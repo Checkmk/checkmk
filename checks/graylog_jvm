@@ -1,0 +1,67 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<graylog_jvm>>>
+# {"jvm.memory.heap.init": 1073741824, "jvm.memory.heap.used": 357154208,
+# "jvm.memory.heap.max": 1020067840, "jvm.memory.heap.committed": 1020067840,
+# "jvm.memory.heap.usage": 0.35012789737592354}
+
+import json
+
+
+def check_graylog_jvm(_no_item, params, parsed):
+    if parsed is None:
+        return
+
+    has_mem_data = False
+    for key, metric_name in [
+        ("used", "mem_heap"),
+        ("committed", "mem_heap_committed"),
+    ]:
+
+        mem_data = parsed.get("jvm.memory.heap.%s" % key)
+        if mem_data is None:
+            continue
+
+        has_mem_data = True
+        yield check_levels(mem_data,
+                           metric_name,
+                           params.get(key),
+                           human_readable_func=get_bytes_human_readable,
+                           infoname="%s heap space" % key.title())
+    if not has_mem_data:
+        yield 3, "No heap space data available"
+
+
+check_info["graylog_jvm"] = {
+    "parse_function": parse_graylog_agent_data,
+    "check_function": check_graylog_jvm,
+    "inventory_function": discover_single,
+    "service_description": "Graylog JVM",
+    "has_perfdata": True,
+    "group": "graylog_jvm",
+    "includes": ["graylog.include"],
+}

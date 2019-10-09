@@ -55,7 +55,7 @@ def main(argv=None):
         GraylogSection(name="cluster_stats", uri="/system/cluster/stats"),
         GraylogSection(name="cluster_traffic", uri="/system/cluster/traffic?days=1&daily=false"),
         GraylogSection(name="failures", uri="/system/indexer/failures/count/?since=%s" % since),
-        GraylogSection(name="jvm", uri="/system/stats/jvm"),
+        GraylogSection(name="jvm", uri="/system/metrics/namespace/jvm.memory.heap"),
         GraylogSection(name="messages", uri="/count/total"),
         GraylogSection(name="nodes", uri="/cluster"),
         GraylogSection(name="sidecars", uri="/sidecars"),
@@ -98,6 +98,23 @@ def handle_request(args, sections):
             for node in node_inputstates:
                 if node in value:
                     value[node].update({"inputstates": node_inputstates[node]})
+
+        if section.name == "jvm":
+            metric_data = value.get("metrics")
+            if metric_data is None:
+                continue
+
+            new_value = {}
+            for metric in value["metrics"]:
+
+                metric_value = metric.get("metric", {}).get("value")
+                metric_name = metric.get("full_name")
+                if metric_value is None or metric_name is None:
+                    continue
+
+                new_value.update({metric_name: metric_value})
+
+            value = new_value
 
         sys.stdout.write("%s\n" % json.dumps(value))
 

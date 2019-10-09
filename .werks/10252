@@ -1,0 +1,22 @@
+Title: Fix broken "Start livestatus proxy" global setting after update from CRE to CEE
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1570646144
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+The global setting "Start livestatus proxy" is used to enable the livestatus proxy
+daemon in Checkmk sites. It is a "omd config" setting which can also be set using
+the Checkmk GUI.
+
+Previous 1.6 versions did not correctly initialize new OMD configuration settings
+after "omd update". When updating from CRE to CEE the new configuration option
+<tt>CONFIG_LIVEPROXYD='on'</tt> should be added to <tt>etc/omd/site.conf</tt>,
+because this file needs to hold the current effective config options for all
+available OMD settings. The missing update of this file resulted in a
+"KeyError ('site_liveproxyd')" exception in the GUI when trying to edit this
+setting.

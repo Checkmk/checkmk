@@ -36,6 +36,8 @@
 #include "Query.h"
 #include "auth.h"
 
+using namespace std::chrono_literals;
+
 namespace {
 // NOTE: Keep this in sync with EC code. Ugly...
 std::vector<std::string> grepping_filters = {
@@ -208,8 +210,7 @@ bool TableEventConsole::isAuthorizedForEventViaContactGroups(
     if (col->isNone(row)) {
         return false;
     }
-    for (const auto &name :
-         col->getValue(row, unknown_auth_user(), std::chrono::seconds(0))) {
+    for (const auto &name : col->getValue(row, unknown_auth_user(), 0s)) {
         if (core()->is_contact_member_of_contactgroup(
                 core()->find_contactgroup(name), ctc)) {
             return (result = true, true);

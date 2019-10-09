@@ -31,6 +31,8 @@
 
 extern timeperiod *timeperiod_list;
 
+using namespace std::chrono_literals;
+
 TimeperiodsCache::TimeperiodsCache(Logger *logger) : _logger(logger) {}
 
 void TimeperiodsCache::logCurrentTimeperiods() {
@@ -57,7 +59,7 @@ void TimeperiodsCache::update(std::chrono::system_clock::time_point now) {
     std::lock_guard<std::mutex> lg(_mutex);
     // Update cache only once a minute. The timeperiod definitions have a
     // 1-minute granularity, so a 1-second resultion is not needed.
-    if (now < _last_update + std::chrono::minutes(1)) {
+    if (now < _last_update + 1min) {
         return;
     }
     _last_update = now;

@@ -35,6 +35,8 @@
 #include "nagios.h"
 #endif
 
+using namespace std::chrono_literals;
+
 double HostSpecialDoubleColumn::getValue(Row row) const {
 #ifdef CMC
     if (auto object = columnData<Object>(row)) {
@@ -104,7 +106,7 @@ double HostSpecialDoubleColumn::staleness(const Object *object) {
             check_result_age = last_period_change - last_check;
         } else {
             // e.g. for timeperiod "never"
-            check_result_age = std::chrono::seconds(0);
+            check_result_age = 0s;
         }
     }
 
@@ -128,6 +130,6 @@ double HostSpecialDoubleColumn::staleness(const Object *object) {
     // make sure that we do not fail if it is set to 0 by some error.
     return std::chrono::duration_cast<std::chrono::seconds>(check_result_age)
                .count() /
-           (interval == std::chrono::seconds(0) ? 1 : interval.count());
+           (interval == 0s ? 1 : interval.count());
 }
 #endif

@@ -33,6 +33,8 @@
 #include <utility>
 #include "Logger.h"
 
+using namespace std::chrono_literals;
+
 EventConsoleConnection::EventConsoleConnection(Logger *logger, std::string path)
     : _logger(logger), _path(std::move(path)) {}
 
@@ -57,7 +59,7 @@ void EventConsoleConnection::run() {
         }
         Debug(_logger) << "retrying to connect";
         stream.clear();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(1ms);
     }
 
     check(stream, "connect");

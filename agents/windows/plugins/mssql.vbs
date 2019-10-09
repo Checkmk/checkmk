@@ -217,12 +217,17 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     cluster_name = instances(instance_id)
 
     ' Use either an instance specific config file named mssql_<instance-id>.ini
-    ' or the default mysql.ini file.
-    cfg_file = cfg_dir & "\mssql_" & instance_id & ".ini"
+    ' or the default mssql.ini file.
+    ' Replace '\' in instance name with '_' (needed for baked agents)
+    cfg_file = cfg_dir & "\mssql_" & Replace(Replace(instance_id, "\", "_"), ",", "_") & ".ini"
     If Not FSO.FileExists(cfg_file) Then
-        cfg_file = cfg_dir & "\mssql.ini"
+        ' Try legacy filename in case of manual deployment
+        cfg_file = cfg_dir & "\mssql_" & instance_id & ".ini"
         If Not FSO.FileExists(cfg_file) Then
-            cfg_file = ""
+            cfg_file = cfg_dir & "\mssql.ini"
+            If Not FSO.FileExists(cfg_file) Then
+                cfg_file = ""
+            End If
         End If
     End If
 

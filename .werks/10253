@@ -1,0 +1,22 @@
+Title: Fix possible AttributeError exception on "Parameters of service" page
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1570648586
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+When trying to view the parameters of a "Number of threads" service while
+having locally configured rules that were saved with Checkmk before version
+1.6, an "AttributeError" crash occurred.
+
+The reason is that this ruleset was converted from a single WARN/CRIT parameter
+set to a more complex set of parameters. The check and rule editor are correctly
+transforming the old values, but this is not possible on the "Parameters of service"
+page.
+
+Instead of the crash Checkmk now prints an error message with a hint that you can
+open the rule in question for editing and save it again to fix this issue.

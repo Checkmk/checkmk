@@ -98,7 +98,10 @@ def check_graylog_nodes(item, params, parsed):
         yield 2, "Missing in agent output (graylog service running?)"
         return
 
-    for _item_name, details in parsed.iteritems():
+    for node_name, details in parsed.iteritems():
+        if item != node_name:
+            continue
+
         for node_info in details:
             for key, infotext, levels in [
                 ("lb_status", "Load balancer state", "lb_"),
@@ -139,18 +142,23 @@ def check_graylog_nodes(item, params, parsed):
                     state_of_input = 0
                     if value_input_state != "RUNNING":
                         state_of_input = params["input_state"]
-                    long_output_str += "Status: %s%s" % (value_input_state,
-                                                         state_markers[state_of_input])
+                    long_output_str += "Status: %s" % value_input_state
 
-                long_output.append(long_output_str)
+                long_output.append((state_of_input, long_output_str))
 
-            input_info = "Inputs: %d" % len(value_inputstates)
-            if state_of_input:
-                input_info += ", One or more inputs not in state running, see long output for more details"
+        max_state = max([state for state, _infotext in long_output])
 
-            yield state_of_input, input_info
+        input_info = "Inputs: %d" % len(value_inputstates)
+        if max_state:
+            input_info += ", One or more inputs not in state running"
 
-            yield 0, "\n%s" % "\n".join(long_output)
+        if long_output:
+            input_info += ", see long output for more details"
+
+        yield max_state, input_info
+
+        for state, line in long_output:
+            yield state, "\n%s" % line
 
 
 check_info["graylog_nodes"] = {

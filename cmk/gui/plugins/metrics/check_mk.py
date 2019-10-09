@@ -285,7 +285,7 @@ unit_info["rpm"] = {
 
 unit_info['bytes/op'] = {
     'title': _('Read size per operation'),
-    'unit': 'bytes/op',
+    'symbol': 'bytes/op',
     'color': '#4080c0',
     "render": cmk.utils.render.fmt_bytes,
 }

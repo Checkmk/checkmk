@@ -444,7 +444,10 @@ class EC2Summary(AWSSectionGeneric):
         return AWSColleagueContents(None, 0.0)
 
     def _fetch_raw_content(self, colleague_contents):
-        response = self._describe_instances()
+        return self._describe_instances()
+
+    def _get_reservations(self, response):
+        # Little hack: This was refactored in later agent versions
         try:
             return response['Reservations']
         except KeyError as e:
@@ -453,10 +456,20 @@ class EC2Summary(AWSSectionGeneric):
 
     def _describe_instances(self):
         if self._names is not None:
-            return self._client.describe_instances(InstanceIds=self._names)
+            response = self._client.describe_instances(InstanceIds=self._names)
+            return self._get_reservations(response)
+
         elif self._tags is not None:
-            return self._client.describe_instances(Filters=self._tags)
-        return self._client.describe_instances()
+            instances = []
+            for chunk in _chunks(self._tags, length=200):
+                # EC2 FilterLimitExceeded: The maximum number of filter values
+                # specified on a single call is 200
+                response = self._client.describe_instances(Filters=chunk)
+                instances.extend(self._get_reservations(response))
+            return instances
+
+        response = self._client.describe_instances()
+        return self._get_reservations(response)
 
     def _compute_content(self, raw_content, colleague_contents):
         # PrivateIpAddress and InstanceId is available although the instance is stopped
@@ -496,19 +509,32 @@ class EC2SecurityGroups(AWSSectionGeneric):
         return AWSColleagueContents({}, 0.0)
 
     def _fetch_raw_content(self, colleague_contents):
-        response = self._describe_security_groups()
+        return {group['GroupId']: group for group in self._describe_security_groups()}
+
+    def _get_security_groups(self, response):
+        # Little hack: This was refactored in later agent versions
         try:
-            return {group['GroupId']: group for group in response['SecurityGroups']}
+            return response['SecurityGroups']
         except KeyError as e:
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            return {}
+            return []
 
     def _describe_security_groups(self):
         if self._names is not None:
-            return self._client.describe_security_groups(InstanceIds=self._names)
+            response = self._client.describe_security_groups(InstanceIds=self._names)
+            return self._get_security_groups(response)
+
         elif self._tags is not None:
-            return self._client.describe_security_groups(Filters=self._tags)
-        return self._client.describe_security_groups()
+            sec_groups = []
+            for chunk in _chunks(self._tags, length=200):
+                # EC2 FilterLimitExceeded: The maximum number of filter values
+                # specified on a single call is 200
+                response = self._client.describe_security_groups(Filters=chunk)
+                sec_groups.extend(self._get_security_groups(response))
+            return sec_groups
+
+        response = self._client.describe_security_groups()
+        return self._get_security_groups(response)
 
     def _compute_content(self, raw_content, colleague_contents):
         content_by_piggyback_hosts = {}
@@ -1012,13 +1038,7 @@ class EBSSummary(AWSSectionGeneric):
         return AWSColleagueContents({}, 0.0)
 
     def _fetch_raw_content(self, colleague_contents):
-        response_volumes = self._describe_volumes()
-        try:
-            volumes = {r['VolumeId']: r for r in response_volumes['Volumes']}
-        except KeyError as e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response_volumes.keys())
-            volumes = {}
-
+        volumes = {r['VolumeId']: r for r in self._describe_volumes()}
         try:
             response_volume_stats = self._client.describe_volume_status(VolumeIds=volumes.keys())
             volume_states = {r['VolumeId']: r for r in response_volume_stats['VolumeStatuses']}
@@ -1028,14 +1048,30 @@ class EBSSummary(AWSSectionGeneric):
             volume_states = {}
         return volumes, volume_states
 
+    def _get_volumes(self, response):
+        # Little hack: This was refactored in later agent versions
+        try:
+            return response['Volumes']
+        except KeyError as e:
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            return []
+
     def _describe_volumes(self):
         if self._names is not None:
-            response_volumes = self._client.describe_volumes(VolumeIds=self._names)
+            response = self._client.describe_volumes(VolumeIds=self._names)
+            return self._get_volumes(response)
+
         elif self._tags is not None:
-            response_volumes = self._client.describe_volumes(Filters=self._tags)
-        else:
-            response_volumes = self._client.describe_volumes()
-        return response_volumes
+            volumes = []
+            for chunk in _chunks(self._tags, length=200):
+                # EC2 FilterLimitExceeded: The maximum number of filter values
+                # specified on a single call is 200
+                response = self._client.describe_volumes(Filters=chunk)
+                volumes.extend(self._get_volumes(response))
+            return volumes
+
+        response = self._client.describe_volumes()
+        return self._get_volumes(response)
 
     def _compute_content(self, raw_content, colleague_contents):
         volumes, volume_states = raw_content.content

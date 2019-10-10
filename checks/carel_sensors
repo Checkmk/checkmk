@@ -24,72 +24,71 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# This is not intended for overriding in main.mk, as any changes will require
-# re-inventory.
-carel_temp_defaultlevels = {             # This still needs sensible values
-    "Room"                  : (30, 35),
-    "Outdoor"               : (60, 70),
-    "Delivery"              : (60, 70),
-    "Cold Water"            : (60, 70),
-    "Hot Water"             : (60, 70),
-    "Cold Water Outlet"     : (60, 70),
-    "Circuit 1 Suction"     : (60, 70),
-    "Circuit 2 Suction"     : (60, 70),
-    "Circuit 1 Evap"        : (60, 70),
-    "Circuit 2 Evap"        : (60, 70),
-    "Circuit 1 Superheat"   : (60, 70),
-    "Circuit 2 Superheat"   : (60, 70),
-    "Cooling Set Point"     : (60, 70),
-    "Cooling Prop. Band"    : (60, 70),
-    "Cooling 2nd Set Point" : (60, 70),
-    "Heating Set Point"     : (60, 70),
-    "Heating 2nd Set Point" : (60, 70),
-    "Heating Prop. Band"    : (60, 70),
+# No factory default because of different defaultlevels
+carel_temp_defaultlevels = {
+    "Room": (30, 35),
+    "Outdoor": (60, 70),
+    "Delivery": (60, 70),
+    "Cold Water": (60, 70),
+    "Hot Water": (60, 70),
+    "Cold Water Outlet": (60, 70),
+    "Circuit 1 Suction": (60, 70),
+    "Circuit 2 Suction": (60, 70),
+    "Circuit 1 Evap": (60, 70),
+    "Circuit 2 Evap": (60, 70),
+    "Circuit 1 Superheat": (60, 70),
+    "Circuit 2 Superheat": (60, 70),
+    "Cooling Set Point": (60, 70),
+    "Cooling Prop. Band": (60, 70),
+    "Cooling 2nd Set Point": (60, 70),
+    "Heating Set Point": (60, 70),
+    "Heating 2nd Set Point": (60, 70),
+    "Heating Prop. Band": (60, 70),
 }
 
 
 def carel_sensors_parse(info):
 
-    oidtothing = {
-        "1.0": ("temp", "Room"),
-        "2.0": ("temp", "Outdoor"),
-        "3.0": ("temp", "Delivery"),
-        "4.0": ("temp", "Cold Water"),
-        "5.0": ("temp", "Hot Water"),
-        "7.0": ("temp", "Cold Water Outlet"),
-        "10.0": ("temp", "Circuit 1 Suction"),
-        "11.0": ("temp", "Circuit 2 Suction"),
-        "12.0": ("temp", "Circuit 1 Evap"),
-        "13.0": ("temp", "Circuit 2 Evap"),
-        "14.0": ("temp", "Circuit 1 Superheat"),
-        "15.0": ("temp", "Circuit 2 Superheat"),
-        "20.0": ("temp", "Cooling Set Point"),
-        "21.0": ("temp", "Cooling Prop. Band"),
-        "22.0": ("temp", "Cooling 2nd Set Point"),
-        "23.0": ("temp", "Heating Set Point"),
-        "24.0": ("temp", "Heating 2nd Set Point"),
-        "25.0": ("temp", "Heating Prop. Band"),
+    oid_parse = {
+        "1.0": "Room",
+        "2.0": "Outdoor",
+        "3.0": "Delivery",
+        "4.0": "Cold Water",
+        "5.0": "Hot Water",
+        "7.0": "Cold Water Outlet",
+        "10.0": "Circuit 1 Suction",
+        "11.0": "Circuit 2 Suction",
+        "12.0": "Circuit 1 Evap",
+        "13.0": "Circuit 2 Evap",
+        "14.0": "Circuit 1 Superheat",
+        "15.0": "Circuit 2 Superheat",
+        "20.0": "Cooling Set Point",
+        "21.0": "Cooling Prop. Band",
+        "22.0": "Cooling 2nd Set Point",
+        "23.0": "Heating Set Point",
+        "24.0": "Heating 2nd Set Point",
+        "25.0": "Heating Prop. Band",
     }
 
     parsed = {}
-    parsed["temp"] = {}
     for oidend, value in info:
-        quantity, sensor = oidtothing.get(oidend, (None, None))
-        if quantity == "temp":
-            if value and value != "0" and value != "-9999":
-                parsed[quantity][sensor] = float(value) / 10
+        sensor_name = oid_parse.get(oidend)
+        if sensor_name is not None and value is not None \
+           and value != "0" and value != "-9999":
+            parsed[sensor_name] = float(value) / 10
 
     return parsed
 
 
 def inventory_carel_sensors_temp(parsed):
-    for thing in parsed["temp"].keys():
-        yield thing, '{ "levels" : carel_temp_defaultlevels["%s"] }' % thing
+    for sensor in parsed.keys():
+        levels = carel_temp_defaultlevels[sensor]
+        yield sensor, {"levels": levels}
 
 
 def check_carel_sensors_temp(item, params, parsed):
-    if item in parsed["temp"]:
-        return check_temperature(parsed["temp"][item], params, "carel_sensors_temp_%s" % item)
+    if item in parsed:
+        return check_temperature(parsed[item], params, "carel_sensors_temp_%s" % item)
 
 
 check_info["carel_sensors"] = {

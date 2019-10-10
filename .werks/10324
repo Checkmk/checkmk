@@ -1,0 +1,16 @@
+Title: carel_sensors: Fixed error while discovery
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0p4
+Date: 1570725188
+
+Since version 1.6.0 the check discovery outputs "name
+'carel_temp_defaultlevels' is not defined".  This has been fixed.
+
+Please remove the autocheck file of affected hosts in
+"~/var/check_mk/autochecks/" before rediscovering the services.

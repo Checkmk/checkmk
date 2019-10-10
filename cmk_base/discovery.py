@@ -28,6 +28,7 @@ import os
 import socket
 import time
 import signal
+import inspect
 from typing import Union, Iterator, Callable, List, Text, Optional, Dict, Tuple  # pylint: disable=unused-import
 
 from cmk.utils.regex import regex
@@ -950,6 +951,15 @@ def _get_discovery_function_of(check_plugin_name):
 
     if discovery_function is None:
         return lambda _info: _no_discovery_possible(check_plugin_name)
+
+    discovery_function_args = inspect.getargspec(discovery_function).args
+    if len(discovery_function_args) != 1:
+        raise MKGeneralException(
+            "The discovery function \"%s\" of the check \"%s\" is expected to take a "
+            "single argument (info or parsed), but it's taking the following arguments: %r. "
+            "You will have to change the arguments of the discovery function to make it "
+            "compatible with this Checkmk version." %
+            (discovery_function.__name__, check_plugin_name, discovery_function_args))
 
     return discovery_function
 

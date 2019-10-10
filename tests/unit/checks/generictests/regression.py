@@ -63,6 +63,7 @@ import sys
 import time
 import yapf
 from importlib import import_module
+from pathlib2 import Path
 
 import generictests.run
 
@@ -74,7 +75,7 @@ YAPF_STYLE = {
 
 class WritableDataset(object):
     def __init__(self, init_dict):
-        self.comments = ['-*- encoding: utf-8', 'yapf: disable']
+        self.comments = [u'-*- encoding: utf-8', u'yapf: disable']
         self.writelist = (
             'checkname',
             'freeze_time',
@@ -91,7 +92,7 @@ class WritableDataset(object):
         self.info = init_dict.get('info', None)
         freeze_time = init_dict.get('freeze_time', None)
         if freeze_time == "":
-            freeze_time = time.strftime("%Y-%m-%d %H:%M:%S")
+            freeze_time = time.strftime(u"%Y-%m-%d %H:%M:%S")
         self.freeze_time = freeze_time
         self.parsed = init_dict.get('parsed', None)
         self.discovery = init_dict.get('discovery', {})
@@ -116,22 +117,22 @@ class WritableDataset(object):
             v = getattr(self, k)
             if not v:
                 continue
-            content.append("%s = %r" % (k, v))
+            content.append(u"%s = %r" % (k, v))
             imports |= self.get_imports(v)
 
         if not content:
             return
 
-        with open(filename, 'w') as f:
+        with Path(filename).open('w') as f:
             for comment in self.comments:
-                f.write('# %s\n' % comment)
+                f.write(u'# %s\n' % comment)
 
             for item in sorted(imports):
-                f.write('%s\n' % item)
-            f.write('\n')
+                f.write(u'%s\n' % item)
+            f.write(u'\n')
 
             output, _ = yapf.yapflib.yapf_api.FormatCode(
-                '\n\n'.join(content),
+                u'\n\n'.join(content),
                 style_config=YAPF_STYLE,
             )
             f.write(output)
@@ -148,7 +149,7 @@ class WritableDataset(object):
         elif isinstance(value, (tuple, list)):
             iterate = value
         else:
-            return {"from %s import %s" % (value.__module__, value.__class__.__name__)}
+            return {u"from %s import %s" % (value.__module__, value.__class__.__name__)}
 
         imports = set()
         for val in iterate:

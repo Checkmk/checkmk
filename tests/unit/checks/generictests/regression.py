@@ -61,9 +61,9 @@ import os
 import ast
 import sys
 import time
-import yapf
 from importlib import import_module
 from pathlib2 import Path
+import yapf
 
 import generictests.run
 
@@ -73,7 +73,7 @@ YAPF_STYLE = {
 }
 
 
-class WritableDataset(object):
+class WritableDataset(object):  # pylint: disable=too-many-instance-attributes
     def __init__(self, init_dict):
         self.comments = [u'-*- encoding: utf-8', u'yapf: disable']
         self.writelist = (
@@ -113,29 +113,29 @@ class WritableDataset(object):
     def write(self, filename):
         content = []
         imports = set()
-        for k in self.writelist:
-            v = getattr(self, k)
-            if not v:
+        for attr in self.writelist:
+            value = getattr(self, attr)
+            if value is None:
                 continue
-            content.append(u"%s = %r" % (k, v))
-            imports |= self.get_imports(v)
+            content.append(u"%s = %r" % (attr, value))
+            imports |= self.get_imports(value)
 
         if not content:
             return
 
-        with Path(filename).open('w') as f:
+        with Path(filename).open('w') as handle:
             for comment in self.comments:
-                f.write(u'# %s\n' % comment)
+                handle.write(u'# %s\n' % comment)
 
             for item in sorted(imports):
-                f.write(u'%s\n' % item)
-            f.write(u'\n')
+                handle.write(u'%s\n' % item)
+            handle.write(u'\n')
 
             output, _ = yapf.yapflib.yapf_api.FormatCode(
                 u'\n\n'.join(content),
                 style_config=YAPF_STYLE,
             )
-            f.write(output)
+            handle.write(output)
 
     def get_imports(self, value):
         try:

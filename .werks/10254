@@ -1,0 +1,25 @@
+Title: Improve error handling of incompatible discovery functions
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0p4
+Date: 1570702469
+Class: fix
+
+In previous 1.6 versions it could happen that 3rd party checks raise
+a TypeError exception resulting in a crash report with a message like
+this: <tt>TypeError (inventory_sslcertificates() takes exactly 2 arguments</tt>
+
+This issue occurs because we have removed some compatibility code that
+dealt with older discovery function syntax. This was planned to be removed
+since 1.2.6 and has now been finally done.
+
+Discovery functions of Checkmk checks take a single argument these days.
+This is either the agent <tt>info</tt> structure or, in case a check has
+a parse function defined, the output of the parse function <tt>parsed</tt>.
+
+Instead of a crash Checkmk produces an error message that should lead you to
+the check plugin in question. You will have to either remove or update the
+plugin. Normally you simply need to remove the first argument of the discovery
+function.

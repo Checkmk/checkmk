@@ -1534,7 +1534,7 @@ class EBSSummary(AWSSectionGeneric):
         elif self._tags is not None:
             volumes = self._fetch_volumes_filtered_by_tags(col_volumes)
         else:
-            volumes = self._fetch_volumes_without_filter()
+            volumes = self._fetch_volumes_without_filter(col_volumes)
 
         for vol_id, vol in volumes.iteritems():
             response = self._client.describe_volume_status(VolumeIds=[vol_id])
@@ -1563,7 +1563,9 @@ class EBSSummary(AWSSectionGeneric):
             volumes.extend(self._get_response_content(response, 'Volumes'))
         return {r['VolumeId']: r for r in volumes}
 
-    def _fetch_volumes_without_filter(self):
+    def _fetch_volumes_without_filter(self, col_volumes):
+        if col_volumes:
+            return {vol['VolumeId']: vol for vol in col_volumes}
         return self._format_volumes(self._client.describe_volumes())
 
     def _format_volumes(self, response):

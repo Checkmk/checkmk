@@ -1536,24 +1536,24 @@ class EBSSummary(AWSSectionGeneric):
         else:
             volumes = self._fetch_volumes_without_filter(col_volumes)
 
-        for vol_id, vol in volumes.iteritems():
+        formatted_volumes = {v['VolumeId']: v for v in volumes}
+        for vol_id, vol in formatted_volumes.iteritems():
             response = self._client.describe_volume_status(VolumeIds=[vol_id])
             for state in self._get_response_content(response, 'VolumeStatuses'):
                 if state['VolumeId'] == vol_id:
                     vol.setdefault('VolumeStatus', state['VolumeStatus'])
-        return volumes
+        return formatted_volumes
 
     def _fetch_volumes_filtered_by_names(self, col_volumes):
         if col_volumes:
-            return {vol['VolumeId']: vol for vol in col_volumes if vol['VolumeId'] in self._names}
-        return self._format_volumes(self._client.describe_volumes(VolumeIds=self._names))
+            return [v for v in col_volumes if v['VolumeId'] in self._names]
+        response = self._client.describe_volumes(VolumeIds=self._names)
+        return self._get_response_content(response, 'Volumes')
 
     def _fetch_volumes_filtered_by_tags(self, col_volumes):
         if col_volumes:
             tags = self._prepare_tags_for_api_response(self._tags)
-            return {
-                vol['VolumeId']: vol for vol in col_volumes for tag in vol['Tags'] if tag in tags
-            }
+            return [v for v in col_volumes for tag in v['Tags'] if tag in tags]
 
         volumes = []
         for chunk in _chunks(self._tags, length=200):
@@ -1561,15 +1561,13 @@ class EBSSummary(AWSSectionGeneric):
             # specified on a single call is 200
             response = self._client.describe_volumes(Filters=chunk)
             volumes.extend(self._get_response_content(response, 'Volumes'))
-        return {r['VolumeId']: r for r in volumes}
+        return volumes
 
     def _fetch_volumes_without_filter(self, col_volumes):
         if col_volumes:
-            return {vol['VolumeId']: vol for vol in col_volumes}
-        return self._format_volumes(self._client.describe_volumes())
-
-    def _format_volumes(self, response):
-        return {r['VolumeId']: r for r in self._get_response_content(response, 'Volumes')}
+            return col_volumes
+        response = self._client.describe_volumes()
+        return self._get_response_content(response, 'Volumes')
 
     def _compute_content(self, raw_content, colleague_contents):
         _col_volumes, col_instances = colleague_contents.content

@@ -43,6 +43,7 @@ from cmk.gui.plugins.metrics import (
     MAX_CORES,
     indexed_color,
 )
+from cmk.special_agents.agent_aws_types import AWSEC2InstTypes
 
 # TODO Graphingsystem:
 # - Default-Template: Wenn im Graph kein "range" angegeben ist, aber
@@ -5251,7 +5252,6 @@ metric_info['aws_ec2_running_ondemand_instances_total'] = {
     'color': '25/a',
 }
 
-from cmk.special_agents.agent_aws import AWSEC2InstTypes
 for inst_type in AWSEC2InstTypes:
     metric_info['aws_ec2_running_ondemand_instances_%s' % inst_type] = {
         'title': _('Total Running On-Demand %s Instances') % inst_type,

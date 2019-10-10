@@ -27,8 +27,10 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
+    Integer,
     MonitoringState,
     TextAscii,
+    Tuple,
 )
 
 from cmk.gui.plugins.wato import (
@@ -74,6 +76,22 @@ def _parameter_valuespec_graylog_nodes():
                                      default_value=2)),
         ("input_state",
          MonitoringState(title=_("State when input is not in state running"), default_value=1)),
+        ("input_count_lower",
+         Tuple(
+             title=_("Total number of inputs lower level"),
+             elements=[
+                 Integer(title=_("Warning if less then"), unit="inputs"),
+                 Integer(title=_("Critical if less then"), unit="inputs")
+             ],
+         )),
+        ("input_count_upper",
+         Tuple(
+             title=_("Total number of inputs upper level"),
+             elements=[
+                 Integer(title=_("Warning at"), unit="inputs"),
+                 Integer(title=_("Critical at"), unit="inputs")
+             ],
+         )),
     ],)
 
 

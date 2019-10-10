@@ -4,8 +4,7 @@ import abc
 import random
 import six
 
-from cmk.special_agents.agent_aws import (
-    AWSEC2InstTypes,)
+from cmk.special_agents.agent_aws_types import AWSEC2InstTypes
 
 #   .--entities------------------------------------------------------------.
 #   |                             _   _ _   _                              |

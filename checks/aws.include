@@ -24,9 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk.special_agents.agent_aws as agent_aws
+import cmk.special_agents.agent_aws_types as agent_aws_types
 
-AWSRegions = dict(agent_aws.AWSRegions)
+AWSRegions = dict(agent_aws_types.AWSRegions)
 
 factory_settings['aws_cpu_credits'] = {
     'balance_levels_lower': (10, 5),

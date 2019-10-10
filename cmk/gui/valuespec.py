@@ -5138,7 +5138,12 @@ class Labels(ValueSpec):
     def from_html_vars(self, varprefix):
         labels = {}
 
-        for entry in json.loads(html.get_unicode_input(varprefix) or "[]"):
+        try:
+            decoded_labels = json.loads(html.get_unicode_input(varprefix) or "[]")
+        except ValueError as e:
+            raise MKUserError(varprefix, _("Failed to parse labels: %s") % e)
+
+        for entry in decoded_labels:
             label_id, label_value = [p.strip() for p in entry["value"].split(":", 1)]
             if label_id in labels:
                 raise MKUserError(

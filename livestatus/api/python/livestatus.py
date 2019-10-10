@@ -34,7 +34,9 @@ import ssl
 from typing import Tuple, Union, Dict, Pattern, Optional  # pylint: disable=unused-import
 
 try:
-    from cmk.gui.i18n import _
+    # Tolerate this violation for the moment. It's OK to have unlocalized
+    # texts when used in other components than our GUI.
+    from cmk.gui.i18n import _  # pylint: disable=cmk-module-layer-violation
 except ImportError:
     _ = lambda x: x
 

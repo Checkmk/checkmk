@@ -35,8 +35,9 @@ from pathlib2 import Path
 import livestatus
 
 import cmk.utils.paths
-import cmk.ec.settings
-import cmk.ec.export
+# It's OK to import centralized config load logic
+import cmk.ec.settings  # pylint: disable=cmk-module-layer-violation
+import cmk.ec.export  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.store
 import cmk.utils
 

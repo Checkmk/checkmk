@@ -28,7 +28,7 @@ import argparse
 import sys
 import urlparse
 import requests
-import urllib3
+import urllib3  # type: ignore
 from cmk.utils.defines import service_state_name
 from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.password_store

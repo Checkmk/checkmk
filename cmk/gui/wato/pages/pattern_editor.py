@@ -42,7 +42,9 @@ from cmk.gui.plugins.wato import (
     ConfigHostname,
 )
 
-import cmk_base.export
+# Tolerate this for 1.6. Should be cleaned up in future versions,
+# e.g. by trying to move the common code to a common place
+import cmk_base.export  # pylint: disable=cmk-module-layer-violation
 
 
 @mode_registry.register

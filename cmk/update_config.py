@@ -50,22 +50,26 @@ import argparse
 import logging
 from werkzeug.test import create_environ
 
-import cmk_base.autochecks
+# This special script needs persistence and conversion code from different
+# places of Checkmk. We may centralize the conversion and move the persistance
+# to a specific layer in the future, but for the the moment we need to deal
+# with it.
+import cmk_base.autochecks  # pylint: disable=cmk-module-layer-violation
 
 import cmk.utils.log as log
 from cmk.utils.log import VERBOSE
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils
-import cmk.gui.watolib.tags
-import cmk.gui.watolib.hosts_and_folders
-import cmk.gui.watolib.rulesets
-import cmk.gui.modules
-import cmk.gui.config
-import cmk.gui.utils
-import cmk.gui.htmllib as htmllib
-from cmk.gui.globals import AppContext, RequestContext
-from cmk.gui.http import Request, Response
+import cmk.gui.watolib.tags  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.watolib.hosts_and_folders  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.watolib.rulesets  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.modules  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.config  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.utils  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.htmllib as htmllib  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.globals import AppContext, RequestContext  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.http import Request, Response  # pylint: disable=cmk-module-layer-violation
 
 
 # TODO: Better make our application available?

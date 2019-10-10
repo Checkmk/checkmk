@@ -73,9 +73,8 @@ YAPF_STYLE = {
 
 
 class WritableDataset(object):
-    def __init__(self, filename, init_dict):
+    def __init__(self, init_dict):
         self.comments = ['-*- encoding: utf-8', 'yapf: disable']
-        self.filename = filename
         self.writelist = (
             'checkname',
             'freeze_time',
@@ -110,7 +109,7 @@ class WritableDataset(object):
                 return
         self.checks[subcheck].append(new_entry)
 
-    def write(self, directory):
+    def write(self, filename):
         content = []
         imports = set()
         for k in self.writelist:
@@ -123,7 +122,7 @@ class WritableDataset(object):
         if not content:
             return
 
-        with open('%s/%s' % (directory, self.filename.split("/")[-1]), 'w') as f:
+        with open(filename, 'w') as f:
             for comment in self.comments:
                 f.write('# %s\n' % comment)
 
@@ -188,11 +187,9 @@ def test_main(check_manager, datasetfile, inplace):
     input_data = import_module(os.path.splitext(modn)[0])
     sys.path.pop(0)
 
-    out_name = _get_out_filename(datasetfile, inplace)
-    regression = WritableDataset(out_name, vars(input_data))
+    regression = WritableDataset(vars(input_data))
 
     generictests.run(check_manager, regression, write=True)
 
-    directory = os.path.join(os.path.dirname(__file__), "datasets")
-    regression.write(directory)
+    regression.write(_get_out_filename(datasetfile, inplace))
     return

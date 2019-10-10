@@ -814,8 +814,8 @@ inline void internal_PrintStringStdio(const char *Txt) { printf("%s", Txt); };
 
         xlog::Type type_;
         xlog::Marker mark_;  // # TODO this is not a good place
-        int directions_;
-        int flags_;
+        uint32_t directions_;
+        uint32_t flags_;
 
     private:
         wchar_t prefix_[kInternalMaxPrefix];

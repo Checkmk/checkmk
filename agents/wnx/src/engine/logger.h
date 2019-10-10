@@ -720,7 +720,7 @@ bool IsEventLogEnabled();
 
 namespace internal {
 int Type2Marker(xlog::Type Lt) noexcept;
-int Mods2Directions(const xlog::LogParam& lp, int mods) noexcept;
+uint32_t Mods2Directions(const xlog::LogParam& lp, uint32_t mods) noexcept;
 }  // namespace internal
 
 }  // namespace XLOG

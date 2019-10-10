@@ -19,6 +19,38 @@
 #include "upgrade.h"
 #include "yaml-cpp/yaml.h"
 
+// returns TRUE only if file have been removed
+static std::string ErrorCodeToMessage(std::error_code ec) {
+    auto str = fmt::format("failed [{}] {}", ec.value(), ec.message());
+
+    if (!str.empty()) str.pop_back();
+    return str;
+}
+
+static void CopyFileWithLog(const std::filesystem::path &target,
+                            const std::filesystem::path &source) {
+    std::error_code ec;
+    auto success = std::filesystem::copy_file(source, target, ec);
+    if (success)
+        XLOG::l.i("Copy file '{}' to '{}' [OK]", source.u8string(),
+                  target.u8string());
+    else
+        XLOG::l("Copy file '{}' to '{}' failed {}", source.u8string(),
+                target.u8string(), ErrorCodeToMessage(ec));
+}
+
+static bool RemoveFileWithLog(const std::filesystem::path &f) {
+    std::error_code ec;
+    auto success = std::filesystem::remove(f, ec);
+    if (success || ec.value() == 0)
+        XLOG::l.i("Remove '{}' [OK]", f.u8string());
+    else
+        XLOG::l("Remove '{}' {}", f.u8string(), ErrorCodeToMessage(ec));
+
+    //
+    return success;
+}
+
 namespace cma::cfg::cap {
 
 // calculate valid path and create folder
@@ -380,38 +412,6 @@ bool ReinstallIni(const std::filesystem::path &target_ini,
     return true;
 }
 
-static std::string ErrorCodeToMessage(std::error_code ec) {
-    auto str = fmt::format("failed [{}] {}", ec.value(), ec.message());
-
-    if (!str.empty()) str.pop_back();
-    return str;
-}
-
-// returns TRUE only if file have been removed
-static bool RemoveFileWithLog(const std::filesystem::path &f) {
-    std::error_code ec;
-    auto success = std::filesystem::remove(f, ec);
-    if (success || ec.value() == 0)
-        XLOG::l.i("Remove '{}' [OK]", f.u8string());
-    else
-        XLOG::l("Remove '{}' {}", f.u8string(), ErrorCodeToMessage(ec));
-
-    //
-    return success;
-}
-
-static void CopyFileWithLog(const std::filesystem::path &target,
-                            const std::filesystem::path &source) {
-    std::error_code ec;
-    auto success = std::filesystem::copy_file(source, target, ec);
-    if (success)
-        XLOG::l.i("Copy file '{}' to '{}' [OK]", source.u8string(),
-                  target.u8string());
-    else
-        XLOG::l("Copy file '{}' to '{}' failed {}", source.u8string(),
-                target.u8string(), ErrorCodeToMessage(ec));
-}
-
 namespace details {
 void UninstallYaml(const std::filesystem::path &bakery_yaml,
                    const std::filesystem::path &target_yaml) {
@@ -474,6 +474,8 @@ bool ReinstallYaml(const std::filesystem::path &bakery_yaml,
     }
 
     // install process
+    // this file may be left after uninstallation of yaml
+    RemoveFileWithLog(bakery_yaml);
     details::InstallYaml(bakery_yaml, target_yaml, source_yaml);
 
     return true;

@@ -47,15 +47,17 @@ TEST(LogInternalTest, Mods2DirectionsCheck) {
     lp.directions_ = mark;
 
     EXPECT_EQ(Mods2Directions(lp, Mods::kFile), mark | xlog::kFilePrint);
-    EXPECT_EQ(Mods2Directions(lp, Mods::kStdio), mark | xlog::kFilePrint);
-    EXPECT_EQ(Mods2Directions(lp, Mods::kEvent), mark | xlog::kFilePrint);
+    EXPECT_EQ(Mods2Directions(lp, Mods::kStdio), mark | xlog::kStdioPrint);
+    EXPECT_EQ(Mods2Directions(lp, Mods::kEvent), mark | xlog::kEventPrint);
 
     constexpr int all_mark = 0xFFFF'FFFF;
     lp.directions_ = all_mark;
 
     EXPECT_EQ(Mods2Directions(lp, Mods::kNoFile), all_mark & ~xlog::kFilePrint);
-    EXPECT_EQ(Mods2Directions(lp, Mods::kStdio), all_mark & ~xlog::kFilePrint);
-    EXPECT_EQ(Mods2Directions(lp, Mods::kEvent), all_mark & ~xlog::kFilePrint);
+    EXPECT_EQ(Mods2Directions(lp, Mods::kNoStdio),
+              all_mark & ~xlog::kStdioPrint);
+    EXPECT_EQ(Mods2Directions(lp, Mods::kNoEvent),
+              all_mark & ~xlog::kEventPrint);
 }
 }  // namespace internal
 

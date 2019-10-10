@@ -177,7 +177,8 @@ TEST(Wtools, Utf16Utf8) {
 
 std::vector<int> TsValues = {
     8154,  // windows 10, dev machine
-    2066   // windows server, build machine
+    2066,  // windows server, build machine
+    5090   // windows 10, dev machine, late build
 };
 
 TEST(Wtools, Perf) {

@@ -24,21 +24,47 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import json
-import calendar
+from cmk.gui.i18n import _
+from cmk.gui.valuespec import (
+    Age,
+    Dictionary,
+    MonitoringState,
+    TextAscii,
+    Tuple,
+)
+
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersApplications,
+)
 
 
-def parse_graylog_agent_data(info):
-    parsed = {}
+def _parameter_valuespec_graylog_sidecars():
+    return Dictionary(elements=[
+        ("active_state",
+         MonitoringState(title=_("State when active state is not OK"), default_value=1)),
+        ("collector_ok",
+         MonitoringState(title=_("State when collector is in state running"), default_value=0)),
+        ("collector_warn",
+         MonitoringState(title=_("State when collector is in state stopped"), default_value=1)),
+        ("collector_crit",
+         MonitoringState(title=_("State when collector is in state failing"), default_value=2)),
+        ("last_seen",
+         Tuple(
+             title=_("Time since the sidecar was last seen by graylog"),
+             elements=[Age(title=_("Warning at")),
+                       Age(title=_("Critical at"))],
+         )),
+    ],)
 
-    for line in info:
-        parsed.update(json.loads(line[0]))
 
-    return parsed
-
-
-def _handle_iso_utc_to_localtimestamp(iso_8601_time):
-    struc_time = time.strptime(iso_8601_time, '%Y-%m-%dT%H:%M:%S.%fZ')
-    local_timestamp = calendar.timegm(struc_time)
-
-    return local_timestamp
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="graylog_sidecars",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Sidecar name")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_graylog_sidecars,
+        title=lambda: _("Graylog sidecars"),
+    ))

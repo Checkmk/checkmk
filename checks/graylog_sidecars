@@ -1,0 +1,158 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<graylog_sidecars>>>
+# {"sort": "node_name", "pagination": {"count": 1, "per_page": 50, "total": 1,
+# "page": 1}, "sidecars": [{"co  llectors": null, "node_name": "testserver",
+# "assignments": [], "node_id": "31c3e8f9-a6b2-41d4-be78-f6273c3cb0e5", "n
+# ode_details": {"metrics": {"disks_75": ["/snap/gnome-calculator/501
+# (100%)", "/snap/core/7713 (100%)", "/snap/gnome-  calculator/406 (100%)",
+# "/snap/gtk-common-themes/1313 (100%)", "/snap/core18/1192 (100%)",
+# "/snap/spotify/35 (100%)"  , "/snap/gnome-characters/317 (100%)",
+# "/snap/gnome-3-26-1604/90 (100%)", "/snap/gnome-3-28-1804/71 (100%)",
+# "/snap/  gnome-3-26-1604/92 (100%)", "/snap/gtk-common-themes/1198 (100%)",
+# "/snap/gnome-logs/73 (100%)", "/snap/gnome-logs/8  1 (100%)",
+# "/snap/gnome-characters/296 (100%)", "/snap/gnome-3-28-1804/67 (100%)",
+# "/snap/core18/1144 (100%)", "/sna  p/gnome-system-monitor/100 (100%)",
+# "/snap/gnome-system-monitor/95 (100%)", "/snap/core/7396 (100%)",
+# "/snap/spotify  /36 (100%)"], "load_1": 0.49, "cpu_idle": 95.0}, "ip":
+# "10.3.2.62", "operating_system": "Linux", "status": {"status"  : 1,
+# "message": "Received no ping signal from sidecar", "collectors": []},
+# "log_file_list": null}, "active": false,   "sidecar_version": "1.0.2",
+# "last_seen": "2019-10-10T09:56:29.303Z"}], "filters": null, "only_active":
+# false, "query  ": "", "total": 1, "order": "asc"}
+
+
+def parse_graylog_sidecars(info):
+    parsed = {}
+
+    for line in info:
+        data = json.loads(line[0])
+        sidecar_section = data.get("sidecars")
+        if sidecar_section is None:
+            continue
+
+        for sidecar in sidecar_section:
+
+            active = sidecar.get("active")
+            collectors = sidecar.get("node_details", {}).get("status", {}).get("collectors")
+            collector_msg = sidecar.get("node_details", {}).get("status", {}).get("message")
+            last_seen = sidecar.get("last_seen")
+            status = sidecar.get("node_details", {}).get("status", {}).get("status")
+
+            sidecar_nodename = sidecar.get("node_name")
+            if sidecar_nodename is None:
+                continue
+
+            parsed.setdefault(
+                sidecar_nodename, {
+                    "active": active,
+                    "collectors": collectors,
+                    "collector_msg": collector_msg,
+                    "last_seen": last_seen,
+                    "status": status
+                })
+
+    return parsed
+
+
+@get_parsed_item_data
+def check_graylog_sidecars(item, params, item_data):
+    active_msg = item_data.get("active")
+    if active_msg is not None:
+        active_state = 0
+        msg = str(active_msg).replace("True", "yes").replace("False", "no")
+        if not active_msg:
+            active_state = params.get("active_state", 1)
+
+        yield active_state, "Active: %s" % msg
+
+    last_seen = item_data.get("last_seen")
+    if last_seen is not None:
+        local_timestamp = _handle_iso_utc_to_localtimestamp(last_seen)
+        age = time.time() - local_timestamp
+
+        yield 0, "Last seen: %s" % get_timestamp_human_readable(local_timestamp)
+
+        yield check_levels(age,
+                           None,
+                           params.get("last_seen"),
+                           human_readable_func=get_age_human_readable,
+                           infoname="Before")
+
+    running_state = _handle_collector_states(item_data.get("status", 3), params)
+    running_msg = item_data.get("collector_msg", "No collectors found")
+    yield running_state, "Collectors: %s" % running_msg
+
+    collector_data = item_data.get("collectors")
+    if collector_data is not None:
+        long_output = []
+        for collector in collector_data:
+            long_output_str = ""
+
+            collector_id = collector.get("collector_id")
+            if collector_id is not None:
+                long_output_str += "ID: %s" % collector_id
+
+            collector_msg = collector.get("message")
+            if collector_msg is not None:
+                long_output_str += ", Message: %s" % collector_msg
+
+            collector_state = _handle_collector_states(collector.get("status", 3), params)
+
+            long_output.append((collector_state, long_output_str))
+
+    if long_output:
+        max_state = max([state for state, _infotext in long_output])
+
+        yield max_state, "see long output for more details"
+
+        for state, line in long_output:
+            yield state, "\n%s" % line
+
+
+def _handle_collector_states(collector_state, params):
+    if collector_state == 0:
+        state = params.get("collector_ok", 0)
+    elif collector_state == 1:
+        state = params.get("collector_warn", 1)
+    elif collector_state == 2:
+        state = params.get("collector_crit", 2)
+    else:
+        state = 3
+
+    return state
+
+
+check_info["graylog_sidecars"] = {
+    "parse_function": parse_graylog_sidecars,
+    "check_function": check_graylog_sidecars,
+    "inventory_function": discover(),
+    "service_description": "Graylog Sidecar %s",
+    "has_perfdata": True,
+    "group": "graylog_sidecars",
+    "includes": ["graylog.include"],
+}

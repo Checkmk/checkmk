@@ -15,8 +15,19 @@
 #include "tools/_misc.h"
 #include "tools/_process.h"
 
+namespace wtools {
+extern std::vector<int> TsValues;
+}
+
 namespace cma::cfg::details {
 extern uint64_t RegisteredPerformanceFreq;
+}
+
+static bool ValidIndexOfTs(int index) {
+    for (auto a : wtools::TsValues)
+        if (a == index) return true;
+
+    return false;
 }
 
 namespace cma::provider {  // to become friendly for wtools classes
@@ -70,7 +81,7 @@ TEST(WinPerfTest, RootCalls) {
     //  testing first line stamping
     // 1548673688.07 510 2156253
     auto index_iofts = GetIndexOfTS();
-    ASSERT_TRUE(index_iofts == 2066 || index_iofts == 8154)
+    ASSERT_TRUE(ValidIndexOfTs(index_iofts))  // latest Windows
         << "not supported index " << index_iofts << std::endl;
     {
         auto x = details::MakeWinPerfStamp(0);
@@ -124,7 +135,7 @@ TEST(WinPerfTest, RootCalls) {
 
 TEST(WinPerfTest, Calls) {
     auto index_iofts = GetIndexOfTS();
-    ASSERT_TRUE(index_iofts == 2066 || index_iofts == 8154)
+    ASSERT_TRUE(ValidIndexOfTs(index_iofts))  // windows 10 latest
         << "not supported index " << index_iofts << std::endl;
     {
         constexpr const char* name = "if";

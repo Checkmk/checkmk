@@ -39,7 +39,7 @@ TEST(SectionProviderSkype, Api) {
 
     // verify registry keys
     EXPECT_EQ(skype.getUniqName(), cma::section::kSkype);
-    EXPECT_EQ(SkypeCounters->size(), 29);
+    EXPECT_EQ(SkypeCounters->size(), 30);
 
     // store old values
     auto save = SkypeCounters;

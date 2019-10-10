@@ -1,0 +1,5 @@
+# test file for msibuild
+
+global:
+  enabled: yes
+  install: no

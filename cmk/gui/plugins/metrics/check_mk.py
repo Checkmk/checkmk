@@ -245,7 +245,6 @@ unit_info["db"] = {
     "render": lambda v: cmk.utils.render.physical_precision(v, 3, _("dB")),
 }
 
-# 'Percent obscuration per meter'-Obscuration for any atmospheric phenomenon, e.g. smoke, dust, snow
 unit_info["ppm"] = {
     "title": _("ppm"),
     "symbol": _("ppm"),
@@ -253,6 +252,7 @@ unit_info["ppm"] = {
     "render": lambda v: cmk.utils.render.physical_precision(v, 3, _("ppm")),
 }
 
+# 'Percent obscuration per meter'-Obscuration for any atmospheric phenomenon, e.g. smoke, dust, snow
 unit_info["%/m"] = {
     "title": _("Percent Per Meter"),
     "symbol": _("%/m"),
@@ -3337,22 +3337,15 @@ metric_info["total_cache_usage"] = {
     "color": "#0ae86d",
 }
 
-# TODO: "title" darf nicht mehr info enthalten als die ID
-# TODO: Was heißt Garbage collection? Dauer? Anzahl pro Zeit?
-# Größe in MB???
-metric_info["gc_reclaimed_redundant_memory_areas"] = {
-    "title": _("Reclaimed redundant memory areas"),
-    "help": _(
-        "The garbage collector attempts to reclaim garbage, or memory occupied by objects that are no longer in use by a program"
-    ),
-    "unit": "count",
+metric_info["jvm_garbage_collection_count"] = {
+    "title": _("Garbage collections"),
+    "unit": "1/s",
     "color": "31/a",
 }
 
-# TODO: ? GCs/sec? oder Avg time? Oder was?
-metric_info["gc_reclaimed_redundant_memory_areas_rate"] = {
-    "title": _("Reclaiming redundant memory areas"),
-    "unit": "1/s",
+metric_info["jvm_garbage_collection_time"] = {
+    "title": _("Time spent collecting garbage"),
+    "unit": "%",
     "color": "32/a",
 }
 
@@ -6409,11 +6402,12 @@ check_metrics["check_mk-postfix_mailq"] = {
 
 check_metrics["check_mk-jolokia_metrics.gc"] = {
     "CollectionCount": {
-        "name": "gc_reclaimed_redundant_memory_areas"
+        "name": "jvm_garbage_collection_count",
+        "scale": 1 / 60.0,
     },
     "CollectionTime": {
-        "name": "gc_reclaimed_redundant_memory_areas_rate",
-        "scale": 1 / 60.0
+        "name": "jvm_garbage_collection_time",
+        "scale": 1 / 600.0,  # ms/min -> %
     },
 }
 

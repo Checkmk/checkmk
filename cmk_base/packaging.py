@@ -37,7 +37,8 @@ from cStringIO import StringIO
 from typing import NamedTuple, List  # pylint: disable=unused-import
 from pathlib2 import Path
 
-import cmk.ec.export
+# It's OK to import centralized config load logic
+import cmk.ec.export  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.log import VERBOSE
 import cmk.utils.paths
 import cmk.utils.tty as tty

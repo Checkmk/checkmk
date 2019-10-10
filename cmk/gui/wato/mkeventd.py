@@ -51,8 +51,9 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.render
 
-import cmk.ec.export as ec
-import cmk.ec.defaults
+# It's OK to import centralized config load logic
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+import cmk.ec.defaults  # pylint: disable=cmk-module-layer-violation
 
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed

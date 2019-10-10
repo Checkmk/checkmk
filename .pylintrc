@@ -17,7 +17,11 @@ init-hook=
     tests_dir = tests_dir3 if sys.version.split('.')[0] == '3' else tests_dir2
     sys.path.insert(0, os.environ.get("TEST_PATH", tests_dir))
     import conftest
-load-plugins=testlib.pylint_cmk,testlib.pylint_checker_localization,pylint.extensions.bad_builtin
+load-plugins=
+    testlib.pylint_cmk,
+    testlib.pylint_checker_localization,
+    testlib.pylint_checker_cmk_module_layers,
+    pylint.extensions.bad_builtin
 jobs=0
 # TODO: Why do we need persistence?
 persistent=yes

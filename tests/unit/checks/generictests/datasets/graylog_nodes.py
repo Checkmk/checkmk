@@ -35,9 +35,10 @@ checks = {
                 (0, 'Load balancer state: alive', []),
                 (0, 'Lifecycle is: running', []),
                 (0, 'Is processing: yes', []),
+                (0, 'Inputs: 3', [('num_inputs', 3, None, None, None, None)]),
                 (
                     1,
-                    'Inputs: 3, One or more inputs not in state running, see long output for more details',
+                    'One or more inputs not in state running, see long output for more details',
                     []
                 ), (0, u'\nName: Beats, Title: Test, Status: RUNNING', []),
                 (

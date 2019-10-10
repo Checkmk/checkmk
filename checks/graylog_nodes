@@ -146,19 +146,28 @@ def check_graylog_nodes(item, params, parsed):
 
                 long_output.append((state_of_input, long_output_str))
 
-        max_state = max([state for state, _infotext in long_output])
+        input_nr_levels = params.get('input_count_upper', (None, None))
+        input_nr_levels_lower = params.get('input_count_lower', (None, None))
+        yield check_levels(len(value_inputstates),
+                           "num_inputs",
+                           input_nr_levels + input_nr_levels_lower,
+                           human_readable_func=int,
+                           infoname="Inputs")
 
-        input_info = "Inputs: %d" % len(value_inputstates)
-        if max_state:
-            input_info += ", One or more inputs not in state running"
-
+        max_state = 0
         if long_output:
-            input_info += ", see long output for more details"
 
-        yield max_state, input_info
+            long_output_info = ""
+            max_state = max([state for state, _infotext in long_output])
+            if max_state:
+                long_output_info += "One or more inputs not in state running, "
 
-        for state, line in long_output:
-            yield state, "\n%s" % line
+            long_output_info += "see long output for more details"
+
+            yield max_state, long_output_info
+
+            for state, line in sorted(long_output):
+                yield state, "\n%s" % line
 
 
 check_info["graylog_nodes"] = {

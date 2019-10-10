@@ -48,6 +48,8 @@ def inventory_f5_bigip_fans(info):
     inventory = []
     for line in info:
         for fanentry in line:
+            if fanentry[0] == '0':
+                continue
             inventory.append((f5_bigip_fans_genitem(fanentry[0]), "f5_bigip_fans_default_levels"))
 
     return inventory

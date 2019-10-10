@@ -722,7 +722,7 @@ def packaged_files_in_dir(part):
 def read_package_info(pacname):
     pkg_info_path = _pac_dir() / pacname
     try:
-        with pkg_info_path.open() as f:
+        with pkg_info_path.open("r", encoding="utf-8") as f:
             package = parse_package_info(f.read())
         package["name"] = pacname  # do not trust package content
         num_files = sum([len(fl) for fl in package["files"].values()])
@@ -730,16 +730,17 @@ def read_package_info(pacname):
         return package
     except IOError:
         return None
-    except Exception:
-        logger.log(VERBOSE, "Ignoring invalid package file '%s'. Please remove it from %s!",
-                   pkg_info_path, _pac_dir())
+    except Exception as e:
+        logger.log(VERBOSE,
+                   "Ignoring invalid package file '%s'. Please remove it from %s! Error: %s",
+                   pkg_info_path, _pac_dir(), e)
         return None
 
 
 def write_package_info(package):
     pkg_info_path = _pac_dir() / package["name"]
-    with pkg_info_path.open("w") as f:
-        f.write(pprint.pformat(package) + "\n")
+    with pkg_info_path.open("w", encoding="utf-8") as f:
+        f.write((pprint.pformat(package) + "\n").decode("utf-8"))
 
 
 def remove_package_info(pacname):

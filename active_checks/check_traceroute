@@ -124,6 +124,7 @@ def _execute_traceroute(target, nodns, method, address_family):
 def check_traceroute(lines, routes):
     # find all visited routers
     routers = set([])
+    hops = len(lines[1:])
     for line in lines[1:]:
         parts = line.strip().split()
         for part in parts:
@@ -152,12 +153,12 @@ def check_traceroute(lines, routes):
             1: "WARN",
             2: "CRIT"
         }[state],
-        len(lines[1:]),
+        hops,
         missing_routers and ", ".join(missing_routers) or "none",
         bad_routers and ", ".join(bad_routers) or "none",
     )
-
-    return state, info
+    perf = [('hops', hops)]
+    return state, info, perf
 
 
 def validate_ip_version(address_arg, ip_version_arg):
@@ -247,9 +248,9 @@ def main(args=None):
                 sys.exit(0)
 
         sto = _execute_traceroute(target_address, opt_nodns, opt_method, opt_address_family)
-        status, output = check_traceroute(sto.split("\n"), route_params)
+        status, output, perf = check_traceroute(sto.split("\n"), route_params)
         info = output.strip() + "\n%s" % sto
-        return status, info, None
+        return status, info, perf
 
     except ExecutionError as e:
         return 3, str(e), None

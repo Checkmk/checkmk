@@ -736,3 +736,20 @@ div#dashboard.grid {
   left: 0;
   cursor: sw-resize;
 }
+
+.dashlet.pnpgraph .dashlet_inner {
+  background-color: $dashlet-inner-bg-color;
+  color: $primary-font-color;
+  text-align: center;
+}
+
+.dashlet.pnpgraph .graph {
+  border: none;
+  box-shadow: none;
+}
+.dashlet.pnpgraph .container {
+  background-color: $dashlet-inner-bg-color;
+}
+.dashlet.pnpgraph div.title a {
+  color: $primary-font-color;
+}

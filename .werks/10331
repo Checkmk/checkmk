@@ -1,0 +1,13 @@
+Title: mk_mysql: set instance alias
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1570804646
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+Instead of using the path to the socket file as instance name, you can define your own instance alias.
+
+You have to re-install your agent to use this feature.

@@ -23,10 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionCheckMK.h"
+
 #include <cstring>
 #include <iterator>
 #include <string>
 #include <vector>
+
 #include "Environment.h"
 #include "Logger.h"
 #include "SectionHeader.h"
@@ -96,14 +98,17 @@ bool SectionCheckMK::produceOutputInner(std::ostream &out,
     // reset script statistics for next round
     _script_statistics.reset();
 
-    out << "OnlyFrom:";
+    out << "OnlyFrom: " << g_only_from_as_text << "\n";
     // only from, isn't this static too?
-    if (_only_from->size() == 0) {
+#if 0
+    // code no more good for the Check MK
+    if (_only_from->empty()) {
         out << " 0.0.0.0/0\n";
     } else {
         for (const auto &is : *_only_from) {
             out << " " << is;
         }
     }
+#endif
     return true;
 }

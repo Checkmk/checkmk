@@ -1,6 +1,5 @@
 # -*- encoding: utf-8
 # yapf: disable
-
 checkname = 'jolokia_metrics'
 
 freeze_time = '2019-10-10 20:38:55'
@@ -40,10 +39,10 @@ discovery = {
     'bea_threads': [],
     'app_sess': [],
     'writer': [],
-    'on_disk': [],
     'uptime': [('MyInstance', None)],
     'tp': [],
     'bea_requests': [],
+    'perm_gen': [],
     'bea_queue': [],
     'threads': [],
     'serv_req': [],
@@ -53,7 +52,7 @@ discovery = {
     [('MyInstance GC PS_MarkSweep', {}), ('MyInstance GC PS_Scavenge', {})],
     'requests': [],
     'bea_sess': [],
-    'perm_gen': []
+    'on_disk': []
 }
 
 checks = {
@@ -96,6 +95,53 @@ checks = {
                 (
                     0, '0.00 GC ms/minute', [
                         ('CollectionTime', 0.0, None, None, None, None)
+                    ]
+                )
+            ]
+        ),
+        (
+            'MyInstance GC PS_Scavenge', None, [
+                (
+                    0, '0.00 GC Count/minute', [
+                        ('CollectionCount', 0.0, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, '0.00 GC ms/minute', [
+                        ('CollectionTime', 0.0, None, None, None, None)
+                    ]
+                )
+            ]
+        ),
+        (
+            'MyInstance GC PS_MarkSweep', {
+                'CollectionCount': (-1, 1)
+            }, [
+                (
+                    1, '0.00 GC Count/minute (Level -1) ', [
+                        ('CollectionCount', 0.0, -1, 1, None, None)
+                    ]
+                ),
+                (
+                    0, '0.00 GC ms/minute', [
+                        ('CollectionTime', 0.0, None, None, None, None)
+                    ]
+                )
+            ]
+        ),
+        (
+            'MyInstance GC PS_Scavenge', {
+                'collection_time':
+                (-0.0016666666666666668, 0.0033333333333333335)
+            }, [
+                (
+                    0, '0.00 GC Count/minute', [
+                        ('CollectionCount', 0.0, None, None, None, None)
+                    ]
+                ),
+                (
+                    1, '0.00 GC ms/minute(Level -1.0) ', [
+                        ('CollectionTime', 0.0, -1.0, 2.0, None, None)
                     ]
                 )
             ]

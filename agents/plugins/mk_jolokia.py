@@ -62,6 +62,8 @@ MBEAN_SECTIONS = {
         "java.lang:name=*,type=MemoryPool",
     ),
     'jvm_runtime': ("java.lang:type=Runtime/Uptime,Name",),
+    'jvm_garbagecollectors':
+        ("java.lang:name=*,type=GarbageCollector/CollectionCount,CollectionTime,Name",),
 }
 
 MBEAN_SECTIONS_SPECIFIC = {
@@ -72,8 +74,6 @@ MBEAN_SECTIONS_SPECIFIC = {
 }
 
 QUERY_SPECS_LEGACY = [
-    ("java.lang:type=GarbageCollector,name=*", "CollectionCount", "", [], False),
-    ("java.lang:type=GarbageCollector,name=*", "CollectionTime", "", [], False),
     ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OffHeapHits",
      "", [], True),
     ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OnDiskHits",

@@ -91,18 +91,6 @@ def jolokia_metrics_serv(info, split_item):
     return app['servlets'][serv]
 
 
-def jolokia_metrics_gc(info, split_item):
-    inst, _typ, gc = split_item
-    parsed = jolokia_metrics_parse(info)
-    if parsed.get(inst, "") is None:
-        raise MKCounterWrapped("No information from Jolokia agent")
-
-    if not inst in parsed \
-       or not gc in parsed[inst].get('gc', {}):
-        return None
-    return parsed[inst]['gc'][gc]
-
-
 #.
 #   .--Number of Requests--------------------------------------------------.
 #   |               ____                            _                      |
@@ -174,90 +162,6 @@ check_info["jolokia_metrics.serv_req"] = {
     "check_function": check_jolokia_metrics_serv_req,
     "inventory_function": inventory_jolokia_metrics_serv,
     "group": "jvm_requests",
-    "has_perfdata": True,
-}
-
-#.
-#   .--Garbage collection--------------------------------------------------.
-#   |                ____            _                                     |
-#   |               / ___| __ _ _ __| |__   __ _  __ _  ___                |
-#   |              | |  _ / _` | '__| '_ \ / _` |/ _` |/ _ \               |
-#   |              | |_| | (_| | |  | |_) | (_| | (_| |  __/               |
-#   |               \____|\__,_|_|  |_.__/ \__,_|\__, |\___|               |
-#   |                                            |___/                     |
-#   |                        _ _           _   _                           |
-#   |               ___ ___ | | | ___  ___| |_(_) ___  _ __                |
-#   |              / __/ _ \| | |/ _ \/ __| __| |/ _ \| '_ \               |
-#   |             | (_| (_) | | |  __/ (__| |_| | (_) | | | |              |
-#   |              \___\___/|_|_|\___|\___|\__|_|\___/|_| |_|              |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def inventory_jolokia_metrics_gc(info):
-    inv = []
-    parsed = jolokia_metrics_parse(info)
-    for inst, vals in parsed.iteritems():
-        if vals is None:
-            continue  # no data from agent
-        for gc in vals.get('gc', {}).iterkeys():
-            inv.append(("%s GC %s" % (inst, gc), {}))
-    return inv
-
-
-def check_jolokia_metrics_gc(item, params, info):
-    gc = jolokia_metrics_gc(info, item.split())
-    if gc is None:
-        return
-
-    if params is None:
-        params = {}
-
-
-    crate = get_rate("jvm.gc.count.%s" % (item), \
-                     time.time(), int(gc['CollectionCount']))
-    crate = crate * 60.0
-
-    ctext = ''
-    status = 0
-    cwarn, ccrit = params.get('CollectionCount', (None, None))
-    if cwarn is not None and ccrit is not None:
-        if crate >= int(ccrit):
-            status = 2
-            ctext = " (Level %s) " % ccrit
-        elif crate >= int(cwarn):
-            status = 1
-            ctext = " (Level %s) " % cwarn
-
-    yield status, "%.2f GC Count/minute%s" % (crate, ctext), \
-                    [('CollectionCount', crate, cwarn, ccrit)]
-
-    if 'CollectionTime' in gc:
-        twarn, tcrit = params.get('CollectionTime', (None, None))
-        trate = get_rate("jvm.gc.time.%s" % (item), \
-                         time.time(), int(gc['CollectionTime']))
-        trate = trate * 60.0
-
-        ttext = ''
-        status = 0
-        if twarn is not None and tcrit is not None:
-            if trate >= int(tcrit):
-                status = 2
-                ttext = "(Level %s) " % tcrit
-            elif trate >= int(twarn):
-                status = 1
-                ttext = "(Level %s) " % twarn
-
-        yield status, "%.2f GC ms/minute%s" % (trate, ttext), \
-                            [('CollectionTime', trate, twarn, tcrit)]
-
-
-check_info["jolokia_metrics.gc"] = {
-    "includes": ["jolokia.include"],
-    "service_description": "JVM %s",
-    "check_function": check_jolokia_metrics_gc,
-    "inventory_function": inventory_jolokia_metrics_gc,
-    "group": "jvm_gc",
     "has_perfdata": True,
 }
 
@@ -814,5 +718,102 @@ check_info["jolokia_metrics.uptime"] = {
     "check_function": check_jolokia_metrics_uptime,
     "inventory_function": discover_jolokia_metrics_uptime,
     "group": "jvm_uptime",
+    "has_perfdata": True,
+}
+
+
+def inventory_jolokia_metrics_gc(info):
+    '''DEPRECATED.
+
+    This service has been replaced by the
+    'jolokia_jvm_uptime' plugin in checkmk verison 1.7.0
+    '''
+    inv = []
+    parsed = jolokia_metrics_parse(info)
+    for inst, vals in parsed.iteritems():
+        if vals is None:
+            continue  # no data from agent
+        for gc in vals.get('gc', {}).iterkeys():
+            inv.append(("%s GC %s" % (inst, gc), {}))
+    return inv
+
+
+def jolokia_metrics_gc(info, split_item):
+    inst, _typ, gc = split_item
+    parsed = jolokia_metrics_parse(info)
+    if parsed.get(inst, "") is None:
+        raise MKCounterWrapped("No information from Jolokia agent")
+
+    if not inst in parsed \
+       or not gc in parsed[inst].get('gc', {}):
+        return None
+    return parsed[inst]['gc'][gc]
+
+
+def _transform_invers(params):
+    """Even if this is deprecated, make sure it still works should the user update the rule"""
+    if params is None:
+        return {}
+    new_params = params.copy()
+    if "collection_time" in params:
+        perc = params["collection_time"]
+        new_params["CollectionTime"] = (perc[0] * 600.0, perc[1] * 600.0)
+    if "collection_count" in params:
+        per_sec = params["collection_count"]
+        new_params["CollectionCount"] = (per_sec[0] * 60.0, per_sec[1] * 60.0)
+    return new_params
+
+
+def check_jolokia_metrics_gc(item, params, info):
+    gc = jolokia_metrics_gc(info, item.split())
+    if gc is None:
+        return
+
+    params = _transform_invers(params)
+
+    crate = get_rate("jvm.gc.count.%s" % (item), \
+                     time.time(), int(gc['CollectionCount']))
+    crate = crate * 60.0
+
+    ctext = ''
+    status = 0
+    cwarn, ccrit = params.get('CollectionCount', (None, None))
+    if cwarn is not None and ccrit is not None:
+        if crate >= int(ccrit):
+            status = 2
+            ctext = " (Level %s) " % ccrit
+        elif crate >= int(cwarn):
+            status = 1
+            ctext = " (Level %s) " % cwarn
+
+    yield status, "%.2f GC Count/minute%s" % (crate, ctext), \
+                    [('CollectionCount', crate, cwarn, ccrit)]
+
+    if 'CollectionTime' in gc:
+        twarn, tcrit = params.get('CollectionTime', (None, None))
+        trate = get_rate("jvm.gc.time.%s" % (item), \
+                         time.time(), int(gc['CollectionTime']))
+        trate = trate * 60.0
+
+        ttext = ''
+        status = 0
+        if twarn is not None and tcrit is not None:
+            if trate >= int(tcrit):
+                status = 2
+                ttext = "(Level %s) " % tcrit
+            elif trate >= int(twarn):
+                status = 1
+                ttext = "(Level %s) " % twarn
+
+        yield status, "%.2f GC ms/minute%s" % (trate, ttext), \
+                            [('CollectionTime', trate, twarn, tcrit)]
+
+
+check_info["jolokia_metrics.gc"] = {
+    "includes": ["jolokia.include"],
+    "service_description": "JVM %s",
+    "check_function": check_jolokia_metrics_gc,
+    "inventory_function": inventory_jolokia_metrics_gc,
+    "group": "jvm_gc",
     "has_perfdata": True,
 }

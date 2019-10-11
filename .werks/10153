@@ -1,0 +1,16 @@
+Title: jolokia_jvm_garbagecollectors: New plugin
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1570787327
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+The Services "JVM MyInstance GC MyGarbageCollector" have been moved to a dedicated Plugin.
+Users of the special agent Jolokia or the latest version of the mk_jolokia
+plugin must perform a rediscovery.
+The performance metrics are kept and defined rulesets will apply to the new
+service (by the same name).
+

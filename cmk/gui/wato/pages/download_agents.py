@@ -139,7 +139,7 @@ class ModeDownloadAgents(WatoMode):
             html.open_div(class_="ruleset")
             html.open_div(style="width:300px;", class_="text")
             html.a(title, href="agents/%s" % relpath)
-            html.span("." * 100, class_="dots")
+            html.span("." * 200, class_="dots")
             html.close_div()
             html.div(cmk.utils.render.fmt_bytes(file_size), style="width:60px;", class_="rulecount")
             html.close_div()

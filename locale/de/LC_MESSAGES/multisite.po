@@ -10322,12 +10322,10 @@ msgid "Custom icons and actions"
 msgstr "Benutzericons und -aktionen"
 
 msgid "Custom icons or actions for hosts in status GUI"
-msgstr "Benutzersymbole oder Aktionen für Hosts in der Status-Oberfläche"
+msgstr "Benutzersymbole/Aktionen für Hosts in der Status-GUI"
 
 msgid "Custom icons or actions for services in status GUI"
-msgstr ""
-"Benutzersymbole oder Aktionen für Services in der Status-OberflächeSymbolbild "
-"für Services in Status GUI"
+msgstr "Benutzersymbole/Aktionen für Services in der Status-GUI"
 
 msgid "Custom localizations"
 msgstr "Angepasste Lokalisierungen"
@@ -16860,9 +16858,6 @@ msgstr "Globale Einstellungen zum Suchbegriff '%s'"
 
 msgid "Global configuration settings for Check_MK"
 msgstr "Globale Einstellungen für Check_MK"
-
-msgid "Global maximum age"
-msgstr "Globales Maximales Alter"
 
 msgid "Global notification rule"
 msgstr "Globale Alarmierungsregel"
@@ -25146,6 +25141,10 @@ msgstr "Maximal erlaubte Uptime"
 msgid "Maximum bulk size"
 msgstr "Maximale Anzahl von Alarmen"
 
+#, fuzzy
+msgid "Maximum cache age must be greater than period."
+msgstr "Maximal zulässiges Alter der gemeldeten Daten in Sekunden"
+
 msgid "Maximum cache file age for clusters"
 msgstr "Maximales Cache-Dateialter für Cluster"
 
@@ -32734,6 +32733,10 @@ msgstr ""
 msgid "Report of Host"
 msgstr "Bericht von Host"
 
+#, fuzzy
+msgid "Report options"
+msgstr "Berichteigenschaften"
+
 #, python-format
 msgid "Report preview generation of %s / %s"
 msgstr "Report Vorschau Erstellung von %s / %s"
@@ -36488,6 +36491,10 @@ msgstr "Freie und kaputte Platten"
 
 msgid "Spare disk"
 msgstr "Freie Platten"
+
+#, fuzzy
+msgid "Special Agent"
+msgstr "Alle Agenten signieren"
 
 msgid "Specialized agents, e.g. check via SSH, ESX vSphere, SAP R/3"
 msgstr "Spezialagenten, wie z.B. Monitoring von ESX vSphere, NetApp, etc."
@@ -48059,12 +48066,13 @@ msgstr "Lokalen FQDN benutzen"
 msgid "Use manually created ORACLE password wallet"
 msgstr "Manuell erzeugtes ORACLE Passwort-Wallet verwenden"
 
-msgid "Use maximum age from global settings"
+#, fuzzy, python-format
+msgid "Use maximum age from <a href=\"%s\">global settings</a>"
 msgstr "Maximales Alter aus den globalen Einstellungen verwenden"
 
-#, python-format
-msgid "Use maximum age from global settings %s"
-msgstr "Maximales Alter %s aus den globalen Einstellungen verwenden"
+#, fuzzy, python-format
+msgid "Use maximum age from <a href=\"%s\">global settings</a> or above"
+msgstr "Maximales Alter aus den globalen Einstellungen verwenden"
 
 msgid "Use monitoring host name"
 msgstr "Monitoring-Hostname verwenden"
@@ -48118,6 +48126,9 @@ msgstr "Proxy-Einstellungen aus der Prozessumgebung verwenden"
 
 msgid "Use settings and page layout from"
 msgstr "Einstellungen und Seitenformat verwenden von"
+
+msgid "Use short title in reports header"
+msgstr ""
 
 msgid "Use single quotes, escape contained quotes with backslash"
 msgstr ""
@@ -53978,9 +53989,6 @@ msgstr "offen"
 msgid "optional"
 msgstr "optional"
 
-msgid "or above"
-msgstr "oder von oben"
-
 msgid "orderly stop"
 msgstr "ordnungsgemäß gestoppt"
 
@@ -54580,6 +54588,15 @@ msgstr "gestern"
 
 msgid "z/OS"
 msgstr "z/OS"
+
+#~ msgid "Global maximum age"
+#~ msgstr "Globales Maximales Alter"
+
+#~ msgid "Use maximum age from global settings %s"
+#~ msgstr "Maximales Alter %s aus den globalen Einstellungen verwenden"
+
+#~ msgid "or above"
+#~ msgstr "oder von oben"
 
 #~ msgid "Pro."
 #~ msgstr "Pro."

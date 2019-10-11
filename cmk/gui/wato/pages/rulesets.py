@@ -318,7 +318,7 @@ class RulesetMode(WatoMode):
                     html.a(ruleset.title(),
                            href=view_url,
                            class_="nonzero" if ruleset.is_empty() else "zero")
-                    html.span("." * 100, class_="dots")
+                    html.span("." * 200, class_="dots")
                     html.close_div()
 
                     num_rules = ruleset.num_rules()

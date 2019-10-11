@@ -128,26 +128,6 @@ class GraphDashlet(Dashlet):
         return elements
 
     @classmethod
-    def styles(cls):
-        return """
-.dashlet.pnpgraph .dashlet_inner {
-    background-color: #f8f4f0;
-    color: #000;
-    text-align: center;
-}
-.dashlet.pnpgraph .graph {
-    border: none;
-    box-shadow: none;
-}
-.dashlet.pnpgraph .container {
-    background-color: #f8f4f0;
-}
-.dashlet.pnpgraph div.title a {
-    color: #000;
-}
-"""
-
-    @classmethod
     def script(cls):
         return """
 var dashlet_offsets = {};

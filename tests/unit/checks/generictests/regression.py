@@ -115,7 +115,7 @@ class WritableDataset(object):  # pylint: disable=too-many-instance-attributes
         imports = set()
         for attr in self.writelist:
             value = getattr(self, attr)
-            if value is None:
+            if not value:
                 continue
             content.append(u"%s = %r" % (attr, value))
             imports |= self.get_imports(value)

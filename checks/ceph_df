@@ -44,11 +44,7 @@ def parse_ceph_df(info):
     pools_headers = None
 
     for line in info:
-        if line[0] == "GLOBAL:":
-            section = "global"
-            continue
-
-        elif line[0] == "RAW":
+        if line[0] in ["GLOBAL:", "RAW"]:
             section = "global"
             continue
 

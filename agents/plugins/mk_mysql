@@ -1,4 +1,5 @@
 #!/bin/bash
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -6,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -27,7 +28,7 @@
 function do_query() {
 
   # we use the sockets full name as instance name:
-  INSTANCE_HEADER="[[$1]]"
+  INSTANCE_HEADER="[[$2]]"
 
   # Check if mysqld is running and root password setup
   echo "<<<mysql_ping>>>"
@@ -55,14 +56,19 @@ function do_query() {
 if type mysqladmin >/dev/null
 then
   mysql_sockets=$(fgrep -h socket "$MK_CONFDIR"/mysql{.local,}.cfg | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
+  alias=$(fgrep -h alias "$MK_CONFDIR"/mysql{.local,}.cfg | cut -d \" -f2)
   if [ -z "$mysql_sockets" ] ; then
     mysql_sockets=$(ps -fww -C mysqld | grep "socket" | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
   fi
   if [ -z "$mysql_sockets" ] ; then
-    do_query ""
+    do_query "" ""
   else
     for socket in $mysql_sockets ; do
-      do_query "$socket"
+      if [ -z "$alias" ] ; then
+        do_query "$socket" "$socket"
+      else
+        do_query "$socket" "$alias"
+      fi
     done
   fi
 

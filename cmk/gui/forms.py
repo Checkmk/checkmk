@@ -289,7 +289,7 @@ def section(title=None,
             html.open_div(class_=["title", "withcheckbox" if checkbox else None],
                           title=html.strip_tags(title))
             html.write(html.permissive_attrencode(title))
-            html.span('.' * 100, class_="dots")
+            html.span('.' * 200, class_="dots")
             html.close_div()
         if checkbox:
             html.open_div(class_="checkbox")

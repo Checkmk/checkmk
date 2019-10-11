@@ -1,0 +1,11 @@
+Title: Support for ceph nautilus 14.x
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1570803096
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+

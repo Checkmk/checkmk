@@ -214,7 +214,7 @@ def check_brocade_optical(item, params, parsed):
         else:
             yield 0, 'Operational %s' % oper_status_readable
 
-        if 'temp' in iface:
+        if 'temp' in iface and iface['temp'][0] is not None:
             yield check_temperature(iface['temp'][0],
                                     params,
                                     "brocade_optical_%s" % item,

@@ -930,7 +930,7 @@ class Site:
         assert "<div class=\"title\">Manual Checks</div>" in response, \
                 "WATO does not seem to be initialized: %r" % response
 
-        wait_time = 10
+        wait_time = 20
         while self._missing_but_required_wato_files() and wait_time >= 0:
             time.sleep(0.5)
             wait_time -= 0.5

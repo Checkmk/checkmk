@@ -1,0 +1,105 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_jolokia_jvm_garbagecollectors(info):
+    parsed = {}
+    for instance, _mbean, bulk_data in parse_jolokia_json_output(info):
+        for data in bulk_data.itervalues():
+            name = data.get("Name")
+            if not name:
+                continue
+            item = "%s GC %s" % (instance, name)
+            parsed.setdefault(item, {}).update(data)
+
+    return parsed
+
+
+@discover
+def discover_jolokia_jvm_garbagecollectors(_item, data):
+    return -1 not in (data.get("CollectionCount", -1), data.get("CollectionTime", -1))
+
+
+def transform_units(params):
+    """transform 1/min to 1/s and ms/min to %, pre 1.7.0 rules."""
+    if "collection_time" in params:
+        # new params already!
+        return params
+
+    new_params = {}
+    if "CollectionTime" in params:
+        ms_per_min = params["CollectionTime"]
+        new_params["collection_time"] = (ms_per_min[0] / 600.0, ms_per_min[1] / 600.0)
+    if "CollectionCount" in params:
+        count_rate_per_min = params["CollectionCount"]
+        new_params["collection_count"] = (count_rate_per_min[0] / 60.0,
+                                          count_rate_per_min[1] / 60.0)
+    return new_params
+
+
+@get_parsed_item_data
+def check_jolokia_jvm_garbagecollectors(item, params, data):
+
+    now = time.time()
+    try:
+        count = data['CollectionCount']
+        ctime = data['CollectionTime']
+    except KeyError:
+        return
+
+    try:
+        count_rate = get_rate("%s.count" % item, now, count)
+    finally:  # initalize 2nd counter!
+        ctime_rate = get_rate("%s.time" % item, now, ctime)
+
+    params = transform_units(params)
+
+    yield check_levels(
+        count_rate,
+        "jvm_garbage_collection_count",
+        params.get('collection_count'),
+        unit="/s",
+        infoname="Garbage collections",
+    )
+
+    yield check_levels(
+        ctime_rate * 10.0,  # ms/s -> %
+        "jvm_garbage_collection_time",
+        params.get('collection_time'),
+        unit="%",
+        infoname="Time spent collecting garbage",
+    )
+
+
+check_info["jolokia_jvm_garbagecollectors"] = {
+    "service_description": "JVM %s",
+    "parse_function": parse_jolokia_jvm_garbagecollectors,
+    "inventory_function": discover_jolokia_jvm_garbagecollectors,
+    "check_function": check_jolokia_jvm_garbagecollectors,
+    "group": "jvm_gc",
+    "has_perfdata": True,
+    "includes": ["jolokia.include"],
+}

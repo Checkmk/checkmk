@@ -28,16 +28,14 @@ $(RE2_BUILD): $(RE2_UNPACK)
 	    echo "no"; IFS=$$SAVED_IFS ; \
 	done ; \
 	test -z "$$CXX" && { echo "error: no C++ compiler found" >&2 ; exit 1; } ; \
-	$(MAKE) -C $(RE2_DIR) CXX="$$CXX" CPPFLAGS="-DRE2_ON_VALGRIND" CXXFLAGS="-O3 -g -fPIC" DESTDIR=$(PACKAGE_RE2_DESTDIR) prefix=$(OMD_ROOT) install
+	cmake -D CMAKE_CXX_COMPILER="$$CXX" \
+        -D CMAKE_CXX_FLAGS="-DRE2_ON_VALGRIND -O3 -g -fPIC" \
+        -D CMAKE_INSTALL_PREFIX="$(PACKAGE_RE2_DESTDIR)" \
+        -D RE2_BUILD_TESTING="OFF" \
+        -S $(RE2_DIR) \
+        -B $(RE2_DIR) && \
+	cmake --build $(RE2_DIR) --target install -j 4
 # Note: We need the -fPIC above to link RE2 statically into livestatus.o.
-# TODO(sp): What should we do about RE2_ON_VALGRIND?
-# Massage paths a bit by moving things around.
-	mv $(PACKAGE_RE2_DESTDIR)/$(OMD_ROOT)/include  $(PACKAGE_RE2_DESTDIR)/$(OMD_ROOT)/lib $(PACKAGE_RE2_DESTDIR)
-	$(RM) -r $(PACKAGE_RE2_DESTDIR)/$(OMD_BASE)
-# To link statically against RE2, we must *only* see the static library at link
-# time. It is a bit wasteful to build the dynamic library, too, but RE2's
-# Makefile doesn't offer an easy way around that.
-	$(RM) $(PACKAGE_RE2_DESTDIR)/lib/*.so*
 	$(TOUCH) $@
 
 $(RE2)-skel:

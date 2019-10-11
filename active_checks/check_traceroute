@@ -73,6 +73,34 @@ import sys
 import ipaddress
 
 
+class MissingValueError(Exception):
+    pass
+
+
+class ProtocolVersionError(Exception):
+    pass
+
+
+class ExecutionError(Exception):
+    pass
+
+
+def parse_exception(exc):
+    exc = str(exc)
+    if exc[0] == '{':
+        exc = "%d - %s" % list(ast.literal_eval(exc).values())[0]
+    return str(exc)
+
+
+def output_check_result(rc, s, perfdata):
+    stxt = ['OK', 'WARN', 'CRIT', 'UNKNOWN'][rc]
+    output = '%s - %s' % (stxt, s)
+    if perfdata:
+        perfdata_output_entries = ['%s=%s' % (p[0], ';'.join(map(str, p[1:]))) for p in perfdata]
+        output += ' | %s' % " ".join(perfdata_output_entries)
+    sys.stdout.write('%s\n' % output)
+
+
 def option_to_state(c):
     return {"w": 1, "c": 2}[c.lower()]
 
@@ -89,8 +117,7 @@ def _execute_traceroute(target, nodns, method, address_family):
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf8")
     sto, ste = p.communicate()
     if p.returncode:
-        sys.stdout.write("UNKNOWN - " + ste.replace("\n", " "))
-        sys.exit(3)
+        raise ExecutionError("UNKNOWN - " + ste.replace("\n", " "))
     return sto
 
 
@@ -133,17 +160,13 @@ def check_traceroute(lines, routes):
     return state, info
 
 
-def bail_out(reason):
-    sys.stderr.write("FATAL ERROR: %s\n" % reason)
-    sys.exit(3)
-
-
 def validate_ip_version(address_arg, ip_version_arg):
     # ipv6 address can have an appended interface index/name: 'fe80::%{interface}'
     ip_address_version = ipaddress.ip_interface(address_arg.split('%')[0]).ip.version
     if not ip_address_version == ip_version_arg:
-        bail_out('IP protocol version "%s" not the same as the IP address version "%s".' %
-                 (ip_version_arg, ip_address_version))
+        raise ProtocolVersionError(
+            'IP protocol version "%s" not the same as the IP address version "%s".' %
+            (ip_version_arg, ip_address_version))
 
 
 def usage():
@@ -195,7 +218,7 @@ def main(args=None):
         opts, args = getopt.getopt(args, short_options, long_options)
 
         if len(args) < 1:
-            bail_out("Please specify the target destination.")
+            raise MissingValueError("Please specify the target destination.")
 
         target_address = args[0]
 
@@ -213,7 +236,7 @@ def main(args=None):
                 opt_method = o
             elif o in ['-4', '-6']:
                 if opt_address_family:
-                    bail_out('Cannot use both IPv4 and IPv6')
+                    raise ProtocolVersionError('Cannot use both IPv4 and IPv6')
                 validate_ip_version(target_address, int(o.lstrip("-")))
                 opt_address_family = o
 
@@ -225,14 +248,25 @@ def main(args=None):
 
         sto = _execute_traceroute(target_address, opt_nodns, opt_method, opt_address_family)
         status, output = check_traceroute(sto.split("\n"), route_params)
-        sys.stdout.write(output.strip() + "\n%s" % sto)
-        sys.exit(status)
+        info = output.strip() + "\n%s" % sto
+        return status, info, None
+
+    except ExecutionError as e:
+        return 3, str(e), None
+
+    except MissingValueError as e:
+        return 3, str(e), None
+
+    except ProtocolVersionError as e:
+        return 3, str(e), None
 
     except Exception as e:
         if opt_debug:
             raise
-        bail_out(e)
+        return 2, 'Unhandled exception: %s' % parse_exception(e), None
 
 
 if __name__ == "__main__":
-    main()
+    exitcode, info, perf = main()
+    output_check_result(exitcode, info, perf)
+    sys.exit(exitcode)

@@ -48,6 +48,10 @@ def parse_ceph_df(info):
             section = "global"
             continue
 
+        elif line[0] == "RAW":
+            section = "global"
+            continue
+
         elif line[0] == "POOLS:":
             section = "pools"
             continue
@@ -56,6 +60,9 @@ def parse_ceph_df(info):
         if section == "global":
             if line == ['SIZE', 'AVAIL', 'RAW', 'USED', '%RAW', 'USED', 'OBJECTS']:
                 global_headers = ['SIZE', 'AVAIL', 'RAW USED', '%RAW USED', 'OBJECTS']
+
+            elif line == ['CLASS', 'SIZE', 'AVAIL', 'USED', 'RAW', 'USED', '%RAW', 'USED']:
+                global_headers = ['CLASS', 'SIZE', 'AVAIL', 'USED', 'RAW USED', '%RAW USED']
 
             elif global_headers is not None:
                 parsed.setdefault("SUMMARY", dict(zip(global_headers, line)))
@@ -77,6 +84,15 @@ def parse_ceph_df(info):
                 pools_headers = [
                     'NAME', 'ID', 'QUOTA OBJECTS', 'QUOTA BYTES', 'USED', '%USED', 'MAX AVAIL',
                     'OBJECTS', 'DIRTY', 'READ', 'WRITE', 'RAW USED'
+                ]
+
+            elif line == [
+                    'POOL', 'ID', 'STORED', 'OBJECTS', 'USED', '%USED', 'MAX', 'AVAIL', 'QUOTA',
+                    'OBJECTS', 'QUOTA', 'BYTES', 'DIRTY', 'USED', 'COMPR', 'UNDER', 'COMPR'
+            ]:
+                pools_headers = [
+                    'POOL', 'ID', 'STORED', 'OBJECTS', 'USED', '%USED', 'MAX AVAIL', 'QUOTA OBJECTS',
+                    'QUOTA BYTES', 'DIRTY', 'USED COMPR', 'UNDER COMPR'
                 ]
 
             elif pools_headers is not None:

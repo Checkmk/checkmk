@@ -854,8 +854,7 @@ register_rule(
                         ( "ignored_sensors",
                             ListOfStrings(
                                 title = _("Ignore the following IPMI sensors"),
-                                help  = _("Names of IPMI sensors that should be ignored during inventory "
-                                          "and when summarizing."
+                                help  = _("Names of IPMI sensors that should be ignored during discovery."
                                           "The pattern specified here must match exactly the beginning of "
                                           "the actual sensor name (case sensitive)."),
                                 orientation = "horizontal"
@@ -864,10 +863,9 @@ register_rule(
                         ( "ignored_sensorstates",
                             ListOfStrings(
                                 title = _("Ignore the following IPMI sensor states"),
-                                help  = _("IPMI sensors with these states that should be ignored during inventory "
-                                          "and when summarizing."
+                                help  = _("IPMI sensors with these states that should be ignored during discovery."
                                           "The pattern specified here must match exactly the beginning of "
-                                          "the actual sensor name (case sensitive)."),
+                                          "the actual sensor state (case sensitive)."),
                                 orientation = "horizontal",
                                 )
                         ),
@@ -4697,11 +4695,10 @@ register_check_parameters(
                 ),
             ( "ignored_sensorstates",
                 ListOfStrings(
-                    title = _("Ignore the following IPMI sensor states"),
-                    help  = _("IPMI sensors with these states that should be ignored during discovery "
-                              "and when summarizing."
+                    title = _("Ignore the following IPMI sensor states (for SUMMARY service)"),
+                    help  = _("IPMI sensors with these states that should be ignored when summarizing."
                               "The pattern specified here must match exactly the beginning of "
-                              "the actual sensor name (case sensitive)."),
+                              "the actual sensor state (case sensitive)."),
                     orientation = "horizontal",
                     default_value = [ "nr", "ns" ]
                     )

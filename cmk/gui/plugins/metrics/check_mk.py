@@ -9723,6 +9723,7 @@ graph_info["cpu_utilization_numcpus"] = {
     "range": (0, 100),
 }
 
+#TODO which warn,crit?
 graph_info["cpu_utilization_3"] = {
     "title": _("CPU utilization"),
     "metrics": [
@@ -9734,6 +9735,7 @@ graph_info["cpu_utilization_3"] = {
     "range": (0, 100),
 }
 
+#TODO which warn,crit?
 graph_info["cpu_utilization_4"] = {
     "title": _("CPU utilization"),
     "metrics": [
@@ -9749,6 +9751,7 @@ graph_info["cpu_utilization_4"] = {
 # If possible, we display the "util" metric,
 # otherwise we display the sum of the present metrics.
 
+#TODO which warn,crit?
 graph_info["cpu_utilization_5"] = {
     "title": _("CPU utilization"),
     "metrics": [
@@ -9774,6 +9777,10 @@ graph_info["cpu_utilization_5_util"] = {
         ("io_wait", "stack"),
         ("util#004080", "line", _("Total")),
     ],
+    "scalars": [
+        "util:warn",
+        "util:crit",
+    ],
     "conflicting_metrics": [
         "cpu_util_guest",
         "cpu_util_steal",
@@ -9781,6 +9788,7 @@ graph_info["cpu_utilization_5_util"] = {
     "range": (0, 100),
 }
 
+#TODO which warn,crit?
 graph_info["cpu_utilization_6"] = {
     "title": _("CPU utilization"),
     "metrics": [
@@ -9807,11 +9815,16 @@ graph_info["cpu_utilization_6_util"] = {
         ("cpu_util_steal", "stack"),
         ("util#004080", "line", _("Total")),
     ],
+    "scalars": [
+        "util:warn",
+        "util:crit",
+    ],
     "conflicting_metrics": ["cpu_util_guest",],
     "omit_zero_metrics": True,
     "range": (0, 100),
 }
 
+#TODO which warn,crit?
 graph_info["cpu_utilization_7"] = {
     "title": _("CPU utilization"),
     "metrics": [
@@ -9837,12 +9850,17 @@ graph_info["cpu_utilization_7_util"] = {
         ("cpu_util_steal", "stack"),
         ("util#004080", "line", _("Total")),
     ],
+    "scalars": [
+        "util:warn",
+        "util:crit",
+    ],
     "omit_zero_metrics": True,
     "range": (0, 100),
 }
 
 # ^-- last six graphs go pairwise together (see above)
 
+#TODO which warn,crit?
 graph_info["cpu_utilization_8"] = {
     "title": _("CPU utilization"),
     "metrics": [

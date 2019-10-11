@@ -1,0 +1,11 @@
+Title: Fixed missing thresholds in some CPU utilization graphs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1570784600
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+

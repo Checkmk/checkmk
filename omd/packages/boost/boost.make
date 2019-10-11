@@ -3,14 +3,14 @@ BOOST_VERS := 1_70_0
 BOOST_DIR := $(BOOST)_$(BOOST_VERS)
 
 BOOST_BUILD := $(BUILD_HELPER_DIR)/$(BOOST_DIR)-build
-BOOST_INSTALL := $(BUILD_HELPER_DIR)/$(BOOST_DIR)-insatll
+BOOST_INSTALL := $(BUILD_HELPER_DIR)/$(BOOST_DIR)-install
 BOOST_UNPACK := $(BUILD_HELPER_DIR)/$(BOOST_DIR)-unpack
 
 .PHONY: $(BOOST) $(BOOST)-install $(BOOST)-skel $(BOOST)-clean
 
 $(BOOST): $(BOOST_BUILD)
 
-$(BOOST)-isntall: $(BOOST_INSTALL)
+$(BOOST)-install: $(BOOST_INSTALL)
 
 # For some obscure reason (GCC's dual ABI) we have to link all Boost stuff
 # statically, otherwise we get linker errors later, e.g.:

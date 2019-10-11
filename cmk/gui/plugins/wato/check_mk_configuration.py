@@ -4647,7 +4647,7 @@ def _valuespec_check_mk_exit_status():
                                  Dictionary(title=_("Programs"),
                                             elements=_common_check_mk_exit_status_elements())),
                                 ("special",
-                                 Dictionary(title=_("Programs"),
+                                 Dictionary(title=_("Special Agent"),
                                             elements=_common_check_mk_exit_status_elements())),
                                 ("snmp",
                                  Dictionary(title=_("SNMP"),

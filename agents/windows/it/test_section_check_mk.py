@@ -11,12 +11,9 @@ import sys
 
 
 class Globals(object):
-    section = 'check_mk'
-    alone = True
     output_file = 'agentoutput.txt'
     only_from = None
     host = None
-    ipv4_to_ipv6 = {'127.0.0.1': '0:0:0:0:0:0:0:1', '10.1.2.3': '0:0:0:0:0:ffff:a01:203'}
 
 
 @pytest.fixture
@@ -24,33 +21,21 @@ def testfile():
     return os.path.basename(__file__)
 
 
-@pytest.fixture(params=['alone', 'with_systemtime'])
+@pytest.fixture(params=[None, 'MontyPython'],
+                ids=['host_restriction=None', 'host_restriction=MontyPython'])
 def testconfig(request, config):
-    Globals.alone = request.param == 'alone'
-    if Globals.alone:
-        config.set('global', 'sections', Globals.section)
-    else:
-        config.set('global', 'sections', '%s systemtime' % Globals.section)
+    Globals.host = request.param
+    section = 'check_mk'
+    config.set('global', 'sections', section)
     config.set('global', 'crash_debug', 'yes')
+    if request.param:
+        config.set('global', 'host', request.param)
     return config
 
 
-@pytest.fixture(params=[None, 'MontyPython'],
-                ids=['host_restriction=None', 'host_restriction=MontyPython'])
-def testconfig_host(request, testconfig):
-    Globals.host = request.param
-    if request.param:
-        testconfig.set('global', 'host', request.param)
+@pytest.fixture()
+def testconfig_only_from(request, testconfig):
     return testconfig
-
-
-@pytest.fixture(params=[None, '127.0.0.1 10.1.2.3'],
-                ids=['only_from=None', 'only_from=127.0.0.1_10.1.2.3'])
-def testconfig_only_from(request, testconfig_host):
-    Globals.only_from = request.param
-    if request.param:
-        testconfig_host.set('global', 'only_from', request.param)
-    return testconfig_host
 
 
 @pytest.fixture(params=[['test'], ['debug'], ['file', Globals.output_file]],
@@ -87,13 +72,12 @@ def actual_output_no_tcp(request, write_config):
 @pytest.fixture
 def expected_output():
     drive_letter = r'[A-Z]:'
-    ipv4 = Globals.only_from.split() if Globals.only_from else None
-    expected = [
+    return [
         # Note: The first two lines are output with crash_debug = yes in 1.2.8
         # but no longer in 1.4.0:
         # r'<<<logwatch>>>\',
         # r'[[[Check_MK Agent]]]','
-        r'<<<%s>>>' % Globals.section,
+        r'<<<check_mk>>>',
         r'Version: \d+\.\d+\.\d+([bi]\d+)?(p\d+)?',
         r'BuildDate: [A-Z][a-z]{2} (\d{2}| \d) \d{4}',
         r'AgentOS: windows',
@@ -123,13 +107,8 @@ def expected_output():
         # r'SuccessLog: %s%s' %
         # (drive_letter,
         #  re.escape(os.path.join(remotedir, 'log', 'success.log'))),
-        (r'OnlyFrom: %s/32 %s/32 %s/128 %s/128' %
-         tuple(ipv4 + [Globals.ipv4_to_ipv6[i4] for i4 in ipv4])
-         if Globals.only_from and not Globals.host else r'OnlyFrom: 0\.0\.0\.0/0')
+        r'OnlyFrom: '
     ]
-    if not Globals.alone:
-        expected += [re.escape(r'<<<systemtime>>>'), r'\d+']
-    return expected
 
 
 def test_section_check_mk(request, testconfig_only_from, expected_output, actual_output, testfile):

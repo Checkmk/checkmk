@@ -6015,7 +6015,7 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
         # if config.debug:
         #     html.write("<div class=message>Running <tt>%s</tt></div>\n" % " ".join(cmd))
         p = subprocess.Popen(cmd,
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
     except Exception, e:
         raise MKGeneralException("Cannot execute <tt>%s</tt>: %s" % (" ".join(cmd), e))
 
@@ -6027,6 +6027,9 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
     p.stdin.close()
     outdata = p.stdout.read()
     exitcode = p.wait()
+    errdata = p.stderr.read()
+    if errdata:
+        logger.warning("'%s' returned '%s'" % (" ".join(cmd), errdata))
     if exitcode != 0:
         if config.debug:
             raise MKGeneralException("Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>" %

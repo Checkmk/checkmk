@@ -1,0 +1,16 @@
+Title: Fixed error handling in automation calls
+Knowledge: doc
+Level: 2
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p39
+Date: 1571039419
+
+Under various circumstances, diagnostic output from automation calls (like
+warnings etc.) got mangled with the result of the automation call itself.
+This could break various things, e.g. activation on changes on local and
+remote sites. This has been fixed, the diagnostic output is redirected
+to var/log/web.log now.

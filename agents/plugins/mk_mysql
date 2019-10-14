@@ -61,7 +61,7 @@ then
     mysql_sockets=$(ps -fww -C mysqld | grep "socket" | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
   fi
   if [ -z "$mysql_sockets" ] ; then
-    do_query "" ""
+    do_query "" "$alias"
   else
     for socket in $mysql_sockets ; do
       if [ -z "$alias" ] ; then

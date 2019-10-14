@@ -80,13 +80,15 @@ def do_inv(hostnames):
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
 
             sources = data_sources.DataSources(hostname, ipaddress)
-            _do_inv_for(
+            inventory_tree, status_data_tree = _do_inv_for(
                 sources,
                 multi_host_sections=None,
                 host_config=host_config,
                 ipaddress=ipaddress,
-                do_status_data_inv=host_config.do_status_data_inventory,
             )
+            _run_inventory_export_hooks(host_config, inventory_tree)
+            _show_inventory_results_on_console(inventory_tree, status_data_tree)
+
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
@@ -94,6 +96,14 @@ def do_inv(hostnames):
             console.section_error("%s" % e)
         finally:
             cmk_base.cleanup.cleanup_globals()
+
+
+def _show_inventory_results_on_console(inventory_tree, status_data_tree):
+    # type: (StructuredDataTree, StructuredDataTree) -> None
+    console.section_success("Found %s%s%d%s inventory entries" %
+                            (tty.bold, tty.yellow, inventory_tree.count_entries(), tty.normal))
+    console.section_success("Found %s%s%d%s status entries" %
+                            (tty.bold, tty.yellow, status_data_tree.count_entries(), tty.normal))
 
 
 @cmk_base.decorator.handle_check_mk_check_result("check_mk_active-cmk_inv",
@@ -116,13 +126,14 @@ def do_inv_check(hostname, options):
     status, infotexts, long_infotexts, perfdata = 0, [], [], []
 
     sources = data_sources.DataSources(hostname, ipaddress)
-    old_timestamp, inventory_tree, status_data_tree = _do_inv_for(
+    inventory_tree, status_data_tree = _do_inv_for(
         sources,
         multi_host_sections=None,
         host_config=host_config,
         ipaddress=ipaddress,
-        do_status_data_inv=host_config.do_status_data_inventory,
     )
+    old_timestamp = _save_inventory_tree(hostname, inventory_tree)
+    _run_inventory_export_hooks(host_config, inventory_tree)
 
     if inventory_tree.is_empty() and status_data_tree.is_empty():
         infotexts.append("Found no data")
@@ -187,13 +198,13 @@ def do_inventory_actions_during_checking_for(sources, multi_host_sections, host_
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
-    _do_inv_for(
+    _inventory_tree, status_data_tree = _do_inv_for(
         sources,
         multi_host_sections=multi_host_sections,
         host_config=host_config,
         ipaddress=ipaddress,
-        do_status_data_inv=do_status_data_inventory,
     )
+    _save_status_data_tree(hostname, status_data_tree)
 
 
 def _cleanup_status_data(hostname):
@@ -205,8 +216,8 @@ def _cleanup_status_data(hostname):
         os.remove(filepath + ".gz")
 
 
-def _do_inv_for(sources, multi_host_sections, host_config, ipaddress, do_status_data_inv):
-    # type: (data_sources.DataSources, data_sources.MultiHostSections, config.HostConfig, Optional[str], bool) -> Tuple[Optional[float], StructuredDataTree, StructuredDataTree]
+def _do_inv_for(sources, multi_host_sections, host_config, ipaddress):
+    # type: (data_sources.DataSources, data_sources.MultiHostSections, config.HostConfig, Optional[str]) -> Tuple[StructuredDataTree, StructuredDataTree]
     hostname = host_config.hostname
 
     _initialize_inventory_tree()
@@ -223,25 +234,8 @@ def _do_inv_for(sources, multi_host_sections, host_config, ipaddress, do_status_
                              inventory_tree, status_data_tree)
 
     inventory_tree.normalize_nodes()
-    old_timestamp = _save_inventory_tree(hostname, inventory_tree)
-    _run_inventory_export_hooks(host_config, inventory_tree)
-
-    success_msg = [
-        "Found %s%s%d%s inventory entries" %
-        (tty.bold, tty.yellow, inventory_tree.count_entries(), tty.normal)
-    ]
-
-    console.section_success(", ".join(success_msg))
-
-    if do_status_data_inv:
-        status_data_tree.normalize_nodes()
-        _save_status_data_tree(hostname, status_data_tree)
-
-        console.section_success(
-            "Found %s%s%d%s status entries" %
-            (tty.bold, tty.yellow, status_data_tree.count_entries(), tty.normal))
-
-    return old_timestamp, inventory_tree, status_data_tree
+    status_data_tree.normalize_nodes()
+    return inventory_tree, status_data_tree
 
 
 def _do_inv_for_cluster(host_config, inventory_tree):

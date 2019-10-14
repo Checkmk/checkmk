@@ -132,7 +132,7 @@ def do_inv_check(hostname, options):
         host_config=host_config,
         ipaddress=ipaddress,
     )
-    old_timestamp = _save_inventory_tree(hostname, inventory_tree)
+    old_tree = _save_inventory_tree(hostname, inventory_tree)
     _run_inventory_export_hooks(host_config, inventory_tree)
 
     if inventory_tree.is_empty() and status_data_tree.is_empty():
@@ -148,10 +148,7 @@ def do_inv_check(hostname, options):
                              check_api_utils.state_markers[_inv_sw_missing])
             status = max(status, _inv_sw_missing)
 
-        if old_timestamp:
-            path = "%s/%s/%d" % (cmk.utils.paths.inventory_archive_dir, hostname, old_timestamp)
-            old_tree = StructuredDataTree().load_from(path)
-
+        if old_tree is not None:
             if not old_tree.is_equal(inventory_tree, edges=["software"]):
                 infotext = "software changes"
                 if _inv_sw_changes:
@@ -360,7 +357,7 @@ def inv_tree_list(path):  # TODO Remove one day. Deprecated with version 1.5.0i3
 
 
 def _save_inventory_tree(hostname, inventory_tree):
-    # type: (str, StructuredDataTree) -> Optional[float]
+    # type: (str, StructuredDataTree) -> Optional[StructuredDataTree]
     cmk.utils.store.makedirs(cmk.utils.paths.inventory_output_dir)
 
     filepath = cmk.utils.paths.inventory_output_dir + "/" + hostname
@@ -380,7 +377,6 @@ def _save_inventory_tree(hostname, inventory_tree):
 
     if old_tree.is_empty():
         console.verbose("New inventory tree\n")
-        old_time = None
     else:
         console.verbose("Inventory tree has changed\n")
         old_time = os.stat(filepath).st_mtime
@@ -388,7 +384,7 @@ def _save_inventory_tree(hostname, inventory_tree):
         cmk.utils.store.makedirs(arcdir)
         os.rename(filepath, arcdir + ("/%d" % old_time))
     inventory_tree.save_to(cmk.utils.paths.inventory_output_dir, hostname)
-    return old_time
+    return old_tree
 
 
 def _save_status_data_tree(hostname, status_data_tree):

@@ -38,7 +38,7 @@ build: $(DIR)/CMakeLists.txt
         $(realpath $(DIR))
 # We do not ship the headers and libraries, we just need them at a known
 # location for testing.
-	cmake --build $(BUILD_DIR) --target install -j 4
+	cmake --build $(BUILD_DIR) --target install -- -j 4
 
 $(DIR)/CMakeLists.txt: $(DIR).tar.gz
 	$(RM) -r $(DIR)

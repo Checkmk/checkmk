@@ -3045,8 +3045,43 @@ class PainterHostServices(Painter):
     def columns(self):
         return ['host_name', 'host_services_with_state']
 
+    @property
+    def parameters(self):
+        elements = [
+            ("render_states",
+             ListChoice(choices=[
+                 (0, _("OK")),
+                 (1, _("WARN")),
+                 (2, _("CRIT")),
+                 (3, _("UNKN")),
+                 ("p", _("PEND")),
+             ],
+                        toggle_all=True,
+                        default_value=[0, 1, 2, 3, 'p'],
+                        title=_("Only show services in this states"),
+                        help=_("Here you can configure which services are displayed depending on "
+                               "their state. This is a filter at display level not query level.")))
+        ]
+
+        return Dictionary(elements=elements, title=_("Options"))
+
     def render(self, row, cell):
-        return paint_service_list(row, "host_services_with_state")
+        params = cell.painter_parameters()
+        render_states = params.get('render_states', [0, 1, 2, 3, 'p'])
+        render_pend = [1]
+        if "p" in render_states:
+            pend_i = render_states.index('p')
+            render_states.pop(pend_i)
+            render_pend.append(0)
+
+        filtered_services = []
+        for svc, state, checked in row["host_services_with_state"]:
+            if state in render_states and checked in render_pend:
+                filtered_services.append([svc, state, checked])
+
+        row['host_services_with_state_filtered'] = filtered_services
+
+        return paint_service_list(row, "host_services_with_state_filtered")
 
 
 @painter_registry.register

@@ -1,0 +1,14 @@
+Title: Render filter for "Services colored according to state" painter
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1571064008
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+
+"Services colored according to state" painter rendered all services in
+host. With this werk, it is possible to filter out services that are in a
+given state.

@@ -1,0 +1,23 @@
+Title: HW/SW Inventory: Do not save inventory tree if Checkmk service calculates status data inventory
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1571059668
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+The {{Checkmk HW/SW Inventory}} service builds up the inventory tree and if
+{{Do status data inventory}} is configured in the ruleset {{Do hardware/software inventory}}
+the {{Checkmk}} service builds up the status data tree. Latter one also saved
+the inventory tree as the {{Checkmk HW/SW Inventory}} service does. This may
+result in flapping inventory history entries.
+
+Now the inventory tree is only saved by the {{Checkmk HW/SW Inventory}}
+service and the status data tree is only saved by the {{Checkmk}} service if
+{{Do status data inventory}} is configured.
+
+Both the commandline {{cmk -vii HOST}} and the {{Checkmk HW/SW Inventory}}
+service also run inventory hooks.

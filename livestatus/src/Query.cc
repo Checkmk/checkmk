@@ -656,10 +656,10 @@ bool Query::processDataset(Row row) {
     }
 
     if (static_cast<size_t>(_output.os().tellp()) > _max_response_size) {
-        Warning(_logger) << "Maximum response size of " << _max_response_size
-                         << " bytes exceeded!";
-        // currently we only log an error into the log file and do
-        // not abort the query. We handle it like Limit:
+        _output.setError(OutputBuffer::ResponseCode::limit_exceeded,
+                         "Maximum response size of " +
+                             std::to_string(_max_response_size) +
+                             " bytes exceeded!");
         return false;
     }
 

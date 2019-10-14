@@ -26,10 +26,8 @@
 """This is an unsorted collection of functions which are needed in
 Check_MK modules and/or cmk_base modules code."""
 
-import itertools
 import os
 import signal
-import sys
 import time
 
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
@@ -59,47 +57,6 @@ def branch_of_daily_build(v):
     if len(v) == 10:
         return "master"
     return v.split('-')[0]
-
-
-def total_size(o, handlers=None):
-    """ Returns the approximate memory footprint an object and all of its contents.
-
-    Automatically finds the contents of the following builtin containers and
-    their subclasses:  tuple, list, dict, set and frozenset.
-    To search other containers, add handlers to iterate over their contents:
-
-        handlers = {SomeContainerClass: iter,
-                    OtherContainerClass: OtherContainerClass.get_elements}
-
-    """
-    if handlers is None:
-        handlers = {}
-
-    dict_handler = lambda d: itertools.chain.from_iterable(d.items())
-    all_handlers = {
-        tuple: iter,
-        list: iter,
-        dict: dict_handler,
-        set: iter,
-        frozenset: iter,
-    }
-    all_handlers.update(handlers)  # user handlers take precedence
-    seen = set()  # track which object id's have already been seen
-    default_size = sys.getsizeof(0)  # estimate sizeof object without __sizeof__
-
-    def sizeof(o):
-        if id(o) in seen:  # do not double count the same object
-            return 0
-        seen.add(id(o))
-        s = sys.getsizeof(o, default_size)
-
-        for typ, handler in all_handlers.items():
-            if isinstance(o, typ):
-                s += sum(map(sizeof, handler(o)))
-                break
-        return s
-
-    return sizeof(o)
 
 
 def cachefile_age(path):

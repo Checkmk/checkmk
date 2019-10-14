@@ -38,8 +38,8 @@
 
 def inv_solaris_mem(parsed):
     node = inv_tree("hardware.memory.")
-    node["total_ram_usable"] = parsed["MemFree"]
-    node["total_swap"] = parsed["SwapTotal"]
+    node["total_ram_usable"] = int(parsed["MemTotal"]) * 1024
+    node["total_swap"] = int(parsed["SwapTotal"]) * 1024
 
 
 inv_info['solaris_mem'] = {

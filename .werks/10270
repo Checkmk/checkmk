@@ -1,0 +1,17 @@
+Title: solaris_mem: Fix value and unit
+Knowledge: doc
+Level: 1
+Component: inv
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0p6
+Date: 1571061371
+
+total_ram_usable and total_swap were given in kB where Bytes
+were expected.  Moreover, total_ram_usable was returning
+the available RAM instead of the total RAM advertised.
+
+<b>Note</b> History for both values has different units.
+It should be converted or considered lost!

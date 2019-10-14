@@ -170,7 +170,7 @@ class HostLabel(ABCLabel):
         }
 
     def __repr__(self):
-        return "HostLabel(%r, %r)" % (self.name, self.value)
+        return "HostLabel(%r, %r, plugin_name=%r)" % (self.name, self.value, self.plugin_name)
 
     def __eq__(self, other):
         if not isinstance(other, HostLabel):
@@ -179,10 +179,7 @@ class HostLabel(ABCLabel):
                 self.plugin_name == other.plugin_name)
 
     def __ne__(self, other):
-        if not isinstance(other, HostLabel):
-            raise TypeError('%s not type HostLabel' % other)
-        return (self.name != other.name or self.value != other.value or
-                self.plugin_name != other.plugin_name)
+        return not self.__eq__(other)
 
 
 class DiscoveredServiceLabels(ABCDiscoveredLabels):

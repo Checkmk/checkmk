@@ -1,0 +1,10 @@
+Title: Debian Buster: Fix missing check_snmp active check plugin
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0p23
+Date: 1571049264
+Class: fix
+
+

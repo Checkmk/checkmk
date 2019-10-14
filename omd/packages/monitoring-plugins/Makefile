@@ -6,7 +6,10 @@ DIR = $(NAME)-$(VERSION)
 
 CONFIGUREOPTS = \
     --prefix=$(OMD_ROOT) \
-    --libexecdir=$(OMD_ROOT)/lib/nagios/plugins
+    --libexecdir=$(OMD_ROOT)/lib/nagios/plugins \
+    --with-snmpget-command=$(OMD_ROOT)/bin/snmpget \
+    --with-snmpgetnext-command=$(OMD_ROOT)/bin/snmpgetnext
+
 
 build:
 	$(MAKE) prepare

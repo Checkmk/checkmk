@@ -1,0 +1,12 @@
+Title: Fix WATO folder painter with configured link showing escaped HTML code on page
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1571047253
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+

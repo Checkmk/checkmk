@@ -2388,12 +2388,13 @@ class CMEHost(CREHost):
         super(CMEHost, self).edit(attributes, cluster_nodes)
 
 
-if cmk.is_managed_edition():
+# TODO: Change to factory?
+if not cmk.is_managed_edition():
+    Folder = CREFolder  # type: Type[CREFolder]
+    Host = CREHost  # type: Type[CREHost]
+else:
     Folder = CMEFolder
     Host = CMEHost
-else:
-    Folder = CREFolder
-    Host = CREHost
 
 
 def call_hook_hosts_changed(folder):

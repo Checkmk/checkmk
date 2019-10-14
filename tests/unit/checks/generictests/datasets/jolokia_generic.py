@@ -37,7 +37,7 @@ checks = {
         (
             'Instance1 Mitglieder_Anzahl', {}, [
                 (
-                    0, '-23.0', [
+                    0, '-23.00', [
                         ('generic_number', -23.0, None, None, None, None)
                     ]
                 )
@@ -46,7 +46,7 @@ checks = {
         (
             'Instance2 Mitglieder Anzahl', {}, [
                 (
-                    0, '-23.0', [
+                    0, '-23.00', [
                         ('generic_number', -23.0, None, None, None, None)
                     ]
                 )
@@ -54,13 +54,13 @@ checks = {
         ),
         (
             'JIRA,com.atlassian.jira:type=web.requests,invocation.count jira.name',
-            {}, [(3, 'Non-numeric MBean value', [])]
+            {}, []
         ),
         (
             'JIRA,com.atlassian.jira:type=web.requests,invocation.count jira.value',
             {}, [
                 (
-                    0, '2624460.0', [
+                    0, '2624460.00', [
                         ('generic_number', 2624460.0, None, None, None, None)
                     ]
                 )
@@ -71,7 +71,7 @@ checks = {
         (
             'Instance2 Beitritte', {}, [
                 (
-                    0, '0.3', [
+                    0, '0.33', [
                         (
                             'generic_rate', 0.328125, None, None,
                             None, None

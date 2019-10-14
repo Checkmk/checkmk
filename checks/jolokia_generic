@@ -30,6 +30,8 @@ def parse_jolokia_generic(info):
     for line in info:
         try:
             instance, mbean, value, type_ = jolokia_basic_split(line, 4)
+            if type_ in ("rate", "number"):
+                value = float(value)
         except ValueError:
             continue
         item = "%s %s" % (instance, mbean)
@@ -49,28 +51,20 @@ def parse_jolokia_generic(info):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_jolokia_generic_string(parsed):
-    for item in parsed:
-        if parsed[item]["type"] == "string":
-            yield item, {}
-
-
-def check_jolokia_generic_string(item, params, parsed):
-    if item not in parsed:
-        return 3, "Item not found in agent output"
-    value = parsed[item]["value"]
-    default_status = params.get("default_status", 0)
+@get_parsed_item_data
+def check_jolokia_generic_string(_item, params, data):
+    value = data["value"]
 
     search_strings = params.get("match_strings", [])
     for search_string, status in search_strings:
         if search_string in value:
             return status, "%s: %s matches" % (value, search_string)
 
-    return default_status, value
+    return params.get("default_status", 0), value
 
 
 check_info["jolokia_generic.string"] = {
-    "inventory_function": inventory_jolokia_generic_string,
+    "inventory_function": discover(lambda key, data: data.get("type") == "string"),
     "check_function": check_jolokia_generic_string,
     "service_description": "JVM %s",
     "group": "generic_string",
@@ -87,68 +81,15 @@ check_info["jolokia_generic.string"] = {
 #   '----------------------------------------------------------------------'
 
 
-def inventory_jolokia_generic_rate(parsed):
-    for item, data in parsed.iteritems():
-        if data.get("type") == "rate":
-            try:
-                float(data["value"])
-            except (KeyError, ValueError):
-                continue
-            yield item, {}
-
-
-def check_jolokia_generic_rate(item, params, parsed):
-    if item not in parsed:
-        yield 3, "Item not found in agent output"
-        return
-    now = time.time()
-
-    try:
-        value = float(parsed[item]["value"])
-    except ValueError:
-        yield 3, "Non-numeric MBean value"
-        return
-
-    rate = get_rate(item, now, value)
-    infotext = "%.1f" % rate
-    perfdata = None
-
-    if params:
-        if params.get("levels"):
-            status = 0
-            warn, crit = params["levels"]
-            perfdata = [("generic_rate", rate, warn, crit)]
-            levelstext = "(warn/crit at %.1f/%.1f)" % (warn, crit)
-
-            if rate >= crit:
-                status = 2
-            elif rate >= warn:
-                status = 1
-
-            if not status:
-                levelstext = ""
-            yield status, levelstext
-
-        if params.get("levels_lower"):
-            status = 0
-            warn_lower, crit_lower = params["levels_lower"]
-            levelstext_lower = "(warn/crit below %.1f/%.1f)" % (warn_lower, crit_lower)
-            if rate < crit_lower:
-                status = 2
-            elif rate < warn_lower:
-                status = 1
-            if not status:
-                levelstext_lower = ""
-            yield status, levelstext_lower
-
-    if not perfdata:
-        perfdata = [("generic_rate", rate)]
-
-    yield 0, infotext, perfdata
+@get_parsed_item_data
+def check_jolokia_generic_rate(item, params, data):
+    rate = get_rate(item, time.time(), data["value"])
+    levels = params.get("levels", (None, None)) + params.get("levels_lower", (None, None))
+    return check_levels(rate, "generic_rate", levels)
 
 
 check_info["jolokia_generic.rate"] = {
-    "inventory_function": inventory_jolokia_generic_rate,
+    "inventory_function": discover(lambda key, data: data.get("type") == "rate"),
     "check_function": check_jolokia_generic_rate,
     "service_description": "JVM %s",
     "has_perfdata": True,
@@ -166,69 +107,17 @@ check_info["jolokia_generic.rate"] = {
 #   '----------------------------------------------------------------------'
 
 
-def inventory_jolokia_generic(parsed):
-    for item, data in parsed.iteritems():
-        if data.get("type") == "number":
-            try:
-                float(data["value"])
-            except (KeyError, ValueError):
-                continue
-            yield item, {}
-
-
-def check_jolokia_generic(item, params, parsed):
-    if item not in parsed:
-        yield 3, "Item not found in agent output"
-        return
-
-    try:
-        value = float(parsed[item]["value"])
-    except ValueError:
-        yield 3, "Non-numeric MBean value"
-        return
-
-    infotext = "%.1f" % value
-    perfdata = None
-
-    if params:
-        if params.get("levels"):
-            status = 0
-            warn, crit = params["levels"]
-            perfdata = [("generic_number", value, warn, crit)]
-            levelstext = "(warn/crit at %.1f/%.1f)" % (warn, crit)
-
-            if value >= crit:
-                status = 2
-            elif value >= warn:
-                status = 1
-
-            if not status:
-                levelstext = ""
-            yield status, levelstext
-
-        if params.get("levels_lower"):
-            status = 0
-            warn_lower, crit_lower = params["levels_lower"]
-            levelstext_lower = "(warn/crit below %.1f/%.1f)" % (warn_lower, crit_lower)
-            if value < crit_lower:
-                status = 2
-            elif value < warn_lower:
-                status = 1
-            if not status:
-                levelstext_lower = ""
-            yield status, levelstext_lower
-
-    if not perfdata:
-        perfdata = [("generic_number", value)]
-
-    yield 0, infotext, perfdata
+@get_parsed_item_data
+def check_jolokia_generic(_item, params, data):
+    levels = params.get("levels", (None, None)) + params.get("levels_lower", (None, None))
+    return check_levels(data["value"], "generic_number", levels)
 
 
 check_info["jolokia_generic"] = {
+    "inventory_function": discover(lambda key, data: data.get("type") == "number"),
+    "check_function": check_jolokia_generic,
     "includes": ["jolokia.include"],
     "parse_function": parse_jolokia_generic,
-    "inventory_function": inventory_jolokia_generic,
-    "check_function": check_jolokia_generic,
     "service_description": "JVM %s",
     "has_perfdata": True,
     "group": "generic_number",

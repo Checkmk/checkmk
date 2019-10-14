@@ -24,7 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from typing import Dict, Text, Union  # pylint: disable=unused-import
 import cmk.gui.watolib as watolib
+from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
@@ -60,6 +62,7 @@ class PainterHostFilename(Painter):
 
 
 def get_wato_folder(row, how, with_links=True):
+    # type: (Dict, Text, bool) -> Union[Text, HTML]
     filename = row["host_filename"]
     if not filename.startswith("/wato/") or not filename.endswith("/hosts.mk"):
         return ""
@@ -78,17 +81,17 @@ def get_wato_folder(row, how, with_links=True):
     if how == "plain":
         return title_path[-1]
     elif how == "abs":
-        return " / ".join(title_path)
+        return HTML(" / ").join(title_path)
     else:
         # We assume that only hosts are show, that are below the
         # current WATO path. If not then better output absolute
         # path then wrong path.
         current_path = html.request.var("wato_folder")
         if not current_path or not wato_path.startswith(current_path):
-            return " / ".join(title_path)
+            return HTML(" / ").join(title_path)
 
         depth = current_path.count('/') + 1
-        return " / ".join(title_path[depth:])
+        return HTML(" / ").join(title_path[depth:])
 
 
 def paint_wato_folder(row, how):

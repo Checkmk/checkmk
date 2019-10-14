@@ -29,7 +29,7 @@ import time
 import re
 import shutil
 import cStringIO
-from typing import Dict  # pylint: disable=unused-import
+from typing import Type, Union, List, Text, Dict  # pylint: disable=unused-import
 
 import cmk
 import cmk.utils.store as store
@@ -1061,11 +1061,14 @@ class CREFolder(BaseFolder):
         return list(site_ids)
 
     def title_path(self, withlinks=False):
+        # type: (bool) -> List[Union[HTML, Text]]
         titles = []
         for folder in self.parent_folder_chain() + [self]:
             title = folder.title()
             if withlinks:
-                title = "<a href='wato.py?mode=folder&folder=%s'>%s</a>" % (folder.path(), title)
+                url = html.makeuri_contextless([("mode", "folder"), ("folder", folder.path())],
+                                               filename="wato.py")
+                title = html.render_a(title, href=url)
             titles.append(title)
         return titles
 

@@ -1,0 +1,11 @@
+Title: Bake Solaris Agent: Include custom files
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1570692492
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+

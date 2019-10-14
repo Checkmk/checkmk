@@ -18,12 +18,7 @@ def precompiled_werks(tmp_path, monkeypatch):
     monkeypatch.setattr(cmk.utils.werks, "_compiled_werks_dir", lambda: tmp_path)
 
 
-@pytest.mark.parametrize("edition", [
-    "cre",
-    "cee",
-    "cme",
-])
-def test_write_precompiled_werks(edition, tmp_path, monkeypatch):
+def test_write_precompiled_werks(tmp_path, monkeypatch):
     tmp_dir = str(tmp_path)
 
     all_werks = cmk.utils.werks.load_raw_files(Path(testlib.cmk_path()) / ".werks")

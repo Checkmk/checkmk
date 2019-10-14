@@ -28,7 +28,7 @@ if type lpstat > /dev/null 2>&1 ; then
     echo "<<<cups_queues>>>"
     CPRINTCONF=/etc/cups/printers.conf
     if  [ -r "$CPRINTCONF" ] ; then
-        LOCAL_PRINTERS=$(grep -E "<(Default)?Printer .*>" $CPRINTCONF | awk '{print $2}' | sed -e 's/>//')
+        LOCAL_PRINTERS=$(perl -ne '/<(?:Default)?Printer (\w+)>/ && print "$1\n"' $CPRINTCONF)
         lpstat -p | while read LINE
         do
             PRINTER=$(echo "$LINE" | awk '{print $2}')

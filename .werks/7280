@@ -1,0 +1,12 @@
+Title: SLA computation: fixed gui exception when no data was available
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1571050887
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+

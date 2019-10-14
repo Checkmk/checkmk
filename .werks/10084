@@ -1,0 +1,11 @@
+Title: f5_bigip_fans: Skip not running sensors
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1571033215
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+In the discovery phase all sensors that are not running will be skipped.

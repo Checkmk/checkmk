@@ -42,12 +42,13 @@ from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
 from cmk.gui.valuespec import (
-    Timerange,
-    TextAscii,
-    DropdownChoice,
     DateFormat,
     Dictionary,
+    DropdownChoice,
+    Integer,
     ListChoice,
+    TextAscii,
+    Timerange,
 )
 
 from cmk.gui.plugins.views.icons import (
@@ -509,11 +510,30 @@ class PainterSvcLongPluginOutput(Painter):
     def columns(self):
         return ['service_long_plugin_output', 'service_custom_variables']
 
+    @property
+    def parameters(self):
+        return Dictionary(elements=[
+            ('max_len',
+             Integer(
+                 title=_("Maximum number of characters in long Output"),
+                 help=_("Truncate long Output at this amount of characters."
+                        "A zero value mean not to truncate"),
+                 default_value=0,
+                 minvalue=0,
+             )),
+        ])
+
     def render(self, row, cell):
+        params = cell.painter_parameters()
+        max_len = params.get('max_len', 0)
+        long_output = row["service_long_plugin_output"]
+
+        if max_len > 0 and len(long_output) > max_len:
+            long_output = long_output[:max_len] + "..."
+
         return paint_stalified(
             row,
-            format_plugin_output(row["service_long_plugin_output"],
-                                 row).replace('\\n', '<br>').replace('\n', '<br>'))
+            format_plugin_output(long_output, row).replace('\\n', '<br>').replace('\n', '<br>'))
 
 
 @painter_registry.register

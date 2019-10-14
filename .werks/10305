@@ -1,0 +1,15 @@
+Title: Configurable long output painter to truncate output
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1571052872
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+The long output of a check can sometime be really extensive. On certain
+views, like tables, extremly long output can lead to a lost of
+overview. This werk allows the long output painter to be configurable and
+truncate the rendered output at a specific amount of characters.

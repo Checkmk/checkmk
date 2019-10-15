@@ -47,6 +47,9 @@ bool starts_with(const std::string &input, const std::string &test);
 
 std::vector<std::string> split(const std::string &str, char delimiter);
 
+std::string join(const std::vector<std::string> &values,
+                 const std::string &separator);
+
 std::string lstrip(const std::string &str,
                    const std::string &chars = " \t\n\v\f\r");
 

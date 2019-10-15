@@ -63,6 +63,20 @@ std::vector<std::string> split(const std::string &str, char delimiter) {
     return result;
 }
 
+std::string join(const std::vector<std::string> &values,
+                 const std::string &separator) {
+    std::string result;
+    auto it = values.cbegin();
+    auto end = values.cend();
+    if (it != end) {
+        result.append(*it++);
+    }
+    while (it != end) {
+        result.append(separator).append(*it++);
+    }
+    return result;
+}
+
 std::string lstrip(const std::string &str, const std::string &chars) {
     auto pos = str.find_first_not_of(chars);
     return pos == std::string::npos ? "" : str.substr(pos);

@@ -28,9 +28,9 @@ usable in all components of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 
-import six
 import itertools
 import sys
+import six
 
 
 def make_utf8(x):

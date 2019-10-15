@@ -1404,6 +1404,10 @@ mode_registry = ModeRegistry()
 # parent: The parent folder of the objects to configure
 # myself: For mode "folder" the folder itself or None, if we edit a new folder
 #         This is needed for handling mandatory attributes.
+#
+# This is the counterpart of "collect_attributes". Another place which
+# is related to these HTTP variables and so on is SearchFolder.
+#
 # TODO: Wow, this function REALLY has to be cleaned up
 def configure_attributes(new,
                          hosts,

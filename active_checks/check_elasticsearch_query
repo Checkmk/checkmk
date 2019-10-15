@@ -29,10 +29,10 @@ import sys
 import urlparse
 import requests
 import urllib3
-from cmk.notification_plugins.utils import retrieve_from_passwordstore
 from cmk.utils.defines import service_state_name
 from cmk.utils.exceptions import MKGeneralException
-
+import cmk.utils.password_store
+cmk.utils.password_store.replace_passwords()
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
@@ -80,7 +80,7 @@ def handle_request(args):
     if args.fieldname:
         query['query']['bool']['must'][0]['query_string']['fields'] = args.fieldname.split(" ")
 
-    if args.user and retrieve_from_passwordstore(args.password):
+    if args.user and args.password:
         raw_response = requests.get(url, json=query, auth=(args.user, args.password))
     else:
         raw_response = requests.get(url, json=query)

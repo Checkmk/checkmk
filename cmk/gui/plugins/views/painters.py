@@ -3070,8 +3070,6 @@ class PainterHostServices(Painter):
         render_states = params.get('render_states', [0, 1, 2, 3, 'p'])
         render_pend = [1]
         if "p" in render_states:
-            pend_i = render_states.index('p')
-            render_states.pop(pend_i)
             render_pend.append(0)
 
         filtered_services = []

@@ -127,7 +127,7 @@ def do_inv_check(hostname, options):
         hostname=hostname,
         ipaddress=ipaddress,
     )
-    old_timestamp = _save_inventory_tree(hostname, inventory_tree)
+    old_tree = _save_inventory_tree(hostname, inventory_tree)
     _run_inventory_export_hooks(hostname, inventory_tree)
 
     if inventory_tree.is_empty() and status_data_tree.is_empty():
@@ -143,10 +143,7 @@ def do_inv_check(hostname, options):
                              check_api.state_markers[_inv_sw_missing])
             status = max(status, _inv_sw_missing)
 
-        if old_timestamp:
-            path = "%s/%s/%d" % (cmk.paths.inventory_archive_dir, hostname, old_timestamp)
-            old_tree = StructuredDataTree().load_from(path)
-
+        if old_tree is not None:
             if not old_tree.is_equal(inventory_tree, edges=["software"]):
                 infotext = "software changes"
                 if _inv_sw_changes:
@@ -328,7 +325,7 @@ def inv_tree_list(path): # TODO Remove one day. Deprecated with version 1.5.0i3?
 def _save_inventory_tree(hostname, inventory_tree):
     cmk.store.makedirs(cmk.paths.inventory_output_dir)
 
-    old_time = None
+    old_tree = None
     filepath = cmk.paths.inventory_output_dir + "/" + hostname
     if not inventory_tree.is_empty():
         old_tree = StructuredDataTree().load_from(filepath)
@@ -352,7 +349,7 @@ def _save_inventory_tree(hostname, inventory_tree):
         if os.path.exists(filepath + ".gz"):
             os.remove(filepath + ".gz")
 
-    return old_time
+    return old_tree
 
 
 def _save_status_data_tree(hostname, status_data_tree):

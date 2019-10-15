@@ -1,0 +1,13 @@
+Title: Reporting: Removed "first" column from graph legends
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1547800872
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+For consistency with the GUI graphs the "first value" column has
+been removed from the PDF graphs legend.

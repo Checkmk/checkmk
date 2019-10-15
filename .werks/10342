@@ -1,0 +1,19 @@
+Title: HW/SW Inventory: Do not overwrite inventory tree if ALL data sources of a host fail
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1571144915
+Class: fix
+
+If a host has multiple data sources and ALL of these sources have an exception
+like empty data, connection problems or timeouts then the inventory tree won't
+be overwritten. This may reduce flapping inventory history entries.
+
+If all sources fail the {{HW/SW Inventory}} service reports
+{{Cannot update tree (WARN)}}.
+
+Note:
+This also concerns hosts with exactly one data source. If this source fails the
+inventory tree won't be overwritten, too.

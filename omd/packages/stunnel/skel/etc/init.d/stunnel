@@ -14,7 +14,7 @@
 
 # Start only if LIVESTATUS_TCP with LIVESTATUS_TCP_TLS is enabled
 . ###ROOT###/etc/omd/site.conf
-if [ "$CONFIG_CORE" = none -o "$CONFIG_LIVESTATUS_TCP" = off -o "$CONFIG_LIVESTATUS_TCP" = off ]; then
+if [ "$CONFIG_CORE" = none -o "$CONFIG_LIVESTATUS_TCP" = off -o "$CONFIG_LIVESTATUS_TCP_TLS" = off ]; then
     exit 5
 fi
 

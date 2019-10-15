@@ -40,7 +40,7 @@ def check_msexch_owa(item, params, parsed):
 
 
 check_info['msexch_owa'] = {
-    'inventory_function': lambda p: inventory_wmi_table(p),  # pylint: disable=unnecessary-lambda
+    'inventory_function': inventory_wmi_table,
     'check_function': check_msexch_owa,
     'parse_function': parse_wmi_table,
     'has_perfdata': True,

@@ -51,7 +51,7 @@ def check_elasticsearch_query_arguments(params):
         args.append('--crit=%d' % params['count'][1])
 
     if 'hostname' in params:
-        args += ["-H", quote_shell_string(params["hostname"])]
+        args += ["-H", params["hostname"]]
     else:
         args += ["-H", "$HOSTADDRESS$"]
 

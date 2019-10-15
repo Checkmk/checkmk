@@ -1,0 +1,11 @@
+Title: check_elasticsearch_query: Fixed wrong quotation of hostname parameter
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p4
+Date: 1571165455
+Class: fix
+
+If used, the parameter "DNS hostname or IP address" was quoted wrong.
+This has been fixed.

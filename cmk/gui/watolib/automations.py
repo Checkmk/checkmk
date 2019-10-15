@@ -32,7 +32,7 @@ import re
 import subprocess
 import time
 import requests
-import urllib3
+import urllib3  # type: ignore
 
 import cmk.utils
 
@@ -99,8 +99,7 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
                              stderr=subprocess.PIPE,
                              close_fds=True)
     except Exception as e:
-        raise MKGeneralException("Cannot execute <tt>%s</tt>: %s" %
-                                 (subprocess.list2cmdline(cmd), e))
+        raise _local_automation_failure(command=command, cmdline=cmd, exc=e)
 
     if stdin_data is not None:
         auto_logger.info("STDIN: %r" % stdin_data)
@@ -120,13 +119,11 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
     if exitcode != 0:
         auto_logger.error("Error running %r (exit code %d)" %
                           (subprocess.list2cmdline(cmd), exitcode))
-
-        if config.debug:
-            raise MKGeneralException(
-                "Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>" %
-                (subprocess.list2cmdline(cmd), exitcode, _hilite_errors(outdata)))
-        else:
-            raise MKGeneralException(_hilite_errors(outdata))
+        raise _local_automation_failure(command=command,
+                                        cmdline=cmd,
+                                        code=exitcode,
+                                        out=outdata,
+                                        err=errdata)
 
     # On successful "restart" command execute the activate changes hook
     if command in ['restart', 'reload']:
@@ -135,9 +132,21 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
     try:
         return ast.literal_eval(outdata)
     except SyntaxError as e:
-        raise MKGeneralException(
-            "Error running <tt>%s</tt>. Invalid output from webservice (%s): <pre>%s</pre>" %
-            (subprocess.list2cmdline(cmd), e, outdata))
+        raise _local_automation_failure(command=command, cmdline=cmd, out=outdata, exc=e)
+
+
+def _local_automation_failure(command, cmdline, code=None, out=None, err=None, exc=None):
+    call = subprocess.list2cmdline(cmdline) if config.debug else command
+    msg = "Error running automation call <tt>%s<tt>" % call
+    if code:
+        msg += " (exit code %d)" % code
+    if out:
+        msg += ", output: <pre>%s</pre>" % _hilite_errors(out)
+    if err:
+        msg += ", error: <pre>%s</pre>" % _hilite_errors(err)
+    if exc:
+        msg += ": %s" % exc
+    return MKGeneralException(msg)
 
 
 def _hilite_errors(outdata):

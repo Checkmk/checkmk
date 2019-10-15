@@ -1,0 +1,16 @@
+Title: stunnel service is now correctly disabled when LIVESTATUS_TCP_TLS is off
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1571162636
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+The stunnel daemon of the site, that is used for serving the encrypted
+livestatus communication was activated just by enabling the LIVESTATUS_TCP,
+even when the "omd config" option LIVESTATUS_TCP_TLS was set to off. This was
+not a real problem from a user perspective because that stunnel process was
+inactive in this situation.

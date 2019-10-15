@@ -132,7 +132,15 @@ def do_inv_check(hostname, options):
         host_config=host_config,
         ipaddress=ipaddress,
     )
-    old_tree = _save_inventory_tree(hostname, inventory_tree)
+
+    #TODO add cluster if and only if all sources do not fail?
+    if _all_sources_fail(host_config, sources):
+        old_tree, sources_state = None, 1
+        status = max(status, sources_state)
+        infotexts.append("Cannot update tree%s" % check_api_utils.state_markers[sources_state])
+    else:
+        old_tree = _save_inventory_tree(hostname, inventory_tree)
+
     _run_inventory_export_hooks(host_config, inventory_tree)
 
     if inventory_tree.is_empty() and status_data_tree.is_empty():
@@ -175,6 +183,23 @@ def do_inv_check(hostname, options):
             infotexts.append("[%s] %s" % (source.id(), source_output))
 
     return status, infotexts, long_infotexts, perfdata
+
+
+def _all_sources_fail(host_config, sources):
+    # type (config.HostConfig, data_sources.DataSources) -> bool
+    """We want to check if ALL data sources of a host fail:
+    By default a host has the auto-piggyback data source. We remove it if
+    it's not a pure piggyback host and there's no piggyback data available
+    for this host.
+    In this case the piggyback data source never fails (self._exception = None)."""
+    exceptions_by_source = {
+        source.id(): source.exception() for source in sources.get_data_sources()
+    }
+    if "piggyback" in exceptions_by_source and not len(exceptions_by_source) == 1\
+       and not host_config.has_piggyback_data:
+        del exceptions_by_source["piggyback"]
+
+    return all(exception is not None for exception in exceptions_by_source.itervalues())
 
 
 def do_inventory_actions_during_checking_for(sources, multi_host_sections, host_config, ipaddress):

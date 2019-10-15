@@ -34,7 +34,7 @@ def check_msexch_autodiscovery(item, params, parsed):
 
 
 check_info['msexch_autodiscovery'] = {
-    'inventory_function': inventory_wmi_table,
+    'inventory_function': lambda p: inventory_wmi_table(p),  # pylint: disable=unnecessary-lambda
     'check_function': check_msexch_autodiscovery,
     'parse_function': parse_wmi_table,
     'has_perfdata': True,

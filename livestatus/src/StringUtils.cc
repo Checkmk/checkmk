@@ -100,6 +100,22 @@ std::pair<std::string, std::string> nextField(const std::string &str,
                : std::make_pair(s.substr(0, pos), s.substr(pos + 1));
 }
 
+std::string replace_first(const std::string &str, const std::string &from,
+                          const std::string &to) {
+    if (str.empty() && from.empty()) {
+        return "";
+    }
+    size_t match = str.find(from);
+    if (match == std::string::npos) {
+        return str;
+    }
+    std::string result;
+    result.reserve(str.size() + to.size() - from.size());
+    return result.append(str, 0, match)
+        .append(to)
+        .append(str, match + from.size());
+}
+
 std::string replace_all(const std::string &str, const std::string &from,
                         const std::string &to) {
     std::string result;
@@ -113,8 +129,7 @@ std::string replace_all(const std::string &str, const std::string &from,
             .append(str, pos, added_after_match);
         pos = match + from.size() + added_after_match;
     }
-    result.append(str, pos - added_after_match);
-    return result;
+    return result.append(str, pos - added_after_match);
 }
 
 std::string from_multi_line(const std::string &str) {

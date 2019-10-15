@@ -1451,8 +1451,9 @@ def _get_all_active_filters(view):
 
 
 def _is_ec_unrelated_host_view(view):
+    # The "name" is not set in view report elements
     return view.datasource.ident in [ "mkeventd_events", "mkeventd_history" ] \
-       and "host" in view.spec["single_infos"] and view.spec["name"] != "ec_events_of_monhost"
+       and "host" in view.spec["single_infos"] and view.spec.get("name") != "ec_events_of_monhost"
 
 
 def _get_needed_regular_columns(cells, sorters, datasource):

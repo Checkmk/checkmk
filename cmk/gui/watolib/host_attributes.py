@@ -728,6 +728,8 @@ def host_attribute(name):
     return host_attribute_registry[name]()
 
 
+# This is the counterpart of "configure_attributes". Another place which
+# is related to these HTTP variables and so on is SearchFolder.
 def collect_attributes(for_what, new, do_validate=True, varprefix=""):
     """Read attributes from HTML variables"""
     host = {}

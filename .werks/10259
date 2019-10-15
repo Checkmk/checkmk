@@ -1,0 +1,14 @@
+Title: WATO host search: Fix possible "request URI too long" error
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1571150806
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+When a large number of host attributes is configured in an environment, this
+could make the WATO host search fail with a HTTP error (white page with black
+font color) with an error message "Request URI too long".

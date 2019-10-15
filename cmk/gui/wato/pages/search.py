@@ -59,13 +59,36 @@ class ModeSearch(WatoMode):
         html.context_button(_("Folder"), self._folder.url(), "back")
 
     def action(self):
+        self._remove_unused_search_vars()
         return "folder"
+
+    def _remove_unused_search_vars(self):
+        """Reduce the HTTP vars (html.request.vars) to the amount of necessary attributes
+
+        The form submits all variables which may result in a too big collection for being
+        used as URL variables. Once we are here we can analyze the attribute checkboxes and
+        remove all HTTP variables that are related to not checked checkboxes for preventing
+        the too long URLs.
+        """
+        keep_vars = {}
+        for varname, value in html.request.itervars(prefix="host_search_change_"):
+            if html.get_checkbox(varname) is False:
+                continue
+
+            attr_prefix = "host_search_attr_%s" % varname.split("host_search_change_", 1)[1]
+
+            keep_vars[varname] = value
+            keep_vars.update(html.request.itervars(prefix=attr_prefix))
+
+        html.request.del_vars("host_search_")
+        for varname, value in keep_vars.iteritems():
+            html.request.set_var(varname, value)
 
     def page(self):
         self._folder.show_breadcrump()
 
         # Show search form
-        html.begin_form("edit_host", method="GET")
+        html.begin_form("edit_host", method="POST")
         html.prevent_password_auto_completion()
 
         basic_attributes = [

@@ -1,6 +1,6 @@
 Title: lnx_if: Fixed wrong interpretation of interface status
 Class: fix
-Compatible: compat
+Compatible: incomp
 Component: checks
 Date: 1570628484
 Edition: cre
@@ -9,4 +9,16 @@ Level: 1
 State: unknown
 Version: 1.7.0i1
 
+Due to some refactorings the wrong interfaces status of Linux host was used.
 
+This bug was introduced with werk 7370 (1.6.0b1).
+
+The interface service may show {{(UP) CRIT}} instead of {{(UP) OK}}.
+
+Because the status is remember during discovery you have to perform a
+re-discovery.
+
+Details:
+Let the output of {{ip address}} be {{1: IFNAME: <UP> state UNKNOWN}}. The
+state {{UNKNOWN}} was used instead of the {{real}} interface status in the
+angle brackets.

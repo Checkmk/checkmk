@@ -62,6 +62,9 @@ std::string strip(const std::string &str,
 std::pair<std::string, std::string> nextField(
     const std::string &str, const std::string &chars = " \t\n\v\f\r");
 
+std::string replace_first(const std::string &str, const std::string &from,
+                          const std::string &to);
+
 std::string replace_all(const std::string &str, const std::string &from,
                         const std::string &to);
 

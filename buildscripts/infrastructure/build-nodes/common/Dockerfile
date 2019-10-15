@@ -15,6 +15,7 @@ RUN apt-get update \
     clang-7 \
     clang-format-7 \
     clang-tidy-7 \
+    cmake \
     devscripts \
     direnv \
     dnsutils \

@@ -6,6 +6,7 @@ RUN yum -y makecache \
     && yum -y install \
     bind-utils \
     boost-devel \
+    cmake \
     curl-devel \
     expat-devel \
     flex \

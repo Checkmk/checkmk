@@ -9,6 +9,7 @@ RUN apt-get update \
     apache2-dev \
     autoconf \
     build-essential \
+    cmake \
     devscripts \
     dnsutils \
     dpatch \

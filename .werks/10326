@@ -1,0 +1,14 @@
+Title: Removed cmk_nagios_webapps mkp from treasures
+Level: 1
+Component: multisite
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p4
+Date: 1571161691
+Class: fix
+
+Due to incompatibility with version 1.6.0 the mkp "cmk_nagios_webapps-1.1.mkp",
+introduced with werk #0247, and the folder "webapps" was removed from
+~/shared/doc/check_mk/treasures/.
+
+Please remove this mkp via "Extension packages" if you update to version 1.6.0.

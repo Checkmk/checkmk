@@ -500,9 +500,8 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         # time for all data of a host. The data sources should be able to provide this information
         # somehow.
         check_table_created = time.time()
-        result = check_mk_automation(
-            request.host.site_id(), "try-inventory",
-            ["@noscan", "@raiseerrors", request.host.name()])
+        result = check_mk_automation(request.host.site_id(), "try-inventory",
+                                     ["@noscan", request.host.name()])
 
         return DiscoveryResult(
             job_status=job_status,

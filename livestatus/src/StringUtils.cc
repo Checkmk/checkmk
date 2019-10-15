@@ -24,7 +24,6 @@
 
 #include "StringUtils.h"
 #include <algorithm>
-#include <boost/algorithm/string/replace.hpp>
 #include <cctype>
 #include <sstream>
 #include <type_traits>
@@ -87,12 +86,29 @@ std::pair<std::string, std::string> nextField(const std::string &str,
                : std::make_pair(s.substr(0, pos), s.substr(pos + 1));
 }
 
+std::string replace_all(const std::string &str, const std::string &from,
+                        const std::string &to) {
+    std::string result;
+    result.reserve(str.size());
+    size_t added_after_match = from.empty() ? 1 : 0;
+    size_t pos = 0;
+    size_t match;
+    while ((match = str.find(from, pos)) != std::string::npos) {
+        result.append(str, pos, match - pos)
+            .append(to)
+            .append(str, pos, added_after_match);
+        pos = match + from.size() + added_after_match;
+    }
+    result.append(str, pos - added_after_match);
+    return result;
+}
+
 std::string from_multi_line(const std::string &str) {
-    return boost::replace_all_copy(str, "\n", R"(\n)");
+    return replace_all(str, "\n", R"(\n)");
 }
 
 std::string to_multi_line(const std::string &str) {
-    return boost::replace_all_copy(str, R"(\n)", "\n");
+    return replace_all(str, R"(\n)", "\n");
 }
 
 #ifdef CMC

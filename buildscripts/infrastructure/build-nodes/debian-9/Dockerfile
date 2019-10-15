@@ -8,6 +8,7 @@ RUN apt-get update \
     apache2 \
     apache2-dev \
     build-essential \
+    cmake \
     default-libmysqlclient-dev \
     dietlibc-dev \
     dnsutils \

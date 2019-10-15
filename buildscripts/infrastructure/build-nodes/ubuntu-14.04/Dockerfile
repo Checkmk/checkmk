@@ -8,6 +8,7 @@ RUN apt-get update \
     apache2 \
     apache2-threaded-dev \
     build-essential \
+    cmake \
     dietlibc-dev \
     dnsutils \
     dpatch \

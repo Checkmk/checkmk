@@ -8,6 +8,7 @@ RUN zypper addrepo -G http://10.9.1.101:8081/repository/sles12sp3 sles12sp3 \
     apache2-devel \
     bind-utils \
     boost-devel \
+    cmake \
     curl \
     flex \
     freeradius-client-devel \

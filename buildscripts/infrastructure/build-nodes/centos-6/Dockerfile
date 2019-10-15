@@ -7,6 +7,7 @@ RUN yum -y makecache \
     bind-utils \
     boost-devel \
     centos-release-scl \
+    cmake \
     compat-readline5 \
     curl-devel \
     expat-devel \

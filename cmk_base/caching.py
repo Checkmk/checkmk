@@ -26,8 +26,7 @@
 """Managing in-memory caches through the execution time of cmk"""
 
 from cmk.utils.exceptions import MKGeneralException
-
-import cmk_base.utils
+import cmk.utils.misc
 
 
 class CacheManager(object):
@@ -63,7 +62,7 @@ class CacheManager(object):
     def dump_sizes(self):
         sizes = {}
         for name, cache in self._caches.items():
-            sizes[name] = cmk_base.utils.total_size(cache)
+            sizes[name] = cmk.utils.misc.total_size(cache)
         return sizes
 
 

@@ -1,0 +1,11 @@
+Title: MKTimeout exceptions no longer fails with no argument
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p4
+Date: 1571145864
+
+When an MKTimeout exception was raised the execption itself did fail when its argument list was empty.

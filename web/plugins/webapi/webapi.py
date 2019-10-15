@@ -514,16 +514,27 @@ def action_edit_users(request):
     user_settings = request.get("users")
     all_users = userdb.load_users()
 
+    locked_attributes_by_connection = {}
+
     import copy
     edit_user_objects = {}
     for user_id, settings in user_settings.items():
         if user_id not in all_users:
             raise MKUserError(None, _("Unknown user: %s") % user_id)
 
-        if all_users[user_id].get("connector", "htpasswd") != "htpasswd":
-            raise MKUserError(None, _("This user is not a htpasswd user: %s") % user_id)
+        user = all_users[user_id]
+        connector_id = user.get('connector')
 
-        user_attrs = copy.deepcopy(all_users[user_id])
+        if connector_id not in locked_attributes_by_connection:
+            locked_attributes_by_connection[connector_id] = userdb.locked_attributes(connector_id)
+        locked_attributes = locked_attributes_by_connection[connector_id]
+
+        for attr in settings.get("set_attributes", {}).keys() + settings.get("unset_attributes", []):
+            if attr in locked_attributes:
+                raise MKUserError(None, _("Attribute \"%s\" of user \"%s\" can not be changed, "
+                    "because it is locked by the user connection.") % (attr, user_id))
+
+        user_attrs = copy.deepcopy(user)
         user_attrs.update(settings.get("set_attributes", {}))
         for entry in settings.get("unset_attributes", []):
             if entry not in user_attrs:

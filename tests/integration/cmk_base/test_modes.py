@@ -690,7 +690,8 @@ def test_check_verbose_only_check(execute):
     p = execute(["cmk", "-v", "--checks=lnx_if", "modes-test-host"])
     assert p.returncode == 0
     assert "Temperature Zone 0" not in p.stdout
-    assert "Interface 2" in p.stdout
+    assert "Interface 1" in p.stdout
+    assert "Interface 3" in p.stdout
     assert "OK - [agent] Version:" in p.stdout
 
 

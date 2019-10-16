@@ -3190,8 +3190,8 @@ class Optional(ValueSpec):
         html.checkbox("%s_use" % varprefix,
                       checked,
                       label=label,
-                      onclick="cmk.valuespecs.toggle_option(this, %r, %r)" %
-                      (div_id, 1 if self._negate else 0))
+                      onclick="cmk.valuespecs.toggle_option(this, %s, %r)" %
+                      (json.dumps(div_id), 1 if self._negate else 0))
 
         if self._sameline:
             html.nbsp()
@@ -3656,7 +3656,7 @@ class Dictionary(ValueSpec):
                 html.checkbox("%s_USE" % vp,
                               visible,
                               label=label,
-                              onclick="cmk.valuespecs.toggle_option(this, %r)" % div_id)
+                              onclick="cmk.valuespecs.toggle_option(this, %s)" % json.dumps(div_id))
             else:
                 visible = True
                 if vs.title():
@@ -3756,7 +3756,7 @@ class Dictionary(ValueSpec):
                 checkbox_code = html.render_checkbox(
                     vp + "_USE",
                     deflt=visible,
-                    onclick="cmk.valuespecs.toggle_option(this, %r)" % div_id)
+                    onclick="cmk.valuespecs.toggle_option(this, %s)" % json.dumps(div_id))
                 forms.section(vs.title(), checkbox=checkbox_code, css=css)
             else:
                 visible = True

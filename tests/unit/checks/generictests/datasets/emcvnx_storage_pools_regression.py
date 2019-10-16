@@ -154,66 +154,92 @@ checks = {
     'tieringtypes': [
         (
             u'backup Capacity', {}, [
+                (0, 'User capacity: 10.75 TB', []),
                 (
-                    0,
-                    'User capacity: 10.75 TB, Consumed capacity: 8.88 TB, Available capacity: 1.86 TB, Percent subscribed: 82.66%, Move up: 17.03 GB, Move down: 0.00 B, Move within: 0.00 B',
-                    [
+                    0, 'Consumed capacity: 8.88 TB', [
                         (
                             'emcvnx_consumed_capacity', 9767807898091.52, None,
                             None, None, None
-                        ),
+                        )
+                    ]
+                ),
+                (
+                    0, 'Available capacity: 1.86 TB', [
                         (
                             'emcvnx_avail_capacity', 2048667187937.28, None,
                             None, None, None
-                        ),
+                        )
+                    ]
+                ),
+                (
+                    0, 'Percent subscribed: 82.66%', [
                         (
                             'emcvnx_perc_subscribed', 82.66, None, None, None,
                             None
-                        ),
+                        )
+                    ]
+                ),
+                (
+                    0, 'Move higher: 17.03 GB', [
                         (
                             'emcvnx_targeted_higher', 18285823262.72, None,
                             None, None, None
-                        ),
-                        ('emcvnx_targeted_lower', 0.0, None, None, None, None),
-                        (
-                            'emcvnx_targeted_within', 0.0, None, None, None,
-                            None
                         )
                     ]
+                ),
+                (
+                    0, 'Move lower: 0.00 B', [
+                        ('emcvnx_targeted_lower', 0.0, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, 'Move within: 0.00 B',
+                    [('emcvnx_targeted_within', 0.0, None, None, None, None)]
                 )
             ]
         ),
         (
             u'backup Performance', {}, [
+                (0, 'User capacity: 4.30 TB', []),
                 (
-                    0,
-                    'User capacity: 4.30 TB, Consumed capacity: 3.87 TB, Available capacity: 439.86 GB, Percent subscribed: 90.01%, Move up: 0.00 B, Move down: 17.03 GB, Move within: 0.00 B',
-                    [
+                    0, 'Consumed capacity: 3.87 TB', [
                         (
                             'emcvnx_consumed_capacity', 4253059152609.28, None,
                             None, None, None
-                        ),
+                        )
+                    ]
+                ),
+                (
+                    0, 'Available capacity: 439.86 GB', [
                         (
                             'emcvnx_avail_capacity', 472296078704.64, None,
                             None, None, None
-                        ),
+                        )
+                    ]
+                ),
+                (
+                    0, 'Percent subscribed: 90.01%', [
                         (
                             'emcvnx_perc_subscribed', 90.01, None, None, None,
                             None
-                        ),
-                        (
-                            'emcvnx_targeted_higher', 0.0, None, None, None,
-                            None
-                        ),
+                        )
+                    ]
+                ),
+                (
+                    0, 'Move higher: 0.00 B',
+                    [('emcvnx_targeted_higher', 0.0, None, None, None, None)]
+                ),
+                (
+                    0, 'Move lower: 17.03 GB', [
                         (
                             'emcvnx_targeted_lower', 18285823262.72, None,
                             None, None, None
-                        ),
-                        (
-                            'emcvnx_targeted_within', 0.0, None, None, None,
-                            None
                         )
                     ]
+                ),
+                (
+                    0, 'Move within: 0.00 B',
+                    [('emcvnx_targeted_within', 0.0, None, None, None, None)]
                 )
             ]
         )
@@ -223,27 +249,45 @@ checks = {
             u'backup', {
                 'time_to_complete': (1814400, 2419200)
             }, [
+                (0, u'Fast cache: Disabled', []),
+                (0, u'Relocation status: Inactive', []),
+                (0, u'Relocation rate: Medium', []),
                 (
-                    0,
-                    u'Fast cache: Disabled, Relocation status: Inactive, Relocation rate: Medium, Move up: 17.03 GB, Move down: 17.03 GB, Move within: 0.00 B, Movement completed: 102.70 GB',
-                    [
+                    0, 'Move up: 17.03 GB', [
                         (
                             'emcvnx_move_up', 18285823262.72, None, None, None,
                             None
-                        ),
+                        )
+                    ]
+                ),
+                (
+                    0, 'Move down: 17.03 GB', [
                         (
                             'emcvnx_move_down', 18285823262.72, None, None,
                             None, None
-                        ), ('emcvnx_move_within', 0.0, None, None, None, None),
+                        )
+                    ]
+                ),
+                (
+                    0, 'Move within: 0.00 B', [
+                        ('emcvnx_move_within', 0.0, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, 'Movement completed: 102.70 GB', [
                         (
                             'emcvnx_move_completed', 110273285324.8, None,
                             None, None, None
                         )
                     ]
-                ),
+                ), (0, u'Estimated time to complete: 4 minutes', []),
                 (
-                    0, u'Estimated time to complete: 4 minutes',
-                    [('emcvnx_time_to_complete', 240, None, None, None, None)]
+                    0, 'Age: 4 m', [
+                        (
+                            'emcvnx_time_to_complete', 240, 1814400.0,
+                            2419200.0, None, None
+                        )
+                    ]
                 )
             ]
         )

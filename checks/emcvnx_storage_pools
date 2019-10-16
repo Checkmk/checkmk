@@ -41,6 +41,9 @@ def parse_emcvnx_storage_pools(info):
             pool_name = line[1]
             parsed.setdefault(pool_name, {})
 
+        elif section == "auto_tiering" and line[0].startswith(u'Auto-tiering is not supported'):
+            pool_name = None
+
         elif pool_name is not None and len(line) == 2:
             if line[0] == "Tier Name":
                 tier_name = line[1]
@@ -176,8 +179,8 @@ def parse_emcvnx_time_to_complete(time_to_complete):
                 unit = unit[:-1]
             seconds += int(value) * map_units[unit]
         return seconds
-    except Exception:
-        return
+    except (ValueError, KeyError, AttributeError):
+        return None
 
 
 def inventory_emcvnx_storage_pools_tiering(parsed):
@@ -185,47 +188,42 @@ def inventory_emcvnx_storage_pools_tiering(parsed):
         yield pool_name, {}
 
 
-def check_emcvnx_storage_pools_tiering(item, params, parsed):
-    if item in parsed:
-        data = parsed[item]
-        fast_cache = data["FAST Cache"]
-        relocation_status = data["Relocation Status"]
-        relocation_rate = data["Relocation Rate"]
-        move_up = float(data["Data to Move Up (GBs)"]) * 1024**3
-        move_down = float(data["Data to Move Down (GBs)"]) * 1024**3
-        move_within = float(data["Data to Move Within Tiers (GBs)"]) * 1024**3
-        move_completed = float(data["Data Movement Completed (GBs)"]) * 1024**3
-        time_to_complete = data["Estimated Time to Complete"]
-        age = parse_emcvnx_time_to_complete(time_to_complete)
+@get_parsed_item_data
+def check_emcvnx_storage_pools_tiering(item, params, data):
 
-        infotext = ("Fast cache: %s, Relocation status: %s, Relocation rate: %s, " +\
-                    "Move up: %s, Move down: %s, Move within: %s, " +\
-                    "Movement completed: %s") %\
-                   (fast_cache, relocation_status, relocation_rate,
-                    get_bytes_human_readable(move_up),
-                    get_bytes_human_readable(move_down),
-                    get_bytes_human_readable(move_within),
-                    get_bytes_human_readable(move_completed))
+    for key in ("FAST Cache", "Relocation Status", "Relocation Rate"):
+        if key in data:
+            yield 0, "%s: %s" % (key.capitalize(), data[key])
 
-        yield 0, infotext, [
-            ("emcvnx_move_up", move_up),
-            ("emcvnx_move_down", move_down),
-            ("emcvnx_move_within", move_within),
-            ("emcvnx_move_completed", move_completed),
-        ]
+    for direction in ("Up", "Down", "Within Tiers"):
+        value_raw = data.get("Data to Move %s (GBs)" % direction)
+        if value_raw is not None:
+            value = float(value_raw) * 1024**3
+            short_dir = direction.split()[0].lower()
+            yield check_levels(value,
+                               "emcvnx_move_%s" % short_dir,
+                               None,
+                               infoname="Move %s" % short_dir,
+                               human_readable_func=get_bytes_human_readable)
 
-        if age is not None:
-            infotext = "Estimated time to complete: %s" % time_to_complete
-            warn, crit = params["time_to_complete"]
-            state = 0
-            if age > crit:
-                state = 2
-            elif age > warn:
-                state = 1
-            if state:
-                infotext += " (warn/crit at %s/%s)" % (get_age_human_readable(warn),
-                                                       get_age_human_readable(crit))
-            yield state, infotext, [("emcvnx_time_to_complete", age)]
+    move_completed_raw = data.get("Data Movement Completed (GBs)")
+    if move_completed_raw is not None:
+        move_completed = float(move_completed_raw) * 1024**3
+        yield check_levels(move_completed,
+                           "emcvnx_move_completed",
+                           None,
+                           infoname="Movement completed",
+                           human_readable_func=get_bytes_human_readable)
+
+    time_to_complete = data.get("Estimated Time to Complete")
+    age = parse_emcvnx_time_to_complete(time_to_complete)
+    if age is not None:
+        yield 0, "Estimated time to complete: %s" % time_to_complete
+        yield check_levels(age,
+                           "emcvnx_time_to_complete",
+                           params["time_to_complete"],
+                           infoname="Age",
+                           human_readable_func=get_age_human_readable)
 
 
 check_info['emcvnx_storage_pools.tiering'] = {
@@ -244,40 +242,65 @@ def inventory_emcvnx_storage_pools_tieringtypes(parsed):
             yield "%s %s" % (pool_name, tier_name), {}
 
 
-def check_emcvnx_storage_pools_tieringtypes(item, params, parsed):
+def _get_item_data_and_tier(item, parsed):
     for pool_name, data in parsed.items():
         for tier_name in data.get("tier_names", []):
             if item == "%s %s" % (pool_name, tier_name):
-                user_capacity = float(data["%s_User Capacity (GBs)" % tier_name]) * 1024**3
-                consumed_capacity = float(data["%s_Consumed Capacity (GBs)" % tier_name]) * 1024**3
-                avail_capacity = float(data["%s_Available Capacity (GBs)" % tier_name]) * 1024**3
-                percent_subscribed = float(data["%s_Percent Subscribed" % tier_name].replace(
-                    "%", ""))
-                targeted_higher = float(
-                    data["%s_Data Targeted for Higher Tier (GBs)" % tier_name]) * 1024**3
-                targeted_lower = float(
-                    data["%s_Data Targeted for Lower Tier (GBs)" % tier_name]) * 1024**3
-                targeted_within = float(
-                    data["%s_Data Targeted Within Tier (GBs)" % tier_name]) * 1024**3
+                return data, tier_name
+    return None, None
 
-                infotext = ("User capacity: %s, Consumed capacity: %s, Available capacity: %s, " +\
-                            "Percent subscribed: %s, Move up: %s, Move down: %s, Move within: %s") %\
-                           (get_bytes_human_readable(user_capacity),
-                            get_bytes_human_readable(consumed_capacity),
-                            get_bytes_human_readable(avail_capacity),
-                            get_percent_human_readable(percent_subscribed),
-                            get_bytes_human_readable(targeted_higher),
-                            get_bytes_human_readable(targeted_lower),
-                            get_bytes_human_readable(targeted_within))
 
-                return 0, infotext, [
-                    ("emcvnx_consumed_capacity", consumed_capacity),
-                    ("emcvnx_avail_capacity", avail_capacity),
-                    ("emcvnx_perc_subscribed", percent_subscribed),
-                    ("emcvnx_targeted_higher", targeted_higher),
-                    ("emcvnx_targeted_lower", targeted_lower),
-                    ("emcvnx_targeted_within", targeted_within),
-                ]
+def check_emcvnx_storage_pools_tieringtypes(item, params, parsed):
+    data, tier_name = _get_item_data_and_tier(item, parsed)
+    if data is None:
+        return
+
+    user_capacity_raw = data.get("%s_User Capacity (GBs)" % tier_name)
+    if user_capacity_raw is not None:
+        user_capacity = float(user_capacity_raw) * 1024**3
+        yield check_levels(user_capacity,
+                           None,
+                           None,
+                           infoname="User capacity",
+                           human_readable_func=get_bytes_human_readable)
+
+    consumed_capacity_raw = data.get("%s_Consumed Capacity (GBs)" % tier_name)
+    if consumed_capacity_raw is not None:
+        consumed_capacity = float(consumed_capacity_raw) * 1024**3
+        yield check_levels(consumed_capacity,
+                           "emcvnx_consumed_capacity",
+                           None,
+                           infoname="Consumed capacity",
+                           human_readable_func=get_bytes_human_readable)
+
+    avail_capacity_raw = data.get("%s_Available Capacity (GBs)" % tier_name)
+    if avail_capacity_raw is not None:
+        avail_capacity = float(avail_capacity_raw) * 1024**3
+        yield check_levels(avail_capacity,
+                           "emcvnx_avail_capacity",
+                           None,
+                           infoname="Available capacity",
+                           human_readable_func=get_bytes_human_readable)
+
+    percent_subscribed_raw = data.get("%s_Percent Subscribed" % tier_name)
+    if percent_subscribed_raw is not None:
+        percent_subscribed = float(percent_subscribed_raw.replace("%", ""))
+        yield check_levels(percent_subscribed,
+                           "emcvnx_perc_subscribed",
+                           None,
+                           infoname="Percent subscribed",
+                           human_readable_func=get_percent_human_readable)
+
+    for direction in ("for Higher", "for Lower", "Within"):
+        value_raw = data.get("%s_Data Targeted %s Tier (GBs)" % (tier_name, direction))
+        if value_raw is not None:
+            value = float(value_raw) * 1024**3
+            short_dir = direction.split()[-1].lower()
+            yield check_levels(value,
+                               "emcvnx_targeted_%s" % short_dir,
+                               None,
+                               infoname="Move %s" % short_dir,
+                               human_readable_func=get_bytes_human_readable)
 
 
 check_info['emcvnx_storage_pools.tieringtypes'] = {

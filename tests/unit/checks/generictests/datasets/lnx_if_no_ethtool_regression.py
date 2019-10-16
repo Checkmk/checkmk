@@ -87,19 +87,19 @@ info = [[None, u'[start_iplink]'],
          u' 130923553  201184    0    0    0     0          0     16078 23586281  142684    0    0    0     0       0          0'],
         [None,
          u'docker0',
-         u'       0       0    0    0    0     0          0         0    16250     184    0    0    0     0       0          0'],
+         u'       123       0    0    0    0     0          0         0    16250     184    0    0    0     0       0          0'],
         [None,
          u'veth6a06585',
          u'       0       0    0    0    0     0          0         0    25963     287    0    0    0     0       0          0']]
 
 
-discovery = {'': [('2', "{'state': ['1'], 'speed': 0}"),
-                  ('3', "{'state': ['1'], 'speed': 0}")]}
+discovery = {'': [('1', "{'state': ['1'], 'speed': 0}"),
+                  ('4', "{'state': ['1'], 'speed': 0}")]}
 
 
-checks = {'': [('2',
+checks = {'': [('1',
                 {'errors': (0.01, 0.1), 'speed': 0, 'state': ['1']},
-                [(0, '[wlp3s0] (up) speed unknown', [])]),
-               ('3',
+                [(0, '[docker0] (up) speed unknown', [])]),
+               ('4',
                 {'errors': (0.01, 0.1), 'speed': 0, 'state': ['1']},
-                [(0, '[docker0] (up) speed unknown', [])])]}
+                [(0, '[wlp3s0] (up) speed unknown', [])])]}

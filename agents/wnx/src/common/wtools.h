@@ -8,6 +8,8 @@
 #define wtools_h__
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
+#include <comdef.h>
+
 #include "windows.h"
 #include "winperf.h"
 
@@ -791,7 +793,7 @@ inline int64_t WmiGetInt64_KillNegatives(const VARIANT& Var) noexcept {
         case VT_I2:
             return Var.intVal & 0xFFFF;
         case VT_I4:
-            return Var.llVal & 0xFFFF'FFFF; // we have seen 0x00DD'0000'0000
+            return Var.llVal & 0xFFFF'FFFF;  // we have seen 0x00DD'0000'0000
 
             // 8 bits values
         case VT_UI1:
@@ -976,6 +978,39 @@ namespace monitor {
 constexpr size_t kMaxMemoryAllowed = 200'000'000;
 bool IsAgentHealthy() noexcept;
 }  // namespace monitor
+
+class ACLInfo {
+public:
+    struct AceList {
+        ACE_HEADER* ace;
+        BOOL allowed;
+        AceList* next;
+    };
+
+    // construction / destruction
+
+    // constructs a new CACLInfo object
+    // bstrPath - path for which ACL info should be queried
+    ACLInfo(_bstr_t path);
+    virtual ~ACLInfo();
+
+    // Queries NTFS for ACL Info of the file/directory
+    HRESULT query();
+
+    // Outputs ACL info in Human-readable format
+    // to supplied output stream
+    std::string output();
+
+private:
+    // Private methods
+    void clearAceList();
+    HRESULT addAceToList(ACE_HEADER* pAce);
+
+private:
+    // Member variables
+    _bstr_t path_;       // path
+    AceList* ace_list_;  // list of Access Control Entries
+};
 
 }  // namespace wtools
 

@@ -444,9 +444,14 @@ int ExecMainService(StdioLog stdio_log) {
     // optional commands should be placed here
     // ********
 #if 0
-        // Auto Update when  MSI file is located by specified address
-        CheckForUpdateFile(kDefaultMsiFileName, cma::cfg::GetUpdateDir(),
-                           UpdateType::kMsiExecQuiet, true);
+            using namespace cma::cfg;
+            // Auto Update when  MSI file is located by specified address
+            CheckForUpdateFile(
+                kDefaultMsiFileName,     // file we are looking for
+                GetUpdateDir(),          // dir where file we're searching
+                UpdateType::exec_quiet,  // quiet for production
+                UpdateProcess::execute,  // start update when file found
+                GetUserInstallDir());    // dir where file to backup
 #endif
             return true;
         });

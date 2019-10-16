@@ -371,4 +371,24 @@ TEST(Wtools, KillTree) {
     EXPECT_FALSE(kProcessTreeKillAllowed);
 }
 
+TEST(Wtools, Acl) {
+    wtools::ACLInfo info("c:\\windows\\notepad.exe");
+    auto ret = info.query();
+    ASSERT_EQ(ret, 0) << "Bad return" << fmt::format("{:#X}", ret);
+    auto stat = info.output();
+    XLOG::l.i("\n{}", stat);
+    EXPECT_TRUE(!stat.empty());
+    {
+        wtools::ACLInfo info_temp("c:\\windows\\temp\\check_mk_agent.msi");
+        auto ret = info_temp.query();
+        if (ret == S_OK) XLOG::l("\n{}", info_temp.output());
+    }
+
+    {
+        wtools::ACLInfo info_temp("c:\\windows\\temp");
+        auto ret = info_temp.query();
+        if (ret == S_OK) XLOG::l("\n{}", info_temp.output());
+    }
+}
+
 }  // namespace wtools

@@ -1,0 +1,13 @@
+Title: Added more builtin views for customer related hosts/services
+Level: 1
+Component: multisite
+Class: feature
+Compatible: compat
+Edition: cme
+State: unknown
+Version: 1.6.0p6
+Date: 1571247550
+
+The overview in the dashboard and the existing builtin view 'Customers'
+did not allow to open a more detailed view for the shown statistics. With
+this change, all statistics link to a more detailed builtin view.

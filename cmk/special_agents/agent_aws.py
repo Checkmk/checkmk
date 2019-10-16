@@ -45,7 +45,7 @@ from cmk.special_agents.utils import (
     datetime_serializer,
     DataCache,
 )
-from cmk.special_agents.agent_aws_types import (
+from cmk.utils.aws_constants import (
     AWSRegions,
     AWSEC2InstTypes,
     AWSEC2LimitsDefault,

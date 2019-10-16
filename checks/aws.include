@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk.special_agents.agent_aws_types as agent_aws_types
+import cmk.utils.aws_constants as agent_aws_types
 
 AWSRegions = dict(agent_aws_types.AWSRegions)
 

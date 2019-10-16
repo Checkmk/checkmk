@@ -45,7 +45,7 @@ from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
 )
-from cmk.special_agents.agent_aws_types import (
+from cmk.utils.aws_constants import (
     AWSEC2InstTypes,
     AWSEC2LimitsDefault,
     AWSEC2LimitsSpecial,

@@ -43,7 +43,7 @@ from cmk.gui.plugins.metrics import (
     MAX_CORES,
     indexed_color,
 )
-from cmk.special_agents.agent_aws_types import AWSEC2InstTypes
+from cmk.utils.aws_constants import AWSEC2InstTypes
 
 # TODO Graphingsystem:
 # - Default-Template: Wenn im Graph kein "range" angegeben ist, aber

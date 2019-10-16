@@ -49,6 +49,7 @@ stamp-h1
 tags
 tests/web/data/*
 .idea/
+*.iml
 .venv
 *.gcov
 htmlcov/

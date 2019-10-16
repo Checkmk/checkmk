@@ -164,7 +164,7 @@ def parse_lnx_if(info):
 
     nic_info = []
     for (node_info, iface_name), iface in sorted(ethtool_stats.items(), key=lambda x: x[0][1]):
-        iface.update(ip_stats.get(iface_name, {}))
+        iface.update(ip_stats.get((node_info, iface_name), {}))
         nic_info.append((node_info, iface_name, iface))
 
     if_table = []

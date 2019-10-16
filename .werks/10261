@@ -1,0 +1,17 @@
+Title: API: The edit_users call can now be used to edit LDAP users
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1571166582
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+The web API call "edit_users" that can be used to edit the attributes of a user
+could previously not be used for users that were created using the LDAP synchronization.
+This limitation has now been removed.
+
+Please note that the call can only set attributes that are not locked by a LDAP attribute
+sync plugin (see LDAP connection settings). This works like the "Edit user" dialog.

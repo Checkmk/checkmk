@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk.special_agents.agent_aws_types as aws_types
+import cmk.utils.aws_constants as aws_types
 
 factory_settings['aws_ec2_limits_default_levels'] = {
     'vpc_elastic_ip_addresses': (None, 80.0, 90.0),

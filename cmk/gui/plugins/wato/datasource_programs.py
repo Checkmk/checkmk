@@ -26,7 +26,6 @@
 
 import cmk.gui.bi as bi
 import cmk.gui.watolib as watolib
-from cmk.special_agents import agent_aws_types
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
@@ -63,6 +62,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato.utils import (
     PasswordFromStore,)
+from cmk.utils import aws_constants
 
 
 @rulespec_group_registry.register
@@ -1870,7 +1870,7 @@ def _valuespec_special_agents_aws():
             ("regions",
              ListChoice(
                  title=_("Regions to use"),
-                 choices=sorted(agent_aws_types.AWSRegions, key=lambda x: x[1]),
+                 choices=sorted(aws_constants.AWSRegions, key=lambda x: x[1]),
              )),
             ("services",
              Dictionary(

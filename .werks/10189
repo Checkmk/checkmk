@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0p4
+Version: 1.6.0p5
 Date: 1569931484
 
 Previously Windows Agent sent IP Addresses for OnlyFrom in the network form.

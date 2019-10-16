@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0p4
+Version: 1.6.0p5
 Date: 1569396481
 
 We have seen cases in which the parameter "KillMode=process" of the unit file

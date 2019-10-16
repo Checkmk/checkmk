@@ -6,7 +6,7 @@ Class: fix
 Compatible: compat
 Edition: cee
 State: unknown
-Version: 1.6.0p4
+Version: 1.6.0p5
 Date: 1570528370
 
 Non-ASCII characters in various places (e.g. group names) caused a failure in

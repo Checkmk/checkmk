@@ -5,7 +5,7 @@ Class: feature
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0p4
+Version: 1.6.0p5
 Date: 1568377108
 
 In very rare cases, there may be a memory leak in the Agent.

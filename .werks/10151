@@ -6,7 +6,7 @@ Class: fix
 Compatible: incomp
 Edition: cre
 State: unknown
-Version: 1.6.0p4
+Version: 1.6.0p5
 Date: 1570619710
 
 If the instance name contained a backslash, the ini-files path was wrongly considered

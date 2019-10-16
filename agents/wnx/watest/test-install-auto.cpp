@@ -59,6 +59,29 @@ TEST(InstallAuto, LowLevel) {
     EXPECT_FALSE(NeedInstall(path, out));
 }
 
+TEST(InstallAuto, Mode) {
+    using namespace cma::install;
+    //
+    EXPECT_EQ(GetInstallMode(), InstallMode::normal);
+    {
+        auto [ret, log] = MakeCommandLine(L"xx", UpdateType::exec_normal);
+        ASSERT_TRUE(!ret.empty());
+        EXPECT_EQ(ret, L" /i xx");
+        ASSERT_TRUE(!log.empty());
+        std::filesystem::path p(log);
+        EXPECT_EQ(p.filename().u8string(), kMsiLogFileName);
+    }
+
+    {
+        auto [ret, log] = MakeCommandLine(L"xx", UpdateType::exec_quiet);
+        ASSERT_TRUE(!ret.empty());
+        ASSERT_TRUE(!log.empty());
+        EXPECT_EQ(ret, std::wstring(L" /i xx /qn /L*V ") + log);
+        std::filesystem::path p(log);
+        EXPECT_EQ(p.filename().u8string(), kMsiLogFileName);
+    }
+}
+
 TEST(InstallAuto, TopLevel) {
     cma::OnStart(cma::AppType::test);
     using namespace cma::install;

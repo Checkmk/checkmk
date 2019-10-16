@@ -355,12 +355,17 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
             // 1. Auto Update when  MSI file is located by specified address
             // this part of code have to be tested manually
             // scripting is possible but complicated
-            CheckForUpdateFile(
+            auto ret = CheckForUpdateFile(
                 kDefaultMsiFileName,     // file we are looking for
                 GetUpdateDir(),          // dir where file we're searching
                 UpdateType::exec_quiet,  // quiet for production
                 UpdateProcess::execute,  // start update when file found
                 GetUserInstallDir());    // dir where file to backup
+
+            if (ret)
+                XLOG::l.i(
+                    "Install process was initiated - waiting for restart");
+
             return true;
         });
         if (ret == 0) ServiceUsage(L"");

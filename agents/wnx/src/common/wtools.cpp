@@ -83,7 +83,7 @@ uint32_t AppRunner::goExecAsJob(std::wstring_view CommandLine) noexcept {
 uint32_t AppRunner::goExecAsUpdater(std::wstring_view CommandLine) noexcept {
     try {
         if (process_id_) {
-            XLOG::l.bp("Attempt to reuse AppRunner");
+            XLOG::l.bp("Attempt to reuse AppRunner/updater");
             return 0;
         }
         prepareResources(CommandLine, true);
@@ -96,7 +96,7 @@ uint32_t AppRunner::goExecAsUpdater(std::wstring_view CommandLine) noexcept {
         if (process_id_) return process_id_;
 
         // failure s here
-        XLOG::l(XLOG_FLINE + " Failed RunStd: [{}]*", GetLastError());
+        XLOG::l(XLOG_FLINE + " Failed updater RunStd: [{}]*", GetLastError());
 
         cleanResources();
         return 0;
@@ -2053,6 +2053,253 @@ uint32_t GetParentPid(uint32_t pid)  // By Napalm @ NetCore2K
         return (uint32_t)(pbi[5]);
 
     return 0;
+}
+
+#define READ_PERMISSIONS (FILE_READ_DATA | FILE_READ_ATTRIBUTES)
+#define WRITE_PERMISSIONS \
+    (FILE_WRITE_DATA | FILE_APPEND_DATA | FILE_WRITE_ATTRIBUTES | FILE_WRITE_EA)
+#define EXECUTE_PERMISSIONS (FILE_READ_DATA | FILE_EXECUTE)
+
+// Constructor
+ACLInfo::ACLInfo(_bstr_t bstrPath) {
+    ace_list_ = nullptr;
+    path_ = bstrPath;
+}
+
+// Destructor
+ACLInfo::~ACLInfo(void) {
+    // Free ace_list structure
+    clearAceList();
+}
+
+// Free the nodes of ace_list
+void ACLInfo::clearAceList() {
+    AceList* pList = ace_list_;
+    AceList* pNext;
+    while (nullptr != pList) {
+        pNext = pList->next;
+        free(pList);
+        pList = pNext;
+    }
+
+    ace_list_ = nullptr;
+}
+
+HRESULT ACLInfo::query() {
+    BOOL success = TRUE;
+    BYTE* security_descriptor_buffer = nullptr;
+    DWORD size_needed = 0;
+
+    // clear any previously queried information
+    clearAceList();
+
+    // Find out size of needed buffer for security descriptor with DACL
+    // DACL = Discretionary Access Control List
+    success = GetFileSecurityW((BSTR)path_, DACL_SECURITY_INFORMATION, nullptr,
+                               0, &size_needed);
+
+    if (0 == size_needed) {
+        return E_FAIL;
+    }
+    security_descriptor_buffer = new BYTE[size_needed];
+
+    // Retrieve security descriptor with DACL information
+    success =
+        GetFileSecurityW((BSTR)path_, DACL_SECURITY_INFORMATION,
+                         security_descriptor_buffer, size_needed, &size_needed);
+
+    // Check if we successfully retrieved security descriptor with DACL
+    // information
+    if (!success) {
+        DWORD error = GetLastError();
+        XLOG::l("Failed to get file security information {}", error);
+        return E_FAIL;
+    }
+
+    // Getting DACL from Security Descriptor
+    PACL acl = nullptr;
+    BOOL bDaclPresent = FALSE;
+    BOOL bDaclDefaulted = FALSE;
+    success = GetSecurityDescriptorDacl(
+        (SECURITY_DESCRIPTOR*)security_descriptor_buffer, &bDaclPresent, &acl,
+        &bDaclDefaulted);
+
+    // Check if we successfully retrieved DACL
+    if (!success) {
+        auto error = GetLastError();
+        XLOG::l("Failed to retrieve DACL from security descriptor {}", error);
+        return E_FAIL;
+    }
+
+    // Check if DACL present in security descriptor
+    if (!bDaclPresent) {
+        XLOG::l("DACL was not found.");
+        return E_FAIL;
+    }
+
+    // DACL for specified file was retrieved successfully
+    // Now, we should fill in the linked list of ACEs
+    // Iterate through ACEs (Access Control Entries) of DACL
+    for (USHORT i = 0; i < acl->AceCount; i++) {
+        LPVOID ace = nullptr;
+        success = GetAce(acl, i, &ace);
+        if (!success) {
+            DWORD error = GetLastError();
+            XLOG::l("Failed to get ace {}, {}", i, error);
+            continue;
+        }
+        HRESULT hr = addAceToList((ACE_HEADER*)ace);
+        if (FAILED(hr)) {
+            XLOG::l("Failed to add ace {} to list", i);
+            continue;
+        }
+    }
+    return S_OK;
+}
+
+HRESULT ACLInfo::addAceToList(ACE_HEADER* Ace) {
+    AceList* new_ace = (AceList*)malloc(sizeof(AceList));  // SK: from example
+    if (nullptr == new_ace) {
+        return E_OUTOFMEMORY;
+    }
+
+    // Check Ace type and update new list entry accordingly
+    switch (Ace->AceType) {
+        case ACCESS_ALLOWED_ACE_TYPE: {
+            new_ace->allowed = TRUE;
+            break;
+        }
+        case ACCESS_DENIED_ACE_TYPE: {
+            new_ace->allowed = FALSE;
+            break;
+        }
+    }
+    // Update the remaining fields
+    // We add new entry to the head of list
+    new_ace->ace = Ace;
+    new_ace->next = ace_list_;
+
+    ace_list_ = new_ace;
+
+    return S_OK;
+}
+
+static std::string MakeReadableString(bool allowed, const std::string& domain,
+                                      const std::string& name,
+                                      ACCESS_MASK mask_permissions) {
+    std::string os;
+    // Output Account info (in NT4 style: domain\user)
+    if (allowed) {
+        os += "Allowed to: ";
+    } else {
+        os += "Denied from: ";
+    }
+
+    if (!domain.empty()) {
+        os += domain;
+        os += "\\";
+    }
+    if (!name.empty()) {
+        os += name;
+    }
+
+    // Output permissions (Read/Write/Execute)
+    os += " [";
+
+    // For Allowed aces
+    if (allowed) {
+        // Read Permissions
+        if ((mask_permissions & READ_PERMISSIONS) == READ_PERMISSIONS) {
+            os += "R";
+        } else {
+            os += " ";
+        }
+        // Write permissions
+        if ((mask_permissions & WRITE_PERMISSIONS) == WRITE_PERMISSIONS) {
+            os += "W";
+        } else {
+            os += " ";
+        }
+        // Execute Permissions
+        if ((mask_permissions & EXECUTE_PERMISSIONS) == EXECUTE_PERMISSIONS) {
+            os += "X";
+        } else {
+            os += " ";
+        }
+    } else
+    // Denied Ace permissions
+    {
+        // Read Permissions
+        if ((mask_permissions & READ_PERMISSIONS) != 0) {
+            os += "R";
+        } else {
+            os += " ";
+        }
+        // Write permissions
+        if ((mask_permissions & WRITE_PERMISSIONS) != 0) {
+            os += "W";
+        } else {
+            os += " ";
+        }
+        // Execute Permissions
+        if ((mask_permissions & EXECUTE_PERMISSIONS) != 0) {
+            os += "X";
+        } else {
+            os += " ";
+        }
+    }
+    os += "]";
+    return os;
+}
+
+// code below has not very high quality
+// copy pasted from MSDN
+std::string ACLInfo::output() {
+    if (nullptr == ace_list_) return "No ACL Info\n";
+
+    ACE_HEADER* ace = nullptr;
+    SID* ace_sid = nullptr;
+    ACCESS_MASK mask_permissions = 0;
+    auto list = ace_list_;
+    // Iterate through ACEs list and
+    // out put information
+    std::string os;
+    while (nullptr != list) {
+        {
+            ace = list->ace;
+            if (list->allowed) {
+                auto allowed = reinterpret_cast<ACCESS_ALLOWED_ACE*>(ace);
+                ace_sid = (SID*)(&(allowed->SidStart));
+                mask_permissions = allowed->Mask;
+            } else {
+                auto denied = reinterpret_cast<ACCESS_DENIED_ACE*>(ace);
+                ace_sid = (SID*)(&(denied->SidStart));
+                mask_permissions = denied->Mask;
+            }
+        }
+
+        SID_NAME_USE sid_name_use;
+        char name_buffer[MAX_PATH];
+        char domain_buffer[MAX_PATH];
+        DWORD name_len = sizeof(name_buffer);
+        DWORD domain_name_len = sizeof(domain_buffer);
+
+        // Get account name for SID
+        auto ret =
+            LookupAccountSidA(nullptr, ace_sid, name_buffer, &name_len,
+                              domain_buffer, &domain_name_len, &sid_name_use);
+        if (!ret) {
+            XLOG::l("Failed to get account for SID");
+            continue;
+        }
+
+        os += MakeReadableString(list->allowed, domain_buffer, name_buffer,
+                                 mask_permissions);
+        os += "\n";
+
+        list = list->next;
+    }
+    return os;
 }
 
 }  // namespace wtools

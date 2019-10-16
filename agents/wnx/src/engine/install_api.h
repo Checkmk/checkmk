@@ -16,7 +16,14 @@ namespace cma {
 namespace install {
 enum class UpdateType { exec_normal, exec_quiet };
 enum class UpdateProcess { execute, skip };
+enum class InstallMode { normal, reinstall };
+InstallMode GetInstallMode();
+std::pair<std::wstring, std::wstring> MakeCommandLine(
+    const std::filesystem::path& msi, UpdateType update_type);
+
 constexpr const std::wstring_view kDefaultMsiFileName = L"check_mk_agent.msi";
+
+constexpr const std::string_view kMsiLogFileName = "agent_msi.log";
 
 namespace registry
 
@@ -47,6 +54,7 @@ bool CheckForUpdateFile(std::wstring_view Name, std::wstring_view DirWithMsi,
                         std::wstring_view BackupPath = L"");
 
 std::filesystem::path MakeTempFileNameInTempPath(std::wstring_view Name);
+std::filesystem::path GenerateTempFileNameInTempPath(std::wstring_view Name);
 
 // internal API with diag published to simplify testing or for later use
 // ****************************************

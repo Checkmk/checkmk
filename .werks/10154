@@ -1,0 +1,12 @@
+Title: mgmt_ipmi_sensors: Missing service details for IPMI sensors services
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.5.0p23
+Date: 1571218996
+Class: fix
+
+Some IPMI sensors reported null bytes within their name. This resulted in various problems,
+including an empty page when trying to view the services' details.
+This has been fixed. A rediscovery is required for affected services.

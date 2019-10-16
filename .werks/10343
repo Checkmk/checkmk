@@ -1,0 +1,23 @@
+Title: lnx_if: Fixed flapping discovery of interfaces if output of ethtool is missing
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1571218390
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+Re-discoveries on Linux hosts which provide the {{lnx_if}} section may found
+new and vanished interfaces if the output of ethtool is missing.
+
+You have to perform a rediscovery on affected Linux hosts.
+
+Details:
+lnx_if section consists of three parts: {{ip address}}, {{/proc/net/dev}} and
+{{ethtool}}. {{ip address}} and {{ethtool}} may be missing.
+If the index of {{/proc/net/dev}} is available we use this one.  Otherwise if
+the index of {{ethtool}} is available we use this one.  Otherwise if the index
+of {{ip address}} is available we use this one.  As a fallback we calculate the
+index synthetically.

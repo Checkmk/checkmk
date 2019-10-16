@@ -860,11 +860,9 @@ def IPNetwork(ip_class=None, **kwargs):
     if ip_class is None:
         ip_class = ipaddress.ip_interface
 
-    def _validate_value(self, value, varprefix):
-        super(IPNetwork, self)._validate_value(value, varprefix)
-
+    def _validate_value(value, varprefix):
         try:
-            ip_class()(value.decode("utf-8"))
+            ip_class(value.decode("utf-8"))
         except ValueError as e:
             raise MKUserError(varprefix, _("Invalid address: %s") % e)
 

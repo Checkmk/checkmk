@@ -69,7 +69,7 @@ checks = {
         (0, 'user perc: 0.0 %', [
             ('user', 0.0005063291139240507, None, None, None, None),
         ]),
-        (0, 'privileged perc: 0.0 %', []),
-        (0, '4 CPUs', []),
+        (0, 'privileged perc: 0.0 %', [('privileged', 1.6877637130801688e-05)]),
+        (0, '4 CPUs', [('cpus', 4)]),
     ]),],
 }

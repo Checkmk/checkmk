@@ -1,0 +1,11 @@
+Title: winperf_processor: Fixed crash when perfdata are missing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1571236122
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+Check did crash because the performance data where missing in certain cases.

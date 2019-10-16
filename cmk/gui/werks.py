@@ -61,7 +61,7 @@ g_werks = None
 
 @cmk.gui.pages.register("version")
 def page_version():
-    html.header(_("Check_MK %s Release Notes") % cmk.__version__)
+    html.header(_("Checkmk %s Release Notes") % cmk.__version__)
     load_werks()
     handle_acknowledgement()
     render_werks_table()
@@ -127,7 +127,7 @@ def page_werk():
     werk_table_row(_("Title"), html.render_b(render_werk_title(werk)))
     werk_table_row(_("Component"), translator.component_of(werk))
     werk_table_row(_("Date"), render_werk_date(werk))
-    werk_table_row(_("Check_MK Version"), werk["version"])
+    werk_table_row(_("Checkmk Version"), werk["version"])
     werk_table_row(_("Level"),
                    translator.level_of(werk),
                    css="werklevel werklevel%d" % werk["level"])
@@ -258,7 +258,7 @@ def _werk_table_option_entries():
             size=41,
         ), ""),
         ("version", "single",
-         Tuple(title=_("Check_MK Version"),
+         Tuple(title=_("Checkmk Version"),
                orientation="float",
                elements=[
                    TextAscii(label=_("from:"), size=12),
@@ -268,7 +268,7 @@ def _werk_table_option_entries():
          DropdownChoice(
              title=_("Group Werks by"),
              choices=[
-                 ("version", _("Check_MK Version")),
+                 ("version", _("Checkmk Version")),
                  ("day", _("Day of creation")),
                  ("week", _("Week of creation")),
                  (None, _("Do not group")),

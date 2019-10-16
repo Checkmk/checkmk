@@ -108,12 +108,12 @@ info = [[None, u'[start_iplink]'],
 
 
 discovery = {'': [('2', "{'state': ['1'], 'speed': 0}"),
-                  ('3', "{'state': ['1'], 'speed': 0}")]}
+                  ('4', "{'state': ['1'], 'speed': 0}")]}
 
 
 checks = {'': [('2',
                 {'errors': (0.01, 0.1), 'speed': 0, 'state': ['1']},
-                [(0, '[wlp3s0] (up) MAC: AA:AA:AA:AA:AA:AA, speed unknown', [])]),
-               ('3',
+                [(0, '[docker0] (up) MAC: AA:AA:AA:AA:AA:AA, speed unknown', [])]),
+               ('4',
                 {'errors': (0.01, 0.1), 'speed': 0, 'state': ['1']},
-                [(0, '[docker0] (up) MAC: AA:AA:AA:AA:AA:AA, speed unknown', [])])]}
+                [(0, '[wlp3s0] (up) MAC: AA:AA:AA:AA:AA:AA, speed unknown', [])])]}

@@ -8,9 +8,6 @@ checkname = u'mknotifyd'
 info = [[u'[EX]'], [u'Binary file (standard input) matches']]
 
 
-parsed = {u'EX': {'connections': {}, 'queues': {}, 'spools': {}}}
-
-
 discovery = {'': [(u'EX', {})], 'connection': []}
 
 

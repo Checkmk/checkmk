@@ -1,0 +1,20 @@
+Title: mknotifyd: fix wrong state file age output
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1571211105
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+The computation of the state file age was dependent on the
+execution time of the check_mk_agent and the scheduling of
+the check itself. If e.g. the sections after the mknotifyd
+section took 5s this time was added to the state file age
+inside the check. In the worst case this may lead to wrong
+warnings that the state file age is older than 90s.
+
+To use the fixed version of the mknotifyd check the
+check_mk_agent has to be updated on systems with Checkmk
+installations after a site update.

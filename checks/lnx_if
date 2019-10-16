@@ -91,6 +91,7 @@ def _parse_lnx_if_ipaddress(lines):
             # 5: veth6a06585@if4: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue ...
             iface = ip_stats.setdefault((node, line[1][:-1].split("@")[0]), {})
             iface.update(dict(zip(line[3::2], line[4::2])))
+            iface["ip_address_index"] = int(line[0][:-1])
             # The interface flags are summarized in the angle brackets.
             if "UP" in line[2][1:-1].split(","):
                 iface['state'] = "UP"
@@ -120,7 +121,8 @@ def _parse_lnx_if_sections(info):
     ethtool_stats = {}
     iface = None
     lines = iter(info)
-    index = 0
+    proc_index = 0
+    ethtool_index = 0
     while True:
         try:
             node, line = _parse_lnx_if_node_info(lines)
@@ -131,22 +133,29 @@ def _parse_lnx_if_sections(info):
             # Parse 'ip link/address' section (as fallback in case ethtool is missing)
             ip_stats.update(_parse_lnx_if_ipaddress(lines))
 
-        elif len(line) == 2 and len(line[1].split()) >= 16:
-            # Parse 'ethtool'; part one
+        elif len(line) == 2 and len(line[1].split()) >= 13:
+            # Some counters may missing, we insert 0. Try to find the length of
+            # shortest line with missing counters: We've seen 13.
+            # '342545566242 0 259949262 0 0 0 0 0  0 19196 0 0  0 0'
+            raw_counters = line[1].replace("  ", " 0 ").split()
+            if len(raw_counters) < 16:
+                continue
+            # Parse '/proc/net/dev'
             # IFACE_NAME: VAL VAL VAL ...
+            proc_index += 1
             iface = ethtool_stats.setdefault((node, line[0]), {})
-            iface.update({"counters": map(int, line[1].split())})
+            iface.update({"counters": map(int, raw_counters), "proc_index": proc_index})
             continue
 
         elif line[0].startswith('[') and line[0].endswith(']'):
-            # Parse 'ethtool'; part two
+            # Parse 'ethtool' output
             # [IF_NAME]
             #       KEY: VAL
             #       KEY: VAL
             #       ...
-            index += 1
+            ethtool_index += 1
             iface = ethtool_stats.setdefault((node, line[0][1:-1]), {})
-            iface.update({"index": index})
+            iface["ethtool_index"] = ethtool_index
             continue
 
         if iface is not None:
@@ -170,10 +179,11 @@ def parse_lnx_if(info):
 
     if_table = []
     index = 0
-    for (node_info, nic), attr in nic_info.iteritems():
+    for (node_info, nic), attr in sorted(nic_info.iteritems()):
         counters = attr.get("counters", [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
         index += 1
-        ifIndex = attr.get("index", index)
+        ifIndex = attr.get("proc_index",
+                           attr.get("ethtool_index", attr.get("ip_address_index", index)))
         ifDescr = nic
         ifAlias = nic
 

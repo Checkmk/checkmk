@@ -20,7 +20,6 @@ RUN yum -y makecache \
     isl-devel \
     kernel-headers \
     libXpm-devel \
-    libdbi-devel \
     libevent-devel \
     libffi-devel \
     libgsf-devel \

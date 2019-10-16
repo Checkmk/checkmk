@@ -87,10 +87,19 @@ info = [[None, u'[start_iplink]'],
          u' 130923553  201184    0    0    0     0          0     16078 23586281  142684    0    0    0     0       0          0'],
         [None,
          u'docker0',
-         u'       123       0    0    0    0     0          0         0    16250     184    0    0    0     0       0          0'],
+         u'       0       0    0    0    0     0          0         0    16250     184    0    0    0     0       0          0'],
         [None,
          u'veth6a06585',
          u'       0       0    0    0    0     0          0         0    25963     287    0    0    0     0       0          0']]
+
+
+# Notes:
+# docker0 has ifInOctets == 0.
+# - If docker0 is not updated with ip address statistics we get:
+#   'ifInOctects == 0' => 'ifOperState == 4'
+#   => The interface is not discovered
+# - ip address statistics contain <UP>; we get 'ifOperState == 1'
+#   and the docker0 interface will be discovered.
 
 
 discovery = {'': [('1', "{'state': ['1'], 'speed': 0}"),

@@ -2,7 +2,7 @@ FROM nexus.lan.tribe29.com:4000/sles-12-base
 
 SHELL ["/bin/bash", "-c"]
 
-RUN zypper addrepo -G http://10.9.1.101:8081/repository/sles12 sles12 \
+RUN zypper addrepo -G http://nexus:8081/repository/sles12 sles12 \
     && zypper ref -s \
     && zypper -n in -y --force-resolution \
     apache2-devel \

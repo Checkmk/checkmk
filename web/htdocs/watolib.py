@@ -6017,7 +6017,7 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
         p = subprocess.Popen(cmd,
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
     except Exception, e:
-        raise MKGeneralException("Cannot execute <tt>%s</tt>: %s" % (" ".join(cmd), e))
+        raise _local_automation_failure(command=command, cmdline=cmd, exc=e)
 
     if stdin_data != None:
         p.stdin.write(stdin_data)
@@ -6031,11 +6031,12 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
     if errdata:
         logger.warning("'%s' returned '%s'" % (" ".join(cmd), errdata))
     if exitcode != 0:
-        if config.debug:
-            raise MKGeneralException("Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>" %
-                  (" ".join(cmd), exitcode, hilite_errors(outdata)))
-        else:
-            raise MKGeneralException(hilite_errors(outdata))
+        logger.error("Error running %r (exit code %d)" % (subprocess.list2cmdline(cmd), exitcode))
+        raise _local_automation_failure(command=command,
+                                        cmdline=cmd,
+                                        code=exitcode,
+                                        out=outdata,
+                                        err=errdata)
 
 
     # On successful "restart" command execute the activate changes hook
@@ -6045,8 +6046,21 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
     try:
         return ast.literal_eval(outdata)
     except Exception, e:
-        raise MKGeneralException("Error running <tt>%s</tt>. Invalid output from webservice (%s): <pre>%s</pre>" %
-                      (" ".join(cmd), e, outdata))
+        raise _local_automation_failure(command=command, cmdline=cmd, out=outdata, exc=e)
+
+
+def _local_automation_failure(command, cmdline, code=None, out=None, err=None, exc=None):
+    call = subprocess.list2cmdline(cmdline) if config.debug else command
+    msg = "Error running automation call <tt>%s<tt>" % call
+    if code:
+        msg += " (exit code %d)" % code
+    if out:
+        msg += ", output: <pre>%s</pre>" % hilite_errors(out)
+    if err:
+        msg += ", error: <pre>%s</pre>" % hilite_errors(err)
+    if exc:
+        msg += ": %s" % exc
+    return MKGeneralException(msg)
 
 
 # TODO: Remove this once non OMD environments are not supported anymore

@@ -895,8 +895,6 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
         console.vverbose("  Skip ignored check plugin name '%s'\n" % check_plugin_name)
         return
 
-    discovery_function = _get_discovery_function_of(check_plugin_name)
-
     try:
         # TODO: There is duplicate code with checking.execute_check(). Find a common place!
         try:
@@ -932,6 +930,7 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
             return
 
         # Now do the actual discovery
+        discovery_function = _get_discovery_function_of(check_plugin_name)
         discovered_items = _execute_discovery_function(discovery_function, section_content)
         for entry in _validate_discovered_items(hostname, check_plugin_name, discovered_items):
             yield entry

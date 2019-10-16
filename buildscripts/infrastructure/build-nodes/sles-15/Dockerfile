@@ -1,4 +1,4 @@
-FROM 10.9.1.101:4000/sles-15-base
+FROM nexus.lan.tribe29.com:4000/sles-15-base
 
 SHELL ["/bin/bash", "-c"]
 

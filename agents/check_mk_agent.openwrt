@@ -640,6 +640,7 @@ if type omd >/dev/null
 then
     run_cached -s omd_status 60 "omd status --bare --auto || true"
     echo '<<<mknotifyd:sep(0)>>>'
+    date +%s
     for statefile in /omd/sites/*/var/log/mknotifyd.state ; do
 	if [ -e "$statefile" ] ; then
 	    site=${statefile%/var/log*}

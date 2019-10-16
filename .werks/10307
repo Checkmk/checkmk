@@ -1,0 +1,17 @@
+Title: Resolve conflict event console archive event
+Knowledge: doc
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p23
+Date: 1571237648
+
+There are two methods to archive events in the event console view. By
+single event, directly clicking on the archive icon or by bulk selection of
+rows. In the case the checkboxes for row selection were toggled by default
+the single event case was shadowed and could not find the selected event.
+
+With Werk resolves the issue and allow both actions to play together.

@@ -1910,15 +1910,15 @@ def render_view(view, rows, datasource, group_painters, painters,
 
     # Actions
     if command_form:
-        # If we are currently within an action (confirming or executing), then
-        # we display only the selected rows (if checkbox mode is active)
-        if show_checkboxes and html.do_actions():
-            rows = filter_selected_rows(view, rows, weblib.get_rowselection('view-' + view['name']))
-
         # There are one shot actions which only want to affect one row, filter the rows
         # by this id during actions
         if html.has_var("_row_id") and html.do_actions():
             rows = filter_by_row_id(view, rows)
+
+        # If we are currently within an action (confirming or executing), then
+        # we display only the selected rows (if checkbox mode is active)
+        elif show_checkboxes and html.do_actions():
+            rows = filter_selected_rows(view, rows, weblib.get_rowselection('view-' + view['name']))
 
         if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
             try:

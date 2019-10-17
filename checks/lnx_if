@@ -109,6 +109,8 @@ def _parse_lnx_if_ipaddress(lines):
                 pass
 
         elif line[0].startswith('inet'):
+            if "temporary" in line and "dynamic" in line:
+                continue
             # inet 127.0.0.1/8 scope host lo
             # inet6 ::1/128 scope host
             iface.setdefault(line[0], []).append(line[1])

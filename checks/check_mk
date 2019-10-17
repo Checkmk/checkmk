@@ -131,6 +131,9 @@ def check_cmk_agent_update(_no_item, _no_params, info):
             if parsed["aghash"]:
                 yield 0, "Agent configuration: %s" % parsed["aghash"][:8]
 
+            if parsed.get("pending_hash"):
+                yield 0, "Pending installation: %s" % parsed["pending_hash"][:8]
+
             return
 
 

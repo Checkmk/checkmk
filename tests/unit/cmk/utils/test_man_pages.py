@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 from pathlib2 import Path
-import pytest
+import pytest  # type: ignore
 
 from testlib import cmk_path
 
@@ -18,21 +18,21 @@ def patch_cmk_paths(monkeypatch, tmp_path):
 
 
 def test_man_page_exists_only_shipped():
-    assert man_pages.man_page_exists("if64") == True
-    assert man_pages.man_page_exists("not_existant") == False
+    assert man_pages.man_page_exists("if64") is True
+    assert man_pages.man_page_exists("not_existant") is False
 
 
 def test_man_page_exists_both_dirs(tmp_path):
     f1 = tmp_path / "file1"
     f1.write_text(u"x", encoding="utf-8")
 
-    assert man_pages.man_page_exists("file1") == True
-    assert man_pages.man_page_exists("file2") == False
+    assert man_pages.man_page_exists("file1") is True
+    assert man_pages.man_page_exists("file2") is False
 
     f2 = tmp_path / "if"
     f2.write_text(u"x", encoding="utf-8")
 
-    assert man_pages.man_page_exists("if") == True
+    assert man_pages.man_page_exists("if") is True
 
 
 def test_man_page_path_only_shipped():
@@ -69,7 +69,7 @@ def test_all_man_pages(tmp_path):
 
 
 def test_load_all_man_pages():
-    for name in man_pages.all_man_pages().keys():
+    for name in man_pages.all_man_pages():
         man_page = man_pages.load_man_page(name)
         assert isinstance(man_page, dict)
         _check_man_page_structure(man_page)
@@ -137,7 +137,7 @@ def test_manpage_files():
 
 def _is_pure_section_declaration(check):
     '''return true if and only if the check never generates a service'''
-    return (check.get('inventory_function') is None and check.get('check_function') is None)
+    return check.get('inventory_function') is None and check.get('check_function') is None
 
 
 def test_find_missing_manpages():

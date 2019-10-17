@@ -63,13 +63,13 @@ class CMKModuleLayerChecker(BaseChecker):
     def _check_import(self, node, import_modname):
         file_path = node.root().file
 
-        if file_path.startswith(("tests/", "tests-py3/"))
-            return # No validation in tests
-
         if not import_modname.startswith("cmk"):
             return  # We only care about our own modules, ignore this
 
         file_path = file_path[len(cmk_path()) + 1:]  # Make relative
+
+        if file_path.startswith("tests/") or file_path.startswith("tests-py3/"):
+            return  # No validation in tests
 
         # Pylint fails to detect the correct module path here. Instead of realizing that the file
         # cmk_base/automations/cee.py is cmk_base.automations.cee it thinks the module is "cee".

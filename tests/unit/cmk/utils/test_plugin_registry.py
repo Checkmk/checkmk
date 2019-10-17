@@ -1,4 +1,5 @@
-import pytest
+# pylint: disable=redefined-outer-name
+import pytest  # type: ignore
 
 import cmk.utils.plugin_registry
 
@@ -58,7 +59,7 @@ def test_delitem(basic_registry):
     with pytest.raises(KeyError):
         del basic_registry["bla"]
 
-    @basic_registry.register
+    @basic_registry.register  # pylint: disable=unused-variable
     class DelPlugin(Plugin):
         pass
 

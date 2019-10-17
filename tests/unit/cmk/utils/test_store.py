@@ -6,7 +6,7 @@ import time
 import os
 import six
 
-import pytest
+import pytest  # type: ignore
 
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
@@ -205,8 +205,8 @@ def test_release_all_locks_already_closed(tmp_path):
 
 
 class LockTestThread(threading.Thread):
-    def __init__(self, store, path):
-        self.store = store
+    def __init__(self, store_mod, path):
+        self.store = store_mod
         self.path = path
         self.do = None
         self.is_locked = False

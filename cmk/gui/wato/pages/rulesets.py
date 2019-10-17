@@ -29,6 +29,7 @@ import abc
 import itertools
 import pprint
 import re
+import json
 from typing import Dict, Generator, Text, NamedTuple, List, Optional  # pylint: disable=unused-import
 
 from cmk.utils.regex import escape_regex_chars
@@ -690,6 +691,8 @@ class ModeEditRuleset(WatoMode):
         groups = ((folder, folder_rules) \
                   for folder, folder_rules in itertools.groupby(rules, key=lambda rule: rule[0]) \
                   if folder.is_transitive_parent_of(cur) or cur.is_transitive_parent_of(folder))
+
+        num_rows = 0
         for folder, folder_rules in groups:
             with table_element("rules_%s_%s" % (self._name, folder.ident()),
                                title="%s %s (%d)" %
@@ -701,10 +704,14 @@ class ModeEditRuleset(WatoMode):
                                limit=None,
                                foldable=True) as table:
                 for _folder, rulenr, rule in folder_rules:
+                    num_rows += 1
                     table.row(css=self._css_for_rule(search_options, rule))
                     self._set_focus(rulenr, rule)
                     self._show_rule_icons(table, match_state, folder, rulenr, rule)
                     self._rule_cells(table, rule)
+
+        headinfo = _("1 row") if num_rows == 1 else _("%d rows") % num_rows
+        html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
 
     @staticmethod
     def _css_for_rule(search_options, rule):

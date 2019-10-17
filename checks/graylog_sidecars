@@ -79,6 +79,13 @@ def parse_graylog_sidecars(info):
     return parsed
 
 
+factory_settings["graylog_sidecars_default_levels"] = {
+    'running_lower': (1, 0),
+    'stopped_upper': (1, 1),
+    'failing_upper': (1, 1)
+}
+
+
 @get_parsed_item_data
 def check_graylog_sidecars(item, params, item_data):
     active_msg = item_data.get("active")
@@ -86,7 +93,7 @@ def check_graylog_sidecars(item, params, item_data):
         active_state = 0
         msg = str(active_msg).replace("True", "yes").replace("False", "no")
         if not active_msg:
-            active_state = params.get("active_state", 1)
+            active_state = params.get("active_state", 2)
 
         yield active_state, "Active: %s" % msg
 
@@ -103,9 +110,25 @@ def check_graylog_sidecars(item, params, item_data):
                            human_readable_func=get_age_human_readable,
                            infoname="Before")
 
-    running_state = _handle_collector_states(item_data.get("status", 3), params)
-    running_msg = item_data.get("collector_msg", "No collectors found")
-    yield running_state, "Collectors: %s" % running_msg
+    collector_state = _handle_collector_states(item_data.get("status", 3), params)
+    collector_msg = item_data.get("collector_msg")
+    if collector_msg is not None:
+        msg = collector_msg.split("/")
+        if len(msg) == 3:
+            for num_collector in msg:
+                count, status = num_collector.strip().split(" ")
+
+                collector_nr_levels = params.get('%s_upper' % status, (None, None))
+                collector_nr_levels_lower = params.get('%s_lower' % status, (None, None))
+
+                yield check_levels(int(count),
+                                   "collectors_%s" % status,
+                                   collector_nr_levels + collector_nr_levels_lower,
+                                   human_readable_func=int,
+                                   infoname="Collectors %s" % status)
+
+        else:
+            yield collector_state, "Collectors: %s" % collector_msg
 
     collector_data = item_data.get("collectors")
     if collector_data is not None:
@@ -136,21 +159,23 @@ def check_graylog_sidecars(item, params, item_data):
 
 def _handle_collector_states(collector_state, params):
     if collector_state == 0:
-        state = params.get("collector_ok", 0)
-    elif collector_state == 1:
-        state = params.get("collector_warn", 1)
-    elif collector_state == 2:
-        state = params.get("collector_crit", 2)
-    else:
-        state = 3
+        return params.get("running", 0)
+    # "Received no ping signal from sidecar"
+    if collector_state == 1:
+        return params.get("no_ping", 2)
+    if collector_state == 2:
+        return params.get("failing", 2)
+    if collector_state == 3:
+        return params.get("stopped", 2)
 
-    return state
+    return 3
 
 
 check_info["graylog_sidecars"] = {
     "parse_function": parse_graylog_sidecars,
     "check_function": check_graylog_sidecars,
     "inventory_function": discover(),
+    "default_levels_variable": "graylog_sidecars_default_levels",
     "service_description": "Graylog Sidecar %s",
     "has_perfdata": True,
     "group": "graylog_sidecars",

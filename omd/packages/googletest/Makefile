@@ -33,8 +33,8 @@ build: $(DIR)/CMakeLists.txt
 	test -z "$$CXX" && { echo "error: no C++ compiler found" >&2 ; exit 1; } ; \
 	mkdir -p $(BUILD_DIR) && \
 	cd $(BUILD_DIR) && \
-	cmake -D CMAKE_CXX_COMPILER="$$CXX" \
-        -D CMAKE_INSTALL_PREFIX="$(PACKAGE_GOOGLETEST_DESTDIR)" \
+	cmake -DCMAKE_CXX_COMPILER="$$CXX" \
+        -DCMAKE_INSTALL_PREFIX="$(PACKAGE_GOOGLETEST_DESTDIR)" \
         $(realpath $(DIR))
 # We do not ship the headers and libraries, we just need them at a known
 # location for testing.

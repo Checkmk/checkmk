@@ -30,10 +30,11 @@ $(RE2_BUILD): $(RE2_UNPACK)
 	test -z "$$CXX" && { echo "error: no C++ compiler found" >&2 ; exit 1; } ; \
 	$(MKDIR) $(RE2_DIR) && \
 	cd $(RE2_DIR) && \
-	cmake -D CMAKE_CXX_COMPILER="$$CXX" \
-        -D CMAKE_CXX_FLAGS="-DRE2_ON_VALGRIND -O3 -g -fPIC" \
-        -D CMAKE_INSTALL_PREFIX="$(PACKAGE_RE2_DESTDIR)" \
-        -D RE2_BUILD_TESTING="OFF"
+	cmake -DCMAKE_CXX_COMPILER="$$CXX" \
+        -DCMAKE_CXX_FLAGS="-DRE2_ON_VALGRIND -O3 -g -fPIC" \
+        -DCMAKE_INSTALL_PREFIX="$(PACKAGE_RE2_DESTDIR)" \
+        -DRE2_BUILD_TESTING="OFF" \
+        .
 	cmake --build $(RE2_DIR) --target install -- -j 4
 # Note: We need the -fPIC above to link RE2 statically into livestatus.o.
 	$(TOUCH) $@

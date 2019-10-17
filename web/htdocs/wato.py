@@ -13705,8 +13705,10 @@ class ModeEditRuleset(WatoMode):
 
         search_options = ModeRuleSearch().search_options
 
+        num_rows = 0
         skip_this_folder = False
         for folder, rulenr, rule in ruleset.get_rules():
+            num_rows += 1
             if folder != last_folder:
                 # Only show folders related to the currently viewed folder hierarchy
                 if folder.is_transitive_parent_of(watolib.Folder.current()) \
@@ -13831,6 +13833,9 @@ class ModeEditRuleset(WatoMode):
 
         if last_folder != None:
             table.end()
+
+        headinfo = "%d %s" % (num_rows, _("row") if num_rows == 1 else _("rows"))
+        html.javascript("update_headinfo('%s');" % headinfo)
 
 
     def _action_url(self, action, folder, rulenr):

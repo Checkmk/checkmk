@@ -168,11 +168,23 @@ export function toggle_attribute(oCheckbox, attrname) {
     }
 }
 
+function get_container_ids()
+{
+    let container = [];
+    let form = document.getElementById("form_edit_host");
+    for (let i = 0; i < form.childNodes.length; i++) {
+        if (form.childNodes[i].className == "nform")
+            container.push(form.childNodes[i].id);
+    }
+    return container;
+
+}
+
 function get_effective_tags()
 {
     var current_tags = [];
 
-    var container_ids = [ "wato_host_tags", "data_sources", "address" ];
+    var container_ids = get_container_ids();
 
     for (var a = 0; a < container_ids.length; a++) {
         var tag_container = document.getElementById(container_ids[a]);
@@ -196,6 +208,8 @@ function get_effective_tags()
                  * name of the checkbox. Get that value instead of the checkbox checked state.
                  */
                 var input_fields = legend_cell.getElementsByTagName("input");
+                if (input_fields.length == 0)
+                    continue;
                 var checkbox = input_fields[0];
                 var attr_enabled = false;
                 if (checkbox.name.indexOf("ignored_") === 0) {

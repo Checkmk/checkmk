@@ -42,6 +42,8 @@ def check_oracle_logswitches(item, params, info):
                 continue
             elif isinstance(err, tuple):
                 return err
+            if len(line) != 2:
+                continue
 
             locrit, lowarn, warn, crit = params
             logswitches = int(line[1])

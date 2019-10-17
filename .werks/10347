@@ -1,0 +1,11 @@
+Title: if: Moved last change field to status data tree; otherwise the inventory history may be polluted
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p23
+Date: 1571302576
+
+

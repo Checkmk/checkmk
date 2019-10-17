@@ -1,5 +1,5 @@
 import os
-import pytest
+import pytest  # type: ignore
 
 import cmk.utils.store as store
 import cmk.utils.daemon as daemon

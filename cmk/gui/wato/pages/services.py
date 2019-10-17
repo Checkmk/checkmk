@@ -846,8 +846,13 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         if not services:
             return
 
-        def _compile_patterns(services):
-            return [{"$regex": "%s$" % re.escape(s)} for s in services]
+        def _compile_patterns(_services, unescaped="exclude"):
+            ret = []
+            for svc in _services:
+                ret.append({"$regex": "%s$" % re.escape(svc)})
+                if unescaped == "include":
+                    ret.append({"$regex": "%s$" % svc})
+            return ret
 
         rulesets = watolib.AllRulesets()
         rulesets.load()
@@ -860,7 +865,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
         modified_folders = []
 
-        service_patterns = _compile_patterns(services)
+        service_patterns = _compile_patterns(services, unescaped="include")
         modified_folders += self._remove_from_rule_of_host(ruleset,
                                                            service_patterns,
                                                            value=not value)

@@ -1,0 +1,13 @@
+Title: Service Discovery: fix re-enabling services which were disabled in 1.4.0
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1571295607
+Class: fix
+
+In 1.4.0 disabled services were not quoted in the rules configuration file. Later
+versions quoted these services. Due to this the unquoted services were not found
+when re-enabling them via the GUI in version 1.6 and later.
+This werk fixes this behaviour.

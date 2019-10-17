@@ -5,6 +5,7 @@ import pytest
 
 from testlib import cmk_path
 
+import cmk
 import cmk.utils.man_pages as man_pages
 import cmk_base.config as config
 
@@ -149,7 +150,7 @@ def test_find_missing_manpages():
        [ ("check_" + name, entry) for (name, entry) in config.active_check_info.items() ])
     assert len(checks_sorted) > 1000
 
-    for check_plugin_name, check in checks_sorted:
+    for check_plugin_name, _check in checks_sorted:
         if check_plugin_name in ["labels", "esx_systeminfo"]:
             continue  # this check's discovery function can only create labels, never a service
         assert check_plugin_name in all_check_manuals, "Manpage missing: %s" % check_plugin_name
@@ -235,7 +236,7 @@ def test_print_man_page(capsys):
 def test_missing_catalog_entries_of_man_pages():
     catalog_titles = set(man_pages.catalog_titles.keys())
     found_catalog_entries_from_man_pages = set()
-    for name in man_pages.all_man_pages().keys():
+    for name in man_pages.all_man_pages():
         man_page = man_pages.load_man_page(name)
         found_catalog_entries_from_man_pages |= set(man_page['header']['catalog'].split("/"))
     missing_catalog_entries = found_catalog_entries_from_man_pages - catalog_titles

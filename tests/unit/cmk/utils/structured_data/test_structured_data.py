@@ -510,8 +510,35 @@ def test_structured_data_StructuredDataTree_is_empty_trees(tree):
 def test_structured_data_StructuredDataTree_is_equal(tree_x, tree_y):
     if id(tree_x) == id(tree_y):
         assert tree_x.is_equal(tree_y)
+        assert tree_y.is_equal(tree_x)
     else:
         assert not tree_x.is_equal(tree_y)
+        assert not tree_y.is_equal(tree_x)
+
+
+@pytest.mark.parametrize("tree_x", trees)
+@pytest.mark.parametrize("tree_y", trees)
+def test_structured_data_StructuredDataTree_equality_comparison(tree_x, tree_y):
+    new_x_y, changed_x_y, removed_x_y, delta_x_y = tree_x.compare_with(tree_y)
+    new_y_x, changed_y_x, removed_y_x, delta_y_x = tree_y.compare_with(tree_x)
+
+    if id(tree_x) == id(tree_y):
+        assert new_x_y == 0
+        assert new_y_x == 0
+        assert changed_x_y == 0
+        assert changed_y_x == 0
+        assert removed_x_y == 0
+        assert removed_y_x == 0
+
+        assert delta_x_y.is_empty()
+        assert delta_y_x.is_empty()
+
+    else:
+        assert new_x_y != 0 or changed_x_y != 0 or removed_x_y != 0
+        assert new_y_x != 0 or changed_y_x != 0 or removed_y_x != 0
+
+        assert not delta_x_y.is_empty()
+        assert not delta_y_x.is_empty()
 
 
 @pytest.mark.parametrize("tree", trees)

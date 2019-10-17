@@ -3928,6 +3928,10 @@ def main_restore(args, options={}):
                  "this backup." % version)
 
     if is_root():
+        # Ensure the restore is done with the sites version
+        if version != OMD_VERSION:
+            exec_other_omd(version)
+
         # Restore site with its original name, or specify a new one
         new_sitename = sitename
         if len(args) == 2:

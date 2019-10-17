@@ -35,7 +35,7 @@ def scan_inv_if(oid):
 
 
 # TODO unify with other if inventory plugins
-def inv_if(info, params, inventory_tree):
+def inv_if(info, params, inventory_tree, status_data_tree):
     def round_to_day(ts):
         broken = time.localtime(ts)
         return time.mktime((broken.tm_year, broken.tm_mon, broken.tm_mday, 0, 0, 0, broken.tm_wday,
@@ -55,6 +55,7 @@ def inv_if(info, params, inventory_tree):
     available_ethernet_ports = 0
 
     interfaces = []
+    status_data = []
     for if_index, if_descr, if_alias, if_type, if_speed, if_high_speed, \
         if_oper_status, if_admin_status, if_phys_address, if_last_change in port_info:
 
@@ -115,6 +116,12 @@ def inv_if(info, params, inventory_tree):
             "oper_status": int(if_oper_status),
             "admin_status": int(if_admin_status),  # 1(up) or 2(down)
             "port_type": int(if_type),
+        })
+
+        status_data.append({
+            "index": if_index_nr,
+            "description": if_descr,
+            "alias": if_alias,
             "last_change": int(last_change_timestamp),
         })
 
@@ -129,6 +136,9 @@ def inv_if(info, params, inventory_tree):
 
     node = inventory_tree.get_list("networking.interfaces:")
     node.extend(sorted(interfaces, key=lambda r: r.get('index')))
+
+    node = status_data_tree.get_list("networking.interfaces:")
+    node.extend(sorted(status_data, key=lambda r: r.get('index')))
 
     node = inventory_tree.get_dict("networking.")
     node["available_ethernet_ports"] = available_ethernet_ports

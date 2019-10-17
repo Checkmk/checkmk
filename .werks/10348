@@ -1,0 +1,11 @@
+Title: mssql_databases: Do not alert if instance is not running
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p23
+Date: 1571307373
+
+

@@ -79,6 +79,8 @@ def check_mssql_databases(item, params, parsed):
             state, state_readable = map_states[data["auto_%s" % what]]
             state = params.get("map_auto_%s_state" % what, {}).get(state_readable, state)
             yield state, 'Auto %s: %s' % (what, state_readable)
+    else:
+        raise MKCounterWrapped("Login into database failed")
 
 
 check_info['mssql_databases'] = {

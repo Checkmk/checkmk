@@ -1,4 +1,3 @@
-import json
 import pytest  # type: ignore
 
 import cmk.utils.prediction as prediction

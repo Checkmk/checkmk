@@ -1,0 +1,11 @@
+Title: lnx_if winperf_if if solaris_addresses: Fixed sorting interfaces; otherwise the inventory history may be polluted
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p23
+Date: 1571302149
+
+

@@ -121,7 +121,7 @@ def inv_if(info, params, inventory_tree):
             if_available = None
 
     node = inventory_tree.get_list("networking.interfaces:")
-    node.extend(sorted(interfaces, key=lambda r: r.get('name')))
+    node.extend(sorted(interfaces, key=lambda r: r.get('index')))
 
     node = inventory_tree.get_dict("networking.")
     node["available_ethernet_ports"] = available_ethernet_ports

@@ -3661,6 +3661,10 @@ def main_restore(site, args, options=None):
                  "this backup." % version)
 
     if is_root():
+        # Ensure the restore is done with the sites version
+        if version != omdlib.__version__:
+            exec_other_omd(site, version, "restore")
+
         # Restore site with its original name, or specify a new one
         new_sitename = sitename
         if len(args) == 2:

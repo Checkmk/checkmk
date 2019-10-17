@@ -1,0 +1,14 @@
+Title: omd restore: Fix possible version issues when default version is not the site version
+Level: 1
+Component: omd
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p6
+Date: 1571319418
+
+When doing a "omd restore" as root user while the version of the site to be restored is not
+the OMD default version (mostly the last installed version), the restore could fail. This
+issue was discovered on systems which tried to restore a 1.5 site on Checkmk servers
+which have a 1.6 default version, but could also occur in other situations.

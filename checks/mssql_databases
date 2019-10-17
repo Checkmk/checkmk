@@ -38,8 +38,11 @@
 # MSSQL_MSSQL46 test_autoclose RECOVERY PENDING FULL 1 0^M
 
 
-@get_parsed_item_data
-def check_mssql_databases(_no_item, params, data):
+def check_mssql_databases(item, params, parsed):
+    data = parsed.get(item)
+    if data is None:
+        raise MKCounterWrapped("Login into database failed")
+
     map_states = {
         "1": (1, "on"),
         "0": (0, "off"),

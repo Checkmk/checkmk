@@ -2833,7 +2833,7 @@ class EventServer(ECServerThread):
             # <78>May 26 13:45:01 Klapprechner CRON[8046]:  message....
 
             # Variant 3: local Nagios alert posted by mkevent -n
-            # <154>@1341847712;5;Contact Info;  MyHost My Service: CRIT - This che
+            # <154>@1341847712;5;Contact Info; MyHost My Service: CRIT - This che
 
             # Variant 4: remote Nagios alert posted by mkevent -n -> syslog
             # <154>Jul  9 17:28:32 Klapprechner @1341847712;5;Contact Info;  MyHost My Service: CRIT - This che
@@ -2869,7 +2869,7 @@ class EventServer(ECServerThread):
             # and detect which information are present. Take a look at the syslog RFCs
             # for details.
 
-            # Variant 2,3,4,5,6,7,8
+            # Variant 2,3,4,5,6,7,7a,8
             if line.startswith('<'):
                 i = line.find('>')
                 prio = int(line[1:i])
@@ -2883,7 +2883,7 @@ class EventServer(ECServerThread):
                 event["priority"] = 5  # notice
 
             # Variant 7 and 7a
-            if line[0] == '@' and line[11] in [' ', ';']:
+            if line[0] == '@' and line[11] in [' ', ';'] and line.split(' ', 1)[0].count(';') <= 1:
                 details, event['host'], line = line.split(' ', 2)
                 detail_tokens = details.split(';')
                 timestamp = detail_tokens[0]

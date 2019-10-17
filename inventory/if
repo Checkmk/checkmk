@@ -111,7 +111,7 @@ def inv_if(info, params, inventory_tree, status_data_tree):
         })
 
         status_data.append({
-            "index"        : if_index_nr,
+            "index"        : int(if_index),
             "description"  : if_descr,
             "alias"        : if_alias,
             "last_change"  : int(last_change_timestamp),

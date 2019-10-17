@@ -590,6 +590,9 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
             "lock_on_logon_failures": 10,
         }
 
+        if cmk.is_demo():
+            settings["cmc_cmk_helpers"] = 3
+
         return settings
 
     def _initialize_tag_config(self):

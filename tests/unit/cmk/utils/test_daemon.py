@@ -1,6 +1,5 @@
-import pytest
-from pathlib2 import Path
 import os
+import pytest
 
 import cmk.utils.store as store
 import cmk.utils.daemon as daemon

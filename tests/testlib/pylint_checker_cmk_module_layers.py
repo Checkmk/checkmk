@@ -63,6 +63,9 @@ class CMKModuleLayerChecker(BaseChecker):
     def _check_import(self, node, import_modname):
         file_path = node.root().file
 
+        if file_path.startswith(("tests/", "tests-py3/"))
+            return # No validation in tests
+
         if not import_modname.startswith("cmk"):
             return  # We only care about our own modules, ignore this
 

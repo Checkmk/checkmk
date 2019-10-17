@@ -1,0 +1,10 @@
+Title: Discovery page: Fix missing "toggle all" checkboxes (1.6.0p2 regression)
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1571296946
+Class: fix
+
+

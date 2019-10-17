@@ -1042,28 +1042,18 @@ class DiscoveryPageRenderer(object):
                 continue
 
             html.begin_form("checks_%s" % entry.table_group, method="POST", action="wato.py")
-            with table_element(css="data",
-                               searchable=False,
-                               limit=None,
-                               sortable=False,
-                               omit_headers=True) as table:
-                table.groupheader(self._get_group_header(entry))
+            html.h3(self._get_group_header(entry))
 
-                if entry.show_bulk_actions and len(checks) > 10:
-                    self._show_bulk_actions(table,
-                                            discovery_result,
-                                            entry.table_group,
-                                            collect_headers=False)
+            if entry.show_bulk_actions and len(checks) > 10:
+                self._show_bulk_actions(discovery_result, entry.table_group)
 
+            with table_element(css="data", searchable=False, limit=None, sortable=False) as table:
                 for check in sorted(checks, key=lambda c: c[6].lower()):
                     self._show_check_row(table, discovery_result, request, check,
                                          entry.show_bulk_actions)
 
-                if entry.show_bulk_actions:
-                    self._show_bulk_actions(table,
-                                            discovery_result,
-                                            entry.table_group,
-                                            collect_headers="finished")
+            if entry.show_bulk_actions:
+                self._show_bulk_actions(discovery_result, entry.table_group)
             html.hidden_fields()
             html.end_form()
 
@@ -1242,12 +1232,9 @@ class DiscoveryPageRenderer(object):
             json.dumps(request_vars),
         )
 
-    def _show_bulk_actions(self, table, discovery_result, table_source, collect_headers):
+    def _show_bulk_actions(self, discovery_result, table_source):
         if not config.user.may("wato.services"):
             return
-
-        table.row(collect_headers=collect_headers, fixed=True)
-        table.cell(css="bulkactions service_discovery", colspan=self._bulk_action_colspan())
 
         if table_source == DiscoveryState.MONITORED:
             if config.user.may("wato.service_discovery_to_undecided"):

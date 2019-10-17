@@ -1,0 +1,13 @@
+Title: Password policy: Do not apply expiration time for LDAP users
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p6
+Date: 1571303066
+
+The password policy is only meant to be used for local Checkmk users. During
+login of LDAP users the expiration time was also applied to LDAP users by
+accident.

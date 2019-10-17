@@ -1,0 +1,10 @@
+Title: lnx_if: Do not inventorize dynamic IPv6 addresses which may pollute inventory history
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1571234530
+Class: fix
+
+

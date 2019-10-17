@@ -571,7 +571,7 @@ virtual-envs/%/.venv: virtual-envs/%/Pipfile.lock
 
 # This is for compatibility: The target .venv should always refer to 2.7
 # .venv is a PHONY target, so it will be remade, even if .venv is 'up to date'
-.venv: virtual-envs/3.7/.venv .venv-2.7
+.venv: .venv-2.7
 
 # This dummy rule is called from subdirectories whenever one of the
 # top-level Makefile's dependencies must be updated.  It does not

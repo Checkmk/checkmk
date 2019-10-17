@@ -6219,6 +6219,22 @@ metric_info['graylog_decoded'] = {
     "color": "42/a",
 }
 
+metric_info["collectors_running"] = {
+    "title": _("Running collectors"),
+    "unit": "count",
+    "color": "26/a",
+}
+metric_info["collectors_stopped"] = {
+    "title": _("Stopped collectors"),
+    "unit": "count",
+    "color": "21/a",
+}
+metric_info["collectors_failing"] = {
+    "title": _("Failing collectors"),
+    "unit": "count",
+    "color": "12/a",
+}
+
 # In order to use the "bytes" unit we would have to change the output of the check, (i.e. divide by
 # 1024) which means an invalidation of historic values.
 metric_info['kb_out_of_sync'] = {

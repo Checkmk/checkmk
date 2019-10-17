@@ -90,10 +90,8 @@ def _parse_lnx_if_ipaddress(lines):
             # 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default ...
             # 5: veth6a06585@if4: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue ...
             iface = ip_stats.setdefault((node, line[1][:-1].split("@")[0]), {})
-            iface.update(dict(zip(line[3::2], line[4::2])))
             # The interface flags are summarized in the angle brackets.
-            if "UP" in line[2][1:-1].split(","):
-                iface['state'] = "UP"
+            iface["state_infos"] = line[2][1:-1].split(",")
             continue
 
         if not iface:
@@ -226,16 +224,16 @@ def parse_lnx_if(info):
             # No information from ethtool. We consider interfaces up
             # if they have been used at least some time since the
             # system boot.
-            if_state = attr.get('state')
-            if if_state is None:
+            state_infos = attr.get('state_infos')
+            if state_infos is None:
                 if ifInOctets > 0:
                     ifOperStatus = 1  # assume up
                 else:
                     ifOperStatus = 4  # unknown (NIC has never been used)
             else:
-                if if_state == "UP":
+                if "UP" in state_infos:
                     ifOperStatus = 1
-                elif if_state == "DOWN":
+                elif "DOWN" in state_infos:
                     ifOperStatus = 2
                 else:
                     ifOperStatus = 4

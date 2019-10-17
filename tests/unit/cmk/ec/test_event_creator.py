@@ -1,4 +1,3 @@
-import os
 import time
 import pytest
 import cmk.utils.log
@@ -83,17 +82,15 @@ def event_creator():
         ),
         (
             # Variant 3: local Nagios alert posted by mkevent -n
-            "<154>@1341847712;5;Contact Info;  MyHost My Service: CRIT - This che",
+            "<154>@1341847712;5;Contact Info; MyHost My Service: CRIT - This che",
             {
-                # TODO: Found a bug? This is not parsed corectly. Check whether or not mkevent
-                # really sends these messages
-                'application': ' MyHost My Service',
+                'application': 'My Service',
+                'contact': 'Contact Info',
                 'core_host': '',
                 'facility': 19,
-                'host': 'Info;',
+                'host': 'MyHost',
                 'host_in_downtime': False,
                 'ipaddress': '127.0.0.1',
-                'pid': 0,
                 'priority': 2,
                 'sl': 5,
                 'text': 'CRIT - This che',

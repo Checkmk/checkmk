@@ -1,0 +1,12 @@
+Title: Show the Contact Person in the Event Details view
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1571315678
+Class: fix
+
+Since version 1.2.7i4 the event console dropped the
+Contact Person of events that were forwarded by the
+mkeventd notification plugin. This is fixed.

@@ -304,6 +304,9 @@ def on_succeeded_login(username):
 # userdb.need_to_change_pw returns either False or the reason description why the
 # password needs to be changed
 def need_to_change_pw(username):
+    if not _is_local_user(username):
+        return False
+
     if load_custom_attr(username, 'enforce_pw_change', saveint) == 1:
         return 'enforced'
 
@@ -320,6 +323,16 @@ def need_to_change_pw(username):
         elif time.time() - last_pw_change > max_pw_age:
             return 'expired'
     return False
+
+def _is_local_user(user_id):
+    user = load_cached_profile()
+    if user == None:
+        # No cached profile present. Load all users to get the users data
+        user = load_users(lock=False).get(user_id, {})
+
+    return user.get('connector', 'htpasswd') == 'htpasswd'
+
+
 
 def on_failed_login(username):
     users = load_users(lock = True)

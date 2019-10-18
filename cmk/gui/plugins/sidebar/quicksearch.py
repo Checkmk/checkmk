@@ -82,7 +82,7 @@ class QuicksearchSnapin(SidebarSnapin):
         }
 
     def _ajax_search(self):
-        q = html.get_unicode_input('q').strip()
+        q = _maybe_strip(html.get_unicode_input('q'))
         if not q:
             return
 
@@ -97,7 +97,7 @@ class QuicksearchSnapin(SidebarSnapin):
             html.show_error(traceback.format_exc())
 
     def _page_search_open(self):
-        q = html.request.var('q').strip()
+        q = _maybe_strip(html.request.var('q'))
         if not q:
             return
 
@@ -521,6 +521,13 @@ class LivestatusQuicksearch(LivestatusSearchBase):
                        id="result_%s" % self._query,
                        href=entry["url"],
                        target="main")
+
+
+def _maybe_strip(param):
+    if param is None:
+        return
+
+    return param.strip()
 
 
 def generate_results(query):

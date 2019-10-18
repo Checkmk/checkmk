@@ -139,7 +139,10 @@ def makedirs(path, mode=0o770):
 # generalize the exception handling for all file IO. This function handles all those files
 # that are read with exec().
 def load_mk_file(path, default=None, lock=False):
-    # type: (str, Any, bool) -> Any
+    # type: (Union[Path, str], Any, bool) -> Any
+    if not isinstance(path, Path):
+        path = Path(path)
+
     if default is None:
         raise MKGeneralException(
             _("You need to provide a config dictionary to merge with the "
@@ -151,7 +154,8 @@ def load_mk_file(path, default=None, lock=False):
 
     try:
         try:
-            exec (open(path).read(), globals(), default)
+            with path.open(mode="rb") as f:
+                exec (f.read(), globals(), default)
         except IOError as e:
             if e.errno != errno.ENOENT:  # No such file or directory
                 raise
@@ -166,12 +170,12 @@ def load_mk_file(path, default=None, lock=False):
 
 # A simple wrapper for cases where you only have to read a single value from a .mk file.
 def load_from_mk_file(path, key, default, lock=False):
-    # type: (str, str, Any, bool) -> Any
+    # type: (Union[Path, str], str, Any, bool) -> Any
     return load_mk_file(path, {key: default}, lock=False)[key]
 
 
 def save_mk_file(path, mk_content, add_header=True):
-    # type: (str, str, bool) -> None
+    # type: (Union[Path, str], str, bool) -> None
     content = ""
 
     if add_header:
@@ -187,13 +191,18 @@ def save_mk_file(path, mk_content, add_header=True):
 # directly read via file/open and then parsed using eval.
 # TODO: Consolidate with load_mk_file?
 def load_data_from_file(path, default=None, lock=False):
-    # type: (str, Any, bool) -> Any
+    # type: (Union[Path, str], Any, bool) -> Any
+    if not isinstance(path, Path):
+        path = Path(path)
+
     if lock:
         aquire_lock(path)
 
     try:
         try:
-            content = open(path).read().strip()
+            with path.open() as f:
+                content = f.read().strip()
+
             if not content:
                 # May be created empty during locking
                 return default
@@ -220,7 +229,7 @@ def load_data_from_file(path, default=None, lock=False):
 # A simple wrapper for cases where you want to store a python data
 # structure that is then read by load_data_from_file() again
 def save_data_to_file(path, data, pretty=True):
-    # type: (str, Any, bool) -> None
+    # type: (Union[Path, str], Any, bool) -> None
     if pretty:
         try:
             formated_data = pprint.pformat(data)
@@ -240,7 +249,10 @@ def save_data_to_file(path, data, pretty=True):
 # Saving assumes a locked destination file (usually done by loading code)
 # Then the new file is written to a temporary file and moved to the target path
 def save_file(path, content, mode=0o660):
-    # type: (str, str, int) -> None
+    # type: (Union[Path, str], str, int) -> None
+    if not isinstance(path, Path):
+        path = Path(path)
+
     tmp_path = None
     try:
         # Normally the file is already locked (when data has been loaded before with lock=True),
@@ -250,8 +262,8 @@ def save_file(path, content, mode=0o660):
         aquire_lock(path)
 
         with tempfile.NamedTemporaryFile("w",
-                                         dir=os.path.dirname(path),
-                                         prefix=".%s.new" % os.path.basename(path),
+                                         dir=str(path.parent),
+                                         prefix=".%s.new" % path.name,
                                          delete=False) as tmp:
             tmp_path = tmp.name
             os.chmod(tmp_path, mode)
@@ -282,7 +294,7 @@ def save_file(path, content, mode=0o660):
             #tmp.flush()
             #os.fsync(tmp.fileno())
 
-        os.rename(tmp_path, path)
+        os.rename(tmp_path, str(path))
 
     except MKTimeout:
         raise
@@ -304,7 +316,7 @@ def save_file(path, content, mode=0o660):
 
 # A simple wrapper for cases where you only have to write a single value to a .mk file.
 def save_to_mk_file(path, key, value, pprint_value=False):
-    # type: (str, str, Any, bool) -> None
+    # type: (Union[Path, str], str, Any, bool) -> None
     format_func = repr
     if pprint_value:
         format_func = pprint.pformat

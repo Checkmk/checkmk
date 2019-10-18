@@ -1,1 +1,0 @@
-../../tests/testlib/pylint_checker_localization.py

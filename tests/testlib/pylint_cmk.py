@@ -88,6 +88,9 @@ def get_pylint_files(base_path, file_pattern):
     for path in glob.glob("%s/%s" % (base_path, file_pattern)):
         f = path[len(base_path) + 1:]
 
+        if f.endswith(".pyc"):
+            continue
+
         if is_python_file(path):
             files.append(f)
 

@@ -36,6 +36,7 @@ $(RE2_BUILD): $(RE2_UNPACK)
 	cmake -DCMAKE_CXX_COMPILER="$$CXX" \
         -DCMAKE_CXX_FLAGS="-DRE2_ON_VALGRIND -O3 -g -fPIC" \
         -DCMAKE_INSTALL_PREFIX="$(PACKAGE_RE2_DESTDIR)" \
+        -DCMAKE_INSTALL_LIBDIR="lib" \
         -DRE2_BUILD_TESTING="OFF" \
         .
 # Note: We need the -fPIC above to link RE2 statically into livestatus.o.

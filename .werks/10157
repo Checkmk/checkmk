@@ -1,0 +1,12 @@
+Title: Now using /dev/null instead of closing stdin in all POSIX agents
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1571396943
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 1.7.0i1
+
+Some programs might not be working when stdin is closed. A more portable
+approach seems to use /dev/null as stdin.

@@ -71,6 +71,7 @@ import os
 import subprocess
 import sys
 import ipaddress
+import ast
 
 
 class MissingValueError(Exception):
@@ -147,7 +148,7 @@ def check_traceroute(lines, routes):
             state = max(state, s)
             missing_routers.append("%s(%s)" % (route, "!" * s))
 
-    info = "%s - %d hops, missing routers: %s, bad routers: %s" % (
+    info_text = "%s - %d hops, missing routers: %s, bad routers: %s" % (
         {
             0: "OK",
             1: "WARN",
@@ -157,8 +158,8 @@ def check_traceroute(lines, routes):
         missing_routers and ", ".join(missing_routers) or "none",
         bad_routers and ", ".join(bad_routers) or "none",
     )
-    perf = [('hops', hops)]
-    return state, info, perf
+    perfdata = [('hops', hops)]
+    return state, info_text, perfdata
 
 
 def validate_ip_version(address_arg, ip_version_arg):
@@ -248,9 +249,9 @@ def main(args=None):
                 sys.exit(0)
 
         sto = _execute_traceroute(target_address, opt_nodns, opt_method, opt_address_family)
-        status, output, perf = check_traceroute(sto.split("\n"), route_params)
-        info = output.strip() + "\n%s" % sto
-        return status, info, perf
+        status, output, perfdata = check_traceroute(sto.split("\n"), route_params)
+        info_text = output.strip() + "\n%s" % sto
+        return status, info_text, perfdata
 
     except ExecutionError as e:
         return 3, str(e), None

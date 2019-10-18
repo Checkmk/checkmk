@@ -52,7 +52,9 @@ import getopt
 import re
 import socket
 import sys
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
+import urllib.error
 import http.cookiejar
 import html.parser
 
@@ -350,7 +352,7 @@ def main(args=None):
         elif o == '-f':
             form_name = a
         elif o == '-q':
-            params = dict([parts.split('=', 1) for parts in a.split('&')])
+            params = {k: v for k, v in (parts.split('=', 1) for parts in a.split('&'))}
         elif o == '-e':
             expect_regex = a
         elif o == '-t':

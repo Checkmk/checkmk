@@ -1,0 +1,19 @@
+Title: Windows Agent User Config file is no more reset after service restart
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1571407974
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+Previous version of the Windows Agent re-installed supplied in MSI file
+check_mk.user.yml on every service restart. This behavior denied the editing
+of the check_mk.user.yml by end user
+
+Now this error had been fixed: Windows Agent installs check_mk.user.yml into
+the check_mk.user.example.yml thus avoiding modifying of user config data.
+If the user config file is absent, for example, during fresh installation, then
+then check_mk.user.example.yml is copied to the check_mk.user.yml

@@ -105,8 +105,10 @@ def lock_exclusive():
 
 
 def mkdir(path, mode=0o770):
-    # type: (str, int) -> None
-    Path(path).mkdir(mode=mode, exist_ok=True)
+    # type: (Union[Path, str], int) -> None
+    if not isinstance(path, Path):
+        path = Path(path)
+    path.mkdir(mode=mode, exist_ok=True)
 
 
 def makedirs(path, mode=0o770):

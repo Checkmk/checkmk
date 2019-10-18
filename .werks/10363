@@ -1,0 +1,12 @@
+Title: f5_bigip_mem: Check no longer crashes when memory information are missing
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p12
+Date: 1571381062
+
+The memory check did crash when the memory information where missing. Now the check changes its state to unknown.

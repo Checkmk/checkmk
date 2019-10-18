@@ -98,7 +98,9 @@ def is_python_file(path):
     if not os.path.isfile(path) or os.path.islink(path):
         return False
 
-    if path.endswith(".py"):
+    # We can not be sure which Python version this file needs by it's extension.
+    # For the moment we treat all .py to be python2
+    if sys.version_info[0] == 2 and path.endswith(".py"):
         return True
 
     check_name = "python3" if sys.version_info[0] >= 3 else "python"

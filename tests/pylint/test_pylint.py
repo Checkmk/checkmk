@@ -1,14 +1,14 @@
-#!/usr/bin/python
 # encoding: utf-8
+# pylint: disable=redefined-outer-name
 
 from __future__ import print_function
 import os
 import sys
-import pytest
 import tempfile
 import shutil
+import pytest  # type: ignore
 
-from testlib import cmk_path, cmc_path, cme_path, repo_path
+from testlib import cmk_path, repo_path
 import testlib.pylint_cmk as pylint_cmk
 
 
@@ -22,7 +22,7 @@ def pylint_test_dir():
     else:
         base_path = None
 
-    test_dir = tempfile.mkdtemp(prefix="cmk_pylint", dir=base_path)
+    test_dir = tempfile.mkdtemp(prefix="cmk_pylint_", dir=base_path)
 
     print("Prepare check in %s ..." % test_dir)
     yield test_dir
@@ -37,41 +37,47 @@ def pylint_test_dir():
 
 def test_pylint(pylint_test_dir):
     # Only specify the path to python packages or modules here
-    modules_or_packages = [
-        # OMD
-        "omd/packages/omd/omdlib",
-        "livestatus/api/python/livestatus.py",
+    if sys.version_info[0] >= 3:
+        modules_or_packages = []
+    else:
+        modules_or_packages = [
+            # OMD
+            "omd/packages/omd/omdlib",
+            "livestatus/api/python/livestatus.py",
 
-        # Check_MK base
-        "cmk_base",
-        # TODO: Check if this kind of "overlay" really works.
-        # TODO: Why do we have e.g. a symlink cmk_base/cee -> enterprise/cmk_base/cee?
-        "enterprise/cmk_base/automations/cee.py",
-        "enterprise/cmk_base/cee",
-        "enterprise/cmk_base/default_config/cee.py",
-        "enterprise/cmk_base/modes/cee.py",
-        "managed/cmk_base/default_config/cme.py",
+            # Check_MK base
+            "cmk_base",
+            # TODO: Check if this kind of "overlay" really works.
+            # TODO: Why do we have e.g. a symlink cmk_base/cee -> enterprise/cmk_base/cee?
+            "enterprise/cmk_base/automations/cee.py",
+            "enterprise/cmk_base/cee",
+            "enterprise/cmk_base/default_config/cee.py",
+            "enterprise/cmk_base/modes/cee.py",
+            "managed/cmk_base/default_config/cme.py",
 
-        # cmk module level
-        # TODO: This checks the whole cmk hierarchy, including things like
-        # cmk.gui.plugins.cron etc. Do we really want that here?
-        # TODO: Funny links there, see above.
-        "cmk",
-        "enterprise/cmk/cee",
+            # cmk module level
+            # TODO: This checks the whole cmk hierarchy, including things like
+            # cmk.gui.plugins.cron etc. Do we really want that here?
+            # TODO: Funny links there, see above.
+            "cmk",
+            "enterprise/cmk/cee",
 
-        # GUI specific
-        "web/app/index.wsgi",
-        "enterprise/cmk/gui/cee",
-        "managed/cmk/gui/cme",
-    ]
+            # GUI specific
+            "web/app/index.wsgi",
+            "enterprise/cmk/gui/cee",
+            "managed/cmk/gui/cme",
+        ]
 
     # Add the compiled files for things that are no modules yet
     open(pylint_test_dir + "/__init__.py", "w")
     _compile_check_and_inventory_plugins(pylint_test_dir)
     _compile_bakery_plugins(pylint_test_dir)
-    modules_or_packages += [
-        pylint_test_dir,
-    ]
+
+    # Not checking compiled check, inventory, bakery plugins with Python 3
+    if sys.version_info[0] == 2:
+        modules_or_packages += [
+            pylint_test_dir,
+        ]
 
     # We use our own search logic to find scripts without python extension
     search_paths = [
@@ -148,10 +154,12 @@ def _compile_bakery_plugins(pylint_test_dir):
     with open(pylint_test_dir + "/cmk_bakery_plugins.py", "w") as f:
 
         pylint_cmk.add_file(
-            f, os.path.realpath(os.path.join(cmc_path(), "cmk_base/cee/agent_bakery_plugins.py")))
+            f,
+            os.path.realpath(
+                os.path.join(cmk_path(), "enterprise/cmk_base/cee/agent_bakery_plugins.py")))
         # This pylint warning is incompatible with our "concatenation technology".
         f.write("# pylint: disable=reimported,wrong-import-order,wrong-import-position\n")
 
         # Also add bakery plugins
-        for path in pylint_cmk.check_files(os.path.join(cmc_path(), "agents/bakery")):
+        for path in pylint_cmk.check_files(os.path.join(cmk_path(), "enterprise/agents/bakery")):
             pylint_cmk.add_file(f, path)

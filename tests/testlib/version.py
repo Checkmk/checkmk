@@ -23,9 +23,10 @@ class CMKVersion(object):  # pylint: disable=useless-object-inheritance
     CRE = "cre"
     CME = "cme"
 
-    def __init__(self, version, edition, branch):
+    def __init__(self, version, edition, branch, check_version_available=True):
         self._version = version
         self._branch = branch
+        self._check_version_available = check_version_available
 
         self._set_edition(edition)
         self.set_version(version, branch)
@@ -72,7 +73,7 @@ class CMKVersion(object):  # pylint: disable=useless-object-inheritance
                 else:
                     self.version = date_part
 
-                if self._version_available():
+                if not self._check_version_available or self._version_available():
                     break
 
         elif version == CMKVersion.DEFAULT:
@@ -137,6 +138,8 @@ class CMKVersion(object):  # pylint: disable=useless-object-inheritance
         return os.path.exists(self.version_path())
 
     def _version_available(self):
+        logger.info("Checking whether or not %s is installed in %s", self.omd_version(),
+                    self.version_path())
         if self.is_installed():
             return True
 

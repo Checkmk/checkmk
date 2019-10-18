@@ -4,6 +4,7 @@ import json
 import ast
 import re
 import six
+import logging
 from six.moves.urllib.parse import urlparse
 from bs4 import BeautifulSoup  # type: ignore[import]
 
@@ -12,6 +13,9 @@ import requests
 
 class APIError(Exception):
     pass
+
+
+logger = logging.getLogger()
 
 
 class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
@@ -728,23 +732,27 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
             request["allow_foreign_changes"] = "1" if allow_foreign_changes else "0"
 
         old_t = {}
+        logger.debug("Getting old program start")
         for site in relevant_sites:
             old_t[site.id] = site.live.query_value("GET status\nColumns: program_start\n")
 
+        logger.debug("Start activate changes: %r", request)
         time_started = time.time()
         result = self._api_request("webapi.py?action=activate_changes", {
             "request": json.dumps(request),
         })
 
+        logger.debug("Result: %r", result)
         assert isinstance(result, dict)
         assert len(result["sites"]) > 0
-        involved_sites = result["sites"].keys()
+        involved_sites = list(result["sites"].keys())
 
         for site_id, status in result["sites"].items():
             assert status["_state"] == "success", \
                 "Failed to activate %s: %r" % (site_id, status)
             assert status["_time_ended"] > time_started
 
+        logger.info("Waiting for core reloads of: %r", involved_sites)
         for site in relevant_sites:
             if site.id in involved_sites:
                 site.wait_for_core_reloaded(old_t[site.id])

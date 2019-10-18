@@ -1,31 +1,38 @@
-#!/usr/bin/env python
-# encoding: utf-8
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import print_function
 from __future__ import division
-import errno
-import os
-import sys
-import time
-import pprint
-import signal
-import threading
-import Queue
-import traceback
-from urlparse import urlsplit, parse_qsl, urlunsplit, urljoin
-from urllib import urlencode
-from bs4 import BeautifulSoup
-import pytest
-from testlib import web
 
-from testlib import CMKWebSession
+import os
+import logging
+import time
+import threading
+import shutil
+import queue
+import traceback
+from pathlib import Path
+from urllib.parse import urlsplit, parse_qsl, urlunsplit, urljoin, urlencode
+from bs4 import BeautifulSoup # type: ignore[import]
+
+from testlib.utils import (
+    current_base_branch_name,
+)
+from testlib.site import SiteFactory
+from testlib.version import CMKVersion
+from testlib.web_session import CMKWebSession
+
+logger = logging.getLogger()
 
 
 class InvalidUrl(Exception):
     pass
 
 
-class Url(object):
+class Url:
     def __init__(self, url, orig_url=None, referer_url=None):
         self.url = url
         self.orig_url = orig_url
@@ -41,8 +48,8 @@ class Url(object):
     # Strip proto and host
     def url_without_host(self):
         parsed = list(urlsplit(self.url))
-        parsed[0] = None
-        parsed[1] = None
+        parsed[0] = ""
+        parsed[1] = ""
         return urlunsplit(parsed)
 
 
@@ -70,7 +77,7 @@ class Worker(threading.Thread):
                     except Exception as e:
                         self.error(url, "Failed to visit: %s\n%s" % (e, traceback.format_exc()))
                     self.crawler.todo.task_done()
-            except Queue.Empty:
+            except queue.Empty:
                 self.idle = True
                 time.sleep(0.5)
 
@@ -79,7 +86,7 @@ class Worker(threading.Thread):
 
     def visit_url(self, url):
         if url.url in self.crawler.visited:
-            print("Already visited: %s" % url.url)
+            logger.info("Already visited: %s", url.url)
             return
         self.crawler.visited.append(url.url)
 
@@ -92,10 +99,9 @@ class Worker(threading.Thread):
             response = self.client.get(url.url_without_host())
         except AssertionError as e:
             if "This view can only be used in mobile mode" in "%s" % e:
-                print("Skipping mobile mode view checking")
+                logger.info("Skipping mobile mode view checking")
                 return
-            else:
-                raise
+            raise
         duration = time.time() - started
 
         self.update_stats(url, duration, len(response.content))
@@ -208,7 +214,7 @@ class Worker(threading.Thread):
 
             try:
                 self.verify_is_valid_url(url)
-            except InvalidUrl as e:
+            except InvalidUrl:
                 #print self.name, "skip invalid", url, e
                 self.crawler.skipped.add(url)
                 continue
@@ -280,7 +286,7 @@ class Worker(threading.Thread):
         return urlunsplit(parsed)
 
 
-class SetQueue(Queue.Queue):
+class SetQueue(queue.Queue):
     def _init(self, maxsize):
         self.queue = set()
 
@@ -291,9 +297,8 @@ class SetQueue(Queue.Queue):
         return self.queue.pop()
 
 
-class TestCrawler(object):
-    @pytest.mark.type("gui_crawl")
-    def test_crawl(self, site):
+class Crawler:
+    def __init__(self, site):
         self.stats = {}
         self.todo = SetQueue()
         self.started = time.time()
@@ -309,65 +314,69 @@ class TestCrawler(object):
         self.site = site
         self.num_workers = 10
 
-        self.load_stats()
+        #self.load_stats()
 
         self.todo.put(Url(site.internal_url))
         self.handled.add(site.internal_url)
 
-        self.crawl()
+        if not os.path.exists(self.result_dir()):
+            os.makedirs(self.result_dir())
 
-        self.report()
+    def result_dir(self):
+        return os.environ.get("RESULT_PATH", self.site.path("results"))
 
-    def var_dir(self):
-        return self.site.path("var/log")
-
-    def stats_file(self):
-        return self.var_dir() + "/crawl.stats"
+    #def stats_file(self):
+    #    return self.result_dir() + "/crawl.stats"
 
     def report_file(self):
-        return self.var_dir() + "/crawl.report"
+        return self.result_dir() + "/crawl.report"
 
-    def web_log_file(self):
-        return self.var_dir() + "/crawl-web.log"
+    #def load_stats(self):
+    #    try:
+    #        self.stats = ast.literal_eval(open(self.stats_file()).read())
+    #    except IOError as e:
+    #        if e.errno == errno.ENOENT:
+    #            pass  # Not existing files are OK
+    #        else:
+    #            raise
 
-    def apache_error_log_file(self):
-        return self.var_dir() + "/crawl-apache_error_log.log"
+    #def save_stats(self):
+    #    open(self.stats_file() + ".tmp", "w").write(pprint.pformat(self.stats) + "\n")
+    #    os.rename(self.stats_file() + ".tmp", self.stats_file())
 
-    def load_stats(self):
-        try:
-            self.stats = eval(open(self.stats_file()).read())
-        except IOError as e:
-            if e.errno == errno.ENOENT:
-                pass  # Not existing files are OK
-            else:
-                raise
+    #def update_total_stats(self, finished):
+    #    stats = self.stats.setdefault("_TOTAL_", {})
 
-    def save_stats(self):
-        open(self.stats_file() + ".tmp", "w").write(pprint.pformat(self.stats) + "\n")
-        os.rename(self.stats_file() + ".tmp", self.stats_file())
+    #    stats["last_num_visited"] = len(self.visited)
+    #    stats["last_duration"] = time.time() - self.started
+    #    stats["last_errors"] = self.errors
+    #    stats["last_finished"] = finished
 
-    def update_total_stats(self, finished):
-        stats = self.stats.setdefault("_TOTAL_", {})
+    #    if finished:
+    #        if stats.get("last_finished_num_visited", 0) > 0:
+    #            perc = float(stats["last_num_visited"]) * 100 / stats["last_finished_num_visited"]
+    #            if perc < 80.0:
+    #                self.error(
+    #                    "Finished and walked %d URLs, previous run walked %d URLs. That "
+    #                    "is %0.2f %% of the previous run. Something seems to be wrong." %
+    #                    (stats["last_num_visited"], stats["last_finished_num_visited"], perc))
 
-        stats["last_num_visited"] = len(self.visited)
-        stats["last_duration"] = time.time() - self.started
-        stats["last_errors"] = self.errors
-        stats["last_finished"] = finished
+    #        stats["last_finished_num_visited"] = stats["last_num_visited"]
+    #        stats["last_finished_duration"] = stats["last_duration"]
+    #        stats["last_finished_errors"] = stats["last_errors"]
 
-        if finished:
-            if stats.get("last_finished_num_visited", 0) > 0:
-                perc = float(stats["last_num_visited"]) * 100 / stats["last_finished_num_visited"]
-                if perc < 80.0:
-                    self.error(
-                        "Finished and walked %d URLs, previous run walked %d URLs. That "
-                        "is %0.2f %% of the previous run. Something seems to be wrong." %
-                        (stats["last_num_visited"], stats["last_finished_num_visited"], perc))
-
-            stats["last_finished_num_visited"] = stats["last_num_visited"]
-            stats["last_finished_duration"] = stats["last_duration"]
-            stats["last_finished_errors"] = stats["last_errors"]
-
+    # TODO: Better write it as report XML that can be parsed by jenkins?
     def report(self):
+        self._write_report_file()
+        self._copy_logs()
+
+        if self.errors:
+            raise Exception("Crawled %d URLs in %d seconds. Failures:\n%s" %
+                            (len(self.visited), time.time() - self.started, "\n".join(self.errors)))
+
+        logger.info("Done. Everything was OK.")
+
+    def _write_report_file(self):
         with open(self.report_file() + ".tmp", "w") as f:
             f.write("Skipped URLs:\n")
             for skipped_url in sorted(self.skipped):
@@ -383,30 +392,18 @@ class TestCrawler(object):
                 f.write("Crawled %d URLs in %d seconds. Failures:\n%s\n" %
                         (len(self.visited), time.time() - self.started, "\n".join(self.errors)))
 
-        # Copy the previous file for analysis
-        #if os.path.exists(self.report_file()):
-        #    open(self.report_file()+".old", "w").write(open(self.report_file()).read())
-
         os.rename(self.report_file() + ".tmp", self.report_file())
+        logger.info("Wrote report file: %s", self.report_file())
 
-        if self.errors:
-            for site_path, test_path in [
-                ("var/log/web.log", self.web_log_file()),
-                ("var/log/apache/error_log", self.apache_error_log_file()),
-            ]:
-                if self.site.file_exists(site_path):
-                    open(test_path + ".tmp", "w").write(self.site.read_file(site_path))
-                    os.rename(test_path + ".tmp", test_path)
-
-            pytest.fail("Crawled %d URLs in %d seconds. Failures:\n%s" %
-                        (len(self.visited), time.time() - self.started, "\n".join(self.errors)))
+    def _copy_logs(self):
+        shutil.copytree(self.site.path("var/log"), Path(self.result_dir(), "logs"))
 
     def error(self, msg):
-        print(msg)
+        logger.error(msg)
         self.errors.append(msg)
 
     def crawl(self):
-        finished = False
+        #finished = False
         workers = []
         try:
             for i in range(self.num_workers):
@@ -432,21 +429,45 @@ class TestCrawler(object):
                 last_tick = now
                 last_num_visited = num_visited
 
-                print("Workers: %d (Idle: %d), Rate: %0.2f/s (1sec: %0.2f/s), Duration: %d sec, "
-                      "Visited: %s, Todo: %d" %
-                      (self.num_workers, num_idle, rate_runtime, rate_tick, duration, num_visited,
-                       self.todo.qsize()))
+                logger.info(
+                    "Workers: %d (Idle: %d), Rate: %0.2f/s (1sec: %0.2f/s), Duration: %d sec, "
+                    "Visited: %s, Todo: %d", self.num_workers, num_idle, rate_runtime, rate_tick,
+                    duration, num_visited, self.todo.qsize())
 
                 if self.todo.qsize() == 0 and all([w.idle for w in workers]):
                     break
-                else:
-                    time.sleep(1)
+                time.sleep(1)
 
-            finished = True
+            #finished = True
         except KeyboardInterrupt:
             for t in workers:
                 t.stop()
-            print("Waiting for workers to finish...")
-        finally:
-            self.update_total_stats(finished)
-            self.save_stats()
+            logger.info("Waiting for workers to finish...")
+        #finally:
+        #    self.update_total_stats(finished)
+        #    self.save_stats()
+
+
+def site_factory():
+    version = os.environ.get("VERSION", CMKVersion.DAILY)
+    edition = os.environ.get("EDITION", CMKVersion.CEE)
+    branch = os.environ.get("BRANCH", current_base_branch_name())
+
+    logger.info("Version: %s, Edition: %s, Branch: %s", version, edition, branch)
+    return SiteFactory(
+        version=version,
+        edition=edition,
+        branch=branch,
+        prefix="crawl_",
+        install_test_python_modules=False,
+    )
+
+
+def test_crawl():
+    sf = site_factory()
+    site = sf.get_site("central")
+    logger.info("Site %s is ready!", site.id)
+
+    crawler = Crawler(site)
+    crawler.crawl()
+    crawler.report()

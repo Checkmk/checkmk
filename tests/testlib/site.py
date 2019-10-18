@@ -32,13 +32,15 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                  reuse=True,
                  version=CMKVersion.DEFAULT,
                  edition=CMKVersion.CEE,
-                 branch="master"):
+                 branch="master",
+                 install_test_python_modules=True):
         assert site_id
         self.id = site_id
         self.root = "/omd/sites/%s" % self.id
         self.version = CMKVersion(version, edition, branch)
 
         self.update_with_git = version == CMKVersion.GIT
+        self.install_test_python_modules = install_test_python_modules
 
         self.reuse = reuse
 
@@ -368,7 +370,8 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                 #self._enabled_liveproxyd_debug_logging()
                 self._enable_mkeventd_debug_logging()
 
-            self._install_test_python_modules()
+            if self.install_test_python_modules:
+                self._install_test_python_modules()
 
             if self.update_with_git:
                 self._update_with_f12_files()
@@ -425,7 +428,9 @@ class Site(object):  # pylint: disable=useless-object-inheritance
     def _update_with_f12_files(self):
         paths = [
             cmk_path() + "/omd/packages/omd",
-            cmk_path() + "/livestatus",
+            # TODO: To be able to build livestatus we need cmake. Disable for the moment.
+            #cmk_path() + "/livestatus",
+            cmk_path() + "/livestatus/api/python",
             cmk_path() + "/bin",
             cmk_path() + "/agents/special",
             cmk_path() + "/agents/plugins",
@@ -452,7 +457,9 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                 # TODO: To be able to build the core correctly we need to build
                 # python/boost/python-modules/rrdtool first. Skip cmc for the moment here
                 #cmc_path() + "/core",
-                cmc_path() + "/agents",
+                # TODO: Do not invoke the chroot build mechanism here, which is very time
+                # consuming when not initialized yet
+                #cmc_path() + "/agents",
             ]
 
         if os.path.exists(cme_path()) and self.version.is_managed_edition():
@@ -790,13 +797,14 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
 
 class SiteFactory(object):  # pylint: disable=useless-object-inheritance
-    def __init__(self, version, edition, branch, prefix=None):
+    def __init__(self, version, edition, branch, install_test_python_modules=True, prefix=None):
         self._base_ident = prefix or "s_%s_" % branch[:6]
         self._version = version
         self._edition = edition
         self._branch = branch
         self._sites = {}
         self._index = 1
+        self._install_test_python_modules = install_test_python_modules
 
     @property
     def sites(self):
@@ -833,7 +841,8 @@ class SiteFactory(object):  # pylint: disable=useless-object-inheritance
                     reuse=False,
                     version=self._version,
                     edition=self._edition,
-                    branch=self._branch)
+                    branch=self._branch,
+                    install_test_python_modules=self._install_test_python_modules)
         site.create()
         site.open_livestatus_tcp()
         # No TLS for testing

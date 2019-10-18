@@ -47,7 +47,7 @@ test_types = collections.OrderedDict([
     ("docker", EXECUTE_IN_VENV),
     ("agent-integration", EXECUTE_IN_VENV),
     ("integration", EXECUTE_IN_SITE),
-    ("gui_crawl", EXECUTE_IN_SITE),
+    ("gui_crawl", EXECUTE_IN_VENV),
     ("packaging", EXECUTE_IN_VENV),
     ("composition", EXECUTE_IN_VENV),
 ])

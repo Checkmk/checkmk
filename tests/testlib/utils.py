@@ -74,19 +74,21 @@ def current_base_branch_name():
         commits = commits.decode("utf-8")
 
     for commit in commits.strip().split("\n"):
+        # Asking for remote heads here, since the git repos checked out by jenkins do not create all
+        # the branches locally
         heads = subprocess.check_output(
-            ["git", "branch", "--format=%(refname)", "--contains", commit])
+            ["git", "branch", "-r", "--format=%(refname)", "--contains", commit])
         if not isinstance(heads, six.text_type):
             heads = heads.decode("utf-8")
 
         for head in heads.strip().split("\n"):
-            if head == "refs/heads/master":
+            if head == "refs/remotes/origin/master":
                 return "master"
 
-            if re.match(r"^refs/heads/[0-9]+\.[0-9]+\.[0-9]+$", head):
+            if re.match(r"^refs/remotes/origin/[0-9]+\.[0-9]+\.[0-9]+$", head):
                 return head
 
-    logger.info("Could not determine base branch, using %s", branch_name)
+    logger.warning("Could not determine base branch, using %s", branch_name)
     return branch_name
 
 
@@ -120,7 +122,9 @@ def is_running_as_site_user():
     try:
         return pwd.getpwuid(os.getuid()).pw_name == site_id()
     except KeyError:
-        return False  # Not existing user -> No site user
+        # Happens when no user with current UID exists (experienced in container with not existing
+        # "-u" run argument set)
+        return False
 
 
 def add_python_paths():

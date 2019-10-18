@@ -155,7 +155,7 @@ def check_livestatus_status(item, params, sections):
 
     pem_path = "/omd/sites/%s/etc/ssl/sites/%s.pem" % (item, item)
     cert_valid_until = ssl_certs.get(item, {}).get(pem_path)
-    if cert_valid_until:
+    if cert_valid_until is not None:
         days_left = (int(cert_valid_until) - time.time()) / 86400.0
         valid_until_formatted = time.strftime("%Y-%m-%d %H:%M:%S",
                                               time.localtime(int(cert_valid_until)))

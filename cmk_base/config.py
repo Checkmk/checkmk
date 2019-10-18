@@ -304,7 +304,7 @@ def _load_config(with_conf_d, exclude_parents_mk):
                 raise
             elif sys.stderr.isatty():
                 console.error("Cannot read in configuration file %s: %s\n", _f, e)
-            sys.exit(1)
+                sys.exit(1)
 
     # Cleanup global helper vars
     for helper_var in helper_vars:

@@ -59,7 +59,7 @@ if [ "$1" = -d ]
 then
     set -xv
 else
-    exec <&- 2>/dev/null
+    exec </dev/null 2>/dev/null
 fi
 
 echo "<<<check_mk>>>"

@@ -63,6 +63,3 @@ RUN zypper addrepo http://nexus:8081/repository/sles12sp1 sles12sp1 \
 
 COPY bw-build-gnu-toolchain.sh /usr/sbin
 RUN bw-build-gnu-toolchain.sh -b
-RUN rm /usr/bin/gcc /usr/bin/g++ \
-    && ln -s /opt/gcc-8.2.0/bin/gcc-8 /usr/bin/gcc \
-    && ln -s /opt/gcc-8.2.0/bin/g++-8 /usr/bin/g++

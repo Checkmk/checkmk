@@ -6,7 +6,6 @@ RUN yum -y makecache \
     && yum -y --enablerepo=PowerTools install \
     bind-utils \
     boost-devel \
-    cmake \
     curl-devel \
     expat-devel \
     flex \
@@ -74,3 +73,7 @@ RUN yum -y makecache \
 #    && mv /usr/bin/cc /usr/bin/cc-old || true \
 #    && ln -s /usr/bin/gcc-8 /usr/bin/gcc \
 #    && ln -s /usr/bin/gcc-8 /usr/bin/cc
+RUN cd /opt \
+    && wget https://github.com/Kitware/CMake/releases/download/v3.15.4/cmake-3.15.4-Linux-x86_64.tar.gz \
+    && tar xf cmake-3.15.4-Linux-x86_64.tar.gz \
+    && ln -s /opt/cmake-3.15.4-Linux-x86_64/bin/* /usr/bin/

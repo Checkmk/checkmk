@@ -7,7 +7,6 @@ RUN yum -y makecache \
     bind-utils \
     boost-devel \
     centos-release-scl \
-    cmake \
     compat-readline5 \
     curl-devel \
     expat-devel \
@@ -61,3 +60,8 @@ RUN yum -y makecache \
 COPY bw-build-gnu-toolchain.sh /usr/sbin
 RUN source scl_source enable devtoolset-7 \ 
     && bw-build-gnu-toolchain.sh -b
+
+RUN cd /opt \
+    && wget https://github.com/Kitware/CMake/releases/download/v3.15.4/cmake-3.15.4-Linux-x86_64.tar.gz \
+    && tar xf cmake-3.15.4-Linux-x86_64.tar.gz \
+    && ln -s /opt/cmake-3.15.4-Linux-x86_64/bin/* /usr/bin/

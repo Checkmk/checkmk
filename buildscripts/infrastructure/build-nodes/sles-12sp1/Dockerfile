@@ -8,7 +8,6 @@ RUN zypper addrepo http://nexus:8081/repository/sles12sp1 sles12sp1 \
     apache2-devel \
     bind-utils \
     boost-devel \
-    cmake \
     curl \
     flex \
     freeradius-client-devel \
@@ -63,3 +62,7 @@ RUN zypper addrepo http://nexus:8081/repository/sles12sp1 sles12sp1 \
 
 COPY bw-build-gnu-toolchain.sh /usr/sbin
 RUN bw-build-gnu-toolchain.sh -b
+RUN cd /opt \
+    && wget https://github.com/Kitware/CMake/releases/download/v3.15.4/cmake-3.15.4-Linux-x86_64.tar.gz \
+    && tar xf cmake-3.15.4-Linux-x86_64.tar.gz \
+    && ln -s /opt/cmake-3.15.4-Linux-x86_64/bin/* /usr/bin/

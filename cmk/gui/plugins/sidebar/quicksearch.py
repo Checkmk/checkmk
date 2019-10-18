@@ -124,13 +124,8 @@ class TooManyRowsError(MKException):
 
 
 class LivestatusSearchBase(object):
-    def _build_url(self, url_params, restore_regex=False):
-        new_params = []
-        if restore_regex:
-            for key, value in url_params:
-                new_params.append((key, value.replace("\\", "\\\\")))
-        else:
-            new_params.extend(url_params)
+    def _build_url(self, url_params):
+        new_params = url_params[:]
         return html.makeuri(new_params, delvars="q", filename="view.py")
 
 
@@ -328,7 +323,7 @@ class LivestatusSearchConductor(LivestatusSearchBase):
             url_tokens = [("view_name", target_view)] + url_params
             if not skip_site:
                 url_tokens.append(("site", row.get("site")))
-            entry["url"] = self._build_url(url_tokens, restore_regex=True)
+            entry["url"] = self._build_url(url_tokens)
 
             entry["raw_data"] = row
             self._elements.append(entry)
@@ -424,13 +419,9 @@ class LivestatusQuicksearch(LivestatusSearchBase):
 
         # Generate a search page for the topmost search_object with results
         url_params = []
-
-        restore_regex = False
         for search_object in self._search_objects:
             if search_object.num_rows() > 0:
                 url_params.extend(search_object.get_search_url_params())
-                if search_object.num_rows() == 1:
-                    restore_regex = True
                 break
         else:
             url_params.extend([
@@ -439,7 +430,7 @@ class LivestatusQuicksearch(LivestatusSearchBase):
                 ("service_regex", self._query),
             ])
 
-        return self._build_url(url_params, restore_regex=restore_regex)
+        return self._build_url(url_params)
 
     def _query_data(self):
         self._determine_search_objects()
@@ -726,10 +717,12 @@ class ServiceMatchPlugin(QuicksearchMatchPlugin):
 
         if row:
             field_value = row.get("description")
+            search_key = "service"
         else:
             field_value = self._create_textfilter_regex(used_filters)
+            search_key = "service_regex"
 
-        return field_value, [("service_regex", field_value)]
+        return field_value, [(search_key, field_value)]
 
 
 @match_plugin_registry.register

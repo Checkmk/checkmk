@@ -604,9 +604,39 @@ bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
     return true;
 }
 
+std::pair<std::filesystem::path, std::filesystem::path> GetExampleYmlNames() {
+    using namespace cma::cfg;
+    namespace fs = std::filesystem;
+    fs::path src_example = GetRootInstallDir();
+
+    src_example /= files::kUserYmlFile;
+    fs::path tgt_example = GetUserDir();
+    tgt_example /= files::kUserYmlFile;
+    tgt_example.replace_extension(".example.yml");
+    return {tgt_example, src_example};
+}
+
+static void UpdateUserYmlExample(const std::filesystem::path &tgt,
+                                 const std::filesystem::path &src) {
+    namespace fs = std::filesystem;
+    if (!NeedReinstall(tgt, src)) return;
+
+    XLOG::l.i("User Example must be updated");
+    std::error_code ec;
+    fs::copy(src, tgt, fs::copy_options::overwrite_existing, ec);
+    if (ec.value() == 0)
+        XLOG::l.i("User Example '{}' have been updated successfully from '{}'",
+                  tgt.u8string(), src.u8string());
+    else
+        XLOG::l.i(
+            "User Example '{}' have been failed to update with error [{}] from '{}'",
+            tgt.u8string(), ec.value(), src.u8string());
+}
+
 void Install() {
     using namespace cma::cfg;
     using namespace cma::cfg::cap;
+    namespace fs = std::filesystem;
 
     try {
         InstallCapFile();
@@ -617,11 +647,28 @@ void Install() {
         return;
     }
 
+    // DAT
     auto source = GetRootInstallDir();
 
     InstallFileAsCopy(files::kDatFile, GetUserInstallDir(), source,
                       Mode::normal);
-    InstallFileAsCopy(files::kUserYmlFile, GetUserDir(), source, Mode::normal);
+
+    // YML
+    fs::path target_file = GetUserDir();
+    target_file /= files::kUserYmlFile;
+    std::error_code ec;
+    if (!fs::exists(target_file, ec)) {
+        XLOG::l.i("Installing user yml file");
+        InstallFileAsCopy(files::kUserYmlFile, GetUserDir(), source,
+                          Mode::normal);
+    } else {
+        XLOG::d.i("Skip installing user yml file");
+    }
+
+    {
+        auto [tgt_example, src_example] = GetExampleYmlNames();
+        UpdateUserYmlExample(tgt_example, src_example);
+    }
 }
 
 // Re-install all files as is from the root-install

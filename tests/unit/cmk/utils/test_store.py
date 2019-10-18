@@ -4,12 +4,43 @@ import sys
 import threading
 import time
 import os
+import stat
 import six
 
 import pytest  # type: ignore
 
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
+
+
+def test_mkdir(tmp_path):
+    test_dir = tmp_path.joinpath("abc")
+    store.mkdir(test_dir)
+    store.mkdir(test_dir)
+
+
+def test_mkdir_mode(tmp_path):
+    test_dir = tmp_path.joinpath("bla")
+    store.mkdir(test_dir, mode=0o750)
+    assert stat.S_IMODE(os.stat(str(test_dir)).st_mode) == 0o750
+
+
+def test_mkdir_parent_not_exists(tmp_path):
+    test_dir = tmp_path.joinpath("not-existing/xyz")
+    with pytest.raises(OSError, match="No such file or directory"):
+        store.mkdir(test_dir)
+
+
+def test_makedirs(tmp_path):
+    test_dir = tmp_path.joinpath("not-existing/xyz")
+    store.makedirs(test_dir)
+    store.makedirs(test_dir)
+
+
+def test_makedirs_mode(tmp_path):
+    test_dir = tmp_path.joinpath("whee/blub")
+    store.makedirs(test_dir, mode=0o750)
+    assert stat.S_IMODE(os.stat(str(test_dir)).st_mode) == 0o750
 
 
 def test_load_data_from_file_not_existing(tmp_path):

@@ -7,6 +7,12 @@ import os
 import stat
 import six
 
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path
+
 import pytest  # type: ignore
 
 import cmk.utils.store as store
@@ -136,26 +142,29 @@ def test_save_data_to_file_not_pretty(tmp_path):
     assert store.load_data_from_file(path) == data
 
 
-def test_acquire_lock_not_existing(tmp_path):
-    store.aquire_lock(str(tmp_path / "asd"))
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_aquire_lock_not_existing(tmp_path, path_type):
+    store.aquire_lock(path_type(tmp_path / "asd"))
 
 
-def test_acquire_lock(tmp_path):
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_aquire_lock(tmp_path, path_type):
     locked_file = tmp_path / "locked_file"
     locked_file.write_text(u"", encoding="utf-8")
 
-    path = str(locked_file)
+    path = path_type(locked_file)
 
     assert store.have_lock(path) is False
     store.aquire_lock(path)
     assert store.have_lock(path) is True
 
 
-def test_acquire_lock_twice(tmp_path):
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_aquire_lock_twice(tmp_path, path_type):
     locked_file = tmp_path / "locked_file"
     locked_file.write_text(u"", encoding="utf-8")
 
-    path = str(locked_file)
+    path = path_type(locked_file)
 
     assert store.have_lock(path) is False
     store.aquire_lock(path)
@@ -164,15 +173,17 @@ def test_acquire_lock_twice(tmp_path):
     assert store.have_lock(path) is True
 
 
-def test_release_lock_not_locked():
-    store.release_lock("/asdasd/aasdasd")
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_release_lock_not_locked(path_type):
+    store.release_lock(path_type("/asdasd/aasdasd"))
 
 
-def test_release_lock(tmp_path):
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_release_lock(tmp_path, path_type):
     locked_file = tmp_path / "locked_file"
     locked_file.write_text(u"", encoding="utf-8")
 
-    path = str(locked_file)
+    path = path_type(locked_file)
 
     assert store.have_lock(path) is False
     store.aquire_lock(path)
@@ -181,30 +192,32 @@ def test_release_lock(tmp_path):
     assert store.have_lock(path) is False
 
 
-def test_release_lock_already_closed(tmp_path):
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_release_lock_already_closed(tmp_path, path_type):
     locked_file = tmp_path / "locked_file"
     locked_file.write_text(u"", encoding="utf-8")
 
-    path = str(locked_file)
+    path = path_type(locked_file)
 
     assert store.have_lock(path) is False
     store.aquire_lock(path)
     assert store.have_lock(path) is True
 
-    os.close(store._acquired_locks[path])
+    os.close(store._acquired_locks[str(path)])
 
     store.release_lock(path)
     assert store.have_lock(path) is False
 
 
-def test_release_all_locks(tmp_path):
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_release_all_locks(tmp_path, path_type):
     locked_file1 = tmp_path / "locked_file1"
     locked_file1.write_text(u"", encoding="utf-8")
     locked_file2 = tmp_path / "locked_file2"
     locked_file2.write_text(u"", encoding="utf-8")
 
-    path1 = str(locked_file1)
-    path2 = str(locked_file2)
+    path1 = path_type(locked_file1)
+    path2 = path_type(locked_file2)
 
     assert store.have_lock(path1) is False
     store.aquire_lock(path1)
@@ -219,17 +232,18 @@ def test_release_all_locks(tmp_path):
     assert store.have_lock(path2) is False
 
 
-def test_release_all_locks_already_closed(tmp_path):
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_release_all_locks_already_closed(tmp_path, path_type):
     locked_file = tmp_path / "locked_file"
     locked_file.write_text(u"", encoding="utf-8")
 
-    path = str(locked_file)
+    path = path_type(locked_file)
 
     assert store.have_lock(path) is False
     store.aquire_lock(path)
     assert store.have_lock(path) is True
 
-    os.close(store._acquired_locks[path])
+    os.close(store._acquired_locks[str(path)])
 
     store.release_all_locks()
     assert store.have_lock(path) is False
@@ -262,7 +276,8 @@ class LockTestThread(threading.Thread):
                 time.sleep(0.1)
 
 
-def test_locking(tmp_path):
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_locking(tmp_path, path_type):
     # HACK: We abuse modules as data containers, so we have to do this Kung Fu...
     store1 = sys.modules["cmk.utils.store"]
     del sys.modules["cmk.utils.store"]
@@ -273,7 +288,7 @@ def test_locking(tmp_path):
 
     locked_file = tmp_path / "locked_file"
     locked_file.write_text(u"", encoding="utf-8")
-    path = str(locked_file)
+    path = path_type(locked_file)
 
     t1 = LockTestThread(store1, path)
     t1.start()

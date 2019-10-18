@@ -336,17 +336,19 @@ _acquired_locks = {}  # type: Dict[str, int]
 
 
 def aquire_lock(path, blocking=True):
-    # type: (str, bool) -> None
+    # type: (Union[Path, str], bool) -> None
+    if not isinstance(path, Path):
+        path = Path(path)
+
     if have_lock(path):
         return  # No recursive locking
 
-    logger.debug("Try aquire lock on %s", path.decode("utf-8"))
+    logger.debug("Try aquire lock on %s", path)
 
     # Create file (and base dir) for locking if not existant yet
-    if not os.path.exists(os.path.dirname(path)):
-        os.makedirs(os.path.dirname(path), mode=0o770)
+    makedirs(path.parent, mode=0o770)
 
-    fd = os.open(path, os.O_RDONLY | os.O_CREAT, 0o660)
+    fd = os.open(str(path), os.O_RDONLY | os.O_CREAT, 0o660)
 
     # Handle the case where the file has been renamed in the meantime
     while True:
@@ -360,7 +362,7 @@ def aquire_lock(path, blocking=True):
             os.close(fd)
             raise
 
-        fd_new = os.open(path, os.O_RDONLY | os.O_CREAT, 0o660)
+        fd_new = os.open(str(path), os.O_RDONLY | os.O_CREAT, 0o660)
         if os.path.sameopenfile(fd, fd_new):
             os.close(fd_new)
             break
@@ -368,12 +370,12 @@ def aquire_lock(path, blocking=True):
             os.close(fd)
             fd = fd_new
 
-    _acquired_locks[path] = fd
-    logger.debug("Got lock on %s", path.decode("utf-8"))
+    _acquired_locks[str(path)] = fd
+    logger.debug("Got lock on %s", path)
 
 
 def try_aquire_lock(path):
-    # type: (str) -> bool
+    # type: (Union[Path, str]) -> bool
     try:
         aquire_lock(path, blocking=False)
         return True
@@ -384,11 +386,14 @@ def try_aquire_lock(path):
 
 
 def release_lock(path):
-    # type: (str) -> None
+    # type: (Union[Path, str]) -> None
+    if not isinstance(path, Path):
+        path = Path(path)
+
     if not have_lock(path):
         return  # no unlocking needed
-    logger.debug("Releasing lock on %s", path.decode("utf-8"))
-    fd = _acquired_locks.get(path)
+    logger.debug("Releasing lock on %s", path)
+    fd = _acquired_locks.get(str(path))
     if fd is None:
         return
     try:
@@ -396,12 +401,15 @@ def release_lock(path):
     except OSError as e:
         if e.errno != errno.EBADF:  # Bad file number
             raise
-    _acquired_locks.pop(path, None)
-    logger.debug("Released lock on %s", path.decode("utf-8"))
+    _acquired_locks.pop(str(path), None)
+    logger.debug("Released lock on %s", path)
 
 
 def have_lock(path):
-    # type: (str) -> bool
+    # type: (Union[str, Path]) -> bool
+    if isinstance(path, Path):
+        path = str(path)
+
     return path in _acquired_locks
 
 

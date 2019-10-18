@@ -107,6 +107,13 @@ def _site_globals_editable(site_id, site):
     return site["replication"] or config.site_is_local(site_id)
 
 
+def _get_demo_message():
+    return _("With the Checkmk Enterprise Free Edition you can create a distributed setup "
+             "with two sites, one central and one remote site. In case you want to test "
+             "more complex distributed setups, please "
+             "<a href=\"mailto:info@checkmk.com\">contact us</a>.")
+
+
 @mode_registry.register
 class ModeEditSite(WatoMode):
     @classmethod
@@ -119,16 +126,16 @@ class ModeEditSite(WatoMode):
 
     def __init__(self):
         super(ModeEditSite, self).__init__()
-        if cmk.is_demo():
-            raise MKGeneralException(
-                _("Distributed setups are not allowed with the Checkmk demo. "
-                  "In case you want to test distributed setups, please "
-                  "<a href=\"mailto:info@checkmk.com\">contact us</a>."))
         self._site_mgmt = watolib.SiteManagementFactory().factory()
 
         self._site_id = html.request.var("edit")
         self._clone_id = html.request.var("clone")
         self._new = self._site_id is None
+
+        if cmk.is_demo() and self._new:
+            num_sites = len(self._site_mgmt.load_sites())
+            if num_sites > 1:
+                raise MKUserError(None, _get_demo_message())
 
         configured_sites = self._site_mgmt.load_sites()
 
@@ -464,11 +471,6 @@ class ModeDistributedMonitoring(WatoMode):
 
     def __init__(self):
         super(ModeDistributedMonitoring, self).__init__()
-        if cmk.is_demo():
-            raise MKGeneralException(
-                _("Distributed setups are not allowed with the Checkmk demo. "
-                  "In case you want to test distributed setups, please "
-                  "<a href=\"mailto:info@checkmk.com\">contact us</a>."))
         self._site_mgmt = watolib.SiteManagementFactory().factory()
 
     def title(self):
@@ -647,6 +649,9 @@ class ModeDistributedMonitoring(WatoMode):
 
     def page(self):
         sites = sort_sites(self._site_mgmt.load_sites().items())
+
+        if cmk.is_demo():
+            html.show_info(_get_demo_message())
 
         html.div("", id_="message_container")
         with table_element(
@@ -922,11 +927,6 @@ class ModeEditSiteGlobals(GlobalSettingsMode):
 
     def __init__(self):
         super(ModeEditSiteGlobals, self).__init__()
-        if cmk.is_demo():
-            raise MKGeneralException(
-                _("Distributed setups are not allowed with the Checkmk demo. "
-                  "In case you want to test distributed setups, please "
-                  "<a href=\"mailto:info@checkmk.com\">contact us</a>."))
         self._site_id = html.request.var("site")
         self._site_mgmt = watolib.SiteManagementFactory().factory()
         self._configured_sites = self._site_mgmt.load_sites()
@@ -1065,11 +1065,6 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
     def __init__(self):
         super(ModeSiteLivestatusEncryption, self).__init__()
-        if cmk.is_demo():
-            raise MKGeneralException(
-                _("Distributed setups are not allowed with the Checkmk demo. "
-                  "In case you want to test distributed setups, please "
-                  "<a href=\"mailto:info@checkmk.com\">contact us</a>."))
         self._site_id = html.request.var("site")
         self._site_mgmt = watolib.SiteManagementFactory().factory()
         self._configured_sites = self._site_mgmt.load_sites()

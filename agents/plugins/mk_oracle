@@ -82,6 +82,11 @@ while test -n "$1"; do
             if type flock > /dev/null 2>&1; then
                 MK_ORA_LOGGING=1
                 export MK_ORA_LOGGING
+            else
+                echo "You cannot use the option '--log': flock needs to be installed."
+                echo "Please run mk_oracle without '--log'."
+                display_usage >&2
+                exit 2
             fi
             shift
             ;;

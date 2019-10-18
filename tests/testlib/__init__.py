@@ -4,7 +4,6 @@
 
 from __future__ import print_function
 
-import imp
 import os
 import glob
 import pwd
@@ -21,10 +20,15 @@ import abc
 import json
 import fcntl
 from contextlib import contextmanager
-from urlparse import urlparse
+from six.moves.urllib.parse import urlparse
 import six
 
-import pathlib2 as pathlib
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+
 import pytest  # type: ignore
 import requests  # type: ignore
 import urllib3  # type: ignore
@@ -66,13 +70,16 @@ def cme_path():
 
 def virtualenv_path():
     venv = subprocess.check_output(["pipenv", "--bare", "--venv"])
-    return pathlib.Path(venv.decode("utf-8").rstrip("\n"))
+    if not isinstance(venv, six.text_type):
+        venv = venv.decode("utf-8")
+    return Path(venv.rstrip("\n"))
 
 
 def current_branch_name():
-    branch_name = subprocess.check_output(["git", "rev-parse", "--abbrev-ref",
-                                           "HEAD"]).split("\n", 1)[0]
-    return branch_name.decode("utf-8")
+    branch_name = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+    if not isinstance(branch_name, six.text_type):
+        branch_name = branch_name.decode("utf-8")
+    return branch_name.split("\n", 1)[0]
 
 
 def get_cmk_download_credentials():
@@ -92,9 +99,18 @@ def import_module(pathname):
     This function loads the module at `pathname` even if it does not have
     the ".py" extension.
 
+    See Also:
+        - `https://mail.python.org/pipermail/python-ideas/2014-December/030265.html`.
+
     """
-    modpath = os.path.join(cmk_path(), pathname)
     modname = os.path.splitext(os.path.basename(pathname))[0]
+    modpath = os.path.join(cmk_path(), pathname)
+
+    if sys.version_info[0] >= 3:
+        import importlib
+        return importlib.machinery.SourceFileLoader(modname, modpath).load_module()  # pylint: disable=no-value-for-parameter,deprecated-method
+
+    import imp
     try:
         return imp.load_source(modname, modpath)
     finally:
@@ -169,7 +185,7 @@ def SiteActionLock():
 
 
 # It's ok to make it currently only work on debian based distros
-class CMKVersion(object):
+class CMKVersion(object):  # pylint: disable=useless-object-inheritance
     DEFAULT = "default"
     DAILY = "daily"
     GIT = "git"
@@ -200,12 +216,11 @@ class CMKVersion(object):
     def _get_short_edition(self, edition):
         if edition == "raw":
             return "cre"
-        elif edition == "enterprise":
+        if edition == "enterprise":
             return "cee"
-        elif edition == "managed":
+        if edition == "managed":
             return "cme"
-        else:
-            raise NotImplementedError("Unknown edition: %s" % edition)
+        raise NotImplementedError("Unknown edition: %s" % edition)
 
     def get_default_version(self):
         if os.path.exists("/etc/alternatives/omd"):
@@ -245,10 +260,11 @@ class CMKVersion(object):
     def edition(self):
         if self.edition_short == CMKVersion.CRE:
             return "raw"
-        elif self.edition_short == CMKVersion.CEE:
+        if self.edition_short == CMKVersion.CEE:
             return "enterprise"
-        elif self.edition_short == CMKVersion.CME:
+        if self.edition_short == CMKVersion.CME:
             return "managed"
+        raise NotImplementedError()
 
     def is_managed_edition(self):
         return self.edition_short == CMKVersion.CME
@@ -323,7 +339,7 @@ class CMKVersion(object):
             self.package_url(), auth=get_cmk_download_credentials(), verify=False)
         if response.status_code != 200:
             raise Exception("Failed to load package: %s" % self.package_url())
-        open(temp_package_path, "w").write(response.content)
+        open(temp_package_path, "wb").write(response.content)
         return temp_package_path
 
     def _install_package(self, package_path):
@@ -345,7 +361,7 @@ class CMKVersion(object):
         assert self.is_installed()
 
 
-class Site(object):
+class Site(object):  # pylint: disable=useless-object-inheritance
     def __init__(self,
                  site_id,
                  reuse=True,
@@ -583,8 +599,7 @@ class Site(object):
             if p.wait() != 0:
                 raise Exception("Failed to read file %s. Exit-Code: %d" % (rel_path, p.wait()))
             return p.stdout.read()
-        else:
-            return open(self.path(rel_path)).read()
+        return open(self.path(rel_path)).read()
 
     def delete_file(self, rel_path):
         if not self._is_running_as_site_user():
@@ -604,6 +619,8 @@ class Site(object):
             shutil.rmtree(self.path(rel_path))
 
     def write_file(self, rel_path, content):
+        if isinstance(content, six.text_type):
+            content = content.encode("utf-8")
         if not self._is_running_as_site_user():
             p = self.execute(["tee", self.path(rel_path)],
                              stdin=subprocess.PIPE,
@@ -613,7 +630,7 @@ class Site(object):
             if p.wait() != 0:
                 raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
         else:
-            return open(self.path(rel_path), "w").write(content)
+            return open(self.path(rel_path), "wb").write(content)
 
     def create_rel_symlink(self, link_rel_target, rel_link_name):
         if not self._is_running_as_site_user():
@@ -1076,7 +1093,7 @@ class Site(object):
         return port
 
 
-class SiteFactory(object):
+class SiteFactory(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, version, edition, branch, prefix=None):
         self._base_ident = prefix or "s_%s_" % branch[:6]
         self._version = version
@@ -1138,7 +1155,7 @@ class SiteFactory(object):
             self.remove_site(site_id)
 
 
-class CMKWebSession(object):
+class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, site):
         super(CMKWebSession, self).__init__()
         self.transids = []
@@ -1501,8 +1518,7 @@ class CMKWebSession(object):
         except AssertionError as e:
             if "No such host" in "%s" % e:
                 return False
-            else:
-                raise
+            raise
 
         assert isinstance(result, dict)
         return "hostname" in result
@@ -1553,8 +1569,7 @@ class CMKWebSession(object):
         except AssertionError as e:
             if "does not exist" in "%s" % e:
                 return False
-            else:
-                raise
+            raise
 
         assert isinstance(result, dict)
         return "folder" in result
@@ -1934,7 +1949,7 @@ class CMKWebSession(object):
         return result
 
 
-class CMKEventConsole(object):
+class CMKEventConsole(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, site):
         super(CMKEventConsole, self).__init__()
         self.site = site
@@ -1944,7 +1959,7 @@ class CMKEventConsole(object):
     def _config(self):
         cfg = {}
         content = self.site.read_file("etc/check_mk/mkeventd.d/wato/global.mk")
-        exec (content, {}, cfg)
+        exec(content, {}, cfg)
         return cfg
 
     def _gather_status_port(self):
@@ -2025,7 +2040,7 @@ class CMKEventConsole(object):
         return event
 
 
-class CMKEventConsoleStatus(object):
+class CMKEventConsoleStatus(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, address):
         self._address = address
 
@@ -2060,7 +2075,7 @@ class CMKEventConsoleStatus(object):
         return self.query(query)[0][0]
 
 
-class WatchLog(object):
+class WatchLog(object):  # pylint: disable=useless-object-inheritance
     """Small helper for integration tests: Watch a sites log file"""
     def __init__(self, site, log_path, default_timeout=5):
         self._site = site
@@ -2161,7 +2176,7 @@ def create_linux_test_host(request, web, site, hostname):
 #   '----------------------------------------------------------------------'
 
 
-class CheckManager(object):
+class CheckManager(object):  # pylint: disable=useless-object-inheritance
     def load(self, file_names=None):
         """Load either all check plugins or the given file_names"""
         import cmk_base.config as config
@@ -2293,7 +2308,7 @@ class ActiveCheck(BaseCheck):
         return self.info['service_description'](params)
 
 
-class SpecialAgent(object):
+class SpecialAgent(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, name):
         import cmk_base.config as config
         super(SpecialAgent, self).__init__()

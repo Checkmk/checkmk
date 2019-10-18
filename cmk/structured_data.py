@@ -729,7 +729,7 @@ class Numeration(Leaf):
 
 
     def is_equal(self, foreign):
-        return self._numeration == foreign._numeration
+        return sorted(self._numeration) == sorted(foreign._numeration)
 
 
     def count_entries(self):

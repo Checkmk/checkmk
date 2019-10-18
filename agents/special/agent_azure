@@ -31,7 +31,6 @@ import time
 import datetime
 import string
 import sys
-import re
 import argparse
 import logging
 
@@ -449,19 +448,25 @@ def create_metric_dict(metric, aggregation, interval_id, filter_):
     raise AzureMetricParseError('warning', "not found: %s (%s)" % (name, aggregation))
 
 
+def get_attrs_from_uri(uri):
+    """The uri contains info on subscription, resource group, provider.
+    """
+    attrs = {}
+    segments = uri.split(u'/')
+    for idx, segment in enumerate(segments):
+        if segment in ("subscriptions", "providers"):
+            attrs[segment[:-1]] = segments[idx + 1]
+        if segment.lower() == "resourcegroups":
+            # we have seen "resouceGroups" and "resourcegroups"
+            attrs["group"] = segments[idx + 1]
+    return attrs
+
+
 class AzureResource(object):
-
-    ID_PATTERN = re.compile("/subscriptions/(?P<subscription>[^/]*)"
-                            "(/resourceGroups/(?P<group>[^/]*))?"
-                            "/providers/(?P<provider>[^/]*)")
-
     def __init__(self, info):
         super(AzureResource, self).__init__()
         self.info = info
-        match = AzureResource.ID_PATTERN.match(info["id"])
-        for key, value in match.groupdict().iteritems():
-            if value is not None:
-                self.info[key] = value
+        self.info.update(get_attrs_from_uri(info["id"]))
         self.tags = self.info.get("tags", {})
 
         self.section = info["type"].split('/')[-1].lower()
@@ -592,11 +597,9 @@ class UsageClient(DataCache):
 
         # add group info:
         for usage in usages:
-            iid = usage['properties']['instanceId']
-            match = AzureResource.ID_PATTERN.match(iid)
-            group = match.group("group")
-            if group:
-                usage["group"] = group
+            attrs = get_attrs_from_uri(usage['properties']['instanceId'])
+            if "group" in attrs:
+                usage["group"] = attrs["group"]
 
         return usages
 

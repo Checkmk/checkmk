@@ -1,5 +1,5 @@
 # This file initializes the py.test environment
-# pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name,wrong-import-order
 
 from __future__ import print_function
 
@@ -19,7 +19,13 @@ import pwd
 import shutil
 import sys
 import tempfile
-from pathlib2 import Path
+
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+
 import testlib
 
 #

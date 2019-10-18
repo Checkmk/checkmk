@@ -1,20 +1,18 @@
-#!/usr/bin/python
+# pylint: disable=redefined-outer-name
 # Library for pylint checks of Check_MK
 
 from __future__ import print_function
 
 import os
+import sys
 import getpass
 import glob
 import multiprocessing
-import shutil
 import subprocess
-import tempfile
 
 from pylint.reporters.text import ColorizedTextReporter, ParseableTextReporter
-from pylint.utils import Message
 
-from testlib import repo_path, cmk_path, cmc_path, cme_path
+from testlib import repo_path, cmk_path
 
 
 def check_files(base_dir):
@@ -37,7 +35,7 @@ def add_file(f, path):
     f.write(open(path).read())
 
 
-def run_pylint(base_path, check_files=None):  #, cleanup_test_dir=False):
+def run_pylint(base_path, check_files=None):
     args = os.environ.get("PYLINT_ARGS", "")
     if args:
         pylint_args = args.split(" ")
@@ -61,17 +59,10 @@ def run_pylint(base_path, check_files=None):  #, cleanup_test_dir=False):
         "--jobs=%d" % num_jobs_to_use(),
     ] + pylint_args + check_files
 
-    os.putenv("TEST_PATH", repo_path() + "/tests")
     print("Running pylint in '%s' with: %s" % (base_path, subprocess.list2cmdline(cmd)))
     p = subprocess.Popen(cmd, shell=False, cwd=base_path)
     exit_code = p.wait()
     print("Finished with exit code: %d" % exit_code)
-
-    #if exit_code == 0 and cleanup_test_dir:
-    #    # Don't remove directory when specified via WORKDIR env
-    #    if not os.environ.get("WORKDIR"):
-    #        print("Removing build path...")
-    #        shutil.rmtree(base_path)
 
     return exit_code
 
@@ -110,9 +101,11 @@ def is_python_file(path):
     if path.endswith(".py"):
         return True
 
+    check_name = "python3" if sys.version_info[0] >= 3 else "python"
+
     # Only add python files
     shebang = open(path, "r").readline().rstrip()
-    if shebang.startswith("#!") and shebang.endswith("python"):
+    if shebang.startswith("#!") and shebang.endswith(check_name):
         return True
 
     return False

@@ -1,0 +1,25 @@
+Title: cmk-update-agent.exe: Fix stdout/stderr redirects
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1571388555
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+This Werk fixes the following bug:
+
+cmk-update-agent.exe console output won't work on Windows if
+stdout/stderr gets redirected to file.
+Instead, a Traceback like this will be displayed for every output:
+<pre>
+Traceback (most recent call last):
+File "logging\__init__.py", line 861, in emit
+File "logging\__init__.py", line 734, in format
+File "cmk_update_agent.py", line 1713, in format
+TypeError: encode() argument 1 must be string, not None
+Logged from file cmk_update_agent.py, line 1009
+</pre>
+The normal program flow is not affected by this bug, also normal
+logging takes place as expected, as can be seen at log/cmk-update-agent.log

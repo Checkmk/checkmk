@@ -56,6 +56,8 @@ def inventory_f5_bigip_mem(parsed):
 
 def check_f5_bigip_mem(item, params, parsed):
     mem_total, mem_used = parsed["mem"]
+    if not mem_total or not mem_used:
+        return 3, "Memory information missing"
     return check_memory_simple(float(mem_used), float(mem_total), params)
 
 
@@ -89,6 +91,8 @@ def inventory_f5_bigip_mem_tmm(parsed):
 
 def check_f5_bigip_mem_tmm(item, params, parsed):
     mem_total, mem_used = parsed["tmm"]
+    if not mem_total or not mem_used:
+        return 3, "Memory information missing"
     return check_memory_simple(float(mem_used) * 1024, float(mem_total) * 1024, params)
 
 

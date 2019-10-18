@@ -19,6 +19,7 @@ import ast
 import abc
 import json
 import fcntl
+import tempfile
 from contextlib import contextmanager
 from six.moves.urllib.parse import urlparse
 import six
@@ -75,11 +76,80 @@ def virtualenv_path():
     return Path(venv.rstrip("\n"))
 
 
+def is_running_as_site_user():
+    return pwd.getpwuid(os.getuid()).pw_name == site_id()
+
+
+def site_id():
+    site_id = os.environ.get("OMD_SITE")
+    if site_id is not None:
+        return site_id
+
+    branch_name = os.environ.get("BRANCH", current_branch_name())
+    # Split by / and get last element, remove unwanted chars
+    branch_part = re.sub("[^a-zA-Z0-9_]", "", branch_name.split("/")[-1])
+    site_id = "int_%s" % branch_part
+
+    os.putenv("OMD_SITE", site_id)
+    return site_id
+
+
 def current_branch_name():
     branch_name = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"])
     if not isinstance(branch_name, six.text_type):
         branch_name = branch_name.decode("utf-8")
     return branch_name.split("\n", 1)[0]
+
+
+# Some cmk.* code is calling things like cmk. is_raw_edition() at import time
+# (e.g. cmk_base/default_config/notify.py) for edition specific variable
+# defaults. In integration tests we want to use the exact version of the
+# site. For unit tests we assume we are in Enterprise Edition context.
+def fake_version_and_paths():
+    if is_running_as_site_user():
+        return
+
+    import _pytest.monkeypatch  # type: ignore
+    monkeypatch = _pytest.monkeypatch.MonkeyPatch()
+    tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
+
+    import cmk
+    monkeypatch.setattr(cmk, "omd_version", lambda: "%s.cee" % cmk.__version__)
+
+    monkeypatch.setattr("cmk.utils.paths.agents_dir", "%s/agents" % cmk_path())
+    monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % cmk_path())
+    monkeypatch.setattr("cmk.utils.paths.notifications_dir", Path(cmk_path()) / "notifications")
+    monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % cmk_path())
+    monkeypatch.setattr("cmk.utils.paths.check_manpages_dir", "%s/checkman" % cmk_path())
+    monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % cmk_path())
+    monkeypatch.setattr("cmk.utils.paths.omd_root", tmp_dir)
+    monkeypatch.setattr("cmk.utils.paths.tmp_dir", os.path.join(tmp_dir, "tmp/check_mk"))
+    monkeypatch.setattr("cmk.utils.paths.var_dir", os.path.join(tmp_dir, "var/check_mk"))
+    monkeypatch.setattr("cmk.utils.paths.precompiled_checks_dir",
+                        os.path.join(tmp_dir, "var/check_mk/precompiled_checks"))
+    monkeypatch.setattr("cmk.utils.paths.include_cache_dir",
+                        os.path.join(tmp_dir, "tmp/check_mk/check_includes"))
+    monkeypatch.setattr("cmk.utils.paths.check_mk_config_dir",
+                        os.path.join(tmp_dir, "etc/check_mk/conf.d"))
+    monkeypatch.setattr("cmk.utils.paths.main_config_file",
+                        os.path.join(tmp_dir, "etc/check_mk/main.mk"))
+    monkeypatch.setattr("cmk.utils.paths.default_config_dir", os.path.join(tmp_dir, "etc/check_mk"))
+    monkeypatch.setattr("cmk.utils.paths.piggyback_dir", Path(tmp_dir) / "var/check_mk/piggyback")
+    monkeypatch.setattr("cmk.utils.paths.piggyback_source_dir",
+                        Path(tmp_dir) / "var/check_mk/piggyback_sources")
+    monkeypatch.setattr("cmk.utils.paths.htpasswd_file", os.path.join(tmp_dir, "etc/htpasswd"))
+
+
+def add_python_paths():
+    # make the testlib available to the test modules
+    sys.path.insert(0, os.path.dirname(__file__))
+    # make the repo directory available (cmk lib)
+    sys.path.insert(0, cmk_path())
+
+    # if not running as site user, make the livestatus module available
+    if not is_running_as_site_user():
+        sys.path.insert(0, os.path.join(cmk_path(), "livestatus/api/python"))
+        sys.path.insert(0, os.path.join(cmk_path(), "omd/packages/omd"))
 
 
 def get_cmk_download_credentials():
@@ -1028,6 +1098,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         env_vars = {
             "VERSION": self.version._version,
             "REUSE": "1" if self.reuse else "0",
+            "BRANCH": self.version._branch,
         }
         for varname in [
                 "WORKSPACE", "PYTEST_ADDOPTS", "BANDIT_OUTPUT_ARGS", "SHELLCHECK_OUTPUT_ARGS",
@@ -1959,7 +2030,7 @@ class CMKEventConsole(object):  # pylint: disable=useless-object-inheritance
     def _config(self):
         cfg = {}
         content = self.site.read_file("etc/check_mk/mkeventd.d/wato/global.mk")
-        exec(content, {}, cfg)
+        exec (content, {}, cfg)
         return cfg
 
     def _gather_status_port(self):

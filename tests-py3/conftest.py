@@ -10,16 +10,19 @@ pytest.register_assert_rewrite(
     "unit.checks.checktestlib",  #
     "unit.checks.generictests.run")
 
-import _pytest.monkeypatch  # type: ignore
-import re
 import collections
 import errno
 import os
-import pwd
 import shutil
 import sys
 import tempfile
-from pathlib import Path
+
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+
 import testlib
 
 #
@@ -43,6 +46,7 @@ test_types = collections.OrderedDict([
     ("gui_crawl", EXECUTE_IN_SITE),
     ("packaging", EXECUTE_IN_VENV),
     ("composition", EXECUTE_IN_VENV),
+    ("agent-integration", EXECUTE_IN_VENV),
 ])
 
 
@@ -101,46 +105,12 @@ def pytest_runtest_setup(item):
     testlib.skip_unwanted_test_types(item)
 
 
-# Some cmk.* code is calling things like cmk. is_raw_edition() at import time
-# (e.g. cmk_base/default_config/notify.py) for edition specific variable
-# defaults. In integration tests we want to use the exact version of the
-# site. For unit tests we assume we are in Enterprise Edition context.
-def fake_version_and_paths():
-    if is_running_as_site_user():
-        return
-
-    monkeypatch = _pytest.monkeypatch.MonkeyPatch()
-    tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
-
-    import cmk
-    monkeypatch.setattr(cmk, "omd_version", lambda: "%s.cee" % cmk.__version__)
-
-    monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.notifications_dir", Path(cmk_path()) / "notifications")
-    monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.check_manpages_dir", "%s/checkman" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.omd_root", tmp_dir)
-    monkeypatch.setattr("cmk.utils.paths.tmp_dir", os.path.join(tmp_dir, "tmp/check_mk"))
-    monkeypatch.setattr("cmk.utils.paths.var_dir", os.path.join(tmp_dir, "var/check_mk"))
-    monkeypatch.setattr("cmk.utils.paths.precompiled_checks_dir",
-                        os.path.join(tmp_dir, "var/check_mk/precompiled_checks"))
-    monkeypatch.setattr("cmk.utils.paths.include_cache_dir",
-                        os.path.join(tmp_dir, "tmp/check_mk/check_includes"))
-    monkeypatch.setattr("cmk.utils.paths.check_mk_config_dir",
-                        os.path.join(tmp_dir, "etc/check_mk/conf.d"))
-    monkeypatch.setattr("cmk.utils.paths.default_config_dir", os.path.join(tmp_dir, "etc/check_mk"))
-    monkeypatch.setattr("cmk.utils.paths.piggyback_dir", Path(tmp_dir) / "var/check_mk/piggyback")
-    monkeypatch.setattr("cmk.utils.paths.piggyback_source_dir",
-                        Path(tmp_dir) / "var/check_mk/piggyback_sources")
-
-
 # Cleanup temporary directory created above
 @pytest.fixture(scope="session", autouse=True)
 def cleanup_cmk():
     yield
 
-    if is_running_as_site_user():
+    if testlib.is_running_as_site_user():
         return
 
     import cmk.utils.paths
@@ -153,30 +123,6 @@ def cleanup_cmk():
     except OSError as exc:
         if exc.errno != errno.ENOENT:
             raise  # re-raise exception
-
-
-def cmk_path():
-    return os.path.dirname(os.path.dirname(__file__))
-
-
-def cmc_path():
-    return os.path.realpath(cmk_path() + "/enterprise")
-
-
-def cme_path():
-    return os.path.realpath(cmk_path() + "/managed")
-
-
-def add_python_paths():
-    # make the testlib available to the test modules
-    sys.path.insert(0, os.path.dirname(__file__))
-    # make the repo directory available (cmk lib)
-    sys.path.insert(0, cmk_path())
-
-    # if not running as site user, make the livestatus module available
-    if not is_running_as_site_user():
-        sys.path.insert(0, os.path.join(cmk_path(), "livestatus/api/python"))
-        sys.path.insert(0, os.path.join(cmk_path(), "omd/packages/omd"))
 
 
 def pytest_cmdline_main(config):
@@ -203,16 +149,12 @@ def verify_virtualenv():
                          "(Use \"pipenv shell\" or configure direnv)")
 
 
-def is_running_as_site_user():
-    return pwd.getpwuid(os.getuid()).pw_name == _site_id()
-
-
 def setup_site_and_switch_user():
-    if is_running_as_site_user():
+    if testlib.is_running_as_site_user():
         return  # This is executed as site user. Nothing to be done.
 
     sys.stdout.write("===============================================\n")
-    sys.stdout.write("Setting up site '%s'\n" % _site_id())
+    sys.stdout.write("Setting up site '%s'\n" % testlib.site_id())
     sys.stdout.write("===============================================\n")
 
     site = _get_site_object()
@@ -249,33 +191,19 @@ def _get_site_object():
     def reuse_site():
         return os.environ.get("REUSE", "1") == "1"
 
-    return testlib.Site(site_id=_site_id(),
+    return testlib.Site(site_id=testlib.site_id(),
                         version=site_version(),
                         edition=site_edition(),
                         reuse=reuse_site(),
                         branch=site_branch())
 
 
-def _site_id():
-    site_id = os.environ.get("OMD_SITE")
-    if site_id is not None:
-        return site_id
-
-    branch_name = os.environ.get("BRANCH", testlib.current_branch_name())
-    # Split by / and get last element, remove unwanted chars
-    branch_part = re.sub("[^a-zA-Z0-9_]", "", branch_name.split("/")[-1])
-    site_id = "int_%s" % branch_part
-
-    os.putenv("OMD_SITE", site_id)
-    return site_id
-
-
 #
 # MAIN
 #
 
-add_python_paths()
-fake_version_and_paths()
+testlib.add_python_paths()
+testlib.fake_version_and_paths()
 
 
 # Session fixtures must be in conftest.py to work properly

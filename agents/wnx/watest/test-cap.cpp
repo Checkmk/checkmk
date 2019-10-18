@@ -419,6 +419,17 @@ TEST(CapTest, CheckInValid) {
     }
 }
 
+TEST(CapTest, Names) {
+    cma::OnStartTest();
+    auto [t, s] = GetExampleYmlNames();
+    std::filesystem::path t_expected = GetUserDir();
+    t_expected /= files::kUserYmlFile;
+    t_expected.replace_extension("example.yml");
+    EXPECT_EQ(t.u8string(), t_expected.u8string());
+    std::filesystem::path s_expected = GetRootInstallDir();
+    EXPECT_EQ(s.u8string(), (s_expected / files::kUserYmlFile).u8string());
+}
+
 TEST(CapTest, ReInstallRestore) {
     using namespace cma::tools;
     cma::OnStartTest();

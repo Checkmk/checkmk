@@ -70,6 +70,9 @@ bool StoreFile(const std::wstring &Name, const std::vector<char> &Data);
 // idiotic API form thje past. Do not for what hell, but let it stay
 bool CheckAllFilesWritable(const std::string &Directory);
 
+// tgt,src
+std::pair<std::filesystem::path, std::filesystem::path> GetExampleYmlNames();
+
 }  // namespace cma::cfg::cap
 
 #endif  // cap_h__

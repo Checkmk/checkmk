@@ -680,7 +680,7 @@ class Numeration(Leaf):
         return self._numeration == []
 
     def is_equal(self, foreign, edges=None):
-        return self._numeration == foreign._numeration
+        return sorted(self._numeration) == sorted(foreign._numeration)
 
     def count_entries(self):
         return sum(map(len, self._numeration))

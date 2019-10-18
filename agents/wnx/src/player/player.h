@@ -232,13 +232,14 @@ private:
     int processExecArray(const std::vector<std::wstring>& ExecArray) {
         int count = 0;
         for (auto& exec_entry : ExecArray) {
-            using namespace std::filesystem;
-            path p = exec_entry;
-            if (!exists(p)) continue;
+            namespace fs = std::filesystem;
+            fs::path p = exec_entry;
+            std::error_code ec;
+            if (!fs::exists(p, ec)) continue;
 
-            if (is_directory(p)) {
+            if (fs::is_directory(p, ec)) {
                 // this is bad idea
-                for (auto& dir_entry : directory_iterator(p)) {
+                for (auto& dir_entry : fs::directory_iterator(p, ec)) {
                     auto p_entry = dir_entry.path();
 
                     if (tryAddToExecArray(p_entry)) count++;

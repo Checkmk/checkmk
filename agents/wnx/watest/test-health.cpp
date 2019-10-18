@@ -66,6 +66,6 @@ TEST(HealthState, Monitor) {
     EXPECT_TRUE(bad.stop);
     ctrl.stop = true;
     if (control_thread.joinable()) control_thread.join();
-    XLOG::SendStringToStdio("end", XLOG::Colors::cyan);
+    XLOG::SendStringToStdio("HealthState,Monitor:end\n", XLOG::Colors::cyan);
 }
 }  // namespace wtools

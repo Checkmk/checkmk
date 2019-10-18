@@ -22,25 +22,27 @@ static const std::vector<std::string> S_UnsupportedCarriers = {
     kCarrierAsioName,  // future use
 };
 
-static auto ParseInternalPort(const std::string& InternalPort) {
-    return cma::tools::ParseKeyValue(InternalPort, kCarrierNameDelimiter);
+static auto ParseInternalPort(const std::string& internal_port) {
+    return cma::tools::ParseKeyValue(internal_port, kCarrierNameDelimiter);
 }
 
 // BASE API
 
 // gtest[+]
-bool CoreCarrier::establishCommunication(const std::string& InternalPort) {
+bool CoreCarrier::establishCommunication(const std::string& internal_port) {
     using namespace cma::carrier;
 
     std::lock_guard lk(lock_);
-    if (!carrier_name_.empty()) return false;
+    if (!carrier_name_.empty()) {
+        XLOG::l("Empty name of InternalPort is not allowed");
+        return false;
+    }
 
-    auto [carrier_name, carrier_address] = ParseInternalPort(InternalPort);
+    auto [carrier_name, carrier_address] = ParseInternalPort(internal_port);
 
     // find a value in a vector
-    auto finder = [](const auto& Vector, const auto& Value) -> bool {
-        return std::find(Vector.begin(), Vector.end(), Value) !=
-               std::end(Vector);
+    auto finder = [](const auto& tbl, const auto& val) -> bool {
+        return std::find(tbl.begin(), tbl.end(), val) != std::end(tbl);
     };
 
     if (finder(S_SupportedCarriers, carrier_name)) {
@@ -58,16 +60,20 @@ bool CoreCarrier::establishCommunication(const std::string& InternalPort) {
         else if (carrier_name_ == kCarrierFileName)
             data_sender_ = &CoreCarrier::fileSlotSend;
         else {
+            // we have no data sender for the supported carrier
+            // this is ok for null devices for example
             data_sender_ = nullptr;
         }
         return true;
     }
 
     if (finder(S_UnsupportedCarriers, carrier_name)) {
-        XLOG::d("\"{}\" not supported yet", carrier_name);
+        XLOG::d("Carrier '{}' not supported yet, port '{}'", carrier_name,
+                internal_port);
         data_sender_ = &CoreCarrier::asioSlotSend;
     } else {
-        XLOG::l.crit("Unknown Name of Carrier {}", carrier_name);
+        XLOG::l.crit("Unknown Name of Carrier '{}' on port '{}'", carrier_name,
+                     internal_port);
     }
 
     carrier_name_ = "";

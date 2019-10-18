@@ -14,6 +14,7 @@
 
 #include "cfg.h"
 #include "cfg_details.h"
+#include "cma_core.h"
 #include "common/cfg_info.h"
 #include "common/version.h"
 #include "common/wtools.h"
@@ -1114,7 +1115,6 @@ std::tuple<bool, std::filesystem::path> IsInstallProtocolExists(
 // #TODO deprecated
 [[deprecated]] void UpdateInstallProtocolFile(
     bool exists_install_protocol, const std::filesystem::path& install_file) {
-
     if (install_file.empty()) {
         XLOG::l("Install file cannot be generated, because it is not correct");
         return;

@@ -83,7 +83,7 @@ TEST(Cma, Commander) {
     cma::carrier::CoreCarrier cc;
     // "mail"
     auto ret = cc.establishCommunication(internal_port);
-    EXPECT_TRUE(ret);
+    EXPECT_TRUE(ret) << fmt::format("Failed port '{}'", internal_port);
     cc.sendCommand(cma::commander::kMainPeer, "a");
     cma::tools::sleep(100ms);
     enabled = GetEnabledFlag(true);

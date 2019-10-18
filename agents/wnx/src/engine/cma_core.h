@@ -54,8 +54,7 @@ inline bool IsValidFile(const std::filesystem::path& FileToExec) {
 }
 // check is extension is valid for OS
 inline bool IsExecutable(const std::filesystem::path& FileToExec) {
-    using namespace std::filesystem;
-    static path executables[] = {L".exe", L".bat", L".cmd"};
+    static std::filesystem::path executables[] = {L".exe", L".bat", L".cmd"};
     auto actual_extension = FileToExec.extension();
     for (auto& ext : executables)
         if (ext == actual_extension) return true;
@@ -748,5 +747,13 @@ std::optional<std::string> GetPiggyBackName(const std::string& in_string);
 
 bool TryToHackStringWithCachedInfo(std::string& in_string,
                                    const std::string& value_to_insert);
+
+namespace ntfs {
+#if _MSC_VER >= 1923
+[[deprecated("Should not be used with VS 19")]]  // VS 19 has good remove
+#endif 
+bool Remove(const std::filesystem::path& Target,
+                    std::error_code& Ec) noexcept;
+}  // namespace ntfs
 
 }  // namespace cma

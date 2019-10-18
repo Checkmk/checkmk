@@ -44,8 +44,8 @@ from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry
 
 @snapin_registry.register
 class QuicksearchSnapin(SidebarSnapin):
-    @staticmethod
-    def type_name():
+    @classmethod
+    def type_name(cls):
         return "search"
 
     @classmethod

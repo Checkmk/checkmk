@@ -541,6 +541,14 @@ def test_structured_data_StructuredDataTree_equality_comparison(tree_x, tree_y):
         assert not delta_y_x.is_empty()
 
 
+def test_structured_data_StructuredDataTree_equal_numerations():
+    tree_addresses_ordered = StructuredDataTree().load_from("%s/tree_addresses_ordered" % TEST_DIR)
+    tree_addresses_unordered = StructuredDataTree().load_from("%s/tree_addresses_unordered" %
+                                                              TEST_DIR)
+    assert tree_addresses_ordered.is_equal(tree_addresses_unordered)
+    assert tree_addresses_unordered.is_equal(tree_addresses_ordered)
+
+
 @pytest.mark.parametrize("tree", trees)
 def test_structured_data_StructuredDataTree_is_equal_save_and_load(tree, tmpdir):
     try:

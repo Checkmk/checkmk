@@ -1,0 +1,10 @@
+Title: HW/SW Inventory: Do not pollute inventory archive if two numerations have different order but same entries
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1571384722
+Class: fix
+
+

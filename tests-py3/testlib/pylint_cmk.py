@@ -12,7 +12,6 @@ import subprocess
 import tempfile
 
 from pylint.reporters.text import ColorizedTextReporter, ParseableTextReporter
-from pylint.utils import Message
 
 from testlib import repo_path, cmk_path, cmc_path, cme_path
 

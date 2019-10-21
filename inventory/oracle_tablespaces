@@ -55,7 +55,7 @@ def inv_oracle_tablespaces(parsed, inventory_tree, status_data_tree):
 
     tablespaces_sizes_by_type = {}
     tablespaces, error_sids = parsed
-    for tablespace, attrs in tablespaces.items():
+    for tablespace, attrs in sorted(tablespaces.items()):
         sid, name = tablespace
         db_version = attrs["db_version"]
         num_files = 0

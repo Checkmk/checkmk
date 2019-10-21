@@ -1,0 +1,14 @@
+Title: bluenet2_powerrail.{temp,humidity}: Fixed discovery of ALL temperature and humidity sensors
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.7.0i1
+Date: 1571660203
+Class: fix
+
+The sensor names/indices were incorrectly put together. Please re-discover the
+affected hosts.
+
+Note: Because the item name has changed all related rulesets have to be adapted
+and the graph history will be gone.

@@ -698,7 +698,6 @@ TEST(LogWatchEventTest, RegPresence) {
 }
 
 TEST(LogWatchEventTest, TestNotSendAll) {
-    XLOG::l(XLOG::kEvent)("EventLog <GTEST>");
     using namespace std;
     using namespace cma::cfg;
     namespace fs = std::filesystem;
@@ -716,6 +715,10 @@ TEST(LogWatchEventTest, TestNotSendAll) {
     lwe.loadConfig();
     lwe.updateSectionStatus();
     auto result = lwe.generateContent();
+    XLOG::l(XLOG::kEvent)("EventLog <GTEST>");
+    lwe.loadConfig();
+    lwe.updateSectionStatus();
+    result = lwe.generateContent();
     EXPECT_TRUE(!result.empty());
     EXPECT_TRUE(result.size() < 100000);
     EXPECT_TRUE(result.find("EventLog <GTEST>") != std::string::npos);
@@ -725,7 +728,6 @@ TEST(LogWatchEventTest, TestNotSendAll) {
 }
 
 TEST(LogWatchEventTest, TestNotSendAllVista) {
-    XLOG::l(XLOG::kEvent)("EventLog Vista <GTEST>");
     using namespace std;
     using namespace cma::cfg;
     namespace fs = std::filesystem;
@@ -742,6 +744,12 @@ TEST(LogWatchEventTest, TestNotSendAllVista) {
     auto old_vista = x[vars::kLogWatchEventVistaApi].as<bool>(false);
     x[vars::kLogWatchEventVistaApi] = true;
 
+    {
+        LogWatchEvent lwe;
+        lwe.loadConfig();
+        lwe.generateContent();
+    }
+    XLOG::l(XLOG::kEvent)("EventLog Vista <GTEST>");
     LogWatchEvent lwe;
     lwe.loadConfig();
     auto result = lwe.generateContent();

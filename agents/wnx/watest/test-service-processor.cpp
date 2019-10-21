@@ -66,7 +66,9 @@ TEST(ServiceProcessorTest, Generate) {
     auto t = cma::tools::SplitString(data, "\n");
     EXPECT_EQ(t[0] + "\n", cma::section::MakeHeader(cma::section::kCheckMk));
     EXPECT_EQ(t[t.size() - 2] + "\n",
-              cma::section::MakeHeader(cma::section::kSystemTime));
+              cma::section::MakeHeader(cma::section::kSystemTime))
+        << "data:\n"
+        << data;
 }
 
 TEST(ServiceProcessorTest, StartStopExe) {
@@ -203,21 +205,35 @@ TEST(ServiceProcessorTest, DirectCall) {
                                                             wmi::kSepChar};
         AsyncAnswer a;
         a.prepareAnswer("aaa");
-        wmi_cpuload_provider.directCall(
-            "0", a.getId(),
-            cma::carrier::BuildPortName(cma::carrier::kCarrierFileName,
-                                        tmp.u8string()));
-        auto table = tst::ReadFileAsTable(tmp.u8string());
-        EXPECT_EQ(table.size(), 7);
-        EXPECT_EQ(table[0] + "\n",
-                  cma::section::MakeHeader(cma::provider::kWmiCpuLoad,
-                                           cma::provider::wmi::kSepChar));
+        std::vector<std::string> table;
+        for (int i = 0; i < 3; i++) {
+            wmi_cpuload_provider.directCall(
+                "0", a.getId(),
+                cma::carrier::BuildPortName(cma::carrier::kCarrierFileName,
+                                            tmp.u8string()));
+            table = tst::ReadFileAsTable(tmp.u8string());
 
-        EXPECT_EQ(table[1] + "\n", cma::section::MakeSubSectionHeader(
-                                       cma::provider::kSubSectionSystemPerf));
-        EXPECT_EQ(table[4] + "\n",
-                  cma::section::MakeSubSectionHeader(
-                      cma::provider::kSubSectionComputerSystem));
+            if (table.size() < 7) {
+                using namespace std::chrono;
+                XLOG::SendStringToStdio("?", XLOG::Colors::pink);
+                cma::tools::sleep(1000ms);
+                continue;
+            }
+
+            EXPECT_EQ(table[0] + "\n",
+                      cma::section::MakeHeader(cma::provider::kWmiCpuLoad,
+                                               cma::provider::wmi::kSepChar));
+
+            EXPECT_EQ(table[1] + "\n",
+                      cma::section::MakeSubSectionHeader(
+                          cma::provider::kSubSectionSystemPerf));
+            EXPECT_EQ(table[4] + "\n",
+                      cma::section::MakeSubSectionHeader(
+                          cma::provider::kSubSectionComputerSystem));
+            return;
+        }
+        EXPECT_TRUE(false) << "CpuLoad returns not enough data, size = "
+                           << table.size();
     }
 }
 

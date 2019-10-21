@@ -23,12 +23,14 @@
 // Boston, MA 02110-1301 USA.
 
 #include "EventConsoleConnection.h"
-#include <boost/asio/basic_socket_streambuf.hpp>
-#include <boost/asio/socket_base.hpp>
-#include <boost/system/error_code.hpp>
-#include <boost/system/system_error.hpp>
+#include <asio/basic_socket_streambuf.hpp>
+#include <asio/error.hpp>
+#include <asio/error_code.hpp>
+#include <asio/socket_base.hpp>
+#include <asio/system_error.hpp>
 #include <chrono>
 #include <ostream>
+#include <system_error>
 #include <thread>
 #include <utility>
 #include "Logger.h"
@@ -43,18 +45,17 @@ EventConsoleConnection::~EventConsoleConnection() {
 }
 
 void EventConsoleConnection::run() {
-    boost::asio::local::stream_protocol::endpoint ep(_path);
+    asio::local::stream_protocol::endpoint ep(_path);
     // Attention, tricky timing-dependent stuff ahead: When we connect very
     // rapidly, a no_buffer_space (= ENOBUFS) error can happen. This is probably
-    // caused by some internal Boost Kung Fu, remapping EGAIN to ENOBUFS, and
-    // looks like a bug in Boost, but that's a bit unclear. So instead of
-    // relying on Boost to retry under these circumstances, we do it ourselves.
-    boost::asio::local::stream_protocol::iostream stream;
+    // caused by some internal asio Kung Fu, remapping EGAIN to ENOBUFS, and
+    // looks like a bug in asio, but that's a bit unclear. So instead of
+    // relying on asio to retry under these circumstances, we do it ourselves.
+    asio::local::stream_protocol::iostream stream;
     while (true) {
         stream.connect(ep);
-        if (stream.error() !=
-            boost::system::error_code(boost::system::errc::no_buffer_space,
-                                      boost::system::system_category())) {
+        if (stream.error() != asio::error_code(asio::error::no_buffer_space,
+                                               asio::system_category())) {
             break;
         }
         Debug(_logger) << "retrying to connect";
@@ -68,7 +69,7 @@ void EventConsoleConnection::run() {
     stream << std::nounitbuf;
     sendRequest(stream);
     stream.flush();
-    stream.rdbuf()->shutdown(boost::asio::socket_base::shutdown_send);
+    stream.rdbuf()->shutdown(asio::socket_base::shutdown_send);
     check(stream, "send request");
 
     receiveReply(stream);
@@ -80,12 +81,9 @@ std::string EventConsoleConnection::prefix(const std::string &message) const {
 }
 
 void EventConsoleConnection::check(
-    boost::asio::local::stream_protocol::iostream &stream,
+    asio::local::stream_protocol::iostream &stream,
     const std::string &what) const {
     if (!stream && !stream.eof()) {
-        // NOTE: Boost's system_error has a mutable string member for lazy
-        // construction of what(), this screws up cert-err60-cpp. :-P
-        throw boost::system::system_error(stream.error(),
-                                          prefix("cannot " + what));  // NOLINT
+        throw asio::system_error(stream.error(), prefix("cannot " + what));
     }
 }

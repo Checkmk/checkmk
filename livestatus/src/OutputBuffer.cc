@@ -63,7 +63,7 @@ void OutputBuffer::flush() {
 
 void OutputBuffer::writeData(std::ostringstream &os) {
     // TODO(sp) This cruel and slightly non-portable hack avoids copying (which
-    // is important). We could do better by e.g. using boost::asio::streambuf.
+    // is important). We could do better by e.g. using asio::streambuf.
     struct Hack : public std::stringbuf {
         [[nodiscard]] const char *base() const { return pbase(); }
     };

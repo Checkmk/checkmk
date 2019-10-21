@@ -42,7 +42,11 @@ def agent_kubernetes_arguments(params, _hostname, ipaddress):
     if "path-prefix" in params:
         args += ["--path-prefix", params["path-prefix"]]
 
-    args += [ipaddress]
+    if ipaddress:
+        args += [ipaddress]
+    else:
+        args += ['']
+
     return args
 
 

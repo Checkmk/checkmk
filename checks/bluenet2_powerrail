@@ -188,6 +188,11 @@ def parse_bluenet2_powerrail(info):
     def get_item_name(descr, index_str):
         return "%s %d" % (descr, int(index_str) + 1)
 
+    def get_pdu_name(pdu_info):
+        if pdu_info == "0":
+            return "Master"
+        return "PDU %s" % pdu_info
+
     pre_parsed = {}
     for oidend, _name in info[0]:
         pre_parsed.setdefault(oidend, {"phases": [], "rcm_phases": []})
@@ -199,7 +204,7 @@ def parse_bluenet2_powerrail(info):
                 pre_parsed[inlet_id][what].append([str(ord(x)) for x in identifier][:-1])
 
     parsed = {"phases": {}, "rcm_phases": {}, "sensors": {}}
-    for oidend, ty, status, exponent_str, _unit, reading_str in info[3]:
+    for oidend, ty, status, exponent_str, reading_str in info[3]:
         status_info = map_status[status]
         reading = float(reading_str) * 10**int(exponent_str)
         oid_info = oidend.split(".")
@@ -214,10 +219,22 @@ def parse_bluenet2_powerrail(info):
                     parsed[phase_ty][phase_name].setdefault(what, (reading, status_info))
 
         elif ty in map_sensor_types:
-            sensor_name = get_item_name("Sensor", oid_info[-1])
-            sensor_ty = map_sensor_types[ty]
-            parsed["sensors"].setdefault(sensor_ty, {})
-            parsed["sensors"][sensor_ty].setdefault(sensor_name, (reading, status_info))
+            # https://www.bachmann.com/fileadmin/05a_Downloads/BlueNet/BlueNet_BN3000_-_BN7500_V2.02.XX_Bedienungsanleitung_DE_Rev_01.pdf
+            # Example of OID_END: ...0.1.64.4.255.2.1.0
+            # 0   * number of pdu (pdu 0 -> Master PDU, 1, 2, 3,... -> Slave PDU)
+            # 1     sensor type (0: electrical, 1: external sensor, 4: rcm)
+            # 64    sensor hardware address (64: combination sensor, 72: temperature sensor, 56: GPIO module)
+            # 4   * channel number of internal multiplexer (channel 4, 5)
+            # 255 * channel number of external multiplexer (channel 255, 1, 2, 4, 8)
+            # 2     external sensor type (2: combination sensor, 1: temperature sensor, 3: GPIO module)
+            # 1.0   two byte key definition:
+            #           1.0: temperature, 1.1: humidity 1.10:dewpoint
+            #           1.2-1.5 GPIO in 1-4
+            #           1.6-1.9 GPIO out 1-4
+            # * becomes part of the item in order to make it unique
+            sensor_name = "Sensor %s %s/%s" % (get_pdu_name(oid_info[0]), oid_info[3], oid_info[4])
+            inst = parsed["sensors"].setdefault(map_sensor_types[ty], {})
+            inst.setdefault(sensor_name, (reading, status_info))
 
     return parsed
 
@@ -256,7 +273,6 @@ check_info["bluenet2_powerrail"] = {
                 "2.1.6",  # bluenet2VariableType
                 "2.1.7",  # bluenet2VariableStatus
                 "2.1.9",  # bluenet2VariableScaling
-                "2.1.10",  # bluenet2VariableUnit
                 "4.1.5",  # bluenet2VariableDataValue
             ])
     ],

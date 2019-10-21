@@ -40,6 +40,14 @@ TEST(StartTest, CheckStatus) {
 }  // namespace cma::cfg::details
 
 int wmain(int argc, wchar_t** argv) {
+    std::set_terminate([]() {
+        //
+        XLOG::details::LogWindowsEventCritical(999, "Win Agent is Terminated.");
+        XLOG::stdio.crit("Win Agent is Terminated.");
+        XLOG::l.bp("WaTest is Terminated.");
+        abort();
+    });
+
     XLOG::setup::ColoredOutputOnStdio(true);
     ::SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
     if (!cma::OnStart(cma::AppType::test)) {
@@ -70,5 +78,7 @@ int wmain(int argc, wchar_t** argv) {
     //::testing::GTEST_FLAG(filter) = "*OnlyFrom*";
     //::testing::GTEST_FLAG(filter) = "EncryptionT*";
 #endif
-    return RUN_ALL_TESTS();
+    auto r = RUN_ALL_TESTS();
+    if (!r) XLOG::stdio.crit("Win Agent is exited with {}.", r);
+    return r;
 }

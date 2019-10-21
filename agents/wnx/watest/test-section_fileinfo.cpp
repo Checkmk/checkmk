@@ -115,7 +115,8 @@ TEST(FileInfoTest, Globs) {
 TEST(FileInfoTest, Base) {
     using namespace cma::provider;
     using namespace cma::cfg;
-    cma::OnStart(cma::AppType::test);
+    cma::OnStartTest();
+    ON_OUT_OF_SCOPE(cma::OnStartTest());
     constexpr const char* hdr = "<<<fileinfo:sep(124)>>>\n";
 
     //
@@ -146,7 +147,7 @@ TEST(FileInfoTest, Base) {
         EXPECT_TRUE(!out.empty());
     }
     // reload config
-    cma::OnStart(cma::AppType::test);
+    cma::OnStartTest();
 
     {
         FileInfo fi;

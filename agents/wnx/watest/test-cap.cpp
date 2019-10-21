@@ -323,11 +323,25 @@ TEST(CapTest, CheckNull) {
 }
 
 TEST(CapTest, CheckUnpack) {
+    namespace fs = std::filesystem;
     std::error_code ec;
     std::wstring names[] = {GetUserPluginsDir() + L"\\windows_if.ps1",
                             GetUserPluginsDir() + L"\\mk_inventory.vbs"};
-    namespace fs = std::filesystem;
+
     fs::path p = GetUserPluginsDir();
+    // clean folder
+    {
+        auto normal_dir =
+            p.u8string().find("\\plugins", 5) != std::wstring::npos;
+        ASSERT_TRUE(normal_dir);
+        if (normal_dir) {
+            // clean
+            fs::remove_all(p);
+            fs::create_directory(p);
+        } else
+            return;
+    }
+    //
     auto f_string = p.lexically_normal().wstring();
     ASSERT_TRUE(f_string.find(L"ProgramData\\checkmk\\agent\\plugins"));
     for (auto& name : names) fs::remove(name, ec);
@@ -344,11 +358,24 @@ TEST(CapTest, CheckUnpack) {
 
     for (auto& name : names) {
         EXPECT_TRUE(fs::exists(name, ec));
+        fs::remove(name, ec);  // cleanup
     }
 }
 
 TEST(CapTest, CheckRemove) {
+    namespace fs = std::filesystem;
     std::error_code ec;
+    fs::path cap = cma::cfg::GetUserDir();
+    cap /= "plugins.test.cap";
+
+    // unpack cap into folder
+    {
+        ASSERT_TRUE(fs::exists(cap, ec)) << "Your setup for tests is invalid";
+        std::vector<std::wstring> files;
+        auto ret = Process(cap.u8string(), ProcMode::install, files);
+        ASSERT_TRUE(ret);
+    }
+
     std::wstring names[] = {GetUserPluginsDir() + L"\\windows_if.ps1",
                             GetUserPluginsDir() + L"\\mk_inventory.vbs"};
     namespace fs = std::filesystem;
@@ -359,8 +386,6 @@ TEST(CapTest, CheckRemove) {
         EXPECT_TRUE(fs::exists(name, ec));
     }
 
-    fs::path cap = cma::cfg::GetUserDir();
-    cap /= "plugins.test.cap";
     ASSERT_TRUE(fs::exists(cap, ec)) << "Your setup for tests is invalid";
     std::vector<std::wstring> files;
     auto ret = Process(cap.u8string(), ProcMode::remove, files);

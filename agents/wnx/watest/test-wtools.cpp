@@ -19,77 +19,92 @@
 namespace wtools {  // to become friendly for cma::cfg classes
 
 TEST(Wtools, ScanProcess) {
-    std::vector<std::string> names;
+    using namespace std::chrono;
+    try {
+        std::vector<std::string> names;
 
-    wtools::ScanProcessList([&names](const PROCESSENTRY32& entry) -> auto {
-        names.emplace_back(wtools::ConvertToUTF8(entry.szExeFile));
-        if (names.back() == "watest32.exe" || names.back() == "watest64.exe") {
-            XLOG::l.w(
-                "Suspicious '{}' pid: [{}] parentpid: [{}] current pid [{}]",
-                names.back(), entry.th32ProcessID, entry.th32ParentProcessID,
-                ::GetCurrentProcessId());
-        }
-        return true;
-    });
-    EXPECT_TRUE(!names.empty());
-    for (auto& name : names) cma::tools::StringLower(name);
-
-    // check that we do not have own process
-    EXPECT_FALSE(cma::tools::find(names, std::string("watest32.exe")));
-    EXPECT_FALSE(cma::tools::find(names, std::string("watest64.exe")));
-    EXPECT_TRUE(cma::tools::find(names, std::string("svchost.exe")));
-
-    {
-        tst::YamlLoader w;
-        tst::SafeCleanTempDir();
-        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
-
-        namespace fs = std::filesystem;
-        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
-
-        fs::path temp_dir = cma::cfg::GetTempDir();
-        std::error_code ec;
-
-        auto exe_a = temp_dir / "a.cmd";
-        auto exe_b = temp_dir / "b.cmd";
-        auto exe_c = temp_dir / "c.cmd";
-
-        tst::ConstructFile(exe_a, "@echo start\n call " + exe_b.u8string());
-        tst::ConstructFile(exe_b, "@echo start\n call " + exe_c.u8string());
-        tst::ConstructFile(exe_c, "@echo start\n powershell Start-Sleep 10000");
-        auto proc_id = cma::tools::RunStdCommand(exe_a.wstring(), false);
-        EXPECT_TRUE(proc_id != 0);
-
-        names.clear();
-        bool found = false;
-        std::wstring proc_name;
-        DWORD parent_process_id = 0;
-        wtools::ScanProcessList([
-            proc_id, &proc_name, &found, &names, &parent_process_id
-        ](const PROCESSENTRY32& entry) -> auto {
-            names.push_back(wtools::ConvertToUTF8(entry.szExeFile));
-            if (entry.th32ProcessID == proc_id) {
-                proc_name = entry.szExeFile;
-                parent_process_id = entry.th32ParentProcessID;
-                found = true;
+        wtools::ScanProcessList([&names](const PROCESSENTRY32& entry) -> auto {
+            names.emplace_back(wtools::ConvertToUTF8(entry.szExeFile));
+            if (names.back() == "watest32.exe" ||
+                names.back() == "watest64.exe") {
+                XLOG::l.w(
+                    "Suspicious '{}' pid: [{}] parentpid: [{}] current pid [{}]",
+                    names.back(), entry.th32ProcessID,
+                    entry.th32ParentProcessID, ::GetCurrentProcessId());
             }
             return true;
         });
-        EXPECT_TRUE(found);
-        EXPECT_TRUE(proc_name == L"cmd.exe");
-        EXPECT_EQ(parent_process_id, ::GetCurrentProcessId());
-        KillProcessTree(proc_id);
-        KillProcess(proc_id);
+        EXPECT_TRUE(!names.empty());
+        for (auto& name : names) cma::tools::StringLower(name);
 
-        found = false;
-        wtools::ScanProcessList(
-            [&found, proc_id ](const PROCESSENTRY32& entry) -> auto {
+        // check that we do not have own process
+        EXPECT_FALSE(cma::tools::find(names, std::string("watest32.exe")));
+        EXPECT_FALSE(cma::tools::find(names, std::string("watest64.exe")));
+        EXPECT_TRUE(cma::tools::find(names, std::string("svchost.exe")));
+
+        {
+            tst::YamlLoader w;
+            tst::SafeCleanTempDir();
+            ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+
+            namespace fs = std::filesystem;
+
+            fs::path temp_dir = cma::cfg::GetTempDir();
+            std::error_code ec;
+
+            auto exe_a = temp_dir / "a.cmd";
+            auto exe_b = temp_dir / "b.cmd";
+            auto exe_c = temp_dir / "c.cmd";
+
+            tst::ConstructFile(exe_a, "@echo start\n@call " + exe_b.u8string());
+            tst::ConstructFile(exe_b, "@echo start\n@call " + exe_c.u8string());
+            tst::ConstructFile(exe_c,
+                               "@echo start\n@powershell Start-Sleep 10000");
+            auto proc_id = cma::tools::RunStdCommand(exe_a.wstring(), false);
+            EXPECT_TRUE(proc_id != 0);
+
+            names.clear();
+            bool found = false;
+            std::wstring proc_name;
+            DWORD parent_process_id = 0;
+            wtools::ScanProcessList([
+                proc_id, &proc_name, &found, &names, &parent_process_id
+            ](const PROCESSENTRY32& entry) -> auto {
+                names.push_back(wtools::ConvertToUTF8(entry.szExeFile));
                 if (entry.th32ProcessID == proc_id) {
+                    proc_name = entry.szExeFile;
+                    parent_process_id = entry.th32ParentProcessID;
                     found = true;
                 }
                 return true;
             });
-        EXPECT_FALSE(found);
+
+            EXPECT_TRUE(found) << "NOT FOUND STARTED PROCESS";
+            EXPECT_TRUE(proc_name == L"cmd.exe");
+            EXPECT_EQ(parent_process_id, ::GetCurrentProcessId());
+
+            // killing
+            KillProcessTree(proc_id);
+            KillProcess(proc_id);
+            cma::tools::sleep(500ms);
+
+            found = false;
+            wtools::ScanProcessList(
+                [&found, proc_id ](const PROCESSENTRY32& entry) -> auto {
+                    if (entry.th32ProcessID == proc_id) {
+                        found = true;
+                        EXPECT_FALSE(true) << "bullshit found " << proc_id;
+
+                        ;
+                    }
+                    return true;
+                });
+            EXPECT_FALSE(found) << "process exists";
+        }
+    } catch (const std::exception& e) {
+        XLOG::l("Error ops '{}'", e.what());
+    } catch (...) {
+        XLOG::l("Error ops");
     }
 }
 

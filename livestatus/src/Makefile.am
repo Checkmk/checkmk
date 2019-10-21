@@ -31,6 +31,10 @@ RUN_CLANG_TIDY ?= \
     $(abs_top_srcdir)/scripts/run-clang-tidy.py \
         -clang-tidy-binary=clang-tidy-$(CLANG_VERSION) \
         -clang-apply-replacements-binary=clang-apply-replacements-$(CLANG_VERSION)
+INCLUDES_DIR := includes
+ASIO_PACKAGE := $(top_srcdir)/omd/packages/asio
+ASIO_VERSION := asio-asio-1-14-0
+ASIO_INCLUDE := $(INCLUDES_DIR)/asio
 PIPENV := LANG=C PIPENV_VENV_IN_PROJECT=true PIPENV_PIPFILE=$(abs_top_srcdir)/virtual-envs/2.7/Pipfile pipenv
 
 bin_PROGRAMS = unixcat
@@ -166,13 +170,26 @@ liblivestatus_a_SOURCES = \
 
 .PHONY: tidy iwyu cppcheck cppcheck-xml documentation
 
-liblivestatus_a_CPPFLAGS = -I.. @BOOST_CPPFLAGS@ @RE2_CPPFLAGS@
+$(liblivestatus_a_SOURCES): $(ASIO_INCLUDE)
+
+$(ASIO_INCLUDE): $(ASIO_VERSION)
+	mkdir -p $(ASIO_INCLUDE)
+	rsync -a --delete --exclude=Makefile.am --exclude=.gitignore $(ASIO_VERSION)/asio/include/ $(ASIO_INCLUDE)
+	patch -p0 < $(ASIO_PACKAGE)/asio.diff
+	touch $@
+
+$(ASIO_VERSION): $(ASIO_PACKAGE)/$(ASIO_VERSION).tar.gz
+	$(RM) -r $@
+	tar xzf $<
+	touch $@
+
+liblivestatus_a_CPPFLAGS = -I.. -isystem $(ASIO_INCLUDE) @RE2_CPPFLAGS@
 liblivestatus_a_CXXFLAGS = -fPIC
 
 livestatus.o: $(liblivestatus_a_OBJECTS)
 # Note: libstdc++fs is only available as a static library, so we are lucky. For
 # RE2 we make sure that this is the case, too.
-	$(CXXLINK) -shared $^ -lstdc++fs -lpthread -static-libstdc++ @BOOST_LDFLAGS@ @BOOST_ASIO_LIB@ @RE2_LDFLAGS@ @RE2_LIBS@
+	$(CXXLINK) -shared $^ -lstdc++fs -lpthread -static-libstdc++ @RE2_LDFLAGS@ @RE2_LIBS@
 # To make sure we can dlopen() our NEB later
 	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) -c NagiosMockup.cc -o NagiosMockup.o
 	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup
@@ -209,4 +226,4 @@ install-data-local:
 	rm -f $(DESTDIR)$(pkglibdir)/liblivestatus.a
 
 clean-local:
-	rm -rf *~ compile_commands.json cppcheck-result.xml html
+	rm -rf *~ compile_commands.json cppcheck-result.xml html $(INCLUDES_DIR) $(ASIO_VERSION)

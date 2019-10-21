@@ -6,8 +6,10 @@
 .deps
 Makefile
 Makefile.in
+asio-asio-1-14-0/
 compile_commands.json
 cppcheck-result.xml
 html/
+includes/
 livecheck
 unixcat

@@ -52,18 +52,16 @@ test_neb_CPPFLAGS = \
     -I.. \
     -I../.. \
     -I$(GOOGLETEST)/destdir/include \
-    @BOOST_CPPFLAGS@ @RE2_CPPFLAGS@
+    @RE2_CPPFLAGS@
 test_neb_LDFLAGS = \
     -static-libstdc++ \
     $(GOOGLETEST)/destdir/lib/libgtest_main.a \
     $(GOOGLETEST)/destdir/lib/libgtest.a \
-    @BOOST_LDFLAGS@ \
     @RE2_LDFLAGS@
 test_neb_LDADD = \
     ../liblivestatus.a \
     -lstdc++fs \
     -lpthread \
-    @BOOST_ASIO_LIB@ \
     @RE2_LIBS@
 
 .PHONY: unit-test build_googletest

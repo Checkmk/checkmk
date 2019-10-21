@@ -26,7 +26,7 @@
 #define EventConsoleConnection_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <boost/asio/local/stream_protocol.hpp>
+#include <asio/local/stream_protocol.hpp>
 #include <iosfwd>
 #include <string>
 class Logger;
@@ -42,7 +42,7 @@ private:
     virtual void receiveReply(std::istream &is) = 0;
 
     std::string prefix(const std::string &message) const;
-    void check(boost::asio::local::stream_protocol::iostream &stream,
+    void check(asio::local::stream_protocol::iostream &stream,
                const std::string &what) const;
 
     Logger *const _logger;

@@ -19,7 +19,7 @@ def test_ac_check_mail_main_failed_connect(check_mail):
     state, info, perf = check_mail.main(
         ['--server', 'foo', '--username', 'bar', '--password', 'baz'])
     assert state == 3
-    assert info == 'Failed connect to foo:143: [Errno -5] No address associated with hostname'
+    assert info.startswith('Failed connect to foo:143:')
     assert perf is None
 
 

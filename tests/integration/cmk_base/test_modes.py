@@ -306,19 +306,23 @@ def test_backup(request, site, execute):
 
 
 def test_restore(request, site, execute):
+    # TODO: main.mk cannot be restored.
     def cleanup():
         if site.file_exists("etc/check_mk.sav"):
             site.delete_dir("etc/check_mk.sav")
+        if site.file_exists("etc/check_mk/final.mk"):
+            site.delete_file("etc/check_mk/final.mk")
         site.delete_file("x.tgz")
 
     request.addfinalizer(cleanup)
 
+    # Add `final.mk` to the site, delete it, and restore it from a backup.
+    assert execute(["cp", "etc/check_mk/main.mk", "etc/check_mk/final.mk"],
+                   cwd=site.root).returncode == 0
+    assert execute(["cp", "-pr", "etc/check_mk", "etc/check_mk.sav"], cwd=site.root).returncode == 0
     _create_cmk_backup(site, execute)
 
-    # First copy the whole etc/check_mk dir, then restore, then compare
-    assert execute(["cp", "-pr", "etc/check_mk", "etc/check_mk.sav"], cwd=site.root).returncode == 0
-    assert execute(["rm", "etc/check_mk/main.mk"], cwd=site.root).returncode == 0
-
+    site.delete_file("etc/check_mk/final.mk")
     p = execute(["cmk", "--restore", "x.tgz"], cwd=site.root)
     assert p.returncode == 0
     assert p.stderr == ""

@@ -352,7 +352,7 @@ def main(args=None):
         elif o == '-f':
             form_name = a
         elif o == '-q':
-            params = {k: v for k, v in (parts.split('=', 1) for parts in a.split('&'))}
+            params = dict(parts.split('=', 1) for parts in a.split('&'))
         elif o == '-e':
             expect_regex = a
         elif o == '-t':

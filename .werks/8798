@@ -1,0 +1,13 @@
+Title: agent_kubernetes: allow the option 'No IP' for the Kubernetes master
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1571658941
+Class: fix
+
+Previously it was necessary to specify an IP for the Kubernetes master.
+If the option 'No IP' was used, the special agent was not able to connect
+to the master even when a 'Custom URL prefix' was given. Now the IP is
+not necessary anymore when a URL prefix is given.

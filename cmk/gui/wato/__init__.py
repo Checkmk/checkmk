@@ -308,6 +308,7 @@ from cmk.gui.plugins.wato import (
     get_hosts_from_checkboxes,
     get_search_expression,
     register_notification_parameters,
+    register_hook,
 )
 # Has to be kept for compatibility with pre 1.6 register_rule() and register_check_parameters()
 # calls in the WATO plugin context

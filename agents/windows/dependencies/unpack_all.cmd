@@ -35,13 +35,18 @@ call %unpack_cmd% %unpacker_exe% %src_dir_name% %src_file_name% %out_root% %out_
 
 rem with internal folder in the tar.gz
 set nm=asio
-set vv=-asio-1.14.0
+set vv=-asio-1-14-0
 set src_dir_name=%omd_path%\%nm%
 if not exist %src_dir_name% set src_dir_name=%agent_path%\%nm%
 set src_file_name=%nm%%vv%
 set out_dir_name=%nm%
 powershell Write-Host "%out_dir_name%:" -ForegroundColor blue
 call %unpack_cmd% %unpacker_exe% %src_dir_name% %src_file_name% %out_root% %out_dir_name% *
+rem specific asio, renaming asio/asio to asio
+set top_folder=%out_root%\%out_dir_name%
+rename %top_folder% tmp
+move %out_root%\tmp\asio %top_folder%
+rmdir /q/s %out_root%\tmp
 
 rem with internal folder in the tar.gz
 set nm=fmt

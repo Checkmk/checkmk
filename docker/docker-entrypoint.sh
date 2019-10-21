@@ -62,10 +62,10 @@ if [ ! -d "/opt/omd/sites/$CMK_SITE_ID/etc" ]; then
     # In a reverse proxy setup the proxy would rewrite the host to the host requested by the user.
     # See omd/packages/apache-omd/skel/etc/apache/apache.conf for further information.
     APACHE_DOCKER_CFG="/omd/sites/$CMK_SITE_ID/etc/apache/conf.d/cmk_docker.conf"
-    echo -e "# Created for Checkmk docker container\n\nUseCanonicalName Off\n" >"$APACHE_DOCKER_CFG"
+    echo -e "# Created for Checkmk docker container\\n\\nUseCanonicalName Off\\n" >"$APACHE_DOCKER_CFG"
     chown "$CMK_SITE_ID:$CMK_SITE_ID" "$APACHE_DOCKER_CFG"
     # Redirect top level requests to the sites base url
-    echo -e "# Redirect top level requests to the sites base url\nRedirectMatch 302 ^/$ /$CMK_SITE_ID/\n" >>"$APACHE_DOCKER_CFG"
+    echo -e "# Redirect top level requests to the sites base url\\nRedirectMatch 302 ^/$ /$CMK_SITE_ID/\\n" >>"$APACHE_DOCKER_CFG"
 
     if [ "$CMK_LIVESTATUS_TCP" = "on" ]; then
         omd config "$CMK_SITE_ID" set LIVESTATUS_TCP on

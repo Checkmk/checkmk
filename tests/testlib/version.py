@@ -4,10 +4,13 @@ import os
 import time
 import sys
 import platform
+import logging
 
 import requests
 
 from testlib.utils import InterProcessLock, get_cmk_download_credentials
+
+logger = logging.getLogger()
 
 
 # It's ok to make it currently only work on debian based distros
@@ -147,12 +150,12 @@ class CMKVersion(object):  # pylint: disable=useless-object-inheritance
 
     def install(self):
         if os.path.exists(self._build_system_package_path()):
-            print("Install from build system package (%s)" % self._build_system_package_path())
+            logger.info("Install from build system package (%s)", self._build_system_package_path())
             package_path = self._build_system_package_path()
             self._install_package(package_path)
 
         else:
-            print("Install from download portal")
+            logger.info("Install from download portal")
             package_path = self._download_package()
             self._install_package(package_path)
             os.unlink(package_path)
@@ -160,7 +163,7 @@ class CMKVersion(object):  # pylint: disable=useless-object-inheritance
     def _download_package(self):
         temp_package_path = "/tmp/%s" % self.package_name()
 
-        print(self.package_url())
+        logger.info(self.package_url())
         response = requests.get(  # nosec
             self.package_url(), auth=get_cmk_download_credentials(), verify=False)
         if response.status_code != 200:
@@ -173,13 +176,13 @@ class CMKVersion(object):  # pylint: disable=useless-object-inheritance
         # manager task being active. Try to wait for other task to finish. Sure
         # this is not race free, but hope it's sufficient.
         while os.system("sudo fuser /var/lib/dpkg/lock >/dev/null 2>&1") >> 8 == 0:
-            print("Waiting for other dpkg process to complete...")
+            logger.info("Waiting for other dpkg process to complete...")
             time.sleep(1)
 
         # Improve the protection against other test runs installing packages
         with InterProcessLock("/tmp/cmk-test-install-version"):
             cmd = "sudo /usr/bin/gdebi --non-interactive %s" % package_path
-            print(cmd)
+            logger.info(cmd)
             sys.stdout.flush()
             if os.system(cmd) >> 8 != 0:  # nosec
                 raise Exception("Failed to install package: %s" % package_path)

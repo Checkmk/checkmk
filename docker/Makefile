@@ -45,6 +45,7 @@ setup:
 	    "deb [arch=amd64] https://download.docker.com/linux/ubuntu $$(lsb_release -cs) stable"
 	sudo apt-get update
 	    sudo apt-get install docker-ce
+	sudo bash -c 'usermod -a -G docker $$SUDO_USER'
 
 setversion:
 	sed -i 's/^ARG CMK_VERSION=.*$$/ARG CMK_VERSION="$(NEW_VERSION)"/g' Dockerfile

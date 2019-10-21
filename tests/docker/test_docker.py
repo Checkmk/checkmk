@@ -30,6 +30,7 @@ import sys
 import os
 import subprocess
 import pytest  # type: ignore
+from requests.exceptions import ConnectionError
 import docker  # type: ignore
 
 import testlib
@@ -52,7 +53,7 @@ def version():
 
 @pytest.fixture()
 def client():
-    return docker.DockerClient(base_url="tcp://127.0.0.1:2376")
+    return docker.DockerClient()
 
 
 def _image_name(version):
@@ -144,12 +145,18 @@ def _start(request, client, version=None, is_update=False, **kwargs):
     if version is None:
         version = build_version()
 
-    if version.version == build_version().version:
-        _image, _build_logs = _build(request, client, version)
-    else:
-        # In case the given version is not the current branch version, don't
-        # try to build it. Download it instead!
-        _image = _pull(client, version)
+    try:
+        if version.version == build_version().version:
+            _image, _build_logs = _build(request, client, version)
+        else:
+            # In case the given version is not the current branch version, don't
+            # try to build it. Download it instead!
+            _image = _pull(client, version)
+    except ConnectionError:
+        raise Exception(
+            "Failed to access docker socket (Permission denied). You need to be member of the "
+            "docker group to get access to the socket (e.g. use \"make -C docker setup\") to "
+            "fix this, then restart your computer and try again.")
 
     c = client.containers.run(image=_image.id, detach=True, **kwargs)
 

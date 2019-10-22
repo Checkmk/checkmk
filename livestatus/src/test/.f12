@@ -2,5 +2,5 @@
 set -e
 
 LANG=C make -C ../../.. config.status
-LANG=C make -j4 -C ..
-LANG=C make -j4 unit-test
+LANG=C make -j4 -C .. unit-test
+

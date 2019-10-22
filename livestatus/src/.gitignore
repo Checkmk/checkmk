@@ -12,4 +12,6 @@ cppcheck-result.xml
 html/
 includes/
 livecheck
+test_neb
+test_detail.xml
 unixcat

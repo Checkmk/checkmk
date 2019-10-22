@@ -1,0 +1,12 @@
+Title: Recover performance data output for averaged bandwidth use in IF checks
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p6
+Date: 1571734874
+
+This Werk reverts Werk "7449 FIX Remove spurious perfdata in IF checks for
+in/out". There average perfdata for used bandwidth use was removed unwantedly

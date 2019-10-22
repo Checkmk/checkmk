@@ -30,9 +30,6 @@ RUN apt-get update \
     gettext \
     git-buildpackage \
     ksh \
-    libboost-all-dev \
-    libboost-dev \
-    libboost-system-dev \
     libclang-7-dev \
     libcurl4-openssl-dev \
     libevent-dev \

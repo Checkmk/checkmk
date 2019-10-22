@@ -5,7 +5,6 @@ SHELL ["/bin/bash", "-c"]
 RUN zypper addrepo -G http://10.9.1.101:8081/repository/sles11sp4  sles11sp4 \
     && zypper ref -s \
     && zypper -n in -y --force-resolution \
-    boost-devel \
     cmake \
     curl \
     samba-client \

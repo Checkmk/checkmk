@@ -373,8 +373,6 @@ setup:
 	    doxygen \
 	    figlet \
 	    g++ \
-	    libboost-dev \
-	    libboost-system-dev \
 	    libclang-7-dev \
 	    libpcap-dev \
 	    librrd-dev \
@@ -413,13 +411,6 @@ config.status: $(CONFIG_DEPS)
 	  echo "update config.status by reconfiguring in the same conditions" ; \
 	  ./config.status --recheck; \
 	else \
-	  if test -d ../boost/destdir ; then \
-	    BOOST_OPT="--with-boost=$(abspath ../boost/destdir)" ; \
-	  elif test -d omd/packages/boost/destdir ; then \
-	    BOOST_OPT="--with-boost=$(abspath omd/packages/boost/destdir)" ; \
-	  else \
-	    BOOST_OPT="DUMMY1=" ; \
-	  fi ; \
 	  if test -d "omd/rrdtool-$(RRDTOOL_VERS)/src/.libs"; then \
 	    RRD_OPT="LDFLAGS=-L$(realpath omd/rrdtool-$(RRDTOOL_VERS)/src/.libs)" ; \
 	  else \
@@ -432,8 +423,8 @@ config.status: $(CONFIG_DEPS)
 	  else \
 	    RE2_OPT="DUMMY3=" ; \
 	  fi ; \
-	  echo "configure CXXFLAGS=\"$(CXX_FLAGS)\" \"$$BOOST_OPT\" \"$$RRD_OPT\" \"$$RE2_OPT\"" ; \
-	  ./configure CXXFLAGS="$(CXX_FLAGS)" "$$BOOST_OPT" "$$RRD_OPT" "$$RE2_OPT" ; \
+	  echo "configure CXXFLAGS=\"$(CXX_FLAGS)\" \"$$RRD_OPT\" \"$$RE2_OPT\"" ; \
+	  ./configure CXXFLAGS="$(CXX_FLAGS)" "$$RRD_OPT" "$$RE2_OPT" ; \
 	fi
 
 configure: $(CONFIGURE_DEPS)

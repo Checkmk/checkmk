@@ -69,8 +69,8 @@ def print_separator():
 
 def dir_from_zipped(file_string):
     for ending in ZIP_ENDINGS:
-        if ending in file_string:
-            return file_string.rstrip(ending) + "/"
+        if file_string.endswith(ending):
+            return file_string[:-len(ending)] + "/"
     return file_string
 
 

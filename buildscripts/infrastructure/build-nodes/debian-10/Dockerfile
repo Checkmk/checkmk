@@ -16,7 +16,6 @@ RUN apt-get update \
     flex \
     gettext \
     git-buildpackage \
-    libboost-all-dev \
     libcurl4-openssl-dev \
     libdbi-dev \
     libevent-dev \

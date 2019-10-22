@@ -18,7 +18,7 @@ TOUCH := $(shell which touch)
 UNZIP := $(shell which unzip) -o
 
 # Rules for patching
-$(BUILD_HELPER_DIR)/%-patching: $(BUILD_HELPER_DIR)/%-unpack 
+$(BUILD_HELPER_DIR)/%-patching: $(BUILD_HELPER_DIR)/%-unpack
 	set -e ; DIR=$$($(ECHO) $* | $(SED) 's/-[0-9.]\+.*//'); \
 	for P in $$($(LS) $(PACKAGE_DIR)/$$DIR/patches/*.dif); do \
 	    $(ECHO) "applying $$P..." ; \
@@ -26,33 +26,33 @@ $(BUILD_HELPER_DIR)/%-patching: $(BUILD_HELPER_DIR)/%-unpack
 	done
 	$(TOUCH) $@
 
-# Rules for unpacking 
+# Rules for unpacking
 $(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.tar.xz
-	$(RM) -r $* 
+	$(RM) -r $*
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TAR_XZ) $<
 	$(TOUCH) $@
 
 $(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.tar.gz
-	$(RM) -r $* 
+	$(RM) -r $*
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TAR_GZ) $<
 	$(TOUCH) $@
 
 $(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.tgz
-	$(RM) -r $* 
+	$(RM) -r $*
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TAR_GZ) $<
 	$(TOUCH) $@
 
 $(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.tar.bz2
-	$(RM) -r $* 
+	$(RM) -r $*
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TAR_BZ2) $<
 	$(TOUCH) $@
 
 $(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.zip
-	$(RM) -r $* 
+	$(RM) -r $*
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(UNZIP) $<
 	$(TOUCH) $@
@@ -62,7 +62,6 @@ debug:
 
 # Include rules to make packages
 include     packages/apache-omd/apache-omd.make \
-    packages/boost/boost.make \
     packages/stunnel/stunnel.make \
     packages/check_mk/check_mk.make \
     packages/check_multi/check_multi.make \
@@ -108,5 +107,3 @@ ifeq ($(EDITION),managed)
 include $(REPO_PATH)/enterprise/enterprise.make \
     $(REPO_PATH)/managed/managed.make
 endif
-
-

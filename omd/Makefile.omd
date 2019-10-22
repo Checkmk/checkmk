@@ -109,11 +109,6 @@ check-python3-modules:
 	    exit 1 ; \
 	fi
 
-# perl #########################################################################
-
-PACKAGE_BOOST_DESTDIR := $(PACKAGE_BASE)/boost/destdir
-
-
 # googletest ###################################################################
 
 PACKAGE_GOOGLETEST_DESTDIR := $(PACKAGE_BASE)/googletest/destdir

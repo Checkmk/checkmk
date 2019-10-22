@@ -99,9 +99,9 @@ def check_sym_brightmail_queues(item, params, parsed):
 
         infotext = "%s: %s" % (title, value)
         state = 0
-        if crit is not None and crit >= crit:
+        if crit is not None and crit >= value:
             state = 2
-        elif warn is not None and warn >= warn:
+        elif warn is not None and warn >= value:
             state = 1
         if state:
             infotext += " (warn/crit at %s/%s)" % (warn, crit)

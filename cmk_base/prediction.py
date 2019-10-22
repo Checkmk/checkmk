@@ -35,6 +35,7 @@ import cmk.utils
 import cmk.utils.log
 import cmk.utils.defines as defines
 import cmk.utils.prediction
+from cmk.utils.exceptions import MKGeneralException
 
 logger = cmk.utils.log.get_logger(__name__)
 
@@ -137,6 +138,9 @@ def retrieve_grouped_data_from_rrd(rrd_column, time_windows):
     # to the best resolution. We assume that the youngest slice has the
     # finest resolution.
     twindow = slices[0][0].twindow
+    if twindow[2] == 0:
+        raise MKGeneralException("Got no historic metrics")
+
     return twindow, [ts.bfill_upsample(twindow, shift) for ts, shift in slices]
 
 

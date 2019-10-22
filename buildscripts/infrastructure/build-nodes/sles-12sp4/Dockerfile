@@ -8,7 +8,6 @@ RUN zypper addrepo -G http://nexus:8081/repository/sles12sp4 sles12sp4 \
     && zypper -n in -y --force-resolution \
     apache2-devel \
     bind-utils \
-    boost-devel \
     curl \
     flex \
     freeradius-client-devel \

@@ -29,7 +29,6 @@ PACKAGES := \
     re2 \
     python-modules \
     python3-modules \
-    boost \
     rrdtool \
     msitools \
     net-snmp \

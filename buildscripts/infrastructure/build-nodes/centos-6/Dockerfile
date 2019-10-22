@@ -5,7 +5,6 @@ SHELL ["/bin/bash", "-c"]
 RUN yum -y makecache \
     && yum -y install \
     bind-utils \
-    boost-devel \
     centos-release-scl \
     compat-readline5 \
     curl-devel \

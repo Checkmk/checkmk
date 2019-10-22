@@ -5,7 +5,6 @@ SHELL ["/bin/bash", "-c"]
 RUN yum -y makecache \
     && yum -y --enablerepo=PowerTools install \
     bind-utils \
-    boost-devel \
     curl-devel \
     expat-devel \
     flex \

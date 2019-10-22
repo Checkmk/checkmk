@@ -86,12 +86,6 @@ AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdint.h stdlib.h string.h strings.h sys/socket.h sys/time.h sys/timeb.h syslog.h unistd.h])
 
 # Checks for C++ features
-AX_BOOST_BASE(,,AC_MSG_ERROR([Boost library not found or too old]))
-AX_BOOST_ASIO
-if test "x$ax_cv_boost_asio" = xno; then
-    AC_MSG_ERROR([Boost::ASIO library not found])
-fi
-
 AC_LANG_PUSH([C++])
 
 AC_MSG_CHECKING([whether C++17 headers are supported by default])
@@ -196,8 +190,6 @@ AC_SUBST(nagios_headers)
 # we leave some breathing room and use a slightly lower limit.
 AC_DEFINE([_GLIBCXX_REGEX_STATE_LIMIT], [2500],
           [the maximum number of states the regex NFA can have])
-
-AC_DEFINE([BOOST_SYSTEM_NO_DEPRECATED], [1], [we do not want any old stuff])
 
 # GCC is a bit picky about redefinitions of built-in macros. Alas, "built-in"
 # simply means "starts with double underscore", so we have to hack around that

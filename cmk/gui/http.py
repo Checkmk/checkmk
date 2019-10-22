@@ -83,7 +83,7 @@ class Request(object):
         # alphanumeric characters plus any character from set('%*+-._'), which is probably still a
         # bit too broad. We should really figure out what we need and make sure that we only use
         # that restricted set.
-        varname_regex = re.compile(r'^[\w.%*+-]+$')
+        varname_regex = re.compile(r'^[\w.%*+=-]+$')
 
         for field in fields.list:
             varname = field.name

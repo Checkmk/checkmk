@@ -41,7 +41,6 @@ ASIO_INCLUDE := $(INCLUDES_DIR)/asio
 
 PACKAGE_GOOGLETEST := $(abs_top_srcdir)/omd/packages/googletest
 
-
 .PHONY: unit-test build_googletest tidy iwyu cppcheck cppcheck-xml documentation
 
 bin_PROGRAMS = unixcat test_neb

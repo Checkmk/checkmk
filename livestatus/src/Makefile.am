@@ -31,17 +31,55 @@ RUN_CLANG_TIDY ?= \
     $(abs_top_srcdir)/scripts/run-clang-tidy.py \
         -clang-tidy-binary=clang-tidy-$(CLANG_VERSION) \
         -clang-apply-replacements-binary=clang-apply-replacements-$(CLANG_VERSION)
+VALGRIND ?= $(shell valgrind --version > /dev/null 2>&1 && echo "valgrind --quiet")
 INCLUDES_DIR := includes
 ASIO_PACKAGE := $(top_srcdir)/omd/packages/asio
 ASIO_VERSION := asio-asio-1-14-0
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
+GOOGLETEST := $(top_srcdir)/omd/packages/googletest
 PIPENV := LANG=C PIPENV_VENV_IN_PROJECT=true PIPENV_PIPFILE=$(abs_top_srcdir)/virtual-envs/2.7/Pipfile pipenv
 
-bin_PROGRAMS = unixcat
+bin_PROGRAMS = unixcat test_neb
 
 unixcat_SOURCES = unixcat.cc
 unixcat_LDADD = -lpthread
 unixcat_LDFLAGS = -static-libstdc++
+
+
+
+test_neb_SOURCES = \
+        test/DummyNagios.cc \
+        test/test_utilities.cc \
+        test/test_CustomVarsDictFilter.cc \
+        test/test_OffsetStringMacroColumn.cc
+test_neb_CPPFLAGS = \
+        -I.. \
+        -isystem $(ASIO_INCLUDE) \
+        -I$(GOOGLETEST)/destdir/include \
+        @RE2_CPPFLAGS@
+test_neb_LDFLAGS = \
+        -static-libstdc++ \
+        $(GOOGLETEST)/destdir/lib/libgtest_main.a \
+        $(GOOGLETEST)/destdir/lib/libgtest.a \
+        @RE2_LDFLAGS@
+test_neb_LDADD = \
+        liblivestatus.a \
+        -lstdc++fs \
+        -lpthread \
+        @RE2_LIBS@
+
+.PHONY: unit-test build_googletest
+
+unit-test: test_neb$(EXEEXT)
+	GTEST_OUTPUT=xml $(VALGRIND) ./test_neb$(EXEEXT)
+
+# NOTE: This is a bit of a hack. What we really want is a clean chroot/VM/image
+# where we just install our build dependencies.
+$(test_neb_SOURCES): build_googletest
+
+# HACK: Avoid recompilation caused by make's -B flag
+build_googletest:
+	bash -c "make -C $(GOOGLETEST) build" > /dev/null
 
 pkglib_LIBRARIES = liblivestatus.a
 
@@ -226,4 +264,4 @@ install-data-local:
 	rm -f $(DESTDIR)$(pkglibdir)/liblivestatus.a
 
 clean-local:
-	rm -rf *~ compile_commands.json cppcheck-result.xml html $(INCLUDES_DIR) $(ASIO_VERSION)
+	rm -rf *~ compile_commands.json cppcheck-result.xml test_detail.xml html $(INCLUDES_DIR) $(ASIO_VERSION)

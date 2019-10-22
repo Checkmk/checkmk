@@ -53,3 +53,12 @@ check_info["dell_poweredge_amperage.power"] = {
     "includes": ["dell_poweredge.include"],
     "management_board": HOST_ONLY,
 }
+
+check_info["dell_poweredge_amperage.current"] = {
+    "check_function": check_dell_poweredge_amperage,
+    "inventory_function": inventory_dell_poweredge_amperage_current,
+    "service_description": "%s",
+    "has_perfdata": True,
+    "includes": ["dell_poweredge.include"],
+    "management_board": HOST_ONLY,
+}

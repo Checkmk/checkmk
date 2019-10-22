@@ -1,0 +1,12 @@
+Title: agent_kubernetes: accept millibytes as unit
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1571751410
+Class: fix
+
+Kubernetes allows millibytes as a unit for memory resources.
+These values are now accepted by the special agent as well
+and do not lead to an error anymore.

@@ -1,0 +1,464 @@
+#!/usr/bin/env python
+# coding: utf-8
+"""
+This program overwrites __import__ and tracks memory before
+and after any import statement issued. The resulting data can
+be emitted in various formats for futher processing.
+"""
+from __future__ import print_function, unicode_literals
+
+import distutils.sysconfig as sysconfig
+
+import argparse
+import collections
+import contextlib
+import gc
+import importlib
+import inspect
+import json
+import os
+import subprocess
+import sys
+
+
+# Some constants to help parse /proc/*/smaps
+KiB = 1024
+MiB = KiB * KiB
+
+# Struct to keep the values. We're only interested in the
+# private memory, as this is the only one the program has any
+# control over. We can't possibly reduce any other type of memory.
+Memory = collections.namedtuple('Memory', ['private', 'pss', 'rss'])
+
+
+def _get_python_stdlib():
+    std_lib = sysconfig.get_python_lib(standard_lib=True)
+    for top, _dirs, files in os.walk(std_lib):
+        if "dist-packages" in top:
+            continue
+
+        if "__init__.py" in files:
+            yield top[len(std_lib)+1:]
+
+        for nm in files:
+            if nm != '__init__.py' and nm[-3:] == '.py':
+                yield (os.path.join(top, nm)[len(std_lib)+1:-3]
+                       .replace('/', '.'))
+
+
+# We pull a list of Python's stdlib so we can color it differently.
+_STDLIB = list(_get_python_stdlib())
+_STDLIB.sort()
+
+
+def log(msg, *args):
+    sys.stderr.write(msg % args)
+    sys.stderr.write("\n")
+    sys.stderr.flush()
+
+
+class ConsoleFormatter(object):
+    __slots__ = ['out']
+
+    def __init__(self, args):
+        self.out = sys.stdout
+
+    def push(self, importer, imported):
+        self.out.write(">")
+        self.out.flush()
+
+    def pop(self):
+        self.out.write("<")
+        self.out.flush()
+
+    def setsize(self, _size):
+        self.out.write("X")
+        self.out.flush()
+
+    def finish(self):
+        pass
+
+
+class JSONFormatter(object):
+    """
+
+    Output looks like this:
+
+    {"name": "root",
+     "children": [{"name": "child1", "value": 12345},
+                  {"name": "child2", "value": 23456,
+                   "children": [{...}]}]}
+
+
+    """
+    __slots__ = ('metric', 'stack', 'open')
+
+    def __init__(self, args):
+        self.open = args.open
+        self.metric = self._make_node("root")
+        self.stack = [self.metric]
+
+    def _make_node(self, name):
+        return {"name": name}
+
+    def push(self, from_, module):
+        node = self._make_node(module)
+        parent = self.stack[-1]
+        if "children" not in parent:
+            parent["children"] = []
+
+        # Prevent duplicate children with the same name.
+        # Not sure how this can happen.
+        already_added = [_n for _n in parent["children"]
+                         if _n["name"] == node["name"]]
+        if len(already_added) == 1:
+            node = already_added[0]
+        else:
+            parent["children"].append(node)
+        self.stack.append(node)
+
+    def setsize(self, _size):
+        self.stack[-1]["value"] = _size
+
+    def pop(self):
+        self.stack.pop()
+
+    def finish(self):
+        filename = os.path.abspath("import-tree.%d.json" % (os.getpid(),))
+        with open(filename, "w") as jsf:
+            jsf.write(self.render_json())
+        sys.stderr.write("Written to %s\n" % (filename,))
+        sys.stderr.flush()
+
+    def render_json(self):
+        # We skip to the first entry, so we start with a dict as root
+        return json.dumps(self.stack[0], indent=4)
+
+
+class GraphVizFormatter(object):
+    __slots__ = ('from_', 'to', 'out', 'open')
+
+    def __init__(self, args):
+        self.open = args.open
+        self.from_ = []
+        self.to = []
+        self.out = []
+
+    def push(self, from_, to):
+        self.from_.append(from_)
+        self.to.append(to)
+
+    def pop(self):
+        self.from_.pop()
+        self.to.pop()
+
+    def setsize(self, size):
+        self.out.append((self.from_[-1], self.to[-1], size))
+
+    def finish(self):
+        filename = "import-graph.%d.dot" % (os.getpid(),)
+        args = []
+        with open(filename, "w") as dot:
+            dot.write("digraph G {\n")
+            dot.write("   overlap = false;\n")
+
+            # Draw edges.
+            for from_, to, _size in self.out:
+                args[:] = []
+                dot.write('    "%s" -> "%s"' % (from_, to))
+
+                if from_.startswith("cmk"):
+                    args.append("color=red")
+                elif from_ not in _STDLIB:
+                    args.append("color=blue")
+
+                if to.startswith("cmk"):
+                    args.append("color=red")
+                elif to not in _STDLIB:
+                    args.append("color=blue")
+
+                if args:
+                    dot.write(" [%s]" % ','.join(args))
+                dot.write(';\n')
+
+            # Style nodes.
+            for from_, to, _size in self.out:
+                if from_.startswith("cmk"):
+                    dot.write('   "%s" [color=red];\n' % (from_,))
+                elif from_ not in _STDLIB:
+                    dot.write('   "%s" [color=blue];\n' % (from_,))
+
+                if to.startswith("cmk"):
+                    dot.write('   "%s" [color=red];\n' % (to,))
+                elif to not in _STDLIB:
+                    dot.write('   "%s" [color=blue];\n' % (to,))
+
+            dot.write("}\n")
+        log("Written to %s", os.path.abspath(filename))
+
+        if self.open:
+            self._write_and_open_images(filename)
+
+    def _write_and_open_images(self, filename):
+        log("Launching eog")
+
+#       neato_image = "neato-%s.png" % (filename,)
+#       os.system("neato -Tpng -o%s %s" % (neato_image, filename))
+#       log("Wrote %s", os.path.abspath(neato_image))
+#       _spawn("eog", neato_image)
+
+        dot_image = "dot-%s.png" % (filename,)
+        os.system("dot -Tpng -o%s %s" % (dot_image, filename))
+        log("Wrote %s", os.path.abspath(dot_image))
+        _spawn("eog", dot_image)
+
+
+FORMATTERS = {
+    'json': JSONFormatter,
+    'dot': GraphVizFormatter,
+    'console': ConsoleFormatter,
+}
+
+
+_FORMATTER = None
+
+
+class Formatter(object):
+
+    def __init__(self, *formatters):
+        self.formatters = formatters
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type:
+            raise
+        for formatter in self.formatters:
+            formatter.finish()
+
+    def push(self, importer, imported):
+        for formatter in self.formatters:
+            formatter.push(importer, imported)
+
+    def pop(self):
+        for formatter in self.formatters:
+            formatter.pop()
+
+    def setsize(self, _size):
+        for formatter in self.formatters:
+            formatter.setsize(_size)
+
+
+def _get_mem(pid):
+    # type: (int) -> Memory
+    private = 0
+    pss = 0
+    rss = 0
+
+    def _get_smaps(_pid):
+        with open('/proc/%d/smaps' % _pid) as fp:
+            return fp.read()
+
+    def _parse_amount(_line):
+        _name, amount, unit = _line.split()
+        val = int(amount)
+
+        # pylint: disable=raising-format-tuple
+        if unit == 'kB':
+            val *= KiB
+        elif unit == 'MB':
+            val *= MiB
+        else:
+            raise RuntimeError(
+                'Unsupported memory unit for Private_* memory info '
+                'from /proc/%d/smaps', pid)
+        # pylint: enable=raising-format-tuple
+        return val
+
+    for line in _get_smaps(pid).split('\n'):
+        if line.startswith('Private_'):
+            private += _parse_amount(line)
+        elif line.startswith("Pss:"):
+            pss += _parse_amount(line)
+        elif line.startswith("Rss:"):
+            rss += _parse_amount(line)
+        else:
+            continue
+
+    return Memory(private=private, pss=pss, rss=rss)
+
+
+def _get_delta(mem1, mem2):
+    return Memory(
+        private=mem2.private - mem1.private,
+        pss=mem2.pss - mem1.pss,
+        rss=mem2.rss - mem1.rss,
+    )
+
+
+class MeasureMemory(object):
+    __slots__ = ['pid', 'mem_before', 'mem_after']
+
+    def __init__(self):
+        self.pid = os.getpid()
+
+    def __enter__(self):
+        self.mem_before = _get_mem(self.pid)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.mem_after = _get_mem(self.pid)
+        if exc_type:
+            raise
+
+    def diff(self):
+        return _get_delta(self.mem_before, self.mem_after)
+
+
+seen = set()
+
+
+@contextlib.contextmanager
+def track_growth(module):
+    global _FORMATTER
+
+    _from = stack[-1]
+
+    # We try to get rid of the indirection that importlib introduces.
+    if _from == 'importlib':
+        _from = stack[-2]
+
+    # We don't want to see this at all.
+    if module == 'importlib':
+        yield
+        return
+
+    stack.append(module)
+    if (_from, module) not in seen:
+        _FORMATTER.push(_from, module)
+
+    with MeasureMemory() as m:
+        yield
+
+    if (_from, module) not in seen:
+        _FORMATTER.setsize(m.diff().private)
+        _FORMATTER.pop()
+        seen.add((_from, module))
+
+    stack.pop()
+
+
+__imp = __import__
+
+stack = ['__main__']
+
+
+def _importer(name, _globals=None, _locals=None, fromlist=None, level=-1):
+    # Wrap __import__ and do some shenanigans
+    # to actually track what's happening.
+    if _globals is None or _locals is None:
+        # Someone did call __import__('foo') without specifying
+        # globals and locals. I'm looking at you, six!
+        without_us = [frame for frame in inspect.stack() if frame[1] != __file__]
+        if without_us:
+            # We get our globals from the parent frame.
+            parent = without_us[0][0]
+            return _importer(name, parent.f_globals, parent.f_locals, fromlist, level)
+        else:
+            # We give up.
+            _globals = globals()
+            _locals = globals()
+
+    if '__name__' not in _globals:
+        # Sometimes a c-library (or some other library imported by a c-library) doesn't have a
+        # name in it's globals, so we want to see how it was called when it was imported.
+        prev_name = [
+            frame for frame in inspect.stack()
+            if frame[1] != __file__ and '__name__' in frame[0].f_globals
+        ]
+        parent = prev_name[0][0]
+        _globals['__name__'] = parent.f_globals['__name__']
+
+    if fromlist is None:
+        fromlist = []
+
+    module_name = _globals['__name__']
+    if module_name == __name__:
+        # c-libraries see us and not the module importing them, which makes sense,
+        # (because we inject ourselves in between) but this result isn't what we want...
+        without_us = [frame for frame in inspect.stack() if frame[1] != __file__]
+        if without_us:
+            parent = without_us[0][0]
+        else:
+            parent = inspect.stack()[-1][0]
+        module_name = parent.f_globals['__name__']
+
+    # Here goes the real magic.
+    with track_growth(module_name):
+        try:
+            return __imp(name, _globals, _locals, fromlist, level)
+        except ValueError as e:
+            # Can't really say why this was the case, it just failed once
+            # with a ValueError due to relative import from a non-package.
+            raise ImportError(e)
+
+
+def main(args):
+    global _FORMATTER
+    formatters = [FORMATTERS[key[0]](args) for key in (args.formatter or [])]
+    if not args.formatter:
+        formatters.append(FORMATTERS['console'](args))
+
+    _FORMATTER = Formatter(*formatters)
+
+    try:
+        __builtins__.__import__ = _importer
+    except AttributeError:
+        __builtins__['__import__'] = _importer
+
+    # Not sure how much this helps.
+    gc.disable()
+
+    with _FORMATTER:
+        for module in args.modules:
+            importlib.import_module(module)
+
+
+@contextlib.contextmanager
+def basedir():
+    root = subprocess.check_output(
+            ["git", "rev-parse", "--show-toplevel"]).strip()
+    # So cmk will actually be found...
+    sys.path.insert(0, root)
+    yield
+
+
+def _spawn(*args):
+    # Give the process it's own process group so it
+    # won't be killed when the script exits.
+    # Close stdout and stderr so we won't have ugly a terminal.
+    subprocess.Popen(
+        args,
+        stdout=open('/dev/null', 'w'),
+        stderr=open('/dev/null', 'w'),
+        preexec_fn=os.setpgrp
+    )
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+            description="Track import memory",
+            epilog=__doc__)
+    parser.add_argument("modules", metavar='MODULE', type=str, nargs='+')
+    parser.add_argument("-o", "--open", action="store_true",
+                        help="Direcly show the resulting file (if possible)")
+    parser.add_argument(
+        "-f", "--formatter", metavar='OUTPUT-FORMAT', type=str,
+        help='May be one of: %s' % (
+            ', '.join(FORMATTERS.keys()),),
+        action="append", nargs=1)
+    _args = parser.parse_args()
+
+    with basedir():
+        main(_args)

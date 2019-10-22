@@ -1,0 +1,14 @@
+Title: Windows Agent: Invalid entries have been removed from logwatch
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1571744698
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+Logwatch entries 'State' and 'Parameters' are now ignored  by Windows Agent as
+invalid thus eliminating bad warning message like 'State: missing' or 
+'Parameters: missing'

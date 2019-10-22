@@ -3721,14 +3721,8 @@ class EventFilterState(Filter):
 
     def display(self):
         html.begin_checkbox_group()
-        chars = 0
         for name, title in self._choices:
-            chars += len(title) + 2
             html.checkbox(self.ident + "_" + str(name), True, label=title)
-            if (title[0].isupper() and chars > 24) or \
-                (title[0].islower() and chars > 36):
-                html.br()
-                chars = 0
         html.end_checkbox_group()
 
     def filter(self, infoname):

@@ -1,0 +1,10 @@
+Title: Customer GUI: remove superfluous tt tags
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cme
+Version: 1.5.0p23
+Date: 1571926462
+Class: fix
+
+<tt> tags were used but escaped so they were visible. These tags are now removed.

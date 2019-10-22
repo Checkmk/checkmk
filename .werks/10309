@@ -1,0 +1,15 @@
+Title: Predictive Levels is robust against receiving no data at all
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p6
+Date: 1571735423
+
+On a new site, when historic perfdata is not yet available and predictive
+levels are set, Check goes into UNKN state and delivers no new perfdata,
+which makes the problem permanent. Predictive Levels calculation is now
+robust against receiving no data at all, and waits until there is enough
+data for prediction. The check now continues to output such data.

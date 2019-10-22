@@ -12,8 +12,10 @@ build-helper/
 build-stamp
 debian/changelog
 destdir
+dokuwiki-20[12][0-9]-[01][0-9]-[0-3][0-9][a-z]/
 dpkg.topdir
 freetds-[0-9].[0-9][0-9].[0-9][0-9]/
+mk-livestatus-1.7.0i1/
 omd-*-*.rpm
 omd-*.deb
 omd-*.tar.gz
@@ -22,6 +24,5 @@ openhardwaremonitor-[0-9].[0-9].[0-9]/
 patch-stamp
 python*-modules-1.[67].0i1.cme/
 re2-20[12][0-9]-[01][0-9]-[0-3][0-9]/
-dokuwiki-20[12][0-9]-[01][0-9]-[0-3][0-9][a-z]/
 rpm.buildroot
 rpm.topdir

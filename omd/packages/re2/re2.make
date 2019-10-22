@@ -15,9 +15,6 @@ $(RE2): $(RE2_BUILD)
 $(RE2)-install:
 
 $(RE2_BUILD): $(RE2_UNPACK)
-	@echo "========== RE2 environment start =========="
-	@env | sort
-	@echo "========== RE2 environment end =========="
 # basically what part of AC_PROC_CXX does
 	@CXX="" ; \
 	for PROG in g++-9 clang++-8 g++-8 clang++-7 g++-7 clang++-6.0 clang++-5.0 g++ clang++; do \
@@ -41,9 +38,6 @@ $(RE2_BUILD): $(RE2_UNPACK)
         .
 # Note: We need the -fPIC above to link RE2 statically into livestatus.o.
 	cmake --build $(RE2_DIR) --target install -- -j 4
-	@echo "========== RE2 destdir start =========="
-	@ls -lRa "$(PACKAGE_RE2_DESTDIR)"
-	@echo "========== RE2 destdir end =========="
 	$(TOUCH) $@
 
 $(RE2)-skel:

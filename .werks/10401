@@ -1,0 +1,14 @@
+Title: Instant reports are deactivated under the correct permission
+Level: 1
+Component: reporting
+Compatible: incomp
+Edition: cee
+Version: 1.6.0p6
+Date: 1571757219
+Class: fix
+
+The instant reports should have always been controlloled with the
+<i>General Permissions -> Instant Reports - PDF Export</i>. Nevertheless
+until this werk they were activated under the <i>General Permissions -> Use
+reporting</i>. If you used the <i>Use Permissions</i> workaround, please
+now change to the correct <i>Instant Reports</i> configuration.

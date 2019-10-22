@@ -1806,7 +1806,7 @@ def _show_context_links(view, show_filters, enable_commands, enable_checkboxes, 
                                 bestof=config.context_buttons_to_show)
 
         # Button for creating an instant report (if reporting is available)
-        if config.reporting_available() and config.user.may("general.reporting"):
+        if config.reporting_available() and config.user.may("general.instant_reports"):
             html.context_button(_("Export as PDF"),
                                 html.makeuri([], filename="report_instant.py"),
                                 "report",

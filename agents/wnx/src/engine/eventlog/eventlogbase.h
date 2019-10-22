@@ -155,7 +155,8 @@ std::pair<uint64_t, cma::cfg::EventLevels> ScanEventLog(
 std::pair<uint64_t, std::string> PrintEventLog(EventLogBase &log,
                                                uint64_t previouslyReadId,
                                                cma::cfg::EventLevels level,
-                                               bool HideContext);
+                                               bool HideContext,
+                                               int64_t max_size);
 
 }  // namespace cma::evl
 #endif  // EventLogBase_h

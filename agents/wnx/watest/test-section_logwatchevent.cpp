@@ -6,6 +6,7 @@
 #include <filesystem>
 
 #include "cfg.h"
+#include "cfg_engine.h"
 #include "common/wtools.h"
 #include "providers/logwatch_event.h"
 #include "providers/logwatch_event_details.h"
@@ -29,7 +30,7 @@ static void LoadTestConfig(YAML::Node Node) {
         "    - '*' : warn context\n");
 }
 
-constexpr int LogWatchSections_Main = 1;
+constexpr int LogWatchSections_Main = 3;
 constexpr int LogWatchSections_Test = 5;
 
 TEST(LogWatchEventTest, Consts) {
@@ -125,6 +126,22 @@ TEST(LogWatchEventTest, Config) {
             GetVal(groups::kLogWatchEvent, vars::kLogWatchEventSendall, false);
         EXPECT_EQ(send_all, false);
 
+        auto max_size =
+            GetVal(groups::kLogWatchEvent, vars::kLogWatchEventMaxSize, 13);
+        EXPECT_EQ(max_size, cma::cfg::logwatch::kMaxSize);
+
+        auto max_line_length = GetVal(groups::kLogWatchEvent,
+                                      vars::kLogWatchEventMaxLineLength, 444);
+        EXPECT_EQ(max_line_length, 444);
+
+        auto tout =
+            GetVal(groups::kLogWatchEvent, vars::kLogWatchEventTimeout, 440);
+        EXPECT_EQ(tout, 440);
+
+        auto max_entries =
+            GetVal(groups::kLogWatchEvent, vars::kLogWatchEventTimeout, 445);
+        EXPECT_EQ(max_entries, 445);
+
         auto sections =
             GetNode(groups::kLogWatchEvent, vars::kLogWatchEventLogFile);
         ASSERT_TRUE(sections.IsSequence());
@@ -133,6 +150,8 @@ TEST(LogWatchEventTest, Config) {
         // data to be tested against
         const RawLogWatchData base[LogWatchSections_Test] = {
             //{false, "", cma::cfg::EventLevels::kOff, false},
+            {true, "Parameters", cma::cfg::EventLevels::kIgnore, false},
+            {true, "State", cma::cfg::EventLevels::kIgnore, false},
             {true, "*", cma::cfg::EventLevels::kWarn, false},
         };
 
@@ -240,6 +259,13 @@ TEST(LogWatchEventTest, ConfigStruct) {
         lwe.init("Name", "off", true);
         EXPECT_TRUE(lwe.level() == cma::cfg::EventLevels::kOff);
     }
+
+    {
+        cma::provider::LogWatchEntry lwe;
+        lwe.init("Name", "ignore", true);
+        EXPECT_TRUE(lwe.level() == cma::cfg::EventLevels::kIgnore);
+    }
+
     {
         cma::provider::LogWatchEntry lwe;
         lwe.init("Name", "warn", false);
@@ -316,7 +342,6 @@ TEST(LogWatchEventTest, ConfigStruct) {
 }
 
 TEST(LogWatchEventTest, ConfigLoad) {
-    using namespace std;
     using namespace cma::cfg;
     using namespace cma::provider;
     tst::YamlLoader w;
@@ -325,7 +350,23 @@ TEST(LogWatchEventTest, ConfigLoad) {
         auto cfg = cma::cfg::GetLoadedConfig();
         LoadTestConfig(cfg);
         LogWatchEvent lw;
+        EXPECT_FALSE(lw.vista_api_);
+        EXPECT_FALSE(lw.send_all_);
+        EXPECT_EQ(lw.max_entries_, cma::cfg::logwatch::kMaxEntries);
+        EXPECT_EQ(lw.max_line_length_, cma::cfg::logwatch::kMaxLineLength);
+        EXPECT_EQ(lw.max_size_, cma::cfg::logwatch::kMaxSize);
+        EXPECT_EQ(lw.timeout_, cma::cfg::logwatch::kTimeout);
+        lw.max_entries_ = 135;
+        lw.max_line_length_ = 99;
+
+        lw.max_size_ = 5;
+        lw.timeout_ = -99;
+
         lw.loadConfig();
+        EXPECT_EQ(lw.max_entries_, cma::cfg::logwatch::kMaxEntries);
+        EXPECT_EQ(lw.max_line_length_, cma::cfg::logwatch::kMaxLineLength);
+        EXPECT_EQ(lw.max_size_, cma::cfg::logwatch::kMaxSize);
+        EXPECT_EQ(lw.timeout_, cma::cfg::logwatch::kTimeout);
         auto e = lw.entries();
         ASSERT_TRUE(e.size() > 2);
         EXPECT_TRUE(e[0].loaded());
@@ -520,6 +561,25 @@ TEST(LogWatchEventTest, TestAddLog) {
     }
 }
 
+TEST(LogWatchEventTest, CheckMakeBody) {
+    LogWatchEvent lw;
+    lw.loadConfig();
+    EXPECT_TRUE(lw.max_size_ == cma::cfg::logwatch::kMaxSize);
+    lw.max_size_ = -1;
+    auto ret = lw.makeBody();
+    ret = lw.makeBody();
+    EXPECT_TRUE(ret.size() < 2000) << "should be almost empty";
+    auto table = cma::tools::SplitString(ret, "\n");
+    auto old_size = table.size();
+    lw.max_size_ = 10;
+    lw.send_all_ = true;
+    ret = lw.makeBody();
+    EXPECT_TRUE(!ret.empty());
+    EXPECT_TRUE(ret.size() < 6000);
+    table = cma::tools::SplitString(ret, "\n");
+    EXPECT_LE(table.size(), old_size * 2);
+}
+
 TEST(LogWatchEventTest, TestDefaultEntry) {
     {
         StateVector st;
@@ -574,8 +634,8 @@ TEST(LogWatchEventTest, TestMakeBody) {
     EXPECT_EQ(def->name(), "*");
 
     bool send_all = lwe.sendAll();
-    auto states =
-        details::LoadEventlogOffsets(statefiles, send_all);  // offsets stored
+    auto states = details::LoadEventlogOffsets(statefiles,
+                                               send_all);  // offsets stored
 
     states.push_back(State("zzz", 1, false));
 
@@ -753,6 +813,8 @@ TEST(LogWatchEventTest, TestNotSendAllVista) {
     LogWatchEvent lwe;
     lwe.loadConfig();
     auto result = lwe.generateContent();
+    XLOG::l(XLOG::kEvent)("EventLog Vista <GTEST>");
+    result = lwe.generateContent();
     EXPECT_TRUE(!result.empty());
     EXPECT_TRUE(result.size() < 100000);
     EXPECT_TRUE(result.find("EventLog Vista <GTEST>") != std::string::npos);

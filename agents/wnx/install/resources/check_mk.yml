@@ -164,10 +164,11 @@ logwatch:
     
     sendall: no   # this value is MANDATORY, yes is useful only for debugging
     vista_api: no # this is RECOMMENDED
+    max_size: 500000 #
 
     logfile: # entries in the windows eventlog
-        - 'Parameters': off
-        - 'State': off
+        - 'Parameters': ignore
+        - 'State': ignore
         - '*': warn nocontext # This is default params for not missing entries
 
 plugins:

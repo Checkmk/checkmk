@@ -249,6 +249,7 @@
     <ClInclude Include="carrier.h" />
     <ClInclude Include="cfg.h" />
     <ClInclude Include="cfg_details.h" />
+    <ClInclude Include="cfg_engine.h" />
     <ClInclude Include="cma_core.h" />
     <ClInclude Include="commander.h" />
     <ClInclude Include="cvt.h" />

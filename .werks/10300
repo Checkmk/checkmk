@@ -1,0 +1,14 @@
+Title: sym_brightmail_queues: bug fix where WATO configuration did not alter behaviour
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p23
+Date: 1571751986
+
+ In the previous version, WATO configuration for the sym_brightmail_queues
+ check did not alter the behaviour of the service. This update now ensures
+ correct display of the check's state when a rule has been configured.

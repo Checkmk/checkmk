@@ -20,7 +20,6 @@ import os
 import subprocess
 import sys
 
-
 # Some constants to help parse /proc/*/smaps
 KiB = 1024
 MiB = KiB * KiB
@@ -38,12 +37,11 @@ def _get_python_stdlib():
             continue
 
         if "__init__.py" in files:
-            yield top[len(std_lib)+1:]
+            yield top[len(std_lib) + 1:]
 
         for nm in files:
             if nm != '__init__.py' and nm[-3:] == '.py':
-                yield (os.path.join(top, nm)[len(std_lib)+1:-3]
-                       .replace('/', '.'))
+                yield (os.path.join(top, nm)[len(std_lib) + 1:-3].replace('/', '.'))
 
 
 # We pull a list of Python's stdlib so we can color it differently.
@@ -109,8 +107,7 @@ class JSONFormatter(object):
 
         # Prevent duplicate children with the same name.
         # Not sure how this can happen.
-        already_added = [_n for _n in parent["children"]
-                         if _n["name"] == node["name"]]
+        already_added = [_n for _n in parent["children"] if _n["name"] == node["name"]]
         if len(already_added) == 1:
             node = already_added[0]
         else:
@@ -202,10 +199,10 @@ class GraphVizFormatter(object):
     def _write_and_open_images(self, filename):
         log("Launching eog")
 
-#       neato_image = "neato-%s.png" % (filename,)
-#       os.system("neato -Tpng -o%s %s" % (neato_image, filename))
-#       log("Wrote %s", os.path.abspath(neato_image))
-#       _spawn("eog", neato_image)
+        #       neato_image = "neato-%s.png" % (filename,)
+        #       os.system("neato -Tpng -o%s %s" % (neato_image, filename))
+        #       log("Wrote %s", os.path.abspath(neato_image))
+        #       _spawn("eog", neato_image)
 
         dot_image = "dot-%s.png" % (filename,)
         os.system("dot -Tpng -o%s %s" % (dot_image, filename))
@@ -219,12 +216,10 @@ FORMATTERS = {
     'console': ConsoleFormatter,
 }
 
-
 _FORMATTER = None
 
 
 class Formatter(object):
-
     def __init__(self, *formatters):
         self.formatters = formatters
 
@@ -427,8 +422,7 @@ def main(args):
 
 @contextlib.contextmanager
 def basedir():
-    root = subprocess.check_output(
-            ["git", "rev-parse", "--show-toplevel"]).strip()
+    root = subprocess.check_output(["git", "rev-parse", "--show-toplevel"]).strip()
     # So cmk will actually be found...
     sys.path.insert(0, root)
     yield
@@ -438,26 +432,26 @@ def _spawn(*args):
     # Give the process it's own process group so it
     # won't be killed when the script exits.
     # Close stdout and stderr so we won't have ugly a terminal.
-    subprocess.Popen(
-        args,
-        stdout=open('/dev/null', 'w'),
-        stderr=open('/dev/null', 'w'),
-        preexec_fn=os.setpgrp
-    )
+    subprocess.Popen(args,
+                     stdout=open('/dev/null', 'w'),
+                     stderr=open('/dev/null', 'w'),
+                     preexec_fn=os.setpgrp)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-            description="Track import memory",
-            epilog=__doc__)
+    parser = argparse.ArgumentParser(description="Track import memory", epilog=__doc__)
     parser.add_argument("modules", metavar='MODULE', type=str, nargs='+')
-    parser.add_argument("-o", "--open", action="store_true",
+    parser.add_argument("-o",
+                        "--open",
+                        action="store_true",
                         help="Direcly show the resulting file (if possible)")
-    parser.add_argument(
-        "-f", "--formatter", metavar='OUTPUT-FORMAT', type=str,
-        help='May be one of: %s' % (
-            ', '.join(FORMATTERS.keys()),),
-        action="append", nargs=1)
+    parser.add_argument("-f",
+                        "--formatter",
+                        metavar='OUTPUT-FORMAT',
+                        type=str,
+                        help='May be one of: %s' % (', '.join(FORMATTERS.keys()),),
+                        action="append",
+                        nargs=1)
     _args = parser.parse_args()
 
     with basedir():

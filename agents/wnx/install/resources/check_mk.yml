@@ -166,6 +166,8 @@ logwatch:
     vista_api: no # this is RECOMMENDED
 
     logfile: # entries in the windows eventlog
+        - 'Parameters': off
+        - 'State': off
         - '*': warn nocontext # This is default params for not missing entries
 
 plugins:

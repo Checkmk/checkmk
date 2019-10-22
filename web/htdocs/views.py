@@ -2252,7 +2252,7 @@ def show_context_links(thisview, datasource, show_filters,
                 bestof = config.context_buttons_to_show)
 
         # Button for creating an instant report (if reporting is available)
-        if config.reporting_available() and config.user.may("general.reporting"):
+        if config.reporting_available() and config.user.may("general.instant_reports"):
             html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"),
                                 "report", class_="context_pdf_export")
 

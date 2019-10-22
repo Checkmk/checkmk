@@ -84,5 +84,9 @@ then
     echo '<<<scaleio_storage_pool>>>'
     scli --query_properties --object_type STORAGE_POOL --all_objects --properties ID,NAME,MAX_CAPACITY_IN_KB,UNUSED_CAPACITY_IN_KB,FAILED_CAPACITY_IN_KB,TOTAL_READ_BWC,TOTAL_WRITE_BWC,REBALANCE_READ_BWC,REBALANCE_WRITE_BWC,
 
+    # Device states
+    echo '<<<scaleio_devices>>>'
+    scli --query_properties --object_type DEVICE --all_objects --properties ID,SDS_ID,STORAGE_POOL_ID,STATE,ERR_STATE
+
     scli --logout >/dev/null 2>&1
 fi

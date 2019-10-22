@@ -1,0 +1,11 @@
+Title: scalio_devices: New check which monitors the device states of all ScaleIO Data Servers
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1571749622
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+

@@ -1,0 +1,91 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<scaleio_devices>>>
+# DEVICE 123:
+#   ID                  Foo
+#   SDS_ID              Bar
+#   STORAGE_POOL_ID     123
+#   STATE               DEVICE_NORMAL
+#   ERR_STATE           NO_ERROR
+
+
+def parse_scaleio_devices(info):
+    devices = {}
+    device = {}
+    for line in info:
+        if len(line) != 2:
+            continue
+        key, value = line
+        if key == "DEVICE":
+            # value ends with ":"
+            device_id = value[:-1]
+            device = devices.setdefault(device_id, {key: device_id})
+        elif device:
+            device[key] = value
+
+    parsed = {}
+    for attrs in devices.itervalues():
+        parsed.setdefault(attrs["SDS_ID"], []).append(attrs)
+    return parsed
+
+
+def _make_state_readable(raw_state):
+    return raw_state.replace("_", " ").lower()
+
+
+@get_parsed_item_data
+def check_scaleio_devices(item, params, devices):
+    num_devices = len(devices)
+    error_devices = []
+    long_output = []
+    for device in devices:
+        err_state = device["ERR_STATE"]
+        if err_state == "NO_ERROR":
+            continue
+        err_state_readable = _make_state_readable(err_state)
+        dev_id = device["DEVICE"]
+        error_devices.append(dev_id)
+        long_output.append("Device %s: Error: %s, State: %s (ID: %s, Storage pool ID: %s)" %
+                           (dev_id, _make_state_readable(device["STATE"]), err_state_readable,
+                            dev_id, device["STORAGE_POOL_ID"]))
+
+    if error_devices:
+        num_errors = len(error_devices)
+        yield 2, "%d devices, %d errors (%s)" % (num_devices, num_errors, ", ".join(error_devices))
+    else:
+        yield 0, '%d devices, no errors' % num_devices
+
+    if long_output:
+        yield 0, "\n%s" % "\n".join(long_output)
+
+
+check_info['scaleio_devices'] = {
+    'parse_function': parse_scaleio_devices,
+    'inventory_function': discover(),
+    'check_function': check_scaleio_devices,
+    'service_description': 'ScaleIO Data Server %s Devices',
+}

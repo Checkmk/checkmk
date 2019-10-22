@@ -1,0 +1,21 @@
+title: EMC ScaleIO: Data Server Devices
+agents: linux
+catalog: os/storage
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the devices states of all ScaleIO Data Servers (SDS).
+ In order to make this check work you have to install the agent plugin
+ {{mk_scaleio}}.
+
+ The check reports the total number of devices and the number of devices
+ with errors per Data Server.
+
+ If at least one error occurs the check goes CRIT. The long output shows
+ more detailed information about DEVICE, ERR_STATE, STATE, ID and STORAGE_POOL_ID.
+
+item:
+ The SDS identifier.
+
+inventory:
+ One service per SDS is created.

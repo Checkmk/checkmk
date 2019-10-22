@@ -10271,7 +10271,7 @@ class ModeDistributedMonitoring(ModeSites):
             if "secret" in site:
                 del site["secret"]
             self._site_mgmt.save_sites(configured_sites)
-            add_change("edit-site", _("Logged out of remote site %s") % html.render_tt(site["alias"]),
+            add_change("edit-site", _("Logged out of remote site %s") % site["alias"],
                        domains=[watolib.ConfigDomainGUI], sites=[watolib.default_site()])
             return None, _("Logged out.")
 
@@ -10313,7 +10313,7 @@ class ModeDistributedMonitoring(ModeSites):
 
                 site["secret"] = secret
                 self._site_mgmt.save_sites(configured_sites)
-                message = _("Successfully logged into remote site %s.") % html.render_tt(site["alias"])
+                message = _("Successfully logged into remote site %s.") % site["alias"])
                 add_change("edit-sites", message, sites=[login_id], domains=watolib.ConfigDomain.enabled_domains())
                 return None, message
 
@@ -10652,9 +10652,9 @@ class ModeEditSite(ModeSites):
         self._site_mgmt.save_sites(configured_sites)
 
         if self._new:
-            msg = _("Created new connection to site %s") % html.render_tt(self._id)
+            msg = _("Created new connection to site: %s") % self._id
         else:
-            msg = _("Modified site connection %s") % html.render_tt(self._id)
+            msg = _("Modified site connection: %s") % self._id
 
         # Don't know exactly what have been changed, so better issue a change
         # affecting all domains

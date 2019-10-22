@@ -24,6 +24,10 @@ else:
 
 import testlib
 
+#TODO Hack: Exclude cee tests in cre repo
+if not Path(testlib.utils.cmc_path()).exists():
+    collect_ignore_glob = ["*/cee/*"]
+
 #
 # Each test is of one of the following types.
 #

@@ -4,8 +4,6 @@ from __future__ import print_function
 import pytest  # type: ignore
 from pathlib2 import Path
 
-import cmk_base.cee.agent_bakery_plugins
-
 
 @pytest.fixture(autouse=True, scope="session")
 def session_info():

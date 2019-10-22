@@ -3,4 +3,3 @@ set -e
 
 LANG=C make -C ../../.. config.status
 LANG=C make -j4 -C .. unit-test
-

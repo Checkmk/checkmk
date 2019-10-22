@@ -137,7 +137,9 @@ class NagVisMaps(SidebarSnapin):
         footnotelinks([(_("Edit"), edit_url)])
 
     def _show_tree(self, request):
+        html.open_ul()
         self._show_tree_nodes(request["maps"]["maps"], request["maps"]["childs"])
+        html.close_ul()
 
     def _show_tree_nodes(self, maps, children):
         for map_name, map_cfg in maps.iteritems():

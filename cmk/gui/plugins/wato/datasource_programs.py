@@ -2237,6 +2237,39 @@ rulespec_registry.register(
     ))
 
 
+def _factory_default_special_agents_zerto():
+    # No default, do not use setting if no rule matches
+    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+
+def _valuespec_special_agents_zerto():
+    return Dictionary(
+        elements=[
+            ("authentication",
+             DropdownChoice(title=_('Authentication method'),
+                            choices=[
+                                ('windows', _('Windows authentication')),
+                                ('vcenter', _('VCenter authentication')),
+                            ],
+                            help=_("Default is Windows authentication"))),
+            ('username', TextAscii(title=_('Username'), allow_empty=False)),
+            ('password', TextAscii(
+                title=_('Password'),
+                allow_empty=False,
+            )),
+        ],
+        title=_("Check state of Zerto"),
+        help=_("This rule selects the Zerto special agent for an existing Checkmk host"))
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupDatasourcePrograms,
+        name="special_agents:zerto",
+        valuespec=_valuespec_special_agents_zerto,
+    ))
+
+
 def _factory_default_special_agents_graylog():
     # No default, do not use setting if no rule matches
     return watolib.Rulespec.FACTORY_DEFAULT_UNUSED

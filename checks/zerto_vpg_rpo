@@ -1,0 +1,66 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA
+
+# 2019-01-07, comNET GmbH, Fabian Binder
+
+MAP_RPO_STATES = {
+    "0": (1, "VPG is initializing"),
+    "1": (0, "Meeting SLA specification"),
+    "2": (2, "Not meeting SLA specification for RPO SLA and journal history"),
+    "3": (2, "Not meeting SLA specification for RPO SLA"),
+    "4": (2, "Not meeting SLA specification for journal history"),
+    "5": (1, "VPG is in a failover operation"),
+    "6": (1, "VPG is in a move operation"),
+    "7": (1, "VPG is being deleted"),
+    "8": (1, "VPG has been recovered"),
+}
+
+
+def parse_zerto_vpg(info):
+    parsed = {}
+    for line in info:
+        if len(line) < 3:
+            continue
+        vpgname = info[0]
+        vpg = parsed.setdefault(vpgname, {})
+        vpg["state"] = line[1]
+        vpg["actual_rpo"] = line[2]
+    return parsed
+
+
+@get_parsed_item_data
+def check_zerto_vpg_rpo(_item, _params, data):
+    state, vpg_info = MAP_RPO_STATES.get(data.get("state"), (3, "Unknown"))
+    yield state, "VPG Status: %s" % vpg_info
+
+
+check_info['zerto_vpg_rpo'] = {
+    'inventory_function': discover(),
+    'check_function': check_zerto_vpg_rpo,
+    'service_description': 'Zerto VPG RPO %s',
+    'has_perfdata': False,
+    'group': 'zerto_vpg_rpo',
+}

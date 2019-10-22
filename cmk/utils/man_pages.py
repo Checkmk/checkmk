@@ -218,6 +218,7 @@ catalog_titles = {
         "barracuda"     : "Barracuda",
         "vnx"           : "VNX NAS",
         "websphere_mq"  : "WebSphere MQ",
+        "zerto"         : "Zerto",
 
     "os"       : "Operating Systems",
         "aix"           : "AIX",

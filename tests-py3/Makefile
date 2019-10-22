@@ -29,4 +29,4 @@ test-pylint: $(VENV)
 	$(PYTEST) -T pylint pylint
 
 test-unit: $(VENV)
-	$(PYTEST) -T unit git unit
+	$(PYTEST) -T unit unit

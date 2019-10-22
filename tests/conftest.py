@@ -39,7 +39,6 @@ EXECUTE_IN_SITE, EXECUTE_IN_VENV = True, False
 
 test_types = collections.OrderedDict([
     ("unit", EXECUTE_IN_VENV),
-    ("git", EXECUTE_IN_VENV),
     ("pylint", EXECUTE_IN_VENV),
     ("docker", EXECUTE_IN_VENV),
     ("agent-integration", EXECUTE_IN_VENV),

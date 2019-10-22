@@ -156,6 +156,11 @@ def parse_memory(value):
     if value.endswith('E'):
         return 1e18 * float(value[:-1])
 
+    # millibytes are a useless, but valid option:
+    # https://github.com/kubernetes/kubernetes/issues/28741
+    if value.endswith('m'):
+        return 1e-3 * float(value[:-1])
+
     return float(value)
 
 

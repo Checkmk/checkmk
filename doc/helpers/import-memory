@@ -7,7 +7,7 @@ be emitted in various formats for futher processing.
 """
 from __future__ import print_function, unicode_literals
 
-import distutils.sysconfig as sysconfig
+import distutils.sysconfig as sysconfig  # pylint: disable=import-error
 
 import argparse
 import collections
@@ -41,7 +41,7 @@ def _get_python_stdlib():
 
         for nm in files:
             if nm != '__init__.py' and nm[-3:] == '.py':
-                yield (os.path.join(top, nm)[len(std_lib) + 1:-3].replace('/', '.'))
+                yield os.path.join(top, nm)[len(std_lib) + 1:-3].replace('/', '.')
 
 
 # We pull a list of Python's stdlib so we can color it differently.

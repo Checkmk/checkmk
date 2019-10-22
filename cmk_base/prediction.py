@@ -126,6 +126,9 @@ def retrieve_grouped_data_from_rrd(hostname, service_description, timegroup, par
         if tg == timegroup:
             step, data = cmk.prediction.get_rrd_data(hostname, service_description, dsname, cf, fr,
                                                      un - 1)
+            if step == 0:
+                raise MKGeneralException("Got no historic metrics")
+
             if smallest_step is None:
                 smallest_step = step
             slices.append((fr, step / float(smallest_step), data))

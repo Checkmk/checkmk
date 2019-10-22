@@ -2,10 +2,26 @@
 # encoding: utf-8
 
 import time
+import io
 
 import cmk.gui.http as http
 from cmk.gui.globals import html
 
+
+def test_http_request_allowed_vars():
+    wsgi_environ = {
+        # Please note: This is no complete WSGI environment
+        "REQUEST_METHOD" : "POST",
+        # Contains a variable that has a base64 coded value in it's name. This
+        # is done for example on the service discovery page or on the user
+        # editing page.
+        "wsgi.input"     : io.BytesIO("asd=x&_Y21rYWRtaW4%3D=aaa"),
+        "SCRIPT_NAME"    : "",
+        "REQUEST_URI"    : "",
+    }
+    req = http.Request(wsgi_environ)
+    assert req.var("asd") == "x"
+    assert req.var("_Y21rYWRtaW4=") == "aaa"
 
 def test_cookie_handling(register_builtin_html, monkeypatch):
     monkeypatch.setattr(html.request, "cookies", {"cookie1": {"key": "1a"}})

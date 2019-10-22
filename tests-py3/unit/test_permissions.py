@@ -1,20 +1,24 @@
-#!/usr/bin/python
 # encoding: utf-8
 
 import os
-import glob
+from pathlib import Path
 from testlib import cmk_path
 
 
 def is_executable(path):
-    return os.path.isfile(path) and os.access(path, os.X_OK)
+    return path.is_file() and os.access(path, os.X_OK)
 
 
 def is_not_executable(path):
-    return os.path.isfile(path) and not os.access(path, os.X_OK)
+    return path.is_file() and not os.access(path, os.X_OK)
 
 
-permissions = [
+_GLOBAL_EXCLUDES = [
+    ".gitignore",
+    ".f12",
+]
+
+_PERMISSIONS = [
     # globbing pattern                check function,   excludes
     ('active_checks/*', is_executable, ['Makefile', 'check_mkevents.cc']),
     ('agents/special/agent_*', is_executable, []),
@@ -43,9 +47,13 @@ permissions = [
 
 
 def test_permissions():
-    for pattern, check_func, excludes in permissions:
-        for f in glob.glob("%s/%s" % (cmk_path(), pattern)):
-            if f.split('/')[-1] in excludes:
+    for pattern, check_func, excludes in _PERMISSIONS:
+        git_dir = Path(cmk_path())
+        for f in git_dir.glob(pattern):
+            if not f.is_file():
+                continue
+
+            if f.name in excludes or f.name in _GLOBAL_EXCLUDES:
                 continue
             assert check_func(f), "%s has wrong permissions (%r)" % \
                                                         (f, check_func)

@@ -100,11 +100,11 @@ test-shellcheck:
 		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
 
 test-unit: $(VENV)
-	$(PYTEST) -T unit git unit
+	$(PYTEST) -T unit unit
 
 # Probably a noteworthy entry for any "obfuscated bash/make/sed contest"...
 list-unit-tests: $(VENV)
-	@$(PYTEST) -T unit git unit --collect-only  `# list tests in tree form` | \
+	@$(PYTEST) -T unit unit --collect-only  `# list tests in tree form` | \
 	  grep '^\(<Module\|  <Function\) '         `# remove docstring lines` | \
 	  sed 's/\[.*\]>/>/'                        `# remove test parameters` | \
 	  uniq                                      `# keep only one line from parameterized tests` | \
@@ -122,5 +122,5 @@ test-unit-one-by-one: $(VENV)
 # TODO: We should perhaps use the pytest --cov/--cov-report options, which the
 # pytest-cov plugin package adds to pyttest.
 test-unit-coverage-html: $(VENV)
-	$(COVERAGE) run --rcfile=.coveragerc_unit -m pytest -T unit git unit
+	$(COVERAGE) run --rcfile=.coveragerc_unit -m pytest -T unit unit
 	$(COVERAGE) html

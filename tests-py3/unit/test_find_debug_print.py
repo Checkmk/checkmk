@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # encoding: utf-8
 
 import os
@@ -59,6 +58,9 @@ def test_find_debug_code(path):
         for filename in filenames:
             file_path = "%s/%s" % (dirpath, filename)
             if [folder for folder in exclude_folders if folder in file_path]:
+                continue
+
+            if file_path.endswith((".pyc", ".whl", ".tar.gz")):
                 continue
 
             for nr, line in enumerate(open(file_path)):

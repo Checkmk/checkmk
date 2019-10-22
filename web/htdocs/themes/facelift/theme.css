@@ -1042,6 +1042,11 @@ table.cmc_stats, table.mkeventd_performance, table.performance {
 #snapin_nagios_legacy a.link, #snapin_nagios_legacy body.main .popup_menu span.link, body.main .popup_menu #snapin_nagios_legacy span.link {
   padding: 8px 0px; }
 
+#snapin_nagvis_maps a b {
+  padding: 0 2px; }
+#snapin_nagvis_maps ul li a {
+  font-size: 11px; }
+
 #snapin_wato_foldertree table {
   border-spacing: 16px; }
 

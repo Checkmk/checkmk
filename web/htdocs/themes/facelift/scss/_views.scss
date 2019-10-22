@@ -241,7 +241,7 @@ div.floatfilter {
   .content {
     display: block;
     width: 100%;
-    padding: 2px 8px;
+    padding: 2px 6px;
     box-sizing: border-box;
 
     select {
@@ -250,6 +250,7 @@ div.floatfilter {
 
     .checkbox {
       margin: 3px 0;
+      display: inline-block;
 
       &:not(:last-of-type) {
 	margin-right: 8px;
@@ -337,7 +338,7 @@ div.floatfilter {
   &.single input.neg[type=text] {
     position: relative;
     top: -2px;
-    width: 200px;
+    width: 237px;
   }
 }
 

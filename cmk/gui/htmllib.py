@@ -2281,7 +2281,6 @@ class html(HTMLGenerator):
     # Choices is a list pairs of (key, title). They keys of the choices
     # and the default value must be of type None, str or unicode.
     def dropdown(self, varname, choices, deflt='', ordered=False, **attrs):
-
         current = self.get_unicode_input(varname, deflt)
         error = self.user_errors.get(varname)
         if varname:

@@ -43,7 +43,8 @@ PACKAGE_GOOGLETEST := $(abs_top_srcdir)/omd/packages/googletest
 
 .PHONY: unit-test build_googletest tidy iwyu cppcheck cppcheck-xml documentation
 
-bin_PROGRAMS = unixcat test_neb
+bin_PROGRAMS = unixcat
+noinst_PROGRAMS = test_neb
 
 unixcat_SOURCES = unixcat.cc
 unixcat_LDADD = -lpthread

@@ -1,0 +1,13 @@
+Title: New plugin: Couchbase Nodes Memory and CPU
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1571841979
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+A new plugin is introduced monitoring the Couchbase nodes' memory usage and
+CPU utilization. Please configure the Couchbase special agent to discover these
+services.

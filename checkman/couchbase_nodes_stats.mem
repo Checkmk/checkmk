@@ -1,0 +1,15 @@
+title: Memory usage of couchbase nodes
+agents: special
+catalog: app/couchbase
+license: GPL
+distribution: check_mk
+description:
+ This service monitors the nodes memory usage.
+ Levels caon be configured using the WATO rule
+ "Main memory usage of devices with modules".
+
+inventory:
+ One check per host in the output is created automatically.
+
+item:
+ The item is the name of the current node as provided by the agent.

@@ -48,7 +48,6 @@ SECTION_KEYS_INFO = (
 )
 
 STATS_KEYS_NODE = (
-    "systemStats",
     "ports",
     "services",
     "ops",
@@ -183,6 +182,12 @@ def _get_info_dict(node_name, node):
     return data
 
 
+def _get_stats_dict(node_name, node):
+    data = node.get("systemStats", {})
+    data.update(name=node_name)
+    return data
+
+
 def sections_node(client):
     pool = client.get_pool()
     node_list = [(node['hostname'].split(':')[0], node) for node in pool.get('nodes', ())]
@@ -191,6 +196,9 @@ def sections_node(client):
         "couchbase_nodes_uptime": ["%s %s" % (node['uptime'], name) for name, node in node_list],
         "couchbase_nodes_info:sep(0)": [
             json.dumps(_get_info_dict(name, node)) for name, node in node_list
+        ],
+        "couchbase_nodes_stats:sep(0)": [
+            json.dumps(_get_stats_dict(name, node)) for name, node in node_list
         ],
     }
 

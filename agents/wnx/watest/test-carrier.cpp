@@ -1,18 +1,16 @@
 // carrier test
-// 
+//
 
 #include "pch.h"
 
+#include "carrier.h"
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
+#include "logger.h"
+#include "read_file.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
-
-#include "logger.h"
-
-#include "carrier.h"
-#include "read_file.h"
 
 namespace cma::carrier {  // to become friendly for wtools classes
 TEST(PlayerTest, Pipe) {
@@ -108,7 +106,8 @@ TEST(CarrierTest, EstablishShutdown) {
     internal_port = BuildPortName(kCarrierAsioName, "127.0.0.1");  // port here
     ret = cc.establishCommunication(internal_port);
     EXPECT_FALSE(ret);
-    ret = cc.sendData("a", 11, "aaa", 3);
+    std::string_view s = "Output from the asio";
+    ret = cc.sendData("a", 11, s.data(), s.length());
     EXPECT_FALSE(ret);
 
     // bad port
@@ -120,7 +119,8 @@ TEST(CarrierTest, EstablishShutdown) {
     internal_port = BuildPortName(kCarrierNullName, "???");  // port here
     ret = cc.establishCommunication(internal_port);
     EXPECT_TRUE(ret);
-    ret = cc.sendData("a", 11, "aaa", 3);
+    s = "Output from the null";
+    ret = cc.sendData("a", 11, s.data(), s.length());
     EXPECT_TRUE(ret);
     cc.shutdownCommunication();
 
@@ -128,7 +128,8 @@ TEST(CarrierTest, EstablishShutdown) {
     internal_port = BuildPortName(kCarrierDumpName, "???");  // port here
     ret = cc.establishCommunication(internal_port);
     EXPECT_TRUE(ret);
-    ret = cc.sendData("a", 11, "aaa", 3);
+    s = "Output from the dump";
+    ret = cc.sendData("a", 11, s.data(), s.length());
     EXPECT_TRUE(ret);
     cc.shutdownCommunication();
 

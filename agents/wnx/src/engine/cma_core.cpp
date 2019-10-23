@@ -20,6 +20,52 @@
 #include "windows_service_api.h"
 
 namespace cma {
+namespace ntfs {
+bool G_SimulateBadRemove = false;
+
+static bool WindowsDeleteFile(const std::filesystem::path& Target,
+                              std::error_code& Ec) noexcept {
+    auto ret = ::DeleteFileW(Target.wstring().c_str());
+    if (ret) {
+        Ec.clear();
+        return true;
+    }
+
+    // this is virtually impossible
+    XLOG::d(
+        "File '{}' can't be removed Also with Windows RemoveFile, this is not normal",
+        Target.u8string());
+
+    auto err = GetLastError();
+    if (err == 2 || err == 0)
+        Ec.clear();  // this is to simulate behavior of the fs::remove
+    else
+        Ec.assign(err, std::generic_category());
+    //
+    return false;
+}
+
+bool Remove(const std::filesystem::path& Target, std::error_code& Ec) noexcept {
+    if (G_SimulateBadRemove) {
+        Ec.assign(1,
+                  std::generic_category());  // situation on the VMWare SCSI HDD
+    } else {
+        const auto result = std::filesystem::remove(Target, Ec);
+        if (result) return true;
+    }
+
+    // false here
+    if (Ec.value() != 1) return false;  // problems with deletion get away
+    XLOG::t(
+        "File '{}' can't be removed with std::filesystem::remove with error 1, try Windows remove",
+        Target.u8string());
+
+    // special case for FS without support Posix mode
+    // this code is hack for old Windows ST libraries
+    return WindowsDeleteFile(Target, Ec);
+}
+}  // namespace ntfs
+
 // we are counting threads in to have control exit/stop/wait
 std::atomic<int> PluginEntry::thread_count_ = 0;
 

@@ -14,6 +14,7 @@
 
 #include "cfg.h"
 #include "cfg_details.h"
+#include "cma_core.h"
 #include "common/cfg_info.h"
 #include "common/object_repo.h"
 #include "common/version.h"

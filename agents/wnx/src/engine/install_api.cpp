@@ -9,6 +9,7 @@
 #include <string>
 
 #include "cfg.h"
+#include "cma_core.h"
 #include "common/wtools.h"  // converts
 #include "logger.h"
 #include "tools/_process.h"  // start process
@@ -120,12 +121,13 @@ bool RmFile(const std::filesystem::path& File) noexcept {
         return true;
     }
 
-    auto ret = fs::remove(File, ec);
+    auto ret = cma::ntfs::Remove(File, ec);
+    if (ret || ec.value() == 0) {  // either deleted or disappeared
+        XLOG::l.i("File '{}'was removed", File.u8string());
+        return true;
+    }
 
-    if (!ret) return RmFileWithRename(File, ec);
-
-    XLOG::l.i("File '{}'was removed", File.u8string());
-    return true;
+    return RmFileWithRename(File, ec);
 }
 
 // MOVE(rename) file with diagnostic

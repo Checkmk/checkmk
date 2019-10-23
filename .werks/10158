@@ -1,0 +1,11 @@
+Title: New plugin: Couchbase nodes uptime
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1571835272
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+You have to set up the special agent couchbase to discover this service.

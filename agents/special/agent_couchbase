@@ -47,7 +47,6 @@ STATS_KEYS_NODE = (
     "ports",
     "recoveryType",
     "services",
-    "uptime",
     "version",
     "ops",
 )
@@ -173,22 +172,29 @@ class CouchbaseClient(object):
         return self._get_suburi("/buckets/%s/stats" % bucket)
 
 
-def section_node(client):
+def sections_node(client):
     pool = client.get_pool()
+    node_list = [(node['hostname'].split(':')[0], node) for node in pool.get('nodes', ())]
+
+    sections = {
+        "couchbase_nodes_uptime": ["%s %s" % (node['uptime'], name) for name, node in node_list]
+    }
 
     data = {}
-    for node in pool.get('nodes', ()):
-        nodename = node['hostname'].split(':')[0]
-        node_data = data.setdefault(nodename, {})
+    for node_name, node in node_list:
+        node_data = data.setdefault(node_name, {})
         for key in STATS_KEYS_NODE:
             node_data[key] = node.get(key, "none")
         for key in STATS_KEYS_INTR:
             node_data[key] = six.text_type(node['interestingStats'][key])
 
-    return [
-        '<<<couchbase_node:sep(0)>>>',
-        json.dumps(data),
-    ]
+    sections["couchbase_node:sep(0)"] = [json.dumps(data)]
+
+    output = []
+    for section_name, section_content in sections.iteritems():
+        output.append('<<<%s>>>' % section_name)
+        output.extend(section_content)
+    return output
 
 
 def section_bucket(client, bucket):
@@ -222,7 +228,7 @@ def main(argv=None):
     client = CouchbaseClient(args.hostname, args.port, args.timeout, args.username, args.password)
 
     try:
-        output = section_node(client)
+        output = sections_node(client)
     except (ValueError, requests.ConnectionError, requests.HTTPError):
         if args.debug:
             raise

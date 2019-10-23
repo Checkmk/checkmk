@@ -176,6 +176,7 @@ catalog_titles = {
         "apache"        : "Apache Webserver",
         "activemq"      : "Apache ActiveMQ",
         "artec"         : "ARTEC",
+        "couchbase"     : "Couchbase",
         "db2"           : "IBM DB2",
         "elasticsearch" : "Elasticsearch",
         "graylog"       : "Graylog",

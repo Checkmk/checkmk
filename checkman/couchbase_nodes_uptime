@@ -1,0 +1,14 @@
+title: Uptime of couchbase nodes
+agents: special
+catalog: app/couchbase
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the nodes uptime. You may provide
+ values for WARN and CRIT in the WATO-rules.
+
+inventory:
+ One service per node is created.
+
+item:
+ The item is the name of the node as provided by the agent.

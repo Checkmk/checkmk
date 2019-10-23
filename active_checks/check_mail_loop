@@ -309,11 +309,12 @@ def fetch_mails():
 
             g_M.login(fetch_user, fetch_pass)
             g_M.select('INBOX', readonly=False) # select INBOX
-            retcode, messages = g_M.search(None, 'NOT', 'DELETED')
-            if retcode == 'OK' and messages[0].strip():
-                for num in messages[0].split(' '):
+            retcode, raw_messages = g_M.search(None, 'NOT', 'DELETED')
+            messages = raw_messages[0].strip()
+            if retcode == 'OK' and messages:
+                for num in messages.split():
                     try:
-                        data = g_M.fetch(num, '(RFC822)')[1]
+                        _type, data = g_M.fetch(num, '(RFC822)')
                         mails[num] = email.message_from_string(data[0][1])
                     except Exception, e:
                         raise Exception('Failed to fetch mail %s (%s). Available messages: %r' % (num, parse_exception(e), messages))
@@ -445,8 +446,8 @@ def cleanup_mailbox():
                 if not response.startswith("+OK"):
                     raise Exception("Response from server: [%s]" % response)
             else:
-                ty = g_M.store(mail_index, '+FLAGS', '\\Deleted')[0]
-                if ty != 'OK':
+                response = g_M.store(mail_index, '+FLAGS', '\\Deleted')
+                if response != 'OK':
                     raise Exception("Response from server: [%s]" % response)
 
         if fetch_proto == 'IMAP':

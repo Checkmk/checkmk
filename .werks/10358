@@ -1,0 +1,12 @@
+Title: check_mail_loop: Fixed exception: Failed to fetch mail NR ('NoneType' object has no attribute '__getitem__')
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p23
+Date: 1571826373
+
+

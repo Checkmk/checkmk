@@ -1,6 +1,6 @@
 LANGUAGES = de ro
 SHELL=/bin/bash -e -o pipefail
-PIPENV=pipenv
+PIPENV=LANG=C PIPENV_VENV_IN_PROJECT=true PIPENV_PIPFILE=../virtual-envs/3.7/Pipfile pipenv
 
 .PHONY: $(LANGUAGES)
 
@@ -42,6 +42,9 @@ cleanup-%:
 	sed -i '/"POT-Creation-Date:/d' $$L/LC_MESSAGES/multisite.po ; \
 	sed -i '/"PO-Revision-Date:/d' $$L/LC_MESSAGES/multisite.po ; \
 	sed -i '/"Last-Translator:/d' $$L/LC_MESSAGES/multisite.po ; \
+
+../virtual-envs/3.7/.venv:
+	$(MAKE) -C $(dir $@) $(notdir $@)
 
 de: ../virtual-envs/3.7/.venv
 	$(MAKE) update-$@

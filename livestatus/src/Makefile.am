@@ -231,7 +231,7 @@ livestatus.o: $(liblivestatus_a_OBJECTS)
 	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup
 	$(RM) NagiosMockup
 
-compile_commands.json: Makefile $(wildcard *.cc *.h)
+compile_commands.json: build_googletest Makefile $(wildcard *.cc *.h)
 	$(MAKE) -C $(top_srcdir) .venv
 	$(PIPENV) --venv
 	$(PIPENV) run compiledb --no-build make

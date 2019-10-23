@@ -80,7 +80,7 @@ $(test_neb_SOURCES): build_googletest
 
 # HACK: Avoid recompilation caused by make's -B flag
 build_googletest:
-	bash -c "make -C $(PACKAGE_GOOGLETEST) build" > /dev/null
+	bash -c "make -C $(PACKAGE_GOOGLETEST) DESTDIR= build" > /dev/null
 
 pkglib_LIBRARIES = liblivestatus.a
 

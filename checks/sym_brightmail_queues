@@ -93,20 +93,9 @@ def check_sym_brightmail_queues(item, params, parsed):
         ("queueSize",        "Queue size"),
         ("queuedMessages",   "Queued messages"),
     ]:
-        warn, crit = params.get(key, (None, None))
         value = data.get(key)
-        if value is None:
-            continue
-
-        infotext = "%s: %s" % (title, value)
-        state = 0
-        if crit is not None and crit >= value:
-            state = 2
-        elif warn is not None and warn >= value:
-            state = 1
-        if state:
-            infotext += " (warn/crit at %s/%s)" % (warn, crit)
-        yield state, infotext
+        if value is not None:
+            yield check_levels_backport(value, None, params.get(key), infoname=title)[:2]
 
 
 check_info["sym_brightmail_queues"] = {
@@ -126,4 +115,5 @@ check_info["sym_brightmail_queues"] = {
                 "2.1.1.8", # queuedMessages
      ]),
      "group"                : "sym_brightmail_queues",
+     "includes": ['backport.include'],
 }

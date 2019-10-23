@@ -44,7 +44,7 @@ cleanup-%:
 	sed -i '/"Last-Translator:/d' $$L/LC_MESSAGES/multisite.po ; \
 
 ../virtual-envs/3.7/.venv:
-	$(MAKE) -C $(dir $@) $(notdir $@)
+	$(MAKE) -C .. virtual-envs/3.7/.venv
 
 de: ../virtual-envs/3.7/.venv
 	$(MAKE) update-$@

@@ -41,6 +41,7 @@
 #include "TableComments.h"
 #include "TableContactGroups.h"
 #include "TableContacts.h"
+#include "TableCrashReports.h"
 #include "TableDowntimes.h"
 #include "TableEventConsoleEvents.h"
 #include "TableEventConsoleHistory.h"
@@ -134,6 +135,7 @@ private:
     TableComments _table_comments;
     TableContactGroups _table_contactgroups;
     TableContacts _table_contacts;
+    TableCrashReports _table_crash_reports;
     TableDowntimes _table_downtimes;
     TableEventConsoleEvents _table_eventconsoleevents;
     TableEventConsoleHistory _table_eventconsolehistory;

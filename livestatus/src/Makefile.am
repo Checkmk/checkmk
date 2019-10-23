@@ -62,6 +62,7 @@ unixcat_LDADD = -lpthread
 test_neb_SOURCES = \
     test/DummyNagios.cc \
     test/test_utilities.cc \
+    test/test_CrashReport.cc \
     test/test_CustomVarsDictFilter.cc \
     test/test_OffsetStringMacroColumn.cc
 $(test_neb_SOURCES): $(ASIO_INCLUDE) $(GOOGLETEST_INCLUDE)
@@ -96,6 +97,7 @@ liblivestatus_a_SOURCES = \
         ContactGroupsColumn.cc \
         ContactGroupsMemberColumn.cc \
         CountAggregator.cc \
+        CrashReport.cc \
         CustomTimeperiodColumn.cc \
         CustomVarsDictColumn.cc \
         CustomVarsDictFilter.cc \
@@ -173,6 +175,7 @@ liblivestatus_a_SOURCES = \
         TableComments.cc \
         TableContactGroups.cc \
         TableContacts.cc \
+        TableCrashReports.cc \
         TableDowntimes.cc \
         TableEventConsole.cc \
         TableEventConsoleEvents.cc \

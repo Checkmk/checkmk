@@ -50,6 +50,7 @@ Store::Store(MonitoringCore *mc)
     , _table_comments(mc)
     , _table_contactgroups(mc)
     , _table_contacts(mc)
+    , _table_crash_reports(mc)
     , _table_downtimes(mc)
     , _table_eventconsoleevents(mc)
     , _table_eventconsolehistory(mc)
@@ -73,6 +74,7 @@ Store::Store(MonitoringCore *mc)
     addTable(_table_comments);
     addTable(_table_contactgroups);
     addTable(_table_contacts);
+    addTable(_table_crash_reports);
     addTable(_table_downtimes);
     addTable(_table_hostgroups);
     addTable(_table_hostsbygroup);

@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
 #include <cstddef>
+#include <filesystem>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -47,6 +48,7 @@ struct NagiosPaths {
     std::string _pnp;
     std::string _mk_inventory;
     std::string _structured_status;
+    std::filesystem::path _crash_reports_path;
     std::string _mk_logwatch;
     std::string _logfile;
     std::string _mkeventd_socket;
@@ -102,6 +104,7 @@ public:
     std::string mkLogwatchPath() override;
     std::string mkInventoryPath() override;
     std::string structuredStatusPath() override;
+    std::filesystem::path crashReportPath() override;
     std::string pnpPath() override;
     std::string historyFilePath() override;
     std::string logArchivePath() override;

@@ -1,3 +1,4 @@
+.syntastic
 *.gcno
 *.pyc
 *.py.*.py

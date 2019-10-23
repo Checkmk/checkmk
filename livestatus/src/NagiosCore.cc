@@ -26,6 +26,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <ctime>
+#include <filesystem>
 #include <memory>
 #include <ostream>
 #include <utility>
@@ -167,6 +168,9 @@ std::string NagiosCore::mkLogwatchPath() { return _paths._mk_logwatch; }
 std::string NagiosCore::mkInventoryPath() { return _paths._mk_inventory; }
 std::string NagiosCore::structuredStatusPath() {
     return _paths._structured_status;
+}
+std::filesystem::path NagiosCore::crashReportPath() {
+    return _paths._crash_reports_path;
 }
 std::string NagiosCore::pnpPath() { return _paths._pnp; }
 std::string NagiosCore::historyFilePath() {

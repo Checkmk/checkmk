@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
+#include <filesystem>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -123,6 +124,7 @@ public:
     virtual std::string mkLogwatchPath() = 0;
     virtual std::string mkInventoryPath() = 0;
     virtual std::string structuredStatusPath() = 0;
+    virtual std::filesystem::path crashReportPath() = 0;
     virtual std::string pnpPath() = 0;
     virtual std::string historyFilePath() = 0;
     virtual std::string logArchivePath() = 0;

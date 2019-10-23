@@ -1,0 +1,14 @@
+Title: Output bits/s with the appropriate SI magnitude
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1571902312
+Class: fix
+
+The interface checks showed very large numbers in the
+legend of PNP4Nagios graphs. Now large values like e.g.
+123456.78 bits/s will be shown as 123.46 kbit/s.
+
+This was a regression introduced with werk #7062.

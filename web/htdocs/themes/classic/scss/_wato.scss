@@ -403,6 +403,13 @@ div#service_container {
     background-position: top left;
     width: 180px;
     height: 140px;
+
+    &.newfolder {
+      opacity: 0.5;
+      font-size: 80px;
+      text-align: center;
+      line-height: 145px;
+    }
 }
 
 .wato div.floatfolder.open {

@@ -525,6 +525,14 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
       text-decoration: underline;
     }
   }
+
+  &.newfolder {
+    opacity: 0.4;
+    color: rgb(220, 220, 220);
+    font-size: 80px;
+    text-align: center;
+    line-height: 145px;
+  }
 }
 
 .wato div.floatfolder div.title a,

@@ -278,6 +278,10 @@ class ModeFolder(WatoMode):
             for subfolder in self._folder.visible_subfolders_sorted_by_title():  # pylint: disable=no-member
                 self._show_subfolder(subfolder)
             html.close_div()
+            html.open_div(class_=["floatfolder", "unlocked", "newfolder"],
+                          onclick="location.href='%s'" % self._folder.url([("mode", "newfolder")]))
+            html.write("+")
+            html.close_div()
             html.div('', class_="folder_foot")
 
     def _show_subfolder(self, subfolder):

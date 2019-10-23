@@ -2328,3 +2328,39 @@ rulespec_registry.register(
         name="special_agents:graylog",
         valuespec=_valuespec_special_agents_graylog,
     ))
+
+
+def _valuespec_special_agents_couchbase():
+    return Dictionary(
+        title=_("Check state of couchbase servers"),
+        help=_("This rule allows to select a couchbase server to monitor as well as "
+               "configure buckets for further checks"),
+        elements=[
+            ("buckets",
+             ListOfStrings(title=_("Bucket names"), help=_("Name of the Buckets to monitor."))),
+            ("timeout",
+             Integer(title=_("Timeout"),
+                     default_value=10,
+                     help=_("Timeout for requests in seconds."))),
+            ("port",
+             Integer(title=_("Port"),
+                     default_value=8091,
+                     help=_("The port that is used for the api call."))),
+            ("authentication",
+             Tuple(title=_("Authentication"),
+                   help=_("The credentials for api calls with authentication."),
+                   elements=[
+                       TextAscii(title=_("Username"), allow_empty=False),
+                       PasswordFromStore(title=_("Password of the user"), allow_empty=False)
+                   ])),
+        ],
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        factory_default=watolib.Rulespec.FACTORY_DEFAULT_UNUSED,
+        group=RulespecGroupDatasourcePrograms,
+        name="special_agents:couchbase",
+        valuespec=_valuespec_special_agents_couchbase,
+    ))

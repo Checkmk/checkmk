@@ -1,0 +1,245 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+"""Checkmk Special Agent Couchbase
+"""
+import sys
+import argparse
+import logging
+import json
+import requests
+import six
+
+import cmk.utils.password_store
+
+cmk.utils.password_store.replace_passwords()
+
+LOGGER = logging.getLogger(__name__)
+
+STATS_KEYS_NODE = (
+    "clusterCompatibility",
+    "clusterMembership",
+    "systemStats",
+    "status",
+    "otpNode",
+    "ports",
+    "recoveryType",
+    "services",
+    "uptime",
+    "version",
+    "ops",
+)
+
+STATS_KEYS_INTR = (
+    "couch_docs_actual_disk_size",
+    "couch_docs_data_size",
+    "couch_spatial_data_size",
+    "couch_spatial_disk_size",
+    "couch_views_actual_disk_size",
+    "couch_views_data_size",
+    "curr_items",
+    "curr_items_tot",
+    "ep_bg_fetched",
+    "get_hits",
+    "ops",
+    "vb_active_num_non_resident",
+)
+
+STATS_KEYS_BUCKET = (
+    "ep_cache_miss_rate",
+    "ep_num_ops_del_meta",
+    "ep_ops_create",
+    "ep_diskqueue_drain",
+    "ep_diskqueue_fill",
+    "ep_bg_fetched",
+    "ep_ops_update",
+    "disk_write_queue",
+    "couch_docs_fragmentation",
+    "couch_views_fragmentation",
+    "ep_mem_high_wat",
+    "ep_mem_low_wat",
+    "mem_total",
+    "mem_free",
+    "ops",
+    "cmd_get",
+    "cmd_set",
+    "vb_active_resident_items_ratio",
+    "vb_active_eject",
+    "vb_active_itm_memory",
+    "vb_active_ops_create",
+    "vb_pending_num",
+    "vb_replica_num",
+    "vb_replica_itm_memory",
+    "curr_items_tot",
+)
+
+
+def parse_arguments(argv):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("-v", "--verbose", action="count", help="Enable verbose logging.")
+    parser.add_argument("--debug", action="store_true", help="Raise python exceptions.")
+    parser.add_argument("-t",
+                        "--timeout",
+                        default=10,
+                        help="Timeout for API-calls in seconds. Default: 10")
+    parser.add_argument("-b",
+                        "--buckets",
+                        default=[],
+                        action='append',
+                        help="Gives a bucket to monitor. Can be used multiple times.")
+    parser.add_argument("-P",
+                        "--port",
+                        default=8091,
+                        help="Gives the port for API-calls. Default: 8091")
+    parser.add_argument("-u",
+                        "--username",
+                        default=None,
+                        help="The username for authentication at the API.")
+    parser.add_argument("-p",
+                        "--password",
+                        default=None,
+                        help="The password for authentication at the API.")
+    parser.add_argument("hostname", help="Host or ip address to contact.")
+
+    return parser.parse_args(argv)
+
+
+def set_up_logging(verbosity):
+
+    fmt = "%(levelname)s: %(message)s"
+    if verbosity >= 2:
+        fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s %(message)s"
+        lvl = logging.DEBUG
+    else:
+        lvl = logging.INFO if verbosity else logging.WARNING
+
+    logging.basicConfig(level=lvl, format=fmt)
+
+    return
+
+
+class CouchbaseClient(object):
+    def __init__(self, host, port, timeout, user, password):
+        self._session = requests.Session()
+        self._timeout = timeout
+        if None not in (user, password):
+            self._session.auth = (user, password)
+        self._base = "http://%s:%s/pools/default" % (host, port)
+
+    def _get_suburi(self, suburi):
+        uri = self._base + suburi
+        LOGGER.debug('request GET %r', uri)
+
+        try:
+            response = self._session.get(uri, timeout=self._timeout)
+            response.raise_for_status()
+        except (requests.ConnectionError, requests.HTTPError):
+            LOGGER.warning('%r could not be reached', uri)
+            raise
+
+        try:
+            return response.json()
+        except ValueError:
+            LOGGER.warning('Invalid response: %r', response)
+            raise
+
+    def get_pool(self):
+        """Gets the pools response"""
+        return self._get_suburi('')
+
+    def get_bucket(self, bucket):
+        return self._get_suburi("/buckets/%s/stats" % bucket)
+
+
+def section_node(client):
+    pool = client.get_pool()
+
+    data = {}
+    for node in pool.get('nodes', ()):
+        nodename = node['hostname'].split(':')[0]
+        node_data = data.setdefault(nodename, {})
+        for key in STATS_KEYS_NODE:
+            node_data[key] = node.get(key, "none")
+        for key in STATS_KEYS_INTR:
+            node_data[key] = six.text_type(node['interestingStats'][key])
+
+    return [
+        '<<<couchbase_node:sep(0)>>>',
+        json.dumps(data),
+    ]
+
+
+def section_bucket(client, bucket):
+    """query server for bucket specific info"""
+    response = client.get_bucket(bucket)
+    try:
+        raw_data = response['op']['samples']
+    except KeyError:
+        LOGGER.warning('Invalid response: %r', response)
+        raise
+
+    out_data = {"name": bucket}
+    for key in STATS_KEYS_BUCKET:
+        if key in raw_data:
+            out_data[key] = raw_data[key]
+
+    return [
+        '<<<couchbase_buckets:sep(0)>>>',
+        json.dumps(out_data),
+    ]
+
+
+def main(argv=None):
+
+    if argv is None:
+        argv = sys.argv[1:]
+
+    args = parse_arguments(argv)
+    set_up_logging(args.verbose)
+
+    client = CouchbaseClient(args.hostname, args.port, args.timeout, args.username, args.password)
+
+    try:
+        output = section_node(client)
+    except (ValueError, requests.ConnectionError, requests.HTTPError):
+        if args.debug:
+            raise
+        return 1
+
+    for bucket in args.buckets:
+        try:
+            output += section_bucket(client, bucket)
+        except (ValueError, KeyError, requests.ConnectionError, requests.HTTPError):
+            if args.debug:
+                raise
+            continue
+
+    output.append('')
+    sys.stdout.write('\n'.join(output))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -70,6 +70,10 @@ bool FindAndPrepareWorkingFolders(AppType Type) {
         case AppType::test:  // only watest
         {
             auto [r, d] = FindAlternateDirs(kRemoteMachine);
+#if 0
+            r = "c:\\z\\m\\check_mk\\artefacts";
+            d = "c:\\z\\m\\check_mk\\artefacts\\ProgramData";
+#endif
             GetCfg().initFolders(L"", r.wstring(), d.wstring());
             break;
         }

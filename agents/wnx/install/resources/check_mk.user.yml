@@ -201,6 +201,7 @@ logwatch:
     
     # sendall: no   # this is MANDATORY
     # vista_api: no # this is RECOMMENDED
+    # max_size: 500000 # default value
 
      # entries in the windows eventlog
     logfile:

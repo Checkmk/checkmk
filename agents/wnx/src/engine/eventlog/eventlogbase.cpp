@@ -2,8 +2,10 @@
 #include "stdafx.h"
 
 #include "eventlogbase.h"
+
 #include "eventlogstd.h"
 #include "eventlogvista.h"
+#include "logger.h"
 
 namespace cma::evl {
 std::unique_ptr<cma::evl::EventLogBase> OpenEvl(const std::wstring &Name,
@@ -45,7 +47,8 @@ std::pair<uint64_t, cma::cfg::EventLevels> ScanEventLog(
 std::pair<uint64_t, std::string> PrintEventLog(EventLogBase &log,
                                                uint64_t previouslyReadId,
                                                cma::cfg::EventLevels level,
-                                               bool HideContext) {
+                                               bool HideContext,
+                                               int64_t max_size) {
     // we must seek past the previously read event - if there was one
     const uint64_t seekPosition =
         previouslyReadId + (cma::cfg::kInitialPos == previouslyReadId ? 0 : 1);
@@ -68,6 +71,11 @@ std::pair<uint64_t, std::string> PrintEventLog(EventLogBase &log,
         lastRecordId = record->recordId();
         auto str = record->stringize(level, HideContext);
         if (!str.empty()) out += str;
+
+        if (max_size > 0 && out.size() > static_cast<size_t>(max_size)) {
+            XLOG::d("Logwatch size have exceeded limit [{}]", max_size);
+            break;
+        }
     }
 
     return {lastRecordId, out};

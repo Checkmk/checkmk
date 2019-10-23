@@ -64,11 +64,14 @@ def eventlog(logtype):
 
 
 def get_last_record(logtype):
-    with eventlog(logtype) as log_handle:
-        oldest = win32evtlog.GetOldestEventLogRecord(log_handle)
-        total = win32evtlog.GetNumberOfEventLogRecords(log_handle)
-        result = oldest + total - 1
-        return result if result >= 0 else 0
+    try:
+        with eventlog(logtype) as log_handle:
+            oldest = win32evtlog.GetOldestEventLogRecord(log_handle)
+            total = win32evtlog.GetNumberOfEventLogRecords(log_handle)
+            result = oldest + total - 1
+            return result if result >= 0 else 0
+    except Exception:
+        return 0
 
 
 def get_log_state(line):

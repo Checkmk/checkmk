@@ -103,9 +103,13 @@ const char* const kWinPerfTimeout = "timeout";        // int
 
 // group "logwatch"
 // root
-const char* const kLogWatchEventSendall = "sendall";     // bool
-const char* const kLogWatchEventVistaApi = "vista_api";  // bool
-const char* const kLogWatchEventLogFile = "logfile";     // string
+const char* const kLogWatchEventSendall = "sendall";                // bool
+const char* const kLogWatchEventVistaApi = "vista_api";             // bool
+const char* const kLogWatchEventMaxSize = "max_size";               // int
+const char* const kLogWatchEventMaxEntries = "max_entries";         // int
+const char* const kLogWatchEventTimeout = "timeout";                // int
+const char* const kLogWatchEventMaxLineLength = "max_line_length";  // int
+const char* const kLogWatchEventLogFile = "logfile";                // string
 
 // Key Words in logwatch.logfile section of the YAML config file
 // example:
@@ -113,13 +117,14 @@ const char* const kLogWatchEventLogFile = "logfile";     // string
 //   - 'Application' : warn
 //                     ^^^^
 constexpr const char* const kLogWatchEvent_ParamWords[] = {
-    "off",   // 0
-    "all",   // 1
-    "warn",  // 2
-    "crit",  // 3
+    "ignore",  // 0
+    "off",     // 1 default
+    "all",     // 2
+    "warn",    // 3
+    "crit",    // 4
 };
 
-const char* const kLogWatchEvent_ParamDefault = kLogWatchEvent_ParamWords[0];
+const char* const kLogWatchEvent_ParamDefault = kLogWatchEvent_ParamWords[1];
 
 const char* const kLogWatchEvent_ContextWords[] = {
     "context",    // 0

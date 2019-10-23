@@ -9,6 +9,7 @@
 #include <string>
 #include <string_view>
 
+#include "cfg_engine.h"
 #include "common/cfg_info.h"
 #include "providers/internal.h"
 #include "section_header.h"
@@ -131,10 +132,15 @@ private:
     size_t default_entry_;
     bool send_all_;
     bool vista_api_;
+    int64_t max_size_ = cma::cfg::logwatch::kMaxSize;
+    int64_t max_line_length_ = cma::cfg::logwatch::kMaxLineLength;
+    int64_t max_entries_ = cma::cfg::logwatch::kMaxEntries;
+    int64_t timeout_ = cma::cfg::logwatch::kTimeout;
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class LogWatchEventTest;
-    FRIEND_TEST(LogWatchEventTest, Base);
+    FRIEND_TEST(LogWatchEventTest, ConfigLoad);
     FRIEND_TEST(LogWatchEventTest, TestDefaultEntry);
+    FRIEND_TEST(LogWatchEventTest, CheckMakeBody);
 #endif
 };
 
@@ -168,7 +174,8 @@ void AddConfigEntry(StateVector& States, const LogWatchEntry&,
                     bool ResetToNull);
 
 // returns output from log and set value validity
-std::string ReadDataFromLog(bool VistaApi, State& St, bool& LogExists);
+std::string ReadDataFromLog(bool vista_api, State& state, bool& log_exists,
+                            int64_t max_size);
 
 // used to check presence of some logs in registry
 bool IsEventLogInRegistry(const std::string Name);

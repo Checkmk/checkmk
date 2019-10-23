@@ -30,13 +30,13 @@ static bool WindowsDeleteFile(const std::filesystem::path& Target,
         Ec.clear();
         return true;
     }
+    auto err = GetLastError();
 
     // this is virtually impossible
     XLOG::d(
         "File '{}' can't be removed Also with Windows RemoveFile, this is not normal",
         Target.u8string());
 
-    auto err = GetLastError();
     if (err == 2 || err == 0)
         Ec.clear();  // this is to simulate behavior of the fs::remove
     else
@@ -1242,6 +1242,7 @@ void RemoveDuplicatedPlugins(PluginMap& Out, bool CheckExists) {
 
 namespace provider::config {
 const bool G_AsyncPluginWithoutCacheAge_RunAsync = true;
+const bool G_SetLogwatchPosToEnd = true;
 
 bool IsRunAsync(const PluginEntry& plugin) noexcept {
     auto run_async = plugin.async();

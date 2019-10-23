@@ -20,6 +20,7 @@ namespace wtools {  // to become friendly for cma::cfg classes
 
 TEST(Wtools, ScanProcess) {
     using namespace std::chrono;
+    ON_OUT_OF_SCOPE(printf("eof ScanProcess\n"));
     try {
         std::vector<std::string> names;
 
@@ -109,6 +110,7 @@ TEST(Wtools, ScanProcess) {
 }
 
 TEST(Wtools, ConditionallyConvertLowLevel) {
+    ON_OUT_OF_SCOPE(printf("eof CCLL\n"));
     {
         std::vector<uint8_t> v = {0xFE, 0xFE};
         EXPECT_FALSE(wtools::IsVectorMarkedAsUTF16(v));

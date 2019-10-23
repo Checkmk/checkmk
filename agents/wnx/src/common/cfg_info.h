@@ -196,7 +196,7 @@ constexpr std::string_view kMkMsiPathName = "MK_MSI_PATH";
 };  // namespace envs
 
 // internal and stable representation of the [logwatch] event levels
-enum class EventLevels { kOff = -1, kAll = 0, kWarn, kCrit };
+enum class EventLevels { kIgnore = -2, kOff = -1, kAll = 0, kWarn, kCrit };
 
 // #TODO gtest
 // converts from internal and stable representation
@@ -204,12 +204,14 @@ enum class EventLevels { kOff = -1, kAll = 0, kWarn, kCrit };
 constexpr const char* const ConvertLogWatchLevelToString(EventLevels Lvl) {
     switch (Lvl) {
         case EventLevels::kAll:
-            return vars::kLogWatchEvent_ParamWords[1];
-        case EventLevels::kWarn:
             return vars::kLogWatchEvent_ParamWords[2];
-        case EventLevels::kCrit:
+        case EventLevels::kWarn:
             return vars::kLogWatchEvent_ParamWords[3];
+        case EventLevels::kCrit:
+            return vars::kLogWatchEvent_ParamWords[4];
         case EventLevels::kOff:
+            return vars::kLogWatchEvent_ParamWords[1];
+        case EventLevels::kIgnore:
             return vars::kLogWatchEvent_ParamWords[0];
     }
 

@@ -45,8 +45,7 @@ def _get_python_stdlib():
 
 
 # We pull a list of Python's stdlib so we can color it differently.
-_STDLIB = list(_get_python_stdlib())
-_STDLIB.sort()
+_STDLIB = sorted(_get_python_stdlib())
 
 
 def log(msg, *args):

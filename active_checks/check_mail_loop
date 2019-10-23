@@ -51,10 +51,13 @@ def parse_exception(exc):
     return str(exc)
 
 
-def bail_out(rc, s):
+def output_check_result(rc, s, perfdata):
     stxt = ['OK', 'WARN', 'CRIT', 'UNKNOWN'][rc]
-    sys.stdout.write('%s - %s\n' % (stxt, s))
-    sys.exit(rc)
+    output = '%s - %s' % (stxt, s)
+    if perfdata:
+        perfdata_output_entries = ['%s=%s' % (p[0], ';'.join(map(str, p[1:]))) for p in perfdata]
+        output += ' | %s' % " ".join(perfdata_output_entries)
+    sys.stdout.write('%s\n' % output)
 
 
 def usage(msg=None):
@@ -113,178 +116,53 @@ OPTIONS:
     sys.exit(1)
 
 
-short_options = 'dh'
-long_options = [
-    'smtp-server=',
-    'smtp-port=',
-    'smtp-username=',
-    'smtp-password=',
-    'smtp-tls',
-    'imap-tls',
-    'fetch-protocol=',
-    'fetch-server=',
-    'fetch-port=',
-    'fetch-username=',
-    'fetch-password=',
-    'fetch-ssl',
-    'mail-from=',
-    'mail-to=',
-    'warning=',
-    'critical=',
-    'connect-timeout=',
-    'delete-messages',
-    'help',
-    'status-dir=',
-    'status-suffix=',
-    'subject=',
-    "debug",
-]
-
-required_params = [
-    'smtp-server',
-    'fetch-server',
-    'fetch-username',
-    'fetch-password',
-    'mail-from',
-    'mail-to',
-]
-
-try:
-    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError as err:
-    sys.stderr.write("%s\n" % err)
-    sys.exit(1)
-
-opt_debug = False
-smtp_server = None
-smtp_port = None
-smtp_user = None
-smtp_pass = None
-smtp_tls = False
-fetch_proto = 'IMAP'
-fetch_server = None
-fetch_port = None
-fetch_user = None
-fetch_pass = None
-fetch_ssl = False
-imap_tls = False
-mail_from = None
-mail_to = None
-warning = None
-critical = 3600
-conn_timeout = 10
-delete_messages = False
-status_dir = None
-status_suffix = None
-subject = 'Check_MK-Mail-Loop'
-for o, a in opts:
-    if o in ['-h', '--help']:
-        usage()
-    elif o in ['-d', '--debug']:
-        opt_debug = True
-    elif o == '--smtp-server':
-        smtp_server = a
-    elif o == '--smtp-port':
-        smtp_port = int(a)
-    elif o == '--smtp-username':
-        smtp_user = a
-    elif o == '--smtp-password':
-        smtp_pass = a
-    elif o == '--smtp-tls':
-        smtp_tls = True
-    elif o == '--fetch-protocol':
-        fetch_proto = a
-    elif o == '--fetch-server':
-        fetch_server = a
-    elif o == '--fetch-port':
-        fetch_port = int(a)
-    elif o == '--fetch-username':
-        fetch_user = a
-    elif o == '--fetch-password':
-        fetch_pass = a
-    elif o == '--imap-tls':
-        imap_tls = True
-    elif o == '--fetch-ssl':
-        fetch_ssl = True
-    elif o == '--mail-from':
-        mail_from = a
-    elif o == '--mail-to':
-        mail_to = a
-    elif o == '--warning':
-        warning = int(a)
-    elif o == '--critical':
-        critical = int(a)
-    elif o == '--connect-timeout':
-        conn_timeout = int(a)
-    elif o == '--delete-messages':
-        delete_messages = True
-    elif o == '--status-dir':
-        status_dir = a
-    elif o == '--status-suffix':
-        status_suffix = a
-    elif o == '--subject':
-        subject = a
-
-param_names = dict(opts).keys()
-for param_name in required_params:
-    if '--' + param_name not in param_names:
-        usage('The needed parameter --%s is missing' % param_name)
-
-if fetch_proto not in ['IMAP', 'POP3']:
-    usage('The given protocol is not supported.')
-
-if fetch_port is None:
-    if fetch_proto == 'POP3':
-        fetch_port = 995 if fetch_ssl else 110
-    else:
-        fetch_port = 993 if fetch_ssl else 143
-
-if not status_dir:
-    status_dir = os.environ.get('OMD_ROOT')
-    if status_dir:
-        status_dir += '/var/check_mk'
-    else:
-        status_dir = '/tmp'
-if status_suffix:
-    status_path = '%s/check_mail_loop.%s.status' % (status_dir, status_suffix)
-else:
-    status_path = '%s/check_mail_loop.status' % (status_dir)
-
-socket.setdefaulttimeout(conn_timeout)
-
-g_expected = {}
-g_mails = {}
-g_obsolete = {}
-g_M = None
+class FetchMailsError(Exception):
+    pass
 
 
-def load_expected_mails():
+class SendMailError(Exception):
+    pass
+
+
+class CleanupMailboxError(Exception):
+    pass
+
+
+class ForwardToECError(Exception):
+    pass
+
+
+def load_expected_mails(status_path):
     try:
+        expected_mails = {}
         for line in open(status_path):
             ts, key = line.rstrip().split(' ', 1)
-            g_expected[ts + '-' + key] = (int(ts), int(key))
+            expected_mails[ts + '-' + key] = (int(ts), int(key))
+        return expected_mails
     except IOError:
-        pass  # Skip errors on not existing file
+        # Skip errors on not existing file
+        return {}
 
 
-def add_expected_msg(ts, key):
-    g_expected[str(ts) + '-' + str(key)] = (int(ts), key)
+def add_expected_msg(ts, key, expected_mails):
+    expected_mails[str(ts) + '-' + str(key)] = (int(ts), key)
 
 
-def save_expected_mails():
+def save_expected_mails(expected_mails, status_path):
     lines = []
-    for ts, key in g_expected.values():
+    for ts, key in expected_mails.values():
         lines.append('%d %s' % (ts, key))
     open(status_path, 'w').write('\n'.join(lines) + '\n')
 
 
-def add_starttls_support(self, keyfile=None, certfile=None):
+def add_starttls_support(self, conn_timeout):
     import ssl
     name = "STARTTLS"
     typ, dat = self._simple_command(name)
     if typ != 'OK':
         raise self.error(dat[-1])
 
+    socket.setdefaulttimeout(conn_timeout)
     self.sock = ssl.wrap_socket(self.sock)
     self.file = self.sock.makefile()
 
@@ -295,13 +173,16 @@ def add_starttls_support(self, keyfile=None, certfile=None):
     self.capabilities = tuple(self.untagged_responses[cap][-1].upper().split())
 
 
-def fetch_mails():
+def fetch_mails(fetch_server, fetch_port, fetch_user, fetch_pass, fetch_ssl, imap_tls, conn_timeout,
+                subject, delete_messages, expected_mails):
     global g_M
-    if not g_expected:
-        return  # not expecting any mail, do not check for mails
 
-    mails = {}
+    if not expected_mails:
+        # not expecting any mail, do not check for mails
+        return {}, {}
+
     try:
+        mails = {}
         if fetch_proto == 'POP3':
             # Get mails from POP3 mailbox
             fetch_class = poplib.POP3_SSL if fetch_ssl else poplib.POP3
@@ -325,7 +206,7 @@ def fetch_mails():
                 # we are going to implement our own version
                 imaplib.Commands.update({"STARTTLS": ("NONAUTH")})
                 g_M = imaplib.IMAP4(fetch_server, fetch_port)
-                add_starttls_support(g_M)
+                add_starttls_support(g_M, conn_timeout)
             else:
                 g_M = fetch_class(fetch_server, fetch_port)
 
@@ -342,6 +223,8 @@ def fetch_mails():
                         raise Exception('Failed to fetch mail %s (%s). Available messages: %r' %
                                         (num, parse_exception(e), messages))
 
+        obsolete_mails = {}
+        fetched_mails = {}
         # Now filter out the messages for this check
         pattern = re.compile(r'(?:Re: |WG: )?%s ([^\s]+) ([^\s]+)' % subject)
         for index, msg in mails.items():
@@ -358,21 +241,23 @@ def fetch_mails():
                     # use current time as fallback where no Received header could be found
                     rx_ts = int(time.time())
 
-                if "%s-%s" % (ts, key) not in g_expected:
+                if "%s-%s" % (ts, key) not in expected_mails:
                     # Delete any "Check_MK-Mail-Loop" messages older than 24 hours, even if they are not in our list
                     if delete_messages and int(time.time()) - rx_ts > 24 * 3600:
-                        g_obsolete[ts + '-' + key] = (index, rx_ts)
+                        obsolete_mails[ts + '-' + key] = (index, rx_ts)
                     continue
 
-                g_mails[ts + '-' + key] = (index, rx_ts)
+                fetched_mails[ts + '-' + key] = (index, rx_ts)
+        return obsolete_mails, fetched_mails
 
     except Exception as e:
         if opt_debug:
             raise
-        bail_out(3, 'Failed to check for mails: %s' % parse_exception(e))
+        raise FetchMailsError('Failed to check for mails: %s' % parse_exception(e))
 
 
-def send_mail():
+def send_mail(mail_from, mail_to, subject, smtp_server, smtp_port, smtp_user, smtp_pass, smtp_tls,
+              expected_mails):
     now = time.time()
     key = random.randint(1, 1000)
 
@@ -391,14 +276,15 @@ def send_mail():
         S.sendmail(mail_from, mail_to, mail.as_string())
         S.quit()
 
-        add_expected_msg(now, key)
+        add_expected_msg(now, key, expected_mails)
+
     except Exception as e:
         if opt_debug:
             raise
-        bail_out(3, 'Failed to send mail: %s' % parse_exception(e))
+        raise SendMailError('Failed to send mail: %s' % parse_exception(e))
 
 
-def check_mails():
+def check_mails(warning, critical, expected_mails, fetched_mails):
     state = 0
     perfdata = []
     output = []
@@ -410,9 +296,9 @@ def check_mails():
     now = time.time()
 
     # Loop all expected mails and check whether or not they have been received
-    for ident, (send_ts, _unused_key) in g_expected.items():
-        if ident in g_mails:
-            recv_ts = g_mails[ident][1]
+    for ident, (send_ts, _unused_key) in sorted(expected_mails.items()):
+        if ident in fetched_mails:
+            recv_ts = fetched_mails[ident][1]
 
             if duration is None:
                 duration = recv_ts - send_ts
@@ -421,12 +307,13 @@ def check_mails():
 
             if critical is not None and duration >= critical:
                 state = 2
-                output.append(' (>= %d)' % critical)
             elif warning is not None and duration >= warning:
                 state = max(state, 1)
-                output.append(' (>= %d)' % warning)
 
-            del g_expected[ident]  # remove message from expect list
+            if state:
+                output.append(' (warn/crit at %s/%s)' % (warning, critical))
+
+            del expected_mails[ident]  # remove message from expect list
             num_received += 1
             # FIXME: Also remove older mails which have not yet been seen?
 
@@ -434,7 +321,7 @@ def check_mails():
             # drop expecting messages when older than critical threshold,
             # but keep waiting for other mails which have not yet reached it
             if now - send_ts >= critical:
-                del g_expected[ident]
+                del expected_mails[ident]
                 num_lost += 1
                 state = 2
             else:
@@ -453,20 +340,20 @@ def check_mails():
     if num_lost:
         output.append('Lost: %d (Did not arrive within %d seconds)' % (num_lost, critical))
 
-    if num_pending > 1:
+    if num_pending:
         output.append('Currently waiting for %d mails' % num_pending)
 
-    return state, output, perfdata
+    return state, ", ".join(output), perfdata
 
 
-def cleanup_mailbox():
+def cleanup_mailbox(obsolete_mails, fetched_mails):
     if not g_M:
         return  # do not deal with mailbox when none sent yet
 
     try:
         # Do not delete all messages in the inbox. Only the ones which were
         # processed before! In the meantime there might be occured new ones.
-        for mail_index, _unused_recv_ts in g_mails.values() + g_obsolete.values():
+        for mail_index, _unused_recv_ts in fetched_mails.values() + obsolete_mails.values():
             if fetch_proto == 'POP3':
                 response = g_M.dele(mail_index + 1)
                 if not response.startswith("+OK"):
@@ -478,10 +365,11 @@ def cleanup_mailbox():
 
         if fetch_proto == 'IMAP':
             g_M.expunge()
+
     except Exception as e:
         if opt_debug:
             raise
-        bail_out(2, 'Failed to delete mail: %s' % parse_exception(e))
+        raise CleanupMailboxError('Failed to delete mail: %s' % parse_exception(e))
 
 
 def close_mailbox():
@@ -494,35 +382,226 @@ def close_mailbox():
         g_M.logout()
 
 
-def main():
+g_M = None
+opt_debug = False
+fetch_proto = 'IMAP'
+
+
+def parse_arguments(sys_args):
+    global g_M
+    global opt_debug
+    global fetch_proto
+
+    if sys_args is None:
+        sys_args = sys.argv[1:]
+
+    short_options = 'dh'
+    long_options = [
+        'smtp-server=',
+        'smtp-port=',
+        'smtp-username=',
+        'smtp-password=',
+        'smtp-tls',
+        'imap-tls',
+        'fetch-protocol=',
+        'fetch-server=',
+        'fetch-port=',
+        'fetch-username=',
+        'fetch-password=',
+        'fetch-ssl',
+        'mail-from=',
+        'mail-to=',
+        'warning=',
+        'critical=',
+        'connect-timeout=',
+        'delete-messages',
+        'help',
+        'status-dir=',
+        'status-suffix=',
+        'subject=',
+        "debug",
+    ]
+
+    required_params = [
+        'smtp-server',
+        'fetch-server',
+        'fetch-username',
+        'fetch-password',
+        'mail-from',
+        'mail-to',
+    ]
+
+    try:
+        opts, _args = getopt.getopt(sys_args, short_options, long_options)
+    except getopt.GetoptError as err:
+        sys.stderr.write("%s\n" % err)
+        sys.exit(1)
+
+    smtp_server = None
+    smtp_port = None
+    smtp_user = None
+    smtp_pass = None
+    smtp_tls = False
+    fetch_server = None
+    fetch_port = None
+    fetch_user = None
+    fetch_pass = None
+    fetch_ssl = False
+    imap_tls = False
+    mail_from = None
+    mail_to = None
+    warning = None
+    critical = 3600
+    conn_timeout = 10
+    delete_messages = False
+    status_dir = None
+    status_suffix = None
+    subject = 'Check_MK-Mail-Loop'
+
+    for o, a in opts:
+        if o in ['-h', '--help']:
+            usage()
+        elif o in ['-d', '--debug']:
+            opt_debug = True
+        elif o == '--smtp-server':
+            smtp_server = a
+        elif o == '--smtp-port':
+            smtp_port = int(a)
+        elif o == '--smtp-username':
+            smtp_user = a
+        elif o == '--smtp-password':
+            smtp_pass = a
+        elif o == '--smtp-tls':
+            smtp_tls = True
+        elif o == '--fetch-protocol':
+            fetch_proto = a
+        elif o == '--fetch-server':
+            fetch_server = a
+        elif o == '--fetch-port':
+            fetch_port = int(a)
+        elif o == '--fetch-username':
+            fetch_user = a
+        elif o == '--fetch-password':
+            fetch_pass = a
+        elif o == '--imap-tls':
+            imap_tls = True
+        elif o == '--fetch-ssl':
+            fetch_ssl = True
+        elif o == '--mail-from':
+            mail_from = a
+        elif o == '--mail-to':
+            mail_to = a
+        elif o == '--warning':
+            warning = int(a)
+        elif o == '--critical':
+            critical = int(a)
+        elif o == '--connect-timeout':
+            conn_timeout = int(a)
+        elif o == '--delete-messages':
+            delete_messages = True
+        elif o == '--status-dir':
+            status_dir = a
+        elif o == '--status-suffix':
+            status_suffix = a
+        elif o == '--subject':
+            subject = a
+
+    param_names = dict(opts).keys()
+    for param_name in required_params:
+        if '--' + param_name not in param_names:
+            usage('The needed parameter --%s is missing' % param_name)
+
+    if fetch_proto not in ['IMAP', 'POP3']:
+        usage('The given protocol is not supported.')
+
+    if fetch_port is None:
+        if fetch_proto == 'POP3':
+            fetch_port = 995 if fetch_ssl else 110
+        else:
+            fetch_port = 993 if fetch_ssl else 143
+
+    if not status_dir:
+        status_dir = os.environ.get('OMD_ROOT')
+        if status_dir:
+            status_dir += '/var/check_mk'
+        else:
+            status_dir = '/tmp'
+
+    if status_suffix:
+        status_path = '%s/check_mail_loop.%s.status' % (status_dir, status_suffix)
+    else:
+        status_path = '%s/check_mail_loop.status' % (status_dir)
+
+    return (
+        smtp_server,
+        smtp_port,
+        smtp_user,
+        smtp_pass,
+        smtp_tls,
+        fetch_server,
+        fetch_port,
+        fetch_user,
+        fetch_pass,
+        fetch_ssl,
+        imap_tls,
+        mail_from,
+        mail_to,
+        warning,
+        critical,
+        conn_timeout,
+        delete_messages,
+        status_path,
+        subject,
+    )
+
+
+def main(sys_args=None):
+    smtp_server, smtp_port, smtp_user, smtp_pass, smtp_tls, fetch_server, fetch_port,\
+        fetch_user, fetch_pass, fetch_ssl, imap_tls, mail_from, mail_to, warning,\
+        critical, conn_timeout, delete_messages, status_path, subject = parse_arguments(sys_args)
+
     # Enable showing protocol messages of imap for debugging
-    if opt_debug:
+    if fetch_proto == 'IMAP' and opt_debug:
         imaplib.Debug = 4
 
-    load_expected_mails()
+    try:
+        expected_mails = load_expected_mails(status_path)
 
-    fetch_mails()
-    send_mail()
+        obsolete_mails, fetched_mails = fetch_mails(fetch_server, fetch_port, fetch_user,
+                                                    fetch_pass, fetch_ssl, imap_tls, conn_timeout,
+                                                    subject, delete_messages, expected_mails)
 
-    state, output, perfdata = check_mails()
+        send_mail(mail_from, mail_to, subject, smtp_server, smtp_port, smtp_user, smtp_pass,
+                  smtp_tls, expected_mails)
 
-    if delete_messages:
-        cleanup_mailbox()
-    close_mailbox()
+        state, output, perfdata = check_mails(warning, critical, expected_mails, fetched_mails)
 
-    save_expected_mails()
+        if delete_messages:
+            cleanup_mailbox(obsolete_mails, fetched_mails)
 
-    sys.stdout.write(', '.join(output))
-    if perfdata:
-        sys.stdout.write(
-            ' | %s' % (' '.join(['%s=%s' % (p[0], ';'.join(map(str, p[1:]))) for p in perfdata])))
-    sys.stdout.write('\n')
-    sys.exit(state)
+        save_expected_mails(expected_mails, status_path)
+
+        return state, output, perfdata
+
+    except FetchMailsError as e:
+        return 3, str(e), None
+
+    except SendMailError as e:
+        return 3, str(e), None
+
+    except CleanupMailboxError as e:
+        return 2, str(e), None
+
+    except Exception as e:
+        if opt_debug:
+            raise
+        return 2, 'Unhandled exception: %s' % parse_exception(e), None
+
+    finally:
+        close_mailbox()
 
 
-try:
-    main()
-except Exception as e:
-    if opt_debug:
-        raise
-    bail_out(2, 'Unhandled exception: %s' % parse_exception(e))
+if __name__ == "__main__":
+    exitcode, info, perf = main()
+    output_check_result(exitcode, info, perf)
+    sys.exit(exitcode)

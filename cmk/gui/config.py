@@ -1001,7 +1001,11 @@ def theme_choices():
         if not base_dir.exists():
             continue
 
-        for theme_dir in (base_dir / "htdocs" / "themes").iterdir():  # pylint: disable=no-member
+        theme_base_dir = base_dir.joinpath("htdocs", "themes")
+        if not theme_base_dir.exists():  # pylint: disable=no-member
+            continue
+
+        for theme_dir in theme_base_dir.iterdir():  # pylint: disable=no-member
             meta_file = theme_dir / "theme.json"
             if not meta_file.exists():
                 continue

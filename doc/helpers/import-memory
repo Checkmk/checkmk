@@ -204,7 +204,7 @@ class GraphVizFormatter(object):
         #       _spawn("eog", neato_image)
 
         dot_image = "dot-%s.png" % (filename,)
-        os.system("dot -Tpng -o%s %s" % (dot_image, filename))
+        os.system("dot -Tpng -o%s %s" % (dot_image, filename))  # nosec
         log("Wrote %s", os.path.abspath(dot_image))
         _spawn("eog", dot_image)
 

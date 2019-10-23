@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -47,7 +47,7 @@ cmk.utils.password_store.replace_passwords()
 def parse_exception(exc):
     exc = str(exc)
     if exc[0] == '{':
-        exc = "%d - %s" % ast.literal_eval(exc).values()[0]
+        exc = "%d - %s" % list(ast.literal_eval(exc).values())[0]
     return str(exc)
 
 
@@ -156,7 +156,7 @@ def save_expected_mails(expected_mails, status_path):
 
 
 def add_starttls_support(self, conn_timeout):
-    import ssl
+    import ssl  # pylint: disable=import-outside-toplevel
     name = "STARTTLS"
     typ, dat = self._simple_command(name)
     if typ != 'OK':
@@ -353,7 +353,7 @@ def cleanup_mailbox(obsolete_mails, fetched_mails):
     try:
         # Do not delete all messages in the inbox. Only the ones which were
         # processed before! In the meantime there might be occured new ones.
-        for mail_index, _unused_recv_ts in fetched_mails.values() + obsolete_mails.values():
+        for mail_index, _unused_recv_ts in list(fetched_mails.values()) + list(obsolete_mails.values()):
             if fetch_proto == 'POP3':
                 response = g_M.dele(mail_index + 1)
                 if not response.startswith("+OK"):
@@ -506,10 +506,11 @@ def parse_arguments(sys_args):
         elif o == '--subject':
             subject = a
 
-    param_names = dict(opts).keys()
-    for param_name in required_params:
-        if '--' + param_name not in param_names:
-            usage('The needed parameter --%s is missing' % param_name)
+    d_opts = dict(opts)
+    for required_param in required_params:
+        required_opt = "--%s" % required_param
+        if required_opt not in d_opts:
+            usage('The needed parameter %s is missing' % required_opt)
 
     if fetch_proto not in ['IMAP', 'POP3']:
         usage('The given protocol is not supported.')

@@ -828,12 +828,23 @@ def render_graph_pnp(graph_template, translated_metrics):
     # Now create the rrdgraph commands for all metrics - according to the choosen layout
     for metric_name, unit_symbol, commands in graph_metrics:
         rrdgraph_commands += commands
+
         legend_symbol = unit_symbol
         if unit_symbol and unit_symbol[0] == " ":
             legend_symbol = " %s%s" % (legend_scale_symbol, unit_symbol[1:])
+        if legend_symbol == " bits/s":
+            # Use a literal '%s' so that GPRINT outputs values with the appropriate
+            # SI magnitude (e.g. 123456 -> 123.456 k)
+            legend_symbol = " %sbit/s"
+
         for what, what_title in [("AVERAGE", _("average")), ("MAX", _("max")), ("LAST", _("last"))]:
-            rrdgraph_commands += "GPRINT:%%s_LEGSCALED:%%s:\"%%%%8.%dlf%%s %%s\" "  % legend_precision % \
-                        (metric_name, what, legend_symbol, what_title)
+            rrdgraph_commands += "GPRINT:%s_LEGSCALED:%s:\"%%8.%dlf%s %s\" " % (
+                metric_name,
+                what,
+                legend_precision,
+                legend_symbol,
+                what_title,
+            )
         rrdgraph_commands += "COMMENT:\"\\n\" "
 
     # add horizontal rules for warn and crit scalars

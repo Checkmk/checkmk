@@ -19,6 +19,7 @@ import json
 import os
 import subprocess
 import sys
+from typing import Set, Tuple  # pylint: disable=unused-import
 
 # Some constants to help parse /proc/*/smaps
 KiB = 1024
@@ -310,7 +311,7 @@ class MeasureMemory(object):
         return _get_delta(self.mem_before, self.mem_after)
 
 
-seen = set()
+seen = set()  # type: Set[Tuple[str, str]]
 
 
 @contextlib.contextmanager

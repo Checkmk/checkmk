@@ -1,0 +1,17 @@
+Title: Fix distributed update issue related to missing theme directory
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1571822317
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+In a distributed environment, where the central site is based on 1.5 and a remote site
+has already been migrated to 1.6, the configuration synchronization to the 1.6 site
+could remove the local/share/check_mk/web/htdocs/themes directory which lead to the
+following error in the GUI: <tt>Internal error: [Errno 2] No such file or directory: '/omd/sites/stable/local/share/check_mk/web/htdocs/themes'</tt>.
+
+The GUI is now able to handle this situation without failing.

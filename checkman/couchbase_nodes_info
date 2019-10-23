@@ -1,0 +1,23 @@
+title: Information on couchbase nodes
+agents: special
+catalog: app/couchbase
+license: GPL
+distribution: check_mk
+description:
+ This service monitors the health status of a cluster node.
+ The service states for "warmup_state" and "unhealthy_state"
+ can be configured in the WATO rule "Couchbase status".
+ By default the service is CRIT on "unhealthy_state"
+ and OK on any other state.
+
+ It additionally displays whether it is a OTP node, the recovery type,
+ the version and the cluster compatibility.
+
+ It also monitors the cluster membership state, counfigurable in the rule.
+ By default inactive added notes go to WARN and inactive failed notes to CRIT.
+
+inventory:
+ One service per node is created.
+
+item:
+ The item is the name of the node.

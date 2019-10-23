@@ -38,16 +38,19 @@ cmk.utils.password_store.replace_passwords()
 
 LOGGER = logging.getLogger(__name__)
 
-STATS_KEYS_NODE = (
+SECTION_KEYS_INFO = (
     "clusterCompatibility",
     "clusterMembership",
-    "systemStats",
     "status",
     "otpNode",
-    "ports",
     "recoveryType",
-    "services",
     "version",
+)
+
+STATS_KEYS_NODE = (
+    "systemStats",
+    "ports",
+    "services",
     "ops",
 )
 
@@ -172,12 +175,23 @@ class CouchbaseClient(object):
         return self._get_suburi("/buckets/%s/stats" % bucket)
 
 
+def _get_info_dict(node_name, node):
+    data = {"name": node_name}
+    for key in SECTION_KEYS_INFO:
+        if key in node:
+            data[key] = node[key]
+    return data
+
+
 def sections_node(client):
     pool = client.get_pool()
     node_list = [(node['hostname'].split(':')[0], node) for node in pool.get('nodes', ())]
 
     sections = {
-        "couchbase_nodes_uptime": ["%s %s" % (node['uptime'], name) for name, node in node_list]
+        "couchbase_nodes_uptime": ["%s %s" % (node['uptime'], name) for name, node in node_list],
+        "couchbase_nodes_info:sep(0)": [
+            json.dumps(_get_info_dict(name, node)) for name, node in node_list
+        ],
     }
 
     data = {}

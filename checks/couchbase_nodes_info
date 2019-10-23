@@ -1,0 +1,78 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+import json
+
+
+def parse_couchbase_nodes_info(info):
+    parsed = {}
+    for line in info:
+        try:
+            data = json.loads(line[0])
+        except (IndexError, ValueError):
+            continue
+        parsed[data["name"]] = data
+    return parsed
+
+
+@get_parsed_item_data
+def check_couchbase_nodes_status(_item, params, data):
+
+    health = data.get('status')
+    if health is not None:
+        status = 0
+        if health == 'warmup':
+            status = params.get('warmup_state', 0)
+        if health == 'unhealthy':
+            status = params.get('unhealthy_state', 2)
+        yield status, 'Health: %s' % health
+
+    for key, label in (
+        ('otpNode', 'One-time-password node'),
+        ('recoveryType', 'Recovery type'),
+        ('version', 'Version'),
+        ('clusterCompatibility', 'Cluster compatibility'),
+    ):
+        yield 0, "%s: %s" % (label, data.get(key, "unknown"))
+
+    membership = data.get('clusterMembership')
+    if membership is None:
+        return
+
+    status = 0
+    if membership == 'inactiveAdded':
+        status = params.get('inactive_added_state', 1)
+    elif membership == 'inactiveFailed':
+        status = params.get('inactive_added_state', 2)
+    yield status, 'Cluster membership: %s' % membership
+
+
+check_info['couchbase_nodes_info'] = {
+    'parse_function': parse_couchbase_nodes_info,
+    'inventory_function': discover(),
+    'check_function': check_couchbase_nodes_status,
+    'service_description': 'Couchbase %s Info',
+    'group': 'couchbase_status',
+}

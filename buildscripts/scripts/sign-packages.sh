@@ -46,11 +46,13 @@ fi
 
 if ls $TARGET/*.deb >/dev/null 2>&1; then
     echo "+ Sign DEB packages..."
-    echo "$GPG_PASSPHRASE" |
-        dpkg-sig -p \
-            -g '--batch --no-tty --passphrase-fd=0 --passphrase-repeat=0 --pinentry-mode loopback' \
-            --sign builder -k $KEY_ID \
-            $TARGET/*.deb
+    for DEB in $TARGET/*.deb; do
+        echo "$GPG_PASSPHRASE" |
+            dpkg-sig -p \
+                -g '--batch --no-tty --passphrase-fd=0 --passphrase-repeat=0 --pinentry-mode loopback' \
+                --sign builder -k $KEY_ID \
+                "$DEB"
+    done
 
     echo "Verify singed DEB packages..."
     for DEB in $TARGET/*.deb; do

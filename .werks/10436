@@ -1,0 +1,13 @@
+Title: 3ware_disks: Warning status for SMART_FAILURE
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1571831836
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+When the device status is SMART_FAILURE the service status will now be warning instead of critical.
+Before all status other than OK and VERIFYING were critical.

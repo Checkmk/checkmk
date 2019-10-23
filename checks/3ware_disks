@@ -75,6 +75,8 @@ def check_3ware_disks(item, _no_params, info):
                        (status, unit_type, size, size_type, disk_type, model)
             if status in ["OK", "VERIFYING"]:
                 return (0, "disk status is " + infotext)
+            elif status in ["SMART_FAILURE"]:
+                return (1, "disk status is " + infotext)
             return (2, "disk status is " + infotext)
     return (3, "disk %s not found in agent output" % item)
 

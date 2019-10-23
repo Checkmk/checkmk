@@ -15,5 +15,5 @@ item:
  A string containing the unit number of the disk, e.g. {"p0"}.
 
 inventory:
- All logical units which don't have the status NOT-PRESENT are automatically inventorized. All states other than
- {OK} are considered critical.
+ All logical units which don't have the status NOT-PRESENT are automatically inventorized. States like
+ {OK} and {VERIFYING} are status OK. States like {SMART_FAILURE} are status warning. All other states are considered critical.

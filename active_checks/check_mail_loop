@@ -446,7 +446,7 @@ def cleanup_mailbox():
                 if not response.startswith("+OK"):
                     raise Exception("Response from server: [%s]" % response)
             else:
-                response = g_M.store(mail_index, '+FLAGS', '\\Deleted')
+                response = g_M.store(mail_index, '+FLAGS', '\\Deleted')[0]
                 if response != 'OK':
                     raise Exception("Response from server: [%s]" % response)
 

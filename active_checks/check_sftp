@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -30,8 +30,6 @@ import time
 import getopt
 import paramiko
 
-sftp = None
-
 
 def usage():
     sys.stderr.write("""
@@ -56,72 +54,7 @@ OPTIONS:
     sys.exit(1)
 
 
-opt_host = None
-opt_user = None
-opt_pass = None
-opt_key = None
-opt_port = 22
-opt_get_remote = None
-opt_get_local = None
-opt_put_local = None
-opt_put_remote = None
-opt_timestamp = None
-opt_timeout = 10.0
-opt_verbose = False
-
-short_options = 'hv'
-long_options = [
-    'host=',
-    'user=',
-    'secret=',
-    'privat-key',
-    'port=',
-    'get-remote=',
-    'get-local=',
-    'put-local=',
-    'put-remote=',
-    'get-timestamp=',
-    'verbose',
-    'help',
-    'timeout=',
-]
-
-try:
-    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError as err:
-    sys.stderr.write("%s\n" % err)
-    sys.exit(1)
-
-for opt, arg in opts:
-    if opt in ['-h', 'help']:
-        usage()
-    elif opt in ['--host']:
-        opt_host = arg
-    elif opt in ['--user']:
-        opt_user = arg
-    elif opt in ['--secret']:
-        opt_pass = arg
-    elif opt in ['--private-key']:
-        opt_pass = arg
-    elif opt in ['--port']:
-        opt_port = int(arg)
-    elif opt in ['--timeout']:
-        opt_timeout = float(arg)
-    elif opt in ['--put-local']:
-        opt_put_local = arg
-    elif opt in ['--put-remote']:
-        opt_put_remote = arg
-    elif opt in ['--get-local']:
-        opt_get_local = arg
-    elif opt in ['--get-remote']:
-        opt_get_remote = arg
-    elif opt in ['--get-timestamp']:
-        opt_timestamp = arg
-    elif opt in ['-v', '--verbose']:
-        opt_verbose = True
-
-
-def connection():
+def connection(opt_key, opt_host, opt_user, opt_pass, opt_port, opt_timeout):
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     if opt_key is None:
@@ -139,7 +72,8 @@ def connection():
     return client
 
 
-def get_paths(omd_root, working_dir):
+def get_paths(opt_put_local, opt_get_local, opt_put_remote, opt_get_remote, opt_timestamp, omd_root,
+              working_dir):
     paths = {}
     if opt_put_local:
         put_filename = opt_put_local.split("/")[-1]
@@ -166,7 +100,7 @@ def get_paths(omd_root, working_dir):
     return paths
 
 
-def file_available(working_dir):
+def file_available(opt_put_local, opt_put_remote, sftp, working_dir):
     filename = opt_put_local.split("/")[-1]
     return filename in sftp.listdir("%s/%s" % (working_dir, opt_put_remote))
 
@@ -178,53 +112,141 @@ def create_testfile(paths):
             f.write("This is a test by Check_MK\n")
 
 
-def put_file(paths):
+def put_file(sftp, paths):
     sftp.put(paths["local_put_path"], \
              paths["remote_put_path"])
 
 
-def get_file(paths):
+def get_file(sftp, paths):
     sftp.get(paths["remote_get_path"], \
              paths["local_get_path"])
 
 
-def get_timestamp(paths):
+def get_timestamp(sftp, paths):
     return sftp.stat(paths["timestamp_path"])
 
 
-def write_out(state, message):
-    state_readable = ['OK', 'WARN', 'CRIT', 'UNKNOWN'][state]
-    sys.stdout.write('%s - %s\n' % (state_readable, message))
-    sys.exit(state)
+def output_check_result(rc, s):
+    stxt = ['OK', 'WARN', 'CRIT', 'UNKNOWN'][rc]
+    output = '%s - %s' % (stxt, s)
+    sys.stdout.write('%s\n' % output)
 
 
-def main():
-    global sftp
+def parse_arguments(sys_args):
+    if sys_args is None:
+        sys_args = sys.argv[1:]
+
+    opt_host = None
+    opt_user = None
+    opt_pass = None
+    opt_key = None
+    opt_port = 22
+    opt_get_remote = None
+    opt_get_local = None
+    opt_put_local = None
+    opt_put_remote = None
+    opt_timestamp = None
+    opt_timeout = 10.0
+    opt_verbose = False
+
+    short_options = 'hv'
+    long_options = [
+        'host=',
+        'user=',
+        'secret=',
+        'privat-key',
+        'port=',
+        'get-remote=',
+        'get-local=',
+        'put-local=',
+        'put-remote=',
+        'get-timestamp=',
+        'verbose',
+        'help',
+        'timeout=',
+    ]
+
+    try:
+        opts, _args = getopt.getopt(sys_args, short_options, long_options)
+    except getopt.GetoptError as err:
+        sys.stderr.write("%s\n" % err)
+        sys.exit(1)
+
+    for opt, arg in opts:
+        if opt in ['-h', 'help']:
+            usage()
+        elif opt in ['--host']:
+            opt_host = arg
+        elif opt in ['--user']:
+            opt_user = arg
+        elif opt in ['--secret']:
+            opt_pass = arg
+        elif opt in ['--private-key']:
+            opt_pass = arg
+        elif opt in ['--port']:
+            opt_port = int(arg)
+        elif opt in ['--timeout']:
+            opt_timeout = float(arg)
+        elif opt in ['--put-local']:
+            opt_put_local = arg
+        elif opt in ['--put-remote']:
+            opt_put_remote = arg
+        elif opt in ['--get-local']:
+            opt_get_local = arg
+        elif opt in ['--get-remote']:
+            opt_get_remote = arg
+        elif opt in ['--get-timestamp']:
+            opt_timestamp = arg
+        elif opt in ['-v', '--verbose']:
+            opt_verbose = True
+
+    return (
+        opt_host,
+        opt_user,
+        opt_pass,
+        opt_key,
+        opt_port,
+        opt_get_remote,
+        opt_get_local,
+        opt_put_local,
+        opt_put_remote,
+        opt_timestamp,
+        opt_timeout,
+        opt_verbose,
+    )
+
+
+def main(sys_args=None):
+    opt_host, opt_user, opt_pass, opt_key, opt_port, opt_get_remote,\
+        opt_get_local, opt_put_local, opt_put_remote, opt_timestamp,\
+        opt_timeout, opt_verbose = parse_arguments(sys_args)
+
     messages = []
     states = []
     try:  # Establish connection
-        client = connection()
+        client = connection(opt_key, opt_host, opt_user, opt_pass, opt_port, opt_timeout)
         sftp = client.open_sftp()
         messages.append("Login successful")
         states.append(0)
     except Exception:
         if opt_verbose:
             raise
-        write_out(2, "Connection failed!")
+        return 2, "Connection failed!"
 
     # Let's prepare for some other tests...
     omd_root = os.getenv("OMD_ROOT")
     sftp.chdir(".")
     working_dir = sftp.getcwd()
-    paths = get_paths(omd_root, working_dir)
+    paths = get_paths(opt_put_local, opt_get_local, opt_put_remote, opt_get_remote, opt_timestamp,
+                      omd_root, working_dir)
     testfile_remote = True
 
     # .. and eventually execute them!
     try:  # Put a file to the server
         if opt_put_local is not None:
             create_testfile(paths)
-            testfile_remote = file_available(working_dir)
-            put_file(paths)
+            testfile_remote = file_available(opt_put_local, opt_put_remote, sftp, working_dir)
+            put_file(sftp, paths)
             states.append(0)
             messages.append("Successfully put file to SFTP server")
     except Exception:
@@ -235,7 +257,7 @@ def main():
 
     try:  # Get a file from the server
         if opt_get_remote is not None:
-            get_file(paths)
+            get_file(sftp, paths)
             states.append(0)
             messages.append("Successfully got file from SFTP server")
     except Exception:
@@ -246,7 +268,7 @@ def main():
 
     try:  # Get timestamp of a remote file
         if opt_timestamp is not None:
-            file_stats = get_timestamp(paths)
+            file_stats = get_timestamp(sftp, paths)
             states.append(0)
             messages.append("Timestamp of %s is: %s" % \
                             (paths["timestamp_filename"], \
@@ -261,7 +283,10 @@ def main():
     if not testfile_remote:
         sftp.remove(paths["remote_put_path"])
 
-    write_out(max(states), ", ".join(messages))
+    return max(states), ", ".join(messages)
 
 
-main()
+if __name__ == "__main__":
+    exitcode, info = main()
+    output_check_result(exitcode, info)
+    sys.exit(exitcode)

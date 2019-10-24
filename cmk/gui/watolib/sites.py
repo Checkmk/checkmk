@@ -66,6 +66,7 @@ import cmk.gui.watolib.sidebar_reload
 from cmk.gui.watolib.config_domains import (
     ConfigDomainLiveproxy,
     ConfigDomainGUI,
+    ConfigDomainCACertificates,
 )
 from cmk.gui.watolib.automation_commands import (
     AutomationCommand,
@@ -624,7 +625,7 @@ def _create_nagvis_backends(sites_config):
         if site == config.omd_site():
             continue  # skip local site, backend already added by omd
 
-        socket = cmk.gui.sites.encode_socket_for_livestatus(site_id, site)
+        socket = _encode_socket_for_nagvis(site_id, site)
 
         cfg += [
             '',
@@ -636,8 +637,20 @@ def _create_nagvis_backends(sites_config):
         if site.get("status_host"):
             cfg.append('statushost="%s"' % ':'.join(site['status_host']))
 
+        if site["proxy"] is None and is_livestatus_encrypted(site):
+            address_spec = site["socket"][1]
+            tls_settings = address_spec["tls"][1]
+            cfg.append('verify_tls_peer=%d' % tls_settings["verify"])
+            cfg.append('verify_tls_ca_path=%s' % ConfigDomainCACertificates.trusted_cas_file)
+
     store.save_file('%s/etc/nagvis/conf.d/cmk_backends.ini.php' % cmk.utils.paths.omd_root,
                     '\n'.join(cfg))
+
+
+def _encode_socket_for_nagvis(site_id, site):
+    if site["proxy"] is None and is_livestatus_encrypted(site):
+        return "tcp-tls:%s:%d" % site["socket"][1]["address"]
+    return cmk.gui.sites.encode_socket_for_livestatus(site_id, site)
 
 
 # Makes sure, that in distributed mode we monitor only
@@ -659,6 +672,11 @@ def _update_distributed_wato_file(sites):
     # b) If the local site could not be gathered
     if not distributed:  # or not found_local:
         _delete_distributed_wato_file()
+
+
+def is_livestatus_encrypted(site):
+    family_spec, address_spec = site["socket"]
+    return family_spec in ["tcp", "tcp6"] and address_spec["tls"][0] != "plain_text"
 
 
 def create_distributed_wato_file(siteid, is_slave):

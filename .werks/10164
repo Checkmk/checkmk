@@ -1,0 +1,12 @@
+Title: New plugin: Services on Couchbase nodes
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1571920358
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+A new plugin is introduced monitoring the Couchbase nodes' services.
+Please configure the Couchbase special agent to discover these services.

@@ -66,10 +66,9 @@ SECTION_KEYS_ITEMS = (
     "vb_active_num_non_resident",
 )
 
-STATS_KEYS_NODE = (
-    "ports",
-    "services",
-)
+SECTION_KEYS_SERVICES = ("services",)
+
+STATS_KEYS_NODE = ("ports",)
 
 STATS_KEYS_INTR = (
     "couch_docs_actual_disk_size",
@@ -202,6 +201,9 @@ def sections_node(client):
         "couchbase_nodes_uptime": ["%s %s" % (node['uptime'], name) for name, node in node_list],
         "couchbase_nodes_info:sep(0)": [
             _get_dump(name, node, SECTION_KEYS_INFO) for name, node in node_list
+        ],
+        "couchbase_nodes_services:sep(0)": [
+            _get_dump(name, node, SECTION_KEYS_SERVICES) for name, node in node_list
         ],
         "couchbase_nodes_stats:sep(0)": [
             _get_dump(name, node.get("systemStats", {}), SECTION_KEYS_STATS)

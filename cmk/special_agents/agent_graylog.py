@@ -77,7 +77,6 @@ def handle_request(args, sections):
         if section.name not in args.sections:
             continue
 
-        sys.stdout.write("<<<graylog_%s:sep(0)>>>\n" % section.name)
         url = url_base + section.uri
 
         value = handle_response(url, args).json()
@@ -93,11 +92,20 @@ def handle_request(args, sections):
 
         if section.name == "nodes":
             url_nodes = url_base + "/cluster/inputstates"
-
             node_inputstates = handle_response(url_nodes, args).json()
+
+            node_list = []
             for node in node_inputstates:
                 if node in value:
                     value[node].update({"inputstates": node_inputstates[node]})
+                    value = {node: value[node]}
+                    if args.display_node_details is not None:
+                        handle_piggyback(value, args, value[node]["hostname"], section.name)
+                        continue
+                    node_list.append(value)
+
+                if node_list:
+                    handle_output(node_list, section.name, args)
 
         if section.name == "jvm":
             metric_data = value.get("metrics")
@@ -116,7 +124,21 @@ def handle_request(args, sections):
 
             value = new_value
 
-        sys.stdout.write("%s\n" % json.dumps(value))
+        if section.name == "sidecars":
+            sidecars = value.get("sidecars")
+            if sidecars is not None:
+                sidecar_list = []
+                for sidecar in sidecars:
+                    if args.display_sidecar_details is not None:
+                        handle_piggyback(sidecar, args, sidecar["node_name"], section.name)
+                        continue
+                    sidecar_list.append(sidecar)
+
+                if sidecar_list:
+                    handle_output(sidecar_list, section.name, args)
+
+        if section.name not in ["nodes", "sidecars"]:
+            handle_output(value, section.name, args)
 
 
 def handle_response(url, args):
@@ -130,14 +152,36 @@ def handle_response(url, args):
     return response
 
 
+def handle_output(value, section, args):
+    sys.stdout.write("<<<graylog_%s:sep(0)>>>\n" % section)
+    if isinstance(value, list):
+        for entry in value:
+            sys.stdout.write("%s\n" % json.dumps(entry))
+        return
+
+    sys.stdout.write("%s\n" % json.dumps(value))
+
+    for name, param_piggyback in [("nodes", args.display_node_details),
+                                  ("sidecars", args.display_sidecar_details)]:
+
+        if section == name and param_piggyback is not None:
+            sys.stdout.write("<<<<>>>>\n")
+    return
+
+
+def handle_piggyback(value, args, piggyback_name, section):
+    sys.stdout.write("<<<<%s>>>>\n" % piggyback_name)
+    handle_output(value, section, args)
+    return
+
+
 def parse_arguments(argv):
     sections = [
         "alerts", "cluster_stats", "cluster_traffic", "collectors", "failures", "jvm", "messages",
         "nodes", "sidecars"
     ]
 
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(description=__doc__)
 
     parser.add_argument("-u", "--user", default=None, help="Username for graylog login")
     parser.add_argument("-s", "--password", default=None, help="Password for graylog login")
@@ -159,8 +203,18 @@ def parse_arguments(argv):
         "-m",
         "--sections",
         default=sections,
-        help="Comma seperated list of data to query. Possible values: %s (default: all)" %
+        help="""Comma seperated list of data to query. Possible values: %s (default: all)""" %
         ", ".join(sections))
+    parser.add_argument("--display_node_details",
+                        default=None,
+                        choices=('host', 'node'),
+                        help="""You can optionally choose, where the node details are shown.
+        Default is the queried graylog host. Possible values: host, node (default: host)""")
+    parser.add_argument("--display_sidecar_details",
+                        default="host",
+                        choices=('host', 'sidecar'),
+                        help="""You can optionally choose, where the sidecar details are shown.
+        Default is the queried graylog host. Possible values: host, sidecar (default: host)""")
     parser.add_argument("--debug",
                         action="store_true",
                         help="Debug mode: let Python exceptions come through")

@@ -2317,6 +2317,28 @@ def _valuespec_special_agents_graylog():
                  ],
                  allow_empty=False,
              )),
+            ("display_node_details",
+             DropdownChoice(
+                 title=_("Display node details on"),
+                 help=_("The node details can be displayed either on the "
+                        "queried host or the graylog node."),
+                 choices=[
+                     ("host", _("The queried graylog host")),
+                     ("node", _("The graylog node")),
+                 ],
+                 default_value="host",
+             )),
+            ("display_sidecar_details",
+             DropdownChoice(
+                 title=_("Display sidecar details on"),
+                 help=_("The sidecar details can be displayed either on the "
+                        "queried host or the sidecar host."),
+                 choices=[
+                     ("host", _("The queried graylog host")),
+                     ("sidecar", _("The sidecar host")),
+                 ],
+                 default_value="host",
+             )),
         ],
     )
 

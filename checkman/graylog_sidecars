@@ -7,7 +7,8 @@ description:
  With this check you can monitor sidecars of a graylog instance. It outputs the
  state of the sidecar, when the sidecar was last seen and the state of the
  collectors of the sidecar. Collector details can be found in the long output of
- the service.
+ the service. You can choose if the service is shown on the queried graylog
+ host or the sidecar host.
 
  Needs the datasource "Check state of Graylog" to be configured.
 

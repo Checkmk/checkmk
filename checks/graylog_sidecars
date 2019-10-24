@@ -50,31 +50,22 @@ def parse_graylog_sidecars(info):
     parsed = {}
 
     for line in info:
-        data = json.loads(line[0])
-        sidecar_section = data.get("sidecars")
-        if sidecar_section is None:
+        sidecar_data = json.loads(line[0])
+
+        sidecar_nodename = sidecar_data.get("node_name")
+        if sidecar_nodename is None:
             continue
 
-        for sidecar in sidecar_section:
-
-            active = sidecar.get("active")
-            collectors = sidecar.get("node_details", {}).get("status", {}).get("collectors")
-            collector_msg = sidecar.get("node_details", {}).get("status", {}).get("message")
-            last_seen = sidecar.get("last_seen")
-            status = sidecar.get("node_details", {}).get("status", {}).get("status")
-
-            sidecar_nodename = sidecar.get("node_name")
-            if sidecar_nodename is None:
-                continue
-
-            parsed.setdefault(
-                sidecar_nodename, {
-                    "active": active,
-                    "collectors": collectors,
-                    "collector_msg": collector_msg,
-                    "last_seen": last_seen,
-                    "status": status
-                })
+        parsed.setdefault(
+            sidecar_nodename, {
+                "active": sidecar_data.get("active"),
+                "collectors": sidecar_data.get("node_details", {}).get("status",
+                                                                       {}).get("collectors"),
+                "collector_msg": sidecar_data.get("node_details", {}).get("status",
+                                                                          {}).get("message"),
+                "last_seen": sidecar_data.get("last_seen"),
+                "status": sidecar_data.get("node_details", {}).get("status", {}).get("status"),
+            })
 
     return parsed
 

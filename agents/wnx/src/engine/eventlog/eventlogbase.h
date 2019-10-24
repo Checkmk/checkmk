@@ -3,6 +3,7 @@
 
 #include <time.h>
 
+#include <functional>
 #include <memory>
 #include <string>
 
@@ -151,12 +152,16 @@ std::unique_ptr<cma::evl::EventLogBase> OpenEvl(const std::wstring &Name,
 std::pair<uint64_t, cma::cfg::EventLevels> ScanEventLog(
     EventLogBase &log, uint64_t previouslyReadId, cma::cfg::EventLevels level);
 
+using EvlProcessor = std::function<bool(const std::string &)>;
+
 // third call
-std::pair<uint64_t, std::string> PrintEventLog(EventLogBase &log,
-                                               uint64_t previouslyReadId,
-                                               cma::cfg::EventLevels level,
-                                               bool HideContext,
-                                               int64_t max_size);
+uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
+                       cma::cfg::EventLevels level, bool hide_context,
+                       EvlProcessor processor);
+// internal
+inline uint64_t choosePos(uint64_t last_read_pos) {
+    return cma::cfg::kFromBegin == last_read_pos ? 0 : last_read_pos + 1;
+}
 
 }  // namespace cma::evl
 #endif  // EventLogBase_h

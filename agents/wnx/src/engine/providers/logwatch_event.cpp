@@ -143,24 +143,26 @@ void LogWatchEvent::loadConfig() {
     using namespace cma::cfg;
     send_all_ =
         GetVal(groups::kLogWatchEvent, vars::kLogWatchEventSendall, true);
-    vista_api_ =
-        GetVal(groups::kLogWatchEvent, vars::kLogWatchEventVistaApi, true);
+    evl_type_ =
+        GetVal(groups::kLogWatchEvent, vars::kLogWatchEventVistaApi, true)
+            ? EvlType::vista
+            : EvlType::classic;
 
     max_size_ = GetVal(groups::kLogWatchEvent, vars::kLogWatchEventMaxSize,
-                       cma ::cfg::logwatch::kMaxSize);
+                       logwatch::kMaxSize);
     max_entries_ =
         GetVal(groups::kLogWatchEvent, vars::kLogWatchEventMaxEntries,
-               cma ::cfg::logwatch::kMaxEntries);
+               logwatch::kMaxEntries);
     max_line_length_ =
         GetVal(groups::kLogWatchEvent, vars::kLogWatchEventMaxLineLength,
-               cma ::cfg::logwatch::kMaxLineLength);
+               logwatch::kMaxLineLength);
     timeout_ = GetVal(groups::kLogWatchEvent, vars::kLogWatchEventTimeout,
-                      cma ::cfg::logwatch::kTimeout);
+                      logwatch::kTimeout);
 
     if (!cma::evl::g_evt.module() || !cma::evl::g_evt.openLog) {
         XLOG::d(
             "Vista API requested in config, but support in OS is absent. Disabling...");
-        vista_api_ = false;
+        evl_type_ = EvlType::classic;
     }
     const auto cfg = cma::cfg::GetLoadedConfig();
     int count = 0;
@@ -295,8 +297,6 @@ void SaveEventlogOffsets(const std::string& FileName,
 
             auto pos = state.pos_;
 
-            if (pos == cma::cfg::kInitialPos) pos = 0;
-
             ofs << state.name_ << "|" << pos << std::endl;
         }
     }
@@ -321,7 +321,7 @@ void AddLogState(StateVector& states, bool from_config,
     }
 
     // new added
-    uint64_t pos = send_mode == SendMode::all ? 0 : cma::cfg::kInitialPos;
+    uint64_t pos = send_mode == SendMode::all ? 0 : cma::cfg::kFromBegin;
     states.emplace_back(State(log_name, pos, true));
     states.back().in_config_ = from_config;
     XLOG::t("New event log '{}' added with pos {}", log_name, pos);
@@ -344,7 +344,7 @@ void AddConfigEntry(StateVector& States, const LogWatchEntry& Log,
     }
 
     // new added
-    uint64_t pos = ResetToNull ? 0 : cma::cfg::kInitialPos;
+    uint64_t pos = ResetToNull ? 0 : cma::cfg::kFromBegin;
     States.emplace_back(State(Log.name(), pos, true));
     States.back().in_config_ = true;
     States.back().level_ = Log.level();
@@ -368,7 +368,7 @@ std::vector<std::string> GatherEventLogEntriesFromRegistry() {
     return wtools::EnumerateAllRegistryKeys(S_EventLogRegPath);
 }
 
-bool IsEventLogInRegistry(const std::string Name) {
+bool IsEventLogInRegistry(std::string_view Name) {
     auto regs = GatherEventLogEntriesFromRegistry();
     bool found = false;
     for (auto& r : regs) {
@@ -377,29 +377,74 @@ bool IsEventLogInRegistry(const std::string Name) {
     return false;
 }
 
-std::string ReadDataFromLog(bool vista_api, State& state, bool& log_exists,
-                            int64_t max_size) {
-    log_exists = false;
+std::optional<uint64_t> GetLastPos(EvlType type, std::string_view name) {
+    if (type == EvlType::classic && !IsEventLogInRegistry(name)) return {};
 
-    if (!vista_api && !IsEventLogInRegistry(state.name_)) {
+    auto log =
+        cma::evl::OpenEvl(wtools::ConvertToUTF16(name), type == EvlType::vista);
+
+    if (!log) return {};
+    if (!log->isLogValid()) return {};
+
+    return log->getLastRecordId();
+}
+
+std::pair<uint64_t, std::string> DumpEventLog(cma::evl::EventLogBase& log,
+                                              State state, LogWatchLimits lwl) {
+    std::string out;
+    int64_t count = 0;
+    auto start = std::chrono::steady_clock::now();
+    auto pos = cma::evl::PrintEventLog(
+        log, state.pos_, state.level_, state.hide_context_,
+        [&out, lwl, &count, start](const std::string& str) -> bool {
+            if (lwl.max_line_length > 0 &&
+                static_cast<int64_t>(str.length()) >= lwl.max_line_length) {
+                out += str.substr(0, static_cast<size_t>(lwl.max_line_length));
+                out += '\n';
+            } else
+                out += str;
+
+            if (lwl.max_size > 0 &&
+                static_cast<int64_t>(out.length()) >= lwl.max_size) {
+                return false;
+            }
+            ++count;
+            if (lwl.max_entries > 0 && count >= lwl.max_entries) return false;
+
+            if (lwl.timeout > 0) {
+                auto p = std::chrono::steady_clock::now();
+                auto span =
+                    std::chrono::duration_cast<std::chrono::seconds>(p - start);
+                if (span.count() > lwl.timeout) return false;
+            }
+
+            return true;
+        }
+
+    );
+
+    return {pos, out};
+}
+
+std::optional<std::string> ReadDataFromLog(EvlType type, State& state,
+                                           LogWatchLimits lwl) {
+    if (type == EvlType::classic && !IsEventLogInRegistry(state.name_)) {
         // we have to check registry, Windows always return success for
         // OpenLog for any even not existent log, but opens Application
         XLOG::d("Log '{}' not found in registry, try VistaApi ", state.name_);
         return {};
     }
 
-    auto log =
-        cma::evl::OpenEvl(wtools::ConvertToUTF16(state.name_), vista_api);
+    auto log = cma::evl::OpenEvl(wtools::ConvertToUTF16(state.name_),
+                                 type == EvlType::vista);
 
     if (!log) return {};
+    if (!log->isLogValid()) return {};
 
-    log_exists = log->isLogValid();
-    if (!log_exists) return {};
-
-    if (state.pos_ == cma::cfg::kInitialPos) {
+    if (state.pos_ == cma::cfg::kFromBegin) {
         // We just started monitoring this log.
         state.pos_ = log->getLastRecordId();
-        return {};
+        return "";
     }
 
     // The last processed eventlog record will serve as previous state
@@ -410,11 +455,10 @@ std::string ReadDataFromLog(bool vista_api, State& state, bool& log_exists,
     if (worst_state < state.level_) {
         // nothing to report
         state.pos_ = last_pos;
-        return {};
+        return "";
     }
 
-    auto [pos, str] = cma::evl::PrintEventLog(*log, state.pos_, state.level_,
-                                              state.hide_context_, max_size);
+    auto [pos, out] = DumpEventLog(*log, state, lwl);
 
     if (provider::config::G_SetLogwatchPosToEnd && last_pos > pos) {
         XLOG::l.t("Skipping logwatch pos from [{}] to [{}]", pos, last_pos);
@@ -422,33 +466,34 @@ std::string ReadDataFromLog(bool vista_api, State& state, bool& log_exists,
     }
 
     state.pos_ = pos;
-    return str;
+    return out;
 }
 
 LogWatchEntry GenerateDefaultValue() { return LogWatchEntry().withDefault(); }
 
-void UpdateStatesByConfig(StateVector& States,
-                          const std::vector<LogWatchEntry>& ConfigEntries,
-                          const LogWatchEntry* Default) {
-    LogWatchEntry default_entry = Default ? *Default : GenerateDefaultValue();
+bool LoadFromConfig(State& state, const LogWatchEntryVector& entries) noexcept {
+    for (auto& config_entry : entries) {
+        if (cma::tools::IsEqual(state.name_, config_entry.name())) {
+            // found, check that param is not off
+            state.hide_context_ = !config_entry.context();
+            state.level_ = config_entry.level();
+            state.in_config_ = true;
+            return true;
+        }
+    }
+
+    // check default entry
+    return false;
+}
+
+void UpdateStatesByConfig(StateVector& states,
+                          const LogWatchEntryVector& entries,
+                          const LogWatchEntry* dflt) {
+    LogWatchEntry default_entry = dflt ? *dflt : GenerateDefaultValue();
 
     // filtering states
-    for (auto& s : States) {
-        bool found = false;
-
-        for (auto& config_entry : ConfigEntries) {
-            if (cma::tools::IsEqual(s.name_, config_entry.name())) {
-                // found, check that param is not off
-                s.hide_context_ = !config_entry.context();
-                s.level_ = config_entry.level();
-                s.in_config_ = true;
-                found = true;
-                break;
-            }
-        }
-
-        // check default entry
-        if (found) continue;
+    for (auto& s : states) {
+        if (LoadFromConfig(s, entries)) continue;
 
         // not found - attempting to load default value
         s.hide_context_ = !default_entry.context();
@@ -457,6 +502,11 @@ void UpdateStatesByConfig(StateVector& States,
         // if default level isn't off, then we set entry as configured
         if (s.level_ != cfg::EventLevels::kOff) s.in_config_ = true;
     }
+}
+
+LogWatchLimits LogWatchEvent::getLogWatchLimits() const noexcept {
+    // verified by gtest
+    return {max_size_, max_line_length_, max_entries_, timeout_};
 }
 
 std::vector<std::filesystem::path> LogWatchEvent::makeStateFilesTable() const {
@@ -477,47 +527,36 @@ std::vector<std::filesystem::path> LogWatchEvent::makeStateFilesTable() const {
     return statefiles;
 }
 
-std::string GenerateOutputFromStates(bool vista_api, StateVector& states,
-                                     int64_t max_size) {
+std::string GenerateOutputFromStates(EvlType type, StateVector& states,
+                                     LogWatchLimits lwl) {
+    using namespace cma::cfg;
+
     std::string out;
     for (auto& state : states) {
-        if (state.level_ == cma::cfg::EventLevels::kIgnore) {
-            continue;
-        }
-        if (state.level_ == cma::cfg::EventLevels::kOff) {
-            // if (state.pos_ == cma::cfg::kInitialPos) {
-            // update pos to last one
-            bool unused = false;
+        switch (state.level_) {
+            case EventLevels::kOff:
+                // updates position in state file for disabled log too
+                {
+                    auto pos = GetLastPos(type, state.name_);
+                    state.pos_ = pos.has_value() ? *pos : 0;
+                }
+                [[fallthrough]];
+            case EventLevels::kIgnore:
+                // this is NOT log, just stupid entries in registry
+                continue;
 
-            // updates position in state file for every(!) log presented
-            // even if the log is disabled
-            ReadDataFromLog(vista_api, state, unused, max_size);
-            continue;
+            default:
+                if (state.in_config_) {
+                    auto log_data = ReadDataFromLog(type, state, lwl);
+                    if (log_data.has_value()) {
+                        out += "[[[" + state.name_ + "]]]\n" + *log_data;
+                    } else
+                        out += "[[[" + state.name_ + ":missing]]]\n";
+                } else {
+                    // skipping
+                    XLOG::d("Skipping log {}", state.name_);
+                }
         }
-#if 0
-        // This Legacy Agent mode AB says this is NOT valid approach
-        // left as a temporary reference
-        if (state.presented_) {
-            out += "[[[" + state.name_ + "]]]\n";
-            out += ReadDataFromLog(state);
-        } else {
-            out += "[[[" + state.name_ + ":missing]]]\n";
-        }
-#else
-        // According to AB
-        if (state.in_config_) {
-            bool valid_log = false;
-            auto log_data =
-                ReadDataFromLog(vista_api, state, valid_log, max_size);
-            if (valid_log) {
-                out += "[[[" + state.name_ + "]]]\n" + log_data;
-            } else
-                out += "[[[" + state.name_ + ":missing]]]\n";
-        } else {
-            // skipping
-            XLOG::d("Skipping log {}", state.name_);
-        }
-#endif
     }
 
     return out;
@@ -550,7 +589,7 @@ std::string LogWatchEvent::makeBody() {
 
     // 2) Register additional, configured logs that are not in registry.
     //    Note: only supported with vista API enabled.
-    if (vista_api_) {
+    if (evl_type_ == EvlType::vista) {
         for (auto& e : entries_) {
             AddConfigEntry(states, e, send_all_);
         }
@@ -560,7 +599,7 @@ std::string LogWatchEvent::makeBody() {
     UpdateStatesByConfig(states, entries_, defaultEntry());
 
     // make string
-    std::string out = GenerateOutputFromStates(vista_api_, states, max_size_);
+    auto out = GenerateOutputFromStates(evl_type_, states, getLogWatchLimits());
 
     // The offsets are persisted in a statefile.
     // Always use the first available statefile name. In case of a

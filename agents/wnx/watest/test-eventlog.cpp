@@ -21,6 +21,11 @@ namespace cma::evl {
 
 TEST(EventLogTest, Base) {
     {
+        EXPECT_EQ(choosePos(1), 2);
+        EXPECT_EQ(choosePos(cma::cfg::kFromBegin), 0);
+    }
+
+    {
         auto ptr = OpenEvl(L"Application", false);
         ASSERT_TRUE(ptr != nullptr);
     }
@@ -42,21 +47,73 @@ TEST(EventLogTest, Base) {
         EXPECT_TRUE(last > 0);
         EXPECT_TRUE(level > cma::cfg::EventLevels::kAll);
     }
+
     {
         auto ptr = OpenEvl(L"Application", false);
         ASSERT_TRUE(ptr != nullptr);
-        auto [last, str] = PrintEventLog(*ptr, 0, cma::cfg::EventLevels::kCrit,
-                                         false, cma::cfg::logwatch::kMaxSize);
+        auto [last, level] =
+            ScanEventLog(*ptr, 0, cma::cfg::EventLevels::kCrit);
+        EXPECT_TRUE(last > 0);
+        EXPECT_TRUE(level > cma::cfg::EventLevels::kAll);
+    }
+    {
+        auto ptr = OpenEvl(L"Application", false);
+        ASSERT_TRUE(ptr != nullptr);
+
+        std::string str;
+        auto last = PrintEventLog(*ptr, 0, cma::cfg::EventLevels::kCrit, false,
+                                  [&str](const std::string& in) -> bool {
+                                      str += in;
+                                      return str.length() <
+                                             cma::cfg::logwatch::kMaxSize;
+                                  });
         EXPECT_TRUE(last > 0);
         EXPECT_TRUE(!str.empty());
         {
-            auto [last, str] = PrintEventLog(
-                *ptr, 0, cma::cfg::EventLevels::kCrit, false, 100);
+            std::string str;
+            auto last =
+                PrintEventLog(*ptr, 0, cma::cfg::EventLevels::kCrit, false,
+                              [&str](const std::string& in) -> bool {
+                                  str += in;
+                                  return str.length() < 100;
+                              });
             EXPECT_TRUE(last > 0);
             EXPECT_TRUE(str.size() >= 100);
             EXPECT_TRUE(str.size() < 1000);  // approximately
             EXPECT_TRUE(!str.empty());
         }
+    }
+}
+
+TEST(EventLogTest, BeginningOfTheLog) {  // check empty log
+    {
+        auto ptr = OpenEvl(L"HardwareEvents", false);
+        ASSERT_TRUE(ptr != nullptr);
+
+        std::string str;
+        auto last = PrintEventLog(*ptr, cma::cfg::kFromBegin,
+                                  cma::cfg::EventLevels::kAll, false,
+                                  [&str](const std::string& in) -> bool {
+                                      str += in;
+                                      return true;
+                                  });
+        EXPECT_TRUE(last == cma::cfg::kFromBegin);
+        EXPECT_TRUE(str.empty());
+    }
+
+    {
+        auto ptr = OpenEvl(L"Application", false);
+        ASSERT_TRUE(ptr != nullptr);
+
+        std::string str;
+        auto last = PrintEventLog(*ptr, cma::cfg::kFromBegin,
+                                  cma::cfg::EventLevels::kAll, false,
+                                  [&str](const std::string& in) -> bool {
+                                      str += in;
+                                      return false;
+                                  });
+        EXPECT_TRUE(last >= 0);
+        EXPECT_FALSE(str.empty());
     }
 }
 
@@ -72,13 +129,23 @@ TEST(EventLogTest, Vista) {
     {
         auto ptr = OpenEvl(L"Application", false);
         ASSERT_TRUE(ptr != nullptr);
-        auto [last, str] = PrintEventLog(*ptr, 0, cma::cfg::EventLevels::kCrit,
-                                         false, cma::cfg::logwatch::kMaxSize);
+        std::string str;
+        auto last = PrintEventLog(*ptr, 0, cma::cfg::EventLevels::kCrit, false,
+                                  [&str](const std::string& in) -> bool {
+                                      str += in;
+                                      return str.length() <
+                                             cma::cfg::logwatch::kMaxSize;
+                                  });
         EXPECT_TRUE(last > 0);
         EXPECT_TRUE(!str.empty());
         {
-            auto [last, str] = PrintEventLog(
-                *ptr, 0, cma::cfg::EventLevels::kCrit, false, 100);
+            std::string str;
+            auto last =
+                PrintEventLog(*ptr, 0, cma::cfg::EventLevels::kCrit, false,
+                              [&str](const std::string& in) -> bool {
+                                  str += in;
+                                  return str.length() < 100;
+                              });
             EXPECT_TRUE(last > 0);
             EXPECT_TRUE(str.size() >= 100);
             EXPECT_TRUE(str.size() < 1000);  // approximately

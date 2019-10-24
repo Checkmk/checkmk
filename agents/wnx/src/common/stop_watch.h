@@ -68,6 +68,11 @@ public:
         return last_.count();
     }
 
+    void skip() {
+        std::lock_guard lk(lock_);
+        started_ = false;
+    }
+
     uint64_t check() const {
         std::lock_guard lk(lock_);
         if (!started_) return 0;

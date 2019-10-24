@@ -165,6 +165,9 @@ logwatch:
     sendall: no   # this value is MANDATORY, yes is useful only for debugging
     vista_api: no # this is RECOMMENDED
     max_size: 500000 #
+    max_line_length: -1 # -1 to ignore, or any positive, max lingth of the line
+    max_entries: -1     # -1 to ignore, or any positive, max count to receive
+    timeout: -1         # -1 to ignore, or any positive, in seconds
 
     logfile: # entries in the windows eventlog
         - 'Parameters': ignore

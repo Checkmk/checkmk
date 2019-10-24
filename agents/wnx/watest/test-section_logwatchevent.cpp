@@ -30,21 +30,101 @@ static void LoadTestConfig(YAML::Node Node) {
         "    - '*' : warn context\n");
 }
 
+static void LoadTestConfigAll(YAML::Node Node) {
+    Node["logwatch"] = YAML::Load(
+        "  enabled : yes\n"
+        "  sendall : yes\n"
+        "  vista_api: yes\n"
+        "  max_size: 11\n"
+        "  max_line_length: 22\n"
+        "  max_entries: 33\n"
+        "  timeout: 44\n");
+}
+
 constexpr int LogWatchSections_Main = 3;
 constexpr int LogWatchSections_Test = 5;
 
 TEST(LogWatchEventTest, Consts) {
-    using namespace std;
     using namespace cma::cfg;
     EXPECT_EQ(EventLevels::kOff, LabelToEventLevel({}));
     EXPECT_EQ(EventLevels::kOff, LabelToEventLevel(""));
     EXPECT_EQ(EventLevels::kOff, LabelToEventLevel("off"));
-    EXPECT_EQ(EventLevels::kOff, LabelToEventLevel("off"));
+    EXPECT_EQ(EventLevels::kOff, LabelToEventLevel("oFf"));
+    EXPECT_EQ(EventLevels::kIgnore, LabelToEventLevel("ignoRe"));
+    EXPECT_EQ(EventLevels::kIgnore, LabelToEventLevel("ignore"));
     EXPECT_EQ(EventLevels::kWarn, LabelToEventLevel("warn"));
     EXPECT_EQ(EventLevels::kCrit, LabelToEventLevel("crit"));
     EXPECT_EQ(EventLevels::kAll, LabelToEventLevel("all"));
     EXPECT_EQ(EventLevels::kAll, LabelToEventLevel("alL"));
     EXPECT_EQ(EventLevels::kOff, LabelToEventLevel("all "));
+}
+
+TEST(LogWatchEventTest, GetLastPos) {
+    using namespace cma::cfg;
+    {
+        auto p = GetLastPos(EvlType::classic, "Application");
+        ASSERT_TRUE(p.has_value());
+        EXPECT_TRUE(*p > 0);
+    }
+
+    {
+        auto p = GetLastPos(EvlType::classic, "State<GTEST>");
+        EXPECT_FALSE(p.has_value());
+    }
+}
+
+TEST(LogWatchEventTest, DumpEventLog) {
+    using namespace cma::cfg;
+    using namespace std::chrono;
+    auto ptr = cma::evl::OpenEvl(L"Application", false);
+    ASSERT_TRUE(ptr);
+
+    State state("Application", 0);
+    {
+        LogWatchLimits lwl{10'000, -1, -1, -1};
+        auto [pos, out] = DumpEventLog(*ptr, state, lwl);
+        EXPECT_TRUE(pos > 0);
+        EXPECT_TRUE(out.length() < 12'000);
+    }
+
+    {
+        LogWatchLimits lwl{-1, 10, 19, -1};
+        auto [pos, out] = DumpEventLog(*ptr, state, lwl);
+        EXPECT_TRUE(pos > 0);
+        EXPECT_TRUE(out.length() < 20000);
+        auto table = cma::tools::SplitString(out, "\n");
+        ASSERT_EQ(table.size(), 19);
+        for (auto& t : table) EXPECT_TRUE(t.size() <= 10);
+    }
+
+    {
+        LogWatchLimits lwl{-1, 10, -1, 1};
+        auto start = steady_clock::now();
+        auto [pos, out] = DumpEventLog(*ptr, state, lwl);
+        auto end = steady_clock::now();
+        EXPECT_TRUE(duration_cast<seconds>(end - start).count() < 2);
+    }
+}
+
+// check how good can we find objects in entries
+TEST(LogWatchEventTest, LoadFromConfig) {
+    using namespace cma::cfg;
+    State state("xx", 1);
+
+    LogWatchEntryVector entries;
+    EXPECT_FALSE(LoadFromConfig(state, entries));
+
+    LogWatchEntry lwe;
+
+    // make good entry to test
+    lwe.loadFrom("XX: warn context");
+    entries.push_back(LogWatchEntry(lwe));
+
+    EXPECT_TRUE(LoadFromConfig(state, entries));
+    EXPECT_EQ(state.level_, EventLevels::kWarn);
+    EXPECT_TRUE(state.in_config_);
+    EXPECT_FALSE(state.hide_context_);
+    EXPECT_TRUE(state.presented_);
 }
 
 TEST(LogWatchEventTest, LoadFrom) {
@@ -345,12 +425,24 @@ TEST(LogWatchEventTest, ConfigLoad) {
     using namespace cma::cfg;
     using namespace cma::provider;
     tst::YamlLoader w;
+    {
+        auto cfg = cma::cfg::GetLoadedConfig();
+        LoadTestConfigAll(cfg);
+        LogWatchEvent lw;
+        lw.loadConfig();
+        EXPECT_TRUE(lw.evl_type_ == EvlType::vista);
+        EXPECT_TRUE(lw.send_all_);
+        EXPECT_EQ(lw.max_size_, 11);
+        EXPECT_EQ(lw.max_line_length_, 22);
+        EXPECT_EQ(lw.max_entries_, 33);
+        EXPECT_EQ(lw.timeout_, 44);
+    }
 
     {
         auto cfg = cma::cfg::GetLoadedConfig();
         LoadTestConfig(cfg);
         LogWatchEvent lw;
-        EXPECT_FALSE(lw.vista_api_);
+        EXPECT_TRUE(lw.evl_type_ == EvlType::classic);
         EXPECT_FALSE(lw.send_all_);
         EXPECT_EQ(lw.max_entries_, cma::cfg::logwatch::kMaxEntries);
         EXPECT_EQ(lw.max_line_length_, cma::cfg::logwatch::kMaxLineLength);
@@ -358,9 +450,13 @@ TEST(LogWatchEventTest, ConfigLoad) {
         EXPECT_EQ(lw.timeout_, cma::cfg::logwatch::kTimeout);
         lw.max_entries_ = 135;
         lw.max_line_length_ = 99;
-
         lw.max_size_ = 5;
         lw.timeout_ = -99;
+        auto lwl = lw.getLogWatchLimits();
+        EXPECT_EQ(lw.max_entries_, 135);
+        EXPECT_EQ(lw.max_line_length_, 99);
+        EXPECT_EQ(lw.max_size_, 5);
+        EXPECT_EQ(lw.timeout_, -99);
 
         lw.loadConfig();
         EXPECT_EQ(lw.max_entries_, cma::cfg::logwatch::kMaxEntries);
@@ -498,7 +594,7 @@ TEST(LogWatchEventTest, TestAddLog) {
 
         EXPECT_EQ(s0.hide_context_, true);                   // default
         EXPECT_EQ(s0.level_, cma::cfg::EventLevels::kCrit);  // default
-        EXPECT_EQ(s0.pos_, cma::cfg::kInitialPos);           // 4 parameter
+        EXPECT_EQ(s0.pos_, cma::cfg::kFromBegin);            // 4 parameter
         EXPECT_EQ(s0.name_, std::string("xxx"));             // 3 param
         EXPECT_EQ(s0.in_config_, false);                     // 2 param
         EXPECT_EQ(s0.presented_, true);                      // default
@@ -531,7 +627,7 @@ TEST(LogWatchEventTest, TestAddLog) {
             EXPECT_EQ(s.in_config_, true);
             EXPECT_EQ(s.hide_context_, true);
             EXPECT_EQ(s.presented_, true);
-            EXPECT_EQ(s.pos_, cma::cfg::kInitialPos);
+            EXPECT_EQ(s.pos_, cma::cfg::kFromBegin);
             EXPECT_EQ(s.level_, cma::cfg::EventLevels::kOff);
         }
 
@@ -540,9 +636,9 @@ TEST(LogWatchEventTest, TestAddLog) {
         {
             auto& s = states.back();
             EXPECT_EQ(s.name_, std::string("a"));
-            EXPECT_EQ(s.hide_context_, false);         // changed
-            EXPECT_EQ(s.presented_, true);             // no change
-            EXPECT_EQ(s.pos_, cma::cfg::kInitialPos);  // no change
+            EXPECT_EQ(s.hide_context_, false);        // changed
+            EXPECT_EQ(s.presented_, true);            // no change
+            EXPECT_EQ(s.pos_, cma::cfg::kFromBegin);  // no change
             EXPECT_EQ(s.level_, cma::cfg::EventLevels::kWarn);
         }
 
@@ -659,7 +755,7 @@ TEST(LogWatchEventTest, TestMakeBody) {
                 count++;
                 EXPECT_TRUE(s.presented_);
                 if (std::string("Zcx") == s.name_) {
-                    EXPECT_TRUE(s.pos_ == cma::cfg::kInitialPos);
+                    EXPECT_TRUE(s.pos_ == cma::cfg::kFromBegin);
                 }
             }
         }
@@ -728,7 +824,7 @@ TEST(LogWatchEventTest, TestMakeBody) {
     EXPECT_EQ(states[application_index].in_config_, true);
     EXPECT_EQ(states[system_index].in_config_, true);
     EXPECT_EQ(states[demo_index].in_config_, true);
-    EXPECT_EQ(states[demo_index].pos_, cma::cfg::kInitialPos);
+    EXPECT_EQ(states[demo_index].pos_, cma::cfg::kFromBegin);
 
     EXPECT_EQ(states[application_index].hide_context_, false);
     EXPECT_EQ(states[application_index].level_, cma::cfg::EventLevels::kCrit);

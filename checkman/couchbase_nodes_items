@@ -1,0 +1,18 @@
+title: Items on couchbase nodes
+agents: special
+catalog: app/couchbase
+license: GPL
+distribution: check_mk
+description:
+
+ This service monitors the number of active, non-resident and total
+ items on a Couchbase node.
+
+ You can configure levels on each using the WATO rule
+ "Couchbase Node Items"
+
+inventory:
+ One service per node is created.
+
+item:
+ The item is the name of the node.

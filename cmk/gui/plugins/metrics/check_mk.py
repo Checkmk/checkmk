@@ -6087,6 +6087,24 @@ metric_info["avg_doc_size"] = {
     "color": "25/b",
 }
 
+metric_info["items_active"] = {
+    "title": _("Active items"),
+    "unit": "count",
+    "color": "23/a",
+}
+
+metric_info["items_non_res"] = {
+    "title": _("Non-resident items"),
+    "unit": "count",
+    "color": "23/a",
+}
+
+metric_info["items_count"] = {
+    "title": _("Items"),
+    "unit": "count",
+    "color": "23/a",
+}
+
 metric_info["num_extents"] = {
     "title": _("Extents"),
     "unit": "count",

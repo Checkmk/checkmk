@@ -1,0 +1,69 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+@get_parsed_item_data
+def check_couchbase_nodes_items(_item, params, data):
+
+    active = data.get('curr_items')
+    if active is not None:
+        yield check_levels(
+            active,
+            'items_active',
+            params.get('curr_items'),
+            human_readable_func=six.text_type,
+            infoname="Items in active vBuckets",
+        )
+
+    non_res = data.get('vb_active_num_non_resident')
+    if non_res is not None:
+        yield check_levels(
+            non_res,
+            'items_non_res',
+            params.get('non_residents'),
+            human_readable_func=six.text_type,
+            infoname='Non-resident items',
+        )
+
+    total = data.get('curr_items_tot')
+    if total is not None:
+        yield check_levels(
+            total,
+            'items',
+            params.get('curr_items_tot'),
+            human_readable_func=six.text_type,
+            infoname='Total items in vBuckets',
+        )
+
+
+check_info['couchbase_nodes_items'] = {
+    'inventory_function': discover(lambda _k, v: 'curr_items' in v),
+    'check_function': check_couchbase_nodes_items,
+    'service_description': 'Couchbase %s vBucket items',
+    'includes': ['couchbase.include'],
+    'group': 'couchbase_items',
+    'has_perfdata': True
+}

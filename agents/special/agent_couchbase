@@ -60,6 +60,12 @@ SECTION_KEYS_CACHE = (
     "get_hits",
 )
 
+SECTION_KEYS_ITEMS = (
+    "curr_items",
+    "curr_items_tot",
+    "vb_active_num_non_resident",
+)
+
 STATS_KEYS_NODE = (
     "ports",
     "services",
@@ -72,9 +78,6 @@ STATS_KEYS_INTR = (
     "couch_spatial_disk_size",
     "couch_views_actual_disk_size",
     "couch_views_data_size",
-    "curr_items",
-    "curr_items_tot",
-    "vb_active_num_non_resident",
 )
 
 STATS_KEYS_BUCKET = (
@@ -210,6 +213,10 @@ def sections_node(client):
         ],
         "couchbase_nodes_operations": [
             "%s %s" % (node.get('interestingStats', {}).get('ops'), name)
+            for name, node in node_list
+        ],
+        "couchbase_nodes_items:sep(0)": [
+            _get_dump(name, node.get('interestingStats', {}), SECTION_KEYS_ITEMS)
             for name, node in node_list
         ],
     }

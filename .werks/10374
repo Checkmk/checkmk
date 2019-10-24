@@ -1,0 +1,10 @@
+Title: NagVis: Updated to 1.9.16
+Level: 1
+Component: packages
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1571912598
+Class: feature
+
+NagVis is now able to work with encrypted Livestatus configurations.

@@ -63,7 +63,6 @@ SECTION_KEYS_CACHE = (
 STATS_KEYS_NODE = (
     "ports",
     "services",
-    "ops",
 )
 
 STATS_KEYS_INTR = (
@@ -75,7 +74,6 @@ STATS_KEYS_INTR = (
     "couch_views_data_size",
     "curr_items",
     "curr_items_tot",
-    "ops",
     "vb_active_num_non_resident",
 )
 
@@ -208,6 +206,10 @@ def sections_node(client):
         ],
         "couchbase_nodes_cache:sep(0)": [
             _get_dump(name, node.get('interestingStats', {}), SECTION_KEYS_CACHE)
+            for name, node in node_list
+        ],
+        "couchbase_nodes_operations": [
+            "%s %s" % (node.get('interestingStats', {}).get('ops'), name)
             for name, node in node_list
         ],
     }

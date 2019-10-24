@@ -1,0 +1,15 @@
+title: Operations on couchbase nodes
+agents: special
+catalog: app/couchbase
+license: GPL
+distribution: check_mk
+description:
+
+ This service monitors the number of operations per second on a single node.
+ Levels can be configured in the WATO rule "Couchbase Node Operations".
+
+inventory:
+ One service per node is created.
+
+item:
+ The item is the name of the node.

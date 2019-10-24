@@ -95,6 +95,7 @@ def try_detect_servers(ssl_ports):
             'httpd2-prefork',
             'httpd2-worker',
             'httpd.worker',
+            'httpd-event',
             'fcgi-pm',
         ]
         # the pid/proc field length is limited to 19 chars. Thus in case of

@@ -501,6 +501,12 @@ metric_info["streams"] = {
     "color": "35/a",
 }
 
+metric_info["cache_misses_rate"] = {
+    "title": _("Cache misses per second"),
+    "unit": "1/s",
+    "color": "#ba60ba",
+}
+
 metric_info["cache_hit_ratio"] = {
     "title": _("Cache hit ratio"),
     "unit": "%",

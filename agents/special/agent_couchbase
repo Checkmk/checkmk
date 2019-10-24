@@ -47,6 +47,19 @@ SECTION_KEYS_INFO = (
     "version",
 )
 
+SECTION_KEYS_STATS = (
+    "cpu_utilization_rate",
+    "mem_total",
+    "mem_free",
+    "swap_total",
+    "swap_used",
+)
+
+SECTION_KEYS_CACHE = (
+    "ep_bg_fetched",
+    "get_hits",
+)
+
 STATS_KEYS_NODE = (
     "ports",
     "services",
@@ -62,8 +75,6 @@ STATS_KEYS_INTR = (
     "couch_views_data_size",
     "curr_items",
     "curr_items_tot",
-    "ep_bg_fetched",
-    "get_hits",
     "ops",
     "vb_active_num_non_resident",
 )
@@ -174,18 +185,12 @@ class CouchbaseClient(object):
         return self._get_suburi("/buckets/%s/stats" % bucket)
 
 
-def _get_info_dict(node_name, node):
+def _get_dump(node_name, raw_data, filter_keys):
     data = {"name": node_name}
-    for key in SECTION_KEYS_INFO:
-        if key in node:
-            data[key] = node[key]
-    return data
-
-
-def _get_stats_dict(node_name, node):
-    data = node.get("systemStats", {})
-    data.update(name=node_name)
-    return data
+    for key in filter_keys:
+        if key in raw_data:
+            data[key] = raw_data[key]
+    return json.dumps(data)
 
 
 def sections_node(client):
@@ -195,10 +200,15 @@ def sections_node(client):
     sections = {
         "couchbase_nodes_uptime": ["%s %s" % (node['uptime'], name) for name, node in node_list],
         "couchbase_nodes_info:sep(0)": [
-            json.dumps(_get_info_dict(name, node)) for name, node in node_list
+            _get_dump(name, node, SECTION_KEYS_INFO) for name, node in node_list
         ],
         "couchbase_nodes_stats:sep(0)": [
-            json.dumps(_get_stats_dict(name, node)) for name, node in node_list
+            _get_dump(name, node.get("systemStats", {}), SECTION_KEYS_STATS)
+            for name, node in node_list
+        ],
+        "couchbase_nodes_cache:sep(0)": [
+            _get_dump(name, node.get('interestingStats', {}), SECTION_KEYS_CACHE)
+            for name, node in node_list
         ],
     }
 

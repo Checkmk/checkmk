@@ -1,0 +1,16 @@
+title: Caches on couchbase nodes
+agents: special
+catalog: app/couchbase
+license: GPL
+distribution: check_mk
+description:
+ This service reports on the nodes cache performance.
+ You may provide levels using the WATO-rule "Couchbase Cache".
+ In evaluates the count of cache misses and the percentage of
+ cache hits.
+
+inventory:
+ One service per node is created.
+
+item:
+ The item is the name of the node.

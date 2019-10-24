@@ -1,0 +1,11 @@
+Title: Graph tuning: Graphs do not exceed the time axis
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p6
+Date: 1571907378
+
+Graphs no longer cross the time axis but are hidden for values smaller than the origin y-axis value.

@@ -187,8 +187,8 @@ div.floatfilter {
   margin-right: 5px;
   margin-bottom: 5px;
   overflow: auto;
-  background: $secondary-bg-color;
-  border: 1px solid $theme-color-table-border;
+  background: $bg-color-secondary;
+  border: 1px solid $color-table-border;
   box-shadow: none;
   box-sizing: border-box;
 
@@ -403,14 +403,14 @@ table.nform table.valuespec_listof {
     .vlof_content .floatfilter {
       width: 400px;
       height: auto;
-      background-color: $theme-color-white;
-      border: 1px solid $theme-color-table-border;
+      background-color: $bg-color-tertiary;
+      border: 1px solid $color-table-border;
       box-shadow: none;
 
       .legend {
         padding: 16px 0 0 16px;
-        font-size: $theme-font-size-global;
-        letter-spacing: $theme-letter-spacing-table;
+        font-size: $font-size-global;
+        letter-spacing: $letter-spacing-table;
         color: $secondary-font-color;
         text-transform: uppercase;
       }
@@ -443,9 +443,9 @@ div.optiondial {
     height: 28px;
     margin-right: 5px;
     margin-bottom: 5px;
-    color: $theme-color-text;
-    background: $secondary-bg-color;
-    border: 1px solid $theme-color-table-border;
+    color: $color-text;
+    background: $bg-color-secondary;
+    border: 1px solid $color-table-border;
     box-shadow: none;
     box-sizing: border-box;
 
@@ -597,8 +597,8 @@ table.data.tiled td.tiles {
   div.tile {
     width: 240px;
     padding: 4px;
-    background: $secondary-bg-color;
-    border: 1px solid $theme-color-table-border;
+    background: $bg-color-secondary;
+    border: 1px solid $color-table-border;
     border-radius: $theme-border-radius;
     box-shadow: none;
 
@@ -655,18 +655,18 @@ table.data.single {
 
     td.invtree table {
       margin: 8px 0 12px;
-      border: 1px solid $theme-color-table-border;
+      border: 1px solid $color-table-border;
       box-shadow: none;
 
       th, td {
 	height: 14px;
 	padding: 2px 6px;
 	background-color: $invtree-td-bg-color;
-	border: 1px solid $theme-color-table-border;
+	border: 1px solid $color-table-border;
       }
 
       th {
-	color: $theme-color-text;
+	color: $color-text;
 	background-color: $invtree-th-bg-color;
       }
     }
@@ -686,7 +686,7 @@ table.data.single {
     border-radius: 0;
 
     &.left {
-      font-weight: $theme-font-weight-bold;
+      font-weight: $font-weight-bold;
       border-right: $td-single-left-border-right;
       transition: .15s ease-in-out;
     }
@@ -722,17 +722,17 @@ table.data.matrix {
   tbody > tr.data {
     > td {
       padding: 8px;
-      border: 1px solid $theme-color-table-border;
+      border: 1px solid $color-table-border;
       border-left: none;
 
       &.left {
-        font-weight: $theme-font-weight-bold;
-        background-color: $theme-color-white;
+        font-weight: $font-weight-bold;
+        background-color: $bg-color-tertiary;
         transition: .15s ease-in-out;
 
 	&:not(.state) {
-	  border-right: 1px solid $theme-color-table-border;
-	  border-left: 1px solid $theme-color-table-border;
+	  border-right: 1px solid $color-table-border;
+	  border-left: 1px solid $color-table-border;
 	}
       }
 
@@ -747,8 +747,8 @@ table.data.matrix {
       background: transparent;
 
       td.matrixhead {
-	font-size: $theme-font-size-global;
-	letter-spacing: $theme-letter-spacing-table;
+	font-size: $font-size-global;
+	letter-spacing: $letter-spacing-table;
 	text-transform: uppercase;
       }
     }
@@ -774,8 +774,8 @@ table.data.matrix {
 
   tr.even0, tr.odd0 {
     tbody & td.matrixhead {
-      font-weight: $theme-font-weight-bold;
-      color: $theme-color-text;
+      font-weight: $font-weight-bold;
+      color: $color-text;
     }
   }
 
@@ -891,7 +891,7 @@ table.data.availability {
     padding-top: 1px;
     padding-bottom: 1px;
     font-weight: bold;
-    border-top: 1px solid $theme-color-table-border;
+    border-top: 1px solid $color-table-border;
     border-bottom-style: none;
   }
 
@@ -900,7 +900,7 @@ table.data.availability {
   }
 
   td {
-    border-color: $theme-color-table-border !important;
+    border-color: $color-table-border !important;
   }
 
   th {
@@ -1059,16 +1059,16 @@ table.data.oddeven.timelineevents > tbody > tr.hilite {
   display: inline-block;
   margin-top: 8px;
   margin-bottom: 4px;
-  font-size: $theme-font-size-small;
-  letter-spacing: $theme-letter-spacing-table;
-  color: $theme-color-darkgrey;
+  font-size: $font-size-small;
+  letter-spacing: $letter-spacing-table;
+  color: $darkgrey;
 }
 
 .timelinerange .timeline {
   box-shadow: none;
 
   &.standalone td {
-    border: 1px solid $theme-color-table-border;
+    border: 1px solid $color-table-border;
   }
 }
 
@@ -1194,25 +1194,25 @@ table.data.single tr.data td.invtree table td.if_state,
 table.data tr.data td.if_state {
   &.if_state_up {
     color: $if-state-up-font-color;
-    background-color: $theme-color-state-success-background;
+    background-color: $color-state-success-background;
   }
 
   &.if_state_down {
-    background-color: $theme-color-state-2-background;
+    background-color: $color-state-2-background;
   }
 
   &.if_state_other {
-    background-color: $theme-color-state-9-background;
+    background-color: $color-state-9-background;
   }
 
   &.if_available {
-    color: $theme-color-black;
-    background-color: $theme-color-state-success-background;
+    color: $black;
+    background-color: $color-state-success-background;
   }
 
   &.if_not_available {
-    color: $theme-color-black;
-    background-color: $theme-color-state-4-background;
+    color: $black;
+    background-color: $color-state-4-background;
   }
 }
 
@@ -1369,8 +1369,8 @@ table.data.headerleft.sla {
           &.title {
             display: table-cell;
             width: 280px;
-            font-weight: $theme-font-weight-bold;
-            color: $theme-color-text;
+            font-weight: $font-weight-bold;
+            color: $color-text;
             background: transparent;
           }
 
@@ -1396,7 +1396,7 @@ table.data.headerleft.sla {
   a,
   body.main .popup_menu span,
   body.main .popup_menu & span {
-    color: $theme-color-text;
+    color: $color-text;
   }
 }
 
@@ -1418,7 +1418,7 @@ td.agent_config table.rulesets table,
 table.data tr.ac_test_details table,
 table.data tr.notification_context table {
   margin-top: 3px;
-  border: 0.5px solid $theme-color-table-border;
+  border: 0.5px solid $color-table-border;
   border-collapse: collapse;
   box-shadow: $primary-box-shadow;
 }
@@ -1448,7 +1448,7 @@ table.data tr.notification_context table th,
 td.rule_conditions table td {
   height: 14px;
   padding: 1px 5px;
-  border: 1px solid $theme-color-table-border;
+  border: 1px solid $color-table-border;
 }
 
 table.data tr.ac_test_details table td {
@@ -1466,14 +1466,14 @@ td.agent_config table.rulesets table td,
 table.data tr.ac_test_details table td,
 table.data tr.notification_context table td,
 td.rule_conditions table td {
-  background-color: $primary-bg-color;
+  background-color: $bg-color-default;
 }
 
 td.sla_spec table td.title,
 td.agent_config table.rulesets table td.title,
 table.data tr.notification_context table th,
 td.rule_conditions table td.title {
-  background-color: $theme-color-table-background;
+  background-color: $color-table-background;
 }
 
 table.agents tbody > tr.data > td {

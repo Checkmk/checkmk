@@ -62,7 +62,7 @@ table.data td.perfometer.stale div.title {
 
 table.data tr.data td.stale.state2,
 table.data tr.data td.stale.hstate1 {
-  color: $theme-color-lightgrey !important;
+  color: $lightgrey !important;
   text-shadow: 0.8px 0.8px 0.8px #f88;
 }
 
@@ -77,11 +77,11 @@ body.main .popup_menu .state0 span,
 .hstate0 a,
 .hstate0 body.main .popup_menu span,
 body.main .popup_menu .hstate0 span {
-  background-color: $theme-color-state-success-background !important;
-  border-color: $theme-color-state-success-border !important;
+  background-color: $color-state-success-background !important;
+  border-color: $color-state-success-border !important;
 
   * {
-    color: $theme-color-text !important;
+    color: $color-text !important;
   }
 }
 
@@ -90,8 +90,8 @@ body.main .popup_menu .hstate0 span {
   body.main .popup_menu & .state0 span, .hstate0 a,
   .hstate0 body.main .popup_menu span, body.main .popup_menu & .hstate0 span {
     color: $dark-font-color;
-    background-color: $theme-color-state-success-background !important;
-    border-color: $theme-color-state-success-border !important;
+    background-color: $color-state-success-background !important;
+    border-color: $color-state-success-border !important;
   }
 }
 
@@ -106,15 +106,15 @@ body.main .popup_menu .hstate0 span {
 .state1 body.main .popup_menu span,
 body.main .popup_menu .state1 span,
 tr.groupheader td.state1 {
-  color: $theme-color-black !important;
-  background-color: $theme-color-state-1-background !important;
-  border-color: $theme-color-state-1-border !important;
+  color: $black !important;
+  background-color: $color-state-1-background !important;
+  border-color: $color-state-1-border !important;
 }
 
 .odd0 .state1,
 .odd1 .state1 {
-  background-color: $theme-color-state-1-background !important;
-  border-color: $theme-color-state-1-border !important;
+  background-color: $color-state-1-background !important;
+  border-color: $color-state-1-border !important;
 }
 
 /* CRIT/DOWN */
@@ -128,16 +128,16 @@ body.main .popup_menu .state2 span,
 .hstate2 a,
 .hstate2 body.main .popup_menu span,
 body.main .popup_menu .hstate2 span {
-  color: $theme-color-lightgrey !important;
-  background-color: $theme-color-state-2-background !important;
-  border-color: $theme-color-state-2-border !important;
+  color: $lightgrey !important;
+  background-color: $color-state-2-background !important;
+  border-color: $color-state-2-border !important;
 }
 
 .odd0 .state2,
 .odd2 .state2 {
-  color: $theme-color-lightgrey !important;
-  background-color: $theme-color-state-2-background !important;
-  border-color: $theme-color-state-2-border !important;
+  color: $lightgrey !important;
+  background-color: $color-state-2-background !important;
+  border-color: $color-state-2-border !important;
 }
 
 /* TODO: Check whether these are supposed to be .hstate3 selectors not ...2 */
@@ -149,17 +149,12 @@ body.main .popup_menu .hstate2 span {
 body.main .popup_menu .state3 span,
 .hstate2 a,
 .hstate2 body.main .popup_menu span,
-body.main .popup_menu .hstate2 span {
-  color: $theme-color-white !important;
-  background-color: $theme-color-state-3-background !important;
-  border-color: $theme-color-state-3-border !important;
-}
-
+body.main .popup_menu .hstate2 span,
 .odd0 .state3,
 .odd3 .state3 {
-  color: $theme-color-white !important;
-  background-color: $theme-color-state-3-background !important;
-  border-color: $theme-color-state-3-border !important;
+  color: $state3-font-color !important;
+  background-color: $color-state-3-background !important;
+  border-color: $color-state-3-border !important;
 }
 
 tr.odd3 {
@@ -171,32 +166,13 @@ tr.even3 {
 }
 
 
-/* PENDING */
-.statep,
-.hstatep,
-.statep a,
-.statep body.main .popup_menu span,
-body.main .popup_menu .statep span,
-.hstatep a,
-.hstatep body.main .popup_menu span,
-body.main .popup_menu .hstatep span {
-  color: $theme-color-white !important;
-  background-color: $theme-color-state-4-background !important;
-  border-color: $theme-color-state-4-border !important;
-}
-
-/* in DOWNTIME */
-.stated,
-.hstated,
-.stated a,
-.stated body.main .popup_menu span,
-body.main .popup_menu .stated span,
-.hstated a,
-.hstated body.main .popup_menu span,
-body.main .popup_menu .hstated span {
-  color: $theme-color-white !important;
-  background-color: $theme-color-state-4-background !important;
-  border-color: $theme-color-state-4-border !important;
+/* PENDING / in DOWNTIME */
+.statep, .hstatep, .stated, .hstated {
+  &, a, body.main .popup_menu span, body.main .popup_menu & span {
+    color: $statep-font-color !important;
+    background-color: $color-state-4-background !important;
+    border-color: $color-state-4-border !important;
+  }
 }
 
 /* inline state markers in check output */
@@ -234,7 +210,7 @@ img.pluginurl {
 }
 
 .states {
-  background-color: $theme-color-nuance-6;
+  background-color: $color-nuance-6;
   background-image: none;
   transition: .15s ease-in-out;
 }
@@ -282,8 +258,8 @@ img.pluginurl {
   &.online {
     font-weight: 500;
     color: $hot-font-color !important;
-    background-color: $theme-color-state-success-background;
-    border-color: $theme-color-state-success-border !important;
+    background-color: $color-state-success-background;
+    border-color: $color-state-success-border !important;
   }
 
   &.partial {
@@ -321,7 +297,7 @@ table.data tr.data > td.perfometer {
     width: 100%;
     padding: 0;
     overflow: hidden;
-    border: 1px solid $theme-color-table-border;
+    border: 1px solid $color-table-border;
     filter: saturate(50%);
   }
 
@@ -330,10 +306,10 @@ table.data tr.data > td.perfometer {
     width: 100%;
     padding: 0;
     margin: 0;
-    font-size: $theme-font-size-main;
-    font-weight: $theme-font-weight-bold;
+    font-size: $font-size-default;
+    font-weight: $font-weight-bold;
     letter-spacing: 0;
-    color: $theme-color-perfometer-title;
+    color: $color-perfometer-title;
   }
 
   .glass {
@@ -475,7 +451,7 @@ table.data {
   }
 
   .state0 * {
-    color: $theme-color-text;
+    color: $color-text;
   }
 
   td.state {
@@ -483,7 +459,7 @@ table.data {
   }
 
   tr.data td.states {
-    background-color: $theme-color-nuance-6;
+    background-color: $color-nuance-6;
     color: $states-font-color;
   }
 }

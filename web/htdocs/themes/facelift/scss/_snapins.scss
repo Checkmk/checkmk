@@ -84,14 +84,14 @@ table.hostmatrix {
 /* TODO: Reproduce these two html elements */
 .hostmatrix td.state1 body.main .popup_menu span,
 body.main .popup_menu .hostmatrix td.state1 span {
-  background-color: $theme-color-main;
+  background-color: $yellow;
 }
 
 .hostmatrix td.state0 a,
 /* TODO: Reproduce these two html elements */
 .hostmatrix td.state0 body.main .popup_menu span,
 body.main .popup_menu .hostmatrix td.state0 span {
-  background-color: $theme-color-nuance-12;
+  background-color: $color-nuance-12;
 }
 
 /*
@@ -121,19 +121,19 @@ div.snapin table.master_control {
   td {
     div.toggle_switch {
       float: right;
-      background-color: $primary-bg-color;
+      background-color: $bg-color-default;
 
       a {
-	font-weight: $theme-font-weight-bold;
+	font-weight: $font-weight-bold;
       }
     }
 
     &.left {
       display: inline-block;
-      font-size: $theme-font-size-main;
-      font-weight: $theme-font-weight-global;
-      letter-spacing: $theme-letter-spacing-table;
-      color: $theme-color-nuance-9;
+      font-size: $font-size-default;
+      font-weight: $font-weight-default;
+      letter-spacing: $letter-spacing-table;
+      color: $color-nuance-9;
       text-align: left;
 
       a {
@@ -154,14 +154,14 @@ div.snapin table.master_control {
 /* Styles shared/inherited by different performance tables */
 %performance-table-shared {
   padding: $performance-table-shared-padding;
-  background-color: $theme-color-table-background-dark;
-  border: 1px solid $theme-color-table-border-dark;
+  background-color: $color-table-background-dark;
+  border: 1px solid $color-table-border-dark;
   border-spacing: 4px;
   box-sizing: border-box;
 
   td {
-    font-weight: $theme-font-weight-global;
-    letter-spacing: $theme-letter-spacing-table;
+    font-weight: $font-weight-default;
+    letter-spacing: $letter-spacing-table;
   }
 }
 
@@ -246,7 +246,7 @@ table.performance {
   margin: 0 auto;
   font-size: 24px;
   font-weight: bold;
-  letter-spacing: $theme-letter-spacing-table;
+  letter-spacing: $letter-spacing-table;
   color: $primary-sidebar-font-color;
   text-align: center;
   border-spacing: 4px;
@@ -330,11 +330,11 @@ table.tacticaloverview {
     padding: 2px;
     text-align: right;
     background: $tactical-overview-td-bg-color;
-    border: 1px solid $theme-color-table-border-dark;
+    border: 1px solid $color-table-border-dark;
     border-radius: $theme-border-radius;
 
     &.states {
-      background: $theme-color-nuance-6;
+      background: $color-nuance-6;
       box-shadow: none;
 
       a.link {
@@ -365,14 +365,14 @@ table.tacticaloverview td span,
 table.tacticaloverview td body.main .popup_menu span,
 body.main .popup_menu table.tacticaloverview td span {
   padding: 4px;
-  font-size: $theme-font-size-main;
-  font-weight: $theme-font-weight-bold;
+  font-size: $font-size-default;
+  font-weight: $font-weight-bold;
   letter-spacing: 0;
-  color: $theme-color-text;
+  color: $color-text;
 }
 
 table.tacticaloverview td a.link, table.tacticaloverview td a:hover {
-  color: $theme-color-text;
+  color: $color-text;
 }
 
 div.tacticalalert {
@@ -381,7 +381,7 @@ div.tacticalalert {
   font-size: 12px;
   line-height: 25px;
   text-align: center;
-  background-color: $theme-color-state-2-background;
+  background-color: $color-state-2-background;
   border-radius: $theme-border-radius;
   box-shadow: none;
 }
@@ -423,7 +423,7 @@ div.spacertop {
 
   div.tag_tree {
     clear: both;
-    font-size: $theme-font-size-main;
+    font-size: $font-size-default;
   }
 
   div.statebullet {
@@ -508,7 +508,7 @@ div.spacertop {
     padding: 6px 0 6px 8px;
     margin: 1px 0 2px;
     clear: both;
-    font-size: $theme-font-size-main;
+    font-size: $font-size-default;
     color: $foldertree-snapin-font-color;
     background-color: $foldertree-snapin-bg-color;
     border-radius: $theme-border-radius;
@@ -716,7 +716,7 @@ body.main {
 
     // TODO: Rm this if redundant
     div.snapin {
-      background-color: $theme-color-table-border-dark;
+      background-color: $color-table-border-dark;
     }
   }
 }

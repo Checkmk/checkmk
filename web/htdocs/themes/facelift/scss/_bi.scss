@@ -162,8 +162,8 @@ table.aggrtree.ltr td {
 
 table.data.table .bi_tree_container .title {
   padding: 0;
-  font-weight: $theme-font-weight-global;
-  color: $theme-color-text;
+  font-weight: $font-weight-default;
+  color: $color-text;
 }
 
 table.data.table .bi_tree_container .title li {
@@ -176,7 +176,7 @@ table.data.table .bi_tree_container .title ul.subtree {
   margin: 8px 0 0 18px;
   list-style-type: none;
   border: none;
-  border-left: 1px solid $theme-color-darkgrey;
+  border-left: 1px solid $darkgrey;
   border-radius: 0;
 }
 

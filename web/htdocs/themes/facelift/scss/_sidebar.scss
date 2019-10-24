@@ -44,19 +44,19 @@ body.side {
   overflow: hidden;
   font-family: arial, helvetica, sans-serif;
   font-size: 14px;
-  font-weight: $theme-font-weight-global;
+  font-weight: $font-weight-default;
   background: $body-side-bg-color;
 
   p {
-    color: $theme-color-darkgrey;
+    color: $darkgrey;
   }
 
   .link {
-    color: $theme-color-lightgrey;
+    color: $lightgrey;
   }
 
   .title {
-    color: $theme-color-lightgrey;
+    color: $lightgrey;
   }
 
   &.screenshotmode {
@@ -73,9 +73,9 @@ body.side {
   width: 100%;
   height: 64px;
   margin: 0;
-  background: $theme-color-sidebar-background;
+  background: $color-sidebar-background;
   border: none;
-  border-bottom: 1px solid $theme-color-sidebar-border;
+  border-bottom: 1px solid $color-sidebar-border;
   border-radius: 0;
   box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
   box-sizing: border-box;
@@ -135,10 +135,10 @@ body.main .popup_menu #side_header > span {
 
   a {
     font-size: 8px;
-    font-weight: $theme-font-weight-bold;
+    font-weight: $font-weight-bold;
     line-height: 1;
-    letter-spacing: $theme-letter-spacing-table;
-    color: $theme-color-text-light;
+    letter-spacing: $letter-spacing-table;
+    color: $color-text-light;
     text-decoration: none;
     text-rendering: optimizeLegibility;
     background: none;
@@ -190,9 +190,9 @@ body.main .popup_menu #side_header > span {
   height: 48px;
   padding: 4px 16px;
   margin: 0;
-  background: $theme-color-sidebar-background;
+  background: $color-sidebar-background;
   border: none;
-  border-top: 1px solid $theme-color-sidebar-border;
+  border-top: 1px solid $color-sidebar-border;
   border-radius: 0;
   box-shadow: none;
   box-sizing: border-box;
@@ -219,10 +219,10 @@ body.main .popup_menu #side_header > span {
     right: 0;
     bottom: 5px;
     float: right;
-    font-size: $theme-font-size-small;
-    font-weight: $theme-font-weight-bold;
-    letter-spacing: $theme-letter-spacing-table;
-    color: $theme-color-text-light;
+    font-size: $font-size-small;
+    font-weight: $font-weight-bold;
+    letter-spacing: $letter-spacing-table;
+    color: $color-text-light;
     text-align: right;
     text-transform: uppercase;
   }
@@ -232,7 +232,7 @@ body.main .popup_menu #side_header > span {
 /* TODO: Reproduce these two html elements */
 #side_footer div.copyright body.main .popup_menu span,
 body.main .popup_menu #side_footer div.copyright span {
-  color: $theme-color-text-light;
+  color: $color-text-light;
   text-decoration: none;
 }
 
@@ -242,7 +242,7 @@ span#msg_label {
   left: -10px;
   z-index: 15;
   padding: 1px;
-  font-size: $theme-font-size-global;
+  font-size: $font-size-global;
   color: #f00;
   background-color: #fff;
   border-radius: 5px;
@@ -254,7 +254,7 @@ body.side div.snapin, div.add_snapin div.snapin  {
   padding: 0;
   margin: $snapin-margin;
   overflow: hidden;
-  background: $theme-color-sidebar-background;
+  background: $color-sidebar-background;
   border: $snapin-border;
   border-top: $snapin-border-top;
   border-bottom: $snapin-border-bottom;
@@ -277,7 +277,7 @@ div.snapin {
     height: auto;
     padding: 8px;
     line-height: 10px; /* affects height of snapin title bar */
-    color: $theme-color-text-light;
+    color: $color-text-light;
     text-align: left;
     background: transparent;
 
@@ -286,9 +286,9 @@ div.snapin {
     }
 
     b.heading {
-      font-size: $theme-font-size-main;
+      font-size: $font-size-default;
       font-weight: 500;
-      letter-spacing: $theme-letter-spacing-table;
+      letter-spacing: $letter-spacing-table;
       text-transform: uppercase;
     }
 
@@ -329,7 +329,7 @@ div.snapin {
     width: 100%;
     padding: 8px; /* Invisible spacing around hole snapin content */
     color: $primary-sidebar-font-color;
-    background-color: $theme-color-sidebar-background;
+    background-color: $color-sidebar-background;
     box-sizing: border-box;
   }
 
@@ -338,8 +338,8 @@ div.snapin {
     height: 100%;
     padding: 8px;
     font-size: 11px;
-    color: $theme-color-text;
-    background-color: $primary-bg-color;
+    color: $color-text;
+    background-color: $bg-color-default;
     background-image: none;
     border: $primary-border;
     border-radius: $theme-border-radius;
@@ -500,9 +500,9 @@ body.main .popup_menu div.snapin div.footnotelink span.link {
   padding: 0 0;
   margin-right: 16px;
   margin-left: 0;
-  font-size: $theme-font-size-small;
-  font-weight: $theme-font-weight-bold;
-  letter-spacing: $theme-letter-spacing-table;
+  font-size: $font-size-small;
+  font-weight: $font-weight-bold;
+  letter-spacing: $letter-spacing-table;
   color: $footnote-link-color;
   text-transform: uppercase;
   background: transparent;
@@ -552,15 +552,15 @@ div.add_snapin {
       height: 220px;
       padding: 8px;
       margin: 0 16px 16px 0;
-      background-color: $theme-color-sidebar-background;
-      border: 1px solid $theme-color-table-border-dark;
+      background-color: $color-sidebar-background;
+      border: 1px solid $color-table-border-dark;
       border-radius: 5px;
       box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
       transition: box-shadow .15s 0s ease-in-out;
     }
 
     *, &:hover * {
-      color: $theme-color-lightgrey;
+      color: $lightgrey;
     }
 
     &:hover {
@@ -569,44 +569,44 @@ div.add_snapin {
 
     div.description {
       padding: 16px;
-      font-size: $theme-font-size-small;
-      font-weight: $theme-font-weight-global;
+      font-size: $font-size-small;
+      font-weight: $font-weight-default;
       line-height: 1.333;
-      letter-spacing: $theme-letter-spacing-table;
-      color: $theme-color-nuance-8;
+      letter-spacing: $letter-spacing-table;
+      color: $color-nuance-8;
       text-rendering: optimizeLegibility;
     }
 
     div.snapin {
       height: 116px;
       padding-top: 0;
-      background-color: $theme-color-sidebar-background;
+      background-color: $color-sidebar-background;
       border: none;
-      border-bottom: 1px solid $theme-color-table-border-dark;
+      border-bottom: 1px solid $color-table-border-dark;
       border-radius: 0;
     }
 
     .head {
       height: auto;
       padding: 8px;
-      color: $theme-color-text-light;
+      color: $color-text-light;
       text-align: left;
       background: transparent;
 
       b.heading {
-        font-size: $theme-font-size-main;
+        font-size: $font-size-default;
         font-weight: 500;
-        letter-spacing: $theme-letter-spacing-table;
+        letter-spacing: $letter-spacing-table;
         text-transform: uppercase;
       }
     }
 
     .snapin b, .head b {
-      font-weight: $theme-font-weight-bold;
+      font-weight: $font-weight-bold;
     }
 
     .content {
-        color: $theme-color-text;
+        color: $color-text;
     }
   }
 

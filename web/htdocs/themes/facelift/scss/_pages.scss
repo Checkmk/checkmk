@@ -42,7 +42,7 @@ Boston, MA 02110-1301 USA.
 '-------------------------------------------------------------------------*/
 
 h1, h2, h3, h4 {
-  color: $theme-color-text;
+  color: $color-text;
 }
 
 h3 {
@@ -84,11 +84,11 @@ body {
   &.main {
     padding: $main-body-padding;
     margin: 0;
-    font-family: $theme-font;
-    font-size: $theme-font-size-main;
-    font-weight: $theme-font-weight-global;
-    color: $theme-color-text;
-    background: $theme-color-background;
+    font-family: $font-family-default;
+    font-size: $font-size-default;
+    font-weight: $font-weight-default;
+    color: $color-text;
+    background: $color-background;
 
     /* Can be toggled with N/n display option */
     &.inline {
@@ -122,7 +122,7 @@ body {
       padding: 8px 32px;
       margin: 0 0 5px;
       color: #fff;
-      background: $secondary-bg-color;
+      background: $bg-color-secondary;
       border-bottom: $table-header-border-bottom;
       border-spacing: 0;
 
@@ -152,14 +152,14 @@ body {
 	  }
 
 	  a, .popup_menu span, .popup_menu & span {
-	    color: $theme-color-text;
+	    color: $color-text;
 	  }
 	}
 
 	&.right {
 	  width: 1%;
 	  font-size: 13px;
-	  color: $theme-color-text;
+	  color: $color-text;
 	  text-align: right;
 
 	  img {
@@ -213,7 +213,7 @@ body {
     table.footer,
     table.footer .popup_menu a,
     table.footer .popup_menu span {
-      color: $theme-color-text;
+      color: $color-text;
     }
 
     table.footer {
@@ -281,7 +281,7 @@ div#foot_refresh, div#foot_refresh_time {
 #reload_pause_counter {
   font-size: 120%;
   font-weight: bold;
-  color: $theme-color-lightgrey;
+  color: $lightgrey;
   text-align: center;
   text-decoration: none;
 
@@ -321,7 +321,7 @@ div.togglebutton {
   margin-right: 5px;
   margin-bottom: -3px;
   overflow: hidden;
-  font-size: $theme-font-size-small;
+  font-size: $font-size-small;
   text-align: center;
   white-space: nowrap;
   vertical-align: middle;
@@ -338,19 +338,19 @@ div.togglebutton {
     bottom: 0;
     left: 0;
     display: block;
-    height: 28px; /* $theme-button-height; */
+    height: 28px; /* $button-height; */
     padding: 5px;
     overflow: hidden;
-    font-size: $theme-font-size-global;
-    font-weight: $theme-font-weight-global;
+    font-size: $font-size-global;
+    font-weight: $font-weight-default;
     line-height: 18px;
-    letter-spacing: $theme-letter-spacing;
+    letter-spacing: $letter-spacing-default;
     color: $primary-link-color;
     text-decoration: none;
     text-overflow: ellipsis;
     cursor: pointer;
-    background: $secondary-bg-color;
-    border: 1px solid $theme-color-table-border;
+    background: $bg-color-secondary;
+    border: 1px solid $color-table-border;
     border-radius: $primary-border-radius;
     box-shadow: none;
     box-sizing: border-box;
@@ -368,13 +368,13 @@ div.togglebutton {
       bottom: 0;
       left: 0;
       padding: 5px;
-      font-size: $theme-font-size-global;
-      font-weight: $theme-font-weight-global;
-      letter-spacing: $theme-letter-spacing;
-      color: $theme-color-text;
+      font-size: $font-size-global;
+      font-weight: $font-weight-default;
+      letter-spacing: $letter-spacing-default;
+      color: $color-text;
       text-decoration: none;
-      background: $theme-button-background-hover;
-      border: 1px solid $theme-color-table-border;
+      background: $button-background-hover;
+      border: 1px solid $color-table-border;
       outline: none;
       box-shadow: none;
     }
@@ -407,7 +407,7 @@ div.contextlink {
   &.hot a {
     color: $hot-font-color;
     background-color: $hot-bg-color;
-    border-color: $theme-color-nuance-16;
+    border-color: $color-nuance-16;
   }
 
   img {
@@ -422,7 +422,7 @@ div.contextlink {
 /* Specific toggle button styles */
 div.togglebutton {
   width: 35.75px;
-  height: $theme-button-height;
+  height: $button-height;
 
   &.off {
     border: $toggle-button-off-border;
@@ -436,19 +436,19 @@ div.togglebutton {
         display: block;
         overflow: hidden;
         line-height: 18px;
-        color: $theme-color-text;
+        color: $color-text;
         text-decoration: none;
         text-overflow: ellipsis;
         cursor: default;
-        background: $secondary-bg-color;
+        background: $bg-color-secondary;
         border-radius: 5px;
         box-shadow: none;
       }
 
       & {
-        font-size: $theme-font-size-global;
-        font-weight: $theme-font-weight-global;
-        letter-spacing: $theme-letter-spacing;
+        font-size: $font-size-global;
+        font-weight: $font-weight-default;
+        letter-spacing: $letter-spacing-default;
         cursor: auto;
         border: none;
       }
@@ -491,7 +491,7 @@ table.data {
   width: 100%;
   padding: 0;
   margin: 0;
-  color: $theme-color-text;
+  color: $color-text;
   border-collapse: $data-table-border-collapse;
   border-spacing: $data-table-border-spacing;
   empty-cells: show;
@@ -503,9 +503,9 @@ table.data {
 
   th {
     padding: 0 8px 2px;
-    font-size: $theme-font-size-main;
-    font-weight: $theme-font-weight-bold;
-    letter-spacing: $theme-letter-spacing-table;
+    font-size: $font-size-default;
+    font-weight: $font-weight-bold;
+    letter-spacing: $letter-spacing-table;
     color: $primary-link-color;
     text-align: left;
     text-transform: uppercase;
@@ -537,11 +537,11 @@ table.data {
 
   td {
     padding: 4px 8px;
-    font-size: $theme-font-size-main;
+    font-size: $font-size-default;
     font-weight: 500;
     line-height: 1.3;
-    letter-spacing: $theme-letter-spacing;
-    color: $theme-color-text;
+    letter-spacing: $letter-spacing-default;
+    color: $color-text;
     border: none;
 
     &.buttons {
@@ -624,17 +624,17 @@ table.data {
         border-radius: $first-child-border-radius;
 
 	&:not(.state):not(.gap):not(.bulksearch):not(.bulkactions) {
-	  border-left: 1px solid $theme-color-table-border;
+	  border-left: 1px solid $color-table-border;
 	}
       }
 
       &:last-child:not(.fillup):not(.bulkactions), &.last_col {
-        border-right: 1px solid $theme-color-table-border;
+        border-right: 1px solid $color-table-border;
         border-radius: $table-cell-last-child-border-radius;
       }
 
       &:only-child {
-        border: 1px solid $theme-color-table-border;
+        border: 1px solid $color-table-border;
         border-radius: $theme-border-radius;
       }
 
@@ -677,7 +677,7 @@ table.data {
   }
 
   a {
-    color: $theme-color-text;
+    color: $color-text;
     text-decoration: none;
 
     &:hover {
@@ -777,7 +777,7 @@ table.data {
 }
 
 table.data .popup_menu, body.main table.data .popup_menu {
-  color: $theme-color-text;
+  color: $color-text;
 }
 
 /* Give each table's topmost row a top border */
@@ -804,7 +804,7 @@ table.groupheader {
 
   tr.groupheader td, tr.groupheader td a {
     font-size: $theme-font-table-header;
-    font-weight: $theme-font-weight-global;
+    font-weight: $font-weight-default;
   }
 }
 
@@ -841,7 +841,7 @@ tr.groupheader {
     padding: 0;
     margin: 0;
     font-weight: bold;
-    color: $theme-color-text;
+    color: $color-text;
     background: transparent;
     border-style: none;
 
@@ -849,9 +849,9 @@ tr.groupheader {
       display: inline-block;
       padding: 12px 0 4px;
       font-size: $theme-font-table-header;
-      font-weight: $theme-font-weight-global;
-      letter-spacing: $theme-letter-spacing-table;
-      color: $theme-color-text;
+      font-weight: $font-weight-default;
+      letter-spacing: $letter-spacing-table;
+      color: $color-text;
       vertical-align: baseline;
 
       &.state {
@@ -868,9 +868,9 @@ tr.groupheader {
       body.main .popup_menu & span {
         display: inline-block;
         font-size: $theme-font-table-header;
-        font-weight: $theme-font-weight-global;
-        letter-spacing: $theme-letter-spacing-table;
-        color: $theme-color-text;
+        font-weight: $font-weight-default;
+        letter-spacing: $letter-spacing-table;
+        color: $color-text;
       }
 
       &.state a,
@@ -883,7 +883,7 @@ tr.groupheader {
       &.state.hstate1 a,
       &.state.hstate1 body.main .popup_menu span,
       body.main .popup_menu &.state.hstate1 span {
-        color: $theme-color-lightgrey;
+        color: $lightgrey;
       }
     }
   }
@@ -891,7 +891,7 @@ tr.groupheader {
   a,
   body.main .popup_menu span,
   body.main .popup_menu & span {
-    color: $theme-color-text;
+    color: $color-text;
     text-decoration: none;
   }
 
@@ -955,10 +955,10 @@ table.data.headerleft {
     &:nth-child(even) {
       padding: 5px 16px;
       vertical-align: top;
-      background: $theme-color-white;
-      border-top: 1px solid $theme-color-table-border;
+      background: $bg-color-tertiary;
+      border-top: 1px solid $color-table-border;
       border-bottom: $table-headerleft-border-bottom;
-      border-left: 1px solid $theme-color-table-border;
+      border-left: 1px solid $color-table-border;
       border-radius: 0;
     }
   }
@@ -969,7 +969,7 @@ table.data.headerleft {
   }
 
   tbody tr td {
-    border-right: 1px solid $theme-color-table-border;
+    border-right: 1px solid $color-table-border;
 
     &.nowiki p {
       margin: 0;
@@ -978,7 +978,7 @@ table.data.headerleft {
 
   tbody tr:last-of-type td,
   tbody tr:last-of-type th {
-    border-bottom: 1px solid $theme-color-table-border;
+    border-bottom: 1px solid $color-table-border;
   }
 }
 
@@ -997,10 +997,10 @@ input:not(.button), input[type=text], input[type=password],
 select, textarea, div.snapin textarea, #mk_side_search_field, .tagify__input {
   height: auto;
   padding: 3px 6px;
-  color: $theme-color-text;
-  background: $primary-bg-color;
+  color: $color-text;
+  background: $bg-color-default;
   background-image: none;
-  border: 1px solid $theme-color-table-border;
+  border: 1px solid $color-table-border;
   border-radius: $theme-border-radius;
   box-shadow: none;
 
@@ -1010,7 +1010,7 @@ select, textarea, div.snapin textarea, #mk_side_search_field, .tagify__input {
 }
 
 span.select2 .select2-selection {
-  background-color: $primary-bg-color;
+  background-color: $bg-color-default;
   border-color: $select2-border-color;
 }
 
@@ -1048,8 +1048,8 @@ input, select, textarea, div.snapin select, div.snapin textarea,
     margin-right: 8px;
     margin-bottom: 8px;
     margin-left: 0;
-    font-size: $theme-font-size-main;
-    letter-spacing: $theme-letter-spacing-table;
+    font-size: $font-size-default;
+    letter-spacing: $letter-spacing-table;
     color: $input-button-color;
     background-color: $input-button-bg-color;
     border-color: $input-button-bg-color;
@@ -1109,7 +1109,7 @@ input.date, input.time {
   input, select, textarea, div.snapin select, div.snapin & select,
   div.snapin textarea, div.snapin & textarea, #mk_side_search_field,
   span.checkbox, > select {
-    background-color: $theme-color-nuance-15;
+    background-color: $color-nuance-15;
   }
 
   span.checkbox {
@@ -1130,7 +1130,7 @@ span.checkbox {
 }
 
 .checkbox label::before {
-  border: 1px solid $theme-color-table-border-dark;
+  border: 1px solid $color-table-border-dark;
   border-radius: 2px;
   box-shadow: none;
 }
@@ -1140,8 +1140,8 @@ table.nform {
   width: 100%;
   padding: 0;
   margin: 5px 0;
-  background: $secondary-bg-color;
-  border: 1px solid $theme-color-table-border;
+  background: $bg-color-secondary;
+  border: 1px solid $color-table-border;
   border-spacing: 7px 5px;
   border-radius: $primary-border-radius;
   box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
@@ -1158,7 +1158,7 @@ table.nform {
 
   tr.heading {
     height: auto;
-    background: $secondary-bg-color;
+    background: $bg-color-secondary;
 
     > td {
       vertical-align: middle;
@@ -1170,8 +1170,8 @@ table.nform {
     td {
       height: auto;
       padding: 3px 4px 0 ;
-      font-size: $theme-font-size-global;
-      letter-spacing: $theme-letter-spacing-table;
+      font-size: $font-size-global;
+      letter-spacing: $letter-spacing-table;
       color: $secondary-font-color;
       text-transform: uppercase;
     }
@@ -1210,7 +1210,7 @@ table.nform {
       max-width: 390px;
       padding: 0 8px 0 0;
       overflow: hidden;
-      font-weight: $theme-font-weight-bold;
+      font-weight: $font-weight-bold;
       white-space: nowrap;
 
       .dots {
@@ -1311,7 +1311,7 @@ table.nform {
   }
 
   .title {
-    color: $theme-color-text;
+    color: $color-text;
   }
 
   #view_p_options_tbl {
@@ -1405,7 +1405,7 @@ div.help {
     font-family: serif;
     font-size: 16px;
     font-style: italic;
-    font-weight: $theme-font-weight-bold;
+    font-weight: $font-weight-bold;
     content: "i";
   }
 
@@ -1456,8 +1456,8 @@ body.main .popup_menu {
   min-width: 300px;
   color: #fff;
   white-space: normal;
-  background-color: $theme-color-white;
-  border: 1px solid $theme-color-table-border;
+  background-color: $bg-color-tertiary;
+  border: 1px solid $color-table-border;
   border-radius: 5px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
 
@@ -1520,7 +1520,7 @@ body.main .popup_menu span {
   display: block;
   padding-top: 1px;
   padding-bottom: 1px;
-  color: $theme-color-text;
+  color: $color-text;
   text-align: left;
   text-decoration: none;
 
@@ -1661,10 +1661,10 @@ div.log_output, .crash_report pre {
   padding: 8px 16px;
   margin: 16px;
   font-family: monospace;
-  font-weight: $theme-font-weight-global;
-  color: $theme-color-lightgrey;
-  background: $theme-color-sidebar-background;
-  border: 1px solid $theme-color-table-border-dark;
+  font-weight: $font-weight-default;
+  color: $lightgrey;
+  background: $color-sidebar-background;
+  border: 1px solid $color-table-border-dark;
   border-radius: $theme-border-radius;
   box-shadow: none;
 }
@@ -1675,8 +1675,8 @@ div.log_output {
 
   pre {
     font-family: monospace;
-    font-size: $theme-font-size-global;
-    color: $theme-color-lightgrey;
+    font-size: $font-size-global;
+    color: $lightgrey;
   }
 }
 
@@ -1803,8 +1803,8 @@ td.job_state {
 
 table.data > tbody > tr > td.job_state {
   &.job_finished {
-    color: $theme-color-table-text;
-    background-color: $theme-color-state-success-background;
+    color: $grey-6;
+    background-color: $color-state-success-background;
     box-shadow: none;
   }
 
@@ -1814,12 +1814,12 @@ table.data > tbody > tr > td.job_state {
   }
 
   &.job_running {
-    background-color: $theme-color-state-9-background;
+    background-color: $color-state-9-background;
     box-shadow: none;
   }
 
   &.job_initialized {
-    color: $theme-color-black;
+    color: $black;
     background-color: #ccc;
   }
 }

@@ -22,200 +22,177 @@ tails.  You should have received  a copy of the  GNU  General Public
 License along with GNU Make; see the file  COPYING.  If  not,  write
 to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 Boston, MA 02110-1301 USA.
-
 */
 
 
 // -----------------------------------------------------------------------------
 // Colors
 // -----------------------------------------------------------------------------
-$white:    rgb(255, 255, 255);
-$black:    rgb(0, 0, 0);
-$warning:  rgb(255, 254, 68); // alt (more of an orange): rgb(255, 160, 66)
-$danger:   rgb(255, 50, 50);
-$success:  rgb(19, 211, 137);
-$info:     rgb(255, 235, 131); // == $theme-color-nuance-6; maybe an alternative rgb(255, 254, 68)
-$grey-1:   rgb(250, 250, 250);
-$grey-2:   rgb(189, 189, 189);
-$grey-3:   rgb(68, 68, 68);
-$grey-4:   rgb(51, 51, 51);
-$grey-5:   rgb(50, 50, 50);
-$grey-6:   rgb(40, 40, 40);
-$grey-7:   rgb(33, 33, 33);
-$shadow:   rgba(33, 33, 33, .35);
+$white:		rgb(255, 255, 255);
+$black:		rgb(0, 0, 0);
+$warning:	rgb(255, 254, 68); // alt (more of an orange): rgb(255, 160, 66)
+$danger:	rgb(255, 50, 50);
+$success:	rgb(19, 211, 137);
+$info:		rgb(255, 235, 131); //maybe an alternative rgb(255, 254, 68)
+$grey-1:	rgb(250, 250, 250);
+$grey-2:	rgb(189, 189, 189);
+$grey-3:	rgb(68, 68, 68);
+$grey-4:	rgb(51, 51, 51);
+$grey-5:	rgb(50, 50, 50);
+$grey-6:	rgb(40, 40, 40);
+$grey-7:	rgb(33, 33, 33);
+$shadow:	rgba(33, 33, 33, .35);
+$darkgrey:      rgb(131, 131, 131); // dark grey
+$yellow:        rgb(255, 215, 3); // yellow
+
+$lightgrey:     rgb(220, 220, 220); // light grey
+
+$color-text:                          $lightgrey;
+$color-background:                    $grey-5; // light grey
+
+$color-text-light:                    $lightgrey; // light grey
+
 
 // -----------------------------------------------------------------------------
 // Global toggles
 // -----------------------------------------------------------------------------
 $enable-rounded:  true;
 
-// -----------------------------------------------------------------------------
-// Spacing
-// -----------------------------------------------------------------------------
-$spacer:        1rem;
-$line-height:   1.5;
-
-$border-width:  1px;
-$border-color:  $grey-3;
 
 // -----------------------------------------------------------------------------
 // Fonts
 // -----------------------------------------------------------------------------
 $font-family-sans-serif:  "Lato", "Roboto", Helvetica, Arial, sans-serif;
 $font-family-monospace:   SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-$font-family-base:        $font-family-sans-serif;
+$font-family-default:	  $font-family-sans-serif;
 
-$font-size__base:          1rem; // Assumes the browser default, typically `16px`
+$font-size__base:	  1rem; // Assumes the browser default, typically `16px`
+$font-size-global:	  12px;
+$font-size-default:       11px;
+$font-size-small:         10px;
 
-$font-weight__light:       300;
-$font-weight__normal:      400;
-$font-weight__bold:        700;
+$font-weight-default:	  400;
+$font-weight-bold:	  700;
 
-$font-weight-base:        $font-weight__normal;
+$letter-spacing-default:  .5px;
+$letter-spacing-table:    1px;
 
-$headings__margin-bottom:  ($spacer * .5);
+$primary-font-color:			    $color-text;
+$secondary-font-color:			    $color-text;
+$primary-hover-font-color:		    $grey-1;
+$primary-sidebar-font-color:		    $color-text;
+
 
 // -----------------------------------------------------------------------------
 // Body
 // -----------------------------------------------------------------------------
-$body__background-color: $grey-5;
-$body__color: $grey-1;
+$bg-color-default:	  $grey-3;
+$bg-color-secondary:	  $grey-6;
+$bg-color-tertiary:	  $grey-7;
+
 
 // -----------------------------------------------------------------------------
 // Buttons
 // -----------------------------------------------------------------------------
-$button__color:                    $white;
-$button__background-color:         $grey-6;
-$button__hover__background-color:  mix($white, $grey-6, 30%);
-$button__border-color:             $grey-7;
+$button-background-hover:             lighten($grey-7, 10%);
+$button-border:                       #d9d9d9;
+$button-height:                       28px;
+
 
 // -----------------------------------------------------------------------------
 // Forms
 // -----------------------------------------------------------------------------
-$input__color:             $white;
-$input__background-color:  $grey-3;
-$input__border-color:      $grey-3;
 
+
+// -----------------------------------------------------------------------------
 // General
-
-$theme-color-black:                         $black; // black
-$theme-color-white:                         $grey-7; // white
-$theme-color-lightgrey:                     rgb(220, 220, 220); // light grey
-$theme-color-darkgrey:                      #838383; // dark grey
-
-$theme-color-main:                          #ffd703; // yellow
-
-$theme-color-text:                          $theme-color-lightgrey;
-$theme-color-background:                    $grey-5; // light grey
-
-$theme-color-text-light:                    $theme-color-lightgrey; // light grey
-
+// -----------------------------------------------------------------------------
 $theme-border-radius:                       4px;
 
 
-// Buttons
-
-$theme-button-background:                   $grey-7;
-$theme-button-background-hover:             lighten($grey-7, 10%);
-$theme-button-border:                       #d9d9d9;
-$theme-button-hover:                        #ffe350;
-$theme-button-height:                       28px;
-
-
+// -----------------------------------------------------------------------------
 // States
+// -----------------------------------------------------------------------------
+$color-state-1-background:	    $warning;
+$color-state-1-border:		    $warning;
 
-$theme-color-state-1-background:	    $warning;
-$theme-color-state-1-border:		    $warning;
+$color-state-2-background:            $danger;
+$color-state-2-border:                mix($black, $danger, 30%);
 
-$theme-color-state-2-background:            $danger;
-$theme-color-state-2-border:                mix($black, $danger, 30%);
+$color-state-3-background:            rgb(255, 179, 0);
+$color-state-3-border:                rgb(255, 179, 0);
 
-$theme-color-state-3-background:            rgb(255, 179, 0);
-$theme-color-state-3-border:                rgb(255, 179, 0);
+$color-state-4-background:            #888;
+$color-state-4-border:                #7b7b7b;
 
-$theme-color-state-4-background:            #888;
-$theme-color-state-4-border:                #7b7b7b;
+$color-state-5-background:            #48cbf0;
 
-$theme-color-state-5-background:            #48cbf0;
+$color-state-6-background:            #b9ecfa;
 
-$theme-color-state-6-background:            #b9ecfa;
+$color-state-7-background:            #e9806e;
 
-$theme-color-state-7-background:            #e9806e;
+$color-state-8-background:            #f1aea2;
 
-$theme-color-state-8-background:            #f1aea2;
+$color-state-9-background:            #bf5abf;
 
-$theme-color-state-9-background:            #bf5abf;
+$color-state-error-border:            #e22828; // red
 
-$theme-color-state-error-border:            #e22828; // red
+$color-state-success-background:      $success; // green
+$color-state-success-border:          mix($black, $success, 30%); // green
 
-$theme-color-state-success-background:      $success; // green
-$theme-color-state-success-border:          mix($black, $success, 30%); // green
-
-$theme-color-perfometer-title:              $grey-7;
+$color-perfometer-title:              $grey-7;
 
 
+// -----------------------------------------------------------------------------
 // Tables
+// -----------------------------------------------------------------------------
+$color-table-border:                  $grey-7; // grey
+$color-table-background:              $grey-6; // light grey
 
-$theme-color-table-border:                  $grey-7; // grey
-$theme-color-table-background:              $grey-6; // light grey
+$color-table-border-dark:             $grey-7; // dark grey
+$color-table-background-dark:         $grey-7; // dark grey
 
-$theme-color-table-border-dark:             $grey-7; // dark grey
-$theme-color-table-background-dark:         $grey-7; // dark grey
-
-$theme-color-table-border-dark-2:           #313638; // dark grey
+$color-table-border-dark-2:           #313638; // dark grey
 
 $theme-font-table-header:                   16px;
 
-$theme-color-table-text:                    #2a2a2a; // dark grey
-$theme-color-table-header-text:             #2a2a2a80; // half transparent
+$color-table-header-text:             #2a2a2a80; // half transparent
 
 
+// -----------------------------------------------------------------------------
 // Sidebar
-
-$theme-color-sidebar-background:            $grey-7; // dark grey
-$theme-color-sidebar-border:                $grey-5;
+// -----------------------------------------------------------------------------
+$color-sidebar-background:            $grey-7; // dark grey
+$color-sidebar-border:                $grey-5;
 
 $theme-snapin-width:                        262px;
 
 
+// -----------------------------------------------------------------------------
 // Nuances (Colors only used once)
-
-$theme-color-nuance-1:                      #afb2c6; // blue grey
-$theme-color-nuance-2:                      #afb; // light green
-$theme-color-nuance-3:                      #8288a6; // dark grey
-$theme-color-nuance-4:                      #f6f7f8; // light grey
-$theme-color-nuance-5:                      #c5c5c5; // grey
-$theme-color-nuance-6:                      #ffeb83; // == $info; yellow
-$theme-color-nuance-7:                      #333; // dark grey
-$theme-color-nuance-8:                      #d7d7d7; // grey
-$theme-color-nuance-9:                      #cfcfcf; // grey
-$theme-color-nuance-10:                     #191c1d; // grey
-$theme-color-nuance-11:                     #222f33; // dark grey
-$theme-color-nuance-12:                     #9ee273; // green
-$theme-color-nuance-13:                     #f3f4f6; // light grey
-$theme-color-nuance-14:                     rgba(37, 41, 42, .3); // transparent grey
-$theme-color-nuance-15:                     rgb(130, 50, 50); // dark red
-$theme-color-nuance-16:                     #fb9f49; // orange
-$theme-color-nuance-17:                     #a1e6f8; // light blue
-
-
-// Fonts
-
-$theme-font:                                "Lato", "Roboto", Helvetica, Arial, sans-serif;
-
-$theme-font-size-global:                    12px;
-$theme-font-size-main:                      11px;
-$theme-font-size-small:                     10px;
-
-$theme-font-weight-global:                  400;
-$theme-font-weight-bold:                    700;
-
-$theme-letter-spacing:                      .5px;
-$theme-letter-spacing-table:                1px;
+// -----------------------------------------------------------------------------
+$color-nuance-1:                      #afb2c6; // blue grey
+$color-nuance-2:                      #afb; // light green
+$color-nuance-3:                      #8288a6; // dark grey
+$color-nuance-4:                      #f6f7f8; // light grey
+$color-nuance-5:                      #c5c5c5; // grey
+$color-nuance-6:                      #ffeb83; // == $info; yellow
+$color-nuance-7:                      #333; // dark grey
+$color-nuance-8:                      #d7d7d7; // grey
+$color-nuance-9:                      #cfcfcf; // grey
+$color-nuance-10:                     #191c1d; // grey
+$color-nuance-11:                     #222f33; // dark grey
+$color-nuance-12:                     #9ee273; // green
+$color-nuance-13:                     #f3f4f6; // light grey
+$color-nuance-14:                     rgba(37, 41, 42, .3); // transparent grey
+$color-nuance-15:                     rgb(130, 50, 50); // dark red
+$color-nuance-16:                     #fb9f49; // orange
+$color-nuance-17:                     #a1e6f8; // light blue
 
 
+// -----------------------------------------------------------------------------
 // Tags
-
+// -----------------------------------------------------------------------------
 $tag-margin:                                0 5px 2px 0;
 $tag-padding:                               .1em .3em;
 $tag-font-color:			    rgb(240, 240, 240);
@@ -232,14 +209,6 @@ $tag-dropdown-active-bg-color:		    $grey-3;
 // Temporary variables for implementing the dark theme
 // These should be put into a more intuitive naming structure afterwards.
 // -----------------------------------------------------------------------------
-
-$primary-bg-color:			    $grey-3;
-$secondary-bg-color:			    $grey-6;
-
-$primary-font-color:			    $theme-color-text;
-$secondary-font-color:			    $theme-color-text;
-$primary-hover-font-color:		    $grey-1;
-$primary-sidebar-font-color:		    $theme-color-text;
 
 $primary-link-color:	  		    $grey-2;
 $secondary-link-color:			    $grey-2;
@@ -266,7 +235,7 @@ $toggle-switch-on-bg-color:		    rgb(20, 118, 20);
 $toggle-switch-on-border:		    1px solid rgb(40, 60, 40);
 $toggle-switch-off-bg-color:		    rgb(164, 0, 0);
 $toggle-switch-off-border:		    1px solid rgb(70, 40, 40);
-$toggle-switch-font-color:		    $theme-color-text;
+$toggle-switch-font-color:		    $color-text;
 $toggle-switch-height:			    15px;
 $toggle-switch-font-weight:		    400;
 
@@ -277,7 +246,7 @@ $toggle-button-down-hover-bg-color:	    lighten($grey-3, 10%);
 $toggle-button-down-hover-border-color:	    null;
 $toggle-button-search-img-filter:	    invert(20%);
 
-$success-bg-color:			    $primary-bg-color;
+$success-bg-color:			    $bg-color-default;
 
 $filter-inversion-percentage:		    0%;
 
@@ -301,7 +270,7 @@ $data-table-state-border-bottom:	    $secondary-table-border !important;
 
 $input-button-bg-color:			    $grey-3;
 $input-button-hover-bg-color:		    lighten($grey-3, 10%);
-$input-button-color:			    $theme-color-text;
+$input-button-color:			    $color-text;
 
 $odd-tr-bg-color:			    $grey-7;
 $even-tr-bg-color:			    $grey-5;
@@ -311,7 +280,7 @@ $tr-data-border-bottom:			    1.8px solid $grey-7;
 $floatfilter-bg-color:			    null;
 
 $select2-border-color:			    $grey-7;
-$select2-rendered-color:		    $theme-color-text;
+$select2-rendered-color:		    $color-text;
 $select2-selected-bg-color:		    $grey-5;
 $select2-highlighted-bg-color:		    rgb(93, 93, 93);
 
@@ -323,16 +292,15 @@ $td-unused-color:			    $grey-2;
 
 $color-div-box-shadow:			    null;
 
-$graph-legend-color:			    $theme-color-text !important;
+$graph-legend-color:			    $color-text !important;
 
 $dark-font-color:			    $grey-7 !important;
 
 $body-dashlet-bg-color:			    $grey-6;
 $dashlet-bg-color:			    $grey-6;
 
-$tactical-overview-th-font-color:	    $theme-color-text;
+$tactical-overview-th-font-color:	    $color-text;
 $tactical-overview-td-bg-color:		    $grey-3;
-$states-font-color:			    $grey-7;
 
 $sidebar-iconbutton-bg-color:		    $grey-5;
 $sidebar-iconbutton-border-color:	    transparent;
@@ -355,7 +323,7 @@ $tr-even3-bg-color:			    $grey-6;
 
 $graph-bg-color:			    $grey-6 !important;
 $graph-legend-th-border-bottom:		    1px solid $grey-1;
-$graph-time-color:			    $theme-color-text;
+$graph-time-color:			    $color-text;
 
 $dashlet-stats-border-top-color:	    $grey-6;
 $dashlet-title-border-radius:		    0;
@@ -368,14 +336,14 @@ $wato-a-border:				    1px solid #212121;
 
 $wato-subtitle-color:			    $grey-2;
 
-$footnote-link-color:			    $theme-color-text;
+$footnote-link-color:			    $color-text;
 
 $table-data-single-padding:		    2px 0;
 $td-single-left-border-right:		    null;
 $td-single-left-padding:		    2px 36px 2px 16px;
 
 $host-diag-success-bg-color:		    rgb(50, 80, 50);
-$host-diag-failed-bg-color:		    $theme-color-nuance-15;
+$host-diag-failed-bg-color:		    $color-nuance-15;
 
 
 $wato-inherited-color:			    $grey-2;
@@ -435,10 +403,10 @@ $invtree-td-bg-color:			    rgb(100, 100, 100);
 
 $availability-table-border-color:	    $grey-7;
 $availability-summary-bg-color:		    null;
-$lightened-state0-bg-color:		    lighten($theme-color-state-success-background, 10%);
-$lightened-state1-bg-color:		    lighten($theme-color-state-1-background, 10%);
-$lightened-state2-bg-color:		    lighten($theme-color-state-2-background, 10%);
-$lightened-state3-bg-color:		    lighten($theme-color-state-3-background, 10%);
+$lightened-state0-bg-color:		    lighten($color-state-success-background, 10%);
+$lightened-state1-bg-color:		    lighten($color-state-1-background, 10%);
+$lightened-state2-bg-color:		    lighten($color-state-2-background, 10%);
+$lightened-state3-bg-color:		    lighten($color-state-3-background, 10%);
 $unmonitored-font-color:		    $grey-7;
 $unmonitored-bg-color:			    rgb(134, 134, 134);
 $lightened-unmonitored-bg-color:	    lighten($unmonitored-bg-color, 10%);
@@ -474,8 +442,9 @@ $snapin-list-color:			    $white;
 $performance-table-shared-padding:          8px 0;
 
 
+// -----------------------------------------------------------------------------
 // Node visualization
-
+// -----------------------------------------------------------------------------
 $node-vis-darkgrey:			    rgb(169, 169, 169);
 $node-vis-togglebox-enabled:		    rgb(94, 93, 93);
 $node-vis-search-box-border:		    none;
@@ -495,7 +464,7 @@ $node-vis-growth-root-color:		    $node-vis-darkgrey; // blue
 $topology-filter-bg-color:		    $grey-5;
 $topology-filter-border-color:		    $grey-7;
 
-$host-folder-font-color:		    $theme-color-text;
+$host-folder-font-color:		    $color-text;
 
 $snapin-link-hover-color:		    $grey-1;
 
@@ -507,7 +476,7 @@ $foldertree-snapin-font-color:		    $primary-sidebar-font-color;
 $table-headerleft-border-bottom:	    1px solid $grey-5;
 
 $agent-config-inner-title-bg-color:	    $grey-5;
-$agent-config-td-color:			    $theme-color-text;
+$agent-config-td-color:			    $color-text;
 
 $service-container-groupheader-bg-color:    $grey-6;
 
@@ -531,7 +500,7 @@ $timetable-hilite-even-bg-color:	    lighten($grey-5, 15%);
 $timetable-hilite-odd-bg-color:		    lighten($grey-7, 15%);
 
 $pnp-graph-img-border-color:		    rgb(240, 240, 240);
-$graph-hover-popup-font-color:		    $theme-color-text;
+$graph-hover-popup-font-color:		    $color-text;
 $graph-hover-popup-bg-color:		    $grey-6;
 $graph-hover-popup-border:		    1px solid $grey-3;
 $graph-hover-popup-box-shadow:		    none;
@@ -541,3 +510,7 @@ $globalvars-modified-box-shadow:	    null;
 $globalvars-modified-globally-box-shadow:   null;
 
 $dashlet-inner-bg-color:		    $grey-6;
+
+$states-font-color:			    $grey-7;
+$statep-font-color:			    $grey-1;
+$state3-font-color:			    $grey-7;

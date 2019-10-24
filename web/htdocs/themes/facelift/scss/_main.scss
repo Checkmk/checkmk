@@ -84,7 +84,7 @@ input, select, textarea {
 select:not([multiple]) {
   padding: 8px 16px;
   padding-right: 2.5em;
-  background: $primary-bg-color url("images/select_arrow.png") right 50% / 20px 11px no-repeat;
+  background: $bg-color-default url("images/select_arrow.png") right 50% / 20px 11px no-repeat;
   -webkit-appearance: none;  /* Removes default chrome and safari style */
   -moz-appearance: none;     /* Removes default style Firefox */
 }
@@ -130,7 +130,7 @@ input[type="checkbox"] {
     margin: -2px 4px 0 0;
     font-size: 12px;
     vertical-align: middle;
-    background-color: $primary-bg-color;
+    background-color: $bg-color-default;
     border: 1px $checkbox-border-color solid;
     content: "\00a0";
     box-shadow: 0.1px 1px 1.2px 0 $checkbox-shadow inset;
@@ -179,8 +179,8 @@ table.vs_duallist a.control,
 table.vs_duallist a.control,
 table.vs_duallist body.main .popup_menu span.control,
 body.main .popup_menu table.vs_duallist span.control {
-  background-color: $theme-color-table-border;
-  border-color: $theme-color-nuance-1;
+  background-color: $color-table-border;
+  border-color: $color-nuance-1;
   border-style: solid;
   box-shadow: none;
 }
@@ -234,8 +234,8 @@ input.button.hot {
   width: 56px;
   height: 22px;
   padding: 2px;
-  background: $primary_bg_color;
-  border: 1px solid $theme-color-table-border;
+  background: $bg-color-default;
+  border: 1px solid $color-table-border;
   border-radius: 11px;
   box-shadow: none;
   box-sizing: border-box;
@@ -251,9 +251,9 @@ input.button.hot {
   body.main .popup_menu .wato div.globalvars & {
     height: $toggle-switch-height;
     font-size: 8px;
-    font-weight: $theme-font-weight-bold;
+    font-weight: $font-weight-bold;
     line-height: $toggle-switch-height;
-    letter-spacing: $theme-letter-spacing-table;
+    letter-spacing: $letter-spacing-table;
     text-transform: uppercase;
     border: none;
     border-radius: 8px;
@@ -462,8 +462,8 @@ div.message {
 }
 
 div.error {
-  color: $theme-color-lightgrey;
-  background-color: $theme-color-state-2-background;
+  color: $lightgrey;
+  background-color: $color-state-2-background;
   border-color: #e40;
 
   a {
@@ -478,7 +478,7 @@ div.error {
 .warning,
 body.main div.warning {
   color: #000;
-  background-color: $theme-color-main;
+  background-color: $yellow;
   border-color: #fc0;
 
   a, a:link {
@@ -855,7 +855,7 @@ div#hover_menu {
 
   div.message {
     color: $primary-sidebar-font-color;
-    background-color: $theme-color-black;
+    background-color: $black;
   }
 
   .graph_container div.title {
@@ -881,7 +881,7 @@ div.popup_trigger.colorpicker div.popup_menu {
 .cp-preview {
   width: 28px;
   height: 18px;
-  border: 1px solid $theme-color-darkgrey;
+  border: 1px solid $darkgrey;
   border-radius: $theme-border-radius;
   box-shadow: none;
 
@@ -948,7 +948,7 @@ div.popup_trigger.colorpicker div.popup_menu {
 .cp-input {
   float: left;
   margin-top: 2px;
-  color: $theme-color-text;
+  color: $color-text;
 
   input, select, textarea,
   div.snapin select, div.snapin & select,
@@ -996,61 +996,61 @@ table.data.werks {
   tr {
     &:nth-child(odd) {
       td.werklevel2 {
-        background-color: $theme-color-state-5-background;
+        background-color: $color-state-5-background;
       }
 
       td.werklevel3 {
-        background-color: $theme-color-state-6-background;
+        background-color: $color-state-6-background;
       }
 
       td.werkclassfeature {
-        background-color: $theme-color-state-success-background;
+        background-color: $color-state-success-background;
       }
 
       td.werkclassfix {
-        background-color: $theme-color-main;
+        background-color: $yellow;
       }
 
       td.werkclasssecurity {
-        background-color: $theme-color-state-2-background;
+        background-color: $color-state-2-background;
       }
 
       td.werkcompincomp_unack {
-        background-color: $theme-color-state-7-background;
+        background-color: $color-state-7-background;
       }
 
       td.werkcompincomp_ack {
-        background-color: $theme-color-state-8-background;
+        background-color: $color-state-8-background;
       }
     }
 
     &:nth-child(even) {
       td.werklevel2 {
-        background-color: $theme-color-state-5-background;
+        background-color: $color-state-5-background;
       }
 
       td.werklevel3 {
-        background-color: $theme-color-state-6-background;
+        background-color: $color-state-6-background;
       }
 
       td.werkclassfeature {
-        background-color: $theme-color-state-success-background;
+        background-color: $color-state-success-background;
       }
 
       td.werkclassfix {
-        background-color: $theme-color-main;
+        background-color: $yellow;
       }
 
       td.werkclasssecurity {
-        background-color: $theme-color-state-2-background;
+        background-color: $color-state-2-background;
       }
 
       td.werkcompincomp_unack {
-        background-color: $theme-color-state-7-background;
+        background-color: $color-state-7-background;
       }
 
       td.werkcompincomp_ack {
-        background-color: $theme-color-state-8-background;
+        background-color: $color-state-8-background;
       }
     }
   }
@@ -1078,7 +1078,7 @@ table.data.werks {
 table.werks td a,
 table.werks td body.main .popup_menu span,
 body.main .popup_menu table.werks td span {
-  color: $theme-color-black;
+  color: $black;
   text-decoration: underline;
 }
 
@@ -1158,13 +1158,13 @@ table.modifydowntimes > tbody > tr {
   }
 
   .select2-dropdown {
-    background-color: $primary-bg-color;
+    background-color: $bg-color-default;
     border: $primary-border;
   }
 
   .select2-results__option {
     color: $select2-rendered-color;
-    background-color: $primary-bg-color;
+    background-color: $bg-color-default;
   }
 
   .select2-results__option[aria-selected=true] {
@@ -1180,21 +1180,21 @@ table.modifydowntimes > tbody > tr {
  *       where needed
  */
 * {
-  letter-spacing: $theme-letter-spacing;
+  letter-spacing: $letter-spacing-default;
   text-shadow: none;
 }
 
 html {
-  font-size: $theme-font-size-global;
+  font-size: $font-size-global;
 }
 
 .link, .title {
   display: inline-block;
   padding: 0 2px; /* affects spacing in sidebar plugins */
-  font-size: $theme-font-size-main;
-  font-weight: $theme-font-weight-global;
-  letter-spacing: $theme-letter-spacing-table;
-  color: $theme-color-text;
+  font-size: $font-size-default;
+  font-weight: $font-weight-default;
+  letter-spacing: $letter-spacing-table;
+  color: $color-text;
   transition: color .15s ease-in-out;
 }
 
@@ -1204,7 +1204,7 @@ a.iconlink img, body.main .popup_menu span.iconlink img {
 }
 
 div.graph {
-  border: 1px solid $theme-color-table-border;
+  border: 1px solid $color-table-border;
   border-radius: $theme-border-radius;
   box-shadow: none;
 
@@ -1282,7 +1282,7 @@ body.main img.treeangle {
 }
 
 table.report_contents td.preview img {
-  border: 1px solid $theme-color-nuance-3;
+  border: 1px solid $color-nuance-3;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
 }
 
@@ -1295,7 +1295,7 @@ div.graph_with_timeranges {
   margin-bottom: 32px;
 
   div.graph {
-    border: 1px solid $theme-color-table-border;
+    border: 1px solid $color-table-border;
     box-shadow: none;
 
     div.title {
@@ -1314,8 +1314,8 @@ div.graph_with_timeranges {
       top: 12px;
       width: calc(100% - 16px);
       padding: 8px 0;
-      font-weight: $theme-font-weight-global;
-      color: $theme-color-text;
+      font-weight: $font-weight-default;
+      color: $color-text;
       text-shadow: none;
       box-sizing: border-box;
     }
@@ -1335,7 +1335,7 @@ div.graph_with_timeranges {
 
   table.timeranges > tbody > tr > td {
     padding: 0 8px 4px;
-    border: none solid $theme-color-white;
+    border: none;
 
     &:first-child {
       border-right: none solid;
@@ -1368,14 +1368,14 @@ td.title {
 table.cmc_stats {
   width: 100%;
   padding: 8px;
-  background-color: $theme-color-table-background-dark;
-  border: 1px solid $theme-color-table-border-dark;
+  background-color: $color-table-background-dark;
+  border: 1px solid $color-table-border-dark;
   border-spacing: 4px;
   box-sizing: border-box;
 
   td {
-    font-weight: $theme-font-weight-global;
-    letter-spacing: $theme-letter-spacing-table;
+    font-weight: $font-weight-default;
+    letter-spacing: $letter-spacing-table;
   }
 }
 
@@ -1390,12 +1390,12 @@ select.vlof_filter {
 }
 
 div.timerange {
-  font-size: $theme-font-size-main;
-  color: $theme-color-darkgrey;
+  font-size: $font-size-default;
+  color: $darkgrey;
 }
 
 body.main.visible div.foldable .title {
-  color: $theme-color-text;
+  color: $color-text;
 }
 
 div.color {
@@ -1406,7 +1406,7 @@ div.color {
 
 /* TODO: Reproduce this element then get rid of important styles */
 th.header_state {
-  color: $theme-color-text !important;
+  color: $color-text !important;
   background: transparent !important;
 
   &:hover {
@@ -1417,15 +1417,15 @@ th.header_state {
 .hot a, .hot body.main .popup_menu span, body.main .popup_menu .hot span {
   color: $hot-font-color;
   background-color: $hot-bg-color;
-  border-color: $theme-color-nuance-16;
+  border-color: $color-nuance-16;
 }
 
 div.info {
   margin: 16px 0 8px;
-  font-size: $theme-font-size-main;
+  font-size: $font-size-default;
   font-weight: 500;
-  letter-spacing: $theme-letter-spacing;
-  color: $theme-color-text;
+  letter-spacing: $letter-spacing-default;
+  color: $color-text;
 }
 
 .age {
@@ -1444,7 +1444,7 @@ div.info {
 
 body.main a, body.main .popup_menu span, body.main .popup_menu a,
 body.main a:link, body.main a:visited {
-  color: $theme-color-text;
+  color: $color-text;
 }
 
 img.glass {

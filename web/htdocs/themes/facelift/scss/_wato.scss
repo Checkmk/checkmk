@@ -39,7 +39,7 @@ Boston, MA 02110-1301 USA.
 
 
 .wato {
-  color: $theme-color-text;
+  color: $color-text;
 }
 
 /* Icon image place inline in some documentation text */
@@ -343,7 +343,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
         left: 0;
         font-size: 29px;
         font-weight: 800;
-        color: $theme-color-main;
+        color: $yellow;
         content: "»";
       }
 
@@ -380,7 +380,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
       height: auto;
       padding: 4px;
       line-height: 33px;
-      color: $theme-color-text;
+      color: $color-text;
       background: none;
     }
 
@@ -393,7 +393,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
       font-size: 12px;
       font-weight: normal;
       color: #fff;
-      background-color: $theme-color-white;
+      background-color: $bg-color-tertiary;
       box-shadow: none;
     }
 
@@ -403,13 +403,13 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
       }
 
       select {
-        background-color: $theme-color-table-background;
+        background-color: $color-table-background;
       }
     }
 
     select option {
-      color: $theme-color-text;
-      background-color: $theme-color-white;
+      color: $color-text;
+      background-color: $bg-color-tertiary;
     }
 
     .left,
@@ -421,7 +421,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
   li a,
   li body.main .popup_menu span,
   body.main .popup_menu li span {
-    color: $theme-color-text;
+    color: $color-text;
   }
 }
 
@@ -478,7 +478,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
       right: 0;
       left: 0;
       overflow: hidden;
-      font-size: $theme-font-size-main;
+      font-size: $font-size-default;
       color: $host-folder-font-color;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -541,7 +541,7 @@ body.main .popup_menu .wato div.floatfolder div.title span,
 .wato div.floatfolder.locked div.title {
   font-size: 13px;
   font-weight: 500;
-  color: $theme-color-text;
+  color: $color-text;
 }
 
 .wato img.authicon {
@@ -578,7 +578,7 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   padding-left: 1px;
   margin-top: 10px;
   margin-bottom: 10px;
-  color: $theme-color-text;
+  color: $color-text;
 }
 
 /* Controls for the audit log paged mechanism */
@@ -783,7 +783,7 @@ form.search, div.filter_buttons {
 }
 
 .wato form.search {
-  color: $theme-color-text;
+  color: $color-text;
 }
 
 .wato div.mainmenu {
@@ -792,8 +792,8 @@ form.search, div.filter_buttons {
     width: 330px;
     height: 80px;
     margin: 0 8px 8px 0;
-    background: $secondary-bg-color;
-    border: 1px solid $theme-color-table-border;
+    background: $bg-color-secondary;
+    border: 1px solid $color-table-border;
     box-shadow: none;
 
     &:hover {
@@ -832,10 +832,10 @@ form.search, div.filter_buttons {
       width: 234px;
       padding: 16px 0;
       overflow: hidden;
-      font-size: $theme-font-size-small;
+      font-size: $font-size-small;
       font-weight: 500;
       line-height: 1.5;
-      letter-spacing: $theme-letter-spacing-table;
+      letter-spacing: $letter-spacing-table;
       color: $wato-subtitle-color;
       text-rendering: optimizeLegibility;
     }
@@ -1049,7 +1049,7 @@ div.varname {
     height: 24px;
     padding-top: 10px;
     font-size: 11px;
-    color: $theme-color-black;
+    color: $black;
     background: $repprogress-progress-bg-color;
     border: 1px solid $repprogress-progress-border-color;
     border-radius: $theme-border-radius;
@@ -1058,20 +1058,20 @@ div.varname {
 
     &.state_success {
       /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#bfd255+0,8eb92a+50,72aa00+51,9ecb2d+100;Green+Gloss */
-      background: $theme-color-state-success-background;
-      border-color: $theme-color-state-success-border;
+      background: $color-state-success-background;
+      border-color: $color-state-success-border;
     }
 
     &.state_error {
       /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#f3c5bd+0,e86c57+50,ea2803+51,ff6600+75,c72200+100;Red+Gloss */
-      background: $theme-color-state-2-background;
-      border-color: $theme-color-state-2-border;
+      background: $color-state-2-background;
+      border-color: $color-state-2-border;
     }
 
     &.state_warning {
       /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#fceabb+0,fccd4d+50,f8b500+51,fbdf93+100;Orange+3D+%235 */
-      background: $theme-color-main;
-      border-color: $theme-color-state-1-border;
+      background: $yellow;
+      border-color: $color-state-1-border;
     }
   }
 }
@@ -1095,7 +1095,7 @@ div.varname {
 
 table.data tr.notification_context table {
   margin: 5px;
-  border: 1px solid $theme-color-table-border;
+  border: 1px solid $color-table-border;
   box-shadow: none;
 
   th, td {
@@ -1104,15 +1104,15 @@ table.data tr.notification_context table {
 
   th {
     padding: 2px 4px;
-    color: $theme-color-text;
+    color: $color-text;
     background-color: $primary-th-bg-color;
-    border: 1px solid $theme-color-table-border;
+    border: 1px solid $color-table-border;
   }
 
   td {
     padding: 2px 4px;
     background-color: $primary-td-bg-color;
-    border: 1px solid $theme-color-table-border;
+    border: 1px solid $color-table-border;
   }
 }
 
@@ -1146,8 +1146,8 @@ table.data tr.data.dcd_log_entries {
 .wato table.progress {
   width: 50%;
   color: #000;
-  background: $theme-color-white;
-  border: 1px solid $theme-color-table-border;
+  background: $bg-color-tertiary;
+  border: 1px solid $color-table-border;
   border-radius: $theme-border-radius;
 
   th {
@@ -1167,11 +1167,11 @@ table.data tr.data.dcd_log_entries {
         margin: 16px;
         overflow: auto;
         font-family: monospace;
-        font-weight: $theme-font-weight-global;
-        color: $theme-color-lightgrey;
+        font-weight: $font-weight-default;
+        color: $lightgrey;
         text-align: left;
-        background: $theme-color-sidebar-background;
-        border: 1px solid $theme-color-table-border-dark;
+        background: $color-sidebar-background;
+        border: 1px solid $color-table-border-dark;
         border-radius: $theme-border-radius;
         box-shadow: none;
       }
@@ -1243,7 +1243,7 @@ table.data tr.data.dcd_log_entries {
       th, td {
         padding: 6px 0;
         border-bottom: 1px solid #fff;
-        border-color: $theme-color-table-border;
+        border-color: $color-table-border;
       }
 
       th {
@@ -1271,7 +1271,7 @@ table.data tr.data.dcd_log_entries {
 .wato #progress_bar.finished {
   td.left {
     padding: 0;
-    background-color: $theme-color-state-success-background;
+    background-color: $color-state-success-background;
     box-shadow: none;
   }
 
@@ -1370,7 +1370,7 @@ table.data td.bi_rule_tree {
   overflow-y: scroll;
   font-family: monospace, sans-serif;
   vertical-align: top;
-  background-color: $primary-bg-color;
+  background-color: $bg-color-default;
   box-shadow: 1px 1px 3px #888 inset;
   /* below resize option is css3 */
   resize: both;
@@ -1408,7 +1408,7 @@ table.data td.bi_rule_tree {
   .log {
     padding: 8px;
     margin: 8px;
-    border: 1px solid $theme-color-table-border;
+    border: 1px solid $color-table-border;
     border-radius: $theme-border-radius;
     box-shadow: none;
 
@@ -1520,8 +1520,8 @@ table.nform.rulesettings td.legend {
     padding: 2px;
     margin: 0 5px 5px 0;
     text-overflow: ellipsis;
-    background: $theme-color-white;
-    border: 1px solid $theme-color-table-border;
+    background: $bg-color-tertiary;
+    border: 1px solid $color-table-border;
     border-radius: 6px;
     box-shadow: none;
 
@@ -1640,9 +1640,9 @@ table.data.analyze_config td.buttons {
 
 .wato h3 {
   font-size: $theme-font-table-header;
-  font-weight: $theme-font-weight-global;
-  letter-spacing: $theme-letter-spacing-table;
-  color: $theme-color-text;
+  font-weight: $font-weight-default;
+  letter-spacing: $letter-spacing-table;
+  color: $color-text;
 }
 
 .wato table.data.job_table {

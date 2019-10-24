@@ -28,7 +28,7 @@ Boston, MA 02110-1301 USA.
 
 #svg_content {
   min-height: 630px;
-  background-color: $secondary-bg-color;
+  background-color: $bg-color-secondary;
 }
 
 #node_visualization {
@@ -110,7 +110,7 @@ div.node_vis {
    }
 
   div.box, img.box {
-    background-color: $primary-bg-color;
+    background-color: $bg-color-default;
     border: $node-vis-box-border;
     border-radius: 4px;
     box-shadow: $node-vis-box-shadow;

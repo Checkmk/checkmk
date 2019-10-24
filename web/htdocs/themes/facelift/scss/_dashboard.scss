@@ -95,14 +95,14 @@ div.dashlet {
     padding-left: 9px;
     margin: 0;
     overflow: hidden;
-    font-size: $theme-font-size-small;
+    font-size: $font-size-small;
     font-weight: 500;
     letter-spacing: 2px;
     color: $secondary-link-color;
     text-transform: uppercase;
     white-space: nowrap;
-    background: $secondary-bg-color;
-    border: 1px solid $theme-color-table-border;
+    background: $bg-color-secondary;
+    border: 1px solid $color-table-border;
     border-bottom: none;
     border-radius: $dashlet-title-border-radius;
     /* IE < 9 */
@@ -225,7 +225,7 @@ table.dashlet_overview h2 {
 div.dashlet_inner div.stats table.hoststats a,
 div.dashlet_inner div.stats table.hoststats body.main .popup_menu span,
 body.main .popup_menu div.dashlet_inner div.stats table.hoststats span {
-  color: $theme-color-text;
+  color: $color-text;
 }
 
 div.dashlet_inner div.stats {
@@ -234,7 +234,7 @@ div.dashlet_inner div.stats {
   height: 100%;
   padding: 0;
   margin: 0;
-  background-color: $secondary-bg-color;
+  background-color: $bg-color-secondary;
 
   table th, table td {
     background: $dashboard-stats-bg-color;
@@ -281,24 +281,24 @@ body.main.dashlet {
     }
 
     &:last-of-type > td:not(.state):not(.gap) {
-      border-bottom: 1px solid $theme-color-table-border;
+      border-bottom: 1px solid $color-table-border;
     }
 
     &:nth-child(2) > td.state {
-      border-top-color: $theme-color-table-border !important;
+      border-top-color: $color-table-border !important;
     }
   }
 }
 
 div[id^=dashlet] div.dashlet_inner > div {
-  border: 1px solid $theme-color-table-border;
+  border: 1px solid $color-table-border;
   border-top: none;
   box-sizing: border-box;
   transition: .15s ease-in-out;
 }
 
 iframe[id^=dashlet_iframe] {
-  background: $theme-color-white;
+  background: $bg-color-tertiary;
   transition: .15s ease-in-out;
 }
 
@@ -333,16 +333,16 @@ iframe[id^=dashlet_iframe] {
   width: 200px;
   padding: 8px;
   margin: 0;
-  color: $theme-color-lightgrey;
+  color: $lightgrey;
   list-style: none;
-  background-color: $theme-color-sidebar-background;
-  border: 1px solid $theme-color-table-border-dark;
+  background-color: $color-sidebar-background;
+  border: 1px solid $color-table-border-dark;
   border-radius: $theme-border-radius;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
 
   li, {
     padding: 4px 0;
-    color: $theme-color-lightgrey;
+    color: $lightgrey;
   }
 }
 

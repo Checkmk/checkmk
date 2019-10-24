@@ -1,0 +1,24 @@
+Title: NagVis backends now work with encrypted Livestatus
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1571914004
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+WATO automatically configures backends in NagVis on the central site of a
+distributed WATO setup. When the livestatus proxy was not used, the backends
+could not be configured to connect to encrypted Livestatus sites.
+
+This is now automatically done. These backends are stored in <tt>etc/nagvis/conf.d/cmk_backends.ini.php</tt>.
+
+In case the Livestatus Proxy Daemon is used, NagVis always uses the local unix
+socket connection to the Livestatus proxy. In case it is not used, NagVis will
+connect to either the plain text socket or the encrypted Livestatus socket,
+just like the Checkmk GUI.
+
+When verifying certificates NagVis uses the trusted certificate authorities
+of Checkmk.

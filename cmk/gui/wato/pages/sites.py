@@ -72,6 +72,7 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.log import logger
 
+from cmk.gui.watolib.sites import is_livestatus_encrypted
 from cmk.gui.watolib.activate_changes import clear_site_replication_status
 from cmk.gui.wato.pages.global_settings import GlobalSettingsMode, is_a_checkbox
 
@@ -1125,7 +1126,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
             "Added CA with fingerprint %s to trusted certificate authorities") % digest_sha256
 
     def page(self):
-        if not self._is_livestatus_encrypted():
+        if not is_livestatus_encrypted(self._site):
             html.show_info(
                 _("The livestatus connection to this site configured not to be encrypted."))
             return
@@ -1192,10 +1193,6 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
     def _cert_trusted_css_class(self, cert):
         return "state state0" if cert.verify_result.is_valid else "state state2"
-
-    def _is_livestatus_encrypted(self):
-        family_spec, address_spec = self._site["socket"]
-        return family_spec in ["tcp", "tcp6"] and address_spec["tls"][0] != "plain_text"
 
     def _fetch_certificate_details(self):
         # type: () -> List[CertificateDetails]

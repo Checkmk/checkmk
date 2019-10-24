@@ -19,7 +19,6 @@ import json
 import os
 import subprocess
 import sys
-from typing import Set, Tuple  # pylint: disable=unused-import
 
 # Some constants to help parse /proc/*/smaps
 KiB = 1024
@@ -33,6 +32,7 @@ Memory = collections.namedtuple('Memory', ['private', 'pss', 'rss'])
 
 def _get_python_stdlib():
     std_lib = sysconfig.get_python_lib(standard_lib=True)
+    # noinspection PyTypeChecker
     for top, _dirs, files in os.walk(std_lib):
         if "dist-packages" in top:
             continue
@@ -93,23 +93,22 @@ class JSONFormatter(object):
 
     def __init__(self, args):
         self.open = args.open
-        self.metric = self._make_node("root")
+        self.metric = {"name": "root"}
         self.stack = [self.metric]
 
-    def _make_node(self, name):
-        return {"name": name}
-
     def push(self, from_, module):
-        node = self._make_node(module)
+        node = {"name": module}
         parent = self.stack[-1]
         if "children" not in parent:
             parent["children"] = []
 
-        # Prevent duplicate children with the same name.
-        # Not sure how this can happen.
+        # Prevent duplicate children with the same name, which can be
+        # if there are multiple from-imports
         already_added = [_n for _n in parent["children"] if _n["name"] == node["name"]]
         if len(already_added) == 1:
-            node = already_added[0]
+            _node = already_added[0]
+            _node["value"] += node.get('value', 0)
+            node = _node
         else:
             parent["children"].append(node)
         self.stack.append(node)
@@ -121,11 +120,21 @@ class JSONFormatter(object):
         self.stack.pop()
 
     def finish(self):
+        # First we sum up all the children to their parents, so each parent containing space
+        # consuming children has a value with at least their sum.
+        sum_values(self.stack[0])
+
+        # We now remove everything of value==0 because we don't have any interest in any of that.
+        remove_zeros(self.stack[0])
+
         filename = os.path.abspath("import-tree.%d.json" % (os.getpid(),))
         with open(filename, "w") as jsf:
             jsf.write(self.render_json())
         sys.stderr.write("Written to %s\n" % (filename,))
         sys.stderr.flush()
+
+        if self.open:
+            _spawn("gvim", filename)
 
     def render_json(self):
         # We skip to the first entry, so we start with a dict as root
@@ -285,6 +294,7 @@ def _get_mem(pid):
 
 
 def _get_delta(mem1, mem2):
+    # type: (Memory, Memory) -> Memory
     return Memory(
         private=mem2.private - mem1.private,
         pss=mem2.pss - mem1.pss,
@@ -311,37 +321,19 @@ class MeasureMemory(object):
         return _get_delta(self.mem_before, self.mem_after)
 
 
-seen = set()  # type: Set[Tuple[str, str]]
-
-
 @contextlib.contextmanager
-def track_growth(module):
+def track_growth(parent, module, fromlist):
+    # This is a separate contextmanager so we can actually gracefully recover from any errors.
     global _FORMATTER
 
-    _from = stack[-1]
-
-    # We try to get rid of the indirection that importlib introduces.
-    if _from == 'importlib':
-        _from = stack[-2]
-
-    # We don't want to see this at all.
-    if module == 'importlib':
-        yield
-        return
-
-    stack.append(module)
-    if (_from, module) not in seen:
-        _FORMATTER.push(_from, module)
-
-    with MeasureMemory() as m:
-        yield
-
-    if (_from, module) not in seen:
-        _FORMATTER.setsize(m.diff().private)
+    _FORMATTER.push(parent, module)
+    try:
+        with MeasureMemory() as mem:
+            yield
+    finally:
+        size = mem.diff().private
+        _FORMATTER.setsize(size)
         _FORMATTER.pop()
-        seen.add((_from, module))
-
-    stack.pop()
 
 
 __imp = __import__
@@ -350,52 +342,78 @@ stack = ['__main__']
 
 
 def _importer(name, _globals=None, _locals=None, fromlist=None, level=-1):
-    # Wrap __import__ and do some shenanigans
-    # to actually track what's happening.
-    if _globals is None or _locals is None:
-        # Someone did call __import__('foo') without specifying
-        # globals and locals. I'm looking at you, six!
-        without_us = [frame for frame in inspect.stack() if frame[1] != __file__]
-        if without_us:
-            # We get our globals from the parent frame.
-            parent = without_us[0][0]
-            return _importer(name, parent.f_globals, parent.f_locals, fromlist, level)
-        else:
-            # We give up.
-            _globals = globals()
-            _locals = globals()
-
-    if '__name__' not in _globals:
-        # Sometimes a c-library (or some other library imported by a c-library) doesn't have a
-        # name in it's globals, so we want to see how it was called when it was imported.
-        prev_name = [
-            frame for frame in inspect.stack()
-            if frame[1] != __file__ and '__name__' in frame[0].f_globals
-        ]
-        parent = prev_name[0][0]
-        _globals['__name__'] = parent.f_globals['__name__']
-
+    # type: (str, Optional[dict], Optional[dict], Optional[list], int) -> None
+    # Wrap __import__ and do some shenanigans to actually track what's happening.
     if fromlist is None:
         fromlist = []
 
-    module_name = _globals['__name__']
-    if module_name == __name__:
-        # c-libraries see us and not the module importing them, which makes sense,
-        # (because we inject ourselves in between) but this result isn't what we want...
-        without_us = [frame for frame in inspect.stack() if frame[1] != __file__]
-        if without_us:
-            parent = without_us[0][0]
+    _stack = inspect.stack()
+    without_us = [frame for frame in _stack if frame[1] != __file__]
+
+    current = inspect.currentframe()
+    parent = current.f_back.f_back.f_back.f_globals.get('__name__')
+
+    if _globals is None or _locals is None:
+        # Someone did call __import__('foo') without specifying
+        # globals and locals. I'm looking at you, six!
+        # We get our globals from the parent frame.
+        _globals = current.f_back.f_globals
+        _locals = current.f_back.f_locals
+
+    def module_name_from_import_stmt(line):
+        # may be 'exec("import foo as bar")'. Thank you reportlab.
+        if 'from' in line:
+            ret = line.split("from")[1].split()[0]
+        elif 'import' in line:
+            ret = line.split("import")[1].split()[0]
         else:
-            parent = inspect.stack()[-1][0]
-        module_name = parent.f_globals['__name__']
+            ret = "? (%s)" % line.strip()
+        return ret
+
+    def looks_like_import(lines):
+        # WARNING: `line` actually may be None
+        return lines and any([part in lines[0] for part in ('import', 'from')])
+
+    def hunt_for_module_name(frames):
+        # Some crappy^H^H^H^H^H^H external packages do some weird stuff with exec and import.
+        # Sometimes it's not even possible to figure out what has been imported as the import
+        # stmts are read from a file and executed through layers of wrapper functions leaving us
+        # with strange frames on the stack containing no source code whatsoever. We must skip those.
+        for _frame in frames:
+            # _frame[4] is `code_context`, meaning the source code actually doing the
+            # import (in some way...). It's a list of source lines, but I have only
+            # seen lengths of 1 until now. Example: ["   from foo import bar\n"]
+            if not looks_like_import(_frame[4]):
+                continue
+
+            # We take the first one we can find.
+            candidate = module_name_from_import_stmt(_frame[4][0])
+            if candidate.startswith("."):
+                ret = current.f_back.f_back.f_globals['__name__'] + module_name
+            else:
+                ret = candidate
+            return ret
+
+    module_name = _globals.get('__name__')
+
+    # c-libraries sometimes don't have a name, or have no _globals and thus somehow fall through
+    # to the base globals() so we figure out how they were called when they were imported and
+    # reconstruct their real name that way.
+    if not module_name or module_name == '__main__':
+        module_name = hunt_for_module_name(without_us)
+
+        if not module_name:
+            # Well
+            module_name = "? (unknown)"
 
     # Here goes the real magic.
-    with track_growth(module_name):
+    with track_growth(parent, module_name, fromlist):
         try:
             return __imp(name, _globals, _locals, fromlist, level)
         except ValueError as e:
-            # Can't really say why this was the case, it just failed once
-            # with a ValueError due to relative import from a non-package.
+            # Until Python 3.9 a call to __import__ fails with a ValueError whenever
+            # a module tries to do a relative-import extending it's package boundaries.
+            # Starting with 3.9 this will be an ImportError
             raise ImportError(e)
 
 
@@ -436,6 +454,37 @@ def _spawn(*args):
                      stdout=open('/dev/null', 'w'),
                      stderr=open('/dev/null', 'w'),
                      preexec_fn=os.setpgrp)
+
+
+def remove_zeros(param):
+    if 'children' not in param:
+        return param
+
+    new_children = []
+    for kid in param['children']:
+        remove_zeros(kid)
+        if kid.get('value'):
+            new_children.append(kid)
+
+    if not new_children:
+        del param['children']
+    else:
+        param['children'][:] = new_children
+
+    return param
+
+
+def sum_values(node):
+    """
+    >>> node = {'value': 0, 'children': [{'value': 1}, {'value': -2, 'children': [{'value': 5}]}]}
+    >>> assert sum_values(node) == 6
+    >>> assert node['value'] == 6
+    """
+    summed_value = sum(sum_values(node) for node in node.get('children', []))
+    current_value = node.get('value', 0)
+    if current_value < summed_value:
+        node['value'] = summed_value
+    return node['value']
 
 
 if __name__ == '__main__':

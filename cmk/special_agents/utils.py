@@ -200,13 +200,12 @@ class DataCache(six.with_metaclass(abc.ABCMeta, object)):
                     raise
 
         live_data = self.get_live_data(*args)
-        if use_cache:
-            try:
-                self._write_to_cache(live_data)
-            except (OSError, IOError, TypeError) as exc:
-                logging.info("Failed to write data to cache file: %s", exc)
-                if self.debug:
-                    raise
+        try:
+            self._write_to_cache(live_data)
+        except (OSError, IOError, TypeError) as exc:
+            logging.info("Failed to write data to cache file: %s", exc)
+            if self.debug:
+                raise
         return live_data
 
     def _write_to_cache(self, raw_content):

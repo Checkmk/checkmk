@@ -1,0 +1,31 @@
+Title: agent_aws: Fetch live data from AWS if special agent configuration has changed
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1571928662
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+The special agent {{agent_aws}} fetches data from an AWS account relying on the
+WATO configuration ruleset {{Amazon Web Services (AWS)}} for a given host.
+
+Cloudwatch metrics and other metrics have a resolution of 5 minutes by default.
+(S3 has 1 day). In order to save API calls and costs the agent caches the data.
+
+If the special agent configuration changes the agent does not recognize that
+and still uses old cached data until the cache expires.
+
+Now the special agent computes a hash over the current configuration and if the
+configuration changes the agent fetches live data immediately.
+
+The configuration hash will be stored in
+{{tmp/check_mk/agents/agent_aws/HOSTNAME.config_hash}}.
+
+From {{cmk -D HOSTNAME}} you get the commandline of the special agent for a
+given host. With the additional option {{--no-cache}} you can update the cached
+data, too.
+
+Workaround for previous special agent versions:
+Remove the files {{tmp/check_mk/agents/agent_aws/REGION/HOSTNAME/*}}.

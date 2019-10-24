@@ -50,7 +50,7 @@ class FakeS3Client(object):
 def get_s3_sections():
     def _create_s3_sections(names, tags):
         region = 'region'
-        config = AWSConfig('hostname', (None, None))
+        config = AWSConfig('hostname', [], (None, None))
         config.add_single_service_config('s3_names', names)
         config.add_service_tags('s3_tags', tags)
 

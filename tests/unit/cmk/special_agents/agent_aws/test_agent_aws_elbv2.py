@@ -73,7 +73,7 @@ class FakeELBv2Client(object):
 def get_elbv2_sections():
     def _create_elbv2_sections(names, tags):
         region = 'region'
-        config = AWSConfig('hostname', (None, None))
+        config = AWSConfig('hostname', [], (None, None))
         config.add_single_service_config('elbv2_names', names)
         config.add_service_tags('elbv2_tags', tags)
 

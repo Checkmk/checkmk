@@ -1,0 +1,12 @@
+Title: New inventory plugin: Port configuration of Couchbase nodes
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1571922595
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+A new plugin is introduced inventorizing the Couchbase nodes' port configuration.
+Please configure the Couchbase special agent.

@@ -26,6 +26,12 @@ PYTHON3_MODULES_LIST += multidict-4.5.2.tar.gz # indirect via vcrpy
 PYTHON3_MODULES_LIST += idna-2.8.tar.gz # indirect via vcrpy
 PYTHON3_MODULES_LIST += vcrpy-2.1.0.tar.gz # direct dependency
 
+PYTHON3_MODULES_LIST += pycparser-2.19.tar.gz # indirect via paramiko
+PYTHON3_MODULES_LIST += cffi-1.13.1.tar.gz # indirect via paramiko
+PYTHON3_MODULES_LIST += PyNaCl-1.3.0.tar.gz # indirect via paramiko
+PYTHON3_MODULES_LIST += cryptography-2.8.tar.gz # indirect via paramiko
+PYTHON3_MODULES_LIST += bcrypt-3.1.7.tar.gz # indirect via paramiko
+PYTHON3_MODULES_LIST += paramiko-2.6.0.tar.gz # direct dependency
 
 $(PYTHON3_MODULES_BUILD): $(PYTHON3_BUILD) $(FREETDS_BUILD) $(PYTHON3_MODULES_UNPACK)
 	set -e ; cd $(PYTHON3_MODULES_DIR) ; \

@@ -91,6 +91,7 @@ CONFIG_ERROR_PREFIX = "CANNOT READ CONFIG FILE: "  # detected by check plugin
 def init_logging(verbosity):
     if verbosity == 0:
         LOGGER.propagate = False
+        logging.basicConfig(level=logging.ERROR, format="%(levelname)s: %(message)s")
     elif verbosity == 1:
         logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     else:
@@ -110,7 +111,7 @@ class ArgsParser(object):  # pylint: disable=too-few-public-methods
             sys.stderr.write(__doc__)
             sys.exit(0)
 
-        self.verbosity = argv.count('-v') + 2 * argv.count('-vv'),
+        self.verbosity = argv.count('-v') + 2 * argv.count('-vv')
         self.config = argv[argv.index('-c') + 1] if '-c' in argv else None
         self.debug = '-d' in argv or '--debug' in argv
 

@@ -1523,12 +1523,16 @@ class html(ABCHTMLGenerator):
 
     def render_help(self, text):
         """Embed help box, whose visibility is controlled by a global button in the page."""
-        if text and text.strip():
-            self.enable_help_toggle()
-            style = "display: %s;" % ("block" if self.help_visible else "none")
-            c = self.render_div(text.strip(), class_="help", style=style)
-            return c
-        return ""
+        if not text:
+            return ""
+
+        stripped = text.strip()
+        if not stripped:
+            return ""
+
+        self.enable_help_toggle()
+        style = "display: %s;" % ("block" if self.help_visible else "none")
+        return self.render_div(stripped, class_="help", style=style)
 
     def enable_help_toggle(self):
         self.have_help = True

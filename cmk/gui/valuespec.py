@@ -739,8 +739,8 @@ class RegExp(TextAscii):
             help_text.append(_("The match is performed case insensitive."))
 
         help_text.append(
-            _("Read more about <a href=\"https://checkmk.com/cms_regexes.html\" target=\"_blank\">regular "
-              "expression matching in Checkmk</a> in our user manual."))
+            _("Read more about [cms_regexes|regular expression matching in Checkmk] in our user manual."
+             ))
 
         return " ".join(help_text)
 

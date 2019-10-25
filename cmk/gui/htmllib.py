@@ -69,6 +69,9 @@ import pprint
 from contextlib import contextmanager
 # suppress missing import error from mypy
 from html import escape as html_escape  # type: ignore
+from typing import (  # pylint: disable=unused-import
+    Union, Text, Optional,
+)
 from pathlib2 import Path
 
 import six
@@ -1519,20 +1522,40 @@ class html(ABCHTMLGenerator):
                 self.del_language_cookie()
 
     def help(self, text):
+        # type: (Optional[Union[HTML, Text]]) -> None
+        """Embed help box, whose visibility is controlled by a global button in the page.
+
+        You may add macros like this to the help texts to create links to the user
+        manual: [cms_piggyback|Piggyback chapter].
+        """
         self.write_html(self.render_help(text))
 
     def render_help(self, text):
-        """Embed help box, whose visibility is controlled by a global button in the page."""
+        # type: (Optional[Union[HTML, Text]]) -> HTML
+        if isinstance(text, HTML):
+            text = "%s" % text
+
         if not text:
-            return ""
+            return HTML("")
 
         stripped = text.strip()
         if not stripped:
-            return ""
+            return HTML("")
+
+        help_text = self._resolve_help_text_macros(stripped)
 
         self.enable_help_toggle()
         style = "display: %s;" % ("block" if self.help_visible else "none")
-        return self.render_div(stripped, class_="help", style=style)
+        return self.render_div(HTML(help_text), class_="help", style=style)
+
+    def _resolve_help_text_macros(self, text):
+        # type: (Text) -> Text
+        if config.user.language() == "de":
+            cmk_base_url = "https://checkmk.de"
+        else:
+            cmk_base_url = "https://checkmk.com"
+        return re.sub(r"\[([a-z0-9_-]+)\|([^\]]+)\]",
+                      "<a href=\"%s/\\1.html\" target=\"_blank\">\\2</a>" % cmk_base_url, text)
 
     def enable_help_toggle(self):
         self.have_help = True

@@ -68,7 +68,7 @@ SECTION_KEYS_ITEMS = (
 
 SECTION_KEYS_SERVICES = ("services",)
 
-STATS_KEYS_NODE = ("ports",)
+SECTION_KEYS_PORTS = ("ports",)
 
 STATS_KEYS_INTR = (
     "couch_docs_actual_disk_size",
@@ -205,6 +205,9 @@ def sections_node(client):
         "couchbase_nodes_services:sep(0)": [
             _get_dump(name, node, SECTION_KEYS_SERVICES) for name, node in node_list
         ],
+        "couchbase_nodes_ports:sep(0)": [
+            _get_dump(name, node, SECTION_KEYS_PORTS) for name, node in node_list
+        ],
         "couchbase_nodes_stats:sep(0)": [
             _get_dump(name, node.get("systemStats", {}), SECTION_KEYS_STATS)
             for name, node in node_list
@@ -226,8 +229,6 @@ def sections_node(client):
     data = {}
     for node_name, node in node_list:
         node_data = data.setdefault(node_name, {})
-        for key in STATS_KEYS_NODE:
-            node_data[key] = node.get(key, "none")
         for key in STATS_KEYS_INTR:
             node_data[key] = six.text_type(node['interestingStats'][key])
 

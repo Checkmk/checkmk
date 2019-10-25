@@ -1,0 +1,17 @@
+Title: cmk-update-agent: Show info about non-existing host on registration
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1572017914
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+On agent registration, an information will now be displayed if the hostname
+that just got registered is not known in the activated monitoring configuration.
+
+Please note that the spelling of the registered host and the monitored host
+must match exactly to enable automatic updates.
+
+The displayed information should help to avoid errors and to clarify things.

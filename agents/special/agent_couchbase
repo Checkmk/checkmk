@@ -30,7 +30,6 @@ import argparse
 import logging
 import json
 import requests
-import six
 
 import cmk.utils.password_store
 
@@ -70,7 +69,7 @@ SECTION_KEYS_SERVICES = ("services",)
 
 SECTION_KEYS_PORTS = ("ports",)
 
-STATS_KEYS_INTR = (
+SECTION_KEYS_SIZE = (
     "couch_docs_actual_disk_size",
     "couch_docs_data_size",
     "couch_spatial_data_size",
@@ -224,15 +223,11 @@ def sections_node(client):
             _get_dump(name, node.get('interestingStats', {}), SECTION_KEYS_ITEMS)
             for name, node in node_list
         ],
+        "couchbase_nodes_size:sep(0)": [
+            _get_dump(name, node.get('interestingStats', {}), SECTION_KEYS_SIZE)
+            for name, node in node_list
+        ],
     }
-
-    data = {}
-    for node_name, node in node_list:
-        node_data = data.setdefault(node_name, {})
-        for key in STATS_KEYS_INTR:
-            node_data[key] = six.text_type(node['interestingStats'][key])
-
-    sections["couchbase_node:sep(0)"] = [json.dumps(data)]
 
     output = []
     for section_name, section_content in sections.iteritems():

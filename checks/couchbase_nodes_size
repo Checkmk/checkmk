@@ -1,0 +1,93 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+check_info['couchbase_nodes_size'] = {
+    'parse_function': parse_couchbase_lines,
+    'includes': ['couchbase.include'],
+}
+
+
+def get_couchbase_check_by_keys(key_disk, key_size):
+    @get_parsed_item_data
+    def check_couchbase_nodes_size(_item, params, data):
+        on_disk = data.get(key_disk)
+        if on_disk is not None:
+            yield check_levels(
+                on_disk,
+                'size_on_disk',
+                params.get('size_on_disk'),
+                human_readable_func=get_bytes_human_readable,
+                infoname='Size on disk',
+            )
+
+        size = data.get(key_size)
+        if size is not None:
+            yield check_levels(
+                size,
+                'data_size',
+                params.get('size'),
+                human_readable_func=get_bytes_human_readable,
+                infoname='Data size',
+            )
+
+    return check_couchbase_nodes_size
+
+
+check_info['couchbase_nodes_size.docs'] = {
+    'inventory_function': discover(),
+    'check_function': get_couchbase_check_by_keys(
+        'couch_docs_actual_disk_size',
+        'couch_docs_data_size',
+    ),
+    'service_description': 'Couchbase %s Documents',
+    'group': 'couchbase_size_docs',
+    'includes': ['couchbase.include'],
+    'has_perfdata': True,
+}
+
+check_info['couchbase_nodes_size.spacial_views'] = {
+    'inventory_function': discover(),
+    'check_function': get_couchbase_check_by_keys(
+        'couch_spatial_disk_size',
+        'couch_spatial_data_size',
+    ),
+    'service_description': 'Couchbase %s Spacial Views',
+    'group': 'couchbase_size_spacial',
+    'includes': ['couchbase.include'],
+    'has_perfdata': True,
+}
+
+check_info['couchbase_nodes_size.couch_views'] = {
+    'inventory_function': discover(),
+    'check_function': get_couchbase_check_by_keys(
+        'couch_views_actual_disk_size',
+        'couch_views_data_size',
+    ),
+    'service_description': 'Couchbase %s Couch Views',
+    'group': 'couchbase_size_couch',
+    'includes': ['couchbase.include'],
+    'has_perfdata': True,
+}

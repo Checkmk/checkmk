@@ -678,6 +678,12 @@ metric_info["data_size"] = {
     "color": "25/a",
 }
 
+metric_info["size_on_disk"] = {
+    "title": _("Size on disk"),
+    "unit": "bytes",
+    "color": "25/b",
+}
+
 metric_info["unallocated_size"] = {
     "title": _("Unallocated space"),
     "help": _("Space in the database that has not been reserved for database objects"),

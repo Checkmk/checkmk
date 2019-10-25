@@ -1,4 +1,5 @@
 # force loading of web API plugins
+import cmk
 import cmk.gui.webapi  # pylint: disable=unused-import
 
 from cmk.gui.plugins.webapi.utils import api_call_collection_registry
@@ -8,7 +9,8 @@ def test_registered_api_call_collections():
     registered_api_actions = (action \
                               for cls in api_call_collection_registry.values()
                               for action in cls().get_api_calls().iterkeys())
-    assert sorted(registered_api_actions) == sorted([
+
+    expected_api_actions = [
         'activate_changes',
         'execute_remote_automation',
         'add_contactgroup',
@@ -18,7 +20,6 @@ def test_registered_api_call_collections():
         'add_hosts',
         'add_servicegroup',
         'add_users',
-        'bake_agents',
         'bulk_discovery_start',
         'bulk_discovery_status',
         'delete_contactgroup',
@@ -47,7 +48,6 @@ def test_registered_api_call_collections():
         'get_bi_aggregations',
         'get_combined_graph_identifications',
         'get_folder',
-        'get_graph',
         'get_graph_annotations',
         'get_graph_recipes',
         'get_host',
@@ -58,7 +58,6 @@ def test_registered_api_call_collections():
         'get_ruleset',
         'get_rulesets_info',
         'get_site',
-        'get_sla',
         'get_user_sites',
         'login_site',
         'logout_site',
@@ -66,4 +65,13 @@ def test_registered_api_call_collections():
         'set_hosttags',
         'set_ruleset',
         'set_site',
-    ])
+    ]
+
+    if not cmk.is_raw_edition():
+        expected_api_actions += [
+            'bake_agents',
+            'get_graph',
+            'get_sla',
+        ]
+
+    assert sorted(registered_api_actions) == sorted(expected_api_actions)

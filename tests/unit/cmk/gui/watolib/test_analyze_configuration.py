@@ -1,11 +1,11 @@
 # Triggers plugin loading of plugins.wato which registers all the plugins
+import cmk
 import cmk.gui.wato  # pylint: disable=unused-import
 import cmk.gui.watolib as watolib
 
 
 def test_registered_ac_tests():
-    registered_plugins = sorted(watolib.ac_test_registry.keys())
-    assert registered_plugins == sorted([
+    expected_ac_tests = [
         'ACTestAlertHandlerEventTypes',
         'ACTestApacheNumberOfProcesses',
         'ACTestApacheProcessUsage',
@@ -24,8 +24,15 @@ def test_registered_ac_tests():
         'ACTestOldDefaultCredentials',
         'ACTestPersistentConnections',
         'ACTestRulebasedNotifications',
-        'ACTestSecureAgentUpdaterTransport',
-        'ACTestSecureNotificationSpoolerMessages',
         'ACTestSizeOfExtensions',
         'ACTestTmpfs',
-    ])
+    ]
+
+    if not cmk.is_raw_edition():
+        expected_ac_tests += [
+            'ACTestSecureAgentUpdaterTransport',
+            'ACTestSecureNotificationSpoolerMessages',
+        ]
+
+    registered_plugins = sorted(watolib.ac_test_registry.keys())
+    assert registered_plugins == sorted(expected_ac_tests)

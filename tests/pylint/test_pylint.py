@@ -8,7 +8,12 @@ import tempfile
 import shutil
 import pytest  # type: ignore
 
-from testlib import cmk_path, repo_path
+from testlib import (
+    cmk_path,
+    repo_path,
+    is_enterprise_repo,
+    is_managed_repo,
+)
 import testlib.pylint_cmk as pylint_cmk
 
 
@@ -41,37 +46,38 @@ def test_pylint(pylint_test_dir):
         modules_or_packages = []
     else:
         modules_or_packages = [
-            # OMD
             "omd/packages/omd/omdlib",
             "livestatus/api/python/livestatus.py",
-
-            # Check_MK base
             "cmk_base",
-            # TODO: Check if this kind of "overlay" really works.
-            # TODO: Why do we have e.g. a symlink cmk_base/cee -> enterprise/cmk_base/cee?
-            "enterprise/cmk_base/automations/cee.py",
-            "enterprise/cmk_base/cee",
-            "enterprise/cmk_base/default_config/cee.py",
-            "enterprise/cmk_base/modes/cee.py",
-            "managed/cmk_base/default_config/cme.py",
-
-            # cmk module level
-            # TODO: This checks the whole cmk hierarchy, including things like
-            # cmk.gui.plugins.cron etc. Do we really want that here?
-            # TODO: Funny links there, see above.
             "cmk",
-            "enterprise/cmk/cee",
-
-            # GUI specific
             "web/app/index.wsgi",
-            "enterprise/cmk/gui/cee",
-            "managed/cmk/gui/cme",
         ]
+
+        if is_enterprise_repo():
+            modules_or_packages += [
+                # TODO: Check if this kind of "overlay" really works.
+                # TODO: Why do we have e.g. a symlink cmk_base/cee -> enterprise/cmk_base/cee?
+                "enterprise/cmk_base/automations/cee.py",
+                "enterprise/cmk_base/cee",
+                "enterprise/cmk_base/default_config/cee.py",
+                "enterprise/cmk_base/modes/cee.py",
+                # TODO: Funny links there, see above.
+                "enterprise/cmk/cee",
+                "enterprise/cmk/gui/cee",
+            ]
+
+        if is_managed_repo():
+            modules_or_packages += [
+                "managed/cmk_base/default_config/cme.py",
+                "managed/cmk/gui/cme",
+            ]
 
     # Add the compiled files for things that are no modules yet
     open(pylint_test_dir + "/__init__.py", "w")
     _compile_check_and_inventory_plugins(pylint_test_dir)
-    _compile_bakery_plugins(pylint_test_dir)
+
+    if is_enterprise_repo():
+        _compile_bakery_plugins(pylint_test_dir)
 
     # Not checking compiled check, inventory, bakery plugins with Python 3
     if sys.version_info[0] == 2:
@@ -87,10 +93,14 @@ def test_pylint(pylint_test_dir):
         "agents/plugins",
         "agents/special",
         "active_checks",
-        "enterprise/agents/plugins",
-        "enterprise/bin",
-        "enterprise/misc",
     ]
+
+    if is_enterprise_repo():
+        search_paths += [
+            "enterprise/agents/plugins",
+            "enterprise/bin",
+            "enterprise/misc",
+        ]
 
     for path in search_paths:
         abs_path = cmk_path() + "/" + path

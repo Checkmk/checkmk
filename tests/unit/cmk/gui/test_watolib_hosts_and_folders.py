@@ -1,9 +1,8 @@
 import pytest  # type: ignore
-from freezegun import freeze_time  # type: ignore
+from testlib import on_time
 import cmk.gui.watolib as watolib
 
 
-@freeze_time("2018-01-10 02:00:00", tz_offset=+1)
 @pytest.mark.parametrize("allowed,last_end,next_time", [
     (((0, 0), (24, 0)), None, 1515549600.0),
     (
@@ -33,4 +32,5 @@ def test_next_network_scan_at(allowed, last_end, next_time):
                                 }
                             })
 
-    assert folder.next_network_scan_at() == next_time
+    with on_time("2018-01-10 02:00:00", "CET"):
+        assert folder.next_network_scan_at() == next_time

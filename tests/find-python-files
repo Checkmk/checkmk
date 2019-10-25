@@ -13,10 +13,14 @@ SEARCH+=" checks"
 SEARCH+=" cmk"
 SEARCH+=" cmk_base"
 SEARCH+=" doc"
-SEARCH+=" enterprise"
+if [ -d "$REPO_PATH/enterprise" ]; then
+    SEARCH+=" enterprise"
+fi
 SEARCH+=" inventory"
 SEARCH+=" livestatus"
-SEARCH+=" managed"
+if [ -d "$REPO_PATH/managed" ]; then
+    SEARCH+=" managed"
+fi
 SEARCH+=" notifications"
 # Do not search whole omd/ because it may contain unpacked sub-packages
 SEARCH+=" omd/packages/appliance"
@@ -32,13 +36,13 @@ REAL_SEARCH=$(realpath $SEARCH)
 
 # while read F is used to deal with files containing whitespaces
 find $REAL_SEARCH \
-     -name .mypy_cache -prune -o \
-     -name .venv -prune -o \
-     -name test_docker_parse_node_images.py -prune -o \
-     -name typeshed -prune -o \
-     -name run-clang-tidy.py -prune -o \
-     -name chroot -prune -o \
-     -type f -print | sort | while read F; do
+    -name .mypy_cache -prune -o \
+    -name .venv -prune -o \
+    -name test_docker_parse_node_images.py -prune -o \
+    -name typeshed -prune -o \
+    -name run-clang-tidy.py -prune -o \
+    -name chroot -prune -o \
+    -type f -print | sort | while read F; do
     if [[ "$F" == *.py ]] || head -n 1 "$F" | grep -q '^#!.*python$' >/dev/null 2>&1; then
         echo "$F"
     fi

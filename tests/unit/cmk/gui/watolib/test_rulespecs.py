@@ -1246,20 +1246,15 @@ def test_grouped_rulespecs():
         rulespec_names = [rulespec.name for rulespec in rulespec_registry.get_by_group(group_name)]
         assert sorted(by_group[group_name]) == sorted(rulespec_names)
 
-
-@pytest.mark.parametrize("mode,result", [
-    ("rulesets", [
+def _expected_rulespec_group_choices():
+    expected = [
         ('activechecks', u'Active checks (HTTP, TCP, etc.)'),
         ('agent', u'Access to Agents'),
         ('agent/check_mk_agent', u'&nbsp;&nbsp;\u2319 Check_MK Agent'),
         ('agent/general_settings', u'&nbsp;&nbsp;\u2319 General Settings'),
         ('agent/snmp', u'&nbsp;&nbsp;\u2319 SNMP'),
         ('agents', u'Monitoring Agents'),
-        ('agents/agent_plugins', u'&nbsp;&nbsp;\u2319 Agent Plugins'),
-        ('agents/automatic_updates', u'&nbsp;&nbsp;\u2319 Automatic Updates'),
         ('agents/generic_options', u'&nbsp;&nbsp;\u2319 Generic Options'),
-        ('agents/linux_agent', u'&nbsp;&nbsp;\u2319 Linux Agent'),
-        ('agents/windows_agent', u'&nbsp;&nbsp;\u2319 Windows Agent'),
         ('checkparams', u'Parameters for discovered services'),
         ('checkparams/applications', u'&nbsp;&nbsp;\u2319 Applications, Processes & Services'),
         ('checkparams/discovery', u'&nbsp;&nbsp;\u2319 Discovery - automatic service detection'),
@@ -1283,7 +1278,23 @@ def test_grouped_rulespecs():
         ('monconf/service_checks', u'&nbsp;&nbsp;\u2319 Service Checks'),
         ('monconf/various', u'&nbsp;&nbsp;\u2319 Various'),
         ('user_interface', u'User Interface'),
-    ]),
+
+    ]
+
+    if not cmk.is_raw_edition():
+        expected += [
+        ('agents/agent_plugins', u'&nbsp;&nbsp;\u2319 Agent Plugins'),
+        ('agents/automatic_updates', u'&nbsp;&nbsp;\u2319 Automatic Updates'),
+        ('agents/linux_agent', u'&nbsp;&nbsp;\u2319 Linux Agent'),
+        ('agents/windows_agent', u'&nbsp;&nbsp;\u2319 Windows Agent'),
+
+        ]
+
+    return expected
+
+
+@pytest.mark.parametrize("mode,result", [
+    ("rulesets", _expected_rulespec_group_choices()),
     ("static_checks", [
         ('static', u'Manual Checks'),
         ('static/applications', u'&nbsp;&nbsp;\u2319 Applications, Processes & Services'),
@@ -1343,7 +1354,7 @@ def test_rulespec_get_main_groups():
 
 
 def test_rulespec_get_all_groups():
-    assert sorted(rulespec_registry.get_all_groups()) == sorted([
+    expected_rulespec_groups = [
         'activechecks',
         'grouping',
         'monconf/service_checks',
@@ -1373,17 +1384,24 @@ def test_rulespec_get_all_groups():
         'static/hardware',
         'datasource_programs',
         'inventory',
+        'eventconsole',
+    ]
+
+    if not cmk.is_raw_edition():
+        expected_rulespec_groups += [
         'agents/automatic_updates',
         'agents/linux_agent',
         'agents/windows_agent',
         'agents/agent_plugins',
-        'eventconsole',
-    ])
+
+        ]
+
+    assert sorted(rulespec_registry.get_all_groups()) == sorted(expected_rulespec_groups)
 
 
 def test_rulespec_get_host_groups():
-    group_names = watolib.rulespec_group_registry.get_host_rulespec_group_names()
-    assert sorted(group_names) == sorted([
+
+    expected_rulespec_host_groups = [
         'grouping',
         'monconf/service_checks',
         'monconf/host_checks',
@@ -1397,12 +1415,21 @@ def test_rulespec_get_host_groups():
         'agents/generic_options',
         'datasource_programs',
         'inventory',
+        'eventconsole',
+    ]
+
+    if not cmk.is_raw_edition():
+        expected_rulespec_host_groups += [
+        'agents/agent_plugins',
         'agents/automatic_updates',
         'agents/linux_agent',
         'agents/windows_agent',
-        'agents/agent_plugins',
-        'eventconsole',
-    ])
+        ]
+
+    group_names = watolib.rulespec_group_registry.get_host_rulespec_group_names()
+    assert sorted(group_names) == sorted(expected_rulespec_host_groups)
+
+
 
 
 def test_legacy_register_rule(monkeypatch):

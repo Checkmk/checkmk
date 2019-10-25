@@ -1,8 +1,9 @@
 # yapf: disable
 import pytest  # type: ignore
 from pathlib2 import Path
-import cmk.gui.config as config
 
+import cmk
+import cmk.gui.config as config
 import cmk.gui.plugins.visuals.utils as utils
 import cmk.gui.plugins.visuals
 import cmk.gui.views
@@ -32,7 +33,8 @@ def test_filters_allowed_for_infos():
     assert isinstance(allowed["service"], cmk.gui.plugins.visuals.filters.FilterText)
 
 
-expected_visual_types = {
+def _expected_visual_types():
+    expected_visual_types = {
     'dashboards': {
         'add_visual_handler': 'popup_add_dashlet',
         'ident_attr': 'name',
@@ -41,15 +43,6 @@ expected_visual_types = {
         'popup_add_handler': 'popup_list_dashboards',
         'show_url': 'dashboard.py',
         'title': u'dashboard',
-    },
-    'reports': {
-        'add_visual_handler': 'popup_add_element',
-        'ident_attr': 'name',
-        'multicontext_links': True,
-        'plural_title': u'reports',
-        'popup_add_handler': 'popup_list_reports',
-        'show_url': 'report.py',
-        'title': u'report',
     },
     'views': {
         'add_visual_handler': None,
@@ -60,19 +53,35 @@ expected_visual_types = {
         'show_url': 'view.py',
         'title': u'view',
     },
-}
+    }
+
+    if not cmk.is_raw_edition():
+        expected_visual_types.update({
+        'reports': {
+        'add_visual_handler': 'popup_add_element',
+        'ident_attr': 'name',
+        'multicontext_links': True,
+        'plural_title': u'reports',
+        'popup_add_handler': 'popup_list_reports',
+        'show_url': 'report.py',
+        'title': u'report',
+        },
+        })
+
+
+    return expected_visual_types
 
 
 @pytest.mark.usefixtures("load_plugins")
 def test_registered_visual_types():
-    assert sorted(utils.visual_type_registry.keys()) == sorted(expected_visual_types.keys())
+    assert sorted(utils.visual_type_registry.keys()) == sorted(_expected_visual_types().keys())
 
 
 @pytest.mark.usefixtures("load_plugins")
 def test_registered_visual_type_attributes():
     for ident, plugin_class in utils.visual_type_registry.items():
         plugin = plugin_class()
-        spec = expected_visual_types[ident]
+        spec = _expected_visual_types()[ident]
 
         # TODO: Add tests for the results of these functions
         #assert plugin.add_visual_handler == spec["add_visual_handler"]

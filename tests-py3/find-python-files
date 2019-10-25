@@ -13,10 +13,14 @@ SEARCH+=" checks"
 SEARCH+=" cmk"
 SEARCH+=" cmk_base"
 SEARCH+=" doc"
-SEARCH+=" enterprise"
+if [ -d "$REPO_PATH/enterprise" ]; then
+    SEARCH+=" enterprise"
+fi
 SEARCH+=" inventory"
 SEARCH+=" livestatus"
-SEARCH+=" managed"
+if [ -d "$REPO_PATH/managed" ]; then
+    SEARCH+=" managed"
+fi
 SEARCH+=" locale"
 SEARCH+=" notifications"
 # Do not search whole omd/ because it may contain unpacked sub-packages

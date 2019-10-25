@@ -1,22 +1,21 @@
-import pytest
+import cmk
 import cmk.gui.views
-import cmk.gui.cee.plugins.views.icons
+
+if not cmk.is_raw_edition():
+    import cmk.gui.cee.plugins.views.icons
+
 import cmk.gui.plugins.views.icons as icons
 
 
 def test_builtin_icons_and_actions():
-    cmk.gui.views.transform_old_dict_based_icons()
-    builtin_icons = sorted(icons.get_multisite_icons().keys())
-    assert builtin_icons == sorted([
+    expected_icons_and_actions = [
         'action_menu',
-        'agent_deployment',
         'aggregation_checks',
         'aggregations',
         'check_manpage',
         'check_period',
         'crashed_check',
         'custom_action',
-        'deployment_status',
         'download_agent_output',
         'download_snmp_walk',
         'icon_image',
@@ -39,10 +38,20 @@ def test_builtin_icons_and_actions():
         'status_notifications_enabled',
         'status_passive_checks',
         'status_service_period',
-        'status_shadow',
         'status_stale',
         'wato',
-    ])
+    ]
+
+    if not cmk.is_raw_edition():
+        expected_icons_and_actions += [
+            'agent_deployment',
+            'deployment_status',
+            'status_shadow',
+        ]
+
+    cmk.gui.views.transform_old_dict_based_icons()
+    builtin_icons = sorted(icons.get_multisite_icons().keys())
+    assert builtin_icons == sorted(expected_icons_and_actions)
 
 
 def test_legacy_icon_plugin():

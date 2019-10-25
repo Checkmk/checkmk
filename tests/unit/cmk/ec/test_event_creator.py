@@ -1,6 +1,8 @@
+# pylint: disable=redefined-outer-name
 import logging
 import time
-import pytest
+import pytest  # type: ignore
+from testlib import on_time
 import cmk.ec.defaults
 import cmk.ec.main as main
 
@@ -30,7 +32,7 @@ def event_creator():
                 'host_in_downtime': False,
                 'application': 'CRON',
                 'host': 'Klapprechner',
-                'time': 1558874701.0,
+                'time': 1558871101.0,
                 'ipaddress': '127.0.0.1',
             },
         ),
@@ -62,7 +64,7 @@ def event_creator():
                 'pid': '8046',
                 'priority': 6,
                 'text': 'message',
-                'time': 1558874701.0
+                'time': 1558871101.0
             },
         ),
         (
@@ -231,16 +233,6 @@ def event_creator():
         ),
     ])
 def test_create_event_from_line(event_creator, monkeypatch, line, expected):
-    monkeypatch.setattr(
-        time,
-        'time',
-        lambda: 1550000000.0,
-    )
-    monkeypatch.setattr(
-        time,
-        'localtime',
-        lambda: time.struct_time((2019, 2, 12, 20, 33, 20, 1, 43, 0)),
-    )
-
     address = ("127.0.0.1", 1234)
-    assert event_creator.create_event_from_line(line, address) == expected
+    with on_time(1550000000.0, "CET"):
+        assert event_creator.create_event_from_line(line, address) == expected

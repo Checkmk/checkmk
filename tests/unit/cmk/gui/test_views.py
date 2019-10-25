@@ -26,13 +26,18 @@ def test_registered_painter_options():
         'aggr_onlyproblems',
         'aggr_treetype',
         'aggr_wrap',
-        'graph_render_options',
         'matrix_omit_uniform',
         'pnp_timerange',
         'show_internal_tree_paths',
         'ts_date',
         'ts_format',
     ]
+
+    if not cmk.is_raw_edition():
+        expected += [
+
+        'graph_render_options',
+        ]
 
     names = cmk.gui.plugins.views.painter_option_registry.keys()
     assert sorted(expected) == sorted(names)
@@ -253,11 +258,6 @@ def test_registered_commands():
             'tables': ['event'],
             'title': u'Archive Event'
         },
-        'edit_downtimes': {
-            'permission': 'action.downtimes',
-            'tables': ['downtime'],
-            'title': u'Edit Downtimes'
-        },
         'add_comment': {
             'permission': 'action.addcomment',
             'tables': ['host', 'service'],
@@ -301,6 +301,14 @@ def test_registered_commands():
             'title': u'Update & Acknowledge'
         },
     }
+
+    if not cmk.is_raw_edition():
+        expected.update({'edit_downtimes': {
+            'permission': 'action.downtimes',
+            'tables': ['downtime'],
+            'title': u'Edit Downtimes'
+        },
+        })
 
     names = cmk.gui.plugins.views.command_registry.keys()
     assert sorted(expected.keys()) == sorted(names)

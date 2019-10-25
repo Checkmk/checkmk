@@ -1,4 +1,5 @@
-import pytest
+import pytest  # type: ignore
+from testlib import on_time
 
 import cmk.utils.render
 import cmk.gui.plugins.views.availability as availability
@@ -15,8 +16,9 @@ import cmk.gui.plugins.views.availability as availability
     (61, 70, False),
 ])
 def test_relevant_annotation_times(annotation_from, annotation_until, result):
-    assert availability._annotation_affects_time_range(annotation_from, annotation_until, 30,
-                                                       60) == result
+    with on_time(1572253746, "CET"):
+        assert availability._annotation_affects_time_range(annotation_from, annotation_until, 30,
+                                                           60) == result
 
 
 @pytest.mark.parametrize("annotation_times,result", [
@@ -33,5 +35,6 @@ def test_relevant_annotation_times(annotation_from, annotation_until, result):
 ])
 def test_get_annotation_date_render_function(annotation_times, result):
     annotations = [((None, None, None), {"from": s, "until": e}) for s, e in annotation_times]
-    assert availability.get_annotation_date_render_function(
-        annotations, {"range": ((1543446000, 1543446000 + 86399), "bla")}) == result
+    with on_time(1572253746, "CET"):
+        assert availability.get_annotation_date_render_function(
+            annotations, {"range": ((1543446000, 1543446000 + 86399), "bla")}) == result

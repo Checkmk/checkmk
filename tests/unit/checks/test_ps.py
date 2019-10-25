@@ -1,10 +1,12 @@
 # yapf: disable
 from collections import namedtuple
 from six.moves import zip_longest
-import pytest
+import pytest # type: ignore
+import datetime
 from cmk_base.check_api import MKGeneralException
 from cmk_base.discovered_labels import DiscoveredHostLabels, HostLabel
 from checktestlib import CheckResult, assertCheckResultsEqual
+from testlib import on_time
 
 pytestmark = pytest.mark.checks
 
@@ -699,12 +701,12 @@ def test_check_ps_common(check_manager, monkeypatch, inv_item, reference):
     check = check_manager.get_check("ps")
     parsed = sum([check.context['parse_ps'](info)[1] for info in generate_inputs()], [])
     total_ram = 1024**3 if "emacs" in inv_item[0] else None
-    monkeypatch.setattr('time.time', lambda: 1540375342)
-    factory_defaults = {"levels": (1, 1, 99999, 99999)}
-    factory_defaults.update(inv_item[1])
-    test_result = CheckResult(check.context["check_ps_common"](
-        inv_item[0], factory_defaults, parsed, total_ram=total_ram))
-    assertCheckResultsEqual(test_result, reference)
+    with on_time(1540375342, "CET"):
+        factory_defaults = {"levels": (1, 1, 99999, 99999)}
+        factory_defaults.update(inv_item[1])
+        test_result = CheckResult(check.context["check_ps_common"](
+            inv_item[0], factory_defaults, parsed, total_ram=total_ram))
+        assertCheckResultsEqual(test_result, reference)
 
 
 cpu_config = namedtuple("CPU_config", "name agent_info cputime cpu_cores exp_load cpu_rescale_max")
@@ -742,11 +744,11 @@ def test_check_ps_common_cpu(check_manager, monkeypatch, data):
     check = check_manager.get_check("ps")
 
     def time_info(agent_info, check_time, cputime, cpu_cores):
-        monkeypatch.setattr('time.time', lambda: check_time)
-        parsed = check.context['parse_ps'](splitter(agent_info.format(cputime)))[1]
+        with on_time(datetime.datetime.utcfromtimestamp(check_time), "CET"):
+            parsed = check.context['parse_ps'](splitter(agent_info.format(cputime)))[1]
 
-        return CheckResult(check.context["check_ps_common"](
-            inv_item[0], inv_item[1], parsed, cpu_cores=cpu_cores))
+            return CheckResult(check.context["check_ps_common"](
+                inv_item[0], inv_item[1], parsed, cpu_cores=cpu_cores))
 
     inv_item = (
         "test",
@@ -880,14 +882,14 @@ def test_cpu_util_single_process_levels(check_manager, monkeypatch, cpu_cores):
     }
 
     def run_check_ps_common_with_elapsed_time(check_time, cputime):
-        monkeypatch.setattr('time.time', lambda: check_time)
-        agent_info = """(on,2275004,434008,00:00:49/26:58,25576) firefox
+        with on_time(check_time, "CET"):
+            agent_info = """(on,2275004,434008,00:00:49/26:58,25576) firefox
 (on,1869920,359836,00:01:23/6:57,25664) firefox
 (on,7962644,229660,00:00:10/26:56,25758) firefox
 (on,1523536,83064,00:{:02}:00/26:55,25898) firefox"""
-        parsed = check.context['parse_ps'](splitter(agent_info.format(cputime)))[1]
+            parsed = check.context['parse_ps'](splitter(agent_info.format(cputime)))[1]
 
-        return CheckResult(check.context["check_ps_common"](
+            return CheckResult(check.context["check_ps_common"](
             'firefox', params, parsed, cpu_cores=cpu_cores))
 
     # CPU utilization is a counter, initialize it

@@ -6,6 +6,7 @@ import pytest  # type: ignore
 import testlib  # type: ignore
 import six
 
+import cmk
 import cmk.utils.paths
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
@@ -23,18 +24,24 @@ def debug_logging():
 
 
 def test_registered_background_jobs():
-    assert sorted(gui_background_job.job_registry.keys()) == sorted([
+    expected_jobs = [
         'ParentScanBackgroundJob',
-        'BakeAgentsBackgroundJob',
         'DummyBackgroundJob',
         'RenameHostsBackgroundJob',
-        'ReportingBackgroundJob',
         'RenameHostBackgroundJob',
         'FetchAgentOutputBackgroundJob',
         'BulkDiscoveryBackgroundJob',
         'UserSyncBackgroundJob',
         'ServiceDiscoveryBackgroundJob',
-    ])
+    ]
+
+    if not cmk.is_raw_edition():
+        expected_jobs += [
+            'BakeAgentsBackgroundJob',
+            'ReportingBackgroundJob',
+        ]
+
+    assert sorted(gui_background_job.job_registry.keys()) == sorted(expected_jobs)
 
 
 def test_registered_background_jobs_attributes():

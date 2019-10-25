@@ -1,3 +1,4 @@
+import cmk
 # Needed to trigger plugin loading
 import cmk.gui.sidebar  # pylint: disable=unused-import
 
@@ -5,14 +6,13 @@ from cmk.gui.plugins.sidebar.utils import snapin_registry
 
 
 def test_registered_snapins():
-    assert sorted(snapin_registry.keys()) == sorted([
+    expected_snapins = [
         'about',
         'admin',
         'admin_mini',
         'biaggr_groups',
         'biaggr_groups_tree',
         'bookmarks',
-        'cmc_stats',
         'custom_links',
         'dashboards',
         'hostgroups',
@@ -24,7 +24,6 @@ def test_registered_snapins():
         'nagvis_maps',
         'performance',
         'problem_hosts',
-        'reports',
         'search',
         'servicegroups',
         'sitestatus',
@@ -36,15 +35,21 @@ def test_registered_snapins():
         'wato_folders',
         'wato_foldertree',
         'wiki',
-    ])
+    ]
+
+    if not cmk.is_raw_edition():
+        expected_snapins += [
+            'cmc_stats',
+            'reports',
+        ]
+
+    assert sorted(snapin_registry.keys()) == sorted(expected_snapins)
 
 
 def test_refresh_snapins():
-    refresh_snapins = [s.type_name() for s in snapin_registry.values() if s.refresh_regularly()]
-    assert sorted(refresh_snapins) == sorted([
+    expected_refresh_snapins = [
         'admin',
         'admin_mini',
-        'cmc_stats',
         'performance',
         'hostmatrix',
         'mkeventd_performance',
@@ -53,4 +58,12 @@ def test_refresh_snapins():
         'tactical_overview',
         'tag_tree',
         'time',
-    ])
+    ]
+
+    if not cmk.is_raw_edition():
+        expected_refresh_snapins += [
+            'cmc_stats',
+        ]
+
+    refresh_snapins = [s.type_name() for s in snapin_registry.values() if s.refresh_regularly()]
+    assert sorted(refresh_snapins) == sorted(expected_refresh_snapins)

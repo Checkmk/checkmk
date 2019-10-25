@@ -4,9 +4,7 @@ import cmk.gui.plugins.wato.utils.main_menu as main_menu
 
 
 def test_registered_modules():
-    module_names = [m.mode_or_url for m in main_menu.get_modules()]
-    assert module_names == [
-        'agents',
+    expected_modules = [
         'folder',
         'tags',
         'globalvars',
@@ -24,13 +22,26 @@ def test_registered_modules():
         'sites',
         'backup',
         'passwords',
-        'alert_handlers',
         'analyze_config',
         'background_jobs_overview',
-        'mkps',
         'pattern_editor',
         'icons',
     ]
+
+    if cmk.is_raw_edition():
+        expected_modules += [
+            'download_agents',
+        ]
+
+    if not cmk.is_raw_edition():
+        expected_modules += [
+            'agents',
+            'alert_handlers',
+            'mkps',
+        ]
+
+    module_names = [m.mode_or_url for m in main_menu.get_modules()]
+    assert sorted(module_names) == sorted(expected_modules)
 
 
 def test_register_module(monkeypatch):

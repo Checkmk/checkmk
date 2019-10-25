@@ -1,8 +1,9 @@
 # encoding: utf-8
 
-import pytest
-from kubernetes.client.models import V1ObjectMeta, V1Node
+import pytest  # type: ignore
+from kubernetes.client.models import V1ObjectMeta, V1Node  # type: ignore
 
+from testlib import on_time
 from cmk.special_agents.agent_kubernetes import Node, NodeList
 
 
@@ -24,10 +25,12 @@ def test_node_timestamps_utc():
         '2019-02-15T13:53:29.796754852Z',
         '2019-02-15T13:53:20.663979637Z',
     ]
-    stats = cluster_stats(node_names, stat_time_formatted)
-    utc_timestamp_average = 1550235205.3
-    assert stats['timestamp'] == pytest.approx(utc_timestamp_average),\
-        "The timestamp of a cluster has to be the average timestamp of its nodes"
+
+    with on_time(1572253746, "CET"):
+        stats = cluster_stats(node_names, stat_time_formatted)
+        utc_timestamp_average = 1550235205.3
+        assert stats['timestamp'] == pytest.approx(utc_timestamp_average),\
+            "The timestamp of a cluster has to be the average timestamp of its nodes"
 
 
 def test_node_timestamps_non_utc():
@@ -37,7 +40,9 @@ def test_node_timestamps_non_utc():
         "2019-03-01T10:44:55.383089539+01:00",
         "2019-03-01T10:44:51.42243614+01:00",
     ]
-    stats = cluster_stats(node_names, stat_time_formatted)
-    utc_timestamp_average = 1551429894.7
-    assert stats['timestamp'] == pytest.approx(utc_timestamp_average),\
-        "The timestamp of a cluster has to be the average timestamp of its nodes"
+
+    with on_time(1572253746, "CET"):
+        stats = cluster_stats(node_names, stat_time_formatted)
+        utc_timestamp_average = 1551429894.7
+        assert stats['timestamp'] == pytest.approx(utc_timestamp_average),\
+            "The timestamp of a cluster has to be the average timestamp of its nodes"

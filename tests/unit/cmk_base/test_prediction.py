@@ -3,7 +3,7 @@ from __future__ import division
 import math
 import time
 from pprint import pprint
-import pytest
+import pytest  # type: ignore
 
 from cmk_base import prediction
 from testlib import on_time
@@ -16,7 +16,8 @@ from testlib import on_time
     (prediction.group_by_everyhour, 1543402820, ('everyhour', 20)),
 ])
 def test_group_by(group_by, timestamp, result):
-    assert group_by(timestamp) == result
+    with on_time(timestamp, "CET"):
+        assert group_by(timestamp) == result
 
 
 @pytest.mark.parametrize(

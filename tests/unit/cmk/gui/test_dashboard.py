@@ -2,6 +2,7 @@
 
 import pytest  # type: ignore
 
+import cmk
 import cmk.gui.dashboard as dashboard
 from cmk.gui.globals import html
 import cmk.gui.config as config
@@ -29,8 +30,7 @@ class DummyDashlet(dashboard.Dashlet):
 
 
 def test_dashlet_registry_plugins():
-    dashboard._transform_old_dict_based_dashlets()
-    assert sorted(dashboard.dashlet_registry.keys()) == sorted([
+    expected_plugins = [
         'hoststats',
         'notify_failed_notifications',
         'mk_logo',
@@ -40,28 +40,45 @@ def test_dashlet_registry_plugins():
         'overview',
         'pnpgraph',
         'view',
-        'custom_graph',
         'notify_users',
         'nodata',
         'snapin',
-    ])
+    ]
+
+    if not cmk.is_raw_edition():
+        expected_plugins += [
+            'custom_graph',
+        ]
+
+    dashboard._transform_old_dict_based_dashlets()
+    assert sorted(dashboard.dashlet_registry.keys()) == sorted(expected_plugins)
 
 
-@pytest.mark.parametrize("type_name,expected_refresh_interval", [
-    ('custom_graph', 60),
-    ('hoststats', 60),
-    ('mk_logo', False),
-    ('network_topology', False),
-    ('nodata', False),
-    ('notify_failed_notifications', 60),
-    ('notify_users', False),
-    ('overview', False),
-    ('pnpgraph', 60),
-    ('servicestats', 60),
-    ('snapin', 30),
-    ('url', False),
-    ('view', False),
-])
+def _expected_intervals():
+    expected = [
+        ('hoststats', 60),
+        ('mk_logo', False),
+        ('network_topology', False),
+        ('nodata', False),
+        ('notify_failed_notifications', 60),
+        ('notify_users', False),
+        ('overview', False),
+        ('pnpgraph', 60),
+        ('servicestats', 60),
+        ('snapin', 30),
+        ('url', False),
+        ('view', False),
+    ]
+
+    if not cmk.is_raw_edition():
+        expected += [
+            ('custom_graph', 60),
+        ]
+
+    return expected
+
+
+@pytest.mark.parametrize("type_name,expected_refresh_interval", _expected_intervals())
 def test_dashlet_refresh_intervals(type_name, expected_refresh_interval):
     dashlet_type = dashboard.dashlet_registry[type_name]
     assert dashlet_type.initial_refresh_interval() == expected_refresh_interval

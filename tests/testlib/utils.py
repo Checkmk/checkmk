@@ -39,6 +39,14 @@ def cme_path():
     return repo_path() + "/managed"
 
 
+def is_enterprise_repo():
+    return os.path.exists(cmc_path())
+
+
+def is_managed_repo():
+    return os.path.exists(cme_path())
+
+
 def virtualenv_path():
     venv = subprocess.check_output(["pipenv", "--bare", "--venv"])
     if not isinstance(venv, six.text_type):

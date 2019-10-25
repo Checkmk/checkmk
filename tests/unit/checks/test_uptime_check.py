@@ -1,5 +1,5 @@
-import pytest
-from freezegun import freeze_time
+import pytest # type: ignore
+from testlib import on_time
 from checktestlib import CheckResult, assertCheckResultsEqual
 
 # Mark all tests in this file as check related tests
@@ -106,6 +106,6 @@ def test_uptime_solaris_inputs(check_manager, info, reference):
     # This time freeze has no correlation with the uptime of the test. It
     # is needed for the check output to always return the same infotext.
     # The true test happens on state and perfdata
-    with freeze_time('2018-04-15 16:50'):
+    with on_time('2018-04-15 16:50', 'CET'):
         result = CheckResult(check.run_check(None, {}, parsed))
     assertCheckResultsEqual(result, CheckResult(reference))

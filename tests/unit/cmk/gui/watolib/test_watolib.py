@@ -20,29 +20,34 @@ from cmk.gui.plugins.wato.utils import (
 
 
 def test_registered_config_domains():
-    registered = sorted(watolib.config_domain_registry.keys())
-    assert registered == sorted([
+    expected_config_domains = [
         'apache',
         'ca-certificates',
         'check_mk',
-        'dcd',
         'diskspace',
         'ec',
         'liveproxyd',
-        'mknotifyd',
         'multisite',
         'omd',
         'rrdcached',
-    ])
+    ]
+
+    if not cmk.is_raw_edition():
+        expected_config_domains += [
+            'dcd',
+            'mknotifyd',
+        ]
+
+    registered = sorted(watolib.config_domain_registry.keys())
+    assert registered == sorted(expected_config_domains)
 
 
 def test_registered_automation_commands():
-    registered = sorted(watolib.automation_command_registry.keys())
-    assert registered == sorted([
+
+    expected_automation_commands = [
         'activate-changes',
         'push-profiles',
         'check-analyze-config',
-        'execute-dcd-command',
         'fetch-agent-output-get-file',
         'fetch-agent-output-get-status',
         'fetch-agent-output-start',
@@ -50,64 +55,32 @@ def test_registered_automation_commands():
         'ping',
         'push-snapshot',
         'service-discovery-job',
-    ])
+    ]
+
+    if not cmk.is_raw_edition():
+        expected_automation_commands += [
+            'execute-dcd-command',
+        ]
+
+    registered = sorted(watolib.automation_command_registry.keys())
+    assert registered == sorted(expected_automation_commands)
 
 
 def test_registered_configvars():
-    registered = sorted(config_variable_registry.keys())
-    assert registered == sorted([
+    expected_vars = [
         'actions',
         'adhoc_downtime',
-        'agent_deployment_enabled',
-        'agent_deployment_host_selection',
-        'agent_deployment_central',
-        'agent_deployment_remote',
         'agent_simulator',
-        'alert_handler_event_types',
-        'alert_handler_timeout',
-        'alert_logging',
         'apache_process_tuning',
         'archive_orphans',
         'auth_by_http_header',
-        'bake_agents_on_restart',
         'builtin_icon_visibility',
         'bulk_discovery_default_settings',
         'check_mk_perfdata_with_times',
         'cluster_max_cachefile_age',
-        'cmc_authorization',
-        'cmc_check_helpers',
-        'cmc_check_timeout',
-        'cmc_cmk_helpers',
-        'cmc_config_multiprocessing',
-        'cmc_debug_notifications',
-        'cmc_dump_core',
-        'cmc_flap_settings',
-        'cmc_graphite',
-        'cmc_import_nagios_state',
-        'cmc_initial_scheduling',
-        'cmc_livestatus_lines_per_file',
-        'cmc_livestatus_logcache_size',
-        'cmc_livestatus_threads',
-        'cmc_log_cmk_helpers',
-        'cmc_log_levels',
-        'cmc_log_limit',
-        'cmc_log_microtime',
-        'cmc_log_rotation_method',
-        'cmc_log_rrdcreation',
-        'cmc_pnp_update_delay',
-        'cmc_pnp_update_on_restart',
-        'cmc_real_time_checks',
-        'cmc_real_time_helpers',
-        'cmc_smartping_tuning',
-        'cmc_state_retention_interval',
-        'cmc_statehist_cache',
-        'cmc_timeperiod_horizon',
-        'config',
         'context_buttons_to_show',
         'crash_report_target',
         'custom_service_attributes',
-        'dcd_log_levels',
-        'dcd_web_api_connection',
         'debug',
         'debug_livestatus_queries',
         'debug_rules',
@@ -121,7 +94,6 @@ def test_registered_configvars():
         'event_limit',
         'eventsocket_queue_len',
         'failed_notification_horizon',
-        'graph_timeranges',
         'hard_query_limit',
         'history_lifetime',
         'history_rotation',
@@ -132,8 +104,6 @@ def test_registered_configvars():
         'inventory_check_do_scan',
         'inventory_check_interval',
         'inventory_check_severity',
-        'liveproxyd_default_connection_params',
-        'liveproxyd_log_levels',
         'lock_on_logon_failures',
         'log_level',
         'log_levels',
@@ -146,14 +116,12 @@ def test_registered_configvars():
         'mkeventd_notify_remotehost',
         'mkeventd_pprint_rules',
         'mkeventd_service_levels',
-        'mknotifyd_insecure_message_format',
         'multisite_draw_ruleicon',
         'notification_backlog',
         'notification_bulk_interval',
         'notification_fallback_email',
         'notification_logging',
         'notification_plugin_timeout',
-        'notification_spooling',
         'page_heading',
         'pagetitle_date_format',
         'password_policy',
@@ -164,21 +132,6 @@ def test_registered_configvars():
         'record_inline_snmp_stats',
         'remote_status',
         'replication',
-        'reporting_date_format',
-        'reporting_email_options',
-        'reporting_filename',
-        'reporting_font_family',
-        'reporting_font_size',
-        'reporting_graph_layout',
-        'reporting_lineheight',
-        'reporting_margins',
-        'reporting_mirror_margins',
-        'reporting_pagesize',
-        'reporting_rangespec',
-        'reporting_table_layout',
-        'reporting_time_format',
-        'reporting_use',
-        'reporting_view_limit',
         'reschedule_timeout',
         'restart_locking',
         'retention_interval',
@@ -195,7 +148,6 @@ def test_registered_configvars():
         'single_user_session',
         'site_autostart',
         'site_core',
-        'site_liveproxyd',
         'site_livestatus_tcp',
         'site_mkeventd',
         'site_nsca',
@@ -232,7 +184,74 @@ def test_registered_configvars():
         'wato_pprint_config',
         'wato_upload_insecure_snapshots',
         'wato_use_git',
-    ])
+    ]
+
+    if not cmk.is_raw_edition():
+        expected_vars += [
+            'agent_deployment_enabled',
+            'agent_deployment_host_selection',
+            'agent_deployment_central',
+            'agent_deployment_remote',
+            'alert_handler_event_types',
+            'alert_handler_timeout',
+            'alert_logging',
+            'bake_agents_on_restart',
+            'cmc_authorization',
+            'cmc_check_helpers',
+            'cmc_check_timeout',
+            'cmc_cmk_helpers',
+            'cmc_config_multiprocessing',
+            'cmc_debug_notifications',
+            'cmc_dump_core',
+            'cmc_flap_settings',
+            'cmc_graphite',
+            'cmc_import_nagios_state',
+            'cmc_initial_scheduling',
+            'cmc_livestatus_lines_per_file',
+            'cmc_livestatus_logcache_size',
+            'cmc_livestatus_threads',
+            'cmc_log_cmk_helpers',
+            'cmc_log_levels',
+            'cmc_log_limit',
+            'cmc_log_microtime',
+            'cmc_log_rotation_method',
+            'cmc_log_rrdcreation',
+            'cmc_pnp_update_delay',
+            'cmc_pnp_update_on_restart',
+            'cmc_real_time_checks',
+            'cmc_real_time_helpers',
+            'cmc_smartping_tuning',
+            'cmc_state_retention_interval',
+            'cmc_statehist_cache',
+            'cmc_timeperiod_horizon',
+            'config',
+            'dcd_log_levels',
+            'dcd_web_api_connection',
+            'graph_timeranges',
+            'liveproxyd_default_connection_params',
+            'liveproxyd_log_levels',
+            'mknotifyd_insecure_message_format',
+            'notification_spooling',
+            'reporting_date_format',
+            'reporting_email_options',
+            'reporting_filename',
+            'reporting_font_family',
+            'reporting_font_size',
+            'reporting_graph_layout',
+            'reporting_lineheight',
+            'reporting_margins',
+            'reporting_mirror_margins',
+            'reporting_pagesize',
+            'reporting_rangespec',
+            'reporting_table_layout',
+            'reporting_time_format',
+            'reporting_use',
+            'reporting_view_limit',
+            'site_liveproxyd',
+        ]
+
+    registered = sorted(config_variable_registry.keys())
+    assert registered == sorted(expected_vars)
 
 
 # Can be removed once we use mypy there
@@ -246,25 +265,31 @@ def test_registered_configvars_types():
 
 
 def test_registered_configvar_groups():
-    registered = sorted(config_variable_group_registry.keys())
-    assert registered == sorted([
+    expected_groups = [
         u'Administration Tool (WATO)',
-        u'Alert Handlers',
-        u'Automatic agent updates',
-        u'Dynamic Configuration',
         u'Event Console: Generic',
         u'Event Console: Logging & Diagnose',
         u'Event Console: SNMP traps',
         u'Execution of checks',
-        u'Livestatus Proxy',
-        u'Monitoring Core',
         u'Notifications',
-        u'Reporting',
         u'Service discovery',
         u'Site Management',
         u'User Interface',
         u'User Management',
-    ])
+    ]
+
+    if not cmk.is_raw_edition():
+        expected_groups += [
+            u'Dynamic Configuration',
+            u'Automatic agent updates',
+            u'Alert Handlers',
+            u'Livestatus Proxy',
+            u'Reporting',
+            u'Monitoring Core',
+        ]
+
+    registered = sorted(config_variable_group_registry.keys())
+    assert registered == sorted(expected_groups)
 
 
 def test_legacy_configvar_order_access():

@@ -13,6 +13,7 @@ import sys
 import ast
 import abc
 import tempfile
+import datetime
 from contextlib import contextmanager
 import six
 
@@ -37,6 +38,8 @@ from testlib.utils import (
     is_running_as_site_user,
     site_id,
     add_python_paths,
+    is_enterprise_repo,
+    is_managed_repo,
 )
 from testlib.fixtures import web, ec
 from testlib.site import Site, SiteFactory
@@ -75,7 +78,15 @@ def fake_version_and_paths():
     tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
 
     import cmk
-    monkeypatch.setattr(cmk, "omd_version", lambda: "%s.cee" % cmk.__version__)
+
+    # TODO: handle CME case
+    #if is_managed_repo():
+    #    monkeypatch.setattr(cmk, "omd_version", lambda: "%s.cee" % cmk.__version__)
+    #elif is_enterprise_repo():
+    if is_enterprise_repo():
+        monkeypatch.setattr(cmk, "omd_version", lambda: "%s.cee" % cmk.__version__)
+    else:
+        monkeypatch.setattr(cmk, "omd_version", lambda: "%s.cre" % cmk.__version__)
 
     monkeypatch.setattr("cmk.utils.paths.agents_dir", "%s/agents" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % cmk_path())
@@ -374,6 +385,9 @@ class SpecialAgent(object):  # pylint: disable=useless-object-inheritance
 @contextmanager
 def on_time(utctime, timezone):
     """Set the time and timezone for the test"""
+    if isinstance(utctime, (int, float)):
+        utctime = datetime.datetime.utcfromtimestamp(utctime)
+
     os.environ['TZ'] = timezone
     time.tzset()
     with freezegun.freeze_time(utctime):

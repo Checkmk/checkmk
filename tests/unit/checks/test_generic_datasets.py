@@ -16,9 +16,8 @@ required variables manually (as in ''veritas_vcs_*.py''), or create a
 regression test dataset as described in ''checks/generictests/regression.py''
 """
 from importlib import import_module
-from pathlib2 import Path
 import pytest  # type: ignore
-from testlib import cmk_path
+import testlib
 import generictests
 
 pytestmark = pytest.mark.checks
@@ -26,5 +25,6 @@ pytestmark = pytest.mark.checks
 
 @pytest.mark.parametrize("datasetname", generictests.DATASET_NAMES)
 def test_dataset(check_manager, datasetname):
-    dataset = import_module("generictests.datasets.%s" % datasetname)
-    generictests.run(check_manager, dataset)
+    with testlib.on_time(1572247138, "CET"):
+        dataset = import_module("generictests.datasets.%s" % datasetname)
+        generictests.run(check_manager, dataset)

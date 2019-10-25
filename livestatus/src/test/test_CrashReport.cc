@@ -1,7 +1,9 @@
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <string>
+#include <vector>
 #include "CrashReport.h"
 #include "gtest/gtest.h"
 
@@ -46,6 +48,18 @@ TEST_F(CrashReportTest, DirectoryAndFileExist) {
 TEST_F(CrashReportTest, AccessorsAreCorrect) {
     ASSERT_TRUE(fs::exists(fullpath()));
     CrashReport cr{uuid(), component()};
-    EXPECT_EQ(cr.id(), uuid());
-    EXPECT_EQ(cr.component(), component());
+    EXPECT_EQ(uuid(), cr.id());
+    EXPECT_EQ(component(), cr.component());
+}
+
+TEST_F(CrashReportTest, ForEachCrashReport) {
+    ASSERT_TRUE(fs::exists(basepath()));
+    std::vector<CrashReport> result{};
+
+    for_each_crash_report(basepath(), [&result](const CrashReport &cr) {
+        result.emplace_back(cr);
+    });
+    ASSERT_EQ(1UL, result.size());
+    EXPECT_EQ(uuid(), result[0].id());
+    EXPECT_EQ(component(), result[0].component());
 }

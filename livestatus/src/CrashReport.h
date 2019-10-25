@@ -1,6 +1,8 @@
 #ifndef CrashReport_h
 #define CrashReport_h
 
+#include <filesystem>
+#include <functional>
 #include <string>
 
 class TableCrashReports;
@@ -17,5 +19,9 @@ private:
     const std::string _id;
     const std::string _component;
 };
+
+/// Apply fun to every crash report under base_path.
+void for_each_crash_report(const std::filesystem::path &base_path,
+                           const std::function<void(const CrashReport &)> &);
 
 #endif

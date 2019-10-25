@@ -1,5 +1,4 @@
 #include "TableCrashReports.h"
-#include <filesystem>
 #include <memory>
 #include <string>
 #include "Column.h"
@@ -23,6 +22,7 @@ std::string TableCrashReports::name() const { return "crashreports"; }
 std::string TableCrashReports::namePrefix() const { return "crashreport_"; }
 
 void TableCrashReports::answerQuery(Query *query) {
-    CrashReport c{core()->crashReportPath().string(), ""};
-    query->processDataset(Row(&c));
+    for_each_crash_report(
+        core()->crashReportPath(),
+        [&query](const CrashReport &cr) { query->processDataset(Row(&cr)); });
 }

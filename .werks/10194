@@ -1,0 +1,21 @@
+Title: Windows Agent: logwatch section size is limited now
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1571986792
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+Previously the Windows Agent may generate too much data during Windows EventLog 
+(logwatch) section generation. In fact, size of the data to be send was 
+unlimited, the Agent could have created a block of data several gigabytes 
+in size.
+
+Now default maximal size of the whole logwatch section of the Windows Agent 
+is limited to 500000 bytes. The value of this limit may be changed in 
+check_mk.user.yml using variable logwatch.max_size. To have unlimited 
+section, the value of the max_size should be set in -1
+

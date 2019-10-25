@@ -27,12 +27,12 @@
 # This file is being used by the rule based notifications and (CEE
 # only) by the alert handling
 
+import logging
 import os
 import sys
 import select
 import socket
 import time
-import traceback
 import urllib
 
 import six
@@ -47,9 +47,11 @@ import cmk.utils.daemon
 import cmk_base.config as config
 import cmk_base.core
 
+logger = logging.getLogger('cmk.base.events')
+logger.addHandler(logging.NullHandler())
+
 
 def event_keepalive(event_function,
-                    log_function,
                     call_every_loop=None,
                     loop_interval=None,
                     shutdown_function=None):
@@ -58,11 +60,11 @@ def event_keepalive(event_function,
     # Send signal that we are ready to receive the next event, but
     # not after a config-reload-restart (see below)
     if os.getenv("CMK_EVENT_RESTART") != "1":
-        log_function("Starting in keepalive mode with PID %d" % os.getpid())
+        logger.info("Starting in keepalive mode with PID %d", os.getpid())
         sys.stdout.write("*")
         sys.stdout.flush()
     else:
-        log_function("We are back after a restart.")
+        logger.info("We are back after a restart.")
 
     while True:
         try:
@@ -79,7 +81,7 @@ def event_keepalive(event_function,
 
             if event_data_available(loop_interval):
                 if last_config_timestamp != config_timestamp():
-                    log_function("Configuration has changed. Restarting myself.")
+                    logger.info("Configuration has changed. Restarting myself.")
                     if shutdown_function:
                         shutdown_function()
 
@@ -104,10 +106,10 @@ def event_keepalive(event_function,
                     except Exception as e:
                         if cmk.utils.debug.enabled():
                             raise
-                        log_function("Cannot read data from CMC: %s" % e)
+                        logger.info("Cannot read data from CMC: %s", e)
 
                     if not new_data:
-                        log_function("CMC has closed the connection. Shutting down.")
+                        logger.info("CMC has closed the connection. Shutting down.")
                         if shutdown_function:
                             shutdown_function()
                         sys.exit(0)  # closed stdin, this is
@@ -116,10 +118,10 @@ def event_keepalive(event_function,
                 try:
                     context = raw_context_from_string(data.rstrip('\n'))
                     event_function(context)
-                except Exception as e:
+                except Exception:
                     if cmk.utils.debug.enabled():
                         raise
-                    log_function("ERROR %s\n%s" % (e, traceback.format_exc()))
+                    logger.exception("ERROR:")
 
                 # Signal that we are ready for the next event
                 sys.stdout.write("*")
@@ -128,18 +130,18 @@ def event_keepalive(event_function,
         # Fix vor Python 2.4:
         except SystemExit as e:
             sys.exit(e)
-        except Exception as e:
+        except Exception:
             if cmk.utils.debug.enabled():
                 raise
-            log_function("ERROR %s\n%s" % (e, traceback.format_exc()))
+            logger.exception("ERROR:")
 
         if call_every_loop:
             try:
                 call_every_loop()
-            except Exception as e:
+            except Exception:
                 if cmk.utils.debug.enabled():
                     raise
-                log_function("ERROR %s\n%s" % (e, traceback.format_exc()))
+                logger.exception("ERROR:")
 
 
 def config_timestamp():
@@ -205,13 +207,6 @@ def render_context_dump(raw_context):
                + "\n".join(["                    %s=%s" % v for v in sorted(encoded_context.items())])
 
 
-def event_log(logfile_path, message):
-    if isinstance(message, str):
-        message = message.decode("utf-8")
-    formatted = u"%s %s\n" % (time.strftime("%F %T", time.localtime()), message)
-    open(logfile_path, "a").write(formatted.encode("utf-8"))
-
-
 def find_host_service_in_context(context):
     host = context.get("HOSTNAME", "UNKNOWN")
     service = context.get("SERVICEDESC")
@@ -268,7 +263,7 @@ def add_rulebased_macros(raw_context):
     raw_context["CONTACTNAME"] = "check-mk-notify"
 
 
-def complete_raw_context(raw_context, with_dump, log_func):
+def complete_raw_context(raw_context, with_dump):
     """Extend the raw notification context
 
     This ensures that all raw contexts processed in the notification code has specific variables
@@ -326,7 +321,7 @@ def complete_raw_context(raw_context, with_dump, log_func):
         for key in ["HOSTNOTIFICATIONNUMBER", "SERVICENOTIFICATIONNUMBER"]:
             if key in raw_context and raw_context[key] == "0":
                 if with_dump:
-                    log_func("Setting %s for notification from '0' to '1'" % key)
+                    logger.info("Setting %s for notification from '0' to '1'", key)
                 raw_context[key] = "1"
 
         # Add the previous hard state. This is neccessary for notification rules that depend on certain transitions,
@@ -349,7 +344,7 @@ def complete_raw_context(raw_context, with_dump, log_func):
                 # would not have been any notification)
                 if raw_context["HOSTSTATE"] != "UP":
                     prev_state = "?"
-                log_func("Previous host hard state not known. Allowing all states.")
+                logger.info("Previous host hard state not known. Allowing all states.")
             raw_context["PREVIOUSHOSTHARDSTATE"] = prev_state
 
         # Same for services
@@ -361,7 +356,7 @@ def complete_raw_context(raw_context, with_dump, log_func):
                 ("SERVICEATTEMPT" in raw_context and raw_context["SERVICEATTEMPT"] != "1"):
                 if raw_context["SERVICESTATE"] != "OK":
                     prev_state = "?"
-                log_func("Previous service hard state not known. Allowing all states.")
+                logger.info("Previous service hard state not known. Allowing all states.")
             raw_context["PREVIOUSSERVICEHARDSTATE"] = prev_state
 
         # Add short variants for state names (at most 4 characters)
@@ -376,14 +371,16 @@ def complete_raw_context(raw_context, with_dump, log_func):
         convert_context_to_unicode(raw_context)
 
     except Exception as e:
-        log_func("Error on completing raw context: %s" % e)
+        logger.info("Error on completing raw context: %s", e)
 
     if with_dump:
-        log_func("Computed variables:\n" + "\n".join(
+        log_context = "\n".join(
             sorted([
-                "                    %s=%s" %
-                (k, raw_context[k]) for k in raw_context if k not in raw_keys
-            ])))
+                "                    %s=%s" % (k, raw_context[k])
+                for k in raw_context
+                if k not in raw_keys
+            ]))
+        logger.info("Computed variables:\n%s", log_context)
 
 
 # TODO: Use cmk.utils.render.*?

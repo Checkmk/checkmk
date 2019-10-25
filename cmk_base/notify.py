@@ -280,9 +280,7 @@ def notify_notify(raw_context, analyse=False):
     logger.debug(events.render_context_dump(raw_context))
 
     _complete_raw_context_with_notification_vars(raw_context)
-    events.complete_raw_context(raw_context,
-                                with_dump=config.notification_logging <= 10,
-                                log_func=notify_log)
+    events.complete_raw_context(raw_context, with_dump=config.notification_logging <= 10)
 
     # Spool notification to remote host, if this is enabled
     if config.notification_spooling in ("remote", "both"):
@@ -399,7 +397,6 @@ def notify_keepalive():
     cmk_base.utils.register_sigint_handler()
     events.event_keepalive(
         event_function=notify_notify,
-        log_function=notify_log,
         call_every_loop=send_ripe_bulks,
         loop_interval=config.notification_bulk_interval,
     )
@@ -1923,12 +1920,6 @@ def dead_nagios_variable(value):
         if not c.isupper() and c != '_':
             return False
     return True
-
-
-# TODO: we have to keep this function until alert_handling.py and events.py use logging as well
-def notify_log(message):
-    if config.notification_logging <= 20:
-        events.event_log(notification_log, message)
 
 
 def fresh_uuid():

@@ -1,0 +1,65 @@
+# This is a simple entry point to execute the basic and most important Python
+# tests for Checkmk. We run tools like pylint, yapf and our py.test based unit
+# tests here. Some tests, like integration tests or tests of very specific
+# components are not executed.
+#
+# We focus on the tests that are needed by external developers, e.g. to support
+# check plugin development.
+---
+language: python
+matrix:
+    include:
+        # Execute all these targets in parallel
+        - name: "Python2 PyLint tests"
+          python: "2.7"
+          env: TEST_TARGETS="test-pylint"
+            TEST_PATH=tests
+        - name: "Python2 unit, futurize and bandit tests"
+          python: "2.7"
+          env: TEST_TARGETS="test-unit test-python-futurize test-bandit"
+            TEST_PATH=tests
+        - name: "Python2 formatting"
+          python: "2.7"
+          env: TEST_TARGETS="test-format-python"
+            TEST_PATH=tests
+        - name: "Python3 PyLint tests"
+          python: "3.7"
+          env: TEST_TARGETS="test-pylint"
+            TEST_PATH=tests-py3
+        - name: "Python3 unit tests"
+          python: "3.7"
+          env: TEST_TARGETS="test-unit"
+            TEST_PATH=tests-py3
+        - name: "Python3 typing tests"
+          python: "3.7"
+          env: TEST_TARGETS="test-mypy"
+            TEST_PATH=tests/static
+env:
+    global:
+        # Optimize builds by caching pip and pipenv things
+        - PIP_CACHE_DIR=$HOME/.cache/pip
+        - PIPENV_CACHE_DIR=$HOME/.cache/pipenv
+        # Don't use travis venv, build our own
+        - PIPENV_IGNORE_VIRTUALENVS=1
+        # Disable some annoying warnings
+        - PYTHONWARNINGS=ignore::DeprecationWarning
+cache:
+    directories:
+        - $PIP_CACHE_DIR
+        - $PIPENV_CACHE_DIR
+addons:
+    apt:
+        packages:
+            # Needed for some "unit test" (test_mk_errpt_aix).
+            - ksh
+            # Needed for building rrdtool python bindings
+            - librrd-dev
+install:
+    - pip install pipenv
+    - make virtual-envs/$TRAVIS_PYTHON_VERSION/.venv
+script:
+    # TODO: Some tests could be optimized for better execution time. For
+    # example test-format-python optionally checks only the files in set in
+    # the environment variable PYTHON_FILES. Without it, it always checks
+    # all known python files.
+    - travis_wait 30 make -C $TEST_PATH $TEST_TARGETS;

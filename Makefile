@@ -70,7 +70,6 @@ FILES_TO_FORMAT_LINUX := \
                       $(wildcard $(addprefix livestatus/src/test/,*.cc *.h)) \
                       $(wildcard $(addprefix bin/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix enterprise/core/src/,*.cc *.h)) \
-                      $(wildcard $(addprefix enterprise/core/src/checkhelper/,*.cc *.h)) \
                       $(wildcard $(addprefix enterprise/core/src/test/,*.cc *.h))
 
 WERKS              := $(wildcard .werks/[0-9]*)

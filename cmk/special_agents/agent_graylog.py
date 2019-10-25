@@ -99,7 +99,7 @@ def handle_request(args, sections):
                 if node in value:
                     value[node].update({"inputstates": node_inputstates[node]})
                     value = {node: value[node]}
-                    if args.display_node_details is not None:
+                    if args.display_node_details == "node":
                         handle_piggyback(value, args, value[node]["hostname"], section.name)
                         continue
                     node_list.append(value)
@@ -129,7 +129,7 @@ def handle_request(args, sections):
             if sidecars is not None:
                 sidecar_list = []
                 for sidecar in sidecars:
-                    if args.display_sidecar_details is not None:
+                    if args.display_sidecar_details == "sidecar":
                         handle_piggyback(sidecar, args, sidecar["node_name"], section.name)
                         continue
                     sidecar_list.append(sidecar)
@@ -161,11 +161,13 @@ def handle_output(value, section, args):
 
     sys.stdout.write("%s\n" % json.dumps(value))
 
-    for name, param_piggyback in [("nodes", args.display_node_details),
-                                  ("sidecars", args.display_sidecar_details)]:
-
-        if section == name and param_piggyback is not None:
+    for name, param_piggyback, value_piggyback in [
+        ("nodes", args.display_node_details, "node"),
+        ("sidecars", args.display_sidecar_details, "sidecar"),
+    ]:
+        if section == name and param_piggyback == value_piggyback:
             sys.stdout.write("<<<<>>>>\n")
+
     return
 
 

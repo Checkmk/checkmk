@@ -37,11 +37,20 @@
 
 def agent_graylog_arguments(params, hostname, ipaddress):
     args = [
-        "-P", params["protocol"], "-m", ','.join(params["sections"]), "-t", params["since"], "-u",
-        params["user"], "-s",
-        passwordstore_get_cmdline("%s", params["password"]), "--display_node_details",
-        params["display_node_details"], "--display_sidecar_details",
-        params["display_sidecar_details"]
+        "-P",
+        params["protocol"],
+        "-m",
+        ','.join(params["sections"]),
+        "-t",
+        params["since"],
+        "-u",
+        params["user"],
+        "-s",
+        passwordstore_get_cmdline("%s", params["password"]),
+        "--display_node_details",
+        params["display_node_details"],
+        "--display_sidecar_details",
+        params["display_sidecar_details"],
     ]
 
     if "port" in params:

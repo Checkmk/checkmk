@@ -1,0 +1,11 @@
+Title: oracle_tablespaces: Sort table by SID and NAME
+Class: feature
+Compatible: compat
+Component: inv
+Date: 1571997171
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+

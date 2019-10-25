@@ -1,0 +1,23 @@
+Title: Windows Agent: additional parameters for logwatch section
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1571988379
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+To better control output from the logwatch section the user can set next 
+parameters for this section:
+
+max_line_length, max_entries, timeout
+
+timeout is measured in seconds and limits the  time of the execution of the 
+every reported log.
+max_line_length cuts every line in output data if the size of the line 
+exceeds the provided value.
+max_entries is the maximal count of the entries in every reported event log.
+
+The default values for all above mentioned parameters are -1 and means 
+unlimited.

@@ -46,7 +46,7 @@ from cmk.special_agents.utils import DataCache
 import cmk.utils.password_store
 cmk.utils.password_store.replace_passwords()
 
-LOG = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 METRICS_SELECTED = {
     # to add a new metric, just add a made up name, run the
@@ -213,7 +213,7 @@ def parse_arguments(argv):
     for key, value in vars(args).items():
         if key == "secret":
             value = '****'
-        LOG.debug('argparse: %s = %r', key, value)
+        LOGGER.debug('argparse: %s = %r', key, value)
 
     return args
 
@@ -439,7 +439,7 @@ def create_metric_dict(metric, aggregation, interval_id, filter_):
             pass
 
         for data in reversed(dataset):
-            LOG.debug("data: %s", data)
+            LOGGER.debug("data: %s", data)
             metric_dict['value'] = data.get(aggregation)
             if metric_dict['value'] is not None:
                 metric_dict['timestamp'] = data['timeStamp']
@@ -537,7 +537,7 @@ class MetricCache(DataCache):
                                               filter=filter_)
         except () if self.debug else ApiError as exc:
             err.add("exception", resource_id, str(exc))
-            LOG.exception(exc)
+            LOGGER.exception(exc)
             return []
 
         metrics = []
@@ -546,7 +546,7 @@ class MetricCache(DataCache):
                 metrics.append(create_metric_dict(raw_metric, aggregation, interval, filter_))
             except AzureMetricParseError as exc:
                 err.add(exc[0], resource_id, exc[1])
-                LOG.warning(exc.args[1])
+                LOGGER.warning(exc.args[1])
 
         return metrics
 
@@ -580,7 +580,7 @@ class UsageClient(DataCache):
         return True
 
     def get_live_data(self):  # pylint: disable=arguments-differ
-        LOG.debug("UsageClient: get live data")
+        LOGGER.debug("UsageClient: get live data")
 
         try:
             # (mo) I am unable to get the filter for usage_end working :-(
@@ -589,11 +589,11 @@ class UsageClient(DataCache):
             if self.offerid_has_no_consuption_api(exc.message):
                 return []
             raise
-        LOG.debug('unfiltered usage details: %d', len(unfiltered_usages))
+        LOGGER.debug('unfiltered usage details: %d', len(unfiltered_usages))
 
         yesterday = (NOW - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
         usages = [u for u in unfiltered_usages if u['properties']['usageEnd'].startswith(yesterday)]
-        LOG.debug('yesterdays usage details: %d', len(usages))
+        LOGGER.debug('yesterdays usage details: %d', len(usages))
 
         # add group info:
         for usage in usages:
@@ -685,7 +685,7 @@ def main(argv=None):
     if args.dump_config:
         sys.stdout.write("Configuration:\n%s\n" % selector)
         return 0
-    LOG.debug("%s", selector)
+    LOGGER.debug("%s", selector)
 
     try:
         rest_client.login(args.tenant, args.client, args.secret, args.subscription)

@@ -74,7 +74,14 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
 
         // Instantiated styles
         this._active_styles = {}
+
+        // Register layout manager toolbar plugin
+        this.toolbar_plugin = new LayoutingToolbarPlugin(this)
+        this.viewport.main_instance.toolbar.add_toolbar_plugin_instance(this.toolbar_plugin)
+        this.viewport.main_instance.toolbar.update_toolbar_plugins()
     }
+
+
 
     create_undo_step() {
         this.layout_applier.create_undo_step()
@@ -142,24 +149,12 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
         return (this._node_dragging_enforced || this._node_dragging_allowed)
     }
 
-    register_toolbar_plugin() {
-        this.toolbar_plugin = new LayoutingToolbarPlugin(this)
-        this.viewport.main_instance.toolbar.add_toolbar_plugin_instance(this.toolbar_plugin)
-        this.viewport.main_instance.toolbar.update_toolbar_plugins()
-    }
-
-
     size_changed() {
         // TODO: check this
 //        node_visualization_layout_styles.force_simulation.size_changed()
     }
 
     update_data() {
-        if (!this.toolbar_plugin) {
-            this.register_toolbar_plugin()
-        }
-
-        // TODO: use only show_style_configuration
         this.toolbar_plugin.update_content()
 
         let sorted_styles = []

@@ -690,9 +690,10 @@ def main(argv=None):
     try:
         rest_client.login(args.tenant, args.client, args.secret, args.subscription)
 
-        resources = [
-            r for r in map(AzureResource, rest_client.resources()) if selector.do_monitor(r)
-        ]
+        all_resources = (AzureResource(r) for r in rest_client.resources())
+
+        resources = [r for r in all_resources if selector.do_monitor(r)]
+
         monitored_groups = sorted(set(r.info['group'] for r in resources))
 
         write_group_info(monitored_groups)

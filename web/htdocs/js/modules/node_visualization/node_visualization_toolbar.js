@@ -35,16 +35,15 @@ import * as node_visualization_search from "node_visualization_search"
 import * as node_visualization_datasources from "node_visualization_datasources"
 
 export class Toolbar {
-    constructor(main_instance) {
+    constructor(main_instance, selection) {
+        selection.attr("id", "toolbar")
         this.main_instance = main_instance
-        this.selection = this.main_instance.get_div_selection().append("div")
-                                          .attr("id", "toolbar")
-                                          .classed("toolbar", true)
+        this._selection = selection
 
         this._toolbar_plugins = {}
-        this.plugins_content_selection = this.selection.append("div")
+        this._plugins_content_selection = this._selection.append("div")
                                                     .attr("id", "content")
-        this.plugins_togglebutton_selection = this.selection.append("div")
+        this._plugins_togglebutton_selection = this._selection.append("div")
                                                     .attr("id", "togglebuttons")
 
         this._setup_toolbar_plugins()
@@ -77,10 +76,10 @@ export class Toolbar {
         plugin_ids.forEach(plugin_id=>{
             let plugin = this._toolbar_plugins[plugin_id]
             if (!plugin.has_content_selection()) {
-                let content_selection = this.plugins_content_selection.append("div").attr("id", plugin_id)
+                let content_selection = this._plugins_content_selection.append("div").attr("id", plugin_id)
                 let togglebutton_selection = null
                 if (plugin.has_toggle_button()) {
-                    togglebutton_selection = this.plugins_togglebutton_selection.append("div")
+                    togglebutton_selection = this._plugins_togglebutton_selection.append("div")
                                                         .classed("togglebutton", true)
                                                         .classed("noselect", true)
                                                         .classed("box", true)

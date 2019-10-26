@@ -37,12 +37,10 @@ import * as node_visualization_utils from "node_visualization_utils"
 //   +--------------------------------------------------------------------+
 
 export class InfoBox {
-    constructor(main_instance) {
+    constructor(main_instance, selection) {
         this.main_instance = main_instance
-        this._selection = main_instance.get_div_selection().append("div")
-            .attr("id", "infobox")
-            .classed("box", true)
-            .style("display", "none")
+        selection.attr("id", "infobox").classed("box", true).style("display", "none")
+        this._selection = selection
 
         this._content_selection = this._selection.append("div").attr("id", "content")
 

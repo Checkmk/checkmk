@@ -45,7 +45,7 @@ class NodeVisualization {
 
         this.gui_theme = "facelift"
 
-        this.div_selection = null
+        this._div_selection = null
         this.datasource_manager = null
         this.viewport = null
         this.infobox = null
@@ -65,19 +65,24 @@ class NodeVisualization {
     }
 
     _initialize_components() {
-        this.div_selection = d3.select("#" + this.div_id).append("div")
+        this._div_selection = d3.select("#" + this.div_id).append("div")
                                         .attr("id", "node_visualization_root_div")
                                         .attr("div_id", this.div_id)
                                         .classed("node_vis", true) // Main indicator for most NodeVisualization css styles
 
+
+        let viewport_selection = this._div_selection.append("div")
+        let toolbar_selection = this._div_selection.append("div")
+        let infobox_selection = this._div_selection.append("div")
+
         this.datasource_manager = new node_visualization_datasources.DatasourceManager()
-        this.viewport = new node_visualization_viewport.Viewport(this)
-        this.infobox = new node_visualization_infobox.InfoBox(this)
-        this.toolbar = new node_visualization_toolbar.Toolbar(this)
+        this.toolbar = new node_visualization_toolbar.Toolbar(this, toolbar_selection)
+        this.viewport = new node_visualization_viewport.Viewport(this, viewport_selection)
+        this.infobox = new node_visualization_infobox.InfoBox(this, infobox_selection)
     }
 
     get_div_selection() {
-        return this.div_selection;
+        return this._div_selection;
     }
 }
 

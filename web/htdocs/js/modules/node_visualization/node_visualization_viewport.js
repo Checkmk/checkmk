@@ -31,11 +31,10 @@ import * as d3 from "d3"
 
 // The main viewport
 export class Viewport {
-    constructor(main_instance) {
+    constructor(main_instance, selection) {
         this.main_instance = main_instance;
-        this.selection = this.main_instance.get_div_selection().append("div")
-                                  .attr("id", "viewport")
-                                  .classed("viewport", true);
+        selection.attr("id", "viewport")
+        this.selection = selection
 
         this._viewport_plugins = {}
         this.current_viewport = null

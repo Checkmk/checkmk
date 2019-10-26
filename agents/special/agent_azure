@@ -41,7 +41,7 @@ from pathlib2 import Path
 
 from cmk.utils.paths import tmp_dir
 
-from cmk.special_agents.agent_azure import rest_client, ApiError
+from cmk.special_agents.agent_azure import RestApiClient, ApiError
 from cmk.special_agents.utils import DataCache
 import cmk.utils.password_store
 cmk.utils.password_store.replace_passwords()
@@ -484,10 +484,10 @@ class AzureResource(object):
         return lines
 
 
-def process_vm(vmach, args):
+def process_vm(mgmt_client, vmach, args):
     use_keys = ('statuses',)
 
-    inst_view = rest_client.vmview(vmach.info["group"], vmach.info["name"])
+    inst_view = mgmt_client.vmview(vmach.info["group"], vmach.info["name"])
     items = ((k, inst_view.get(k)) for k in use_keys)
     vmach.info["specific_info"] = {k: v for k, v in items if v is not None}
 
@@ -525,11 +525,11 @@ class MetricCache(DataCache):
     def get_validity_from_args(self, *args):
         return True
 
-    def get_live_data(self, resource_id, err):  # pylint: disable=arguments-differ
+    def get_live_data(self, mgmt_client, resource_id, err):  # pylint: disable=arguments-differ
         metricnames, interval, aggregation, filter_ = self.metric_definition
 
         try:
-            raw_metrics = rest_client.metrics(resource_id,
+            raw_metrics = mgmt_client.metrics(resource_id,
                                               timespan=self._timespan,
                                               interval=interval,
                                               metricnames=metricnames,
@@ -562,10 +562,11 @@ class UsageClient(DataCache):
         'offer MS-AZR-0144P',
     )
 
-    def __init__(self, subscription, debug=False):
+    def __init__(self, client, subscription, debug=False):
         super(UsageClient, self).__init__(AZURE_CACHE_FILE_PATH,
                                           "%s-usage" % subscription,
                                           debug=debug)
+        self._client = client
 
     @property
     def cache_interval(self):
@@ -584,7 +585,7 @@ class UsageClient(DataCache):
 
         try:
             # (mo) I am unable to get the filter for usage_end working :-(
-            unfiltered_usages = rest_client.usagedetails()
+            unfiltered_usages = self._client.usagedetails()
         except ApiError as exc:
             if self.offerid_has_no_consuption_api(exc.message):
                 return []
@@ -611,7 +612,7 @@ class UsageClient(DataCache):
             UsageSection(usage_resource, piggytargets, cacheinfo).write()
 
 
-def gather_metrics(resource, debug=False):
+def gather_metrics(mgmt_client, resource, debug=False):
     '''
     Gather all metrics for a resource. These metrics have different time
     resolutions, so every metric needs its own cache.
@@ -621,23 +622,24 @@ def gather_metrics(resource, debug=False):
     metric_definitions = METRICS_SELECTED.get(resource.info["type"], [])
     for metric_def in metric_definitions:
         cache = MetricCache(resource, metric_def, NOW, debug=debug)
-        resource.metrics += cache.get_data(resource.info['id'],
+        resource.metrics += cache.get_data(mgmt_client,
+                                           resource.info['id'],
                                            err,
                                            use_cache=cache.cache_interval > 60)
     return err
 
 
 def process_resource(function_args):
-    resource, args = function_args
+    mgmt_client, resource, args = function_args
 
     resource_type = resource.info.get("type")
     if resource_type == 'Microsoft.Compute/virtualMachines':
-        process_vm(resource, args)
+        process_vm(mgmt_client, resource, args)
 
-    err = gather_metrics(resource, debug=args.debug)
+    err = gather_metrics(mgmt_client, resource, debug=args.debug)
 
     agent_info_section = AzureSection('agent_info')
-    agent_info_section.add(('remaining-reads', rest_client.ratelimit))
+    agent_info_section.add(('remaining-reads', mgmt_client.ratelimit))
     agent_info_section.add(err.dumpinfo())
 
     section = AzureSection(resource.section, resource.piggytargets)
@@ -646,9 +648,9 @@ def process_resource(function_args):
     return [agent_info_section, section]
 
 
-def write_group_info(monitored_groups):
+def write_group_info(mgmt_client, monitored_groups):
 
-    for group in rest_client.resourcegroups():
+    for group in mgmt_client.resourcegroups():
         name = group['name']
         tags = group.get('tags')
         if name in monitored_groups and tags:
@@ -698,10 +700,11 @@ def main(argv=None):
         return 0
     LOGGER.debug("%s", selector)
 
+    mgmt_client = RestApiClient()
     try:
-        rest_client.login(args.tenant, args.client, args.secret, args.subscription)
+        mgmt_client.login(args.tenant, args.client, args.secret, args.subscription)
 
-        all_resources = (AzureResource(r) for r in rest_client.resources())
+        all_resources = (AzureResource(r) for r in mgmt_client.resources())
 
         resources = [r for r in all_resources if selector.do_monitor(r)]
 
@@ -710,15 +713,15 @@ def main(argv=None):
         write_exception_to_agent_info_section(exc)
         return 1
 
-    write_group_info(monitored_groups)
+    write_group_info(mgmt_client, monitored_groups)
 
     try:
-        usage_client = UsageClient(args.subscription, args.debug)
+        usage_client = UsageClient(mgmt_client, args.subscription, args.debug)
         usage_client.write_sections(monitored_groups)
     except () if args.debug else Exception as exc:
         write_exception_to_agent_info_section(exc)
 
-    func_args = ((resource, args) for resource in resources)
+    func_args = ((mgmt_client, resource, args) for resource in resources)
     mapper = get_sequential_mapper(args.debug) if args.sequential else AsyncMapper(
         args.timeout, args.debug)
     for sections in mapper(process_resource, func_args):

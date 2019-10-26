@@ -101,6 +101,3 @@ class RestApiClient(object):
         url = resource_id.split('/', 3)[-1] + "/providers/microsoft.insights/metrics"
         params['api-version'] = '2018-01-01'
         return self._get(url, key='value', params=params)
-
-
-rest_client = RestApiClient()

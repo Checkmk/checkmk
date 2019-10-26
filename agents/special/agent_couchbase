@@ -32,6 +32,7 @@ import json
 import requests
 
 import cmk.utils.password_store
+from cmk.special_agents.utils import vcrtrace
 
 cmk.utils.password_store.replace_passwords()
 
@@ -111,6 +112,7 @@ def parse_arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("-v", "--verbose", action="count", help="Enable verbose logging.")
     parser.add_argument("--debug", action="store_true", help="Raise python exceptions.")
+    parser.add_argument("--vcrtrace", action=vcrtrace(filter_headers=[('authorization', '****')]))
     parser.add_argument("-t",
                         "--timeout",
                         default=10,

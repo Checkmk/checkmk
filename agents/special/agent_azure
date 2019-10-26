@@ -678,6 +678,17 @@ def write_exception_to_agent_info_section(exception):
     section.write()
 
 
+def get_sequential_mapper(debug):
+    def mapper(func, args_iter):
+        for arg_set in args_iter:
+            try:
+                yield func(arg_set)
+            except () if debug else Exception:
+                pass
+
+    return mapper
+
+
 def main(argv=None):
 
     args = parse_arguments(argv or sys.argv[1:])
@@ -695,20 +706,25 @@ def main(argv=None):
         resources = [r for r in all_resources if selector.do_monitor(r)]
 
         monitored_groups = sorted(set(r.info['group'] for r in resources))
-
-        write_group_info(monitored_groups)
-
-        usage_client = UsageClient(args.subscription, args.debug)
-        usage_client.write_sections(monitored_groups)
-
-        func_args = ((resource, args) for resource in resources)
-        map_ = map if args.sequential else AsyncMapper(args.timeout, args.debug)
-        for sections in map_(process_resource, func_args):
-            for section in sections:
-                section.write()
-
     except () if args.debug else Exception as exc:
         write_exception_to_agent_info_section(exc)
+        return 1
+
+    write_group_info(monitored_groups)
+
+    try:
+        usage_client = UsageClient(args.subscription, args.debug)
+        usage_client.write_sections(monitored_groups)
+    except () if args.debug else Exception as exc:
+        write_exception_to_agent_info_section(exc)
+
+    func_args = ((resource, args) for resource in resources)
+    mapper = get_sequential_mapper(args.debug) if args.sequential else AsyncMapper(
+        args.timeout, args.debug)
+    for sections in mapper(process_resource, func_args):
+        for section in sections:
+            section.write()
+
     return 0
 
 

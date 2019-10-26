@@ -84,12 +84,18 @@ SECTION_KEYS_B_MEM = (
     "mem_free",
 )
 
+SECTION_KEYS_B_OPERATIONS = (
+    "ops",
+    "cmd_get",
+    "cmd_set",
+    "ep_num_ops_del_meta",
+)
+
 #
 # Theses are not (yet) in use. I'm on it! (mo)
 #
 #STATS_KEYS_BUCKET = (
 #    "ep_cache_miss_rate",
-#    "ep_num_ops_del_meta",
 #    "ep_ops_create",
 #    "ep_diskqueue_drain",
 #    "ep_diskqueue_fill",
@@ -100,9 +106,6 @@ SECTION_KEYS_B_MEM = (
 #    "couch_views_fragmentation",
 #    "ep_mem_high_wat",
 #    "ep_mem_low_wat",
-#    "ops",
-#    "cmd_get",
-#    "cmd_set",
 #    "vb_active_resident_items_ratio",
 #    "vb_active_eject",
 #    "vb_active_itm_memory",
@@ -266,6 +269,9 @@ def sections_buckets(bucket_list):
     sections = {
         "couchbase_buckets_mem:sep(0)": [
             _get_dump(name, data, SECTION_KEYS_B_MEM, _average) for name, data in bucket_list
+        ],
+        "couchbase_buckets_operations:sep(0)": [
+            _get_dump(name, data, SECTION_KEYS_B_OPERATIONS, _average) for name, data in bucket_list
         ],
     }
 

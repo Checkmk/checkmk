@@ -213,6 +213,22 @@ class BaseApiClient(object):
             raise ApiError(error.get('message', json_data))
 
 
+class GraphApiClient(BaseApiClient):
+    def __init__(self):
+        base_url = '%s/v1.0/' % self.resource
+        super(GraphApiClient, self).__init__(base_url)
+
+    @property
+    def resource(self):
+        return 'https://graph.microsoft.com'
+
+    def users(self):
+        return self._get('users', key='value')
+
+    def organization(self):
+        return self._get('organization', key='value')
+
+
 class MgmtApiClient(BaseApiClient):
     def __init__(self, subscription):
         base_url = '%s/subscriptions/%s/' % (self.resource, subscription)
@@ -637,6 +653,20 @@ class UsageClient(DataCache):
             UsageSection(usage_resource, piggytargets, cacheinfo).write()
 
 
+def process_azure_graph(graph_client):
+    section = AzureSection('ad')
+
+    # users
+    users = graph_client.users()
+    section.add(['users_count', len(users)])
+
+    # organization
+    orgas = graph_client.organization()
+    section.add(['ad_connect', json.dumps(orgas)])
+
+    section.write()
+
+
 def gather_metrics(mgmt_client, resource, debug=False):
     '''
     Gather all metrics for a resource. These metrics have different time
@@ -791,6 +821,13 @@ def main(argv=None):
         return 1
 
     write_group_info(mgmt_client, monitored_groups)
+
+    graph_client = GraphApiClient()
+    try:
+        graph_client.login(args.tenant, args.client, args.secret)
+        process_azure_graph(graph_client)
+    except () if args.debug else Exception as exc:
+        write_exception_to_agent_info_section(exc)
 
     try:
         usage_client = UsageClient(mgmt_client, args.subscription, args.debug)

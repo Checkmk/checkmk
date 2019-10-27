@@ -64,6 +64,14 @@ class NodeVisualization {
         this.gui_theme = new_theme
     }
 
+    set_initial_overlays_config(overlay_config) {
+        this._initial_overlay_config = overlay_config
+    }
+
+    get_initial_overlays_config() {
+        return this._initial_overlay_config
+    }
+
     _initialize_components() {
         this._div_selection = d3.select("#" + this.div_id).append("div")
                                         .attr("id", "node_visualization_root_div")

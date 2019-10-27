@@ -846,7 +846,6 @@ class ParentChildNetworkTopology(Topology):
             info["node_type"] = "topology"
 
         info["state"] = self._map_host_state_to_service_state(info, host_info)
-        info["hostname"] = hostname
 
         if info["node_type"] == "topology_center":
             info["explicit_force_options"] = {"repulsion": -3000, "center_force": 200}

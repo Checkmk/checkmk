@@ -553,11 +553,11 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
     }
 
     render_togglebutton(selection) {
-        this.togglebutton_selection.style("cursor", "pointer")
-        this.togglebutton_selection.append("img")
+        selection.style("cursor", "pointer");
+        selection.append("img")
                         .attr("src", this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.png")
                         .attr("title", "Layout Designer")
-                        .style("opacity", 1)
+                        .style("opacity", 1);
     }
 
     enable_actions() {
@@ -575,21 +575,23 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
     }
 
     disable_actions() {
-        this.layout_manager.hide_layout_options()
-        this.layout_manager.viewport.update_gui_of_layers()
+        if (this.layout_manager.edit_layout) {
+            this.layout_manager.hide_layout_options();
+            this.layout_manager.viewport.update_gui_of_layers();
+        }
 
         this.content_selection
                 .transition().duration(node_visualization_utils.DefaultTransition.duration())
                 .style("opacity", 0)
-                .style("display", "none")
+                .style("display", "none");
     }
 
-    remove() {
-        this.content_selection.select("div.toolbar_layouting").transition().duration(node_visualization_utils.DefaultTransition.duration()).style("height", "0px").remove()
+    remove_content() {
+        this.content_selection.select("div.toolbar_layouting").transition().duration(node_visualization_utils.DefaultTransition.duration()).style("height", "0px").remove();
     }
 
     render_content() {
-        this.update_content()
+        this.update_content();
     }
 
     update_content() {

@@ -223,7 +223,7 @@ export class TopologyVisualization extends NodeVisualization {
     }
 
     add_depth_slider() {
-        let slider = d3.select("#togglebuttons").selectAll("div.mesh_depth_slider").data([null])
+        let slider = d3.select("div#toolbar_controls div#custom").selectAll("div.mesh_depth_slider").data([null])
         let slider_enter = slider.enter().append("div")
                     .classed("topology_slider", true)
 
@@ -248,7 +248,7 @@ export class TopologyVisualization extends NodeVisualization {
     }
 
     add_max_nodes_slider() {
-        let slider = d3.select("#togglebuttons").selectAll("div.max_nodes_slider").data([null])
+        let slider = d3.select("div#toolbar_controls div#custom").selectAll("div.max_nodes_slider").data([null])
         let slider_enter = slider.enter().append("div")
                     .classed("topology_slider", true)
 

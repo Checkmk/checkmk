@@ -78,11 +78,16 @@ div.node_vis {
     top: 25px;
   }
 
-  #togglebuttons {
+  #toolbar #toolbar_controls{
     position: absolute;
     top: 16px;
     left: 280px;
+
+    #custom {
+        display: flex;
+    }
   }
+
 
   .togglebutton {
     width: 29px;
@@ -164,7 +169,6 @@ div.node_vis {
 
   /* topology depth */
   div.topology_slider {
-      float: left;
       padding-top: 4px;
       padding-right: 8px;
   }

@@ -866,7 +866,7 @@ class AbstractGUINode {
     }
 }
 
-class TopologyNode extends AbstractGUINode {
+export class TopologyNode extends AbstractGUINode {
     static id() {
         return "topology"
     }

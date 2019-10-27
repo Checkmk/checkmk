@@ -60,6 +60,7 @@ import * as node_visualization from "node_visualization";
 import * as node_visualization_utils from "node_visualization_utils";
 import * as node_visualization_layout_styles from "node_visualization_layout_styles";
 import * as node_visualization_viewport_utils from "node_visualization_viewport_utils";
+import * as node_visualization_viewport_layers from "node_visualization_viewport_layers";
 
 // Optional import is currently not possible using the ES6 imports
 var graphs;
@@ -110,6 +111,7 @@ export const cmk_export = {
         node_visualization_utils: node_visualization_utils,
         node_visualization_layout_styles: node_visualization_layout_styles,
         node_visualization_viewport_utils: node_visualization_viewport_utils,
+        node_visualization_viewport_layers: node_visualization_viewport_layers,
         node_visualization: node_visualization,
         d3: d3,
         d3_flextree: d3_flextree,

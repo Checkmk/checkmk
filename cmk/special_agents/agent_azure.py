@@ -74,63 +74,6 @@ AZURE_CACHE_FILE_PATH = Path(tmp_dir) / "agents" / "agent_azure"
 NOW = datetime.datetime.utcnow()
 
 
-class AsyncMapper(object):  # pylint: disable=too-few-public-methods
-    '''Create an async drop-in replacement for builtin 'map'
-
-    which does not require the involved values to be pickle-able,
-    nor third party modules such as 'multiprocess' or 'dill'.
-
-    Usage:
-             map_ = AsyncMapper()
-
-             for results in map_(function, arguments_iter):
-                 do_stuff()
-
-    Note that the order of the results does not correspond
-    to that of the arguments.
-
-    Keywords for initialization:
-
-      * timeout:  number of seconds we will wait for the next result
-                  before terminating all remaining jobs (default: None)
-      * debug:    raise exceptions in jobs (default: False)
-    '''
-    def __init__(self, timeout=None, debug=False):
-        super(AsyncMapper, self).__init__()
-        self.timeout = timeout
-        self.debug = debug
-
-    def __call__(self, function, args_iter):
-        queue = Queue()
-        jobs = {}
-
-        def produce(id_, args):
-            try:
-                queue.put((id_, True, function(args)))
-            except Exception as _e:  # pylint: disable=broad-except
-                queue.put((id_, False, None))
-                if self.debug:
-                    raise
-
-        # start
-        for id_, args in enumerate(args_iter):
-            jobs[id_] = Process(target=produce, args=(id_, args))
-            jobs[id_].start()
-
-        # consume
-        while jobs:
-            try:
-                id_, success, result = queue.get(block=True, timeout=self.timeout)
-            except QueueEmpty:
-                break
-            if success:
-                yield result
-            jobs.pop(id_)
-
-        for job in jobs.values():
-            job.terminate()
-
-
 def parse_arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--debug",
@@ -749,15 +692,67 @@ def write_exception_to_agent_info_section(exception):
     section.write()
 
 
-def get_mapper(debug):
-    def sequential_mapper(func, args_iter):
-        for args in args_iter:
-            try:
-                yield func(args)
-            except () if debug else Exception:
-                pass
+def get_mapper(debug, sequential, timeout):
+    '''Return a function similar to the builtin 'map'
 
-    return sequential_mapper
+    However, these functions won't stop upon an exception
+    (unless debug is set).
+    Also, there's an async variant available.
+    '''
+    if sequential:
+
+        def sequential_mapper(func, args_iter):
+            for args in args_iter:
+                try:
+                    yield func(args)
+                except () if debug else Exception:
+                    pass
+
+        return sequential_mapper
+
+    def async_mapper(func, args_iter):
+        '''Async drop-in replacement for builtin 'map'
+
+        which does not require the involved values to be pickle-able,
+        nor third party modules such as 'multiprocess' or 'dill'.
+
+        Usage:
+                 for results in async_mapper(function, arguments_iter):
+                     do_stuff()
+
+        Note that the order of the results does not correspond
+        to that of the arguments.
+        '''
+        queue = Queue()
+        jobs = {}
+
+        def produce(id_, args):
+            try:
+                queue.put((id_, True, func(args)))
+            except Exception as _e:  # pylint: disable=broad-except
+                queue.put((id_, False, None))
+                if debug:
+                    raise
+
+        # start
+        for id_, args in enumerate(args_iter):
+            jobs[id_] = Process(target=produce, args=(id_, args))
+            jobs[id_].start()
+
+        # consume
+        while jobs:
+            try:
+                id_, success, result = queue.get(block=True, timeout=timeout)
+            except QueueEmpty:
+                break
+            if success:
+                yield result
+            jobs.pop(id_)
+
+        for job in jobs.values():
+            job.terminate()
+
+    return async_mapper
 
 
 def main(argv=None):
@@ -791,7 +786,7 @@ def main(argv=None):
         write_exception_to_agent_info_section(exc)
 
     func_args = ((mgmt_client, resource, args) for resource in resources)
-    mapper = get_mapper(args.debug) if args.sequential else AsyncMapper(args.timeout, args.debug)
+    mapper = get_mapper(args.debug, args.sequential, args.timeout)
     for sections in mapper(process_resource, func_args):
         for section in sections:
             section.write()

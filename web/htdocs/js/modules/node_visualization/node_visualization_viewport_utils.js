@@ -60,6 +60,8 @@ export class LayeredLayerBase {
     disable() {
         this.enabled = false
 
+        this.disable_hook()
+
         if (this.selection) {
             this.selection.selectAll("*").remove()
             this.selection = null
@@ -70,6 +72,8 @@ export class LayeredLayerBase {
             this.div_selection = null
         }
     }
+
+    disable_hook() {}
 
     setup() {}
 

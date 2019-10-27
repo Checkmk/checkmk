@@ -695,7 +695,7 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
         let table_selection = into_selection.selectAll("table#overlay_configuration").data([null]).style("width", "100%")
         let table_enter = table_selection.enter().append("table").attr("id", "overlay_configuration")
                                                     .style("width", "100%")
-                                                    .on("change", ()=>this.overlay_options_changed())
+                                                    .on("change", ()=>this._overlay_checkbox_options_changed())
 
         let row_enter = table_enter.append("tr").classed("header", true)
         row_enter.append("th").text("")
@@ -816,13 +816,13 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
         this.update_save_layout_button()
     }
 
-    set_overlay_options(overlay_id, active, configurable) {
+    set_overlay_options(overlay_id, active=false, configurable=false) {
         let current_overlay_config = this.layout_manager.layout_applier.current_layout_group.overlay_config
         current_overlay_config[overlay_id] = {active: active, configurable: configurable}
         this.layout_manager.viewport.update_active_overlays()
     }
 
-    overlay_options_changed() {
+    _overlay_checkbox_options_changed() {
         let current_overlay_config = this.layout_manager.layout_applier.current_layout_group.overlay_config
         let checkbox = d3.select(d3.event.target)
         let checked = checkbox.property("checked")

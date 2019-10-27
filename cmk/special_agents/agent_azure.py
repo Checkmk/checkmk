@@ -161,25 +161,26 @@ class ApiError(RuntimeError):
     pass
 
 
-class RestApiClient(object):
+class MgmtApiClient(object):
 
     AUTHORITY = 'https://login.microsoftonline.com'
-    RESOURCE = 'https://management.azure.com'
 
-    def __init__(self):
+    def __init__(self, subscription):
         self._ratelimit = float('Inf')
-        self._base_url = None
+        self._base_url = '%s/subscriptions/%s/' % (self.resource, subscription)
         self._headers = {}
 
-    def login(self, tenant, client, secret, subscription):
-        context = adal.AuthenticationContext('%s/%s' % (RestApiClient.AUTHORITY, tenant))
-        token = context.acquire_token_with_client_credentials(RestApiClient.RESOURCE, client,
-                                                              secret)
+    @property
+    def resource(self):
+        return 'https://management.azure.com'
+
+    def login(self, tenant, client, secret):
+        context = adal.AuthenticationContext('%s/%s' % (self.AUTHORITY, tenant))
+        token = context.acquire_token_with_client_credentials(self.resource, client, secret)
         self._headers.update({
             'Authorization': 'Bearer %s' % token['accessToken'],
             'Content-Type': 'application/json',
         })
-        self._base_url = '%s/subscriptions/%s/' % (RestApiClient.RESOURCE, subscription)
 
     @property
     def ratelimit(self):
@@ -764,9 +765,9 @@ def main(argv=None):
         return 0
     LOGGER.debug("%s", selector)
 
-    mgmt_client = RestApiClient()
+    mgmt_client = MgmtApiClient(args.subscription)
     try:
-        mgmt_client.login(args.tenant, args.client, args.secret, args.subscription)
+        mgmt_client.login(args.tenant, args.client, args.secret)
 
         all_resources = (AzureResource(r) for r in mgmt_client.resources())
 

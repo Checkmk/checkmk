@@ -157,7 +157,15 @@ class ParentChildTopologyPage(Page):
         html.javascript("topology_instance.set_max_nodes(%d)" % max_nodes)
         html.javascript("topology_instance.set_mesh_depth(%d)" % mesh_depth)
         html.javascript("topology_instance.set_theme(%s)" % json.dumps(html.get_theme()))
+        overlay_config = self._get_overlay_config()
+        if overlay_config:
+            html.javascript("topology_instance.set_initial_overlays_config(%s)" %
+                            json.dumps(overlay_config))
+
         html.javascript("topology_instance.show_topology(%s)" % json.dumps(hostnames))
+
+    def _get_overlay_config(self):
+        return []
 
     def _get_filter_headers(self):
         view, filters = self._get_topology_view_and_filters()

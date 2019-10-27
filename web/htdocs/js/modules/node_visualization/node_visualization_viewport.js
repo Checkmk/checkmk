@@ -220,11 +220,20 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
     }
 
     update_active_overlays() {
+        let initial_overlays_config = this.main_instance.get_initial_overlays_config()
+
         let overlay_config = this.layout_manager.get_overlay_config()
         let active_overlays = {}
+
+        for (let idx in initial_overlays_config) {
+            let overlay = initial_overlays_config[idx]
+            if (overlay && overlay.active == true)
+                active_overlays[idx] = true
+        }
+
         for (let idx in overlay_config) {
             let overlay = overlay_config[idx]
-            if (overlay.active == true)
+            if (overlay && overlay.active == true)
                 active_overlays[idx] = true
         }
 

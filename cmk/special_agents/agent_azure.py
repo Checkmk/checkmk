@@ -94,16 +94,11 @@ class AsyncMapper(object):  # pylint: disable=too-few-public-methods
       * timeout:  number of seconds we will wait for the next result
                   before terminating all remaining jobs (default: None)
       * debug:    raise exceptions in jobs (default: False)
-      * fallback: specify a function, called in case an exception occurs in
-                  the mapped function. The fallback function should return
-                  a tuple (err, value). If err is falsey, value will we be
-                  yielded (default: (1, None)).
     '''
-    def __init__(self, timeout=None, debug=False, fallback=lambda x: (1, None)):
+    def __init__(self, timeout=None, debug=False):
         super(AsyncMapper, self).__init__()
         self.timeout = timeout
         self.debug = debug
-        self.fallback = fallback
 
     def __call__(self, function, args_iter):
         queue = Queue()
@@ -111,9 +106,9 @@ class AsyncMapper(object):  # pylint: disable=too-few-public-methods
 
         def produce(id_, args):
             try:
-                queue.put((id_, 0, function(args)))
+                queue.put((id_, True, function(args)))
             except Exception as _e:  # pylint: disable=broad-except
-                queue.put((id_,) + self.fallback(args))
+                queue.put((id_, False, None))
                 if self.debug:
                     raise
 
@@ -125,10 +120,10 @@ class AsyncMapper(object):  # pylint: disable=too-few-public-methods
         # consume
         while jobs:
             try:
-                id_, err, result = queue.get(block=True, timeout=self.timeout)
+                id_, success, result = queue.get(block=True, timeout=self.timeout)
             except QueueEmpty:
                 break
-            if not err:
+            if success:
                 yield result
             jobs.pop(id_)
 
@@ -754,15 +749,15 @@ def write_exception_to_agent_info_section(exception):
     section.write()
 
 
-def get_sequential_mapper(debug):
-    def mapper(func, args_iter):
-        for arg_set in args_iter:
+def get_mapper(debug):
+    def sequential_mapper(func, args_iter):
+        for args in args_iter:
             try:
-                yield func(arg_set)
+                yield func(args)
             except () if debug else Exception:
                 pass
 
-    return mapper
+    return sequential_mapper
 
 
 def main(argv=None):
@@ -796,8 +791,7 @@ def main(argv=None):
         write_exception_to_agent_info_section(exc)
 
     func_args = ((mgmt_client, resource, args) for resource in resources)
-    mapper = get_sequential_mapper(args.debug) if args.sequential else AsyncMapper(
-        args.timeout, args.debug)
+    mapper = get_mapper(args.debug) if args.sequential else AsyncMapper(args.timeout, args.debug)
     for sections in mapper(process_resource, func_args):
         for section in sections:
             section.write()

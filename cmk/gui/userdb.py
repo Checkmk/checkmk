@@ -239,7 +239,7 @@ def is_customer_user_allowed_to_login(user_id):
     if not cmk.is_managed_edition():
         return True
 
-    import cmk.gui.cme.managed as managed
+    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
     user = config.LoggedInUser(user_id)
     customer_id = managed.get_customer_id(user.attributes)
 

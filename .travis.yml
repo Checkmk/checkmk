@@ -32,7 +32,7 @@ matrix:
             TEST_PATH=tests-py3
         - name: "Python3 typing tests"
           python: "3.7"
-          env: TEST_TARGETS="test-mypy"
+          env: TEST_TARGETS="test-mypy-raw"
             TEST_PATH=tests/static
 env:
     global:

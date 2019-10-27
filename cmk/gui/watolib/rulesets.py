@@ -701,7 +701,7 @@ class Ruleset(object):
 
     def _on_change(self):
         if has_agent_bakery():
-            import cmk.gui.cee.agent_bakery as agent_bakery
+            import cmk.gui.cee.agent_bakery as agent_bakery  # pylint: disable=no-name-in-module
             agent_bakery.ruleset_changed(self.name)
 
     # Returns the outcoming value or None and a list of matching rules. These are pairs

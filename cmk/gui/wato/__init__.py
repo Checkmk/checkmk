@@ -264,12 +264,12 @@ import cmk.gui.plugins.wato
 import cmk.gui.plugins.wato.bi
 
 if not cmk.is_raw_edition():
-    import cmk.gui.cee.plugins.wato
+    import cmk.gui.cee.plugins.wato  # pylint: disable=no-name-in-module
 
 if cmk.is_managed_edition():
-    import cmk.gui.cme.managed as managed
-    import cmk.gui.cme.plugins.wato
-    import cmk.gui.cme.plugins.wato.managed
+    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+    import cmk.gui.cme.plugins.wato  # pylint: disable=no-name-in-module
+    import cmk.gui.cme.plugins.wato.managed  # pylint: disable=no-name-in-module
 else:
     managed = None
 
@@ -417,7 +417,8 @@ def page_handler():
             _("WATO is disabled. Please set <tt>wato_enabled = True</tt>"
               " in your <tt>multisite.mk</tt> if you want to use WATO."))
 
-    if cmk.is_managed_edition() and not managed.is_provider(config.current_customer):
+    # config.current_customer can not be checked with CRE repos
+    if cmk.is_managed_edition() and not managed.is_provider(config.current_customer):  # pylint: disable=no-member
         raise MKGeneralException(
             _("Check_MK can only be configured on "
               "the managers central site."))

@@ -225,7 +225,7 @@ def do_create_config(core, with_agents):
     if with_agents:
         try:
             import cmk_base.cee.agent_bakery
-            cmk_base.cee.agent_bakery.bake_on_restart()
+            cmk_base.cee.agent_bakery.bake_on_restart()  # pylint: disable=no-member
         except ImportError:
             pass
 

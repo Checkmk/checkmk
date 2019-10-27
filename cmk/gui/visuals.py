@@ -74,10 +74,10 @@ from cmk.gui.plugins.visuals.utils import (  # pylint: disable=unused-import
 from cmk.gui.permissions import permission_registry
 
 if not cmk.is_raw_edition():
-    import cmk.gui.cee.plugins.visuals
+    import cmk.gui.cee.plugins.visuals  # pylint: disable=no-name-in-module
 
 if cmk.is_managed_edition():
-    import cmk.gui.cme.plugins.visuals
+    import cmk.gui.cme.plugins.visuals  # pylint: disable=no-name-in-module
 
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |

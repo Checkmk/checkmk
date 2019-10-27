@@ -52,10 +52,10 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.log import logger
 
 if not cmk.is_raw_edition():
-    import cmk.gui.cee.plugins.sidebar
+    import cmk.gui.cee.plugins.sidebar  # pylint: disable=no-name-in-module
 
 if cmk.is_managed_edition():
-    import cmk.gui.cme.plugins.sidebar
+    import cmk.gui.cme.plugins.sidebar  # pylint: disable=no-name-in-module
 
 # Helper functions to be used by snapins
 # Kept for compatibility with legacy plugins

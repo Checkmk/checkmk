@@ -34,9 +34,9 @@ import cmk_base.console as console
 import cmk_base.crash_reporting
 from cmk_base.exceptions import MKAgentError, MKSNMPError, MKIPAddressLookupError
 
-try:
-    import cmk_base.cee.keepalive as keepalive
-except Exception:
+if not cmk.is_raw_edition():
+    import cmk_base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
+else:
     keepalive = None  # type: ignore
 
 

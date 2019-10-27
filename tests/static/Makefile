@@ -16,10 +16,13 @@ FILES_TO_CHECK := $(realpath $(addprefix ../../cmk/ec/,defaults.py export.py mai
 		  $(realpath $(addprefix ../../cmk/gui/plugins/userdb/,htpasswd.py utils.py)) \
 		  $(realpath $(wildcard ../../cmk/gui/plugins/wato/utils/*.py))
 
-.PHONY: test-mypy
+.PHONY: test-mypy test-mypy-raw clean
 
 test-mypy:
 	./run_mypy --config-file=$(realpath ../../mypy.ini) $(FILES_TO_CHECK)
+
+test-mypy-raw:
+	./run_mypy --config-file=$(realpath ../../mypy-raw.ini) $(FILES_TO_CHECK)
 
 clean:
 	rm -rf .mypy_cache

@@ -57,10 +57,10 @@ import cmk_base.check_utils
 import cmk_base.decorator
 import cmk_base.check_api_utils as check_api_utils
 
-try:
-    import cmk_base.cee.keepalive as keepalive
-    import cmk_base.cee.inline_snmp as inline_snmp
-except Exception:
+if not cmk.is_raw_edition():
+    import cmk_base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
+    import cmk_base.cee.inline_snmp as inline_snmp  # pylint: disable=no-name-in-module
+else:
     keepalive = None  # type: ignore
     inline_snmp = None  # type: ignore
 

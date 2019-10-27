@@ -64,7 +64,7 @@ from cmk.gui.watolib.host_attributes import host_attribute_registry
 from cmk.gui.plugins.watolib.utils import wato_fileheader
 
 if cmk.is_managed_edition():
-    import cmk.gui.cme.managed as managed
+    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 # Names:
 # folder_path: Path of the folders directory relative to etc/check_mk/conf.d/wato

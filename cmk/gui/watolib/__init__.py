@@ -275,7 +275,7 @@ from cmk.gui.watolib.utils import (
 )
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 if cmk.is_managed_edition():
-    import cmk.gui.cme.managed as managed
+    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 from cmk.gui.plugins.watolib.utils import (
     ABCConfigDomain,
@@ -289,7 +289,7 @@ from cmk.gui.plugins.watolib.utils import (
 import cmk.gui.plugins.watolib
 
 if not cmk.is_raw_edition():
-    import cmk.gui.cee.plugins.watolib
+    import cmk.gui.cee.plugins.watolib  # pylint: disable=no-name-in-module
 
 # Disable python warnings in background job output or logs like "Unverified
 # HTTPS request is being made". We warn the user using analyze configuration.

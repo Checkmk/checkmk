@@ -997,7 +997,8 @@ class CommandScheduleDowntimes(Command):
                           label=_("Repeat this downtime on a regular basis every"))
             html.write_text(" ")
 
-            from cmk.gui.cee.plugins.wato.cmc import recurring_downtimes_types
+            from cmk.gui.cee.plugins.wato.cmc import recurring_downtimes_types  # pylint: disable=no-name-in-module
+
             recurring_selections = [
                 (str(k), v) for (k, v) in sorted(recurring_downtimes_types().items())
             ]
@@ -1010,7 +1011,7 @@ class CommandScheduleDowntimes(Command):
         down_to = None
 
         if self._has_recurring_downtimes() and html.get_checkbox("_down_do_recur"):
-            from cmk.gui.cee.plugins.wato.cmc import recurring_downtimes_types
+            from cmk.gui.cee.plugins.wato.cmc import recurring_downtimes_types  # pylint: disable=no-name-in-module
             recurring_type = int(html.request.var("_down_recurring"))
             title_start = _("schedule a periodic downtime every %s") % recurring_downtimes_types(
             )[recurring_type]

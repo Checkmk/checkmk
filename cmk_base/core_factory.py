@@ -29,7 +29,7 @@ import cmk_base.config
 
 def create_core(options=None):
     if cmk_base.config.monitoring_core == "cmc":
-        from cmk_base.cee.core_cmc import CMC
+        from cmk_base.cee.core_cmc import CMC  # pylint: disable=no-name-in-module
         return CMC(options)
     from cmk_base.core_nagios import NagiosCore
     return NagiosCore()

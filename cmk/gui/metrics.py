@@ -945,7 +945,7 @@ def page_host_service_graph_popup():
 
     # TODO: Refactor this to some OO based approach
     if cmk_graphs_possible(site_id):
-        import cmk.gui.cee.plugins.metrics.html_render as graphs
+        import cmk.gui.cee.plugins.metrics.html_render as graphs  # pylint: disable=no-name-in-module
         graphs.host_service_graph_popup_cmk(site_id, host_name, service_description)
     else:
         host_service_graph_popup_pnp(site_id, host_name, service_description)
@@ -993,7 +993,7 @@ def page_graph_dashlet():
 
     # TODO: Refactor this to some OO based approach
     if cmk_graphs_possible():
-        import cmk.gui.cee.plugins.metrics.html_render as graphs
+        import cmk.gui.cee.plugins.metrics.html_render as graphs  # pylint: disable=no-name-in-module
         graphs.host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_options)
     elif graph_identification[0] == "template":
         host_service_graph_dashlet_pnp(graph_identification)

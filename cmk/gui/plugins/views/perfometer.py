@@ -263,8 +263,8 @@ class PainterPerfometer(Painter):
         if display_options.enabled(display_options.X) \
            and row["service_pnpgraph_present"] != 0:
             if metrics.cmk_graphs_possible():
-                import cmk.gui.cee.plugins.views.graphs
-                url = cmk.gui.cee.plugins.views.graphs.cmk_graph_url(row, "service")
+                import cmk.gui.cee.plugins.views.graphs as graphs  # pylint: disable=no-name-in-module
+                url = graphs.cmk_graph_url(row, "service")
             else:
                 url = pnp_url(row, "service")
             disabled = False

@@ -56,7 +56,7 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 import cmk.ec.defaults  # pylint: disable=cmk-module-layer-violation
 
 if cmk.is_managed_edition():
-    import cmk.gui.cme.managed as managed
+    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 else:
     managed = None  # type: ignore
 

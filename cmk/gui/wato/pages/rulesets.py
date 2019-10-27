@@ -84,7 +84,7 @@ from cmk.gui.plugins.wato import (
 )
 
 if watolib.has_agent_bakery():
-    import cmk.gui.cee.plugins.wato.agent_bakery as agent_bakery
+    import cmk.gui.cee.plugins.wato.agent_bakery as agent_bakery  # pylint: disable=import-error,no-name-in-module
 else:
     agent_bakery = None  # type: ignore
 

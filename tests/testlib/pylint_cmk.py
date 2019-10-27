@@ -12,7 +12,7 @@ import subprocess
 
 from pylint.reporters.text import ColorizedTextReporter, ParseableTextReporter
 
-from testlib import repo_path, cmk_path
+from testlib import repo_path, cmk_path, is_enterprise_repo
 
 
 def check_files(base_dir):
@@ -176,6 +176,16 @@ def verify_pylint_version():
 # Is called by pylint to load this plugin
 def register(linter):
     verify_pylint_version()
+
+    # Disable some CEE/CME specific things when linting CRE repos
+    if not is_enterprise_repo():
+        # Is used to disable import-error. Would be nice if no-name-in-module could be
+        # disabled using this, but this does not seem to be possible :(
+        linter.global_set_option("ignored-modules",
+                                 "cmk_base.cee,cmk.gui.cee,cmk.gui.cme,cmk.gui.cme.managed")
+        # This disables no-member errors
+        linter.global_set_option("generated-members",
+                                 r"(cmk_base\.cee|cmk\.gui\.cee|cmk\.gui\.cme)(\..*)?")
 
     linter.register_reporter(CMKColorizedTextReporter)
     linter.register_reporter(CMKParseableTextReporter)

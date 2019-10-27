@@ -58,7 +58,7 @@ from cmk.gui.permissions import (
 import cmk.gui.plugins.webapi
 
 if not cmk.is_raw_edition():
-    import cmk.gui.cee.plugins.webapi
+    import cmk.gui.cee.plugins.webapi  # pylint: disable=import-error,no-name-in-module
 
 # TODO: Kept for compatibility reasons with legacy plugins
 from cmk.gui.plugins.webapi.utils import (  # pylint: disable=unused-import

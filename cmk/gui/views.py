@@ -122,11 +122,11 @@ import cmk.gui.plugins.views.inventory
 import cmk.gui.plugins.views.availability
 
 if not cmk.is_raw_edition():
-    import cmk.gui.cee.plugins.views
-    import cmk.gui.cee.plugins.views.icons
+    import cmk.gui.cee.plugins.views  # pylint: disable=no-name-in-module
+    import cmk.gui.cee.plugins.views.icons  # pylint: disable=no-name-in-module
 
 if cmk.is_managed_edition():
-    import cmk.gui.cme.plugins.views
+    import cmk.gui.cme.plugins.views  # pylint: disable=no-name-in-module
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
@@ -1362,7 +1362,7 @@ def show_view(view, view_renderer, only_count=False):
                     row["host_inventory"] = inventory.load_filtered_and_merged_tree(row)
 
         if not cmk.is_raw_edition():
-            import cmk.gui.cee.sla as sla
+            import cmk.gui.cee.sla as sla  # pylint: disable=no-name-in-module
             sla_params = []
             for cell in cells:
                 if cell.painter_name() in ["sla_specific", "sla_fixed"]:

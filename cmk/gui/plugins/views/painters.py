@@ -1404,8 +1404,8 @@ class PainterSvcGroupMemberlist(Painter):
 
 def paint_time_graph(row, cell):
     if metrics.cmk_graphs_possible(row["site"]):
-        import cmk.gui.cee.plugins.views.graphs  # pylint: disable=redefined-outer-name
-        return cmk.gui.cee.plugins.views.graphs.paint_time_graph_cmk(row, cell)
+        import cmk.gui.cee.plugins.views.graphs  # pylint: disable=redefined-outer-name,import-error,no-name-in-module
+        return cmk.gui.cee.plugins.views.graphs.paint_time_graph_cmk(row, cell)  # pylint: disable=no-member
     return paint_time_graph_pnp(row)
 
 
@@ -1448,8 +1448,8 @@ def time_graph_params():
     if not metrics.cmk_graphs_possible():
         return  # The method is only available in CEE
 
-    import cmk.gui.cee.plugins.views.graphs  # pylint: disable=redefined-outer-name
-    return cmk.gui.cee.plugins.views.graphs.cmk_time_graph_params()
+    import cmk.gui.cee.plugins.views.graphs  # pylint: disable=redefined-outer-name,import-error,no-name-in-module
+    return cmk.gui.cee.plugins.views.graphs.cmk_time_graph_params()  # pylint: disable=no-member
 
 
 @painter_registry.register

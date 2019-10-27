@@ -63,18 +63,6 @@ from .piggyback import PiggyBackDataSource
 from .programs import DSProgramDataSource, SpecialAgentDataSource
 from .host_sections import HostSections, MultiHostSections
 
-try:
-    import cmk_base.cee.keepalive as keepalive
-except Exception:
-    keepalive = None  # type: ignore
-
-
-def _in_keepalive_mode():
-    if keepalive:
-        return keepalive.enabled()
-    return False
-
-
 # TODO: Cluster with different data sources, eg. TCP node and SNMP node:
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.

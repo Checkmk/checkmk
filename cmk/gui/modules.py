@@ -60,10 +60,10 @@ from cmk.gui.globals import g
 import cmk.gui.plugins.main_modules
 
 if not cmk.is_raw_edition():
-    import cmk.gui.cee.plugins.main_modules
+    import cmk.gui.cee.plugins.main_modules  # pylint: disable=no-name-in-module
 
 if cmk.is_managed_edition():
-    import cmk.gui.cme.plugins.main_modules
+    import cmk.gui.cme.plugins.main_modules  # pylint: disable=no-name-in-module
 
 # TODO: Both kept for compatibility with old plugins. Drop this one day
 pagehandlers = {}

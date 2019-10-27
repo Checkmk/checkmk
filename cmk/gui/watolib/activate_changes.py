@@ -576,7 +576,7 @@ class ActivateChangesManager(ActivateChanges):
 
             work_dir = os.path.join(self.activation_tmp_base_dir, self._activation_id)
             if cmk.is_managed_edition():
-                import cmk.gui.cme.managed_snapshots as managed_snapshots
+                import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
                 managed_snapshots.CMESnapshotManager(
                     work_dir, self._get_site_configurations()).generate_snapshots()
             else:

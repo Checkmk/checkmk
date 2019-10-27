@@ -1665,7 +1665,7 @@ class html(ABCHTMLGenerator):
                        config.custom_style_sheet)
 
         if self._theme == "classic" and cmk.is_managed_edition():
-            import cmk.gui.cme.gui_colors as gui_colors
+            import cmk.gui.cme.gui_colors as gui_colors  # pylint: disable=no-name-in-module
             gui_colors.GUIColors().render_html()
 
     def _plugin_stylesheets(self):

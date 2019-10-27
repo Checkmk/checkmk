@@ -45,7 +45,7 @@ from cmk.gui.plugins.cron import (  # pylint: disable=unused-import
 )
 
 if not cmk.is_raw_edition():
-    import cmk.gui.cee.plugins.cron
+    import cmk.gui.cee.plugins.cron  # pylint: disable=no-name-in-module
 
 loaded_with_language = False
 

@@ -72,10 +72,10 @@ from cmk.gui.plugins.visuals.utils import (
 import cmk.gui.plugins.dashboard
 
 if not cmk.is_raw_edition():
-    import cmk.gui.cee.plugins.dashboard
+    import cmk.gui.cee.plugins.dashboard  # pylint: disable=no-name-in-module
 
 if cmk.is_managed_edition():
-    import cmk.gui.cme.plugins.dashboard
+    import cmk.gui.cme.plugins.dashboard  # pylint: disable=no-name-in-module
 
 from cmk.gui.plugins.views.utils import (
     data_source_registry,

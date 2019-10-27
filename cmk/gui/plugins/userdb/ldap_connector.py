@@ -101,7 +101,7 @@ from cmk.gui.plugins.userdb.utils import (
 import cmk.gui.sites as sites
 
 if cmk.is_managed_edition():
-    import cmk.gui.cme.managed as managed
+    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 else:
     managed = None  # type: ignore
 

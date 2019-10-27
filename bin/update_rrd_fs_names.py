@@ -29,7 +29,10 @@ import six
 from omdlib.main import SiteContext, site_name
 
 import cmk_base.autochecks
-import cmk_base.cee.rrd
+try:
+    import cmk_base.cee.rrd
+except ImportError:
+    raise RuntimeError("Can only be used with the Checkmk Enterprise Editions")
 import cmk_base.config as config
 import cmk_base.check_api as check_api
 

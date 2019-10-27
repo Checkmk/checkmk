@@ -392,7 +392,7 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
             return reason
 
     if cmk.is_managed_edition():
-        import cmk.gui.cme.managed as managed
+        import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
         if "customer" in rule_pack:
             rule_customer_id = rule_pack["customer"]
         else:

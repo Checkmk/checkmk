@@ -52,10 +52,10 @@ import cmk.gui.plugins.config
 from cmk.gui.plugins.config.base import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 if not cmk.is_raw_edition():
-    from cmk.gui.cee.plugins.config.cee import *  # pylint: disable=wildcard-import,unused-wildcard-import
+    from cmk.gui.cee.plugins.config.cee import *  # pylint: disable=wildcard-import,unused-wildcard-import,no-name-in-module
 
 if cmk.is_managed_edition():
-    from cmk.gui.cme.plugins.config.cme import *  # pylint: disable=wildcard-import,unused-wildcard-import
+    from cmk.gui.cme.plugins.config.cme import *  # pylint: disable=wildcard-import,unused-wildcard-import,no-name-in-module
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |

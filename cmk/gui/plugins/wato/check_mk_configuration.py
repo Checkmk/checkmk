@@ -2169,7 +2169,7 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
         elements = []
 
         if cmk.is_managed_edition():
-            import cmk.gui.cme.managed as managed
+            import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
             elements += managed.customer_choice_element()
 
         return elements + [

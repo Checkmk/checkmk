@@ -96,6 +96,10 @@ export class Toolbar {
         })
     }
 
+    get_plugin(plugin_id) {
+        return this._toolbar_plugins[plugin_id]
+    }
+
     add_togglebutton() {
 
     }

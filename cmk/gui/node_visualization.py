@@ -561,9 +561,7 @@ class Topology(object):
 
         self._meshes = []
         try:
-            self._growth_to_depth()
-            self._growth_to_parents()
-            self._growth_to_continue_nodes()
+            self._grow()
         except MKGrowthExceeded as e:
             # Unexpected interuption, unable to display all nodes
             self.add_error(str(e))
@@ -577,6 +575,11 @@ class Topology(object):
 
         meshes = self._postprocess_meshes(self._meshes)
         return meshes
+
+    def _grow(self):
+        self._growth_to_depth()
+        self._growth_to_parents()
+        self._growth_to_continue_nodes()
 
     def _check_mesh_size(self, meshes):
         total_nodes = sum(map(len, meshes))

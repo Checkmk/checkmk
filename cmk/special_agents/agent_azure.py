@@ -26,6 +26,7 @@
 """
 Special agent azure: Monitoring Azure cloud applications with Checkmk
 """
+import abc
 import json
 import time
 import datetime
@@ -161,18 +162,19 @@ class ApiError(RuntimeError):
     pass
 
 
-class MgmtApiClient(object):
+class BaseApiClient(object):
+    __METACLASS__ = abc.ABCMeta
 
     AUTHORITY = 'https://login.microsoftonline.com'
 
-    def __init__(self, subscription):
+    def __init__(self, base_url):
         self._ratelimit = float('Inf')
-        self._base_url = '%s/subscriptions/%s/' % (self.resource, subscription)
         self._headers = {}
+        self._base_url = base_url
 
-    @property
+    @abc.abstractproperty
     def resource(self):
-        return 'https://management.azure.com'
+        pass
 
     def login(self, tenant, client, secret):
         context = adal.AuthenticationContext('%s/%s' % (self.AUTHORITY, tenant))
@@ -209,6 +211,16 @@ class MgmtApiClient(object):
         except KeyError:
             error = json_data.get('error', json_data)
             raise ApiError(error.get('message', json_data))
+
+
+class MgmtApiClient(BaseApiClient):
+    def __init__(self, subscription):
+        base_url = '%s/subscriptions/%s/' % (self.resource, subscription)
+        super(MgmtApiClient, self).__init__(base_url)
+
+    @property
+    def resource(self):
+        return 'https://management.azure.com'
 
     def resourcegroups(self):
         return self._get('resourcegroups', key='value', params={'api-version': '2019-05-01'})

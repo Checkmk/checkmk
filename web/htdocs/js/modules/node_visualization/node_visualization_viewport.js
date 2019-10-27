@@ -331,6 +331,7 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         this.update_layers()
         this.layout_manager.layout_applier.apply_multiple_layouts(this.get_hierarchy_list(),  this._chunks_changed || this.always_update_layout)
         this.layout_manager.compute_node_positions()
+        this.update_active_overlays()
     }
 
     _consume_chunk_rawdata(chunk_rawdata) {

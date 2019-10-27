@@ -1268,7 +1268,7 @@ class LayoutApplier{
                                 let style_options = node.data.rule_layout_style.style_config;
                                 let new_style = this.layout_style_factory.instantiate_style_name(style_name, node);
                                 new_style.style_config.options = style_options;
-    
+
                                 node_chunk.layout_instance.save_style(new_style.style_config)
                                 nodes_with_style.push({node: node, style: new_style.style_config});
                             }
@@ -1313,8 +1313,6 @@ class LayoutApplier{
         // TODO: fix id handling
         if (used_layout_id)
             this.current_layout_group.id = used_layout_id
-
-        this.viewport.update_active_overlays()
 
         if (this.layout_manager.edit_layout)
             this.layout_manager.allow_layout_updates = false

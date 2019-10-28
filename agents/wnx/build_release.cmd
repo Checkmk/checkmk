@@ -13,6 +13,23 @@ rem WNX_BUILD - in the future this is name of subfloder to build out
 rem creates # artefacts in the output folder
 SETLOCAL EnableDelayedExpansion
 
+rem CHECK FOR CHOCO
+rem if choco is absent then build is not possible(we can't dynamically control environment)
+@choco -v > nul
+@if "%errorlevel%" NEQ "0" powershell Write-Host "choco must be installed!" -Foreground Red && exit /b 55
+powershell Write-Host "[+] choco" -Foreground Green
+
+rem CHECK FOR make
+rem if make is absent then we try to install it using choco. Failure meand build fail, make is mandatory
+for /f %%i in ('where make') do set make_exe=%%i
+if "!make_exe!" == "" (
+powershell Write-Host "make not found, try to install" -Foreground Yellow 
+choco install make -y
+for /f %%i in ('where make') do set make_exe=%%i
+if "!make_exe!" == "" powershell Write-Host "make not found, something is really bad" -Foreground Red && exit /b 57
+)
+powershell Write-Host "[+] make" -Foreground Green
+ 
 rem read version from the C++ agent
 set /p wnx_version_raw=<src\common\wnx_version.h
 rem parse version
@@ -127,16 +144,6 @@ powershell Write-Host "File Deployment succeeded" -Foreground Green
 rem touching update msi
 rem copy check_mk_agent_update.msi /B+ ,,/Y > nul
 popd
-
-
-for /f %%i in ('where makes') do set make_exe=%%i
-if "!make_exe!" == "" ( 
-set make_exe=c:\ProgramData\chocolatey\bin\make.exe
-powershell Write-Host "Setting make to the most suitable possibility !make_exe!" -Foreground Yellow 
-echo !make_exe!
-) else (
-powershell Write-Host "Using found make !make_exe!" -Foreground Green
-)
 
 
 !make_exe! frozen_binaries || powershell Write-Host "Failed to build frozen binaries" -Foreground Red && echo set && exit /b 36

@@ -23,13 +23,20 @@ MKJOLOKIA_EXE_BUILD = $(BUILD_PATH)\dist\mk_jolokia.exe
 
 .PHONY: clean
 
-setup_python:
+choco_check:
 	@choco -v > nul
 	@if "%errorlevel%" NEQ "0" powershell Write-Host "choco must be installed" -Foreground Red && exit /b 1
 	@powershell Write-Host "choco is installed. This is good" -Foreground Green
+
+setup_software: choco_check
+	@call windows_setup.cmd
+	@if "%errorlevel%" NEQ "0" powershell Write-Host "Failed Windows Software Installation" -Foreground Red && exit /b 1
+
+setup_all: choco_check setup_software
 	@if NOT exist "$(PYTHON_DIR)" powershell Write-Host "$(PYTHON_DIR) not found" -Foreground Red && exit /b 1
 	@if NOT exist "$(PYTHON_SCRIPTS_DIR)" powershell Write-Host "$(PYTHON_SCRIPTS_DIR) not found" -Foreground Red && exit /b 1
 	@call python_packages.cmd
+	@powershell Write-Host "----- SETUP IS FINISHED SUCCESSFULLY -----" -Foreground Green
 
 check_install:
 	@if NOT exist "$(PYTHON_DIR)" powershell Write-Host "$(PYTHON_DIR) not found" -Foreground Red && exit /b 1

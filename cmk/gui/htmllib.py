@@ -1545,7 +1545,7 @@ class html(ABCHTMLGenerator):
         help_text = self._resolve_help_text_macros(stripped)
 
         self.enable_help_toggle()
-        style = "display: %s;" % ("block" if self.help_visible else "none")
+        style = "display:%s;" % ("block" if self.help_visible else "none")
         return self.render_div(HTML(help_text), class_="help", style=style)
 
     def _resolve_help_text_macros(self, text):

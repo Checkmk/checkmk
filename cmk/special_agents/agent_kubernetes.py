@@ -992,7 +992,7 @@ class ApiData(object):
         storage_api = client.StorageV1Api(api_client)
         rbac_authorization_api = client.RbacAuthorizationV1Api(api_client)
         ext_api = client.ExtensionsV1beta1Api(api_client)
-        apps_api = client.AppsV1beta1Api(api_client)
+        apps_api = client.AppsV1Api(api_client)
 
         self.custom_api = client.CustomObjectsApi(api_client)
 
@@ -1013,8 +1013,13 @@ class ApiData(object):
         pvcs = core_api.list_persistent_volume_claim_for_all_namespaces()
         pods = core_api.list_pod_for_all_namespaces()
         services = core_api.list_service_for_all_namespaces()
-        deployments = ext_api.list_deployment_for_all_namespaces()
-        daemon_sets = ext_api.list_daemon_set_for_all_namespaces()
+        try:
+            deployments = apps_api.list_deployment_for_all_namespaces()
+            daemon_sets = apps_api.list_daemon_set_for_all_namespaces()
+        except ApiException:
+            # deprecated endpoints removed in Kubernetes 1.16
+            deployments = ext_api.list_deployment_for_all_namespaces()
+            daemon_sets = ext_api.list_daemon_set_for_all_namespaces()
         stateful_sets = apps_api.list_stateful_set_for_all_namespaces()
 
         logging.debug('Assigning collected data')

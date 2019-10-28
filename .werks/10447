@@ -1,0 +1,26 @@
+Title: agent_kubernetes: use new API versions
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p6
+Date: 1572266070
+Class: fix
+
+The Kubernetes release <a href="https://kubernetes.io/blog/2019/07/18/api-deprecations-in-1-16/">1.16</a>
+deprecated two API endpoints. To honor these deprecations
+the agent_kubernetes now uses the recommended new API
+endpoints by default. All Kubernetes versions since 1.9
+support these new API endpoints.
+
+To grant Checkmk access to the new API endpoints an
+updated version of the <a href="https://github.com/tribe29/checkmk/blob/master/doc/treasures/kubernetes/check_mk_rbac.yaml">check_mk_rbac.yaml</a>
+has to be applied.
+
+If you have a Kubernetes version >= 1.16 and use a
+special agent prior to this werk a NotFound (404)
+error will be returned.
+
+If you do not apply the updated check_mk_rbac.yaml
+the special agent will fall back to the old API version
+to be backwards compatible.

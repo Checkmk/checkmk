@@ -1615,6 +1615,7 @@ def prepare_and_populate_tmpfs(site):
 
 def prepare_tmpfs(site):
     if tmpfs_mounted(site.name):
+        sys.stdout.write("Temporary filesystem already mounted\n")
         return  # Fine: Mounted
 
     if site.conf["TMPFS"] != "on":

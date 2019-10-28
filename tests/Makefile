@@ -1,7 +1,7 @@
 SHELL    := /bin/bash -e
 VENV     := ../.venv
 NODE_MODULES := ../node_modules
-PIPENV   := PIPENV_VENV_IN_PROJECT=true pipenv
+PIPENV   := PIPENV_VENV_IN_PROJECT=true PIPENV_NOSPIN=true PIPENV_HIDE_EMOJIS=true pipenv
 BANDIT   := $(PIPENV) run bandit
 COVERAGE := $(PIPENV) run coverage
 PYTEST   := $(PIPENV) run py.test -vv

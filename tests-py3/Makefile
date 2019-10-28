@@ -1,6 +1,6 @@
 SHELL    := /bin/bash -e
 VENV     := ../.venv-3.7
-PIPENV   := PIPENV_VENV_IN_PROJECT=true pipenv
+PIPENV   := PIPENV_VENV_IN_PROJECT=true PIPENV_NOSPIN=true PIPENV_HIDE_EMOJIS=true pipenv
 PYTEST   := $(PIPENV) run py.test -vv
 
 include ../defines.make

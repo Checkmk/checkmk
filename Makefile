@@ -42,7 +42,7 @@ SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export CPPCHECK    := cppcheck
 export DOXYGEN     := doxygen
 export IWYU_TOOL   := iwyu_tool
-PIPENV             := PIPENV_NO_INHERIT=true PIPENV_VENV_IN_PROJECT=true pipenv
+PIPENV             := PIPENV_NO_INHERIT=true PIPENV_VENV_IN_PROJECT=true PIPENV_NOSPIN=true PIPENV_HIDE_EMOJIS=true pipenv
 ARTIFACT_STORAGE   := http://nexus:8081
 
 M4_DEPS            := $(wildcard m4/*) configure.ac

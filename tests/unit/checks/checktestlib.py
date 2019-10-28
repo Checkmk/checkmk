@@ -1,7 +1,8 @@
 import types
 import copy
 import mock
-import pytest
+import pytest  # type: ignore
+import six
 from cmk_base.item_state import MKCounterWrapped
 from cmk_base.discovered_labels import DiscoveredHostLabels, HostLabel
 
@@ -40,7 +41,7 @@ class PerfValue(Tuploid):
         # TODO: This is very basic. There is more way more magic involved
         #       in what kind of values are allowed as metric names.
         #       I'm not too sure unicode should be allowed, either.
-        assert type(key) in [str, unicode],\
+        assert isinstance(key, six.string_types),\
                "PerfValue: key %r must be of type str or unicode" % key
         #       Whitespace leads to serious errors
         assert len(key.split()) == 1, \
@@ -54,11 +55,11 @@ class PerfValue(Tuploid):
         #       context for performance values using Check_MK metrics. It is therefore
         #       preferred to return a "naked" scalar.
         msg = "PerfValue: %s parameter %r must be of type int, float or None - not %r"
-        assert type(value) in [int, float],\
+        assert isinstance(value, (int, float)),\
                msg.replace(' or None', '') % ('value', value, type(value))
         for n in ('warn', 'crit', 'minimum', 'maximum'):
             v = getattr(self, n)
-            assert type(v) in [int, float, type(None)], msg % (n, v, type(v))
+            assert v is None or isinstance(v, (int, float)), msg % (n, v, type(v))
 
     @property
     def tuple(self):
@@ -293,10 +294,12 @@ class DiscoveryResult(object):
         self.entries.sort(key=repr)
 
     def __eq__(self, other):
-        return (self.entries == other.entries and self.labels == other.labels)
+        return self.entries == other.entries and self.labels == other.labels
 
     def __repr__(self):
-        args = self.entries + [HostLabel(unicode(k), unicode(self.labels[k])) for k in self.labels]
+        args = self.entries + [
+            HostLabel(six.text_type(k), six.text_type(self.labels[k])) for k in self.labels
+        ]
         return "DiscoveryResult(%r)" % (args,)
 
     def __str__(self):
@@ -537,7 +540,7 @@ class Immutables(object):
         self.copies.__setitem__(k, copy.deepcopy(v))
 
     def test(self, descr=''):
-        for k in self.refs.keys():
+        for k in self.refs:
             try:
                 assertEqual(self.refs[k], self.copies[k], repr(k) + descr)
             except AssertionError as exc:
@@ -565,7 +568,7 @@ def assertEqual(first, second, descr=''):
     if isinstance(first, (list, tuple)):
         assert len(first) == len(second), "%svarying length: %r != %r" \
             % (descr, first, second)
-        for c in range(len(first)):
+        for c in enumerate(first):
             assertEqual(first[c], second[c], descr + "[%d] " % c)
 
     raise AssertionError("%snot equal (%r): %r != %r" % (descr, type(first), first, second))

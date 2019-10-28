@@ -95,8 +95,8 @@ THEME_RESOURCES    := $(THEME_CSS_FILES) $(THEME_JSON_FILES) $(THEME_IMAGE_DIRS)
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc cppcheck dist documentation format format-c \
         format-windows format-linux format-python format-shell \
-	GTAGS headers help install \
-        iwyu mrproper optimize-images packages setup setversion tidy version \
+        GTAGS headers help install \
+        iwyu mrproper mrclean optimize-images packages setup setversion tidy version \
         am--refresh skel
 
 help:
@@ -358,7 +358,16 @@ clean:
 	       ChangeLog
 
 mrproper:
-	git clean -d --force -x --exclude='\.werks/.last' --exclude='\.werks/.my_ids'
+	git clean -d --force -x \
+	    --exclude='\.werks/.last'\
+	    --exclude='\.werks/.my_ids'
+
+mrclean:
+	git clean -d --force -x \
+	    --exclude='\.werks/.last' \
+	    --exclude='\.werks/.my_ids' \
+	    --exclude=".venv*" \
+	    --exclude="virtual-envs/*/.venv/"
 
 setup:
 	sudo apt-get install \

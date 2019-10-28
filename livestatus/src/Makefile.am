@@ -34,53 +34,53 @@ RUN_CLANG_TIDY ?= \
 VALGRIND ?= $(shell valgrind --version > /dev/null 2>&1 && echo "valgrind --quiet")
 PIPENV := LANG=C PIPENV_VENV_IN_PROJECT=true PIPENV_PIPFILE=$(abs_top_srcdir)/virtual-envs/2.7/Pipfile pipenv
 INCLUDES_DIR := includes
+LIBS_DIR := libs
 
 PACKAGE_ASIO := $(abs_top_srcdir)/omd/packages/asio
 ASIO_VERSION := asio-asio-1-14-0
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
 
 PACKAGE_GOOGLETEST := $(abs_top_srcdir)/omd/packages/googletest
+GOOGLETEST_VERSION := googletest-release-1.10.0
+GOOGLETEST_INCLUDE := $(INCLUDES_DIR)/googletest
 
-.PHONY: unit-test build_googletest tidy iwyu cppcheck cppcheck-xml documentation
+.PHONY: unit-test tidy iwyu cppcheck cppcheck-xml documentation
+
+AM_CPPFLAGS = \
+    -I.. \
+    -isystem $(ASIO_INCLUDE) \
+    @RE2_CPPFLAGS@
+
+AM_LDFLAGS = \
+    -static-libstdc++ \
+    @RE2_LDFLAGS@
 
 bin_PROGRAMS = unixcat
 noinst_PROGRAMS = test_neb
 
 unixcat_SOURCES = unixcat.cc
 unixcat_LDADD = -lpthread
-unixcat_LDFLAGS = -static-libstdc++
 
 test_neb_SOURCES = \
-        test/DummyNagios.cc \
-        test/test_utilities.cc \
-        test/test_CustomVarsDictFilter.cc \
-        test/test_OffsetStringMacroColumn.cc
+    test/DummyNagios.cc \
+    test/test_utilities.cc \
+    test/test_CustomVarsDictFilter.cc \
+    test/test_OffsetStringMacroColumn.cc
+$(test_neb_SOURCES): $(ASIO_INCLUDE) $(GOOGLETEST_INCLUDE)
 test_neb_CPPFLAGS = \
-        -I.. \
-        -isystem $(ASIO_INCLUDE) \
-        -I$(PACKAGE_GOOGLETEST)/destdir/include \
-        @RE2_CPPFLAGS@
-test_neb_LDFLAGS = \
-        -static-libstdc++ \
-        $(PACKAGE_GOOGLETEST)/destdir/lib/libgtest_main.a \
-        $(PACKAGE_GOOGLETEST)/destdir/lib/libgtest.a \
-        @RE2_LDFLAGS@
+    $(AM_CPPFLAGS) \
+    -I$(GOOGLETEST_INCLUDE)
 test_neb_LDADD = \
-        liblivestatus.a \
-        -lstdc++fs \
-        -lpthread \
-        @RE2_LIBS@
+    liblivestatus.a \
+    -lstdc++fs \
+    -lpthread \
+    @RE2_LIBS@ \
+    $(LIBS_DIR)/libgtest.a \
+    $(LIBS_DIR)/libgtest_main.a
+
 
 unit-test: test_neb$(EXEEXT)
 	GTEST_OUTPUT=xml $(VALGRIND) ./test_neb$(EXEEXT)
-
-# NOTE: This is a bit of a hack. What we really want is a clean chroot/VM/image
-# where we just install our build dependencies.
-$(test_neb_SOURCES): build_googletest
-
-# HACK: Avoid recompilation caused by make's -B flag
-build_googletest:
-	bash -c "make -C $(PACKAGE_GOOGLETEST) DESTDIR= build" > /dev/null
 
 pkglib_LIBRARIES = liblivestatus.a
 
@@ -206,8 +206,7 @@ liblivestatus_a_SOURCES = \
         opids.cc \
         pnp4nagios.cc \
         strutil.cc
-
-$(test_neb_SOURCES) $(liblivestatus_a_SOURCES): $(ASIO_INCLUDE)
+$(liblivestatus_a_SOURCES): $(ASIO_INCLUDE)
 
 $(ASIO_INCLUDE): $(ASIO_VERSION)
 	mkdir -p $(ASIO_INCLUDE)
@@ -220,19 +219,42 @@ $(ASIO_VERSION): $(PACKAGE_ASIO)/$(ASIO_VERSION).tar.gz
 	tar xzf $<
 	touch $@
 
-liblivestatus_a_CPPFLAGS = -I.. -isystem $(ASIO_INCLUDE) @RE2_CPPFLAGS@
+$(GOOGLETEST_INCLUDE): $(GOOGLETEST_VERSION)/Makefile
+# NOTE: We don't want the googletest files in our compile_commands.json!
+	$(MAKE) -C $(GOOGLETEST_VERSION) install > /dev/null
+	touch $(GOOGLETEST_INCLUDE) $(LIBS_DIR)/libgmock.a $(LIBS_DIR)/libgmock_main.a $(LIBS_DIR)/libgtest.a $(LIBS_DIR)/libgtest_main.a
+# See: https://www.gnu.org/software/automake/manual/html_node/Multiple-Outputs.html
+$(LIBS_DIR)/libgmock.a: $(GOOGLETEST_INCLUDE)
+$(LIBS_DIR)/libgmock_main.a: $(LIBS_DIR)/libgmock.a
+$(LIBS_DIR)/libgtest.a: $(LIBS_DIR)/libgmock_main.a
+$(LIBS_DIR)/libgtest_main.a: $(LIBS_DIR)/libgtest.a
+
+$(GOOGLETEST_VERSION)/Makefile: $(GOOGLETEST_VERSION)/CMakeLists.txt
+	cd $(GOOGLETEST_VERSION) && \
+	cmake -DCMAKE_CXX_COMPILER=$(CXX) \
+        -DCMAKE_INSTALL_PREFIX=.. \
+        -DCMAKE_INSTALL_INCLUDEDIR=$(GOOGLETEST_INCLUDE) \
+        -DCMAKE_INSTALL_LIBDIR=libs \
+        .
+	touch $@
+
+$(GOOGLETEST_VERSION)/CMakeLists.txt: $(PACKAGE_GOOGLETEST)/$(GOOGLETEST_VERSION).tar.gz
+	$(RM) -r $(GOOGLETEST_VERSION)
+	tar xzf $<
+	touch $@
+
 liblivestatus_a_CXXFLAGS = -fPIC
 
 livestatus.o: $(liblivestatus_a_OBJECTS)
 # Note: libstdc++fs is only available as a static library, so we are lucky. For
 # RE2 we make sure that this is the case, too.
-	$(CXXLINK) -shared $^ -lstdc++fs -lpthread -static-libstdc++ @RE2_LDFLAGS@ @RE2_LIBS@
+	$(CXXLINK) -shared $^ -lstdc++fs -lpthread $(AM_LDFLAGS) @RE2_LIBS@
 # To make sure we can dlopen() our NEB later
 	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) -c NagiosMockup.cc -o NagiosMockup.o
 	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup
 	$(RM) NagiosMockup
 
-compile_commands.json: build_googletest Makefile $(wildcard *.cc *.h)
+compile_commands.json: $(unixcat_SOURCES) $(test_neb_SOURCES) $(liblivestatus_a_SOURCES)
 	$(MAKE) -C $(top_srcdir) .venv
 	$(PIPENV) --venv
 	$(PIPENV) run compiledb --no-build make
@@ -263,4 +285,4 @@ install-data-local:
 	rm -f $(DESTDIR)$(pkglibdir)/liblivestatus.a
 
 clean-local:
-	rm -rf *~ compile_commands.json cppcheck-result.xml test_detail.xml html $(INCLUDES_DIR) $(ASIO_VERSION)
+	rm -rf *~ compile_commands.json cppcheck-result.xml test_detail.xml html $(INCLUDES_DIR) $(LIBS_DIR) $(ASIO_VERSION) $(GOOGLETEST_VERSION)

@@ -4,7 +4,7 @@ NODE_MODULES := ../node_modules
 PIPENV   := PIPENV_VENV_IN_PROJECT=true PIPENV_NOSPIN=true PIPENV_HIDE_EMOJIS=true pipenv
 BANDIT   := $(PIPENV) run bandit
 COVERAGE := $(PIPENV) run coverage
-PYTEST   := $(PIPENV) run py.test -vv
+PYTEST   := $(PIPENV) run py.test
 YAPF     := $(PIPENV) run yapf
 FUTURIZE := $(PIPENV) run ./test-futurize
 

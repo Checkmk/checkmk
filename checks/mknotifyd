@@ -161,7 +161,7 @@ def parse_mknotifyd(info):
 #   '----------------------------------------------------------------------'
 
 def inventory_mknotifyd(parsed):
-    return [ (p, {}) for p in parsed ]
+    return [ (p, {}) for p in parsed["sites"] ]
 
 def check_mknotifyd(item, _no_params, parsed):
     sites = parsed["sites"]

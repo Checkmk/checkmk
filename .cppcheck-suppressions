@@ -7,12 +7,14 @@ missingOverride:test_*.cc
 missingOverride:test/test_*.cc
 // We do not care about warnings in our libraries.
 *:*/includes/asio/*
+*:*/includes/googletest/*
 *:*/include/gtest/*
 *:*/include/re2/*
 // Why on earth do we need this???
 unmatchedSuppression:test_*.cc
 unmatchedSuppression:test/test_*.cc
 unmatchedSuppression:*/includes/asio/*
+unmatchedSuppression:*/includes/googletest/*
 unmatchedSuppression:*/include/gtest/*
 unmatchedSuppression:*/include/re2/*
 unmatchedSuppression

@@ -127,5 +127,5 @@ powershell Write-Host "File Deployment succeeded" -Foreground Green
 rem touching update msi
 rem copy check_mk_agent_update.msi /B+ ,,/Y > nul
 popd
-make frozen_binaries || powershell Write-Host "Failed to build frozen binaries" -Foreground Red && exit /b 36
+make frozen_binaries || powershell Write-Host "Failed to build frozen binaries" -Foreground Red && set && exit /b 36
 

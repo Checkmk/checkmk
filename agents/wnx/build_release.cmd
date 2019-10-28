@@ -127,5 +127,17 @@ powershell Write-Host "File Deployment succeeded" -Foreground Green
 rem touching update msi
 rem copy check_mk_agent_update.msi /B+ ,,/Y > nul
 popd
-make frozen_binaries || powershell Write-Host "Failed to build frozen binaries" -Foreground Red && set && exit /b 36
+
+
+for /f %%i in ('where makes') do set make_exe=%%i
+if "!make_exe!" == "" ( 
+set make_exe=c:\ProgramData\chocolatey\bin\make.exe
+powershell Write-Host "Setting make to the most suitable possibility !make_exe!" -Foreground Yellow 
+echo !make_exe!
+) else (
+powershell Write-Host "Using found make !make_exe!" -Foreground Green
+)
+
+
+!make_exe! frozen_binaries || powershell Write-Host "Failed to build frozen binaries" -Foreground Red && echo set && exit /b 36
 

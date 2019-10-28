@@ -1201,7 +1201,7 @@ class ApiData(object):
         rbac_authorization_api = client.RbacAuthorizationV1Api(api_client)
         ext_api = client.ExtensionsV1beta1Api(api_client)
         batch_api = client.BatchV1Api(api_client)
-        apps_api = client.AppsV1beta1Api(api_client)
+        apps_api = client.AppsV1Api(api_client)
 
         self.custom_api = client.CustomObjectsApi(api_client)
 
@@ -1224,9 +1224,14 @@ class ApiData(object):
         endpoints = core_api.list_endpoints_for_all_namespaces()
         jobs = batch_api.list_job_for_all_namespaces()
         services = core_api.list_service_for_all_namespaces()
-        deployments = ext_api.list_deployment_for_all_namespaces()
         ingresses = ext_api.list_ingress_for_all_namespaces()
-        daemon_sets = ext_api.list_daemon_set_for_all_namespaces()
+        try:
+            deployments = apps_api.list_deployment_for_all_namespaces()
+            daemon_sets = apps_api.list_daemon_set_for_all_namespaces()
+        except ApiException:
+            # deprecated endpoints removed in Kubernetes 1.16
+            deployments = ext_api.list_deployment_for_all_namespaces()
+            daemon_sets = ext_api.list_daemon_set_for_all_namespaces()
         stateful_sets = apps_api.list_stateful_set_for_all_namespaces()
 
         logging.debug('Assigning collected data')

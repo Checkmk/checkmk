@@ -1,0 +1,14 @@
+Title: cisco_cpu_memory: Check for monitoring CPU Memory of Cisco devices
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1572257846
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+ This check monitors the CPU Memory level of Cisco devices. A Wato rule can be configured
+ depending on free or occupied memory. The details displayed on the service depend on this
+ WATO rule with the default being free memory. The performance graph will always be based
+ on occupied memory.

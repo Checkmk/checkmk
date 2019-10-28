@@ -801,6 +801,12 @@ metric_info["mem_used_percent"] = {
     "unit": "%",
 }
 
+metric_info["cpu_mem_used_percent"] = {
+    "color": "#80ff40",
+    "title": _("CPU Memory used"),
+    "unit": "%",
+}
+
 metric_info["mem_perm_used"] = {
     "color": "#80ff40",
     "title": _("Permanent Generation Memory"),
@@ -8447,6 +8453,8 @@ check_metrics["check_mk-cisco_mem"] = {
     },
 }
 
+check_metrics["check_mk-cisco_cpu_memory"] = {"mem_used": {"name": "cpu_mem_used_percent"}}
+
 check_metrics["check_mk-cisco_sys_mem"] = {
     "mem_used": {
         "name": "mem_used_percent"
@@ -8535,6 +8543,12 @@ perfometer_info.append({
 perfometer_info.append({
     "type": "linear",
     "segments": ["mem_used_percent"],
+    "total": 100.0,
+})
+
+perfometer_info.append({
+    "type": "linear",
+    "segments": ["cpu_mem_used_percent"],
     "total": 100.0,
 })
 
@@ -10860,6 +10874,12 @@ graph_info["mem_used_percent"] = {
         "mem_used_percent:warn",
         "mem_used_percent:crit",
     ],
+    "range": (0, 100),
+}
+
+graph_info["cpu_mem_used_percent"] = {
+    "metrics": [("cpu_mem_used_percent", "area"),],
+    "scalars": ["cpu_mem_used_percent:warn", "cpu_mem_used_percent:crit"],
     "range": (0, 100),
 }
 

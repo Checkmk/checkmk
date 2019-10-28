@@ -1,0 +1,13 @@
+title: CPU Memory
+agents: snmp
+catalog: hw/network/cisco
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the cpu memory usage (in percentage) of Cisco devices. The
+ check can be configured based on free or occupied memory. Free memory excludes
+ kernel reserved memory while occupied memory incorporates it along with used
+ memory.
+
+inventory:
+ One service per Cisco device is created

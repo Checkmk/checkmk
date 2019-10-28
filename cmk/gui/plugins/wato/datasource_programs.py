@@ -2023,8 +2023,8 @@ def _factory_default_special_agents_elasticsearch():
 def _valuespec_special_agents_elasticsearch():
     return Dictionary(
         optional_keys=["user", "password"],
-        title=_("Check state of elasticsearch"),
-        help=_("Requests data about elasticsearch clusters, nodes and indices."),
+        title=_("Check state of Elasticsearch"),
+        help=_("Requests data about Elasticsearch clusters, nodes and indices."),
         elements=[
             ("hosts",
              ListOfStrings(
@@ -2092,8 +2092,8 @@ def _factory_default_special_agents_splunk():
 
 def _valuespec_special_agents_splunk():
     return Dictionary(
-        title=_("Check state of splunk"),
-        help=_("Requests data from a splunk instance."),
+        title=_("Check state of Splunk"),
+        help=_("Requests data from a Splunk instance."),
         optional_keys=["port"],
         elements=[
             ("instance",
@@ -2129,9 +2129,9 @@ def _valuespec_special_agents_splunk():
              ListChoice(
                  title=_("Informations to query"),
                  help=_("Defines what information to query. You can "
-                        "choose to query license state and usage, splunk "
-                        "system messages, splunk jobs, shown in the job "
-                        "menu within splunk. You can also query for "
+                        "choose to query license state and usage, Splunk "
+                        "system messages, Splunk jobs, shown in the job "
+                        "menu within Splunk. You can also query for "
                         "component health and fired alerts."),
                  choices=[
                      ("license_state", _("Licence state")),

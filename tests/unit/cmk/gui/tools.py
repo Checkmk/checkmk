@@ -63,8 +63,14 @@ def compare_soup(html1, html2):
 
         else:
             assert len(list(d1.children)) == len(list(d2.children)), '%s\n%s' % (html1, html2)
-            attrs1 = {k: [x for x in (v) if x != ''] for k, v in d1.attrs.iteritems() if len(v) > 0}
-            attrs2 = {k: [x for x in (v) if x != ''] for k, v in d2.attrs.iteritems() if len(v) > 0}
+            attrs1 = {
+                k: [x for x in (v) if x != ''
+                   ] for k, v in d1.attrs.iteritems() if isinstance(v, list) and len(v) > 0
+            }
+            attrs2 = {
+                k: [x for x in (v) if x != ''
+                   ] for k, v in d2.attrs.iteritems() if isinstance(v, list) and len(v) > 0
+            }
 
             for key in attrs1.keys():
                 assert key in attrs2, '%s\n%s\n\n%s' % (key, d1, d2)

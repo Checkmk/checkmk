@@ -1,5 +1,6 @@
 # Checkmk - Your complete IT monitoring solution
 
+
 Checkmk is available in several editions. The Checkmk Raw Edition is free and
 100% open-source. The Checkmk Enterprise Edition includes several additional
 features and professional support from the authors, billed annually. A demo

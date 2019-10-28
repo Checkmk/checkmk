@@ -18,9 +18,9 @@ checks = {
         (
             u'MyJIRA', {}, [
                 (
-                    0, 'Up since Fri Sep  7 02:26:49 2018 (399d 08:06:02)', [
-                        ('uptime', 34502762, None, None, None, None)
-                    ]
+                    0,
+                    'Up since Fri Sep  7 02:26:49 2018, uptime: 399 days, 8:06:02',
+                    [('uptime', 34502762, None, None, None, None)]
                 )
             ]
         )

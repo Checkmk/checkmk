@@ -77,9 +77,9 @@ checks = {
         (
             'MyInstance', {}, [
                 (
-                    0, 'Up since Fri Oct  4 07:45:24 2019 (6d 14:53:31)', [
-                        ('uptime', 572011, None, None, None, None)
-                    ]
+                    0,
+                    'Up since Fri Oct  4 07:45:24 2019, uptime: 6 days, 14:53:31',
+                    [('uptime', 572011, None, None, None, None)]
                 )
             ]
         )

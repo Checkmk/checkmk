@@ -16,7 +16,7 @@ checks = {
         (
             u'Node with weird hostname', {}, [
                 (
-                    0, 'Up since Wed Oct 23 16:47:22 2019 (0d 00:02:03)', [
+                    0, 'Up since Wed Oct 23 16:47:22 2019, uptime: 0:02:03', [
                         ('uptime', 123.0, None, None, None, None)
                     ]
                 )

@@ -5663,6 +5663,12 @@ metric_info["open_file_descriptors"] = {
     "color": "14/a",
 }
 
+metric_info["max_file_descriptors"] = {
+    "title": _("Maximum number of file descriptors"),
+    "unit": "count",
+    "color": "16/a",
+}
+
 metric_info["app"] = {
     "title": _("Available physical processors in shared pool"),
     "unit": "count",
@@ -5755,6 +5761,12 @@ metric_info["flushed"] = {
 
 metric_info["avg_flush_time"] = {
     "title": _("Average flush time"),
+    "unit": "s",
+    "color": "31/a",
+}
+
+metric_info["cpu_total_in_millis"] = {
+    "title": _("CPU time used by JVM process"),
     "unit": "s",
     "color": "31/a",
 }
@@ -7952,6 +7964,15 @@ check_metrics["check_mk-cisco_mem_asa64"] = {
 check_metrics["check_mk-fortigate_sessions_base"] = {
     "session": {
         "name": "active_sessions"
+    },
+}
+
+check_metrics["check_mk-elasticsearch_nodes"] = {
+    "cpu_percent": {
+        "name": "util"
+    },
+    "mem_total_virtual_in_bytes": {
+        "name": "mem_lnx_total_total"
     },
 }
 

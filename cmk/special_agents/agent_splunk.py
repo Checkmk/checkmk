@@ -28,6 +28,9 @@ from collections import namedtuple
 import argparse
 import sys
 import requests
+import urllib3  # type: ignore
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 Section = namedtuple('Section', ['name', 'uri', 'handler'])
 
@@ -68,7 +71,8 @@ def handle_request(args, sections):
                                     auth=(args.user, args.password),
                                     data={"output_mode": "json"})
 
-        except requests.exceptions.RequestException:
+        except requests.exceptions.RequestException as e:
+            sys.stderr.write("Error: %s\n" % e)
             if args.debug:
                 raise
         else:

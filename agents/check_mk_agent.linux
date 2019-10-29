@@ -133,8 +133,14 @@ if [ -f "$MK_CONFDIR/exclude_sections.cfg" ]; then
 fi
 
 if [ "$ENCRYPTED" == "yes" ]; then
-    echo -n "00" # protocol version
-    exec > >(openssl enc -aes-256-cbc -md md5 -k "$PASSPHRASE" -nosalt)
+    OPENSSL_VERSION=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')
+    if [ $OPENSSL_VERSION -ge 10000 ]; then
+        echo -n "02"
+        exec > >(openssl enc -aes-256-cbc -md sha256 -k "$PASSPHRASE" -nosalt)
+    else
+        echo -n "00"
+        exec > >(openssl enc -aes-256-cbc -md md5 -k "$PASSPHRASE" -nosalt)
+    fi
 fi
 
 RTC_PLUGINS=""
@@ -166,10 +172,8 @@ section_mem() {
     else
         echo '<<<docker_container_mem>>>'
         cat /sys/fs/cgroup/memory/memory.stat
-        echo -n "usage_in_bytes "
-        cat /sys/fs/cgroup/memory/memory.usage_in_bytes
-        echo -n "limit_in_bytes "
-        cat /sys/fs/cgroup/memory/memory.limit_in_bytes
+        echo "usage_in_bytes $(cat /sys/fs/cgroup/memory/memory.usage_in_bytes)"
+        echo "limit_in_bytes $(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)"
         grep -F 'MemTotal:' /proc/meminfo
     fi
 }
@@ -270,7 +274,10 @@ section_df() {
 section_systemd() {
     if inpath systemctl; then
         echo '<<<systemd_units>>>'
-        systemctl --all --no-pager
+        echo "[list-unit-files]"
+        systemctl list-unit-files --no-pager
+        echo "[all]"
+        systemctl --all --no-pager | sed '/^$/q'
     fi
 }
 
@@ -1503,7 +1510,7 @@ run_local_checks
 run_plugins
 
 # Agent output snippets created by cronjobs, etc.
-if [ -d "$SPOOLDIR" ]; then
+if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
     pushd "$SPOOLDIR" >/dev/null
     now=$(date +%s)
 

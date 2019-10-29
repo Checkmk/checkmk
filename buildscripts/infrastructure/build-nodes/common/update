@@ -1,0 +1,7 @@
+NAME=ubuntu-18.04-common:latest
+REGISTRY=nexus.lan.tribe29.com:4000
+
+echo "Building $NAME"
+docker build -t $REGISTRY/$NAME .
+echo "Push $NAME to registry"
+docker push $REGISTRY/$NAME

@@ -25,7 +25,7 @@ export REQUESTS_CA_BUNDLE=$OMD_ROOT/var/ssl/ca-certificates.crt
 # localization of the user's environment variables. This can lead to confusion
 # during tests.
 INSTALLED_LOCALES=$(locale -a)
-for i in "C.UTF-8" "en_US.utf8" "C"; do
+for i in "C.UTF-8" "C.utf8" "en_US.utf8" "C"; do
     if echo $INSTALLED_LOCALES | grep -q -w -F "$i"; then
         export LANG="$i" LC_ALL="$i"
         break

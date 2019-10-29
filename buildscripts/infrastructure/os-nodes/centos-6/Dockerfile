@@ -1,6 +1,8 @@
 FROM centos:6
 
-SHELL ["/bin/bash", "-c"]
+# Use a login shell to make the definitions from /etc/profile.d/enable-python27.sh
+# available to the "RUN" commands below
+SHELL ["/bin/bash", "-l", "-c"]
 
 ARG PACKAGES
 
@@ -30,6 +32,16 @@ RUN yum -y --enablerepo=extras install \
     sudo \
     vim \
     which
+
+# CentOS 6 has 2.6.6 installed by default. The pipenv we need does not work with
+# Python < 2.7.9. For this reason we install the 2.7.16 from centos-release-scl-rh
+# which installs it's files to /opt/rh/python27.
+#
+# Enable the Python 2.7 installed from centos-release-scl-rh in all shells by default
+# (https://access.redhat.com/solutions/527703)
+RUN echo -e "source scl_source enable python27" > /etc/profile.d/enable-python27.sh
+
+# Now bring pip and pipenv to our standard version used in all environments.
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
     && python get-pip.py
 RUN pip install --upgrade setuptools virtualenv \

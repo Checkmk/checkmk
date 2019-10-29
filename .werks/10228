@@ -7,4 +7,5 @@ Version: 1.7.0i1
 Date: 1571906857
 Class: fix
 
-Dark font color for problem cells in dark theme data tables. Group headers and other subheadings are now smaller. Fixed WATO checkbox sizes for the classic theme.
+Dark font color for problem cells in dark theme data tables. Group headers and other subheadings are now smaller. Fixed WATO checkbox sizes for the classic theme. Adjusted sizes and formatting for search filter input fields.
+

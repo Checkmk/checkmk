@@ -286,7 +286,6 @@ class Age(ValueSpec):
             html.write(self._label + " ")
 
         takeover = 0
-        first = True
         for uid, title, val, tkovr_fac in [("days", _("days"), days, 24),
                                            ("hours", _("hours"), hours, 60),
                                            ("minutes", _("mins"), minutes, 60),
@@ -294,9 +293,8 @@ class Age(ValueSpec):
             if uid in self._display:
                 val += takeover
                 takeover = 0
-                html.number_input(varprefix + "_" + uid, val, 3 if first else 2)
+                html.number_input(varprefix + "_" + uid, val, 4)
                 html.write(" %s " % title)
-                first = False
             else:
                 takeover = (takeover + val) * tkovr_fac
         html.close_div()

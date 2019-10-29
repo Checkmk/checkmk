@@ -73,6 +73,10 @@ div.floatfilter {
     width: 100%;
     box-sizing: border-box;
 
+    &.number {
+      text-align: center;
+    }
+
     &.neg {
       width: 229px;
     }
@@ -177,6 +181,10 @@ div.floatfilter {
     .select2-container {
       margin-left: 4px;
     }
+  }
+
+  &.downtimes span.checkbox {
+    white-space: normal;
   }
 }
 

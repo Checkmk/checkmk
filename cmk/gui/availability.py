@@ -488,6 +488,7 @@ def get_av_computation_options():
              unit=_("status entries"),
              minvalue=0,
              default_value=5000,
+             size=6,
          )),
     ]
 

@@ -82,10 +82,12 @@ div.floatfilter {
     .select2-container .select2-selection--single {
         height: 22px;
 
-        .select2-selection__arrow{
-            b{
-                margin-top: -4px;
-            }
+	.select2-selection__rendered {
+	    line-height: 22px;
+	}
+
+        .select2-selection__arrow b {
+            margin-top: -4px;
         }
     }
 }

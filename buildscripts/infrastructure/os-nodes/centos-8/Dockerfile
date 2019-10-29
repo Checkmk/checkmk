@@ -38,6 +38,10 @@ RUN pip install --upgrade setuptools virtualenv \
 RUN yum -y --enablerepo=PowerTools install \
     $PACKAGES \
     && yum clean all
+# The /etc/fstab does not exist in the base image we use. A missing fstab prevents OMD from
+# using a tmpfs for /omd/sites/[site]/tmp, which we want to have during our tests. We can
+# simply solve this by pre-creating the empty file here.
+RUN touch /etc/fstab
 
 # Set Environment Variables to activate python27
 ENV PATH=/opt/rh/python27/root/usr/bin${PATH:+:${PATH}}

@@ -1,0 +1,2774 @@
+#!/bin/sh
+# vim: noai:ts=4:sw=4:expandtab
+# Check_MK Agent for UNIX/Linux systems
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at https://checkmk.com/.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Remove locale settings to eliminate localized outputs where possible
+LC_ALL=C
+export LC_ALL
+unset LANG
+
+# Close standard input (for security reasons) and stderr when not explicitly in debug mode.
+# When the nodes agent is executed by a e.g. docker node in a container,
+# then don't close stdin, because the agent is piped through it in this case.
+if [ "${1}" = -d ]; then
+    set -xv
+# TO-DO: Review the validity/use of MK_FROM_NODE, it seems to be superseded now
+elif [ -z "${MK_FROM_NODE}" ]; then
+    exec </dev/null 2>/dev/null
+fi
+
+####################################################################################################
+# Dynamically build PATH to ensure that locally installed binaries are found
+# Blank a variable for the following dynamic PATH task
+newPath=
+
+# Itirate through a list of potential PATH members and add any paths that are found
+# to the 'newPath' variable.  This way, we dynamically build PATH, and bias Solaris towards XPG4
+for dir in /usr/gnu/bin /usr/xpg6/bin /usr/xpg4/bin /usr/kerberos/bin /usr/kerberos/sbin /bin \
+    /sbin /usr/bin /usr/sbin /usr/contrib/bin/usr/local/bin /usr/local/sbin /opt/csw/bin \
+    /opt/csw/sbin /opt/sfw/bin /opt/sfw/sbin /usr/pkg/bin /usr/sfw/bin /usr/sfw/sbin /snap/bin; do
+
+    [ -d "${dir}" ] && newPath="${newPath}:${dir}"
+done
+
+# Now assign our freshly built newPath variable, removing any leading colon
+PATH="${newPath#:}"
+
+# Finally, export the PATH and unset newPath
+export PATH
+unset -v newPath
+
+# 'mkecho()' abstracts the portability of 'printf' and solves the major 
+# portability headaches caused by various implementations of 'echo'
+# This is called 'mkecho()' rather than an 'echo()' override because 
+# some shells protect their builtins, denying us the override cleanliness
+# Fun exercise: look at Oracle's man page for 'echo', specifically the USAGE section.
+# This also adds the '-j' option to output in json keypair format
+mkecho() {
+    case "${1}" in
+        (-e)
+            case "${2}" in
+                (-n)      shift 2; printf -- '%b' "${*}" ;;
+                (*)       shift; printf -- '%b\n' "${*}" ;;
+            esac
+        ;;
+        (-E)
+            case "${2}" in
+                (-n)      shift 2; printf -- '%s' "${*}" ;;
+                (*)       shift; printf -- '%s\n' "${*}" ;;
+            esac
+        ;;
+        (-j)              shift; printf -- '{"%s": "%s"}\n' "${1}" "${2}" ;;
+        (-n)
+            case "${2}" in
+                (-e)      shift 2; printf -- '%b' "${*}" ;;
+                (-E)      shift 2; printf -- '%s' "${*}" ;;
+                (*)       shift; printf -- '%s' "${*}" ;;
+            esac
+        ;;
+        (-en|-ne)         shift; printf -- '%b' "${*}" ;;
+        (-En|-nE)         shift; printf -- '%s' "${*}" ;;
+        (*)               printf -- '%s\n' "${*}" ;;
+    esac
+}
+
+# Functionalise and standardise 'quiet grep' based tests.
+# This gives us 'grep -q' cleanliness where '>/dev/null 2>&1'
+# would otherwise be required e.g. Solaris, older versions of grep etc
+if mkecho "word" | grep -q "word" >/dev/null 2>&1; then
+    grepq() { grep -q "$@" 2>/dev/null; }
+else
+    grepq() { grep "$@" >/dev/null 2>&1; }
+fi
+
+# Function to replace "if type [somecmd]" idiom
+# 'command -v' tends to be more robust vs 'which' and 'type' based tests
+# We set this function early so that it's available for the rest of the agent
+inpath() {
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
+####################################################################################################
+# If EUID isn't set, then set it
+# Note that 'id -u' is now mostly portable here due to the alignment of xpg4 above
+# '[ -w / ]' may be an alternative test for proving root privileges...
+if [ ! "${EUID}" ]; then
+    EUID=$(id -u); readonly EUID; export EUID
+fi
+
+# If HOSTNAME isn't set, then set it
+if [ ! "${HOSTNAME}" ]; then 
+    HOSTNAME=$(hostname); readonly HOSTNAME; export HOSTNAME
+fi
+
+# If HOME isn't set, then set it
+if [ ! "${HOME}" ]; then
+    HOME=$(getent passwd | awk -F':' -v EUID="${EUID}" '$3 == EUID{print $6}')
+    readonly HOME; export HOME
+fi
+
+# date +%s is not portable, so we provide this function
+# To do this in pure shell is... fun... however 'perl' is assumed
+# elsewhere in this agent, so we may as well depend on that for our failover option
+if date +%s 2>/dev/null | grepq '%s'; then
+    get_epoch() { perl -e 'print time."\n";'; }
+else
+    get_epoch() { date +%s; }
+fi
+
+# Newer shells like zsh and bash5.x have EPOCHSECONDS.  If it's not available, we set it
+# Note that if this is set here, it will not update each time it's used
+# Use get_epoch() if you need that kind of accuracy
+if [ ! "${EPOCHSECONDS}" ]; then
+    EPOCHSECONDS=$(get_epoch); readonly EPOCHSECONDS; export EPOCHSECONDS
+fi
+
+# Because $SHELL is an unreliable thing to test against (e.g. SHLVL > 1), we provide this function
+# It tries multiple methods to discover and name the invoking shell
+# This won't work for 'fish', which needs 'ps -p %self' or similar non-bourne-esque syntax.
+get_shell() {
+    if [ -r "/proc/$$/cmdline" ]; then
+        # We use 'tr' because 'cmdline' files have NUL terminated lines
+        # TO-DO: Possibly handle multi-word output e.g. 'busybox ash'
+        printf -- '%s\n' "$(tr '\0' ' ' </proc/"$$"/cmdline)"
+    elif ps -p "$$" >/dev/null 2>&1; then
+        # This double-awk caters for situations where CMD/COMMAND
+        # might be a full path e.g. /usr/bin/zsh
+        ps -p "$$" | tail -n 1 | awk '{print $NF}' | awk -F '/' '{print $NF}'
+    # This one works well except for busybox
+    elif ps -o comm= -p "$$" >/dev/null 2>&1; then
+        ps -o comm= -p "$$"
+    elif ps -o pid,comm= >/dev/null 2>&1; then
+        ps -o pid,comm= | awk -v ppid="$$" '$1==ppid {print $2}'
+    else
+        case "${BASH_VERSION}" in (*.*) printf -- '%s\n' "bash";; esac; return 0
+        case "${KSH_VERSION}" in (*.*) printf -- '%s\n' "ksh";; esac; return 0
+        case "${ZSH_VERSION}" in (*.*) printf -- '%s\n' "zsh";; esac; return 0
+        # If we get to this point, fail out:
+        return 1
+    fi
+}
+
+# If SHELL isn't set, then set it.
+if [ ! "${SHELL}" ]; then
+    if get_shell >/dev/null 2>&1; then
+        SHELL=$(command -v "$(get_shell)"); readonly SHELL; export SHELL
+    fi
+fi
+
+####################################################################################################
+# Define the version of Check_MK
+MK_VERSION=TESTING
+
+# Manually define these variables here if you want to override the defaults
+# This is where these would be templated in something like an Ansible role too e.g.
+#MK_LIBDIR="{{ mk_libdir | d('/opt/check_mk/lib') }}"
+#MK_CONFDIR="{{ mk_confdir | d('/opt/check_mk/etc') }}"
+#MK_VARDIR="{{ mk_vardir | d('/opt/check_mk/var') }}"
+#MK_TMPDIR="{{ mk_tmpdir | d('/opt/check_mk/tmp') }}" 
+
+# Ensure that the MK_OSSTR environment variable is set.
+# This imitates the 'OSTYPE' variable from bash
+# We use this variable later on for OS specific behaviour
+case $(uname -s) in
+    ("AIX")
+        MK_OSSTR=aix
+        MK_LIBDIR="${MK_LIBDIR:-/usr/check_mk/lib}"
+        MK_CONFDIR="${MK_CONFDIR:-/usr/check_mk/conf}"
+        MK_VARDIR="${MK_VARDIR:-/tmp/check_mk}"
+    ;;
+    ("Darwin")
+        MK_OSSTR=mac
+        #MK_LIBDIR="${MK_LIBDIR:-/to/be/changed}"
+        #MK_CONFDIR="${MK_CONFDIR:-/to/be/changed}"
+        #MK_VARDIR="${MK_VARDIR:-/set/this}"
+    ;;
+    ("FreeBSD")
+        MK_OSSTR=freebsd
+        MK_LIBDIR="${MK_LIBDIR:-/usr/local/lib/check_mk_agent}"
+        MK_CONFDIR="${MK_CONFDIR:-/etc/check_mk}"
+        #MK_VARDIR="${MK_VARDIR:-/set/this}"
+        MK_TMPDIR="${MK_TMPDIR:-/var/run/check_mk}"
+    ;;
+    ("HPUX")
+        MK_OSSTR=hpux
+        MK_LIBDIR="${MK_LIBDIR:-/usr/lib/check_mk_agent}"
+        MK_CONFDIR="${MK_CONFDIR:-/etc/check_mk}"
+        #MK_VARDIR="${MK_VARDIR:-/set/this}""
+    ;;
+    ("Linux"|"linux-gnu"|"GNU"*)
+        MK_OSSTR=linux
+        MK_LIBDIR="${MK_LIBDIR:-/usr/lib/check_mk_agent}"
+        MK_CONFDIR="${MK_CONFDIR:-/etc/check_mk}"
+        MK_VARDIR="${MK_VARDIR:-/var/lib/check_mk_agent}"
+    ;;
+    ("NetBSD")
+        MK_OSSTR=netbsd
+        #MK_LIBDIR="${MK_LIBDIR:-/change/me/}"
+        #MK_CONFDIR="${MK_CONFDIR:-/change/me}"
+        #MK_VARDIR="${MK_VARDIR:-/set/this}"
+    ;;
+    ("OpenBSD")
+        MK_OSSTR=openbsd
+        MK_LIBDIR="${MK_LIBDIR:-/usr/lib/check_mk_agent}"
+        MK_CONFDIR="${MK_CONFDIR:-/etc}"
+        #MK_VARDIR="${MK_VARDIR:-/set/this}"
+    ;;
+    ("SunOS"|"solaris")
+        MK_OSSTR=solaris
+        MK_LIBDIR="${MK_LIBDIR:-/usr/lib/check_mk_agent}"
+        MK_CONFDIR="${MK_CONFDIR:-/etc/check_mk}"
+        MK_VARDIR="${MK_VARDIR:-/var/lib/check_mk_agent}"
+    ;;
+    (*"BSD"|*"bsd"|"DragonFly"|"Bitrig")
+        MK_OSSTR=bsd
+        #MK_LIBDIR="${MK_LIBDIR:-/change/me/}"
+        #MK_CONFDIR="${MK_CONFDIR:-/change/me}"
+        #MK_VARDIR="${MK_VARDIR:-/set/this}"
+    ;;
+    (*)
+        MK_OSSTR=$(uname -s)
+        #MK_LIBDIR="${MK_LIBDIR:-/to/be/changed}"
+        #MK_CONFDIR="${MK_CONFDIR:-/to/be/changed}"
+        #MK_VARDIR="${MK_VARDIR:-/set/this}"
+    ;;
+esac
+
+# All executables in MK_PLUGINSDIR will simply be executed and their
+# ouput appended to the output of the agent. Plugins define their own
+# sections and must output headers with '<<<' and '>>>'
+MK_PLUGINSDIR="${MK_LIBDIR:?}"/plugins
+
+# All executables in MK_LOCALDIR will be executed and their
+# output inserted into the section <<<local>>>. Please
+# refer to online documentation for details about local checks.
+MK_LOCALDIR="${MK_LIBDIR}"/local
+
+# All files in MK_SPOOLDIR will simply appended to the agent
+# output if they are not outdated (see below)
+MK_SPOOLDIR="${MK_VARDIR:?}"/spool
+
+# Protect all our MK variables
+readonly MK_OSSTR MK_LIBDIR MK_CONFDIR MK_VARDIR MK_VERSION 
+readonly MK_PLUGINSDIR MK_LOCALDIR MK_SPOOLDIR MK_TMPDIR
+
+# Export all our MK variables
+export MK_OSSTR MK_LIBDIR MK_CONFDIR MK_VARDIR MK_VERSION 
+export MK_PLUGINSDIR MK_LOCALDIR MK_SPOOLDIR MK_TMPDIR
+
+# Now that we have all of that figured out, we work through some OS specific setup tasks
+case "${MK_OSSTR}" in
+    (aix)
+        # For AIX, force load of environment.
+        # shellcheck source=/dev/null
+        [ -e "${HOME}"/.profile ] && . "${HOME}"/.profile >/dev/null 2>&1
+        # Avoid problems with wrong decimal separators in other language verions of aix
+        LC_NUMERIC="en_US"
+        export LC_NUMERIC
+    ;;
+    (freebsd)
+        osver="$(uname -r)"
+        is_jailed="$(sysctl -n security.jail.jailed)"
+    ;;
+    (solaris)
+        # Find out what zone we are running in
+        # Treat all pre-Solaris 10 systems as "global"
+        if inpath zonename; then
+            zonename=$(zonename)
+            pszone="-z $zonename"
+        else
+            zonename="global"
+            pszone="-A"
+        fi
+    ;;
+esac
+
+####################################################################################################
+# The package name gets patched for baked agents to either
+# "check-mk-agent" or the name set by the "name of agent packages" rule
+XINETD_SERVICE_NAME=check_mk
+
+# Detect whether or not the agent is being executed in a container
+# environment.
+if [ -f /.dockerenv ]; then
+    MK_IS_DOCKERIZED=1
+elif grepq container=lxc /proc/1/environ; then
+    # Works in lxc environment e.g. on Ubuntu bionic, but does not
+    # seem to work in proxmox (see CMK-1561)
+    MK_IS_LXC_CONTAINER=1
+elif grepq 'lxcfs /proc/cpuinfo fuse.lxcfs' /proc/mounts; then
+    # Seems to work in proxmox
+    MK_IS_LXC_CONTAINER=1
+else
+    unset -v MK_IS_DOCKERIZED
+    unset -v MK_IS_LXC_CONTAINER
+fi
+
+# Load our variables for encrypted data.  See protect_output()
+if [ -r "${MK_CONFDIR}/encryption.cfg" ]; then
+    # We ensure that this file is secure
+    chmod 640 "${MK_CONFDIR}/encryption.cfg" 2>/dev/null
+
+    # shellcheck source=/dev/null
+    . "${MK_CONFDIR}/encryption.cfg"
+fi
+
+# Load our variables for realtime data
+RTC_PLUGINS=""
+# Load our config file.  This provides RTC_TIMEOUT, RTC_PORT, RTC_SECRET and RTC_SECTIONS
+if [ -r "${MK_CONFDIR}/real_time_checks.cfg" ]; then
+    # We ensure that this file is secure
+    chmod 640 "${MK_CONFDIR}/real_time_checks.cfg" 2>/dev/null
+    
+    # shellcheck source=/dev/null
+    . "${MK_CONFDIR}/real_time_checks.cfg"
+fi
+
+# Provide information about the remote host. That helps when data
+# is being sent only once to each remote host.
+if [ "${REMOTE_HOST}" ]; then
+    MK_RTC_HOST="${REMOTE_HOST}"
+    export MK_RTC_HOST
+elif [ "${SSH_CLIENT}" ]; then
+    MK_RTC_HOST="${SSH_CLIENT%% *}"
+    export MK_RTC_HOST
+fi
+
+# If we are called via xinetd, try to find only_from configuration
+if [ -n "${REMOTE_HOST}" ]; then
+    # shellcheck disable=SC2039
+    mkecho -n 'OnlyFrom: '
+    sed -n '/^service[[:space:]]*'$XINETD_SERVICE_NAME'/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1
+    mkecho
+fi
+
+# 'coreutils' 5.3.0 broke how 'stat' handled its output.  This was reverted
+# in STABLE in 5.9.4.  Just in case we happen across this version
+# we catch it and build a workaround to correct its behaviour
+# See: https://lists.gnu.org/archive/html/bug-coreutils/2005-12/msg00157.html
+if stat --version 2>&1 | head -n 1 | grepq "5.3.0"; then
+    stat() {
+        printf -- '%s\n' "$(command stat "${@}")"
+    }
+fi
+
+# Function to list CIFS mounts for use by section_nfs
+get_cifs_mounts() {
+    if [ -r /proc/mounts ]; then
+        sed -n '/ cifs\? /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts | sed 's/\\040/ /g'
+    else
+        mount | awk '/ cifs/{print $3;}'
+    fi
+}
+
+# Function to list NFS mounts for use by section_nfs
+get_nfs_mounts() {
+    if [ -r /proc/mounts ]; then
+        sed -n '/ nfs4\? /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts | sed 's/\\040/ /g'
+    else
+        mount | awk '/ nfs/{print $3;}'
+    fi
+}
+
+# In theory, this is how these functions should work:
+# If the GNU stat approach fails, its failure will be silenced
+# and the BSD stat approach will be tried.  Failing that, it's perl to the rescue.
+get_file_atime() {
+    stat -c %X "${1}" 2>/dev/null || 
+    stat -f %a "${1}" 2>/dev/null ||
+    perl -e 'if (! -f $ARGV[0]){die "0000000"};$atime=(stat($ARGV[0]))[8];print $atime."\n";' "${1}"
+}
+
+# Note: ctime is the least portable of these metrics!
+get_file_ctime() {
+    stat -c %Z "${1}" 2>/dev/null || 
+    stat -f %c "${1}" 2>/dev/null ||
+    perl -e 'if (! -f $ARGV[0]){die "0000000"};$ctime=(stat($ARGV[0]))[10];print $ctime."\n";' "${1}"
+}
+
+get_file_mtime() {
+    stat -c %Y "${1}" 2>/dev/null || 
+    stat -f %m "${1}" 2>/dev/null ||
+    perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print $mtime."\n";' "${1}"
+}
+
+# This function ensures that a file is executable and
+# does not have certain patterns within its name
+is_valid_plugin() {
+    case "${1:?No plugin defined}" in
+        (*dpkg-new|*dpkg-old|*dpkg-temp)
+            return 1
+        ;;
+        (*)
+        if [ -x "${1}" ]; then
+            return 0
+        else
+            return 1
+        fi
+        ;;
+    esac
+}
+
+# Setup a function to encrypt the output using openssl
+protect_output() {
+    if ! inpath openssl; then
+        mkecho "ERROR: protect_output(): 'openssl' not found in PATH" >&2
+        return
+    fi
+
+    # If this function has an arg "-rt", then we're being used for realtime data
+    if [ "${1}" = "-rt" ]; then
+        # Let's see if RTC_SECRET is defined
+        if [ ! -r "${MK_CONFDIR}/real_time_checks.cfg" ]; then
+            mkecho "ERROR: protect_output(): Unable to read real_time_checks.cfg"
+            return
+        fi
+        # If we have a defined RTC_SECRET, then we prioritise that.
+        # This is a reversal of the previous behaviour, because we may want a setup
+        # where realtime checks go to hostA secured with pwdA, and normal check 
+        # output goes to hostB secured with pwdB.  This approach makes that clear.
+        if grepq "^RTC_SECRET=.*" "${MK_CONFDIR}/real_time_checks.cfg"; then
+            PASSPHRASE=$(awk -F '=' '/^RTC_SECRET/{print $2' "${MK_CONFDIR}/real_time_checks.cfg")
+        fi
+    fi
+
+    # Convert the openssl version to an integer e.g. 1.0.2k-fips -> 10002
+    _opensslVer=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')
+    # shellcheck disable=SC2039
+    if [ "${_opensslVer}" -ge 10000 ]; then
+        _encCode="02"
+        _encMode=sha256
+    else
+        _encCode="00"
+        _encMode=md5
+    fi
+
+    # Print our protocol and/or epoch information
+    if [ "${1}" = "-rt" ]; then
+        mkecho -n "${_encCode}$(get_epoch)"
+    else
+        mkecho -n "${_encCode}"
+    fi
+
+    # Call openssl with our required digest and auth
+    openssl enc -aes-256-cbc -md "${_encMode}" -k "${PASSPHRASE}" -nosalt
+
+    unset _opensslVer _encMode _encCode
+}
+
+read_ipmi_sensors() {
+    for _class in Temperature Power_Unit Fan; do
+        ipmi-sensors "${1:?No format given}" \
+            --sdr-cache-directory /var/cache "${2:?No group opt given}" "${_class}" | 
+            sed -e 's/ /_/g' -e 's/:_\\?/ /g' -e 's@ \\([^(]*\\)_(\\([^)]*\\))@ \\2_\\1@'
+        # In case of a timeout immediately leave loop.
+        [ $? = 255 ] && break
+    done
+    unset -v _class
+}
+
+# Function to format the output of 'ipmitool'
+read_ipmitool() {
+    if ! inpath ipmitool; then
+        return 1
+    fi
+    case "${MK_OSSTR}" in
+        (linux)
+            ipmitool sensor list |
+                grep -v 'command failed' | 
+                grep -E -v '^[^ ]+ na ' | 
+                grep -v ' discrete '
+        ;;
+        (*bsd)
+            # IPMI-Data (Fans, CPU, temperature, etc)
+            # needs the sysutils/ipmitool and kldload ipmi.ko
+            ipmitool sensor list |
+                grep -v 'command failed' |
+                sed -e 's/ *| */|/g' -e "s/ /_/g" -e 's/_*$//' -e 's/|/ /g' |
+                grep -Ev '^[^ ]+ na ' |
+                grep -v ' discrete '
+        ;;
+    esac
+}
+
+# We prefer the 'timeout' command shipped with 'coreutils' v7.0 and newer
+# Our shipped 'waitmax' is statically linked and crashes on recent Ubuntu releases
+if inpath timeout; then
+    waitmax() {
+        # The busybox version of 'timeout' requires '-t' to define the duration
+        # So if we're in busybox, we need to insert '-t' into '$*'
+        # This means that 'waitmax' invocations MUST follow a standard pattern
+        case "$(get_shell)" in
+            (*busybox*)
+                # This translates calls like 'waitmax -s 9 5 somecommand'
+                #   to instead read like 'waitmax -s 9 -t 5 somecommand'
+                # Likewise, calls like 'waitmax 5 somecommand'
+                #   are translated to look like 'waitmax -t 5 somecommand'
+                # Nb: busybox 'timeout' defaults to SIGTERM, GNU's to SIGALRM
+                case "${1}" in
+                    (-s)
+                        _signal="${2}"
+                        shift 2
+                        set -- "-s ${_signal} -t ${*}"
+                    ;;
+                    (*) set -- "-t ${*}" ;;
+                esac
+            ;;
+        esac
+        timeout "${@}"
+        unset -v _signal
+    }
+    # TO-DO: Check if this export is still required
+    export -f waitmax
+fi
+
+####################################################################################################
+
+# Runs a command asynchronous by use of a cache file. Usage:
+# run_cached [-m|-a] NAME MAXAGE COMMAND
+#   -m mrpe-mode: stores exit code with the cache
+#   -ma mrpe-mode with age: stores exit code with the cache and adds the cache age
+#   NAME is the name of the section (also used as cache file name)
+#   MAXAGE is the maximum cache livetime in seconds
+#   A section header is automatically generated based on NAME and MAXAGE
+run_cached() {
+    # Use _var notation to denote local scope
+    _cached_section=
+    _cached_mrpe=0
+    _cached_append_age=0
+
+    while getopts ":ma" _cached_arg; do
+        case "${_cached_arg}" in
+            (m) _cached_mrpe=1 ;;
+            (a) _cached_append_age=1 ;;
+            (*) : ;;
+        esac
+    done
+    shift "$((OPTIND-1))"
+
+    _cached_name="${1}"
+    _cached_maxage="${2}"
+    _cached_section="mkecho '<<<${_cached_name}:cached($(get_epoch),${_cached_maxage})>>>' ; "
+    shift 2
+    _cached_cmd="${_cached_section}${*}"
+
+    # If the cache directory does not exist, create it
+    [ ! -d "${MK_VARDIR}/cache" ]; mkdir -p "${MK_VARDIR}/cache"
+
+    if [ "${_cached_mrpe}" = 1 ]; then
+        _cached_file="${MK_VARDIR}/cache/_mrpe_${_cached_name}.cache"
+    else
+        _cached_file="${MK_VARDIR}/cache/${_cached_name}.cache"
+    fi
+
+    # Check if the creation of the cache takes suspiciously long and kill the
+    # process if the age (access time) of $_cached_file.new is twice the _cached_maxage.
+    # Output the evantually already cached section anyways and start the cache
+    # update again.
+    if [ -e "${_cached_file}".new ]; then
+        _cf_atime=$(get_file_atime "${_cached_file}".new)
+        if [ $(( $(get_epoch) - _cf_atime )) -ge $(( _cached_maxage * 2)) ]; then
+            # Kill the process still accessing that file in case
+            # it is still running. This avoids overlapping processes!
+            fuser -k -9 "${_cached_file}".new >/dev/null 2>&1
+            rm -f "${_cached_file}".new
+        fi
+    fi
+
+    # Check if cache file exists and is recent enough
+    if [ -s "${_cached_file}" ]; then
+        _cf_mtime=$(get_file_mtime "${_cached_file}")
+        _cf_age=$(( $(get_epoch) - _cf_mtime ))
+        [ "${_cf_age}" -le "${_cached_maxage}" ] && _use_cachefile=1
+        # Output the file in any case, even if it is
+        # outdated. The new file will not yet be available
+        if [ "${_cached_append_age}" -eq 1 ]; then
+            # insert the cached-string before the pipe (first -e)
+            # or, if no pipe found (-e t) append it (third -e),
+            # but only once and on the second line (2!b) (first line is section header,
+            # all further lines are long output)
+            sed -e "2s/|/ (Cached: ${_cf_age}\\/${_cached_maxage}s)|/" \
+                -e t \
+                -e "2s/$/ (Cached: ${_cf_age}\\/${_cached_maxage}s)/" <"${_cached_file}"
+        else
+            _cached_info="cached(${_cf_mtime},${_cached_maxage})"
+            case "${_cached_name}" in
+                (local_*)
+                    sed -e "s/^/$_cached_info /" "${_cached_file}"
+                ;;
+                (*) 
+                    # insert the cache info in the section header (^= after '!'),
+                    # if none is present (^= before '!')
+                    sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'"${_cached_info}"'>>>/' "${_cached_file}"
+                ;;
+            esac
+        fi
+    fi
+
+    # Cache file outdated and new job not yet running? Start it
+    if [ -z "${_use_cachefile}" ] && [ ! -e "${_cached_file}".new ]; then
+        # When the command fails, the output is throws away ignored
+        if [ "${_cached_mrpe}" -eq 1 ]; then
+            mkecho "set -o noclobber ; exec > \"$_cached_file.new\" || exit 1 ; run_mrpe $_cached_name \"$_cached_cmd\" && mv \"$_cached_file.new\" \"$_cached_file\" || rm -f \"$_cached_file\" \"$_cached_file.new\"" | nohup /bin/bash >/dev/null 2>&1 &
+        else
+            mkecho "set -o noclobber ; exec > \"$_cached_file.new\" || exit 1 ; $_cached_cmd && mv \"$_cached_file.new\" \"$_cached_file\" || rm -f \"$_cached_file\" \"$_cached_file.new\"" | nohup /bin/bash >/dev/null 2>&1 &
+        fi
+    fi
+    unset -v _cached_section _cached_mrpe _cached_append_age _cached_name _cached_maxage _cached_cmd
+    unset -v _cached_file _cached_info _cf_atime _cf_mtime _cf_age _use_cachefile
+}
+
+# Make run_cached available for subshells (plugins, local checks, etc.)
+# TO-DO: Check if this export is still required
+export -f run_cached
+
+####################################################################################################
+# Define a helper function to send real time check data
+# If we're using ksh93 or bash, then we should have /dev/tcp and /dev/udp capability built in
+# This isn't always the case, however, as these shells can be compiled without it
+# So we test directly for this capability and if it's not working, we use 'netcat'
+case $(waitmax 1 bash -c ": </dev/tcp/127.0.0.1/9 2>&1") in
+    (""|*"Connection refused"*)
+        send_rtc() {
+            # RTC_PORT is defined in "${MK_CONFDIR}/real_time_checks.cfg
+            waitmax 4 "/dev/udp/${1:?No Host Defined}/${2:?No Port Defined}" < /dev/stdin
+        }
+    ;;
+    (*)
+        # Otherwise, we try netcat under either its 'nc' or its 'netcat' monikers
+        # TO-DO: Add alternatives like socat?
+        if inpath nc netcat; then
+            send_rtc() {
+                _bin_nc=$(command -v nc netcat 2>/dev/null | head -n 1)
+                "${_bin_nc}" "${1:?No Host Defined}" "${2:?No Port Defined}"
+                unset -v _bin_nc
+            }
+        else
+            mkecho "send_rtc(): Unable to determine communication method" >&2
+        fi
+    ;;
+esac
+
+# Implements Real-Time Check feature of the Check_MK agent which can send
+# some section data in 1 second resolution. Useful for fast notifications and
+# detailed graphing (if you configure your RRDs to this resolution).
+run_real_time_checks() {
+    _rt_pid=${MK_VARDIR:?}/real_time_checks.pid
+    mkecho "$$" >"${_rt_pid}"
+
+    while true; do
+        # terminate when pidfile is gone or other Real-Time Check process started or configured timeout
+        if [ ! -e "${_rt_pid}" ] || [ "$(cat "${_rt_pid}")" -ne $$ ] || [ "${RTC_TIMEOUT}" -eq 0 ]; then
+            exit 1
+        fi
+
+        for _rt_section in ${RTC_SECTIONS}; do
+            # Be aware of maximum packet size. Maybe we need to check the size of the section
+            # output and do some kind of nicer error handling.
+            # 2 bytes: protocol version, 10 bytes: timestamp, rest: encrypted data
+            # dd is used to concatenate the output of all commands to a single write/block => udp packet
+            # TO-DO: See if this use of dd can be made portable.  'iflag' is a gnuism.
+            {
+                if [ "${ENCRYPTED_RT}" != "no" ]; then
+                    # protect_output() takes care of printing our protocol and epoch info
+                    section_"${_rt_section}" | protect_output -rt
+                else
+                    mkecho -n "99$(get_epoch)"
+                    section_"${_rt_section}"
+                fi
+            } | dd bs=9999 iflag=fullblock 2>/dev/null | send_rtc "${MK_RTC_HOST}" "${RTC_PORT}"
+        done
+
+        # Plugins
+        if cd "${MK_PLUGINSDIR}"; then
+            for _rt_plugin in ${RTC_PLUGINS}; do
+                # If the plugin doesn't exist, skip to the next one in the list
+                [ ! -f "${_rt_plugin}" ] && continue
+                # Same comment as per section handling above applies here
+                {
+                    if [ "${ENCRYPTED_RT}" != "no" ]; then
+                        ./"${_rt_plugin}" | protect_output -rt
+                    else
+                        mkecho -n "99$(get_epoch)"
+                        ./"${_rt_plugin}"
+                    fi
+                } | dd bs=9999 iflag=fullblock 2>/dev/null | send_rtc "${MK_RTC_HOST}" "${RTC_PORT}"
+            done
+        fi
+
+        sleep 1
+        RTC_TIMEOUT=$((RTC_TIMEOUT - 1))
+    done
+
+    unset -v _rt_pid _rt_section _rt_plugin
+}
+
+####################################################################################################
+# CHECK SECTIONS
+
+# TO-DO: Determine if any of these can be merged into other functions
+section_aix() {
+    if inpath lparstat; then
+        mkecho '<<<lparstat_aix>>>'
+        lparstat 1 1
+    fi
+
+    # powerHA
+    if inpath lslpp; then
+        _cluster_cmd_output=$(lslpp -l cluster.es.server.rte)
+        if ! mkecho "${_cluster_cmd_output}" | grepq "not installed"; then
+            # now the following commands should be available
+            _nodes=$(cllsnode | grep "NODE" | sed -e s/NODE//g -e s/://g)
+            _list_active_nodes=""
+            for _node in ${_nodes}; do
+                _active_nodes=$(clgetactivenodes -n "${_node}")
+                if mkecho "${_active_nodes}" | grepq "${_node}"; then
+                    _list_active_nodes=${_list_active_nodes}"\\n${_node}"
+                fi
+            done
+
+            if [ "${_list_active_nodes}" ]; then
+                mkecho '<<<aix_hacmp_nodes>>>'
+                # shellcheck disable=SC2039
+                mkecho -e "${_list_active_nodes}"
+                cllsnode
+            fi
+
+            mkecho '<<<aix_hacmp_services>>>'
+            if inpath clshowsrv ; then
+                waitmax 5 clshowsrv -v
+            else # fallback, hardcoded base installation path
+                waitmax 5 /usr/es/sbin/cluster/utilities/clshowsrv -v
+            fi
+
+            mkecho '<<<aix_hacmp_resources:sep(58)>>>'
+            waitmax 5 clRGinfo -s
+
+            unset -v _cluster_cmd_output _nodes _list_active_nodes _node _active_nodes
+        fi
+    fi
+
+    mkecho '<<<mpstat_aix>>>'
+    mpstat -a | tail -n1
+
+    mkecho '<<<aix_lvm>>>'
+    # -L disables LVM lock for the query. Avoids blocking while LVM is
+    # doing changes. For rootvg that is fine.
+    lsvg -L -l rootvg
+}
+
+section_cpu() {
+    case "${MK_OSSTR}" in
+        (aix)
+            # CPU output of Linux agent simulated (thanks to Cameron Pierce)
+            mkecho '<<<cpu>>>'
+            _load=$(uptime|sed -e 's;.*average: \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\), \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\), \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\);\1 \2 \3;')
+            _ps=$(ps -eo thcount | awk '{SUM+=$1} END {print SUM}')
+            _procs=$(vmstat|grep lcpu|sed -e 's;.*lcpu=\([[:digit:]]\{1,4\}\).*;\1;')
+            mkecho "${_load} 1/${_ps} $$ ${_procs}"
+            unset -v _load _ps _procs
+        ;;
+        (freebsd)
+            mkecho '<<<cpu>>>'
+            sysctl -n vm.loadavg | tr -d '{}'
+            top -b -n 1 | grep -E '^[0-9]+ processes' | awk '{print $3"/"$1}'
+            sysctl -n kern.lastpid
+            sysctl -n hw.ncpu
+        ;;
+        (hpux)
+            mkecho '<<<hpux_cpu>>>'
+            uptime
+            # machinfo is unsupported addon thus not in $PATH
+            /usr/contrib/bin/machinfo | grep -E 'logical proc|core' | tail -1
+        ;;
+        (linux)
+            if [ "$(uname -m)" = "armv7l" ]; then
+                _cpu_regex='^processor'
+            else
+                _cpu_regex='^CPU|^processor'
+            fi
+            _num_cpus=$(grep -c -E ${_cpu_regex} </proc/cpuinfo)
+
+            if [ -z "${MK_IS_DOCKERIZED}" ] && [ -z "${MK_IS_LXC_CONTAINER}" ]; then
+                mkecho '<<<cpu>>>'
+                mkecho "$(cat /proc/loadavg) $_num_cpus"
+                if [ -f "/proc/sys/kernel/threads-max" ]; then
+                    cat /proc/sys/kernel/threads-max
+                fi
+            else
+                if [ -n "${MK_IS_DOCKERIZED}" ]; then
+                    mkecho '<<<docker_container_cpu>>>'
+                else
+                    mkecho '<<<lxc_container_cpu>>>'
+                fi
+                grep "^cpu " /proc/stat
+                mkecho "num_cpus ${_num_cpus}"
+                cat /sys/fs/cgroup/cpuacct/cpuacct.stat
+            fi
+            unset -v _cpu_regex _num_cpu
+        ;;
+        (mac)
+            mkecho '<<<cpu>>>'
+            sysctl -n vm.loadavg | tr -d '{}'
+            top -l 1 -n 1 | grep -E '^Processes:' | awk '{$4"/"$2;}'
+            mkecho 'mkecho $$' | bash
+            sysctl -n hw.ncpu
+        ;;
+        (netbsd|openbsd)
+            mkecho '<<<cpu>>>'
+            sysctl -n vm.loadavg | tr -d '{}'
+            top -b -n 1 | grep -E '^[0-9]+ processes' | awk '{print $3"/"$1}'
+            sysctl -n hw.ncpu
+        ;;
+        (solaris)
+            # Simulated Output of Linux /proc/cpu
+            mkecho '<<<cpu>>>'
+            _load=$(uptime|sed -e 's;.*average: \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\).*;\1 \2 \3;')
+            _nthreads=$(($(ps -AL | wc -l)))
+            _procs=$(($(psrinfo | wc -l)))
+            mkecho "${_load} 1/${_nthreads} $$ ${_procs}"
+            unset -v _load _nthreads _procs
+        ;;
+    esac
+}
+
+# Print out Partitions / Filesystems. (-P gives non-wrapped POSIXed output)
+# Heads up: NFS-mounts are generally supressed to avoid agent hangs.
+# If hard NFS mounts are configured or you have too large nfs retry/timeout
+# settings, accessing those mounts from the agent would leave you with
+# thousands of agent processes and, ultimately, a dead monitored system.
+# These should generally be monitored on the NFS server, not on the clients.
+section_df() {
+    case "${MK_OSSTR}" in
+        (aix)
+            if [ -x /usr/opt/freeware/bin/df ] ; then
+                _df_excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x zfs -x cdrfs"
+                # All instances of _df_excludefs in this function 
+                # are uncommented because we want word-splitting
+                # shellcheck disable=SC2086
+                /usr/opt/freeware/bin/df -PTlk ${_df_excludefs} | sed 1d
+
+                # df inodes information
+                mkecho '<<<df>>>'
+                mkecho '[df_inodes_start]'
+                # shellcheck disable=SC2086
+                /usr/opt/freeware/bin/df -PTli ${_df_excludefs} | sed 1d
+                mkecho '[df_inodes_end]'
+            else
+                df -kP | sed 's/ / - /' | grep -v ^/proc | grep -v ^Filesystem | grep -v :
+            fi
+            unset -v _df_excludefs
+        ;;
+        (freebsd)
+            mkecho '<<<df>>>'
+            # no special zfs handling so far, the ZFS.pools plugin has been tested to
+            # work on FreeBSD
+            if df -T > /dev/null ; then
+                df -kTP -t ufs | 
+                    grep -Ev '(Filesystem|devfs|procfs|fdescfs|basejail)'
+            else
+                df -kP -t ufs | 
+                    grep -Ev '(Filesystem|devfs|procfs|fdescfs|basejail)' | 
+                    awk '{ print $1,"ufs",$2,$3,$4,$5,$6 }'
+            fi
+        ;;
+        (hpux)
+            # Filesystems. HP-UX does not provide a filesystem type. We assume
+            # modern systems with vxfs only here. The filesystem type is currently
+            # not used by the check anyway.
+            mkecho '<<<df>>>'
+            df -kP | 
+                sed 's/ / - /' | 
+                awk '/^(.*-.*)$/ { print $0 } /^([^-]+)$/ { printf $0 }' | 
+                grep -Ev "^/proc|^Filesystem|^/aha|:"
+        ;;
+        (linux)
+            if [ -n "${MK_IS_DOCKERIZED}" ]; then
+                return
+            fi
+
+            # The exclusion list is getting a bit of a problem.
+            # -l should hide any remote FS but seems to be all but working.
+            _df_excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x prl_fs -x squashfs -x devtmpfs"
+            if [ -z "${MK_IS_LXC_CONTAINER}" ]; then
+                _df_excludefs="${_df_excludefs} -x zfs"
+            fi
+
+            mkecho '<<<df>>>'
+            # shellcheck disable=SC2086
+            df -PTlk ${_df_excludefs} | sed 1d
+
+            # df inodes information
+            mkecho '<<<df>>>'
+            mkecho '[df_inodes_start]'
+            # shellcheck disable=SC2086
+            df -PTli ${_df_excludefs} | sed 1d
+            mkecho '[df_inodes_end]'
+
+            unset -v _df_excludefs
+        ;;
+        (mac)
+            mkecho '<<<df>>>'
+            df -kPT hfs,apfs | sed 1d | \
+            while read -r _df_dev _df_rest; do
+                _df_type=$(diskutil info "${_df_dev}" | grep '^\s*Type' | cut -d: -f2 | tr -d '[:space:]')
+                mkecho "${_df_dev} ${_df_type} ${_df_rest}"
+            done
+            unset -v df_dev df_type df_rest
+        ;;
+        (netbsd|openbsd)
+            mkecho '<<<df>>>'
+            df -kPt ffs | sed -e 's/^\([^ ][^ ]*\) \(.*\)$/\1 ffs \2/' | sed 1d
+        ;;
+        (solaris)
+            # Filesystem usage for UFS and VXFS
+            mkecho '<<<df>>>'
+            for _fs in ufs vxfs samfs lofs tmpfs; do
+                df -l -k -F ${_fs} 2>/dev/null | sed 1d | grep -v "^[^ ]*/lib/[^ ]*\\.so\\.1 " | \
+                while read -r _Filesystem _kbytes _used _avail _capacity _Mountedon; do
+                    _kbytes=$((_used + _avail))
+                    mkecho "${_Filesystem} ${_fs} ${_kbytes} ${_used} ${_avail} ${_capacity} ${_Mountedon}"
+                done
+            done
+            unset -v _fs _Filesystem _kbytes _used _avail _capacity _Mountedon
+        ;;
+
+    esac
+}
+
+section_diskstat() {
+    # Performancecounter Platten
+    if [ -z "${MK_IS_DOCKERIZED}" ]&&[ -r "/proc/diskstats" ]; then
+        mkecho '<<<diskstat>>>'
+        get_epoch
+        _grepFilter=" (x?[shv]d[a-z]*[0-9]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+"
+        _grepFilter="${_grepFilter}|VxVM.*|mmcblk.*|dasd[a-z]*|bcache[0-9]+|nvme[0-9]+n[0-9]+) "
+        grep -E "${_grepFilter}" </proc/diskstats
+        if inpath dmsetup; then
+            mkecho '[dmsetup_info]'
+            dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
+        fi
+        if [ -d /dev/vx/dsk ]; then
+            mkecho '[vx_dsk]'
+            stat -c "%t %T %n" /dev/vx/dsk/*/*
+        fi
+        unset -v _grepFilter
+    elif [ -n "${MK_IS_DOCKERIZED}" ]; then
+        mkecho '<<<docker_container_diskstat>>>'
+        mkecho "[time]"
+        get_epoch
+        for _ioFile in io_service_bytes io_serviced; do
+            mkecho "[${_ioFile}]"
+            cat "/sys/fs/cgroup/blkio/blkio.throttle.${_ioFile}"
+        done
+        mkecho "[names]"
+        for _ioFile in /sys/block/*; do
+            # shellcheck disable=SC2039
+            mkecho "${_ioFile##*/} $(cat "${_ioFile}/dev")"
+        done
+        unset -v _ioFile
+    fi
+}
+
+section_drbd() {
+    if [ -z "${MK_IS_DOCKERIZED}" ] && [ -z "${MK_IS_LXC_CONTAINER}" ] && [ -r /proc/drbd ]; then
+        mkecho '<<<drbd>>>'
+        cat /proc/drbd
+    fi
+}
+
+section_fileinfo() {
+    # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
+    perl -e '
+    my @patterns = ();
+    foreach (bsd_glob("$ARGV[0]/fileinfo.cfg"), bsd_glob("$ARGV[0]/fileinfo.d/*")) {
+        open my $handle, "<", $_ or next;
+        while (<$handle>) {
+            chomp;
+            next if /^\s*(#|$)/;
+            my $pattern = $_;
+            $pattern =~ s/\$DATE:(.*?)\$/substr(`date +"$1"`, 0, -1)/eg;
+            push @patterns, $pattern;
+        }
+        warn "error while reading $_: $!\n" if $!;
+        close $handle;
+    }
+    exit if ! @patterns;
+
+    print "<<<fileinfo:sep(124)>>>\n", time, "\n[[[header]]]\nname|status|size|time\n[[[content]]]\n";
+
+    foreach (@patterns) {
+        foreach (bsd_glob("$_")) {
+            if (! -f) {
+                print "$_|missing\n" if ! -d;
+            } elsif (my @infos = stat) {
+                print "$_|ok|$infos[7]|$infos[9]\n";
+            } else {
+                print "$_|stat failed: $!\n";
+            }
+        }
+    }
+    ' -- "${MK_CONFDIR}"
+}
+
+section_haproxy() {
+    for HAPROXY_SOCK in /run/haproxy/admin.sock /var/lib/haproxy/stats; do
+        if [ -r "$HAPROXY_SOCK" ] && inpath socat; then
+            mkecho "<<<haproxy:sep(44)>>>"
+            mkecho "show stat" | socat - "UNIX-CONNECT:$HAPROXY_SOCK"
+        fi
+    done
+}
+
+# Function to output the basic details of the check_mk agent's operating conditions
+section_head() {
+cat << EOF
+"<<<check_mk>>>"
+"Version: ${MK_VERSION}"
+"AgentOS: ${MK_OSSTR}"
+"Hostname: ${HOSTNAME}"
+"AgentDirectory: ${MK_CONFDIR}"
+"DataDirectory: ${MK_VARDIR}"
+"SpoolDirectory: ${MK_SPOOLDIR}"
+"PluginsDirectory: ${MK_PLUGINSDIR}"
+"LocalDirectory: ${MK_LOCALDIR}"
+EOF
+}
+
+section_heartbeat() {
+    # Heartbeat monitoring
+    # Different handling for heartbeat clusters with and without CRM
+    # for the resource state
+    if [ -S /var/run/heartbeat/crm/cib_ro ] || [ -S /var/run/crm/cib_ro ] || pgrep crmd >/dev/null 2>&1; then
+        mkecho '<<<heartbeat_crm>>>'
+        TZ=UTC crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
+    fi
+    if inpath cl_status; then
+        mkecho '<<<heartbeat_rscstatus>>>'
+        cl_status rscstatus
+
+        mkecho '<<<heartbeat_nodes>>>'
+        for _node in $(cl_status listnodes); do
+            if [ "${_node}" != "$(mkecho "${HOSTNAME}" | tr '[:upper:]' '[:lower:]')" ]; then
+                _status=$(cl_status nodestatus "${_node}")
+                # shellcheck disable=SC2039
+                mkecho -n "${_node} ${_status}"
+                for _link in $(cl_status listhblinks "${_node}" 2>/dev/null); do
+                    # shellcheck disable=SC2039
+                    mkecho -n " ${_link} $(cl_status hblinkstatus "${_node}" "${_link}")"
+                done
+                mkecho
+            fi
+        done
+        unset -v _node _status _link
+    fi
+}
+
+section_hpux() {
+    # Logical Volume Manager
+    mkecho '<<<hpux_lvm:sep(58)>>>'
+    /sbin/vgdisplay -v -F
+
+    mkecho '<<<hpux_serviceguard:sep(124)>>>'
+    if inpath cmviewcl; then
+        cmviewcl -v -f line | grep summary
+    fi
+
+    # Kernel tunnables
+    if inpath kcusage; then
+        mkecho '<<<hpux_tunables>>>'
+        kcusage -l
+    fi
+
+    # State of FC HBAs
+    mkecho '<<<hpux_hbahealth:sep(61)>>>'
+    for _hba in /dev/fcd*; do
+        mkecho "${_hba}"
+        /opt/fcms/bin/fcdutil "${_hba}" | 
+            grep -e "Driver state" \
+                -e "Topology" \
+                -e "Dump Available" \
+                -e "Code version" \
+                -e "Hardware Path" \
+                -e "Port World"
+    done
+    unset -v _hba
+}
+
+section_iostat() {
+    # Skip if 'section_diskstat()' has this already covered
+    if [ -r /proc/diskstats ] || [ "${MK_IS_DOCKERIZED}" ]; then
+        return 0
+    fi
+    # Skip if 'iostat' isn't present
+    if ! inpath iostat; then
+        return 0
+    fi
+
+    _grepFilter="^(x?[shv]d[a-z]*[0-9]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*"
+    _grepFilter="${_grepFilter}|mmcblk.*|dasd[a-z]*|bcache[0-9]+|nvme[0-9]+n[0-9]+|hdisk) "
+
+    mkecho "<<<${MK_OSSTR}_iostat>>>"
+
+    # AIX was formerly under the header '<<<aix_diskiod>>>'
+    # TO-DO: Update checkman/aix_diskiod, checks/aix_diskiod etc
+    # OpenBSD has a different output format, so we ringfence it for now
+    # FreeBSD - we might like to consider 'gstat' and/or 'dtrace' as well
+    case "${MK_OSSTR}" in
+        (openbsd)
+            iostat "${_iostatOpts:--d}" 2 1
+        ;;
+        (*)
+            iostat "${_iostatOpts:--d}" 2 1 | tr -s ' ' | grep -E "${_grepFilter}"
+        ;;
+    esac
+
+    unset -v _iostatOpts _grepFilter
+}
+
+# This function pairs with read_ipmitool()
+# TO-DO: merge them somehow?
+section_ipmi() {
+    # Hardware sensors via IPMI (need ipmitool)
+    if inpath ipmitool; then
+        # We denote our delimiter 'i.e. separator' as being at column 124
+        run_cached "ipmi:sep(124)" 300 "waitmax 300 read_ipmitool"
+        # readable discrete sensor states
+        run_cached "ipmi_discrete:sep(124)" 300 "waitmax 300 ipmitool sdr elist compact"
+    fi
+    # IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
+    # have installed freeipmi that IPMI is really support by your hardware.
+    if (inpath ipmi-sensors && ls /dev/ipmi*) >/dev/null 2>&1; then
+        mkecho '<<<ipmi_sensors>>>'
+        # Newer ipmi-sensors version have new output format; Legacy format can be used
+        if ipmi-sensors --help | grepq legacy-output; then
+            _ipmi_format="--legacy-output"
+        else
+            _ipmi_format=""
+        fi
+        if ipmi-sensors --help | grepq " \\-\\-groups"; then
+            _ipmi_group_opt="-g"
+        else
+            _ipmi_group_opt="-t"
+        fi
+
+        # At least with ipmi-sensors 0.7.16 this group is Power_Unit instead of "Power Unit"
+        run_cached ipmi_sensors 300 "read_ipmi_sensors ${_ipmi_format} ${_ipmi_group_opt}"
+        unset -v _ipmi_format _ipmi_group_opt
+    fi
+}
+
+section_jobs() {
+    # Get statistics about monitored jobs. Below the job directory there
+    # is a sub directory per user that ran a job. That directory must be
+    # owned by the user so that a symlink or hardlink attack for reading
+    # arbitrary files can be avoided.
+    if [ "${MK_OSSTR}" = "linux" ]; then
+        (
+            cd "${MK_VARDIR}/job" || return
+            mkecho '<<<job>>>'
+            for _username in *; do
+                if [ -d "${_username}" ] && cd "${_username}"; then
+                    if [ "${EUID}" -eq 0 ]; then
+                        su -s "${SHELL}" "${_username}" -c "head -n -0 -v *"
+                    else
+                        head -n -0 -v ./*
+                    fi
+                    cd ..
+                fi
+            done
+        )
+    elif [ "${MK_OSSTR}" = "solaris" ]; then
+        (
+            cd "${MK_VARDIR}/job" || return
+            mkecho '<<<job>>>'
+            for _username in *; do
+                if [ -d "${_username}" ] && cd "${_username}" ; then
+                    _count=$(su -s "${SHELL}" "${_username}" -c "ls -1 * | wc -l")
+
+                    if [ "${_count}" -eq "1" ]; then
+                        _filename=$(su -s "${SHELL}" "${_username}" -c "ls -1 *")
+                        mkecho "==> ${_filename} <=="
+                    fi
+
+                    su -s "${SHELL}" "${_username}" -c "head -n1000 *"
+                    cd ..
+                fi
+            done
+        )
+    fi
+    unset -v _username _filename _count
+}
+
+section_kernel() {
+    case "${MK_OSSTR}" in
+        (freebsd)
+            # Performancecounter Kernel
+            mkecho "<<<kernel>>>"
+            get_epoch
+            _forks=$(sysctl -n vm.stats.vm.v_forks)
+            _vforks=$(sysctl -n vm.stats.vm.v_vforks)
+            _rforks=$(sysctl -n vm.stats.vm.v_rforks)
+            _kthreads=$(sysctl -n vm.stats.vm.v_kthreads)
+            mkecho "cpu" "$(sysctl -n kern.cp_time | awk ' { print $1" "$2" "$3" "$5" "$4 } ')"
+            mkecho "ctxt" "$(sysctl -n vm.stats.sys.v_swtch)"
+            # TO-DO: confirm that these are all ints and if so, convert to $(())
+            # shellcheck disable=SC2003
+            mkecho "processes" "$(expr "${_forks}" + "${_vforks}" + "${_rforks}" + "${_kthreads}")"
+            unset -v _forks _vforks _rforks _kthreads
+        ;;
+        (linux)
+            # Performancecounter Kernel
+            if [ -z "${MK_IS_DOCKERIZED}" ] && [ -z "${MK_IS_LXC_CONTAINER}" ]; then
+                mkecho '<<<kernel>>>'
+                get_epoch
+                cat /proc/vmstat /proc/stat
+            fi
+        ;;
+    esac
+}
+
+section_local() {
+    # Local checks
+    mkecho '<<<local>>>'
+    # Contain the 'cd' within a subshell so that we return
+    # where we came from once the subshell closes
+    (
+        if cd "${MK_LOCALDIR}" 2>/dev/null; then
+            for _skript in ./*; do
+                if is_valid_plugin "${_skript}"; then
+                    ./"${_skript}"
+                fi
+            done
+            # Call some plugins only every X'th second
+            for _skript in [1-9]*/*; do
+                if is_valid_plugin "${_skript}"; then
+                    _skript_cache=$(mkecho "${_skript}" | sed 's/\//\\/')
+                    run_cached "local_${_skript_cache}" "${_skript%/*}" "${_skript}"
+                fi
+            done
+            unset -v _skript _skript_cache
+        fi
+    )
+}
+
+section_mac() {
+    # OSX Timemachine
+    if inpath tmutil; then
+        mkecho '<<<timemachine>>>'
+        tmutil latestbackup 2>&1
+    fi
+}
+
+#TO-DO: De-duplicate this mess
+section_mail() {
+    # Postfix mailqueue monitoring
+    # Determine the number of mails and their size in several postfix mail queues
+    read_postfix_queue_dirs() {
+        _postfix_queue_dir="${1}"
+        if [ -n "${_postfix_queue_dir}" ]; then
+            mkecho '<<<postfix_mailq>>>'
+            if [ -n "${2}" ]; then
+                mkecho "[[[${2}]]]"
+            fi
+            for _queue in deferred active; do
+                _count=$(find "${_postfix_queue_dir}/${_queue}" -type f | wc -l)
+                _size=$(du -s "${_postfix_queue_dir}/${_queue}" | awk '{print $1 }')
+                if [ -z "${_count}" ]; then
+                    mkecho "Mail queue is empty"
+                else
+                    mkecho "QUEUE_${_queue} ${_size:-0} ${_count}"
+                fi
+            done
+        fi
+        unset -v _postfix_queue_dir _queue _count _size
+    }
+
+    # Postfix mailqueue monitoring
+    # Determine the number of mails and their size in several postfix mail queues
+    if inpath postconf; then
+        case "${MK_OSSTR}" in
+            (freebsd)
+                # Only handle mailq when postfix user is present. The mailq command is also
+                # available when postfix is not installed. But it produces different outputs
+                # which are not handled by the check at the moment. So try to filter out the
+                # systems not using postfix by searching for the postfix user.
+                #
+                # Cannot take the whole outout. This could produce several MB of agent output
+                # on blocking queues.
+                # Only handle the last 6 lines (includes the summary line at the bottom and
+                # the last message in the queue. The last message is not used at the moment
+                # but it could be used to get the timestamp of the last message.
+                mkecho '<<<postfix_mailq>>>'
+                postfix_queue_dir=$(postconf -h queue_directory)
+                postfix_count=$(find "$postfix_queue_dir"/deferred -type f | wc -l)
+                postfix_size=$(du -ks "$postfix_queue_dir"/deferred | awk '{print $1 }')
+                if [ "$postfix_count" -gt 0 ]; then
+                    mkecho "$postfix_size" Kbytes in "$postfix_count" Requests.
+                else
+                    mkecho Mail queue is empty
+                fi
+            ;;
+            (linux)
+                # Check if multi_instance_directories exists in main.cf and is not empty
+                # always takes the last entry, multiple entries possible
+                multi_instances_dirs=$(postconf -c /etc/postfix 2>/dev/null | grep ^multi_instance_directories | sed 's/.*=[[:space:]]*//g')
+                if [ -n "$multi_instances_dirs" ]; then
+                    for queue_dir in $multi_instances_dirs; do
+                        if [ -n "$queue_dir" ]; then
+                            postfix_queue_dir=$(postconf -c "$queue_dir" 2>/dev/null | grep ^queue_directory | sed 's/.*=[[:space:]]*//g')
+                            read_postfix_queue_dirs "$postfix_queue_dir" "$queue_dir"
+                        fi
+                    done
+
+                else
+                    postfix_queue_dir=$(postconf -h queue_directory 2>/dev/null)
+                    read_postfix_queue_dirs "$postfix_queue_dir"
+                fi
+                ;;
+        esac
+
+    elif [ -x /usr/sbin/ssmtp ]; then
+        mkecho '<<<postfix_mailq>>>'
+        mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
+
+    # *bsd but should be a reasonable generic fallback
+    elif inpath mailq && getent passwd postfix >/dev/null 2>&1; then
+        mkecho '<<<postfix_mailq>>>'
+        mailq | tail -n 6
+    fi
+
+    # From AIX, seems generic enough
+    if [ -x /usr/sbin/sendmail ] ; then
+        mkecho '<<<postfix_mailq>>>';
+        mailq 2>&1 | tail -n 6
+    fi
+
+    # Postfix status monitoring. Can handle multiple instances.
+    if inpath postfix; then
+        mkecho "<<<postfix_mailq_status:sep(58)>>>"
+        for i in /var/spool/postfix*/; do
+            if [ -e "$i/pid/master.pid" ]; then
+                if [ -r "$i/pid/master.pid" ]; then
+                    postfix_pid=$(sed 's/ //g' <"$i/pid/master.pid") # handle possible spaces in output
+                    if readlink -- "/proc/${postfix_pid}/exe" | grepq ".*postfix/\\(s\\?bin/\\)\\?master.*"; then
+                        mkecho "$i:the Postfix mail system is running:PID:$postfix_pid" | sed 's/\/var\/spool\///g'
+                    else
+                        mkecho "$i:PID file exists but instance is not running!" | sed 's/\/var\/spool\///g'
+                    fi
+                else
+                    mkecho "$i:PID file exists but is not readable"
+                fi
+            else
+                mkecho "$i:the Postfix mail system is not running" | sed 's/\/var\/spool\///g'
+            fi
+        done
+    fi
+
+    # Check status of qmail mailqueue
+    if inpath qmail-qstat; then
+        mkecho "<<<qmail_stats>>>"
+        qmail-qstat
+    fi
+
+    # Nullmailer queue monitoring
+    if inpath nullmailer-send && [ -d /var/spool/nullmailer/queue ]; then
+        mkecho '<<<nullmailer_mailq>>>'
+        COUNT=$(find /var/spool/nullmailer/queue -type f | wc -l)
+        SIZE=$(du -s /var/spool/nullmailer/queue | awk '{print $1 }')
+        mkecho "$SIZE $COUNT"
+    fi
+}
+
+# TO-DO: Standardise section headers
+# We ignore the shellcheck alerts for 'mkecho -n' as our 'mkecho()' solves this
+# shellcheck disable=SC2039
+section_mem() {
+    case "${MK_OSSTR}" in
+        (aix)
+            mkecho '<<<aix_memory>>>'
+            vmstat -v  | tr -s ' '
+            swap -s
+            # TO-DO: Possible candidates?
+            # lsattr -El sys0 -a realmem
+            # lsps -s
+            # lsps -a
+        ;;
+        (hpux)
+            mkecho '<<<hpux_mem>>>'
+            machinfo | grep ^Memory
+            vmstat | sed -n 3p
+
+        ;;
+        (linux)
+            if [ -z "${MK_IS_DOCKERIZED}" ]; then
+                mkecho '<<<mem>>>'
+                grep -E -v '^Swap:|^Mem:|total:' </proc/meminfo
+            else
+                mkecho '<<<docker_container_mem>>>'
+                cat /sys/fs/cgroup/memory/memory.stat
+                mkecho "usage_in_bytes $(cat /sys/fs/cgroup/memory/memory.usage_in_bytes)"
+                mkecho "limit_in_bytes $(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)"
+                grep -F 'MemTotal:' /proc/meminfo
+            fi
+        ;;
+        (mac)
+            _memFreeSpec=$(vm_stat | grep speculative: | awk '{print $3}')
+            _memFreeInactive=$(vm_stat | grep inactive: | awk '{print $3}')
+            _memFree=$(vm_stat | grep free: | awk '{print $3}')
+            _memFreeMach=$(vm_stat | grep Mach | awk '{print $8}')
+            mkecho '<<<mem>>>'
+            mkecho "MemTotal: $(mkecho "$(sysctl -n hw.memsize)/1024" | bc) kB"
+            mkecho "MemFree: $(mkecho "( ${_memFreeSpec} + ${_memFreeInactive} + ${_memFree} ) * ${_memFreeMach} / 1024" | bc) kB"
+            mkecho "SwapTotal: 0 kB"
+            mkecho "SwapFree: 0 kB"
+            # FIXME: Just call vm_stat here, write a check plugin that uses that
+            # native output of vm_stat
+        ;;
+        (openbsd)
+            mkecho "<<<mem>>>"
+            MEM_FREE=$(vmstat | tail -n1 | awk '{ print $5 }')
+            MEM_TOTAL=$(sysctl hw.usermem | cut -d= -f2)
+            MEM_TOTAL=$(mkecho "$MEM_TOTAL/1024" | bc)
+
+            SWAPCTL_OUTPUT=$(swapctl -k -s)
+            SWAP_FREE=$(mkecho "$SWAPCTL_OUTPUT" | awk '{ print $7 }')
+            SWAP_TOTAL=$(mkecho "$SWAPCTL_OUTPUT" | awk '{ print $2 }')
+
+            # if there is no swap space swap values are 0
+            if [ -z "$SWAPCTL_OUTPUT" ]; then
+                SWAP_FREE=0
+                SWAP_TOTAL=0
+            fi
+
+            mkecho -e "MemTotal:\\t$MEM_TOTAL kB"
+            mkecho -e "MemFree:\\t$MEM_FREE kB"
+            mkecho -e "SwapTotal:\\t$SWAP_TOTAL kB"
+            mkecho -e "SwapFree:\\t$SWAP_FREE kB"
+        ;;
+        (solaris)
+            # We prefer to use 'statgrab' if it's available.  See section_statgrab()
+            # If 'statgrab' isn't available, we offer this workaround
+            if ! inpath statgrab; then
+                if [ -x /usr/bin/top ] || [ -x /usr/local/bin/top ]; then
+                    mkecho "<<<solaris_mem>>>"
+                    if [ -x /usr/bin/top ]; then /usr/bin/top | grep '^Memory:'; fi
+                    if [ -x /usr/local/bin/top ]; then /usr/local/bin/top | grep '^Memory:'; fi
+                fi
+            fi
+        ;;
+    esac
+}
+
+section_mkbackup() {
+    # Collect states of configured Check_MK site backup jobs
+    if ls /omd/sites/*/var/check_mk/backup/*.state >/dev/null 2>&1; then
+        mkecho "<<<mkbackup>>>"
+        for _state_file in /omd/sites/*/var/check_mk/backup/*.state; do
+            _omd_site=${_state_file#/*/*/*}
+            _omd_site=${_omd_site%%/*}
+
+            _job_ident=${F%.state}
+            _job_ident=${_job_ident##*/}
+
+            if [ "${_job_ident}" != "restore" ]; then
+                mkecho "[[[site:${_omd_site}:${_job_ident}]]]"
+                cat "${_state_file}"
+                mkecho
+            fi
+        done
+        unset -v _state_file _omd_site _job_ident
+    fi
+
+    # Collect states of configured CMA backup jobs
+    if inpath mkbackup && ls /var/lib/mkbackup/*.state >/dev/null 2>&1; then
+        mkecho "<<<mkbackup>>>"
+        for _state_file in /var/lib/mkbackup/*.state; do
+            _job_ident=${_state_file%.state}
+            _job_ident=${_job_ident##*/}
+
+            if [ "${_job_ident}" != "restore" ]; then
+                mkecho "[[[system:${_job_ident}]]]"
+                cat "$F"
+                mkecho
+            fi
+        done
+        unset -v _state_file _job_ident
+    fi
+}
+
+section_mounts() {
+    case "${MK_OSSTR}" in
+        (freebsd)
+            # Check mount options.
+            # FreeBSD doesn't do remount-ro on errors, but the users might consider
+            # security related mount options more important.
+            mkecho '<<<mounts>>>'
+            mount -p -t ufs
+        ;;
+        (linux)
+            # Check mount options. Filesystems may switch to 'ro' in case
+            # of a read error.
+            mkecho '<<<mounts>>>'
+            grep ^/dev </proc/mounts | grep -v " squashfs "
+        ;;
+
+    esac
+}
+
+run_mrpe() {
+    _mrpe_descr="${1}"
+    shift
+    _mrpe_cmdline="${*}"
+
+    mkecho '<<<mrpe>>>'
+
+    _mrpe_plugin=${_mrpe_cmdline%% *}
+    _mrpe_output=$(eval "${_mrpe_cmdline}")
+
+    # We ignore the shellcheck alerts for 'mkecho -n' as our 'mkecho()' solves this
+    # shellcheck disable=SC2039
+    mkecho -n "(${_mrpe_plugin##*/}) ${_mrpe_descr} ${?} ${_mrpe_output}" | tr \\n \\1
+    mkecho
+
+    # Unset the function variables
+    unset -v _mrpe_descr _mrpe_cmdline _mrpe_plugin _mrpe_output
+}
+
+section_mrpe() {
+
+    # MK's Remote Plugin Executor
+    # We handle mrpe.cfg format that looks like this for synchronous running:
+    # SERVICE_NAME  /path/to/the/plugin/script  -warn 10 -crit 20
+    # Or this for asynchronous running:
+    # SERVICE_NAME  (interval=360:appendage=1)  /path/to/the/plugin/script  -warn 10 -crit 20
+    if [ -r "${MK_CONFDIR}/mrpe.cfg" ]; then
+        grep -Ev '^[[:space:]]*($|#)' "${MK_CONFDIR}/mrpe.cfg" |
+            while read -r _mrpe_descr _mrpe_cmdline; do
+                # Detect if _mrpe_cmdline starts with '(' i.e. async mode
+                case "${_mrpe_cmdline}" in
+                    (\(*)
+                        # If we do start with '(', then split 'params' out of '_mrpe_cmdline'
+                        # We strip the brackets from 'params' and rewrite '_mrpe_cmdline' without the params
+                        _mrpe_params=$(mkecho "${_mrpe_cmdline% *}" | tr -d '()')
+                        _mrpe_cmdline="${_mrpe_cmdline##* }"
+
+                        # split multiple parameter assignments
+                        for _par in $(mkecho "${_mrpe_params}" | tr ":" "\\n"); do 
+                            # split each assignment
+                            _key="${_par%=*}"
+                            _value="${_par#*=}"
+                            # Setting 'args' here upsets shellcheck because we're within a while pipeline
+                            # This should be fine: if we use it, it's immediately so
+                            # shellcheck disable=SC2030
+                            case "${_key}" in
+                                (interval)  _interval="${_value}" ;;
+                                (appendage) _args="-ma" ;;
+                            esac
+                        done
+                        run_cached "${_args:--m}" "${_mrpe_descr}" "${_interval:-}" "${_mrpe_cmdline}"
+                    ;;
+                    (*)
+                        run_mrpe "${_mrpe_descr}" "${_mrpe_cmdline}"
+                    ;;
+                esac 
+            done
+            unset -v _mrpe_descr _mrpe_cmdline _mrpe_params _par _key _value _interval _args
+    fi
+}
+
+section_multipathing() {
+    case "${MK_OSSTR}" in
+        (aix)
+            # TO-DO: Consider merging in mpio_get_config, lsmpio, sanlun, 
+            # dlnkmgr, powermt and pcmpath handling
+            mkecho '<<<aix_multipath>>>'
+            lspath -F"name parent status"
+        ;;
+        (freebsd)
+            # Multipathing is supported in FreeBSD by now
+            # http://www.mywushublog.com/2010/06/freebsd-and-multipath/
+            if kldstat -v | grep g_multipath > /dev/null ; then
+                mkecho '<<<freebsd_multipath>>>'
+                gmultipath status | grep -v ^Name
+            fi
+        ;;
+        (hpux)
+            # Multipathing
+            mkecho '<<<hpux_multipath>>>'
+            scsimgr lun_map | grep -E '^[[:space:]]*(LUN PATH|State|World Wide Identifier)'
+        ;;
+        (linux)
+            if inpath multipath; then
+                if [ -f /etc/multipath.conf ]; then
+                    mkecho '<<<multipath>>>'
+                    multipath -l
+                fi
+            fi
+        ;;
+        (solaris)
+            if inpath mpathadm; then
+                if [ "$zonename" = "global" ]; then
+                    mkecho '<<<solaris_multipath>>>'
+                    mpathadm list LU | 
+                        nawk '{if(NR%3==1){dev=$1}
+                                if(NR%3==2){tc=$NF}
+                                if(NR%3==0){printf "%s %s %s\n",dev,tc,$NF}}'
+                fi
+            fi
+        ;;
+    esac
+}
+
+section_net() {
+    case "${MK_OSSTR}" in
+        (aix)
+            mkecho "<<<aix_if>>>"
+            for ent in $(ifconfig -a | grep '^en' | cut -d ":" -f 1); do
+                mkecho "[$ent]"
+                entstat "$ent" | 
+                    grep -E "(^Hardware|^Bytes:|^Packets:|^Transmit|^Broadcast:|^Multicast:)"
+                entstat "$ent" | grep -p "Driver Flags:"
+            done
+        ;;
+        (hpux)
+            mkecho '<<<hpux_if>>>'
+            for nic in $(nwmgr -g | sed -n '/^lan/s/\(^[^ ]* \).*/\1/p'); do
+                nwmgr -g --st mib -c "$nic"
+            done
+        ;;
+        (linux)
+            # New variant: Information about speed and state in one section
+            if inpath ip; then
+                mkecho '<<<lnx_if>>>'
+                mkecho "[start_iplink]"
+                ip address
+                mkecho "[end_iplink]"
+            fi
+
+            mkecho '<<<lnx_if:sep(58)>>>'
+            sed 1,2d /proc/net/dev
+            if inpath ethtool; then
+                sed -e 1,2d /proc/net/dev | cut -d':' -f1 | sort | while read -r eth; do
+                    mkecho "[$eth]"
+                    ethtool "$eth" | grep -E '(Speed|Duplex|Link detected|Auto-negotiation):'
+                    # shellcheck disable=SC2039
+                    mkecho -e "\\tAddress: $(cat "/sys/class/net/$eth/address")\\n"
+                done
+            fi
+
+            # Current state of bonding interfaces
+            if [ -e /proc/net/bonding ]; then
+                mkecho '<<<lnx_bonding:sep(58)>>>'
+                (
+                    cd /proc/net/bonding || return
+                    head -v -n 1000 ./*
+                )
+            fi
+
+            # Same for Open vSwitch bonding
+            if inpath ovs-appctl; then
+                BONDS=$(ovs-appctl bond/list)
+                COL=$(mkecho "$BONDS" | awk '{for(i=1;i<=NF;i++) {if($i = "bond") printf("%d", i)} exit 0}')
+                mkecho '<<<ovs_bonding:sep(58)>>>'
+                for bond in $(mkecho "$BONDS" | sed -e 1d | cut -f"${COL}"); do
+                    mkecho "[$bond]"
+                    ovs-appctl bond/show "$bond"
+                done
+            fi
+        ;;
+        (openbsd)
+            mkecho '<<<lnx_if:sep(58)>>>'
+            # Example line:
+            # em0     1500  <Link>      08:00:27:e6:c4:70    16358     0      254     0     0
+            netstat -in | grep '<Link>' | grep -E -v "\\*|lo|pfsync|enc" |
+                while read -r _ifName _ _ _ _pktsIn _errsIn _pktsOut _errsOut _collisions; do
+                    # Make another 'netstat' call to get our extra metrics
+                    # Example line:
+                    # em0     1500  <Link>      08:00:27:e6:c4:70    1815571      37701
+                    netstat -inb | grep "${_ifName}.*<Link>" |
+                        while read -r _ _ _ _ _bytesIn _bytesOut; do
+                            _ifData="${_ifName}:${_bytesIn} ${_pktsIn} ${_errsIn} 0 0 0 0 0 ${_bytesOut}"
+                            _ifData="${_ifData} ${_pktsOut} ${_errsOut} 0 0 ${_collisions} 0 0"
+                            mkecho "${_ifData}"
+                        done
+                done
+
+            unset -v _ifName _pktsIn _errsIn _pktsOut _errsOut _collisions _ifData
+
+            for _ifName in $(netstat -in | awk '/<Link>/{print $1}' | grep -E -v "\\*|lo|pfsync|enc"); do
+                mkecho "[${_ifName}]"
+
+                _macAddr=$(ifconfig "${_ifName}" | awk '/lladdr/{print $NF}')
+
+                # Example line:
+                # media: Ethernet autoselect (1000baseT full-duplex)
+                _ifData=$(ifconfig "${_ifName}" | grep "media:")
+
+                # Speed
+                _ifSpeed=$(mkecho "${_ifData}" | cut -d\( -f2 | cut -db -f1)
+                # shellcheck disable=SC2039
+                [ "${_ifSpeed}" ] && mkecho -e "\\tSpeed: ${_ifSpeed}Mb/s"
+
+                # Detect duplexity - in reality only available for physical devices but
+                # virtual ones like CARP devices will get at least a half duplex
+                # shellcheck disable=SC2039
+                case "${_ifData}" in
+                    (*full-duplex*)  mkecho -e "\\tDuplex: Full" ;;
+                    (*half-duplex*)  mkecho -e "\\tDuplex: Half" ;;
+                    (*)             mkecho -e "\\tDuplex: Unknown" ;;
+                esac
+
+                # Auto-negotiation
+                # shellcheck disable=SC2039
+                case "${_ifData}" in
+                    (*autoselect*)   mkecho -e "\\tAuto-negotiation: on" ;;
+                    (*)             mkecho -e "\\tAuto-negotiation: off" ;;
+                esac
+
+                # Detect detected link
+                if ifconfig "${_ifName}" | grep "status:" | grepq -E "active|backup|master"; then
+                    # shellcheck disable=SC2039
+                    mkecho -e "\\tLink detected: yes"
+                fi
+                # shellcheck disable=SC2039
+                mkecho -e "\\tAddress: ${_macAddr}"
+            done
+
+            unset -v _ifName _ifData _ifSpeed _macAddr
+        ;;
+    esac
+}
+
+section_netctr() {
+    case "${MK_OSSTR}" in
+        (freebsd)
+            # Network device statistics (Packets, Collisions, etc)
+            # only the "Link/Num" interface has all counters.
+            mkecho '<<<netctr>>>'
+            get_epoch
+            if [ "$(mkecho "${osver}" | cut -f1 -d\. )" -gt "8" ]; then
+                netstat -inb |
+                    grep -Ev '(^Name|lo|plip)' |
+                    grep Link | 
+                    awk '{print $1" "$8" "$5" "$6" "$7" 0 0 0 0 "$11" "$9" "$10" 0 0 0 0 0"}'
+            else
+                # pad output for freebsd 7 and before
+                netstat -inb | 
+                    grep -Ev '(^Name|lo|plip)' | 
+                    grep Link | 
+                    awk '{print $1" "$7" "$5" "$6" 0 0 0 0 0 "$10" "$8" "$9" 0 0 "$11" 0 0"}'
+            fi
+        ;;
+        (mac)
+            mkecho '<<<netctr>>>';
+            get_epoch
+            netstat -inb | 
+                grep -Ev '(^Name|lo|plip)' | 
+                grep Link | 
+                awk '{ print $1,$7,$5,$6,"0","0","0","0","0",$10,$8,$9,"0","0",$11,"0","0"; }'
+        ;;
+        (netbsd)
+            mkecho '<<<netctr>>>'
+            # BI= Bytes in
+            # PI= Packets in
+            # EI= Errors in
+            # EO= Errors out
+            # BO= Bytes out
+            # PO= Packets out
+            # CO= Colls
+
+            Z1=1
+            Z2=p
+
+            get_epoch
+            while [ $Z1 -lt 15 ]; do
+              BI=$( netstat -inb | grep -Ev Name | grep Link | awk '{print $1" "$5}' | sed -ne $Z1$Z2 )
+              PI=$( netstat -in | grep -Ev Name | grep Link | awk '{print $5}' | sed -ne $Z1$Z2 )
+              EI=$( netstat -in | grep -Ev Name | grep Link | awk '{print $6}' | sed -ne $Z1$Z2 )
+              FF1="0 0 0 0 0"
+              BO=$( netstat -inb | grep -Ev Name | grep Link | awk '{print $6}' | sed -ne $Z1$Z2 )
+              PO=$( netstat -in | grep -Ev Name | grep Link | awk '{print $7}' | sed -ne $Z1$Z2 )
+              EO=$( netstat -in | grep -Ev Name | grep Link | awk '{print $8}' | sed -ne $Z1$Z2 )
+              CO=$( netstat -in | grep -Ev Name | grep Link | awk '{print $9}' | sed -ne $Z1$Z2 )
+              FF2="0 0"
+                if [ "$PI" -gt "0" ]; then
+                    mkecho "$BI $PI $EI $FF1 $BO $PO $EO $FF2 $CO $FF2"
+                fi
+              Z1=$((Z1+1))
+            done
+    esac
+}
+
+section_nfs() {
+    # Check NFS mounts by accessing them with stat -f (System call statfs()). 
+    # If this lasts more then 2 seconds we consider it as hanging. We need waitmax.
+    if inpath waitmax; then
+        case "${MK_OSSTR}" in
+            (aix)   statFmt="ok - - - -" ;;
+            (linux) statFmt="ok %b %f %a %s" ;;
+        esac
+        mkecho '<<<nfsmounts>>>'
+        get_nfs_mounts | while read -r mountPoint; do
+            waitmax -s 9 5 stat -f -c "${mountPoint} ${statFmt}" "${mountPoint}" \
+            || mkecho "${mountPoint} hanging 0 0 0 0"
+        done
+
+        mkecho '<<<cifsmounts>>>'
+        get_cifs_mounts | while read -r mountPoint; do
+            if [ ! -r "${mountPoint}" ]; then
+                mkecho "${mountPoint} Permission denied"
+            else
+                waitmax -s 9 2 stat -f -c "${mountPoint} ${statFmt}" "${mountPoint}" \
+                    || mkecho "${mountPoint} hanging 0 0 0 0"
+            fi
+        done
+    fi
+
+    # Clean up our function variables
+    unset mountPoint statFmt
+}
+
+section_ntp() {
+    # Time synchronization with NTP
+    if inpath ntpq; then
+        if [ "${MK_OSSTR}" = "aix" ]; then
+            if [ "$(lssrc -s xntpd|grep -c active)" -gt 0 ] ; then
+                mkecho '<<<ntp>>>'
+                ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+            fi
+        elif [ "${MK_OSSTR}" = "solaris" ]; then
+            # 'psgrep' does not work well in this case
+            # shellcheck disable=SC2009
+            if ps -o comm $pszone | grep -w ".*ntpd" >/dev/null 2>&1; then
+                mkecho '<<<ntp>>>'
+                ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+            fi
+        # The following should cover everything else
+        else
+            # remove heading, make first column space separated
+            run_cached ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\\(.\\)/\\1 /' -e 's/^ /%/' || true"
+        fi
+    fi
+
+    # Time synchronization with Chrony
+    if inpath chronyc; then
+        # Force successful exit code. Otherwise section will be missing if daemon not running
+        #
+        # The "| cat" has been added for some kind of regression in RedHat 7.5. The
+        # SELinux rules shipped with that release were denying the chronyc call
+        # without cat.
+        run_cached chrony 30 "waitmax 5 chronyc -n tracking | cat || true"
+    fi
+
+    # Time synchronization with systemd timesyncd
+    if inpath timedatectl; then
+        _systemd_version=$(systemctl --version | awk '{if(NR==1) print $2}')
+        if [ "${_systemd_version}" -ge 239 ]; then
+            mkecho "<<<timesyncd>>>"
+            timedatectl timesync-status
+            get_file_mtime /var/lib/systemd/timesync/clock | awk '{print "[[["$1"]]]"}'
+        fi
+        unset -v _systemd_version
+    fi
+}
+
+section_nvidia() {
+    if inpath nvidia-settings && [ -S /tmp/.X11-unix/X0 ]; then
+        mkecho '<<<nvidia>>>'
+        for _var in GPUErrors GPUCoreTemp; do
+            DISPLAY=:0 waitmax 2 nvidia-settings -t -q "${_var}" | sed "s/^/${_var}: /"
+        done
+        unset -v _var
+    fi
+}
+
+section_omd() {
+    # Check status of OMD sites and Check_MK Notification spooler
+    if inpath omd; then
+        mkecho '<<<labels:sep(0)>>>'
+        # mkecho '{"cmk/check_mk_server": "yes"}'
+        mkecho -j "cmk/check_mk_server" "yes"
+
+        run_cached omd_status 60 "omd status --bare --auto || true"
+        mkecho '<<<mknotifyd:sep(0)>>>'
+        get_epoch
+        for statefile in /omd/sites/*/var/log/mknotifyd.state; do
+            if [ -e "$statefile" ]; then
+                site=${statefile%/var/log*}
+                site=${site#/omd/sites/}
+                mkecho "[$site]"
+                grep -v '^#' <"$statefile"
+            fi
+        done
+
+        mkecho '<<<omd_apache:sep(124)>>>'
+        for statsfile in /omd/sites/*/var/log/apache/stats; do
+            if [ -e "$statsfile" ]; then
+                site=${statsfile%/var/log*}
+                site=${site#/omd/sites/}
+                mkecho "[$site]"
+                cat "$statsfile"
+                : >"$statsfile"
+                # prevent next section to fail caused by a missing newline at the end of the statsfile
+                mkecho
+            fi
+        done
+    fi
+
+    # Get stats about OMD monitoring cores running on this machine.
+    # Since cd is a shell builtin the check does not affect the performance
+    # on non-OMD machines.
+    if cd /omd/sites; then
+        mkecho '<<<livestatus_status:sep(59)>>>'
+        for site in *; do
+            if [ -S "/omd/sites/$site/tmp/run/live" ]; then
+                mkecho "[$site]"
+                # shellcheck disable=SC2039
+                mkecho -e "GET status" |
+                    waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/live"
+            fi
+        done
+
+        mkecho '<<<livestatus_ssl_certs:sep(124)>>>'
+        for site in *; do
+            mkecho "[$site]"
+            for PEM_PATH in "/omd/sites/$site/etc/ssl/ca.pem" "/omd/sites/$site/etc/ssl/sites/$site.pem"; do
+                if [ -f "$PEM_PATH" ]; then
+                    CERT_DATE=$(openssl x509 -enddate -noout -in "$PEM_PATH")
+                    # TO-DO: Confirm that this works
+                    CERT_DATE=$(mkecho "${CERT_DATE}" | sed 's/notAfter=//g')
+                    mkecho "$PEM_PATH|$(date --date="$CERT_DATE" --utc +%s)"
+                fi
+            done
+        done
+
+        mkecho '<<<mkeventd_status:sep(0)>>>'
+        for site in *; do
+            if [ -S "/omd/sites/$site/tmp/run/mkeventd/status" ]; then
+                mkecho "[\"$site\"]"
+                # shellcheck disable=SC2039
+                mkecho -e "GET status\\nOutputFormat: json" |
+                    waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/mkeventd/status"
+            fi
+        done
+    fi
+}
+
+section_openvpn() {
+    # OpenVPN Clients.  These are our two known log locations.
+    # The 'sed' invocation may need to be tested on non-linux
+    if [ -e /etc/openvpn/openvpn-status.log ]; then
+        _openvpn_logfile='/etc/openvpn/openvpn-status.log'
+    elif [ -e /var/log/openvpn/openvpn-status.log ]; then
+        _openvpn_logfile='/var/log/openvpn/openvpn-status.log'
+    else
+        return 0
+    fi
+    
+    mkecho '<<<openvpn_clients:sep(44)>>>'
+    sed -n -e '/CLIENT LIST/,/ROUTING TABLE/p' < "${_openvpn_logfile}" |
+        sed -e 1,3d -e '$d'
+
+    unset -v _openvpn_logfile
+}
+
+# TO-DO: Merge with section_local and deduplicate i.e. DRY approach
+section_plugins() {
+    # Plugins
+    (
+        if cd "${MK_PLUGINSDIR}" 2>/dev/null; then
+            for _skript in ./*; do
+                if is_valid_plugin "${_skript}"; then
+                    ./"${_skript}"
+                fi
+            done
+            # Call some plugins only every Xth second
+            for _skript in [1-9]*/*; do
+                if is_valid_plugin "${_skript}"; then
+                    _skript_cache=$(mkecho "${_skript}" | sed 's/\//\\/')
+                    run_cached "plugins_${_skript_cache}" "${_skript%/*}" "${_skript}"
+                fi
+            done
+            unset -v _skript _skript_cache
+        fi
+    )
+}
+
+section_proxmox() {
+    # Proxmox Cluster
+    if inpath pvecm; then
+        mkecho "<<<pvecm_status:sep(58)>>>"
+        pvecm status
+        mkecho "<<<pvecm_nodes>>>"
+        pvecm nodes
+    fi
+}
+
+section_ps() {
+    case "${MK_OSSTR}" in
+        (aix)
+            mkecho '<<<ps>>>'
+            ps -ef -F user,vszsize,rssize,pcpu,etime,pid,args | 
+                sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
+        ;;
+        (freebsd)
+            # processes including username, without kernel processes
+            mkecho '<<<ps>>>'
+            COLUMNS=10000
+            if [ "$is_jailed" = "0" ]; then
+                ps ax -o state,user,vsz,rss,pcpu,command | 
+                    sed -e 1d  -e '/\([^ ]*J\) */d' -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\2,\3,\4,\5) /'
+            else
+                ps ax -o user,vsz,rss,pcpu,command | 
+                    sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
+            fi
+        ;;
+        (hpux)
+            # Process table: HP-UX does not provide a resident size of processes.
+            # We send a 0 here for RSZ.
+            mkecho '<<<ps>>>'
+            UNIX95=yes ps -ef -o user,vsz,pcpu,args | 
+                sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,0,\3) /'
+        ;;
+        (linux)
+            if inpath ps; then
+                # processes including username, without kernel processes
+                mkecho '<<<ps>>>'
+                mkecho 'dummy section -- refer to section ps_lnx'
+                mkecho '<<<ps_lnx>>>'
+                CGROUP=""
+                if [ -e /sys/fs/cgroup ]; then
+                    CGROUP="cgroup:512,"
+                fi
+                # shellcheck disable=SC2039
+                mkecho "[header] $(ps ax -o "$CGROUP"user:32,vsz,rss,cputime,etime,pid,command --columns 10000)"
+            fi
+        ;;
+        (mac|netbsd|openbsd)
+            mkecho '<<<ps>>>'
+            COLUMNS=10000
+            ps ax -o user,vsz,rss,pcpu,command | 
+                sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
+        ;;
+        (solaris)
+            mkecho '<<<ps>>>'
+            # The default solaris ps command strips the command lines of the processes. But for good process
+            # matching on the server we really need to whole command line. On linux there are arguments to
+            # make ps output the whole command line, but on solaris this seems to be missing. We use the ucb
+            # ps command to get the full command line instead. What a hack.
+            if [ -x /usr/ucb/ps ]; then
+                UCB_PS=$(/usr/ucb/ps -agwwwx)
+                ps -o user,vsz,rss,pcpu,etime,pid,args $pszone |
+                    sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /' |
+                    while read -r LINE; do
+                        STATS=${LINE%) *}
+                        PID=${STATS##*,}
+
+                        # Directly use ps output when line is too slow to be stripped
+                        if [ ${#LINE} -lt 100 ]; then
+                            mkecho "$LINE"
+                            continue
+                        fi
+
+                        CMD=$(mkecho "$UCB_PS" | grep "^[ ]*$PID " | head -n1 | \
+                            awk '{ s = ""; for (i = 5; i <= NF; i++) s = s $i " "; print s }')
+                        # Only use the ucb ps line when it's not empty (process might already been gone)
+                        if [ -z "$CMD" ]; then
+                            mkecho "$LINE"
+                        else
+                            mkecho "${STATS}) ${CMD}"
+                        fi
+                    done
+            else
+                ps -o user,vsz,rss,pcpu,etime,pidargs "${pszone}" |
+                    sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
+            fi
+        ;;
+    esac
+}
+
+section_raid() {
+    case "${MK_OSSTR}" in
+        (freebsd)
+            # Soft-RAID
+            mkecho '<<<freebsd_geom_mirrors>>>'
+            gmirror status | grep -v ^Name
+        ;;
+        (linux)
+            # RAID status of Linux software RAID
+            mkecho '<<<md>>>'
+            cat /proc/mdstat
+
+            # RAID status of Linux RAID via device mapper
+            if inpath dmraid && DMSTATUS=$(waitmax 3 dmraid -r); then
+                mkecho '<<<dmraid>>>'
+
+                # Output name and status
+                waitmax 20 dmraid -s | grep -e ^name -e ^status
+
+                # Output disk names of the RAID disks
+                DISKS=$(mkecho "$DMSTATUS" | cut -f1 -d":")
+
+                for disk in $DISKS; do
+                    device=$(cat /sys/block/"$(basename "$disk")"/device/model)
+                    status=$(mkecho "$DMSTATUS" | grep "^${disk}")
+                    mkecho "${status} Model: ${device}"
+                done
+            fi
+        ;;
+    esac
+    # RAID status of LSI controllers via cfggen
+    if inpath cfggen; then
+        mkecho '<<<lsi>>>'
+        cfggen 0 DISPLAY |
+            grep -E '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' |
+            sed -e 's/ *//g' -e 's/:/ /'
+    fi
+
+    # RAID status of LSI MegaRAID controller via MegaCli. You can download that tool from:
+    # http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip
+    # From this list, the first that's found in PATH (if any) is mapped to lsicli()
+    for cliAlt in MegaCli MegaCli64 megacli storcli storcli64; do
+        if inpath "${cliAlt}"; then
+            lsicli() { "${cliAlt}"; }
+            break
+        fi
+        unset cliAlt
+    done
+
+    if inpath lsicli; then
+        mkecho '<<<megaraid_pdisks>>>'
+        for part in $(lsicli -EncInfo -aALL -NoLog </dev/null |
+            sed -rn 's/:/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//; s/Number of enclosures on adapter ([0-9]+).*/adapter \1/g; /^(Enclosure|Device ID|adapter) [0-9]+$/ p'); do
+            [ "$part" = adapter ] && mkecho ""
+            # shellcheck disable=SC2039
+            [ "$part" = 'Enclosure' ] && mkecho -ne "\\ndev2enc"
+            # shellcheck disable=SC2039
+            mkecho -n " $part"
+        done
+        mkecho
+        lsicli -PDList -aALL -NoLog </dev/null |
+            grep -E 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter'
+        mkecho '<<<megaraid_ldisks>>>'
+        lsicli -LDInfo -Lall -aALL -NoLog </dev/null | grep -E 'Size|State|Number|Adapter|Virtual'
+        mkecho '<<<megaraid_bbu>>>'
+        lsicli -AdpBbuCmd -GetBbuStatus -aALL -NoLog </dev/null | grep -v Exit
+    fi
+
+    # RAID status of 3WARE disk controller (by Radoslaw Bak)
+    if inpath tw_cli; then
+        for _tw_ctl in $(tw_cli show | awk 'NR < 4 { next } { print $1 }'); do
+            mkecho '<<<3ware_info>>>'
+            tw_cli "/${_tw_ctl}" show all | grep -E 'Model =|Firmware|Serial'
+            mkecho '<<<3ware_disks>>>'
+            tw_cli "/${_tw_ctl}" show drivestatus | grep -E 'p[0-9]' | sed "s/^/${_tw_ctl}\\//"
+            mkecho '<<<3ware_units>>>'
+            tw_cli "/${_tw_ctl}" show unitstatus | grep -E 'u[0-9]' | sed "s/^/${_tw_ctl}\\//"
+        done
+        unset -v _tw_ctl
+    fi
+
+    # RAID controllers from areca (Taiwan)
+    # cli64 can be found at ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/
+    if inpath cli64; then
+        run_cached arc_raid_status 300 "cli64 rsf info | tail -n +3 | head -n -2"
+    fi
+}
+
+# Start new liveupdate process in background on each agent execution. 
+# Starting a new live update process will terminate the old one 
+# automatically after a maximum of 1 second.
+section_realtime_checks() {
+    # Validate that we're configured and equipped, otherwise return
+    if [ -r "${MK_CONFDIR}/real_time_checks.cfg" ]; then
+        if [ -z "${MK_RTC_HOST}" ]; then
+            mkecho "ERROR: \${MK_RTC_HOST} not specified. Not starting Real-Time Checks." >&2
+            return
+        elif ! inpath openssl; then
+            mkecho "ERROR: openssl command is missing. Not starting Real-Time Checks." >&2
+            return
+        fi
+    else
+        return
+    fi
+
+    run_real_time_checks >/dev/null &
+}
+
+section_runas() {
+    # MK's runas Executor
+    # runas.cfg syntax is: [Script type] [User context] [File / Directory]
+    # Script type can be 'mrpe', 'local' or 'plugin'
+    # User context defines the target user.  Use '-' to skip
+    if [ -r "${MK_CONFDIR}/runas.cfg" ]; then
+
+        # For now, we only define this function for this section.
+        runas_user() {
+            _suUser="${1:?No user supplied}"
+            shift
+            _suCmd="${*}"
+            case "${_suUser}" in
+                ('-'|'_'|null )  "${_suCmd}" ;;
+                (*)              su "${_suUser}" -s "${SHELL}" -c "${_suCmd}" ;;
+            esac
+            unset _suUser _suCmd
+        }
+
+        # Filter out lines startng with unwanted characters, then read what's left
+        grep -Ev '^[[:space:]]*($|#)' "${MK_CONFDIR}/runas.cfg" | while read -r type user include; do
+            case "${type}" in
+                (mrpe)
+                    grep -Ev '^[[:space:]]*($|#)' "$include" | while read -r descr cmdline; do
+                        # Detect if cmdline starts with '(' i.e. async mode
+                        case "${cmdline}" in
+                            (\(*)
+                                # If we do start with '(', then split 'params' out of 'cmdline'
+                                # We strip the brackets from 'params' and rewrite 'cmdline' without the params
+                                params=$(mkecho "${cmdline% *}" | tr -d '()')
+                                cmdline="${cmdline##* }"
+                                # split multiple parameter assignments
+                                for par in $(mkecho "${params}" | tr ":" "\\n"); do 
+                                    # split each assignment
+                                    key="${par%=*}"
+                                    value="${par#*=}"
+                                    case "${key}" in
+                                        (interval)  interval="${value}" ;;
+                                        (appendage) args="-ma" ;;
+                                    esac
+                                done
+                                case "${user}" in
+                                    ('-')
+                                        run_cached "${args:--m}" "${descr}" "${interval:-}" "${cmdline}"
+                                    ;;
+                                    (*)
+                                        run_cached "${args:--m}" "${descr}" "${interval:-}" runas_user "${user}" "${cmdline}"
+                                    ;;
+                                esac
+                            ;;
+                            (*)
+                                case "${user}" in
+                                    ('-')
+                                        run_mrpe "${descr}" "${cmdline}"
+                                    ;;
+                                    (*)
+                                        run_mrpe "${descr}" runas_user "${user}" "${cmdline}"
+                                    ;;
+                                esac
+                            ;;
+                        esac 
+                    done
+                ;;
+                (local|plugin)
+                    [ "$type" = "local" ] && mkecho "<<<local>>>"
+                    find "$include" -executable -type f |
+                        while read -r filename; do
+                            runas_user "${user}" "${filename}"
+                        done
+                ;;
+            esac
+        done
+    fi
+}
+
+section_services() {
+    case "${MK_OSSTR}" in
+        (linux)
+            if inpath systemctl; then
+                mkecho '<<<systemd_units>>>'
+                mkecho "[list-unit-files]"
+                systemctl list-unit-files --no-pager
+                mkecho "[all]"
+                systemctl --all --no-pager | sed '/^$/q'
+            fi
+
+            # Next we check for 'chkconfig'
+            if inpath chkconfig; then
+                mkecho '<<<chkconfig>>>'
+                chkconfig --list 2>&1
+            fi
+
+            # Some debian hosts have sysv-rc-conf
+            if inpath sysv-rc-conf; then
+                mkecho '<<<sysv-rc-conf>>>'
+                sysv-rc-conf
+            fi
+        ;;
+        (solaris)
+            # Getting Information About Services Running on Solaris
+            # We can get a list of all service instances, including disabled
+            # or incomplete ones by 'svcs -a'
+            if inpath svcs; then
+                mkecho '<<<solaris_services>>>'
+                svcs -a
+            fi
+        ;;
+    esac
+}
+
+section_solaris() {
+    if inpath prtdiag; then
+        # prtdiag does not work in local zones
+        if [ "${zonename}" = "global" ]; then
+            run_cached solaris_prtdiag_status 300 '/usr/sbin/prtdiag 1>/dev/null 2>&1; mkecho $?'
+        fi
+    fi
+
+    # Displaying Information About Faults or Defects
+    # If there are no faults the output of this command will be empty.
+    if inpath fmadm; then
+        mkecho '<<<solaris_fmadm:sep(58)>>>'
+        fmadm faulty
+    fi
+}
+
+section_spooldir() {
+    # Agent output snippets created by cronjobs, etc.
+    # See: Werk 0016
+    (
+        # Output every file in this directory. If the file is prefixed with a number,
+        # then that number is the maximum age of the file in seconds.
+        # If the file is older than that, it is ignored.
+        if cd "${MK_SPOOLDIR}" 2>/dev/null; then
+            _now=$(get_epoch)
+
+            for _file in *; do
+                [ "${_file}" = "*" ] && break
+
+                # Split any leading digits from a filename and assign to 'maxage'
+                # This should ignore further digits e.g. '600file20' will output '600'
+                _maxage="$(mkecho "${_file}" | sed 's/^[^0-9]*//;s/[^0-9].*$//')"
+
+                # If 'maxage' is set, then we grab the file's mtime, subtract it from
+                # the epoch time, and compare that to 'maxage'
+                if [ "${_maxage}" ]; then
+                    _mtime=$(get_file_mtime "${_file}")
+                    if [ $((_now - _mtime)) -gt "${_maxage}" ]; then
+                        continue
+                    fi
+                fi
+
+                # Output the file
+                cat "${_file}"
+            done
+            unset -v _now _file _maxage _mtime
+        fi
+    )
+}
+
+section_statgrab() {
+    if inpath statgrab; then
+        case "${MK_OSSTR}" in
+            (freebsd)
+                # To install: pkg install libstatgrab
+                statgrab_vars="const. disk. general. page. proc. user."
+                statgrab_vars_mem="mem. swap."
+                statgrab_sections="proc disk page"
+
+                statgrab "$statgrab_vars" | grep -v md 1> /tmp/statgrab.$$
+                statgrab "$statgrab_vars_mem" 1>>/tmp/statgrab.$$
+
+                for s in $statgrab_sections; do
+                    mkecho "<<<statgrab_$s>>>"
+                    grep "^${s}\\." /tmp/statgrab.$$ | cut -d. -f2-99 | sed 's/ *= */ /'
+                done
+
+                mkecho '<<<statgrab_net>>>'
+                statgrab net. 2>&1 | cut -d. -f2-99 | sed 's/ *= */ /'
+
+                mkecho '<<<statgrab_mem>>>'
+                grep -E "^(swap|mem)\\." /tmp/statgrab.$$ | sed 's/ *= */ /'
+
+                [ -f /tmp/statgrab.$$ ] && rm -f /tmp/statgrab.$$
+            ;;
+            (solaris)
+                # source: http://www.i-scream.org/libstatgrab/
+                # binary: http://www.opencsw.org/
+                statgrab_vars="const. cpu. disk. general. mem. page. swap. user."
+                statgrab_sections="cpu disk page"
+
+                # Collect net stats in the global zone and in local zones if dlstat is present.
+                if [ "$zonename" = "global" ] || inpath dlstat >/dev/null 2>&1; then
+                    statgrab_vars="$statgrab_vars net."
+                    statgrab_sections="$statgrab_sections net"
+                fi
+
+                statgrab "$statgrab_vars" | grep -v md 1> /tmp/statgrab.$$
+                for s in $statgrab_sections; do
+                    mkecho "<<<statgrab_$s>>>"
+                    grep "^$s\\." /tmp/statgrab.$$ | cut -d. -f2-99 | sed 's/ *= */ /'
+                done
+
+                # <<<statgrab_mem>>> info is preferred over <<<solaris_mem>>>
+                # since solaris_mem is under suspicion to be buggy.
+                mkecho '<<<statgrab_mem>>>'
+                grep -E "^(swap|mem)\\." /tmp/statgrab.$$ | sed 's/ *= */ /'
+
+                [ -f /tmp/statgrab.$$ ] && rm -f /tmp/statgrab.$$
+
+            ;;
+        esac
+    fi
+}
+
+section_tcp_stats() {
+    # Helper function, we'll keep it tucked away here for now
+    filter_netstats() {
+        awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
+    }
+    mkecho '<<<tcp_conn_stats>>>'
+    case "${MK_OSSTR}" in
+        (aix|mac)   _netstat_opts="-ntfinet" ;;
+        (freebsd)   _netstat_opts="-na" ;;
+        (hpux)      _netstat_opts="-f inet -n" ;;
+        (linux)
+            if inpath waitmax; then
+                _tcp_stats=$(waitmax 5 cat /proc/net/tcp /proc/net/tcp6 2>/dev/null | awk ' /:/ { c[$4]++; } END { for (x in c) { print x, c[x]; } }')
+                # We simply ignore this warning until we can come up with a cleaner way to do this
+                # shellcheck disable=SC2181
+                if [ $? = 0 ]; then
+                    mkecho "${_tcp_stats}"
+                elif inpath ss; then
+                    ss -ant | 
+                        grep -v ^State | 
+                        awk ' /:/ { c[$1]++; } END { for (x in c) { print x, c[x]; } }' |
+                        sed -e 's/^ESTAB/01/g;s/^SYN-SENT/02/g;s/^SYN-RECV/03/g;s/^FIN-WAIT-1/04/g;s/^FIN-WAIT-2/05/g;s/^TIME-WAIT/06/g;s/^CLOSED/07/g;s/^CLOSE-WAIT/08/g;s/^LAST-ACK/09/g;s/^LISTEN/0A/g;s/^CLOSING/0B/g;'
+                else
+                    _netstat_opts="-na"
+                fi
+                unset -v _tcp_stats
+            else
+                _netstat_opts="-na"
+            fi
+        ;;
+        (solaris)
+            netstat -n -a -f inet -P tcp |
+                tail  +5 |
+                nawk '{ c[$7]++; } END { for (x in c) { print x, c[x]; } }'
+            return
+        ;;
+    esac
+    netstat "${_netstat_opts}" | filter_netstats
+    unset -v _netstat_opts
+}
+
+section_thermal() {
+    # Gather thermal information provided e.g. by acpi
+    # At the moment only supporting thermal sensors
+    if [ -z "${MK_IS_DOCKERIZED}" ] && [ -z "${MK_IS_LXC_CONTAINER}" ] && ls /sys/class/thermal/thermal_zone* >/dev/null 2>&1; then
+        mkecho '<<<lnx_thermal:sep(124)>>>'
+        for _sysPath in /sys/class/thermal/thermal_zone*; do
+            _line="${_sysPath##*/}"
+            if [ ! -e "${_sysPath}/mode" ]; then 
+                _line="${_line}|-"
+            else
+                _line="${_line}|$(cat "${_sysPath}"/mode)"
+            fi
+            _line="${_line}|$(cat "${_sysPath}"/type "${_sysPath}"/temp 2>/dev/null | tr \\n "|")"
+            for _temp in "${_sysPath}"/trip_point_*_temp; do
+                _line="${_line}$(tr <"${_temp}" \\n "|")"
+            done
+            for _type in "${_sysPath}"/trip_point_*_type; do
+                _line="${_line}$(tr <"${_type}" \\n "|")"
+            done
+            mkecho "${_line%?}"
+        done
+        unset _sysPath _line _temp _type
+    fi
+}
+
+# Libelle Business Shadow
+section_trd() {
+    if inpath trd; then
+        mkecho "<<<libelle_business_shadow:sep(58)>>>"
+        trd -s
+    fi
+}
+
+section_uptime() {
+    mkecho '<<<uptime>>>'
+    case "${MK_OSSTR}" in
+        (aix)
+            # uptime formats
+            # 12:55pm  up 105 days, 21 hrs,  2 users, load average: 0.26, 0.26, 0.26 --> 9147600
+            # 1:41pm   up 105 days, 21:46,   2 users, load average: 0.28, 0.28, 0.27 --> 9150360
+            # 05:26PM  up           1:16,    1 user,  load average: 0.33, 0.21, 0.20 --> 4560
+            # 06:13PM  up           2:03,    1 user,  load average: 1.16, 1.07, 0.91 --> 7380
+            # 08:43AM  up 29 mins,           1 user,  load average: 0.09, 0.18, 0.21 --> 1740
+            # 08:47AM  up 66 days,  18:34,   1 user,  load average: 2.25, 2.43, 2.61 --> 5769240
+            # 08:45AM  up 76 days,  34 mins, 1 user,  load average: 2.25, 2.43, 2.61 --> 5769240
+            
+            _uptime=$(uptime | sed -e 's/^.*up//g' -e 's/[0-9]* user.*//g')
+            case ${_uptime} in
+                ( *day* ) _up_days=$(mkecho "${_uptime}" | sed -e 's/days\{0,1\},.*//g') ;;
+                ( * ) _up_days="0" ;;
+            esac
+
+            case ${_uptime} in
+                ( *:* )
+                    _up_hours=$(mkecho "${_uptime}" | sed -e 's/.*days\{0,1\},//g' -e 's/:.*//g')
+                    _up_mins=$(mkecho "${_uptime}" | sed -e 's/.*days\{0,1\},//g' -e 's/.*://g' -e 's/,.*//g')
+                ;;
+                ( *hr* )
+                    _up_hours=$(mkecho "${_uptime}" | sed -e 's/hrs\{0,1\},.*//g' -e 's/.*,//g')
+                    _up_mins=0
+                ;;
+                ( *min* )
+                    _up_hours=0
+                    _up_mins=$(mkecho "${_uptime}" | sed -e 's/mins\{0,1\},.*//g' -e 's/.*hrs\{0,1\},//g' -e 's/.*days\{0,1\},//g')
+                ;;
+                ( * )
+                    _up_hours="0"
+                    _up_mins=0
+                ;;
+            esac
+
+            mkecho $(((_up_days*86400)+(_up_hours*3600)+(_up_mins*60)))
+            unset -v _uptime _up_hours _up_mins
+        ;;
+        (freebsd)
+            # Calculate the uptime in seconds since epoch compatible to /proc/uptime in linux
+            _up_seconds=$(( $(get_epoch) - $(sysctl -n kern.boottime  | cut -f1 -d\, | awk '{print $4}') ))
+            # pgrep is not appropriate (or even available?) here
+            # shellcheck disable=SC2009
+            _idle_seconds=$(ps axw | grep "[i]dle" | awk '/idle/{print $4}' | cut -f1 -d':' )
+            mkecho "${_up_seconds} ${_idle_seconds}"
+            unset -v _up_seconds _idle_seconds
+        ;;
+        (linux)
+            if [ -z "${MK_IS_DOCKERIZED}" ]; then
+                cat /proc/uptime
+            else
+                mkecho "$(($(get_epoch) - $(stat -c %Z /dev/pts)))"
+            fi
+        ;;
+        (mac|netbsd|openbsd)
+            mkecho "$(get_epoch) - $(sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | tr -d ' ')" | bc
+        ;;
+        (solaris)
+            # Solaris doesn't always give a consistent output on uptime, thus include side information
+            # Tested in VM for solaris 10/11
+            _ctime=$(nawk 'BEGIN{print srand()}')
+            _btime=$(kstat '-p' 'unix:::boot_time' 2>&1|grep 'boot_time'|awk '{print $2}')
+            mkecho $((_ctime - _btime));
+            mkecho '[uptime_solaris_start]'
+            uname -a
+            zonename
+            uptime
+            kstat -p unix:0:system_misc:snaptime
+            mkecho '[uptime_solaris_end]'
+            unset -v _ctime _btime
+        ;;
+    esac
+
+    # 'who -b' is a mostly portable way to report the boot time
+    # TO-DO: is this information header the correct format?
+    if who -b > /dev/null 2>&1; then
+        mkecho "[who_b_boot_time]"
+        who -b
+    fi
+}
+
+# HTTP Accelerator Statistics
+section_varnishstat() {
+    if inpath varnishstat; then
+        mkecho "<<<varnish>>>"
+        varnishstat -1
+    fi
+}
+
+section_vbox() {
+    # VirtualBox Guests. Section must always been output. Otherwise the
+    # check would not be executed in case no guest additions are installed.
+    # And that is something the check wants to detect
+    mkecho '<<<vbox_guest>>>'
+    if inpath VBoxControl; then
+        if lsmod | grepq vboxguest; then
+            VBoxControl -nologo guestproperty enumerate | cut -d, -f1,2
+        fi
+    else
+        mkecho "ERROR"
+    fi
+}
+
+section_vcs() {
+    # Veritas Cluster Server
+    # Software is always installed in /opt/VRTSvcs.
+    # Secure mode must be off to allow root to execute commands
+    if [ -x /opt/VRTSvcs/bin/haclus ]; then
+        mkecho "<<<veritas_vcs>>>"
+        vcshost=$(hostname | cut -d. -f1)
+        waitmax -s 9 2 /opt/VRTSvcs/bin/haclus -display -localclus | grep -e ClusterName -e ClusState
+        waitmax -s 9 2 /opt/VRTSvcs/bin/hasys -display -attribute SysState
+        waitmax -s 9 2 /opt/VRTSvcs/bin/hagrp -display -sys "$vcshost" -attribute State -localclus
+        waitmax -s 9 2 /opt/VRTSvcs/bin/hares -display -sys "$vcshost" -attribute State -localclus
+        waitmax -s 9 2 /opt/VRTSvcs/bin/hagrp -display -attribute TFrozen -attribute Frozen
+    fi
+}
+
+# TO-DO: Standardise headers
+section_vmstat() {
+    case "${MK_OSSTR}" in
+        (aix)
+            mkecho '<<<vmstat_aix>>>'
+            vmstat | tail -n1
+        ;;
+        (hpux)
+            # Several machine performance counters
+            mkecho '<<<hpux_vmstat>>>'
+            vmstat -s
+        ;;
+    esac
+}
+
+# TO-DO: Can this behaviour be simplified or made portable?
+section_zfs() {
+    if [ "${MK_OSSTR}" = "linux" ]||[ "${MK_OSSTR}" = "solaris" ]; then
+        # Filesystem usage for ZFS
+        if inpath zfs; then
+            mkecho '<<<zfsget:sep(9)>>>'
+            zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type || \
+                zfs get -Hp name,referenced,avail,mountpoint,type | sed 's/referenced/used/g'
+            mkecho '<<<zfsget>>>'
+            mkecho '[df]'
+            df -PTlk -t zfs | sed 1d
+        fi
+    fi
+
+    if [ "${MK_OSSTR}" = "linux" ]; then
+        # Welcome the ZFS check on Linux
+        # We do not endorse running ZFS on linux if your vendor doesnt support it ;)
+        # check zpool status
+        if inpath zpool; then
+            mkecho "<<<zpool_status>>>"
+            zpool status -x
+            mkecho "<<<zpool>>>"
+            zpool list
+        fi
+    fi
+
+    if [ "${MK_OSSTR}" = "freebsd" ]; then
+        # Filesystem usage for ZFS
+        if inpath zfs; then
+            mkecho '<<<zfsget>>>'
+            zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type || \
+              zfs get -Hp name,quota,used,avail,mountpoint,type
+            mkecho '[df]'
+            df -kP -t zfs | sed 1d
+            # arc stats for zfs_arc_cache
+            mkecho '<<<zfs_arc_cache>>>'
+            sysctl -q kstat.zfs.misc.arcstats |  sed -e 's/kstat.zfs.misc.arcstats.//g' -e 's/: / = /g'
+        fi
+
+        # check zpool status
+        if [ -x /sbin/zpool ]; then
+            mkecho "<<<zpool_status>>>"
+            /sbin/zpool status -x | grep -v "errors: No known data errors"
+        fi
+    fi
+
+    if [ "${MK_OSSTR}" = "solaris" ]; then
+        # ZFS arc cache
+        # newer Solaris (>=11.3) do not provide hits and misses via mdb -k
+        mkecho '<<<zfs_arc_cache>>>'
+        if inpath kstat; then
+            kstat -p zfs:0:arcstats | 
+                sed -e 's/.*arcstats://g' | 
+                awk '{printf "%s = %s\n", $1, $2;}'
+        elif inpath; then
+            mkecho '::arc' | mdb -k
+        fi
+
+        # zpool status
+        if [ -x /sbin/zpool ]; then
+            run_cached zpool_status 120 "/sbin/zpool status -x"
+            mkecho '<<<zpool>>>'
+            zpool list
+        fi
+    fi
+}
+
+########################################################################################################################
+# Output begins here
+main() {
+    section_head
+    section_cpu
+    section_mem
+    section_df
+    section_zfs
+    section_nfs
+    section_mounts
+    section_multipathing
+    section_raid
+    section_diskstat
+    section_net
+    section_netctr
+    section_tcp_stats
+    section_ntp
+    section_mail
+    section_uptime
+    section_kernel
+    section_services
+    section_ps
+    section_statgrab
+    section_vmstat
+    section_ipmi
+    section_thermal
+    section_openvpn
+    section_omd
+    section_mkbackup
+    section_jobs
+    section_vbox
+    section_nvidia
+    section_heartbeat
+    section_vcs
+    section_proxmox
+    section_drbd
+    section_trd
+    section_varnishstat
+    section_haproxy
+    section_realtime_checks
+    section_fileinfo
+    section_runas
+    section_mrpe
+    section_local
+    section_plugins
+    section_spooldir
+    # Now any OS-specific catch-all functions
+    # I wonder if this could be called universally/portably with section_${MK_OSSTR}
+    case "${MK_OSSTR}" in
+        (aix)       section_aix ;;
+        (hpux)      section_hpux ;;
+        (mac)       section_mac ;;
+        (solaris)   section_solaris ;;
+    esac
+}
+
+# Determine whether we need to send our output via encryption or not
+case "${ENCRYPTION}" in
+    (yY*)   main | protect_output ;;
+    (*)     main ;;
+esac

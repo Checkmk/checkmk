@@ -43,7 +43,7 @@ from pathlib2 import Path
 
 from cmk.utils.paths import tmp_dir
 
-from cmk.special_agents.utils import DataCache
+from cmk.special_agents.utils import DataCache, vcrtrace
 import cmk.utils.password_store
 
 cmk.utils.password_store.replace_passwords()
@@ -85,6 +85,9 @@ def parse_arguments(argv):
                         action="count",
                         default=0,
                         help='''Verbose mode (for even more output use -vvv)''')
+    parser.add_argument("--vcrtrace",
+                        action=vcrtrace(filter_post_data_parameters=[('client_secret', '****')]),
+                        help='''(implies --sequential)''')
     parser.add_argument("--sequential",
                         action="store_true",
                         help='''Sequential mode: do not use multiprocessing''')
@@ -128,6 +131,9 @@ def parse_arguments(argv):
              If specified, every 'group=<name>' argument starts a new group configuration,
              and every 'resource=<name>' arguments specifies a resource.''')
     args = parser.parse_args(argv)
+
+    if args.vcrtrace:
+        args.sequential = True
 
     # LOGGING
     if args.verbose >= 3:

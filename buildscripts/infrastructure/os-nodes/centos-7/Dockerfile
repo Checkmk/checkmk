@@ -1,6 +1,8 @@
 FROM centos:7
 
-SHELL ["/bin/bash", "-c"]
+# Use a login shell to make the definitions from /etc/profile.d/enable-python27.sh
+# available to the "RUN" commands below
+SHELL ["/bin/bash", "-l", "-c"]
 
 ARG PACKAGES
 

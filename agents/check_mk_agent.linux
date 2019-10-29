@@ -78,11 +78,39 @@ else
     unset IS_LXC_CONTAINER
 fi
 
+# Function to list CIFS mounts for use by section_nfs
+get_cifs_mounts() {
+    if [ -r /proc/mounts ]; then
+        sed -n '/ cifs\? /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts | sed 's/\\040/ /g'
+    else
+        mount | awk '/ cifs/{print $3;}'
+    fi
+}
+
+# Function to list NFS mounts for use by section_nfs
+get_nfs_mounts() {
+    if [ -r /proc/mounts ]; then
+        sed -n '/ nfs4\? /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts | sed 's/\\040/ /g'
+    else
+        mount | awk '/ nfs/{print $3;}'
+    fi
+}
+
 # Function to replace "if type [somecmd]" idiom
 # 'command -v' tends to be more robust vs 'which' and 'type' based tests
 inpath() {
     command -v "${1:?No command to test}" >/dev/null 2>&1
 }
+
+# 'coreutils' 5.3.0 broke how 'stat' handled its output.  This was reverted
+# in 5.9.4 STABLE.  Just in case we happen across this particular version
+# we catch it and build a workaround to correct its behaviour globally
+# See: https://lists.gnu.org/archive/html/bug-coreutils/2005-12/msg00157.html
+if stat --version 2>&1 | head -n 1 | grep "5.3.0" >/dev/null 2>&1; then
+    stat() {
+        printf -- '%s\n' "$(command stat "${@}")"
+    }
+fi
 
 # Prefer (relatively) new /usr/bin/timeout from coreutils against
 # our shipped waitmax. waitmax is statically linked and crashes on
@@ -105,14 +133,8 @@ if [ -f "$MK_CONFDIR/exclude_sections.cfg" ]; then
 fi
 
 if [ "$ENCRYPTED" == "yes" ]; then
-    OPENSSL_VERSION=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')
-    if [ $OPENSSL_VERSION -ge 10000 ]; then
-        echo -n "02"
-        exec > >(openssl enc -aes-256-cbc -md sha256 -k "$PASSPHRASE" -nosalt)
-    else
-        echo -n "00"
-        exec > >(openssl enc -aes-256-cbc -md md5 -k "$PASSPHRASE" -nosalt)
-    fi
+    echo -n "00" # protocol version
+    exec > >(openssl enc -aes-256-cbc -md md5 -k "$PASSPHRASE" -nosalt)
 fi
 
 RTC_PLUGINS=""
@@ -144,10 +166,37 @@ section_mem() {
     else
         echo '<<<docker_container_mem>>>'
         cat /sys/fs/cgroup/memory/memory.stat
-        echo "usage_in_bytes $(cat /sys/fs/cgroup/memory/memory.usage_in_bytes)"
-        echo "limit_in_bytes $(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)"
+        echo -n "usage_in_bytes "
+        cat /sys/fs/cgroup/memory/memory.usage_in_bytes
+        echo -n "limit_in_bytes "
+        cat /sys/fs/cgroup/memory/memory.limit_in_bytes
         grep -F 'MemTotal:' /proc/meminfo
     fi
+}
+
+section_nfs() {
+    # Check NFS mounts by accessing them with stat -f (System call statfs()). 
+    # If this lasts more then 2 seconds we consider it as hanging. We need waitmax.
+    if inpath waitmax; then
+        echo '<<<nfsmounts>>>'
+        get_nfs_mounts | while read -r mountPoint; do
+            waitmax -s 9 5 stat -f -c "${mountPoint} ok %b %f %a %s" "${mountPoint}" \
+            || echo "${mountPoint} hanging 0 0 0 0"
+        done
+
+        echo '<<<cifsmounts>>>'
+        get_cifs_mounts | while read -r mountPoint; do
+            if [ ! -r "${mountPoint}" ]; then
+                echo "${mountPoint} Permission denied"
+            else
+                waitmax -s 9 2 stat -f -c "${mountPoint} ok %b %f %a %s" "${mountPoint}" \
+                    || echo "${mountPoint} hanging 0 0 0 0"
+            fi
+        done
+    fi
+
+    # Clean up our function variables
+    unset mountPoint
 }
 
 section_cpu() {
@@ -165,7 +214,6 @@ section_cpu() {
             cat /proc/sys/kernel/threads-max
         fi
     else
-
         if [ -n "$IS_DOCKERIZED" ]; then
             echo '<<<docker_container_cpu>>>'
         else
@@ -219,13 +267,10 @@ section_df() {
     echo '[df_inodes_end]'
 }
 
-sections_systemd() {
+section_systemd() {
     if inpath systemctl; then
         echo '<<<systemd_units>>>'
-        echo "[list-unit-files]"
-        systemctl list-unit-files --no-pager
-        echo "[all]"
-        systemctl --all --no-pager | sed '/^$/q'
+        systemctl --all --no-pager
     fi
 }
 
@@ -1458,7 +1503,7 @@ run_local_checks
 run_plugins
 
 # Agent output snippets created by cronjobs, etc.
-if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
+if [ -d "$SPOOLDIR" ]; then
     pushd "$SPOOLDIR" >/dev/null
     now=$(date +%s)
 

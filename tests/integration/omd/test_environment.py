@@ -9,7 +9,9 @@ def test_locales(site):
     output = p.communicate()[0]
 
     assert "LANG=C.UTF-8" in output \
+        or "LANG=C.utf8" in output \
         or "LANG=en_US.utf8" in output
 
     assert "LC_ALL=C.UTF-8" in output \
+        or "LC_ALL=C.utf8" in output \
         or "LC_ALL=en_US.utf8" in output

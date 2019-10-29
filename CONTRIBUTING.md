@@ -2,17 +2,19 @@
 
 We welcome contributions to [Checkmk on Github](https://github.com/tribe29/checkmk).
 
-The most contributions to Checkmk are small bugfixes or feature enhancements
-to existing features, or completely new plugins. We assume such changes in the
-following.
+Most contributions to Checkmk are small bugfixes, enhancements of existing
+features, or completely new plugins. The guidelines below address these types
+of contributions.
 
 If you would like to make a major change to Checkmk, please contact us first.
 Let's talk about what you want to do. Somebody else may already be working on
 it, or there are certain topics you should know before implementing the change.
 
-We like to work with contributors to accept their code, but there are often
-several ways to solve a problem, and it is important to find the best approach
-before spending too much time on wrong approaches.
+We love to work with community contributors and want to make sure contributions
+and time investments are as effective as possible. That's why it is important
+to us to discuss major changes you might be planning in order to jointly agree
+on the best solution approach to the problem at hand. This preempts potential
+issues during the code reviews of pull requests.
 
 ## Contributing code
 
@@ -223,8 +225,11 @@ The guidelines listed here are binding for the development at Checkmk in
 Python.
 
 This list is intended to grow in practice and does not claim to be exhaustive.
-In unexplained the existing code and the common understanding must first be
-seen as decisive in answering these questions.
+
+First orientate yourself on the existing code. If it doesn't fit these
+guidelines at all, it might be better to first orientate yourself on the
+existing code and adapt the code to these guidelines separately from any
+content changes.
 
 [Zen of Python](https://www.python.org/dev/peps/pep-0020/).
 

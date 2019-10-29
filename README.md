@@ -21,6 +21,10 @@ Please have a look at the [official
 handbook](https://checkmk.com/cms_introduction.html) on how to get
 started with Checkmk.
 
+## Want to contribute?
+
+Nice! Have a look at our [contribution guidelines](CONTRIBUTING.md).
+
 ## Building on your own packages
 
 It is highly recommended to use the prebuilt Checkmk packages we

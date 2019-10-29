@@ -2022,14 +2022,14 @@ section_net() {
                 case "${_ifData}" in
                     (*full-duplex*)  println -e "\\tDuplex: Full" ;;
                     (*half-duplex*)  println -e "\\tDuplex: Half" ;;
-                    (*)             println -e "\\tDuplex: Unknown" ;;
+                    (*)              println -e "\\tDuplex: Unknown" ;;
                 esac
 
                 # Auto-negotiation
                 # shellcheck disable=SC2039
                 case "${_ifData}" in
                     (*autoselect*)   println -e "\\tAuto-negotiation: on" ;;
-                    (*)             println -e "\\tAuto-negotiation: off" ;;
+                    (*)              println -e "\\tAuto-negotiation: off" ;;
                 esac
 
                 # Detect detected link

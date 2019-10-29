@@ -1474,6 +1474,12 @@ metric_info["overprovisioned"] = {
     "color": "24/a",
 }
 
+metric_info["precompiled"] = {
+    "title": _("Precompiled"),
+    "unit": "bytes",
+    "color": "16/a",
+}
+
 metric_info["temp"] = {
     "title": _("Temperature"),
     "unit": "c",

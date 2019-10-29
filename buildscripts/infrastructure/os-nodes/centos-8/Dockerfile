@@ -29,8 +29,11 @@ RUN yum -y --enablerepo=PowerTools --allowerasing install \
     which \
     && yum clean all
 
-RUN ln -s /usr/bin/python2.7 /usr/bin/python \
-    && python -V
+# RH8 does not install a python binary by default. Some of our scripts need a default python binary
+# without a version suffix. The assumption is that this points to Python 2.
+RUN alternatives --set python /usr/bin/python2 && python -V
+
+# Now bring pip and pipenv to our standard version used in all environments.
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
     && python get-pip.py
 RUN pip install --upgrade setuptools virtualenv \

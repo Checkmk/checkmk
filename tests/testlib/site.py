@@ -535,6 +535,9 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                 sys.stdout.flush()
                 time.sleep(0.2)
 
+        assert os.path.ismount(self.path("tmp")), \
+            "The site does not have a tmpfs mounted! We require this for good performing tests"
+
     def stop(self):
         if not self.is_running():
             return  # Nothing to do

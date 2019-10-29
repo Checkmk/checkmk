@@ -49,17 +49,6 @@ RUN apt-get update \
     uuid-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# For the common part, split later
-#RUN pip install pathlib2 \
-#    typing
-
-#RUN apt-get update \
-#    && apt-get install -y \
-#    rpm \
-#    alien \
-#    mono-xbuild \
-#    && rm -rf /var/lib/apt/lists/*
-
 COPY bw-build-gnu-toolchain.sh /usr/sbin
 RUN bw-build-gnu-toolchain.sh -b
 RUN cd /opt \

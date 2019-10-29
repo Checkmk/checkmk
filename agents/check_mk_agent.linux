@@ -141,8 +141,14 @@ if [ -f "$MK_CONFDIR/encryption.cfg" ]; then
 fi
 
 if [ "$ENCRYPTED" == "yes" ]; then
-    echo -n "00" # protocol version
-    exec > >(openssl enc -aes-256-cbc -md md5 -k "$PASSPHRASE" -nosalt)
+    OPENSSL_VERSION=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')
+    if [ $OPENSSL_VERSION -ge 10000 ]; then
+        echo -n "02"
+        exec > >(openssl enc -aes-256-cbc -md sha256 -k "$PASSPHRASE" -nosalt)
+    else
+        echo -n "00"
+        exec > >(openssl enc -aes-256-cbc -md md5 -k "$PASSPHRASE" -nosalt)
+    fi
 fi
 
 RTC_PLUGINS=""
@@ -162,10 +168,8 @@ section_mem() {
     else
         echo '<<<docker_container_mem>>>'
         cat /sys/fs/cgroup/memory/memory.stat
-        echo -n "usage_in_bytes "
-        cat /sys/fs/cgroup/memory/memory.usage_in_bytes
-        echo -n "limit_in_bytes "
-        cat /sys/fs/cgroup/memory/memory.limit_in_bytes
+        echo "usage_in_bytes $(cat /sys/fs/cgroup/memory/memory.usage_in_bytes)"
+        echo "limit_in_bytes $(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)"
         grep -F 'MemTotal:' /proc/meminfo
     fi
 }
@@ -244,7 +248,7 @@ section_df() {
     # The exclusion list is getting a bit of a problem.
     # -l should hide any remote FS but seems to be all but working.
     local excludefs
-    excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x prl_fs -x squashfs"
+    excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x prl_fs -x squashfs -x devtmpfs"
     if [ -z "$IS_LXC_CONTAINER" ]; then
         excludefs+=" -x zfs"
     fi
@@ -266,7 +270,10 @@ section_df() {
 section_systemd() {
     if inpath systemctl; then
         echo '<<<systemd_units>>>'
-        systemctl --all --no-pager
+        echo "[list-unit-files]"
+        systemctl list-unit-files --no-pager
+        echo "[all]"
+        systemctl --all --no-pager | sed '/^$/q'
     fi
 }
 
@@ -475,8 +482,9 @@ section_systemd
 
 # Filesystem usage for ZFS
 if inpath zfs; then
-    echo '<<<zfsget>>>'
+    echo '<<<zfsget:sep(9)>>>'
     zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type 2>/dev/null
+    echo '<<<zfsget>>>'
     echo '[df]'
     df -PTlk -t zfs | sed 1d
 fi
@@ -489,10 +497,17 @@ section_nfs
 echo '<<<mounts>>>'
 grep ^/dev </proc/mounts | grep -v " squashfs "
 
-# processes including username, without kernel processes
-echo '<<<ps>>>'
-ps ax -o user:32,vsz,rss,cputime,etime,pid,command --columns 10000 |
-    sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
+if inpath ps; then
+    # processes including username, without kernel processes
+    echo '<<<ps>>>'
+    echo 'dummy section -- refer to section ps_lnx'
+    echo '<<<ps_lnx>>>'
+    CGROUP=""
+    if [ -e /sys/fs/cgroup ]; then
+        CGROUP="cgroup:512,"
+    fi
+    echo "[header] $(ps ax -o "$CGROUP"user:32,vsz,rss,cputime,etime,pid,command --columns 10000)"
+fi
 
 # Memory usage
 section_mem
@@ -583,8 +598,7 @@ else
     done
     echo "[names]"
     for F in /sys/block/*; do
-        echo -n "${F##*/} "
-        cat "$F/dev"
+        echo "${F##*/} $(cat "$F/dev")"
     done
 fi
 
@@ -723,10 +737,23 @@ if [ -e /etc/openvpn/openvpn-status.log ]; then
         sed -e 1,3d -e '$d'
 fi
 
-# Time synchronization with NTP
-if inpath ntpq; then
-    # remove heading, make first column space separated
-    run_cached -s ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
+TIMESYNC_STATUS=$(systemctl status ntp | awk '{if(NR==3) print $2}')
+if [ $TIMESYNC_STATUS == "active" ]; then
+    # Time synchronization with NTP
+    if inpath ntpq; then
+        # remove heading, make first column space separated
+        run_cached -s ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
+    fi
+else
+    # Time synchronization with systemd timesyncd
+    VERSION=$(systemd --version | awk '{if(NR==1) print $2}')
+    if [ $VERSION -ge 239 ]; then
+        if inpath timedatectl; then
+            echo "<<<timesyncd>>>"
+            timedatectl timesync-status
+            stat -c %Y /var/lib/systemd/timesync/clock | awk '{print "[[["$1"]]]"}'
+        fi
+    fi
 fi
 
 # Time synchronization with Chrony
@@ -861,8 +888,12 @@ fi
 
 # Check status of OMD sites and Check_MK Notification spooler
 if inpath omd; then
+    echo '<<<labels:sep(0)>>>'
+    echo '{"cmk/check_mk_server": "yes"}'
+
     run_cached -s omd_status 60 "omd status --bare --auto || true"
     echo '<<<mknotifyd:sep(0)>>>'
+    date +%s
     for statefile in /omd/sites/*/var/log/mknotifyd.state; do
         if [ -e "$statefile" ]; then
             site=${statefile%/var/log*}
@@ -911,8 +942,9 @@ fi
 
 # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
 perl -e '
+use File::Glob "bsd_glob";
 my @patterns = ();
-foreach (<"$ARGV[0]/fileinfo.cfg">, <"$ARGV[0]/fileinfo.d/*">) {
+foreach (bsd_glob("$ARGV[0]/fileinfo.cfg"), bsd_glob("$ARGV[0]/fileinfo.d/*")) {
     open my $handle, "<", $_ or next;
     while (<$handle>) {
         chomp;
@@ -929,7 +961,7 @@ exit if ! @patterns;
 print "<<<fileinfo:sep(124)>>>\n", time, "\n[[[header]]]\nname|status|size|time\n[[[content]]]\n";
 
 foreach (@patterns) {
-    while (<"$_">) {
+    foreach (bsd_glob("$_")) {
         if (! -f) {
             print "$_|missing\n" if ! -d;
         } elsif (my @infos = stat) {
@@ -1147,8 +1179,8 @@ if [ -e "$MK_CONFDIR/runas.cfg" ]; then
                                     IFS='=' read -r key value <<<"${par}"
                                     if [ "$key" = "interval" ]; then
                                         interval=$value
-                                    # no other parameters supported currently
                                     fi
+                                    # no other parameters supported currently
                                 done
                             fi
 
@@ -1224,7 +1256,7 @@ if cd "$PLUGINSDIR"; then
 fi
 
 # Agent output snippets created by cronjobs, etc.
-if [ -d "$SPOOLDIR" ]; then
+if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
     pushd "$SPOOLDIR" >/dev/null
     now=$(date +%s)
 

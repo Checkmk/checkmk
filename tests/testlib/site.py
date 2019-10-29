@@ -412,6 +412,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             cmk_path() + "/livestatus/api/python",
             cmk_path() + "/bin",
             cmk_path() + "/agents/special",
+            cmk_path() + "/agents/plugins",
             cmk_path() + "/modules",
             cmk_path() + "/cmk_base",
             cmk_path() + "/cmk",

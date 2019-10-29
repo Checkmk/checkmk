@@ -105,14 +105,8 @@ if [ -f "$MK_CONFDIR/exclude_sections.cfg" ]; then
 fi
 
 if [ "$ENCRYPTED" == "yes" ]; then
-    OPENSSL_VERSION=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')
-    if [ $OPENSSL_VERSION -ge 10000 ]; then
-        echo -n "02"
-        exec > >(openssl enc -aes-256-cbc -md sha256 -k "$PASSPHRASE" -nosalt)
-    else
-        echo -n "00"
-        exec > >(openssl enc -aes-256-cbc -md md5 -k "$PASSPHRASE" -nosalt)
-    fi
+    echo -n "00" # protocol version
+    exec > >(openssl enc -aes-256-cbc -md md5 -k "$PASSPHRASE" -nosalt)
 fi
 
 RTC_PLUGINS=""
@@ -144,10 +138,37 @@ section_mem() {
     else
         echo '<<<docker_container_mem>>>'
         cat /sys/fs/cgroup/memory/memory.stat
-        echo "usage_in_bytes $(cat /sys/fs/cgroup/memory/memory.usage_in_bytes)"
-        echo "limit_in_bytes $(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)"
+        echo -n "usage_in_bytes "
+        cat /sys/fs/cgroup/memory/memory.usage_in_bytes
+        echo -n "limit_in_bytes "
+        cat /sys/fs/cgroup/memory/memory.limit_in_bytes
         grep -F 'MemTotal:' /proc/meminfo
     fi
+}
+
+section_nfs() {
+    # Check NFS mounts by accessing them with stat -f (System call statfs()). 
+    # If this lasts more then 2 seconds we consider it as hanging. We need waitmax.
+    if inpath waitmax; then
+        echo '<<<nfsmounts>>>'
+        get_nfs_mounts | while read -r mountPoint; do
+            waitmax -s 9 5 stat -f -c "${mountPoint} ok %b %f %a %s" "${mountPoint}" \
+            || echo "${mountPoint} hanging 0 0 0 0"
+        done
+
+        echo '<<<cifsmounts>>>'
+        get_cifs_mounts | while read -r mountPoint; do
+            if [ ! -r "${mountPoint}" ]; then
+                echo "${mountPoint} Permission denied"
+            else
+                waitmax -s 9 2 stat -f -c "${mountPoint} ok %b %f %a %s" "${mountPoint}" \
+                    || echo "${mountPoint} hanging 0 0 0 0"
+            fi
+        done
+    fi
+
+    # Clean up our function variables
+    unset mountPoint
 }
 
 section_cpu() {
@@ -165,7 +186,6 @@ section_cpu() {
             cat /proc/sys/kernel/threads-max
         fi
     else
-
         if [ -n "$IS_DOCKERIZED" ]; then
             echo '<<<docker_container_cpu>>>'
         else
@@ -219,13 +239,10 @@ section_df() {
     echo '[df_inodes_end]'
 }
 
-sections_systemd() {
+section_systemd() {
     if inpath systemctl; then
         echo '<<<systemd_units>>>'
-        echo "[list-unit-files]"
-        systemctl list-unit-files --no-pager
-        echo "[all]"
-        systemctl --all --no-pager | sed '/^$/q'
+        systemctl --all --no-pager
     fi
 }
 
@@ -1458,7 +1475,7 @@ run_local_checks
 run_plugins
 
 # Agent output snippets created by cronjobs, etc.
-if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
+if [ -d "$SPOOLDIR" ]; then
     pushd "$SPOOLDIR" >/dev/null
     now=$(date +%s)
 

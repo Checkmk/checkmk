@@ -32,10 +32,8 @@ RUN_CLANG_TIDY ?= \
         -clang-tidy-binary=clang-tidy-$(CLANG_VERSION) \
         -clang-apply-replacements-binary=clang-apply-replacements-$(CLANG_VERSION)
 VALGRIND ?= $(shell valgrind --version > /dev/null 2>&1 && echo "valgrind --quiet")
-PIPENV := LANG=C PIPENV_VENV_IN_PROJECT=true PIPENV_PIPFILE=$(abs_top_srcdir)/virtual-envs/2.7/Pipfile pipenv
 INCLUDES_DIR := includes
 LIBS_DIR := libs
-
 PACKAGE_ASIO := $(abs_top_srcdir)/omd/packages/asio
 ASIO_VERSION := asio-asio-1-14-0
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
@@ -255,9 +253,7 @@ livestatus.o: $(liblivestatus_a_OBJECTS)
 	$(RM) NagiosMockup
 
 compile_commands.json: $(unixcat_SOURCES) $(test_neb_SOURCES) $(liblivestatus_a_SOURCES)
-	$(MAKE) -C $(top_srcdir) .venv
-	$(PIPENV) --venv
-	$(PIPENV) run compiledb --no-build make
+	$(top_srcdir)/scripts/run-pipenv 2 run compiledb --no-build make
 
 tidy: compile_commands.json
 	$(RUN_CLANG_TIDY) -quiet -j6 $(FILES_TO_CHECK)

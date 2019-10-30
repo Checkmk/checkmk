@@ -42,8 +42,9 @@ SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export CPPCHECK    := cppcheck
 export DOXYGEN     := doxygen
 export IWYU_TOOL   := iwyu_tool
-PIPENV             := PIPENV_NO_INHERIT=true PIPENV_VENV_IN_PROJECT=true PIPENV_NOSPIN=true PIPENV_HIDE_EMOJIS=true pipenv
 ARTIFACT_STORAGE   := http://nexus:8081
+PIPENV2            := scripts/run-pipenv 2
+PIPENV3            := scripts/run-pipenv 3
 
 M4_DEPS            := $(wildcard m4/*) configure.ac
 CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
@@ -97,7 +98,8 @@ THEME_RESOURCES    := $(THEME_CSS_FILES) $(THEME_JSON_FILES) $(THEME_IMAGE_DIRS)
         format-windows format-linux format-python format-shell \
         GTAGS headers help install \
         iwyu mrproper mrclean optimize-images packages setup setversion tidy version \
-        am--refresh skel
+        am--refresh skel .venv .venv-2.7 .venv-3.7
+
 
 help:
 	@echo "setup			      --> Prepare system for development and building"
@@ -178,7 +180,7 @@ endif
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
 # This tar file is only used by "omd/packages/check_mk/Makefile"
-$(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI) $(THEME_RESOURCES) ChangeLog
+$(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI) $(THEME_RESOURCES) ChangeLog
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
@@ -187,7 +189,7 @@ $(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).ta
 	tar rf $(DISTNAME)/bin.tar $(TAROPTS) -C agents/windows/msibuild msi-update
 	tar rf $(DISTNAME)/bin.tar $(TAROPTS) -C agents/windows/msibuild msi-update-legacy
 	gzip $(DISTNAME)/bin.tar
-	$(PIPENV) run python -m compileall cmk ; \
+	$(PIPENV2) run python -m compileall cmk ; \
 	  tar czf $(DISTNAME)/lib.tar.gz $(TAROPTS) \
 	    --exclude "cee" \
 	    --exclude "cee.py*" \
@@ -195,7 +197,7 @@ $(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).ta
 	    --exclude "cme.py*" \
 	    cmk/* ; \
 	  rm cmk/*.pyc
-	$(PIPENV) run python -m compileall cmk_base ; \
+	$(PIPENV2) run python -m compileall cmk_base ; \
 	  tar czf $(DISTNAME)/base.tar.gz \
 	    $(TAROPTS) \
 	    --exclude "cee" \
@@ -268,11 +270,11 @@ omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe:
 
 omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll: omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe
 
-.werks/werks: .venv $(WERKS)
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/precompile-werks.py .werks .werks/werks cre
+.werks/werks: $(WERKS)
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV2) run scripts/precompile-werks.py .werks .werks/werks cre
 
-ChangeLog: .venv .werks/werks
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/create-changelog.py ChangeLog .werks/werks
+ChangeLog: .werks/werks
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV2) run scripts/create-changelog.py ChangeLog .werks/werks
 
 packages:
 	$(MAKE) -C agents packages
@@ -512,14 +514,14 @@ format-windows:
 format-linux:
 	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT_LINUX)
 
-format-python: .venv
+format-python:
 # Explicitly specify --style [FILE] to prevent costly searching in parent directories
 # for each file specified via command line
 #
 # Saw some mixed up lines on stdout after adding the --parallel option. Leaving it on
 # for the moment to get the performance boost this option brings.
 	PYTHON_FILES=$${PYTHON_FILES-$$(tests/find-python-files)} ; \
-	$(PIPENV) run yapf --parallel --style .style.yapf --verbose -i $$PYTHON_FILES
+	$(PIPENV2) run yapf --parallel --style .style.yapf --verbose -i $$PYTHON_FILES
 
 format-shell:
 	sudo docker run --rm -v "$(realpath .):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES)
@@ -532,44 +534,19 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src documentation
 endif
 
-# TODO: The line: sed -i "/\"markers\": \"extra == /d" Pipfile.lock; \
-# can be removed if pipenv fixes this issue.
-# See: https://github.com/pypa/pipenv/issues/3140
-#      https://github.com/pypa/pipenv/issues/3026
-# The recent pipenv version 2018.10.13 has a bug that places wrong markers in the
-# Pipfile.lock. This leads to an error when installing packages with this
-# markers and prints an error message. Example:
-# Ignoring pyopenssl: markers 'extra == "security"' don't match your environment
-# TODO: pipenv and make don't really cooperate nicely: Locking alone already
-# creates a virtual environment with setuptools/pip/wheel. This could lead to a
-# wrong up-to-date status of it later, so let's remove it here. What we really
-# want is a check if the contents of .venv match the contents of Pipfile.lock.
-# We should do this via some move-if-change Kung Fu, but for now rm suffices.
-virtual-envs/%/Pipfile.lock: virtual-envs/%/Pipfile
-	cd virtual-envs/$*/; \
-	$(PIPENV) lock; \
-	sed -i "/\"markers\": \"extra == /d" Pipfile.lock; \
-	rm -rf .venv
-
-# Remake .venv everytime Pipfile or Pipfile.lock are updated. Using the 'sync'
-# mode installs the dependencies exactly as speciefied in the Pipfile.lock.
-# This is extremely fast since the dependencies do not have to be resolved.
-# Cleanup partially created pipenv. This makes us able to automatically repair
-# broken virtual environments which may have been caused by network issues.
-.PRECIOUS: virtual-envs/%/.venv
-virtual-envs/%/.venv: virtual-envs/%/Pipfile.lock
-	@type python$* >/dev/null 2>&1 || (echo "ERROR: python$* can not be found. Execute: \"make setup\"" && exit 1)
-	cd virtual-envs/$*/; \
-	$(RM) -r .venv; \
-	($(PIPENV) sync --dev && touch .venv) || ($(RM) -r .venv ; exit 1)
-
-.venv-%: virtual-envs/%/.venv
+.venv-2.7:
+	make -C virtual-envs/2.7 .venv
+	make -C virtual-envs/3.7 .venv
 	rm -rf {Pipfile,Pipfile.lock,.venv*}
-	ln -s virtual-envs/$*/{Pipfile,Pipfile.lock,.venv} .
-	touch $@
+	ln -s virtual-envs/2.7/{Pipfile,Pipfile.lock,.venv} .
 
-# This is for compatibility: The target .venv should always refer to 2.7
-# .venv is a PHONY target, so it will be remade, even if .venv is 'up to date'
+.venv-3.7:
+	make -C virtual-envs/2.7 .venv
+	make -C virtual-envs/3.7 .venv
+	rm -rf {Pipfile,Pipfile.lock,.venv*}
+	ln -s virtual-envs/3.7/{Pipfile,Pipfile.lock,.venv} .
+
+# This alias is for compatibility: The target .venv should refer to 2.7 for the moment
 .venv: .venv-2.7
 
 # This dummy rule is called from subdirectories whenever one of the

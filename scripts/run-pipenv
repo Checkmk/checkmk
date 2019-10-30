@@ -1,0 +1,35 @@
+#!/bin/bash
+# Small helper to execute pipenv with our different virtual environments.
+# The first argument must be the name of the virtual environment in $REPO_PATH/virtual-envs
+
+set -e -o pipefail
+
+REPO_PATH="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" >/dev/null 2>&1 && pwd)"
+PYTHON_VERSION=$1
+shift
+
+if [ -z "$PYTHON_VERSION" ]; then
+    echo "ERROR: run-pipenv [2|3] PIPENV-ARGS..."
+    exit 1
+fi
+
+# TODO: Intermediate step. will be cleaned up later when we rename the venv directories
+if [ "$PYTHON_VERSION" = "2" ]; then
+    PYTHON_VERSION="2.7"
+elif [ "$PYTHON_VERSION" = "3" ]; then
+    PYTHON_VERSION="3.7"
+fi
+
+if [ ! -d "$REPO_PATH/virtual-envs/$PYTHON_VERSION" ]; then
+    echo "ERROR: Invalid python version $PYTHON_VERSION given."
+    exit 1
+fi
+
+make -C "$REPO_PATH/virtual-envs/$PYTHON_VERSION" .venv
+
+PIPENV_VENV_IN_PROJECT=true \
+    PIPENV_NOSPIN=true \
+    PIPENV_HIDE_EMOJIS=true \
+    PIPENV_NO_INHERIT=true \
+    PIPENV_PIPFILE="$REPO_PATH/virtual-envs/$PYTHON_VERSION/Pipfile" \
+    pipenv "$@"

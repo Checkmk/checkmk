@@ -1,14 +1,12 @@
-SHELL    := /bin/bash -e
-VENV     := ../.venv
-NODE_MODULES := ../node_modules
-PIPENV   := PIPENV_VENV_IN_PROJECT=true PIPENV_NOSPIN=true PIPENV_HIDE_EMOJIS=true pipenv
-BANDIT   := $(PIPENV) run bandit
-COVERAGE := $(PIPENV) run coverage
-PYTEST   := $(PIPENV) run py.test
-YAPF     := $(PIPENV) run yapf
-FUTURIZE := $(PIPENV) run ./test-futurize
-
 include ../defines.make
+
+SHELL    := /bin/bash -e
+PIPENV2  := ../scripts/run-pipenv 2
+BANDIT   := $(PIPENV2) run bandit
+COVERAGE := $(PIPENV2) run coverage
+PYTEST   := $(PIPENV2) run py.test
+YAPF     := $(PIPENV2) run yapf
+FUTURIZE := $(PIPENV2) run ./test-futurize
 
 .PHONY: help pipenv-check test-bandit test-docker test-format-python \
         test-format-shell test-gui-crawl test-integration test-agent-integration test-packaging \
@@ -16,7 +14,6 @@ include ../defines.make
         list-unit-tests test-unit-one-by-one test-unit-coverage-html
 
 help:
-	echo $(MAKE) -C $(dir $(VENV)) $(notdir $(VENV))
 	@echo "pipenv-check              - Checks for security vulnerabilities/PEP 508 markers"
 	@echo "test-bandit               - Run bandit (security) tests"
 	@echo "test-format-python        - Test the python formatting"
@@ -33,29 +30,21 @@ help:
 	@echo "test-unit-one-by-one      - Run unit tests one by one"
 	@echo "test-unit-coverage-html   - Create HTML coverage report for unit tests"
 
-# These target need to be phony so it is run every time because only the other
-# makefile can determine that there's nothing to be done.
-# TODO: Move everything to top level makefile?
-.PHONY: $(VENV) bandit.ini
-
-$(VENV):
-	$(MAKE) -C $(dir $(VENV)) $(notdir $(VENV))
-
 $(NODE_MODULES):
 	$(MAKE) -C $(dir $(NODE_MODULES)) $(notdir $(NODE_MODULES))
 
 bandit.ini:
 	echo -e "[bandit]\ntargets: $$(./find-python-files | tr '\n' ',' | sed 's/,$$//')" > bandit.ini
 
-pipenv-check: $(VENV)
-	$(PIPENV) check
+pipenv-check:
+	$(PIPENV2) check
 
-test-bandit: $(VENV) bandit.ini
+test-bandit: bandit.ini
 # Currently only care about high severity reported issues. Once this is reached,
 # go and enable the medium/low checks.
 	$(BANDIT) -c ../bandit.yaml -r -lll --ini bandit.ini $(BANDIT_OUTPUT_ARGS)
 
-test-format-python: $(VENV) ../.style.yapf
+test-format-python: ../.style.yapf
 # Explicitly specify --style [FILE] to prevent costly searching in parent directories
 # for each file specified via command line
 #
@@ -70,25 +59,25 @@ test-format-python: $(VENV) ../.style.yapf
 test-format-shell:
 	sudo docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
 
-test-gui-crawl: $(VENV) $(NODE_MODULES)
+test-gui-crawl: $(NODE_MODULES)
 	$(PYTEST) -T gui_crawl $(realpath integration/cmk/gui/test_crawl.py)
 
-test-integration: $(VENV) $(NODE_MODULES)
+test-integration: $(NODE_MODULES)
 	$(PYTEST) -T integration $(realpath integration)
 
-test-agent-integration: $(VENV)
+test-agent-integration:
 	$(PYTEST) -T agent-integration $(realpath agent-integration)
 
-test-composition: $(VENV) $(NODE_MODULES)
+test-composition: $(NODE_MODULES)
 	$(PYTEST) -T composition $(realpath composition)
 
-test-packaging: $(VENV)
+test-packaging:
 	$(PYTEST) -T packaging packaging
 
-test-pylint: $(VENV)
+test-pylint:
 	$(PYTEST) -T pylint pylint
 
-test-python-futurize: $(VENV)
+test-python-futurize:
 	$(FUTURIZE)
 
 test-shellcheck:
@@ -99,11 +88,11 @@ test-shellcheck:
 		$$(grep -l '^#!/.*sh' $$CMK_DIR/agents/* $$CMK_DIR/agents/plugins/* $$CMK_DIR/agents/special/* 2>/dev/null) \
 		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
 
-test-unit: $(VENV)
+test-unit:
 	$(PYTEST) -T unit unit
 
 # Probably a noteworthy entry for any "obfuscated bash/make/sed contest"...
-list-unit-tests: $(VENV)
+list-unit-tests:
 	@$(PYTEST) -T unit unit --collect-only  `# list tests in tree form` | \
 	  grep '^\(<Module\|  <Function\) '         `# remove docstring lines` | \
 	  sed 's/\[.*\]>/>/'                        `# remove test parameters` | \
@@ -113,7 +102,7 @@ list-unit-tests: $(VENV)
 	  sed -e '/^#/{h;d};G'                      `# precede every function name line with a file name line` \
 	      -e 's/^\(.*\)\n#\(.*\)/\2::\1/'       `# glue the line pairs together`
 
-test-unit-one-by-one: $(VENV)
+test-unit-one-by-one:
 	@set -e ; \
 	for i in $$($(MAKE) --silent --no-print-directory list-unit-tests); do \
 	  $(PYTEST) -T unit $$i ; \
@@ -121,6 +110,6 @@ test-unit-one-by-one: $(VENV)
 
 # TODO: We should perhaps use the pytest --cov/--cov-report options, which the
 # pytest-cov plugin package adds to pyttest.
-test-unit-coverage-html: $(VENV)
+test-unit-coverage-html:
 	$(COVERAGE) run --rcfile=.coveragerc_unit -m pytest -T unit unit
 	$(COVERAGE) html

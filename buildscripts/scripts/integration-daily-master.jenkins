@@ -174,7 +174,7 @@ try {
             println(DOCKER_REGISTRY)
             IMAGE = 'ubuntu-18.04-common'
             docker.image(IMAGE).inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN --network ci_local-infra') {
-                stage('checkout sources') {
+                stage('archive artifacts') {
                     sh 'rm -rf results'
                     dir('results') {
                         for (String DISTRO : DISTRO_LIST) {

@@ -61,6 +61,6 @@ check_info['hp_fan'] = {
             "2",  # hpicfFanTray: Tray number in which the fan is docked.
             "4",  # hpicfFanState
         ]),
-    'snmp_scan_function': lambda oid: "hp" in oid(".1.3.6.1.2.1.1.1.0").lower() and "5406rzl2" in
-                          oid(".1.3.6.1.2.1.1.1.0").lower(),
+    'snmp_scan_function': lambda oid: "hp" in oid(".1.3.6.1.2.1.1.1.0").lower() and
+                          bool(re.search(r"54(06|12)rzl2", oid(".1.3.6.1.2.1.1.1.0").lower())),
 }

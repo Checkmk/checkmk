@@ -31,10 +31,10 @@ Boston, MA 02110-1301 USA.
 /* States */
 
 /* Colors of the five possible host and service states
-  CRIT:    #e2001a
-  UNKNOWN: #f79802
-  WARN:    #e6c908
-  OK:      #41a62a
+  CRIT:    rgb(226, 0, 26)
+  UNKNOWN: rgb(247, 152, 2)
+  WARN:    rgb(230, 201, 8)
+  OK:      rgb(65, 166, 42)
 */
 
 /* TODO: Get rid of important styles throughout this style sheet */
@@ -57,13 +57,13 @@ td.state {
 
 table.data tr.data td.stale,
 table.data td.perfometer.stale div.title {
-  color: #888;
+  color: rgb(136, 136, 136);
 }
 
 table.data tr.data td.stale.state2,
 table.data tr.data td.stale.hstate1 {
   color: $lightgrey !important;
-  text-shadow: 0.8px 0.8px 0.8px #f88;
+  text-shadow: 0.8px 0.8px 0.8px rgb(255, 136, 136);
 }
 
 
@@ -182,7 +182,7 @@ b.stmark {
   padding: 1px 3px;
   margin-left: 2px;
   font-size: 9px;
-  border: 1px solid #666;
+  border: 1px solid rgb(102, 102, 102);
   border-radius: 4px;
 }
 
@@ -197,7 +197,7 @@ img.pluginurl {
 
 /* *some* problem */
 .states, .hstates {
-  color: #000;
+  color: rgb(0, 0, 0);
   background-image: url("images/someproblem.png");
   background-position: center center;
   background-repeat: repeat;
@@ -222,10 +222,10 @@ img.pluginurl {
   padding: 2px;
   font-size: 9px;
   line-height: 12px;
-  color: #fff;
+  color: rgb(255, 255, 255);
   text-align: center;
   cursor: default;
-  border-color: #1b333d #264c18 #1b333d #274141;
+  border-color: rgb(27, 51, 61) rgb(38, 76, 24) rgb(27, 51, 61) rgb(39, 65, 65);
   border-style: solid;
   border-width: 1px;
   border-radius: 4px;
@@ -243,16 +243,16 @@ img.pluginurl {
   }
 
   &.disabled {
-    color: #b2b2b2;
-    background-color: #787878;
+    color: rgb(178, 178, 178);
+    background-color: rgb(120, 120, 120);
   }
 
   &.dead     {
-    background-color: #b91e1d;
+    background-color: rgb(185, 30, 29);
   }
 
   &.down     {
-    background-color: #f60000;
+    background-color: rgb(246, 0, 0);
   }
 
   &.online {
@@ -263,19 +263,19 @@ img.pluginurl {
   }
 
   &.partial {
-    background-color: #bd8a3f;
+    background-color: rgb(189, 138, 63);
   }
 
   &.unknown  {
-    background-color: #a96394;
+    background-color: rgb(169, 99, 148);
   }
 
   &.unreach  {
-    background-color: #ef7b08;
+    background-color: rgb(239, 123, 8);
   }
 
   &.waiting  {
-    background-color: #3574c2;
+    background-color: rgb(53, 116, 194);
   }
 }
 
@@ -323,7 +323,7 @@ table.data tr.data > td.perfometer {
 
 td.perfometer {
   a {
-    color: #000;
+    color: rgb(0, 0, 0);
     text-decoration: none;
   }
 
@@ -369,7 +369,7 @@ td.perfometer {
     height: 24px;
     padding: 0;
     margin: 0;
-    border: 1px solid #aaa;
+    border: 1px solid rgb(170, 170, 170);
     border-spacing: 0;
   }
 }
@@ -398,7 +398,7 @@ table.data td.perfometer {
 }
 
 td.statex {  /* zero count */
-  color: #ccc;
+  color: rgb(204, 204, 204);
 }
 
 /* Row coloring in case of the different states */
@@ -425,8 +425,8 @@ tr[class*="even"] {
 .data div.hostdown {
   padding-right: 3px;
   padding-left: 3px;
-  background-color: #f22;
-  border: 2px solid #000;
+  background-color: rgb(255, 34, 34);
+  border: 2px solid rgb(0, 0, 0);
   border-radius: 4px;
 }
 
@@ -437,7 +437,7 @@ table.data {
 
     &.staletime {
       font-weight: bold;
-      color: #f00;
+      color: rgb(255, 0, 0);
     }
 
     &.recent {
@@ -447,7 +447,7 @@ table.data {
   }
 
   .state2 *, .state3 * {
-    color: #fff;
+    color: rgb(255, 255, 255);
   }
 
   .state0 * {
@@ -466,11 +466,11 @@ table.data {
 
 td.badflag {
   font-weight: bold;
-  background-color: #f64;
+  background-color: rgb(255, 102, 68);
 }
 
 td.goodflag {
-  color: #080;
+  color: rgb(0, 136, 0);
 }
 
 td.icons {
@@ -514,7 +514,7 @@ table.data div.objectlist div {
 img.siteicon {
   width: 24px;
   height: 24px;
-  border: 1px solid #666;
+  border: 1px solid rgb(102, 102, 102);
 }
 
 /* TODO: Reproduce table.customvars */
@@ -528,7 +528,7 @@ table.data tr.data td table.customvars td {
 
   &:last-child {
     padding-left: 5px;
-    border-left: 1px solid #bbb;
+    border-left: 1px solid rgb(187, 187, 187);
   }
 }
 
@@ -536,10 +536,10 @@ td.matchgroups span {
   padding: 0 3px;
   margin-right: 3px;
   font-family: monospace;
-  background-color: #fff;
-  border: 1px solid #eee;
+  background-color: rgb(255, 255, 255);
+  border: 1px solid rgb(238, 238, 238);
   border-radius: 3px;
-  box-shadow: 0 0 1px #888;
+  box-shadow: 0 0 1px rgb(136, 136, 136);
 }
 
 table.data.availability tr.even0 td {

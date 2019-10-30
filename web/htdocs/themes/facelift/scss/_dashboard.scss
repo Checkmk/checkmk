@@ -118,7 +118,7 @@ div.dashlet {
   }
 
   div.title a {
-    color: #fff;
+    color: rgb(255, 255, 255);
     text-decoration: none;
 
     &:hover {
@@ -169,7 +169,7 @@ div.dashlet {
     th, td {
       padding: 0 4px;
       vertical-align: middle;
-      border-color: #498aa6;
+      border-color: rgb(73, 138, 166);
       border-style: solid none;
       border-width: 1px;
 
@@ -186,11 +186,11 @@ div.dashlet {
 
     td {
       text-align: right;
-      background-color: #95bbcd;
+      background-color: rgb(149, 187, 205);
     }
 
     a {
-      color: #000;
+      color: rgb(0, 0, 0);
       text-decoration: none;
 
       &:hover {
@@ -487,9 +487,9 @@ div#dashboard.grid {
 .sizer {
   position: absolute;
   cursor: pointer;
-  border: 1px solid #666;
+  border: 1px solid rgb(102, 102, 102);
   border-radius: 2px;
-  box-shadow: .5px .5px 2px #333;
+  box-shadow: .5px .5px 2px rgb(51, 51, 51);
 }
 
 .sizer0 {
@@ -503,15 +503,15 @@ div#dashboard.grid {
 }
 
 .sizer.max {
-  background-color: #f00;
+  background-color: rgb(255, 0, 0);
 }
 
 .sizer.grow {
-  background-color: #ff0;
+  background-color: rgb(255, 255, 0);
 }
 
 .sizer.abs {
-  background-color: #eee;
+  background-color: rgb(238, 238, 238);
 }
 
 /* left side */
@@ -622,7 +622,7 @@ div#dashboard.grid {
   /* display: none; */
   padding: 2px;
   font-size: 6px;
-  color: #000;
+  color: rgb(0, 0, 0);
   cursor: auto;
 }
 

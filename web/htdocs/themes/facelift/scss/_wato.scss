@@ -88,10 +88,10 @@ Boston, MA 02110-1301 USA.
 /* Tables renderes in forms. */
 /* TODO: Reproduce these data tables within nform tables */
 .wato table.nform table.data {
-  box-shadow: 1px 1px 2px #444;
+  box-shadow: 1px 1px 2px rgb(68, 68, 68);
 
   th {
-    background-color: #527280;
+    background-color: rgb(82, 114, 128);
   }
 }
 
@@ -163,7 +163,7 @@ Boston, MA 02110-1301 USA.
   td {
     padding: 2px 8px;
     margin: 2px;
-    background-color: #ff0;
+    background-color: rgb(255, 255, 0);
   }
 }
 
@@ -174,15 +174,15 @@ Boston, MA 02110-1301 USA.
 
 /* TODO: Reproduce these .dns .dnserror and .error elements */
 .wato td.dns {
-  color: #666;
+  color: rgb(102, 102, 102);
 }
 
 .wato td.dnserror {
-  color: #f00;
+  color: rgb(255, 0, 0);
 }
 
 .wato td.error {
-  color: #f00;
+  color: rgb(255, 0, 0);
 }
 
 .wato div.inherited {
@@ -199,7 +199,7 @@ Boston, MA 02110-1301 USA.
 }
 
 .wato td.inherited {
-  color: #666;
+  color: rgb(102, 102, 102);
 }
 
 /* host validation error */
@@ -369,7 +369,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
     padding-right: 20px; /* spacing for the image divs left/right */
     padding-left: 20px;
     margin-left: -13px; /* move left border of all items 22px left to make the items overlap */
-    color: #fff;
+    color: rgb(255, 255, 255);
     background: transparent;
 
     a {
@@ -392,7 +392,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
       margin: 0;
       font-size: 12px;
       font-weight: normal;
-      color: #fff;
+      color: rgb(255, 255, 255);
       background-color: $bg-color-tertiary;
       box-shadow: none;
     }
@@ -505,7 +505,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
     left: 20px;
     padding: 0;
     overflow: hidden;
-    color: #fff;
+    color: rgb(255, 255, 255);
     text-align: left;
     text-overflow: ellipsis;
     -o-text-overflow: ellipsis;
@@ -598,7 +598,7 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   height: 140px;
   margin-top: 10px;
   background-color: rgba(255, 255, 255, 0.3);
-  border: 1px solid #fff;
+  border: 1px solid rgb(255, 255, 255);
   border-radius: 4px;
 
   div.nr {
@@ -607,10 +607,10 @@ body.main .popup_menu .wato div.floatfolder div.title span,
     left: 9px;
     width: 20px;
     height: 20px;
-    color: #000;
+    color: rgb(0, 0, 0);
     text-align: center;
-    background-color: #fcd340;
-    border: 1px solid #fff;
+    background-color: rgb(252, 211, 64);
+    border: 1px solid rgb(255, 255, 255);
     border-radius: 10px;
 
     b {
@@ -624,7 +624,7 @@ body.main .popup_menu .wato div.floatfolder div.title span,
     top: 12px;
     font-size: 13px;
     font-weight: bold;
-    color: #fff;
+    color: rgb(255, 255, 255);
 
     &.conditions {
       left: 40px;
@@ -640,8 +640,8 @@ body.main .popup_menu .wato div.floatfolder div.title span,
     top: 30px;
     height: 90px;
     padding: 5px;
-    background-color: #a7bec3;
-    border: 1px solid #fff;
+    background-color: rgb(167, 190, 195);
+    border: 1px solid rgb(255, 255, 255);
     border-radius: 4px;
 
     &.conditions {
@@ -731,7 +731,7 @@ body.main .popup_menu .wato div.floatfolder div.title span,
 
 .wato table.data.ruleset tr.disabled td {
   * {
-    color: #999;
+    color: rgb(153, 153, 153);
   }
 
   .tagify__tag-text {
@@ -915,7 +915,7 @@ form.search, div.filter_buttons {
  * with white color it wasn't visible anyways */
 div.varname {
   font-family: monospace, sans-serif;
-  color: #fff;
+  color: rgb(255, 255, 255);
 }
 
 /* page "global settings*/
@@ -1007,7 +1007,7 @@ div.varname {
   width: 100%;
 
   tr.foreign.not_permitted td {
-    color: #f00;
+    color: rgb(255, 0, 0);
   }
 }
 
@@ -1120,8 +1120,8 @@ table.data tr.notification_context table {
 table.data tr.data.dcd_log_entries {
   > td {
     font-family: monospace, sans-serif;
-    color: #fff;
-    background-color: #000;
+    color: rgb(255, 255, 255);
+    background-color: rgb(0, 0, 0);
   }
 
   pre {
@@ -1145,14 +1145,14 @@ table.data tr.data.dcd_log_entries {
 
 .wato table.progress {
   width: 50%;
-  color: #000;
+  color: rgb(0, 0, 0);
   background: $bg-color-tertiary;
   border: 1px solid $color-table-border;
   border-radius: $theme-border-radius;
 
   th {
     padding: 3px 0;
-    background-color: #fff;
+    background-color: rgb(255, 255, 255);
   }
 
   td {
@@ -1179,7 +1179,7 @@ table.data tr.data.dcd_log_entries {
       div.exc {
         padding: 5px;
         margin: 10px;
-        border: 1px solid #f00;
+        border: 1px solid rgb(255, 0, 0);
       }
     }
 
@@ -1194,7 +1194,7 @@ table.data tr.data.dcd_log_entries {
         top: 12px;
         width: 100%;
         height: 22px;
-        background-color: #fff;
+        background-color: rgb(255, 255, 255);
         border-spacing: 1px 2px;
       }
 
@@ -1221,7 +1221,7 @@ table.data tr.data.dcd_log_entries {
 
       td.left {
         width: 0%;
-        background-color: #4080ff;
+        background-color: rgb(64, 128, 255);
       }
 
       td.right {
@@ -1235,14 +1235,14 @@ table.data tr.data.dcd_log_entries {
       padding: 24px 12px 18px;
 
       table {
-        border: 1px solid #fff;
+        border: 1px solid rgb(255, 255, 255);
         border-collapse: collapse;
         border-spacing: 0;
       }
 
       th, td {
         padding: 6px 0;
-        border-bottom: 1px solid #fff;
+        border-bottom: 1px solid rgb(255, 255, 255);
         border-color: $color-table-border;
       }
 
@@ -1289,8 +1289,8 @@ table.data tr.data.dcd_log_entries {
   padding: 2px 5px;
   margin: 2px;
   font-weight: bold;
-  color: #000;
-  background-color: #ff0;
+  color: rgb(0, 0, 0);
+  background-color: rgb(255, 255, 0);
   border-radius: 3px;
   opacity: 0.9;
 }
@@ -1304,13 +1304,13 @@ table.data tr.data.dcd_log_entries {
 /* TODO: Reproduce these table.logwatch elements */
 table.logwatch {
   tr.noreason {
-    color: #898989;
+    color: rgb(137, 137, 137);
   }
 
   span.match {
     padding: 0 2px 2px;
-    background-color: #fff;
-    border: 1px solid #49768b;
+    background-color: rgb(255, 255, 255);
+    border: 1px solid rgb(73, 118, 139);
     border-radius: 4px;
   }
 }
@@ -1330,7 +1330,7 @@ table.multisite_conn_method td {
 table.data td.bi_rule_tree {
   b.treeangle {
     font-weight: normal;
-    color: #000;
+    color: rgb(0, 0, 0);
   }
 
   ul.treeangle {
@@ -1371,7 +1371,7 @@ table.data td.bi_rule_tree {
   font-family: monospace, sans-serif;
   vertical-align: top;
   background-color: $bg-color-default;
-  box-shadow: 1px 1px 3px #888 inset;
+  box-shadow: 1px 1px 3px rgb(136, 136, 136) inset;
   /* below resize option is css3 */
   resize: both;
 }
@@ -1468,10 +1468,10 @@ table.setting td.reason {
   float: none;
   width: 180px;
   font-style: italic;
-  color: #fff;
+  color: rgb(255, 255, 255);
 
   i { /* default value */
-    color: #b6c8d1;
+    color: rgb(182, 200, 209);
   }
 
   a {

@@ -95,7 +95,7 @@ $bg-color-tertiary:	  $grey-7;
 // Buttons
 // -----------------------------------------------------------------------------
 $button-background-hover:             lighten($grey-7, 10%);
-$button-border:                       #d9d9d9;
+$button-border:                       rgb(217, 217, 217);
 $button-height:                       28px;
 
 
@@ -122,20 +122,20 @@ $color-state-2-border:                mix($black, $danger, 30%);
 $color-state-3-background:            rgb(255, 179, 0);
 $color-state-3-border:                rgb(255, 179, 0);
 
-$color-state-4-background:            #888;
-$color-state-4-border:                #7b7b7b;
+$color-state-4-background:            rgb(136, 136, 136);
+$color-state-4-border:                rgb(123, 123, 123);
 
-$color-state-5-background:            #48cbf0;
+$color-state-5-background:            rgb(72, 203, 240);
 
-$color-state-6-background:            #b9ecfa;
+$color-state-6-background:            rgb(185, 236, 250);
 
-$color-state-7-background:            #e9806e;
+$color-state-7-background:            rgb(233, 128, 110);
 
-$color-state-8-background:            #f1aea2;
+$color-state-8-background:            rgb(241, 174, 162);
 
-$color-state-9-background:            #bf5abf;
+$color-state-9-background:            rgb(191, 90, 191);
 
-$color-state-error-border:            #e22828; // red
+$color-state-error-border:            rgb(226, 40, 40); // red
 
 $color-state-success-background:      $success; // green
 $color-state-success-border:          mix($black, $success, 30%); // green
@@ -152,11 +152,9 @@ $color-table-background:              $grey-6; // light grey
 $color-table-border-dark:             $grey-7; // dark grey
 $color-table-background-dark:         $grey-7; // dark grey
 
-$color-table-border-dark-2:           #313638; // dark grey
+$color-table-border-dark-2:           rgb(49, 54, 56); // dark grey
 
 $theme-font-table-header:                   16px;
-
-$color-table-header-text:             #2a2a2a80; // half transparent
 
 
 // -----------------------------------------------------------------------------
@@ -171,23 +169,23 @@ $theme-snapin-width:                        262px;
 // -----------------------------------------------------------------------------
 // Nuances (Colors only used once)
 // -----------------------------------------------------------------------------
-$color-nuance-1:                      #afb2c6; // blue grey
-$color-nuance-2:                      #afb; // light green
-$color-nuance-3:                      #8288a6; // dark grey
-$color-nuance-4:                      #f6f7f8; // light grey
-$color-nuance-5:                      #c5c5c5; // grey
-$color-nuance-6:                      #ffeb83; // == $info; yellow
-$color-nuance-7:                      #333; // dark grey
-$color-nuance-8:                      #d7d7d7; // grey
-$color-nuance-9:                      #cfcfcf; // grey
-$color-nuance-10:                     #191c1d; // grey
-$color-nuance-11:                     #222f33; // dark grey
-$color-nuance-12:                     #9ee273; // green
-$color-nuance-13:                     #f3f4f6; // light grey
+$color-nuance-1:                      rgb(175, 178, 198); // blue grey
+$color-nuance-2:                      rgb(170, 255, 187); // light green
+$color-nuance-3:                      rgb(130, 136, 166); // dark grey
+$color-nuance-4:                      rgb(246, 247, 248); // light grey
+$color-nuance-5:                      rgb(197, 197, 197); // grey
+$color-nuance-6:                      rgb(255, 235, 131); // == $info; yellow
+$color-nuance-7:                      rgb(51, 51, 51); // dark grey
+$color-nuance-8:                      rgb(215, 215, 215); // grey
+$color-nuance-9:                      rgb(207, 207, 207); // grey
+$color-nuance-10:                     rgb(25, 28, 29); // grey
+$color-nuance-11:                     rgb(34, 47, 51); // dark grey
+$color-nuance-12:                     rgb(158, 226, 115); // green
+$color-nuance-13:                     rgb(243, 244, 246); // light grey
 $color-nuance-14:                     rgba(37, 41, 42, .3); // transparent grey
 $color-nuance-15:                     rgb(130, 50, 50); // dark red
-$color-nuance-16:                     #fb9f49; // orange
-$color-nuance-17:                     #a1e6f8; // light blue
+$color-nuance-16:                     rgb(251, 159, 73); // orange
+$color-nuance-17:                     rgb(161, 230, 248); // light blue
 
 
 // -----------------------------------------------------------------------------
@@ -332,7 +330,7 @@ $snapin-border:				    1px solid $grey-7;
 $snapin-border-top:			    null;
 $snapin-border-bottom:			    null;
 
-$wato-a-border:				    1px solid #212121;
+$wato-a-border:				    1px solid rgb(33, 33, 33);
 
 $wato-subtitle-color:			    $grey-2;
 
@@ -359,7 +357,7 @@ $wato-h3-margin-bottom:			    4px;
 $wato-data-th-bg-color:			    $grey-6;
 $wato-data-table-border:		    10px solid $grey-6;
 $wato-data-table-border-bottom:		    none;
-$wato-data-table-box-shadow:		    0 0 0 1px #212121;
+$wato-data-table-box-shadow:		    0 0 0 1px rgb(33, 33, 33);
 
 $wato-post-contextlinks-border-top:	    19px solid $grey-6;
 

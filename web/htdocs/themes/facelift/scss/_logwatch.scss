@@ -28,13 +28,13 @@ Boston, MA 02110-1301 USA.
 
 #logwatch {
   margin-top: 6px;
-  color: #000;
+  color: rgb(0, 0, 0);
 
   div.chunk {
     padding: 3px;
     margin-bottom: 11px;
-    background-color: #fff;
-    border-color: #bbb #555 #222 #bbb;
+    background-color: rgb(255, 255, 255);
+    border-color: rgb(187, 187, 187) rgb(85, 85, 85) rgb(34, 34, 34) rgb(187, 187, 187);
     border-style: solid;
     border-width: 1px;
   }
@@ -43,20 +43,20 @@ Boston, MA 02110-1301 USA.
     width: 26px;
     font-family: sans-serif;
     font-weight: bold;
-    color: #008;
+    color: rgb(0, 0, 136);
 
     /* TODO: Reproduce this html element */
     b {
-      color: #08f;
+      color: rgb(0, 136, 255);
     }
 
     /* TODO: Reproduce this html element */
     &.ack {
       padding: 2.1px 7px;
-      color: #fff;
+      color: rgb(255, 255, 255);
       text-decoration: none;
-      background-color: #33c;
-      border-color: #ccc #888 #333 #777;
+      background-color: rgb(51, 51, 204);
+      border-color: rgb(204, 204, 204) rgb(136, 136, 136) rgb(51, 51, 51) rgb(119, 119, 119);
       border-style: solid;
       border-width: 2px;
       border-radius: 6px;
@@ -74,9 +74,9 @@ Boston, MA 02110-1301 USA.
     white-space: -moz-pre-wrap; /* Firefox */
     white-space: -pre-wrap;     /* Opera <7 */
     white-space: -o-pre-wrap;   /* Opera 7 */
-    background-color: #ddd;
-    border-right: 1px solid #888;
-    border-left: 1px solid #888;
+    background-color: rgb(221, 221, 221);
+    border-right: 1px solid rgb(136, 136, 136);
+    border-left: 1px solid rgb(136, 136, 136);
 
     img {
       margin-right: 2px;
@@ -84,18 +84,18 @@ Boston, MA 02110-1301 USA.
   }
 
   .WARN {
-    background-color: #ff8;
-    border-bottom: 1px solid #cc0;
+    background-color: rgb(255, 255, 136);
+    border-bottom: 1px solid rgb(204, 204, 0);
   }
 
   .CRIT {
-    background-color: #f88;
-    border-bottom: 1px solid #c00;
+    background-color: rgb(255, 136, 136);
+    border-bottom: 1px solid rgb(204, 0, 0);
   }
 
   .OK {
-    background-color: #0b3;
-    border-bottom: 1px solid #0c0;
+    background-color: rgb(0, 187, 51);
+    border-bottom: 1px solid rgb(0, 204, 0);
   }
 
   td.WARN, td.CRIT, td.OK {
@@ -104,21 +104,21 @@ Boston, MA 02110-1301 USA.
     margin: 0;
     font-weight: bold;
     text-align: center;
-    border: 1px solid #000;
+    border: 1px solid rgb(0, 0, 0);
   }
 
   td.WARN {
-    background-color: #ff0;
+    background-color: rgb(255, 255, 0);
   }
 
   td.CRIT {
-    color: #fff;
-    background-color: #f00;
+    color: rgb(255, 255, 255);
+    background-color: rgb(255, 0, 0);
   }
 
   td.OK {
-    color: #fff;
-    background-color: #0b3;
+    color: rgb(255, 255, 255);
+    background-color: rgb(0, 187, 51);
   }
 
   table.section {
@@ -129,7 +129,7 @@ Boston, MA 02110-1301 USA.
   .date {
     padding-left: 6px;
     font-weight: normal;
-    color: #666;
+    color: rgb(102, 102, 102);
   }
 
   /* TODO: Reproduce these three td.button elements */
@@ -139,16 +139,16 @@ Boston, MA 02110-1301 USA.
     a {
       padding: .7px 7px;
       font-weight: normal;
-      color: #000;
+      color: rgb(0, 0, 0);
       text-decoration: none;
-      background-color: #cca;
-      border-color: #ddd #888 #333 #ddd;
+      background-color: rgb(204, 204, 170);
+      border-color: rgb(221, 221, 221) rgb(136, 136, 136) rgb(51, 51, 51) rgb(221, 221, 221);
       border-style: solid;
       border-width: 1px;
       border-radius: 4px;
 
       &:active {
-        background-color: #aa8;
+        background-color: rgb(170, 170, 136);
       }
     }
   }
@@ -162,11 +162,11 @@ Boston, MA 02110-1301 USA.
     padding: 2.8px 12px;
     margin-right: 2.1px;
     margin-bottom: 0;
-    color: #000;
+    color: rgb(0, 0, 0);
     text-decoration: none;
     vertical-align: top;
-    background-color: #fc0;
-    border-bottom: 1px solid #000;
+    background-color: rgb(255, 204, 0);
+    border-bottom: 1px solid rgb(0, 0, 0);
     border-style: none;
     border-radius: 12px 12px 0 0;
   }

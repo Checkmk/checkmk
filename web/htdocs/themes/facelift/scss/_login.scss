@@ -90,7 +90,7 @@ body.login {
   }
 
   label {
-    color: #fff;
+    color: rgb(255, 255, 255);
   }
 
   #label_user, #label_pass {
@@ -137,7 +137,7 @@ body.login {
     padding: 8px 16px;
     margin: 0;
     font-weight: $font-weight-bold;
-    border-color: #13d389;
+    border-color: rgb(19, 211, 137);
   }
 
   #login_error {

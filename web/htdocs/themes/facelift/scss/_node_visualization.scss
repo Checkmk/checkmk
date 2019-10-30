@@ -309,24 +309,24 @@ div.node_vis {
 
   .state0 {
     color: $black;
-    fill: #13d389;
+    fill: rgb(19, 211, 137);
   }
 
   .state1 {
-    fill: #fffe44;
+    fill: rgb(255, 254, 68);
   }
 
   .state2 {
-    fill: #ff3232;
+    fill: rgb(255, 50, 50);
   }
 
   .state3 {
-    fill: #f91;
+    fill: rgb(255, 153, 17);
   }
 
   // state pending
   .state-1 {
-    fill: #888;
+    fill: rgb(136, 136, 136);
   }
 
   circle.state_circle {
@@ -364,7 +364,7 @@ div.node_vis {
 
   circle.style_indicator.focus {
     opacity: 0.5;
-    stroke: #fffe44;
+    stroke: rgb(255, 254, 68);
     stroke-width: 3;
   }
 

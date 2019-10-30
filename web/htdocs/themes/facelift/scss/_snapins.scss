@@ -75,7 +75,7 @@ table.hostmatrix {
 
   td {
     padding: 0;
-    border: 1px solid #123a4a;
+    border: 1px solid rgb(18, 58, 74);
     border-spacing: 0;
   }
 }
@@ -197,18 +197,18 @@ table.mkeventd_performance {
  */
 div.state1 {
   &.statea, &.stated {
-    border-color: #ff0;
+    border-color: rgb(255, 255, 0);
   }
 }
 
 div.state2 {
   &.statea, &.stated {
-    border-color: #f00;
+    border-color: rgb(255, 0, 0);
   }
 }
 
 div.statea, div.stated {
-  background-color: #0b3;
+  background-color: rgb(0, 187, 51);
 }
 
 /*
@@ -436,7 +436,7 @@ div.spacertop {
     height: 8px;
     margin-right: 0;
     border-radius: 50%;
-    box-shadow: 0 0 0.7px #284850;
+    box-shadow: 0 0 0.7px rgb(40, 72, 80);
   }
 
   ul > div.statebullet.leaf {
@@ -649,7 +649,7 @@ table.cmc_stats {
  */
 #snapin_reports {
   i {
-    color: #000;
+    color: rgb(0, 0, 0);
   }
 
   input {

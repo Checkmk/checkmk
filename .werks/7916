@@ -13,5 +13,6 @@ environemts with OID/LDAP or special setups with a wallet.
 
 Examples:
 
-DBUSER=<username>:<password>:<sysdba|sysoper>:<hostname>:<port>:<tns alias>
-REMOTE_INSTANCE_1_orcl=<username>:<password>:<sysdba|sysoper>:<hostname>:<port>:<piggybackhost>:<ORACLE_SID>:<DB version>:<tns alias> 
+DBUSER=MYUSER:MYPASSWORD:SYSDBA:MYHOSTNAME:MYPORT:MYTNSALIAS
+
+REMOTE_INSTANCE_1_orcl=MYUSER:MYPASSWORD:SYSDBA:MYHOSTNAME:MYPORT:MYPIGGYBACKHOST:MYSID:MYDBVERSION:MYTNSALIAS

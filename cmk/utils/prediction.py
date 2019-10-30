@@ -60,6 +60,29 @@ def rrd_timestamps(twindow):
     return [t + step for t in range(start, end, step)]
 
 
+def aggregation_functions(series, aggr):
+    """Aggregate data in series list according to aggr
+
+    If series has None values they are dropped before aggregation"""
+    if aggr is None:
+        aggr = "max"
+    aggr = aggr.lower()
+
+    if not series or all(x is None for x in series):
+        return None
+
+    series = [x for x in series if x is not None]
+
+    if aggr == 'average':
+        return sum(series) / float(len(series))
+    if aggr == 'max':
+        return max(series)
+    if aggr == 'min':
+        return min(series)
+
+    raise ValueError("Invalid Aggregation function %s, only max, min, average allowed" % aggr)
+
+
 class TimeSeries(object):
     """Describes the returned time series returned by livestatus
 
@@ -110,6 +133,35 @@ class TimeSeries(object):
 
             return upsa
 
+        return self.values
+
+    def downsample(self, twindow, cf='max'):
+        """Downsample time series by consolidation function
+
+        twindow : 3-tuple, (start, end, step)
+             description of target time interval
+        cf : str ('max', 'average', 'min')
+             consolidation function imitating RRD methods
+"""
+        dwsa = []
+        i = 0
+        co = []
+        start, end, step = twindow
+        desired_times = rrd_timestamps(twindow)
+        if start != self.start or end != self.end or step != self.step:
+            for t, val in self.time_data_pairs():
+                if t > desired_times[i]:
+                    dwsa.append(aggregation_functions(co, cf))
+                    co = []
+                    i += 1
+                co.append(val)
+
+            diff_len = len(desired_times) - len(dwsa)
+            if diff_len > 0:
+                dwsa.append(aggregation_functions(co, cf))
+                dwsa = dwsa + [None] * (diff_len - 1)
+
+            return dwsa
         return self.values
 
     def time_data_pairs(self):

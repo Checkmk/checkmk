@@ -1,0 +1,29 @@
+Title: Deal with RRD sources which are not updated anymore in multiline graphs
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1572530912
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+The metrics "Guest operating systems" and "CPU time stolen by other
+operating systems" that appear on the CPU utilization service Check for
+unix systems are only relevant on virtualized environments. On other cases
+they are always zero, and thus completely skipped in the graphs, but still
+tracked by the monitoring core.
+
+Checkmk 1.6 stopped delivering this metrics for systems where they are
+irrelevant. This saves disk space, and disk I/O improving scalability.
+
+If you update from Checkmk 1.5, the unused RRDs will remain in disk but
+won't be updated anymore. If you use the RRD single format you wont
+experience any problem, but if you are on RRD format for one RRD per
+metric, the RRDs will go out of sync. At the time of drawing the graphs,
+this lack of syncronicity will disrupt the resolution of the data, and
+crash the graphs, if two metrics have a different resolution.
+
+With this werk, data is resampled after being retrieved from the core if
+the metrics on the same graph have different resolutions.

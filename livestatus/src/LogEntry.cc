@@ -400,7 +400,7 @@ std::unordered_map<std::string, HostState> fl_host_state_types{
     {"OK", HostState::up},
     {"WARNING", HostState::down},
     {"CRITICAL", HostState::unreachable},
-    {"UNKNOWN", HostState::up}};
+    {"UNKNOWN", static_cast<HostState>(3)}};  // Horrible HACK
 }  // namespace
 
 // static

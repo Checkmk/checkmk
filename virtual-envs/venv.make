@@ -1,4 +1,5 @@
 SHELL := /bin/bash -e -o pipefail
+PIPENV := SKIP_MAKEFILE_CALL=1 ../../scripts/run-pipenv $(PYTHON_VERSION)
 LOCK_FD := 200
 LOCK_PATH := .venv.lock
 
@@ -19,7 +20,7 @@ Pipfile.lock: Pipfile
 	@( \
 	    echo "Locking .venv..." ; \
 	    flock $(LOCK_FD); \
-	    pipenv lock; \
+	    $(PIPENV) lock; \
 	    sed -i "/\"markers\": \"extra == /d" Pipfile.lock; \
 	    rm -rf .venv \
 	) $(LOCK_FD)>$(LOCK_PATH)
@@ -38,5 +39,5 @@ Pipfile.lock: Pipfile
 	    echo "Locking .venv..." ; \
 	    flock $(LOCK_FD); \
 	    $(RM) -r .venv; \
-	    (pipenv sync --dev && touch .venv) || ($(RM) -r .venv ; exit 1) \
+	    ($(PIPENV) sync --dev && touch .venv) || ($(RM) -r .venv ; exit 1) \
 	) $(LOCK_FD)>$(LOCK_PATH)

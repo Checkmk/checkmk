@@ -25,7 +25,10 @@ if [ ! -d "$REPO_PATH/virtual-envs/$PYTHON_VERSION" ]; then
     exit 1
 fi
 
-make --silent -C "$REPO_PATH/virtual-envs/$PYTHON_VERSION" .venv
+# This is skipped when run-pipenv is called from virtual-envs/venv.make
+if [ -z "$SKIP_MAKEFILE_CALL" ]; then
+    make --silent -C "$REPO_PATH/virtual-envs/$PYTHON_VERSION" .venv
+fi
 
 PIPENV_VENV_IN_PROJECT=true \
     PIPENV_NOSPIN=true \

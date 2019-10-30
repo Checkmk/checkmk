@@ -1,0 +1,12 @@
+Title: liveproxyd: Reduced CPU usage
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cee
+Version: 1.6.0p6
+Date: 1572446835
+Class: fix
+
+Introduced first fixes to reduce the CPU usage of the liveproxyd. More to come.
+
+

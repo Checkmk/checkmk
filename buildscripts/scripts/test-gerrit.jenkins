@@ -54,7 +54,7 @@ node {
 
         stage("Python typing") {
             if (CHANGED_PYTHON_FILES != "") {
-                dir("tests/static") {
+                dir("tests-py3") {
                     sh ". /bauwelt/bin/bw-setup-jenkins-env ; make --quiet test-mypy"
                 }
             } else {

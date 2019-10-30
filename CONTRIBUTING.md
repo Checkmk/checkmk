@@ -435,8 +435,8 @@ names are really available and needed in the current namespace.
 
 The style definition file, `.style.yapf`, lives in the root directory of the
 project repository, where YAPF picks it up automatically. YAPF itself lives in
-a virtualenv managed by pipenv in `check_mk/.venv`, you can run it with
-`make format-python` or pipenv run yapf`.
+a virtualenv managed by pipenv in `check_mk/virtual-envs/2.7/.venv`, you can run it with
+`make format-python` or `scripts/run-pipenv run yapf`.
 
 #### Manual invocation: Single file ===
 
@@ -489,7 +489,7 @@ let g:ale_fix_on_save = 1
 
 ### Type checking: mypy
 
-Code can be checked manually with `make -C tests/static test-mypy`.
+Code can be checked manually with `make -C tests-py3 test-mypy`.
 
 The configuration file is `mypy.ini` and lives in the root directory of the
 Checkmk repository. For info about how to type hint refer to
@@ -511,8 +511,8 @@ This is where [ALE](https://github.com/w0rp/ale) comes in again. To include mypy
 - Then tell the linter how to run mypy:
 
   ```
-  let g:ale_python_mypy_executable = 'tests/static/run_mypy'
-  let g:ale_python_mypy_options = '--config-file=../../mypy.ini'
+  let g:ale_python_mypy_executable = 'scripts/run-mypy'
+  let g:ale_python_mypy_options = '--config-file=../mypy.ini'
   ```
 
 The mypy-Checker should run with this. With ":ALEInfo" you get information
@@ -539,7 +539,7 @@ about the error diagnosis below, if it doesn't work.
   (eval setq flycheck-python-mypy-executable
              (concat
               (projectile-locate-dominating-file default-directory dir-locals-file)
-              "tests/static/run_mypy"))
+              "scripts/run-mypy"))
   ```
 
 - An example value of the `safe-local-variables` variable is e.g.:
@@ -548,7 +548,7 @@ about the error diagnosis below, if it doesn't work.
   ((eval setq flycheck-python-mypy-executable
          (concat
           (projectile-locate-dominating-file default-directory dir-locals-file)
-          "tests/static/run_mypy"))
+          "scripts/run-mypy"))
    (py-indent-offset . 4)
    (encoding . utf-8))
   ```

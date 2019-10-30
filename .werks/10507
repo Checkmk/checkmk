@@ -1,0 +1,12 @@
+Title: mk_oracle: Fixed missing option to set the TNS_ADMIN in the bakery
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p6
+Date: 1572445454
+
+This option has been missing in the bakery rule and is now available.

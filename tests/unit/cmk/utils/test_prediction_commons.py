@@ -1,4 +1,3 @@
-import json
 import pytest  # type: ignore
 
 import cmk.utils.prediction as prediction
@@ -22,6 +21,22 @@ def test_rrdtimestamps(twindow, result):
 def test_time_series_upsampling(rrddata, twindow, shift, upsampled):
     ts = prediction.TimeSeries(rrddata)
     assert ts.bfill_upsample(twindow, shift) == upsampled
+
+
+@pytest.mark.parametrize("rrddata, twindow, cf, downsampled", [
+    ([10, 25, 5, 15, 20, 25], (10, 30, 10), "average", [17.5, 25]),
+    ([10, 25, 5, 15, 20, 25], (10, 30, 10), "max", [20, 25]),
+    ([10, 45, 5, 15, 20, 25, 30, 35, 40, 45], (10, 40, 10), "max", [20, 30, 40]),
+    ([10, 45, 5, 15, 20, 25, 30, 35, 40, 45], (10, 60, 10), "max", [20, 30, 40, 45, None]),
+    ([10, 45, 5, 15, None, 25, None, None, None, 45],
+     (10, 60, 10), "max", [15, 25, None, 45, None]),
+    ([10, 45, 5, 15, 20, 25, 30, 35, 40, 45], (0, 60, 10), "max", [None, 20, 30, 40, 45, None]),
+    ([10, 45, 5, 15, 20, 25, 30, 35, 40, 45], (10, 40, 10), "average", [17.5, 27.5, 37.5]),
+    ([10, 45, 5, 15, 20, 25, 30, None, 40, 45], (10, 40, 10), "average", [17.5, 27.5, 40.]),
+])
+def test_time_series_downsampling(rrddata, twindow, cf, downsampled):
+    ts = prediction.TimeSeries(rrddata)
+    assert ts.downsample(twindow, cf) == downsampled
 
 
 @pytest.mark.parametrize("ref_value, stdev, sig, params, levels_factor, result", [

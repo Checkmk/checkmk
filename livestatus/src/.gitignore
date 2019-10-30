@@ -1,6 +1,7 @@
 *.a
 *.la
 *.o
+*.o.tmp
 *.so
 .cproject
 .deps

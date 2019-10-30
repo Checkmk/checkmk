@@ -9,7 +9,7 @@ PYTHON_VERSION=$1
 shift
 
 if [ -z "$PYTHON_VERSION" ]; then
-    echo "ERROR: run-pipenv [2|3] PIPENV-ARGS..."
+    echo "ERROR: run-pipenv [2|3] PIPENV-ARGS..." >&2
     exit 1
 fi
 
@@ -21,7 +21,7 @@ elif [ "$PYTHON_VERSION" = "3" ]; then
 fi
 
 if [ ! -d "$REPO_PATH/virtual-envs/$PYTHON_VERSION" ]; then
-    echo "ERROR: Invalid python version $PYTHON_VERSION given."
+    echo "ERROR: Invalid python version $PYTHON_VERSION given." >&2
     exit 1
 fi
 

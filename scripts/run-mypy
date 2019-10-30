@@ -1,0 +1,21 @@
+#!/bin/bash
+# mypy_path in mypy.ini doesn't support relative paths, so use this wrapper to
+# tell mypy about the relevant paths using the MYPYPATH environment variable
+
+set -e -o pipefail
+
+REPO_PATH="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" >/dev/null 2>&1 && pwd)"
+PIPENV="$REPO_PATH/scripts/run-pipenv"
+
+VENV_PATH=$($PIPENV 3 --venv)
+
+if [ ! -f "$VENV_PATH/bin/mypy" ]; then
+    for LAST_ARG; do :; done
+    echo "$LAST_ARG:1: error: Could not find $VENV_PATH/.venv/bin/mypy"
+    exit 1
+fi
+
+cd "$REPO_PATH"
+
+MYPYPATH="$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/omd:$REPO_PATH/tests-py3:$REPO_PATH/tests-py3/typeshed" \
+    exec "$PIPENV" 3 run mypy "$@"

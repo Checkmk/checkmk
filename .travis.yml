@@ -33,7 +33,7 @@ matrix:
         - name: "Python3 typing tests"
           python: "3.7"
           env: TEST_TARGETS="test-mypy-raw"
-            TEST_PATH=tests/static
+            TEST_PATH=tests-py3
 env:
     global:
         # Optimize builds by caching pip and pipenv things

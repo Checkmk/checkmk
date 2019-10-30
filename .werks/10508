@@ -1,0 +1,12 @@
+Title: mk_oracle: Fixed missing sysdg as role choice
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1572445848
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+The role sysdg has been missing in previous releases as a choice in the
+bakery rule. This role is needed to fulfill security considerations.

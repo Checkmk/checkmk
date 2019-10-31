@@ -134,6 +134,7 @@ private:
         ContactName,
         HostState,
         ServiceState,
+        ExitCode,
         State,
         StateType,
         Attempt,

@@ -109,6 +109,7 @@ void LogEntry::assign(Param par, const std::string &field) {
             _state = static_cast<int>(parseHostState(field));
             return;
         case Param::ServiceState:
+        case Param::ExitCode:  // HACK: Encoded as a service state! :-P
             _state = static_cast<int>(parseServiceState(field));
             return;
         case Param::State:
@@ -274,14 +275,14 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions{
     LogDef{"HOST ALERT HANDLER STOPPED",
            Class::alert_handlers,
            LogEntryKind::none,
-           {Param::HostName, Param::CommandName, Param::ServiceState,
+           {Param::HostName, Param::CommandName, Param::ExitCode,
             Param::PluginOutput}},
     ////////////////
     LogDef{"SERVICE ALERT HANDLER STOPPED",
            Class::alert_handlers,
            LogEntryKind::none,
            {Param::HostName, Param::ServiceDescription, Param::CommandName,
-            Param::ServiceState, Param::PluginOutput}},
+            Param::ExitCode, Param::PluginOutput}},
     ////////////////
     // NOTE: Only Nagios writes such lines if configured to do so.
     LogDef{"PASSIVE SERVICE CHECK",

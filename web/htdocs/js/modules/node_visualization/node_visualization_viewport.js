@@ -23,6 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 import * as node_visualization_utils from "node_visualization_utils"
+import * as node_visualization_viewport_utils from "node_visualization_viewport_utils"
+
 import * as node_visualization_datasources from "node_visualization_datasources"
 import * as node_visualization_viewport_layers from "node_visualization_viewport_layers"
 import * as node_visualization_layouting from "node_visualization_layouting"
@@ -78,25 +80,6 @@ export class Viewport {
 }
 
 
-export class AbstractViewportPlugin {
-    static id() {
-        return "abstract_viewport_plugin"
-    }
-
-    constructor(master_viewport) {
-        this._master_viewport = master_viewport
-        this.main_instance = this._master_viewport.main_instance
-    }
-
-    setup(into_selection) {}
-
-    feed_data(json_data) {}
-
-    get_current_datasource() {
-        return this._master_viewport.get_current_datasource()
-    }
-}
-
 
 //#.
 //#   .-Layered Viewport---------------------------------------------------.
@@ -113,8 +96,8 @@ export class AbstractViewportPlugin {
 //#   |              \_/  |_|\___| \_/\_/ | .__/ \___/|_|   \__|           |
 //#   |                                   |_|                              |
 //#   +--------------------------------------------------------------------+
-class LayeredViewportPlugin extends AbstractViewportPlugin {
-    id() {
+class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractViewportPlugin {
+    static id() {
         return "layered_viewport"
     }
 

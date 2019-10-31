@@ -1,4 +1,5 @@
 import pytest  # type: ignore
+from testlib.base import Scenario
 from pathlib2 import Path
 import cmk_base.ip_lookup as ip_lookup
 
@@ -14,30 +15,30 @@ def _cache_file():
         p.unlink()
 
 
-def test_initialize_ip_lookup_cache_not_existing(_cache_file):
+def test_get_ip_lookup_cache_not_existing(_cache_file):
     if _cache_file.exists():
         _cache_file.unlink()
 
-    ip_lookup_cache = ip_lookup._initialize_ip_lookup_cache()
+    ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
 
     assert ip_lookup_cache == {}
 
 
-def test_initialize_ip_lookup_cache_invalid_syntax(_cache_file):
+def test_get_ip_lookup_cache_invalid_syntax(_cache_file):
     with _cache_file.open(mode="w", encoding="utf-8") as f:
         f.write(u"{...")
 
-    ip_lookup_cache = ip_lookup._initialize_ip_lookup_cache()
+    ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
 
     assert ip_lookup_cache == {}
 
 
-def test_initialize_ip_lookup_cache_existing(_cache_file):
+def test_get_ip_lookup_cache_existing(_cache_file):
     cache_id1 = "host1", 4
     with _cache_file.open(mode="w", encoding="utf-8") as f:
         f.write(u"%r" % {cache_id1: "1"})
 
-    ip_lookup_cache = ip_lookup._initialize_ip_lookup_cache()
+    ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
 
     assert ip_lookup_cache == {cache_id1: "1"}
 
@@ -89,3 +90,32 @@ def test_load_legacy_lookup_cache(_cache_file):
     cache = ip_lookup._load_ip_lookup_cache(lock=False)
     assert cache[cache_id1] == "127.0.0.1"
     assert cache[cache_id2] == "127.0.0.2"
+
+
+def test_clear_ip_lookup_cache(_cache_file):
+    with _cache_file.open(mode="w", encoding="utf-8") as f:
+        f.write(u"%r" % {("host1", 4): "127.0.0.1"})
+
+    ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
+    assert ip_lookup_cache[("host1", 4)] == "127.0.0.1"
+
+    ip_lookup._clear_ip_lookup_cache()
+
+    assert len(ip_lookup_cache) == 0
+    assert not _cache_file.exists()
+
+
+def test_get_dns_cache_lookup_hosts(monkeypatch):
+    ts = Scenario()
+    ts.add_host("blub", tags={"criticality": "offline"})
+    ts.add_host("bla")
+    ts.add_host("dual", tags={"address_family": "ip-v4v6"})
+
+    ts.apply(monkeypatch)
+
+    assert sorted(ip_lookup._get_dns_cache_lookup_hosts()) == sorted([
+        ('bla', 4),
+        ('dual', 4),
+        ('dual', 6),
+        ('blub', 4),
+    ])

@@ -105,7 +105,6 @@ try:
             modes.get("help").handler_function()
             exit_status = 0
 
-    profiling.output_profile()
     sys.exit(exit_status)
 
 except MKTerminate, e:
@@ -117,3 +116,6 @@ except (MKGeneralException, MKBailOut), e:
     if cmk.debug.enabled():
         raise
     sys.exit(3)
+
+finally:
+    profiling.output_profile()

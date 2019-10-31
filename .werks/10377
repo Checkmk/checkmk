@@ -1,0 +1,11 @@
+Title: Fix terminating "cmk --update-dns-cache" with CTRL+C
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1572525433
+Class: fix
+
+Previously the CTRL+C termination was not working during the whole execution
+time of the call.

@@ -40,7 +40,7 @@ from typing import Dict, List  # pylint: disable=unused-import
 import pathlib2 as pathlib
 
 import cmk.utils.log
-from cmk.utils.exceptions import MKGeneralException, MKTimeout
+from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKTerminate
 from cmk.utils.i18n import _
 from cmk.utils.paths import default_config_dir
 
@@ -144,7 +144,7 @@ def load_mk_file(path, default=None, lock=False):
                 raise
         return default
 
-    except MKTimeout:
+    except (MKTerminate, MKTimeout):
         raise
     except Exception as e:
         # TODO: How to handle debug mode or logging?
@@ -188,7 +188,7 @@ def load_data_from_file(path, default=None, lock=False):
                 raise
             return default
 
-    except MKTimeout:
+    except (MKTerminate, MKTimeout):
         if lock:
             release_lock(path)
         raise
@@ -266,7 +266,7 @@ def save_file(path, content, mode=0660):
 
         os.rename(tmp_path, path)
 
-    except MKTimeout:
+    except (MKTerminate, MKTimeout):
         raise
     except Exception as e:
         # In case an exception happens during saving cleanup the tempfile created for writing

@@ -8,7 +8,7 @@ PYTEST   := $(PIPENV2) run py.test
 YAPF     := $(PIPENV2) run yapf
 FUTURIZE := $(PIPENV2) run ./test-futurize
 
-.PHONY: help pipenv-check test-bandit test-docker test-format-python \
+.PHONY: help pipenv-check test-bandit test-format-python \
         test-format-shell test-gui-crawl test-integration test-agent-integration test-packaging \
         test-pylint test-python-futurize test-shellcheck test-unit \
         list-unit-tests test-unit-one-by-one test-unit-coverage-html

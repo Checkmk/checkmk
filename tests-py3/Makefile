@@ -33,7 +33,7 @@ help:
 	@echo "test-unit                 - Run unit tests"
 
 test-docker:
-	$(MAKE) -C $(REPO_PATH)/docker test-lint-dockerfile test-lint-entrypoint
+	$(MAKE) -C ../docker test-lint-dockerfile test-lint-entrypoint
 	$(PYTEST) -T docker docker
 
 test-pylint:

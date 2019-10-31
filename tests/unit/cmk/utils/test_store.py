@@ -143,7 +143,7 @@ def test_save_data_to_file_pretty(tmp_path, path_type):
         "4asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
         "5asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
     }
-    store.save_data_to_file(path, data)
+    store.save_data_to_file(path, data, pretty=True)
     assert open(str(path)).read().count("\n") > 4
     assert store.load_data_from_file(path) == data
 
@@ -160,7 +160,7 @@ def test_save_data_to_file_not_pretty(tmp_path, path_type):
         "4asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
         "5asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
     }
-    store.save_data_to_file(path, data, pretty=False)
+    store.save_data_to_file(path, data)
     assert open(str(path)).read().count("\n") == 1
     assert store.load_data_from_file(path) == data
 

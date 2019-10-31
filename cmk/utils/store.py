@@ -228,7 +228,7 @@ def load_data_from_file(path, default=None, lock=False):
 
 # A simple wrapper for cases where you want to store a python data
 # structure that is then read by load_data_from_file() again
-def save_data_to_file(path, data, pretty=True):
+def save_data_to_file(path, data, pretty=False):
     # type: (Union[Path, str], Any, bool) -> None
     if pretty:
         try:

@@ -151,7 +151,7 @@ class ABCDiscoveredLabelsStore(object):
             return
 
         self.file_path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
-        cmk.utils.store.save_data_to_file(str(self.file_path), labels)
+        cmk.utils.store.save_data_to_file(str(self.file_path), labels, pretty=False)
 
 
 class DiscoveredHostLabelsStore(ABCDiscoveredLabelsStore):

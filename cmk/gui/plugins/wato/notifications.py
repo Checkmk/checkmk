@@ -610,7 +610,7 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
                  )),
                 ("resolution",
                  TextAscii(
-                     title=_("Activate resultion with following resolution transistion ID"),
+                     title=_("Activate resolution with following resolution transistion ID"),
                      help=_("The numerical JIRA resolution transition ID. "
                             "11 - 'To Do', 21 - 'In Progress', 31 - 'Done'"),
                      size=3,

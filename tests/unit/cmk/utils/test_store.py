@@ -212,11 +212,12 @@ class LockTestThread(threading.Thread):
         self.path = path
         self.do = None
         self.is_locked = False
+        self._need_stop = threading.Event()
         super(LockTestThread, self).__init__()
         self.daemon = True
 
     def run(self):
-        while True:
+        while not self._need_stop.is_set():
             if self.do == "lock":
                 assert self.store.have_lock(self.path) is False
                 self.store.aquire_lock(self.path)
@@ -232,8 +233,11 @@ class LockTestThread(threading.Thread):
             else:
                 time.sleep(0.1)
 
+    def terminate(self):
+        self._need_stop.set()
 
-def test_locking(tmpdir):
+
+def test_locking(tmp_path):
     # HACK: We abuse modules as data containers, so we have to do this Kung Fu...
     store1 = sys.modules["cmk.utils.store"]
     del sys.modules["cmk.utils.store"]
@@ -242,35 +246,44 @@ def test_locking(tmpdir):
 
     assert store1 != store2
 
-    locked_file = tmpdir.join("locked_file")
-    locked_file.write("")
-    path = "%s" % locked_file
+    locked_file_path = tmp_path.joinpath("locked_file")
+    with locked_file_path.open(mode="w", encoding="utf-8") as locked_file:
+        locked_file.write(u"")
+        path = "%s" % locked_file_path
 
-    t1 = LockTestThread(store1, path)
-    t1.start()
-    t2 = LockTestThread(store2, path)
-    t2.start()
+        t1 = LockTestThread(store1, path)
+        t1.start()
+        t2 = LockTestThread(store2, path)
+        t2.start()
 
-    # Take lock with store1
-    t1.do = "lock"
-    while range(20):
-        if store1.have_lock(path):
-            break
-        time.sleep(0.01)
-    assert store1.have_lock(path) is True
+        # Take lock with store1
+        t1.do = "lock"
+        while range(20):
+            if store1.have_lock(path):
+                break
+            time.sleep(0.01)
+        assert store1.have_lock(path) is True
 
-    # Now try to get lock with store2
-    t2.do = "lock"
-    time.sleep(0.2)
-    assert store1.have_lock(path) is True
-    assert store2.have_lock(path) is False
+        # Now try to get lock with store2
+        t2.do = "lock"
+        time.sleep(0.2)
+        assert store1.have_lock(path) is True
+        assert store2.have_lock(path) is False
 
-    # And now unlock store1 and check whether store2 has the lock now
-    t1.do = "unlock"
-    while range(20):
-        if not store1.have_lock(path):
-            break
-        time.sleep(0.01)
-    assert store1.have_lock(path) is False
-    time.sleep(0.2)
-    assert store2.have_lock(path) is True
+        # And now unlock store1 and check whether store2 has the lock now
+        t1.do = "unlock"
+        while range(20):
+            if not store1.have_lock(path):
+                break
+            time.sleep(0.01)
+        assert store1.have_lock(path) is False
+        time.sleep(0.2)
+        assert store2.have_lock(path) is True
+
+        # Not 100% safe, but protects agains left over ressources in the good case at least
+        store1.release_all_locks()
+        store2.release_all_locks()
+        t1.terminate()
+        t1.join()
+        t2.terminate()
+        t2.join()

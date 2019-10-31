@@ -42,7 +42,7 @@ import cmk_base.config as config
 from cmk_base.exceptions import MKIPAddressLookupError
 
 IPLookupCacheId = Tuple[str, int]
-IPLookupCache = Dict[IPLookupCacheId, str]
+NewIPLookupCache = Dict[IPLookupCacheId, str]
 LegacyIPLookupCache = Dict[str, str]
 
 _fake_dns = None  # type: Optional[str]
@@ -147,7 +147,7 @@ def cached_dns_lookup(hostname, family):
         # Update our cached address if that has changed or was missing
         if ipa != cached_ip:
             console.verbose("Updating IPv%d DNS cache for %s: %s\n" % (family, hostname, ipa))
-            _update_ip_lookup_cache(cache_id, ipa)
+            ip_lookup_cache.update_cache(cache_id, ipa)
 
         cache[cache_id] = ipa  # Update in-memory-cache
         return ipa
@@ -169,78 +169,93 @@ def cached_dns_lookup(hostname, family):
                                          (family, hostname, e))
 
 
+class IPLookupCache(cmk_base.caching.DictCache):
+    def __init__(self):
+        super(IPLookupCache, self).__init__()
+        self.persist_on_update = True
+
+    def load_persisted(self):
+        try:
+            self.update(_load_ip_lookup_cache(lock=False))
+        except (MKTerminate, MKTimeout):
+            # We should be more specific with the exception handler below, then we
+            # could drop this special handling here
+            raise
+
+        except:
+            if cmk.utils.debug.enabled():
+                raise
+            # TODO: Would be better to log it somewhere to make the failure transparent
+
+    def update_cache(self, cache_id, ipa):
+        # type: (IPLookupCacheId, str) -> None
+        """Updates the cache with a new / changed entry
+
+        When self.persist_on_update update is disabled, this simply updates the in-memory
+        cache without any persistence interaction. Otherwise:
+
+        The cache that was previously loaded into this IPLookupCache with load_persisted()
+        might be outdated compared to the current persisted lookup cache. Another process
+        might have updated the cache in the meantime.
+
+        The approach here is to load the currently persisted cache with a lock, then update
+        the current IPLookupCache with it, add the given new / changed entry and then write
+        out the resulting data structure.
+
+        This could really be solved in a better way, but may be sufficient for the moment.
+
+        The cache can only be cleaned up with the "Update DNS cache" option in WATO
+        or the "cmk --update-dns-cache" call that both call update_dns_cache().
+        """
+        if not self.persist_on_update:
+            self[cache_id] = ipa
+            return
+
+        try:
+            self.update(_load_ip_lookup_cache(lock=True))
+            self[cache_id] = ipa
+            self.save_persisted()
+        finally:
+            cmk.utils.store.release_lock(_cache_path())
+
+    def save_persisted(self):
+        cmk.utils.store.save_data_to_file(_cache_path(), self, pretty=False)
+
+
 def _get_ip_lookup_cache():
     # type: () -> IPLookupCache
-    """File based fall-back DNS cache in case resolution fails"""
+    """A file based fall-back DNS cache in case resolution fails"""
     if cmk_base.config_cache.exists("ip_lookup"):
-        # Already created and initialized. Simply return it!
-        return cmk_base.config_cache.get_dict("ip_lookup")
+        # Return already created and initialized cache
+        return cmk_base.config_cache.get("ip_lookup", IPLookupCache)
 
-    ip_lookup_cache = cmk_base.config_cache.get_dict("ip_lookup")  # type: IPLookupCache
-
-    try:
-        ip_lookup_cache.update(_load_ip_lookup_cache(lock=False))
-    except (MKTerminate, MKTimeout):
-        # We should be more specific with the exception handler below, then we
-        # could drop this special handling here
-        raise
-
-    except:
-        if cmk.utils.debug.enabled():
-            raise
-        # TODO: Would be better to log it somewhere to make the failure transparent
-
-    return ip_lookup_cache
+    cache = cmk_base.config_cache.get("ip_lookup", IPLookupCache)
+    cache.load_persisted()
+    return cache
 
 
 def _load_ip_lookup_cache(lock):
-    # type: (bool) -> IPLookupCache
+    # type: (bool) -> NewIPLookupCache
     return _convert_legacy_ip_lookup_cache(
         store.load_data_from_file(_cache_path(), default={}, lock=lock))
 
 
 def _convert_legacy_ip_lookup_cache(cache):
-    # type: (Union[LegacyIPLookupCache, IPLookupCache]) -> IPLookupCache
+    # type: (Union[LegacyIPLookupCache, NewIPLookupCache]) -> NewIPLookupCache
     """be compatible to old caches which were created by Check_MK without IPv6 support"""
     if not cache:
         return {}
 
     # New version has (hostname, ip family) as key
     if isinstance(cache.keys()[0], tuple):
-        return cast(IPLookupCache, cache)
+        return cast(NewIPLookupCache, cache)
 
     cache = cast(LegacyIPLookupCache, cache)
 
-    new_cache = {}  # type: IPLookupCache
+    new_cache = {}  # type: NewIPLookupCache
     for key, val in cache.items():
         new_cache[(key, 4)] = val
     return new_cache
-
-
-# TODO: This is called after single IP lookups, even during update_dns_cache.
-# It loops over all hosts to resolve their IP addresses and update the cache.
-# Bug always first loads the currently persisted IP addresses from the cache,
-# while holding the lock, updating one IP address and writing it back, then
-# unlocking the file again.
-# This is VERY ineffective! And it seems to be done this way because there are
-# multiple check executions running in parallel where all of them could update
-# the IP address at any time.
-def _update_ip_lookup_cache(cache_id, ipa):
-    ip_lookup_cache = cmk_base.config_cache.get_dict("ip_lookup")  # type: IPLookupCache
-
-    # Read already known data
-    cache_path = _cache_path()
-    try:
-        ip_lookup_cache.update(_load_ip_lookup_cache(lock=True))
-        ip_lookup_cache[cache_id] = ipa
-
-        # (I don't like this)
-        # TODO: this file always grows... there should be a cleanup mechanism
-        #       maybe on "cmk --update-dns-cache"
-        # The cache_path is already locked from a previous function call..
-        cmk.utils.store.save_data_to_file(cache_path, ip_lookup_cache, pretty=False)
-    finally:
-        cmk.utils.store.release_lock(cache_path)
 
 
 def _cache_path():
@@ -248,11 +263,13 @@ def _cache_path():
 
 
 def update_dns_cache():
-    updated = 0
     failed = []
 
+    ip_lookup_cache = _get_ip_lookup_cache()
+    ip_lookup_cache.persist_on_update = False
+
     console.verbose("Cleaning up existing DNS cache...\n")
-    _clear_ip_lookup_cache()
+    _clear_ip_lookup_cache(ip_lookup_cache)
 
     console.verbose("Updating DNS cache...\n")
     for hostname, family in _get_dns_cache_lookup_hosts():
@@ -260,7 +277,6 @@ def update_dns_cache():
         try:
             ip = lookup_ip_address(hostname, family)
             console.verbose("%s\n" % ip)
-            updated += 1
 
         except (MKTerminate, MKTimeout):
             # We should be more specific with the exception handler below, then we
@@ -274,12 +290,14 @@ def update_dns_cache():
                 raise
             continue
 
-    # TODO: After calculation the cache needs to be written once
+    ip_lookup_cache.persist_on_update = True
+    ip_lookup_cache.save_persisted()
 
-    return updated, failed
+    return len(ip_lookup_cache), failed
 
 
-def _clear_ip_lookup_cache():
+def _clear_ip_lookup_cache(ip_lookup_cache):
+    # type: (IPLookupCache) -> None
     """Clear the persisted AND in memory cache"""
     try:
         os.unlink(_cache_path())
@@ -287,7 +305,7 @@ def _clear_ip_lookup_cache():
         if e.errno != errno.ENOENT:
             raise
 
-    cmk_base.config_cache.get_dict("ip_lookup").clear()
+    ip_lookup_cache.clear()
 
 
 def _get_dns_cache_lookup_hosts():

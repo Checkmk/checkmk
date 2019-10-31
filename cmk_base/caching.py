@@ -36,7 +36,7 @@ class CacheManager(object):
     def exists(self, name):
         return name in self._caches
 
-    def _get(self, name, cache_class):
+    def get(self, name, cache_class):
         try:
             return self._caches[name]
         except KeyError:
@@ -47,13 +47,13 @@ class CacheManager(object):
             return self._caches[name]
 
     def get_dict(self, name):
-        return self._get(name, DictCache)
+        return self.get(name, DictCache)
 
     def get_set(self, name):
-        return self._get(name, SetCache)
+        return self.get(name, SetCache)
 
     def get_list(self, name):
-        return self._get(name, ListCache)
+        return self.get(name, ListCache)
 
     def clear_all(self):
         for cache in self._caches.values():

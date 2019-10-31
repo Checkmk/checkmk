@@ -407,6 +407,13 @@ class LogLinesIter(object):
         self._enc = encoding or self._get_encoding()
         self._newline = u'\n'.encode(self._enc)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return False  # Do not swallow exceptions
+
     def close(self):
         os.close(self._fd)
 
@@ -514,6 +521,7 @@ def process_logfile(logfile, patterns, opt, status):
     In case the file has never been seen before returns a list of logfile lines
     and None in case the logfile cannot be opened.
     """
+    # TODO: Make use of the ContextManager feature of LogLinesIter
     try:
         log_iter = LogLinesIter(logfile, opt.encoding)
     except OSError:

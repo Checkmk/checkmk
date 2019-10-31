@@ -287,31 +287,31 @@ def test_ip_in_subnetwork(mk_logwatch):
 ])
 def test_log_lines_iter_encoding(mk_logwatch, monkeypatch, buff, encoding, position):
     monkeypatch.setattr(os, 'open', lambda *_args: None)
+    monkeypatch.setattr(os, 'close', lambda *_args: None)
     monkeypatch.setattr(os, 'read', lambda *_args: buff)
     monkeypatch.setattr(os, 'lseek', lambda *_args: len(buff))
-    log_iter = mk_logwatch.LogLinesIter('void', None)
-    assert log_iter._enc == encoding
-    assert log_iter.get_position() == position
+    with mk_logwatch.LogLinesIter('void', None) as log_iter:
+        assert log_iter._enc == encoding
+        assert log_iter.get_position() == position
 
 
 def test_log_lines_iter(mk_logwatch):
-    log_iter = mk_logwatch.LogLinesIter(mk_logwatch.__file__, None)
+    with mk_logwatch.LogLinesIter(mk_logwatch.__file__, None) as log_iter:
+        log_iter.set_position(710)
+        assert log_iter.get_position() == 710
 
-    log_iter.set_position(710)
-    assert log_iter.get_position() == 710
+        line = log_iter.next_line()
+        assert isinstance(line, unicode)
+        assert line == u"# This file is part of Check_MK.\n"
+        assert log_iter.get_position() == 743
 
-    line = log_iter.next_line()
-    assert isinstance(line, unicode)
-    assert line == u"# This file is part of Check_MK.\n"
-    assert log_iter.get_position() == 743
+        log_iter.push_back_line(u'Täke this!')
+        assert log_iter.get_position() == 732
+        assert log_iter.next_line() == u'Täke this!'
 
-    log_iter.push_back_line(u'Täke this!')
-    assert log_iter.get_position() == 732
-    assert log_iter.next_line() == u'Täke this!'
-
-    log_iter.skip_remaining()
-    assert log_iter.next_line() is None
-    assert log_iter.get_position() == os.stat(mk_logwatch.__file__).st_size
+        log_iter.skip_remaining()
+        assert log_iter.next_line() is None
+        assert log_iter.get_position() == os.stat(mk_logwatch.__file__).st_size
 
 
 @pytest.mark.parametrize(
@@ -356,18 +356,18 @@ def test_non_ascii_line_processing(mk_logwatch, tmp_path, monkeypatch, use_speci
         f.write(b"\n".join(lines) + "\n")
 
     # Now test processing
-    log_iter = mk_logwatch.LogLinesIter(str(log_path), None)
-    if use_specific_encoding:
-        log_iter._enc = use_specific_encoding
+    with mk_logwatch.LogLinesIter(str(log_path), None) as log_iter:
+        if use_specific_encoding:
+            log_iter._enc = use_specific_encoding
 
-    result = []
-    while True:
-        l = log_iter.next_line()
-        if l is None:
-            break
-        result.append(l)
+        result = []
+        while True:
+            l = log_iter.next_line()
+            if l is None:
+                break
+            result.append(l)
 
-    assert result == expected_result
+        assert result == expected_result
 
 
 class MockStdout(object):

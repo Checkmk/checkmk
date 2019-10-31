@@ -12,3 +12,4 @@ Group headers and other subheadings are now smaller.
 Fixed WATO checkbox sizes for the classic theme.
 Adjusted sizes and formatting for search filter input fields.
 Fixed the collapsing mechanism of search filters in the network topology view for the classic theme.
+Tuned sidebar table spacing to prevent unnecessary line breaks.

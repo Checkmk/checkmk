@@ -28,7 +28,7 @@ import socket
 import errno
 import os
 from typing import (  # pylint: disable=unused-import
-    Optional, Dict, Tuple, Union, cast,
+    Optional, Dict, Tuple, Union, List, cast,
 )
 
 import cmk.utils.paths
@@ -41,7 +41,8 @@ import cmk_base.console as console
 import cmk_base.config as config
 from cmk_base.exceptions import MKIPAddressLookupError
 
-IPLookupCache = Dict[Tuple[str, int], str]
+IPLookupCacheId = Tuple[str, int]
+IPLookupCache = Dict[IPLookupCacheId, str]
 LegacyIPLookupCache = Dict[str, str]
 
 _fake_dns = None  # type: Optional[str]
@@ -125,9 +126,7 @@ def cached_dns_lookup(hostname, family):
     except KeyError:
         pass
 
-    # Prepare file based fall-back DNS cache in case resolution fails
-    # TODO: Find a place where this only called once!
-    ip_lookup_cache = _initialize_ip_lookup_cache()
+    ip_lookup_cache = _get_ip_lookup_cache()
 
     cached_ip = ip_lookup_cache.get(cache_id)
     if cached_ip and config.use_dns_cache:
@@ -170,10 +169,11 @@ def cached_dns_lookup(hostname, family):
                                          (family, hostname, e))
 
 
-def _initialize_ip_lookup_cache():
+def _get_ip_lookup_cache():
     # type: () -> IPLookupCache
-    # Already created and initialized. Simply return it!
+    """File based fall-back DNS cache in case resolution fails"""
     if cmk_base.config_cache.exists("ip_lookup"):
+        # Already created and initialized. Simply return it!
         return cmk_base.config_cache.get_dict("ip_lookup")
 
     ip_lookup_cache = cmk_base.config_cache.get_dict("ip_lookup")  # type: IPLookupCache
@@ -252,15 +252,52 @@ def update_dns_cache():
     failed = []
 
     console.verbose("Cleaning up existing DNS cache...\n")
+    _clear_ip_lookup_cache()
+
+    console.verbose("Updating DNS cache...\n")
+    for hostname, family in _get_dns_cache_lookup_hosts():
+        console.verbose("%s (IPv%d)..." % (hostname, family))
+        try:
+            if family == 4:
+                ip = lookup_ipv4_address(hostname)
+            else:
+                ip = lookup_ipv6_address(hostname)
+
+            console.verbose("%s\n" % ip)
+            updated += 1
+
+        except (MKTerminate, MKTimeout):
+            # We should be more specific with the exception handler below, then we
+            # could drop this special handling here
+            raise
+
+        except Exception as e:
+            failed.append(hostname)
+            console.verbose("lookup failed: %s\n" % e)
+            if cmk.utils.debug.enabled():
+                raise
+            continue
+
+    # TODO: After calculation the cache needs to be written once
+
+    return updated, failed
+
+
+def _clear_ip_lookup_cache():
+    """Clear the persisted AND in memory cache"""
     try:
         os.unlink(_cache_path())
     except OSError as e:
         if e.errno != errno.ENOENT:
             raise
 
-    config_cache = config.get_config_cache()
+    cmk_base.config_cache.get_dict("ip_lookup").clear()
 
-    console.verbose("Updating DNS cache...\n")
+
+def _get_dns_cache_lookup_hosts():
+    # type: () -> List[IPLookupCacheId]
+    config_cache = config.get_config_cache()
+    hosts = []
     for hostname in config_cache.all_active_hosts():
         host_config = config_cache.get_host_config(hostname)
 
@@ -269,28 +306,6 @@ def update_dns_cache():
         for family in [4, 6]:
             if (family == 4 and host_config.is_ipv4_host) \
                or (family == 6 and host_config.is_ipv6_host):
-                console.verbose("%s (IPv%d)..." % (hostname, family))
-                try:
-                    if family == 4:
-                        ip = lookup_ipv4_address(hostname)
-                    else:
-                        ip = lookup_ipv6_address(hostname)
+                hosts.append((hostname, family))
 
-                    console.verbose("%s\n" % ip)
-                    updated += 1
-
-                except (MKTerminate, MKTimeout):
-                    # We should be more specific with the exception handler below, then we
-                    # could drop this special handling here
-                    raise
-
-                except Exception as e:
-                    failed.append(hostname)
-                    console.verbose("lookup failed: %s\n" % e)
-                    if cmk.utils.debug.enabled():
-                        raise
-                    continue
-
-    # TODO: After calculation the cache needs to be written once
-
-    return updated, failed
+    return hosts

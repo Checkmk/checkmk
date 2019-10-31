@@ -1,0 +1,19 @@
+Title: Improve "Update DNS cache" / cmk --update-dns-cache performance
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1572562641
+Class: fix
+
+The operation was performing a lot of needless operations. The update of
+several thousands of hosts DNS entries took way too long. The exact time needed
+depends mostly on the number of hosts, cache size, DNS lookup performance and
+so on. But even with good responding servers the operation took too long,
+because the cache was updated in a very inefficient way when calling the
+"Update DNS cache" action in WATO or "cmk --update-dns-cache" from the command
+line.
+
+The operation is now more than a 100 times faster (tested with ~2000 hosts and
+a fast responding DNS server).

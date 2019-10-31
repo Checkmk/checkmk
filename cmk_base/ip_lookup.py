@@ -238,7 +238,7 @@ def _update_ip_lookup_cache(cache_id, ipa):
         # TODO: this file always grows... there should be a cleanup mechanism
         #       maybe on "cmk --update-dns-cache"
         # The cache_path is already locked from a previous function call..
-        cmk.utils.store.save_data_to_file(cache_path, ip_lookup_cache)
+        cmk.utils.store.save_data_to_file(cache_path, ip_lookup_cache, pretty=False)
     finally:
         cmk.utils.store.release_lock(cache_path)
 

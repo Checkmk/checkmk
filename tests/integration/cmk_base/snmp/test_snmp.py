@@ -5,8 +5,8 @@ import logging
 import os
 import pytest  # type: ignore
 from pathlib2 import Path
-from testlib import cmk_path, wait_until
 import six
+from testlib import wait_until, virtualenv_path
 
 from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.paths
@@ -40,7 +40,7 @@ def monkeymodule(request):
 def snmpsim(site, request, tmp_path_factory):
     tmp_path = tmp_path_factory.getbasetemp()
 
-    snmpsimd_path = "%s/.venv/bin/snmpsimd.py" % cmk_path()
+    snmpsimd_path = "%s/bin/snmpsimd.py" % (virtualenv_path())
     source_data_dir = Path(request.fspath.dirname) / "snmp_data"
 
     log.logger.setLevel(logging.DEBUG)

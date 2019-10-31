@@ -20,6 +20,9 @@ import os
 import subprocess
 import sys
 
+# pylint: disable=unused-import
+from typing import Iterator, Optional, Union, Any
+
 # Some constants to help parse /proc/*/smaps
 KiB = 1024
 MiB = KiB * KiB
@@ -31,6 +34,7 @@ Memory = collections.namedtuple('Memory', ['private', 'pss', 'rss'])
 
 
 def _get_python_stdlib():
+    # type: () -> Iterator[str]
     std_lib = sysconfig.get_python_lib(standard_lib=True)
     # noinspection PyTypeChecker
     for top, _dirs, files in os.walk(std_lib):
@@ -120,12 +124,17 @@ class JSONFormatter(object):
         self.stack.pop()
 
     def finish(self):
+        # HACKETY HACK
+        self.stack[0] = remove_importlib(self.stack[0])
+
         # First we sum up all the children to their parents, so each parent containing space
         # consuming children has a value with at least their sum.
         sum_values(self.stack[0])
+        adjust_values(self.stack[0])
 
-        # We now remove everything of value==0 because we don't have any interest in any of that.
-        remove_zeros(self.stack[0])
+        # We now remove everything of value <= 0 because we don't have any interest in any of that.
+        # FIXME Not sure if this is even still the case.
+        # remove_zeros(self.stack[0])
 
         filename = os.path.abspath("import-tree.%d.json" % (os.getpid(),))
         with open(filename, "w") as jsf:
@@ -342,7 +351,7 @@ stack = ['__main__']
 
 
 def _importer(name, _globals=None, _locals=None, fromlist=None, level=-1):
-    # type: (str, Optional[dict], Optional[dict], Optional[list], int) -> None
+    # type: (str, Optional[dict], Optional[dict], Optional[list], int) -> Any
     # Wrap __import__ and do some shenanigans to actually track what's happening.
     if fromlist is None:
         fromlist = []
@@ -440,6 +449,7 @@ def main(args):
 
 @contextlib.contextmanager
 def basedir():
+    # type () -> Iterator
     root = subprocess.check_output(["git", "rev-parse", "--show-toplevel"]).strip()
     # So cmk will actually be found...
     sys.path.insert(0, root)
@@ -449,7 +459,7 @@ def basedir():
 def _spawn(*args):
     # Give the process it's own process group so it
     # won't be killed when the script exits.
-    # Close stdout and stderr so we won't have ugly a terminal.
+    # Close stdout and stderr so we won't have an ugly terminal.
     subprocess.Popen(args,
                      stdout=open('/dev/null', 'w'),
                      stderr=open('/dev/null', 'w'),
@@ -457,6 +467,7 @@ def _spawn(*args):
 
 
 def remove_zeros(param):
+    # type: (dict) -> dict
     if 'children' not in param:
         return param
 
@@ -474,17 +485,75 @@ def remove_zeros(param):
     return param
 
 
+def remove_importlib(val):
+    # type: (Union[dict, list, str]) -> Union[dict, list, str]
+    if isinstance(val, list):
+        ret = []
+        for entry in val:
+            if entry['name'] == 'importlib':
+                ret.extend(entry.get('children', []))
+            else:
+                ret.append(entry)
+        return ret
+    elif isinstance(val, dict):
+        if val['name'] == "importlib":
+            raise Exception("Too late!")
+        return {key: remove_importlib(value) for key, value in val.items()}
+    else:
+        return val
+
+
 def sum_values(node):
+    # type: (dict) -> None
     """
-    >>> node = {'value': 0, 'children': [{'value': 1}, {'value': -2, 'children': [{'value': 5}]}]}
-    >>> assert sum_values(node) == 6
-    >>> assert node['value'] == 6
+    >>> node = {'value': 0, 'children': [
+    ...    {'value': 1}, {'value': -2, 'children': [{'value': 5}]}
+    ... ]}
+    >>> sum_values(node)
+
+    >>> node['child_value']
+    4
+
     """
-    summed_value = sum(sum_values(node) for node in node.get('children', []))
-    current_value = node.get('value', 0)
-    if current_value < summed_value:
-        node['value'] = summed_value
-    return node['value']
+    for child in node.get('children', []):
+        sum_values(child)
+
+    node['child_value'] = sum(
+        child.get('value', 0) + child.get('child_value', 0) for child in node.get('children', []))
+
+
+def adjust_values(node):
+    # type: (dict) -> None
+    """
+    >>> node = {
+    ...     u'child_value': 4,
+    ...     u'children': [
+    ...         {u'child_value': 0, u'value': 1},
+    ...         {u'child_value': 5,
+    ...             u'children': [{u'child_value': 0, u'value': 5}],
+    ...             u'value': -2}],
+    ...     u'value': 0
+    ... }
+    >>> adjust_values(node)
+    >>> node['own']
+    0
+
+    """
+    for child in node.get('children', []):
+        adjust_values(child)
+
+    value = node.get('value', 0)
+    child = node.get('child_value', 0)
+
+    if value < child:
+        node['own'] = value
+        node['value'] = value + child
+    elif value > child:
+        node['own'] = value - child
+    elif value == child:
+        node['own'] = 0
+
+    assert node['own'] + node['child_value'] == node['value']
 
 
 if __name__ == '__main__':

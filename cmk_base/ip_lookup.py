@@ -34,6 +34,7 @@ from typing import (  # pylint: disable=unused-import
 import cmk.utils.paths
 import cmk.utils.debug
 import cmk.utils.store as store
+from cmk.utils.exceptions import MKTimeout, MKTerminate
 
 import cmk_base
 import cmk_base.console as console
@@ -152,6 +153,11 @@ def cached_dns_lookup(hostname, family):
         cache[cache_id] = ipa  # Update in-memory-cache
         return ipa
 
+    except (MKTerminate, MKTimeout):
+        # We should be more specific with the exception handler below, then we
+        # could drop this special handling here
+        raise
+
     except Exception as e:
         # DNS failed. Use cached IP address if present, even if caching
         # is disabled.
@@ -174,6 +180,11 @@ def _initialize_ip_lookup_cache():
 
     try:
         ip_lookup_cache.update(_load_ip_lookup_cache(lock=False))
+    except (MKTerminate, MKTimeout):
+        # We should be more specific with the exception handler below, then we
+        # could drop this special handling here
+        raise
+
     except Exception:
         if cmk.utils.debug.enabled():
             raise
@@ -267,6 +278,12 @@ def update_dns_cache():
 
                     console.verbose("%s\n" % ip)
                     updated += 1
+
+                except (MKTerminate, MKTimeout):
+                    # We should be more specific with the exception handler below, then we
+                    # could drop this special handling here
+                    raise
+
                 except Exception as e:
                     failed.append(hostname)
                     console.verbose("lookup failed: %s\n" % e)

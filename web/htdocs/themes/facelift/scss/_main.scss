@@ -1364,21 +1364,6 @@ td.title {
   display: table-cell;
 }
 
-/* Spezielle Snapins */
-table.cmc_stats {
-  width: 100%;
-  padding: 8px;
-  background-color: $theme-color-table-background-dark;
-  border: 1px solid $theme-color-table-border-dark;
-  border-spacing: 4px;
-  box-sizing: border-box;
-
-  td {
-    font-weight: $theme-font-weight-global;
-    letter-spacing: $theme-letter-spacing-table;
-  }
-}
-
 #form_search input, #form_search select, #form_search textarea,
 #form_search #mk_side_search_field {
   width: auto;

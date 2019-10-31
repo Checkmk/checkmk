@@ -116,7 +116,7 @@ body.main .popup_menu .hostmatrix td.state0 span {
 div.snapin table.master_control {
   width: 100%;
   margin: 0;
-  border-spacing: 8px;
+  border-spacing: 0 8px;
 
   td {
     div.toggle_switch {
@@ -132,6 +132,7 @@ div.snapin table.master_control {
       display: inline-block;
       font-size: $theme-font-size-main;
       font-weight: $theme-font-weight-global;
+      line-height: 22px;
       letter-spacing: $theme-letter-spacing-table;
       color: $theme-color-nuance-9;
       text-align: left;
@@ -156,7 +157,7 @@ div.snapin table.master_control {
   padding: $performance-table-shared-padding;
   background-color: $theme-color-table-background-dark;
   border: 1px solid $theme-color-table-border-dark;
-  border-spacing: 4px;
+  border-spacing: 0 4px;
   box-sizing: border-box;
 
   td {
@@ -174,7 +175,7 @@ table.mkeventd_performance {
   border-radius: 2px;
 
   td {
-    padding: 0 2px;
+    padding: 0;
     font-size: 11px;
 
     &:nth-of-type(2) {
@@ -220,7 +221,7 @@ table.performance {
   border-radius: 2px;
 
   td {
-    padding: 0 2px;
+    padding: 0;
     font-size: 11px;
 
     &.right {
@@ -629,11 +630,17 @@ div.spacertop {
 
 table.cmc_stats {
   width: $snapin-cmc-table-width;
+  background-color: $theme-color-table-background-dark;
+  border: 1px solid $theme-color-table-border-dark;
+  border-spacing: 0 4px;
   border-radius: 2px;
+  box-sizing: border-box;
 
   td {
-    padding: 0 2px;
+    padding: 0;
     font-size: 11px;
+    font-weight: $theme-font-weight-global;
+    letter-spacing: $theme-letter-spacing-table;
 
     &.right {
       padding: 0;

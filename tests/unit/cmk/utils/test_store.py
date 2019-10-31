@@ -5,7 +5,8 @@ import threading
 import time
 import os
 
-import pytest
+import pytest  # type: ignore
+from testlib import import_module
 
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
@@ -237,12 +238,10 @@ class LockTestThread(threading.Thread):
         self._need_stop.set()
 
 
-def test_locking(tmp_path):
+def test_locking(tmp_path, monkeypatch):
     # HACK: We abuse modules as data containers, so we have to do this Kung Fu...
-    store1 = sys.modules["cmk.utils.store"]
-    del sys.modules["cmk.utils.store"]
-    import cmk.utils.store as _store  # pylint: disable=reimported
-    store2 = sys.modules["cmk.utils.store"]
+    store1 = store
+    store2 = import_module("cmk/utils/store.py")
 
     assert store1 != store2
 

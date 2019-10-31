@@ -258,11 +258,7 @@ def update_dns_cache():
     for hostname, family in _get_dns_cache_lookup_hosts():
         console.verbose("%s (IPv%d)..." % (hostname, family))
         try:
-            if family == 4:
-                ip = lookup_ipv4_address(hostname)
-            else:
-                ip = lookup_ipv6_address(hostname)
-
+            ip = lookup_ip_address(hostname, family)
             console.verbose("%s\n" % ip)
             updated += 1
 
@@ -301,11 +297,10 @@ def _get_dns_cache_lookup_hosts():
     for hostname in config_cache.all_active_hosts():
         host_config = config_cache.get_host_config(hostname)
 
-        # Use intelligent logic. This prevents DNS lookups for hosts
-        # with statically configured addresses, etc.
-        for family in [4, 6]:
-            if (family == 4 and host_config.is_ipv4_host) \
-               or (family == 6 and host_config.is_ipv6_host):
-                hosts.append((hostname, family))
+        if host_config.is_ipv4_host:
+            hosts.append((hostname, 4))
+
+        if host_config.is_ipv6_host:
+            hosts.append((hostname, 6))
 
     return hosts

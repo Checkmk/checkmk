@@ -314,6 +314,7 @@ _acquired_locks = {}  # type: Dict[str, int]
 
 
 def aquire_lock(path, blocking=True):
+    print(path, type(path))
     if have_lock(path):
         return True  # No recursive locking
 

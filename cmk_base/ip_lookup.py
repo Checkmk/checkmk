@@ -173,16 +173,19 @@ def _initialize_ip_lookup_cache():
     ip_lookup_cache = cmk_base.config_cache.get_dict("ip_lookup")  # type: IPLookupCache
 
     try:
-        data_from_file = store.load_data_from_file(_cache_path(), {})
-        data_from_file = _convert_legacy_ip_lookup_cache(data_from_file)
-
-        ip_lookup_cache.update(data_from_file)
+        ip_lookup_cache.update(_load_ip_lookup_cache(lock=False))
     except:
         if cmk.utils.debug.enabled():
             raise
         # TODO: Would be better to log it somewhere to make the failure transparent
 
     return ip_lookup_cache
+
+
+def _load_ip_lookup_cache(lock):
+    # type: (bool) -> IPLookupCache
+    return _convert_legacy_ip_lookup_cache(
+        store.load_data_from_file(_cache_path(), default={}, lock=lock))
 
 
 def _convert_legacy_ip_lookup_cache(cache):
@@ -217,10 +220,7 @@ def _update_ip_lookup_cache(cache_id, ipa):
     # Read already known data
     cache_path = _cache_path()
     try:
-        data_from_file = cmk.utils.store.load_data_from_file(cache_path, default={}, lock=True)
-        data_from_file = _convert_legacy_ip_lookup_cache(data_from_file)
-
-        ip_lookup_cache.update(data_from_file)
+        ip_lookup_cache.update(_load_ip_lookup_cache(lock=True))
         ip_lookup_cache[cache_id] = ipa
 
         # (I don't like this)

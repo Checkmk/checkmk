@@ -130,6 +130,7 @@ private:
         HostName,
         ServiceDescription,
         CommandName,
+        CommandNameWithWorkaround,
         ContactName,
         HostState,
         ServiceState,
@@ -152,7 +153,6 @@ private:
     static std::vector<LogDef> log_definitions;
 
     bool assign(Param par, const std::string &field);
-    void applyWorkarounds();
     void classifyLogMessage();
     bool textStartsWith(const std::string &what);
     bool textContains(const std::string &what);

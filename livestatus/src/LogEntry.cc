@@ -65,46 +65,69 @@ LogEntry::LogEntry(size_t lineno, std::string line)
     }
 
     classifyLogMessage();
-    applyWorkarounds();
 }
 
 bool LogEntry::assign(Param par, const std::string &field) {
     switch (par) {
         case Param::HostName:
-            this->_host_name = field;
+            _host_name = field;
             break;
         case Param::ServiceDescription:
-            this->_service_description = field;
+            _service_description = field;
             break;
         case Param::CommandName:
-            this->_command_name = field;
+            _command_name = field;
+            break;
+        case Param::CommandNameWithWorkaround:
+            _command_name = field;
+            // The NotifyHelper class has a long, tragic history: Through a long
+            // series of commits, it suffered from spelling mistakes like
+            // "HOST_NOTIFICATION" or "HOST NOTIFICATION" (without a colon),
+            // parameter lists not matching the corresponding format strings,
+            // and last but not least wrong ordering of fields. The net result
+            // of this tragedy is that due to legacy reasons, we have to support
+            // parsing an incorrect ordering of "state type" and "command name"
+            // fields. :-P
+            if (_state_type.empty()) {
+                break;  // extremely broken line
+            }
+            if (_state_type == "check-mk-notify") {
+                // Ooops, we encounter one of our own buggy lines...
+                std::swap(_state_type, _command_name);
+                if (_state_type.empty()) {
+                    break;  // extremely broken line, even after swapping
+                }
+            }
+            _state = _service_description.empty()
+                         ? static_cast<int>(parseHostState(_state_type))
+                         : static_cast<int>(parseServiceState(_state_type));
             break;
         case Param::ContactName:
-            this->_contact_name = field;
+            _contact_name = field;
             break;
         case Param::HostState:
-            this->_state = static_cast<int>(parseHostState(field));
+            _state = static_cast<int>(parseHostState(field));
             break;
         case Param::ServiceState:
-            this->_state = static_cast<int>(parseServiceState(field));
+            _state = static_cast<int>(parseServiceState(field));
             break;
         case Param::State:
-            this->_state = atoi(field.c_str());
+            _state = atoi(field.c_str());
             break;
         case Param::StateType:
-            this->_state_type = field;
+            _state_type = field;
             break;
         case Param::Attempt:
-            this->_attempt = atoi(field.c_str());
+            _attempt = atoi(field.c_str());
             break;
         case Param::Comment:
-            this->_comment = field;
+            _comment = field;
             break;
         case Param::PluginOutput:
-            this->_plugin_output = field;
+            _plugin_output = field;
             break;
         case Param::LongPluginOutput:
-            this->_long_plugin_output = mk::to_multi_line(field);
+            _long_plugin_output = mk::to_multi_line(field);
             break;
         case Param::Ignore:
             break;
@@ -200,15 +223,16 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions{
            Class::hs_notification,
            LogEntryKind::none,
            {Param::ContactName, Param::HostName, Param::StateType,
-            Param::CommandName, Param::PluginOutput,  //
-            Param::Ignore,                            // author
+            Param::CommandNameWithWorkaround, Param::PluginOutput,
+            Param::Ignore,  // author
             Param::Comment, Param::LongPluginOutput}},
     ////////////////
     LogDef{"SERVICE NOTIFICATION",
            Class::hs_notification,
            LogEntryKind::none,
            {Param::ContactName, Param::HostName, Param::ServiceDescription,
-            Param::StateType, Param::CommandName, Param::PluginOutput,  //
+            Param::StateType, Param::CommandNameWithWorkaround,
+            Param::PluginOutput,
             Param::Ignore,  // author
             Param::Comment, Param::LongPluginOutput}},
     ////////////////
@@ -216,26 +240,28 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions{
            Class::hs_notification,
            LogEntryKind::none,
            {Param::ContactName, Param::HostName, Param::StateType,
-            Param::CommandName, Param::PluginOutput, Param::Comment}},
+            Param::CommandNameWithWorkaround, Param::PluginOutput,
+            Param::Comment}},
     ////////////////
     LogDef{"SERVICE NOTIFICATION RESULT",
            Class::hs_notification,
            LogEntryKind::none,
            {Param::ContactName, Param::HostName, Param::ServiceDescription,
-            Param::StateType, Param::CommandName, Param::PluginOutput,
-            Param::Comment}},
+            Param::StateType, Param::CommandNameWithWorkaround,
+            Param::PluginOutput, Param::Comment}},
     ////////////////
     LogDef{"HOST NOTIFICATION PROGRESS",
            Class::hs_notification,
            LogEntryKind::none,
            {Param::ContactName, Param::HostName, Param::StateType,
-            Param::CommandName, Param::PluginOutput}},
+            Param::CommandNameWithWorkaround, Param::PluginOutput}},
     ////////////////
     LogDef{"SERVICE NOTIFICATION PROGRESS",
            Class::hs_notification,
            LogEntryKind::none,
            {Param::ContactName, Param::HostName, Param::ServiceDescription,
-            Param::StateType, Param::CommandName, Param::PluginOutput}},
+            Param::StateType, Param::CommandNameWithWorkaround,
+            Param::PluginOutput}},
     ////////////////
     LogDef{"HOST ALERT HANDLER STARTED",
            Class::alert_handlers,
@@ -339,33 +365,6 @@ bool LogEntry::textStartsWith(const std::string &what) {
 
 bool LogEntry::textContains(const std::string &what) {
     return _message.find(what, timestamp_prefix_length) != std::string::npos;
-}
-
-// The NotifyHelper class has a long, tragic history: Through a long series of
-// commits, it suffered from spelling mistakes like "HOST_NOTIFICATION" or "HOST
-// NOTIFICATION" (without a colon), parameter lists not matching the
-// corresponding format strings, and last but not least wrong ordering of
-// fields. The net result of this tragedy is that due to legacy reasons, we have
-// to support parsing an incorrect ordering of "state type" and "command name"
-// fields. :-P
-void LogEntry::applyWorkarounds() {
-    if (_class != Class::hs_notification ||  // no need for any workaround
-        _state_type.empty()) {               // extremely broken line
-        return;
-    }
-
-    if (_state_type == "check-mk-notify") {
-        // Ooops, we encounter one of our own buggy lines...
-        std::swap(_state_type, _command_name);
-    }
-
-    if (_state_type.empty()) {
-        return;  // extremely broken line, even after a potential swap
-    }
-
-    _state = _service_description.empty()
-                 ? static_cast<int>(parseHostState(_state_type))
-                 : static_cast<int>(parseServiceState(_state_type));
 }
 
 namespace {

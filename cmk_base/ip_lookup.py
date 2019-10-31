@@ -27,7 +27,9 @@
 import socket
 import errno
 import os
-from typing import Optional  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Optional, Dict, Tuple, Union, cast,
+)
 
 import cmk.utils.paths
 import cmk.utils.debug
@@ -37,6 +39,9 @@ import cmk_base
 import cmk_base.console as console
 import cmk_base.config as config
 from cmk_base.exceptions import MKIPAddressLookupError
+
+IPLookupCache = Dict[Tuple[str, int], str]
+LegacyIPLookupCache = Dict[str, str]
 
 _fake_dns = None  # type: Optional[str]
 _enforce_localhost = False
@@ -160,19 +165,18 @@ def cached_dns_lookup(hostname, family):
 
 
 def _initialize_ip_lookup_cache():
+    # type: () -> IPLookupCache
     # Already created and initialized. Simply return it!
     if cmk_base.config_cache.exists("ip_lookup"):
         return cmk_base.config_cache.get_dict("ip_lookup")
 
-    ip_lookup_cache = cmk_base.config_cache.get_dict("ip_lookup")
+    ip_lookup_cache = cmk_base.config_cache.get_dict("ip_lookup")  # type: IPLookupCache
 
     try:
-        data_from_file = store.load_data_from_file(cmk.utils.paths.var_dir + '/ipaddresses.cache',
-                                                   {})
-        ip_lookup_cache.update(data_from_file)
+        data_from_file = store.load_data_from_file(_cache_path(), {})
+        data_from_file = _convert_legacy_ip_lookup_cache(data_from_file)
 
-        # be compatible to old caches which were created by Check_MK without IPv6 support
-        _convert_legacy_ip_lookup_cache(ip_lookup_cache)
+        ip_lookup_cache.update(data_from_file)
     except:
         if cmk.utils.debug.enabled():
             raise
@@ -181,31 +185,41 @@ def _initialize_ip_lookup_cache():
     return ip_lookup_cache
 
 
-def _convert_legacy_ip_lookup_cache(ip_lookup_cache):
-    ip_lookup_cache = cmk_base.config_cache.get_dict("ip_lookup")
-    if not ip_lookup_cache:
-        return
+def _convert_legacy_ip_lookup_cache(cache):
+    # type: (Union[LegacyIPLookupCache, IPLookupCache]) -> IPLookupCache
+    """be compatible to old caches which were created by Check_MK without IPv6 support"""
+    if not cache:
+        return {}
 
     # New version has (hostname, ip family) as key
-    if isinstance(ip_lookup_cache.keys()[0], tuple):
-        return
+    if isinstance(cache.keys()[0], tuple):
+        return cast(IPLookupCache, cache)
 
-    new_cache = {}
-    for key, val in ip_lookup_cache.items():
+    cache = cast(LegacyIPLookupCache, cache)
+
+    new_cache = {}  # type: IPLookupCache
+    for key, val in cache.items():
         new_cache[(key, 4)] = val
-    ip_lookup_cache.clear()
-    ip_lookup_cache.update(new_cache)
+    return new_cache
 
 
+# TODO: This is called after single IP lookups, even during update_dns_cache.
+# It loops over all hosts to resolve their IP addresses and update the cache.
+# Bug always first loads the currently persisted IP addresses from the cache,
+# while holding the lock, updating one IP address and writing it back, then
+# unlocking the file again.
+# This is VERY ineffective! And it seems to be done this way because there are
+# multiple check executions running in parallel where all of them could update
+# the IP address at any time.
 def _update_ip_lookup_cache(cache_id, ipa):
-    ip_lookup_cache = cmk_base.config_cache.get_dict("ip_lookup")
+    ip_lookup_cache = cmk_base.config_cache.get_dict("ip_lookup")  # type: IPLookupCache
 
     # Read already known data
     cache_path = _cache_path()
     try:
         data_from_file = cmk.utils.store.load_data_from_file(cache_path, default={}, lock=True)
+        data_from_file = _convert_legacy_ip_lookup_cache(data_from_file)
 
-        _convert_legacy_ip_lookup_cache(data_from_file)
         ip_lookup_cache.update(data_from_file)
         ip_lookup_cache[cache_id] = ipa
 
@@ -259,5 +273,7 @@ def update_dns_cache():
                     if cmk.utils.debug.enabled():
                         raise
                     continue
+
+    # TODO: After calculation the cache needs to be written once
 
     return updated, failed

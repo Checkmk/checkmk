@@ -964,9 +964,12 @@ class Overridable(Base):
                     # Actions
                     table.cell(_('Actions'), css='buttons visuals')
 
+                    # View
+                    html.icon_button(instance.page_url(), _("View"), "new_" + cls.type_name())
+
                     # Clone / Customize
-                    buttontext = _("Create a customized copy of this")
-                    html.icon_button(instance.clone_url(), buttontext, "new_" + cls.type_name())
+                    html.icon_button(instance.clone_url(), _("Create a customized copy of this"),
+                                     "clone")
 
                     # Delete
                     if instance.may_delete():

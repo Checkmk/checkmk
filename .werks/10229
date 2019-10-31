@@ -1,4 +1,4 @@
-Title: Graph tuning: Graphs do not exceed the time axis
+Title: Graph tuning: Graphs do not exceed the time axis and forecast graph icons were fixed
 Level: 1
 Component: multisite
 Class: fix
@@ -9,3 +9,4 @@ Version: 1.6.0p6
 Date: 1571907378
 
 Graphs no longer cross the time axis but are hidden for values smaller than the origin y-axis value.
+The correct icons for cloning and viewing forecast graphs were put in place.

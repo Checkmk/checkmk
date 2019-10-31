@@ -2925,6 +2925,12 @@ def main_rm(site, args, options=None):
     if tmpfs_mounted(site.name):
         unmount_tmpfs(site, kill=kill)
 
+    # Remove include-hook for Apache and tell apache
+    # Needs to be cleaned up before removing the site directory. Otherwise a
+    # parallel restart / reload of the apache may fail, because the apache hook
+    # refers to a not existing site apache config.
+    delete_apache_hook(site.name)
+
     if not reuse:
         remove_from_fstab(site)
         sys.stdout.write("Deleting user and group %s..." % site.name)
@@ -2942,8 +2948,6 @@ def main_rm(site, args, options=None):
         os.mkdir(site.tmp_dir)
         os.chown(site.tmp_dir, user_id(site.name), group_id(site.name))
 
-    # remove include-hook for Apache and tell apache
-    delete_apache_hook(site.name)
     if "apache-reload" in options:
         reload_apache()
     else:

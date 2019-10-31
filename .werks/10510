@@ -1,0 +1,13 @@
+Title: Added more link views for Host Groups (Summary)
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1572535913
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+The view Host Groups (Summary) did not have any links in the shown data,
+that would display more details. With this change, all statistics are now
+linked to such a more detailed view.

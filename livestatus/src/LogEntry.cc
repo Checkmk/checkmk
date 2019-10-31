@@ -67,17 +67,17 @@ LogEntry::LogEntry(size_t lineno, std::string line)
     classifyLogMessage();
 }
 
-bool LogEntry::assign(Param par, const std::string &field) {
+void LogEntry::assign(Param par, const std::string &field) {
     switch (par) {
         case Param::HostName:
             _host_name = field;
-            break;
+            return;
         case Param::ServiceDescription:
             _service_description = field;
-            break;
+            return;
         case Param::CommandName:
             _command_name = field;
-            break;
+            return;
         case Param::CommandNameWithWorkaround:
             _command_name = field;
             // The NotifyHelper class has a long, tragic history: Through a long
@@ -89,51 +89,49 @@ bool LogEntry::assign(Param par, const std::string &field) {
             // parsing an incorrect ordering of "state type" and "command name"
             // fields. :-P
             if (_state_type.empty()) {
-                break;  // extremely broken line
+                return;  // extremely broken line
             }
             if (_state_type == "check-mk-notify") {
                 // Ooops, we encounter one of our own buggy lines...
                 std::swap(_state_type, _command_name);
                 if (_state_type.empty()) {
-                    break;  // extremely broken line, even after swapping
+                    return;  // extremely broken line, even after swapping
                 }
             }
             _state = _service_description.empty()
                          ? static_cast<int>(parseHostState(_state_type))
                          : static_cast<int>(parseServiceState(_state_type));
-            break;
+            return;
         case Param::ContactName:
             _contact_name = field;
-            break;
+            return;
         case Param::HostState:
             _state = static_cast<int>(parseHostState(field));
-            break;
+            return;
         case Param::ServiceState:
             _state = static_cast<int>(parseServiceState(field));
-            break;
+            return;
         case Param::State:
             _state = atoi(field.c_str());
-            break;
+            return;
         case Param::StateType:
             _state_type = field;
-            break;
+            return;
         case Param::Attempt:
             _attempt = atoi(field.c_str());
-            break;
+            return;
         case Param::Comment:
             _comment = field;
-            break;
+            return;
         case Param::PluginOutput:
             _plugin_output = field;
-            break;
+            return;
         case Param::LongPluginOutput:
             _long_plugin_output = mk::to_multi_line(field);
-            break;
+            return;
         case Param::Ignore:
-            break;
+            return;
     }
-
-    return true;
 };
 
 std::vector<LogEntry::LogDef> LogEntry::log_definitions{

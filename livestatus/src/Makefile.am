@@ -31,7 +31,7 @@ RUN_CLANG_TIDY ?= \
     $(abs_top_srcdir)/scripts/run-clang-tidy.py \
         -clang-tidy-binary=clang-tidy-$(CLANG_VERSION) \
         -clang-apply-replacements-binary=clang-apply-replacements-$(CLANG_VERSION)
-PIPENV := LANG=C PIPENV_VENV_IN_PROJECT=true PIPENV_PIPFILE=$(abs_top_srcdir)/virtual-envs/2.7/Pipfile pipenv
+PIPENV := LANG=C PIPENV_VENV_IN_PROJECT=true PIPENV_PIPFILE=$(abs_top_srcdir)/Pipfile pipenv
 
 bin_PROGRAMS = unixcat
 

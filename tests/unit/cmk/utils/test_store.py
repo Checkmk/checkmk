@@ -14,6 +14,7 @@ else:
     from pathlib2 import Path
 
 import pytest  # type: ignore
+from testlib import import_module
 
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
@@ -327,10 +328,8 @@ class LockTestThread(threading.Thread):
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_locking(tmp_path, path_type):
     # HACK: We abuse modules as data containers, so we have to do this Kung Fu...
-    store1 = sys.modules["cmk.utils.store"]
-    del sys.modules["cmk.utils.store"]
-    import cmk.utils.store as _store  # pylint: disable=reimported
-    store2 = sys.modules["cmk.utils.store"]
+    store1 = store
+    store2 = import_module("cmk/utils/store.py")
 
     assert store1 != store2
 

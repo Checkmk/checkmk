@@ -59,6 +59,8 @@ LogEntry::LogEntry(size_t lineno, std::string line)
     } catch (const std::logic_error &e) {
         _class = Class::invalid;
         _kind = LogEntryKind::none;
+        _time = 0;
+        _type = "";
         return;  // ignore invalid lines silently
     }
 
@@ -400,7 +402,7 @@ std::unordered_map<std::string, HostState> fl_host_state_types{
     {"OK", HostState::up},
     {"WARNING", HostState::down},
     {"CRITICAL", HostState::unreachable},
-    {"UNKNOWN", HostState::up}};
+    {"UNKNOWN", static_cast<HostState>(3)}};  // Horrible HACK
 }  // namespace
 
 // static

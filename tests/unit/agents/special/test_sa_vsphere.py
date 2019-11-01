@@ -17,7 +17,6 @@ DEFAULT_AGRS = {
     "hostname": None,
     "skip_placeholder_vm": False,
     "pysphere": False,
-    "tracefile": None,
     "host_pwr_display": None,
     "vm_pwr_display": None,
     "snapshot_display": None,
@@ -71,9 +70,6 @@ DEFAULT_AGRS = {
     }),
     (['--pysphere'], {
         "pysphere": True
-    }),
-    (['--tracefile', 'pathToTracefile'], {
-        "tracefile": "pathToTracefile"
     }),
     (['--host_pwr_display', 'vm'], {
         "host_pwr_display": "vm"

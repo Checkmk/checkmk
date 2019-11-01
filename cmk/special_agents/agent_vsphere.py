@@ -48,6 +48,8 @@ from pathlib2 import Path
 import cmk.utils.password_store
 import cmk.utils.paths
 
+from cmk.special_agents.utils import vcrtrace
+
 AGENT_TMP_PATH = Path(cmk.utils.paths.tmp_dir, "agents/agent_vsphere")
 
 REQUESTED_COUNTERS_KEYS = (
@@ -924,9 +926,9 @@ def parse_arguments(argv):
         Recovery Manager (SRM) and are identified by not having any assigned virtual disks.""")
 
     # optional arguments
-    parser.add_argument("--tracefile",
-                        default=None,
-                        help="""Log all outgoing and incoming data into the given tracefile""")
+    parser.add_argument("--vcrtrace",
+                        "--tracefile",
+                        action=vcrtrace(before_record_request=ESXConnection.filter_request))
     parser.add_argument(
         "-t",
         "--timeout",
@@ -1063,6 +1065,13 @@ class ESXConnection(object):
     ESCAPED_CHARS = {"&": "&amp;", ">": "&gt;", "<": "&lt;", "'": "&apos;", '"': "&quot;"}
 
     @staticmethod
+    def filter_request(request):
+        """Used for VCR. Filter password"""
+        if '<ns1:password>' in request.body:
+            request.body = "login request filtered out"
+        return request
+
+    @staticmethod
     def _escape_xml(text):
         return ''.join(ESXConnection.ESCAPED_CHARS.get(c, c) for c in text)
 
@@ -1073,7 +1082,6 @@ class ESXConnection(object):
 
     def __init__(self, address, port, opt):
         super(ESXConnection, self).__init__()
-        self.tracefile = opt.tracefile
 
         AGENT_TMP_PATH.mkdir(parents=True, exist_ok=True)
 
@@ -1121,10 +1129,6 @@ class ESXConnection(object):
     def query_server(self, method, **kwargs):
         payload = getattr(self._soap_templates, method) % kwargs
 
-        if self.tracefile:
-            self.tracefile.write("####   Sent  ####\n%s" % payload)
-            time_sent = time.time()
-
         response_data = []
         while True:
             response = self._session.postsoap(payload)
@@ -1138,12 +1142,7 @@ class ESXConnection(object):
                 break
             payload = self._soap_templates.continuetoken % {"token": token[0]}
 
-        respose_text = "".join(response_data)
-        if self.tracefile:
-            timing_info = "Response took: %f" % (time.time() - time_sent)
-            self.tracefile.write("\n#### Received #### %s\n%s\n" % (timing_info, respose_text))
-
-        return respose_text
+        return "".join(response_data)
 
     @property
     def perf_samples(self):
@@ -1938,18 +1937,6 @@ def main(argv=None):
         sys.exit(call_legacy_pysphere())
 
     socket.setdefaulttimeout(opt.timeout)
-
-    if opt.tracefile:
-        tracefile_dir = os.path.dirname(opt.tracefile) or "."
-        if os.path.exists(tracefile_dir):
-            opt.tracefile = open(opt.tracefile, "w")
-        elif opt.debug:
-            sys.stderr.write("Path for tracefile %s does not exist" % opt.tracefile)
-            sys.stderr.flush()
-
-    if opt.tracefile:
-        opt.tracefile.write("Tracefile %s Host address: %s\n" %
-                            (datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), opt.host_address))
 
     try:
         esx_connection = ESXConnection(opt.host_address, opt.port, opt)

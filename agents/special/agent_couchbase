@@ -91,11 +91,12 @@ SECTION_KEYS_B_OPERATIONS = (
     "ep_num_ops_del_meta",
 )
 
+SECTION_KEYS_B_CACHE = ("ep_cache_miss_rate",)
+
 #
 # Theses are not (yet) in use. I'm on it! (mo)
 #
 #STATS_KEYS_BUCKET = (
-#    "ep_cache_miss_rate",
 #    "ep_ops_create",
 #    "ep_diskqueue_drain",
 #    "ep_diskqueue_fill",
@@ -272,6 +273,9 @@ def sections_buckets(bucket_list):
         ],
         "couchbase_buckets_operations:sep(0)": [
             _get_dump(name, data, SECTION_KEYS_B_OPERATIONS, _average) for name, data in bucket_list
+        ],
+        "couchbase_buckets_cache:sep(0)": [
+            _get_dump(name, data, SECTION_KEYS_B_CACHE, _average) for name, data in bucket_list
         ],
     }
 

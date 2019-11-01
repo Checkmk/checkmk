@@ -71,6 +71,10 @@ class ModeSearch(WatoMode):
         the too long URLs.
         """
         keep_vars = {}
+
+        if html.request.var("host_search_host"):
+            keep_vars["host_search_host"] = html.request.var("host_search_host")
+
         for varname, value in html.request.itervars(prefix="host_search_change_"):
             if html.get_checkbox(varname) is False:
                 continue

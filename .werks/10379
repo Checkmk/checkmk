@@ -1,0 +1,14 @@
+Title: Hostname search: Host bulk actions affected all hosts (1.6.0p4 regression)
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1572617559
+Class: fix
+
+When using the WATO host search to filter hosts by a host name pattern, the
+resulting page showed the correctly matched hosts. When performing a bulk
+operation on this page, this affected all hosts instead of the filtered hosts.
+
+This regression was introduced by #10259 with 1.6.0p5.

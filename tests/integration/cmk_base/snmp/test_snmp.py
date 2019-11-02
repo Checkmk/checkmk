@@ -6,7 +6,7 @@ import os
 import pytest  # type: ignore
 from pathlib2 import Path
 import six
-from testlib import wait_until, virtualenv_path
+from testlib import wait_until
 
 from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.paths
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 # https://github.com/pytest-dev/pytest/issues/363
 @pytest.fixture(scope="module")
 def monkeymodule(request):
-    from _pytest.monkeypatch import MonkeyPatch
+    from _pytest.monkeypatch import MonkeyPatch  # type: ignore
     mpatch = MonkeyPatch()
     yield mpatch
     mpatch.undo()
@@ -39,15 +39,12 @@ def monkeymodule(request):
 @pytest.fixture(scope="module", autouse=True)
 def snmpsim(site, request, tmp_path_factory):
     tmp_path = tmp_path_factory.getbasetemp()
-
-    snmpsimd_path = "%s/bin/snmpsimd.py" % (virtualenv_path())
     source_data_dir = Path(request.fspath.dirname) / "snmp_data"
 
     log.logger.setLevel(logging.DEBUG)
     debug.enable()
     cmd = [
-        "%s/bin/python" % site.root,
-        snmpsimd_path,
+        "snmpsimd.py",
         #"--log-level=error",
         "--cache-dir",
         str(tmp_path / "snmpsim"),
@@ -91,7 +88,8 @@ def snmpsim(site, request, tmp_path_factory):
         if num_sockets < 2:
             return False
 
-        import netsnmp
+        # Correct module is only available in the site
+        import netsnmp  # pylint: disable=import-error
         var = netsnmp.Varbind("sysDescr.0")
         result = netsnmp.snmpget(var, Version=2, DestHost="127.0.0.1:1337", Community="public")
         if result is None or result[0] is None:

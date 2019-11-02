@@ -28,8 +28,9 @@ import time
 import copy
 import json
 from typing import (  # pylint: disable=unused-import
-    Any, Dict, Optional,
+    Any, Dict, Optional, NamedTuple,
 )
+import six
 
 import cmk.gui.pages
 import cmk.gui.notify as notify
@@ -830,31 +831,13 @@ def dashboard_edit_controls(name, board):
         # The dashlet types which can be added to the view
         html.open_ul(style="display:none", class_=["menu", "sub"], id_="control_add_sub")
 
-        # TODO: Why is this done like this? Looks like a dirty hack.
-        # - Mypy does not understand this. We could probably use type(..., ..., ...) here instead.
-        # - Or event better: Just produce a new menu entry below without registering something new
-        #   to the dashlet registry.
-        class ExistingView(dashlet_registry['view']):  # type: ignore
-            @classmethod
-            def title(cls):
-                return _('Existing View')
-
-            @classmethod
-            def add_url(cls):
-                return 'create_view_dashlet.py?name=%s&create=0&back=%s' % \
-                            (html.urlencode(name), html.urlencode(html.makeuri([('edit', '1')])))
-
-        dashlet_registry.register(ExistingView)
-
-        for ty, dashlet_type in sorted(dashlet_registry.items(), key=lambda x: x[1].sort_index()):
-            if dashlet_type.is_selectable():
-                url = dashlet_type.add_url()
-                html.open_li()
-                html.open_a(href=url)
-                html.icon(title=dashlet_type.title(), icon="dashlet_%s" % ty)
-                html.write(dashlet_type.title())
-                html.close_a()
-                html.close_li()
+        for menu_entry in _get_add_menu_entries(name):
+            html.open_li()
+            html.open_a(href=menu_entry.url)
+            html.icon(title=menu_entry.title, icon=menu_entry.icon_name)
+            html.write(menu_entry.title)
+            html.close_a()
+            html.close_li()
         html.close_ul()
 
         html.close_li()
@@ -904,6 +887,35 @@ def dashboard_edit_controls(name, board):
                      onclick='void(0)')
 
     html.close_div()
+
+
+MenuEntry = NamedTuple("MenuEntry", [
+    ("title", six.text_type),
+    ("url", six.text_type),
+    ("icon_name", six.text_type),
+])
+
+
+def _get_add_menu_entries(name):
+    entries = [
+        MenuEntry(
+            title=_('Copy existing view'),
+            url='create_view_dashlet.py?name=%s&create=0&back=%s' %
+            (html.urlencode(name), html.urlencode(html.makeuri([('edit', '1')]))),
+            icon_name="dashlet_view",
+        ),
+    ]
+
+    for ty, dashlet_type in sorted(dashlet_registry.items(), key=lambda x: x[1].sort_index()):
+        if dashlet_type.is_selectable():
+            entries.append(
+                MenuEntry(
+                    url=dashlet_type.add_url(),
+                    title=dashlet_type.title(),
+                    icon_name="dashlet_%s" % ty,
+                ))
+
+    return entries
 
 
 # Render dashlet custom scripts
@@ -1174,7 +1186,7 @@ def page_create_view_dashlet():
     if create:
         import cmk.gui.views as views
         url = html.makeuri([('back', html.makeuri([]))], filename="create_view_dashlet_infos.py")
-        views.page_create_view(next_url=url)
+        views.show_create_view_dialog(next_url=url)
 
     else:
         # Choose an existing view from the list of available views

@@ -704,8 +704,11 @@ def DatasourceSelection():
 
 
 @cmk.gui.pages.register("create_view")
-def page_create_view(next_url=None):
+def page_create_view():
+    show_create_view_dialog()
 
+
+def show_create_view_dialog(next_url=None):
     vs_ds = DatasourceSelection()
 
     ds = 'services'  # Default selection

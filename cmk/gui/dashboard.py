@@ -699,7 +699,7 @@ def draw_dashboard(name):
                 on_resize_dashlets[nr] = on_resize
 
             dashlet_title_html = render_dashlet_title_html(dashlet_instance)
-            dashlet_content_html = render_dashlet_content(dashlet_instance, is_update=False)
+            dashlet_content_html = render_dashlet_content(board, dashlet_instance, is_update=False)
 
         except Exception as e:
             dashlet_content_html = render_dashlet_exception_content(dashlet_instance, nr, e)
@@ -766,8 +766,8 @@ def render_dashlet_title_html(dashlet_instance):
     return title
 
 
-def render_dashlet_content(dashlet_instance, is_update, stash_html_vars=True):
-    def update_or_show():
+def render_dashlet_content(board, dashlet_instance, is_update, stash_html_vars=True):
+    def update_or_show(mtime):
         visuals.add_context_to_uri_vars(dashlet_instance.dashlet_spec)
         if dashlet_instance.wato_folder is not None:
             html.request.set_var("wato_folder", dashlet_instance.wato_folder)
@@ -776,15 +776,26 @@ def render_dashlet_content(dashlet_instance, is_update, stash_html_vars=True):
                 dashlet_instance.update()
             else:
                 dashlet_instance.show()
+
+            if mtime < board['mtime']:
+                # prevent reloading on the dashboard which already has the current mtime,
+                # this is normally the user editing this dashboard. All others: reload
+                # the whole dashboard once.
+                html.javascript('if (cmk.dashboard.dashboard_properties.dashboard_mtime < %d) {\n'
+                                '    parent.location.reload();\n'
+                                '}' % board['mtime'])
+
             return html.drain()
+
+    mtime = html.get_integer_input('mtime', 0)
 
     if stash_html_vars:
         with html.stashed_vars():
             html.request.del_vars()
             html.request.set_var("name", dashlet_instance.dashboard_name)
-            return update_or_show()
+            return update_or_show(mtime)
     else:
-        return update_or_show()
+        return update_or_show(mtime)
 
 
 def render_dashlet_exception_content(dashlet_instance, nr, e):
@@ -1034,15 +1045,6 @@ def ajax_dashlet():
         raise MKUserError("name", _('The requested dashboard does not exist.'))
     board = available_dashboards[name]
 
-    mtime = html.get_integer_input('mtime', 0)
-    if mtime < board['mtime']:
-        # prevent reloading on the dashboard which already has the current mtime,
-        # this is normally the user editing this dashboard. All others: reload
-        # the whole dashboard once.
-        html.javascript('if (cmk.dashboard.dashboard_properties.dashboard_mtime < %d) {\n'
-                        '    parent.location.reload();\n'
-                        '}' % board['mtime'])
-
     the_dashlet = None
     for nr, dashlet in enumerate(board['dashlets']):
         if nr == ident:
@@ -1061,7 +1063,8 @@ def ajax_dashlet():
     dashlet_instance = dashlet_type(name, board, ident, the_dashlet, wato_folder)
 
     try:
-        dashlet_content_html = render_dashlet_content(dashlet_instance,
+        dashlet_content_html = render_dashlet_content(board,
+                                                      dashlet_instance,
                                                       stash_html_vars=False,
                                                       is_update=True)
     except Exception as e:

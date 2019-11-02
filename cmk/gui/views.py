@@ -2403,10 +2403,7 @@ def ajax_popup_action_menu():
                 if url.startswith('onclick:'):
                     onclick = url[8:]
                     url = 'javascript:void(0);'
-                target = None
-                if target_frame and target_frame != "_self":
-                    target = target_frame
-                html.open_a(href=url, target=target, onclick=onclick)
+                html.open_a(href=url, target=target_frame, onclick=onclick)
 
             html.icon('', icon_name)
             if title:

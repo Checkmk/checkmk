@@ -2793,10 +2793,14 @@ class html(HTMLGenerator):
                      json.dumps(resizable))
 
         #TODO: Check if HTML'ing content is correct and necessary!
-        atag = self.render_a(HTML(content),
-                             class_="popup_trigger",
-                             href="javascript:void(0);",
-                             onclick=onclick)
+        atag = self.render_a(
+            HTML(content),
+            class_="popup_trigger",
+            href="javascript:void(0);",
+            # Needed to prevent wrong linking when views are parts of dashlets
+            target="_self",
+            onclick=onclick,
+        )
 
         return self.render_div(atag,
                                class_=["popup_trigger", cssclass],

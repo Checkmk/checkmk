@@ -219,7 +219,8 @@ class RescheduleIcon(Icon):
 
             url = 'onclick:cmk.views.reschedule_check(this, \'%s\', \'%s\', \'%s\', \'%s\');' % \
                 (row["site"], row["host_name"], html.urlencode(servicedesc), html.urlencode(wait_svc))
-            return icon, txt, url
+            # _self is needed to prevent wrong linking when views are parts of dashlets
+            return icon, txt, (url, "_self")
 
 
 #.

@@ -1,0 +1,11 @@
+Title: Fix editing dashlet views
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1572708152
+Class: fix
+
+The general view options, painter, sorters and group painters could not be
+edited once a view was added to a dashboard.

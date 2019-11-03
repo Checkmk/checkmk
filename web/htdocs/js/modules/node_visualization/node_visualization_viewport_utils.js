@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 import * as node_visualization_utils from "node_visualization_utils"
+import * as d3 from "d3"
 
 export class LayeredLayerBase {
     constructor(viewport, enabled=true) {

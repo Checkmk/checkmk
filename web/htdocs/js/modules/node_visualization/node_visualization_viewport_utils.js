@@ -599,8 +599,14 @@ export class TopologyNode extends AbstractGUINode {
 
     get_context_menu_elements() {
         let elements = AbstractGUINode.prototype.get_context_menu_elements.call(this)
+        elements = elements.concat(this._get_topology_menu_elements())
+        return elements
+    }
 
+
+    _get_topology_menu_elements() {
         // Toggle root node
+        let elements = []
         let root_node_text = "Add root node"
         if (this.node.data.growth_root)
             root_node_text = "Remove root node"

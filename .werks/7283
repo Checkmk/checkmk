@@ -1,0 +1,10 @@
+Title: background jobs: fixed parsing of broken background job status files
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p23
+Date: 1572804938
+Class: fix
+
+

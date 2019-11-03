@@ -569,6 +569,13 @@ class JobStatus(object):
         # During intialization phase the pid may be none. Before entering the running phase,
         # the pid has to be set to the process pid.
         status.setdefault("pid", None)
+
+        # Repair broken/invalid files
+        if "state" not in status:
+            status["state"] = JobStatus.state_initialized
+        if "started" not in status:
+            # Time is set to 1970, these jobs get precedence during the housingkeeping cleanup
+            status["started"] = 0
         return status
 
 

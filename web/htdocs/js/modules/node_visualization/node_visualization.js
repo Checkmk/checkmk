@@ -130,6 +130,7 @@ export class TopologyVisualization extends NodeVisualization {
         this._mesh_depth = 0 // Number of hops from growth root
         this._max_nodes = 200 // Maximum allowed nodes
         this._growth_auto_max_nodes = null // Automatically stop growth when this limit is reached (handled on server side)
+        this.custom_topology_fetch_parameters = {} // Custom parameter, added to each fetch request
     }
     show_topology(list_of_hosts) {
         let topo_ds = this.datasource_manager.get_datasource(node_visualization_datasources.TopologyDatasource.id())
@@ -302,11 +303,18 @@ export class TopologyVisualization extends NodeVisualization {
         })
 
         let ds = this.datasource_manager.get_datasource(node_visualization_datasources.TopologyDatasource.id())
-        ds.fetch_hosts({growth_root_nodes: growth_root_nodes,
-                        mesh_depth: this._mesh_depth,
-                        max_nodes: this._max_nodes,
-                        growth_forbidden_nodes: growth_forbidden_nodes,
-                        growth_continue_nodes: growth_continue_nodes,
-                        mode: this._mode});
+
+
+        let config = {growth_root_nodes: growth_root_nodes,
+                  mesh_depth: this._mesh_depth,
+                  max_nodes: this._max_nodes,
+                  growth_forbidden_nodes: growth_forbidden_nodes,
+                  growth_continue_nodes: growth_continue_nodes,
+                  mode: this._mode};
+
+        for (let key in this.custom_topology_fetch_parameters) {
+            config[key] = this.custom_topology_fetch_parameters[key]
+        }
+        ds.fetch_hosts(config)
     }
 }

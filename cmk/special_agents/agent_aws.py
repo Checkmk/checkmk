@@ -33,12 +33,15 @@ import json
 import logging
 import sys
 import time
+import errno
 from typing import (  # pylint: disable=unused-import
     Union, NamedTuple, Any, List,
 )
 from pathlib2 import Path
 import boto3  # type: ignore
 import botocore  # type: ignore
+
+import cmk.utils.store
 from cmk.utils.paths import tmp_dir
 import cmk.utils.password_store
 from cmk.special_agents.utils import (
@@ -2869,10 +2872,12 @@ def create_session(access_key_id, secret_access_key, region):
 
 
 class AWSConfig(object):
-    def __init__(self, hostname, overall_tags):
+    def __init__(self, hostname, sys_argv, overall_tags):
         self.hostname = hostname
         self._overall_tags = self._prepare_tags(overall_tags)
         self.service_config = {}
+        self._config_hash_file = AWSCacheFilePath.joinpath("%s.config_hash" % hostname)
+        self._current_config_hash = self._compute_config_hash(sys_argv)
 
     def add_service_tags(self, tags_key, tags):
         """Convert commandline input
@@ -2884,14 +2889,15 @@ class AWSConfig(object):
         as we need in API methods if and only if keys AND values are set.
         """
         self.service_config.setdefault(tags_key, None)
-        if tags != (None, None):
+        keys, values = tags
+        if keys and values:
             self.service_config[tags_key] = self._prepare_tags(tags)
         elif self._overall_tags:
             self.service_config[tags_key] = self._overall_tags
 
     def _prepare_tags(self, tags):
-        keys, values = tags
-        if keys and values:
+        if all(tags):
+            keys, values = tags
             return [{
                 'Name': 'tag:%s' % k,
                 'Values': v
@@ -2901,17 +2907,54 @@ class AWSConfig(object):
     def add_single_service_config(self, key, value):
         self.service_config.setdefault(key, value)
 
+    def _compute_config_hash(self, sys_argv):
+        filtered_sys_argv = [
+            arg for arg in sys_argv if arg not in ['--debug', '--verbose', '--no-cache']
+        ]
+        return hash(tuple(sorted(filtered_sys_argv)))
 
-def main(args=None):
-    if args is None:
+    def is_up_to_date(self):
+        old_config_hash = self._load_config_hash()
+        if old_config_hash is None:
+            logging.info("AWSConfig: %s: New config: '%s'", self.hostname,
+                         self._current_config_hash)
+            self._write_config_hash()
+            return False
+
+        if old_config_hash != self._current_config_hash:
+            logging.info("AWSConfig: %s: Config has changed: '%s' -> '%s'", self.hostname,
+                         old_config_hash, self._current_config_hash)
+            self._write_config_hash()
+            return False
+
+        logging.info("AWSConfig: %s: Config is up-to-date: '%s'", self.hostname,
+                     self._current_config_hash)
+        return True
+
+    def _load_config_hash(self):
+        try:
+            with self._config_hash_file.open(mode='r', encoding="utf-8") as f:  # pylint: disable=no-member
+                return int(f.read().strip())
+        except IOError as e:
+            if e.errno != errno.ENOENT:
+                # No such file or directory
+                raise
+            return None
+
+    def _write_config_hash(self):
+        cmk.utils.store.save_file(self._config_hash_file, "%s\n" % self._current_config_hash)
+
+
+def main(sys_argv=None):
+    if sys_argv is None:
         cmk.utils.password_store.replace_passwords()
-        args = sys.argv[1:]
+        sys_argv = sys.argv[1:]
 
-    args = parse_arguments(args)
+    args = parse_arguments(sys_argv)
     setup_logging(args.debug, args.verbose)
     hostname = args.hostname
 
-    aws_config = AWSConfig(hostname, (args.overall_tag_key, args.overall_tag_values))
+    aws_config = AWSConfig(hostname, sys_argv, (args.overall_tag_key, args.overall_tag_values))
     for service_key, service_names, service_tags, service_limits in [
         ("ec2", args.ec2_names, (args.ec2_tag_key, args.ec2_tag_values), args.ec2_limits),
         ("ebs", args.ebs_names, (args.ebs_tag_key, args.ebs_tag_values), args.ebs_limits),
@@ -2927,6 +2970,8 @@ def main(args=None):
     aws_config.add_single_service_config("s3_requests", args.s3_requests)
     aws_config.add_single_service_config("cloudwatch_alarms", args.cloudwatch_alarms)
 
+    use_cache = aws_config.is_up_to_date() and not args.no_cache
+
     has_exceptions = False
     for aws_services, aws_regions, aws_sections in [
         (args.global_services, ["us-east-1"], AWSSectionsUSEast),
@@ -2939,7 +2984,7 @@ def main(args=None):
                 session = create_session(args.access_key_id, args.secret_access_key, region)
                 sections = aws_sections(hostname, session, debug=args.debug)
                 sections.init_sections(aws_services, region, aws_config)
-                sections.run(use_cache=not args.no_cache)
+                sections.run(use_cache=use_cache)
             except AssertionError:
                 if args.debug:
                     return 1

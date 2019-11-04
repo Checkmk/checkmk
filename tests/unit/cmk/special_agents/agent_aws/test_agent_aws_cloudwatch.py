@@ -16,7 +16,7 @@ from cmk.special_agents.agent_aws import (
 def get_cloudwatch_alarms_sections():
     def _create_cloudwatch_alarms_sections(alarm_names):
         region = 'region'
-        config = AWSConfig('hostname', (None, None))
+        config = AWSConfig('hostname', [], (None, None))
         config.add_single_service_config('cloudwatch_alarms', alarm_names)
 
         fake_cloudwatch_client = FakeCloudwatchClient()

@@ -1025,6 +1025,9 @@ class CommandScheduleDowntimes(Command):
             if name == "next_day":
                 return time.mktime((now.tm_year, now.tm_mon, now.tm_mday, 23, 59, 59, 0, 0, now.tm_isdst)) + 1, \
                     _("<b>%s until 24:00:00</b> on") % title_start
+            elif name == "next_day_plus":
+                return time.mktime((now.tm_year, now.tm_mon, now.tm_mday + 1, 10, 0, 0, 0, 0, now.tm_isdst)), \
+                    _("<b>%s until 10:00 tomorrow</b> on") % title_start
             elif name == "next_week":
                 wday = now.tm_wday
                 days_plus = 6 - wday
@@ -1032,6 +1035,11 @@ class CommandScheduleDowntimes(Command):
                     (now.tm_year, now.tm_mon, now.tm_mday, 23, 59, 59, 0, 0, now.tm_isdst)) + 1
                 res += days_plus * 24 * 3600
                 return res, _("<b>%s until sunday night</b> on") % title_start
+            elif name == "next_week_plus":
+                wday = now.tm_wday
+                days_plus = 7 - wday
+                return time.mktime((now.tm_year, now.tm_mon, now.tm_mday + days_plus, 10, 0, 0, 0, 0, now.tm_isdst)), \
+                    _("<b>%s until monday morning 10:00</b> on") % title_start
             elif name == "next_month":
                 new_month = now.tm_mon + 1
                 if new_month == 13:
@@ -1041,9 +1049,29 @@ class CommandScheduleDowntimes(Command):
                     new_year = now.tm_year
                 return time.mktime((new_year, new_month, 1, 0, 0, 0, 0, 0, now.tm_isdst)), \
                     _("<b>%s until end of month</b> on") % title_start
+            elif name == "next_month_plus":
+                tmp = time.localtime(time.mktime((now.tm_year, now.tm_mon + 1, 1, 10, 0, 0, 0, 0, now.tm_isdst)))
+                days_plus = 0
+                if tmp.tm_wday == 6:
+                    days_plus = 1
+                if tmp.tm_wday == 5:
+                    days_plus = 2
+                down_to = time.mktime((tmp.tm_year, tmp.tm_mon, tmp.tm_mday + days_plus, 10, 0, 0, 0, 0, tmp.tm_isdst))
+                return down_to, \
+                    _("<b>%s until start of next month (%s)</b> on") % (title_start, time.strftime('%Y-%m-%d %H:%M', time.localtime(down_to)))
             elif name == "next_year":
                 return time.mktime((now.tm_year, 12, 31, 23, 59, 59, 0, 0, now.tm_isdst)) + 1, \
                     _("<b>%s until end of %d</b> on") % (title_start, now.tm_year)
+            elif name == "next_year_plus":
+                tmp = time.localtime(time.mktime((now.tm_year + 1, 1, 2, 9, 0, 0, 0, 0, now.tm_isdst)))
+                days_plus = 0
+                if tmp.tm_wday == 6:
+                    days_plus = 1
+                if tmp.tm_wday == 5:
+                    days_plus = 2
+                down_to = time.mktime((tmp.tm_year, tmp.tm_mon, tmp.tm_mday + days_plus, 10, 0, 0, 0, 0, tmp.tm_isdst))
+                return down_to, \
+                    _("<b>%s until start of next year (%s) </b> on") % (title_start, time.strftime('%Y-%m-%d %H:%M', time.localtime(down_to)))
             else:
                 duration = int(name)
                 return down_from + duration, \

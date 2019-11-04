@@ -1453,9 +1453,13 @@ class ConfigVariableUserDowntimeTimeranges(ConfigVariable):
                                        title=_("Until"),
                                        choices=[
                                            ('next_day', _("Start of next day")),
+                                           ('next_day_plus', _("Tomorrow 10:00")),
                                            ('next_week', _("Start of next week")),
+                                           ('next_week_plus', _("Next Monday 10:00")),
                                            ('next_month', _("Start of next month")),
+                                           ('next_month_plus', _("First of next month 10:00")),
                                            ('next_year', _("Start of next year")),
+                                           ('next_year_plus', _("January 2nd 10:00")),
                                        ],
                                        default_value="next_day",
                                    )

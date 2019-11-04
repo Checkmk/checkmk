@@ -4,7 +4,8 @@ checkname = 'cisco_temperature'
 
 info = [
     [
-        [u'10', u'Fabric Stack Root'],
+        [u'1176', u'Filtered sensor'],
+        [u'1177', u'Sensor with large precision'],
         [u'2008', u'Switch 1 - WS-C2960X-24PD-L - Sensor 0'],
         [u'4950', u'Linecard-1 Port-1'],
         [u'21590', u'module-1 Crossbar1(s1)'],
@@ -18,6 +19,8 @@ info = [
         [u'300000014', u'Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor'],
     ],
     [
+        [u'1176', u'1', u'9', u'1613258611', u'0', u'1'],
+        [u'1177', u'8', u'9', u'1613258611', u'0', u'1'],
         [u'21590', u'8', u'9', u'0', u'62', u'1'],
         [u'21591', u'8', u'9', u'0', u'58', u'1'],
         [u'21592', u'8', u'9', u'0', u'49', u'1'],
@@ -64,6 +67,7 @@ info = [
 
 discovery = {
     '': [
+        (u'Sensor with large precision', {}),
         (u'Ethernet1/1 Lane 1 Transceiver Temperature Sensor', {}),
         (u'SW 1 Sensor 1', {}),
         (u'SW 2 Sensor 1', {}),
@@ -79,6 +83,15 @@ discovery = {
 
 checks = {
     '': [
+        (
+            u'Sensor with large precision',
+            {},
+            [(
+                0,
+                u'0.0 \xb0C',
+                [('temp', 0.0, None, None, None, None)],
+            )],
+        ),
         (
             u'Ethernet1/1 Lane 1 Transceiver Temperature Sensor',
             {},

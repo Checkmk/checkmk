@@ -1,0 +1,41 @@
+Title: Distributed Agent Updates
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1572874347
+Edition: cee
+Knowledge: undoc
+Level: 2
+Version: 1.7.0i1
+
+It is now possible to deploy baked agents via remote sites within a distributed
+monitoring configuration. Prerequisites for this feature are a monitoring setup
+using distributed WATO and the possibility to establish a connection from remote
+sites to the central site via HTTP/HTTPS.
+
+This feature is realized as follows: Update requests to the remote sites
+get forwarded to the central site – The entire configuration and the agent
+baking process is done on the central site. Agent packages that got requested
+once at a remote site will get cached (as long as they are valid) there to save
+unnecessary traffic. Additionally, the requested data will be checked for consistency
+on the remote site, again to save unnecessary traffic to the central site.
+
+In contrast to a single-site-setup, the update server for a host doesn't come exclusively
+from the agent updater ruleset, but gets transmitted to the host on it's registration and
+update requests. A host will receive the Checkmk site that it is monitored on as it's
+update server. 
+
+Putting this together, an input of a Checkmk-server is only needed once on registration.
+If a connection to the automatic update server is failing, the previously saved server
+(from agent updater ruleset or from manual registration) will be contacted as a
+fallback.
+
+This feature also introduces a faciliated agent updater ruleset configuration - especially
+when it comes to HTTPS handling - and some additional global settings that have to
+be configured to enable the distributed agent updates.
+All new or adapted configuration values get migrated in a way that maintains the behavior
+of an existing agent updater ruleset.
+
+For details about configuration and how to enable (or disable) this new feature, please
+have a look at the <a href="https://checkmk.com/cms_agent_deployment.html"> Automatic Agent Updates</a>
+article at the official Checkmk guide.

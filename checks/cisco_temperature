@@ -104,14 +104,13 @@ def parse_cisco_temperature(info):
         }
 
         if sensorstate == '1':
-            scale = 10**int(magnitude)
-            scale *= 10 ** (-1 * cisco_entity_exponents[scalecode])
-            sensor_attrs['reading'] = float(value) / scale
+            factor = 10.0**(float(cisco_entity_exponents[scalecode]) - float(magnitude))
+            sensor_attrs['reading'] = float(value) * factor
             if len(thresholds[sensor_id]) in [ 2, 4 ]:
                 warnraw, critraw = thresholds[sensor_id][0:2]
                 # Some devices deliver these values in the wrong order
-                dev_levels = ( min(float(warnraw)/scale, float(critraw)/scale),
-                               max(float(warnraw)/scale, float(critraw)/scale) )
+                dev_levels = ( min(float(warnraw)*factor, float(critraw)*factor),
+                               max(float(warnraw)*factor, float(critraw)*factor) )
             else:
                 dev_levels = None
             sensor_attrs['dev_levels'] = dev_levels

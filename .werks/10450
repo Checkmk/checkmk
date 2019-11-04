@@ -1,0 +1,16 @@
+Title: cisco_temperature: don't block on large precisions
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p24
+Date: 1572861718
+Class: fix
+
+On devices which delivered a large number for the precision in the
+OID .1.3.6.1.4.1.9.9.91.1.1.1.1.3 the check plugin blocked consuming
+100% CPU. As a result the discovery and check execution on such
+devices will not be possible. To be noticeable a value must be larger
+than 1'000'000. The larger the value is the more severe the effect
+will be. As a workaround the check can be deactivated on the affected
+hosts.

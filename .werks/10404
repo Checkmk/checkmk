@@ -1,0 +1,14 @@
+Title: Performace update for RRD on high resolution
+Class: fix
+Compatible: compat
+Component: core
+Date: 1572864818
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+When the resolution of RRD files is increased it could lead to potential
+delays in rendering of the graphs. This werk separates the tasks of
+flushing the RRD files and querying them for data, which leads to a
+performance increase.

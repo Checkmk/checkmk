@@ -94,9 +94,8 @@ SECTION_KEYS_B_OPERATIONS = (
 SECTION_KEYS_B_CACHE = ("ep_cache_miss_rate",)
 
 #
-# Theses are not (yet) in use. I'm on it! (mo)
+# These bucket related keys are not (yet) in use.
 #
-#STATS_KEYS_BUCKET = (
 #    "ep_ops_create",
 #    "ep_diskqueue_drain",
 #    "ep_diskqueue_fill",
@@ -115,7 +114,7 @@ SECTION_KEYS_B_CACHE = ("ep_cache_miss_rate",)
 #    "vb_replica_num",
 #    "vb_replica_itm_memory",
 #    "curr_items_tot",
-#)
+#
 
 
 def parse_arguments(argv):

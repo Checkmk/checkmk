@@ -171,9 +171,8 @@ def parse_cisco_temperature(info):
         }
 
         if sensorstate == '1':
-            scale = 10**int(magnitude)
-            scale *= 10**(-1 * cisco_entity_exponents[scalecode])
-            sensor_attrs['reading'] = float(value) / scale
+            factor = 10.0**(float(cisco_entity_exponents[scalecode]) - float(magnitude))
+            sensor_attrs['reading'] = float(value) * factor
             # All sensors have 4 threshold values.
             # Map thresholds [crit_upper, warn_upper, crit_lower, warn_lower] to
             # dev_levels (warn_upper, crit_upper, warn_lower, crit_lower) conform
@@ -186,8 +185,7 @@ def parse_cisco_temperature(info):
             # to temperature sensors the device levels are ordered accoringly.
             if sensortype == "dBm" and len(thresholds[sensor_id]) == 4:
                 unsorted_thresholds = thresholds[sensor_id][0:4]
-                converted_thresholds = [float(t) / scale for t in unsorted_thresholds]
-                #list(map(lambda x: x / scale, map(float, unsorted_thresholds)))  # pylint: disable=cell-var-from-loop
+                converted_thresholds = [float(t) * factor for t in unsorted_thresholds]
                 sorted_thresholds = sorted(converted_thresholds, key=float)
                 opt_crit_upper, opt_warn_upper, opt_crit_lower, opt_warn_lower = sorted_thresholds[
                     3], sorted_thresholds[2], sorted_thresholds[0], sorted_thresholds[1]
@@ -198,10 +196,10 @@ def parse_cisco_temperature(info):
                 # do no validation when thresholds are set this could result in values in a
                 # wrong oder as well. Device levels are assigned accoring to their size.
                 dev_levels = (
-                    min(float(temp_warn_upper_raw) / scale,
-                        float(temp_crit_upper_raw) / scale),
-                    max(float(temp_warn_upper_raw) / scale,
-                        float(temp_crit_upper_raw) / scale),
+                    min(float(temp_warn_upper_raw) * factor,
+                        float(temp_crit_upper_raw) * factor),
+                    max(float(temp_warn_upper_raw) * factor,
+                        float(temp_crit_upper_raw) * factor),
                 )
             else:
                 dev_levels = None

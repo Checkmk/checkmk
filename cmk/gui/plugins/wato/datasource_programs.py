@@ -1859,6 +1859,29 @@ def _valuespec_special_agents_aws():
                  title=_("The secret access key for your AWS account"),
                  allow_empty=False,
              )),
+            ("assume_role",
+             Dictionary(
+                 title=_("Assume a different IAM role"),
+                 elements=
+                 [("role_arn_id",
+                   Tuple(
+                       title=_("Use STS AssumeRole to assume a different IAM role"),
+                       elements=[
+                           TextAscii(
+                               title=_("The ARN of the IAM role to assume"),
+                               size=50,
+                               help=_("The Amazon Resource Name (ARN) of the role to assume.")),
+                           TextAscii(
+                               title=_("External ID (optional)"),
+                               size=50,
+                               help=
+                               _("A unique identifier that might be required when you assume a role in another "
+                                 +
+                                 "account. If the administrator of the account to which the role belongs provided "
+                                 +
+                                 "you with an external ID, then provide that value in the External ID parameter. "
+                                ))
+                       ]))])),
             ("global_services",
              Dictionary(
                  title=_("Global services to monitor"),

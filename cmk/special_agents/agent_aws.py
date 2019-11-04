@@ -3116,6 +3116,12 @@ def parse_arguments(argv):
     parser.add_argument("--secret-access-key",
                         required=True,
                         help="The secret access key for your AWS account.")
+    parser.add_argument("--assume-role",
+                        action="store_true",
+                        help="Use STS AssumeRole to assume a different IAM role")
+    parser.add_argument("--role-arn", help="The ARN of the IAM role to assume")
+    parser.add_argument("--external-id",
+                        help="Unique identifier to assume a role in another account")
     parser.add_argument("--regions",
                         nargs='+',
                         help="Regions to use:\n%s" %
@@ -3178,9 +3184,43 @@ def setup_logging(opt_debug, opt_verbose):
 
 
 def create_session(access_key_id, secret_access_key, region):
-    return boto3.session.Session(aws_access_key_id=access_key_id,
-                                 aws_secret_access_key=secret_access_key,
-                                 region_name=region)
+    try:
+        return boto3.session.Session(aws_access_key_id=access_key_id,
+                                     aws_secret_access_key=secret_access_key,
+                                     region_name=region)
+    except Exception as e:
+        raise AwsAccessError(e)
+
+
+def sts_assume_role(access_key_id, secret_access_key, role_arn, external_id, region):
+    """
+    Returns a session using a set of temporary security credentials that
+    you can use to access AWS resources from another account.
+    :param access_key_id: AWS credentials
+    :param secret_access_key: AWS credentials
+    :param role_arn: The Amazon Resource Name (ARN) of the role to assume
+    :param region: AWS region
+    :param external_id: Unique identifier to assume a role in another account (optional)
+    :return: AWS session
+    """
+    try:
+        session = create_session(access_key_id, secret_access_key, region)
+        sts_client = session.client('sts')
+        if external_id:
+            assumed_role_object = sts_client.assume_role(RoleArn=role_arn,
+                                                         RoleSessionName="AssumeRoleSession",
+                                                         ExternalId=external_id)
+        else:
+            assumed_role_object = sts_client.assume_role(RoleArn=role_arn,
+                                                         RoleSessionName="AssumeRoleSession")
+
+        credentials = assumed_role_object['Credentials']
+        return boto3.session.Session(aws_access_key_id=credentials['AccessKeyId'],
+                                     aws_secret_access_key=credentials['SecretAccessKey'],
+                                     aws_session_token=credentials['SessionToken'],
+                                     region_name=region)
+    except Exception as e:
+        raise AwsAccessError(e)
 
 
 class AWSConfig(object):
@@ -3328,10 +3368,20 @@ def main(sys_argv=None):
             continue
         for region in aws_regions:
             try:
-                session = create_session(args.access_key_id, args.secret_access_key, region)
+                if args.assume_role:
+                    session = sts_assume_role(args.access_key_id, args.secret_access_key,
+                                              args.role_arn, args.external_id, region)
+                else:
+                    session = create_session(args.access_key_id, args.secret_access_key, region)
+
                 sections = aws_sections(hostname, session, debug=args.debug)
                 sections.init_sections(aws_services, region, aws_config)
                 sections.run(use_cache=use_cache)
+            except AwsAccessError as ae:
+                # can not access AWS, retreat
+                sys.stdout.write("<<<aws_exceptions>>>\n")
+                sys.stdout.write("Exception: %s\n" % ae)
+                return 0
             except AssertionError:
                 if args.debug:
                     return 1
@@ -3343,3 +3393,7 @@ def main(sys_argv=None):
     if has_exceptions:
         return 1
     return 0
+
+
+class AwsAccessError(Exception):
+    pass

@@ -1397,9 +1397,9 @@ def page_edit_dashlet():
     elif isinstance(params, (Dictionary, Transform)):
         vs_type = params
 
-    elif hasattr(params, '__call__'):
+    elif isinstance(params, tuple):
         # It's a tuple of functions which should be used to render and parse the params
-        render_input_func, handle_input_func = params()
+        render_input_func, handle_input_func = params
 
     if html.request.var('save') and html.transaction_valid():
         try:

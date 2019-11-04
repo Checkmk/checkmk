@@ -35,3 +35,45 @@ def test_ac_check_uniserv_broken_arguments(capsys, check_uniserv, args):
 ])
 def test_ac_check_uniserv_parse_arguments(check_uniserv, args, expected_args):
     assert check_uniserv.parse_arguments(args) == expected_args
+
+
+@pytest.mark.parametrize("data", [
+    "",
+    ";",
+    "=;",
+    ";=",
+    "foo=bar",
+    "type=TIPTOP",
+    "foo=bar;",
+    "foo=bar;type=TIPTOP",
+    "foo=bar;type=TIPTOP",
+])
+def test_ac_check_uniserv_broken_data(capsys, check_uniserv, data):
+    with pytest.raises(SystemExit):
+        check_uniserv.parse_response(data)
+    out, _err = capsys.readouterr()
+    assert out.startswith("Invalid data:")
+
+
+@pytest.mark.parametrize("data", [
+    "type=1;",
+    "type=1;foo=bar",
+])
+def test_ac_check_uniserv_broken_response(capsys, check_uniserv, data):
+    with pytest.raises(SystemExit):
+        check_uniserv.parse_response(data)
+    out, _err = capsys.readouterr()
+    assert out.startswith("Invalid response:")
+
+
+@pytest.mark.parametrize("data, expected_result", [
+    ("type=TIPTOP;foo=bar", {
+        'type': 'TIPTOP'
+    }),
+    ("type=TIPTOP;key=value;foo=bar", {
+        'type': 'TIPTOP',
+        'key': 'value'
+    }),
+])
+def test_ac_check_uniserv_parse_response(check_uniserv, data, expected_result):
+    assert sorted(check_uniserv.parse_response(data).items()) == sorted(expected_result.items())

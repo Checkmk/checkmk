@@ -29,8 +29,14 @@ import socket
 
 
 def parse_response(data):
-    parsed = dict([x.split('=') for x in data.split(";")][:-1])
-    if parsed['type'] == '1':
+    try:
+        parsed = dict([x.split('=') for x in data.split(";")][:-1])
+        response_type = parsed['type']
+    except (ValueError, KeyError):
+        sys.stdout.write("Invalid data: %s\n" % data)
+        sys.exit(3)
+
+    if response_type == '1':
         sys.stdout.write("Invalid response: %s\n" % data)
         sys.exit(3)
     return parsed

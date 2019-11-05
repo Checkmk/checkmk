@@ -52,7 +52,7 @@ def parse_domino_tasks(info):
     for line in info:
         node, task_name = line
         # node, process_info, command_line
-        parsed.append((node, (None,), task_name))
+        parsed.append((node, ps_info(), task_name))
     return parsed
 
 

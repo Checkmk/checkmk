@@ -1,0 +1,12 @@
+Title: Fix Domino task check pluging to use newer PS check functions
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1572974016
+Class: fix
+
+Domino tasks relies on functionality of the PS check, which has received a
+lot of feature updates in the recent versions. This werk brings a
+compatibility layer to the Domino Tasks check plugin.

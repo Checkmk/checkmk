@@ -84,18 +84,14 @@ class RenameHostsBackgroundJob(watolib.WatoBackgroundJob):
         return _("Host renaming")
 
     def __init__(self, title=None):
-        if not title:
-            title = _("Host renaming")
-
-        kwargs = {}
-        kwargs["title"] = title
-        kwargs["lock_wato"] = True
-        kwargs["stoppable"] = False
         last_job_status = watolib.WatoBackgroundJob(self.job_prefix).get_status()
-        if "duration" in last_job_status:
-            kwargs["estimated_duration"] = last_job_status["duration"]
-
-        super(RenameHostsBackgroundJob, self).__init__(self.job_prefix, **kwargs)
+        super(RenameHostsBackgroundJob, self).__init__(
+            self.job_prefix,
+            title=title or self.gui_title(),
+            lock_wato=True,
+            stoppable=False,
+            estimated_duration=last_job_status.get("duration"),
+        )
 
         if self.is_active():
             raise MKGeneralException(_("Another renaming operation is currently in progress"))

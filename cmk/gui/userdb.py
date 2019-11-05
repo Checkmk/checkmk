@@ -1377,11 +1377,11 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
         return _("User synchronization")
 
     def __init__(self):
-        kwargs = {}
-        kwargs["title"] = self.gui_title()
-        kwargs["stoppable"] = False
-
-        super(UserSyncBackgroundJob, self).__init__(self.job_prefix, **kwargs)
+        super(UserSyncBackgroundJob, self).__init__(
+            self.job_prefix,
+            title=self.gui_title(),
+            stoppable=False,
+        )
 
     def _back_url(self):
         return html.makeuri_contextless([("mode", "users")], filename="wato.py")

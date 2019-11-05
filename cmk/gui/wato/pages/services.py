@@ -431,16 +431,15 @@ class ServiceDiscoveryBackgroundJob(watolib.WatoBackgroundJob):
     def __init__(self, host_name):
         # type: (str) -> None
         job_id = "%s-%s" % (self.job_prefix, host_name)
-        kwargs = {
-            "title": _("Service discovery"),
-            "stoppable": True,
-            "host_name": host_name,
-        }
         last_job_status = watolib.WatoBackgroundJob(job_id).get_status()
-        if "duration" in last_job_status:
-            kwargs["estimated_duration"] = last_job_status["duration"]
 
-        super(ServiceDiscoveryBackgroundJob, self).__init__(job_id, **kwargs)
+        super(ServiceDiscoveryBackgroundJob, self).__init__(
+            job_id,
+            title=_("Service discovery"),
+            stoppable=True,
+            host_name=host_name,
+            estimated_duration=last_job_status.get("duration"),
+        )
 
     def discover(self, request, job_interface):
         # type: (StartDiscoveryRequest, BackgroundProcessInterface) -> None

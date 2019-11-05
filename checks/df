@@ -131,11 +131,7 @@ def parse_df(info):
             else:
                 mountpoint = " ".join(line[6:]).replace('\\', '/')  # Windows \ is replaced with /
 
-            #Always exclude filesystems below dockers local storage area
-            #and also exclude docker mounts in containers which are reported
-            #by the agent when the agent is executed in the container context
-            if (mountpoint.startswith("/var/lib/docker/") or
-                    mountpoint in ("/etc/resolv.conf", "/etc/hostname", "/etc/hosts")):
+            if mountpoint in ("/etc/resolv.conf", "/etc/hostname", "/etc/hosts"):
                 continue
 
             # exclude filesystems without size
@@ -245,6 +241,11 @@ def inventory_df(parsed):
     filtered_blocks = _filter_by_exclude_rule(inventory_df_exclude_mountpoints, df_blocks)
     filtered_blocks = _filter_by_type(volume_info, ignore_fs_types, never_ignore_mountpoints,
                                       filtered_blocks)
+
+    #Always exclude filesystems below dockers local storage area
+    #and also exclude docker mounts in containers which are reported
+    #by the agent when the agent is executed in the container context
+    filtered_blocks = (mp for mp in filtered_blocks if not mp[0].startswith("/var/lib/docker/"))
 
     mplist = _get_item_list_from_blocks(filtered_blocks)
 

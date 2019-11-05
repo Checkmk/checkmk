@@ -892,13 +892,13 @@ metric_info["mem_lnx_total_used"] = {
 }
 
 metric_info["mem_lnx_cached"] = {
-    "title": _("File contents"),
+    "title": _("Cached memory"),
     "color": "#91cceb",
     "unit": "bytes",
 }
 
 metric_info["mem_lnx_buffers"] = {
-    "title": _("Filesystem structure"),
+    "title": _("Buffered memory"),
     "color": "#5bb9eb",
     "unit": "bytes",
 }

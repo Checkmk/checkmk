@@ -996,12 +996,23 @@ def _subnetwork_to_ip_range(subnetwork):
     raise ValueError("invalid subnetwork: %r" % subnetwork)
 
 
-def write_output(lines, maxbytes):
+def _filter_maxoutputsize(encoded_lines, maxoutputsize):
+    """Produce lines right *before* maxoutputsize is exceeded"""
     bytecount = 0
-    for line in (l.encode('utf-8') for l in lines):
+    for line in encoded_lines:
         bytecount += len(line)
-        if bytecount > maxbytes:
+        if bytecount > maxoutputsize:
             break
+        yield line
+
+
+def write_output(lines, options):
+
+    encoded_lines = (l.encode('utf-8') for l in lines)
+
+    filtered_enc_lines = _filter_maxoutputsize(encoded_lines, options.maxoutputsize)
+
+    for line in filtered_enc_lines:
         sys.stdout.write(line)
 
 
@@ -1054,7 +1065,7 @@ def main(argv=None):
         filestate = state.get(section.name_fs)
         try:
             output = process_logfile(section, filestate, args.debug)
-            write_output(output, section.options.maxoutputsize)
+            write_output(output, section.options)
         except () if args.debug else Exception, exc:
             LOGGER.debug("Exception when processing %r: %s", section.name_fs, exc)
 

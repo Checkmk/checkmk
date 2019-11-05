@@ -61,10 +61,13 @@ unixcat_LDADD = -lpthread
 
 test_neb_SOURCES = \
     test/DummyNagios.cc \
-    test/test_utilities.cc \
     test/test_CrashReport.cc \
     test/test_CustomVarsDictFilter.cc \
-    test/test_OffsetStringMacroColumn.cc
+    test/test_LogEntry.cc \
+    test/test_OffsetStringMacroColumn.cc \
+    test/test_RegExp.cc \
+    test/test_StringUtil.cc \
+    test/test_utilities.cc
 $(test_neb_SOURCES): $(ASIO_INCLUDE) $(GOOGLETEST_INCLUDE)
 test_neb_CPPFLAGS = \
     $(AM_CPPFLAGS) \
@@ -72,11 +75,10 @@ test_neb_CPPFLAGS = \
 test_neb_LDADD = \
     liblivestatus.a \
     -lstdc++fs \
-    -lpthread \
     @RE2_LIBS@ \
     $(LIBS_DIR)/libgtest.a \
-    $(LIBS_DIR)/libgtest_main.a
-
+    $(LIBS_DIR)/libgtest_main.a \
+    -lpthread
 
 unit-test: test_neb$(EXEEXT)
 	GTEST_OUTPUT=xml $(VALGRIND) ./test_neb$(EXEEXT)

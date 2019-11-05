@@ -3946,114 +3946,6 @@ rulespec_registry.register(
         valuespec=_valuespec_extra_service_conf_service_period,
     ))
 
-
-def _validate_max_cache_ages_and_validity_periods(params, varprefix):
-    global_max_cache_age = params.get("global_max_cache_age")
-    global_period = params.get("global_validity", {}).get('period')
-    _validate_max_cache_age_and_validity_period(global_max_cache_age, global_period, varprefix)
-
-    for exception in params.get("per_piggybacked_host", []):
-        max_cache_age = exception.get("max_cache_age")
-        period = exception.get("validity", {}).get('period', global_period)
-        if max_cache_age == "global":
-            _validate_max_cache_age_and_validity_period(global_max_cache_age, period, varprefix)
-        else:
-            _validate_max_cache_age_and_validity_period(max_cache_age, period, varprefix)
-
-
-def _validate_max_cache_age_and_validity_period(max_cache_age, period, varprefix):
-    if isinstance(max_cache_age, int) and isinstance(period, int)\
-       and max_cache_age < period:
-        raise MKUserError(varprefix, _("Maximum cache age must be greater than period."))
-
-
-def _valuespec_piggybacked_host_files():
-    global_max_cache_age_uri = html.makeuri_contextless(
-        [('mode', 'edit_configvar'), ('varname', 'piggyback_max_cachefile_age')],
-        filename="wato.py")
-
-    global_max_cache_age_title = _("Use maximum age from <a href=\"%s\">global settings</a>" %
-                                   global_max_cache_age_uri)
-    max_cache_age_title = _("Use maximum age from <a href=\"%s\">global settings</a> or above" %
-                            global_max_cache_age_uri)
-
-    return Dictionary(
-        title=_("Piggybacked Host Files"),
-        optional_keys=[],
-        elements=[
-            ("global_max_cache_age", _vs_max_cache_age(global_max_cache_age_title)),
-            ("global_validity", _vs_validity()),
-            ("per_piggybacked_host",
-             ListOf(
-                 Dictionary(
-                     optional_keys=[],
-                     elements=[
-                         ("piggybacked_hostname",
-                          TextUnicode(
-                              title=_("Piggybacked host name"),
-                              allow_empty=False,
-                          )),
-                         ("max_cache_age", _vs_max_cache_age(max_cache_age_title)),
-                         ("validity", _vs_validity()),
-                     ],
-                 ),
-                 title=_("Exceptions for piggybacked hosts"),
-                 add_label=_("Add exception"),
-             )),
-        ],
-        help=_(
-            "We assume that a source host is sending piggyback data every check interval "
-            "by default. If this is not the case for some source hosts then the <b>Check_MK</b> "
-            "and <b>Check_MK Disovery</b> services of the piggybacked hosts report "
-            "<b>Got no information from host</b> resp. <b>vanished services</b> if the piggybacked "
-            "data is missing within a check interval. "
-            "This rule helps you to get more control over the piggybacked host data handling. "
-            "The source host names have to be set in the condition field <i>Explicit hosts</i>."),
-        validate=_validate_max_cache_ages_and_validity_periods,
-    )
-
-
-def _vs_max_cache_age(max_cache_age_title):
-    return Alternative(
-        title=_("Set maximum age how long piggyback files are kept"),
-        elements=[
-            FixedValue(
-                "global",
-                title=max_cache_age_title,
-                totext="",
-            ),
-            Age(
-                title=_("Set maximum age"),
-                default_value=3600,
-            ),
-        ],
-    )
-
-
-def _vs_validity():
-    return Dictionary(
-        title=_("Set period how long piggyback files are treated as valid"),
-        elements=[
-            ("period", Age(
-                title=_("Period"),
-                default_value=60,
-            )),
-            ("check_mk_state",
-             MonitoringState(
-                 title=_("Check MK status within this period"),
-                 default_value=0,
-             )),
-        ],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringConfigurationHostChecks,
-        name="piggybacked_host_files",
-        valuespec=_valuespec_piggybacked_host_files,
-    ))
-
 #.
 #   .--User Interface------------------------------------------------------.
 #   |   _   _                 ___       _             __                   |
@@ -4987,4 +4879,112 @@ rulespec_registry.register(
         group=RulespecGroupAgentSNMP,
         name="snmpv3_contexts",
         valuespec=_valuespec_snmpv3_contexts,
+    ))
+
+
+def _validate_max_cache_ages_and_validity_periods(params, varprefix):
+    global_max_cache_age = params.get("global_max_cache_age")
+    global_period = params.get("global_validity", {}).get('period')
+    _validate_max_cache_age_and_validity_period(global_max_cache_age, global_period, varprefix)
+
+    for exception in params.get("per_piggybacked_host", []):
+        max_cache_age = exception.get("max_cache_age")
+        period = exception.get("validity", {}).get('period', global_period)
+        if max_cache_age == "global":
+            _validate_max_cache_age_and_validity_period(global_max_cache_age, period, varprefix)
+        else:
+            _validate_max_cache_age_and_validity_period(max_cache_age, period, varprefix)
+
+
+def _validate_max_cache_age_and_validity_period(max_cache_age, period, varprefix):
+    if isinstance(max_cache_age, int) and isinstance(period, int)\
+       and max_cache_age < period:
+        raise MKUserError(varprefix, _("Maximum cache age must be greater than period."))
+
+
+def _valuespec_piggybacked_host_files():
+    global_max_cache_age_uri = html.makeuri_contextless(
+        [('mode', 'edit_configvar'), ('varname', 'piggyback_max_cachefile_age')],
+        filename="wato.py")
+
+    global_max_cache_age_title = _("Use maximum age from <a href=\"%s\">global settings</a>" %
+                                   global_max_cache_age_uri)
+    max_cache_age_title = _("Use maximum age from <a href=\"%s\">global settings</a> or above" %
+                            global_max_cache_age_uri)
+
+    return Dictionary(
+        title=_("Piggybacked Host Files"),
+        optional_keys=[],
+        elements=[
+            ("global_max_cache_age", _vs_max_cache_age(global_max_cache_age_title)),
+            ("global_validity", _vs_validity()),
+            ("per_piggybacked_host",
+             ListOf(
+                 Dictionary(
+                     optional_keys=[],
+                     elements=[
+                         ("piggybacked_hostname",
+                          TextUnicode(
+                              title=_("Piggybacked host name"),
+                              allow_empty=False,
+                          )),
+                         ("max_cache_age", _vs_max_cache_age(max_cache_age_title)),
+                         ("validity", _vs_validity()),
+                     ],
+                 ),
+                 title=_("Exceptions for piggybacked hosts"),
+                 add_label=_("Add exception"),
+             )),
+        ],
+        help=_(
+            "We assume that a source host is sending piggyback data every check interval "
+            "by default. If this is not the case for some source hosts then the <b>Check_MK</b> "
+            "and <b>Check_MK Disovery</b> services of the piggybacked hosts report "
+            "<b>Got no information from host</b> resp. <b>vanished services</b> if the piggybacked "
+            "data is missing within a check interval. "
+            "This rule helps you to get more control over the piggybacked host data handling. "
+            "The source host names have to be set in the condition field <i>Explicit hosts</i>."),
+        validate=_validate_max_cache_ages_and_validity_periods,
+    )
+
+
+def _vs_max_cache_age(max_cache_age_title):
+    return Alternative(
+        title=_("Set maximum age how long piggyback files are kept"),
+        elements=[
+            FixedValue(
+                "global",
+                title=max_cache_age_title,
+                totext="",
+            ),
+            Age(
+                title=_("Set maximum age"),
+                default_value=3600,
+            ),
+        ],
+    )
+
+
+def _vs_validity():
+    return Dictionary(
+        title=_("Set period how long piggyback files are treated as valid"),
+        elements=[
+            ("period", Age(
+                title=_("Period"),
+                default_value=60,
+            )),
+            ("check_mk_state",
+             MonitoringState(
+                 title=_("Check MK status within this period"),
+                 default_value=0,
+             )),
+        ],
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupAgentGeneralSettings,
+        name="piggybacked_host_files",
+        valuespec=_valuespec_piggybacked_host_files,
     ))

@@ -56,6 +56,7 @@ def main(argv=None):
         GraylogSection(name="cluster_traffic", uri="/system/cluster/traffic?days=1&daily=false"),
         GraylogSection(name="failures", uri="/system/indexer/failures/count/?since=%s" % since),
         GraylogSection(name="jvm", uri="/system/metrics/namespace/jvm.memory.heap"),
+        GraylogSection(name="license", uri="/plugins/org.graylog.plugins.license/licenses/status"),
         GraylogSection(name="messages", uri="/count/total"),
         GraylogSection(name="nodes", uri="/cluster"),
         GraylogSection(name="sidecars", uri="/sidecars"),
@@ -179,8 +180,8 @@ def handle_piggyback(value, args, piggyback_name, section):
 
 def parse_arguments(argv):
     sections = [
-        "alerts", "cluster_stats", "cluster_traffic", "collectors", "failures", "jvm", "messages",
-        "nodes", "sidecars"
+        "alerts", "cluster_stats", "cluster_traffic", "collectors", "failures", "jvm", "license",
+        "messages", "nodes", "sidecars"
     ]
 
     parser = argparse.ArgumentParser(description=__doc__)

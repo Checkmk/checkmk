@@ -1,0 +1,4 @@
+# example of the output from bakery with unicode NORT allowed(default)
+test:
+  enabled: true
+  "\u0425\u0443\u0434\u043E": "\u0425\u0443\u0434\u043E\u0425\u0443\u0434\u043E"

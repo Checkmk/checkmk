@@ -1459,4 +1459,23 @@ TEST(AgentConfig, ExeUnitTest) {
     EXPECT_EQ(e.retry(), 0);
 }
 
+TEST(AgentConfig, LoadUtf8) {
+#if 0
+    // disabled code to check how valid is unicode files
+    cma::OnStart(AppType::test);
+    std::filesystem::path d = GetCfg().getUserDir().u8string();
+    auto load = YAML::LoadFile((d / "test_utf8.escaped.yml").u8string());
+    //auto load = YAML::LoadFile((d / "test_utf8.unicode.yml").u8string());
+    EXPECT_TRUE(load.size() > 0);
+    YAML::Emitter e;
+    e << load;
+    std::cout << e.c_str();
+    auto z = e.c_str();
+    std::filesystem::path n = d / "test.yml";
+    std::ofstream ofs(n.u8string());
+
+    ofs << z << " \n";
+#endif
+}
+
 }  // namespace cma::cfg

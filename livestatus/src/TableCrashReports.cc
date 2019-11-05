@@ -18,8 +18,6 @@ TableCrashReports::TableCrashReports(MonitoringCore *mc) : Table(mc) {
         -1, -1, DANGEROUS_OFFSETOF(CrashReport, _component)));
 }
 
-TableCrashReports::~TableCrashReports() = default;
-
 std::string TableCrashReports::name() const { return "crashreports"; }
 
 std::string TableCrashReports::namePrefix() const { return "crashreport_"; }

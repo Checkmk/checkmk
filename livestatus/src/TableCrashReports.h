@@ -11,7 +11,6 @@ class Query;
 class TableCrashReports : public Table {
 public:
     explicit TableCrashReports(MonitoringCore *mc);
-    ~TableCrashReports();
     std::string name() const final;
     std::string namePrefix() const final;
     void answerQuery(Query *) final;

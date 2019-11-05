@@ -23,7 +23,7 @@ MYPY_FILES_TO_CHECK := \
 	$(realpath $(wildcard ../cmk/gui/plugins/wato/utils/*.py))
 
 .PHONY: help test-docker test-pylint test-unit \
-	test-mypy test-mypy-raw clean
+	test-mypy test-mypy-raw clean test-packaging
 
 help:
 	@echo "test-mypy                 - Run mypy tests"
@@ -31,6 +31,7 @@ help:
 	@echo "test-docker               - Run docker tests"
 	@echo "test-pylint               - Run pylint based tests"
 	@echo "test-unit                 - Run unit tests"
+	@echo "test-packaging            - Run packaging tests"
 
 test-docker:
 	$(MAKE) -C ../docker test-lint-dockerfile test-lint-entrypoint
@@ -47,6 +48,9 @@ test-mypy:
 
 test-mypy-raw:
 	$(MYPY) --config-file=$(realpath ../mypy-raw.ini) $(MYPY_FILES_TO_CHECK)
+
+test-packaging:
+	$(PYTEST) -T packaging packaging
 
 clean:
 	rm -rf .mypy_cache

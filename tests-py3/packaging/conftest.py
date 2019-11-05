@@ -1,5 +1,5 @@
 import os
-import pytest
+import pytest  # type: ignore
 
 
 # Packaging tests should not be executed in site.

@@ -9,7 +9,7 @@ YAPF     := $(PIPENV2) run yapf
 FUTURIZE := $(PIPENV2) run ./test-futurize
 
 .PHONY: help pipenv-check test-bandit test-format-python \
-        test-format-shell test-gui-crawl test-integration test-agent-integration test-packaging \
+        test-format-shell test-gui-crawl test-integration test-agent-integration \
         test-pylint test-python-futurize test-shellcheck test-unit \
         list-unit-tests test-unit-one-by-one test-unit-coverage-html test-unit-sh
 
@@ -22,7 +22,6 @@ help:
 	@echo "test-integration          - Run integration tests"
 	@echo "test-agent-integration    - Run agent (plugin) related integration tests"
 	@echo "test-format-python        - Test the python formatting"
-	@echo "test-packaging            - Run packaging tests"
 	@echo "test-pylint               - Run pylint based tests"
 	@echo "test-python-futurize      - Run python futurize tests"
 	@echo "test-shellcheck           - Run shellcheck tests"
@@ -71,9 +70,6 @@ test-agent-integration:
 
 test-composition: $(NODE_MODULES)
 	$(PYTEST) -T composition $(realpath composition)
-
-test-packaging:
-	$(PYTEST) -T packaging packaging
 
 test-pylint:
 	$(PYTEST) -T pylint pylint

@@ -441,7 +441,7 @@ def sign_package(PACKAGE_PATH, DISTRO, DAILY_DATA) {
 def test_package(PACKAGE_PATH, NAME, DAILY_DATA, CMK_VERS) {
     stage(NAME + ' test package') {
         try {
-            dir("${DAILY_DATA}/git/tests") {
+            dir("${DAILY_DATA}/git/tests-py3") {
                 withEnv(["PACKAGE_PATH=${PACKAGE_PATH}", "PYTEST_ADDOPTS='--junitxml=${WORKSPACE}/junit-${NAME}.xml'"]) {
                     sh "make VERSION=${CMK_VERS} test-packaging"
                 }

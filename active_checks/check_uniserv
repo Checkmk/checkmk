@@ -42,6 +42,12 @@ def parse_response(data):
     return parsed
 
 
+def send_and_receive(sock, request_str):
+    sock.send(request_str)
+    answer = sock.recv(1024)
+    return parse_response(answer)
+
+
 def parse_arguments(sys_args):
     if sys_args is None:
         sys_args = sys.argv[1:]
@@ -74,7 +80,6 @@ def parse_arguments(sys_args):
 
 
 def main(sys_args=None):
-    BUFFER_SIZE = 1024
 
     host, tcp_port, service, job, street, street_nr, city, regex = parse_arguments(sys_args)
 
@@ -82,9 +87,7 @@ def main(sys_args=None):
     s.connect((host, tcp_port))
 
     sendstring = "open:service=" + service + ";servicehost=" + host + "\n"
-    s.send(sendstring)
-
-    data = parse_response(s.recv(BUFFER_SIZE))
+    data = send_and_receive(s, sendstring)
     if not data.get('session'):
         return 3, "Error getting SID. Response was: %s\n" % data
 
@@ -92,8 +95,7 @@ def main(sys_args=None):
 
     if job == "VERSION":
         sendstring = "version:session=" + sid + "\n"
-        s.send(sendstring)
-        data = parse_response(s.recv(BUFFER_SIZE))
+        data = send_and_receive(s, sendstring)
         state = 0
         infotext = "Version is " + data['version_str']
     elif job == "ADDRESS":
@@ -104,12 +106,10 @@ def main(sys_args=None):
             street_nr,
             city,
         )
-        s.send(sendstring)
-        data = parse_response(s.recv(BUFFER_SIZE))
+        _data = send_and_receive(s, sendstring)
 
         sendstring = "fetch:session=" + sid + ";out_zip=?;out_city=?\n"
-        s.send(sendstring)
-        data = parse_response(s.recv(BUFFER_SIZE))
+        data = send_and_receive(s, sendstring)
 
         state = 0
         infotext = "Address is %s %s" % (data['out_zip'], data['out_city'])

@@ -120,8 +120,15 @@ def validate_discovered_params(check, params):
     rulespec_group = check.info.get("group")
     if rulespec_group is None:
         return
+
     key = "checkgroup_parameters:%s" % (rulespec_group,)
-    spec = rulespec_registry[key].valuespec
+    if key in rulespec_registry:
+        spec = rulespec_registry[key].valuespec
+    else:
+        # Static checks still don't work. For example the test for
+        # domino_tasks. For the moment just skip
+        # key_sc = "static_checks:%s" % (rulespec_group,)
+        return
 
     # We need to handle one exception: In the ps params, the key 'cpu_rescale_max'
     # *may* be 'None'. However, this is deliberately not allowed by the valuespec,

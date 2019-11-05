@@ -77,3 +77,31 @@ def test_ac_check_uniserv_broken_response(capsys, check_uniserv, data):
 ])
 def test_ac_check_uniserv_parse_response(check_uniserv, data, expected_result):
     assert sorted(check_uniserv.parse_response(data).items()) == sorted(expected_result.items())
+
+
+@pytest.mark.parametrize("args, parsed, expected_result", [
+    ((None, None, "SID", None, None, None, None), {}, (3, 'Unknown job')),
+    (("VERSION", None, "SID", None, None, None, None), {}, (3, 'Unknown version')),
+    (("VERSION", None, "SID", None, None, None, None), {
+        'version_str': '123'
+    }, (0, 'Version: 123')),
+    (("ADDRESS", None, "SID", None, None, None, ""), {}, (3, 'Unknown zip or city')),
+    (("ADDRESS", None, "SID", None, None, None, ""), {
+        'out_zip': '456',
+    }, (3, 'Unknown zip or city')),
+    (("ADDRESS", None, "SID", None, None, None, ""), {
+        'out_city': 'Muc',
+    }, (3, 'Unknown zip or city')),
+    (("ADDRESS", None, "SID", None, None, None, ""), {
+        'out_zip': '456',
+        'out_city': 'Muc'
+    }, (0, 'Address: 456 Muc')),
+    (("ADDRESS", None, "SID", None, None, None, "Ber"), {
+        'out_zip': '456',
+        'out_city': 'Muc'
+    }, (2, 'Address: 456 Muc but expects Ber')),
+])
+def test_ac_check_uniserv_check_job(monkeypatch, check_uniserv, args, parsed, expected_result):
+    job, s, sid, street, street_nr, city, regex = args
+    monkeypatch.setattr("check_uniserv.send_and_receive", lambda x, y: parsed)
+    assert check_uniserv.check_job(job, s, sid, street, street_nr, city, regex) == expected_result

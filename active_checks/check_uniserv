@@ -48,6 +48,46 @@ def send_and_receive(sock, request_str):
     return parse_response(answer)
 
 
+def check_job(job, s, sid, street, street_nr, city, regex):
+    if job == "VERSION":
+        sendstring = "version:session=" + sid + "\n"
+        data = send_and_receive(s, sendstring)
+        try:
+            version = data['version_str']
+        except KeyError:
+            return 3, 'Unknown version'
+        return 0, "Version: %s" % version
+
+    if job == "ADDRESS":
+        import re
+        sendstring = "exec:session=%s;request_type=check_address;in_str=%s;in_hno=%s;in_city=%s\n" % (
+            sid,
+            street,
+            street_nr,
+            city,
+        )
+        _data = send_and_receive(s, sendstring)
+
+        sendstring = "fetch:session=" + sid + ";out_zip=?;out_city=?\n"
+        data = send_and_receive(s, sendstring)
+
+        try:
+            city_zip = data['out_zip']
+            city_name = data['out_city']
+        except KeyError:
+            return 3, 'Unknown zip or city'
+
+        state = 0
+        infotext = "Address: %s %s" % (city_zip, city_name)
+        if not re.match(regex, data['out_city']):
+            infotext += " but expects %s" % regex
+            state = 2
+
+        return state, infotext
+
+    return 3, "Unknown job"
+
+
 def parse_arguments(sys_args):
     if sys_args is None:
         sys_args = sys.argv[1:]
@@ -92,32 +132,7 @@ def main(sys_args=None):
     if not sid:
         return 3, "Error getting SID. Response was: %s\n" % data
 
-    if job == "VERSION":
-        sendstring = "version:session=" + sid + "\n"
-        data = send_and_receive(s, sendstring)
-        state = 0
-        infotext = "Version is " + data['version_str']
-    elif job == "ADDRESS":
-        import re
-        sendstring = "exec:session=%s;request_type=check_address;in_str=%s;in_hno=%s;in_city=%s\n" % (
-            sid,
-            street,
-            street_nr,
-            city,
-        )
-        _data = send_and_receive(s, sendstring)
-
-        sendstring = "fetch:session=" + sid + ";out_zip=?;out_city=?\n"
-        data = send_and_receive(s, sendstring)
-
-        state = 0
-        infotext = "Address is %s %s" % (data['out_zip'], data['out_city'])
-        if not re.match(regex, data['out_city']):
-            infotext += " But excpects %s" % regex
-            state = 2
-    else:
-        state = 3
-        infotext = "JOB not known"
+    state, infotext = check_job(job, s, sid, street, street_nr, city, regex)
 
     s.send("close:session=" + sid + "\n")
     s.close()

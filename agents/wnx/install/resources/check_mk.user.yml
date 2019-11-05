@@ -158,7 +158,7 @@ global:
 ps:
     # enabled: yes
     # use_wmi: yes
-    # full_path: yes # This value has effect only when use_wmi is set
+    # full_path: yes
 
 winperf:
     # enabled: yes

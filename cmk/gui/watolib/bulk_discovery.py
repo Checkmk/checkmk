@@ -135,7 +135,6 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         kwargs = {}
         kwargs["title"] = self.gui_title()
         kwargs["lock_wato"] = False
-        kwargs["deletable"] = False
         kwargs["stoppable"] = False
 
         super(BulkDiscoveryBackgroundJob, self).__init__(self.job_prefix, **kwargs)

@@ -62,9 +62,7 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
         kwargs = {}
         kwargs["title"] = _("Parent scan")
         kwargs["lock_wato"] = False
-        kwargs["deletable"] = False
         kwargs["stoppable"] = False
-
         super(ParentScanBackgroundJob, self).__init__(self.job_prefix, **kwargs)
 
     def _back_url(self):

@@ -265,7 +265,7 @@ class FetchAgentOutputBackgroundJob(watolib.WatoBackgroundJob):
                                  self._request.agent_type)
         title = _("Fetching %s of %s / %s") % (self._request.agent_type, host.site_id(),
                                                host.name())
-        super(FetchAgentOutputBackgroundJob, self).__init__(job_id, title=title, deletable=False)
+        super(FetchAgentOutputBackgroundJob, self).__init__(job_id, title=title)
 
         self.set_function(self._fetch_agent_output)
 

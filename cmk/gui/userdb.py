@@ -1379,7 +1379,6 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
     def __init__(self):
         kwargs = {}
         kwargs["title"] = self.gui_title()
-        kwargs["deletable"] = False
         kwargs["stoppable"] = False
 
         super(UserSyncBackgroundJob, self).__init__(self.job_prefix, **kwargs)

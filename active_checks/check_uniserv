@@ -88,10 +88,9 @@ def main(sys_args=None):
 
     sendstring = "open:service=" + service + ";servicehost=" + host + "\n"
     data = send_and_receive(s, sendstring)
-    if not data.get('session'):
-        return 3, "Error getting SID. Response was: %s\n" % data
-
     sid = data.get('session')
+    if not sid:
+        return 3, "Error getting SID. Response was: %s\n" % data
 
     if job == "VERSION":
         sendstring = "version:session=" + sid + "\n"

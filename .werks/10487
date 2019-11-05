@@ -1,0 +1,15 @@
+Title: Warn if host has tag "Always use and expect piggback data" and no piggyback data is available
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1572945325
+Class: fix
+
+If a host has the tag {{Always use and expect piggback data}} but no piggyback
+data is available the {{Check_MK}} service returns a WARNING.
+
+If a host has the tag {{Use piggyback data from other hosts if present}} then
+the {{Check_MK}} service does not warn if there's no piggyback data available.
+The same applies to the tag {{Never use piggyback data}}.

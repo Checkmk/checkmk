@@ -34,6 +34,7 @@
 #include "Column.h"
 #include "LogCache.h"
 #include "LogEntry.h"
+#include "LogEntryStringColumn.h"
 #include "Logfile.h"
 #include "MonitoringCore.h"
 #include "OffsetIntColumn.h"
@@ -105,6 +106,9 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<OffsetSStringColumn>(
         "state_type", "The type of the state (varies on different log classes)",
         entry_offset, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _state_type)));
+    addColumn(std::make_unique<LogEntryStringColumn>(
+        "state_info", "Additional information about the state", entry_offset,
+        -1, -1, 0));
     addColumn(std::make_unique<OffsetIntColumn>(
         "attempt", "The number of the check attempt", entry_offset, -1, -1,
         DANGEROUS_OFFSETOF(LogEntry, _attempt)));

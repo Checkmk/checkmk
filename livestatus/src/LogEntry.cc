@@ -24,6 +24,7 @@
 
 #include "LogEntry.h"
 #include <cstdlib>
+#include <cstring>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
@@ -413,4 +414,122 @@ ServiceState LogEntry::parseServiceState(const std::string &str) {
 HostState LogEntry::parseHostState(const std::string &str) {
     auto it = fl_host_state_types.find(extractStateType(str));
     return it == fl_host_state_types.end() ? HostState::up : it->second;
+}
+
+namespace {
+std::string parens(const std::string &fun, const std::string &arg) {
+    return fun + " (" + arg + ")";
+}
+
+// TODO(sp) Centralized these mappings and their inverses...
+std::string to_host_state(int state) {
+    switch (state) {
+        case 0:
+            return "UP";
+        case 1:
+            return "DOWN";
+        case 2:
+            return "UNREACHABLE";
+        default:
+            return "FUNNY_HOST_STATE_" + std::to_string(state);
+    }
+}
+
+std::string to_service_state(int state) {
+    switch (state) {
+        case 0:
+            return "OK";
+        case 1:
+            return "WARNING";
+        case 2:
+            return "CRITICAL";
+        case 3:
+            return "UNKNOWN";
+        default:
+            return "FUNNY_HOST_STATE_" + std::to_string(state);
+    }
+}
+
+std::string to_exit_code(int state) {
+    switch (state) {
+        case 0:
+            return "SUCCESS";
+        case 1:
+            return "TEMPORARY_FAILURE";
+        case 2:
+            return "PERMANENT_FAILURE";
+        default:
+            return "FUNNY_EXIT_CODE_" + std::to_string(state);
+    }
+}
+}  // namespace
+
+std::string LogEntry::state_info() const {
+    switch (_kind) {
+        case LogEntryKind::state_host_initial:
+        case LogEntryKind::state_host:
+        case LogEntryKind::alert_host:
+            return parens(_state_type, to_host_state(_state));
+
+        case LogEntryKind::state_service_initial:
+        case LogEntryKind::state_service:
+        case LogEntryKind::alert_service:
+            return parens(_state_type, to_service_state(_state));
+
+        case LogEntryKind::none:
+            if (strcmp(_type, "HOST NOTIFICATION RESULT") == 0 ||
+                strcmp(_type, "SERVICE NOTIFICATION RESULT") == 0 ||
+                strcmp(_type, "HOST NOTIFICATION PROGRESS") == 0 ||
+                strcmp(_type, "SERVICE NOTIFICATION PROGRESS") == 0 ||
+                strcmp(_type, "HOST ALERT HANDLER STOPPED") == 0 ||
+                strcmp(_type, "SERVICE ALERT HANDLER STOPPED") == 0) {
+                return parens("EXIT_CODE", to_exit_code(_state));
+            }
+            if (strcmp(_type, "HOST NOTIFICATION") == 0) {
+                if (_state_type == "UP" ||    //
+                    _state_type == "DOWN" ||  //
+                    _state_type == "UNREACHABLE") {
+                    return parens("NOTIFY", _state_type);
+                }
+                if (mk::starts_with(_state_type, "ALERTHANDLER (")) {
+                    return parens("EXIT_CODE", to_exit_code(_state));
+                }
+                return _state_type;
+            }
+            if (strcmp(_type, "SERVICE NOTIFICATION") == 0) {
+                if (_state_type == "OK" ||        //
+                    _state_type == "WARNING" ||   //
+                    _state_type == "CRITICAL" ||  //
+                    _state_type == "UNKNOWN") {
+                    return parens("NOTIFY", _state_type);
+                }
+                if (mk::starts_with(_state_type, "ALERTHANDLER (")) {
+                    return parens("EXIT_CODE", to_exit_code(_state));
+                }
+                return _state_type;
+            }
+            if (strcmp(_type, "PASSIVE HOST CHECK") == 0) {
+                return parens("PASSIVE", to_host_state(_state));
+            }
+            if (strcmp(_type, "PASSIVE SERVICE CHECK") == 0) {
+                return parens("PASSIVE", to_service_state(_state));
+            }
+            return "";
+
+        case LogEntryKind::downtime_alert_host:
+        case LogEntryKind::downtime_alert_service:
+        case LogEntryKind::flapping_host:
+        case LogEntryKind::flapping_service:
+        case LogEntryKind::acknowledge_alert_host:
+        case LogEntryKind::acknowledge_alert_service:
+            return _state_type;
+
+        case LogEntryKind::timeperiod_transition:
+        case LogEntryKind::core_starting:
+        case LogEntryKind::core_stopping:
+        case LogEntryKind::log_version:
+        case LogEntryKind::log_initial_states:
+            return "";
+    }
+    return "";  // unreachable, make the compiler happy
 }

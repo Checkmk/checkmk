@@ -1,5 +1,5 @@
 #include <string>
-#include <unordered_map>
+#include <tuple>
 #include <utility>
 #include <vector>
 #include "LogEntry.h"
@@ -9,7 +9,7 @@ using namespace std::string_literals;
 
 namespace {
 template <class T>
-using table = std::unordered_map<std::string, T>;
+using table = std::vector<std::tuple<std::string, T>>;
 
 table<HostState> host_states{{"UP", HostState::up},
                              {"DOWN", HostState::down},
@@ -20,12 +20,15 @@ table<ServiceState> service_states{{"OK", ServiceState::ok},
                                    {"CRITICAL", ServiceState::critical},
                                    {"UNKNOWN", ServiceState::unknown}};
 
+using info_table = std::vector<std::tuple<std::string, int, std::string>>;
+
 // NOTE: A few LogEntry types abuse a service state when actually the exit code
 // of a process is meant.
-table<int> exit_codes{{"OK", static_cast<int>(ServiceState::ok)},
-                      {"WARNING", static_cast<int>(ServiceState::warning)},
-                      {"CRITICAL", static_cast<int>(ServiceState::critical)},
-                      {"UNKNOWN", static_cast<int>(ServiceState::unknown)}};
+info_table exit_codes{
+    {"OK", static_cast<int>(ServiceState::ok), "SUCCESS"},
+    {"WARNING", static_cast<int>(ServiceState::warning), "TEMPORARY_FAILURE"},
+    {"CRITICAL", static_cast<int>(ServiceState::critical), "PERMANENT_FAILURE"},
+    {"UNKNOWN", static_cast<int>(ServiceState::unknown), "FUNNY_EXIT_CODE_3"}};
 
 using strings = std::vector<std::string>;
 
@@ -39,22 +42,28 @@ strings reasons{"CUSTOM",      "ACKNOWLEDGEMENT",   "DOWNTIMESTART",
                 "DOWNTIMEEND", "DOWNTIMECANCELLED", "FLAPPINGSTART",
                 "FLAPPINGSTOP"};
 
-std::string with_arg(const std::string& f, const std::string& arg) {
+std::string parens(const std::string& f, const std::string& arg) {
     return f + " (" + arg + ")";
 }
 
 // host_or_svc_state | reason (host_or_svc_state) | ALERTHANDLER (exit_code)
 template <class T>
-table<int> notification_state_types(const table<T>& states) {
-    table<int> result;
+info_table notification_state_types(const table<T>& states) {
+    info_table result;
     for (const auto& [state_name, state] : states) {
-        result[state_name] = static_cast<int>(state);
+        result.push_back({state_name,  //
+                          static_cast<int>(state),
+                          parens("NOTIFY", state_name)});
         for (const auto& reason : reasons) {
-            result[with_arg(reason, state_name)] = static_cast<int>(state);
+            result.push_back({parens(reason, state_name),
+                              static_cast<int>(state),
+                              parens(reason, state_name)});
         }
     }
-    for (const auto& [code_name, code] : exit_codes) {
-        result[with_arg("ALERTHANDLER", code_name)] = code;
+    for (const auto& [code_name, code, info] : exit_codes) {
+        result.push_back({parens("ALERTHANDLER", code_name),  //
+                          code,                               //
+                          parens("EXIT_CODE", info)});
     }
     return result;
 }
@@ -91,6 +100,7 @@ TEST(LogEntry, InitialHostState) {
             EXPECT_EQ("Krasser Output", e._plugin_output);
             EXPECT_EQ("Laaang", e._long_plugin_output);
             EXPECT_EQ("", e._comment);
+            EXPECT_EQ(parens(state_type, state_name), e.state_info());
         }
     }
 }
@@ -116,6 +126,7 @@ TEST(LogEntry, InitialHostStateWithoutLongOutput) {
     EXPECT_EQ("Krasser Output", e._plugin_output);
     EXPECT_EQ("", e._long_plugin_output);
     EXPECT_EQ("", e._comment);
+    EXPECT_EQ("HARD (UP)", e.state_info());
 }
 
 TEST(LogEntry, InitialHostStateWithMultiLine) {
@@ -140,6 +151,7 @@ TEST(LogEntry, InitialHostStateWithMultiLine) {
     EXPECT_EQ("Krasser Output", e._plugin_output);
     EXPECT_EQ("Laaanger\nLong\nOutput", e._long_plugin_output);
     EXPECT_EQ("", e._comment);
+    EXPECT_EQ("HARD (UP)", e.state_info());
 }
 
 TEST(LogEntry, CurrentHostState) {
@@ -173,6 +185,7 @@ TEST(LogEntry, CurrentHostState) {
             EXPECT_EQ("Voll krasser Output", e._plugin_output);
             EXPECT_EQ("long", e._long_plugin_output);
             EXPECT_EQ("", e._comment);
+            EXPECT_EQ(parens(state_type, state_name), e.state_info());
         }
     }
 }
@@ -207,6 +220,7 @@ TEST(LogEntry, HostAlert) {
             EXPECT_EQ("Komisch...", e._plugin_output);
             EXPECT_EQ("Lalalang", e._long_plugin_output);
             EXPECT_EQ("", e._comment);
+            EXPECT_EQ(parens(state_type, state_name), e.state_info());
         }
     }
 }
@@ -233,6 +247,7 @@ TEST(LogEntry, HostDowntimeAlert) {
         EXPECT_EQ("", e._plugin_output);
         EXPECT_EQ("", e._long_plugin_output);
         EXPECT_EQ("Komisch...", e._comment);
+        EXPECT_EQ(state_type, e.state_info());
     }
 }
 
@@ -258,6 +273,7 @@ TEST(LogEntry, HostAcknowledgeAlert) {
         EXPECT_EQ("", e._plugin_output);
         EXPECT_EQ("", e._long_plugin_output);
         EXPECT_EQ("foo bar", e._comment);
+        EXPECT_EQ(state_type, e.state_info());
     }
 }
 
@@ -283,6 +299,7 @@ TEST(LogEntry, HostFlappingAlert) {
         EXPECT_EQ("", e._plugin_output);
         EXPECT_EQ("", e._long_plugin_output);
         EXPECT_EQ("foo bar", e._comment);
+        EXPECT_EQ(state_type, e.state_info());
     }
 }
 
@@ -317,6 +334,7 @@ TEST(LogEntry, InitialServiceState) {
             EXPECT_EQ("Langweiliger Output", e._plugin_output);
             EXPECT_EQ("long", e._long_plugin_output);
             EXPECT_EQ("", e._comment);
+            EXPECT_EQ(parens(state_type, state_name), e.state_info());
         }
     }
 }
@@ -352,6 +370,7 @@ TEST(LogEntry, CurrentServiceState) {
             EXPECT_EQ("Irgendein Output", e._plugin_output);
             EXPECT_EQ("lang", e._long_plugin_output);
             EXPECT_EQ("", e._comment);
+            EXPECT_EQ(parens(state_type, state_name), e.state_info());
         }
     }
 }
@@ -387,6 +406,7 @@ TEST(LogEntry, ServiceAlert) {
             EXPECT_EQ("Komisch...", e._plugin_output);
             EXPECT_EQ("lang", e._long_plugin_output);
             EXPECT_EQ("", e._comment);
+            EXPECT_EQ(parens(state_type, state_name), e.state_info());
         }
     }
 }
@@ -413,6 +433,7 @@ TEST(LogEntry, ServiceDowntimeAlert) {
         EXPECT_EQ("", e._plugin_output);
         EXPECT_EQ("", e._long_plugin_output);
         EXPECT_EQ("Komisch...", e._comment);
+        EXPECT_EQ(state_type, e.state_info());
     }
 }
 
@@ -438,6 +459,7 @@ TEST(LogEntry, ServiceAcknowledgeAlert) {
         EXPECT_EQ("", e._plugin_output);
         EXPECT_EQ("", e._long_plugin_output);
         EXPECT_EQ("foo bar", e._comment);
+        EXPECT_EQ(state_type, e.state_info());
     }
 }
 
@@ -463,6 +485,7 @@ TEST(LogEntry, ServiceFlappingAlert) {
         EXPECT_EQ("", e._plugin_output);
         EXPECT_EQ("", e._long_plugin_output);
         EXPECT_EQ("foo bar", e._comment);
+        EXPECT_EQ(state_type, e.state_info());
     }
 }
 
@@ -486,10 +509,11 @@ TEST(LogEntry, TimeperiodTransition) {
     EXPECT_EQ("", e._plugin_output);
     EXPECT_EQ("", e._long_plugin_output);
     EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.state_info());
 }
 
 TEST(LogEntry, HostNotification) {
-    for (const auto& [state_name, state] :
+    for (const auto& [state_name, state, info] :
          notification_state_types(host_states)) {
         auto line = "[1551424305] HOST NOTIFICATION: King Kong;donald;"s +
                     state_name +
@@ -514,11 +538,12 @@ TEST(LogEntry, HostNotification) {
         EXPECT_EQ("viel output...", e._plugin_output);
         EXPECT_EQ("lalala", e._long_plugin_output);
         EXPECT_EQ("The Hobbit", e._comment);
+        EXPECT_EQ(info, e.state_info());
     }
 }
 
 TEST(LogEntry, ServiceNotification) {
-    for (const auto& [state_name, state] :
+    for (const auto& [state_name, state, info] :
          notification_state_types(service_states)) {
         auto line =
             "[1551424305] SERVICE NOTIFICATION: King Kong;donald;duck;"s +
@@ -543,13 +568,14 @@ TEST(LogEntry, ServiceNotification) {
         EXPECT_EQ("viel output...", e._plugin_output);
         EXPECT_EQ("lalala", e._long_plugin_output);
         EXPECT_EQ("The Hobbit", e._comment);
+        EXPECT_EQ(info, e.state_info());
     }
 }
 
 TEST(LogEntry, HostNotificationResult) {
     // The exit code string is directly taken from a log line field, where it is
     // encoded as a service result (HACK).
-    for (const auto& [code_name, code] : exit_codes) {
+    for (const auto& [code_name, code, info] : exit_codes) {
         auto line = "[1551424305] HOST NOTIFICATION RESULT: King Kong;donald;" +
                     code_name + ";commando;viel output...;blah blubb";
         LogEntry e{42, line};
@@ -572,13 +598,14 @@ TEST(LogEntry, HostNotificationResult) {
         EXPECT_EQ("viel output...", e._plugin_output);
         EXPECT_EQ("", e._long_plugin_output);
         EXPECT_EQ("blah blubb", e._comment);
+        EXPECT_EQ(parens("EXIT_CODE", info), e.state_info());
     }
 }
 
 TEST(LogEntry, ServiceNotificationResult) {
     // The exit code string is directly taken from a log line field, where it is
     // encoded as a service result (HACK).
-    for (const auto& [code_name, code] : exit_codes) {
+    for (const auto& [code_name, code, info] : exit_codes) {
         auto line =
             "[1551424305] SERVICE NOTIFICATION RESULT: King Kong;donald;duck;" +
             code_name + ";commando;viel output...;blah blubb";
@@ -602,13 +629,14 @@ TEST(LogEntry, ServiceNotificationResult) {
         EXPECT_EQ("viel output...", e._plugin_output);
         EXPECT_EQ("", e._long_plugin_output);
         EXPECT_EQ("blah blubb", e._comment);
+        EXPECT_EQ(parens("EXIT_CODE", info), e.state_info());
     }
 }
 
 TEST(LogEntry, HostNotificationProgress) {
     // The exit code string is directly taken from a log line field, where it is
     // encoded as a service result (HACK).
-    for (const auto& [code_name, code] : exit_codes) {
+    for (const auto& [code_name, code, info] : exit_codes) {
         auto line =
             "[1551424305] HOST NOTIFICATION PROGRESS: King Kong;donald;" +
             code_name + ";commando;viel output...";
@@ -631,13 +659,14 @@ TEST(LogEntry, HostNotificationProgress) {
         EXPECT_EQ("viel output...", e._plugin_output);
         EXPECT_EQ("", e._long_plugin_output);
         EXPECT_EQ("", e._comment);
+        EXPECT_EQ(parens("EXIT_CODE", info), e.state_info());
     }
 }
 
 TEST(LogEntry, ServiceNotificationProgress) {
     // The exit code string is directly taken from a log line field, where it is
     // encoded as a service result (HACK).
-    for (const auto& [code_name, code] : exit_codes) {
+    for (const auto& [code_name, code, info] : exit_codes) {
         auto line =
             "[1551424305] SERVICE NOTIFICATION PROGRESS: King Kong;donald;duck;" +
             code_name + ";commando;viel output...";
@@ -661,6 +690,7 @@ TEST(LogEntry, ServiceNotificationProgress) {
         EXPECT_EQ("viel output...", e._plugin_output);
         EXPECT_EQ("", e._long_plugin_output);
         EXPECT_EQ("", e._comment);
+        EXPECT_EQ(parens("EXIT_CODE", info), e.state_info());
     }
 }
 
@@ -683,6 +713,7 @@ TEST(LogEntry, HostAlertHandlerStarted) {
     EXPECT_EQ(0, e._attempt);
     EXPECT_EQ("", e._plugin_output);
     EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.state_info());
 }
 
 TEST(LogEntry, ServiceAlertHandlerStarted) {
@@ -705,12 +736,13 @@ TEST(LogEntry, ServiceAlertHandlerStarted) {
     EXPECT_EQ(0, e._attempt);
     EXPECT_EQ("", e._plugin_output);
     EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.state_info());
 }
 
 TEST(LogEntry, HostAlertHandlerStopped) {
     // The exit code string is directly taken from a log line field, where it is
     // encoded as a service result (HACK).
-    for (const auto& [code_name, code] : exit_codes) {
+    for (const auto& [code_name, code, info] : exit_codes) {
         auto line =
             "[1551424305] HOST ALERT HANDLER STOPPED: donald;commando;"s +
             code_name + ";es war einmal...";
@@ -733,13 +765,14 @@ TEST(LogEntry, HostAlertHandlerStopped) {
         EXPECT_EQ("es war einmal...", e._plugin_output);
         EXPECT_EQ("", e._long_plugin_output);
         EXPECT_EQ("", e._comment);
+        EXPECT_EQ(parens("EXIT_CODE", info), e.state_info());
     }
 }
 
 TEST(LogEntry, ServiceAlertHandlerStopped) {
     // The exit code string is directly taken from a log line field, where it is
     // encoded as a service result (HACK).
-    for (const auto& [code_name, code] : exit_codes) {
+    for (const auto& [code_name, code, info] : exit_codes) {
         auto line =
             "[1551424305] SERVICE ALERT HANDLER STOPPED: donald;duck;commando;"s +
             code_name + ";once upon a time...";
@@ -762,6 +795,7 @@ TEST(LogEntry, ServiceAlertHandlerStopped) {
         EXPECT_EQ("once upon a time...", e._plugin_output);
         EXPECT_EQ("", e._long_plugin_output);
         EXPECT_EQ("", e._comment);
+        EXPECT_EQ(parens("EXIT_CODE", info), e.state_info());
     }
 }
 
@@ -790,6 +824,7 @@ TEST(LogEntry, PassiveServiceCheck) {
         EXPECT_EQ(0, e._attempt);
         EXPECT_EQ("Isch hab Ruecken!", e._plugin_output);
         EXPECT_EQ("", e._comment);
+        EXPECT_EQ(parens("PASSIVE", state_name), e.state_info());
     }
 }
 
@@ -818,6 +853,7 @@ TEST(LogEntry, PassiveHostCheck) {
         EXPECT_EQ(0, e._attempt);
         EXPECT_EQ("Isch hab Ruecken!", e._plugin_output);
         EXPECT_EQ("", e._comment);
+        EXPECT_EQ(parens("PASSIVE", state_name), e.state_info());
     }
 }
 
@@ -840,6 +876,7 @@ TEST(LogEntry, ExternalCommand) {
     EXPECT_EQ(0, e._attempt);
     EXPECT_EQ("", e._plugin_output);
     EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.state_info());
 }
 
 TEST(LogEntry, LogVersion) {
@@ -861,6 +898,7 @@ TEST(LogEntry, LogVersion) {
     EXPECT_EQ(0, e._attempt);
     EXPECT_EQ("", e._plugin_output);
     EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.state_info());
 }
 
 TEST(LogEntry, LogInitialStates) {
@@ -882,6 +920,7 @@ TEST(LogEntry, LogInitialStates) {
     EXPECT_EQ(0, e._attempt);
     EXPECT_EQ("", e._plugin_output);
     EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.state_info());
 }
 
 TEST(LogEntry, CoreStarting1) {
@@ -903,6 +942,7 @@ TEST(LogEntry, CoreStarting1) {
     EXPECT_EQ(0, e._attempt);
     EXPECT_EQ("", e._plugin_output);
     EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.state_info());
 }
 
 TEST(LogEntry, CoreStarting2) {
@@ -924,6 +964,7 @@ TEST(LogEntry, CoreStarting2) {
     EXPECT_EQ(0, e._attempt);
     EXPECT_EQ("", e._plugin_output);
     EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.state_info());
 }
 
 TEST(LogEntry, CoreStopping1) {
@@ -945,6 +986,7 @@ TEST(LogEntry, CoreStopping1) {
     EXPECT_EQ(0, e._attempt);
     EXPECT_EQ("", e._plugin_output);
     EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.state_info());
 }
 
 TEST(LogEntry, CoreStopping2) {
@@ -966,6 +1008,7 @@ TEST(LogEntry, CoreStopping2) {
     EXPECT_EQ(0, e._attempt);
     EXPECT_EQ("", e._plugin_output);
     EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.state_info());
 }
 
 TEST(LogEntry, CoreStopping3) {
@@ -987,6 +1030,7 @@ TEST(LogEntry, CoreStopping3) {
     EXPECT_EQ(0, e._attempt);
     EXPECT_EQ("", e._plugin_output);
     EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.state_info());
 }
 
 TEST(LogEntry, InvalidTimeStamp) {
@@ -1008,6 +1052,7 @@ TEST(LogEntry, InvalidTimeStamp) {
     EXPECT_EQ(0, e._attempt);
     EXPECT_EQ("", e._plugin_output);
     EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.state_info());
 }
 
 TEST(LogEntry, NoColon) {
@@ -1029,12 +1074,13 @@ TEST(LogEntry, NoColon) {
     EXPECT_EQ(0, e._attempt);
     EXPECT_EQ("", e._plugin_output);
     EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.state_info());
 }
 
 TEST(LogEntry, HostNotificationSwapped) {
     // Test that we handle buggy legacy log lines where the state_type and the
     // commando "check-mk-notify" are swapped.
-    for (const auto& [state_name, state] :
+    for (const auto& [state_name, state, info] :
          notification_state_types(host_states)) {
         auto line =
             "[1551424305] HOST NOTIFICATION: King Kong;donald;check-mk-notify;"s +
@@ -1059,13 +1105,14 @@ TEST(LogEntry, HostNotificationSwapped) {
         EXPECT_EQ("viel output...", e._plugin_output);
         EXPECT_EQ("lalala", e._long_plugin_output);
         EXPECT_EQ("The Hobbit", e._comment);
+        EXPECT_EQ(info, e.state_info());
     }
 }
 
 TEST(LogEntry, ServiceNotificationSwapped) {
     // Test that we handle buggy legacy log lines where the state_type and the
     // commando "check-mk-notify" are swapped.
-    for (const auto& [state_name, state] :
+    for (const auto& [state_name, state, info] :
          notification_state_types(service_states)) {
         auto line =
             "[1551424305] SERVICE NOTIFICATION: King Kong;donald;duck;check-mk-notify;"s +
@@ -1090,13 +1137,14 @@ TEST(LogEntry, ServiceNotificationSwapped) {
         EXPECT_EQ("viel output...", e._plugin_output);
         EXPECT_EQ("lalala", e._long_plugin_output);
         EXPECT_EQ("The Hobbit", e._comment);
+        EXPECT_EQ(info, e.state_info());
     }
 }
 
 TEST(LogEntry, HostNotificationResultSwapped) {
     // Test that we handle buggy legacy log lines where the state_type and the
     // commando "check-mk-notify" are swapped.
-    for (const auto& [code_name, code] : exit_codes) {
+    for (const auto& [code_name, code, info] : exit_codes) {
         auto line =
             "[1551424305] HOST NOTIFICATION RESULT: King Kong;donald;check-mk-notify;" +
             code_name + ";viel output...;blah blubb";
@@ -1120,13 +1168,14 @@ TEST(LogEntry, HostNotificationResultSwapped) {
         EXPECT_EQ("viel output...", e._plugin_output);
         EXPECT_EQ("", e._long_plugin_output);
         EXPECT_EQ("blah blubb", e._comment);
+        EXPECT_EQ(parens("EXIT_CODE", info), e.state_info());
     }
 }
 
 TEST(LogEntry, ServiceNotificationResultSwapped) {
     // Test that we handle buggy legacy log lines where the state_type and the
     // commando "check-mk-notify" are swapped.
-    for (const auto& [code_name, code] : exit_codes) {
+    for (const auto& [code_name, code, info] : exit_codes) {
         auto line =
             "[1551424305] SERVICE NOTIFICATION RESULT: King Kong;donald;duck;check-mk-notify;" +
             code_name + ";viel output...;blah blubb";
@@ -1150,13 +1199,14 @@ TEST(LogEntry, ServiceNotificationResultSwapped) {
         EXPECT_EQ("viel output...", e._plugin_output);
         EXPECT_EQ("", e._long_plugin_output);
         EXPECT_EQ("blah blubb", e._comment);
+        EXPECT_EQ(parens("EXIT_CODE", info), e.state_info());
     }
 }
 
 TEST(LogEntry, HostNotificationProgressSwapped) {
     // Test that we handle buggy legacy log lines where the state_type and the
     // commando "check-mk-notify" are swapped.
-    for (const auto& [code_name, code] : exit_codes) {
+    for (const auto& [code_name, code, info] : exit_codes) {
         auto line =
             "[1551424305] HOST NOTIFICATION PROGRESS: King Kong;donald;check-mk-notify;" +
             code_name + ";viel output...";
@@ -1180,13 +1230,14 @@ TEST(LogEntry, HostNotificationProgressSwapped) {
         EXPECT_EQ("viel output...", e._plugin_output);
         EXPECT_EQ("", e._long_plugin_output);
         EXPECT_EQ("", e._comment);
+        EXPECT_EQ(parens("EXIT_CODE", info), e.state_info());
     }
 }
 
 TEST(LogEntry, ServiceNotificationProgressSwapped) {
     // Test that we handle buggy legacy log lines where the state_type and the
     // commando "check-mk-notify" are swapped.
-    for (const auto& [code_name, code] : exit_codes) {
+    for (const auto& [code_name, code, info] : exit_codes) {
         auto line =
             "[1551424305] SERVICE NOTIFICATION PROGRESS: King Kong;donald;duck;check-mk-notify;" +
             code_name + ";viel output...";
@@ -1210,5 +1261,6 @@ TEST(LogEntry, ServiceNotificationProgressSwapped) {
         EXPECT_EQ("viel output...", e._plugin_output);
         EXPECT_EQ("", e._long_plugin_output);
         EXPECT_EQ("", e._comment);
+        EXPECT_EQ(parens("EXIT_CODE", info), e.state_info());
     }
 }

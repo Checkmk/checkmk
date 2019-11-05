@@ -617,8 +617,12 @@ class UsageClient(DataCache):
 
     @property
     def cache_interval(self):
-        midnight = NOW.combine(NOW.date(), datetime.time(0))
-        return (NOW - midnight).seconds
+        """Return the upper limit for allowed cache age.
+
+        Data is updated at midnight, so the cache should not be older than the day.
+        """
+        utc_today_start = NOW.combine(NOW.date(), datetime.time(0))
+        return (NOW - utc_today_start).seconds
 
     @classmethod
     def offerid_has_no_consuption_api(cls, errmsg):

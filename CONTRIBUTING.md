@@ -409,10 +409,14 @@ names are really available and needed in the current namespace.
 * For the CME/CEE there is a module hierarchy under `cmk/cee` or `cmk/cme`.
   The same rules apply as for `cmk` itself.
 
+### Code formatting
 
-### Code format
-
-- We use YAPF for automatic formatting of our python code. Have a look [below](#automatic-formatting) for further information.
+- We supply an `.editorconfig` file, which is used to automatically configure
+  your editor to adhere to the most basic formatting style, like indents or
+  line-lengths. If your editor doesn't already come with Editorconfig support,
+  install [one of the available plugins](https://editorconfig.org/#download).
+- We use YAPF for automatic formatting of the Python code.
+  Have a look [below](#automatic-formatting) for further information.
 - Multi line imports: Use braces instead of continuation character
 
     ```

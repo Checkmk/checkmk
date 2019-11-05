@@ -29,6 +29,7 @@
 #include <memory>
 #include <string>
 class Column;
+class Logger;
 
 class DynamicColumn {
 public:
@@ -39,8 +40,10 @@ public:
     std::string name() const;
     virtual std::unique_ptr<Column> createColumn(
         const std::string &name, const std::string &arguments) = 0;
+    Logger *logger() const;
 
 protected:
+    Logger *const _logger;
     const std::string _name;
     const std::string _description;  // Note: Currently unused!
     const int _indirect_offset;

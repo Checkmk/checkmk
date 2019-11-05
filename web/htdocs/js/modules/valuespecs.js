@@ -626,7 +626,7 @@ export function listofmultiple_add(varprefix, choice_page_name, page_request_var
 
             // Put in a line break following the table if the added row is the first
             if (tbody.childNodes.length == 1)
-                table.after(document.createElement("br"));
+                table.parentNode.insertBefore(document.createElement("br"), table.nextSibling);
         }
     });
 }
@@ -676,7 +676,7 @@ export function listofmultiple_init(varprefix) {
     listofmultiple_disable_selected_options(varprefix);
     // Put in a line break following the table if it's not empty
     if (tbody.childNodes.length >= 1)
-        table.after(document.createElement("br"));
+        table.parentNode.insertBefore(document.createElement("br"), table.nextSibling);
 }
 
 // The <option> elements in the <select> field of the currently choosen

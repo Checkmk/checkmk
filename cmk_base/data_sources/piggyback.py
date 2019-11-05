@@ -102,6 +102,10 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
             # and source status file
             return 0, '', []
 
+        if 'piggyback' in self._host_config.tags and not self._processed_file_reasons:
+            # Tag: 'Always use and expect piggback data'
+            return 1, 'Missing data', []
+
         states = [0]
         infotexts = []
         for reason_status, reason in self._processed_file_reasons:

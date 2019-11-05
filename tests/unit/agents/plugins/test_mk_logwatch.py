@@ -530,7 +530,8 @@ def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, s
     section._compiled_patterns = patterns
 
     monkeypatch.setattr(sys, 'stdout', MockStdout())
-    output = mk_logwatch.process_logfile(section, state, False)
+    header, warning_and_errors = mk_logwatch.process_logfile(section, state, False)
+    output = [header] + warning_and_errors
     assert all(isinstance(item, six.text_type) for item in output)
     assert output == expected_output
     if len(output) > 1:

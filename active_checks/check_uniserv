@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -26,6 +26,7 @@
 
 import sys
 import socket
+import re
 
 
 def parse_response(data):
@@ -43,9 +44,10 @@ def parse_response(data):
 
 
 def send_and_receive(sock, request_str):
-    sock.send(request_str)
+    encoding = "utf-8"
+    sock.send(request_str.encode(encoding))
     answer = sock.recv(1024)
-    return parse_response(answer)
+    return parse_response(answer.decode(encoding))
 
 
 def check_job(job, s, sid, street, street_nr, city, regex):
@@ -59,7 +61,6 @@ def check_job(job, s, sid, street, street_nr, city, regex):
         return 0, "Version: %s" % version
 
     if job == "ADDRESS":
-        import re
         sendstring = "exec:session=%s;request_type=check_address;in_str=%s;in_hno=%s;in_city=%s\n" % (
             sid,
             street,

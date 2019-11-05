@@ -4913,7 +4913,7 @@ def _valuespec_piggybacked_host_files():
                             global_max_cache_age_uri)
 
     return Dictionary(
-        title=_("Piggybacked Host Files"),
+        title=_("Processing of Piggybacked Host Data"),
         optional_keys=[],
         elements=[
             ("global_max_cache_age", _vs_max_cache_age(global_max_cache_age_title)),
@@ -4932,7 +4932,7 @@ def _valuespec_piggybacked_host_files():
                          ("validity", _vs_validity()),
                      ],
                  ),
-                 title=_("Exceptions for piggybacked hosts"),
+                 title=_("Exceptions for piggybacked hosts (VMs, ...)"),
                  add_label=_("Add exception"),
              )),
         ],
@@ -4967,18 +4967,23 @@ def _vs_max_cache_age(max_cache_age_title):
 
 def _vs_validity():
     return Dictionary(
-        title=_("Set period how long piggyback files are treated as valid"),
+        title=_("Set period how long outdated piggyback data is treated as valid"),
         elements=[
             ("period", Age(
-                title=_("Period"),
+                title=_("Period for outdated piggybacked host data"),
                 default_value=60,
             )),
             ("check_mk_state",
              MonitoringState(
-                 title=_("Check MK status within this period"),
+                 title=_("Check MK status of piggybacked host within this period"),
                  default_value=0,
              )),
         ],
+        help=_("If a source host does not send data for its piggybacked hosts at all "
+               "or for single piggybacked hosts then a period can be set in order to "
+               "treat outdated piggybacked host files/data as valid within this period. "
+               "Moreover the status of the <b>Check_MK</b> service of these piggybacked "
+               "hosts can be specified for this period."),
     )
 
 

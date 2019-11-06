@@ -68,8 +68,10 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     parser.add_argument(
         "-m",
         "--metrics",
-        action="store_true",
-        help="""Add performance data to the output""",
+        nargs="?",
+        metavar="METRIC_NAME",
+        const="performance_data",
+        help="""Add performance data to the output. Store data with metric_name in RRD.""",
     )
     parser.add_argument(
         "-o",
@@ -392,7 +394,7 @@ def process_result(result, warn, crit, metrics=False, debug=False):
     perf = ""
     if metrics:
         try:
-            perf = " | performance_data=%s" % str(row0[2])
+            perf = " | %s=%s" % (metrics, str(row0[2]))
         except IndexError:
             if debug:
                 raise

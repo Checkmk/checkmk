@@ -6613,6 +6613,7 @@ check_metrics["check_mk-statgrab_mem"] = ram_used_swap_translation
 check_metrics["check_mk-hr_mem"] = ram_used_swap_translation
 check_metrics["check_mk-solaris_mem"] = ram_used_swap_translation
 check_metrics["check_mk-docker_container_mem"] = ram_used_swap_translation
+check_metrics["check_mk-emc_ecs_mem"] = ram_used_swap_translation
 
 check_metrics["check_mk-mem.used"] = {
     "ramused": {

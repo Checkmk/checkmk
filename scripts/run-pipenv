@@ -35,4 +35,5 @@ PIPENV_VENV_IN_PROJECT=true \
     PIPENV_HIDE_EMOJIS=true \
     PIPENV_NO_INHERIT=true \
     PIPENV_PIPFILE="$REPO_PATH/virtual-envs/$PYTHON_VERSION/Pipfile" \
+    PIPENV_IGNORE_VIRTUALENVS=1 \
     pipenv "$@"

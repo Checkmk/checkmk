@@ -15,7 +15,8 @@ if [ ! -f "$VENV_PATH/bin/mypy" ]; then
     exit 1
 fi
 
-cd "$REPO_PATH"
+# NOTE: We should NOT run this in "$REPO_PATH", otherwise mypy will make paths
+# in messages relative, which will confuse e.g. Emacs' flycheck mode.
 
 MYPYPATH="$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/omd:$REPO_PATH/tests-py3:$REPO_PATH/tests-py3/typeshed" \
     exec "$PIPENV" 3 run mypy "$@"

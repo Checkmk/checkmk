@@ -686,7 +686,7 @@ class HostConfig(object):
         return host
 
     def _update_from_core(self):
-        if not self._has_core_config_reloaded():
+        if self._cache_valid():
             return
 
         self.initialize()
@@ -713,14 +713,9 @@ class HostConfig(object):
         self._logger.debug("Got %d hosts from core" % len(self._hosts_by_name))
         self._got_config_from_core = self._get_core_start_time()
 
-    def _has_core_config_reloaded(self):
-        if not self._got_config_from_core:
-            return True
-
-        if self._get_core_start_time() > self._got_config_from_core:
-            return True
-
-        return False
+    def _cache_valid(self):
+        return self._got_config_from_core and (self._get_core_start_time() <=
+                                               self._got_config_from_core)
 
     def _get_core_start_time(self):
         return livestatus.LocalConnection().query_value("GET status\n"  #

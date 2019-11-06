@@ -632,9 +632,10 @@ def check_timeperiod(settings, tpname):
 #   | It fetches and caches the information during runtine of the EC.      |
 #   '----------------------------------------------------------------------'
 
+
 class HostConfig(object):
-    def __init__(self):
-        self._logger = logger.getChild("HostConfig")
+    def __init__(self, logger):
+        self._logger = logger
         self.initialize()
 
     def initialize(self):
@@ -672,8 +673,9 @@ class HostConfig(object):
         low_event_host_name = event_host_name.lower()
 
         host = deflt
-        for search_map in [self._hosts_by_lower_name, self._hosts_by_lower_address,
-                           self._hosts_by_lower_alias]:
+        for search_map in [
+                self._hosts_by_lower_name, self._hosts_by_lower_address, self._hosts_by_lower_alias
+        ]:
             try:
                 host = search_map[low_event_host_name]
                 break
@@ -721,11 +723,8 @@ class HostConfig(object):
         return False
 
     def _get_core_start_time(self):
-        query = (
-            "GET status\n"
-            "Columns: program_start\n"
-        )
-        return livestatus.LocalConnection().query_value(query)
+        return livestatus.LocalConnection().query_value("GET status\n"  #
+                                                        "Columns: program_start\n")
 
 
 #.
@@ -1325,7 +1324,7 @@ class EventServer(ECServerThread):
         for _unused_facility in xrange(32):
             self._hash_stats.append([0] * 8)
 
-        self.host_config = HostConfig()
+        self.host_config = HostConfig(logger.getChild("HostConfig"))
         self._perfcounters = perfcounters
         self._event_status = event_status
 

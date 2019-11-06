@@ -4923,6 +4923,14 @@ def _validate_max_cache_age_and_validity_period(max_cache_age, period, varprefix
         raise MKUserError(varprefix, _("Maximum cache age must be greater than period."))
 
 
+def _transform_piggybacked_exception(p):
+    if "piggybacked_hostname" in p:
+        piggybacked_hostname = p["piggybacked_hostname"]
+        del p["piggybacked_hostname"]
+        p["piggybacked_hostname_expressions"] = [piggybacked_hostname]
+    return p
+
+
 def _valuespec_piggybacked_host_files():
     global_max_cache_age_uri = html.makeuri_contextless(
         [('mode', 'edit_configvar'), ('varname', 'piggyback_max_cachefile_age')],
@@ -4941,17 +4949,28 @@ def _valuespec_piggybacked_host_files():
             ("global_validity", _vs_validity()),
             ("per_piggybacked_host",
              ListOf(
-                 Dictionary(
-                     optional_keys=[],
-                     elements=[
-                         ("piggybacked_hostname",
-                          TextUnicode(
-                              title=_("Piggybacked host name"),
-                              allow_empty=False,
-                          )),
-                         ("max_cache_age", _vs_max_cache_age(max_cache_age_title)),
-                         ("validity", _vs_validity()),
-                     ],
+                 Transform(
+                     Dictionary(
+                         optional_keys=[],
+                         elements=[
+                             ("piggybacked_hostname_expressions",
+                              ListOfStrings(
+                                  title=_("Piggybacked host name expressions"),
+                                  orientation="horizontal",
+                                  valuespec=RegExpUnicode(
+                                      size=30,
+                                      mode=RegExpUnicode.prefix,
+                                  ),
+                                  allow_empty=False,
+                                  help=_(
+                                      'Here you can specify explicit piggybacked host names or '
+                                      'regex patterns to match specific piggybacked host names.'),
+                              )),
+                             ("max_cache_age", _vs_max_cache_age(max_cache_age_title)),
+                             ("validity", _vs_validity()),
+                         ],
+                     ),
+                     forth=_transform_piggybacked_exception,
                  ),
                  title=_("Exceptions for piggybacked hosts (VMs, ...)"),
                  add_label=_("Add exception"),

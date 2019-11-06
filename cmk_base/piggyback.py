@@ -37,6 +37,7 @@ import cmk.utils.translations
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.render import Age
+from cmk.utils.regex import regex
 
 import cmk_base.utils
 import cmk_base.console as console
@@ -60,7 +61,7 @@ PiggybackRawDataInfo = NamedTuple('PiggybackRawData', [
 
 
 def get_piggyback_raw_data(piggybacked_hostname, time_settings):
-    # type: (str, Dict[Tuple[Optional[str], str], int]) -> List[PiggybackRawDataInfo]
+    # type: (str, List[Tuple[Optional[str], str, int]]) -> List[PiggybackRawDataInfo]
     """Returns the usable piggyback data for the given host
 
     A list of two element tuples where the first element is
@@ -107,7 +108,7 @@ def get_piggyback_raw_data(piggybacked_hostname, time_settings):
 
 
 def get_source_and_piggyback_hosts(time_settings):
-    # type: (Dict[Tuple[Optional[str], str], int]) -> Iterator[Tuple[str, str]]
+    # type: (List[Tuple[Optional[str], str, int]]) -> Iterator[Tuple[str, str]]
     """Generates all piggyback pig/piggybacked host pairs that have up-to-date data"""
 
     # Pylint bug (https://github.com/PyCQA/pylint/issues/1660). Fixed with pylint 2.x
@@ -120,7 +121,7 @@ def get_source_and_piggyback_hosts(time_settings):
 
 
 def has_piggyback_raw_data(piggybacked_hostname, time_settings):
-    # type: (str, Dict[Tuple[Optional[str], str], int]) -> bool
+    # type: (str, List[Tuple[Optional[str], str, int]]) -> bool
     for file_info in _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings):
         if file_info.successfully_processed:
             return True
@@ -128,7 +129,7 @@ def has_piggyback_raw_data(piggybacked_hostname, time_settings):
 
 
 def _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings):
-    # type: (str, Dict[Tuple[Optional[str], str], int]) -> List[PiggybackFileInfo]
+    # type: (str, List[Tuple[Optional[str], str, int]]) -> List[PiggybackFileInfo]
     """Gather a list of piggyback files to read for further processing.
 
     Please note that there may be multiple parallel calls executing the
@@ -137,6 +138,8 @@ def _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings):
     updated files/directories.
     """
     source_hostnames = get_source_hostnames(piggybacked_hostname)
+    matching_time_settings = _get_matching_time_settings(source_hostnames, piggybacked_hostname,
+                                                         time_settings)
 
     file_infos = []  # type: List[PiggybackFileInfo]
     for source_hostname in source_hostnames:
@@ -146,12 +149,29 @@ def _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings):
         piggyback_file_path = _get_piggybacked_file_path(source_hostname, piggybacked_hostname)
 
         successfully_processed, reason, reason_status = _get_piggyback_processed_file_info(
-            source_hostname, piggybacked_hostname, piggyback_file_path, time_settings)
+            source_hostname, piggybacked_hostname, piggyback_file_path, matching_time_settings)
 
         piggyback_file_info = PiggybackFileInfo(source_hostname, piggyback_file_path,
                                                 successfully_processed, reason, reason_status)
         file_infos.append(piggyback_file_info)
     return file_infos
+
+
+def _get_matching_time_settings(source_hostnames, piggybacked_hostname, time_settings):
+    # type: (List[str], str, List[Tuple[Optional[str], str, int]]) -> Dict[Tuple[Optional[str], str], int]
+    matching_time_settings = {}  # type: Dict[Tuple[Optional[str], str], int]
+    for expr, key, value in time_settings:
+        # expr may be
+        #   - None (global settings) or
+        #   - 'source-hostname' or
+        #   - 'piggybacked-hostname' or
+        #   - '~piggybacked-[hH]ostname'
+        # the first entry ('piggybacked-hostname' vs '~piggybacked-[hH]ostname') wins
+        if expr is None or expr in source_hostnames or expr == piggybacked_hostname:
+            matching_time_settings.setdefault((expr, key), value)
+        elif expr.startswith("~") and regex(expr[1:]).match(piggybacked_hostname):
+            matching_time_settings.setdefault((piggybacked_hostname, key), value)
+    return matching_time_settings
 
 
 def _get_piggyback_processed_file_info(source_hostname, piggybacked_hostname, piggyback_file_path,

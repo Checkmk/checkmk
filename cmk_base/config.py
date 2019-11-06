@@ -2133,10 +2133,8 @@ class HostConfig(object):
     @property
     def has_piggyback_data(self):
         # type: () -> bool
-        time_settings = {
-            (None, "max_cache_age"): piggyback_max_cachefile_age
-        }  # type: Dict[Tuple[Optional[str], str], int]
-        time_settings.update(self.piggybacked_host_files)
+        time_settings = self.piggybacked_host_files  # type: List[Tuple[Optional[str], str, int]]
+        time_settings.append((None, "max_cache_age", piggyback_max_cachefile_age))
 
         if piggyback.has_piggyback_raw_data(self.hostname, time_settings):
             return True
@@ -2146,14 +2144,14 @@ class HostConfig(object):
 
     @property
     def piggybacked_host_files(self):
-        # type: () -> Dict[Tuple[Optional[str], str], int]
+        # type: () -> List[Tuple[Optional[str], str, int]]
         rules = self._config_cache.host_extra_conf(self.hostname, piggybacked_host_files)
         if rules:
             return self._flatten_piggybacked_host_files_rule(rules[0])
-        return {}
+        return []
 
     def _flatten_piggybacked_host_files_rule(self, rule):
-        # type: (Dict[str, Any]) -> Dict[Tuple[Optional[str], str], int]
+        # type: (Dict[str, Any]) -> List[Tuple[Optional[str], str, int]]
         """This rule is a first match rule.
 
         Max cache age, validity period and state are configurable wihtin this
@@ -2163,40 +2161,47 @@ class HostConfig(object):
             (HOST, KEY): VALUE
         Then piggyback.py:_get_piggyback_processed_file_info can evaluate the
         parameters generically."""
-        flat_rule = {}  # type: Dict[Tuple[Optional[str], str], int]
+        flat_rule = []  # type: List[Tuple[Optional[str], str, int]]
 
         max_cache_age = rule.get('global_max_cache_age')
         if max_cache_age is not None and max_cache_age != "global":
-            flat_rule[(self.hostname, 'max_cache_age')] = max_cache_age
+            flat_rule.append((self.hostname, 'max_cache_age', max_cache_age))
 
         global_validity_setting = rule.get('global_validity', {})
 
         period = global_validity_setting.get("period")
         if period is not None:
-            flat_rule[(self.hostname, 'validity_period')] = period
+            flat_rule.append((self.hostname, 'validity_period', period))
 
         check_mk_state = global_validity_setting.get("check_mk_state")
         if check_mk_state is not None:
-            flat_rule[(self.hostname, 'validity_state')] = check_mk_state
+            flat_rule.append((self.hostname, 'validity_state', check_mk_state))
 
         for setting in rule.get('per_piggybacked_host', []):
-            piggybacked_hostname = setting["piggybacked_hostname"]
+            piggybacked_hostname_expressions = setting["piggybacked_hostname"]
+            if "piggybacked_hostname" in setting:
+                piggybacked_hostname_expressions = [setting["piggybacked_hostname"]]
+            elif "piggybacked_hostname_expressions" in setting:
+                piggybacked_hostname_expressions = setting["piggybacked_hostname_expressions"]
+            else:
+                piggybacked_hostname_expressions = []
 
-            max_cache_age = setting.get('max_cache_age')
-            if max_cache_age is not None and max_cache_age != "global":
-                flat_rule[(piggybacked_hostname, 'max_cache_age')] = max_cache_age
+            for piggybacked_hostname_expr in piggybacked_hostname_expressions:
+                max_cache_age = setting.get('max_cache_age')
+                if max_cache_age is not None and max_cache_age != "global":
+                    flat_rule.append((piggybacked_hostname_expr, 'max_cache_age', max_cache_age))
 
-            validity_setting = setting.get('validity', {})
-            if not validity_setting:
-                continue
+                validity_setting = setting.get('validity', {})
+                if not validity_setting:
+                    continue
 
-            period = validity_setting.get("period")
-            if period is not None:
-                flat_rule[(piggybacked_hostname, 'validity_period')] = period
+                period = validity_setting.get("period")
+                if period is not None:
+                    flat_rule.append((piggybacked_hostname_expr, 'validity_period', period))
 
-            check_mk_state = validity_setting.get("check_mk_state")
-            if check_mk_state is not None:
-                flat_rule[(piggybacked_hostname, 'validity_state')] = check_mk_state
+                check_mk_state = validity_setting.get("check_mk_state")
+                if check_mk_state is not None:
+                    flat_rule.append((piggybacked_hostname_expr, 'validity_state', check_mk_state))
 
         return flat_rule
 
@@ -3407,15 +3412,13 @@ class ConfigCache(object):
         return hostname
 
     def get_piggybacked_hosts_time_settings(self, piggybacked_hostname=None):
-        # type: (Optional[str]) -> Dict[Tuple[Optional[str], str], int]
+        # type: (Optional[str]) -> List[Tuple[Optional[str], str, int]]
+        time_settings = []  # type: List[Tuple[Optional[str], str, int]]
+        for source_hostname in sorted(piggyback.get_source_hostnames(piggybacked_hostname)):
+            time_settings.extend(self.get_host_config(source_hostname).piggybacked_host_files)
 
         # From global settings
-        time_settings = {
-            (None, 'max_cache_age'): piggyback_max_cachefile_age,
-        }  # type: Dict[Tuple[Optional[str], str], int]
-
-        for source_hostname in sorted(piggyback.get_source_hostnames(piggybacked_hostname)):
-            time_settings.update(self.get_host_config(source_hostname).piggybacked_host_files)
+        time_settings.append((None, 'max_cache_age', piggyback_max_cachefile_age))
         return time_settings
 
     # TODO: Remove old name one day

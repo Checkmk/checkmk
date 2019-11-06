@@ -536,8 +536,8 @@ class HostConfig(object):
         return False
 
     def _get_core_start_time(self):
-        query = ("GET status\n" "Columns: program_start\n")
-        return livestatus.LocalConnection().query_value(query)
+        return livestatus.LocalConnection().query_value("GET status\n"  #
+                                                        "Columns: program_start\n")
 
 
 #.

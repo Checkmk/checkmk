@@ -199,6 +199,20 @@ def _url_args(host, _proxy, settings):
     return args
 
 
+def _server_address(host, proxy):
+    if proxy:
+        return proxy.address
+    return host.address
+
+
+def _host_name(host, proxy):
+    if proxy and host.port:
+        return '%s:%s' % (host.address, host.port)
+    if proxy:
+        return host.address
+    return host.virtual
+
+
 def _common_args(host, proxy, params):
     args = []
 
@@ -214,15 +228,8 @@ def _common_args(host, proxy, params):
         args += ['-p', '%s' % specify_port]
 
     # last two arguments correspond to -I/-H, respectively
-    if proxy:
-        args += [proxy.address]
-    address = host.address
-    if proxy and host.port:
-        address += ':%s' % host.port
-    args += [address]
-
-    if not proxy:
-        args += [host.virtual]
+    args += [_server_address(host, proxy)]
+    args += [_host_name(host, proxy)]
 
     return args
 

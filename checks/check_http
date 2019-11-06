@@ -202,11 +202,6 @@ def _url_args(host, _proxy, settings):
 def _common_args(host, proxy, params):
     args = []
 
-    if not proxy:
-        # If a proxy is used the second positional argument will override
-        # the -H option.
-        args += ["-H", host.virtual]
-
     if host.family == 'ipv6':
         args += ['-6']
     if not params.get("disable_sni"):
@@ -225,6 +220,9 @@ def _common_args(host, proxy, params):
     if proxy and host.port:
         address += ':%s' % host.port
     args += [address]
+
+    if not proxy:
+        args += [host.virtual]
 
     return args
 

@@ -17,11 +17,10 @@ pytestmark = pytest.mark.checks
             '/images',
             '--onredirect=follow',
             '-L',
-            '-H',
-            'www.test123.de',
             '--sni',
             '-p',
             '80',
+            'www.test123.de',
             'www.test123.de',
         ],
     ),
@@ -53,7 +52,15 @@ pytestmark = pytest.mark.checks
             'cert_host': 'www.test123.com',
             'port': '42',
         }),
-        ['-C', '10,20', '-H', 'www.test123.com', '--sni', '-p', '42', 'www.test123.com'],
+        [
+            '-C',
+            '10,20',
+            '--sni',
+            '-p',
+            '42',
+            'www.test123.com',
+            'www.test123.com',
+        ],
     ),
     (
         (None, {
@@ -118,7 +125,7 @@ pytestmark = pytest.mark.checks
                 'ssl': "auto"
             }),
         },
-        ['--ssl', '-H', 'www.test123.com', '--sni', 'www.test123.com'],
+        ['--ssl', '--sni', 'www.test123.com', 'www.test123.com'],
     ),
     (
         (None, {
@@ -138,13 +145,13 @@ pytestmark = pytest.mark.checks
         (None, {
             'virthost': ("virtual.host", True),
         }),
-        ['-H', 'virtual.host', '--sni', 'virtual.host'],
+        ['--sni', 'virtual.host', 'virtual.host'],
     ),
     (
         (None, {
             'virthost': ("virtual.host", False),
         }),
-        ['-H', 'virtual.host', '--sni', '$_HOSTADDRESS_4$'],
+        ['--sni', '$_HOSTADDRESS_4$', 'virtual.host'],
     ),
 ])
 def test_check_http_argument_parsing(check_manager, params, expected_args):

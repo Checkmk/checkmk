@@ -462,16 +462,16 @@ class HostConfig(object):
 
         self._cache_timestamp = -1  # sentinel, always less than a real timestamp
 
-    def get(self, host_name, deflt=None):
+    def get_config_for_host(self, host_name, deflt):
         return self._hosts_by_name.get(host_name, deflt)
 
-    def get_by_event_host_name(self, event_host_name, deflt=None):
+    def get_by_event_host_name(self, event_host_name):
         try:
             if not self._cache_valid():
                 self._update_cache()
         except Exception:
             self._logger.exception("Failed to get host info from core. Try again later.")
-            return
+            return None
 
         try:
             return self._event_host_to_host[event_host_name]
@@ -486,7 +486,7 @@ class HostConfig(object):
         # Host address : Case insensitive equality (host_address =~ %s)
         low_event_host_name = event_host_name.lower()
 
-        host = deflt
+        host = None
         for search_map in [
                 self._hosts_by_lower_name, self._hosts_by_lower_address, self._hosts_by_lower_alias
         ]:
@@ -1630,11 +1630,7 @@ class EventServer(ECServerThread):
 
     def add_core_host_to_event(self, event):
         matched_host = self.host_config.get_by_event_host_name(event["host"])
-        if not matched_host:
-            event["core_host"] = ""
-            return
-
-        event["core_host"] = matched_host["name"]
+        event["core_host"] = matched_host["name"] if matched_host else ""
 
     def _add_core_host_to_new_event(self, event):
         self.add_core_host_to_event(event)
@@ -1901,7 +1897,7 @@ class EventServer(ECServerThread):
 
         # Prefer the host individual limit for by_host limit (in case there is some)
         if ty == "by_host":
-            host_config = self.host_config.get(event["core_host"], {})
+            host_config = self.host_config.get_config_for_host(event["core_host"], {})
             host_limit = host_config.get("custom_variables", {}).get("EC_EVENT_LIMIT")
             if host_limit:
                 limit, action = host_limit.split(":", 1)

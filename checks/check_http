@@ -197,7 +197,12 @@ def _url_args(host, _proxy, settings):
 
 
 def _common_args(host, proxy, params):
-    args = ["-H", host.virtual]
+    args = []
+
+    if not proxy:
+        # If a proxy is used the second positional argument will override
+        # the -H option.
+        args += ["-H", host.virtual]
 
     if host.family == "ipv6":
         args.append("-6")

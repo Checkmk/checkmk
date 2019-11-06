@@ -1,0 +1,11 @@
+Title: ipmi_sensors: fix for sensor state 'nc' causing false alarms
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1573058391
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+Sensors reporting 'nc' were set to WARN or CRIT even they didn't exceed any threshold.

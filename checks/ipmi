@@ -234,7 +234,7 @@ def ipmi_status_txt_mapping(status_txt):
     if status_txt.startswith('ok') and not "failure detected" in status_txt.lower():
         return 0
     elif status_txt.startswith('nc'):
-        return 1
+        return 0
     return 2
 
 

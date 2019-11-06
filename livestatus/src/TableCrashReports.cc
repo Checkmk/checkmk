@@ -3,6 +3,8 @@
 #include <string>
 #include "Column.h"
 #include "CrashReport.h"
+#include "DynamicColumn.h"
+#include "DynamicHostFileColumn.h"
 #include "MonitoringCore.h"
 #include "OffsetSStringColumn.h"
 #include "Query.h"
@@ -15,6 +17,10 @@ TableCrashReports::TableCrashReports(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<OffsetSStringColumn>(
         "component", "The component that crashed (gui, agent, check, etc.)", -1,
         -1, -1, DANGEROUS_OFFSETOF(CrashReport, _component)));
+    // auto mc = core();
+    addDynamicColumn(std::make_unique<DynamicHostFileColumn>(
+        "file", "Files related to the crash report (crash.info, etc.)", -1, -1,
+        -1, [mc] { return mc->crashReportPath(); }));
 }
 
 std::string TableCrashReports::name() const { return "crashreports"; }

@@ -63,6 +63,7 @@ test_neb_SOURCES = \
     test/DummyNagios.cc \
     test/test_CrashReport.cc \
     test/test_CustomVarsDictFilter.cc \
+    test/test_FileSystemHelper.cc \
     test/test_LogEntry.cc \
     test/test_OffsetStringMacroColumn.cc \
     test/test_RegExp.cc \
@@ -113,11 +114,14 @@ liblivestatus_a_SOURCES = \
         DowntimesOrComments.cc \
         DynamicColumn.cc \
         DynamicEventConsoleReplicationColumn.cc \
+        DynamicHostFileColumn.cc \
         DynamicLogwatchFileColumn.cc \
         EventConsoleConnection.cc \
+        FileSystemHelper.cc \
         Filter.cc \
         HostContactsColumn.cc \
         HostFileColumn.cc \
+        HostFileColumn2.cc \
         HostGroupsColumn.cc \
         HostListColumn.cc \
         HostListStateColumn.cc \

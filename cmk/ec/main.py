@@ -647,14 +647,15 @@ class HostConfig(object):
         self._hosts_by_lower_alias = {}
         self._hosts_by_lower_address = {}
 
-        self._got_config_from_core = False
+        self._cache_timestamp = -1  # sentinel, always less than a real timestamp
 
     def get(self, host_name, deflt=None):
         return self._hosts_by_name.get(host_name, deflt)
 
     def get_by_event_host_name(self, event_host_name, deflt=None):
         try:
-            self._update_from_core()
+            if not self._cache_valid():
+                self._update_cache()
         except Exception:
             self._logger.exception("Failed to get host info from core. Try again later.")
             return
@@ -685,10 +686,7 @@ class HostConfig(object):
         self._event_host_to_host[event_host_name] = host
         return host
 
-    def _update_from_core(self):
-        if self._cache_valid():
-            return
-
+    def _update_cache(self):
         self.initialize()
         self._logger.debug("Fetching host config from core")
 
@@ -711,13 +709,12 @@ class HostConfig(object):
             self._hosts_by_lower_address[host["address"].lower()] = host
 
         self._logger.debug("Got %d hosts from core" % len(self._hosts_by_name))
-        self._got_config_from_core = self._get_core_start_time()
+        self._cache_timestamp = self._get_config_timestamp()
 
     def _cache_valid(self):
-        return self._got_config_from_core and (self._get_core_start_time() <=
-                                               self._got_config_from_core)
+        return self._get_config_timestamp() <= self._cache_timestamp
 
-    def _get_core_start_time(self):
+    def _get_config_timestamp(self):
         return livestatus.LocalConnection().query_value("GET status\n"  #
                                                         "Columns: program_start\n")
 

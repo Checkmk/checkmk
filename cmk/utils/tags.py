@@ -245,6 +245,7 @@ class TagGroup(object):
         self.id = None
         self.title = None
         self.topic = None
+        self.help = None
         self.tags = []
 
     def _parse_from_dict(self, group_info):
@@ -252,6 +253,7 @@ class TagGroup(object):
         self.id = group_info["id"]
         self.title = group_info["title"]
         self.topic = group_info.get("topic")
+        self.help = group_info.get("help")
         self.tags = [GroupedTag(self, tag) for tag in group_info["tags"]]
 
     def _parse_legacy_format(self, group_info):
@@ -291,6 +293,9 @@ class TagGroup(object):
         response = {"id": self.id, "title": self.title, "tags": []}
         if self.topic:
             response["topic"] = self.topic
+
+        if self.help:
+            response["help"] = self.help
 
         for tag in self.tags:
             response["tags"].append(tag.get_dict_format())
@@ -592,6 +597,17 @@ class BuiltinTagConfig(TagConfig):
                 'id': 'piggyback',
                 'title': _("Piggyback"),
                 'topic': _('Data sources'),
+                'help': _(
+                    "By default every host has the piggyback data source "
+                    "<b>Use piggyback data from other hosts if present</b>. "
+                    "In this case the <tt>Check_MK</tt> service of this host processes the piggyback data "
+                    "but does not warn if no piggyback data is available. The related discovered services "
+                    "would become stale. "
+                    "If a host has configured <b>Always use and expect piggyback data</b> for the piggyback "
+                    "data source then this host expects piggyback data and the <tt>Check_MK</tt> service of "
+                    "this host warns if no piggyback data is available. "
+                    "In the last case, ie. <b>Never use piggyback data</b>, the <tt>Check_MK</tt> service "
+                    "does not process piggyback data at all and ignores it if available."),
                 'tags': [
                     {
                         "id": "auto-piggyback",
@@ -663,6 +679,7 @@ class BuiltinTagConfig(TagConfig):
                 'id': 'ip-v4',
                 'topic': _('Address'),
                 'title': _('IPv4'),
+                'help': _("Bar"),
             },
             {
                 'id': 'ip-v6',

@@ -648,6 +648,7 @@ def _create_tag_group_attribute(tag_group):
 
     return type("HostAttributeTag%s" % str(tag_group.id).title(), (base_class,), {
         "_tag_group": tag_group,
+        "help": lambda _: tag_group.help,
     })
 
 

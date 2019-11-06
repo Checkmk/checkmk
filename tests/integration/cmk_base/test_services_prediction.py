@@ -50,6 +50,9 @@ custom_checks = [
     site.delete_dir("var/check_mk/rrd")
 
 
+# This test has a conflict with daemon usage. Since we now don't use
+# daemon, the lower resolution is somehow preferred. Despite having a
+# higher available. See https://github.com/oetiker/rrdtool-1.x/issues/1063
 @pytest.mark.parametrize('utcdate, timezone, period, result', [
     pytest.param("2018-11-28 12", "UTC", "minute", (60, 60), id='1 min resolution in hour query'),
     pytest.param("2018-11-27 12", "UTC", "minute", (300, 12), id='5 min resolution in hour query'),
@@ -57,7 +60,8 @@ custom_checks = [
         "2018-11-15 12:25", "UTC", "minute", (1800, 2), id='30 min resolution in hour query'),
     pytest.param(
         "2018-07-15 12", "UTC", "minute", (21600, 1), id='hour query when resolution is 6hrs'),
-    pytest.param("2018-11-28 12", "UTC", "wday", (240, 360), id='max 360 points of data response'),
+    pytest.param(
+        "2018-11-28 12", "UTC", "wday", (300, 288), id='max 400(default) points of data response'),
     pytest.param("2018-11-27 12", "UTC", "wday", (300, 288), id='5 min resolution in day query'),
     pytest.param("2018-11-10 12", "UTC", "day", (1800, 48), id='30 min resolution in day query'),
     pytest.param(
@@ -86,13 +90,18 @@ def test_get_rrd_data(cfg_setup, utcdate, timezone, period, result):
     assert (timeseries.step, len(timeseries.values)) == result
 
 
+# This test has a conflict with daemon usage. Since we now don't use
+# daemon, the lower resolution is somehow preferred. Despite having a
+# higher available. See https://github.com/oetiker/rrdtool-1.x/issues/1063
 @pytest.mark.parametrize("max_entries, result", [(400, (180, 401)), (20, (3600, 21)),
-                                                 (50, (1440, 51)), (1000, (120, 600)),
+                                                 (50, (1800, 41)), (1000, (120, 600)),
                                                  (1200, (60, 1200))])
 def test_get_rrd_data_point_max(cfg_setup, max_entries, result):
     from_time, until_time = 1543430040, 1543502040
     timeseries = cmk.utils.prediction.get_rrd_data('test-prediction', 'CPU load', 'load15', 'MAX',
                                                    from_time, until_time, max_entries)
+    assert timeseries.start <= from_time
+    assert timeseries.end >= until_time
     assert (timeseries.step, len(timeseries.values)) == result
 
 
@@ -154,6 +163,9 @@ def test_retieve_grouped_data_from_rrd(cfg_setup, utcdate, timezone, params, ref
     assert result == reference
 
 
+# This test has a conflict with daemon usage. Since we now don't use
+# daemon, the lower resolution is somehow preferred. Despite having a
+# higher available. See https://github.com/oetiker/rrdtool-1.x/issues/1063
 @pytest.mark.parametrize('utcdate, timezone, params', [
     ("2018-11-29 14:56", "Europe/Berlin", {
         'period': 'wday',

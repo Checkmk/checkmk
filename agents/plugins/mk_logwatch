@@ -712,6 +712,7 @@ class Options(object):
         'regex': None,
         'overflow': 'C',
         'nocontext': None,
+        'maxcontextlines': None,
         'maxoutputsize': 500000,  # same as logwatch_max_filesize in check plugin
         'fromstart': False,
     }
@@ -750,6 +751,10 @@ class Options(object):
     @property
     def nocontext(self):
         return self._attr_or_default('nocontext')
+
+    @property
+    def maxcontextlines(self):
+        return self._attr_or_default('maxcontextlines')
 
     @property
     def maxoutputsize(self):
@@ -799,6 +804,9 @@ class Options(object):
                         Options.MAP_BOOL.keys(),
                     ))
                 self.values[key] = Options.MAP_BOOL[value.lower()]
+            elif key == 'maxcontextlines':
+                before, after = (int(i) for i in value.split(','))
+                self.values[key] = (before, after)
             else:
                 raise ValueError("Invalid option: %r" % opt_str)
         except (ValueError, LookupError), exc:
@@ -1005,7 +1013,30 @@ def _filter_maxoutputsize(encoded_lines, maxoutputsize):
         yield line
 
 
+def _filter_maxcontextlines(lines_list, before, after):
+    """Only produce lines from a limited context
+
+    Think of grep's -A and -B options
+    """
+
+    n_lines = len(lines_list)
+    indices = iter(range(-before, n_lines))
+    context_end = -1
+    for idx in indices:
+        new_in_context_idx = idx + before
+        if new_in_context_idx < n_lines and context_end < n_lines:
+            new_in_context = lines_list[new_in_context_idx]
+            # if the line ahead is relevant, extend the context
+            if new_in_context.startswith(("C", "W")):
+                context_end = new_in_context_idx + after
+        if 0 <= idx <= context_end:
+            yield lines_list[idx]
+
+
 def write_output(header, lines, options):
+
+    if options.maxcontextlines:
+        lines = _filter_maxcontextlines(lines, *options.maxcontextlines)
 
     encoded_lines = (l.encode('utf-8') for l in lines)
 

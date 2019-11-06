@@ -18,7 +18,7 @@ def mk_logwatch():
 def test_options_defaults(mk_logwatch):
     opt = mk_logwatch.Options()
     for attribute in ('encoding', 'maxfilesize', 'maxlines', 'maxtime', 'maxlinesize', 'regex',
-                      'overflow', 'nocontext', 'maxoutputsize'):
+                      'overflow', 'nocontext', 'maxcontextlines', 'maxoutputsize'):
         assert getattr(opt, attribute) == mk_logwatch.Options.DEFAULTS[attribute]
 
 
@@ -31,6 +31,7 @@ def test_options_defaults(mk_logwatch):
     ("overflow=I", 'overflow', 'I'),
     ("nocontext=tRuE", 'nocontext', True),
     ("nocontext=FALse", 'nocontext', False),
+    ("maxcontextlines=17,23", 'maxcontextlines', (17, 23)),
     ("fromstart=1", 'fromstart', True),
     ("fromstart=yEs", 'fromstart', True),
     ("fromstart=0", 'fromstart', False),
@@ -537,6 +538,16 @@ def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, s
     if len(output) > 1:
         assert isinstance(state['offset'], int)
         assert state['offset'] >= 15000  # about the size of this file
+
+
+@pytest.mark.parametrize("input_lines, before, after, expected_output",
+                         [([], 2, 3, []),
+                          (["0", "1", "2", "C 3", "4", "5", "6", "7", "8", "9", "W 10"
+                           ], 2, 3, ["1", "2", "C 3", "4", "5", "6", "8", "9", "W 10"]),
+                          (["C 0", "1", "2"], 12, 17, ["C 0", "1", "2"])])
+def test_filter_maxcontextlines(mk_logwatch, input_lines, before, after, expected_output):
+
+    assert expected_output == list(mk_logwatch._filter_maxcontextlines(input_lines, before, after))
 
 
 @pytest.fixture

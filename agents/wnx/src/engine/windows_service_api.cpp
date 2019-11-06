@@ -347,39 +347,40 @@ int RestoreWATOConfig() {
 // on -cvt
 // may be used as internal API function to convert ini to yaml
 // GTESTED internally
-int ExecCvtIniYaml(std::filesystem::path IniFile,
-                   std::filesystem::path YamlFile, StdioLog stdio_log) {
+int ExecCvtIniYaml(std::filesystem::path ini_file_name,
+                   std::filesystem::path yaml_file_name, StdioLog stdio_log) {
     //
     auto flag = stdio_log == StdioLog::no ? 0 : XLOG::kStdio;
     if (stdio_log != StdioLog::no) {
         XLOG::setup::ColoredOutputOnStdio(true);
     }
     namespace fs = std::filesystem;
-    fs::path file = IniFile;
+    fs::path file = ini_file_name;
     std::error_code ec;
     if (!fs::exists(file, ec)) {
-        XLOG::l(flag)("File not found '{}'", IniFile.u8string());
+        XLOG::l(flag)("File not found '{}'", ini_file_name.u8string());
         return 3;
     }
     cma::cfg::cvt::Parser parser_converter;
     parser_converter.prepare();
     if (!parser_converter.readIni(file, false)) {
-        XLOG::l(flag)("Failed Load '{}'", fs::absolute(IniFile).u8string());
+        XLOG::l(flag)("Failed Load '{}'",
+                      fs::absolute(ini_file_name).u8string());
         return 2;
     }
     auto yaml = parser_converter.emitYaml();
 
     try {
-        if (YamlFile.empty()) {
+        if (yaml_file_name.empty()) {
             std::cout << yaml;
         } else {
-            auto file = YamlFile;
+            auto file = yaml_file_name;
             std::ofstream ofs(file.u8string());
             ofs << yaml;
             ofs.close();
             XLOG::l.i(flag, "Successfully Converted {} -> {}",
-                      fs::absolute(IniFile).u8string(),
-                      fs::absolute(YamlFile).u8string());
+                      fs::absolute(ini_file_name).u8string(),
+                      fs::absolute(yaml_file_name).u8string());
         }
     } catch (const std::exception& e) {
         XLOG::l(flag) << "Exception: '" << e.what() << "' in ExecCvtIniYaml"

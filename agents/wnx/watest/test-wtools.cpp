@@ -406,4 +406,25 @@ TEST(Wtools, Acl) {
     }
 }
 
+TEST(Wtools, LineEnding) {
+    cma::OnStartTest();
+    tst::SafeCleanTempDir();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+    std::filesystem::path tmp = cma::cfg::GetTempDir();
+
+    auto work_file = tmp / "lf.test";
+
+    const std::string s = "a\nb\r\nc\nd\n\n";
+    const std::string expected = "a\r\nb\r\r\nc\r\nd\r\n\r\n";
+
+    std::ofstream tst(work_file, std::ios::binary);
+    tst.write(s.c_str(), s.size());
+    tst.close();
+
+    wtools::PatchFileLineEnding(work_file);
+
+    auto result = ReadWholeFile(work_file);
+    EXPECT_EQ(result, expected);
+}
+
 }  // namespace wtools

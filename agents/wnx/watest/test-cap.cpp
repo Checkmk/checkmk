@@ -511,7 +511,7 @@ TEST(CapTest, ReInstallRestore) {
     ASSERT_TRUE(bakery);
     EXPECT_TRUE(user_dat == root_dat);
     EXPECT_TRUE(user_ini == root_ini);
-    auto table = SplitString(bakery.value(), "\n");
+    auto table = SplitString(bakery.value(), "\r\n");
     EXPECT_EQ(table[3], "ps:");
 
     // now damage files
@@ -539,7 +539,7 @@ TEST(CapTest, ReInstallRestore) {
     ASSERT_TRUE(user_dat);
     EXPECT_TRUE(user_dat == root_dat);
     EXPECT_TRUE(user_ini == root_ini);
-    table = SplitString(bakery.value(), "\n");
+    table = SplitString(bakery.value(), "\r\n");
     EXPECT_EQ(table[3], "ps:");
 }
 

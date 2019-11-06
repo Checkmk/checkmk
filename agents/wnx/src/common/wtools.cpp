@@ -2302,6 +2302,46 @@ std::string ACLInfo::output() {
     return os;
 }
 
+std::string ReadWholeFile(const std::filesystem::path& fname) noexcept {
+    try {
+        std::ifstream f(fname.u8string(), std::ios::binary);
+
+        if (!f.good()) {
+            return {};
+        }
+
+        f.seekg(0, std::ios::end);
+        auto fsize = static_cast<uint32_t>(f.tellg());
+
+        // read contents
+        f.seekg(0, std::ios::beg);
+        std::string v;
+        v.resize(fsize);
+        f.read(reinterpret_cast<char*>(v.data()), fsize);
+        return v;
+    } catch (const std::exception& e) {
+        // catching possible exceptions in the
+        // ifstream or memory allocations
+        XLOG::l(XLOG_FUNC + "Exception '{}' generated in read file", e.what());
+        return {};
+    }
+    return {};
+}
+
+bool PatchFileLineEnding(const std::filesystem::path& fname) noexcept {
+    auto result = ReadWholeFile(fname);
+    if (result.empty()) return false;
+
+    try {
+        std::ofstream tst(fname.u8string());  // text file
+        tst.write(result.c_str(), result.size());
+        return true;
+    } catch (const std::exception& e) {
+        XLOG::l("Error during patching file line ending {}", e.what());
+        return false;
+    }
+}
+
 }  // namespace wtools
 
 // verified code from the legacy client

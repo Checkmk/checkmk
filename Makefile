@@ -375,7 +375,6 @@ setup:
 	    libboost-system-dev \
 	    libclang-7-dev \
 	    libpcap-dev \
-	    librrd-dev \
 	    llvm-7-dev \
 	    libsasl2-dev \
 	    libldap2-dev \

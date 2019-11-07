@@ -4726,7 +4726,7 @@ def add_infos_from_monitoring_host(event_server, context, event):
         _add_artificial_context_info()
         return
 
-    host_config = event_server.host_config.get(event["core_host"])
+    host_config = event_server.host_config.get_config_for_host(event["core_host"], None)
     if not host_config:
         _add_artificial_context_info()  # No config found - Host has vanished?
         return

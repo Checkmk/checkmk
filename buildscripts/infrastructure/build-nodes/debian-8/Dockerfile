@@ -34,7 +34,6 @@ RUN apt-get update \
     libperl-dev \
     libpq-dev \
     libreadline6-dev \
-    librrd-dev \
     libsqlite3-dev \
     libssl-dev \
     libxml2-dev \

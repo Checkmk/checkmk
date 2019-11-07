@@ -33,7 +33,6 @@ RUN apt-get update \
     libpq-dev \
     libradiusclient-ng-dev \
     libreadline-dev \
-    librrd-dev \
     libsqlite3-dev \
     libssl-dev \
     libxml2-dev \

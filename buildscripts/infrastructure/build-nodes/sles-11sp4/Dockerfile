@@ -47,7 +47,6 @@ RUN zypper addrepo -G http://10.9.1.101:8081/repository/sles11sp4  sles11sp4 \
     libbz2-devel \
     libgsf-devel \
     libpcap-devel \
-    rrdtool-devel \
     libffi-devel \
     krb5-devel \
     flex \

@@ -16,14 +16,12 @@ RUN apt-get update \
     libenchant1c2a \
     libkrb5-dev \
     libldap2-dev \
-    librrd-dev \
     libsasl2-dev \
     libssl-dev \
     make \
     python-dev \
     python-dev \
     python3-pip \
-    rrdtool \
     strace \
     sudo \
     vim \

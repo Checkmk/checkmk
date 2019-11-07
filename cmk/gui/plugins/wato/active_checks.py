@@ -907,12 +907,13 @@ def _active_checks_http_hostspec():
     return Dictionary(
         title=_("Host settings"),
         help=_("Usually Check_MK will nail this check to the primary IP address of the host"
-               " it is attached to. It will use corresponding IP version (IPv4/IPv6) and"
-               " the default port (80/443). With this option you can override either of these"
-               " parameters. By default the host name / IP address will be used as virtual"
-               " host as well. In some setups however, you may want to distiguish the contacted"
-               " servers address from your virtual host name (e.g. if the virtual host name is"
-               " not resolvable by DNS)."),
+               " it is attached to. It will use the corresponding IP version (IPv4/IPv6) and"
+               " default port (80/443). With this option you can override either of these"
+               " parameters. By default no virtual host is set and HTTP/1.0 will be used."
+               " In some setups however, you may want to distiguish the contacted server"
+               " address from your virtual host name (e.g. if the virtual host name is"
+               " not resolvable by DNS). In this case the HTTP Host header will be set and "
+               "HTTP/1.1 is used."),
         elements=[
             ("address", TextAscii(title=_("Hosts name / IP address"), allow_empty=False)),
             ("port", _active_checks_http_portspec(443)),

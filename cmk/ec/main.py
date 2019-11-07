@@ -456,7 +456,6 @@ class HostConfig(object):
 
     def initialize(self):
         self._logger.debug("Initializing host config")
-        self._event_host_to_host = {}  # type: Dict[str, str]
         self._hosts_by_name = {}
         self._hosts_by_designation = {}  # type: Dict[str, str]
         self._cache_timestamp = -1  # sentinel, always less than a real timestamp
@@ -472,15 +471,7 @@ class HostConfig(object):
         except Exception:
             self._logger.exception("Failed to get host info from core. Try again later.")
             return ""
-
-        try:
-            return self._event_host_to_host[event_host_name]
-        except KeyError:
-            pass  # Not cached yet
-
-        canonical_name = self._hosts_by_designation.get(event_host_name.lower(), "")
-        self._event_host_to_host[event_host_name] = canonical_name
-        return canonical_name
+        return self._hosts_by_designation.get(event_host_name.lower(), "")
 
     def _update_cache(self):
         self.initialize()

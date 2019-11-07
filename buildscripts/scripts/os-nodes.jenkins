@@ -4,7 +4,12 @@ properties([
    ])
 ])
 
+// TODO: Duplicate code (sync buildscripts/scripts/os-nodes.jenkins, buildscripts/scripts/integration-daily-master.jenkins)
 DISTRO_LIST = DISTROS.split(' ');
+// CMK-1705: SLES-15 is missing xinitd and should therefore not be tested
+DISTRO_LIST = DISTRO_LIST - ['sles-15']
+// Testing CMA is not needed
+DISTRO_LIST = DISTRO_LIST - ['cma']
 
 println("Building for the following Distros:")
 println(DISTRO_LIST)

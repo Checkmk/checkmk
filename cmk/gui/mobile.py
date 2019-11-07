@@ -50,7 +50,7 @@ def mobile_html_head(title, ready_code=""):
     )
     html.open_html()
     html.open_head()
-    html.meta(content="text/html;", charset="utf-8", **{"http-equiv": "Content-Type"})
+    html.default_html_headers()
     html.meta(name="viewport", content="initial-scale=1.0")
     html.meta(name="apple-mobile-web-app-capable", content="yes")
     html.meta(name="apple-mobile-web-app-title", content="Check_MK")

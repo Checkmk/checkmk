@@ -28,6 +28,14 @@
 require('script-loader!../jquery/jquery-1.6.4.min.js');
 require('script-loader!../jquery/jquery.mobile-1.0.min.js');
 
+// Optional import is currently not possible using the ES6 imports
+var graphs;
+try {
+    graphs = require("graphs");
+} catch(e) {
+    graphs = null;
+}
+
 $(document).ready(function() {
     $("a").attr("data-ajax", "false");
     $("form").attr("data-ajax", "false");
@@ -43,3 +51,9 @@ $(document).bind("mobileinit", function(){
     $.mobile.hashListeningEnabled = false;
 
 });
+
+export const cmk_export = {
+    cmk: {
+        graphs: graphs,
+    }
+};

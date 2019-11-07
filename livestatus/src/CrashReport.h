@@ -16,8 +16,8 @@ public:
     [[nodiscard]] std::string component() const;
 
 private:
-    const std::string _id;
-    const std::string _component;
+    std::string _id;
+    std::string _component;
 };
 
 /// Apply fun to every crash report under base_path.

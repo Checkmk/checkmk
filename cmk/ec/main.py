@@ -454,12 +454,8 @@ class HostConfig(object):
     def initialize(self):
         self._logger.debug("Initializing host config")
         self._event_host_to_host = {}  # type: Dict[str, str]
-
         self._hosts_by_name = {}
-        self._hosts_by_lower_name = {}  # type: Dict[str, str]
-        self._hosts_by_lower_alias = {}  # type: Dict[str, str]
-        self._hosts_by_lower_address = {}  # type: Dict[str, str]
-
+        self._hosts_by_designation = {}  # type: Dict[str, str]
         self._cache_timestamp = -1  # sentinel, always less than a real timestamp
 
     def get_config_for_host(self, host_name, deflt):
@@ -480,17 +476,9 @@ class HostConfig(object):
         except KeyError:
             pass  # Not cached yet
 
-        # Note: It is important that we use exactly the same algorithm here as in the core
-        # (enterprise/core/src/World.cc getHostByDesignation)
-        #
-        # Host name    : Case insensitive equality (host_name =~ %s)
-        # Host alias   : Case insensitive equality (host_alias =~ %s)
-        # Host address : Case insensitive equality (host_address =~ %s)
         low_event_host_name = event_host_name.lower()
 
-        for search_map in [
-                self._hosts_by_lower_name, self._hosts_by_lower_address, self._hosts_by_lower_alias
-        ]:
+        for search_map in [self._hosts_by_designation]:
             try:
                 canonical_name = search_map[low_event_host_name]
                 break
@@ -515,12 +503,16 @@ class HostConfig(object):
 
         query = "GET hosts\nColumns: %s" % " ".join(columns)
         for host in livestatus.LocalConnection().query_table_assoc(query):
-            self._hosts_by_name[host["name"]] = host
+            host_name = host["name"]
+            self._hosts_by_name[host_name] = host
 
-            # Lookup maps to improve performance of host searches
-            self._hosts_by_lower_name[host["name"].lower()] = host["name"]
-            self._hosts_by_lower_alias[host["alias"].lower()] = host["name"]
-            self._hosts_by_lower_address[host["address"].lower()] = host["name"]
+            # Note: It is important that we use exactly the same algorithm here as
+            # in the core, see World::loadHosts and World::getHostByDesignation.
+            if host["address"]:
+                self._hosts_by_designation[host["address"].lower()] = host_name
+            if host["alias"]:
+                self._hosts_by_designation[host["alias"].lower()] = host_name
+            self._hosts_by_designation[host_name.lower()] = host_name
 
         self._logger.debug("Got %d hosts from core" % len(self._hosts_by_name))
         self._cache_timestamp = self._get_config_timestamp()

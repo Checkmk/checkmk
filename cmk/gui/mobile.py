@@ -27,7 +27,6 @@
 import cmk.gui.views as views
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
-import cmk.gui.metrics as metrics
 import cmk.gui.utils
 import cmk.gui.view_utils
 from cmk.gui.plugins.views.utils import (
@@ -63,9 +62,6 @@ def mobile_html_head(title, ready_code=""):
                                  href="themes/classic/images/ios_logo.png",
                                  close_tag=True))
     html.javascript_file(src='js/mobile_min.js')
-
-    if metrics.cmk_graphs_possible():
-        html.javascript_file(src='js/graphs.js')
 
     # Never allow the mobile page to be opened in a frameset. Redirect top page to the current content page.
     # This will result in a full screen mobile interface page.

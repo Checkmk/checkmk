@@ -1,0 +1,11 @@
+Title: Show graphs in the mobile GUI
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1573136175
+Class: fix
+
+Due to a reordering of internal JS modules graphs
+were not shown in the mobile GUI. This is fixed.

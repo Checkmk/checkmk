@@ -237,4 +237,5 @@ check_info['mssql_backup.per_type'] = {
     'service_description': 'MSSQL %s Backup',
     'has_perfdata': True,
     'group': 'mssql_backup_per_type',
+    'extra_sections': ['mssql_databases'],
 }

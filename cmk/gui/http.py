@@ -109,7 +109,7 @@ class Request(object):
 
     @property
     def user_agent(self):
-        return self._wsgi_environ.get("USER_AGENT", "")
+        return self._wsgi_environ.get("HTTP_USER_AGENT", "")
 
     @property
     def referer(self):

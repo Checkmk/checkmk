@@ -1,5 +1,6 @@
 #!/bin/bash
-set -x -e
+
+set -e -o pipefail
 
 GCC_MAJOR="8"
 GCC_MINOR="2"
@@ -14,29 +15,42 @@ BUILD_DIR=/tmp/build-gcc-toolchain
 
 NEXUS="http://nexus:8081/repository/archives/"
 
+function log() {
+    echo "+++ $1"
+}
+
 function download-sources() {
     # To avoid repeated downloads of the sources + the prerequisites, we
     # pre-package things together:
     # wget https://ftp.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.gz
 
-    if ! wget ${NEXUS}/binutils-${BINUTILS_VERSION}.tar.gz; then
-        wget https://sourceware.org/pub/binutils/releases/binutils-${BINUTILS_VERSION}.tar.gz
-        curl -v -u ${USERNAME}:${PASSWORD} --upload-file binutils-${BINUTILS_VERSION}.tar.gz ${NEXUS}
+    log "Downloading binutils"
+    if ! curl -s -O "${NEXUS}binutils-${BINUTILS_VERSION}.tar.gz"; then
+        log "File not available from ${NEXUS}. Downloading from upstream"
+        curl -s -O https://sourceware.org/pub/binutils/releases/binutils-${BINUTILS_VERSION}.tar.gz
+        curl -s -u "${USERNAME}:${PASSWORD}" --upload-file "binutils-${BINUTILS_VERSION}.tar.gz" "${NEXUS}"
     fi
-    if ! wget ${NEXUS}/gcc-${GCC_VERSION}-with-prerequisites.tar.gz; then
-        wget ftp://ftp.gwdg.de/pub/misc/gcc/releases/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz
+
+    log "Downloading gcc"
+    if ! curl -s -O "${NEXUS}gcc-${GCC_VERSION}-with-prerequisites.tar.gz"; then
+        log "File not available from ${NEXUS}. Downloading from upstream"
+        curl -s -O ftp://ftp.gwdg.de/pub/misc/gcc/releases/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz
         tar xzf gcc-${GCC_VERSION}.tar.gz
         (cd gcc-${GCC_VERSION} && ./contrib/download_prerequisites)
         tar czf gcc-${GCC_VERSION}-with-prerequisites.tar.gz gcc-${GCC_VERSION}
-        curl -v -u ${USERNAME}:${PASSWORD} --upload-file gcc-${GCC_VERSION}-with-prerequisites.tar.gz ${NEXUS}
+        curl -s -u "${USERNAME}:${PASSWORD}" --upload-file "gcc-${GCC_VERSION}-with-prerequisites.tar.gz" "${NEXUS}"
     fi
-    if ! wget ${NEXUS}/gdb-${GDB_VERSION}.tar.gz; then
-        wget ftp://sourceware.org/pub/gdb/releases/gdb-${GDB_VERSION}.tar.gz
-        curl -v -u ${USERNAME}:${PASSWORD} --upload-file gdb-${GDB_VERSION}.tar.gz ${NEXUS}
+
+    log "Downloading gdb"
+    if ! curl -s -O "${NEXUS}gdb-${GDB_VERSION}.tar.gz"; then
+        log "File not available from ${NEXUS}. Downloading from upstream"
+        curl -s -O ftp://sourceware.org/pub/gdb/releases/gdb-${GDB_VERSION}.tar.gz
+        curl -s -u "${USERNAME}:${PASSWORD}" --upload-file "gdb-${GDB_VERSION}.tar.gz" "${NEXUS}"
     fi
 }
 
 function build-binutils() {
+    log "Build binutils"
     cd ${BUILD_DIR}
     tar xzf binutils-${BINUTILS_VERSION}.tar.gz
     mkdir binutils-${BINUTILS_VERSION}-build
@@ -48,6 +62,7 @@ function build-binutils() {
 }
 
 function build-gcc() {
+    log "Build gcc"
     cd ${BUILD_DIR}
     tar xzf gcc-${GCC_VERSION}-with-prerequisites.tar.gz
     mkdir gcc-${GCC_VERSION}-build
@@ -63,6 +78,7 @@ function build-gcc() {
 }
 
 function build-gdb() {
+    log "Build gdb"
     cd ${BUILD_DIR}
     tar xzf gdb-${GDB_VERSION}.tar.gz
     mkdir gdb-${GDB_VERSION}-build
@@ -77,6 +93,7 @@ function build-gdb() {
 }
 
 function set-symlinks() {
+    log "Set symlink"
     cd ${BUILD_DIR}
     ln -sf ${PREFIX}/bin/* /usr/bin
     ln -sf ${PREFIX}/bin/gcc-${GCC_MAJOR} /usr/bin/gcc
@@ -85,6 +102,7 @@ function set-symlinks() {
 }
 
 function build-all() {
+    log "Build all"
     mkdir -p ${BUILD_DIR}
     cd ${BUILD_DIR}
     download-sources

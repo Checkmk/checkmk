@@ -16,7 +16,7 @@ and needs to be installed separately. The following instructions assist on
 the installation processes and strip unnecessary dependencies. Within your
 site execute the following instructions.
 
-<code>
+C+:
     pip install pystan
     pip install fbprophet
     pip uninstall -y matplotlib
@@ -25,7 +25,7 @@ site execute the following instructions.
     rm -rf local/lib/python/pystan/stan/src
     rm -rf local/lib/python/pystan/stan/lib/stan_math
     omd restart
-</code>
+C-:
 
 The easiest way to use a metric data for Forecast is from the service view
 under "Service Metrics" to click in the graph icon and select "Use this

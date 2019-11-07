@@ -202,8 +202,9 @@ def parse_lnx_if(info):
                     else:
                         ifOperStatus = 4 # unknown (NIC has never been used)
 
+            raw_phys_address = attr.get("Address", attr.get("link/ether", ""))
             try:
-                ifPhysAddress = "".join([chr(int(x, 16)) for x in attr.get("Address", "").split(":")])
+                ifPhysAddress = "".join([chr(int(x, 16)) for x in raw_phys_address.split(":")])
             except ValueError:
                 ifPhysAddress = ''
 

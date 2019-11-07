@@ -463,28 +463,19 @@ class HostConfig(object):
 
     def get_canonical_name(self, event_host_name):
         # type: (str) -> str
-        canonical_name = ""
         try:
             if not self._cache_valid():
                 self._update_cache()
         except Exception:
             self._logger.exception("Failed to get host info from core. Try again later.")
-            return canonical_name
+            return ""
 
         try:
             return self._event_host_to_host[event_host_name]
         except KeyError:
             pass  # Not cached yet
 
-        low_event_host_name = event_host_name.lower()
-
-        for search_map in [self._hosts_by_designation]:
-            try:
-                canonical_name = search_map[low_event_host_name]
-                break
-            except KeyError:
-                continue
-
+        canonical_name = self._hosts_by_designation.get(event_host_name.lower(), "")
         self._event_host_to_host[event_host_name] = canonical_name
         return canonical_name
 

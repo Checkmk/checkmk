@@ -125,7 +125,7 @@ pytestmark = pytest.mark.checks
                 'ssl': "auto"
             }),
         },
-        ['--ssl', '--sni', 'www.test123.com', 'www.test123.com'],
+        ['--ssl', '--sni', 'www.test123.com'],
     ),
     (
         (None, {

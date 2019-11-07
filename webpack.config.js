@@ -11,6 +11,7 @@ module.exports = {
         side: "./web/htdocs/js/side_index.js",
         themes: [
             "./web/htdocs/themes/facelift/theme.scss",
+            "./web/htdocs/themes/facelift/cma_facelift.scss",
             "./web/htdocs/themes/classic/theme.scss",
             "./web/htdocs/themes/modern-dark/theme.scss",
         ],

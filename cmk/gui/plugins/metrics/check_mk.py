@@ -7580,6 +7580,7 @@ cpu_util_unix_translate = {
 check_metrics["check_mk-kernel.util"] = cpu_util_unix_translate
 check_metrics["check_mk-statgrab_cpu"] = cpu_util_unix_translate
 check_metrics["check_mk-lxc_container_cpu"] = cpu_util_unix_translate
+check_metrics["check_mk-emc_ecs_cpu_util"] = cpu_util_unix_translate
 
 check_metrics["check_mk-lparstat_aix.cpu_util"] = {
     "wait": {

@@ -1360,6 +1360,38 @@ metric_info["mongodb_collection_storage_size"] = {
     "unit": "bytes",
 }
 
+metric_info["mongodb_collection_total_index_size"] = {
+    "title": _("Total Index Size"),
+    "help": _("The total size of all indexes for the collection"),
+    "color": "#535687",
+    "unit": "bytes",
+}
+
+metric_info["mongodb_replication_info_log_size"] = {
+    "title": _("Total size of the oplog"),
+    "help": _(
+        "Total amount of space allocated to the oplog rather than the current size of operations stored in the oplog"
+    ),
+    "color": "#3b4080",
+    "unit": "bytes",
+}
+
+metric_info["mongodb_replication_info_used"] = {
+    "title": _("Total amount of space used by the oplog"),
+    "help": _(
+        "Total amount of space currently used by operations stored in the oplog rather than the total amount of space allocated"
+    ),
+    "color": "#4d5092",
+    "unit": "bytes",
+}
+
+metric_info["mongodb_replication_info_time_diff"] = {
+    "title": _("Difference between the first and last operation in the oplog"),
+    "help": _("Difference between the first and last operation in the oplog in seconds"),
+    "color": "#535687",
+    "unit": "s",
+}
+
 metric_info["mongodb_document_count"] = {
     "title": _("Number of Documents"),
     "help": _("Number of documents per collection"),

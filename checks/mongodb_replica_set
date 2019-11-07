@@ -1,0 +1,296 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at https://checkmk.com/.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<mongodb_replica_status>>>
+# <json>
+
+import json
+import datetime
+
+# levels_mongdb_replication_lag: (lag threshold, time interval for warning, time interval for critical)
+factory_settings["mongodb_replica_set_levels"] = {"levels_mongdb_replication_lag": (10, 60, 3600)}
+
+
+def parse_mongodb_replica_set(info):
+    """
+    :param info: dictionary with all data for all checks and subchecks
+    :return:
+    """
+    if info:
+        return json.loads(str(info[0][0]))
+    return dict()
+
+
+#   .--replication lag-----------------------------------------------------.
+#   |                  _ _           _   _               _                 |
+#   |   _ __ ___ _ __ | (_) ___ __ _| |_(_) ___  _ __   | | __ _  __ _     |
+#   |  | '__/ _ \ '_ \| | |/ __/ _` | __| |/ _ \| '_ \  | |/ _` |/ _` |    |
+#   |  | | |  __/ |_) | | | (_| (_| | |_| | (_) | | | | | | (_| | (_| |    |
+#   |  |_|  \___| .__/|_|_|\___\__,_|\__|_|\___/|_| |_| |_|\__,_|\__, |    |
+#   |           |_|                                              |___/     |
+#   +----------------------------------------------------------------------+
+#.
+
+
+class ReplicaState(enum.IntEnum):
+    PRIMARY = 1
+    ARBITER = 7
+
+
+def check_mongodb_replica_set_lag(_item, params, status_dict):
+    """
+    based on MongoDB script 'db.printSlaveReplicationInfo'
+    :param _item: <not_used>
+    :param _params: mongodb_replica_set_levels parameters
+    :param status_dict:
+    :return:
+    """
+    # to calculate replication lag we need at least two members
+    number_of_replica_set_members = len(status_dict.get("members", []))
+    if number_of_replica_set_members <= 1:
+        yield 1, "Number of members is %d" % number_of_replica_set_members
+        return
+
+    # get primary and other members (besides arbiters)
+    primary, secondaries = _get_primary(status_dict.get("members"))
+
+    # get timestamp of the last entry in the oplog from primary (if available)
+    start_operation_timestamp, name = _get_start_timestamp(primary, secondaries)
+
+    long_output = []
+    # loop through members and calculate replication lag
+    for member in secondaries:
+
+        member_name = member.get("name", "unknown")
+
+        if member.get("optime", {}).get("ts", {}).get("$timestamp", {}).get("t", None):
+            # calculate replication lag
+            member_optime_date = member.get("optimeDate", {}).get("$date", 0)
+            replication_lag_sec = _calculate_replication_lag(start_operation_timestamp,
+                                                             member_optime_date)
+
+            # check it
+            yield _check_lag_over_time(time.time(), member_name, name, replication_lag_sec,
+                                       params.get("levels_mongdb_replication_lag"))
+
+            # add to long output
+            long_output.append(
+                _get_long_output(member_name, member_optime_date, replication_lag_sec, name))
+        else:
+            # no info available yet
+            yield 0, "%s: no replication info yet, State: %d" % (member_name, member.get(
+                "state", 0))
+
+    yield 0, "\n" + "\n".join(long_output)
+
+
+def _check_lag_over_time(new_timestamp, member_name, name, lag_in_sec, levels):
+    member_state_name = "mongodb.replica.set.lag.%s" % member_name
+    if lag_in_sec > levels[0]:
+        last_timestamp = get_item_state(member_state_name, ZERO)
+        lag_duration = (new_timestamp - last_timestamp)
+        state, infotext, _ = check_levels(lag_duration,
+                                          None,
+                                          levels[1:],
+                                          human_readable_func=get_age_human_readable,
+                                          infoname="%s is behind %s for" % (member_name, name))
+
+        if last_timestamp == 0:
+            set_item_state(member_state_name, new_timestamp)
+        elif state:
+            return state, infotext
+
+        return 0, "", []
+
+    clear_item_state(member_state_name)
+    return 0, "", []
+
+
+def _get_long_output(member_name, member_optime_date, replication_lag_sec, name):
+    log = []
+    log.append("source: %s" % member_name)
+    log.append("syncedTo: %s (UTC)" % (datetime.datetime.fromtimestamp(
+        member_optime_date / 1000.0).strftime('%Y-%m-%d %H:%M:%S')))
+    log.append("member (%s) is %ds (%dh) behind %s" %
+               (member_name, round(replication_lag_sec), round(
+                   (replication_lag_sec / 36) / 100.0), name))
+    log.append("")
+    return "\n".join(log)
+
+
+def _get_start_timestamp(primary, secondaries):
+    """
+    Get timestamp of the last entry in the oplog from primary.
+    If there is no primary, get the newest timestamp from the other members.
+    :param primary: primary of replica set if available
+    :param secondaries: rest of replica set
+    :return: start of operation and name of member
+    """
+    start_operation_timestamp = 0
+    name = "unknown"
+    if primary:
+        start_operation_timestamp = primary.get("optimeDate", {}).get("$date", 0)
+        name = "primary (%s)" % primary.get("name")
+    else:
+        index_to_delete = -1
+        for index, member in enumerate(secondaries):
+            if member.get("optimeDate", {}).get("$date", 0) > start_operation_timestamp:
+                start_operation_timestamp = member.get("optimeDate", {}).get("$date", 0)
+                name = "freshest member (%s, no primary available at the moment)" % member.get(
+                    "name")
+                index_to_delete = index
+
+        # remove member from the list to avoid comparing to itself later
+        if index_to_delete != -1:
+            secondaries.pop(index_to_delete)
+
+    return start_operation_timestamp, name
+
+
+def _calculate_replication_lag(start_operation_time, secondary_operation_time):
+    """
+    calculate time difference when the last oplog entry was written to the secondary
+    :param primary:
+    :param start_operation_time:
+    :param secondary_operation_time:
+    :return: replication lag in seconds
+    """
+    return (start_operation_time - secondary_operation_time) / 1000.0
+
+
+check_info["mongodb_replica_set"] = {
+    "default_levels_variable": "mongodb_replica_set_levels",
+    "parse_function": parse_mongodb_replica_set,
+    "inventory_function": discover_single,
+    "check_function": check_mongodb_replica_set_lag,
+    "service_description": "MongoDB Replication Lag",
+    "group": "mongodb_replica_set",
+}
+
+#   .--primary election----------------------------------------------------.
+#   |                          _                                           |
+#   |               _ __  _ __(_)_ __ ___   __ _ _ __ _   _                |
+#   |              | '_ \| '__| | '_ ` _ \ / _` | '__| | | |               |
+#   |              | |_) | |  | | | | | | | (_| | |  | |_| |               |
+#   |              | .__/|_|  |_|_| |_| |_|\__,_|_|   \__, |               |
+#   |              |_|                                |___/                |
+#   |                      _           _   _                               |
+#   |                  ___| | ___  ___| |_(_) ___  _ __                    |
+#   |                 / _ \ |/ _ \/ __| __| |/ _ \| '_ \                   |
+#   |                |  __/ |  __/ (__| |_| | (_) | | | |                  |
+#   |                 \___|_|\___|\___|\__|_|\___/|_| |_|                  |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#.
+
+
+def check_mongodb_primary_election(_item, _params, status_dict):
+    """
+    checks if primary has changed between last check
+    :param _item: <not_used>
+    :param _params: <not_used>
+    :param status_dict:
+    :return:
+    """
+    # consistency check
+    if not status_dict.get("members"):
+        yield 1, "Replica set has no members"
+        return
+
+    # get primary member
+    primary_dict = _get_primary(status_dict.get("members"))[0]
+    # get primary name
+    primary_name = primary_dict.get("name", None)
+    # get primary election timestamp
+    primary_election_time = _get_primary_election_time(primary_dict)
+
+    # consistency check
+    if not primary_name or not primary_election_time:
+        yield 1, "Can not retrieve primary name and election date"
+        return
+
+    # get primary information from last check
+    last_primary_dict = get_item_state("mongodb_primary_election", {})
+
+    # check if primary or election date has changed between checks
+    primary_name_changed = True if last_primary_dict and last_primary_dict.get(
+        "name", primary_name) != primary_name else False
+    election_date_changed = True if last_primary_dict and last_primary_dict.get(
+        "election_time", primary_election_time) != primary_election_time else False
+
+    # warning if primary has changed
+    if last_primary_dict and (primary_name_changed or election_date_changed):
+        yield 1, "New primary '%s' elected %s %s" % (
+            primary_name, get_timestamp_human_readable(primary_election_time), "(%s)" %
+            ("node changed" if primary_name_changed else "election date changed"))
+    else:
+        yield 0, "Primary '%s' elected %s" % (primary_name,
+                                              get_timestamp_human_readable(primary_election_time))
+
+    # update primary information
+    set_item_state("mongodb_primary_election", {
+        "name": primary_name,
+        "election_time": primary_election_time
+    })
+
+
+def _get_primary_election_time(primary):
+    """
+    Get election date for primary
+    :param primary: name of primary
+    :return: election date as datetime
+    """
+    if not primary:
+        return None
+    return primary.get("electionTime", {}).get("$timestamp", {}).get("t", None)
+
+
+check_info["mongodb_replica_set.election"] = {
+    "inventory_function": discover_single,
+    "check_function": check_mongodb_primary_election,
+    "service_description": "MongoDB Replica Set Primary Election",
+    "group": "mongodb_replica_set",
+}
+
+
+def _get_primary(member_list):
+    """
+    Get primary from list of members, put the rest in secondary list.
+    :param member_list:
+    :return:
+    """
+    primary = {}
+    secondaries = []
+    for member in member_list:
+        if member.get("state", -1) == ReplicaState.PRIMARY:
+            primary = member
+            continue
+        elif member.get("state", -1) == ReplicaState.ARBITER:
+            # ignore arbiters(7)
+            continue
+        else:
+            secondaries.append(member)
+    return primary, secondaries

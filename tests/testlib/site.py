@@ -409,7 +409,6 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         paths = [
             cmk_path() + "/omd/packages/omd",
             cmk_path() + "/livestatus",
-            cmk_path() + "/livestatus/api/python",
             cmk_path() + "/bin",
             cmk_path() + "/agents/special",
             cmk_path() + "/agents/plugins",

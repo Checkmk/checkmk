@@ -1613,7 +1613,6 @@ class html(ABCHTMLGenerator):
 
     def default_html_headers(self):
         self.meta(httpequiv="Content-Type", content="text/html; charset=utf-8")
-        self.meta(httpequiv="X-UA-Compatible", content="IE=edge")
         self.write_html(
             self._render_opening_tag('link',
                                      rel="shortcut icon",

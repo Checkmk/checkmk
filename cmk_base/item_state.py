@@ -339,10 +339,10 @@ def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero=
     if timedif < 0:
         timedif = 0
 
-    # Overflow error occurs if weigth exceeds 1e308 or falls below 1e-308
+    # Overflow error occurs if weight exceeds 1e308 or falls below 1e-308
     # Under the conditions 0<=percentile<=1, backlog_minutes>=1 and timedif>=0
-    # first case is not possible because weigth is max. 1.
-    # In the second case weigth goes to zero.
+    # first case is not possible because weight is max. 1.
+    # In the second case weight goes to zero.
     try:
         # Compute the weight: We do it like this: First we assume that
         # we get one sample per minute. And that backlog_minutes is the number

@@ -388,12 +388,12 @@ class MockItemState(object):
 
     2) Dictionary:
         The dictionary will replace the item states.
-        Basically `get_item_state` gets replaced by the dictionarys GET method.
+        Basically `get_item_state` gets replaced by the dictionaries GET method.
 
     3) Anything else:
         All calls to the item_state API behave as if the last state had
         been `value`, recorded
-        `time_diff` seeconds ago.
+        `time_diff` seconds ago.
 
     See for example 'test_statgrab_cpu_check.py'.
     """

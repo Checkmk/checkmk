@@ -54,6 +54,10 @@ set SKIP_MINOR_BINARIES=YES
 if "%1" == "SIMULATE_OK" powershell Write-Host "Successful Build" -Foreground Green && echo aaa > %arte%\check_mk_service.msi  && exit /b 0
 if "%1" == "SIMULATE_FAIL" powershell Write-Host "Failed Install build" -Foreground Red && del %arte%\check_mk_service.msi  && exit /b 8
 
+@rem CHECK for line ending
+@py -2 check_crlf.py 
+@if errorlevel 1 powershell Write-Host "Line Encoding Error`r`n`tPlease check how good repo was checked out" -Foreground Red && exit /b 113
+
 call %cur_dir%\clean_artefacts.cmd 
 
 powershell Write-Host "Building MSI..." -Foreground Green

@@ -367,12 +367,11 @@ static void ConvertIniToBakery(const std::filesystem::path &bakery_yml,
     if (!yaml.has_value()) return;  // bad ini
 
     XLOG::l.i("Creating Bakery file '{}'", bakery_yml.u8string());
-    std::ofstream ofs(bakery_yml, std::ios::binary);
+    std::ofstream ofs(bakery_yml);
     if (ofs) {
         ofs << cma::cfg::upgrade::MakeComments(source_ini, true);
         ofs << *yaml;
     }
-    ofs.close();
     XLOG::l.i("Creating Bakery file SUCCESS");
 }
 
@@ -618,6 +617,9 @@ std::pair<std::filesystem::path, std::filesystem::path> GetExampleYmlNames() {
     return {tgt_example, src_example};
 }
 
+constexpr bool G_PatchLineEnding =
+    false;  // set to true to fix error during checkout git
+
 static void UpdateUserYmlExample(const std::filesystem::path &tgt,
                                  const std::filesystem::path &src) {
     namespace fs = std::filesystem;
@@ -626,10 +628,12 @@ static void UpdateUserYmlExample(const std::filesystem::path &tgt,
     XLOG::l.i("User Example must be updated");
     std::error_code ec;
     fs::copy(src, tgt, fs::copy_options::overwrite_existing, ec);
-    if (ec.value() == 0)
+    if (ec.value() == 0) {
         XLOG::l.i("User Example '{}' have been updated successfully from '{}'",
                   tgt.u8string(), src.u8string());
-    else
+        // #PROPERTY:
+        if (G_PatchLineEnding) wtools::PatchFileLineEnding(tgt);
+    } else
         XLOG::l.i(
             "User Example '{}' have been failed to update with error [{}] from '{}'",
             tgt.u8string(), ec.value(), src.u8string());

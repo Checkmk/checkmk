@@ -1012,6 +1012,10 @@ private:
     AceList* ace_list_;  // list of Access Control Entries
 };
 
+std::string ReadWholeFile(const std::filesystem::path& fname) noexcept;
+
+bool PatchFileLineEnding(const std::filesystem::path& fname) noexcept;
+
 }  // namespace wtools
 
 #endif  // wtools_h__

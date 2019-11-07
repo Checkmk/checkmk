@@ -131,7 +131,13 @@ def parse_brocade_fcport(info):
         # as the sequence number in the borcade MIB (pindex = item_index)
         if_table = [x + y if y[0] == "56" else ["", x[-2]] for x, y in zip(if_info, speed_info)]
     else:
-        if_table = [x + ["", x[-2]] for x in if_info]
+        # Try to filter all FC ports and compare the length of the lists again.
+        # Sometimes there are other interfaces after the FC ports in speed_info, which are not in if_info.
+        speed_info = [x for x in speed_info if x[0] == "56"]
+        if len(if_info) == len(speed_info):
+            if_table = [x + y for x,y in zip(if_info, speed_info)]
+        else:
+            if_table = [x + ["", x[-2]] for x in if_info]
 
     parsed = []
     for index, phystate, opstate, admstate, txwords, rxwords, txframes, \

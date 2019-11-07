@@ -23,7 +23,6 @@ RUN zypper addrepo -G http://nexus:8081/repository/sles12sp1 sles12sp1 \
     python-devel \
     python-pyOpenSSL \
     python-xml \
-    rrdtool-devel \
     sudo
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
     && python get-pip.py

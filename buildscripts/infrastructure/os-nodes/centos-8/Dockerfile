@@ -22,7 +22,6 @@ RUN yum -y --enablerepo=PowerTools --allowerasing install \
     postfix \
     python2-devel \
     python27 \
-    rrdtool-devel \
     strace \
     sudo \
     vim \

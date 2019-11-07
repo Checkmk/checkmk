@@ -48,7 +48,6 @@ RUN zypper addrepo -G http://nexus:8081/repository/sles12sp3 sles12sp3 \
     rpcbind \
     rpm-build \
     rpm-devel \
-    rrdtool-devel \
     samba-client \
     sqlite3-devel \
     tar \

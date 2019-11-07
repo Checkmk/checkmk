@@ -50,7 +50,6 @@ RUN apt-get update \
     libperl-dev \
     libpq-dev \
     libreadline-dev \
-    librrd-dev \
     libsasl2-dev \
     libsqlite3-dev \
     libterm-readkey-perl \

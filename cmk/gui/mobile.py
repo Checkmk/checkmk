@@ -41,7 +41,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger
 
 
-def mobile_html_head(title, ready_code=""):
+def mobile_html_head(title):
     html.mobile = True
     html.write(
         """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">"""
@@ -68,13 +68,12 @@ def mobile_html_head(title, ready_code=""):
     html.javascript('''if(top != self) { window.top.location.href = location; }''')
 
     html.javascript("""
-      $(document).ready(function() { %s });
       $(document).ready(function() {
           $("a").click(function (event) {
             event.preventDefault();
             window.location = $(this).attr("href");
           });
-      });""" % ready_code)
+      });""")
 
     html.close_head()
     html.open_body(class_="mobile")

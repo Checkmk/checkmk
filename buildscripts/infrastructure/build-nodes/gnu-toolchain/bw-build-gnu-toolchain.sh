@@ -14,7 +14,7 @@ BUILD_DIR=/tmp/build-gcc-toolchain
 
 NEXUS="http://nexus:8081/repository/archives/"
 
-function download-sources {
+function download-sources() {
     # To avoid repeated downloads of the sources + the prerequisites, we
     # pre-package things together:
     # wget https://ftp.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.gz
@@ -26,7 +26,7 @@ function download-sources {
     if ! wget ${NEXUS}/gcc-${GCC_VERSION}-with-prerequisites.tar.gz; then
         wget ftp://ftp.gwdg.de/pub/misc/gcc/releases/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz
         tar xzf gcc-${GCC_VERSION}.tar.gz
-       ( cd gcc-${GCC_VERSION} && ./contrib/download_prerequisites )
+        (cd gcc-${GCC_VERSION} && ./contrib/download_prerequisites)
         tar czf gcc-${GCC_VERSION}-with-prerequisites.tar.gz gcc-${GCC_VERSION}
         curl -v -u ${USERNAME}:${PASSWORD} --upload-file gcc-${GCC_VERSION}-with-prerequisites.tar.gz ${NEXUS}
     fi
@@ -36,18 +36,18 @@ function download-sources {
     fi
 }
 
-function build-binutils {
+function build-binutils() {
     cd ${BUILD_DIR}
     tar xzf binutils-${BINUTILS_VERSION}.tar.gz
     mkdir binutils-${BINUTILS_VERSION}-build
     cd binutils-${BINUTILS_VERSION}-build
     ../binutils-${BINUTILS_VERSION}/configure \
         --prefix=${PREFIX}
-    make -j8
+    make -j4
     make install
 }
 
-function build-gcc {
+function build-gcc() {
     cd ${BUILD_DIR}
     tar xzf gcc-${GCC_VERSION}-with-prerequisites.tar.gz
     mkdir gcc-${GCC_VERSION}-build
@@ -58,11 +58,11 @@ function build-gcc {
         --enable-linker-build-id \
         --disable-multilib \
         --enable-languages=c,c++
-    make -j8
+    make -j4
     make install
 }
-    
-function build-gdb {
+
+function build-gdb() {
     cd ${BUILD_DIR}
     tar xzf gdb-${GDB_VERSION}.tar.gz
     mkdir gdb-${GDB_VERSION}-build
@@ -72,11 +72,11 @@ function build-gdb {
         CC=${PREFIX}/bin/gcc-${GCC_MAJOR} \
         CXX=${PREFIX}/bin/g++-${GCC_MAJOR} \
         $(python -V 2>&1 | grep -q 'Python 2\.4\.' && echo "--with-python=no")
-    make -j8
+    make -j4
     make install
 }
 
-function set-symlinks {
+function set-symlinks() {
     cd ${BUILD_DIR}
     ln -sf ${PREFIX}/bin/* /usr/bin
     ln -sf ${PREFIX}/bin/gcc-${GCC_MAJOR} /usr/bin/gcc
@@ -84,7 +84,7 @@ function set-symlinks {
     rm -rf ${BUILD_DIR}
 }
 
-function build-all {
+function build-all() {
     mkdir -p ${BUILD_DIR}
     cd ${BUILD_DIR}
     download-sources
@@ -95,24 +95,32 @@ function build-all {
 }
 
 while getopts ":hdbucgs" opt; do
-  case ${opt} in
-    h ) echo "Usage: cmd [-d] [-b] [-h]"
+    case ${opt} in
+    h)
+        echo "Usage: cmd [-d] [-b] [-h]"
         echo "\t-d\tdownload sources"
         echo "\t-b\tbuild toolchain"
-      ;;
-    d ) download-sources
-      ;;
-    b ) build-all
-      ;;
-    u ) build-binutils
-      ;;
-    c ) build-gcc
-      ;;
-    g ) build-gdb
-      ;;
-    s ) set-symlinks
-      ;;
-    \? ) echo "Usage: cmd [-d] [-b] [-h]"
-      ;;
-  esac
+        ;;
+    d)
+        download-sources
+        ;;
+    b)
+        build-all
+        ;;
+    u)
+        build-binutils
+        ;;
+    c)
+        build-gcc
+        ;;
+    g)
+        build-gdb
+        ;;
+    s)
+        set-symlinks
+        ;;
+    \?)
+        echo "Usage: cmd [-d] [-b] [-h]"
+        ;;
+    esac
 done

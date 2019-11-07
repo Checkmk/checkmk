@@ -120,15 +120,15 @@ public:
 
     virtual bool mkeventdEnabled() = 0;
 
-    virtual std::string mkeventdSocketPath() = 0;
-    virtual std::string mkLogwatchPath() = 0;
-    virtual std::string mkInventoryPath() = 0;
-    virtual std::string structuredStatusPath() = 0;
-    virtual std::filesystem::path crashReportPath() = 0;
-    virtual std::string pnpPath() = 0;
-    virtual std::string historyFilePath() = 0;
-    virtual std::string logArchivePath() = 0;
-    virtual std::string rrdcachedSocketPath() = 0;
+    virtual std::filesystem::path mkeventdSocketPath() const = 0;
+    virtual std::filesystem::path mkLogwatchPath() const = 0;
+    virtual std::filesystem::path mkInventoryPath() const = 0;
+    virtual std::filesystem::path structuredStatusPath() const = 0;
+    virtual std::filesystem::path crashReportPath() const = 0;
+    virtual std::filesystem::path pnpPath() const = 0;
+    virtual std::filesystem::path historyFilePath() const = 0;
+    virtual std::filesystem::path logArchivePath() const = 0;
+    virtual std::filesystem::path rrdcachedSocketPath() const = 0;
 
     virtual Encoding dataEncoding() = 0;
     virtual size_t maxResponseSize() = 0;

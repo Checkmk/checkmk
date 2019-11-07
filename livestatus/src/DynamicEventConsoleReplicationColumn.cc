@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DynamicEventConsoleReplicationColumn.h"
+#include <filesystem>
 #include <iosfwd>
 #include <memory>
 #include <stdexcept>

@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostSpecialIntColumn.h"
+#include <filesystem>
 #include "MonitoringCore.h"
 #include "Row.h"
 #include "mk_inventory.h"
@@ -56,7 +57,7 @@ int32_t HostSpecialIntColumn::getValue(Row row,
                 return object->rrdInfo().names_.empty() ? 0 : 1;
             case Type::mk_inventory_last:
                 return static_cast<int32_t>(mk_inventory_last(
-                    _mc->mkInventoryPath() + "/" + object->host()->name()));
+                    _mc->mkInventoryPath() / object->host()->name()));
         }
     }
 #else
@@ -72,8 +73,8 @@ int32_t HostSpecialIntColumn::getValue(Row row,
                 return pnpgraph_present(_mc, hst->name,
                                         dummy_service_description());
             case Type::mk_inventory_last:
-                return static_cast<int32_t>(mk_inventory_last(
-                    _mc->mkInventoryPath() + "/" + hst->name));
+                return static_cast<int32_t>(
+                    mk_inventory_last(_mc->mkInventoryPath() / hst->name));
         }
     }
 #endif

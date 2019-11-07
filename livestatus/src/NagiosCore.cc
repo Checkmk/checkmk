@@ -163,25 +163,31 @@ bool NagiosCore::mkeventdEnabled() {
     return false;
 }
 
-std::string NagiosCore::mkeventdSocketPath() { return _paths._mkeventd_socket; }
-std::string NagiosCore::mkLogwatchPath() { return _paths._mk_logwatch; }
-std::string NagiosCore::mkInventoryPath() { return _paths._mk_inventory; }
-std::string NagiosCore::structuredStatusPath() {
+std::filesystem::path NagiosCore::mkeventdSocketPath() const {
+    return _paths._mkeventd_socket;
+}
+std::filesystem::path NagiosCore::mkLogwatchPath() const {
+    return _paths._mk_logwatch;
+}
+std::filesystem::path NagiosCore::mkInventoryPath() const {
+    return _paths._mk_inventory;
+}
+std::filesystem::path NagiosCore::structuredStatusPath() const {
     return _paths._structured_status;
 }
-std::filesystem::path NagiosCore::crashReportPath() {
+std::filesystem::path NagiosCore::crashReportPath() const {
     return _paths._crash_reports_path;
 }
-std::string NagiosCore::pnpPath() { return _paths._pnp; }
-std::string NagiosCore::historyFilePath() {
+std::filesystem::path NagiosCore::pnpPath() const { return _paths._pnp; }
+std::filesystem::path NagiosCore::historyFilePath() const {
     extern char *log_file;
     return log_file;
 }
-std::string NagiosCore::logArchivePath() {
+std::filesystem::path NagiosCore::logArchivePath() const {
     extern char *log_archive_path;
     return log_archive_path;
 }
-std::string NagiosCore::rrdcachedSocketPath() {
+std::filesystem::path NagiosCore::rrdcachedSocketPath() const {
     return _paths._rrdcached_socket;
 }
 

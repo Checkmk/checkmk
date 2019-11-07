@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "StatusSpecialIntColumn.h"
+#include <filesystem>
 #include "MonitoringCore.h"
 #include "Row.h"
 #include "mk_inventory.h"
@@ -34,7 +35,7 @@ int32_t StatusSpecialIntColumn::getValue(Row /* row */,
         case Type::mk_inventory_last:
             // Check_MK Inventory touches the file ".last" after each inventory
             return static_cast<int32_t>(
-                mk_inventory_last(_mc->mkInventoryPath() + "/.last"));
+                mk_inventory_last(_mc->mkInventoryPath() / ".last"));
         case Type::num_queued_notifications:
             return static_cast<int32_t>(_mc->numQueuedNotifications());
         case Type::num_queued_alerts:

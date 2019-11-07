@@ -24,6 +24,7 @@
 
 #include "Store.h"
 #include <ctime>
+#include <filesystem>
 #include <memory>
 #include <mutex>
 #include <sstream>

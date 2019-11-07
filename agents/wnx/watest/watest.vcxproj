@@ -321,6 +321,7 @@ call prepare_to_tests.cmd $(REMOTE_MACHINE)
     <ClCompile Include="test-encryption.cpp" />
     <ClCompile Include="test-eventlog.cpp" />
     <ClCompile Include="test-external-port.cpp" />
+    <ClCompile Include="test-firewall.cpp" />
     <ClCompile Include="test-health.cpp" />
     <ClCompile Include="test-install-auto.cpp" />
     <ClCompile Include="test-log.cpp" />

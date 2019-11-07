@@ -456,7 +456,7 @@ class HostConfig(object):
 
     def initialize(self):
         self._logger.debug("Initializing host config")
-        self._event_host_to_host = {}
+        self._event_host_to_host = {}  # type: Dict[str, Dict[str, Any]]
 
         self._hosts_by_name = {}
         self._hosts_by_lower_name = {}
@@ -468,16 +468,18 @@ class HostConfig(object):
     def get_config_for_host(self, host_name, deflt):
         return self._hosts_by_name.get(host_name, deflt)
 
-    def get_by_event_host_name(self, event_host_name):
+    def get_canonical_name(self, event_host_name):
+        # type: (str) -> str
+        host = {"name": ""}
         try:
             if not self._cache_valid():
                 self._update_cache()
         except Exception:
             self._logger.exception("Failed to get host info from core. Try again later.")
-            return None
+            return host["name"]
 
         try:
-            return self._event_host_to_host[event_host_name]
+            return self._event_host_to_host[event_host_name]["name"]
         except KeyError:
             pass  # Not cached yet
 
@@ -489,7 +491,6 @@ class HostConfig(object):
         # Host address : Case insensitive equality (host_address =~ %s)
         low_event_host_name = event_host_name.lower()
 
-        host = None
         for search_map in [
                 self._hosts_by_lower_name, self._hosts_by_lower_address, self._hosts_by_lower_alias
         ]:
@@ -500,7 +501,7 @@ class HostConfig(object):
                 continue
 
         self._event_host_to_host[event_host_name] = host
-        return host
+        return host["name"]
 
     def _update_cache(self):
         self.initialize()
@@ -1632,8 +1633,7 @@ class EventServer(ECServerThread):
             })
 
     def add_core_host_to_event(self, event):
-        matched_host = self.host_config.get_by_event_host_name(event["host"])
-        event["core_host"] = matched_host["name"] if matched_host else ""
+        event["core_host"] = self.host_config.get_canonical_name(event["host"])
 
     def _add_core_host_to_new_event(self, event):
         self.add_core_host_to_event(event)

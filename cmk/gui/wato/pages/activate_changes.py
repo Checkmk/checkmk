@@ -302,13 +302,13 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 if self._is_foreign(change):
                     html.icon(_("This change has been made by another user"), "foreign_changes")
 
-                table.cell(_("Affected sites"), css="narrow nobr")
+                table.cell(_("Change"), change["text"])
+
+                table.cell(_("Affected sites"), css="affected_sites")
                 if self._affects_all_sites(change):
                     html.write_text("<i>%s</i>" % _("All sites"))
                 else:
                     html.write_text(", ".join(sorted(change["affected_sites"])))
-
-                table.cell(_("Change"), change["text"])
 
     def _render_change_object(self, obj):
         if not obj:

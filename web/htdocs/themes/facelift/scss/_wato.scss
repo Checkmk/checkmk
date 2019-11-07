@@ -998,6 +998,10 @@ div.varname {
 .wato table.changes {
   width: 100%;
 
+  td.affected_sites {
+    max-width: 400px;
+  }
+
   tr.foreign.not_permitted td {
     color: #f00;
   }

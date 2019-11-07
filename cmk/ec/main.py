@@ -456,12 +456,12 @@ class HostConfig(object):
 
     def initialize(self):
         self._logger.debug("Initializing host config")
-        self._event_host_to_host = {}  # type: Dict[str, Dict[str, Any]]
+        self._event_host_to_host = {}  # type: Dict[str, str]
 
         self._hosts_by_name = {}
-        self._hosts_by_lower_name = {}
-        self._hosts_by_lower_alias = {}
-        self._hosts_by_lower_address = {}
+        self._hosts_by_lower_name = {}  # type: Dict[str, str]
+        self._hosts_by_lower_alias = {}  # type: Dict[str, str]
+        self._hosts_by_lower_address = {}  # type: Dict[str, str]
 
         self._cache_timestamp = -1  # sentinel, always less than a real timestamp
 
@@ -470,16 +470,16 @@ class HostConfig(object):
 
     def get_canonical_name(self, event_host_name):
         # type: (str) -> str
-        host = {"name": ""}
+        canonical_name = ""
         try:
             if not self._cache_valid():
                 self._update_cache()
         except Exception:
             self._logger.exception("Failed to get host info from core. Try again later.")
-            return host["name"]
+            return canonical_name
 
         try:
-            return self._event_host_to_host[event_host_name]["name"]
+            return self._event_host_to_host[event_host_name]
         except KeyError:
             pass  # Not cached yet
 
@@ -495,13 +495,13 @@ class HostConfig(object):
                 self._hosts_by_lower_name, self._hosts_by_lower_address, self._hosts_by_lower_alias
         ]:
             try:
-                host = search_map[low_event_host_name]
+                canonical_name = search_map[low_event_host_name]
                 break
             except KeyError:
                 continue
 
-        self._event_host_to_host[event_host_name] = host
-        return host["name"]
+        self._event_host_to_host[event_host_name] = canonical_name
+        return canonical_name
 
     def _update_cache(self):
         self.initialize()
@@ -521,9 +521,9 @@ class HostConfig(object):
             self._hosts_by_name[host["name"]] = host
 
             # Lookup maps to improve performance of host searches
-            self._hosts_by_lower_name[host["name"].lower()] = host
-            self._hosts_by_lower_alias[host["alias"].lower()] = host
-            self._hosts_by_lower_address[host["address"].lower()] = host
+            self._hosts_by_lower_name[host["name"].lower()] = host["name"]
+            self._hosts_by_lower_alias[host["alias"].lower()] = host["name"]
+            self._hosts_by_lower_address[host["address"].lower()] = host["name"]
 
         self._logger.debug("Got %d hosts from core" % len(self._hosts_by_name))
         self._cache_timestamp = self._get_config_timestamp()

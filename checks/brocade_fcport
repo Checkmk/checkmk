@@ -143,19 +143,25 @@ def parse_brocade_fcport(info):
         bbcredits = None
         if if64_info:
             fcmgmt_portstats = []
-            for oidend, tx_elements, rx_elements, bbcredits_64 in if64_info:
+            for oidend, tx_objects, rx_objects, tx_elements, rx_elements, bbcredits_64 in if64_info:
                 if index == oidend.split(".")[-1]:
                     fcmgmt_portstats = [
+                        binstring_to_int(''.join(map(chr, tx_objects))),
+                        binstring_to_int(''.join(map(chr, rx_objects))),
                         int(binstring_to_int(''.join(map(chr, tx_elements))) / 4),
                         int(binstring_to_int(''.join(map(chr, rx_elements))) / 4),
                         binstring_to_int(''.join(map(chr, bbcredits_64))),
                     ]
                     break
             if fcmgmt_portstats:
-                txwords = fcmgmt_portstats[0]
-                rxwords = fcmgmt_portstats[1]
-                bbcredits = fcmgmt_portstats[2]
+                txframes = fcmgmt_portstats[0]
+                rxframes = fcmgmt_portstats[1]
+                txwords = fcmgmt_portstats[2]
+                rxwords = fcmgmt_portstats[3]
+                bbcredits = fcmgmt_portstats[4]
             else:
+                txframes = 0
+                rxframes = 0
                 txwords = 0
                 rxwords = 0
 
@@ -444,6 +450,8 @@ check_info["brocade_fcport"] = {
             ".1.3.6.1.3.94.4.5.1",
             [
                 OID_END,
+                BINARY("4"),  # FCMGMT-MIB::connUnitPortStatCountTxObjects
+                BINARY("5"),  # FCMGMT-MIB::connUnitPortStatCountRxObjects
                 BINARY("6"),  # FCMGMT-MIB::connUnitPortStatCountTxElements
                 BINARY("7"),  # FCMGMT-MIB::connUnitPortStatCountRxElements
                 BINARY("8"),  # FCMGMT-MIB::connUnitPortStatCountBBCreditZero

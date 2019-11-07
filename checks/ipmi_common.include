@@ -135,6 +135,11 @@ def check_ipmi_common_detailed(item, params, data, what, status_txt_mapping):
         state = 1
         levelsinfo = " (%s)" % ", ".join(warn_texts)
 
+    # Sensor reports 'nc' ('non critical'), so we set the state to WARNING
+    # but only if user thresholds are not exceeded to CRITICAL
+    if status_txt.startswith('nc') and not these_crit_texts:
+        state = 1
+
     return state, "Status: %s%s" % (infotext, levelsinfo), perfdata
 
 

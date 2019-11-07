@@ -8,4 +8,5 @@ Knowledge: doc
 Level: 1
 Version: 1.7.0i1
 
-Sensors reporting 'nc' were set to WARN or CRIT even they didn't exceed any threshold.
+Sensors reporting 'nc' ('non critical') were set falsely to CRIT.
+Now they will be set to WARN. Thresholds set by the user will overwrite this behaviour.

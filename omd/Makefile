@@ -87,7 +87,14 @@ $(BUILD_HELPER_DIR)/build-helper-files.make:
 	  egrep -h "$${P_VAR}_DIR\s:=\s" $$inc_path >> $@ ; \
 	  egrep -h "$${P_VAR}_BUILD\s:=\s" $$inc_path >> $@ ; \
 	  egrep -h "$${P_VAR}_INSTALL\s:=\s" $$inc_path >> $@ ; \
+	  if [ "$$P" == "rrdtool" ]; then \
+	    egrep -h "$${P_VAR}_BUILD_LIBRARY\s:=\s" $$inc_path >> $@ ; \
+	    egrep -h "$${P_VAR}_INSTALL_LIBRARY\s:=\s" $$inc_path >> $@ ; \
+	    egrep -h "$${P_VAR}_BUILD_BINDINGS\s:=\s" $$inc_path >> $@ ; \
+	    egrep -h "$${P_VAR}_INSTALL_BINDINGS\s:=\s" $$inc_path >> $@ ; \
+	  fi \
 	done
+
 
 -include .config
 

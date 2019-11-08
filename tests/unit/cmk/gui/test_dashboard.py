@@ -40,6 +40,7 @@ def test_dashlet_registry_plugins():
         'overview',
         'pnpgraph',
         'view',
+        'linked_view',
         'notify_users',
         'nodata',
         'snapin',
@@ -68,6 +69,7 @@ def _expected_intervals():
         ('snapin', 30),
         ('url', False),
         ('view', False),
+        ('linked_view', False),
     ]
 
     if not cmk.is_raw_edition():

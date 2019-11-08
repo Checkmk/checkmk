@@ -193,10 +193,10 @@ class VisualTypeDashboards(VisualType):
         if add_type == 'view':
             # save the original context and override the context provided by the view
             context = dashlet['context']
-            load_view_into_dashlet(dashlet,
-                                   len(dashboard['dashlets']),
-                                   view_name,
-                                   add_context=context)
+            _copy_view_into_dashlet(dashlet,
+                                    len(dashboard['dashlets']),
+                                    view_name,
+                                    add_context=context)
 
         elif add_type in ["pnpgraph", "custom_graph"]:
             # The "add to visual" popup does not provide a timerange information,
@@ -525,7 +525,7 @@ def transform_builtin_dashboards():
                 view_name = dashlet['view'].split('&')[0]
 
                 # Copy the view definition into the dashlet
-                load_view_into_dashlet(dashlet, nr, view_name, load_from_all_views=True)
+                _copy_view_into_dashlet(dashlet, nr, view_name, load_from_all_views=True)
                 del dashlet['view']
 
             else:
@@ -553,7 +553,7 @@ def transform_builtin_dashboards():
     builtin_dashboards_transformed = True
 
 
-def load_view_into_dashlet(dashlet, nr, view_name, add_context=None, load_from_all_views=False):
+def _copy_view_into_dashlet(dashlet, nr, view_name, add_context=None, load_from_all_views=False):
     permitted_views = get_permitted_views()
 
     # it is random which user is first accessing
@@ -1245,10 +1245,11 @@ def choose_view(name):
 
             # save the original context and override the context provided by the view
             dashlet_id = len(dashboard['dashlets'])
-            load_view_into_dashlet(dashlet, dashlet_id, view_name)
+            _copy_view_into_dashlet(dashlet, dashlet_id, view_name)
             add_dashlet(dashlet, dashboard)
 
-            raise HTTPRedirect('edit_dashlet.py?name=%s&id=%d' % (name, dashlet_id))
+            raise HTTPRedirect('edit_dashlet.py?name=%s&id=%d' %
+                               (html.urlencode(name), html.urlencode(dashlet_id)))
         except MKUserError as e:
             html.user_error(e)
 

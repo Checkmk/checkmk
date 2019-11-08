@@ -65,7 +65,7 @@ def parse_lparstat_aix(info):
 
 
 def inventory_lparstat(parsed):
-    if parsed:
+    if parsed and parsed.get('util'):
         yield None, {}
 
 

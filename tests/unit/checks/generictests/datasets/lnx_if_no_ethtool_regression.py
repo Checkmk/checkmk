@@ -39,7 +39,7 @@ info = [[None, u'[start_iplink]'],
          u'default',
          u'qlen',
          u'1000'],
-        [None, u'link/ether', u'AA:AA:AA:AA:AA:AA', u'brd', u'BB:BB:BB:BB:BB:BB'],
+        [None, u'link/ether', u'AA:AA:AA:AA:AA:BB', u'brd', u'BB:BB:BB:BB:BB:BB'],
         [None,
          u'3:',
          u'docker0:',
@@ -108,7 +108,7 @@ discovery = {'': [('1', "{'state': ['1'], 'speed': 0}"),
 
 checks = {'': [('1',
                 {'errors': (0.01, 0.1), 'speed': 0, 'state': ['1']},
-                [(0, '[docker0] (up) speed unknown', [])]),
+                [(0, '[docker0] (up) MAC: AA:AA:AA:AA:AA:AA, speed unknown', [])]),
                ('4',
                 {'errors': (0.01, 0.1), 'speed': 0, 'state': ['1']},
-                [(0, '[wlp3s0] (up) speed unknown', [])])]}
+                [(0, '[wlp3s0] (up) MAC: AA:AA:AA:AA:AA:BB, speed unknown', [])])]}

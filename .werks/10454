@@ -1,0 +1,10 @@
+Title: Don't show an error in Commands of mobile GUI
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1573211364
+Class: fix
+
+

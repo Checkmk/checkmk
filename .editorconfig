@@ -10,7 +10,7 @@ indent_style = space
 indent_size = 4
 charset = utf-8
 
-[*.{bat,ps1}]
+[*.{bat,ps1,vbs,cmd}]
 end_of_line = crlf
 
 [*.md]

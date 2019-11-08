@@ -16,8 +16,7 @@ $(MK_LIVESTATUS)-build: $(MK_LIVESTATUS_BUILD)
 $(PACKAGE_DIR)/$(MK_LIVESTATUS)/$(MK_LIVESTATUS_DIR).tar.gz:
 	$(MAKE) -C $(REPO_PATH) omd/packages/mk-livestatus/$(MK_LIVESTATUS_DIR).tar.gz
 
-# TODO: Why can't we use $(RRDTOOL_BUILD_LIBRARY) as dependency here?
-$(MK_LIVESTATUS_BUILD): $(MK_LIVESTATUS_UNPACK) $(BOOST_BUILD) $(RE2_BUILD) $(RRDTOOL)-build-library
+$(MK_LIVESTATUS_BUILD): $(MK_LIVESTATUS_UNPACK) $(BOOST_BUILD) $(RE2_BUILD) $(RRDTOOL_BUILD_LIBRARY)
 # TODO: Improve the rrdtool hacks below
 	cd $(MK_LIVESTATUS_DIR) ; \
 	    export CPPFLAGS=-I$(REPO_PATH)/omd/$(RRDTOOL_DIR)/src ; \

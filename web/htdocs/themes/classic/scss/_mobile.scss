@@ -231,6 +231,11 @@ body.mobile {
         margin: 0px;
     }
 
+    input.button {
+        background-color: transparent;
+        border-color: transparent;
+    }
+
     input[type=checkbox]+label:before {
         display: none;
     }

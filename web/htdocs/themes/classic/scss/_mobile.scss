@@ -234,4 +234,9 @@ body.mobile {
     input[type=checkbox]+label:before {
         display: none;
     }
+
+    input[type=password], input[type=text] {
+        height: 36.7812px;
+        padding: 6.4px;
+    }
 }

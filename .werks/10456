@@ -1,0 +1,10 @@
+Title: Fix redirection from login page in mobile GUI
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1573227638
+Class: fix
+
+

@@ -470,23 +470,11 @@ class HostConfig(object):
 
     def _update_cache(self):
         self._logger.debug("Fetching host config from core")
-
-        columns = [
-            "name",
-            "alias",
-            "address",
-            "custom_variables",
-            "contacts",
-            "contact_groups",
-        ]
-
         self._hosts_by_name.clear()
         self._hosts_by_designation.clear()
-        query = "GET hosts\nColumns: %s" % " ".join(columns)
-        for host in livestatus.LocalConnection().query_table_assoc(query):
+        for host in self._get_host_configs():
             host_name = host["name"]
             self._hosts_by_name[host_name] = host
-
             # Note: It is important that we use exactly the same algorithm here as
             # in the core, see World::loadHosts and World::getHostByDesignation.
             if host["address"]:
@@ -494,12 +482,16 @@ class HostConfig(object):
             if host["alias"]:
                 self._hosts_by_designation[host["alias"].lower()] = host_name
             self._hosts_by_designation[host_name.lower()] = host_name
-
         self._logger.debug("Got %d hosts from core" % len(self._hosts_by_name))
+
+    def _get_host_configs(self):
+        return livestatus.LocalConnection().query_table_assoc(
+            "GET hosts\n"
+            "Columns: name alias address custom_variables contacts contact_groups")
 
     def _get_config_timestamp(self):
         return livestatus.LocalConnection().query_value("GET status\n"  #
-                                                        "Columns: program_start\n")
+                                                        "Columns: program_start")
 
 
 #.

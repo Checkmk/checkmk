@@ -28,6 +28,10 @@ Boston, MA 02110-1301 USA.
 /* Styles for Check_MK mobile interface */
 
 body.mobile {
+    h3 {
+        color: #2f3e46,
+    }
+
     div.really,
     div.success,
     div.error,

@@ -10,6 +10,9 @@ indent_style = space
 indent_size = 4
 charset = utf-8
 
+[*.{bat,ps1}]
+end_of_line = crlf
+
 [*.md]
 max_line_length = 80
 

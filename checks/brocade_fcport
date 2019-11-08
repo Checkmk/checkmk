@@ -105,12 +105,16 @@ def _try_int(int_str):
         return None
 
 
-def _get_if_table_offset(speed_info):
+def _get_if_table_offset(speed_info, offset):
     # http://community.brocade.com/t5/Fibre-Channel-SAN/SNMP-FC-port-speed/td-p/64980
     # says that "1073741824" from if-table correlates with index 1 from
     # brocade-if-table.
+    # But: In logically separated Brocade FC switches, the interface indices do
+    # not start with 1. Therefor the index in the speed table does not start
+    # with "1073741824". It is necessary to add the first interface index as
+    # offset to find the table offset in the speed table.
     for index, entry in enumerate(speed_info):
-        if entry[0] == "1073741824":
+        if int(entry[0]) == 1073741823 + offset:
             return index
 
 
@@ -119,7 +123,7 @@ def parse_brocade_fcport(info):
     isl_ports = dict(link_info)
 
     # if-table and brocade-if-table do NOT have same length
-    speed_info = [x[1:] for x in speed_info[_get_if_table_offset(speed_info):]]
+    speed_info = [x[1:] for x in speed_info[_get_if_table_offset(speed_info, int(if_info[0][0])):]]
 
     if len(if_info) == len(speed_info):
         # extract the speed from IF-MIB::ifHighSpeed.

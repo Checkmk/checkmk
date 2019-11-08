@@ -1,0 +1,15 @@
+Title: brocade_fcport: Get table offset with interface index
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p7
+Date: 1573225985
+
+In logically separated Brocade FC switches, the interface indices do not start
+with 1. Therefor the index in the speed table does not start with "1073741824".
+It is necessary to add the first interface index as offset to find the table
+offset in the speed table.

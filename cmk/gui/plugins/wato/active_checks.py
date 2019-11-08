@@ -653,15 +653,13 @@ def _valuespec_active_checks_sql():
                     ]),
             ),
             ("levels",
-             Tuple(
-                 title=_("Upper levels for first output item"),
-                 elements=[Float(title=_("Warning if above")),
-                           Float(title=_("Critical if above"))])),
+             Tuple(title=_("Upper levels for first output item"),
+                   elements=[Float(title=_("Warning at")),
+                             Float(title=_("Critical at"))])),
             ("levels_low",
-             Tuple(
-                 title=_("Lower levels for first output item"),
-                 elements=[Float(title=_("Warning if below")),
-                           Float(title=_("Critical if below"))])),
+             Tuple(title=_("Lower levels for first output item"),
+                   elements=[Float(title=_("Warning below")),
+                             Float(title=_("Critical below"))])),
             ("perfdata",
              FixedValue(
                  title=_("Performance Data"),

@@ -185,8 +185,11 @@ def page_login():
         origtarget = html.request.requested_url
     html.hidden_field('_origtarget', html.attrencode(origtarget))
 
-    html.text_input("_username", label=_("Username:"))
-    html.password_input("_password", size=None, label=_("Password:"))
+    html.text_input("_username", label=_("Username:"), autocomplete="username")
+    html.password_input("_password",
+                        size=None,
+                        label=_("Password:"),
+                        autocomplete="current-password")
     html.br()
     html.button("_login", _('Login'))
     html.set_focus("_username")

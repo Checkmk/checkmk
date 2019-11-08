@@ -595,7 +595,8 @@ class Topology(object):
             raise MKGrowthExceeded(
                 _("Maximum number of nodes exceeded %d/%d") % (total_nodes, self.max_nodes))
         if total_nodes > self.growth_auto_max_nodes:
-            raise MKGrowthInterruption(_("Growth interrupted") % (total_nodes, self.max_nodes))
+            raise MKGrowthInterruption(
+                _("Growth interrupted %d/%d") % (total_nodes, self.growth_auto_max_nodes))
 
     @property
     def max_nodes(self):

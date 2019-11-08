@@ -10717,6 +10717,17 @@ graph_info["net_data_traffic"] = {
     ],
 }
 
+# For the 'ps' check there are multiple graphs.
+# Without the graph info 'number_of_processes', the graph will not show,
+# because 'size_per_process' uses the variable name 'processes' as well.
+# Once a variable is used by some other graph it will not create a single graph anymore.
+# That is why we have to define a specific graph info here.
+# Further details see here: metrics/utils.py -> _get_implicit_graph_templates()
+graph_info["number_of_processes"] = {
+    "title": _("Number of processes"),
+    "metrics": [("processes", "area"),]
+}
+
 graph_info["size_of_processes"] = {
     "title": _("Size of processes"),
     "metrics": [

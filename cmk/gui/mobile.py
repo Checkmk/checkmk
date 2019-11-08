@@ -180,9 +180,8 @@ def page_login():
 
     html.begin_form("login", method='POST', add_transid=False)
     # Keep information about original target URL
-    origtarget = html.request.var('_origtarget', '')
-    if not origtarget and not html.myfile == 'login':
-        origtarget = html.request.requested_url
+    default_origtarget = "index.py" if html.myfile in ["login", "logout"] else html.makeuri([])
+    origtarget = html.get_url_input("_origtarget", default_origtarget)
     html.hidden_field('_origtarget', html.attrencode(origtarget))
 
     html.text_input("_username", label=_("Username:"), autocomplete="username")

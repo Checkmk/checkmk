@@ -108,17 +108,6 @@ def jqm_page_header(title, id_=None, left_button=None, right_button=None):
     html.open_div(**{"data-role": "content"})
 
 
-def jqm_page_footer(content=""):
-    html.close_div()  # close content-div
-    html.close_div()
-    html.open_div(**{"data-role": "footer"})
-    html.open_h4()
-    html.write(content)
-    html.close_h4()
-    html.close_div()
-    html.close_div()  # close page-div
-
-
 def jqm_page_navfooter(items, current, page_id):
     html.close_div()  # close content
     html.open_div(**{"data-role": "footer", "data-position": "fixed"})
@@ -181,12 +170,6 @@ def jqm_page_index_topic_renderer(topic, items):
     html.close_ul()
 
 
-def jqm_page(title, content, foot, id_=None):
-    jqm_page_header(title, id_)
-    html.write(content)
-    jqm_page_footer(foot)
-
-
 def page_login():
     title = _("Check_MK Mobile")
     mobile_html_head(title)
@@ -210,7 +193,9 @@ def page_login():
     html.img("themes/classic/images/logo_cmk_small.png", class_="logomk")
     html.div(HTML(_("&copy; <a target=\"_blank\" href=\"https://checkmk.com\">tribe29 GmbH</a>")),
              class_="copyright")
-    jqm_page_footer()
+    html.close_div()  # close content-div
+    html.close_div()
+    html.close_div()  # close page-div
     mobile_html_foot()
 
 

@@ -462,8 +462,10 @@ class HostConfig(object):
     def get_canonical_name(self, event_host_name):
         # type: (str) -> str
         try:
-            if not self._cache_valid():
+            timestamp = self._get_config_timestamp()
+            if timestamp > self._cache_timestamp:
                 self._update_cache()
+                self._cache_timestamp = timestamp
         except Exception:
             self._logger.exception("Failed to get host info from core. Try again later.")
             return ""
@@ -497,10 +499,6 @@ class HostConfig(object):
             self._hosts_by_designation[host_name.lower()] = host_name
 
         self._logger.debug("Got %d hosts from core" % len(self._hosts_by_name))
-        self._cache_timestamp = self._get_config_timestamp()
-
-    def _cache_valid(self):
-        return self._get_config_timestamp() <= self._cache_timestamp
 
     def _get_config_timestamp(self):
         return livestatus.LocalConnection().query_value("GET status\n"  #

@@ -25,8 +25,8 @@
 /* Disable data-ajax per default, as it makes problems in most
    of our cases */
 
-require('script-loader!../jquery/jquery-1.6.4.min.js');
-require('script-loader!../jquery/jquery.mobile-1.0.min.js');
+require('script-loader!../jquery/jquery-1.8.3.min.js');
+require('script-loader!../jquery/jquery.mobile-1.2.1.min.js');
 
 // Optional import is currently not possible using the ES6 imports
 var graphs;

@@ -1,0 +1,12 @@
+Title: Consistent naming for levels in Check SQL Database active check
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1573217927
+Class: fix
+
+Check SQL Database active check uses the convention for upper levels where
+warn/crit happen at value, and lower levels are active below value. Now
+this is explicit in the WATO config.

@@ -101,8 +101,11 @@ def test_format_var_for_export_strip_nested_dict_with_list():
 
 def test_crash_report_store_cleanup():
     store = CrashReportStore()
+    base_dir = cmk.utils.paths.crash_dir / "test"
 
     expected_crash_ids = set()
+    assert set(e.name for e in base_dir.glob("*")) == expected_crash_ids
+
     for num in range(store._keep_num_crashes + 1):
         try:
             raise ValueError("Crash #%d" % num)
@@ -112,5 +115,4 @@ def test_crash_report_store_cleanup():
                 expected_crash_ids.add(crash.ident_to_text())
             store.save(crash)
 
-    base_dir = cmk.utils.paths.crash_dir / "test"
     assert set(e.name for e in base_dir.glob("*")) == expected_crash_ids

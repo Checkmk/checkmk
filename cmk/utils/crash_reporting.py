@@ -28,6 +28,7 @@ to produce crash reports in a generic format which can then be sent to Check_MK
 developers for analyzing the crashes."""
 
 import abc
+import errno
 import base64
 import inspect
 import os
@@ -277,13 +278,19 @@ def _get_os_info():
 
 def _current_monitoring_core():
     # type: () -> Text
-    p = subprocess.Popen(["omd", "config", "show", "CORE"],
-                         close_fds=True,
-                         shell=False,
-                         stdin=open(os.devnull),
-                         stdout=subprocess.PIPE,
-                         stderr=open(os.devnull, "w"))
-    return p.communicate()[0]
+    try:
+        p = subprocess.Popen(["omd", "config", "show", "CORE"],
+                             close_fds=True,
+                             shell=False,
+                             stdin=open(os.devnull),
+                             stdout=subprocess.PIPE,
+                             stderr=open(os.devnull, "w"))
+        return p.communicate()[0]
+    except OSError as e:
+        # Allow running unit tests on systems without omd installed (e.g. on travis)
+        if e.errno != errno.ENOENT:
+            raise
+        return "UNKNOWN"
 
 
 def _get_local_vars_of_last_exception():

@@ -227,4 +227,7 @@ body.mobile {
         margin: 0px;
     }
 
+    input[type=checkbox]+label:before {
+        display: none;
+    }
 }

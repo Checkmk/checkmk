@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cstddef>
+#include <cstdlib>
 #include <iterator>
 #include <string>
 #include "Column.h"
@@ -14,11 +15,22 @@
 #include "test_utilities.h"
 
 // TODO(sp) Move this to a better place.
-TEST(Store, dont_use_mc) {
+TEST(Store, the_core_is_not_accessed_during_construction_of_the_store) {
+    // Segfault if the (not entirely constructed) core is accessed during
+    // the construction of the store.
+    //
+    // There are circular dependencies in the code and this test avoids
+    // shooting oneself in the foot.
+    //
     // Make sure that the MonitoringCore abstraction is not accessed during the
     // construction of Store. This is a bit fragile, but it is needed to tie the
     // knot between NagiosCore and Store.
-    Store store{nullptr};
+    ASSERT_EXIT(  // NOLINT
+        {
+            Store{nullptr};
+            exit(0);
+        },
+        ::testing::ExitedWithCode(0), "");
 }
 
 extern char *macro_user[MAX_USER_MACROS];

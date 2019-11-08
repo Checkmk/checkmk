@@ -25,11 +25,10 @@
 # Boston, MA 02110-1301 USA.
 
 import json
+from typing import Dict, Text, Optional, List  # pylint: disable=unused-import
+import livestatus
 
-import cmk.utils.paths
-import cmk.utils.crash_reporting
-
-import cmk.gui.config as config
+import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
@@ -77,40 +76,77 @@ class DataSourceCrashReports(DataSourceLivestatus):
 
 
 class CrashReportsRowTable(RowTable):
+    # TODO: Handle headers / all_active_filters, limit, ...
     def query(self, view, columns, headers, only_sites, limit, all_active_filters):
         rows = []
-        for raw_row in self._crash_report_rows_from_local_site():
+        for raw_row in self.get_crash_report_rows(only_sites, filter_headers=""):
             crash_info_raw = json.loads(raw_row["crash_info"])
             rows.append({
                 "site": raw_row["site"],
                 "crash_id": raw_row["crash_id"],
+                "crash_type": raw_row["crash_type"],
                 "crash_time": crash_info_raw["time"],
-                "crash_type": crash_info_raw["crash_type"],
                 "crash_version": crash_info_raw["version"],
                 "crash_exc_type": crash_info_raw["exc_type"],
                 "crash_exc_value": crash_info_raw["exc_value"],
                 "crash_exc_traceback": crash_info_raw["exc_traceback"],
             })
+        return sorted(rows, key=lambda r: r["crash_time"])
+
+    def get_crash_report_rows(self, only_sites, filter_headers):
+        # type: (Optional[List[Text]], Text) -> List[Dict[Text, Text]]
+
+        # First fetch the information that is needed to query for the dynamic columns (crash_info,
+        # ...)
+        crash_infos = self._get_crash_report_info(only_sites, filter_headers)
+        if not crash_infos:
+            return []
+
+        rows = []
+        for crash_info in crash_infos:
+            file_path = "/".join([crash_info["crash_type"], crash_info["crash_id"]])
+
+            headers = ["crash_info"]
+            columns = ["file:crash_info:%s/crash.info" % livestatus.lqencode(file_path)]
+
+            if crash_info["crash_type"] == "check":
+                headers = ["agent_output", "snmp_info"]
+                columns += [
+                    "file:agent_output:%s/agent_output" % livestatus.lqencode(file_path),
+                    "file:snmp_info:%s/snmp_info" % livestatus.lqencode(file_path),
+                ]
+
+            try:
+                sites.live().set_prepend_site(False)
+                sites.live().set_only_sites([crash_info["site"]])
+
+                raw_row = sites.live().query_row(
+                    "GET crashreports\n"
+                    "Columns: %s\n"
+                    "Filter: id = %s" %
+                    (" ".join(columns), livestatus.lqencode(crash_info["crash_id"])))
+            finally:
+                sites.live().set_only_sites(None)
+                sites.live().set_prepend_site(False)
+
+            crash_info.update(dict(zip(headers, raw_row)))
+            rows.append(crash_info)
+
         return rows
 
-    # Simulate the crash reports as they will be reported via livestatus
-    # TODO: Drop this once the livestatus table is ready
-    def _crash_report_rows_from_local_site(self):
-        raw_rows = []
-        store = cmk.utils.crash_reporting.CrashReportStore()
-        for crash_dir in cmk.utils.paths.crash_dir.glob("*/*"):  # pylint: disable=no-member
-            serialized_crash = store.load_serialized_from_directory(crash_dir)
+    def _get_crash_report_info(self, only_sites, filter_headers=None):
+        # type: (Optional[List[Text]], Optional[Text]) -> List[Dict[Text, Text]]
+        try:
+            sites.live().set_prepend_site(True)
+            sites.live().set_only_sites(only_sites)
+            rows = sites.live().query("GET crashreports\nColumns: id component\n%s" %
+                                      (filter_headers or ""))
+        finally:
+            sites.live().set_only_sites(None)
+            sites.live().set_prepend_site(False)
 
-            raw_row = {
-                "site": config.omd_site(),
-                "crash_id": crash_dir.name,
-            }
-
-            for key, value in serialized_crash.iteritems():
-                raw_row[key] = json.dumps(value)
-
-            raw_rows.append(raw_row)
-        return sorted(raw_rows, key=lambda r: r["crash_id"])
+        columns = ["site", "crash_id", "crash_type"]
+        return [dict(zip(columns, r)) for r in rows]
 
 
 @painter_registry.register

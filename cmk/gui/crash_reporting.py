@@ -32,8 +32,9 @@ import time
 import pprint
 import traceback
 import json
-from typing import Dict, Text  # pylint: disable=unused-import
+from typing import Dict, Text, Optional  # pylint: disable=unused-import
 import six
+import livestatus
 
 import cmk.gui.pages
 import cmk.gui.i18n
@@ -41,6 +42,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 import cmk.gui.userdb as userdb
+from cmk.gui.plugins.views.crash_reporting import CrashReportsRowTable
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import (
     EmailAddress,
@@ -132,7 +134,7 @@ class ABCCrashReportPage(six.with_metaclass(abc.ABCMeta, cmk.gui.pages.Page)):
         return json.loads(row["crash_info"])
 
     def _get_crash_row(self):
-        row = _get_crash_report_row(self._crash_id, self._site_id)
+        row = self._get_crash_report_row(self._crash_id, self._site_id)
         if not row:
             raise MKUserError(
                 None,
@@ -140,8 +142,21 @@ class ABCCrashReportPage(six.with_metaclass(abc.ABCMeta, cmk.gui.pages.Page)):
                 (self._crash_id, self._site_id))
         return row
 
+    def _get_crash_report_row(self, crash_id, site_id):
+        # type: (Text, Text) -> Optional[Dict[Text, Text]]
+        rows = CrashReportsRowTable().get_crash_report_rows(only_sites=[site_id],
+                                                            filter_headers="Filter: id = %s" %
+                                                            livestatus.lqencode(crash_id))
+        if not rows:
+            return None
+        return rows[0]
+
     def _get_serialized_crash_report(self):
-        return {k: v for k, v in self._get_crash_row().iteritems() if k not in ["site", "crash_id"]}
+        return {
+            k: v
+            for k, v in self._get_crash_row().iteritems()
+            if k not in ["site", "crash_id", "crash_type"]
+        }
 
 
 @cmk.gui.pages.page_registry.register_page("crash")
@@ -499,15 +514,6 @@ class ReportRendererGUI(ABCReportRenderer):
         _crash_row(_("Language"), details["language"], odd=False)
 
         html.close_table()
-
-
-def _get_crash_report_row(crash_id, site_id):
-    # TODO: Drop this once the livestatus table is ready
-    from cmk.gui.plugins.views.crash_reporting import CrashReportsRowTable
-    for row in CrashReportsRowTable()._crash_report_rows_from_local_site():
-        if row["site"] == site_id and row["crash_id"] == crash_id:
-            return row
-    return None
 
 
 def _crash_row(title, infotext, odd=True, legend=False, pre=False):

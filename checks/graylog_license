@@ -63,9 +63,11 @@ factory_settings["graylog_license_default_levels"] = {
 
 
 def check_graylog_license(_no_item, params, parsed):
-    license_data = parsed.get("status")[0]
-    if license_data is None:
+    license_state = parsed.get("status")
+    if license_state is None or not license_state:
         return
+
+    license_data = license_state[0]
 
     for key, infotext, expected in [
         ("expired", "Is expired", "False"),

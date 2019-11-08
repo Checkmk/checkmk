@@ -2363,13 +2363,14 @@ def _valuespec_special_agents_graylog():
                      ("cluster_traffic", _("Cluster traffic statistics")),
                      ("failures", _("Failed index operations")),
                      ("jvm", _("JVM heap size")),
+                     ("license", _("License state")),
                      ("messages", _("Message count")),
                      ("nodes", _("Nodes")),
                      ("sidecars", _("Sidecar fleet")),
                  ],
                  default_value=[
                      "alerts", "collectors", "cluster_stats", "cluster_traffic", "failures", "jvm",
-                     "messages", "nodes", "sidecars"
+                     "license", "messages", "nodes", "sidecars"
                  ],
                  allow_empty=False,
              )),

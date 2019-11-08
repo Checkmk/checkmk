@@ -378,6 +378,7 @@ mrclean:
 	    --exclude="virtual-envs/*/.venv/"
 
 setup:
+# librrd-dev is still needed by the python rrd package we build in our virtual environment
 	sudo apt-get install \
 	    aptitude \
 	    autoconf \
@@ -391,6 +392,7 @@ setup:
 	    g++ \
 	    libclang-7-dev \
 	    libpcap-dev \
+		librrd-dev \
 	    llvm-7-dev \
 	    libsasl2-dev \
 	    libldap2-dev \

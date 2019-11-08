@@ -10,4 +10,4 @@ ECHO ^<^<^<storcli_pdisks^>^>^>
 ECHO ^<^<^<storcli_vdrives^>^>^>
 "!StorCli!" /call/vall show
 
-:END
+:END

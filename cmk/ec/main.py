@@ -636,10 +636,6 @@ def check_timeperiod(settings, tpname):
 class HostConfig(object):
     def __init__(self, logger):
         self._logger = logger
-        self.initialize()
-
-    def initialize(self):
-        self._logger.debug("Initializing host config")
         self._hosts_by_name = {}
         self._hosts_by_designation = {}  # type: Dict[str, str]
         self._cache_timestamp = -1  # sentinel, always less than a real timestamp
@@ -658,7 +654,6 @@ class HostConfig(object):
         return self._hosts_by_designation.get(event_host_name.lower(), "")
 
     def _update_cache(self):
-        self.initialize()
         self._logger.debug("Fetching host config from core")
 
         columns = [
@@ -670,6 +665,8 @@ class HostConfig(object):
             "contact_groups",
         ]
 
+        self._hosts_by_name.clear()
+        self._hosts_by_designation.clear()
         query = "GET hosts\nColumns: %s" % " ".join(columns)
         for host in livestatus.LocalConnection().query_table_assoc(query):
             host_name = host["name"]
@@ -2058,7 +2055,7 @@ class EventServer(ECServerThread):
     def reload_configuration(self, config):
         self._config = config
         self.compile_rules(self._config["rules"], self._config["rule_packs"])
-        self.host_config.initialize()
+        self.host_config = HostConfig(self._logger)
 
     # Precompile regular expressions and similar stuff. Also convert legacy
     # "rules" parameter into new "rule_packs" parameter

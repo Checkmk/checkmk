@@ -55,7 +55,7 @@ def mobile_html_head(title):
     html.meta(name="apple-mobile-web-app-capable", content="yes")
     html.meta(name="apple-mobile-web-app-title", content="Check_MK")
     html.title(title)
-    html.stylesheet(href="jquery/jquery.mobile-1.0.css")
+    html.stylesheet(href="jquery/jquery.mobile-1.2.1.css")
     html.stylesheet(href="themes/classic/theme.css")
 
     html.write(

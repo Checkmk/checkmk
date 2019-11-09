@@ -233,10 +233,8 @@ def parse_lnx_if(info):
             else:
                 if "UP" in state_infos:
                     ifOperStatus = 1
-                elif "DOWN" in state_infos:
-                    ifOperStatus = 2
                 else:
-                    ifOperStatus = 4
+                    ifOperStatus = 2
 
         raw_phys_address = attr.get("Address", attr.get("link/ether", ""))
         try:

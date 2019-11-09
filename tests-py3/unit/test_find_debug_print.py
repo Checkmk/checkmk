@@ -2,8 +2,11 @@
 
 import os
 import re
-import pytest
+import logging
+import pytest  # type: ignore
 from testlib import cmk_path, cmc_path, cme_path
+
+LOGGER = logging.getLogger()
 
 check_paths = [
     "bin",
@@ -24,6 +27,7 @@ check_paths = [
 ]
 
 exclude_folders = ["plugins/build", "plugins/build_32", "chroot"]
+exclude_files = ["bin/mkeventd_open514", "bin/mkevent"]
 
 
 def find_debugs(line):
@@ -63,6 +67,10 @@ def test_find_debug_code(path):
             if file_path.endswith((".pyc", ".whl", ".tar.gz")):
                 continue
 
+            if os.path.relpath(file_path, cmk_path()) in exclude_files:
+                continue
+
+            LOGGER.info("Checking file %s", file_path)
             for nr, line in enumerate(open(file_path)):
                 if nr == 0 and ("bash" in line or "php" in line):
                     break  # skip non python files

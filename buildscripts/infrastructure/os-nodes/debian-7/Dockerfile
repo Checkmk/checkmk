@@ -16,12 +16,15 @@ RUN apt-get update \
     libkrb5-dev \
     libldap2-dev \
     libmysqlclient-dev \
+    librrd-dev \
+    librrd4 \
     libsasl2-dev \
     libssl-dev \
     make \
     python \
     python-dev \
     python-dev \
+    rrdtool \
     strace \
     vim \
     && curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \

@@ -15,12 +15,15 @@ RUN apt-get update \
     libkrb5-dev \
     libldap2-dev \
     libmysqlclient-dev \
+    librrd-dev \
+    librrd4 \
     libsasl2-dev \
     libssl-dev \
     make \
     nullmailer \
     python-dev \
     python-pip \
+    rrdtool \
     strace \
     vim \
     && curl -sL https://deb.nodesource.com/setup_12.x | bash - \

@@ -24,7 +24,5 @@ openhardwaremonitor-[0-9].[0-9].[0-9]/
 patch-stamp
 python*-modules-1.[67].0i1.cme/
 re2-20[12][0-9]-[01][0-9]-[0-3][0-9]/
-rrdtool-[0-9].[0-9].[0-9]/
-.modulebuildrc
 rpm.buildroot
 rpm.topdir

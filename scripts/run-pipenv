@@ -5,8 +5,6 @@
 set -e -o pipefail
 
 REPO_PATH="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" >/dev/null 2>&1 && pwd)"
-RRDTOOL_VERSION=1.7.1
-
 PYTHON_VERSION=$1
 shift
 
@@ -32,18 +30,10 @@ if [ -z "$SKIP_MAKEFILE_CALL" ]; then
     make --silent -C "$REPO_PATH/virtual-envs/$PYTHON_VERSION" .venv 1>&2
 fi
 
-if [ ! -e "$REPO_PATH/omd/rrdtool-$RRDTOOL_VERSION/src/.libs/librrd.so" ]; then
-    echo "librrd missing, building..." >&2
-    LANG=C make --silent -j6 -C "$REPO_PATH/omd" rrdtool-build-library >&2
-fi
-
 PIPENV_VENV_IN_PROJECT=true \
     PIPENV_NOSPIN=true \
     PIPENV_HIDE_EMOJIS=true \
     PIPENV_NO_INHERIT=true \
     PIPENV_PIPFILE="$REPO_PATH/virtual-envs/$PYTHON_VERSION/Pipfile" \
     PIPENV_IGNORE_VIRTUALENVS=1 \
-    CFLAGS="-I$REPO_PATH/omd/rrdtool-$RRDTOOL_VERSION/src/" \
-    LDFLAGS="-L$REPO_PATH/omd/rrdtool-$RRDTOOL_VERSION/src/.libs/" \
-    LD_LIBRARY_PATH="$REPO_PATH/omd/rrdtool-$RRDTOOL_VERSION/src/.libs:$LD_LIBRARY_PATH" \
     pipenv "$@"

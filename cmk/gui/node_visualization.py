@@ -516,7 +516,8 @@ class Topology(object):
 
     def get_info_for_host(self, hostname, mesh):
         return {
-            "name": hostname,  # Used as text in GUI
+            "name": hostname,  # Used as node text in GUI
+            "hostname": hostname,
             "has_no_parents": self.is_root_node(hostname),
             "growth_root": self.is_growth_root(hostname),
             "growth_possible": self.may_grow(hostname, mesh),

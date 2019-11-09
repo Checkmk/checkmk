@@ -1612,10 +1612,15 @@ export class LayoutStyleExampleGenerator {
 
     _create_fake_viewport() {
         return {
-            update_data_of_layers: ()=>{},
-            update_gui_of_layers: ()=>{
+            update_layers: ()=>{
                 this._update_nodes()
                 this._render_nodes_and_links(true)
+            },
+            main_instance: {
+                toolbar: {
+                    add_toolbar_plugin_instance: ()=>{},
+                    update_toolbar_plugins : ()=>{},
+                }
             }
         }
     }

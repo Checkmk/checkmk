@@ -15,6 +15,8 @@ RUN apt-get update \
     libkrb5-dev \
     libldap2-dev \
     libmysqlclient-dev \
+    librrd-dev \
+    librrd4 \
     libsasl2-dev \
     libssl-dev \
     make \
@@ -22,6 +24,7 @@ RUN apt-get update \
     python-dev \
     python-dev \
     python3-pip \
+    rrdtool \
     strace \
     vim \
     && pip3 install --upgrade setuptools \

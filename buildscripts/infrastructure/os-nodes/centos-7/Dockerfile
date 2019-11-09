@@ -23,6 +23,7 @@ RUN yum -y --enablerepo=extras install \
     postfix \
     python27 \
     python27-devel \
+    rrdtool-devel \
     strace \
     sudo \
     vim \

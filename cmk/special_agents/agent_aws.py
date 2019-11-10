@@ -2942,7 +2942,7 @@ class AWSConfig(object):
             return None
 
     def _write_config_hash(self):
-        cmk.utils.store.save_file(self._config_hash_file, "%s\n" % self._current_config_hash)
+        cmk.utils.store.save_file(str(self._config_hash_file), "%s\n" % self._current_config_hash)
 
 
 def main(sys_argv=None):

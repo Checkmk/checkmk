@@ -30,7 +30,7 @@
 # MSSQLSERVER tempdb 1
 
 factory_settings["mssql_connections_default_levels"] = {
-    "levels": (20, 50),
+    "levels": (None, None),
 }
 
 
@@ -54,20 +54,13 @@ def inventory_mssql_connections(parsed):
 def check_mssql_connections(item, params, parsed):
     # If a database is missing in the agent output there are no
     # active connections for that database.
-    connection_count = parsed.get(item, 0)
-
-    warn, crit = params['levels']
-    if connection_count >= crit:
-        state = 2
-    elif connection_count >= warn:
-        state = 1
-    else:
-        state = 0
-
-    infotext = "Connections: %d" % connection_count
-    if state:
-        infotext += " (warn/crit at %d/%d)" % (warn, crit)
-    return state, infotext, [('connections', connection_count, warn, crit)]
+    return check_levels(
+        parsed.get(item, 0),
+        "connections",
+        params['levels'],
+        human_readable_func=int,
+        infoname="Connections",
+    )
 
 
 check_info['mssql_connections'] = {

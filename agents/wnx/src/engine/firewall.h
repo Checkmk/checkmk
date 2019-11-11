@@ -30,18 +30,8 @@ INetFwRule* ScanAllRules(std::function<INetFwRule*(INetFwRule*)> processor);
 INetFwRule* DumpFWRulesInCollection(INetFwRule* fw_rule);
 inline void DumpAllRules() { ScanAllRules(DumpFWRulesInCollection); }
 
-inline INetFwRule* FindRule(std::wstring_view name) {
-    return ScanAllRules([name](INetFwRule* fw_rule) -> INetFwRule* {
-        if (fw_rule == nullptr) return nullptr;  // continue enumeration
-
-        BSTR rule_name = nullptr;
-        auto ret = fw_rule->get_Name(&rule_name);
-        if (ret != 0) return nullptr;
-
-        ON_OUT_OF_SCOPE(SysFreeString(rule_name));
-        return wcscmp(name.data(), rule_name) == 0 ? fw_rule : nullptr;
-    });
-}
+INetFwRule* FindRule(std::wstring_view name);
+INetFwRule* FindRule(std::wstring_view name, std::wstring_view app_name);
 
 // proxy class to keep Windows Firewall API maximally isolated
 class Policy {

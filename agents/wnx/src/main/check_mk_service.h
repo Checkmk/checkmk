@@ -50,6 +50,11 @@ constexpr std::string_view kSectionParamShow = "-show";  // logging sub param
 
 constexpr std::string_view kShowConfigParam = "showconfig";  // show config
 
+// FIREWALL:
+constexpr std::string_view kFwParam = "fw";       // firewall settings
+constexpr std::string_view kFwAddParam = "-add";  // add firewall rule for exe
+constexpr std::string_view kFwRemoveParam = "-remove";  // remove firewall rule
+
 constexpr std::string_view kResetOhm = "resetohm";  // reset ohm as treasury
 
 // Service name and Targeting

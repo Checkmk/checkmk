@@ -6,7 +6,8 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
 LANG=C make -j4 -C ../omd re2 boost
-LANG=C make -C .. config.h
+LANG=C make -C .. config.status
+( cd .. && ./config.status )
 LANG=C make -j4
 sudo install -v src/livestatus.o $ROOT/lib/mk-livestatus/livestatus.o
 

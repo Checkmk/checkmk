@@ -23,85 +23,8 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
-from __future__ import print_function
-import re
-import sys
-import time
-import getopt
-import warnings
-import requests
-import urllib3  # type: ignore
-
-# Hackish early conditional import for legacy mode
-# TODO: Check whether or not we can drop this
-if "--legacy" in sys.argv:
-    try:
-        from NaElement import NaElement  # pylint: disable=import-error
-        from NaServer import NaServer  # pylint: disable=import-error
-    except Exception as e:
-        sys.stderr.write("Unable to import the files NaServer.py/NaElement.py.\nThese files are "\
-                         "provided by the NetApp Managability SDK and must be put into "\
-                         "the sites folder ~/local/lib/python.\nDetailed error: %s\n" % e)
-        sys.exit(1)
-
-try:
-    # lxml was quite promising in our test environment: Uses 2 times less CPU resources
-    # Unfortunaly, it is not a builtin module and need to be installed manually with
-    # pip install lxml
-    import lxml.etree as ET  # type: ignore
-except ImportError:
-    import xml.etree.ElementTree as ET  # type: ignore
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-urllib3.util.ssl_.DEFAULT_CIPHERS += ":" + ":".join([
-    "DH+3DES",
-    "DH+HIGH",
-    "ECDH+3DES",
-    "ECDH+HIGH",
-    "RSA+3DES",
-    "RSA+HIGH",
-])
-
-# This suppress deprecated warning on older python versions
-warnings.filterwarnings("ignore")
-
-# Use this block if you want to use TLS instead of SSL authentification
-#import ssl
-#from functools import wraps
-#def sslwrap(func):
-#    @wraps(func)
-#    def bar(*args, **kw):
-#        kw['ssl_version'] = ssl.PROTOCOL_TLSv1
-#        return func(*args, **kw)
-#    return bar
-#
-#ssl.wrap_socket = sslwrap(ssl.wrap_socket)
-
-
-def usage():
-    sys.stderr.write("""Check_MK NetApp Agent
-
-USAGE: agent_netapp [OPTIONS] HOST
-
-ARGUMENTS:
-  HOST                          Host name or IP address of NetApp Filer
-
-OPTIONS:
-  -h, --help                    Show this help message and exit
-  -u USER, --user USER          Username for NetApp login
-  -s SECRET, --secret SECRET    Secret/Password for NetApp login
-  -p, --port port               Alternative port number (default is 443 for the https connection)
-  --debug                       Debug mode: let Python exceptions come through
-  --xml,                        Dump xml messages into agent output
-  -t, --timeout SECS            Set the network timeout to the NetApp filer to SECS seconds.
-                                This is also used when connecting the agent (option -a).
-                                Default is 60 seconds. Note: the timeout is not only
-                                applied to the connection, but also to each individual
-                                subquery.
-  --nocounters volumes          (clustermode only), skip counters for the given element
-                                right now only "volumes" is supported
-  --legacy                      Legacy mode with NaServer.py/NaElements.py (not configurable via WATO)
+"""
+Checkmk NetApp Agent
 
 Required user permissions
 #########################
@@ -147,8 +70,68 @@ Additionally you may need to make further adjustments for the Ontap 9.5:
  * Give access to ONtapi
  * Create a role for the command ''statistics' on the Ontap 9.5:
      sec log role create -role netapp-monitoring-role -cmddirname \"statistics\" -access readonly
-""")
+"""
 
+from __future__ import print_function
+
+import argparse
+import re
+import sys
+import time
+import warnings
+
+from typing import List
+
+import requests
+import urllib3  # type: ignore
+
+from cmk.special_agents.utils import vcrtrace
+
+# Hackish early conditional import for legacy mode
+# TODO: Check whether or not we can drop this
+
+if "--legacy" in sys.argv:
+    try:
+        from NaElement import NaElement  # type: ignore # pylint: disable=import-error
+        from NaServer import NaServer  # type: ignore # pylint: disable=import-error
+    except Exception as e:
+        sys.stderr.write("Unable to import the files NaServer.py/NaElement.py.\nThese files are "\
+                         "provided by the NetApp Managability SDK and must be put into "\
+                         "the sites folder ~/local/lib/python.\nDetailed error: %s\n" % e)
+        sys.exit(1)
+
+try:
+    # lxml was quite promising in our test environment: Uses 2 times less CPU resources
+    # Unfortunaly, it is not a builtin module and need to be installed manually with
+    # pip install lxml
+    import lxml.etree as ET  # type: ignore
+except ImportError:
+    import xml.etree.ElementTree as ET  # type: ignore
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+urllib3.util.ssl_.DEFAULT_CIPHERS += ":" + ":".join([
+    "DH+3DES",
+    "DH+HIGH",
+    "ECDH+3DES",
+    "ECDH+HIGH",
+    "RSA+3DES",
+    "RSA+HIGH",
+])
+
+# This suppress deprecated warning on older python versions
+warnings.filterwarnings("ignore")
+
+# Use this block if you want to use TLS instead of SSL authentification
+#import ssl
+#from functools import wraps
+#def sslwrap(func):
+#    @wraps(func)
+#    def bar(*args, **kw):
+#        kw['ssl_version'] = ssl.PROTOCOL_TLSv1
+#        return func(*args, **kw)
+#    return bar
+#
+#ssl.wrap_socket = sslwrap(ssl.wrap_socket)
 
 #.
 #   .--Direct XML----------------------------------------------------------.
@@ -547,15 +530,15 @@ def format_dict(the_dict, prefix="", report="all", delimeter="\t", as_line=False
 #   +----------------------------------------------------------------------+
 
 
-def debug_node(node):
-    if opt_legacy:
+def debug_node(args, node):
+    if args.legacy:
         print(node.sprintf())
     else:
         print(prettify(node.get_node()))
 
 
-def output_error_section(server):
-    if opt_legacy:
+def output_error_section(args, server):
+    if args.legacy:
         print("<<<netapp_api_connection>>>")
         sys.stdout.write("\n".join(section_errors))
     else:
@@ -567,8 +550,8 @@ def output_error_section(server):
         print(server.error_messages.format_messages())
 
 
-def query_nodes(server, nodes, what, node_attribute="node-name"):
-    if opt_legacy:
+def query_nodes(args, server, nodes, what, node_attribute="node-name"):
+    if args.legacy:
         results = {}
         for node in nodes:
             node_query = NaElement(what)  # pylint: disable=undefined-variable
@@ -580,7 +563,6 @@ def query_nodes(server, nodes, what, node_attribute="node-name"):
 
             results["%s.%s" % (what, node)] = response
     else:
-
         results = {}
         for node in nodes:
             what_element = ET.Element(what)
@@ -595,8 +577,8 @@ def query_nodes(server, nodes, what, node_attribute="node-name"):
     return results
 
 
-def query(server, what, return_toplevel_node=False):
-    if opt_legacy:
+def query(args, server, what, return_toplevel_node=False):
+    if args.legacy:
         # HACK: if "what" endswith "iter", add max_records = 5000
         # This approach is way easier than reading the tag, invoke another command and merge all answers together
         # This might lead to out of memory requests. The new mechanism handles this better
@@ -645,9 +627,9 @@ def query(server, what, return_toplevel_node=False):
             return data[0]
 
 
-def query_counters(server, netapp_mode, what):
+def query_counters(args, server, netapp_mode, what):
     instance_uuids = []
-    if opt_legacy:
+    if args.legacy:
         counter_query = NaElement("perf-object-get-instances")  # pylint: disable=undefined-variable
         counter_query.child_add_string("objectname", what)
 
@@ -776,9 +758,9 @@ def query_counters(server, netapp_mode, what):
             return initial_results.child_get("instances")
 
 
-def fetch_netapp_mode(server):
+def fetch_netapp_mode(args, server):
     # Determine if this filer is running 7mode or Clustermode
-    version_info = query(server, "system-get-version", return_toplevel_node=True)
+    version_info = query(args, server, "system-get-version", return_toplevel_node=True)
 
     if not version_info:
         sys.stderr.write(",".join(section_errors))
@@ -798,15 +780,15 @@ def fetch_netapp_mode(server):
     return '7mode' if '7-mode' in version_string else 'clustermode'
 
     # DEBUG
-    #version_info = query(server, "system-api-list")
+    #version_info = query(args, server, "system-api-list")
 
 
-def fetch_license_information(server):
+def fetch_license_information(args, server):
     # Some sections are not queried when a license is missing
     try:
         server.suppress_errors = True
         licenses = {"v1": {}, "v1_disabled": {}, "v2": {}, "v2_disabled": {}}
-        license_info = query(server, "license-list-info")
+        license_info = query(args, server, "license-list-info")
         if license_info:
             licenses["v1"] = create_dict(license_info, custom_key=["service"], is_counter=False)
             for license_, values in licenses["v1"].items():
@@ -814,7 +796,7 @@ def fetch_license_information(server):
                     licenses["v1_disabled"][license_] = values
 
         # The v2 license info is not used, yet
-        licensev2_info = query(server, "license-v2-list-info")
+        licensev2_info = query(args, server, "license-v2-list-info")
         if licensev2_info:
             licenses["v2"] = create_dict(licensev2_info, custom_key=["package"], is_counter=False)
         return licenses
@@ -822,10 +804,10 @@ def fetch_license_information(server):
         server.suppress_errors = False
 
 
-def fetch_nodes(server):
+def fetch_nodes(args, server):
     nodes = []
 
-    if opt_legacy:
+    if args.legacy:
         node_query = NaElement("system-get-node-info-iter")  # pylint: disable=undefined-variable
         node_list = server.invoke_elem(node_query)  # pylint: disable=no-member
         for instance in node_list.child_get("attributes-list").children_get():
@@ -854,26 +836,26 @@ def fetch_nodes(server):
     return nodes
 
 
-def process_clustermode(server, netapp_mode, licenses):
-    nodes = fetch_nodes(server)
+def process_clustermode(args, server, netapp_mode, licenses):
+    nodes = fetch_nodes(args, server)
 
-    process_vserver_status(server)
-    process_vserver_traffic(server, netapp_mode)
-    process_interfaces(server, netapp_mode)
-    process_ports(server, netapp_mode)
-    process_fibrechannel_ports(server, netapp_mode)
-    process_cpu(server)
+    process_vserver_status(args, server)
+    process_vserver_traffic(args, server, netapp_mode)
+    process_interfaces(args, server, netapp_mode)
+    process_ports(args, server, netapp_mode)
+    process_fibrechannel_ports(args, server, netapp_mode)
+    process_cpu(args, server)
 
     # Cluster info
     # TODO: check is missing
     ha_partners = {}  # Used later on by environmental sensors
     if "cf" not in licenses["v1_disabled"]:
-        cluster_status = query_nodes(server, nodes, "cf-status", node_attribute="node")
+        cluster_status = query_nodes(args, server, nodes, "cf-status", node_attribute="node")
         if cluster_status:
             print("<<<netapp_api_cm_cluster:sep(9)>>>")
             for node, entry in cluster_status.items():
                 # Small trick to improve formatting
-                if opt_legacy:
+                if args.legacy:
                     container = NaElement("container")  # pylint: disable=undefined-variable
                     container.child_add(entry)
                 else:
@@ -893,7 +875,7 @@ def process_clustermode(server, netapp_mode, licenses):
                 print("%s\t%s\t%s" % (node[10:], current_time, node_current_time))
 
     # Disk
-    disks = query(server, "storage-disk-get-iter")
+    disks = query(args, server, "storage-disk-get-iter")
     if disks:
         print("<<<netapp_api_disk:sep(9)>>>")
         print(format_config(disks,
@@ -920,11 +902,11 @@ def process_clustermode(server, netapp_mode, licenses):
                             }))
 
     # Volumes
-    volumes = query(server, "volume-get-iter")
-    if "volumes" in opt_no_counters:
+    volumes = query(args, server, "volume-get-iter")
+    if "volumes" in args.no_counters:
         volume_counters = None
     else:
-        volume_counters = query_counters(server, netapp_mode, "volume")
+        volume_counters = query_counters(args, server, netapp_mode, "volume")
     if volumes:
         print("<<<netapp_api_volumes:sep(9)>>>")
         print(format_config(volumes, "volume", "volume-id-attributes.instance-uuid",
@@ -956,7 +938,7 @@ def process_clustermode(server, netapp_mode, licenses):
         ))
 
     # Aggregations
-    aggregations = query(server, "aggr-get-iter")
+    aggregations = query(args, server, "aggr-get-iter")
     if aggregations:
         print("<<<netapp_api_aggr:sep(9)>>>")
         print(format_config(aggregations,
@@ -972,7 +954,7 @@ def process_clustermode(server, netapp_mode, licenses):
                             }))
 
     # LUNs
-    luns = query(server, "lun-get-iter")
+    luns = query(args, server, "lun-get-iter")
     if luns:
         print("<<<netapp_api_luns:sep(9)>>>")
         print(format_config(
@@ -983,14 +965,14 @@ def process_clustermode(server, netapp_mode, licenses):
                            "volume"]))
 
     # Diagnosis status
-    diag_status = query(server, "diagnosis-status-get")
+    diag_status = query(args, server, "diagnosis-status-get")
     if diag_status:
         print("<<<netapp_api_status>>>")
         print(format_config(diag_status, "status", "status"))
 
     # NetApp System Version/Info
-    system_version = query(server, "system-get-version", return_toplevel_node=True)
-    system_info = query(server, "system-get-node-info-iter")
+    system_version = query(args, server, "system-get-version", return_toplevel_node=True)
+    system_info = query(args, server, "system-get-node-info-iter")
     if system_version:
         print("<<<netapp_api_info:sep(9)>>>")
         print(format_as_key_value(system_version))
@@ -1000,7 +982,7 @@ def process_clustermode(server, netapp_mode, licenses):
                 print(format_dict(values, prefix="node %s" % key, as_line=True))
 
     # Snapmirror / Snapvault lag-time
-    snapmirror_info = query(server, "snapmirror-get-iter")
+    snapmirror_info = query(args, server, "snapmirror-get-iter")
     if snapmirror_info:
         print("<<<netapp_api_snapvault:sep(9)>>>")
         print(format_config(snapmirror_info,
@@ -1018,7 +1000,7 @@ def process_clustermode(server, netapp_mode, licenses):
                             }))
 
     # Environmental sensors
-    environment_info = query_nodes(server, nodes, "storage-shelf-environment-list-info")
+    environment_info = query_nodes(args, server, nodes, "storage-shelf-environment-list-info")
     processed_nodes = []
     if environment_info:
         for node, values in environment_info.items():
@@ -1048,13 +1030,13 @@ def process_clustermode(server, netapp_mode, licenses):
                         print(format_config(node, what, shelf_id))
 
     # Controller Status
-    environment = query(server, "environment-sensors-get-iter")
+    environment = query(args, server, "environment-sensors-get-iter")
     if environment:
         print("<<<netapp_api_environment:sep(9)>>>")
         print(format_config(environment, "sensor-name", "sensor-name"))
 
     # Qtree quota usage
-    quota_info = query(server, "quota-report-iter")
+    quota_info = query(args, server, "quota-report-iter")
     if quota_info:
         print("<<<netapp_api_qtree_quota:sep(9)>>>")
         print(format_config(quota_info,
@@ -1068,7 +1050,7 @@ def process_clustermode(server, netapp_mode, licenses):
                                           }))
 
     # LUNs
-    luns = query(server, "lun-get-iter")
+    luns = query(args, server, "lun-get-iter")
     if luns:
         print("<<<netapp_api_luns:sep(9)>>>")
         print(format_config(
@@ -1079,8 +1061,8 @@ def process_clustermode(server, netapp_mode, licenses):
                            "volume"]))
 
 
-def process_vserver_status(server):
-    vservers = query(server, "vserver-get-iter")
+def process_vserver_status(args, server):
+    vservers = query(args, server, "vserver-get-iter")
     if not vservers:
         return
     vserver_dict = create_dict(vservers, custom_key=["vserver-name"], is_counter=False)
@@ -1093,23 +1075,23 @@ def process_vserver_status(server):
         print('\t'.join(words))
 
 
-def process_vserver_traffic(server, netapp_mode):
+def process_vserver_traffic(args, server, netapp_mode):
     print("<<<netapp_api_vs_traffic:sep(9)>>>")
     for what in [
             "lif:vserver", "fcp_lif:vserver", "iscsi_lif:vserver", "cifs:vserver", "nfsv3", "nfsv4",
             "nfsv4_1"
     ]:
-        result = query_counters(server, netapp_mode, what)
+        result = query_counters(args, server, netapp_mode, what)
         if result:
             result_dict = create_dict(result)
             for value in result_dict.values():
                 print(format_dict(value, prefix="protocol %s" % what, as_line=True))
 
 
-def process_interfaces(server, netapp_mode):
-    interfaces = query(server, "net-interface-get-iter")
-    ports = query(server, "net-port-get-iter")
-    if_counters = query_counters(server, netapp_mode, "lif")
+def process_interfaces(args, server, netapp_mode):
+    interfaces = query(args, server, "net-interface-get-iter")
+    ports = query(args, server, "net-port-get-iter")
+    if_counters = query_counters(args, server, netapp_mode, "lif")
 
     if interfaces:
         print("<<<netapp_api_if:sep(9)>>>")
@@ -1171,17 +1153,17 @@ def process_interfaces(server, netapp_mode):
                             ]))
 
 
-def process_ports(server, netapp_mode):
-    ports = query(server, "net-port-get-iter")
+def process_ports(args, server, netapp_mode):
+    ports = query(args, server, "net-port-get-iter")
     if ports:
         print("<<<netapp_api_ports:sep(9)>>>")
         print(format_config(ports, "port", ["node", "port"]))
 
 
-def process_fibrechannel_ports(server, netapp_mode):
-    fcp_counters = query_counters(server, netapp_mode, "fcp_lif")
-    fcp_ports = query(server, "fcp-interface-get-iter")
-    fcp_adapter = query(server, "fcp-adapter-get-iter")
+def process_fibrechannel_ports(args, server, netapp_mode):
+    fcp_counters = query_counters(args, server, netapp_mode, "fcp_lif")
+    fcp_ports = query(args, server, "fcp-interface-get-iter")
+    fcp_adapter = query(args, server, "fcp-adapter-get-iter")
 
     if fcp_counters:
         print("<<<netapp_api_fcp:sep(9)>>>")
@@ -1195,10 +1177,10 @@ def process_fibrechannel_ports(server, netapp_mode):
         print(format_config(fcp_ports, "fcp", "interface-name", extra_info=fcp_counter_dict))
 
 
-def process_cpu(server):
+def process_cpu(args, server):
     # CPU Util for both nodes
-    node_info = query(server, "system-get-node-info-iter")
-    system_info = query(server, "system-node-get-iter")
+    node_info = query(args, server, "system-get-node-info-iter")
+    system_info = query(args, server, "system-node-get-iter")
     if node_info and system_info:
         print("<<<netapp_api_cpu:sep(9)>>>")
         print(format_config(node_info,
@@ -1214,10 +1196,10 @@ def process_cpu(server):
                             config_rename={"cpu-busytime": "cpu_busy"}))
 
 
-def process_7mode(server, netapp_mode, licenses):
+def process_7mode(args, server, netapp_mode, licenses):
     # Interfaces
-    interfaces = query(server, "net-ifconfig-get")
-    if_counters = query_counters(server, netapp_mode, "ifnet")
+    interfaces = query(args, server, "net-ifconfig-get")
+    if_counters = query_counters(args, server, netapp_mode, "ifnet")
     if interfaces:
         print("<<<netapp_api_if:sep(9)>>>")
         print(format_config(interfaces,
@@ -1233,18 +1215,18 @@ def process_7mode(server, netapp_mode, licenses):
     # TODO: Fibrechannel interfaces
 
     # CPU
-    system_counters = query_counters(server, netapp_mode, "system")
+    system_counters = query_counters(args, server, netapp_mode, "system")
     if system_counters:
         print("<<<netapp_api_cpu:sep(9)>>>")
         dict_counters = create_dict(system_counters)
         print(format_dict(dict_counters.get("system"), report=["cpu_busy", "num_processors"]))
 
     # Volumes
-    volumes = query(server, "volume-list-info")
-    if "volumes" in opt_no_counters:
+    volumes = query(args, server, "volume-list-info")
+    if "volumes" in args.no_counters:
         volume_counters = None
     else:
-        volume_counters = query_counters(server, netapp_mode, "volume")
+        volume_counters = query_counters(args, server, netapp_mode, "volume")
     if volumes:
         print("<<<netapp_api_volumes:sep(9)>>>")
         print(format_config(volumes, "volume", "name",
@@ -1258,7 +1240,7 @@ def process_7mode(server, netapp_mode, licenses):
                                                 [ "instance_name" ]))
 
     # Aggregation
-    aggregations = query(server, "aggr-list-info")
+    aggregations = query(args, server, "aggr-list-info")
     if aggregations:
         print("<<<netapp_api_aggr:sep(9)>>>")
         print(format_config(aggregations,
@@ -1270,7 +1252,7 @@ def process_7mode(server, netapp_mode, licenses):
     print("<<<netapp_api_snapshots:sep(9)>>>")
     for volume in volumes.children_get():
         # Small trick improve formatting
-        if opt_legacy:
+        if args.legacy:
             container = NaElement("container")  # pylint: disable=undefined-variable
             container.child_add(volume)
         else:
@@ -1293,7 +1275,7 @@ def process_7mode(server, netapp_mode, licenses):
         ("cifs", "cifs"),
         ("fcp", "fcp"),
     ]:
-        protocol_counters = query_counters(server, netapp_mode, what)
+        protocol_counters = query_counters(args, server, netapp_mode, what)
         if protocol_counters:
             protocol_dict = create_dict(protocol_counters)
             print(format_dict(protocol_dict[key],
@@ -1304,13 +1286,13 @@ def process_7mode(server, netapp_mode, licenses):
                               as_line=True))
 
     # Diagnosis status
-    diag_status = query(server, "diagnosis-status-get")
+    diag_status = query(args, server, "diagnosis-status-get")
     if diag_status:
         print("<<<netapp_api_status>>>")
         print(format_config(diag_status, "status", "status"))
 
     # Disks
-    disk_info = query(server, "disk-list-info")
+    disk_info = query(args, server, "disk-list-info")
     if disk_info:
         print("<<<netapp_api_disk:sep(9)>>>")
         print(format_config(disk_info,
@@ -1322,7 +1304,7 @@ def process_7mode(server, netapp_mode, licenses):
                             ]))
 
     # VFiler
-    vfiler_info = query(server, "vfiler-list-info")
+    vfiler_info = query(args, server, "vfiler-list-info")
     vfiler_names = [""]  # default is no vfiler
     if vfiler_info:
         print("<<<netapp_api_vf_status:sep(9)>>>")
@@ -1376,7 +1358,7 @@ def process_7mode(server, netapp_mode, licenses):
     server.set_vfiler("")
 
     # VFiler Counters
-    vfiler_counters = query_counters(server, netapp_mode, "vfiler")
+    vfiler_counters = query_counters(args, server, netapp_mode, "vfiler")
     if vfiler_counters:
         print("<<<netapp_api_vf_stats:sep(9)>>>")
         vfiler_dict = create_dict(vfiler_counters)
@@ -1384,8 +1366,8 @@ def process_7mode(server, netapp_mode, licenses):
             print(format_dict(values, prefix="vfiler %s" % key, as_line=True))
 
     # NetApp System Version/Info
-    system_info = query(server, "system-get-info")
-    system_version = query(server, "system-get-version", return_toplevel_node=True)
+    system_info = query(args, server, "system-get-info")
+    system_version = query(args, server, "system-get-version", return_toplevel_node=True)
     if system_info:
         print("<<<netapp_api_info:sep(9)>>>")
         print(format_as_key_value(system_info))
@@ -1393,7 +1375,7 @@ def process_7mode(server, netapp_mode, licenses):
 
     # 7Mode Cluster info
     if "cf" not in licenses["v1_disabled"]:
-        cluster_status = query(server, "cf-status", return_toplevel_node=True)
+        cluster_status = query(args, server, "cf-status", return_toplevel_node=True)
         if cluster_status:
             print("<<<netapp_api_cluster:sep(9)>>>")
             print(format_as_key_value(cluster_status))
@@ -1411,7 +1393,7 @@ def process_7mode(server, netapp_mode, licenses):
     system_name = system_info.child_get_string("system-name")
     partner_system_name = system_info.child_get_string("partner-system-name")
     if not partner_system_name or system_name < partner_system_name:
-        environ_info = query(server, "storage-shelf-environment-list-info")
+        environ_info = query(args, server, "storage-shelf-environment-list-info")
         if environ_info:
             for channel in environ_info.children_get():
                 shelf_list = channel.child_get("shelf-environ-shelf-list")
@@ -1427,12 +1409,12 @@ def process_7mode(server, netapp_mode, licenses):
 
     # License information
     print("<<<netapp_api_licenses:sep(9)>>>")
-    licensev2_info = query(server, "license-v2-list-info")
+    licensev2_info = query(args, server, "license-v2-list-info")
     if licensev2_info:
         print(format_config(licensev2_info, "license", "package"))
 
     # Qtree quota usage
-    quota_info = query(server, "quota-report")
+    quota_info = query(args, server, "quota-report")
     if quota_info:
         print("<<<netapp_api_qtree_quota:sep(9)>>>")
         print(format_config(quota_info,
@@ -1446,28 +1428,28 @@ def process_7mode(server, netapp_mode, licenses):
                                           }))
 
 
-def connect(host_address):
+def connect(args):
     try:
-        if opt_legacy:
-            if opt_debug:
+        if args.legacy:
+            if args.debug:
                 print("Running in legacy mode")
-            server = NaServer(host_address, 1, 8)  # pylint: disable=undefined-variable
-            server.set_admin_user(opt_user, opt_secret)
-            server.set_timeout(opt_timeout)
+            server = NaServer(args.host_address, 1, 8)  # pylint: disable=undefined-variable
+            server.set_admin_user(args.user, args.secret)
+            server.set_timeout(args.timeout)
             server.set_transport_type("HTTPS")
             server.set_server_cert_verification(False)
-            if opt_dump_xml:
+            if args.dump_xml:
                 server.set_debug_style("NA_PRINT_DONT_PARSE")
         else:
-            server = NetAppConnection(host_address, opt_user, opt_secret)
-            if opt_debug:
+            server = NetAppConnection(args.host_address, args.user, args.secret)
+            if args.debug:
                 print("Running in optimized mode")
                 server.debug = True
 
         return server
 
     except Exception:
-        if opt_debug:
+        if args.debug:
             raise
         sys.stderr.write("Cannot connect to NetApp Server. Maybe you provided wrong " \
                          "credentials. Please check your connection settings and try " \
@@ -1485,77 +1467,101 @@ def connect(host_address):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-opt_user = None
-opt_secret = None
+SectionType = List[str]
 
-opt_timeout = 120
-opt_debug = False
-opt_dump_xml = False
-opt_no_counters = []
-opt_legacy = False
-section_errors = []
+section_errors = []  # type: SectionType
 
 
 def main():
-    global opt_user, opt_secret, opt_timeout, opt_debug, opt_dump_xml, opt_no_counters, opt_legacy
+    class Formatter(argparse.RawDescriptionHelpFormatter):
+        def _get_help_string(self, action):
+            return action.help
 
-    short_options = 'hu:s:t:o'
-    long_options = ['help', 'debug', 'user=', 'secret=', 'timeout=', 'xml', "nocounters=", "legacy"]
+    def positive_int(n):
+        val = int(n)
+        if val < 0:
+            raise ValueError
+
+    description, epilog = __doc__.split("\n\n", 1)  # See module's doc-string.
+    parser = argparse.ArgumentParser(description=description.strip(),
+                                     formatter_class=Formatter,
+                                     epilog=epilog.lstrip())
+    parser.add_argument(
+        dest='host_address',
+        type=str,
+        help='Hostname or IP-address of NetApp Filer.',
+    )
+
+    parser.add_argument('-u', '--user', help='Username for NetApp login')
+    parser.add_argument('-s', '--secret', help='Secret/Password for NetApp login')
+
+    parser.add_argument("--vcrtrace", action=vcrtrace(filter_headers=[('authorization', '****')]))
+
+    parser.add_argument(
+        '-t',
+        '--timeout',
+        type=positive_int,
+        default=120,
+        help=('Set the network timeout to the NetApp filer to TIMEOUT seconds. '
+              'Note: the timeout is not only applied to the connection, but also '
+              'to each individual subquery. (Default is %(default)s seconds)'),
+    )
+    parser.add_argument(
+        '--nocounters',
+        dest='no_counters',
+        action='append',
+        type=str,
+        default=[],
+        choices=['volumes'],
+        help=('(clustermode only), skip counters for the given element. '
+              'Right now only "volumes" is supported.'),
+    )
+
+    parser.add_argument(
+        '--xml',
+        dest='dump_xml',
+        action='store_true',
+        help='Dump XML messages into agent output.',
+    )
+    parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='Debug mode: let Python exceptions come through.',
+    )
+    parser.add_argument(
+        '--legacy',
+        action='store_true',
+        help='Legacy mode with NaServer.py/NaElements.py (not configurable via WATO)',
+    )
+
+    if len(sys.argv) <= 1:
+        # This is done to always print out the *full* help when no arguments are passed, not just
+        # the abbreviated help which is generated by `argparse`.
+        parser.print_help(sys.stderr)
+        sys.exit(1)
+
+    args = parser.parse_args()
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-    except getopt.GetoptError as err:
-        sys.stderr.write("%s\n" % err)
-        return 1
-
-    for o, a in opts:
-        if o in ['--debug']:
-            opt_debug = True
-        elif o in ['--legacy']:
-            opt_legacy = True
-        elif o in ['-u', '--user']:
-            opt_user = a
-        elif o in ['-s', '--secret']:
-            opt_secret = a
-        elif o in ['--nocounters']:
-            opt_no_counters = a.split(",")
-        elif o in ['--xml']:
-            opt_dump_xml = True
-        elif o in ['-t', '--timeout']:
-            opt_timeout = int(a)
-        elif o in ['-h', '--help']:
-            usage()
-            return 0
-
-    if len(args) == 1:
-        host_address = args[0]
-    elif not args:
-        sys.stderr.write("ERROR: No host given.\n")
-        return 1
-    else:
-        sys.stderr.write("ERROR: Please specify exactly one host.\n")
-        return 1
-
-    try:
-        server = connect(host_address)
-        netapp_mode = fetch_netapp_mode(server)
-        licenses = fetch_license_information(server)
+        server = connect(args)
+        netapp_mode = fetch_netapp_mode(args, server)
+        licenses = fetch_license_information(args, server)
 
         if netapp_mode == "clustermode":
-            process_clustermode(server, netapp_mode, licenses)
+            process_clustermode(args, server, netapp_mode, licenses)
         else:
-            process_7mode(server, netapp_mode, licenses)
+            process_7mode(args, server, netapp_mode, licenses)
 
         return 0
 
     except Exception as e:
         # Shouldn't happen at all...
         server.add_error_message("Agent Exception (contact developer): %s" % e)
-        if opt_debug:
+        if args.debug:
             raise
         return 1
     finally:
-        output_error_section(server)
+        output_error_section(args, server)
 
 
 if __name__ == "__main__":

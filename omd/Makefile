@@ -122,7 +122,7 @@ BUILD_TARGETS := $(foreach package,$(addsuffix _BUILD,$(BUILD_TARGET_VARS)),$($(
 INSTALL_TARGETS := $(foreach package,$(addsuffix _INSTALL,$(BUILD_TARGET_VARS)),$($(package)))
 SKEL_TARGETS :=  $(foreach package,$(addsuffix _SKEL,$(BUILD_TARGET_VARS)),$($(package)))
 
-.PHONY: build install pack cma rpm deb
+.PHONY: build install pack cma rpm deb clean setversion
 
 # Called in the build phase of .rpm packaging procedure
 build: $(BUILD_TARGETS)
@@ -151,7 +151,6 @@ $(PRE_INSTALL):
 
 
 $(INSTALL_TARGETS): $(PRE_INSTALL)
-$(APPLIANCE_INSTALL_CMA): $(PRE_INSTALL)
 
 $(SKEL_TARGETS): $(PRE_SKEL)
 
@@ -313,9 +312,14 @@ setversion:
 	fi ; \
 	sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1"'"$$NEW_OMD_VERSION"'"/' packages/omd/omdlib/__init__.py
 
+# TODO: Can not find CMA_INSTALL definition. Is this dead?
 $(CMA_INSTALL): $(INSTALL_TARGETS)
 
-$(CMA_PACKAGE): $(CMA_INSTALL) $(APPLIANCE_INSTALL_CMA) $(APPLIANCE_SKEL_CMA) $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions $(FIX_SKEL)
+# Please note: APPLIANCE_*_CMA are defined in omd/packages/appliance/appliance.make
+$(APPLIANCE_INSTALL_CMA): $(PRE_INSTALL)
+
+# Please note: APPLIANCE_*_CMA are defined in omd/packages/appliance/appliance.make
+$(CMA_PACKAGE): $(CMA_INSTALL) $(APPLIANCE_INSTALL_CMA) $(APPLIANCE_SKEL_CMA) install
 	# Create info file to mark minimal cma firmware version requirement
 	@if [ "$(DISTRO_CODE)" = "stretch" ]; then \
 	    MIN_VERSION=1.4.0 ; \

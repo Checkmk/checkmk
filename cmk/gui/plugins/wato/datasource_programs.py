@@ -2353,12 +2353,11 @@ def _valuespec_special_agents_graylog():
              ListChoice(
                  title=_("Informations to query"),
                  help=_("Defines what information to query. You can choose "
-                        "between the alarms, collectors, cluster statistics, "
-                        "failures, jvm heap size, message count, nodes and sidecar "
+                        "between the alarms, cluster statistics, failures, "
+                        "jvm heap size, message count, nodes and sidecar "
                         "fleet."),
                  choices=[
                      ("alerts", _("Alarms")),
-                     ("collectors", _("Collectors")),
                      ("cluster_stats", _("Cluster statistics")),
                      ("cluster_traffic", _("Cluster traffic statistics")),
                      ("failures", _("Failed index operations")),
@@ -2369,8 +2368,8 @@ def _valuespec_special_agents_graylog():
                      ("sidecars", _("Sidecar fleet")),
                  ],
                  default_value=[
-                     "alerts", "collectors", "cluster_stats", "cluster_traffic", "failures", "jvm",
-                     "license", "messages", "nodes", "sidecars"
+                     "alerts", "cluster_stats", "cluster_traffic", "failures", "jvm", "license",
+                     "messages", "nodes", "sidecars"
                  ],
                  allow_empty=False,
              )),

@@ -49,7 +49,6 @@ def main(argv=None):
     # Add new queries here
     sections = [
         GraylogSection(name="alerts", uri="/streams/alerts?limit=300"),
-        GraylogSection(name="collectors", uri="/plugins/org.graylog.plugins.collector/collectors"),
         GraylogSection(name="cluster_health", uri="/system/indexer/cluster/health"),
         GraylogSection(name="cluster_inputstates", uri="/cluster/inputstates"),
         GraylogSection(name="cluster_stats", uri="/system/cluster/stats"),
@@ -180,8 +179,8 @@ def handle_piggyback(value, args, piggyback_name, section):
 
 def parse_arguments(argv):
     sections = [
-        "alerts", "cluster_stats", "cluster_traffic", "collectors", "failures", "jvm", "license",
-        "messages", "nodes", "sidecars"
+        "alerts", "cluster_stats", "cluster_traffic", "failures", "jvm", "license", "messages",
+        "nodes", "sidecars"
     ]
 
     parser = argparse.ArgumentParser(description=__doc__)

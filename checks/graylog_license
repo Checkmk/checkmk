@@ -52,10 +52,11 @@ def inventory_graylog_license(parsed):
 
 
 factory_settings["graylog_license_default_levels"] = {
+    'no_enterprise': 0,
     'valid': 2,
     'cluster_not_covered': 1,
     'traffic_exceeded': 1,
-    'violated': 1,
+    'violated': 2,
     'nodes_exceeded': 1,
     'expired': 2,
     'remote_checks_failed': 1,
@@ -64,14 +65,19 @@ factory_settings["graylog_license_default_levels"] = {
 
 def check_graylog_license(_no_item, params, parsed):
     license_state = parsed.get("status")
-    if license_state is None or not license_state:
+    if license_state is None:
+        return
+
+    # if no enterprise licence could be found
+    if not license_state:
+        yield params.get("no_enterprise"), "No enterprise license found"
         return
 
     license_data = license_state[0]
 
     for key, infotext, expected in [
         ("expired", "Is expired", "False"),
-        ("violated", "Is violated", "True"),
+        ("violated", "Is violated", "False"),
         ("valid", "Is valid", "True"),
         ("traffic_exceeded", "Traffic is exceeded", "False"),
         ("cluster_not_covered", "Cluster is not covered", "False"),

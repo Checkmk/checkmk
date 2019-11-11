@@ -41,9 +41,12 @@ from cmk.gui.plugins.wato import (
 
 def _parameter_valuespec_graylog_license():
     return Dictionary(elements=[
+        ("no_enterprise",
+         MonitoringState(title=_("State when no enterprise license is installed"),
+                         default_value=0)),
         ("expired", MonitoringState(title=_("State when license is expired"), default_value=2)),
         ("violated",
-         MonitoringState(title=_("State when license state is violated"), default_value=1)),
+         MonitoringState(title=_("State when license state is violated"), default_value=2)),
         ("valid", MonitoringState(title=_("State when license is not valid"), default_value=2)),
         ("traffic_exceeded",
          MonitoringState(title=_("State when license traffic is exceeded"), default_value=1)),

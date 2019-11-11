@@ -16,7 +16,8 @@ checks = {
     '': [
         (
             None, {
-                'violated': 1,
+                'no_enterprise': 0,
+                'violated': 2,
                 'valid': 2,
                 'cluster_not_covered': 1,
                 'traffic_exceeded': 1,
@@ -24,7 +25,7 @@ checks = {
                 'expired': 2,
                 'remote_checks_failed': 1
             }, [
-                (0, 'Is expired: no', []), (0, 'Is violated: yes', []),
+                (0, 'Is expired: no', []), (2, 'Is violated: yes', []),
                 (2, 'Is valid: no', []), (0, 'Traffic is exceeded: no', []),
                 (0, 'Cluster is not covered: no', []),
                 (0, 'Nodes exceeded: no', []),

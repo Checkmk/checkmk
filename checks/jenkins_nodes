@@ -25,59 +25,47 @@
 # Boston, MA 02110-1301 USA.
 
 #<<<jenkins_nodes>>>
-# [{"displayName": "master", "description": "the master Jenkins node",
+# [[u'[{"displayName": "master", "description": "the master Jenkins node",
 # "temporarilyOffline": false, "monitorData":
 # {"hudson.node_monitors.SwapSpaceMonitor": {"totalPhysicalMemory":
-# 67429339136, "availableSwapSpace": 47768457216, "_class":
+# 67429359616, "availableSwapSpace": 59097583616, "_class":
 # "hudson.node_monitors.SwapSpaceMonitor$MemoryUsage2",
-# "availablePhysicalMemory": 13439528960, "totalSwapSpace": 64000876544},
+# "availablePhysicalMemory": 4450242560, "totalSwapSpace": 64000876544},
 # "hudson.node_monitors.ClockMonitor": {"diff": 0, "_class":
-# "hudson.util.ClockDifference"},
-# "hudson.node_monitors.DiskSpaceMonitor": {"size": 332634664960,
-# "timestamp": 1566969226922, "_class":
-# "hudson.node_monitors.DiskSpaceMonitorDescriptor$DiskSpace",
-# "path": "/var/lib/jenkins"},
-# "hudson.node_monitors.TemporarySpaceMonitor": {"size": 23989067776,
-# "timestamp": 1566969227236, "_class":
-# "hudson.node_monitors.DiskSpaceMonitorDescriptor$DiskSpace",
-# "path": "/tmp"}, "hudson.node_monitors.ResponseTimeMonitor":
-# {"timestamp": 1566969226923, "average": 0, "_class":
-# "hudson.node_monitors.ResponseTimeMonitor$Data"},
+# "hudson.util.ClockDifference"}, "hudson.node_monitors.DiskSpaceMonitor":
+# {"size": 290845855744, "timestamp": 1573468791686, "_class":
+# "hudson.node_monitors.DiskSpaceMonitorDescriptor$DiskSpace", "path":
+# "/var/lib/jenkins"}, "hudson.node_monitors.TemporarySpaceMonitor": {"size":
+# 32569888768, "timestamp": 1573468792277, "_class":
+# "hudson.node_monitors.DiskSpaceMonitorDescriptor$DiskSpace", "path": "/tmp"},
+# "hudson.node_monitors.ResponseTimeMonitor": {"timestamp": 1573468791687,
+# "average": 0, "_class": "hudson.node_monitors.ResponseTimeMonitor$Data"},
 # "hudson.node_monitors.ArchitectureMonitor": "Linux (amd64)"},
-# "numExecutors": 10, "idle": true, "offlineCause": null, "offline": false,
-# "_class": "hudson.model.Hudson$MasterComputer", "jnlpAgent": false},
-# {"displayName": "Windows", "description": "Name: MY-NODE",
+# "assignedLabels": [{"busyExecutors": 3, "idleExecutors": 17},
+# {"busyExecutors": 3, "idleExecutors": 17}], "numExecutors": 20, "idle":
+# false, "offlineCause": null, "offline": false, "_class":
+# "hudson.model.Hudson$MasterComputer", "jnlpAgent": false}, {"displayName":
+# "Windows", "description": "Name: MYNAME, IP-Address: 1.1.1.1",
 # "temporarilyOffline": false, "monitorData":
 # {"hudson.node_monitors.SwapSpaceMonitor": {"totalPhysicalMemory":
-# 17179332608, "availableSwapSpace": 14135590912, "_class":
+# 17179332608, "availableSwapSpace": 8569982976, "_class":
 # "hudson.node_monitors.SwapSpaceMonitor$MemoryUsage2",
-# "availablePhysicalMemory": 9060417536, "totalSwapSpace":
-# 22548041728}, "hudson.node_monitors.ClockMonitor": {"diff": -4,
-# "_class": "hudson.util.ClockDifference"},
-# "hudson.node_monitors.DiskSpaceMonitor": {"size": 14138306560,
-# "timestamp": 1566969226949, "_class":
-# "hudson.node_monitors.DiskSpaceMonitorDescriptor$DiskSpace",
-# "path": "C:\\"}, "hudson.node_monitors.TemporarySpaceMonitor":
-# {"size": 14138306560, "timestamp": 1566969227263, "_class":
-# "hudson.node_monitors.DiskSpaceMonitorDescriptor$DiskSpace",
-# "path": "C:\\Windows\\Temp"},
-# "hudson.node_monitors.ResponseTimeMonitor": {"timestamp":
-# 1566969226952, "average": 27, "_class":
+# "availablePhysicalMemory": 5656227840, "totalSwapSpace": 22548041728},
+# "hudson.node_monitors.ClockMonitor": {"diff": 8, "_class":
+# "hudson.util.ClockDifference"}, "hudson.node_monitors.DiskSpaceMonitor":
+# {"size": 15085674496, "timestamp": 1573468791711, "_class":
+# "hudson.node_monitors.DiskSpaceMonitorDescriptor$DiskSpace", "path":
+# "C:\\\\"}, "hudson.node_monitors.TemporarySpaceMonitor": {"size":
+# 15085674496, "timestamp": 1573468792334, "_class":
+# "hudson.node_monitors.DiskSpaceMonitorDescriptor$DiskSpace", "path":
+# "C:\\\\Windows\\\\Temp"}, "hudson.node_monitors.ResponseTimeMonitor":
+# {"timestamp": 1573468791722, "average": 35, "_class":
 # "hudson.node_monitors.ResponseTimeMonitor$Data"},
-# "hudson.node_monitors.ArchitectureMonitor": "Windows Server 2010
-# (x86)"}, "numExecutors": 1, "idle": true, "offlineCause": null,
-# "offline": false, "_class": "hudson.slaves.SlaveComputer",
-# "jnlpAgent": true}, {"displayName": "Windows",
-# "description": "vM", "temporarilyOffline": false,
-# "monitorData": {"hudson.node_monitors.SwapSpaceMonitor": null,
-# "hudson.node_monitors.ClockMonitor": null,
-# "hudson.node_monitors.DiskSpaceMonitor": null,
-# "hudson.node_monitors.TemporarySpaceMonitor": null,
-# "hudson.node_monitors.ResponseTimeMonitor": null,
-# "hudson.node_monitors.ArchitectureMonitor": null},
-# "numExecutors": 1, "idle": true, "offlineCause": null,
-# "offline": true, "_class": "hudson.slaves.SlaveComputer",
-# "jnlpAgent": true}]
+# "hudson.node_monitors.ArchitectureMonitor": "Windows Server"},
+# "assignedLabels": [{"busyExecutors": 0, "idleExecutors": 1},
+# {"busyExecutors": 0, "idleExecutors": 1}], "numExecutors": 1, "idle": true,
+# "offlineCause": null, "offline": false, "_class":
+# "hudson.slaves.SlaveComputer", "jnlpAgent": true}]']]
 
 import json
 
@@ -132,9 +120,38 @@ def check_jenkins_nodes(item, params, item_data):
             exec_name = "jenkins_%s" % exec_key.lower()
 
             yield check_levels(exec_data,
-                               exec_name, (None, None) + params.get(exec_name, (None, None)),
+                               "jenkins_num_executors",
+                               (None, None) + params.get(exec_name, (None, None)),
                                human_readable_func=int,
-                               infoname="Number of executers")
+                               infoname="Total number of executors")
+
+        for key, infotext in [
+            ("busyExecutors", "Number of busy executors"),
+            ("idleExecutors", "Number of idle executors"),
+        ]:
+
+            exec_label_data = node.get("assignedLabels")
+
+            if exec_label_data is None:
+                continue
+
+            for executor in exec_label_data:
+                # list of two dicts like [{"busyExecutors": 0,
+                # "idleExecutors": 1}, {"busyExecutors": 0,
+                # "idleExecutors": 1}], we only need one entry here
+                executors = executor.get(key)
+                break
+
+            if executors is None:
+                continue
+
+            executor_name = "jenkins_%s" % key.lower()
+
+            yield check_levels(executors,
+                               "jenkins_%s_executors" % key[0:4],
+                               params.get(executor_name),
+                               human_readable_func=int,
+                               infoname=infotext)
 
         state = 0
         offline_state = node.get("offline")

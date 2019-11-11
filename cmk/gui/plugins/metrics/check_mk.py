@@ -6033,16 +6033,28 @@ metric_info["jenkins_build_duration"] = {
     "color": "31/a",
 }
 
-metric_info["jenkins_numexecutors"] = {
-    "title": _("Number of executers"),
+metric_info["jenkins_num_executors"] = {
+    "title": _("Total number of executors"),
     "unit": "count",
-    "color": "31/a",
+    "color": "25/a",
+}
+
+metric_info["jenkins_busy_executors"] = {
+    "title": _("Number of busy executors"),
+    "unit": "count",
+    "color": "11/b",
+}
+
+metric_info["jenkins_idle_executors"] = {
+    "title": _("Number of idle executors"),
+    "unit": "count",
+    "color": "23/a",
 }
 
 metric_info["jenkins_clock"] = {
     "title": _("Clock difference"),
     "unit": "s",
-    "color": "43/a",
+    "color": "25/a",
 }
 
 metric_info["jenkins_temp"] = {
@@ -11928,5 +11940,14 @@ graph_info["write_latency"] = {
         ("nimble_write_latency_200", "line"),
         ("nimble_write_latency_500", "line"),
         ("nimble_write_latency_1000", "line"),
+    ],
+}
+
+graph_info["number_of_executors"] = {
+    "title": _("Executors"),
+    "metrics": [
+        ("jenkins_num_executors", "area"),
+        ("jenkins_busy_executors", "area"),
+        ("jenkins_idle_executors", "area"),
     ],
 }

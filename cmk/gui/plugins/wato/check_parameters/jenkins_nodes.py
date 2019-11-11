@@ -52,6 +52,22 @@ def _parameter_valuespec_jenkins_nodes():
                  Integer(title=_("Critical below")),
              ],
          )),
+        ('jenkins_busyexecutors',
+         Tuple(
+             title=_("Upper level for number of busy executors of this node"),
+             elements=[
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
+             ],
+         )),
+        ('jenkins_idleexecutors',
+         Tuple(
+             title=_("Upper level for number of idle executors of this node"),
+             elements=[
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
+             ],
+         )),
         ('avg_response_time',
          Tuple(
              title=_("Average round-trip response time to this node"),

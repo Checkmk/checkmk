@@ -129,8 +129,11 @@ def check_mssql_backup(item, params, parsed):
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
 
-    # remove MSSQL_ at start of item
-    dbinfo = parsed[1].get(item[6:], {})
+    try:
+        # remove MSSQL_ at start of item
+        dbinfo = parsed[1].get(item[6:], {})
+    except AttributeError:
+        dbinfo = {}
 
     if not isinstance(params, dict):
         params = {"database": params}
@@ -210,8 +213,11 @@ def inventory_mssql_backup_per_type(parsed):
     if discovery_mode != "per_type":
         return
     for db_name, attrs in parsed[0].iteritems():
-        # remove MSSQL_ at start of item
-        dbinfo = parsed[1].get(db_name[6:], {})
+        try:
+            # remove MSSQL_ at start of item
+            dbinfo = parsed[1].get(db_name[6:], {})
+        except AttributeError:
+            dbinfo = {}
         for backup in attrs:
             if dbinfo.get('Recovery') == 'SIMPLE' and backup.type in _mssql_backup_ignore_types:
                 # ignore backups for SIMPLE databases

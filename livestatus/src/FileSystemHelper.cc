@@ -30,6 +30,26 @@
 
 namespace fs = std::filesystem;
 
+[[nodiscard]] std::string mk::unescape_filename(const std::string& filename) {
+    std::string filename_native;
+    bool quote_active = false;
+    for (auto c : filename) {
+        if (quote_active) {
+            if (c == 's') {
+                filename_native += ' ';
+            } else {
+                filename_native += c;
+            }
+            quote_active = false;
+        } else if (c == '\\') {
+            quote_active = true;
+        } else {
+            filename_native += c;
+        }
+    }
+    return fs::path{filename_native};
+}
+
 bool mk::path_contains(const fs::path& directory, const fs::path& path) {
     std::error_code ec{};
     const fs::path can_dir{fs::canonical(directory, ec)};

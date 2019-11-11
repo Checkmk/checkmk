@@ -19,7 +19,9 @@ TableCrashReports::TableCrashReports(MonitoringCore *mc) : Table(mc) {
         -1, -1, DANGEROUS_OFFSETOF(CrashReport, _component)));
     addDynamicColumn(std::make_unique<DynamicHostFileColumn>(
         "file", "Files related to the crash report (crash.info, etc.)", -1, -1,
-        -1, [mc] { return mc->crashReportPath(); }));
+        -1, [mc] { return mc->crashReportPath(); },
+        [](const Column & /*unused*/, const Row & /*unused*/,
+           const std::string &args) { return args; }));
 }
 
 std::string TableCrashReports::name() const { return "crashreports"; }

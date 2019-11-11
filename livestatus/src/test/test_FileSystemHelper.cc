@@ -85,3 +85,22 @@ INSTANTIATE_TEST_SUITE_P(
                       std::make_tuple("abc/def", "xyz/abc", false),
                       std::make_tuple("abc/def", "xyz", false),
                       std::make_tuple("xyz", "abc/def", false)));
+
+class UnescapeFileNameFixture
+    : public ::testing::TestWithParam<std::tuple<fs::path, fs::path>> {};
+
+TEST_P(UnescapeFileNameFixture, TestUnescapeFileName) {
+    ASSERT_EQ(mk::unescape_filename(std::get<0>(GetParam())),
+              std::get<1>(GetParam()));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    TestUnescapeFileName, UnescapeFileNameFixture,
+    ::testing::Values(std::make_tuple(R"(/a/b/c)", R"(/a/b/c)"),
+                      std::make_tuple(R"(/a/b\\c)", R"(/a/b\c)"),
+                      std::make_tuple(R"(\\a\\b\\c)", R"(\a\b\c)"),
+                      std::make_tuple(R"(/a/b\sc)", R"(/a/b c)"),
+                      std::make_tuple(R"(\sa\sb\sc)", R"( a b c)"),
+                      std::make_tuple(R"(\\\sa\\\sb\\\sc)", R"(\ a\ b\ c)"),
+                      std::make_tuple(R"(\\sa\\sb\\sc)", R"(\sa\sb\sc)"),
+                      std::make_tuple(R"(\\\sa\\\sb\\\sc)", R"(\ a\ b\ c)")));

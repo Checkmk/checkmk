@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -23,97 +23,73 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostFileColumn.h"
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <cerrno>
-#include <cstring>
-#include <ostream>
+#include <filesystem>
+#include <sstream>
 #include <utility>
 #include "Logger.h"
 #include "Row.h"
 
-#ifdef CMC
-#include "Host.h"
-#else
-#include "nagios.h"
-#endif
-
-HostFileColumn::HostFileColumn(const std::string& name,
-                               const std::string& description,
-                               int indirect_offset, int extra_offset,
-                               int extra_extra_offset, int offset,
-                               std::function<std::string()> get_base_dir,
-                               std::string suffix)
+// TODO(ml): This is a generalization of HostFileColumn.
+//           The main difference is that the path where the file
+//           is located is entirely the business of the caller.
+//           This contrasts with HostFileColumn where the path
+//           must contain the host name.
+HostFileColumn::HostFileColumn(
+    const std::string& name, const std::string& description,
+    int indirect_offset, int extra_offset, int extra_extra_offset, int offset,
+    std::function<std::filesystem::path()> basepath,
+    std::function<std::optional<std::filesystem::path>(const Column&,
+                                                       const Row&)>
+        filepath)
     : BlobColumn(name, description, indirect_offset, extra_offset,
                  extra_extra_offset, offset)
-    , _get_base_dir(std::move(get_base_dir))
-    , _suffix(std::move(suffix)) {}
+    , _basepath(std::move(basepath))
+    , _filepath(std::move(filepath)) {}
+
+[[nodiscard]] std::filesystem::path HostFileColumn::basepath() const {
+    return _basepath();
+}
+
+[[nodiscard]] std::optional<std::filesystem::path> HostFileColumn::filepath(
+    const Row& row) const {
+    return _filepath(*this, row);
+}
+
+[[nodiscard]] std::optional<std::filesystem::path> HostFileColumn::abspath(
+    const Row& row) const {
+    if (auto f = filepath(row)) {
+        return basepath() / *f;
+    }
+    return {};
+}
 
 std::unique_ptr<std::vector<char>> HostFileColumn::getValue(Row row) const {
-    auto base_dir = _get_base_dir();
-    if (base_dir.empty()) {
-        return nullptr;  // Path is not configured
-    }
-
-#ifdef CMC
-    auto hst = columnData<Host>(row);
-    if (hst == nullptr) {
+    if (!std::filesystem::exists(basepath())) {
+        // The basepath is not configured.
         return nullptr;
     }
-    std::string host_name = hst->name();
-#else
-    auto hst = columnData<host>(row);
-    if (hst == nullptr) {
+    auto path = abspath(row);
+    if (!path) {
         return nullptr;
     }
-    std::string host_name = hst->name;
-#endif
-
-    std::string path = base_dir + "/" + host_name + _suffix;
-    int fd = open(path.c_str(), O_RDONLY);
-    if (fd == -1) {
-        // It is OK when inventory/logwatch files do not exist.
-        if (errno != ENOENT) {
-            generic_error ge("cannot open " + path);
-            Warning(logger()) << ge;
-        }
+    if (!std::filesystem::is_regular_file(*path)) {
+        Warning(logger()) << *path << " is not a regular file";
         return nullptr;
     }
-
-    struct stat st;
-    if (fstat(fd, &st) == -1) {
-        generic_error ge("cannot stat " + path);
+    auto file_size = std::filesystem::file_size(*path);
+    std::ifstream ifs;
+    ifs.open(*path, std::ifstream::in | std::ifstream::binary);
+    if (!ifs.is_open()) {
+        generic_error ge("cannot open " + path->string());
         Warning(logger()) << ge;
         return nullptr;
     }
-    if (!S_ISREG(st.st_mode)) {
-        Warning(logger()) << path << " is not a regular file";
+    using iterator = std::istreambuf_iterator<char>;
+    auto buffer = std::make_unique<std::vector<char>>(file_size);
+    buffer->assign(iterator{ifs}, iterator{});
+    if (buffer->size() != file_size) {
+        Warning(logger()) << "premature EOF reading " << *path;
         return nullptr;
     }
-
-    size_t bytes_to_read = st.st_size;
-    auto result = std::make_unique<std::vector<char>>(bytes_to_read);
-    char* buffer = &(*result)[0];
-    while (bytes_to_read > 0) {
-        ssize_t bytes_read = read(fd, buffer, bytes_to_read);
-        if (bytes_read == -1) {
-            if (errno != EINTR) {
-                generic_error ge("could not read " + path);
-                Warning(logger()) << ge;
-                close(fd);
-                return nullptr;
-            }
-        } else if (bytes_read == 0) {
-            Warning(logger()) << "premature EOF reading " << path;
-            close(fd);
-            return nullptr;
-        } else {
-            bytes_to_read -= bytes_read;
-            buffer += bytes_read;
-        }
-    }
-
-    close(fd);
-    return result;
+    return buffer;
 }

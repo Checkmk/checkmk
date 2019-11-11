@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableHosts.h"
+#include <filesystem>
 #include <memory>
 #include <optional>
 #include <ostream>
@@ -38,7 +39,7 @@
 #include "CustomVarsValuesColumn.h"
 #include "DowntimeColumn.h"
 #include "DynamicColumn.h"
-#include "DynamicLogwatchFileColumn.h"
+#include "DynamicHostFileColumn.h"
 #include "HostContactsColumn.h"
 #include "HostFileColumn.h"
 #include "HostGroupsColumn.h"
@@ -642,30 +643,58 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         "The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present",
         indirect_offset, extra_offset, -1, 0, table->core(),
         HostSpecialIntColumn::Type::mk_inventory_last));
+
     table->addColumn(std::make_unique<HostFileColumn>(
         prefix + "mk_inventory",
         "The file content of the Check_MK HW/SW-Inventory", indirect_offset,
-        extra_offset, -1, 0, [mc]() { return mc->mkInventoryPath(); }, ""));
+        extra_offset, -1, 0, [mc]() { return mc->mkInventoryPath(); },
+        [](const Column &col,
+           const Row &row) -> std::optional<std::filesystem::path> {
+            if (auto hst = col.columnData<host>(row)) {
+                return hst->name;
+            }
+            return {};
+        }));
     table->addColumn(std::make_unique<HostFileColumn>(
         prefix + "mk_inventory_gz",
         "The gzipped file content of the Check_MK HW/SW-Inventory",
         indirect_offset, extra_offset, -1, 0,
-        [mc]() { return mc->mkInventoryPath(); }, ".gz"));
+        [mc]() { return mc->mkInventoryPath(); },
+        [](const Column &col,
+           const Row &row) -> std::optional<std::filesystem::path> {
+            if (auto hst = col.columnData<host>(row)) {
+                return std::string{hst->name} + ".gz";
+            }
+            return {};
+        }));
     table->addColumn(std::make_unique<HostFileColumn>(
         prefix + "structured_status",
         "The file content of the structured status of the Check_MK HW/SW-Inventory",
         indirect_offset, extra_offset, -1, 0,
-        [mc]() { return mc->structuredStatusPath(); }, ""));
-
+        [mc]() { return mc->structuredStatusPath(); },
+        [](const Column &col,
+           const Row &row) -> std::optional<std::filesystem::path> {
+            if (auto hst = col.columnData<host>(row)) {
+                return hst->name;
+            }
+            return {};
+        }));
     table->addColumn(std::make_unique<LogwatchListColumn>(
         prefix + "mk_logwatch_files",
         "This list of logfiles with problems fetched via mk_logwatch",
         indirect_offset, extra_offset, -1, 0, table->core()));
 
-    table->addDynamicColumn(std::make_unique<DynamicLogwatchFileColumn>(
+    table->addDynamicColumn(std::make_unique<DynamicHostFileColumn>(
         prefix + "mk_logwatch_file",
-        "This contents of a logfile fetched via mk_logwatch", table->core(),
-        indirect_offset, extra_offset, -1));
+        "This contents of a logfile fetched via mk_logwatch", indirect_offset,
+        extra_offset, -1, [mc]() { return mc->mkLogwatchPath(); },
+        [](const Column &col, const Row &row,
+           const std::string &args) -> std::optional<std::filesystem::path> {
+            if (auto hst = col.columnData<host>(row)) {
+                return std::filesystem::path{hst->name} / args;
+            }
+            return {};
+        }));
 
     table->addColumn(std::make_unique<HostSpecialDoubleColumn>(
         prefix + "staleness", "Staleness indicator for this host",

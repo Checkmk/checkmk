@@ -29,22 +29,30 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include "DynamicColumn.h"
 class Column;
+class Row;
 
 class DynamicHostFileColumn : public DynamicColumn {
 public:
-    DynamicHostFileColumn(const std::string &name,
-                          const std::string &description, int indirect_offset,
-                          int extra_offset, int extra_extra_offset,
-                          std::function<std::filesystem::path()> basepath);
+    DynamicHostFileColumn(
+        const std::string &name, const std::string &description,
+        int indirect_offset, int extra_offset, int extra_extra_offset,
+        std::function<std::filesystem::path()> basepath,
+        std::function<std::optional<std::filesystem::path>(
+            const Column &, const Row &, const std::string &args)>
+            filepath);
     std::unique_ptr<Column> createColumn(const std::string &name,
                                          const std::string &arguments) override;
     std::filesystem::path basepath() const;
 
 private:
-    const std::function<std::filesystem::path()> basepath_;
+    const std::function<std::filesystem::path()> _basepath;
+    const std::function<std::optional<std::filesystem::path>(
+        const Column &, const Row &, const std::string &args)>
+        _filepath;
 };
 
 #endif  // DynamicHostFileColumn_h

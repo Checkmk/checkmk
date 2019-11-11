@@ -115,13 +115,11 @@ liblivestatus_a_SOURCES = \
         DynamicColumn.cc \
         DynamicEventConsoleReplicationColumn.cc \
         DynamicHostFileColumn.cc \
-        DynamicLogwatchFileColumn.cc \
         EventConsoleConnection.cc \
         FileSystemHelper.cc \
         Filter.cc \
         HostContactsColumn.cc \
         HostFileColumn.cc \
-        HostFileColumn2.cc \
         HostGroupsColumn.cc \
         HostListColumn.cc \
         HostListStateColumn.cc \

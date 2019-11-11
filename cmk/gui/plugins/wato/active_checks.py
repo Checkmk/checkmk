@@ -559,7 +559,7 @@ def _valuespec_active_checks_sql():
                "as the state of the check.  If a procedure is used, input parameters of the "
                "procedures may by given as comma separated list. "
                "This check uses the active check <tt>check_sql</tt>."),
-        optional_keys=["levels", "levels_low", "perfdata", "port", "procedure", "host"],
+        optional_keys=["levels", "levels_low", "perfdata", "port", "procedure", "text", "host"],
         elements=[
             ("description",
              TextUnicode(
@@ -665,6 +665,12 @@ def _valuespec_active_checks_sql():
                  title=_("Performance Data"),
                  totext=_("Store output value into RRD database"),
                  value=True,
+             )),
+            ("text",
+             TextAscii(
+                 title=_("Prefix Text"),
+                 help=_('Additional text prefixed to the output'),
+                 allow_empty=False,
              )),
             ("host",
              TextAscii(

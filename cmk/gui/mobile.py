@@ -112,7 +112,13 @@ def jqm_page_header(title, id_=None, left_button=None, right_button=None):
 
 def jqm_page_navfooter(items, current, page_id):
     html.close_div()  # close content
-    html.open_div(**{"data-role": "footer", "data-position": "fixed"})
+    html.open_div(
+        **{
+            "data-role": "footer",
+            "data-position": "fixed",
+            "data-tap-toggle": "false",
+            "data-hide-during-focus": "",
+        })
     html.open_div(**{"data-role": "navbar"})
     html.open_ul()
 
@@ -129,7 +135,7 @@ def jqm_page_navfooter(items, current, page_id):
                         **{
                             "data-transition": "slide",
                             "data-icon": icon,
-                            "data-iconpos": "bottom"
+                            "data-iconpos": "bottom",
                         })
             html.write(title)
             html.close_a()

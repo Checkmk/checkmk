@@ -294,7 +294,9 @@ deb: debian/changelog
 	    -e '/Depends:/s/@/ /g' \
 	   `pwd`/debian/control.in > `pwd`/debian/control
 	fakeroot bash -c "export EDITION=$(EDITION) ; debian/rules clean"
-	debuild --set-envvar EDITION=$(EDITION) \
+	debuild \
+		--preserve-envvar="NEXUS_*" \
+		--set-envvar EDITION=$(EDITION) \
 		--prepend-path=/usr/local/bin --no-lintian -i\.git -I\.git \
 			-icheck-mk-$(EDITION)-bin-$(OMD_VERSION).tar.gz \
 			-Icheck-mk-$(EDITION)-bin-$(OMD_VERSION).tar.gz \
@@ -358,6 +360,7 @@ clean: $(addsuffix -clean,$(PACKAGES))
 	    fi ; \
 	done
 	$(RM) -r $(BUILD_HELPER_DIR)
+	$(RM) -r $(BUILD_CACHE_BASE)
 
 # Only for development: install tarball below /
 xzf:

@@ -23,6 +23,75 @@ DISTRO_VERSION     := $(word 2, $(DISTRO_INFO))
 # Depending on the distro we include a Makefile with distro-specific variables.
 include $(REPO_PATH)/omd/distros/$(DISTRO_NAME)_$(DISTRO_VERSION).mk
 
+# CI integration ################################################################
+
+# When the NEXUS_BUILD_CACHE_URL is set, some packages exchange "build
+# packages" with the given nexus.  This is some sort build artefact cache that
+# helps reduce build times.  Set to something like this:
+# "https://nexus/repository/repo-name"
+NEXUS_BUILD_CACHE_URL ?=
+# The credentials need to be made available through the environment. This is normally
+# done using the CI system
+NEXUS_USERNAME ?=
+NEXUS_PASSWORD ?=
+
+# Currently only used for the OMD build cache. We did not want to use the branch name,
+# because we want to re-use the cache also for derived sandbox branches (1.7.0i1 -> 1.7.0).
+BRANCH_VERSION := $(shell echo "$(VERSION)" | sed -E 's/^([0-9]+.[0-9]+.[0-9]+).*$$/\1/')
+# In case of "master daily builds" we get the DATE as BRANCH_VERSION, which is
+# not what we want. TODO: Find a solution for this
+ifeq ($(BRANCH_VERSION),$(shell date +%Y.%m.%d))
+    BRANCH_VERSION := 1.7.0
+endif
+
+BUILD_CACHE_BASE   := $(REPO_PATH)/omd/build_cache
+
+define build_pkg_name
+$1_$2_$(BRANCH_VERSION)_$(DISTRO_NAME)_$(DISTRO_VERSION).tar.gz
+endef
+
+define build_pkg_path
+$(BUILD_CACHE_BASE)/$(call build_pkg_name,$1,$2)
+endef
+
+# $1: Absolute path to the build package tar (as created by build_pkg_path)
+# $2: Directory name produced by the "build" target
+# $3: BUILD_ID of the given package
+define build_pkg_archive
+	mkdir -p $(BUILD_CACHE_BASE)
+	@echo "+++ Load or build $1 to create local build package..."
+	if [ -z "$(NEXUS_BUILD_CACHE_URL)" ] || ! curl -sSf -o "$1" "$(NEXUS_BUILD_CACHE_URL)/$(call build_pkg_name,$2,$3)"; then \
+	    if [ -z "$(NEXUS_BUILD_CACHE_URL)" ]; then \
+	        echo "+++ Nexus URL not configured. Building..." ; \
+	    else \
+		echo "+++ Not available from $(NEXUS_BUILD_CACHE_URL). Building..." ; \
+	    fi && \
+	    $(MAKE) $4 && \
+	    tar -czf $1 $2 ; \
+	fi
+endef
+
+# $1: Absolute path to the build package tar (as created by build_pkg_path)
+# $2: Directory name produced by the "build" target
+define unpack_pkg_archive
+        if [ ! -d $2 ]; then \
+            echo "+++ Unpacking $1 to $2" && \
+            tar -xzf $1 ; \
+        else \
+            echo "+++ $2 exists, nothing to do" ; \
+        fi
+endef
+
+# $1: Absolute path to the build package tar (as created by build_pkg_path)
+# $2: Directory name produced by the "build" target
+# $3: BUILD_ID of the given package
+define upload_pkg_archive
+	if [ -n "$(NEXUS_BUILD_CACHE_URL)" ] && ! curl -sf --head "$(NEXUS_BUILD_CACHE_URL)/$(call build_pkg_name,$2,$3)" >/dev/null; then \
+	    echo "+++ Package not found on nexus. Upload package..." && \
+	    curl -sSf -u "$(NEXUS_USERNAME):$(NEXUS_PASSWORD)" --upload-file "$1" "$(NEXUS_BUILD_CACHE_URL)/" ; \
+	fi
+endef
+
 # perl #########################################################################
 
 PERL                          := /usr/bin/perl

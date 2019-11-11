@@ -11951,3 +11951,12 @@ graph_info["number_of_executors"] = {
         ("jenkins_idle_executors", "area"),
     ],
 }
+
+graph_info["number_of_tasks"] = {
+    "title": _("Tasks"),
+    "metrics": [
+        ("jenkins_stuck_tasks", "area"),
+        ("jenkins_blocked_tasks", "area"),
+        ("jenkins_pending_tasks", "area"),
+    ],
+}

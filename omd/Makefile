@@ -306,25 +306,12 @@ deb: debian/changelog debian/control
 	    -rfakeroot \
 	    -- clean binary-arch
 
-# On debian based systems register the alternative switches
-alt:
-	@if which update-alternatives >/dev/null 2>&1; then \
-	    update-alternatives --install /omd/versions/default \
-		omd /omd/versions/$(OMD_VERSION) $(OMD_SERIAL) \
-		--slave /usr/bin/omd omd.bin /omd/versions/$(OMD_VERSION)/bin/omd \
-		--slave /usr/share/man/man8/omd.8.gz omd.man8 \
-               /omd/versions/$(OMD_VERSION)/share/man/man8/omd.8.gz ; \
-	fi ;
-
 setversion:
 	NEW_OMD_VERSION=$(NEW_VERSION_STRING).$(EDITION_SHORT)$(DEMO_SUFFIX) ; \
 	if [ -n "$$NEW_OMD_VERSION" ] && [ "$$NEW_OMD_VERSION" != "$(OMD_VERSION)" ]; then \
 	    sed -ri 's/^(OMD_SERIAL[[:space:]]*= *).*/\1'"$(NEW_SERIAL)/" Makefile.omd ; \
 	fi ; \
 	sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1"'"$$NEW_OMD_VERSION"'"/' packages/omd/omdlib/__init__.py
-
-test:
-	t/test_all.sh
 
 $(CMA_INSTALL): $(INSTALL_TARGETS)
 
@@ -356,17 +343,6 @@ clean: $(addsuffix -clean,$(PACKAGES))
 	    fi ; \
 	done
 	$(RM) -r $(BUILD_BASE_DIR)
-
-# Only for development: install tarball below /
-xzf:
-	tar xzf $(BIN_TGZ) -C / # HACK: Add missing suid bits if compiled as non-root
-	chmod 750 $(OMD_ROOT)/lib/nagios/plugins/check_dhcp
-	setcap 'cap_net_raw,cap_net_bind_service=+ep' $(OMD_ROOT)/lib/nagios/plugins/check_dhcp
-	chmod 750 $(OMD_ROOT)/lib/nagios/plugins/check_icmp
-	setcap "cap_net_raw+ep" $(OMD_ROOT)/lib/nagios/plugins/check_icmp
-	chmod 750 $(OMD_ROOT)/bin/mkeventd_open514
-	setcap "cap_net_bind_service+ep" $(OMD_ROOT)/bin/mkeventd_open514
-	$(APACHE_CTL) -k graceful
 
 setup:
 	@echo "Please run the build in a docker container."

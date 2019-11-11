@@ -392,7 +392,9 @@ setup:
 	    g++ \
 	    libclang-7-dev \
 	    libpcap-dev \
-		librrd-dev \
+	    librrd-dev \
+	    libxml2-dev \
+	    libpango1.0-dev \
 	    llvm-7-dev \
 	    libsasl2-dev \
 	    libldap2-dev \

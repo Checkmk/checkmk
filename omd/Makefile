@@ -245,7 +245,11 @@ $(BIN_TGZ): $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions $(FIX_SKEL)
 	# Pack the whole stuff into a tarball
 	tar czf $@ --owner=root --group=root -C $(DESTDIR) .
 
-rpm:
+../check-mk-$(EDITION)-$(OMD_VERSION).tar.gz:
+	make -C $(REPO_PATH) dist
+
+# Called by our release system to build RPM packages
+rpm: ../check-mk-$(EDITION)-$(OMD_VERSION).tar.gz
 	sed -e 's/^Requires:.*/Requires:        $(OS_PACKAGES)/' \
 	    -e 's/%{version}/$(OMD_VERSION)/g' \
 	    -e "s/%{pkg_version}/$(PKG_VERSION)/g" \

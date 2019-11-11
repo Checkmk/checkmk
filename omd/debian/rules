@@ -12,13 +12,13 @@ _PWD=`pwd`
 include Makefile.omd
 -include .config
 
-build: patch build-stamp
+build: build-stamp
 build-stamp:
 	dh_testdir
 	$(MAKE) EDITION=$(EDITION) -j 4 build
 	touch build-stamp
 
-clean: clean-patched unpatch
+clean:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp
@@ -35,20 +35,6 @@ clean: clean-patched unpatch
 	rm -rf  $(_PWD)/debian/check-mk-*-[1-9][0-9].[0-9.]*
 
 	dh_clean
-
-clean-patched:
-	dh_testdir
-	dh_testroot
-	${MAKE} EDITION=$(EDITION) clean
-
-patch: patch-stamp
-patch-stamp:
-	dpatch apply-all
-	dpatch cat-all >patch-stamp
-
-unpatch:
-	dpatch deapply-all
-	rm -rf patch-stamp debian/patched
 
 install: build
 	dh_testdir

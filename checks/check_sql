@@ -47,6 +47,9 @@ def check_sql_arguments(params):
         args.append("-w%s:%s" % (warn_low, warn_high))
         args.append("-c%s:%s" % (crit_low, crit_high))
 
+    if "text" in params:
+        args.append("--text=%s" % params["text"])
+
     if isinstance(params["sql"], tuple):
         sql_tmp = params["sql"][-1]
     else:

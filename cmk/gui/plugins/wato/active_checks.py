@@ -640,7 +640,7 @@ def _valuespec_active_checks_sql() -> Dictionary:
             "procedures may by given as comma separated list. "
             "This check uses the active check <tt>check_sql</tt>."
         ),
-        optional_keys=["levels", "levels_low", "perfdata", "port", "procedure", "host"],
+        optional_keys=["levels", "levels_low", "perfdata", "port", "procedure", "text", "host"],
         elements=[
             (
                 "description",
@@ -780,6 +780,14 @@ def _valuespec_active_checks_sql() -> Dictionary:
                         allow_empty=False,
                     ),
                     forth=transform_check_sql_perfdata,
+                ),
+            ),
+            (
+                "text",
+                TextInput(
+                    title=_("Prefix text"),
+                    help=_("Additional text prefixed to the output"),
+                    allow_empty=False,
                 ),
             ),
             (

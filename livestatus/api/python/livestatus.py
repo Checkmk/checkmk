@@ -492,7 +492,7 @@ class SingleSiteConnection(Helpers):
         try:
             # Headers are always ASCII encoded
             resp = self.receive_data(16)
-            code = resp[0:3]
+            code = resp[0:3].decode("ascii")
             try:
                 length = int(resp[4:15].lstrip())
             except:

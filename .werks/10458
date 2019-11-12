@@ -1,0 +1,12 @@
+Title: Remove icons for hosts and services in the mobile GUI
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p7
+Date: 1573556636
+Class: fix
+
+The icons in the host and service details of the mobile GUI
+are removed, because they linked to views which did not
+belong to the mobile GUI.

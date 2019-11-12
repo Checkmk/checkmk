@@ -2017,7 +2017,7 @@ multisite_builtin_views['ec_events_mobile'] = {
     'painters': [
         ('event_id', 'ec_event_mobile', None),
         ('event_state', None, None),
-        ('event_host', 'ec_events_of_host', None),
+        ('event_host', None, None),
         ('event_application', None, None),
         ('event_text', None, None),
         ('event_last', None, None),

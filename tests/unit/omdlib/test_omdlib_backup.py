@@ -67,12 +67,14 @@ def test_backup_site_to_tarfile_vanishing_files(site, tmp_path, monkeypatch):
     orig_add = omdlib.backup.BackupTarFile.add
 
     def add(self, name, arcname=None, recursive=True, exclude=None, filter=None):  # pylint: disable=redefined-builtin
+        if exclude is not None:
+            raise DeprecationWarning("TarFile.add's exclude parameter should not be used")
         # The add() was called for test_dir which then calls os.listdir() and
         # add() for all found entries. Remove the test_file here to simulate
         # a vanished file during this step.
         if arcname == "unit/xyz/test_file":
             test_file.unlink()  # pylint: disable=no-member
-        orig_add(self, name, arcname, recursive, exclude, filter)
+        orig_add(self, name, arcname, recursive, filter=filter)
 
     monkeypatch.setattr(omdlib.backup.BackupTarFile, "add", add)
 

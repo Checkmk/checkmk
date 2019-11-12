@@ -91,15 +91,14 @@ def _backup_site_files_to_tarfile(site, tar, options):
     exclude.append("var/check_mk/persisted/*")
     exclude.append("var/check_mk/persisted_sections/*")
 
-    def filter_files(filename):
-        for glob_pattern in exclude:
-            # patterns are relative to site directory, filename is full path.
-            # strip of the site.dir prefix from full path
-            if fnmatch.fnmatch(filename[len(site.dir) + 1:], glob_pattern):
-                return True  # exclude this file
-        return False
+    def filter_files(tarinfo):
+        # patterns are relative to site directory, tarinfo.name includes site name.
+        matches_exclude = any(
+            fnmatch.fnmatch(tarinfo.name[len(site.name) + 1:], glob_pattern)
+            for glob_pattern in exclude)
+        return None if matches_exclude else tarinfo
 
-    tar.add(site.dir, site.name, exclude=filter_files)
+    tar.add(site.dir, site.name, filter=filter_files)
 
 
 class BackupTarFile(tarfile.TarFile):
@@ -120,8 +119,10 @@ class BackupTarFile(tarfile.TarFile):
     # and the first file access (often seen os.lstat()) during backup. Instead of failing
     # like this we want to skip those files silently during backup.
     def add(self, name, arcname=None, recursive=True, exclude=None, filter=None):  # pylint: disable=redefined-builtin
+        if exclude is not None:
+            raise DeprecationWarning("TarFile.add's exclude parameter should not be used")
         try:
-            super(BackupTarFile, self).add(name, arcname, recursive, exclude, filter)
+            super(BackupTarFile, self).add(name, arcname, recursive, filter=filter)
         except OSError as e:
             if e.errno != errno.ENOENT or arcname == self._site.name:
                 raise

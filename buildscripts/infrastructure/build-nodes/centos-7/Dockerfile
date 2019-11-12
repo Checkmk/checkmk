@@ -5,6 +5,7 @@ SHELL ["/bin/bash", "-c"]
 RUN yum -y makecache \
     && yum -y install \
     bind-utils \
+    curl \
     curl-devel \
     expat-devel \
     flex \

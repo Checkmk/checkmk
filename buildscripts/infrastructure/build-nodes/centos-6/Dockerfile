@@ -7,6 +7,7 @@ RUN yum -y makecache \
     bind-utils \
     centos-release-scl \
     compat-readline5 \
+    curl \
     curl-devel \
     expat-devel \
     flex \

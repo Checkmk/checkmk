@@ -31,6 +31,7 @@ RUN apt-get update \
     git-buildpackage \
     ksh \
     libclang-7-dev \
+    curl \
     libcurl4-openssl-dev \
     libevent-dev \
     libffi-dev \

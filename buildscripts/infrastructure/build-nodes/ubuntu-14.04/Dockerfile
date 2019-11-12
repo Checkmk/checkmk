@@ -14,6 +14,7 @@ RUN apt-get update \
     flex \
     gettext \
     git-buildpackage \
+    curl \
     libcurl4-openssl-dev \
     libevent-dev \
     libffi-dev \

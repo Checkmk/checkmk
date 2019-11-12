@@ -113,6 +113,12 @@ check-python:
 	    exit 1 ; \
 	fi
 
+ifeq (0,$(shell gcc -Xlinker --help | grep -q -e "-plugin"; echo $$?))
+PYTHON_ENABLE_OPTIMIZATIONS ?= --enable-optimizations
+else
+PYTHON_ENABLE_OPTIMIZATIONS ?=
+endif
+
 # python3 #######################################################################
 
 PACKAGE_PYTHON3_DESTDIR         := $(PACKAGE_BASE)/python3/destdir
@@ -166,12 +172,6 @@ check-python-modules:
 	    echo "ERROR: You need to build the \"python-modules\" package first" ; \
 	    exit 1 ; \
 	fi
-
-ifeq (0,$(shell gcc -Xlinker --help | grep -q -e "-plugin"; echo $$?))
-PYTHON_ENABLE_OPTIMIZATIONS ?= --enable-optimizations
-else
-PYTHON_ENABLE_OPTIMIZATIONS ?=
-endif
 
 # python3-module ################################################################
 

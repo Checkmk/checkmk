@@ -98,6 +98,12 @@ check-python-modules:
 	    exit 1 ; \
 	fi
 
+ifeq (0,$(shell gcc -Xlinker --help | grep -q -e "-plugin"; echo $$?))
+PYTHON_ENABLE_OPTIMIZATIONS ?= --enable-optimizations
+else
+PYTHON_ENABLE_OPTIMIZATIONS ?=
+endif
+
 # python3-module ################################################################
 
 PACKAGE_PYTHON3_MODULES_DESTDIR    := $(PACKAGE_BASE)/python3-modules/destdir

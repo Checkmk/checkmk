@@ -1,7 +1,7 @@
 # Package definition
-PYTHON3 := Python
+PYTHON3 := Python3
 PYTHON3_VERS := 3.7.4
-PYTHON3_DIR := $(PYTHON3)-$(PYTHON3_VERS)
+PYTHON3_DIR := Python-$(PYTHON3_VERS)
 
 PYTHON3_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON3_DIR)-build
 PYTHON3_COMPILE := $(BUILD_HELPER_DIR)/$(PYTHON3_DIR)-compile
@@ -9,27 +9,26 @@ PYTHON3_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON3_DIR)-install
 PYTHON3_UNPACK := $(BUILD_HELPER_DIR)/$(PYTHON3_DIR)-unpack
 
 # HACK!
-PYTHON3_PACKAGE_DIR := $(PACKAGE_DIR)/Python3
+PYTHON3_PACKAGE_DIR := $(PACKAGE_DIR)/$(PYTHON3)
 PYTHON3_SITECUSTOMIZE_SOURCE := $(PYTHON3_PACKAGE_DIR)/sitecustomize.py
 PYTHON3_SITECUSTOMIZE_COMPILED := $(PYTHON3_PACKAGE_DIR)/__pycache__/sitecustomize.cpython-37.pyc
 
-.PHONY: Python3 Python3-install Python3-skel Python3-clean upstream
+.PHONY: $(PYTHON3) $(PYTHON3)-install $(PYTHON3)-skel $(PYTHON3)-clean upstream
 
 .NOTPARALLEL: $(PYTHON3_INSTALL)
 
-Python3: $(PYTHON3_BUILD)
+$(PYTHON3): $(PYTHON3_BUILD)
 
-Python3-install: $(PYTHON3_INSTALL)
-
-# Environment variables
-ifeq (0,$(shell gcc -Xlinker --help | grep -q -e "-plugin"; echo $$?))
-PYTHON_ENABLE_OPTIMIZATIONS := --enable-optimizations
-else
-PYTHON_ENABLE_OPTIMIZATIONS :=
-endif
+$(PYTHON3)-install: $(PYTHON3_INSTALL)
 
 $(PYTHON3_BUILD): $(PYTHON3_SITECUSTOMIZE_COMPILED)
 	$(TOUCH) $(PYTHON3_BUILD)
+
+$(PYTHON3_UNPACK): $(PACKAGE_DIR)/$(PYTHON3)/$(PYTHON3_DIR).tar.xz
+	$(RM) -r $*
+	$(MKDIR) $(BUILD_HELPER_DIR)
+	$(TAR_XZ) $<
+	$(TOUCH) $@
 
 $(PYTHON3_COMPILE): $(PYTHON3_UNPACK)
 # The build with PGO/LTO enabled is mainly sequential, so a high build
@@ -39,7 +38,6 @@ $(PYTHON3_COMPILE): $(PYTHON3_UNPACK)
 	./configure \
 	    --prefix="" \
 	    --enable-shared \
-	    --enable-unicode=ucs4 \
 	    --with-ensurepip=install \
 	    $(PYTHON_ENABLE_OPTIMIZATIONS) \
 	    LDFLAGS="-Wl,--rpath,$(OMD_ROOT)/lib"
@@ -69,5 +67,5 @@ $(PYTHON3_INSTALL): $(PYTHON3_BUILD)
 	install -m 644 $(PYTHON3_SITECUSTOMIZE_COMPILED) $(DESTDIR)$(OMD_ROOT)/lib/python3.7/__pycache__
 	$(TOUCH) $(PYTHON3_INSTALL)
 
-Python3-clean:
+$(PYTHON3)-clean:
 	$(RM) -r $(DIR) $(BUILD_HELPER_DIR)/$(PYTHON3)* $(PACKAGE_PYTHON3_DESTDIR)

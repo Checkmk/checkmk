@@ -19,12 +19,6 @@ Python-install: $(PYTHON_INSTALL)
 # Environment variables
 PATH_VAR := PATH="$(abspath bin):$$PATH"
 
-ifeq (0,$(shell gcc -Xlinker --help | grep -q -e "-plugin"; echo $$?))
-PYTHON_ENABLE_OPTIMIZATIONS := --enable-optimizations
-else
-PYTHON_ENABLE_OPTIMIZATIONS :=
-endif
-
 CC_COMPILERS = gcc-9 clang-8 gcc-8 gcc-7 clang-6.0 clang-5.0 gcc-6 clang-4.0 gcc-5 clang-3.9 clang-3.8 clang-3.7 clang-3.6 clang-3.5 gcc-4.9 gcc clang
 CXX_COMPILERS := g++-9 clang++-8 g++-8 clang++-7 g++-7 clang++-6.0 clang++-5.0 g++ clang++
 

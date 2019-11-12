@@ -1,6 +1,7 @@
 *.log
 .*.swp
 .config
+.modulebuildrc
 .werks/.last
 .werks/.my_ids
 .werks/werks
@@ -26,3 +27,4 @@ python*-modules-1.[67].0i1.cme/
 re2-20[12][0-9]-[01][0-9]-[0-3][0-9]/
 rpm.buildroot
 rpm.topdir
+rrdtool-1.7.1/

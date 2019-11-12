@@ -1,5 +1,7 @@
 #include "TableCrashReports.h"
+#include <filesystem>
 #include <memory>
+#include <optional>
 #include <string>
 #include "Column.h"
 #include "CrashReport.h"
@@ -21,7 +23,9 @@ TableCrashReports::TableCrashReports(MonitoringCore *mc) : Table(mc) {
         "file", "Files related to the crash report (crash.info, etc.)", -1, -1,
         -1, [mc] { return mc->crashReportPath(); },
         [](const Column & /*unused*/, const Row & /*unused*/,
-           const std::string &args) { return args; }));
+           const std::string &args) -> std::optional<std::filesystem::path> {
+            return args;
+        }));
 }
 
 std::string TableCrashReports::name() const { return "crashreports"; }

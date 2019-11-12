@@ -61,6 +61,7 @@ unixcat_LDADD = -lpthread
 
 test_neb_SOURCES = \
     test/DummyNagios.cc \
+    test/TableQueryHelper.cc \
     test/test_CrashReport.cc \
     test/test_CustomVarsDictFilter.cc \
     test/test_FileSystemHelper.cc \

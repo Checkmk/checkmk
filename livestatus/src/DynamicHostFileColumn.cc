@@ -27,22 +27,22 @@ DynamicHostFileColumn::DynamicHostFileColumn(
 std::unique_ptr<Column> DynamicHostFileColumn::createColumn(
     const std::string &name, const std::string &arguments) {
     // Arguments contains a path relative to basepath and possibly escaped.
-    const std::filesystem::path filepath{mk::unescape_filename(arguments)};
     if (arguments.empty()) {
         throw std::runtime_error("invalid arguments for column '" + _name +
                                  "': missing file name");
     }
-    if (!mk::path_contains(basepath(), basepath() / filepath)) {
+    const std::filesystem::path f{mk::unescape_filename(arguments)};
+    if (!mk::path_contains(basepath(), basepath() / f)) {
         // Prevent malicious attempts to read files as root with
         // "/etc/shadow" (abs paths are not stacked) or
         // "../../../../etc/shadow".
         throw std::runtime_error("invalid arguments for column '" + _name +
-                                 "': '" + filepath.string() + "' not in '" +
+                                 "': '" + f.string() + "' not in '" +
                                  basepath().string() + "'");
     }
     return std::make_unique<HostFileColumn>(
         name, _description, _indirect_offset, _extra_offset, -1, 0, _basepath,
-        [&filepath, this](const Column &col, const Row &row) {
-            return _filepath(col, row, filepath);
+        [=](const Column &col, const Row &row) {
+            return _filepath(col, row, f);
         });
 }

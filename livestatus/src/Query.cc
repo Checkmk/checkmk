@@ -24,6 +24,7 @@
 
 #include "Query.h"
 #include <algorithm>
+#include <cassert>
 #include <cctype>
 #include <chrono>
 #include <cmath>
@@ -699,6 +700,7 @@ bool Query::processDataset(Row row) {
                 aggr->consume(row, _auth_user, timezoneOffset());
             }
         } else {
+            assert(_renderer_query);  // Missing call to `process()`.
             RowRenderer r(*_renderer_query);
             for (const auto &column : _columns) {
                 column->output(row, r, _auth_user, _timezone_offset);

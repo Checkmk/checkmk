@@ -6,6 +6,7 @@
 #include "Logger.h"
 #include "NagiosCore.h"
 #include "TableCrashReports.h"
+#include "TableQueryHelper.h"
 #include "data_encoding.h"
 #include "gtest/gtest.h"
 
@@ -72,27 +73,38 @@ TEST_F(CrashReportFixture, TestDeleteIdWithNonExistingId) {
     EXPECT_TRUE(fs::exists(fullpath));
 }
 
-class CrashReportCoreFixture : public CrashReportFixture {
+class CrashReportTableFixture : public CrashReportFixture {
 public:
-    CrashReportCoreFixture()
-        : core{NagiosCore{paths_(), NagiosLimits{}, NagiosAuthorization{},
-                          Encoding::utf8}}
-        , table(&core){};
-
-    NagiosCore core;
-    TableCrashReports table;
+    NagiosCore core{paths_(), NagiosLimits{}, NagiosAuthorization{},
+                    Encoding::utf8};
+    TableCrashReports table{&core};
+    const std::string header{"component;id\n"};
 
 private:
-    NagiosPaths paths_() {
-        NagiosPaths paths{};
-        paths._crash_reports_path = basepath;
-        return paths;
+    // cppcheck-suppress unusedPrivateFunction
+    [[nodiscard]] NagiosPaths paths_() const {
+        NagiosPaths p{};
+        p._crash_reports_path = basepath;
+        return p;
     }
 };
 
-TEST_F(CrashReportCoreFixture, TestTable) {
+TEST_F(CrashReportTableFixture, TestTable) {
+    EXPECT_EQ(basepath, core.crashReportPath());
+    EXPECT_EQ("crashreports", table.name());
+    EXPECT_EQ("crashreport_", table.namePrefix());
+}
+
+TEST_F(CrashReportTableFixture, TestListCrashReports) {
     ASSERT_TRUE(fs::exists(basepath));
-    ASSERT_EQ(basepath, core.crashReportPath());
-    ASSERT_EQ("crashreports", table.name());
-    ASSERT_EQ("crashreport_", table.namePrefix());
+    EXPECT_EQ(header + component + ";" + uuid + "\n",
+              mk::test::query(table, {}));
+}
+
+TEST_F(CrashReportTableFixture, TestGetOneCrashReport) {
+    ASSERT_TRUE(fs::exists(basepath));
+    EXPECT_EQ(json + "\n",
+              mk::test::query(table, {"Columns: file:f0:" + component + "/" +
+                                          uuid + "/" + crash_info + "\n",
+                                      "Filter: id = " + uuid + "\n"}));
 }

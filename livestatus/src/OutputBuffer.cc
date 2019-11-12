@@ -96,3 +96,5 @@ void OutputBuffer::setError(ResponseCode code, const std::string &message) {
         _response_code = code;
     }
 }
+
+std::string OutputBuffer::getError() const { return _error_message; }

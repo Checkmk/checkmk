@@ -28,7 +28,7 @@ SEARCH+=" omd/packages/appliance"
 SEARCH+=" omd/packages/maintenance"
 SEARCH+=" omd/packages/omd"
 SEARCH+=" scripts"
-SEARCH+=" tests"
+SEARCH+=" tests-py3"
 SEARCH+=" web/app"
 SEARCH+=" werk"
 

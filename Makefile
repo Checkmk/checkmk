@@ -345,8 +345,8 @@ web/htdocs/themes/%/theme.css: node_modules webpack.config.js postcss.config.js 
 	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
 
 # This target is used to generate a css file for the virtual appliance. It is
-# called from the cma git's Makefile and the respective scss and css files are
-# kept under ~/git/cma/skel/usr/share/cma/webconf/htdocs/
+# called from the cma git's Makefile and the built css file is moved to
+# ~/git/cma/skel/usr/share/cma/webconf/htdocs/
 web/htdocs/themes/facelift/cma_facelift.css: node_modules webpack.config.js postcss.config.js web/htdocs/themes/facelift/cma_facelift.scss web/htdocs/themes/facelift/scss/*.scss
 	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
 

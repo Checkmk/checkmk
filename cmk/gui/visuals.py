@@ -1556,16 +1556,20 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
             skip = not visual_type.is_enabled_for(this_visual, visual, vars_values)
 
         if not skip:
+            filename = visual_type.show_url
+            if mobile and visual_type.show_url == 'view.py':
+                filename = 'mobile_' + visual_type.show_url
+
             # add context link to this visual. For reports we put in
             # the *complete* context, even the non-single one.
             if visual_type.multicontext_links:
-                uri = html.makeuri([(visual_type.ident_attr, name)], filename=visual_type.show_url)
+                uri = html.makeuri([(visual_type.ident_attr, name)], filename=filename)
 
             # For views and dashboards currently the current filter
             # settings
             else:
                 uri = html.makeuri_contextless(vars_values + [(visual_type.ident_attr, name)],
-                                               filename=visual_type.show_url)
+                                               filename=filename)
             icon = visual.get("icon")
             buttonid = "cb_" + name
             context_links.append((_u(linktitle), uri, icon, buttonid))

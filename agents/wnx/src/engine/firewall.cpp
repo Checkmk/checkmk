@@ -530,9 +530,9 @@ bool RemoveRule(std::wstring_view name, std::wstring_view raw_app_name) {
                 {
                     new_name = GenerateRandomRuleName();
                     fw_rule->put_Name(Bstr(new_name));
-                    XLOG::d.i("Rule '{}' renamed to '{}' for deletion",
-                              wtools::ConvertToUTF8(name),
-                              wtools::ConvertToUTF8(new_name));
+                    XLOG::t("Rule '{}' renamed to '{}' for deletion",
+                            wtools::ConvertToUTF8(name),
+                            wtools::ConvertToUTF8(new_name));
                     return fw_rule;  // found
                 }
             }
@@ -540,7 +540,11 @@ bool RemoveRule(std::wstring_view name, std::wstring_view raw_app_name) {
 
     // in any case we have to clean
     if (rule) rule->Release();
-    if (!new_name.empty()) return RemoveRule(new_name);
+    if (!new_name.empty()) {
+        XLOG::t("Removing Rule '{}' for exe '{}'", wtools::ConvertToUTF8(name),
+                wtools::ConvertToUTF8(app_name));
+        return RemoveRule(new_name);
+    }
 
     return false;
 }

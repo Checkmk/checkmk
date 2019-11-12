@@ -343,30 +343,42 @@ int RestoreWATOConfig() {
 
 static void LogFirewallCreate(bool success) {
     if (success)
-        XLOG::SendStringToStdio(
-            "The firewall rule have been created successfully",
-            XLOG::Colors::green);
+        XLOG::SendStringToStdio("The firewall has been successfully configured",
+                                XLOG::Colors::green);
     else
-        XLOG::SendStringToStdio("Failed to create firewall rule",
+        XLOG::SendStringToStdio("Failed to configure firewall",
                                 XLOG::Colors::red);
 }
 
 static void LogFirewallRemove(bool success) {
     if (success)
-        XLOG::SendStringToStdio("The firewall rule have been removed",
+        XLOG::SendStringToStdio("The firewall configuration have been cleared",
                                 XLOG::Colors::green);
     else
-        XLOG::SendStringToStdio("Failed to remove firewall rule",
+        XLOG::SendStringToStdio("Failed to clear firewall configuration",
                                 XLOG::Colors::red);
 }
 
-static void LogFirewallFind(bool success) {
-    if (success)
-        XLOG::SendStringToStdio("The firewall rule doesn't exists",
-                                XLOG::Colors::yellow);
+static void LogFirewallFindApp(int count) {
+    if (count)
+        XLOG::SendStringToStdio(
+            fmt::format("The firewall has been configured for this exe\n"),
+            XLOG::Colors::green);
     else
-        XLOG::SendStringToStdio("The firewall rule exists",
-                                XLOG::Colors::green);
+        XLOG::SendStringToStdio(
+            fmt::format("The firewall has NOT been configured for this exe\n"),
+            XLOG::Colors::yellow);
+}
+
+static void LogFirewallFindService(int count) {
+    if (count)
+        XLOG::SendStringToStdio(
+            "The firewall has been configured for the service\n",
+            XLOG::Colors::green);
+    else
+        XLOG::SendStringToStdio(
+            "The firewall has NOT been configured for  the service\n",
+            XLOG::Colors::yellow);
 }
 
 int ExecFirewall(srv::FwMode fw_mode, std::wstring_view app_name,
@@ -376,14 +388,20 @@ int ExecFirewall(srv::FwMode fw_mode, std::wstring_view app_name,
         XLOG::setup::ColoredOutputOnStdio(true);
         XLOG::setup::DuplicateOnStdio(true);
         switch (fw_mode) {
-            case FwMode::add: {
+            case FwMode::configure: {
+                // remove all rules with the same name
+                while (RemoveRule(name, app_name))
+                    ;
                 auto success = CreateInboundRule(name, app_name, -1);
                 LogFirewallCreate(success);
                 return 0;
             }
-            case FwMode::remove:
+            case FwMode::clear:
                 if (FindRule(name)) {
-                    auto success = RemoveRule(name);
+                    auto success = RemoveRule(name, app_name);
+                    // remove all rules with the same name
+                    while (RemoveRule(name, app_name))
+                        ;
                     LogFirewallRemove(success);
                     return 0;
                 }
@@ -393,8 +411,11 @@ int ExecFirewall(srv::FwMode fw_mode, std::wstring_view app_name,
                     XLOG::Colors::yellow);
                 return 0;
             case FwMode::show: {
-                auto rule = FindRule(name);
-                LogFirewallFind(rule == nullptr);
+                auto count = CountRules(kAppFirewallRuleName, app_name);
+                LogFirewallFindApp(count);
+
+                count = CountRules(kSrvFirewallRuleName, L"");
+                LogFirewallFindService(count);
                 return 0;
             }
         }
@@ -888,13 +909,49 @@ int ExecRealtimeTest(bool Print) {
     return 0;
 }
 
+void ProcessFirewallConfiguration(std::wstring_view app_name) {
+    using namespace cma::cfg;
+    auto cfg = GetLoadedConfig();
+    auto os = GetNode(cfg, groups::kSystem);
+    auto firewall = GetNode(os, vars::kFirewall);
+
+    auto mode = GetVal(firewall, vars::kMode, std::string(vars::kModeNone));
+    if (cma::tools::IsEqual(mode, vars::kModeConfigure)) {
+        XLOG::l.i("Firewall mode is set to configure, adding rule...");
+        // remove all rules with the same name
+        while (cma::fw::RemoveRule(kSrvFirewallRuleName, app_name))
+            ;
+        auto success =
+            cma::fw::CreateInboundRule(kSrvFirewallRuleName, app_name, -1);
+        if (success)
+            XLOG::l.i("Firewall rule '[]' had been added successfully",
+                      wtools::ConvertToUTF8(kSrvFirewallRuleName));
+        return;
+    }
+
+    if (cma::tools::IsEqual(mode, vars::kModeClear)) {
+        XLOG::l.i("Firewall mode is set to clear, removing rule...");
+        // remove all rules with the same name
+        int count = 0;
+        while (cma::fw::RemoveRule(kSrvFirewallRuleName, app_name)) ++count;
+        if (count)
+            XLOG::l.i(
+                "Firewall rule '[]' had been added successfully [{}] times",
+                wtools::ConvertToUTF8(kSrvFirewallRuleName), count);
+        else
+            XLOG::l.i("Firewall rule '[]' is absent",
+                      wtools::ConvertToUTF8(kSrvFirewallRuleName));
+        return;
+    }
+}
+
 // entry point in service mode
 // normally this is "BLOCKING FOR EVER"
 // called by Windows Service Manager
 // exception free
 // returns -1 on failure
 int ServiceAsService(
-    std::chrono::milliseconds Delay,
+    std::wstring_view app_name, std::chrono::milliseconds Delay,
     std::function<bool(const void* Processor)> InternalCallback) noexcept {
     XLOG::l.i("service to run");
 
@@ -902,6 +959,8 @@ int ServiceAsService(
     ON_OUT_OF_SCOPE(cma::OnExit());  // we are sure that this is last foo
 
     SelfConfigure();
+
+    ProcessFirewallConfiguration(app_name);
 
     // infinite loop to protect from exception
     while (1) {

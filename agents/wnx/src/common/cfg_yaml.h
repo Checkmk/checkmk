@@ -168,11 +168,11 @@ const char* const kMrpeConfig = "config";      // sequence
 const char* const kMrpeParallel = "parallel";  // boool
 
 // group "system"
-constexpr const char* const kFirewall = "firewall";  // dictionary
-constexpr const char* const kMode = "mode";          // string
-constexpr const char* const kModeAdd = "add";        // install
-constexpr const char* const kModeNone = "none";      // does noting
-constexpr const char* const kModeRemove = "remove";  // remove
+constexpr const char* const kFirewall = "firewall";        // dictionary
+constexpr const char* const kMode = "mode";                // string
+constexpr const char* const kModeConfigure = "configure";  // install
+constexpr const char* const kModeNone = "none";            // does noting
+constexpr const char* const kModeClear = "clear";          // remove
 
 }  // namespace vars
 }  // namespace cma::cfg

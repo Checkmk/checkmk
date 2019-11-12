@@ -100,7 +100,13 @@ def jqm_header_button(pos, url, title, icon=""):
 
 def jqm_page_header(title, id_=None, left_button=None, right_button=None):
     html.open_div(id_=id_ if id_ else None, **{"data-role": "page"})
-    html.open_div(**{"data-role": "header", "data-position": "fixed"})
+    html.open_div(
+        **{
+            "data-role": "header",
+            "data-position": "fixed",
+            "data-tap-toggle": "false",
+            "data-hide-during-focus": "",
+        })
     if left_button:
         jqm_header_button("left", *left_button)
     html.h1(title)

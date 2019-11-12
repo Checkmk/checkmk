@@ -636,24 +636,27 @@ def check_timeperiod(settings, tpname):
 class HostConfig(object):
     def __init__(self, logger):
         self._logger = logger
+        self._lock = threading.Lock()
         self._hosts_by_name = {}
         self._hosts_by_designation = {}  # type: Dict[str, str]
         self._cache_timestamp = -1  # sentinel, always less than a real timestamp
 
     def get_config_for_host(self, host_name, deflt):
-        return self._hosts_by_name.get(host_name, deflt)
+        with self._lock:
+            return self._hosts_by_name.get(host_name, deflt)
 
     def get_canonical_name(self, event_host_name):
         # type: (str) -> str
-        try:
-            timestamp = self._get_config_timestamp()
-            if timestamp > self._cache_timestamp:
-                self._update_cache()
-                self._cache_timestamp = timestamp
-        except Exception:
-            self._logger.exception("Failed to get host info from core. Try again later.")
-            return ""
-        return self._hosts_by_designation.get(event_host_name.lower(), "")
+        with self._lock:
+            try:
+                timestamp = self._get_config_timestamp()
+                if timestamp > self._cache_timestamp:
+                    self._update_cache()
+                    self._cache_timestamp = timestamp
+            except Exception:
+                self._logger.exception("Failed to get host info from core. Try again later.")
+                return ""
+            return self._hosts_by_designation.get(event_host_name.lower(), "")
 
     def _update_cache(self):
         self._logger.debug("Fetching host config from core")

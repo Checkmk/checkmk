@@ -41,6 +41,7 @@
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -850,6 +851,9 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                 }
             } else if (left == "pnp_path") {
                 fl_paths._pnp = check_path("PNP perfdata directory", right);
+            } else if (left == "crash_report_path") {
+                fl_paths._crash_reports_path =
+                    check_path("Path to the crash reports", right);
             } else if (left == "mk_inventory_path") {
                 fl_paths._mk_inventory =
                     check_path("Check_MK Inventory directory", right);

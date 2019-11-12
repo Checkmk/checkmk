@@ -17,7 +17,6 @@ TableCrashReports::TableCrashReports(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<OffsetSStringColumn>(
         "component", "The component that crashed (gui, agent, check, etc.)", -1,
         -1, -1, DANGEROUS_OFFSETOF(CrashReport, _component)));
-    // auto mc = core();
     addDynamicColumn(std::make_unique<DynamicHostFileColumn>(
         "file", "Files related to the crash report (crash.info, etc.)", -1, -1,
         -1, [mc] { return mc->crashReportPath(); }));
@@ -28,7 +27,8 @@ std::string TableCrashReports::name() const { return "crashreports"; }
 std::string TableCrashReports::namePrefix() const { return "crashreport_"; }
 
 void TableCrashReports::answerQuery(Query *query) {
-    for_each_crash_report(
-        core()->crashReportPath(),
-        [&query](const CrashReport &cr) { query->processDataset(Row(&cr)); });
+    mk::crash_report::any(core()->crashReportPath(),
+                          [&query](const CrashReport &cr) {
+                              return !query->processDataset(Row(&cr));
+                          });
 }

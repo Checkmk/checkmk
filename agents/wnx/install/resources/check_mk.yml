@@ -243,3 +243,6 @@ mrpe:
         # - include user_name = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
         # - include = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
 
+system:
+    firewall:
+        mode: none # allowed none, add, remove

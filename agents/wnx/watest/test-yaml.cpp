@@ -839,6 +839,13 @@ TEST(AgentConfig, WorkScenario) {
         auto mrpe_parallel = GetVal(groups::kMrpe, vars::kMrpeParallel, true);
         EXPECT_FALSE(mrpe_parallel);
     }
+
+    // system
+    {
+        auto firewall = GetNode(groups::kSystem, vars::kFirewall);
+        auto mode = GetVal(firewall, vars::kMode, std::string("xx"));
+        EXPECT_TRUE(mode == vars::kModeNone);
+    }
 }
 
 TEST(AgentConfig, UTF16LE) {

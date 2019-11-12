@@ -1,0 +1,13 @@
+Title: Generate a table of contents for the reports
+Class: feature
+Compatible: compat
+Component: reporting
+Date: 1573646303
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+Reports can not be configured to have a table of contents at the begining
+of the report. This option remains deactivated by default, but you can
+configure it under {Report properties}.

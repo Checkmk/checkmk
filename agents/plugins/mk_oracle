@@ -1311,7 +1311,7 @@ sql_jobs () {
                               AND jd.LOG_ID = jm.LOG_ID
               WHERE vd.database_role = ''PRIMARY''
                 AND vd.open_mode = ''READ WRITE''
-                AND not (j.auto_drop = '''TRUE'' and REPEAT_INTERVAL is null)'
+                AND not (j.auto_drop = ''TRUE'' and REPEAT_INTERVAL is null)'
                       bulk collect into xx;
                       if xx.count >= 1 then
                           for i in 1 .. xx.count loop

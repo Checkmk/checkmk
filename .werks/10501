@@ -1,0 +1,14 @@
+Title: mk_oracle: Fixed SQL for Databasese <= 11.2 which leads to errors and missing jobs
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p7
+Date: 1573547256
+
+Regression from Werk 10359 Fixed copy & paste error The Werk 10359 introduced
+new SQLs for oracle_jobs. There was a typo error in the SQL for Databasese <= 11.2
+which leads to errors and missing jobs. This has been fixed.

@@ -242,24 +242,24 @@ inline std::optional<YAML::Node> GetGroupLoaded(const std::string& Section) {
 
 // safe method yo extract value from the yaml
 template <typename T>
-T GetVal(const YAML::Node& Yaml, std::string Name, T Default,
+T GetVal(const YAML::Node& yaml, const std::string& name, T dflt,
          int* ErrorOut = nullptr) noexcept {
-    if (Yaml.size() == 0) {
+    if (yaml.size() == 0) {
         if (ErrorOut) *ErrorOut = Error::kEmpty;
-        return Default;
+        return dflt;
     }
     try {
-        auto val = Yaml[Name];
-        if (!val.IsDefined()) return Default;
+        auto val = yaml[name];
+        if (!val.IsDefined()) return dflt;
 
         if (val.IsScalar()) return val.as<T>();
         if (val.IsNull()) return {};
-        return Default;
+        return dflt;
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {} code:{}",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Name, e.what());
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), name, e.what());
     }
-    return Default;
+    return dflt;
 }
 
 inline YAML::Node GetNode(const YAML::Node& Yaml, std::string Name,

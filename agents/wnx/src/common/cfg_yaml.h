@@ -27,6 +27,7 @@ constexpr const char* const kFileInfo = "fileinfo";
 constexpr const char* const kMrpe = "mrpe";
 constexpr const char* const kLogWatchEvent = "logwatch";
 constexpr const char* const kLocal = "local";
+constexpr const char* const kSystem = "system";
 }  // namespace groups
 
 // ALL name of variables in the YAML
@@ -164,6 +165,13 @@ const char* const kFileInfoPath = "path";  // sequence
 // group "mrpe"
 const char* const kMrpeConfig = "config";      // sequence
 const char* const kMrpeParallel = "parallel";  // boool
+
+// group "system"
+constexpr const char* const kFirewall = "firewall";  // dictionary
+constexpr const char* const kMode = "mode";          // string
+constexpr const char* const kModeAdd = "add";        // install
+constexpr const char* const kModeNone = "none";      // does noting
+constexpr const char* const kModeRemove = "remove";  // remove
 
 }  // namespace vars
 }  // namespace cma::cfg

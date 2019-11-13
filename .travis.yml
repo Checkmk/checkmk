@@ -34,6 +34,10 @@ matrix:
           python: "3.7"
           env: TEST_TARGETS="test-mypy-raw"
             TEST_PATH=tests-py3
+        - name: "Shell tests"
+          python: "3.7"
+          env: TEST_TARGETS="test-unit-sh"
+            TEST_PATH=tests
 env:
     global:
         # Optimize builds by caching pip and pipenv things

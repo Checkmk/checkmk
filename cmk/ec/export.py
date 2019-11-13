@@ -35,7 +35,18 @@ import logging
 import os
 import pprint
 from typing import Any, Dict, Iterable, List, Optional, Tuple  # pylint: disable=unused-import
-import UserDict
+try:
+    # Python has a totally braindead history of changes in this area:
+    #   * In the dark ages: Hmmm, one can't subclass dict, so we have to provide UserDict.
+    #   * Python 2.2: Well, now we can subclass dict, but let's keep UserDict.
+    #   * Python 2.3: Actually, DictMixin might often be a better idea.
+    #   * Python 2.6: It is recommended to use collections.MutableMapping instead of DictMixin.
+    #   * Python 3.0: UserDict is gone...
+    #   * Python 3.3: Let's just move the ABCs from collections to collections.abc, keeping the old stuff for now.
+    #   * Python 3.8: To *really* annoy people, let's nuke the ABCs from collection! >:-)
+    from collections.abc import MutableMapping  # type: ignore
+except ImportError:
+    from collections import MutableMapping
 
 from pathlib2 import Path
 
@@ -51,7 +62,7 @@ class MkpRulePackBindingError(Exception):
     pass
 
 
-class MkpRulePackProxy(UserDict.DictMixin):
+class MkpRulePackProxy(MutableMapping):
     """
     An object of this class represents an entry (i.e. a rule pack) in
     mkp_rule_packs. It is used as a reference to an EC rule pack
@@ -61,6 +72,7 @@ class MkpRulePackProxy(UserDict.DictMixin):
     This is achieved via the method bind_to.
     """
     def __init__(self, rule_pack_id):
+        super(MkpRulePackProxy, self).__init__()
         # Ideally the 'id_' would not be necessary and the proxy object would
         # be bound to it's referenced object upon initialization. Unfortunately,
         # this is not possible because the mknotifyd.mk could specify referenced

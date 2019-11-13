@@ -42,6 +42,7 @@ find $REAL_SEARCH \
     -name typeshed -prune -o \
     -name run-clang-tidy.py -prune -o \
     -name chroot -prune -o \
+    -name googletest-release-1.10.0 -prune -o \
     -type f -print | sort | while read F; do
     if [[ $F =~ "/tests/" ]] && [[ $F == *.py ]]; then
         echo "$F"

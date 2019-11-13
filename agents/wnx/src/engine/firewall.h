@@ -1,6 +1,13 @@
 // engine to install/remove firewall rule
 // namespace cma::fw
 
+// ***************************************************
+// #ATTENTION:
+// THIS API WASN'T TESTED ON MEMORY LEAKS
+// USE IT CAREFULLY and ONLY ONCE DURING PROCESS LIFE
+// THANK YOU FOR UNDERSTANDING
+// ***************************************************
+
 #ifndef firewall_h__
 #define firewall_h__
 
@@ -21,16 +28,21 @@ bool CreateInboundRule(std::wstring_view rule_name, std::wstring_view app_name,
                        int port);
 
 bool RemoveRule(std::wstring_view rule_name);
+bool RemoveRule(std::wstring_view rule_name, std::wstring_view app_name);
 
 // mid-level API to be used with functor
 // functor should find an appropriate rule anf return it to stop scanning
 INetFwRule* ScanAllRules(std::function<INetFwRule*(INetFwRule*)> processor);
 
+int CountRules(std::wstring_view name, std::wstring_view raw_app_name);
+
 // Dump API, do not use it production
 INetFwRule* DumpFWRulesInCollection(INetFwRule* fw_rule);
 inline void DumpAllRules() { ScanAllRules(DumpFWRulesInCollection); }
 
+// type A: find random rule with 'name'
 INetFwRule* FindRule(std::wstring_view name);
+// type B: find random rule with 'name' and 'app_name'
 INetFwRule* FindRule(std::wstring_view name, std::wstring_view app_name);
 
 // proxy class to keep Windows Firewall API maximally isolated

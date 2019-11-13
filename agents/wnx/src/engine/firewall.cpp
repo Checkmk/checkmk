@@ -155,14 +155,18 @@ INetFwRule *ScanAllRules(std::function<INetFwRule *(INetFwRule *)> processor) {
         if (!SUCCEEDED(hr)) break;
 
         INetFwRule *rule = nullptr;
-        ON_OUT_OF_SCOPE(if (rule) rule->Release(););
 
         auto dispatch = (V_DISPATCH(&var));
         hr = dispatch->QueryInterface(__uuidof(INetFwRule),
                                       reinterpret_cast<void **>(&rule));
-
         if (!SUCCEEDED(hr)) break;
+        if (rule == nullptr) continue;
+
+        // processing itself
         auto rule_candidate = processor(rule);
+
+        // post processing
+        if (rule != rule_candidate) rule->Release();
         if (rule_candidate) return rule_candidate;
     }
 
@@ -378,15 +382,17 @@ INetFwPolicy2 *WFCOMInitialize() {
 }
 
 // #TODO: do we need it in the cma::tools?
+// #IMPORTANT: this function is tested  only indirectly
 static std::wstring ToCanonical(std::wstring_view raw_app_name) {
     namespace fs = std::filesystem;
     constexpr int buf_size = 16 * 1024 + 1;
     auto buf = std::make_unique<wchar_t[]>(buf_size);
     std::error_code ec;
-    auto ret =
+    auto resulting_size =
         ::ExpandEnvironmentStringsW(raw_app_name.data(), buf.get(), buf_size);
 
-    fs::path p = fs::canonical(ret ? buf.get() : raw_app_name, ec);
+    auto p =
+        fs::weakly_canonical(resulting_size > 0 ? buf.get() : raw_app_name, ec);
 
     if (ec.value() == 0) return p.wstring();
 
@@ -442,34 +448,6 @@ bool CreateInboundRule(std::wstring_view rule_name,
     return true;
 }
 
-bool RemoveRule(std::wstring_view rule_name) {
-    // Retrieve INetFwPolicy2
-    Policy p;
-    // Retrieve INetFwRules
-    auto rules = p.getRules();
-    if (rules == nullptr) return false;
-
-    // Retrieve Current Profiles bitmask
-    long bit_mask = p.getCurrentProfileTypes();
-    if (bit_mask == -1) return false;
-
-    // When possible we avoid adding firewall rules to the Public profile.
-    // If Public is currently active and it is not the only active profile, we
-    // remove it from the bitmask
-    if ((bit_mask & NET_FW_PROFILE2_PUBLIC) &&
-        (bit_mask != NET_FW_PROFILE2_PUBLIC)) {
-        bit_mask ^= NET_FW_PROFILE2_PUBLIC;
-    }
-
-    auto hr = rules->Remove(Bstr(rule_name));
-    if (FAILED(hr)) {
-        XLOG::l("Firewall Rule REMOVE failed: [{:#X}]", hr);
-        return false;
-    }
-
-    return true;
-}
-
 static std::optional<std::wstring> GetRuleName(INetFwRule *fw_rule) {
     BSTR rule_name = nullptr;
     auto ret = fw_rule->get_Name(&rule_name);
@@ -492,6 +470,81 @@ static std::optional<std::wstring> GetRuleAppName(INetFwRule *fw_rule) {
     return app_name;
 }
 
+bool RemoveRule(std::wstring_view rule_name) {
+    // Retrieve INetFwPolicy2
+    Policy p;
+    // Retrieve INetFwRules
+    auto rules = p.getRules();
+    if (rules == nullptr) return false;
+
+    auto hr = rules->Remove(Bstr(rule_name));
+    if (FAILED(hr)) {
+        XLOG::l("Firewall Rule REMOVE failed: [{:#X}]", hr);
+        return false;
+    }
+
+    return true;
+}
+
+std::wstring GenerateRandomRuleName() {
+    static bool run_once = false;
+    if (!run_once) {
+        run_once = true;
+        srand(static_cast<unsigned int>(time(nullptr)));
+    }
+    auto random_int = rand();
+    std::wstring new_name = L"to_delete_";
+    new_name += std::to_wstring(random_int);
+
+    return new_name;
+}
+
+bool RemoveRule(std::wstring_view name, std::wstring_view raw_app_name) {
+    if (raw_app_name.empty()) return RemoveRule(name);
+
+    auto app_name = raw_app_name.empty() ? L"" : ToCanonical(raw_app_name);
+    std::wstring new_name;
+
+    // find a rule with name and app_name
+    auto rule = ScanAllRules(
+        [name, app_name, &new_name](INetFwRule *fw_rule) -> INetFwRule * {
+            if (fw_rule == nullptr) return nullptr;  // continue enumeration
+
+            {
+                auto rule_name = GetRuleName(fw_rule);
+                if (!rule_name || wcscmp(name.data(), rule_name->c_str()))
+                    return nullptr;
+            }
+
+            {
+                auto candidate_name = GetRuleAppName(fw_rule);
+                if (!candidate_name) return nullptr;
+
+                if (!cma::tools::IsEqual(app_name, *candidate_name))
+                    return nullptr;
+
+                // we have found a rule to delete
+                // unfortunately MS API has no possibility to delete this rule
+                // so we rename this rule to the random name and we will delete
+                // rule by this random name
+                {
+                    new_name = GenerateRandomRuleName();
+                    fw_rule->put_Name(Bstr(new_name));
+                    XLOG::d.i("Rule '{}' renamed to '{}' for deletion",
+                              wtools::ConvertToUTF8(name),
+                              wtools::ConvertToUTF8(new_name));
+                    return fw_rule;  // found
+                }
+            }
+        });
+
+    // in any case we have to clean
+    if (rule) rule->Release();
+    if (!new_name.empty()) return RemoveRule(new_name);
+
+    return false;
+}
+
 INetFwRule *FindRule(std::wstring_view name, std::wstring_view raw_app_name) {
     auto app_name = raw_app_name.empty() ? L"" : ToCanonical(raw_app_name);
 
@@ -511,12 +564,40 @@ INetFwRule *FindRule(std::wstring_view name, std::wstring_view raw_app_name) {
             auto candidate_name = GetRuleAppName(fw_rule);
             if (!candidate_name) return nullptr;
 
-            auto the_same = cma::tools::IsEqual(app_name, *candidate_name) == 0;
+            if (cma::tools::IsEqual(app_name, *candidate_name))
+                return fw_rule;  // stop enumeration
 
-            return the_same ? fw_rule  // stop enumeration
-                            : nullptr;
+            return nullptr;
         }
     });
+}
+
+int CountRules(std::wstring_view name, std::wstring_view raw_app_name) {
+    auto app_name = raw_app_name.empty() ? L"" : ToCanonical(raw_app_name);
+
+    int count = 0;
+    ScanAllRules([name, app_name, &count](INetFwRule *fw_rule) -> INetFwRule * {
+        if (fw_rule == nullptr) return nullptr;
+
+        {
+            auto rule_name = GetRuleName(fw_rule);
+            if (!rule_name) return nullptr;
+
+            if (wcscmp(name.data(), rule_name->c_str())) return nullptr;
+        }
+
+        if (app_name.empty()) count++;
+
+        {
+            auto candidate_name = GetRuleAppName(fw_rule);
+            if (!candidate_name) return nullptr;
+
+            if (cma::tools::IsEqual(app_name, *candidate_name)) count++;
+            return nullptr;
+        }
+    });
+
+    return count;
 }
 
 INetFwRule *FindRule(std::wstring_view name) {

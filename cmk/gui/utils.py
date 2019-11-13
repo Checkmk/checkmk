@@ -33,6 +33,7 @@ import uuid
 import marshal
 import urlparse
 import itertools
+import six
 from pathlib2 import Path
 
 import cmk.utils.paths
@@ -172,7 +173,7 @@ def load_web_plugins(forwhat, globalvars):
         for file_path in sorted(plugins_path.iterdir()):
             try:
                 if file_path.suffix == ".py" and not file_path.with_suffix(".pyc").exists():
-                    exec (file_path.open().read(), globalvars)
+                    exec (_drop_comments(file_path.open().read()), globalvars)
 
                 elif file_path.suffix == ".pyc":
                     code_bytes = file_path.open().read()[8:]
@@ -182,6 +183,20 @@ def load_web_plugins(forwhat, globalvars):
             except Exception as e:
                 logger.exception("Failed to load plugin %s: %s", file_path, e)
                 _failed_plugins[forwhat].append((str(file_path), e))
+
+
+def _drop_comments(content):
+    if six.PY3:
+        return content
+
+    # Files opened with Pathlib handler are by default unicode encoded,
+    # which is what we want. We constantly use exec to load modules or user
+    # defined scripts. In python2, it is not possible to exec a unicode
+    # string, which in itself defines an encoding. Minimal example
+    # exec(u'# coding=utf8')
+    # Thus we just drop all comment lines
+
+    return "\n".join(x for x in content.split('\n') if not x.lstrip().startswith("#"))
 
 
 def get_failed_plugins():

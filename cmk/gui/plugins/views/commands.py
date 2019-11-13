@@ -34,7 +34,11 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.valuespec import Age
+from cmk.gui.valuespec import (
+    Age,
+    Alternative,
+    FixedValue
+)
 
 from cmk.gui.permissions import (
     permission_section_registry,
@@ -742,9 +746,34 @@ class CommandAcknowledge(Command):
             sendnot = 1 if html.request.var("_ack_notify") else 0
             perscomm = 1 if html.request.var("_ack_persistent") else 0
 
+            expire = None
             expire_secs = self._vs_expire().from_html_vars("_ack_expire")
-            if expire_secs:
+            if type(expire_secs) == int:
                 expire = int(time.time()) + expire_secs
+            elif type(expire_secs) == str:
+                now = time.localtime(time.time())
+                if expire_secs == "ack_expire_tomorrow":
+                    expire = time.mktime((now.tm_year, now.tm_mon, now.tm_mday + 1, 10, 0, 0, 0, 0, now.tm_isdst))
+                elif expire_secs == "ack_expire_next_monday":
+                    days_plus = 7 - now.tm_wday
+                    expire = time.mktime((now.tm_year, now.tm_mon, now.tm_mday + days_plus, 10, 0, 0, 0, 0, now.tm_isdst))
+                elif expire_secs == "ack_expire_next_month":
+                    tmp = time.localtime(time.mktime((now.tm_year, now.tm_mon + 1, 1, 10, 0, 0, 0, 0, now.tm_isdst)))
+                    days_plus = 0
+                    if tmp.tm_wday == 6:
+                        days_plus = 1
+                    elif tmp.tm_wday == 5:
+                        days_plus = 2
+                    expire = time.mktime((tmp.tm_year, tmp.tm_mon, tmp.tm_mday + days_plus, 10, 0, 0, 0, 0, tmp.tm_isdst))
+                elif expire_secs == "ack_expire_next_year":
+                    tmp = time.localtime(time.mktime((now.tm_year + 1, 1, 2, 10, 0, 0, 0, 0, now.tm_isdst)))
+                    days_plus = 0
+                    if tmp.tm_wday == 6:
+                        days_plus = 1
+                    elif tmp.tm_wday == 5:
+                        days_plus = 2
+                    expire = time.mktime((tmp.tm_year, tmp.tm_mon, tmp.tm_mday + days_plus, 10, 0, 0, 0, 0, tmp.tm_isdst))
+            if expire:
                 expire_text = ";%d" % expire
             else:
                 expire_text = ""
@@ -760,7 +789,7 @@ class CommandAcknowledge(Command):
                 commands = [make_command(spec, cmdtag)]
 
             title = _("<b>acknowledge the problems%s</b> of") % (
-                expire_text and (_(" for a period of %s") % Age().value_to_text(expire_secs)) or "")
+                expire and (_(" until %s") % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(expire))) or "")
             return commands, title
 
         elif html.request.var("_remove_ack"):
@@ -776,9 +805,52 @@ class CommandAcknowledge(Command):
             return commands, title
 
     def _vs_expire(self):
-        return Age(
-            display=["days", "hours", "minutes"],
-            label=_("Expire acknowledgement after"),
+        now = time.localtime(time.time())
+        expire_tomorrow = time.strftime("%Y-%m-%d %H:%M:%S", (now.tm_year, now.tm_mon, now.tm_mday + 1, 10, 0, 0, 0, 0, now.tm_isdst))
+        days_plus = 7 - now.tm_wday
+        expire_next_monday = time.strftime("%Y-%m-%d %H:%M:%S", (now.tm_year, now.tm_mon, now.tm_mday + days_plus, 10, 0, 0, 0, 0, now.tm_isdst))
+        tmp = time.localtime(time.mktime((now.tm_year, now.tm_mon + 1, 1, 10, 0, 0, 0, 0, now.tm_isdst)))
+        days_plus = 0
+        if tmp.tm_wday == 6:
+            days_plus = 1
+        elif tmp.tm_wday == 5:
+            days_plus = 2
+        expire_next_month = time.strftime("%Y-%m-%d %H:%M:%S", (tmp.tm_year, tmp.tm_mon, tmp.tm_mday + days_plus, 10, 0, 0, 0, 0, tmp.tm_isdst))
+        tmp = time.localtime(time.mktime((now.tm_year + 1, 1, 2, 10, 0, 0, 0, 0, now.tm_isdst)))
+        days_plus = 0
+        if tmp.tm_wday == 6:
+            days_plus = 1
+        elif tmp.tm_wday == 5:
+            days_plus = 2
+        expire_next_year = time.strftime("%Y-%m-%d %H:%M:%S", (tmp.tm_year, tmp.tm_mon, tmp.tm_mday + days_plus, 10, 0, 0, 0, 0, tmp.tm_isdst))
+        return Alternative(
+            elements=[
+                Age(
+                    display=["days", "hours", "minutes"],
+                    title=_(" Expire"),
+                    label=_("after")
+                ),
+                FixedValue(
+                    value="ack_expire_tomorrow",
+                    title=_(" Expire tomorrow"),
+                    totext=expire_tomorrow,
+                ),
+                FixedValue(
+                    value="ack_expire_next_monday",
+                    title=_(" Expire next monday"),
+                    totext=expire_next_monday,
+                ),
+                FixedValue(
+                    value="ack_expire_next_month",
+                    title=_(" Expire next month"),
+                    totext=expire_next_month,
+                ),
+                FixedValue(
+                    value="ack_expire_next_year",
+                    title=_(" Expire next year"),
+                    totext=expire_next_year,
+                ),
+            ]
         )
 
 

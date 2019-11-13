@@ -4611,7 +4611,7 @@ class PainterLogStateType(Painter):
 
     @property
     def title(self):
-        return _("Log: type of state (hard/soft/stopped/started)")
+        return _("Log: state type (DEPRECATED: Use \"state information\")")
 
     @property
     def short_title(self):
@@ -4623,6 +4623,34 @@ class PainterLogStateType(Painter):
 
     def render(self, row, cell):
         return ("", row["log_state_type"])
+
+
+@painter_registry.register
+class PainterLogStateInfo(Painter):
+    @property
+    def ident(self):
+        return "log_state_info"
+
+    @property
+    def title(self):
+        return _("Log: State information")
+
+    @property
+    def short_title(self):
+        return _("State info")
+
+    @property
+    def columns(self):
+        return ['log_state_info', 'log_state_type']
+
+    def render(self, row, cell):
+        info = row["log_state_info"]
+
+        # be compatible to <1.7 remote sites and show log_state_type content as fallback
+        if not info:
+            info = row["log_state_type"]
+
+        return ("", html.attrencode(info))
 
 
 @painter_registry.register

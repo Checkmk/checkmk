@@ -2163,7 +2163,7 @@ class FilterLogStateType(FilterText):
 
     @property
     def title(self):
-        return _("Log: state type")
+        return _("Log: state type (DEPRECATED: Use \"state information\")")
 
     @property
     def sort_index(self):
@@ -2171,6 +2171,24 @@ class FilterLogStateType(FilterText):
 
     def __init__(self):
         FilterText.__init__(self, "log", "log_state_type", "log_state_type", "~~")
+
+
+@filter_registry.register
+class FilterLogStateInfo(FilterText):
+    @property
+    def ident(self):
+        return "log_state_info"
+
+    @property
+    def title(self):
+        return _("Log: state information")
+
+    @property
+    def sort_index(self):
+        return 204
+
+    def __init__(self):
+        FilterText.__init__(self, "log", "log_state_info", "log_state_info", "~~")
 
 
 @filter_registry.register

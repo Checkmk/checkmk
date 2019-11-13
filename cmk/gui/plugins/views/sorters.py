@@ -534,6 +534,7 @@ declare_simple_sorter("downtime_entry_time", _("Downtime entry time"), "downtime
 declare_1to1_sorter("log_plugin_output", cmp_simple_string)
 declare_1to1_sorter("log_attempt", cmp_simple_string)
 declare_1to1_sorter("log_state_type", cmp_simple_string)
+declare_1to1_sorter("log_state_info", cmp_simple_string)
 declare_1to1_sorter("log_type", cmp_simple_string)
 declare_1to1_sorter("log_contact_name", cmp_simple_string)
 declare_1to1_sorter("log_time", cmp_simple_number)

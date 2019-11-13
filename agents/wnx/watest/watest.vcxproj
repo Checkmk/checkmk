@@ -316,6 +316,7 @@ call check_watest.cmd watest
     <ClCompile Include="test-encryption.cpp" />
     <ClCompile Include="test-eventlog.cpp" />
     <ClCompile Include="test-external-port.cpp" />
+    <ClCompile Include="test-firewall.cpp" />
     <ClCompile Include="test-health.cpp" />
     <ClCompile Include="test-install-auto.cpp" />
     <ClCompile Include="test-log.cpp" />

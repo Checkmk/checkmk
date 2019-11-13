@@ -20,14 +20,17 @@ namespace cma {
 // Related to Service Agent Logic
 namespace srv {
 enum class StdioLog { no, yes, extended };
+enum class FwMode { show, add, remove };
 class ServiceProcessor;
-int InstallMainService();                  // on install
-int RemoveMainService();                   // on remove
-int TestIo();                              // on check -io
-int TestMt();                              // on check -mt
-int TestMainServiceSelf(int Interval);     // on check self
-int TestLegacy();                          // on test
-int RestoreWATOConfig();                   // on restore
+int InstallMainService();               // on install
+int RemoveMainService();                // on remove
+int TestIo();                           // on check -io
+int TestMt();                           // on check -mt
+int TestMainServiceSelf(int Interval);  // on check self
+int TestLegacy();                       // on test
+int RestoreWATOConfig();                // on restore
+int ExecFirewall(srv::FwMode fw_mode, std::wstring_view app_name,
+                 std::wstring_view name);  // on fw
 int ExecMainService(StdioLog stdio_log);   // on exec
 int ExecStartLegacy();                     // on start_legacy
 int ExecStopLegacy();                      // on stop_legacy
@@ -64,6 +67,9 @@ constexpr int kServiceStartType = SERVICE_DEMAND_START;  //  SERVICE_AUTO_START;
 constexpr const wchar_t* kServiceDependencies = L"";
 constexpr const wchar_t* kServiceAccount = L"NT AUTHORITY\\LocalService";
 constexpr const wchar_t* kServicePassword = nullptr;
+
+constexpr std::wstring_view kSrvFirewallRuleName = L"CheckMkSrvRule_Main";
+constexpr std::wstring_view kAppFirewallRuleName = L"CheckMkAppRule_Main";
 
 // service configuration
 // main call

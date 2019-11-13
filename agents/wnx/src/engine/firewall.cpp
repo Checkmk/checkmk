@@ -4,12 +4,14 @@
 
 #include "firewall.h"
 
-#include <atlcomcli.h>
 #include <comutil.h>
 #include <netfw.h>
 
+#include <filesystem>
+
 #include "common/wtools.h"
 #include "logger.h"
+#include "tools/_misc.h"
 
 #if defined(WIN32)
 #pragma comment(lib, "ole32.lib")
@@ -133,23 +135,23 @@ INetFwRule *ScanAllRules(std::function<INetFwRule *(INetFwRule *)> processor) {
     long rule_count = p.getRulesCount();
     if (rule_count == 0) return 0;
 
-    XLOG::l.i("Firewall Rules count is [{}]", rule_count);
+    XLOG::t.i("Firewall Rules count is [{}]", rule_count);
 
     auto variant = p.getEnum();
     if (variant == nullptr) return nullptr;
     ON_OUT_OF_SCOPE(variant->Release());
 
     ULONG cFetched = 0;
-    CComVariant var;
-    var.Clear();
+    VARIANT var;
+    ::VariantClear(&var);
 
     while (1) {
         auto hr = variant->Next(1, &var, &cFetched);
-        ON_OUT_OF_SCOPE(var.Clear());
+        ON_OUT_OF_SCOPE(::VariantClear(&var););
 
         if (S_FALSE == hr) break;
         if (!SUCCEEDED(hr)) break;
-        hr = var.ChangeType(VT_DISPATCH);
+        hr = ::VariantChangeType(&var, &var, 0, VT_DISPATCH);
         if (!SUCCEEDED(hr)) break;
 
         INetFwRule *rule = nullptr;
@@ -375,8 +377,29 @@ INetFwPolicy2 *WFCOMInitialize() {
     return pNetFwPolicy2;
 }
 
-bool CreateInboundRule(std::wstring_view rule_name, std::wstring_view app_name,
-                       int port) {
+// #TODO: do we need it in the cma::tools?
+static std::wstring ToCanonical(std::wstring_view raw_app_name) {
+    namespace fs = std::filesystem;
+    constexpr int buf_size = 16 * 1024 + 1;
+    auto buf = std::make_unique<wchar_t[]>(buf_size);
+    std::error_code ec;
+    auto ret =
+        ::ExpandEnvironmentStringsW(raw_app_name.data(), buf.get(), buf_size);
+
+    fs::path p = fs::canonical(ret ? buf.get() : raw_app_name, ec);
+
+    if (ec.value() == 0) return p.wstring();
+
+    XLOG::l.i(
+        "Path '{}' cannot be canonical: probably based on the environment variables",
+        wtools::ConvertToUTF8(raw_app_name));
+
+    return std::wstring(raw_app_name);
+}
+
+bool CreateInboundRule(std::wstring_view rule_name,
+                       std::wstring_view raw_app_name, int port) {
+    auto app_name = ToCanonical(raw_app_name);
     // Retrieve INetFwPolicy2
     Policy p;
     // Retrieve INetFwRules
@@ -412,7 +435,7 @@ bool CreateInboundRule(std::wstring_view rule_name, std::wstring_view app_name,
     // Add the Firewall Rule
     auto hr = rules->Add(rule);
     if (FAILED(hr)) {
-        printf("Firewall Rule Add failed: 0x%08lx\n", hr);
+        XLOG::l("Firewall Rule Add failed: [{:#X}]", hr);
         return false;
     }
 
@@ -440,11 +463,73 @@ bool RemoveRule(std::wstring_view rule_name) {
 
     auto hr = rules->Remove(Bstr(rule_name));
     if (FAILED(hr)) {
-        printf("Firewall Rule Add failed: 0x%08lx\n", hr);
+        XLOG::l("Firewall Rule REMOVE failed: [{:#X}]", hr);
         return false;
     }
 
     return true;
+}
+
+static std::optional<std::wstring> GetRuleName(INetFwRule *fw_rule) {
+    BSTR rule_name = nullptr;
+    auto ret = fw_rule->get_Name(&rule_name);
+    if (ret != 0) return {};
+    ON_OUT_OF_SCOPE(SysFreeString(rule_name));
+
+    if (rule_name == nullptr) return {};
+
+    return rule_name;
+}
+
+static std::optional<std::wstring> GetRuleAppName(INetFwRule *fw_rule) {
+    BSTR app_name = nullptr;
+    auto ret = fw_rule->get_ApplicationName(&app_name);
+    if (ret != 0) return {};
+    ON_OUT_OF_SCOPE(SysFreeString(app_name));
+
+    if (app_name == nullptr) return {};
+
+    return app_name;
+}
+
+INetFwRule *FindRule(std::wstring_view name, std::wstring_view raw_app_name) {
+    auto app_name = raw_app_name.empty() ? L"" : ToCanonical(raw_app_name);
+
+    return ScanAllRules([name, app_name](INetFwRule *fw_rule) -> INetFwRule * {
+        if (fw_rule == nullptr) return nullptr;  // continue enumeration
+
+        {
+            auto rule_name = GetRuleName(fw_rule);
+            if (!rule_name) return nullptr;
+
+            if (wcscmp(name.data(), rule_name->c_str())) return nullptr;
+        }
+
+        if (app_name.empty()) return fw_rule;
+
+        {
+            auto candidate_name = GetRuleAppName(fw_rule);
+            if (!candidate_name) return nullptr;
+
+            auto the_same = cma::tools::IsEqual(app_name, *candidate_name) == 0;
+
+            return the_same ? fw_rule  // stop enumeration
+                            : nullptr;
+        }
+    });
+}
+
+INetFwRule *FindRule(std::wstring_view name) {
+    return ScanAllRules([name](INetFwRule *fw_rule) -> INetFwRule * {
+        if (fw_rule == nullptr) return nullptr;  // continue enumeration
+
+        BSTR rule_name = nullptr;
+        auto ret = fw_rule->get_Name(&rule_name);
+        if (ret != 0) return nullptr;
+
+        ON_OUT_OF_SCOPE(SysFreeString(rule_name));
+        return wcscmp(name.data(), rule_name) == 0 ? fw_rule : nullptr;
+    });
 }
 
 }  // namespace cma::fw

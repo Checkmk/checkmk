@@ -17,7 +17,8 @@
 #include "common/wtools.h"
 #include "cvt.h"
 #include "external_port.h"  // windows api abstracted
-#include "install_api.h"    // install
+#include "firewall.h"
+#include "install_api.h"  // install
 #include "realtime.h"
 #include "service_processor.h"  // cmk service implementation class
 #include "tools/_kbd.h"
@@ -324,22 +325,81 @@ int TestLegacy() {
         sp.startServiceAsLegacyTest();
         sp.stopService();
     } catch (const std::exception& e) {
-        xlog::l("Exception is not allowed here %s", e.what());
+        XLOG::l(XLOG_FUNC + "Exception is not allowed here {}", e.what());
     }
     return 0;
 }
 
 int RestoreWATOConfig() {
-    using namespace std::chrono;
-
     try {
-        // test for main thread. will be disabled in production
-        // to find file, read and start update POC.
         XLOG::setup::ColoredOutputOnStdio(true);
         XLOG::setup::DuplicateOnStdio(true);
         cma::cfg::cap::ReInstall();
     } catch (const std::exception& e) {
-        xlog::l("Exception is not allowed here %s", e.what());
+        XLOG::l(XLOG_FUNC + "Exception is not allowed here {}", e.what());
+    }
+    return 0;
+}
+
+static void LogFirewallCreate(bool success) {
+    if (success)
+        XLOG::SendStringToStdio(
+            "The firewall rule have been created successfully",
+            XLOG::Colors::green);
+    else
+        XLOG::SendStringToStdio("Failed to create firewall rule",
+                                XLOG::Colors::red);
+}
+
+static void LogFirewallRemove(bool success) {
+    if (success)
+        XLOG::SendStringToStdio("The firewall rule have been removed",
+                                XLOG::Colors::green);
+    else
+        XLOG::SendStringToStdio("Failed to remove firewall rule",
+                                XLOG::Colors::red);
+}
+
+static void LogFirewallFind(bool success) {
+    if (success)
+        XLOG::SendStringToStdio("The firewall rule doesn't exists",
+                                XLOG::Colors::yellow);
+    else
+        XLOG::SendStringToStdio("The firewall rule exists",
+                                XLOG::Colors::green);
+}
+
+int ExecFirewall(srv::FwMode fw_mode, std::wstring_view app_name,
+                 std::wstring_view name) {
+    using namespace cma::fw;
+    try {
+        XLOG::setup::ColoredOutputOnStdio(true);
+        XLOG::setup::DuplicateOnStdio(true);
+        switch (fw_mode) {
+            case FwMode::add: {
+                auto success = CreateInboundRule(name, app_name, -1);
+                LogFirewallCreate(success);
+                return 0;
+            }
+            case FwMode::remove:
+                if (FindRule(name)) {
+                    auto success = RemoveRule(name);
+                    LogFirewallRemove(success);
+                    return 0;
+                }
+
+                XLOG::SendStringToStdio(
+                    "The firewall doesn't exists, nothing to remove",
+                    XLOG::Colors::yellow);
+                return 0;
+            case FwMode::show: {
+                auto rule = FindRule(name);
+                LogFirewallFind(rule == nullptr);
+                return 0;
+            }
+        }
+    } catch (const std::exception& e) {
+        XLOG::l(XLOG_FUNC + "Exception is not allowed here {}", e.what());
     }
     return 0;
 }

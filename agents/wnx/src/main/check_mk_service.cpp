@@ -180,6 +180,18 @@ void PrintLwaActivate() {
     });
 }
 
+void PrintFirewall() {
+    using namespace xlog::internal;
+
+    PrintBlock("Add/Remove Firewall Rule:\n", Colors::pink, []() {
+        return fmt::format(
+            "\t{1} [{2}|{3}]\n"
+            "\t{2:{0}} - add firewall rule\n"
+            "\t{3:{0}} - remove firewall rule\n",
+            kParamShift, kFwParam, kFwAddParam, kFwRemoveParam);
+    });
+}
+
 void PrintUpgrade() {
     using namespace xlog::internal;
     PrintBlock("Upgrade Legacy Agent(migration):\n", Colors::pink, []() {
@@ -247,6 +259,7 @@ static void ServiceUsage(std::wstring_view comment) {
         PrintShowConfig();
         PrintCvt();
         PrintLwaActivate();
+        PrintFirewall();
         PrintUpgrade();
         PrintCap();
         PrintSectionTesting();
@@ -516,6 +529,24 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
             return 2;
         }
     }
+
+    if (param == wtools::ConvertToUTF16(kFwParam)) {
+        using namespace cma::srv;
+        using namespace cma::tools;
+        if (argc <= 2)
+            return ExecFirewall(FwMode::show, Argv[0], kAppFirewallRuleName);
+
+        if (CheckArgvForValue(argc, Argv, 2, kFwAddParam))
+            return ExecFirewall(FwMode::add, Argv[0], kAppFirewallRuleName);
+
+        if (CheckArgvForValue(argc, Argv, 2, kFwRemoveParam))
+            return ExecFirewall(FwMode::remove, Argv[0], kAppFirewallRuleName);
+
+        ServiceUsage(std::wstring(L"Invalid parameter for ") +
+                     wtools::ConvertToUTF16(kFwParam) + L"\n");
+        return 2;
+    }
+
     if (param == wtools::ConvertToUTF16(kSectionParam) && argc > 2) {
         std::wstring section = Argv[2];
         int delay = argc > 3 ? ToInt(Argv[3]) : 0;

@@ -44,7 +44,9 @@ find $REAL_SEARCH \
     -name run-clang-tidy.py -prune -o \
     -name chroot -prune -o \
     -type f -print | sort | while read F; do
-    if head -n 1 "$F" | grep -q '^#!.*python3$' >/dev/null 2>&1; then
+    if [[ $F =~ "/tests-py3/" ]] && [[ $F == *.py ]]; then
+        echo "$F"
+    elif head -n 1 "$F" | grep -q '^#!.*python3$' >/dev/null 2>&1; then
         echo "$F"
     fi
 done

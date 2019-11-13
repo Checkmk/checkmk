@@ -235,7 +235,9 @@ fi
 PYTHON_FILES=${PYTHON_FILES-$($REPO_PATH/tests/find-python-files)}
 # Exclude python files which can be installed on client hosts
 PYTHON_FILES=$(echo "$PYTHON_FILES" |\
-               grep -v "$REPO_PATH/agents/plugins" |\
+               grep -v "$REPO_PATH/agents/plugins/" |\
+               grep -v "$REPO_PATH/agents/windows/plugins/" |\
+               grep -v "$REPO_PATH/enterprise/agents/plugins/" |\
                grep -v "$REPO_PATH/doc/treasures/downtime")
 
 FIXER_OPTS=""

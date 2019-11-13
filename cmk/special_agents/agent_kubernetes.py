@@ -75,7 +75,7 @@ class PathPrefixAction(argparse.Action):
         setattr(namespace, self.dest, path_prefix)
 
 
-def parse(args):
+def parse_arguments(args):
     # type: (List[str]) -> argparse.Namespace
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--debug', action='store_true', help='Debug mode: raise Python exceptions')
@@ -1445,7 +1445,7 @@ def main(args=None):
     if args is None:
         cmk.utils.password_store.replace_passwords()
         args = sys.argv[1:]
-    arguments = parse(args)
+    arguments = parse_arguments(args)
 
     try:
         setup_logging(arguments.verbose)

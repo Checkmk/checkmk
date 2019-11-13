@@ -4,6 +4,7 @@
 #include "pch.h"
 
 #include "common/wtools.h"
+#include "firewall.h"
 #include "service_processor.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
@@ -162,6 +163,53 @@ TEST(CmaSrv, GlobalApi) {
     sp.stopService();
     EXPECT_TRUE(cma::srv::IsGlobalStopSignaled());
     global_stop_signaled = false;
+}
+
+static void SetCfgMode(YAML::Node cfg, std::string_view mode) {
+    using namespace cma::cfg;
+    cfg[groups::kSystem] =
+        YAML::Load(fmt::format("firewall:\n  mode: {}\n", mode));
+}
+
+TEST(CmaSrv, Firewall) {
+    using namespace cma::cfg;
+    OnStartTest();
+    ON_OUT_OF_SCOPE(OnStartTest());
+    auto cfg = cma::cfg::GetLoadedConfig();
+    constexpr std::wstring_view app_name = L"test.exe.exe";
+
+    // remove all from the Firewall
+    SetCfgMode(cfg, vars::kModeClear);
+
+    auto fw_node = GetNode(groups::kSystem, vars::kFirewall);
+    auto value = GetVal(fw_node, vars::kMode, std::string(""));
+    ASSERT_TRUE(value == vars::kModeClear);
+    ProcessFirewallConfiguration(app_name);
+
+    SetCfgMode(cfg, vars::kModeConfigure);
+    for (auto i = 0; i < 2; ++i) {
+        ProcessFirewallConfiguration(app_name);
+        auto count = cma::fw::CountRules(kSrvFirewallRuleName, app_name);
+        EXPECT_EQ(count, 1);
+    }
+
+    SetCfgMode(cfg, vars::kModeNone);
+    for (auto i = 0; i < 2; ++i) {
+        ProcessFirewallConfiguration(app_name);
+        auto count = cma::fw::CountRules(kSrvFirewallRuleName, app_name);
+        EXPECT_EQ(count, 1);
+    }
+
+    SetCfgMode(cfg, vars::kModeClear);
+    for (auto i = 0; i < 2; ++i) {
+        ProcessFirewallConfiguration(app_name);
+        auto count = cma::fw::CountRules(kSrvFirewallRuleName, app_name);
+        EXPECT_EQ(count, 0);
+    }
+
+    SetCfgMode(cfg, vars::kModeNone);
+    ProcessFirewallConfiguration(app_name);
+    EXPECT_EQ(0, cma::fw::CountRules(cma::srv::kSrvFirewallRuleName, app_name));
 }
 
 }  // namespace cma::srv

@@ -20,7 +20,7 @@ namespace cma {
 // Related to Service Agent Logic
 namespace srv {
 enum class StdioLog { no, yes, extended };
-enum class FwMode { show, add, remove };
+enum class FwMode { show, configure, clear };
 class ServiceProcessor;
 int InstallMainService();               // on install
 int RemoveMainService();                // on remove
@@ -53,9 +53,12 @@ int ExecCvtIniYaml(std::filesystem::path IniFile,
 int ExecSection(const std::wstring& SecName,
                 int RepeatPause,      // if 0 no repeat
                 StdioLog stdio_log);  // on section
-int ServiceAsService(std::chrono::milliseconds Delay,
+int ServiceAsService(std::wstring_view app_name,
+                     std::chrono::milliseconds Delay,
                      std::function<bool(const void* Processor)>
                          InternalCallback) noexcept;  // service execution
+
+void ProcessFirewallConfiguration(std::wstring_view app_name);
 
 // NAMES
 constexpr const wchar_t* kServiceName = L"CheckMkService";
@@ -68,8 +71,8 @@ constexpr const wchar_t* kServiceDependencies = L"";
 constexpr const wchar_t* kServiceAccount = L"NT AUTHORITY\\LocalService";
 constexpr const wchar_t* kServicePassword = nullptr;
 
-constexpr std::wstring_view kSrvFirewallRuleName = L"CheckMkSrvRule_Main";
-constexpr std::wstring_view kAppFirewallRuleName = L"CheckMkAppRule_Main";
+constexpr std::wstring_view kSrvFirewallRuleName = L"CheckMk Service Rule";
+constexpr std::wstring_view kAppFirewallRuleName = L"CheckMk Application Rule";
 
 // service configuration
 // main call

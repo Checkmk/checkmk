@@ -29,6 +29,7 @@
 
 # Put this script into local/share/check_mk/web/plugins/wato on a Check_MK site
 # and run "omd reload apache" as site user to ensure the plugin is loaded.
+from cmk.gui.log import logger
 
 
 def pre_activate_changes_check_duplicate_host(hosts):
@@ -41,8 +42,10 @@ def pre_activate_changes_check_duplicate_host(hosts):
 
     for address, host_names in addresses.items():
         if len(host_names) > 1:
-            html.show_warning("The IP address %s is used for multiple hosts: %s" %
-                              (address, ", ".join(host_names)))
+            message = "The IP address %s is used for multiple hosts: %s" % (address,
+                                                                            ", ".join(host_names))
+            html.show_warning(message)
+            logger.warning(message)
 
 
 register_hook('pre-activate-changes', pre_activate_changes_check_duplicate_host)

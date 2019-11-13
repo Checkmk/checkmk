@@ -132,7 +132,7 @@ def parse_arguments(argv):
                         metavar="HOSTNAME",
                         help="Name of the jenkins instance to query.")
 
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 if __name__ == "__main__":

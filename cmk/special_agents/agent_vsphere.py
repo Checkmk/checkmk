@@ -1004,7 +1004,7 @@ def parse_arguments(argv):
                         metavar="HOST",
                         help="""Host name or IP address of VMWare HostSystem""")
 
-    return parser.parse_args(argv[1:])
+    return parser.parse_args(argv)
 
 
 #   .--Connection----------------------------------------------------------+
@@ -1928,7 +1928,7 @@ def call_legacy_pysphere():
 def main(argv=None):
     if argv is None:
         cmk.utils.password_store.replace_passwords()
-        argv = sys.argv
+        argv = sys.argv[1:]
 
     opt = parse_arguments(argv)
 

@@ -112,7 +112,7 @@ DEFAULT_AGRS = {
     }),
 ])
 def test_parse_arguments(argv, expected_non_default_args):
-    args = agent_vsphere.parse_arguments(["./agent_vsphere"] + argv + ["test_host"])
+    args = agent_vsphere.parse_arguments(argv + ["test_host"])
     for attr in DEFAULT_AGRS:
         expected = expected_non_default_args.get(attr, DEFAULT_AGRS[attr])
         actual = getattr(args, attr)
@@ -130,4 +130,4 @@ def test_parse_arguments(argv, expected_non_default_args):
 ])
 def test_parse_arguments_invalid(invalid_argv):
     with pytest.raises(SystemExit):
-        agent_vsphere.parse_arguments(["./agent_vsphere"] + invalid_argv)
+        agent_vsphere.parse_arguments(invalid_argv)

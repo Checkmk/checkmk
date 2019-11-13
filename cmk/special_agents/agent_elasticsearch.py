@@ -33,9 +33,11 @@ import urllib3  # type: ignore
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-def main():
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
 
-    args = parse_arguments()
+    args = parse_arguments(argv)
 
     try:
         user = args.user
@@ -100,9 +102,7 @@ def handle_request(user, pwd, opt_port, query_objects, opt_proto, opt_debug, ela
                 raise
 
 
-def parse_arguments(argv=None):
-    if argv is None:
-        argv = sys.argv[1:]
+def parse_arguments(argv):
 
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawTextHelpFormatter)
@@ -134,7 +134,7 @@ def parse_arguments(argv=None):
         "You can define one or more elasticsearch instances to query. First instance where data is queried wins."
     )
 
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def handle_cluster_health(response):

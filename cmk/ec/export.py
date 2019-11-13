@@ -74,7 +74,7 @@ class MkpRulePackProxy(UserDict.DictMixin):
     def __setitem__(self, key, value):
         self.rule_pack[key] = value
 
-    def __delattr__(self, key):
+    def __delitem__(self, key):
         del self.rule_pack[key]
 
     def __repr__(self):

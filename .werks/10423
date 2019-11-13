@@ -1,0 +1,15 @@
+Title: check_mk.agent_update: configuration of service state when agent deployment is globally disabled
+Knowledge: undoc
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p7
+Date: 1573546006
+
+ The current check_mk agent update service displays per default
+ a warning state when the agent deployment is globally disabled.
+ This feature now allows the user to select which state should be
+ displayed when this situation arises.

@@ -73,6 +73,10 @@ def parse_azure_agent_info(info):
             issues.setdefault(value['type'], []).append(value)
             continue
 
+        if key == 'monitored-groups':
+            parsed.setdefault(key, []).extend(value)
+            continue
+
         parsed.setdefault(key, []).append(value)
 
     return parsed
@@ -103,8 +107,8 @@ def check_azure_agent_info(_no_item, params, parsed):
             yield state, txt, [('remaining_reads', reads, warn, crit, 0, 15000)]
 
     groups = parsed.get('monitored-groups')
-    if groups is not None:
-        yield 0, "Monitored groups: %s" % ', '.join(groups[0])
+    if groups:
+        yield 0, "Monitored groups: %s" % ', '.join(groups)
 
     issues = parsed.get('issues', {})
     for type_ in ('warning', 'exception'):

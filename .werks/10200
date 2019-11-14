@@ -1,0 +1,15 @@
+Title: WMI timeout in 'ps' section doesn't prevent Windows Agent output
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p24
+Date: 1573749239
+Class: fix
+
+Previously, if a timeout occurs in the 'ps' section during WMI query, the agent 
+immediately stopped generation of data from all remaining sections. As result,
+the monitoring site reported a lots of missing and/or staling services.
+
+Now, in the case of the timeout in the 'ps' section the Agent skips only this 
+section.

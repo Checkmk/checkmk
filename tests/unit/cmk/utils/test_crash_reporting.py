@@ -1,5 +1,6 @@
 # pylint: disable=redefined-outer-name
 import copy
+import shutil
 import pytest  # type: ignore
 
 import cmk.utils.paths
@@ -99,21 +100,31 @@ def test_format_var_for_export_strip_nested_dict_with_list():
     assert orig_var == var
 
 
-@pytest.mark.skip("Temporarily disable flaky test")
-def test_crash_report_store_cleanup():
+@pytest.fixture
+def base_dir():
+    dir = cmk.utils.paths.crash_dir / "test"
+    yield dir
+    try:
+        shutil.rmtree(str(dir))
+    except OSError:
+        pass
+
+
+@pytest.mark.parametrize("n_crashes", [15, 45])
+def test_crash_report_store_cleanup(base_dir, n_crashes):
+    assert not frozenset(base_dir.glob("*"))
+
+    crash_ids = set()
     store = CrashReportStore()
-    base_dir = cmk.utils.paths.crash_dir / "test"
-
-    expected_crash_ids = set()
-    assert set(e.name for e in base_dir.glob("*")) == expected_crash_ids
-
-    for num in range(store._keep_num_crashes + 1):
+    for num in range(n_crashes):
         try:
             raise ValueError("Crash #%d" % num)
         except ValueError:
             crash = UnitTestCrashReport.from_exception()
-            if num != 0:
-                expected_crash_ids.add(crash.ident_to_text())
             store.save(crash)
+            crash_ids.add(crash.ident_to_text())
 
-    assert set(e.name for e in base_dir.glob("*")) == expected_crash_ids
+    assert len(crash_ids) == n_crashes
+    # TODO: Decide which crash reports should remain.
+    assert len(frozenset(base_dir.glob("*"))) <= store._keep_num_crashes
+    assert frozenset(e.name for e in base_dir.glob("*")).issubset(crash_ids)

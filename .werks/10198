@@ -1,0 +1,17 @@
+Title: Windows Agent can be configured to use also non-WMI API to get data about running processes
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p7
+Date: 1573725532
+
+Previously the Bakery could not set "use_wmi" option to "no" (false) in the Windows 
+Agent's configuration file. This error force the Agent to use only WMI API to 
+get information about running processes.
+
+Now the error has been fixed and the Bakery generates the configuration
+file for the Windows Agent correctly

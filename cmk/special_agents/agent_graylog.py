@@ -98,14 +98,14 @@ def handle_request(args, sections):
             for node in node_inputstates:
                 if node in value:
                     value[node].update({"inputstates": node_inputstates[node]})
-                    value = {node: value[node]}
+                    new_value = {node: value[node]}
                     if args.display_node_details == "node":
-                        handle_piggyback(value, args, value[node]["hostname"], section.name)
+                        handle_piggyback(new_value, args, new_value[node]["hostname"], section.name)
                         continue
-                    node_list.append(value)
+                    node_list.append(new_value)
 
-                if node_list:
-                    handle_output(node_list, section.name, args)
+            if node_list:
+                handle_output(node_list, section.name, args)
 
         if section.name == "jvm":
             metric_data = value.get("metrics")

@@ -663,7 +663,7 @@ class UsageClient(DataCache):
             UsageSection(usage_resource, piggytargets, cacheinfo).write()
 
 
-def process_azure_graph(graph_client):
+def write_section_ad(graph_client):
     section = AzureSection('ad')
 
     # users
@@ -808,15 +808,18 @@ def get_mapper(debug, sequential, timeout):
     return async_mapper
 
 
-def main(argv=None):
+def main_graph_client(args):
+    graph_client = GraphApiClient()
+    try:
+        graph_client.login(args.tenant, args.client, args.secret)
+        write_section_ad(graph_client)
+    except () if args.debug else Exception as exc:
+        write_exception_to_agent_info_section(exc)
+        return 1
+    return 0
 
-    args = parse_arguments(argv or sys.argv[1:])
-    selector = Selector(args)
-    if args.dump_config:
-        sys.stdout.write("Configuration:\n%s\n" % selector)
-        return 0
-    LOGGER.debug("%s", selector)
 
+def main_subscription(args, selector, subscription):
     mgmt_client = MgmtApiClient(args.subscription)
     try:
         mgmt_client.login(args.tenant, args.client, args.secret)
@@ -832,13 +835,6 @@ def main(argv=None):
 
     write_group_info(mgmt_client, monitored_groups)
 
-    graph_client = GraphApiClient()
-    try:
-        graph_client.login(args.tenant, args.client, args.secret)
-        process_azure_graph(graph_client)
-    except () if args.debug else Exception as exc:
-        write_exception_to_agent_info_section(exc)
-
     try:
         usage_client = UsageClient(mgmt_client, args.subscription, args.debug)
         usage_client.write_sections(monitored_groups)
@@ -851,7 +847,21 @@ def main(argv=None):
         for section in sections:
             section.write()
 
-    return 0
+
+def main(argv=None):
+
+    args = parse_arguments(argv or sys.argv[1:])
+    selector = Selector(args)
+    if args.dump_config:
+        sys.stdout.write("Configuration:\n%s\n" % selector)
+        return 0
+    LOGGER.debug("%s", selector)
+
+    exit_code = main_graph_client(args)
+
+    exit_code = main_subscription(args, selector, args.subscription) or exit_code
+
+    return exit_code
 
 
 if __name__ == "__main__":

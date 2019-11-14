@@ -99,6 +99,7 @@ def test_format_var_for_export_strip_nested_dict_with_list():
     assert orig_var == var
 
 
+@pytest.mark.skip("Temporarily disable flaky test")
 def test_crash_report_store_cleanup():
     store = CrashReportStore()
     base_dir = cmk.utils.paths.crash_dir / "test"

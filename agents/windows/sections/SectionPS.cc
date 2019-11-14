@@ -23,7 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionPS.h"
+
 #include <iomanip>
+
 #include "Environment.h"
 #include "Logger.h"
 #include "PerfCounter.h"
@@ -32,6 +34,7 @@
 #include "win_error.h"
 
 namespace {
+constexpr bool G_UseCacheForPs = false;
 
 const unsigned long long SEC_TO_UNIX_EPOCH = 11644473600L;
 const unsigned long WINDOWS_TICK = 10000000;
@@ -158,22 +161,36 @@ bool SectionPS::produceOutputInner(std::ostream &out,
     }
 }
 
-void SectionPS::outputProcess(std::ostream &out, ULONGLONG virtual_size,
-                              ULONGLONG working_set_size,
-                              long long pagefile_usage, ULONGLONG uptime,
-                              long long usermode_time,
-                              long long kernelmode_time, long long process_id,
-                              long long process_handle_count,
-                              long long thread_count, const std::string &user,
-                              const std::string &exe_file) {
+std::string SectionPS::outputProcess(
+    std::ostream &out, ULONGLONG virtual_size, ULONGLONG working_set_size,
+    long long pagefile_usage, ULONGLONG uptime, long long usermode_time,
+    long long kernelmode_time, long long process_id,
+    long long process_handle_count, long long thread_count,
+    const std::string &user, const std::string &exe_file) {
     // Note: CPU utilization is determined out of usermodetime and
     // kernelmodetime
+
+    if (G_UseCacheForPs) {
+        std::stringstream proxy;
+        proxy << "(" << user << "," << virtual_size / 1024 << ","
+              << working_set_size / 1024 << ",0"
+              << "," << process_id << "," << pagefile_usage / 1024 << ","
+              << usermode_time << "," << kernelmode_time << ","
+              << process_handle_count << "," << thread_count << "," << uptime
+              << ")\t" << exe_file << "\n";
+
+        out << proxy.str();
+        return proxy.str();
+    }
+
     out << "(" << user << "," << virtual_size / 1024 << ","
         << working_set_size / 1024 << ",0"
         << "," << process_id << "," << pagefile_usage / 1024 << ","
         << usermode_time << "," << kernelmode_time << ","
         << process_handle_count << "," << thread_count << "," << uptime << ")\t"
         << exe_file << "\n";
+
+    return {};
 }
 
 bool SectionPS::outputWMI(std::ostream &out) {
@@ -186,7 +203,7 @@ bool SectionPS::outputWMI(std::ostream &out) {
     try {
         result = _helper->getClass(L"Win32_Process");
         bool more = result.valid();
-
+        std::string cache;
         while (more) {
             long long processId = result.get<long long>(L"ProcessId");
 
@@ -234,7 +251,7 @@ bool SectionPS::outputWMI(std::ostream &out) {
             auto uptime = static_cast<ULONGLONG>(std::max(timeDiff, 1LL));
 
             try {
-                outputProcess(
+                auto current_line = outputProcess(
                     out, std::stoull(result.get<std::string>(L"VirtualSize")),
                     std::stoull(result.get<std::string>(L"WorkingSetSize")),
                     result.get<long long>(L"PagefileUsage"), uptime,
@@ -243,6 +260,8 @@ bool SectionPS::outputWMI(std::ostream &out) {
                     processId, result.get<long long>(L"HandleCount"),
                     result.get<long long>(L"ThreadCount"), user,
                     to_utf8(process_name));
+                cache += current_line;
+
             } catch (const std::range_error &e) {
                 // catch possible exception when UTF-16 is in not valid range
                 // for Linux toolchain, see FEED-3048
@@ -253,13 +272,27 @@ bool SectionPS::outputWMI(std::ostream &out) {
 
             more = result.next();
         }
+        if (!cache.empty()) cache_ = cache;
+
         return true;
     } catch (const wmi::ComException &e) {
         // the most likely cause is that the wmi query fails, i.e. because the
-        // service is currently offline.
-        Error(_logger) << "ComException: " << e.what();
+        // service is currently off line.
+        Error(_logger) << "ps:ComException: " << e.what();
+    } catch (const wmi::Timeout &e) {
+        Error(_logger) << "ps:Timeout " << e.what();
+        if (G_UseCacheForPs) {
+            if (cache_.empty()) {
+                Debug(_logger) << "ps:No data in cache for reuse";
+            } else {
+                Debug(_logger) << "ps:Reuse cache";
+                out << cache_;
+                return true;
+            }
+        }
+
     } catch (const wmi::ComTypeException &e) {
-        Error(_logger) << "ComTypeException: " << e.what();
+        Error(_logger) << "ps:ComTypeException: " << e.what();
         std::wstring types;
         std::vector<std::wstring> names;
         for (std::vector<std::wstring>::const_iterator iter = names.begin();

@@ -29,6 +29,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+
 #include "Configurable.h"
 #include "Section.h"
 #include "wmiHelper.h"
@@ -58,18 +59,21 @@ private:
     bool ExtractProcessOwner(const NullHandle &hProcess_i,
                              std::string &csOwner_o);
     process_entry_t getProcessPerfdata();
-    void outputProcess(std::ostream &out, ULONGLONG virtual_size,
-                       ULONGLONG working_set_size, long long pagefile_usage,
-                       ULONGLONG uptime, long long usermode_time,
-                       long long kernelmode_time, long long process_id,
-                       long long process_handle_count, long long thread_count,
-                       const std::string &user, const std::string &exe_file);
+    std::string outputProcess(std::ostream &out, ULONGLONG virtual_size,
+                              ULONGLONG working_set_size,
+                              long long pagefile_usage, ULONGLONG uptime,
+                              long long usermode_time,
+                              long long kernelmode_time, long long process_id,
+                              long long process_handle_count,
+                              long long thread_count, const std::string &user,
+                              const std::string &exe_file);
     bool outputWMI(std::ostream &out);
     bool outputNative(std::ostream &out);
 
     Configurable<bool> _use_wmi;
     Configurable<bool> _full_commandline;
     std::unique_ptr<wmi::Helper> _helper;
+    std::string cache_;
 };
 
 #endif  // SectionPS_h

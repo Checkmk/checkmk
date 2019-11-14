@@ -34,6 +34,7 @@ import cmk
 import cmk.utils.debug
 import cmk.utils.defines
 from cmk.utils.log import VERBOSE
+from cmk.utils.encoding import make_utf8
 import livestatus
 
 #.
@@ -287,7 +288,7 @@ def do_notify(event_server, logger, event, username=None, is_cancelling=False):
         return
 
     # Send notification context via stdin.
-    context_string = to_utf8("".join([
+    context_string = make_utf8("".join([
         "%s=%s\n" % (varname, value.replace("\n", "\\n"))
         for (varname, value) in context.iteritems()
     ]))
@@ -461,9 +462,3 @@ def _core_has_notifications_disabled(event, logger):
                     e)
 
     return False
-
-
-def to_utf8(x):
-    if isinstance(x, six.text_type):
-        return x.encode("utf-8")
-    return x

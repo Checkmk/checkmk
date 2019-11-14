@@ -35,6 +35,7 @@ import six
 import cmk.ec.actions
 from cmk.utils.log import VERBOSE
 import cmk.utils.render
+from cmk.utils.encoding import make_utf8
 
 # TODO: As one can see clearly below, we should really have a class hierarchy here...
 
@@ -331,7 +332,7 @@ def _add_files(history, event, what, who, addinfo):
 
         with get_logfile(history._config, history._settings.paths.history_dir.value,
                          history._active_history_period).open(mode='ab') as f:
-            f.write("\t".join(map(cmk.ec.actions.to_utf8, columns)) + "\n")
+            f.write("\t".join(map(make_utf8, columns)) + "\n")
 
 
 def quote_tab(col):

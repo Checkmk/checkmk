@@ -39,7 +39,7 @@ import cmk.utils.paths
 import cmk.ec.settings  # pylint: disable=cmk-module-layer-violation
 import cmk.ec.export  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.store
-import cmk.utils
+from cmk.utils.encoding import make_utf8
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -200,7 +200,7 @@ def send_event(event):
         (event["sl"], event["host"], event["ipaddress"], event["application"], event["text"]),
     ]
 
-    execute_command("CREATE", map(cmk.utils.make_utf8, rfc), site=event["site"])
+    execute_command("CREATE", map(make_utf8, rfc), site=event["site"])
 
     return ";".join(rfc)
 

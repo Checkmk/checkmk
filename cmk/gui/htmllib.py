@@ -76,6 +76,8 @@ from pathlib2 import Path
 
 import six
 
+from cmk.utils.encoding import ensure_unicode
+
 
 # TODO: Cleanup this dirty hack. Import of htmllib must not magically modify the behaviour of
 # the json module. Better would be to create a JSON wrapper in cmk.utils.json which uses a
@@ -252,11 +254,13 @@ class HTML(object):
         super(HTML, self).__init__()
         self.value = self._ensure_unicode(value)
 
-    def _ensure_unicode(self, thing, encoding_index=0):
-        try:
-            return six.text_type(thing)
-        except UnicodeDecodeError:
-            return thing.decode("utf-8")
+    def _ensure_unicode(self, value):
+        # HTML objects, None, strings can be inserted
+        if value is None:
+            return u"None"
+        if isinstance(value, HTML):
+            return ensure_unicode(value.value)
+        return ensure_unicode(value)
 
     def __bytebatzen__(self):
         return self.value.encode("utf-8")

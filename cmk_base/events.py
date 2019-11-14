@@ -43,6 +43,7 @@ import cmk
 from cmk.utils.regex import regex
 import cmk.utils.debug
 import cmk.utils.daemon
+from cmk.utils.encoding import convert_to_unicode
 
 import cmk_base.config as config
 import cmk_base.core
@@ -190,14 +191,7 @@ def convert_context_to_unicode(context):
     # Convert all values to unicode
     for key, value in context.iteritems():
         if isinstance(value, str):
-            try:
-                value_unicode = value.decode("utf-8")
-            except UnicodeDecodeError:
-                try:
-                    value_unicode = value.decode("latin-1")
-                except UnicodeDecodeError:
-                    value_unicode = u"(Invalid byte sequence)"
-            context[key] = value_unicode
+            context[key] = convert_to_unicode(value)
 
 
 def render_context_dump(raw_context):

@@ -26,9 +26,9 @@
 
 import time
 
-import cmk.utils
 import cmk.utils.tty as tty
 import cmk.utils.render
+from cmk.utils.encoding import make_utf8
 
 import cmk_base.utils
 import cmk_base.config as config
@@ -95,9 +95,9 @@ def dump_host(hostname):
         console.output(tty.yellow + "Parents:                " + tty.normal +
                        ", ".join(parents_list) + "\n")
     console.output(tty.yellow + "Host groups:            " + tty.normal +
-                   cmk.utils.make_utf8(", ".join(host_config.hostgroups)) + "\n")
+                   make_utf8(", ".join(host_config.hostgroups)) + "\n")
     console.output(tty.yellow + "Contact groups:         " + tty.normal +
-                   cmk.utils.make_utf8(", ".join(host_config.contactgroups)) + "\n")
+                   make_utf8(", ".join(host_config.contactgroups)) + "\n")
 
     agenttypes = []
     sources = data_sources.DataSources(hostname, ipaddress)
@@ -127,11 +127,11 @@ def dump_host(hostname):
                           key=lambda s: s.description):
         table_data.append([
             service.check_plugin_name,
-            cmk.utils.make_utf8(service.item),
+            make_utf8(service.item),
             _evaluate_params(service.parameters),
-            cmk.utils.make_utf8(service.description),
-            cmk.utils.make_utf8(",".join(
-                config_cache.servicegroups_of_service(hostname, service.description)))
+            make_utf8(service.description),
+            make_utf8(",".join(config_cache.servicegroups_of_service(hostname,
+                                                                     service.description)))
         ])
 
     tty.print_table(headers, colors, table_data, "  ")

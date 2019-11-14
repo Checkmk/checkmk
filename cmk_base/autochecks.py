@@ -36,6 +36,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.encoding import decode_incoming_string
 
 import cmk_base.config as config
 import cmk_base.console
@@ -178,7 +179,7 @@ class AutochecksManager(object):
             # items from existing autocheck files for compatibility. TODO remove this one day
             item = entry["item"]
             if isinstance(item, str):
-                item = config.decode_incoming_string(item)
+                item = decode_incoming_string(item)
 
             if not isinstance(entry["check_plugin_name"], six.string_types):
                 raise MKGeneralException("Invalid entry '%r' in check table of host '%s': "
@@ -273,7 +274,7 @@ def _parse_autocheck_entry(hostname, entry):
     # strings. Convert items from existing autocheck files for
     # compatibility.
     if isinstance(item, str):
-        item = config.decode_incoming_string(item)
+        item = decode_incoming_string(item)
 
     try:
         description = config.service_description(hostname, check_plugin_name, item)

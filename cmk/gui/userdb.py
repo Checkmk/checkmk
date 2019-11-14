@@ -35,9 +35,9 @@ import copy
 import pathlib2 as pathlib
 import six
 
-import cmk.utils
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.encoding import make_utf8
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -766,7 +766,7 @@ def load_users(lock=False):
 
 
 def custom_attr_path(userid, key):
-    return cmk.utils.paths.var_dir + "/web/" + cmk.utils.make_utf8(userid) + "/" + key + ".mk"
+    return cmk.utils.paths.var_dir + "/web/" + make_utf8(userid) + "/" + key + ".mk"
 
 
 def load_custom_attr(userid, key, conv_func, default=None):
@@ -1010,7 +1010,7 @@ def _save_auth_serials(updated_profiles):
     # Write out the users serials
     serials = ""
     for user_id, user in updated_profiles.items():
-        serials += '%s:%d\n' % (cmk.utils.make_utf8(user_id), user.get('serial', 0))
+        serials += '%s:%d\n' % (make_utf8(user_id), user.get('serial', 0))
     store.save_file('%s/auth.serials' % os.path.dirname(cmk.utils.paths.htpasswd_file), serials)
 
 

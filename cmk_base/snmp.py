@@ -32,6 +32,7 @@ import cmk.utils.debug
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKBailOut
 import cmk.utils.store as store
+from cmk.utils.encoding import snmp_decode_string
 
 import cmk_base.utils
 import cmk_base.config as config
@@ -600,7 +601,8 @@ def _compute_fetch_oid(oid, suboid, column):
 
 
 def _sanitize_snmp_encoding(snmp_config, columns):
-    decode_string_func = lambda s: _snmp_decode_string(snmp_config, s)
+    snmp_encoding = snmp_config.character_encoding
+    decode_string_func = lambda s: snmp_decode_string(s, snmp_encoding)
 
     for index, (column, value_encoding) in enumerate(columns):
         if value_encoding == "string":
@@ -608,18 +610,6 @@ def _sanitize_snmp_encoding(snmp_config, columns):
         else:
             columns[index] = map(_snmp_decode_binary, column)
     return columns
-
-
-def _snmp_decode_string(snmp_config, text):
-    encoding = snmp_config.character_encoding
-    if encoding:
-        return text.decode(encoding)
-
-    # Try to determine the current string encoding. In case a UTF-8 decoding fails, we decode latin1.
-    try:
-        return text.decode('utf-8')
-    except UnicodeDecodeError:
-        return text.decode('latin1')
 
 
 def _snmp_decode_binary(text):

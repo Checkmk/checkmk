@@ -35,6 +35,7 @@ from pathlib2 import Path
 
 import cmk
 import cmk.utils.store as store
+from cmk.utils.encoding import make_utf8
 
 import cmk.gui.hooks as hooks
 import cmk.gui.config as config
@@ -365,7 +366,7 @@ class ConfigDomainOMD(ABCConfigDomain):
                              stderr=subprocess.STDOUT,
                              stdin=subprocess.PIPE,
                              close_fds=True)
-        stdout = p.communicate(cmk.utils.make_utf8("\n".join(config_change_commands)))[0]
+        stdout = p.communicate(make_utf8("\n".join(config_change_commands)))[0]
         self._logger.debug("  Exit code: %d" % p.returncode)
         self._logger.debug("  Output: %r" % stdout)
         if p.returncode != 0:

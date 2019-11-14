@@ -35,12 +35,12 @@ from typing import List, Tuple, Optional  # pylint: disable=unused-import
 import six
 
 import cmk
-import cmk.utils
 import cmk.utils.defines as defines
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.regex import regex
 import cmk.utils.debug
+from cmk.utils.encoding import make_utf8
 
 import cmk_base.utils
 import cmk_base.core
@@ -598,8 +598,7 @@ def _output_check_result(servicedesc, state, infotext, perftexts):
         infotext_fmt = "%s"
 
     console.verbose("%-20s %s%s" + infotext_fmt + "%s%s\n", servicedesc.encode('utf-8'), tty.bold,
-                    tty.states[state], cmk.utils.make_utf8(infotext.split('\n')[0]), tty.normal,
-                    cmk.utils.make_utf8(p))
+                    tty.states[state], make_utf8(infotext.split('\n')[0]), tty.normal, make_utf8(p))
 
 
 def _do_submit_to_core(host, service, state, output, cached_at=None, cache_interval=None):
@@ -637,7 +636,7 @@ finish_time=%.1f
 return_code=%d
 output=%s
 
-""" % (host, cmk.utils.make_utf8(service), now, now, state, cmk.utils.make_utf8(output)))
+""" % (host, make_utf8(service), now, now, state, make_utf8(output)))
 
 
 def _open_checkresult_file():
@@ -665,8 +664,9 @@ def _submit_via_command_pipe(host, service, state, output):
     _open_command_pipe()
     if _nagios_command_pipe:
         # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
-        _nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % (int(
-            time.time()), host, cmk.utils.make_utf8(service), state, cmk.utils.make_utf8(output)))
+        _nagios_command_pipe.write(
+            "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" %
+            (int(time.time()), host, make_utf8(service), state, make_utf8(output)))
         # Important: Nagios needs the complete command in one single write() block!
         # Python buffers and sends chunks of 4096 bytes, if we do not flush.
         _nagios_command_pipe.flush()

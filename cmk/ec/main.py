@@ -67,6 +67,7 @@ import cmk.utils.profile
 import cmk.utils.render
 import cmk.utils.regex
 import cmk.utils.debug
+from cmk.utils.encoding import decode_from_bytes
 from cmk.ec.crash_reporting import ECCrashReport, CrashReportStore
 
 # suppress "Cannot find module" error from mypy
@@ -140,28 +141,6 @@ class SyslogFacility(object):
             return self.NAMES[self.value]
         except KeyError:
             return "(unknown facility %d)" % self.value
-
-
-# Alas, we often have no clue about the actual encoding, so we have to guess:
-# Initially we assume UTF-8, but fall back to latin-1 if it didn't work.
-def decode_from_bytes(string_as_bytes):
-    # This is just a safeguard if we are inadvertedly called with a Unicode
-    # string. In theory this should never happen, but given the typing chaos in
-    # this script, one never knows. In the Unicode case, Python tries to be
-    # "helpful", but this fails miserably: Calling 'decode' on a Unicode string
-    # implicitly converts it via 'encode("ascii")' to a byte string first, but
-    # this can of course fail and doesn't make sense at all when we immediately
-    # call 'decode' on this byte string again. In a nutshell: The implicit
-    # conversions between str and unicode are a fundamentally broken idea, just
-    # like all implicit things and "helpful" ideas in general. :-P For further
-    # info see e.g. http://nedbatchelder.com/text/unipain.html
-    if isinstance(string_as_bytes, six.text_type):
-        return string_as_bytes
-
-    try:
-        return string_as_bytes.decode("utf-8")
-    except Exception:
-        return string_as_bytes.decode("latin-1")
 
 
 def scrub_and_decode(s):

@@ -30,6 +30,7 @@ import time
 
 import cmk
 import cmk.utils.store as store
+from cmk.utils.encoding import convert_to_unicode
 
 import cmk.gui.view_utils
 import cmk.gui.wato.user_profile
@@ -661,14 +662,7 @@ class ModeNotifications(NotificationsMode):
         # Convert all values to unicode
         for key, value in context.iteritems():
             if isinstance(value, str):
-                try:
-                    value_unicode = value.decode("utf-8")
-                except UnicodeDecodeError:
-                    try:
-                        value_unicode = value.decode("latin-1")
-                    except UnicodeDecodeError:
-                        value_unicode = u"(Invalid byte sequence)"
-                context[key] = value_unicode
+                context[key] = convert_to_unicode(value)
 
     # TODO: Refactor this
     def _show_rules(self):

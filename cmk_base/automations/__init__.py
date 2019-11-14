@@ -29,10 +29,10 @@ import sys
 import pprint
 from typing import Optional  # pylint: disable=unused-import
 
-import cmk.utils
 import cmk.utils.debug
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.plugin_loader import load_plugins
+from cmk.utils.encoding import make_utf8
 
 import cmk_base.utils
 import cmk_base.config as config
@@ -79,7 +79,7 @@ class Automations(object):
             result = automation.execute(args)
 
         except (MKAutomationError, MKTimeout) as e:
-            console.error("%s\n" % cmk.utils.make_utf8("%s" % e))
+            console.error("%s\n" % make_utf8("%s" % e))
             if cmk.utils.debug.enabled():
                 raise
             return 1
@@ -87,7 +87,7 @@ class Automations(object):
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
-            console.error("%s\n" % cmk.utils.make_utf8("%s" % e))
+            console.error("%s\n" % make_utf8("%s" % e))
             return 2
 
         finally:

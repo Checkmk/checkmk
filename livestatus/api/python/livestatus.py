@@ -32,6 +32,10 @@ import os
 import ast
 import ssl
 from typing import Tuple, Union, Dict, Pattern, Optional  # pylint: disable=unused-import
+from cmk.utils.encoding import (
+    ensure_unicode,
+    ensure_bytestr,
+)
 
 try:
     # Tolerate this violation for the moment. It's OK to have unlocalized
@@ -59,20 +63,10 @@ persistent_connections = {}  # type: Dict[str, socket.socket]
 remove_cache_regex = re.compile("\nCache:[^\n]*")  # type: Pattern
 
 
-def ensure_unicode(text):
+def _ensure_unicode(text):
     if hasattr(text, "decode"):
-        try:
-            return text.decode("utf-8")
-        except UnicodeEncodeError:
-            return text
+        return ensure_unicode(text)
     return text
-
-
-def ensure_bytestr(text):
-    try:
-        return text.encode("utf-8")
-    except UnicodeDecodeError:
-        return text
 
 
 class MKLivestatusException(Exception):
@@ -132,7 +126,7 @@ def lqencode(s):
     # It is not enough to strip off \n\n, because one might submit "\n \n",
     # which is also interpreted as termination of the last query and beginning
     # of the next query.
-    return ensure_unicode(s).replace(u"\n", u"")
+    return _ensure_unicode(s).replace(u"\n", u"")
 
 
 def quote_dict(s):
@@ -272,7 +266,7 @@ class Query(object):
     def __init__(self, query, suppress_exceptions=None):
         super(Query, self).__init__()
 
-        self._query = ensure_unicode(query)
+        self._query = _ensure_unicode(query)
 
         if suppress_exceptions is None:
             self.suppress_exceptions = self.default_suppressed_exceptions

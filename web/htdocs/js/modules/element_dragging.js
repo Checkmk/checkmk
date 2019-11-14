@@ -92,6 +92,9 @@ function position_dragging_object(event)
         // TODO: Does not work with all tables! See comment in finalize_dragging()
         if (previous && previous.children && previous.children[0].tagName == "TH")
             return null;
+        // Do not move above the action rows of tables rendered with "table.py"
+        if (previous && utils.has_class(previous, "actions"))
+            return null;
 
         return previous;
     };
@@ -153,14 +156,16 @@ function finalize_dragging()
 
     var index = Array.prototype.slice.call(elements).indexOf(dragging);
 
-    // TODO: This currently makes the draggig work with tables having:
+    // This currently makes the draggig work with tables having:
     // - no header
     // - one header line
-    // Known things that don't work:
-    // - second header (actions in tables)
-    // - footer (like in WATO host list)
     var has_header = elements[0].children[0].tagName == "TH";
     if (has_header)
+        index -= 1;
+
+    // - possible existing "table.py" second header (actions in tables)
+    var has_action_row = elements.length > 1 && utils.has_class(elements[1], "actions");
+    if (has_action_row)
         index -= 1;
 
     g_element_dragging.drop_handler(index);

@@ -196,6 +196,10 @@ PYTHON_MODULES_LIST += vcrpy-2.1.0.tar.gz
 
 # NOTE: Cruel hack below! We need to have a recent GCC visible in the PATH
 # because the SSSE3 detection in pycryptodomex is slightly broken. :-/
+# NOTE(2): The install here is used to populate a temporary directory that is only
+# needed to fulfill dependencies between the modules.
+# NOTE(3): DESTDIR= for "python setup.py build" is set because PyNaCl
+# (libsodium) headers would be installed during build even if they should not
 $(PYTHON_MODULES_BUILD): $(PYTHON_BUILD) $(FREETDS_BUILD) $(PYTHON_MODULES_PATCHING)
 	set -e ; cd $(PYTHON_MODULES_DIR) ; \
 	    $(MKDIR) $(PACKAGE_PYTHON_MODULES_PYTHONPATH) ; \
@@ -204,7 +208,7 @@ $(PYTHON_MODULES_BUILD): $(PYTHON_BUILD) $(FREETDS_BUILD) $(PYTHON_MODULES_PATCH
 	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include" ; \
 	    export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS)" ; \
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
-	    PATH="$(abspath ./bin):$$PATH" ; \
+	    export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
 	    for M in $(PYTHON_MODULES_LIST); do \
 		echo "Building $$M..." ; \
 		PKG=$${M//.tar.gz/} ; \
@@ -214,7 +218,7 @@ $(PYTHON_MODULES_BUILD): $(PYTHON_BUILD) $(FREETDS_BUILD) $(PYTHON_MODULES_PATCH
 		fi ; \
 	    	echo $$PWD ;\
 		cd $$PKG ; \
-		$(PACKAGE_PYTHON_EXECUTABLE) setup.py build ; \
+		DESTDIR="" $(PACKAGE_PYTHON_EXECUTABLE) setup.py build ; \
 		$(PACKAGE_PYTHON_EXECUTABLE) setup.py install \
 		    --root=$(PACKAGE_PYTHON_MODULES_DESTDIR) \
 		    --prefix='' \
@@ -261,6 +265,7 @@ $(PYTHON_MODULES_INSTALL): $(PYTHON_MODULES_BUILD)
 	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include" ; \
 	    export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS)" ; \
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
+	    export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
 	    for M in $$(ls); do \
 		echo "Installing $$M..." ; \
 		cd $$M ; \

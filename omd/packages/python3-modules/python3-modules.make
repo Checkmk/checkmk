@@ -47,7 +47,7 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON3_BUILD) $(FREETDS_BUILD) $(PYTHON3_MODULES_UN
 	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include" ; \
 	    export LDFLAGS="$(PACKAGE_PYTHON3_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS)" ; \
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" ; \
-	    PATH="$(abspath ./bin):$$PATH" ; \
+	    export PATH="$(PACKAGE_PYTHON3_BIN):$$PATH" ; \
 	    for M in $(PYTHON3_MODULES_LIST); do \
 		echo "Building $$M..." ; \
 		PKG=$${M//.tar.gz/} ; \
@@ -96,6 +96,7 @@ $(PYTHON3_MODULES_INSTALL): $(PYTHON3_MODULES_BUILD)
 	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include" ; \
 	    export LDFLAGS="$(PACKAGE_PYTHON3_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS)" ; \
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" ; \
+	    export PATH="$(PACKAGE_PYTHON3_BIN):$$PATH" ; \
 	    for M in $$(ls); do \
 		echo "Installing $$M..." ; \
 		cd $$M ; \

@@ -1,0 +1,15 @@
+Title: Fix moving table rows (e.g. EC rules) when table action row is shown
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p7
+Date: 1573721576
+Class: fix
+
+When trying to move Event console rules in the table while the action row
+at the top of the table is enabled, the rows were always positioned one
+row below the position you wanted to put it to. This could be solved by
+temporarily hiding the action row before moving a rule.
+
+The dragging is now working even when the action row is enabled.

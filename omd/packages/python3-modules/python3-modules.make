@@ -33,6 +33,12 @@ PYTHON3_MODULES_LIST += cryptography-2.8.tar.gz # indirect via paramiko
 PYTHON3_MODULES_LIST += bcrypt-3.1.7.tar.gz # indirect via paramiko
 PYTHON3_MODULES_LIST += paramiko-2.6.0.tar.gz # direct dependency
 
+PYTHON3_MODULES_LIST += pyasn1-0.4.7.tar.gz # needed by pysnmp
+PYTHON3_MODULES_LIST += pycryptodomex-3.9.3.tar.gz # needed by pysnmp
+PYTHON3_MODULES_LIST += ply-3.11.tar.gz # needed by pysmi
+PYTHON3_MODULES_LIST += pysmi-0.3.4.tar.gz # needed by pysnmp
+PYTHON3_MODULES_LIST += pysnmp-4.4.12.tar.gz # needed by Event Console
+
 $(PYTHON3_MODULES_BUILD): $(PYTHON3_BUILD) $(FREETDS_BUILD) $(PYTHON3_MODULES_UNPACK)
 	set -e ; cd $(PYTHON3_MODULES_DIR) ; \
 	    $(MKDIR) $(PACKAGE_PYTHON3_MODULES_PYTHONPATH) ; \
@@ -131,7 +137,7 @@ python3-modules-dump-Pipfile:
 	@echo 'pytest-cov = "*"  # used (indirectly) by test/Makefile'"'"'s test-unit-coverage-html target, see comment there'
 	@echo 'pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker fixture'
 	@echo 'yapf = "*"  # used for editor integration and the format-python Makefile target'
-	@echo 'polib = "*" # used by locale/add-authors for working with .po files'
+	@echo 'polib = "*"  # used by locale/add-authors for working with .po files'
 	@echo ''
 	@echo '[packages]'
 	@echo $(patsubst %.zip,%,$(patsubst %.tar.gz,%,$(PYTHON3_MODULES_LIST))) | tr ' ' '\n' | sed 's/-\([0-9.]*\)$$/ = "==\1"/'

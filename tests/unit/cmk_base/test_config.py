@@ -1384,7 +1384,7 @@ def test_labels_of_service_discovered_labels(monkeypatch, tmp_path):
     ts = Scenario().add_host("test-host")
 
     monkeypatch.setattr(cmk.utils.paths, "autochecks_dir", str(tmp_path))
-    autochecks_file = Path(cmk.utils.paths.autochecks_dir).joinpath("test-host.mk")
+    autochecks_file = Path(cmk.utils.paths.autochecks_dir, "test-host.mk")
     with autochecks_file.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
         f.write(u"""[
     {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels, 'service_labels': {u'äzzzz': u'eeeeez'}},

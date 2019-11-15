@@ -88,8 +88,8 @@ def test_msi_component_table():
 
 
 def test_copy_or_create(conf_dir):
-    src_file = Path(conf_dir).joinpath("temp.x.in")
-    dst_file = Path(conf_dir).joinpath("temp.x.out")
+    src_file = Path(conf_dir, "temp.x.in")
+    dst_file = Path(conf_dir, "temp.x.out")
 
     # file doesn't exist, check file created
     msi_update.copy_or_create(src_file, dst_file, u"!!!")
@@ -114,10 +114,10 @@ def test_generate_product_versions():
 
 
 def test_make_msi_copy(conf_dir):
-    src_file = Path(conf_dir).joinpath("temp.in")
+    src_file = Path(conf_dir, "temp.in")
     with src_file.open('w') as s:
         s.write("+++".decode("utf8"))
-    dst_file = Path(conf_dir).joinpath("temp.out")
+    dst_file = Path(conf_dir, "temp.out")
     assert msi_update.copy_file_safe(src_file, dst_file)
     assert dst_file.exists()
     with dst_file.open('r') as d:

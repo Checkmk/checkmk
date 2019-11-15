@@ -100,7 +100,7 @@ def test_config(monkeypatch):
         ),
     ])
 def test_manager_get_autochecks_of(test_config, autochecks_content, expected_result):
-    autochecks_file = Path(cmk.utils.paths.autochecks_dir).joinpath("host.mk")
+    autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
     with autochecks_file.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
         f.write(autochecks_content)
 
@@ -211,7 +211,7 @@ def test_parse_autochecks_file_not_existing():
         ),
     ])
 def test_parse_autochecks_file(test_config, autochecks_content, expected_result):
-    autochecks_file = Path(cmk.utils.paths.autochecks_dir).joinpath("host.mk")
+    autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
     with autochecks_file.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
         f.write(autochecks_content)
 
@@ -262,7 +262,7 @@ def test_remove_autochecks_file():
 def test_save_autochecks_file(items, expected_content):
     autochecks.save_autochecks_file("host", items)
 
-    autochecks_file = Path(cmk.utils.paths.autochecks_dir).joinpath("host.mk")
+    autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
     with autochecks_file.open("r", encoding="utf-8") as f:  # pylint: disable=no-member
         content = f.read()
 

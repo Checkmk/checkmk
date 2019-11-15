@@ -328,12 +328,12 @@ def msi_update_core(msi_file, source_dir, revision, version_name):
 
         # Convert Input Files to Internal-MSI Presentation
         file_dir = work_dir
-        ini_file = Path(source_dir).joinpath("check_mk.ini")
-        ini_target = Path(file_dir).joinpath("check_mk_ini")
+        ini_file = Path(source_dir, "check_mk.ini")
+        ini_target = Path(file_dir, "check_mk_ini")
         copy_or_create(ini_file, ini_target, u"# test file\r\n[global]\r\n port = 6556\r\n")
 
-        yml_file = Path(source_dir).joinpath("check_mk.install.yml")
-        yml_target = Path(file_dir).joinpath("check_mk_install_yml")
+        yml_file = Path(source_dir, "check_mk.install.yml")
+        yml_target = Path(file_dir, "check_mk_install_yml")
         copy_or_create(yml_file, yml_target,
                        u"# test file\r\nglobal:\r\n  enabled: yes\r\n  install: no\r\n")
 
@@ -353,7 +353,7 @@ def msi_update_core(msi_file, source_dir, revision, version_name):
 
         # Rename modified tables
         for entry in ["Property", "File", "Component"]:
-            p = Path(work_dir).joinpath(entry).with_suffix(".idt.new")
+            p = Path(work_dir, entry).with_suffix(".idt.new")
             p.rename(p.with_suffix(""))
 
         for entry in ["Property", "File", "Component"]:

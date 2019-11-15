@@ -20,7 +20,7 @@ def cmk_dir():
     try:
         p = Path(__file__)
         cmk_root_table = p.parent
-        cmk_root = Path(cmk_root_table).joinpath("../../../../..")
+        cmk_root = Path(cmk_root_table, "../../../../..")
         return cmk_root.resolve()
     except IOError as e:
         print("Exception {}".format(e))

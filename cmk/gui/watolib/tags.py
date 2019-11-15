@@ -59,7 +59,7 @@ class TagConfigFile(WatoSimpleConfigFile):
         return super(TagConfigFile, self)._load_file(lock=lock)
 
     def _pre_16_hosttags_path(self):
-        return Path(multisite_dir()).joinpath("hosttags.mk")
+        return Path(multisite_dir(), "hosttags.mk")
 
     def _load_pre_16_config(self, lock):
         legacy_cfg = store.load_mk_file(str(self._pre_16_hosttags_path()), {

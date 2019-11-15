@@ -6321,6 +6321,12 @@ metric_info["collectors_failing"] = {
     "color": "12/a",
 }
 
+metric_info["num_streams"] = {
+    "title": _("Streams"),
+    "unit": "count",
+    "color": "11/a",
+}
+
 # In order to use the "bytes" unit we would have to change the output of the check, (i.e. divide by
 # 1024) which means an invalidation of historic values.
 metric_info['kb_out_of_sync'] = {

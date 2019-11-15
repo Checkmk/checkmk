@@ -59,6 +59,7 @@ def main(argv=None):
         GraylogSection(name="messages", uri="/count/total"),
         GraylogSection(name="nodes", uri="/cluster"),
         GraylogSection(name="sidecars", uri="/sidecars"),
+        GraylogSection(name="streams", uri="/streams"),
     ]
 
     try:
@@ -180,7 +181,7 @@ def handle_piggyback(value, args, piggyback_name, section):
 def parse_arguments(argv):
     sections = [
         "alerts", "cluster_stats", "cluster_traffic", "failures", "jvm", "license", "messages",
-        "nodes", "sidecars"
+        "nodes", "sidecars", "streams"
     ]
 
     parser = argparse.ArgumentParser(description=__doc__)

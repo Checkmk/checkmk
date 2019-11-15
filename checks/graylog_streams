@@ -1,0 +1,150 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<graylog_streams>>>
+# {"total": 5, "streams": [{"remove_matches_from_default_stream": false,
+# "is_default": false, "index_set_id": "5da58758e2847e0602771f2a",
+# "description": "logins", "alert_conditions": [], "rules": [], "outputs": [],
+# "created_at": "2019-10-21T11:32:54.371Z", "title": "Logins", "disabled":
+# false, "content_pack": null, "matching_type": "AND", "creator_user_id":
+# "admin", "alert_receivers": {"emails": [], "users": []}, "id":
+# "5dad97665bc77407a731e7dc"}, {"remove_matches_from_default_stream": false,
+# "is_default": false, "index_set_id": "5d64cceecaba8d12890fdf47",
+# "description": "dfh", "alert_conditions": [], "rules": [], "outputs": [],
+# "created_at": "2019-10-30T19:45:31.792Z", "title": "shsdfhg", "disabled":
+# false, "content_pack": null, "matching_type": "AND", "creator_user_id":
+# "admin", "alert_receivers": {"emails": [], "users": []}, "id":
+# "5db9e85b9a74aa6ccbb8e1b0"}, {"remove_matches_from_default_stream": false,
+# "is_default": true, "index_set_id": "5d64cceecaba8d12890fdf47",
+# "description": "Stream containing all messages", "alert_conditions": [],
+# "rules": [], "outputs": [], "created_at": "2019-08-27T06:25:50.570Z",
+# "title": "All messages", "disabled": false, "content_pack": null,
+# "matching_type": "AND", "creator_user_id": "local:admin", "alert_receivers":
+# {"emails": [], "users": []}, "id": "000000000000000000000001"},
+# {"remove_matches_from_default_stream": true, "is_default": false,
+# "index_set_id": "5da58758e2847e0602771f28", "description": "Stream containing
+# all events created by Graylog", "alert_conditions": [], "rules":
+# [{"description": "", "stream_id": "000000000000000000000002", "value": ".*",
+# "inverted": false, "field": ".*", "type": 2, "id":
+# "5dad59d65bc77407a731a2fc"}], "outputs": [], "created_at":
+# "2019-10-15T08:46:16.321Z", "title": "All events", "disabled": false,
+# "content_pack": null, "matching_type": "AND", "creator_user_id": "admin",
+# "alert_receivers": {"emails": [], "users": []}, "id":
+# "000000000000000000000002"}, {"remove_matches_from_default_stream": true,
+# "is_default": false, "index_set_id": "5da58758e2847e0602771f2a",
+# "description": "Stream containing all system events created by Graylog",
+# "alert_conditions": [], "rules": [], "outputs": [], "created_at":
+# "2019-10-15T08:46:16.327Z", "title": "All system events", "disabled": false,
+# "content_pack": null, "matching_type": "AND", "creator_user_id": "admin",
+# "alert_receivers": {"emails": [], "users": []}, "id":
+# "000000000000000000000003"}]}
+
+import json
+
+
+def parse_graylog_streams(info):
+    parsed = {}
+
+    for line in info:
+
+        streams = json.loads(line[0])
+
+        stream_data = streams.get("streams")
+        if stream_data is None:
+            continue
+
+        for stream in stream_data:
+
+            stream_title = stream.get("title")
+            if stream_title is None:
+                continue
+
+            parsed.setdefault(
+                stream_title, {
+                    "disabled": stream.get("disabled", False),
+                    "is_default": stream.get("is_default", False),
+                })
+
+    return parsed
+
+
+def inventory_graylog_streams(parsed):
+    return [(None, {})]
+
+
+factory_settings["graylog_streams_default_levels"] = {
+    "stream_disabled": 1,
+}
+
+
+def check_graylog_streams(_no_item, params, parsed):
+    if not parsed:
+        yield 1, "Number of streams: 0"
+        return
+
+    stream_count = len(parsed)
+    stream_nr_levels = params.get('stream_count_upper', (None, None))
+    stream_nr_levels_lower = params.get('stream_count_lower', (None, None))
+
+    yield check_levels(stream_count,
+                       "num_streams",
+                       stream_nr_levels + stream_nr_levels_lower,
+                       human_readable_func=int,
+                       infoname="Number of streams")
+
+    long_output = []
+    for stream, values in parsed.iteritems():
+        long_output_str = "%s" % stream
+
+        if values["is_default"]:
+            yield 0, "Default stream: %s" % stream
+            long_output_str += " (default)"
+
+        stream_state = 0
+        if values["disabled"]:
+            stream_state = params.get("stream_disabled")
+            long_output_str += ", Is disabled"
+
+        long_output.append((stream_state, long_output_str))
+
+    if long_output:
+        max_state = max([state for state, _infotext in long_output])
+
+        yield max_state, "see long output for more details"
+
+        for state, line in sorted(long_output, key=lambda x: x[1]):
+            yield state, "\n%s" % line
+
+
+check_info["graylog_streams"] = {
+    "parse_function": parse_graylog_streams,
+    "check_function": check_graylog_streams,
+    "inventory_function": inventory_graylog_streams,
+    "default_levels_variable": "graylog_streams_default_levels",
+    "service_description": "Graylog Streams",
+    "group": "graylog_streams",
+    "includes": ["graylog.include"],
+}

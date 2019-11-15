@@ -2366,10 +2366,11 @@ def _valuespec_special_agents_graylog():
                      ("messages", _("Message count")),
                      ("nodes", _("Nodes")),
                      ("sidecars", _("Sidecar fleet")),
+                     ("streams", _("Streams")),
                  ],
                  default_value=[
                      "alerts", "cluster_stats", "cluster_traffic", "failures", "jvm", "license",
-                     "messages", "nodes", "sidecars"
+                     "messages", "nodes", "sidecars", "streams"
                  ],
                  allow_empty=False,
              )),

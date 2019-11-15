@@ -317,6 +317,7 @@ call prepare_to_tests.cmd $(REMOTE_MACHINE)
     <ClCompile Include="test-cma_yml.cpp" />
     <ClCompile Include="test-cfg_engine.cpp" />
     <ClCompile Include="test-cma-tools.cpp" />
+    <ClCompile Include="test-commander.cpp" />
     <ClCompile Include="test-cvt.cpp" />
     <ClCompile Include="test-encryption.cpp" />
     <ClCompile Include="test-eventlog.cpp" />

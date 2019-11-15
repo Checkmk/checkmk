@@ -152,7 +152,9 @@
     <ClCompile Include="test-firewall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
+    <ClCompile Include="test-commander.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>  </ItemGroup>
   <ItemGroup>
     <None Include="..\test_files\config\check_mk.old.example.yml">
       <Filter>Resource Files</Filter>

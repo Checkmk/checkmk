@@ -1,4 +1,4 @@
-Title: emc_ecs_cpu_util: new xCPU check for Dell EMC ECS storage systems
+Title: emc_ecs_cpu_util: new CPU check for Dell EMC ECS storage systems
 Class: feature
 Compatible: compat
 Component: checks

@@ -32,7 +32,7 @@ import cmk.utils.debug
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKBailOut
 import cmk.utils.store as store
-from cmk.utils.encoding import snmp_decode_string
+from cmk.utils.encoding import convert_to_unicode
 
 import cmk_base.utils
 import cmk_base.config as config
@@ -602,7 +602,7 @@ def _compute_fetch_oid(oid, suboid, column):
 
 def _sanitize_snmp_encoding(snmp_config, columns):
     snmp_encoding = snmp_config.character_encoding
-    decode_string_func = lambda s: snmp_decode_string(s, snmp_encoding)
+    decode_string_func = lambda s: convert_to_unicode(s, encoding=snmp_encoding)
 
     for index, (column, value_encoding) in enumerate(columns):
         if value_encoding == "string":

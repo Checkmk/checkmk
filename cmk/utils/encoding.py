@@ -28,17 +28,30 @@
 import six
 
 
-def convert_to_unicode(value):
+def convert_to_unicode(
+        value,
+        encoding=None,
+        std_encoding="utf-8",
+        fallback_encoding="latin-1",
+        on_error=None,
+):
     if isinstance(value, six.text_type):
         return value
+
+    if encoding:
+        return value.decode(encoding)
+
     try:
-        return value.decode("utf-8")
+        return value.decode(std_encoding)
     except UnicodeDecodeError:
         pass
+
     try:
-        return value.decode("latin-1")
+        return value.decode(fallback_encoding)
     except UnicodeDecodeError:
-        return u"(Invalid byte sequence)"
+        if on_error is None:
+            raise
+        return on_error
 
 
 def ensure_unicode(value):
@@ -53,46 +66,6 @@ def ensure_bytestr(value):
         return value.encode("utf-8")
     except UnicodeDecodeError:
         return value
-
-
-def decode_incoming_string(value, encoding="utf-8", fallback_encoding="latin-1"):
-    try:
-        return value.decode(encoding)
-    except UnicodeDecodeError:
-        return value.decode(fallback_encoding)
-
-
-def snmp_decode_string(value, encoding):
-    if encoding:
-        return value.decode(encoding)
-
-    # Try to determine the current string encoding. In case a UTF-8 decoding fails, we decode latin1.
-    try:
-        return value.decode('utf-8')
-    except UnicodeDecodeError:
-        return value.decode('latin1')
-
-
-# Alas, we often have no clue about the actual encoding, so we have to guess:
-# Initially we assume UTF-8, but fall back to latin-1 if it didn't work.
-def decode_from_bytes(value):
-    # This is just a safeguard if we are inadvertedly called with a Unicode
-    # string. In theory this should never happen, but given the typing chaos in
-    # this script, one never knows. In the Unicode case, Python tries to be
-    # "helpful", but this fails miserably: Calling 'decode' on a Unicode string
-    # implicitly converts it via 'encode("ascii")' to a byte string first, but
-    # this can of course fail and doesn't make sense at all when we immediately
-    # call 'decode' on this byte string again. In a nutshell: The implicit
-    # conversions between str and unicode are a fundamentally broken idea, just
-    # like all implicit things and "helpful" ideas in general. :-P For further
-    # info see e.g. http://nedbatchelder.com/value/unipain.html
-    if isinstance(value, six.text_type):
-        return value
-
-    try:
-        return value.decode("utf-8")
-    except Exception:
-        return value.decode("latin-1")
 
 
 def make_utf8(value):

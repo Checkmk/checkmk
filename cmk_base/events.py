@@ -191,7 +191,7 @@ def convert_context_to_unicode(context):
     # Convert all values to unicode
     for key, value in context.iteritems():
         if isinstance(value, str):
-            context[key] = convert_to_unicode(value)
+            context[key] = convert_to_unicode(value, on_error=u"(Invalid byte sequence)")
 
 
 def render_context_dump(raw_context):

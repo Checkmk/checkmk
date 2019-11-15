@@ -67,7 +67,7 @@ import cmk.utils.profile
 import cmk.utils.render
 import cmk.utils.regex
 import cmk.utils.debug
-from cmk.utils.encoding import decode_from_bytes
+from cmk.utils.encoding import convert_to_unicode
 from cmk.ec.crash_reporting import ECCrashReport, CrashReportStore
 
 # suppress "Cannot find module" error from mypy
@@ -144,7 +144,7 @@ class SyslogFacility(object):
 
 
 def scrub_and_decode(s):
-    return decode_from_bytes(cmk.ec.history.scrub_string(s))
+    return convert_to_unicode(cmk.ec.history.scrub_string(s))
 
 
 #.

@@ -42,7 +42,7 @@ import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.encoding import decode_incoming_string
+from cmk.utils.encoding import convert_to_unicode
 
 import cmk_base.utils
 import cmk_base.config as config
@@ -1193,7 +1193,7 @@ class AutomationDiagHost(Automation):
                     # respect the ecoding options of sections.
                     # If this is a problem, we would have to apply parse and
                     # decode logic and unparse the decoded output again.
-                    output += decode_incoming_string(source_output)
+                    output += convert_to_unicode(source_output)
 
                     if source.exception():
                         state = 1

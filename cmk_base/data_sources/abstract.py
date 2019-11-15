@@ -41,7 +41,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
-from cmk.utils.encoding import decode_incoming_string
+from cmk.utils.encoding import convert_to_unicode
 
 import cmk_base.utils
 import cmk_base.agent_simulator
@@ -652,9 +652,9 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
                     line = stripped_line
 
                 if encoding:
-                    line = decode_incoming_string(line, encoding=encoding)
+                    line = convert_to_unicode(line, std_encoding=encoding)
                 else:
-                    line = decode_incoming_string(line)
+                    line = convert_to_unicode(line)
 
                 section_content.append(line.split(separator))
 

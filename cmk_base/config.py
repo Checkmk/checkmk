@@ -54,7 +54,7 @@ import cmk.utils
 from cmk.utils.labels import LabelManager
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
-from cmk.utils.encoding import decode_incoming_string
+from cmk.utils.encoding import convert_to_unicode
 
 import cmk_base
 import cmk_base.console as console
@@ -1011,8 +1011,7 @@ def translate_piggyback_host(sourcehost, backedhost):
     # To make it possible to match umlauts we need to change the hostname
     # to a unicode string which can then be matched with regexes etc.
     # We assume the incoming name is correctly encoded in UTF-8
-    backedhost = decode_incoming_string(backedhost,
-                                        fallback_encoding=fallback_agent_output_encoding)
+    backedhost = convert_to_unicode(backedhost, fallback_encoding=fallback_agent_output_encoding)
 
     translated = cmk.utils.translations.translate_hostname(translation, backedhost)
 

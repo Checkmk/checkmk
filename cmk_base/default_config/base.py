@@ -64,7 +64,7 @@ check_mk_perfdata_with_times = True
 debug_log = False  # deprecated
 monitoring_host = None  # deprecated
 max_num_processes = 50
-fallback_agent_output_encoding = 'latin1'
+fallback_agent_output_encoding = 'latin-1'
 stored_passwords = {}
 # Collection of predefined rule conditions. For the moment this setting is only stored
 # in this config domain but not used by the base code. The WATO logic for writing out

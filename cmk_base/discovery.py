@@ -37,7 +37,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
-from cmk.utils.encoding import decode_incoming_string
+from cmk.utils.encoding import convert_to_unicode
 
 import cmk_base
 import cmk_base.crash_reporting
@@ -1017,7 +1017,7 @@ def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
         # strings here seamless. TODO remove this conversion one day and replace it
         # with a validation that item needs to be of type unicode
         if isinstance(item, str):
-            item = decode_incoming_string(item)
+            item = convert_to_unicode(item)
 
         description = config.service_description(hostname, check_plugin_name, item)
         # make sanity check

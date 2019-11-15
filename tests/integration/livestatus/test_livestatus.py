@@ -176,8 +176,7 @@ class TestCrashReport(object):
         site.makedirs(dir)
         site.write_file(dir + "crash.info", crash_info)
         yield
-        site.delete_dir("var/check_mk/crashes")
-        site.makedirs("var/check_mk/crashes")
+        site.delete_dir("var/check_mk/crashes/%s" % component)
 
     @pytest.mark.skip("TODO(ml): Currently broken")
     def test_list_crash_report(self, site, component, uuid):

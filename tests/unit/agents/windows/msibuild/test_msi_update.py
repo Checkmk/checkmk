@@ -39,13 +39,12 @@ def test_export_msi_file(conf_dir, cmk_dir):
     try:
         out_dir.mkdir()
         for entry in ["File", "Property", "Component"]:
-            msi_update.export_msi_file("agents/windows/msibuild/", entry, src.__fspath__(),
-                                       out_dir.__fspath__())
+            msi_update.export_msi_file("agents/windows/msibuild/", entry, str(src), str(out_dir))
             f = out_dir.joinpath(entry + ".idt")
             assert f.exists()
     finally:
         if out_dir.exists():
-            shutil.rmtree(out_dir.__fspath__())
+            shutil.rmtree(str(out_dir))
 
 
 def test_update_package_code(conf_dir, cmk_dir):
@@ -66,7 +65,7 @@ def test_update_package_code(conf_dir, cmk_dir):
 
         assert not tgt.exists()
         assert msi_update.copy_file_safe(src, tgt)
-        msi_update.update_package_code(src.name, tgt.__fspath__())
+        msi_update.update_package_code(src.name, str(tgt))
         content = tgt.read_bytes()
         assert content.find(b"BAEBF560-7308-4") == -1
     finally:

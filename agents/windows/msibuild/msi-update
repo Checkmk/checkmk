@@ -202,7 +202,7 @@ def patch_msi_properties(dir_name, product_code, version_build):
 # tested
 def copy_file_safe(s, d):
     try:
-        shutil.copy(s.__fspath__(), d.__fspath__())
+        shutil.copy(str(s), str(d))
         return True
     except IOError as ex:
         verbose("exception in copy safe {}".format(ex))

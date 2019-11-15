@@ -1,8 +1,11 @@
-FROM nexus.lan.tribe29.com:5010/sles-12sp4-base
+ARG DOCKER_REGISTRY
+FROM ${DOCKER_REGISTRY}/sles-12sp4-base
 
 SHELL ["/bin/bash", "-c"]
 
-RUN zypper addrepo -G http://nexus:8081/repository/sles12sp4 sles12sp4 \
+ARG ARTIFACT_STORAGE
+
+RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp4 sles12sp4 \
     && zypper -n in -y --force-resolution \
     awk \
     && zypper -n in -y --force-resolution \

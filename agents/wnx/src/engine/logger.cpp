@@ -18,6 +18,42 @@ Emitter bp(LogType::log, true);
 bool Emitter::bp_allowed_ = tgt::IsDebug();
 
 namespace details {
+
+void WriteToWindowsEventLog(unsigned short type, int code,
+                            std::string_view log_name, std::string_view text) {
+    auto eventSource =
+        RegisterEventSourceA(nullptr, cma::cfg::kDefaultEventLogName);
+    if (eventSource == nullptr) return;
+
+    const char *strings[2] = {log_name.data(), text.data()};
+    ReportEventA(eventSource,  // Event log handle
+                 type,         // Event type
+                 0,            // Event category
+                 code,         // Event identifier
+                 nullptr,      // No security identifier
+                 2,            // Size of lpszStrings array
+                 0,            // No binary data
+                 strings,      // Array of strings
+                 nullptr);     // No binary data
+    DeregisterEventSource(eventSource);
+}
+
+unsigned short LoggerEventLevelToWindowsEventType(EventLevel level) {
+    switch (level) {
+        case EventLevel::success:
+            return EVENTLOG_SUCCESS;
+        case EventLevel::information:
+            return EVENTLOG_INFORMATION_TYPE;
+        case EventLevel::warning:
+            return EVENTLOG_WARNING_TYPE;
+        case EventLevel::error:
+        case EventLevel::critical:
+            return EVENTLOG_ERROR_TYPE;
+        default:
+            return EVENTLOG_INFORMATION_TYPE;
+    }
+}
+
 static std::atomic<bool> LogDuplicatedOnStdio = false;
 static std::atomic<bool> LogColoredOnStdio = false;
 static DWORD LogOldMode = -1;

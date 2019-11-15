@@ -56,52 +56,34 @@ void WriteToLogFileWithBackup(std::string_view filename, size_t max_size,
 // check status of duplication
 bool IsDuplicatedOnStdio();
 bool IsColoredOnStdio();
+
+unsigned short LoggerEventLevelToWindowsEventType(EventLevel level);
+
+void WriteToWindowsEventLog(unsigned short type, int code,
+                            std::string_view log_name, std::string_view text);
+
+// main engine to write something in the Windows Event Log
+template <typename... Args>
+void LogWindowsEventAlways(EventLevel Level, int Code, const char* Format,
+                           Args&&... args) {
+    auto type = LoggerEventLevelToWindowsEventType(Level);
+    std::string x;
+    try {
+        x = fmt::format(Format, args...);
+    } catch (...) {
+        x = Format;
+    }
+
+    WriteToWindowsEventLog(type, Code, cma::cfg::kDefaultEventLogName, x);
+}
+
 template <typename... Args>
 void LogWindowsEvent(EventLevel Level, int Code, const char* Format,
                      Args&&... args) {
     auto allowed_level = cma::cfg::GetCurrentEventLevel();
     if (Level > allowed_level) return;
 
-    auto eventSource =
-        RegisterEventSourceA(nullptr, cma::cfg::kDefaultEventLogName);
-    if (eventSource) {
-        unsigned short type = EVENTLOG_ERROR_TYPE;
-        switch (Level) {
-            case EventLevel::success:
-                type = EVENTLOG_SUCCESS;
-                break;
-            case EventLevel::information:
-                type = EVENTLOG_INFORMATION_TYPE;
-                break;
-            case EventLevel::warning:
-                type = EVENTLOG_WARNING_TYPE;
-                break;
-            case EventLevel::error:
-            case EventLevel::critical:
-                type = EVENTLOG_ERROR_TYPE;
-                break;
-            default:
-                type = EVENTLOG_INFORMATION_TYPE;
-                break;
-        }
-        std::string x;
-        try {
-            x = fmt::format(Format, args...);
-        } catch (...) {
-            x = Format;
-        }
-        const char* strings[2] = {cma::cfg::kDefaultEventLogName, x.c_str()};
-        ReportEventA(eventSource,  // Event log handle
-                     type,         // Event type
-                     0,            // Event category
-                     Code,         // Event identifier
-                     nullptr,      // No security identifier
-                     2,            // Size of lpszStrings array
-                     0,            // No binary data
-                     strings,      // Array of strings
-                     nullptr);     // No binary data
-        DeregisterEventSource(eventSource);
-    }
+    LogWindowsEventAlways(Level, Code, Format, std::forward<Args>(args)...);
 }
 
 template <typename... Args>

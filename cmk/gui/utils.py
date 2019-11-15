@@ -165,7 +165,7 @@ def load_web_plugins(forwhat, globalvars):
 
     for plugins_path in [
             Path(cmk.utils.paths.web_dir, "plugins", forwhat),
-            cmk.utils.paths.local_web_dir.joinpath("plugins", forwhat),
+            cmk.utils.paths.local_web_dir / "plugins" / forwhat,
     ]:
         if not plugins_path.exists():
             continue

@@ -59,7 +59,7 @@ def _locale_base():
 
 def _pot_file():
     # type: () -> str
-    local_pot_file = cmk.utils.paths.local_locale_dir.joinpath('multisite.pot')
+    local_pot_file = cmk.utils.paths.local_locale_dir / 'multisite.pot'
     if local_pot_file.exists():
         return str(local_pot_file)
     return _locale_base() + '/multisite.pot'
@@ -67,7 +67,7 @@ def _pot_file():
 
 def _builtin_po_file(lang):
     # type: (str) -> Path
-    return cmk.utils.paths.locale_dir.joinpath(lang, 'LC_MESSAGES', '%s.po' % domain)
+    return cmk.utils.paths.locale_dir / lang / 'LC_MESSAGES' / ('%s.po' % domain)
 
 
 def _po_file(lang):

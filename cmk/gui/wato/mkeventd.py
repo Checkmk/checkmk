@@ -2424,7 +2424,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             mibname = filename
 
         msg = self._validate_and_compile_mib(mibname.upper(), content)
-        with cmk.gui.mkeventd.mib_upload_dir().joinpath(filename).open("w") as f:
+        with (cmk.gui.mkeventd.mib_upload_dir() / filename).open("w") as f:
             f.write(content)
         self._add_change("uploaded-mib", _("MIB %s: %s") % (filename, msg))
         return msg
@@ -2520,7 +2520,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         self._add_change("delete-mib", _("Deleted MIB %s") % filename)
 
         # Delete the uploaded mib file
-        cmk.gui.mkeventd.mib_upload_dir().joinpath(filename).unlink()
+        (cmk.gui.mkeventd.mib_upload_dir() / filename).unlink()
 
         # Also delete the compiled files
         compiled_mibs_dir = _compiled_mibs_dir()

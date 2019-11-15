@@ -22,35 +22,35 @@ from cmk.utils.exceptions import MKGeneralException
 
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_mkdir(tmp_path, path_type):
-    test_dir = tmp_path.joinpath("abc")
+    test_dir = tmp_path / "abc"
     store.mkdir(path_type(test_dir))
     store.mkdir(path_type(test_dir))
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_mkdir_mode(tmp_path, path_type):
-    test_dir = tmp_path.joinpath("bla")
+    test_dir = tmp_path / "bla"
     store.mkdir(path_type(test_dir), mode=0o750)
     assert stat.S_IMODE(os.stat(str(test_dir)).st_mode) == 0o750
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_mkdir_parent_not_exists(tmp_path, path_type):
-    test_dir = tmp_path.joinpath("not-existing/xyz")
+    test_dir = tmp_path / "not-existing/xyz"
     with pytest.raises(OSError, match="No such file or directory"):
         store.mkdir(path_type(test_dir))
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_makedirs(tmp_path, path_type):
-    test_dir = tmp_path.joinpath("not-existing/xyz")
+    test_dir = tmp_path / "not-existing/xyz"
     store.makedirs(path_type(test_dir))
     store.makedirs(path_type(test_dir))
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_makedirs_mode(tmp_path, path_type):
-    test_dir = tmp_path.joinpath("whee/blub")
+    test_dir = tmp_path / "whee/blub"
     store.makedirs(path_type(test_dir), mode=0o750)
     assert stat.S_IMODE(os.stat(str(test_dir)).st_mode) == 0o750
 
@@ -167,7 +167,7 @@ def test_save_data_to_file_not_pretty(tmp_path, path_type):
 
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_save_file(tmp_path, path_type):
-    path = path_type(tmp_path.joinpath("lala"))
+    path = path_type(tmp_path / "lala")
     data = ['luläla']
     store.save_file(path, repr(data))
     assert store.load_data_from_file(str(path)) == data
@@ -175,14 +175,14 @@ def test_save_file(tmp_path, path_type):
 
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_save_mk_file(tmp_path, path_type):
-    path = path_type(tmp_path.joinpath("lala"))
+    path = path_type(tmp_path / "lala")
     store.save_mk_file(path, "x = 1")
     assert store.load_mk_file(path, default={}) == {"x": 1}
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_save_to_mk_file(tmp_path, path_type):
-    path = path_type(tmp_path.joinpath("huhu"))
+    path = path_type(tmp_path / "huhu")
     store.save_to_mk_file(path, "x", {"a": 1})
     assert store.load_mk_file(path, default={"x": {"a": 2, "y": 1}}) == {"x": {"a": 1, "y": 1}}
 
@@ -333,7 +333,7 @@ def test_locking(tmp_path, path_type):
 
     assert store1 != store2
 
-    locked_file_path = tmp_path.joinpath("locked_file")
+    locked_file_path = tmp_path / "locked_file"
     with locked_file_path.open(mode="w", encoding="utf-8") as locked_file:
         locked_file.write(u"")
         path = "%s" % locked_file_path

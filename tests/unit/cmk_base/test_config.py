@@ -1795,22 +1795,22 @@ cmc_host_rrd_config = [
 
 """ % {"name": "main-host"})
 
-    wato_main_folder = config_dir.joinpath("wato")
+    wato_main_folder = config_dir / "wato"
     wato_main_folder.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
     _add_host_in_folder(wato_main_folder, "lvl0-host")
     _add_rule_in_folder(wato_main_folder, "LVL0")
 
-    wato_lvl1_folder = wato_main_folder.joinpath("lvl1")
+    wato_lvl1_folder = wato_main_folder / "lvl1"
     wato_lvl1_folder.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
     _add_host_in_folder(wato_lvl1_folder, "lvl1-host")
     _add_rule_in_folder(wato_lvl1_folder, "LVL1")
 
-    wato_lvl1a_folder = wato_main_folder.joinpath("lvl1_aaa")
+    wato_lvl1a_folder = wato_main_folder / "lvl1_aaa"
     wato_lvl1a_folder.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
     _add_host_in_folder(wato_lvl1a_folder, "lvl1aaa-host")
     _add_rule_in_folder(wato_lvl1a_folder, "LVL1aaa")
 
-    wato_lvl2_folder = wato_main_folder.joinpath("lvl1", "lvl2")
+    wato_lvl2_folder = wato_main_folder / "lvl1" / "lvl2"
     wato_lvl2_folder.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
     _add_host_in_folder(wato_lvl2_folder, "lvl2-host")
     _add_rule_in_folder(wato_lvl2_folder, "LVL2")
@@ -1821,19 +1821,19 @@ cmc_host_rrd_config = [
 
     # Cleanup after the test. Would be better to use a dedicated test directory
     Path(cmk.utils.paths.main_config_file).unlink()  # pylint: disable=no-member
-    wato_main_folder.joinpath("hosts.mk").unlink()  # pylint: disable=no-member
-    wato_main_folder.joinpath("rules.mk").unlink()  # pylint: disable=no-member
-    wato_lvl1_folder.joinpath("hosts.mk").unlink()  # pylint: disable=no-member
-    wato_lvl1_folder.joinpath("rules.mk").unlink()  # pylint: disable=no-member
-    wato_lvl1a_folder.joinpath("hosts.mk").unlink()  # pylint: disable=no-member
-    wato_lvl1a_folder.joinpath("rules.mk").unlink()  # pylint: disable=no-member
-    wato_lvl2_folder.joinpath("hosts.mk").unlink()  # pylint: disable=no-member
-    wato_lvl2_folder.joinpath("rules.mk").unlink()  # pylint: disable=no-member
-    config._initialize_config()
+    (wato_main_folder / "hosts.mk").unlink()  # pylint: disable=no-member
+    (wato_main_folder / "rules.mk").unlink()  # pylint: disable=no-member
+    (wato_lvl1_folder / "hosts.mk").unlink()  # pylint: disable=no-member
+    (wato_lvl1_folder / "rules.mk").unlink()  # pylint: disable=no-member
+    (wato_lvl1a_folder / "hosts.mk").unlink()  # pylint: disable=no-member
+    (wato_lvl1a_folder / "rules.mk").unlink()  # pylint: disable=no-member
+    (wato_lvl2_folder / "hosts.mk").unlink()  # pylint: disable=no-member
+    (wato_lvl2_folder / "rules.mk").unlink()  # pylint: disable=no-member
+    (config._initialize_config())
 
 
 def _add_host_in_folder(folder_path, name):
-    with folder_path.joinpath("hosts.mk").open("w", encoding="utf-8") as f:
+    with (folder_path / "hosts.mk").open("w", encoding="utf-8") as f:
         f.write(u"""
 all_hosts += ['%(name)s']
 
@@ -1859,7 +1859,7 @@ host_tags.update({
 
 
 def _add_rule_in_folder(folder_path, value):
-    with folder_path.joinpath("rules.mk").open("w", encoding="utf-8") as f:
+    with (folder_path / "rules.mk").open("w", encoding="utf-8") as f:
         if value == "LVL0":
             condition = "{}"
         else:

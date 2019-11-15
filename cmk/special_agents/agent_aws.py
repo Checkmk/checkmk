@@ -3228,7 +3228,7 @@ class AWSConfig(object):
         self.hostname = hostname
         self._overall_tags = self._prepare_tags(overall_tags)
         self.service_config = {}
-        self._config_hash_file = AWSCacheFilePath.joinpath("%s.config_hash" % hostname)
+        self._config_hash_file = AWSCacheFilePath / ("%s.config_hash" % hostname)
         self._current_config_hash = self._compute_config_hash(sys_argv)
 
     def add_service_tags(self, tags_key, tags):

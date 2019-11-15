@@ -162,8 +162,8 @@ def test_create_socket(tls, verify, ca, ca_file_path, monkeypatch, tmp_path):
 
     ssl_dir = tmp_path / "var/ssl"
     ssl_dir.mkdir(parents=True)
-    with ssl_dir.joinpath("ca-certificates.crt").open(mode="w", encoding="utf-8") as f:  # pylint: disable=no-member
-        f.write(ca.ca_path.joinpath("ca.pem").open(encoding="utf-8").read())
+    with (ssl_dir / "ca-certificates.crt").open(mode="w", encoding="utf-8") as f:  # pylint: disable=no-member
+        f.write((ca.ca_path / "ca.pem").open(encoding="utf-8").read())
 
     monkeypatch.setenv("OMD_ROOT", str(tmp_path))
 

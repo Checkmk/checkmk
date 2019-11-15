@@ -1045,7 +1045,7 @@ def theme_choices():
         if not base_dir.exists():
             continue
 
-        theme_base_dir = base_dir.joinpath("htdocs", "themes")
+        theme_base_dir = base_dir / "htdocs" / "themes"
         if not theme_base_dir.exists():  # pylint: disable=no-member
             continue
 

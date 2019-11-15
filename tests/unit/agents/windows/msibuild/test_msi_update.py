@@ -31,16 +31,16 @@ def test_export_msi_file(conf_dir, cmk_dir):
     # prepare file to tests
     if not cmk_dir.exists():
         pytest.skip("cmk_dir is not good")
-    src = cmk_dir.joinpath(u"agents/wnx/test_files/msibuild/msi/check_mk_agent.msi")
+    src = cmk_dir / u"agents/wnx/test_files/msibuild/msi/check_mk_agent.msi"
     if not src.exists():
         pytest.skip("Path with MSI doesn't exist")
 
-    out_dir = conf_dir.joinpath('idts')
+    out_dir = conf_dir / 'idts'
     try:
         out_dir.mkdir()
         for entry in ["File", "Property", "Component"]:
             msi_update.export_msi_file("agents/windows/msibuild/", entry, str(src), str(out_dir))
-            f = out_dir.joinpath(entry + ".idt")
+            f = out_dir / (entry + ".idt")
             assert f.exists()
     finally:
         if out_dir.exists():
@@ -50,13 +50,13 @@ def test_export_msi_file(conf_dir, cmk_dir):
 def test_update_package_code(conf_dir, cmk_dir):
     if not cmk_dir.exists():
         pytest.skip("cmk_dir '{}' is not good".format(cmk_dir))
-    src = cmk_dir.joinpath(u"agents/wnx/test_files/msibuild/msi/check_mk_agent.msi")
+    src = cmk_dir / u"agents/wnx/test_files/msibuild/msi/check_mk_agent.msi"
     if not src.exists():
         pytest.skip("Path '{}' with MSI doesn't exist".format(src))
     # prepare file to tests
-    tgt = conf_dir.joinpath("check_mk_agent.msi")
+    tgt = conf_dir / "check_mk_agent.msi"
     try:
-        src = cmk_dir.joinpath(u"agents/wnx/test_files/msibuild/msi/check_mk_agent.msi")
+        src = cmk_dir / u"agents/wnx/test_files/msibuild/msi/check_mk_agent.msi"
         assert src.exists()
         content = src.read_bytes()
         assert content.find(b"BAEBF560-7308-4") != -1

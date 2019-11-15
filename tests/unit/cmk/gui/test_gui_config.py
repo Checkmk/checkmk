@@ -819,7 +819,7 @@ def my_theme(theme_dirs):
     theme_path = theme_dirs[0]
     my_dir = theme_path / "my_theme"
     my_dir.mkdir()
-    my_dir.joinpath("theme.json").open(mode="w", encoding="utf-8").write(
+    (my_dir / "theme.json").open(mode="w", encoding="utf-8").write(
         six.text_type(json.dumps({"title": "Määh Theme :-)"})))
     return my_dir
 
@@ -837,7 +837,7 @@ def test_theme_choices_local_theme(theme_dirs, my_theme):
 
     my_dir = local_theme_path / "my_improved_theme"
     my_dir.mkdir()
-    my_dir.joinpath("theme.json").open(mode="w", encoding="utf-8").write(
+    (my_dir / "theme.json").open(mode="w", encoding="utf-8").write(
         six.text_type(json.dumps({"title": "Määh Bettr Theme :-D"})))
 
     assert config.theme_choices() == sorted([
@@ -851,7 +851,7 @@ def test_theme_choices_override(theme_dirs, my_theme):
 
     my_dir = local_theme_path / "my_theme"
     my_dir.mkdir()
-    my_dir.joinpath("theme.json").open(mode="w", encoding="utf-8").write(
+    (my_dir / "theme.json").open(mode="w", encoding="utf-8").write(
         six.text_type(json.dumps({"title": "Fixed theme"})))
 
     assert config.theme_choices() == sorted([
@@ -860,7 +860,7 @@ def test_theme_choices_override(theme_dirs, my_theme):
 
 
 def test_theme_broken_meta(my_theme):
-    my_theme.joinpath("theme.json").open(mode="w", encoding="utf-8").write(
+    (my_theme / "theme.json").open(mode="w", encoding="utf-8").write(
         six.text_type("{\"titlewrong\": xyz\"bla\"}"))
 
     assert config.theme_choices() == sorted([

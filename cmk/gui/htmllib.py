@@ -1671,7 +1671,7 @@ class html(ABCHTMLGenerator):
         plugin_stylesheets = set([])
         for directory in [
                 Path(cmk.utils.paths.web_dir, "htdocs", "css"),
-                cmk.utils.paths.local_web_dir.joinpath("htdocs", "css"),
+                cmk.utils.paths.local_web_dir / "htdocs" / "css",
         ]:
             if directory.exists():
                 for entry in directory.iterdir():

@@ -81,11 +81,11 @@ PERM_MAP = (
     (str(cmk.utils.paths.locale_dir), 0o644),
     (str(cmk.utils.paths.local_locale_dir), 0o644),
     (str(cmk.utils.paths.local_bin_dir), 0o755),
-    (str(cmk.utils.paths.local_lib_dir.joinpath("nagios", "plugins")), 0o755),
+    (str(cmk.utils.paths.local_lib_dir / "nagios" / "plugins"), 0o755),
     (str(cmk.utils.paths.local_lib_dir), 0o644),
     (str(cmk.utils.paths.local_mib_dir), 0o644),
     (os.path.join(cmk.utils.paths.share_dir, "alert_handlers"), 0o755),
-    (str(cmk.utils.paths.local_share_dir.joinpath("alert_handlers")), 0o755),
+    (str(cmk.utils.paths.local_share_dir / "alert_handlers"), 0o755),
     (str(cmk.ec.export.mkp_rule_pack_dir()), 0o644),
 )
 
@@ -120,7 +120,7 @@ _package_parts = [
     PackagePart("lib", "Libraries", str(cmk.utils.paths.local_lib_dir)),
     PackagePart("mibs", "SNMP MIBs", str(cmk.utils.paths.local_mib_dir)),
     PackagePart("alert_handlers", "Alert handlers",
-                str(cmk.utils.paths.local_share_dir.joinpath("alert_handlers"))),
+                str(cmk.utils.paths.local_share_dir / "alert_handlers")),
 ]
 
 config_parts = [
@@ -305,7 +305,7 @@ def package_create(args):
     write_package_info(package)
     logger.log(VERBOSE, "New package %s created with %d files.", pacname, num_files)
     logger.log(VERBOSE, "Please edit package details in %s%s%s", tty.bold,
-               _pac_dir().joinpath(pacname), tty.normal)
+               _pac_dir() / pacname, tty.normal)
 
 
 def package_find(_no_args):
@@ -353,7 +353,7 @@ def package_release(args):
 
 
 def package_exists(pacname):
-    return _pac_dir().joinpath(pacname).exists()  # pylint: disable=no-member
+    return (_pac_dir() / pacname).exists()  # pylint: disable=no-member
 
 
 def package_pack(args):
@@ -452,7 +452,7 @@ def remove_package(package):
                         raise
                     raise Exception("Cannot remove %s: %s\n" % (path, e))
 
-    _pac_dir().joinpath(package["name"]).unlink()  # pylint: disable=no-member
+    (_pac_dir() / package["name"]).unlink()  # pylint: disable=no-member
 
 
 def create_package(pkg_info):
@@ -745,7 +745,7 @@ def write_package_info(package):
 
 
 def remove_package_info(pacname):
-    _pac_dir().joinpath(pacname).unlink()  # pylint: disable=no-member
+    (_pac_dir() / pacname).unlink()  # pylint: disable=no-member
 
 
 def all_package_names():

@@ -34,8 +34,7 @@ def test_crash_report_ident_to_text(crash):
 
 
 def test_crash_report_crash_dir(crash):
-    assert crash.crash_dir() == cmk.utils.paths.crash_dir.joinpath(crash.type(),
-                                                                   crash.ident_to_text())
+    assert crash.crash_dir() == (cmk.utils.paths.crash_dir / crash.type() / crash.ident_to_text())
 
 
 def test_crash_report_local_crash_report_url(crash):

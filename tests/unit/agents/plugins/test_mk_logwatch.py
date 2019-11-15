@@ -61,7 +61,7 @@ def test_get_config_files(mk_logwatch, tmp_path):
     fake_config_dir = tmp_path / "test"
     fake_config_dir.mkdir()
     (fake_config_dir / "logwatch.d").mkdir()
-    (fake_config_dir / "logwatch.d").joinpath("custom.cfg").open(mode="w")
+    (fake_config_dir / "logwatch.d" / "custom.cfg").open(mode="w")
 
     expected = [
         str(fake_config_dir / "logwatch.cfg"),
@@ -76,7 +76,7 @@ def test_iter_config_lines(mk_logwatch, tmp_path):
     # setup
     fake_config_path = tmp_path / "test"
     fake_config_path.mkdir()
-    fake_config_file = fake_config_path.joinpath("logwatch.cfg")
+    fake_config_file = fake_config_path / "logwatch.cfg"
     fake_config_file.write_text(u"# this is a comment\nthis is a line   ", encoding="utf-8")
     files = [str(fake_config_file)]
 
@@ -275,7 +275,7 @@ def test_get_status_filename(mk_logwatch, env_var, istty, statusfile, monkeypatc
 ])
 def test_state_load(mk_logwatch, tmp_path, state_data, state_dict):
     # setup for reading
-    file_path = tmp_path.joinpath("logwatch.state.testcase")
+    file_path = tmp_path / "logwatch.state.testcase"
     file_path.write_text(state_data, encoding="utf-8")
 
     # loading and __getitem__
@@ -307,7 +307,7 @@ def test_state_load(mk_logwatch, tmp_path, state_data, state_dict):
 ])
 def test_state_write(mk_logwatch, tmp_path, state_dict):
     # setup for writing
-    file_path = tmp_path.joinpath("logwatch.state.testcase")
+    file_path = tmp_path / "logwatch.state.testcase"
     state = mk_logwatch.State(str(file_path))
     assert not state._data
 
@@ -436,7 +436,7 @@ def test_log_lines_iter(mk_logwatch):
 def test_non_ascii_line_processing(mk_logwatch, tmp_path, monkeypatch, use_specific_encoding, lines,
                                    expected_result):
     # Write test logfile first
-    log_path = tmp_path.joinpath("testlog")
+    log_path = tmp_path / "testlog"
     with log_path.open("wb") as f:
         f.write(b"\n".join(lines) + "\n")
 

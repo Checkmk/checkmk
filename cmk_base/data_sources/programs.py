@@ -201,7 +201,7 @@ class SpecialAgentDataSource(ProgramDataSource):
 
         agent_name = "agent_" + self._special_agent_id
         special_agent_path = Path(cmk.utils.paths.agents_dir, "special", agent_name)
-        local_special_agent_path = cmk.utils.paths.local_agents_dir.joinpath("special", agent_name)
+        local_special_agent_path = cmk.utils.paths.local_agents_dir / "special" / agent_name
 
         path = local_special_agent_path if local_special_agent_path.exists() else special_agent_path
         return "%s %s" % (path, final_arguments), command_stdin

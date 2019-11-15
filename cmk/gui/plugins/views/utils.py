@@ -1883,7 +1883,7 @@ class Cell(object):
         # TODO: Move this somewhere else!
         def find_htdocs_image_path(filename):
             for file_path in [
-                    cmk.utils.paths.local_web_dir.joinpath("htdocs", filename),
+                    cmk.utils.paths.local_web_dir / "htdocs" / filename,
                     Path(cmk.utils.paths.web_dir, "htdocs", filename),
             ]:
                 if file_path.exists():

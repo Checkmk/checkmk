@@ -134,9 +134,9 @@ def patch_msi_files(dir_name, version_build):
     use_dir = Path(dir_name)
 
     name = "File.idt"
-    lines_file_idt = read_file_as_lines(use_dir.joinpath(name))
+    lines_file_idt = read_file_as_lines(use_dir / name)
 
-    with use_dir.joinpath(name + ".new").open('w', newline='', encoding='utf8') as out_file:
+    with (use_dir / (name + ".new")).open('w', newline='', encoding='utf8') as out_file:
         # first three lines of the table write back
         to_write = u"".join(lines_file_idt[:3])
         out_file.write(to_write)
@@ -147,7 +147,7 @@ def patch_msi_files(dir_name, version_build):
             # check every file from the table whether it should be replaced
             for file_to_replace in msi_file_table():  # sorted(cabinet_files):
                 if file_to_replace == filename:
-                    work_file = use_dir.joinpath(filename)
+                    work_file = use_dir / filename
                     if work_file.exists():
                         file_stats = work_file.stat()
                         new_size = file_stats.st_size
@@ -165,9 +165,9 @@ def patch_msi_components(dir_name):
     use_dir = Path(dir_name)
 
     name = "Component.idt"
-    lines_component_idt = read_file_as_lines(use_dir.joinpath(name))
+    lines_component_idt = read_file_as_lines(use_dir / name)
 
-    with use_dir.joinpath(name + ".new").open('w', newline='', encoding='utf8') as out_file:
+    with (use_dir / (name + ".new")).open('w', newline='', encoding='utf8') as out_file:
         out_file.write(u"".join(lines_component_idt[:3]))
 
         for l in lines_component_idt[3:]:
@@ -181,8 +181,8 @@ def patch_msi_properties(dir_name, product_code, version_build):
     use_dir = Path(dir_name)
 
     name = "Property.idt"
-    lines_property_idt = read_file_as_lines(use_dir.joinpath(name))
-    with use_dir.joinpath(name + ".new").open('w', newline='', encoding='utf8') as out_file:
+    lines_property_idt = read_file_as_lines(use_dir / name)
+    with (use_dir / (name + ".new")).open('w', newline='', encoding='utf8') as out_file:
         out_file.write(u"".join(lines_property_idt[:3]))
 
         for line in lines_property_idt[3:]:

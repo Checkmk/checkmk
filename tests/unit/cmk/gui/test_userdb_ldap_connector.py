@@ -223,7 +223,7 @@ def encode_to_byte_strings(inp):
 def user_files():
     profile_dir = Path(cmk.utils.paths.var_dir, "web", "admin")
     profile_dir.mkdir(parents=True, exist_ok=True)
-    with profile_dir.joinpath("cached_profile.mk").open("w", encoding="utf-8") as f:  # pylint: disable=no-member
+    with (profile_dir / "cached_profile.mk").open("w", encoding="utf-8") as f:  # pylint: disable=no-member
         f.write(u"%r" % {
             "alias": u"admin",
             "connector": "default",

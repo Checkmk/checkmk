@@ -1,11 +1,13 @@
-FROM nexus.lan.tribe29.com:4000/sles-12sp2-base
+ARG DOCKER_REGISTRY
+FROM ${DOCKER_REGISTRY}/sles-12sp2-base
 
 SHELL ["/bin/bash", "-c"]
 
+ARG ARTIFACT_STORAGE
 ARG PACKAGES
 
-RUN zypper addrepo -G http://nexus:8081/repository/sles12sp2 sles12sp2 \
-    && zypper addrepo -G http://nexus:8081/repository/sles12spx-web-scripting web-scripting \
+RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp2 sles12sp2 \
+    && zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12spx-web-scripting web-scripting \
     && zypper -n --no-gpg-checks in --replacefiles --force-resolution \
     curl \
     cyrus-sasl-devel \

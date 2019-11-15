@@ -50,7 +50,15 @@ DISTRO_LIST.each { DISTRO ->
                             returnStdout: true).trim()
                         dir('buildscripts/infrastructure/os-nodes/' + DISTRO) {
                             def DOCKER_REGISTRY_NOHTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
-                            sh "docker build -t $DOCKER_REGISTRY_NOHTTP/$DISTRO-os-image --build-arg PACKAGES='$OS_PACKAGES' --network ci_local-infra ."
+                            sh """
+                                docker build \
+                                -t $DOCKER_REGISTRY_NOHTTP/$DISTRO-os-image \
+                                --build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP' \
+                                --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE' \
+                                --build-arg PACKAGES='$OS_PACKAGES' \
+                                --network ci_local-infra \
+                                .
+                            """
                             sh "docker push $DOCKER_REGISTRY_NOHTTP/$DISTRO-os-image"
                         }
                     }

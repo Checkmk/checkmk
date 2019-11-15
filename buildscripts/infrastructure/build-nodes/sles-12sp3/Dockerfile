@@ -1,8 +1,11 @@
-FROM nexus.lan.tribe29.com:4000/sles-12sp3-base
+ARG DOCKER_REGISTRY
+FROM ${DOCKER_REGISTRY}/sles-12sp3-base
 
 SHELL ["/bin/bash", "-c"]
 
-RUN zypper addrepo -G http://nexus:8081/repository/sles12sp3 sles12sp3 \
+ARG ARTIFACT_STORAGE
+
+RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp3 sles12sp3 \
     && zypper ref -s \
     && zypper -n in -y --force-resolution \
     apache2-devel \

@@ -1,11 +1,13 @@
-FROM nexus.lan.tribe29.com:4000/sles-12sp1-base
+ARG DOCKER_REGISTRY
+FROM ${DOCKER_REGISTRY}/sles-12sp1-base
 
 SHELL ["/bin/bash", "-c"]
 
+ARG ARTIFACT_STORAGE
 ARG PACKAGES
 
-RUN zypper addrepo -G http://nexus:8081/repository/sles12sp1 sles12sp1 \
-    && zypper addrepo -G http://nexus:8081/repository/sles12spx-web-scripting web-scripting \
+RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp1 sles12sp1 \
+    && zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12spx-web-scripting web-scripting \
     && zypper -n --no-gpg-checks in --replacefiles --force-resolution \
     gawk \
     && zypper -n --no-gpg-checks in --replacefiles --force-resolution \
@@ -24,7 +26,8 @@ RUN zypper addrepo -G http://nexus:8081/repository/sles12sp1 sles12sp1 \
     python-pyOpenSSL \
     python-xml \
     rrdtool-devel \
-    sudo
+    sudo \
+    && zypper clean -a
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
     && python get-pip.py
 RUN pip install --upgrade setuptools \

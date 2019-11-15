@@ -55,17 +55,15 @@ def convert_to_unicode(
 
 
 def ensure_unicode(value):
-    try:
-        return value.decode("utf-8")
-    except UnicodeEncodeError:
+    if isinstance(value, six.text_type):
         return value
+    return value.decode("utf-8")
 
 
 def ensure_bytestr(value):
-    try:
-        return value.encode("utf-8")
-    except UnicodeDecodeError:
+    if isinstance(value, six.binary_type):
         return value
+    return value.encode("utf-8")
 
 
 def make_utf8(value):

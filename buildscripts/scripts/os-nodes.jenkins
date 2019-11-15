@@ -4,6 +4,7 @@ properties([
    ])
 ])
 
+
 // TODO: Duplicate code (sync buildscripts/scripts/os-nodes.jenkins, buildscripts/scripts/integration-daily-master.jenkins)
 DISTRO_LIST = DISTROS.split(' ');
 // CMK-1705: SLES-15 is missing xinitd and should therefore not be tested
@@ -25,6 +26,7 @@ node {
             stage('checkout sources') {
                 cleanWs()
                 checkout(scm)
+                str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
                 stash name: 'distroinfos', includes: 'omd/distros/*.mk'
                 stash name: 'dockerfiles', includes: 'buildscripts/infrastructure/os-nodes/*/Dockerfile'
             }
@@ -47,7 +49,7 @@ DISTRO_LIST.each { DISTRO ->
                             """,
                             returnStdout: true).trim()
                         dir('buildscripts/infrastructure/os-nodes/' + DISTRO) {
-                            def DOCKER_REGISTRY_NOHTTP = DOCKER_REGISTRY.split('//')[1]
+                            def DOCKER_REGISTRY_NOHTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
                             sh "docker build -t $DOCKER_REGISTRY_NOHTTP/$DISTRO-os-image --build-arg PACKAGES='$OS_PACKAGES' --network ci_local-infra ."
                             sh "docker push $DOCKER_REGISTRY_NOHTTP/$DISTRO-os-image"
                         }

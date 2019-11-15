@@ -22,8 +22,8 @@ PYTHON_MODULES_LIST :=
 
 PYTHON_MODULES_LIST += setuptools_scm-3.1.0.tar.gz # needed by various setup.py
 PYTHON_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
-PYTHON_MODULES_LIST += typing-3.7.4.tar.gz # direct dependency
-PYTHON_MODULES_LIST += six-1.12.0.tar.gz # direct dependency, indirect via python-dateutil
+PYTHON_MODULES_LIST += typing-3.7.4.1.tar.gz # direct dependency
+PYTHON_MODULES_LIST += six-1.13.0.tar.gz # direct dependency, indirect via python-dateutil
 PYTHON_MODULES_LIST += python-dateutil-2.8.0.tar.gz # direct dependency
 PYTHON_MODULES_LIST += Werkzeug-0.15.5.tar.gz # direct dependency
 
@@ -147,8 +147,8 @@ PYTHON_MODULES_LIST += tinkerforge-2.1.19.tar.gz
 PYTHON_MODULES_LIST += bcrypt-3.1.4.tar.gz
 PYTHON_MODULES_LIST += PyNaCl-1.3.0.tar.gz
 
-PYTHON_MODULES_LIST += scandir-1.9.0.tar.gz
-PYTHON_MODULES_LIST += pathlib2-2.3.2.tar.gz
+PYTHON_MODULES_LIST += scandir-1.10.0.tar.gz
+PYTHON_MODULES_LIST += pathlib2-2.3.5.tar.gz
 # Added for scheduling (cmk/schedule.py)
 PYTHON_MODULES_LIST += python-snap7-0.10.tar.gz
 # Added for azure special agent

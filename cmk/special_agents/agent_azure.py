@@ -103,8 +103,13 @@ def parse_arguments(argv):
                         choices=["grouphost", "self"],
                         help='''Send VM piggyback data to group host (default) or the VM iteself''')
 
+    parser.add_argument("--subscription",
+                        dest="subscriptions",
+                        action="append",
+                        default=[],
+                        help="Azure subscription IDs")
+
     # REQUIRED
-    parser.add_argument("--subscription", required=True, help="Azure subscription ID")
     parser.add_argument("--client", required=True, help="Azure client ID")
     parser.add_argument("--tenant", required=True, help="Azure tenant ID")
     parser.add_argument("--secret", required=True, help="Azure authentication secret")
@@ -859,7 +864,8 @@ def main(argv=None):
 
     exit_code = main_graph_client(args)
 
-    exit_code = main_subscription(args, selector, args.subscription) or exit_code
+    for subscription in args.subscriptions:
+        exit_code = main_subscription(args, selector, subscription) or exit_code
 
     return exit_code
 

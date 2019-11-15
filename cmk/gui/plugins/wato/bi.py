@@ -284,7 +284,7 @@ class BIManagement(object):
             else:
                 hostspec = self._bi_constants['ALL_HOSTS']
 
-            if type(what) == tuple and what[0] == 'child_with':
+            if isinstance(what, tuple) and what[0] == 'child_with':
                 child_conditions = what[1]
                 what = what[0]
                 child_tags = child_conditions[0]

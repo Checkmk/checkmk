@@ -31,6 +31,9 @@ void OnExit();  // #VIP will stop WMI and all services(in the future)
 
 bool ConfigLoaded();
 
+bool IsCleanOnExit(); // check during exit from the service
+void CleanOnExit(); // set when command is got from the transport
+
 std::pair<std::filesystem::path, std::filesystem::path> FindAlternateDirs(
     std::wstring_view environment_variable);
 

@@ -99,8 +99,29 @@ static AppType CalcAppType(AppType Type) {
 
 bool ReloadConfig() {
     //
-
     return LoadConfig(AppDefaultType(), {});
+}
+
+static bool s_clean_on_exit = false;
+
+bool IsCleanOnExit() { return s_clean_on_exit; }
+
+// usually for testing
+void ResetCleanOnExit() {
+    //
+    s_clean_on_exit = false;
+}
+
+void CleanOnExit() {
+    //
+    if (!IsService()) {
+        XLOG::l.i("Requested clean on exit is IGNORED, mnot service");
+        return;
+    }
+
+    XLOG::l.i("Requested clean on exit");
+    XLOG::details::LogWindowsEventInfo(9, "Requested Clean On Exit");
+    s_clean_on_exit = true;
 }
 
 bool LoadConfig(AppType Type, const std::wstring& ConfigFile) {

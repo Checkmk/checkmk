@@ -245,4 +245,4 @@ mrpe:
 
 system:
     firewall:
-        mode: none # allowed none, clear, configure
+        mode: configure # allowed none, clear, configure

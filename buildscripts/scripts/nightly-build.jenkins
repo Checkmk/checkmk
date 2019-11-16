@@ -35,7 +35,7 @@ def UPLOAD_DEST = 'bauwelt@mathias-kettner.de:/bauwelt/download/'
 
 def DAILY_DATA_BASE_DIR = '/var/jenkins_home/daily-data'
 def ARCHIVE_DIR = ''
-def OMD_MAKE_VARS = ''
+def OMD_ENV_VARS = ''
 if (shall_publish_package(scm, JOB_BASE_NAME)) {
     DAILY_DATA = DAILY_DATA_BASE_DIR + '/' + BRANCH + '/' + CMK_VERS
     ARCHIVE_DIR = '/bauwelt/download/' + CMK_VERS
@@ -44,7 +44,7 @@ if (shall_publish_package(scm, JOB_BASE_NAME)) {
     ARCHIVE_DIR = DAILY_DATA + '/download'
     // Do not use our build cache to ensure we catch build related issues. And
     // disable python optimizations to execute the build faster
-    OMD_MAKE_VARS = ' NEXUS_BUILD_CACHE_URL="" PYTHON_ENABLE_OPTIMIZATIONS=""'
+    OMD_ENV_VARS = ' NEXUS_BUILD_CACHE_URL="" PYTHON_ENABLE_OPTIMIZATIONS=""'
 }
 
 def DOCKER_BASE_ARGS = "-u 0:0 --ulimit nofile=1024:1024 --network ci_local-infra"
@@ -120,7 +120,7 @@ DISTRO_LIST.each { DISTRO ->
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 docker.image(DISTRO).inside(DOCKER_ARGS + " --privileged --hostname ${DISTRO}") {
                     withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
-                        build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_MAKE_VARS)
+                        build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_ENV_VARS)
                     }
                 }
             }
@@ -368,7 +368,7 @@ def copy_source_package(PACKAGE_PATH, ARCHIVE_PATH) {
     }
 }
 
-def build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_MAKE_VARS) {
+def build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_ENV_VARS) {
     stage(DISTRO + ' build package') {
         def DEST_DIR = "${WORKSPACE}/dest"
 
@@ -381,13 +381,13 @@ def build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_MAKE_VARS) {
             sh """
                 case $DISTRO in
                     centos*|rh*|sles*|opensuse*)
-                        make ${OMD_MAKE_VARS} -C omd rpm
+                        ${OMD_ENV_VARS} make -C omd rpm
                         ;;
                     cma*)
-                        make ${OMD_MAKE_VARS} -C omd cma
+                        ${OMD_ENV_VARS} make -C omd cma
                         ;;
                     *)
-                        DEBFULLNAME='Checkmk Team' DEBEMAIL='feedback@checkmk.com' make ${OMD_MAKE_VARS} -C omd deb
+                        DEBFULLNAME='Checkmk Team' DEBEMAIL='feedback@checkmk.com' ${OMD_ENV_VARS} make -C omd deb
                         ;;
                 esac
             """

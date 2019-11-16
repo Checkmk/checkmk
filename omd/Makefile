@@ -296,6 +296,7 @@ deb: debian/changelog
 	fakeroot bash -c "export EDITION=$(EDITION) ; debian/rules clean"
 	debuild \
 		--preserve-envvar="NEXUS_*" \
+		--preserve-envvar="PYTHON_ENABLE_OPTIMIZATIONS" \
 		--set-envvar EDITION=$(EDITION) \
 		--prepend-path=/usr/local/bin --no-lintian -i\.git -I\.git \
 			-icheck-mk-$(EDITION)-bin-$(OMD_VERSION).tar.gz \

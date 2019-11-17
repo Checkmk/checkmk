@@ -65,6 +65,7 @@ node {
                     patch_demo(DEMO)
                     set_version(CMK_VERS)
 
+                    // Remember files needed for building the windows agent on the windows node later
                     stash(
                         name: 'WinDep',
                         include: 'agents/wnx/**/*, agents/windows/dependencies/**/*, agents/windows/plugins/**/*, omd/packages/googletest/*, omd/packages/simpleini/*'
@@ -251,12 +252,14 @@ def set_version(CMK_VERS) {
 def build_windows_agent() {
     stage('Build windows agent') {
         bat 'powershell Remove-Item .\\* -Recurse -Force'
+        // Receive files needed for building the agent
         unstash(name: 'WinDep')
         bat 'cd agents\\wnx && call build_release.cmd'
         dir('artefacts') {
+            // Store the built files for later packaging
             stash(
                 name: 'WinMSI',
-                includes: 'check_mk_agent*,check_mk.user.yml'
+                includes: 'check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml'
             )
         }
     }
@@ -329,17 +332,15 @@ def create_source_package(DAILY_DATA) {
     stage('Create source package') {
        sh 'rm -rf *'
        unstash(name: 'WinMSI')
-       sh "mv check_mk_agent* ${DAILY_DATA}/agents/"
-       sh "mv check_mk.user.yml ${DAILY_DATA}/agents/"
+       sh "mv check_mk_agent-64.exe check_mk_agent.exe check_mk_agent.msi check_mk.user.yml ${DAILY_DATA}/agents/"
        dir("${DAILY_DATA}/git") {
             if(EDITION != 'raw') {
                 sh "cp ${DAILY_DATA}/agents/cmk-update-agent enterprise/agents/plugins/"
                 sh "cp ${DAILY_DATA}/agents/cmk-update-agent-32 enterprise/agents/plugins/"
                 sh "cp ${DAILY_DATA}/agents/cmk-update-agent.exe enterprise/agents/windows/plugins/"
             }
-            sh "cp ${DAILY_DATA}/agents/check_mk_agent*.msi agents/windows"
-            sh "cp ${DAILY_DATA}/agents/check_mk_agent*.exe agents/windows"
-            sh "cp ${DAILY_DATA}/agents/check_mk.user.yml agents/windows"
+            sh "cp ${DAILY_DATA}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml} agents/windows"
+            sh "cp ${DAILY_DATA}/agents/{check_mk_agent_legacy-64.exe,check_mk_agent_legacy.exe,check_mk_agent_legacy.msi} agents/windows"
             sh 'make dist || cat /root/.npm/_logs/*-debug.log'
         }
     }

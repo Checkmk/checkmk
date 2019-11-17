@@ -248,7 +248,12 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		mk-job* \
 		waitmax \
 		windows/cfg_examples \
-		windows/check_mk_agent*.{exe,msi} \
+		windows/check_mk_agent-64.exe \
+		windows/check_mk_agent.exe \
+		windows/check_mk_agent.msi \
+		windows/check_mk_agent_legacy-64.exe \
+		windows/check_mk_agent_legacy.exe \
+		windows/check_mk_agent_legacy.msi \
 		windows/check_mk.example.ini \
 		windows/check_mk.user.yml \
 		windows/CONTENTS \

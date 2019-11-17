@@ -59,6 +59,7 @@ $(PNP4NAGIOS_INSTALL): $(PNP4NAGIOS_BUILD)
 	install -m 644 $(PNP4NAGIOS_DIR)/THANKS $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
 
 	# Install the diskspace cleanup plugin
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/diskspace
 	install -m 644 $(PACKAGE_DIR)/$(PNP4NAGIOS)/diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/pnp4nagios
 
 	# Move default config files to skel

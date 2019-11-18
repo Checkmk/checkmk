@@ -27,6 +27,7 @@
 checks and tells the user what could be improved."""
 
 import traceback
+from typing import Optional  # pylint: disable=unused-import
 
 from livestatus import LocalConnection
 import cmk.utils.defines
@@ -48,7 +49,7 @@ from cmk.gui.watolib.automation_commands import (
 
 
 class ACResult(object):
-    status = None
+    status = None  # type: Optional[int]
 
     def __init__(self, text):
         super(ACResult, self).__init__()

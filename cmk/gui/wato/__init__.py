@@ -271,7 +271,7 @@ if cmk.is_managed_edition():
     import cmk.gui.cme.plugins.wato  # pylint: disable=no-name-in-module
     import cmk.gui.cme.plugins.wato.managed  # pylint: disable=no-name-in-module
 else:
-    managed = None
+    managed = None  # type: ignore[assignment]
 
 wato_root_dir = watolib.wato_root_dir
 multisite_dir = watolib.multisite_dir

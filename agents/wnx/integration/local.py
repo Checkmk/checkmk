@@ -11,12 +11,13 @@ import os
 import pytest
 import re
 import time
-import subprocess
 import sys
 import shutil
 import telnetlib  # nosec
 import it_utils
 import platform
+
+import cmk.utils.cmk_subprocess as subprocess
 
 default_config = """
 global:
@@ -146,7 +147,12 @@ def env_var(key, value):
 def run_subprocess(cmd):
     with env_var('CMA_TEST_DIR', root_dir):
         sys.stderr.write(' '.join(cmd) + '\n')
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding="cp1252",
+        )
         stdout, stderr = p.communicate(timeout=10)
 
     return p.returncode, stdout, stderr
@@ -163,10 +169,10 @@ def assert_subprocess(cmd):
     exit_code, stdout_ret, stderr_ret = run_subprocess(cmd)
 
     if stdout_ret:
-        sys.stdout.write(stdout_ret.decode(encoding='cp1252'))
+        sys.stdout.write(stdout_ret.encode("cp1252"))
 
     if stderr_ret:
-        sys.stderr.write(stderr_ret.decode(encoding='cp1252'))
+        sys.stderr.write(stderr_ret.encode("cp1252"))
 
     assert exit_code == 0, "'%s' failed" % ' '.join(cmd)
 

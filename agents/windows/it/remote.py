@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; py-indent-offset: 4 -*-
 import ConfigParser
-import contextlib
 import os
 import platform
-import pytest
 import re
-import subprocess
 import sys
 import telnetlib  # nosec
+import pytest
+import cmk.utils.cmk_subprocess as subprocess
 
 # To use another host for running the tests, replace this IP address.
 remote_ip = '10.1.2.30'
@@ -24,7 +23,12 @@ ini_filename = os.path.join(remotedir, 'check_mk.ini')
 
 def run_subprocess(cmd):
     sys.stderr.write(' '.join(cmd) + '\n')
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        encoding="utf-8",
+    )
     stdout, stderr = p.communicate()
     return (p.returncode, stdout, stderr)
 
@@ -32,9 +36,9 @@ def run_subprocess(cmd):
 def assert_subprocess(cmd):
     exit_code, stdout, stderr = run_subprocess(cmd)
     if stdout:
-        sys.stdout.write(stdout)
+        sys.stdout.write(stdout.encode("utf-8"))
     if stderr:
-        sys.stderr.write(stderr)
+        sys.stderr.write(stderr.encode("utf-8"))
     assert exit_code == 0, "'%s' failed" % ' '.join(cmd)
 
 

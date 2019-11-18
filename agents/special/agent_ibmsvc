@@ -31,7 +31,7 @@ from __future__ import print_function
 import os
 import sys
 import getopt
-import subprocess
+import cmk.utils.cmk_subprocess as subprocess
 
 
 def usage():
@@ -234,18 +234,25 @@ if opt_debug:
     sys.stderr.write("executing external command: %s\n" % cmd)
 
 result = subprocess.Popen(  # nosec
-    cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=None)
+    cmd,
+    shell=True,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    stdin=None,
+    encoding="utf-8",
+)
 stdout, stderr = result.communicate()
 exit_code = result.wait()
 
 if exit_code not in [0, 1]:
-    sys.stderr.write("Error connecting via ssh: %s\n" % stderr)
+    msg = "Error connecting via ssh: %s\n" % stderr
+    sys.stderr.write(msg.encode("utf-8"))
     sys.exit(2)
 
 lines = stdout.split('\n')
 
 if lines[0].startswith("CMMVC7016E") or (len(lines) > 1 and lines[1].startswith("CMMVC7016E")):
-    sys.stderr.write(stdout)
+    sys.stderr.write(stdout.encode("utf-8"))
     sys.exit(2)
 
 # Quite strange.. Why not simply print stdout?

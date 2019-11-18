@@ -54,7 +54,7 @@ class HTTPRedirect(FinalizeRequest):
     def __init__(self, url):
         # type: (str) -> None
         super(HTTPRedirect, self).__init__(httplib.FOUND)
-        self.url = url  #type: str
+        self.url = url  # type: str
 
 
 class MKAuthException(MKException):

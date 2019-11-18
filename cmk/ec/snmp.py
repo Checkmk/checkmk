@@ -39,7 +39,7 @@ import pysnmp.smi.builder
 import pysnmp.smi.view
 import pysnmp.smi.rfc1902
 import pysnmp.smi.error
-import pyasn1.error
+import pyasn1.error  # type: ignore[import]
 
 from cmk.utils.log import VERBOSE
 import cmk.utils.render

@@ -125,7 +125,7 @@ class ModeIcons(WatoMode):
 
     def _upload_icon(self, icon_info):
         # Add the icon category to the PNG comment
-        from PIL import Image, PngImagePlugin
+        from PIL import Image, PngImagePlugin  # type: ignore[import]
         from StringIO import StringIO
         im = Image.open(StringIO(icon_info['icon'][2]))
         im.info['Comment'] = icon_info['category']

@@ -29,7 +29,7 @@ import json
 import os
 import shutil
 import time
-import xml.dom.minidom
+import xml.dom.minidom  # type: ignore[import]
 
 import dicttoxml
 from pathlib2 import Path

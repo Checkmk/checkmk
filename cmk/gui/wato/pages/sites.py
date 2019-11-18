@@ -33,7 +33,7 @@ import socket
 import contextlib
 import binascii
 import typing  # pylint: disable=unused-import
-from typing import Text, TypeVar, List, Dict, NamedTuple  # pylint: disable=unused-import
+from typing import Dict, List, NamedTuple, Text, Union  # pylint: disable=unused-import
 from OpenSSL import crypto, SSL
 # mypy can't find x509 for some reason (is a c extension involved?)
 from cryptography.x509.oid import ExtensionOID, NameOID  # type: ignore
@@ -526,7 +526,6 @@ class ModeDistributedMonitoring(WatoMode):
                   "assigned to it. You can use the <a href=\"%s\">host "
                   "search</a> to get a list of the hosts.") % search_url)
 
-
         c = wato_confirm(_("Confirm deletion of site %s") % html.render_tt(delete_id),
                          _("Do you really want to delete the connection to the site %s?") % \
                          html.render_tt(delete_id))
@@ -824,7 +823,7 @@ PingResult = NamedTuple("PingResult", [
 ReplicationStatus = NamedTuple("ReplicationStatus", [
     ("site_id", str),
     ("success", bool),
-    ("response", TypeVar("ReplicationResponse", PingResult, Exception)),
+    ("response", Union[PingResult, Exception]),
 ])
 
 

@@ -45,6 +45,7 @@ int ExecResetOhm();   // on resetohm :hidden
 
 int ExecReloadConfig();
 int ExecRemoveLegacyAgent();
+void ExecUninstallClean();
 
 int ExecRealtimeTest(bool Print);  // on rt
 int ExecCvtIniYaml(std::filesystem::path IniFile,

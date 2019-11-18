@@ -590,17 +590,6 @@ int ExecPatchHash() {
     return 0;
 }
 
-static void InformPort(std::string_view mail_slot) {
-    cma::carrier::CoreCarrier cc;
-
-    using namespace cma::carrier;
-    auto internal_port = BuildPortName(kCarrierMailslotName, mail_slot.data());
-    auto ret = cc.establishCommunication(internal_port);
-    cc.sendCommand(cma::commander::kMainPeer, cma::commander::kReload);
-
-    cc.shutdownCommunication();
-}
-
 int ExecReloadConfig() {
     XLOG::setup::ColoredOutputOnStdio(true);
     XLOG::setup::DuplicateOnStdio(true);
@@ -611,13 +600,77 @@ int ExecReloadConfig() {
     using namespace cma::carrier;
 
     XLOG::l.i("Asking for reload service");
-    InformPort(mailbox_service.GetName());
+    cma::carrier::InformByMailSlot(mailbox_service.GetName(),
+                                   cma::commander::kReload);
 
     XLOG::l.i("Asking for reload executable");
-    InformPort(mailbox_test.GetName());
+    cma::carrier::InformByMailSlot(mailbox_test.GetName(),
+                                   cma::commander::kReload);
 
     XLOG::SendStringToStdio("Done.", XLOG::Colors::white);
     return 0;
+}
+
+int InformCleanOnStop() {
+    cma::MailSlot mailbox_service(cma::cfg::kServiceMailSlot, 0);
+
+    cma::carrier::InformByMailSlot(mailbox_service.GetName(),
+                                   cma::commander::kCleanOnStop);
+    return 0;
+}
+
+// only as testing
+static bool CreateTheFile(const std::filesystem::path& dir,
+                          std::string_view content) {
+    try {
+        auto protocol_file = dir / "check_mk_agent.log.tmp";
+        std::ofstream ofs(protocol_file, std::ios::binary);
+
+        if (ofs) {
+            ofs << "Info Log from check mk agent:\n";
+            ofs << "  time: '" << cma::cfg::ConstructTimeString() << "'\n";
+            if (!content.empty()) {
+                ofs << content;
+                ofs << "\n";
+            }
+        }
+    } catch (const std::exception& e) {
+        XLOG::l.crit("Exception during creatin protocol file {}", e.what());
+        return false;
+    }
+    return true;
+}
+
+// on command line uninstall_clean
+void ExecUninstallClean() {
+    try {
+        auto tmp_path = cma::tools::win::GetEnv(L"TEMP");
+        if (!cma::tools::win::IsElevated()) {
+            XLOG::details::LogWindowsEventError(
+                9, "You have to be in elevated to use this function.");
+            CreateTheFile(tmp_path, "not elevated");
+            return;
+        }
+
+        auto status =
+            cma::cfg::upgrade::GetServiceStatusByName(cma::srv::kServiceName);
+
+        if (status == SERVICE_RUNNING) {
+            XLOG::details::LogWindowsEventError(
+                10, "checkmkservice must be stopped or un-installed");
+            cma::MailSlot mailbox_client(cma::cfg::kServiceMailSlot, 0);
+            cma::carrier::InformByMailSlot(mailbox_client.GetName(),
+                                           cma::commander::kCleanOnStop);
+            CreateTheFile(tmp_path, "informed");
+            return;
+        }
+
+        cma::cfg::details::RecursivelyDeleteDefaultDataFolder();  // command
+                                                                  // line
+    } catch (const std::exception& e) {
+        XLOG::details::LogWindowsEventCritical(
+            9, "You have to be in elevated to use this function. {}", e.what());
+    }
 }
 
 // returns codes for main
@@ -976,10 +1029,15 @@ int ServiceAsService(
             switch (ret) {
                 case wtools::ServiceController::StopType::normal:
                     XLOG::l.i("Service is stopped normally");
+                    if (cma::IsCleanOnExit())
+                        cma::cfg::details::
+                            RecursivelyDeleteDefaultDataFolder();  // normal
                     return 0;
-
                 case wtools::ServiceController::StopType::fail:
                     XLOG::l.i("Service is stopped due to abnormal situation");
+                    if (cma::IsCleanOnExit())
+                        cma::cfg::details::
+                            RecursivelyDeleteDefaultDataFolder();  // abnormal
                     return -1;
                 case wtools::ServiceController::StopType::no_connect:
                     // may happen when we try to call usual exe

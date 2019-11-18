@@ -26,6 +26,8 @@
 
 import os
 import abc
+from typing import Dict  # pylint: disable=unused-import
+
 import six
 
 import cmk.utils.paths

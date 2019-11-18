@@ -31,7 +31,7 @@ import shutil
 import time
 import xml.dom.minidom  # type: ignore[import]
 
-import dicttoxml
+import dicttoxml  # type: ignore[import]
 from pathlib2 import Path
 
 import livestatus

@@ -27,18 +27,18 @@
 import traceback
 
 # Needed for receiving traps
-import pysnmp.debug
-import pysnmp.entity.config
-import pysnmp.entity.engine
-import pysnmp.entity.rfc3413.ntfrcv
-import pysnmp.proto.api
-import pysnmp.proto.errind
+import pysnmp.debug  # type: ignore[import]
+import pysnmp.entity.config  # type: ignore[import]
+import pysnmp.entity.engine  # type: ignore[import]
+import pysnmp.entity.rfc3413.ntfrcv  # type: ignore[import]
+import pysnmp.proto.api  # type: ignore[import]
+import pysnmp.proto.errind  # type: ignore[import]
 
 # Needed for trap translation
-import pysnmp.smi.builder
-import pysnmp.smi.view
-import pysnmp.smi.rfc1902
-import pysnmp.smi.error
+import pysnmp.smi.builder  # type: ignore[import]
+import pysnmp.smi.view  # type: ignore[import]
+import pysnmp.smi.rfc1902  # type: ignore[import]
+import pysnmp.smi.error  # type: ignore[import]
 import pyasn1.error  # type: ignore[import]
 
 from cmk.utils.log import VERBOSE

@@ -89,7 +89,7 @@ def snmpsim(site, request, tmp_path_factory):
             return False
 
         # Correct module is only available in the site
-        import netsnmp  # pylint: disable=import-error
+        import netsnmp  #type: ignore[import] # pylint: disable=import-error
         var = netsnmp.Varbind("sysDescr.0")
         result = netsnmp.snmpget(var, Version=2, DestHost="127.0.0.1:1337", Community="public")
         if result is None or result[0] is None:

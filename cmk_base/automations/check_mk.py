@@ -28,7 +28,6 @@ import ast
 import errno
 import glob
 import os
-import subprocess
 import sys
 import time
 import shutil
@@ -43,6 +42,7 @@ import cmk.utils.man_pages as man_pages
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.encoding import convert_to_unicode
+import cmk.utils.cmk_subprocess as subprocess
 
 import cmk_base.utils
 import cmk_base.config as config
@@ -549,12 +549,14 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
         handled_files = []
 
         command = ["sed", "-ri", "--file=/dev/fd/0"]
-        p = subprocess.Popen(command + file_paths,
-                             stdin=subprocess.PIPE,
-                             stdout=open(os.devnull, "w"),
-                             stderr=subprocess.STDOUT,
-                             close_fds=True)
-        p.communicate(sed_commands)
+        p = subprocess.Popen(
+            command + file_paths,
+            stdin=subprocess.PIPE,
+            stdout=open(os.devnull, "w"),
+            stderr=subprocess.STDOUT,
+            close_fds=True,
+        )
+        p.communicate(input=sed_commands)
         # TODO: error handling?
 
         handled_files += file_paths

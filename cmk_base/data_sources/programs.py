@@ -26,12 +26,13 @@
 
 import os
 import signal
-import subprocess
 import collections
 from pathlib2 import Path
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKTimeout
+import cmk.utils.cmk_subprocess as subprocess
+from cmk.utils.encoding import ensure_unicode
 
 import cmk_base.config as config
 import cmk_base.core_config as core_config
@@ -75,7 +76,9 @@ class ProgramDataSource(CheckMKAgentDataSource):
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     preexec_fn=os.setsid,
-                    close_fds=True)
+                    close_fds=True,
+                    encoding="utf-8",
+                )
             else:
                 # We can not create a separate process group when running Nagios
                 # Upon reaching the service_check_timeout Nagios only kills the process
@@ -86,9 +89,16 @@ class ProgramDataSource(CheckMKAgentDataSource):
                     stdin=subprocess.PIPE if command_stdin else open(os.devnull),
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
-                    close_fds=True)
-            stdout, stderr = p.communicate(input=command_stdin)
+                    close_fds=True,
+                    encoding="utf-8",
+                )
+
+            if command_stdin:
+                stdout, stderr = p.communicate(input=ensure_unicode(command_stdin))
+            else:
+                stdout, stderr = p.communicate()
             exitstatus = p.returncode
+
         except MKTimeout:
             # On timeout exception try to stop the process to prevent child process "leakage"
             if p:

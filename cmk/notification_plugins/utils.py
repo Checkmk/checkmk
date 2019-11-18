@@ -25,7 +25,6 @@
 
 import os
 import re
-import subprocess
 import sys
 from html import escape as html_escape  # type: ignore
 from typing import (  # pylint: disable=unused-import
@@ -35,6 +34,7 @@ import requests
 
 from cmk.utils.notify import find_wato_folder
 import cmk.utils.password_store
+import cmk.utils.cmk_subprocess as subprocess
 
 
 def collect_context():
@@ -168,11 +168,14 @@ def send_mail_sendmail(m, target, from_address):
     cmd += ["-i", target.encode("utf-8")]
 
     try:
-        p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+        p = subprocess.Popen(
+            cmd,
+            stdin=subprocess.PIPE,
+        )
     except OSError:
         raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
 
-    p.communicate(m.as_string())
+    p.communicate(input=m.as_string())
     if p.returncode != 0:
         raise Exception("sendmail returned with exit code: %d" % p.returncode)
 

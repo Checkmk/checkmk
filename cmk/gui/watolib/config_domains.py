@@ -29,13 +29,12 @@ import logging
 import os
 import re
 import signal
-import subprocess
 import traceback
 from pathlib2 import Path
 
 import cmk
 import cmk.utils.store as store
-from cmk.utils.encoding import make_utf8
+import cmk.utils.cmk_subprocess as subprocess
 
 import cmk.gui.hooks as hooks
 import cmk.gui.config as config
@@ -361,12 +360,15 @@ class ConfigDomainOMD(ABCConfigDomain):
 
         self._logger.debug("Executing \"omd config change\"")
         self._logger.debug("  Commands: %r" % config_change_commands)
-        p = subprocess.Popen(["omd", "config", "change"],
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT,
-                             stdin=subprocess.PIPE,
-                             close_fds=True)
-        stdout = p.communicate(make_utf8("\n".join(config_change_commands)))[0]
+        p = subprocess.Popen(
+            ["omd", "config", "change"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            stdin=subprocess.PIPE,
+            close_fds=True,
+            encoding="utf-8",
+        )
+        stdout, _stderr = p.communicate(input="\n".join(config_change_commands))
         self._logger.debug("  Exit code: %d" % p.returncode)
         self._logger.debug("  Output: %r" % stdout)
         if p.returncode != 0:

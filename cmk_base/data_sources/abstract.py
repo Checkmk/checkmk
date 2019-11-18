@@ -31,6 +31,7 @@ import time
 import abc
 import logging
 import sys
+from typing import Text  # pylint: disable=unused-import
 import six
 
 import cmk.utils.log  # TODO: Remove this!
@@ -42,7 +43,10 @@ import cmk.utils.misc
 import cmk.utils.store as store
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
-from cmk.utils.encoding import convert_to_unicode
+from cmk.utils.encoding import (
+    convert_to_unicode,
+    ensure_bytestr,
+)
 
 import cmk_base.utils
 import cmk_base.agent_simulator
@@ -269,7 +273,8 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         return raw_data
 
     def _to_cache_file(self, raw_data):
-        return raw_data
+        # type: (Text) -> bytes
+        return ensure_bytestr(raw_data)
 
     @abc.abstractmethod
     def _convert_to_sections(self, raw_data):

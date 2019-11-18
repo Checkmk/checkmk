@@ -40,7 +40,6 @@ import logging
 import os
 import re
 import signal
-import subprocess
 import sys
 import time
 
@@ -60,6 +59,7 @@ from cmk.utils.exceptions import (
     MKException,
     MKGeneralException,
 )
+import cmk.utils.cmk_subprocess as subprocess
 
 import cmk_base.utils
 import cmk_base.config as config
@@ -1237,13 +1237,15 @@ def notify_via_email(plugin_context):
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         stdin=subprocess.PIPE,
-        close_fds=True)
-    stdout_txt, stderr_txt = p.communicate(body.encode("utf-8"))
+        close_fds=True,
+        encoding="utf-8",
+    )
+    stdout, stderr = p.communicate(input=body)
     exitcode = p.returncode
     os.putenv("LANG", old_lang)  # Important: do not destroy our environment
     if exitcode != 0:
         logger.info("ERROR: could not deliver mail. Exit code of command is %r", exitcode)
-        for line in (stdout_txt + stderr_txt).decode('utf-8').splitlines():
+        for line in (stdout + stderr).splitlines():
             logger.info("mail: %s", line.rstrip())
         return 2
 
@@ -1789,20 +1791,23 @@ def call_bulk_notification_script(plugin, context_lines):
     if not path:
         raise MKGeneralException("Notification plugin %s not found" % plugin)
 
-    stdout_txt = stderr_txt = ""
+    stdout = stderr = ""
     try:
         set_notification_timeout()
 
         # Protocol: The script gets the context on standard input and
         # read until that is closed. It is being called with the parameter
         # --bulk.
-        p = subprocess.Popen([path, "--bulk"],
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE,
-                             stdin=subprocess.PIPE,
-                             close_fds=True)
+        p = subprocess.Popen(
+            [path, "--bulk"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            close_fds=True,
+            encoding="utf-8",
+        )
 
-        stdout_txt, stderr_txt = p.communicate("".join(context_lines).encode("utf-8"))
+        stdout, stderr = p.communicate(input="".join(context_lines))
         exitcode = p.returncode
 
         clear_notification_timeout()
@@ -1816,7 +1821,7 @@ def call_bulk_notification_script(plugin, context_lines):
     if exitcode:
         logger.info("ERROR: script %s --bulk returned with exit code %s", path, exitcode)
 
-    output_lines = (stdout_txt + stderr_txt).decode('utf-8').splitlines()
+    output_lines = (stdout + stderr).splitlines()
     for line in output_lines:
         logger.info("%s: %s", plugin, line.rstrip())
 

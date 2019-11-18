@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 import os
-import subprocess
 import time
 
 import six
@@ -34,7 +33,7 @@ import cmk
 import cmk.utils.debug
 import cmk.utils.defines
 from cmk.utils.log import VERBOSE
-from cmk.utils.encoding import make_utf8
+import cmk.utils.cmk_subprocess as subprocess
 import livestatus
 
 #.
@@ -176,21 +175,24 @@ def _send_email(config, to, subject, body, logger):
     if config["debug_rules"]:
         logger.info("  Executing: %s" % " ".join(command_utf8))
 
-    p = subprocess.Popen(command_utf8,
-                         close_fds=True,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE,
-                         stdin=subprocess.PIPE)
+    p = subprocess.Popen(
+        command_utf8,
+        close_fds=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+        encoding="utf-8",
+    )
     # FIXME: This may lock on too large buffer. We should move all "mail sending" code
     # to a general place and fix this for all our components (notification plugins,
     # notify.py, this one, ...)
-    stdout_txt, stderr_txt = p.communicate(body.encode("utf-8"))
+    stdout, stderr = p.communicate(input=body)
     exitcode = p.returncode
 
     logger.info('  Exitcode: %d' % exitcode)
     if exitcode != 0:
         logger.info("  Error: Failed to send the mail.")
-        for line in (stdout_txt + stderr_txt).splitlines():
+        for line in (stdout + stderr).splitlines():
             logger.info("  Output: %s" % line.rstrip())
         return False
 
@@ -216,11 +218,12 @@ def _execute_script(event_columns, body, event, logger):
         stderr=subprocess.STDOUT,
         close_fds=True,
         env=script_env,
+        encoding="utf-8",
     )
-    output = p.communicate(body.encode('utf-8'))[0]
+    stdout, _stderr = p.communicate(input=body)
     logger.info('  Exit code: %d' % p.returncode)
-    if output:
-        logger.info('  Output: \'%s\'' % output)
+    if stdout:
+        logger.info('  Output: \'%s\'' % stdout)
 
 
 def _get_event_tags(event_columns, event):
@@ -288,20 +291,23 @@ def do_notify(event_server, logger, event, username=None, is_cancelling=False):
         return
 
     # Send notification context via stdin.
-    context_string = make_utf8("".join([
+    context_string = "".join([
         "%s=%s\n" % (varname, value.replace("\n", "\\n"))
         for (varname, value) in context.iteritems()
-    ]))
+    ])
 
-    p = subprocess.Popen(["cmk", "--notify", "stdin"],
-                         stdin=subprocess.PIPE,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT,
-                         close_fds=True)
-    response = p.communicate(input=context_string)[0]
+    p = subprocess.Popen(
+        ["cmk", "--notify", "stdin"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        close_fds=True,
+        encoding="utf-8",
+    )
+    stdout, _stderr = p.communicate(input=context_string)
     status = p.returncode
     if status:
-        logger.error("Error notifying via Check_MK: %s" % response.strip())
+        logger.error("Error notifying via Check_MK: %s" % stdout.strip())
     else:
         logger.info("Successfully forwarded notification for event %d to Check_MK" % event["id"])
 

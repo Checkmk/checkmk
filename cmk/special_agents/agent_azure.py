@@ -825,7 +825,7 @@ def main_graph_client(args):
 
 
 def main_subscription(args, selector, subscription):
-    mgmt_client = MgmtApiClient(args.subscription)
+    mgmt_client = MgmtApiClient(subscription)
     try:
         mgmt_client.login(args.tenant, args.client, args.secret)
 
@@ -841,7 +841,7 @@ def main_subscription(args, selector, subscription):
     write_group_info(mgmt_client, monitored_groups)
 
     try:
-        usage_client = UsageClient(mgmt_client, args.subscription, args.debug)
+        usage_client = UsageClient(mgmt_client, subscription, args.debug)
         usage_client.write_sections(monitored_groups)
     except () if args.debug else Exception as exc:
         write_exception_to_agent_info_section(exc)

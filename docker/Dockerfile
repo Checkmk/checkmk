@@ -7,8 +7,6 @@ ARG CMK_VERSION="1.6.0p7"
 ARG CMK_EDITION="raw"
 
 ARG CMK_DL_URL="https://checkmk.com/support"
-# Give download credentials in "USER:PASSWORD" format. You can only use Raw Edition without
-ARG CMK_DL_CREDENTIALS=""
 
 # The following variables can be set during container init (docker run -e KEY=val)
 ARG CMK_SITE_ID
@@ -66,7 +64,10 @@ RUN set -e \
     && export DEBIAN_FRONTEND=noninteractive \
     && PKG_NAME="check-mk-${CMK_EDITION}-${CMK_VERSION}" \
     && PKG_FILE="${PKG_NAME}_0.stretch_$(dpkg --print-architecture).deb" \
+    && CREDENTIALS_URL="http://localhost:8000/secret" \
     && if [ ! -e "/${PKG_FILE}" ]; then \
+        echo "Receive download credentials from ${CREDENTIALS_URL}..." && \
+        CMK_DL_CREDENTIALS=$(curl -sS "${CREDENTIALS_URL}") && \
         echo "Downloading ${PKG_FILE}..." && \
         echo "--user \"${CMK_DL_CREDENTIALS}\"" \
             | curl -o "${PKG_FILE}" -K - "${CMK_DL_URL}/${CMK_VERSION}/${PKG_FILE}" ; \

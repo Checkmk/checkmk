@@ -29,13 +29,13 @@ import time
 import shutil
 import traceback
 import tarfile
-import subprocess
 import cStringIO
 from hashlib import sha256
 from typing import Any, Dict  # pylint: disable=unused-import
 
 import cmk.utils
 import cmk.utils.store as store
+import cmk.utils.cmk_subprocess as subprocess
 
 import cmk.gui.config as config
 import cmk.gui.multitar as multitar
@@ -119,12 +119,15 @@ def _do_create_snapshot(data):
                 "tar", "czf", path_subtar, "--ignore-failed-read", "--force-local", "-C", prefix
             ] + paths
 
-            proc = subprocess.Popen(command,
-                                    stdin=None,
-                                    close_fds=True,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE,
-                                    cwd=prefix)
+            proc = subprocess.Popen(
+                command,
+                stdin=None,
+                close_fds=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=prefix,
+                encoding="utf-8",
+            )
             _stdout, stderr = proc.communicate()
             exit_code = proc.wait()
             # Allow exit codes 0 and 1 (files changed during backup)
@@ -139,7 +142,11 @@ def _do_create_snapshot(data):
 
             # Append tar.gz subtar to snapshot
             command = ["tar", "--append", "--file=" + filename_work, filename_subtar]
-            proc = subprocess.Popen(command, cwd=work_dir, close_fds=True)
+            proc = subprocess.Popen(
+                command,
+                cwd=work_dir,
+                close_fds=True,
+            )
             proc.communicate()
             exit_code = proc.wait()
 

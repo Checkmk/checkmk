@@ -37,7 +37,6 @@ import pprint
 import sys
 import time
 import traceback
-import subprocess
 import json
 import uuid
 import urllib
@@ -55,6 +54,7 @@ import cmk
 import cmk.utils.paths
 import cmk.utils.store
 import cmk.utils.plugin_registry
+import cmk.utils.cmk_subprocess as subprocess
 
 
 @contextlib.contextmanager
@@ -301,12 +301,14 @@ def _get_os_info():
 def _current_monitoring_core():
     # type: () -> Text
     try:
-        p = subprocess.Popen(["omd", "config", "show", "CORE"],
-                             close_fds=True,
-                             shell=False,
-                             stdin=open(os.devnull),
-                             stdout=subprocess.PIPE,
-                             stderr=open(os.devnull, "w"))
+        p = subprocess.Popen(
+            ["omd", "config", "show", "CORE"],
+            close_fds=True,
+            stdin=open(os.devnull),
+            stdout=subprocess.PIPE,
+            stderr=open(os.devnull, "w"),
+            encoding="utf-8",
+        )
         return p.communicate()[0]
     except OSError as e:
         # Allow running unit tests on systems without omd installed (e.g. on travis)

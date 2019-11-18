@@ -28,9 +28,15 @@ of console input / output"""
 
 import logging
 import sys
+from typing import AnyStr, Text, IO  # pylint: disable=unused-import
+import six
 
 from cmk.utils.log import VERBOSE
 import cmk.utils.tty as tty
+from cmk.utils.encoding import (
+    ensure_bytestr,
+    ensure_unicode,
+)
 
 # NOTE: This is a hack! We abuse the global logger just to pass around the
 # verbosity setting.
@@ -44,13 +50,19 @@ logger = logging.getLogger("cmk.base")
 # would rather use "def output(text, *args, stream=sys.stdout)", but this is not possible
 # with python 2.7
 def output(text, *args, **kwargs):
+    # type: (AnyStr, *AnyStr, **IO[Text]) -> None
     if args:
         text = text % args
+
+    if six.PY3:
+        ensured_text = ensure_unicode(text)  # type: unicode
+    else:
+        ensured_text = ensure_bytestr(text)  # type: bytes
 
     stream = kwargs.get("stream", sys.stdout)
 
     try:
-        stream.write(text)
+        stream.write(ensured_text)
         stream.flush()
     except Exception:
         # TODO: Way to generic!

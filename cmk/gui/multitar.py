@@ -35,12 +35,12 @@ import shutil
 import cStringIO
 import glob
 import fnmatch
-import subprocess
 import traceback
 import itertools
 import multiprocessing
 
 import cmk.utils.paths
+import cmk.utils.cmk_subprocess as subprocess
 
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
@@ -222,12 +222,14 @@ class SnapshotCreationBase(object):
             if debug:
                 self._logger.debug(" ".join(command))
             try:
-                p = subprocess.Popen(command,
-                                     stdin=subprocess.PIPE,
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE,
-                                     shell=False,
-                                     close_fds=True)
+                p = subprocess.Popen(
+                    command,
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    close_fds=True,
+                    encoding="utf-8",
+                )
                 stdout, stderr = p.communicate()
                 if p.returncode != 0:
                     raise MKGeneralException(_("Activate changes error. Unable to prepare site snapshots. Failed command: %r; StdOut: %r; StdErr: %s") %\
@@ -480,9 +482,12 @@ def extract_domains(tar, domains):
 
         # Older versions of python tarfile handle empty subtar archives :(
         # This won't work: subtar = tarfile.open("%s/%s" % (restore_dir, tar_member.name))
-        p = subprocess.Popen(["tar", "tzf", "%s/%s" % (restore_dir, tar_member.name)],
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
+        p = subprocess.Popen(
+            ["tar", "tzf", "%s/%s" % (restore_dir, tar_member.name)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding="utf-8",
+        )
         stdout, stderr = p.communicate()
         if stderr:
             errors.append(_("Contains corrupt file %s") % tar_member.name)
@@ -535,7 +540,12 @@ def extract_domains(tar, domains):
             tar.extract(tar_member, restore_dir)
 
             command = ["tar", "xzf", "%s/%s" % (restore_dir, tar_member.name), "-C", target_dir]
-            p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            p = subprocess.Popen(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                encoding="utf-8",
+            )
             _stdout, stderr = p.communicate()
             exit_code = p.wait()
             if exit_code:

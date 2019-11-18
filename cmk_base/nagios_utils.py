@@ -24,10 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import subprocess
-
 import cmk.utils.paths
 import cmk.utils.tty as tty
+import cmk.utils.cmk_subprocess as subprocess
 
 import cmk_base.console
 
@@ -37,8 +36,14 @@ def do_check_nagiosconfig():
     cmk_base.console.verbose("Running '%s'\n" % subprocess.list2cmdline(command))
     cmk_base.console.output("Validating Nagios configuration...")
 
-    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
-    (stdout, stderr) = p.communicate()
+    p = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        close_fds=True,
+        encoding="utf-8",
+    )
+    stdout, stderr = p.communicate()
     exit_status = p.returncode
     if not exit_status:
         cmk_base.console.output(tty.ok + "\n")

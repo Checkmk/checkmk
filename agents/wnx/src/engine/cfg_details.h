@@ -26,6 +26,8 @@ std::wstring FindServiceImagePath(std::wstring_view service_name) noexcept;
 std::filesystem::path ExtractPathFromServiceName(
     std::wstring_view service_name) noexcept;
 
+bool RecursivelyDeleteDefaultDataFolder();
+
 class Folders {
 public:
     // if ServiceValidName set, then we MUST find path
@@ -105,10 +107,14 @@ public:
 
     inline std::filesystem::path getData() const { return data_; }
 
+    static std::filesystem::path getDefaultDataFolder() {
+        return makeDefaultDataFolder(L"", CreateMode::with_path);
+    }
+
 private:
     // make [recursive] folder in windows
     // returns path if folder was created successfully
-    std::filesystem::path makeDefaultDataFolder(
+    static std::filesystem::path makeDefaultDataFolder(
         std::wstring_view AgentDataFolder, CreateMode mode);
     std::filesystem::path root_;          // where is root
     std::filesystem::path data_;          // ProgramData

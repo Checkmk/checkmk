@@ -656,6 +656,28 @@ void Folders::cleanAll() {
     private_logs_.clear();
 }
 
+// This function should be tested only manually
+bool RecursivelyDeleteDefaultDataFolder() {
+    namespace fs = std::filesystem;
+
+    std::error_code ec;
+    auto path = Folders::getDefaultDataFolder();
+    if (fs::exists(path / dirs::kBakery) &&
+        fs::exists(path / dirs::kAgentPlugins)) {
+#if 1
+        XLOG::details::LogWindowsEventAlways(
+            XLOG::EventLevel::warning, 99,
+            "No File Deletion because it is not tested");
+#else
+        XLOG::details::LogWindowsEventInfo(99, "ExecFile Deletion ");
+        fs::remove_all(path, ec);
+#endif
+        return true;
+    }
+
+    return false;
+}
+
 //
 // Not API, but quite important
 // Create project defined Directory Structure in the Data Folder

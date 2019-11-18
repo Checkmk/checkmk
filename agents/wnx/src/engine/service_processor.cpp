@@ -675,7 +675,8 @@ bool SystemMailboxCallback(const cma::MailSlot*, const void* data, int len,
             std::string cmd(static_cast<const char*>(dt->data()),
                             static_cast<size_t>(dt->length()));
             std::string peer(cma::commander::kMainPeer);
-            cma::commander::RunCommand(peer, cmd);
+            auto rcp = cma::commander::ObtainRunCommandProcessor();
+            if (rcp) rcp(peer, cmd);
 
             break;
         }

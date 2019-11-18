@@ -262,5 +262,6 @@ private:
     FRIEND_TEST(CarrierTest, EstablishShutdown);
 #endif
 };
+void InformByMailSlot(std::string_view mail_slot, std::string_view cmd);
 
 };  // namespace cma::carrier

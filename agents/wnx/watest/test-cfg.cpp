@@ -24,6 +24,8 @@
 
 // we want to avoid those data public
 namespace cma {
+void ResetCleanOnExit();
+
 namespace details {
 extern bool G_Service;
 extern bool G_Test;
@@ -373,6 +375,17 @@ TEST(CmaCfg, ReloadCfg) {
     cma::LoadConfig(AppType::test, {});
     auto id2 = GetCfg().uniqId();
     EXPECT_TRUE(id2 > id);
+}
+
+TEST(Cma, Clean) {
+    ASSERT_FALSE(cma::IsCleanOnExit());
+    cma::CleanOnExit();
+    ASSERT_FALSE(cma::IsCleanOnExit());
+    cma::details::G_Service = true;
+    cma::CleanOnExit();
+    EXPECT_TRUE(cma::IsCleanOnExit());
+    cma::details::G_Service = false;
+    cma::ResetCleanOnExit();
 }
 
 TEST(Cma, PushPop) {

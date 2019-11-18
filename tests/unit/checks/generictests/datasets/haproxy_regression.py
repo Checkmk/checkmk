@@ -59,16 +59,28 @@ info = [
 ]
 
 discovery = {
-    'frontend': [(u'BLABLABLABLA', None), (u'https_t3test.tgic.de', None)],
-    'server': [(u'BLABLABFO/ELEADC05', None), (u't3test/t3test', None)]
+    '': [],
+    'frontend': [(u'BLABLABLABLA', {}), (u'https_t3test.tgic.de', {})],
+    'server': [(u'BLABLABFO/ELEADC05', {}), (u't3test/t3test', {})]
 }
 
 checks = {
     'frontend': [
         (
-            u'BLABLABLABLA', {}, [
+            u'BLABLABLABLA', None, [  # handle old params
+                (0, u'Status: OPEN', []),
                 (
-                    0, u'OPEN, Session Rate: 0.00/s', [
+                    0, 'Session Rate: 0.00', [
+                        ('session_rate', 0.0, None, None, None, None)
+                    ]
+                )
+            ]
+        ),
+        (
+            u'BLABLABLABLA', {}, [
+                (0, u'Status: OPEN', []),
+                (
+                    0, 'Session Rate: 0.00', [
                         ('session_rate', 0.0, None, None, None, None)
                     ]
                 )
@@ -76,8 +88,9 @@ checks = {
         ),
         (
             u'https_t3test.tgic.de', {}, [
+                (0, u'Status: OPEN', []),
                 (
-                    0, u'OPEN, Session Rate: 0.00/s', [
+                    0, 'Session Rate: 0.00', [
                         ('session_rate', 0.0, None, None, None, None)
                     ]
                 )
@@ -86,13 +99,27 @@ checks = {
     ],
     'server': [
         (
+            u'BLABLABFO/ELEADC05', None, [  # handle old params
+                (0, u'Status: UP', []),
+                (0, 'Active', []),
+                (0, u'Layer Check: L4OK', []),
+                (0, 'Up since 10 h', []),
+            ]
+        ),
+        (
             u'BLABLABFO/ELEADC05', {}, [
-                (0, u'Status: UP since 10 h, Layer Check: L4OK, active', [])
+                (0, u'Status: UP', []),
+                (0, 'Active', []),
+                (0, u'Layer Check: L4OK', []),
+                (0, 'Up since 10 h', []),
             ]
         ),
         (
             u't3test/t3test', {}, [
-                (0, u'Status: UP since 4.2 d, Layer Check: L4OK, active', [])
+                (0, u'Status: UP', []),
+                (0, 'Active', []),
+                (0, u'Layer Check: L4OK', []),
+                (0, 'Up since 4.2 d', []),
             ]
         )
     ]

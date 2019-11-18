@@ -425,7 +425,7 @@ def parse_file(site, host_name, file_name, hidecontext = False):
     except Exception, e:
         if config.debug:
             raise
-        raise MKGeneralException(html.render_text(_("Cannot parse log file %s: %s") % (file_name, e)))
+        raise MKGeneralException(_("Cannot parse log file %s: %s") % (file_name, e))
 
     return log_chunks
 

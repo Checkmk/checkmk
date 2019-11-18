@@ -214,7 +214,9 @@ from cmk.gui.watolib.rulesets import (
 )
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.hosts_and_folders import (
+    CREFolder,
     Folder,
+    CREHost,
     Host,
     validate_all_hosts,
     call_hook_hosts_changed,

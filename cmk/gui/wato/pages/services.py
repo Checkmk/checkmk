@@ -148,8 +148,8 @@ DiscoveryOptions = NamedTuple("DiscoveryOptions", [
 ])
 
 StartDiscoveryRequest = NamedTuple("StartDiscoveryRequest", [
-    ("host", watolib.Host),
-    ("folder", watolib.Folder),
+    ("host", watolib.CREHost),
+    ("folder", watolib.CREFolder),
     ("options", DiscoveryOptions),
 ])
 
@@ -975,7 +975,7 @@ class DiscoveryPageRenderer(object):
         return sha256(key.encode('utf-8')).hexdigest()
 
     def __init__(self, host, options):
-        # type: (watolib.Host, DiscoveryOptions) -> None
+        # type: (watolib.CREHost, DiscoveryOptions) -> None
         super(DiscoveryPageRenderer, self).__init__()
         self._host = host
         self._options = options

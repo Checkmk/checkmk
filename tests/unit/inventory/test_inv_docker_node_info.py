@@ -1,64 +1,45 @@
-import os
 import pytest
 
-INV_FILE = os.path.join(os.path.dirname(__file__), '../../../inventory/docker_node_info')
 
+@pytest.mark.parametrize('parsed, inventory_data, status_data', [
+    ({
+        "nothing": "usable"
+    }, {}, {}),
+    ({
+        'ServerVersion': u'1.17',
+        'IndexServerAddress': u'https://registry.access.redhat.com/v1/',
+        u'Containers': 11,
+        u'ContainersPaused': 0,
+        u'ContainersRunning': 11,
+        u'ContainersStopped': 0,
+        u'Images': 22,
+        u'Swarm': {
+            'LocalNodeState': u'active',
+            'NodeID': u'Hier koennte ihre Werbung stehen.'
+        },
+    }, {
+        "version": "1.17",
+        "registry": u'https://registry.access.redhat.com/v1/',
+        "swarm_state": "active",
+        "swarm_node_id": u'Hier koennte ihre Werbung stehen.',
+    }, {
+        "num_containers_total": 11,
+        "num_containers_running": 11,
+        "num_containers_paused": 0,
+        "num_containers_stopped": 0,
+        "num_images": 22,
+    }),
+])
+def test_inv_docker_node_info(inventory_plugin_manager, parsed, inventory_data, status_data):
+    inv_plugin = inventory_plugin_manager.get_inventory_plugin('docker_node_info')
+    inventory_tree_data, status_tree_data = inv_plugin.run_inventory(parsed)
 
-class MockTree(object):
-    def __init__(self):
-        self.data = {}
+    path = "software.applications.docker."
+    assert path in inventory_tree_data
+    assert path in status_tree_data
 
-    def get_dict(self, path):
-        return self.data.setdefault(path, dict())
+    node_inventory_data = inventory_tree_data[path]
+    node_status_data = status_tree_data[path]
 
-    def get_list(self, path):
-        return self.data.setdefault(path, list())
-
-
-@pytest.mark.parametrize('parsed,inv_data,stat_data',
-                         [({
-                             "nothing": "usable"
-                         }, {
-                             "software.applications.docker.": {}
-                         }, {
-                             "software.applications.docker.": {}
-                         }),
-                          ({
-                              'ServerVersion': u'1.17',
-                              'IndexServerAddress': u'https://registry.access.redhat.com/v1/',
-                              u'Containers': 11,
-                              u'ContainersPaused': 0,
-                              u'ContainersRunning': 11,
-                              u'ContainersStopped': 0,
-                              u'Images': 22,
-                              u'Swarm': {
-                                  'LocalNodeState': u'active',
-                                  'NodeID': u'Hier koennte ihre Werbung stehen.'
-                              },
-                          }, {
-                              "software.applications.docker.": {
-                                  "version": "1.17",
-                                  "registry": u'https://registry.access.redhat.com/v1/',
-                                  "swarm_state": "active",
-                                  "swarm_node_id": u'Hier koennte ihre Werbung stehen.',
-                              },
-                          }, {
-                              "software.applications.docker.": {
-                                  "num_containers_total": 11,
-                                  "num_containers_running": 11,
-                                  "num_containers_paused": 0,
-                                  "num_containers_stopped": 0,
-                                  "num_images": 22,
-                              },
-                          })])
-def test_inv_docker_node_info(parsed, inv_data, stat_data):
-    inventory_tree = MockTree()
-    status_data_tree = MockTree()
-
-    context = {'inv_info': {}}
-    exec (open(INV_FILE).read(), context)
-    inv_docker_node_info = context["inv_docker_node_info"]
-
-    inv_docker_node_info(parsed, inventory_tree, status_data_tree)
-    assert inventory_tree.data == inv_data
-    assert status_data_tree.data == stat_data
+    assert sorted(node_inventory_data.items()) == sorted(inventory_data.items())
+    assert sorted(node_status_data.items()) == sorted(status_data.items())

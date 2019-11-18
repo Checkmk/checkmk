@@ -399,3 +399,95 @@ def on_time(utctime, timezone):
         yield
     os.environ.pop('TZ')
     time.tzset()
+
+
+#.
+#   .--Inventory plugins---------------------------------------------------.
+#   |            ___                      _                                |
+#   |           |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _              |
+#   |            | || '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |             |
+#   |            | || | | \ V /  __/ | | | || (_) | |  | |_| |             |
+#   |           |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |             |
+#   |                                                   |___/              |
+#   |                         _             _                              |
+#   |                   _ __ | |_   _  __ _(_)_ __  ___                    |
+#   |                  | '_ \| | | | |/ _` | | '_ \/ __|                   |
+#   |                  | |_) | | |_| | (_| | | | | \__ \                   |
+#   |                  | .__/|_|\__,_|\__, |_|_| |_|___/                   |
+#   |                  |_|            |___/                                |
+#   '----------------------------------------------------------------------'
+
+
+class MockStructuredDataTree(object):
+    def __init__(self):
+        self.data = {}
+
+    def get_dict(self, path):
+        return self.data.setdefault(path, dict())
+
+    def get_list(self, path):
+        return self.data.setdefault(path, list())
+
+
+class InventoryPluginManager(object):
+    def load(self):
+        import cmk_base.inventory_plugins as inv_plugins
+        import cmk_base.check_api as check_api
+        g_inv_tree = MockStructuredDataTree()
+        g_status_tree = MockStructuredDataTree()
+
+        def get_inventory_context():
+            return {
+                "inv_tree_list": g_inv_tree.get_list,
+                "inv_tree": g_inv_tree.get_dict,
+            }
+
+        inv_plugins.load_plugins(check_api.get_check_api_context, get_inventory_context)
+        return g_inv_tree, g_status_tree
+
+    def get_inventory_plugin(self, name):
+        g_inv_tree, g_status_tree = self.load()
+        return InventoryPlugin(name, g_inv_tree, g_status_tree)
+
+
+class MissingInvInfoError(KeyError):
+    pass
+
+
+class InventoryPlugin(object):
+    def __init__(self, name, g_inv_tree, g_status_tree):
+        import cmk_base.inventory_plugins as inv_plugins
+        super(InventoryPlugin, self).__init__()
+        self.name = name
+        if self.name not in inv_plugins.inv_info:
+            raise MissingInvInfoError(self.name)
+        self.info = inv_plugins.inv_info[self.name]
+        self.g_inv_tree = g_inv_tree
+        self.g_status_tree = g_status_tree
+
+    def run_inventory(self, *args):
+        # args contain info/parsed and/or params
+        inv_function = self.info.get("inv_function")
+        if not inv_function:
+            raise MissingInvInfoError("Inventory plugin '%s' " % self.name +
+                                      "has no inv function defined.")
+
+        # As in inventory._do_inv_for_realhost
+        import inspect
+        inv_function_args = inspect.getargspec(inv_function).args
+
+        inventory_tree = MockStructuredDataTree()
+        status_data_tree = MockStructuredDataTree()
+        kwargs = {}
+        for dynamic_arg_name, dynamic_arg_value in [
+            ("inventory_tree", inventory_tree),
+            ("status_data_tree", status_data_tree),
+        ]:
+            if dynamic_arg_name in inv_function_args:
+                inv_function_args.remove(dynamic_arg_name)
+                kwargs[dynamic_arg_name] = dynamic_arg_value
+
+        inv_function(*args, **kwargs)
+        if kwargs:
+            return inventory_tree.data, status_data_tree.data
+        return self.g_inv_tree.data, self.g_status_tree.data

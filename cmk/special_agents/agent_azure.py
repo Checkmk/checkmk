@@ -173,6 +173,10 @@ class ApiError(RuntimeError):
     pass
 
 
+class ApiErrorMissingData(ApiError):
+    pass
+
+
 class BaseApiClient(object):
     __METACLASS__ = abc.ABCMeta
 
@@ -647,6 +651,8 @@ class UsageClient(DataCache):
                 return []
             raise
         LOGGER.debug('unfiltered usage details: %d', len(unfiltered_usages))
+        if not unfiltered_usages:  # do not save this in the cache!
+            raise ApiErrorMissingData('Azure API did not return any usage details')
 
         yesterday = (NOW - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
         usages = [u for u in unfiltered_usages if u['properties']['usageEnd'].startswith(yesterday)]
@@ -845,6 +851,8 @@ def main_subscription(args, selector, subscription):
         usage_client.write_sections(monitored_groups)
     except () if args.debug else Exception as exc:
         write_exception_to_agent_info_section(exc)
+    except ApiErrorMissingData as exc:
+        LOGGER.warning("%s", exc)
 
     func_args = ((mgmt_client, resource, args) for resource in resources)
     mapper = get_mapper(args.debug, args.sequential, args.timeout)

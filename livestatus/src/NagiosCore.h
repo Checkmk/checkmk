@@ -32,11 +32,12 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "Metric.h"
 #include "MonitoringCore.h"
+#include "RRDColumn.h"
 #include "Store.h"
 #include "Triggers.h"
 #include "auth.h"
-#include "contact_fwd.h"
 #include "data_encoding.h"
 #include "nagios.h"
 class InputBuffer;
@@ -106,9 +107,14 @@ public:
     std::filesystem::path structuredStatusPath() const override;
     std::filesystem::path crashReportPath() const override;
     std::filesystem::path pnpPath() const override;
+    std::filesystem::path rrdPath() const;
     std::filesystem::path historyFilePath() const override;
     std::filesystem::path logArchivePath() const override;
     std::filesystem::path rrdcachedSocketPath() const override;
+
+    MetricLocation metricLocation(const void *const object,
+                                  const Metric::MangledName &,
+                                  const RRDColumn::Table &) const override;
 
     Encoding dataEncoding() override;
     size_t maxResponseSize() override;

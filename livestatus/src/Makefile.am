@@ -37,6 +37,7 @@ LIBS_DIR := libs
 PACKAGE_ASIO := $(abs_top_srcdir)/omd/packages/asio
 ASIO_VERSION := asio-asio-1-14-0
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
+RRDTOOL_SRC_DIR := $(abs_top_srcdir)/omd/rrdtool-1.7.1/src
 
 PACKAGE_GOOGLETEST := $(abs_top_srcdir)/omd/packages/googletest
 GOOGLETEST_VERSION := googletest-release-1.10.0
@@ -47,11 +48,14 @@ GOOGLETEST_INCLUDE := $(INCLUDES_DIR)/googletest
 AM_CPPFLAGS = \
     -I.. \
     -isystem $(ASIO_INCLUDE) \
-    @RE2_CPPFLAGS@
+    @RE2_CPPFLAGS@ \
+    -I$(RRDTOOL_SRC_DIR)
 
 AM_LDFLAGS = \
     -static-libstdc++ \
-    @RE2_LDFLAGS@
+    @RE2_LDFLAGS@ \
+    -lrrd \
+    -L$(RRDTOOL_SRC_DIR)/.libs
 
 bin_PROGRAMS = unixcat
 noinst_PROGRAMS = test_neb
@@ -73,13 +77,15 @@ test_neb_SOURCES = \
 $(test_neb_SOURCES): $(ASIO_INCLUDE) $(GOOGLETEST_INCLUDE)
 test_neb_CPPFLAGS = \
     $(AM_CPPFLAGS) \
-    -I$(GOOGLETEST_INCLUDE)
+    -I$(GOOGLETEST_INCLUDE) \
+    -I$(RRDTOOL_SRC_DIR)/src
 test_neb_LDADD = \
     liblivestatus.a \
     -lstdc++fs \
     @RE2_LIBS@ \
     $(LIBS_DIR)/libgtest.a \
     $(LIBS_DIR)/libgtest_main.a \
+    -lrrd \
     -lpthread
 
 unit-test: test_neb$(EXEEXT)
@@ -116,6 +122,9 @@ liblivestatus_a_SOURCES = \
         DynamicColumn.cc \
         DynamicEventConsoleReplicationColumn.cc \
         DynamicHostFileColumn.cc \
+        DynamicHostRRDColumn.cc \
+        DynamicRRDColumn.cc \
+        DynamicServiceRRDColumn.cc \
         EventConsoleConnection.cc \
         FileSystemHelper.cc \
         Filter.cc \
@@ -124,6 +133,7 @@ liblivestatus_a_SOURCES = \
         HostGroupsColumn.cc \
         HostListColumn.cc \
         HostListStateColumn.cc \
+        HostRRDColumn.cc \
         HostServiceState.cc \
         HostSpecialDoubleColumn.cc \
         HostSpecialIntColumn.cc \
@@ -162,11 +172,13 @@ liblivestatus_a_SOURCES = \
         RendererJSON.cc \
         RendererPython.cc \
         RendererPython3.cc \
+        RRDColumn.cc \
         ServiceContactsColumn.cc \
         ServiceGroupMembersColumn.cc \
         ServiceGroupsColumn.cc \
         ServiceListColumn.cc \
         ServiceListStateColumn.cc \
+        ServiceRRDColumn.cc \
         ServiceSpecialDoubleColumn.cc \
         ServiceSpecialIntColumn.cc \
         StatsColumn.cc \

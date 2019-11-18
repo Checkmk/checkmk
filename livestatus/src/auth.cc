@@ -24,6 +24,7 @@
 
 #include "auth.h"
 #include "MonitoringCore.h"
+#include "contact_fwd.h"
 
 contact *unknown_auth_user() { return reinterpret_cast<contact *>(0xdeadbeaf); }
 

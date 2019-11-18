@@ -32,6 +32,8 @@
 #include <tuple>
 #include <unordered_map>
 #include <vector>
+#include "Metric.h"
+#include "RRDColumn.h"
 #include "StringUtils.h"
 #include "Triggers.h"
 #include "auth.h"
@@ -129,6 +131,10 @@ public:
     virtual std::filesystem::path historyFilePath() const = 0;
     virtual std::filesystem::path logArchivePath() const = 0;
     virtual std::filesystem::path rrdcachedSocketPath() const = 0;
+
+    virtual MetricLocation metricLocation(const void *const object,
+                                          const Metric::MangledName &,
+                                          const RRDColumn::Table &) const = 0;
 
     virtual Encoding dataEncoding() = 0;
     virtual size_t maxResponseSize() = 0;

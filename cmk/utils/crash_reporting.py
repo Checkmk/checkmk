@@ -30,6 +30,7 @@ developers for analyzing the crashes."""
 import abc
 import errno
 import base64
+import contextlib
 import inspect
 import os
 import pprint
@@ -40,6 +41,7 @@ import subprocess
 import json
 import uuid
 import urllib
+from itertools import islice
 from typing import (Type, Any, Tuple, Dict, Text, Optional)  # pylint: disable=unused-import
 
 try:
@@ -53,6 +55,15 @@ import cmk
 import cmk.utils.paths
 import cmk.utils.store
 import cmk.utils.plugin_registry
+
+
+@contextlib.contextmanager
+def suppress(*exc):
+    # This is contextlib.suppress from Python 3.2
+    try:
+        yield
+    except exc:
+        pass
 
 
 # The default JSON encoder raises an exception when detecting unknown types. For the crash
@@ -94,16 +105,27 @@ class CrashReportStore(object):
     def _cleanup_old_crashes(self, base_dir):
         # type: (Path) -> None
         """Simple cleanup mechanism: For each crash type we keep up to X crashes"""
-        for delete_crash_dir in sorted(base_dir.iterdir(), reverse=True)[self._keep_num_crashes:]:
-            # Remove crash report contents
-            for f in delete_crash_dir.iterdir():
+        def uuid_paths(path):
+            # type: (Path) -> Path
+            for p in path.iterdir():
                 try:
+                    uuid.UUID(str(p.name))
+                except (ValueError, TypeError):
+                    continue
+                yield p
+
+        for crash_dir in islice(
+                sorted(uuid_paths(base_dir),
+                       key=lambda p: uuid.UUID(str(p.name)).time,
+                       reverse=True), self._keep_num_crashes, None):  # type: Path
+            # Remove crash report contents
+            for f in crash_dir.iterdir():
+                with suppress(OSError):
                     f.unlink()
-                except OSError:
-                    pass
 
             # And finally remove the crash report directory
-            delete_crash_dir.rmdir()
+            with suppress(OSError):
+                crash_dir.rmdir()
 
     def load_from_directory(self, crash_dir):
         # type: (Path) -> ABCCrashReport

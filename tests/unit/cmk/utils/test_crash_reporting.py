@@ -1,6 +1,9 @@
 # pylint: disable=redefined-outer-name
 import copy
+import itertools
 import shutil
+import struct
+import uuid
 import pytest  # type: ignore
 
 import cmk.utils.paths
@@ -100,7 +103,7 @@ def test_format_var_for_export_strip_nested_dict_with_list():
 
 
 @pytest.fixture
-def base_dir():
+def crash_dir():
     dir = cmk.utils.paths.crash_dir / "test"
     yield dir
     try:
@@ -109,21 +112,31 @@ def base_dir():
         pass
 
 
-@pytest.mark.parametrize("n_crashes", [15, 45])
-def test_crash_report_store_cleanup(base_dir, n_crashes):
-    assert not frozenset(base_dir.glob("*"))
+@pytest.fixture
+def patch_uuid1(monkeypatch):
+    """Generate a uuid1 with known values."""
+    c = itertools.count()
 
-    crash_ids = set()
+    def uuid1(node=None, clock_seq=None):
+        return uuid.UUID(bytes=struct.pack(">I", next(c)) + 12 * "\0")
+
+    monkeypatch.setattr("uuid.uuid1", uuid1)
+
+
+@pytest.mark.usefixtures("patch_uuid1")
+@pytest.mark.parametrize("n_crashes", [15, 45])
+def test_crash_report_store_cleanup(crash_dir, n_crashes):
     store = CrashReportStore()
+    assert not set(crash_dir.glob("*"))
+
+    crash_ids = []
     for num in range(n_crashes):
         try:
             raise ValueError("Crash #%d" % num)
         except ValueError:
             crash = UnitTestCrashReport.from_exception()
             store.save(crash)
-            crash_ids.add(crash.ident_to_text())
+            crash_ids.append(crash.ident_to_text())
 
-    assert len(crash_ids) == n_crashes
-    # TODO: Decide which crash reports should remain.
-    assert len(frozenset(base_dir.glob("*"))) <= store._keep_num_crashes
-    assert frozenset(e.name for e in base_dir.glob("*")).issubset(crash_ids)
+    assert len(set(crash_dir.glob("*"))) <= store._keep_num_crashes
+    assert {e.name for e in crash_dir.glob("*")} == set(crash_ids[-store._keep_num_crashes:])

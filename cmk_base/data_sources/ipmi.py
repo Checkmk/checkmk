@@ -24,10 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import pyghmi.ipmi.command as ipmi_cmd
-import pyghmi.ipmi.sdr as ipmi_sdr
-import pyghmi.constants as ipmi_const
-from pyghmi.exceptions import IpmiException
+import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
+import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import]
+import pyghmi.constants as ipmi_const  # type: ignore[import]
+from pyghmi.exceptions import IpmiException  # type: ignore[import]
 
 import cmk.utils.debug
 from cmk.utils.log import VERBOSE

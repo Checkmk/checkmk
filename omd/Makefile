@@ -306,7 +306,8 @@ deb: debian/changelog debian/control
 	    -i.gitignore -I.gitignore \
 	    --no-sign \
 	    -rfakeroot \
-	    -- clean binary-arch
+	    -- binary-arch
+#-- clean binary-arch
 
 setversion:
 	NEW_OMD_VERSION=$(NEW_VERSION_STRING).$(EDITION_SHORT)$(DEMO_SUFFIX) ; \

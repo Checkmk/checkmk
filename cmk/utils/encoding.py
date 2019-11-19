@@ -25,6 +25,9 @@
 # Boston, MA 02110-1301 USA.
 """This module provides some bytes-unicode encoding functions"""
 
+from typing import (  # pylint: disable=unused-import
+    AnyStr, Text, Optional,
+)
 import six
 
 
@@ -35,6 +38,7 @@ def convert_to_unicode(
         fallback_encoding="latin-1",
         on_error=None,
 ):
+    # type: (AnyStr, Optional[AnyStr], AnyStr, AnyStr, Optional[Text]) -> Text
     if isinstance(value, six.text_type):
         return value
 
@@ -55,18 +59,21 @@ def convert_to_unicode(
 
 
 def ensure_unicode(value):
+    # type: (AnyStr) -> Text
     if isinstance(value, six.text_type):
         return value
     return value.decode("utf-8")
 
 
 def ensure_bytestr(value):
+    # type: (AnyStr) -> bytes
     if isinstance(value, six.binary_type):
         return value
     return value.encode("utf-8")
 
 
 def make_utf8(value):
+    # type: (AnyStr) -> bytes
     if isinstance(value, six.text_type):
         return value.encode('utf-8')
     return value

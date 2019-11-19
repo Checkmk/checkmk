@@ -36,6 +36,7 @@ import fcntl
 import multiprocessing
 from contextlib import contextmanager
 import traceback
+from typing import Any, Dict, List, Set, Tuple  # pylint: disable=unused-import
 
 import six
 
@@ -175,21 +176,21 @@ g_bi_cache_manager = None
 g_bi_sitedata_manager = None
 g_bi_job_manager = None
 g_services_items = None
-g_services = {}
-g_services_by_hostname = {}
-g_assumptions = {}
-g_remaining_refs = []
+g_services = {}  # type: Dict[Tuple[Any, Any], Tuple[Any, Any, Any, Any, Any]]
+g_services_by_hostname = {}  # type: Dict[str, List[Tuple[Any, Tuple[Any, Any, Any, Any, Any]]]]
+g_assumptions = {}  # type: Dict[Any, Any]
+g_remaining_refs = []  # type: List[Tuple[Any, Any, Any]]
 # dictionary with hosts and its compiled services
-g_compiled_services_leafes = {}
+g_compiled_services_leafes = {}  # type: Dict[Any, Set[Any]]
 
-g_tree_cache = {}
+g_tree_cache = {}  # type: Dict[str, Any]
 g_config_information = None  # for invalidating cache after config change
 did_compilation = False  # Is set to true if anything has been compiled
 
-regex_host_hit_cache = set()
-regex_host_miss_cache = set()
-regex_svc_hit_cache = set()
-regex_svc_miss_cache = set()
+regex_host_hit_cache = set()  # type: Set[Tuple[Any, Any]]
+regex_host_miss_cache = set()  # type: Set[Tuple[Any, Any]]
+regex_svc_hit_cache = set()  # type: Set[Tuple[Any, Any]]
+regex_svc_miss_cache = set()  # type: Set[Tuple[Any, Any]]
 
 
 # Load the static configuration of all services and hosts (including tags)
@@ -3568,7 +3569,7 @@ def get_state_name(node):
     return _service_state_names()[node[0]['state']]
 
 
-_rule_to_pack_lookup = {}
+_rule_to_pack_lookup = {}  # type: Dict[str, str]
 
 
 def migrate_bi_configuration():

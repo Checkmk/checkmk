@@ -32,6 +32,7 @@ import tarfile
 import subprocess
 import cStringIO
 from hashlib import sha256
+from typing import Any, Dict  # pylint: disable=unused-import
 
 import cmk.utils
 import cmk.utils.store as store
@@ -44,7 +45,7 @@ from cmk.gui.i18n import _
 var_dir = cmk.utils.paths.var_dir + "/wato/"
 snapshot_dir = var_dir + "snapshots/"
 
-backup_domains = {}
+backup_domains = {}  # type: Dict[str, Dict[str, Any]]
 
 
 # TODO: Remove once new changes mechanism has been implemented

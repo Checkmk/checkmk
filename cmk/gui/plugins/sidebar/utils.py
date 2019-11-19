@@ -28,6 +28,7 @@
 import abc
 import traceback
 import json
+from typing import List  #pylint: disable=unused-import
 import six
 
 import cmk.utils.plugin_registry
@@ -45,7 +46,7 @@ from cmk.gui.permissions import (
 # Constants to be used in snapins
 snapin_width = 230
 
-search_plugins = []
+search_plugins = []  # type: List
 
 
 @permission_section_registry.register

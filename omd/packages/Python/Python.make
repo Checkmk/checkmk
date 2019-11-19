@@ -6,12 +6,14 @@ PYTHON_DIR := $(PYTHON)-$(PYTHON_VERS)
 PYTHON_BUILD_ID := 0
 
 PYTHON_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-build
-PYTHON_BUILD_UNCACHED := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-build-uncached
-PYTHON_BUILD_PKG_UPLOAD := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-build-pkg-upload
+PYTHON_CACHE_PKG_UPLOAD := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-cache-pkg-upload
 PYTHON_BUILD_TMP_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-install-for-build
 PYTHON_COMPILE := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-compile
-PYTHON_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-install
 PYTHON_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-patching
+PYTHON_INTERMEDIATE_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-install-intermediate
+PYTHON_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-install
+
+PYTHON_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(PYTHON_DIR)
 
 # HACK!
 PYTHON_PACKAGE_DIR := $(PACKAGE_DIR)/$(PYTHON)
@@ -37,17 +39,14 @@ Python-install: $(PYTHON_INSTALL)
 $(PYTHON_BUILD): $(PYTHON_SITECUSTOMIZE_COMPILED)
 	$(TOUCH) $@
 
-PYTHON_BUILD_PKG_PATH := $(call build_pkg_path,$(PYTHON_DIR),$(PYTHON_BUILD_ID))
+PYTHON_CACHE_PKG_PATH := $(call cache_pkg_path,$(PYTHON_DIR),$(PYTHON_BUILD_ID))
 
-$(PYTHON_BUILD_PKG_PATH):
-	$(call build_pkg_archive,$@,$(PYTHON_DIR),$(PYTHON_BUILD_ID),$(PYTHON_BUILD_UNCACHED))
+$(PYTHON_CACHE_PKG_PATH):
+	$(call pack_pkg_archive,$@,$(PYTHON_DIR),$(PYTHON_BUILD_ID),$(PYTHON_INTERMEDIATE_INSTALL))
 
-$(PYTHON_BUILD_PKG_UPLOAD): $(PYTHON_BUILD_PKG_PATH)
-	$(call unpack_pkg_archive,$(PYTHON_BUILD_PKG_PATH),$(PYTHON_DIR))
-	$(call upload_pkg_archive,$(PYTHON_BUILD_PKG_PATH),$(PYTHON_DIR),$(PYTHON_BUILD_ID))
-	$(TOUCH) $@
-
-$(PYTHON_BUILD_UNCACHED): $(PYTHON_COMPILE)
+$(PYTHON_CACHE_PKG_UPLOAD): $(PYTHON_CACHE_PKG_PATH)
+	$(call unpack_pkg_archive,$(PYTHON_CACHE_PKG_PATH),$(PYTHON_DIR))
+	$(call upload_pkg_archive,$(PYTHON_CACHE_PKG_PATH),$(PYTHON_DIR),$(PYTHON_BUILD_ID))
 	$(TOUCH) $@
 
 $(PYTHON_COMPILE): $(PYTHON_PATCHING) $(PYTHON_TMP_BIN_DIR)/gcc $(PYTHON_TMP_BIN_DIR)/g++
@@ -72,7 +71,7 @@ $(PYTHON_COMPILE): $(PYTHON_PATCHING) $(PYTHON_TMP_BIN_DIR)/gcc $(PYTHON_TMP_BIN
 # Install python files (needed by dependent packages like mod_python,
 # python-modules, ...) during compilation and install targets.
 # NOTE: -j1 seems to be necessary when --enable-optimizations is used
-$(PYTHON_BUILD_TMP_INSTALL): $(PYTHON_BUILD_PKG_UPLOAD) $(PYTHON_TMP_BIN_DIR)/gcc $(PYTHON_TMP_BIN_DIR)/g++
+$(PYTHON_BUILD_TMP_INSTALL): $(PYTHON_COMPILE) $(PYTHON_TMP_BIN_DIR)/gcc $(PYTHON_TMP_BIN_DIR)/g++
 	$(PYTHON_TMP_BIN_PATH_VAR) ; $(MAKE) -j1 -C $(PYTHON_DIR) DESTDIR=$(PACKAGE_PYTHON_DESTDIR) install
 	$(TOUCH) $@
 
@@ -118,20 +117,24 @@ $(PYTHON_TMP_BIN_DIR)/g++:
 	$(RM) $(PYTHON_TMP_BIN_DIR)/g++ ; \
 	$(LN) -s "$$CXX" $(PYTHON_TMP_BIN_DIR)/g++
 
-$(PYTHON_INSTALL): $(PYTHON_BUILD) $(PYTHON_TMP_BIN_DIR)/gcc $(PYTHON_TMP_BIN_DIR)/g++
+$(PYTHON_INTERMEDIATE_INSTALL): $(PYTHON_BUILD) $(PYTHON_TMP_BIN_DIR)/gcc $(PYTHON_TMP_BIN_DIR)/g++
 # Install python files (needed by dependent packages like mod_python,
 # python-modules, ...) during compilation and install targets.
 # NOTE: -j1 seems to be necessary when --enable-optimizations is used
-	$(PYTHON_TMP_BIN_PATH_VAR) ; $(MAKE) -j1 -C $(PYTHON_DIR) DESTDIR=$(DESTDIR)$(OMD_ROOT) install
+	$(PYTHON_TMP_BIN_PATH_VAR) ; $(MAKE) -j1 -C $(PYTHON_DIR) DESTDIR=$(PYTHON_INSTALL_DIR) install
 # Cleanup unused stuff: We ship 2to3 from Python3 and we don't need some example proxy.
-	$(RM) $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,2to3 smtpd.py)
+	$(RM) $(addprefix $(PYTHON_INSTALL_DIR)/bin/,2to3 smtpd.py)
 # Fix python interpreter for kept scripts
-	$(SED) -i '1s|^#!.*/python2\.7$$|#!/usr/bin/env python2|' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,easy_install easy_install-2.7 idle pip pip2 pip2.7 pydoc python2.7-config)
+	$(SED) -i '1s|^#!.*/python2\.7$$|#!/usr/bin/env python2|' $(addprefix $(PYTHON_INSTALL_DIR)/bin/,easy_install easy_install-2.7 idle pip pip2 pip2.7 pydoc python2.7-config)
 # Fix pip configuration
-	$(SED) -i '/^import re$$/i import os\nos.environ["PIP_DISABLE_PIP_VERSION_CHECK"] = "True"\nos.environ["PIP_TARGET"] = os.path.join(os.environ["OMD_ROOT"], "local/lib/python")' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,pip pip2 pip2.7)
-	install -m 644 $(PYTHON_SITECUSTOMIZE_SOURCE) $(DESTDIR)$(OMD_ROOT)/lib/python2.7/
-	install -m 644 $(PYTHON_SITECUSTOMIZE_COMPILED) $(DESTDIR)$(OMD_ROOT)/lib/python2.7/
-	$(TOUCH) $(PYTHON_INSTALL)
+	$(SED) -i '/^import re$$/i import os\nos.environ["PIP_DISABLE_PIP_VERSION_CHECK"] = "True"\nos.environ["PIP_TARGET"] = os.path.join(os.environ["OMD_ROOT"], "local/lib/python")' $(addprefix $(PYTHON_INSTALL_DIR)/bin/,pip pip2 pip2.7)
+	install -m 644 $(PYTHON_SITECUSTOMIZE_SOURCE) $(PYTHON_INSTALL_DIR)/lib/python2.7/
+	install -m 644 $(PYTHON_SITECUSTOMIZE_COMPILED) $(PYTHON_INSTALL_DIR)/lib/python2.7/
+	$(TOUCH) $@
+
+$(PYTHON_INSTALL): $(PYTHON_CACHE_PKG_UPLOAD)
+	$(RSYNC) $(PYTHON_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
+	$(TOUCH) $@
 
 Python-skel:
 

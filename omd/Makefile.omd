@@ -4,7 +4,18 @@ REPO_PATH          := $(realpath $(dir $(realpath $(dir $(lastword $(MAKEFILE_LI
 
 include $(REPO_PATH)/defines.make
 
+# OMD packages are located below this directory
 PACKAGE_BASE       := $(REPO_PATH)/omd/packages
+# Each OMD package creates a package-named subdirectory below this hierarchy
+# which contains the files the package wants to install.  The files need to be
+# relative to $OMD_ROOT, for example
+# $INTERMEDIATE_INSTALL_BASE/Python/bin/python will finally result in a file
+# /opt/omd/versions/[version]/bin/python.
+INTERMEDIATE_INSTALL_BASE := $(REPO_PATH)/omd/intermediate_install
+# Results of intermediate install will be stored in package specific archives
+# that are stored in this directory
+PACKAGE_CACHE_BASE := $(REPO_PATH)/omd/package_cache
+
 
 CMK_VERSION        := $(VERSION)
 OMD_SERIAL         := 38
@@ -44,49 +55,47 @@ ifeq ($(BRANCH_VERSION),$(shell date +%Y.%m.%d))
     BRANCH_VERSION := 1.7.0
 endif
 
-BUILD_CACHE_BASE   := $(REPO_PATH)/omd/build_cache
-
-define build_pkg_name
+define cache_pkg_name
 $1_$2_$(BRANCH_VERSION)_$(DISTRO_NAME)_$(DISTRO_VERSION).tar.gz
 endef
 
-define build_pkg_path
-$(BUILD_CACHE_BASE)/$(call build_pkg_name,$1,$2)
+define cache_pkg_path
+$(PACKAGE_CACHE_BASE)/$(call cache_pkg_name,$1,$2)
 endef
 
-# $1: Absolute path to the build package tar (as created by build_pkg_path)
-# $2: Directory name produced by the "build" target
+# $1: Absolute path to the build package tar (as created by cache_pkg_path)
+# $2: Directory name produced by the "intermediate install" target
 # $3: BUILD_ID of the given package
-define build_pkg_archive
-	mkdir -p $(BUILD_CACHE_BASE)
+define pack_pkg_archive
+	mkdir -p $(PACKAGE_CACHE_BASE)
 	@echo "+++ Load or build $1 to create local build package..."
-	if [ -z "$(NEXUS_BUILD_CACHE_URL)" ] || ! curl -sSf -o "$1" "$(NEXUS_BUILD_CACHE_URL)/$(call build_pkg_name,$2,$3)"; then \
+	if [ -z "$(NEXUS_BUILD_CACHE_URL)" ] || ! curl -sSf -o "$1" "$(NEXUS_BUILD_CACHE_URL)/$(call cache_pkg_name,$2,$3)"; then \
 	    if [ -z "$(NEXUS_BUILD_CACHE_URL)" ]; then \
 	        echo "+++ Nexus URL not configured. Building..." ; \
 	    else \
 		echo "+++ Not available from $(NEXUS_BUILD_CACHE_URL). Building..." ; \
 	    fi && \
 	    $(MAKE) $4 && \
-	    tar -czf $1 $2 ; \
+	    tar -cz -C $(INTERMEDIATE_INSTALL_BASE) -f $1 $2 ; \
 	fi
 endef
 
-# $1: Absolute path to the build package tar (as created by build_pkg_path)
-# $2: Directory name produced by the "build" target
+# $1: Absolute path to the build package tar (as created by cache_pkg_path)
+# $2: Directory name produced by the "intermediate install" target
 define unpack_pkg_archive
-        if [ ! -d $2 ]; then \
-            echo "+++ Unpacking $1 to $2" && \
-            tar -xz --no-same-owner -f $1 ; \
+        if [ ! -d $(INTERMEDIATE_INSTALL_BASE)/$2 ]; then \
+            echo "+++ Unpacking $1 to $(INTERMEDIATE_INSTALL_BASE)/$2" && \
+            tar -xz --no-same-owner -C $(INTERMEDIATE_INSTALL_BASE) -f $1 ; \
         else \
-            echo "+++ $2 exists, nothing to do" ; \
+            echo "+++ $(INTERMEDIATE_INSTALL_BASE)/$2 exists, nothing to do" ; \
         fi
 endef
 
-# $1: Absolute path to the build package tar (as created by build_pkg_path)
-# $2: Directory name produced by the "build" target
+# $1: Absolute path to the build package tar (as created by cache_pkg_path)
+# $2: Directory name produced by the "intermediate install" target
 # $3: BUILD_ID of the given package
 define upload_pkg_archive
-	if [ -n "$(NEXUS_BUILD_CACHE_URL)" ] && ! curl -sf --head "$(NEXUS_BUILD_CACHE_URL)/$(call build_pkg_name,$2,$3)" >/dev/null; then \
+	if [ -n "$(NEXUS_BUILD_CACHE_URL)" ] && ! curl -sf --head "$(NEXUS_BUILD_CACHE_URL)/$(call cache_pkg_name,$2,$3)" >/dev/null; then \
 	    echo "+++ Package not found on nexus. Upload package..." && \
 	    curl -sSf -u "$(NEXUS_USERNAME):$(NEXUS_PASSWORD)" --upload-file "$1" "$(NEXUS_BUILD_CACHE_URL)/" ; \
 	fi

@@ -365,7 +365,8 @@ clean: $(addsuffix -clean,$(PACKAGES))
 	    fi ; \
 	done
 	$(RM) -r $(BUILD_HELPER_DIR)
-	$(RM) -r $(BUILD_CACHE_BASE)
+	$(RM) -r $(PACKAGE_CACHE_BASE)
+	$(RM) -r $(INTERMEDIATE_INSTALL_BASE)
 
 # Only for development: install tarball below /
 xzf:

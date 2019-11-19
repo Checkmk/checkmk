@@ -17,6 +17,14 @@ PYTHON_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-patching
 PYTHON_PACKAGE_DIR := $(PACKAGE_DIR)/$(PYTHON)
 PYTHON_SITECUSTOMIZE_SOURCE := $(PYTHON_PACKAGE_DIR)/sitecustomize.py
 PYTHON_SITECUSTOMIZE_COMPILED := $(PYTHON_PACKAGE_DIR)/sitecustomize.pyc
+PYTHON_TMP_BIN_DIR := $(PYTHON_PACKAGE_DIR)/python-bin
+
+# Is needed to find the temporary links created by the targets
+# $(PYTHON_TMP_BIN_DIR)/gcc and $(PYTHON_TMP_BIN_DIR)/g++
+PYTHON_TMP_BIN_PATH_VAR := PATH="$(PYTHON_TMP_BIN_DIR):$$PATH"
+
+PYTHON_CC_COMPILERS = gcc-9 clang-8 gcc-8 gcc-7 clang-6.0 clang-5.0 gcc-6 clang-4.0 gcc-5 clang-3.9 clang-3.8 clang-3.7 clang-3.6 clang-3.5 gcc-4.9 gcc clang
+PYTHON_CXX_COMPILERS := g++-9 clang++-8 g++-8 clang++-7 g++-7 clang++-6.0 clang++-5.0 g++ clang++
 
 .PHONY: Python Python-install Python-skel Python-clean upstream
 
@@ -25,12 +33,6 @@ PYTHON_SITECUSTOMIZE_COMPILED := $(PYTHON_PACKAGE_DIR)/sitecustomize.pyc
 Python: $(PYTHON_BUILD)
 
 Python-install: $(PYTHON_INSTALL)
-
-# Environment variables
-PATH_VAR := PATH="$(abspath bin):$$PATH"
-
-CC_COMPILERS = gcc-9 clang-8 gcc-8 gcc-7 clang-6.0 clang-5.0 gcc-6 clang-4.0 gcc-5 clang-3.9 clang-3.8 clang-3.7 clang-3.6 clang-3.5 gcc-4.9 gcc clang
-CXX_COMPILERS := g++-9 clang++-8 g++-8 clang++-7 g++-7 clang++-6.0 clang++-5.0 g++ clang++
 
 $(PYTHON_BUILD): $(PYTHON_SITECUSTOMIZE_COMPILED)
 	$(TOUCH) $@
@@ -48,14 +50,14 @@ $(PYTHON_BUILD_PKG_UPLOAD): $(PYTHON_BUILD_PKG_PATH)
 $(PYTHON_BUILD_UNCACHED): $(PYTHON_COMPILE)
 	$(TOUCH) $@
 
-$(PYTHON_COMPILE): $(PYTHON_PATCHING) bin/gcc bin/g++
+$(PYTHON_COMPILE): $(PYTHON_PATCHING) $(PYTHON_TMP_BIN_DIR)/gcc $(PYTHON_TMP_BIN_DIR)/g++
 # Things are a bit tricky here: For PGO/LTO we need a rather recent compiler,
 # but we don't want to bake paths to our build system into _sysconfigdata and
 # friends. Workaround: Find a recent compiler to be used for building and make a
 # symlink for it under a generic name. :-P Furthermore, the build with PGO/LTO
 # enables is mainly sequential, so a high build parallelism doesn't really
 # help. Therefore we use just -j2.
-	cd $(PYTHON_DIR) ; $(PATH_VAR) ; \
+	cd $(PYTHON_DIR) ; $(PYTHON_TMP_BIN_PATH_VAR) ; \
 	$(TEST) "$(DISTRO_NAME)" = "SLES" && sed -i 's,#include <panel.h>,#include <ncurses/panel.h>,' Modules/_curses_panel.c ; \
 	./configure \
 	    --prefix="" \
@@ -64,14 +66,14 @@ $(PYTHON_COMPILE): $(PYTHON_PATCHING) bin/gcc bin/g++
 	    --with-ensurepip=install \
 	    $(PYTHON_ENABLE_OPTIMIZATIONS) \
 	    LDFLAGS="-Wl,--rpath,$(OMD_ROOT)/lib"
-	cd $(PYTHON_DIR) ; $(PATH_VAR) ; $(MAKE) -j2
+	cd $(PYTHON_DIR) ; $(PYTHON_TMP_BIN_PATH_VAR) ; $(MAKE) -j2
 	$(TOUCH) $@
 
 # Install python files (needed by dependent packages like mod_python,
 # python-modules, ...) during compilation and install targets.
 # NOTE: -j1 seems to be necessary when --enable-optimizations is used
-$(PYTHON_BUILD_TMP_INSTALL): $(PYTHON_BUILD_PKG_UPLOAD)
-	$(PATH_VAR) ; $(MAKE) -j1 -C $(PYTHON_DIR) DESTDIR=$(PACKAGE_PYTHON_DESTDIR) install
+$(PYTHON_BUILD_TMP_INSTALL): $(PYTHON_BUILD_PKG_UPLOAD) $(PYTHON_TMP_BIN_DIR)/gcc $(PYTHON_TMP_BIN_DIR)/g++
+	$(PYTHON_TMP_BIN_PATH_VAR) ; $(MAKE) -j1 -C $(PYTHON_DIR) DESTDIR=$(PACKAGE_PYTHON_DESTDIR) install
 	$(TOUCH) $@
 
 $(PYTHON_SITECUSTOMIZE_COMPILED): $(PYTHON_SITECUSTOMIZE_SOURCE) $(PYTHON_BUILD_TMP_INSTALL)
@@ -81,9 +83,9 @@ $(PYTHON_SITECUSTOMIZE_COMPILED): $(PYTHON_SITECUSTOMIZE_SOURCE) $(PYTHON_BUILD_
 	$(PACKAGE_PYTHON_EXECUTABLE) -m py_compile $<
 
 # The compiler detection code below is basically what part of AC_PROC_CXX does.
-bin/gcc:
+$(PYTHON_TMP_BIN_DIR)/gcc:
 	@CC="" ; \
-	for PROG in $(CC_COMPILERS); do \
+	for PROG in $(PYTHON_CC_COMPILERS); do \
 	    echo -n "checking for $$PROG... "; SAVED_IFS=$$IFS; IFS=: ; \
 	    for DIR in $$PATH; do \
 	        IFS=$$SAVED_IFS ; \
@@ -94,14 +96,14 @@ bin/gcc:
 	    echo "no"; IFS=$$SAVED_IFS ; \
 	done ; \
 	$(TEST) -z "$$CC" && { echo "error: no C compiler found" >&2 ; exit 1; } ; \
-	$(MKDIR) bin ; \
-	$(RM) bin/gcc ; \
-	$(LN) -s "$$CC" bin/gcc ; \
+	$(MKDIR) -p $(PYTHON_TMP_BIN_DIR) ; \
+	$(RM) $(PYTHON_TMP_BIN_DIR)/gcc ; \
+	$(LN) -s "$$CC" $(PYTHON_TMP_BIN_DIR)/gcc ; \
 
 
-bin/g++:
+$(PYTHON_TMP_BIN_DIR)/g++:
 	@CXX="" ; \
-	for PROG in $(CXX_COMPILERS); do \
+	for PROG in $(PYTHON_CXX_COMPILERS); do \
 	    echo -n "checking for $$PROG... "; SAVED_IFS=$$IFS; IFS=: ; \
 	    for DIR in $$PATH; do \
 	        IFS=$$SAVED_IFS ; \
@@ -112,15 +114,15 @@ bin/g++:
 	    echo "no"; IFS=$$SAVED_IFS ; \
 	done ; \
 	$(TEST) -z "$$CXX" && { echo "error: no C++ compiler found" >&2 ; exit 1; } ; \
-	$(MKDIR) bin ; \
-	$(RM) bin/g++ ; \
-	$(LN) -s "$$CXX" bin/g++
+	$(MKDIR) -p $(PYTHON_TMP_BIN_DIR) ; \
+	$(RM) $(PYTHON_TMP_BIN_DIR)/g++ ; \
+	$(LN) -s "$$CXX" $(PYTHON_TMP_BIN_DIR)/g++
 
-$(PYTHON_INSTALL): $(PYTHON_BUILD)
+$(PYTHON_INSTALL): $(PYTHON_BUILD) $(PYTHON_TMP_BIN_DIR)/gcc $(PYTHON_TMP_BIN_DIR)/g++
 # Install python files (needed by dependent packages like mod_python,
 # python-modules, ...) during compilation and install targets.
 # NOTE: -j1 seems to be necessary when --enable-optimizations is used
-	$(PATH_VAR) ; $(MAKE) -j1 -C $(PYTHON_DIR) DESTDIR=$(DESTDIR)$(OMD_ROOT) install
+	$(PYTHON_TMP_BIN_PATH_VAR) ; $(MAKE) -j1 -C $(PYTHON_DIR) DESTDIR=$(DESTDIR)$(OMD_ROOT) install
 # Cleanup unused stuff: We ship 2to3 from Python3 and we don't need some example proxy.
 	$(RM) $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,2to3 smtpd.py)
 # Fix python interpreter for kept scripts
@@ -134,7 +136,7 @@ $(PYTHON_INSTALL): $(PYTHON_BUILD)
 Python-skel:
 
 Python-clean:
-	$(RM) -r $(DIR) $(BUILD_HELPER_DIR)/$(MSITOOLS)* bin build  $(PACKAGE_PYTHON_DESTDIR)
+	$(RM) -r $(DIR) $(BUILD_HELPER_DIR)/$(MSITOOLS)* build  $(PACKAGE_PYTHON_DESTDIR) $(PYTHON_TMP_BIN_DIR)
 
 upstream:
 	git rm Python-*.tgz

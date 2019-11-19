@@ -39,6 +39,7 @@
 
 import os
 import json
+from typing import Dict  # pylint: disable=unused-import
 
 import cmk.utils.store as store
 
@@ -236,7 +237,7 @@ class Base(object):
     # Store for all instances of this page type. The key into
     # this dictionary????
     # TODO: Brauchen wir hier überhaupt ein dict??
-    __instances = {}
+    __instances = {}  # type: Dict[str, Base]
 
     @classmethod
     def clear_instances(cls):

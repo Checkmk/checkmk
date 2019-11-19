@@ -29,6 +29,7 @@ import ast
 import os
 import shutil
 import time
+from typing import List, Tuple, Union  # pylint: disable=unused-import
 import multiprocessing
 
 import cmk.utils
@@ -88,7 +89,7 @@ ACTIVATION_TIME_PROFILE_SYNC = "profile-sync"
 var_dir = cmk.utils.paths.var_dir + "/wato/"
 
 # Directories and files to synchronize during replication
-_replication_paths = []
+_replication_paths = []  # type: List[Union[Tuple[str, str, str], Tuple[str, str, str, List[str]]]]
 
 
 def add_replication_paths(paths):

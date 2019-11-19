@@ -3102,7 +3102,7 @@ class OptionalDropdownChoice(DropdownChoice):
     def __init__(  # pylint: disable=redefined-builtin
             self,
             explicit,  # type: ValueSpec
-            choices,  # type: List[TypingTuple[Any, Text]]
+            choices,  # type: Union[List[TypingTuple[Any, Text]], Callable[[], List[TypingTuple[Any, Text]]]]
             otherlabel=None,  # type: TypingOptional[Text]
             # DropdownChoice
             sorted=False,  # type: bool

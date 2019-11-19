@@ -314,7 +314,8 @@ _SORT_AND_GROUP = {
     ),
     "week": (
         cmk.utils.werks.sort_by_date,
-        lambda werk: time.strftime("%s %%U - %%Y" % _("Week"), time.localtime(werk["date"]))  #
+        lambda werk: time.strftime("%s %%U - %%Y" % _("Week").encode("utf-8"),
+                                   time.localtime(werk["date"]))  #
     ),
     None: (
         cmk.utils.werks.sort_by_date,

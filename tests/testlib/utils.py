@@ -90,10 +90,13 @@ def current_base_branch_name():
     return branch_name
 
 
+def get_cmk_download_credentials_file():
+    return "%s/.cmk-credentials" % os.environ["HOME"]
+
+
 def get_cmk_download_credentials():
-    cred = "%s/.cmk-credentials" % os.environ["HOME"]
     try:
-        return tuple(open(cred).read().strip().split(":"))
+        return tuple(open(get_cmk_download_credentials_file()).read().strip().split(":"))
     except IOError:
         raise Exception("Missing %s file (Create with content: USER:PASSWORD)" % cred)
 

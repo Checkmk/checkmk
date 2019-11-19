@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import pytest  # type: ignore
+
 import json
 import six
 from cmk.gui.htmllib import HTML
@@ -15,6 +17,19 @@ _default.default = json.JSONEncoder().default  # Save unmodified default.
 json.JSONEncoder.default = _default  # replacement
 
 
+@pytest.mark.parametrize("value", [
+    None,
+    "",
+    123,
+    123.4,
+    "one",
+    "Oneüლ,ᔑ•ﺪ͟͠•ᔐ.ლ",
+])
+def test_class_HTML_value(value):
+    assert isinstance(HTML(value).value, six.text_type)
+    assert HTML(HTML(value)) == HTML(value)
+
+
 # TODO: Split this up into multiple tests
 def test_class_HTML():
     a = "Oneüლ,ᔑ•ﺪ͟͠•ᔐ.ლ"
@@ -27,8 +42,8 @@ def test_class_HTML():
     C = HTML(c)
     D = HTML(d)
 
-    assert HTML(None) == HTML(u"%s" % None)
     assert HTML() == HTML('')
+    assert HTML(HTML()) == HTML()
     # One day we will fix this!
     assert six.text_type(A) == a.decode("utf-8"), six.text_type(A)
     assert "%s" % A == a.decode("utf-8"), "%s" % A

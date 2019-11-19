@@ -76,8 +76,6 @@ from pathlib2 import Path
 
 import six
 
-from cmk.utils.encoding import ensure_unicode
-
 
 # TODO: Cleanup this dirty hack. Import of htmllib must not magically modify the behaviour of
 # the json module. Better would be to create a JSON wrapper in cmk.utils.json which uses a
@@ -97,6 +95,7 @@ json.JSONEncoder.default = _default  # type: ignore
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.encoding import ensure_unicode
 from cmk.gui.exceptions import MKUserError, RequestTimeout
 
 import cmk.gui.utils as utils
@@ -255,11 +254,10 @@ class HTML(object):
         self.value = self._ensure_unicode(value)
 
     def _ensure_unicode(self, value):
-        # HTML objects, None, strings can be inserted
-        if value is None:
-            return u"None"
-        if isinstance(value, HTML):
-            return ensure_unicode(value.value)
+        # value can of of any type: HTML, int, float, None, str, ...
+        # TODO cleanup call sites
+        if not isinstance(value, six.string_types):
+            value = six.text_type(value)
         return ensure_unicode(value)
 
     def __bytebatzen__(self):

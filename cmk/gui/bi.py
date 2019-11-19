@@ -171,7 +171,6 @@ NT_REMAINING = 3
 NT_PLACEHOLDER = 4  # temporary dummy entry needed for REMAINING
 
 # Global variables
-g_cache = {}
 g_bi_cache_manager = None
 g_bi_sitedata_manager = None
 g_bi_job_manager = None

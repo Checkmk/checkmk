@@ -82,7 +82,6 @@ input, select, textarea {
 
 /* consistent dropdown field styling for all browsers */
 select:not([multiple]) {
-  padding: 8px 16px;
   padding-right: 2.5em;
   background: $bg-color-default url("images/select_arrow.png") right 50% / 20px 11px no-repeat;
   -webkit-appearance: none;  /* Removes default chrome and safari style */

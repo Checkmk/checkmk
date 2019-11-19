@@ -52,7 +52,7 @@ class SidebarSnapinAggregationGroupList(SidebarSnapin):
 
     def show(self):
         html.open_ul()
-        for group in sorted(bi.get_aggregation_group_trees()):
+        for group in bi.get_aggregation_group_trees():
             bulletlink(group, "view.py?view_name=aggr_group&aggr_group=%s" % html.urlencode(group))
         html.close_ul()
 

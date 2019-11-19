@@ -1,0 +1,13 @@
+Title: Duplicate entries in BI Aggregation Groups snapin
+Level: 1
+Component: bi
+Compatible: compat
+Edition: cre
+Version: 1.6.0p7
+Date: 1574176950
+Class: fix
+
+Aggregation groups with the same name appeared multiple
+times in the BI Aggregation Groups snapin. Furthermore the
+aggregation groups in filters and the BI Aggregation Groups
+Tree snapin were not sorted alphabetically. This is fixed.

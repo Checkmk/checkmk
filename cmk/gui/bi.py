@@ -284,16 +284,16 @@ def get_aggregation_group_trees():
     # - "GROUP"
     # - ["GROUP_1", "GROUP2", ..]
     migrate_bi_configuration()  # convert bi_packs into legacy variables
-    groups = []
+    groups = set()
     for aggr_def in config.aggregations + config.host_aggregations:
         if aggr_def[0].get("disabled"):
             continue
         legacy_group = aggr_def[1]
         if isinstance(legacy_group, list):
-            groups.extend(legacy_group)
+            groups.update(legacy_group)
         else:
-            groups.append(legacy_group)
-    return groups
+            groups.add(legacy_group)
+    return sorted(groups)
 
 
 def aggregation_group_choices():

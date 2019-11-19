@@ -34,7 +34,8 @@ import contextlib
 import binascii
 import typing  # pylint: disable=unused-import
 from typing import Dict, List, NamedTuple, Text, Union  # pylint: disable=unused-import
-from OpenSSL import crypto, SSL
+from OpenSSL import crypto
+from OpenSSL import SSL  # type: ignore[attr-defined]
 # mypy can't find x509 for some reason (is a c extension involved?)
 from cryptography.x509.oid import ExtensionOID, NameOID  # type: ignore
 from cryptography import x509  # type: ignore

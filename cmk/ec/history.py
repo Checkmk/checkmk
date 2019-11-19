@@ -607,11 +607,11 @@ def _get_logfile_timespan(path):
 # choice and continue to do it wrong... :-/
 def scrub_string(s):
     if isinstance(s, str):
-        return s.translate(scrub_string.str_table, "\0\1\2\n")
+        return s.translate(_scrub_string_str_table, "\0\1\2\n")
     if isinstance(s, six.text_type):
-        return s.translate(scrub_string.unicode_table)
+        return s.translate(_scrub_string_unicode_table)
     raise TypeError("scrub_string expects a string argument")
 
 
-scrub_string.str_table = string.maketrans("\t", " ")
-scrub_string.unicode_table = {0: None, 1: None, 2: None, ord("\n"): None, ord("\t"): ord(" ")}
+_scrub_string_str_table = string.maketrans("\t", " ")
+_scrub_string_unicode_table = {0: None, 1: None, 2: None, ord("\n"): None, ord("\t"): ord(" ")}

@@ -1952,7 +1952,8 @@ class Cell(object):
 
 
 SorterEntry = namedtuple("SorterEntry", ["sorter", "negate", "join_key"])
-SorterEntry.__new__.__defaults__ = (None,) * len(SorterEntry._fields)
+# TODO: WTF?
+SorterEntry.__new__.__defaults__ = (None,) * len(SorterEntry._fields)  # type: ignore[attr-defined]
 
 
 def _encode_sorter_url(sorters):

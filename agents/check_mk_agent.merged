@@ -1291,9 +1291,8 @@ section_mail() {
         _postfix_queue_dir="${1}"
         if [ -n "${_postfix_queue_dir}" ]; then
             mkecho '<<<postfix_mailq>>>'
-            if [ -n "${2}" ]; then
-                mkecho "[[[${2}]]]"
-            fi
+            mkecho "[[[${2}]]]"
+
             for _queue in deferred active; do
                 _count=$(find "${_postfix_queue_dir}/${_queue}" -type f | wc -l)
                 _size=$(du -s "${_postfix_queue_dir}/${_queue}" | awk '{print $1 }')
@@ -1343,12 +1342,10 @@ section_mail() {
                             read_postfix_queue_dirs "$postfix_queue_dir" "$queue_dir"
                         fi
                     done
-
-                else
-                    postfix_queue_dir=$(postconf -h queue_directory 2>/dev/null)
-                    read_postfix_queue_dirs "$postfix_queue_dir"
                 fi
-                ;;
+                # Always check for the default queue. It can exist even if multiple instances are configured
+                read_postfix_queue_dirs "$(postconf -h queue_directory 2>/dev/null)"
+            ;;
         esac
 
     elif [ -x /usr/sbin/ssmtp ]; then

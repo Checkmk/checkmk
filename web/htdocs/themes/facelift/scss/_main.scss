@@ -739,36 +739,6 @@ table.vs_duallist {
   }
 }
 
-div.vs_autocomplete {
-  position: absolute;
-  z-index: 20;
-  display: block;
-  width: 160px;
-  color: rgb(0, 0, 0);
-  background-color: rgb(223, 223, 223);
-  border: 1px solid;
-  border-color: rgb(255, 255, 255) rgb(0, 0, 0) rgb(0, 0, 0) rgb(255, 255, 255);
-  box-shadow: 0 0 1.5px rgb(0, 0, 0);
-
-  ul {
-    max-height: 80px;
-    padding-left:0;
-    margin: 0;
-    overflow-y: scroll;
-    list-style-type:none;
-  }
-
-  li {
-    padding: 1px 3px;
-
-    &:hover {
-      color: rgb(255, 255, 255);
-      cursor: default;
-      background-color: rgb(44, 87, 102);
-    }
-  }
-}
-
 textarea.tt {
   font-family: monospace;
 }
@@ -1173,6 +1143,49 @@ table.modifydowntimes > tbody > tr {
   .select2-results__option--highlighted[aria-selected] {
     background-color: $select2-highlighted-bg-color;
   }
+}
+
+div.vs_autocomplete {
+    height: 22px;
+}
+
+div.vs_autocomplete .error{
+  padding: 0.5em 2em;
+  margin: 0;
+}
+
+span.vs_autocomplete .select2-dropdown {
+    border: 0px;
+    position: inherit;
+}
+
+span.vs_autocomplete .select2-dropdown--below {
+    top: -8px;
+}
+
+span.vs_autocomplete .select2-search--dropdown {
+    padding: 0px;
+    margin: 0px;
+}
+
+span.vs_autocomplete .select2-search__field {
+    height: 22px;
+    padding-left: 6px;
+    border-radius: 4px;
+}
+
+span.vs_autocomplete .select2-results__options {
+    border: 1px solid #aaa;
+    border-top: 0px;
+    border-radius: 4px;
+}
+
+div.metricchoice div.vs_autocomplete .select2-dropdown--below {
+    top: -11px;
+}
+
+div.vs_autocomplete > .select2-container--below > .selection > span {
+    display: none;
 }
 
 /* TODO: Go through these following styles and move them to specific scss

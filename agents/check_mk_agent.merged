@@ -157,7 +157,7 @@ get_shell() {
     elif ps -p "$$" >/dev/null 2>&1; then
         # This double-awk caters for situations where CMD/COMMAND
         # might be a full path e.g. /usr/bin/zsh
-        ps -p "$$" | tail -n 1 | awk '{print $NF}' | awk -F '/' '{print $NF}'
+        ps -p "$$" | tail -n 1 | awk '{print $NF}' | awk -F '/' '{print $NF}' | tr -d '()'
     # This one works well except for busybox
     elif ps -o comm= -p "$$" >/dev/null 2>&1; then
         ps -o comm= -p "$$"

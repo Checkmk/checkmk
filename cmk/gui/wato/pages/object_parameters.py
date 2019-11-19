@@ -27,6 +27,8 @@
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
 
+from typing import Any, Sequence  # pylint: disable=unused-import
+
 import cmk
 
 import cmk.gui.config as config
@@ -54,8 +56,8 @@ from cmk.gui.plugins.wato.utils.context_buttons import (
 
 @mode_registry.register
 class ModeObjectParameters(WatoMode):
-    _PARAMETERS_UNKNOWN = []
-    _PARAMETERS_OMIT = []
+    _PARAMETERS_UNKNOWN = []  # type: Sequence[Any]
+    _PARAMETERS_OMIT = []  # type: Sequence[Any]
 
     @classmethod
     def name(cls):

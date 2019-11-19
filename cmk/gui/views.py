@@ -31,7 +31,7 @@ import os
 import pprint
 import traceback
 import json
-from typing import Dict, List, Optional, Sequence  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Sequence, Set  # pylint: disable=unused-import
 import six
 
 import livestatus
@@ -133,12 +133,12 @@ loaded_with_language = False
 
 # TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
 # will be displayed.
-multisite_painter_options = {}
-multisite_layouts = {}
-multisite_commands = []
-multisite_datasources = {}
-multisite_painters = {}
-multisite_sorters = {}
+multisite_painter_options = {}  # type: Dict[str, Any]
+multisite_layouts = {}  # type: Dict[str, Any]
+multisite_commands = []  # type: List[Dict[str, Any]]
+multisite_datasources = {}  # type: Dict[str, Any]
+multisite_painters = {}  # type: Dict[str, Dict[str, Any]]
+multisite_sorters = {}  # type: Dict[str, Any]
 
 
 @visual_type_registry.register
@@ -1591,7 +1591,7 @@ def _do_table_join(view, master_rows, master_filters, sorters):
         row["JOIN"] = joininfo
 
 
-g_alarm_sound_states = set([])
+g_alarm_sound_states = set([])  # type: Set[str]
 
 
 def clear_alarm_sound_states():

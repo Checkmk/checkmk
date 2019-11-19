@@ -96,6 +96,7 @@ import traceback
 import copy
 import inspect
 from hashlib import sha256
+from typing import Any, Dict  # pylint: disable=unused-import
 
 import cmk
 import cmk.utils.paths
@@ -355,7 +356,7 @@ from cmk.gui.plugins.watolib.utils import (
     configvar_order,
 )
 
-modes = {}
+modes = {}  # type: Dict[Any, Any]
 
 from cmk.gui.plugins.wato.utils.html_elements import (
     wato_confirm,

@@ -27,6 +27,8 @@
 
 import abc
 import json
+from typing import Any, Dict  # pylint: disable=unused-import
+
 import six
 
 import cmk.utils.plugin_registry
@@ -35,9 +37,9 @@ import cmk.gui.config as config
 import cmk.gui.visuals as visuals
 from cmk.gui.globals import html
 
-builtin_dashboards = {}
+builtin_dashboards = {}  # type: Dict[str, Dict[str, Any]]
 # Keep this for legacy reasons until we drop the legacy plugin mechanic
-dashlet_types = {}
+dashlet_types = {}  # type: Dict[str, Dict[str, Any]]
 
 # Declare constants to be used in the definitions of the dashboards
 GROW = 0

@@ -32,6 +32,7 @@ import sys
 import struct
 import termios
 import io
+import six
 from cmk.utils.encoding import make_utf8
 
 if sys.stdout.isatty():
@@ -118,6 +119,9 @@ def _column_lengths(headers, rows, num_columns):
     for row in rows:
         for index, column in enumerate(row[:num_columns]):
             # FIXME alignment by reference to lengths of utf-8 strings?
+            # column can be None, str, data structures, ...
+            if not isinstance(column, six.string_types):
+                column = six.binary_type(column)
             lengths[index] = max(len(make_utf8(column)), lengths[index])
     return lengths
 

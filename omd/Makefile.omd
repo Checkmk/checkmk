@@ -76,7 +76,7 @@ endef
 define unpack_pkg_archive
         if [ ! -d $2 ]; then \
             echo "+++ Unpacking $1 to $2" && \
-            tar -xzf $1 ; \
+            tar -xz --no-same-owner -f $1 ; \
         else \
             echo "+++ $2 exists, nothing to do" ; \
         fi

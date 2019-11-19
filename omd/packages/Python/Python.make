@@ -14,12 +14,14 @@ PYTHON_INTERMEDIATE_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-install-interme
 PYTHON_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-install
 
 PYTHON_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(PYTHON_DIR)
+PYTHON_WORK_DIR := $(PACKAGE_WORK_DIR)/$(PYTHON_DIR)
 
 # HACK!
 PYTHON_PACKAGE_DIR := $(PACKAGE_DIR)/$(PYTHON)
 PYTHON_SITECUSTOMIZE_SOURCE := $(PYTHON_PACKAGE_DIR)/sitecustomize.py
-PYTHON_SITECUSTOMIZE_COMPILED := $(PYTHON_PACKAGE_DIR)/sitecustomize.pyc
-PYTHON_TMP_BIN_DIR := $(PYTHON_PACKAGE_DIR)/python-bin
+PYTHON_SITECUSTOMIZE_WORK := $(PYTHON_WORK_DIR)/sitecustomize.py
+PYTHON_SITECUSTOMIZE_COMPILED := $(PYTHON_WORK_DIR)/sitecustomize.pyc
+PYTHON_TMP_BIN_DIR := $(PYTHON_WORK_DIR)/python-bin
 
 # Is needed to find the temporary links created by the targets
 # $(PYTHON_TMP_BIN_DIR)/gcc and $(PYTHON_TMP_BIN_DIR)/g++
@@ -76,10 +78,12 @@ $(PYTHON_BUILD_TMP_INSTALL): $(PYTHON_COMPILE) $(PYTHON_TMP_BIN_DIR)/gcc $(PYTHO
 	$(TOUCH) $@
 
 $(PYTHON_SITECUSTOMIZE_COMPILED): $(PYTHON_SITECUSTOMIZE_SOURCE) $(PYTHON_BUILD_TMP_INSTALL)
+	$(MKDIR) $(PYTHON_WORK_DIR)
+	install -m 644 $(PYTHON_SITECUSTOMIZE_SOURCE) $(PYTHON_SITECUSTOMIZE_WORK)
 	export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH)" ; \
 	export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS)" ; \
 	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
-	$(PACKAGE_PYTHON_EXECUTABLE) -m py_compile $<
+	$(PACKAGE_PYTHON_EXECUTABLE) -m py_compile $(PYTHON_SITECUSTOMIZE_WORK)
 
 # The compiler detection code below is basically what part of AC_PROC_CXX does.
 $(PYTHON_TMP_BIN_DIR)/gcc:
@@ -128,7 +132,7 @@ $(PYTHON_INTERMEDIATE_INSTALL): $(PYTHON_BUILD) $(PYTHON_TMP_BIN_DIR)/gcc $(PYTH
 	$(SED) -i '1s|^#!.*/python2\.7$$|#!/usr/bin/env python2|' $(addprefix $(PYTHON_INSTALL_DIR)/bin/,easy_install easy_install-2.7 idle pip pip2 pip2.7 pydoc python2.7-config)
 # Fix pip configuration
 	$(SED) -i '/^import re$$/i import os\nos.environ["PIP_DISABLE_PIP_VERSION_CHECK"] = "True"\nos.environ["PIP_TARGET"] = os.path.join(os.environ["OMD_ROOT"], "local/lib/python")' $(addprefix $(PYTHON_INSTALL_DIR)/bin/,pip pip2 pip2.7)
-	install -m 644 $(PYTHON_SITECUSTOMIZE_SOURCE) $(PYTHON_INSTALL_DIR)/lib/python2.7/
+	install -m 644 $(PYTHON_SITECUSTOMIZE_WORK) $(PYTHON_INSTALL_DIR)/lib/python2.7/
 	install -m 644 $(PYTHON_SITECUSTOMIZE_COMPILED) $(PYTHON_INSTALL_DIR)/lib/python2.7/
 	$(TOUCH) $@
 

@@ -1,6 +1,5 @@
 SHELL = /bin/bash -e -o pipefail
 
-BUILD_HELPER_DIR := build-helper
 PACKAGE_DIR := $(shell pwd)/packages
 
 include Makefile.omd
@@ -364,9 +363,7 @@ clean: $(addsuffix -clean,$(PACKAGES))
 		$(MAKE) -C $$p clean ; \
 	    fi ; \
 	done
-	$(RM) -r $(BUILD_HELPER_DIR)
-	$(RM) -r $(PACKAGE_CACHE_BASE)
-	$(RM) -r $(INTERMEDIATE_INSTALL_BASE)
+	$(RM) -r $(BUILD_BASE_DIR)
 
 # Only for development: install tarball below /
 xzf:

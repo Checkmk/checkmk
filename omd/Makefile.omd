@@ -4,18 +4,33 @@ REPO_PATH          := $(realpath $(dir $(realpath $(dir $(lastword $(MAKEFILE_LI
 
 include $(REPO_PATH)/defines.make
 
-# OMD packages are located below this directory
+# OMD packages, the single components, are located below this directory
 PACKAGE_BASE       := $(REPO_PATH)/omd/packages
+# The OMD build (RPM, DEB, ...) needs some working directorties of several types
+# during the build. All of them should be located below this base directory to
+# make it easier to clean them up.
+BUILD_BASE_DIR     := $(REPO_PATH)/omd/build
+# Several targets in the Makefiles need helper files to mark that the target
+# excution succeeded.
+BUILD_HELPER_DIR := $(BUILD_BASE_DIR)/stamps
+# Base for extracting upstream packages to and compiling stuff.  Each OMD
+# package creates a package-named subdirectory below this hierarchy which
+# contains the files the package needs.
+# TODO: Not used yet
+#PACKAGE_BUILD_DIR := $(BUILD_BASE_DIR)/package_build
+# Base for package specific work directories for random stuff that needs to be
+# created during package build. Each OMD package creates a package-named
+# subdirectory below this hierarchy which contains the files the package needs.
+PACKAGE_WORK_DIR := $(BUILD_BASE_DIR)/package_work
 # Each OMD package creates a package-named subdirectory below this hierarchy
 # which contains the files the package wants to install.  The files need to be
 # relative to $OMD_ROOT, for example
 # $INTERMEDIATE_INSTALL_BASE/Python/bin/python will finally result in a file
 # /opt/omd/versions/[version]/bin/python.
-INTERMEDIATE_INSTALL_BASE := $(REPO_PATH)/omd/intermediate_install
+INTERMEDIATE_INSTALL_BASE := $(BUILD_BASE_DIR)/intermediate_install
 # Results of intermediate install will be stored in package specific archives
 # that are stored in this directory
-PACKAGE_CACHE_BASE := $(REPO_PATH)/omd/package_cache
-
+PACKAGE_CACHE_BASE := $(BUILD_BASE_DIR)/package_cache
 
 CMK_VERSION        := $(VERSION)
 OMD_SERIAL         := 38
@@ -85,6 +100,7 @@ endef
 define unpack_pkg_archive
         if [ ! -d $(INTERMEDIATE_INSTALL_BASE)/$2 ]; then \
             echo "+++ Unpacking $1 to $(INTERMEDIATE_INSTALL_BASE)/$2" && \
+            mkdir -p $(INTERMEDIATE_INSTALL_BASE) && \
             tar -xz --no-same-owner -C $(INTERMEDIATE_INSTALL_BASE) -f $1 ; \
         else \
             echo "+++ $(INTERMEDIATE_INSTALL_BASE)/$2 exists, nothing to do" ; \

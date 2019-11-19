@@ -83,7 +83,7 @@ def _get_host(params):
         address = "$_HOSTADDRESS_%s$" % family[-1]
 
     HostSettings = collections.namedtuple("HostSettings", ("address", "port", "family", "virtual"))
-    return HostSettings(address, host.get("port"), family, host.get("virthost", address))
+    return HostSettings(address, host.get("port"), family, host.get("virthost"))
 
 
 def _get_proxy(params):
@@ -207,7 +207,9 @@ def _host_name(host, proxy):
         return "%s:%s" % (host.address, host.port)
     if proxy:
         return host.address
-    return host.virtual
+    if host.virtual:
+        return host.virtual
+    return host.address
 
 
 def _common_args(host, proxy, params):

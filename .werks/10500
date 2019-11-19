@@ -1,0 +1,13 @@
+Title: postfix_mailq: Also discover the default queue which can exist even if multiple instances are configured
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p7
+Date: 1573479625
+
+If multiple instances are configured the postfix mail queue check also
+discovers the default queue which was missing before. The default queue name is
+{{}} (empty) for non-multi and multi Postfix environments.

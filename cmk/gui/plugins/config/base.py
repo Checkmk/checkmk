@@ -25,6 +25,8 @@
 # Boston, MA 02110-1301 USA.
 """Default configuration settings for the Check_MK GUI"""
 
+from typing import Dict as _Dict, List as _List, Tuple as _Tuple  # pylint: disable=unused-import
+
 #.
 #   .--Generic-------------------------------------------------------------.
 #   |                   ____                      _                        |
@@ -144,7 +146,8 @@ view_action_defaults = {
 #  \____\__,_|___/\__\___/|_| |_| |_| |_____|_|_| |_|_|\_\___/
 #
 
-custom_links = {}
+# TODO: Improve type below, see cmk.gui.plugins.sidebar.custom_links
+custom_links = {}  # type: _Dict[str, _List[_Tuple]]
 
 # Links for everyone
 custom_links['guest'] = [

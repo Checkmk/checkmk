@@ -2425,7 +2425,7 @@ class CascadingDropdown(ValueSpec):
     def __init__(  # pylint: disable=redefined-builtin
             self,
             # TODO: Make this more specific
-            choices,  # type: Union[List[TypingTuple[Text, Text, ValueSpec]], Callable]
+            choices,  # type: Union[List[Union[TypingTuple[Text, Text], TypingTuple[Text, Text, ValueSpec]]], Callable]
             label=None,  # type: TypingOptional[Text]
             separator=", ",  # type: TypingOptional[Text]
             sorted=True,  # type: bool

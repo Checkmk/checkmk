@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from typing import Any as _Any, Dict as _Dict, List as _List  # pylint: disable=unused-import
+
 import cmk as _cmk
 
 # Log level of notifications
@@ -37,7 +39,7 @@ notification_backlog = 10  # keep the last 10 notification contexts for referenc
 # Settings for new rule based notifications
 enable_rulebased_notifications = False
 notification_fallback_email = ""
-notification_rules = []
+notification_rules = []  # type: _List[_Dict[str, _Any]]
 # Check every 10 seconds for ripe bulks
 notification_bulk_interval = 10
 notification_plugin_timeout = 60

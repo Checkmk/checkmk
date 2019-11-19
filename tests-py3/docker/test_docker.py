@@ -77,7 +77,7 @@ def _build(request, client, version, add_args=None):
         detach=True,
         remove=True,
         volumes={
-            testlib.get_cmk_download_credentials_file(): {
+            testlib.utils.get_cmk_download_credentials_file(): {
                 "bind": "/files/secret",
                 "mode": "ro"
             }

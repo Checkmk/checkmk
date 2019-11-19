@@ -31,7 +31,7 @@ import os
 import pprint
 import traceback
 import json
-from typing import Dict, Optional, List  # pylint: disable=unused-import
+from typing import Dict, List, Optional, Sequence  # pylint: disable=unused-import
 import six
 
 import livestatus
@@ -232,9 +232,9 @@ class View(object):
 
     @property
     def row_cells(self):
-        # type: () -> List[Cell]
+        # type: () -> Sequence[Cell]
         """Regular cells are displaying information about the rows of the type the view is about"""
-        cells = []
+        cells = []  # type: List[Cell]
         for e in self.spec["painters"]:
             if not painter_exists(e):
                 continue

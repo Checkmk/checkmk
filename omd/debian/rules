@@ -12,18 +12,11 @@ _PWD=`pwd`
 include Makefile.omd
 -include .config
 
-.PHONY: build clean binary-indep binary-arch binary install
-
-build: build-stamp
-build-stamp:
-	dh_testdir
-	$(MAKE) EDITION=$(EDITION) -j 4 build
-	touch build-stamp
+.PHONY: clean binary-indep binary-arch binary install
 
 clean:
 	dh_testdir
 	dh_testroot
-	rm -f build-stamp
 
 	$(MAKE) EDITION=$(EDITION) clean
 	rm -f $(_PWD)/debian/postinst
@@ -38,25 +31,40 @@ clean:
 
 	dh_clean
 
-install: build
+install:
 	dh_testdir
 	dh_testroot
 	dh_prep
 	dh_installdirs
 
-	$(MAKE) EDITION=$(EDITION) DESTDIR=$(_PWD)/debian/`dh_listpackages` pack
-	# -- remove version independent dirs, will be created later by postinst
-	rm -f $(_PWD)/debian/`dh_listpackages`/usr/bin/omd
-	rmdir $(_PWD)/debian/`dh_listpackages`/usr/bin
-	rm -f $(_PWD)/debian/`dh_listpackages`/usr/share/man/man8/omd.8.gz
-	rm -f $(_PWD)/debian/`dh_listpackages`/omd
-	rmdir $(_PWD)/debian/`dh_listpackages`/opt/omd/apache
-	rmdir $(_PWD)/debian/`dh_listpackages`/opt/omd/sites
-	rm -f $(_PWD)/debian/`dh_listpackages`/opt/omd/versions/default
-	rm -rf $(_PWD)/debian/`dh_listpackages`/etc/apache2
-	rm -f $(_PWD)/debian/`dh_listpackages`/etc/init.d/omd
-	rm -f $(_PWD)/debian/`dh_listpackages`/etc/systemd/system/omd.service
-	mv -f $(_PWD)/check-mk-$(EDITION)-bin-$(OMD_VERSION).tar.gz $(_PWD)/..
+	# This target compiles and installs everything needed into our DESTDIR
+	$(MAKE) EDITION=$(EDITION) DESTDIR=$(_PWD)/debian/`dh_listpackages` install
+
+	# Remove version independent things that will be created later by postinst
+	set -e ; \
+	for F in usr/bin/omd \
+		 usr/bin \
+		 usr/share/man/man8/omd.8.gz \
+		 usr/share/man/man8 \
+		 usr/share/man \
+		 usr/share \
+		 usr \
+		 omd \
+		 opt/omd/apache \
+		 opt/omd/sites \
+		 opt/omd/versions/default \
+		 etc/apache2/conf.d/zzz_omd.conf \
+		 etc/apache2/conf.d \
+		 etc/apache2 \
+		 etc/init.d/omd \
+		 etc/systemd/system/omd.service; do \
+        ABS_PATH="$(_PWD)/debian/`dh_listpackages`/$$F" ; \
+        if [ -f "$$ABS_PATH" ] || [ -h "$$ABS_PATH" ] ; then \
+            rm -f "$$ABS_PATH" ; \
+        elif [ -d "$$ABS_PATH" ]; then \
+            rmdir "$$ABS_PATH" ; \
+        fi \
+    done
 
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
 	    -e 's/###OMD_SERIAL###/$(OMD_SERIAL)/g' \
@@ -72,9 +80,7 @@ install: build
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
 	   $(_PWD)/debian/links.in > $(_PWD)/debian/links
 
-# Build architecture-independent files here.
-binary-indep: install
-# We have nothing to do by default.
+binary-indep:
 
 # Build architecture-dependent files here.
 binary-arch: install

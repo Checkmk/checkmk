@@ -97,6 +97,7 @@ $(BUILD_HELPER_DIR)/build-helper-files.make:
 
 -include .config
 
+# debian/rules sets DESTDIR to be at debian/[package-name]-[version] when building a .deb
 DESTDIR ?=$(shell pwd)/destdir
 RPM_TOPDIR=$$(pwd)/rpm.topdir
 BIN_TGZ=check-mk-$(EDITION)-bin-$(OMD_VERSION).tar.gz
@@ -123,6 +124,7 @@ SKEL_TARGETS :=  $(foreach package,$(addsuffix _SKEL,$(BUILD_TARGET_VARS)),$($(p
 
 .PHONY: install-global build install pack skel
 
+# Called in the build phase of .rpm packaging procedure
 build: $(BUILD_TARGETS)
 
 install: $(INSTALL)
@@ -139,6 +141,7 @@ cma: $(CMA_PACKAGE)
 $(PRE_INSTALL):
 	rm -rf $(DESTDIR)
 	rm -rf $(BUILD_HELPER_DIR)/*-install
+	rm -rf $(BUILD_HELPER_DIR)/*-skel
 	$(MKDIR) $(DESTDIR)$(OMD_PHYSICAL_BASE)
 	A="$(OMD_PHYSICAL_BASE)" ; ln -s $${A:1} $(DESTDIR)/omd
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
@@ -170,7 +173,7 @@ $(PRE_SKEL) : $(INSTALL_GLOBAL)
         done
 	$(TOUCH) $@
 
-$(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions: $(SKEL_TARGETS)
+$(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions: $(PRE_SKEL) $(SKEL_TARGETS)
 	# Create permissions file for skel
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
 	set -e ; cd packages ; for p in $(PACKAGES) ; do \
@@ -180,6 +183,7 @@ $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions: $(SKEL_TARGETS)
 	    fi ; \
 	done > $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions
 
+# TODO: There is no FIX_SKEL definition. This is never executed. WTF?
 $(FIX_SKEL): $(SKEL_TARGETS)
 	# Make sure, all permissions in skel are set to 0755, 0644
 	@failed=$$(find $(DESTDIR)$(OMD_ROOT)/skel -type d -not -perm 0755) ; \
@@ -240,7 +244,7 @@ $(INSTALL_GLOBAL): $(INSTALL)
 	fi
 	$(TOUCH) $@
 
-$(BIN_TGZ): $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions $(FIX_SKEL)
+$(BIN_TGZ): skel
 	# Pack the whole stuff into a tarball
 	tar czf $@ --owner=root --group=root -C $(DESTDIR) .
 
@@ -274,46 +278,35 @@ rpm: ../check-mk-$(EDITION)-$(OMD_VERSION).tar.gz
 	mv -v $(RPM_TOPDIR)/RPMS/*/*.rpm $(REPO_PATH)
 	rm -rf $(RPM_TOPDIR) rpm.buildroot
 
-# create a debian/changelog to build the package
 debian/changelog:
-	# Build DEB from prebuild binary. This currently needs 'make dist' and thus only
-	# works within a GIT repository.
-	@if test -z "$(DEBFULLNAME)" || test -z "$(DEBEMAIL)"; then \
-	  echo "please read 'man dch' and set DEBFULLNAME and DEBEMAIL" ;\
-	  exit 1; \
-	fi
-	# this is a hack!
-	rm -f debian/changelog
-	dch --create --package check-mk-$(EDITION)-$(PKG_VERSION) \
-	    --newversion 0.$(DISTRO_CODE) "`cat debian/changelog.tmpl`"
-	dch --release "releasing ...."
+	sed -e 's/###DISTRO_CODE###/$(DISTRO_CODE)/g' \
+	    -e "s/###PKG_VERSION###/$(PKG_VERSION)/g" \
+	    -e "s/###NOW###/$(shell date -R)/g" \
+	    -e 's/###EDITION###/$(EDITION)/g' \
+	    debian/changelog.in > debian/changelog
 
-deb: debian/changelog
-	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/' \
-	    -e "s/###PKG_VERSION###/$(PKG_VERSION)/" \
-	    -e 's/###EDITION###/$(EDITION)/' \
-	    -e 's/###OS_PACKAGES###/$(OS_PACKAGES)/' \
+debian/control: debian/control.in
+	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
+	    -e "s/###PKG_VERSION###/$(PKG_VERSION)/g" \
+	    -e 's/###EDITION###/$(EDITION)/g' \
+	    -e 's/###OS_PACKAGES###/$(OS_PACKAGES)/g' \
 	    -e '/Depends:/s/\> /, /g' \
 	    -e '/Depends:/s/@/ /g' \
-	   `pwd`/debian/control.in > `pwd`/debian/control
-	# Disable this for incremental .deb building
-	fakeroot bash -c "export EDITION=$(EDITION) ; debian/rules clean"
+	   debian/control.in > debian/control
+
+deb: debian/changelog debian/control
+# In case we want to have fast package creation without need to rebuild
+# everything, we'd have to drop the "clean" argument below.
 	debuild \
-		--preserve-envvar="NEXUS_*" \
-		--preserve-envvar="PYTHON_ENABLE_OPTIMIZATIONS" \
-		--set-envvar EDITION=$(EDITION) \
-		--prepend-path=/usr/local/bin --no-lintian -i\.git -I\.git \
-			-icheck-mk-$(EDITION)-bin-$(OMD_VERSION).tar.gz \
-			-Icheck-mk-$(EDITION)-bin-$(OMD_VERSION).tar.gz \
-			-i.gitignore -I.gitignore \
-			-uc -us -rfakeroot -- binary
-	# -- renaming deb package to DISTRO_CODE dependend name
-	# arch=`dpkg-architecture -qDEB_HOST_ARCH` ; \
-	# build=`sed -e '1s/.*(\(.*\)).*/\1/;q' debian/changelog` ; \
-	# distro=`echo $$build | sed -e 's/build/$(DISTRO_CODE)/' ` ; \
-	# echo "$$arch $$build $$distro"; \
-	# mv "../omd-$(OMD_VERSION)_$${build}_$${arch}.deb" \
-	#  "../omd-$(OMD_VERSION)_$${distro}_$${arch}.deb" ;
+	    --preserve-envvar="NEXUS_*" \
+	    --preserve-envvar="PYTHON_ENABLE_OPTIMIZATIONS" \
+	    --set-envvar EDITION=$(EDITION) \
+	    --no-lintian \
+	    -i\.git -I\.git \
+	    -i.gitignore -I.gitignore \
+	    --no-sign \
+	    -rfakeroot \
+	    -- clean binary-arch
 
 # On debian based systems register the alternative switches
 alt:

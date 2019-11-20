@@ -2,6 +2,7 @@
 SNAP7 := snap7
 SNAP7_VERS := 1.4.2
 SNAP7_DIR := $(SNAP7)-full-$(SNAP7_VERS)
+SNAP7_ARCH := $(shell uname -m)
 
 SNAP7_BUILD := $(BUILD_HELPER_DIR)/$(SNAP7_DIR)-build
 SNAP7_INSTALL := $(BUILD_HELPER_DIR)/$(SNAP7_DIR)-install
@@ -13,18 +14,12 @@ $(SNAP7): $(SNAP7_BUILD)
 
 $(SNAP7)-install: $(SNAP7_INSTALL)
 
-# ToDo: Move this to top level makefile
-ARCH = $(shell uname -m)
-ifeq ($(ARCH),i686)
-    ARCH=i386
-endif
-
 $(SNAP7_BUILD): $(SNAP7_UNPACK) $(PYTHON_BUILD)
-	$(MAKE) -C $(SNAP7_DIR)/build/unix -f $(ARCH)_linux.mk
+	$(MAKE) -C $(SNAP7_DIR)/build/unix -f $(SNAP7_ARCH)_linux.mk
 	$(TOUCH) $@
 
 $(SNAP7_INSTALL): $(SNAP7_BUILD)
-	install -m 644 $(SNAP7_DIR)/build/bin/$(ARCH)-linux/libsnap7.so $(DESTDIR)$(OMD_ROOT)/lib
+	install -m 644 $(SNAP7_DIR)/build/bin/$(SNAP7_ARCH)-linux/libsnap7.so $(DESTDIR)$(OMD_ROOT)/lib
 	$(TOUCH) $@
 
 $(SNAP7)-skel:

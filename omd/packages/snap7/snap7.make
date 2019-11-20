@@ -14,7 +14,7 @@ $(SNAP7): $(SNAP7_BUILD)
 
 $(SNAP7)-install: $(SNAP7_INSTALL)
 
-$(SNAP7_BUILD): $(SNAP7_UNPACK) $(PYTHON_BUILD)
+$(SNAP7_BUILD): $(SNAP7_UNPACK)
 	$(MAKE) -C $(SNAP7_DIR)/build/unix -f $(SNAP7_ARCH)_linux.mk
 	$(TOUCH) $@
 

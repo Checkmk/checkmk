@@ -68,7 +68,6 @@ table.data tr.data td.stale.hstate1 {
 
 
 /* OK/UP */
-/* TODO: Replace class "odd0" with "odd state0" */
 .state0,
 .hstate0,
 .state0 a,
@@ -79,12 +78,9 @@ body.main .popup_menu .state0 span,
 body.main .popup_menu .hstate0 span {
   background-color: $color-state-success-background !important;
   border-color: $color-state-success-border !important;
-
-  * {
-    color: $color-text !important;
-  }
 }
 
+/* TODO: Replace class "odd0" with "odd state0" */
 .odd0, .even0 {
   .state0, .hstate0, .state0 a, .state0 body.main .popup_menu span,
   body.main .popup_menu & .state0 span, .hstate0 a,
@@ -448,10 +444,6 @@ table.data {
 
   .state2 *, .state3 * {
     color: rgb(255, 255, 255);
-  }
-
-  .state0 * {
-    color: $color-text;
   }
 
   td.state {

@@ -246,7 +246,8 @@ $toggle-button-search-img-filter:	    null;
 
 $success-bg-color:			    rgb(157, 190, 205);
 
-$filter-inversion-percentage:		    100%;
+$tree-white-img-filter:			    invert(100%);
+$tree-black-img-filter:			    null;
 
 $color-div-border-color:		    $black;
 
@@ -388,8 +389,6 @@ $iconbutton-filter:			    invert(0%);
 
 $multiple-select-bg-color:		    $white;
 $popup-menu-select-bg-color:		    $white;
-
-$tree-collapse-img-filter:		    null;
 
 $input-focus-box-shadow-color:		    $grey-5;
 

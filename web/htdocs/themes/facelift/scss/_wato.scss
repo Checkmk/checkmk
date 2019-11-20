@@ -220,9 +220,15 @@ table.validationerror  {
 }
 
 /* bulk actions in host table */
-.wato table.data tr.data td.bulksearch,
-.wato table.data tr.data td.bulkactions {
-  padding-top: 25px;
+.wato table.data tr.data {
+  td.bulksearch, td.bulkactions {
+    padding-top: 25px;
+  }
+
+  &:not(:last-child) td.bulksearch,
+  &:not(:last-child) td.bulkactions {
+    padding: 10px;
+  }
 }
 
 .wato td.bulkactions {

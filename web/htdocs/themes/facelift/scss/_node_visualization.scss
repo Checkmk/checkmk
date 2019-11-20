@@ -271,7 +271,7 @@ div.node_vis {
   }
 
   img.treeangle {
-    filter: invert($filter-inversion-percentage);
+    filter: $tree-white-img-filter;
   }
 
   .path_details table {

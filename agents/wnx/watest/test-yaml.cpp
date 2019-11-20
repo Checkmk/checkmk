@@ -1466,8 +1466,8 @@ TEST(AgentConfig, ExeUnitTest) {
     EXPECT_EQ(e.retry(), 0);
 }
 
-TEST(AgentConfig, LoadUtf8) {
 #if 0
+TEST(AgentConfig, LoadUtf8) {
     // disabled code to check how valid is unicode files
     cma::OnStart(AppType::test);
     std::filesystem::path d = GetCfg().getUserDir().u8string();
@@ -1482,7 +1482,7 @@ TEST(AgentConfig, LoadUtf8) {
     std::ofstream ofs(n.u8string());
 
     ofs << z << " \n";
-#endif
 }
+#endif
 
 }  // namespace cma::cfg

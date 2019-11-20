@@ -7,7 +7,6 @@
 #include <functional>  // callback in the main function
 
 #include "common/cfg_info.h"  // default logfile name
-#include "common/mailslot_transport.h"
 #include "logger.h"
 #include "tools/_misc.h"
 #include "tools/_xlog.h"

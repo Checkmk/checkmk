@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "commander.h"
+#include "common/mailslot_transport.h"
 #include "logger.h"
 #include "tools/_misc.h"
 

@@ -1,8 +1,11 @@
 
-// Perfect Mail Slot Transport
+// Simple Mail Slot Transport
+// Windows only
 // by SK
-// Usage example - see GreatExampleReceiverBegin, GreatExampleReceiverEnd and
-// GreatExampleSender.
+// CODE STYLE is a bit old-fashioned, this is mix of MSN example with
+// very old implementation
+
+// Thread Safe
 
 // Sender is using postman
 // Receiver is using mailbox (with thread/callback)
@@ -12,6 +15,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <filesystem>
 #include <mutex>
 #include <string>
 #include <strstream>
@@ -24,12 +28,12 @@
 namespace wtools {
 // we are using custom allocator because of Windows taking care about memory
 // allocated
-inline void* ProcessHeapAlloc(size_t Size) {
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
+inline void* ProcessHeapAlloc(size_t size) {
+    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
 }
 
-inline void ProcessHeapFree(void* Data) {
-    if (Data) HeapFree(GetProcessHeap(), 0, Data);
+inline void ProcessHeapFree(void* data) {
+    if (data) HeapFree(GetProcessHeap(), 0, data);
 }
 
 // legacy from the past
@@ -127,29 +131,29 @@ constexpr const char* const kMailSlotLogFilePrivate =
     "\\Logs\\cmk_mail_log.log";
 constexpr const char* const kMailSlotLogFileName = "cmk_mail.log";
 
-inline bool IsMailApiTraced() { return false; }
+inline bool IsMailApiTraced() { return true; }
 
 // #TODO gtest
 inline const std::string GetMailApiLog() {
-    static std::string folder_path = "";
-    if (0 == folder_path[0]) {
-        if (kUsePublicProfileLog) {
-            std::string public_folder_path =
-                cma::tools::win::GetSomeSystemFolderA(FOLDERID_Public);
-            if (!public_folder_path.empty()) {
-                folder_path = public_folder_path + kMailSlotLogFileName;
-            }
-        } else {
-            char win_path[256];
-            auto len = GetWindowsDirectoryA(win_path, 256);
-            if (len) {
-                folder_path = win_path;
-                folder_path += "\\Logs";
-                folder_path += kMailSlotLogFileName;
-            }
-        }
+    using namespace cma::tools;
+    namespace fs = std::filesystem;
+
+    if (kUsePublicProfileLog) {
+        fs::path path = win::GetSomeSystemFolderA(FOLDERID_Public);
+        if (!path.empty()) return (path / kMailSlotLogFileName).u8string();
     }
-    return folder_path;
+
+    fs::path win_path = win::GetSomeSystemFolderA(FOLDERID_Windows);
+
+    if (!win_path.empty())
+        return (win_path / "Logs" / kMailSlotLogFileName).u8string();
+
+    return {};
+}
+
+template <typename... Args>
+void MailSlotLog(Args... args) {
+    xlog::l(IsMailApiTraced(), args...).filelog(GetMailApiLog());
 }
 
 // This is Thread Callback definition
@@ -158,19 +162,10 @@ inline const std::string GetMailApiLog() {
 // Context is parameter supplied by YOU, my friend when you creates mailbox,
 // it may be nullptr or something important like an address of an object of
 // a class to which callback should deliver data
-typedef bool (*MailBoxThreadFoo)(const MailSlot* Slot, const void* Data,
-                                 int Len, void* Context);
+using MailBoxThreadFoo = bool (*)(const MailSlot* slot, const void* data,
+                                  int len, void* context);
 
-// const char* const MAIL_SLOT_PREFIX     = "\\\\.\\mailslot\\";
-const char* const MAIL_SLOT_VCAST_SERVER =
-    "nc_vcast_server";  // created inside service
-const char* const kVCastMailSlotPrefix =
-    "nc_vcast_client";  // created inside app
-const int DEFAULT_THREAD_SLEEP = 20;
-const char* const kUseThisNamePrefix =
-    "^^^:";  // send to the hosting app with answer channel
-const char* const kInternalTestString =
-    "*test*";  // send to the hosting app with answer channel
+constexpr int DEFAULT_THREAD_SLEEP = 20;
 
 class MailSlot {
 public:
@@ -189,59 +184,47 @@ private:
 
 public:
     // convert slot name into fully qualified global object
-    static std::string BuildMailSlotName(const char* Name, int Id,
-                                         const char* PcName = ".") {
+    static std::string BuildMailSlotName(const char* slot_name, int id,
+                                         const char* pc_name = ".") {
         std::string name = "\\\\";
-        name += PcName;
+        name += pc_name;
         name += "\\mailslot\\Global\\";  // this work. ok. don't touch.
-        name += Name;
+        name += slot_name;
         name += "_";
-        name +=
-            std::to_string(Id);  // session id or something unique you prefer
+        name += std::to_string(id);  // session id or something unique
         return name;
     }
 
-    MailSlot(const char* Name, int Id, const char* PcName = ".")
-        : handle_(0)
-        , owner_(false)
-        , keep_running_(true)
-        , main_thread_(nullptr) {
-        name_ = BuildMailSlotName(Name, Id, PcName);
+    MailSlot(const char* name, int id, const char* pc_name = ".") {
+        name_ = BuildMailSlotName(name, id, pc_name);
     }
 
-    // with prepapred mail slot
-    MailSlot(const char* Name)
-        : handle_(0)
-        , owner_(false)
-        , keep_running_(true)
-        , main_thread_(nullptr)
-        , name_(Name)
-
-    {}
+    // with prepared mail slot
+    MailSlot(const char* name) : name_(name) {}
 
     ~MailSlot() { Close(); }
 
     // API below
 
     // Accessors
-    bool IsOwner() const {
+    bool IsOwner() const noexcept {
         return owner_;
-    }  // true, wehn mailslot had been "created", false if "opened"
-    bool IsPostman() const { return !owner_; }
-    const char* GetName() const { return name_.c_str(); }
-    HANDLE GetHandle() { return handle_; }
+    }  // true, if mailslot had been "created", false if "opened"
+    bool IsPostman() const noexcept { return !owner_; }
+    const char* GetName() const noexcept { return name_.c_str(); }
+    HANDLE GetHandle() const noexcept { return handle_; }
 
     // mailbox start here
-    bool ConstructThread(cma::MailBoxThreadFoo Foo, int SleepValue,
-                         void* Context, bool ForceOpen = false) {
+    bool ConstructThread(cma::MailBoxThreadFoo foo, int sleep_ms, void* context,
+                         bool force_open = false) {
         if (main_thread_) {
-            xlog::l(IsMailApiTraced(), XLOG_FUNC + " Double call is forbidden")
-                .filelog(GetMailApiLog());
+            MailSlotLog(XLOG_FUNC + " Double call is forbidden");
             return false;
         }
+
         keep_running_ = true;
-        if (ForceOpen) {
-            // future use only or wil be removed
+        if (force_open) {
+            // future use only or will be removed
             for (int i = 0; i < 10; i++) {
                 auto ret = Create();
                 if (ret) break;
@@ -255,7 +238,7 @@ public:
             }
 
         main_thread_ = std::make_unique<std::thread>(
-            &MailSlot::MailBoxThread, this, Foo, SleepValue, Context);
+            &MailSlot::MailBoxThread, this, foo, sleep_ms, context);
         return true;
     }
 
@@ -270,25 +253,22 @@ public:
     }
 
     // postman the only operation
-    bool ExecPost(const void* Data, uint64_t Length) {
-        auto len = static_cast<int>(Length);
-        if (!Data && len) {
-            xlog::l(IsMailApiTraced(), "Bad data for \"%s\"posting %p %d",
-                    name_.c_str(), Data, len)
-                .filelog(GetMailApiLog());
+    bool ExecPost(const void* data, uint64_t length) {
+        auto len = static_cast<int>(length);
+        if (!data && len) {
+            MailSlotLog("Bad data for \"%s\"posting %p %d", name_.c_str(), data,
+                        len);
             return false;
         }
 
         if (Open()) {
-            auto ret = Post(Data, len);
+            auto ret = Post(data, len);
             Close();
             return ret;
-        } else {
-            xlog::l(IsMailApiTraced(), "Can't open mail slot \"%s\"",
-                    name_.c_str())
-                .filelog(GetMailApiLog());
-            return false;
         }
+
+        MailSlotLog("Can't open mail slot \"%s\"", name_.c_str());
+        return false;
     }
     // protected:
     bool Create() {
@@ -300,12 +280,10 @@ public:
 
         if (handle_ == INVALID_HANDLE_VALUE) handle_ = nullptr;
 
-        if (!handle_ && GetLastError() == 183)  // duplicated file name
+        if (!handle_ && ::GetLastError() == 183)  // duplicated file name
         {
-            xlog::l(IsMailApiTraced(),
-                    "Duplicated OWN mail slot \"%s\" Retry with OPEN",
-                    name_.c_str())
-                .filelog(GetMailApiLog());
+            MailSlotLog("Duplicated OWN mail slot \"%s\" Retry with OPEN",
+                        name_.c_str());
             return false;
         }
 
@@ -313,13 +291,10 @@ public:
 
         if (ret) {
             owner_ = true;  // we create -> we own
-            xlog::l(IsMailApiTraced(), "OWN Mail slot \"%s\" was opened",
-                    name_.c_str())
-                .filelog(GetMailApiLog());
+            MailSlotLog("OWN Mail slot \"%s\" was opened", name_.c_str());
         } else {
-            xlog::l(IsMailApiTraced(), "Fail open OWN mail slot \"%s\" %d",
-                    name_.c_str(), GetLastError())
-                .filelog(GetMailApiLog());
+            MailSlotLog("Fail open OWN mail slot \"%s\" %d", name_.c_str(),
+                        ::GetLastError());
         }
 
         return true;
@@ -332,112 +307,94 @@ public:
         handle_ = openMailSlotWrite(name_.c_str());
 
         if (handle_ == INVALID_HANDLE_VALUE) {
-            auto error = GetLastError();
+            auto error = ::GetLastError();
             handle_ = nullptr;
-            // please do not use printf - chrome host app communicates with
-            // chrome via stdin/stdout making printf breaks communication
-            // printf("Error %d opening file %s\n", error, name_.c_str());
-            xlog::l(IsMailApiTraced(), "Fail open mail slot \"%s\" %d",
-                    name_.c_str(), error)
-                .filelog(GetMailApiLog());
+            MailSlotLog("Fail open mail slot \"%s\" %d", name_.c_str(), error);
         } else
-            xlog::l(IsMailApiTraced(), "Mail slot \"%s\" was opened",
-                    name_.c_str())
-                .filelog(GetMailApiLog());
+            MailSlotLog("Mail slot \"%s\" was opened", name_.c_str());
 
         return handle_ != nullptr;
     }
 
     bool Close() {
         std::lock_guard<std::mutex> lck(lock_);
-        if (handle_) {
-            auto ret = CloseHandle(handle_);
-            if (!ret) {
-                // if failed do not clean value
-                auto error = GetLastError();
-                xlog::l(IsMailApiTraced(), "Fail CLOSE mail slot \"%s\" %d",
-                        name_.c_str(), error)
-                    .filelog(GetMailApiLog());
-            } else
-                handle_ = nullptr;
+        if (nullptr == handle_) return true;
+
+        auto ret = ::CloseHandle(handle_);
+        if (ret)
+            handle_ = nullptr;
+        else {
+            // if failed do not clean value
+            auto error = ::GetLastError();
+            MailSlotLog("Fail CLOSE mail slot \"%s\" %d", name_.c_str(), error);
         }
+
         return true;
     }
 
     bool Post(const void* Data, int Len) {
         std::lock_guard<std::mutex> lck(lock_);
         if (!handle_ || IsOwner()) {
-            xlog::l(IsMailApiTraced(), "Bad situation %p %d", handle_,
-                    (int)IsOwner())
-                .filelog(GetMailApiLog());
+            MailSlotLog("Bad situation %p %d", handle_, (int)IsOwner());
             return false;
         }
 
-        DWORD cbWritten = 0;
-        auto fResult = WriteFile(handle_, Data, Len, &cbWritten, nullptr);
+        DWORD written = 0;
+        auto success = ::WriteFile(handle_, Data, Len, &written, nullptr);
 
-        if (0 == fResult) {
-            xlog::l(IsMailApiTraced(), "Bad write %d", GetLastError())
-                .filelog(GetMailApiLog());
+        if (success) return true;
 
-            return false;
-        }
-
-        return true;
+        MailSlotLog("Bad write %d", ::GetLastError());
+        return false;
     }
 
-    int Get(void* Data, unsigned int MaxLen) {
+    int Get(void* data, unsigned int max_len) {
         std::lock_guard<std::mutex> lck(lock_);
-        if (!handle_ || IsPostman()) return FAILED_INIT;
-        auto hEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-        if (nullptr == hEvent) {
-            auto error = GetLastError();
-            xlog::l(IsMailApiTraced(), "Failed Create Event with error %d",
-                    error)
-                .filelog(GetMailApiLog());
+        if (!handle_ || IsPostman()) return ErrCodes::FAILED_INIT;
+        auto event = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
+        if (nullptr == event) {
+            auto error = ::GetLastError();
+            MailSlotLog("Failed Create Event with error %d", error);
 
-            return FAILED_CREATE;
+            return ErrCodes::FAILED_CREATE;
         }
-        ON_OUT_OF_SCOPE(CloseHandle(hEvent));
+        ON_OUT_OF_SCOPE(::CloseHandle(event));
 
         OVERLAPPED ov = {0};
         ov.Offset = 0;
         ov.OffsetHigh = 0;
-        ov.hEvent = hEvent;
+        ov.hEvent = event;
 
         DWORD message_size = 0;
         DWORD message_count = 0;
 
-        auto fResult = GetMailslotInfo(handle_,  // mailslot handle
-                                       nullptr,  // no maximum message size
-                                       &message_size,   // size of next message
-                                       &message_count,  // number of messages
-                                       nullptr);        // no read time-out
+        auto success = ::GetMailslotInfo(handle_,  // mailslot handle
+                                         nullptr,  // no maximum message size
+                                         &message_size,  // size of next message
+                                         &message_count,  // number of messages
+                                         nullptr);        // no read time-out
 
-        if (!fResult) return ErrCodes::FAILED_INFO;
+        if (!success) return ErrCodes::FAILED_INFO;
 
         if (message_size == MAILSLOT_NO_MESSAGE) return ErrCodes::SUCCESS;
 
-        if (Data == nullptr) {
-            return message_size;
-        }
+        if (data == nullptr) return message_size;
 
-        if (MaxLen < message_size) return ErrCodes::TOO_SMALL;
+        if (max_len < message_size) return ErrCodes::TOO_SMALL;
 
         DWORD message_read = 0;
-        fResult = ReadFile(handle_, Data, message_size, &message_read, &ov);
+        success = ::ReadFile(handle_, data, message_size, &message_read, &ov);
 
-        if (fResult) return message_read;
+        if (success) return message_read;
 
-        auto error = GetLastError();
-        xlog::l(IsMailApiTraced(), "Failed read mail slot with error %d", error)
-            .filelog(GetMailApiLog());
+        auto error = ::GetLastError();
+        MailSlotLog("Failed read mail slot with error %d", error);
 
         return ErrCodes::FAILED_READ;
     }
 
-    void MailBoxThread(cma::MailBoxThreadFoo Foo, int SleepValue,
-                       void* Context) {
+    void MailBoxThread(cma::MailBoxThreadFoo foo, int sleep_value,
+                       void* context) {
         int buffer_size = 16000;
         char* buffer = new char[buffer_size];
         while (keep_running_) {
@@ -445,57 +402,54 @@ public:
             if (required_size > buffer_size) {
                 delete[] buffer;
                 buffer = new char[required_size];
-                if (buffer) {
-                    buffer_size = required_size;
-                }
+                buffer_size = required_size;
             }
 
             auto read_size = Get(buffer, buffer_size);
             if (read_size > 0) {
-                Foo(this, buffer, read_size, Context);
+                foo(this, buffer, read_size, context);
             } else if (read_size < 0) {
             }
 
-            Sleep(SleepValue > 0
-                      ? SleepValue
-                      : cma::DEFAULT_THREAD_SLEEP);  // we need sleep to
-                                                     // prevent polling
+            ::Sleep(sleep_value > 0
+                        ? sleep_value
+                        : cma::DEFAULT_THREAD_SLEEP);  // we need sleep to
+                                                       // prevent polling
         }
         delete[] buffer;
     }
 
     // typically called from the ::Open, to write data in
-    static HANDLE openMailSlotWrite(const char* Name) {
-        return CreateFileA(Name, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
-                           OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    static HANDLE openMailSlotWrite(const char* name) {
+        return ::CreateFileA(name, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
+                             OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     }
 
-    static HANDLE createMailSlot(const char* Name) {
+    static HANDLE createMailSlot(const char* name) {
         wtools::SecurityAttributeKeeper
             security_attribute_keeper;  // black magic behind, do not try to
                                         // understand, RAII auto-destroy
         auto sa = security_attribute_keeper.get();
         if (nullptr == sa) {
-            xlog::l(IsMailApiTraced(), "Failed to create security descriptor")
-                .filelog(GetMailApiLog());
+            MailSlotLog("Failed to create security descriptor");
             return INVALID_HANDLE_VALUE;
         }
 
         return CreateMailslotA(
-            Name,                   // name
+            name,                   // name
             0,                      // no maximum message size
             MAILSLOT_WAIT_FOREVER,  // no time-out for operations
             sa);                    // black magic resulted SECURITY_ATTRIBUTES
     }
 
 private:
-    std::mutex lock_;   // protect data
-    std::string name_;  // fully qualified mailslot name
-    HANDLE handle_;     // handle to the mailslot
-    bool owner_;        // true - we receive data, false - we send data
+    std::mutex lock_;          // protect data
+    std::string name_;         // fully qualified mailslot name
+    HANDLE handle_ = nullptr;  // handle to the mailslot
+    bool owner_ = false;       // true - we receive data, false - we send data
 
-    std::atomic<bool> keep_running_;  // thread flag
+    std::atomic<bool> keep_running_ = true;  // thread flag
     std::unique_ptr<std::thread>
-        main_thread_;  // thread itself, Controlled by Construct/Dismantle
+        main_thread_;  // controlled by Construct/Dismantle
 };
 };  // namespace cma

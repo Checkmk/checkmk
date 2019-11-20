@@ -16,10 +16,9 @@ MYPY_FILES_TO_CHECK_1 := \
 	$(realpath $(wildcard ../cmk_base/automations/*.py)) \
 	$(realpath $(wildcard ../cmk_base/modes/*.py)) \
 	$(realpath $(wildcard ../cmk_base/data_sources/*.py)) \
-	$(realpath $(addprefix ../cmk/gui/,dashboard.py exceptions.py globals.py htmllib.py \
-	                                   i18n.py sidebar.py sites.py table.py visuals.py permissions.py)) \
-	$(realpath $(addprefix ../cmk/gui/watolib/,rulespecs.py)) \
-	$(realpath $(addprefix ../cmk/gui/plugins/userdb/,htpasswd.py utils.py)) \
+	$(realpath $(wildcard ../cmk/gui/*.py)) \
+	$(realpath $(wildcard ../cmk/gui/watolib/*.py)) \
+	$(realpath $(wildcard ../cmk/gui/plugins/userdb/*.py)) \
 	$(realpath $(wildcard ../cmk/gui/plugins/wato/utils/*.py))
 
 # Horrible hack: Massage paths to make our symlinks "invisible". :-P

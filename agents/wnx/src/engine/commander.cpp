@@ -35,7 +35,7 @@ bool RunCommand(std::string_view peer, std::string_view cmd) {
     }
 
     if (cma::tools::IsEqual(cmd, kCleanOnStop)) {
-        XLOG::l.t("Commander: Pass True");
+        XLOG::l.t("Commander: Clean On Stop");
         if (cma::IsTest()) return false;
         if (!cma::IsService()) return false;
 

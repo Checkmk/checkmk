@@ -115,7 +115,7 @@ void ResetCleanOnExit() {
 void CleanOnExit() {
     //
     if (!IsService()) {
-        XLOG::l.i("Requested clean on exit is IGNORED, mnot service");
+        XLOG::l.i("Requested clean on exit is IGNORED, not service");
         return;
     }
 

@@ -434,12 +434,6 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
 
     using namespace cma::cmdline;
 
-    // special parameters
-    if (param == L"uninstall_clean") {
-        cma::srv::ExecUninstallClean();
-        return 0;
-    }
-
     cma::OnStartApp();  // path from EXE
 
     if (param == wtools::ConvertToUTF16(kInstallParam)) {

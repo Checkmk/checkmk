@@ -316,3 +316,10 @@ mrpe:
         # - include user_name = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
         # - include = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
 
+system:
+    enabled: yes
+
+    #firewall:
+    #    mode: configure # allowed none, clear, configure
+
+    #cleanup_uninstall: none # allowed none, smart and all

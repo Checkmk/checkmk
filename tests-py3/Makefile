@@ -4,7 +4,7 @@ PYTEST   := $(PIPENV3) run py.test -vv
 MYPY     := ../scripts/run-mypy
 # TODO: Use find-python-files helper to check same files as other tests?
 MYPY_FILES_TO_CHECK_1 := \
-	$(realpath $(addprefix ../cmk/ec/,defaults.py export.py main.py settings.py)) \
+	$(realpath $(wildcard ../cmk/ec/*.py)) \
 	$(realpath $(wildcard ../cmk/cee/dcd/*.py)) \
 	$(realpath $(wildcard ../cmk/cee/dcd/connectors/*.py)) \
 	$(realpath $(wildcard ../cmk/*.py)) \

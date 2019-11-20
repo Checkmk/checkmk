@@ -296,6 +296,7 @@ deb: debian/changelog
 	    -e '/Depends:/s/\> /, /g' \
 	    -e '/Depends:/s/@/ /g' \
 	   `pwd`/debian/control.in > `pwd`/debian/control
+	# Disable this for incremental .deb building
 	fakeroot bash -c "export EDITION=$(EDITION) ; debian/rules clean"
 	debuild \
 		--preserve-envvar="NEXUS_*" \
@@ -305,7 +306,7 @@ deb: debian/changelog
 			-icheck-mk-$(EDITION)-bin-$(OMD_VERSION).tar.gz \
 			-Icheck-mk-$(EDITION)-bin-$(OMD_VERSION).tar.gz \
 			-i.gitignore -I.gitignore \
-			-uc -us -rfakeroot
+			-uc -us -rfakeroot -- binary
 	# -- renaming deb package to DISTRO_CODE dependend name
 	# arch=`dpkg-architecture -qDEB_HOST_ARCH` ; \
 	# build=`sed -e '1s/.*(\(.*\)).*/\1/;q' debian/changelog` ; \

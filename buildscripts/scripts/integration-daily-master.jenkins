@@ -56,11 +56,11 @@ try {
     DISTRO_LIST.each { DISTRO ->
         DOCKER_BUILDS[DISTRO] = {
             node {
-                def JENKINS_USER = sh(script: 'id -u jenkins', returnStdout: true)
-                def JENKINS_GROUP = sh(script: 'id -g jenkins', returnStdout: true)
+                def JENKINS_USER = sh(script: 'id -u jenkins', returnStdout: true).trim()
+                def JENKINS_GROUP = sh(script: 'id -g jenkins', returnStdout: true).trim()
                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                     docker.image(DISTRO + '-os-image').pull()
-                    docker.image(DISTRO + '-os-image').inside("-u 0:0 --ulimit nofile=1024:1024  -v /bauwelt/download/$CMK_VERSION:/bauwelt/download/$CMK_VERSION:ro -v $TEST_DATA:$TEST_DATA --init --privileged --network ci_local-infra --hostname ${DISTRO} -e JENKINS_USER=${JENKINS_USER} -e JENKINS_GROUP=i${JENKINS_GROUP}") {
+                    docker.image(DISTRO + '-os-image').inside("-u 0:0 --ulimit nofile=1024:1024  -v /bauwelt/download/$CMK_VERSION:/bauwelt/download/$CMK_VERSION:ro -v $TEST_DATA:$TEST_DATA --init --privileged --network ci_local-infra --hostname ${DISTRO}") {
                         stage('install ' + DISTRO + ' omd') {
                             DISTRO_CODE = sh ( script: """
                                 case $DISTRO in

@@ -122,19 +122,16 @@ BUILD_TARGETS := $(foreach package,$(addsuffix _BUILD,$(BUILD_TARGET_VARS)),$($(
 INSTALL_TARGETS := $(foreach package,$(addsuffix _INSTALL,$(BUILD_TARGET_VARS)),$($(package)))
 SKEL_TARGETS :=  $(foreach package,$(addsuffix _SKEL,$(BUILD_TARGET_VARS)),$($(package)))
 
-.PHONY: install-global build install pack skel
+.PHONY: build install pack cma rpm deb
 
 # Called in the build phase of .rpm packaging procedure
 build: $(BUILD_TARGETS)
-
-install: $(INSTALL)
-
-install-global: $(INSTALL_GLOBAL)
-
+# Called while building the .rpm packages (in omd.spec.in)
 pack: $(BIN_TGZ)
+# Called while building the .deb packages (in debian/rules)
+install: $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions $(FIX_SKEL)
 
-skel: $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions $(FIX_SKEL)
-
+# Called by our release system to build appliance packages
 cma: $(CMA_PACKAGE)
 
 #Prepare clean install environment
@@ -244,7 +241,7 @@ $(INSTALL_GLOBAL): $(INSTALL)
 	fi
 	$(TOUCH) $@
 
-$(BIN_TGZ): skel
+$(BIN_TGZ): install
 	# Pack the whole stuff into a tarball
 	tar czf $@ --owner=root --group=root -C $(DESTDIR) .
 
@@ -294,6 +291,7 @@ debian/control: debian/control.in
 	    -e '/Depends:/s/@/ /g' \
 	   debian/control.in > debian/control
 
+# Called by our release system to build RPM packages
 deb: debian/changelog debian/control
 # In case we want to have fast package creation without need to rebuild
 # everything, we'd have to drop the "clean" argument below.

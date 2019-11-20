@@ -37,7 +37,8 @@ $(RE2_BUILD): $(RE2_UNPACK)
         -DRE2_BUILD_TESTING="OFF" \
         .
 # Note: We need the -fPIC above to link RE2 statically into livestatus.o.
-	cmake --build $(RE2_DIR) --target install -- -j 4
+	unset DESTDIR MAKEFLAGS; \
+	    cmake --build $(RE2_DIR) --target install -- -j 4
 	$(TOUCH) $@
 
 $(RE2)-skel:

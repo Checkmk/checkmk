@@ -202,6 +202,7 @@ PYTHON_MODULES_LIST += vcrpy-2.1.0.tar.gz
 # (libsodium) headers would be installed during build even if they should not
 $(PYTHON_MODULES_BUILD): $(PYTHON_BUILD) $(FREETDS_BUILD) $(PYTHON_MODULES_PATCHING)
 	set -e ; cd $(PYTHON_MODULES_DIR) ; \
+	    unset DESTDIR MAKEFLAGS ; \
 	    $(MKDIR) $(PACKAGE_PYTHON_MODULES_PYTHONPATH) ; \
 	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_MODULES_PYTHONPATH)" ; \
 	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH)" ; \
@@ -218,7 +219,7 @@ $(PYTHON_MODULES_BUILD): $(PYTHON_BUILD) $(FREETDS_BUILD) $(PYTHON_MODULES_PATCH
 		fi ; \
 	    	echo $$PWD ;\
 		cd $$PKG ; \
-		DESTDIR="" $(PACKAGE_PYTHON_EXECUTABLE) setup.py build ; \
+		$(PACKAGE_PYTHON_EXECUTABLE) setup.py build ; \
 		$(PACKAGE_PYTHON_EXECUTABLE) setup.py install \
 		    --root=$(PACKAGE_PYTHON_MODULES_DESTDIR) \
 		    --prefix='' \

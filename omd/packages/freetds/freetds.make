@@ -25,8 +25,8 @@ $(FREETDS_BUILD): $(FREETDS_UNPACK)
 		--disable-odbc
 	$(MAKE) -C $(FREETDS_DIR) -j4
 # Package python-modules needs some stuff during the build.
-	$(MAKE) -C $(FREETDS_DIR)/include prefix=$(PACKAGE_FREETDS_DESTDIR) install
-	$(MAKE) -C $(FREETDS_DIR)/src/dblib prefix=$(PACKAGE_FREETDS_DESTDIR) install
+	$(MAKE) -C $(FREETDS_DIR)/include DESTDIR="" prefix=$(PACKAGE_FREETDS_DESTDIR) install
+	$(MAKE) -C $(FREETDS_DIR)/src/dblib DESTDIR="" prefix=$(PACKAGE_FREETDS_DESTDIR) install
 	$(TOUCH) $@
 
 $(FREETDS_INSTALL): $(FREETDS_BUILD)

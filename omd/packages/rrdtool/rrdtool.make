@@ -20,7 +20,7 @@ RRDTOOL_CONFIGUREOPTS  := \
 	--disable-tcl \
 	--disable-lua \
 	--disable-rrdcgi \
-	--with-perl-options="LIB=$(DESTDIR)$(OMD_ROOT)/lib/perl5/lib/perl5"
+	--with-perl-options="LIB=$(OMD_ROOT)/lib/perl5/lib/perl5"
 
 .PHONY: $(RRDTOOL) $(RRDTOOL)-install $(RRDTOOL)-skel $(RRDTOOL)-build $(RRDTOOL)-build-bindings $(RRDTOOL)-build-library \
 	$(RRDTOOL)-install-bindings $(RRDTOOL)-install-library
@@ -77,6 +77,8 @@ $(RRDTOOL_BUILD_LIBRARY): $(RRDTOOL_CONFIGURE)
 $(RRDTOOL_BUILD_BINDINGS): $(RRDTOOL_CONFIGURE) $(RRDTOOL_BUILD_LIBRARY) $(PYTHON_BUILD) $(PYTHON_MODULES_BUILD)
 # TODO: We need to find out which variables here are needed for the configure and which for the make calls
 	$(ECHO) "install  --install_base  $(DESTDIR)$(OMD_ROOT)/lib/perl5" > .modulebuildrc
+	set -e ; \
+	unset DESTDIR MAKEFLAGS ; \
 	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_MODULES_PYTHONPATH) ; \
 	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH) ; \
 	export LD_LIBRARY_PATH=$(PACKAGE_PYTHON_LD_LIBRARY_PATH) ; \
@@ -94,6 +96,8 @@ $(RRDTOOL_INSTALL): $(RRDTOOL_INSTALL_LIBRARY) $(RRDTOOL_INSTALL_BINDINGS)
 
 # TODO: We need to find out which variables here are needed for the configure and which for the make calls
 $(RRDTOOL_INSTALL_LIBRARY): $(RRDTOOL_BUILD_LIBRARY)
+	set -e ; \
+	unset DESTDIR MAKEFLAGS ; \
 	export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS)" ; \
 	export LD_LIBRARY_PATH=$(PACKAGE_PYTHON_LD_LIBRARY_PATH) ; \
 	export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
@@ -108,6 +112,8 @@ $(RRDTOOL_INSTALL_LIBRARY): $(RRDTOOL_BUILD_LIBRARY)
 
 # TODO: We need to find out which variables here are needed for the configure and which for the make calls
 $(RRDTOOL_INSTALL_BINDINGS): $(RRDTOOL_BUILD_BINDINGS)
+	set -e ; \
+	unset DESTDIR MAKEFLAGS ; \
 	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_MODULES_PYTHONPATH) ; \
 	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH) ; \
 	export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS)" ; \

@@ -115,7 +115,13 @@ $(RPM_PACKAGE): waitmax
 $(DEB_PACKAGE): $(RPM_PACKAGE)
 	@echo "Sorry. Debian packages currently via alien"
 	rm -f *.deb
-	fakeroot alien --scripts -k --to-deb $(RPM_PACKAGE)
+	set -e ; \
+	if [ -z "$$FAKEROOTKEY" ]; then \
+	    FAKEROOT=fakeroot ; \
+	else \
+	    FAKEROOT= ; \
+	fi ; \
+	$$FAKEROOT alien --scripts -k --to-deb $(RPM_PACKAGE)
 	DEB_PKG=$$(ls *.deb) ; \
 	echo "Repackaging $$DEB_PKG" ; \
 	rm -rf deb-unpack ; \

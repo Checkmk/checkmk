@@ -81,13 +81,16 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
 	$(RM) $(DESTDIR)$(OMD_ROOT)/skel/etc/check_mk/*-*.mk
 
 	# Binaries
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(CHECK_MK_DIR)/bin/* $(DESTDIR)$(OMD_ROOT)/bin
 	$(RM) $(DESTDIR)$(OMD_ROOT)/bin/Makefile $(DESTDIR)$(OMD_ROOT)/bin/*.cc
 
 	# Install the diskspace cleanup plugin
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/diskspace
 	install -m 644 $(PACKAGE_DIR)/$(CHECK_MK)/diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/check_mk
 
 	# Install active checks
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/nagios
 	install -m 755 $(CHECK_MK_DIR)/active_checks/* \
 	    $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/Makefile
@@ -102,6 +105,7 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
 	install -m 644 $(REPO_PATH)/locale/ro/alias $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/ro
 
 	# Install hooks
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SNMPTRAP $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SYSLOG $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/

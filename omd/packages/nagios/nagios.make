@@ -41,13 +41,16 @@ $(NAGIOS_INSTALL): $(NAGIOS_BUILD)
 	   install -m 644 $(NAGIOS_DIR)/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAGIOS); \
 	done
 	
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(PACKAGE_DIR)/$(NAGIOS)/merge-nagios-config $(DESTDIR)$(OMD_ROOT)/bin
 	
 	# Install the diskspace cleanup plugin
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/diskspace
 	install -m 644 $(PACKAGE_DIR)/$(NAGIOS)/diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/nagios
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks
 	install -m 755 $(PACKAGE_DIR)/$(NAGIOS)/NAGIOS_THEME $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	$(TOUCH) $@
-  
+
 $(NAGIOS)-skel:
 
 $(NAGIOS)-clean:

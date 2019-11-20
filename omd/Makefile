@@ -297,6 +297,7 @@ deb: debian/changelog debian/control
 	debuild \
 	    --preserve-envvar="NEXUS_*" \
 	    --preserve-envvar="PYTHON_ENABLE_OPTIMIZATIONS" \
+	    --prepend-path=/usr/local/bin \
 	    --set-envvar EDITION=$(EDITION) \
 	    --no-lintian \
 	    -i\.git -I\.git \

@@ -9,6 +9,10 @@ NET_SNMP_INSTALL_PYTHON := $(BUILD_HELPER_DIR)/$(NET_SNMP_DIR)-install-python
 NET_SNMP_INSTALL_PERL := $(BUILD_HELPER_DIR)/$(NET_SNMP_DIR)-install-perl
 NET_SNMP_PATCHING := $(BUILD_HELPER_DIR)/$(NET_SNMP_DIR)-patching
 
+#NET_SNMP_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(NET_SNMP_DIR)
+NET_SNMP_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(NET_SNMP_DIR)
+#NET_SNMP_WORK_DIR := $(PACKAGE_WORK_DIR)/$(NET_SNMP_DIR)
+
 .PHONY: $(NET_SNMP) $(NET_SNMP)-install $(NET_SNMP)-install-base $(NET_SNMP)-install-python $(NET_SNMP)-install-perl $(NET_SNMP)-skel $(NET_SNMP)-clean
 
 $(NET_SNMP): $(NET_SNMP_BUILD)
@@ -18,7 +22,7 @@ $(NET_SNMP)-install: $(NET_SNMP_INSTALL)
 $(NET_SNMP_BUILD): $(NET_SNMP_PATCHING) $(PYTHON_BUILD) $(PERL_MODULES_BUILD)
 # Skip Perl-Modules because of build errors when MIB loading is disabled.
 # Skip Python binding because we need to use our own python, see install target.
-	cd $(NET_SNMP_DIR) \
+	cd $(NET_SNMP_BUILD_DIR) \
         && if [ "$(DISTRO_CODE)" == "el8" ]; then export CFLAGS='-Wformat -I../../include -D_REENTRANT -D_GNU_SOURCE -O2 -g -pipe -Wp,-D_FORTIFY_SOURCE=2 -Wp,-D_GLIBCXX_ASSERTIONS -fexceptions -fstack-protector-strong -grecord-gcc-switches -specs=/usr/lib/rpm/redhat/redhat-hardened-cc1 -specs=/usr/lib/rpm/redhat/redhat-annobin-cc1 -m64 -mtune=generic -fasynchronous-unwind-tables -fstack-clash-protection -fcf-protection -fwrapv -fno-strict-aliasing -I/usr/local/include -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64'; fi \
         && ./configure \
 	    --enable-ipv6 \
@@ -34,16 +38,16 @@ $(NET_SNMP_INSTALL): $(NET_SNMP_INSTALL_BASE) $(NET_SNMP_INSTALL_PYTHON) $(NET_S
 	$(TOUCH) $@
 
 $(NET_SNMP_INSTALL_BASE): $(NET_SNMP_BUILD)
-	cd $(NET_SNMP_DIR)/snmplib && make DESTDIR=$(DESTDIR) installlibs
-	cd $(NET_SNMP_DIR)/apps && make DESTDIR=$(DESTDIR) installbin
-	cd $(NET_SNMP_DIR)/man && make DESTDIR=$(DESTDIR) install
+	cd $(NET_SNMP_BUILD_DIR)/snmplib && make DESTDIR=$(DESTDIR) installlibs
+	cd $(NET_SNMP_BUILD_DIR)/apps && make DESTDIR=$(DESTDIR) installbin
+	cd $(NET_SNMP_BUILD_DIR)/man && make DESTDIR=$(DESTDIR) install
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/snmp/mibs
-	cd $(NET_SNMP_DIR)/mibs && make DESTDIR=$(DESTDIR) mibsinstall
+	cd $(NET_SNMP_BUILD_DIR)/mibs && make DESTDIR=$(DESTDIR) mibsinstall
 	$(TOUCH) $@
 
 $(NET_SNMP_INSTALL_PYTHON): $(NET_SNMP_BUILD)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python
-	cd $(NET_SNMP_DIR)/python && \
+	cd $(NET_SNMP_BUILD_DIR)/python && \
 		export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH):$(DESTDIR)$(OMD_ROOT)/lib/python" ; \
 	    export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS)" ; \
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
@@ -64,7 +68,7 @@ $(NET_SNMP_INSTALL_PYTHON): $(NET_SNMP_BUILD)
 #	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/python/site.py*
 
 $(NET_SNMP_INSTALL_PERL): $(NET_SNMP_BUILD)
-	cd $(NET_SNMP_DIR)/perl && \
+	cd $(NET_SNMP_BUILD_DIR)/perl && \
 	    make \
 		DESTDIR=$(DESTDIR)$(OMD_ROOT) \
 		INSTALLSITEARCH=/lib/perl5/lib/perl5 \
@@ -77,4 +81,4 @@ $(NET_SNMP_INSTALL_PERL): $(NET_SNMP_BUILD)
 $(NET_SNMP)-skel:
 
 $(NET_SNMP)-clean:
-	$(RM) -r $(NET_SNMP_DIR) $(BUILD_HELPER_DIR)/$(NET_SNMP)*
+	$(RM) -r $(NET_SNMP_BUILD_DIR) $(BUILD_HELPER_DIR)/$(NET_SNMP)*

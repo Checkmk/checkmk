@@ -10,6 +10,10 @@ CHECK_MULTI_BUILD := $(BUILD_HELPER_DIR)/$(CHECK_MULTI_ARCH)-build
 CHECK_MULTI_INSTALL := $(BUILD_HELPER_DIR)/$(CHECK_MULTI_ARCH)-install
 CHECK_MULTI_UNPACK := $(BUILD_HELPER_DIR)/$(CHECK_MULTI_ARCH)-unpack
 
+#CHECK_MULTI_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(CHECK_MULTI_DIR)
+CHECK_MULTI_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(CHECK_MULTI_DIR)
+#CHECK_MULTI_WORK_DIR := $(PACKAGE_WORK_DIR)/$(CHECK_MULTI_DIR)
+
 .PHONY: $(CHECK_MULTI) $(CHECK_MULTI)-install $(CHECK_MULTI)-skel $(CHECK_MULTI)-clean
 
 $(CHECK_MULTI): $(CHECK_MULTI_BUILD)
@@ -84,24 +88,21 @@ CHECK_MULTI_CONFIGUREOPTS := \
 	--with-tmp_etc="$(ROOTDIR)/tmp/check_multi/etc" \
 
 $(CHECK_MULTI_BUILD): $(CHECK_MULTI_UNPACK)
-	cd $(CHECK_MULTI_DIR) ; ./configure $(CHECK_MULTI_CONFIGUREOPTS)
-	$(MAKE) -C $(CHECK_MULTI_DIR) all
+	cd $(CHECK_MULTI_BUILD_DIR) ; ./configure $(CHECK_MULTI_CONFIGUREOPTS)
+	$(MAKE) -C $(CHECK_MULTI_BUILD_DIR) all
 	$(TOUCH) $@
 
 $(CHECK_MULTI_INSTALL): $(CHECK_MULTI_BUILD)
 	#--- plugin
-	install -m 755 $(CHECK_MULTI_DIR)/plugins/check_multi $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	install -m 755 $(CHECK_MULTI_BUILD_DIR)/plugins/check_multi $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 
 	#--- readme
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/doc/check_multi
-	install -m 644 $(CHECK_MULTI_DIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/check_multi
-
-	#--- allow to find testdir in plugin directory
-	test -L check_multi || ln -s $(CHECK_MULTI_DIR) check_multi
+	install -m 644 $(CHECK_MULTI_BUILD_DIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/check_multi
 	$(TOUCH) $@
 
 $(CHECK_MULTI)-clean:
-	rm -rf $(CHECK_MULTI_DIR) check_multi $(BUILD_HELPER_DIR)/$(CHECK_MULTI)*
+	rm -rf $(CHECK_MULTI_BUILD_DIR) check_multi $(BUILD_HELPER_DIR)/$(CHECK_MULTI)*
 
 $(CHECK_MULTI)-get:
 	#wget --no-clobber my-plugin.de/check_multi/check_multi-stable-$(CHECK_MULTI_VERS).tar.gz

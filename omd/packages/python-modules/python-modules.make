@@ -8,6 +8,10 @@ PYTHON_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON_MODULES_DIR)-unpack
 # The custom patching rule for python-modules needs to be called
 PYTHON_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON_MODULES_DIR)-patching-c
 
+#PYTHON_MODULES_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(PYTHON_MODULES_DIR)
+PYTHON_MODULES_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(PYTHON_MODULES_DIR)
+#PYTHON_MODULES_WORK_DIR := $(PACKAGE_WORK_DIR)/$(PYTHON_MODULES_DIR)
+
 .PHONY: $(PYTHON_MODULES) $(PYTHON_MODULES)-install $(PYTHON_MODULES)-clean
 
 $(PYTHON_MODULES): $(PYTHON_MODULES_BUILD)
@@ -201,7 +205,7 @@ PYTHON_MODULES_LIST += vcrpy-2.1.0.tar.gz
 # NOTE(3): DESTDIR= for "python setup.py build" is set because PyNaCl
 # (libsodium) headers would be installed during build even if they should not
 $(PYTHON_MODULES_BUILD): $(PYTHON_BUILD) $(FREETDS_BUILD) $(PYTHON_MODULES_PATCHING)
-	set -e ; cd $(PYTHON_MODULES_DIR) ; \
+	set -e ; cd $(PYTHON_MODULES_BUILD_DIR) ; \
 	    unset DESTDIR MAKEFLAGS ; \
 	    $(MKDIR) $(PACKAGE_PYTHON_MODULES_PYTHONPATH) ; \
 	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_MODULES_PYTHONPATH)" ; \
@@ -234,14 +238,14 @@ $(PYTHON_MODULES_PATCHING): $(PYTHON_MODULES_UNPACK)
 	echo $(PYTHON_MODULES_PATCHES)
 	set -e ; for p in $$(echo $(PYTHON_MODULES_PATCHES) | tr " " "\n" | sort); do \
 	    echo "applying $$p..." ; \
-	    patch -p1 -b -d $(PYTHON_MODULES_DIR) < $$p ; \
+	    patch -p1 -b -d $(PYTHON_MODULES_BUILD_DIR) < $$p ; \
 	done
 	$(TOUCH) $@
 
 $(PYTHON_MODULES_UNPACK): $(addprefix $(PACKAGE_DIR)/$(PYTHON_MODULES)/src/,$(PYTHON_MODULES_LIST)) $(PYTHON_MODULES_PATCHES) $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches
-	$(RM) -r $(PYTHON_MODULES_DIR)
-	$(MKDIR) $(PYTHON_MODULES_DIR)
-	cd $(PYTHON_MODULES_DIR) && \
+	$(RM) -r $(PYTHON_MODULES_BUILD_DIR)
+	$(MKDIR) $(PYTHON_MODULES_BUILD_DIR)
+	cd $(PYTHON_MODULES_BUILD_DIR) && \
 	    for M in $(PYTHON_MODULES_LIST); do \
 		echo "Unpacking $$M..." ; \
 		if echo $$M | grep .tar.gz; then \
@@ -259,7 +263,7 @@ $(PYTHON_MODULES_UNPACK): $(addprefix $(PACKAGE_DIR)/$(PYTHON_MODULES)/src/,$(PY
 # double installation. We should really switch to e.g. pipenv here.
 $(PYTHON_MODULES_INSTALL): $(PYTHON_MODULES_BUILD)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python
-	set -e ; cd $(PYTHON_MODULES_DIR) ; \
+	set -e ; cd $(PYTHON_MODULES_BUILD_DIR) ; \
 	    export SODIUM_INSTALL="system" ; \
 	    export PYTHONPATH=$$PYTHONPATH:"$(PACKAGE_PYTHON_MODULES_PYTHONPATH)" ; \
 	    export PYTHONPATH=$$PYTHONPATH:"$(PACKAGE_PYTHON_PYTHONPATH)" ; \
@@ -316,4 +320,4 @@ python-modules-dump-Pipfile:
 	@echo 'python_version = "2.7"'
 
 $(PYTHON_MODULES)-clean:
-	rm -rf $(PYTHON_MODULES_DIR) $(BUILD_HELPER_DIR)/$(PYTHON_MODULES)*
+	rm -rf $(PYTHON_MODULES_BUILD_DIR) $(BUILD_HELPER_DIR)/$(PYTHON_MODULES)*

@@ -14,6 +14,7 @@ PYTHON_INTERMEDIATE_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-install-interme
 PYTHON_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-install
 
 PYTHON_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(PYTHON_DIR)
+PYTHON_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(PYTHON_DIR)
 PYTHON_WORK_DIR := $(PACKAGE_WORK_DIR)/$(PYTHON_DIR)
 
 # HACK!
@@ -60,7 +61,7 @@ $(PYTHON_COMPILE): $(PYTHON_PATCHING) $(PYTHON_TMP_BIN_DIR)/gcc $(PYTHON_TMP_BIN
 # symlink for it under a generic name. :-P Furthermore, the build with PGO/LTO
 # enables is mainly sequential, so a high build parallelism doesn't really
 # help. Therefore we use just -j2.
-	cd $(PYTHON_DIR) ; $(PYTHON_TMP_BIN_PATH_VAR) ; \
+	cd $(PYTHON_BUILD_DIR) ; $(PYTHON_TMP_BIN_PATH_VAR) ; \
 	$(TEST) "$(DISTRO_NAME)" = "SLES" && sed -i 's,#include <panel.h>,#include <ncurses/panel.h>,' Modules/_curses_panel.c ; \
 	./configure \
 	    --prefix="" \
@@ -69,14 +70,14 @@ $(PYTHON_COMPILE): $(PYTHON_PATCHING) $(PYTHON_TMP_BIN_DIR)/gcc $(PYTHON_TMP_BIN
 	    --with-ensurepip=install \
 	    $(PYTHON_ENABLE_OPTIMIZATIONS) \
 	    LDFLAGS="-Wl,--rpath,$(OMD_ROOT)/lib"
-	cd $(PYTHON_DIR) ; $(PYTHON_TMP_BIN_PATH_VAR) ; $(MAKE) -j2
+	cd $(PYTHON_BUILD_DIR) ; $(PYTHON_TMP_BIN_PATH_VAR) ; $(MAKE) -j2
 	$(TOUCH) $@
 
 # Install python files (needed by dependent packages like mod_python,
 # python-modules, ...) during compilation and install targets.
 # NOTE: -j1 seems to be necessary when --enable-optimizations is used
 $(PYTHON_BUILD_TMP_INSTALL): $(PYTHON_COMPILE) $(PYTHON_TMP_BIN_DIR)/gcc $(PYTHON_TMP_BIN_DIR)/g++
-	$(PYTHON_TMP_BIN_PATH_VAR) ; $(MAKE) -j1 -C $(PYTHON_DIR) DESTDIR=$(PACKAGE_PYTHON_DESTDIR) install
+	$(PYTHON_TMP_BIN_PATH_VAR) ; $(MAKE) -j1 -C $(PYTHON_BUILD_DIR) DESTDIR=$(PACKAGE_PYTHON_DESTDIR) install
 	$(TOUCH) $@
 
 $(PYTHON_SITECUSTOMIZE_COMPILED): $(PYTHON_SITECUSTOMIZE_SOURCE) $(PYTHON_BUILD_TMP_INSTALL)
@@ -127,7 +128,7 @@ $(PYTHON_INTERMEDIATE_INSTALL): $(PYTHON_BUILD) $(PYTHON_TMP_BIN_DIR)/gcc $(PYTH
 # Install python files (needed by dependent packages like mod_python,
 # python-modules, ...) during compilation and install targets.
 # NOTE: -j1 seems to be necessary when --enable-optimizations is used
-	$(PYTHON_TMP_BIN_PATH_VAR) ; $(MAKE) -j1 -C $(PYTHON_DIR) DESTDIR=$(PYTHON_INSTALL_DIR) install
+	$(PYTHON_TMP_BIN_PATH_VAR) ; $(MAKE) -j1 -C $(PYTHON_BUILD_DIR) DESTDIR=$(PYTHON_INSTALL_DIR) install
 # Cleanup unused stuff: We ship 2to3 from Python3 and we don't need some example proxy.
 	$(RM) $(addprefix $(PYTHON_INSTALL_DIR)/bin/,2to3 smtpd.py)
 # Fix python interpreter for kept scripts

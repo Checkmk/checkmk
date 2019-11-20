@@ -22,39 +22,44 @@ $(BUILD_HELPER_DIR)/%-patching: $(BUILD_HELPER_DIR)/%-unpack
 	set -e ; DIR=$$($(ECHO) $* | $(SED) 's/-[0-9.]\+.*//'); \
 	for P in $$($(LS) $(PACKAGE_DIR)/$$DIR/patches/*.dif); do \
 	    $(ECHO) "applying $$P..." ; \
-	    $(PATCH) -p1 -b -d $* < $$P ; \
+	    $(PATCH) -p1 -b -d $(PACKAGE_BUILD_DIR)/$* < $$P ; \
 	done
 	$(TOUCH) $@
 
 # Rules for unpacking
 $(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.tar.xz
-	$(RM) -r $*
+	$(RM) -r $(PACKAGE_BUILD_DIR)/$*
+	$(MKDIR) $(PACKAGE_BUILD_DIR)
+	$(TAR_XZ) $< -C $(PACKAGE_BUILD_DIR)
 	$(MKDIR) $(BUILD_HELPER_DIR)
-	$(TAR_XZ) $<
 	$(TOUCH) $@
 
 $(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.tar.gz
-	$(RM) -r $*
+	$(RM) -r $(BUILD_HELPER_DIR)/$*
+	$(MKDIR) $(PACKAGE_BUILD_DIR)
+	$(TAR_GZ) $< -C $(PACKAGE_BUILD_DIR)
 	$(MKDIR) $(BUILD_HELPER_DIR)
-	$(TAR_GZ) $<
 	$(TOUCH) $@
 
 $(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.tgz
-	$(RM) -r $*
+	$(RM) -r $(BUILD_HELPER_DIR)/$*
+	$(MKDIR) $(PACKAGE_BUILD_DIR)
+	$(TAR_GZ) $< -C $(PACKAGE_BUILD_DIR)
 	$(MKDIR) $(BUILD_HELPER_DIR)
-	$(TAR_GZ) $<
 	$(TOUCH) $@
 
 $(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.tar.bz2
-	$(RM) -r $*
+	$(RM) -r $(PACKAGE_BUILD_DIR)/$*
+	$(MKDIR) $(PACKAGE_BUILD_DIR)
+	$(TAR_BZ2) $< -C $(PACKAGE_BUILD_DIR)
 	$(MKDIR) $(BUILD_HELPER_DIR)
-	$(TAR_BZ2) $<
 	$(TOUCH) $@
 
 $(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.zip
-	$(RM) -r $*
+	$(RM) -r $(BUILD_HELPER_DIR)/$*
+	$(MKDIR) $(PACKAGE_BUILD_DIR)
+	$(UNZIP) $< -d $(PACKAGE_BUILD_DIR)
 	$(MKDIR) $(BUILD_HELPER_DIR)
-	$(UNZIP) $<
 	$(TOUCH) $@
 
 debug:

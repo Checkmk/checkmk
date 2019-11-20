@@ -6,6 +6,10 @@ PNP4NAGIOS_BUILD := $(BUILD_HELPER_DIR)/$(PNP4NAGIOS_DIR)-build
 PNP4NAGIOS_INSTALL := $(BUILD_HELPER_DIR)/$(PNP4NAGIOS_DIR)-install
 PNP4NAGIOS_PATCHING := $(BUILD_HELPER_DIR)/$(PNP4NAGIOS_DIR)-patching
 
+#PNP4NAGIOS_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(PNP4NAGIOS_DIR)
+PNP4NAGIOS_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(PNP4NAGIOS_DIR)
+#PNP4NAGIOS_WORK_DIR := $(PACKAGE_WORK_DIR)/$(PNP4NAGIOS_DIR)
+
 .PHONY: $(PNP4NAGIOS) $(PNP4NAGIOS)-install $(PNP4NAGIOS)-clean
 
 $(PNP4NAGIOS): $(PNP4NAGIOS_BUILD)
@@ -35,13 +39,13 @@ PNP4NAGIOS_CONFIGUREOPTS = \
     --with-base-url='/\#\#\#SITE\#\#\#/pnp4nagios'
 
 $(PNP4NAGIOS_BUILD): $(PNP4NAGIOS_PATCHING)
-	cd $(PNP4NAGIOS_DIR) ; ./configure $(PNP4NAGIOS_CONFIGUREOPTS)
-	$(MAKE) -C $(PNP4NAGIOS_DIR) all
+	cd $(PNP4NAGIOS_BUILD_DIR) ; ./configure $(PNP4NAGIOS_CONFIGUREOPTS)
+	$(MAKE) -C $(PNP4NAGIOS_BUILD_DIR) all
 	$(TOUCH) $@
 
 $(PNP4NAGIOS_INSTALL): $(PNP4NAGIOS_BUILD)
 	$(MKDIR) $(DESTDIR)$(APACHE_CONF_DIR)
-	$(MAKE) DESTDIR=$(DESTDIR) -C $(PNP4NAGIOS_DIR) install
+	$(MAKE) DESTDIR=$(DESTDIR) -C $(PNP4NAGIOS_BUILD_DIR) install
 	# Fixup wrong man page installation path
 	# (There is a --mandir configure option, but it does not work)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/man/man8
@@ -53,10 +57,10 @@ $(PNP4NAGIOS_INSTALL): $(PNP4NAGIOS_BUILD)
 	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/pnp4nagios
 	rm -rf $(DESTDIR)$(OMD_ROOT)/var/pnp4nagios
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
-	install -m 644 $(PNP4NAGIOS_DIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
-	install -m 644 $(PNP4NAGIOS_DIR)/COPYING $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
-	install -m 644 $(PNP4NAGIOS_DIR)/AUTHORS $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
-	install -m 644 $(PNP4NAGIOS_DIR)/THANKS $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
+	install -m 644 $(PNP4NAGIOS_BUILD_DIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
+	install -m 644 $(PNP4NAGIOS_BUILD_DIR)/COPYING $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
+	install -m 644 $(PNP4NAGIOS_BUILD_DIR)/AUTHORS $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
+	install -m 644 $(PNP4NAGIOS_BUILD_DIR)/THANKS $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
 
 	# Install the diskspace cleanup plugin
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/diskspace
@@ -87,4 +91,4 @@ $(PNP4NAGIOS_INSTALL): $(PNP4NAGIOS_BUILD)
 $(PNP4NAGIOS)-skel:
 
 $(PNP4NAGIOS)-clean:
-	rm -rf $(PNP4NAGIOS_DIR) $(BUILD_HELPER_DIR)/$(PNP4NAGIOS_DIR)*
+	rm -rf $(PNP4NAGIOS_BUILD_DIR) $(BUILD_HELPER_DIR)/$(PNP4NAGIOS_DIR)*

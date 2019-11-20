@@ -6,6 +6,10 @@ NAGIOS_BUILD := $(BUILD_HELPER_DIR)/$(NAGIOS_DIR)-build
 NAGIOS_INSTALL := $(BUILD_HELPER_DIR)/$(NAGIOS_DIR)-install
 NAGIOS_PATCHING := $(BUILD_HELPER_DIR)/$(NAGIOS_DIR)-patching
 
+#NAGIOS_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(NAGIOS_DIR)
+NAGIOS_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(NAGIOS_DIR)
+#NAGIOS_WORK_DIR := $(PACKAGE_WORK_DIR)/$(NAGIOS_DIR)
+
 .PHONY: $(NAGIOS) $(NAGIOS)-install $(NAGIOS)-skel $(NAGIOS)-build
 
 $(NAGIOS): $(NAGIOS_BUILD)
@@ -25,20 +29,20 @@ NAGIOS_CONFIGUREOPTS := \
     --enable-embedded-perl \
 
 $(NAGIOS_BUILD): $(NAGIOS_PATCHING)
-	find $(NAGIOS_DIR)/ -name \*.orig -exec rm {} \;
-	cd $(NAGIOS_DIR) ; ./configure $(NAGIOS_CONFIGUREOPTS)
-	$(MAKE) -C $(NAGIOS_DIR) all
+	find $(NAGIOS_BUILD_DIR)/ -name \*.orig -exec rm {} \;
+	cd $(NAGIOS_BUILD_DIR) ; ./configure $(NAGIOS_CONFIGUREOPTS)
+	$(MAKE) -C $(NAGIOS_BUILD_DIR) all
 	$(TOUCH) $@
 
 $(NAGIOS_INSTALL): $(NAGIOS_BUILD)
-	$(MAKE) DESTDIR=$(DESTDIR) -C $(NAGIOS_DIR) install-base
+	$(MAKE) DESTDIR=$(DESTDIR) -C $(NAGIOS_BUILD_DIR) install-base
 	
-	install -m 664 $(NAGIOS_DIR)/p1.pl $(DESTDIR)$(OMD_ROOT)/lib/nagios
+	install -m 664 $(NAGIOS_BUILD_DIR)/p1.pl $(DESTDIR)$(OMD_ROOT)/lib/nagios
 	
 	# Copy package documentations to have these information in the binary packages
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAGIOS)
-	for file in README THANKS LEGAL LICENSE ; do \
-	   install -m 644 $(NAGIOS_DIR)/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAGIOS); \
+	set -e ; for file in README THANKS LEGAL LICENSE ; do \
+	   install -m 644 $(NAGIOS_BUILD_DIR)/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAGIOS); \
 	done
 	
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
@@ -54,17 +58,4 @@ $(NAGIOS_INSTALL): $(NAGIOS_BUILD)
 $(NAGIOS)-skel:
 
 $(NAGIOS)-clean:
-	rm -rf $(NAGIOS_DIR) $(BUILD_HELPER_DIR)/$(NAGIOS)*
-
-$(NAGIOS)-testpatches:
-	@rm -rf $(NAGIOS_DIR)
-	@tar xzf $(NAGIOS_DIR).tar.gz
-	@set -e ; for p in patches/*.dif ; do \
-	    rm -rf $(NAGIOS_DIR).orig; \
-	    cp -rp $(NAGIOS_DIR) $(NAGIOS_DIR).orig; \
-	    ( cd $(NAGIOS_DIR) ; patch -sNt -p1 -r - ) < $$p > /dev/null; \
-	    find $(NAGIOS_DIR) -name \*.orig -exec rm {} \;; \
-	    [ $$(diff -wr $(NAGIOS_DIR).orig/. $(NAGIOS_DIR)/. | wc -l) = 0 ] && echo "-> patch $$p did not change anything (already applied or broken)" || echo -n ""; \
-	done
-	@rm -rf $(NAGIOS_DIR).orig
-	@echo "all patches tested"
+	rm -rf $(NAGIOS_BUILD_DIR) $(BUILD_HELPER_DIR)/$(NAGIOS)*

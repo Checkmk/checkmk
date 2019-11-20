@@ -14,6 +14,7 @@ PYTHON3_INTERMEDIATE_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON3_DIR)-install-inter
 PYTHON3_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON3_DIR)-install
 
 PYTHON3_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(PYTHON3_DIR)
+PYTHON3_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(PYTHON3_DIR)
 PYTHON3_WORK_DIR := $(PACKAGE_WORK_DIR)/$(PYTHON3_DIR)
 
 # HACK!
@@ -46,15 +47,16 @@ $(PYTHON3_CACHE_PKG_UPLOAD): $(PYTHON3_CACHE_PKG_PATH)
 	$(TOUCH) $@
 
 $(PYTHON3_UNPACK): $(PACKAGE_DIR)/$(PYTHON3)/$(PYTHON3_DIR).tar.xz
-	$(RM) -r $*
+	$(RM) -r $(PACKAGE_BUILD_DIR)/$*
+	$(MKDIR) $(PACKAGE_BUILD_DIR)
+	$(TAR_XZ) $< -C $(PACKAGE_BUILD_DIR)
 	$(MKDIR) $(BUILD_HELPER_DIR)
-	$(TAR_XZ) $<
 	$(TOUCH) $@
 
 $(PYTHON3_COMPILE): $(PYTHON3_UNPACK)
 # The build with PGO/LTO enabled is mainly sequential, so a high build
 # parallelism doesn't really help. Therefore we use just -j2.
-	cd $(PYTHON3_DIR) ; \
+	cd $(PYTHON3_BUILD_DIR) ; \
 	$(TEST) "$(DISTRO_NAME)" = "SLES" && sed -i 's,#include <panel.h>,#include <ncurses/panel.h>,' Modules/_curses_panel.c ; \
 	./configure \
 	    --prefix="" \
@@ -62,14 +64,14 @@ $(PYTHON3_COMPILE): $(PYTHON3_UNPACK)
 	    --with-ensurepip=install \
 	    $(PYTHON_ENABLE_OPTIMIZATIONS) \
 	    LDFLAGS="-Wl,--rpath,$(OMD_ROOT)/lib"
-	cd $(PYTHON3_DIR) ; $(MAKE) -j2
+	cd $(PYTHON3_BUILD_DIR) ; $(MAKE) -j2
 	$(TOUCH) $@
 
 $(PYTHON3_BUILD_TMP_INSTALL): $(PYTHON3_COMPILE)
 # Install python files (needed by dependent packages like mod_python,
 # python-modules, ...) during compilation and install targets.
 # NOTE: -j1 seems to be necessary when --enable-optimizations is used
-	$(MAKE) -j1 -C $(PYTHON3_DIR) DESTDIR=$(PACKAGE_PYTHON3_DESTDIR) install
+	$(MAKE) -j1 -C $(PYTHON3_BUILD_DIR) DESTDIR=$(PACKAGE_PYTHON3_DESTDIR) install
 	$(TOUCH) $@
 
 $(PYTHON3_SITECUSTOMIZE_COMPILED): $(PYTHON3_SITECUSTOMIZE_SOURCE) $(PYTHON3_BUILD_TMP_INSTALL)
@@ -84,7 +86,7 @@ $(PYTHON3_INTERMEDIATE_INSTALL): $(PYTHON3_BUILD)
 # Install python files (needed by dependent packages like mod_python,
 # python-modules, ...) during compilation and install targets.
 # NOTE: -j1 seems to be necessary when --enable-optimizations is used
-	$(MAKE) -j1 -C $(PYTHON3_DIR) DESTDIR=$(PYTHON3_INSTALL_DIR) install
+	$(MAKE) -j1 -C $(PYTHON3_BUILD_DIR) DESTDIR=$(PYTHON3_INSTALL_DIR) install
 # Fix python interpreter
 	$(SED) -i '1s|^#!.*/python3\.7$$|#!/usr/bin/env python3|' $(addprefix $(PYTHON3_INSTALL_DIR)/bin/,2to3-3.7 easy_install-3.7 idle3.7 pip3 pip3.7 pydoc3.7 python3.7m-config pyvenv-3.7)
 # Fix pip3 configuration
@@ -98,4 +100,4 @@ $(PYTHON3_INSTALL): $(PYTHON3_CACHE_PKG_UPLOAD)
 	$(TOUCH) $@
 
 $(PYTHON3)-clean:
-	$(RM) -r $(DIR) $(BUILD_HELPER_DIR)/$(PYTHON3)* $(PACKAGE_PYTHON3_DESTDIR)
+	$(RM) -r $(PYTHON3_BUILD_DIR) $(BUILD_HELPER_DIR)/$(PYTHON3)* $(PACKAGE_PYTHON3_DESTDIR)

@@ -6,6 +6,10 @@ CHECK_MK_INSTALL := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-install
 CHECK_MK_SKEL := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-skel
 CHECK_MK_PATCHING := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-patching
 
+#CHECK_MK_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(CHECK_MK_DIR)
+CHECK_MK_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(CHECK_MK_DIR)
+#CHECK_MK_WORK_DIR := $(PACKAGE_WORK_DIR)/$(CHECK_MK_DIR)
+
 .PHONY: $(CHECK_MK) $(CHECK_MK)-install $(CHECK_MK)-skel $(CHECK_MK)-clean
 
 $(CHECK_MK): $(CHECK_MK_BUILD)
@@ -16,25 +20,26 @@ $(CHECK_MK)-skel: $(CHECK_MK_SKEL)
 # This step creates a tar archive containing the sources
 # which are need for the build step
 $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz:
-	    $(MAKE) -C $(REPO_PATH) $(CHECK_MK_DIR).tar.gz ; \
+	$(MAKE) -C $(REPO_PATH) $(CHECK_MK_DIR).tar.gz
 
 # The build step just extracts the archive
 # which was created in the step before
 $(CHECK_MK_BUILD): $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz
 	$(MAKE) -C $(REPO_PATH)/locale all
-	$(TAR_GZ) $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz
-	cd $(CHECK_MK_DIR) ; \
+	$(TAR_GZ) $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz -C $(PACKAGE_BUILD_DIR)
+	cd $(CHECK_MK_BUILD_DIR) ; \
 	  $(MKDIR) bin ; \
 	  cd bin ; \
 	  $(TAR_GZ) ../bin.tar.gz ; \
 	  $(MAKE)
-	cd $(CHECK_MK_DIR) ; \
+	cd $(CHECK_MK_BUILD_DIR) ; \
 	  $(MKDIR) active_checks ; \
 	  cd active_checks ; \
 	  $(TAR_GZ) ../active_checks.tar.gz ; \
 	  $(MAKE)
 	$(TOUCH) $@
 
+# TODO: Replace the ancient setup.py with explicit installation directly in makefile
 $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
 	export bindir='$(OMD_ROOT)/bin' ; \
 	export sharedir='$(OMD_ROOT)/share/check_mk' ; \
@@ -74,7 +79,7 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
 	export nagios_auth_name='Nagios Access' ; \
 	export nagiosuser='nagios' ; \
 	export wwwgroup='nagios' ; \
-	cd $(CHECK_MK_DIR) ; DESTDIR=$(DESTDIR) ./setup.sh --yes
+	cd $(CHECK_MK_BUILD_DIR) ; DESTDIR=$(DESTDIR) ./setup.sh --yes
 
 	# Delete files we do not want to package
 	$(RM) -r $(DESTDIR)/REMOVE
@@ -82,7 +87,7 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
 
 	# Binaries
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(CHECK_MK_DIR)/bin/* $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(CHECK_MK_BUILD_DIR)/bin/* $(DESTDIR)$(OMD_ROOT)/bin
 	$(RM) $(DESTDIR)$(OMD_ROOT)/bin/Makefile $(DESTDIR)$(OMD_ROOT)/bin/*.cc
 
 	# Install the diskspace cleanup plugin
@@ -91,7 +96,7 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
 
 	# Install active checks
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/nagios
-	install -m 755 $(CHECK_MK_DIR)/active_checks/* \
+	install -m 755 $(CHECK_MK_BUILD_DIR)/active_checks/* \
 	    $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/Makefile
 	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/*.cc
@@ -115,11 +120,6 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
 
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/cmk.update-pre-hooks $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks
-
-	# GUI-Test (in doc/helpers)
-	#$(TAR_GZ) $(CHECK_MK_DIR)/doc.tar.gz -C $(DESTDIR)$(OMD_ROOT)/bin \
-	#    --strip-components 1 helpers/guitest
-	#chmod +x $(DESTDIR)$(OMD_ROOT)/bin/*
 	$(TOUCH) $@
 
 $(CHECK_MK_SKEL): $(CHECK_MK_INSTALL)
@@ -128,4 +128,4 @@ $(CHECK_MK_SKEL): $(CHECK_MK_INSTALL)
 	$(TOUCH) $@
 
 $(CHECK_MK)-clean:
-	$(RM) -r check_mk-*.*.*[0-9] werks ChangeLog $(BUILD_HELPER_DIR)/$(CHECK_MK)*
+	$(RM) -r $(CHECK_MK_BUILD_DIR) werks ChangeLog $(BUILD_HELPER_DIR)/$(CHECK_MK)*

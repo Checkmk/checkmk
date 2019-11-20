@@ -6,6 +6,10 @@ LIBGSF_BUILD := $(BUILD_HELPER_DIR)/$(LIBGSF_DIR)-build
 LIBGSF_INSTALL := $(BUILD_HELPER_DIR)/$(LIBGSF_DIR)-install
 LIBGSF_UNPACK := $(BUILD_HELPER_DIR)/$(LIBGSF_DIR)-unpack
 
+#LIBGSF_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(LIBGSF_DIR)
+LIBGSF_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(LIBGSF_DIR)
+#LIBGSF_WORK_DIR := $(PACKAGE_WORK_DIR)/$(LIBGSF_DIR)
+
 .PHONY: $(LIBGSF)-build $(LIBGSF)-install $(LIBGSF)-skel $(LIBGSF)-clean
 
 $(LIBGSF): $(LIBGSF_BUILD)
@@ -13,12 +17,12 @@ $(LIBGSF): $(LIBGSF_BUILD)
 $(LIBGSF)-install: $(LIBGSF_INSTALL)
 
 
-ifneq ($(filter $(DISTRO_CODE),sles15),)
+ifeq ($(filter $(DISTRO_CODE),sles15),)
 $(LIBGSF_BUILD): $(LIBGSF_UNPACK)
-	cd $(LIBGSF_DIR) && ./configure --prefix=$(OMD_ROOT)
-	$(MAKE) -C $(LIBGSF_DIR)
+	cd $(LIBGSF_BUILD_DIR) && ./configure --prefix=$(OMD_ROOT)
+	$(MAKE) -C $(LIBGSF_BUILD_DIR)
 # Package msitools needs some stuff during the build.
-	$(MAKE) -C $(LIBGSF_DIR) prefix=$(PACKAGE_LIBGSF_DESTDIR) install
+	$(MAKE) -C $(LIBGSF_BUILD_DIR) prefix=$(PACKAGE_LIBGSF_DESTDIR) install
 	$(TOUCH) $@
 else
 $(LIBGSF_BUILD):
@@ -28,11 +32,11 @@ endif
 
 $(LIBGSF_INSTALL): $(LIBGSF_BUILD)
 ifneq ($(filter $(DISTRO_CODE),sles15),)
-	$(MAKE) DESTDIR=$(DESTDIR) -C $(LIBGSF_DIR) install
+	$(MAKE) DESTDIR=$(DESTDIR) -C $(LIBGSF_BUILD_DIR) install
 endif
 	$(TOUCH) $@
 
 $(LIBGSF)-skel:
 
 $(LIBGSF)-clean:
-	rm -rf $(LIBGSF_DIR) $(BUILD_HELPER_DIR)/$(LIBGSF_DIR)*
+	rm -rf $(LIBGSF_BUILD_DIR) $(BUILD_HELPER_DIR)/$(LIBGSF_DIR)*

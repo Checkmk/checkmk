@@ -16,8 +16,7 @@ BUILD_HELPER_DIR := $(BUILD_BASE_DIR)/stamps
 # Base for extracting upstream packages to and compiling stuff.  Each OMD
 # package creates a package-named subdirectory below this hierarchy which
 # contains the files the package needs.
-# TODO: Not used yet
-#PACKAGE_BUILD_DIR := $(BUILD_BASE_DIR)/package_build
+PACKAGE_BUILD_DIR := $(BUILD_BASE_DIR)/package_build
 # Base for package specific work directories for random stuff that needs to be
 # created during package build. Each OMD package creates a package-named
 # subdirectory below this hierarchy which contains the files the package needs.
@@ -121,9 +120,7 @@ endef
 
 # perl #########################################################################
 
-PERL                          := /usr/bin/perl
-PACKAGE_PERL_MODULES_DESTDIR  := $(PACKAGE_BASE)/perl-modules/destdir
-PACKAGE_PERL_MODULES_PERL5LIB := $(PACKAGE_PERL_MODULES_DESTDIR)/dest/lib/perl5
+PERL                           := /usr/bin/perl
 
 # python #######################################################################
 
@@ -177,17 +174,6 @@ check-freetds:
 PACKAGE_LIBGSF_DESTDIR := $(PACKAGE_BASE)/libgsf/destdir
 PACKAGE_LIBGSF_LDFLAGS := -L$(PACKAGE_LIBGSF_DESTDIR)/lib -lgsf-1
 PACKAGE_LIBGSF_CFLAGS := -I$(PACKAGE_LIBGSF_DESTDIR)/include/libgsf-1
-
-# re2 #########################################################################
-
-PACKAGE_RE2_DESTDIR := $(PACKAGE_BASE)/re2/destdir
-
-check-re2:
-	@if [ ! -d $(PACKAGE_RE2_DESTDIR) ]; then \
-	    echo "ERROR: You need to build the \"re2\" package first" ; \
-	    exit 1 ; \
-	fi
-
 
 # python-module ################################################################
 

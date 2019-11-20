@@ -291,7 +291,10 @@ omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz:
 	mkdir -p mk-livestatus-$(VERSION)
 	tar cf -  $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) ) | tar xf - -C mk-livestatus-$(VERSION)
 	cp -a configure.ac m4 mk-livestatus-$(VERSION)
-	cd mk-livestatus-$(VERSION) && autoreconf --install --include=m4 && rm -rf autom4te.cache
+	cd mk-livestatus-$(VERSION) && \
+	    autoreconf --install --include=m4 && \
+	    rm -rf autom4te.cache && \
+	    touch ar-lib compile config.guess config.sub install-sh missing depcomp
 	tar czf omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz $(TAROPTS) mk-livestatus-$(VERSION)
 	rm -rf mk-livestatus-$(VERSION)
 

@@ -32,8 +32,8 @@ bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
 bool NeedReinstall(const std::filesystem::path &Target,
                    const std::filesystem::path &Src);
 
-bool IsFilesTheSame(const std::filesystem::path &Target,
-                    const std::filesystem::path &Src);
+bool AreFilesSame(const std::filesystem::path &Target,
+                  const std::filesystem::path &Src);
 
 using ProcFunc = bool (*)(const std::filesystem::path &TargetCap,
                           const std::filesystem::path &SrcCap);
@@ -84,8 +84,10 @@ bool StoreFile(const std::wstring &Name, const std::vector<char> &Data);
 bool CheckAllFilesWritable(const std::string &Directory);
 
 // tgt,src
-std::pair<std::filesystem::path, std::filesystem::path> GetExampleYmlNames();
+using PairOfPath = std::pair<std::filesystem::path, std::filesystem::path>;
+PairOfPath GetExampleYmlNames();
 
+PairOfPath GetInstallPair(std::wstring_view name);
 }  // namespace cma::cfg::cap
 
 #endif  // cap_h__

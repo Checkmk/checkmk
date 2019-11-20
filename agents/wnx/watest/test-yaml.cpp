@@ -844,7 +844,13 @@ TEST(AgentConfig, WorkScenario) {
     {
         auto firewall = GetNode(groups::kSystem, vars::kFirewall);
         auto mode = GetVal(firewall, vars::kMode, std::string("xx"));
-        EXPECT_TRUE(mode == vars::kModeConfigure);
+        EXPECT_TRUE(mode == values::kModeConfigure);
+    }
+
+    {
+        auto mode =
+            GetVal(groups::kSystem, vars::kCleanupUninstall, std::string("xx"));
+        EXPECT_TRUE(mode == values::kCleanupNone);
     }
 }
 
@@ -1485,4 +1491,28 @@ TEST(AgentConfig, LoadUtf8) {
 }
 #endif
 
+static void SetCfgMode(YAML::Node cfg, std::string_view name,
+                       std::string_view mode) {
+    using namespace cma::cfg;
+    cfg[groups::kSystem] = YAML::Load(fmt::format("{}: {}\n", name, mode));
+}
+
+TEST(AgentConfig, CleanupUninstall) {
+    using namespace cma::cfg;
+    OnStartTest();
+    ON_OUT_OF_SCOPE(OnStartTest());
+    auto cfg = cma::cfg::GetLoadedConfig();
+    constexpr std::wstring_view app_name = L"test.exe.exe";
+
+    // remove all from the Firewall
+    std::pair<std::string_view, details::CleanMode> fixtures[] = {
+        {values::kCleanupNone, details::CleanMode::none},
+        {values::kCleanupSmart, details::CleanMode::smart},
+        {values::kCleanupAll, details::CleanMode::all}};
+
+    for (auto& [n, v] : fixtures) {
+        SetCfgMode(cfg, vars::kCleanupUninstall, n);
+        EXPECT_EQ(details::GetCleanDataFolderMode(), v);
+    }
+}
 }  // namespace cma::cfg

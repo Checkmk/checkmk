@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <string>
 
+#include "cap.h"
 #include "cfg.h"
 #include "cfg_details.h"
 #include "cma_core.h"
@@ -656,26 +657,133 @@ void Folders::cleanAll() {
     private_logs_.clear();
 }
 
+CleanMode GetCleanDataFolderMode() {
+    auto mode_text = GetVal(groups::kSystem, vars::kCleanupUninstall,
+                            std::string(values::kCleanupNone));
+    if (cma::tools::IsEqual(mode_text, values::kCleanupNone))
+        return CleanMode::none;
+
+    if (cma::tools::IsEqual(mode_text, values::kCleanupSmart))
+        return CleanMode::smart;
+
+    if (cma::tools::IsEqual(mode_text, values::kCleanupAll))
+        return CleanMode::all;
+
+    return CleanMode::none;
+}
+
+static void RemoveCapGeneratedFile() {
+    namespace fs = std::filesystem;
+    auto [target_cap, ignore_it] = cap::GetInstallPair(files::kCapFile);
+    XLOG::l.i("Removing generated files...");
+
+    std::error_code ec;
+    if (!fs::exists(target_cap, ec)) return;  // nothing to do
+
+    XLOG::l.i("Removing files from the cap '{}' file...",
+              target_cap.u8string());
+
+    std::vector<std::wstring> files_on_disk;
+    cap::Process(target_cap.u8string(), cap::ProcMode::remove, files_on_disk);
+    XLOG::l.i("Removed [{}] files from the cap file.", files_on_disk.size());
+}
+
+static void RemoveOwnGeneratedFile() {
+    namespace fs = std::filesystem;
+
+    auto [target_yml_example, ignore_it_again] = cap::GetExampleYmlNames();
+    std::error_code ec;
+
+    if (!fs::exists(target_yml_example, ec)) return;  // nothing to do
+
+    XLOG::l.i("Removing yml files.");
+    fs::path user_yml = GetUserDir();
+    user_yml /= files::kUserYmlFile;
+    if (cap::AreFilesSame(target_yml_example, user_yml)) {
+        XLOG::l.i("Removing user yml files.");
+        fs::remove(user_yml, ec);
+    }
+    XLOG::l.i("Removing example yml files.");
+    fs::remove(target_yml_example, ec);
+}
+
+static void RemoveDirs(std::filesystem::path path) {
+    namespace fs = std::filesystem;
+    std::error_code ec;
+    auto del_dirs = details::RemovableDirTable();
+    for (auto& d : del_dirs) fs::remove_all(path / d, ec);
+
+    auto std_dirs = details::AllDirTable();
+    for (auto& d : std_dirs) fs::remove(path / d, ec);
+}
+
 // This function should be tested only manually
-bool RecursivelyDeleteDefaultDataFolder() {
+bool CleanDataFolder(CleanMode mode) {
     namespace fs = std::filesystem;
 
     std::error_code ec;
-    auto path = Folders::getDefaultDataFolder();
-    if (fs::exists(path / dirs::kBakery) &&
-        fs::exists(path / dirs::kAgentPlugins)) {
-#if 1
-        XLOG::details::LogWindowsEventAlways(
-            XLOG::EventLevel::warning, 99,
-            "No File Deletion because it is not tested");
-#else
-        XLOG::details::LogWindowsEventInfo(99, "ExecFile Deletion ");
-        fs::remove_all(path, ec);
-#endif
-        return true;
+    fs::path path = cma::cfg::GetUserDir();
+    if (!fs::exists(path / dirs::kBakery, ec) ||
+        !fs::exists(path / dirs::kUserPlugins, ec)) {
+        XLOG::l.w(
+            "Data Folder '{}' looks as invalid/damaged, processing is stopped",
+            path.u8string());
+        return false;
     }
 
-    return false;
+    switch (mode) {
+        case CleanMode::none:
+            XLOG::details::LogWindowsEventAlways(XLOG::EventLevel::information,
+                                                 99, "No cleaning");
+            break;
+
+        case CleanMode::smart: {
+            XLOG::details::LogWindowsEventInfo(
+                99, "Removing SMART from the Program Data Folder");
+            RemoveCapGeneratedFile();
+            RemoveOwnGeneratedFile();
+            RemoveDirs(path);
+        } break;
+
+        case CleanMode::all:
+            XLOG::details::LogWindowsEventInfo(
+                99, "Removing All from the Program Data Folder");
+            fs::remove_all(path, ec);
+            break;
+    }
+
+    return true;
+}
+
+std::vector<std::wstring_view> AllDirTable() {
+    return {//
+            // may not contain user content
+            dirs::kBakery,   // config file(s)
+            dirs::kUserBin,  // placeholder for ohm
+            dirs::kBackup,   // backed up files
+            dirs::kTemp,     //
+            dirs::kInstall,  // for installing data
+            dirs::kUpdate,   // for incoming MSI
+
+            // may contain user content
+            dirs::kState,          // state folder
+            dirs::kSpool,          // keine Ahnung
+            dirs::kUserPlugins,    // user plugins
+            dirs::kLocal,          // user local plugins
+            dirs::kMrpe,           // for incoming mrpe tests
+            dirs::kLog,            // logs are located here
+            dirs::kPluginConfig};  //
+}
+
+std::vector<std::wstring_view> RemovableDirTable() {
+    return {
+        dirs::kBakery,   // config file(s)
+        dirs::kUserBin,  // placeholder for ohm
+        dirs::kBackup,   // backed up files
+        dirs::kTemp,     //
+        dirs::kInstall,  // for installing data
+        dirs::kUpdate    // for incoming MSI
+    };                   //
 }
 
 //
@@ -683,24 +791,12 @@ bool RecursivelyDeleteDefaultDataFolder() {
 // Create project defined Directory Structure in the Data Folder
 // gtest[+] indirectly
 // Returns error code
-static int CreateTree(const std::filesystem::path& base_path) noexcept {
+int CreateTree(const std::filesystem::path& base_path) noexcept {
     namespace fs = std::filesystem;
 
     // directories to be created
     // should be more clear defined in cfg_info
-    auto dir_list = {dirs::kBakery,         // config file(s)
-                     dirs::kUserBin,        // placeholder for ohm
-                     dirs::kBackup,         // backed up files
-                     dirs::kState,          // state folder
-                     dirs::kSpool,          // keine Ahnung
-                     dirs::kUserPlugins,    // user plugins
-                     dirs::kLocal,          // user local plugins
-                     dirs::kTemp,           //
-                     dirs::kInstall,        // for installing data
-                     dirs::kUpdate,         // for incoming MSI
-                     dirs::kMrpe,           // for incoming mrpe tests
-                     dirs::kLog,            // logs are located here
-                     dirs::kPluginConfig};  //
+    auto dir_list = AllDirTable();
 
     for (auto dir : dir_list) {
         std::error_code ec;

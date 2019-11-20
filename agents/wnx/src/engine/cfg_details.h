@@ -26,7 +26,10 @@ std::wstring FindServiceImagePath(std::wstring_view service_name) noexcept;
 std::filesystem::path ExtractPathFromServiceName(
     std::wstring_view service_name) noexcept;
 
-bool RecursivelyDeleteDefaultDataFolder();
+enum class CleanMode { none, smart, all };
+
+CleanMode GetCleanDataFolderMode();
+bool CleanDataFolder(CleanMode mode);
 
 class Folders {
 public:
@@ -107,10 +110,6 @@ public:
 
     inline std::filesystem::path getData() const { return data_; }
 
-    static std::filesystem::path getDefaultDataFolder() {
-        return makeDefaultDataFolder(L"", CreateMode::with_path);
-    }
-
 private:
     // make [recursive] folder in windows
     // returns path if folder was created successfully
@@ -130,6 +129,11 @@ private:
     FRIEND_TEST(CmaCfg, LogFileLocation);
 #endif
 };
+
+std::vector<std::wstring_view> AllDirTable();
+std::vector<std::wstring_view> RemovableDirTable();
+
+int CreateTree(const std::filesystem::path& base_path) noexcept;
 
 }  // namespace cma::cfg::details
 

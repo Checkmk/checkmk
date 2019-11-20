@@ -168,11 +168,23 @@ const char* const kMrpeConfig = "config";      // sequence
 const char* const kMrpeParallel = "parallel";  // boool
 
 // group "system"
-constexpr const char* const kFirewall = "firewall";        // dictionary
-constexpr const char* const kMode = "mode";                // string
+constexpr const char* const kFirewall = "firewall";  // dictionary
+constexpr const char* const kMode = "mode";          // string
+
+constexpr const char* const kCleanupUninstall = "cleanup_uninstall";  // string
+
+}  // namespace vars
+
+namespace values {
+// FIREWALL.MOde
 constexpr const char* const kModeConfigure = "configure";  // install
 constexpr const char* const kModeNone = "none";            // does noting
 constexpr const char* const kModeClear = "clear";          // remove
 
-}  // namespace vars
+// CleanupUninstall
+constexpr const char* const kCleanupNone = "none";    // delete nothing
+constexpr const char* const kCleanupSmart = "smart";  // delete only installed
+constexpr const char* const kCleanupAll = "all";      // delete all
+
+}  // namespace values
 }  // namespace cma::cfg

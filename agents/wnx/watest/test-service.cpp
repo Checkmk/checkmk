@@ -179,35 +179,35 @@ TEST(CmaSrv, Firewall) {
     constexpr std::wstring_view app_name = L"test.exe.exe";
 
     // remove all from the Firewall
-    SetCfgMode(cfg, vars::kModeClear);
+    SetCfgMode(cfg, values::kModeClear);
 
     auto fw_node = GetNode(groups::kSystem, vars::kFirewall);
     auto value = GetVal(fw_node, vars::kMode, std::string(""));
-    ASSERT_TRUE(value == vars::kModeClear);
+    ASSERT_TRUE(value == values::kModeClear);
     ProcessFirewallConfiguration(app_name);
 
-    SetCfgMode(cfg, vars::kModeConfigure);
+    SetCfgMode(cfg, values::kModeConfigure);
     for (auto i = 0; i < 2; ++i) {
         ProcessFirewallConfiguration(app_name);
         auto count = cma::fw::CountRules(kSrvFirewallRuleName, app_name);
         EXPECT_EQ(count, 1);
     }
 
-    SetCfgMode(cfg, vars::kModeNone);
+    SetCfgMode(cfg, values::kModeNone);
     for (auto i = 0; i < 2; ++i) {
         ProcessFirewallConfiguration(app_name);
         auto count = cma::fw::CountRules(kSrvFirewallRuleName, app_name);
         EXPECT_EQ(count, 1);
     }
 
-    SetCfgMode(cfg, vars::kModeClear);
+    SetCfgMode(cfg, values::kModeClear);
     for (auto i = 0; i < 2; ++i) {
         ProcessFirewallConfiguration(app_name);
         auto count = cma::fw::CountRules(kSrvFirewallRuleName, app_name);
         EXPECT_EQ(count, 0);
     }
 
-    SetCfgMode(cfg, vars::kModeNone);
+    SetCfgMode(cfg, values::kModeNone);
     ProcessFirewallConfiguration(app_name);
     EXPECT_EQ(0, cma::fw::CountRules(cma::srv::kSrvFirewallRuleName, app_name));
 }

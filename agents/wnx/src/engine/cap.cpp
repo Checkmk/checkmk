@@ -272,8 +272,8 @@ bool Process(const std::string CapFileName, ProcMode Mode,
     return false;
 }
 
-bool IsFilesTheSame(const std::filesystem::path &Target,
-                    const std::filesystem::path &Src) {
+bool AreFilesSame(const std::filesystem::path &Target,
+                  const std::filesystem::path &Src) {
     try {
         std::ifstream f1(Target, std::ifstream::binary | std::ifstream::ate);
         std::ifstream f2(Src, std::ifstream::binary | std::ifstream::ate);
@@ -320,7 +320,7 @@ bool NeedReinstall(const std::filesystem::path &Target,
     auto src_time = fs::last_write_time(Src, ec);
     if (src_time > target_time) return true;
     XLOG::d.i("Timestamp OK, checking file content...");
-    return !IsFilesTheSame(Target, Src);
+    return !AreFilesSame(Target, Src);
 }
 
 // returns true when changes had been done
@@ -482,8 +482,7 @@ bool ReinstallYaml(const std::filesystem::path &bakery_yaml,
     return true;
 }
 
-static std::tuple<std::filesystem::path, std::filesystem::path> GetInstallPair(
-    std::wstring_view name) {
+PairOfPath GetInstallPair(std::wstring_view name) {
     namespace fs = std::filesystem;
     fs::path target = cma::cfg::GetUserInstallDir();
     target /= name;
@@ -605,7 +604,7 @@ bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
     return true;
 }
 
-std::pair<std::filesystem::path, std::filesystem::path> GetExampleYmlNames() {
+PairOfPath GetExampleYmlNames() {
     using namespace cma::cfg;
     namespace fs = std::filesystem;
     fs::path src_example = GetRootInstallDir();

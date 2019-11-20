@@ -641,38 +641,6 @@ static bool CreateTheFile(const std::filesystem::path& dir,
     return true;
 }
 
-// on command line uninstall_clean
-void ExecUninstallClean() {
-    try {
-        auto tmp_path = cma::tools::win::GetEnv(L"TEMP");
-        if (!cma::tools::win::IsElevated()) {
-            XLOG::details::LogWindowsEventError(
-                9, "You have to be in elevated to use this function.");
-            CreateTheFile(tmp_path, "not elevated");
-            return;
-        }
-
-        auto status =
-            cma::cfg::upgrade::GetServiceStatusByName(cma::srv::kServiceName);
-
-        if (status == SERVICE_RUNNING) {
-            XLOG::details::LogWindowsEventError(
-                10, "checkmkservice must be stopped or un-installed");
-            cma::MailSlot mailbox_client(cma::cfg::kServiceMailSlot, 0);
-            cma::carrier::InformByMailSlot(mailbox_client.GetName(),
-                                           cma::commander::kCleanOnStop);
-            CreateTheFile(tmp_path, "informed");
-            return;
-        }
-
-        cma::cfg::details::RecursivelyDeleteDefaultDataFolder();  // command
-                                                                  // line
-    } catch (const std::exception& e) {
-        XLOG::details::LogWindowsEventCritical(
-            9, "You have to be in elevated to use this function. {}", e.what());
-    }
-}
-
 // returns codes for main
 // 0 - no more Legacy Agent
 // 1 - legacy agent is here
@@ -968,8 +936,8 @@ void ProcessFirewallConfiguration(std::wstring_view app_name) {
     auto os = GetNode(cfg, groups::kSystem);
     auto firewall = GetNode(os, vars::kFirewall);
 
-    auto mode = GetVal(firewall, vars::kMode, std::string(vars::kModeNone));
-    if (cma::tools::IsEqual(mode, vars::kModeConfigure)) {
+    auto mode = GetVal(firewall, vars::kMode, std::string(values::kModeNone));
+    if (cma::tools::IsEqual(mode, values::kModeConfigure)) {
         XLOG::l.i("Firewall mode is set to configure, adding rule...");
         // remove all rules with the same name
         while (cma::fw::RemoveRule(kSrvFirewallRuleName, app_name))
@@ -982,7 +950,7 @@ void ProcessFirewallConfiguration(std::wstring_view app_name) {
         return;
     }
 
-    if (cma::tools::IsEqual(mode, vars::kModeClear)) {
+    if (cma::tools::IsEqual(mode, values::kModeClear)) {
         XLOG::l.i("Firewall mode is set to clear, removing rule...");
         // remove all rules with the same name
         int count = 0;
@@ -998,12 +966,24 @@ void ProcessFirewallConfiguration(std::wstring_view app_name) {
     }
 }
 
+static void TryCleanOnExit() {
+    using namespace cma::cfg;
+    if (!cma::IsCleanOnExit()) return;
+
+    auto mode = details::GetCleanDataFolderMode();  // read config
+    XLOG::l.i(
+        "Clean on exit was requested, trying to remove what we have mode is [{}]",
+        static_cast<int>(mode));
+    details::CleanDataFolder(mode);  // normal
+}
+
 // entry point in service mode
 // normally this is "BLOCKING FOR EVER"
 // called by Windows Service Manager
 // exception free
 // returns -1 on failure
 int ServiceAsService(
+
     std::wstring_view app_name, std::chrono::milliseconds Delay,
     std::function<bool(const void* Processor)> InternalCallback) noexcept {
     XLOG::l.i("service to run");
@@ -1018,6 +998,8 @@ int ServiceAsService(
     // infinite loop to protect from exception
     while (1) {
         try {
+            using namespace cma::cfg;
+
             std::unique_ptr<wtools::BaseServiceProcessor> processor =
                 std::make_unique<ServiceProcessor>(Delay, InternalCallback);
 
@@ -1029,15 +1011,11 @@ int ServiceAsService(
             switch (ret) {
                 case wtools::ServiceController::StopType::normal:
                     XLOG::l.i("Service is stopped normally");
-                    if (cma::IsCleanOnExit())
-                        cma::cfg::details::
-                            RecursivelyDeleteDefaultDataFolder();  // normal
+                    TryCleanOnExit();
                     return 0;
                 case wtools::ServiceController::StopType::fail:
                     XLOG::l.i("Service is stopped due to abnormal situation");
-                    if (cma::IsCleanOnExit())
-                        cma::cfg::details::
-                            RecursivelyDeleteDefaultDataFolder();  // abnormal
+                    TryCleanOnExit();
                     return -1;
                 case wtools::ServiceController::StopType::no_connect:
                     // may happen when we try to call usual exe

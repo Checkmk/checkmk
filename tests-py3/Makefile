@@ -4,22 +4,72 @@ PYTEST   := $(PIPENV3) run py.test -vv
 MYPY     := ../scripts/run-mypy
 # TODO: Use find-python-files helper to check same files as other tests?
 MYPY_DIRS_TO_CHECK := \
-	cmk/ec \
+	cmk \
+	cmk_base \
+	cmk_base/automations \
+	cmk_base/cee \
+	cmk_base/data_sources \
+	cmk_base/default_config \
+	cmk_base/modes \
+	cmk/cee \
 	cmk/cee/dcd \
 	cmk/cee/dcd/connectors \
-	cmk \
-	cmk/utils \
+	cmk/cee/mknotifyd \
+	cmk/cee/notification_plugins \
+	cmk/ec \
+	cmk/gui \
+	cmk/gui/cee \
+	cmk/gui/cee/plugins \
+	cmk/gui/cee/plugins/config \
+	cmk/gui/cee/plugins/cron \
+	cmk/gui/cee/plugins/dashboard \
+	cmk/gui/cee/plugins/main_modules \
+	cmk/gui/cee/plugins/metrics \
+	cmk/gui/cee/plugins/reporting \
+	cmk/gui/cee/plugins/sidebar \
+	cmk/gui/cee/plugins/sla \
+	cmk/gui/cee/plugins/views \
+	cmk/gui/cee/plugins/views/icons \
+	cmk/gui/cee/plugins/visuals \
+	cmk/gui/cee/plugins/wato \
+	cmk/gui/cee/plugins/watolib \
+	cmk/gui/cee/plugins/webapi \
+	cmk/gui/cme \
+	cmk/gui/cme/plugins \
+	cmk/gui/cme/plugins/config \
+	cmk/gui/cme/plugins/dashboard \
+	cmk/gui/cme/plugins/main_modules \
+	cmk/gui/cme/plugins/sidebar \
+	cmk/gui/cme/plugins/views \
+	cmk/gui/cme/plugins/visuals \
+	cmk/gui/cme/plugins/wato \
+	cmk/gui/plugins \
+	cmk/gui/plugins/config \
+	cmk/gui/plugins/cron \
+	cmk/gui/plugins/dashboard \
+	cmk/gui/plugins/main_modules \
+	cmk/gui/plugins/sidebar \
+	cmk/gui/plugins/userdb \
+	cmk/gui/plugins/views/icons \
+	cmk/gui/plugins/views/perfometers \
+	cmk/gui/plugins/wato \
+	cmk/gui/plugins/watolib \
+	cmk/gui/plugins/wato/utils \
+	cmk/gui/plugins/webapi \
+	cmk/gui/wato \
+	cmk/gui/watolib \
+	cmk/gui/wato/pages \
 	cmk/notification_plugins \
 	cmk/special_agents \
-	cmk_base \
-	cmk_base/cee \
-	cmk_base/automations \
-	cmk_base/modes \
-	cmk_base/data_sources \
-	cmk/gui \
-	cmk/gui/watolib \
-	cmk/gui/plugins/userdb \
-	cmk/gui/plugins/wato/utils
+	cmk/utils \
+	cmk/utils/rulesets
+
+# TODO: Directories with typing bugs
+#	cmk/cee/liveproxy
+#	cmk/gui/plugins/metrics
+#	cmk/gui/plugins/views
+#	cmk/gui/plugins/visuals
+#	cmk/gui/plugins/wato/check_parameters
 
 # Horrible hack: Massage paths to make our symlinks "invisible". :-P
 MYPY_FILES_TO_CHECK := \

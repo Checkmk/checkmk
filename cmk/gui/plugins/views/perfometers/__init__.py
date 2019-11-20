@@ -32,6 +32,7 @@
 # Darin die vertikalen Balken.
 
 import math
+from typing import Dict as _Dict  # pylint: disable=unused-import
 
 import cmk.gui.utils as utils
 import cmk.gui.metrics as metrics
@@ -53,7 +54,8 @@ from cmk.utils.plugin_loader import load_plugins
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
-perfometers = {}
+# TODO: Is this unused?
+perfometers = {}  # type: _Dict
 
 #   .--Old Style-----------------------------------------------------------.
 #   |                ___  _     _   ____  _         _                      |

@@ -113,7 +113,7 @@ PERL_MODULES_LIST2 := \
 $(PACKAGE_DIR)/$(PERL_MODULES)/src/%-patched.tar.gz: $(PACKAGE_DIR)/$(PERL_MODULES)/src/%.tar.gz
 	$(MKDIR) $(PERL_MODULES_WORK_DIR)
 	tar xf $< -C $(PERL_MODULES_WORK_DIR)
-	for P in $$($(LS) $(PACKAGE_DIR)/$(PERL_MODULES)/patches/$**.dif); do \
+	set -e ; for P in $$($(LS) $(PACKAGE_DIR)/$(PERL_MODULES)/patches/$**.dif); do \
 	    $(ECHO) "applying $$P..." ; \
 	    $(PATCH) -p1 -b -d $(PERL_MODULES_WORK_DIR)/$* < $$P ; \
 	done
@@ -123,16 +123,15 @@ $(PACKAGE_DIR)/$(PERL_MODULES)/src/%-patched.tar.gz: $(PACKAGE_DIR)/$(PERL_MODUL
 $(PERL_MODULES_BUILD): $(PACKAGE_DIR)/$(PERL_MODULES)/src/Crypt-SSLeay-0.72-patched.tar.gz
 	$(MKDIR) $(PERL_MODULES_BUILD_DIR)/dest
 	$(MKDIR) $(PERL_MODULES_BUILD_DIR)/src
-	echo $(PERL_MODULES)
 	$(RSYNC) $(PACKAGE_DIR)/$(PERL_MODULES)/src/. $(PERL_MODULES_BUILD_DIR)/src/.
 	$(RSYNC) $(PACKAGE_DIR)/$(PERL_MODULES)/build_module.pl $(PACKAGE_DIR)/$(PERL_MODULES)/lib $(PERL_MODULES_BUILD_DIR)/src/.
-	for F in $$(ls $(PERL_MODULES_BUILD_DIR)/src/*-patched.tar.gz); do \
+	set -e ; for F in $$(ls $(PERL_MODULES_BUILD_DIR)/src/*-patched.tar.gz); do \
 		echo $$F; \
 		echo $${F/-patched/}; \
 	    mv $$F $${F/-patched/}; \
 	done
 	echo "install --install_base $(PERL_MODULES_BUILD_DIR)/dest" > $(PERL_MODULES_BUILD_DIR)/dest/.modulebuildrc
-	unset LANG; \
+	set -e; unset LANG; \
 	    unset DESTDIR; \
 	    unset MAKEFLAGS ; \
 	    unset PERL5LIB; \

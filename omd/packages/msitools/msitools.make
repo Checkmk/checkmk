@@ -18,6 +18,7 @@ MSITOOLS_PATCHING := $(BUILD_HELPER_DIR)/$(MSITOOLS_DIR)-patching
 MSITOOLS_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(MSITOOLS_DIR)
 #MSITOOLS_WORK_DIR := $(PACKAGE_WORK_DIR)/$(MSITOOLS_DIR)
 
+
 .PHONY: skel
 
 # Problem here is: msitools is not compilable on older distros
@@ -37,7 +38,7 @@ $(MSITOOLS): $(MSITOOLS_BUILD)
 
 $(MSITOOLS)-install: $(MSITOOLS_INSTALL)
 
-$(MSITOOLS_BUILD): $(LIBGSF_BUILD) $(MSITOOLS_PATCHING) $(BUILD_HELPER_DIR)/$(LCAB_DIR)-unpack
+$(MSITOOLS_BUILD): $(LIBGSF_INTERMEDIATE_INSTALL) $(MSITOOLS_PATCHING) $(BUILD_HELPER_DIR)/$(LCAB_DIR)-unpack
 	# Do not try to compile on lenny. Compiler is too old
 	if [ "$$($(GCC_SYSTEM) --version | $(SED) -n '1s/.* //p' )" != 4.3.2 ] && cd $(MSITOOLS_BUILD_DIR) && $(GSF_CONFIGURE_VARS) ./configure --prefix=$(OMD_ROOT) ; then \
 	  $(MAKE) -C libmsi ; \

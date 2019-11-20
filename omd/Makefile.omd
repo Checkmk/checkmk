@@ -152,23 +152,6 @@ PACKAGE_PYTHON3_LD_LIBRARY_PATH := $(PACKAGE_PYTHON3_DESTDIR)/lib
 PACKAGE_PYTHON3_BIN             := $(PACKAGE_PYTHON3_DESTDIR)/bin
 PACKAGE_PYTHON3_EXECUTABLE      := $(PACKAGE_PYTHON3_BIN)/python3
 
-check-python3:
-	@if [ ! -d "$(PACKAGE_PYTHON3_DESTDIR)" ]; then \
-	    echo "ERROR: You need to build the \"Python3\" package first" ; \
-	    exit 1 ; \
-	fi
-
-# freetds #####################################################################
-
-PACKAGE_FREETDS_DESTDIR := $(PACKAGE_BASE)/freetds/destdir
-PACKAGE_FREETDS_LDFLAGS := -L$(PACKAGE_FREETDS_DESTDIR)/lib
-
-check-freetds:
-	@if [ ! -d $(PACKAGE_FREETDS_DESTDIR) ]; then \
-	    echo "ERROR: You need to build the \"freetds\" package first" ; \
-	    exit 1 ; \
-	fi
-
 # python-module ################################################################
 
 PACKAGE_PYTHON_MODULES_DESTDIR    := $(PACKAGE_BASE)/python-modules/destdir

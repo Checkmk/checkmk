@@ -12,10 +12,10 @@ MYPY_FILES_TO_CHECK := \
 	$(realpath $(wildcard ../cmk/notification_plugins/*.py)) \
 	$(realpath $(wildcard ../cmk/special_agents/*.py)) \
 	$(realpath $(wildcard ../cmk_base/*.py)) \
-	$(wildcard $(realpath ..)/cmk_base/cee/*.py) \
-	$(wildcard $(realpath ..)/cmk_base/automations/*.py) \
-	$(wildcard $(realpath ..)/cmk_base/modes/*.py) \
-	$(wildcard $(realpath ..)/cmk_base/data_sources/*.py) \
+	$(realpath $(wildcard ../cmk_base/cee/*.py)) \
+	$(realpath $(wildcard ../cmk_base/automations/*.py)) \
+	$(realpath $(wildcard ../cmk_base/modes/*.py)) \
+	$(realpath $(wildcard ../cmk_base/data_sources/*.py)) \
 	$(realpath $(addprefix ../cmk/gui/,dashboard.py exceptions.py globals.py htmllib.py \
 	                                   i18n.py sidebar.py sites.py table.py visuals.py permissions.py)) \
 	$(realpath $(addprefix ../cmk/gui/watolib/,rulespecs.py)) \

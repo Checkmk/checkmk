@@ -124,19 +124,6 @@ PERL                           := /usr/bin/perl
 
 # python #######################################################################
 
-PACKAGE_PYTHON_DESTDIR         := $(PACKAGE_BASE)/python/destdir
-PACKAGE_PYTHON_PYTHONPATH      := $(PACKAGE_PYTHON_DESTDIR)/lib/python2.7
-PACKAGE_PYTHON_LDFLAGS         := -L$(PACKAGE_PYTHON_DESTDIR)/lib -L$(PACKAGE_PYTHON_PYTHONPATH)/config
-PACKAGE_PYTHON_LD_LIBRARY_PATH := $(PACKAGE_PYTHON_DESTDIR)/lib
-PACKAGE_PYTHON_BIN             := $(PACKAGE_PYTHON_DESTDIR)/bin
-PACKAGE_PYTHON_EXECUTABLE      := $(PACKAGE_PYTHON_BIN)/python
-
-check-python:
-	@if [ ! -d "$(PACKAGE_PYTHON_DESTDIR)" ]; then \
-	    echo "ERROR: You need to build the \"python\" package first" ; \
-	    exit 1 ; \
-	fi
-
 ifeq (0,$(shell gcc -Xlinker --help | grep -q -e "-plugin"; echo $$?))
 PYTHON_ENABLE_OPTIMIZATIONS ?= --enable-optimizations
 else

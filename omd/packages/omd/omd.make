@@ -42,7 +42,7 @@ $(OMD_INSTALL): omdlib-install
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/hooks/* $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	$(TOUCH) $@
 
-omdlib-install: $(PYTHON_BUILD)
+omdlib-install: $(PYTHON_INTERMEDIATE_INSTALL)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib
 	install -m 644 $(PACKAGE_DIR)/$(OMD)/omdlib/*.py $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib/
 	sed -i 's|###OMD_VERSION###|$(OMD_VERSION)|g' $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib/__init__.py

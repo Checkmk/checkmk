@@ -3,7 +3,7 @@ PIPENV3  := ../scripts/run-pipenv 3
 PYTEST   := $(PIPENV3) run py.test -vv
 MYPY     := ../scripts/run-mypy
 # TODO: Use find-python-files helper to check same files as other tests?
-MYPY_FILES_TO_CHECK := \
+MYPY_FILES_TO_CHECK_1 := \
 	$(realpath $(addprefix ../cmk/ec/,defaults.py export.py main.py settings.py)) \
 	$(realpath $(wildcard ../cmk/cee/dcd/*.py)) \
 	$(realpath $(wildcard ../cmk/cee/dcd/connectors/*.py)) \
@@ -21,6 +21,13 @@ MYPY_FILES_TO_CHECK := \
 	$(realpath $(addprefix ../cmk/gui/watolib/,rulespecs.py)) \
 	$(realpath $(addprefix ../cmk/gui/plugins/userdb/,htpasswd.py utils.py)) \
 	$(realpath $(wildcard ../cmk/gui/plugins/wato/utils/*.py))
+
+# Horrible hack: Massage paths to make our symlinks "invisible". :-P
+MYPY_FILES_TO_CHECK_2 := \
+	$(subst $(realpath ..)/enterprise,$(realpath ..),$(MYPY_FILES_TO_CHECK_1))
+
+MYPY_FILES_TO_CHECK := \
+	$(subst $(realpath ..)/managed,$(realpath ..),$(MYPY_FILES_TO_CHECK_2))
 
 .PHONY: help test-docker test-pylint test-unit \
 	test-mypy test-mypy-raw clean test-packaging

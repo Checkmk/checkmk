@@ -118,40 +118,8 @@ define upload_pkg_archive
 	fi
 endef
 
-# perl #########################################################################
-
-PERL                           := /usr/bin/perl
-
-# python #######################################################################
-
 ifeq (0,$(shell gcc -Xlinker --help | grep -q -e "-plugin"; echo $$?))
 PYTHON_ENABLE_OPTIMIZATIONS ?= --enable-optimizations
 else
 PYTHON_ENABLE_OPTIMIZATIONS ?=
 endif
-
-# python-module ################################################################
-
-PACKAGE_PYTHON_MODULES_DESTDIR    := $(PACKAGE_BASE)/python-modules/destdir
-PACKAGE_PYTHON_MODULES_PYTHONPATH := $(PACKAGE_PYTHON_MODULES_DESTDIR)/lib
-
-check-python-modules:
-	@if [ ! -d $(PACKAGE_PYTHON_MODULES_DESTDIR) ]; then \
-	    echo "ERROR: You need to build the \"python-modules\" package first" ; \
-	    exit 1 ; \
-	fi
-
-# python3-module ################################################################
-
-PACKAGE_PYTHON3_MODULES_DESTDIR    := $(PACKAGE_BASE)/python3-modules/destdir
-PACKAGE_PYTHON3_MODULES_PYTHONPATH := $(PACKAGE_PYTHON3_MODULES_DESTDIR)/lib
-
-check-python3-modules:
-	@if [ ! -d $(PACKAGE_PYTHON3_MODULES_DESTDIR) ]; then \
-	    echo "ERROR: You need to build the \"python3-modules\" package first" ; \
-	    exit 1 ; \
-	fi
-
-# googletest ###################################################################
-
-PACKAGE_GOOGLETEST_DESTDIR := $(PACKAGE_BASE)/googletest/destdir

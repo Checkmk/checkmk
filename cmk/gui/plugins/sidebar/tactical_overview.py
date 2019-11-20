@@ -32,7 +32,7 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 import cmk.gui.notifications as notifications
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.globals import html
 from cmk.gui.valuespec import Checkbox, ListOf, CascadingDropdown, Dictionary, TextUnicode
 # Things imported here are used by pre legacy (pre 1.6) cron plugins)
@@ -439,14 +439,13 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         html.open_div(class_="spacertop")
         html.open_div(class_="tacticalalert")
 
-        if len(sites_not_connected) == 1:
-            message_template = _("%d site is not connected")
-            tooltip_template = _("Associated hosts, services and events are not included "
-                                 "in the Tactical Overview. The disconnected site is %s.")
-        else:
-            message_template = _("%d sites are not connected")
-            tooltip_template = _("Associated hosts, services and events are not included "
-                                 "in the Tactical Overview. The disconnected sites are %s.")
+        message_template = ungettext("%d site is not connected", "%d sites are not connected",
+                                     len(sites_not_connected))
+        tooltip_template = ungettext(
+            "Associated hosts, services and events are not included "
+            "in the Tactical Overview. The disconnected site is %s.",
+            "Associated hosts, services and events are not included "
+            "in the Tactical Overview. The disconnected sites are %s.", len(sites_not_connected))
         message = message_template % len(sites_not_connected)
         tooltip = tooltip_template % ', '.join(sites_not_connected)
 

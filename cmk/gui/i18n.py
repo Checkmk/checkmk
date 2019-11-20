@@ -57,9 +57,18 @@ _translation = None  # type: Optional[Translation]
 
 def _(message):
     # type: (str) -> Text
-    if not _translation:
-        return six.text_type(message)
-    return _translation.translation.ugettext(message)
+    if _translation:
+        return _translation.translation.ugettext(message)
+    return six.text_type(message)
+
+
+def ungettext(singular, plural, n):
+    # type: (str, str, int) -> Text
+    if _translation:
+        return _translation.translation.ungettext(singular, plural, n)
+    if n == 1:
+        return six.text_type(singular)
+    return six.text_type(plural)
 
 
 def get_current_language():

@@ -97,6 +97,7 @@ multisite_builtin_views.update({
             'hostalias',
             'host_labels',
             'host_tags',
+            'host_auxtags',
         ],
         'sorters': [
             ('site', False),
@@ -1920,6 +1921,7 @@ multisite_builtin_views.update({
             'host_staleness',
             'host_labels',
             'host_tags',
+            'host_auxtags',
             'hostalias',
             'host_favorites',
             'host_num_services',
@@ -1999,6 +2001,7 @@ multisite_builtin_views.update({
             'service_labels',
             'host_labels',
             'host_tags',
+            'host_auxtags',
             'hostalias',
             'host_favorites',
             'service_favorites',
@@ -2354,6 +2357,7 @@ multisite_builtin_views.update({
             'serviceregex',
             'host_labels',
             'host_tags',
+            'host_auxtags',
             'hoststate',
         ],
         'sorters': [

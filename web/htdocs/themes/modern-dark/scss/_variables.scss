@@ -279,7 +279,8 @@ $toggle-button-search-img-filter:	    invert(20%);
 
 $success-bg-color:			    $primary-bg-color;
 
-$filter-inversion-percentage:		    0%;
+$tree-white-img-filter:			    invert(0%);
+$tree-black-img-filter:			    invert(90%);
 
 $color-div-border-color:		    $grey-7;
 
@@ -423,8 +424,6 @@ $iconbutton-filter:			    invert(40%);
 
 $multiple-select-bg-color:		    $grey-5;
 $popup-menu-select-bg-color:		    $grey-5;
-
-$tree-collapse-img-filter:		    invert(90%);
 
 $input-focus-box-shadow-color:		    $grey-2;
 

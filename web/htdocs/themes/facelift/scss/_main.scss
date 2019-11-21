@@ -1261,7 +1261,7 @@ div.content {
 }
 
 body.main img.treeangle {
-  filter: invert($filter-inversion-percentage);
+  filter: $tree-black-img-filter;
 }
 
 /* TODO: Reproduce this element then get rid of important styles */
@@ -1276,7 +1276,7 @@ body.main img.treeangle {
 
     &.open, &.closed {
       margin: 1px 4px 0;
-      filter: $tree-collapse-img-filter;
+      filter: $tree-black-img-filter;
     }
   }
 }

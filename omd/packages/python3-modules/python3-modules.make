@@ -2,17 +2,18 @@ PYTHON3_MODULES := python3-modules
 PYTHON3_MODULES_VERS := $(OMD_VERSION)
 PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
 
-PYTHON3_MODULES_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-build
-PYTHON3_MODULES_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-install
 PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
+PYTHON3_MODULES_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-build
+PYTHON3_MODULES_INTERMEDIATE_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-install-intermediate
+PYTHON3_MODULES_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-install
 
-#PYTHON3_MODULES_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(PYTHON3_MODULES_DIR)
+PYTHON3_MODULES_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(PYTHON3_MODULES_DIR)
 PYTHON3_MODULES_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(PYTHON3_MODULES_DIR)
-#PYTHON3_MODULES_WORK_DIR := $(PACKAGE_WORK_DIR)/$(PYTHON3_MODULES_DIR)
+PYTHON3_MODULES_WORK_DIR := $(PACKAGE_WORK_DIR)/$(PYTHON3_MODULES_DIR)
 
 # Used by other OMD packages
-PACKAGE_PYTHON3_MODULES_DESTDIR    := $(PACKAGE_BASE)/python3-modules/destdir
-PACKAGE_PYTHON3_MODULES_PYTHONPATH := $(PACKAGE_PYTHON3_MODULES_DESTDIR)/lib
+PACKAGE_PYTHON3_MODULES_DESTDIR    := $(PYTHON3_MODULES_INSTALL_DIR)
+PACKAGE_PYTHON3_MODULES_PYTHONPATH := $(PACKAGE_PYTHON3_MODULES_DESTDIR)/lib/python
 
 .PHONY: $(PYTHON3_MODULES) $(PYTHON3_MODULES)-install $(PYTHON3_MODULES)-clean
 
@@ -47,6 +48,8 @@ PYTHON3_MODULES_LIST += ply-3.11.tar.gz # needed by pysmi
 PYTHON3_MODULES_LIST += pysmi-0.3.4.tar.gz # needed by pysnmp
 PYTHON3_MODULES_LIST += pysnmp-4.4.12.tar.gz # needed by Event Console
 
+# TODO: Can we clean this up and use the intermediate install step results? Would be possible
+# in the moment we merge the build and intermediate install in a single target
 $(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(FREETDS_INTERMEDIATE_INSTALL) $(PYTHON3_MODULES_UNPACK)
 	set -e ; cd $(PYTHON3_MODULES_BUILD_DIR) ; \
 	    unset DESTDIR MAKEFLAGS ; \
@@ -58,21 +61,17 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(FREETDS_INTERMEDIATE_IN
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" ; \
 	    export PATH="$(PACKAGE_PYTHON3_BIN):$$PATH" ; \
 	    for M in $(PYTHON3_MODULES_LIST); do \
-		echo "Building $$M..." ; \
+		echo "=== Building $$M..." ; \
 		PKG=$${M//.tar.gz/} ; \
 		PKG=$${PKG//.zip/} ; \
-		if [ $$PKG = pysnmp-git ]; then \
-		    PKG=pysnmp-master ; \
-		fi ; \
-	    	echo $$PWD ;\
 		cd $$PKG ; \
 		$(PACKAGE_PYTHON3_EXECUTABLE) setup.py build ; \
 		$(PACKAGE_PYTHON3_EXECUTABLE) setup.py install \
-		    --root=$(PACKAGE_PYTHON3_MODULES_DESTDIR) \
+		    --root=$(PYTHON3_MODULES_INSTALL_DIR) \
 		    --prefix='' \
 		    --install-data=/share \
-		    --install-platlib=/lib \
-		    --install-purelib=/lib ; \
+		    --install-platlib=/lib/python \
+		    --install-purelib=/lib/python ; \
 		cd .. ; \
 	    done
 	$(TOUCH) $@
@@ -92,31 +91,11 @@ $(PYTHON3_MODULES_UNPACK): $(addprefix $(PACKAGE_DIR)/$(PYTHON3_MODULES)/src/,$(
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 
-# NOTE: Setting SODIUM_INSTALL variable below is an extremely cruel hack to
-# avoid installing libsodium headers and libraries. The need for this hack
-# arises because of our "interesting" flag use for "setup.py install" and our
-# double installation. We should really switch to e.g. pipenv here.
-$(PYTHON3_MODULES_INSTALL): $(PYTHON3_MODULES_BUILD)
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python3
-	set -e ; cd $(PYTHON3_MODULES_BUILD_DIR) ; \
-	    export SODIUM_INSTALL="system" ; \
-	    export PYTHONPATH=$$PYTHONPATH:"$(PACKAGE_PYTHON3_MODULES_PYTHONPATH)" ; \
-	    export PYTHONPATH=$$PYTHONPATH:"$(PACKAGE_PYTHON3_PYTHONPATH)" ; \
-	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include" ; \
-	    export LDFLAGS="$(PACKAGE_PYTHON3_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS)" ; \
-	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" ; \
-	    export PATH="$(PACKAGE_PYTHON3_BIN):$$PATH" ; \
-	    for M in $$(ls); do \
-		echo "Installing $$M..." ; \
-		cd $$M ; \
-		$(PACKAGE_PYTHON3_EXECUTABLE) setup.py install \
-		    --root=$(DESTDIR)$(OMD_ROOT) \
-		    --prefix='' \
-		    --install-data=/share \
-		    --install-platlib=/lib/python3 \
-		    --install-purelib=/lib/python3 ; \
-		cd .. ; \
-	    done
+$(PYTHON3_MODULES_INTERMEDIATE_INSTALL): $(PYTHON3_MODULES_BUILD)
+	$(TOUCH) $@
+
+$(PYTHON3_MODULES_INSTALL): $(PYTHON3_MODULES_INTERMEDIATE_INSTALL)
+	$(RSYNC) $(PYTHON3_MODULES_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
 	$(TOUCH) $@
 
 $(PYTHON3_MODULES)-skel:

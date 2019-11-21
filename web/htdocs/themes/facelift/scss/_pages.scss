@@ -767,7 +767,7 @@ table.data {
   tr th a.toggle_actions img,
   tr th body.main .popup_menu span.toggle_actions img,
   body.main .popup_menu & tr th span.toggle_actions img {
-    filter: $tree-white-img-filter;
+    filter: $treeangle-img-filter;
   }
 
   tr.groupheader,
@@ -1178,7 +1178,6 @@ table.nform {
 
     img.treeangle.nform {
       margin: 0 8px 0 0;
-      filter: $tree-white-img-filter;
     }
   }
 

@@ -369,7 +369,7 @@ img.treeangle {
   margin-right: 3px;
   vertical-align: middle;
   cursor: pointer;
-  filter: invert(20%);
+  filter: $treeangle-img-filter;
   transition: transform .2s ease-in-out;
   -webkit-transition: -webkit-transform .2s ease-in-out;
   -moz-transition: -moz-transform .2s ease-in-out;
@@ -1272,10 +1272,6 @@ div.content {
   box-sizing: border-box;
 }
 
-body.main img.treeangle {
-  filter: $tree-black-img-filter;
-}
-
 /* TODO: Reproduce this element then get rid of important styles */
 .op {
   width: 60px !important;
@@ -1284,11 +1280,8 @@ body.main img.treeangle {
 .bi_rule_tree img.treeangle, .invtree img.treeangle,
 .grouped_row_header img.treeangle.nform, .aggrtree img.treeangle {
   &, body.main & {
-    filter: invert(0%);
-
     &.open, &.closed {
       margin: 1px 4px 0;
-      filter: $tree-black-img-filter;
     }
   }
 }

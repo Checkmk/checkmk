@@ -1527,8 +1527,7 @@ class NodeRenderer(object):
                                              False,
                                              header,
                                              icon=icon,
-                                             fetch_url=fetch_url,
-                                             tree_img="tree_black"):
+                                             fetch_url=fetch_url):
                 # Render only if it is open. We'll get the stuff via ajax later if it's closed
                 for child in inventory.sort_children(node.get_node_children()):
                     child.show(self, path=raw_invpath)

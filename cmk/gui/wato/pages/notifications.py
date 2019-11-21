@@ -373,7 +373,6 @@ class NotificationsMode(EventsMode):
                             isopen=False,
                             title=title,
                             indent=False,
-                            tree_img="tree_black",
                         )
                         html.write(vs_match_conditions.value_to_text(rule))
                         html.end_foldable_container()

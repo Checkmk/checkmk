@@ -1009,8 +1009,7 @@ class ModeBI(WatoMode, BIManagement):
                                           "%s%s" % (tree_prefix, tree_path),
                                           False,
                                           title,
-                                          title_url=edit_url,
-                                          tree_img="tree_black")
+                                          title_url=edit_url)
             for sub_rule_id in sub_rule_ids:
                 self.render_rule_tree(sub_rule_id, tree_path + "/" + sub_rule_id, tree_prefix)
             html.end_foldable_container()

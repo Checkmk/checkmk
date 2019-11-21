@@ -377,6 +377,10 @@ img.treeangle {
     -moz-transition: -moz-transform .2s ease-in-out;
     transition: transform .2s ease-in-out;
     vertical-align: middle;
+
+    body:not(.side) &:not(.nform):not(.title) {
+      filter: invert(100%);
+    }
 }
 
 img.treeangle.open {
@@ -415,6 +419,7 @@ ul.treeangle {
     margin: 8px 0px;
     position: relative; /* In order for placement of invtablelink */
 }
+
 ul.treeangle li {
     margin: 0px;
     margin-left: 16px;
@@ -422,6 +427,7 @@ ul.treeangle li {
     list-style: disc;
     display: block;
 }
+
 ul.closed {
     display: none;
 }

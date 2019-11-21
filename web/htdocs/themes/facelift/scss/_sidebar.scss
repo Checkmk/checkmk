@@ -62,6 +62,10 @@ body.side {
   &.screenshotmode {
     background-image: url("");
   }
+
+  img.treeangle {
+    filter: $treeangle-img-filter-sidebar;
+  }
 }
 
 /* Top logo part */

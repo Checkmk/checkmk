@@ -2476,8 +2476,7 @@ class html(HTMLGenerator):
                                  icon=None,
                                  fetch_url=None,
                                  title_url=None,
-                                 title_target=None,
-                                 tree_img="tree"):
+                                 title_target=None):
         self.folding_indent = indent
 
         if self._user_id:
@@ -2500,7 +2499,7 @@ class html(HTMLGenerator):
             else:
                 self.img(id_=img_id,
                          class_=["treeangle", "nform", "open" if isopen else "closed"],
-                         src="themes/%s/images/%s_closed.png" % (self._theme, tree_img),
+                         src="themes/%s/images/tree_closed.png" % (self._theme),
                          align="absbottom")
             self.write_text(title)
             self.close_td()
@@ -2513,7 +2512,7 @@ class html(HTMLGenerator):
             if not icon:
                 self.img(id_=img_id,
                          class_=["treeangle", "open" if isopen else "closed"],
-                         src="themes/%s/images/%s_closed.png" % (self._theme, tree_img),
+                         src="themes/%s/images/tree_closed.png" % (self._theme),
                          align="absbottom",
                          onclick=onclick)
             if isinstance(title, HTML):  # custom HTML code

@@ -1,0 +1,14 @@
+Title: Quicksearch: Now supports filtering for Auxiliary tags
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1574346060
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.6.0p10
+
+The quicksearch now supports the filtering for Auxiliary host tags. This can be achieved by using 'tg: something'.
+In various filter settings you can now have a more detailed search for host auxiliary tags.
+Previous versions showed an error when searching for auxiliary tags.

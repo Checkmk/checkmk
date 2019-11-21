@@ -13,6 +13,3 @@ Fixed WATO checkbox sizes for the classic theme.
 Adjusted sizes and formatting for search filter input fields.
 Fixed the collapsing mechanism of search filters in the network topology view for the classic theme.
 Tuned sidebar table spacing to prevent unnecessary line breaks.
-Fixed the theme specific coloring of list collapsing icons.
-Adjusted the padding for search bars in long WATO lists.
-Fixed the OK state font color in the "Analyze configuration" view for the dark theme.

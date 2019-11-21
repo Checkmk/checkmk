@@ -423,18 +423,19 @@ class FilterCRESite(Filter):
         self.enforce = enforce
 
     def display(self):
-        html.dropdown("site", self._choices())
+        html.dropdown("site", ([] if self.enforce else [("", "")]) + self._choices())
 
     def _choices(self):
-        choices = [] if self.enforce else [("", "")]
-        for sitename, state in sites.states().items():
-            if state["state"] == "online":
-                choices.append((sitename, config.site(sitename)["alias"]))
-        return sorted(choices, key=lambda a: a[1].lower())
+        return sorted([(sitename, config.site(sitename)["alias"])
+                       for sitename, state in sites.states().items()
+                       if state["state"] == "online"],
+                      key=lambda a: a[1].lower())
 
     def heading_info(self):
         current_value = html.request.var("site")
-        return config.site(current_value)["alias"] if current_value else None
+        if not current_value:
+            return None
+        return config.site(current_value)["alias"]
 
     def variable_settings(self, row):
         return [("site", row["site"])]

@@ -19,6 +19,7 @@ MYPY_DIRS_TO_CHECK := \
 	cmk/ec \
 	cmk/gui \
 	cmk/gui/cee \
+	cmk/cee/liveproxy \
 	cmk/gui/cee/plugins \
 	cmk/gui/cee/plugins/config \
 	cmk/gui/cee/plugins/cron \
@@ -48,12 +49,15 @@ MYPY_DIRS_TO_CHECK := \
 	cmk/gui/plugins/cron \
 	cmk/gui/plugins/dashboard \
 	cmk/gui/plugins/main_modules \
+	cmk/gui/plugins/metrics \
 	cmk/gui/plugins/sidebar \
 	cmk/gui/plugins/userdb \
+	cmk/gui/plugins/views \
 	cmk/gui/plugins/views/icons \
 	cmk/gui/plugins/views/perfometers \
 	cmk/gui/plugins/wato \
 	cmk/gui/plugins/watolib \
+	cmk/gui/plugins/wato/check_parameters \
 	cmk/gui/plugins/wato/utils \
 	cmk/gui/plugins/webapi \
 	cmk/gui/wato \
@@ -65,11 +69,7 @@ MYPY_DIRS_TO_CHECK := \
 	cmk/utils/rulesets
 
 # TODO: Directories with typing bugs
-#	cmk/cee/liveproxy
-#	cmk/gui/plugins/metrics
-#	cmk/gui/plugins/views
 #	cmk/gui/plugins/visuals
-#	cmk/gui/plugins/wato/check_parameters
 
 # Horrible hack: Massage paths to make our symlinks "invisible". :-P
 MYPY_FILES_TO_CHECK := \

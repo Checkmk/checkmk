@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from typing import Optional as _Optional, Tuple as _Tuple  # pylint: disable=unused-import
+
 from cmk.gui.i18n import _
 
 from . import (
@@ -40,6 +42,8 @@ service_view_painters = [
     ('svc_check_age', None),
     ('perfometer', None),
 ]
+
+_host_host_painter = ('host', 'host')  # type: _Tuple[str, _Optional[str]]
 
 # Same as list of services, but extended by the hostname
 host_service_view_painters = service_view_painters[:]
@@ -2214,7 +2218,7 @@ multisite_builtin_views.update({
         'name': 'svcbygroups',
         'num_columns': 1,
         'owner': '',
-        'painters': [('host', 'host')] + service_view_painters,
+        'painters': [_host_host_painter] + service_view_painters,
         'public': True,
         'show_filters': [],
         'sorters': [

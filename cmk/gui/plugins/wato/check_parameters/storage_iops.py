@@ -72,7 +72,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="storage_iops",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_(u"Port index or 'Total'")),
+        item_spec=lambda: TextAscii(title=_("Port index or 'Total'")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_storage_iops,
         title=lambda: _("I/O operations for DDN S2A devices"),

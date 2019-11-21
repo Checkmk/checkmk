@@ -27,6 +27,8 @@
 import abc
 import re
 import json
+from typing import Optional as _Optional  # pylint: disable=unused-import
+
 import six
 
 import livestatus
@@ -305,7 +307,7 @@ class FilterHostnameOrAlias(FilterUnicode):
 
 
 class FilterIPAddress(Filter):
-    _what = None
+    _what = None  # type: _Optional[str]
 
     def display(self):
         html.text_input(self.htmlvars[0])

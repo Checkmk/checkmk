@@ -9864,17 +9864,20 @@ perfometer_info.append({
     "color": "16/a",
 })
 
-perfometer_info.append(("stacked", [{
-    "type": "logarithmic",
-    "metric": "elasticsearch_size_rate",
-    "half_value": 5000,
-    "exponent": 2,
-}, {
-    "type": "logarithmic",
-    "metric": "elasticsearch_count_rate",
-    "half_value": 10,
-    "exponent": 2,
-}]))
+perfometer_info.append({
+    'type': 'stacked',
+    'perfometers': [{
+        'type': 'logarithmic',
+        'metric': 'elasticsearch_size_rate',
+        'half_value': 5000,
+        'exponent': 2,
+    }, {
+        'type': 'logarithmic',
+        'metric': 'elasticsearch_count_rate',
+        'half_value': 10,
+        'exponent': 2,
+    }],
+})
 
 perfometer_info.append({
     "type": "logarithmic",
@@ -9884,15 +9887,18 @@ perfometer_info.append({
     "unit": "count",
 })
 
-perfometer_info.append(("dual", [{
-    "type": "linear",
-    "segments": ["active_primary_shards"],
-    "total": "active_shards",
-}, {
-    "type": "linear",
-    "segments": ["active_shards"],
-    "total": "active_shards",
-}]))
+perfometer_info.append({
+    'type': 'dual',
+    'perfometers': [{
+        'type': 'linear',
+        'segments': ['active_primary_shards'],
+        'total': 'active_shards',
+    }, {
+        'type': 'linear',
+        'segments': ['active_shards'],
+        'total': 'active_shards',
+    }],
+})
 
 perfometer_info.append({
     "type": "linear",

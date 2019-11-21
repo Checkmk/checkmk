@@ -52,7 +52,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="read_hits",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_(u"Port index or 'Total'")),
+        item_spec=lambda: TextAscii(title=_("Port index or 'Total'")),
         parameter_valuespec=_parameter_valuespec_read_hits,
         title=lambda: _("Read prefetch hits for DDN S2A devices"),
     ))

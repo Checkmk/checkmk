@@ -160,7 +160,7 @@ def _vs_latency():
 
 
 def _vs_limits(resource, default_limit, vs_limit_cls=None):
-    # type: (Text, int, Optional[Type[Filesize]]) -> Alternative
+    # type: (str, int, Optional[Type[Filesize]]) -> Alternative
     if vs_limit_cls is None:
         vs_limit = Integer(
             unit=_("%s" % resource),

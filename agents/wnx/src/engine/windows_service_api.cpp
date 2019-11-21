@@ -936,21 +936,32 @@ void ProcessFirewallConfiguration(std::wstring_view app_name) {
     auto os = GetNode(cfg, groups::kSystem);
     auto firewall = GetNode(os, vars::kFirewall);
 
-    auto mode = GetVal(firewall, vars::kMode, std::string(values::kModeNone));
-    if (cma::tools::IsEqual(mode, values::kModeConfigure)) {
+    auto firewall_mode =
+        GetVal(firewall, vars::kFirewallMode, std::string(values::kModeNone));
+    auto port_mode = GetVal(firewall, vars::kFirewallPort,
+                            std::string(values::kFirewallPortAuto));
+
+    if (cma::tools::IsEqual(firewall_mode, values::kModeConfigure)) {
         XLOG::l.i("Firewall mode is set to configure, adding rule...");
         // remove all rules with the same name
         while (cma::fw::RemoveRule(kSrvFirewallRuleName, app_name))
             ;
+
+        int port = -1;  // all ports
+        if (port_mode == values::kFirewallPortAuto)
+            port = GetVal(groups::kGlobal, vars::kPort, cma::cfg::kMainPort);
+
         auto success =
-            cma::fw::CreateInboundRule(kSrvFirewallRuleName, app_name, -1);
+            cma::fw::CreateInboundRule(kSrvFirewallRuleName, app_name, port);
+
         if (success)
-            XLOG::l.i("Firewall rule '[]' had been added successfully",
-                      wtools::ConvertToUTF8(kSrvFirewallRuleName));
+            XLOG::l.i(
+                "Firewall rule '[]' had been added successfully for ports [{}]",
+                wtools::ConvertToUTF8(kSrvFirewallRuleName), port);
         return;
     }
 
-    if (cma::tools::IsEqual(mode, values::kModeClear)) {
+    if (cma::tools::IsEqual(firewall_mode, values::kModeRemove)) {
         XLOG::l.i("Firewall mode is set to clear, removing rule...");
         // remove all rules with the same name
         int count = 0;

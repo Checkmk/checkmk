@@ -169,21 +169,26 @@ const char* const kMrpeParallel = "parallel";  // boool
 
 // group "system"
 constexpr const char* const kFirewall = "firewall";  // dictionary
-constexpr const char* const kMode = "mode";          // string
+constexpr const char* const kFirewallMode = "mode";  // string
+constexpr const char* const kFirewallPort = "port";  // string
 
 constexpr const char* const kCleanupUninstall = "cleanup_uninstall";  // string
 
 }  // namespace vars
 
 namespace values {
-// FIREWALL.MOde
-constexpr const char* const kModeConfigure = "configure";  // install
+// Firewall.Mode
+constexpr const char* const kModeConfigure = "configure";  // install [*]
 constexpr const char* const kModeNone = "none";            // does noting
-constexpr const char* const kModeClear = "clear";          // remove
+constexpr const char* const kModeRemove = "remove";        // remove
+
+// Firewall.Port
+constexpr const char* const kFirewallPortAll = "all";    // open all ports
+constexpr const char* const kFirewallPortAuto = "auto";  // port in config, [*]
 
 // CleanupUninstall
 constexpr const char* const kCleanupNone = "none";    // delete nothing
-constexpr const char* const kCleanupSmart = "smart";  // delete only installed
+constexpr const char* const kCleanupSmart = "smart";  // delete only owned [*]
 constexpr const char* const kCleanupAll = "all";      // delete all
 
 }  // namespace values

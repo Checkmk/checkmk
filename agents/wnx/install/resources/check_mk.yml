@@ -247,7 +247,9 @@ system:
     enabled: yes
 
     firewall:
-        mode: configure # allowed none, clear, configure
+        mode: configure # allowed none, remove, configure
+        port: auto      # allowed all or auto
+
 
     cleanup_uninstall: none # allowed none, smart and all
 

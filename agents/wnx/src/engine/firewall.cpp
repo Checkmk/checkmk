@@ -113,8 +113,8 @@ public:
     Bstr &operator=(const Bstr &) = delete;
     Bstr &operator=(Bstr &&) = delete;
 
-    Bstr(std::wstring_view str) { data_ = SysAllocString(str.data()); }
-    ~Bstr() { SysFreeString(data_); }
+    Bstr(std::wstring_view str) { data_ = ::SysAllocString(str.data()); }
+    ~Bstr() { ::SysFreeString(data_); }
     operator BSTR() { return data_; }
 
 public:
@@ -211,18 +211,22 @@ INetFwRule *DumpFWRulesInCollection(INetFwRule *fw_rule) {
 
     if (SUCCEEDED(fw_rule->get_Name(&bstrVal))) {
         XLOG::l.i("Name:             '{}'", to_utf8(bstrVal));
+        ::SysFreeString(bstrVal);
     }
 
     if (SUCCEEDED(fw_rule->get_Description(&bstrVal))) {
         XLOG::l.i("Description:      '{}'", to_utf8(bstrVal));
+        ::SysFreeString(bstrVal);
     }
 
     if (SUCCEEDED(fw_rule->get_ApplicationName(&bstrVal))) {
         XLOG::l.i("Application Name: '{}'", to_utf8(bstrVal));
+        ::SysFreeString(bstrVal);
     }
 
     if (SUCCEEDED(fw_rule->get_ServiceName(&bstrVal))) {
         XLOG::l.i("Service Name:     '{}'", to_utf8(bstrVal));
+        ::SysFreeString(bstrVal);
     }
 
     if (SUCCEEDED(fw_rule->get_Protocol(&lVal))) {
@@ -247,24 +251,29 @@ INetFwRule *DumpFWRulesInCollection(INetFwRule *fw_rule) {
         if (lVal != NET_FW_IP_VERSION_V4 && lVal != NET_FW_IP_VERSION_V6) {
             if (SUCCEEDED(fw_rule->get_LocalPorts(&bstrVal))) {
                 XLOG::l.i("Local Ports:      '{}'", to_utf8(bstrVal));
+                ::SysFreeString(bstrVal);
             }
 
             if (SUCCEEDED(fw_rule->get_RemotePorts(&bstrVal))) {
                 XLOG::l.i("Remote Ports:      '{}'", to_utf8(bstrVal));
+                ::SysFreeString(bstrVal);
             }
         } else {
             if (SUCCEEDED(fw_rule->get_IcmpTypesAndCodes(&bstrVal))) {
                 XLOG::l.i("ICMP TypeCode:      '{}'", to_utf8(bstrVal));
+                ::SysFreeString(bstrVal);
             }
         }
     }
 
     if (SUCCEEDED(fw_rule->get_LocalAddresses(&bstrVal))) {
         XLOG::l.i("LocalAddresses:   '{}'", to_utf8(bstrVal));
+        ::SysFreeString(bstrVal);
     }
 
     if (SUCCEEDED(fw_rule->get_RemoteAddresses(&bstrVal))) {
         XLOG::l.i("RemoteAddresses:  '{}'", to_utf8(bstrVal));
+        ::SysFreeString(bstrVal);
     }
 
     if (SUCCEEDED(fw_rule->get_Profiles(&lProfileBitmask))) {
@@ -330,12 +339,14 @@ INetFwRule *DumpFWRulesInCollection(INetFwRule *fw_rule) {
                 SafeArrayGetElement(pSa, &index, &InterfaceString);
                 XLOG::l.i("Interfaces:       '{}'",
                           wtools::ConvertToUTF8((BSTR)InterfaceString.bstrVal));
+                InterfaceString.Clear();
             }
         }
     }
 
     if (SUCCEEDED(fw_rule->get_InterfaceTypes(&bstrVal))) {
         XLOG::l.i("Interface Types:  '{}'", to_utf8(bstrVal));
+        ::SysFreeString(bstrVal);
     }
 
     if (SUCCEEDED(fw_rule->get_Enabled(&bEnabled))) {
@@ -350,6 +361,7 @@ INetFwRule *DumpFWRulesInCollection(INetFwRule *fw_rule) {
 
     if (SUCCEEDED(fw_rule->get_Grouping(&bstrVal))) {
         XLOG::l.i("Grouping:         '{}'", to_utf8(bstrVal));
+        ::SysFreeString(bstrVal);
     }
 
     if (SUCCEEDED(fw_rule->get_EdgeTraversal(&bEnabled))) {

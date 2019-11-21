@@ -843,7 +843,7 @@ TEST(AgentConfig, WorkScenario) {
     // system
     {
         auto firewall = GetNode(groups::kSystem, vars::kFirewall);
-        auto mode = GetVal(firewall, vars::kMode, std::string("xx"));
+        auto mode = GetVal(firewall, vars::kFirewallMode, std::string("xx"));
         EXPECT_TRUE(mode == values::kModeConfigure);
     }
 

@@ -171,6 +171,26 @@ static void SetCfgMode(YAML::Node cfg, std::string_view mode) {
         YAML::Load(fmt::format("firewall:\n  mode: {}\n", mode));
 }
 
+static void SetCfgMode(YAML::Node cfg, std::string_view mode, bool all_ports) {
+    using namespace cma::cfg;
+    cfg[groups::kSystem] =
+        YAML::Load(fmt::format("firewall:\n  mode: {}\n  port: {}\n", mode,
+                               all_ports ? "all" : "auto"));
+}
+
+static std::wstring getPortValue(std::wstring_view name,
+                                 std::wstring_view app_name) {
+    auto rule = cma::fw::FindRule(kSrvFirewallRuleName, app_name);
+    ON_OUT_OF_SCOPE(if (rule) rule->Release());
+    if (rule == nullptr) return {};
+
+    BSTR bstr = nullptr;
+    auto x = rule->get_LocalPorts(&bstr);
+    std::wstring port(bstr);
+    ::SysFreeString(bstr);
+    return port;
+}
+
 TEST(CmaSrv, Firewall) {
     using namespace cma::cfg;
     OnStartTest();
@@ -179,18 +199,29 @@ TEST(CmaSrv, Firewall) {
     constexpr std::wstring_view app_name = L"test.exe.exe";
 
     // remove all from the Firewall
-    SetCfgMode(cfg, values::kModeClear);
+    SetCfgMode(cfg, values::kModeRemove);
 
     auto fw_node = GetNode(groups::kSystem, vars::kFirewall);
-    auto value = GetVal(fw_node, vars::kMode, std::string(""));
-    ASSERT_TRUE(value == values::kModeClear);
+    auto value = GetVal(fw_node, vars::kFirewallMode, std::string(""));
+    ASSERT_TRUE(value == values::kModeRemove);
     ProcessFirewallConfiguration(app_name);
 
-    SetCfgMode(cfg, values::kModeConfigure);
+    SetCfgMode(cfg, values::kModeConfigure, false);
     for (auto i = 0; i < 2; ++i) {
         ProcessFirewallConfiguration(app_name);
         auto count = cma::fw::CountRules(kSrvFirewallRuleName, app_name);
         EXPECT_EQ(count, 1);
+        auto p = getPortValue(kSrvFirewallRuleName, app_name);
+        EXPECT_TRUE(p == L"6556");
+    }
+
+    SetCfgMode(cfg, values::kModeConfigure, true);
+    for (auto i = 0; i < 2; ++i) {
+        ProcessFirewallConfiguration(app_name);
+        auto count = cma::fw::CountRules(kSrvFirewallRuleName, app_name);
+        EXPECT_EQ(count, 1);
+        auto p = getPortValue(kSrvFirewallRuleName, app_name);
+        EXPECT_TRUE(p == L"*");
     }
 
     SetCfgMode(cfg, values::kModeNone);
@@ -200,7 +231,7 @@ TEST(CmaSrv, Firewall) {
         EXPECT_EQ(count, 1);
     }
 
-    SetCfgMode(cfg, values::kModeClear);
+    SetCfgMode(cfg, values::kModeRemove);
     for (auto i = 0; i < 2; ++i) {
         ProcessFirewallConfiguration(app_name);
         auto count = cma::fw::CountRules(kSrvFirewallRuleName, app_name);

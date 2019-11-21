@@ -101,7 +101,10 @@ $(BUILD_HELPER_DIR)/build-helper-files.make:
 
 # debian/rules sets DESTDIR to be at debian/[package-name]-[version] when building a .deb
 DESTDIR ?=$(shell pwd)/destdir
-RPM_TOPDIR=$$(pwd)/rpm.topdir
+
+RPM_TOPDIR := $(BUILD_BASE_DIR)/rpm/topdir
+RPM_BUILDROOT := $(BUILD_BASE_DIR)/rpm/buildroot
+
 BIN_TGZ=check-mk-$(EDITION)-bin-$(OMD_VERSION).tar.gz
 NEW_SERIAL=$$(($(OMD_SERIAL) + 1))
 SKEL := $(DESTDIR)$(OMD_ROOT)/skel
@@ -249,8 +252,7 @@ $(BIN_TGZ): install
 ../check-mk-$(EDITION)-$(OMD_VERSION).tar.gz:
 	make -C $(REPO_PATH) dist
 
-# Called by our release system to build RPM packages
-rpm: ../check-mk-$(EDITION)-$(OMD_VERSION).tar.gz
+omd.spec: omd.spec.in
 	sed -e 's/^Requires:.*/Requires:        $(OS_PACKAGES)/' \
 	    -e 's/%{version}/$(OMD_VERSION)/g' \
 	    -e "s/%{pkg_version}/$(PKG_VERSION)/g" \
@@ -260,10 +262,13 @@ rpm: ../check-mk-$(EDITION)-$(OMD_VERSION).tar.gz
 	    -e 's#@APACHE_CONFDIR@#$(APACHE_CONF_DIR)#g' \
 	    -e 's#@APACHE_NAME@#$(APACHE_INIT_NAME)#g' \
 	    omd.spec.in > omd.spec
+
+# Called by our release system to build RPM packages
+rpm: ../check-mk-$(EDITION)-$(OMD_VERSION).tar.gz omd.spec
 	if [ "$(EDITION)" =  "raw" ]; then \
 	    sed -i '/icmpsender/d;/icmpreceiver/d' omd.spec ; \
 	fi
-	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
+	$(MKDIR) $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
 	cp ../check-mk-$(EDITION)-$(OMD_VERSION).tar.gz $(RPM_TOPDIR)/SOURCES
 	# NO_BRP_STALE_LINK_ERROR ignores errors when symlinking from skel to
 	# share,lib,bin because the link has a invalid target until the site is created
@@ -272,9 +277,9 @@ rpm: ../check-mk-$(EDITION)-$(OMD_VERSION).tar.gz
 	NO_BRP_CHECK_RPATH="yes" \
 	NO_BRP_STALE_LINK_ERROR="yes" \
 	rpmbuild -bb --define "_topdir $(RPM_TOPDIR)" \
-	     --buildroot=$$(pwd)/rpm.buildroot omd.spec
+	     --buildroot=$(RPM_BUILDROOT) omd.spec
 	mv -v $(RPM_TOPDIR)/RPMS/*/*.rpm $(REPO_PATH)
-	rm -rf $(RPM_TOPDIR) rpm.buildroot
+	rm -rf $(RPM_TOPDIR) $(RPM_BUILDROOT)
 
 debian/changelog:
 	sed -e 's/###DISTRO_CODE###/$(DISTRO_CODE)/g' \

@@ -1,9 +1,9 @@
-Summary:        Check_MK
+Summary:        Checkmk
 Name:           check-mk-%{edition}-%{pkg_version}
 Version:        SET BY MAKEFILE
 Release:        SET BY MAKEFILE
 License:        GPL
-URL:            http://mathias-kettner.com
+URL:            https://checkmk.com
 Group:          Application/System
 Source:         check-mk-%{edition}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
@@ -21,11 +21,7 @@ Requires:
 %global _build_id_links none
 
 %description
-Check_MK is a full featured system monitoring
-solution. This package ships with Check_MK, Nagios,
-the Nagios plugins, Livestatus, Multisite,
-PNP4Nagios, NagVis, and other addons. Please visit
-http://mathias-kettner.com/.
+Checkmk - Best-in-class infrastructure & application monitoring
 
 %prep
 %setup -q -n check-mk-%{edition}-%{version}

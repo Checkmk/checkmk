@@ -49,6 +49,8 @@ $(PYTHON_CACHE_PKG_PATH):
 $(PYTHON_CACHE_PKG_UPLOAD): $(PYTHON_CACHE_PKG_PATH)
 	$(call unpack_pkg_archive,$(PYTHON_CACHE_PKG_PATH),$(PYTHON_DIR))
 	$(call upload_pkg_archive,$(PYTHON_CACHE_PKG_PATH),$(PYTHON_DIR),$(PYTHON_BUILD_ID))
+# Ensure that the rpath of the python binary always points to the current version path
+	chrpath -r "$(OMD_ROOT)/lib" $(PACKAGE_PYTHON_EXECUTABLE)
 	$(TOUCH) $@
 
 $(PYTHON_COMPILE): $(PYTHON_PATCHING) $(PYTHON_TMP_BIN_DIR)/gcc $(PYTHON_TMP_BIN_DIR)/g++

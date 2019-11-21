@@ -41,6 +41,8 @@ $(PYTHON3_CACHE_PKG_PATH):
 $(PYTHON3_CACHE_PKG_UPLOAD): $(PYTHON3_CACHE_PKG_PATH)
 	$(call unpack_pkg_archive,$(PYTHON3_CACHE_PKG_PATH),$(PYTHON3_DIR))
 	$(call upload_pkg_archive,$(PYTHON3_CACHE_PKG_PATH),$(PYTHON3_DIR),$(PYTHON3_BUILD_ID))
+# Ensure that the rpath of the python binary always points to the current version path
+	chrpath -r "$(OMD_ROOT)/lib" $(PACKAGE_PYTHON3_EXECUTABLE)
 	$(TOUCH) $@
 
 $(PYTHON3_UNPACK): $(PACKAGE_DIR)/$(PYTHON3)/$(PYTHON3_DIR).tar.xz

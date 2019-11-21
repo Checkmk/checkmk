@@ -66,8 +66,6 @@ PACKAGES += enterprise
 PACKAGES += managed
 endif
 
-default: build
-
 # Workaround: Makefiles evaluate Variables the first time they are read. If a variable is not set the
 # moment it is read, it is replaced with an empty string. Therefor our dependencies get lost, if the
 # inlcuded Makefiles are not ordered correctly. For that reason, we parse the Makefiles for certain
@@ -99,13 +97,13 @@ $(BUILD_HELPER_DIR)/build-helper-files.make:
 
 -include .config
 
-# debian/rules sets DESTDIR to be at debian/[package-name]-[version] when building a .deb
-DESTDIR ?=$(shell pwd)/destdir
+# debian/rules and RPM specfile (omd.spec) set DESTDIR to install files to
+# the package build directories
+DESTDIR ?= $(BUILD_BASE_DIR)/dest
 
 RPM_TOPDIR := $(BUILD_BASE_DIR)/rpm/topdir
 RPM_BUILDROOT := $(BUILD_BASE_DIR)/rpm/buildroot
 
-BIN_TGZ=check-mk-$(EDITION)-bin-$(OMD_VERSION).tar.gz
 NEW_SERIAL=$$(($(OMD_SERIAL) + 1))
 SKEL := $(DESTDIR)$(OMD_ROOT)/skel
 # NEW_VERSION should be set on the command line.
@@ -127,13 +125,9 @@ BUILD_TARGETS := $(foreach package,$(addsuffix _BUILD,$(BUILD_TARGET_VARS)),$($(
 INSTALL_TARGETS := $(foreach package,$(addsuffix _INSTALL,$(BUILD_TARGET_VARS)),$($(package)))
 SKEL_TARGETS :=  $(foreach package,$(addsuffix _SKEL,$(BUILD_TARGET_VARS)),$($(package)))
 
-.PHONY: build install pack cma rpm deb clean setversion install-clean
+.PHONY: install cma rpm deb clean setversion install-clean
 
-# Called in the build phase of .rpm packaging procedure
-build: $(BUILD_TARGETS)
-# Called while building the .rpm packages (in omd.spec.in)
-pack: $(BIN_TGZ)
-# Called while building the .deb packages (in debian/rules)
+# Called while building the .rpm/.deb packages
 install: $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions $(FIX_SKEL)
 
 # Called by our release system to build appliance packages
@@ -246,13 +240,6 @@ $(INSTALL_GLOBAL): $(INSTALL)
 	    install -m 644 COMMIT $(DESTDIR)$(OMD_ROOT)/share/doc ; \
 	fi
 	$(TOUCH) $@
-
-$(BIN_TGZ): install
-	# Pack the whole stuff into a tarball
-	tar czf $@ --owner=root --group=root -C $(DESTDIR) .
-
-../check-mk-$(EDITION)-$(OMD_VERSION).tar.gz:
-	make -C $(REPO_PATH) dist
 
 omd.spec: omd.spec.in
 	sed -e 's/^Requires:.*/Requires:        $(OS_PACKAGES)/' \

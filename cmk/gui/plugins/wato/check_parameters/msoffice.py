@@ -26,6 +26,7 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
+    Alternative,
     Dictionary,
     Percentage,
     TextAscii,
@@ -46,11 +47,23 @@ def _item_spec_msoffice_licenses():
 def _parameter_valuespec_msoffice_licenses():
     return Dictionary(elements=[
         ("usage",
-         Tuple(title=_("Upper levels for license usage"),
-               elements=[
-                   Percentage(title=_("Warning at"), default_value=80.0),
-                   Percentage(title=_("Critical at"), default_value=90.0),
-               ])),
+         Alternative(
+             title=_("Upper levels for license usage"),
+             elements=[
+                 Tuple(
+                     title=_("Upper absolute levels"),
+                     elements=[Integer(title=_("Warning at")),
+                               Integer(title=_("Critical at"))],
+                 ),
+                 Tuple(
+                     title=_("Upper percentage levels"),
+                     elements=[
+                         Percentage(title=_("Warning at"), default_value=80.0),
+                         Percentage(title=_("Critical at"), default_value=90.0)
+                     ],
+                 ),
+             ],
+         )),
     ])
 
 

@@ -39,11 +39,15 @@ checks = {
     '': [
         (
             u'sx:MYLICENSE1', {
-                'usage': (80, 90)
+                'usage': (80.0, 90.0)
             }, [
                 (
-                    0, 'Consumed: 55 of 55', [
-                        ('licenses', 55, None, None, None, None),
+                    0, 'Consumed licenses: 55', [
+                        ('licenses', 55, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, 'Active licenses: 55', [
                         ('licenses_total', 55, None, None, None, None)
                     ]
                 ),
@@ -56,11 +60,15 @@ checks = {
         ),
         (
             u'sx:MYLICENSE10', {
-                'usage': (80, 90)
+                'usage': (80.0, 90.0)
             }, [
                 (
-                    0, 'Consumed: 5 of 10000', [
-                        ('licenses', 5, None, None, None, None),
+                    0, 'Consumed licenses: 5', [
+                        ('licenses', 5, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, 'Active licenses: 10000', [
                         ('licenses_total', 10000, None, None, None, None)
                     ]
                 ),
@@ -73,11 +81,15 @@ checks = {
         ),
         (
             u'sx:MYLICENSE11', {
-                'usage': (80, 90)
+                'usage': (80.0, 90.0)
             }, [
                 (
-                    0, 'Consumed: 46 of 100', [
-                        ('licenses', 46, None, None, None, None),
+                    0, 'Consumed licenses: 46', [
+                        ('licenses', 46, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, 'Active licenses: 100', [
                         ('licenses_total', 100, None, None, None, None)
                     ]
                 ),
@@ -90,11 +102,15 @@ checks = {
         ),
         (
             u'sx:MYLICENSE12', {
-                'usage': (80, 90)
+                'usage': (80.0, 90.0)
             }, [
                 (
-                    0, 'Consumed: 194 of 1000000', [
-                        ('licenses', 194, None, None, None, None),
+                    0, 'Consumed licenses: 194', [
+                        ('licenses', 194, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, 'Active licenses: 1000000', [
                         ('licenses_total', 1000000, None, None, None, None)
                     ]
                 ),
@@ -107,11 +123,15 @@ checks = {
         ),
         (
             u'sx:MYLICENSE13', {
-                'usage': (80, 90)
+                'usage': (80.0, 90.0)
             }, [
                 (
-                    0, 'Consumed: 10461 of 10665', [
-                        ('licenses', 10461, None, None, None, None),
+                    0, 'Consumed licenses: 10461', [
+                        ('licenses', 10461, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, 'Active licenses: 10665', [
                         ('licenses_total', 10665, None, None, None, None)
                     ]
                 ),
@@ -127,21 +147,25 @@ checks = {
         ),
         (
             u'sx:MYLICENSE14', {
-                'usage': (80, 90)
+                'usage': (80.0, 90.0)
             }, [(0, 'No active licenses', [])]
         ),
         (
             u'sx:MYLICENSE15', {
-                'usage': (80, 90)
+                'usage': (80.0, 90.0)
             }, [(0, 'No active licenses', [])]
         ),
         (
             u'sx:MYLICENSE16', {
-                'usage': (80, 90)
+                'usage': (80.0, 90.0)
             }, [
                 (
-                    0, 'Consumed: 4 of 5', [
-                        ('licenses', 4, None, None, None, None),
+                    0, 'Consumed licenses: 4', [
+                        ('licenses', 4, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, 'Active licenses: 5', [
                         ('licenses_total', 5, None, None, None, None)
                     ]
                 ),
@@ -154,11 +178,15 @@ checks = {
         ),
         (
             u'sx:MYLICENSE4', {
-                'usage': (80, 90)
+                'usage': (80.0, 90.0)
             }, [
                 (
-                    0, 'Consumed: 120 of 130', [
-                        ('licenses', 120, None, None, None, None),
+                    0, 'Consumed licenses: 120', [
+                        ('licenses', 120, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, 'Active licenses: 130', [
                         ('licenses_total', 130, None, None, None, None)
                     ]
                 ),
@@ -174,11 +202,15 @@ checks = {
         ),
         (
             u'sx:MYLICENSE5', {
-                'usage': (80, 90)
+                'usage': (80.0, 90.0)
             }, [
                 (
-                    0, 'Consumed: 1 of 10000', [
-                        ('licenses', 1, None, None, None, None),
+                    0, 'Consumed licenses: 1', [
+                        ('licenses', 1, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, 'Active licenses: 10000', [
                         ('licenses_total', 10000, None, None, None, None)
                     ]
                 ),
@@ -191,11 +223,15 @@ checks = {
         ),
         (
             u'sx:MYLICENSE6', {
-                'usage': (80, 90)
+                'usage': (80.0, 90.0)
             }, [
                 (
-                    0, 'Consumed: 6330 of 6575', [
-                        ('licenses', 6330, None, None, None, None),
+                    0, 'Consumed licenses: 6330', [
+                        ('licenses', 6330, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, 'Active licenses: 6575', [
                         ('licenses_total', 6575, None, None, None, None)
                     ]
                 ),
@@ -211,11 +247,15 @@ checks = {
         ),
         (
             u'sx:MYLICENSE7', {
-                'usage': (80, 90)
+                'usage': (80.0, 90.0)
             }, [
                 (
-                    0, 'Consumed: 3756 of 3800', [
-                        ('licenses', 3756, None, None, None, None),
+                    0, 'Consumed licenses: 3756', [
+                        ('licenses', 3756, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, 'Active licenses: 3800', [
                         ('licenses_total', 3800, None, None, None, None)
                     ]
                 ),
@@ -231,11 +271,15 @@ checks = {
         ),
         (
             u'sx:MYLICENSE8', {
-                'usage': (80, 90)
+                'usage': (80.0, 90.0)
             }, [
                 (
-                    0, 'Consumed: 1424 of 10000', [
-                        ('licenses', 1424, None, None, None, None),
+                    0, 'Consumed licenses: 1424', [
+                        ('licenses', 1424, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, 'Active licenses: 10000', [
                         ('licenses_total', 10000, None, None, None, None)
                     ]
                 ),
@@ -248,11 +292,15 @@ checks = {
         ),
         (
             u'sx:MYLICENSE9', {
-                'usage': (80, 90)
+                'usage': (80.0, 90.0)
             }, [
                 (
-                    0, 'Consumed: 4 of 10000', [
-                        ('licenses', 4, None, None, None, None),
+                    0, 'Consumed licenses: 4', [
+                        ('licenses', 4, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, 'Active licenses: 10000', [
                         ('licenses_total', 10000, None, None, None, None)
                     ]
                 ),

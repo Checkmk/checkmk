@@ -59,7 +59,7 @@ def parse_msoffice_licenses(info):
 
 
 factory_settings["msoffice_licenses_levels"] = {
-    "usage": (80, 90),
+    "usage": (80.0, 90.0),
 }
 
 
@@ -70,18 +70,36 @@ def check_msoffice_licenses(item, params, item_data):
 
     if lcs_active:
 
-        yield (
-            0,
-            "Consumed: %s of %s" % (lcs_consumed, lcs_active),
-            [("licenses", lcs_consumed), ("licenses_total", lcs_active)],
+        warn, crit = params["usage"]
+        warn_abs, crit_abs = None, None
+        warn_perc, crit_perc = None, None
+        if isinstance(warn, float):
+            warn_perc, crit_perc = warn, crit
+        else:
+            warn_abs, crit_abs = warn, crit
+
+        # the agent plugin also gathers the last 3 unused licenses with no
+        # active licenses. To handle this, we only output consumed licenses for
+        # licenses with active ones
+        yield check_levels(
+            lcs_consumed,
+            "licenses",
+            (warn_abs, crit_abs),
+            human_readable_func=int,
+            infoname="Consumed licenses",
         )
 
-        warn, crit = params["usage"]
+        yield (
+            0,
+            "Active licenses: %s" % lcs_active,
+            [("licenses_total", lcs_active)],
+        )
+
         usage = lcs_consumed * 100.0 / (lcs_active)
         yield check_levels(
             usage,
             "license_percentage",
-            (warn, crit),
+            (warn_perc, crit_perc),
             human_readable_func=get_percent_human_readable,
             infoname="Usage",
             boundaries=(0, 100),

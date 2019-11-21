@@ -113,7 +113,9 @@ endef
 define upload_pkg_archive
 	if [ -n "$(NEXUS_BUILD_CACHE_URL)" ] && ! curl -sf --head "$(NEXUS_BUILD_CACHE_URL)/$(call cache_pkg_name,$2,$3)" >/dev/null; then \
 	    echo "+++ Package not found on nexus. Upload package..." && \
-	    curl -sSf -u "$(NEXUS_USERNAME):$(NEXUS_PASSWORD)" --upload-file "$1" "$(NEXUS_BUILD_CACHE_URL)/" ; \
+	    if ! curl -sSf -u "$(NEXUS_USERNAME):$(NEXUS_PASSWORD)" --upload-file "$1" "$(NEXUS_BUILD_CACHE_URL)/" ; then \
+                echo "+++ ERROR: Upload failed. Continuing with build..." ; \
+            fi \
 	fi
 endef
 

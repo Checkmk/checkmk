@@ -1,0 +1,12 @@
+Title: Several minor GUI fixes
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1574339673
+Class: fix
+
+Fixed the theme specific coloring of list collapsing icons.
+Adjusted the padding for search bars in long WATO lists.
+Fixed the OK state font color in the "Analyze configuration" view for the dark theme.

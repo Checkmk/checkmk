@@ -46,10 +46,8 @@ omdlib-install: $(PYTHON_CACHE_PKG_PROCESS)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib
 	install -m 644 $(PACKAGE_DIR)/$(OMD)/omdlib/*.py $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib/
 	sed -i 's|###OMD_VERSION###|$(OMD_VERSION)|g' $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib/__init__.py
-	export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_MODULES_PYTHONPATH):$(PACKAGE_PYTHON_PYTHONPATH):$(REPO_PATH)" ; \
-	export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS)" ; \
 	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
-	$(PACKAGE_PYTHON_EXECUTABLE) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib
+	    $(PACKAGE_PYTHON_EXECUTABLE) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib
 
 $(OMD_SKEL): $(OMD_INSTALL)
 	$(MKDIR) $(SKEL)/etc/bash_completion.d

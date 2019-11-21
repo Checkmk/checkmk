@@ -2,19 +2,20 @@ PYTHON_MODULES := python-modules
 PYTHON_MODULES_VERS := $(OMD_VERSION)
 PYTHON_MODULES_DIR := $(PYTHON_MODULES)-$(PYTHON_MODULES_VERS)
 
-PYTHON_MODULES_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON_MODULES_DIR)-build
-PYTHON_MODULES_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON_MODULES_DIR)-install
 PYTHON_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON_MODULES_DIR)-unpack
 # The custom patching rule for python-modules needs to be called
 PYTHON_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON_MODULES_DIR)-patching-c
+PYTHON_MODULES_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON_MODULES_DIR)-build
+PYTHON_MODULES_INTERMEDIATE_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON_MODULES_DIR)-install-intermediate
+PYTHON_MODULES_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON_MODULES_DIR)-install
 
-#PYTHON_MODULES_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(PYTHON_MODULES_DIR)
+PYTHON_MODULES_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(PYTHON_MODULES_DIR)
 PYTHON_MODULES_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(PYTHON_MODULES_DIR)
-#PYTHON_MODULES_WORK_DIR := $(PACKAGE_WORK_DIR)/$(PYTHON_MODULES_DIR)
+PYTHON_MODULES_WORK_DIR := $(PACKAGE_WORK_DIR)/$(PYTHON_MODULES_DIR)
 
 # Used by other OMD packages
-PACKAGE_PYTHON_MODULES_DESTDIR    := $(PACKAGE_BASE)/python-modules/destdir
-PACKAGE_PYTHON_MODULES_PYTHONPATH := $(PACKAGE_PYTHON_MODULES_DESTDIR)/lib
+PACKAGE_PYTHON_MODULES_DESTDIR    := $(PYTHON_MODULES_INSTALL_DIR)
+PACKAGE_PYTHON_MODULES_PYTHONPATH := $(PACKAGE_PYTHON_MODULES_DESTDIR)/lib/python
 
 .PHONY: $(PYTHON_MODULES) $(PYTHON_MODULES)-install $(PYTHON_MODULES)-clean
 
@@ -202,12 +203,11 @@ PYTHON_MODULES_LIST += mock-3.0.5.tar.gz
 PYTHON_MODULES_LIST += wrapt-1.11.2.tar.gz
 PYTHON_MODULES_LIST += vcrpy-2.1.0.tar.gz
 
-# NOTE: Cruel hack below! We need to have a recent GCC visible in the PATH
-# because the SSSE3 detection in pycryptodomex is slightly broken. :-/
-# NOTE(2): The install here is used to populate a temporary directory that is only
-# needed to fulfill dependencies between the modules.
-# NOTE(3): DESTDIR= for "python setup.py build" is set because PyNaCl
-# (libsodium) headers would be installed during build even if they should not
+# NOTE: Setting SODIUM_INSTALL variable below is an extremely cruel hack to
+# avoid installing libsodium headers and libraries. The need for this hack
+# arises because of our "interesting" flag use for "setup.py install" and our
+# double installation. We should really switch to e.g. pipenv here.
+#	    export SODIUM_INSTALL="system"
 $(PYTHON_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(FREETDS_INTERMEDIATE_INSTALL) $(PYTHON_MODULES_PATCHING)
 	set -e ; cd $(PYTHON_MODULES_BUILD_DIR) ; \
 	    unset DESTDIR MAKEFLAGS ; \
@@ -219,21 +219,18 @@ $(PYTHON_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(FREETDS_INTERMEDIATE_INST
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
 	    export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
 	    for M in $(PYTHON_MODULES_LIST); do \
-		echo "Building $$M..." ; \
+		echo "=== Building $$M..." ; \
 		PKG=$${M//.tar.gz/} ; \
 		PKG=$${PKG//.zip/} ; \
-		if [ $$PKG = pysnmp-git ]; then \
-		    PKG=pysnmp-master ; \
-		fi ; \
-	    	echo $$PWD ;\
 		cd $$PKG ; \
 		$(PACKAGE_PYTHON_EXECUTABLE) setup.py build ; \
+		echo "=== Installing $$M..." ; \
 		$(PACKAGE_PYTHON_EXECUTABLE) setup.py install \
-		    --root=$(PACKAGE_PYTHON_MODULES_DESTDIR) \
+		    --root=$(PYTHON_MODULES_INSTALL_DIR) \
 		    --prefix='' \
 		    --install-data=/share \
-		    --install-platlib=/lib \
-		    --install-purelib=/lib ; \
+		    --install-platlib=/lib/python \
+		    --install-purelib=/lib/python ; \
 		cd .. ; \
 	    done
 	$(TOUCH) $@
@@ -261,35 +258,15 @@ $(PYTHON_MODULES_UNPACK): $(addprefix $(PACKAGE_DIR)/$(PYTHON_MODULES)/src/,$(PY
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 
-# NOTE: Setting SODIUM_INSTALL variable below is an extremely cruel hack to
-# avoid installing libsodium headers and libraries. The need for this hack
-# arises because of our "interesting" flag use for "setup.py install" and our
-# double installation. We should really switch to e.g. pipenv here.
-$(PYTHON_MODULES_INSTALL): $(PYTHON_MODULES_BUILD)
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python
-	set -e ; cd $(PYTHON_MODULES_BUILD_DIR) ; \
-	    export SODIUM_INSTALL="system" ; \
-	    export PYTHONPATH=$$PYTHONPATH:"$(PACKAGE_PYTHON_MODULES_PYTHONPATH)" ; \
-	    export PYTHONPATH=$$PYTHONPATH:"$(PACKAGE_PYTHON_PYTHONPATH)" ; \
-	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include" ; \
-	    export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS)" ; \
-	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
-	    export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
-	    for M in $$(ls); do \
-		echo "Installing $$M..." ; \
-		cd $$M ; \
-		$(PACKAGE_PYTHON_EXECUTABLE) setup.py install \
-		    --root=$(DESTDIR)$(OMD_ROOT) \
-		    --prefix='' \
-		    --install-data=/share \
-		    --install-platlib=/lib/python \
-		    --install-purelib=/lib/python ; \
-		cd .. ; \
-	    done
+$(PYTHON_MODULES_INTERMEDIATE_INSTALL): $(PYTHON_MODULES_BUILD)
 # Cleanup some unwanted files (example scripts)
-	find $(DESTDIR)$(OMD_ROOT)/bin -name \*.py ! -name snmpsimd.py -exec rm {} \;
+	find $(PYTHON_MODULES_INSTALL_DIR)/bin -name \*.py ! -name snmpsimd.py -exec rm {} \;
 # Fix python interpreter for kept scripts
-	$(SED) -i '1s|^#!.*/python$$|#!/usr/bin/env python2|' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,chardetect fakebmc futurize jirashell pasteurize pbr pyghmicons pyghmiutil pyjwt pyrsa-decrypt pyrsa-encrypt pyrsa-keygen pyrsa-priv2pub pyrsa-sign pyrsa-verify virshbmc snmpsimd.py)
+	$(SED) -i '1s|^#!.*/python$$|#!/usr/bin/env python2|' $(addprefix $(PYTHON_MODULES_INSTALL_DIR)/bin/,chardetect fakebmc futurize jirashell pasteurize pbr pyghmicons pyghmiutil pyjwt pyrsa-decrypt pyrsa-encrypt pyrsa-keygen pyrsa-priv2pub pyrsa-sign pyrsa-verify virshbmc snmpsimd.py)
+	$(TOUCH) $@
+
+$(PYTHON_MODULES_INSTALL): $(PYTHON_MODULES_INTERMEDIATE_INSTALL)
+	$(RSYNC) $(PYTHON_MODULES_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
 	$(TOUCH) $@
 
 python-modules-dump-Pipfile:

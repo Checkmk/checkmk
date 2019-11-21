@@ -47,6 +47,7 @@ tests/web/data/*
 .idea/
 *.iml
 .venv
+.venv-2.7
 *.gcov
 htmlcov/
 artefacts/

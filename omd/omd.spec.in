@@ -23,20 +23,14 @@ Requires:
 %description
 Checkmk - Best-in-class infrastructure & application monitoring
 
-%prep
-%setup -q -n check-mk-%{edition}-%{version}
-
-%build
-cd omd
-make -j 4
-make pack
-
 %install
-mkdir -p $RPM_BUILD_ROOT
-tar xzf omd/check-mk-%{edition}-bin-%{version}.tar.gz -C $RPM_BUILD_ROOT
+# This target compiles and installs everything needed into our DESTDIR
+make -C $REPO_PATH/omd DESTDIR=$RPM_BUILD_ROOT install
+
 # Remove all global symbolic links from package. They are shared
 # among all versions and must be handled in %post und %postun
 # in order to avoid RPM conflicts
+# TODO: Synchronize with omd/debian/rules
 rm -f $RPM_BUILD_ROOT/opt/omd/versions/default
 rm -f $RPM_BUILD_ROOT/omd
 rm -f $RPM_BUILD_ROOT/usr/bin/omd

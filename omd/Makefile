@@ -127,7 +127,7 @@ BUILD_TARGETS := $(foreach package,$(addsuffix _BUILD,$(BUILD_TARGET_VARS)),$($(
 INSTALL_TARGETS := $(foreach package,$(addsuffix _INSTALL,$(BUILD_TARGET_VARS)),$($(package)))
 SKEL_TARGETS :=  $(foreach package,$(addsuffix _SKEL,$(BUILD_TARGET_VARS)),$($(package)))
 
-.PHONY: build install pack cma rpm deb clean setversion
+.PHONY: build install pack cma rpm deb clean setversion install-clean
 
 # Called in the build phase of .rpm packaging procedure
 build: $(BUILD_TARGETS)
@@ -139,11 +139,13 @@ install: $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions $(FIX_SKEL)
 # Called by our release system to build appliance packages
 cma: $(CMA_PACKAGE)
 
-#Prepare clean install environment
-$(PRE_INSTALL):
+install-clean:
 	rm -rf $(DESTDIR)
 	rm -rf $(BUILD_HELPER_DIR)/*-install
 	rm -rf $(BUILD_HELPER_DIR)/*-skel
+
+# Prepare clean install environment
+$(PRE_INSTALL):
 	$(MKDIR) $(DESTDIR)$(OMD_PHYSICAL_BASE)
 	A="$(OMD_PHYSICAL_BASE)" ; ln -s $${A:1} $(DESTDIR)/omd
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
@@ -262,20 +264,21 @@ omd.spec: omd.spec.in
 	    -e 's#@APACHE_CONFDIR@#$(APACHE_CONF_DIR)#g' \
 	    -e 's#@APACHE_NAME@#$(APACHE_INIT_NAME)#g' \
 	    omd.spec.in > omd.spec
-
-# Called by our release system to build RPM packages
-rpm: ../check-mk-$(EDITION)-$(OMD_VERSION).tar.gz omd.spec
 	if [ "$(EDITION)" =  "raw" ]; then \
 	    sed -i '/icmpsender/d;/icmpreceiver/d' omd.spec ; \
 	fi
+
+# Called by our release system to build RPM packages
+# To make incremental builds possible, e.g. for testing, remove the install-clean target
+rpm: install-clean omd.spec
 	$(MKDIR) $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
-	cp ../check-mk-$(EDITION)-$(OMD_VERSION).tar.gz $(RPM_TOPDIR)/SOURCES
 	# NO_BRP_STALE_LINK_ERROR ignores errors when symlinking from skel to
 	# share,lib,bin because the link has a invalid target until the site is created
 	# NO_BRP_CHECK_RPATH ignores errors with the compiled python2.7 binary which
 	# has a rpath hard coded to the OMD shipped libpython2.7.
 	NO_BRP_CHECK_RPATH="yes" \
 	NO_BRP_STALE_LINK_ERROR="yes" \
+	REPO_PATH=$(REPO_PATH) \
 	rpmbuild -bb --define "_topdir $(RPM_TOPDIR)" \
 	     --buildroot=$(RPM_BUILDROOT) omd.spec
 	mv -v $(RPM_TOPDIR)/RPMS/*/*.rpm $(REPO_PATH)

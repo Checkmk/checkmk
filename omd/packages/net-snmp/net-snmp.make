@@ -19,7 +19,7 @@ $(NET_SNMP): $(NET_SNMP_BUILD)
 
 $(NET_SNMP)-install: $(NET_SNMP_INSTALL)
 
-$(NET_SNMP_BUILD): $(NET_SNMP_PATCHING) $(PYTHON_INTERMEDIATE_INSTALL) $(PERL_MODULES_BUILD)
+$(NET_SNMP_BUILD): $(NET_SNMP_PATCHING) $(PYTHON_CACHE_PKG_PROCESS) $(PERL_MODULES_BUILD)
 # Skip Perl-Modules because of build errors when MIB loading is disabled.
 # Skip Python binding because we need to use our own python, see install target.
 	cd $(NET_SNMP_BUILD_DIR) \

@@ -208,7 +208,7 @@ PYTHON_MODULES_LIST += vcrpy-2.1.0.tar.gz
 # needed to fulfill dependencies between the modules.
 # NOTE(3): DESTDIR= for "python setup.py build" is set because PyNaCl
 # (libsodium) headers would be installed during build even if they should not
-$(PYTHON_MODULES_BUILD): $(PYTHON_INTERMEDIATE_INSTALL) $(FREETDS_INTERMEDIATE_INSTALL) $(PYTHON_MODULES_PATCHING)
+$(PYTHON_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(FREETDS_INTERMEDIATE_INSTALL) $(PYTHON_MODULES_PATCHING)
 	set -e ; cd $(PYTHON_MODULES_BUILD_DIR) ; \
 	    unset DESTDIR MAKEFLAGS ; \
 	    $(MKDIR) $(PACKAGE_PYTHON_MODULES_PYTHONPATH) ; \

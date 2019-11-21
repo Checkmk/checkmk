@@ -52,3 +52,8 @@ RUN cd /opt \
     && wget https://github.com/Kitware/CMake/releases/download/v3.15.4/cmake-3.15.4-Linux-x86_64.tar.gz \
     && tar xf cmake-3.15.4-Linux-x86_64.tar.gz \
     && ln -s /opt/cmake-3.15.4-Linux-x86_64/bin/* /usr/bin/
+
+RUN apt-get update \
+    && apt-get install -y \
+    chrpath \
+    && rm -rf /var/lib/apt/lists/*

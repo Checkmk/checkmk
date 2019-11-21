@@ -1,0 +1,12 @@
+Title: aix_diskoid,hpux_lunstats: Allow Disk IO SUMMARY for indiviual nodes of a cluster
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p24
+Date: 1574330892
+
+Previously the SUMMARY service of theses Disk IO Checkplugins reported UNKNOWN for every
+individual node as soon as the node was part of a cluster. This has been fixed.

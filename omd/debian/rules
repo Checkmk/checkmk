@@ -118,4 +118,7 @@ binary-arch: install
 	dh_md5sums
 	dh_builddeb
 
+# Still needed for debian8, ubuntu-14.04 and ubuntu-16.04
+build-arch: binary-arch
+
 binary: binary-indep binary-arch

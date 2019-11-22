@@ -283,11 +283,21 @@ debian/control: debian/control.in
 	    -e '/Depends:/s/@/ /g' \
 	   debian/control.in > debian/control
 
-# Called by our release system to build RPM packages
-deb: debian/changelog debian/control
+# Called by our release system to build DEB packages
+#
 # In case we want to have fast package creation without need to rebuild
-# everything, we'd have to drop the "clean" argument below.
-	debuild \
+# everything, we'd have to
+# a) add -nc fo jessie/trusty/xenial
+# b) drop the "clean" argument for newer distros
+deb: debian/changelog debian/control
+	echo $(DISTRO_CODE)
+	if [ "$(DISTRO_CODE)" = "jessie" ] || [ "$(DISTRO_CODE)" = "trusty" ] || [ "$(DISTRO_CODE)" = "xenial" ]; then \
+	    TARGET="-B" ; \
+	else \
+	    TARGET="-- clean binary-arch" ; \
+	fi && \
+	DEBUILD_DPKG_BUILDPACKAGE_OPTS="-us -uc" \
+	    debuild \
 	    --preserve-envvar="NEXUS_*" \
 	    --preserve-envvar="PYTHON_ENABLE_OPTIMIZATIONS" \
 	    --prepend-path=/usr/local/bin \
@@ -295,10 +305,8 @@ deb: debian/changelog debian/control
 	    --no-lintian \
 	    -i\.git -I\.git \
 	    -i.gitignore -I.gitignore \
-	    --no-sign \
 	    -rfakeroot \
-	    -- binary-arch
-#-- clean binary-arch
+	    $$TARGET
 
 setversion:
 	NEW_OMD_VERSION=$(NEW_VERSION_STRING).$(EDITION_SHORT)$(DEMO_SUFFIX) ; \

@@ -413,32 +413,16 @@ class FilterTime(Filter):
             return None
 
 
-class FilterCRESite(Filter):
-    def __init__(self, enforce):
-        super(FilterCRESite, self).__init__(
-            'host',
-            ["site"],
-            [],
-        )
-        self.enforce = enforce
+def filter_cre_choices():
+    return sorted([(sitename, config.site(sitename)["alias"])
+                   for sitename, state in sites.states().items()
+                   if state["state"] == "online"],
+                  key=lambda a: a[1].lower())
 
-    def display(self):
-        html.dropdown("site", ([] if self.enforce else [("", "")]) + self._choices())
 
-    def _choices(self):
-        return sorted([(sitename, config.site(sitename)["alias"])
-                       for sitename, state in sites.states().items()
-                       if state["state"] == "online"],
-                      key=lambda a: a[1].lower())
-
-    def heading_info(self):
-        current_value = html.request.var("site")
-        if not current_value:
-            return None
-        return config.site(current_value)["alias"]
-
-    def variable_settings(self, row):
-        return [("site", row["site"])]
+def filter_cre_heading_info():
+    current_value = html.request.var("site")
+    return config.site(current_value)["alias"] if current_value else None
 
 
 class FilterRegistry(cmk.utils.plugin_registry.ClassRegistry):

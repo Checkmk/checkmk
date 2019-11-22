@@ -47,7 +47,10 @@ from cmk.gui.valuespec import (
 )
 
 if cmk.is_managed_edition():
-    import cmk.gui.cme.plugins.visuals.managed  # pylint: disable=no-name-in-module
+    from cmk.gui.cme.plugins.visuals.managed import (
+        filter_cme_choices,
+        filter_cme_heading_info,
+    )  # pylint: disable=no-name-in-module
 
 from cmk.gui.plugins.visuals import (
     filter_registry,
@@ -55,7 +58,11 @@ from cmk.gui.plugins.visuals import (
     FilterUnicodeFilter,
     FilterTristate,
     FilterTime,
-    FilterCRESite,
+)
+
+from cmk.gui.plugins.visuals.utils import (
+    filter_cre_choices,
+    filter_cre_heading_info,
 )
 
 
@@ -1692,10 +1699,24 @@ class FilterHostScheduledDowntimeDepth(FilterNagiosFlag):
         FilterNagiosFlag.__init__(self, "host")
 
 
-if cmk.is_managed_edition():
-    SiteFilter = cmk.gui.cme.plugins.visuals.managed.FilterCMESite
-else:
-    SiteFilter = FilterCRESite
+class SiteFilter(Filter):
+    def __init__(self, enforce):
+        super(SiteFilter, self).__init__(
+            'host',
+            ["site"],
+            [],
+        )
+        self.enforce = enforce
+
+    def display(self):
+        choices = filter_cme_choices() if cmk.is_managed_edition() else filter_cre_choices()
+        html.dropdown("site", ([] if self.enforce else [("", "")]) + choices)
+
+    def heading_info(self):
+        return filter_cme_heading_info() if cmk.is_managed_edition() else filter_cre_heading_info()
+
+    def variable_settings(self, row):
+        return [("site", row["site"])]
 
 
 @filter_registry.register

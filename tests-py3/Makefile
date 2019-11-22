@@ -55,6 +55,7 @@ MYPY_DIRS_TO_CHECK := \
 	cmk/gui/plugins/views \
 	cmk/gui/plugins/views/icons \
 	cmk/gui/plugins/views/perfometers \
+	cmk/gui/plugins/visuals \
 	cmk/gui/plugins/wato \
 	cmk/gui/plugins/watolib \
 	cmk/gui/plugins/wato/check_parameters \
@@ -67,9 +68,6 @@ MYPY_DIRS_TO_CHECK := \
 	cmk/special_agents \
 	cmk/utils \
 	cmk/utils/rulesets
-
-# TODO: Directories with typing bugs
-#	cmk/gui/plugins/visuals
 
 # Horrible hack: Massage paths to make our symlinks "invisible". :-P
 MYPY_FILES_TO_CHECK := \

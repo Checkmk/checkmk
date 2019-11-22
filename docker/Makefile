@@ -77,7 +77,7 @@ image-daily: needed-packages
 	else \
 	    BRANCH_PREFIX="$${BRANCH_PREFIX}-" ; \
 	fi ; \
-	VERSION="$$(date +%F)" ; \
+	VERSION="$${VERSION:-$$(date +%F)}" ; \
 	VERSION="$${BRANCH_PREFIX}$${VERSION//-/.}" ; \
 	docker build \
 	    --network=container:$$SECRET_CONTAINER_ID \

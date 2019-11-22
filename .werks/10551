@@ -1,0 +1,14 @@
+Title: Docker container: Fix URL redirects when accessing /
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0p7
+Date: 1574421810
+Class: fix
+
+When updating a Checkmk docker container instance from 1.5* to 1.6 the web
+interface is not reachable using the top level URL "/" nor the "/cmk/" URL.
+This worked only when setting up completely new container instances with 1.6.
+
+With this werk the redirects now work as intended after an update.

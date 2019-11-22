@@ -38,13 +38,6 @@ from cmk.utils.encoding import (
 )
 from cmk.utils.exceptions import MKException
 
-try:
-    # Tolerate this violation for the moment. It's OK to have unlocalized
-    # texts when used in other components than our GUI.
-    from cmk.gui.i18n import _  # pylint: disable=cmk-module-layer-violation
-except ImportError:
-    _ = lambda x: x
-
 #   .--Globals-------------------------------------------------------------.
 #   |                    ____ _       _           _                        |
 #   |                   / ___| | ___ | |__   __ _| |___                    |
@@ -78,9 +71,6 @@ class MKLivestatusException(MKException):
     def __str__(self):
         return str(self.parameter)
 
-    def title(self):
-        return _("Livestatus problem")
-
 
 class MKLivestatusSocketError(MKLivestatusException):
     pass
@@ -101,9 +91,6 @@ class MKLivestatusQueryError(MKLivestatusException):
 class MKLivestatusNotFoundError(MKLivestatusException):
     def __str__(self):
         return "No matching entries found for query %s" % str(self.parameter)
-
-    def title(self):
-        return _("Data not found")
 
 
 class MKLivestatusTableNotFoundError(MKLivestatusException):

@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.utils.i18n import _
-
 
 # never used directly in the code. Just some wrapper to make all of our
 # exceptions handleable with one call
@@ -55,9 +53,6 @@ class MKGeneralException(MKException):
 
     def __str__(self):
         return self.reason
-
-    def title(self):
-        return _("Error")
 
 
 # This exception is raises when the current program execution should be

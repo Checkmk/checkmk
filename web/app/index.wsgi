@@ -70,7 +70,7 @@ class Application(object):
              RequestContext(cmk.gui.htmllib.html(self._request, self._response)):
             self._process_request()
 
-    def _process_request(self):
+    def _process_request(self):  # pylint: disable=too-many-branches
         try:
             config.initialize()
 
@@ -86,15 +86,21 @@ class Application(object):
         except FinalizeRequest as e:
             self._response.status_code = e.status
 
-        except (livestatus.MKLivestatusNotFoundError, MKUserError, MKAuthException) as e:
-            self._render_exception(e)
+        except livestatus.MKLivestatusNotFoundError as e:
+            self._render_exception(e, title=_("Data not found"))
+
+        except MKUserError as e:
+            self._render_exception(e, title=_("Invalid user Input"))
+
+        except MKAuthException as e:
+            self._render_exception(e, title=_("Permission denied"))
 
         except livestatus.MKLivestatusException as e:
-            self._render_exception(e)
+            self._render_exception(e, title=_("Livestatus problem"))
             self._response.status_code = httplib.BAD_GATEWAY
 
         except MKUnauthenticatedException as e:
-            self._render_exception(e)
+            self._render_exception(e, title=_("Not authenticated"))
             self._response.status_code = httplib.UNAUTHORIZED
 
         except MKConfigError as e:
@@ -130,7 +136,7 @@ class Application(object):
             html.write("%s%s\n" % (title, e))
 
         elif not self._fail_silently():
-            html.header(e.title())
+            html.header(title)
             html.show_error(e)
             html.footer()
 

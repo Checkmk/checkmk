@@ -29,8 +29,6 @@ from typing import Optional, Text  # pylint: disable=unused-import
 
 from werkzeug.http import HTTP_STATUS_CODES
 
-from cmk.gui.i18n import _
-
 from cmk.utils.exceptions import (
     MKException,
     MKGeneralException,
@@ -71,21 +69,13 @@ class MKAuthException(MKException):
         # type: () -> str
         return self.reason
 
-    def title(self):
-        # type: () -> unicode
-        return _("Permission denied")
-
 
 class MKUnauthenticatedException(MKGeneralException):
-    def title(self):
-        # type: () -> unicode
-        return _("Not authenticated")
+    pass
 
 
 class MKConfigError(MKException):
-    def title(self):
-        # type: () -> unicode
-        return _("Configuration error")
+    pass
 
 
 class MKUserError(MKException):
@@ -97,10 +87,6 @@ class MKUserError(MKException):
 
     def __str__(self):
         return self.message
-
-    def title(self):
-        # type: () -> Text
-        return _("Invalid User Input")
 
 
 class MKInternalError(MKException):

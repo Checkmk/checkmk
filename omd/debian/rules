@@ -34,7 +34,9 @@ clean:
 install:
 	dh_testdir
 	dh_testroot
-	dh_prep
+	# Keep the package installation directory for incremental builds. In case a
+	# fresh build is requested, debuild will be called with "clean"
+	dh_prep --exclude=`dh_listpackages`
 	dh_installdirs
 
 	# This target compiles and installs everything needed into our DESTDIR

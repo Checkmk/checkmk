@@ -341,13 +341,14 @@ $(CMA_PACKAGE): $(CMA_INSTALL) $(APPLIANCE_INSTALL_CMA) $(APPLIANCE_SKEL_CMA) in
 	    -C $(DESTDIR)/opt/omd/versions/ \
 	    $(OMD_VERSION)
 
-clean: $(addsuffix -clean,$(PACKAGES))
+clean: $(addsuffix -clean,$(PACKAGES)) install-clean
 	rm -rf $(DESTDIR)
 	@for p in packages/* ; do \
 	    if [ -d $$p ] && [ -f $$p/Makefile ]; then \
 		$(MAKE) -C $$p clean ; \
 	    fi ; \
 	done
+	$(RM) -r $(BUILD_HELPER_DIR)
 	$(RM) -r $(BUILD_BASE_DIR)
 
 setup:

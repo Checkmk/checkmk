@@ -78,7 +78,6 @@ include     packages/apache-omd/apache-omd.make \
     packages/jmx4perl/jmx4perl.make \
     packages/libgsf/libgsf.make \
     packages/maintenance/maintenance.make \
-    packages/mk-livestatus/mk-livestatus.make \
     packages/mod_fcgid/mod_fcgid.make \
     packages/mod_wsgi/mod_wsgi.make \
     packages/monitoring-plugins/monitoring-plugins.make \
@@ -101,6 +100,7 @@ include     packages/apache-omd/apache-omd.make \
     packages/python3-modules/python3-modules.make \
     packages/re2/re2.make \
     packages/rrdtool/rrdtool.make \
+    packages/mk-livestatus/mk-livestatus.make \
     packages/snap7/snap7.make \
     packages/Webinject/Webinject.make \
     packages/appliance/appliance.make

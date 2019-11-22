@@ -37,7 +37,7 @@ LIBS_DIR := libs
 PACKAGE_ASIO := $(abs_top_srcdir)/omd/packages/asio
 ASIO_VERSION := asio-asio-1-14-0
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
-RRDTOOL_SRC_DIR := $(abs_top_srcdir)/omd/rrdtool-1.7.1/src
+RRDTOOL_SRC_DIR := $(abs_top_srcdir)/omd/build/package_build/rrdtool-1.7.1/src
 
 PACKAGE_GOOGLETEST := $(abs_top_srcdir)/omd/packages/googletest
 GOOGLETEST_VERSION := googletest-release-1.10.0

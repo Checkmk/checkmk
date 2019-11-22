@@ -1,0 +1,12 @@
+Title: msoffice_licenses: Fixed ZeroDevisionError
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p7
+Date: 1574427669
+Class: fix
+
+The check could got to UNKN state, if zero licenses where active. This
+has been fixed. Such licenses now show the infotext "No active
+licenses".

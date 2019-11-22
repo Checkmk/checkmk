@@ -45,6 +45,7 @@ import six
 import cmk.utils.store
 from cmk.utils.paths import tmp_dir
 import cmk.utils.password_store
+from cmk.utils.exceptions import MKException
 from cmk.special_agents.utils import (
     datetime_serializer,
     DataCache,
@@ -3395,5 +3396,5 @@ def main(sys_argv=None):
     return 0
 
 
-class AwsAccessError(Exception):
+class AwsAccessError(MKException):
     pass

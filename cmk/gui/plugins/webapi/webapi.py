@@ -37,10 +37,14 @@ import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+from cmk.utils.exceptions import MKException
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.exceptions import MKUserError, MKAuthException, MKException
+from cmk.gui.exceptions import (
+    MKUserError,
+    MKAuthException,
+)
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 import cmk.gui.watolib.users
 from cmk.gui.watolib.tags import (

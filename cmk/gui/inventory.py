@@ -38,6 +38,10 @@ import livestatus
 
 import cmk.utils.paths
 from cmk.utils.structured_data import StructuredDataTree, Container, Numeration, Attributes
+from cmk.utils.exceptions import (
+    MKException,
+    MKGeneralException,
+)
 
 import cmk.gui.pages
 import cmk.gui.config as config
@@ -45,7 +49,11 @@ import cmk.gui.userdb as userdb
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
-from cmk.gui.exceptions import MKException, MKGeneralException, MKAuthException, MKUserError, RequestTimeout
+from cmk.gui.exceptions import (
+    MKAuthException,
+    MKUserError,
+    RequestTimeout,
+)
 
 
 def get_inventory_data(inventory_tree, tree_path):

@@ -44,7 +44,10 @@ import traceback
 
 import cmk.utils.paths
 import cmk.utils.store
-from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.exceptions import (
+    MKException,
+    MKGeneralException,
+)
 import cmk_base.cleanup
 
 # Constants for counters
@@ -58,7 +61,7 @@ g_suppress_on_wrap = True  # Suppress check on wrap (raise an exception)
 # e.g. do not suppress this check on check_mk -nv
 
 
-class MKCounterWrapped(Exception):
+class MKCounterWrapped(MKException):
     def __init__(self, reason):
         self.reason = reason
         super(MKCounterWrapped, self).__init__(reason)

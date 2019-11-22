@@ -32,13 +32,17 @@ import six
 import livestatus
 
 import cmk.utils.plugin_registry
+from cmk.utils.exceptions import (
+    MKException,
+    MKGeneralException,
+)
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKException
+from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry
 
 

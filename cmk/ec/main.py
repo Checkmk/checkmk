@@ -68,6 +68,7 @@ import cmk.utils.render
 import cmk.utils.regex
 import cmk.utils.debug
 from cmk.utils.encoding import convert_to_unicode
+from cmk.utils.exceptions import MKException
 from cmk.ec.crash_reporting import ECCrashReport, CrashReportStore
 
 # suppress "Cannot find module" error from mypy
@@ -359,15 +360,15 @@ def replace_groups(text, origtext, match_groups):
     return text
 
 
-class MKSignalException(Exception):
+class MKSignalException(MKException):
     def __init__(self, signum):
-        Exception.__init__(self, "Got signal %d" % signum)
+        MKException.__init__(self, "Got signal %d" % signum)
         self._signum = signum
 
 
-class MKClientError(Exception):
+class MKClientError(MKException):
     def __init__(self, t):
-        Exception.__init__(self, t)
+        MKException.__init__(self, t)
 
 
 #.

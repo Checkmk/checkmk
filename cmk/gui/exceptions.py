@@ -31,7 +31,11 @@ from werkzeug.http import HTTP_STATUS_CODES
 
 from cmk.gui.i18n import _
 
-from cmk.utils.exceptions import MKGeneralException, MKException, MKTimeout
+from cmk.utils.exceptions import (
+    MKException,
+    MKGeneralException,
+    MKTimeout,
+)
 
 
 class RequestTimeout(MKTimeout):
@@ -40,7 +44,7 @@ class RequestTimeout(MKTimeout):
     pass
 
 
-class FinalizeRequest(Exception):
+class FinalizeRequest(MKException):
     """Is used to end the HTTP request processing from deeper code levels"""
     def __init__(self, code):
         # type: (int) -> None

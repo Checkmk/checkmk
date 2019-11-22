@@ -44,6 +44,7 @@ import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.werks
 import cmk.utils.debug
+from cmk.utils.exceptions import MKException
 import cmk_base.utils
 
 logger = logging.getLogger("cmk.base.packaging")
@@ -51,7 +52,7 @@ _pac_ext = ".mkp"
 
 
 # TODO: Subclass MKGeneralException()?
-class PackageException(Exception):
+class PackageException(MKException):
     def __init__(self, reason):
         self.reason = reason
         super(PackageException, self).__init__(reason)

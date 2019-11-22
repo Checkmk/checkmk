@@ -32,7 +32,7 @@ import six
 import cmk.utils.plugin_registry
 from cmk.gui.globals import html
 import cmk.gui.config as config
-from cmk.gui.exceptions import MKException
+from cmk.utils.exceptions import MKException
 from cmk.gui.log import logger
 
 

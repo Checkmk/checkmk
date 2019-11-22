@@ -67,9 +67,7 @@ target_values = {
 
 
 class Sorry(Exception):
-    def __init__(self, reason):
-        self.reason = reason
-        super(Sorry, self).__init__(reason)
+    pass
 
 
 def find_pid_and_configfile():
@@ -638,7 +636,7 @@ try:
             print("# NOT DETECTED: %s" % var)
 
 except Sorry as e:
-    sys.stderr.write("\033[1;41;35m Sorry: %s \033[0m\n" % e.reason)
+    sys.stderr.write("\033[1;41;35m Sorry: %s \033[0m\n" % e.args[0])
     sys.exit(1)
 
 except Exception as e:

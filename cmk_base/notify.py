@@ -56,7 +56,10 @@ from cmk.utils.notify import (
 from cmk.utils.regex import regex
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.exceptions import (
+    MKException,
+    MKGeneralException,
+)
 
 import cmk_base.utils
 import cmk_base.config as config
@@ -1385,7 +1388,7 @@ def notification_script_env(plugin_context):
     return notify_env
 
 
-class NotificationTimeout(Exception):
+class NotificationTimeout(MKException):
     pass
 
 

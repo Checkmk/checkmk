@@ -33,6 +33,7 @@ import cmk.utils.debug
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.plugin_loader import load_plugins
 from cmk.utils.encoding import make_utf8
+from cmk.utils.exceptions import MKException
 
 import cmk_base.utils
 import cmk_base.config as config
@@ -42,7 +43,7 @@ import cmk_base.check_api as check_api
 
 
 # TODO: Inherit from MKGeneralException
-class MKAutomationError(Exception):
+class MKAutomationError(MKException):
     def __init__(self, reason):
         # TODO: This disable is needed because of a pylint bug. Remove one day.
         super(MKAutomationError, self).__init__(reason)  # pylint: disable=bad-super-call

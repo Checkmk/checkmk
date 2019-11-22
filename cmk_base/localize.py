@@ -35,12 +35,13 @@ from cmk.utils.log import VERBOSE
 import cmk.utils.tty as tty
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.exceptions import MKException
 
 logger = logging.getLogger("cmk.base.localize")
 
 
 # TODO: Inherit from MKGeneralException?
-class LocalizeException(Exception):
+class LocalizeException(MKException):
     def __init__(self, reason):
         self.reason = reason
         super(LocalizeException, self).__init__(reason)

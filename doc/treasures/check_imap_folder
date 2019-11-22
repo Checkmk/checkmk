@@ -25,9 +25,10 @@
 # Boston, MA 02110-1301 USA.
 
 import imaplib, sys, email, email.header, re, getopt
+from cmk.utils.exceptions import MKException
 
 
-class MKImapError(Exception):
+class MKImapError(MKException):
     def __init__(self, reason):
         self.reason = reason
 

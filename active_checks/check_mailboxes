@@ -36,6 +36,7 @@ from optparse import OptionParser
 
 import cmk.utils.render
 import cmk.utils.password_store
+from cmk.utils.exceptions import MKException
 cmk.utils.password_store.replace_passwords()
 
 
@@ -82,7 +83,7 @@ class MailList(object):
         return not self.__id_list
 
 
-class LoginError(Exception):
+class LoginError(MKException):
     pass
 
 

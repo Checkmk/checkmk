@@ -36,6 +36,7 @@ from cmk.utils.encoding import (
     ensure_unicode,
     ensure_bytestr,
 )
+from cmk.utils.exceptions import MKException
 
 try:
     # Tolerate this violation for the moment. It's OK to have unlocalized
@@ -69,7 +70,7 @@ def _ensure_unicode(text):
     return text
 
 
-class MKLivestatusException(Exception):
+class MKLivestatusException(MKException):
     def __init__(self, value):
         self.parameter = value
         super(MKLivestatusException, self).__init__(value)

@@ -53,11 +53,12 @@ from pathlib2 import Path
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.store
+from cmk.utils.exceptions import MKException
 import cmk.ec.defaults
 import cmk.ec.settings
 
 
-class MkpRulePackBindingError(Exception):
+class MkpRulePackBindingError(MKException):
     """Base class for exceptions related to rule pack binding"""
     pass
 

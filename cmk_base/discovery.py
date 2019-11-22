@@ -38,6 +38,7 @@ import cmk.utils.paths
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.encoding import convert_to_unicode
+from cmk.utils.exceptions import MKException
 
 import cmk_base
 import cmk_base.crash_reporting
@@ -530,7 +531,7 @@ def _set_rediscovery_flag(hostname):
     touch(discovery_filename)
 
 
-class DiscoveryTimeout(Exception):
+class DiscoveryTimeout(MKException):
     pass
 
 

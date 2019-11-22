@@ -35,6 +35,8 @@ import socket
 import urllib2
 import traceback
 
+from cmk.utils.exceptions import MKException
+
 
 def usage():
     sys.stderr.write("""Check_MK ALLNET IP-Sensoric Agent
@@ -89,7 +91,7 @@ else:
 socket.setdefaulttimeout(opt_timeout)
 
 
-class RequestError(Exception):
+class RequestError(MKException):
     pass
 
 

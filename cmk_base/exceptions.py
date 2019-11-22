@@ -29,10 +29,13 @@
 
 import traceback
 
-from cmk.utils.exceptions import MKGeneralException as _MKGeneralException
+from cmk.utils.exceptions import (
+    MKException,
+    MKGeneralException,
+)
 
 
-class MKAgentError(Exception):
+class MKAgentError(MKException):
     def __init__(self, reason):
         super(MKAgentError, self).__init__(reason)
         self.reason = reason
@@ -41,7 +44,7 @@ class MKAgentError(Exception):
         return self.reason
 
 
-class MKIPAddressLookupError(_MKGeneralException):
+class MKIPAddressLookupError(MKGeneralException):
     pass
 
 
@@ -49,7 +52,7 @@ class MKEmptyAgentData(MKAgentError):
     pass
 
 
-class MKParseFunctionError(Exception):
+class MKParseFunctionError(MKException):
     def __init__(self, exception_type, exception, backtrace):
         self.exception_type = exception_type
         self.exception = exception
@@ -63,7 +66,7 @@ class MKParseFunctionError(Exception):
         return "%r\n%s" % (self.exception, "".join(traceback.format_tb(self.backtrace)))
 
 
-class MKSNMPError(Exception):
+class MKSNMPError(MKException):
     def __init__(self, reason):
         self.reason = reason
         super(MKSNMPError, self).__init__(reason)
@@ -72,5 +75,5 @@ class MKSNMPError(Exception):
         return self.reason
 
 
-class MKSkipCheck(Exception):
+class MKSkipCheck(MKException):
     pass

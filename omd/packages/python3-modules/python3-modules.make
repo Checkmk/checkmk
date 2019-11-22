@@ -13,7 +13,7 @@ PYTHON3_MODULES_WORK_DIR := $(PACKAGE_WORK_DIR)/$(PYTHON3_MODULES_DIR)
 
 # Used by other OMD packages
 PACKAGE_PYTHON3_MODULES_DESTDIR    := $(PYTHON3_MODULES_INSTALL_DIR)
-PACKAGE_PYTHON3_MODULES_PYTHONPATH := $(PACKAGE_PYTHON3_MODULES_DESTDIR)/lib/python
+PACKAGE_PYTHON3_MODULES_PYTHONPATH := $(PACKAGE_PYTHON3_MODULES_DESTDIR)/lib/python3
 
 .PHONY: $(PYTHON3_MODULES) $(PYTHON3_MODULES)-install $(PYTHON3_MODULES)-clean
 
@@ -70,8 +70,8 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(FREETDS_INTERMEDIATE_IN
 		    --root=$(PYTHON3_MODULES_INSTALL_DIR) \
 		    --prefix='' \
 		    --install-data=/share \
-		    --install-platlib=/lib/python \
-		    --install-purelib=/lib/python ; \
+		    --install-platlib=/lib/python3 \
+		    --install-purelib=/lib/python3 ; \
 		cd .. ; \
 	    done
 	$(TOUCH) $@
@@ -92,6 +92,16 @@ $(PYTHON3_MODULES_UNPACK): $(addprefix $(PACKAGE_DIR)/$(PYTHON3_MODULES)/src/,$(
 	$(TOUCH) $@
 
 $(PYTHON3_MODULES_INTERMEDIATE_INSTALL): $(PYTHON3_MODULES_BUILD)
+# Ensure all native modules have the correct rpath set
+	set -e ; for F in $$(find $(PACKAGE_PYTHON3_MODULES_PYTHONPATH) -name \*.so); do \
+	    echo -n "Test rpath of $$F..." ; \
+		if chrpath "$$F" | grep "=$(OMD_ROOT)/lib" >/dev/null 2>&1; then \
+		    echo OK ; \
+		else \
+		    echo "ERROR ($$(chrpath $$F))"; \
+		    exit 1 ; \
+		fi \
+	done
 	$(TOUCH) $@
 
 $(PYTHON3_MODULES_INSTALL): $(PYTHON3_MODULES_INTERMEDIATE_INSTALL)

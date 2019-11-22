@@ -263,6 +263,16 @@ $(PYTHON_MODULES_INTERMEDIATE_INSTALL): $(PYTHON_MODULES_BUILD)
 	find $(PYTHON_MODULES_INSTALL_DIR)/bin -name \*.py ! -name snmpsimd.py -exec rm {} \;
 # Fix python interpreter for kept scripts
 	$(SED) -i '1s|^#!.*/python$$|#!/usr/bin/env python2|' $(addprefix $(PYTHON_MODULES_INSTALL_DIR)/bin/,chardetect fakebmc futurize jirashell pasteurize pbr pyghmicons pyghmiutil pyjwt pyrsa-decrypt pyrsa-encrypt pyrsa-keygen pyrsa-priv2pub pyrsa-sign pyrsa-verify virshbmc snmpsimd.py)
+# Ensure all native modules have the correct rpath set
+	set -e ; for F in $$(find $(PACKAGE_PYTHON_MODULES_PYTHONPATH) -name \*.so); do \
+	    echo -n "Test rpath of $$F..." ; \
+		if chrpath "$$F" | grep "=$(OMD_ROOT)/lib" >/dev/null 2>&1; then \
+		    echo OK ; \
+		else \
+		    echo "ERROR ($$(chrpath $$F))"; \
+		    exit 1 ; \
+		fi \
+	done
 	$(TOUCH) $@
 
 $(PYTHON_MODULES_INSTALL): $(PYTHON_MODULES_INTERMEDIATE_INSTALL)

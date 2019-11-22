@@ -18,7 +18,7 @@ PYTHON3_WORK_DIR := $(PACKAGE_WORK_DIR)/$(PYTHON3_DIR)
 
 # Used by other OMD packages
 PACKAGE_PYTHON3_DESTDIR         := $(PYTHON3_INSTALL_DIR)
-PACKAGE_PYTHON3_PYTHONPATH      := $(PACKAGE_PYTHON3_DESTDIR)/lib/python3
+PACKAGE_PYTHON3_PYTHONPATH      := $(PACKAGE_PYTHON3_DESTDIR)/lib/python3.7
 PACKAGE_PYTHON3_LDFLAGS         := -L$(PACKAGE_PYTHON3_DESTDIR)/lib -L$(PACKAGE_PYTHON3_PYTHONPATH)/config
 PACKAGE_PYTHON3_LD_LIBRARY_PATH := $(PACKAGE_PYTHON3_DESTDIR)/lib
 PACKAGE_PYTHON3_BIN             := $(PACKAGE_PYTHON3_DESTDIR)/bin
@@ -51,6 +51,12 @@ $(PYTHON3_CACHE_PKG_PROCESS): $(PYTHON3_CACHE_PKG_PATH)
 	$(call upload_pkg_archive,$(PYTHON3_CACHE_PKG_PATH),$(PYTHON3_DIR),$(PYTHON3_BUILD_ID))
 # Ensure that the rpath of the python binary always points to the current version path
 	chrpath -r "$(OMD_ROOT)/lib" $(PACKAGE_PYTHON3_EXECUTABLE)
+# Native modules built based on this version need to use the correct rpath
+	sed -i 's|--rpath,/omd/versions/[^/]*/lib|--rpath,$(OMD_ROOT)/lib|g' \
+	    $(PACKAGE_PYTHON3_PYTHONPATH)/_sysconfigdata_m_linux_x86_64-linux-gnu.py
+	LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" \
+	    $(PACKAGE_PYTHON3_EXECUTABLE) -m py_compile \
+	    $(PACKAGE_PYTHON3_PYTHONPATH)/_sysconfigdata_m_linux_x86_64-linux-gnu.py
 	$(TOUCH) $@
 
 $(PYTHON3_UNPACK): $(PACKAGE_DIR)/$(PYTHON3)/$(PYTHON3_DIR).tar.xz

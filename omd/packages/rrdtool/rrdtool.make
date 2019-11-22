@@ -25,6 +25,7 @@ RRDTOOL_CONFIGUREOPTS  := \
 	--disable-tcl \
 	--disable-lua \
 	--disable-rrdcgi \
+	--with-systemdsystemunitdir=no \
 	--with-perl-options="LIB=$(OMD_ROOT)/lib/perl5/lib/perl5"
 
 .PHONY: $(RRDTOOL) $(RRDTOOL)-install $(RRDTOOL)-skel $(RRDTOOL)-build $(RRDTOOL)-build-bindings $(RRDTOOL)-build-library \

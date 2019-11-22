@@ -97,9 +97,13 @@ class Application(object):
             self._render_exception(e)
             self._response.status_code = httplib.UNAUTHORIZED
 
-        except (MKConfigError, MKGeneralException) as e:
-            self._render_exception(e)
-            logger.error("%s: %s", e.plain_title(), e)
+        except MKConfigError as e:
+            self._render_exception(e, title=_("Configuration error"))
+            logger.error("MKConfigError: %s", e)
+
+        except MKGeneralException as e:
+            self._render_exception(e, title=_("General error"))
+            logger.error("MKGeneralException: %s", e)
 
         except Exception as e:
             crash = crash_reporting.GUICrashReport.from_exception()
@@ -117,10 +121,14 @@ class Application(object):
                 logger.exception("error releasing locks after WSGI request")
                 raise
 
-    def _render_exception(self, e):
+    def _render_exception(self, e, title=""):
+        if title:
+            title = "%s: " % title
+
         if self._plain_error():
             html.set_output_format("text")
-            html.write("%s: %s\n" % (e.plain_title(), e))
+            html.write("%s%s\n" % (title, e))
+
         elif not self._fail_silently():
             html.header(e.title())
             html.show_error(e)

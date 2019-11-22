@@ -75,29 +75,17 @@ class MKAuthException(MKException):
         # type: () -> unicode
         return _("Permission denied")
 
-    def plain_title(self):
-        # type: () -> unicode
-        return _("Authentication error")
-
 
 class MKUnauthenticatedException(MKGeneralException):
     def title(self):
         # type: () -> unicode
         return _("Not authenticated")
 
-    def plain_title(self):
-        # type: () -> unicode
-        return _("Missing authentication credentials")
-
 
 class MKConfigError(MKException):
     def title(self):
         # type: () -> unicode
         return _("Configuration error")
-
-    def plain_title(self):
-        # type: () -> unicode
-        return self.title()
 
 
 class MKUserError(MKException):
@@ -113,10 +101,6 @@ class MKUserError(MKException):
     def title(self):
         # type: () -> Text
         return _("Invalid User Input")
-
-    def plain_title(self):
-        # type: () -> Text
-        return _("User error")
 
 
 class MKInternalError(MKException):

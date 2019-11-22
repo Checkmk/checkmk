@@ -56,9 +56,6 @@ class MKGeneralException(MKException):
     def __str__(self):
         return self.reason
 
-    def plain_title(self):
-        return _("General error")
-
     def title(self):
         return _("Error")
 

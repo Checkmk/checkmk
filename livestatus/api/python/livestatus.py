@@ -78,9 +78,6 @@ class MKLivestatusException(MKException):
     def __str__(self):
         return str(self.parameter)
 
-    def plain_title(self):
-        return _("Livestatus problem")
-
     def title(self):
         return _("Livestatus problem")
 
@@ -104,9 +101,6 @@ class MKLivestatusQueryError(MKLivestatusException):
 class MKLivestatusNotFoundError(MKLivestatusException):
     def __str__(self):
         return "No matching entries found for query %s" % str(self.parameter)
-
-    def plain_title(self):
-        return _("Livestatus-data not found")
 
     def title(self):
         return _("Data not found")

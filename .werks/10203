@@ -1,0 +1,23 @@
+Title: Windows Agent cleans during Uninstall Program Data directory
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1574411581
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+
+During Uninstall Windows Agent can clean Program data directory.
+
+By default Windows Agent removes own files and folders.
+
+The behaviour of the agent is controlled using  yml config key 
+<tt>system.cleanup_uninstall</tt>, possible values are
+
+* <tt>none</tt> - do nothing
+* <tt>smart</tt> - remove owned by the Agent files and subfolders
+* <tt>all</tt> - remove all files and subfolders in the Windows Agent 
+Program Data directory
+

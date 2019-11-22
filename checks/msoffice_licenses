@@ -44,30 +44,50 @@ factory_settings["msoffice_licenses_levels"] = {
 
 
 def inventory_msoffice_licenses(info):
-    for name, _active, _warning_units, _consumed in info:
-        yield name, {}
+    for line in info:
+        if len(line) == 4:
+            yield line[0], {}
 
 
 def check_msoffice_licenses(item, params, info):
-    for name, active, warning_units, consumed in info:
-        if name == item:
-            warn, crit = params.get("usage")
-            usage = int(consumed) * 100.0 / (int(active))
+    # will be refactored in 1.7
+    for line in info:
+        if len(line) != 4:
+            continue
+
+        name, active, warning_units, consumed = line
+        if name != item:
+            continue
+
+        try:
+            active = int(active)
+            warning_units = int(warning_units)
+            consumed = int(consumed)
+        except ValueError:
+            yield 3, "Invalid data in agent output"
+            return
+
+        if active:
+            usage = consumed * 100.0 / (active)
+
             state = 0
             infotext = "Consumed: %s of %s (%.2f%%)" % (consumed, active, usage)
+            warn, crit = params["usage"]
             if usage >= crit:
                 state = 2
             elif usage >= warn:
                 state = 1
             if state:
                 infotext += " (warn/crit at %s%%/%s%%)" % (warn, crit)
-            yield (state, infotext, [
-                ("licenses", int(consumed)),
-                ("licenses_total", int(active)),
-                ("license_percentage", usage, warn, crit, 0, 100),
-            ])
-            if int(warning_units):
-                yield 0, " Warning units: %s" % warning_units
+
+            yield (state, infotext, [("licenses", consumed), ("licenses_total", active),
+                                     ("license_percentage", usage, warn, crit, 0, 100)])
+        else:
+            yield 0, "No active licenses"
+            return
+
+        if warning_units:
+            yield 0, " Warning units: %s" % warning_units
 
 
 check_info["msoffice_licenses"] = {

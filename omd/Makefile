@@ -1,7 +1,3 @@
-SHELL = /bin/bash -e -o pipefail
-
-PACKAGE_DIR := $(shell pwd)/packages
-
 include Makefile.omd
 include $(BUILD_HELPER_DIR)/build-helper-files.make
 include packages/packages.make

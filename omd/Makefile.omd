@@ -4,8 +4,13 @@ REPO_PATH          := $(realpath $(dir $(realpath $(dir $(lastword $(MAKEFILE_LI
 
 include $(REPO_PATH)/defines.make
 
+# Needs to be set after defines.make load (to override the shell defined there)
+SHELL := /bin/bash -e -o pipefail
+
 # OMD packages, the single components, are located below this directory
+# TODO: Cleanup one of these
 PACKAGE_BASE       := $(REPO_PATH)/omd/packages
+PACKAGE_DIR        := $(PACKAGE_BASE)
 # The OMD build (RPM, DEB, ...) needs some working directorties of several types
 # during the build. All of them should be located below this base directory to
 # make it easier to clean them up.

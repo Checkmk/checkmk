@@ -26,8 +26,8 @@ clean:
 	rm -f $(_PWD)/debian/init
 	rm -f $(_PWD)/debian/links
 	rm -f $(_PWD)/debian/*.debhelper
-	rm -rf  $(_PWD)/debian/check-mk-*-[0-9].[0-9.]*
-	rm -rf  $(_PWD)/debian/check-mk-*-[1-9][0-9].[0-9.]*
+	rm -rf $(_PWD)/debian/check-mk-*-[0-9].[0-9.]*
+	rm -rf $(_PWD)/debian/check-mk-*-[1-9][0-9].[0-9.]*
 
 	dh_clean
 
@@ -58,13 +58,13 @@ install:
 		 etc/apache2 \
 		 etc/init.d/omd \
 		 etc/systemd/system/omd.service; do \
-        ABS_PATH="$(_PWD)/debian/`dh_listpackages`/$$F" ; \
-        if [ -f "$$ABS_PATH" ] || [ -h "$$ABS_PATH" ] ; then \
-            rm -f "$$ABS_PATH" ; \
-        elif [ -d "$$ABS_PATH" ]; then \
-            rmdir "$$ABS_PATH" ; \
-        fi \
-    done
+	    ABS_PATH="$(_PWD)/debian/`dh_listpackages`/$$F" ; \
+            if [ -f "$$ABS_PATH" ] || [ -h "$$ABS_PATH" ] ; then \
+                rm -f "$$ABS_PATH" ; \
+            elif [ -d "$$ABS_PATH" ]; then \
+                rmdir "$$ABS_PATH" ; \
+            fi \
+	done
 
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
 	    -e 's/###OMD_SERIAL###/$(OMD_SERIAL)/g' \

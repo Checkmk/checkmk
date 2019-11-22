@@ -292,11 +292,10 @@ debian/control: debian/control.in
 deb: debian/changelog debian/control
 	echo $(DISTRO_CODE)
 	if [ "$(DISTRO_CODE)" = "jessie" ] || [ "$(DISTRO_CODE)" = "trusty" ] || [ "$(DISTRO_CODE)" = "xenial" ]; then \
-	    TARGET="-B" ; \
+	    TARGET="-us -uc -B" ; \
 	else \
-	    TARGET="-- clean binary-arch" ; \
+	    TARGET="--no-sign -- clean binary-arch" ; \
 	fi && \
-	DEBUILD_DPKG_BUILDPACKAGE_OPTS="-us -uc" \
 	    debuild \
 	    --preserve-envvar="NEXUS_*" \
 	    --preserve-envvar="PYTHON_ENABLE_OPTIMIZATIONS" \

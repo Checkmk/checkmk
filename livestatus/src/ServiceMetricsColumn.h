@@ -22,34 +22,26 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#ifndef ServiceMetricsColumn_h
+#define ServiceMetricsColumn_h
+
+#include "config.h"  // IWYU pragma: keep
+
+#include <string>
+#include <vector>
 #include "MetricsColumn.h"
-#include "Row.h"
+#include "contact_fwd.h"
 
-#ifdef CMC
-#include <algorithm>
-#include <iterator>
-#include "Metric.h"
-#include "Object.h"
-#include "RRDInfo.h"
-#include "State.h"
-#include "cmc.h"
-#endif
+class Row;
 
-std::vector<std::string> MetricsColumn::getValue(
-    Row row, const contact * /*auth_user*/,
-    std::chrono::seconds /*timezone_offset*/) const {
-    std::vector<std::string> metrics;
-#ifdef CMC
-    if (auto object = columnData<Object>(row)) {
-        if (object->isEnabled(State::Enable::performance_data)) {
-            auto names = object->rrdInfo().names_;
-            std::transform(
-                names.begin(), names.end(), std::back_inserter(metrics),
-                [](const Metric::MangledName &name) { return name.string(); });
-        }
+class ServiceMetricsColumn : public MetricsColumn {
+public:
+    using MetricsColumn::MetricsColumn;
+    std::vector<std::string> getValue(
+        Row, const contact* /*auth_user*/,
+        std::chrono::seconds /*timezone_offset*/) const override {
+        return {};
     }
-#else
-    (void)row;
+};
+
 #endif
-    return metrics;
-}

@@ -42,7 +42,6 @@
 #include "DynamicServiceRRDColumn.h"
 #include "FixedIntColumn.h"
 #include "Logger.h"
-#include "MetricsColumn.h"
 #include "MonitoringCore.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetIntColumn.h"
@@ -53,6 +52,7 @@
 #include "Query.h"
 #include "ServiceContactsColumn.h"
 #include "ServiceGroupsColumn.h"
+#include "ServiceMetricsColumn.h"
 #include "ServiceSpecialDoubleColumn.h"
 #include "ServiceSpecialIntColumn.h"
 #include "StringUtils.h"
@@ -514,7 +514,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         "A list of all contact groups this service is in", indirect_offset, -1,
         -1, DANGEROUS_OFFSETOF(service, contact_groups)));
 
-    table->addColumn(std::make_unique<MetricsColumn>(
+    table->addColumn(std::make_unique<ServiceMetricsColumn>(
         prefix + "metrics",
         "A dummy column in order to be compatible with Check_MK Multisite",
         indirect_offset, -1, -1, 0));

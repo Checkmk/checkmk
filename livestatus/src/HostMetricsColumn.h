@@ -22,24 +22,26 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef MetricsColumn_h
-#define MetricsColumn_h
+#ifndef HostMetricsColumn_h
+#define HostMetricsColumn_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <chrono>
+
 #include <string>
 #include <vector>
-#include "ListColumn.h"
+#include "MetricsColumn.h"
 #include "contact_fwd.h"
+
 class Row;
 
-class MetricsColumn : public ListColumn {
+class HostMetricsColumn : public MetricsColumn {
 public:
-    MetricsColumn(const std::string &name, const std::string &description,
-                  int indirect_offset, int extra_offset, int extra_extra_offset,
-                  int offset)
-        : ListColumn(name, description, indirect_offset, extra_offset,
-                     extra_extra_offset, offset) {}
+    using MetricsColumn::MetricsColumn;
+    std::vector<std::string> getValue(
+        Row, const contact* /*auth_user*/,
+        std::chrono::seconds /*timezone_offset*/) const override {
+        return {};
+    }
 };
 
-#endif  // MetricsColumn_h
+#endif

@@ -45,11 +45,11 @@
 #include "HostFileColumn.h"
 #include "HostGroupsColumn.h"
 #include "HostListColumn.h"
+#include "HostMetricsColumn.h"
 #include "HostSpecialDoubleColumn.h"
 #include "HostSpecialIntColumn.h"
 #include "Logger.h"
 #include "LogwatchListColumn.h"
-#include "MetricsColumn.h"
 #include "MonitoringCore.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetIntColumn.h"
@@ -735,7 +735,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         indirect_offset, extra_offset, -1, DANGEROUS_OFFSETOF(host, services),
         table->core(), 3));
 
-    table->addColumn(std::make_unique<MetricsColumn>(
+    table->addColumn(std::make_unique<HostMetricsColumn>(
         prefix + "metrics",
         "A dummy column in order to be compatible with Check_MK Multisite",
         indirect_offset, extra_offset, -1, 0));

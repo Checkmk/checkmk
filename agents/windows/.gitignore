@@ -22,3 +22,4 @@ Makefile.in
 junit.xml
 coverage.info
 /packages/
+check_mk.user.yml

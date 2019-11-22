@@ -659,7 +659,7 @@ void Folders::cleanAll() {
 
 CleanMode GetCleanDataFolderMode() {
     auto mode_text = GetVal(groups::kSystem, vars::kCleanupUninstall,
-                            std::string(values::kCleanupNone));
+                            std::string(values::kCleanupSmart));
     if (cma::tools::IsEqual(mode_text, values::kCleanupNone))
         return CleanMode::none;
 

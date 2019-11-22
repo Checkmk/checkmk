@@ -251,5 +251,5 @@ system:
         port: auto      # allowed all or auto
 
 
-    cleanup_uninstall: none # allowed none, smart and all
+    cleanup_uninstall: smart # allowed none, smart and all
 

@@ -5,7 +5,8 @@ REPO_PATH          := $(realpath $(dir $(realpath $(dir $(lastword $(MAKEFILE_LI
 include $(REPO_PATH)/defines.make
 
 # Needs to be set after defines.make load (to override the shell defined there)
-SHELL := /bin/bash -e -o pipefail
+# TODO: Enable this in a separate step. Seems we need to fix several places before merging
+#SHELL := /bin/bash -e -o pipefail
 
 # OMD packages, the single components, are located below this directory
 # TODO: Cleanup one of these

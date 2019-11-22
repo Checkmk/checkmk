@@ -1,0 +1,11 @@
+Title: Fix actions after bulk search for tags
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p7
+Date: 1574425416
+Class: fix
+
+Previous versions showed a message like "The selected element is no longer available"
+when first performing a bulk search for a tag and then trying to perform a bulk action.

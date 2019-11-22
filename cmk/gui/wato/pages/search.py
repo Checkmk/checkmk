@@ -79,9 +79,15 @@ class ModeSearch(WatoMode):
             if html.get_checkbox(varname) is False:
                 continue
 
-            attr_prefix = "host_search_attr_%s" % varname.split("host_search_change_", 1)[1]
-
             keep_vars[varname] = value
+
+            attr_ident = varname.split("host_search_change_", 1)[1]
+
+            # The URL variable naming scheme is not clear. Try to match with "attr_" prefix
+            # and without. We should investigate and clean this up.
+            attr_prefix = "host_search_attr_%s" % attr_ident
+            keep_vars.update(html.request.itervars(prefix=attr_prefix))
+            attr_prefix = "host_search_%s" % attr_ident
             keep_vars.update(html.request.itervars(prefix=attr_prefix))
 
         html.request.del_vars("host_search_")

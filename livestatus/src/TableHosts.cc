@@ -129,9 +129,9 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         DANGEROUS_OFFSETOF(host, check_period)));
     table->addColumn(std::make_unique<CustomVarsExplicitColumn>(
         prefix + "service_period", "The name of the service period of the host",
-        indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, custom_variables), table->core(),
-        "SERVICE_PERIOD"));
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, custom_variables)},
+        table->core(), "SERVICE_PERIOD"));
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "notes", "Optional notes for this host", indirect_offset,
         extra_offset, -1, DANGEROUS_OFFSETOF(host, notes)));
@@ -386,8 +386,9 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         DANGEROUS_OFFSETOF(host, modified_attributes)));
     table->addColumn(std::make_unique<AttributeListColumn>(
         prefix + "modified_attributes_list",
-        "A list of all modified attributes", indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, modified_attributes)));
+        "A list of all modified attributes",
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, modified_attributes)}));
 
     // columns of type double
     table->addColumn(std::make_unique<OffsetDoubleColumn>(
@@ -451,9 +452,9 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<CustomTimeperiodColumn>(
         prefix + "in_service_period",
         "Whether this host is currently in its service period (0/1)",
-        indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, custom_variables), table->core(),
-        "SERVICE_PERIOD"));
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, custom_variables)},
+        table->core(), "SERVICE_PERIOD"));
 
     table->addColumn(std::make_unique<HostContactsColumn>(
         prefix + "contacts",
@@ -491,65 +492,71 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",
-        "A list of the names of the custom variables", indirect_offset,
-        extra_offset, -1, DANGEROUS_OFFSETOF(host, custom_variables),
+        "A list of the names of the custom variables",
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, custom_variables)},
         table->core(), AttributeKind::custom_variables));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "custom_variable_values",
-        "A list of the values of the custom variables", indirect_offset,
-        extra_offset, -1, DANGEROUS_OFFSETOF(host, custom_variables),
+        "A list of the values of the custom variables",
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, custom_variables)},
         table->core(), AttributeKind::custom_variables));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
         prefix + "custom_variables", "A dictionary of the custom variables",
-        indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, custom_variables), table->core(),
-        AttributeKind::custom_variables));
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, custom_variables)},
+        table->core(), AttributeKind::custom_variables));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "tag_names", "A list of the names of the tags",
-        indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, custom_variables), table->core(),
-        AttributeKind::tags));
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, custom_variables)},
+        table->core(), AttributeKind::tags));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "tag_values", "A list of the values of the tags",
-        indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, custom_variables), table->core(),
-        AttributeKind::tags));
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, custom_variables)},
+        table->core(), AttributeKind::tags));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
-        prefix + "tags", "A dictionary of the tags", indirect_offset,
-        extra_offset, -1, DANGEROUS_OFFSETOF(host, custom_variables),
+        prefix + "tags", "A dictionary of the tags",
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, custom_variables)},
         table->core(), AttributeKind::tags));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "label_names", "A list of the names of the labels",
-        indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, custom_variables), table->core(),
-        AttributeKind::labels));
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, custom_variables)},
+        table->core(), AttributeKind::labels));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "label_values", "A list of the values of the labels",
-        indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, custom_variables), table->core(),
-        AttributeKind::labels));
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, custom_variables)},
+        table->core(), AttributeKind::labels));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
-        prefix + "labels", "A dictionary of the labels", indirect_offset,
-        extra_offset, -1, DANGEROUS_OFFSETOF(host, custom_variables),
+        prefix + "labels", "A dictionary of the labels",
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, custom_variables)},
         table->core(), AttributeKind::labels));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "label_source_names",
-        "A list of the names of the label sources", indirect_offset,
-        extra_offset, -1, DANGEROUS_OFFSETOF(host, custom_variables),
+        "A list of the names of the label sources",
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, custom_variables)},
         table->core(), AttributeKind::label_sources));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "label_source_values",
-        "A list of the values of the label sources", indirect_offset,
-        extra_offset, -1, DANGEROUS_OFFSETOF(host, custom_variables),
+        "A list of the values of the label sources",
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, custom_variables)},
         table->core(), AttributeKind::label_sources));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
         prefix + "label_sources", "A dictionary of the label sources",
-        indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, custom_variables), table->core(),
-        AttributeKind::label_sources));
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, custom_variables)},
+        table->core(), AttributeKind::label_sources));
 
     // Add direct access to the custom macro _FILENAME. In a future version of
     // Livestatus this will probably be configurable so access to further custom
@@ -557,8 +564,9 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     // ordinary Nagios columns.
     table->addColumn(std::make_unique<CustomVarsExplicitColumn>(
         prefix + "filename", "The value of the custom variable FILENAME",
-        indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, custom_variables), table->core(), "FILENAME"));
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, custom_variables)},
+        table->core(), "FILENAME"));
 
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "parents", "A list of all direct parents of the host",
@@ -571,7 +579,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addDynamicColumn(std::make_unique<DynamicHostRRDColumn>(
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",
-        table->core(), indirect_offset, extra_offset, -1));
+        table->core(), Column::Offsets{indirect_offset, extra_offset, -1, 0}));
 
     table->addColumn(std::make_unique<ServiceListStateColumn>(
         prefix + "num_services", "The total number of services of the host",
@@ -651,8 +659,9 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<HostFileColumn>(
         prefix + "mk_inventory",
-        "The file content of the Check_MK HW/SW-Inventory", indirect_offset,
-        extra_offset, -1, 0, [mc]() { return mc->mkInventoryPath(); },
+        "The file content of the Check_MK HW/SW-Inventory",
+        Column::Offsets{indirect_offset, extra_offset, -1, 0},
+        [mc]() { return mc->mkInventoryPath(); },
         [](const Column &col,
            const Row &row) -> std::optional<std::filesystem::path> {
             if (auto hst = col.columnData<host>(row)) {
@@ -663,7 +672,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<HostFileColumn>(
         prefix + "mk_inventory_gz",
         "The gzipped file content of the Check_MK HW/SW-Inventory",
-        indirect_offset, extra_offset, -1, 0,
+        Column::Offsets{indirect_offset, extra_offset, -1, 0},
         [mc]() { return mc->mkInventoryPath(); },
         [](const Column &col,
            const Row &row) -> std::optional<std::filesystem::path> {
@@ -675,7 +684,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<HostFileColumn>(
         prefix + "structured_status",
         "The file content of the structured status of the Check_MK HW/SW-Inventory",
-        indirect_offset, extra_offset, -1, 0,
+        Column::Offsets{indirect_offset, extra_offset, -1, 0},
         [mc]() { return mc->structuredStatusPath(); },
         [](const Column &col,
            const Row &row) -> std::optional<std::filesystem::path> {
@@ -691,8 +700,9 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addDynamicColumn(std::make_unique<DynamicHostFileColumn>(
         prefix + "mk_logwatch_file",
-        "This contents of a logfile fetched via mk_logwatch", indirect_offset,
-        extra_offset, -1, [mc]() { return mc->mkLogwatchPath(); },
+        "This contents of a logfile fetched via mk_logwatch",
+        Column::Offsets{indirect_offset, extra_offset, -1, 0},
+        [mc]() { return mc->mkLogwatchPath(); },
         [](const Column &col, const Row &row,
            const std::string &args) -> std::optional<std::filesystem::path> {
             if (auto hst = col.columnData<host>(row)) {
@@ -712,8 +722,9 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         DANGEROUS_OFFSETOF(host, hostgroups_ptr), table->core()));
     table->addColumn(std::make_unique<ContactGroupsColumn>(
         prefix + "contact_groups",
-        "A list of all contact groups this host is in", indirect_offset,
-        extra_offset, -1, DANGEROUS_OFFSETOF(host, contact_groups)));
+        "A list of all contact groups this host is in",
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, contact_groups)}));
 
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services", "A list of all services of the host",

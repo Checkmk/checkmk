@@ -34,17 +34,16 @@
 #include "config.h"  // IWYU pragma: keep
 #include <memory>
 #include <string>
+#include "Column.h"
 #include "DynamicColumn.h"
 #include "opids.h"
 class Filter;
-class Column;
 class MonitoringCore;
 
 class DynamicRRDColumn : public DynamicColumn {
 public:
     DynamicRRDColumn(const std::string &name, const std::string &description,
-                     MonitoringCore *mc, int indirect_offset, int extra_offset,
-                     int extra_extra_offset);
+                     MonitoringCore *mc, Column::Offsets);
 
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                          const std::string &value) const;

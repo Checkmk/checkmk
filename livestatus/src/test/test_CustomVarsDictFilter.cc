@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include "Column.h"
 #include "CustomVarsDictColumn.h"
 #include "CustomVarsDictFilter.h"
 #include "Filter.h"
@@ -28,8 +29,9 @@ std::string b16encode(const std::string& str) {
 struct CustomVarsDictFilterTest : public ::testing::Test {
     bool accepts(AttributeKind kind, const std::string& value) {
         CustomVarsDictColumn cvdc{
-            "name", "description", -1, -1, -1, offsetof(host, custom_variables),
-            &core,  kind};
+            "name", "description",
+            Column::Offsets{-1, -1, -1, offsetof(host, custom_variables)},
+            &core, kind};
         CustomVarsDictFilter filter{Filter::Kind::row, cvdc,
                                     RelationalOperator::equal, value};
         return filter.accepts(Row{&test_host}, {}, {});

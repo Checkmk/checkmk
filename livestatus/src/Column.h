@@ -26,6 +26,7 @@
 #define Column_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <array>
 #include <chrono>
 #include <cstddef>
 #include <functional>
@@ -54,6 +55,8 @@ using AggregationFactory = std::function<std::unique_ptr<Aggregation>()>;
 
 class Column {
 public:
+    using Offsets = std::array<int, 4>;
+    Column(std::string name, std::string description, Offsets);
     Column(std::string name, std::string description, int indirect_offset,
            int extra_offset, int extra_extra_offset, int offset);
     virtual ~Column() = default;
@@ -84,10 +87,7 @@ private:
     Logger *const _logger;
     std::string _name;
     std::string _description;
-    int _indirect_offset;
-    int _extra_offset;
-    int _extra_extra_offset;
-    int _offset;
+    Offsets _offsets;
 
     const void *shiftPointer(Row row) const;
 };

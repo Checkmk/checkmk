@@ -33,14 +33,13 @@
 #include <string>
 #include <vector>
 #include "BlobColumn.h"
-class Column;
+#include "Column.h"
 class Row;
 
 class HostFileColumn : public BlobColumn {
 public:
     HostFileColumn(const std::string& name, const std::string& description,
-                   int indirect_offset, int extra_offset,
-                   int extra_extra_offset, int offset,
+                   Column::Offsets,
                    std::function<std::filesystem::path()> basepath,
                    std::function<std::optional<std::filesystem::path>(
                        const Column&, const Row&)>

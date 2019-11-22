@@ -31,6 +31,7 @@
 #include <string>
 #include <vector>
 #include "AttributeListAsIntColumn.h"
+#include "Column.h"
 #include "Filter.h"
 #include "ListColumn.h"
 #include "contact_fwd.h"
@@ -40,12 +41,9 @@ class Row;
 class AttributeListColumn : public ListColumn {
 public:
     AttributeListColumn(const std::string &name, const std::string &description,
-                        int indirect_offset, int extra_offset,
-                        int extra_extra_offset, int offset)
-        : ListColumn(name, description, indirect_offset, extra_offset,
-                     extra_extra_offset, offset)
-        , _int_view_column(name, description, indirect_offset, extra_offset,
-                           extra_extra_offset, offset) {}
+                        Column::Offsets offsets)
+        : ListColumn(name, description, offsets)
+        , _int_view_column(name, description, offsets) {}
 
     std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,

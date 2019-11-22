@@ -38,12 +38,7 @@ class Row;
 
 class AttributeListAsIntColumn : public IntColumn {
 public:
-    AttributeListAsIntColumn(const std::string &name,
-                             const std::string &description,
-                             int indirect_offset, int extra_offset,
-                             int extra_extra_offset, int offset)
-        : IntColumn(name, description, indirect_offset, extra_offset,
-                    extra_extra_offset, offset) {}
+    using IntColumn::IntColumn;
 
     std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,

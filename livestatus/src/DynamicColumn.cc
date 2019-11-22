@@ -24,17 +24,21 @@
 
 #include "DynamicColumn.h"
 #include <utility>
+#include "Column.h"
 #include "Logger.h"
+
+DynamicColumn::DynamicColumn(std::string name, std::string description,
+                             Column::Offsets offsets)
+    : _logger(Logger::getLogger("cmk.livestatus"))
+    , _name(std::move(name))
+    , _description(std::move(description))
+    , _offsets(offsets) {}
 
 DynamicColumn::DynamicColumn(std::string name, std::string description,
                              int indirect_offset, int extra_offset,
                              int extra_extra_offset)
-    : _logger(Logger::getLogger("cmk.livestatus"))
-    , _name(std::move(name))
-    , _description(std::move(description))
-    , _indirect_offset(indirect_offset)
-    , _extra_offset(extra_offset)
-    , _extra_extra_offset(extra_extra_offset) {}
+    : DynamicColumn(std::move(name), std::move(description),
+                    {indirect_offset, extra_offset, extra_extra_offset, 0}) {}
 
 DynamicColumn::~DynamicColumn() = default;
 

@@ -108,59 +108,71 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",
-        "A list of all custom variables of the contact", indirect_offset, -1,
-        -1, DANGEROUS_OFFSETOF(contact, custom_variables), table->core(),
-        AttributeKind::custom_variables));
+        "A list of all custom variables of the contact",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(contact, custom_variables)},
+        table->core(), AttributeKind::custom_variables));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "custom_variable_values",
         "A list of the values of all custom variables of the contact",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(contact, custom_variables),
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(contact, custom_variables)},
         table->core(), AttributeKind::custom_variables));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
         prefix + "custom_variables", "A dictionary of the custom variables",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(contact, custom_variables),
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(contact, custom_variables)},
         table->core(), AttributeKind::custom_variables));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "tag_names", "A list of all tags of the contact",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(contact, custom_variables),
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(contact, custom_variables)},
         table->core(), AttributeKind::tags));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "tag_values",
-        "A list of the values of all tags of the contact", indirect_offset, -1,
-        -1, DANGEROUS_OFFSETOF(contact, custom_variables), table->core(),
-        AttributeKind::tags));
+        "A list of the values of all tags of the contact",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(contact, custom_variables)},
+        table->core(), AttributeKind::tags));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
-        prefix + "tags", "A dictionary of the tags", indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(contact, custom_variables), table->core(),
-        AttributeKind::tags));
+        prefix + "tags", "A dictionary of the tags",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(contact, custom_variables)},
+        table->core(), AttributeKind::tags));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "label_names", "A list of all labels of the contact",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(contact, custom_variables),
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(contact, custom_variables)},
         table->core(), AttributeKind::labels));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "label_values",
-        "A list of the values of all labels of the contact", indirect_offset,
-        -1, -1, DANGEROUS_OFFSETOF(contact, custom_variables), table->core(),
-        AttributeKind::labels));
+        "A list of the values of all labels of the contact",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(contact, custom_variables)},
+        table->core(), AttributeKind::labels));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
-        prefix + "labels", "A dictionary of the labels", indirect_offset, -1,
-        -1, DANGEROUS_OFFSETOF(contact, custom_variables), table->core(),
-        AttributeKind::labels));
+        prefix + "labels", "A dictionary of the labels",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(contact, custom_variables)},
+        table->core(), AttributeKind::labels));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "label_source_names", "A list of all sources of the contact",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(contact, custom_variables),
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(contact, custom_variables)},
         table->core(), AttributeKind::label_sources));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "label_source_values",
-        "A list of the values of all sources of the contact", indirect_offset,
-        -1, -1, DANGEROUS_OFFSETOF(contact, custom_variables), table->core(),
-        AttributeKind::label_sources));
+        "A list of the values of all sources of the contact",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(contact, custom_variables)},
+        table->core(), AttributeKind::label_sources));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
         prefix + "label_sources", "A dictionary of the label sources",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(contact, custom_variables),
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(contact, custom_variables)},
         table->core(), AttributeKind::label_sources));
 
     table->addColumn(std::make_unique<AttributeListAsIntColumn>(
@@ -170,8 +182,9 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
         DANGEROUS_OFFSETOF(contact, modified_attributes)));
     table->addColumn(std::make_unique<AttributeListColumn>(
         prefix + "modified_attributes_list",
-        "A list of all modified attributes", indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(contact, modified_attributes)));
+        "A list of all modified attributes",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(contact, modified_attributes)}));
 }
 
 void TableContacts::answerQuery(Query *query) {

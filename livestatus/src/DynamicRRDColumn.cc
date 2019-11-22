@@ -36,11 +36,8 @@
 
 DynamicRRDColumn::DynamicRRDColumn(const std::string &name,
                                    const std::string &description,
-                                   MonitoringCore *mc, int indirect_offset,
-                                   int extra_offset, int extra_extra_offset)
-    : DynamicColumn(name, description, indirect_offset, extra_offset,
-                    extra_extra_offset)
-    , _mc(mc) {}
+                                   MonitoringCore *mc, Column::Offsets offsets)
+    : DynamicColumn(name, description, offsets), _mc(mc) {}
 
 std::unique_ptr<Filter> DynamicRRDColumn::createFilter(
     RelationalOperator /*unused*/, const std::string & /*unused*/) const {

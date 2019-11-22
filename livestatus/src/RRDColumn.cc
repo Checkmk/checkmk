@@ -55,12 +55,10 @@
 #include "strutil.h"
 
 RRDColumn::RRDColumn(const std::string &name, const std::string &description,
-                     int indirect_offset, int extra_offset,
-                     int extra_extra_offset, int offset, MonitoringCore *mc,
+                     Column::Offsets offsets, MonitoringCore *mc,
                      std::string rpn, time_t start_time, time_t end_time,
                      int resolution, int max_entries)
-    : ListColumn(name, description, indirect_offset, extra_offset,
-                 extra_extra_offset, offset)
+    : ListColumn(name, description, offsets)
     , _mc(mc)
     , _rpn(std::move(rpn))
     , _start_time(start_time)

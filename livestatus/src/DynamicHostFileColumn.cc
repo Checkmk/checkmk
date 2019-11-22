@@ -2,20 +2,17 @@
 #include <filesystem>
 #include <stdexcept>
 #include <utility>
-#include "Column.h"
 #include "FileSystemHelper.h"
 #include "HostFileColumn.h"
 class Row;
 
 DynamicHostFileColumn::DynamicHostFileColumn(
     const std::string &name, const std::string &description,
-    int indirect_offset, int extra_offset, int extra_extra_offset,
-    std::function<std::filesystem::path()> basepath,
+    Column::Offsets offsets, std::function<std::filesystem::path()> basepath,
     std::function<std::optional<std::filesystem::path>(
         const Column &, const Row &, const std::string &)>
         filepath)
-    : DynamicColumn(name, description, indirect_offset, extra_offset,
-                    extra_extra_offset)
+    : DynamicColumn(name, description, offsets)
     , _basepath{std::move(basepath)}
     , _filepath{std::move(filepath)} {}
 
@@ -41,7 +38,7 @@ std::unique_ptr<Column> DynamicHostFileColumn::createColumn(
                                  basepath().string() + "'");
     }
     return std::make_unique<HostFileColumn>(
-        name, _description, _indirect_offset, _extra_offset, -1, 0, _basepath,
+        name, _description, _offsets, _basepath,
         [=](const Column &col, const Row &row) {
             return _filepath(col, row, f);
         });

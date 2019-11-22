@@ -26,15 +26,16 @@
 #include <utility>
 #include "Logger.h"
 
-Column::Column(std::string name, std::string description, int indirect_offset,
-               int extra_offset, int extra_extra_offset, int offset)
+Column::Column(std::string name, std::string description, Offsets offsets)
     : _logger(Logger::getLogger("cmk.livestatus"))
     , _name(std::move(name))
     , _description(std::move(description))
-    , _indirect_offset(indirect_offset)
-    , _extra_offset(extra_offset)
-    , _extra_extra_offset(extra_extra_offset)
-    , _offset(offset) {}
+    , _offsets(offsets) {}
+
+Column::Column(std::string name, std::string description, int indirect_offset,
+               int extra_offset, int extra_extra_offset, int offset)
+    : Column(std::move(name), std::move(description),
+             {indirect_offset, extra_offset, extra_extra_offset, offset}) {}
 
 namespace {
 const void *add(const void *data, int offset) {
@@ -50,8 +51,8 @@ const void *shift(const void *data, int offset) {
 }  // namespace
 
 const void *Column::shiftPointer(Row row) const {
-    return add(shift(shift(shift(row.rawData<const void>(), _indirect_offset),
-                           _extra_offset),
-                     _extra_extra_offset),
-               _offset);
+    return add(
+        shift(shift(shift(row.rawData<const void>(), _offsets[0]), _offsets[1]),
+              _offsets[2]),
+        _offsets[3]);
 }

@@ -36,7 +36,6 @@ std::unique_ptr<Column> DynamicServiceRRDColumn::createColumn(
     const std::string &name, const std::string &arguments) {
     const auto args = parse_args(arguments);
     return std::make_unique<ServiceRRDColumn>(
-        name, "dynamic column", _indirect_offset, _extra_offset,
-        _extra_extra_offset, 0, core(), args.rpn, args.start_time,
+        name, "dynamic column", _offsets, core(), args.rpn, args.start_time,
         args.end_time, args.resolution, args.max_entries);
 }

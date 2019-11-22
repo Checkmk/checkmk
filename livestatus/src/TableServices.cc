@@ -127,9 +127,10 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, check_period)));
     table->addColumn(std::make_unique<CustomVarsExplicitColumn>(
         prefix + "service_period",
-        "The name of the service period of the service", indirect_offset, -1,
-        -1, DANGEROUS_OFFSETOF(service, custom_variables), table->core(),
-        "SERVICE_PERIOD"));
+        "The name of the service period of the service",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, custom_variables)},
+        table->core(), "SERVICE_PERIOD"));
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "notes", "Optional notes about the service", indirect_offset,
         -1, -1, DANGEROUS_OFFSETOF(service, notes)));
@@ -341,8 +342,9 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         DANGEROUS_OFFSETOF(service, modified_attributes)));
     table->addColumn(std::make_unique<AttributeListColumn>(
         prefix + "modified_attributes_list",
-        "A list of all modified attributes", indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, modified_attributes)));
+        "A list of all modified attributes",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, modified_attributes)}));
     table->addColumn(std::make_unique<ServiceSpecialIntColumn>(
         prefix + "hard_state",
         "The effective hard state of the service (eliminates a problem in hard_state)",
@@ -449,60 +451,72 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",
         "A list of the names of the custom variables of the service",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, custom_variables),
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, custom_variables)},
         table->core(), AttributeKind::custom_variables));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "custom_variable_values",
         "A list of the values of all custom variable of the service",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, custom_variables),
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, custom_variables)},
         table->core(), AttributeKind::custom_variables));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
         prefix + "custom_variables", "A dictionary of the custom variables",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, custom_variables),
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, custom_variables)},
         table->core(), AttributeKind::custom_variables));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "tag_names", "A list of the names of the tags of the service",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, custom_variables),
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, custom_variables)},
         table->core(), AttributeKind::tags));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "tag_values",
-        "A list of the values of all tags of the service", indirect_offset, -1,
-        -1, DANGEROUS_OFFSETOF(service, custom_variables), table->core(),
-        AttributeKind::tags));
+        "A list of the values of all tags of the service",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, custom_variables)},
+        table->core(), AttributeKind::tags));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
-        prefix + "tags", "A dictionary of the tags", indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, custom_variables), table->core(),
-        AttributeKind::tags));
+        prefix + "tags", "A dictionary of the tags",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, custom_variables)},
+        table->core(), AttributeKind::tags));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "label_names",
-        "A list of the names of the labels of the service", indirect_offset, -1,
-        -1, DANGEROUS_OFFSETOF(service, custom_variables), table->core(),
-        AttributeKind::labels));
+        "A list of the names of the labels of the service",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, custom_variables)},
+        table->core(), AttributeKind::labels));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "label_values",
-        "A list of the values of all labels of the service", indirect_offset,
-        -1, -1, DANGEROUS_OFFSETOF(service, custom_variables), table->core(),
-        AttributeKind::labels));
+        "A list of the values of all labels of the service",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, custom_variables)},
+        table->core(), AttributeKind::labels));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
-        prefix + "labels", "A dictionary of the labels", indirect_offset, -1,
-        -1, DANGEROUS_OFFSETOF(service, custom_variables), table->core(),
-        AttributeKind::labels));
+        prefix + "labels", "A dictionary of the labels",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, custom_variables)},
+        table->core(), AttributeKind::labels));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "label_source_names",
-        "A list of the names of the sources of the service", indirect_offset,
-        -1, -1, DANGEROUS_OFFSETOF(service, custom_variables), table->core(),
-        AttributeKind::label_sources));
+        "A list of the names of the sources of the service",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, custom_variables)},
+        table->core(), AttributeKind::label_sources));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "label_source_values",
-        "A list of the values of all sources of the service", indirect_offset,
-        -1, -1, DANGEROUS_OFFSETOF(service, custom_variables), table->core(),
-        AttributeKind::label_sources));
+        "A list of the values of all sources of the service",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, custom_variables)},
+        table->core(), AttributeKind::label_sources));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
         prefix + "label_sources", "A dictionary of the label sources",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, custom_variables),
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, custom_variables)},
         table->core(), AttributeKind::label_sources));
 
     table->addColumn(std::make_unique<ServiceGroupsColumn>(
@@ -511,8 +525,9 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         table->core()));
     table->addColumn(std::make_unique<ContactGroupsColumn>(
         prefix + "contact_groups",
-        "A list of all contact groups this service is in", indirect_offset, -1,
-        -1, DANGEROUS_OFFSETOF(service, contact_groups)));
+        "A list of all contact groups this service is in",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, contact_groups)}));
 
     table->addColumn(std::make_unique<ServiceMetricsColumn>(
         prefix + "metrics",
@@ -521,7 +536,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addDynamicColumn(std::make_unique<DynamicServiceRRDColumn>(
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",
-        table->core(), indirect_offset, -1, -1));
+        table->core(), Column::Offsets{indirect_offset, -1, -1, 0}));
     table->addColumn(std::make_unique<FixedIntColumn>(
         prefix + "cached_at",
         "A dummy column in order to be compatible with Check_MK Multisite", 0));

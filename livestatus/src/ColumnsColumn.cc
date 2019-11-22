@@ -25,7 +25,6 @@
 #include "ColumnsColumn.h"
 #include "Row.h"
 #include "TableColumns.h"
-class Column;
 
 std::string ColumnsColumn::getValue(Row row) const {
     if (auto p = columnData<Column>(row)) {

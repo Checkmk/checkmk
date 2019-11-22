@@ -36,6 +36,7 @@
 #include <ctime>
 #include <string>
 #include <vector>
+#include "Column.h"
 #include "ListColumn.h"
 #include "contact_fwd.h"
 class MonitoringCore;
@@ -45,8 +46,7 @@ class RowRenderer;
 class RRDColumn : public ListColumn {
 public:
     RRDColumn(const std::string &name, const std::string &description,
-              int indirect_offset, int extra_offset, int extra_extra_offset,
-              int offset, MonitoringCore *mc, std::string rpn,
+              Column::Offsets, MonitoringCore *mc, std::string rpn,
               time_t start_time, time_t end_time, int resolution,
               int max_entries);
 

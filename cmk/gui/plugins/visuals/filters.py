@@ -47,10 +47,9 @@ from cmk.gui.valuespec import (
 )
 
 if cmk.is_managed_edition():
-    from cmk.gui.cme.plugins.visuals.managed import (
-        filter_cme_choices,
-        filter_cme_heading_info,
-    )  # pylint: disable=no-name-in-module
+    from cmk.gui.cme.plugins.visuals.managed import (  # pylint: disable=no-name-in-module
+        filter_cme_choices, filter_cme_heading_info,
+    )
 
 from cmk.gui.plugins.visuals import (
     filter_registry,

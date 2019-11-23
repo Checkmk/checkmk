@@ -34,10 +34,14 @@ RUN_CLANG_TIDY ?= \
 VALGRIND ?= $(shell valgrind --version > /dev/null 2>&1 && echo "valgrind --quiet")
 INCLUDES_DIR := includes
 LIBS_DIR := libs
+
 PACKAGE_ASIO := $(abs_top_srcdir)/omd/packages/asio
 ASIO_VERSION := asio-asio-1-14-0
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
+
 RRDTOOL_SRC_DIR := $(abs_top_srcdir)/omd/build/package_build/rrdtool-1.7.1/src
+RRDTOOL_LDFLAGS := -lrrd -L$(RRDTOOL_SRC_DIR)/.libs
+RRDTOOL_CPPFLAGS := -I$(RRDTOOL_SRC_DIR)
 
 PACKAGE_GOOGLETEST := $(abs_top_srcdir)/omd/packages/googletest
 GOOGLETEST_VERSION := googletest-release-1.10.0
@@ -49,13 +53,12 @@ AM_CPPFLAGS = \
     -I.. \
     -isystem $(ASIO_INCLUDE) \
     @RE2_CPPFLAGS@ \
-    -I$(RRDTOOL_SRC_DIR)
+    $(RRDTOOL_CPPFLAGS)
 
 AM_LDFLAGS = \
     -static-libstdc++ \
     @RE2_LDFLAGS@ \
-    -lrrd \
-    -L$(RRDTOOL_SRC_DIR)/.libs
+    $(RRDTOOL_LDFLAGS)
 
 bin_PROGRAMS = unixcat
 noinst_PROGRAMS = test_neb
@@ -78,7 +81,7 @@ $(test_neb_SOURCES): $(ASIO_INCLUDE) $(GOOGLETEST_INCLUDE)
 test_neb_CPPFLAGS = \
     $(AM_CPPFLAGS) \
     -I$(GOOGLETEST_INCLUDE) \
-    -I$(RRDTOOL_SRC_DIR)/src
+    $(RRDTOOL_CPPFLAGS)
 test_neb_LDADD = \
     liblivestatus.a \
     -lstdc++fs \
@@ -262,6 +265,7 @@ $(GOOGLETEST_VERSION)/CMakeLists.txt: $(PACKAGE_GOOGLETEST)/$(GOOGLETEST_VERSION
 	touch $@
 
 liblivestatus_a_CXXFLAGS = -fPIC
+liblivestatus_a_LDFLAGS = $(RRDTOOL_LDFLAGS)
 
 livestatus.o: $(liblivestatus_a_OBJECTS)
 # Note: libstdc++fs is only available as a static library, so we are lucky. For
@@ -269,7 +273,7 @@ livestatus.o: $(liblivestatus_a_OBJECTS)
 	$(CXXLINK) -shared $^ -lstdc++fs -lpthread $(AM_LDFLAGS) @RE2_LIBS@
 # To make sure we can dlopen() our NEB later
 	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) -c NagiosMockup.cc -o NagiosMockup.o
-	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup
+	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) $(liblivestatus_a_LDFLAGS) NagiosMockup.o $@ -o NagiosMockup
 	$(RM) NagiosMockup
 
 compile_commands.json: $(unixcat_SOURCES) $(test_neb_SOURCES) $(liblivestatus_a_SOURCES)

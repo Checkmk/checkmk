@@ -25,7 +25,7 @@ Checkmk - Best-in-class infrastructure & application monitoring
 
 %install
 # This target compiles and installs everything needed into our DESTDIR
-make -C $REPO_PATH/omd DESTDIR=$RPM_BUILD_ROOT install
+make --warn-undefined-variables -C $REPO_PATH/omd DESTDIR=$RPM_BUILD_ROOT install
 
 # Remove all global symbolic links from package. They are shared
 # among all versions and must be handled in %post und %postun

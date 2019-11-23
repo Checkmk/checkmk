@@ -1,5 +1,5 @@
 include Makefile.omd
-include $(BUILD_HELPER_DIR)/build-helper-files.make
+include $(BUILD_BASE_DIR)/build-helper-files.make
 include packages/packages.make
 
 # You can build singele packages by calling macke <PACKAGENAME>
@@ -66,8 +66,8 @@ endif
 # moment it is read, it is replaced with an empty string. Therefor our dependencies get lost, if the
 # inlcuded Makefiles are not ordered correctly. For that reason, we parse the Makefiles for certain
 # variable definitions and write them to an extra Makefile, which we include before the package Makefile.
-$(BUILD_HELPER_DIR)/build-helper-files.make:
-	mkdir -p $(BUILD_HELPER_DIR)
+$(BUILD_BASE_DIR)/build-helper-files.make:
+	$(MKDIR) $(BUILD_BASE_DIR)
 	$(RM) $@
 	for P in $(PACKAGES); do \
 	  inc_path=$(PACKAGE_DIR)/$$P/$$P.make; \

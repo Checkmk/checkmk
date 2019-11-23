@@ -31,20 +31,23 @@ $(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.tar.xz
 	$(RM) -r $(PACKAGE_BUILD_DIR)/$*
 	$(MKDIR) $(PACKAGE_BUILD_DIR)
 	$(TAR_XZ) $< -C $(PACKAGE_BUILD_DIR)
+
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 
 $(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.tar.gz
-	$(RM) -r $(BUILD_HELPER_DIR)/$*
+	$(RM) -r $(PACKAGE_BUILD_DIR)/$*
 	$(MKDIR) $(PACKAGE_BUILD_DIR)
 	$(TAR_GZ) $< -C $(PACKAGE_BUILD_DIR)
+
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 
 $(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.tgz
-	$(RM) -r $(BUILD_HELPER_DIR)/$*
+	$(RM) -r $(PACKAGE_BUILD_DIR)/$*
 	$(MKDIR) $(PACKAGE_BUILD_DIR)
 	$(TAR_GZ) $< -C $(PACKAGE_BUILD_DIR)
+
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 
@@ -52,13 +55,15 @@ $(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.tar.bz2
 	$(RM) -r $(PACKAGE_BUILD_DIR)/$*
 	$(MKDIR) $(PACKAGE_BUILD_DIR)
 	$(TAR_BZ2) $< -C $(PACKAGE_BUILD_DIR)
+
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 
 $(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.zip
-	$(RM) -r $(BUILD_HELPER_DIR)/$*
+	$(RM) -r $(PACKAGE_BUILD_DIR)/$*
 	$(MKDIR) $(PACKAGE_BUILD_DIR)
 	$(UNZIP) $< -d $(PACKAGE_BUILD_DIR)
+
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 

@@ -57,7 +57,7 @@ def parse_azure_agent_info(info):
     parsed = {}
     for row in info:
         key = row[0]
-        value = _AZURE_AGENT_SEPARATOR.join(row[1:])
+        value = _AZURE_AGENT_SEPARATOR.join(row[1:])  # pylint: disable=undefined-variable
 
         if key == 'remaining-reads':
             _update_remaining_reads(parsed, value)
@@ -86,40 +86,31 @@ def discovery_azure_agent_info(_parsed):
     yield None, {}
 
 
-def check_azure_agent_info(_no_item, params, parsed):
+def remaining_api_reads(reads, params):
+    if not isinstance(reads, int):
+        return params['remaining_reads_unknown_state'], "Remaining API reads: %s" % reads
 
-    for status, text in parsed.get('agent-bailout', []):
-        yield status, text
+    levels = (None, None) + params.get('remaining_reads_levels_lower', (None, None))
+    return check_levels(
+        reads,
+        'remaining_reads',
+        levels,
+        infoname="Remaining API reads",
+        human_readable_func=lambda i: "%d" % i,
+        boundaries=(0, 15000),
+    )
 
-    reads = parsed.get('remaining-reads')
-    # this is only reported for the Datasource Host, so None
-    # is ignored.
-    if reads is not None:
-        state, txt = 0, "Remaining API reads: %s" % reads
-        if not isinstance(reads, int):
-            yield params['remaining_reads_unknown_state'], txt
-        else:
-            warn, crit = params.get('remaining_reads_levels_lower', (None, None))
-            if crit is not None and reads <= crit:
-                state = 2
-            elif warn is not None and reads <= warn:
-                state = 1
-            yield state, txt, [('remaining_reads', reads, warn, crit, 0, 15000)]
 
-    groups = parsed.get('monitored-groups')
-    if groups:
-        yield 0, "Monitored groups: %s" % ', '.join(groups)
-
-    issues = parsed.get('issues', {})
+def agent_issues(issues, params):
     for type_ in ('warning', 'exception'):
         count = len(issues.get(type_, ()))
-        state, txt = 0, "%d %ss" % (count, type_)
-        warn, crit = params.get('%s_levels' % type_, (None, None))
-        if crit is not None and count >= crit:
-            state = 2
-        elif warn is not None and count >= warn:
-            state = 1
-        yield state, txt
+        yield check_levels(
+            count,
+            None,
+            params.get('%s_levels' % type_),
+            human_readable_func=lambda i: "%d" % i,
+            infoname="%ss" % type_.title(),
+        )
 
     for i in sorted(issues.get('exception', []), key=lambda x: x["msg"]):
         yield 0, "\nIssue in %s: Exception: %s (!!)" % (i["issued_by"], i["msg"])
@@ -127,6 +118,23 @@ def check_azure_agent_info(_no_item, params, parsed):
         yield 0, "\nIssue in %s: Warning: %s (!)" % (i["issued_by"], i["msg"])
     for i in sorted(issues.get('info', []), key=lambda x: x["msg"]):
         yield 0, "\nIssue in %s: Info: %s" % (i["issued_by"], i["msg"])
+
+
+def check_azure_agent_info(_no_item, params, parsed):
+
+    for status, text in parsed.get('agent-bailout', []):
+        yield status, text
+
+    reads = parsed.get('remaining-reads')
+    if reads is not None:
+        yield remaining_api_reads(reads, params)
+
+    groups = parsed.get('monitored-groups')
+    if groups:
+        yield 0, "Monitored groups: %s" % ', '.join(groups)
+
+    for subresult in agent_issues(parsed.get('issues', {}), params):
+        yield subresult
 
 
 check_info['azure_agent_info'] = {

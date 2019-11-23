@@ -1,0 +1,14 @@
+Title: agent_azure: No longer report missing metrics as warning
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1574539700
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+Previously metrics not found in the API response have resulted in
+a warning reported to the 'Agent Azure Info' service. As it turns
+out this happens to often to be usefull. Now an info is reported
+instead of a warning.

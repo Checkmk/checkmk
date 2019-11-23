@@ -631,7 +631,9 @@ class UsageClient(DataCache):
         Data is updated at midnight, so the cache should not be older than the day.
         """
         utc_today_start = NOW.combine(NOW.date(), datetime.time(0))
-        return (NOW - utc_today_start).seconds
+        cache_interval = (NOW - utc_today_start).seconds
+        LOGGER.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        return cache_interval
 
     @classmethod
     def offerid_has_no_consuption_api(cls, errmsg):

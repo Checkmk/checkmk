@@ -584,17 +584,12 @@ class MetricCache(DataCache):
     def get_live_data(self, mgmt_client, resource_id, err):  # pylint: disable=arguments-differ
         metricnames, interval, aggregation, filter_ = self.metric_definition
 
-        try:
-            raw_metrics = mgmt_client.metrics(resource_id,
-                                              timespan=self._timespan,
-                                              interval=interval,
-                                              metricnames=metricnames,
-                                              aggregation=aggregation,
-                                              filter=filter_)
-        except () if self.debug else ApiError as exc:
-            err.add("exception", resource_id, str(exc))
-            LOGGER.exception(exc)
-            return []
+        raw_metrics = mgmt_client.metrics(resource_id,
+                                          timespan=self._timespan,
+                                          interval=interval,
+                                          metricnames=metricnames,
+                                          aggregation=aggregation,
+                                          filter=filter_)
 
         metrics = []
         for raw_metric in raw_metrics:
@@ -700,10 +695,14 @@ def gather_metrics(mgmt_client, resource, debug=False):
     metric_definitions = METRICS_SELECTED.get(resource.info["type"], [])
     for metric_def in metric_definitions:
         cache = MetricCache(resource, metric_def, NOW, debug=debug)
-        resource.metrics += cache.get_data(mgmt_client,
-                                           resource.info['id'],
-                                           err,
-                                           use_cache=cache.cache_interval > 60)
+        try:
+            resource.metrics += cache.get_data(mgmt_client,
+                                               resource.info['id'],
+                                               err,
+                                               use_cache=cache.cache_interval > 60)
+        except () if debug else ApiError as exc:
+            err.add("exception", resource.info['id'], str(exc))
+            LOGGER.exception(exc)
     return err
 
 

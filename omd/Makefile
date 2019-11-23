@@ -75,18 +75,18 @@ $(BUILD_BASE_DIR)/build-helper-files.make:
 	    inc_path=$(REPO_PATH)/$$P/$$P.make; \
 	  fi ; \
 	  P_VAR=$$(echo $${P^^} | tr '-' '_' ); \
-	  egrep -h "$$P_VAR\s:=\s" $$inc_path >> $@ ; \
-	  egrep -h "$${P_VAR}_VERS\s:=\s" $$inc_path >> $@ ; \
-	  egrep -h "$${P_VAR}_DIR\s:=\s" $$inc_path >> $@ ; \
-	  egrep -h "$${P_VAR}_BUILD\s:=\s" $$inc_path >> $@ ; \
-	  egrep -h "$${P_VAR}_INSTALL\s:=\s" $$inc_path >> $@ ; \
-	  egrep -h "$${P_VAR}_INTERMEDIATE_INSTALL\s:=\s" $$inc_path >> $@ ; \
-	  egrep -h "$${P_VAR}_CACHE_PKG_PROCESS\s:=\s" $$inc_path >> $@ ; \
+	  egrep -h "$$P_VAR\s+:=\s+" $$inc_path >> $@ ; \
+	  egrep -h "$${P_VAR}_VERS\s+:=\s+" $$inc_path >> $@ ; \
+	  egrep -h "$${P_VAR}_DIR\s+:=\s+" $$inc_path >> $@ ; \
+	  egrep -h "$${P_VAR}_BUILD\s+:=\s+" $$inc_path >> $@ ; \
+	  egrep -h "$${P_VAR}_INSTALL\s+:=\s+" $$inc_path >> $@ ; \
+	  egrep -h "$${P_VAR}_INTERMEDIATE_INSTALL\s+:=\s+" $$inc_path >> $@ ; \
+	  egrep -h "$${P_VAR}_CACHE_PKG_PROCESS\s+:=\s+" $$inc_path >> $@ ; \
 	  if [ "$$P" == "rrdtool" ]; then \
-	    egrep -h "$${P_VAR}_BUILD_LIBRARY\s:=\s" $$inc_path >> $@ ; \
-	    egrep -h "$${P_VAR}_INSTALL_LIBRARY\s:=\s" $$inc_path >> $@ ; \
-	    egrep -h "$${P_VAR}_BUILD_BINDINGS\s:=\s" $$inc_path >> $@ ; \
-	    egrep -h "$${P_VAR}_INSTALL_BINDINGS\s:=\s" $$inc_path >> $@ ; \
+	    egrep -h "$${P_VAR}_BUILD_LIBRARY\s+:=\s+" $$inc_path >> $@ ; \
+	    egrep -h "$${P_VAR}_INSTALL_LIBRARY\s+:=\s+" $$inc_path >> $@ ; \
+	    egrep -h "$${P_VAR}_BUILD_BINDINGS\s+:=\s+" $$inc_path >> $@ ; \
+	    egrep -h "$${P_VAR}_INSTALL_BINDINGS\s+:=\s+" $$inc_path >> $@ ; \
 	  fi \
 	done
 

@@ -364,7 +364,7 @@ web/htdocs/themes/facelift/cma_facelift.css: node_modules webpack.config.js post
 # GNU standards here (see "Standard Targets for Users",
 # https://www.gnu.org/prep/standards/html_node/Standard-Targets.html).
 clean:
-	make -C omd clean
+	$(MAKE) -C omd clean
 	rm -rf clang-analyzer dist.tmp rpm.topdir *.rpm *.deb *.exe \
 	       omd/packages/mk-livestatus/mk-livestatus-*.tar.gz \
 	       $(NAME)-*.tar.gz *~ counters autochecks \
@@ -554,14 +554,14 @@ ifeq ($(ENTERPRISE),yes)
 endif
 
 .venv-2.7:
-	make -C virtual-envs/2.7 .venv
-	make -C virtual-envs/3.7 .venv
+	$(MAKE) -C virtual-envs/2.7 .venv
+	$(MAKE) -C virtual-envs/3.7 .venv
 	rm -rf {Pipfile,Pipfile.lock,.venv*}
 	ln -s virtual-envs/2.7/{Pipfile,Pipfile.lock,.venv} .
 
 .venv-3.7:
-	make -C virtual-envs/2.7 .venv
-	make -C virtual-envs/3.7 .venv
+	$(MAKE) -C virtual-envs/2.7 .venv
+	$(MAKE) -C virtual-envs/3.7 .venv
 	rm -rf {Pipfile,Pipfile.lock,.venv*}
 	ln -s virtual-envs/3.7/{Pipfile,Pipfile.lock,.venv} .
 

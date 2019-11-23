@@ -382,6 +382,8 @@ mrclean:
 	git clean -d --force -x \
 	    --exclude='\.werks/.last' \
 	    --exclude='\.werks/.my_ids' \
+	    --exclude="Pipfile" \
+	    --exclude="Pipfile.lock" \
 	    --exclude=".venv*" \
 	    --exclude="virtual-envs/*/.venv/"
 

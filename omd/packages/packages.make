@@ -17,6 +17,20 @@ TEST := $(shell which test)
 TOUCH := $(shell which touch)
 UNZIP := $(shell which unzip) -o
 
+HUMAN_INSTALL_TARGETS := $(foreach package,$(PACKAGES),$(addsuffix -install,$(package)))
+HUMAN_BUILD_TARGETS := $(foreach package,$(PACKAGES),$(addsuffix -build,$(package)))
+
+.PHONY: $(HUMAN_INSTALL_TARGETS) $(HUMAN_BUILD_TARGETS)
+
+# Provide some targets for convenience: [pkg] instead of /abs/path/to/[pkg]/[pkg]-[version]-install
+$(HUMAN_INSTALL_TARGETS): %-install:
+# TODO: Can we make this work as real dependency without submake?
+	$(MAKE) $($(addsuffix _INSTALL, $(call package_target_prefix,$*)))
+
+$(HUMAN_BUILD_TARGETS): %-build:
+# TODO: Can we make this work as real dependency without submake?
+	$(MAKE) $($(addsuffix _BUILD, $(call package_target_prefix,$*)))
+
 # Rules for patching
 $(BUILD_HELPER_DIR)/%-patching: $(BUILD_HELPER_DIR)/%-unpack
 	set -e ; DIR=$$($(ECHO) $* | $(SED) 's/-[0-9.]\+.*//'); \

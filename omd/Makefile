@@ -1,6 +1,5 @@
 include Makefile.omd
 include $(BUILD_BASE_DIR)/build-helper-files.make
-include packages/packages.make
 
 # You can build singele packages by calling macke <PACKAGENAME>
 # e.g.: make nagios rrdtool
@@ -62,6 +61,8 @@ PACKAGES += enterprise
 PACKAGES += managed
 endif
 
+include packages/packages.make
+
 # Workaround: Makefiles evaluate Variables the first time they are read. If a variable is not set the
 # moment it is read, it is replaced with an empty string. Therefor our dependencies get lost, if the
 # inlcuded Makefiles are not ordered correctly. For that reason, we parse the Makefiles for certain
@@ -111,8 +112,7 @@ PRE_SKEL := $(BUILD_HELPER_DIR)/pre-skel
 INSTALL := $(BUILD_HELPER_DIR)/install
 INSTALL_GLOBAL := $(BUILD_HELPER_DIR)/install-global
 
-BUILD_TARGET_VARS := $(shell echo $(PACKAGES)  | tr 'a-z' 'A-Z' | tr '-' '_' )
-BUILD_TARGETS := $(foreach package,$(addsuffix _BUILD,$(BUILD_TARGET_VARS)),$($(package)))
+BUILD_TARGET_VARS := $(call package_target_prefix,$(PACKAGES))
 INSTALL_TARGETS := $(foreach package,$(addsuffix _INSTALL,$(BUILD_TARGET_VARS)),$($(package)))
 SKEL_TARGETS :=  $(foreach package,$(addsuffix _SKEL,$(BUILD_TARGET_VARS)),$($(package)))
 
@@ -140,7 +140,6 @@ $(PRE_INSTALL):
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/diskspace
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/man/man1
 	touch $@
-
 
 $(INSTALL_TARGETS): $(PRE_INSTALL)
 

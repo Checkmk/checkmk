@@ -280,6 +280,13 @@ if [ -e "$MK_CONFDIR/mk_oracle.cfg" ]; then
     . "$MK_CONFDIR/mk_oracle.cfg"
 fi
 
+if [ -d "$MK_CONFDIR/mk_oracle.d" ]; then
+    for cfg in "$MK_CONFDIR"/mk_oracle.d/*.cfg
+    do
+        # shellcheck source=/dev/null
+        . "$cfg"
+    done
+fi
 
 #.
 #   .--logging-------------------------------------------------------------.

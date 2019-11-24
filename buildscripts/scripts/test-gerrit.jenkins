@@ -4,31 +4,7 @@ node {
 
     try {
         stage("Auschecken: Checkmk") {
-            checkout([$class: 'GitSCM',
-                branches: [
-                    [name: '${GERRIT_PATCHSET_REVISION}']
-                ],
-                browser: [
-                    $class: 'GitWeb',
-                    repoUrl: 'https://review.lan.mathias-kettner.de/git/?p=check_mk.git'
-                ],
-                doGenerateSubmoduleConfigurations: false,
-                extensions: [[
-                    $class: 'CloneOption',
-                    //honorRefspec: true,
-                    //reference: '/home/gerrit/gerrit_data/git/check_mk.git',
-                    noTags: true,
-                    shallow: false
-                ]],
-                submoduleCfg: [],
-                userRemoteConfigs: [
-                    [
-                        credentialsId: '058f09c4-21c9-49ae-b72b-0b9d2f465da6',
-                        url: 'ssh://jenkins@review.lan.mathias-kettner.de:29418/check_mk',
-                        refspec: "${GERRIT_REFSPEC}"
-                    ]
-                ]
-            ])
+            checkout(scm)
         }
 
         // Creates a \n separated list of changed files

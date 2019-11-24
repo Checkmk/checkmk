@@ -16,12 +16,8 @@ FREETDS_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(FREETDS_DIR)
 PACKAGE_FREETDS_DESTDIR := $(FREETDS_INSTALL_DIR)/build
 PACKAGE_FREETDS_LDFLAGS := -L$(PACKAGE_FREETDS_DESTDIR)/lib
 
-.PHONY: freetds freetds-install freetds-skel freetds-clean
+.PHONY: $(FREETDS)-clean
 
-freetds: $(FREETDS_BUILD)
-
-freetds-install: $(FREETDS_INSTALL)
-	
 $(FREETDS_BUILD): $(FREETDS_UNPACK)
 	cd $(FREETDS_BUILD_DIR) && \
 	    ./configure \
@@ -53,7 +49,5 @@ $(FREETDS_INSTALL): $(FREETDS_INTERMEDIATE_INSTALL)
 $(FREETDS_SKEL):
 	$(TOUCH) $@
 
-freetds-skel:
-
-freetds-clean:
+$(FREETDS)-clean:
 	$(RM) -r $(FREETDS_BUILD_DIR) $(BUILD_HELPER_DIR)/$(FREETDS)*

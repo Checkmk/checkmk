@@ -11,11 +11,7 @@ NRPE_SKEL := $(BUILD_HELPER_DIR)/$(NRPE_DIR)-skel
 NRPE_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(NRPE_DIR)
 #NRPE_WORK_DIR := $(PACKAGE_WORK_DIR)/$(NRPE_DIR)
 
-.PHONY: $(NRPE) $(NRPE)-install $(NRPE)-skel $(NRPE)-build
-
-$(NRPE): $(NRPE_BUILD)
-
-$(NRPE)-install: $(NRPE_INSTALL)
+.PHONY: $(NRPE)-clean
 
 $(NRPE_BUILD): $(NRPE_UNPACK)
 	cd $(NRPE_BUILD_DIR) ; ./configure
@@ -32,8 +28,6 @@ $(NRPE_INSTALL): $(NRPE_BUILD)
 
 $(NRPE_SKEL):
 	$(TOUCH) $@
-
-$(NRPE)-skel:
 
 $(NRPE)-clean:
 	$(RM) -r $(NRPE_BUILD_DIR) $(BUILD_HELPER_DIR)/$(NRPE)*

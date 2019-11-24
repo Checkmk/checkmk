@@ -13,11 +13,7 @@ SNAP7_SKEL := $(BUILD_HELPER_DIR)/$(SNAP7_DIR)-skel
 SNAP7_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(SNAP7_DIR)
 #SNAP7_WORK_DIR := $(PACKAGE_WORK_DIR)/$(SNAP7_DIR)
 
-.PHONY: $(SNAP7) $(SNAP7)-skel $(SNAP7)-clean $(SNAP7)-repackage
-
-$(SNAP7): $(SNAP7_BUILD)
-
-$(SNAP7)-install: $(SNAP7_INSTALL)
+.PHONY: $(SNAP7)-clean $(SNAP7)-repackage
 
 $(SNAP7_BUILD): $(SNAP7_UNPACK)
 	$(MAKE) -C $(SNAP7_BUILD_DIR)/build/unix -f $(SNAP7_ARCH)_linux.mk
@@ -29,8 +25,6 @@ $(SNAP7_INSTALL): $(SNAP7_BUILD)
 
 $(SNAP7_SKEL):
 	$(TOUCH) $@
-
-$(SNAP7)-skel:
 
 $(SNAP7)-clean:
 	rm -rf $(SNAP7_BUILD_DIR) $(SNAP7_DIR).7z $(BUILD_HELPER_DIR)/$(SNAP7)*

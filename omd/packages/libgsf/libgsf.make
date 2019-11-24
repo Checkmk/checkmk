@@ -17,12 +17,7 @@ PACKAGE_LIBGSF_DESTDIR := $(LIBGSF_INSTALL_DIR)
 PACKAGE_LIBGSF_LDFLAGS := -L$(PACKAGE_LIBGSF_DESTDIR)/lib -lgsf-1
 PACKAGE_LIBGSF_CFLAGS := -I$(PACKAGE_LIBGSF_DESTDIR)/include/libgsf-1
 
-.PHONY: $(LIBGSF)-build $(LIBGSF)-install $(LIBGSF)-skel $(LIBGSF)-clean
-
-$(LIBGSF): $(LIBGSF_BUILD)
-
-$(LIBGSF)-install: $(LIBGSF_INSTALL)
-
+.PHONY: $(LIBGSF)-clean
 
 ifneq ($(filter $(DISTRO_CODE),sles15),)
 $(LIBGSF_BUILD): $(LIBGSF_UNPACK)
@@ -49,8 +44,6 @@ endif
 
 $(LIBGSF_SKEL):
 	$(TOUCH) $@
-
-$(LIBGSF)-skel:
 
 $(LIBGSF)-clean:
 	rm -rf $(LIBGSF_BUILD_DIR) $(BUILD_HELPER_DIR)/$(LIBGSF_DIR)*

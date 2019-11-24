@@ -11,11 +11,7 @@ NSCA_SKEL := $(BUILD_HELPER_DIR)/$(NSCA_DIR)-skel
 NSCA_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(NSCA_DIR)
 #NSCA_WORK_DIR := $(PACKAGE_WORK_DIR)/$(NSCA_DIR)
 
-.PHONY: $(NSCA) $(NSCA)-install $(NSCA)-skel $(NSCA)-build
-
-$(NSCA): $(NSCA_BUILD)
-
-$(NSCA)-install: $(NSCA_INSTALL)
+.PHONY: $(NSCA)-clean
 
 $(NSCA_BUILD): $(NSCA_PATCHING)
 	cd $(NSCA_BUILD_DIR) ; ./configure
@@ -36,8 +32,6 @@ $(NSCA_INSTALL): $(NSCA_BUILD)
 
 $(NSCA_SKEL):
 	$(TOUCH) $@
-
-$(NSCA)-skel:
 
 $(NSCA)-clean:
 	$(RM) -r $(NSCA_BUILD_DIR) $(BUILD_HELPER_DIR)/$(NSCA)*

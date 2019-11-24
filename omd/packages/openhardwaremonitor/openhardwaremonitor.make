@@ -16,16 +16,14 @@ OPENHARDWAREMONITOR_SKEL := $(BUILD_HELPER_DIR)/$(OPENHARDWAREMONITOR_DIR)-skel
 OPENHARDWAREMONITOR_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(OPENHARDWAREMONITOR_DIR)
 #OPENHARDWAREMONITOR_WORK_DIR := $(PACKAGE_WORK_DIR)/$(OPENHARDWAREMONITOR_DIR)
 
-.PHONY: $(OPENHARDWAREMONITOR) $(OPENHARDWAREMONITOR)-setup $(OPENHARDWAREMONITOR)-clean-ohm $(OPENHARDWAREMONITOR)-dist $(OPENHARDWAREMONITOR)-build $(OPENHARDWAREMONITOR)-install $(OPENHARDWAREMONITOR)-skel $(OPENHARDWAREMONITOR)-clean
+.PHONY: $(OPENHARDWAREMONITOR)-setup $(OPENHARDWAREMONITOR)-clean-ohm $(OPENHARDWAREMONITOR)-dist $(OPENHARDWAREMONITOR)-clean
 
 # This package can not, because it's a Mono project, and should not be built, because we compile
 # a linux distro independent windows binary, during packaging procedure in the context of the
 # single linux distributions. Instead we build the exe file during src/ packaging phase on our
 # development server. This is equal to the precompiled windows agent and the agent updater.
-$(OPENHARDWAREMONITOR):
 
-$(OPENHARDWAREMONITOR)-install: $(OPENHARDWAREMONITOR_INSTALL)
-
+# TODO: Can this be removed?
 $(OPENHARDWAREMONITOR)-dist: $(OPENHARDWAREMONITOR_DIST)
 
 $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorCLI.exe: $(OPENHARDWAREMONITOR_UNPACK) $(OPENHARDWAREMONITOR_BUILD_DIR)/OpenHardwareMonitorCLI $(OPENHARDWAREMONITOR_BUILD_DIR)/OpenHardwareMonitor.sln
@@ -61,8 +59,6 @@ $(OPENHARDWAREMONITOR_INSTALL):
 
 $(OPENHARDWAREMONITOR_SKEL):
 	$(TOUCH) $@
-
-$(OPENHARDWAREMONITOR)-skel:
 
 # ToDo: Remove this from build scrtip.
 $(OPENHARDWAREMONITOR)-setup:

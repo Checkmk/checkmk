@@ -29,17 +29,7 @@ RRDTOOL_CONFIGUREOPTS  := \
 	--with-systemdsystemunitdir=no \
 	--with-perl-options="LIB=$(OMD_ROOT)/lib/perl5/lib/perl5"
 
-.PHONY: $(RRDTOOL) $(RRDTOOL)-install $(RRDTOOL)-skel $(RRDTOOL)-build $(RRDTOOL)-build-bindings $(RRDTOOL)-build-library \
-	$(RRDTOOL)-install-bindings $(RRDTOOL)-install-library
-
-$(RRDTOOL): $(RRDTOOL_BUILD)
-
-$(RRDTOOL)-install: $(RRDTOOL_INSTALL)
-$(RRDTOOL)-install-bindings: $(RRDTOOL_INSTALL_BINDINGS)
-$(RRDTOOL)-install-library: $(RRDTOOL_INSTALL_LIBRARY)
-$(RRDTOOL)-build: $(RRDTOOL_BUILD)
-$(RRDTOOL)-build-bindings: $(RRDTOOL_BUILD_BINDINGS)
-$(RRDTOOL)-build-library: $(RRDTOOL_BUILD_LIBRARY)
+.PHONY: $(RRDTOOL)-clean
 
 $(MODULEBUILDRC_PATH):
 	$(MKDIR) $(RRDTOOL_WORK_DIR)
@@ -135,8 +125,6 @@ $(RRDTOOL_INSTALL_BINDINGS): $(RRDTOOL_BUILD_BINDINGS) $(PERL_MODULES_INTERMEDIA
 
 $(RRDTOOL_SKEL):
 	$(TOUCH) $@
-
-$(RRDTOOL)-skel:
 
 $(RRDTOOL)-clean:
 	$(RM) -r $(RRDTOOL_BUILD_DIR) $(BUILD_HELPER_DIR)/$(RRDTOOL)*

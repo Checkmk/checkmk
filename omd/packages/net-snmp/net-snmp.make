@@ -14,11 +14,7 @@ NET_SNMP_SKEL := $(BUILD_HELPER_DIR)/$(NET_SNMP_DIR)-skel
 NET_SNMP_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(NET_SNMP_DIR)
 #NET_SNMP_WORK_DIR := $(PACKAGE_WORK_DIR)/$(NET_SNMP_DIR)
 
-.PHONY: $(NET_SNMP) $(NET_SNMP)-install $(NET_SNMP)-install-base $(NET_SNMP)-install-python $(NET_SNMP)-install-perl $(NET_SNMP)-skel $(NET_SNMP)-clean
-
-$(NET_SNMP): $(NET_SNMP_BUILD)
-
-$(NET_SNMP)-install: $(NET_SNMP_INSTALL)
+.PHONY: $(NET_SNMP)-clean
 
 $(NET_SNMP_BUILD): $(NET_SNMP_PATCHING) $(PYTHON_CACHE_PKG_PROCESS) $(PERL_MODULES_BUILD)
 # Skip Perl-Modules because of build errors when MIB loading is disabled.
@@ -80,8 +76,6 @@ $(NET_SNMP_INSTALL_PERL): $(NET_SNMP_BUILD)
 
 $(NET_SNMP_SKEL):
 	$(TOUCH) $@
-
-$(NET_SNMP)-skel:
 
 $(NET_SNMP)-clean:
 	$(RM) -r $(NET_SNMP_BUILD_DIR) $(BUILD_HELPER_DIR)/$(NET_SNMP)*

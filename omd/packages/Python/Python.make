@@ -39,13 +39,9 @@ PYTHON_TMP_BIN_PATH_VAR := PATH="$(PYTHON_TMP_BIN_DIR):$$PATH"
 PYTHON_CC_COMPILERS = gcc-9 clang-9 clang-8 gcc-8 gcc-7 clang-6.0 clang-5.0 gcc-6 clang-4.0 gcc-5 clang-3.9 clang-3.8 clang-3.7 clang-3.6 clang-3.5 gcc-4.9 gcc clang
 PYTHON_CXX_COMPILERS := g++-9 clang++-9 clang++-8 g++-8 clang++-7 g++-7 clang++-6.0 clang++-5.0 g++ clang++
 
-.PHONY: Python Python-install Python-skel Python-clean upstream
+.PHONY: $(PYTHON)-clean $(PYTHON)-upstream
 
 .NOTPARALLEL: $(PYTHON_INSTALL)
-
-Python: $(PYTHON_BUILD)
-
-Python-install: $(PYTHON_INSTALL)
 
 $(PYTHON_BUILD): $(PYTHON_SITECUSTOMIZE_COMPILED)
 	$(TOUCH) $@
@@ -150,12 +146,10 @@ $(PYTHON_INSTALL): $(PYTHON_CACHE_PKG_PROCESS)
 $(PYTHON_SKEL):
 	$(TOUCH) $@
 
-Python-skel:
-
-Python-clean:
+$(PYTHON)-clean:
 	$(RM) -r $(DIR) $(BUILD_HELPER_DIR)/$(MSITOOLS)* build  $(PACKAGE_PYTHON_DESTDIR) $(PYTHON_TMP_BIN_DIR)
 
-upstream:
+$(PYTHON)-upstream:
 	git rm Python-*.tgz
 	wget https://www.python.org/ftp/python/$(PYTHON_VERSION)/Python-$(PYTHON_VERSION).tgz
 	git add Python-$(PYTHON_VERSION).tgz

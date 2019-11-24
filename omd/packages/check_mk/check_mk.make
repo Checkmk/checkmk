@@ -10,12 +10,7 @@ CHECK_MK_PATCHING := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-patching
 CHECK_MK_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(CHECK_MK_DIR)
 #CHECK_MK_WORK_DIR := $(PACKAGE_WORK_DIR)/$(CHECK_MK_DIR)
 
-.PHONY: $(CHECK_MK) $(CHECK_MK)-install $(CHECK_MK)-skel $(CHECK_MK)-clean
-
-$(CHECK_MK): $(CHECK_MK_BUILD)
-
-$(CHECK_MK)-install: $(CHECK_MK_INSTALL)
-$(CHECK_MK)-skel: $(CHECK_MK_SKEL)
+.PHONY: $(CHECK_MK)-clean
 
 # This step creates a tar archive containing the sources
 # which are need for the build step

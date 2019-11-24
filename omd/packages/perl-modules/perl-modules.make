@@ -18,13 +18,7 @@ PERL_MODULES_BUILD_PERL5LIB := $(PERL_MODULES_BUILD_DESTDIR)/lib/perl5
 # Used by other packages
 PACKAGE_PERL_MODULES_PERL5LIB := $(PERL_MODULES_INSTALL_DIR)/lib/perl5
 
-.PHONY: $(PERL_MODULES) $(PERL_MODULES)-install $(PERL_MODULES)-skel $(PERL_MODULES)-clean
-
-perl-modules: $(PERL_MODULES_BUILD)
-
-perl-modules-install: $(PERL_MODULES_INSTALL)
-
-perl-modules-skel: $(PERL_MODULES_SKEL)
+.PHONY: $(PERL_MODULES)-clean
 
 PERL_MODULES_LIST1 := \
                    ExtUtils-MakeMaker-7.04.tar.gz \

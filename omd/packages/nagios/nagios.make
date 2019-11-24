@@ -11,11 +11,7 @@ NAGIOS_SKEL := $(BUILD_HELPER_DIR)/$(NAGIOS_DIR)-skel
 NAGIOS_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(NAGIOS_DIR)
 #NAGIOS_WORK_DIR := $(PACKAGE_WORK_DIR)/$(NAGIOS_DIR)
 
-.PHONY: $(NAGIOS) $(NAGIOS)-install $(NAGIOS)-skel $(NAGIOS)-build
-
-$(NAGIOS): $(NAGIOS_BUILD)
-
-$(NAGIOS)-install: $(NAGIOS_INSTALL)
+.PHONY: $(NAGIOS)-clean
 
 # Configure options for Nagios. Since we want to compile
 # as non-root, we use our own user and group for compiling.
@@ -58,8 +54,6 @@ $(NAGIOS_INSTALL): $(NAGIOS_BUILD)
 
 $(NAGIOS_SKEL):
 	$(TOUCH) $@
-
-$(NAGIOS)-skel:
 
 $(NAGIOS)-clean:
 	rm -rf $(NAGIOS_BUILD_DIR) $(BUILD_HELPER_DIR)/$(NAGIOS)*

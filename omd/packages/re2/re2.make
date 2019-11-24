@@ -16,11 +16,7 @@ RE2_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(RE2_DIR)
 # Used by other packages
 PACKAGE_RE2_DESTDIR := $(PACKAGE_BASE)/re2/destdir
 
-.PHONY: $(RE2) $(RE2)-install $(RE2)-skel $(RE2)-clean
-
-$(RE2): $(RE2_BUILD)
-
-$(RE2)-install:
+.PHONY: $(RE2)-clean
 
 $(RE2_BUILD): $(RE2_UNPACK)
 # basically what part of AC_PROC_CXX does
@@ -53,8 +49,6 @@ $(RE2_INSTALL):
 
 $(RE2_SKEL):
 	$(TOUCH) $@
-
-$(RE2)-skel:
 
 $(RE2)-clean:
 	$(RM) -r $(RE2_BUILD_DIR) $(PACKAGE_RE2_DESTDIR) $(BUILD_HELPER_DIR)/$(RE2)*

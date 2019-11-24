@@ -6,12 +6,6 @@ NAVICLI_BUILD := $(BUILD_HELPER_DIR)/$(NAVICLI_DIR)-build
 NAVICLI_INSTALL := $(BUILD_HELPER_DIR)/$(NAVICLI_DIR)-install
 NAVICLI_SKEL := $(BUILD_HELPER_DIR)/$(NAVICLI_DIR)-skel
 
-.PHONY: navicli navicli-install navicli-skel navicli-clean
-
-navicli:
-	
-navicli-install: $(NAVICLI_INSTALL)
-
 $(NAVICLI_BUILD):
 	$(TOUCH) $@
 
@@ -37,7 +31,3 @@ $(NAVICLI_INSTALL):
 
 $(NAVICLI_SKEL):
 	$(TOUCH) $@
-
-navicli-skel:
-
-navicli-clean:

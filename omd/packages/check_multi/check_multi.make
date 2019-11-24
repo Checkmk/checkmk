@@ -14,13 +14,7 @@ CHECK_MULTI_SKEL := $(BUILD_HELPER_DIR)/$(CHECK_MULTI_DIR)-skel
 CHECK_MULTI_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(CHECK_MULTI_DIR)
 #CHECK_MULTI_WORK_DIR := $(PACKAGE_WORK_DIR)/$(CHECK_MULTI_DIR)
 
-.PHONY: $(CHECK_MULTI) $(CHECK_MULTI)-install $(CHECK_MULTI)-skel $(CHECK_MULTI)-clean
-
-$(CHECK_MULTI): $(CHECK_MULTI_BUILD)
-
-$(CHECK_MULTI)-install: $(CHECK_MULTI_INSTALL)
-
-$(CHECK_MULTI)-skel:
+.PHONY: $(CHECK_MULTI)-clean
 
 # TODO
 #--with-nagios-name=<nagios>       set nagios name (there might be some clones ;)) (default:nagios)

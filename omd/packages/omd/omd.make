@@ -8,16 +8,9 @@ else
     DEFAULT_RUNLEVELS=2 3 4 5
 endif
 
-OMD_INSTALL := $(BUILD_HELPER_DIR)/$(OMD_DIR)-install
 OMD_BUILD := $(BUILD_HELPER_DIR)/$(OMD_DIR)-build
+OMD_INSTALL := $(BUILD_HELPER_DIR)/$(OMD_DIR)-install
 OMD_SKEL := $(BUILD_HELPER_DIR)/$(OMD_DIR)-skel
-
-.PHONY: $(OMD) $(OMD)-install $(OMD)-skel
-
-$(OMD):
-
-$(OMD)-install: $(OMD_INSTALL)
-$(OMD)-skel: $(OMD_SKEL)
 
 $(OMD_BUILD):
 	$(TOUCH) $@
@@ -56,5 +49,3 @@ omdlib-install: $(PYTHON_CACHE_PKG_PROCESS)
 $(OMD_SKEL): $(OMD_INSTALL)
 	$(MKDIR) $(SKEL)/etc/bash_completion.d
 	$(TOUCH) $@
-
-$(OMD)-clean:

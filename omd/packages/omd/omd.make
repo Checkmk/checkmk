@@ -9,6 +9,7 @@ else
 endif
 
 OMD_INSTALL := $(BUILD_HELPER_DIR)/$(OMD_DIR)-install
+OMD_BUILD := $(BUILD_HELPER_DIR)/$(OMD_DIR)-build
 OMD_SKEL := $(BUILD_HELPER_DIR)/$(OMD_DIR)-skel
 
 .PHONY: $(OMD) $(OMD)-install $(OMD)-skel
@@ -17,6 +18,9 @@ $(OMD):
 
 $(OMD)-install: $(OMD_INSTALL)
 $(OMD)-skel: $(OMD_SKEL)
+
+$(OMD_BUILD):
+	$(TOUCH) $@
 
 $(OMD_INSTALL): omdlib-install
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin

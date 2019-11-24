@@ -102,11 +102,6 @@ RPM_BUILDROOT := $(BUILD_BASE_DIR)/rpm/buildroot
 
 NEW_SERIAL=$$(($(OMD_SERIAL) + 1))
 SKEL := $(DESTDIR)$(OMD_ROOT)/skel
-# NEW_VERSION should be set on the command line.
-# Replace all '/' since sed tries to interpret them
-# '/' might occur in custom branches
-# filenames and sed arguments should not contain '/'
-NEW_VERSION_STRING := $(subst /,-,$(NEW_VERSION))
 CMA_PKG_VERSION_TXT := $(shell if [ "$(DISTRO_CODE)" = "stretch" ]; then echo "-2" ; fi )
 ARCH := $(shell uname -m)
 CMA_PACKAGE:= $(REPO_PATH)/check-mk-$(EDITION)-$(PKG_VERSION)$(CMA_PKG_VERSION_TXT)-$(ARCH).cma
@@ -308,7 +303,10 @@ deb: debian/changelog debian/control
 	    $$TARGET
 
 setversion:
-	NEW_OMD_VERSION=$(NEW_VERSION_STRING).$(EDITION_SHORT)$(DEMO_SUFFIX) ; \
+# NEW_VERSION should be set on the command line.  Replace all '/' since sed
+# tries to interpret them '/' might occur in custom branches filenames and sed
+# arguments should not contain '/'
+	NEW_OMD_VERSION=$(subst /,-,$(NEW_VERSION)).$(EDITION_SHORT)$(DEMO_SUFFIX) ; \
 	if [ -n "$$NEW_OMD_VERSION" ] && [ "$$NEW_OMD_VERSION" != "$(OMD_VERSION)" ]; then \
 	    sed -ri 's/^(OMD_SERIAL[[:space:]]*= *).*/\1'"$(NEW_SERIAL)/" Makefile.omd ; \
 	fi ; \

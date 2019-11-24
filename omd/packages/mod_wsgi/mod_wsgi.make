@@ -23,9 +23,10 @@ ifneq ("$(wildcard /usr/bin/apxs2-prefork)","")
     APXS := /usr/bin/apxs2-prefork
 endif
 
+MOD_WSGI_PATCHING := $(BUILD_HELPER_DIR)/$(MOD_WSGI_DIR)-patching
 MOD_WSGI_BUILD := $(BUILD_HELPER_DIR)/$(MOD_WSGI_DIR)-build
 MOD_WSGI_INSTALL := $(BUILD_HELPER_DIR)/$(MOD_WSGI_DIR)-install
-MOD_WSGI_PATCHING := $(BUILD_HELPER_DIR)/$(MOD_WSGI_DIR)-patching
+MOD_WSGI_SKEL := $(BUILD_HELPER_DIR)/$(MOD_WSGI_DIR)-skel
 
 #MOD_WSGI_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(MOD_WSGI_DIR)
 MOD_WSGI_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(MOD_WSGI_DIR)
@@ -57,6 +58,9 @@ $(MOD_WSGI_INSTALL): $(MOD_WSGI_BUILD)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
 	cp $(MOD_WSGI_BUILD_DIR)/src/server/.libs/mod_wsgi.so $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
 	chmod 644 $(DESTDIR)$(OMD_ROOT)/lib/apache/modules/mod_wsgi.so
+	$(TOUCH) $@
+
+$(MOD_WSGI_SKEL):
 	$(TOUCH) $@
 
 $(MOD_WSGI)-clean:

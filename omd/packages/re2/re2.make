@@ -5,8 +5,10 @@ RE2 := re2
 RE2_VERS := 2019-09-01
 RE2_DIR := $(RE2)-$(RE2_VERS)
 
-RE2_BUILD := $(BUILD_HELPER_DIR)/$(RE2_DIR)-build
 RE2_UNPACK := $(BUILD_HELPER_DIR)/$(RE2_DIR)-unpack
+RE2_BUILD := $(BUILD_HELPER_DIR)/$(RE2_DIR)-build
+RE2_INSTALL := $(BUILD_HELPER_DIR)/$(RE2_DIR)-install
+RE2_SKEL := $(BUILD_HELPER_DIR)/$(RE2_DIR)-skel
 
 #RE2_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(RE2_DIR)
 RE2_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(RE2_DIR)
@@ -44,6 +46,12 @@ $(RE2_BUILD): $(RE2_UNPACK)
 # Note: We need the -fPIC above to link RE2 statically into livestatus.o.
 	unset DESTDIR MAKEFLAGS; \
 	    cmake --build $(RE2_BUILD_DIR) --target install -- -j 4
+	$(TOUCH) $@
+
+$(RE2_INSTALL):
+	$(TOUCH) $@
+
+$(RE2_SKEL):
 	$(TOUCH) $@
 
 $(RE2)-skel:

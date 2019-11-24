@@ -19,6 +19,7 @@ oneTimeSetUp () {
     export MK_VARDIR=${SHUNIT_TMPDIR}
 
     touch "$MK_VARDIR/mk_oracle.found"
+    mkdir -p "$MK_CONFDIR/mk_oracle.d"
 
     # shellcheck disable=SC1090
     . "$MK_ORACLE_PLUGIN_PATH" >/dev/null 2>&1
@@ -61,6 +62,11 @@ tearDown () {
         # shellcheck disable=SC1090
         rm "${MK_CONFDIR}/mk_oracle.cfg"
     fi
+
+    if [ -d "$MK_CONFDIR/mk_oracle.d" ]; then
+        find "${MK_CONFDIR}/mk_oracle.d/" -type f -delete
+    fi
+
     unset SYNC_SECTIONS ASYNC_SECTIONS SYNC_ASM_SECTIONS ASYNC_ASM_SECTIONS CACHE_MAXAGE OLRLOC
     unset ONLY_SIDS SKIP_SIDS EXCLUDE_MySID EXCLUDE_OtherSID SYNC_SECTIONS_MySID ASYNC_SECTIONS_MySID
     unset MK_SYNC_SECTIONS_QUERY MK_ASYNC_SECTIONS_QUERY
@@ -202,6 +208,43 @@ EOF
 
     assertEquals "no" "$(skip_sid "MySID")"
 }
+
+test_mk_oracle_load_config_confd () {
+    cat <<EOF >"${MK_CONFDIR}/mk_oracle.d/custom_config.cfg"
+DBUSER_MYSID="checkmk:password"
+SYNC_SECTIONS_MYSID="instance performance"
+ASYNC_SECTIONS_MYSID="tablespaces jobs"
+EOF
+
+    # Test should also fail if it reads non-cfg files
+    cat <<EOF >"${MK_CONFDIR}/mk_oracle.d/testfile"
+DBUSER_MYSID="checkmk:testfilepassword"
+SYNC_SECTIONS_MYSID="instance testfilesection"
+ASYNC_SECTIONS_MYSID="tablespaces testfilesection2"
+EOF
+
+    load_config
+
+    assertEquals "checkmk:password" "$DBUSER_MYSID"
+    assertEquals "instance performance" "$SYNC_SECTIONS_MYSID"
+    assertEquals "tablespaces jobs" "$ASYNC_SECTIONS_MYSID"
+}
+
+test_mk_oracle_noexisting_confd () {
+    rmdir "${MK_CONFDIR}/mk_oracle.d"
+    cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
+DBUSER="checkmk:password"
+DBUSER_MYSID="checkmk:password2"
+EOF
+
+    load_config
+
+    assertEquals "checkmk:password" "$DBUSER"
+    assertEquals "checkmk:password2" "$DBUSER_MYSID"
+
+    mkdir "${MK_CONFDIR}/mk_oracle.d"
+}
+
 
 #   ---do_checks------------------------------------------------------------
 

@@ -495,7 +495,7 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src tidy
 endif
 
-iwyu: config.h
+iwyu: config.status
 	$(MAKE) -C livestatus/src iwyu
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src iwyu

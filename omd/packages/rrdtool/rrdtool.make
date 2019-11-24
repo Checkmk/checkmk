@@ -44,15 +44,12 @@ $(MODULEBUILDRC_PATH):
 	$(MKDIR) $(RRDTOOL_WORK_DIR)
 	$(ECHO) "install  --install_base  $(DESTDIR)$(OMD_ROOT)/lib/perl5" > $(MODULEBUILDRC_PATH)
 
-$(RRDTOOL_CONFIGURE): $(RRDTOOL_PATCHING) $(MODULEBUILDRC_PATH) $(PERL_MODULES_INTERMEDIATE_INSTALL)
+$(RRDTOOL_CONFIGURE): $(RRDTOOL_PATCHING)
 # TODO: We need to find out which variables here are needed for the configure and which for the make calls
 	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_MODULES_PYTHONPATH) ; \
 	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH) ; \
 	export LD_LIBRARY_PATH=$(PACKAGE_PYTHON_LD_LIBRARY_PATH) ; \
 	export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
-	export PERL5LIB=$(PACKAGE_PERL_MODULES_PERL5LIB); \
-	export PERL_MM_OPT=INSTALL_BASE=$(DESTDIR)$(OMD_ROOT)/lib/perl5; \
-	export MODULEBUILDRC=$(MODULEBUILDRC_PATH); \
 	export top_builddir="."; \
 	export LDFLAGS="$(shell pkg-config --libs gthread-2.0) -lglib-2.0 $(PACKAGE_PYTHON_LDFLAGS)" ; \
 	export CPPFLAGS="$(shell pkg-config --cflags gthread-2.0)" ; \
@@ -62,7 +59,7 @@ $(RRDTOOL_CONFIGURE): $(RRDTOOL_PATCHING) $(MODULEBUILDRC_PATH) $(PERL_MODULES_I
 
 $(RRDTOOL_BUILD): $(RRDTOOL_BUILD_LIBRARY) $(RRDTOOL_BUILD_BINDINGS)
 
-$(RRDTOOL_BUILD_LIBRARY): $(RRDTOOL_CONFIGURE) $(MODULEBUILDRC_PATH) $(PERL_MODULES_INTERMEDIATE_INSTALL)
+$(RRDTOOL_BUILD_LIBRARY): $(RRDTOOL_CONFIGURE)
 # Build everything except the bindings (which have python and so on as
 # dependency which would take a long time to build)
 # TODO: We need to find out which variables here are needed for the configure and which for the make calls
@@ -70,9 +67,6 @@ $(RRDTOOL_BUILD_LIBRARY): $(RRDTOOL_CONFIGURE) $(MODULEBUILDRC_PATH) $(PERL_MODU
 	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH) ; \
 	export LD_LIBRARY_PATH=$(PACKAGE_PYTHON_LD_LIBRARY_PATH) ; \
 	export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
-	export PERL5LIB=$(PACKAGE_PERL_MODULES_PERL5LIB); \
-	export PERL_MM_OPT=INSTALL_BASE=$(DESTDIR)$(OMD_ROOT)/lib/perl5; \
-	export MODULEBUILDRC=$(MODULEBUILDRC_PATH); \
 	export top_builddir="."; \
 	export LDFLAGS="$(shell pkg-config --libs gthread-2.0) -lglib-2.0 $(PACKAGE_PYTHON_LDFLAGS)" ; \
 	export CPPFLAGS="$(shell pkg-config --cflags gthread-2.0)" ; \

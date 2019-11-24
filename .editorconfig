@@ -35,5 +35,5 @@ max_line_length = 100
 [{package.json,.envrc}]
 indent_size = 2
 
-[{Makefile,*.make}]
+[{Makefile,*.make,*.am}]
 indent_style = tab

@@ -39,7 +39,8 @@ PACKAGE_ASIO := $(abs_top_srcdir)/omd/packages/asio
 ASIO_VERSION := asio-asio-1-14-0
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
 
-RRDTOOL_SRC_DIR := $(abs_top_srcdir)/omd/build/package_build/rrdtool-1.7.1/src
+RRDTOOL_VERSION := rrdtool-1.7.1
+RRDTOOL_SRC_DIR := $(abs_top_srcdir)/omd/build/package_build/$(RRDTOOL_VERSION)/src
 RRDTOOL_LDFLAGS := -lrrd -L$(RRDTOOL_SRC_DIR)/.libs
 RRDTOOL_CPPFLAGS := -I$(RRDTOOL_SRC_DIR)
 
@@ -52,13 +53,11 @@ GOOGLETEST_INCLUDE := $(INCLUDES_DIR)/googletest
 AM_CPPFLAGS = \
     -I.. \
     -isystem $(ASIO_INCLUDE) \
-    @RE2_CPPFLAGS@ \
-    $(RRDTOOL_CPPFLAGS)
+    @RE2_CPPFLAGS@
 
 AM_LDFLAGS = \
     -static-libstdc++ \
-    @RE2_LDFLAGS@ \
-    $(RRDTOOL_LDFLAGS)
+    @RE2_LDFLAGS@
 
 bin_PROGRAMS = unixcat
 noinst_PROGRAMS = test_neb
@@ -77,11 +76,14 @@ test_neb_SOURCES = \
     test/test_RegExp.cc \
     test/test_StringUtil.cc \
     test/test_utilities.cc
-$(test_neb_SOURCES): $(ASIO_INCLUDE) $(GOOGLETEST_INCLUDE)
+$(test_neb_SOURCES): $(ASIO_INCLUDE) $(GOOGLETEST_INCLUDE) $(RRDTOOL_VERSION)
 test_neb_CPPFLAGS = \
     $(AM_CPPFLAGS) \
     -I$(GOOGLETEST_INCLUDE) \
     $(RRDTOOL_CPPFLAGS)
+test_neb_LDFLAGS = \
+    $(AM_LDFLAGS) \
+    $(RRDTOOL_LDFLAGS)
 test_neb_LDADD = \
     liblivestatus.a \
     -lstdc++fs \
@@ -96,6 +98,13 @@ unit-test: test_neb$(EXEEXT)
 
 pkglib_LIBRARIES = liblivestatus.a
 
+liblivestatus_a_CXXFLAGS = -fPIC
+liblivestatus_a_CPPFLAGS = \
+    $(AM_CPPFLAGS) \
+    $(RRDTOOL_CPPFLAGS)
+liblivestatus_a_LDFLAGS = \
+    $(AM_LDFLAGS) \
+    $(RRDTOOL_LDFLAGS)
 liblivestatus_a_SOURCES = \
         AndingFilter.cc \
         AttributeListAsIntColumn.cc \
@@ -227,7 +236,7 @@ liblivestatus_a_SOURCES = \
         opids.cc \
         pnp4nagios.cc \
         strutil.cc
-$(liblivestatus_a_SOURCES): $(ASIO_INCLUDE)
+$(liblivestatus_a_SOURCES): $(ASIO_INCLUDE) $(RRDTOOL_VERSION)
 
 $(ASIO_INCLUDE): $(ASIO_VERSION)
 	mkdir -p $(ASIO_INCLUDE)
@@ -238,6 +247,10 @@ $(ASIO_INCLUDE): $(ASIO_VERSION)
 $(ASIO_VERSION): $(PACKAGE_ASIO)/$(ASIO_VERSION).tar.gz
 	$(RM) -r $@
 	tar xzf $<
+	touch $@
+
+$(RRDTOOL_VERSION):
+	LANG=C make -j4 -C ../../omd rrdtool-build-library
 	touch $@
 
 $(GOOGLETEST_INCLUDE): $(GOOGLETEST_VERSION)/Makefile
@@ -263,9 +276,6 @@ $(GOOGLETEST_VERSION)/CMakeLists.txt: $(PACKAGE_GOOGLETEST)/$(GOOGLETEST_VERSION
 	$(RM) -r $(GOOGLETEST_VERSION)
 	tar xzf $<
 	touch $@
-
-liblivestatus_a_CXXFLAGS = -fPIC
-liblivestatus_a_LDFLAGS = $(RRDTOOL_LDFLAGS)
 
 livestatus.o: $(liblivestatus_a_OBJECTS)
 # Note: libstdc++fs is only available as a static library, so we are lucky. For

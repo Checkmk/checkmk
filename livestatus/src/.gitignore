@@ -8,6 +8,7 @@
 Makefile
 Makefile.in
 asio-asio-1-14-0/
+rrdtool-*
 compile_commands.json
 cppcheck-result.xml
 googletest-release-1.10.0/

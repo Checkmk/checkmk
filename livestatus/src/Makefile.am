@@ -250,7 +250,9 @@ $(ASIO_VERSION): $(PACKAGE_ASIO)/$(ASIO_VERSION).tar.gz
 	touch $@
 
 $(RRDTOOL_VERSION):
-	LANG=C make -j4 -C ../../omd rrdtool-build-library
+# TODO: This is specialized for OMD environments. We need make this automatically detect the
+# OMD scenario and perform specific things for OMD and other things for rrdtool standalone.
+	LANG=C make -j4 -C $$(dirname $$(dirname $$(dirname $$(dirname $(RRDTOOL_SRC_DIR))))) rrdtool-build-library
 	touch $@
 
 $(GOOGLETEST_INCLUDE): $(GOOGLETEST_VERSION)/Makefile

@@ -94,6 +94,13 @@ def is_cma():
     return os.path.exists("/etc/cma/cma.conf")
 
 
+def is_canonical(directory):
+    if not directory.endswith("/"):
+        directory += "/"
+    return (os.path.isabs(directory) and
+            os.path.commonprefix([os.path.realpath(directory) + '/', directory]) == directory)
+
+
 # TODO: Locking!
 class Config(object):
     def __init__(self, file_path):
@@ -1379,6 +1386,9 @@ class BackupTargetLocal(BackupTargetType):
 
     @classmethod
     def validate_local_directory(cls, value, varprefix):
+        if not is_canonical(value):
+            raise MKUserError(varprefix, _("You have to provide a canonical path."))
+
         if is_cma() and not value.startswith("/mnt/"):
             raise MKUserError(varprefix, _("You can only use mountpoints below the <tt>/mnt</tt> "
                                            "directory as backup targets."))

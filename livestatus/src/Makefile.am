@@ -185,7 +185,7 @@ tidy: compile_commands.json
 	$(RUN_CLANG_TIDY) -quiet -j6
 
 iwyu: compile_commands.json
-	$(IWYU_TOOL) --output-format=clang -p . -- --mapping_file=$(abs_top_srcdir)/livestatus/iwyu-mappings/check_mk.imp
+	$(IWYU_TOOL) --output-format=clang -p . -- -Xiwyu --mapping_file=$(abs_top_srcdir)/livestatus/iwyu-mappings/check_mk.imp
 
 cppcheck: compile_commands.json
 	$(CPPCHECK) -UCMC --enable=all --suppressions-list=$(abs_top_srcdir)/.cppcheck-suppressions --inline-suppr --project=compile_commands.json --quiet --template=gcc

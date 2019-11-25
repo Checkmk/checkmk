@@ -723,7 +723,7 @@ def process_resource(function_args):
     return [agent_info_section, section]
 
 
-def write_group_info(mgmt_client, monitored_groups):
+def write_group_info(mgmt_client, monitored_groups, monitored_resources):
 
     for group in mgmt_client.resourcegroups():
         name = group['name']
@@ -735,6 +735,7 @@ def write_group_info(mgmt_client, monitored_groups):
 
     section = AzureSection('agent_info')
     section.add(('monitored-groups', json.dumps(monitored_groups)))
+    section.add(('monitored-resources', json.dumps([r.info['name'] for r in monitored_resources])))
     section.write()
     # write empty agent_info section for all groups, otherwise
     # the service will only be discovered if something goes wrong
@@ -836,14 +837,14 @@ def main_subscription(args, selector, subscription):
 
         all_resources = (AzureResource(r) for r in mgmt_client.resources())
 
-        resources = [r for r in all_resources if selector.do_monitor(r)]
+        monitored_resources = [r for r in all_resources if selector.do_monitor(r)]
 
-        monitored_groups = sorted(set(r.info['group'] for r in resources))
+        monitored_groups = sorted(set(r.info['group'] for r in monitored_resources))
     except () if args.debug else Exception as exc:
         write_exception_to_agent_info_section(exc)
         return 1
 
-    write_group_info(mgmt_client, monitored_groups)
+    write_group_info(mgmt_client, monitored_groups, monitored_resources)
 
     try:
         usage_client = UsageClient(mgmt_client, subscription, args.debug)
@@ -853,7 +854,7 @@ def main_subscription(args, selector, subscription):
     except ApiErrorMissingData as exc:
         LOGGER.warning("%s", exc)
 
-    func_args = ((mgmt_client, resource, args) for resource in resources)
+    func_args = ((mgmt_client, resource, args) for resource in monitored_resources)
     mapper = get_mapper(args.debug, args.sequential, args.timeout)
     for sections in mapper(process_resource, func_args):
         for section in sections:

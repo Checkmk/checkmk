@@ -73,7 +73,7 @@ def parse_azure_agent_info(info):
             issues.setdefault(value['type'], []).append(value)
             continue
 
-        if key == 'monitored-groups':
+        if key in ('monitored-groups', 'monitored-resources'):
             parsed.setdefault(key, []).extend(value)
             continue
 
@@ -82,8 +82,8 @@ def parse_azure_agent_info(info):
     return parsed
 
 
-def discovery_azure_agent_info(_parsed):
-    yield None, {}
+def discovery_azure_agent_info(parsed):
+    yield None, {'discovered_resources': parsed.get('monitored-resources', [])}
 
 
 def remaining_api_reads(reads, params):
@@ -99,6 +99,29 @@ def remaining_api_reads(reads, params):
         human_readable_func=lambda i: "%d" % i,
         boundaries=(0, 15000),
     )
+
+
+def resource_pinning(present_resources, params):
+    if not params.get('resource_pinning'):
+        return "", ""
+
+    discovered = params.get('discovered_resources')
+    if discovered is None:
+        return "", ""
+
+    missing = sorted(set(discovered) - set(present_resources))
+    new = sorted(set(present_resources) - set(discovered))
+    short_output = []
+    long_output = []
+
+    if missing:
+        short_output.append("Missing resources: %d" % len(missing))
+        long_output.extend("Missing resource: %r(!)" % r for r in missing)
+    if new:
+        short_output.append("New resources: %d" % len(new))
+        long_output.extend("New resource: %r(!)" % r for r in new)
+
+    return ', '.join(short_output), '\n'.join(long_output)
 
 
 def agent_issues(issues, params):
@@ -133,8 +156,16 @@ def check_azure_agent_info(_no_item, params, parsed):
     if groups:
         yield 0, "Monitored groups: %s" % ', '.join(groups)
 
+    resources = parsed.get('monitored-resources', [])
+    resource_infos = resource_pinning(resources, params)
+    if resource_infos[0]:
+        yield 1, resource_infos[0]
+
     for subresult in agent_issues(parsed.get('issues', {}), params):
         yield subresult
+
+    if resource_infos[1]:
+        yield 0, "\n%s" % resource_infos[1]
 
 
 check_info['azure_agent_info'] = {

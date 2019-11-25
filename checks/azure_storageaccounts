@@ -41,7 +41,7 @@ factory_settings['levels_azure_storageaccounts'] = {}
 #     specified API operation.
 
 
-@get_parsed_item_data
+@get_data_or_go_stale
 def check_azure_storageaccounts(_item, params, resource):
     iter_attrs = azure_iter_informative_attrs(resource, include_keys=('kind', 'location'))
     # kind first
@@ -73,7 +73,7 @@ check_info['azure_storageaccounts'] = {
 }
 
 
-@get_parsed_item_data
+@get_data_or_go_stale
 def check_azure_storageaccounts_flow(_item, params, resource):
     for metric_key in ('total_Ingress', 'total_Egress', 'total_Transactions'):
         cmk_key = metric_key[6:].lower()
@@ -96,7 +96,7 @@ check_info['azure_storageaccounts.flow'] = {
 }
 
 
-@get_parsed_item_data
+@get_data_or_go_stale
 def check_azure_storageaccounts_performance(_item, params, resource):
 
     for key, cmk_key, displ in (

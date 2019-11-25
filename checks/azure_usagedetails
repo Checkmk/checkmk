@@ -51,7 +51,7 @@ def parse_azure_usagedetails(info):
     return parsed
 
 
-@get_parsed_item_data
+@get_data_or_go_stale
 def check_azure_usagedetails(_no_item, params, data):
 
     for currency, amount in data.get('costs', {}).items():

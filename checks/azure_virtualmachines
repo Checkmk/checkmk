@@ -59,7 +59,7 @@ def _azure_vms_get_status(resource, desired_type):
     return "unknown", ""
 
 
-@get_parsed_item_data
+@get_data_or_go_stale
 def check_azure_virtualmachines(_item, params, resource):
 
     map_provisioning_states = params.get("map_provisioning_states", {})

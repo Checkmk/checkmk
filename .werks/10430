@@ -1,0 +1,17 @@
+Title: Follow rule "match site" at agent updates host selection
+Knowledge: doc
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p7
+Date: 1574674471
+
+Previously, the "match sites" selection within the agent updates
+host selection configuration got ignored completely, i.e. updates
+were possible for hosts even if the "match site" parameter got selected
+and the corresponding monitoring site got not selected.
+
+With this Werk, the parameter is processed correctly.

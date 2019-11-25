@@ -56,10 +56,6 @@ SHELL              := /bin/bash
 # TODO: Be more strict - Add this:
 #SHELL              := /bin/bash -e -o pipefail
 
-# Prevent trouble (e.g. broken target dependencies) because of missing/wrong
-# make variable names
-MAKEFLAGS          := --warn-undefined-variables
-
 # Helper for shell checkers / fixers with all shell script the tools
 # should care about
 # TODO: Complete this list

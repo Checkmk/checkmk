@@ -47,6 +47,11 @@ pycryptodomex = "==3.9.3"  # needed by pysnmp
 ply = "==3.11"  # needed by pysmi
 pysmi = "==0.3.4"  # needed by pysnmp
 pysnmp = "==4.4.12"  # needed by Event Console
+certifi = "==2019.9.11"  # needed by requests
+chardet = "==3.0.4"  # needed by requests
+urllib3 = "==1.25.7"  # needed by requests
+pyOpenSSL = "==19.1.0"  # needed by requests with extras = ["security"]
+requests = { version = "==2.22.0", extras = ["security"] }  # needed by DCD
 
 [requires]
 python_version = "3.7"

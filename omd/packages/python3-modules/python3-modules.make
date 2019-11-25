@@ -25,28 +25,34 @@ PYTHON3_MODULES_LIST :=
 
 PYTHON3_MODULES_LIST += setuptools_scm-3.3.3.tar.gz # needed by various setup.py
 PYTHON3_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
-PYTHON3_MODULES_LIST += six-1.13.0.tar.gz # direct dependency, indirect via python-dateutil, vcrpy
+PYTHON3_MODULES_LIST += six-1.13.0.tar.gz # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, pyOpenSSL
 PYTHON3_MODULES_LIST += python-dateutil-2.8.0.tar.gz # direct dependency
 
-PYTHON3_MODULES_LIST += PyYAML-5.1.2.tar.gz # indirect via vcrpy
-PYTHON3_MODULES_LIST += wrapt-1.11.2.tar.gz # indirect via vcrpy
-PYTHON3_MODULES_LIST += yarl-1.3.0.tar.gz # indirect via vcrpy
-PYTHON3_MODULES_LIST += multidict-4.5.2.tar.gz # indirect via vcrpy
-PYTHON3_MODULES_LIST += idna-2.8.tar.gz # indirect via vcrpy
-PYTHON3_MODULES_LIST += vcrpy-2.1.0.tar.gz # direct dependency
+PYTHON3_MODULES_LIST += PyYAML-5.1.2.tar.gz # needed by vcrpy
+PYTHON3_MODULES_LIST += wrapt-1.11.2.tar.gz # needed by vcrpy
+PYTHON3_MODULES_LIST += yarl-1.3.0.tar.gz # needed by vcrpy
+PYTHON3_MODULES_LIST += multidict-4.5.2.tar.gz # needed by yarl
+PYTHON3_MODULES_LIST += idna-2.8.tar.gz # needed by yarl, requests
+PYTHON3_MODULES_LIST += vcrpy-2.1.0.tar.gz # used by various unit tests to mock HTTP transactions
 
-PYTHON3_MODULES_LIST += pycparser-2.19.tar.gz # indirect via paramiko
-PYTHON3_MODULES_LIST += cffi-1.13.1.tar.gz # indirect via paramiko
-PYTHON3_MODULES_LIST += PyNaCl-1.3.0.tar.gz # indirect via paramiko
-PYTHON3_MODULES_LIST += cryptography-2.8.tar.gz # indirect via paramiko
-PYTHON3_MODULES_LIST += bcrypt-3.1.7.tar.gz # indirect via paramiko
-PYTHON3_MODULES_LIST += paramiko-2.6.0.tar.gz # direct dependency
+PYTHON3_MODULES_LIST += pycparser-2.19.tar.gz # needed by cffi
+PYTHON3_MODULES_LIST += cffi-1.13.1.tar.gz # needed by PyNaCl, cryptography, bcrypt
+PYTHON3_MODULES_LIST += PyNaCl-1.3.0.tar.gz # needed by paramiko
+PYTHON3_MODULES_LIST += cryptography-2.8.tar.gz # needed by paramiko, pyOpenSSL
+PYTHON3_MODULES_LIST += bcrypt-3.1.7.tar.gz # needed by paramiko
+PYTHON3_MODULES_LIST += paramiko-2.6.0.tar.gz # direct dependency, used for SFTP transactions in check_sftp
 
 PYTHON3_MODULES_LIST += pyasn1-0.4.7.tar.gz # needed by pysnmp
 PYTHON3_MODULES_LIST += pycryptodomex-3.9.3.tar.gz # needed by pysnmp
 PYTHON3_MODULES_LIST += ply-3.11.tar.gz # needed by pysmi
 PYTHON3_MODULES_LIST += pysmi-0.3.4.tar.gz # needed by pysnmp
 PYTHON3_MODULES_LIST += pysnmp-4.4.12.tar.gz # needed by Event Console
+
+PYTHON3_MODULES_LIST += certifi-2019.9.11.tar.gz # needed by requests
+PYTHON3_MODULES_LIST += chardet-3.0.4.tar.gz # needed by requests
+PYTHON3_MODULES_LIST += urllib3-1.25.7.tar.gz # needed by requests
+PYTHON3_MODULES_LIST += pyOpenSSL-19.1.0.tar.gz # needed by requests with extras = ["security"]
+PYTHON3_MODULES_LIST += requests-2.22.0.tar.gz # needed by DCD
 
 # TODO: Can we clean this up and use the intermediate install step results? Would be possible
 # in the moment we merge the build and intermediate install in a single target

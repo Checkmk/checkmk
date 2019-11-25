@@ -102,7 +102,7 @@ liblivestatus_a_CXXFLAGS = -fPIC
 liblivestatus_a_CPPFLAGS = \
     $(AM_CPPFLAGS) \
     $(RRDTOOL_CPPFLAGS)
-liblivestatus_a_LDFLAGS = \
+liblivestatus_a_LD_FLAGS = \
     $(AM_LDFLAGS) \
     $(RRDTOOL_LD_FLAGS)
 liblivestatus_a_SOURCES = \
@@ -285,7 +285,7 @@ livestatus.o: $(liblivestatus_a_OBJECTS)
 	$(CXXLINK) -shared $^ -lstdc++fs -lpthread $(AM_LDFLAGS) @RE2_LIBS@
 # To make sure we can dlopen() our NEB later
 	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) -c NagiosMockup.cc -o NagiosMockup.o
-	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup $(liblivestatus_a_LDFLAGS)
+	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup $(liblivestatus_a_LD_FLAGS)
 	$(RM) NagiosMockup
 
 compile_commands.json: $(unixcat_SOURCES) $(test_neb_SOURCES) $(liblivestatus_a_SOURCES)

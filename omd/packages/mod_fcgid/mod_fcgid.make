@@ -16,7 +16,6 @@ endif
 MOD_FCGID_BUILD := $(BUILD_HELPER_DIR)/$(MOD_FCGID_DIR)-build
 MOD_FCGID_INSTALL := $(BUILD_HELPER_DIR)/$(MOD_FCGID_DIR)-install
 MOD_FCGID_PATCHING := $(BUILD_HELPER_DIR)/$(MOD_FCGID_DIR)-patching
-MOD_FCGID_SKEL := $(BUILD_HELPER_DIR)/$(MOD_FCGID_DIR)-skel
 
 #MOD_FCGID_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(MOD_FCGID_DIR)
 MOD_FCGID_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(MOD_FCGID_DIR)
@@ -33,9 +32,6 @@ $(MOD_FCGID_INSTALL): $(MOD_FCGID_BUILD)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
 	cp $(MOD_FCGID_BUILD_DIR)/modules/fcgid/.libs/mod_fcgid.so $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
 	chmod 644 $(DESTDIR)$(OMD_ROOT)/lib/apache/modules/mod_fcgid.so
-	$(TOUCH) $@
-
-$(MOD_FCGID_SKEL): $(MOD_FCGID_INSTALL)
 	$(MKDIR) $(SKEL)/tmp/apache/fcgid_sock
 	$(TOUCH) $@
 

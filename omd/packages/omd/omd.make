@@ -10,7 +10,6 @@ endif
 
 OMD_BUILD := $(BUILD_HELPER_DIR)/$(OMD_DIR)-build
 OMD_INSTALL := $(BUILD_HELPER_DIR)/$(OMD_DIR)-install
-OMD_SKEL := $(BUILD_HELPER_DIR)/$(OMD_DIR)-skel
 
 $(OMD_BUILD):
 	$(TOUCH) $@
@@ -37,6 +36,7 @@ $(OMD_INSTALL): omdlib-install
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/hooks/* $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	$(MKDIR) $(SKEL)/etc/bash_completion.d
 	$(TOUCH) $@
 
 omdlib-install: $(PYTHON_CACHE_PKG_PROCESS)
@@ -45,7 +45,3 @@ omdlib-install: $(PYTHON_CACHE_PKG_PROCESS)
 	sed -i 's|###OMD_VERSION###|$(OMD_VERSION)|g' $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib/__init__.py
 	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
 	    $(PACKAGE_PYTHON_EXECUTABLE) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib
-
-$(OMD_SKEL): $(OMD_INSTALL)
-	$(MKDIR) $(SKEL)/etc/bash_completion.d
-	$(TOUCH) $@

@@ -4,7 +4,6 @@ NAVICLI_DIR := navisphere-64
 
 NAVICLI_BUILD := $(BUILD_HELPER_DIR)/$(NAVICLI_DIR)-build
 NAVICLI_INSTALL := $(BUILD_HELPER_DIR)/$(NAVICLI_DIR)-install
-NAVICLI_SKEL := $(BUILD_HELPER_DIR)/$(NAVICLI_DIR)-skel
 
 $(NAVICLI_BUILD):
 	$(TOUCH) $@
@@ -27,7 +26,4 @@ $(NAVICLI_INSTALL):
 	install -m 755 $(PACKAGE_DIR)/$(NAVICLI)/$(NAVICLI_DIR)/lib/seccli/* $(DESTDIR)$(OMD_ROOT)/lib/seccli
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/navicli
 	cp -pr $(PACKAGE_DIR)/$(NAVICLI)/$(NAVICLI_DIR)/seccli/CST $(DESTDIR)$(OMD_ROOT)/share/navicli
-	$(TOUCH) $@
-
-$(NAVICLI_SKEL):
 	$(TOUCH) $@

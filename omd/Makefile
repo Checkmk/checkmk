@@ -103,23 +103,22 @@ RPM_BUILDROOT := $(BUILD_BASE_DIR)/rpm/buildroot
 
 NEW_SERIAL=$$(($(OMD_SERIAL) + 1))
 SKEL := $(DESTDIR)$(OMD_ROOT)/skel
+SKEL_PERMISSIONS := $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions
 CMA_PKG_VERSION_TXT := $(shell if [ "$(DISTRO_CODE)" = "stretch" ]; then echo "-2" ; fi )
 ARCH := $(shell uname -m)
 CMA_PACKAGE:= $(REPO_PATH)/check-mk-$(EDITION)-$(PKG_VERSION)$(CMA_PKG_VERSION_TXT)-$(ARCH).cma
 
 PRE_INSTALL := $(BUILD_HELPER_DIR)/pre-install
-PRE_SKEL := $(BUILD_HELPER_DIR)/pre-skel
 INSTALL := $(BUILD_HELPER_DIR)/install
 INSTALL_GLOBAL := $(BUILD_HELPER_DIR)/install-global
 
 BUILD_TARGET_VARS := $(call package_target_prefix,$(PACKAGES))
 INSTALL_TARGETS := $(foreach package,$(addsuffix _INSTALL,$(BUILD_TARGET_VARS)),$($(package)))
-SKEL_TARGETS :=  $(foreach package,$(addsuffix _SKEL,$(BUILD_TARGET_VARS)),$($(package)))
 
 .PHONY: install cma rpm deb clean setversion install-clean
 
 # Called while building the .rpm/.deb packages
-install: $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions $(FIX_SKEL)
+install: $(INSTALL_GLOBAL)
 
 # Called by our release system to build appliance packages
 cma: $(CMA_PACKAGE)
@@ -127,7 +126,6 @@ cma: $(CMA_PACKAGE)
 install-clean:
 	rm -rf $(DESTDIR)
 	rm -rf $(BUILD_HELPER_DIR)/*-install
-	rm -rf $(BUILD_HELPER_DIR)/*-skel
 
 # Prepare clean install environment
 $(PRE_INSTALL):
@@ -139,63 +137,29 @@ $(PRE_INSTALL):
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/omd
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/diskspace
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/man/man1
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel
 	touch $@
 
 $(INSTALL_TARGETS): $(PRE_INSTALL)
 
-$(SKEL_TARGETS): $(PRE_SKEL)
-
 $(INSTALL): $(INSTALL_TARGETS)
-	# Repair packages that install with silly modes (such as Nagios)
+# Repair packages that install with silly modes (such as Nagios)
 	chmod -R o+Xr $(DESTDIR)$(OMD_ROOT)
 	$(TOUCH) $@
 
-$(PRE_SKEL) : $(INSTALL_GLOBAL)
-	# Install skeleton files (subdirs skel/ in packages' directories)
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel
-	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
-            if [ -d "$$p/skel" ] ; then  \
-              tar cf - -C $$p/skel --exclude="*~" --exclude=".gitignore" . | tar xvf - -C $(DESTDIR)$(OMD_ROOT)/skel ; \
-            fi ;\
-        done
-	$(TOUCH) $@
-
-$(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions: $(PRE_SKEL) $(SKEL_TARGETS)
-	# Create permissions file for skel
+$(SKEL_PERMISSIONS): $(INSTALL)
+# Create permissions file for skel
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
 	set -e ; cd packages ; for p in $(PACKAGES) ; do \
 	    if [ -d $$p ] && [ -e $$p/skel.permissions ] ; then \
 	        echo "# $$p" ; \
 	        cat $$p/skel.permissions ; \
 	    fi ; \
-	done > $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions
-
-# TODO: There is no FIX_SKEL definition. This is never executed. WTF?
-$(FIX_SKEL): $(SKEL_TARGETS)
-	# Make sure, all permissions in skel are set to 0755, 0644
-	@failed=$$(find $(DESTDIR)$(OMD_ROOT)/skel -type d -not -perm 0755) ; \
-	if [ -n "$$failed" ] ; then \
-	    echo "Fixing invalid permissions for skeleton dirs. Must be 0755:" ; \
-            chmod -c 755 $$failed ; \
-            echo "$$failed" ; \
-        fi
-	@failed=$$(find $(DESTDIR)$(OMD_ROOT)/skel -type f -not -perm 0644) ; \
-	if [ -n "$$failed" ] ; then \
-	    echo "Fixing invalid permissions for skeleton files. Must be 0644:" ; \
-            echo "$$failed" ; \
-            chmod -c 644 $$failed ; \
-        fi
-
-	# Fix packages which did not add ###ROOT###
-	find $(DESTDIR)$(OMD_ROOT)/skel -type f | xargs -n1 sed -i -e 's+$(OMD_ROOT)+###ROOT###+g'
-
-	# Remove site-specific directories that went under /omd/version
-	rm -rf $(DESTDIR)/{var,tmp}
-	$(TOUCH) $@
+	done > $(SKEL_PERMISSIONS)
 
 # Create installations files that do not lie beyond /omd/versions/$(OMD_VERSION)
 # and files not owned by a specific package.
-$(INSTALL_GLOBAL): $(INSTALL)
+$(INSTALL_GLOBAL): $(SKEL_PERMISSIONS)
 	# Create link to default version
 	ln -sf $(OMD_VERSION) $(DESTDIR)$(OMD_BASE)/versions/default
 
@@ -327,7 +291,7 @@ $(CMA_INSTALL): $(INSTALL_TARGETS)
 $(APPLIANCE_INSTALL_CMA): $(PRE_INSTALL)
 
 # Please note: APPLIANCE_*_CMA are defined in omd/packages/appliance/appliance.make
-$(CMA_PACKAGE): $(CMA_INSTALL) $(APPLIANCE_INSTALL_CMA) $(APPLIANCE_SKEL_CMA) install
+$(CMA_PACKAGE): $(CMA_INSTALL) $(APPLIANCE_INSTALL_CMA) install
 	# Create info file to mark minimal cma firmware version requirement
 	@if [ "$(DISTRO_CODE)" = "stretch" ]; then \
 	    MIN_VERSION=1.4.0 ; \

@@ -5,7 +5,6 @@ NAGVIS_DIR := $(NAGVIS)-$(NAGVIS_VERS)
 NAGVIS_PATCHING := $(BUILD_HELPER_DIR)/$(NAGVIS_DIR)-patching
 NAGVIS_BUILD := $(BUILD_HELPER_DIR)/$(NAGVIS_DIR)-build
 NAGVIS_INSTALL := $(BUILD_HELPER_DIR)/$(NAGVIS_DIR)-install
-NAGVIS_SKEL := $(BUILD_HELPER_DIR)/$(NAGVIS_DIR)-skel
 
 #NAGVIS_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(NAGVIS_DIR)
 NAGVIS_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(NAGVIS_DIR)
@@ -53,9 +52,6 @@ $(NAGVIS_INSTALL): $(NAGVIS_BUILD)
 	# Delete files/directories we do not want to pack
 	$(RM) -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/var
 	$(RM) -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc
-	$(TOUCH) $@
-
-$(NAGVIS_SKEL):
 	$(TOUCH) $@
 
 $(NAGVIS)-clean:

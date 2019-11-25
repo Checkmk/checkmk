@@ -3,7 +3,6 @@ CHECK_MK_DIR := $(CHECK_MK)-$(CMK_VERSION)
 
 CHECK_MK_BUILD := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-build
 CHECK_MK_INSTALL := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-install
-CHECK_MK_SKEL := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-skel
 CHECK_MK_PATCHING := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-patching
 
 #CHECK_MK_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(CHECK_MK_DIR)
@@ -115,9 +114,7 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
 
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/cmk.update-pre-hooks $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks
-	$(TOUCH) $@
 
-$(CHECK_MK_SKEL): $(CHECK_MK_INSTALL)
 	$(RM) $(SKEL)/etc/check_mk/main.mk-*
 	$(RM) $(SKEL)/etc/check_mk/multisite.mk-*
 	$(TOUCH) $@

@@ -31,6 +31,25 @@ $(HUMAN_BUILD_TARGETS): %-build:
 # TODO: Can we make this work as real dependency without submake?
 	$(MAKE) $($(addsuffix _BUILD, $(call package_target_prefix,$*)))
 
+# Each package may have a packages/[pkg]/skel directory which contents will be
+# packed into destdir/skel. These files will be installed, e.g. [site]/etc/...
+# and may contain macros that are replaced during site creation/update.
+#
+# These files here need to be installed into skel/ before the install target is
+# executed, because the install target is allowed to do modifications to the
+# files.
+$(BUILD_HELPER_DIR)/%-install: $(BUILD_HELPER_DIR)/%-skel-dir
+$(BUILD_HELPER_DIR)/%-skel-dir:
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel
+	set -e ; \
+	    PACKAGE_PATH="$(PACKAGE_DIR)/$$(echo "$*" | sed 's/-[0-9.]\+.*//')"; \
+	    if [ -d "$$PACKAGE_PATH/skel" ]; then \
+		tar cf - -C "$$PACKAGE_PATH/skel" \
+		    --exclude="*~" \
+		    --exclude=".gitignore" \
+		    . | tar xvf - -C $(DESTDIR)$(OMD_ROOT)/skel ; \
+            fi
+
 # Rules for patching
 $(BUILD_HELPER_DIR)/%-patching: $(BUILD_HELPER_DIR)/%-unpack
 	set -e ; DIR=$$($(ECHO) $* | $(SED) 's/-[0-9.]\+.*//'); \

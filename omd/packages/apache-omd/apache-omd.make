@@ -4,7 +4,6 @@ APACHE_OMD_DIR := $(APACHE_OMD)-$(APACHE_OMD_VERS)
 
 APACHE_OMD_BUILD := $(BUILD_HELPER_DIR)/$(APACHE_OMD_DIR)-build
 APACHE_OMD_INSTALL := $(BUILD_HELPER_DIR)/$(APACHE_OMD_DIR)-install
-APACHE_OMD_SKEL := $(BUILD_HELPER_DIR)/$(APACHE_OMD_DIR)-skel
 
 APACHE_OMD_MODULE_DIR=$(APACHE_MODULE_DIR)
 ifeq ($(shell uname -m),x86_64)
@@ -68,6 +67,9 @@ ifeq ($(DISTRO_NAME),REDHAT)
   endif
 endif
 
+$(APACHE_OMD_BUILD):
+	$(TOUCH) $@
+
 $(APACHE_OMD_INSTALL):
 	# Install software below $(DESTDIR)$(OMD_ROOT)/{bin,lib,share}
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/omd
@@ -78,12 +80,7 @@ $(APACHE_OMD_INSTALL):
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks
 	install -m 775 $(PACKAGE_DIR)/$(APACHE_OMD)/APACHE_TCP_ADDR $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	install -m 775 $(PACKAGE_DIR)/$(APACHE_OMD)/APACHE_TCP_PORT $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
-	$(TOUCH) $@
 
-$(APACHE_OMD_BUILD):
-	$(TOUCH) $@
-
-$(APACHE_OMD_SKEL): $(APACHE_OMD_INSTALL)
 	# This file is loaded by php-wrapper on RedHat/CentOS < 7
 	if [ $(CENTOS_WORKAROUND) -eq 1 ]; then \
 		$(MKDIR) $(SKEL)/etc/apache/; \

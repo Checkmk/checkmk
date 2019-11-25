@@ -39,7 +39,7 @@ _AZURE_SITES_METRICS = (  # metric_key, cmk_key, display_name, use_rate_flag
 )
 
 
-@get_parsed_item_data
+@get_data_or_go_stale
 def check_azure_sites(_item, params, resource):
 
     for key, cmk_key, displ, use_rate in _AZURE_SITES_METRICS:

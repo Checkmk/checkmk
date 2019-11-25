@@ -5,7 +5,8 @@ SITE=${SITE:-$(cat ../../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-LANG=C make -j4 -C ../../omd re2 rrdtool-build-library
+echo Building rrdtool library...
+LANG=C make -j4 -C ../../omd re2 rrdtool-build-library > /dev/null 2>&1
 LANG=C make -C ../.. config.status
 ( cd ../.. && ./config.status )
 LANG=C make -j4

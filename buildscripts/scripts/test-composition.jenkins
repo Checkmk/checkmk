@@ -24,14 +24,7 @@ def dateFormat = new SimpleDateFormat("yyyy.MM.dd")
 def date = new Date()
 
 def BRANCH = scm.branches[0].name.replaceAll("/","-")
-def CMK_VERSION
-if(BRANCH == 'master') {
-    CMK_VERSION = dateFormat.format(date)
-} else if (VERSION == 'daily') {
-    CMK_VERSION = BRANCH + '-' + dateFormat.format(date)
-} else {
-    CMK_VERSION = VERSION
-}
+def CMK_VERSION = get_cmk_version(BRANCH, VERSION)
 
 def TEST_DATA = '/var/jenkins_home/composition-test-data/' + CMK_VERSION
 def OMD_SITE = 'int_' + BRANCH.replaceAll("\\.","")
@@ -185,5 +178,19 @@ try {
                 }
             }
         }
+    }
+}
+
+// Duplicate code with nightly-cmk-container.jenkins, integration-daily-master.jenkins, nightly-build.jenkins
+def get_cmk_version(BRANCH, VERSION) {
+    def DATE_FORMAT = new SimpleDateFormat("yyyy.MM.dd")
+    def DATE = new Date()
+
+    if(BRANCH == 'master' && VERSION == 'daily') {
+        return DATE_FORMAT.format(DATE)
+    } else if (VERSION == 'daily') {
+        return BRANCH + '-' + DATE_FORMAT.format(DATE)
+    } else {
+        return VERSION
     }
 }

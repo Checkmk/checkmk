@@ -62,12 +62,7 @@ g_suppress_on_wrap = True  # Suppress check on wrap (raise an exception)
 
 
 class MKCounterWrapped(MKException):
-    def __init__(self, reason):
-        self.reason = reason
-        super(MKCounterWrapped, self).__init__(reason)
-
-    def __str__(self):
-        return self.reason
+    pass
 
 
 class CachedItemStates(object):

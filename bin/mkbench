@@ -80,7 +80,10 @@ import npyscreen
 import livestatus
 
 from cmk.utils.render import fmt_bytes
-from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.exceptions import (
+    MKGeneralException,
+    MKTerminate,
+)
 
 #.
 #   .--Helpers-------------------------------------------------------------.
@@ -133,11 +136,6 @@ def fmt_timespan(seconds):
 
 def fmt_datetime(seconds):
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(seconds))
-
-
-#TODO use MKTerminate from utils; cleanup hierarchy
-class MKTerminate(MKGeneralException):
-    pass
 
 
 class MKSkipTestCase(MKGeneralException):

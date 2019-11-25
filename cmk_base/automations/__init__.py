@@ -44,13 +44,7 @@ import cmk_base.check_api as check_api
 
 # TODO: Inherit from MKGeneralException
 class MKAutomationError(MKException):
-    def __init__(self, reason):
-        # TODO: This disable is needed because of a pylint bug. Remove one day.
-        super(MKAutomationError, self).__init__(reason)  # pylint: disable=bad-super-call
-        self.reason = reason
-
-    def __str__(self):
-        return self.reason
+    pass
 
 
 class Automations(object):

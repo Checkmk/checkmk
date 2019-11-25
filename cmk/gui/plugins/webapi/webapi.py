@@ -37,7 +37,10 @@ import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-from cmk.utils.exceptions import MKException
+from cmk.utils.exceptions import (
+    MKException,
+    MKGeneralException,
+)
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -725,9 +728,7 @@ class APICallRules(APICallCollection):
                     rule_vs.validate_datatype(value, "test_value")
                     rule_vs.validate_value(value, "test_value")
                 except MKException as e:
-                    # TODO: The abstract MKException should never be instanciated directly
-                    # Change this call site and make MKException an abstract base class
-                    raise MKException("ERROR: %s. Affected Rule %r" % (str(e), rule))
+                    raise MKGeneralException("ERROR: %s. Affected Rule %r" % (str(e), rule))
 
         # Add new rulesets
         for folder_path, rules in new_ruleset.items():

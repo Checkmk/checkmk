@@ -42,12 +42,7 @@ logger = logging.getLogger("cmk.base.localize")
 
 # TODO: Inherit from MKGeneralException?
 class LocalizeException(MKException):
-    def __init__(self, reason):
-        self.reason = reason
-        super(LocalizeException, self).__init__(reason)
-
-    def __str__(self):
-        return self.reason
+    pass
 
 
 domain = 'multisite'

@@ -509,8 +509,9 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
             html.add_user_error(e.varname, action_message)
 
         except MKAuthException as e:
-            action_message = e.reason
-            html.add_user_error(None, e.reason)
+            reason = e.args[0]
+            action_message = reason
+            html.add_user_error(None, reason)
 
     wato_html_head(mode.title(),
                    show_body_start=display_options.enabled(display_options.H),

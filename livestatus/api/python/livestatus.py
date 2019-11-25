@@ -64,12 +64,7 @@ def _ensure_unicode(text):
 
 
 class MKLivestatusException(MKException):
-    def __init__(self, value):
-        self.parameter = value
-        super(MKLivestatusException, self).__init__(value)
-
-    def __str__(self):
-        return str(self.parameter)
+    pass
 
 
 class MKLivestatusSocketError(MKLivestatusException):
@@ -89,8 +84,7 @@ class MKLivestatusQueryError(MKLivestatusException):
 
 
 class MKLivestatusNotFoundError(MKLivestatusException):
-    def __str__(self):
-        return "No matching entries found for query %s" % str(self.parameter)
+    pass
 
 
 class MKLivestatusTableNotFoundError(MKLivestatusException):
@@ -172,7 +166,7 @@ class Helpers(object):
             return result[0][0]
         except IndexError:
             if deflt == NO_DEFAULT:
-                raise MKLivestatusNotFoundError(query)
+                raise MKLivestatusNotFoundError("No matching entries found for query: %s" % query)
             else:
                 return deflt
 
@@ -183,7 +177,7 @@ class Helpers(object):
         try:
             return result[0]
         except IndexError:
-            raise MKLivestatusNotFoundError(query)
+            raise MKLivestatusNotFoundError("No matching entries found for query: %s" % query)
 
     def query_row_assoc(self, query):
         """Issues a query that returns one line of data and returns the elements
@@ -226,7 +220,8 @@ class Helpers(object):
         Adds up results column-wise. This is useful for multisite queries."""
         data = self.query(query, add_headers)
         if not data:
-            raise MKLivestatusNotFoundError("Empty result to Stats-Query")
+            raise MKLivestatusNotFoundError(
+                "No matching entries found for query: Empty result to Stats-Query")
         return [sum(column) for column in zip(*data)]
 
 

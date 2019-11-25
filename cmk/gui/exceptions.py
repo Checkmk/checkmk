@@ -60,14 +60,7 @@ class HTTPRedirect(FinalizeRequest):
 
 
 class MKAuthException(MKException):
-    def __init__(self, reason):
-        # type: (str) -> None
-        self.reason = reason  # type: str
-        super(MKAuthException, self).__init__(reason)
-
-    def __str__(self):
-        # type: () -> str
-        return self.reason
+    pass
 
 
 class MKUnauthenticatedException(MKGeneralException):

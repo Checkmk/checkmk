@@ -53,12 +53,7 @@ _pac_ext = ".mkp"
 
 # TODO: Subclass MKGeneralException()?
 class PackageException(MKException):
-    def __init__(self, reason):
-        self.reason = reason
-        super(PackageException, self).__init__(reason)
-
-    def __str__(self):
-        return self.reason
+    pass
 
 
 # order matters! See function _get_permissions

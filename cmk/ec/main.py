@@ -367,8 +367,7 @@ class MKSignalException(MKException):
 
 
 class MKClientError(MKException):
-    def __init__(self, t):
-        MKException.__init__(self, t)
+    pass
 
 
 #.

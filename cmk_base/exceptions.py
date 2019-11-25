@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 # TODO: Inherit from cmk.MKGeneralException?
-# TODO: Cleanup self.reason to use .args of standard exceptions
 
 import traceback
 
@@ -36,12 +35,7 @@ from cmk.utils.exceptions import (
 
 
 class MKAgentError(MKException):
-    def __init__(self, reason):
-        super(MKAgentError, self).__init__(reason)
-        self.reason = reason
-
-    def __str__(self):
-        return self.reason
+    pass
 
 
 class MKIPAddressLookupError(MKGeneralException):
@@ -67,12 +61,7 @@ class MKParseFunctionError(MKException):
 
 
 class MKSNMPError(MKException):
-    def __init__(self, reason):
-        self.reason = reason
-        super(MKSNMPError, self).__init__(reason)
-
-    def __str__(self):
-        return self.reason
+    pass
 
 
 class MKSkipCheck(MKException):

@@ -806,23 +806,23 @@ class CommandAcknowledge(Command):
 
     def _vs_expire(self):
         now = time.localtime(time.time())
-        expire_tomorrow = time.strftime("%Y-%m-%d %H:%M:%S", (now.tm_year, now.tm_mon, now.tm_mday + 1, 10, 0, 0, 0, 0, now.tm_isdst))
+        expire_tomorrow = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.mktime((now.tm_year, now.tm_mon, now.tm_mday + 1, 10, 0, 0, 0, 0, now.tm_isdst))))
         days_plus = 7 - now.tm_wday
-        expire_next_monday = time.strftime("%Y-%m-%d %H:%M:%S", (now.tm_year, now.tm_mon, now.tm_mday + days_plus, 10, 0, 0, 0, 0, now.tm_isdst))
+        expire_next_monday = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.mktime((now.tm_year, now.tm_mon, now.tm_mday + days_plus, 10, 0, 0, 0, 0, now.tm_isdst))))
         tmp = time.localtime(time.mktime((now.tm_year, now.tm_mon + 1, 1, 10, 0, 0, 0, 0, now.tm_isdst)))
         days_plus = 0
         if tmp.tm_wday == 6:
             days_plus = 1
         elif tmp.tm_wday == 5:
             days_plus = 2
-        expire_next_month = time.strftime("%Y-%m-%d %H:%M:%S", (tmp.tm_year, tmp.tm_mon, tmp.tm_mday + days_plus, 10, 0, 0, 0, 0, tmp.tm_isdst))
+        expire_next_month = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.mktime((tmp.tm_year, tmp.tm_mon, tmp.tm_mday + days_plus, 10, 0, 0, 0, 0, tmp.tm_isdst))))
         tmp = time.localtime(time.mktime((now.tm_year + 1, 1, 2, 10, 0, 0, 0, 0, now.tm_isdst)))
         days_plus = 0
         if tmp.tm_wday == 6:
             days_plus = 1
         elif tmp.tm_wday == 5:
             days_plus = 2
-        expire_next_year = time.strftime("%Y-%m-%d %H:%M:%S", (tmp.tm_year, tmp.tm_mon, tmp.tm_mday + days_plus, 10, 0, 0, 0, 0, tmp.tm_isdst))
+        expire_next_year = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.mktime((tmp.tm_year, tmp.tm_mon, tmp.tm_mday + days_plus, 10, 0, 0, 0, 0, tmp.tm_isdst))))
         return Alternative(
             elements=[
                 Age(

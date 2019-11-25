@@ -249,6 +249,16 @@ class MgmtApiClient(BaseApiClient):
         base_url = '%s/subscriptions/%s/' % (self.resource, subscription)
         super(MgmtApiClient, self).__init__(base_url)
 
+    @staticmethod
+    def _get_available_metrics_from_exception(desired_names, api_error):
+        if not (api_error.message.startswith("Failed to find metric configuration for provider") and
+                "Valid metrics: " in api_error.message):
+            return None
+
+        available_names = api_error.message.split("Valid metrics: ")[1]
+        retry_names = set(desired_names.split(',')) & set(available_names.split(','))
+        return ','.join(sorted(retry_names))
+
     @property
     def resource(self):
         return 'https://management.azure.com'
@@ -271,7 +281,14 @@ class MgmtApiClient(BaseApiClient):
     def metrics(self, resource_id, **params):
         url = resource_id.split('/', 3)[-1] + "/providers/microsoft.insights/metrics"
         params['api-version'] = '2018-01-01'
-        return self._get(url, key='value', params=params)
+        try:
+            return self._get(url, key='value', params=params)
+        except ApiError as exc:
+            retry_names = self._get_available_metrics_from_exception(params['metricnames'], exc)
+            if retry_names:
+                params['metricnames'] = retry_names
+                return self._get(url, key='value', params=params)
+            raise
 
 
 # The following *Config objects provide a Configuration instance as described in

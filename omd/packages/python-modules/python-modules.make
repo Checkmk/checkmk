@@ -261,6 +261,9 @@ $(PYTHON_MODULES_UNPACK): $(addprefix $(PACKAGE_DIR)/$(PYTHON_MODULES)/src/,$(PY
 $(PYTHON_MODULES_INTERMEDIATE_INSTALL): $(PYTHON_MODULES_BUILD)
 # Cleanup some unwanted files (example scripts)
 	find $(PYTHON_MODULES_INSTALL_DIR)/bin -name \*.py ! -name snmpsimd.py -exec rm {} \;
+# These files break the integration tests on the CI server. Don't know exactly
+# why this happens only there, but should be a working fix.
+	$(RM) -r $(PYTHON_MODULES_INSTALL_DIR)/share/snmpsim/data
 # Fix python interpreter for kept scripts
 	$(SED) -i '1s|^#!.*/python$$|#!/usr/bin/env python2|' $(addprefix $(PYTHON_MODULES_INSTALL_DIR)/bin/,chardetect fakebmc futurize jirashell pasteurize pbr pyghmicons pyghmiutil pyjwt pyrsa-decrypt pyrsa-encrypt pyrsa-keygen pyrsa-priv2pub pyrsa-sign pyrsa-verify virshbmc snmpsimd.py)
 # Ensure all native modules have the correct rpath set

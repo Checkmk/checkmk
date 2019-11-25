@@ -41,7 +41,7 @@ ASIO_INCLUDE := $(INCLUDES_DIR)/asio
 
 RRDTOOL_VERSION := rrdtool-1.7.1
 RRDTOOL_SRC_DIR := $(abs_top_srcdir)/omd/build/package_build/$(RRDTOOL_VERSION)/src
-RRDTOOL_LDFLAGS := -lrrd -L$(RRDTOOL_SRC_DIR)/.libs
+RRDTOOL_LD_FLAGS := -lrrd -L$(RRDTOOL_SRC_DIR)/.libs
 RRDTOOL_CPPFLAGS := -I$(RRDTOOL_SRC_DIR)
 
 PACKAGE_GOOGLETEST := $(abs_top_srcdir)/omd/packages/googletest
@@ -83,7 +83,7 @@ test_neb_CPPFLAGS = \
     $(RRDTOOL_CPPFLAGS)
 test_neb_LDFLAGS = \
     $(AM_LDFLAGS) \
-    $(RRDTOOL_LDFLAGS)
+    $(RRDTOOL_LD_FLAGS)
 test_neb_LDADD = \
     liblivestatus.a \
     -lstdc++fs \
@@ -104,7 +104,7 @@ liblivestatus_a_CPPFLAGS = \
     $(RRDTOOL_CPPFLAGS)
 liblivestatus_a_LDFLAGS = \
     $(AM_LDFLAGS) \
-    $(RRDTOOL_LDFLAGS)
+    $(RRDTOOL_LD_FLAGS)
 liblivestatus_a_SOURCES = \
         AndingFilter.cc \
         AttributeListAsIntColumn.cc \

@@ -10,8 +10,6 @@ NSCA_INSTALL := $(BUILD_HELPER_DIR)/$(NSCA_DIR)-install
 NSCA_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(NSCA_DIR)
 #NSCA_WORK_DIR := $(PACKAGE_WORK_DIR)/$(NSCA_DIR)
 
-.PHONY: $(NSCA)-clean
-
 $(NSCA_BUILD): $(NSCA_PATCHING)
 	cd $(NSCA_BUILD_DIR) ; ./configure
 	$(MAKE) -C $(NSCA_BUILD_DIR) all
@@ -28,6 +26,3 @@ $(NSCA_INSTALL): $(NSCA_BUILD)
 	install -m 755 $(PACKAGE_DIR)/$(NSCA)/NSCA $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(NSCA)/NSCA_TCP_PORT $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	$(TOUCH) $@
-
-$(NSCA)-clean:
-	$(RM) -r $(NSCA_BUILD_DIR) $(BUILD_HELPER_DIR)/$(NSCA)*

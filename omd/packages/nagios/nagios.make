@@ -10,8 +10,6 @@ NAGIOS_INSTALL := $(BUILD_HELPER_DIR)/$(NAGIOS_DIR)-install
 NAGIOS_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(NAGIOS_DIR)
 #NAGIOS_WORK_DIR := $(PACKAGE_WORK_DIR)/$(NAGIOS_DIR)
 
-.PHONY: $(NAGIOS)-clean
-
 # Configure options for Nagios. Since we want to compile
 # as non-root, we use our own user and group for compiling.
 # All files will be packaged as user 'root' later anyway.
@@ -50,6 +48,3 @@ $(NAGIOS_INSTALL): $(NAGIOS_BUILD)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks
 	install -m 755 $(PACKAGE_DIR)/$(NAGIOS)/NAGIOS_THEME $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	$(TOUCH) $@
-
-$(NAGIOS)-clean:
-	rm -rf $(NAGIOS_BUILD_DIR) $(BUILD_HELPER_DIR)/$(NAGIOS)*

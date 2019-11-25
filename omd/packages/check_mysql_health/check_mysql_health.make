@@ -10,8 +10,6 @@ CHECK_MYSQL_HEALTH_INSTALL := $(BUILD_HELPER_DIR)/$(CHECK_MYSQL_HEALTH_DIR)-inst
 CHECK_MYSQL_HEALTH_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(CHECK_MYSQL_HEALTH_DIR)
 #CHECK_MYSQL_HEALTH_WORK_DIR := $(PACKAGE_WORK_DIR)/$(CHECK_MYSQL_HEALTH_DIR)
 
-.PHONY: $(CHECK_MYSQL_HEALTH)-clean
-
 # Configure options for Nagios. Since we want to compile
 # as non-root, we use our own user and group for compiling.
 # All files will be packaged as user 'root' later anyway.
@@ -28,6 +26,3 @@ $(CHECK_MYSQL_HEALTH_BUILD): $(CHECK_MYSQL_HEALTH_UNPACK)
 $(CHECK_MYSQL_HEALTH_INSTALL): $(CHECK_MYSQL_HEALTH_BUILD)
 	install -m 755 $(CHECK_MYSQL_HEALTH_BUILD_DIR)/plugins-scripts/check_mysql_health $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	$(TOUCH) $@
-
-$(CHECK_MYSQL_HEALTH)-clean:
-	rm -rf $(CHECK_MYSQL_HEALTH_BUILD_DIR) $(BUILD_HELPER_DIR)/$(CHECK_MYSQL_HEALTH_DIR)*

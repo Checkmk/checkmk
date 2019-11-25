@@ -13,8 +13,6 @@ NET_SNMP_INSTALL_PERL := $(BUILD_HELPER_DIR)/$(NET_SNMP_DIR)-install-perl
 NET_SNMP_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(NET_SNMP_DIR)
 #NET_SNMP_WORK_DIR := $(PACKAGE_WORK_DIR)/$(NET_SNMP_DIR)
 
-.PHONY: $(NET_SNMP)-clean
-
 $(NET_SNMP_BUILD): $(NET_SNMP_PATCHING) $(PYTHON_CACHE_PKG_PROCESS) $(PERL_MODULES_BUILD)
 # Skip Perl-Modules because of build errors when MIB loading is disabled.
 # Skip Python binding because we need to use our own python, see install target.
@@ -72,6 +70,3 @@ $(NET_SNMP_INSTALL_PERL): $(NET_SNMP_BUILD)
 		INSTALLARCHLIB=/lib/perl5/lib/perl5/x86_64-linux-gnu-thread-multi \
 		install
 	$(TOUCH) $@
-
-$(NET_SNMP)-clean:
-	$(RM) -r $(NET_SNMP_BUILD_DIR) $(BUILD_HELPER_DIR)/$(NET_SNMP)*

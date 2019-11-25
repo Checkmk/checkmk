@@ -10,8 +10,6 @@ NAGVIS_INSTALL := $(BUILD_HELPER_DIR)/$(NAGVIS_DIR)-install
 NAGVIS_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(NAGVIS_DIR)
 #NAGVIS_WORK_DIR := $(PACKAGE_WORK_DIR)/$(NAGVIS_DIR)
 
-.PHONY: $(NAGVIS)-clean
-
 $(NAGVIS_BUILD): $(NAGVIS_PATCHING)
 	$(TOUCH) $@
 
@@ -53,6 +51,3 @@ $(NAGVIS_INSTALL): $(NAGVIS_BUILD)
 	$(RM) -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/var
 	$(RM) -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc
 	$(TOUCH) $@
-
-$(NAGVIS)-clean:
-	$(RM) -r $(NAGVIS)-*.*.*[0-9] $(NAGVIS)-*.*-nightly $(BUILD_HELPER_DIR)/$(NAGVIS)*

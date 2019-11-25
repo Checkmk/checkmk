@@ -12,7 +12,7 @@ SNAP7_INSTALL := $(BUILD_HELPER_DIR)/$(SNAP7_DIR)-install
 SNAP7_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(SNAP7_DIR)
 #SNAP7_WORK_DIR := $(PACKAGE_WORK_DIR)/$(SNAP7_DIR)
 
-.PHONY: $(SNAP7)-clean $(SNAP7)-repackage
+.PHONY: $(SNAP7)-repackage
 
 $(SNAP7_BUILD): $(SNAP7_UNPACK)
 	$(MAKE) -C $(SNAP7_BUILD_DIR)/build/unix -f $(SNAP7_ARCH)_linux.mk
@@ -21,9 +21,6 @@ $(SNAP7_BUILD): $(SNAP7_UNPACK)
 $(SNAP7_INSTALL): $(SNAP7_BUILD)
 	install -m 644 $(SNAP7_BUILD_DIR)/build/bin/$(SNAP7_ARCH)-linux/libsnap7.so $(DESTDIR)$(OMD_ROOT)/lib
 	$(TOUCH) $@
-
-$(SNAP7)-clean:
-	rm -rf $(SNAP7_BUILD_DIR) $(SNAP7_DIR).7z $(BUILD_HELPER_DIR)/$(SNAP7)*
 
 # The original 7z file is quite large (20MB), because it contains tons of
 # executables, but we don't need any of them. An equivalent .tar.gz would almost

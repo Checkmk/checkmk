@@ -17,8 +17,6 @@ PERL_MODULES_BUILD_PERL5LIB := $(PERL_MODULES_BUILD_DESTDIR)/lib/perl5
 # Used by other packages
 PACKAGE_PERL_MODULES_PERL5LIB := $(PERL_MODULES_INSTALL_DIR)/lib/perl5
 
-.PHONY: $(PERL_MODULES)-clean
-
 PERL_MODULES_LIST1 := \
                    ExtUtils-MakeMaker-7.04.tar.gz \
                    parent-0.232.tar.gz \
@@ -165,6 +163,3 @@ $(PERL_MODULES_INSTALL): $(PERL_MODULES_INTERMEDIATE_INSTALL)
 	$(RSYNC) $(PERL_MODULES_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
 	echo "install  --install_base  ###ROOT###/local/lib/perl5" > $(SKEL)/.modulebuildrc
 	$(TOUCH) $@
-
-perl-modules-clean:
-	$(RM) -r src/inc $(PERL_MODULES_BUILD_DIR) $(BUILD_HELPER_DIR)/$(PERL_MODULES_DIR)-* $(PACKAGE_DIR)/$(PERL_MODULES)/src/*-patched.tar.gz

@@ -38,7 +38,7 @@ PYTHON_TMP_BIN_PATH_VAR := PATH="$(PYTHON_TMP_BIN_DIR):$$PATH"
 PYTHON_CC_COMPILERS = gcc-9 clang-9 clang-8 gcc-8 gcc-7 clang-6.0 clang-5.0 gcc-6 clang-4.0 gcc-5 clang-3.9 clang-3.8 clang-3.7 clang-3.6 clang-3.5 gcc-4.9 gcc clang
 PYTHON_CXX_COMPILERS := g++-9 clang++-9 clang++-8 g++-8 clang++-7 g++-7 clang++-6.0 clang++-5.0 g++ clang++
 
-.PHONY: $(PYTHON)-clean $(PYTHON)-upstream
+.PHONY:  $(PYTHON)-upstream
 
 .NOTPARALLEL: $(PYTHON_INSTALL)
 
@@ -141,9 +141,6 @@ $(PYTHON_INTERMEDIATE_INSTALL): $(PYTHON_BUILD) $(PYTHON_TMP_BIN_DIR)/gcc $(PYTH
 $(PYTHON_INSTALL): $(PYTHON_CACHE_PKG_PROCESS)
 	$(RSYNC) $(PYTHON_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
 	$(TOUCH) $@
-
-$(PYTHON)-clean:
-	$(RM) -r $(DIR) $(BUILD_HELPER_DIR)/$(MSITOOLS)* build  $(PACKAGE_PYTHON_DESTDIR) $(PYTHON_TMP_BIN_DIR)
 
 $(PYTHON)-upstream:
 	git rm Python-*.tgz

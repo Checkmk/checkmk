@@ -18,8 +18,6 @@ MSITOOLS_INSTALL := $(BUILD_HELPER_DIR)/$(MSITOOLS_DIR)-install
 MSITOOLS_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(MSITOOLS_DIR)
 #MSITOOLS_WORK_DIR := $(PACKAGE_WORK_DIR)/$(MSITOOLS_DIR)
 
-.PHONY: $(MSITOOLS)-clean
-
 # Problem here is: msitools is not compilable on older distros
 # like Debian 5 or RedHat 5.X. So here we rather ignore
 # compile problems and msi{build,info} will be missing. Check_MK
@@ -54,6 +52,3 @@ $(MSITOOLS_INSTALL): $(MSITOOLS_BUILD)
 	    install -m 644 $(PACKAGE_DIR)/$(MSITOOLS)/*.msi $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows ; \
 	fi
 	$(TOUCH) $@
-
-$(MSITOOLS)-clean:
-	$(RM) -r $(MSITOOLS_BUILD_DIR) $(LCAB_BUILD_DIR) $(BUILD_HELPER_DIR)/$(MSITOOLS)* $(BUILD_HELPER_DIR)/$(LCAB_DIR)*

@@ -12,8 +12,6 @@ DOKUWIKI_PATCHING := $(BUILD_HELPER_DIR)/$(DOKUWIKI_DIR)-patching
 DOKUWIKI_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(DOKUWIKI_DIR)
 #DOKUWIKI_WORK_DIR := $(PACKAGE_WORK_DIR)/$(DOKUWIKI_DIR)
 
-.PHONY: $(DOKUWIKI)-clean
-
 $(DOKUWIKI_UNPACK_ADDITIONAL): $(DOKUWIKI_UNPACK)
 	$(TAR_GZ) $(PACKAGE_DIR)/$(DOKUWIKI)/template-arctictut.tgz -C $(DOKUWIKI_BUILD_DIR)/lib/tpl/
 	$(LN) -sf $(DOKUWIKI_BUILD_DIR)/lib/images/fileicons/pdf.png $(DOKUWIKI_BUILD_DIR)/lib/tpl/arctictut/images/tool-pdf.png
@@ -62,7 +60,3 @@ $(DOKUWIKI_INSTALL): $(DOKUWIKI_BUILD)
 	    $(LN) -sf ../../../../share/dokuwiki/htdocs/lib/plugins/$$i . ; \
 	done
 	$(TOUCH) $@
-
-$(DOKUWIKI)-clean:
-	# Remove files created by build/install
-	$(RM) -r $(DOKUWIKI_BUILD_DIR) $(BUILD_HELPER_DIR)/$(DOKUWIKI)*

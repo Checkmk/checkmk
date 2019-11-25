@@ -10,8 +10,6 @@ NRPE_INSTALL := $(BUILD_HELPER_DIR)/$(NRPE_DIR)-install
 NRPE_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(NRPE_DIR)
 #NRPE_WORK_DIR := $(PACKAGE_WORK_DIR)/$(NRPE_DIR)
 
-.PHONY: $(NRPE)-clean
-
 $(NRPE_BUILD): $(NRPE_UNPACK)
 	cd $(NRPE_BUILD_DIR) ; ./configure
 	$(MAKE) -C $(NRPE_BUILD_DIR)/src check_nrpe
@@ -24,6 +22,3 @@ $(NRPE_INSTALL): $(NRPE_BUILD)
 	install -m 644 $(NRPE_BUILD_DIR)/*.md $(DESTDIR)$(OMD_ROOT)/share/doc/nrpe
 	install -m 644 $(NRPE_BUILD_DIR)/LEGAL $(DESTDIR)$(OMD_ROOT)/share/doc/nrpe
 	$(TOUCH) $@
-
-$(NRPE)-clean:
-	$(RM) -r $(NRPE_BUILD_DIR) $(BUILD_HELPER_DIR)/$(NRPE)*

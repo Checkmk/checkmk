@@ -15,8 +15,6 @@ PYTHON3_MODULES_WORK_DIR := $(PACKAGE_WORK_DIR)/$(PYTHON3_MODULES_DIR)
 PACKAGE_PYTHON3_MODULES_DESTDIR    := $(PYTHON3_MODULES_INSTALL_DIR)
 PACKAGE_PYTHON3_MODULES_PYTHONPATH := $(PACKAGE_PYTHON3_MODULES_DESTDIR)/lib/python3
 
-.PHONY: $(PYTHON3_MODULES)-clean
-
 PYTHON3_MODULES_LIST :=
 
 PYTHON3_MODULES_LIST += setuptools_scm-3.3.3.tar.gz # needed by various setup.py
@@ -143,6 +141,3 @@ python3-modules-dump-Pipfile:
 	@echo ''
 	@echo '[requires]'
 	@echo 'python_version = "3.7"'
-
-$(PYTHON3_MODULES)-clean:
-	rm -rf $(PYTHON3_MODULES_BUILD_DIR) $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES)*

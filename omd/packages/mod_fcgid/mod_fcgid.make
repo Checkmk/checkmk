@@ -21,8 +21,6 @@ MOD_FCGID_PATCHING := $(BUILD_HELPER_DIR)/$(MOD_FCGID_DIR)-patching
 MOD_FCGID_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(MOD_FCGID_DIR)
 #MOD_FCGID_WORK_DIR := $(PACKAGE_WORK_DIR)/$(MOD_FCGID_DIR)
 
-.PHONY: $(MOD_FCGID)-clean
-
 $(MOD_FCGID_BUILD): $(MOD_FCGID_PATCHING)
 	cd $(MOD_FCGID_BUILD_DIR) && APXS=$(APXS) ./configure.apxs
 	CPATH="/usr/include/apache2-worker" $(MAKE) -C $(MOD_FCGID_BUILD_DIR)
@@ -34,6 +32,3 @@ $(MOD_FCGID_INSTALL): $(MOD_FCGID_BUILD)
 	chmod 644 $(DESTDIR)$(OMD_ROOT)/lib/apache/modules/mod_fcgid.so
 	$(MKDIR) $(SKEL)/tmp/apache/fcgid_sock
 	$(TOUCH) $@
-
-$(MOD_FCGID)-clean:
-	$(RM) -r $(MOD_FCGID_BUILD_DIR) $(BUILD_HELPER_DIR)/$(MOD_FCGID)*

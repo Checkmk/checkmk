@@ -13,8 +13,6 @@ CHECK_MULTI_INSTALL := $(BUILD_HELPER_DIR)/$(CHECK_MULTI_DIR)-install
 CHECK_MULTI_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(CHECK_MULTI_DIR)
 #CHECK_MULTI_WORK_DIR := $(PACKAGE_WORK_DIR)/$(CHECK_MULTI_DIR)
 
-.PHONY: $(CHECK_MULTI)-clean
-
 # TODO
 #--with-nagios-name=<nagios>       set nagios name (there might be some clones ;)) (default:nagios)
 #--with-action_url="$(OMD_SITE)/pnp4nagios/index.php/graph?host=\\\$$HOSTNAME\\\$$&srv=\\\$$SERVICEDESC\\\$$"
@@ -93,9 +91,6 @@ $(CHECK_MULTI_INSTALL): $(CHECK_MULTI_BUILD)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/doc/check_multi
 	install -m 644 $(CHECK_MULTI_BUILD_DIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/check_multi
 	$(TOUCH) $@
-
-$(CHECK_MULTI)-clean:
-	rm -rf $(CHECK_MULTI_BUILD_DIR) check_multi $(BUILD_HELPER_DIR)/$(CHECK_MULTI)*
 
 $(CHECK_MULTI)-get:
 	#wget --no-clobber my-plugin.de/check_multi/check_multi-stable-$(CHECK_MULTI_VERS).tar.gz

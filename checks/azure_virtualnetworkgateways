@@ -39,8 +39,7 @@ def check_azure_virtualnetworkgateways(_item, params, resource):
                                     cmk_key,
                                     displ,
                                     levels=levels_u,
-                                    levels_lower=levels_l,
-                                    minv=0)
+                                    levels_lower=levels_l)
         if mcheck:
             yield mcheck
 

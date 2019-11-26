@@ -41,8 +41,7 @@ def check_azure_databases_storage(_item, params, resource):
                                 'average_storage_percent',
                                 cmk_key,
                                 'Storage',
-                                levels=levels,
-                                minv=0)
+                                levels=levels)
     if mcheck:
         state, text, perf = mcheck
         abs_storage_metric = resource.get('metrics', {}).get('average_storage')
@@ -66,12 +65,7 @@ def check_azure_databases_deadlock(_item, params, resource):
 
     cmk_key = 'deadlocks'
     levels = params.get("%s_levels" % cmk_key)
-    mcheck = check_azure_metric(resource,
-                                'average_deadlock',
-                                cmk_key,
-                                'Deadlocks',
-                                levels=levels,
-                                minv=0)
+    mcheck = check_azure_metric(resource, 'average_deadlock', cmk_key, 'Deadlocks', levels=levels)
     if mcheck:
         yield mcheck
 
@@ -119,8 +113,7 @@ def check_azure_databases_dtu(_item, params, resource):
                                 'average_dtu_consumption_percent',
                                 cmk_key,
                                 'Database throughput units',
-                                levels=levels,
-                                minv=0)
+                                levels=levels)
     if mcheck:
         yield mcheck
 
@@ -146,13 +139,7 @@ def check_azure_databases_connections(_item, params, resource):
 
     for key, cmk_key, displ, use_rate in _AZURE_CONNECTIONS_METRICS:
         levels = params.get("%s_levels" % cmk_key)
-        mcheck = check_azure_metric(resource,
-                                    key,
-                                    cmk_key,
-                                    displ,
-                                    levels=levels,
-                                    minv=0,
-                                    use_rate=use_rate)
+        mcheck = check_azure_metric(resource, key, cmk_key, displ, levels=levels, use_rate=use_rate)
         if mcheck:
             yield mcheck
 

@@ -1,0 +1,14 @@
+Title: mk_oracle: Fixed wrong check for oracle version
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0p7
+Date: 1574755610
+
+There has been a regression in werk #10359. This werk changed accidentally
+the check for the oracle version in the tablespace section. This is now
+working again.

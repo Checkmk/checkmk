@@ -571,7 +571,7 @@ sql_performance () {
 sql_tablespaces () {
 
     echo "PROMPT <<<oracle_tablespaces:sep(124)>>>"
-    if [ "$NUMERIC_ORACLE_VERSION" -ge 141 ]; then
+    if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
 
         echo "SET SERVEROUTPUT ON feedback off
               DECLARE

@@ -445,31 +445,38 @@ template <>
 std::string ToYamlString(const globline_container &Entry, bool) {
     namespace fs = std::filesystem;
 
-    std::string out = "- glob: '";
-    out += Entry.tokens[0].from_start ? "from_start " : "";
-    out += Entry.tokens[0].rotated ? "rotated " : "";
-    out += Entry.tokens[0].nocontext ? "nocontext " : "";
-    out += "= ";
+    if (Entry.tokens.empty()) return {};
 
-    for (auto &t : Entry.tokens) {
-        out += t.pattern;
-        out += "|";
+    try {
+        auto token = Entry.tokens.at(0);
+        std::string out = "- glob: '";
+        out += token.from_start ? "from_start " : "";
+        out += token.rotated ? "rotated " : "";
+        out += token.nocontext ? "nocontext " : "";
+        out += "= ";
+
+        for (auto &t : Entry.tokens) {
+            out += t.pattern;
+            out += "|";
+        }
+        out.pop_back();
+        out += "'\n";
+
+        out += "  pattern:";
+        for (auto &p : Entry.patterns) {
+            out += " ";
+            out += p.state;
+            out += " = ";
+            out += "'";
+            out += p.glob_pattern;
+            out += "'";
+        }
+        if (Entry.patterns.size() == 0) out += " ~";
+
+        return out;
+    } catch (...) {
+        return {};
     }
-    out.pop_back();
-    out += "'\n";
-
-    out += "  pattern:";
-    for (auto &p : Entry.patterns) {
-        out += " ";
-        out += p.state;
-        out += " = ";
-        out += "'";
-        out += p.glob_pattern;
-        out += "'";
-    }
-    if (Entry.patterns.size() == 0) out += " ~";
-
-    return out;
 }
 
 namespace eventlog {

@@ -732,6 +732,12 @@ TEST(UpgradeTest, UserIniWatoAgent) {
     }
 }
 
+TEST(UpgradeTest, LoadIniBad) {
+    std::filesystem::path userdir = GetUserDir();
+    auto y = LoadIni(userdir / "check_mk.bad.test.ini");
+    EXPECT_TRUE(y.has_value());
+}
+
 TEST(UpgradeTest, LoadIni) {
     tst::SafeCleanTempDir();
     namespace fs = std::filesystem;

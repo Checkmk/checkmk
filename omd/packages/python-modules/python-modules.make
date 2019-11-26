@@ -266,7 +266,10 @@ $(PYTHON_MODULES_INSTALL): $(PYTHON_MODULES_BUILD)
 		cd .. ; \
 	    done
 # Cleanup some unwanted files (example scripts)
-	$(RM) $(DESTDIR)$(OMD_ROOT)/bin/*.py
+	find $(DESTDIR)$(OMD_ROOT)/bin -name \*.py ! -name snmpsimd.py -exec rm {} \;
+# These files break the integration tests on the CI server. Don't know exactly
+# why this happens only there, but should be a working fix.
+	$(RM) -r $(DESTDIR)$(OMD_ROOT)/share/snmpsim/data
 # Fix python interpreter for kept scripts
 	$(SED) -i '1s|^#!.*/python$$|#!/usr/bin/env python2|' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,chardetect fakebmc jirashell pbr pyghmicons pyghmiutil pyjwt pyrsa-decrypt pyrsa-encrypt pyrsa-keygen pyrsa-priv2pub pyrsa-sign pyrsa-verify virshbmc)
 	$(TOUCH) $@

@@ -23,8 +23,11 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+
 import re
 import copy
+from typing import Tuple, Dict, List, Text  # pylint: disable=unused-import
+
 import cmk
 import cmk.utils.store as store
 
@@ -50,6 +53,10 @@ from cmk.gui.watolib.host_attributes import (
 from cmk.gui.plugins.watolib.utils import (
     config_variable_registry,
     wato_fileheader,
+)
+from cmk.gui.watolib.notifications import (
+    load_notification_rules,
+    load_user_notification_rules,
 )
 from cmk.gui.valuespec import DualListChoice
 
@@ -292,6 +299,7 @@ def find_usages_of_contact_group(name):
     used_in += _find_usages_of_contact_group_in_default_user_profile(name, global_config)
     used_in += _find_usages_of_contact_group_in_mkeventd_notify_contactgroup(name, global_config)
     used_in += _find_usages_of_contact_group_in_hosts_and_folders(name, Folder.root_folder())
+    used_in += _find_usages_of_contact_group_in_notification_rules(name)
 
     return used_in
 
@@ -355,6 +363,29 @@ def _find_usages_of_contact_group_in_hosts_and_folders(name, folder):
             used_in.append((_("Host: %s") % host.name(), host.edit_url()))
 
     return used_in
+
+
+def _find_usages_of_contact_group_in_notification_rules(name):
+    # type: (Text) -> List[Tuple[Text, Text]]
+    used_in = []  # type: List[Tuple[Text, Text]]
+    for rule in load_notification_rules():
+        if _used_in_notification_rule(name, rule):
+            title = "%s: %s" % (_("Notification rule"), rule.get("description", ""))
+            used_in.append((title, "wato.py?mode=notifications"))
+
+    for user_id, user_rules in load_user_notification_rules().iteritems():
+        for rule in user_rules:
+            if _used_in_notification_rule(name, rule):
+                title = "%s: %s" % (_("Notification rules of user %s") % user_id,
+                                    rule.get("description", ""))
+                used_in.append((title, "wato.py?mode=user_notifications&user=%s" % user_id))
+
+    return used_in
+
+
+def _used_in_notification_rule(name, rule):
+    # type: (Text, Dict) -> bool
+    return name in rule.get('contact_groups', []) or name in rule.get("match_contactgroups", [])
 
 
 def find_usages_of_host_group(name):

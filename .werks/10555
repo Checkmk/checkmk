@@ -1,0 +1,13 @@
+Title: Contact group deletion: Ensure not used by notification rules
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1574794726
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+When trying to delete contact groups, WATO now ensures that no contact group is
+referencing the group anymore and prevents the deletion in case there is a
+reference.

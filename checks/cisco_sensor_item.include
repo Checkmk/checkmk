@@ -36,6 +36,8 @@ def cisco_sensor_item(description, sensor_id):
             item = description
         elif '#' in splitted[-1] or 'Power' in splitted[-1]:
             item = " ".join(splitted)
+        elif splitted[-1].startswith("PS"):
+            item = " ".join([splitted[0], splitted[-1].split(" ")[0]])
         elif splitted[-2].startswith("PS"):
             item = " ".join(splitted[:-2] + splitted[-2].split(" ")[:-1])
         elif splitted[-2].startswith("Status"):

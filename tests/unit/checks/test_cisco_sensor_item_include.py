@@ -28,6 +28,7 @@ FALLBACK = '999'
     ("Switch 1 Chassis Fan Tray 1", "Switch 1 Chassis Fan Tray 1"),
     ("Power supply 1, WS-CAC-1300W", "Power supply 1"),
     ("Power supply 2, empty", "Power supply 2"),
+    ("Sw1, PSA Normal", "Sw1 PSA %s" % FALLBACK),
     ("Sw1, PS1 Normal, RPS Normal", "Sw1 PS1"),
     ("Switch 1 Power Supply 1", "Switch 1 Power Supply 1"),
     ("Switch#1, PowerSupply 1", "Switch 1 PowerSupply 1"),

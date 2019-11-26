@@ -1,0 +1,11 @@
+Title: Analyze configuration: Secure Agent Updater fix exception when protocol not configured
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cee
+Version: 1.6.0p7
+Date: 1574767514
+Class: fix
+
+The "Secure Agent Updater" analyze configuration check could fail when a rule had no protocol
+defined, which is totally fine, because it is an optional parameter per rule.

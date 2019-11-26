@@ -1,0 +1,350 @@
+#!/usr/bin/env python3
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+"""
+Special agent for monitoring Prometheus with Checkmk.
+"""
+import ast
+import sys
+import argparse
+import json
+import logging
+from collections import OrderedDict, defaultdict
+import requests
+
+
+def parse_arguments(argv):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--debug",
+                        action="store_true",
+                        help='''Debug mode: raise Python exceptions''')
+    parser.add_argument("-v",
+                        "--verbose",
+                        action="count",
+                        default=0,
+                        help='''Verbose mode (for even more output use -vvv)''')
+    parser.add_argument("--timeout",
+                        default=10,
+                        type=int,
+                        help='''Timeout for individual processes in seconds (default 10)''')
+
+    args = parser.parse_args(argv)
+    return args
+
+
+def setup_logging(verbosity):
+    if verbosity >= 3:
+        lvl = logging.DEBUG
+    elif verbosity == 2:
+        lvl = logging.INFO
+    elif verbosity == 1:
+        lvl = logging.WARN
+    else:
+        logging.disable(logging.CRITICAL)
+        lvl = logging.CRITICAL
+    logging.basicConfig(level=lvl, format='%(asctime)s %(levelname)s %(message)s')
+
+
+class ABCDataSource:
+    """
+    All Prometheus metrics serving instances will be referred as Exporters.
+    Not to confuse with actual Exporters since some softwares (non Exporters)
+    naturally serve metrics.
+    """
+    def __init__(self, api_client):
+        self.api_client = api_client
+        self._sections = {}
+
+
+class PrometheusServer:
+    """
+    Query and process general information from the Prometheus Server including
+    its own status and the connected scrape targets
+    """
+    def __init__(self, api_client):
+        self.api_client = api_client
+
+    def scrape_targets_health(self):
+        result = {}
+        for scrape_target_name, attributes in self.api_client.scrape_targets_attributes():
+            result[scrape_target_name] = {
+                "health": attributes["health"],
+                "lastScrape": attributes["lastScrape"],
+                "labels": attributes["labels"]
+            }
+        return result
+
+    def health(self):
+        response = self.api_client.query_static_endpoint("/-/healthy")
+        return {"status_code": response.status_code, "status_text": response.reason}
+
+
+class PrometheusAPI:
+    """
+    Realizes communication with the Prometheus API
+    """
+    def __init__(self, server_address):
+        self.server_address = "http://%s" % server_address
+        self.api_endpoint = "%s/api/v1" % self.server_address
+        self.scrape_targets_dict = self._connected_scrape_targets()
+
+    @staticmethod
+    def _process_json_request(request):
+        response = requests.get(request)
+        response.raise_for_status()
+        return response.json()
+
+    def query_promql(self, promql):
+        promql_request = "%s/query?query=%s" % (self.api_endpoint, promql)
+        result = self._process_json_request(promql_request)["data"]["result"]
+        return result
+
+    def query_json_endpoint(self, endpoint):
+        """Query the given endpoint of the Prometheus API expecting a json response
+
+        Args:
+            endpoint: Param which contains the Prometheus API endpoint to be queried
+
+        Returns:
+            Returns a response object containing the json response
+        """
+
+        endpoint_request = "%s%s" % (self.server_address, endpoint)
+        result = self._process_json_request(endpoint_request)
+        return result
+
+    def query_static_endpoint(self, endpoint):
+        """Query the given endpoint of the Prometheus API expecting a text response
+
+        Args:
+            endpoint: Param which contains the Prometheus API endpoint to be queried
+
+        Returns:
+            Returns a response object containing the status code and description
+        """
+
+        endpoint_request = "%s%s" % (self.server_address, endpoint)
+        response = requests.get(endpoint_request)
+        response.raise_for_status()
+        return response
+
+    def scrape_targets_attributes(self):
+        """Format the scrape_targets_dict for information processing
+
+        Returns:
+              Tuples consisting of the Scrape Target name and its general attributes. The
+              job-instance labels combination is hereby omitted
+
+        """
+        for _scrape_target_label, info in self.scrape_targets_dict.items():
+            scrape_target_name = info["name"]
+            yield scrape_target_name, info["attributes"]
+
+    def _connected_scrape_targets(self):
+        """Query and parse the information concerning the connected Scrape Targets
+
+        Returns:
+            A dictionary having the job-instance labels combination of each scrape target
+            as keys and the values being dictionaries including the name and the general attributes
+            of the scrape target. Having the job-label combination allows to unique identify each scrape
+            target
+        """
+        result = self.query_json_endpoint("/api/v1/targets")
+        scrape_targets = self.test(result)
+        return scrape_targets
+
+    def test(self, result):
+        """
+
+        Args:
+            result:
+
+        Returns:
+
+
+        """
+        scrape_targets = {}
+        scrape_target_names = defaultdict(int)
+        for scrape_target_info in result["data"]["activeTargets"]:
+            scrape_target_labels = scrape_target_info["labels"]
+            job_label = scrape_target_labels["job"]
+
+            if job_label not in scrape_target_names:
+                scrape_target_name = job_label
+            else:
+                scrape_target_name = "%s-%s" % (job_label, scrape_target_names[job_label])
+
+            scrape_target_names[job_label] += 1
+            instance_label = scrape_target_labels["instance"]
+            scrape_targets.update({
+                "%s:%s" % (job_label, instance_label): {
+                    "name": scrape_target_name,
+                    "attributes": scrape_target_info
+                }
+            })
+        return scrape_targets
+
+
+class PiggybackGroup:
+    """
+    A group of elements where an element is e.g. a piggyback host.
+    """
+    def __init__(self):
+        # type: () -> None
+        self._elements = OrderedDict()  # type: OrderedDict[str, PiggybackHost]
+
+    def get(self, element_name):
+        # type: (str) -> PiggybackHost
+        if element_name not in self._elements:
+            self._elements[element_name] = PiggybackHost()
+        return self._elements[element_name]
+
+    def join(self, section_name, pairs):
+        # type: (str, Mapping[str, Dict[str, Any]]) -> PiggybackGroup
+        for element_name, data in pairs.items():
+            section = self.get(element_name).get(section_name)
+            section.insert(data)
+        return self
+
+    def output(self, piggyback_prefix=""):
+        # type: (str) -> List[str]
+        data = []
+        for name, element in self._elements.items():
+            data.append('<<<<%s>>>>' % (piggyback_prefix + name))
+            data.extend(element.output())
+            data.append('<<<<>>>>')
+        return data
+
+
+class PiggybackHost:
+    """
+    An element that bundles a collection of sections.
+    """
+    def __init__(self):
+        # type: () -> None
+        super(PiggybackHost, self).__init__()
+        self._sections = OrderedDict()  # type: OrderedDict[str, Section]
+
+    def get(self, section_name):
+        # type: (str) -> Section
+        if section_name not in self._sections:
+            self._sections[section_name] = Section()
+        return self._sections[section_name]
+
+    def output(self):
+        # type: () -> List[str]
+        data = []
+        for name, section in self._sections.items():
+            data.append('<<<%s:sep(0)>>>' % name)
+            data.append(section.output())
+        return data
+
+
+class Section:
+    """
+    An agent section.
+    """
+    def __init__(self):
+        # type: () -> None
+        self._content = OrderedDict()  # type: OrderedDict[str, Dict[str, Any]]
+
+    def insert(self, check_data):
+        # type: (Dict[str, Any]) -> None
+        for key, value in check_data.items():
+            if key not in self._content:
+                self._content[key] = value
+            else:
+                if isinstance(value, dict):
+                    self._content[key].update(value)
+                else:
+                    raise ValueError('Key %s is already present and cannot be merged' % key)
+
+    def output(self):
+        # type: () -> str
+        return json.dumps(self._content)
+
+
+class ApiData:
+    """
+    Hub for all various metrics coming from different sources including the Prometheus
+    Server & the Prometheus Exporters
+    """
+    def __init__(self, api_client, custom_services_list):
+        custom_services = custom_services_list  # pylint: disable=W0612
+        self.prometheus_server = PrometheusServer(api_client)
+
+    def server_info_section(self):
+        logging.info('Prometheus Server Info')
+        g = PiggybackHost()
+        g.get('prometheus_api_server').insert(self.prometheus_server.health())
+        return '\n'.join(g.output())
+
+    def scrape_targets_section(self):
+        e = PiggybackGroup()
+        e.join('prometheus_scrape_target', self.prometheus_server.scrape_targets_health())
+        return '\n'.join(e.output())
+
+
+def _extract_config_args(config):
+    server_address = config["host_address"]
+    if "port" in config:
+        server_address += ":%s" % config["port"]
+    return {
+        "server_address": server_address,
+        "custom_services": config.get("promql_checks", []),
+    }
+
+
+def _get_host_label(labels):
+    return "%s:%s" % (labels["job"], labels["instance"])
+
+
+class ApiError(Exception):
+    pass
+
+
+def main(argv=None):
+    config = ast.literal_eval(sys.stdin.read())
+    if argv is None:
+        argv = sys.argv[1:]
+    args = parse_arguments(argv)
+    config_args = _extract_config_args(config)
+    try:
+        # default cases always must be there
+        api_client = PrometheusAPI(config_args["server_address"])
+        api_data = ApiData(api_client, config_args["custom_services"])
+        print(api_data.server_info_section())
+        print(api_data.scrape_targets_section())
+
+    except Exception as e:
+        if args.debug:
+            raise
+        sys.stderr.write("%s\n" % e)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

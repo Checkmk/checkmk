@@ -210,6 +210,50 @@ rulespec_registry.register(
     ))
 
 
+def _valuespec_generic_metrics_prometheus():
+    return Dictionary(
+        elements=[("port",
+                   Integer(
+                       title=_('API-Port'),
+                       help=_("If no port is given a default vaulue of 443 will be used."),
+                       default_value=443,
+                   )),
+                  ("promql_checks",
+                   ListOf(
+                       Dictionary(elements=[
+                           ("host_name", TextAscii(title=_('Piggyback for: '))),
+                           ("service_description",
+                            TextAscii(
+                                title=_('Service description: '),
+                                allow_empty=False,
+                            )),
+                           ("metric_components",
+                            ListOf(Dictionary(
+                                title=_('PromQL query'),
+                                elements=[
+                                    ("metric_name",
+                                     TextAscii(title=_('Metric Name: '), allow_empty=False)),
+                                    ("promql_query",
+                                     TextAscii(title=_('PromQL query: '), allow_empty=False)),
+                                ]),
+                                   title=_('PromQL queries for Service'),
+                                   allow_empty=False,
+                                   magic='@;@')),
+                       ]),
+                       title=_("Service creation using PromQL queries"),
+                   ))],
+        title=_("Prometheus"),
+        help=_("No help yet defined"),
+    )
+
+
+rulespec_registry.register((HostRulespec(
+    group=RulespecGroupDatasourcePrograms,
+    name="special_agents:prometheus",
+    valuespec=_valuespec_generic_metrics_prometheus,
+)))
+
+
 def _factory_default_special_agents_vsphere():
     # No default, do not use setting if no rule matches
     return watolib.Rulespec.FACTORY_DEFAULT_UNUSED

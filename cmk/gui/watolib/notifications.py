@@ -25,13 +25,16 @@
 # Boston, MA 02110-1301 USA.
 """Module for managing the new rule based notifications"""
 
+from typing import Dict, List, Text  # pylint: disable=unused-import
 import cmk.utils.store as store
 
 import cmk.gui.config as config
+import cmk.gui.userdb as userdb
 from cmk.gui.watolib.utils import wato_root_dir
 
 
 def load_notification_rules(lock=False):
+    # type: (bool) -> List[Dict]
     filename = wato_root_dir() + "notifications.mk"
     notification_rules = store.load_from_mk_file(filename, "notification_rules", [], lock=lock)
 
@@ -47,8 +50,19 @@ def load_notification_rules(lock=False):
 
 
 def save_notification_rules(rules):
+    # type: (List[Dict]) -> None
     store.mkdir(wato_root_dir())
     store.save_to_mk_file(wato_root_dir() + "notifications.mk",
                           "notification_rules",
                           rules,
                           pprint_value=config.wato_pprint_config)
+
+
+def load_user_notification_rules():
+    # type: () -> Dict[Text, List]
+    rules = {}
+    for user_id, user in userdb.load_users().iteritems():
+        user_rules = user.get("notification_rules")
+        if user_rules:
+            rules[user_id] = user_rules
+    return rules

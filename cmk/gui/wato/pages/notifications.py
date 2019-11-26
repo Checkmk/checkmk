@@ -78,6 +78,7 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.watolib.notifications import (
     save_notification_rules,
     load_notification_rules,
+    load_user_notification_rules,
 )
 
 
@@ -678,19 +679,17 @@ class ModeNotifications(NotificationsMode):
         start_nr += len(rules)
 
         if self._show_user_rules:
-            users = userdb.load_users()
-            userids = sorted(users.keys())
-            for userid in userids:
-                user = users[userid]
-                user_rules = user.get("notification_rules", [])
-                if user_rules:
-                    self._render_notification_rules(user_rules,
-                                                    userid,
-                                                    show_title=True,
-                                                    show_buttons=False,
-                                                    analyse=analyse,
-                                                    start_nr=start_nr)
-                    start_nr += len(user_rules)
+            for user_id, user_rules in sorted(load_user_notification_rules().iteritems(),
+                                              key=lambda u: u[0]):
+                self._render_notification_rules(
+                    user_rules,
+                    user_id,
+                    show_title=True,
+                    show_buttons=False,
+                    analyse=analyse,
+                    start_nr=start_nr,
+                )
+                start_nr += len(user_rules)
 
         if analyse:
             with table_element(table_id="plugins", title=_("Resulting notifications")) as table:

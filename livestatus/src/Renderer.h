@@ -237,6 +237,7 @@ public:
                 _list.renderer().separateListElements();
             }
         }
+        ~BeginEnd() = default;
 
     private:
         ListRenderer &_list;
@@ -274,6 +275,7 @@ public:
                 _sublist.renderer().separateSublistElements();
             }
         }
+        ~BeginEnd() = default;
 
     private:
         SublistRenderer &_sublist;
@@ -311,6 +313,7 @@ public:
                 _dict.renderer().separateDictElements();
             }
         }
+        ~BeginEnd() = default;
 
     private:
         DictRenderer &_dict;

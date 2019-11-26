@@ -61,6 +61,8 @@ bool is_authorized_for_host_group(MonitoringCore *mc, const hostgroup *hg,
     if (ctc == nullptr) {
         return true;
     }
+    // cppcheck false positive!
+    // cppcheck-suppress knownConditionTrueFalse
     if (ctc == unknown_auth_user()) {
         return false;
     }
@@ -91,6 +93,8 @@ bool is_authorized_for_service_group(MonitoringCore *mc, const servicegroup *sg,
     if (ctc == nullptr) {
         return true;
     }
+    // cppcheck false positive!
+    // cppcheck-suppress knownConditionTrueFalse
     if (ctc == unknown_auth_user()) {
         return false;
     }

@@ -67,6 +67,11 @@ function sign_package() {
 # MAIN
 #
 
+if [[ "$FILE_PATH" == *cma ]]; then
+    echo "+ Not signing CMA packages at the moment"
+    exit 0
+fi
+
 if is_already_signed; then
     echo "+ No need to sign $FILE_PATH, is already signed"
     exit 0

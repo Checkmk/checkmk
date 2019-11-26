@@ -14,3 +14,5 @@ for an attacker that has access to WATO backups to compromise the site.
 
 Using this vulnerability it was possible to write backup files to directories
 that are writable by the site user.
+
+Thanks to Robin `ypid` Schneider.

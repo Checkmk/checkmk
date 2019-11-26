@@ -72,6 +72,7 @@ test_neb_SOURCES = \
     test/test_CustomVarsDictFilter.cc \
     test/test_FileSystemHelper.cc \
     test/test_LogEntry.cc \
+    test/test_Metric.cc \
     test/test_OffsetStringMacroColumn.cc \
     test/test_RegExp.cc \
     test/test_StringUtil.cc \
@@ -145,6 +146,7 @@ liblivestatus_a_SOURCES = \
         HostGroupsColumn.cc \
         HostListColumn.cc \
         HostListStateColumn.cc \
+        HostMetricsColumn.cc \
         HostRRDColumn.cc \
         HostServiceState.cc \
         HostSpecialDoubleColumn.cc \
@@ -160,6 +162,7 @@ liblivestatus_a_SOURCES = \
         Logfile.cc \
         Logger.cc \
         LogwatchListColumn.cc \
+        Metric.cc \
         NagiosCore.cc \
         NullColumn.cc \
         OffsetBoolColumn.cc \
@@ -189,6 +192,7 @@ liblivestatus_a_SOURCES = \
         ServiceGroupsColumn.cc \
         ServiceListColumn.cc \
         ServiceListStateColumn.cc \
+        ServiceMetricsColumn.cc \
         ServiceRRDColumn.cc \
         ServiceSpecialDoubleColumn.cc \
         ServiceSpecialIntColumn.cc \

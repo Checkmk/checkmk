@@ -737,8 +737,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<HostMetricsColumn>(
         prefix + "metrics",
-        "A dummy column in order to be compatible with Check_MK Multisite",
-        indirect_offset, extra_offset, -1, 0));
+        "A list of all metrics of this object that historically existed",
+        indirect_offset, extra_offset, -1, 0, table->core()));
 }
 
 void TableHosts::answerQuery(Query *query) {

@@ -22,31 +22,38 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef HostMetricsColumn_h
-#define HostMetricsColumn_h
+#include "ServiceMetricsColumn.h"
+#include <algorithm>
+#include <filesystem>
+#include <iterator>
+#include "Metric.h"
+#include "MonitoringCore.h"
+#include "Row.h"
+#include "nagios.h"
 
-#include "config.h"  // IWYU pragma: keep
+ServiceMetricsColumn::ServiceMetricsColumn(const std::string& name,
+                                           const std::string& description,
+                                           int indirect_offset,
+                                           int extra_offset,
+                                           int extra_extra_offset, int offset,
+                                           MonitoringCore* mc)
+    : MetricsColumn(name, description, indirect_offset, extra_offset,
+                    extra_extra_offset, offset)
+    , _mc(mc) {}
 
-#include <chrono>
-#include <string>
-#include <vector>
-#include "MetricsColumn.h"
-#include "contact_fwd.h"
-
-class Row;
-class MonitoringCore;
-
-class HostMetricsColumn : public MetricsColumn {
-public:
-    HostMetricsColumn(const std::string& name, const std::string& description,
-                      int indirect_offset, int extra_offset,
-                      int extra_extra_offset, int offset, MonitoringCore* mc);
-
-    std::vector<std::string> getValue(Row, const contact*,
-                                      std::chrono::seconds) const override;
-
-private:
-    MonitoringCore* const _mc;
-};
-
-#endif
+std::vector<std::string> ServiceMetricsColumn::getValue(
+    Row row, const contact* /*auth_user*/,
+    std::chrono::seconds /*timezone_offset*/) const {
+    auto* svc = columnData<service>(row);
+    if (svc == nullptr || svc->host_name == nullptr ||
+        svc->description == nullptr) {
+        return {};
+    }
+    Metric::Names names;
+    scan_rrd(_mc->pnpPath() / svc->host_name, svc->description, names,
+             _mc->loggerRRD());
+    std::vector<std::string> result{names.size()};
+    std::transform(std::begin(names), std::end(names), std::begin(result),
+                   [](auto&& m) { return m.string(); });
+    return result;
+}

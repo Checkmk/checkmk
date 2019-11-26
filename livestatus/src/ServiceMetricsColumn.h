@@ -27,21 +27,28 @@
 
 #include "config.h"  // IWYU pragma: keep
 
+#include <chrono>
 #include <string>
 #include <vector>
 #include "MetricsColumn.h"
 #include "contact_fwd.h"
 
 class Row;
+class MonitoringCore;
 
 class ServiceMetricsColumn : public MetricsColumn {
 public:
-    using MetricsColumn::MetricsColumn;
+    ServiceMetricsColumn(const std::string& name,
+                         const std::string& description, int indirect_offset,
+                         int extra_offset, int extra_extra_offset, int offset,
+                         MonitoringCore* mc);
+
     std::vector<std::string> getValue(
         Row, const contact* /*auth_user*/,
-        std::chrono::seconds /*timezone_offset*/) const override {
-        return {};
-    }
+        std::chrono::seconds /*timezone_offset*/) const override;
+
+private:
+    MonitoringCore* const _mc;
 };
 
 #endif

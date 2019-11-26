@@ -34,10 +34,13 @@
 #include "config.h"  // IWYU pragma: keep
 #include <cstddef>
 #include <filesystem>
-#include <functional>
 #include <string>
+#include <system_error>
 #include <utility>
+#include <vector>
 #include "pnp4nagios.h"
+
+class Logger;
 
 class Metric {
 public:
@@ -52,13 +55,16 @@ public:
 
     class MangledName {
     public:
-        explicit MangledName(const Name &name)
-            : _value(pnp_cleanup(name.string())) {}
+        explicit MangledName(const std::string &name)
+            : _value(pnp_cleanup(name)) {}
+        explicit MangledName(const Name &name) : MangledName(name.string()) {}
         std::string string() const { return _value; }
 
     private:
         std::string _value;
     };
+
+    using Names = std::vector<MangledName>;
 
     Metric(std::string label, std::string value, std::string uom,
            std::string warn, std::string crit, std::string min, std::string max)
@@ -118,5 +124,9 @@ struct hash<Metric::MangledName> {
     }
 };
 }  // namespace std
+
+/// Scan rrd in `basedir` and fill `Metric::Names` with metrics matching `desc`.
+void scan_rrd(const std::filesystem::path &basedir, const std::string &desc,
+              Metric::Names &, Logger *);
 
 #endif  // Metric_h

@@ -22,31 +22,33 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef HostMetricsColumn_h
-#define HostMetricsColumn_h
+#include "Metric.h"
+#include <sstream>
+#include "Logger.h"
+#include "StringUtils.h"
 
-#include "config.h"  // IWYU pragma: keep
-
-#include <chrono>
-#include <string>
-#include <vector>
-#include "MetricsColumn.h"
-#include "contact_fwd.h"
-
-class Row;
-class MonitoringCore;
-
-class HostMetricsColumn : public MetricsColumn {
-public:
-    HostMetricsColumn(const std::string& name, const std::string& description,
-                      int indirect_offset, int extra_offset,
-                      int extra_extra_offset, int offset, MonitoringCore* mc);
-
-    std::vector<std::string> getValue(Row, const contact*,
-                                      std::chrono::seconds) const override;
-
-private:
-    MonitoringCore* const _mc;
-};
-
-#endif
+void scan_rrd(const std::filesystem::path& basedir, const std::string& desc,
+              Metric::Names& names, Logger* logger) {
+    Informational(logger) << "scanning for metrics of " << desc << " in "
+                          << basedir;
+    std::string base = pnp_cleanup(desc + " ");
+    try {
+        for (const auto& entry : std::filesystem::directory_iterator(basedir)) {
+            if (entry.path().extension() == ".rrd") {
+                auto stem = entry.path().filename().stem().string();
+                if (mk::starts_with(stem, base)) {
+                    // NOTE: This is the main reason for mangling: The part of
+                    // the file name after the stem is considered a mangled
+                    // metric name.
+                    names.emplace_back(stem.substr(base.size()));
+                }
+            }
+        }
+    } catch (const std::filesystem::filesystem_error& e) {
+        if (e.code() == std::errc::no_such_file_or_directory) {
+            Debug(logger) << "directory " << basedir << " does not exist yet";
+        } else {
+            Warning(logger) << "scanning directory for metrics: " << e.what();
+        }
+    }
+}

@@ -605,6 +605,8 @@ bool Query::process() {
                        _separators, _data_encoding);
     doWait();
     QueryRenderer q(*renderer, EmitBeginEnd::on);
+    // TODO(sp) The construct below is horrible, refactor this!
+    // cppcheck-suppress danglingLifetime
     _renderer_query = &q;
     start(q);
     _table.answerQuery(this);

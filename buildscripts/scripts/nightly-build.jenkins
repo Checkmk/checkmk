@@ -259,7 +259,7 @@ def build_windows_agent() {
             // Store the built files for later packaging
             stash(
                 name: 'WinMSI',
-                includes: 'check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml'
+                includes: 'check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,mk_logwatch.exe,mk_jolokia.exe'
             )
         }
     }
@@ -332,7 +332,7 @@ def create_source_package(DAILY_DATA) {
     stage('Create source package') {
        sh 'rm -rf *'
        unstash(name: 'WinMSI')
-       sh "mv check_mk_agent-64.exe check_mk_agent.exe check_mk_agent.msi check_mk.user.yml ${DAILY_DATA}/agents/"
+       sh "mv check_mk_agent-64.exe check_mk_agent.exe check_mk_agent.msi check_mk.user.yml mk_logwatch.exe mk_jolokia.exe ${DAILY_DATA}/agents/"
        dir("${DAILY_DATA}/git") {
             if(EDITION != 'raw') {
                 sh "cp ${DAILY_DATA}/agents/cmk-update-agent enterprise/agents/plugins/"
@@ -341,6 +341,7 @@ def create_source_package(DAILY_DATA) {
             }
             sh "cp ${DAILY_DATA}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml} agents/windows"
             sh "cp ${DAILY_DATA}/agents/{check_mk_agent_legacy-64.exe,check_mk_agent_legacy.exe,check_mk_agent_legacy.msi} agents/windows"
+            sh "cp ${DAILY_DATA}/agents/{mk_logwatch.exe,mk_jolokia.exe} agents/windows/plugins"
             sh 'make dist || cat /root/.npm/_logs/*-debug.log'
         }
     }

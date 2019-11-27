@@ -57,7 +57,7 @@ class MKException(Exception):
         if len(self.args) == 1:
             arg = self.args[0]
             if isinstance(arg, six.binary_type):
-                # Python 3 immediatelly returns repr of bytestr but we try to decode first.
+                # Python 3 immediately returns repr of bytestr but we try to decode first.
                 # We always return a unicode str.
                 try:
                     return arg.decode("utf-8")

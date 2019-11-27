@@ -61,6 +61,7 @@ $(NET_SNMP_INSTALL_PYTHON): $(NET_SNMP_BUILD)
 # out what's really going on here!
 #	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/python/site.py*
 
+# TODO: Use perl standard path variables
 $(NET_SNMP_INSTALL_PERL): $(NET_SNMP_BUILD)
 	cd $(NET_SNMP_BUILD_DIR)/perl && \
 	    $(MAKE) \

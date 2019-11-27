@@ -113,29 +113,29 @@ include     packages/apache-omd/apache-omd.make \
     packages/dokuwiki/dokuwiki.make \
     packages/freetds/freetds.make \
     packages/heirloom-pkgtools/heirloom-pkgtools.make \
+    packages/perl-modules/perl-modules.make \
     packages/jmx4perl/jmx4perl.make \
     packages/libgsf/libgsf.make \
     packages/maintenance/maintenance.make \
     packages/mod_fcgid/mod_fcgid.make \
-    packages/mod_wsgi/mod_wsgi.make \
     packages/monitoring-plugins/monitoring-plugins.make \
     packages/msitools/msitools.make \
     packages/nagios/nagios.make \
     packages/nagvis/nagvis.make \
     packages/heirloom-mailx/heirloom-mailx.make \
     packages/navicli/navicli.make \
-    packages/net-snmp/net-snmp.make \
     packages/nrpe/nrpe.make \
     packages/nsca/nsca.make \
-    packages/omd/omd.make \
     packages/openhardwaremonitor/openhardwaremonitor.make \
     packages/patch/patch.make \
-    packages/perl-modules/perl-modules.make \
     packages/pnp4nagios/pnp4nagios.make \
     packages/Python/Python.make \
     packages/Python3/Python3.make \
     packages/python-modules/python-modules.make \
     packages/python3-modules/python3-modules.make \
+    packages/omd/omd.make \
+    packages/net-snmp/net-snmp.make \
+    packages/mod_wsgi/mod_wsgi.make \
     packages/re2/re2.make \
     packages/rrdtool/rrdtool.make \
     packages/mk-livestatus/mk-livestatus.make \

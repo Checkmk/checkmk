@@ -284,14 +284,11 @@ setversion:
 	fi ; \
 	sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1"'"$$NEW_OMD_VERSION"'"/' packages/omd/omdlib/__init__.py
 
-# TODO: Can not find CMA_INSTALL definition. Is this dead?
-$(CMA_INSTALL): $(INSTALL_TARGETS)
-
 # Please note: APPLIANCE_*_CMA are defined in omd/packages/appliance/appliance.make
 $(APPLIANCE_INSTALL_CMA): $(PRE_INSTALL)
 
 # Please note: APPLIANCE_*_CMA are defined in omd/packages/appliance/appliance.make
-$(CMA_PACKAGE): $(CMA_INSTALL) $(APPLIANCE_INSTALL_CMA) install
+$(CMA_PACKAGE): $(APPLIANCE_INSTALL_CMA) install
 	# Create info file to mark minimal cma firmware version requirement
 	@if [ "$(DISTRO_CODE)" = "stretch" ]; then \
 	    MIN_VERSION=1.4.0 ; \

@@ -615,6 +615,7 @@ export function listofmultiple_add(varprefix, choice_page_name, page_request_var
             }
 
             tbody.appendChild(new_row);
+            forms.enable_dynamic_form_elements(new_row);
             utils.execute_javascript_by_object(new_row);
 
             // Add it to the list of active elements

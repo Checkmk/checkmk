@@ -1,0 +1,14 @@
+Title: agent_azure: Do not warn about missing usage details for one hour
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1574845265
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+The "Microsoft.Consumption" API sometimes fails with a timeout. Since the usage
+information is only updated once every day anyway, we do not warn about such
+exceptions for the first hour. Only if an errror occurs longer than that, the
+state will go to CRIT.

@@ -426,8 +426,8 @@ class Section(object):
         else:  # assume one single line
             self._cont.append(self.formatline(info))
 
-    def write(self):
-        if not self._cont:
+    def write(self, write_empty=False):
+        if not (write_empty or self._cont):
             return
         with self.LOCK:
             for piggytarget in self._piggytargets:
@@ -679,8 +679,17 @@ class UsageClient(DataCache):
         return usages
 
     def write_sections(self, monitored_groups):
+        try:
+            usage_data = self.get_data()
+        except ApiErrorMissingData if self.debug else Exception as exc:
+            LOGGER.warning("%s", exc)
+            write_exception_to_agent_info_section(exc, "Usage client")
+            # write an empty section to all groups:
+            AzureSection('usagedetails', monitored_groups + ['']).write(write_empty=True)
+            return
+
         cacheinfo = (self.cache_timestamp or time.time(), self.cache_interval)
-        for usage_details in self.get_data():
+        for usage_details in usage_data:
             usage_resource = AzureResource(usage_details)
             piggytargets = [g for g in usage_resource.piggytargets if g in monitored_groups] + ['']
             UsageSection(usage_resource, piggytargets, cacheinfo).write()
@@ -759,7 +768,7 @@ def write_group_info(mgmt_client, monitored_groups, monitored_resources):
     AzureSection('agent_info', monitored_groups).write()
 
 
-def write_exception_to_agent_info_section(exception):
+def write_exception_to_agent_info_section(exception, component):
     # those exeptions are quite noisy. try to make them more concise:
     msg = str(exception).split('Trace ID')[0]
     msg = msg.split(':', 2)[-1].strip(' ,')
@@ -767,7 +776,7 @@ def write_exception_to_agent_info_section(exception):
     if "does not have authorization to perform action" in msg:
         msg += "HINT: Make sure you have a proper role asigned to your client!"
 
-    value = json.dumps((2, msg))
+    value = json.dumps((2, "%s: %s" % (component, msg)))
     section = AzureSection('agent_info')
     section.add(('agent-bailout', value))
     section.write()
@@ -842,7 +851,7 @@ def main_graph_client(args):
         graph_client.login(args.tenant, args.client, args.secret)
         write_section_ad(graph_client)
     except () if args.debug else Exception as exc:
-        write_exception_to_agent_info_section(exc)
+        write_exception_to_agent_info_section(exc, "Graph client")
         return 1
     return 0
 
@@ -858,18 +867,13 @@ def main_subscription(args, selector, subscription):
 
         monitored_groups = sorted(set(r.info['group'] for r in monitored_resources))
     except () if args.debug else Exception as exc:
-        write_exception_to_agent_info_section(exc)
+        write_exception_to_agent_info_section(exc, "Management client")
         return 1
 
     write_group_info(mgmt_client, monitored_groups, monitored_resources)
 
-    try:
-        usage_client = UsageClient(mgmt_client, subscription, args.debug)
-        usage_client.write_sections(monitored_groups)
-    except () if args.debug else Exception as exc:
-        write_exception_to_agent_info_section(exc)
-    except ApiErrorMissingData as exc:
-        LOGGER.warning("%s", exc)
+    usage_client = UsageClient(mgmt_client, subscription, args.debug)
+    usage_client.write_sections(monitored_groups)
 
     func_args = ((mgmt_client, resource, args) for resource in monitored_resources)
     mapper = get_mapper(args.debug, args.sequential, args.timeout)

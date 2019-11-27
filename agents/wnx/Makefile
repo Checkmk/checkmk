@@ -1,12 +1,12 @@
 #
 # Build script for the Windows Frozen Binaries
-# Expected Python 2.7 installed in certain folders(can be and must be done with choco)
+# Expected 32-bits Python 2.7 installed in the certain folder
 #
 # Usage:
 #  make frozen_binaries
 
-PYTHON_SCRIPTS_DIR = c:\Python27\Scripts
-PYTHON_DIR = c:\Python27
+PYTHON_DIR = c:\Python27.32
+PYTHON_SCRIPTS_DIR = $(PYTHON_DIR)\Scripts
 PYINSTALLER_EXE = $(PYTHON_SCRIPTS_DIR)\pyinstaller.exe 
 SRC_PATH = ..\plugins
 ARTE_PATH = ..\..\artefacts
@@ -35,7 +35,7 @@ setup_software: choco_check
 setup_all: choco_check setup_software
 	@if NOT exist "$(PYTHON_DIR)" powershell Write-Host "$(PYTHON_DIR) not found" -Foreground Red && exit /b 1
 	@if NOT exist "$(PYTHON_SCRIPTS_DIR)" powershell Write-Host "$(PYTHON_SCRIPTS_DIR) not found" -Foreground Red && exit /b 1
-	@call python_packages.cmd
+	@call python_packages.cmd "$(PYTHON_DIR)"
 	@powershell Write-Host "----- SETUP IS FINISHED SUCCESSFULLY -----" -Foreground Green
 
 check_install:

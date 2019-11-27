@@ -24,7 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from typing import Any, Dict, List, NewType, Optional, Tuple  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Any, Dict, List, NewType, Optional, Tuple, Iterator, Text, Union,
+)
+from contextlib import contextmanager
 
 from livestatus import MultiSiteConnection, MKLivestatusQueryError
 from cmk import is_managed_edition
@@ -298,3 +301,28 @@ def _livestatus_auth_user(user, force_authuser):
     if user.get_attribute("force_authuser"):
         return user.id
     return None
+
+
+@contextmanager
+def only_sites(sites):
+    # type: (Optional[Union[List[Text], Text]]) -> Iterator[None]
+    """Livestatus query over sites"""
+    if not sites:
+        sites = None
+    elif not isinstance(sites, list):
+        sites = [sites]
+    live().set_only_sites(sites)
+    try:
+        yield
+    finally:
+        live().set_only_sites(None)
+
+
+@contextmanager
+def prepend_site():
+    # type: () -> Iterator[None]
+    live().set_prepend_site(True)
+    try:
+        yield
+    finally:
+        live().set_prepend_site(False)

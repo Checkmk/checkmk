@@ -1,0 +1,18 @@
+Title: Rule Text logfiles(Windows) has been moved to Deprecated Rulesets
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p7
+Date: 1574843682
+Class: feature
+
+
+This rule had been fully removed from the Windows Agent since 1.6.0, because
+the generic <tt>Text logfiles(Windows, Linux)</tt>  offers better 
+functionality. In 1.6.0 the Rule <tt>Text logfiles(Windows, Linux)</tt> is a full 
+and effective substitute for the above mentioned deprecated one.
+
+To migrate you have to correctly configure <tt>Text logfiles(Windows, Linux)</tt>.
+The old configuration can be fould in the Deprected Rulesets.
+

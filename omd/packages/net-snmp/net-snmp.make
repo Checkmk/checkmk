@@ -25,18 +25,18 @@ $(NET_SNMP_BUILD): $(NET_SNMP_PATCHING) $(PYTHON_CACHE_PKG_PROCESS) $(PERL_MODUL
 	    --with-mibdirs="\$$HOME/local/share/snmp/mibs:$(OMD_ROOT)/share/snmp/mibs:/usr/share/snmp/mibs" \
 	    --with-defaults \
 	    --disable-scripts \
-	    --prefix=$(OMD_ROOT) && make
+	    --prefix=$(OMD_ROOT) && $(MAKE)
 	$(TOUCH) $@
 
 $(NET_SNMP_INSTALL): $(NET_SNMP_INSTALL_BASE) $(NET_SNMP_INSTALL_PYTHON) $(NET_SNMP_INSTALL_PERL)
 	$(TOUCH) $@
 
 $(NET_SNMP_INSTALL_BASE): $(NET_SNMP_BUILD)
-	cd $(NET_SNMP_BUILD_DIR)/snmplib && make DESTDIR=$(DESTDIR) installlibs
-	cd $(NET_SNMP_BUILD_DIR)/apps && make DESTDIR=$(DESTDIR) installbin
-	cd $(NET_SNMP_BUILD_DIR)/man && make DESTDIR=$(DESTDIR) install
+	cd $(NET_SNMP_BUILD_DIR)/snmplib && $(MAKE) DESTDIR=$(DESTDIR) installlibs
+	cd $(NET_SNMP_BUILD_DIR)/apps && $(MAKE) DESTDIR=$(DESTDIR) installbin
+	cd $(NET_SNMP_BUILD_DIR)/man && $(MAKE) DESTDIR=$(DESTDIR) install
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/snmp/mibs
-	cd $(NET_SNMP_BUILD_DIR)/mibs && make DESTDIR=$(DESTDIR) mibsinstall
+	cd $(NET_SNMP_BUILD_DIR)/mibs && $(MAKE) DESTDIR=$(DESTDIR) mibsinstall
 	$(TOUCH) $@
 
 $(NET_SNMP_INSTALL_PYTHON): $(NET_SNMP_BUILD)
@@ -63,7 +63,7 @@ $(NET_SNMP_INSTALL_PYTHON): $(NET_SNMP_BUILD)
 
 $(NET_SNMP_INSTALL_PERL): $(NET_SNMP_BUILD)
 	cd $(NET_SNMP_BUILD_DIR)/perl && \
-	    make \
+	    $(MAKE) \
 		DESTDIR=$(DESTDIR)$(OMD_ROOT) \
 		INSTALLSITEARCH=/lib/perl5/lib/perl5 \
 		INSTALLSITEMAN3DIR=/share/man/man3 \

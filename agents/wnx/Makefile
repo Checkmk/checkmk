@@ -49,17 +49,17 @@ check_install:
 mklogwatch: $(MKLOGWATCH_EXE_BUILD)
 	@copy $(MKLOGWATCH_EXE_BUILD) $(ARTE_PATH)
 
-$(MKLOGWATCH_EXE_BUILD): $(SRC_PATH)\mk_logwatch
+$(MKLOGWATCH_EXE_BUILD): $(SRC_PATH)\mk_logwatch .\bld_fb.cmd
 	@powershell Write-Host "Starting the build of mklogwatch" -Foreground Green
-	@call bld_fb.cmd $?
+	@call bld_fb.cmd $(SRC_PATH)\mk_logwatch
 	@if NOT exist $(MKLOGWATCH_EXE_BUILD) powershell Write-Host "$(MKLOGWATCH_EXE_BUILD) not found" -Foreground Red && exit /b 1
 
 mkjolokia: $(MKJOLOKIA_EXE_BUILD)
 	@copy $(MKJOLOKIA_EXE_BUILD) $(ARTE_PATH)
 
-$(MKJOLOKIA_EXE_BUILD): $(SRC_PATH)\mk_jolokia.py
+$(MKJOLOKIA_EXE_BUILD): $(SRC_PATH)\mk_jolokia.py .\bld_fb.cmd
 	@powershell Write-Host "Starting the build of mkjolokia" -Foreground Green
-	@call bld_fb.cmd $? "--hidden-import=cffi"
+	@call bld_fb.cmd $(SRC_PATH)\mk_jolokia.py "--hidden-import=cffi"
 	@if NOT exist $(MKJOLOKIA_EXE_BUILD) powershell Write-Host "$(MKJOLOKIA_EXE_BUILD) not found" -Foreground Red && exit /b 1
 
 	

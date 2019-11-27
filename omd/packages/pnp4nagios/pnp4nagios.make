@@ -56,7 +56,11 @@ $(PNP4NAGIOS_INSTALL): $(PNP4NAGIOS_BUILD)
 	# Remove installer
 	rm $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/install.php
 	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/pnp4nagios
+	rmdir $(DESTDIR)$(OMD_ROOT)/etc
 	rm -rf $(DESTDIR)$(OMD_ROOT)/var/pnp4nagios
+	rmdir $(DESTDIR)$(OMD_ROOT)/var
+	rm -rf $(DESTDIR)$(OMD_ROOT)/tmp/pnp4nagios
+	rmdir $(DESTDIR)$(OMD_ROOT)/tmp
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
 	install -m 644 $(PNP4NAGIOS_BUILD_DIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
 	install -m 644 $(PNP4NAGIOS_BUILD_DIR)/COPYING $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios

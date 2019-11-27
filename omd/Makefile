@@ -230,6 +230,15 @@ $(INSTALL_GLOBAL): $(INSTALL)
 	if [ -f COMMIT ]; then \
 	    install -m 644 COMMIT $(DESTDIR)$(OMD_ROOT)/share/doc ; \
 	fi
+
+# Perform some validations
+	for SKEL_DIR in tmp var etc; do \
+	    if [ -d "$(DESTDIR)$(OMD_ROOT)/$$SKEL_DIR" ]; then \
+	        echo "ERROR: The directory $$SKEL_DIR is only allowed to exist in skel/" ; \
+	        find "$(DESTDIR)$(OMD_ROOT)/$$SKEL_DIR" ; \
+	        exit 1 ;
+	    fi ; \
+	done
 	$(TOUCH) $@
 
 omd.spec: omd.spec.in

@@ -27,6 +27,11 @@ $(STUNNEL_BUILD): $(STUNNEL_UNPACK)
 $(STUNNEL_INSTALL): $(STUNNEL_BUILD)
 	$(MAKE) -C $(STUNNEL_BUILD_DIR) DESTDIR=$(DESTDIR) install
 	rm -f $(DESTDIR)$(OMD_ROOT)/etc/stunnel/stunnel.conf-sample
+	rmdir $(DESTDIR)$(OMD_ROOT)/etc/stunnel
+	rmdir $(DESTDIR)$(OMD_ROOT)/etc
+	rmdir $(DESTDIR)$(OMD_ROOT)/var/lib/stunnel
+	rmdir $(DESTDIR)$(OMD_ROOT)/var/lib
+	rmdir $(DESTDIR)$(OMD_ROOT)/var
 	$(TOUCH) $@
 
 $(STUNNEL_SKEL):

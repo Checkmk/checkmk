@@ -38,60 +38,67 @@
 #msonline:PROJECTPROFESSIONAL 10 0 10
 #msonline:ATP_ENTERPRISE 1040 0 988
 
+
+def parse_msoffice_licenses(info):
+    parsed = {}
+
+    for line in info:
+        if len(line) != 4:
+            continue
+
+        try:
+            parsed.setdefault(line[0], {
+                "active": int(line[1]),
+                "warning_units": int(line[2]),
+                "consumed": int(line[3])
+            })
+        except ValueError:
+            pass
+
+    return parsed
+
+
 factory_settings["msoffice_licenses_levels"] = {
     "usage": (80, 90),
 }
 
 
-def inventory_msoffice_licenses(info):
-    for line in info:
-        if len(line) == 4:
-            yield line[0], {}
+@get_parsed_item_data
+def check_msoffice_licenses(item, params, item_data):
+    lcs_active = item_data["active"]
+    lcs_consumed = item_data["consumed"]
 
+    if lcs_active:
 
-def check_msoffice_licenses(item, params, info):
-    # will be refactored in 1.7
-    for line in info:
-        if len(line) != 4:
-            continue
+        yield (
+            0,
+            "Consumed: %s of %s" % (lcs_consumed, lcs_active),
+            [("licenses", lcs_consumed), ("licenses_total", lcs_active)],
+        )
 
-        name, active, warning_units, consumed = line
-        if name != item:
-            continue
+        warn, crit = params["usage"]
+        usage = lcs_consumed * 100.0 / (lcs_active)
+        yield check_levels(
+            usage,
+            "license_percentage",
+            (warn, crit),
+            human_readable_func=get_percent_human_readable,
+            infoname="Usage",
+            boundaries=(0, 100),
+        )
 
-        try:
-            active = int(active)
-            warning_units = int(warning_units)
-            consumed = int(consumed)
-        except ValueError:
-            yield 3, "Invalid data in agent output"
-            return
+    else:
+        yield 0, "No active licenses"
+        return
 
-        if active:
-            usage = consumed * 100.0 / (active)
-
-            state = 0
-            infotext = "Consumed: %s of %s (%.2f%%)" % (consumed, active, usage)
-            warn, crit = params["usage"]
-            if usage >= crit:
-                state = 2
-            elif usage >= warn:
-                state = 1
-            if state:
-                infotext += " (warn/crit at %s%%/%s%%)" % (warn, crit)
-
-            yield (state, infotext, [("licenses", consumed), ("licenses_total", active),
-                                     ("license_percentage", usage, warn, crit, 0, 100)])
-        else:
-            yield 0, "No active licenses"
-            return
-
-        if warning_units:
-            yield 0, " Warning units: %s" % warning_units
+    lcs_warning_units = item_data["warning_units"]
+    if lcs_warning_units:
+        yield 0, " Warning units: %s" % lcs_warning_units
 
 
 check_info["msoffice_licenses"] = {
-    "inventory_function": inventory_msoffice_licenses,
+    "parse_function": parse_msoffice_licenses,
+    "inventory_function": discover(),
     "check_function": check_msoffice_licenses,
     "service_description": "MS Office Licenses %s",
     "has_perfdata": True,

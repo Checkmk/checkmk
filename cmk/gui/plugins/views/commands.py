@@ -824,10 +824,16 @@ class CommandAcknowledge(Command):
             days_plus = 2
         expire_next_year = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.mktime((tmp.tm_year, tmp.tm_mon, tmp.tm_mday + days_plus, 10, 0, 0, 0, 0, tmp.tm_isdst))))
         return Alternative(
+            style="dropdown",
             elements=[
+                FixedValue(
+                    value=0,
+                    title=_(" Do not expire"),
+                    totext="No expiration will be set",
+                ),
                 Age(
                     display=["days", "hours", "minutes"],
-                    title=_(" Expire"),
+                    title=_(" Expire ..."),
                     label=_("after")
                 ),
                 FixedValue(

@@ -30,6 +30,7 @@
 
 #ifdef CMC
 #include "Host.h"
+#include "Metric.h"
 #include "Object.h"
 #include "RRDInfo.h"
 #include "State.h"

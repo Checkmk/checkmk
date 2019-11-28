@@ -25,6 +25,7 @@
 #include "Triggers.h"
 #include <stdexcept>
 
+// static
 Triggers::Kind Triggers::find(const std::string &name) {
     if (name == "all") {
         return Kind::all;

@@ -38,7 +38,7 @@ class MacroExpander {
 public:
     virtual ~MacroExpander() = default;
     virtual std::optional<std::string> expand(const std::string &str) = 0;
-    std::optional<std::string> from_ptr(const char *str);
+    static std::optional<std::string> from_ptr(const char *str);
 };
 
 // poor man's monad...

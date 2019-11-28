@@ -557,7 +557,7 @@ void Query::parseWaitTimeoutLine(char *line) {
 }
 
 void Query::parseWaitTriggerLine(char *line) {
-    _wait_trigger = _table.core()->triggers().find(nextStringArgument(&line));
+    _wait_trigger = Triggers::find(nextStringArgument(&line));
 }
 
 void Query::parseWaitObjectLine(char *line) {

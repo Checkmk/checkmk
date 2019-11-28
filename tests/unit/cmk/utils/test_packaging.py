@@ -26,7 +26,7 @@ def test_package_parts():
 
 
 def test_config_parts():
-    assert packaging.config_parts == [
+    assert packaging.get_config_parts() == [
         packaging.PackagePart("ec_rule_packs", "Event Console rule packs",
                               "%s/mkeventd.d/mkp/rule_packs" % cmk.utils.paths.default_config_dir)
     ]

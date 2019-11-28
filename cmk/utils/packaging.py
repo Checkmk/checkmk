@@ -91,7 +91,7 @@ _package_parts = [
                 str(cmk.utils.paths.local_share_dir / "alert_handlers")),
 ]
 
-config_parts = [
+_config_parts = [
     PackagePart("ec_rule_packs", "Event Console rule packs",
                 str(cmk.ec.export.mkp_rule_pack_dir())),
 ]
@@ -108,7 +108,7 @@ def package_dir():
 
 def get_config_parts():
     # type: () -> List[PackagePart]
-    return config_parts
+    return _config_parts
 
 
 def get_package_parts():
@@ -117,7 +117,7 @@ def get_package_parts():
 
 
 def release_package(pacname):
-    if not pacname or not package_exists(pacname):
+    if not pacname or not _package_exists(pacname):
         raise PackageException("Package %s not installed or corrupt." % pacname)
 
     package = read_package_info(pacname)
@@ -130,7 +130,7 @@ def release_package(pacname):
                 logger.log(VERBOSE, "    %s", f)
             if part.ident == 'ec_rule_packs':
                 cmk.ec.export.release_packaged_rule_packs(filenames)
-    remove_package_info(pacname)
+    _remove_package_info(pacname)
 
 
 def create_mkp_file(package, file_name=None, file_object=None):
@@ -197,36 +197,34 @@ def remove_package(package):
 
 def create_package(pkg_info):
     pacname = pkg_info["name"]
-    if package_exists(pacname):
+    if _package_exists(pacname):
         raise PackageException("Packet already exists.")
 
-    validate_package_files(pacname, pkg_info["files"])
+    _validate_package_files(pacname, pkg_info["files"])
     write_package_info(pkg_info)
 
 
-# TODO
 def edit_package(pacname, new_package_info):
-    if not package_exists(pacname):
+    if not _package_exists(pacname):
         raise PackageException("No such package")
 
     # Renaming: check for collision
     if pacname != new_package_info["name"]:
-        if package_exists(new_package_info["name"]):
+        if _package_exists(new_package_info["name"]):
             raise PackageException(
                 "Cannot rename package: a package with that name already exists.")
 
-    validate_package_files(pacname, new_package_info["files"])
+    _validate_package_files(pacname, new_package_info["files"])
 
-    remove_package_info(pacname)
+    _remove_package_info(pacname)
     write_package_info(new_package_info)
 
 
-# TODO
 def install_package(file_name=None, file_object=None):
     tar = tarfile.open(name=file_name, fileobj=file_object, mode="r:gz")
     package = parse_package_info(tar.extractfile("info").read())
 
-    verify_check_mk_version(package)
+    _verify_check_mk_version(package)
 
     pacname = package["name"]
     old_package = read_package_info(pacname)
@@ -323,19 +321,18 @@ def install_package(file_name=None, file_object=None):
     return package
 
 
-# Packaged files must either be unpackaged or already
-# belong to that package
-def validate_package_files(pacname, files):
+def _validate_package_files(pacname, files):
+    """Packaged files must either be unpackaged or already belong to that package"""
     packages = {}
     for package_name in all_package_names():
         packages[package_name] = read_package_info(package_name)
 
     for part in get_package_parts():
-        validate_package_files_part(packages, pacname, part.ident, part.path,
-                                    files.get(part.ident, []))
+        _validate_package_files_part(packages, pacname, part.ident, part.path,
+                                     files.get(part.ident, []))
 
 
-def validate_package_files_part(packages, pacname, part, directory, rel_paths):
+def _validate_package_files_part(packages, pacname, part, directory, rel_paths):
     for rel_path in rel_paths:
         path = os.path.join(directory, rel_path)
         if not os.path.exists(path):
@@ -348,10 +345,10 @@ def validate_package_files_part(packages, pacname, part, directory, rel_paths):
                                            (path, other_pacname))
 
 
-# Checks whether or not the minimum required Check_MK version is older than the
-# current Check_MK version. Raises an exception if not. When the Check_MK version
-# can not be parsed or is a daily build, the check is simply passing without error.
-def verify_check_mk_version(package):
+def _verify_check_mk_version(package):
+    """Checks whether or not the minimum required Check_MK version is older than the
+    current Check_MK version. Raises an exception if not. When the Check_MK version
+    can not be parsed or is a daily build, the check is simply passing without error."""
     min_version = package["version.min_required"]
     cmk_version = cmk.__version__
 
@@ -429,7 +426,7 @@ def read_package_info(pacname):
         return None
 
 
-def files_in_dir(part, directory, prefix=""):
+def _files_in_dir(part, directory, prefix=""):
     if directory is None or not os.path.exists(directory):
         return []
 
@@ -450,7 +447,7 @@ def files_in_dir(part, directory, prefix=""):
 
         path = directory + "/" + f
         if os.path.isdir(path):
-            result += files_in_dir(part, path, prefix + f + "/")
+            result += _files_in_dir(part, path, prefix + f + "/")
         else:
             result.append(prefix + f)
     result.sort()
@@ -458,7 +455,7 @@ def files_in_dir(part, directory, prefix=""):
 
 
 def unpackaged_files_in_dir(part, directory):
-    return [f for f in files_in_dir(part, directory) if f not in packaged_files_in_dir(part)]
+    return [f for f in _files_in_dir(part, directory) if f not in packaged_files_in_dir(part)]
 
 
 def packaged_files_in_dir(part):
@@ -474,7 +471,7 @@ def all_package_names():
     return sorted([p.name for p in package_dir().iterdir()])
 
 
-def package_exists(pacname):
+def _package_exists(pacname):
     return (package_dir() / pacname).exists()  # pylint: disable=no-member
 
 
@@ -484,7 +481,7 @@ def write_package_info(package):
         f.write((pprint.pformat(package) + "\n").decode("utf-8"))
 
 
-def remove_package_info(pacname):
+def _remove_package_info(pacname):
     (package_dir() / pacname).unlink()  # pylint: disable=no-member
 
 

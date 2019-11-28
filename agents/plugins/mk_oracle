@@ -56,6 +56,8 @@ display_usage () {
     echo "  -s, --sections S1,S2,.. Only execute stated sections"
     echo "                          Note: asynchronous sections are execute"
     echo "                          as synchronous sections"
+    echo "  --oratestversion        set a custom Oracleversion during execution. Example: 12.1"
+    echo "                          This parameter is only for development"
     echo ""
 }
 
@@ -94,6 +96,11 @@ while test -n "$1"; do
         -s|--sections)
             shift
             MK_ORA_SECTIONS=($(echo "$1" | tr ',' '\n'))
+            shift
+            ;;
+        --oratestversion)
+            shift
+            MK_ORA_TESTVERSION="$1"
             shift
             ;;
 
@@ -483,7 +490,13 @@ set_ora_env () {
 
 
 set_ora_version () {
-    ORACLE_VERSION="$1"
+    if [ "$MK_ORA_TESTVERSION" ] ; then
+        ORACLE_VERSION="$MK_ORA_TESTVERSION"
+        logging -o -e "[${sid}] [set_ora_version]" "Custom ORACLE_VERSION: ${ORACLE_VERSION}"
+    else
+        ORACLE_VERSION="$1"
+    fi
+
     NUMERIC_ORACLE_VERSION=${ORACLE_VERSION//./}
     export NUMERIC_ORACLE_VERSION
 

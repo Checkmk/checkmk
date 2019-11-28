@@ -2,6 +2,7 @@
 *.la
 *.o
 *.so
+.clangd/
 .cproject
 .deps
 Makefile

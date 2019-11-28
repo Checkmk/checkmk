@@ -25,7 +25,7 @@ $(RE2)-install:
 $(RE2_BUILD): $(RE2_UNPACK)
 # basically what part of AC_PROC_CXX does
 	@CXX="" ; \
-	for PROG in g++-9 clang++-8 g++-8 clang++-7 g++-7 clang++-6.0 clang++-5.0 g++ clang++; do \
+	for PROG in g++-9 clang++-9 clang++-8 g++-8 clang++-7 g++-7 clang++-6.0 clang++-5.0 g++ clang++; do \
 	    echo -n "checking for $$PROG... "; SAVED_IFS=$$IFS; IFS=: ; \
 	    for DIR in $$PATH; do \
 	        IFS=$$SAVED_IFS ; \

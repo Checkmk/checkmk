@@ -36,8 +36,8 @@ PYTHON_TMP_BIN_DIR := $(PYTHON_WORK_DIR)/python-bin
 # $(PYTHON_TMP_BIN_DIR)/gcc and $(PYTHON_TMP_BIN_DIR)/g++
 PYTHON_TMP_BIN_PATH_VAR := PATH="$(PYTHON_TMP_BIN_DIR):$$PATH"
 
-PYTHON_CC_COMPILERS = gcc-9 clang-8 gcc-8 gcc-7 clang-6.0 clang-5.0 gcc-6 clang-4.0 gcc-5 clang-3.9 clang-3.8 clang-3.7 clang-3.6 clang-3.5 gcc-4.9 gcc clang
-PYTHON_CXX_COMPILERS := g++-9 clang++-8 g++-8 clang++-7 g++-7 clang++-6.0 clang++-5.0 g++ clang++
+PYTHON_CC_COMPILERS = gcc-9 clang-9 clang-8 gcc-8 gcc-7 clang-6.0 clang-5.0 gcc-6 clang-4.0 gcc-5 clang-3.9 clang-3.8 clang-3.7 clang-3.6 clang-3.5 gcc-4.9 gcc clang
+PYTHON_CXX_COMPILERS := g++-9 clang++-9 clang++-8 g++-8 clang++-7 g++-7 clang++-6.0 clang++-5.0 g++ clang++
 
 .PHONY: Python Python-install Python-skel Python-clean upstream
 

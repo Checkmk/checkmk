@@ -1122,7 +1122,7 @@ class ABCEventConsoleMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
     def _get_rule_pack_to_mkp_map(self):
         if cmk.is_raw_edition():
             return {}
-        package_info = watolib.check_mk_local_automation("get-package-info")
+        package_info = cmk.utils.packaging.get_all_package_infos()
         return ec.rule_pack_id_to_mkp(package_info)
 
     def _vs_mkeventd_event(self):

@@ -383,6 +383,18 @@ def _verify_check_mk_version(package):
                                "but you have %s installed." % (min_version, cmk_version))
 
 
+def get_all_package_infos():
+    packages = {}
+    for package_name in all_package_names():
+        packages[package_name] = read_package_info(package_name)
+
+    return {
+        "installed": packages,
+        "unpackaged": unpackaged_files(),
+        "parts": package_part_info(),
+    }
+
+
 def unpackaged_files():
     unpackaged = {}
     for part in get_package_parts() + get_config_parts():

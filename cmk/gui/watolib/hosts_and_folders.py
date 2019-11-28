@@ -585,6 +585,9 @@ class CREFolder(BaseFolder):
         if "tag_snmp" in attributes:
             return attributes  # Already in new format, no transformation necessary
 
+        if "meta_data" in attributes:
+            return attributes  # These attributes were already saved with version 1.6+
+
         value = attributes["tag_agent"]
 
         if value == "cmk-agent":

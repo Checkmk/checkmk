@@ -1,6 +1,6 @@
 # Package definition
 PYTHON := Python
-PYTHON_VERS := 2.7.16
+PYTHON_VERS := 2.7.17
 PYTHON_DIR := $(PYTHON)-$(PYTHON_VERS)
 
 PYTHON_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-build
@@ -113,7 +113,7 @@ Python-skel:
 Python-clean:
 	$(RM) -r $(DIR) $(BUILD_HELPER_DIR)/$(MSITOOLS)* bin build  $(PACKAGE_PYTHON_DESTDIR)
 
-upstream:
-	git rm Python-*.tgz
-	wget https://www.python.org/ftp/python/$(PYTHON_VERSION)/Python-$(PYTHON_VERSION).tgz
-	git add Python-$(PYTHON_VERSION).tgz
+Python-upstream:
+	git rm Python-*.tgz || true
+	wget https://www.python.org/ftp/python/$(PYTHON_VERS)/Python-$(PYTHON_VERS).tgz
+	git add Python-$(PYTHON_VERS).tgz

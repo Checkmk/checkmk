@@ -499,4 +499,6 @@ def _remove_package_info(pacname):
 
 
 def parse_package_info(python_string):
-    return ast.literal_eval(python_string)
+    package_info = ast.literal_eval(python_string)
+    package_info.setdefault("version.usable_until", None)
+    return package_info

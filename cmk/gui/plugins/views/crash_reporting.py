@@ -47,6 +47,17 @@ from cmk.gui.plugins.views import (
     cmp_simple_number,
 )
 
+from cmk.gui.permissions import (
+    permission_registry,
+    Permission,
+)
+
+from cmk.gui.plugins.views.commands import PermissionSectionAction
+from cmk.gui.plugins.views import (
+    command_registry,
+    Command,
+)
+
 
 @data_source_registry.register
 class DataSourceCrashReports(DataSourceLivestatus):
@@ -287,3 +298,53 @@ class SorterCrashTime(Sorter):
 
     def cmp(self, r1, r2):
         return cmp_simple_number("crash_time", r1, r2)
+
+
+@permission_registry.register
+class PermissionActionDeleteCrashReport(Permission):
+    @property
+    def section(self):
+        return PermissionSectionAction
+
+    @property
+    def permission_name(self):
+        return "delete_crash_report"
+
+    @property
+    def title(self):
+        return _("Delete crash reports")
+
+    @property
+    def description(self):
+        return _("Delete crash reports created by Checkmk")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@command_registry.register
+class CommandDeleteCrashReports(Command):
+    @property
+    def ident(self):
+        return "delete_crash_reports"
+
+    @property
+    def title(self):
+        return _("Delete crash reports")
+
+    @property
+    def permission(self):
+        return PermissionActionDeleteCrashReport
+
+    @property
+    def tables(self):
+        return ["crash"]
+
+    def render(self, what):
+        html.button("_delete_crash_reports", _("Delete"))
+
+    def action(self, cmdtag, spec, row, row_index, num_rows):
+        if html.request.has_var("_delete_crash_reports"):
+            commands = [("DEL_CRASH_REPORT;%s" % row["crash_id"])]
+            return commands, _("remove")

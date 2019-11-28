@@ -100,6 +100,7 @@ def test_registered_permissions():
         'action.remove_all_downtimes',
         'action.reschedule',
         'action.star',
+        'action.delete_crash_report',
         'background_jobs.delete_foreign_jobs',
         'background_jobs.delete_jobs',
         'background_jobs.manage_jobs',

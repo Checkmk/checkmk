@@ -300,6 +300,11 @@ def test_registered_commands():
             'tables': ['event'],
             'title': u'Update & Acknowledge'
         },
+        'delete_crash_reports': {
+            'permission': 'action.delete_crash_report',
+            'tables': ['crash'],
+            'title': u'Delete crash reports',
+        },
     }
 
     if not cmk.is_raw_edition():

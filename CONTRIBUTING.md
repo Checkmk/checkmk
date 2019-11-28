@@ -565,6 +565,7 @@ portability and transparency. In case you want to change something respect the
 following things:
 
 - Bash scripts are written for Bash version 3.1 or newer
+- Set `set -e -o pipefail` at the top of your script
 - Use [shellcheck](https://www.shellcheck.net/) for your changes before
   submitting patches.
 

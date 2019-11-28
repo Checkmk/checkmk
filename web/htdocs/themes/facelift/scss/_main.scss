@@ -465,7 +465,7 @@ div.error {
   background-color: $color-state-2-background;
   border-color: rgb(238, 68, 0);
 
-  a {
+  a, a:link {
     color: rgb(255, 255, 255);
   }
 

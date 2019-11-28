@@ -225,7 +225,7 @@ SYNC_SECTIONS="instance sessions logswitches undostat recovery_area processes re
 # Sections that are run in the background and at a larger interval.
 # Note: sections not listed in SYNC_SECTIONS or ASYNC_SECTIONS will not be
 # executed at all!
-ASYNC_SECTIONS="tablespaces rman jobs ts_quotas resumable"
+ASYNC_SECTIONS="tablespaces rman jobs resumable"
 
 # Sections that are run in the background and at a larger interval.
 # Note: _ASM_ sections are only executed when SID starts with '+'

@@ -852,8 +852,6 @@ def main_graph_client(args):
         write_section_ad(graph_client)
     except () if args.debug else Exception as exc:
         write_exception_to_agent_info_section(exc, "Graph client")
-        return 1
-    return 0
 
 
 def main_subscription(args, selector, subscription):
@@ -868,7 +866,7 @@ def main_subscription(args, selector, subscription):
         monitored_groups = sorted(set(r.info['group'] for r in monitored_resources))
     except () if args.debug else Exception as exc:
         write_exception_to_agent_info_section(exc, "Management client")
-        return 1
+        return
 
     write_group_info(mgmt_client, monitored_groups, monitored_resources)
 
@@ -888,15 +886,13 @@ def main(argv=None):
     selector = Selector(args)
     if args.dump_config:
         sys.stdout.write("Configuration:\n%s\n" % selector)
-        return 0
+        return
     LOGGER.debug("%s", selector)
 
-    exit_code = main_graph_client(args)
+    main_graph_client(args)
 
     for subscription in args.subscriptions:
-        exit_code = main_subscription(args, selector, subscription) or exit_code
-
-    return exit_code
+        main_subscription(args, selector, subscription)
 
 
 if __name__ == "__main__":

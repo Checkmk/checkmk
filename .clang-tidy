@@ -57,12 +57,12 @@ CheckOptions:
     value:           '1'
   - key:             misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
     value:           '1'
-  - key:             readability-identifier-naming.MemberCase
-    value:           'lower_case'
-  - key:             readability-identifier-naming.ProtectedMemberSuffix
-    value:           '_'
-  - key:             readability-identifier-naming.PrivateMemberSuffix
-    value:           '_'
-  - key:             readability-identifier-naming.VariableCase
-    value:           'lower_case'
+#  - key:             readability-identifier-naming.MemberCase
+#    value:           'lower_case'
+#  - key:             readability-identifier-naming.ProtectedMemberSuffix
+#    value:           '_'
+#  - key:             readability-identifier-naming.PrivateMemberSuffix
+#    value:           '_'
+#  - key:             readability-identifier-naming.VariableCase
+#    value:           'lower_case'
 ...

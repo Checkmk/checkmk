@@ -103,3 +103,15 @@ def total_size(o, handlers=None):
         return s
 
     return sizeof(o)
+
+
+# Works with Check_MK version (without tailing .cee and/or .demo)
+def is_daily_build_version(v):
+    return len(v) == 10 or '-' in v
+
+
+# Works with Check_MK version (without tailing .cee and/or .demo)
+def branch_of_daily_build(v):
+    if len(v) == 10:
+        return "master"
+    return v.split('-')[0]

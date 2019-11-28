@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import cmk.utils.paths
-import cmk_base.packaging as packaging
+import cmk.utils.packaging as packaging
 
 
 def test_package_parts():

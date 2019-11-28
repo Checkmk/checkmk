@@ -42,18 +42,6 @@ def worst_service_state(*states):
     return max(states)
 
 
-# Works with Check_MK version (without tailing .cee and/or .demo)
-def is_daily_build_version(v):
-    return len(v) == 10 or '-' in v
-
-
-# Works with Check_MK version (without tailing .cee and/or .demo)
-def branch_of_daily_build(v):
-    if len(v) == 10:
-        return "master"
-    return v.split('-')[0]
-
-
 def cachefile_age(path):
     try:
         return time.time() - os.stat(path)[8]

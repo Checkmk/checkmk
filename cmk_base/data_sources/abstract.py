@@ -38,6 +38,7 @@ from cmk.utils.log import VERBOSE
 
 import cmk.utils.debug
 import cmk.utils.paths
+import cmk.utils.misc
 import cmk.utils.store as store
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
@@ -781,10 +782,10 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
 
             elif isinstance(expected_version, tuple) and expected_version[0] == 'at_least':
                 spec = expected_version[1]
-                if cmk_base.utils.is_daily_build_version(agent_version) and 'daily_build' in spec:
+                if cmk.utils.misc.is_daily_build_version(agent_version) and 'daily_build' in spec:
                     expected = int(spec['daily_build'].replace('.', ''))
 
-                    branch = cmk_base.utils.branch_of_daily_build(agent_version)
+                    branch = cmk.utils.misc.branch_of_daily_build(agent_version)
                     if branch == "master":
                         agent = int(agent_version.replace('.', ''))
 
@@ -795,7 +796,7 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
                         return False
 
                 elif 'release' in spec:
-                    if cmk_base.utils.is_daily_build_version(agent_version):
+                    if cmk.utils.misc.is_daily_build_version(agent_version):
                         return False
 
                     if cmk.utils.werks.parse_check_mk_version(agent_version) \

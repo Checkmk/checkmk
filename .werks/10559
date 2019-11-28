@@ -1,0 +1,13 @@
+Title: Web API: Fix validation of non-ASCII characters in custom attributes
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p7
+Date: 1574945960
+Class: fix
+
+When creating or editing a host using the Web API, the custom host attributes
+are not correctly validated. The GUI prevents the user from inserting non-ASCII
+characters, but the Web API did not. These unexpected characters could result
+in issues at different places of Checkmk.

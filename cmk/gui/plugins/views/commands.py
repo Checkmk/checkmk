@@ -748,7 +748,7 @@ class CommandAcknowledge(Command):
 
             expire = None
             expire_secs = self._vs_expire().from_html_vars("_ack_expire")
-            if type(expire_secs) == int:
+            if type(expire_secs) == int and expire_secs:
                 expire = int(time.time()) + expire_secs
             elif type(expire_secs) == str:
                 now = time.localtime(time.time())

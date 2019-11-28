@@ -1,0 +1,12 @@
+Title: MKP manager: Links to package download URLs are now opened in new window / tab
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cee
+Version: 1.6.0p7
+Date: 1574941462
+Class: fix
+
+The download URLs of extension packages could not be opened in previous 1.6 releases,
+because the Content Security Policy blocked opening external URLs in the content area
+of the GUI. The links are now opened in a new page to prevent this issue.

@@ -455,7 +455,8 @@ def _files_in_dir(part, directory, prefix=""):
 
 
 def unpackaged_files_in_dir(part, directory):
-    return [f for f in _files_in_dir(part, directory) if f not in packaged_files_in_dir(part)]
+    packaged = set(packaged_files_in_dir(part))
+    return [f for f in _files_in_dir(part, directory) if f not in packaged]
 
 
 def packaged_files_in_dir(part):

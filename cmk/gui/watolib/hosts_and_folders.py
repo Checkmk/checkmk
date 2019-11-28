@@ -544,6 +544,13 @@ class CREFolder(BaseFolder):
         attributes = self._transform_none_value_site_attribute(attributes)
         attributes = self._add_missing_meta_data(attributes)
         attributes = self._transform_tag_snmp_ds(attributes)
+        attributes = self._transform_cgconf_attributes(attributes)
+        return attributes
+
+    def _transform_cgconf_attributes(self, attributes):
+        cgconf = attributes.get("contactgroups")
+        if cgconf:
+            attributes["contactgroups"] = convert_cgroups_from_tuple(cgconf)
         return attributes
 
     # In versions previous to 1.6 Checkmk had a tag group named "snmp" and an

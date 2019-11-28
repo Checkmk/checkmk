@@ -59,7 +59,7 @@ TEST_F(CustomVarsDictFilterTest, empty) {
     EXPECT_FALSE(accepts(AttributeKind::tags, "GUT '' "));
 }
 
-TEST_F(CustomVarsDictFilterTest, unquoted_kinds) {
+TEST_F(CustomVarsDictFilterTest, UnquotedKinds) {
     EXPECT_TRUE(accepts(AttributeKind::custom_variables, "GUT Mies"));
     EXPECT_TRUE(accepts(AttributeKind::tags, "GUT Guten Tag!"));
     EXPECT_TRUE(accepts(AttributeKind::labels, "GUT foo"));
@@ -67,27 +67,27 @@ TEST_F(CustomVarsDictFilterTest, unquoted_kinds) {
     EXPECT_FALSE(accepts(AttributeKind::label_sources, "GUT bart"));
 }
 
-TEST_F(CustomVarsDictFilterTest, unquoted_splitting) {
+TEST_F(CustomVarsDictFilterTest, UnquotedSplitting) {
     EXPECT_TRUE(accepts(AttributeKind::tags, "     GUT Guten Tag!"));
     EXPECT_TRUE(accepts(AttributeKind::tags, "     GUT    Guten Tag!"));
     EXPECT_FALSE(accepts(AttributeKind::tags, "    GUT    Guten Tag!    "));
 }
 
-TEST_F(CustomVarsDictFilterTest, unquoted_utf8) {
+TEST_F(CustomVarsDictFilterTest, UnquotedUTF8) {
     EXPECT_TRUE(accepts(AttributeKind::labels, "GÓÐ Góðan dag!"));
     EXPECT_TRUE(accepts(AttributeKind::labels, "     GÓÐ Góðan dag!"));
     EXPECT_TRUE(accepts(AttributeKind::labels, "     GÓÐ    Góðan dag!"));
     EXPECT_FALSE(accepts(AttributeKind::labels, "    GÓÐ    Góðan dag!   "));
 }
 
-TEST_F(CustomVarsDictFilterTest, quoted_splitting) {
+TEST_F(CustomVarsDictFilterTest, QuotedSplitting) {
     EXPECT_TRUE(accepts(AttributeKind::tags, "'GUT' 'Guten Tag!'"));
     EXPECT_TRUE(accepts(AttributeKind::tags, "     'GUT' 'Guten Tag!'"));
     EXPECT_TRUE(accepts(AttributeKind::tags, "     'GUT'    'Guten Tag!'"));
     EXPECT_TRUE(accepts(AttributeKind::tags, "    'GUT'    'Guten Tag!'    "));
 }
 
-TEST_F(CustomVarsDictFilterTest, quoted_escape) {
+TEST_F(CustomVarsDictFilterTest, QuotedEscape) {
     EXPECT_TRUE(accepts(AttributeKind::tags, "'Rock''n' 'Rock''n Roll'"));
     EXPECT_TRUE(accepts(AttributeKind::tags, "'Rock''n' 'Rock''n Roll"));
     EXPECT_TRUE(accepts(AttributeKind::tags, "'Rollin' 'Rock''n Rollin'''"));

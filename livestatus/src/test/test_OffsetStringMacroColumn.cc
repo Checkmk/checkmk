@@ -15,7 +15,7 @@
 #include "test_utilities.h"
 
 // TODO(sp) Move this to a better place.
-TEST(Store, the_core_is_not_accessed_during_construction_of_the_store) {
+TEST(Store, TheCoreIsNotAccessedDuringConstructionOfTheStore) {
     // Segfault if the (not entirely constructed) core is accessed during
     // the construction of the store.
     //
@@ -86,7 +86,7 @@ TEST_F(OffsetStringHostMacroColumnTest, misc) {
     EXPECT_EQ(&test_host, oshmc.columnData<void>(Row{&test_host}));
 }
 
-TEST_F(OffsetStringHostMacroColumnTest, expand_host_builtin) {
+TEST_F(OffsetStringHostMacroColumnTest, ExpandHostBuiltin) {
     set_host_notes("checking $HOSTNAME$...");
     EXPECT_EQ("checking sesame_street...", expanded_host_notes());
 
@@ -112,7 +112,7 @@ TEST_F(OffsetStringHostMacroColumnTest, expand_host_builtin) {
     EXPECT_EQ("checking the host check command...", expanded_host_notes());
 }
 
-TEST_F(OffsetStringHostMacroColumnTest, expand_host_custom) {
+TEST_F(OffsetStringHostMacroColumnTest, ExpandHostCustom) {
     set_host_notes("Hi, I'm $_HOSTERNIE$!");
     EXPECT_EQ("Hi, I'm Bert!", expanded_host_notes());
 
@@ -120,7 +120,7 @@ TEST_F(OffsetStringHostMacroColumnTest, expand_host_custom) {
     EXPECT_EQ("Hi, I'm $_HOSTKERMIT$!", expanded_host_notes());
 }
 
-TEST_F(OffsetStringHostMacroColumnTest, expand_service_builtin) {
+TEST_F(OffsetStringHostMacroColumnTest, ExpandServiceBuiltin) {
     set_host_notes("checking $SERVICEDESC$...");
     EXPECT_EQ("checking $SERVICEDESC$...", expanded_host_notes());
 
@@ -140,7 +140,7 @@ TEST_F(OffsetStringHostMacroColumnTest, expand_service_builtin) {
     EXPECT_EQ("checking $SERVICECHECKCOMMAND$...", expanded_host_notes());
 }
 
-TEST_F(OffsetStringHostMacroColumnTest, expand_service_custom) {
+TEST_F(OffsetStringHostMacroColumnTest, ExpandServiceCustom) {
     set_host_notes("checking $_SERVICESTATLER$...");
     EXPECT_EQ("checking $_SERVICESTATLER$...", expanded_host_notes());
 
@@ -148,7 +148,7 @@ TEST_F(OffsetStringHostMacroColumnTest, expand_service_custom) {
     EXPECT_EQ("checking $_SERVICEFOZZIE$...", expanded_host_notes());
 }
 
-TEST_F(OffsetStringHostMacroColumnTest, expand_user) {
+TEST_F(OffsetStringHostMacroColumnTest, ExpandUser) {
     set_host_notes("checking $USER11$...");
     EXPECT_EQ("checking I drink and I know things...", expanded_host_notes());
 
@@ -159,7 +159,7 @@ TEST_F(OffsetStringHostMacroColumnTest, expand_user) {
     EXPECT_EQ("checking $NONSENSE$...", expanded_host_notes());
 }
 
-TEST_F(OffsetStringHostMacroColumnTest, border_cases) {
+TEST_F(OffsetStringHostMacroColumnTest, BorderCases) {
     test_host.name = nullptr;
     set_host_notes("checking $HOSTNAME$...");
     EXPECT_EQ("checking $HOSTNAME$...", expanded_host_notes());
@@ -205,7 +205,7 @@ TEST_F(OffsetStringServiceMacroColumnTest, misc) {
     EXPECT_EQ(&test_service, ossmc.columnData<void>(Row{&test_service}));
 }
 
-TEST_F(OffsetStringServiceMacroColumnTest, expand_host_builtin) {
+TEST_F(OffsetStringServiceMacroColumnTest, ExpandHostBuiltin) {
     set_service_notes("checking $HOSTNAME$...");
     EXPECT_EQ("checking sesame_street...", expanded_service_notes());
 
@@ -231,7 +231,7 @@ TEST_F(OffsetStringServiceMacroColumnTest, expand_host_builtin) {
     EXPECT_EQ("checking the host check command...", expanded_service_notes());
 }
 
-TEST_F(OffsetStringServiceMacroColumnTest, expand_host_custom) {
+TEST_F(OffsetStringServiceMacroColumnTest, ExpandHostCustom) {
     set_service_notes("Hi, I'm $_HOSTERNIE$!");
     EXPECT_EQ("Hi, I'm Bert!", expanded_service_notes());
 
@@ -239,7 +239,7 @@ TEST_F(OffsetStringServiceMacroColumnTest, expand_host_custom) {
     EXPECT_EQ("Hi, I'm $_HOSTKERMIT$!", expanded_service_notes());
 }
 
-TEST_F(OffsetStringServiceMacroColumnTest, expand_service_builtin) {
+TEST_F(OffsetStringServiceMacroColumnTest, ExpandServiceBuiltin) {
     set_service_notes("checking $SERVICEDESC$...");
     EXPECT_EQ("checking muppet_show...", expanded_service_notes());
 
@@ -259,7 +259,7 @@ TEST_F(OffsetStringServiceMacroColumnTest, expand_service_builtin) {
     EXPECT_EQ("checking check_fozzie_bear...", expanded_service_notes());
 }
 
-TEST_F(OffsetStringServiceMacroColumnTest, expand_service_custom) {
+TEST_F(OffsetStringServiceMacroColumnTest, ExpandServiceCustom) {
     set_service_notes("checking $_SERVICESTATLER$...");
     EXPECT_EQ("checking Boo!...", expanded_service_notes());
 
@@ -267,7 +267,7 @@ TEST_F(OffsetStringServiceMacroColumnTest, expand_service_custom) {
     EXPECT_EQ("checking $_SERVICEFOZZIE$...", expanded_service_notes());
 }
 
-TEST_F(OffsetStringServiceMacroColumnTest, expand_user) {
+TEST_F(OffsetStringServiceMacroColumnTest, ExpandUser) {
     set_service_notes("checking $USER11$...");
     EXPECT_EQ("checking I drink and I know things...",
               expanded_service_notes());
@@ -279,7 +279,7 @@ TEST_F(OffsetStringServiceMacroColumnTest, expand_user) {
     EXPECT_EQ("checking $NONSENSE$...", expanded_service_notes());
 }
 
-TEST_F(OffsetStringServiceMacroColumnTest, border_cases) {
+TEST_F(OffsetStringServiceMacroColumnTest, BorderCases) {
     test_service.description = nullptr;
     set_service_notes("checking $SERVICEDESC$...");
     EXPECT_EQ("checking $SERVICEDESC$...", expanded_service_notes());

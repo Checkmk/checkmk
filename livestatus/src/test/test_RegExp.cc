@@ -67,7 +67,7 @@ TEST(RegExpTest, IgnorePattern) {
     EXPECT_TRUE(r.search("GNARK mMbZKENU"));
 }
 
-TEST(RegExpTest, CMK_1381) {
+TEST(RegExpTest, CMK1381) {
     // Regression test for wrong quoting of special characters
     RegExp r{"xy.z|", RegExp::Case::respect, RegExp::Syntax::literal};
 

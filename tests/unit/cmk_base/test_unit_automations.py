@@ -42,8 +42,6 @@ def test_registered_automations(site):
             'create-package',
             'edit-package',
             'install-package',
-            'remove-package',
-            'release-package',
             'remove-unpackaged-file',
         ]
 

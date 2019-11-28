@@ -236,7 +236,7 @@ $(INSTALL_GLOBAL): $(INSTALL)
 	    if [ -d "$(DESTDIR)$(OMD_ROOT)/$$SKEL_DIR" ]; then \
 	        echo "ERROR: The directory $$SKEL_DIR is only allowed to exist in skel/" ; \
 	        find "$(DESTDIR)$(OMD_ROOT)/$$SKEL_DIR" ; \
-	        exit 1 ;
+	        exit 1 ; \
 	    fi ; \
 	done
 	$(TOUCH) $@

@@ -37,12 +37,6 @@ def test_registered_automations(site):
     if cmk.is_enterprise_edition():
         needed_automations += [
             'bake-agents',
-            'get-package-info',
-            'get-package',
-            'create-package',
-            'edit-package',
-            'install-package',
-            'remove-unpackaged-file',
         ]
 
     registered_automations = cmk_base.automations.automations._automations.keys()

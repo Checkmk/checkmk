@@ -678,26 +678,23 @@ def write_exception_to_agent_info_section(exception):
     section.write()
 
 
-def main(argv=None):
-
-    args = parse_arguments(argv or sys.argv[1:])
-    selector = Selector(args)
-    if args.dump_config:
-        sys.stdout.write("Configuration:\n%s\n" % selector)
-        return 0
-    LOG.debug("%s", selector)
-
+def main_subscription(args, selector, subscription):
     try:
-        rest_client.login(args.tenant, args.client, args.secret, args.subscription)
+        rest_client.login(args.tenant, args.client, args.secret, subscription)
 
         resources = [
             r for r in map(AzureResource, rest_client.resources()) if selector.do_monitor(r)
         ]
         monitored_groups = sorted(set(r.info['group'] for r in resources))
+    except () if args.debug else Exception as exc:
+        write_exception_to_agent_info_section(exc)
+        return
 
-        write_group_info(monitored_groups)
+    write_group_info(monitored_groups)
 
-        usage_client = UsageClient(args.subscription, args.debug)
+    usage_client = UsageClient(subscription, args.debug)
+
+    try:
         usage_client.write_sections(monitored_groups)
 
         func_args = ((resource, args) for resource in resources)
@@ -708,6 +705,18 @@ def main(argv=None):
 
     except () if args.debug else Exception as exc:
         write_exception_to_agent_info_section(exc)
+
+
+def main(argv=None):
+
+    args = parse_arguments(argv or sys.argv[1:])
+    selector = Selector(args)
+    if args.dump_config:
+        sys.stdout.write("Configuration:\n%s\n" % selector)
+        return 0
+    LOG.debug("%s", selector)
+
+    main_subscription(args, selector, args.subscription)
     return 0
 
 

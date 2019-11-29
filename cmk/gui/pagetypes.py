@@ -791,7 +791,7 @@ class Overridable(Base):
                 if not userdb.user_exists(user):
                     continue
 
-                user_pages = store.load_data_from_file(path, {})
+                user_pages = store.load_data_from_file(path, default={})
                 for name, page_dict in user_pages.items():
                     page_dict["owner"] = user
                     page_dict["name"] = name

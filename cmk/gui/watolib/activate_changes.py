@@ -132,7 +132,7 @@ def get_replication_paths():
 
 
 def _load_site_replication_status(site_id, lock=False):
-    return store.load_data_from_file(_site_replication_status_path(site_id), {}, lock)
+    return store.load_data_from_file(_site_replication_status_path(site_id), default={}, lock=lock)
 
 
 def _save_site_replication_status(site_id, repl_status):

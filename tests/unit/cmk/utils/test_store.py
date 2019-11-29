@@ -60,7 +60,7 @@ def test_load_data_from_file_not_existing(tmp_path, path_type):
     data = store.load_data_from_file(path_type(tmp_path / "x"))
     assert data is None
 
-    data = store.load_data_from_file(path_type(tmp_path / "x"), "DEFAULT")
+    data = store.load_data_from_file(path_type(tmp_path / "x"), default="DEFAULT")
     assert data == "DEFAULT"
 
 
@@ -68,7 +68,7 @@ def test_load_data_from_file_not_existing(tmp_path, path_type):
 def test_load_data_from_file_empty(tmp_path, path_type):
     locked_file = tmp_path / "test"
     locked_file.write_text(u"", encoding="utf-8")
-    data = store.load_data_from_file(path_type(tmp_path / "x"), "DEF")
+    data = store.load_data_from_file(path_type(tmp_path / "x"), default="DEF")
     assert data == "DEF"
 
 

@@ -1157,7 +1157,7 @@ def load_annotations(lock=False):
         # Support legacy old wrong name-clashing path
         path = cmk.utils.paths.var_dir + "/web/statehist_annotations.mk"
 
-    return store.load_data_from_file(path, {}, lock)
+    return store.load_data_from_file(path, default={}, lock=lock)
 
 
 def update_annotations(site_host_svc, annotation, replace_existing):

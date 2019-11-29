@@ -114,7 +114,7 @@ def _load_single_oid_cache(snmp_config):
     # type: (snmp_utils.SNMPHostConfig) -> Dict[str, str]
     cache_path = "%s/%s.%s" % (cmk.utils.paths.snmp_scan_cache_dir, snmp_config.hostname,
                                snmp_config.ipaddress)
-    return store.load_data_from_file(cache_path, {})
+    return store.load_data_from_file(cache_path, default={})
 
 
 def cleanup_host_caches():

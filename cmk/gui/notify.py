@@ -60,7 +60,7 @@ def get_gui_messages(user_id=None):
     if user_id is None:
         user_id = config.user.id
     path = config.config_dir + "/" + user_id.encode("utf-8") + '/messages.mk'
-    messages = store.load_data_from_file(path, [])
+    messages = store.load_data_from_file(path, default=[])
 
     # Delete too old messages
     updated = False

@@ -398,4 +398,4 @@ class ModeAnalyzeConfig(WatoMode):
         store.save_data_to_file(self._ack_path, acknowledged_werks)
 
     def _load_acknowledgements(self, lock=False):
-        return store.load_data_from_file(self._ack_path, {}, lock=lock)
+        return store.load_data_from_file(self._ack_path, default={}, lock=lock)

@@ -1437,7 +1437,7 @@ def handle_spoolfile(spoolfile):
     notif_uuid = spoolfile.rsplit("/", 1)[-1]
     logger.info("----------------------------------------------------------------------")
     try:
-        data = store.load_data_from_file(spoolfile)
+        data = store.load_data_from_file(spoolfile, default={})
         if "plugin" in data:
             plugin_context = data["context"]
             plugin = data["plugin"]

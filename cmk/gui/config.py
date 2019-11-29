@@ -585,7 +585,7 @@ class LoggedInUser(object):
             return deflt  # No user known at this point of time
 
         path = self.confdir + "/" + name + ".mk"
-        return store.load_data_from_file(path, deflt, lock)
+        return store.load_data_from_file(path, default=deflt, lock=lock)
 
     def save_file(self, name, content, unlock=False):
         save_user_file(name, content, self.id, unlock)

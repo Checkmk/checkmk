@@ -127,7 +127,7 @@ class Config(object):
         self._file_path = file_path
 
     def load(self):
-        return store.load_data_from_file(self._file_path, {
+        return store.load_data_from_file(self._file_path, default={
             "targets": {},
             "jobs": {},
         })

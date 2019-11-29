@@ -41,7 +41,7 @@ public:
         : StringColumn(name, description, offsets)
         , _mc(mc)
         , _varname(varname) {}
-    std::string getValue(Row row) const override;
+    [[nodiscard]] std::string getValue(Row row) const override;
 
 private:
     const MonitoringCore *const _mc;

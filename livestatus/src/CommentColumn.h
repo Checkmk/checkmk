@@ -69,7 +69,7 @@ private:
     bool _with_info;
     bool _with_extra_info;
 
-    std::vector<CommentData> comments_for_row(Row row) const;
+    [[nodiscard]] std::vector<CommentData> comments_for_row(Row row) const;
 };
 
 #endif  // CommentColumn_h

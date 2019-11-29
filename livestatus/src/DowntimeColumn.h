@@ -62,7 +62,7 @@ private:
     bool _is_service;
     info _with_info;
 
-    std::vector<DowntimeData> downtimes_for_row(Row row) const;
+    [[nodiscard]] std::vector<DowntimeData> downtimes_for_row(Row row) const;
 };
 
 #endif  // DowntimeColumn_h

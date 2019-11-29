@@ -41,8 +41,8 @@ public:
     using RRDColumn::RRDColumn;
 
 private:
-    Table table() const override;
-    const void *getObject(Row row) const override;
+    [[nodiscard]] Table table() const override;
+    [[nodiscard]] const void *getObject(Row row) const override;
 };
 
 #endif

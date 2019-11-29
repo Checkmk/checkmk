@@ -37,7 +37,7 @@ public:
                          int extra_offset, int extra_extra_offset, int offset)
         : StringColumn(name, description, indirect_offset, extra_offset,
                        extra_extra_offset, offset) {}
-    std::string getValue(Row row) const override;
+    [[nodiscard]] std::string getValue(Row row) const override;
 };
 
 #endif  // LogEntryStringColumn_h

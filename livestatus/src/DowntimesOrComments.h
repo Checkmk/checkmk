@@ -40,8 +40,8 @@ public:
     explicit DowntimesOrComments(MonitoringCore *mc);
     void registerDowntime(nebstruct_downtime_data *data);
     void registerComment(nebstruct_comment_data *data);
-    auto begin() const { return _entries.cbegin(); }
-    auto end() const { return _entries.cend(); }
+    [[nodiscard]] auto begin() const { return _entries.cbegin(); }
+    [[nodiscard]] auto end() const { return _entries.cend(); }
 
 private:
     std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> _entries;

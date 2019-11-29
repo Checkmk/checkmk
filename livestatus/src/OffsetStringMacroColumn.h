@@ -83,9 +83,10 @@ public:
         , _mc(mc)
         , _string_offset(offset) {}
 
-    std::string getValue(Row row) const override;
+    [[nodiscard]] std::string getValue(Row row) const override;
 
-    virtual std::unique_ptr<MacroExpander> getMacroExpander(Row row) const = 0;
+    [[nodiscard]] virtual std::unique_ptr<MacroExpander> getMacroExpander(
+        Row row) const = 0;
 
 protected:
     const MonitoringCore *const _mc;

@@ -51,7 +51,7 @@ public:
     explicit LogCache(MonitoringCore *mc);
     void update();
 
-    size_t numCachedLogMessages() const;
+    [[nodiscard]] size_t numCachedLogMessages() const;
     void logLineHasBeenAdded(Logfile *logfile, unsigned logclasses);
     auto begin() { return _logfiles.begin(); }
     auto end() { return _logfiles.end(); }
@@ -64,7 +64,7 @@ private:
     std::chrono::system_clock::time_point _last_index_update;
 
     void addToIndex(std::unique_ptr<Logfile> logfile);
-    Logger *logger() const;
+    [[nodiscard]] Logger *logger() const;
 };
 
 #endif  // LogCache_h

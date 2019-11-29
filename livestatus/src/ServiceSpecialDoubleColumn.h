@@ -42,7 +42,7 @@ public:
                        extra_extra_offset, offset)
         , _type(ssdc_type) {}
 
-    double getValue(Row row) const override;
+    [[nodiscard]] double getValue(Row row) const override;
 
 private:
     const Type _type;

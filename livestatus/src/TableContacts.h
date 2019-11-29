@@ -36,10 +36,10 @@ class TableContacts : public Table {
 public:
     explicit TableContacts(MonitoringCore *mc);
 
-    std::string name() const override;
-    std::string namePrefix() const override;
+    [[nodiscard]] std::string name() const override;
+    [[nodiscard]] std::string namePrefix() const override;
     void answerQuery(Query *query) override;
-    Row findObject(const std::string &objectspec) const override;
+    [[nodiscard]] Row findObject(const std::string &objectspec) const override;
 
     static void addColumns(Table *table, const std::string &prefix,
                            int indirect_offset);

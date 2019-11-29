@@ -55,7 +55,8 @@ public:
                                   extra_offset, extra_extra_offset, mc,
                                   offset) {}
 
-    std::unique_ptr<MacroExpander> getMacroExpander(Row row) const override;
+    [[nodiscard]] std::unique_ptr<MacroExpander> getMacroExpander(
+        Row row) const override;
 };
 
 #endif  // OffsetStringHostMacroColumn_h

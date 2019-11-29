@@ -40,7 +40,8 @@ public:
                      extra_extra_offset, offset) {}
 
 private:
-    std::chrono::system_clock::time_point getRawValue(Row row) const override;
+    [[nodiscard]] std::chrono::system_clock::time_point getRawValue(
+        Row row) const override;
 };
 
 #endif  // OffsetTimeColumn_h

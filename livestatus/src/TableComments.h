@@ -36,8 +36,8 @@ class Row;
 class TableComments : public Table {
 public:
     explicit TableComments(MonitoringCore *mc);
-    std::string name() const override;
-    std::string namePrefix() const override;
+    [[nodiscard]] std::string name() const override;
+    [[nodiscard]] std::string namePrefix() const override;
     void answerQuery(Query *query) override;
     bool isAuthorized(Row row, const contact *ctc) const override;
 };

@@ -55,19 +55,19 @@ public:
         , _mc(mc)
         , _kind(kind) {}
 
-    ColumnType type() const override { return ColumnType::dict; };
+    [[nodiscard]] ColumnType type() const override { return ColumnType::dict; };
 
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;
 
-    std::unique_ptr<Filter> createFilter(
+    [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
         const std::string &value) const override;
 
-    std::unique_ptr<Aggregator> createAggregator(
+    [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const override;
 
-    Attributes getValue(Row row) const;
+    [[nodiscard]] Attributes getValue(Row row) const;
 
 private:
     const MonitoringCore *const _mc;

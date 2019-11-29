@@ -47,7 +47,7 @@ public:
     class Name {
     public:
         explicit Name(std::string value) : _value(std::move(value)) {}
-        std::string string() const { return _value; }
+        [[nodiscard]] std::string string() const { return _value; }
 
     private:
         std::string _value;
@@ -58,7 +58,7 @@ public:
         explicit MangledName(const std::string &name)
             : _value(pnp_cleanup(name)) {}
         explicit MangledName(const Name &name) : MangledName(name.string()) {}
-        std::string string() const { return _value; }
+        [[nodiscard]] std::string string() const { return _value; }
 
     private:
         std::string _value;
@@ -77,14 +77,14 @@ public:
         , _min(std::move(min))
         , _max(std::move(max)) {}
 
-    Name name() const { return _name; }
-    MangledName mangled_name() const { return _mangled_name; }
-    std::string value() const { return _value; }
-    std::string uom() const { return _uom; }
-    std::string warn() const { return _warn; }
-    std::string crit() const { return _crit; }
-    std::string min() const { return _min; }
-    std::string max() const { return _max; }
+    [[nodiscard]] Name name() const { return _name; }
+    [[nodiscard]] MangledName mangled_name() const { return _mangled_name; }
+    [[nodiscard]] std::string value() const { return _value; }
+    [[nodiscard]] std::string uom() const { return _uom; }
+    [[nodiscard]] std::string warn() const { return _warn; }
+    [[nodiscard]] std::string crit() const { return _crit; }
+    [[nodiscard]] std::string min() const { return _min; }
+    [[nodiscard]] std::string max() const { return _max; }
 
 private:
     // We still need the original name for the Carbon interface, but apart from

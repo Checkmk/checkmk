@@ -45,7 +45,7 @@ public:
             filepath);
     std::unique_ptr<Column> createColumn(const std::string &name,
                                          const std::string &arguments) override;
-    std::filesystem::path basepath() const;
+    [[nodiscard]] std::filesystem::path basepath() const;
 
 private:
     const std::function<std::filesystem::path()> _basepath;

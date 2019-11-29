@@ -61,27 +61,27 @@ public:
            int extra_offset, int extra_extra_offset, int offset);
     virtual ~Column() = default;
 
-    std::string name() const { return _name; }
-    std::string description() const { return _description; }
+    [[nodiscard]] std::string name() const { return _name; }
+    [[nodiscard]] std::string description() const { return _description; }
 
     template <typename T>
-    const T *columnData(Row row) const {
+    [[nodiscard]] const T *columnData(Row row) const {
         return static_cast<const T *>(shiftPointer(row));
     }
 
-    virtual ColumnType type() const = 0;
+    [[nodiscard]] virtual ColumnType type() const = 0;
 
     virtual void output(Row row, RowRenderer &r, const contact *auth_user,
                         std::chrono::seconds timezone_offset) const = 0;
 
-    virtual std::unique_ptr<Filter> createFilter(
+    [[nodiscard]] virtual std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
         const std::string &value) const = 0;
 
-    virtual std::unique_ptr<Aggregator> createAggregator(
+    [[nodiscard]] virtual std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const = 0;
 
-    Logger *logger() const { return _logger; }
+    [[nodiscard]] Logger *logger() const { return _logger; }
 
 private:
     Logger *const _logger;
@@ -89,7 +89,7 @@ private:
     std::string _description;
     Offsets _offsets;
 
-    const void *shiftPointer(Row row) const;
+    [[nodiscard]] const void *shiftPointer(Row row) const;
 };
 
 #endif  // Column_h

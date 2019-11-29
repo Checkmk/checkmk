@@ -42,11 +42,12 @@ class TableLog : public Table {
 public:
     TableLog(MonitoringCore *mc, LogCache *log_cache);
 
-    std::string name() const override;
-    std::string namePrefix() const override;
+    [[nodiscard]] std::string name() const override;
+    [[nodiscard]] std::string namePrefix() const override;
     void answerQuery(Query *query) override;
     bool isAuthorized(Row row, const contact *ctc) const override;
-    std::shared_ptr<Column> column(std::string colname) const override;
+    [[nodiscard]] std::shared_ptr<Column> column(
+        std::string colname) const override;
 
 private:
     LogCache *_log_cache;

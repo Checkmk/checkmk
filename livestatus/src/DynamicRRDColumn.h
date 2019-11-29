@@ -45,8 +45,8 @@ public:
     DynamicRRDColumn(const std::string &name, const std::string &description,
                      MonitoringCore *mc, Column::Offsets);
 
-    std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
-                                         const std::string &value) const;
+    [[nodiscard]] std::unique_ptr<Filter> createFilter(
+        RelationalOperator relOp, const std::string &value) const;
 
     std::unique_ptr<Column> createColumn(
         const std::string &name, const std::string &arguments) override = 0;
@@ -60,7 +60,7 @@ protected:
         int resolution;
         int max_entries;
     };
-    Args parse_args(const std::string &arguments) const;
+    [[nodiscard]] Args parse_args(const std::string &arguments) const;
 
 private:
     MonitoringCore *_mc;

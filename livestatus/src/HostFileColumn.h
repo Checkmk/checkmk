@@ -45,10 +45,13 @@ public:
                        const Column&, const Row&)>
                        filepath);
 
-    std::unique_ptr<std::vector<char>> getValue(Row row) const override;
-    std::filesystem::path basepath() const;
-    std::optional<std::filesystem::path> filepath(const Row&) const;
-    std::optional<std::filesystem::path> abspath(const Row&) const;
+    [[nodiscard]] std::unique_ptr<std::vector<char>> getValue(
+        Row row) const override;
+    [[nodiscard]] std::filesystem::path basepath() const;
+    [[nodiscard]] std::optional<std::filesystem::path> filepath(
+        const Row&) const;
+    [[nodiscard]] std::optional<std::filesystem::path> abspath(
+        const Row&) const;
 
 private:
     const std::function<std::filesystem::path()> _basepath;

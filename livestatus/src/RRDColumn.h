@@ -60,8 +60,8 @@ public:
     enum class Table { objects, services, hosts };
 
 private:
-    virtual const void *getObject(Row row) const = 0;
-    virtual Table table() const = 0;
+    [[nodiscard]] virtual const void *getObject(Row row) const = 0;
+    [[nodiscard]] virtual Table table() const = 0;
 
     MonitoringCore *_mc;
     std::string _rpn;
@@ -77,7 +77,7 @@ private:
         std::vector<double> values;
     };
 
-    Data getData(Row row) const;
+    [[nodiscard]] Data getData(Row row) const;
 };
 
 #endif  // RRDColumn_h

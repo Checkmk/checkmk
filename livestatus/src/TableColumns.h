@@ -38,8 +38,8 @@ class TableColumns : public Table {
 public:
     explicit TableColumns(MonitoringCore *mc);
 
-    std::string name() const override;
-    std::string namePrefix() const override;
+    [[nodiscard]] std::string name() const override;
+    [[nodiscard]] std::string namePrefix() const override;
     void answerQuery(Query *query) override;
 
     void addTable(const Table &table);

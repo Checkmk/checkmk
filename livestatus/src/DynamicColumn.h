@@ -39,10 +39,10 @@ public:
     DynamicColumn(std::string name, std::string description,
                   Column::Offsets offsets);
     virtual ~DynamicColumn();
-    std::string name() const;
+    [[nodiscard]] std::string name() const;
     virtual std::unique_ptr<Column> createColumn(
         const std::string &name, const std::string &arguments) = 0;
-    Logger *logger() const;
+    [[nodiscard]] Logger *logger() const;
 
 protected:
     Logger *const _logger;

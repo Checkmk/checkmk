@@ -40,7 +40,7 @@ public:
         : OffsetStringColumn(name, description, indirect_offset, extra_offset,
                              extra_extra_offset, offset) {}
 
-    std::unique_ptr<Aggregator> createAggregator(
+    [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const override;
 };
 

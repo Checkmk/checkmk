@@ -46,7 +46,7 @@ public:
                        extra_extra_offset, offset)
         , _type(hsdc_type) {}
 
-    double getValue(Row row) const override;
+    [[nodiscard]] double getValue(Row row) const override;
 
 #ifdef CMC
     static double staleness(const Object* object);

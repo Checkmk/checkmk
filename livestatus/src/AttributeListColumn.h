@@ -45,7 +45,7 @@ public:
         : ListColumn(name, description, offsets)
         , _int_view_column(name, description, offsets) {}
 
-    std::unique_ptr<Filter> createFilter(
+    [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
         const std::string &value) const override;
 

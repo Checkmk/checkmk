@@ -1,6 +1,6 @@
 # Package definition
 PYTHON := Python
-PYTHON_VERS := 2.7.16
+PYTHON_VERS := 2.7.17
 PYTHON_DIR := $(PYTHON)-$(PYTHON_VERS)
 # Increase this to enforce a recreation of the build cache
 PYTHON_BUILD_ID := 0
@@ -143,6 +143,6 @@ $(PYTHON_INSTALL): $(PYTHON_CACHE_PKG_PROCESS)
 	$(TOUCH) $@
 
 $(PYTHON)-upstream:
-	git rm Python-*.tgz
-	wget https://www.python.org/ftp/python/$(PYTHON_VERSION)/Python-$(PYTHON_VERSION).tgz
-	git add Python-$(PYTHON_VERSION).tgz
+	git rm Python-*.tgz || true
+	wget https://www.python.org/ftp/python/$(PYTHON_VERS)/Python-$(PYTHON_VERS).tgz
+	git add Python-$(PYTHON_VERS).tgz

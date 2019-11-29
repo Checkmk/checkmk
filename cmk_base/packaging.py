@@ -262,8 +262,10 @@ def package_pack(args):
     if not package:
         raise PackageException("Package %s not existing or corrupt." % pacname)
     tarfilename = "%s-%s%s" % (pacname, package["version"], _pac_ext)
+
     logger.log(VERBOSE, "Packing %s into %s...", pacname, tarfilename)
-    create_mkp_file(package, file_name=tarfilename)
+    with Path(tarfilename).open("wb") as f:
+        create_mkp_file(package, f)
     logger.log(VERBOSE, "Successfully created %s", tarfilename)
 
 

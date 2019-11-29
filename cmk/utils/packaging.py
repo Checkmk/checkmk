@@ -136,8 +136,8 @@ def release_package(pacname):
     _remove_package_info(pacname)
 
 
-def create_mkp_file(package, file_name=None, file_object=None):
-    # type: (PackageInfo, Optional[Text], BinaryIO) -> None
+def create_mkp_file(package, file_object=None):
+    # type: (PackageInfo, BinaryIO) -> None
     package["version.packaged"] = cmk.__version__
 
     def create_tar_info(filename, size):
@@ -151,7 +151,7 @@ def create_mkp_file(package, file_name=None, file_object=None):
         info.name = filename
         return info
 
-    tar = tarfile.open(name=file_name, fileobj=file_object, mode="w:gz")
+    tar = tarfile.open(fileobj=file_object, mode="w:gz")
 
     # add the regular info file (Python format)
     info_file = StringIO(pprint.pformat(package))

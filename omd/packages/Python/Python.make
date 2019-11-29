@@ -143,6 +143,6 @@ $(PYTHON_INSTALL): $(PYTHON_CACHE_PKG_PROCESS)
 	$(TOUCH) $@
 
 $(PYTHON)-upstream:
-	git rm Python-*.tgz || true
-	wget https://www.python.org/ftp/python/$(PYTHON_VERS)/Python-$(PYTHON_VERS).tgz
-	git add Python-$(PYTHON_VERS).tgz
+	git rm $(PYTHON_PACKAGE_DIR)/Python-*.tgz || true
+	wget -O $(PYTHON_PACKAGE_DIR)/Python-$(PYTHON_VERS).tgz https://www.python.org/ftp/python/$(PYTHON_VERS)/Python-$(PYTHON_VERS).tgz
+	git add $(PYTHON_PACKAGE_DIR)/Python-$(PYTHON_VERS).tgz

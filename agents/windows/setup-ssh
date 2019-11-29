@@ -14,11 +14,7 @@ ssh_key=id_rsa_windows_test
 remote_ip=$(grep "remote_ip =" $script_dir/it/remote.py | sed "s/^.*'\(.*\)'/\1/g")
 remoteuser=$(grep "remoteuser =" $script_dir/it/remote.py | sed "s/^.*'\(.*\)'/\1/g")
 
-if [[ $SUDO_USER == jenkins ]]; then
-    home_dir=/var/lib/jenkins
-else
-    home_dir=/home/$SUDO_USER
-fi
+home_dir=/home/$SUDO_USER
 
 if [[ ! -f "$home_dir/.ssh/$ssh_key" ]] || [[ ! -f "$home_dir/.ssh/${ssh_key}.pub" ]]; then
     echo "SSH key pair '$ssh_key' not found. Please generate a new key pair with the command"

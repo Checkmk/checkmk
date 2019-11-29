@@ -26,13 +26,14 @@
 #define FixedIntColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include "Column.h"
 #include "IntColumn.h"
 
 class FixedIntColumn : public IntColumn {
 public:
     FixedIntColumn(const std::string& name, const std::string& description,
-                   int value)
-        : IntColumn(name, description, {-1, -1, -1, 0}), _value(value) {}
+                   Column::Offsets offsets, int value)
+        : IntColumn(name, description, offsets), _value(value) {}
 
     int32_t getValue(Row /* row */,
                      const contact* /* auth_user */) const override {

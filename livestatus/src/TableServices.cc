@@ -426,17 +426,17 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         indirect_offset, -1, -1, 0));
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes", "A list of all downtime ids of the service",
-        indirect_offset, -1, -1, 0, table->core(), true,
+        Column::Offsets{indirect_offset, -1, -1, 0}, table->core(), true,
         DowntimeColumn::info::none));
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes_with_info",
         "A list of all downtimes of the service with id, author and comment",
-        indirect_offset, -1, -1, 0, table->core(), true,
+        Column::Offsets{indirect_offset, -1, -1, 0}, table->core(), true,
         DowntimeColumn::info::medium));
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes_with_extra_info",
         "A list of all downtimes of the service with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
-        indirect_offset, -1, -1, 0, table->core(), true,
+        Column::Offsets{indirect_offset, -1, -1, 0}, table->core(), true,
         DowntimeColumn::info::full));
     table->addColumn(std::make_unique<CommentColumn>(
         prefix + "comments", "A list of all comment ids of the service",
@@ -549,10 +549,12 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         table->core(), Column::Offsets{indirect_offset, -1, -1, 0}));
     table->addColumn(std::make_unique<FixedIntColumn>(
         prefix + "cached_at",
-        "A dummy column in order to be compatible with Check_MK Multisite", 0));
+        "A dummy column in order to be compatible with Check_MK Multisite",
+        Column::Offsets{-1, -1, -1, 0}, 0));
     table->addColumn(std::make_unique<FixedIntColumn>(
         prefix + "cache_interval",
-        "A dummy column in order to be compatible with Check_MK Multisite", 0));
+        "A dummy column in order to be compatible with Check_MK Multisite",
+        Column::Offsets{-1, -1, -1, 0}, 0));
 }
 
 void TableServices::answerQuery(Query *query) {

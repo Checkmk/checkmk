@@ -26,13 +26,14 @@
 #define IntPointerColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include "Column.h"
 #include "IntColumn.h"
 
 class IntPointerColumn : public IntColumn {
 public:
     IntPointerColumn(const std::string& name, const std::string& description,
-                     const int* number)
-        : IntColumn(name, description, -1, -1, -1, 0), _number(number) {}
+                     Column::Offsets offsets, const int* number)
+        : IntColumn(name, description, offsets), _number(number) {}
 
     int32_t getValue(Row /* row */,
                      const contact* /* auth_user */) const override {

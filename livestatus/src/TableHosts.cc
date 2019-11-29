@@ -465,22 +465,22 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<HostContactsColumn>(
         prefix + "contacts",
         "A list of all contacts of this host, either direct or via a contact group",
-        indirect_offset, extra_offset, -1, 0));
+        Column::Offsets{indirect_offset, extra_offset, -1, 0}));
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes",
         "A list of the ids of all scheduled downtimes of this host",
-        indirect_offset, extra_offset, -1, 0, table->core(), false,
-        DowntimeColumn::info::none));
+        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
+        false, DowntimeColumn::info::none));
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes_with_info",
         "A list of the scheduled downtimes of the host with id, author and comment",
-        indirect_offset, extra_offset, -1, 0, table->core(), false,
-        DowntimeColumn::info::medium));
+        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
+        false, DowntimeColumn::info::medium));
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes_with_extra_info",
         "A list of the scheduled downtimes of the host with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
-        indirect_offset, extra_offset, -1, 0, table->core(), false,
-        DowntimeColumn::info::full));
+        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
+        false, DowntimeColumn::info::full));
     table->addColumn(std::make_unique<CommentColumn>(
         prefix + "comments", "A list of the ids of all comments of this host",
         indirect_offset, extra_offset, -1, 0, table->core(), false, false,
@@ -576,12 +576,14 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "parents", "A list of all direct parents of the host",
-        indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, parent_hosts), table->core(), false));
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, parent_hosts)},
+        table->core(), false));
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "childs", "A list of all direct childs of the host",
-        indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, child_hosts), table->core(), false));
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, child_hosts)},
+        table->core(), false));
     table->addDynamicColumn(std::make_unique<DynamicHostRRDColumn>(
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",
@@ -650,17 +652,17 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<HostSpecialIntColumn>(
         prefix + "hard_state",
         "The effective hard state of the host (eliminates a problem in hard_state)",
-        indirect_offset, extra_offset, -1, 0, table->core(),
+        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
         HostSpecialIntColumn::Type::real_hard_state));
     table->addColumn(std::make_unique<HostSpecialIntColumn>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this host (-1/0/1)",
-        indirect_offset, extra_offset, -1, 0, table->core(),
+        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
         HostSpecialIntColumn::Type::pnp_graph_present));
     table->addColumn(std::make_unique<HostSpecialIntColumn>(
         prefix + "mk_inventory_last",
         "The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present",
-        indirect_offset, extra_offset, -1, 0, table->core(),
+        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core(),
         HostSpecialIntColumn::Type::mk_inventory_last));
 
     table->addColumn(std::make_unique<HostFileColumn>(
@@ -702,7 +704,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<LogwatchListColumn>(
         prefix + "mk_logwatch_files",
         "This list of logfiles with problems fetched via mk_logwatch",
-        indirect_offset, extra_offset, -1, 0, table->core()));
+        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core()));
 
     table->addDynamicColumn(std::make_unique<DynamicHostFileColumn>(
         prefix + "mk_logwatch_file",
@@ -724,8 +726,9 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<HostGroupsColumn>(
         prefix + "groups", "A list of all host groups this host is in",
-        indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, hostgroups_ptr), table->core()));
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, hostgroups_ptr)},
+        table->core()));
     table->addColumn(std::make_unique<ContactGroupsColumn>(
         prefix + "contact_groups",
         "A list of all contact groups this host is in",
@@ -755,7 +758,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<HostMetricsColumn>(
         prefix + "metrics",
         "A list of all metrics of this object that historically existed",
-        indirect_offset, extra_offset, -1, 0, table->core()));
+        Column::Offsets{indirect_offset, extra_offset, -1, 0}, table->core()));
 }
 
 void TableHosts::answerQuery(Query *query) {

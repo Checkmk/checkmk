@@ -107,8 +107,8 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
         "state_type", "The type of the state (varies on different log classes)",
         entry_offset, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _state_type)));
     addColumn(std::make_unique<LogEntryStringColumn>(
-        "state_info", "Additional information about the state", entry_offset,
-        -1, -1, 0));
+        "state_info", "Additional information about the state",
+        Column::Offsets{entry_offset, -1, -1, 0}));
     addColumn(std::make_unique<OffsetIntColumn>(
         "attempt", "The number of the check attempt", entry_offset, -1, -1,
         DANGEROUS_OFFSETOF(LogEntry, _attempt)));

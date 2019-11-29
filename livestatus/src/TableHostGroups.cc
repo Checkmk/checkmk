@@ -68,12 +68,14 @@ void TableHostGroups::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "members",
         "A list of all host names that are members of the hostgroup",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(hostgroup, members),
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(hostgroup, members)},
         table->core(), false));
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "members_with_state",
         "A list of all host names that are members of the hostgroup together with state and has_been_checked",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(hostgroup, members),
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(hostgroup, members)},
         table->core(), true));
 
     table->addColumn(std::make_unique<HostListStateColumn>(

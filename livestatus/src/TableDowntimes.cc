@@ -58,12 +58,13 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
         -1, DANGEROUS_OFFSETOF(Downtime, _entry_time)));
     addColumn(std::make_unique<OffsetIntColumn>(
         "type",
-        "The type of the downtime: 0 if it is active, 1 if it is pending", -1,
-        -1, -1, DANGEROUS_OFFSETOF(Downtime, _type)));
+        "The type of the downtime: 0 if it is active, 1 if it is pending",
+        Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Downtime, _type)}));
     addColumn(std::make_unique<OffsetBoolColumn>(
         "is_service",
-        "0, if this entry is for a host, 1 if it is for a service", -1, -1, -1,
-        DANGEROUS_OFFSETOF(Downtime, _is_service)));
+        "0, if this entry is for a host, 1 if it is for a service",
+        Column::Offsets{-1, -1, -1,
+                        DANGEROUS_OFFSETOF(Downtime, _is_service)}));
 
     addColumn(std::make_unique<OffsetTimeColumn>(
         "start_time", "The start time of the downtime as UNIX timestamp", -1,

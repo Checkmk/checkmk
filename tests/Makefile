@@ -57,7 +57,7 @@ test-format-python: ../.style.yapf
 	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/'
 
 test-format-shell:
-	sudo docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
+	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
 
 test-gui-crawl: $(NODE_MODULES)
 	$(PYTEST) -T gui_crawl $(realpath integration/cmk/gui/test_crawl.py)

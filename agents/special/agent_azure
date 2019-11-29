@@ -357,8 +357,8 @@ class Section(object):
         else:  # assume one single line
             self._cont.append(self.formatline(info))
 
-    def write(self):
-        if not self._cont:
+    def write(self, write_empty=False):
+        if not (write_empty or self._cont):
             return
         with self.LOCK:
             for piggytarget in self._piggytargets:
@@ -606,7 +606,9 @@ class UsageClient(DataCache):
             usage_data = self.get_data()
         except ApiErrorMissingData if self.debug else Exception as exc:
             LOG.warning("%s", exc)
-            write_exception_to_agent_info_section(exc)
+            write_exception_to_agent_info_section(exc, "Usage client")
+            # write an empty section to all groups:
+            AzureSection('usagedetails', monitored_groups + ['']).write(write_empty=True)
             return
 
         cacheinfo = (self.cache_timestamp or time.time(), self.cache_interval)
@@ -675,7 +677,7 @@ def write_group_info(monitored_groups, monitored_resources):
     AzureSection('agent_info', monitored_groups).write()
 
 
-def write_exception_to_agent_info_section(exception):
+def write_exception_to_agent_info_section(exception, component):
     # those exeptions are quite noisy. try to make them more concise:
     msg = str(exception).split('Trace ID')[0]
     msg = msg.split(':', 2)[-1].strip(' ,')
@@ -683,7 +685,7 @@ def write_exception_to_agent_info_section(exception):
     if "does not have authorization to perform action" in msg:
         msg += "HINT: Make sure you have a proper role asigned to your client!"
 
-    value = json.dumps((2, msg))
+    value = json.dumps((2, "%s: %s" % (component, msg)))
     section = AzureSection('agent_info')
     section.add(('agent-bailout', value))
     section.write()
@@ -698,7 +700,7 @@ def main_subscription(args, selector, subscription):
         ]
         monitored_groups = sorted(set(r.info['group'] for r in resources))
     except () if args.debug else Exception as exc:
-        write_exception_to_agent_info_section(exc)
+        write_exception_to_agent_info_section(exc, "Management client")
         return
 
     write_group_info(monitored_groups, resources)
@@ -714,7 +716,7 @@ def main_subscription(args, selector, subscription):
                 section.write()
 
     except () if args.debug else Exception as exc:
-        write_exception_to_agent_info_section(exc)
+        write_exception_to_agent_info_section(exc, "Management client")
 
 
 def main(argv=None):

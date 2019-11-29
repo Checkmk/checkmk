@@ -86,6 +86,18 @@ def discovery_azure_agent_info(parsed):
     yield None, {'discovered_resources': parsed.get('monitored-resources', [])}
 
 
+def agent_bailouts(bailouts):
+    now = time.time()
+    for status, text in bailouts:
+        if text.startswith("Usage client"):
+            # Usage API is unreliable.
+            # Only use state if this goes on for more than an hour.
+            first_seen = get_item_state(text, default=now)
+            set_item_state(text, first_seen)
+            status = 0 if (now - first_seen < 3600) else status
+        yield status, text
+
+
 def remaining_api_reads(reads, params):
     if not isinstance(reads, int):
         return params['remaining_reads_unknown_state'], "Remaining API reads: %s" % reads
@@ -144,8 +156,8 @@ def agent_issues(issues, params):
 
 def check_azure_agent_info(_no_item, params, parsed):
 
-    for status, text in parsed.get('agent-bailout', []):
-        yield status, text
+    for subresult in agent_bailouts(parsed.get('agent-bailout', [])):
+        yield subresult
 
     reads = parsed.get('remaining-reads')
     if reads is not None:

@@ -39,11 +39,7 @@ class RowRenderer;
 
 class DoubleColumn : public Column {
 public:
-    DoubleColumn(const std::string &name, const std::string &description,
-                 int indirect_offset, int extra_offset, int extra_extra_offset,
-                 int offset)
-        : Column(name, description, indirect_offset, extra_offset,
-                 extra_extra_offset, offset) {}
+    using Column::Column;
     [[nodiscard]] virtual double getValue(Row row) const = 0;
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;

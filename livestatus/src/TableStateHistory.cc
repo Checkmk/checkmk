@@ -108,8 +108,9 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         "duration", "Duration of state (until - from)", -1, -1, -1,
         DANGEROUS_OFFSETOF(HostServiceState, _duration)));
     addColumn(std::make_unique<OffsetDoubleColumn>(
-        "duration_part", "Duration part in regard to the query timeframe", -1,
-        -1, -1, DANGEROUS_OFFSETOF(HostServiceState, _duration_part)));
+        "duration_part", "Duration part in regard to the query timeframe",
+        Column::Offsets{-1, -1, -1,
+                        DANGEROUS_OFFSETOF(HostServiceState, _duration_part)}));
     addColumn(std::make_unique<OffsetIntColumn>(
         "state",
         "The state of the host or service in question - OK(0) / WARNING(1) / CRITICAL(2) / UNKNOWN(3) / UNMONITORED(-1)",
@@ -163,31 +164,39 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         DANGEROUS_OFFSETOF(HostServiceState, _duration_ok)));
     addColumn(std::make_unique<OffsetDoubleColumn>(
         "duration_part_ok", "OK duration part in regard to the query timeframe",
-        -1, -1, -1, DANGEROUS_OFFSETOF(HostServiceState, _duration_part_ok)));
+        Column::Offsets{
+            -1, -1, -1,
+            DANGEROUS_OFFSETOF(HostServiceState, _duration_part_ok)}));
 
     addColumn(std::make_unique<OffsetIntColumn>(
         "duration_warning", "WARNING duration of state (until - from)", -1, -1,
         -1, DANGEROUS_OFFSETOF(HostServiceState, _duration_warning)));
     addColumn(std::make_unique<OffsetDoubleColumn>(
         "duration_part_warning",
-        "WARNING duration part in regard to the query timeframe", -1, -1, -1,
-        DANGEROUS_OFFSETOF(HostServiceState, _duration_part_warning)));
+        "WARNING duration part in regard to the query timeframe",
+        Column::Offsets{
+            -1, -1, -1,
+            DANGEROUS_OFFSETOF(HostServiceState, _duration_part_warning)}));
 
     addColumn(std::make_unique<OffsetIntColumn>(
         "duration_critical", "CRITICAL duration of state (until - from)", -1,
         -1, -1, DANGEROUS_OFFSETOF(HostServiceState, _duration_critical)));
     addColumn(std::make_unique<OffsetDoubleColumn>(
         "duration_part_critical",
-        "CRITICAL duration part in regard to the query timeframe", -1, -1, -1,
-        DANGEROUS_OFFSETOF(HostServiceState, _duration_part_critical)));
+        "CRITICAL duration part in regard to the query timeframe",
+        Column::Offsets{
+            -1, -1, -1,
+            DANGEROUS_OFFSETOF(HostServiceState, _duration_part_critical)}));
 
     addColumn(std::make_unique<OffsetIntColumn>(
         "duration_unknown", "UNKNOWN duration of state (until - from)", -1, -1,
         -1, DANGEROUS_OFFSETOF(HostServiceState, _duration_unknown)));
     addColumn(std::make_unique<OffsetDoubleColumn>(
         "duration_part_unknown",
-        "UNKNOWN duration part in regard to the query timeframe", -1, -1, -1,
-        DANGEROUS_OFFSETOF(HostServiceState, _duration_part_unknown)));
+        "UNKNOWN duration part in regard to the query timeframe",
+        Column::Offsets{
+            -1, -1, -1,
+            DANGEROUS_OFFSETOF(HostServiceState, _duration_part_unknown)}));
 
     addColumn(std::make_unique<OffsetIntColumn>(
         "duration_unmonitored", "UNMONITORED duration of state (until - from)",
@@ -195,8 +204,10 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         DANGEROUS_OFFSETOF(HostServiceState, _duration_unmonitored)));
     addColumn(std::make_unique<OffsetDoubleColumn>(
         "duration_part_unmonitored",
-        "UNMONITORED duration part in regard to the query timeframe", -1, -1,
-        -1, DANGEROUS_OFFSETOF(HostServiceState, _duration_part_unmonitored)));
+        "UNMONITORED duration part in regard to the query timeframe",
+        Column::Offsets{
+            -1, -1, -1,
+            DANGEROUS_OFFSETOF(HostServiceState, _duration_part_unmonitored)}));
 
     // join host and service tables
     TableHosts::addColumns(this, "current_host_",

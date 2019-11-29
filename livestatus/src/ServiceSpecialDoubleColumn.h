@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
+#include "Column.h"
 #include "DoubleColumn.h"
 class Row;
 
@@ -35,12 +36,9 @@ public:
     enum class Type { staleness };
 
     ServiceSpecialDoubleColumn(const std::string& name,
-                               const std::string& description, int indirect,
-                               int extra_offset, int extra_extra_offset,
-                               int offset, Type ssdc_type)
-        : DoubleColumn(name, description, indirect, extra_offset,
-                       extra_extra_offset, offset)
-        , _type(ssdc_type) {}
+                               const std::string& description,
+                               Column::Offsets offsets, Type ssdc_type)
+        : DoubleColumn(name, description, offsets), _type(ssdc_type) {}
 
     [[nodiscard]] double getValue(Row row) const override;
 

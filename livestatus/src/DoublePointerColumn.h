@@ -26,14 +26,14 @@
 #define DoublePointerColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include "Column.h"
 #include "DoubleColumn.h"
 
 class DoublePointerColumn : public DoubleColumn {
 public:
     DoublePointerColumn(const std::string &name, const std::string &description,
-                        const double *number)
-        : DoubleColumn(name, description, -1, -1, -1, 0), _number(number) {}
-
+                        Column::Offsets offsets, const double *number)
+        : DoubleColumn(name, description, offsets), _number(number) {}
     [[nodiscard]] double getValue(Row /*unused*/) const override {
         return *_number;
     }

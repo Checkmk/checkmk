@@ -247,33 +247,33 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<DoublePointerColumn>(
         "livestatus_usage",
         "The average usage of the livestatus connection slots, ranging from 0.0 (0%) up to 1.0 (100%)",
-        &g_avg_livestatus_usage._average));
+        Column::Offsets{-1, -1, -1, 0}, &g_avg_livestatus_usage._average));
 
     addColumn(std::make_unique<DoublePointerColumn>(
         "average_latency_generic",
         "The average latency for executing active checks (i.e. the time the start of the execution is behind the schedule)",
-        &g_average_active_latency));
+        Column::Offsets{-1, -1, -1, 0}, &g_average_active_latency));
     addColumn(std::make_unique<DoublePointerColumn>(
         "average_latency_cmk",
         "The average latency for executing Check_MK checks (i.e. the time the start of the execution is behind the schedule)",
-        &dummy_double));
+        Column::Offsets{-1, -1, -1, 0}, &dummy_double));
     addColumn(std::make_unique<DoublePointerColumn>(
         "average_latency_real_time",
         "The average latency for executing real time checks (i.e. the time the start of the execution is behind the schedule)",
-        &dummy_double));
+        Column::Offsets{-1, -1, -1, 0}, &dummy_double));
 
     addColumn(std::make_unique<DoublePointerColumn>(
         "helper_usage_generic",
         "The average usage of the generic check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
-        &dummy_double));
+        Column::Offsets{-1, -1, -1, 0}, &dummy_double));
     addColumn(std::make_unique<DoublePointerColumn>(
         "helper_usage_cmk",
         "The average usage of the Check_MK check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
-        &dummy_double));
+        Column::Offsets{-1, -1, -1, 0}, &dummy_double));
     addColumn(std::make_unique<DoublePointerColumn>(
         "helper_usage_real_time",
         "The average usage of the real time check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
-        &dummy_double));
+        Column::Offsets{-1, -1, -1, 0}, &dummy_double));
 
     addColumn(std::make_unique<BoolPointerColumn>(
         "has_event_handlers",
@@ -301,10 +301,10 @@ void TableStatus::addCounterColumns(const std::string &name,
                                     Counter which) {
     addColumn(std::make_unique<DoublePointerColumn>(
         name, "The number of " + description + " since program start",
-        counterAddress(which)));
+        Column::Offsets{-1, -1, -1, 0}, counterAddress(which)));
     addColumn(std::make_unique<DoublePointerColumn>(
         name + "_rate", "The averaged number of " + description + " per second",
-        counterRateAddress(which)));
+        Column::Offsets{-1, -1, -1, 0}, counterRateAddress(which)));
 }
 
 std::string TableStatus::name() const { return "status"; }

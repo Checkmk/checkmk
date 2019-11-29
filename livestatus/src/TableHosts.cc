@@ -394,50 +394,56 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetDoubleColumn>(
         prefix + "check_interval",
         "Number of basic interval lengths between two scheduled checks of the host",
-        indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, check_interval)));
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, check_interval)}));
     table->addColumn(std::make_unique<OffsetDoubleColumn>(
         prefix + "retry_interval",
         "Number of basic interval lengths between checks when retrying after a soft error",
-        indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, retry_interval)));
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, retry_interval)}));
     table->addColumn(std::make_unique<OffsetDoubleColumn>(
         prefix + "notification_interval",
-        "Interval of periodic notification or 0 if its off", indirect_offset,
-        extra_offset, -1, DANGEROUS_OFFSETOF(host, notification_interval)));
+        "Interval of periodic notification or 0 if its off",
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, notification_interval)}));
     table->addColumn(std::make_unique<OffsetDoubleColumn>(
         prefix + "first_notification_delay",
-        "Delay before the first notification", indirect_offset, extra_offset,
-        -1, DANGEROUS_OFFSETOF(host, first_notification_delay)));
+        "Delay before the first notification",
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, first_notification_delay)}));
     table->addColumn(std::make_unique<OffsetDoubleColumn>(
         prefix + "low_flap_threshold", "Low threshold of flap detection",
-        indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, low_flap_threshold)));
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, low_flap_threshold)}));
     table->addColumn(std::make_unique<OffsetDoubleColumn>(
         prefix + "high_flap_threshold", "High threshold of flap detection",
-        indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, high_flap_threshold)));
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, high_flap_threshold)}));
     table->addColumn(std::make_unique<OffsetDoubleColumn>(
-        prefix + "x_3d", "3D-Coordinates: X", indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, x_3d)));
+        prefix + "x_3d", "3D-Coordinates: X",
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, x_3d)}));
     table->addColumn(std::make_unique<OffsetDoubleColumn>(
-        prefix + "y_3d", "3D-Coordinates: Y", indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, y_3d)));
+        prefix + "y_3d", "3D-Coordinates: Y",
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, y_3d)}));
     table->addColumn(std::make_unique<OffsetDoubleColumn>(
-        prefix + "z_3d", "3D-Coordinates: Z", indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, z_3d)));
+        prefix + "z_3d", "3D-Coordinates: Z",
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, z_3d)}));
     table->addColumn(std::make_unique<OffsetDoubleColumn>(
         prefix + "latency",
         "Time difference between scheduled check time and actual check time",
-        indirect_offset, extra_offset, -1, DANGEROUS_OFFSETOF(host, latency)));
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, latency)}));
     table->addColumn(std::make_unique<OffsetDoubleColumn>(
         prefix + "execution_time", "Time the host check needed for execution",
-        indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, execution_time)));
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, execution_time)}));
     table->addColumn(std::make_unique<OffsetDoubleColumn>(
         prefix + "percent_state_change", "Percent state change",
-        indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, percent_state_change)));
+        Column::Offsets{indirect_offset, extra_offset, -1,
+                        DANGEROUS_OFFSETOF(host, percent_state_change)}));
 
     table->addColumn(std::make_unique<TimeperiodColumn>(
         prefix + "in_notification_period",
@@ -713,7 +719,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<HostSpecialDoubleColumn>(
         prefix + "staleness", "Staleness indicator for this host",
-        indirect_offset, extra_offset, -1, 0,
+        Column::Offsets{indirect_offset, extra_offset, -1, 0},
         HostSpecialDoubleColumn::Type::staleness));
 
     table->addColumn(std::make_unique<HostGroupsColumn>(

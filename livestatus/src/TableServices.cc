@@ -357,46 +357,53 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         ServiceSpecialIntColumn::Type::pnp_graph_present));
     table->addColumn(std::make_unique<ServiceSpecialDoubleColumn>(
         prefix + "staleness", "The staleness indicator for this service",
-        indirect_offset, -1, -1, 0,
+        Column::Offsets{indirect_offset, -1, -1, 0},
         ServiceSpecialDoubleColumn::Type::staleness));
 
     // columns of type double
     table->addColumn(std::make_unique<OffsetDoubleColumn>(
         prefix + "check_interval",
         "Number of basic interval lengths between two scheduled checks of the service",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, check_interval)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, check_interval)}));
     table->addColumn(std::make_unique<OffsetDoubleColumn>(
         prefix + "retry_interval",
         "Number of basic interval lengths between checks when retrying after a soft error",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, retry_interval)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, retry_interval)}));
     table->addColumn(std::make_unique<OffsetDoubleColumn>(
         prefix + "notification_interval",
-        "Interval of periodic notification or 0 if its off", indirect_offset,
-        -1, -1, DANGEROUS_OFFSETOF(service, notification_interval)));
+        "Interval of periodic notification or 0 if its off",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, notification_interval)}));
     table->addColumn(std::make_unique<OffsetDoubleColumn>(
         prefix + "first_notification_delay",
-        "Delay before the first notification", indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, first_notification_delay)));
+        "Delay before the first notification",
+        Column::Offsets{
+            indirect_offset, -1, -1,
+            DANGEROUS_OFFSETOF(service, first_notification_delay)}));
     table->addColumn(std::make_unique<OffsetDoubleColumn>(
         prefix + "low_flap_threshold", "Low threshold of flap detection",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, low_flap_threshold)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, low_flap_threshold)}));
     table->addColumn(std::make_unique<OffsetDoubleColumn>(
         prefix + "high_flap_threshold", "High threshold of flap detection",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, high_flap_threshold)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, high_flap_threshold)}));
     table->addColumn(std::make_unique<OffsetDoubleColumn>(
         prefix + "latency",
         "Time difference between scheduled check time and actual check time",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, latency)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, latency)}));
     table->addColumn(std::make_unique<OffsetDoubleColumn>(
         prefix + "execution_time",
-        "Time the service check needed for execution", indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, execution_time)));
+        "Time the service check needed for execution",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, execution_time)}));
     table->addColumn(std::make_unique<OffsetDoubleColumn>(
         prefix + "percent_state_change", "Percent state change",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, percent_state_change)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, percent_state_change)}));
 
     table->addColumn(std::make_unique<TimeperiodColumn>(
         prefix + "in_check_period",
@@ -433,15 +440,18 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         DowntimeColumn::info::full));
     table->addColumn(std::make_unique<CommentColumn>(
         prefix + "comments", "A list of all comment ids of the service",
-        indirect_offset, -1, -1, 0, table->core(), true, false, false));
+        Column::Offsets{indirect_offset, -1, -1, 0}, table->core(), true, false,
+        false));
     table->addColumn(std::make_unique<CommentColumn>(
         prefix + "comments_with_info",
         "A list of all comments of the service with id, author and comment",
-        indirect_offset, -1, -1, 0, table->core(), true, true, false));
+        Column::Offsets{indirect_offset, -1, -1, 0}, table->core(), true, true,
+        false));
     table->addColumn(std::make_unique<CommentColumn>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the service with id, author, comment, entry type and entry time",
-        indirect_offset, -1, -1, 0, table->core(), true, true, true));
+        Column::Offsets{indirect_offset, -1, -1, 0}, table->core(), true, true,
+        true));
 
     if (add_hosts) {
         TableHosts::addColumns(table, "host_",

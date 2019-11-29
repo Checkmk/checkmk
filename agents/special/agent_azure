@@ -408,10 +408,6 @@ class IssueCollecter(object):
         return len(self._list)
 
 
-class AzureMetricParseError(ValueError):
-    pass
-
-
 def create_metric_dict(metric, aggregation, interval_id, filter_):
 
     name = metric['name']['value']
@@ -428,7 +424,7 @@ def create_metric_dict(metric, aggregation, interval_id, filter_):
 
     timeseries = metric.get('timeseries')
     if not timeseries:
-        raise AzureMetricParseError('info', "no timeseries found for metric %r" % name)
+        return None
 
     for measurement in reversed(timeseries):
         dataset = measurement.get('data', ())
@@ -449,7 +445,7 @@ def create_metric_dict(metric, aggregation, interval_id, filter_):
                 metric_dict['timestamp'] = data['timeStamp']
                 return metric_dict
 
-    raise AzureMetricParseError('warning', "not found: %s (%s)" % (name, aggregation))
+    return None
 
 
 def get_attrs_from_uri(uri):
@@ -540,11 +536,13 @@ class MetricCache(DataCache):
                                           filter=filter_)
         metrics = []
         for raw_metric in raw_metrics:
-            try:
-                metrics.append(create_metric_dict(raw_metric, aggregation, interval, filter_))
-            except AzureMetricParseError as exc:
-                err.add(exc[0], resource_id, exc[1])
-                LOG.warning(exc.args[1])
+            parsed_metric = create_metric_dict(raw_metric, aggregation, interval, filter_)
+            if parsed_metric is not None:
+                metrics.append(parsed_metric)
+            else:
+                msg = "metric not found: %s (%s)" % (raw_metric['name']['value'], aggregation)
+                err.add('info', resource_id, msg)
+                LOG.info(msg)
 
         return metrics
 

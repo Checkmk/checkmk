@@ -114,6 +114,6 @@ Python-clean:
 	$(RM) -r $(DIR) $(BUILD_HELPER_DIR)/$(MSITOOLS)* bin build  $(PACKAGE_PYTHON_DESTDIR)
 
 Python-upstream:
-	git rm Python-*.tgz || true
-	wget https://www.python.org/ftp/python/$(PYTHON_VERS)/Python-$(PYTHON_VERS).tgz
-	git add Python-$(PYTHON_VERS).tgz
+	git rm $(PACKAGE_DIR)/$(PYTHON)/Python-*.tgz || true
+	wget -O $(PACKAGE_DIR)/$(PYTHON)/Python-$(PYTHON_VERS).tgz https://www.python.org/ftp/python/$(PYTHON_VERS)/Python-$(PYTHON_VERS).tgz
+	git add $(PACKAGE_DIR)/$(PYTHON)/Python-$(PYTHON_VERS).tgz

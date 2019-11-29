@@ -95,17 +95,13 @@ def parse_netscaler_vserver(info):
         server_name = full_name if full_name else name
         svr_state, svr_state_readable = netscaler_vserver_states.get(svr_state, (1, "unknown"))
 
-        entity_service_type = "Type: %s, Protocol: %s, Socket: %s:%s" % (
-            netscaler_vserver_entitytypes.get(svr_entitytype, "unknown (%s)" % svr_entitytype),
-            netscaler_vserver_types.get(svr_type, "service unknown (%s)" % svr_type),
-            ip,
-            port,
-        )
-
         tmp_dict = {
             'node': node,
             'service_state': (svr_state, svr_state_readable),
-            'entity_service_type': entity_service_type,
+            'entity_service_type': netscaler_vserver_entitytypes.get(
+                svr_entitytype, "unknown (%s)" % svr_entitytype),
+            'protocol': netscaler_vserver_types.get(svr_type, "service unknown (%s)" % svr_type),
+            'socket': '%s:%s' % (ip, port),
             'request_rate': int(request_rate),
             'rx_bytes': int(rx_bytes),
             'tx_bytes': int(tx_bytes),
@@ -143,7 +139,7 @@ def check_netscaler_vserver(item, params, data):
         else:
             yield node['service_state'][0], txt
 
-    if params.get('entity_service_type') in ["1", "2"]:
+    if data[0].get('entity_service_type') in ['loadbalancing', 'loadbalancing group']:
         warn, crit = params.get("health_levels", (None, None))
         health_perc = data[0]['health']
         info_txt = "Health: %s" % get_percent_human_readable(health_perc)
@@ -158,7 +154,11 @@ def check_netscaler_vserver(item, params, data):
                                                       get_percent_human_readable(crit))
         yield health_state, info_txt, [("health_perc", health_perc, warn, crit, 0, 100)]
 
-    yield 0, data[0]["entity_service_type"]
+    yield 0, "Type: %s, Protocol: %s, Socket: %s" % (
+        data[0]['entity_service_type'],
+        data[0]['protocol'],
+        data[0]['socket'],
+    )
 
     info_txt = "Request rate: %s/s, In: %s/s, Out: %s/s" % (max(req_rate_list),
                                                             get_bytes_human_readable(max(rx_list)),

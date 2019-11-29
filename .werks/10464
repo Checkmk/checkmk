@@ -1,0 +1,13 @@
+Title: netscaler_vserver: output health information
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p7
+Date: 1575039628
+Class: fix
+
+Since version 1.6.0 the check netscaler_vserver did not output
+any health information. This is fixed.
+
+SUP-198

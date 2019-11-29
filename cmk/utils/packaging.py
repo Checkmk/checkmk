@@ -7,7 +7,7 @@ import time
 import subprocess
 import json
 from cStringIO import StringIO
-from typing import NamedTuple, List  # pylint: disable=unused-import
+from typing import NamedTuple, Dict, Optional, List, Text, BinaryIO  # pylint: disable=unused-import
 from pathlib2 import Path
 
 # It's OK to import centralized config load logic
@@ -72,6 +72,8 @@ PackagePart = NamedTuple("PackagePart", [
     ("path", str),
 ])
 
+PackageInfo = Dict
+
 _package_parts = [
     PackagePart("checks", "Checks", str(cmk.utils.paths.local_checks_dir)),
     PackagePart("notifications", "Notification scripts",
@@ -117,6 +119,7 @@ def get_package_parts():
 
 
 def release_package(pacname):
+    # type: (Text) -> None
     if not pacname or not _package_exists(pacname):
         raise PackageException("Package %s not installed or corrupt." % pacname)
 
@@ -134,6 +137,7 @@ def release_package(pacname):
 
 
 def create_mkp_file(package, file_name=None, file_object=None):
+    # type: (PackageInfo, Optional[Text], BinaryIO) -> None
     package["version.packaged"] = cmk.__version__
 
     def create_tar_info(filename, size):
@@ -175,6 +179,7 @@ def create_mkp_file(package, file_name=None, file_object=None):
 
 
 def remove_package(package):
+    # type: (PackageInfo) -> None
     for part in get_package_parts() + get_config_parts():
         filenames = package["files"].get(part.ident, [])
         if len(filenames) > 0:
@@ -196,6 +201,7 @@ def remove_package(package):
 
 
 def create_package(pkg_info):
+    # type: (PackageInfo) -> None
     pacname = pkg_info["name"]
     if _package_exists(pacname):
         raise PackageException("Packet already exists.")
@@ -205,6 +211,7 @@ def create_package(pkg_info):
 
 
 def edit_package(pacname, new_package_info):
+    # type: (Text, PackageInfo) -> None
     if not _package_exists(pacname):
         raise PackageException("No such package")
 

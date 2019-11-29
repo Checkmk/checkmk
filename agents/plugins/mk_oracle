@@ -2529,14 +2529,29 @@ do_checks () {
         local do_async_sections=${ASYNC_ASM_SECTIONS}
         local do_sync_sections=${SYNC_ASM_SECTIONS}
     else
-        local dummy="SYNC_SECTIONS_${ORACLE_SID}"
-        local SYNC_SECTIONS_SID=${!dummy}
-        local do_sync_sections=${SYNC_SECTIONS_SID:-${SYNC_SECTIONS}}
-        unset dummy
+        # declare -p => check for SYNC_STIONS_<SID> is existing
+        # we need this for possible configuration: SYNC_SECTIONS_<SID>=""
+        # shellcheck disable=SC2153
+        if ! declare -p "SYNC_SECTIONS_${ORACLE_SID}" > /dev/null 2>&1
+        then
+            local do_sync_sections="${SYNC_SECTIONS}"
+        else
+            local dummy="SYNC_SECTIONS_${ORACLE_SID}"
+            local do_sync_sections=${!dummy}
+            unset dummy
+        fi
 
-        local dummy="ASYNC_SECTIONS_${ORACLE_SID}"
-        local ASYNC_SECTIONS_SID=${!dummy}
-        local do_async_sections=${ASYNC_SECTIONS_SID:-${ASYNC_SECTIONS}}
+        # declare -p => check for ASYNC_STIONS_<SID> is existing
+        # we need this for possible configuration: ASYNC_SECTIONS_<SID>=""
+        # shellcheck disable=SC2153
+        if ! declare -p "ASYNC_SECTIONS_${ORACLE_SID}" > /dev/null 2>&1
+        then
+            local do_async_sections="${ASYNC_SECTIONS}"
+        else
+            local dummy="ASYNC_SECTIONS_${ORACLE_SID}"
+            local do_async_sections=${!dummy}
+            unset dummy
+        fi
     fi
 
     if [ -n "${MK_ORA_SECTIONS[*]}" ]; then

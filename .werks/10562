@@ -1,0 +1,11 @@
+Title: Service- / Hostgroup summary views now aggregate multiple sites
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p7
+Date: 1575045763
+Class: fix
+
+The standard views "Host Groups (Summary)" and "Service Groups (Summary)" are now
+are now querying all sites and merging equal named groups together to a single row.

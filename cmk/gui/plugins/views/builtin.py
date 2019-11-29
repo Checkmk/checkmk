@@ -1671,11 +1671,11 @@ multisite_builtin_views.update({
     'hostgroups': {
         'browser_reload': 30,
         'column_headers': 'pergroup',
-        'datasource': 'hostgroups',
+        'datasource': 'merged_hostgroups',
         'description': _(
             'A short overview over all host groups, without an explicity listing of the actual hosts'
         ),
-        'group_painters': [('sitealias', 'sitehosts')],
+        'group_painters': [],
         'hard_filters': [],
         'hard_filtervars': [],
         'hidden': False,
@@ -2256,11 +2256,11 @@ multisite_builtin_views.update({
     'svcgroups': {
         'browser_reload': 30,
         'column_headers': 'pergroup',
-        'datasource': 'servicegroups',
+        'datasource': 'merged_servicegroups',
         'description': _(
             'A short overview over all service groups, without explicity listing of the actual hosts and services'
         ),
-        'group_painters': [('sitealias', 'sitehosts')],
+        'group_painters': [],
         'hard_filters': [],
         'hard_filtervars': [],
         'hidden': False,

@@ -217,6 +217,10 @@ class DataSourceMergedHostGroups(DataSourceLivestatus):
         return _("Hostgroups, merged")
 
     @property
+    def table(self):
+        return RowTableLivestatus("hostgroups")
+
+    @property
     def infos(self):
         return ["hostgroup"]
 

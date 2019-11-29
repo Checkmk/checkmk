@@ -4,11 +4,10 @@ import os
 import platform
 import pytest
 import re
+import subprocess
 from remote import (actual_output, agent_exe, config, remotetest, remotedir, wait_agent,
                     write_config)
 import sys
-
-import cmk.utils.cmk_subprocess as subprocess
 
 
 class Globals(object):
@@ -47,15 +46,12 @@ def actual_output_no_tcp(request, write_config):
         try:
             save_cwd = os.getcwd()
             os.chdir(remotedir)
-            p = subprocess.Popen(
-                [agent_exe] + request.param,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                encoding="utf-8",
-            )
+            p = subprocess.Popen([agent_exe] + request.param,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
             stdout, stderr = p.communicate()
-            sys.stdout.write(stdout.encode("utf-8"))
-            sys.stderr.write(stderr.encode("utf-8"))
+            sys.stdout.write(stdout)
+            sys.stderr.write(stderr)
             assert p.returncode == 0
             if request.param[0] == 'file':
                 with open(Globals.output_file) as outfile:

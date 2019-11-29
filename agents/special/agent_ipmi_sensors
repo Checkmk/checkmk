@@ -28,7 +28,7 @@ import os
 import errno
 import sys
 import getopt
-import cmk.utils.cmk_subprocess as subprocess
+import subprocess
 
 
 def agent_ipmi_sensors_usage():
@@ -75,9 +75,9 @@ def parse_data(data, excludes):
                     has_excludes = True
                     break
             if not has_excludes:
-                sys.stdout.write(("%s\n" % line).encode("utf-8"))
+                sys.stdout.write("%s\n" % line)
         else:
-            sys.stdout.write(("%s\n" % line).encode("utf-8"))
+            sys.stdout.write("%s\n" % line)
 
 
 def agent_ipmi_sensors_main(cmdline_args):
@@ -179,14 +179,12 @@ def agent_ipmi_sensors_main(cmdline_args):
         sys.stdout.write("<<<ipmi%s:sep(124)>>>\n" % section)
         try:
             try:
-                p = subprocess.Popen(
-                    ipmi_cmd + types,
-                    close_fds=True,
-                    stdin=open(os.devnull),
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    encoding="utf-8",
-                )
+                p = subprocess.Popen(ipmi_cmd + types,
+                                     shell=False,
+                                     close_fds=True,
+                                     stdin=open(os.devnull),
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE)
             except OSError as e:
                 if e.errno == errno.ENOENT:  # No such file or directory
                     raise Exception("Could not find '%s' command (PATH: %s)"\
@@ -202,8 +200,7 @@ def agent_ipmi_sensors_main(cmdline_args):
             errors.append(e)
 
     if errors:
-        msg = "ERROR: '%s'.\n" % ", ".join(errors)
-        sys.stderr.write(msg.encode("utf-8"))
+        sys.stderr.write("ERROR: '%s'.\n" % ", ".join(errors))
         sys.exit(1)
 
     sys.exit(0)

@@ -37,7 +37,6 @@ import re
 import shutil
 import socket
 import signal
-import subprocess
 import sys
 import syslog
 import tempfile
@@ -58,6 +57,8 @@ import cmk.utils.render as render
 import cmk.utils.schedule as schedule
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKTerminate, MKGeneralException
+
+import cmk.utils.cmk_subprocess as subprocess
 
 VERSION = "1.4.0i1"
 
@@ -111,7 +112,8 @@ def stop_logging():
 
 
 def log(s):
-    sys.stdout.write("%s %s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), s))
+    msg = "%s %s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), s)
+    sys.stdout.write(msg.encode("utf-8"))
     if is_cma():
         syslog.syslog(s)
 
@@ -697,12 +699,15 @@ def start_site(site):
 def omd_command(*args):
     cmd = ["omd"] + list(args)
     verbose("Command: %s" % " ".join(cmd))
-    p = subprocess.Popen(cmd,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT,
-                         stdin=open(os.devnull),
-                         close_fds=True)
-    stdout = p.communicate()[0]
+    p = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        stdin=open(os.devnull),
+        close_fds=True,
+        encoding="utf-8",
+    )
+    stdout, _stderr = p.communicate()
     verbose(stdout)
     if p.returncode != 0:
         raise MKGeneralException("Failed to run <tt>%s</tt>: %s" % (" ".join(cmd), stdout))

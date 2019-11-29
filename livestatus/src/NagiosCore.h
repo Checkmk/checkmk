@@ -26,12 +26,14 @@
 #define NagiosCore_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <cstddef>
 #include <filesystem>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
 #include "Metric.h"
 #include "MonitoringCore.h"
 #include "RRDColumn.h"
@@ -112,7 +114,7 @@ public:
     std::filesystem::path logArchivePath() const override;
     std::filesystem::path rrdcachedSocketPath() const override;
 
-    MetricLocation metricLocation(const void *const object,
+    MetricLocation metricLocation(const void *object,
                                   const Metric::MangledName &,
                                   const RRDColumn::Table &) const override;
 

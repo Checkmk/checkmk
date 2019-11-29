@@ -26,12 +26,14 @@
 #define MonitoringCore_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <filesystem>
 #include <string>
 #include <tuple>
 #include <unordered_map>
 #include <vector>
+
 #include "Metric.h"
 #include "RRDColumn.h"
 #include "StringUtils.h"
@@ -132,7 +134,7 @@ public:
     virtual std::filesystem::path logArchivePath() const = 0;
     virtual std::filesystem::path rrdcachedSocketPath() const = 0;
 
-    virtual MetricLocation metricLocation(const void *const object,
+    virtual MetricLocation metricLocation(const void *object,
                                           const Metric::MangledName &,
                                           const RRDColumn::Table &) const = 0;
 

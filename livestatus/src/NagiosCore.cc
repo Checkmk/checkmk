@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "NagiosCore.h"
+
 #include <cstdint>
 #include <cstdlib>
 #include <ctime>
@@ -31,6 +32,7 @@
 #include <ostream>
 #include <stdexcept>
 #include <utility>
+
 #include "DowntimeOrComment.h"
 #include "DowntimesOrComments.h"
 #include "Logger.h"
@@ -195,7 +197,7 @@ std::filesystem::path NagiosCore::rrdcachedSocketPath() const {
     return _paths._rrdcached_socket;
 }
 [[nodiscard]] MetricLocation NagiosCore::metricLocation(
-    const void *const object, const Metric::MangledName &name,
+    const void *object, const Metric::MangledName &name,
     const RRDColumn::Table &table) const {
     switch (table) {
         case RRDColumn::Table::services: {

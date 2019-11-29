@@ -7,7 +7,7 @@ import time
 import subprocess
 import json
 from cStringIO import StringIO
-from typing import NamedTuple, Dict, Optional, List, Text, BinaryIO  # pylint: disable=unused-import
+from typing import cast, NamedTuple, Dict, Optional, List, Text, BinaryIO  # pylint: disable=unused-import
 from pathlib2 import Path
 
 # It's OK to import centralized config load logic
@@ -227,9 +227,19 @@ def edit_package(pacname, new_package_info):
     write_package_info(new_package_info)
 
 
-def install_package(file_name=None, file_object=None):
-    tar = tarfile.open(name=file_name, fileobj=file_object, mode="r:gz")
-    package = parse_package_info(tar.extractfile("info").read())
+def install_package_by_path(package_path):
+    # type: (Path) -> None
+    with package_path.open("rb") as f:
+        install_package(file_object=cast(BinaryIO, f))
+
+
+def install_package(file_object):
+    # type: (BinaryIO) -> None
+    tar = tarfile.open(fileobj=file_object, mode="r:gz")
+    package_info_file = tar.extractfile("info")
+    if package_info_file is None:
+        raise PackageException("Failed to open package info file")
+    package = parse_package_info(package_info_file.read())
 
     _verify_check_mk_version(package)
 
@@ -247,7 +257,7 @@ def install_package(file_name=None, file_object=None):
     keep_files = {}
     for part in get_package_parts() + get_config_parts():
         packaged = packaged_files_in_dir(part.ident)
-        keep = []
+        keep = []  # type: List[Text]
         keep_files[part.ident] = keep
 
         if update:
@@ -276,6 +286,8 @@ def install_package(file_name=None, file_object=None):
                 os.makedirs(part.path)
 
             tarsource = tar.extractfile(part.ident + ".tar")
+            if tarsource is None:
+                raise PackageException("Failed to open %s.tar" % part.ident)
 
             # Important: Do not preserve the tared timestamp. Checkmk needs to know when the files
             # been installed for cache invalidation.
@@ -283,6 +295,9 @@ def install_package(file_name=None, file_object=None):
                                        stdin=subprocess.PIPE,
                                        shell=False,
                                        close_fds=True)
+            if tardest.stdin is None:
+                raise PackageException("Failed to open stdin")
+
             while True:
                 data = tarsource.read(4096)
                 if not data:

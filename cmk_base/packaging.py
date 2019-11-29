@@ -29,6 +29,7 @@ import logging
 import sys
 import tarfile
 from typing import NamedTuple, List  # pylint: disable=unused-import
+from pathlib2 import Path
 
 # It's OK to import centralized config load logic
 import cmk.ec.export  # pylint: disable=cmk-module-layer-violation
@@ -45,7 +46,7 @@ from cmk.utils.packaging import (
     write_package_info,
     parse_package_info,
     remove_package,
-    install_package,
+    install_package_by_path,
     release_package,
     get_package_parts,
     create_mkp_file,
@@ -292,8 +293,8 @@ def package_remove(args):
 def package_install(args):
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P install NAME")
-    path = args[0]
-    if not os.path.exists(path):
+    path = Path(args[0])
+    if not path.exists():
         raise PackageException("No such file %s." % path)
 
-    return install_package(file_name=path)
+    return install_package_by_path(path)

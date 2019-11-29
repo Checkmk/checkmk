@@ -125,13 +125,6 @@ def test_load_mk_file(tmp_path, path_type):
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_save_data_to_file(tmp_path, path_type):
-    path = path_type(tmp_path / "test")
-    store.save_data_to_file(path, [2, 3])
-    assert store.load_data_from_file(path) == [2, 3]
-
-
-@pytest.mark.parametrize("path_type", [str, Path])
 def test_save_data_to_file_pretty(tmp_path, path_type):
     path = path_type(tmp_path / "test")
 
@@ -166,11 +159,57 @@ def test_save_data_to_file_not_pretty(tmp_path, path_type):
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_save_file(tmp_path, path_type):
+@pytest.mark.parametrize("data", [
+    None,
+    [2, 3],
+    [u"föö"],
+    [b'foob\xc3\xa4r'],
+])
+def test_save_data_to_file(tmp_path, path_type, data):
     path = path_type(tmp_path / "lala")
-    data = ['luläla']
-    store.save_file(path, repr(data))
+    store.save_data_to_file(path, data)
     assert store.load_data_from_file(str(path)) == data
+
+
+@pytest.mark.parametrize("path_type", [str, Path])
+@pytest.mark.parametrize("data", [
+    u"föö",
+])
+def test_save_text_to_file(tmp_path, path_type, data):
+    path = path_type(tmp_path / "lala")
+    store.save_file(path, data)
+    assert store._load_data_from_file(str(path)) == data
+
+
+@pytest.mark.parametrize("path_type", [str, Path])
+@pytest.mark.parametrize("data", [
+    b'foob\xc3\xa4r',
+])
+def test_save_text_to_file_bytestr(tmp_path, path_type, data):
+    path = path_type(tmp_path / "lala")
+    store.save_file(path, data)
+    assert store._load_data_from_file(str(path)).encode("utf-8") == data
+
+
+@pytest.mark.parametrize("path_type", [str, Path])
+@pytest.mark.parametrize("data", [
+    b'foob\xc3\xa4r',
+])
+def test_save_binary_file(tmp_path, path_type, data):
+    path = path_type(tmp_path / "lala")
+    store._save_data_to_file(path, data)
+    assert store._load_data_from_file(str(path)).encode("utf-8") == data
+
+
+@pytest.mark.parametrize("path_type", [str, Path])
+@pytest.mark.parametrize("data", [
+    u"föö",
+])
+def test_save_binary_file_wrong_strtype(tmp_path, path_type, data):
+    path = path_type(tmp_path / "lala")
+    with pytest.raises(MKGeneralException) as e:
+        store._save_data_to_file(path, data)
+    assert "'ascii' codec can't encode characters" in "%s" % e
 
 
 @pytest.mark.parametrize("path_type", [str, Path])

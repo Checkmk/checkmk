@@ -37,7 +37,7 @@ import os
 import pprint
 import tempfile
 import time
-from typing import Callable, Any, Union, Dict, Iterator, List  # pylint: disable=unused-import
+from typing import Callable, Any, Union, Dict, Iterator, List, Text, Optional  # pylint: disable=unused-import
 
 # Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:
@@ -48,6 +48,7 @@ else:
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKTerminate
 from cmk.utils.i18n import _
 from cmk.utils.paths import default_config_dir
+from cmk.utils.encoding import ensure_bytestr
 
 logger = logging.getLogger("cmk.store")
 
@@ -217,6 +218,14 @@ def save_to_mk_file(path, key, value, pprint_value=False):
 # TODO: Consolidate with load_mk_file?
 def load_data_from_file(path, default=None, lock=False):
     # type: (Union[Path, str], Any, bool) -> Any
+    content = _load_data_from_file(path, lock=lock)
+    if not content:
+        return default
+    return ast.literal_eval(content)
+
+
+def _load_data_from_file(path, lock=False):
+    # type: (Union[Path, str], bool) -> Optional[Text]
     if not isinstance(path, Path):
         path = Path(path)
 
@@ -225,18 +234,13 @@ def load_data_from_file(path, default=None, lock=False):
 
     try:
         try:
-            with path.open() as f:
-                content = f.read().strip()
+            with path.open('r', encoding="utf-8") as f:
+                return f.read().strip()
 
-            if not content:
-                # May be created empty during locking
-                return default
-
-            return ast.literal_eval(content)
         except IOError as e:
             if e.errno != errno.ENOENT:  # No such file or directory
                 raise
-            return default
+            return None
 
     except (MKTerminate, MKTimeout):
         if lock:
@@ -271,10 +275,18 @@ def save_data_to_file(path, data, pretty=False):
     save_file(path, "%s\n" % formated_data)
 
 
+def save_file(path, content, mode=0o660):
+    # type: (Union[Path, str], Optional[Text], int) -> None
+    if content is None:
+        content = ""
+    # Just to be sure: ensure_bytestr
+    _save_data_to_file(path, ensure_bytestr(content), mode=mode)
+
+
 # Saving assumes a locked destination file (usually done by loading code)
 # Then the new file is written to a temporary file and moved to the target path
-def save_file(path, content, mode=0o660):
-    # type: (Union[Path, str], str, int) -> None
+def _save_data_to_file(path, content, mode=0o660):
+    # type: (Union[Path, str], bytes, int) -> None
     if not isinstance(path, Path):
         path = Path(path)
 
@@ -286,10 +298,11 @@ def save_file(path, content, mode=0o660):
         # Please note that this already creates the file with 0 bytes (in case it is missing).
         aquire_lock(path)
 
-        with tempfile.NamedTemporaryFile("w",
+        with tempfile.NamedTemporaryFile("wb",
                                          dir=str(path.parent),
                                          prefix=".%s.new" % path.name,
                                          delete=False) as tmp:
+
             tmp_path = tmp.name
             os.chmod(tmp_path, mode)
             tmp.write(content)

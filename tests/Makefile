@@ -93,7 +93,7 @@ test-shellcheck:
 		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
 
 test-format-shell:
-	sudo docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
+	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
 
 test-unit: $(VENV)
 	$(PYTEST) -T unit git unit

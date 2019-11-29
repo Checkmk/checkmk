@@ -27,6 +27,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
+    DropdownChoice,
     Float,
     Integer,
     MonitoringState,
@@ -47,6 +48,16 @@ def _item_spec_azure_agent_info():
 
 def _parameter_valuespec_azure_agent_info():
     return Dictionary(elements=[
+        ("resource_pinning",
+         DropdownChoice(
+             title=_("Resource pinning: Ensure monitored resources are unchanged"),
+             help=_("If this option is selected, the resources being monitored are stored during"
+                    " discovery. The service will go to a warning state, if they change."),
+             choices=[
+                 (True, _("Warn if resources appear or vanish")),
+                 (False, _("Silently ignore new or missing resources")),
+             ],
+         )),
         ("warning_levels",
          Tuple(
              title=_("Upper levels for encountered warnings"),

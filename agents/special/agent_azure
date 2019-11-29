@@ -218,6 +218,10 @@ def parse_arguments(argv):
     return args
 
 
+class ApiErrorMissingData(ApiError):
+    pass
+
+
 # The following *Config objects provide a Configuration instance as described in
 # CMK-513 (comment-12620).
 # For now the passed commandline arguments are used to create it.
@@ -590,6 +594,8 @@ class UsageClient(DataCache):
                 return []
             raise
         LOG.debug('unfiltered usage details: %d', len(unfiltered_usages))
+        if not unfiltered_usages:  # do not save this in the cache!
+            raise ApiErrorMissingData('Azure API did not return any usage details')
 
         yesterday = (NOW - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
         usages = [u for u in unfiltered_usages if u['properties']['usageEnd'].startswith(yesterday)]
@@ -604,8 +610,15 @@ class UsageClient(DataCache):
         return usages
 
     def write_sections(self, monitored_groups):
+        try:
+            usage_data = self.get_data()
+        except ApiErrorMissingData if self.debug else Exception as exc:
+            LOG.warning("%s", exc)
+            write_exception_to_agent_info_section(exc)
+            return
+
         cacheinfo = (self.cache_timestamp or time.time(), self.cache_interval)
-        for usage_details in self.get_data():
+        for usage_details in usage_data:
             usage_resource = AzureResource(usage_details)
             piggytargets = [g for g in usage_resource.piggytargets if g in monitored_groups] + ['']
             UsageSection(usage_resource, piggytargets, cacheinfo).write()
@@ -693,10 +706,9 @@ def main_subscription(args, selector, subscription):
     write_group_info(monitored_groups)
 
     usage_client = UsageClient(subscription, args.debug)
+    usage_client.write_sections(monitored_groups)
 
     try:
-        usage_client.write_sections(monitored_groups)
-
         func_args = ((resource, args) for resource in resources)
         map_ = map if args.sequential else AsyncMapper(args.timeout, args.debug)
         for sections in map_(process_resource, func_args):

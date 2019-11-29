@@ -178,6 +178,21 @@ def create_mkp_file(package, file_name=None, file_object=None):
     tar.close()
 
 
+def get_initial_package_info(pacname):
+    return {
+        "title": "Title of %s" % pacname,
+        "name": pacname,
+        "description": "Please add a description here",
+        "version": "1.0",
+        "version.packaged": cmk.__version__,
+        "version.min_required": cmk.__version__,
+        "version.usable_until": None,
+        "author": "Add your name here",
+        "download_url": "http://example.com/%s/" % pacname,
+        "files": {},
+    }
+
+
 def remove_package(package):
     # type: (PackageInfo) -> None
     for part in get_package_parts() + get_config_parts():

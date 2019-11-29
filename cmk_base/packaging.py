@@ -52,6 +52,7 @@ from cmk.utils.packaging import (
     create_mkp_file,
     unpackaged_files_in_dir,
     get_config_parts,
+    get_initial_package_info,
 )
 
 logger = logging.getLogger("cmk.base.packaging")
@@ -197,19 +198,8 @@ def package_create(args):
         raise PackageException("Package %s already existing." % pacname)
 
     logger.log(VERBOSE, "Creating new package %s...", pacname)
-    filelists = {}
-    package = {
-        "title": "Title of %s" % pacname,
-        "name": pacname,
-        "description": "Please add a description here",
-        "version": "1.0",
-        "version.packaged": cmk.__version__,
-        "version.min_required": cmk.__version__,
-        "version.usable_until": None,
-        "author": "Add your name here",
-        "download_url": "http://example.com/%s/" % pacname,
-        "files": filelists
-    }
+    package = get_initial_package_info(pacname)
+    filelists = package_info["files"]
     num_files = 0
     for part in get_package_parts():
         files = unpackaged_files_in_dir(part.ident, part.path)

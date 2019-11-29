@@ -54,7 +54,6 @@ logger = logging.getLogger("cmk.store")
 # TODO: Make all methods handle paths the same way. e.g. mkdir() and makedirs()
 # care about encoding a path to UTF-8. The others don't to that.
 
-#.
 #   .--Predefined----------------------------------------------------------.
 #   |          ____               _       __ _                _            |
 #   |         |  _ \ _ __ ___  __| | ___ / _(_)_ __   ___  __| |           |
@@ -89,7 +88,6 @@ def lock_exclusive():
     aquire_lock(configuration_lockfile())
 
 
-#.
 #.
 #   .--Directories---------------------------------------------------------.
 #   |           ____  _               _             _                      |
@@ -185,6 +183,33 @@ def save_mk_file(path, mk_content, add_header=True):
     content += mk_content
     content += "\n"
     save_file(path, content)
+
+
+# A simple wrapper for cases where you only have to write a single value to a .mk file.
+def save_to_mk_file(path, key, value, pprint_value=False):
+    # type: (Union[Path, str], str, Any, bool) -> None
+    format_func = repr
+    if pprint_value:
+        format_func = pprint.pformat
+
+    # mypy complains: "[mypy:] Cannot call function of unknown type"
+    if isinstance(value, dict):
+        formated = "%s.update(%s)" % (key, format_func(value))
+    else:
+        formated = "%s += %s" % (key, format_func(value))
+
+    save_mk_file(path, formated)
+
+
+#.
+#   .--load/save-----------------------------------------------------------.
+#   |             _                 _    __                                |
+#   |            | | ___   __ _  __| |  / /__  __ ___   _____              |
+#   |            | |/ _ \ / _` |/ _` | / / __|/ _` \ \ / / _ \             |
+#   |            | | (_) | (_| | (_| |/ /\__ \ (_| |\ V /  __/             |
+#   |            |_|\___/ \__,_|\__,_/_/ |___/\__,_| \_/ \___|             |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 
 # Handle .mk files that are only holding a python data structure and often
@@ -312,22 +337,6 @@ def save_file(path, content, mode=0o660):
 
     finally:
         release_lock(path)
-
-
-# A simple wrapper for cases where you only have to write a single value to a .mk file.
-def save_to_mk_file(path, key, value, pprint_value=False):
-    # type: (Union[Path, str], str, Any, bool) -> None
-    format_func = repr
-    if pprint_value:
-        format_func = pprint.pformat
-
-    # mypy complains: "[mypy:] Cannot call function of unknown type"
-    if isinstance(value, dict):
-        formated = "%s.update(%s)" % (key, format_func(value))
-    else:
-        formated = "%s += %s" % (key, format_func(value))
-
-    save_mk_file(path, formated)
 
 
 #.

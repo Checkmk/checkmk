@@ -93,9 +93,9 @@ endef
 # $2: Directory name produced by the "intermediate install" target
 # $3: BUILD_ID of the given package
 define pack_pkg_archive
-	mkdir -p $(PACKAGE_CACHE_BASE)
+	@mkdir -p $(PACKAGE_CACHE_BASE)
 	@echo "+++ Load or build $1 to create local build package..."
-	if [ -z "$(NEXUS_BUILD_CACHE_URL)" ] || ! curl -sSf -o "$1" "$(NEXUS_BUILD_CACHE_URL)/$(call cache_pkg_name,$2,$3)"; then \
+	@if [ -z "$(NEXUS_BUILD_CACHE_URL)" ] || ! curl -sSf -o "$1" "$(NEXUS_BUILD_CACHE_URL)/$(call cache_pkg_name,$2,$3)"; then \
 	    if [ -z "$(NEXUS_BUILD_CACHE_URL)" ]; then \
 	        echo "+++ Nexus URL not configured. Building..." ; \
 	    else \
@@ -109,7 +109,7 @@ endef
 # $1: Absolute path to the build package tar (as created by cache_pkg_path)
 # $2: Directory name produced by the "intermediate install" target
 define unpack_pkg_archive
-        if [ ! -d $(INTERMEDIATE_INSTALL_BASE)/$2 ]; then \
+        @if [ ! -d $(INTERMEDIATE_INSTALL_BASE)/$2 ]; then \
             echo "+++ Unpacking $1 to $(INTERMEDIATE_INSTALL_BASE)/$2" && \
             mkdir -p $(INTERMEDIATE_INSTALL_BASE) && \
             tar -xz --no-same-owner -C $(INTERMEDIATE_INSTALL_BASE) -f $1 ; \

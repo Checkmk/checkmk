@@ -61,6 +61,9 @@ PACKAGES += enterprise
 PACKAGES += managed
 endif
 
+BUILD_TARGET_VARS := $(call package_target_prefix,$(PACKAGES))
+INSTALL_TARGETS := $(foreach package,$(addsuffix _INSTALL,$(BUILD_TARGET_VARS)),$($(package)))
+
 include packages/packages.make
 
 # Workaround: Makefiles evaluate Variables the first time they are read. If a variable is not set the
@@ -111,9 +114,6 @@ CMA_PACKAGE:= $(REPO_PATH)/check-mk-$(EDITION)-$(PKG_VERSION)$(CMA_PKG_VERSION_T
 PRE_INSTALL := $(BUILD_HELPER_DIR)/pre-install
 INSTALL := $(BUILD_HELPER_DIR)/install
 INSTALL_GLOBAL := $(BUILD_HELPER_DIR)/install-global
-
-BUILD_TARGET_VARS := $(call package_target_prefix,$(PACKAGES))
-INSTALL_TARGETS := $(foreach package,$(addsuffix _INSTALL,$(BUILD_TARGET_VARS)),$($(package)))
 
 .PHONY: install cma rpm deb clean setversion install-clean
 

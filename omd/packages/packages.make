@@ -38,7 +38,7 @@ $(HUMAN_BUILD_TARGETS): %-build:
 # These files here need to be installed into skel/ before the install target is
 # executed, because the install target is allowed to do modifications to the
 # files.
-$(BUILD_HELPER_DIR)/%-install: $(BUILD_HELPER_DIR)/%-skel-dir
+$(INSTALL_TARGETS): $(BUILD_HELPER_DIR)/%-install: $(BUILD_HELPER_DIR)/%-skel-dir
 $(BUILD_HELPER_DIR)/%-skel-dir:
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel
 	set -e ; \

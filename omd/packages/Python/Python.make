@@ -3,7 +3,7 @@ PYTHON := Python
 PYTHON_VERS := 2.7.17
 PYTHON_DIR := $(PYTHON)-$(PYTHON_VERS)
 # Increase this to enforce a recreation of the build cache
-PYTHON_BUILD_ID := 0
+PYTHON_BUILD_ID := 1
 
 PYTHON_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-patching
 PYTHON_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-build

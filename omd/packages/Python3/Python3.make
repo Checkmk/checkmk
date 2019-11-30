@@ -63,6 +63,9 @@ $(PYTHON3_UNPACK): $(PACKAGE_DIR)/$(PYTHON3)/$(PYTHON3_DIR).tar.xz
 $(PYTHON3_COMPILE): $(PYTHON3_UNPACK)
 # The build with PGO/LTO enabled is mainly sequential, so a high build
 # parallelism doesn't really help. Therefore we use just -j2.
+#
+# rpath: Create some dummy rpath which has enough space for later replacement
+# by the final rpath
 	cd $(PYTHON3_BUILD_DIR) ; \
 	$(TEST) "$(DISTRO_NAME)" = "SLES" && sed -i 's,#include <panel.h>,#include <ncurses/panel.h>,' Modules/_curses_panel.c ; \
 	./configure \
@@ -70,7 +73,7 @@ $(PYTHON3_COMPILE): $(PYTHON3_UNPACK)
 	    --enable-shared \
 	    --with-ensurepip=install \
 	    $(PYTHON_ENABLE_OPTIMIZATIONS) \
-	    LDFLAGS="-Wl,--rpath,$(OMD_ROOT)/lib"
+	    LDFLAGS="-Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib"
 	cd $(PYTHON3_BUILD_DIR) ; $(MAKE) -j2
 	$(TOUCH) $@
 

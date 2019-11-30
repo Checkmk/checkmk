@@ -40,8 +40,8 @@ ASIO_VERSION := asio-asio-1-14-0
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
 
 RRDTOOL_VERSION := rrdtool-1.7.1
-RRDTOOL_BUILD_LOG := $(RRDTOOL_SRC_DIR)/build.log
 RRDTOOL_SRC_DIR := $(abs_top_srcdir)/omd/build/package_build/$(RRDTOOL_VERSION)/src
+RRDTOOL_BUILD_LOG := $(RRDTOOL_SRC_DIR)/build.log
 RRDTOOL_LD_FLAGS := -lrrd -L$(RRDTOOL_SRC_DIR)/.libs
 RRDTOOL_CPPFLAGS := -I$(RRDTOOL_SRC_DIR)
 

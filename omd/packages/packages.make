@@ -39,7 +39,7 @@ $(HUMAN_BUILD_TARGETS): %-build:
 # executed, because the install target is allowed to do modifications to the
 # files.
 $(INSTALL_TARGETS): $(BUILD_HELPER_DIR)/%-install: $(BUILD_HELPER_DIR)/%-skel-dir
-$(BUILD_HELPER_DIR)/%-skel-dir:
+$(BUILD_HELPER_DIR)/%-skel-dir: $(PRE_INSTALL)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel
 	set -e ; \
 	    PACKAGE_PATH="$(PACKAGE_DIR)/$$(echo "$*" | sed 's/-[0-9.]\+.*//')"; \

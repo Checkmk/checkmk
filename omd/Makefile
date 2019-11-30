@@ -64,6 +64,10 @@ endif
 BUILD_TARGET_VARS := $(call package_target_prefix,$(PACKAGES))
 INSTALL_TARGETS := $(foreach package,$(addsuffix _INSTALL,$(BUILD_TARGET_VARS)),$($(package)))
 
+PRE_INSTALL := $(BUILD_HELPER_DIR)/pre-install
+INSTALL := $(BUILD_HELPER_DIR)/install
+INSTALL_GLOBAL := $(BUILD_HELPER_DIR)/install-global
+
 include packages/packages.make
 
 # Workaround: Makefiles evaluate Variables the first time they are read. If a variable is not set the
@@ -111,10 +115,6 @@ CMA_PKG_VERSION_TXT := $(shell if [ "$(DISTRO_CODE)" = "stretch" ]; then echo "-
 ARCH := $(shell uname -m)
 CMA_PACKAGE:= $(REPO_PATH)/check-mk-$(EDITION)-$(PKG_VERSION)$(CMA_PKG_VERSION_TXT)-$(ARCH).cma
 
-PRE_INSTALL := $(BUILD_HELPER_DIR)/pre-install
-INSTALL := $(BUILD_HELPER_DIR)/install
-INSTALL_GLOBAL := $(BUILD_HELPER_DIR)/install-global
-
 .PHONY: install cma rpm deb clean setversion install-clean
 
 # Called while building the .rpm/.deb packages
@@ -130,7 +130,11 @@ install-clean:
 # Prepare clean install environment
 $(PRE_INSTALL):
 	$(MKDIR) $(DESTDIR)$(OMD_PHYSICAL_BASE)
-	A="$(OMD_PHYSICAL_BASE)" ; ln -s $${A:1} $(DESTDIR)/omd
+# The default physical base for OMD is /opt/omd. This may be changed by
+# the user locally, but the logical path for OMD is always /omd. We use
+# /omd during installation to make all programs that persist the path
+# somehow use the logical path.
+	A="$(OMD_PHYSICAL_BASE)" ; ln -sfn $${A:1} $(DESTDIR)/omd
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins

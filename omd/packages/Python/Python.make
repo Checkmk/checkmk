@@ -69,6 +69,9 @@ $(PYTHON_COMPILE): $(PYTHON_PATCHING) $(PYTHON_TMP_BIN_DIR)/gcc $(PYTHON_TMP_BIN
 # symlink for it under a generic name. :-P Furthermore, the build with PGO/LTO
 # enables is mainly sequential, so a high build parallelism doesn't really
 # help. Therefore we use just -j2.
+#
+# rpath: Create some dummy rpath which has enough space for later replacement
+# by the final rpath
 	cd $(PYTHON_BUILD_DIR) ; $(PYTHON_TMP_BIN_PATH_VAR) ; \
 	$(TEST) "$(DISTRO_NAME)" = "SLES" && sed -i 's,#include <panel.h>,#include <ncurses/panel.h>,' Modules/_curses_panel.c ; \
 	./configure \
@@ -77,7 +80,7 @@ $(PYTHON_COMPILE): $(PYTHON_PATCHING) $(PYTHON_TMP_BIN_DIR)/gcc $(PYTHON_TMP_BIN
 	    --enable-unicode=ucs4 \
 	    --with-ensurepip=install \
 	    $(PYTHON_ENABLE_OPTIMIZATIONS) \
-	    LDFLAGS="-Wl,--rpath,$(OMD_ROOT)/lib"
+	    LDFLAGS="-Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib"
 	cd $(PYTHON_BUILD_DIR) ; $(PYTHON_TMP_BIN_PATH_VAR) ; $(MAKE) -j2
 	$(TOUCH) $@
 

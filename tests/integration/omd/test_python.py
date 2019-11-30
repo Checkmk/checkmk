@@ -48,7 +48,7 @@ def test_02_pip_path(site):
 def test_03_pip_interpreter_version(site):
     p = site.execute(["pip", "-V"], stdout=subprocess.PIPE)
     version = p.stdout.read()
-    assert version.startswith("pip 18.1")
+    assert version.startswith("pip 19.2.3")
 
 
 # TODO: Improve this test to automatically adapt the expected modules from our Pipfile

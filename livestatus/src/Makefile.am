@@ -40,6 +40,7 @@ ASIO_VERSION := asio-asio-1-14-0
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
 
 RRDTOOL_VERSION := rrdtool-1.7.1
+RRDTOOL_BUILD_LOG := $(RRDTOOL_SRC_DIR)/build.log
 RRDTOOL_SRC_DIR := $(abs_top_srcdir)/omd/build/package_build/$(RRDTOOL_VERSION)/src
 RRDTOOL_LD_FLAGS := -lrrd -L$(RRDTOOL_SRC_DIR)/.libs
 RRDTOOL_CPPFLAGS := -I$(RRDTOOL_SRC_DIR)
@@ -257,7 +258,9 @@ $(RRDTOOL_VERSION):
 # TODO: This is specialized for OMD environments. We need make this automatically detect the
 # OMD scenario and perform specific things for OMD and other things for rrdtool standalone.
 	@echo Building rrdtool library...
-	LANG=C make -j4 -C $$(dirname $$(dirname $$(dirname $$(dirname $(RRDTOOL_SRC_DIR))))) rrdtool-build-library > /dev/null 2>&1
+# Would be nice to have some output here, but it was silenced for some reason. Instead of
+# throwing the output away, we at least write it to a log file for better diagnose
+	LANG=C make -j4 -C $$(dirname $$(dirname $$(dirname $$(dirname $(RRDTOOL_SRC_DIR))))) rrdtool-build-library >$(RRDTOOL_BUILD_LOG) 2>&1
 	touch $@
 
 $(GOOGLETEST_INCLUDE): $(GOOGLETEST_VERSION)/Makefile

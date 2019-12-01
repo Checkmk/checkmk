@@ -18,7 +18,7 @@ $pswindow.buffersize = $newsize
 ###
 
 Write-Host "<<<win_printers>>>"
-$Data_Set1 = Get-WMIObject Win32_PerfFormattedData_Spooler_PrintQueue | Select Name, @{Expression={$_.jobs};Label="CurrentJobs"}
+$Data_Set1 = Get-WMIObject Win32_PerfFormattedData_Spooler_PrintQueue | Select Name, Jobs
 # $Data_Set2 = Get-WmiObject win32_printer | select name, printerstatus, detectederrorstate
 $Data_Set2 = Get-WmiObject win32_printer | ?{$_.PortName -notmatch '^TS'} | Select name, printerstatus, detectederrorstate
 
@@ -251,4 +251,4 @@ function Join-Object
     }
 }
 
-Join-Object -Left $Data_Set1 -Right $Data_Set2 -Where {$args[0].Name -eq $args[1].Name} -LeftProperties "Name","CurrentJobs" -RightProperties "printerstatus","detectederrorstate" -Type OnlyIfInBoth | format-table -HideTableHeaders
+Join-Object -Left $Data_Set1 -Right $Data_Set2 -Where {$args[0].Name -eq $args[1].Name} -LeftProperties "Name","Jobs" -RightProperties "printerstatus","detectederrorstate" -Type OnlyIfInBoth | format-table -HideTableHeaders

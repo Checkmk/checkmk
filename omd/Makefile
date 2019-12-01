@@ -260,8 +260,8 @@ debian/control: debian/control.in
 # everything, we'd have to
 # a) add -nc fo jessie/trusty/xenial
 # b) drop the "clean" argument for newer distros
+# c) remove the dh_prep from debian/rules
 deb: debian/changelog debian/control
-	echo $(DISTRO_CODE)
 	if [ "$(DISTRO_CODE)" = "jessie" ] || [ "$(DISTRO_CODE)" = "trusty" ] || [ "$(DISTRO_CODE)" = "xenial" ]; then \
 	    TARGET="-us -uc -B" ; \
 	else \

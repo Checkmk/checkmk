@@ -484,7 +484,7 @@ def create_metric_dict(metric, aggregation, interval_id, filter_):
         'name': name,
         'aggregation': aggregation,
         'value': None,
-        'unit': metric['unit'],
+        'unit': metric['unit'].lower(),
         'timestamp': None,
         'filter': filter_,
         'interval_id': interval_id,

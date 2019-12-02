@@ -1,0 +1,24 @@
+Title: Extension packages: Checkmk can now ship optional packages
+Class: feature
+Compatible: compat
+Component: core
+Date: 1575286103
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+Checkmk can now ship optional extension packages. This feature has been introduced to
+be able to provide feature previews in stable versions. Instead of introducing backported
+features for all users, we can now create backports, pack them into optional extension
+packages. Each user can then decide to install the package or not.
+
+After installation these packages are treated exactly like manually uploaded
+extension packages and can be removed in the same way.
+
+Enterprise Edition users can install the optional extension packages using the dialog
+"WATO > Extension packages". Raw Edition users can find optional extension packages
+in the path <tt>share/check_mk/optional_packages</tt> once we ship those packages.
+
+At the moment there is no such package shipped with Checkmk. The first optional
+extension packages may be added to Checkmk 1.6 in the next weeks.

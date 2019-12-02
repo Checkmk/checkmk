@@ -42,11 +42,11 @@ function set_osenv () {
 
 function set_has_env(){
     test -f ${ocrcfgfile} || exit 0
-    local_has_type=$(cat $ocrcfgfile | $GREP "^local_only=" | cut -d"=" -f2 | tr '[:lower:]' '[:upper:]')
+    local_has_type=$($GREP "^local_only=" "$ocrcfgfile" | cut -d"=" -f2 | tr '[:lower:]' '[:upper:]')
     local_has_type=${local_has_type:-"FALSE"}
 
     if [ -f ${olrcfgfile} ] ; then
-        has_ORACLE_HOME=$(cat $olrcfgfile | $GREP "^crs_home=" | cut -d"=" -f2)
+        has_ORACLE_HOME=$($GREP "^crs_home=" "$olrcfgfile" | cut -d"=" -f2)
     else
         # There is no olr.cfg in 10.2 and 11.1
         # we try to get the ORA_CRS_HOME from /etc/init.d/init.cssd
@@ -71,8 +71,8 @@ function printhasdata() {
     $CRSCTL query has releaseversion
 
     echo "<<<oracle_crs_res:sep(124)>>>"
-    OLS_NODENAME=`uname -n`
-    echo "nodename|"$OLS_NODENAME
+    OLS_NODENAME=$(uname -n)
+    echo "nodename|$OLS_NODENAME"
     $CRSCTL stat res -f | $GREP -E $resourcefilter | sed "s/^/csslocal\|/"
 }
 
@@ -81,7 +81,7 @@ function printcrsdata() {
 
     echo "<<<oracle_crs_version:sep(124)>>>"
     crs_version=$($CRSCTL query crs releaseversion)
-    echo $crs_version
+    echo "$crs_version"
 
     echo "<<<oracle_crs_voting>>>"
     $CRSCTL query css votedisk | $GREP "^ [0-9]"
@@ -90,11 +90,11 @@ function printcrsdata() {
     echo "<<<oracle_crs_res:sep(124)>>>"
     OLS_NODENAME=$($OLSNODES -l)
 
-    echo "nodename|"$OLS_NODENAME
+    echo "nodename|$OLS_NODENAME"
 
-    crs_version_short=$(echo $crs_version | cut -d"[" -f2- | cut -d"." -f-2 | sed 's/\.//')
-    if [ $(($crs_version_short)) -ge 112 ] ; then
-        $CRSCTL stat res -v -n $OLS_NODENAME -init | $GREP -E $resourcefilter | sed "s/^/csslocal\|/"
+    crs_version_short=$(echo "$crs_version" | cut -d"[" -f2- | cut -d"." -f-2 | sed 's/\.//')
+    if [ "$crs_version_short" -ge 112 ] ; then
+        $CRSCTL stat res -v -n "$OLS_NODENAME" -init | $GREP -E "$resourcefilter" | sed "s/^/csslocal\|/"
         for nodelist in $($OLSNODES)
         do
             $CRSCTL stat res -v -n "$nodelist" | $GREP -E "$resourcefilter" | sed "s/^/$nodelist\|/"

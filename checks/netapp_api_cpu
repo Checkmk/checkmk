@@ -96,6 +96,9 @@ def check_netapp_api_cpu_utilization(item, params, parsed, mode):
         num_cpus = int(num_cpus_str)
         perfdata[0] = perfdata[0][:5] + (num_cpus,)
         infotext += ", %d CPUs" % num_cpus
+    else:
+        perfdata[0] = perfdata[0][:5] + (1,)
+
     return state, infotext, perfdata
 
 

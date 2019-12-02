@@ -26,13 +26,16 @@
 #define StringPointerColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include "Column.h"
 #include "StringColumn.h"
 
 class StringPointerColumn : public StringColumn {
 public:
     StringPointerColumn(const std::string &name, const std::string &description,
-                        const char *string)
-        : StringColumn(name, description, -1, -1, -1, 0), _string(string) {}
+                        Column::Offsets offsets, const char *string)
+        : StringColumn(name, description, offsets)
+        //-1, -1, -1, 0)
+        , _string(string) {}
 
     [[nodiscard]] std::string getValue(Row /*unused*/) const override {
         return _string;

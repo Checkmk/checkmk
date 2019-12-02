@@ -169,21 +169,21 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         Column::Offsets{-1, -1, -1, 0}, &check_external_commands));
     addColumn(std::make_unique<TimePointerColumn>(
         "program_start", "The time of the last program start as UNIX timestamp",
-        &program_start));
+        &program_start, Column::Offsets{-1, -1, -1, 0}));
 #ifndef NAGIOS4
     addColumn(std::make_unique<TimePointerColumn>(
         "last_command_check",
         "The time of the last check for a command as UNIX timestamp",
-        &last_command_check));
+        &last_command_check, Column::Offsets{-1, -1, -1, 0}));
 #else
     addColumn(std::make_unique<TimePointerColumn>(
         "last_command_check",
         "The time of the last check for a command as UNIX timestamp (placeholder)",
-        &dummy_time));
+        &dummy_time, Column::Offsets{-1, -1, -1, 0}));
 #endif  // NAGIOS4
     addColumn(std::make_unique<TimePointerColumn>(
         "last_log_rotation", "Time time of the last log file rotation",
-        &last_log_rotation));
+        &last_log_rotation, Column::Offsets{-1, -1, -1, 0}));
     addColumn(std::make_unique<IntPointerColumn>(
         "interval_length", "The default interval length from nagios.cfg",
         Column::Offsets{-1, -1, -1, 0}, &interval_length));
@@ -197,7 +197,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
 
     addColumn(std::make_unique<StringPointerColumn>(
         "program_version", "The version of the monitoring daemon",
-        get_program_version()));
+        Column::Offsets{-1, -1, -1, 0}, get_program_version()));
 
 // External command buffer
 #ifndef NAGIOS4
@@ -231,11 +231,12 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     // Livestatus' own status
     addColumn(std::make_unique<StatusSpecialIntColumn>(
         "cached_log_messages",
-        "The current number of log messages MK Livestatus keeps in memory", -1,
-        -1, -1, 0, mc, StatusSpecialIntColumn::Type::num_cached_log_messages));
+        "The current number of log messages MK Livestatus keeps in memory",
+        Column::Offsets{-1, -1, -1, 0}, mc,
+        StatusSpecialIntColumn::Type::num_cached_log_messages));
     addColumn(std::make_unique<StringPointerColumn>(
         "livestatus_version", "The version of the MK Livestatus module",
-        VERSION));
+        Column::Offsets{-1, -1, -1, 0}, VERSION));
     addColumn(std::make_unique<AtomicInt32PointerColumn>(
         "livestatus_active_connections",
         "The current number of active connections to MK Livestatus",
@@ -288,16 +289,18 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<StatusSpecialIntColumn>(
         "mk_inventory_last",
         "The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory",
-        -1, -1, -1, 0, mc, StatusSpecialIntColumn::Type::mk_inventory_last));
+        Column::Offsets{-1, -1, -1, 0}, mc,
+        StatusSpecialIntColumn::Type::mk_inventory_last));
     addColumn(std::make_unique<StatusSpecialIntColumn>(
         "num_queued_notifications",
         "The number of queued notifications which have not yet been delivered to the notification helper",
-        -1, -1, -1, 0, mc,
+        Column::Offsets{-1, -1, -1, 0}, mc,
         StatusSpecialIntColumn::Type::num_queued_notifications));
     addColumn(std::make_unique<StatusSpecialIntColumn>(
         "num_queued_alerts",
         "The number of queued alerts which have not yet been delivered to the alert helper",
-        -1, -1, -1, 0, mc, StatusSpecialIntColumn::Type::num_queued_alerts));
+        Column::Offsets{-1, -1, -1, 0}, mc,
+        StatusSpecialIntColumn::Type::num_queued_alerts));
 }
 
 void TableStatus::addCounterColumns(const std::string &name,

@@ -72,8 +72,9 @@ protected:
 
     struct StringEventConsoleColumn : public StringColumn {
         StringEventConsoleColumn(const std::string &name,
-                                 const std::string &description)
-            : StringColumn(name, description, -1, -1, -1, 0) {}
+                                 const std::string &description,
+                                 Column::Offsets offsets)
+            : StringColumn(name, description, offsets) {}
 
         [[nodiscard]] std::string getValue(Row row) const override {
             return getRaw(row, *this, "");
@@ -82,8 +83,9 @@ protected:
 
     struct IntEventConsoleColumn : public IntColumn {
         IntEventConsoleColumn(const std::string &name,
-                              const std::string &description)
-            : IntColumn(name, description, -1, -1, -1, 0) {}
+                              const std::string &description,
+                              Column::Offsets offsets)
+            : IntColumn(name, description, offsets) {}
 
         int32_t getValue(Row row,
                          const contact * /* auth_user */) const override {
@@ -93,8 +95,9 @@ protected:
 
     struct DoubleEventConsoleColumn : public DoubleColumn {
         DoubleEventConsoleColumn(const std::string &name,
-                                 const std::string &description)
-            : DoubleColumn(name, description, -1, -1, -1, 0) {}
+                                 const std::string &description,
+                                 Column::Offsets offsets)
+            : DoubleColumn(name, description, offsets) {}
 
         [[nodiscard]] double getValue(Row row) const override {
             return atof(getRaw(row, *this, "0").c_str());
@@ -103,8 +106,9 @@ protected:
 
     struct TimeEventConsoleColumn : public TimeColumn {
         TimeEventConsoleColumn(const std::string &name,
-                               const std::string &description)
-            : TimeColumn(name, description, -1, -1, -1, 0) {}
+                               const std::string &description,
+                               Column::Offsets offsets)
+            : TimeColumn(name, description, offsets) {}
 
     private:
         [[nodiscard]] std::chrono::system_clock::time_point getRawValue(
@@ -117,8 +121,9 @@ protected:
 
     struct ListEventConsoleColumn : public ListColumn {
         ListEventConsoleColumn(const std::string &name,
-                               const std::string &description)
-            : ListColumn(name, description, -1, -1, -1, 0) {}
+                               const std::string &description,
+                               Column::Offsets offsets)
+            : ListColumn(name, description, offsets) {}
 
         std::vector<std::string> getValue(
             Row row, const contact * /*auth_user*/,

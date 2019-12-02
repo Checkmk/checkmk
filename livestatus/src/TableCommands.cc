@@ -43,11 +43,13 @@ std::string TableCommands::namePrefix() const { return "command_"; }
 void TableCommands::addColumns(Table *table, const std::string &prefix,
                                int offset) {
     table->addColumn(std::make_unique<OffsetSStringColumn>(
-        prefix + "name", "The name of the command", -1, -1, -1,
-        offset + DANGEROUS_OFFSETOF(Command, _name)));
+        prefix + "name", "The name of the command",
+        Column::Offsets{-1, -1, -1,
+                        offset + DANGEROUS_OFFSETOF(Command, _name)}));
     table->addColumn(std::make_unique<OffsetSStringColumn>(
-        prefix + "line", "The shell command line", -1, -1, -1,
-        offset + DANGEROUS_OFFSETOF(Command, _command_line)));
+        prefix + "line", "The shell command line",
+        Column::Offsets{-1, -1, -1,
+                        offset + DANGEROUS_OFFSETOF(Command, _command_line)}));
 }
 
 void TableCommands::answerQuery(Query *query) {

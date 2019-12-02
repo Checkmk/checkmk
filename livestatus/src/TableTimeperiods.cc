@@ -35,13 +35,14 @@ extern timeperiod *timeperiod_list;
 
 TableTimeperiods::TableTimeperiods(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<OffsetStringColumn>(
-        "name", "The name of the timeperiod", -1, -1, -1,
-        DANGEROUS_OFFSETOF(timeperiod, name)));
+        "name", "The name of the timeperiod",
+        Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(timeperiod, name)}));
     addColumn(std::make_unique<OffsetStringColumn>(
-        "alias", "The alias of the timeperiod", -1, -1, -1,
-        DANGEROUS_OFFSETOF(timeperiod, alias)));
+        "alias", "The alias of the timeperiod",
+        Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(timeperiod, alias)}));
     addColumn(std::make_unique<TimeperiodColumn>(
-        "in", "Wether we are currently in this period (0/1)", -1, -1, -1, 0));
+        "in", "Wether we are currently in this period (0/1)",
+        Column::Offsets{-1, -1, -1, 0}));
     // TODO(mk): add days and exceptions
 }
 

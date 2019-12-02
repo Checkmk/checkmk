@@ -32,11 +32,6 @@ Column::Column(std::string name, std::string description, Offsets offsets)
     , _description(std::move(description))
     , _offsets(offsets) {}
 
-Column::Column(std::string name, std::string description, int indirect_offset,
-               int extra_offset, int extra_extra_offset, int offset)
-    : Column(std::move(name), std::move(description),
-             {indirect_offset, extra_offset, extra_extra_offset, offset}) {}
-
 namespace {
 const void *add(const void *data, int offset) {
     return (data == nullptr || offset < 0) ? data

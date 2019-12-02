@@ -30,6 +30,7 @@
 #include <chrono>
 #include <string>
 #include <vector>
+#include "Column.h"
 #include "MetricsColumn.h"
 #include "contact_fwd.h"
 
@@ -39,9 +40,8 @@ class MonitoringCore;
 class ServiceMetricsColumn : public MetricsColumn {
 public:
     ServiceMetricsColumn(const std::string& name,
-                         const std::string& description, int indirect_offset,
-                         int extra_offset, int extra_extra_offset, int offset,
-                         MonitoringCore* mc);
+                         const std::string& description,
+                         Column::Offsets offsets, MonitoringCore* mc);
 
     std::vector<std::string> getValue(
         Row, const contact* /*auth_user*/,

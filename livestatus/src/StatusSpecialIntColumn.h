@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <cstdint>
 #include <string>
+#include "Column.h"
 #include "IntColumn.h"
 #include "contact_fwd.h"
 class MonitoringCore;
@@ -43,13 +44,10 @@ public:
     };
 
     StatusSpecialIntColumn(const std::string& name,
-                           const std::string& description, int indirect_offset,
-                           int extra_offset, int extra_extra_offset, int offset,
-                           MonitoringCore* mc, Type type)
-        : IntColumn(name, description, indirect_offset, extra_offset,
-                    extra_extra_offset, offset)
-        , _mc(mc)
-        , _type(type) {}
+                           const std::string& description,
+                           Column::Offsets offsets, MonitoringCore* mc,
+                           Type type)
+        : IntColumn(name, description, offsets), _mc(mc), _type(type) {}
     int32_t getValue(Row row, const contact* auth_user) const override;
 
 private:

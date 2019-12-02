@@ -78,53 +78,61 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     // wichtige Spalten und die Servicegruppen.
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "description", "Description of the service (also used as key)",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, description)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, description)}));
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "display_name",
         "An optional display name (not used by Nagios standard web pages)",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, display_name)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, display_name)}));
 #ifndef NAGIOS4
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "check_command", "Nagios command used for active checks",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, service_check_command)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, service_check_command)}));
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command used for active checks with the macros expanded",
-        indirect_offset, -1, -1, table->core(),
+        Column::Offsets{indirect_offset, -1, -1, 0}, table->core(),
         DANGEROUS_OFFSETOF(service, service_check_command)));
 #else
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "check_command", "Nagios command used for active checks",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, check_command)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, check_command)}));
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command used for active checks with the macros expanded",
-        indirect_offset, -1, -1, table->core(),
+        Column::Offsets{indirect_offset, -1, -1, 0}, table->core(),
         DANGEROUS_OFFSETOF(service, check_command)));
 #endif
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "event_handler", "Nagios command used as event handler",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, event_handler)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, event_handler)}));
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "plugin_output", "Output of the last check plugin",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, plugin_output)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, plugin_output)}));
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "long_plugin_output",
-        "Unabbreviated output of the last check plugin", indirect_offset, -1,
-        -1, DANGEROUS_OFFSETOF(service, long_plugin_output)));
+        "Unabbreviated output of the last check plugin",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, long_plugin_output)}));
     table->addColumn(std::make_unique<OffsetPerfdataColumn>(
         prefix + "perf_data", "Performance data of the last check plugin",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, perf_data)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, perf_data)}));
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "notification_period",
         "The name of the notification period of the service. It this is empty, service problems are always notified.",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, notification_period)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, notification_period)}));
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "check_period",
         "The name of the check period of the service. It this is empty, the service is always checked.",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, check_period)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, check_period)}));
     table->addColumn(std::make_unique<CustomVarsExplicitColumn>(
         prefix + "service_period",
         "The name of the service period of the service",
@@ -132,214 +140,250 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
                         DANGEROUS_OFFSETOF(service, custom_variables)},
         table->core(), "SERVICE_PERIOD"));
     table->addColumn(std::make_unique<OffsetStringColumn>(
-        prefix + "notes", "Optional notes about the service", indirect_offset,
-        -1, -1, DANGEROUS_OFFSETOF(service, notes)));
+        prefix + "notes", "Optional notes about the service",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, notes)}));
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "notes_expanded",
-        "The notes with (the most important) macros expanded", indirect_offset,
-        -1, -1, table->core(), DANGEROUS_OFFSETOF(service, notes)));
+        "The notes with (the most important) macros expanded",
+        Column::Offsets{indirect_offset, -1, -1, 0}, table->core(),
+        DANGEROUS_OFFSETOF(service, notes)));
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "notes_url",
         "An optional URL for additional notes about the service",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, notes_url)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, notes_url)}));
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "notes_url_expanded",
         "The notes_url with (the most important) macros expanded",
-        indirect_offset, -1, -1, table->core(),
+        Column::Offsets{indirect_offset, -1, -1, 0}, table->core(),
         DANGEROUS_OFFSETOF(service, notes_url)));
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "action_url",
         "An optional URL for actions or custom information about the service",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, action_url)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, action_url)}));
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "action_url_expanded",
         "The action_url with (the most important) macros expanded",
-        indirect_offset, -1, -1, table->core(),
+        Column::Offsets{indirect_offset, -1, -1, 0}, table->core(),
         DANGEROUS_OFFSETOF(service, action_url)));
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "icon_image",
         "The name of an image to be used as icon in the web interface",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, icon_image)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, icon_image)}));
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "icon_image_expanded",
         "The icon_image with (the most important) macros expanded",
-        indirect_offset, -1, -1, table->core(),
+        Column::Offsets{indirect_offset, -1, -1, 0}, table->core(),
         DANGEROUS_OFFSETOF(service, icon_image)));
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "icon_image_alt",
         "An alternative text for the icon_image for browsers not displaying icons",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, icon_image_alt)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, icon_image_alt)}));
 
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "initial_state", "The initial state of the service",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, initial_state)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, initial_state)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "max_check_attempts", "The maximum number of check attempts",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, max_attempts)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, max_attempts)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "current_attempt", "The number of the current check attempt",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, current_attempt)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, current_attempt)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "state",
         "The current state of the service (0: OK, 1: WARN, 2: CRITICAL, 3: UNKNOWN)",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, current_state)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, current_state)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "has_been_checked",
-        "Whether the service already has been checked (0/1)", indirect_offset,
-        -1, -1, DANGEROUS_OFFSETOF(service, has_been_checked)));
+        "Whether the service already has been checked (0/1)",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, has_been_checked)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
-        prefix + "last_state", "The last state of the service", indirect_offset,
-        -1, -1, DANGEROUS_OFFSETOF(service, last_state)));
+        prefix + "last_state", "The last state of the service",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, last_state)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "last_hard_state", "The last hard state of the service",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, last_hard_state)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, last_hard_state)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "state_type",
-        "The type of the current state (0: soft, 1: hard)", indirect_offset, -1,
-        -1, DANGEROUS_OFFSETOF(service, state_type)));
+        "The type of the current state (0: soft, 1: hard)",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, state_type)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "check_type",
-        "The type of the last check (0: active, 1: passive)", indirect_offset,
-        -1, -1, DANGEROUS_OFFSETOF(service, check_type)));
+        "The type of the last check (0: active, 1: passive)",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, check_type)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "acknowledged",
         "Whether the current service problem has been acknowledged (0/1)",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, problem_has_been_acknowledged)));
+        Column::Offsets{
+            indirect_offset, -1, -1,
+            DANGEROUS_OFFSETOF(service, problem_has_been_acknowledged)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "acknowledgement_type",
         "The type of the acknownledgement (0: none, 1: normal, 2: sticky)",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, acknowledgement_type)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, acknowledgement_type)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "no_more_notifications",
-        "Whether to stop sending notifications (0/1)", indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, no_more_notifications)));
+        "Whether to stop sending notifications (0/1)",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, no_more_notifications)}));
     table->addColumn(std::make_unique<OffsetTimeColumn>(
         prefix + "last_time_ok",
-        "The last time the service was OK (Unix timestamp)", indirect_offset,
-        -1, -1, DANGEROUS_OFFSETOF(service, last_time_ok)));
+        "The last time the service was OK (Unix timestamp)",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, last_time_ok)}));
     table->addColumn(std::make_unique<OffsetTimeColumn>(
         prefix + "last_time_warning",
         "The last time the service was in WARNING state (Unix timestamp)",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, last_time_warning)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, last_time_warning)}));
     table->addColumn(std::make_unique<OffsetTimeColumn>(
         prefix + "last_time_critical",
         "The last time the service was CRITICAL (Unix timestamp)",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, last_time_critical)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, last_time_critical)}));
     table->addColumn(std::make_unique<OffsetTimeColumn>(
         prefix + "last_time_unknown",
         "The last time the service was UNKNOWN (Unix timestamp)",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, last_time_unknown)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, last_time_unknown)}));
 
     table->addColumn(std::make_unique<OffsetTimeColumn>(
         prefix + "last_check", "The time of the last check (Unix timestamp)",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, last_check)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, last_check)}));
     table->addColumn(std::make_unique<OffsetTimeColumn>(
         prefix + "next_check",
         "The scheduled time of the next check (Unix timestamp)",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, next_check)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, next_check)}));
     table->addColumn(std::make_unique<OffsetTimeColumn>(
         prefix + "last_notification",
-        "The time of the last notification (Unix timestamp)", indirect_offset,
-        -1, -1, DANGEROUS_OFFSETOF(service, last_notification)));
+        "The time of the last notification (Unix timestamp)",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, last_notification)}));
     table->addColumn(std::make_unique<OffsetTimeColumn>(
         prefix + "next_notification",
-        "The time of the next notification (Unix timestamp)", indirect_offset,
-        -1, -1, DANGEROUS_OFFSETOF(service, next_notification)));
+        "The time of the next notification (Unix timestamp)",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, next_notification)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "current_notification_number",
-        "The number of the current notification", indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, current_notification_number)));
+        "The number of the current notification",
+        Column::Offsets{
+            indirect_offset, -1, -1,
+            DANGEROUS_OFFSETOF(service, current_notification_number)}));
     table->addColumn(std::make_unique<OffsetTimeColumn>(
         prefix + "last_state_change",
         "The time of the last state change - soft or hard (Unix timestamp)",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, last_state_change)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, last_state_change)}));
     table->addColumn(std::make_unique<OffsetTimeColumn>(
         prefix + "last_hard_state_change",
         "The time of the last hard state change (Unix timestamp)",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, last_hard_state_change)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, last_hard_state_change)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "scheduled_downtime_depth",
         "The number of scheduled downtimes the service is currently in",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, scheduled_downtime_depth)));
+        Column::Offsets{
+            indirect_offset, -1, -1,
+            DANGEROUS_OFFSETOF(service, scheduled_downtime_depth)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "is_flapping", "Whether the service is flapping (0/1)",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, is_flapping)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, is_flapping)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "checks_enabled",
         "Whether active checks are enabled for the service (0/1)",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, checks_enabled)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, checks_enabled)}));
 #ifndef NAGIOS4
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "accept_passive_checks",
-        "Whether the service accepts passive checks (0/1)", indirect_offset, -1,
-        -1, DANGEROUS_OFFSETOF(service, accept_passive_service_checks)));
+        "Whether the service accepts passive checks (0/1)",
+        Column::Offsets{
+            indirect_offset, -1, -1,
+            DANGEROUS_OFFSETOF(service, accept_passive_service_checks)}));
 #else
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "accept_passive_checks",
-        "Whether the service accepts passive checks (0/1)", indirect_offset, -1,
-        -1, DANGEROUS_OFFSETOF(service, accept_passive_checks)));
+        "Whether the service accepts passive checks (0/1)",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, accept_passive_checks)}));
 #endif  // NAGIOS4
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "event_handler_enabled",
         "Whether and event handler is activated for the service (0/1)",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, event_handler_enabled)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, event_handler_enabled)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "notifications_enabled",
         "Whether notifications are enabled for the service (0/1)",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, notifications_enabled)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, notifications_enabled)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "process_performance_data",
         "Whether processing of performance data is enabled for the service (0/1)",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, process_performance_data)));
+        Column::Offsets{
+            indirect_offset, -1, -1,
+            DANGEROUS_OFFSETOF(service, process_performance_data)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "is_executing",
-        "is there a service check currently running... (0/1)", indirect_offset,
-        -1, -1, DANGEROUS_OFFSETOF(service, is_executing)));
+        "is there a service check currently running... (0/1)",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, is_executing)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "active_checks_enabled",
         "Whether active checks are enabled for the service (0/1)",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, checks_enabled)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, checks_enabled)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "check_options",
         "The current check option, forced, normal, freshness... (0/1)",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, check_options)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, check_options)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "flap_detection_enabled",
         "Whether flap detection is enabled for the service (0/1)",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, flap_detection_enabled)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, flap_detection_enabled)}));
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "check_freshness",
-        "Whether freshness checks are activated (0/1)", indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, check_freshness)));
+        "Whether freshness checks are activated (0/1)",
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, check_freshness)}));
 #ifndef NAGIOS4
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "obsess_over_service",
         "Whether 'obsess_over_service' is enabled for the service (0/1)",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, obsess_over_service)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, obsess_over_service)}));
 #else
     table->addColumn(std::make_unique<OffsetIntColumn>(
         prefix + "obsess_over_service",
         "Whether 'obsess_over_service' is enabled for the service (0/1)",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, obsess)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, obsess)}));
 #endif  // NAGIOS4
     table->addColumn(std::make_unique<AttributeListAsIntColumn>(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, modified_attributes)));
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, modified_attributes)}));
     table->addColumn(std::make_unique<AttributeListColumn>(
         prefix + "modified_attributes_list",
         "A list of all modified attributes",
@@ -348,12 +392,12 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<ServiceSpecialIntColumn>(
         prefix + "hard_state",
         "The effective hard state of the service (eliminates a problem in hard_state)",
-        indirect_offset, -1, -1, 0, table->core(),
+        Column::Offsets{indirect_offset, -1, -1, 0}, table->core(),
         ServiceSpecialIntColumn::Type::real_hard_state));
     table->addColumn(std::make_unique<ServiceSpecialIntColumn>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this service (0/1)",
-        indirect_offset, -1, -1, 0, table->core(),
+        Column::Offsets{indirect_offset, -1, -1, 0}, table->core(),
         ServiceSpecialIntColumn::Type::pnp_graph_present));
     table->addColumn(std::make_unique<ServiceSpecialDoubleColumn>(
         prefix + "staleness", "The staleness indicator for this service",
@@ -408,22 +452,25 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<TimeperiodColumn>(
         prefix + "in_check_period",
         "Whether the service is currently in its check period (0/1)",
-        indirect_offset, DANGEROUS_OFFSETOF(service, check_period_ptr), -1, 0));
+        Column::Offsets{indirect_offset,
+                        DANGEROUS_OFFSETOF(service, check_period_ptr), -1, 0}));
     table->addColumn(std::make_unique<CustomTimeperiodColumn>(
         prefix + "in_service_period",
         "Whether this service is currently in its service period (0/1)",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, custom_variables),
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, custom_variables)},
         table->core(), "SERVICE_PERIOD"));
     table->addColumn(std::make_unique<TimeperiodColumn>(
         prefix + "in_notification_period",
         "Whether the service is currently in its notification period (0/1)",
-        indirect_offset, DANGEROUS_OFFSETOF(service, notification_period_ptr),
-        -1, 0));
+        Column::Offsets{indirect_offset,
+                        DANGEROUS_OFFSETOF(service, notification_period_ptr),
+                        -1, 0}));
 
     table->addColumn(std::make_unique<ServiceContactsColumn>(
         prefix + "contacts",
         "A list of all contacts of the service, either direct or via a contact group",
-        indirect_offset, -1, -1, 0));
+        Column::Offsets{indirect_offset, -1, -1, 0}));
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes", "A list of all downtime ids of the service",
         Column::Offsets{indirect_offset, -1, -1, 0}, table->core(), true,
@@ -531,7 +578,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<ServiceGroupsColumn>(
         prefix + "groups", "A list of all service groups the service is in",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, servicegroups_ptr),
+        Column::Offsets{indirect_offset, -1, -1,
+                        DANGEROUS_OFFSETOF(service, servicegroups_ptr)},
         table->core()));
     table->addColumn(std::make_unique<ContactGroupsColumn>(
         prefix + "contact_groups",
@@ -542,7 +590,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<ServiceMetricsColumn>(
         prefix + "metrics",
         "A list of all metrics of this object that historically existed",
-        indirect_offset, -1, -1, 0, table->core()));
+        Column::Offsets{indirect_offset, -1, -1, 0}, table->core()));
     table->addDynamicColumn(std::make_unique<DynamicServiceRRDColumn>(
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",

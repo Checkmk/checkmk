@@ -32,11 +32,7 @@ class Row;
 
 class OffsetSStringColumn : public StringColumn {
 public:
-    OffsetSStringColumn(const std::string& name, const std::string& description,
-                        int indirect_offset, int extra_offset,
-                        int extra_extra_offset, int offset)
-        : StringColumn(name, description, indirect_offset, extra_offset,
-                       extra_extra_offset, offset) {}
+    using StringColumn::StringColumn;
     [[nodiscard]] std::string getValue(Row row) const override;
 };
 

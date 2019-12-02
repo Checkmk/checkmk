@@ -57,8 +57,6 @@ class Column {
 public:
     using Offsets = std::array<int, 4>;
     Column(std::string name, std::string description, Offsets);
-    Column(std::string name, std::string description, int indirect_offset,
-           int extra_offset, int extra_extra_offset, int offset);
     virtual ~Column() = default;
 
     [[nodiscard]] std::string name() const { return _name; }

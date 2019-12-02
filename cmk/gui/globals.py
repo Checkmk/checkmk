@@ -124,6 +124,8 @@ class RequestContext(object):
         self.request = html_obj.request
         self.response = html_obj.response
 
+        self.auth_type = None
+
     def __enter__(self):
         _request_ctx_stack.push(self)
         # TODO: Move this plus the corresponding cleanup code to hooks.

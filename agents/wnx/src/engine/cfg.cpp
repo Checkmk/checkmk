@@ -47,6 +47,7 @@ namespace cma {
 namespace details {
 
 // internal and hidden global variables
+// #GLOBAL x2
 bool G_Service = false;  // set to true only when we run service
 bool G_Test = false;     // set to true only when we run watest
 

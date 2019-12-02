@@ -87,7 +87,7 @@ TEST(Commander, RunCommandDefault) {
     EXPECT_FALSE(RunCommand(kMainPeer, ""));
     EXPECT_FALSE(RunCommand(kMainPeer, "invalidcommand"));
     EXPECT_TRUE(RunCommand(kMainPeer, kReload));
-    EXPECT_FALSE(RunCommand(kMainPeer, kCleanOnStop));
+    EXPECT_FALSE(RunCommand(kMainPeer, kUninstallAlert));
 }
 
 TEST(Commander, GetSet) {

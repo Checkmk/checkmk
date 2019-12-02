@@ -11,7 +11,7 @@ namespace commander {
 constexpr std::string_view kMainPeer = "main_peer";
 constexpr std::string_view kReload = "reload";
 constexpr std::string_view kPassTrue = "pass_true";  // test command
-constexpr std::string_view kCleanOnStop = "clean";
+constexpr std::string_view kUninstallAlert = "uninstall_alert";
 
 using RunCommandProcessor = bool (*)(std::string_view peer,
                                      std::string_view cmd);

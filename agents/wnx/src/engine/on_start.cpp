@@ -102,17 +102,15 @@ bool ReloadConfig() {
     return LoadConfig(AppDefaultType(), {});
 }
 
-static bool s_clean_on_exit = false;
-
-bool IsCleanOnExit() { return s_clean_on_exit; }
+UninstallAlert G_UninstallALert;
 
 // usually for testing
-void ResetCleanOnExit() {
+void UninstallAlert::clear() noexcept {
     //
-    s_clean_on_exit = false;
+    set_ = false;
 }
 
-void CleanOnExit() {
+void UninstallAlert::set() noexcept {
     //
     if (!IsService()) {
         XLOG::l.i("Requested clean on exit is IGNORED, not service");
@@ -121,7 +119,7 @@ void CleanOnExit() {
 
     XLOG::l.i("Requested clean on exit");
     XLOG::details::LogWindowsEventInfo(9, "Requested Clean On Exit");
-    s_clean_on_exit = true;
+    set_ = true;
 }
 
 bool LoadConfig(AppType Type, const std::wstring& ConfigFile) {

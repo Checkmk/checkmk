@@ -850,7 +850,7 @@ TEST(AgentConfig, WorkScenario) {
     {
         auto mode =
             GetVal(groups::kSystem, vars::kCleanupUninstall, std::string("xx"));
-        EXPECT_TRUE(mode == values::kCleanupNone);
+        EXPECT_TRUE(mode == values::kCleanupSmart);
     }
 }
 

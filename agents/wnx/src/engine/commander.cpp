@@ -34,12 +34,12 @@ bool RunCommand(std::string_view peer, std::string_view cmd) {
         return true;
     }
 
-    if (cma::tools::IsEqual(cmd, kCleanOnStop)) {
-        XLOG::l.t("Commander: Clean On Stop");
+    if (cma::tools::IsEqual(cmd, kUninstallAlert)) {
+        XLOG::l.t("Commander: Alert of Uninstall");
         if (cma::IsTest()) return false;
         if (!cma::IsService()) return false;
 
-        cma::CleanOnExit();
+        cma::G_UninstallALert.set();
         return true;
     }
 
@@ -48,6 +48,7 @@ bool RunCommand(std::string_view peer, std::string_view cmd) {
 }
 
 // #TODO global. MOVE TO THE service processor
+// #GLOBAL
 RunCommandProcessor g_rcp = RunCommand;
 
 RunCommandProcessor ObtainRunCommandProcessor() {

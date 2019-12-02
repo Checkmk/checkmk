@@ -226,15 +226,15 @@ just to signal that real build script was not called -->
       </Directory>
       -->
     </Directory>
-      <CustomAction Id="uninstall_clean"
-          Directory  ="INSTALLFOLDER_SERVICE"
-          ExeCommand ='[INSTALLFOLDER_SERVICE]check_mk_agent.exe uninstall_clean'
-          Execute    ="deferred"
-          Impersonate="no"
-          Return     ="ignore"/>
+    <CustomAction Id="uninstall_alert"
+        Directory  ="INSTALLFOLDER_SERVICE"
+        ExeCommand ='[INSTALLFOLDER_SERVICE]check_mk_agent.exe uninstall_alert'
+        Execute    ="deferred"
+        Impersonate="no"
+        Return     ="ignore"/>
 
     <InstallExecuteSequence>
-      <Custom Action='uninstall_clean' Sequence="1504" >(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
+        <Custom Action='uninstall_alert' Sequence="1504" >REMOVE="ALL"</Custom>
     </InstallExecuteSequence>
 
     <!-- Step 2: Add files to your installer package -->

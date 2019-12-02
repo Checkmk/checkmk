@@ -379,14 +379,19 @@ TEST(CmaCfg, ReloadCfg) {
 }
 
 TEST(Cma, CleanApi) {
-    ASSERT_FALSE(cma::IsCleanOnExit());
-    cma::CleanOnExit();
-    ASSERT_FALSE(cma::IsCleanOnExit());
+    auto& alert = cma::G_UninstallALert;
+    ASSERT_FALSE(alert.isSet()) << "initial always false";
+    alert.clear();
+    ASSERT_FALSE(alert.isSet());
+    alert.set();
+    ASSERT_FALSE(alert.isSet())
+        << "forbidden to set for non service executable";
     cma::details::G_Service = true;
-    cma::CleanOnExit();
-    EXPECT_TRUE(cma::IsCleanOnExit());
+    alert.set();
+    EXPECT_TRUE(alert.isSet());
     cma::details::G_Service = false;
-    cma::ResetCleanOnExit();
+    alert.clear();
+    EXPECT_FALSE(alert.isSet());
 }
 
 TEST(Cma, PushPop) {

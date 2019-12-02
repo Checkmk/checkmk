@@ -29,6 +29,8 @@ constexpr std::string_view kVersionParam = "version";
 constexpr std::string_view kReloadConfigParam = "reload_config";
 constexpr std::string_view kRemoveLegacyParam = "remove_legacy";
 
+constexpr std::string_view kUninstallAlert = "uninstall_alert";  // from the msi
+
 constexpr std::string_view kExecParam = "exec";             // runs as app
 constexpr std::string_view kAdhocParam = "adhoc";           // runs as app
 constexpr std::string_view kExecParamShowWarn = "-show";    // logging sub param

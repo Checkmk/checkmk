@@ -565,6 +565,12 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
         return 0;
     }
 
+    if (param == wtools::ConvertToUTF16(kUninstallAlert)) {
+        XLOG::l.i("UNINSTALL ALERT");
+        cma::srv::ExecUninstallAlert();
+        return 0;
+    }
+
     if (param == wtools::ConvertToUTF16(kRemoveLegacyParam)) {
         cma::srv::ExecRemoveLegacyAgent();
         return 0;
@@ -579,7 +585,7 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
         std::wstring(L"Provided Parameter \"") + param + L"\" is not allowed\n";
 
     ServiceUsage(text);
-    return 2;
+    return 13;
 }
 }  // namespace cma
 

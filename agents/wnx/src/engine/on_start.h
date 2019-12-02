@@ -31,8 +31,24 @@ void OnExit();  // #VIP will stop WMI and all services(in the future)
 
 bool ConfigLoaded();
 
-bool IsCleanOnExit(); // check during exit from the service
-void CleanOnExit(); // set when command is got from the transport
+class UninstallAlert {
+public:
+    UninstallAlert() = default;
+    UninstallAlert(const UninstallAlert&) = delete;
+    UninstallAlert(UninstallAlert&&) = delete;
+    UninstallAlert& operator=(const UninstallAlert&) = delete;
+    UninstallAlert& operator=(UninstallAlert&&) = delete;
+    bool isSet() const noexcept {
+        return set_;
+    }                       // check during exit from the service
+    void clear() noexcept;  // test only
+    void set() noexcept;    // set when command is got from the
+                            // transport
+private:
+    bool set_ = false;
+};
+
+extern UninstallAlert G_UninstallALert;
 
 std::pair<std::filesystem::path, std::filesystem::path> FindAlternateDirs(
     std::wstring_view environment_variable);

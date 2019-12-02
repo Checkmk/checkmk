@@ -44,6 +44,7 @@ int ExecSkypeTest();  // on skype :hidden
 int ExecResetOhm();   // on resetohm :hidden
 
 int ExecReloadConfig();
+int ExecUninstallAlert();
 int ExecRemoveLegacyAgent();
 void ExecUninstallClean();
 

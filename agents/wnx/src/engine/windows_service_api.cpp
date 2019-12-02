@@ -611,11 +611,11 @@ int ExecReloadConfig() {
     return 0;
 }
 
-int InformCleanOnStop() {
+int ExecUninstallAlert() {
     cma::MailSlot mailbox_service(cma::cfg::kServiceMailSlot, 0);
 
     cma::carrier::InformByMailSlot(mailbox_service.GetName(),
-                                   cma::commander::kCleanOnStop);
+                                   cma::commander::kUninstallAlert);
     return 0;
 }
 
@@ -979,7 +979,11 @@ void ProcessFirewallConfiguration(std::wstring_view app_name) {
 
 static void TryCleanOnExit() {
     using namespace cma::cfg;
-    if (!cma::IsCleanOnExit()) return;
+    if (!cma::G_UninstallALert.isSet()) {
+        XLOG::l.i("Clean on exit was not requested");
+
+        return;
+    }
 
     auto mode = details::GetCleanDataFolderMode();  // read config
     XLOG::l.i(

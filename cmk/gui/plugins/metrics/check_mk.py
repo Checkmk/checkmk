@@ -6467,6 +6467,8 @@ for check in [
     }
 
 check_metrics["check_mk-winperf_processor.util"].update({"util": {"name": "util_numcpu_as_max"}})
+check_metrics["check_mk-netapp_api_cpu"] = {"util": {"name": "util_numcpu_as_max"}}
+check_metrics["check_mk-netapp_api_cpu.utilization"] = {"util": {"name": "util_numcpu_as_max"}}
 
 check_metrics["check_mk-citrix_serverload"] = {
     "perf": {
@@ -10370,6 +10372,7 @@ graph_info["cpu_utilization_numcpus"] = {
         "util_numcpu_as_max:crit",
     ],
     "range": (0, 100),
+    "optional_metrics": ["user"],
 }
 
 #TODO which warn,crit?

@@ -1,0 +1,15 @@
+Title: oracle_jobs: Fixed IndexError while discovery
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p8
+Date: 1576510211
+
+The {{Check_MK Discovery}} service reports an UNKNOWN state due to wrong
+handling of lines with less than three items (IndexError). Moreover if the
+agent output contains invalid or debug lines the {{Oracle Jobs}} services
+reports UNKNOWN instead of becoming stale.

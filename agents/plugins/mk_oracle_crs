@@ -11,8 +11,6 @@ VERSION="2.1.0i1"
 
 set -f
 
-ocrcfgfile=/etc/oracle/ocr.loc
-olrcfgfile=/etc/oracle/olr.loc
 resourcefilter="^NAME=|^TYPE=|^STATE=|^TARGET=|^ENABLED="
 
 #   .--Functions-----------------------------------------------------------.
@@ -26,13 +24,29 @@ resourcefilter="^NAME=|^TYPE=|^STATE=|^TARGET=|^ENABLED="
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-set_has_env(){
+function set_osenv () {
+    ostype=$(uname -s)
+    if [ "$ostype" = 'Linux' ] ; then
+        ocrcfgfile=/etc/oracle/ocr.loc
+        olrcfgfile=/etc/oracle/olr.loc
+        GREP=$(which grep)
+    elif [ "$ostype" = 'SunOS' ] ; then
+        ocrcfgfile=/var/opt/oracle/ocr.loc
+        olrcfgfile=/var/opt/oracle/olr.loc
+        GREP=/usr/xpg4/bin/grep
+    else
+        ostype="unknown OS: ${ostype}"
+        exit 1
+    fi
+}
+
+function set_has_env(){
     test -f ${ocrcfgfile} || exit 0
-    local_has_type=$(cat $ocrcfgfile | grep "^local_only=" | cut -d"=" -f2 | tr '[:lower:]' '[:upper:]')
+    local_has_type=$(cat $ocrcfgfile | $GREP "^local_only=" | cut -d"=" -f2 | tr '[:lower:]' '[:upper:]')
     local_has_type=${local_has_type:-"FALSE"}
 
     if [ -f ${olrcfgfile} ] ; then
-        has_ORACLE_HOME=$(cat $olrcfgfile | grep "^crs_home=" | cut -d"=" -f2)
+        has_ORACLE_HOME=$(cat $olrcfgfile | $GREP "^crs_home=" | cut -d"=" -f2)
     else
         # There is no olr.cfg in 10.2 and 11.1
         # we try to get the ORA_CRS_HOME from /etc/init.d/init.cssd
@@ -41,7 +55,7 @@ set_has_env(){
         if [ ! -f ${INITCSSD} ] ; then
             exit 0
         else
-            has_ORACLE_HOME=$(grep "^ORA_CRS_HOME=" ${INITCSSD} | cut -d"=" -f2-)
+            has_ORACLE_HOME=$($GREP "^ORA_CRS_HOME=" ${INITCSSD} | cut -d"=" -f2-)
         fi
     fi
 
@@ -50,27 +64,29 @@ set_has_env(){
     CRS_STAT=${has_ORACLE_HOME}/bin/crs_stat
 }
 
-printhasdata() {
-    ps -e | grep cssd.bin > /dev/null || exit 0
+function printhasdata() {
+    ps -ef | $GREP -v grep | $GREP cssd.bin > /dev/null || exit 0
 
     echo "<<<oracle_crs_version:sep(124)>>>"
     $CRSCTL query has releaseversion
 
-    echo "<<<oracle_crs_res>>>"
-    $CRSCTL stat res -f | grep -E $resourcefilter
+    echo "<<<oracle_crs_res:sep(124)>>>"
+    OLS_NODENAME=`uname -n`
+    echo "nodename|"$OLS_NODENAME
+    $CRSCTL stat res -f | $GREP -E $resourcefilter | sed "s/^/csslocal\|/"
 }
 
-printcrsdata() {
-    ps -e | grep -e ohasd.bin -e crsd.bin > /dev/null || exit 0
+function printcrsdata() {
+    ps -ef | $GREP -v grep | $GREP -e ohasd.bin -e crsd.bin > /dev/null || exit 0
 
     echo "<<<oracle_crs_version:sep(124)>>>"
     crs_version=$($CRSCTL query crs releaseversion)
     echo $crs_version
 
     echo "<<<oracle_crs_voting>>>"
-    $CRSCTL query css votedisk | grep "^ [0-9]"
+    $CRSCTL query css votedisk | $GREP "^ [0-9]"
 
-    ps -e | grep crsd.bin > /dev/null || exit 0
+    ps -ef | $GREP -v grep | $GREP crsd.bin > /dev/null || exit 0
     echo "<<<oracle_crs_res:sep(124)>>>"
     OLS_NODENAME=$($OLSNODES -l)
 
@@ -78,13 +94,13 @@ printcrsdata() {
 
     crs_version_short=$(echo $crs_version | cut -d"[" -f2- | cut -d"." -f-2 | sed 's/\.//')
     if [ $(($crs_version_short)) -ge 112 ] ; then
-        $CRSCTL stat res -v -n $OLS_NODENAME -init | grep -E $resourcefilter | sed "s/^/csslocal\|/"
+        $CRSCTL stat res -v -n $OLS_NODENAME -init | $GREP -E $resourcefilter | sed "s/^/csslocal\|/"
         for nodelist in $($OLSNODES)
         do
-            $CRSCTL stat res -v -n $nodelist | grep -E $resourcefilter | sed "s/^/$nodelist\|/"
+            $CRSCTL stat res -v -n "$nodelist" | $GREP -E "$resourcefilter" | sed "s/^/$nodelist\|/"
         done
     else
-        $CRS_STAT -f -c $OLS_NODENAME | grep -E $resourcefilter | sed "s/^/$OLS_NODENAME\|/"
+        $CRS_STAT -f -c "$OLS_NODENAME" | $GREP -E "$resourcefilter" | sed "s/^/$OLS_NODENAME\|/"
     fi
 }
 
@@ -100,6 +116,7 @@ printcrsdata() {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+set_osenv
 set_has_env
 echo "<<<oracle_crs_res>>>"
 echo "<<<oracle_crs_version>>>"
@@ -109,4 +126,3 @@ if [ $local_has_type = 'FALSE' ] ; then
 else
     printhasdata
 fi
-

@@ -26,7 +26,13 @@
 
 import sys
 import logging
-from typing import IO, Any  # pylint: disable=unused-import
+from typing import Union, IO, Any  # pylint: disable=unused-import
+
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path
 
 # Just for reference, the predefined logging levels:
 #
@@ -92,12 +98,15 @@ def setup_console_logging():
 
 # TODO: Cleanup IO[Any] to IO[Text]
 def open_log(log_file_path):
-    # type: (str) -> IO[Any]
+    # type: (Union[str, Path]) -> IO[Any]
     """Open logfile and fall back to stderr if this is not successfull
     The opened file-like object is returned.
     """
+    if not isinstance(log_file_path, Path):
+        log_file_path = Path(log_file_path)
+
     try:
-        logfile = open(log_file_path, "a")  # type: IO[Any]
+        logfile = log_file_path.open("a")  # type: IO[Any]
         logfile.flush()
     except Exception as e:
         logger.exception("Cannot open log file '%s': %s", log_file_path, e)

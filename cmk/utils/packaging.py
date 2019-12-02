@@ -242,19 +242,25 @@ def edit_package(pacname, new_package_info):
     write_package_info(new_package_info)
 
 
+def install_optional_package(package_file_name):
+    # type: (Text) -> PackageInfo
+    if package_file_name not in [p.name.decode("utf-8") for p in _get_optional_package_paths()]:
+        raise PackageException("Optional package %s does not exist" % package_file_name)
+
+    return install_package_by_path(
+        cmk.utils.paths.optional_packages_dir.joinpath(package_file_name.encode("utf-8")))
+
+
 def install_package_by_path(package_path):
-    # type: (Path) -> None
+    # type: (Path) -> PackageInfo
     with package_path.open("rb") as f:
-        install_package(file_object=cast(BinaryIO, f))
+        return install_package(file_object=cast(BinaryIO, f))
 
 
 def install_package(file_object):
-    # type: (BinaryIO) -> None
-    tar = tarfile.open(fileobj=file_object, mode="r:gz")
-    package_info_file = tar.extractfile("info")
-    if package_info_file is None:
-        raise PackageException("Failed to open package info file")
-    package = parse_package_info(package_info_file.read())
+    # type: (BinaryIO) -> PackageInfo
+    package = _get_package_info_from_package(file_object)
+    file_object.seek(0)
 
     _verify_check_mk_version(package)
 
@@ -267,6 +273,8 @@ def install_package(file_object):
     else:
         logger.log(VERBOSE, "Installing %s version %s.", pacname, package["version"])
         update = False
+
+    tar = tarfile.open(fileobj=file_object, mode="r:gz")
 
     # Before installing check for conflicts
     keep_files = {}
@@ -358,6 +366,15 @@ def install_package(file_object):
     return package
 
 
+def _get_package_info_from_package(file_object):
+    # type: (BinaryIO) -> PackageInfo
+    tar = tarfile.open(fileobj=file_object, mode="r:gz")
+    package_info_file = tar.extractfile("info")
+    if package_info_file is None:
+        raise PackageException("Failed to open package info file")
+    return parse_package_info(package_info_file.read())
+
+
 def _validate_package_files(pacname, files):
     """Packaged files must either be unpackaged or already belong to that package"""
     packages = {}
@@ -429,7 +446,26 @@ def get_all_package_infos():
         "installed": packages,
         "unpackaged": unpackaged_files(),
         "parts": package_part_info(),
+        "optional_packages": get_optional_package_infos(),
     }
+
+
+def get_optional_package_infos():
+    # type: () -> Dict[Text, Dict]
+    optional = {}
+    for pkg_path in _get_optional_package_paths():
+        with pkg_path.open("rb") as pkg:
+            package_info = _get_package_info_from_package(cast(BinaryIO, pkg))
+            optional[pkg_path.name.decode("utf-8")] = package_info
+
+    return optional
+
+
+def _get_optional_package_paths():
+    # type: () -> List[Path]
+    if not cmk.utils.paths.optional_packages_dir.exists():
+        return []
+    return list(cmk.utils.paths.optional_packages_dir.iterdir())
 
 
 def unpackaged_files():

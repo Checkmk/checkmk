@@ -315,6 +315,27 @@ def test_unpackaged_files():
 #def test_package_part_info()
 
 
+def test_get_optional_package_infos_none():
+    assert packaging.get_optional_package_infos() == {}
+
+
+def test_get_optional_package_infos(monkeypatch, tmp_path):
+    mkp_dir = tmp_path.joinpath("optional_packages")
+    mkp_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(cmk.utils.paths, "optional_packages_dir", mkp_dir)
+
+    # Create package
+    _create_simple_test_package("optional")
+    package_info = packaging.read_package_info("optional")
+
+    # Write MKP file
+    mkp_path = mkp_dir.joinpath("optional.mkp")
+    with mkp_path.open("wb") as mkp:
+        packaging.create_mkp_file(package_info, mkp)
+
+    assert packaging.get_optional_package_infos() == {"optional.mkp": package_info}
+
+
 def test_parse_package_info_pre_160():
     assert packaging.parse_package_info(repr({"name": "aaa"}))["version.usable_until"] is None
 

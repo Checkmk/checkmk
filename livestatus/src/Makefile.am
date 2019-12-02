@@ -296,8 +296,10 @@ livestatus.o: $(liblivestatus_a_OBJECTS)
 	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup $(liblivestatus_a_LD_FLAGS)
 	$(RM) NagiosMockup
 
+# NOTE: Using make's -B flag destroys all dependencies via the am--depfiles
+# target, so we use a cruel sed hack below. :-P
 compile_commands.json: $(unixcat_SOURCES) $(test_neb_SOURCES) $(liblivestatus_a_SOURCES)
-	$(top_srcdir)/scripts/run-pipenv 2 run compiledb --no-build make
+	@$(MAKE) -nwk $$(echo " $^" | sed 's/ / -W /g') | $(top_srcdir)/scripts/run-pipenv 2 run compiledb
 
 tidy: compile_commands.json
 	$(RUN_CLANG_TIDY) -quiet -j6 $(FILES_TO_CHECK)

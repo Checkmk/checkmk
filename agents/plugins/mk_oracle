@@ -2377,6 +2377,14 @@ mk_ora_sqlplus () {
     if output=$(echo "$(ora_session_environment)${loc_stdin}" | "$SQLPLUS" -L -s "$MK_DB_CONNECT"); then
         echo -e "$output"
 
+        elapsed_time=$(bc <<<"$(perl -MTime::HiRes=time -wle 'print time')-$start_time")
+
+        if [ "$print_elapsed_time" = "yes" ]; then
+            echo "elapsed:$elapsed_time"
+        fi
+
+        logging "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "Elapsed time: $elapsed_time"
+
     else
         logging -w "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "OUTPUT '$output'"
         output=$(echo -e "$output" | "${GREP}" -v "^ERROR at line" | tr '\n' ' ' |\
@@ -2391,17 +2399,9 @@ mk_ora_sqlplus () {
         fi
     fi
 
-    elapsed_time=$(bc <<<"$(perl -MTime::HiRes=time -wle 'print time')-$start_time")
-
-    if [ "$print_elapsed_time" = "yes" ]; then
-        echo "elapsed:$elapsed_time"
-    fi
-
     if [ -n "$MK_PIGGYBACK_HOST" ]; then
         echo "<<<<>>>>"
     fi
-
-    logging "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "Elapsed time: $elapsed_time"
 }
 
 #.

@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from typing import Text, Dict, List  # pylint: disable=unused-import
+
 import cmk.utils.defines
 
 
@@ -60,6 +62,7 @@ def notification_message(plugin, context):
 
 
 def notification_progress_message(plugin, context, exit_code, output):
+    # type: (bytes, Dict, int, Text) -> Text
     contact = context["CONTACTNAME"]
     hostname = context["HOSTNAME"]
     service = context.get("SERVICEDESC")
@@ -74,6 +77,7 @@ def notification_progress_message(plugin, context, exit_code, output):
 
 
 def notification_result_message(plugin, context, exit_code, output):
+    # type: (bytes, Dict, int, List[Text]) -> Text
     contact = context["CONTACTNAME"]
     hostname = context["HOSTNAME"]
     service = context.get("SERVICEDESC")

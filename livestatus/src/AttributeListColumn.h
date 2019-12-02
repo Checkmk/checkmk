@@ -41,7 +41,7 @@ class Row;
 class AttributeListColumn : public ListColumn {
 public:
     AttributeListColumn(const std::string &name, const std::string &description,
-                        Column::Offsets offsets)
+                        const Column::Offsets &offsets)
         : ListColumn(name, description, offsets)
         , _int_view_column(name, description, offsets) {}
 

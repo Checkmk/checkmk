@@ -60,7 +60,7 @@ public:
 
     ServiceListStateColumn(const std::string &name,
                            const std::string &description,
-                           Column::Offsets offsets, MonitoringCore *mc,
+                           const Column::Offsets &offsets, MonitoringCore *mc,
                            Type logictype)
         : IntColumn(name, description, offsets)
         , _mc(mc)

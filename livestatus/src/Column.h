@@ -26,12 +26,12 @@
 #define Column_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <array>
 #include <chrono>
 #include <cstddef>
 #include <functional>
 #include <memory>
 #include <string>
+#include <vector>
 #include "Filter.h"
 #include "Row.h"
 #include "contact_fwd.h"
@@ -55,7 +55,7 @@ using AggregationFactory = std::function<std::unique_ptr<Aggregation>()>;
 
 class Column {
 public:
-    using Offsets = std::array<int, 4>;
+    using Offsets = std::vector<int>;
     Column(std::string name, std::string description, Offsets);
     virtual ~Column() = default;
 

@@ -36,7 +36,7 @@ class RowRenderer;
 class TimePointerColumn : public TimeColumn {
 public:
     TimePointerColumn(const std::string &name, const std::string &description,
-                      const time_t *number, Column::Offsets offsets)
+                      const time_t *number, const Column::Offsets &offsets)
         : TimeColumn(name, description, offsets), _number(number) {}
 
 private:

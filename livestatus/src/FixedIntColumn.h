@@ -32,7 +32,7 @@
 class FixedIntColumn : public IntColumn {
 public:
     FixedIntColumn(const std::string& name, const std::string& description,
-                   Column::Offsets offsets, int value)
+                   const Column::Offsets& offsets, int value)
         : IntColumn(name, description, offsets), _value(value) {}
 
     int32_t getValue(Row /* row */,

@@ -47,7 +47,7 @@ enum class ServiceState;
 class ServiceListColumn : public ListColumn {
 public:
     ServiceListColumn(const std::string &name, const std::string &description,
-                      Column::Offsets offsets, MonitoringCore *mc,
+                      const Column::Offsets &offsets, MonitoringCore *mc,
                       int info_depth)
         : ListColumn(name, description, offsets)
         , _mc(mc)

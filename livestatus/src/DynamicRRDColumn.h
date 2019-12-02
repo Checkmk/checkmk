@@ -43,7 +43,7 @@ class MonitoringCore;
 class DynamicRRDColumn : public DynamicColumn {
 public:
     DynamicRRDColumn(const std::string &name, const std::string &description,
-                     MonitoringCore *mc, Column::Offsets);
+                     MonitoringCore *mc, const Column::Offsets &);
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const;

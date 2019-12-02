@@ -42,8 +42,8 @@ public:
     enum class info { none, medium, full };
 
     DowntimeColumn(const std::string &name, const std::string &description,
-                   Column::Offsets offsets, MonitoringCore *mc, bool is_service,
-                   info with_info)
+                   const Column::Offsets &offsets, MonitoringCore *mc,
+                   bool is_service, info with_info)
         : ListColumn(name, description, offsets)
         , _mc(mc)
         , _is_service(is_service)

@@ -40,7 +40,7 @@ class MonitoringCore;
 class HostMetricsColumn : public MetricsColumn {
 public:
     HostMetricsColumn(const std::string& name, const std::string& description,
-                      Column::Offsets offsets, MonitoringCore* mc);
+                      const Column::Offsets& offsets, MonitoringCore* mc);
 
     std::vector<std::string> getValue(Row, const contact*,
                                       std::chrono::seconds) const override;

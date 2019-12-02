@@ -32,7 +32,7 @@
 class DoublePointerColumn : public DoubleColumn {
 public:
     DoublePointerColumn(const std::string &name, const std::string &description,
-                        Column::Offsets offsets, const double *number)
+                        const Column::Offsets &offsets, const double *number)
         : DoubleColumn(name, description, offsets), _number(number) {}
     [[nodiscard]] double getValue(Row /*unused*/) const override {
         return *_number;

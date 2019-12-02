@@ -46,7 +46,7 @@ class RowRenderer;
 class RRDColumn : public ListColumn {
 public:
     RRDColumn(const std::string &name, const std::string &description,
-              Column::Offsets, MonitoringCore *mc, std::string rpn,
+              const Column::Offsets &, MonitoringCore *mc, std::string rpn,
               time_t start_time, time_t end_time, int resolution,
               int max_entries);
 

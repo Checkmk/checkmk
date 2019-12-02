@@ -37,7 +37,7 @@ public:
 
     ServiceSpecialDoubleColumn(const std::string& name,
                                const std::string& description,
-                               Column::Offsets offsets, Type ssdc_type)
+                               const Column::Offsets& offsets, Type ssdc_type)
         : DoubleColumn(name, description, offsets), _type(ssdc_type) {}
 
     [[nodiscard]] double getValue(Row row) const override;

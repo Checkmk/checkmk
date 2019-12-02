@@ -12,7 +12,7 @@ DynamicHostFileColumn::DynamicHostFileColumn(
     std::function<std::optional<std::filesystem::path>(
         const Column &, const Row &, const std::string &)>
         filepath)
-    : DynamicColumn(name, description, offsets)
+    : DynamicColumn(name, description, std::move(offsets))
     , _basepath{std::move(basepath)}
     , _filepath{std::move(filepath)} {}
 

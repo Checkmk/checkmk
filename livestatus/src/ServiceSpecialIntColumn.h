@@ -40,7 +40,7 @@ public:
 
     ServiceSpecialIntColumn(const std::string &name,
                             const std::string &description,
-                            Column::Offsets offsets, MonitoringCore *mc,
+                            const Column::Offsets &offsets, MonitoringCore *mc,
                             Type ssic_type)
         : IntColumn(name, description, offsets), _mc(mc), _type(ssic_type) {}
 

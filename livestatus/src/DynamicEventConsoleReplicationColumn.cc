@@ -56,7 +56,7 @@ private:
 class ReplicationColumn : public BlobColumn {
 public:
     ReplicationColumn(const std::string &name, const std::string &description,
-                      std::string blob, Column::Offsets offsets)
+                      std::string blob, const Column::Offsets &offsets)
         : BlobColumn(name, description, offsets), blob_(std::move(blob)) {}
 
     [[nodiscard]] std::unique_ptr<std::vector<char>> getValue(
@@ -71,7 +71,7 @@ private:
 
 DynamicEventConsoleReplicationColumn::DynamicEventConsoleReplicationColumn(
     const std::string &name, const std::string &description, MonitoringCore *mc,
-    Column::Offsets offsets)
+    const Column::Offsets &offsets)
     : DynamicColumn(name, description, offsets), _mc(mc) {}
 
 std::unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(

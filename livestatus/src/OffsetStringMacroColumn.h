@@ -78,8 +78,8 @@ public:
     // TODO(ml): 5 offsets!
     OffsetStringMacroColumn(const std::string &name,
                             const std::string &description,
-                            Column::Offsets offsets, const MonitoringCore *mc,
-                            int offset)
+                            const Column::Offsets &offsets,
+                            const MonitoringCore *mc, int offset)
         : StringColumn(name, description, offsets)
         , _mc(mc)
         , _string_offset(offset) {}

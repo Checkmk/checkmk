@@ -45,7 +45,7 @@ public:
 
     StatusSpecialIntColumn(const std::string& name,
                            const std::string& description,
-                           Column::Offsets offsets, MonitoringCore* mc,
+                           const Column::Offsets& offsets, MonitoringCore* mc,
                            Type type)
         : IntColumn(name, description, offsets), _mc(mc), _type(type) {}
     int32_t getValue(Row row, const contact* auth_user) const override;

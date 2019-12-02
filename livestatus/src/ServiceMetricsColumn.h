@@ -41,7 +41,7 @@ class ServiceMetricsColumn : public MetricsColumn {
 public:
     ServiceMetricsColumn(const std::string& name,
                          const std::string& description,
-                         Column::Offsets offsets, MonitoringCore* mc);
+                         const Column::Offsets& offsets, MonitoringCore* mc);
 
     std::vector<std::string> getValue(
         Row, const contact* /*auth_user*/,

@@ -39,7 +39,7 @@ class Row;
 class LogwatchListColumn : public ListColumn {
 public:
     LogwatchListColumn(const std::string &name, const std::string &description,
-                       Column::Offsets offsets, MonitoringCore *mc)
+                       const Column::Offsets &offsets, MonitoringCore *mc)
         : ListColumn(name, description, offsets), _mc(mc) {}
 
     std::vector<std::string> getValue(

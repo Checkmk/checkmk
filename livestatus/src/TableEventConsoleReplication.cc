@@ -33,7 +33,7 @@
 TableEventConsoleReplication::TableEventConsoleReplication(MonitoringCore *mc)
     : Table(mc) {
     addDynamicColumn(std::make_unique<DynamicEventConsoleReplicationColumn>(
-        "value", "The replication value", mc, Column::Offsets{-1, -1, -1, 0}));
+        "value", "The replication value", mc, Column::Offsets{}));
 }
 
 std::string TableEventConsoleReplication::name() const {

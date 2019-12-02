@@ -36,7 +36,8 @@ class DynamicEventConsoleReplicationColumn : public DynamicColumn {
 public:
     DynamicEventConsoleReplicationColumn(const std::string &name,
                                          const std::string &description,
-                                         MonitoringCore *mc, Column::Offsets);
+                                         MonitoringCore *mc,
+                                         const Column::Offsets &);
 
     std::unique_ptr<Column> createColumn(const std::string &name,
                                          const std::string &arguments) override;

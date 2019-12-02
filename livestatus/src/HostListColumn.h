@@ -41,7 +41,8 @@ class RowRenderer;
 class HostListColumn : public ListColumn {
 public:
     HostListColumn(const std::string &name, const std::string &description,
-                   Column::Offsets offsets, MonitoringCore *mc, bool show_state)
+                   const Column::Offsets &offsets, MonitoringCore *mc,
+                   bool show_state)
         : ListColumn(name, description, offsets)
         , _mc(mc)
         , _show_state(show_state) {}

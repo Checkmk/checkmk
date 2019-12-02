@@ -36,7 +36,7 @@
 
 HostMetricsColumn::HostMetricsColumn(const std::string& name,
                                      const std::string& description,
-                                     Column::Offsets offsets,
+                                     const Column::Offsets& offsets,
                                      MonitoringCore* mc)
     : MetricsColumn(name, description, offsets)
 

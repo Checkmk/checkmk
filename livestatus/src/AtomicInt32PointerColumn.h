@@ -34,7 +34,7 @@ public:
     AtomicInt32PointerColumn(const std::string& name,
                              const std::string& description,
                              const std::atomic_int32_t* number)
-        : IntColumn(name, description, {-1, -1, -1, 0}), _number(number) {}
+        : IntColumn(name, description, {}), _number(number) {}
 
     int32_t getValue(Row /* row */,
                      const contact* /* auth_user */) const override {

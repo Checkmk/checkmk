@@ -22,7 +22,7 @@ TableCrashReports::TableCrashReports(MonitoringCore *mc) : Table(mc) {
                         DANGEROUS_OFFSETOF(CrashReport, _component)}));
     addDynamicColumn(std::make_unique<DynamicHostFileColumn>(
         "file", "Files related to the crash report (crash.info, etc.)",
-        Column::Offsets{-1, -1, -1, 0}, [mc] { return mc->crashReportPath(); },
+        Column::Offsets{}, [mc] { return mc->crashReportPath(); },
         [](const Column & /*unused*/, const Row & /*unused*/,
            const std::string &args) -> std::optional<std::filesystem::path> {
             return args;

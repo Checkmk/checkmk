@@ -40,7 +40,7 @@ public:
 
     HostSpecialIntColumn(const std::string &name,
                          const std::string &description,
-                         Column::Offsets offsets, MonitoringCore *mc,
+                         const Column::Offsets &offsets, MonitoringCore *mc,
                          Type hsic_type)
         : IntColumn(name, description, offsets), _mc(mc), _type(hsic_type) {}
 

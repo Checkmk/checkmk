@@ -111,132 +111,132 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
 
     addColumn(std::make_unique<IntPointerColumn>(
         "nagios_pid", "The process ID of the monitoring core",
-        Column::Offsets{-1, -1, -1, 0}, &nagios_pid));
+        Column::Offsets{}, &nagios_pid));
     addColumn(std::make_unique<IntPointerColumn>(
-        "core_pid", "The process ID of the monitoring core",
-        Column::Offsets{-1, -1, -1, 0}, &nagios_pid));
+        "core_pid", "The process ID of the monitoring core", Column::Offsets{},
+        &nagios_pid));
     addColumn(std::make_unique<IntPointerColumn>(
         "enable_notifications",
-        "Whether notifications are enabled in general (0/1)",
-        Column::Offsets{-1, -1, -1, 0}, &enable_notifications));
+        "Whether notifications are enabled in general (0/1)", Column::Offsets{},
+        &enable_notifications));
     addColumn(std::make_unique<IntPointerColumn>(
         "execute_service_checks",
         "Whether active service checks are activated in general (0/1)",
-        Column::Offsets{-1, -1, -1, 0}, &execute_service_checks));
+        Column::Offsets{}, &execute_service_checks));
     addColumn(std::make_unique<IntPointerColumn>(
         "accept_passive_service_checks",
         "Whether passive service checks are activated in general (0/1)",
-        Column::Offsets{-1, -1, -1, 0}, &accept_passive_service_checks));
+        Column::Offsets{}, &accept_passive_service_checks));
     addColumn(std::make_unique<IntPointerColumn>(
         "execute_host_checks",
-        "Whether host checks are executed in general (0/1)",
-        Column::Offsets{-1, -1, -1, 0}, &execute_host_checks));
+        "Whether host checks are executed in general (0/1)", Column::Offsets{},
+        &execute_host_checks));
     addColumn(std::make_unique<IntPointerColumn>(
         "accept_passive_host_checks",
         "Whether passive host checks are accepted in general (0/1)",
-        Column::Offsets{-1, -1, -1, 0}, &accept_passive_host_checks));
+        Column::Offsets{}, &accept_passive_host_checks));
     addColumn(std::make_unique<IntPointerColumn>(
         "obsess_over_services",
         "Whether Nagios will obsess over service checks and run the ocsp_command (0/1)",
-        Column::Offsets{-1, -1, -1, 0}, &obsess_over_services));
+        Column::Offsets{}, &obsess_over_services));
     addColumn(std::make_unique<IntPointerColumn>(
         "obsess_over_hosts",
-        "Whether Nagios will obsess over host checks (0/1)",
-        Column::Offsets{-1, -1, -1, 0}, &obsess_over_hosts));
+        "Whether Nagios will obsess over host checks (0/1)", Column::Offsets{},
+        &obsess_over_hosts));
     addColumn(std::make_unique<IntPointerColumn>(
         "check_service_freshness",
         "Whether service freshness checking is activated in general (0/1)",
-        Column::Offsets{-1, -1, -1, 0}, &check_service_freshness));
+        Column::Offsets{}, &check_service_freshness));
     addColumn(std::make_unique<IntPointerColumn>(
         "check_host_freshness",
         "Whether host freshness checking is activated in general (0/1)",
-        Column::Offsets{-1, -1, -1, 0}, &check_host_freshness));
+        Column::Offsets{}, &check_host_freshness));
     addColumn(std::make_unique<IntPointerColumn>(
         "enable_flap_detection",
         "Whether flap detection is activated in general (0/1)",
-        Column::Offsets{-1, -1, -1, 0}, &enable_flap_detection));
+        Column::Offsets{}, &enable_flap_detection));
     addColumn(std::make_unique<IntPointerColumn>(
         "process_performance_data",
         "Whether processing of performance data is activated in general (0/1)",
-        Column::Offsets{-1, -1, -1, 0}, &process_performance_data));
+        Column::Offsets{}, &process_performance_data));
     addColumn(std::make_unique<IntPointerColumn>(
         "enable_event_handlers",
         "Whether event handlers are activated in general (0/1)",
-        Column::Offsets{-1, -1, -1, 0}, &enable_event_handlers));
+        Column::Offsets{}, &enable_event_handlers));
     addColumn(std::make_unique<IntPointerColumn>(
         "check_external_commands",
         "Whether Nagios checks for external commands at its command pipe (0/1)",
-        Column::Offsets{-1, -1, -1, 0}, &check_external_commands));
+        Column::Offsets{}, &check_external_commands));
     addColumn(std::make_unique<TimePointerColumn>(
         "program_start", "The time of the last program start as UNIX timestamp",
-        &program_start, Column::Offsets{-1, -1, -1, 0}));
+        &program_start, Column::Offsets{}));
 #ifndef NAGIOS4
     addColumn(std::make_unique<TimePointerColumn>(
         "last_command_check",
         "The time of the last check for a command as UNIX timestamp",
-        &last_command_check, Column::Offsets{-1, -1, -1, 0}));
+        &last_command_check, Column::Offsets{}));
 #else
     addColumn(std::make_unique<TimePointerColumn>(
         "last_command_check",
         "The time of the last check for a command as UNIX timestamp (placeholder)",
-        &dummy_time, Column::Offsets{-1, -1, -1, 0}));
+        &dummy_time, Column::Offsets{}));
 #endif  // NAGIOS4
     addColumn(std::make_unique<TimePointerColumn>(
         "last_log_rotation", "Time time of the last log file rotation",
-        &last_log_rotation, Column::Offsets{-1, -1, -1, 0}));
+        &last_log_rotation, Column::Offsets{}));
     addColumn(std::make_unique<IntPointerColumn>(
         "interval_length", "The default interval length from nagios.cfg",
-        Column::Offsets{-1, -1, -1, 0}, &interval_length));
+        Column::Offsets{}, &interval_length));
 
     addColumn(std::make_unique<IntPointerColumn>(
-        "num_hosts", "The total number of hosts",
-        Column::Offsets{-1, -1, -1, 0}, &g_num_hosts));
+        "num_hosts", "The total number of hosts", Column::Offsets{},
+        &g_num_hosts));
     addColumn(std::make_unique<IntPointerColumn>(
-        "num_services", "The total number of services",
-        Column::Offsets{-1, -1, -1, 0}, &g_num_services));
+        "num_services", "The total number of services", Column::Offsets{},
+        &g_num_services));
 
     addColumn(std::make_unique<StringPointerColumn>(
         "program_version", "The version of the monitoring daemon",
-        Column::Offsets{-1, -1, -1, 0}, get_program_version()));
+        Column::Offsets{}, get_program_version()));
 
 // External command buffer
 #ifndef NAGIOS4
     addColumn(std::make_unique<IntPointerColumn>(
         "external_command_buffer_slots",
-        "The size of the buffer for the external commands",
-        Column::Offsets{-1, -1, -1, 0}, &external_command_buffer_slots));
+        "The size of the buffer for the external commands", Column::Offsets{},
+        &external_command_buffer_slots));
     addColumn(std::make_unique<IntPointerColumn>(
         "external_command_buffer_usage",
         "The number of slots in use of the external command buffer",
-        Column::Offsets{-1, -1, -1, 0}, &(external_command_buffer.items)));
+        Column::Offsets{}, &(external_command_buffer.items)));
     addColumn(std::make_unique<IntPointerColumn>(
         "external_command_buffer_max",
         "The maximum number of slots used in the external command buffer",
-        Column::Offsets{-1, -1, -1, 0}, &(external_command_buffer.high)));
+        Column::Offsets{}, &(external_command_buffer.high)));
 #else
     addColumn(std::make_unique<IntPointerColumn>(
         "external_command_buffer_slots",
         "The size of the buffer for the external commands (placeholder)",
-        Column::Offsets{-1, -1, -1, 0}, &dummy_int));
+        Column::Offsets{}, &dummy_int));
     addColumn(std::make_unique<IntPointerColumn>(
         "external_command_buffer_usage",
         "The number of slots in use of the external command buffer (placeholder)",
-        Column::Offsets{-1, -1, -1, 0}, &dummy_int));
+        Column::Offsets{}, &dummy_int));
     addColumn(std::make_unique<IntPointerColumn>(
         "external_command_buffer_max",
         "The maximum number of slots used in the external command buffer (placeholder)",
-        Column::Offsets{-1, -1, -1, 0}, &dummy_int));
+        Column::Offsets{}, &dummy_int));
 #endif  // NAGIOS4
 
     // Livestatus' own status
     addColumn(std::make_unique<StatusSpecialIntColumn>(
         "cached_log_messages",
         "The current number of log messages MK Livestatus keeps in memory",
-        Column::Offsets{-1, -1, -1, 0}, mc,
+        Column::Offsets{}, mc,
         StatusSpecialIntColumn::Type::num_cached_log_messages));
     addColumn(std::make_unique<StringPointerColumn>(
         "livestatus_version", "The version of the MK Livestatus module",
-        Column::Offsets{-1, -1, -1, 0}, VERSION));
+        Column::Offsets{}, VERSION));
     addColumn(std::make_unique<AtomicInt32PointerColumn>(
         "livestatus_active_connections",
         "The current number of active connections to MK Livestatus",
@@ -244,41 +244,41 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<IntPointerColumn>(
         "livestatus_queued_connections",
         "The current number of queued connections to MK Livestatus (that wait for a free thread)",
-        Column::Offsets{-1, -1, -1, 0}, &g_num_queued_connections));
+        Column::Offsets{}, &g_num_queued_connections));
     addColumn(std::make_unique<IntPointerColumn>(
         "livestatus_threads",
         "The maximum number of connections to MK Livestatus that can be handled in parallel",
-        Column::Offsets{-1, -1, -1, 0}, &g_livestatus_threads));
+        Column::Offsets{}, &g_livestatus_threads));
     addColumn(std::make_unique<DoublePointerColumn>(
         "livestatus_usage",
         "The average usage of the livestatus connection slots, ranging from 0.0 (0%) up to 1.0 (100%)",
-        Column::Offsets{-1, -1, -1, 0}, &g_avg_livestatus_usage._average));
+        Column::Offsets{}, &g_avg_livestatus_usage._average));
 
     addColumn(std::make_unique<DoublePointerColumn>(
         "average_latency_generic",
         "The average latency for executing active checks (i.e. the time the start of the execution is behind the schedule)",
-        Column::Offsets{-1, -1, -1, 0}, &g_average_active_latency));
+        Column::Offsets{}, &g_average_active_latency));
     addColumn(std::make_unique<DoublePointerColumn>(
         "average_latency_cmk",
         "The average latency for executing Check_MK checks (i.e. the time the start of the execution is behind the schedule)",
-        Column::Offsets{-1, -1, -1, 0}, &dummy_double));
+        Column::Offsets{}, &dummy_double));
     addColumn(std::make_unique<DoublePointerColumn>(
         "average_latency_real_time",
         "The average latency for executing real time checks (i.e. the time the start of the execution is behind the schedule)",
-        Column::Offsets{-1, -1, -1, 0}, &dummy_double));
+        Column::Offsets{}, &dummy_double));
 
     addColumn(std::make_unique<DoublePointerColumn>(
         "helper_usage_generic",
         "The average usage of the generic check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
-        Column::Offsets{-1, -1, -1, 0}, &dummy_double));
+        Column::Offsets{}, &dummy_double));
     addColumn(std::make_unique<DoublePointerColumn>(
         "helper_usage_cmk",
         "The average usage of the Check_MK check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
-        Column::Offsets{-1, -1, -1, 0}, &dummy_double));
+        Column::Offsets{}, &dummy_double));
     addColumn(std::make_unique<DoublePointerColumn>(
         "helper_usage_real_time",
         "The average usage of the real time check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
-        Column::Offsets{-1, -1, -1, 0}, &dummy_double));
+        Column::Offsets{}, &dummy_double));
 
     addColumn(std::make_unique<BoolPointerColumn>(
         "has_event_handlers",
@@ -289,17 +289,17 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<StatusSpecialIntColumn>(
         "mk_inventory_last",
         "The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory",
-        Column::Offsets{-1, -1, -1, 0}, mc,
+        Column::Offsets{}, mc,
         StatusSpecialIntColumn::Type::mk_inventory_last));
     addColumn(std::make_unique<StatusSpecialIntColumn>(
         "num_queued_notifications",
         "The number of queued notifications which have not yet been delivered to the notification helper",
-        Column::Offsets{-1, -1, -1, 0}, mc,
+        Column::Offsets{}, mc,
         StatusSpecialIntColumn::Type::num_queued_notifications));
     addColumn(std::make_unique<StatusSpecialIntColumn>(
         "num_queued_alerts",
         "The number of queued alerts which have not yet been delivered to the alert helper",
-        Column::Offsets{-1, -1, -1, 0}, mc,
+        Column::Offsets{}, mc,
         StatusSpecialIntColumn::Type::num_queued_alerts));
 }
 
@@ -308,10 +308,10 @@ void TableStatus::addCounterColumns(const std::string &name,
                                     Counter which) {
     addColumn(std::make_unique<DoublePointerColumn>(
         name, "The number of " + description + " since program start",
-        Column::Offsets{-1, -1, -1, 0}, counterAddress(which)));
+        Column::Offsets{}, counterAddress(which)));
     addColumn(std::make_unique<DoublePointerColumn>(
         name + "_rate", "The averaged number of " + description + " per second",
-        Column::Offsets{-1, -1, -1, 0}, counterRateAddress(which)));
+        Column::Offsets{}, counterRateAddress(which)));
 }
 
 std::string TableStatus::name() const { return "status"; }

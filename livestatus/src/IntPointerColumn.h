@@ -32,7 +32,7 @@
 class IntPointerColumn : public IntColumn {
 public:
     IntPointerColumn(const std::string& name, const std::string& description,
-                     Column::Offsets offsets, const int* number)
+                     const Column::Offsets& offsets, const int* number)
         : IntColumn(name, description, offsets), _number(number) {}
 
     int32_t getValue(Row /* row */,

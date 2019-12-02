@@ -598,11 +598,11 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<FixedIntColumn>(
         prefix + "cached_at",
         "A dummy column in order to be compatible with Check_MK Multisite",
-        Column::Offsets{-1, -1, -1, 0}, 0));
+        Column::Offsets{}, 0));
     table->addColumn(std::make_unique<FixedIntColumn>(
         prefix + "cache_interval",
         "A dummy column in order to be compatible with Check_MK Multisite",
-        Column::Offsets{-1, -1, -1, 0}, 0));
+        Column::Offsets{}, 0));
 }
 
 void TableServices::answerQuery(Query *query) {

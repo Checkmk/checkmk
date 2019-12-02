@@ -32,7 +32,7 @@ DynamicColumn::DynamicColumn(std::string name, std::string description,
     : _logger(Logger::getLogger("cmk.livestatus"))
     , _name(std::move(name))
     , _description(std::move(description))
-    , _offsets(offsets) {}
+    , _offsets(std::move(offsets)) {}
 
 DynamicColumn::~DynamicColumn() = default;
 

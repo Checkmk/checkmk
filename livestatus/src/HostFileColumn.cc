@@ -36,7 +36,8 @@
 //           must contain the host name.
 HostFileColumn::HostFileColumn(
     const std::string& name, const std::string& description,
-    Column::Offsets offsets, std::function<std::filesystem::path()> basepath,
+    const Column::Offsets& offsets,
+    std::function<std::filesystem::path()> basepath,
     std::function<std::optional<std::filesystem::path>(const Column&,
                                                        const Row&)>
         filepath)

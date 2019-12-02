@@ -36,7 +36,7 @@ class ColumnsColumn : public StringColumn {
 public:
     enum class Type { table, name, description, type };
     ColumnsColumn(const std::string &name, const std::string &description,
-                  Column::Offsets offsets, Type colcol,
+                  const Column::Offsets &offsets, Type colcol,
                   const TableColumns &tablecols)
         : StringColumn(name, description, offsets)
         , _colcol(colcol)

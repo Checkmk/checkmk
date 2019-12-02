@@ -36,8 +36,8 @@ class CustomVarsExplicitColumn : public StringColumn {
 public:
     CustomVarsExplicitColumn(const std::string &name,
                              const std::string &description,
-                             Column::Offsets offsets, const MonitoringCore *mc,
-                             const char *varname)
+                             const Column::Offsets &offsets,
+                             const MonitoringCore *mc, const char *varname)
         : StringColumn(name, description, offsets)
         , _mc(mc)
         , _varname(varname) {}

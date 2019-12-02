@@ -41,7 +41,7 @@ public:
 
     HostSpecialDoubleColumn(const std::string& name,
                             const std::string& description,
-                            Column::Offsets offsets, Type hsdc_type)
+                            const Column::Offsets& offsets, Type hsdc_type)
         : DoubleColumn(name, description, offsets), _type(hsdc_type) {}
 
     [[nodiscard]] double getValue(Row row) const override;

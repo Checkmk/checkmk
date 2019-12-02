@@ -43,7 +43,7 @@ TableContactGroups::TableContactGroups(MonitoringCore *mc) : Table(mc) {
         Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(contactgroup, alias)}));
     addColumn(std::make_unique<ContactGroupsMemberColumn>(
         "members", "A list of all members of this contactgroup",
-        Column::Offsets{-1, -1, -1, 0}));
+        Column::Offsets{}));
 }
 
 std::string TableContactGroups::name() const { return "contactgroups"; }

@@ -42,7 +42,7 @@ TableTimeperiods::TableTimeperiods(MonitoringCore *mc) : Table(mc) {
         Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(timeperiod, alias)}));
     addColumn(std::make_unique<TimeperiodColumn>(
         "in", "Wether we are currently in this period (0/1)",
-        Column::Offsets{-1, -1, -1, 0}));
+        Column::Offsets{}));
     // TODO(mk): add days and exceptions
 }
 

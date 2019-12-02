@@ -49,8 +49,8 @@ class RowRenderer;
 class CustomVarsDictColumn : public Column {
 public:
     CustomVarsDictColumn(std::string name, std::string description,
-                         Column::Offsets offsets, const MonitoringCore *mc,
-                         AttributeKind kind)
+                         const Column::Offsets &offsets,
+                         const MonitoringCore *mc, AttributeKind kind)
         : Column(std::move(name), std::move(description), offsets)
         , _mc(mc)
         , _kind(kind) {}

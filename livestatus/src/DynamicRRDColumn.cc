@@ -36,7 +36,8 @@
 
 DynamicRRDColumn::DynamicRRDColumn(const std::string &name,
                                    const std::string &description,
-                                   MonitoringCore *mc, Column::Offsets offsets)
+                                   MonitoringCore *mc,
+                                   const Column::Offsets &offsets)
     : DynamicColumn(name, description, offsets), _mc(mc) {}
 
 std::unique_ptr<Filter> DynamicRRDColumn::createFilter(

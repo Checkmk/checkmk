@@ -258,8 +258,10 @@ $(RRDTOOL_VERSION):
 # TODO: This is specialized for OMD environments. We need make this automatically detect the
 # OMD scenario and perform specific things for OMD and other things for rrdtool standalone.
 	@echo Building rrdtool library...
-# Would be nice to have some output here, but it was silenced for some reason. Instead of
-# throwing the output away, we at least write it to a log file for better diagnose
+# Building rrdtool with modern compilers results in *tons* of warnings, which
+# would totally hide any output of our own stuff, so we write it to a log file
+# in case something goes seriously wrong.
+	mkdir -p $$(dirname $(RRDTOOL_BUILD_LOG))
 	LANG=C make -j4 -C $$(dirname $$(dirname $$(dirname $$(dirname $(RRDTOOL_SRC_DIR))))) rrdtool-build-library >$(RRDTOOL_BUILD_LOG) 2>&1
 	touch $@
 

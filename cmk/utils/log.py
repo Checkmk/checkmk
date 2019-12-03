@@ -96,9 +96,9 @@ def setup_console_logging():
     setup_logging_handler(sys.stdout, get_formatter("%(message)s"))
 
 
-# TODO: Cleanup IO[Any] to IO[Text]
+# TODO: Find a portable way for Python 2/3 compatibility. Python3 needs IO[Text]
 def open_log(log_file_path):
-    # type: (Union[str, Path]) -> IO[Any]
+    # type: (Union[str, Path]) -> IO[bytes]
     """Open logfile and fall back to stderr if this is not successfull
     The opened file-like object is returned.
     """
@@ -106,7 +106,7 @@ def open_log(log_file_path):
         log_file_path = Path(log_file_path)
 
     try:
-        logfile = log_file_path.open("a")  # type: IO[Any]
+        logfile = log_file_path.open("ab")  # type: IO[bytes]
         logfile.flush()
     except Exception as e:
         logger.exception("Cannot open log file '%s': %s", log_file_path, e)
@@ -116,7 +116,7 @@ def open_log(log_file_path):
 
 
 def setup_logging_handler(stream, formatter=None):
-    # type: (IO[Any], logging.Formatter) -> None
+    # type: (IO[bytes], logging.Formatter) -> None
     """This method enables all log messages to be written to the given
     stream file object. The messages are formated in Check_MK standard
     logging format.

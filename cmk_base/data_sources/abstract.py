@@ -490,7 +490,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
     def _load_persisted_sections(self):
         file_path = self._persisted_sections_file_path()
 
-        persisted_sections = store.load_data_from_file(file_path, default={})
+        persisted_sections = store.load_object_from_file(file_path, default={})
         filtered_persisted_sections = self._filter_outdated_persisted_sections(persisted_sections)
 
         if not filtered_persisted_sections:

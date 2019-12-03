@@ -57,10 +57,10 @@ def test_makedirs_mode(tmp_path, path_type):
 
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_load_data_from_file_not_existing(tmp_path, path_type):
-    data = store.load_data_from_file(path_type(tmp_path / "x"))
+    data = store.load_object_from_file(path_type(tmp_path / "x"))
     assert data is None
 
-    data = store.load_data_from_file(path_type(tmp_path / "x"), default="DEFAULT")
+    data = store.load_object_from_file(path_type(tmp_path / "x"), default="DEFAULT")
     assert data == "DEFAULT"
 
 
@@ -68,7 +68,7 @@ def test_load_data_from_file_not_existing(tmp_path, path_type):
 def test_load_data_from_file_empty(tmp_path, path_type):
     locked_file = tmp_path / "test"
     locked_file.write_text(u"", encoding="utf-8")
-    data = store.load_data_from_file(path_type(tmp_path / "x"), default="DEF")
+    data = store.load_object_from_file(path_type(tmp_path / "x"), default="DEF")
     assert data == "DEF"
 
 
@@ -77,7 +77,7 @@ def test_load_data_not_locked(tmp_path, path_type):
     locked_file = tmp_path / "locked_file"
     locked_file.write_text(u"[1, 2]", encoding="utf-8")
 
-    store.load_data_from_file(path_type(locked_file))
+    store.load_object_from_file(path_type(locked_file))
     assert store.have_lock(path_type(locked_file)) is False
 
 
@@ -86,7 +86,7 @@ def test_load_data_from_file_locking(tmp_path, path_type):
     locked_file = tmp_path / "locked_file"
     locked_file.write_text(u"[1, 2]", encoding="utf-8")
 
-    data = store.load_data_from_file(path_type(locked_file), lock=True)
+    data = store.load_object_from_file(path_type(locked_file), lock=True)
     assert data == [1, 2]
     assert store.have_lock(path_type(locked_file)) is True
 
@@ -98,7 +98,7 @@ def test_load_data_from_not_permitted_file(tmp_path, path_type):
     os.chmod(str(locked_file), 0o200)
 
     with pytest.raises(MKGeneralException) as e:
-        store.load_data_from_file(path_type(locked_file))
+        store.load_object_from_file(path_type(locked_file))
     assert str(locked_file) in "%s" % e
     assert "Permission denied" in "%s" % e
 
@@ -108,7 +108,7 @@ def test_load_data_from_file_dict(tmp_path, path_type):
     locked_file = tmp_path / "test"
     locked_file.write_bytes(repr({"1": 2, "ä": u"ß"}))
 
-    data = store.load_data_from_file(path_type(locked_file))
+    data = store.load_object_from_file(path_type(locked_file))
     assert isinstance(data, dict)
     assert data["1"] == 2
     assert isinstance(data["ä"], six.text_type)
@@ -138,7 +138,7 @@ def test_save_data_to_file_pretty(tmp_path, path_type):
     }
     store.save_object_to_file(path, data, pretty=True)
     assert open(str(path)).read().count("\n") > 4
-    assert store.load_data_from_file(path) == data
+    assert store.load_object_from_file(path) == data
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
@@ -155,7 +155,7 @@ def test_save_data_to_file_not_pretty(tmp_path, path_type):
     }
     store.save_object_to_file(path, data)
     assert open(str(path)).read().count("\n") == 1
-    assert store.load_data_from_file(path) == data
+    assert store.load_object_from_file(path) == data
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
@@ -168,7 +168,7 @@ def test_save_data_to_file_not_pretty(tmp_path, path_type):
 def test_save_data_to_file(tmp_path, path_type, data):
     path = path_type(tmp_path / "lala")
     store.save_object_to_file(path, data)
-    assert store.load_data_from_file(str(path)) == data
+    assert store.load_object_from_file(str(path)) == data
 
 
 @pytest.mark.parametrize("path_type", [str, Path])

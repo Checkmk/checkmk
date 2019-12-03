@@ -87,7 +87,11 @@ class CachedItemStates(object):
         filename = cmk.utils.paths.counters_dir + "/" + hostname
         try:
             # TODO: refactoring. put these two values into a named tuple
-            self._item_states = cmk.utils.store.load_data_from_file(filename, default={}, lock=True)
+            self._item_states = cmk.utils.store.load_object_from_file(
+                filename,
+                default={},
+                lock=True,
+            )
             self._last_mtime = os.stat(filename).st_mtime
         finally:
             cmk.utils.store.release_lock(filename)
@@ -113,7 +117,7 @@ class CachedItemStates(object):
             cmk.utils.store.aquire_lock(filename)
             last_mtime = os.stat(filename).st_mtime
             if last_mtime != self._last_mtime:
-                self._item_states = cmk.utils.store.load_data_from_file(filename, default={})
+                self._item_states = cmk.utils.store.load_object_from_file(filename, default={})
 
                 # Remove obsolete keys
                 for key in self._removed_item_state_keys:

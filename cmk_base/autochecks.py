@@ -130,7 +130,7 @@ class AutochecksManager(object):
 
         return raw_autochecks
 
-    # TODO: use store.load_data_from_file()
+    # TODO: use store.load_object_from_file()
     # TODO: Common code with parse_autochecks_file? Cleanup.
     def _read_raw_autochecks_of(self, hostname):
         # type: (str) -> List[Service]

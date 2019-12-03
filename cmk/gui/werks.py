@@ -192,7 +192,7 @@ def werk_is_pre_127(werk):
 
 
 def load_acknowledgements():
-    return store.load_data_from_file(acknowledgement_path, default=[])
+    return store.load_object_from_file(acknowledgement_path, default=[])
 
 
 def unacknowledged_incompatible_werks():

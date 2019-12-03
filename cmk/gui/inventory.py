@@ -217,7 +217,7 @@ def get_history_deltas(hostname, search_timestamp=None):
 
         cached_data = None
         try:
-            cached_data = cmk.utils.store.load_data_from_file(cached_delta_path)
+            cached_data = cmk.utils.store.load_object_from_file(cached_delta_path)
         except MKGeneralException:
             pass
 

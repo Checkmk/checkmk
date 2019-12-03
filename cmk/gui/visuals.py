@@ -282,7 +282,7 @@ def load_user_visuals(what, builtin_visuals, skip_func, lock):
 
 def load_visuals_of_a_user(what, builtin_visuals, skip_func, lock, path, user):
     user_visuals = {}
-    for name, visual in store.load_data_from_file(path, default={}, lock=lock).items():
+    for name, visual in store.load_object_from_file(path, default={}, lock=lock).items():
         visual["owner"] = user
         visual["name"] = name
 
@@ -329,7 +329,7 @@ def declare_custom_permissions(what):
                 path = "%s/%s.mk" % (dirpath, what)
                 if not os.path.exists(path):
                     continue
-                visuals = store.load_data_from_file(path, default={})
+                visuals = store.load_object_from_file(path, default={})
                 for name, visual in visuals.items():
                     declare_visual_permission(what, name, visual)
         except Exception:

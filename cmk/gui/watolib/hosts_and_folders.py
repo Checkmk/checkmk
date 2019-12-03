@@ -850,7 +850,7 @@ class CREFolder(BaseFolder):
             self._save_wato_info()
 
     def _load_wato_info(self):
-        return store.load_data_from_file(self.wato_info_path(), default={})
+        return store.load_object_from_file(self.wato_info_path(), default={})
 
     def save(self):
         self._save_wato_info()

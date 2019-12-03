@@ -567,7 +567,7 @@ class ModeNotifications(NotificationsMode):
         if not self._show_backlog:
             return
 
-        backlog = store.load_data_from_file(
+        backlog = store.load_object_from_file(
             cmk.utils.paths.var_dir + "/notify/backlog.mk",
             default=[],
         )

@@ -132,7 +132,11 @@ def get_replication_paths():
 
 
 def _load_site_replication_status(site_id, lock=False):
-    return store.load_data_from_file(_site_replication_status_path(site_id), default={}, lock=lock)
+    return store.load_object_from_file(
+        _site_replication_status_path(site_id),
+        default={},
+        lock=lock,
+    )
 
 
 def _save_site_replication_status(site_id, repl_status):
@@ -335,7 +339,7 @@ class ActivateChanges(object):
         manager = ActivateChangesManager()
         site_state_path = os.path.join(manager.activation_persisted_dir,
                                        manager.site_filename(site_id))
-        return store.load_data_from_file(site_state_path, {})
+        return store.load_object_from_file(site_state_path, {})
 
     def _get_last_change_id(self):
         return self._changes[-1][1]["id"]
@@ -518,7 +522,7 @@ class ActivateChangesManager(ActivateChanges):
                                               site_id)
 
     def _load_activation(self):
-        self.__dict__.update(store.load_data_from_file(self._info_path(), {}))
+        self.__dict__.update(store.load_object_from_file(self._info_path(), {}))
 
     def _save_activation(self):
         try:
@@ -753,7 +757,7 @@ class ActivateChangesManager(ActivateChanges):
         return self._load_site_state(site_id)
 
     def _load_site_state(self, site_id):
-        return store.load_data_from_file(self.site_state_path(site_id), {})
+        return store.load_object_from_file(self.site_state_path(site_id), {})
 
     def site_state_path(self, site_id):
         return os.path.join(self.activation_tmp_base_dir, self._activation_id,

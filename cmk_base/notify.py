@@ -1437,7 +1437,7 @@ def handle_spoolfile(spoolfile):
     notif_uuid = spoolfile.rsplit("/", 1)[-1]
     logger.info("----------------------------------------------------------------------")
     try:
-        data = store.load_data_from_file(spoolfile, default={})
+        data = store.load_object_from_file(spoolfile, default={})
         if "plugin" in data:
             plugin_context = data["context"]
             plugin = data["plugin"]
@@ -1715,7 +1715,7 @@ def notify_bulk(dirname, uuids):
     unhandled_uuids = []
     for mtime, uuid in uuids:
         try:
-            params, context = store.load_data_from_file(dirname + "/" + uuid)
+            params, context = store.load_object_from_file(dirname + "/" + uuid)
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
@@ -1854,13 +1854,16 @@ def store_notification_backlog(raw_context):
             os.remove(path)
         return
 
-    backlog = store.load_data_from_file(path, default=[],
-                                        lock=True)[:config.notification_backlog - 1]
+    backlog = store.load_object_from_file(
+        path,
+        default=[],
+        lock=True,
+    )[:config.notification_backlog - 1]
     store.save_object_to_file(path, [raw_context] + backlog, pretty=False)
 
 
 def raw_context_from_backlog(nr):
-    backlog = store.load_data_from_file(notification_logdir + "/backlog.mk", default=[])
+    backlog = store.load_object_from_file(notification_logdir + "/backlog.mk", default=[])
 
     if nr < 0 or nr >= len(backlog):
         console.error("No notification number %d in backlog.\n" % nr)

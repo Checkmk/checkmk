@@ -144,7 +144,7 @@ class ABCDiscoveredLabelsStore(six.with_metaclass(abc.ABCMeta, object)):
         # type: () -> Dict
         # Skip labels discovered by the previous HW/SW inventory approach (which was addded+removed in 1.6 beta)
         return {
-            k: v for k, v in cmk.utils.store.load_data_from_file(str(
+            k: v for k, v in cmk.utils.store.load_object_from_file(str(
                 self.file_path), default={}).iteritems() if isinstance(v, dict)
         }
 

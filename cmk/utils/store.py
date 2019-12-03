@@ -216,7 +216,7 @@ def save_to_mk_file(path, key, value, pprint_value=False):
 # Handle .mk files that are only holding a python data structure and often
 # directly read via file/open and then parsed using eval.
 # TODO: Consolidate with load_mk_file?
-def load_data_from_file(path, default=None, lock=False):
+def load_object_from_file(path, default=None, lock=False):
     # type: (Union[Path, str], Any, bool) -> Any
     content = _load_data_from_file(path, lock=lock)
     if not content:

@@ -594,7 +594,7 @@ def rename_host_in_multisite(oldname, newname):
 
         favpath = config.config_dir + "/" + userid + "/favorites.mk"
         num_changed = 0
-        favorites = store.load_data_from_file(favpath, default=[], lock=True)
+        favorites = store.load_object_from_file(favpath, default=[], lock=True)
         for nr, entry in enumerate(favorites):
             if entry == oldname:
                 favorites[nr] = newname

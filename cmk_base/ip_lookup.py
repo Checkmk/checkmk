@@ -237,7 +237,7 @@ def _get_ip_lookup_cache():
 def _load_ip_lookup_cache(lock):
     # type: (bool) -> NewIPLookupCache
     return _convert_legacy_ip_lookup_cache(
-        store.load_data_from_file(_cache_path(), default={}, lock=lock))
+        store.load_object_from_file(_cache_path(), default={}, lock=lock))
 
 
 def _convert_legacy_ip_lookup_cache(cache):

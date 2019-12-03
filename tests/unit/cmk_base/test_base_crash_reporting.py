@@ -1,3 +1,4 @@
+import six
 from pathlib2 import Path
 
 import cmk.utils.crash_reporting
@@ -20,7 +21,7 @@ def _check_generic_crash_info(crash):
             "crash_type": str,
             "time": float,
             "os": str,
-            "version": str,
+            "version": six.text_type,
             "python_version": str,
             "python_paths": list,
             "exc_type": str,

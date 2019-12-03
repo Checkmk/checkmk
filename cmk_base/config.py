@@ -2389,7 +2389,7 @@ class HostConfig(object):
 
     @property
     def agent_target_version(self):
-        # type: () -> Union[None, str, Tuple[str, str]]
+        # type: () -> Union[None, Text, Tuple[str, str]]
         agent_target_versions = self._config_cache.host_extra_conf(self.hostname,
                                                                    check_mk_agent_target_versions)
         if not agent_target_versions:

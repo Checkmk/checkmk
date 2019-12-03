@@ -16,6 +16,7 @@ pathlib_paths = [
     "locale_dir",
     "mib_dir",
     "crash_dir",
+    "optional_packages_dir",
     "local_share_dir",
     "local_checks_dir",
     "local_notifications_dir",

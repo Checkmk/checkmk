@@ -2,7 +2,6 @@ import pytest
 
 import cmk.gui.sidebar as sidebar
 import cmk.gui.config as config
-import cmk.gui.pages
 from cmk.gui.globals import html
 from cmk.gui.sidebar import UserSidebarSnapin
 
@@ -19,7 +18,7 @@ sidebar.load_plugins(True)
 
 
 @pytest.fixture(scope="function", autouse=True)
-def user(monkeypatch):
+def user(register_builtin_html, monkeypatch):
     monkeypatch.setattr(config.user, "confdir", "")
     monkeypatch.setattr(config.user, "may", lambda x: True)
 
@@ -205,7 +204,7 @@ def test_save_user_config_denied(mocker, monkeypatch):
     save_user_file_mock.assert_not_called()
 
 
-def test_save_user_config_allowed(mocker, monkeypatch):
+def test_save_user_config_allowed(register_builtin_html, mocker, monkeypatch):
     monkeypatch.setattr(config.user, "may", lambda x: x == "general.configure_sidebar")
     save_user_file_mock = mocker.patch.object(config.user, "save_file")
     user_config = sidebar.UserSidebarConfig(config.user, config.sidebar)

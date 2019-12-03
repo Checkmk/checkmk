@@ -21,13 +21,13 @@ Packages List:
   Global Packages[OMD]
     1. Gtest
     2. Simpleini
+    3. Fmt. Formatting package for C++. Python and "C" style full and safe support. License is Special but looks as safe.
+    4. Asio. *Standalone* ASIO library for C++. Industry Standard Low-level Transport. License is Boost.
   Local Packages[Windows Agent] one per folder:
     1. 7-zip: to unpack tar.gz and zip files. Windows doesn't support from the box decompression of zip/tgz/etc/. License is LGPL.
-    2. Fmt. Formatting package for C++. Python and "C" style full and safe support. License is Special but looks as safe.
-    3. Asio. *Standalone* ASIO library for C++. Industry Standard Low-level Transport. License is Boost.
-    4. Catch2. Lightweight unit test header only. Prototyping and test driven development. License is Boost.
+    2. Catch2. Lightweight unit test header only. Prototyping and test driven development. License is Boost.
     TODO:
-    5. Json. Nlohmann C++ Header Only Library for Json management. Relatively fast and lightweight. License is MIT. 
+    3. Json. Nlohmann C++ Header Only Library for Json management. Relatively fast and lightweight. License is MIT. 
 
 Guidelines:
   HOW-TO unpack all by default(example) :

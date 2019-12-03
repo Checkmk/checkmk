@@ -44,10 +44,6 @@ def _check_paths(root):
                 assert value.startswith(root)
 
 
-def test_paths_in_site(site):
-    _check_paths(site.root)
-
-
 def test_paths_in_omd_root(monkeypatch):
     omd_root = '/omd/sites/dingeling'
     try:

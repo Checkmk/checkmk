@@ -25,25 +25,31 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_emc_isilon_iops(info):
-    inventory = []
-    for name, _iops in info:
-        inventory.append((name, None))
-    return inventory
+def parse_emc_isilon_iops(info):
+    parsed = {}
+    for name, iops_str in info:
+        try:
+            parsed[name] = int(iops_str)
+        except ValueError:
+            pass
+    return parsed
 
 
-def check_emc_isilon_iops(item, _no_params, info):
-    for name, iops in info:
-        if name == item:
-            perfdata = [("iops", iops)]
-            message = "%s disk operations per second" % int(iops)
-            return 0, message, perfdata
-    return 3, "Disk not found"
+@get_parsed_item_data
+def check_emc_isilon_iops(_item, _no_params, iops):
+    return check_levels(
+        iops,
+        "iops",
+        None,
+        infoname="Disk operations per second",
+        human_readable_func=lambda d: "%d" % d,
+    )
 
 
 check_info["emc_isilon_iops"] = {
+    "parse_function": parse_emc_isilon_iops,
+    "inventory_function": discover(),
     "check_function": check_emc_isilon_iops,
-    "inventory_function": inventory_emc_isilon_iops,
     "service_description": "Disk %s IO",
     "has_perfdata": True,
     "snmp_info": (

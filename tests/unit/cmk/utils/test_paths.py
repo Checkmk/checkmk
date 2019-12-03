@@ -1,8 +1,6 @@
 import os
-#TODO Change calls of imp.reload to importlib.reload (the imp module is deprecated in Python 3)
-import imp
 from pathlib2 import Path
-import cmk.utils.paths
+from testlib import repo_path, import_module
 
 pathlib_paths = [
     "core_discovered_host_labels_dir",
@@ -33,8 +31,8 @@ pathlib_paths = [
 ]
 
 
-def _check_paths(root):
-    for var, value in cmk.utils.paths.__dict__.iteritems():
+def _check_paths(root, module):
+    for var, value in module.__dict__.iteritems():
         if not var.startswith("_") and var not in ('Path', 'os', 'sys'):
             if var in pathlib_paths:
                 assert isinstance(value, Path)
@@ -46,10 +44,7 @@ def _check_paths(root):
 
 def test_paths_in_omd_root(monkeypatch):
     omd_root = '/omd/sites/dingeling'
-    try:
-        with monkeypatch.context() as m:
-            m.setitem(os.environ, 'OMD_ROOT', omd_root)
-            imp.reload(cmk.utils.paths)
-            _check_paths(omd_root)
-    finally:
-        imp.reload(cmk.utils.paths)
+    with monkeypatch.context() as m:
+        m.setitem(os.environ, 'OMD_ROOT', omd_root)
+        test_paths = import_module("%s/cmk/utils/paths.py" % repo_path())
+        _check_paths(omd_root, test_paths)

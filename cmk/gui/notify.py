@@ -90,7 +90,7 @@ def save_gui_messages(messages, user_id=None):
         user_id = config.user.id
     path = config.config_dir + "/" + user_id.encode("utf-8") + '/messages.mk'
     store.mkdir(os.path.dirname(path))
-    store.save_data_to_file(path, messages)
+    store.save_object_to_file(path, messages)
 
 
 def _notify_methods():

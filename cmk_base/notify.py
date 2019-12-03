@@ -1425,7 +1425,7 @@ def create_spoolfile(data):
         os.makedirs(notification_spooldir)
     file_path = "%s/%s" % (notification_spooldir, fresh_uuid())
     logger.info("Creating spoolfile: %s", file_path)
-    store.save_data_to_file(file_path, data, pretty=True)
+    store.save_object_to_file(file_path, data, pretty=True)
 
 
 # There are three types of spool files:
@@ -1856,7 +1856,7 @@ def store_notification_backlog(raw_context):
 
     backlog = store.load_data_from_file(path, default=[],
                                         lock=True)[:config.notification_backlog - 1]
-    store.save_data_to_file(path, [raw_context] + backlog, pretty=False)
+    store.save_object_to_file(path, [raw_context] + backlog, pretty=False)
 
 
 def raw_context_from_backlog(nr):

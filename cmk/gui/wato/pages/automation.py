@@ -203,5 +203,5 @@ def _get_login_secret(create_on_demand=False):
         return None
 
     secret = cmk.gui.utils.get_random_string(32)
-    store.save_data_to_file(path, secret)
+    store.save_object_to_file(path, secret)
     return secret

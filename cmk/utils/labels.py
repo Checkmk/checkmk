@@ -156,7 +156,7 @@ class ABCDiscoveredLabelsStore(six.with_metaclass(abc.ABCMeta, object)):
             return
 
         self.file_path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
-        cmk.utils.store.save_data_to_file(str(self.file_path), labels)
+        cmk.utils.store.save_object_to_file(str(self.file_path), labels)
 
 
 class DiscoveredHostLabelsStore(ABCDiscoveredLabelsStore):

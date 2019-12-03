@@ -604,7 +604,7 @@ def rename_host_in_multisite(oldname, newname):
                 num_changed += 1
 
         if num_changed:
-            store.save_data_to_file(favpath, favorites)
+            store.save_object_to_file(favpath, favorites)
             users_changed += 1
             total_changed += num_changed
         store.release_lock(favpath)

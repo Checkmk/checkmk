@@ -133,7 +133,7 @@ class Config(object):
         })
 
     def save(self, config):
-        store.save_data_to_file(self._file_path, config)
+        store.save_object_to_file(self._file_path, config)
 
 
 #.

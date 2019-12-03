@@ -456,7 +456,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
             else:
                 raise
 
-        store.save_data_to_file(file_path, persisted_sections, pretty=False)
+        store.save_object_to_file(file_path, persisted_sections, pretty=False)
         self._logger.debug("Stored persisted sections: %s" % (", ".join(persisted_sections.keys())))
 
     def _update_info_with_persisted_sections(self, persisted_sections_from_disk, host_sections,

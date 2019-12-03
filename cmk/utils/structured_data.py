@@ -127,7 +127,7 @@ class StructuredDataTree(object):
     def save_to(self, path, filename, pretty=False):
         filepath = "%s/%s" % (path, filename)
         output = self.get_raw_tree()
-        store.save_data_to_file(filepath, output, pretty=pretty)
+        store.save_object_to_file(filepath, output, pretty=pretty)
         gzip.open(filepath + ".gz", "w").write(repr(output) + "\n")
         # Inform Livestatus about the latest inventory update
         store.save_file("%s/.last" % path, "")

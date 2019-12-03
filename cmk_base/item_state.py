@@ -92,7 +92,7 @@ class CachedItemStates(object):
         finally:
             cmk.utils.store.release_lock(filename)
 
-    # TODO: self._last_mtime needs be updated accordingly after the save_data_to_file operation
+    # TODO: self._last_mtime needs be updated accordingly after the save_object_to_file operation
     #       right now, the current mechanism is sufficient enough, since the save() function is only
     #       called as the final operation, just before the lifecycle of the CachedItemState ends
     def save(self, hostname):
@@ -125,7 +125,7 @@ class CachedItemStates(object):
                 # Add updated keys
                 self._item_states.update(self._updated_item_states)
 
-            cmk.utils.store.save_data_to_file(filename, self._item_states, pretty=False)
+            cmk.utils.store.save_object_to_file(filename, self._item_states, pretty=False)
         except Exception:
             raise MKGeneralException("Cannot write to %s: %s" % (filename, traceback.format_exc()))
         finally:

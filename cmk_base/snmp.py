@@ -95,7 +95,7 @@ def write_single_oid_cache(snmp_config):
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
     cache_path = "%s/%s.%s" % (cache_dir, snmp_config.hostname, snmp_config.ipaddress)
-    store.save_data_to_file(cache_path, _g_single_oid_cache, pretty=False)
+    store.save_object_to_file(cache_path, _g_single_oid_cache, pretty=False)
 
 
 def set_single_oid_cache(snmp_config, oid, value):
@@ -708,7 +708,7 @@ def _save_snmpwalk_cache(hostname, fetchoid, rowinfo):
         os.makedirs(os.path.dirname(path))
 
     console.vverbose("  Saving walk of %s to walk cache %s\n" % (fetchoid, path))
-    store.save_data_to_file(path, rowinfo, pretty=False)
+    store.save_object_to_file(path, rowinfo, pretty=False)
 
 
 def _snmpwalk_cache_path(hostname, fetchoid):

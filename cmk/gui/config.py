@@ -715,7 +715,7 @@ def user_may(user_id, pname):
 def save_user_file(name, data, user_id, unlock=False):
     path = config_dir + "/" + user_id.encode("utf-8") + "/" + name + ".mk"
     store.mkdir(os.path.dirname(path))
-    store.save_data_to_file(path, data)
+    store.save_object_to_file(path, data)
 
 
 def migrate_old_site_config(site_config):

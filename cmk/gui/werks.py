@@ -178,7 +178,7 @@ def acknowledge_werks(werks, check_permission=True):
 
 
 def save_acknowledgements(acknowledged_werks):
-    store.save_data_to_file(acknowledgement_path, acknowledged_werks)
+    store.save_object_to_file(acknowledgement_path, acknowledged_werks)
 
 
 def acknowledge_all_werks(check_permission=True):

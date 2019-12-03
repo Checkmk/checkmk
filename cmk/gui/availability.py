@@ -1148,7 +1148,7 @@ def melt_short_intervals(entries, duration, dont_merge):
 
 def save_annotations(annotations):
     path = cmk.utils.paths.var_dir + "/availability_annotations.mk"
-    store.save_data_to_file(path, annotations)
+    store.save_object_to_file(path, annotations)
 
 
 def load_annotations(lock=False):

@@ -858,7 +858,7 @@ class CREFolder(BaseFolder):
 
     def _save_wato_info(self):
         self._ensure_folder_directory()
-        store.save_data_to_file(self.wato_info_path(), self.get_wato_info())
+        store.save_object_to_file(self.wato_info_path(), self.get_wato_info())
 
     def get_wato_info(self):
         return {

@@ -219,7 +219,7 @@ class IPLookupCache(cmk_base.caching.DictCache):
             cmk.utils.store.release_lock(_cache_path())
 
     def save_persisted(self):
-        cmk.utils.store.save_data_to_file(_cache_path(), self, pretty=False)
+        cmk.utils.store.save_object_to_file(_cache_path(), self, pretty=False)
 
 
 def _get_ip_lookup_cache():

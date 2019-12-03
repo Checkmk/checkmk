@@ -136,7 +136,7 @@ def _load_site_replication_status(site_id, lock=False):
 
 
 def _save_site_replication_status(site_id, repl_status):
-    store.save_data_to_file(_site_replication_status_path(site_id), repl_status, pretty=False)
+    store.save_object_to_file(_site_replication_status_path(site_id), repl_status, pretty=False)
     _cleanup_legacy_replication_status()
 
 
@@ -529,7 +529,7 @@ class ActivateChangesManager(ActivateChanges):
             else:
                 raise
 
-        return store.save_data_to_file(
+        return store.save_object_to_file(
             self._info_path(), {
                 "_sites": self._sites,
                 "_activate_until": self._activate_until,
@@ -702,7 +702,7 @@ class ActivateChangesManager(ActivateChanges):
                                               userdb.user_sync_default_config(site_id)),
         })
 
-        store.save_data_to_file(tmp_dir + "/sitespecific.mk", site_globals)
+        store.save_object_to_file(tmp_dir + "/sitespecific.mk", site_globals)
 
     def _start_activation(self):
         self._log_activation()
@@ -1132,7 +1132,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                                   self._activation_id,
                                   ActivateChangesManager.site_filename(self._site_id))
 
-        return store.save_data_to_file(
+        return store.save_object_to_file(
             state_path, {
                 "_site_id": self._site_id,
                 "_phase": self._phase,

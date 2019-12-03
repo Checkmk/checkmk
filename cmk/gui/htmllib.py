@@ -1060,7 +1060,7 @@ class html(ABCHTMLGenerator):
         return "themes/%s/%s" % (self._theme, rel_url)
 
     def _verify_not_using_threaded_mpm(self):
-        if self.request.is_multithreaded:
+        if self.request.is_multithread:
             raise MKGeneralException(
                 _("You are trying to Check_MK together with a threaded Apache multiprocessing module (MPM). "
                   "Check_MK is only working with the prefork module. Please change the MPM module to make "
@@ -1111,7 +1111,7 @@ class html(ABCHTMLGenerator):
             self.mobile = self.request.cookie("mobile", "0") == "1"
 
         else:
-            self.mobile = self._is_mobile_client(self.request.user_agent)
+            self.mobile = self._is_mobile_client(self.request.user_agent.string)
 
     def _is_mobile_client(self, user_agent):
         # These regexes are taken from the public domain code of Matt Sullivan
@@ -1138,6 +1138,22 @@ class html(ABCHTMLGenerator):
             self.request.del_vars()
             for varname, value in saved_vars.iteritems():
                 self.request.set_var(varname, value)
+
+    def del_var_from_env(self, varname):
+        # HACKY WORKAROUND, REMOVE WHEN NO LONGER NEEDED
+        # We need to get rid of query-string entries which can contain secret information.
+        # As this is the only location where these are stored on the WSGI environment this
+        # should be enough.
+        # See also cmk.gui.globals:RequestContext
+        # Filter the variables even if there are multiple copies of them (this is allowed).
+        decoded_qs = [
+            (key, value) for key, value in self.request.args.items(multi=True) if key != varname
+        ]
+        self.request.environ['QUERY_STRING'] = urllib.urlencode(decoded_qs)
+        # We remove the args, __dict__ entry to allow @cached_property to reload the args from
+        # the environment. The rest of the request object stays the same.
+        self.request.__dict__.pop('args', None)
+        self.request.__dict__.pop('values', None)
 
     def get_ascii_input(self, varname, deflt=None):
         """Helper to retrieve a byte string and ensure it only contains ASCII characters
@@ -1232,7 +1248,9 @@ class html(ABCHTMLGenerator):
 
         for key, val in self.request.itervars():
             if key not in ["request", "output_format"] + exclude_vars:
-                request[key] = val.decode("utf-8")
+                if isinstance(val, bytes):
+                    val = val.decode("utf-8")
+                request[key] = val
 
         return request
 

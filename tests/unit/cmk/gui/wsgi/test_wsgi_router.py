@@ -59,7 +59,7 @@ def wsgi_app(monkeypatch):
 
     wsgi_callable = make_app()
     cookies = CookieJar()
-    app = WebTestAppForCMK(wsgi_callable, extra_environ={'REQUEST_URI': ''}, cookiejar=cookies)
+    app = WebTestAppForCMK(wsgi_callable, cookiejar=cookies)
 
     return app
 

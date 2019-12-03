@@ -110,7 +110,7 @@ class GUICrashReport(cmk.utils.crash_reporting.ABCCrashReport):
                 for key, value in html.request.itervars()
             },
             "username": config.user.id,
-            "user_agent": html.request.user_agent,
+            "user_agent": html.request.user_agent.string,
             "referer": html.request.referer,
             "is_mobile": html.is_mobile(),
             "is_ssl_request": html.request.is_ssl_request,

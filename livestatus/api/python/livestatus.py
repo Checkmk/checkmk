@@ -492,6 +492,7 @@ class SingleSiteConnection(Helpers):
             raise MKLivestatusSocketError("Socket to '%s' is not connected" % self.socketurl)
 
         try:
+            # TODO: Use socket.sendall()
             # socket.send() only works with byte strings
             query = ensure_bytestr(query)
             self.socket.send(query)
@@ -599,13 +600,15 @@ class SingleSiteConnection(Helpers):
                 row.insert(0, b"")
         return response
 
-    # TODO: Encoding should be done in do_command, right before sock.send()
+    # TODO: Cleanup all call sites to hand over Text types
     def command(self, command, site=None):
-        # type: (bytes, Optional[SiteId]) -> None
+        # type: (AnyStr, Optional[SiteId]) -> None
         self.do_command(command)
 
     def do_command(self, command):
-        # type: (bytes) -> None
+        # type: (AnyStr) -> None
+        cmd = _ensure_unicode(command)
+
         if self.socket is None:
             self.connect()
 
@@ -613,11 +616,11 @@ class SingleSiteConnection(Helpers):
         # raises an exception.
         sock = cast(socket.socket, self.socket)
 
-        if not command.endswith("\n"):
-            command += "\n"
+        if not cmd.endswith(u"\n"):
+            cmd += u"\n"
 
         try:
-            sock.send("COMMAND " + command + "\n")
+            sock.send(("COMMAND %s\n" % cmd).encode("utf-8"))
         except IOError as e:
             self.socket = None
             if self.persist:
@@ -971,7 +974,7 @@ class MultiSiteConnection(Helpers):
     # TODO: Is this SiteId(...) the way to go? Without this mypy complains about incompatible bytes
     # vs. Optional[SiteId]
     def command(self, command, sitename=SiteId("local")):
-        # type: (bytes, Optional[SiteId]) -> None
+        # type: (AnyStr, Optional[SiteId]) -> None
         if sitename in self.deadsites:
             raise MKLivestatusSocketError("Connection to site %s is dead: %s" % \
                     (sitename, self.deadsites[sitename]["exception"]))

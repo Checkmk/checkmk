@@ -303,18 +303,28 @@ def check_auth(request):
     return user_id
 
 
+def verify_automation_secret(user_id, secret):
+    if secret and user_id and "/" not in user_id:
+        path = cmk.utils.paths.var_dir + "/web/" + user_id.encode("utf-8") + "/automation.secret"
+        if not os.path.isfile(path):
+            return False
+
+        with open(path) as f:
+            return f.read().strip() == secret
+
+    return False
+
+
 def check_auth_automation():
     secret = html.request.var("_secret", "").strip()
     user_id = html.get_unicode_input("_username", "").strip()
     html.del_var_from_env('_username')
     html.del_var_from_env('_secret')
-    if secret and user_id and "/" not in user_id:
-        path = cmk.utils.paths.var_dir + "/web/" + user_id.encode("utf-8") + "/automation.secret"
-        if os.path.isfile(path) and open(path).read().strip() == secret:
-            # Auth with automation secret succeeded - mark transid as unneeded in this case
-            html.transaction_manager.ignore()
-            set_auth_type("automation")
-            return user_id
+    if verify_automation_secret(user_id, secret):
+        # Auth with automation secret succeeded - mark transid as unneeded in this case
+        html.transaction_manager.ignore()
+        set_auth_type("automation")
+        return user_id
     raise MKAuthException(_("Invalid automation secret for user %s") % user_id)
 
 

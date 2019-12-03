@@ -42,15 +42,18 @@ import re
 import signal
 import sys
 import time
+from typing import Text  # pylint: disable=unused-import
 
-# suppress "Cannot find module" error from mypy
-import livestatus  # type: ignore
+import livestatus
 import cmk.utils.debug
 import cmk.utils.log as log
 from cmk.utils.notify import (
     find_wato_folder,
     notification_message,
     notification_result_message,
+    NotificationPluginName,
+    NotificationContext,
+    NotificationResultCode,
 )
 from cmk.utils.regex import regex
 import cmk.utils.paths
@@ -1315,7 +1318,9 @@ def path_to_notification_script(plugin):
 #
 # Note: this function is *not* being called for bulk notification.
 def call_notification_script(plugin, plugin_context):
-    _log_to_history(notification_message(plugin or "plain email", plugin_context))
+    _log_to_history(
+        notification_message(NotificationPluginName(plugin or "plain email"),
+                             NotificationContext(plugin_context)))
 
     def plugin_log(s):
         logger.info("     %s", s)
@@ -1745,7 +1750,9 @@ def notify_bulk(dirname, uuids):
             # a single entry for each notification contained in the bulk.
             # It is important later to have this precise information.
             plugin_name = "bulk " + (plugin or "plain email")
-            _log_to_history(notification_message(plugin_name, context))
+            _log_to_history(
+                notification_message(NotificationPluginName(plugin_name),
+                                     NotificationContext(context)))
 
             context_lines.append("\n")
             for varname, value in context.iteritems():
@@ -1757,9 +1764,9 @@ def notify_bulk(dirname, uuids):
         for context in bulk_context:
             _log_to_history(
                 notification_result_message(
-                    "bulk " + (plugin or "plain email"),
-                    context,
-                    exitcode,
+                    NotificationPluginName("bulk " + (plugin or "plain email")),
+                    NotificationContext(context),
+                    NotificationResultCode(exitcode),
                     output_lines,
                 ))
     else:
@@ -1944,11 +1951,15 @@ def fresh_uuid():
         return str(uuid.uuid4())
 
 
+# TODO: Copy'n paste: enterprise/cmk/cee/mknotifyd/main.py, cmk_base/notify.py
 def _log_to_history(message):
+    # type: (Text) -> None
     _livestatus_cmd("LOG;%s" % message)
 
 
+# TODO: Copy'n paste: enterprise/cmk/cee/mknotifyd/main.py, cmk_base/notify.py
 def _livestatus_cmd(command):
+    # type: (Text) -> None
     try:
         livestatus.LocalConnection().command("[%d] %s" % (time.time(), command.encode("utf-8")))
     except Exception as e:

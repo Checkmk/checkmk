@@ -37,6 +37,7 @@ from cmk.utils.encoding import (
     ensure_bytestr,
 )
 from cmk.utils.exceptions import MKException
+from cmk.utils.types import UserId  # pylint: disable=unused-import
 
 SiteId = NewType("SiteId", bytes)
 SiteConfiguration = NewType("SiteConfiguration", Dict[str, Any])
@@ -311,7 +312,7 @@ class SingleSiteConnection(Helpers):
         """Create a new connection to a MK Livestatus socket"""
         super(SingleSiteConnection, self).__init__()
         self.prepend_site = False
-        self.auth_users = {}  # type: Dict[str, Text]
+        self.auth_users = {}  # type: Dict[str, UserId]
         # never filled, just to have the same API as MultiSiteConnection (TODO: Cleanup)
         self.deadsites = {}  # type: Dict[str, DeadSite]
         self.limit = None  # type: Optional[int]
@@ -629,7 +630,7 @@ class SingleSiteConnection(Helpers):
 
     # Set user to be used in certain authorization domain
     def set_auth_user(self, domain, user):
-        # type: (bytes, Text) -> None
+        # type: (bytes, UserId) -> None
         if user:
             self.auth_users[domain] = user
         elif domain in self.auth_users:
@@ -866,7 +867,7 @@ class MultiSiteConnection(Helpers):
         return False
 
     def set_auth_user(self, domain, user):
-        # type: (bytes, Text) -> None
+        # type: (bytes, UserId) -> None
         for _sitename, _site, connection in self.connections:
             connection.set_auth_user(domain, user)
 

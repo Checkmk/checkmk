@@ -35,13 +35,15 @@ from pathlib2 import Path
 from livestatus import SiteId, SiteConfiguration, SiteConfigurations  # pylint: disable=unused-import
 
 import cmk
-import cmk.gui.utils as utils
 import cmk.utils.tags
+import cmk.utils.paths
+import cmk.utils.store as store
+from cmk.utils.types import UserId
+
+import cmk.gui.utils as utils
 import cmk.gui.i18n
 from cmk.gui.i18n import _
 import cmk.gui.log as log
-import cmk.utils.paths
-import cmk.utils.store as store
 from cmk.gui.exceptions import MKConfigError, MKAuthException
 import cmk.gui.permissions as permissions
 
@@ -419,7 +421,7 @@ def _may_with_roles(some_role_ids, pname):
 # TODO: Cleanup accesses to module global vars and functions
 class LoggedInUser(object):
     def __init__(self, user_id):
-        self.id = user_id
+        self.id = UserId(user_id)
 
         self._load_confdir()
         self._load_roles()

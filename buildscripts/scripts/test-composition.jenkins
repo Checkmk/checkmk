@@ -168,8 +168,8 @@ try {
                                 rm -rf $DISTRO
                                 mkdir -p $DISTRO
                                 cp /omd/sites/${OMD_SITE}/junit.xml $DISTRO/
-                                id.setOwner(${JENKINS_USER}, ${JENKINS_GROUP}, $DISTRO)
                             """
+                            id.setOwner(JENKINS_USER, JENKINS_GROUP, DISTRO)
                             stash name: "$DISTRO-results", includes: "$DISTRO/**/*"
                             // Unmount is clean solution, unfortunately it often fails
                             // The mount dies when the container is stopped anyway

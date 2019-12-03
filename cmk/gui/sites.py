@@ -25,15 +25,21 @@
 # Boston, MA 02110-1301 USA.
 
 from typing import (  # pylint: disable=unused-import
-    Any, Dict, List, NewType, Optional, Tuple, Iterator, Text, Union,
+    cast, Any, Dict, List, NewType, Optional, Tuple, Iterator, Text, Union,
 )
 from contextlib import contextmanager
 
-from livestatus import MultiSiteConnection, MKLivestatusQueryError
+from livestatus import (
+    MultiSiteConnection,
+    MKLivestatusQueryError,
+    SiteId,
+    SiteConfiguration,
+    SiteConfigurations,
+)
 from cmk import is_managed_edition
 from cmk.utils.paths import livestatus_unix_socket
 import cmk.gui.config as config
-from cmk.gui.config import SiteId, SiteConfiguration, SiteConfigurations, LoggedInUser  # pylint: disable=unused-import
+from cmk.gui.config import LoggedInUser  # pylint: disable=unused-import
 from cmk.gui.globals import g, html
 
 #   .--API-----------------------------------------------------------------.
@@ -49,19 +55,19 @@ from cmk.gui.globals import g, html
 
 
 def live(user=None, force_authuser=None):
-    # type: (Optional[LoggedInUser], Optional[str]) -> MultiSiteConnection
+    # type: (Optional[LoggedInUser], Optional[Text]) -> MultiSiteConnection
     """Get Livestatus connection object matching the current site configuration
        and user settings. On the first call the actual connection is being made."""
     _ensure_connected(user, force_authuser)
     return g.live
 
 
-SiteStatus = NewType('SiteStatus', Dict[str, Any])
+SiteStatus = NewType('SiteStatus', Dict[bytes, Any])
 SiteStates = NewType('SiteStates', Dict[SiteId, SiteStatus])
 
 
 def states(user=None, force_authuser=None):
-    # type: (Optional[LoggedInUser], Optional[str]) -> SiteStates
+    # type: (Optional[LoggedInUser], Optional[Text]) -> SiteStates
     """Returns dictionary of all known site states."""
     _ensure_connected(user, force_authuser)
     return g.site_status
@@ -76,12 +82,13 @@ def disconnect():
 
 # TODO: This should live somewhere else, it's just a random helper...
 def all_groups(what):
-    # type: (str) -> List[Tuple[str, str]]
+    # type: (bytes) -> List[Tuple[Text, Text]]
     """Returns a list of host/service/contact groups (pairs of name/alias)
 
     Groups are collected via livestatus from all sites. In case no alias is defined
     the name is used as second element. The list is sorted by lower case alias in the first place."""
-    groups = live().query("GET %sgroups\nCache: reload\nColumns: name alias\n" % what)
+    query = "GET %sgroups\nCache: reload\nColumns: name alias\n" % what
+    groups = cast(List[Tuple[Text, Text]], live().query(query))
     # The dict() removes duplicate group names. Aliases don't need be deduplicated.
     return sorted([(name, alias or name) for name, alias in dict(groups).iteritems()],
                   key=lambda e: e[1].lower())
@@ -112,7 +119,7 @@ def all_groups(what):
 
 # Build up a connection to livestatus to either a single site or multiple sites.
 def _ensure_connected(user, force_authuser):
-    # type: (Optional[LoggedInUser], Optional[str]) -> None
+    # type: (Optional[LoggedInUser], Optional[Text]) -> None
     if 'live' in g:
         return
     if user is None:
@@ -212,7 +219,7 @@ def _site_config_for_livestatus(site_id, site):
 
 
 def encode_socket_for_livestatus(site_id, site):
-    # type: (SiteId, SiteConfiguration) -> str
+    # type: (SiteId, SiteConfiguration) -> bytes
     socket_spec = site["socket"]
     family_spec, address_spec = socket_spec
 
@@ -235,7 +242,7 @@ def update_site_states_from_dead_sites():
     # type: () -> None
     # Get exceptions in case of dead sites
     for site_id, deadinfo in live().dead_sites().items():
-        status_host_state = deadinfo.get("status_host_state")
+        status_host_state = cast(Optional[int], deadinfo.get("status_host_state"))
         g.site_status[site_id].update({
             "exception": deadinfo["exception"],
             "status_host_state": status_host_state,
@@ -244,7 +251,7 @@ def update_site_states_from_dead_sites():
 
 
 def _status_host_state_name(shs):
-    # type: (Optional[int]) -> str
+    # type: (Optional[int]) -> bytes
     return _STATUS_NAMES.get(shs, "unknown")
 
 
@@ -268,7 +275,7 @@ def _set_initial_site_states(enabled_sites, disabled_sites):
 # If Multisite is retricted to data the user is a contact for, we need to set an
 # AuthUser: header for livestatus.
 def _set_livestatus_auth(user, force_authuser):
-    # type: (LoggedInUser, str) -> None
+    # type: (LoggedInUser, Text) -> None
     user_id = _livestatus_auth_user(user, force_authuser)
     if user_id is not None:
         g.live.set_auth_user('read', user_id)
@@ -289,7 +296,7 @@ def _set_livestatus_auth(user, force_authuser):
 # Returns either None when no auth user shal be set or the name of the user
 # to be used as livestatus auth user
 def _livestatus_auth_user(user, force_authuser):
-    # type: (LoggedInUser, str) -> Optional[str]
+    # type: (LoggedInUser, Text) -> Optional[Text]
     if not user.may("general.see_all"):
         return user.id
     if force_authuser == "1":
@@ -305,13 +312,15 @@ def _livestatus_auth_user(user, force_authuser):
 
 @contextmanager
 def only_sites(sites):
-    # type: (Optional[Union[List[Text], Text]]) -> Iterator[None]
+    # type: (Optional[Union[List[SiteId], SiteId]]) -> Iterator[None]
     """Livestatus query over sites"""
     if not sites:
         sites = None
     elif not isinstance(sites, list):
         sites = [sites]
+
     live().set_only_sites(sites)
+
     try:
         yield
     finally:

@@ -460,7 +460,7 @@ class Command(six.with_metaclass(abc.ABCMeta, object)):
     def executor(self, command, site):
         # type: (str, str) -> None
         """Function that is called to execute this action"""
-        sites.live().command("[%d] %s" % (int(time.time()), command), site)
+        sites.live().command("[%d] %s" % (int(time.time()), command), livestatus.SiteId(site))
 
 
 class CommandRegistry(cmk.utils.plugin_registry.ClassRegistry):

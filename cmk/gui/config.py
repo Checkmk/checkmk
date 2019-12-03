@@ -32,6 +32,7 @@ import json
 from typing import Any, Callable, Dict, List, NewType, Optional, Tuple, Union  # pylint: disable=unused-import
 import six
 from pathlib2 import Path
+from livestatus import SiteId, SiteConfiguration, SiteConfigurations  # pylint: disable=unused-import
 
 import cmk
 import cmk.gui.utils as utils
@@ -67,10 +68,6 @@ if cmk.is_managed_edition():
 #   +----------------------------------------------------------------------+
 #   |  Declarations of global variables and constants                      |
 #   '----------------------------------------------------------------------'
-
-SiteId = NewType('SiteId', str)
-SiteConfiguration = NewType('SiteConfiguration', Dict[str, Any])
-SiteConfigurations = NewType('SiteConfigurations', Dict[SiteId, SiteConfiguration])
 
 multisite_users = {}
 admin_users = []

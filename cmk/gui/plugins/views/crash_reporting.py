@@ -28,6 +28,7 @@ import json
 from typing import Dict, Text, Optional, List  # pylint: disable=unused-import
 import livestatus
 
+import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -105,7 +106,7 @@ class CrashReportsRowTable(RowTable):
         return sorted(rows, key=lambda r: r["crash_time"])
 
     def get_crash_report_rows(self, only_sites, filter_headers):
-        # type: (Optional[List[Text]], Text) -> List[Dict[Text, Text]]
+        # type: (Optional[List[config.SiteId]], Text) -> List[Dict[Text, Text]]
 
         # First fetch the information that is needed to query for the dynamic columns (crash_info,
         # ...)
@@ -129,7 +130,7 @@ class CrashReportsRowTable(RowTable):
 
             try:
                 sites.live().set_prepend_site(False)
-                sites.live().set_only_sites([crash_info["site"]])
+                sites.live().set_only_sites([config.SiteId(bytes(crash_info["site"]))])
 
                 raw_row = sites.live().query_row(
                     "GET crashreports\n"
@@ -146,7 +147,7 @@ class CrashReportsRowTable(RowTable):
         return rows
 
     def _get_crash_report_info(self, only_sites, filter_headers=None):
-        # type: (Optional[List[Text]], Optional[Text]) -> List[Dict[Text, Text]]
+        # type: (Optional[List[config.SiteId]], Optional[Text]) -> List[Dict[Text, Text]]
         try:
             sites.live().set_prepend_site(True)
             sites.live().set_only_sites(only_sites)

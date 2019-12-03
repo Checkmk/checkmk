@@ -144,9 +144,9 @@ class ABCCrashReportPage(six.with_metaclass(abc.ABCMeta, cmk.gui.pages.Page)):
 
     def _get_crash_report_row(self, crash_id, site_id):
         # type: (Text, Text) -> Optional[Dict[Text, Text]]
-        rows = CrashReportsRowTable().get_crash_report_rows(only_sites=[site_id],
-                                                            filter_headers="Filter: id = %s" %
-                                                            livestatus.lqencode(crash_id))
+        rows = CrashReportsRowTable().get_crash_report_rows(
+            only_sites=[config.SiteId(bytes(site_id))],
+            filter_headers="Filter: id = %s" % livestatus.lqencode(crash_id))
         if not rows:
             return None
         return rows[0]

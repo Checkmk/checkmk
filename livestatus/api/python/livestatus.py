@@ -283,9 +283,8 @@ class Query(object):
 
 
 QueryTypes = Union[Text, bytes, Query]
-Site = Dict
 OnlySites = Optional[List[SiteId]]
-DeadSite = Dict[str, Union[str, int, Exception, Site]]
+DeadSite = Dict[str, Union[str, int, Exception, SiteConfiguration]]
 
 #.
 #   .--SingleSiteConn------------------------------------------------------.
@@ -674,7 +673,7 @@ class MultiSiteConnection(Helpers):
             disabled_sites = SiteConfigurations({})
 
         self.sites = sites
-        self.connections = []  # type: List[Tuple[SiteId, Site, SingleSiteConnection]]
+        self.connections = []  # type: List[Tuple[SiteId, SiteConfiguration, SingleSiteConnection]]
         self.deadsites = {}  # type: Dict[SiteId, DeadSite]
         self.prepend_site = False
         self.only_sites = None  # type: OnlySites
@@ -798,7 +797,7 @@ class MultiSiteConnection(Helpers):
                     }
 
     def connect_to_site(self, sitename, site, temporary=False):
-        # type: (SiteId, Site, bool) -> SingleSiteConnection
+        # type: (SiteId, SiteConfiguration, bool) -> SingleSiteConnection
         """Helper function for connecting to a site"""
         url = site["socket"]
         persist = not temporary and site.get("persist", False)

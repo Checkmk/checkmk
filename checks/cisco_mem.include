@@ -82,7 +82,7 @@ def check_cisco_mem_sub(item, params, mem_used, mem_total):
     warn, crit = params.get("levels", (None, None))
 
     if isinstance(warn, (int, long)):  # must convert absolute to percentage
-        warn *= 1048576.0
+        warn *= 1048576.0  # convert from megabyte to byte
         crit *= 1048576.0
 
         warn, crit = _convert_absolute_levels(warn, crit, mem_total)

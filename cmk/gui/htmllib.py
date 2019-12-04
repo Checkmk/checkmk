@@ -1556,8 +1556,8 @@ class html(ABCHTMLGenerator):
             cmk_base_url = "https://checkmk.de"
         else:
             cmk_base_url = "https://checkmk.com"
-        return re.sub(r"\[([a-z0-9_-]+)\|([^\]]+)\]",
-                      "<a href=\"%s/\\1.html\" target=\"_blank\">\\2</a>" % cmk_base_url, text)
+        return re.sub(r"\[([a-z0-9_-]+)(#[a-z0-9_-]+|)\|([^\]]+)\]",
+                      "<a href=\"%s/\\1.html\\2\" target=\"_blank\">\\3</a>" % cmk_base_url, text)
 
     def enable_help_toggle(self):
         self.have_help = True

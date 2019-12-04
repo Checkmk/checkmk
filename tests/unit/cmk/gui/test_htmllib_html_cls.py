@@ -52,3 +52,12 @@ def test_add_manual_link_localized(register_builtin_html, monkeypatch):
         HTML(
             u"<div style=\"display:none\" class=\"help\"><a href=\"https://checkmk.de/cms_introduction_docker.html\" target=\"_blank\">docker</a></div>"
         ))
+
+
+def test_add_manual_link_anchor(register_builtin_html, monkeypatch):
+    monkeypatch.setattr(config.user, "language", lambda: "de")
+    assert compare_html(
+        html.render_help(u"[cms_graphing#rrds|RRDs]"),
+        HTML(
+            u"<div style=\"display:none\" class=\"help\"><a href=\"https://checkmk.de/cms_graphing.html#rrds\" target=\"_blank\">RRDs</a></div>"
+        ))

@@ -49,7 +49,7 @@ def actual_output(request, write_config):
                 sys.stdout.write(_stdout.decode(encoding='cp1252'))
             if _stderr:
                 sys.stderr.write(_stderr.decode(encoding='cp1252'))
-            expected_code = 2 if Globals.param[0] == 'bad' else 0
+            expected_code = 13 if Globals.param[0] == 'bad' else 0
             assert expected_code == exit_code
             # Usage is written to stderr, actual cmd output to stdout.
             work_load = _stdout.decode(encoding='cp1252')

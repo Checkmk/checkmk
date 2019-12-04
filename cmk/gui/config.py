@@ -38,7 +38,7 @@ import cmk
 import cmk.utils.tags
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.types import UserId
+from cmk.utils.type_defs import UserId
 
 import cmk.gui.utils as utils
 import cmk.gui.i18n

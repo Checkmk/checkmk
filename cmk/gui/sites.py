@@ -38,7 +38,7 @@ from livestatus import (
 )
 from cmk import is_managed_edition
 from cmk.utils.paths import livestatus_unix_socket
-from cmk.utils.types import UserId  # pylint: disable=unused-import
+from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
 import cmk.gui.config as config
 from cmk.gui.config import LoggedInUser  # pylint: disable=unused-import
 from cmk.gui.globals import g, html

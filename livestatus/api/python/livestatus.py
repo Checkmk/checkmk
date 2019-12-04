@@ -37,7 +37,7 @@ from cmk.utils.encoding import (
     ensure_bytestr,
 )
 from cmk.utils.exceptions import MKException
-from cmk.utils.types import UserId  # pylint: disable=unused-import
+from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
 
 SiteId = NewType("SiteId", bytes)
 SiteConfiguration = NewType("SiteConfiguration", Dict[str, Any])

@@ -26,8 +26,13 @@
 # Boston, MA 02110-1301 USA.
 
 # Remove locale settings to eliminate localized outputs where possible
-LC_ALL=C
-export LC_ALL
+# The locale logic here is used to make the Python encoding detection
+# work (see CMK-2778).
+MK_LOCALE=$(locale -a |grep -E '^C$|^C.UTF-8$|^c.utf8$' | head -n 1)
+if [ -z "${MK_LOCALE}" ]; then
+    LC_ALL="${MK_LOCALE}"
+    export LC_ALL
+fi
 unset LANG
 
 # Close standard input (for security reasons) and stderr when not explicitly in debug mode.
@@ -115,17 +120,17 @@ inpath() {
 # If EUID isn't set, then set it
 # Note that 'id -u' is now mostly portable here due to the alignment of xpg4 above
 # '[ -w / ]' may be an alternative test for proving root privileges...
-if [ ! "${EUID}" ]; then
+if [ -z "${EUID}" ]; then
     EUID=$(id -u); readonly EUID; export EUID
 fi
 
 # If HOSTNAME isn't set, then set it
-if [ ! "${HOSTNAME}" ]; then 
+if [ -z "${HOSTNAME}" ]; then 
     HOSTNAME=$(hostname); readonly HOSTNAME; export HOSTNAME
 fi
 
 # If HOME isn't set, then set it
-if [ ! "${HOME}" ]; then
+if [ -z "${HOME}" ]; then
     HOME=$(getent passwd | awk -F':' -v EUID="${EUID}" '$3 == EUID{print $6}')
     readonly HOME; export HOME
 fi
@@ -142,7 +147,7 @@ fi
 # Newer shells like zsh and bash5.x have EPOCHSECONDS.  If it's not available, we set it
 # Note that if this is set here, it will not update each time it's used
 # Use get_epoch() if you need that kind of accuracy
-if [ ! "${EPOCHSECONDS}" ]; then
+if [ -z "${EPOCHSECONDS}" ]; then
     EPOCHSECONDS=$(get_epoch); readonly EPOCHSECONDS; export EPOCHSECONDS
 fi
 
@@ -173,7 +178,7 @@ get_shell() {
 }
 
 # If SHELL isn't set, then set it.
-if [ ! "${SHELL}" ]; then
+if [ -z "${SHELL}" ]; then
     if get_shell >/dev/null 2>&1; then
         SHELL=$(command -v "$(get_shell)"); readonly SHELL; export SHELL
     fi

@@ -542,6 +542,18 @@ def _parameter_valuespec_if():
                                     ("check_and_display", _("Check and display only")),
                                     ("dont_show_and_check", _("Don't show and check")),
                                 ])),
+                ("home_port",
+                 DropdownChoice(title=_("Is-Home state (Netapp only)"),
+                                help=_("Choose the behaviour when the current port is not the "
+                                       "home port of the respective interface. The default is "
+                                       "\"Check and Display\". This feature is currently only "
+                                       "supported by the check netapp_api_if."),
+                                choices=[
+                                    ("check_and_warn", _("Check and WARN")),
+                                    ("check_and_crit", _("Check and CRIT")),
+                                    ("check_and_display", _("Check and display only")),
+                                    ("dont_show_and_check", _("Don't show home port info")),
+                                ])),
             ],
         ),
         forth=transform_if,

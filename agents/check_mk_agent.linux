@@ -1148,7 +1148,7 @@ if [ -e "$MK_CONFDIR/runas.cfg" ]; then
                             fi
 
                             if [ -n "$PREFIX" ]; then
-                                cmdline="$PREFIX\'$cmdline\'"
+                                cmdline="$PREFIX'$cmdline'"
                             fi
                             if [ -z "$interval" ]; then
                                 run_mrpe "$descr" "$cmdline"

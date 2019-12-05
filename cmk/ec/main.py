@@ -69,6 +69,7 @@ import cmk.utils.regex
 import cmk.utils.debug
 from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.exceptions import MKException
+import cmk.utils.store as store
 from cmk.ec.crash_reporting import ECCrashReport, CrashReportStore
 
 # suppress "Cannot find module" error from mypy
@@ -4154,7 +4155,7 @@ def main():
         bail_out(logger, traceback.format_exc())
 
     finally:
-        if pid_path and cmk.utils.store.have_lock(str(pid_path)):
+        if pid_path and store.have_lock(str(pid_path)):
             try:
                 pid_path.unlink()
             except OSError:

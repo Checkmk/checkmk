@@ -34,7 +34,7 @@ from typing import Tuple, Optional  # pylint: disable=unused-import
 
 import cmk
 import cmk.utils.paths
-import cmk.utils.store
+import cmk.utils.store as store
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import StructuredDataTree
@@ -65,8 +65,8 @@ import cmk_base.check_api as check_api
 
 
 def do_inv(hostnames):
-    cmk.utils.store.makedirs(cmk.utils.paths.inventory_output_dir)
-    cmk.utils.store.makedirs(cmk.utils.paths.inventory_archive_dir)
+    store.makedirs(cmk.utils.paths.inventory_output_dir)
+    store.makedirs(cmk.utils.paths.inventory_archive_dir)
 
     for hostname in hostnames:
         console.section_begin(hostname)
@@ -383,7 +383,7 @@ def inv_tree_list(path):  # TODO Remove one day. Deprecated with version 1.5.0i3
 
 def _save_inventory_tree(hostname, inventory_tree):
     # type: (str, StructuredDataTree) -> Optional[StructuredDataTree]
-    cmk.utils.store.makedirs(cmk.utils.paths.inventory_output_dir)
+    store.makedirs(cmk.utils.paths.inventory_output_dir)
 
     filepath = cmk.utils.paths.inventory_output_dir + "/" + hostname
     if inventory_tree.is_empty():
@@ -406,7 +406,7 @@ def _save_inventory_tree(hostname, inventory_tree):
         console.verbose("Inventory tree has changed\n")
         old_time = os.stat(filepath).st_mtime
         arcdir = "%s/%s" % (cmk.utils.paths.inventory_archive_dir, hostname)
-        cmk.utils.store.makedirs(arcdir)
+        store.makedirs(arcdir)
         os.rename(filepath, arcdir + ("/%d" % old_time))
     inventory_tree.save_to(cmk.utils.paths.inventory_output_dir, hostname)
     return old_tree
@@ -414,7 +414,7 @@ def _save_inventory_tree(hostname, inventory_tree):
 
 def _save_status_data_tree(hostname, status_data_tree):
     if status_data_tree and not status_data_tree.is_empty():
-        cmk.utils.store.makedirs(cmk.utils.paths.status_data_dir)
+        store.makedirs(cmk.utils.paths.status_data_dir)
         status_data_tree.save_to(cmk.utils.paths.status_data_dir, hostname)
 
 

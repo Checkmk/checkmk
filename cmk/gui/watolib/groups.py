@@ -265,7 +265,7 @@ def save_group_information(all_groups, custom_default_config_dir=None):
             output += "if type(define_%sgroups) != dict:\n    define_%sgroups = {}\n" % (what, what)
             output += "define_%sgroups.update(%s)\n\n" % (
                 what, format_config_value(check_mk_groups[what]))
-    cmk.utils.store.save_file("%s/groups.mk" % check_mk_config_dir, output)
+    store.save_file("%s/groups.mk" % check_mk_config_dir, output)
 
     # Users with passwords for Multisite
     store.makedirs(multisite_config_dir)
@@ -274,7 +274,7 @@ def save_group_information(all_groups, custom_default_config_dir=None):
         if multisite_groups.get(what):
             output += "multisite_%sgroups = \\\n%s\n\n" % (
                 what, format_config_value(multisite_groups[what]))
-    cmk.utils.store.save_file("%s/groups.mk" % multisite_config_dir, output)
+    store.save_file("%s/groups.mk" % multisite_config_dir, output)
 
 
 def find_usages_of_group(name, group_type):

@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk.utils.store
+import cmk.utils.store as store
 import cmk.gui.gui_background_job
 
 
@@ -32,8 +32,8 @@ class WatoBackgroundProcess(cmk.gui.gui_background_job.GUIBackgroundProcess):
     def initialize_environment(self):
         super(WatoBackgroundProcess, self).initialize_environment()
         if self._jobstatus.get_status_from_file().get("lock_wato"):
-            cmk.utils.store.release_all_locks()
-            cmk.utils.store.lock_exclusive()
+            store.release_all_locks()
+            store.lock_exclusive()
 
 
 class WatoBackgroundJob(cmk.gui.gui_background_job.GUIBackgroundJob):

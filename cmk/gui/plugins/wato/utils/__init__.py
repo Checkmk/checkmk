@@ -40,7 +40,6 @@ from typing import Optional as TypingOptional, List, Callable, Text, Union  # py
 import six
 
 import cmk.utils.plugin_registry
-import cmk.utils.store
 
 from cmk.gui.globals import g
 import cmk.gui.mkeventd
@@ -609,9 +608,9 @@ def _group_choices(group_information):
 
 
 def passwordstore_choices():
-    store = PasswordStore()
+    pw_store = PasswordStore()
     return [(ident, pw["title"])
-            for ident, pw in store.filter_usable_entries(store.load_for_reading()).items()]
+            for ident, pw in pw_store.filter_usable_entries(pw_store.load_for_reading()).items()]
 
 
 def PasswordFromStore(  # pylint: disable=redefined-builtin

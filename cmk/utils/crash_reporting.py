@@ -52,7 +52,7 @@ import six
 
 import cmk
 import cmk.utils.paths
-import cmk.utils.store
+import cmk.utils.store as store
 import cmk.utils.plugin_registry
 import cmk.utils.cmk_subprocess as subprocess
 
@@ -85,8 +85,8 @@ class CrashReportStore(object):
 
         for key, value in crash.serialize().iteritems():
             fname = "crash.info" if key == "crash_info" else key
-            cmk.utils.store.save_file(str(crash.crash_dir() / fname),
-                                      json.dumps(value, cls=RobustJSONEncoder) + "\n")
+            store.save_file(str(crash.crash_dir() / fname),
+                            json.dumps(value, cls=RobustJSONEncoder) + "\n")
 
         self._cleanup_old_crashes(crash.crash_dir().parent)
 

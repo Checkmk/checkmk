@@ -28,7 +28,7 @@ import os
 import six
 
 import cmk.utils.paths
-import cmk.utils.store
+import cmk.utils.store as store
 
 import cmk.gui.config as config
 from cmk.gui.table import table_element
@@ -136,7 +136,7 @@ class ModeIcons(WatoMode):
 
         # and finally save the image
         dest_dir = "%s/local/share/check_mk/web/htdocs/images/icons" % cmk.utils.paths.omd_root
-        cmk.utils.store.makedirs(dest_dir)
+        store.makedirs(dest_dir)
         try:
             file_name = os.path.basename(icon_info['icon'][0])
             im.save(dest_dir + '/' + file_name, 'PNG', pnginfo=meta)

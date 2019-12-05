@@ -37,7 +37,7 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path
 
-import cmk.utils.store
+import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 
 
@@ -107,7 +107,7 @@ def lock_with_pid_file(path):
     Use this after daemonizing or in foreground mode to ensure there is only
     one process running.
     """
-    if not cmk.utils.store.try_aquire_lock(str(path)):
+    if not store.try_aquire_lock(str(path)):
         raise MKGeneralException("Failed to aquire PID file lock: "
                                  "Another process is already running")
 
@@ -120,10 +120,10 @@ def lock_with_pid_file(path):
 def _cleanup_locked_pid_file(path):
     # type: (Path) -> None
     """Cleanup the lock + file acquired by the function above"""
-    if not cmk.utils.store.have_lock(str(path)):
+    if not store.have_lock(str(path)):
         return
 
-    cmk.utils.store.release_lock(str(path))
+    store.release_lock(str(path))
 
     try:
         path.unlink()

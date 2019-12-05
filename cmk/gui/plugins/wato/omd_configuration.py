@@ -291,7 +291,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         for k, v in sorted(config.items()):
             output += '%s = %r\n' % (k, v)
 
-        cmk.utils.store.save_file(self.diskspace_config, output)
+        store.save_file(self.diskspace_config, output)
 
     def save_site_globals(self, settings):
         pass

@@ -42,7 +42,7 @@ import requests
 from pathlib2 import Path
 import six
 
-import cmk.utils.store
+import cmk.utils.store as store
 
 
 class AgentJSON(object):
@@ -212,7 +212,7 @@ class DataCache(six.with_metaclass(abc.ABCMeta, object)):
         self._cache_file_dir.mkdir(parents=True, exist_ok=True)
 
         json_dump = json.dumps(raw_content, default=datetime_serializer)
-        cmk.utils.store.save_file(str(self._cache_file), json_dump)
+        store.save_file(str(self._cache_file), json_dump)
 
 
 class _NullContext(object):

@@ -38,7 +38,6 @@ from hashlib import sha256
 from typing import Dict, NamedTuple, Text, List, Optional  # pylint: disable=unused-import
 
 import cmk
-import cmk.utils.store
 from cmk.utils.defines import short_service_state_name
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 

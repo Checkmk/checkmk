@@ -38,7 +38,6 @@ import cmk.utils.paths
 # It's OK to import centralized config load logic
 import cmk.ec.settings  # pylint: disable=cmk-module-layer-violation
 import cmk.ec.export  # pylint: disable=cmk-module-layer-violation
-import cmk.utils.store
 from cmk.utils.encoding import make_utf8
 
 import cmk.gui.config as config

@@ -68,6 +68,7 @@ import six
 
 import cmk
 import cmk.utils.paths
+import cmk.utils.store as store
 
 import cmk.gui.config as config
 import cmk.gui.log as log
@@ -383,7 +384,7 @@ class LDAPUserConnector(UserConnector):
 
     def _cache_nearest_dc(self, server):
         self._logger.debug('Caching nearest DC %s' % server)
-        cmk.utils.store.save_file(self._nearest_dc_cache_filepath(), server)
+        store.save_file(self._nearest_dc_cache_filepath(), server)
 
     def clear_nearest_dc_cache(self):
         if not self._uses_discover_nearest_server():

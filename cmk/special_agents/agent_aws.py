@@ -42,7 +42,7 @@ import boto3  # type: ignore
 import botocore  # type: ignore
 import six
 
-import cmk.utils.store
+import cmk.utils.store as store
 from cmk.utils.paths import tmp_dir
 import cmk.utils.password_store
 from cmk.utils.exceptions import MKException
@@ -3295,7 +3295,7 @@ class AWSConfig(object):
             return None
 
     def _write_config_hash(self):
-        cmk.utils.store.save_file(self._config_hash_file, "%s\n" % self._current_config_hash)
+        store.save_file(self._config_hash_file, "%s\n" % self._current_config_hash)
 
 
 def _sanitize_aws_services_params(g_aws_services, r_aws_services):

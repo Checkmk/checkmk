@@ -52,7 +52,7 @@ from pathlib2 import Path
 
 import cmk.utils.log
 import cmk.utils.paths
-import cmk.utils.store
+import cmk.utils.store as store
 from cmk.utils.exceptions import MKException
 import cmk.ec.defaults
 import cmk.ec.settings
@@ -295,7 +295,7 @@ def save_rule_packs(rule_packs, pretty_print=False, dir_=None):
     if not dir_:
         dir_ = rule_pack_dir()
     dir_.mkdir(parents=True, exist_ok=True)
-    cmk.utils.store.save_file(str(dir_ / "rules.mk"), output)
+    store.save_file(str(dir_ / "rules.mk"), output)
 
 
 # NOTE: It is essential that export_rule_pack() is called *before*
@@ -327,7 +327,7 @@ def export_rule_pack(rule_pack, pretty_print=False, dir_=None):
     if not dir_:
         dir_ = mkp_rule_pack_dir()
     dir_.mkdir(parents=True, exist_ok=True)
-    cmk.utils.store.save_file(str(dir_ / ("%s.mk" % rule_pack['id'])), output)
+    store.save_file(str(dir_ / ("%s.mk" % rule_pack['id'])), output)
 
 
 def add_rule_pack_proxies(file_names):

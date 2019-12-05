@@ -216,10 +216,10 @@ class IPLookupCache(cmk_base.caching.DictCache):
             self[cache_id] = ipa
             self.save_persisted()
         finally:
-            cmk.utils.store.release_lock(_cache_path())
+            store.release_lock(_cache_path())
 
     def save_persisted(self):
-        cmk.utils.store.save_object_to_file(_cache_path(), self, pretty=False)
+        store.save_object_to_file(_cache_path(), self, pretty=False)
 
 
 def _get_ip_lookup_cache():

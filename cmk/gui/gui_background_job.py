@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 import cmk
-import cmk.utils.store
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKGeneralException
 

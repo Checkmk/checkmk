@@ -43,7 +43,7 @@ import os
 import traceback
 
 import cmk.utils.paths
-import cmk.utils.store
+import cmk.utils.store as store
 from cmk.utils.exceptions import (
     MKException,
     MKGeneralException,
@@ -87,14 +87,14 @@ class CachedItemStates(object):
         filename = cmk.utils.paths.counters_dir + "/" + hostname
         try:
             # TODO: refactoring. put these two values into a named tuple
-            self._item_states = cmk.utils.store.load_object_from_file(
+            self._item_states = store.load_object_from_file(
                 filename,
                 default={},
                 lock=True,
             )
             self._last_mtime = os.stat(filename).st_mtime
         finally:
-            cmk.utils.store.release_lock(filename)
+            store.release_lock(filename)
 
     # TODO: self._last_mtime needs be updated accordingly after the save_object_to_file operation
     #       right now, the current mechanism is sufficient enough, since the save() function is only
@@ -114,10 +114,10 @@ class CachedItemStates(object):
             if not os.path.exists(cmk.utils.paths.counters_dir):
                 os.makedirs(cmk.utils.paths.counters_dir)
 
-            cmk.utils.store.aquire_lock(filename)
+            store.aquire_lock(filename)
             last_mtime = os.stat(filename).st_mtime
             if last_mtime != self._last_mtime:
-                self._item_states = cmk.utils.store.load_object_from_file(filename, default={})
+                self._item_states = store.load_object_from_file(filename, default={})
 
                 # Remove obsolete keys
                 for key in self._removed_item_state_keys:
@@ -129,11 +129,11 @@ class CachedItemStates(object):
                 # Add updated keys
                 self._item_states.update(self._updated_item_states)
 
-            cmk.utils.store.save_object_to_file(filename, self._item_states, pretty=False)
+            store.save_object_to_file(filename, self._item_states, pretty=False)
         except Exception:
             raise MKGeneralException("Cannot write to %s: %s" % (filename, traceback.format_exc()))
         finally:
-            cmk.utils.store.release_lock(filename)
+            store.release_lock(filename)
 
     def clear_item_state(self, user_key):
         key = self.get_unique_item_state_key(user_key)

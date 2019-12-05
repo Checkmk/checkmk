@@ -42,6 +42,7 @@ from cmk.utils.exceptions import (
     MKException,
     MKGeneralException,
 )
+import cmk.utils.store as store
 
 import cmk.gui.pages
 import cmk.gui.config as config
@@ -217,7 +218,7 @@ def get_history_deltas(hostname, search_timestamp=None):
 
         cached_data = None
         try:
-            cached_data = cmk.utils.store.load_object_from_file(cached_delta_path)
+            cached_data = store.load_object_from_file(cached_delta_path)
         except MKGeneralException:
             pass
 
@@ -235,8 +236,10 @@ def get_history_deltas(hostname, search_timestamp=None):
             delta_data = current_tree.compare_with(previous_tree)
             new, changed, removed, delta_tree = delta_data
             if new or changed or removed:
-                cmk.utils.store.save_file(cached_delta_path,
-                                          repr((new, changed, removed, delta_tree.get_raw_tree())))
+                store.save_file(
+                    cached_delta_path,
+                    repr((new, changed, removed, delta_tree.get_raw_tree())),
+                )
                 delta_history.append((timestamp, delta_data))
         except RequestTimeout:
             raise

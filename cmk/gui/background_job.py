@@ -437,10 +437,10 @@ class BackgroundJob(object):
 
     def start(self):
         try:
-            cmk.utils.store.aquire_lock(self._job_initializiation_lock)
+            store.aquire_lock(self._job_initializiation_lock)
             self._start()
         finally:
-            cmk.utils.store.release_lock(self._job_initializiation_lock)
+            store.release_lock(self._job_initializiation_lock)
 
     def _start(self):
         if self.is_active():
@@ -534,7 +534,7 @@ class JobStatus(object):
                     data["state"] = "initialized"
                     data["started"] = time.time()
             finally:
-                cmk.utils.store.release_lock(str(self._jobstatus_path))
+                store.release_lock(str(self._jobstatus_path))
 
         data.setdefault("pid", None)
         data["loginfo"] = {}

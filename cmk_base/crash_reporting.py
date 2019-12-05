@@ -33,6 +33,7 @@ from pathlib2 import Path
 
 import cmk.utils.debug
 import cmk.utils.paths
+import cmk.utils.encoding
 import cmk.utils.crash_reporting as crash_reporting
 
 import cmk_base.utils
@@ -161,8 +162,13 @@ def _read_agent_output(hostname):
 
     cache_path = Path(cmk.utils.paths.tcp_cache_dir, hostname)
     try:
-        with cache_path.open(encoding="utf-8") as f:
-            return f.read()
+        # Use similar decoding logic as cmk_base/data_sources/abstract.py does. In case this is not
+        # working as intended, we may have to keep working with bytes here.
+        with cache_path.open() as f:
+            output = u""
+            for l in f.readline():
+                output += cmk.utils.encoding.convert_to_unicode(l)
+            return output
     except IOError:
         pass
     return None

@@ -426,8 +426,8 @@ class ReportRendererCheck(ABCReportRenderer):
         return "check"
 
     def context_buttons(self, crash_info, site_id):
-        host = crash_info["host"]
-        service = crash_info["description"]
+        host = crash_info["details"]["host"]
+        service = crash_info["details"]["description"]
 
         host_url = html.makeuri(
             [

@@ -56,7 +56,7 @@ node {
         IMAGE = 'ubuntu-18.04-common'
         println(IMAGE)
         docker.image(IMAGE).pull()
-        docker.image(IMAGE).inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN --network ci_local-infra') {
+        docker.image(IMAGE).inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN') {
             stage('checkout sources') {
                 cleanWs()
                 dir(TEST_DATA + '/git') {
@@ -75,7 +75,7 @@ try {
                 def JENKINS_GROUP = id.getGroup('jenkins')
                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                     docker.image(DISTRO + '-os-image').pull()
-                    docker.image(DISTRO + '-os-image').inside("-u 0:0 --ulimit nofile=1024:1024  -v /bauwelt/download/$CMK_VERSION:/bauwelt/download/$CMK_VERSION:ro -v $TEST_DATA:$TEST_DATA --init --privileged --network ci_local-infra --hostname ${DISTRO}") {
+                    docker.image(DISTRO + '-os-image').inside("-u 0:0 --ulimit nofile=1024:1024  -v /bauwelt/download/$CMK_VERSION:/bauwelt/download/$CMK_VERSION:ro -v $TEST_DATA:$TEST_DATA --init --privileged --hostname ${DISTRO}") {
                         stage('install ' + DISTRO + ' omd') {
                             DISTRO_CODE = sh ( script: """
                                 case $DISTRO in
@@ -188,7 +188,7 @@ try {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             println(DOCKER_REGISTRY)
             IMAGE = 'ubuntu-18.04-common'
-            docker.image(IMAGE).inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN --network ci_local-infra') {
+            docker.image(IMAGE).inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN') {
                 stage('checkout sources') {
                     sh 'rm -rf results'
                     dir('results') {

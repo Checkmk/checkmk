@@ -47,7 +47,7 @@ if (shall_publish_package(scm, JOB_BASE_NAME)) {
     OMD_ENV_VARS = ' NEXUS_BUILD_CACHE_URL="" PYTHON_ENABLE_OPTIMIZATIONS=""'
 }
 
-def DOCKER_BASE_ARGS = "-u 0:0 --ulimit nofile=1024:1024 --network ci_local-infra"
+def DOCKER_BASE_ARGS = "-u 0:0 --ulimit nofile=1024:1024"
 def DOCKER_ARGS = "${DOCKER_BASE_ARGS} -v ${DAILY_DATA}:${DAILY_DATA} -v ${ARCHIVE_DIR}:${ARCHIVE_DIR}"
 
 //

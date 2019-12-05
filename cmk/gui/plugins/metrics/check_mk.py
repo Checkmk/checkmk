@@ -2294,6 +2294,18 @@ metric_info["cpu_time_percent"] = {
     "color": "#94b65a",
 }
 
+metric_info["cpu_ready_percent"] = {
+    "title": _("CPU ready"),
+    "unit": "%",
+    "color": "15/a",
+}
+
+metric_info["cpu_costop_percent"] = {
+    "title": _("Co-Stop"),
+    "unit": "%",
+    "color": "11/a",
+}
+
 metric_info["system_time"] = {
     "title": _("CPU time in system space"),
     "unit": "s",

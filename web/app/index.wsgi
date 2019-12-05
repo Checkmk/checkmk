@@ -275,7 +275,7 @@ class Application(object):
             _("If you think this is an error, please ask your administrator "
               "to check the permissions configuration."))
 
-        if login.get_auth_type() == 'cookie':
+        if login.auth_type == 'cookie':
             reason.append(
                 _("<p>You have been logged out. Please reload the page "
                   "to re-authenticate.</p>"))

@@ -12,15 +12,12 @@ from cmk.gui.globals import AppContext, RequestContext
 from testlib.utils import DummyApplication
 
 
-# This needs to be at least module scoped, as it needs to be entered before any monkeypatching
-# and also needs to exit last. Any other ordering will break tests which assume they can just
-# change the user object.
-@pytest.fixture(scope='module')
+@pytest.fixture()
 def register_builtin_html():
     """This fixture registers a global htmllib.html() instance just like the regular GUI"""
     environ = dict(create_environ(), REQUEST_URI='')
     with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(Request(environ), Response(is_secure=False))):
+         RequestContext(htmllib.html(Request(environ), Response(is_secure=False))):
         yield
 
 

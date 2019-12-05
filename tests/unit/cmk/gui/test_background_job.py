@@ -95,7 +95,7 @@ class DummyBackgroundJob(gui_background_job.GUIBackgroundJob):
         time.sleep(100)
 
 
-def test_start_job(register_builtin_html):
+def test_start_job():
     job = DummyBackgroundJob()
     job.set_function(job.execute_hello)
 
@@ -125,7 +125,7 @@ def test_start_job(register_builtin_html):
     assert "Hallo :-)" in output
 
 
-def test_stop_job(register_builtin_html):
+def test_stop_job():
     job = DummyBackgroundJob()
     job.set_function(job.execute_endless)
     job.start()

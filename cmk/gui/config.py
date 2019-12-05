@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -29,13 +29,12 @@ import errno
 import os
 import copy
 import json
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, List, NewType, Optional, Tuple, Union  # pylint: disable=unused-import
 import six
 from pathlib2 import Path
 from livestatus import SiteId, SiteConfiguration, SiteConfigurations  # pylint: disable=unused-import
 
 import cmk
-from cmk.gui.globals import user, local
 import cmk.utils.tags
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -657,14 +656,12 @@ def set_super_user():
 
 
 def _set_user(_user):
-    """Set the currently logged in user (thread safe).
-
-    local.user will set the current RequestContext to _user and it will be accessible via
-    cmk.gui.globals.user directly. This is imported here."""
-    local.user = _user
+    global user
+    user = _user
 
 
 # This holds the currently logged in user object
+user = LoggedInNobody()
 
 #.
 #   .--User Handling-------------------------------------------------------.

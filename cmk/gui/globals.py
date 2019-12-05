@@ -126,10 +126,6 @@ class RequestContext(object):
 
         self.auth_type = None
 
-        # TODO: cyclical import with config -> globals -> config -> ...
-        from cmk.gui.config import LoggedInNobody
-        self.user = LoggedInNobody()
-
     def __enter__(self):
         _request_ctx_stack.push(self)
         # TODO: Move this plus the corresponding cleanup code to hooks.
@@ -141,10 +137,8 @@ class RequestContext(object):
 
     def __exit__(self, exc_type, exc_value, tb):
         self._web_log_handler.removeFilter(self._prepend_url_filter)
-        # TODO: html.finalize needs to be called before popping the stack, because it does
-        #       something with the user object.
-        self.html.finalize()
         _request_ctx_stack.pop()
+        self.html.finalize()
 
 
 # NOTE: Flask offers the proxies below, and we should go into that direction,
@@ -168,7 +162,6 @@ def request_local_attr(name=None):
 
 local = request_local_attr()  # None as name will get the whole object.
 
-user = request_local_attr('user')
 request = request_local_attr('request')
 response = request_local_attr('response')
 html = request_local_attr('html')

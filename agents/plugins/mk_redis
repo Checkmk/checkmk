@@ -75,7 +75,7 @@ fi
 
 # print redis section, if servers are found
 if [ "${REDIS_INSTANCES[*]}" ]; then
-    echo -e "<<<redis_info>>>"
+    echo -e "<<<redis_info:sep(58)>>>"
 else
     exit 0
 fi
@@ -93,14 +93,11 @@ for INSTANCE in ${REDIS_INSTANCES[*]}; do
 
     # if autodetection is used, rewrite instance name for section output
     if [[ "$IS_DETECTED" == true ]]; then
-        INSTANCE="${!HOST}:${!PORT}"
+        INSTANCE="${!HOST};${!PORT}"
     fi
 
     # print server section
-    echo "[[[]]]"
-    echo "redis_instance:$INSTANCE"
-    echo "redis_host:${!HOST}"
-    echo "redis_port:${!PORT}"
+    echo "[[[$INSTANCE|${!HOST}|${!PORT}]]]"
 
     # execute command
     $REDIS_CMD

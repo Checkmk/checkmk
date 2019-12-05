@@ -121,14 +121,20 @@ def _lookup_req_object(name):
 class RequestContext(object):
     def __init__(self, html_obj):
         self.html = html_obj
-        self.request = html_obj.request
-        self.response = html_obj.response
-
         self.auth_type = None
-
         # TODO: cyclical import with config -> globals -> config -> ...
         from cmk.gui.config import LoggedInNobody
         self.user = LoggedInNobody()
+
+    # These properties are needed so that we can replace the Request object from within html
+    # This actually is a hack which should be removed once the filtering can be done via middleware.
+    @property
+    def request(self):
+        return self.html.request
+
+    @property
+    def response(self):
+        return self.html.response
 
     def __enter__(self):
         _request_ctx_stack.push(self)

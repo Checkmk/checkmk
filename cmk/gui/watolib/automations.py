@@ -321,8 +321,7 @@ def do_site_login(site_id, name, password):
         '_login': '1',
         '_username': name,
         '_password': password,
-        '_origtarget': 'automation_login.py?_version=%s&_edition_short=%s' %
-                       (cmk.__version__, cmk.edition_short()),
+        '_origtarget': 'automation_login.py',
         '_plain_error': '1',
     }
     response = get_url(url, site.get('insecure', False), auth=(name, password),

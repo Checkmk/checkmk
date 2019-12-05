@@ -3676,7 +3676,7 @@ class Timerange(CascadingDropdown):
             # TODO: Make this more specific
             label=None,  # type: TypingOptional[Text]
             separator=", ",  # type: TypingOptional[Text]
-            sorted=True,  # type: bool
+            sorted=False,  # type: bool
             orientation="vertical",  # type: Text
             render=None,  # type: TypingOptional[CascadingDropdown.Render]
             encoding="tuple",  # type: Text
@@ -5711,7 +5711,7 @@ def LogLevelChoice(**kwargs):
 def MetricName():
     """Factory of a Dropdown menu from all known metric names"""
     return DropdownChoice(
-        title=_("Metric Name"),
+        title=_("Metric"),
         sorted=True,
         choices=[
             (metric_id, metric_detail['title']) for metric_id, metric_detail in metric_info.items()

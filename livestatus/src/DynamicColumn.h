@@ -34,9 +34,6 @@ class Logger;
 class DynamicColumn {
 public:
     DynamicColumn(std::string name, std::string description,
-                  int indirect_offset, int extra_offset,
-                  int extra_extra_offset);
-    DynamicColumn(std::string name, std::string description,
                   Column::Offsets offsets);
     virtual ~DynamicColumn();
     [[nodiscard]] std::string name() const;

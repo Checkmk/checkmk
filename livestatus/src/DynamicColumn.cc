@@ -34,12 +34,6 @@ DynamicColumn::DynamicColumn(std::string name, std::string description,
     , _description(std::move(description))
     , _offsets(offsets) {}
 
-DynamicColumn::DynamicColumn(std::string name, std::string description,
-                             int indirect_offset, int extra_offset,
-                             int extra_extra_offset)
-    : DynamicColumn(std::move(name), std::move(description),
-                    {indirect_offset, extra_offset, extra_extra_offset, 0}) {}
-
 DynamicColumn::~DynamicColumn() = default;
 
 [[nodiscard]] Logger *DynamicColumn::logger() const { return _logger; }

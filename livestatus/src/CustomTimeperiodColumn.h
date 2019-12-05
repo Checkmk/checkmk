@@ -43,14 +43,7 @@ public:
         : IntColumn(name, description, offsets)
         , _mc(mc)
         , _varname(std::move(varname)) {}
-    CustomTimeperiodColumn(const std::string &name,
-                           const std::string &description, int indirect_offset,
-                           int extra_offset, int extra_extra_offset, int offset,
-                           const MonitoringCore *mc, std::string varname)
-        : CustomTimeperiodColumn(
-              name, description,
-              {indirect_offset, extra_offset, extra_extra_offset, offset}, mc,
-              std::move(varname)) {}
+
     int32_t getValue(Row row, const contact *auth_user) const override;
 
 private:

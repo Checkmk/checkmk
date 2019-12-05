@@ -78,15 +78,6 @@ public:
         , _mc(mc)
         , _logictype(logictype) {}
 
-    HostListStateColumn(const std::string &name, const std::string &description,
-                        int indirect_offset, int extra_offset,
-                        int extra_extra_offset, int offset, MonitoringCore *mc,
-                        Type logictype)
-        : HostListStateColumn(
-              name, description,
-              {indirect_offset, extra_offset, extra_extra_offset, offset}, mc,
-              logictype) {}
-
     int32_t getValue(Row row, const contact *auth_user) const override;
 
 private:

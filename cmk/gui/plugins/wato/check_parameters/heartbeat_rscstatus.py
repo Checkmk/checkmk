@@ -24,46 +24,39 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<heartbeat_rscstatus>>>
-# all
-#
-# Status can be "local", "foreign", "all" or "none"
+from cmk.gui.i18n import _
+from cmk.gui.valuespec import (Dictionary, DropdownChoice)
+
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersStorage,
+)
 
 
-def parse_heartbeat_rscstatus(info):
-    try:
-        return info[0][0]
-    except IndexError:
-        return
+def _parameter_valuespec_heartbeat_rscstatus():
+    return Dictionary(elements=[
+        ("expected_state",
+         DropdownChoice(
+             title=_("Expected state"),
+             choices=[
+                 ("none", _("All resource groups are running on a different node (none)")),
+                 ("all", _("All resource groups run on this node (all)")),
+                 ("local",
+                  _("All resource groups that belong to this node run on this node (local)")),
+                 ("foreign",
+                  _("All resource groups are running that are supposed to be running on the other node (foreign)"
+                   )),
+             ],
+         )),
+    ],)
 
 
-def inventory_heartbeat_rscstatus(heartbeat_rsc_status):
-    if heartbeat_rsc_status is not None:
-        yield None, {"discovered_state": heartbeat_rsc_status}
-
-
-def check_heartbeat_rscstatus(_no_item, params, heartbeat_rsc_status):
-    if heartbeat_rsc_status is None:
-        return
-
-    if not isinstance(params, dict):
-        # old params comes styled with double qoutes
-        params = {"discovered_state": params.replace("\"", "")}
-
-    expected_state = params["discovered_state"]
-    if "expected_state" in params:
-        expected_state = params["expected_state"]
-
-    if expected_state == heartbeat_rsc_status:
-        yield 0, "Current state: %s" % heartbeat_rsc_status
-    else:
-        yield 2, "Current state: %s (Expected: %s)" % (heartbeat_rsc_status, expected_state)
-
-
-check_info["heartbeat_rscstatus"] = {
-    'parse_function': parse_heartbeat_rscstatus,
-    'check_function': check_heartbeat_rscstatus,
-    'inventory_function': inventory_heartbeat_rscstatus,
-    'service_description': 'Heartbeat Ressource Status',
-    'group': 'heartbeat_rscstatus',
-}
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="heartbeat_rscstatus",
+        group=RulespecGroupCheckParametersStorage,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_heartbeat_rscstatus,
+        title=lambda: _("Heartbeat Ressource Status"),
+    ))

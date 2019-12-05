@@ -1106,7 +1106,7 @@ class html(ABCHTMLGenerator):
             self.mobile = self.request.cookie("mobile", "0") == "1"
 
         else:
-            self.mobile = self._is_mobile_client(self.request.user_agent.string)
+            self.mobile = self._is_mobile_client(self.request.user_agent)
 
     def _is_mobile_client(self, user_agent):
         # These regexes are taken from the public domain code of Matt Sullivan
@@ -1227,9 +1227,7 @@ class html(ABCHTMLGenerator):
 
         for key, val in self.request.itervars():
             if key not in ["request", "output_format"] + exclude_vars:
-                if isinstance(val, bytes):
-                    val = val.decode("utf-8")
-                request[key] = val
+                request[key] = val.decode("utf-8")
 
         return request
 

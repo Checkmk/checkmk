@@ -29,15 +29,15 @@
 
 from functools import partial
 import logging
+from typing import Any, Union  # pylint: disable=unused-import
 
-from typing import Any  # pylint: disable=unused-import
+from werkzeug.local import LocalProxy
+from werkzeug.local import LocalStack
 
-from werkzeug.local import LocalProxy, LocalStack
+import cmk.gui.htmllib  # pylint: disable=unused-import
 
 #####################################################################
 # a namespace for storing data during an application context
-# Cyclical import
-# from cmk.gui import htmllib, http  # pylint: disable=unused-import
 
 _sentinel = object()
 
@@ -111,18 +111,12 @@ def _lookup_req_object(name):
     top = _request_ctx_stack.top
     if top is None:
         raise RuntimeError("Working outside of request context.")
-
-    if name is None:
-        return top
-
     return getattr(top, name)
 
 
 class RequestContext(object):
     def __init__(self, html_obj):
         self.html = html_obj
-        self.request = html_obj.request
-        self.response = html_obj.response
 
     def __enter__(self):
         _request_ctx_stack.push(self)
@@ -141,25 +135,10 @@ class RequestContext(object):
 
 # NOTE: Flask offers the proxies below, and we should go into that direction,
 # too. But currently our html class is a swiss army knife with tons of
-# responsibilities which we should really, really split up...
-def request_local_attr(name=None):
-    """Delegate access to the corresponding attribute on RequestContext
+# resposibilites which we should really, really split up...
+#
+# request = LocalProxy(partial(_lookup_req_object, "request"))
+# session = LocalProxy(partial(_lookup_req_object, "session"))
 
-    When the returned object is accessed, the Proxy will fetch the current
-    RequestContext from the LocalStack and return the attribute given by `name`.
-
-    Args:
-        name (str): The name of the attribute on RequestContext
-
-    Returns:
-        A proxy which wraps the value stored on RequestContext.
-
-    """
-    return LocalProxy(partial(_lookup_req_object, name))
-
-
-local = request_local_attr()  # None as name will get the whole object.
-
-request = request_local_attr('request')
-response = request_local_attr('response')
-html = request_local_attr('html')
+html = LocalProxy(partial(_lookup_req_object,
+                          "html"))  # type: Union[cmk.gui.htmllib.html, LocalProxy]

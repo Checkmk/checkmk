@@ -37,7 +37,8 @@ import os
 import pprint
 import tempfile
 import time
-from typing import Callable, Any, Union, Dict, Iterator, List, Text, Optional  # pylint: disable=unused-import
+from typing import Callable, Any, Union, Dict, Iterator, List, Text, Optional, AnyStr  # pylint: disable=unused-import
+import six
 
 # Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:
@@ -224,6 +225,14 @@ def load_object_from_file(path, default=None, lock=False):
     return ast.literal_eval(content)
 
 
+def load_text_from_file(path, default=u"", lock=False):
+    # type: (Union[Path, str], Text, bool) -> Text
+    content = _load_data_from_file(path, lock=lock)
+    if not content:
+        return default
+    return content
+
+
 def _load_data_from_file(path, lock=False):
     # type: (Union[Path, str], bool) -> Optional[Text]
     if not isinstance(path, Path):
@@ -275,10 +284,22 @@ def save_object_to_file(path, data, pretty=False):
     save_file(path, "%s\n" % formated_data)
 
 
+def save_text_to_file(path, content, mode=0o660):
+    # type: (Union[Path, str], Text, int) -> None
+    if not isinstance(content, six.text_type):
+        raise TypeError("content argument must be Text, not bytes")
+    _save_data_to_file(path, content.encode("utf-8"), mode)
+
+
+def save_bytes_to_file(path, content, mode=0o660):
+    # type: (Union[Path, str], bytes, int) -> None
+    if not isinstance(content, six.binary_type):
+        raise TypeError("content argument must be bytes, not Text")
+    _save_data_to_file(path, content, mode)
+
+
 def save_file(path, content, mode=0o660):
-    # type: (Union[Path, str], Optional[Text], int) -> None
-    if content is None:
-        content = ""
+    # type: (Union[Path, str], AnyStr, int) -> None
     # Just to be sure: ensure_bytestr
     _save_data_to_file(path, ensure_bytestr(content), mode=mode)
 

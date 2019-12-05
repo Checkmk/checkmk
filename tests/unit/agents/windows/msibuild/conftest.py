@@ -12,7 +12,9 @@ def session_info():
 
 @pytest.fixture()
 def conf_dir(tmp_path):
-    return tmp_path
+    path = tmp_path / "temp"
+    path.mkdir(parents=True)
+    return path
 
 
 @pytest.fixture()

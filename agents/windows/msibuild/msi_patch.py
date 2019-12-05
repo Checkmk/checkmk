@@ -26,11 +26,16 @@
 
 from __future__ import print_function
 import sys
+import os
 import uuid
+import yaml
 
 from pathlib2 import Path
+from typing import Optional, Tuple
 
 TRADITIONAL_UUID = "{BAEBF560-7308-4D53-B426-903EA74B1D7E}"
+MSI_PACKAGE_CODE_MARKER = "Intel;1033"
+MSI_PACKAGE_CODE_OFFSET = len("Intel;1033") + 10  #
 
 
 # used normally only in Windows build chain to patch
@@ -52,26 +57,103 @@ def generate_uuid():
     return ("{%s}" % uuid.uuid1()).upper()
 
 
+def write_state_file(path_to_state, pos, code):
+    # type: (Optional[Path], int, str) -> None
+    if path_to_state is not None:
+        state = {"msi_info": {"package_code_pos": pos, "package_code_value": code}}
+        with path_to_state.open("w", encoding="utf-8") as f:
+            yaml.dump(state, f, encoding='utf-8', allow_unicode=True)
+
+
+def load_state_file(path_to_state):
+    # type: (Optional[Path]) -> Tuple[int, str]
+
+    if path_to_state is not None and path_to_state.exists():
+        with path_to_state.open("r", encoding="utf-8") as f:
+            result = yaml.safe_load(f)
+            if result is not None:
+                root = result["msi_info"]
+                return root["package_code_pos"], root["package_code_value"]
+
+    return -1, ""
+
+
 # engine to patch MSI file with new code
-def patch_package_code(f_name, mask, package_code=""):
-    # type: (str, str, str) -> bool
+# optionally can save state file with results of patching
+# by default amsk is TRADITIONAL
+# by default uuid is generated
+def patch_package_code(f_name, mask=None, package_code=None, state_file=None):
+    # type: (str, Optional[str], Optional[str], Optional[Path]) -> bool
 
     p = Path(f_name)
     if not p.exists():
         return False
 
-    if len(package_code) == 0:
+    if package_code is None or len(package_code) == 0:
         package_code = generate_uuid()
 
-    if len(mask) == 0:
+    if mask is None or len(mask) == 0:
         mask = TRADITIONAL_UUID
 
-    data = p.read_bytes()
-    if data.find(mask.encode('ascii')) == -1:
+    data = p.read_bytes()  # type:ignore
+    pos = data.find(mask.encode('ascii'))
+    if pos == -1:
+        write_state_file(state_file, -1, "")
         return False
 
     ret = data.replace(mask.encode('ascii'), package_code.encode('ascii'), 1)
-    p.write_bytes(ret)
+    p.write_bytes(ret)  # type:ignore
+
+    write_state_file(state_file, pos, package_code)
+
+    return True
+
+
+# engine to patch MSI file using already existsing state file
+def patch_package_code_by_state_file(f_name, state_file, package_code=None):
+    # type: (str, Path, Optional[str]) -> bool
+
+    p = Path(f_name)
+    if not p.exists():
+        return False
+
+    pos, id_ = load_state_file(state_file)
+
+    if pos == -1 or id_ == "":
+        return False
+
+    return patch_package_code(f_name, mask=id_, package_code=package_code)
+
+
+# engine to patch MSI file with new code
+# search for 'Intel;1033' marker, add offset and patch code
+def patch_package_code_by_marker(f_name, package_code=None, state_file=None):
+    # type: (str, str, Optional[Path]) -> bool
+
+    p = Path(f_name)
+    if not p.exists():
+        return False
+
+    if package_code is None or len(package_code) == 0:
+        package_code = generate_uuid()
+
+    data = p.read_bytes()  # type:ignore
+    location = data.find(MSI_PACKAGE_CODE_MARKER.encode('ascii'))
+    if location == -1:
+        return False
+
+    location += MSI_PACKAGE_CODE_OFFSET
+
+    if data[location] != b"{":
+        return False
+
+    start = location + len(package_code)
+    end = start + len(package_code)
+    out = data[:start] + package_code.encode('ascii') + data[end:]
+    p.write_bytes(out)  # type:ignore
+
+    write_state_file(state_file, start, package_code)
+
     return True
 
 

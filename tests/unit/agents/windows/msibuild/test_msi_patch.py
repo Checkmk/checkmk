@@ -2,7 +2,7 @@
 import pytest  # type: ignore
 
 import shutil
-import os
+import yaml
 
 from pathlib2 import Path
 
@@ -35,6 +35,135 @@ def test_parse_command_line():
         assert False
     except Exception as _:
         assert True
+
+
+def test_low_level_functions(conf_dir, cmk_dir):
+    assert msi_patch.MSI_PACKAGE_CODE_OFFSET == 20
+    assert msi_patch.MSI_PACKAGE_CODE_MARKER == "Intel;1033"
+    assert msi_patch.generate_uuid() != msi_patch.generate_uuid()
+    assert len(msi_patch.generate_uuid()) == 38
+    p = conf_dir / "msi_state.yml"
+    msi_patch.write_state_file(p, 12, "12")
+    pos, id = msi_patch.load_state_file(p)
+    assert pos == 12
+    assert id == "12"
+
+
+def test_patch_package_code_by_state_file(conf_dir, cmk_dir):
+    # prepare file to tests
+    if not cmk_dir.exists():
+        pytest.skip("cmk_dir is not good")
+    fname = u"test_bin.tst"
+    src = cmk_dir / u"agents/wnx/test_files/msibuild/msi" / fname
+    if not src.exists():
+        pytest.skip("Path with MSI doesn't exist")
+
+    uuid = msi_patch.generate_uuid()
+
+    # prepare test file
+    dst = conf_dir / fname
+    shutil.copy(str(src), str(dst))
+    base_content = dst.read_bytes()
+    assert base_content.find(msi_patch.TRADITIONAL_UUID.encode('ascii')) != -1
+
+    # patch 1, patching is successful
+    p = conf_dir / "msi_state.yml"
+    msi_patch.write_state_file(p, 4, msi_patch.TRADITIONAL_UUID)
+    assert msi_patch.patch_package_code_by_state_file(f_name=dst, package_code=uuid, state_file=p)
+
+    assert dst.stat().st_size == src.stat().st_size
+
+    new_content = dst.read_bytes()
+    assert new_content.find(uuid.encode('ascii')) == 4
+
+
+def test_patch_package_code_with_state(conf_dir, cmk_dir):
+    # prepare file to tests
+    if not cmk_dir.exists():
+        pytest.skip("cmk_dir is not good")
+    fname = u"test_bin.tst"
+    src = cmk_dir / u"agents/wnx/test_files/msibuild/msi" / fname
+    if not src.exists():
+        pytest.skip("Path with MSI doesn't exist")
+
+    uuid = msi_patch.generate_uuid()
+
+    # prepare test file
+    dst = conf_dir / fname
+    shutil.copy(str(src), str(dst))
+    base_content = dst.read_bytes()
+    assert base_content.find(msi_patch.TRADITIONAL_UUID.encode('ascii')) != -1
+
+    # patch 1, patching is successful
+    p = conf_dir / "msi_state.yml"
+    assert msi_patch.patch_package_code(f_name=dst, package_code=uuid, state_file=p)
+
+    assert dst.stat().st_size == src.stat().st_size
+
+    new_content = dst.read_bytes()
+    assert new_content.find(uuid.encode('ascii')) != -1
+
+    pos, id_ = msi_patch.load_state_file(p)
+    assert pos == 4
+    assert id_ == uuid
+
+    # prepare test file
+    shutil.copy(str(src), str(dst))
+
+    # patch 2, patching failed
+    p = conf_dir / "msi_state.yml"
+    assert not msi_patch.patch_package_code(
+        f_name=dst, mask="asdyebdvdbee", package_code=uuid, state_file=p)
+
+    assert dst.stat().st_size == src.stat().st_size
+
+    new_content = dst.read_bytes()
+    assert new_content.find(uuid.encode('ascii')) == -1
+
+    yaml_content = p.read_bytes()
+    state = yaml.safe_load(yaml_content)
+    assert state is not None
+
+    pos, id_ = msi_patch.load_state_file(p)
+    assert pos == -1
+    assert id_ == ""
+
+
+def test_patch_package_code_by_marker(conf_dir, cmk_dir):
+    # prepare file to tests
+    if not cmk_dir.exists():
+        pytest.skip("cmk_dir is not good")
+    fname = u"test_bin.tst"
+    src = cmk_dir / u"agents/wnx/test_files/msibuild/msi" / fname
+    if not src.exists():
+        pytest.skip("Path with MSI doesn't exist")
+
+    uuid = msi_patch.generate_uuid()
+
+    # prepare test file
+    dst = conf_dir / fname
+    shutil.copy(str(src), str(dst))
+    base_content = dst.read_bytes()
+    assert base_content.find(msi_patch.TRADITIONAL_UUID.encode('ascii')) != -1
+
+    # patch 1
+    assert msi_patch.patch_package_code_by_marker(f_name=dst, package_code=uuid)
+
+    new_content = dst.read_bytes()
+    assert new_content.find(uuid.encode('ascii')) != -1
+
+    # prepare test file
+    shutil.copy(str(src), str(dst))
+
+    # patch 2
+    st_f = conf_dir / "state_file_2.yml"
+    assert msi_patch.patch_package_code_by_marker(f_name=dst, package_code=uuid, state_file=st_f)
+
+    new_content = dst.read_bytes()
+    loc = new_content.find(uuid.encode('ascii'))
+    pos, id = msi_patch.load_state_file(st_f)
+    assert loc == pos
+    assert id == uuid
 
 
 def test_patch_package_code(conf_dir, cmk_dir):

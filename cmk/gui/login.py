@@ -305,8 +305,8 @@ def check_auth(request):
 def check_auth_automation():
     secret = html.request.var("_secret", "").strip()
     user_id = html.get_unicode_input("_username", "").strip()
-    html.del_var_from_env('_username')
-    html.del_var_from_env('_secret')
+    html.request.del_var('_username')
+    html.request.del_var('_secret')
     if secret and user_id and "/" not in user_id:
         path = cmk.utils.paths.var_dir + "/web/" + user_id.encode("utf-8") + "/automation.secret"
         if os.path.isfile(path) and open(path).read().strip() == secret:

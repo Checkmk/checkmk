@@ -1134,25 +1134,6 @@ class html(ABCHTMLGenerator):
             for varname, value in saved_vars.iteritems():
                 self.request.set_var(varname, value)
 
-    def del_var_from_env(self, varname):
-        # HACKY WORKAROUND, REMOVE WHEN NO LONGER NEEDED
-        # We need to get rid of query-string entries which can contain secret information.
-        # As this is the only location where these are stored on the WSGI environment this
-        # should be enough.
-        # See also cmk.gui.globals:RequestContext
-        environ = self.request.environ
-        # Filter the variables even if there are multiple copies of them (this is allowed).
-        decoded_qs = [
-            (key, value) for key, value in self.request.args.items(multi=True) if key != varname
-        ]
-        environ['QUERY_STRING'] = urllib.urlencode(decoded_qs)
-        old_request = self.request
-
-        # Make a new request class derived from our changed environment.
-        self.request = old_request.__class__(self.request.environ)
-        # Copy over the legacy vars as well.
-        self.request.legacy_vars.update(old_request.legacy_vars)
-
     def get_ascii_input(self, varname, deflt=None):
         """Helper to retrieve a byte string and ensure it only contains ASCII characters
         In case a non ASCII character is found an MKUserError() is raised."""

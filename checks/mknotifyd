@@ -119,7 +119,7 @@ def parse_mknotifyd(info):
                         value = int(value.split()[0])
                     except ValueError:
                         pass
-                elif value and varname not in [
+                elif value and value != "-" and varname not in [
                         "Type",
                         "State",
                         "Version",

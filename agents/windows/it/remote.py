@@ -11,14 +11,14 @@ import sys
 import telnetlib  # nosec
 
 # To use another host for running the tests, replace this IP address.
-remote_ip = '10.1.2.30'
+remote_ip = os.environ.get('LEGACY_WINDOWS_AGENT_TEST_HOST_ADDRESS')
 # To use another user account for running the tests, replace this username.
-remoteuser = 'NetworkAdministrator'
+remoteuser = 'Testuser'
 remotedir = os.path.join(os.sep, 'Users', remoteuser, 'Tests')
 sshopts = '-o StrictHostKeyChecking=no'
 host = 'localhost'
 port = 9999
-agent_exe = os.path.join(remotedir, 'check_mk_agent-64.exe')
+agent_exe = os.path.join(remotedir, 'check_mk_agent_legacy-64.exe')
 ini_filename = os.path.join(remotedir, 'check_mk.ini')
 
 

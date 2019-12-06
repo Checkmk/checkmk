@@ -36,6 +36,7 @@ from typing import Text  # pylint: disable=unused-import
 import six
 
 import cmk.utils.paths
+from cmk.utils.encoding import ensure_unicode
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
@@ -49,13 +50,13 @@ else:
 def omd_version():
     # type: () -> Text
     version_link = Path(cmk.utils.paths.omd_root).joinpath("version")
-    return version_link.resolve().name.decode("utf-8")
+    return ensure_unicode(version_link.resolve().name)
 
 
 def omd_site():
     # type: () -> Text
     try:
-        return os.environ["OMD_SITE"].decode("utf-8")
+        return ensure_unicode(os.environ["OMD_SITE"])
     except KeyError:
         raise MKGeneralException(
             _("OMD_SITE environment variable not set. You can "

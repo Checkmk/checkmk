@@ -96,26 +96,26 @@ class WerkTranslator(object):
         }
 
     def classes(self):
-        return self._classes.iteritems()
+        return self._classes.items()
 
     def class_of(self, werk):
         return self._classes[werk["class"]]
 
     def components(self):
-        return self._components.iteritems()
+        return self._components.items()
 
     def component_of(self, werk):
         c = werk["component"]
         return self._components.get(c, c)
 
     def levels(self):
-        return self._levels.iteritems()
+        return self._levels.items()
 
     def level_of(self, werk):
         return self._levels[werk["level"]]
 
     def compatibilities(self):
-        return self._compatibilities.iteritems()
+        return self._compatibilities.items()
 
     def compatibility_of(self, werk):
         return self._compatibilities[werk["compatible"]]
@@ -137,7 +137,7 @@ def load():
 
 def load_precompiled_werks_file(path):
     with path.open() as fp:
-        return {int(werk_id): werk for werk_id, werk in json.load(fp).iteritems()}
+        return {int(werk_id): werk for werk_id, werk in json.load(fp).items()}
 
 
 def load_raw_files(werks_dir):

@@ -89,7 +89,7 @@ class LabelManager(object):
         # type: (str) -> Dict
         return {
             label_id: label["value"]
-            for label_id, label in DiscoveredHostLabelsStore(hostname).load().iteritems()
+            for label_id, label in DiscoveredHostLabelsStore(hostname).load().items()
         }
 
     def labels_of_service(self, ruleset_matcher, hostname, service_desc):
@@ -145,7 +145,7 @@ class ABCDiscoveredLabelsStore(six.with_metaclass(abc.ABCMeta, object)):
         # Skip labels discovered by the previous HW/SW inventory approach (which was addded+removed in 1.6 beta)
         return {
             k: v
-            for k, v in store.load_object_from_file(str(self.file_path), default={}).iteritems()
+            for k, v in store.load_object_from_file(str(self.file_path), default={}).items()
             if isinstance(v, dict)
         }
 

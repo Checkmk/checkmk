@@ -472,6 +472,6 @@ def release_all_locks():
     # type: () -> None
     logger.debug("Releasing all locks")
     logger.debug("_acquired_locks: %r", _acquired_locks)
-    for path in list(_acquired_locks.iterkeys()):
+    for path in list(_acquired_locks.keys()):
         release_lock(path)
     _acquired_locks.clear()

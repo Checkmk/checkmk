@@ -40,11 +40,11 @@ import traceback
 import json
 import uuid
 from itertools import islice
-from typing import (Type, Any, Tuple, Dict, Text, Optional)  # pylint: disable=unused-import
+from typing import Any, Dict, Iterator, Optional, Text, Tuple, Type  # pylint: disable=unused-import
 
-try:
-    from pathlib import Path  # type: ignore # pylint: disable=unused-import
-except ImportError:
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
     from pathlib2 import Path
 
 import six
@@ -105,7 +105,7 @@ class CrashReportStore(object):
         # type: (Path) -> None
         """Simple cleanup mechanism: For each crash type we keep up to X crashes"""
         def uuid_paths(path):
-            # type: (Path) -> Path
+            # type: (Path) -> Iterator[Path]
             for p in path.iterdir():
                 try:
                     uuid.UUID(str(p.name))

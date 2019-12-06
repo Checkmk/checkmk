@@ -81,8 +81,16 @@ def check_oracle_jobs(item, params, info):
     for line in info:
         service_found = False
 
-        if line[0] == sid:
-            data_found = True
+        if len(line) < 2:
+            # ignore wrong/corrupted lines
+            continue
+        else:
+            if line[1].startswith(' Debug '):
+                # Skip invalid lines from Agent
+                continue
+
+            if line[0] == sid:
+                data_found = True
 
         # check for pdb_name in agent output
         # => the agentoutput is responsible for the format of item from Check_MK!
@@ -104,8 +112,9 @@ def check_oracle_jobs(item, params, info):
             sid, job_owner, job_name, job_state, job_runtime, _job_run_count, \
             job_enabled, job_nextrun, job_schedule, job_last_state = line
 
-        else:
+        elif len(line) > 8:
             # really old plugins without job_owner...
+            # The > 8 is expected, due to missing field seperator.
             # this should be removed in a future release!
 
             # sid.job_name
@@ -121,6 +130,10 @@ def check_oracle_jobs(item, params, info):
             job_nextrun = " ".join(line[7:-3])
             job_schedule = line[-2]
             job_last_state = line[-1]
+
+        else:
+            # invalid line/format from agent
+            continue
 
         if   (lineformat == 3 and itemname == job_name and itemowner == job_owner and itempdb == job_pdb and itemsid == sid) \
            or(lineformat == 2 and itemname == job_name and itemowner == job_owner and itemsid == sid) \

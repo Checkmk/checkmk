@@ -42,6 +42,7 @@ from cmk.gui.plugins.wato import (
 def _item_spec_mysql_connections():
     return TextAscii(
         title=_("Instance"),
+        default_value="mysql",
         help=_("Only needed if you have multiple MySQL Instances on one server"),
     )
 

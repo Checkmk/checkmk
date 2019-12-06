@@ -2345,7 +2345,7 @@ def _factory_default_special_agents_graylog():
 def _valuespec_special_agents_graylog():
     return Dictionary(
         title=_("Check state of Graylog"),
-        help=_("Requests node, cluster and indice data from a graylog "
+        help=_("Requests node, cluster and indice data from a Graylog "
                "instance."),
         optional_keys=["port"],
         elements=[
@@ -2362,7 +2362,7 @@ def _valuespec_special_agents_graylog():
              TextAscii(
                  title=_("Username"),
                  help=_("The username that should be used for accessing the "
-                        "graylog API. Has to have read permissions at least."),
+                        "Graylog API. Has to have read permissions at least."),
                  size=32,
                  allow_empty=False,
              )),
@@ -2409,7 +2409,8 @@ def _valuespec_special_agents_graylog():
                      ("license", _("License state")),
                      ("messages", _("Message count")),
                      ("nodes", _("Nodes")),
-                     ("sidecars", _("Sidecar fleet")),
+                     ("sidecars", _("Sidecars")),
+                     ("sources", _("Sources")),
                      ("streams", _("Streams")),
                  ],
                  default_value=[
@@ -2422,10 +2423,10 @@ def _valuespec_special_agents_graylog():
              DropdownChoice(
                  title=_("Display node details on"),
                  help=_("The node details can be displayed either on the "
-                        "queried host or the graylog node."),
+                        "queried host or the Graylog node."),
                  choices=[
-                     ("host", _("The queried graylog host")),
-                     ("node", _("The graylog node")),
+                     ("host", _("The queried Graylog host")),
+                     ("node", _("The Graylog node")),
                  ],
                  default_value="host",
              )),
@@ -2435,8 +2436,19 @@ def _valuespec_special_agents_graylog():
                  help=_("The sidecar details can be displayed either on the "
                         "queried host or the sidecar host."),
                  choices=[
-                     ("host", _("The queried graylog host")),
+                     ("host", _("The queried Graylog host")),
                      ("sidecar", _("The sidecar host")),
+                 ],
+                 default_value="host",
+             )),
+            ("display_source_details",
+             DropdownChoice(
+                 title=_("Display source details on"),
+                 help=_("The source details can be displayed either on the "
+                        "queried host or the source host."),
+                 choices=[
+                     ("host", _("The queried Graylog host")),
+                     ("source", _("The source host")),
                  ],
                  default_value="host",
              )),

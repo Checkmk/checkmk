@@ -24,44 +24,47 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# {
-#     'port': 9000,
-#     'password': 'yeah',
-#     'sections': ['jvm', 'cluster_health', 'failures'],
-#     'since': 30,
-#     'user': 'hell',
-#     'display_node_details': 'node',
-#     'display_sidecar_details': 'sidecar',
-#     'display_source_details': 'source',
-# }
+import json
+
+# <<<graylog_sources>>>
+# {"sources": {"klappclub": 81216}, "range": 0, "total": 1, "took_ms": 28}
 
 
-def agent_graylog_arguments(params, hostname, ipaddress):
-    args = [
-        "-P",
-        params["protocol"],
-        "-m",
-        ','.join(params["sections"]),
-        "-t",
-        params["since"],
-        "-u",
-        params["user"],
-        "-s",
-        passwordstore_get_cmdline("%s", params["password"]),
-        "--display_node_details",
-        params["display_node_details"],
-        "--display_sidecar_details",
-        params["display_sidecar_details"],
-        "--display_source_details",
-        params["display_source_details"],
-    ]
+def parse_graylog_sources(info):
+    parsed = {}
 
-    if "port" in params:
-        args += ["-p", params["port"]]
+    for line in info:
+        sources_data = json.loads(line[0])
 
-    args.append(params["instance"])
+        source_name = sources_data.get("sources")
+        if source_name is None:
+            continue
 
-    return args
+        for name, messages in source_name.iteritems():
+
+            parsed.setdefault(name, {
+                "messages": int(messages),
+            })
+
+    return parsed
 
 
-special_agent_info['graylog'] = agent_graylog_arguments
+@get_parsed_item_data
+def check_graylog_sources(item, params, item_data):
+    messages = item_data.get("messages")
+    if messages is None:
+        return
+
+    return handle_graylog_messages(messages, params)
+
+
+check_info["graylog_sources"] = {
+    "parse_function": parse_graylog_sources,
+    "check_function": check_graylog_sources,
+    "inventory_function": discover(),
+    "default_levels_variable": "graylog_sources_default_levels",
+    "service_description": "Graylog Source %s",
+    "has_perfdata": True,
+    "group": "graylog_sources",
+    "includes": ["graylog.include"],
+}

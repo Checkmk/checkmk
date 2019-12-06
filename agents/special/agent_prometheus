@@ -326,12 +326,14 @@ class ApiError(Exception):
 
 
 def main(argv=None):
-    config = ast.literal_eval(sys.stdin.read())
     if argv is None:
         argv = sys.argv[1:]
     args = parse_arguments(argv)
-    config_args = _extract_config_args(config)
+
     try:
+        config = ast.literal_eval(sys.stdin.read())
+        config_args = _extract_config_args(config)
+
         # default cases always must be there
         api_client = PrometheusAPI(config_args["server_address"])
         api_data = ApiData(api_client, config_args["custom_services"])

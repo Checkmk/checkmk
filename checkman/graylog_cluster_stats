@@ -4,7 +4,7 @@ catalog: app/graylog
 license: GPL
 distribution: check_mk
 description:
- This check monitors the cluster stats of a graylog instance. It outputs the
+ This check monitors the cluster stats of a Graylog instance. It outputs the
  number of inputs, outputs, streams, stream rules, extractors and user.
 
  Needs the datasource "Check state of Graylog" to be configured.

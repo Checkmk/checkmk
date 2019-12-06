@@ -103,6 +103,7 @@ check_info["hp_proliant_psu"] = {
             "7",  # cpqHeFltTolPowerSupplyCapacityUsed
             "8",  # cpqHeFltTolPowerSupplyCapacityMaximum
         ]),
-    'snmp_scan_function': lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower(),
+    'snmp_scan_function': lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower() or
+                          "storeeasy" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower(),
     'has_perfdata': True,
 }

@@ -206,6 +206,8 @@ def check_ceph_status_pgs(_no_item, params, parsed):
         "repair": (0, "repair"),
         "replay": (1, "replay"),
         "scrubbing": (0, "scrubbing"),
+        "snaptrim": (0, "snaptrim"),
+        "snaptrim_wait": (0, "snaptrim wait"),
         "stale": (2, "stale"),
         "undersized": (0, "undersized"),
         "wait_backfill": (0, "wait backfill"),

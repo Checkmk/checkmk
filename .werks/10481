@@ -1,0 +1,13 @@
+Title: ceph_status.pgs: Plugin now knowns about 'snaptrim' and 'snaptrim_wait'
+Knowledge: undoc
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p7
+Date: 1575633422
+
+The plugin now knowns about the states "snaptrim" and "snaptrim_wait",
+which appear after deleting a snapshot. They are considered to be OK.

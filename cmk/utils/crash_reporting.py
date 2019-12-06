@@ -39,7 +39,6 @@ import time
 import traceback
 import json
 import uuid
-import urllib
 from itertools import islice
 from typing import (Type, Any, Tuple, Dict, Text, Optional)  # pylint: disable=unused-import
 

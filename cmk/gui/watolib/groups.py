@@ -567,3 +567,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
                              for cg_id, cg_attrs in self._contactgroups.items()],
                             key=lambda x: x[1])
         return DualListChoice(choices=cg_choices, rows=20, size=100)
+
+    def validate_input(self, value, varprefix):
+        self.load_data()
+        self._vs_contactgroups().validate_value(value.get("groups", []), varprefix)

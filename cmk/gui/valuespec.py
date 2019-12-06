@@ -2908,19 +2908,17 @@ class ListChoice(ValueSpec):
         return value
 
     def validate_datatype(self, value, varprefix):
-        self.load_elements()
-
         if not isinstance(value, list):
             raise MKUserError(varprefix,
                               _("The datatype must be list, but is %s") % _type_name(value))
 
-        for v in value:
-            if self._value_is_invalid(v):
-                raise MKUserError(varprefix, _("%s is not an allowed value") % v)
-
     def _validate_value(self, value, varprefix):
         if not self._allow_empty and not value:
             raise MKUserError(varprefix, _('You have to select at least one element.'))
+        self.load_elements()
+        for v in value:
+            if self._value_is_invalid(v):
+                raise MKUserError(varprefix, _("%s is not an allowed value") % v)
 
     def _value_is_invalid(self, value):
         d = dict(self._elements)

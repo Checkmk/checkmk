@@ -37,6 +37,12 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersStorage,
 )
 
+from cmk.gui.plugins.wato.check_parameters.utils import (
+    fs_levels_elements,
+    fs_magic_elements,
+    size_trend_elements,
+)
+
 
 def _item_spec_network_fs():
     return TextAscii(title=_("Name of the mount point"),
@@ -44,7 +50,7 @@ def _item_spec_network_fs():
 
 
 def _parameter_valuespec_network_fs():
-    return Dictionary(elements=[
+    return Dictionary(elements=(fs_levels_elements + fs_magic_elements + size_trend_elements + [
         (
             "has_perfdata",
             DropdownChoice(title=_("Performance data settings"),
@@ -54,7 +60,7 @@ def _parameter_valuespec_network_fs():
                            ],
                            default_value=False),
         ),
-    ],)
+    ]),)
 
 
 rulespec_registry.register(
@@ -64,5 +70,5 @@ rulespec_registry.register(
         item_spec=_item_spec_network_fs,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_network_fs,
-        title=lambda: _("Network filesystem - overall status (e.g. NFS)"),
+        title=lambda: _("Network filesystem - overall status and usage (e.g. NFS)"),
     ))

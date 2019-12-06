@@ -21,14 +21,14 @@ size1 = Size(
     [u'491520', u'460182', u'460182', u'65536'],
     491520 * 65536,
     491520 * 65536 - 460182 * 65536,
-    "6.4% used (1.91 GB of 30.00 GB)",
+    "6.38% used (1.91 of 30.00 GB), trend: 0.00 B / 24 hours",
 )
 
 size2 = Size(
     [u'201326592', u'170803720', u'170803720', u'32768'],
     None,  # not in use
     None,  # not in use
-    "15.2% used (931.48 GB of 6.00 TB)",
+    "15.16% used (931.48 GB of 6.00 TB), trend: 0.00 B / 24 hours",
 )
 
 
@@ -57,10 +57,13 @@ size2 = Size(
                 ('/PERFshare', {
                     'has_perfdata': True
                 },
-                 BasicCheckResult(
-                     0, size1.text,
-                     [PerfValue('fs_size', size1.total),
-                      PerfValue('fs_used', size1.used)]))
+                 BasicCheckResult(0, size1.text, [
+                     PerfValue('fs_used', size1.used, 0.8 * size1.total, 0.9 * size1.total, 0,
+                               size1.total),
+                     PerfValue('fs_size', size1.total),
+                     PerfValue('fs_growth', 0),
+                     PerfValue('fs_trend', 0, None, None, 0, 15534.459259259258),
+                 ]))
             ]),
         (  # state == 'hanging'
             [[u'/test', u'hanging', u'hanging', u'0', u'0', u'0', u'0']
@@ -69,7 +72,7 @@ size2 = Size(
             }, BasicCheckResult(2, "Server not responding", None))]),
         (  # unknown state
             [[u'/test', u'unknown', u'unknown', u'1', u'1', u'1', u'1']], [('/test unknown', {})], [
-                ('/test unknown', {}, BasicCheckResult(2, "Unknown state", None))
+                ('/test unknown', {}, BasicCheckResult(2, "Unknown state: unknown", None))
             ]),
         (  # zero block size
             [[u'/test', u'perfdata', u'ok', u'0', u'460182', u'460182', u'0']],

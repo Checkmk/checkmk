@@ -35,5 +35,5 @@ check_info["nfsmounts"] = {
     'service_description': 'NFS mount %s',
     'has_perfdata': True,
     'group': 'network_fs',
-    'includes': ['network_fs.include'],
+    'includes': ['network_fs.include', 'df.include', 'size_trend.include'],
 }

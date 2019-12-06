@@ -41,7 +41,7 @@ def release_lock():
 
 def scp_agent_exe():
     agents_windows_dir = os.path.dirname(localdir)
-    agent_exe = os.path.join(agents_windows_dir, 'check_mk_agent-64.exe')
+    agent_exe = os.path.join(agents_windows_dir, 'check_mk_agent_legacy-64.exe')
     cmd = ['scp', agent_exe, '%s@%s:%s' % (remoteuser, remote_ip, remotedir)]
     assert_subprocess(cmd)
 

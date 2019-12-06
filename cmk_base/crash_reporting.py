@@ -166,7 +166,7 @@ def _read_agent_output(hostname):
         # working as intended, we may have to keep working with bytes here.
         with cache_path.open() as f:
             output = u""
-            for l in f.readline():
+            for l in f:
                 output += cmk.utils.encoding.convert_to_unicode(l)
             return output
     except IOError:

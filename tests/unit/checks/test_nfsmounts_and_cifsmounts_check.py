@@ -19,12 +19,12 @@ pytestmark = pytest.mark.checks
     "info,discovery_expected,check_expected",
     [
         (  # no info
-            [], [], (['', None, BasicCheckResult(3, ' not mounted', None)],)),
+            [], [], ()),
         (  # single mountpoint with data
-            [[u'/ABCshare', u'ok', u'491520', u'460182', u'460182', u'65536']], [
-                ('/ABCshare', {})
-            ], [('/ABCshare', {}, BasicCheckResult(0, "6.4% used (1.91 GB of 30.00 GB)", None)),
-                ('/ZZZshare', {}, BasicCheckResult(3, "/ZZZshare not mounted", None))]),
+            [[u'/ABCshare', u'ok', u'491520', u'460182', u'460182', u'65536']
+            ], [('/ABCshare', {})], [
+                ('/ABCshare', {}, BasicCheckResult(0, "6.4% used (1.91 GB of 30.00 GB)", None)),
+            ]),
         (  # two mountpoints with empty data
             [[u'/AB', u'ok', u'-', u'-', u'-', u'-'], [u'/ABC', u'ok', u'-', u'-', u'-', u'-']], [
                 ('/AB', {}), ('/ABC', {})

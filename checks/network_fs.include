@@ -45,16 +45,8 @@ def parse_network_fs_mounts(info):
     return parsed
 
 
-def inventory_network_fs_mounts(parsed):
-    for mp in parsed:
-        yield mp, {}
-
-
-def check_network_fs_mounts(item, params, parsed):
-    attrs = parsed.get(item)
-    if not attrs:
-        return 3, "%s not mounted" % item
-
+@get_parsed_item_data
+def check_network_fs_mounts(item, params, attrs):
     state = attrs["state"]
     if state == "Permission denied":
         return 2, "Permission denied"

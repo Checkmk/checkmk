@@ -98,7 +98,7 @@ test-unit:
 	$(PYTEST) -T unit unit
 
 test-mypy:
-	$(MYPY) --config-file=$(realpath ../mypy.ini) $(MYPY_FILES_TO_CHECK)
+	$(MYPY) $(MYPY_FILES_TO_CHECK)
 
 test-mypy-raw:
 	$(MYPY) --config-file=$(realpath ../mypy-raw.ini) $(MYPY_FILES_TO_CHECK)

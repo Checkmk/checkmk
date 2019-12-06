@@ -15,8 +15,28 @@ if [ ! -f "$VENV_PATH/bin/mypy" ]; then
     exit 1
 fi
 
+# Try to detect python version of the file to be checked and toggle mypy mode
+# depending on this. In doubt use Python 2 for the moment
+# This approach may be way too naive, since mypy can be invoked in a lot of
+# different ways (single file, multi file, paths, ...). But let's try...
+FILE_ARG="${@: -1}"
+if [ ! -f "$FILE_ARG" ]; then
+    echo "$LAST_ARG:1: error: scripts/run-mypy can not detect Python version"
+    exit 1
+fi
+# Synchronize detection logic with test*/find-python-files.
+if [[ $FILE_ARG =~ "/tests-py3/" ]] && [[ $FILE_ARG == *.py ]]; then
+    PYTHON_VERSION=3.7
+elif head -n 1 "$FILE_ARG" | grep -q '^#!.*python3$' >/dev/null 2>&1; then
+    PYTHON_VERSION=3.7
+else
+    PYTHON_VERSION=2.7
+fi
+
+echo "Execute mypy in $PYTHON_VERSION mode..."
+
 # NOTE: We should NOT run this in "$REPO_PATH", otherwise mypy will make paths
 # in messages relative, which will confuse e.g. Emacs' flycheck mode.
 
 MYPYPATH="$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/omd:$REPO_PATH/tests-py3:$REPO_PATH/tests-py3/typeshed" \
-    exec "$PIPENV" 3 run mypy "$@"
+    exec "$PIPENV" 3 run mypy --python-version "$PYTHON_VERSION" "$@"

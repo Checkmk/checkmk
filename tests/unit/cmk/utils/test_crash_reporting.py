@@ -118,7 +118,7 @@ def patch_uuid1(monkeypatch):
     c = itertools.count()
 
     def uuid1(node=None, clock_seq=None):
-        return uuid.UUID(bytes=struct.pack(">I", next(c)) + 12 * "\0")
+        return uuid.UUID(bytes=struct.pack(b">I", next(c)) + 12 * b"\0")
 
     monkeypatch.setattr("uuid.uuid1", uuid1)
 

@@ -83,7 +83,7 @@ class CrashReportStore(object):
         """Save the crash report instance to it's crash report directory"""
         self._prepare_crash_dump_directory(crash)
 
-        for key, value in crash.serialize().iteritems():
+        for key, value in crash.serialize().items():
             fname = "crash.info" if key == "crash_info" else key
             store.save_file(str(crash.crash_dir() / fname),
                             json.dumps(value, cls=RobustJSONEncoder) + "\n")
@@ -173,8 +173,8 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
     def deserialize(cls, serialized):
         # type: (Type[ABCCrashReport], dict) -> ABCCrashReport
         """Deserialize the object"""
-        cls = crash_report_registry[serialized["crash_info"]["crash_type"]]
-        return cls(**serialized)
+        class_ = crash_report_registry[serialized["crash_info"]["crash_type"]]
+        return class_(**serialized)
 
     def _serialize_attributes(self):
         # type: () -> dict
@@ -222,8 +222,8 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
     def local_crash_report_url(self):
         # type: () -> Text
         """Returns the site local URL to the current crash report"""
-        return "crash.py?%s" % urllib.urlencode([("component", self.type()),
-                                                 ("ident", self.ident_to_text())])
+        return "crash.py?%s" % six.moves.urllib.parse.urlencode([("component", self.type()),
+                                                                 ("ident", self.ident_to_text())])
 
 
 def _get_generic_crash_info(type_name, details):
@@ -331,7 +331,7 @@ def _get_local_vars_of_last_exception():
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
     return base64.b64encode(
-        _format_var_for_export(pprint.pformat(local_vars), maxsize=5 * 1024 * 1024))
+        _format_var_for_export(pprint.pformat(local_vars).encode("utf-8"), maxsize=5 * 1024 * 1024))
 
 
 def _format_var_for_export(val, maxdepth=4, maxsize=1024 * 1024):

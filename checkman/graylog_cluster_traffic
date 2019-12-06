@@ -4,7 +4,7 @@ catalog: app/graylog
 license: GPL
 distribution: check_mk
 description:
- This check monitors the cluster traffic of a graylog instance. It outputs the
+ This check monitors the cluster traffic of a Graylog instance. It outputs the
  input, output and decoded traffic. Graylog only covers that data every hour, so
  the last update time is also shown. Needs the datasource "Check state of
  Graylog" to be configured.

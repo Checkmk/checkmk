@@ -39,13 +39,12 @@ import time
 import traceback
 import json
 import uuid
-import urllib
 from itertools import islice
-from typing import (Type, Any, Tuple, Dict, Text, Optional)  # pylint: disable=unused-import
+from typing import Any, Dict, Iterator, Optional, Text, Tuple, Type  # pylint: disable=unused-import
 
-try:
-    from pathlib import Path  # type: ignore # pylint: disable=unused-import
-except ImportError:
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
     from pathlib2 import Path
 
 import six
@@ -83,7 +82,7 @@ class CrashReportStore(object):
         """Save the crash report instance to it's crash report directory"""
         self._prepare_crash_dump_directory(crash)
 
-        for key, value in crash.serialize().iteritems():
+        for key, value in crash.serialize().items():
             fname = "crash.info" if key == "crash_info" else key
             store.save_file(str(crash.crash_dir() / fname),
                             json.dumps(value, cls=RobustJSONEncoder) + "\n")
@@ -106,7 +105,7 @@ class CrashReportStore(object):
         # type: (Path) -> None
         """Simple cleanup mechanism: For each crash type we keep up to X crashes"""
         def uuid_paths(path):
-            # type: (Path) -> Path
+            # type: (Path) -> Iterator[Path]
             for p in path.iterdir():
                 try:
                     uuid.UUID(str(p.name))
@@ -173,8 +172,8 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
     def deserialize(cls, serialized):
         # type: (Type[ABCCrashReport], dict) -> ABCCrashReport
         """Deserialize the object"""
-        cls = crash_report_registry[serialized["crash_info"]["crash_type"]]
-        return cls(**serialized)
+        class_ = crash_report_registry[serialized["crash_info"]["crash_type"]]
+        return class_(**serialized)
 
     def _serialize_attributes(self):
         # type: () -> dict
@@ -222,8 +221,8 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
     def local_crash_report_url(self):
         # type: () -> Text
         """Returns the site local URL to the current crash report"""
-        return "crash.py?%s" % urllib.urlencode([("component", self.type()),
-                                                 ("ident", self.ident_to_text())])
+        return "crash.py?%s" % six.moves.urllib.parse.urlencode([("component", self.type()),
+                                                                 ("ident", self.ident_to_text())])
 
 
 def _get_generic_crash_info(type_name, details):
@@ -331,7 +330,7 @@ def _get_local_vars_of_last_exception():
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
     return base64.b64encode(
-        _format_var_for_export(pprint.pformat(local_vars), maxsize=5 * 1024 * 1024))
+        _format_var_for_export(pprint.pformat(local_vars).encode("utf-8"), maxsize=5 * 1024 * 1024))
 
 
 def _format_var_for_export(val, maxdepth=4, maxsize=1024 * 1024):

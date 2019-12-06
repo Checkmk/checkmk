@@ -42,8 +42,15 @@ $(MK_LIVESTATUS_INSTALL): $(MK_LIVESTATUS_BUILD)
 	    install
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(PACKAGE_DIR)/$(MK_LIVESTATUS)/lq $(DESTDIR)$(OMD_ROOT)/bin
+	
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python
 	install -m 644 $(MK_LIVESTATUS_BUILD_DIR)/api/python/livestatus.py $(DESTDIR)$(OMD_ROOT)/lib/python
+	
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python3
+	install -m 644 $(MK_LIVESTATUS_BUILD_DIR)/api/python/livestatus.py $(DESTDIR)$(OMD_ROOT)/lib/python3
+	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" ; \
+	    $(PACKAGE_PYTHON3_EXECUTABLE) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python3/livestatus.py
+	
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks
 	install -m 755 $(PACKAGE_DIR)/$(MK_LIVESTATUS)/LIVESTATUS_TCP $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(MK_LIVESTATUS)/LIVESTATUS_TCP_ONLY_FROM $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/

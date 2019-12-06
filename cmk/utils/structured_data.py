@@ -142,7 +142,7 @@ class StructuredDataTree(object):
         return self
 
     def _create_hierarchy_from_data(self, raw_tree, parent, parent_path):
-        for edge, attrs in raw_tree.iteritems():
+        for edge, attrs in raw_tree.items():
             if not attrs:
                 continue
             if parent_path:
@@ -167,7 +167,7 @@ class StructuredDataTree(object):
     def _get_child_data(self, raw_entries):
         leaf_data = {}
         sub_raw_tree = {}
-        for k, v in raw_entries.iteritems():
+        for k, v in raw_entries.items():
             if isinstance(v, dict):
                 # Dict based values mean that current key
                 # is a node.
@@ -467,7 +467,7 @@ class Container(NodeAttribute):
         parent = self.add_child(edge, Container(), abs_path)
         for nr, entry in enumerate(child_data):
             attrs = {}
-            for k, v in entry.iteritems():
+            for k, v in entry.items():
                 if isinstance(v, list):
                     numeration = parent.add_child(nr, Container(), abs_path+(nr,))\
                                        .add_child(k, Numeration(), abs_path+(nr,k))
@@ -547,18 +547,18 @@ class Container(NodeAttribute):
     #   ---getting [sub] nodes/node attributes----------------------------------
 
     def get_edge_nodes(self):
-        return self._edges.iteritems()
+        return self._edges.items()
 
     def get_children(self, edges=None):
         """Returns a flatten list of tuples (edge, absolute path, child)"""
         children = set()
         if edges is None:
-            for edge, node in self._edges.iteritems():
+            for edge, node in self._edges.items():
                 node_abs_path = node.get_absolute_path()
                 for child in node.get_node_children():
                     children.add((edge, node_abs_path, child))
         else:
-            for edge, node in self._edges.iteritems():
+            for edge, node in self._edges.items():
                 if edge not in edges:
                     continue
                 node_abs_path = node.get_absolute_path()
@@ -654,7 +654,7 @@ class Leaf(NodeAttribute):
 
     def _get_filtered_entries(self, entries, keys):
         filtered = {}
-        for k, v in entries.iteritems():
+        for k, v in entries.items():
             if k in keys:
                 filtered.setdefault(k, v)
         return filtered
@@ -712,15 +712,15 @@ class Numeration(Leaf):
 
         delta_node_rows = compared_rows\
                           + [{k: _new_delta_tree_node(v)
-                             for k,v in row.iteritems()}
+                             for k,v in row.items()}
                              for row in new_rows]\
                           + [{k: _removed_delta_tree_node(v)
-                             for k,v in row.iteritems()}
+                             for k,v in row.items()}
                              for row in removed_rows]
         if keep_identical:
-            delta_node_rows += [{k: _identical_delta_tree_node(v)
-                                 for k, v in row.iteritems()}
-                                for row in identical_rows]
+            delta_node_rows += [
+                {k: _identical_delta_tree_node(v) for k, v in row.items()} for row in identical_rows
+            ]
         if delta_node_rows:
             delta_node = Numeration()
             delta_node.set_child_data(delta_node_rows)
@@ -771,7 +771,7 @@ class Numeration(Leaf):
         delta_node = Numeration()
         data = []
         for entry in self._numeration:
-            data.append({k: encode_as(v) for k, v in entry.iteritems()})
+            data.append({k: encode_as(v) for k, v in entry.items()})
         delta_node.set_child_data(data)
         return delta_node
 
@@ -888,7 +888,7 @@ class Attributes(Leaf):
 
     def encode_for_delta_tree(self, encode_as):
         delta_node = Attributes()
-        data = {k: encode_as(v) for k, v in self._attributes.iteritems()}
+        data = {k: encode_as(v) for k, v in self._attributes.items()}
         delta_node.set_child_data(data)
         return delta_node
 

@@ -38,7 +38,7 @@ def convert_to_unicode(
         fallback_encoding="latin-1",
         on_error=None,
 ):
-    # type: (AnyStr, Optional[AnyStr], AnyStr, AnyStr, Optional[Text]) -> Text
+    # type: (AnyStr, Optional[str], str, str, Optional[Text]) -> Text
     if isinstance(value, six.text_type):
         return value
 

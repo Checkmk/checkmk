@@ -33,8 +33,6 @@ else
     PYTHON_VERSION=2.7
 fi
 
-echo "Execute mypy in $PYTHON_VERSION mode..."
-
 # NOTE: We should NOT run this in "$REPO_PATH", otherwise mypy will make paths
 # in messages relative, which will confuse e.g. Emacs' flycheck mode.
 

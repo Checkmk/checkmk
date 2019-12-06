@@ -32,7 +32,7 @@ $(CHECK_MK_BUILD): $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz
 	$(TOUCH) $@
 
 # TODO: Replace the ancient setup.py with explicit installation directly in makefile
-$(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
+$(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS)
 	export bindir='$(OMD_ROOT)/bin' ; \
 	export sharedir='$(OMD_ROOT)/share/check_mk' ; \
 	export checksdir='$(OMD_ROOT)/share/check_mk/checks' ; \
@@ -81,6 +81,12 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(CHECK_MK_BUILD_DIR)/bin/* $(DESTDIR)$(OMD_ROOT)/bin
 	$(RM) $(DESTDIR)$(OMD_ROOT)/bin/Makefile $(DESTDIR)$(OMD_ROOT)/bin/*.cc
+
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/utils
+	tar -xz -C $(DESTDIR)$(OMD_ROOT)/lib/python3 -f $(CHECK_MK_BUILD_DIR)/lib.tar.gz cmk/__init__.py
+	tar -xz -C $(DESTDIR)$(OMD_ROOT)/lib/python3 -f $(CHECK_MK_BUILD_DIR)/lib.tar.gz cmk/utils
+	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" ; \
+	    $(PACKAGE_PYTHON3_EXECUTABLE) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk
 
 	# Install the diskspace cleanup plugin
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/diskspace

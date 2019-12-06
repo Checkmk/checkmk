@@ -18,16 +18,29 @@ sudo rsync \
     --exclude=cme.py \
     -a * $ROOT/lib/python/cmk/
 
+# TODO: Enable python3 compatible parts step by step
+sudo rsync \
+    --exclude=cee \
+    --exclude=cee.py \
+    --exclude=cme \
+    --exclude=cme.py \
+    -a __init__.py utils $ROOT/lib/python3/cmk/
+
 # Restore site version after .f12
 sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" $ROOT/lib/python/cmk/__init__.py
+sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" $ROOT/lib/python3/cmk/__init__.py
 
 sudo pycompile -q $ROOT/lib/python/cmk/
+sudo py3compile -q $ROOT/lib/python3/cmk/
 
 # Also deploy all other directories of same type
 if [ ${ALL_EDITIONS:-1} != 0 ]; then
     for WHAT in enterprise managed; do
         if [ -e ../$WHAT/cmk/.f12 ]; then
-            (cd ../$WHAT/cmk; ONLY_COPY=1 ALL_EDITIONS=0 bash .f12)
+            (
+                cd ../$WHAT/cmk
+                ONLY_COPY=1 ALL_EDITIONS=0 bash .f12
+            )
         fi
     done
 fi

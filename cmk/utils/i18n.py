@@ -27,6 +27,8 @@
 
 from typing import AnyStr, Text  # pylint:disable=unused-import
 
+from cmk.utils.encoding import ensure_unicode
+
 
 # TODO: Clean this up one day by using the way recommended by gettext.
 # (See https://docs.python.org/2/library/gettext.html). For this we
@@ -34,4 +36,4 @@ from typing import AnyStr, Text  # pylint:disable=unused-import
 # Fake i18n when not available
 def _(string):
     # type: (AnyStr) -> Text
-    return string
+    return ensure_unicode(string)

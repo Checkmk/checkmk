@@ -27,6 +27,7 @@
 
 import six
 import werkzeug.wrappers
+from werkzeug.utils import get_content_type
 
 from cmk.gui.i18n import _
 
@@ -234,3 +235,6 @@ class Response(werkzeug.wrappers.Response):
             # TODO: Use the request-self proxy for this so the callers don't have to supply this
             secure = self._is_secure
         super(Response, self).set_cookie(key, value, secure=secure, httponly=True)
+
+    def set_content_type(self, mime_type):
+        self.headers["Content-type"] = get_content_type(mime_type, self.charset)

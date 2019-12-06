@@ -942,6 +942,18 @@ class TransactionManager(object):
 #   | Caution! The class needs to be derived from Outputfunnel first!      |
 #   '----------------------------------------------------------------------'
 
+OUTPUT_FORMAT_MIME_TYPES = {
+    "json": "application/json",
+    "jsonp": "application/javascript",
+    "csv": "text/csv",
+    "csv_export": "text/csv",
+    "python": "text/plain",
+    "text": "text/plain",
+    "html": "text/html",
+    "xml": "text/xml",
+    "pdf": "application/pdf",
+}
+
 
 class html(ABCHTMLGenerator):
     def __init__(self, request, response):
@@ -1344,35 +1356,11 @@ class html(ABCHTMLGenerator):
     #
 
     def set_output_format(self, f):
-        if f == "json":
-            content_type = "application/json; charset=UTF-8"
-
-        elif f == "jsonp":
-            content_type = "application/javascript; charset=UTF-8"
-
-        elif f in ("csv", "csv_export"):  # Cleanup: drop one of these
-            content_type = "text/csv; charset=UTF-8"
-
-        elif f == "python":
-            content_type = "text/plain; charset=UTF-8"
-
-        elif f == "text":
-            content_type = "text/plain; charset=UTF-8"
-
-        elif f == "html":
-            content_type = "text/html; charset=UTF-8"
-
-        elif f == "xml":
-            content_type = "text/xml; charset=UTF-8"
-
-        elif f == "pdf":
-            content_type = "application/pdf"
-
-        else:
+        if f not in OUTPUT_FORMAT_MIME_TYPES:
             raise MKGeneralException(_("Unsupported context type '%s'") % f)
 
         self.output_format = f
-        self.response.headers["Content-type"] = content_type
+        self.response.set_content_type(OUTPUT_FORMAT_MIME_TYPES[f])
 
     def is_api_call(self):
         return self.output_format != "html"

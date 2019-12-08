@@ -121,21 +121,17 @@ def manage_plugins(request, plugindir):
     if platform.system() != 'Windows':
         fullbuilddir = os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))), Globals.builddir)
-        cmds = [[
-            'ssh', sshopts,
-            '%s@%s' % (remoteuser, remote_ip),
-            'if not exist %s md %s' % (targetdir, targetdir)
-        ],
-                [
-                    'scp', sshopts,
-                    os.path.join(plugindir[0], request.param),
-                    '%s@%s:%s' % (remoteuser, remote_ip, plugindir[1])
-                ],
-                [
-                    'scp', sshopts,
-                    os.path.join(fullbuilddir, Globals.binaryplugin),
-                    '%s@%s:%s' % (remoteuser, remote_ip, plugindir[1])
-                ]]
+        cmds = [
+            ['ssh'] + sshopts +
+            ['%s@%s' % (remoteuser, remote_ip),
+             'if not exist %s md %s' % (targetdir, targetdir)], ['scp'] + sshopts + [
+                 os.path.join(plugindir[0], request.param),
+                 '%s@%s:%s' % (remoteuser, remote_ip, plugindir[1])
+             ], ['scp'] + sshopts + [
+                 os.path.join(fullbuilddir, Globals.binaryplugin),
+                 '%s@%s:%s' % (remoteuser, remote_ip, plugindir[1])
+             ]
+        ]
         for cmd in cmds:
             assert_subprocess(cmd)
     yield

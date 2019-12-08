@@ -19,7 +19,7 @@ remotedir = os.path.join(os.sep, 'Users', remoteuser, 'Tests')
 sshopts = ['-oPort=9922', '-oStrictHostKeyChecking=no']
 host = 'localhost'
 port = 9999
-agent_exe = os.path.join(remotedir, 'check_mk_agent_legacy-64.exe')
+agent_exe = os.path.join(remotedir, 'check_mk_agent-64.exe')
 ini_filename = os.path.join(remotedir, 'check_mk.ini')
 
 

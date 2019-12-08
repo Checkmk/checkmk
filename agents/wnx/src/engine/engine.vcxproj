@@ -241,6 +241,7 @@
     <ClInclude Include="..\common\version.h" />
     <ClInclude Include="..\common\wnx_version.h" />
     <ClInclude Include="..\common\wtools.h" />
+    <ClInclude Include="..\common\wtools_user_control.h" />
     <ClInclude Include="..\lwa\Configurable.h" />
     <ClInclude Include="..\lwa\Configuration.h" />
     <ClInclude Include="..\lwa\SettingsCollector.h" />
@@ -465,6 +466,7 @@
     <ClCompile Include="..\common\cma_yml.cpp" />
     <ClCompile Include="..\common\object_repo.cpp" />
     <ClCompile Include="..\common\wtools.cpp" />
+    <ClCompile Include="..\common\wtools_user_control.cpp" />
     <ClCompile Include="..\lwa\Configuration.cpp" />
     <ClCompile Include="..\lwa\stringutil.cpp" />
     <ClCompile Include="..\lwa\types.cc" />

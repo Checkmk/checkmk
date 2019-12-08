@@ -228,6 +228,9 @@
     <ClInclude Include="firewall.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\wtools_user_control.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -453,6 +456,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="firewall.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\wtools_user_control.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

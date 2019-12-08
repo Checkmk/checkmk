@@ -105,7 +105,7 @@ def _build(request, client, edition, version, add_args=None):
         u'6557/tcp': {},
     }
 
-    assert attrs["Size"] < 900000000
+    assert attrs["Size"] < 1000000000
 
     assert len(attrs["RootFS"]["Layers"]) == 6
 

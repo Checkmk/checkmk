@@ -39,6 +39,16 @@ node {
         }
 
 
+        stage("Python3 typing") {
+            if (CHANGED_PYTHON3_FILES != "") {
+                dir("tests-py3") {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; make --quiet test-mypy3"
+                }
+            } else {
+                println "No python3 files changed. Skipping."
+            }
+        }
+
         stage("Python format") {
             if (CHANGED_PYTHON_FILES != "") {
                 dir('tests') {

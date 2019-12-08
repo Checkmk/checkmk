@@ -31,15 +31,14 @@ import re
 import os
 import ast
 import ssl
-from typing import NewType, AnyStr, Any, Type, List, Text, cast, Tuple, Union, Dict, Pattern, Optional  # pylint: disable=unused-import
-from cmk.utils.encoding import (
-    ensure_unicode,
-    ensure_bytestr,
+import sys
+from typing import (  # pylint: disable=unused-import
+    NewType, AnyStr, Any, Type, List, Text, cast, Tuple, Union, Dict, Pattern, Optional,
 )
-from cmk.utils.exceptions import MKException
-from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
+import six
 
-SiteId = NewType("SiteId", bytes)
+UserId = NewType("UserId", Text)
+SiteId = NewType("SiteId", str)
 SiteConfiguration = NewType("SiteConfiguration", Dict[str, Any])
 SiteConfigurations = NewType("SiteConfigurations", Dict[SiteId, SiteConfiguration])
 
@@ -66,14 +65,14 @@ persistent_connections = {}  # type: Dict[str, socket.socket]
 remove_cache_regex = re.compile("\nCache:[^\n]*")  # type: Pattern
 
 
-def _ensure_unicode(text):
-    # type: (AnyStr) -> Text
-    if hasattr(text, "decode"):
-        return ensure_unicode(text)
-    return text
+def _ensure_unicode(value):
+    # type: (Union[Text, bytes]) -> Text
+    if isinstance(value, six.text_type):
+        return value
+    return value.decode("utf-8")
 
 
-class MKLivestatusException(MKException):
+class MKLivestatusException(Exception):
     pass
 
 
@@ -168,52 +167,63 @@ def create_client_socket(family, tls, verify, ca_file_path):
 
 
 class Helpers(object):
-    def query(self, query, add_headers=""):
-        # type: (QueryTypes, AnyStr) -> LivestatusResponse
+    def query(self, query, add_headers=u""):
+        # type: (QueryTypes, Union[Text, bytes]) -> LivestatusResponse
         raise NotImplementedError()
 
     def query_value(self, query, deflt=NO_DEFAULT):
         # type: (QueryTypes, Any) -> LivestatusColumn
         """Issues a query that returns exactly one line and one columns and returns
            the response as a single value"""
-        result = self.query(query, "ColumnHeaders: off\n")
+        normalized_query = Query(query) if not isinstance(query, Query) else query
+
+        result = self.query(normalized_query, "ColumnHeaders: off\n")
         try:
             return result[0][0]
         except IndexError:
             if deflt == NO_DEFAULT:
-                raise MKLivestatusNotFoundError("No matching entries found for query: %s" % query)
-            else:
-                return deflt
+                raise MKLivestatusNotFoundError("No matching entries found for query: %s" %
+                                                normalized_query)
+            return deflt
 
     def query_row(self, query):
         # type: (QueryTypes) -> LivestatusRow
         """Issues a query that returns one line of data and returns the elements
            of that line as list"""
-        result = self.query(query, "ColumnHeaders: off\n")
+        normalized_query = Query(query) if not isinstance(query, Query) else query
+
+        result = self.query(normalized_query, "ColumnHeaders: off\n")
         try:
             return result[0]
         except IndexError:
-            raise MKLivestatusNotFoundError("No matching entries found for query: %s" % query)
+            raise MKLivestatusNotFoundError("No matching entries found for query: %s" %
+                                            normalized_query)
 
     def query_row_assoc(self, query):
         # type: (QueryTypes) -> Dict[Text, Any]
         """Issues a query that returns one line of data and returns the elements
            of that line as a dictionary from column names to values"""
-        r = self.query(query, "ColumnHeaders: on\n")[0:2]
+        normalized_query = Query(query) if not isinstance(query, Query) else query
+
+        r = self.query(normalized_query, "ColumnHeaders: on\n")[0:2]
         return dict(zip(r[0], r[1]))
 
     def query_column(self, query):
         # type: (QueryTypes) -> List[LivestatusColumn]
         """Issues a query that returns exactly one column and returns the values
            of all lines in that column as a single list"""
-        return [l[0] for l in self.query(query, "ColumnHeaders: off\n")]
+        normalized_query = Query(query) if not isinstance(query, Query) else query
+
+        return [l[0] for l in self.query(normalized_query, "ColumnHeaders: off\n")]
 
     def query_column_unique(self, query):
         # type: (QueryTypes) -> List[LivestatusColumn]
         """Issues a query that returns exactly one column and returns the values
            of all lines with duplicates removed"""
+        normalized_query = Query(query) if not isinstance(query, Query) else query
+
         result = []  # type: List[LivestatusColumn]
-        for line in self.query(query, "ColumnHeaders: off\n"):
+        for line in self.query(normalized_query, "ColumnHeaders: off\n"):
             if line[0] not in result:
                 result.append(line[0])
         return result
@@ -222,25 +232,31 @@ class Helpers(object):
         # type: (QueryTypes) -> LivestatusResponse
         """Issues a query that may return multiple lines and columns and returns
            a list of lists"""
-        return self.query(query, "ColumnHeaders: off\n")
+        normalized_query = Query(query) if not isinstance(query, Query) else query
+
+        return self.query(normalized_query, "ColumnHeaders: off\n")
 
     def query_table_assoc(self, query):
         # type: (QueryTypes) -> List[Dict[Text, Any]]
         """Issues a query that may return multiple lines and columns and returns
            a dictionary from column names to values for each line. This can be
            very ineffective for large response sets."""
-        response = self.query(query, "ColumnHeaders: on\n")
+        normalized_query = Query(query) if not isinstance(query, Query) else query
+
+        response = self.query(normalized_query, "ColumnHeaders: on\n")
         headers = response[0]
         result = []
         for line in response[1:]:
             result.append(dict(zip(headers, line)))
         return result
 
-    def query_summed_stats(self, query, add_headers=""):
-        # type: (QueryTypes, AnyStr) -> List[int]
+    def query_summed_stats(self, query, add_headers=u""):
+        # type: (QueryTypes, Union[Text, bytes]) -> List[int]
         """Convenience function for adding up numbers from Stats queries
         Adds up results column-wise. This is useful for multisite queries."""
-        data = self.query(query, add_headers)
+        normalized_query = Query(query) if not isinstance(query, Query) else query
+
+        data = self.query(normalized_query, add_headers)
         if not data:
             raise MKLivestatusNotFoundError(
                 "No matching entries found for query: Empty result to Stats-Query")
@@ -263,7 +279,7 @@ class Query(object):
     default_suppressed_exceptions = [MKLivestatusTableNotFoundError]  # type: List[Type[Exception]]
 
     def __init__(self, query, suppress_exceptions=None):
-        # type: (AnyStr, Optional[List[Type[Exception]]]) -> None
+        # type: (Union[Text, bytes], Optional[List[Type[Exception]]]) -> None
         super(Query, self).__init__()
 
         self._query = _ensure_unicode(query)
@@ -278,7 +294,9 @@ class Query(object):
         return self._query
 
     def __str__(self):
-        # type: () -> bytes
+        # type: () -> str
+        if sys.version_info[0] >= 3:
+            return self._query
         return self._query.encode("utf-8")
 
 
@@ -313,7 +331,7 @@ class SingleSiteConnection(Helpers):
         self.prepend_site = False
         self.auth_users = {}  # type: Dict[str, UserId]
         # never filled, just to have the same API as MultiSiteConnection (TODO: Cleanup)
-        self.deadsites = {}  # type: Dict[str, DeadSite]
+        self.deadsites = {}  # type: Dict[SiteId, DeadSite]
         self.limit = None  # type: Optional[int]
         self.add_headers = u""
         self.auth_header = u""
@@ -457,18 +475,14 @@ class SingleSiteConnection(Helpers):
         return result
 
     # TODO: change all call sites to hand over Query + Text
-    def do_query(self, query, add_headers=""):
-        # type: (QueryTypes, AnyStr) -> LivestatusResponse
+    def do_query(self, query, add_headers=u""):
+        # type: (Query, Text) -> LivestatusResponse
         self.send_query(query, add_headers)
         return self.recv_response(query, add_headers)
 
-    def send_query(self, query_obj, add_headers="", do_reconnect=True):
-        # type: (QueryTypes, AnyStr, bool) -> None
+    def send_query(self, query_obj, add_headers=u"", do_reconnect=True):
+        # type: (Query, Text, bool) -> None
         orig_query = query_obj
-
-        # TODO: Clean this up one day
-        if isinstance(query_obj, bytes):
-            query_obj = query_obj.decode("utf-8")
 
         query = u"%s" % query_obj
         if not self.allow_cache:
@@ -494,8 +508,7 @@ class SingleSiteConnection(Helpers):
         try:
             # TODO: Use socket.sendall()
             # socket.send() only works with byte strings
-            query = ensure_bytestr(query)
-            self.socket.send(query)
+            self.socket.send(query.encode("utf-8"))
         except IOError as e:
             if self.persist:
                 del persistent_connections[self.socketurl]
@@ -515,7 +528,7 @@ class SingleSiteConnection(Helpers):
     # by the livestatus server, we automatically make a reconnect and send
     # the query again (once). This is due to timeouts during keepalive.
     def recv_response(self, query=None, add_headers="", timeout_at=None):
-        # type: (QueryTypes, AnyStr, Optional[float]) -> LivestatusResponse
+        # type: (Query, Text, Optional[float]) -> LivestatusResponse
         try:
             # Headers are always ASCII encoded
             resp = self.receive_data(16)
@@ -562,8 +575,7 @@ class SingleSiteConnection(Helpers):
                 return self.recv_response(
                     query, add_headers,
                     timeout_at)  # do not send query again -> danger of infinite loop
-            else:
-                raise MKLivestatusSocketError(str(e))
+            raise MKLivestatusSocketError(str(e))
 
         except MKLivestatusTableNotFoundError:
             raise
@@ -587,14 +599,18 @@ class SingleSiteConnection(Helpers):
         # type: (Optional[int]) -> None
         self.limit = limit
 
-    def query(self, query, add_headers=""):
-        # type: (QueryTypes, AnyStr) -> LivestatusResponse
+    def query(self, query, add_headers=u""):
+        # type: (QueryTypes, Union[Text, bytes]) -> LivestatusResponse
+
+        # Normalize argument types
+        normalized_add_headers = _ensure_unicode(add_headers)
+        normalized_query = Query(query) if not isinstance(query, Query) else query
+
         if self.limit is not None:
-            if isinstance(query, Query):
-                query = Query(u"%sLimit: %d\n" % (query, self.limit), query.suppress_exceptions)
-            else:
-                query += "Limit: %d\n" % self.limit
-        response = self.do_query(query, add_headers)
+            normalized_query = Query(u"%sLimit: %d\n" % (normalized_query, self.limit),
+                                     normalized_query.suppress_exceptions)
+
+        response = self.do_query(normalized_query, normalized_add_headers)
         if self.prepend_site:
             for row in response:
                 row.insert(0, b"")
@@ -629,7 +645,7 @@ class SingleSiteConnection(Helpers):
 
     # Set user to be used in certain authorization domain
     def set_auth_user(self, domain, user):
-        # type: (bytes, UserId) -> None
+        # type: (str, UserId) -> None
         if user:
             self.auth_users[domain] = user
         elif domain in self.auth_users:
@@ -637,7 +653,7 @@ class SingleSiteConnection(Helpers):
 
     # Switch future request to new authorization domain
     def set_auth_domain(self, domain):
-        # type: (bytes) -> None
+        # type: (str) -> None
         auth_user = self.auth_users.get(domain)
         if auth_user:
             self.auth_header = "AuthUser: %s\n" % auth_user
@@ -740,10 +756,10 @@ class MultiSiteConnection(Helpers):
         status_host_states = {}
         for sitename, hosts in status_hosts.items():
             # Fetch all the states of status hosts of this local site in one query
-            query = "GET hosts\nColumns: name state has_been_checked last_time_up\n"
+            query = u"GET hosts\nColumns: name state has_been_checked last_time_up\n"
             for host in hosts:
-                query += "Filter: name = %s\n" % host
-            query += "Or: %d\n" % len(hosts)
+                query += u"Filter: name = %s\n" % six.text_type(host)
+            query += u"Or: %d\n" % len(hosts)
             self.set_only_sites([sitename])  # only connect one site
             try:
                 result = self.query_table(query)
@@ -828,7 +844,7 @@ class MultiSiteConnection(Helpers):
             i += 1
 
     def add_header(self, header):
-        # type: (AnyStr) -> None
+        # type: (Text) -> None
         for _sitename, _site, connection in self.connections:
             connection.add_header(header)
 
@@ -866,23 +882,28 @@ class MultiSiteConnection(Helpers):
         return False
 
     def set_auth_user(self, domain, user):
-        # type: (bytes, UserId) -> None
+        # type: (str, UserId) -> None
         for _sitename, _site, connection in self.connections:
             connection.set_auth_user(domain, user)
 
     def set_auth_domain(self, domain):
-        # type: (bytes) -> None
+        # type: (str) -> None
         for _sitename, _site, connection in self.connections:
             connection.set_auth_domain(domain)
 
-    def query(self, query, add_headers=""):
-        # type: (QueryTypes, AnyStr) -> LivestatusResponse
-        if self.parallelize:
-            return self.query_parallel(query, add_headers)
-        return self.query_non_parallel(query, add_headers)
+    def query(self, query, add_headers=u""):
+        # type: (QueryTypes, Union[Text, bytes]) -> LivestatusResponse
 
-    def query_non_parallel(self, query, add_headers=""):
-        # type: (QueryTypes, AnyStr) -> LivestatusResponse
+        # Normalize argument types
+        normalized_add_headers = _ensure_unicode(add_headers)
+        normalized_query = Query(query) if not isinstance(query, Query) else query
+
+        if self.parallelize:
+            return self.query_parallel(normalized_query, normalized_add_headers)
+        return self.query_non_parallel(normalized_query, normalized_add_headers)
+
+    def query_non_parallel(self, query, add_headers=u""):
+        # type: (Query, Text) -> LivestatusResponse
         result = LivestatusResponse([])
         stillalive = []
         limit = self.limit
@@ -915,8 +936,8 @@ class MultiSiteConnection(Helpers):
     # New parallelized version of query(). The semantics differs in the handling
     # of Limit: since all sites are queried in parallel, the Limit: is simply
     # applied to all sites - resulting in possibly more results then Limit requests.
-    def query_parallel(self, query, add_headers=""):
-        # type: (QueryTypes, AnyStr) -> LivestatusResponse
+    def query_parallel(self, query, add_headers=u""):
+        # type: (Query, Text) -> LivestatusResponse
         stillalive = []
         if self.only_sites is not None:
             connect_to_sites = [c for c in self.connections if c[0] in self.only_sites]
@@ -927,9 +948,9 @@ class MultiSiteConnection(Helpers):
 
         limit = self.limit
         if limit is not None:
-            limit_header = "Limit: %d\n" % limit
+            limit_header = u"Limit: %d\n" % limit
         else:
-            limit_header = ""
+            limit_header = u""
 
         # First send all queries
         for sitename, site, connection in connect_to_sites:
@@ -941,10 +962,7 @@ class MultiSiteConnection(Helpers):
                     "site": site,
                 }
 
-        if isinstance(query, Query):
-            suppress_exceptions = tuple(query.suppress_exceptions)
-        else:
-            suppress_exceptions = tuple(Query.default_suppressed_exceptions)
+        suppress_exceptions = tuple(query.suppress_exceptions)
 
         # Then retrieve all answers. We will be as slow as the slowest of all
         # connections.

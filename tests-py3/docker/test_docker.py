@@ -29,9 +29,9 @@
 import sys
 import os
 import subprocess
-import pytest
-import docker
-from requests.exceptions import ConnectionError
+import pytest  # type: ignore[import]
+import requests.exceptions
+import docker  # type: ignore[import]
 
 import testlib
 import testlib.utils
@@ -175,7 +175,7 @@ def _start(request, client, version=None, is_update=False, **kwargs):
             # In case the given version is not the current branch version, don't
             # try to build it. Download it instead!
             _image = _pull(client, version)
-    except ConnectionError as e:
+    except requests.exceptions.ConnectionError as e:
         raise Exception(
             "Failed to access docker socket (Permission denied). You need to be member of the "
             "docker group to get access to the socket (e.g. use \"make -C docker setup\") to "

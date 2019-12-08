@@ -1,8 +1,8 @@
 # -*- encoding: utf-8
 # pylint: disable=protected-access,redefined-outer-name
 import os
-import vcr
-import pytest  # type: ignore
+import vcr  # type: ignore[import]
+import pytest  # type: ignore[import]
 from testlib import import_module  # pylint: disable=import-error
 
 

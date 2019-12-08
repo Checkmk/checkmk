@@ -31,6 +31,7 @@ import sys
 import argparse
 import json
 import logging
+from typing import List, Dict, Any, Mapping
 from collections import OrderedDict, defaultdict
 import requests
 
@@ -211,25 +212,21 @@ class PiggybackGroup:
     """
     A group of elements where an element is e.g. a piggyback host.
     """
-    def __init__(self):
-        # type: () -> None
-        self._elements = OrderedDict()  # type: OrderedDict[str, PiggybackHost]
+    def __init__(self) -> None:
+        self._elements: OrderedDict[str, PiggybackHost] = OrderedDict()
 
-    def get(self, element_name):
-        # type: (str) -> PiggybackHost
+    def get(self, element_name: str) -> PiggybackHost:
         if element_name not in self._elements:
             self._elements[element_name] = PiggybackHost()
         return self._elements[element_name]
 
-    def join(self, section_name, pairs):
-        # type: (str, Mapping[str, Dict[str, Any]]) -> PiggybackGroup
+    def join(self, section_name: str, pairs: Mapping[str, Dict[str, Any]]) -> "PiggybackGroup":
         for element_name, data in pairs.items():
             section = self.get(element_name).get(section_name)
             section.insert(data)
         return self
 
-    def output(self, piggyback_prefix=""):
-        # type: (str) -> List[str]
+    def output(self, piggyback_prefix: str = "") -> List[str]:
         data = []
         for name, element in self._elements.items():
             data.append('<<<<%s>>>>' % (piggyback_prefix + name))
@@ -242,19 +239,16 @@ class PiggybackHost:
     """
     An element that bundles a collection of sections.
     """
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         super(PiggybackHost, self).__init__()
-        self._sections = OrderedDict()  # type: OrderedDict[str, Section]
+        self._sections: OrderedDict[str, Section] = OrderedDict()
 
-    def get(self, section_name):
-        # type: (str) -> Section
+    def get(self, section_name: str) -> Section:
         if section_name not in self._sections:
             self._sections[section_name] = Section()
         return self._sections[section_name]
 
-    def output(self):
-        # type: () -> List[str]
+    def output(self) -> List[str]:
         data = []
         for name, section in self._sections.items():
             data.append('<<<%s:sep(0)>>>' % name)
@@ -266,12 +260,10 @@ class Section:
     """
     An agent section.
     """
-    def __init__(self):
-        # type: () -> None
-        self._content = OrderedDict()  # type: OrderedDict[str, Dict[str, Any]]
+    def __init__(self) -> None:
+        self._content: OrderedDict[str, Dict[str, Any]] = OrderedDict()
 
-    def insert(self, check_data):
-        # type: (Dict[str, Any]) -> None
+    def insert(self, check_data: Dict[str, Any]) -> None:
         for key, value in check_data.items():
             if key not in self._content:
                 self._content[key] = value
@@ -281,8 +273,7 @@ class Section:
                 else:
                     raise ValueError('Key %s is already present and cannot be merged' % key)
 
-    def output(self):
-        # type: () -> str
+    def output(self) -> str:
         return json.dumps(self._content)
 
 

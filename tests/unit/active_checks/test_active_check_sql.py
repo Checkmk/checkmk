@@ -1,7 +1,9 @@
+#!/usr/bin/env python
+
 import os
 
 import imp
-import pytest
+import pytest  # type: ignore[import]
 
 from testlib import repo_path
 

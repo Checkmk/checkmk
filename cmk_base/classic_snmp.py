@@ -131,7 +131,7 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
             if snmp_process:
                 exitstatus = snmp_process.wait()
                 if snmp_process.stderr:
-                    error = snmp_process.stderr.read()
+                    error = snmp_process.stderr.read().decode("utf-8")
                     snmp_process.stderr.close()
                 if snmp_process.stdout:
                     snmp_process.stdout.close()

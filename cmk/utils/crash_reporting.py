@@ -45,7 +45,7 @@ from typing import Any, Dict, Iterator, Optional, Text, Tuple, Type  # pylint: d
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
 else:
-    from pathlib2 import Path
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
 import six
 
@@ -250,7 +250,7 @@ def _get_generic_crash_info(type_name, details):
     try:
         exc_txt = six.text_type(exc_value)
     except UnicodeDecodeError:
-        exc_txt = str(exc_value).decode("utf-8")
+        exc_txt = six.binary_type(exc_value).decode("utf-8")
 
     return {
         "id": str(uuid.uuid1()),
@@ -329,8 +329,10 @@ def _get_local_vars_of_last_exception():
 
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
-    return base64.b64encode(
-        _format_var_for_export(pprint.pformat(local_vars).encode("utf-8"), maxsize=5 * 1024 * 1024))
+    return six.text_type(
+        base64.b64encode(
+            _format_var_for_export(pprint.pformat(local_vars).encode("utf-8"),
+                                   maxsize=5 * 1024 * 1024)))
 
 
 def _format_var_for_export(val, maxdepth=4, maxsize=1024 * 1024):

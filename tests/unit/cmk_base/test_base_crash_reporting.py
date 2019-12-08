@@ -25,9 +25,9 @@ def _check_generic_crash_info(crash):
             "python_version": str,
             "python_paths": list,
             "exc_type": str,
-            "exc_value": unicode,
+            "exc_value": six.text_type,
             "exc_traceback": list,
-            "local_vars": str,
+            "local_vars": six.text_type,
     }.items():
         assert key in crash.crash_info
         assert isinstance(crash.crash_info[key], ty), \

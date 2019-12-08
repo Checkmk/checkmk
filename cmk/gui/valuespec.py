@@ -5474,24 +5474,12 @@ class Color(ValueSpec):
                                     class_="cp-preview",
                                     style="background-color:%s" % value)
 
-        # TODO(rh): Please take a look at this hard coded HTML
-        # FIXME: Rendering with HTML class causes bug in html popup_trigger function.
-        #        Reason is HTML class and the escaping.
-        menu_content = "<div id=\"%s_picker\" class=\"cp-small\"></div>" % varprefix
-        menu_content += "<div class=\"cp-input\">" \
-            "%s" \
-            "<input id=\"%s_input\" type=\"text\"></input></div>" % \
-                (_("Hex color:"), varprefix)
-
-        menu_content += "<script language=\"javascript\">" \
-            "cmk.valuespecs.add_color_picker(%s, %s)" \
-            "</script>" % (json.dumps(varprefix), json.dumps(value))
-
         html.popup_trigger(indicator,
                            varprefix + '_popup',
-                           menu_content=menu_content,
                            cssclass="colorpicker",
-                           onclose=self._on_change)
+                           onclose=self._on_change,
+                           content_body="cmk.popup_menu.generate_colorpicker_body(this, %s, %s)" %
+                           (json.dumps(varprefix), json.dumps(value)))
 
     def from_html_vars(self, varprefix):
         color = html.request.var(varprefix + '_value')

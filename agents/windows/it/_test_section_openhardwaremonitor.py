@@ -68,20 +68,18 @@ def manage_ohm_binaries():
         targetdir = os.path.join(remotedir, 'bin')
         targetdir_win = targetdir.replace('/', '\\')
 
-        cmds = [[
-            'ssh', sshopts,
+        cmds = [['ssh'] + sshopts + [
             '%s@%s' % (remoteuser, remote_ip),
             'if not exist %s md %s' % (targetdir_win, targetdir_win)
-        ], ['scp', sshopts] + [os.path.join(sourcedir, b) for b in binaries] +
+        ], ['scp'] + sshopts + [os.path.join(sourcedir, b) for b in binaries] +
                 ['%s@%s:%s' % (remoteuser, remote_ip, targetdir)]]
         for cmd in cmds:
             assert_subprocess(cmd)
     yield
     if platform.system() != 'Windows':
-        cmd = [
-            'ssh', sshopts,
-            '%s@%s' % (remoteuser, remote_ip),
-            ' && '.join(['del %s' % '\\'.join([targetdir_win, b]) for b in binaries])
+        cmd = ['ssh'] + sshopts + [
+            '%s@%s' % (remoteuser, remote_ip), ' && '.join(
+                ['del %s' % '\\'.join([targetdir_win, b]) for b in binaries])
         ]
         assert_subprocess(cmd)
 

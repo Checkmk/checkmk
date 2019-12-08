@@ -69,12 +69,10 @@ def manage_plugin(request):
     targetdir = os.path.join(remotedir, plugindir)
     targetdir_windows = targetdir.replace('/', '\\')
     if platform.system() != 'Windows':
-        cmds = [[
-            'ssh', sshopts,
+        cmds = [['ssh'] + sshopts + [
             '%s@%s' % (remoteuser, remote_ip),
             'if not exist "%s" md "%s"' % (targetdir_windows, targetdir_windows)
-        ], ['scp', sshopts, source,
-            '%s@%s:"%s"' % (remoteuser, remote_ip, targetdir)]]
+        ], ['scp'] + sshopts + [source, '%s@%s:"%s"' % (remoteuser, remote_ip, targetdir)]]
         for cmd in cmds:
             assert_subprocess(cmd)
     elif Globals.newline >= 0:

@@ -12,7 +12,8 @@ localdir = os.path.dirname(os.path.abspath(__file__))
 
 def lock_cmd(subcmd):
     return [
-        'ssh', sshopts,
+        'ssh',
+    ] + sshopts + [
         '%s@%s' % (remoteuser, remote_ip),
         ('cd %s' % remotedir + ' && python ./lock.py %s' % subcmd)
     ]
@@ -22,10 +23,7 @@ def lock_operation(command):
     # Copy essential sources always to remote host. This is necessary as
     # another test executor might have removed the files meanwhile.
     files = [os.path.join(localdir, f) for f in ['lock.py', 'remote.py']]
-    cmds = [[
-        'scp',
-        sshopts,
-    ] + files + ['%s@%s:%s' % (remoteuser, remote_ip, remotedir)],
+    cmds = [['scp'] + sshopts + files + ['%s@%s:%s' % (remoteuser, remote_ip, remotedir)],
             lock_cmd(command)]
     for cmd in cmds:
         assert_subprocess(cmd)

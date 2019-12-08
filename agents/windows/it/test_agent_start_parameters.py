@@ -124,7 +124,7 @@ def expected_output(request, testconfig):
 
 
 def copy_capfile():
-    cmd = ['scp', sshopts, Globals.capfile, '%s@%s:"%s"' % (remoteuser, remote_ip, remotedir)]
+    cmd = ['scp'] + sshopts + [Globals.capfile, '%s@%s:"%s"' % (remoteuser, remote_ip, remotedir)]
     assert_subprocess(cmd)
 
 

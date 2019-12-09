@@ -154,7 +154,7 @@ def set_cmdline(cmdline):
     # mypy: The type is not detected correctly
     cmdlen = sum([len(argv[i]) for i in range(argc.value)]) + argc.value  # type: ignore
     # TODO: This can probably be simplified...
-    _new_cmdline = ctypes.c_char_p(cmdline.ljust(cmdlen, '\0'))
+    _new_cmdline = ctypes.c_char_p(cmdline.ljust(cmdlen, b'\0'))
 
     set_procname(cmdline)
 

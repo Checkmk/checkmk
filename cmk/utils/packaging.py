@@ -7,8 +7,13 @@ import time
 import subprocess
 import json
 from cStringIO import StringIO
+import sys
 from typing import cast, NamedTuple, Dict, Optional, List, Text, BinaryIO  # pylint: disable=unused-import
-from pathlib2 import Path
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path
 
 # It's OK to import centralized config load logic
 import cmk.ec.export  # pylint: disable=cmk-module-layer-violation
@@ -19,6 +24,7 @@ import cmk.utils.werks
 import cmk.utils.debug
 import cmk.utils.misc
 from cmk.utils.exceptions import MKException
+from cmk.utils.encoding import ensure_unicode
 
 
 # TODO: Subclass MKGeneralException()?
@@ -243,12 +249,10 @@ def edit_package(pacname, new_package_info):
 
 
 def install_optional_package(package_file_name):
-    # type: (Text) -> PackageInfo
-    if package_file_name not in [p.name.decode("utf-8") for p in _get_optional_package_paths()]:
+    # type: (Path) -> PackageInfo
+    if package_file_name not in [p.name for p in _get_optional_package_paths()]:
         raise PackageException("Optional package %s does not exist" % package_file_name)
-
-    return install_package_by_path(
-        cmk.utils.paths.optional_packages_dir.joinpath(package_file_name.encode("utf-8")))
+    return install_package_by_path(cmk.utils.paths.optional_packages_dir / package_file_name)
 
 
 def install_package_by_path(package_path):
@@ -456,7 +460,7 @@ def get_optional_package_infos():
     for pkg_path in _get_optional_package_paths():
         with pkg_path.open("rb") as pkg:
             package_info = _get_package_info_from_package(cast(BinaryIO, pkg))
-            optional[pkg_path.name.decode("utf-8")] = package_info
+            optional[ensure_unicode(pkg_path.name)] = package_info
 
     return optional
 

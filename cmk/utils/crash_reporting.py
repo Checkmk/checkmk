@@ -247,10 +247,19 @@ def _get_generic_crash_info(type_name, details):
         tb_list += traceback.extract_tb(exc_value.exc_info()[2])  # type: ignore
 
     # Unify different string types from exception messages to a unicode string
-    try:
-        exc_txt = six.text_type(exc_value)
-    except UnicodeDecodeError:
-        exc_txt = six.binary_type(exc_value).decode("utf-8")
+    # HACK: copy-n-paste from cmk.utils.exception.MKException.__str__ below.
+    # Remove this after migration...
+    if exc_value is None or not exc_value.args:
+        exc_txt = six.text_type("")
+    elif len(exc_value.args) == 1 and isinstance(exc_value.args[0], six.binary_type):
+        try:
+            exc_txt = exc_value.args[0].decode("utf-8")
+        except UnicodeDecodeError:
+            exc_txt = u"b%s" % repr(exc_value.args[0])
+    elif len(exc_value.args) == 1:
+        exc_txt = six.text_type(exc_value.args[0])
+    else:
+        exc_txt = six.text_type(exc_value.args)
 
     return {
         "id": str(uuid.uuid1()),

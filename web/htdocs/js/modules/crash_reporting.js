@@ -105,7 +105,7 @@ function handle_crash_report_error(handler_data, status_code, error_msg)
         fail_container.children[0].innerHTML += " ("+error_msg+").";
     }
     else {
-        fail_container.children[0].innerHTML += " (Maybe <tt>"+handler_data["base_url"]+"</tt> not reachable).";
+        fail_container.children[0].innerHTML += " (<tt>"+handler_data["base_url"]+"</tt> is not reachable. Does your browser block XMLHttpRequest requests?).";
     }
 }
 

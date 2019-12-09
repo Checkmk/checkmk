@@ -245,7 +245,7 @@ class PageCrash(ABCCrashReportPage):
                   "support email address to send us a mail refering to your crash "
                   "report.<br>If you are interested in the details about support, "
                   "you find details on <a href=\"https://checkmk.com/"
-                  "checkmk_support_contract.html\" target=_blank>our website</a>."))
+                  "checkmk_support_contract.html\" target=\"_blank\">our website</a>."))
             html.close_div()
             html.open_div(id_="fail_msg", style="display:none")
             report_url = html.makeuri([

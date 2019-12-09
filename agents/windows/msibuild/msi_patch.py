@@ -30,7 +30,7 @@ import os
 import uuid
 import yaml
 
-from pathlib2 import Path
+from pathlib2 import Path  # type: ignore
 from typing import Optional, Tuple
 
 TRADITIONAL_UUID = "{BAEBF560-7308-4D53-B426-903EA74B1D7E}"
@@ -128,7 +128,7 @@ def patch_package_code_by_state_file(f_name, state_file, package_code=None):
 # engine to patch MSI file with new code
 # search for 'Intel;1033' marker, add offset and patch code
 def patch_package_code_by_marker(f_name, package_code=None, state_file=None):
-    # type: (str, str, Optional[Path]) -> bool
+    # type: (str, Optional[str], Optional[Path]) -> bool
 
     p = Path(f_name)
     if not p.exists():
@@ -147,7 +147,7 @@ def patch_package_code_by_marker(f_name, package_code=None, state_file=None):
     if data[location] != b"{":
         return False
 
-    start = location + len(package_code)
+    start = location
     end = start + len(package_code)
     out = data[:start] + package_code.encode('ascii') + data[end:]
     p.write_bytes(out)  # type:ignore
@@ -162,8 +162,13 @@ def patch_package_code_by_marker(f_name, package_code=None, state_file=None):
 # MAIN:
 if __name__ == '__main__':
     mode, file_name, param = parse_command_line(sys.argv)
-    if (mode == "code"):
+
+    if mode == "code":
         success = patch_package_code(f_name=file_name, mask=param)
+        exit(0 if success else 1)
+
+    if mode == "1033":
+        success = patch_package_code_by_marker(f_name=file_name)
         exit(0 if success else 1)
 
     print("Invalid mode '{}'".format(mode))

@@ -4,10 +4,9 @@ import pytest  # type: ignore
 import shutil
 import yaml
 
-from pathlib2 import Path
-
-import cmk.utils.paths
 from agents.windows.msibuild import msi_patch
+
+aaa_marker = "{AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA}".encode('ascii')
 
 
 def test_parse_command_line():
@@ -31,9 +30,9 @@ def test_parse_command_line():
     assert param == ""
 
     try:
-        mode = msi_patch.parse_command_line(["/path/to/executable", "mode"])
+        _ = msi_patch.parse_command_line(["/path/to/executable", "mode"])
         assert False
-    except Exception as _:
+    except IndexError as _:
         assert True
 
 
@@ -129,6 +128,16 @@ def test_patch_package_code_with_state(conf_dir, cmk_dir):
     assert id_ == ""
 
 
+def check_content(new_content, base_content, pos, uuid, marker):
+    # type: (bytes, bytes, int, str, bytes) -> None
+    assert new_content.find(marker) == -1
+    new_pos = new_content.find(uuid.encode('ascii'))
+    assert new_pos == pos
+    assert new_content[pos:pos + len(uuid)] == uuid
+    assert new_content[:pos] == base_content[:pos]
+    assert new_content[pos + len(uuid):] == base_content[pos + len(uuid):]
+
+
 def test_patch_package_code_by_marker(conf_dir, cmk_dir):
     # prepare file to tests
     if not cmk_dir.exists():
@@ -147,10 +156,16 @@ def test_patch_package_code_by_marker(conf_dir, cmk_dir):
     assert base_content.find(msi_patch.TRADITIONAL_UUID.encode('ascii')) != -1
 
     # patch 1
+    pos = base_content.find(aaa_marker)
+    assert pos != -1
     assert msi_patch.patch_package_code_by_marker(f_name=dst, package_code=uuid)
 
     new_content = dst.read_bytes()
-    assert new_content.find(uuid.encode('ascii')) != -1
+    check_content(new_content=new_content,
+                  base_content=base_content,
+                  pos=pos,
+                  uuid=uuid,
+                  marker=aaa_marker)
 
     # prepare test file
     shutil.copy(str(src), str(dst))
@@ -176,32 +191,44 @@ def test_patch_package_code(conf_dir, cmk_dir):
         pytest.skip("Path with MSI doesn't exist")
 
     uuid = msi_patch.generate_uuid()
+    marker = msi_patch.TRADITIONAL_UUID.encode('ascii')
 
     # prepare test file
     dst = conf_dir / fname
     shutil.copy(str(src), str(dst))
     base_content = dst.read_bytes()
-    assert base_content.find(msi_patch.TRADITIONAL_UUID.encode('ascii')) != -1
+    pos = base_content.find(marker)
+    assert pos != -1
 
-    # patch 1
+    # patch 1, default
     assert msi_patch.patch_package_code(f_name=dst, mask="", package_code=uuid)
 
     new_content = dst.read_bytes()
-    assert new_content.find(msi_patch.TRADITIONAL_UUID.encode('ascii')) == -1
-    assert new_content.find(uuid.encode('ascii')) != -1
+    check_content(new_content=new_content,
+                  base_content=base_content,
+                  pos=pos,
+                  uuid=uuid,
+                  marker=marker)
 
     # prepare test file
     shutil.copy(str(src), str(dst))
     # patch 2
-    assert msi_patch.patch_package_code(f_name=dst, mask=msi_patch.TRADITIONAL_UUID)
+    uuid = msi_patch.generate_uuid()
+    assert msi_patch.patch_package_code(f_name=dst,
+                                        mask=msi_patch.TRADITIONAL_UUID,
+                                        package_code=uuid)
 
     new_content = dst.read_bytes()
-    assert new_content.find(msi_patch.TRADITIONAL_UUID.encode('ascii')) == -1
+    check_content(new_content=new_content,
+                  base_content=base_content,
+                  pos=pos,
+                  uuid=uuid,
+                  marker=marker)
 
     # prepare test file
     shutil.copy(str(src), str(dst))
-    # patch 3
+    # patch 3, mask is absent
     assert not msi_patch.patch_package_code(f_name=dst, mask="Cant/Be/Found/In")
 
     new_content = dst.read_bytes()
-    assert new_content.find(msi_patch.TRADITIONAL_UUID.encode('ascii')) != -1
+    assert new_content.find(marker) != -1

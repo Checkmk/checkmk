@@ -26,16 +26,13 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
-    Age,
     Dictionary,
-    DropdownChoice,
-    MonitoringState,
-    TextAscii,
     Tuple,
+    Integer,
 )
 
 from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
+    CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
@@ -47,8 +44,8 @@ def _parameter_valuespec_entersekt_certexpiry():
             "levels",
             Tuple(title=_("Levels for number of days until expiration"),
                   elements=[
-                      Integer(title=_("Warning if below"), default_value=20, allow_empty=False),
-                      Integer(title=_("Critical if below"), default_value=10, allow_empty=False)
+                      Integer(title=_("Warning if below"), default_value=20),
+                      Integer(title=_("Critical if below"), default_value=10),
                   ]),
         ),
     ],)

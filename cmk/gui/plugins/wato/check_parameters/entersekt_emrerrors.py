@@ -26,29 +26,26 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
-    Age,
     Dictionary,
-    DropdownChoice,
-    MonitoringState,
-    TextAscii,
     Tuple,
+    Integer,
 )
 
 from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
+    CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
 
 
-def _parameter_valuespec_entersekt_soaprrors():
+def _parameter_valuespec_entersekt_emrerrors():
     return Dictionary(elements=[
         (
             "levels",
-            Tuple(title=_("Upper levels for Soap Service Errors"),
+            Tuple(title=_("Upper levels for HTTP EMR Errors"),
                   elements=[
-                      Integer(title=_("Warning if above"), default_value=100, allow_empty=False),
-                      Integer(title=_("Critical if above"), default_value=200, allow_empty=False)
+                      Integer(title=_("Warning if above"), default_value=100),
+                      Integer(title=_("Critical if above"), default_value=200),
                   ]),
         ),
     ],)
@@ -56,9 +53,9 @@ def _parameter_valuespec_entersekt_soaprrors():
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
-        check_group_name="entersekt_soaprrors",
+        check_group_name="entersekt_emrerrors",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        parameter_valuespec=_parameter_valuespec_entersekt_soaprrors,
-        title=lambda: _("Entersekt Soap Service Errors"),
+        parameter_valuespec=_parameter_valuespec_entersekt_emrerrors,
+        title=lambda: _("Entersekt HTTP EMR Errors"),
     ))

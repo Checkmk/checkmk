@@ -26,16 +26,13 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
-    Age,
     Dictionary,
-    DropdownChoice,
-    MonitoringState,
-    TextAscii,
     Tuple,
+    Integer,
 )
 
 from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
+    CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
@@ -47,8 +44,8 @@ def _parameter_valuespec_entersekt_ecerterrors():
             "levels",
             Tuple(title=_("Upper levels for HTTP Ecert Errors"),
                   elements=[
-                      Integer(title=_("Warning if above"), default_value=100, allow_empty=False),
-                      Integer(title=_("Critical if above"), default_value=200, allow_empty=False)
+                      Integer(title=_("Warning if above"), default_value=100),
+                      Integer(title=_("Critical if above"), default_value=200),
                   ]),
         ),
     ],)

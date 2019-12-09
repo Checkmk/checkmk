@@ -149,6 +149,7 @@ rem touching update msi
 rem copy check_mk_agent_update.msi /B+ ,,/Y > nul
 popd
 
-
-!make_exe! frozen_binaries || powershell Write-Host "Failed to build frozen binaries" -Foreground Red && echo set && exit /b 36
+@ disabled till integrated
+@rem !make_exe! msi_patch || powershell Write-Host "Failed to patch MSI exec" -Foreground Red && echo set && exit /b 36
+!make_exe! frozen_binaries || powershell Write-Host "Failed to build frozen binaries" -Foreground Red && echo set && exit /b 37
 

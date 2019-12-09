@@ -211,20 +211,6 @@ def chdir(path):
 #   |  Wrapper functions for interactive dialogs using the dialog cmd tool |
 #   '----------------------------------------------------------------------'
 
-patch_supports_merge = None
-
-
-def patch_has_merge():
-    # check wether our version of patch supports the option '--merge'
-    global patch_supports_merge
-    if patch_supports_merge is None:
-        patch_supports_merge = (
-            os.system(  # nosec
-                "true | PATH=/omd/versions/default/bin:$PATH patch --merge >/dev/null 2>&1") == 0)
-        if not patch_supports_merge:
-            sys.stdout.write("Your version of patch does not support --merge.\n")
-    return patch_supports_merge
-
 
 def run_dialog(args):
     env = {"TERM": getenv("TERM", "linux"), "LANG": "de_DE.UTF-8"}
@@ -1089,7 +1075,7 @@ def merge_update_file(site, relpath, old_version, new_version):
 
     # No success. Should we try merging the users' changes onto the new file?
     # user_patch = os.popen(
-    merge_message = ' (watch out for >>>>> and <<<<<)' if patch_has_merge() else ''
+    merge_message = ' (watch out for >>>>> and <<<<<)'
     editor = get_editor()
     reject_file = user_path + ".rej"
 
@@ -1223,10 +1209,9 @@ def _try_merge(site, relpath, old_version, new_version):
         "diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version)).read()
 
     # First try to merge the changes in the version into the users' file
-    merge = '--merge' if patch_has_merge() else ''
     f = os.popen(  # nosec
-        "PATH=/omd/versions/default/bin:$PATH patch --force --backup --forward --silent %s %s >/dev/null"
-        % (merge, user_path), "w")
+        "%s/bin/patch --force --backup --forward --silent --merge %s >/dev/null" %
+        (site.dir, user_path), "w")
     f.write(version_patch)
     status = f.close()
     if status:

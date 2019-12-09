@@ -14,7 +14,6 @@ MYPY_DIRS_TO_CHECK := \
 	cmk/cee \
 	cmk/cee/dcd \
 	cmk/cee/dcd/connectors \
-	cmk/cee/mknotifyd \
 	cmk/cee/notification_plugins \
 	cmk/ec \
 	cmk/gui \

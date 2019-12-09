@@ -9,7 +9,7 @@ import testlib.pylint_cmk
 
 @pytest.fixture(scope="module")
 def docker_client():
-    return docker.DockerClient(base_url="tcp://127.0.0.1:2376")
+    return docker.DockerClient()
 
 
 @pytest.fixture(scope="module")

@@ -1569,7 +1569,7 @@ rulespec_registry.register(
 def _valuespec_custom_checks():
     return Dictionary(
         title=_("Classical active and passive Monitoring checks"),
-        help=_("With this ruleset you can configure &quot;classical Monitoring checks&quot; "
+        help=_("With this ruleset you can configure \"classical Monitoring checks\" "
                "to be executed directly on your monitoring server. These checks "
                "will not use Check_MK. It is also possible to configure passive "
                "checks that are fed with data from external sources via the "

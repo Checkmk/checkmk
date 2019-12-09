@@ -75,6 +75,7 @@ test_neb_SOURCES = \
     test/test_LogEntry.cc \
     test/test_Metric.cc \
     test/test_OffsetStringMacroColumn.cc \
+    test/test_Queue.cc \
     test/test_RegExp.cc \
     test/test_StringUtil.cc \
     test/test_utilities.cc

@@ -25,13 +25,18 @@
 # Boston, MA 02110-1301 USA.
 
 from __future__ import print_function
+from typing import Optional, Tuple  # pylint: disable=unused-import
+
 import sys
-import os
+
 import uuid
 import yaml
 
-from pathlib2 import Path  # type: ignore
-from typing import Optional, Tuple
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path
 
 TRADITIONAL_UUID = "{BAEBF560-7308-4D53-B426-903EA74B1D7E}"
 MSI_PACKAGE_CODE_MARKER = "Intel;1033"
@@ -168,7 +173,8 @@ if __name__ == '__main__':
         exit(0 if success else 1)
 
     if mode == "1033":
-        success = patch_package_code_by_marker(f_name=file_name)
+        out_state_file = None if param == "" else Path(param)
+        success = patch_package_code_by_marker(f_name=file_name, state_file=out_state_file)
         exit(0 if success else 1)
 
     print("Invalid mode '{}'".format(mode))

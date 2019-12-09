@@ -4,7 +4,7 @@ import pytest  # type: ignore
 import shutil
 import yaml
 
-from agents.windows.msibuild import msi_patch
+from cmk.utils import msi_patch
 
 aaa_marker = "{AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA}".encode('ascii')
 
@@ -30,7 +30,7 @@ def test_parse_command_line():
     assert param == ""
 
     try:
-        _ = msi_patch.parse_command_line(["/path/to/executable", "mode"])
+        msi_patch.parse_command_line(["/path/to/executable", "mode"])
         assert False
     except IndexError as _:
         assert True

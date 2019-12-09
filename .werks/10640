@@ -1,0 +1,12 @@
+Title: diskstat: fix of unit conversion for utilization
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1575878031
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+ In the previous version, the diskstat wrongly converted the percentage
+ value of the Disk IO utilization. This changes fixes this conversion.

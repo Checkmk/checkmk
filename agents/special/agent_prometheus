@@ -208,6 +208,27 @@ class PrometheusAPI:
         return scrape_targets
 
 
+class Section:
+    """
+    An agent section.
+    """
+    def __init__(self) -> None:
+        self._content: OrderedDict[str, Dict[str, Any]] = OrderedDict()
+
+    def insert(self, check_data: Dict[str, Any]) -> None:
+        for key, value in check_data.items():
+            if key not in self._content:
+                self._content[key] = value
+            else:
+                if isinstance(value, dict):
+                    self._content[key].update(value)
+                else:
+                    raise ValueError('Key %s is already present and cannot be merged' % key)
+
+    def output(self) -> str:
+        return json.dumps(self._content)
+
+
 class PiggybackHost:
     """
     An element that bundles a collection of sections.
@@ -254,27 +275,6 @@ class PiggybackGroup:
             data.extend(element.output())
             data.append('<<<<>>>>')
         return data
-
-
-class Section:
-    """
-    An agent section.
-    """
-    def __init__(self) -> None:
-        self._content: OrderedDict[str, Dict[str, Any]] = OrderedDict()
-
-    def insert(self, check_data: Dict[str, Any]) -> None:
-        for key, value in check_data.items():
-            if key not in self._content:
-                self._content[key] = value
-            else:
-                if isinstance(value, dict):
-                    self._content[key].update(value)
-                else:
-                    raise ValueError('Key %s is already present and cannot be merged' % key)
-
-    def output(self) -> str:
-        return json.dumps(self._content)
 
 
 class ApiData:

@@ -114,7 +114,6 @@ liblivestatus_a_SOURCES = \
         AttributeListColumn.cc \
         Average.cc \
         BlobColumn.cc \
-        ClientQueue.cc \
         Column.cc \
         ColumnFilter.cc \
         ColumnsColumn.cc \

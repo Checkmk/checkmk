@@ -6,7 +6,7 @@ import tarfile
 import time
 import subprocess
 import json
-from cStringIO import StringIO
+from io import BytesIO
 import sys
 from typing import cast, NamedTuple, Dict, Optional, List, Text, BinaryIO  # pylint: disable=unused-import
 
@@ -14,6 +14,8 @@ if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
 else:
     from pathlib2 import Path
+
+import six  # pylint: disable=unused-import
 
 # It's OK to import centralized config load logic
 import cmk.ec.export  # pylint: disable=cmk-module-layer-violation
@@ -24,7 +26,7 @@ import cmk.utils.werks
 import cmk.utils.debug
 import cmk.utils.misc
 from cmk.utils.exceptions import MKException
-from cmk.utils.encoding import ensure_unicode
+from cmk.utils.encoding import ensure_unicode, ensure_bytestr
 
 
 # TODO: Subclass MKGeneralException()?
@@ -145,8 +147,10 @@ def release_package(pacname):
 def create_mkp_file(package, file_object=None):
     # type: (PackageInfo, BinaryIO) -> None
     package["version.packaged"] = cmk.__version__
+    tar = tarfile.open(fileobj=file_object, mode="w:gz")
 
     def create_tar_info(filename, size):
+        # type: (str, int) -> tarfile.TarInfo
         info = tarfile.TarInfo()
         info.mtime = int(time.time())
         info.uid = 0
@@ -157,17 +161,17 @@ def create_mkp_file(package, file_object=None):
         info.name = filename
         return info
 
-    tar = tarfile.open(fileobj=file_object, mode="w:gz")
+    def add_file(filename, data):
+        # type: (str, six.binary_type) -> None
+        info_file = BytesIO(data)
+        info = create_tar_info(filename, len(info_file.getvalue()))
+        tar.addfile(info, info_file)
 
     # add the regular info file (Python format)
-    info_file = StringIO(pprint.pformat(package))
-    info = create_tar_info("info", len(info_file.getvalue()))
-    tar.addfile(info, info_file)
+    add_file("info", ensure_bytestr(pprint.pformat(package)))
 
     # add the info file a second time (JSON format) for external tools
-    info_file = StringIO(json.dumps(package))
-    info = create_tar_info("info.json", len(info_file.getvalue()))
-    tar.addfile(info, info_file)
+    add_file("info.json", ensure_bytestr(json.dumps(package)))
 
     # Now pack the actual files into sub tars
     for part in get_package_parts() + get_config_parts():
@@ -176,11 +180,9 @@ def create_mkp_file(package, file_object=None):
             logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
             for f in filenames:
                 logger.log(VERBOSE, "    %s", f)
-            subtarname = part.ident + ".tar"
             subdata = subprocess.check_output(
                 ["tar", "cf", "-", "--dereference", "--force-local", "-C", part.path] + filenames)
-            info = create_tar_info(subtarname, len(subdata))
-            tar.addfile(info, StringIO(subdata))
+            add_file(part.ident + ".tar", subdata)
     tar.close()
 
 

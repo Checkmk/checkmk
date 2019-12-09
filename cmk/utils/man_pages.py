@@ -205,6 +205,7 @@ catalog_titles = {
         "pfsense"       : "pfsense",
         "postfix"       : "Postfix",
         "postgresql"    : "PostgreSQL",
+        "prometheus"    : "Prometheus",
         "qmail"         : "qmail",
         "redis"         : "Redis",
         "ruckus"        : "Ruckus Spot",

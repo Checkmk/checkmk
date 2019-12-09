@@ -81,6 +81,8 @@ config_dir = cmk.utils.paths.var_dir + "/web"
 
 # Stores the initial configuration values
 default_config = {}
+# Needed as helper to determine the builtin variables
+_vars_before_plugins = set()
 
 # TODO: Clean this up
 permission_declaration_functions = []
@@ -232,10 +234,15 @@ def register_post_config_load_hook(func):
 
 
 def _initialize_with_default_config():
-    vars_before_plugins = all_nonfunction_vars(globals())
+    # Since plugin loading changes the global namespace and these changes are kept
+    # for the whole module lifetime, the "vars before plugins" can only be determined
+    # once before the first plugin loading
+    if not _vars_before_plugins:
+        _vars_before_plugins.update(all_nonfunction_vars(globals()))
+
     load_plugins(True)
     vars_after_plugins = all_nonfunction_vars(globals())
-    _load_default_config(vars_before_plugins, vars_after_plugins)
+    _load_default_config(_vars_before_plugins, vars_after_plugins)
 
     _apply_default_config()
 

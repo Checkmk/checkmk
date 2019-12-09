@@ -208,6 +208,27 @@ class PrometheusAPI:
         return scrape_targets
 
 
+class PiggybackHost:
+    """
+    An element that bundles a collection of sections.
+    """
+    def __init__(self) -> None:
+        super(PiggybackHost, self).__init__()
+        self._sections: OrderedDict[str, Section] = OrderedDict()
+
+    def get(self, section_name: str) -> Section:
+        if section_name not in self._sections:
+            self._sections[section_name] = Section()
+        return self._sections[section_name]
+
+    def output(self) -> List[str]:
+        data = []
+        for name, section in self._sections.items():
+            data.append('<<<%s:sep(0)>>>' % name)
+            data.append(section.output())
+        return data
+
+
 class PiggybackGroup:
     """
     A group of elements where an element is e.g. a piggyback host.
@@ -232,27 +253,6 @@ class PiggybackGroup:
             data.append('<<<<%s>>>>' % (piggyback_prefix + name))
             data.extend(element.output())
             data.append('<<<<>>>>')
-        return data
-
-
-class PiggybackHost:
-    """
-    An element that bundles a collection of sections.
-    """
-    def __init__(self) -> None:
-        super(PiggybackHost, self).__init__()
-        self._sections: OrderedDict[str, Section] = OrderedDict()
-
-    def get(self, section_name: str) -> Section:
-        if section_name not in self._sections:
-            self._sections[section_name] = Section()
-        return self._sections[section_name]
-
-    def output(self) -> List[str]:
-        data = []
-        for name, section in self._sections.items():
-            data.append('<<<%s:sep(0)>>>' % name)
-            data.append(section.output())
         return data
 
 

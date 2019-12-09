@@ -29,12 +29,12 @@ used as base for the list of supported checks and catalogs of checks.
 
 These man pages are in a Check_MK specific format an not real
 Linux/Unix man pages"""
-from __future__ import division
+from __future__ import division, print_function, unicode_literals
 
 import os
 import re
 import sys
-import StringIO
+from io import StringIO
 import subprocess
 
 # Explicitly check for Python 3 (which is understood by mypy)
@@ -833,7 +833,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
 class NowikiManPageRenderer(ManPageRenderer):
     def __init__(self, name):
         super(NowikiManPageRenderer, self).__init__(name)
-        self.output = StringIO.StringIO()
+        self.output = StringIO()
 
     def index_entry(self):
         return "<tr><td class=\"tt\">%s</td><td>[check_%s|%s]</td></tr>\n" % \
@@ -909,3 +909,25 @@ class NowikiManPageRenderer(ManPageRenderer):
 
     def _end_main_mk(self):
         self.output.write("F-:\n")
+
+
+if __name__ == "__main__":
+    import argparse
+    _parser = argparse.ArgumentParser(prog="man_pages", description="show manual pages for checks")
+    _parser.add_argument('checks', metavar='NAME', nargs='*', help='name of a check')
+    _parser.add_argument('-r',
+                         '--renderer',
+                         choices=['console', 'nowiki'],
+                         default='console',
+                         help='use the given renderer (default: console)')
+    _args = _parser.parse_args()
+    cmk.utils.paths.local_check_manpages_dir = Path(__file__).parent.parent.parent / str("checkman")
+    for check in _args.checks:
+        try:
+            print("----------------------------------------", check)
+            if _args.renderer == 'console':
+                ConsoleManPageRenderer(check).paint()
+            else:
+                print(NowikiManPageRenderer(check).render())
+        except MKGeneralException as _e:
+            print(_e)

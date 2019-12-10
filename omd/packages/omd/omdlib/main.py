@@ -44,9 +44,11 @@ import termios
 import traceback
 import subprocess
 import signal
+import io
 import contextlib
 from typing import (  # pylint: disable=unused-import
-    Tuple, Optional, Callable, List, NamedTuple, Dict,
+    Any, cast, Iterable, Union, Pattern, Iterator, Tuple, Optional, Callable, List, NamedTuple,
+    Dict,
 )
 from passlib.hash import sha256_crypt  # type: ignore
 import psutil  # type: ignore
@@ -56,8 +58,15 @@ import six
 import omdlib
 import omdlib.certs
 import omdlib.backup
+from omdlib.type_defs import CommandOptions  # pylint: disable=unused-import
 
-CommandOptions = Dict[str, Optional[str]]
+Arguments = List[str]
+Replacements = Dict[str, str]
+ConfigHookChoiceItem = Tuple[str, str]
+ConfigHookChoices = Union[None, Pattern, List[ConfigHookChoiceItem]]
+ConfigHook = Dict[str, Union[str, bool, ConfigHookChoices]]
+ConfigHooks = Dict[str, ConfigHook]
+ConfigHookResult = Tuple[int, str]
 
 #   .--Logging-------------------------------------------------------------.
 #   |                _                      _                              |
@@ -124,18 +133,21 @@ class StateMarkers(object):
 
 
 def ok():
+    # type: () -> None
     sys.stdout.write(tty_ok + "\n")
 
 
 def bail_out(message):
+    # type: (str) -> None
     sys.exit(message)
 
 
 # Is used to duplicate output from stdout/stderr to a logfiles. This
 # is e.g. used during "omd update" to have a chance to analyze errors
 # during past updates
-class Log(object):
+class Log(io.BytesIO):
     def __init__(self, fd, logfile):
+        # type: (int, bytes) -> None
         self.log = open(logfile, 'a')
         self.fd = fd
 
@@ -149,6 +161,7 @@ class Log(object):
         self.color_replace = re.compile("\033\\[\\d{1,2}m", re.UNICODE)
 
     def __del__(self):
+        # type: () -> None
         if self.fd == 1:
             sys.stdout = self.orig
         else:
@@ -156,31 +169,37 @@ class Log(object):
         self.log.close()
 
     def write(self, data):
+        # type: (bytes) -> int
         self.orig.write(data)
         self.log.write(self.color_replace.sub('', data))
+        return len(data)
 
     def flush(self):
+        # type: () -> None
         self.log.flush()
         self.orig.flush()
 
 
-g_stdout_log = None
-g_stderr_log = None
+g_stdout_log = None  # type: Optional[Log]
+g_stderr_log = None  # type: Optional[Log]
 
 
 def start_logging(logfile):
+    # type: (bytes) -> None
     global g_stdout_log, g_stderr_log
     g_stdout_log = Log(1, logfile)
     g_stderr_log = Log(2, logfile)
 
 
 def stop_logging():
+    # type: () -> None
     global g_stdout_log, g_stderr_log
     g_stdout_log = None
     g_stderr_log = None
 
 
 def show_success(exit_code):
+    # type: (int) -> int
     if exit_code is True or exit_code == 0:
         ok()
     else:
@@ -190,6 +209,7 @@ def show_success(exit_code):
 
 @contextlib.contextmanager
 def chdir(path):
+    # type: (bytes) -> Iterator[None]
     """Change working directory and return on exit"""
     prev_cwd = os.getcwd()
     os.chdir(path)
@@ -211,15 +231,25 @@ def chdir(path):
 #   |  Wrapper functions for interactive dialogs using the dialog cmd tool |
 #   '----------------------------------------------------------------------'
 
+DialogResult = Tuple[bool, bytes]
+
 
 def run_dialog(args):
-    env = {"TERM": getenv("TERM", "linux"), "LANG": "de_DE.UTF-8"}
-    p = subprocess.Popen(["dialog", "--shadow"] + args, env=env, stderr=subprocess.PIPE)
+    # type: (List[str]) -> DialogResult
+    dialog_env = {
+        "TERM": cast(str, getenv("TERM", "linux")),
+        # TODO: Why de_DE?
+        "LANG": "de_DE.UTF-8",
+    }
+    p = subprocess.Popen(["dialog", "--shadow"] + args, env=dialog_env, stderr=subprocess.PIPE)
+    if p.stderr is None:
+        raise Exception()
     response = p.stderr.read()
     return os.waitpid(p.pid, 0)[1] == 0, response
 
 
 def dialog_menu(title, text, choices, defvalue, oktext, canceltext):
+    # type: (str, str, List[Tuple[str, str]], Optional[str], str, str) -> DialogResult
     args = ["--ok-label", oktext, "--cancel-label", canceltext]
     if defvalue is not None:
         args += ["--default-item", defvalue]
@@ -230,6 +260,7 @@ def dialog_menu(title, text, choices, defvalue, oktext, canceltext):
 
 
 def dialog_regex(title, text, regex, value, oktext, canceltext):
+    # type: (str, str, Pattern, str, str, str) -> DialogResult
     while True:
         args = [
             "--ok-label", oktext, "--cancel-label", canceltext, "--title", title, "--inputbox",
@@ -246,16 +277,19 @@ def dialog_regex(title, text, regex, value, oktext, canceltext):
 
 
 def dialog_yesno(text, yeslabel="yes", nolabel="no"):
+    # type: (str, str, str) -> bool
     state, _response = run_dialog(
         ["--yes-label", yeslabel, "--no-label", nolabel, "--yesno", text, "0", "0"])
     return state
 
 
 def dialog_message(text, buttonlabel="OK"):
+    # type: (str, str) -> None
     run_dialog(["--ok-label", buttonlabel, "--msgbox", text, "0", "0"])
 
 
 def user_confirms(site, title, message, relpath, yes_choice, yes_text, no_choice, no_text):
+    # type: (SiteContext, str, str, str, str, str, str, str) -> bool
     # Handle non-interactive mode
     if opt_conflict == "abort":
         bail_out("Update aborted.")
@@ -280,7 +314,9 @@ def user_confirms(site, title, message, relpath, yes_choice, yes_text, no_choice
             return choice == yes_choice
 
 
+# TODO: Use standard textwrap module?
 def wrap_text(text, width):
+    # type: (str, int) -> List[str]
     def fillup(line, width):
         if len(line) < width:
             line += " " * (width - len(line))
@@ -327,6 +363,7 @@ def wrap_text(text, width):
 
 
 def getch():
+    # type: () -> str
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
     try:
@@ -340,6 +377,7 @@ def getch():
 
 
 def ask_user_choices(title, message, choices):
+    # type: (str, str, List[Tuple[str, str]]) -> str
     sys.stdout.write("\n")
 
     def pl(line):
@@ -350,7 +388,7 @@ def ask_user_choices(title, message, choices):
     for line in wrap_text(message, 76):
         pl(line)
     pl("")
-    chars = []
+    chars = []  # type: List[str]
     empty_line = " %s%-78s%s\n" % (tty_bgblue + tty_white, "", tty_normal)
     sys.stdout.write(empty_line)
     for choice, choice_title in choices:
@@ -395,16 +433,21 @@ def ask_user_choices(title, message, choices):
 
 
 def find_processes_of_user(username):
+    # type: (str) -> List[bytes]
     try:
-        return subprocess.Popen(["pgrep", "-u", username],
-                                stdin=open(os.devnull, "r"),
-                                stdout=subprocess.PIPE,
-                                close_fds=True).stdout.read().split()
+        p = subprocess.Popen(["pgrep", "-u", username],
+                             stdin=open(os.devnull, "r"),
+                             stdout=subprocess.PIPE,
+                             close_fds=True)
+        if p.stdout is None:
+            raise Exception()
+        return p.stdout.read().split()
     except Exception:
         return []
 
 
 def groupdel(groupname):
+    # type: (str) -> None
     try:
         p = subprocess.Popen(["groupdel", groupname],
                              stdin=open(os.devnull, "r"),
@@ -419,7 +462,9 @@ def groupdel(groupname):
         bail_out("\n" + tty_error + ": Failed to delete group '%s': %s" % (groupname, stderr))
 
 
+# TODO: refactor gid to int
 def groupadd(groupname, gid=None):
+    # type: (str, Optional[str]) -> None
     cmd = ["groupadd"]
     if gid is not None:
         cmd += ["-g", "%d" % int(gid)]
@@ -433,7 +478,9 @@ def groupadd(groupname, gid=None):
         bail_out("Cannot create group for site user.")
 
 
+# TODO: Cleanup: Change uid/gid to int
 def useradd(site, uid=None, gid=None):
+    # type: (SiteContext, Optional[str], Optional[str]) -> None
     # Create user for running site 'name'
     groupadd(site.name, gid)
     useradd_options = g_info.USERADD_OPTIONS
@@ -456,11 +503,13 @@ def useradd(site, uid=None, gid=None):
 
 
 def add_user_to_group(user, group):
+    # type: (str, str) -> bool
     cmd = g_info.ADD_USER_TO_GROUP % {"user": user, "group": group}
     return os.system(cmd + " >/dev/null") == 0  # nosec
 
 
 def userdel(name):
+    # type: (str) -> None
     if user_exists(name):
         try:
             p = subprocess.Popen(["userdel", "-r", name],
@@ -482,13 +531,12 @@ def userdel(name):
 
 
 def user_by_id(id_):
-    try:
-        return pwd.getpwuid(id_)
-    except Exception:
-        return None
+    # type: (int) -> pwd.struct_passwd
+    return pwd.getpwuid(id_)
 
 
 def user_id(name):
+    # type: (str) -> Union[bool, int]
     try:
         return pwd.getpwnam(name).pw_uid
     except Exception:
@@ -496,6 +544,7 @@ def user_id(name):
 
 
 def user_exists(name):
+    # type: (str) -> bool
     try:
         pwd.getpwnam(name)
         return True
@@ -504,6 +553,7 @@ def user_exists(name):
 
 
 def user_has_group(user, group):
+    # type: (str, str) -> bool
     try:
         u = user_by_id(user_id(user))
         g = group_by_id(u.pw_gid)
@@ -512,11 +562,13 @@ def user_has_group(user, group):
         g = group_by_id(group_id(group))
         if user in g.gr_mem:
             return True
+        return False
     except Exception:
         return False
 
 
 def group_exists(name):
+    # type: (str) -> bool
     try:
         grp.getgrnam(name)
         return True
@@ -525,26 +577,23 @@ def group_exists(name):
 
 
 def group_by_id(id_):
-    try:
-        return grp.getgrgid(id_)
-    except Exception:
-        return None
+    # type: (int) -> grp.struct_group
+    return grp.getgrgid(id_)
 
 
 def group_id(name):
-    try:
-        g = grp.getgrnam(name)
-        return g.gr_gid
-    except Exception:
-        return None
+    # type: (str) -> int
+    return grp.getgrnam(name).gr_gid
 
 
 def user_logged_in(name):
+    # type: (str) -> bool
     """Check if processes of named user are existing"""
     return any(p for p in psutil.process_iter() if p.username() == name)
 
 
 def user_verify(site, allow_populated=False):
+    # type: (SiteContext, bool) -> bool
     name = site.name
 
     if not user_exists(name):
@@ -579,6 +628,7 @@ def user_verify(site, allow_populated=False):
 
 
 def switch_to_site_user(site):
+    # type: (SiteContext) -> None
     p = pwd.getpwnam(site.name)
     uid = p.pw_uid
     gid = p.pw_gid
@@ -596,6 +646,7 @@ def switch_to_site_user(site):
 
 
 def groups_of(username):
+    # type: (str) -> List[int]
     group_ids = {g.gr_gid for g in grp.getgrall() if username in g.gr_mem}
     group_ids.add(pwd.getpwnam(username).pw_gid)
     return list(group_ids)
@@ -615,30 +666,36 @@ def groups_of(username):
 
 
 def site_name():
+    # type: () -> str
     return pwd.getpwuid(os.getuid()).pw_name
 
 
 def is_root():
+    # type: () -> bool
     return os.getuid() == 0
 
 
 def all_sites():
+    # type: () -> Iterable[str]
     l = sorted(
         [s for s in os.listdir("/omd/sites") if os.path.isdir(os.path.join("/omd/sites/", s))])
     return l
 
 
 def start_site(site):
+    # type: (SiteContext) -> None
     prepare_and_populate_tmpfs(site)
     call_init_scripts(site, "start")
 
 
 def stop_if_not_stopped(site):
+    # type: (SiteContext) -> None
     if not site.is_stopped():
         stop_site(site)
 
 
 def stop_site(site):
+    # type: (SiteContext) -> None
     call_init_scripts(site, "stop")
 
 
@@ -654,10 +711,13 @@ def stop_site(site):
 #   |  Deal with file owners, permissions and the the skel hierarchy       |
 #   '----------------------------------------------------------------------'
 
-g_skel_permissions = {}  # type: Dict[str, int]
+Permissions = Dict[str, int]
+
+g_skel_permissions = {}  # type: Permissions
 
 
 def read_skel_permissions():
+    # type: () -> None
     global g_skel_permissions
     g_skel_permissions = load_skel_permissions(omdlib.__version__)
     if not g_skel_permissions:
@@ -665,11 +725,13 @@ def read_skel_permissions():
 
 
 def load_skel_permissions(version):
+    # type: (str) -> Permissions
     return load_skel_permissions_from(skel_permissions_file_path(version))
 
 
 def load_skel_permissions_from(path):
-    perms = {}
+    # type: (str) -> Permissions
+    perms = {}  # type: Permissions
     with open(path) as f:
         for line in f:
             line = line.strip()
@@ -682,10 +744,12 @@ def load_skel_permissions_from(path):
 
 
 def skel_permissions_file_path(version):
+    # type: (str) -> str
     return "/omd/versions/%s/share/omd/skel.permissions" % version
 
 
 def get_skel_permissions(skel_path, perms, relpath):
+    # type: (str, Permissions, str) -> int
     try:
         return perms[relpath]
     except KeyError:
@@ -693,6 +757,7 @@ def get_skel_permissions(skel_path, perms, relpath):
 
 
 def get_file_permissions(path):
+    # type: (str) -> int
     try:
         return os.stat(path).st_mode & 0o7777
     except Exception:
@@ -700,6 +765,7 @@ def get_file_permissions(path):
 
 
 def get_file_owner(path):
+    # type: (str) -> Optional[str]
     try:
         return pwd.getpwuid(os.stat(path).st_uid)[0]
     except Exception:
@@ -707,6 +773,7 @@ def get_file_owner(path):
 
 
 def create_version_symlink(site, version):
+    # type: (SiteContext, str) -> None
     linkname = site.dir + "/version"
     if os.path.lexists(linkname):
         os.remove(linkname)
@@ -714,16 +781,20 @@ def create_version_symlink(site, version):
 
 
 def calculate_admin_password(options):
+    # type: (CommandOptions) -> str
     if options.get("admin-password"):
-        return options["admin-password"]
+        return cast(str, options["admin-password"])
     return random_password()
 
 
 def set_admin_password(site, pw):
-    open("%s/etc/htpasswd" % site.dir, "w").write("cmkadmin:%s\n" % hash_password(pw))
+    # type: (SiteContext, str) -> None
+    with open("%s/etc/htpasswd" % site.dir, "w") as f:
+        f.write("cmkadmin:%s\n" % hash_password(pw))
 
 
 def file_owner_verify(path, uid, gid):
+    # type: (str, int, int) -> bool
     try:
         s = os.stat(path)
         if s.st_uid != uid or s.st_gid != gid:
@@ -734,6 +805,7 @@ def file_owner_verify(path, uid, gid):
 
 
 def create_skeleton_files(site, directory):
+    # type: (SiteContext, str) -> None
     read_skel_permissions()
     replacements = site.replacements
     # Hack: exclude tmp if dir is '.'
@@ -753,6 +825,7 @@ def create_skeleton_files(site, directory):
 
 
 def save_version_meta_data(site, version):
+    # type: (SiteContext, str) -> None
     """Make meta information from the version available in the site directory
 
     Currently it holds the following information
@@ -776,6 +849,7 @@ def save_version_meta_data(site, version):
 
 
 def delete_user_file(user_path):
+    # type: (str) -> None
     if not os.path.islink(user_path) and os.path.isdir(user_path):
         shutil.rmtree(user_path)
     else:
@@ -783,11 +857,13 @@ def delete_user_file(user_path):
 
 
 def delete_directory_contents(d):
+    # type: (str) -> None
     for f in os.listdir(d):
         delete_user_file(d + '/' + f)
 
 
 def create_skeleton_file(skelbase, userbase, relpath, replacements):
+    # type: (str, str, str, Replacements) -> None
     skel_path = skelbase + "/" + relpath
     user_path = userbase + "/" + relpath
 
@@ -814,6 +890,7 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
 
 
 def chown_tree(directory, user):
+    # type: (str, str) -> None
     uid = pwd.getpwnam(user).pw_uid
     gid = pwd.getpwnam(user).pw_gid
     os.chown(directory, uid, gid)
@@ -823,6 +900,7 @@ def chown_tree(directory, user):
 
 
 def try_chown(filename, user):
+    # type: (str, str) -> None
     if os.path.exists(filename):
         try:
             uid = pwd.getpwnam(user).pw_uid
@@ -833,6 +911,7 @@ def try_chown(filename, user):
 
 
 def instantiate_skel(site, path):
+    # type: (SiteContext, str) -> str
     try:
         t = open(path).read()
         return replace_tags(t, site.replacements)
@@ -854,6 +933,7 @@ def instantiate_skel(site, path):
 
 # The function returns a set of already handled files.
 def walk_skel(root, handler, args, depth_first, exclude_if_in=None, relbase='.'):
+    # type: (str, Callable, Tuple[Any], bool, Optional[str], str) -> None
     with chdir(root):
         # Note: os.walk first finds level 1 directories, then deeper
         # layers. If we need a real depth search instead, where we first
@@ -928,6 +1008,7 @@ def walk_skel(root, handler, args, depth_first, exclude_if_in=None, relbase='.')
 # Change site specific information in files originally create from
 # skeleton files. Skip files below tmp/
 def patch_skeleton_files(old_site, new_site):
+    # type: (SiteContext, SiteContext) -> None
     skelroot = "/omd/versions/%s/skel" % omdlib.__version__
     with chdir(skelroot):  # make relative paths
         for dirpath, _dirnames, filenames in os.walk("."):
@@ -948,6 +1029,7 @@ def patch_skeleton_files(old_site, new_site):
 
 
 def patch_template_file(src, dst, old_site, new_site):
+    # type: (str, str, SiteContext, SiteContext) -> None
     # Create patch from old instantiated skeleton file to new one
     content = open(src).read()
     for site in [old_site, new_site]:
@@ -1062,6 +1144,7 @@ def patch_template_file(src, dst, old_site, new_site):
 # Try to merge changes from old->new version and
 # old->user version
 def merge_update_file(site, relpath, old_version, new_version):
+    # type: (SiteContext, str, str, str) -> None
     fn = tty_bold + relpath + tty_normal
 
     user_path = site.dir + "/" + relpath
@@ -1177,6 +1260,7 @@ def merge_update_file(site, relpath, old_version, new_version):
 
 
 def _try_merge(site, relpath, old_version, new_version):
+    # type: (SiteContext, str, str, str) -> int
     user_path = site.dir + "/" + relpath
 
     for version, skelroot in [(old_version, site.version_skel_dir),
@@ -1221,6 +1305,7 @@ def _try_merge(site, relpath, old_version, new_version):
 
 # Compares two files and returns infos wether the file type or contants have changed """
 def file_status(site, source_path, target_path):
+    # type: (SiteContext, str, str) -> Tuple[bool, bool, bool]
     source_type = filetype(source_path)
     target_type = filetype(target_path)
 
@@ -1244,6 +1329,7 @@ def file_status(site, source_path, target_path):
 
 
 def update_file(relpath, site, old_version, new_version, old_perms):
+    # type: (str, SiteContext, str, str, Permissions) -> None
     old_skel = site.version_skel_dir
     new_skel = "/omd/versions/%s/skel" % new_version
 
@@ -1542,23 +1628,22 @@ def update_file(relpath, site, old_version, new_version, old_perms):
 
 
 def filetype(p):
+    # type: (str) -> Optional[str]
     # check for symlinks first. Might be dangling. In that
     # case os.path.exists checks the links target for existance
     # and reports it is non-existing.
     if os.path.islink(p):
-        tp = "link"
-    elif not os.path.exists(p):
-        tp = None
-    elif os.path.isdir(p):
-        tp = "dir"
-    else:
-        tp = "file"
-
-    return tp
+        return "link"
+    if not os.path.exists(p):
+        return None
+    if os.path.isdir(p):
+        return "dir"
+    return "file"
 
 
 # Returns the file contents of a site file or a skel file
 def file_contents(site, path):
+    # type: (SiteContext, str) -> bytes
     if '/skel/' in path:
         return instantiate_skel(site, path)
     return open(path).read()
@@ -1577,7 +1662,9 @@ def file_contents(site, path):
 #   '----------------------------------------------------------------------'
 
 
+# TODO: Use site context?
 def tmpfs_mounted(sitename):
+    # type: (str) -> bool
     # Problem here: if /omd is a symbolic link somewhere else,
     # then in /proc/mounts the physical path will appear and be
     # different from tmp_path. We just check the suffix therefore.
@@ -1593,6 +1680,7 @@ def tmpfs_mounted(sitename):
 
 
 def prepare_and_populate_tmpfs(site):
+    # type: (SiteContext) -> None
     prepare_tmpfs(site)
 
     if not os.listdir(site.tmp_dir):
@@ -1603,6 +1691,7 @@ def prepare_and_populate_tmpfs(site):
 
 
 def prepare_tmpfs(site):
+    # type: (SiteContext) -> None
     if tmpfs_mounted(site.name):
         sys.stdout.write("Temporary filesystem already mounted\n")
         return  # Fine: Mounted
@@ -1637,6 +1726,9 @@ def prepare_tmpfs(site):
         ok()
         return  # Fine: Mounted
 
+    if p.stdout is None:
+        raise Exception("stdout needs to be set")
+
     sys.stdout.write(p.stdout.read())
     if is_dockerized():
         sys.stdout.write(tty_warn + ": "
@@ -1649,6 +1741,7 @@ def prepare_tmpfs(site):
 
 
 def _mark_tmpfs_initialized(site):
+    # type: (SiteContext) -> None
     """Write a simple file marking the time of the tmpfs structure initialization
 
     The st_ctime of the file will be used by Checkmk to know when the tmpfs file
@@ -1658,10 +1751,12 @@ def _mark_tmpfs_initialized(site):
 
 
 def is_dockerized():
+    # type: () -> bool
     return os.path.exists("/.dockerenv")
 
 
 def tmpfs_is_managed_by_node(site):
+    # type: (SiteContext) -> bool
     """When running in a container, and the tmpfs is managed by the node, the
     mount is visible, but can not be unmounted. umount exits with 32 in this
     case. Treat this case like there is no tmpfs and only the directory needs
@@ -1678,6 +1773,7 @@ def tmpfs_is_managed_by_node(site):
 
 
 def unmount_tmpfs(site, output=True, kill=False):
+    # type: (SiteContext, bool, bool) -> bool
     # Clear directory hierarchy when not using a tmpfs
     # During omd update TMPFS hook might not be set so assume
     # that the hook is enabled by default.
@@ -1720,16 +1816,19 @@ def unmount_tmpfs(site, output=True, kill=False):
 
     if output:
         bail_out(tty_error + ": Cannot unmount temporary filesystem.")
-    else:
+        # TODO: Mypy does not detects this exist condition
         return False
+    return False
 
 
 # Extracted to separate function to be able to monkeypatch the path for tests
 def fstab_path():
+    # type: () -> str
     return "/etc/fstab"
 
 
 def add_to_fstab(site, tmpfs_size=None):
+    # type: (SiteContext, Optional[str]) -> None
     if not os.path.exists(fstab_path()):
         return  # Don't do anything in case there is no fstab
 
@@ -1755,6 +1854,7 @@ def add_to_fstab(site, tmpfs_size=None):
 
 
 def remove_from_fstab(site):
+    # type: (SiteContext) -> None
     if not os.path.exists("/etc/fstab"):
         return  # Don't do anything in case there is no fstab
 
@@ -1782,7 +1882,9 @@ def remove_from_fstab(site):
 #   '----------------------------------------------------------------------'
 
 
+# TODO: Use site context
 def init_scripts(sitename):
+    # type: (str) -> Tuple[str, List[str]]
     rc_dir = "/omd/sites/%s/etc/rc.d" % sitename
     try:
         scripts = sorted(os.listdir(rc_dir))
@@ -1792,6 +1894,7 @@ def init_scripts(sitename):
 
 
 def call_init_script(scriptpath, command):
+    # type: (str, str) -> bool
     if not os.path.exists(scriptpath):
         sys.stderr.write('ERROR: This daemon does not exist.\n')
         return False
@@ -1800,18 +1903,19 @@ def call_init_script(scriptpath, command):
         return subprocess.call([scriptpath, command]) in [0, 5]
     except OSError as e:
         sys.stderr.write("ERROR: Failed to run '%s': %s\n" % (scriptpath, e))
-        if e.errno == errno.EACCES:
-            return False
+        return False
 
 
 def call_init_scripts(site, command, daemon=None, exclude_daemons=None):
+    # type: (SiteContext, str, Optional[str], List[str]) -> int
     # Restart: Do not restart each service after another,
     # but first do stop all, then start all again! This
     # preserves the order.
     if command == "restart":
+        # TODO: Why is the result of call_init_scripts not returned?
         call_init_scripts(site, "stop", daemon)
         call_init_scripts(site, "start", daemon)
-        return
+        return 0
 
     # OMD guarantees OMD_ROOT to be the current directory
     with chdir(site.dir):
@@ -1839,6 +1943,7 @@ def call_init_scripts(site, command, daemon=None, exclude_daemons=None):
 
 
 def check_status(site, display=True, daemon=None, bare=False):
+    # type: (SiteContext, bool, Optional[str], bool) -> int
     num_running = 0
     num_unused = 0
     num_stopped = 0
@@ -1926,12 +2031,14 @@ def check_status(site, display=True, daemon=None, bare=False):
 # Put all site configuration (explicit and defaults) into environment
 # variables beginning with CONFIG_
 def create_config_environment(site):
+    # type: (SiteContext) -> None
     for varname, value in site.conf.items():
         putenv("CONFIG_" + varname, value)
 
 
 # TODO: RENAME
 def save_site_conf(site):
+    # type: (SiteContext) -> None
     confdir = site.dir + "/etc/omd"
 
     if not os.path.exists(confdir):
@@ -1946,7 +2053,8 @@ def save_site_conf(site):
 # Get information about all hooks. Just needed for
 # the "omd config" command.
 def load_config_hooks(site):
-    config_hooks = {}
+    # type: (SiteContext) -> ConfigHooks
+    config_hooks = {}  # type: ConfigHooks
 
     hook_dir = site.dir + "/lib/omd/hooks"
     for hook_name in os.listdir(hook_dir):
@@ -1963,10 +2071,11 @@ def load_config_hooks(site):
 
 
 def config_load_hook(site, hook_name):
+    # type: (SiteContext, str) -> ConfigHook
     hook = {
         "name": hook_name,
         "deprecated": False,
-    }
+    }  # type: ConfigHook
 
     description = ""
     description_active = False
@@ -1994,6 +2103,7 @@ def config_load_hook(site, hook_name):
     # where that line is an extended regular expression matching the
     # possible values.
     choicestxt = get_hook_info("choices").split("\n")
+    choices = None  # type: ConfigHookChoices
     if len(choicestxt) == 1:
         regextext = choicestxt[0].strip()
         if regextext != "":
@@ -2008,14 +2118,15 @@ def config_load_hook(site, hook_name):
                 val = val.strip()
                 descr = descr.strip()
                 choices.append((val, descr))
-        except Exception:
-            bail_out("Invalid output of hook: %s" % choicestxt)
+        except Exception as e:
+            bail_out("Invalid output of hook: %s: %s" % (choicestxt, e))
 
     hook["choices"] = choices
     return hook
 
 
 def load_hook_dependencies(site, config_hooks):
+    # type: (SiteContext, ConfigHooks) -> ConfigHooks
     for hook_name in sort_hooks(config_hooks.keys()):
         hook = config_hooks[hook_name]
         exitcode, _content = call_hook(site, hook_name, ["depends"])
@@ -2029,31 +2140,47 @@ def load_hook_dependencies(site, config_hooks):
 # Always sort CORE hook to the end because it runs "cmk -U" which
 # relies on files created by other hooks.
 def sort_hooks(hook_names):
+    # type: (List[str]) -> Iterable[str]
     return sorted(hook_names, key=lambda n: (n == "CORE", n))
 
 
 def hook_exists(site, hook_name):
+    # type: (SiteContext, str) -> bool
     hook_file = site.dir + "/lib/omd/hooks/" + hook_name
     return os.path.exists(hook_file)
 
 
 def call_hook(site, hook_name, args):
-    hook_file = site.dir + "/lib/omd/hooks/" + hook_name
-    argsstring = " ".join(["'%s'" % arg for arg in args])
-    command = hook_file + " " + argsstring
+    # type: (SiteContext, str, List[str]) -> ConfigHookResult
+
+    cmd = [site.dir + "/lib/omd/hooks/" + hook_name] + args
+    hook_env = os.environ.copy()
+    hook_env.update({
+        "OMD_ROOT": site.dir,
+        "OMD_SITE": site.name,
+    })
+
     if opt_verbose:
-        sys.stdout.write("Calling hook: %s\n" % command)
-    putenv("OMD_ROOT", site.dir)
-    putenv("OMD_SITE", site.name)
-    pipe = os.popen(command)  # nosec
-    content = pipe.read().strip()
-    exitcode = pipe.close()
+        sys.stdout.write("Calling hook: %s\n" % subprocess.list2cmdline(cmd))
+
+    p = subprocess.Popen(
+        cmd,
+        env=hook_env,
+        close_fds=True,
+        shell=False,
+        stdout=subprocess.PIPE,
+    )
+    content = p.communicate()[0].strip()
+    exitcode = p.poll()
+
     if exitcode and args[0] != "depends":
-        sys.stderr.write("Error running %s: %s\n" % (command, content))
+        sys.stderr.write("Error running %s: %s\n" % (subprocess.list2cmdline(cmd), content))
+
     return exitcode, content
 
 
 def initialize_site_ca(site):
+    # type: (SiteContext) -> None
     """Initialize the site local CA and create the default site certificate
     This will be used e.g. for serving SSL secured livestatus"""
     ca = omdlib.certs.CertificateAuthority(
@@ -2064,7 +2191,11 @@ def initialize_site_ca(site):
     ca.create_site_certificate(site.name)
 
 
+ConfigChangeCommands = List[Tuple[str, str]]
+
+
 def config_change(site, config_hooks):
+    # type: (SiteContext, ConfigHooks) -> None
     # Check whether or not site needs to be stopped. Stop and remember to start again later
     site_was_stopped = False
     if not site.is_stopped():
@@ -2089,6 +2220,7 @@ def config_change(site, config_hooks):
 
 
 def read_config_change_commands():
+    # type: () -> ConfigChangeCommands
     settings = []
     for l in sys.stdin:
         line = l.strip()
@@ -2104,11 +2236,14 @@ def read_config_change_commands():
 
 
 def validate_config_change_commands(config_hooks, settings):
+    # type: (ConfigHooks, ConfigChangeCommands) -> None
     # Validate the provided commands
     for key, value in settings:
         hook = config_hooks.get(key)
         if not hook:
             bail_out("Invalid config option: %r" % key)
+            # TODO: mypy does not detect this exit condition
+            sys.exit(1)
 
         # Check if value is valid. Choices are either a list of allowed
         # keys or a regular expression
@@ -2117,13 +2252,16 @@ def validate_config_change_commands(config_hooks, settings):
             if value not in choices:
                 bail_out("Invalid value %r for %r. Allowed are: %s\n" % \
                         (value, key, ", ".join(choices)))
-        else:
+        elif isinstance(hook["choices"], Pattern):
             if not hook["choices"].match(value):
                 bail_out("Invalid value %r for %r. Does not match allowed pattern.\n" %
                          (value, key))
+        else:
+            raise NotImplementedError()
 
 
 def config_set(site, config_hooks, args):
+    # type: (SiteContext, ConfigHooks, Arguments) -> None
     if len(args) != 2:
         sys.stderr.write("Please specify variable name and value\n")
         config_usage()
@@ -2148,10 +2286,12 @@ def config_set(site, config_hooks, args):
             sys.stderr.write("Invalid value for '%s'. Allowed are: %s\n" % \
                     (value, ", ".join(choices)))
             return
-    else:
+    elif isinstance(hook["choices"], Pattern):
         if not hook["choices"].match(value):
             sys.stderr.write("Invalid value for '%s'. Does not match allowed pattern.\n" % value)
             return
+    else:
+        raise NotImplementedError()
 
     config_set_value(site, config_hooks, hook_name, value)
 
@@ -2173,6 +2313,7 @@ def config_set_all(site, ignored_hooks=None):
 
 
 def config_set_value(site, config_hooks, hook_name, value, save=True):
+    # type: (SiteContext, ConfigHooks, str, str, bool) -> None
     # TODO: Warum wird hier nicht call_hook() aufgerufen!!
 
     # Call hook with 'set'. If it outputs something, that will
@@ -2195,6 +2336,7 @@ def config_set_value(site, config_hooks, hook_name, value, save=True):
 
 
 def config_usage():
+    # type: () -> None
     sys.stdout.write("""Usage of config command:
 
 omd config               - interactive configuration menu
@@ -2208,6 +2350,8 @@ omd config change        - change multiple at once. Provide newline separated
 
 
 def config_show(site, config_hooks, args):
+    # type: (SiteContext, ConfigHooks, Arguments) -> None
+    hook = {}  # type: Optional[ConfigHook]
     if len(args) == 0:
         hook_names = sorted(config_hooks.keys())
         for hook_name in hook_names:
@@ -2228,8 +2372,9 @@ def config_show(site, config_hooks, args):
 
 
 def config_configure(site, config_hooks):
+    # type: (SiteContext, ConfigHooks) -> None
     hook_names = sorted(config_hooks.keys())
-    current_hook_name = ""
+    current_hook_name = ""  # type: Optional[str]
     menu_open = False
     current_menu = "Basic"
 
@@ -2238,11 +2383,11 @@ def config_configure(site, config_hooks):
 
     while True:
         # Rebuild hook information (values possible changed)
-        menu = {}
+        menu = {}  # type: Dict[str, List[Tuple[str, str]]]
         for hook_name in hook_names:
             hook = config_hooks[hook_name]
             if hook["active"] and not hook["deprecated"]:
-                mp = hook.get("menu", "Other")
+                mp = cast(str, hook.get("menu", "Other"))
                 entries = menu.get(mp, [])
                 entries.append((hook_name, site.conf[hook_name]))
                 menu[mp] = entries
@@ -2283,6 +2428,7 @@ def config_configure(site, config_hooks):
 
 
 def config_configure_hook(site, config_hooks, hook_name):
+    # type: (SiteContext, ConfigHooks, str) -> None
     if not site.is_stopped():
         if not dialog_yesno("You cannot change configuration value while the "
                             "site is running. Do you want me to stop the site now?"):
@@ -2291,24 +2437,29 @@ def config_configure_hook(site, config_hooks, hook_name):
         dialog_message("The site has been stopped.")
 
     hook = config_hooks[hook_name]
-    title = hook["alias"]
-    descr = hook["description"].replace("\n\n", "\001").replace("\n", " ").replace("\001", "\n\n")
+    title = cast(str, hook["alias"])
+    descr = cast(str, hook["description"]).replace("\n\n",
+                                                   "\001").replace("\n",
+                                                                   " ").replace("\001", "\n\n")
     value = site.conf[hook_name]
     choices = hook["choices"]
+
     if isinstance(choices, list):
-        dialog_function = dialog_menu
+        change, new_value = dialog_menu(title, descr, choices, value, "Change", "Cancel")
+    elif isinstance(choices, Pattern):
+        change, new_value = dialog_regex(title, descr, choices, value, "Change", "Cancel")
     else:
-        dialog_function = dialog_regex
-    change, new_value = \
-        dialog_function(title, descr, choices, value, "Change", "Cancel")
+        raise NotImplementedError()
+
     if change:
-        config_set_value(site, config_hooks, hook["name"], new_value)
+        config_set_value(site, config_hooks, cast(str, hook["name"]), new_value)
         site.conf[hook_name] = new_value
         save_site_conf(site)
         config_hooks = load_hook_dependencies(site, config_hooks)
 
 
 def init_action(site, command, args, options):
+    # type: (SiteContext, str, Arguments, CommandOptions) -> int
     if site.is_disabled():
         bail_out("This site is disabled.")
 
@@ -2316,7 +2467,8 @@ def init_action(site, command, args, options):
         prepare_and_populate_tmpfs(site)
 
     if len(args) > 0:
-        daemon = args[0]  # restrict to this daemon
+        # restrict to this daemon
+        daemon = args[0]  # type: Optional[str]
     else:
         daemon = None
 
@@ -2341,6 +2493,7 @@ def init_action(site, command, args, options):
 
 
 def fstab_verify(site):
+    # type: (SiteContext) -> bool
     """Ensure that there is an fstab entry for the tmpfs of the site.
     In case there is no fstab (seen in some containers) assume everything
     is OK without fstab entry."""
@@ -2353,6 +2506,8 @@ def fstab_verify(site):
         if "uid=%s," % site.name in line and mountpoint in line:
             return True
     bail_out(tty_error + ": fstab entry for %s does not exist" % mountpoint)
+    # TODO: mypy does not understand exit condition
+    sys.exit(1)
 
 
 # No using os.putenv, os.getenv os.unsetenv directly because
@@ -2367,16 +2522,19 @@ def fstab_verify(site):
 #
 # Directly modifying os.environ seems to work.
 def putenv(key, value):
+    # type: (str, str) -> None
     os.environ[key] = value
 
 
 def getenv(key, default=None):
+    # type: (str, Optional[str]) -> Optional[str]
     if not key in os.environ:
         return default
     return os.environ[key]
 
 
 def clear_environment():
+    # type: () -> None
     # first remove *all* current environment variables
     keep = ["TERM"]
     for key in os.environ.keys():
@@ -2385,6 +2543,7 @@ def clear_environment():
 
 
 def set_environment(site):
+    # type: (SiteContext) -> None
     putenv("OMD_SITE", site.name)
     putenv("OMD_ROOT", site.dir)
     putenv(
@@ -2426,6 +2585,7 @@ def set_environment(site):
 
 
 def hostname():
+    # type: () -> str
     try:
         return os.popen("hostname").read().strip()
     except Exception:
@@ -2433,14 +2593,17 @@ def hostname():
 
 
 def create_apache_hook(site):
-    open("/omd/apache/%s.conf" % site.name, "w")\
-        .write("Include %s/etc/apache/mode.conf\n" % site.dir)
+    # type: (SiteContext) -> None
+    with open("/omd/apache/%s.conf" % site.name, "w") as f:
+        f.write("Include %s/etc/apache/mode.conf\n" % site.dir)
 
 
 def delete_apache_hook(sitename):
+    # type: (str) -> None
     hook_path = "/omd/apache/%s.conf" % sitename
     if not os.path.exists(hook_path):
         return
+
     try:
         os.remove(hook_path)
     except Exception as e:
@@ -2448,6 +2611,7 @@ def delete_apache_hook(sitename):
 
 
 def init_cmd(name, action):
+    # type: (str, str) -> str
     return g_info.INIT_CMD % {
         'name': name,
         'action': action,
@@ -2455,12 +2619,14 @@ def init_cmd(name, action):
 
 
 def reload_apache():
+    # type: () -> None
     sys.stdout.write("Reloading Apache...")
     sys.stdout.flush()
     show_success(subprocess.call([g_info.APACHE_CTL, "graceful"]) >> 8)
 
 
 def restart_apache():
+    # type: () -> None
     if os.system(  # nosec
             init_cmd(g_info.APACHE_INIT_NAME, 'status') + ' >/dev/null 2>&1') >> 8 == 0:
         sys.stdout.write("Restarting Apache...")
@@ -2470,20 +2636,27 @@ def restart_apache():
 
 
 def replace_tags(content, replacements):
+    # type: (str, Replacements) -> str
     for var, value in replacements.items():
         content = content.replace(var, value)
     return content
 
 
 def get_editor():
-    editor = getenv("VISUAL", getenv("EDITOR", "/usr/bin/vi"))
+    # type: () -> str
+    editor = getenv("VISUAL", getenv("EDITOR"))
+    if editor is None:
+        editor = "/usr/bin/vi"
+
     if not os.path.exists(editor):
         editor = 'vi'
+
     return editor
 
 
 # return "| $PAGER", if a pager is available
 def pipe_pager():
+    # type: () -> str
     pager = getenv("PAGER")
     if not pager and os.path.exists("/usr/bin/less"):
         pager = "less -F -X"
@@ -2493,6 +2666,7 @@ def pipe_pager():
 
 
 def call_scripts(site, phase):
+    # type: (SiteContext, str) -> None
     path = site.dir + "/lib/omd/scripts/" + phase
     if os.path.exists(path):
         putenv("OMD_ROOT", site.dir)
@@ -2506,6 +2680,8 @@ def call_scripts(site, phase):
                 shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT)
+            if p.stdout is None:
+                raise Exception("stdout needs to be set")
             stdout = p.stdout.read()
             exitcode = p.wait()
             if exitcode == 0:
@@ -2517,6 +2693,7 @@ def call_scripts(site, phase):
 
 
 def check_site_user(site, site_must_exist):
+    # type: (AbstractSiteContext, int) -> None
     if not site.is_site_context():
         return
 
@@ -2542,6 +2719,7 @@ def check_site_user(site, site_must_exist):
 
 
 def main_help(site, args=None, options=None):
+    # type: (AbstractSiteContext, Optional[Arguments], Optional[CommandOptions]) -> None
     if args is None:
         args = []
     if options is None:
@@ -2570,10 +2748,8 @@ def main_help(site, args=None, options=None):
         " omd COMMAND -h, --help          show available options of COMMAND\n")
 
 
-def main_setversion(site, args, options=None):
-    if options is None:
-        options = {}
-
+def main_setversion(site, args, options):
+    # type: (SiteContext, Arguments, CommandOptions) -> None
     if len(args) == 0:
         versions = [(v, "Version %s" % v) for v in omd_versions() if not v == default_version()]
 
@@ -2607,13 +2783,12 @@ def main_setversion(site, args, options=None):
 
 
 def use_update_alternatives():
+    # type: () -> bool
     return os.path.exists("/var/lib/dpkg/alternatives/omd")
 
 
-def main_version(site, args, options=None):
-    if options is None:
-        options = {}
-
+def main_version(site, args, options):
+    # type: (SiteContext, Arguments, CommandOptions) -> None
     if len(args) > 0:
         site = SiteContext(args[0])
         if not site.exists():
@@ -2628,10 +2803,8 @@ def main_version(site, args, options=None):
         sys.stdout.write("OMD - Open Monitoring Distribution Version %s\n" % version)
 
 
-def main_versions(site, args, options=None):
-    if options is None:
-        options = {}
-
+def main_versions(site, args, options):
+    # type: (SiteContext, Arguments, CommandOptions) -> None
     for v in omd_versions():
         if v == default_version() and "bare" not in options:
             sys.stdout.write("%s (default)\n" % v)
@@ -2640,10 +2813,12 @@ def main_versions(site, args, options=None):
 
 
 def default_version():
+    # type: () -> str
     return os.path.basename(os.path.realpath("/omd/versions/default"))
 
 
 def omd_versions():
+    # type: () -> Iterable[str]
     try:
         return sorted([v for v in os.listdir("/omd/versions") if v != "default"])
     except OSError as e:
@@ -2654,13 +2829,12 @@ def omd_versions():
 
 
 def version_exists(v):
+    # type: (str) -> bool
     return v in omd_versions()
 
 
-def main_sites(site, args, options=None):
-    if options is None:
-        options = {}
-
+def main_sites(site, args, options):
+    # type: (SiteContext, Arguments, CommandOptions) -> None
     if sys.stdout.isatty() and "bare" not in options:
         sys.stdout.write("SITE             VERSION          COMMENTS\n")
     for sitename in all_sites():
@@ -2684,6 +2858,7 @@ def main_sites(site, args, options=None):
 
 # Bail out if name for new site is not valid (needed by create/mv/cp)
 def sitename_must_be_valid(site, reuse=False):
+    # type (SiteContext, bool) -> None
     # Make sanity checks before starting any action
     if not reuse and site.exists():
         bail_out("Site '%s' already existing." % site.name)
@@ -2697,10 +2872,8 @@ def sitename_must_be_valid(site, reuse=False):
         )
 
 
-def main_create(site, args, options=None):
-    if options is None:
-        options = {}
-
+def main_create(site, args, options):
+    # type: (SiteContext, Arguments, CommandOptions) -> None
     reuse = False
     if "reuse" in options:
         reuse = True
@@ -4071,6 +4244,10 @@ class AbstractSiteContext(six.with_metaclass(abc.ABCMeta, object)):
         return self._sitename
 
     @abc.abstractproperty
+    def version(self):
+        raise NotImplementedError()
+
+    @abc.abstractproperty
     def dir(self):
         raise NotImplementedError()
 
@@ -4256,6 +4433,7 @@ class RootContext(AbstractSiteContext):
     def tmp_dir(self):
         return "/tmp"
 
+    @property
     def version(self):
         return omdlib.__version__
 
@@ -4350,19 +4528,22 @@ exclude_options = [
 #  options_spec  List of individual arguments for this command
 #  description   Text for the help of omd
 #  confirm_text  Confirm text to show before calling the handler function
-Command = NamedTuple("Command", [
-    ("command", str),
-    ("only_root", bool),
-    ("no_suid", bool),
-    ("needs_site", int),
-    ("site_must_exist", int),
-    ("confirm", bool),
-    ("args_text", str),
-    ("handler", Callable),
-    ("options", List[Option]),
-    ("description", str),
-    ("confirm_text", str),
-])
+Command = NamedTuple(
+    "Command",
+    [
+        ("command", str),
+        ("only_root", bool),
+        ("no_suid", bool),
+        ("needs_site", int),
+        # TODO: Refactor to bool
+        ("site_must_exist", int),
+        ("confirm", bool),
+        ("args_text", str),
+        ("handler", Callable),
+        ("options", List[Option]),
+        ("description", str),
+        ("confirm_text", str),
+    ])
 
 commands = []  # type: List[Command]
 
@@ -4885,7 +5066,7 @@ def handle_global_option(main_args, opt, orig):
 
 
 def _parse_command_options(args, options):
-    # type: (List[str], List[Option]) -> Tuple[List[str], CommandOptions]
+    # type: (Arguments, List[Option]) -> Tuple[Arguments, CommandOptions]
 
     # Give a short overview over the command specific options
     # when the user specifies --help:
@@ -5001,9 +5182,10 @@ g_orig_wd = "/"
 # TODO: Refactor these global variables
 # TODO: Refactor to argparse. Be aware of the pitfalls of the OMD command line scheme
 def main():
+    # type: () -> None
     global g_orig_wd
 
-    site = RootContext()
+    site = RootContext()  # type: AbstractSiteContext
     main_args = sys.argv[1:]
 
     while len(main_args) >= 1 and main_args[0].startswith("-"):
@@ -5078,10 +5260,14 @@ def main():
             raise
 
     if not command.no_suid and site.is_site_context() and is_root() and not command.only_root:
+        if not isinstance(site, SiteContext):
+            raise Exception("site must be of type SiteContext")
         switch_to_site_user(site)
 
     # Make sure environment is in a defined state
     if site.is_site_context():
+        if not isinstance(site, SiteContext):
+            raise Exception("site must be of type SiteContext")
         clear_environment()
         set_environment(site)
 
@@ -5099,7 +5285,7 @@ def main():
 
 
 def _get_command(site, command_arg):
-    # type: (RootContext, str) -> Command
+    # type: (AbstractSiteContext, str) -> Command
     for command in commands:
         if command.command == command_arg:
             return command

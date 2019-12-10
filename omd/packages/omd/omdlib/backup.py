@@ -30,9 +30,14 @@ import errno
 import socket
 import tarfile
 import fnmatch
-from typing import Tuple  # pylint: disable=unused-import
+from typing import Tuple, BinaryIO  # pylint: disable=unused-import
+
+from omdlib.type_defs import CommandOptions  # pylint: disable=unused-import
 
 
+# Can not be added at the moment, because importing SiteContext would create
+# a circular import
+# type (SiteContext, BinaryIO, str, CommandOptions, bool) -> None
 def backup_site_to_tarfile(site, fh, mode, options, verbose):
     tar = BackupTarFile.open(fileobj=fh, mode=mode, site=site, verbose=verbose)
     # Add the version symlink as first file to be able to

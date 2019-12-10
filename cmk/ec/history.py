@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import os
-import string
+import struct
 import subprocess
 import threading
 import time
@@ -345,7 +345,7 @@ def quote_tab(col):
         col = "\1" + "\1".join([quote_tab(e) for e in col])
     elif col is None:
         col = "\2"
-    elif ty is unicode:
+    elif ty is six.text_type:
         col = col.encode("utf-8")
 
     return col.replace("\t", " ")
@@ -606,12 +606,13 @@ def _get_logfile_timespan(path):
 # Check_MK. To keep backwards compatibility with old history files, we have no
 # choice and continue to do it wrong... :-/
 def scrub_string(s):
-    if isinstance(s, str):
-        return s.translate(_scrub_string_str_table, "\0\1\2\n")
+    if isinstance(s, six.binary_type):
+        return s.translate(_scrub_string_str_table, b"\0\1\2\n")
     if isinstance(s, six.text_type):
         return s.translate(_scrub_string_unicode_table)
     raise TypeError("scrub_string expects a string argument")
 
 
-_scrub_string_str_table = string.maketrans("\t", " ")
+_scrub_string_str_table = b''.join(
+    b' ' if x == ord(b'\t') else struct.Struct(">B").pack(x) for x in range(256))
 _scrub_string_unicode_table = {0: None, 1: None, 2: None, ord("\n"): None, ord("\t"): ord(" ")}

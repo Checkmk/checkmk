@@ -523,8 +523,7 @@ class Perfcounters(object):
         self._lock = ECLock(logger)
 
         # Initialize counters
-        self._counters = dict([(n, 0) for n in self._counter_names])
-
+        self._counters = {n: 0 for n in self._counter_names}
         self._old_counters = {}
         self._rates = {}
         self._average_rates = {}
@@ -1473,91 +1472,89 @@ class EventServer(ECServerThread):
                         if self._config["debug_rules"]:
                             self._logger.info("  skipping this rule pack (%s)" % skip_pack)
                         continue
-                    else:
-                        self._perfcounters.count("drops")
-                        return
+                    self._perfcounters.count("drops")
+                    return
 
                 if cancelling:
                     self._event_status.cancel_events(self, self._event_columns, event, match_groups,
                                                      rule)
                     return
-                else:
-                    # Remember the rule id that this event originated from
-                    event["rule_id"] = rule["id"]
 
-                    # Attach optional contact group information for visibility
-                    # and eventually for notifications
-                    self._add_rule_contact_groups_to_event(rule, event)
+                # Remember the rule id that this event originated from
+                event["rule_id"] = rule["id"]
 
-                    # Store groups from matching this event. In order to make
-                    # persistence easier, we do not safe them as list but join
-                    # them on ASCII-1.
-                    event["match_groups"] = match_groups.get("match_groups_message", ())
-                    event["match_groups_syslog_application"] = match_groups.get(
-                        "match_groups_syslog_application", ())
-                    self.rewrite_event(rule, event, match_groups)
+                # Attach optional contact group information for visibility
+                # and eventually for notifications
+                self._add_rule_contact_groups_to_event(rule, event)
 
-                    # Lookup the monitoring core hosts and add the core host
-                    # name to the event when one can be matched.
-                    #
-                    # Needs to be done AFTER event rewriting, because the rewriting
-                    # may change the "host" field.
-                    #
-                    # For the moment we have no rule/condition matching on this
-                    # field. So we only add the core host info for matched events.
-                    self._add_core_host_to_new_event(event)
+                # Store groups from matching this event. In order to make
+                # persistence easier, we do not safe them as list but join
+                # them on ASCII-1.
+                event["match_groups"] = match_groups.get("match_groups_message", ())
+                event["match_groups_syslog_application"] = match_groups.get(
+                    "match_groups_syslog_application", ())
+                self.rewrite_event(rule, event, match_groups)
 
-                    if "count" in rule:
-                        count = rule["count"]
-                        # Check if a matching event already exists that we need to
-                        # count up. If the count reaches the limit, the event will
-                        # be opened and its rule actions performed.
-                        existing_event = \
-                            self._event_status.count_event(self, event, rule, count)
-                        if existing_event:
-                            if "delay" in rule:
-                                if self._config["debug_rules"]:
-                                    self._logger.info(
-                                        "Event opening will be delayed for %d seconds" %
-                                        rule["delay"])
-                                existing_event["delay_until"] = time.time() + rule["delay"]
-                                existing_event["phase"] = "delayed"
-                            else:
-                                cmk.ec.actions.event_has_opened(self._history, self.settings,
-                                                                self._config, self._logger, self,
-                                                                self._event_columns, rule,
-                                                                existing_event)
+                # Lookup the monitoring core hosts and add the core host
+                # name to the event when one can be matched.
+                #
+                # Needs to be done AFTER event rewriting, because the rewriting
+                # may change the "host" field.
+                #
+                # For the moment we have no rule/condition matching on this
+                # field. So we only add the core host info for matched events.
+                self._add_core_host_to_new_event(event)
 
-                            self._history.add(existing_event, "COUNTREACHED")
-
-                            if "delay" not in rule and rule.get("autodelete"):
-                                existing_event["phase"] = "closed"
-                                self._history.add(existing_event, "AUTODELETE")
-                                with self._event_status.lock:
-                                    self._event_status.remove_event(existing_event)
-                    elif "expect" in rule:
-                        self._event_status.count_expected_event(self, event)
-                    else:
+                if "count" in rule:
+                    count = rule["count"]
+                    # Check if a matching event already exists that we need to
+                    # count up. If the count reaches the limit, the event will
+                    # be opened and its rule actions performed.
+                    existing_event = \
+                        self._event_status.count_event(self, event, rule, count)
+                    if existing_event:
                         if "delay" in rule:
                             if self._config["debug_rules"]:
                                 self._logger.info("Event opening will be delayed for %d seconds" %
                                                   rule["delay"])
-                            event["delay_until"] = time.time() + rule["delay"]
-                            event["phase"] = "delayed"
+                            existing_event["delay_until"] = time.time() + rule["delay"]
+                            existing_event["phase"] = "delayed"
                         else:
-                            event["phase"] = "open"
+                            cmk.ec.actions.event_has_opened(self._history, self.settings,
+                                                            self._config, self._logger, self,
+                                                            self._event_columns, rule,
+                                                            existing_event)
 
-                        if self.new_event_respecting_limits(event):
-                            if event["phase"] == "open":
-                                cmk.ec.actions.event_has_opened(self._history, self.settings,
-                                                                self._config, self._logger, self,
-                                                                self._event_columns, rule, event)
-                                if rule.get("autodelete"):
-                                    event["phase"] = "closed"
-                                    self._history.add(event, "AUTODELETE")
-                                    with self._event_status.lock:
-                                        self._event_status.remove_event(event)
-                    return
+                        self._history.add(existing_event, "COUNTREACHED")
+
+                        if "delay" not in rule and rule.get("autodelete"):
+                            existing_event["phase"] = "closed"
+                            self._history.add(existing_event, "AUTODELETE")
+                            with self._event_status.lock:
+                                self._event_status.remove_event(existing_event)
+                elif "expect" in rule:
+                    self._event_status.count_expected_event(self, event)
+                else:
+                    if "delay" in rule:
+                        if self._config["debug_rules"]:
+                            self._logger.info("Event opening will be delayed for %d seconds" %
+                                              rule["delay"])
+                        event["delay_until"] = time.time() + rule["delay"]
+                        event["phase"] = "delayed"
+                    else:
+                        event["phase"] = "open"
+
+                    if self.new_event_respecting_limits(event):
+                        if event["phase"] == "open":
+                            cmk.ec.actions.event_has_opened(self._history, self.settings,
+                                                            self._config, self._logger, self,
+                                                            self._event_columns, rule, event)
+                            if rule.get("autodelete"):
+                                event["phase"] = "closed"
+                                self._history.add(event, "AUTODELETE")
+                                with self._event_status.lock:
+                                    self._event_status.remove_event(event)
+                return
 
         # End of loop over rules.
         if self._config["archive_orphans"]:
@@ -2694,7 +2691,7 @@ class StatusTable(object):
         for name, def_val in self.columns:
             self.column_types[name] = type(def_val)
 
-        self.column_indices = dict([(name, index) for index, name in enumerate(self.column_names)])
+        self.column_indices = {name: index for index, name in enumerate(self.column_names)}
 
     def query(self, query):
         requested_column_indexes = query.requested_column_indexes()
@@ -3194,7 +3191,7 @@ class StatusServer(ECServerThread):
         new_mode = arguments[0]
         if not is_replication_slave(self._config):
             raise MKClientError("Cannot switch replication mode: this is not a replication slave.")
-        elif new_mode not in ["sync", "takeover"]:
+        if new_mode not in ["sync", "takeover"]:
             raise MKClientError("Invalid target mode '%s': allowed are only 'sync' and 'takeover'" %
                                 new_mode)
         self._slave_status["mode"] = new_mode
@@ -3346,16 +3343,15 @@ class EventStatus(object):
             start = self.next_interval_start(interval, time.time())
             self._interval_starts[rule_id] = start
             return start
-        else:
-            start = self._interval_starts[rule_id]
-            # Make sure that if the user switches from day to hour and we
-            # are still waiting for the first interval to begin, that we
-            # do not wait for the next day.
-            next_interval = self.next_interval_start(interval, time.time())
-            if start > next_interval:
-                start = next_interval
-                self._interval_starts[rule_id] = start
-            return start
+        start = self._interval_starts[rule_id]
+        # Make sure that if the user switches from day to hour and we
+        # are still waiting for the first interval to begin, that we
+        # do not wait for the next day.
+        next_interval = self.next_interval_start(interval, time.time())
+        if start > next_interval:
+            start = next_interval
+            self._interval_starts[rule_id] = start
+        return start
 
     def next_interval_start(self, interval, previous_start):
         if isinstance(interval, tuple):
@@ -3522,12 +3518,11 @@ class EventStatus(object):
     def get_num_existing_events_by(self, ty, event):
         if ty == "overall":
             return self.num_existing_events
-        elif ty == "by_rule":
+        if ty == "by_rule":
             return self.num_existing_events_by_rule.get(event["rule_id"], 0)
-        elif ty == "by_host":
+        if ty == "by_host":
             return self.num_existing_events_by_host.get(event["host"], 0)
-        else:
-            raise NotImplementedError()
+        raise NotImplementedError()
 
     # Cancel all events the belong to a certain rule id and are
     # of the same "breed" as a new event.

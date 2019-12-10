@@ -339,9 +339,9 @@ def quote_tab(col):
     ty = type(col)
     if ty in [float, int]:
         return str(col)
-    elif ty is bool:
+    if ty is bool:
         return '1' if col else '0'
-    elif ty in [tuple, list]:
+    if ty in [tuple, list]:
         col = "\1" + "\1".join([quote_tab(e) for e in col])
     elif col is None:
         col = "\2"
@@ -576,10 +576,10 @@ def _unsplit(s):
     if not isinstance(s, six.string_types):
         return s
 
-    elif s.startswith('\2'):
+    if s.startswith('\2'):
         return None  # \2 is the designator for None
 
-    elif s.startswith('\1'):
+    if s.startswith('\1'):
         if len(s) == 1:
             return ()
         return tuple(s[1:].split('\1'))

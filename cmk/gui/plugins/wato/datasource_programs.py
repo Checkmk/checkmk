@@ -2351,7 +2351,7 @@ def _valuespec_special_agents_graylog():
         elements=[
             ("instance",
              TextAscii(
-                 title=_("Graylog instance to query."),
+                 title=_("Graylog instance to query"),
                  help=_("Use this option to set which instance should be "
                         "checked by the special agent. Please add the "
                         "hostname here, eg. my_graylog.com."),
@@ -2389,17 +2389,17 @@ def _valuespec_special_agents_graylog():
             ("since",
              Age(
                  title=_("Time for coverage of failures"),
-                 help=_(
-                     "Use this option to set the timeframe in which failures should be covered."),
+                 help=_("If you choose to query for failed index operations, use "
+                        "this option to set the timeframe in which failures "
+                        "should be covered. The check will output the total "
+                        "number of failures and the number of failures in this "
+                        "given timeframe."),
                  default_value=1800,
              )),
             ("sections",
              ListChoice(
-                 title=_("Informations to query"),
-                 help=_("Defines what information to query. You can choose "
-                        "between the alarms, cluster statistics, failures, "
-                        "jvm heap size, message count, nodes and sidecar "
-                        "fleet."),
+                 title=_("Information to query"),
+                 help=_("Defines what information to query."),
                  choices=[
                      ("alerts", _("Alarms")),
                      ("cluster_stats", _("Cluster statistics")),

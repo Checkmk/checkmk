@@ -1,5 +1,5 @@
 import logging
-import pytest
+import pytest  # type: ignore
 
 from cmk.ec.main import Perfcounters
 
@@ -104,7 +104,7 @@ def test_perfcounters_correct_status_values():
     for _x in range(2):
         c.count("rule_tries")
 
-    for column_name, column_value in zip([n for n, d in c.status_columns()], c.get_status()):
+    for column_name, column_value in zip([n for n, _d in c.status_columns()], c.get_status()):
         if column_name.startswith("status_average_") and column_name.endswith("_time"):
             counter_name = column_name.split("_")[-2]
             assert column_value == c._times.get(counter_name, 0.0)

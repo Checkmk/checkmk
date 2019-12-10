@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -31,13 +31,13 @@
 # creating objects. Or at least update the documentation. It is not clear
 # which fields are mandatory for the events.
 
-from __future__ import division
 import abc
 import ast
 import errno
 import json
 import logging
 import os
+from pathlib import Path
 import pprint
 import re
 import select
@@ -48,9 +48,6 @@ import threading
 import time
 import traceback
 from typing import Any, Dict, List, Optional, Tuple, Union  # pylint: disable=unused-import
-
-from pathlib2 import Path
-import six
 
 import cmk
 import cmk.utils.daemon
@@ -76,7 +73,7 @@ from cmk.ec.crash_reporting import ECCrashReport, CrashReportStore
 import livestatus  # type: ignore
 
 
-class SyslogPriority(object):
+class SyslogPriority:
     NAMES = {
         0: "emerg",
         1: "alert",
@@ -89,7 +86,7 @@ class SyslogPriority(object):
     }
 
     def __init__(self, value):
-        super(SyslogPriority, self).__init__()
+        super().__init__()
         self.value = int(value)
 
     def __repr__(self):
@@ -102,7 +99,7 @@ class SyslogPriority(object):
             return "(unknown priority %d)" % self.value
 
 
-class SyslogFacility(object):
+class SyslogFacility:
     NAMES = {
         0: 'kern',
         1: 'user',
@@ -132,7 +129,7 @@ class SyslogFacility(object):
     }
 
     def __init__(self, value):
-        super(SyslogFacility, self).__init__()
+        super().__init__()
         self.value = int(value)
 
     def __repr__(self):
@@ -162,9 +159,9 @@ def scrub_and_decode(s):
 #   '----------------------------------------------------------------------'
 
 
-class ECLock(object):
+class ECLock:
     def __init__(self, logger):
-        super(ECLock, self).__init__()
+        super().__init__()
         self._logger = logger
         self._lock = threading.Lock()
 
@@ -200,7 +197,7 @@ class ECServerThread(threading.Thread):
 
     def __init__(self, name, logger, settings, config, slave_status, profiling_enabled,
                  profile_file):
-        super(ECServerThread, self).__init__(name=name)
+        super().__init__(name=name)
         self.settings = settings
         self._config = config
         self._slave_status = slave_status
@@ -277,7 +274,7 @@ def match(pattern, text, complete=True):
     if pattern is None:
         return ()
 
-    elif isinstance(pattern, six.string_types):
+    if isinstance(pattern, str):
         if complete:
             return () if pattern == text.lower() else False
         return () if pattern in text.lower() else False
@@ -386,9 +383,9 @@ class MKClientError(MKException):
 #   '----------------------------------------------------------------------'
 
 
-class TimePeriods(object):
+class TimePeriods:
     def __init__(self, logger):
-        super(TimePeriods, self).__init__()
+        super().__init__()
         self._logger = logger
         self._periods = None
         self._last_update = 0
@@ -432,7 +429,7 @@ class TimePeriods(object):
 #   '----------------------------------------------------------------------'
 
 
-class HostConfig(object):
+class HostConfig:
     def __init__(self, logger):
         self._logger = logger
         self._lock = threading.Lock()
@@ -501,7 +498,7 @@ def lerp(a, b, t):
     return (1 - t) * a + t * b
 
 
-class Perfcounters(object):
+class Perfcounters:
     _counter_names = [
         "messages",
         "rule_tries",
@@ -521,7 +518,7 @@ class Perfcounters(object):
 
     # TODO: Why aren't self._times / self._rates / ... not initialized with their defaults?
     def __init__(self, logger):
-        super(Perfcounters, self).__init__()
+        super().__init__()
         self._lock = ECLock(logger)
 
         # Initialize counters
@@ -626,13 +623,13 @@ class EventServer(ECServerThread):
 
     def __init__(self, logger, settings, config, slave_status, perfcounters, lock_configuration,
                  history, event_status, event_columns):
-        super(EventServer, self).__init__(name="EventServer",
-                                          logger=logger,
-                                          settings=settings,
-                                          config=config,
-                                          slave_status=slave_status,
-                                          profiling_enabled=settings.options.profile_event,
-                                          profile_file=settings.paths.event_server_profile.value)
+        super().__init__(name="EventServer",
+                         logger=logger,
+                         settings=settings,
+                         config=config,
+                         slave_status=slave_status,
+                         profiling_enabled=settings.options.profile_event,
+                         profile_file=settings.paths.event_server_profile.value)
         self._syslog = None
         self._syslog_tcp = None
         self._snmptrap = None
@@ -1913,9 +1910,9 @@ class EventServer(ECServerThread):
         return new_event
 
 
-class EventCreator(object):
+class EventCreator:
     def __init__(self, logger, config):
-        super(EventCreator, self).__init__()
+        super().__init__()
         self._logger = logger
         self._config = config
 
@@ -2207,9 +2204,9 @@ class EventCreator(object):
         return event
 
 
-class RuleMatcher(object):
+class RuleMatcher:
     def __init__(self, logger, config):
-        super(RuleMatcher, self).__init__()
+        super().__init__()
         self._logger = logger
         self._config = config
         self._time_periods = TimePeriods(logger)
@@ -2445,9 +2442,9 @@ class RuleMatcher(object):
 #   '----------------------------------------------------------------------'
 
 
-class Queries(object):
+class Queries:
     def __init__(self, status_server, sock, logger):
-        super(Queries, self).__init__()
+        super().__init__()
         self._status_server = status_server
         self._socket = sock
         self._logger = logger
@@ -2473,7 +2470,7 @@ class Queries(object):
                     break
 
 
-class Query(object):
+class Query:
     @staticmethod
     def make(status_server, raw_query, logger):
         parts = raw_query[0].split(None, 1)
@@ -2489,7 +2486,7 @@ class Query(object):
         raise MKClientError("Invalid method %s (allowed are GET, REPLICATE, COMMAND)" % method)
 
     def __init__(self, status_server, raw_query, logger):
-        super(Query, self).__init__()
+        super().__init__()
 
         self._logger = logger
         self.output_format = "python"
@@ -2525,7 +2522,7 @@ class QueryGET(Query):
     }
 
     def _from_raw_query(self, status_server):
-        super(QueryGET, self)._from_raw_query(status_server)
+        super()._from_raw_query(status_server)
         self._parse_table(status_server)
         self._parse_header_lines()
 
@@ -2671,7 +2668,7 @@ class QueryCOMMAND(Query):
 # - maybe add a field into the event simulator
 
 
-class StatusTable(object):
+class StatusTable:
     prefix = None  # type: Optional[str]
     columns = []  # type: List[Tuple[str, Any]]
 
@@ -2682,7 +2679,7 @@ class StatusTable(object):
         raise NotImplementedError()
 
     def __init__(self, logger):
-        super(StatusTable, self).__init__()
+        super().__init__()
         self._logger = logger.getChild("status_table.%s" % self.prefix)
         self._populate_column_views()
 
@@ -2759,7 +2756,7 @@ class StatusTableEvents(StatusTable):
     ]
 
     def __init__(self, logger, event_status):
-        super(StatusTableEvents, self).__init__(logger)
+        super().__init__(logger)
         self._event_status = event_status
 
     def _enumerate(self, query):
@@ -2791,7 +2788,7 @@ class StatusTableHistory(StatusTable):
     ] + StatusTableEvents.columns
 
     def __init__(self, logger, history):
-        super(StatusTableHistory, self).__init__(logger)
+        super().__init__(logger)
         self._history = history
 
     def _enumerate(self, query):
@@ -2806,7 +2803,7 @@ class StatusTableRules(StatusTable):
     ]
 
     def __init__(self, logger, event_status):
-        super(StatusTableRules, self).__init__(logger)
+        super().__init__(logger)
         self._event_status = event_status
 
     def _enumerate(self, query):
@@ -2818,7 +2815,7 @@ class StatusTableStatus(StatusTable):
     columns = EventServer.status_columns()
 
     def __init__(self, logger, event_server):
-        super(StatusTableStatus, self).__init__(logger)
+        super().__init__(logger)
         self._event_server = event_server
 
     def _enumerate(self, query):
@@ -2841,13 +2838,13 @@ class StatusTableStatus(StatusTable):
 class StatusServer(ECServerThread):
     def __init__(self, logger, settings, config, slave_status, perfcounters, lock_configuration,
                  history, event_status, event_server, terminate_main_event):
-        super(StatusServer, self).__init__(name="StatusServer",
-                                           logger=logger,
-                                           settings=settings,
-                                           config=config,
-                                           slave_status=slave_status,
-                                           profiling_enabled=settings.options.profile_status,
-                                           profile_file=settings.paths.status_server_profile.value)
+        super().__init__(name="StatusServer",
+                         logger=logger,
+                         settings=settings,
+                         config=config,
+                         slave_status=slave_status,
+                         profiling_enabled=settings.options.profile_status,
+                         profile_file=settings.paths.status_server_profile.value)
         self._socket = None
         self._tcp_socket = None
         self._reopen_sockets = False
@@ -3306,7 +3303,7 @@ def run_eventd(terminate_main_event, settings, config, lock_configuration, histo
 #   '----------------------------------------------------------------------'
 
 
-class EventStatus(object):
+class EventStatus:
     def __init__(self, settings, config, perfcounters, history, logger):
         self.settings = settings
         self._config = config

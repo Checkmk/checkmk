@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -30,8 +30,6 @@ import subprocess
 import threading
 import time
 
-import six
-
 import cmk.ec.actions
 from cmk.utils.log import VERBOSE
 import cmk.utils.render
@@ -40,9 +38,9 @@ from cmk.utils.encoding import make_utf8
 # TODO: As one can see clearly below, we should really have a class hierarchy here...
 
 
-class History(object):
+class History:
     def __init__(self, settings, config, logger, event_columns, history_columns):
-        super(History, self).__init__()
+        super().__init__()
         self._settings = settings
         self._config = config
         self._logger = logger
@@ -106,9 +104,9 @@ except ImportError:
     Connection = None
 
 
-class MongoDB(object):
+class MongoDB:
     def __init__(self):
-        super(MongoDB, self).__init__()
+        super().__init__()
         self.connection = None
         self.db = None
 
@@ -345,15 +343,15 @@ def quote_tab(col):
         col = "\1" + "\1".join([quote_tab(e) for e in col])
     elif col is None:
         col = "\2"
-    elif ty is six.text_type:
+    elif ty is str:
         col = col.encode("utf-8")
 
     return col.replace("\t", " ")
 
 
-class ActiveHistoryPeriod(object):
+class ActiveHistoryPeriod:
     def __init__(self):
-        super(ActiveHistoryPeriod, self).__init__()
+        super().__init__()
         self.value = None
 
 
@@ -573,7 +571,7 @@ def _convert_history_line(history, values):
 
 
 def _unsplit(s):
-    if not isinstance(s, six.string_types):
+    if not isinstance(s, str):
         return s
 
     if s.startswith('\2'):
@@ -606,9 +604,9 @@ def _get_logfile_timespan(path):
 # Check_MK. To keep backwards compatibility with old history files, we have no
 # choice and continue to do it wrong... :-/
 def scrub_string(s):
-    if isinstance(s, six.binary_type):
+    if isinstance(s, bytes):
         return s.translate(_scrub_string_str_table, b"\0\1\2\n")
-    if isinstance(s, six.text_type):
+    if isinstance(s, str):
         return s.translate(_scrub_string_unicode_table)
     raise TypeError("scrub_string expects a string argument")
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -45,14 +45,14 @@ from cmk.utils.log import VERBOSE
 import cmk.utils.render
 
 
-class SNMPTrapEngine(object):
+class SNMPTrapEngine:
 
     # Disable receiving of SNMPv3 INFORM messages. We do not support them (yet)
     class ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):
         pduTypes = (pysnmp.proto.api.v1.TrapPDU.tagSet, pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet)
 
     def __init__(self, settings, config, logger, callback):
-        super(SNMPTrapEngine, self).__init__()
+        super().__init__()
         self._logger = logger
         if settings.options.snmptrap_udp is None:
             return
@@ -178,9 +178,9 @@ class SNMPTrapEngine(object):
                          variables["transportAddress"][0], msg)
 
 
-class SNMPTrapTranslator(object):
+class SNMPTrapTranslator:
     def __init__(self, settings, config, logger):
-        super(SNMPTrapTranslator, self).__init__()
+        super().__init__()
         self._logger = logger
         translation_config = config["translate_snmptraps"]
         if translation_config is False:

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -26,8 +26,6 @@
 
 import os
 import time
-
-import six
 
 import cmk
 import cmk.utils.debug
@@ -203,9 +201,9 @@ def _execute_script(event_columns, body, event, logger):
     script_env = os.environ.copy()
 
     for key, value in _get_event_tags(event_columns, event).items():
-        if isinstance(key, six.text_type):
+        if isinstance(key, str):
             key = key.encode("utf-8")
-        if isinstance(value, six.text_type):
+        if isinstance(value, str):
             value = value.encode("utf-8")
         script_env["CMK_" + key.upper()] = value
 
@@ -236,7 +234,7 @@ def _get_event_tags(event_columns, event):
         substs.append((varname, event.get(varname, defaultvalue)))
 
     def to_string(v):
-        if isinstance(v, six.string_types):
+        if isinstance(v, str):
             return v
         return "%s" % v
 

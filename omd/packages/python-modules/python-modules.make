@@ -26,7 +26,8 @@ PYTHON_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
 PYTHON_MODULES_LIST += typing-3.7.4.1.tar.gz # direct dependency
 PYTHON_MODULES_LIST += six-1.13.0.tar.gz # direct dependency, indirect via python-dateutil
 PYTHON_MODULES_LIST += python-dateutil-2.8.0.tar.gz # direct dependency
-PYTHON_MODULES_LIST += Werkzeug-0.15.5.tar.gz # direct dependency
+PYTHON_MODULES_LIST += Werkzeug-0.15.5.tar.gz # direct dependency, indirect via connexion
+PYTHON_MODULES_LIST += connexion-2.4.0.tar.gz # direct dependency
 
 # Modules really needed on all platforms
 PYTHON_MODULES_LIST += pysphere-0.1.7.zip
@@ -149,6 +150,7 @@ PYTHON_MODULES_LIST += bcrypt-3.1.4.tar.gz
 PYTHON_MODULES_LIST += PyNaCl-1.3.0.tar.gz
 
 PYTHON_MODULES_LIST += scandir-1.10.0.tar.gz
+# required by importlib-metadata
 PYTHON_MODULES_LIST += pathlib2-2.3.5.tar.gz
 # Added for scheduling (cmk/schedule.py)
 PYTHON_MODULES_LIST += python-snap7-0.10.tar.gz
@@ -194,6 +196,35 @@ PYTHON_MODULES_LIST += funcsigs-1.0.2.tar.gz
 PYTHON_MODULES_LIST += mock-3.0.5.tar.gz
 PYTHON_MODULES_LIST += wrapt-1.11.2.tar.gz
 PYTHON_MODULES_LIST += vcrpy-2.1.0.tar.gz
+# required by Jinja2
+PYTHON_MODULES_LIST += MarkupSafe-1.1.1.tar.gz
+# required by Flask
+PYTHON_MODULES_LIST += itsdangerous-1.1.0.tar.gz
+PYTHON_MODULES_LIST += Jinja2-2.10.3.tar.gz
+# required by zipp
+PYTHON_MODULES_LIST += more-itertools-8.0.1.tar.gz
+# required by importlib_metadata
+PYTHON_MODULES_LIST += configparser-4.0.2.tar.gz
+PYTHON_MODULES_LIST += contextlib2-0.6.0.post1.tar.gz
+PYTHON_MODULES_LIST += zipp-0.6.0.tar.gz
+# required by jsonschema
+PYTHON_MODULES_LIST += attrs-19.3.0.tar.gz
+PYTHON_MODULES_LIST += functools32-3.2.3-2.tar.gz
+PYTHON_MODULES_LIST += importlib_metadata-1.2.0.tar.gz
+PYTHON_MODULES_LIST += pyrsistent-0.15.6.tar.gz
+# required by connexion, openapi-spec-validator
+PYTHON_MODULES_LIST += jsonschema-3.2.0.tar.gz
+# required by clickclick
+PYTHON_MODULES_LIST += Click-7.0.tar.gz
+# required by connexion
+PYTHON_MODULES_LIST += clickclick-1.2.2.tar.gz
+PYTHON_MODULES_LIST += Flask-1.1.1.tar.gz
+PYTHON_MODULES_LIST += inflection-0.3.1.tar.gz
+PYTHON_MODULES_LIST += openapi-spec-validator-0.2.8.tar.gz
+PYTHON_MODULES_LIST += pathlib-1.0.1.tar.gz
+# direct dependency
+PYTHON_MODULES_LIST += connexion-2.4.0.tar.gz
+PYTHON_MODULES_LIST += swagger_ui_bundle-0.0.6.tar.gz
 
 # NOTE: Setting SODIUM_INSTALL variable below is an extremely cruel hack to
 # avoid installing libsodium headers and libraries. The need for this hack

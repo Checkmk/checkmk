@@ -111,6 +111,8 @@ funcsigs = "==1.0.2"
 mock = "==3.0.5"
 wrapt = "==1.11.2"
 vcrpy = "==2.1.0"
+connexion = { version = "==2.4.0", extras = ["swagger-ui"] }  # used by our new REST API
+
 
 [requires]
 python_version = "2.7"

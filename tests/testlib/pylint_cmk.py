@@ -10,7 +10,7 @@ import glob
 import multiprocessing
 import subprocess
 
-from pylint.reporters.text import ColorizedTextReporter, ParseableTextReporter
+from pylint.reporters.text import ColorizedTextReporter, ParseableTextReporter  # type: ignore[import]
 
 from testlib import repo_path, cmk_path, is_enterprise_repo
 
@@ -35,7 +35,7 @@ def add_file(f, path):
     f.write(open(path).read())
 
 
-def run_pylint(base_path, check_files=None):
+def run_pylint(base_path, check_files):
     args = os.environ.get("PYLINT_ARGS", "")
     if args:
         pylint_args = args.split(" ")
@@ -43,12 +43,6 @@ def run_pylint(base_path, check_files=None):
         pylint_args = []
 
     pylint_cfg = repo_path() + "/.pylintrc"
-
-    if not check_files:
-        check_files = get_pylint_files(base_path, "*")
-        if not check_files:
-            print("Nothing to do...")
-            return 0  # nothing to do
 
     cmd = [
         "python",
@@ -100,11 +94,6 @@ def get_pylint_files(base_path, file_pattern):
 def is_python_file(path):
     if not os.path.isfile(path) or os.path.islink(path):
         return False
-
-    # We can not be sure which Python version this file needs by it's extension.
-    # For the moment we treat all .py to be python2
-    if sys.version_info[0] == 2 and path.endswith(".py"):
-        return True
 
     check_name = "python3" if sys.version_info[0] >= 3 else "python"
 
@@ -167,7 +156,7 @@ class CMKParseableTextReporter(CMKFixFileMixin, ParseableTextReporter):
 
 
 def verify_pylint_version():
-    import pylint
+    import pylint  # type: ignore[import]
     if tuple(map(int, pylint.__version__.split("."))) < (1, 5, 5):
         raise Exception("You need to use at least pylint 1.5.5. Run \"make setup\" in "
                         "pylint directory to get the current version.")

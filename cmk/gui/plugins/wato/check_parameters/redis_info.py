@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -29,7 +29,6 @@ from cmk.gui.valuespec import (
     Age,
     Dictionary,
     DropdownChoice,
-    MonitoringState,
     TextAscii,
     Tuple,
 )
@@ -41,24 +40,42 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def _parameter_valuespec_entersekt_emrerrors():
+def _parameter_valuespec_redis_info():
     return Dictionary(elements=[
-        (
-            "levels",
-            Tuple(title=_("Upper levels for HTTP EMR Errors"),
-                  elements=[
-                      Integer(title=_("Warning if above"), default_value=100, allow_empty=False),
-                      Integer(title=_("Critical if above"), default_value=200, allow_empty=False)
-                  ]),
-        ),
+        ("expected_mode",
+         DropdownChoice(
+             title=_("Expected mode"),
+             choices=[
+                 ("standalone", _("Standalone")),
+                 ("sentinel", _("Sentinel")),
+                 ("cluster", _("Cluster")),
+             ],
+         )),
+        ("min",
+         Tuple(
+             title=_("Minimum required uptime"),
+             elements=[
+                 Age(title=_("Warning if below")),
+                 Age(title=_("Critical if below")),
+             ],
+         )),
+        ("max",
+         Tuple(
+             title=_("Maximum allowed uptime"),
+             elements=[
+                 Age(title=_("Warning at")),
+                 Age(title=_("Critical at")),
+             ],
+         )),
     ],)
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="entersekt_emrerrors",
+    CheckParameterRulespecWithItem(
+        check_group_name="redis_info",
         group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Redis server name")),
         match_type="dict",
-        parameter_valuespec=_parameter_valuespec_entersekt_emrerrors,
-        title=lambda: _("Entersekt HTTP EMR Errors"),
+        parameter_valuespec=_parameter_valuespec_redis_info,
+        title=lambda: _("Redis info"),
     ))

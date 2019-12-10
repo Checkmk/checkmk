@@ -46,3 +46,29 @@ def _handle_iso_utc_to_localtimestamp(iso_8601_time):
     local_timestamp = calendar.timegm(struc_time)
 
     return local_timestamp
+
+
+def handle_graylog_messages(messages, params):
+    msgs_levels_upper = params.get('msgs_upper', (None, None))
+    msgs_levels_lower = params.get('msgs_lower', (None, None))
+
+    yield check_levels(messages,
+                       "messages",
+                       msgs_levels_upper + msgs_levels_lower,
+                       human_readable_func=int,
+                       infoname="Total number of messages")
+
+    avg_key = "msgs_avg"
+    avg = params.get(avg_key, 30)
+    msgs_avg_levels_upper = params.get('msgs_avg_upper', (None, None))
+    msgs_avg_levels_lower = params.get('msgs_avg_lower', (None, None))
+    this_time = time.time()
+
+    rate = get_rate("graylog_%s.rate" % avg_key, this_time, messages)
+    avg_rate = get_average("graylog_%s.avg" % avg_key, this_time, rate, avg)
+
+    yield check_levels(avg_rate,
+                       avg_key,
+                       msgs_avg_levels_upper + msgs_avg_levels_lower,
+                       infoname="Average number of messages (%s)" %
+                       get_age_human_readable(avg * 60))

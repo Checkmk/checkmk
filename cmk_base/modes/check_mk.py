@@ -761,31 +761,28 @@ def mode_scan_parents(options, args):
 
 
 modes.register(
-    Mode(
-        long_option="scan-parents",
-        handler_function=mode_scan_parents,
-        needs_config=False,
-        # TODO: Sadly needs to be True because the checks need to initialize the check specific
-        # configuration variables before the config can be loaded.
-        needs_checks=True,
-        argument=True,
-        argument_descr="HOST1 HOST2...",
-        argument_optional=True,
-        short_help="Autoscan parents, create conf.d/parents.mk",
-        long_help=[
-            "Uses traceroute in order to automatically detect hosts's parents. "
-            "It creates the file conf.d/parents.mk which "
-            "defines gateway hosts and parent declarations.",
-        ],
-        sub_options=[
-            Option(
-                long_option="procs",
-                argument=True,
-                argument_descr="N",
-                argument_conv=int,
-                short_help="Start up to N processes in parallel. Defaults to 50.",
-            ),
-        ]))
+    Mode(long_option="scan-parents",
+         handler_function=mode_scan_parents,
+         needs_config=False,
+         needs_checks=False,
+         argument=True,
+         argument_descr="HOST1 HOST2...",
+         argument_optional=True,
+         short_help="Autoscan parents, create conf.d/parents.mk",
+         long_help=[
+             "Uses traceroute in order to automatically detect hosts's parents. "
+             "It creates the file conf.d/parents.mk which "
+             "defines gateway hosts and parent declarations.",
+         ],
+         sub_options=[
+             Option(
+                 long_option="procs",
+                 argument=True,
+                 argument_descr="N",
+                 argument_conv=int,
+                 short_help="Start up to N processes in parallel. Defaults to 50.",
+             ),
+         ]))
 
 #.
 #   .--snmptranslate-------------------------------------------------------.
@@ -800,6 +797,7 @@ modes.register(
 
 def mode_snmptranslate(*args):
     snmp.do_snmptranslate(*args)
+
 
 modes.register(Mode(
     long_option="snmptranslate",
@@ -1400,9 +1398,7 @@ modes.register(
         long_option="notify",
         handler_function=mode_notify,
         needs_config=False,
-        # TODO: Sadly needs to be True because the checks need to initialize the check specific
-        # configuration variables before the config can be loaded.
-        needs_checks=True,
+        needs_checks=False,
         argument=True,
         argument_descr="MODE",
         argument_optional=True,

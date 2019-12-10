@@ -3,7 +3,7 @@
 import os
 import subprocess
 import sys
-import polib
+import polib  # type: ignore[import]
 
 
 def update_po_file(lang):

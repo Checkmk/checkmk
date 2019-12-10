@@ -46,7 +46,7 @@ find $REAL_SEARCH \
     -type f -print | sort | while read F; do
     if [[ $F =~ "/tests/" ]] && [[ $F == *.py ]]; then
         echo "$F"
-    elif [[ "$F" == *.py ]] || head -n 1 "$F" | grep -q '^#!.*python$' >/dev/null 2>&1; then
+    elif head -n 1 "$F" | grep -q '^#!.*python$' >/dev/null 2>&1; then
         echo "$F"
     fi
 done

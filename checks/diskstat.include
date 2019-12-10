@@ -465,10 +465,11 @@ def check_diskstat_dict(item, params, disks):
     # Utilization
     if "utilization" in disk:
         util = disk.pop("utilization")
-        yield check_levels(util * 100,
+        yield check_levels(util,
                            "disk_utilization",
                            params.get("utilization"),
                            human_readable_func=get_percent_human_readable,
+                           scale=0.01,
                            statemarkers=False,
                            infoname=prefix + "Utilization")
 

@@ -55,7 +55,7 @@ def output(text, *args, **kwargs):
         text = text % args
 
     if six.PY3:
-        ensured_text = ensure_unicode(text)  # type: unicode
+        ensured_text = ensure_unicode(text)  # type: Text
     else:
         ensured_text = ensure_bytestr(text)  # type: bytes
 

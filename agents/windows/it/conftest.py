@@ -12,7 +12,8 @@ localdir = os.path.dirname(os.path.abspath(__file__))
 
 def lock_cmd(subcmd):
     return [
-        'ssh', sshopts,
+        'ssh',
+    ] + sshopts + [
         '%s@%s' % (remoteuser, remote_ip),
         ('cd %s' % remotedir + ' && python ./lock.py %s' % subcmd)
     ]
@@ -22,10 +23,7 @@ def lock_operation(command):
     # Copy essential sources always to remote host. This is necessary as
     # another test executor might have removed the files meanwhile.
     files = [os.path.join(localdir, f) for f in ['lock.py', 'remote.py']]
-    cmds = [[
-        'scp',
-        sshopts,
-    ] + files + ['%s@%s:%s' % (remoteuser, remote_ip, remotedir)],
+    cmds = [['scp'] + sshopts + files + ['%s@%s:%s' % (remoteuser, remote_ip, remotedir)],
             lock_cmd(command)]
     for cmd in cmds:
         assert_subprocess(cmd)
@@ -42,7 +40,7 @@ def release_lock():
 def scp_agent_exe():
     agents_windows_dir = os.path.dirname(localdir)
     agent_exe = os.path.join(agents_windows_dir, 'check_mk_agent-64.exe')
-    cmd = ['scp', agent_exe, '%s@%s:%s' % (remoteuser, remote_ip, remotedir)]
+    cmd = ['scp'] + sshopts + [agent_exe, '%s@%s:%s' % (remoteuser, remote_ip, remotedir)]
     assert_subprocess(cmd)
 
 
@@ -51,13 +49,12 @@ def scp_tests():
         os.path.abspath(t) for t in glob.glob(os.path.join(localdir, 'test_*')) +
         [os.path.join(localdir, 'remote.py')]
     ]
-    cmd = ['scp'] + test_files + ['%s@%s:%s' % (remoteuser, remote_ip, remotedir)]
+    cmd = ['scp'] + sshopts + test_files + ['%s@%s:%s' % (remoteuser, remote_ip, remotedir)]
     assert_subprocess(cmd)
 
 
 def rm_rf_testfiles():
-    cmd = [
-        'ssh',
+    cmd = ['ssh'] + sshopts + [
         '%s@%s' % (remoteuser, remote_ip),
         ('cd %s' % remotedir + ' && del /S /F /Q * '
          '&& for /d %G in ("*") do rmdir "%~G" /Q')

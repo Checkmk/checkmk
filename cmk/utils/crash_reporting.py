@@ -45,7 +45,7 @@ from typing import Any, Dict, Iterator, Optional, Text, Tuple, Type  # pylint: d
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
 else:
-    from pathlib2 import Path
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
 import six
 
@@ -247,10 +247,19 @@ def _get_generic_crash_info(type_name, details):
         tb_list += traceback.extract_tb(exc_value.exc_info()[2])  # type: ignore
 
     # Unify different string types from exception messages to a unicode string
-    try:
-        exc_txt = six.text_type(exc_value)
-    except UnicodeDecodeError:
-        exc_txt = str(exc_value).decode("utf-8")
+    # HACK: copy-n-paste from cmk.utils.exception.MKException.__str__ below.
+    # Remove this after migration...
+    if exc_value is None or not exc_value.args:
+        exc_txt = six.text_type("")
+    elif len(exc_value.args) == 1 and isinstance(exc_value.args[0], six.binary_type):
+        try:
+            exc_txt = exc_value.args[0].decode("utf-8")
+        except UnicodeDecodeError:
+            exc_txt = u"b%s" % repr(exc_value.args[0])
+    elif len(exc_value.args) == 1:
+        exc_txt = six.text_type(exc_value.args[0])
+    else:
+        exc_txt = six.text_type(exc_value.args)
 
     return {
         "id": str(uuid.uuid1()),
@@ -329,8 +338,10 @@ def _get_local_vars_of_last_exception():
 
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
-    return base64.b64encode(
-        _format_var_for_export(pprint.pformat(local_vars).encode("utf-8"), maxsize=5 * 1024 * 1024))
+    return six.text_type(
+        base64.b64encode(
+            _format_var_for_export(pprint.pformat(local_vars).encode("utf-8"),
+                                   maxsize=5 * 1024 * 1024)))
 
 
 def _format_var_for_export(val, maxdepth=4, maxsize=1024 * 1024):

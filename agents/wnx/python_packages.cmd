@@ -51,3 +51,5 @@ call python_package_install !ppath! pypiwin32
 call python_package_install !ppath! requests
 call python_package_install !ppath! pyOpenSSL
 call python_package_install !ppath! requests[socks]
+call python_package_install !ppath! pathlib
+call python_package_install !ppath! pathlib2

@@ -34,6 +34,7 @@ from enum import Enum
 import logging
 import os
 import pprint
+import sys
 from typing import Any, Dict, Iterable, List, Optional, Tuple  # pylint: disable=unused-import
 try:
     # Python has a totally braindead history of changes in this area:
@@ -48,8 +49,12 @@ try:
 except ImportError:
     from collections import MutableMapping
 
-from pathlib2 import Path
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path
 
+from cmk.utils.encoding import make_utf8
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -102,8 +107,11 @@ class MkpRulePackProxy(MutableMapping):
     def __len__(self):
         return len(self.keys())
 
+    # NOTE: One cannot portably give a type for this method because of the
+    # braindead incompatible type changes of Mapping.keys(): In Python 2 it has
+    # to be a List[K], while in Python 3 it has to be an AbstractSet[K] (it's a
+    # KeysView[K], actually).
     def keys(self):
-        # type: () -> List[str]
         """List of keys of this rule pack"""
         return self.rule_pack.keys()
 
@@ -216,8 +224,8 @@ def load_config(settings):
     config["MkpRulePackProxy"] = MkpRulePackProxy
     for path in [settings.paths.main_config_file.value] + \
             sorted(settings.paths.config_dir.value.glob('**/*.mk')):
-        with open(str(path)) as file_object:
-            exec (file_object, config)  # pylint: disable=exec-used
+        with open(str(path), mode="rb") as file_object:
+            exec (file_object.read().decode("utf-8"), config)  # pylint: disable=exec-used
     config.pop("MkpRulePackProxy", None)
     _bind_to_rule_pack_proxies(config['rule_packs'], config['mkp_rule_packs'])
 
@@ -295,7 +303,7 @@ def save_rule_packs(rule_packs, pretty_print=False, dir_=None):
     if not dir_:
         dir_ = rule_pack_dir()
     dir_.mkdir(parents=True, exist_ok=True)
-    store.save_file(str(dir_ / "rules.mk"), output)
+    store.save_file(str(dir_ / "rules.mk"), make_utf8(output))
 
 
 # NOTE: It is essential that export_rule_pack() is called *before*
@@ -327,7 +335,7 @@ def export_rule_pack(rule_pack, pretty_print=False, dir_=None):
     if not dir_:
         dir_ = mkp_rule_pack_dir()
     dir_.mkdir(parents=True, exist_ok=True)
-    store.save_file(str(dir_ / ("%s.mk" % rule_pack['id'])), output)
+    store.save_file(str(dir_ / ("%s.mk" % rule_pack['id'])), make_utf8(output))
 
 
 def add_rule_pack_proxies(file_names):
@@ -421,7 +429,7 @@ def rule_pack_id_to_mkp(package_info):
     def mkp_of(rule_pack_file):
         # type: (str) -> Any
         """Find the MKP for the given file"""
-        for mkp, content in package_info.get('installed', {}).iteritems():
+        for mkp, content in package_info.get('installed', {}).items():
             if rule_pack_file in content.get('files', {}).get('ec_rule_packs', []):
                 return mkp
         return None

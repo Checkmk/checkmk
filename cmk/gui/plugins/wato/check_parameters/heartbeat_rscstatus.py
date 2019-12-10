@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -25,40 +25,38 @@
 # Boston, MA 02110-1301 USA.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    Dictionary,
-    DropdownChoice,
-    MonitoringState,
-    TextAscii,
-    Tuple,
-)
+from cmk.gui.valuespec import (Dictionary, DropdownChoice)
 
 from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
+    CheckParameterRulespecWithoutItem,
     rulespec_registry,
-    RulespecGroupCheckParametersApplications,
+    RulespecGroupCheckParametersStorage,
 )
 
 
-def _parameter_valuespec_entersekt_certexpiry():
+def _parameter_valuespec_heartbeat_rscstatus():
     return Dictionary(elements=[
-        (
-            "levels",
-            Tuple(title=_("Levels for number of days until expiration"),
-                  elements=[
-                      Integer(title=_("Warning if below"), default_value=20, allow_empty=False),
-                      Integer(title=_("Critical if below"), default_value=10, allow_empty=False)
-                  ]),
-        ),
+        ("expected_state",
+         DropdownChoice(
+             title=_("Expected state"),
+             choices=[
+                 ("none", _("All resource groups are running on a different node (none)")),
+                 ("all", _("All resource groups run on this node (all)")),
+                 ("local",
+                  _("All resource groups that belong to this node run on this node (local)")),
+                 ("foreign",
+                  _("All resource groups are running that are supposed to be running on the other node (foreign)"
+                   )),
+             ],
+         )),
     ],)
 
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
-        check_group_name="entersekt_certexpiry",
-        group=RulespecGroupCheckParametersApplications,
+        check_group_name="heartbeat_rscstatus",
+        group=RulespecGroupCheckParametersStorage,
         match_type="dict",
-        parameter_valuespec=_parameter_valuespec_entersekt_certexpiry,
-        title=lambda: _("Entersekt Certificate Expiration"),
+        parameter_valuespec=_parameter_valuespec_heartbeat_rscstatus,
+        title=lambda: _("Heartbeat Ressource Status"),
     ))

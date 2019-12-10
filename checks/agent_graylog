@@ -32,6 +32,7 @@
 #     'user': 'hell',
 #     'display_node_details': 'node',
 #     'display_sidecar_details': 'sidecar',
+#     'display_source_details': 'source',
 # }
 
 
@@ -51,6 +52,8 @@ def agent_graylog_arguments(params, hostname, ipaddress):
         params["display_node_details"],
         "--display_sidecar_details",
         params["display_sidecar_details"],
+        "--display_source_details",
+        params["display_source_details"],
     ]
 
     if "port" in params:

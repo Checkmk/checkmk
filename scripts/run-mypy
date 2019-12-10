@@ -37,4 +37,7 @@ fi
 # in messages relative, which will confuse e.g. Emacs' flycheck mode.
 
 MYPYPATH="$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/omd:$REPO_PATH/tests-py3:$REPO_PATH/tests-py3/typeshed" \
-    exec "$PIPENV" 3 run mypy --python-version "$PYTHON_VERSION" "$@"
+    exec "$PIPENV" 3 run mypy \
+    --python-version "$PYTHON_VERSION" \
+    --scripts-are-modules \
+    "$@"

@@ -28,7 +28,7 @@ import os
 import sys
 import time
 import getopt
-import paramiko
+import paramiko  # type: ignore[import]
 
 
 def usage():

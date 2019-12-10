@@ -14,7 +14,6 @@ MYPY_DIRS_TO_CHECK := \
 	cmk/cee \
 	cmk/cee/dcd \
 	cmk/cee/dcd/connectors \
-	cmk/cee/mknotifyd \
 	cmk/cee/notification_plugins \
 	cmk/ec \
 	cmk/gui \
@@ -77,11 +76,14 @@ MYPY_FILES_TO_CHECK := \
 	      $(realpath $(wildcard ../$(dir)/*.py)))))
 
 .PHONY: help test-docker test-pylint test-unit \
-	test-mypy test-mypy-raw clean test-packaging
+	test-mypy test-mypy-raw test-mypy3 test-mypy3-raw \
+	clean test-packaging
 
 help:
 	@echo "test-mypy                 - Run mypy tests"
 	@echo "test-mypy-raw             - Run mypy tests with raw edition config"
+	@echo "test-mypy3                - Run mypy tests for Python 3"
+	@echo "test-mypy3-raw            - Run mypy tests for Python 3 with raw edition config"
 	@echo "test-docker               - Run docker tests"
 	@echo "test-pylint               - Run pylint based tests"
 	@echo "test-unit                 - Run unit tests"
@@ -96,6 +98,12 @@ test-pylint:
 
 test-unit:
 	$(PYTEST) -T unit unit
+
+test-mypy3:
+	$(MYPY) $$(./find-python-files)
+
+test-mypy3-raw:
+	$(MYPY) --config-file=$(realpath ../mypy-raw.ini) $$(./find-python-files)
 
 test-mypy:
 	$(MYPY) $(MYPY_FILES_TO_CHECK)

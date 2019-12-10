@@ -40,6 +40,7 @@ find $REAL_SEARCH \
     -name .mypy_cache -prune -o \
     -name .venv -prune -o \
     -name test_docker_parse_node_images.py -prune -o \
+    -name conftest.py -prune -o \
     -name typeshed -prune -o \
     -name run-clang-tidy.py -prune -o \
     -name chroot -prune -o \

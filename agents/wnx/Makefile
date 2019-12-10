@@ -19,6 +19,10 @@ MKJOLOKIA_EXE = $(ARTE_PATH)\mk_jolokia.exe
 MKLOGWATCH_EXE_BUILD = $(BUILD_PATH)\dist\mk_logwatch.exe
 MKJOLOKIA_EXE_BUILD = $(BUILD_PATH)\dist\mk_jolokia.exe
 
+MSI_STATE_FILE = $(ARTE_PATH)\msi_state_data.yml
+MSI_AGENT_FILE = $(ARTE_PATH)\check_mk_agent.msi
+MSI_PATCH_FILE = ..\..\cmk\utils\msi_patch.py
+
 
 
 .PHONY: clean
@@ -48,6 +52,19 @@ check_install:
 
 mklogwatch: $(MKLOGWATCH_EXE_BUILD)
 	@copy $(MKLOGWATCH_EXE_BUILD) $(ARTE_PATH)
+
+$(MSI_STATE_FILE): $(MSI_AGENT_FILE) $(MSI_PATCH_FILE)
+	@powershell Write-Host "Patching '$(MSI_AGENT_FILE)'" -Foreground Green
+	@del $(MSI_STATE_FILE)  2> nul
+	py -2 $(MSI_PATCH_FILE) 1033 $(MSI_AGENT_FILE) $(MSI_STATE_FILE)
+
+msi_patch: $(MSI_STATE_FILE)
+	@if NOT exist "$(MSI_STATE_FILE)" powershell Write-Host "Patch of '$(MSI_AGENT_FILE)' failed" -Foreground Red && exit /b 1
+	@powershell Write-Host "Patch of '$(MSI_AGENT_FILE)' success" -Foreground Green
+	@type $(MSI_STATE_FILE)
+	@exit /b 0
+
+	
 
 $(MKLOGWATCH_EXE_BUILD): $(SRC_PATH)\mk_logwatch .\bld_fb.cmd
 	@powershell Write-Host "Starting the build of mklogwatch" -Foreground Green

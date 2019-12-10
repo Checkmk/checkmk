@@ -109,19 +109,21 @@ rem move %REMOTE_MACHINE%\check_mk_service.msi %REMOTE_MACHINE%\check_mk_agent_u
 %msbuild% wamain.sln /t:install /p:Configuration=Release,Platform=x64
 if not %errorlevel% == 0 powershell Write-Host "Failed Install build" -Foreground Red && exit /b 8
 
+@rem Patch Version Phase: Patch version value direct in the msi file
 rem set version:
 rem remove quotes
 echo %wnx_version:~1,-1%
 rem info
 powershell Write-Host "Setting Version in MSI: %wnx_version%" -Foreground Green
-rem command
-echo cscript.exe //nologo WiRunSQL.vbs %REMOTE_MACHINE%\check_mk_agent.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
+@rem command
+@echo cscript.exe //nologo WiRunSQL.vbs %REMOTE_MACHINE%\check_mk_agent.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
 cscript.exe //nologo WiRunSQL.vbs %REMOTE_MACHINE%\check_mk_service.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
-rem check result
+@rem check result
 if not %errorlevel% == 0 powershell Write-Host "Failed version set" -Foreground Red && exit /b 34
 
 goto end
-@rem ignored:
+@rem Unit Tests Phase: post processing/build special modules using make
+@rem this phase is skipped, there is no need to inculde unit tests in the build script
 powershell Write-Host "starting unit tests" -Foreground Cyan 
 
 pushd %REMOTE_MACHINE%
@@ -136,7 +138,10 @@ powershell Write-Host "Unit test failed" -Foreground Red
 powershell Write-Host "Killing msi in artefacts" -Foreground Red 
 call %cur_dir%\clean_artefacts.cmd 
 exit 100
+
 :end
+
+@rem Deploy Phase: post processing/build special modules using make
 copy install\resources\check_mk.user.yml %REMOTE_MACHINE%
 pushd %REMOTE_MACHINE%
 
@@ -145,11 +150,9 @@ copy check_mk_service32.exe check_mk_agent.exe || powershell Write-Host "Failed 
 copy check_mk_service64.exe check_mk_agent-64.exe || powershell Write-Host "Failed to create 64 bit agent" -Foreground Red && exit /b 35
 powershell Write-Host "File Deployment succeeded" -Foreground Green
 
-rem touching update msi
-rem copy check_mk_agent_update.msi /B+ ,,/Y > nul
 popd
 
-@ disabled till integrated
-@rem !make_exe! msi_patch || powershell Write-Host "Failed to patch MSI exec" -Foreground Red && echo set && exit /b 36
+@rem Additional Phase: post processing/build special modules using make
+!make_exe! msi_patch || powershell Write-Host "Failed to patch MSI exec" -Foreground Red && echo set && exit /b 36
 !make_exe! frozen_binaries || powershell Write-Host "Failed to build frozen binaries" -Foreground Red && echo set && exit /b 37
 

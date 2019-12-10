@@ -1,10 +1,9 @@
 # pylint: disable=redefined-outer-name
 import logging
-import time
 import pytest  # type: ignore
 from testlib import on_time
 import cmk.ec.defaults
-import cmk.ec.main as main
+import cmk.ec.main
 
 
 @pytest.fixture
@@ -14,7 +13,7 @@ def event_creator():
     config = cmk.ec.defaults.default_config()
     config["debug_rules"] = True
 
-    return main.EventCreator(logger, config)
+    return cmk.ec.main.EventCreator(logger, config)
 
 
 @pytest.mark.parametrize(

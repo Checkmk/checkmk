@@ -244,8 +244,7 @@ def _is_piggyback_file_outdated(status_file_path, piggyback_file_path):
     except OSError as e:
         if e.errno == errno.ENOENT:
             return True
-        else:
-            raise
+        raise
 
 
 def _remove_piggyback_file(piggyback_file_path):
@@ -256,8 +255,7 @@ def _remove_piggyback_file(piggyback_file_path):
     except OSError as e:
         if e.errno == errno.ENOENT:
             return False
-        else:
-            raise
+        raise
 
 
 def remove_source_status_file(source_hostname):
@@ -308,8 +306,7 @@ def _store_status_file_of(status_file_path, piggyback_file_paths):
             except OSError as e:
                 if e.errno == errno.ENOENT:
                     continue
-                else:
-                    raise
+                raise
     os.rename(tmp_path, status_file_path)
 
 
@@ -345,8 +342,7 @@ def _get_piggybacked_host_folders():
     except OSError as e:
         if e.errno == errno.ENOENT:
             return []
-        else:
-            raise
+        raise
 
 
 def _get_piggybacked_host_sources(piggybacked_host_folder):
@@ -356,8 +352,7 @@ def _get_piggybacked_host_sources(piggybacked_host_folder):
     except OSError as e:
         if e.errno == errno.ENOENT:
             return []
-        else:
-            raise
+        raise
 
 
 def _get_source_status_file_path(source_hostname):

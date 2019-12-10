@@ -36,6 +36,8 @@ import cmk
 import cmk.utils.store as store
 import cmk.utils.cmk_subprocess as subprocess
 
+import cmk.ec.defaults  # pylint: disable=cmk-module-layer-violation
+
 import cmk.gui.hooks as hooks
 import cmk.gui.config as config
 import cmk.gui.mkeventd as mkeventd

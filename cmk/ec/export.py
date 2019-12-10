@@ -65,7 +65,6 @@ import cmk.ec.settings
 
 class MkpRulePackBindingError(MKException):
     """Base class for exceptions related to rule pack binding"""
-    pass
 
 
 class MkpRulePackProxy(MutableMapping):

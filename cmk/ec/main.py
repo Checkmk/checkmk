@@ -2065,7 +2065,7 @@ class EventCreator(object):
                     # Nasty: the year is not contained in the message. We cannot simply
                     # assume that the message if from the current year.
                     lt = time.localtime()
-                    if lt.tm_mon < 6 and month > 6:  # Assume that message is from last year
+                    if lt.tm_mon < 6 < month:  # Assume that message is from last year
                         year = lt.tm_year - 1
                     else:
                         year = lt.tm_year  # Assume the current year

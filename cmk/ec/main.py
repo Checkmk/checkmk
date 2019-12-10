@@ -312,7 +312,7 @@ def match_ipv4_network(pattern, ipaddress_text):
     # first network_bits of network and ipaddress must be
     # identical. Create a bitmask.
     bitmask = 0
-    for n in xrange(32):
+    for n in range(32):
         bitmask = bitmask << 1
         if n < network_bits:
             bit = 1
@@ -351,7 +351,7 @@ def replace_groups(text, origtext, match_groups):
     # Right now we have
     # $MATCH_GROUPS_MESSAGE_x$
     # $MATCH_GROUPS_SYSLOG_APPLICATION_x$
-    for key_prefix, values in match_groups.iteritems():
+    for key_prefix, values in match_groups.items():
         if not isinstance(values, tuple):
             continue
 
@@ -551,7 +551,7 @@ class Perfcounters(object):
                 duration = now - self._last_statistics
             else:
                 duration = 0
-            for name, value in self._counters.iteritems():
+            for name, value in self._counters.items():
                 if duration:
                     delta = value - self._old_counters[name]
                     rate = delta / duration  # fixed: true-divsion
@@ -638,7 +638,7 @@ class EventServer(ECServerThread):
 
         self._rules = []
         self._hash_stats = []
-        for _unused_facility in xrange(32):
+        for _unused_facility in range(32):
             self._hash_stats.append([0] * 8)
 
         self.host_config = HostConfig(self._logger)
@@ -875,7 +875,7 @@ class EventServer(ECServerThread):
 
             # Read data from existing event unix socket connections
             # NOTE: We modify client_socket in the loop, so we need to copy below!
-            for fd, (cs, address, previous_data) in list(client_sockets.iteritems()):
+            for fd, (cs, address, previous_data) in list(client_sockets.items()):
                 if fd in readable:
                     # Receive next part of data
                     try:
@@ -1350,7 +1350,7 @@ class EventServer(ECServerThread):
             for facility in range(23) + [31]:
                 if facility in self._rule_hash:
                     stats = []
-                    for prio, entries in self._rule_hash[facility].iteritems():
+                    for prio, entries in self._rule_hash[facility].items():
                         stats.append("%s(%d)" % (SyslogPriority(prio), len(entries)))
                     self._logger.info(" %-12s: %s" % (SyslogFacility(facility), " ".join(stats)))
 
@@ -1376,7 +1376,7 @@ class EventServer(ECServerThread):
         if facility and not rule.get("invert_matching"):
             self.hash_rule_facility(rule, facility)
         else:
-            for facility in xrange(32):  # all syslog facilities
+            for facility in range(32):  # all syslog facilities
                 self.hash_rule_facility(rule, facility)
 
     def hash_rule_facility(self, rule, facility):
@@ -1385,7 +1385,7 @@ class EventServer(ECServerThread):
             if key in rule:
                 prio_from, prio_to = rule[key]
                 # Beware: from > to!
-                for p in xrange(prio_to, prio_from + 1):
+                for p in range(prio_to, prio_from + 1):
                     needed_prios[p] = True
             elif key == "match_priority":  # all priorities match
                 needed_prios = [True] * 8  # needed to check this rule for all event priorities
@@ -1404,8 +1404,8 @@ class EventServer(ECServerThread):
         self._logger.info("Top 20 of facility/priority:")
         entries = []
         total_count = 0
-        for facility in xrange(32):
-            for priority in xrange(8):
+        for facility in range(32):
+            for priority in range(8):
                 count = self._hash_stats[facility][priority]
                 if count:
                     total_count += count
@@ -1739,16 +1739,14 @@ class EventServer(ECServerThread):
 
     def get_hosts_with_active_event_limit(self):
         hosts = []
-        for hostname, num_existing_events in self._event_status.num_existing_events_by_host.iteritems(
-        ):
+        for hostname, num_existing_events in self._event_status.num_existing_events_by_host.items():
             if num_existing_events >= self._config["event_limit"]["by_host"]["limit"]:
                 hosts.append(hostname)
         return hosts
 
     def get_rules_with_active_event_limit(self):
         rule_ids = []
-        for rule_id, num_existing_events in self._event_status.num_existing_events_by_rule.iteritems(
-        ):
+        for rule_id, num_existing_events in self._event_status.num_existing_events_by_rule.items():
             if rule_id is None:
                 continue  # Ignore rule unrelated overflow events. They have no rule id associated.
             if num_existing_events >= self._config["event_limit"]["by_rule"]["limit"]:
@@ -2104,7 +2102,7 @@ class EventCreator(object):
 
         if self._config["debug_rules"]:
             self._logger.info('Parsed message:\n' + ("".join(
-                [" %-15s %s\n" % (k + ":", v) for (k, v) in sorted(event.iteritems())])).rstrip())
+                [" %-15s %s\n" % (k + ":", v) for (k, v) in sorted(event.items())])).rstrip())
 
         return event
 
@@ -3742,7 +3740,7 @@ class EventStatus(object):
         return self._events
 
     def get_rule_stats(self):
-        return sorted(self._rule_stats.iteritems(), key=lambda x: x[0])
+        return sorted(self._rule_stats.items(), key=lambda x: x[0])
 
 
 #.

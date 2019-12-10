@@ -37,9 +37,13 @@ from __future__ import print_function
 # https://github.com/PyCQA/pylint/issues/1290 for invalid-name.
 
 from argparse import ArgumentParser, ArgumentTypeError, RawDescriptionHelpFormatter
-from typing import Text, List, NamedTuple, Optional, Union  # pylint: disable=unused-import
+import sys
+from typing import List, NamedTuple, Optional, Union  # pylint: disable=unused-import
 
-from pathlib2 import Path
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
 # a filesystem path with a user-presentable description
 AnnotatedPath = NamedTuple('AnnotatedPath', [('description', str), ('value', Path)])
@@ -126,7 +130,7 @@ FileDescriptor = NamedTuple('FileDescriptor', [('value', int)])
 class ECArgumentParser(ArgumentParser):
     """An argument parser for the event console"""
     def __init__(self, prog, version, paths, port_numbers):
-        # type: (str, Text, Paths, PortNumbers) -> None
+        # type: (str, str, Paths, PortNumbers) -> None
         super(ECArgumentParser, self).__init__(prog=prog,
                                                formatter_class=RawDescriptionHelpFormatter,
                                                description='Start the Check_MK event console.',
@@ -141,7 +145,7 @@ class ECArgumentParser(ArgumentParser):
             '  {:<{width}} {}'.format(p.description + ':', p.value, width=width) for p in paths))
 
     def _add_arguments(self, version, port_numbers):
-        # type: (Text, PortNumbers) -> None
+        # type: (str, PortNumbers) -> None
         self.add_argument('-V',
                           '--version',
                           action='version',
@@ -229,7 +233,7 @@ Settings = NamedTuple('Settings', [
 
 
 def settings(version, omd_root, default_config_dir, argv):
-    # type: (Text, Path, Path, List[str]) -> Settings
+    # type: (str, Path, Path, List[str]) -> Settings
     """Returns all event console settings"""
     paths = _default_paths(omd_root, default_config_dir)
     port_numbers = _default_port_numbers()
@@ -249,8 +253,7 @@ def settings(version, omd_root, default_config_dir, argv):
 
 
 if __name__ == "__main__":
-    import sys
     import cmk
     import cmk.utils.paths
-    print(settings(cmk.__version__, Path(cmk.utils.paths.omd_root),
+    print(settings(str(cmk.__version__), Path(cmk.utils.paths.omd_root),
                    Path(cmk.utils.paths.default_config_dir), sys.argv))

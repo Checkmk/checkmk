@@ -30,6 +30,15 @@ Please try to find a better place for the things you want to put here."""
 
 import itertools
 import sys
+import time
+from typing import Union  # pylint: disable=unused-import
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path
+
+from cmk.utils.exceptions import MKGeneralException
 
 
 def quote_shell_string(s):
@@ -115,3 +124,14 @@ def branch_of_daily_build(v):
     if len(v) == 10:
         return "master"
     return v.split('-')[0]
+
+
+def cachefile_age(path):
+    # type: (Union[Path, str]) -> float
+    if not isinstance(path, Path):
+        path = Path(path)
+
+    try:
+        return time.time() - path.stat().st_mtime
+    except Exception as e:
+        raise MKGeneralException("Cannot determine age of cache file %s: %s" % (path, e))

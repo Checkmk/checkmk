@@ -123,7 +123,6 @@ import cmk.utils.rulesets.tuple_rulesets as _tuple_rulesets
 # with an underscore. These names will be skipped when loading into the
 # check context.
 import cmk.utils as _cmk_utils
-import cmk_base.utils as _utils
 import cmk_base.config as _config
 import cmk_base.console as _console  # pylint: disable=unused-import
 import cmk_base.snmp_utils as _snmp_utils
@@ -572,7 +571,7 @@ def _agent_cache_file_age(hostname, check_plugin_name):
         cachefile = None
 
     if cachefile is not None and os.path.exists(cachefile):
-        return _utils.cachefile_age(cachefile)
+        return _cmk_utils.cachefile_age(cachefile)
 
     return None
 

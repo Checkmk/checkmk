@@ -26,11 +26,9 @@
 """This is an unsorted collection of functions which are needed in
 Check_MK modules and/or cmk_base modules code."""
 
-import os
 import signal
-import time
 
-from cmk.utils.exceptions import MKGeneralException, MKTerminate
+from cmk.utils.exceptions import MKTerminate
 
 # TODO: Try to find a better place for them.
 
@@ -40,14 +38,6 @@ def worst_service_state(*states):
     if 2 in states:
         return 2
     return max(states)
-
-
-def cachefile_age(path):
-    try:
-        return time.time() - os.stat(path)[8]
-    except Exception as e:
-        raise MKGeneralException("Cannot determine age of cache file %s: %s" \
-                                 % (path, e))
 
 
 #.

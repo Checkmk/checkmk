@@ -32,6 +32,7 @@ from typing import (  # pylint: disable=unused-import
 )
 from pathlib2 import Path  # pylint: disable=unused-import
 
+import cmk.utils
 import cmk.utils.paths
 import cmk.utils.translations
 import cmk.utils.store as store
@@ -39,7 +40,6 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.render import Age
 from cmk.utils.regex import regex
 
-import cmk_base.utils
 import cmk_base.console as console
 
 PiggybackFileInfo = NamedTuple('PiggybackFileInfo', [
@@ -183,7 +183,7 @@ def _get_piggyback_processed_file_info(source_hostname, piggybacked_hostname, pi
     validity_state = _get_validity_state(source_hostname, piggybacked_hostname, time_settings)
 
     try:
-        file_age = cmk_base.utils.cachefile_age(piggyback_file_path)
+        file_age = cmk.utils.cachefile_age(piggyback_file_path)
     except MKGeneralException:
         return False, "Piggyback file might have been deleted", 0
 
@@ -227,7 +227,7 @@ def _get_validity_state(source_hostname, piggybacked_hostname, time_settings):
 
 
 def _eval_file_in_validity_period(file_age, validity_period, validity_state, reason):
-    # type: (int, Optional[int], int, str) -> Tuple[bool, str, int]
+    # type: (float, Optional[int], int, str) -> Tuple[bool, str, int]
     if validity_period is not None and file_age < validity_period:
         return (True, "%s (still valid, %s left)" % (reason, Age(validity_period - file_age)),
                 validity_state)
@@ -419,7 +419,7 @@ def _cleanup_old_source_status_files(time_settings):
         source_file_path = os.path.join(base_dir, entry)
 
         try:
-            file_age = cmk_base.utils.cachefile_age(source_file_path)
+            file_age = cmk.utils.cachefile_age(source_file_path)
         except MKGeneralException:
             continue  # File might've been deleted. That's ok.
 

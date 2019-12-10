@@ -62,6 +62,11 @@ display_usage () {
 }
 
 
+MK_ORA_DEBUG=false
+MK_ORA_DEBUG_CONNECT=false
+MK_ORA_LOGGING=false
+
+
 while test -n "$1"; do
     case "$1" in
         -h|--help)
@@ -71,18 +76,18 @@ while test -n "$1"; do
 
         -d)
             set -xv
-            MK_ORA_DEBUG=1
+            MK_ORA_DEBUG=true
             shift
             ;;
 
         -t)
-            MK_ORA_DEBUG_CONNECT=1
+            MK_ORA_DEBUG_CONNECT=true
             shift
             ;;
 
         -l|--log)
             if type flock > /dev/null 2>&1; then
-                MK_ORA_LOGGING=1
+                MK_ORA_LOGGING=true
                 export MK_ORA_LOGGING
             else
                 echo "You cannot use the option '--log': flock needs to be installed."
@@ -345,7 +350,7 @@ fi
 
 
 logging () {
-    if [ "$MK_ORA_LOGGING" == "1" ]; then
+    if $MK_ORA_LOGGING; then
         (
             flock 200
 
@@ -1958,7 +1963,7 @@ do_custom_sqls () {
                 "Section item: $MK_CUSTOM_SQLS_ITEM" "Custom SQLS query: $MK_CUSTOM_SQLS_SECTION_QUERY"\
                 "Max cache age: $max_cache_age"
 
-        if [ "$MK_ORA_DEBUG_CONNECT" = "1" ]; then
+        if $MK_ORA_DEBUG_CONNECT; then
             do_testmode_custom_sql
         else
             if [ -z "$max_cache_age" ]; then
@@ -2055,7 +2060,7 @@ unset_custom_sqls_vars
 #   '----------------------------------------------------------------------'
 
 do_dummy_sections () {
-    if [ "$MK_ORA_LOGGING" != "1" ]; then
+    if ! $MK_ORA_LOGGING; then
         for section in $SYNC_SECTIONS $ASYNC_SECTIONS $SYNC_ASM_SECTIONS $ASYNC_ASM_SECTIONS; do
             echo "<<<oracle_${section}>>>"
         done
@@ -2218,7 +2223,7 @@ run_cached () {
     # Cache file outdated and new job not yet running? Start it
     if [ -z "$use_cache_file" ] && [ ! -e "${cache_file}.new" ]; then
         logging "[${MK_SID}] [run_cached]" "Cache file outdated, start it."
-        if [ "$MK_ORA_DEBUG" ]; then
+        if $MK_ORA_DEBUG; then
             echo "set -o noclobber; exec > \"${cache_file}.new\" || exit 1; ${cmd_name} && mv \"${cache_file}.new\" \"${cache_file}\" || rm -f \"${cache_file}\" \"${cache_file}.new\"" | /bin/bash
         else
             # When the command fails, the output is throws away ignored
@@ -2443,7 +2448,7 @@ mk_ora_sqlplus () {
         logging -w "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "OUTPUT '$output'"
         output=$(echo -e "$output" | "${GREP}" -v "^ERROR at line" | tr '\n' ' ' |\
                                      sed "s/^/$(echo "$MK_SID" | tr '[:lower:]' '[:upper:]')|FAILURE|/" ; echo)
-        if [ "$MK_ORA_DEBUG_CONNECT" ]; then
+        if $MK_ORA_DEBUG_CONNECT; then
             echo "Logindetails: ${DBCONNECT}" >&2
             echo -e "$output"
         else
@@ -2564,12 +2569,12 @@ do_checks () {
     fi
     export MK_ASYNC_SECTIONS_QUERY
 
-    if [ "$MK_ORA_LOGGING" = "1" ]; then
+    if $MK_ORA_LOGGING; then
         logging "[${MK_SID}] [do_checks]" "Testmode: $(echo \
                 "select user || ' on ' || host_name || ' instance ' || instance_name from v\$instance;" | mk_ora_sqlplus "do_checks")"
     fi
 
-    if [ "$MK_ORA_DEBUG_CONNECT" = "1" ]; then
+    if $MK_ORA_DEBUG_CONNECT; then
         do_testmode "$sections" "$asections" 2>&1
     else
         do_sync_checks
@@ -2600,7 +2605,7 @@ export -f set_ora_env
 #   ---preliminaries--------------------------------------------------------
 
 logging "--------------------------------------------------------------------"
-if [ "$MK_ORA_LOGGING" == "1" ]; then
+if $MK_ORA_LOGGING; then
     echo "Start logging to file: $MK_VARDIR/log/mk_oracle.log" >&2
 fi
 

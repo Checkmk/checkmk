@@ -59,6 +59,10 @@ import omdlib
 import omdlib.certs
 import omdlib.backup
 from omdlib.type_defs import CommandOptions  # pylint: disable=unused-import
+from omdlib.skel_permissions import (  # pylint: disable=unused-import
+    Permissions, read_skel_permissions, load_skel_permissions, load_skel_permissions_from,
+    skel_permissions_file_path,
+)
 
 Arguments = List[str]
 Replacements = Dict[str, str]
@@ -68,8 +72,8 @@ ConfigHookChoices = Union[None, Pattern, List[ConfigHookChoiceItem]]
 ConfigHook = Dict[str, Union[str, bool, ConfigHookChoices]]
 ConfigHooks = Dict[str, ConfigHook]
 ConfigHookResult = Tuple[int, str]
-Permissions = Dict[str, int]
 ConfigChangeCommands = List[Tuple[str, str]]
+DialogResult = Tuple[bool, bytes]
 
 #   .--Logging-------------------------------------------------------------.
 #   |                _                      _                              |
@@ -233,8 +237,6 @@ def chdir(path):
 #   +----------------------------------------------------------------------+
 #   |  Wrapper functions for interactive dialogs using the dialog cmd tool |
 #   '----------------------------------------------------------------------'
-
-DialogResult = Tuple[bool, bytes]
 
 
 def run_dialog(args):
@@ -703,53 +705,6 @@ def stop_site(site):
     call_init_scripts(site, "stop")
 
 
-#.
-#   .--Skeleton------------------------------------------------------------.
-#   |                ____  _        _      _                               |
-#   |               / ___|| | _____| | ___| |_ ___  _ __                   |
-#   |               \___ \| |/ / _ \ |/ _ \ __/ _ \| '_ \                  |
-#   |                ___) |   <  __/ |  __/ || (_) | | | |                 |
-#   |               |____/|_|\_\___|_|\___|\__\___/|_| |_|                 |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Deal with file owners, permissions and the the skel hierarchy       |
-#   '----------------------------------------------------------------------'
-
-g_skel_permissions = {}  # type: Permissions
-
-
-def read_skel_permissions():
-    # type: () -> None
-    global g_skel_permissions
-    g_skel_permissions = load_skel_permissions(omdlib.__version__)
-    if not g_skel_permissions:
-        bail_out("%s is missing or currupted." % skel_permissions_file_path(omdlib.__version__))
-
-
-def load_skel_permissions(version):
-    # type: (str) -> Permissions
-    return load_skel_permissions_from(skel_permissions_file_path(version))
-
-
-def load_skel_permissions_from(path):
-    # type: (str) -> Permissions
-    perms = {}  # type: Permissions
-    with open(path) as f:
-        for line in f:
-            line = line.strip()
-            if line == "" or line[0] == "#":
-                continue
-            path, perm = line.split()
-            mode = int(perm, 8)
-            perms[path] = mode
-        return perms
-
-
-def skel_permissions_file_path(version):
-    # type: (str) -> str
-    return "/omd/versions/%s/share/omd/skel.permissions" % version
-
-
 def get_skel_permissions(skel_path, perms, relpath):
     # type: (str, Permissions, str) -> int
     try:
@@ -808,7 +763,6 @@ def file_owner_verify(path, uid, gid):
 
 def create_skeleton_files(site, directory):
     # type: (SiteContext, str) -> None
-    read_skel_permissions()
     replacements = site.replacements
     # Hack: exclude tmp if dir is '.'
     exclude_tmp = directory == "."
@@ -882,7 +836,7 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
         open(user_path, "w").write(replace_tags(open(skel_path).read(), replacements))
 
     if not os.path.islink(skel_path):
-        mode = g_skel_permissions.get(relpath)
+        mode = read_skel_permissions().get(relpath)
         if mode is None:
             if os.path.isdir(skel_path):
                 mode = 0o755
@@ -1571,7 +1525,7 @@ def update_file(relpath, site, old_version, new_version, old_perms):
 
     user_type = filetype(user_path)
     old_perm = get_skel_permissions(old_skel, old_perms, relpath)
-    new_perm = get_skel_permissions(new_skel, g_skel_permissions, relpath)
+    new_perm = get_skel_permissions(new_skel, read_skel_permissions(), relpath)
     user_perm = get_file_permissions(user_path)
 
     # Fix permissions not for links and only if the new type is as expected
@@ -3297,8 +3251,6 @@ def diff_list(options, site, from_skelroot, from_version, orig_path):
     # diff, otherwise just the state. Only files present in skel/ are
     # handled at all.
 
-    read_skel_permissions()
-
     old_perms = site.skel_permissions
 
     # Prepare paths:
@@ -3482,9 +3434,6 @@ def main_update(site, args, options):
     # 2. creating a patch from the old default files to the current
     #    files and applying that to the new default files
     # We implement the first method.
-
-    # read permissions
-    read_skel_permissions()
 
     # In case the version_meta is stored in the site and it's the data of the
     # old version we are facing, use these files instead of the files from the

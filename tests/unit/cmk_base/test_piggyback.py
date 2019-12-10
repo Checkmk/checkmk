@@ -221,8 +221,8 @@ def test_store_piggyback_raw_data_new_host():
     time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)]
 
     piggyback.store_piggyback_raw_data("source2", {"pig": [
-        u"<<<check_mk>>>",
-        u"lulu",
+        b"<<<check_mk>>>",
+        b"lulu",
     ]})
 
     for raw_data_info in piggyback.get_piggyback_raw_data("pig", time_settings):
@@ -238,8 +238,8 @@ def test_store_piggyback_raw_data_second_source():
     time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)]
 
     piggyback.store_piggyback_raw_data("source2", {"test-host": [
-        u"<<<check_mk>>>",
-        u"lulu",
+        b"<<<check_mk>>>",
+        b"lulu",
     ]})
 
     for raw_data_info in piggyback.get_piggyback_raw_data("test-host", time_settings):
@@ -265,12 +265,12 @@ def test_get_source_and_piggyback_hosts():
 
     piggyback.store_piggyback_raw_data("source1", {
         "test-host2": [
-            u"<<<check_mk>>>",
-            u"source1",
+            b"<<<check_mk>>>",
+            b"source1",
         ],
         "test-host": [
-            u"<<<check_mk>>>",
-            u"source1",
+            b"<<<check_mk>>>",
+            b"source1",
         ]
     })
 
@@ -279,18 +279,18 @@ def test_get_source_and_piggyback_hosts():
              (time.time() - 10, time.time() - 10))
 
     piggyback.store_piggyback_raw_data("source1", {"test-host2": [
-        u"<<<check_mk>>>",
-        u"source1",
+        b"<<<check_mk>>>",
+        b"source1",
     ]})
 
     piggyback.store_piggyback_raw_data("source2", {
         "test-host2": [
-            u"<<<check_mk>>>",
-            u"source2",
+            b"<<<check_mk>>>",
+            b"source2",
         ],
         "test-host": [
-            u"<<<check_mk>>>",
-            u"source2",
+            b"<<<check_mk>>>",
+            b"source2",
         ]
     })
 

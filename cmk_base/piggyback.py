@@ -61,7 +61,7 @@ PiggybackRawDataInfo = NamedTuple('PiggybackRawData', [
     ('successfully_processed', bool),
     ('reason', str),
     ('reason_status', int),
-    ('raw_data', str),
+    ('raw_data', bytes),
 ])
 
 
@@ -88,7 +88,10 @@ def get_piggyback_raw_data(piggybacked_hostname, time_settings):
     piggyback_data = []
     for file_info in piggyback_file_infos:
         try:
-            raw_data = open(file_info.file_path).read()
+            # Raw data is always stored as bytes. Later the content is
+            # converted to unicode in abstact.py:_parse_info which respects
+            # 'encoding' in section options.
+            raw_data = store.load_bytes_from_file(file_info.file_path)
 
         except IOError as e:
             reason = "Cannot read piggyback raw data from source '%s'" % file_info.source_hostname
@@ -290,7 +293,7 @@ def remove_source_status_file(source_hostname):
 
 
 def store_piggyback_raw_data(source_hostname, piggybacked_raw_data):
-    # type: (str, Dict[str, List[str]]) -> None
+    # type: (str, Dict[str, List[bytes]]) -> None
     piggyback_file_paths = []
     for piggybacked_hostname, lines in piggybacked_raw_data.items():
         piggyback_file_path = _get_piggybacked_file_path(source_hostname, piggybacked_hostname)
@@ -299,8 +302,10 @@ def store_piggyback_raw_data(source_hostname, piggybacked_raw_data):
             "Storing piggyback data for: %s",
             piggybacked_hostname,
         )
-        content = "\n".join(lines) + "\n"
-        store.save_file(piggyback_file_path, content)
+        # Raw data is always stored as bytes. Later the content is
+        # converted to unicode in abstact.py:_parse_info which respects
+        # 'encoding' in section options.
+        store.save_bytes_to_file(piggyback_file_path, b"%s\n" % b"\n".join(lines))
         piggyback_file_paths.append(piggyback_file_path)
 
     # Store the last contact with this piggyback source to be able to filter outdated data later
@@ -317,13 +322,20 @@ def store_piggyback_raw_data(source_hostname, piggybacked_raw_data):
 def _store_status_file_of(status_file_path, piggyback_file_paths):
     # type: (str, List[str]) -> None
     store.makedirs(os.path.dirname(status_file_path))
-    with tempfile.NamedTemporaryFile("w",
+    # Cannot use store.save_bytes_to_file like:
+    # 1. store.save_bytes_to_file(status_file_path, b"")
+    # 2. set utime of piggybacked host files
+    # Between 1. and 2.:
+    # - the piggybacked host may check its files
+    # - status file is newer (before utime of piggybacked host files is set)
+    # => piggybacked host file is outdated
+    with tempfile.NamedTemporaryFile("wb",
                                      dir=os.path.dirname(status_file_path),
                                      prefix=".%s.new" % os.path.basename(status_file_path),
                                      delete=False) as tmp:
         tmp_path = tmp.name
         os.chmod(tmp_path, 0o660)
-        tmp.write("")
+        tmp.write(b"")
 
         tmp_stats = os.stat(tmp_path)
         status_file_times = (tmp_stats.st_atime, tmp_stats.st_mtime)

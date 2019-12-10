@@ -30,6 +30,8 @@ import tempfile
 from typing import (  # pylint: disable=unused-import
     Optional, Dict, Set, Iterator, List, Tuple, NamedTuple,
 )
+import logging
+
 from pathlib2 import Path  # pylint: disable=unused-import
 
 import cmk.utils
@@ -39,8 +41,11 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.render import Age
 from cmk.utils.regex import regex
+import cmk.utils.log as log
+from cmk.utils.log import VERBOSE
 
-import cmk_base.console as console
+log.setup_console_logging()
+logger = logging.getLogger("cmk.base")
 
 PiggybackFileInfo = NamedTuple('PiggybackFileInfo', [
     ('source_hostname', str),
@@ -73,7 +78,11 @@ def get_piggyback_raw_data(piggybacked_hostname, time_settings):
 
     piggyback_file_infos = _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings)
     if not piggyback_file_infos:
-        console.verbose("No piggyback files for '%s'. Skip processing.\n" % piggybacked_hostname)
+        logger.log(
+            VERBOSE,
+            "No piggyback files for '%s'. Skip processing.",
+            piggybacked_hostname,
+        )
         return []
 
     piggyback_data = []
@@ -89,7 +98,13 @@ def get_piggyback_raw_data(piggybacked_hostname, time_settings):
                                                       reason=reason,
                                                       reason_status=0,
                                                       raw_data='')
-            console.verbose("Piggyback file '%s': %s, %s\n" % (file_info.file_path, reason, e))
+            logger.log(
+                VERBOSE,
+                "Piggyback file '%s': %s, %s",
+                file_info.file_path,
+                reason,
+                e,
+            )
 
         else:
             piggyback_raw_data = PiggybackRawDataInfo(file_info.source_hostname,
@@ -98,11 +113,19 @@ def get_piggyback_raw_data(piggybacked_hostname, time_settings):
                                                       file_info.reason, file_info.reason_status,
                                                       raw_data)
             if file_info.successfully_processed:
-                console.verbose("Piggyback file '%s': %s.\n" %
-                                (file_info.file_path, file_info.reason))
+                logger.log(
+                    VERBOSE,
+                    "Piggyback file '%s': %s",
+                    file_info.file_path,
+                    file_info.reason,
+                )
             else:
-                console.verbose("Piggyback file '%s' is outdated (%s). Skip processing.\n" %
-                                (file_info.file_path, file_info.reason))
+                logger.log(
+                    VERBOSE,
+                    "Piggyback file '%s' is outdated (%s). Skip processing.",
+                    file_info.file_path,
+                    file_info.reason,
+                )
         piggyback_data.append(piggyback_raw_data)
     return piggyback_data
 
@@ -271,7 +294,11 @@ def store_piggyback_raw_data(source_hostname, piggybacked_raw_data):
     piggyback_file_paths = []
     for piggybacked_hostname, lines in piggybacked_raw_data.items():
         piggyback_file_path = _get_piggybacked_file_path(source_hostname, piggybacked_hostname)
-        console.verbose("Storing piggyback data for: %s\n" % piggybacked_hostname)
+        logger.log(
+            VERBOSE,
+            "Storing piggyback data for: %s",
+            piggybacked_hostname,
+        )
         content = "\n".join(lines) + "\n"
         store.save_file(piggyback_file_path, content)
         piggyback_file_paths.append(piggyback_file_path)
@@ -385,7 +412,11 @@ def cleanup_piggyback_files(time_settings):
     # if and only if they have exceeded the maximum cache age configured in the
     # global settings or in the rule 'Piggybacked Host Files'."""
 
-    console.verbose("Cleanup piggyback files; time settings: %s.\n" % repr(time_settings))
+    logger.log(
+        VERBOSE,
+        "Cleanup piggyback files; time settings: %s.",
+        time_settings,
+    )
 
     _cleanup_old_source_status_files(time_settings)
     _cleanup_old_piggybacked_files(time_settings)
@@ -425,9 +456,12 @@ def _cleanup_old_source_status_files(time_settings):
 
         max_cache_age = max_cache_age_by_sources.get(entry, global_max_cache_age)
         if file_age > max_cache_age:
-            console.verbose(
-                "Piggyback source status file '%s' is outdated (File too old: %s). Remove it.\n" %
-                (source_file_path, Age(file_age - max_cache_age)))
+            logger.log(
+                VERBOSE,
+                "Piggyback source status file '%s' is outdated (File too old: %s). Remove it.",
+                source_file_path,
+                Age(file_age - max_cache_age),
+            )
             _remove_piggyback_file(source_file_path)
 
 
@@ -452,8 +486,12 @@ def _cleanup_old_piggybacked_files(time_settings):
                 _get_piggyback_processed_file_info(source_hostname, piggybacked_hostname, piggyback_file_path, time_settings)
 
             if not successfully_processed:
-                console.verbose("Piggyback file '%s' is outdated (%s). Remove it.\n" %
-                                (piggyback_file_path, reason))
+                logger.log(
+                    VERBOSE,
+                    "Piggyback file '%s' is outdated (%s). Remove it.",
+                    piggyback_file_path,
+                    reason,
+                )
                 _remove_piggyback_file(piggyback_file_path)
 
         # Remove empty backed host directory
@@ -465,4 +503,8 @@ def _cleanup_old_piggybacked_files(time_settings):
             else:
                 raise
         else:
-            console.verbose("Piggyback folder '%s' is empty. Remove it.\n" % backed_host_dir_path)
+            logger.log(
+                VERBOSE,
+                "Piggyback folder '%s' is empty. Remove it.",
+                backed_host_dir_path,
+            )

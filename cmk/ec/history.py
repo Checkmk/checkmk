@@ -451,7 +451,7 @@ def _get_files(history, logger, query):
         # actual logfiles. They will be joined with ".*"!
         try:
             nr = grepping_filters.index(column_name)
-            if operator_name in ['=' '~~']:
+            if operator_name in ['=', '~~']:
                 greptexts.append((nr, str(argument)))
         except Exception:
             pass

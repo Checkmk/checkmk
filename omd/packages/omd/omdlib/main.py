@@ -58,6 +58,7 @@ import six
 import omdlib
 import omdlib.certs
 import omdlib.backup
+from omdlib.version_info import VersionInfo
 from omdlib.type_defs import CommandOptions  # pylint: disable=unused-import
 from omdlib.skel_permissions import (  # pylint: disable=unused-import
     Permissions, read_skel_permissions, load_skel_permissions, load_skel_permissions_from,
@@ -4481,58 +4482,6 @@ class RootContext(AbstractSiteContext):
     def is_site_context():
         # type: () -> bool
         return False
-
-
-class VersionInfo(object):
-    """Provides OMD version/platform specific infos"""
-    def __init__(self, version):
-        # type: (str) -> None
-        self._version = version
-
-        # Register all relevant vars
-        self.USERADD_OPTIONS = ""
-        self.APACHE_USER = ""
-        self.ADD_USER_TO_GROUP = ""
-        self.MOUNT_OPTIONS = ""
-        self.INIT_CMD = ""
-        self.APACHE_CTL = ""
-        self.APACHE_INIT_NAME = ""
-        self.OMD_PHYSICAL_BASE = ""
-        self.APACHE_CONF_DIR = ""
-        self.DISTRO_CODE = ""
-
-    def load(self):
-        # type: () -> None
-        """Update vars with real values from info file"""
-        for k, v in self._read_info().items():
-            setattr(self, k, v)
-
-    def _read_info(self):
-        # type: () -> Dict[str, str]
-        info = {}  # type: Dict[str, str]
-        info_dir = "/omd/versions/" + omdlib.__version__ + "/share/omd"
-        for f in os.listdir(info_dir):
-            if f.endswith(".info"):
-                for line in open(info_dir + "/" + f):
-                    try:
-                        line = line.strip()
-                        # Skip comment and empty lines
-                        if line.startswith('#') or line == '':
-                            continue
-                        # Remove everything after the first comment sign
-                        if '#' in line:
-                            line = line[:line.index('#')].strip()
-                        var, value = line.split('=')
-                        value = value.strip()
-                        if var.endswith("+"):
-                            var = var[:-1]  # remove +
-                            info[var.strip()] += " " + value
-                        else:
-                            info[var.strip()] = value
-                    except Exception:
-                        bail_out('Unable to parse line "%s" in file "%s"' %
-                                 (line, info_dir + "/" + f))
-        return info
 
 
 Option = NamedTuple("Option", [

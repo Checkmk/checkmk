@@ -49,7 +49,7 @@ import time
 import traceback
 from typing import Any, Dict, List, Optional, Tuple, Union  # pylint: disable=unused-import
 
-import pathlib2 as pathlib
+from pathlib2 import Path
 import six
 
 import cmk
@@ -4034,8 +4034,8 @@ def reload_configuration(settings, logger, lock_configuration, history, event_st
 def main():
     os.unsetenv("LANG")
     logger = logging.getLogger("cmk.mkeventd")
-    settings = cmk.ec.settings.settings(cmk.__version__, pathlib.Path(cmk.utils.paths.omd_root),
-                                        pathlib.Path(cmk.utils.paths.default_config_dir), sys.argv)
+    settings = cmk.ec.settings.settings(cmk.__version__, Path(cmk.utils.paths.omd_root),
+                                        Path(cmk.utils.paths.default_config_dir), sys.argv)
 
     pid_path = None
     try:

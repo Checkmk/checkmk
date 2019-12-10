@@ -52,7 +52,7 @@ except ImportError:
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
 else:
-    from pathlib2 import Path
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
 from cmk.utils.encoding import make_utf8
 import cmk.utils.log

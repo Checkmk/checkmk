@@ -35,7 +35,7 @@ Column::Column(std::string name, std::string description, Offsets offsets)
 
 const void *Column::shiftPointer(Row row) const {
     const void *data = row.rawData<void>();
-    const auto last = --std::cend(_offsets);
+    const auto last = std::prev(std::cend(_offsets));
     for (auto iter = std::begin(_offsets); iter != std::end(_offsets); iter++) {
         if (data == nullptr) {
             break;

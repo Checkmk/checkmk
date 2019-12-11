@@ -76,20 +76,15 @@ def parse_aix_memory(info):
     return parsed
 
 
-def check_aix_memory(_no_item, params, info):
-    meminfo = parse_aix_memory(info)
-    return check_memory(params, meminfo)
-
-
-def inventory_aix_memory(info):
-    meminfo = parse_aix_memory(info)
-    if "MemFree" in meminfo:
-        return [(None, {})]
+def inventory_aix_memory(parsed):
+    if "MemFree" in parsed:
+        yield None, {}
 
 
 check_info['aix_memory'] = {
-    "check_function": check_aix_memory,
+    "parse_function": parse_aix_memory,
     "inventory_function": inventory_aix_memory,
+    "check_function": lambda _no_item, params, parsed: check_memory(params, parsed),
     "service_description": "Memory used",
     "has_perfdata": True,
     "group": "memory",

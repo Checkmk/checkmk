@@ -33,7 +33,6 @@ import time
 import cmk.ec.actions
 from cmk.utils.log import VERBOSE
 import cmk.utils.render
-from cmk.utils.encoding import make_utf8
 
 # TODO: As one can see clearly below, we should really have a class hierarchy here...
 
@@ -330,23 +329,23 @@ def _add_files(history, event, what, who, addinfo):
 
         with get_logfile(history._config, history._settings.paths.history_dir.value,
                          history._active_history_period).open(mode='ab') as f:
-            f.write("\t".join(map(make_utf8, columns)) + "\n")
+            f.write(b"\t".join(columns) + "\n")
 
 
 def quote_tab(col):
     ty = type(col)
     if ty in [float, int]:
-        return str(col)
+        return str(col).encode("utf-8")
     if ty is bool:
-        return '1' if col else '0'
+        return b'1' if col else b'0'
     if ty in [tuple, list]:
-        col = "\1" + "\1".join([quote_tab(e) for e in col])
+        col = b"\1" + b"\1".join([quote_tab(e) for e in col])
     elif col is None:
-        col = "\2"
+        col = b"\2"
     elif ty is str:
         col = col.encode("utf-8")
 
-    return col.replace("\t", " ")
+    return col.replace(b"\t", b" ")
 
 
 class ActiveHistoryPeriod:

@@ -851,7 +851,7 @@ class EventServer(ECServerThread):
         select_timeout = 1
         while not self._terminate_event.is_set():
             try:
-                readable = select.select(listen_list + client_sockets.keys(), [], [],
+                readable = select.select(listen_list + list(client_sockets.keys()), [], [],
                                          select_timeout)[0]
             except select.error as e:
                 if e[0] == errno.EINTR:
@@ -1345,7 +1345,7 @@ class EventServer(ECServerThread):
             self._logger.info(
                 "Rule hash: %d rules - %d hashed, %d unspecific" %
                 (len(self._rules), len(self._rules) - count_unspecific, count_unspecific))
-            for facility in range(23) + [31]:
+            for facility in list(range(23)) + [31]:
                 if facility in self._rule_hash:
                     stats = []
                     for prio, entries in self._rule_hash[facility].items():
@@ -2448,14 +2448,14 @@ class Queries:
         self._status_server = status_server
         self._socket = sock
         self._logger = logger
-        self._buffer = ""
+        self._buffer = b""
 
     def _query(self, request):
         return Query.make(self._status_server, request.decode("utf-8").splitlines(), self._logger)
 
     def __iter__(self):
         while True:
-            parts = self._buffer.split("\n\n", 1)
+            parts = self._buffer.split(b"\n\n", 1)
             if len(parts) > 1:
                 request, self._buffer = parts
                 yield self._query(request)
@@ -2464,7 +2464,7 @@ class Queries:
                 if data:
                     self._buffer += data
                 elif self._buffer:
-                    request, self._buffer = [self._buffer, ""]
+                    request, self._buffer = [self._buffer, b""]
                     yield self._query(request)
                 else:
                     break
@@ -3037,10 +3037,10 @@ class StatusServer(ECServerThread):
 
         if query.output_format == "plain":
             for row in response:
-                client_socket.sendall("\t".join([cmk.ec.history.quote_tab(c) for c in row]) + "\n")
+                client_socket.sendall(b"\t".join([cmk.ec.history.quote_tab(c) for c in row]) + b"\n")
 
         elif query.output_format == "json":
-            client_socket.sendall(json.dumps(list(response)) + "\n")
+            client_socket.sendall((json.dumps(list(response)) + "\n").encode("utf-8"))
 
         elif query.output_format == "python":
             self._answer_query_python(client_socket, list(response))
@@ -3049,7 +3049,7 @@ class StatusServer(ECServerThread):
             raise NotImplementedError()
 
     def _answer_query_python(self, client_socket, response):
-        client_socket.sendall(repr(response) + "\n")
+        client_socket.sendall((repr(response) + "\n").encode("utf-8"))
 
     # All commands are already locked with self._event_status.lock
     def handle_command_request(self, commandline):
@@ -3117,7 +3117,7 @@ class StatusServer(ECServerThread):
         # self._event_status.lock too. The lock can not be allocated twice.
         # TODO: Change the lock type in future?
         # process_raw_lines("%s" % ";".join(arguments))
-        with open(str(self.settings.paths.event_pipe.value), "w") as pipe:
+        with open(str(self.settings.paths.event_pipe.value), "wb") as pipe:
             pipe.write(("%s\n" % ";".join(arguments)).encode("utf-8"))
 
     def handle_command_changestate(self, arguments):
@@ -3395,7 +3395,7 @@ class EventStatus:
         path_new = path.parent / (path.name + '.new')
         # Believe it or not: cPickle is more than two times slower than repr()
         with path_new.open(mode='wb') as f:
-            f.write(repr(status) + "\n")
+            f.write((repr(status) + "\n").encode("utf-8"))
             f.flush()
             os.fsync(f.fileno())
         path_new.rename(path)
@@ -3414,7 +3414,7 @@ class EventStatus:
         path = self.settings.paths.status_file.value
         if path.exists():
             try:
-                status = ast.literal_eval(path.read_bytes())
+                status = ast.literal_eval(path.read_text(encoding="utf-8"))
                 self._next_event_id = status["next_event_id"]
                 self._events = status["events"]
                 self._rule_stats = status["rule_stats"]
@@ -3879,7 +3879,7 @@ def save_master_config(settings, new_state):
 def load_master_config(settings, config, logger):
     path = settings.paths.master_config_file.value
     try:
-        config = ast.literal_eval(path.read_bytes())
+        config = ast.literal_eval(path.read_text(encoding="utf-8"))
         config["rules"] = config["rules"]
         config["rule_packs"] = config.get("rule_packs", [])
         config["actions"] = config["actions"]
@@ -3900,14 +3900,14 @@ def get_state_from_master(config, slave_status):
                      (slave_status["last_sync"] and slave_status["last_sync"] or 0))
         sock.shutdown(socket.SHUT_WR)
 
-        response_text = ""
+        response_text = b""
         while True:
             chunk = sock.recv(8192)
             response_text += chunk
             if not chunk:
                 break
 
-        return ast.literal_eval(response_text)
+        return ast.literal_eval(response_text.decode("utf-8"))
     except SyntaxError as e:
         raise Exception("Invalid response from event daemon: <pre>%s</pre>" % response_text)
 
@@ -3944,7 +3944,7 @@ def update_slave_status(slave_status, settings, config):
     path = settings.paths.slave_status_file.value
     if is_replication_slave(config):
         try:
-            slave_status.update(ast.literal_eval(path.read_bytes()))
+            slave_status.update(ast.literal_eval(path.read_text(encoding="utf-8")))
         except Exception:
             slave_status.update(default_slave_status_sync())
             save_slave_status(settings, slave_status)

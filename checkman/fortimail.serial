@@ -1,0 +1,11 @@
+title: Fortinet FortiMail Serial Info
+agents: snmp
+catalog: hw/network/fortinet
+license: GPL
+distribution: check_mk
+description:
+ This Check will display the Model name, the Serial number and the current 
+ Firmware Version on a Fortinet Mail Server.
+
+inventory:
+ One check per host will be created.

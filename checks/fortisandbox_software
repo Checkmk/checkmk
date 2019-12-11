@@ -1,0 +1,74 @@
+#!/usr/bin/python
+# author: Oguzhan Cicek, OpenSource Security GmbH - oguzhan(at)os-s.de
+
+# Example Input:
+#[...]
+#.1.3.6.1.4.1.12356.118.3.1.1.0 v2.52-build0340 (GA)
+#.1.3.6.1.4.1.12356.118.3.1.2.0 2
+#.1.3.6.1.4.1.12356.118.3.1.3.0 4
+#.1.3.6.1.4.1.12356.118.3.1.4.0 260459760
+#.1.3.6.1.4.1.12356.118.3.1.5.0 710698
+#.1.3.6.1.4.1.12356.118.3.1.6.0 3754417
+#.1.3.6.1.4.1.12356.118.3.1.7.0 2
+#.1.3.6.1.4.1.12356.118.3.1.8.0 32908349
+#.1.3.6.1.4.1.12356.118.3.2.1.0 5.2.50534
+#.1.3.6.1.4.1.12356.118.3.2.2.0 2.4.20034
+#.1.3.6.1.4.1.12356.118.3.2.3.0 3.2.279
+#.1.3.6.1.4.1.12356.118.3.2.4.0 4.478
+#.1.3.6.1.4.1.12356.118.3.2.5.0 14.613
+#[...]
+
+# Example GUI Output:
+# OK	Tracer engine				Version: 5.2.50534
+# OK	Rating engine				Version: 2.4.20034
+# OK	System tools				Version: 3.2.279
+# OK	Sniffer					Version: 4.478
+# OK	Network alerts singature database	Version: 14.613
+
+
+def parse_fortisandbox_software(info):
+    parsed = {
+        "Tracer engine": info[0][0][0],
+        "Rating engine": info[0][0][1],
+        "System tools": info[0][0][2],
+        "Sniffer": info[0][0][3],
+        "Network alerts signature database": info[0][0][4],
+        "Android analytic engine": info[0][0][5],
+        "Android rating engine": info[0][0][6]
+    }
+    return parsed
+
+
+def inventory_fortisandbox_software(parsed):
+    for p in parsed:
+        if parsed[p]:
+            yield (p, None)
+
+
+def check_fortisandbox_software(item, params, parsed):
+    if parsed[item]:
+        state = 0
+        statustext = "Version: %s" % parsed[item]
+        yield state, statustext
+
+
+check_info['fortisandbox_software'] = {
+    'parse_function': parse_fortisandbox_software,
+    'inventory_function': inventory_fortisandbox_software,
+    'check_function': check_fortisandbox_software,
+    'has_perfdata': False,
+    'service_description': "%s",
+    'snmp_info': [(
+        '.1.3.6.1.4.1.12356.118.3.2',
+        [
+            1,  # fraSysTracer
+            2,  # fraSysRating
+            3,  # fraSysTool
+            4,  # fraSysSniffer
+            5,  # fraSysIPS
+            6,  # fraSysAndroidA
+            7,  # fraSysAndroidR
+        ])],
+    'snmp_scan_function': lambda oid: '.1.3.6.1.4.1.12356.118.1.30006' in oid('.1.3.6.1.2.1.1.2.0').
+                          lower(),
+}

@@ -101,14 +101,14 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
             ]),
         ]),
         ({"levels": (20, 43)}, MEMINFO_MINI, [
-            (1, TEXT_MINI + ", warning at 0.02 GB used", [
+            (1, TEXT_MINI + ", warn/crit at 20.00 MB/43.00 MB used", [
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('swapused', 0, None, None, 0, 0),
                 ('memused', 21.0, 20, 43, 0, 42.0),
             ]),
         ]),
         ({"levels": (20, 20)}, MEMINFO_MINI, [
-            (2, TEXT_MINI + ", critical at 0.02 GB used", [
+            (2, TEXT_MINI + ", warn/crit at 20.00 MB/20.00 MB used", [
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('swapused', 0, None, None, 0, 0),
                 ('memused', 21.0, 20, 20, 0, 42.0),
@@ -119,21 +119,21 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
             (0, TEXT_MINI, [
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('swapused', 0, None, None, 0, 0),
-                ('memused', 21.0, -4, -3, 0, 42.0),  # FIXME
+                ('memused', 21.0, 38.0, 39.0, 0, 42.0),
             ]),
         ]),
         ((-43, -3), MEMINFO_MINI, [
-            (1, TEXT_MINI + ", warning at 0.04 GB free", [
+            (1, TEXT_MINI + ", warn/crit below 43.00 MB/3.00 MB free", [
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('swapused', 0, None, None, 0, 0),
-                ('memused', 21.0, -43, -3, 0, 42.0),  # FIXME
+                ('memused', 21.0, -1.00, 39.0, 0, 42.0),
             ]),
         ]),
-        ((-43, -43), MEMINFO_MINI, [
-            (2, TEXT_MINI + ", critical at 0.04 GB free", [
+        ((-41, -41), MEMINFO_MINI, [
+            (2, TEXT_MINI + ", warn/crit below 41.00 MB/41.00 MB free", [
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('swapused', 0, None, None, 0, 0),
-                ('memused', 21.0, -43, -43, 0, 42.0),  # FIXME
+                ('memused', 21.0, 1.0, 1.0, 0, 42.0),
             ]),
         ]),
         # POSITIVE Percentage levels OK, WARN, CRIT
@@ -141,21 +141,21 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
             (0, TEXT_MINI, [
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('swapused', 0, None, None, 0, 0),
-                ('memused', 21.0, 33, 37, 0, 42.0),
+                ('memused', 21.0, 33.6, 37.800000000000004, 0, 42.0),  # sorry
             ]),
         ]),
         ((10.0, 90.0), MEMINFO_MINI, [
-            (1, TEXT_MINI + ", warning at 10.0% used", [
+            (1, TEXT_MINI + ", warn/crit at 10.0%/90.0% used", [
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('swapused', 0, None, None, 0, 0),
-                ('memused', 21.0, 4, 37, 0, 42.0),
+                ('memused', 21.0, 4.2, 37.800000000000004, 0, 42.0),
             ]),
         ]),
         ((10.0, 10.0), MEMINFO_MINI, [
-            (2, TEXT_MINI + ", critical at 10.0% used", [
+            (2, TEXT_MINI + ", warn/crit at 10.0%/10.0% used", [
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('swapused', 0, None, None, 0, 0),
-                ('memused', 21.0, 4, 4, 0, 42.0),
+                ('memused', 21.0, 4.2, 4.2, 0, 42.0),
             ]),
         ]),
         # NEGATIVE Percentage levels OK, WARN, CRIT
@@ -163,21 +163,21 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
             (0, TEXT_MINI, [
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('swapused', 0, None, None, 0, 0),
-                ('memused', 21.0, -4, -4, 0, 42.0),
+                ('memused', 21.0, 37.8, 37.8, 0, 42.0),
             ]),
         ]),
         ((-90.0, -10.0), MEMINFO_MINI, [
-            (1, TEXT_MINI + ", warning at 90.0% free", [
+            (1, TEXT_MINI + ", warn/crit below 90.0%/10.0% free", [
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('swapused', 0, None, None, 0, 0),
-                ('memused', 21.0, -37, -4, 0, 42.0),  # FIXME
+                ('memused', 21.0, 4.199999999999996, 37.8, 0, 42.0),
             ]),
         ]),
         ((-90.0, -80.0), MEMINFO_MINI, [
-            (2, TEXT_MINI + ", critical at 80.0% free", [
+            (2, TEXT_MINI + ", warn/crit below 90.0%/80.0% free", [
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('swapused', 0, None, None, 0, 0),
-                ('memused', 21.0, -37, -33, 0, 42.0),  # FIXME
+                ('memused', 21.0, 4.199999999999996, 8.399999999999999, 0, 42.0),
             ]),
         ]),
         # now with swap != 0
@@ -189,14 +189,14 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
             ]),
         ]),
         ({"levels": (23, 43)}, MEMINFO_SWAP, [
-            (1, TEXT_SWAP + ", warning at 0.02 GB used", [
+            (1, TEXT_SWAP + ", warn/crit at 23.00 MB/43.00 MB used", [
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('swapused', 21.0, None, None, 0, 42.0),
                 ('memused', 42.0, 23, 43, 0, 84.0),
             ]),
         ]),
         ({"levels": (23, 23)}, MEMINFO_SWAP, [
-            (2, TEXT_SWAP + ", critical at 0.02 GB used", [
+            (2, TEXT_SWAP + ", warn/crit at 23.00 MB/23.00 MB used", [
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('swapused', 21.0, None, None, 0, 42.0),
                 ('memused', 42.0, 23, 23, 0, 84.0),
@@ -239,7 +239,7 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
             (0, TEXT_PAGE + ", 0.0 mapped, 0.0 committed, 0.0 shared", [
                 ('ramused', 14.0, None, None, 0, 42.0),
                 ('swapused', 21, None, None, 0, 42.0),
-                ('memused', 42.0, 63, 79, 0, 84.0),
+                ('memused', 42.0, 63.0, 79.8, 0, 84.0),
                 ('mapped', 12),
                 ('committed_as', 3),
                 ('pagetables', 7),

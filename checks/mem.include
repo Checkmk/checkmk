@@ -43,7 +43,65 @@ def parse_proc_meminfo_bytes(info):
     return meminfo
 
 
+def _get_levels_mode_from_value(warn):
+    """get levels mode by looking at the value
+
+    Levels may be given either as
+     * positive int -> absolute levels on used
+     * negative int -> absolute levels on free
+     * positive float -> percentages on used
+     * negative float -> percentages on free
+    """
+    type_ = "perc" if isinstance(warn, float) else "abs"
+    reference = "used" if warn > 0 else "free"
+    return "%s_%s" % (type_, reference)
+
+
+def _normalize_mem_levels(mode, warn, crit, perc_ref, abs_ref, render_base, unit=1):
+    """get normalized levels and formatter
+
+    Levels may be given either as
+     * MB levels on used
+     * MB levels on free
+     * percentages on used
+     * percentages on free
+    Normalize levels to absolute posive levels and return formatted levels text
+    """
+    # normalize percent -> absolute
+    if mode.startswith("perc"):
+        warn_used = warn / 100.0 * perc_ref
+        crit_used = crit / 100.0 * perc_ref
+        levels_text = "%s/%s" % (
+            get_percent_human_readable(abs(warn)),
+            get_percent_human_readable(abs(crit)),
+        )
+    elif mode.startswith("abs"):
+        warn_used = float(warn)
+        crit_used = float(crit)
+        levels_text = "%s/%s" % (
+            get_bytes_human_readable(abs(warn) * unit, base=render_base),
+            get_bytes_human_readable(abs(crit) * unit, base=render_base),
+        )
+    else:
+        raise NotImplementedError("unknown levels mode: %r" % (mode,))
+
+    # normalize negative -> positive
+    if mode.endswith("free"):
+        warn_used = float(abs_ref + warn_used)  # warn_used is negative!
+        crit_used = float(abs_ref + crit_used)
+        levels_text = "warn/crit below %s free" % levels_text
+    elif mode.endswith("used"):
+        levels_text = "warn/crit at %s used" % levels_text
+    else:
+        raise NotImplementedError("unknown levels mode: %r" % (mode,))
+
+    return warn_used, crit_used, levels_text
+
+
 def check_memory(params, meminfo):
+    if isinstance(params, tuple):
+        params = {"levels": params}
+
     swapused_kb = meminfo['SwapTotal'] - meminfo['SwapFree']
     swapused = swapused_kb * 1024.0
     memused_kb = meminfo['MemTotal'] - meminfo['MemFree']
@@ -67,10 +125,6 @@ def check_memory(params, meminfo):
     totalmem = totalmem_kb * 1024.0
     totalused_perc = 100 * (float(totalused_kb) / float(totalmem_kb))
     totalvirt_mb = (meminfo['SwapTotal'] + meminfo['MemTotal']) / 1024.0
-
-    if isinstance(params, tuple):
-        params = {"levels": params}
-    warn, crit = params["levels"]
 
     details = []
     if swapused:
@@ -108,16 +162,17 @@ def check_memory(params, meminfo):
     else:
         comp_mb = totalused_mb
 
-    # levels may be given either in int -> MB or in float -> percentages. So convert
-    # effective levels to MB now
-    if isinstance(warn, float):
-        warn_mb = int(warn / 100.0 * totalmem_mb)
-        crit_mb = int(crit / 100.0 * totalmem_mb)
-        leveltext = lambda x: "%.1f%%" % x
-    else:
-        warn_mb = warn
-        crit_mb = crit
-        leveltext = lambda x: "%.2f GB" % (x / 1024.0)
+    warn, crit = params["levels"]
+    mode = _get_levels_mode_from_value(warn)
+    warn_mb, crit_mb, levels_text = _normalize_mem_levels(
+        mode,
+        warn,
+        crit,
+        totalmem_mb,
+        totalvirt_mb,
+        1024,
+        unit=1024**2,
+    )
 
     # Prepare performance data
     perfdata = [
@@ -131,21 +186,13 @@ def check_memory(params, meminfo):
 
     # Check levels
     state = 0
-    if warn_mb > 0:  # positive levels - used memory
-        if comp_mb >= crit_mb:
-            state = 2
-            infotext += ", critical at %s used" % leveltext(crit)
-        elif comp_mb >= warn_mb:
-            state = 1
-            infotext += ", warning at %s used" % leveltext(warn)
-    else:  # negative levels - free memory
-        freemem_mb = totalvirt_mb - comp_mb
-        if freemem_mb <= -crit_mb:
-            state = 2
-            infotext += ", critical at %s free" % leveltext(-crit)
-        elif freemem_mb <= -warn_mb:
-            state = 1
-            infotext += ", warning at %s free" % leveltext(-warn)
+    if comp_mb >= crit_mb:
+        state = 2
+    elif comp_mb >= warn_mb:
+        state = 1
+
+    if state:
+        infotext += ", %s" % levels_text
 
     # Add additional metrics, provided by Linux.
     mapped = meminfo.get('Mapped')

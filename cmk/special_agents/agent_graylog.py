@@ -30,6 +30,8 @@ import time
 import json
 import sys
 import requests
+import urllib3  # type: ignore
+urllib3.disable_warnings(urllib3.exceptions.SubjectAltNameWarning)
 
 GraylogSection = NamedTuple("GraylogSection", [
     ("name", Text),

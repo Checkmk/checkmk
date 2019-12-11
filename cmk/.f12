@@ -24,7 +24,7 @@ sudo rsync \
     --exclude=cee.py \
     --exclude=cme \
     --exclude=cme.py \
-    -a __init__.py utils $ROOT/lib/python3/cmk/
+    -a __init__.py utils ec $ROOT/lib/python3/cmk/
 
 # Restore site version after .f12
 sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" $ROOT/lib/python/cmk/__init__.py

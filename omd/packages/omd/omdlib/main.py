@@ -2548,9 +2548,10 @@ def set_environment(site):
 def hostname():
     # type: () -> str
     try:
-        return os.popen("hostname").read().strip()
-    except Exception:
+        p = subprocess.Popen(["hostname"], shell=False, close_fds=True, stdout=subprocess.PIPE)
+    except OSError:
         return "localhost"
+    return p.communicate()[0].strip()
 
 
 def create_apache_hook(site):

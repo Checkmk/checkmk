@@ -1,4 +1,5 @@
 # pylint: disable=redefined-outer-name
+import os
 import pytest  # type: ignore[import]
 
 import omdlib.main
@@ -63,3 +64,7 @@ def test_add_to_fstab_empty(tmp_fstab, site_context):
     omdlib.main.add_to_fstab(site_context)
     assert tmp_fstab.open().read() == (
         "tmpfs  /opt/omd/sites/unit/tmp tmpfs noauto,user,mode=755,uid=unit,gid=unit 0 0\n")
+
+
+def test_hostname():
+    assert omdlib.main.hostname() == os.popen("hostname").read().strip()

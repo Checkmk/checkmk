@@ -26,6 +26,7 @@ sudo rsync \
     utils \
     ec/__init__.py \
     ec/export.py \
+    ec/settings.py \
     ec/defaults.py \
     $ROOT/lib/python/cmk/
 

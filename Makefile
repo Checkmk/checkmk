@@ -42,7 +42,7 @@ SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export CPPCHECK    := cppcheck
 export DOXYGEN     := doxygen
 export IWYU_TOOL   := iwyu_tool
-ARTIFACT_STORAGE   := http://nexus:8081
+ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
 PIPENV2            := scripts/run-pipenv 2
 PIPENV3            := scripts/run-pipenv 3
 

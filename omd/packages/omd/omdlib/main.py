@@ -160,6 +160,7 @@ def bail_out(message):
 # Is used to duplicate output from stdout/stderr to a logfiles. This
 # is e.g. used during "omd update" to have a chance to analyze errors
 # during past updates
+# TODO: Replace this with regular logging mechanics
 class Log(io.BytesIO):
     def __init__(self, fd, logfile):
         # type: (int, bytes) -> None

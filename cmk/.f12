@@ -16,7 +16,18 @@ sudo rsync \
     --exclude=cee.py \
     --exclude=cme \
     --exclude=cme.py \
-    -a cee gui __init__.py notification_plugins special_agents update_config.py utils $ROOT/lib/python/cmk/
+    -aR \
+    cee \
+    gui \
+    __init__.py \
+    notification_plugins \
+    special_agents \
+    update_config.py \
+    utils \
+    ec/__init__.py \
+    ec/export.py \
+    ec/defaults.py \
+    $ROOT/lib/python/cmk/
 
 # TODO: Enable python3 compatible parts step by step
 sudo rsync \

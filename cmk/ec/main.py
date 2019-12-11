@@ -326,7 +326,7 @@ def match_ipv4_network(pattern, ipaddress_text):
 
 
 def parse_ipv4_address(text):
-    parts = map(int, text.split("."))
+    parts = list(map(int, text.split(".")))
     return (parts[0] << 24) + (parts[1] << 16) + (parts[2] << 8) + parts[3]
 
 

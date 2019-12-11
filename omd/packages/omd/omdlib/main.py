@@ -2793,6 +2793,9 @@ def main_version(site, args, options):
     else:
         version = omdlib.__version__
 
+    if version is None:
+        bail_out("Failed to determine site version")
+
     if "bare" in options:
         sys.stdout.write(version + "\n")
     else:
@@ -3268,6 +3271,8 @@ def main_diff(site, args, options):
     # type: (SiteContext, Arguments, CommandOptions) -> None
 
     from_version = site.version
+    if from_version is None:
+        bail_out("Failed to determine site version")
     from_skelroot = site.version_skel_dir
 
     # If arguments are added and those arguments are directories,
@@ -3410,6 +3415,8 @@ def main_update(site, args, options):
 
     # Source version: the version of the site we deal with
     from_version = site.version
+    if from_version is None:
+        bail_out("Failed to determine site version")
 
     # Target version: the version of the OMD binary
     to_version = omdlib.__version__
@@ -4282,7 +4289,7 @@ class AbstractSiteContext(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractproperty
     def version(self):
-        # type: () -> str
+        # type: () -> Optional[str]
         raise NotImplementedError()
 
     @abc.abstractproperty
@@ -4348,13 +4355,14 @@ class SiteContext(AbstractSiteContext):
 
     @property
     def version(self):
-        # type: () -> str
-        """The version of a site is solely determined by the link ~SITE/version"""
+        # type: () -> Optional[str]
+        """The version of a site is solely determined by the link ~SITE/version
+        In case the version of a site can not be determined, it reports None."""
         version_link = self.dir + "/version"
         try:
             return os.readlink(version_link).split("/")[-1]
-        except Exception as e:
-            raise Exception("Failed to determine site version: %s" % e)
+        except Exception:
+            return None
 
     @property
     def replacements(self):
@@ -4456,6 +4464,8 @@ class SiteContext(AbstractSiteContext):
         """Returns the skeleton permissions. Load either from version meta directory
         or from the original version skel.permissions file"""
         if not self._has_version_meta_data():
+            if self.version is None:
+                bail_out("Failed to determine site version")
             return load_skel_permissions(self.version)
 
         return load_skel_permissions_from(self.version_meta_dir + "/skel.permissions")

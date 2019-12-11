@@ -2826,16 +2826,18 @@ def main_sites(site, global_opts, args, options):
 def sitename_must_be_valid(site, reuse=False):
     # type (SiteContext, bool) -> None
     # Make sanity checks before starting any action
+
+    if not re.match("^[a-zA-Z_][a-zA-Z_0-9]{0,15}$", site.name):
+        bail_out(
+            "Invalid site name. Must begin with a character, may contain characters, digits and _ and have length 1 up to 16"
+        )
+
     if not reuse and site.exists():
         bail_out("Site '%s' already existing." % site.name)
     if not reuse and group_exists(site.name):
         bail_out("Group '%s' already existing." % site.name)
     if not reuse and user_exists(site.name):
         bail_out("User '%s' already existing." % site.name)
-    if not re.match("^[a-zA-Z_][a-zA-Z_0-9]{0,15}$", site.name):
-        bail_out(
-            "Invalid site name. Must begin with a character, may contain characters, digits and _ and have length 1 up to 16"
-        )
 
 
 def main_create(site, global_opts, args, options):

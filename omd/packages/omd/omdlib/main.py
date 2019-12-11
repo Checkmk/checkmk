@@ -3251,7 +3251,10 @@ def main_diff(site, global_opts, args, options):
     if len(args) == 0:
         args = ["."]
     elif len(args) == 1 and os.path.isfile(args[0]):
-        global_opts = GlobalOptions(verbose=True, **global_opts._asdict())
+        global_opts = GlobalOptions(verbose=True,
+                                    force=global_opts.force,
+                                    interactive=global_opts.interactive,
+                                    orig_working_directory=global_opts.orig_working_directory)
 
     for arg in args:
         diff_list(global_opts, options, site, from_skelroot, from_version, arg)
@@ -3773,7 +3776,7 @@ def main_backup(site, global_opts, args, options):
         tar_mode = 'w|'
     else:
         if dest[0] != '/':
-            dest = g_orig_wd + '/' + dest
+            dest = global_opts.orig_working_directory + '/' + dest
         fh = open(dest, 'w')
         tar_mode = 'w:'
 
@@ -5036,12 +5039,15 @@ GlobalOptions = NamedTuple("GlobalOptions", [
     ("verbose", bool),
     ("force", bool),
     ("interactive", bool),
+    ("orig_working_directory", str),
 ])
 
 
 def handle_global_option(global_opts, main_args, opt, orig):
     # type: (GlobalOptions, Arguments, str, str) -> Tuple[GlobalOptions, Arguments]
-    verbose, force, interactive = global_opts
+    verbose = global_opts.verbose
+    force = global_opts.force
+    interactive = global_opts.interactive
 
     if opt in ['V', 'version']:
         # Switch to other version of bin/omd
@@ -5063,7 +5069,11 @@ def handle_global_option(global_opts, main_args, opt, orig):
     else:
         bail_out("Invalid global option %s.\n" "Call omd help for available options." % orig)
 
-    new_global_opts = GlobalOptions(verbose=verbose, force=force, interactive=interactive)
+    new_global_opts = GlobalOptions(verbose=verbose,
+                                    force=force,
+                                    interactive=interactive,
+                                    orig_working_directory=global_opts.orig_working_directory)
+
     return new_global_opts, main_args
 
 
@@ -5179,7 +5189,6 @@ def hash_password(password):
 #   '----------------------------------------------------------------------'
 
 g_info = VersionInfo(omdlib.__version__)
-g_orig_wd = "/"
 
 
 # Handle global options. We might convert this to getopt
@@ -5190,8 +5199,6 @@ g_orig_wd = "/"
 # TODO: Refactor to argparse. Be aware of the pitfalls of the OMD command line scheme
 def main():
     # type: () -> None
-    global g_orig_wd
-
     main_args = sys.argv[1:]
     site = RootContext()  # type: AbstractSiteContext
 
@@ -5262,17 +5269,9 @@ def main():
     site.load_config()
 
     # Commands which affect a site and can be called as root *or* as
-    # site user should always run with site user priviledges. That way
+    # site user should always run with site user privileges. That way
     # we are sure that new files and processes are created under the
     # site user and never as root.
-    try:
-        g_orig_wd = os.getcwd()
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            g_orig_wd = "/"
-        else:
-            raise
-
     if not command.no_suid and site.is_site_context() and is_root() and not command.only_root:
         if not isinstance(site, SiteContext):
             raise Exception("site must be of type SiteContext")
@@ -5299,7 +5298,11 @@ def main():
 
 
 def default_global_options():
-    return GlobalOptions(verbose=False, force=False, interactive=False)
+    # type: () -> GlobalOptions
+    return GlobalOptions(verbose=False,
+                         force=False,
+                         interactive=False,
+                         orig_working_directory=_get_orig_working_directory())
 
 
 def _get_command(site, global_opts, command_arg):
@@ -5311,3 +5314,13 @@ def _get_command(site, global_opts, command_arg):
     sys.stderr.write("omd: no such command: %s\n" % command_arg)
     main_help(site, global_opts)
     sys.exit(1)
+
+
+def _get_orig_working_directory():
+    # type: () -> str
+    try:
+        return os.getcwd()
+    except OSError as e:
+        if e.errno == errno.ENOENT:
+            return "/"
+        raise

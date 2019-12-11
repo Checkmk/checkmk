@@ -109,6 +109,34 @@ def _normalize_mem_levels(mode, warn, crit, perc_ref, abs_ref, render_base, unit
     return warn_used, crit_used, levels_text
 
 
+def _get_plain_state(value, warn, crit):
+    if crit is not None and value >= crit:
+        return 2
+    if warn is not None and value >= warn:
+        return 1
+    return 0
+
+
+def _get_total_usage(ramused, swapused, pagetables):
+    """get total usage and a description how it was computed
+    """
+    totalused_kb = ramused.kb
+    details = ["%s RAM" % ramused.render()]
+
+    if swapused.kb:
+        totalused_kb += swapused.kb
+        details.append("%s SWAP" % swapused.render())
+
+    if pagetables.kb:
+        totalused_kb += pagetables.kb
+        details.append("%s Pagetables" % pagetables.render())
+
+    totalused = MemBytes(totalused_kb, ramused.base)
+    if len(details) == 1:
+        return totalused, ""
+    return totalused, " + ".join(details) + ", "
+
+
 def check_memory(params, meminfo, render_base=1024):
     if isinstance(params, tuple):
         params = {"levels": params}
@@ -132,31 +160,22 @@ def check_memory(params, meminfo, render_base=1024):
         perfdata = []
 
     ramused = MemBytes(memused.kb - caches.kb, render_base)
-    totalused = MemBytes(swapused.kb + ramused.kb + pagetables.kb, render_base)
+    totalused, totalused_descr = _get_total_usage(ramused, swapused, pagetables)
     totalused_perc = 100.0 * totalused.kb / memtotal.kb
     totalvirt = MemBytes(swaptotal.kb + memtotal.kb, render_base)
-
-    details = []
-    if swapused.kb:
-        details.append("%s SWAP" % swapused.render())
-
-    if pagetables.kb:
-        details.append("%s Pagetables" % pagetables.render())
-
-    if details:
-        details.insert(0, "%s RAM" % ramused.render())
-        details_txt = " + ".join(details) + ", "
-    else:
-        details_txt = ""
 
     if swaptotal.kb:
         swap_txt = (" + %s SWAP" % swaptotal.render())
     else:
         swap_txt = ""
 
-    infotext = "%s used (%sthis is %.1f%% of %s RAM%s)" % \
-               (totalused.render(), details_txt,
-                totalused_perc, memtotal.render(), swap_txt)
+    infotext = "%s used (%sthis is %.1f%% of %s RAM%s)" % (
+        totalused.render(),
+        totalused_descr,
+        totalused_perc,
+        memtotal.render(),
+        swap_txt,
+    )
 
     # Take into account averaging
     average_min = params.get("average")
@@ -184,6 +203,10 @@ def check_memory(params, meminfo, render_base=1024):
         render_base,
         unit=1024**2,
     )
+    # Check levels
+    state = _get_plain_state(comp_mb, warn_mb, crit_mb)
+    if state:
+        infotext += ", %s" % levels_text
 
     # Prepare performance data
     perfdata.extend([
@@ -191,16 +214,6 @@ def check_memory(params, meminfo, render_base=1024):
         ('swapused', swapused.mb, None, None, 0, swaptotal.mb),
         ('memused', totalused.mb, warn_mb, crit_mb, 0, totalvirt.mb),
     ])
-
-    # Check levels
-    state = 0
-    if comp_mb >= crit_mb:
-        state = 2
-    elif comp_mb >= warn_mb:
-        state = 1
-
-    if state:
-        infotext += ", %s" % levels_text
 
     # Add additional metrics, provided by Linux.
     if meminfo.get('Mapped'):

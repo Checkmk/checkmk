@@ -43,7 +43,7 @@ export CPPCHECK    := cppcheck
 export DOXYGEN     := doxygen
 export IWYU_TOOL   := $(realpath scripts/iwyu_tool)
 PIPENV             := PIPENV_NO_INHERIT=true PIPENV_VENV_IN_PROJECT=true pipenv
-ARTIFACT_STORAGE   := http://nexus:8081
+ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
 
 M4_DEPS            := $(wildcard m4/*) configure.ac
 CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4

@@ -61,6 +61,7 @@ import * as node_visualization_utils from "node_visualization_utils";
 import * as node_visualization_layout_styles from "node_visualization_layout_styles";
 import * as node_visualization_viewport_utils from "node_visualization_viewport_utils";
 import * as node_visualization_viewport_layers from "node_visualization_viewport_layers";
+import {fetch} from "whatwg-fetch";
 
 // Optional import is currently not possible using the ES6 imports
 var graphs;

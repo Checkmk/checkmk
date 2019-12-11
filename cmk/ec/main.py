@@ -2453,23 +2453,24 @@ class Queries(object):
         self._logger = logger
         self._buffer = ""
 
-    def __iter__(self):
-        return self
+    def _query(self, request):
+        return Query.make(self._status_server, request.decode("utf-8").splitlines(), self._logger)
 
-    def next(self):
+    def __iter__(self):
         while True:
             parts = self._buffer.split("\n\n", 1)
             if len(parts) > 1:
-                break
-            data = self._socket.recv(4096)
-            if not data:
-                if len(self._buffer) == 0:
-                    raise StopIteration()
-                parts = [self._buffer, ""]
-                break
-            self._buffer += data
-        request, self._buffer = parts
-        return Query.make(self._status_server, request.decode("utf-8").splitlines(), self._logger)
+                request, self._buffer = parts
+                yield self._query(request)
+            else:
+                data = self._socket.recv(4096)
+                if data:
+                    self._buffer += data
+                elif self._buffer:
+                    request, self._buffer = [self._buffer, ""]
+                    yield self._query(request)
+                else:
+                    break
 
 
 class Query(object):

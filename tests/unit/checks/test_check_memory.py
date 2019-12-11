@@ -220,29 +220,30 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
         # page tables
         ((43, 43), MEMINFO_PAGE, [
             (0, TEXT_PAGE, [
+                ('pagetables', 7),
                 ('ramused', 14.0, None, None, 0, 42.0),
                 ('swapused', 21.0, None, None, 0, 42.0),
-                ('memused', 42.0, 43, 43, 0, 84.0),  # TODO: why no pagetables?
+                ('memused', 42.0, 43, 43, 0, 84.0),
             ]),
         ]),
         # averaging
         ({"average": 3, "levels": (43, 43)}, MEMINFO_MINI, [
             (0, TEXT_MINI + ", 3 min average 50.0%", [
+                ('memusedavg', 21.0, None, None, None, None),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('swapused', 0, None, None, 0, 0),
                 ('memused', 21.0, 43, 43, 0, 42.0),
-                ('memusedavg', 21.0, None, None, None, None),
             ]),
         ]),
         # Mapped
         ((150.0, 190.0), MEMINFO_PAGE_MAPPED, [
-            (0, TEXT_PAGE + ", 0.0 mapped, 0.0 committed, 0.0 shared", [
+            (0, TEXT_PAGE + ", 12.00 MB mapped, 3.00 MB committed, 1.00 MB shared", [
+                ('pagetables', 7),
                 ('ramused', 14.0, None, None, 0, 42.0),
                 ('swapused', 21, None, None, 0, 42.0),
                 ('memused', 42.0, 63.0, 79.8, 0, 84.0),
                 ('mapped', 12),
                 ('committed_as', 3),
-                ('pagetables', 7),
                 ('shared', 1),
             ]),
         ]),

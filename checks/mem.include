@@ -114,8 +114,12 @@ def check_memory(params, meminfo):
     # Size of Pagetable on Linux can be relevant e.g. on ORACLE
     # servers with much memory, that do not use HugeTables. We account
     # that for used
-    pagetables_kb = meminfo.get('PageTables', 0)
-    pagetables_mb = pagetables_kb / 1024.0
+    if 'PageTables' in meminfo:
+        pagetables_kb = meminfo['PageTables']
+        perfdata = [('pagetables', pagetables_kb / 1024.0)]
+    else:
+        pagetables_kb = 0
+        perfdata = []
 
     totalused_kb = (swapused_kb + memused_kb - caches_kb + pagetables_kb)
     totalused_mb = totalused_kb / 1024.0
@@ -158,6 +162,7 @@ def check_memory(params, meminfo):
                                        initialize_zero=False)
         totalused_perc_avg = totalused_mb_avg / totalmem_mb * 100
         infotext += ", %d min average %.1f%%" % (average_min, totalused_perc_avg)
+        perfdata.append(('memusedavg', totalused_mb_avg))
         comp_mb = totalused_mb_avg
     else:
         comp_mb = totalused_mb
@@ -175,14 +180,11 @@ def check_memory(params, meminfo):
     )
 
     # Prepare performance data
-    perfdata = [
+    perfdata.extend([
         ('ramused', (memused_kb - caches_kb) / 1024.0, None, None, 0, totalmem_mb),
         ('swapused', swapused_kb / 1024.0, None, None, 0, meminfo['SwapTotal'] / 1024.0),
         ('memused', totalused_mb, warn_mb, crit_mb, 0, totalvirt_mb),
-    ]
-
-    if average_min:
-        perfdata.append(('memusedavg', totalused_mb_avg))
+    ])
 
     # Check levels
     state = 0
@@ -195,19 +197,14 @@ def check_memory(params, meminfo):
         infotext += ", %s" % levels_text
 
     # Add additional metrics, provided by Linux.
-    mapped = meminfo.get('Mapped')
-    if mapped:
-        mapped_mb = int(mapped) / 1024.0
-        committed_as_mb = int(meminfo.get('Committed_AS', 0)) / 1024.0
-        shared_mb = int(meminfo.get('Shmem', 0)) / 1024.0
-
-        perfdata += [
-            ('mapped', mapped_mb),
-            ('committed_as', committed_as_mb),
-            ('pagetables', pagetables_mb),
-            ('shared', shared_mb),
-        ]
-        infotext += ", %.1f mapped, %.1f committed, %.1f shared" % \
-                    (mapped_mb / 1024.0, committed_as_mb / 1024.0, shared_mb / 1024.0)
+    if meminfo.get('Mapped'):
+        for key, label, metric in (
+            ('Mapped', 'mapped', 'mapped'),
+            ('Committed_AS', 'committed', 'committed_as'),
+            ('Shmem', 'shared', 'shared'),
+        ):
+            value_kb = float(meminfo.get(key, 0))
+            perfdata.append((metric, value_kb / 1024.0))
+            infotext += ", %s %s" % (get_bytes_human_readable(value_kb * 1024), label)
 
     return state, infotext, perfdata

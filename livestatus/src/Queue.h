@@ -107,7 +107,7 @@ bool Queue<S>::try_push(value_type&& elem) {
 template <typename S>
 bool Queue<S>::push(const_reference elem) {
     std::unique_lock<std::mutex> lock(mutex_);
-    cv_.wait(lock, [&]{return limit_ != q_.size() || terminate_; });
+    cv_.wait(lock, [&] { return limit_ != q_.size() || terminate_; });
     if (terminate_) {
         return false;
     }
@@ -119,7 +119,7 @@ bool Queue<S>::push(const_reference elem) {
 template <typename S>
 bool Queue<S>::push(value_type&& elem) {
     std::unique_lock<std::mutex> lock(mutex_);
-    cv_.wait(lock, [&]{return limit_ != q_.size() || terminate_; });
+    cv_.wait(lock, [&] { return limit_ != q_.size() || terminate_; });
     if (terminate_) {
         return false;
     }
@@ -142,7 +142,7 @@ std::optional<typename Queue<S>::value_type> Queue<S>::try_pop() {
 template <typename S>
 std::optional<typename Queue<S>::value_type> Queue<S>::pop() {
     std::unique_lock<std::mutex> lock(mutex_);
-    cv_.wait(lock, [&]{return !q_.empty() || terminate_; });
+    cv_.wait(lock, [&] { return !q_.empty() || terminate_; });
     if (terminate_) {
         return std::nullopt;
     }

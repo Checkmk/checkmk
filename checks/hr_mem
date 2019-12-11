@@ -95,15 +95,15 @@ def check_hr_mem(_no_item, params, parsed):
     if totalmem_mb > 0 and totalram_mb > 0:
         totalused_perc = 100 * totalused_mb / totalram_mb
 
-        perfdata = [('ramused', str(ramused_mb) + 'MB', None, None, 0, totalram_mb),
-                    ('swapused', str(virtused_mb) + 'MB', None, None, 0, totalvirt_mb)]
+        perfdata = [('ramused', ramused_mb, None, None, 0, totalram_mb),
+                    ('swapused', virtused_mb, None, None, 0, totalvirt_mb)]
 
         infotext = "%.2f GB used (%.2f GB RAM + %.2f GB SWAP, this is %.1f%% of %.2f GB RAM)" % \
                (totalused_mb / 1024.0, ramused_mb / 1024.0, virtused_mb / 1024.0, totalused_perc, totalram_mb / 1024.0)
 
         warn, crit = params
         if isinstance(warn, float):
-            perfdata.append(('memused', str(totalused_mb) + 'MB', int(warn / 100.0 * totalram_mb),
+            perfdata.append(('memused', totalused_mb, int(warn / 100.0 * totalram_mb),
                              int(crit / 100.0 * totalram_mb), 0, totalvirt_mb))
             if totalused_perc >= crit:
                 return (2, '%s, critical at %.1f%%' % (infotext, crit), perfdata)
@@ -111,7 +111,7 @@ def check_hr_mem(_no_item, params, parsed):
                 return (1, '%s, warning at %.1f%%' % (infotext, warn), perfdata)
             return (0, '%s' % infotext, perfdata)
 
-        perfdata.append(('memused', str(totalused_mb) + 'MB', warn, crit, 0, totalram_mb))
+        perfdata.append(('memused', totalused_mb, warn, crit, 0, totalram_mb))
         if totalused_mb >= crit:
             return (2, '%s, critical at %.2f GB' % (infotext, crit / 1024.0), perfdata)
         elif totalused_mb >= warn:

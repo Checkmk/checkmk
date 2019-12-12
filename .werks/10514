@@ -1,0 +1,15 @@
+Title: mk_oracle.ps1: Fixed version check for instance services
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1576157476
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+The plugin tried to use the extended output for instance services even if
+the version was not capable to produce the output. This happend, because
+the version check is on Windows more specific than on Linux and the version
+check was too loose. The plugin needs to be replaced and then the correct
+output will be generated.

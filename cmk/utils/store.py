@@ -221,7 +221,7 @@ def save_to_mk_file(path, key, value, pprint_value=False):
 # TODO: Consolidate with load_mk_file?
 def load_object_from_file(path, default=None, lock=False):
     # type: (Union[Path, str], Any, bool) -> Any
-    content = _load_data_from_file(path, lock=lock)
+    content = cast(Text, _load_data_from_file(path, lock=lock, encoding="utf-8"))
     if not content:
         return default
     return ast.literal_eval(content)
@@ -243,6 +243,10 @@ def load_bytes_from_file(path, default=b"", lock=False):
     return content
 
 
+# TODO: This function has to die! Its return type depends on the value of the
+# encoding parameter, which doesn't work at all with mypy and various APIs like
+# ast.literal_eval. As a workaround, we use casts, but this isn't a real
+# solution....
 def _load_data_from_file(path, lock=False, encoding=None):
     # type: (Union[Path, str], bool, Optional[str]) -> Optional[Union[Text, bytes]]
     if not isinstance(path, Path):

@@ -232,7 +232,7 @@ if [ -z "$ENABLED_FIXERS" ]; then
 fi
 
 # Check all relevant files in case no PYTHON_FILES is set via environment
-PYTHON_FILES=${PYTHON_FILES-$($REPO_PATH/tests/find-python-files)}
+PYTHON_FILES=${PYTHON_FILES-$($REPO_PATH/scripts/find-python-files 2)}
 # Exclude python files which can be installed on client hosts
 PYTHON_FILES=$(echo "$PYTHON_FILES" |\
                grep -v "$REPO_PATH/agents/plugins/" |\

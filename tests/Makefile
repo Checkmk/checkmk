@@ -34,7 +34,7 @@ $(NODE_MODULES):
 	$(MAKE) -C $(dir $(NODE_MODULES)) $(notdir $(NODE_MODULES))
 
 bandit.ini:
-	echo -e "[bandit]\ntargets: $$(./find-python-files | tr '\n' ',' | sed 's/,$$//')" > bandit.ini
+	echo -e "[bandit]\ntargets: $$(../scripts/find-python-files 2 | tr '\n' ',' | sed 's/,$$//')" > bandit.ini
 
 pipenv-check:
 	$(PIPENV2) check
@@ -51,7 +51,7 @@ test-format-python: ../.style.yapf
 # There are some mixed up lines on stdout caused by the --parallel option.
 # Nevertheless, we keep that option to get a big performance boost. GitHub issue
 # opened for this problem: https://github.com/google/yapf/issues/644.
-	@PYTHON_FILES=$${PYTHON_FILES-$$(./find-python-files)} ; \
+	@PYTHON_FILES=$${PYTHON_FILES-$$(../scripts/find-python-files 2)} ; \
 	$(YAPF) --parallel --style ../.style.yapf --verbose --diff $$PYTHON_FILES | \
 	grep '^+++ .*(reformatted)$$' | \
 	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/'

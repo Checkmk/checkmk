@@ -18,7 +18,7 @@ installation on the sites you want to calculate and visualize the forecast.
 Slave sites which only do monitoring don't need the package.
 
 To install the dependencies run the script in
-{bin/install_fbprophet.sh}. This script has additional flags {-u} if you
+{bin/install_fbprophet}. This script has additional flags {-u} if you
 want to uninstall the dependencies and {-h} for a help summary.
 
 The easiest way to use a metric data for Forecast is from the service view

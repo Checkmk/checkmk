@@ -257,13 +257,7 @@ def _load_data_from_file(path, lock=False, encoding=None):
 
     try:
         try:
-            if encoding:
-                with path.open('r', encoding=encoding) as f:
-                    return f.read().strip()
-
-            with path.open('rb') as f:
-                return f.read()
-
+            return path.read_text(encoding=encoding) if encoding else path.read_bytes()
         except IOError as e:
             if e.errno != errno.ENOENT:  # No such file or directory
                 raise

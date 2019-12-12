@@ -278,6 +278,14 @@ AWSEC2InstFPGATypes = [
     'f1.16xlarge',
 ]
 
+AWSEC2InstFamilies = {
+    'f': 'Running On-Demand F instances',
+    'g': 'Running On-Demand G instances',
+    'p': 'Running On-Demand P instances',
+    'x': 'Running On-Demand X instances',
+    '_': 'Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances'
+}
+
 AWSEC2InstTypes = (AWSEC2InstGeneralTypes + AWSEC2InstPrevGeneralTypes + AWSEC2InstMemoryTypes +
                    AWSEC2InstPrevMemoryTypes + AWSEC2InstComputeTypes + AWSEC2InstPrevComputeTypes +
                    AWSEC2InstAcceleratedComputeTypes + AWSEC2InstStorageTypes +
@@ -334,4 +342,9 @@ AWSEC2LimitsSpecial = {
     'r4.4xlarge': (10, 20, 5),
     'r4.8xlarge': (5, 20, 5),
     'r4.16xlarge': (1, 20, 5),
+    'f_vcpu': (128, None, None),
+    'g_vcpu': (128, None, None),
+    'p_vcpu': (128, None, None),
+    'x_vcpu': (128, None, None),
+    '__vcpu': (1152, None, None),
 }

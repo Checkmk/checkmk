@@ -52,6 +52,7 @@ from cmk.special_agents.utils import (
 )
 from cmk.utils.aws_constants import (
     AWSRegions,
+    AWSEC2InstFamilies,
     AWSEC2InstTypes,
     AWSEC2LimitsDefault,
     AWSEC2LimitsSpecial,
@@ -648,9 +649,20 @@ class EC2Limits(AWSSectionLimits):
         dflt_ondemand_limit, _reserved_limit, _spot_limit = AWSEC2LimitsDefault
         total_instances = 0
         for inst_type, count in ondemand_limits.iteritems():
-            total_instances += count
             ondemand_limit, _reserved_limit, _spot_limit = AWSEC2LimitsSpecial.get(
                 inst_type, AWSEC2LimitsDefault)
+            if inst_type.endswith('_vcpu'):
+                self._add_limit(
+                    "",
+                    AWSLimit(
+                        "running_ondemand_instances_%s" % inst_type.lower(),
+                        AWSEC2InstFamilies.get(inst_type[0], AWSEC2InstFamilies['_']) + " vCPUs",
+                        ondemand_limit,
+                        count,
+                    ))
+                continue
+
+            total_instances += count
             self._add_limit(
                 "",
                 AWSLimit(
@@ -680,6 +692,10 @@ class EC2Limits(AWSSectionLimits):
             inst_az = inst['Placement']['AvailabilityZone']
             inst_limits.setdefault(
                 inst_az, {})[inst_type] = inst_limits.get(inst_az, {}).get(inst_type, 0) + 1
+
+            vcount = inst['CpuOptions']['CoreCount'] * inst['CpuOptions']['ThreadsPerCore']
+            vcpu_family = '%s_vcpu' % (inst_type[0] if inst_type[0] in AWSEC2InstFamilies.keys() else "_")
+            inst_limits[inst_az][vcpu_family] = inst_limits[inst_az].get(vcpu_family, 0) + vcount
         return inst_limits
 
     def _get_res_inst_limits(self, res_instances):

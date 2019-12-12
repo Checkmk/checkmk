@@ -33,11 +33,15 @@ test-mypy3:
 test-mypy3-raw:
 	$(MYPY) --config-file=$(realpath ../mypy-raw.ini) $$(../scripts/find-python-files 3)
 
+# TODO: This is a real hack caused by our dubious directory structure plus the
+# use of --scripts-are-modules. Is this really the right flag to use?
+MYPY2_FILES=$$(../scripts/find-python-files 2 | grep -v '/agents/special/\|/agents/plugins/\|/active_checks/\|/bin/check_mk\|/bin/mkbackup\|/agents/wnx/integration/local.py')
+
 test-mypy:
-	$(MYPY) $$(../scripts/find-python-files 2)
+	$(MYPY) $(MYPY2_FILES)
 
 test-mypy-raw:
-	$(MYPY) --config-file=$(realpath ../mypy-raw.ini) $$(../scripts/find-python-files 2)
+	$(MYPY) --config-file=$(realpath ../mypy-raw.ini)  $(MYPY2_FILES)
 
 test-packaging:
 	$(PYTEST) -T packaging packaging

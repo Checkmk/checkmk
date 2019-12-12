@@ -1,0 +1,53 @@
+#!/usr/bin/python
+#author: Oguzhan Cicek, OpenSource Security GmbH - oguzhan(at)os-s.de
+
+#Example Input:
+#.1.3.6.1.2.1.1.1.0 testname
+#.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.8072.3.2.10
+#[...]
+#.1.3.6.1.4.1.12356.113.1.202.22.0 810
+#.1.3.6.1.4.1.12356.113.1.202.23.0 0
+#[...]
+
+#Example GUI Output:
+#OK	FortiAuthenticator Authentication Failures	Authentication Failures within the last 5 Minutes: 0	fortiauthenticator_auth_fail
+
+factory_settings["fortiauthenticator_auth_fail_default_levels"] = {
+    "auth_fails": (100, 200),
+}
+
+
+def inventory_fortiauthenticator_auth_fail(info):
+    return [(None, "fortiauthenticator_auth_fail_default_levels")]
+
+
+def check_fortiauthenticator_auth_fail(item, params, info):
+    warn, crit = params["auth_fails"]
+    fails = int(info[0][0][0])
+    statustext = "Authentication Failures within the last 5 Minutes: %s" % (fails)
+    perfdata = [("Authentication Failures 5 Minutes", fails)]
+    state = 0
+    if fails >= warn:
+        state = 1
+    if fails >= crit:
+        state = 2
+    if fails < 0:
+        state = 3
+    yield state, statustext, perfdata
+
+
+check_info['fortiauthenticator_auth_fail'] = {
+    'inventory_function': inventory_fortiauthenticator_auth_fail,
+    'check_function': check_fortiauthenticator_auth_fail,
+    'has_perfdata': True,
+    'service_description': "FortiAuthenticator Authentication Failures",
+    'snmp_info': [(
+        '.1.3.6.1.4.1.12356.113.1.202',
+        [
+            '23.0',  # facAuthFailures5Min
+        ])],
+    'snmp_scan_function': lambda oid: '.1.3.6.1.4.1.8072.3.2.10' in oid('.1.3.6.1.2.1.1.2.0').lower(
+    ),
+    'group': 'fortiauthenticator_auth_fail',
+    'default_levels_variable': 'fortiauthenticator_auth_fail_default_levels',
+}

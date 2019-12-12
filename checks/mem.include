@@ -144,25 +144,37 @@ def check_memory(params, meminfo, render_base=1024):
     if isinstance(params, tuple):
         params = {"levels": params}
 
+    zerobytes = MemBytes(0, render_base)
+
     memtotal = MemBytes(meminfo['MemTotal'], render_base)
     memused = MemBytes(memtotal.kb - meminfo['MemFree'], render_base)
-    swaptotal = MemBytes(meminfo['SwapTotal'], render_base)
-    swapused = MemBytes(swaptotal.kb - meminfo['SwapFree'], render_base)
 
     # Buffers and Cached are optional. On Linux both mean basically the same.
     caches = MemBytes(meminfo.get('Buffers', 0) + meminfo.get('Cached', 0), render_base)
+
+    if "SwapFree" in meminfo:
+        swaptotal = MemBytes(meminfo['SwapTotal'], render_base)
+        swapused = MemBytes(swaptotal.kb - meminfo['SwapFree'], render_base)
+        perfdata = [('swapused', swapused.mb, None, None, 0, swaptotal.mb)]
+    else:
+        swaptotal = zerobytes
+        swapused = zerobytes
+        perfdata = []
 
     # Size of Pagetable on Linux can be relevant e.g. on ORACLE
     # servers with much memory, that do not use HugeTables. We account
     # that for used
     if 'PageTables' in meminfo:
         pagetables = MemBytes(meminfo['PageTables'], render_base)
-        perfdata = [('pagetables', pagetables.mb)]
+        perfdata.append(('pagetables', pagetables.mb))
     else:
-        pagetables = MemBytes(0, render_base)
-        perfdata = []
+        pagetables = zerobytes
 
     ramused = MemBytes(memused.kb - caches.kb, render_base)
+    if perfdata:
+        # if perfdata is empty here, ramused and memused would be the same anyway.
+        perfdata.append(('ramused', ramused.mb, None, None, 0, memtotal.mb))
+
     totalused, totalused_descr = _get_total_usage(ramused, swapused, pagetables)
     totalused_perc = 100.0 * totalused.kb / memtotal.kb
     totalvirt = MemBytes(swaptotal.kb + memtotal.kb, render_base)
@@ -212,12 +224,7 @@ def check_memory(params, meminfo, render_base=1024):
     if state and levels_text:
         infotext += ", %s" % levels_text
 
-    # Prepare performance data
-    perfdata.extend([
-        ('ramused', ramused.mb, None, None, 0, memtotal.mb),
-        ('swapused', swapused.mb, None, None, 0, swaptotal.mb),
-        ('memused', totalused.mb, warn_mb, crit_mb, 0, totalvirt.mb),
-    ])
+    perfdata.append(('memused', totalused.mb, warn_mb, crit_mb, 0, totalvirt.mb))
 
     # Add additional metrics, provided by Linux.
     if meminfo.get('Mapped'):

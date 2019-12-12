@@ -47,6 +47,6 @@ checks = {'': [(None,
                 {'levels': (150.0, 200.0)},
                 [(0,
                   '76.77 MB used (this is 0.1% of 62.62 GB RAM)',
-                  [('ramused', 76.765625, None, None, 0, 64121.671875),
-                   ('swapused', 0, None, None, 0, 0),
+                  [('swapused', 0, None, None, 0, 0),
+                   ('ramused', 76.765625, None, None, 0, 64121.671875),
                    ('memused', 76.765625, 96182.5078125, 128243.34375, 0, 64121.671875)])])]}

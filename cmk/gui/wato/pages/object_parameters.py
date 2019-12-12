@@ -258,7 +258,6 @@ class ModeObjectParameters(WatoMode):
             rule_nr = serviceinfo["rule_nr"]
             rules = all_rulesets.get("custom_checks").get_rules()
             rule_folder, rule_index, _rule = rules[rule_nr]
-            html.debug(rules)
 
             url = watolib.folder_preserving_link([('mode', 'edit_ruleset'),
                                                   ('varname', "custom_checks"),

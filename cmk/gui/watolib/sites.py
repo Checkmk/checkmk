@@ -553,6 +553,8 @@ class CEESiteManagement(SiteManagement):
 
         conf = {}
         for siteid, siteconf in sites.items():
+            if siteconf.get("disabled", False):
+                continue
             proxy_params = siteconf["proxy"]
             if proxy_params is None:
                 continue

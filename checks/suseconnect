@@ -33,7 +33,9 @@
 # starts_at: 2015-12-01 00:00:00 UTC
 # expires_at: 2019-12-31 00:00:00 UTC
 # subscription_status: ACTIVE
-# type: full
+# typeXXX: full
+#
+# Note: the typeXXX above is actually type, but this would confuse mypy.
 
 factory_settings['sles_license_default_levels'] = {
     'status': 'Registered',

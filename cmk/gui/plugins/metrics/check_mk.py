@@ -43,7 +43,7 @@ from cmk.gui.plugins.metrics import (
     MAX_CORES,
     indexed_color,
 )
-from cmk.utils.aws_constants import AWSEC2InstTypes
+from cmk.utils.aws_constants import AWSEC2InstTypes, AWSEC2InstFamilies
 
 # TODO Graphingsystem:
 # - Default-Template: Wenn im Graph kein "range" angegeben ist, aber
@@ -5169,6 +5169,13 @@ metric_info['aws_ec2_running_ondemand_instances_total'] = {
     'unit': 'count',
     'color': '25/a',
 }
+
+for inst_fam in AWSEC2InstFamilies:
+    metric_info['aws_ec2_running_ondemand_instances_%s_vcpu' % inst_fam[0]] = {
+        'title': _('Total %s vCPUs') % AWSEC2InstFamilies[inst_fam],
+        'unit': 'count',
+        'color': '25/a',
+    }
 
 for inst_type in AWSEC2InstTypes:
     metric_info['aws_ec2_running_ondemand_instances_%s' % inst_type] = {

@@ -382,7 +382,7 @@ void terminate_threads() {
         pthread_join(fl_thread_info[0].id, nullptr);
         Informational(fl_logger_nagios)
             << "waiting for client threads to terminate...";
-        fl_client_queue->terminate();
+        fl_client_queue->join();
         while (auto fd = fl_client_queue->try_pop()) {
             close(*fd);
         }

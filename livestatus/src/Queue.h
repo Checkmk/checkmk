@@ -56,14 +56,15 @@ public:
     [[nodiscard]] bool push(value_type&&);
     std::optional<value_type> try_pop();
     std::optional<value_type> pop();
-    void terminate();
+    void join();
+    [[nodiscard]] bool joinable() const;
 
 private:
     Storage q_;
     std::optional<size_type> limit_;
     mutable std::mutex mutex_;
     std::condition_variable cv_;
-    std::atomic_bool terminate_ = false;
+    std::atomic_bool joinable_ = false;
 };
 
 template <typename S>
@@ -74,7 +75,7 @@ Queue<S>::Queue(size_type limit) : limit_{limit} {}
 
 template <typename S>
 Queue<S>::~Queue() {
-    terminate();
+    join();
 }
 
 template <typename S>
@@ -107,8 +108,8 @@ bool Queue<S>::try_push(value_type&& elem) {
 template <typename S>
 bool Queue<S>::push(const_reference elem) {
     std::unique_lock<std::mutex> lock(mutex_);
-    cv_.wait(lock, [&] { return limit_ != q_.size() || terminate_; });
-    if (terminate_) {
+    cv_.wait(lock, [&] { return limit_ != q_.size() || joinable_; });
+    if (joinable_) {
         return false;
     }
     q_.push_back(elem);
@@ -119,8 +120,8 @@ bool Queue<S>::push(const_reference elem) {
 template <typename S>
 bool Queue<S>::push(value_type&& elem) {
     std::unique_lock<std::mutex> lock(mutex_);
-    cv_.wait(lock, [&] { return limit_ != q_.size() || terminate_; });
-    if (terminate_) {
+    cv_.wait(lock, [&] { return limit_ != q_.size() || joinable_; });
+    if (joinable_) {
         return false;
     }
     q_.push_back(std::move(elem));
@@ -142,8 +143,8 @@ std::optional<typename Queue<S>::value_type> Queue<S>::try_pop() {
 template <typename S>
 std::optional<typename Queue<S>::value_type> Queue<S>::pop() {
     std::unique_lock<std::mutex> lock(mutex_);
-    cv_.wait(lock, [&] { return !q_.empty() || terminate_; });
-    if (terminate_) {
+    cv_.wait(lock, [&] { return !q_.empty() || joinable_; });
+    if (joinable_) {
         return std::nullopt;
     }
     value_type elem = q_.front();
@@ -152,9 +153,14 @@ std::optional<typename Queue<S>::value_type> Queue<S>::pop() {
 };
 
 template <typename S>
-void Queue<S>::terminate() {
-    terminate_ = true;
+void Queue<S>::join() {
+    joinable_ = true;
     cv_.notify_all();
+}
+
+template <typename S>
+bool Queue<S>::joinable() const {
+    return joinable_;
 }
 
 #endif

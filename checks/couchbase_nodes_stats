@@ -59,6 +59,8 @@ def check_couchbase_nodes_mem(_item, params, data):
     except KeyError:
         return None
 
+    # TODO: I (mo) f***ed this up. We need to call check_memory,
+    # but the WATO rule needs an item
     return check_memory_multiitem(
         params, {
             'MemTotal': mem_total,

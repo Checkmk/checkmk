@@ -35,7 +35,7 @@ test-mypy3-raw:
 
 # TODO: This is a real hack caused by our dubious directory structure plus the
 # use of --scripts-are-modules. Is this really the right flag to use?
-MYPY2_FILES=$$(../scripts/find-python-files 2 | grep -v '/agents/special/\|/agents/plugins/\|/active_checks/\|/bin/check_mk\|/bin/mkbackup\|/agents/wnx/integration/local.py')
+MYPY2_FILES=$$(../scripts/find-python-files 2 | grep $$(realpath '../cmk'))
 
 test-mypy:
 	$(MYPY) $(MYPY2_FILES)

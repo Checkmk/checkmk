@@ -42,8 +42,12 @@ MYPY2_FILES=$(shell \
     grep -v $$(realpath '../doc/predictive') | \
     grep -v $$(realpath '../doc/bi-example-oracle.mk') | \
     grep -v $$(realpath '../doc/bi-example.mk') | \
-    grep -v $$(realpath '../enterprise/agents/bakery') | \
-    grep -v $$(realpath '../enterprise/agents/plugins') | \
+    if test -d ../enterprise; then \
+        grep -v $$(realpath '../enterprise/agents/bakery') | \
+        grep -v $$(realpath '../enterprise/agents/plugins'); \
+    else \
+        cat; \
+    fi | \
     grep -v $$(realpath '../inventory') | \
     `: We should really check these, but currently there are too many errors. :-/` \
     grep -v $$(realpath '../active_checks') | \

@@ -31,7 +31,6 @@ import sys
 import abc
 import grp
 import pwd
-import tty
 import time
 import errno
 import fcntl
@@ -47,6 +46,7 @@ import signal
 import io
 import contextlib
 import logging
+from tty import setraw
 from typing import (  # pylint: disable=unused-import
     NoReturn, IO, Any, cast, Iterable, Union, Pattern, Iterator, Tuple, Optional, Callable, List,
     NamedTuple, Dict,
@@ -57,6 +57,7 @@ from pathlib2 import Path
 import six
 
 import cmk.utils.log
+import cmk.utils.tty as tty
 from cmk.utils.log import VERBOSE
 
 import omdlib
@@ -83,73 +84,16 @@ DialogResult = Tuple[bool, bytes]
 cmk.utils.log.setup_console_logging()
 logger = logging.getLogger("cmk.omd")
 
-#   .--Logging-------------------------------------------------------------.
-#   |                _                      _                              |
-#   |               | |    ___   __ _  __ _(_)_ __   __ _                  |
-#   |               | |   / _ \ / _` |/ _` | | '_ \ / _` |                 |
-#   |               | |__| (_) | (_| | (_| | | | | | (_| |                 |
-#   |               |_____\___/ \__, |\__, |_|_| |_|\__, |                 |
-#   |                           |___/ |___/         |___/                  |
-#   +----------------------------------------------------------------------+
-#   | Helper functions for output on the TTY                               |
-#   '----------------------------------------------------------------------'
-
-# colored output, if stdout is a tty
-if sys.stdout.isatty():
-    tty_black = '\033[30m'
-    tty_red = '\033[31m'
-    tty_green = '\033[32m'
-    tty_yellow = '\033[33m'
-    tty_blue = '\033[34m'
-    tty_magenta = '\033[35m'
-    tty_cyan = '\033[36m'
-    tty_white = '\033[37m'
-    tty_bgblack = '\033[40m'
-    tty_bgred = '\033[41m'
-    tty_bggreen = '\033[42m'
-    tty_bgyellow = '\033[43m'
-    tty_bgblue = '\033[44m'
-    tty_bgmagenta = '\033[45m'
-    tty_bgcyan = '\033[46m'
-    tty_bgwhite = '\033[47m'
-    tty_bold = '\033[1m'
-    tty_underline = '\033[4m'
-    tty_normal = '\033[0m'
-    tty_ok = tty_green + tty_bold + 'OK' + tty_normal
-    tty_error = tty_red + tty_bold + 'ERROR' + tty_normal
-    tty_warn = tty_yellow + tty_bold + 'WARNING' + tty_normal
-else:
-    tty_black = ''
-    tty_red = ''
-    tty_green = ''
-    tty_yellow = ''
-    tty_blue = ''
-    tty_magenta = ''
-    tty_cyan = ''
-    tty_white = ''
-    tty_bgred = ''
-    tty_bggreen = ''
-    tty_bgyellow = ''
-    tty_bgblue = ''
-    tty_bgmagenta = ''
-    tty_bgcyan = ''
-    tty_bold = ''
-    tty_underline = ''
-    tty_normal = ''
-    tty_ok = 'OK'
-    tty_error = 'ERROR'
-    tty_warn = 'WARNING'
-
 
 class StateMarkers(object):
-    good = " " + tty_green + tty_bold + "*" + tty_normal
-    warn = " " + tty_bgyellow + tty_black + tty_bold + "!" + tty_normal
-    error = " " + tty_bgred + tty_white + tty_bold + "!" + tty_normal
+    good = " " + tty.green + tty.bold + "*" + tty.normal
+    warn = " " + tty.bgyellow + tty.black + tty.bold + "!" + tty.normal
+    error = " " + tty.bgred + tty.white + tty.bold + "!" + tty.normal
 
 
 def ok():
     # type: () -> None
-    sys.stdout.write(tty_ok + "\n")
+    sys.stdout.write(tty.ok + "\n")
 
 
 def bail_out(message):
@@ -219,7 +163,7 @@ def show_success(exit_code):
     if exit_code is True or exit_code == 0:
         ok()
     else:
-        sys.stdout.write(tty_error + "\n")
+        sys.stdout.write(tty.error + "\n")
     return exit_code
 
 
@@ -383,7 +327,7 @@ def getch():
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
     try:
-        tty.setraw(sys.stdin.fileno())
+        setraw(sys.stdin.fileno())
         ch = sys.stdin.read(1)
     finally:
         termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
@@ -397,41 +341,41 @@ def ask_user_choices(title, message, choices):
     sys.stdout.write("\n")
 
     def pl(line):
-        sys.stdout.write(" %s %-76s %s\n" % (tty_bgcyan + tty_white, line, tty_normal))
+        sys.stdout.write(" %s %-76s %s\n" % (tty.bgcyan + tty.white, line, tty.normal))
 
     pl("")
-    sys.stdout.write(" %s %-76s %s\n" % (tty_bgcyan + tty_white + tty_bold, title, tty_normal))
+    sys.stdout.write(" %s %-76s %s\n" % (tty.bgcyan + tty.white + tty.bold, title, tty.normal))
     for line in wrap_text(message, 76):
         pl(line)
     pl("")
     chars = []  # type: List[str]
-    empty_line = " %s%-78s%s\n" % (tty_bgblue + tty_white, "", tty_normal)
+    empty_line = " %s%-78s%s\n" % (tty.bgblue + tty.white, "", tty.normal)
     sys.stdout.write(empty_line)
     for choice, choice_title in choices:
         sys.stdout.write(" %s %s%s%s%-10s %-65s%s\n" %
-                         (tty_bgblue + tty_white, tty_bold, choice[0], tty_normal + tty_bgblue +
-                          tty_white, choice[1:], choice_title, tty_normal))
+                         (tty.bgblue + tty.white, tty.bold, choice[0], tty.normal + tty.bgblue +
+                          tty.white, choice[1:], choice_title, tty.normal))
         for c in choice:
             if c.lower() not in chars:
                 chars.append(c)
                 break
     sys.stdout.write(empty_line)
 
-    choicetxt = (tty_bold + tty_magenta + "/").join([
-        (tty_bold + tty_white + char + tty_normal + tty_bgmagenta)
+    choicetxt = (tty.bold + tty.magenta + "/").join([
+        (tty.bold + tty.white + char + tty.normal + tty.bgmagenta)
         for (char, _c) in zip(chars, choices)
     ])
     l = len(choices) * 2 - 1
-    sys.stdout.write(" %s %s" % (tty_bgmagenta, choicetxt))
-    sys.stdout.write(" ==> %s   %s" % (tty_bgred, tty_bgmagenta))
+    sys.stdout.write(" %s %s" % (tty.bgmagenta, choicetxt))
+    sys.stdout.write(" ==> %s   %s" % (tty.bgred, tty.bgmagenta))
     sys.stdout.write(" " * (69 - l))
     sys.stdout.write("\b" * (71 - l))
-    sys.stdout.write(tty_normal)
+    sys.stdout.write(tty.normal)
     while True:
         a = getch()
         for char, (choice, choice_title) in zip(chars, choices):
             if a == char:
-                sys.stdout.write(tty_bold + tty_bgred + tty_white + a + tty_normal + "\n\n")
+                sys.stdout.write(tty.bold + tty.bgred + tty.white + a + tty.normal + "\n\n")
                 return choice
 
 
@@ -471,11 +415,11 @@ def groupdel(groupname):
                              stderr=subprocess.PIPE,
                              close_fds=True)
     except OSError as e:
-        bail_out("\n" + tty_error + ": Failed to delete group '%s': %s" % (groupname, e))
+        bail_out("\n" + tty.error + ": Failed to delete group '%s': %s" % (groupname, e))
 
     stderr = p.communicate()[1]
     if p.returncode != 0:
-        bail_out("\n" + tty_error + ": Failed to delete group '%s': %s" % (groupname, stderr))
+        bail_out("\n" + tty.error + ": Failed to delete group '%s': %s" % (groupname, stderr))
 
 
 # TODO: refactor gid to int
@@ -534,11 +478,11 @@ def userdel(name):
                                  stderr=subprocess.PIPE,
                                  close_fds=True)
         except OSError as e:
-            bail_out("\n" + tty_error + ": Failed to delete user '%s': %s" % (name, e))
+            bail_out("\n" + tty.error + ": Failed to delete user '%s': %s" % (name, e))
 
         stderr = p.communicate()[1]
         if p.returncode != 0:
-            bail_out("\n" + tty_error + ": Failed to delete user '%s': %s" % (name, stderr))
+            bail_out("\n" + tty.error + ": Failed to delete user '%s': %s" % (name, stderr))
 
     # On some OSes (e.g. debian) the group is automatically removed if
     # it bears the same name as the user. So first check for the group.
@@ -613,32 +557,32 @@ def user_verify(site, allow_populated=False):
     name = site.name
 
     if not user_exists(name):
-        bail_out(tty_error + ": user %s does not exist" % name)
+        bail_out(tty.error + ": user %s does not exist" % name)
 
     user = user_by_id(user_id(name))
     if user.pw_dir != site.dir:
-        bail_out(tty_error + ": Wrong home directory for user %s, must be %s" % (name, site.dir))
+        bail_out(tty.error + ": Wrong home directory for user %s, must be %s" % (name, site.dir))
 
     if not os.path.exists(site.dir):
-        bail_out(tty_error + ": home directory for user %s (%s) does not exist" % (name, site.dir))
+        bail_out(tty.error + ": home directory for user %s (%s) does not exist" % (name, site.dir))
 
     if not allow_populated and os.path.exists(site.dir + "/version"):
-        bail_out(tty_error + ": home directory for user %s (%s) must be empty" % (name, site.dir))
+        bail_out(tty.error + ": home directory for user %s (%s) must be empty" % (name, site.dir))
 
     if not file_owner_verify(site.dir, user.pw_uid, user.pw_gid):
-        bail_out(tty_error + ": home directory (%s) is not owned by user %s and group %s" %
+        bail_out(tty.error + ": home directory (%s) is not owned by user %s and group %s" %
                  (site.dir, name, name))
 
     group = group_by_id(user.pw_gid)
     if group is None or group.gr_name != name:
-        bail_out(tty_error + ": primary group for siteuser must be %s" % name)
+        bail_out(tty.error + ": primary group for siteuser must be %s" % name)
 
     if not user_has_group(g_info.APACHE_USER, name):
-        bail_out(tty_error + ": apache user %s must be member of group %s" %
+        bail_out(tty.error + ": apache user %s must be member of group %s" %
                  (g_info.APACHE_USER, name))
 
     if not user_has_group(name, "omd"):
-        bail_out(tty_error + ": siteuser must be member of group omd")
+        bail_out(tty.error + ": siteuser must be member of group omd")
 
     return True
 
@@ -1069,7 +1013,7 @@ def patch_template_file(conflict_mode, src, dst, old_site, new_site):
                     sys.stdout.write("Found no matching line.\n")
                 else:
                     sys.stdout.write("Did brute-force replace, changed %s%d%s lines:\n" %
-                                     (tty_bold, changed, tty_normal))
+                                     (tty.bold, changed, tty.normal))
                     os.system("diff -u %s.orig %s" % (dst, dst))  # nosec
                     break
             elif choice == "you":
@@ -1111,7 +1055,7 @@ def patch_template_file(conflict_mode, src, dst, old_site, new_site):
 # old->user version
 def merge_update_file(site, conflict_mode, relpath, old_version, new_version):
     # type: (SiteContext, str, str, str, str) -> None
-    fn = tty_bold + relpath + tty_normal
+    fn = tty.bold + relpath + tty.normal
 
     user_path = site.dir + "/" + relpath
     permissions = os.stat(user_path).st_mode
@@ -1173,7 +1117,7 @@ def merge_update_file(site, conflict_mode, relpath, old_version, new_version):
                 (user_path, old_version, user_path, new_version, pipe_pager()))
         elif choice == "missing":
             if os.path.exists(reject_file):
-                sys.stdout.write(tty_bgblue + tty_white + open(reject_file).read() + tty_normal)
+                sys.stdout.write(tty.bgblue + tty.white + open(reject_file).read() + tty.normal)
             else:
                 sys.stdout.write("File %s not found.\n" % reject_file)
 
@@ -1322,7 +1266,7 @@ def update_file(relpath, site, conflict_mode, old_version, new_version, old_perm
         os.listdir(user_path))
 
     #     if global_opts.verbose:
-    #         sys.stdout.write("%s%s%s:\n" % (tty_bold, relpath, tty_normal))
+    #         sys.stdout.write("%s%s%s:\n" % (tty.bold, relpath, tty.normal))
     #         sys.stdout.write("  you       : %s\n" % user_type)
     #         sys.stdout.write("  %-10s: %s\n" % (old_version, old_type))
     #         sys.stdout.write("  %-10s: %s\n" % (new_version, new_type))
@@ -1331,8 +1275,8 @@ def update_file(relpath, site, conflict_mode, old_version, new_version, old_perm
 
     # Handle cases with missing files first. At least old or new are present,
     # or this function would never have been invoked.
-    fn = tty_bold + tty_bgblue + tty_white + relpath + tty_normal
-    fn = tty_bold + relpath + tty_normal
+    fn = tty.bold + tty.bgblue + tty.white + relpath + tty.normal
+    fn = tty.bold + relpath + tty.normal
 
     # 1) New version ships new skeleton file -> simply install
     if not old_type and not user_type:
@@ -1700,12 +1644,12 @@ def prepare_tmpfs(site):
 
     sys.stdout.write(p.stdout.read())
     if is_dockerized():
-        sys.stdout.write(tty_warn + ": "
+        sys.stdout.write(tty.warn + ": "
                          "Could not mount tmpfs. You may either start the container in "
                          "privileged mode or use the \"docker run\" option \"--tmpfs\" to "
                          "make docker do the tmpfs mount for the site.\n")
 
-    sys.stdout.write(tty_warn + ": You may continue without tmpfs, but the "
+    sys.stdout.write(tty.warn + ": You may continue without tmpfs, but the "
                      "performance of Check_MK may be degraded.\n")
 
 
@@ -1784,7 +1728,7 @@ def unmount_tmpfs(site, output=True, kill=False):
         time.sleep(1)
 
     if output:
-        bail_out(tty_error + ": Cannot unmount temporary filesystem.")
+        bail_out(tty.error + ": Cannot unmount temporary filesystem.")
 
     return False
 
@@ -1934,7 +1878,7 @@ def check_status(site, display=True, daemon=None, bare=False):
                 sys.stdout.write(komponent + " ")
             else:
                 sys.stdout.write("%-16s" % (komponent + ":"))
-                sys.stdout.write(tty_bold)
+                sys.stdout.write(tty.bold)
 
         if bare:
             if state != 5 or is_verbose:
@@ -1942,37 +1886,37 @@ def check_status(site, display=True, daemon=None, bare=False):
 
         if state == 0:
             if display and not bare:
-                sys.stdout.write(tty_green + "running\n")
+                sys.stdout.write(tty.green + "running\n")
             num_running += 1
         elif state == 5:
             if display and is_verbose and not bare:
-                sys.stdout.write(tty_blue + "unused\n")
+                sys.stdout.write(tty.blue + "unused\n")
             num_unused += 1
         else:
             if display and not bare:
-                sys.stdout.write(tty_red + "stopped\n")
+                sys.stdout.write(tty.red + "stopped\n")
             num_stopped += 1
         if display and not bare:
-            sys.stdout.write(tty_normal)
+            sys.stdout.write(tty.normal)
 
     if num_stopped > 0 and num_running == 0:
         exit_code = 1
-        ovstate = tty_red + "stopped"
+        ovstate = tty.red + "stopped"
     elif num_running > 0 and num_stopped == 0:
         exit_code = 0
-        ovstate = tty_green + "running"
+        ovstate = tty.green + "running"
     elif num_running == 0 and num_stopped == 0:
         exit_code = 0
-        ovstate = tty_blue + "unused"
+        ovstate = tty.blue + "unused"
     else:
         exit_code = 2
-        ovstate = tty_yellow + "partially running"
+        ovstate = tty.yellow + "partially running"
     if display:
         if bare:
             sys.stdout.write("OVERALL %d\n" % exit_code)
         else:
             sys.stdout.write("-----------------------\n")
-            sys.stdout.write("Overall state:  %s\n" % (tty_bold + ovstate + tty_normal))
+            sys.stdout.write("Overall state:  %s\n" % (tty.bold + ovstate + tty.normal))
     return exit_code
 
 
@@ -2469,7 +2413,7 @@ def fstab_verify(site):
     for line in open("/etc/fstab"):
         if "uid=%s," % site.name in line and mountpoint in line:
             return True
-    bail_out(tty_error + ": fstab entry for %s does not exist" % mountpoint)
+    bail_out(tty.error + ": fstab entry for %s does not exist" % mountpoint)
 
 
 # No using os.putenv, os.getenv os.unsetenv directly because
@@ -2648,9 +2592,9 @@ def call_scripts(site, phase):
             stdout = p.stdout.read()
             exitcode = p.wait()
             if exitcode == 0:
-                sys.stdout.write(tty_ok + '\n')
+                sys.stdout.write(tty.ok + '\n')
             else:
-                sys.stdout.write(tty_error + ' (exit code: %d)\n' % exitcode)
+                sys.stdout.write(tty.error + ' (exit code: %d)\n' % exitcode)
             if stdout:
                 sys.stdout.write('Output: %s\n' % stdout)
 
@@ -2817,7 +2761,7 @@ def main_sites(site, global_opts, args, options):
             elif v == default_version():
                 tags.append("default version")
             if disabled:
-                tags.append(tty_bold + tty_red + "disabled" + tty_normal)
+                tags.append(tty.bold + tty.red + "disabled" + tty.normal)
             sys.stdout.write("%-16s %-16s %s " % (site.name, v, ", ".join(tags)))
             sys.stdout.write("\n")
 
@@ -2886,18 +2830,18 @@ def welcome_message(site, admin_password):
     # type: (SiteContext, str) -> None
     sys.stdout.write("Created new site %s with version %s.\n\n" % (site.name, omdlib.__version__))
     sys.stdout.write("  The site can be started with %somd start %s%s.\n" %
-                     (tty_bold, site.name, tty_normal))
+                     (tty.bold, site.name, tty.normal))
     sys.stdout.write("  The default web UI is available at %shttp://%s/%s/%s\n" %
-                     (tty_bold, hostname(), site.name, tty_normal))
+                     (tty.bold, hostname(), site.name, tty.normal))
     sys.stdout.write("\n")
     sys.stdout.write(
         "  The admin user for the web applications is %scmkadmin%s with password: %s%s%s\n" %
-        (tty_bold, tty_normal, tty_bold, admin_password, tty_normal))
+        (tty.bold, tty.normal, tty.bold, admin_password, tty.normal))
     sys.stdout.write(
         "  (It can be changed with 'htpasswd -m ~/etc/htpasswd cmkadmin' as site user.\n)")
     sys.stdout.write("\n")
     sys.stdout.write("  Please do a %ssu - %s%s for administration of this site.\n" %
-                     (tty_bold, site.name, tty_normal))
+                     (tty.bold, site.name, tty.normal))
     sys.stdout.write("\n")
 
 
@@ -3334,8 +3278,8 @@ def print_diff(rel_path, global_opts, options, site, source_path, target_path, s
     if not changed:
         return
 
-    fn = tty_bold + tty_bgblue + tty_white + rel_path + tty_normal
-    fn = tty_bold + rel_path + tty_normal
+    fn = tty.bold + tty.bgblue + tty.white + rel_path + tty.normal
+    fn = tty.bold + rel_path + tty.normal
 
     def print_status(color, f, status, long_out):
         # type: (str, str, str, str) -> None
@@ -3344,7 +3288,7 @@ def print_diff(rel_path, global_opts, options, site, source_path, target_path, s
         elif not global_opts.verbose:
             sys.stdout.write(color + " %s %s\n" % (long_out, f))
         else:
-            arrow = tty_magenta + '->' + tty_normal
+            arrow = tty.magenta + '->' + tty.normal
             if 'c' in status:
                 source_content = instantiate_skel(site, source_file)
                 if os.system("which colordiff > /dev/null 2>&1") == 0:  # nosec
@@ -3576,7 +3520,7 @@ def main_umount(site, global_opts, args, options):
                 continue
 
             sys.stdout.write("%sUnmounting tmpfs of site %s%s..." %
-                             (tty_bold, site.name, tty_normal))
+                             (tty.bold, site.name, tty.normal))
             sys.stdout.flush()
 
             if not show_success(unmount_tmpfs(site, False, kill="kill" in options)):
@@ -3646,7 +3590,7 @@ def main_init_action(site, global_opts, command, args, options):
             sys.stdout.write('[%s]\n' % site.name)
         elif not parallel:
             sys.stdout.write("%sDoing '%s' on site %s:%s\n" %
-                             (tty_bold, command, site.name, tty_normal))
+                             (tty.bold, command, site.name, tty.normal))
         else:
             parallel_output(site.name, "Invoking '%s'\n" % (command))
         sys.stdout.flush()
@@ -4111,7 +4055,7 @@ def main_cleanup(site, global_opts, args, options):
         site_ids = [s for s in all_sites() if SiteContext(s).version == version]
         if site_ids:
             sys.stdout.write("%s%-20s%s In use (by %s). Keeping this version.\n" %
-                             (tty_bold, version, tty_normal, ", ".join(site_ids)))
+                             (tty.bold, version, tty.normal, ", ".join(site_ids)))
             continue
 
         version_path = os.path.join("/omd/versions", version)
@@ -4119,10 +4063,10 @@ def main_cleanup(site, global_opts, args, options):
         packages = package_manager.find_packages_of_path(version_path)
         if len(packages) != 1:
             sys.stdout.write("%s%-20s%s Could not determine package. Keeping this version.\n" %
-                             (tty_bold, version, tty_normal))
+                             (tty.bold, version, tty.normal))
             continue
 
-        sys.stdout.write("%s%-20s%s Uninstalling\n" % (tty_bold, version, tty_normal))
+        sys.stdout.write("%s%-20s%s Uninstalling\n" % (tty.bold, version, tty.normal))
         package_manager.uninstall(packages[0])
 
         # In case there were modifications made to the version the uninstall may leave
@@ -5298,7 +5242,7 @@ def main():
     try:
         command.handler(site, global_opts, args, command_options)
     except KeyboardInterrupt:
-        bail_out(tty_normal + "Aborted.")
+        bail_out(tty.normal + "Aborted.")
 
 
 def default_global_options():

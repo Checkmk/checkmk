@@ -54,7 +54,6 @@ MYPY2_FILES=$(shell \
     grep -v $$(realpath '../livestatus/api/python') | \
     grep -v $$(realpath '../notifications/sms') | \
     grep -v $$(realpath '../omd/packages') | \
-    grep -v $$(realpath '../scripts') | \
     grep -v $$(realpath '../tests'))
 
 test-mypy:

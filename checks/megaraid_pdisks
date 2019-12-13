@@ -104,7 +104,7 @@ def megaraid_pdisks_parse(info):
 def inventory_megaraid_pdisks(info):
     info = megaraid_pdisks_parse(info)
     inventory = []
-    for adapter, enclosure, _enc_dev_id, slot, _state, _name, predictive_failure_count in info:
+    for adapter, enclosure, _enc_dev_id, slot, _state, _name, _predictive_failure_count in info:
         inventory.append(("%s%s/%s" % (adapter, enclosure, slot), None))
     return inventory
 

@@ -35,6 +35,7 @@ import cmk.utils.log as log
 import cmk.utils.debug
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKBailOut
+import cmk.utils.piggyback as piggyback
 
 import cmk_base.data_sources as data_sources
 import cmk_base.console as console
@@ -44,7 +45,6 @@ import cmk_base.autochecks as autochecks
 import cmk_base.inventory as inventory
 import cmk_base.inventory_plugins as inventory_plugins
 import cmk_base.check_api as check_api
-import cmk_base.piggyback as piggyback
 import cmk_base.snmp as snmp
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.profiling as profiling
@@ -728,9 +728,8 @@ modes.register(
 
 
 def mode_cleanup_piggyback():
-    from cmk_base.piggyback import cleanup_piggyback_files
     time_settings = config.get_config_cache().get_piggybacked_hosts_time_settings()
-    cleanup_piggyback_files(time_settings)
+    piggyback.cleanup_piggyback_files(time_settings)
 
 
 modes.register(

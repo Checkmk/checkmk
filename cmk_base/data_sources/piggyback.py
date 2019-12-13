@@ -29,9 +29,9 @@ import json
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import tmp_dir
+from cmk.utils.piggyback import get_piggyback_raw_data
 
 import cmk_base.config as config
-from cmk_base.piggyback import get_piggyback_raw_data
 
 from .abstract import CheckMKAgentDataSource
 

@@ -47,13 +47,13 @@ import cmk.utils.paths
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.store as store
+import cmk.utils.piggyback
 
 import cmk_base
 import cmk_base.config as config
 import cmk_base.console as console
 import cmk_base.item_state as item_state
 import cmk_base.ip_lookup as ip_lookup
-import cmk_base.piggyback
 import cmk_base.check_table as check_table
 
 from .snmp import SNMPDataSource, SNMPManagementBoardDataSource
@@ -269,7 +269,7 @@ class DataSources(object):
 
             # Store piggyback information received from all sources of this host. This
             # also implies a removal of piggyback files received during previous calls.
-            cmk_base.piggyback.store_piggyback_raw_data(this_hostname,
-                                                        host_sections.piggybacked_raw_data)
+            cmk.utils.piggyback.store_piggyback_raw_data(this_hostname,
+                                                         host_sections.piggybacked_raw_data)
 
         return multi_host_sections

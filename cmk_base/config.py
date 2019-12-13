@@ -55,6 +55,7 @@ from cmk.utils.labels import LabelManager
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
 from cmk.utils.encoding import convert_to_unicode
+import cmk.utils.piggyback as piggyback
 
 import cmk_base
 import cmk_base.console as console
@@ -63,7 +64,6 @@ import cmk_base.check_utils
 import cmk_base.utils
 import cmk_base.check_api_utils as check_api_utils
 import cmk_base.cleanup
-import cmk_base.piggyback as piggyback
 import cmk_base.snmp_utils
 from cmk_base.discovered_labels import DiscoveredServiceLabels  # pylint: disable=unused-import
 

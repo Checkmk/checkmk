@@ -24,15 +24,19 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import sys
 import errno
 import os
 import tempfile
 from typing import (  # pylint: disable=unused-import
-    Optional, Dict, Set, Iterator, List, Tuple, NamedTuple,
+    Optional, Dict, Set, Iterator, List, Tuple, NamedTuple, Text,
 )
 import logging
 
-from pathlib2 import Path  # pylint: disable=unused-import
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import cmk.utils
 import cmk.utils.paths
@@ -51,7 +55,7 @@ PiggybackFileInfo = NamedTuple('PiggybackFileInfo', [
     ('source_hostname', str),
     ('file_path', Path),
     ('successfully_processed', bool),
-    ('reason', str),
+    ('reason', Text),
     ('reason_status', int),
 ])
 
@@ -59,7 +63,7 @@ PiggybackRawDataInfo = NamedTuple('PiggybackRawData', [
     ('source_hostname', str),
     ('file_path', str),
     ('successfully_processed', bool),
-    ('reason', str),
+    ('reason', Text),
     ('reason_status', int),
     ('raw_data', bytes),
 ])
@@ -221,7 +225,7 @@ def _get_matching_time_settings(source_hostnames, piggybacked_hostname, time_set
 
 def _get_piggyback_processed_file_info(source_hostname, piggybacked_hostname, piggyback_file_path,
                                        time_settings):
-    # type: (str, str, Path, Dict[Tuple[Optional[str], str], int]) -> Tuple[bool, str, int]
+    # type: (str, str, Path, Dict[Tuple[Optional[str], str], int]) -> Tuple[bool, Text, int]
 
     max_cache_age = _get_max_cache_age(source_hostname, piggybacked_hostname, time_settings)
     validity_period = _get_validity_period(source_hostname, piggybacked_hostname, time_settings)
@@ -272,7 +276,7 @@ def _get_validity_state(source_hostname, piggybacked_hostname, time_settings):
 
 
 def _eval_file_in_validity_period(file_age, validity_period, validity_state, reason):
-    # type: (float, Optional[int], int, str) -> Tuple[bool, str, int]
+    # type: (float, Optional[int], int, str) -> Tuple[bool, Text, int]
     if validity_period is not None and file_age < validity_period:
         return (True, "%s (still valid, %s left)" % (reason, Age(validity_period - file_age)),
                 validity_state)

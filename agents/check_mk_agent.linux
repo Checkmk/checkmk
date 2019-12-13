@@ -690,7 +690,7 @@ if [ "$MegaCli_bin" != "unknown" ]; then
     done
     echo
     $MegaCli_bin -PDList -aALL -NoLog </dev/null |
-        grep -E 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter'
+        grep -E 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter|Predictive Failure Count'
     echo '<<<megaraid_ldisks>>>'
     $MegaCli_bin -LDInfo -Lall -aALL -NoLog </dev/null | grep -E 'Size|State|Number|Adapter|Virtual'
     echo '<<<megaraid_bbu>>>'

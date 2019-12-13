@@ -23,6 +23,7 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+from typing import NamedTuple
 
 memused_default_levels = (150.0, 200.0)
 
@@ -41,6 +42,16 @@ def parse_proc_meminfo_bytes(info):
             value *= 1024
         meminfo[line[0][:-1]] = value
     return meminfo
+
+
+class MemBytes(NamedTuple('MemBytes', [('bytes', int), ('kb', float), ('mb', float),
+                                       ('base', int)])):
+    def __new__(cls, value, base):
+        return super(MemBytes, cls).__new__(cls, int(value * 1024), float(value), value / 1024.0,
+                                            int(base))
+
+    def render(self):
+        return get_bytes_human_readable(self.bytes, base=self.base)
 
 
 def _get_levels_mode_from_value(warn):
@@ -98,74 +109,69 @@ def _normalize_mem_levels(mode, warn, crit, perc_ref, abs_ref, render_base, unit
     return warn_used, crit_used, levels_text
 
 
-def check_memory(params, meminfo):
+def check_memory(params, meminfo, render_base=1024):
     if isinstance(params, tuple):
         params = {"levels": params}
 
-    swapused_kb = meminfo['SwapTotal'] - meminfo['SwapFree']
-    swapused = swapused_kb * 1024.0
-    memused_kb = meminfo['MemTotal'] - meminfo['MemFree']
-    memused = memused_kb * 1024.0
+    memtotal = MemBytes(meminfo['MemTotal'], render_base)
+    memused = MemBytes(memtotal.kb - meminfo['MemFree'], render_base)
+    swaptotal = MemBytes(meminfo['SwapTotal'], render_base)
+    swapused = MemBytes(swaptotal.kb - meminfo['SwapFree'], render_base)
 
     # Buffers and Cached are optional. On Linux both mean basically the same.
-    caches_kb = meminfo.get('Buffers', 0) + meminfo.get('Cached', 0)
-    caches = caches_kb * 1024.0
+    caches = MemBytes(meminfo.get('Buffers', 0) + meminfo.get('Cached', 0), render_base)
 
     # Size of Pagetable on Linux can be relevant e.g. on ORACLE
     # servers with much memory, that do not use HugeTables. We account
     # that for used
     if 'PageTables' in meminfo:
-        pagetables_kb = meminfo['PageTables']
-        perfdata = [('pagetables', pagetables_kb / 1024.0)]
+        pagetables = MemBytes(meminfo['PageTables'], render_base)
+        perfdata = [('pagetables', pagetables.mb)]
     else:
-        pagetables_kb = 0
+        pagetables = MemBytes(0, render_base)
         perfdata = []
 
-    totalused_kb = (swapused_kb + memused_kb - caches_kb + pagetables_kb)
-    totalused_mb = totalused_kb / 1024.0
-    totalused = totalused_kb * 1024.0
-    totalmem_kb = meminfo['MemTotal']
-    totalmem_mb = totalmem_kb / 1024.0
-    totalmem = totalmem_kb * 1024.0
-    totalused_perc = 100 * (float(totalused_kb) / float(totalmem_kb))
-    totalvirt_mb = (meminfo['SwapTotal'] + meminfo['MemTotal']) / 1024.0
+    ramused = MemBytes(memused.kb - caches.kb, render_base)
+    totalused = MemBytes(swapused.kb + ramused.kb + pagetables.kb, render_base)
+    totalused_perc = 100.0 * totalused.kb / memtotal.kb
+    totalvirt = MemBytes(swaptotal.kb + memtotal.kb, render_base)
 
     details = []
-    if swapused:
-        details.append("%s SWAP" % get_bytes_human_readable(swapused))
+    if swapused.kb:
+        details.append("%s SWAP" % swapused.render())
 
-    if pagetables_kb:
-        details.append("%s Pagetables" % get_bytes_human_readable(pagetables_kb * 1024.0))
+    if pagetables.kb:
+        details.append("%s Pagetables" % pagetables.render())
 
     if details:
-        details.insert(0, "%s RAM" % get_bytes_human_readable(memused - caches))
+        details.insert(0, "%s RAM" % ramused.render())
         details_txt = " + ".join(details) + ", "
     else:
         details_txt = ""
 
-    if meminfo["SwapTotal"]:
-        swap_txt = (" + %s SWAP" % get_bytes_human_readable(meminfo["SwapTotal"] * 1024.0))
+    if swaptotal.kb:
+        swap_txt = (" + %s SWAP" % swaptotal.render())
     else:
         swap_txt = ""
 
     infotext = "%s used (%sthis is %.1f%% of %s RAM%s)" % \
-               (get_bytes_human_readable(totalused), details_txt,
-                totalused_perc, get_bytes_human_readable(totalmem), swap_txt)
+               (totalused.render(), details_txt,
+                totalused_perc, memtotal.render(), swap_txt)
 
     # Take into account averaging
     average_min = params.get("average")
     if average_min:
         totalused_mb_avg = get_average("mem.used.total",
                                        time.time(),
-                                       totalused_mb,
+                                       totalused.mb,
                                        average_min,
                                        initialize_zero=False)
-        totalused_perc_avg = totalused_mb_avg / totalmem_mb * 100
+        totalused_perc_avg = totalused_mb_avg / memtotal.mb * 100
         infotext += ", %d min average %.1f%%" % (average_min, totalused_perc_avg)
         perfdata.append(('memusedavg', totalused_mb_avg))
         comp_mb = totalused_mb_avg
     else:
-        comp_mb = totalused_mb
+        comp_mb = totalused.mb
 
     warn, crit = params["levels"]
     mode = _get_levels_mode_from_value(warn)
@@ -173,17 +179,17 @@ def check_memory(params, meminfo):
         mode,
         warn,
         crit,
-        totalmem_mb,
-        totalvirt_mb,
-        1024,
+        memtotal.mb,
+        totalvirt.mb,
+        render_base,
         unit=1024**2,
     )
 
     # Prepare performance data
     perfdata.extend([
-        ('ramused', (memused_kb - caches_kb) / 1024.0, None, None, 0, totalmem_mb),
-        ('swapused', swapused_kb / 1024.0, None, None, 0, meminfo['SwapTotal'] / 1024.0),
-        ('memused', totalused_mb, warn_mb, crit_mb, 0, totalvirt_mb),
+        ('ramused', ramused.mb, None, None, 0, memtotal.mb),
+        ('swapused', swapused.mb, None, None, 0, swaptotal.mb),
+        ('memused', totalused.mb, warn_mb, crit_mb, 0, totalvirt.mb),
     ])
 
     # Check levels
@@ -203,8 +209,8 @@ def check_memory(params, meminfo):
             ('Committed_AS', 'committed', 'committed_as'),
             ('Shmem', 'shared', 'shared'),
         ):
-            value_kb = float(meminfo.get(key, 0))
-            perfdata.append((metric, value_kb / 1024.0))
-            infotext += ", %s %s" % (get_bytes_human_readable(value_kb * 1024), label)
+            value = MemBytes(meminfo.get(key, 0), render_base)
+            perfdata.append((metric, value.mb))
+            infotext += ", %s %s" % (value.render(), label)
 
     return state, infotext, perfdata

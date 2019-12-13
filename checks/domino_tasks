@@ -71,9 +71,9 @@ check_info['domino_tasks'] = {
     "has_perfdata": True,
     "group": "domino_tasks",
     "service_description": "Domino Task %s",
-    "includes": ["ps.include"],
+    "includes": ["ps.include", "domino.include"],
     "node_info": True,  # add first column with actual host name
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.311.1.1.3.1.2",
+    "snmp_scan_function": scan_domino,
     "snmp_info": (
         ".1.3.6.1.4.1.334.72.1.1.6.1.2.1",
         [

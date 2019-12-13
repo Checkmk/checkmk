@@ -84,13 +84,14 @@ def check_oracle_jobs(item, params, info):
         if len(line) < 2:
             # ignore wrong/corrupted lines
             continue
-        else:
-            if line[1].startswith(' Debug '):
-                # Skip invalid lines from Agent
-                continue
 
-            if line[0] == sid:
-                data_found = True
+        elif line[1].startswith(' Debug '):
+            # Skip invalid lines from Agent
+            continue
+
+        # we need to check against valid lines before the following comparisonq
+        if line[0] == sid:
+            data_found = True
 
         # check for pdb_name in agent output
         # => the agentoutput is responsible for the format of item from Check_MK!

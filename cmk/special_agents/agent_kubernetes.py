@@ -435,6 +435,7 @@ class Pod(Metadata):
 
         status = pod.status
         if status:
+            self.phase = status.phase
             self.host_ip = status.host_ip
             self.pod_ip = status.pod_ip
             self.qos_class = status.qos_class
@@ -949,7 +950,7 @@ class PodList(K8sList[Pod]):
         return {
             node: {
                 'requests': {
-                    'pods': len(list(pods))
+                    'pods': len(list(filter(lambda pod: pod.phase == "Running", pods)))
                 }
             } for node, pods in by_node if node is not None
         }

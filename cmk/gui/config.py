@@ -29,7 +29,7 @@ import errno
 import os
 import copy
 import json
-from typing import Set, Any, Callable, Dict, List, NewType, Optional, Tuple, Union  # pylint: disable=unused-import
+from typing import Set, Any, Callable, Dict, List, NewType, Optional, Text, Tuple, Union  # pylint: disable=unused-import
 import six
 from pathlib2 import Path
 from livestatus import SiteId, SiteConfiguration, SiteConfigurations  # pylint: disable=unused-import
@@ -151,6 +151,7 @@ aggregation_functions = {}  # type: Dict[str, Callable]
 
 
 def initialize():
+    # type () -> None
     clear_user_login()
     load_config()
     log.set_log_levels(log_levels)
@@ -268,9 +269,10 @@ def _load_default_config(vars_before_plugins, vars_after_plugins):
 
 
 def _load_default_config_from_module_plugins():
+    # type: () -> None
     # TODO: Find a better solution for this. Probably refactor declaration of default
     # config option.
-    config_plugin_vars = {}
+    config_plugin_vars = {}  # type: Dict
     for module in _config_plugin_modules():
         config_plugin_vars.update(module.__dict__)
 
@@ -285,11 +287,13 @@ def _load_default_config_from_module_plugins():
 
 
 def _load_default_config_from_legacy_plugins(vars_before_plugins, vars_after_plugins):
+    # type: (Set, Set) -> None
     new_vars = vars_after_plugins.difference(vars_before_plugins)
     default_config.update(dict([(k, copy.deepcopy(globals()[k])) for k in new_vars]))
 
 
 def _config_plugin_modules():
+    # type: () -> List
     return [
         module for name, module in sys.modules.items()
         if (name.startswith("cmk.gui.plugins.config.") or name.startswith(
@@ -299,6 +303,7 @@ def _config_plugin_modules():
 
 
 def reporting_available():
+    # type: () -> bool
     try:
         # Check the existance of one arbitrary config variable from the
         # reporting module
@@ -309,6 +314,7 @@ def reporting_available():
 
 
 def combined_graphs_available():
+    # type: () -> bool
     try:
         _dummy = have_combined_graphs
         return True
@@ -317,10 +323,12 @@ def combined_graphs_available():
 
 
 def hide_language(lang):
+    # type: (str) -> bool
     return lang in hide_languages
 
 
 def all_nonfunction_vars(var_dict):
+    # type: (Dict) -> Set
     return {
         name for name, value in var_dict.items()
         if name[0] != '_' and not hasattr(value, '__call__')
@@ -358,6 +366,7 @@ declare_permission_section = permissions.declare_permission_section
 # situations.
 # TODO: Clean this up
 def declare_dynamic_permissions(func):
+    # type: (Callable) -> None
     permission_declaration_functions.append(func)
 
 
@@ -428,7 +437,8 @@ def _may_with_roles(some_role_ids, pname):
 # TODO: Cleanup accesses to module global vars and functions
 class LoggedInUser(object):
     def __init__(self, user_id):
-        self.id = UserId(user_id)
+        # type: (Optional[Text]) -> None
+        self.id = UserId(user_id) if user_id else None
 
         self._load_confdir()
         self._load_roles()
@@ -439,6 +449,7 @@ class LoggedInUser(object):
 
     # TODO: Clean up that baserole_* stuff?
     def _load_roles(self):
+        # type: () -> None
         # Determine the roles of the user. If the user is listed in
         # users, admin_users or guest_users in multisite.mk then we
         # give him the according roles. If the user has an explicit
@@ -459,9 +470,11 @@ class LoggedInUser(object):
             self.baserole_id = "guest"
 
     def _gather_roles(self):
+        # type: () -> List
         return roles_of_user(self.id)
 
     def _load_base_roles(self):
+        # type: () -> None
         base_roles = set([])
         for r in self.role_ids:
             if r in builtin_role_ids:
@@ -472,6 +485,7 @@ class LoggedInUser(object):
         self.baserole_ids = list(base_roles)
 
     def _load_attributes(self):
+        # type: () -> None
         self.attributes = self.load_file("cached_profile", None)
         if self.attributes is None:
             if self.id in multisite_users:
@@ -485,6 +499,7 @@ class LoggedInUser(object):
         self.email = self.attributes.get("email", self.id)
 
     def _load_permissions(self):
+        # type: () -> None
         # Prepare cache of already computed permissions
         # Make sure, admin can restore permissions in any case!
         if self.id in admin_users:
@@ -502,6 +517,7 @@ class LoggedInUser(object):
         store.mkdir(self.confdir)
 
     def _load_site_config(self):
+        # type: () -> None
         self.siteconf = self.load_file("siteconfig", {})
 
     def get_button_counts(self):
@@ -575,6 +591,7 @@ class LoggedInUser(object):
         return he_may
 
     def need_permission(self, pname):
+        # type: (str) -> None
         if not self.may(pname):
             perm = permissions.permission_registry[pname]()
             raise MKAuthException(
@@ -614,17 +631,21 @@ class LoggedInUser(object):
 # TODO: Can we somehow get rid of this?
 class LoggedInSuperUser(LoggedInUser):
     def __init__(self):
+        # type: () -> None
         super(LoggedInSuperUser, self).__init__(None)
         self.alias = "Superuser for unauthenticated pages"
         self.email = "admin"
 
     def _gather_roles(self):
+        # type: () -> List
         return ["admin"]
 
     def _load_confdir(self):
+        # type: () -> None
         self.confdir = None
 
     def _load_site_config(self):
+        # type: () -> None
         self.siteconf = {}
 
     def load_file(self, name, deflt, lock=False):
@@ -633,17 +654,21 @@ class LoggedInSuperUser(LoggedInUser):
 
 class LoggedInNobody(LoggedInUser):
     def __init__(self):
+        # type: () -> None
         super(LoggedInNobody, self).__init__(None)
         self.alias = "Unauthenticated user"
         self.email = "nobody"
 
     def _gather_roles(self):
+        # type: () -> List
         return []
 
     def _load_confdir(self):
+        # type: () -> None
         self.confdir = None
 
     def _load_site_config(self):
+        # type: () -> None
         self.siteconf = {}
 
     def load_file(self, name, deflt, lock=False):
@@ -651,18 +676,22 @@ class LoggedInNobody(LoggedInUser):
 
 
 def clear_user_login():
+    # type: () -> None
     _set_user(LoggedInNobody())
 
 
 def set_user_by_id(user_id):
+    # type: (UserId) -> None
     _set_user(LoggedInUser(user_id))
 
 
 def set_super_user():
+    # type: () -> None
     _set_user(LoggedInSuperUser())
 
 
 def _set_user(_user):
+    # type: (LoggedInUser) -> None
     global user
     user = _user
 

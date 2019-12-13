@@ -58,11 +58,9 @@ OMD_SITE = 'int_' + BRANCH.replaceAll("\\.","")
 
 node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        println(DOCKER_REGISTRY)
-        IMAGE = 'ubuntu-18.04-common'
-        println(IMAGE)
-        docker.image(IMAGE).pull()
-        docker.image(IMAGE).inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN') {
+        def COMMON_IMAGE = docker.image('ubuntu-18.04-common')
+        COMMON_IMAGE.pull()
+        COMMON_IMAGE.inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN') {
             stage('checkout sources') {
                 cleanWs()
                 dir(TEST_DATA + '/git') {
@@ -80,8 +78,9 @@ try {
                 def JENKINS_USER = id.getUser('jenkins')
                 def JENKINS_GROUP = id.getGroup('jenkins')
                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                    docker.image(DISTRO + '-os-image').pull()
-                    docker.image(DISTRO + '-os-image').inside("-u 0:0 --ulimit nofile=1024:1024  -v /bauwelt/download/$CMK_VERSION:/bauwelt/download/$CMK_VERSION:ro -v $TEST_DATA:$TEST_DATA --init --privileged --hostname ${DISTRO}") {
+                    def TEST_IMAGE = docker.image(DISTRO + '-os-image');
+                    TEST_IMAGE.pull()
+                    TEST_IMAGE.inside("-u 0:0 --ulimit nofile=1024:1024  -v /bauwelt/download/$CMK_VERSION:/bauwelt/download/$CMK_VERSION:ro -v $TEST_DATA:$TEST_DATA --init --privileged --hostname ${DISTRO}") {
                         stage('install ' + DISTRO + ' omd') {
                             DISTRO_CODE = sh ( script: """
                                 case $DISTRO in
@@ -193,9 +192,9 @@ try {
 } finally {
     node {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            println(DOCKER_REGISTRY)
-            IMAGE = 'ubuntu-18.04-common'
-            docker.image(IMAGE).inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN') {
+            def COMMON_IMAGE = docker.image('ubuntu-18.04-common')
+            COMMON_IMAGE.pull()
+            COMMON_IMAGE.inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN') {
                 stage('archive artifacts') {
                     sh 'rm -rf results'
                     dir('results') {

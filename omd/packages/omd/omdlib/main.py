@@ -29,7 +29,6 @@ import os
 import re
 import sys
 import abc
-import grp
 import pwd
 import time
 import errno
@@ -77,6 +76,9 @@ from omdlib.skel_permissions import (  # pylint: disable=unused-import
 from omdlib.config_hooks import (  # pylint: disable=unused-import
     create_config_environment, save_site_conf, load_config_hooks, load_hook_dependencies,
     sort_hooks, hook_exists, call_hook, ConfigHook, ConfigHooks)
+from omdlib.users_and_groups import (find_processes_of_user, groupdel, useradd, userdel, user_id,
+                                     user_exists, group_exists, group_id, user_logged_in,
+                                     switch_to_site_user, user_verify)
 
 Arguments = List[str]
 ConfigChangeCommands = List[Tuple[str, str]]
@@ -165,239 +167,6 @@ def show_success(exit_code):
     else:
         sys.stdout.write(tty.error + "\n")
     return exit_code
-
-
-#.
-#   .--Users/Groups--------------------------------------------------------.
-#   |     _   _                      ______                                |
-#   |    | | | |___  ___ _ __ ___   / / ___|_ __ ___  _   _ _ __  ___      |
-#   |    | | | / __|/ _ \ '__/ __| / / |  _| '__/ _ \| | | | '_ \/ __|     |
-#   |    | |_| \__ \  __/ |  \__ \/ /| |_| | | | (_) | |_| | |_) \__ \     |
-#   |     \___/|___/\___|_|  |___/_/  \____|_|  \___/ \__,_| .__/|___/     |
-#   |                                                      |_|             |
-#   +----------------------------------------------------------------------+
-#   |  Helper functions for dealing with Linux users and groups            |
-#   '----------------------------------------------------------------------'
-
-
-def find_processes_of_user(username):
-    # type: (str) -> List[bytes]
-    try:
-        p = subprocess.Popen(["pgrep", "-u", username],
-                             stdin=open(os.devnull, "r"),
-                             stdout=subprocess.PIPE,
-                             close_fds=True)
-        if p.stdout is None:
-            raise Exception()
-        return p.stdout.read().split()
-    except Exception:
-        return []
-
-
-def groupdel(groupname):
-    # type: (str) -> None
-    try:
-        p = subprocess.Popen(["groupdel", groupname],
-                             stdin=open(os.devnull, "r"),
-                             stdout=open(os.devnull, "w"),
-                             stderr=subprocess.PIPE,
-                             close_fds=True)
-    except OSError as e:
-        bail_out("\n" + tty.error + ": Failed to delete group '%s': %s" % (groupname, e))
-
-    stderr = p.communicate()[1]
-    if p.returncode != 0:
-        bail_out("\n" + tty.error + ": Failed to delete group '%s': %s" % (groupname, stderr))
-
-
-# TODO: refactor gid to int
-def groupadd(groupname, gid=None):
-    # type: (str, Optional[str]) -> None
-    cmd = ["groupadd"]
-    if gid is not None:
-        cmd += ["-g", "%d" % int(gid)]
-    cmd.append(groupname)
-
-    if subprocess.Popen(
-            cmd,
-            close_fds=True,
-            stdin=open(os.devnull, "r"),
-    ).wait() != 0:
-        bail_out("Cannot create group for site user.")
-
-
-# TODO: Cleanup: Change uid/gid to int
-def useradd(version_info, site, uid=None, gid=None):
-    # type: (VersionInfo, SiteContext, Optional[str], Optional[str]) -> None
-    # Create user for running site 'name'
-    groupadd(site.name, gid)
-    useradd_options = version_info.USERADD_OPTIONS
-    if uid is not None:
-        useradd_options += " -u %d" % int(uid)
-    if os.system(  # nosec
-            "useradd %s -r -d '%s' -c 'OMD site %s' -g %s -G omd %s -s /bin/bash" %
-        (useradd_options, site.dir, site.name, site.name, site.name)) != 0:
-        groupdel(site.name)
-        bail_out("Error creating site user.")
-
-    # On SLES11+ there is a standard group "trusted" that the OMD site users should be members
-    # of to be able to access CRON.
-    if group_exists("trusted"):
-        _add_user_to_group(version_info, site.name, "trusted")
-
-    # Add Apache to new group. It needs to be able to write in to the
-    # command pipe and possible other stuff
-    _add_user_to_group(version_info, version_info.APACHE_USER, site.name)
-
-
-def _add_user_to_group(version_info, user, group):
-    # type: (VersionInfo, str, str) -> bool
-    cmd = version_info.ADD_USER_TO_GROUP % {"user": user, "group": group}
-    return os.system(cmd + " >/dev/null") == 0  # nosec
-
-
-def userdel(name):
-    # type: (str) -> None
-    if user_exists(name):
-        try:
-            p = subprocess.Popen(["userdel", "-r", name],
-                                 stdin=open(os.devnull, "r"),
-                                 stdout=open(os.devnull, "w"),
-                                 stderr=subprocess.PIPE,
-                                 close_fds=True)
-        except OSError as e:
-            bail_out("\n" + tty.error + ": Failed to delete user '%s': %s" % (name, e))
-
-        stderr = p.communicate()[1]
-        if p.returncode != 0:
-            bail_out("\n" + tty.error + ": Failed to delete user '%s': %s" % (name, stderr))
-
-    # On some OSes (e.g. debian) the group is automatically removed if
-    # it bears the same name as the user. So first check for the group.
-    if group_exists(name):
-        groupdel(name)
-
-
-def user_by_id(id_):
-    # type: (int) -> pwd.struct_passwd
-    return pwd.getpwuid(id_)
-
-
-def user_id(name):
-    # type: (str) -> Union[bool, int]
-    try:
-        return pwd.getpwnam(name).pw_uid
-    except Exception:
-        return False
-
-
-def user_exists(name):
-    # type: (str) -> bool
-    try:
-        pwd.getpwnam(name)
-        return True
-    except Exception:
-        return False
-
-
-def user_has_group(user, group):
-    # type: (str, str) -> bool
-    try:
-        u = user_by_id(user_id(user))
-        g = group_by_id(u.pw_gid)
-        if g.gr_name == group:
-            return True
-        g = group_by_id(group_id(group))
-        if user in g.gr_mem:
-            return True
-        return False
-    except Exception:
-        return False
-
-
-def group_exists(name):
-    # type: (str) -> bool
-    try:
-        grp.getgrnam(name)
-        return True
-    except Exception:
-        return False
-
-
-def group_by_id(id_):
-    # type: (int) -> grp.struct_group
-    return grp.getgrgid(id_)
-
-
-def group_id(name):
-    # type: (str) -> int
-    return grp.getgrnam(name).gr_gid
-
-
-def user_logged_in(name):
-    # type: (str) -> bool
-    """Check if processes of named user are existing"""
-    return any(p for p in psutil.process_iter() if p.username() == name)
-
-
-def user_verify(version_info, site, allow_populated=False):
-    # type: (VersionInfo, SiteContext, bool) -> bool
-    name = site.name
-
-    if not user_exists(name):
-        bail_out(tty.error + ": user %s does not exist" % name)
-
-    user = user_by_id(user_id(name))
-    if user.pw_dir != site.dir:
-        bail_out(tty.error + ": Wrong home directory for user %s, must be %s" % (name, site.dir))
-
-    if not os.path.exists(site.dir):
-        bail_out(tty.error + ": home directory for user %s (%s) does not exist" % (name, site.dir))
-
-    if not allow_populated and os.path.exists(site.dir + "/version"):
-        bail_out(tty.error + ": home directory for user %s (%s) must be empty" % (name, site.dir))
-
-    if not file_owner_verify(site.dir, user.pw_uid, user.pw_gid):
-        bail_out(tty.error + ": home directory (%s) is not owned by user %s and group %s" %
-                 (site.dir, name, name))
-
-    group = group_by_id(user.pw_gid)
-    if group is None or group.gr_name != name:
-        bail_out(tty.error + ": primary group for siteuser must be %s" % name)
-
-    if not user_has_group(version_info.APACHE_USER, name):
-        bail_out(tty.error + ": apache user %s must be member of group %s" %
-                 (version_info.APACHE_USER, name))
-
-    if not user_has_group(name, "omd"):
-        bail_out(tty.error + ": siteuser must be member of group omd")
-
-    return True
-
-
-def switch_to_site_user(site):
-    # type: (SiteContext) -> None
-    p = pwd.getpwnam(site.name)
-    uid = p.pw_uid
-    gid = p.pw_gid
-    os.chdir(p.pw_dir)
-    os.setgid(gid)
-
-    # Darn. The site user might have been put into further groups.
-    # This is e.g. needed if you want to access the livestatus socket
-    # from one site by another. We make use of the "id" command here.
-    # If you know something better, that does not rely on an external
-    # command (and that does not try to parse around /etc/group, of
-    # course), then please tell mk -> mk@mathias-kettner.de.
-    os.setgroups(groups_of(site.name))
-    os.setuid(uid)
-
-
-def groups_of(username):
-    # type: (str) -> List[int]
-    group_ids = {g.gr_gid for g in grp.getgrall() if username in g.gr_mem}
-    group_ids.add(pwd.getpwnam(username).pw_gid)
-    return list(group_ids)
 
 
 #.
@@ -490,17 +259,6 @@ def set_admin_password(site, pw):
     # type: (SiteContext, str) -> None
     with open("%s/etc/htpasswd" % site.dir, "w") as f:
         f.write("cmkadmin:%s\n" % hash_password(pw))
-
-
-def file_owner_verify(path, uid, gid):
-    # type: (str, int, int) -> bool
-    try:
-        s = os.stat(path)
-        if s.st_uid != uid or s.st_gid != gid:
-            return False
-    except Exception:
-        return False
-    return True
 
 
 def create_skeleton_files(site, directory):

@@ -46,7 +46,6 @@ MYPY2_FILES=$(shell \
     grep -v $$(realpath '../agents/special') | \
     grep -v $$(realpath '../agents/windows') | \
     grep -v $$(realpath '../agents/wnx') | \
-    grep -v $$(realpath '../bin') | \
     grep -v $$(realpath '../doc') | \
     grep -v $$(realpath '../enterprise/bin') | \
     grep -v $$(realpath '../livestatus/api/python') | \

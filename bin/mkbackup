@@ -47,6 +47,7 @@ import traceback
 import json
 from tarfile import TarFile, ReadError
 from hashlib import md5
+from typing import Any, Dict  # pylint: disable=unused-import
 
 from OpenSSL import crypto
 from Cryptodome.Cipher import AES, PKCS1_OAEP
@@ -336,7 +337,7 @@ def add_site_info_to_backup_info(info):
 
 
 def add_system_info_to_backup_info(info):
-    import cma  # pylint: disable=import-error
+    import cma  # type: ignore[import] # pylint: disable=import-error
     cma.load_config()
     info["cma_version"] = cma.version()
 
@@ -1647,7 +1648,7 @@ def setup_standalone_environment(info):
 def enable_drbd_ip_addresses():
     # These modules are only available when mkbackup is executed on OS level on the appliance
     import cma  # pylint: disable=import-error
-    import cma_net  # pylint: disable=import-error
+    import cma_net  # type: ignore[import] # pylint: disable=import-error
     cma.load_config()
     cma_net.load_config()
 
@@ -1890,7 +1891,7 @@ def init_logging():
         syslog.openlog("mkbackup")
 
 
-g_config = {}
+g_config = {}  # type: Dict[str, Any]
 opt_verbose = 0
 opt_debug = False
 

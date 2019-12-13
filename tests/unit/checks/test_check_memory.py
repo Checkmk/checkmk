@@ -92,7 +92,7 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
 @pytest.mark.parametrize(
     "params,meminfo,expected",
     [
-        # ABSOLUTE levels of OK, WARN, CRIT
+        # POSITIVE ABSOLUTE levels of OK, WARN, CRIT
         ((43, 43), MEMINFO_MINI, [
             (0, TEXT_MINI, [
                 ('ramused', 21.0, None, None, 0, 42.0),
@@ -114,7 +114,7 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
                 ('memused', 21.0, 20, 20, 0, 42.0),
             ]),
         ]),
-        # NEGATIVE levels OK, WARN, CRIT
+        # NEGATIVE ABSOLUTE levels OK, WARN, CRIT
         ((-4, -3), MEMINFO_MINI, [
             (0, TEXT_MINI, [
                 ('ramused', 21.0, None, None, 0, 42.0),
@@ -136,7 +136,7 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
                 ('memused', 21.0, -43, -43, 0, 42.0),  # FIXME
             ]),
         ]),
-        # Percentage levels OK, WARN, CRIT
+        # POSITIVE Percentage levels OK, WARN, CRIT
         ((80.0, 90.0), MEMINFO_MINI, [
             (0, TEXT_MINI, [
                 ('ramused', 21.0, None, None, 0, 42.0),
@@ -156,6 +156,28 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('swapused', 0, None, None, 0, 0),
                 ('memused', 21.0, 4, 4, 0, 42.0),
+            ]),
+        ]),
+        # NEGATIVE Percentage levels OK, WARN, CRIT
+        ((-10.0, -10.0), MEMINFO_MINI, [
+            (0, TEXT_MINI, [
+                ('ramused', 21.0, None, None, 0, 42.0),
+                ('swapused', 0, None, None, 0, 0),
+                ('memused', 21.0, -4, -4, 0, 42.0),
+            ]),
+        ]),
+        ((-90.0, -10.0), MEMINFO_MINI, [
+            (1, TEXT_MINI + ", warning at 90.0% free", [
+                ('ramused', 21.0, None, None, 0, 42.0),
+                ('swapused', 0, None, None, 0, 0),
+                ('memused', 21.0, -37, -4, 0, 42.0),  # FIXME
+            ]),
+        ]),
+        ((-90.0, -80.0), MEMINFO_MINI, [
+            (2, TEXT_MINI + ", critical at 80.0% free", [
+                ('ramused', 21.0, None, None, 0, 42.0),
+                ('swapused', 0, None, None, 0, 0),
+                ('memused', 21.0, -37, -33, 0, 42.0),  # FIXME
             ]),
         ]),
         # now with swap != 0

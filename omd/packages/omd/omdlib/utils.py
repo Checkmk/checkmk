@@ -23,8 +23,23 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from typing import Dict, Optional  # pylint: disable=unused-import
+import os
+import contextlib
+from typing import Iterator  # pylint: disable=unused-import
 
-Config = Dict[str, str]
-Replacements = Dict[str, str]
-CommandOptions = Dict[str, Optional[str]]
+
+def is_dockerized():
+    # type: () -> bool
+    return os.path.exists("/.dockerenv")
+
+
+@contextlib.contextmanager
+def chdir(path):
+    # type: (bytes) -> Iterator[None]
+    """Change working directory and return on exit"""
+    prev_cwd = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(prev_cwd)

@@ -39,14 +39,11 @@ import random
 import shutil
 import string
 import tarfile
-import termios
 import traceback
 import subprocess
 import signal
 import io
-import contextlib
 import logging
-from tty import setraw
 from typing import (  # pylint: disable=unused-import
     NoReturn, IO, Any, cast, Iterable, Union, Pattern, Iterator, Tuple, Optional, Callable, List,
     NamedTuple, Dict,
@@ -59,27 +56,30 @@ import six
 import cmk.utils.log
 import cmk.utils.tty as tty
 from cmk.utils.log import VERBOSE
+from cmk.utils.exceptions import MKTerminate
 
 import omdlib
 import omdlib.certs
 import omdlib.backup
+from omdlib.utils import chdir, is_dockerized
 from omdlib.version_info import VersionInfo
-from omdlib.type_defs import CommandOptions  # pylint: disable=unused-import
+from omdlib.dialog import (  # pylint: disable=unused-import
+    DialogResult, dialog_menu, dialog_regex, dialog_yesno, dialog_message, user_confirms,
+    ask_user_choices,
+)
+from omdlib.init_scripts import call_init_scripts, check_status
+from omdlib.contexts import AbstractSiteContext, SiteContext, RootContext  # pylint: disable=unused-import
+from omdlib.type_defs import Config, CommandOptions, Replacements  # pylint: disable=unused-import
 from omdlib.skel_permissions import (  # pylint: disable=unused-import
     Permissions, read_skel_permissions, load_skel_permissions, load_skel_permissions_from,
     skel_permissions_file_path,
 )
+from omdlib.config_hooks import (  # pylint: disable=unused-import
+    create_config_environment, save_site_conf, load_config_hooks, load_hook_dependencies,
+    sort_hooks, hook_exists, call_hook, ConfigHook, ConfigHooks)
 
 Arguments = List[str]
-Replacements = Dict[str, str]
-Config = Dict[str, str]
-ConfigHookChoiceItem = Tuple[str, str]
-ConfigHookChoices = Union[None, Pattern, List[ConfigHookChoiceItem]]
-ConfigHook = Dict[str, Union[str, bool, ConfigHookChoices]]
-ConfigHooks = Dict[str, ConfigHook]
-ConfigHookResult = Tuple[int, str]
 ConfigChangeCommands = List[Tuple[str, str]]
-DialogResult = Tuple[bool, bytes]
 
 cmk.utils.log.setup_console_logging()
 logger = logging.getLogger("cmk.omd")
@@ -165,218 +165,6 @@ def show_success(exit_code):
     else:
         sys.stdout.write(tty.error + "\n")
     return exit_code
-
-
-@contextlib.contextmanager
-def chdir(path):
-    # type: (bytes) -> Iterator[None]
-    """Change working directory and return on exit"""
-    prev_cwd = os.getcwd()
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        os.chdir(prev_cwd)
-
-
-#.
-#   .--Dialog--------------------------------------------------------------.
-#   |                     ____  _       _                                  |
-#   |                    |  _ \(_) __ _| | ___   __ _                      |
-#   |                    | | | | |/ _` | |/ _ \ / _` |                     |
-#   |                    | |_| | | (_| | | (_) | (_| |                     |
-#   |                    |____/|_|\__,_|_|\___/ \__, |                     |
-#   |                                           |___/                      |
-#   +----------------------------------------------------------------------+
-#   |  Wrapper functions for interactive dialogs using the dialog cmd tool |
-#   '----------------------------------------------------------------------'
-
-
-def run_dialog(args):
-    # type: (List[str]) -> DialogResult
-    dialog_env = {
-        "TERM": cast(str, getenv("TERM", "linux")),
-        # TODO: Why de_DE?
-        "LANG": "de_DE.UTF-8",
-    }
-    p = subprocess.Popen(["dialog", "--shadow"] + args, env=dialog_env, stderr=subprocess.PIPE)
-    if p.stderr is None:
-        raise Exception()
-    response = p.stderr.read()
-    return os.waitpid(p.pid, 0)[1] == 0, response
-
-
-def dialog_menu(title, text, choices, defvalue, oktext, canceltext):
-    # type: (str, str, List[Tuple[str, str]], Optional[str], str, str) -> DialogResult
-    args = ["--ok-label", oktext, "--cancel-label", canceltext]
-    if defvalue is not None:
-        args += ["--default-item", defvalue]
-    args += ["--title", title, "--menu", text, "0", "0", "0"]  # "20", "60", "17" ]
-    for choice_text, value in choices:
-        args += [choice_text, value]
-    return run_dialog(args)
-
-
-def dialog_regex(title, text, regex, value, oktext, canceltext):
-    # type: (str, str, Pattern, str, str, str) -> DialogResult
-    while True:
-        args = [
-            "--ok-label", oktext, "--cancel-label", canceltext, "--title", title, "--inputbox",
-            text, "0", "0", value
-        ]
-        change, new_value = run_dialog(args)
-        if not change:
-            return False, value
-        elif not regex.match(new_value):
-            dialog_message("Invalid value. Please try again.")
-            value = new_value
-        else:
-            return True, new_value
-
-
-def dialog_yesno(text, yeslabel="yes", nolabel="no"):
-    # type: (str, str, str) -> bool
-    state, _response = run_dialog(
-        ["--yes-label", yeslabel, "--no-label", nolabel, "--yesno", text, "0", "0"])
-    return state
-
-
-def dialog_message(text, buttonlabel="OK"):
-    # type: (str, str) -> None
-    run_dialog(["--ok-label", buttonlabel, "--msgbox", text, "0", "0"])
-
-
-def user_confirms(site, conflict_mode, title, message, relpath, yes_choice, yes_text, no_choice,
-                  no_text):
-    # type: (SiteContext, str, str, str, str, str, str, str, str) -> bool
-    # Handle non-interactive mode
-    if conflict_mode == "abort":
-        bail_out("Update aborted.")
-    elif conflict_mode == "install":
-        return False
-    elif conflict_mode == "keepold":
-        return True
-
-    user_path = site.dir + "/" + relpath
-    options = [(yes_choice, yes_text), (no_choice, no_text),
-               ("shell", "Open a shell for looking around"),
-               ("abort", "Stop here and abort update!")]
-    while True:
-        choice = ask_user_choices(title, message, options)
-        if choice == "abort":
-            bail_out("Update aborted.")
-        elif choice == "shell":
-            thedir = "/".join(user_path.split("/")[:-1])
-            sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
-            subprocess.Popen(["bash", "-i"], cwd=thedir).wait()
-        else:
-            return choice == yes_choice
-
-
-# TODO: Use standard textwrap module?
-def wrap_text(text, width):
-    # type: (str, int) -> List[str]
-    def fillup(line, width):
-        if len(line) < width:
-            line += " " * (width - len(line))
-        return line
-
-    def justify(line, width):
-        # type: (str, int) -> str
-        need_spaces = float(width - len(line))
-        spaces = float(line.count(' '))
-        newline = ""
-        x = 0.0
-        s = 0.0
-        words = line.split()
-        newline = words[0]
-        for word in words[1:]:
-            newline += ' '
-            x += 1.0
-            if s / x < need_spaces / spaces:  # fixed: true-division
-                newline += ' '
-                s += 1
-            newline += word
-        return newline
-
-    wrapped = []
-    line = ""
-    col = 0
-    for word in text.split():
-        netto = len(word)
-        if line != "" and netto + col + 1 > width:
-            wrapped.append(justify(line, width))
-            col = 0
-            line = ""
-        if line != "":
-            line += ' '
-            col += 1
-        line += word
-        col += netto
-    if line != "":
-        wrapped.append(fillup(line, width))
-
-    # remove trailing empty lines
-    while wrapped[-1].strip() == "":
-        wrapped = wrapped[:-1]
-    return wrapped
-
-
-def getch():
-    # type: () -> str
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    try:
-        setraw(sys.stdin.fileno())
-        ch = sys.stdin.read(1)
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-    if ord(ch) == 3:
-        raise KeyboardInterrupt()
-    return ch
-
-
-def ask_user_choices(title, message, choices):
-    # type: (str, str, List[Tuple[str, str]]) -> str
-    sys.stdout.write("\n")
-
-    def pl(line):
-        sys.stdout.write(" %s %-76s %s\n" % (tty.bgcyan + tty.white, line, tty.normal))
-
-    pl("")
-    sys.stdout.write(" %s %-76s %s\n" % (tty.bgcyan + tty.white + tty.bold, title, tty.normal))
-    for line in wrap_text(message, 76):
-        pl(line)
-    pl("")
-    chars = []  # type: List[str]
-    empty_line = " %s%-78s%s\n" % (tty.bgblue + tty.white, "", tty.normal)
-    sys.stdout.write(empty_line)
-    for choice, choice_title in choices:
-        sys.stdout.write(" %s %s%s%s%-10s %-65s%s\n" %
-                         (tty.bgblue + tty.white, tty.bold, choice[0], tty.normal + tty.bgblue +
-                          tty.white, choice[1:], choice_title, tty.normal))
-        for c in choice:
-            if c.lower() not in chars:
-                chars.append(c)
-                break
-    sys.stdout.write(empty_line)
-
-    choicetxt = (tty.bold + tty.magenta + "/").join([
-        (tty.bold + tty.white + char + tty.normal + tty.bgmagenta)
-        for (char, _c) in zip(chars, choices)
-    ])
-    l = len(choices) * 2 - 1
-    sys.stdout.write(" %s %s" % (tty.bgmagenta, choicetxt))
-    sys.stdout.write(" ==> %s   %s" % (tty.bgred, tty.bgmagenta))
-    sys.stdout.write(" " * (69 - l))
-    sys.stdout.write("\b" * (71 - l))
-    sys.stdout.write(tty.normal)
-    while True:
-        a = getch()
-        for char, (choice, choice_title) in zip(chars, choices):
-            if a == char:
-                sys.stdout.write(tty.bold + tty.bgred + tty.white + a + tty.normal + "\n\n")
-                return choice
 
 
 #.
@@ -876,6 +664,8 @@ def walk_skel(root, handler, args, conflict_mode, depth_first, exclude_if_in=Non
                     try:
                         handler(path, *args)
                         todo = False
+                    except MKTerminate:
+                        raise
                     except Exception:
                         todo = False
                         sys.stderr.write(StateMarkers.error * 40 + "\n")
@@ -934,6 +724,8 @@ def patch_skeleton_files(conflict_mode, old_site, new_site):
                     and os.path.exists(dst): # not deleted by user
                     try:
                         patch_template_file(conflict_mode, src, dst, old_site, new_site)
+                    except MKTerminate:
+                        raise
                     except Exception as e:
                         sys.stderr.write("Error patching template file '%s': %s\n" % (dst, e))
 
@@ -1390,6 +1182,8 @@ def update_file(relpath, site, conflict_mode, old_version, new_version, old_perm
             merge_update_file(site, conflict_mode, relpath, old_version, new_version)
         except KeyboardInterrupt:
             raise
+        except MKTerminate:
+            raise
         except Exception as e:
             sys.stdout.write(StateMarkers.error + " Cannot merge: %s\n" % e)
 
@@ -1663,11 +1457,6 @@ def _mark_tmpfs_initialized(site):
         f.write(u"")
 
 
-def is_dockerized():
-    # type: () -> bool
-    return os.path.exists("/.dockerenv")
-
-
 def tmpfs_is_managed_by_node(site):
     # type: (SiteContext) -> bool
     """When running in a container, and the tmpfs is managed by the node, the
@@ -1779,317 +1568,6 @@ def remove_from_fstab(site):
         newtab.write(line)
     os.rename("/etc/fstab.new", "/etc/fstab")
     ok()
-
-
-#.
-#   .--init.d--------------------------------------------------------------.
-#   |                        _       _ _        _                          |
-#   |                       (_)_ __ (_) |_   __| |                         |
-#   |                       | | '_ \| | __| / _` |                         |
-#   |                       | | | | | | |_ | (_| |                         |
-#   |                       |_|_| |_|_|\__(_)__,_|                         |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Handling of site-internal init scripts                              |
-#   '----------------------------------------------------------------------'
-
-
-# TODO: Use site context
-def init_scripts(sitename):
-    # type: (str) -> Tuple[str, List[str]]
-    rc_dir = "/omd/sites/%s/etc/rc.d" % sitename
-    try:
-        scripts = sorted(os.listdir(rc_dir))
-        return rc_dir, scripts
-    except Exception:
-        return rc_dir, []
-
-
-def call_init_script(scriptpath, command):
-    # type: (str, str) -> bool
-    if not os.path.exists(scriptpath):
-        sys.stderr.write('ERROR: This daemon does not exist.\n')
-        return False
-
-    try:
-        return subprocess.call([scriptpath, command]) in [0, 5]
-    except OSError as e:
-        sys.stderr.write("ERROR: Failed to run '%s': %s\n" % (scriptpath, e))
-        return False
-
-
-def call_init_scripts(site, command, daemon=None, exclude_daemons=None):
-    # type: (SiteContext, str, Optional[str], List[str]) -> int
-    # Restart: Do not restart each service after another,
-    # but first do stop all, then start all again! This
-    # preserves the order.
-    if command == "restart":
-        # TODO: Why is the result of call_init_scripts not returned?
-        call_init_scripts(site, "stop", daemon)
-        call_init_scripts(site, "start", daemon)
-        return 0
-
-    # OMD guarantees OMD_ROOT to be the current directory
-    with chdir(site.dir):
-        if daemon:
-            success = call_init_script("%s/etc/init.d/%s" % (site.dir, daemon), command)
-
-        else:
-            # Call stop scripts in reverse order. If daemon is set,
-            # then only that start script will be affected
-            rc_dir, scripts = init_scripts(site.name)
-            if command == "stop":
-                scripts.reverse()
-            success = True
-
-            for script in scripts:
-                if exclude_daemons and script in exclude_daemons:
-                    continue
-
-                if not call_init_script("%s/%s" % (rc_dir, script), command):
-                    success = False
-
-    if success:
-        return 0
-    return 2
-
-
-def check_status(site, display=True, daemon=None, bare=False):
-    # type: (SiteContext, bool, Optional[str], bool) -> int
-    num_running = 0
-    num_unused = 0
-    num_stopped = 0
-    rc_dir, scripts = init_scripts(site.name)
-    components = [s.split('-', 1)[-1] for s in scripts]
-    if daemon and daemon not in components:
-        if not bare:
-            sys.stderr.write('ERROR: This daemon does not exist.\n')
-        return 3
-    is_verbose = logger.isEnabledFor(VERBOSE)
-    for script in scripts:
-        komponent = script.split("/")[-1].split('-', 1)[-1]
-        if daemon and komponent != daemon:
-            continue
-
-        state = os.system("%s/%s status >/dev/null 2>&1" % (rc_dir, script)) >> 8  # nosec
-
-        if display and (state != 5 or is_verbose):
-            if bare:
-                sys.stdout.write(komponent + " ")
-            else:
-                sys.stdout.write("%-16s" % (komponent + ":"))
-                sys.stdout.write(tty.bold)
-
-        if bare:
-            if state != 5 or is_verbose:
-                sys.stdout.write("%d\n" % state)
-
-        if state == 0:
-            if display and not bare:
-                sys.stdout.write(tty.green + "running\n")
-            num_running += 1
-        elif state == 5:
-            if display and is_verbose and not bare:
-                sys.stdout.write(tty.blue + "unused\n")
-            num_unused += 1
-        else:
-            if display and not bare:
-                sys.stdout.write(tty.red + "stopped\n")
-            num_stopped += 1
-        if display and not bare:
-            sys.stdout.write(tty.normal)
-
-    if num_stopped > 0 and num_running == 0:
-        exit_code = 1
-        ovstate = tty.red + "stopped"
-    elif num_running > 0 and num_stopped == 0:
-        exit_code = 0
-        ovstate = tty.green + "running"
-    elif num_running == 0 and num_stopped == 0:
-        exit_code = 0
-        ovstate = tty.blue + "unused"
-    else:
-        exit_code = 2
-        ovstate = tty.yellow + "partially running"
-    if display:
-        if bare:
-            sys.stdout.write("OVERALL %d\n" % exit_code)
-        else:
-            sys.stdout.write("-----------------------\n")
-            sys.stdout.write("Overall state:  %s\n" % (tty.bold + ovstate + tty.normal))
-    return exit_code
-
-
-#.
-#   .--Config & Hooks------------------------------------------------------.
-#   |  ____             __ _          ___     _   _             _          |
-#   | / ___|___  _ __  / _(_) __ _   ( _ )   | | | | ___   ___ | | _____   |
-#   || |   / _ \| '_ \| |_| |/ _` |  / _ \/\ | |_| |/ _ \ / _ \| |/ / __|  |
-#   || |__| (_) | | | |  _| | (_| | | (_>  < |  _  | (_) | (_) |   <\__ \  |
-#   | \____\___/|_| |_|_| |_|\__, |  \___/\/ |_| |_|\___/ \___/|_|\_\___/  |
-#   |                        |___/                                         |
-#   +----------------------------------------------------------------------+
-#   |  Site configuration and config hooks                                 |
-#   '----------------------------------------------------------------------'
-
-# Hooks are scripts in lib/omd/hooks that are being called with one
-# of the following arguments:
-#
-# default - return the default value of the hook. Mandatory
-# set     - implements a new setting for the hook
-# choices - available choices for enumeration hooks
-# depends - exists with 1, if this hook misses its dependent hook settings
-
-
-# Put all site configuration (explicit and defaults) into environment
-# variables beginning with CONFIG_
-def create_config_environment(site):
-    # type: (SiteContext) -> None
-    for varname, value in site.conf.items():
-        putenv("CONFIG_" + varname, value)
-
-
-# TODO: RENAME
-def save_site_conf(site):
-    # type: (SiteContext) -> None
-    confdir = site.dir + "/etc/omd"
-
-    if not os.path.exists(confdir):
-        os.mkdir(confdir)
-
-    f = open(site.dir + "/etc/omd/site.conf", "w")
-
-    for hook_name, value in sorted(site.conf.items(), key=lambda x: x[0]):
-        f.write("CONFIG_%s='%s'\n" % (hook_name, value))
-
-
-# Get information about all hooks. Just needed for
-# the "omd config" command.
-def load_config_hooks(site):
-    # type: (SiteContext) -> ConfigHooks
-    config_hooks = {}  # type: ConfigHooks
-
-    hook_dir = site.dir + "/lib/omd/hooks"
-    for hook_name in os.listdir(hook_dir):
-        try:
-            if hook_name[0] != '.':
-                hook = config_load_hook(site, hook_name)
-                # only load configuration hooks
-                if hook.get("choices", None) is not None:
-                    config_hooks[hook_name] = hook
-        except Exception:
-            pass
-    config_hooks = load_hook_dependencies(site, config_hooks)
-    return config_hooks
-
-
-def config_load_hook(site, hook_name):
-    # type: (SiteContext, str) -> ConfigHook
-    hook = {
-        "name": hook_name,
-        "deprecated": False,
-    }  # type: ConfigHook
-
-    description = ""
-    description_active = False
-    for line in open(site.dir + "/lib/omd/hooks/" + hook_name):
-        if line.startswith("# Alias:"):
-            hook["alias"] = line[8:].strip()
-        elif line.startswith("# Menu:"):
-            hook["menu"] = line[7:].strip()
-        elif line.startswith("# Deprecated: yes"):
-            hook["deprecated"] = True
-        elif line.startswith("# Description:"):
-            description_active = True
-        elif line.startswith("#  ") and description_active:
-            description += line[3:].strip() + "\n"
-        else:
-            description_active = False
-    hook["description"] = description
-
-    def get_hook_info(info):
-        # type: (str) -> str
-        return call_hook(site, hook_name, [info])[1]
-
-    # The choices can either be a list of possible keys. Then
-    # the hook outputs one live for each choice where the key and a
-    # description are separated by a colon. Or it outputs one line
-    # where that line is an extended regular expression matching the
-    # possible values.
-    choicestxt = get_hook_info("choices").split("\n")
-    choices = None  # type: ConfigHookChoices
-    if len(choicestxt) == 1:
-        regextext = choicestxt[0].strip()
-        if regextext != "":
-            choices = re.compile(regextext + "$")
-        else:
-            choices = None
-    else:
-        choices = []
-        try:
-            for line in choicestxt:
-                val, descr = line.split(":", 1)
-                val = val.strip()
-                descr = descr.strip()
-                choices.append((val, descr))
-        except Exception as e:
-            bail_out("Invalid output of hook: %s: %s" % (choicestxt, e))
-
-    hook["choices"] = choices
-    return hook
-
-
-def load_hook_dependencies(site, config_hooks):
-    # type: (SiteContext, ConfigHooks) -> ConfigHooks
-    for hook_name in sort_hooks(config_hooks.keys()):
-        hook = config_hooks[hook_name]
-        exitcode, _content = call_hook(site, hook_name, ["depends"])
-        if exitcode:
-            hook["active"] = False
-        else:
-            hook["active"] = True
-    return config_hooks
-
-
-# Always sort CORE hook to the end because it runs "cmk -U" which
-# relies on files created by other hooks.
-def sort_hooks(hook_names):
-    # type: (List[str]) -> Iterable[str]
-    return sorted(hook_names, key=lambda n: (n == "CORE", n))
-
-
-def hook_exists(site, hook_name):
-    # type: (SiteContext, str) -> bool
-    hook_file = site.dir + "/lib/omd/hooks/" + hook_name
-    return os.path.exists(hook_file)
-
-
-def call_hook(site, hook_name, args):
-    # type: (SiteContext, str, List[str]) -> ConfigHookResult
-
-    cmd = [site.dir + "/lib/omd/hooks/" + hook_name] + args
-    hook_env = os.environ.copy()
-    hook_env.update({
-        "OMD_ROOT": site.dir,
-        "OMD_SITE": site.name,
-    })
-
-    logger.log(VERBOSE, "Calling hook: %s", subprocess.list2cmdline(cmd))
-
-    p = subprocess.Popen(
-        cmd,
-        env=hook_env,
-        close_fds=True,
-        shell=False,
-        stdout=subprocess.PIPE,
-    )
-    content = p.communicate()[0].strip()
-    exitcode = p.poll()
-
-    if exitcode and args[0] != "depends":
-        sys.stderr.write("Error running %s: %s\n" % (subprocess.list2cmdline(cmd), content))
-
-    return exitcode, content
 
 
 def initialize_site_ca(site):
@@ -2329,6 +1807,8 @@ def config_configure(site, global_opts, config_hooks):
             if change:
                 try:
                     config_configure_hook(site, global_opts, config_hooks, current_hook_name)
+                except MKTerminate:
+                    raise
                 except Exception as e:
                     bail_out("Error in hook %s: %s" % (current_hook_name, e))
             else:
@@ -4187,267 +3667,6 @@ class PackageManagerRPM(PackageManager):
         return output.strip().split("\n")
 
 
-class AbstractSiteContext(six.with_metaclass(abc.ABCMeta, object)):
-    """Object wrapping site specific information"""
-    def __init__(self, sitename):
-        # type: (Optional[str]) -> None
-        super(AbstractSiteContext, self).__init__()
-        self._sitename = sitename
-        self._config_loaded = False
-        self._config = {}  # type: Config
-
-    @property
-    def name(self):
-        # type: () -> Optional[str]
-        return self._sitename
-
-    @abc.abstractproperty
-    def version(self):
-        # type: () -> Optional[str]
-        raise NotImplementedError()
-
-    @abc.abstractproperty
-    def dir(self):
-        # type: () -> str
-        raise NotImplementedError()
-
-    @abc.abstractproperty
-    def tmp_dir(self):
-        # type: () -> str
-        raise NotImplementedError()
-
-    @property
-    def version_meta_dir(self):
-        # type: () -> str
-        return "%s/.version_meta" % self.dir
-
-    @property
-    def conf(self):
-        # type: () -> Config
-        """{ "CORE" : "nagios", ... } (contents of etc/omd/site.conf plus defaults from hooks)"""
-        if not self._config_loaded:
-            raise Exception("Config not loaded yet")
-        return self._config
-
-    @abc.abstractmethod
-    def load_config(self):
-        # type: () -> None
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def exists(self):
-        # type: () -> bool
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def is_empty(self):
-        # type: () -> bool
-        raise NotImplementedError()
-
-    @staticmethod
-    @abc.abstractmethod
-    def is_site_context():
-        # type: () -> bool
-        raise NotImplementedError()
-
-
-class SiteContext(AbstractSiteContext):
-    @property
-    def name(self):
-        # type: () -> str
-        return cast(str, self._sitename)
-
-    @property
-    def dir(self):
-        # type: () -> str
-        return "/omd/sites/" + cast(str, self._sitename)
-
-    @property
-    def tmp_dir(self):
-        # type: () -> str
-        return "%s/tmp" % self.dir
-
-    @property
-    def version(self):
-        # type: () -> Optional[str]
-        """The version of a site is solely determined by the link ~SITE/version
-        In case the version of a site can not be determined, it reports None."""
-        version_link = self.dir + "/version"
-        try:
-            return os.readlink(version_link).split("/")[-1]
-        except Exception:
-            return None
-
-    @property
-    def replacements(self):
-        # type: () -> Replacements
-        """Dictionary of key/value for replacing macros in skel files"""
-        return {
-            "###SITE###": self.name,
-            "###ROOT###": self.dir,
-        }
-
-    def load_config(self):
-        # type: () -> None
-        """Load all variables from omd/sites.conf. These variables always begin with
-        CONFIG_. The reason is that this file can be sources with the shell.
-
-        Puts these variables into the config dict without the CONFIG_. Also
-        puts the variables into the process environment."""
-        self._config = self.read_site_config()
-
-        # Get the default values of all config hooks that are not contained
-        # in the site configuration. This can happen if there are new hooks
-        # after an update or when a site is being created.
-        hook_dir = self.dir + "/lib/omd/hooks"
-        if os.path.exists(hook_dir):
-            for hook_name in sort_hooks(os.listdir(hook_dir)):
-                if hook_name[0] != '.' and hook_name not in self._config:
-                    content = call_hook(self, hook_name, ["default"])[1]
-                    self._config[hook_name] = content
-
-        self._config_loaded = True
-
-    def read_site_config(self):
-        # type: () -> Config
-        """Read and parse the file site.conf of a site into a dictionary and returns it"""
-        config = {}  # type: Config
-        confpath = "%s/etc/omd/site.conf" % (self.dir)
-        if not os.path.exists(confpath):
-            return {}
-
-        for line in open(confpath):
-            line = line.strip()
-            if line == "" or line[0] == "#":
-                continue
-            var, value = line.split("=", 1)
-            if not var.startswith("CONFIG_"):
-                sys.stderr.write("Ignoring invalid variable %s.\n" % var)
-            else:
-                config[var[7:].strip()] = value.strip().strip("'")
-
-        return config
-
-    def exists(self):
-        # type: () -> bool
-        # In dockerized environments the tmpfs may be managed by docker (when
-        # using the --tmpfs option).  In this case the site directory is
-        # created as parent of the tmp directory to mount the tmpfs during
-        # container initialization. Detect this situation and don't treat the
-        # site as existing in that case.
-        if is_dockerized():
-            if not os.path.exists(self.dir):
-                return False
-            if os.listdir(self.dir) == ["tmp"]:
-                return False
-            return True
-
-        return os.path.exists(self.dir)
-
-    def is_empty(self):
-        # type: () -> bool
-        for entry in os.listdir(self.dir):
-            if entry not in ['.', '..']:
-                return False
-        return True
-
-    def is_autostart(self):
-        # type: () -> bool
-        """Determines whether a specific site is set to autostart."""
-        return self.conf.get('AUTOSTART', 'on') == 'on'
-
-    def is_disabled(self):
-        # type: () -> bool
-        """Whether or not this site has been disabled with 'omd disable'"""
-        apache_conf = "/omd/apache/%s.conf" % self.name
-        return not os.path.exists(apache_conf)
-
-    def is_stopped(self):
-        # type: () -> bool
-        """Check if site is completely stopped"""
-        return check_status(self, display=False) == 1
-
-    @staticmethod
-    def is_site_context():
-        # type: () -> bool
-        return True
-
-    @property
-    def skel_permissions(self):
-        # type: () -> Permissions
-        """Returns the skeleton permissions. Load either from version meta directory
-        or from the original version skel.permissions file"""
-        if not self._has_version_meta_data():
-            if self.version is None:
-                bail_out("Failed to determine site version")
-            return load_skel_permissions(self.version)
-
-        return load_skel_permissions_from(self.version_meta_dir + "/skel.permissions")
-
-    @property
-    def version_skel_dir(self):
-        # type: () -> str
-        """Returns the current version skel directory. In case the meta data is
-        available and fits the sites version use that one instead of the version
-        skel directory."""
-        if not self._has_version_meta_data():
-            return "/omd/versions/%s/skel" % self.version
-        return self.version_meta_dir + "/skel"
-
-    def _has_version_meta_data(self):
-        # type: () -> bool
-        if not os.path.exists(self.version_meta_dir):
-            return False
-
-        if self._version_meta_data_version() != self.version:
-            return False
-
-        return True
-
-    def _version_meta_data_version(self):
-        # type: () -> str
-        with open(self.version_meta_dir + "/version") as f:
-            return f.read().strip()
-
-
-class RootContext(AbstractSiteContext):
-    def __init__(self):
-        # type: () -> None
-        super(RootContext, self).__init__(sitename=None)
-
-    @property
-    def dir(self):
-        # type: () -> str
-        return "/"
-
-    @property
-    def tmp_dir(self):
-        # type: () -> str
-        return "/tmp"
-
-    @property
-    def version(self):
-        # type: () -> str
-        return omdlib.__version__
-
-    def load_config(self):
-        # type: () -> None
-        pass
-
-    def exists(self):
-        # type: () -> bool
-        return False
-
-    def is_empty(self):
-        # type: () -> bool
-        return False
-
-    @staticmethod
-    def is_site_context():
-        # type: () -> bool
-        return False
-
-
 Option = NamedTuple("Option", [
     ("long_opt", str),
     ("short_opt", Optional[str]),
@@ -5241,6 +4460,8 @@ def main():
 
     try:
         command.handler(site, global_opts, args, command_options)
+    except MKTerminate as e:
+        bail_out(str(e))
     except KeyboardInterrupt:
         bail_out(tty.normal + "Aborted.")
 

@@ -33,9 +33,28 @@ test-mypy3:
 test-mypy3-raw:
 	$(MYPY) --config-file=$(realpath ../mypy-raw.ini) $$(../scripts/find-python-files 3)
 
-# TODO: This is a real hack caused by our dubious directory structure plus the
-# use of --scripts-are-modules. Is this really the right flag to use?
-MYPY2_FILES=$$(../scripts/find-python-files 2 | grep $$(realpath '../cmk'))
+MYPY2_FILES=$(shell \
+    ../scripts/find-python-files 2 | \
+    `: filter out plugins, they are not real modules` \
+    grep -v $$(realpath '../agents/plugins') | \
+    grep -v $$(realpath '../checks') | \
+    grep -v $$(realpath '../enterprise/agents/bakery') | \
+    grep -v $$(realpath '../enterprise/agents/plugins') | \
+    grep -v $$(realpath '../inventory') | \
+    `: We should really check these, but currently there are too many errors. :-/` \
+    grep -v $$(realpath '../active_checks') | \
+    grep -v $$(realpath '../agents/special') | \
+    grep -v $$(realpath '../agents/windows') | \
+    grep -v $$(realpath '../agents/wnx') | \
+    grep -v $$(realpath '../bin') | \
+    grep -v $$(realpath '../doc') | \
+    grep -v $$(realpath '../enterprise/bin') | \
+    grep -v $$(realpath '../livestatus/api/python') | \
+    grep -v $$(realpath '../notifications/sms') | \
+    grep -v $$(realpath '../omd/packages') | \
+    grep -v $$(realpath '../scripts') | \
+    grep -v $$(realpath '../tests') | \
+    grep -v $$(realpath '../werk'))
 
 test-mypy:
 	$(MYPY) $(MYPY2_FILES)

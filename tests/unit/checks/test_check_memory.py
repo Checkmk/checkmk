@@ -74,16 +74,13 @@ TEXT_PAGE = (
 )
 
 
-# The following test is just added to nail down the current behaviour.
-# I am making no statement about whether it needs to be this way.
+# The function currently fails with KeyError if input is incomplete:
 @pytest.mark.parametrize(
     "params,meminfo,fail_with_exception",
     [
-        # The following inputs and outputs are expected to succeed
-        # as no levels are checked, or the levels are OK.
         ((80., 90.), {}, KeyError),
-        ({}, MEMINFO_MINI, KeyError),
         ((80., 90.), {"MemTotal": 42 * KILO, "MemFree": 28 * KILO}, KeyError),
+        ({}, {"MemTotal": 42 * KILO, "MemFree": 28 * KILO, "SwapFree": 23}, KeyError),
     ],
 )
 def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception):

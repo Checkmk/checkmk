@@ -78,6 +78,9 @@ def _normalize_mem_levels(mode, warn, crit, perc_ref, abs_ref, render_base, unit
      * percentages on free
     Normalize levels to absolute posive levels and return formatted levels text
     """
+    if warn is None or crit is None:
+        return None, None, ""
+
     # normalize percent -> absolute
     if mode.startswith("perc"):
         warn_used = warn / 100.0 * perc_ref
@@ -192,7 +195,8 @@ def check_memory(params, meminfo, render_base=1024):
     else:
         comp_mb = totalused.mb
 
-    warn, crit = params["levels"]
+    # Normalize levels and check them
+    warn, crit = params.get("levels", (None, None))
     mode = _get_levels_mode_from_value(warn)
     warn_mb, crit_mb, levels_text = _normalize_mem_levels(
         mode,
@@ -205,7 +209,7 @@ def check_memory(params, meminfo, render_base=1024):
     )
     # Check levels
     state = _get_plain_state(comp_mb, warn_mb, crit_mb)
-    if state:
+    if state and levels_text:
         infotext += ", %s" % levels_text
 
     # Prepare performance data

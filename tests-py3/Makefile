@@ -38,6 +38,10 @@ MYPY2_FILES=$(shell \
     `: filter out plugins, they are not real modules` \
     grep -v $$(realpath '../agents/plugins') | \
     grep -v $$(realpath '../checks') | \
+    grep -v $$(realpath '../doc/skeleton_check') | \
+    grep -v $$(realpath '../doc/predictive') | \
+    grep -v $$(realpath '../doc/bi-example-oracle.mk') | \
+    grep -v $$(realpath '../doc/bi-example.mk') | \
     grep -v $$(realpath '../enterprise/agents/bakery') | \
     grep -v $$(realpath '../enterprise/agents/plugins') | \
     grep -v $$(realpath '../inventory') | \
@@ -46,7 +50,7 @@ MYPY2_FILES=$(shell \
     grep -v $$(realpath '../agents/special') | \
     grep -v $$(realpath '../agents/windows') | \
     grep -v $$(realpath '../agents/wnx') | \
-    grep -v $$(realpath '../doc') | \
+    grep -v $$(realpath '../doc/treasures') | \
     grep -v $$(realpath '../enterprise/bin') | \
     grep -v $$(realpath '../livestatus/api/python') | \
     grep -v $$(realpath '../notifications/sms') | \

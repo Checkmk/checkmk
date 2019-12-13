@@ -237,6 +237,7 @@ TEST(PluginTest, JobStartSTop) {
     fs::path temp_folder = cma::cfg::GetTempDir();
 
     CreatePluginInTemp(temp_folder / "a.cmd", 120, "a");
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
 
     auto [pid, job, process] =
         cma::tools::RunStdCommandAsJob((temp_folder / "a.cmd").wstring());

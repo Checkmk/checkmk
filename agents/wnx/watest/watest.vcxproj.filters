@@ -156,6 +156,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="test-wtools_user_control.cpp">
+    <ClCompile Include="test-wtools_runas.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

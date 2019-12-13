@@ -35,6 +35,9 @@
 namespace wtools {
 constexpr const wchar_t* kWToolsLogName = L"check_mk_wtools.log";
 
+// returns <exit_code, 0>, <0, error> or <-1, error>
+std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid);
+
 uint32_t GetParentPid(uint32_t pid);
 
 //
@@ -259,6 +262,10 @@ public:
     // returns process id
     uint32_t goExecAsJob(std::wstring_view CommandLine) noexcept;
 
+    // returns process id
+    uint32_t goExecAsJobAndUser(std::wstring_view user,
+                                std::wstring_view password,
+                                std::wstring_view CommandLine) noexcept;
     // returns process id
     uint32_t goExecAsUpdater(std::wstring_view CommandLine) noexcept;
 

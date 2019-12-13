@@ -761,7 +761,7 @@ bool TheMiniBox::waitForEnd(std::chrono::milliseconds timeout) {
         auto grane = kGraneLong;
         auto ready = checkProcessExit(pi.waiting_processes) ||  // process exit?
                      cma::srv::IsGlobalStopSignaled();  // agent is exiting?
-        auto buf = readFromHandle<std::vector<char>>(read_handle);
+        auto buf = cma::tools::ReadFromHandle<std::vector<char>>(read_handle);
         if (!buf.empty()) {
             pi.added += buf.size();
             pi.blocks++;
@@ -815,7 +815,8 @@ bool TheMiniBox::waitForEndWindows(std::chrono::milliseconds Timeout) {
             2, handles, FALSE, static_cast<DWORD>(kGraneWindows.count()));
 
         if (ret == WAIT_OBJECT_0) {
-            auto buf = readFromHandle<std::vector<char>>(read_handle);
+            auto buf =
+                cma::tools::ReadFromHandle<std::vector<char>>(read_handle);
             if (!buf.empty()) {
                 pi.added += buf.size();
                 pi.blocks++;
@@ -872,7 +873,7 @@ bool TheMiniBox::waitForUpdater(std::chrono::milliseconds timeout) {
     auto read_handle = getReadHandle();
     int safety_poll_count = 5;
     for (;;) {
-        auto buf = readFromHandle<std::vector<char>>(read_handle);
+        auto buf = cma::tools::ReadFromHandle<std::vector<char>>(read_handle);
         if (buf.size()) {
             appendResult(read_handle, buf);
             XLOG::d.t("Appended [{}] bytes from '{}'",

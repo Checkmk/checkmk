@@ -350,6 +350,7 @@ call prepare_to_tests.cmd $(REMOTE_MACHINE)
     <ClCompile Include="test-winperf.cpp" />
     <ClCompile Include="test-wtools.cpp" />
     <ClCompile Include="test-wtools_user_control.cpp" />
+    <ClCompile Include="test-wtools_runas.cpp" />
     <ClCompile Include="test-yaml.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </ExcludedFromBuild>

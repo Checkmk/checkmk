@@ -23,12 +23,25 @@
 
 #include "cap.h"
 #include "cfg.h"
+#include "common/wtools_runas.h"
 #include "common/wtools_user_control.h"
 #include "logger.h"
 #include "tools/_raii.h"
 #include "upgrade.h"
 
 namespace wtools {
+
+std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid) {
+    auto h = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,  // not on XP
+                           FALSE, pid);
+    if (!h) return {0, GetLastError()};
+
+    ON_OUT_OF_SCOPE(::CloseHandle(h));
+    DWORD exit_code = 0;
+    auto success = ::GetExitCodeProcess(h, &exit_code);
+    if (!success) return {-1, GetLastError()};
+    return {exit_code, 0};
+}
 
 void AppRunner::prepareResources(std::wstring_view command_line,
                                  bool create_pipe) noexcept {
@@ -61,6 +74,40 @@ uint32_t AppRunner::goExecAsJob(std::wstring_view CommandLine) noexcept {
 
         auto [pid, jh, ph] = cma::tools::RunStdCommandAsJob(
             CommandLine.data(), true, stdio_.getWrite(), stderr_.getWrite());
+        // store data to reuse
+        process_id_ = pid;
+        job_handle_ = jh;
+        process_handle_ = ph;
+
+        // check and return on success
+        if (process_id_) return process_id_;
+
+        // failure s here
+        XLOG::l(XLOG_FLINE + " Failed RunStd: [{}]*", GetLastError());
+
+        cleanResources();
+
+        return 0;
+    } catch (const std::exception& e) {
+        XLOG::l.crit(XLOG_FLINE + " unexpected exception: '{}'", e.what());
+    }
+    return 0;
+}
+
+uint32_t AppRunner::goExecAsJobAndUser(std::wstring_view user,
+                                       std::wstring_view password,
+                                       std::wstring_view CommandLine) noexcept {
+    try {
+        if (process_id_) {
+            XLOG::l.bp("Attempt to reuse AppRunner");
+            return 0;
+        }
+
+        prepareResources(CommandLine, true);
+
+        auto [pid, jh, ph] =
+            runas::RunAsJob(user, password, CommandLine.data(), true,
+                            stdio_.getWrite(), stderr_.getWrite());
         // store data to reuse
         process_id_ = pid;
         job_handle_ = jh;
@@ -1378,7 +1425,7 @@ bool WmiWrapper::open() noexcept {  // Obtain the initial locator to Windows
 
     auto hres =
         CoCreateInstance(CLSID_WbemLocator, nullptr, CLSCTX_INPROC_SERVER,
-                         IID_IWbemLocator, reinterpret_cast<LPVOID*>(&locator));
+                         IID_IWbemLocator, reinterpret_cast<void**>(&locator));
 
     if (FAILED(hres)) {
         XLOG::l.crit("Can't Create Instance WMI {:#X}",
@@ -2143,7 +2190,7 @@ HRESULT ACLInfo::query() {
     // Now, we should fill in the linked list of ACEs
     // Iterate through ACEs (Access Control Entries) of DACL
     for (USHORT i = 0; i < acl->AceCount; i++) {
-        LPVOID ace = nullptr;
+        void* ace = nullptr;
         success = GetAce(acl, i, &ace);
         if (!success) {
             DWORD error = GetLastError();

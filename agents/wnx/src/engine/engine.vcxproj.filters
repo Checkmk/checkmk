@@ -459,6 +459,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\common\wtools_user_control.cpp">
+    <ClCompile Include="..\common\wtools_runas.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -22,6 +22,46 @@
 namespace cma {
 namespace tools {
 
+// add content of file to the Buf
+template <typename T>
+bool AppendFileContent(T& Buf, HANDLE h, size_t Count) noexcept {
+    // check what we have already inside
+    auto buf_size = Buf.size();
+    try {
+        Buf.resize(buf_size + Count);
+    } catch (const std::exception& e) {
+        XLOG::l(XLOG_FLINE + " exception: '{}'", e.what());
+        return false;
+    }
+
+    // add new data
+    auto read_buffer = Buf.data() + buf_size;
+    DWORD read_in_fact = 0;
+    auto count = static_cast<DWORD>(Count);
+    auto result = ::ReadFile(h, read_buffer, count, &read_in_fact, nullptr);
+    if (!result) false;
+
+    if (buf_size + read_in_fact != Buf.size()) {
+        Buf.resize(buf_size + read_in_fact);
+    }
+
+    return true;
+}
+
+template <typename T>
+T ReadFromHandle(HANDLE Handle) {
+    T buf;
+    for (;;) {
+        auto read_count = wtools::DataCountOnHandle(Handle);
+
+        // now reading to the end
+        if (read_count == 0) break;  // no data
+        if (!cma::tools::AppendFileContent<T>(buf, Handle, read_count))
+            break;  // io fail
+    }
+    return buf;
+}
+
 // primitive command line checker
 bool CheckArgvForValue(int argc, const wchar_t* argv[], int pos,
                        std::string_view value) noexcept;
@@ -269,32 +309,6 @@ public:
 
     bool const failed() const noexcept { return failed_; }
 
-    // add content of file to the Buf
-    template <typename T>
-    bool appendFileContent(T& Buf, HANDLE h, size_t Count) const noexcept {
-        // check what we have already inside
-        auto buf_size = Buf.size();
-        try {
-            Buf.resize(buf_size + Count);
-        } catch (const std::exception& e) {
-            XLOG::l(XLOG_FLINE + " exception: '{}'", e.what());
-            return false;
-        }
-
-        // add new data
-        auto read_buffer = Buf.data() + buf_size;
-        DWORD read_in_fact = 0;
-        auto count = static_cast<DWORD>(Count);
-        auto result = ::ReadFile(h, read_buffer, count, &read_in_fact, nullptr);
-        if (!result) false;
-
-        if (buf_size + read_in_fact != Buf.size()) {
-            Buf.resize(buf_size + read_in_fact);
-        }
-
-        return true;
-    }
-
     // very special, only used for cmk-updater
     bool waitForUpdater(std::chrono::milliseconds Timeout);
 
@@ -357,21 +371,8 @@ private:
     void readWhatLeft() {
         using namespace std;
         auto read_handle = getReadHandle();
-        auto buf = readFromHandle<vector<char>>(read_handle);
+        auto buf = cma::tools::ReadFromHandle<vector<char>>(read_handle);
         if (buf.size()) appendResult(read_handle, buf);
-    }
-
-    template <typename T>
-    T readFromHandle(HANDLE Handle) {
-        T buf;
-        for (;;) {
-            auto read_count = wtools::DataCountOnHandle(Handle);
-
-            // now reading to the end
-            if (read_count == 0) break;                              // no data
-            if (!appendFileContent(buf, Handle, read_count)) break;  // io fail
-        }
-        return buf;
     }
 
     static std::string formatProcessInLog(uint32_t pid, std::wstring name) {
@@ -383,31 +384,24 @@ private:
     // updates object with exit code
     // returns true if process  exists or not accessible
     bool checkProcessExit(const uint32_t pid) {
+        auto [code, error] = wtools::GetProcessExitCode(pid);
+
         auto proc_string = formatProcessInLog(pid, exec_);
+        // check for error
+        if (error == 0) {
+            if (code == STILL_ACTIVE) return false;
 
-        auto h = ::OpenProcess(
-            PROCESS_QUERY_LIMITED_INFORMATION,  // not supported on XP
-            FALSE, pid);
-        if (!h) {
-            storeExitCode(pid, 0);  // process died
-            XLOG::d("{} is failed to open, error is [{}]", proc_string,
-                    ::GetLastError());
-            return true;
-        }
-        ON_OUT_OF_SCOPE(::CloseHandle(h));
-        DWORD exit_code = 0;
-        auto success = ::GetExitCodeProcess(h, &exit_code);
-        if (!success) {
-            XLOG::l("Error  [{}] accessing {}", ::GetLastError(), proc_string);
+            // success and valid exit code store exit code
+            XLOG::t("{} exits, code is [{}]", proc_string, code);
+            storeExitCode(pid, code);
             return true;
         }
 
-        // no logging for the case due to high noise
-        if (exit_code == STILL_ACTIVE) return false;
-
-        // success and valid exit code store exit code
-        XLOG::t("{} exits, code is [{}]", proc_string, exit_code);
-        storeExitCode(pid, exit_code);
+        if (code == 0) {
+            storeExitCode(pid, 0);  // process rather died
+            XLOG::d("{} is failed to open, error is [{}]", proc_string, error);
+        } else
+            XLOG::l("Error  [{}] accessing {}", error, proc_string);
         return true;
     }
 
@@ -446,7 +440,6 @@ private:
 }  // namespace cma
 
 namespace cma {
-
 enum class HackDataMode { header, line };
 
 // build correct string for patching
@@ -752,9 +745,9 @@ bool TryToHackStringWithCachedInfo(std::string& in_string,
 namespace ntfs {
 #if _MSC_VER >= 1923
 [[deprecated("Should not be used with VS 19")]]  // VS 19 has good remove
-#endif 
-bool Remove(const std::filesystem::path& Target,
-                    std::error_code& Ec) noexcept;
+#endif
+    bool
+    Remove(const std::filesystem::path& Target, std::error_code& Ec) noexcept;
 }  // namespace ntfs
 
 }  // namespace cma

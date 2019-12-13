@@ -146,3 +146,7 @@ class ProblemHosts(HostSnapin):
     def description(cls):
         return _("A summary state of all hosts that have a problem, with "
                  "links to problems of those hosts")
+
+    @classmethod
+    def refresh_regularly(cls):
+        return True

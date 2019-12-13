@@ -1,0 +1,12 @@
+Title: Problem Hosts sidebar snapin was not refreshed regularly
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1576243198
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+The sidebar snapin was not updated automatically as intended.

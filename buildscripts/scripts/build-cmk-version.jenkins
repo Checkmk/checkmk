@@ -174,17 +174,17 @@ def shall_publish_package(scm, JOB_BASE_NAME) {
     return (scm.branches[0].name == 'master' || scm.branches[0].name ==~ '[0-9]+\\.[0-9]+\\.[0-9]+') && JOB_BASE_NAME == 'nightly_build_containerized'
 }
 
-def mount_overlay(LOWER_DIR, OVERLAY_DIR) {
+def mount_overlay(LOWER_DIR, UPPER_DIR) {
     sh """
-        mkdir -p ${OVERLAY_DIR} ${OVERLAY_DIR}-upper ${OVERLAY_DIR}-work
+        mkdir -p ${UPPER_DIR} ${UPPER_DIR}-work
         mount -t overlay overlay -o \
-        lowerdir=${LOWER_DIR},upperdir=${OVERLAY_DIR}-upper,workdir=${OVERLAY_DIR}-work \
-        ${OVERLAY_DIR}
+        lowerdir=${LOWER_DIR},upperdir=${UPPER_DIR},workdir=${UPPER_DIR}-work \
+        ${UPPER_DIR}
    """
 }
 
-def unmount_overlay(OVERLAY_DIR) {
-    sh "until umount ${OVERLAY_DIR}; do sleep 1; done"
+def unmount_overlay(UPPER_DIR) {
+    sh "until umount ${UPPER_DIR}; do sleep 1; done"
 }
 
 def cleanup_work_directories(DAILY_DATA) {

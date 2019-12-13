@@ -63,7 +63,7 @@ def inventory_oracle_jobs(info):
         if len(line) <= 2:
             continue
         # old format < RDBMS 12.1
-        elif len(line) >= 3 and len(line) <= 10:
+        elif 3 <= len(line) <= 10:
             yield "%s.%s.%s" % (line[0], line[1], line[2]), {}
         else:
             # new format: sid.pdb_name.job_owner.job_name

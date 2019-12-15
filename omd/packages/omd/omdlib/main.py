@@ -2655,7 +2655,7 @@ def main_update(version_info, site, global_opts, args, options):
     #
     # tuple type is: Tuple[SiteContext, str, str, Permissions]
     walk_skel(to_skelroot,
-              update_file, (site, from_version, to_version, old_perms),
+              update_file, (site, conflict_mode, from_version, to_version, old_perms),
               conflict_mode=conflict_mode,
               depth_first=False)
 
@@ -2663,7 +2663,7 @@ def main_update(version_info, site, global_opts, args, options):
     #
     # tuple type is: Tuple[SiteContext, str, str, Permissions]
     walk_skel(from_skelroot,
-              update_file, (site, from_version, to_version, old_perms),
+              update_file, (site, conflict_mode, from_version, to_version, old_perms),
               conflict_mode=conflict_mode,
               depth_first=True,
               exclude_if_in=to_skelroot)

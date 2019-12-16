@@ -2085,7 +2085,7 @@ TEST(PluginTest, EmptyPlugins) {
         plugins.updateSectionStatus();
         auto result = plugins.generateContent(section::kLocal, true);
         ASSERT_FALSE(result.empty());
-        EXPECT_EQ(result, "<<<local>>>\n<<<>>>\n");
+        EXPECT_EQ(result, "<<<local:sep(0)>>>\n<<<>>>\n");
     }
 }
 

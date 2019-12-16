@@ -50,8 +50,8 @@ constexpr std::string_view kSystemTime{"systemtime"};
 constexpr std::string_view kServices{"services"};
 constexpr std::string_view kCheckMk{"check_mk"};
 
-constexpr std::string_view kPlugins{"plugins"};  // not used in makeHeader
-constexpr std::string_view kLocal{"local"};      // not used in makeHeader
+constexpr std::string_view kPlugins{"plugins"};     // not used in makeHeader
+constexpr std::string_view kLocal{"local:sep(0)"};  // used in makeHeader
 
 constexpr std::string_view kMrpe{"mrpe"};                // used in makeHeader
 constexpr std::string_view kOhm{"openhardwaremonitor"};  // used in makeHeader

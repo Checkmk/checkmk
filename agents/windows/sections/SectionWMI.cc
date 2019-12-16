@@ -222,8 +222,7 @@ bool SectionWMI::produceOutputInner(std::ostream &Out,
             result = _helper->getClass(_object.c_str());
         } else {
             std::wstringstream query;
-            query << L"SELECT " << join(_columns, wmi::kWideSeparator)
-                  << L" FROM " << _object;
+            query << L"SELECT " << join(_columns, L",") << L" FROM " << _object;
             result = _helper->query(query.str().c_str());
         }
 

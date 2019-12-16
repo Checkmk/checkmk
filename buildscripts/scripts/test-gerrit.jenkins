@@ -140,22 +140,13 @@ node {
         currentBuild.result = "FAILED"
         throw e
     } finally {
-        step([
-            $class: 'WarningsPublisher',
-            canComputeNew: false,
-            canResolveRelativePaths: false,
-            canRunOnFailed: true,
-            defaultEncoding: '',
-            excludePattern: '',
-            healthy: '',
-            includePattern: '',
-            messagesPattern: '',
-            consoleParsers: [[parserName: 'GNU Make + GNU C Compiler (gcc)'], [parserName: 'Clang (LLVM based)'], [parserName: 'PyLint']],
-            unHealthy: '',
-            defaultEncoding: 'UTF-8',
-            failedTotalAll: '0',
-            unstableTotalAll: '0'
-        ])
+        stage("Analyse Issues") {
+            def CLANG = scanForIssues tool: clang()
+            def GCC = scanForIssues tool: gcc()
+            def PYLINT = scanForIssues tool: pyLint()
+
+            publishIssues issues:[CLANG,GCC,PYLINT], trendChartType: 'TOOLS_ONLY'
+        }
     }
 }
 }

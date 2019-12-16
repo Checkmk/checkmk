@@ -308,7 +308,7 @@ def reporting_available():
     try:
         # Check the existance of one arbitrary config variable from the
         # reporting module
-        _dummy = reporting_filename
+        _dummy = reporting_filename  # type: ignore # pylint: disable=undefined-variable
         return True
     except NameError:
         return False
@@ -317,7 +317,7 @@ def reporting_available():
 def combined_graphs_available():
     # type: () -> bool
     try:
-        _dummy = have_combined_graphs
+        _dummy = have_combined_graphs  # type: ignore # pylint: disable=undefined-variable
         return True
     except NameError:
         return False

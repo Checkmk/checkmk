@@ -1,0 +1,15 @@
+Title: Fixed race condition when changing host check command.
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1576490948
+Edition: cee
+Knowledge: doc
+Level: 2
+Version: 1.7.0i1
+
+When the kind of a host check command was changed, e.g. from an active check
+to smart ping, there was a small time window for scheduling to go wrong.
+This resulted in endless log lines of the form "invalid command line '@foo'
+for bar", and the only way to resume normal operation was to restart the
+Checkmk Micro Core, reloading was not enough.  This has been fixed.

@@ -2172,7 +2172,6 @@ class HostConfig(object):
             flat_rule.append((self.hostname, 'validity_state', check_mk_state))
 
         for setting in rule.get('per_piggybacked_host', []):
-            piggybacked_hostname_expressions = setting["piggybacked_hostname"]
             if "piggybacked_hostname" in setting:
                 piggybacked_hostname_expressions = [setting["piggybacked_hostname"]]
             elif "piggybacked_hostname_expressions" in setting:

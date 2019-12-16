@@ -26,6 +26,10 @@
 
 import cmk.utils.aws_constants as aws_types
 
+default_running_ondemand_instances = [
+    (inst_type, (None, 80.0, 90.0)) for inst_type in aws_types.AWSEC2InstTypes
+]
+
 factory_settings['aws_ec2_limits_default_levels'] = {
     'vpc_elastic_ip_addresses': (None, 80.0, 90.0),
     'elastic_ip_addresses': (None, 80.0, 90.0),
@@ -36,14 +40,16 @@ factory_settings['aws_ec2_limits_default_levels'] = {
     'active_spot_fleet_requests': (None, 80.0, 90.0),
     'spot_fleet_total_target_capacity': (None, 80.0, 90.0),
     'running_ondemand_instances_total': (None, 80.0, 90.0),
-    'running_ondemand_instances': [
-        (inst_type, (None, 80.0, 90.0)) for inst_type in aws_types.AWSEC2InstTypes
-    ],
+    'running_ondemand_instances': default_running_ondemand_instances,
 }
 
 
 def _transform_ec2_limits(params):
-    transformed = {}
+    # Check default reset
+    transformed = {
+        'running_ondemand_instances_%s' % inst_type: levels
+        for inst_type, levels in default_running_ondemand_instances
+    }
     for k, v in params.iteritems():
         if isinstance(v, tuple):
             transformed[k] = v

@@ -24,19 +24,22 @@
 
 #include "TableStatus.h"
 #include <atomic>
+#include <cstdint>
 #include <ctime>
+#include <filesystem>
 #include <memory>
 #include "Average.h"
 #include "BoolPointerColumn.h"
 #include "Column.h"
 #include "DoublePointerColumn.h"
 #include "IntLambdaColumn.h"
+#include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"
-#include "StatusSpecialIntColumn.h"
 #include "StringPointerColumn.h"
 #include "TimePointerColumn.h"
 #include "global_counters.h"
+#include "mk_inventory.h"
 #include "nagios.h"
 
 extern time_t program_start;
@@ -222,18 +225,19 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
 #endif  // NAGIOS4
 
     // Livestatus' own status
-    addColumn(std::make_unique<StatusSpecialIntColumn>(
+    addColumn(std::make_unique<IntLambdaColumn>(
         "cached_log_messages",
         "The current number of log messages MK Livestatus keeps in memory",
-        Column::Offsets{}, mc,
-        StatusSpecialIntColumn::Type::num_cached_log_messages));
+        [mc](Row /*row*/) {
+            return static_cast<int32_t>(mc->numCachedLogMessages());
+        }));
     addColumn(std::make_unique<StringPointerColumn>(
         "livestatus_version", "The version of the MK Livestatus module",
         Column::Offsets{}, VERSION));
     addColumn(std::make_unique<IntLambdaColumn>(
         "livestatus_active_connections",
         "The current number of active connections to MK Livestatus",
-        [&] { return g_livestatus_active_connections.load(); }));
+        [&](Row /*row*/) { return g_livestatus_active_connections.load(); }));
     addColumn(std::make_unique<IntLambdaColumn::Reference>(
         "livestatus_queued_connections",
         "The current number of queued connections to MK Livestatus (that wait for a free thread)",
@@ -279,21 +283,25 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         &g_any_event_handler_enabled));
 
     // Special stuff for Check_MK
-    addColumn(std::make_unique<StatusSpecialIntColumn>(
+    addColumn(std::make_unique<IntLambdaColumn>(
         "mk_inventory_last",
         "The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory",
-        Column::Offsets{}, mc,
-        StatusSpecialIntColumn::Type::mk_inventory_last));
-    addColumn(std::make_unique<StatusSpecialIntColumn>(
+        [mc](Row /*row*/) {
+            return static_cast<int32_t>(
+                mk_inventory_last(mc->mkInventoryPath() / ".last"));
+        }));
+    addColumn(std::make_unique<IntLambdaColumn>(
         "num_queued_notifications",
         "The number of queued notifications which have not yet been delivered to the notification helper",
-        Column::Offsets{}, mc,
-        StatusSpecialIntColumn::Type::num_queued_notifications));
-    addColumn(std::make_unique<StatusSpecialIntColumn>(
+        [mc](Row /*row*/) {
+            return static_cast<int32_t>(mc->numQueuedNotifications());
+        }));
+    addColumn(std::make_unique<IntLambdaColumn>(
         "num_queued_alerts",
         "The number of queued alerts which have not yet been delivered to the alert helper",
-        Column::Offsets{}, mc,
-        StatusSpecialIntColumn::Type::num_queued_alerts));
+        [mc](Row /*row*/) {
+            return static_cast<int32_t>(mc->numQueuedAlerts());
+        }));
 }
 
 void TableStatus::addCounterColumns(const std::string &name,

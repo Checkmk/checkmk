@@ -463,7 +463,7 @@ def _get_piggybacked_file_path(source_hostname, piggybacked_hostname):
 
 
 def cleanup_piggyback_files(time_settings):
-    # type: (Dict[Tuple[Optional[str], str], int]) -> None
+    # type: (List[Tuple[Optional[str], str, int]]) -> None
     """This is a housekeeping job to clean up different old files from the
     piggyback directories.
 
@@ -477,24 +477,41 @@ def cleanup_piggyback_files(time_settings):
         time_settings,
     )
 
-    _cleanup_old_source_status_files(time_settings)
-    _cleanup_old_piggybacked_files(time_settings)
+    piggybacked_hosts_settings = _get_piggybacked_hosts_settings(time_settings)
+
+    _cleanup_old_source_status_files(piggybacked_hosts_settings)
+    _cleanup_old_piggybacked_files(piggybacked_hosts_settings)
 
 
-def _cleanup_old_source_status_files(time_settings):
-    # type: (Dict[Tuple[Optional[str], str], int]) -> None
+def _get_piggybacked_hosts_settings(time_settings):
+    # type: (List[Tuple[Optional[str], str, int]]) -> List[Tuple[Path, List[Path], Dict[Tuple[Optional[str], str], int]]]
+    piggybacked_hosts_settings = []
+    for piggybacked_host_folder in _get_piggybacked_host_folders():
+        source_hosts = _get_piggybacked_host_sources(piggybacked_host_folder)
+        matching_time_settings = _get_matching_time_settings(
+            [source_host.name for source_host in source_hosts],
+            piggybacked_host_folder.name,
+            time_settings,
+        )
+        piggybacked_hosts_settings.append(
+            (piggybacked_host_folder, source_hosts, matching_time_settings))
+    return piggybacked_hosts_settings
+
+
+def _cleanup_old_source_status_files(piggybacked_hosts_settings):
+    # type: (List[Tuple[Path, List[Path], Dict[Tuple[Optional[str], str], int]]]) -> None
     """Remove source status files which exceed configured maximum cache age.
     There may be several 'Piggybacked Host Files' rules where the max age is configured.
     We simply use the greatest one per source."""
 
-    global_max_cache_age = time_settings[(None, 'max_cache_age')]  # type: int
-
     max_cache_age_by_sources = {}  # type: Dict[str, int]
-    for piggybacked_host_folder in _get_piggybacked_host_folders():
-        for source_host in _get_piggybacked_host_sources(piggybacked_host_folder):
+    for piggybacked_host_folder, source_hosts, time_settings in piggybacked_hosts_settings:
+        for source_host in source_hosts:
             max_cache_age = _get_max_cache_age(source_host.name, piggybacked_host_folder.name,
                                                time_settings)
+
             max_cache_age_of_source = max_cache_age_by_sources.get(source_host.name)
+
             if max_cache_age_of_source is None:
                 max_cache_age_by_sources[source_host.name] = max_cache_age
 
@@ -502,13 +519,12 @@ def _cleanup_old_source_status_files(time_settings):
                 max_cache_age_by_sources[source_host.name] = max_cache_age
 
     for source_state_file in _get_source_state_files():
-
         try:
             file_age = cmk.utils.cachefile_age(source_state_file)
         except MKGeneralException:
             continue  # File might've been deleted. That's ok.
 
-        max_cache_age = max_cache_age_by_sources.get(source_state_file.name, global_max_cache_age)
+        max_cache_age = max_cache_age_by_sources[source_state_file.name]
         if file_age > max_cache_age:
             logger.log(
                 VERBOSE,
@@ -519,13 +535,12 @@ def _cleanup_old_source_status_files(time_settings):
             _remove_piggyback_file(source_state_file)
 
 
-def _cleanup_old_piggybacked_files(time_settings):
-    # type: (Dict[Tuple[Optional[str], str], int]) -> None
+def _cleanup_old_piggybacked_files(piggybacked_hosts_settings):
+    # type: (List[Tuple[Path, List[Path], Dict[Tuple[Optional[str], str], int]]]) -> None
     """Remove piggybacked data files which exceed configured maximum cache age."""
 
-    for piggybacked_host_folder in _get_piggybacked_host_folders():
-        for piggybacked_host_source in _get_piggybacked_host_sources(piggybacked_host_folder):
-
+    for piggybacked_host_folder, source_hosts, time_settings in piggybacked_hosts_settings:
+        for piggybacked_host_source in source_hosts:
             successfully_processed, reason, _reason_status = _get_piggyback_processed_file_info(
                 piggybacked_host_source.name,
                 piggybacked_host_folder.name,

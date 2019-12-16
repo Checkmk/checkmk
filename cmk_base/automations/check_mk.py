@@ -676,12 +676,11 @@ class AutomationAnalyseServices(Automation):
                 }
 
         # 3. Classical checks
-        for nr, entry in enumerate(host_config.custom_checks):
+        for entry in host_config.custom_checks:
             desc = entry["service_description"]
             if desc == servicedesc:
                 result = {
                     "origin": "classic",
-                    "rule_nr": nr,
                 }
                 if "command_line" in entry:  # Only active checks have a command line
                     result["command_line"] = entry["command_line"]

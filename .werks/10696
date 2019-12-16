@@ -1,0 +1,10 @@
+Title: Fix wrong rule links on "Classical monitoring check" object parameter page
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p8
+Date: 1576509403
+Class: fix
+
+The links to the rules that are used to create "Classical active and passive Monitoring checks" services on the WATO "Parameters of service" page

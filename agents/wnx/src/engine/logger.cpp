@@ -108,7 +108,7 @@ CalcLogParam(const xlog::LogParam &Param, int Modifications) {
     auto &lp = Param;
     auto directions = lp.directions_;
     auto flags = lp.flags_;
-    using namespace fmt::v5;
+    using namespace fmt;
     auto c = Colors::dflt;
 
     if (Modifications & Mods::kStdio) directions |= xlog::kStdioPrint;

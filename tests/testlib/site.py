@@ -8,6 +8,7 @@ import subprocess
 import pipes
 import time
 import shutil
+import logging
 import six
 from six.moves.urllib.parse import urlparse
 
@@ -21,6 +22,8 @@ from testlib.utils import (
 )
 from testlib.web_session import CMKWebSession
 from testlib.version import CMKVersion
+
+logger = logging.getLogger(__name__)
 
 
 class Site(object):  # pylint: disable=useless-object-inheritance
@@ -142,11 +145,18 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                                           command_timestamp, expected_state)
 
     def schedule_check(self, hostname, service_description, expected_state):
+        logger.debug("%s;%s schedule check", hostname, service_description)
         last_check_before = self._last_service_check(hostname, service_description)
+        logger.debug("%s;%s last check before %r", hostname, service_description, last_check_before)
+
         command_timestamp = self._command_timestamp(last_check_before)
-        self.live.command(
-            "[%d] SCHEDULE_FORCED_SVC_CHECK;%s;%s;%d" %
-            (command_timestamp, hostname, service_description.encode("utf-8"), command_timestamp))
+
+        command = "[%d] SCHEDULE_FORCED_SVC_CHECK;%s;%s;%d" % \
+            (command_timestamp, hostname, service_description.encode("utf-8"), command_timestamp)
+
+        logger.debug("%s;%s: %r", hostname, service_description, command)
+        self.live.command(command)
+
         self._wait_for_next_service_check(hostname, service_description, last_check_before,
                                           command_timestamp, expected_state)
 
@@ -185,6 +195,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             "WaitTimeout: %d\n" \
             "WaitCondition: last_check > %d\n" \
             "WaitCondition: state = %d\n" \
+            "WaitCondition: has_been_checked = 1\n" \
             "WaitTrigger: check\n" % (hostname, service_description, hostname, service_description, wait_timeout*1000, last_check_before, expected_state))
         self._verify_next_check_output(command_timestamp, last_check, last_check_before, state,
                                        expected_state, plugin_output, wait_timeout)

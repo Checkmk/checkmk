@@ -53,8 +53,14 @@ $(PYTHON_CACHE_PKG_PATH):
 $(PYTHON_CACHE_PKG_PROCESS): $(PYTHON_CACHE_PKG_PATH)
 	$(call unpack_pkg_archive,$(PYTHON_CACHE_PKG_PATH),$(PYTHON_DIR))
 	$(call upload_pkg_archive,$(PYTHON_CACHE_PKG_PATH),$(PYTHON_DIR),$(PYTHON_BUILD_ID))
-# Ensure that the rpath of the python binary always points to the current version path
-	chrpath -r "$(OMD_ROOT)/lib" $(PACKAGE_PYTHON_EXECUTABLE)
+# Ensure that the rpath of the python binary and dynamic libs always points to the current version path
+	chmod +w $(PACKAGE_PYTHON_LD_LIBRARY_PATH)/libpython2.7.so.1.0
+	for i in $(PACKAGE_PYTHON_EXECUTABLE) \
+	         $(PACKAGE_PYTHON_LD_LIBRARY_PATH)/libpython2.7.so.1.0 \
+	         $(PACKAGE_PYTHON_PYTHONPATH)/lib-dynload/*.so ; do \
+	    chrpath -r "$(OMD_ROOT)/lib" $$i; \
+	done
+	chmod -w $(PACKAGE_PYTHON_LD_LIBRARY_PATH)/libpython2.7.so.1.0
 # Native modules built based on this version need to use the correct rpath
 	sed -i 's|--rpath,/omd/versions/[^/]*/lib|--rpath,$(OMD_ROOT)/lib|g' \
 	    $(PACKAGE_PYTHON_PYTHONPATH)/_sysconfigdata.py

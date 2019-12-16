@@ -376,20 +376,15 @@ def instantiate_skel(site, path):
 
 
 # Walks all files in the skeleton dir to execute a function for each file
-# The given handler is called with the provided args. Additionally the relative
-# path of the file to handle is handed over in the 'relpath' parameter.
-
+#
 # When called with a path in 'exclude_if_in' then paths existing relative to
 # that are skipped. This is used for a second run during the update-process: to handle
 # files that have vanished in the new version.
-
+#
 # The option 'relbase' is optional. It can contain a relative path which can be used
 # as base for the walk instead of walking the whole tree.
-
-
-# The function returns a set of already handled files.
-def walk_skel(root, handler, args, conflict_mode, depth_first, exclude_if_in=None, relbase='.'):
-    # type: (str, Callable, Tuple, str, bool, Optional[str], str) -> None
+def walk_skel(root, conflict_mode, depth_first, exclude_if_in=None, relbase='.'):
+    # type: (str, str, bool, Optional[str], str) -> Iterable[str]
     with chdir(root):
         # Note: os.walk first finds level 1 directories, then deeper
         # layers. If we need a real depth search instead, where we first
@@ -417,37 +412,7 @@ def walk_skel(root, handler, args, conflict_mode, depth_first, exclude_if_in=Non
                 if exclude_if_in and os.path.exists(exclude_if_in + "/" + path):
                     continue
 
-                todo = True
-                while todo:
-                    try:
-                        handler(path, *args)
-                        todo = False
-                    except MKTerminate:
-                        raise
-                    except Exception:
-                        todo = False
-                        sys.stderr.write(StateMarkers.error * 40 + "\n")
-                        sys.stderr.write(StateMarkers.error + " Exception      %s\n" % (path))
-                        sys.stderr.write(
-                            StateMarkers.error + " " +
-                            traceback.format_exc().replace('\n', "\n" + StateMarkers.error + " ") +
-                            "\n")
-                        sys.stderr.write(StateMarkers.error * 40 + "\n")
-
-                        # If running in interactive mode ask the user to terminate or retry
-                        # In case of non interactive mode just throw the exception
-                        if conflict_mode == 'ask':
-                            options = [("retry", "Retry the operation"),
-                                       ("continue", "Continue with next files"),
-                                       ("abort", "Stop here and abort update!")]
-                            choice = ask_user_choices(
-                                'Problem occured',
-                                'We detected an exception (printed above). You have the '
-                                'chance to fix things and retry the operation now.', options)
-                            if choice == 'abort':
-                                bail_out("Update aborted.")
-                            elif choice == 'retry':
-                                todo = True  # Try again
+                yield path
 
 
 #.
@@ -786,6 +751,39 @@ def file_status(site, source_path, target_path):
     changed = changed_type or changed_content
 
     return (changed_type, changed_content, changed)
+
+
+def _execute_update_file(relpath, site, conflict_mode, old_version, new_version, old_perms):
+    # type: (str, SiteContext, str, str, str, Permissions) -> None
+    todo = True
+    while todo:
+        try:
+            update_file(relpath, site, conflict_mode, old_version, new_version, old_perms)
+            todo = False
+        except MKTerminate:
+            raise
+        except Exception:
+            todo = False
+            sys.stderr.write(StateMarkers.error * 40 + "\n")
+            sys.stderr.write(StateMarkers.error + " Exception      %s\n" % (relpath))
+            sys.stderr.write(StateMarkers.error + " " +
+                             traceback.format_exc().replace('\n', "\n" + StateMarkers.error + " ") +
+                             "\n")
+            sys.stderr.write(StateMarkers.error * 40 + "\n")
+
+            # If running in interactive mode ask the user to terminate or retry
+            # In case of non interactive mode just throw the exception
+            if conflict_mode == 'ask':
+                options = [("retry", "Retry the operation"),
+                           ("continue", "Continue with next files"),
+                           ("abort", "Stop here and abort update!")]
+                choice = ask_user_choices(
+                    'Problem occured', 'We detected an exception (printed above). You have the '
+                    'chance to fix things and retry the operation now.', options)
+                if choice == 'abort':
+                    bail_out("Update aborted.")
+                elif choice == 'retry':
+                    todo = True  # Try again
 
 
 def update_file(relpath, site, conflict_mode, old_version, new_version, old_perms):
@@ -2493,13 +2491,13 @@ def diff_list(global_opts, options, site, from_skelroot, from_version, orig_path
     else:
         if not rel_path:
             rel_path = "."
-        # tuple type is: Tuple[GlobalOptions, CommandOptions, SiteContext, str, str, str, Permissions]
-        walk_skel(from_skelroot,
-                  print_diff,
-                  (global_opts, options, site, from_skelroot, site.dir, from_version, old_perms),
-                  conflict_mode="ask",
-                  depth_first=False,
-                  relbase=rel_path)
+
+        for file_path in walk_skel(from_skelroot,
+                                   conflict_mode="ask",
+                                   depth_first=False,
+                                   relbase=rel_path):
+            print_diff(file_path, global_opts, options, site, from_skelroot, site.dir, from_version,
+                       old_perms)
 
 
 def print_diff(rel_path, global_opts, options, site, source_path, target_path, source_version,
@@ -2652,21 +2650,15 @@ def main_update(version_info, site, global_opts, args, options):
     to_skelroot = "/omd/versions/%s/skel" % to_version
 
     # First walk through skeleton files of new version
-    #
-    # tuple type is: Tuple[SiteContext, str, str, Permissions]
-    walk_skel(to_skelroot,
-              update_file, (site, conflict_mode, from_version, to_version, old_perms),
-              conflict_mode=conflict_mode,
-              depth_first=False)
+    for relpath in walk_skel(to_skelroot, conflict_mode=conflict_mode, depth_first=False):
+        _execute_update_file(relpath, site, conflict_mode, from_version, to_version, old_perms)
 
     # Now handle files present in old but not in new skel files
-    #
-    # tuple type is: Tuple[SiteContext, str, str, Permissions]
-    walk_skel(from_skelroot,
-              update_file, (site, conflict_mode, from_version, to_version, old_perms),
-              conflict_mode=conflict_mode,
-              depth_first=True,
-              exclude_if_in=to_skelroot)
+    for relpath in walk_skel(from_skelroot,
+                             conflict_mode=conflict_mode,
+                             depth_first=True,
+                             exclude_if_in=to_skelroot):
+        _execute_update_file(relpath, site, conflict_mode, from_version, to_version, old_perms)
 
     # Change symbolic link pointing to new version
     create_version_symlink(site, to_version)

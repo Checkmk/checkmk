@@ -30,16 +30,22 @@
 #include "Table.h"
 class MonitoringCore;
 class Query;
+struct Command;
 
 class TableCommands : public Table {
 public:
+    class IRow {
+    public:
+        virtual ~IRow() = default;
+        virtual Command getCommand() const = 0;
+    };
     explicit TableCommands(MonitoringCore *mc);
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
     void answerQuery(Query *query) override;
 
-    static void addColumns(Table *table, const std::string &prefix, int offset);
+    static void addColumns(Table *table, const std::string &prefix);
 };
 
 #endif  // TableCommands_h

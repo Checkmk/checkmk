@@ -55,7 +55,16 @@
 #include "nagios.h"
 #endif
 
-struct LogRow {
+class LogRow : TableCommands::IRow {
+public:
+    LogRow(LogEntry *entry_, host *hst_, service *svc_, const contact *ctc_,
+           Command command_)
+        : entry{entry_}
+        , hst{hst_}
+        , svc{svc_}
+        , ctc{ctc_}
+        , command{std::move(command_)} {};
+
     LogEntry *entry;
     host *hst;
     service *svc;
@@ -63,6 +72,7 @@ struct LogRow {
     // cppcheck-suppress unusedStructMember
     const contact *ctc;
     Command command;
+    [[nodiscard]] Command getCommand() const override { return command; }
 };
 
 TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
@@ -152,8 +162,8 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
                               false /* no hosts table */);
     TableContacts::addColumns(this, "current_contact_",
                               DANGEROUS_OFFSETOF(LogRow, ctc));
-    TableCommands::addColumns(this, "current_command_",
-                              DANGEROUS_OFFSETOF(LogRow, command));
+
+    TableCommands::addColumns(this, "current_command_");
 }
 
 std::string TableLog::name() const { return "log"; }

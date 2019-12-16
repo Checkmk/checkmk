@@ -22,51 +22,40 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "TableCommands.h"
-#include <memory>
-#include <utility>
-#include <vector>
-#include "Column.h"
-#include "MonitoringCore.h"
-#include "Query.h"
-#include "Row.h"
-#include "StringLambdaColumn.h"
+#ifndef StringLambdaColumn_h
+#define StringLambdaColumn_h
 
-TableCommands::TableCommands(MonitoringCore *mc) : Table(mc) {
-    addColumns(this, "");
-}
+#include "config.h"  // IWYU pragma: keep
+#include <functional>
+#include <string>
+#include "StringColumn.h"
+class Row;
 
-std::string TableCommands::name() const { return "commands"; }
-
-std::string TableCommands::namePrefix() const { return "command_"; }
-
-namespace {
-class CommandRow : TableCommands::IRow {
+class StringLambdaColumn : public StringColumn {
 public:
-    explicit CommandRow(Command cmd) : cmd_{std::move(cmd)} {};
-    [[nodiscard]] Command getCommand() const override { return cmd_; }
+    struct Constant;
+    struct Reference;
+    StringLambdaColumn(std::string name, std::string description,
+                       std::function<std::string(Row)> gv)
+        : StringColumn(std::move(name), std::move(description), {})
+        , get_value_(gv) {}
+    virtual ~StringLambdaColumn() = default;
+    std::string getValue(Row row) const override { return get_value_(row); }
 
 private:
-    Command cmd_;
+    std::function<std::string(Row)> get_value_;
 };
-}  // namespace
 
-// static
-void TableCommands::addColumns(Table *table, const std::string &prefix) {
-    table->addColumn(std::make_unique<StringLambdaColumn>(
-        prefix + "name", "The name of the command",
-        [](Row row) { return row.rawData<IRow>()->getCommand()._name; }));
-    table->addColumn(std::make_unique<StringLambdaColumn>(
-        prefix + "line", "The shell command line", [](Row row) {
-            return row.rawData<IRow>()->getCommand()._command_line;
-        }));
-}
+struct StringLambdaColumn::Constant : StringLambdaColumn {
+    Constant(std::string name, std::string description, const std::string& x)
+        : StringLambdaColumn(std::move(name), std::move(description),
+                             [x](Row /*row*/) { return x; }){};
+};
 
-void TableCommands::answerQuery(Query *query) {
-    for (auto &cmd : core()->commands()) {
-        auto r = CommandRow{cmd};
-        if (!query->processDataset(Row{&r})) {
-            break;
-        }
-    }
-}
+struct StringLambdaColumn::Reference : StringLambdaColumn {
+    Reference(std::string name, std::string description, const std::string& x)
+        : StringLambdaColumn(std::move(name), std::move(description),
+                             [&x](Row /*row*/) { return x; }){};
+};
+
+#endif

@@ -443,6 +443,7 @@ class Pod(Metadata):
                                         if status.container_statuses else [])
             self._conditions = status.conditions if status.conditions else []
         else:
+            self.phase = None
             self.host_ip = None
             self.pod_ip = None
             self.qos_class = None
@@ -950,13 +951,13 @@ class PodList(K8sList[Pod]):
         return {
             node: {
                 'requests': {
-                    'pods': len(list(filter(lambda pod: pod.phase == "Running", pods)))
+                    'pods': len([pod for pod in pods if pod.phase not in ["Succeeded", "Failed"]])
                 }
             } for node, pods in by_node if node is not None
         }
 
     def pods_in_cluster(self):
-        return {'requests': {'pods': len(self)}}
+        return {'requests': {'pods': len([pod for pod in self if pod.phase not in ["Succeeded", "Failed"]])}}
 
     def info(self):
         return {pod.name: pod.info for pod in self}

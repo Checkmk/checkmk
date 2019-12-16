@@ -547,11 +547,11 @@ def _cleanup_old_piggybacked_files(time_settings):
             piggybacked_host_folder.rmdir()
         except OSError as e:
             if e.errno == errno.ENOTEMPTY:
-                pass
+                continue
             raise
         else:
             logger.log(
                 VERBOSE,
-                "Piggyback folder '%s' is empty. Remove it.",
+                "Piggyback folder '%s' is empty. Removed it.",
                 piggybacked_host_folder,
             )

@@ -1,0 +1,11 @@
+Title: OpenHardwareMonitor: Fixed a bug that prevented the generation of the section
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p24
+Date: 1576502069
+Class: fix
+
+The regression in the legacy Windows Agent prevented the generation of the
+'OpenHardwareMonitor' section. This has been fixed.

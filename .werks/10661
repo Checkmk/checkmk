@@ -1,0 +1,14 @@
+Title: DCD: Remove "Maximum cache age from global settings" which had no effect
+Level: 1
+Component: dcd
+Compatible: compat
+Edition: cee
+Version: 1.6.0p8
+Date: 1576507845
+Class: fix
+
+The setting {{Maximum cache age from global settings}} in a dynamic
+configuration connection had no effect and the hardcoded fallback {{1 hour}}
+was used.
+Maybe in the future the global maximum age from global settings will be
+configurable here.

@@ -48,3 +48,6 @@ tests/web/data/*
 .venv
 artefacts/
 wnx/
+node_modules/
+web/htdocs/js/*_min.js.map
+.mypy_cache/

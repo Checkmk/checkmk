@@ -29,7 +29,7 @@ import errno
 import os
 import copy
 import json
-from typing import Set, Any, Callable, Dict, List, NewType, Optional, Text, Tuple, Union  # pylint: disable=unused-import
+from typing import Set, Any, AnyStr, Callable, Dict, List, NewType, Optional, Text, Tuple, Union  # pylint: disable=unused-import
 import six
 from pathlib2 import Path
 from livestatus import SiteId, SiteConfiguration, SiteConfigurations  # pylint: disable=unused-import
@@ -263,6 +263,7 @@ def _apply_default_config():
 
 
 def _load_default_config(vars_before_plugins, vars_after_plugins):
+    # type: (Set, Set) -> None
     default_config.clear()
     _load_default_config_from_module_plugins()
     _load_default_config_from_legacy_plugins(vars_before_plugins, vars_after_plugins)
@@ -374,13 +375,15 @@ def declare_dynamic_permissions(func):
 # to possible dynamic permissions
 # TODO: Clean this up
 def load_dynamic_permissions():
+    # type: () -> None
     for func in permission_declaration_functions:
         func()
 
 
 def get_role_permissions():
+    # type: () -> Dict[str, List[str]]
     """Returns the set of permissions for all roles"""
-    role_permissions = {}
+    role_permissions = {}  # type: Dict[str, List[str]]
     roleids = roles.keys()
     for perm_class in permissions.permission_registry.values():
         perm = perm_class()
@@ -394,6 +397,7 @@ def get_role_permissions():
 
 
 def _may_with_roles(some_role_ids, pname):
+    # type: (List[str], str) -> bool
     # If at least one of the given roles has this permission, it's fine
     for role_id in some_role_ids:
         role = roles[role_id]
@@ -526,30 +530,38 @@ class LoggedInUser(object):
         return self._button_counts
 
     def save_site_config(self):
+        # type: () -> None
         self.save_file("siteconfig", self.siteconf)
 
     def get_attribute(self, key, deflt=None):
+        # type: (str, Any) -> Any
         return self.attributes.get(key, deflt)
 
     def set_attribute(self, key, value):
+        # type: (str, Any) -> None
         self.attributes[key] = value
 
     def unset_attribute(self, key):
+        # type: (str) -> None
         try:
             del self.attributes[key]
         except KeyError:
             pass
 
     def language(self, default=None):
+        # type: (Optional[str]) -> Optional[str]
         return self.get_attribute("language", get_language(default))
 
     def contact_groups(self):
+        # type: () -> List
         return self.get_attribute("contactgroups", [])
 
     def load_stars(self):
+        # type: () -> Set[str]
         return set(self.load_file("favorites", []))
 
     def save_stars(self, stars):
+        # type: (Set[str]) -> None
         self.save_file("favorites", list(stars))
 
     def is_site_disabled(self, site_id):
@@ -601,6 +613,7 @@ class LoggedInUser(object):
                   "the following permission: '<b>%s</b>'.") % perm.title)
 
     def load_file(self, name, deflt, lock=False):
+        # type: (str, Any, bool) -> Any
         # In some early error during login phase there are cases where it might
         # happen that a user file is requested but the user is not yet
         # set. We have all information to set it, then do it.
@@ -611,9 +624,11 @@ class LoggedInUser(object):
         return store.load_object_from_file(path, default=deflt, lock=lock)
 
     def save_file(self, name, content, unlock=False):
+        # type: (str, Any, bool) -> None
         save_user_file(name, content, self.id, unlock)
 
     def file_modified(self, name):
+        # type: (str) -> float
         if self.confdir is None:
             return 0
 
@@ -637,7 +652,7 @@ class LoggedInSuperUser(LoggedInUser):
         self.email = "admin"
 
     def _gather_roles(self):
-        # type: () -> List
+        # type: () -> List[str]
         return ["admin"]
 
     def _load_confdir(self):
@@ -649,6 +664,7 @@ class LoggedInSuperUser(LoggedInUser):
         self.siteconf = {}
 
     def load_file(self, name, deflt, lock=False):
+        # type: (str, Any, bool) -> Any
         return deflt
 
 
@@ -660,7 +676,7 @@ class LoggedInNobody(LoggedInUser):
         self.email = "nobody"
 
     def _gather_roles(self):
-        # type: () -> List
+        # type: () -> List[str]
         return []
 
     def _load_confdir(self):
@@ -672,6 +688,7 @@ class LoggedInNobody(LoggedInUser):
         self.siteconf = {}
 
     def load_file(self, name, deflt, lock=False):
+        # type: (str, Any, bool) -> Any
         return deflt
 
 
@@ -716,6 +733,7 @@ user = LoggedInNobody()
 
 
 def roles_of_user(user_id):
+    # type: (Optional[UserId]) -> List[str]
     def existing_role_ids(role_ids):
         return [role_id for role_id in role_ids if role_id in roles]
 
@@ -727,7 +745,8 @@ def roles_of_user(user_id):
         return ["guest"]
     elif users is not None and user_id in users:
         return ["user"]
-    elif os.path.exists(config_dir + "/" + user_id.encode("utf-8") + "/automation.secret"):
+    elif user_id is not None and os.path.exists(config_dir + "/" + user_id.encode("utf-8") +
+                                                "/automation.secret"):
         return ["guest"]  # unknown user with automation account
     elif 'roles' in default_user_profile:
         return existing_role_ids(default_user_profile['roles'])
@@ -737,17 +756,23 @@ def roles_of_user(user_id):
 
 
 def alias_of_user(user_id):
+    # type: (Optional[UserId]) -> Optional[UserId]
     if user_id in multisite_users:
         return multisite_users[user_id].get("alias", user_id)
     return user_id
 
 
 def user_may(user_id, pname):
+    # type: (Optional[UserId], str) -> bool
     return _may_with_roles(roles_of_user(user_id), pname)
 
 
 # TODO: Check all calls for arguments (changed optional user to 3rd positional)
 def save_user_file(name, data, user_id, unlock=False):
+    # type: (str, Any, Optional[UserId], bool) -> None
+    if user_id is None:
+        raise TypeError("The profiles of LoggedInSuperUser and LoggedInNobody cannot be saved")
+
     path = config_dir + "/" + user_id.encode("utf-8") + "/" + name + ".mk"
     store.mkdir(os.path.dirname(path))
     store.save_object_to_file(path, data)
@@ -794,6 +819,7 @@ def migrate_old_site_config(site_config):
 #    This has now been split up. The top level socket settings are now used independent of the proxy.
 #    The proxy options are stored in the separate key "proxy" which is a mandatory key.
 def _migrate_pre_16_socket_config(site_cfg):
+    # type: (Dict[AnyStr, Any]) -> None
     if site_cfg.get("socket") is None:
         site_cfg["socket"] = ("local", None)
         return
@@ -828,7 +854,7 @@ def _migrate_pre_16_socket_config(site_cfg):
 
 
 def _migrate_string_encoded_socket(value):
-    # type: (str) -> Tuple[str, Union[Dict]]
+    # type: (AnyStr) -> Tuple[AnyStr, Union[Dict]]
     family_txt, address = value.split(":", 1)  # pylint: disable=no-member
 
     if family_txt == "unix":
@@ -920,14 +946,17 @@ def configured_sites():
 
 
 def has_wato_slave_sites():
+    # type: () -> bool
     return bool(wato_slave_sites())
 
 
 def is_wato_slave_site():
+    # type: () -> bool
     return _has_distributed_wato_file() and not has_wato_slave_sites()
 
 
 def _has_distributed_wato_file():
+    # type: () -> bool
     return os.path.exists(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk") \
         and os.stat(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk").st_size != 0
 
@@ -1066,6 +1095,7 @@ def get_event_console_site_choices():
 
 
 def load_plugins(force):
+    # type: (bool) -> None
     utils.load_web_plugins("config", globals())
 
     # Make sure, builtin roles are present, even if not modified and saved with WATO.
@@ -1074,6 +1104,7 @@ def load_plugins(force):
 
 
 def theme_choices():
+    # type: () -> List[Tuple[str, Any]]
     themes = {}
 
     for base_dir in [Path(cmk.utils.paths.web_dir), cmk.utils.paths.local_web_dir]:
@@ -1103,6 +1134,7 @@ def theme_choices():
 
 
 def get_page_heading():
+    # type: () -> AnyStr
     if "%s" in page_heading:
         return page_heading % (site(omd_site()).get('alias', _("GUI")))
     return page_heading

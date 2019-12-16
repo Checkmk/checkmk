@@ -118,7 +118,7 @@ try:
 
     if opt_piggyback_mode:
         add_output("<<<<>>>>")
-        add_output("<<<local>>>")
+        add_output("<<<local:sep(0)>>>")
         add_output("0 Active_MQ - Found %s Queues in total" % count)
 except Exception as e:  # Probably an IndexError
     sys.stderr.write("Unable to process data. Returned data might be incorrect: %r" % e)

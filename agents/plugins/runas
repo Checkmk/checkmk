@@ -67,7 +67,7 @@ do
         # local and plugin includes
         elif [ "$type" == "local" -o "$type" == "plugin" ] ; then
             if [ "$type" == "local" ] ; then
-                echo "<<<local>>>"
+                echo "<<<local:sep(0)>>>"
             fi
             find $include -executable -type f | \
             while read filename

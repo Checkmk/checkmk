@@ -33,10 +33,13 @@ class Row;
 
 class IntLambdaColumn : public IntColumn {
 public:
+    struct Constant;
+    struct Reference;
     IntLambdaColumn(std::string name, std::string description,
                     std::function<int()> gv)
         : IntColumn(std::move(name), std::move(description), {})
         , get_value_(gv) {}
+    virtual ~IntLambdaColumn() = default;
 
     std::int32_t getValue(Row /*row*/,
                           const contact* /*auth_user*/) const override {
@@ -45,6 +48,18 @@ public:
 
 private:
     std::function<int()> get_value_;
+};
+
+struct IntLambdaColumn::Constant : IntLambdaColumn {
+    Constant(std::string name, std::string description, int x)
+        : IntLambdaColumn(std::move(name), std::move(description),
+                          [x] { return x; }){};
+};
+
+struct IntLambdaColumn::Reference : IntLambdaColumn {
+    Reference(std::string name, std::string description, int& x)
+        : IntLambdaColumn(std::move(name), std::move(description),
+                          [&x] { return x; }){};
 };
 
 #endif

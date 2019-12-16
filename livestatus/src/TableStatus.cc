@@ -75,7 +75,6 @@ extern int external_command_buffer_slots;
 // TODO: check if this data is available in nagios_squeue
 namespace {
 time_t dummy_time = 0;
-const int dummy_int = 0;
 }  // namespace
 #endif  // NAGIOS4
 
@@ -108,64 +107,62 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "times a Livestatus connection could not be immediately accepted because all threads where busy",
         Counter::overflows);
 
-    addColumn(std::make_unique<IntLambdaColumn>(
-        "nagios_pid", "The process ID of the monitoring core",
-        [&] { return nagios_pid; }));
-    addColumn(std::make_unique<IntLambdaColumn>(
-        "core_pid", "The process ID of the monitoring core",
-        [&] { return nagios_pid; }));
-    addColumn(std::make_unique<IntLambdaColumn>(
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+        "nagios_pid", "The process ID of the monitoring core", nagios_pid));
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+        "core_pid", "The process ID of the monitoring core", nagios_pid));
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
         "enable_notifications",
         "Whether notifications are enabled in general (0/1)",
-        [&] { return enable_notifications; }));
-    addColumn(std::make_unique<IntLambdaColumn>(
+        enable_notifications));
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
         "execute_service_checks",
         "Whether active service checks are activated in general (0/1)",
-        [&] { return execute_service_checks; }));
-    addColumn(std::make_unique<IntLambdaColumn>(
+        execute_service_checks));
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
         "accept_passive_service_checks",
         "Whether passive service checks are activated in general (0/1)",
-        [&] { return accept_passive_service_checks; }));
-    addColumn(std::make_unique<IntLambdaColumn>(
+        accept_passive_service_checks));
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
         "execute_host_checks",
         "Whether host checks are executed in general (0/1)",
-        [&] { return execute_host_checks; }));
-    addColumn(std::make_unique<IntLambdaColumn>(
+        execute_host_checks));
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
         "accept_passive_host_checks",
         "Whether passive host checks are accepted in general (0/1)",
-        [&] { return accept_passive_host_checks; }));
-    addColumn(std::make_unique<IntLambdaColumn>(
+        accept_passive_host_checks));
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
         "obsess_over_services",
         "Whether Nagios will obsess over service checks and run the ocsp_command (0/1)",
-        [&] { return obsess_over_services; }));
-    addColumn(std::make_unique<IntLambdaColumn>(
+        obsess_over_services));
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
         "obsess_over_hosts",
         "Whether Nagios will obsess over host checks (0/1)",
-        [&] { return obsess_over_hosts; }));
-    addColumn(std::make_unique<IntLambdaColumn>(
+        obsess_over_hosts));
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
         "check_service_freshness",
         "Whether service freshness checking is activated in general (0/1)",
-        [&] { return check_service_freshness; }));
-    addColumn(std::make_unique<IntLambdaColumn>(
+        check_service_freshness));
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
         "check_host_freshness",
         "Whether host freshness checking is activated in general (0/1)",
-        [&] { return check_host_freshness; }));
-    addColumn(std::make_unique<IntLambdaColumn>(
+        check_host_freshness));
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
         "enable_flap_detection",
         "Whether flap detection is activated in general (0/1)",
-        [&] { return enable_flap_detection; }));
-    addColumn(std::make_unique<IntLambdaColumn>(
+        enable_flap_detection));
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
         "process_performance_data",
         "Whether processing of performance data is activated in general (0/1)",
-        [&] { return process_performance_data; }));
-    addColumn(std::make_unique<IntLambdaColumn>(
+        process_performance_data));
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
         "enable_event_handlers",
         "Whether event handlers are activated in general (0/1)",
-        [&] { return enable_event_handlers; }));
-    addColumn(std::make_unique<IntLambdaColumn>(
+        enable_event_handlers));
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
         "check_external_commands",
         "Whether Nagios checks for external commands at its command pipe (0/1)",
-        [&] { return check_external_commands; }));
+        check_external_commands));
     addColumn(std::make_unique<TimePointerColumn>(
         "program_start", "The time of the last program start as UNIX timestamp",
         &program_start, Column::Offsets{}));
@@ -183,15 +180,14 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<TimePointerColumn>(
         "last_log_rotation", "Time time of the last log file rotation",
         &last_log_rotation, Column::Offsets{}));
-    addColumn(std::make_unique<IntLambdaColumn>(
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
         "interval_length", "The default interval length from nagios.cfg",
-        [&] { return interval_length; }));
+        interval_length));
 
-    addColumn(std::make_unique<IntLambdaColumn>(
-        "num_hosts", "The total number of hosts", [&] { return g_num_hosts; }));
-    addColumn(std::make_unique<IntLambdaColumn>(
-        "num_services", "The total number of services",
-        [&] { return g_num_services; }));
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+        "num_hosts", "The total number of hosts", g_num_hosts));
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+        "num_services", "The total number of services", g_num_services));
 
     addColumn(std::make_unique<StringPointerColumn>(
         "program_version", "The version of the monitoring daemon",
@@ -199,32 +195,30 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
 
 // External command buffer
 #ifndef NAGIOS4
-    addColumn(std::make_unique<IntLambdaColumn>(
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
         "external_command_buffer_slots",
         "The size of the buffer for the external commands",
-        [&] { return external_command_buffer_slots; }));
-    addColumn(std::make_unique<IntLambdaColumn>(
+        external_command_buffer_slots));
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
         "external_command_buffer_usage",
         "The number of slots in use of the external command buffer",
-        [&] { return external_command_buffer.items; }));
-    addColumn(std::make_unique<IntLambdaColumn>(
+        external_command_buffer.items));
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
         "external_command_buffer_max",
         "The maximum number of slots used in the external command buffer",
-        [&] { return external_command_buffer.high; }));
+        external_command_buffer.high));
 #else
-    addColumn(std::make_unique<IntLambdaColumn>(
+    addColumn(std::make_unique<IntLambdaColumn::Constant>(
         "external_command_buffer_slots",
-        "The size of the buffer for the external commands (placeholder)",
-        [&] { return dummy_int; }));
-    addColumn(std::make_unique<IntLambdaColumn>(
+        "The size of the buffer for the external commands (placeholder)", 0));
+    addColumn(std::make_unique<IntLambdaColumn::Constant>(
         "external_command_buffer_usage",
         "The number of slots in use of the external command buffer (placeholder)",
-        [&] { return dummy_int; }));
-    addColumn(std::make_unique<IntLambdaColumn>(
+        0));
+    addColumn(std::make_unique<IntLambdaColumn::Constant>(
         "external_command_buffer_max",
         "The maximum number of slots used in the external command buffer (placeholder)",
-        [&] {
-        return dummy_int; ));
+        0));
 #endif  // NAGIOS4
 
     // Livestatus' own status
@@ -240,14 +234,14 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "livestatus_active_connections",
         "The current number of active connections to MK Livestatus",
         [&] { return g_livestatus_active_connections.load(); }));
-    addColumn(std::make_unique<IntLambdaColumn>(
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
         "livestatus_queued_connections",
         "The current number of queued connections to MK Livestatus (that wait for a free thread)",
-        [&] { return g_num_queued_connections; }));
-    addColumn(std::make_unique<IntLambdaColumn>(
+        g_num_queued_connections));
+    addColumn(std::make_unique<IntLambdaColumn::Reference>(
         "livestatus_threads",
         "The maximum number of connections to MK Livestatus that can be handled in parallel",
-        [&] { return g_livestatus_threads; }));
+        g_livestatus_threads));
     addColumn(std::make_unique<DoublePointerColumn>(
         "livestatus_usage",
         "The average usage of the livestatus connection slots, ranging from 0.0 (0%) up to 1.0 (100%)",

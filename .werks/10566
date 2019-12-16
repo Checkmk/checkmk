@@ -26,5 +26,3 @@ F+:mylocalcheck_new_format_with_blank
 echo "0 \"my service\" - OK: This is my custom output"
 F-:
 
-This feature is not yet available for the windows agent, but will follow
-soon.

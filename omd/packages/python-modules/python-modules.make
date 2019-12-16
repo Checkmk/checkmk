@@ -297,6 +297,7 @@ python-modules-dump-Pipfile:
 	@echo 'pytest = "*"  # used by various test/Makefile targets'
 	@echo 'pytest-cov = "*"  # used (indirectly) by test/Makefile'"'"'s test-unit-coverage-html target, see comment there'
 	@echo 'pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker fixture'
+	@echo 'webtest = "*"  # used for WSGI tests
 	@echo 'yapf = "*"  # used for editor integration and the format-python Makefile target'
 	@echo ''
 	@echo '[packages]'

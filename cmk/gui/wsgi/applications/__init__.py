@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -7,7 +6,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -24,21 +23,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from werkzeug.debug import DebuggedApplication
+from cmk.gui.wsgi.applications.checkmk import CheckmkApp
 
-import cmk.gui.modules as modules
-import cmk.gui.log as log
-from cmk.gui.wsgi import make_app
-
-# Early initialization upon first start of the application by the server
-log.init_logging()
-modules.init_modules()
-
-DEBUG = False
-
-GUI_APP = make_app()
-
-if DEBUG:
-    Application = DebuggedApplication(GUI_APP, evalex=True, pin_security=False)  # type: ignore
-else:
-    Application = GUI_APP
+__all__ = [
+    'CheckmkApp',
+]

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -7,7 +6,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -24,21 +23,29 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from werkzeug.debug import DebuggedApplication
+import functools
+import wsgiref.util
 
-import cmk.gui.modules as modules
-import cmk.gui.log as log
-from cmk.gui.wsgi import make_app
+from cmk.gui.wsgi.applications import CheckmkApp
 
-# Early initialization upon first start of the application by the server
-log.init_logging()
-modules.init_modules()
 
-DEBUG = False
+def apache_env(func):
+    @functools.wraps(func)
+    def _add_apache_env(environ, start_response):
+        if not environ.get('REQUEST_URI'):
+            environ['REQUEST_URI'] = wsgiref.util.request_uri(environ)
 
-GUI_APP = make_app()
+        if not environ.get('SCRIPT_NAME'):
+            environ['SCRIPT_NAME'] = environ.get('PATH_INFO', '/')
+            environ['PATH_INFO'] = '/'
 
-if DEBUG:
-    Application = DebuggedApplication(GUI_APP, evalex=True, pin_security=False)  # type: ignore
-else:
-    Application = GUI_APP
+        return func(environ, start_response)
+
+    return _add_apache_env
+
+
+def make_app():
+    return apache_env(CheckmkApp)
+
+
+__all__ = ['make_app']

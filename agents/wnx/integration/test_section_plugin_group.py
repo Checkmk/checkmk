@@ -74,7 +74,7 @@ def testconfig(request, testconfig_sections):
 @pytest.fixture()
 def expected_output():
     main_label = [
-        re.escape(r'<<<%s>>>' % (Globals.plugintype if Globals.plugintype == 'local' else ''))
+        re.escape(r'<<<%s>>>' % ('local:sep(0)' if Globals.plugintype == 'local' else ''))
     ]
 
     if Globals.suffixes == 'default':

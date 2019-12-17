@@ -27,6 +27,10 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
+<<<<<<< HEAD
+=======
+    TextAscii,
+>>>>>>> 75928ed9f737d329ecfe4a8662f863c66ffcc7fd
     DropdownChoice,
     ListChoice,
 )
@@ -34,6 +38,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
+<<<<<<< HEAD
     RulespecGroupCheckParametersApplications,
 )
 
@@ -119,3 +124,100 @@ rulespec_registry.register(
         parameter_valuespec=_parameter_valuespec_ucs_bladecenter_faultinst,
         title=lambda: _("UCS Bladecenter Fault instances"),
     ))
+=======
+    RulespecGroupCheckParametersEnvironment,
+)
+
+status_choices = [
+    (0, _("Ok")),
+    (1, _("Warning")),
+    (2, _("Critical")),
+    (3, _("Unknown")),
+]
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersUcsBladecenterFaultInstances(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "ucs_bladecenter_faultinst"
+
+    @property
+    def title(self):
+        return _("UCS Bladecenter Fault instances")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("critical",
+                 DropdownChoice(
+                     title=_("Translation of 'critical'-state to Check_mk"),
+                     choices=status_choices,
+                     default_value=2,
+                 )),
+                ("major",
+                 DropdownChoice(
+                     title=_("Translation of 'major'-state to Check_mk"),
+                     choices=status_choices,
+                     default_value=1,
+                 )),
+                ("warning",
+                 DropdownChoice(
+                     title=_("Translation of 'warning'-state to Check_mk"),
+                     choices=status_choices,
+                     default_value=1,
+                 )),
+                ("minor",
+                 DropdownChoice(
+                     title=_("Translation of 'minor'-state to Check_mk"),
+                     choices=status_choices,
+                     default_value=1,
+                 )),
+                ("info",
+                 DropdownChoice(
+                     title=_("Translation of 'info'-state to Check_mk"),
+                     choices=status_choices,
+                     default_value=0,
+                 )),
+                ("condition",
+                 DropdownChoice(
+                     title=_("Translation of 'condition'-state to Check_mk"),
+                     choices=status_choices,
+                     default_value=0,
+                 )),
+                ("cleared",
+                 DropdownChoice(
+                     title=_("Translation of 'cleared'-state to Check_mk"),
+                     choices=status_choices,
+                     default_value=0,
+                 )),
+                ("show_only",
+                 ListChoice(
+                     title=_("Show and check only the following states"),
+                     choices=[
+                         ("critical", _("Critical")),
+                         ("major", _("Major")),
+                         ("warning", _("Warning")),
+                         ("minor", _("Minor")),
+                         ("info", _("Info")),
+                         ("condition", _("Condition")),
+                         ("cleared", _("Cleared")),
+                     ],
+                     toggle_all=True,
+                     default_value=[
+                         "critical", "major", "warning", "minor", "info", "condition", "cleared"
+                     ],
+                 )),
+            ],
+            optional_keys=[],
+        )
+>>>>>>> 75928ed9f737d329ecfe4a8662f863c66ffcc7fd

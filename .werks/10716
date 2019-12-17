@@ -1,0 +1,13 @@
+Title: if64_tplink: Improve support for interface aliases of TP-LINK switches
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p8
+Date: 1576592750
+
+The network interface check for TP-LINK switches now supports standard ifAlias OIDs. 
+This addresses the issue that for some TP-LINK switches the configured alias names weren't shown.

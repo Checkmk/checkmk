@@ -6106,7 +6106,7 @@ check_metrics["check_mk-mem.used"] = {
         "name": "mem_lnx_shmem",
         "scale": MB
     },
-    "pagetable": {
+    "pagetables": {
         "name": "mem_lnx_page_tables",
         "scale": MB
     },

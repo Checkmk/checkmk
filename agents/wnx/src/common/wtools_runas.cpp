@@ -652,8 +652,8 @@ static void SetAffinityMask(HANDLE process,
                             const std::vector<uint16_t>& affinity) {
     if (affinity.empty()) return;
 
-    DWORD system_mask = 0;
-    DWORD process_mask = 0;
+    DWORD_PTR system_mask = 0;
+    DWORD_PTR process_mask = 0;
     auto ret = ::GetProcessAffinityMask(process, &process_mask, &system_mask);
     if (!ret) XLOG::l.bp(XLOG_FLINE + " hit1!");
 
@@ -738,10 +738,10 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
         if (0 != launch_gle)
             XLOG::t(
                 "Launch (launchGLE={}) params: user=[x{:X}] path=[{}] flags=[x{:X}], pEnv=[{}], dir=[{}], stdin=[x{:X}], stdout=[x{:X}], stderr=[x{:X}]",
-                launch_gle, (DWORD)settings.hUser, wtools::ConvertToUTF8(path),
+                launch_gle, settings.hUser, wtools::ConvertToUTF8(path),
                 start_flags, environment ? "{env}" : "{null}",
                 startingDir.empty() ? "{null}" : ConvertToUTF8(startingDir),
-                (DWORD)si.hStdInput, (DWORD)si.hStdOutput, (DWORD)si.hStdError);
+                si.hStdInput, si.hStdOutput, si.hStdError);
 
         ::RevertToSelf();
     } else {
@@ -779,8 +779,7 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
                         startingDir.empty()
                             ? "{null}"
                             : wtools::ConvertToUTF8(startingDir),
-                        (DWORD)si.hStdInput, (DWORD)si.hStdOutput,
-                        (DWORD)si.hStdError);
+                        si.hStdInput, si.hStdOutput, si.hStdError);
                 }
             } else
                 bLaunched = FALSE;  // force to run with CreateProcessAsUser so
@@ -813,14 +812,12 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
                 if (0 != launch_gle)
                     XLOG::t(
                         "Launch (launchGLE={}) params: user=[x{:X}] path=[{}] pEnv=[{}], dir=[{}], stdin=[x{:X}], stdout=[x{:X}], stderr=[x{:X}]",
-                        launch_gle, (DWORD)settings.hUser,
-                        wtools::ConvertToUTF8(path),
+                        launch_gle, settings.hUser, wtools::ConvertToUTF8(path),
                         environment ? "{env}" : "{null}",
                         startingDir.empty()
                             ? "{null}"
                             : wtools::ConvertToUTF8(startingDir),
-                        (DWORD)si.hStdInput, (DWORD)si.hStdOutput,
-                        (DWORD)si.hStdError);
+                        si.hStdInput, si.hStdOutput, si.hStdError);
                 ::RevertToSelf();
             }
         } else {
@@ -851,8 +848,7 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
                     environment ? "{env}" : "{null}",
                     startingDir.empty() ? "{null}"
                                         : wtools::ConvertToUTF8(startingDir),
-                    (DWORD)si.hStdInput, (DWORD)si.hStdOutput,
-                    (DWORD)si.hStdError);
+                    si.hStdInput, si.hStdOutput, si.hStdError);
             //#endif
         }
     }

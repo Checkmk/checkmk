@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -29,9 +29,12 @@ import errno
 import os
 import copy
 import json
-from typing import Set, Any, AnyStr, Callable, Dict, List, NewType, Optional, Text, Tuple, Union  # pylint: disable=unused-import
+from typing import Set, Any, AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union  # pylint: disable=unused-import
 import six
 from pathlib2 import Path
+
+from werkzeug.local import LocalProxy
+
 from livestatus import SiteId, SiteConfiguration, SiteConfigurations  # pylint: disable=unused-import
 
 import cmk
@@ -39,7 +42,7 @@ import cmk.utils.tags
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.type_defs import UserId
-
+from cmk.gui.globals import local
 import cmk.gui.utils as utils
 import cmk.gui.i18n
 from cmk.gui.i18n import _
@@ -162,7 +165,7 @@ def _load_config_file(path):
     # type: (str) -> None
     """Load the given GUI configuration file"""
     try:
-        exec (open(path).read(), globals(), globals())
+        exec(open(path).read(), globals(), globals())
     except IOError as e:
         if e.errno != errno.ENOENT:  # No such file or directory
             raise
@@ -709,12 +712,15 @@ def set_super_user():
 
 def _set_user(_user):
     # type: (LoggedInUser) -> None
-    global user
-    user = _user
+    """Set the currently logged in user (thread safe).
+
+    local.user will set the current RequestContext to _user and it will be accessible via
+    cmk.gui.globals.user directly. This is imported here."""
+    local.user = _user
 
 
 # This holds the currently logged in user object
-user = LoggedInNobody()
+user = LocalProxy(lambda: local.user)
 
 #.
 #   .--User Handling-------------------------------------------------------.

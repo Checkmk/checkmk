@@ -45,7 +45,7 @@ def test_add_manual_link(register_builtin_html):
         ))
 
 
-def test_add_manual_link_localized(register_builtin_html, monkeypatch):
+def test_add_manual_link_localized(module_wide_request_context, monkeypatch):
     monkeypatch.setattr(config.user, "language", lambda: "de")
     assert compare_html(
         html.render_help(u"[cms_introduction_docker|docker]"),
@@ -54,7 +54,7 @@ def test_add_manual_link_localized(register_builtin_html, monkeypatch):
         ))
 
 
-def test_add_manual_link_anchor(register_builtin_html, monkeypatch):
+def test_add_manual_link_anchor(module_wide_request_context, monkeypatch):
     monkeypatch.setattr(config.user, "language", lambda: "de")
     assert compare_html(
         html.render_help(u"[cms_graphing#rrds|RRDs]"),

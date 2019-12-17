@@ -3,7 +3,6 @@
 
 import pytest
 
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
 import cmk.gui.main
 import cmk.gui.config
@@ -18,7 +17,7 @@ def test_get_start_url_default_config(monkeypatch, register_builtin_html):
     assert cmk.gui.main._get_start_url() == "bla.py"
 
 
-def test_get_start_url_user_config(monkeypatch, register_builtin_html):
+def test_get_start_url_user_config(monkeypatch, module_wide_request_context):
     monkeypatch.setattr(cmk.gui.config, "start_url", "bla.py")
 
     monkeypatch.setattr(cmk.gui.config.user, "attributes", {
@@ -42,13 +41,13 @@ def test_get_start_url(register_builtin_html):
     "javAscRiPt:alert(1)",
     "localhost:80/bla",
 ])
-def test_get_start_url_invalid(register_builtin_html, invalid_url):
+def test_get_start_url_invalid(module_wide_request_context, invalid_url):
     html.request.set_var("start_url", invalid_url)
 
     assert cmk.gui.main._get_start_url() == "dashboard.py"
 
 
-def test_get_start_url_invalid_config(monkeypatch, register_builtin_html):
+def test_get_start_url_invalid_config(monkeypatch, module_wide_request_context):
     monkeypatch.setattr(cmk.gui.config.user, "attributes", {
         "start_url": "http://asdasd/",
     })

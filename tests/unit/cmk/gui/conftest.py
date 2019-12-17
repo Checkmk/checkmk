@@ -28,6 +28,17 @@ def register_builtin_html():
         yield
 
 
+@pytest.fixture(scope='module')
+def module_wide_request_context():
+    # This one is kind of an hack because some other test-fixtures touch the user object AFTER the
+    # request context has already ended. If we increase our scope this won't matter, but it is of
+    # course wrong. These other fixtures have to be fixed.
+    environ = create_environ()
+    with AppContext(DummyApplication(environ, None)), \
+         RequestContext(htmllib.html(Request(environ), Response(is_secure=False))):
+        yield
+
+
 @pytest.fixture()
 def load_config(register_builtin_html):
     old_root_log_level = cmk.utils.log.logger.getEffectiveLevel()
@@ -76,20 +87,19 @@ def _create_and_destroy_user(automation=False):
     password = 'Ischbinwischtisch'
     edit_users(_mk_user_obj(username, password, automation=automation))
     yield username, password
-    config.user = config.LoggedInNobody()  # HACK, look into it sometime
     logging.warn('Deleting user: %s', username)
     delete_users([username])
     if not contact_existed:
         os.unlink(contacts_mk)
 
 
-@pytest.fixture()
+@pytest.fixture(scope='function')
 def with_user(register_builtin_html, load_config):
     with _create_and_destroy_user(automation=False) as user:
         yield user
 
 
-@pytest.fixture()
+@pytest.fixture(scope='function')
 def with_automation_user(register_builtin_html, load_config):
     with _create_and_destroy_user(automation=True) as user:
         yield user

@@ -22,6 +22,7 @@ class WebTestAppForCMK(webtest.TestApp):
         self.password = None
 
     def set_credentials(self, username, password):
+        logging.warn("Setting username and password")
         self.username = username
         self.password = password
 
@@ -53,27 +54,13 @@ class WebTestAppForCMK(webtest.TestApp):
             raise NotImplementedError("Format %s not implemented" % output_format)
 
 
-@pytest.fixture()
+@pytest.fixture(scope='function')
 def wsgi_app(monkeypatch):
     monkeypatch.setenv("OMD_SITE", "NO_SITE")
-
     wsgi_callable = make_app()
+    logging.warn('Making app %d', id(wsgi_callable))
     cookies = CookieJar()
-    app = WebTestAppForCMK(wsgi_callable, cookiejar=cookies)
-
-    return app
-
-
-@pytest.fixture()
-def wsgi_automation(
-    wsgi_app,  # type: WebTestAppForCMK
-    with_automation_user,
-):
-    username, password = with_automation_user
-    logging.warn('Setting credentials for user: %s', username)
-    wsgi_app.set_credentials(username, password)
-    logging.warn('Returning app')
-    return wsgi_app
+    return WebTestAppForCMK(wsgi_callable, cookiejar=cookies)
 
 
 def test_normal_auth(
@@ -90,14 +77,16 @@ def test_normal_auth(
 
 
 def test_legacy_webapi(
-    wsgi_automation,  # type: WebTestAppForCMK
+    wsgi_app,  # type: WebTestAppForCMK
+    with_automation_user,
 ):
-    app = wsgi_automation
+    username, password = with_automation_user
+    wsgi_app.set_credentials(username, password)
     hostname = 'foobar'
 
     try:
         ipaddress = '127.0.0.1'
-        app.api_request(
+        wsgi_app.api_request(
             'add_host',
             {
                 "hostname": hostname,
@@ -110,14 +99,14 @@ def test_legacy_webapi(
                 "nodes": [],
             })
 
-        resp = app.api_request(
+        resp = wsgi_app.api_request(
             'foo_host',
             {'hostname': hostname},
         )
         assert "Unknown API action" in resp['result']
         assert resp['result_code'] == 1
 
-        resp = app.api_request(
+        resp = wsgi_app.api_request(
             'get_host',
             {
                 'hostname': hostname,

@@ -29,7 +29,9 @@ import os
 import time
 import traceback
 from hashlib import md5
+
 import six
+from werkzeug.local import LocalProxy
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -39,14 +41,13 @@ import cmk.gui.i18n
 import cmk.gui.mobile
 from cmk.gui.pages import page_registry, Page
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, local
 from cmk.gui.htmllib import HTML
 
 import cmk.utils.paths
 
 from cmk.gui.exceptions import HTTPRedirect, MKInternalError, MKAuthException, MKUserError, FinalizeRequest
 
-auth_type = None
 auth_logger = logger.getChild("auth")
 
 
@@ -366,9 +367,11 @@ def check_auth_by_cookie():
                                   (cookie_name, traceback.format_exc()))
 
 
-def set_auth_type(ty):
-    global auth_type
-    auth_type = ty
+def set_auth_type(_auth_type):
+    local.auth_type = _auth_type
+
+
+auth_type = LocalProxy(lambda: local.auth_type)
 
 
 def do_login():

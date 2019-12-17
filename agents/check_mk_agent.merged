@@ -268,7 +268,7 @@ esac
 MK_PLUGINSDIR="${MK_LIBDIR:?}"/plugins
 
 # All executables in MK_LOCALDIR will be executed and their
-# output inserted into the section <<<local>>>. Please
+# output inserted into the section <<<local:sep(0)>>>. Please
 # refer to online documentation for details about local checks.
 MK_LOCALDIR="${MK_LIBDIR}"/local
 
@@ -1258,7 +1258,7 @@ section_kernel() {
 
 section_local() {
     # Local checks
-    mkecho '<<<local>>>'
+    mkecho '<<<local:sep(0)>>>'
     # Contain the 'cd' within a subshell so that we return
     # where we came from once the subshell closes
     (
@@ -2289,7 +2289,7 @@ section_runas() {
                     done
                 ;;
                 (local|plugin)
-                    [ "$type" = "local" ] && mkecho "<<<local>>>"
+                    [ "$type" = "local" ] && mkecho "<<<local:sep(0)>>>"
                     find "$include" -executable -type f |
                         while read -r filename; do
                             runas_user "${user}" "${filename}"

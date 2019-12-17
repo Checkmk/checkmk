@@ -1842,7 +1842,7 @@ sql_asm_diskgroup () {
 
 unset_custom_sqls_vars () {
     unset SQLS_SECTION_NAME SQLS_SECTION_SEP SQLS_SIDS SQLS_DIR SQLS_SQL SQLS_PARAMETERS SQLS_MAX_CACHE_AGE SQLS_ITEM_NAME MK_CUSTOM_SQLS_SECTION MK_CUSTOM_SQLS_SECTION_HEADER MK_CUSTOM_SQLS_ITEM MK_CUSTOM_SQLS_SECTION_QUERY
-    unset SQLS_DBUSER SQLS_DBPASSWORD SQLS_DBSYSCONNECT SQLS_TNSALIAS
+    unset SQLS_DBUSER SQLS_DBPASSWORD SQLS_DBSYSCONNECT SQLS_TNSALIAS SQLS_ITEM_SID
 }
 
 
@@ -1915,10 +1915,25 @@ do_custom_sqls () {
         fi
 
         if [ "$section_name" = "oracle_sql" ]; then
-            if [ -n "$SQLS_ITEM_NAME" ]; then
-                local item="${MK_SID}|${SQLS_ITEM_NAME}"
+            if [[ "$MK_SID" =~ ^REMOTE_INSTANCE_.* ]]; then
+                if [ -z "$SQLS_ITEM_SID" ]; then
+                    # we can not extract MK_SID from REMOTE_INSTANCE_ variable name
+                    # get MK_SID from mk_oracle.cfg when SQLS_ITEM_SID is not defined
+                    # => needed when tnsnames.ora is used without SID in CFGLINE...
+                    local SQLS_ITEM_SID
+                    SQLS_ITEM_SID=$(eval "echo \${$MK_SID}" | cut -d":" -f7)
+                fi
             else
-                local item="${MK_SID}|${sql}"
+                # local connection mode
+                local SQLS_ITEM_SID="$MK_SID"
+            fi
+            logging "[${MK_SID}] [${section}] [custom_sql] "\
+                    "SQLS_ITEM_SID: $SQLS_ITEM_SID"
+
+            if [ -n "$SQLS_ITEM_NAME" ]; then
+                local item="${SQLS_ITEM_SID}|${SQLS_ITEM_NAME}"
+            else
+                local item="${SQLS_ITEM_SID}|${sql}"
             fi
         else
             local item=
@@ -2722,4 +2737,5 @@ for remote_instance in $REMOTE_INSTANCES; do
     export MK_PIGGYBACK_HOST=$piggyback_host
 
     do_checks
+    do_custom_sqls
 done

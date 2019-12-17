@@ -237,8 +237,25 @@ class GraphApiClient(BaseApiClient):
     def resource(self):
         return 'https://graph.microsoft.com'
 
-    def users(self):
-        return self._get('users', key='value')
+    def users(self, data=None, uri=None):
+        if data is None:
+            data = []
+
+        # the uri is the link to the next page for pagination of results
+        if uri:
+            response = self._get(uri)
+        else:
+            response = self._get('users?$top=%s' % 500)
+        data += response.get('value', [])
+
+        # check if there is a next page, otherwise return result
+        next_page = response.get('@odata.nextLink')
+        if next_page is None:
+            return data
+
+        # if there is another page, remove the base url to get uri
+        uri = next_page.replace(self._base_url, '')
+        return self.users(data=data, uri=uri)
 
     def organization(self):
         return self._get('organization', key='value')

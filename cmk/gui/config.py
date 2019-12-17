@@ -29,6 +29,7 @@ import errno
 import os
 import copy
 import json
+import inspect
 from typing import Callable, Union, Tuple, Dict  # pylint: disable=unused-import
 import six
 from pathlib2 import Path
@@ -314,7 +315,10 @@ def hide_language(lang):
 
 
 def all_nonfunction_vars(var_dict):
-    return set([name for name, value in var_dict.items() if name[0] != '_' and not callable(value)])
+    return set([
+        name for name, value in var_dict.items()
+        if name[0] != '_' and not callable(value) and not inspect.ismodule(value)
+    ])
 
 
 def get_language(default=None):

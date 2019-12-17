@@ -101,7 +101,7 @@ define pack_pkg_archive
 	    else \
 		echo "+++ Not available from $(NEXUS_BUILD_CACHE_URL). Building..." ; \
 	    fi && \
-	    $(MAKE) --warn-undefined-variables $4 && \
+	    $(MAKE) $4 && \
 	    tar -cz -C $(INTERMEDIATE_INSTALL_BASE) -f $1 $2 ; \
 	fi
 endef

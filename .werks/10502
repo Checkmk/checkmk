@@ -1,0 +1,11 @@
+Title: oracle_instance: Skip uptime and DB creation time entries if they cannot be converted
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1573824888
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+

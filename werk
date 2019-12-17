@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
 
 import fcntl
 import os
@@ -100,7 +101,7 @@ g_last_werk = None  # type: Optional[int]
 
 def load_config():
     global g_last_werk
-    exec (open("config").read(), globals(), globals())
+    exec(open("config").read(), globals(), globals())
     try:
         g_last_werk = int(open(".last").read())
     except Exception:
@@ -553,7 +554,23 @@ def all_components():
     return components
 
 
+werk_notes = """
+    .---Werk----------------------------------------------------------------------.
+    |                                                                             |
+    |             Das Werk ist für den User/Admin gedacht!!                       |
+    |                                                                             |
+    |  Anhand des Titels soll der User sofort erkennen, ob er/sie betroffen ist.  |
+    |  In den Details soll beschrieben werden, was er/sie ggfs. tun muss.         |
+    |  Es dürfen auch gerne technische Details erläutert werden.                  |
+    |                                                                             |
+    '-----------------------------------------------------------------------------'
+
+"""
+
+
 def main_new(args):
+    sys.stdout.write(tty_green + werk_notes + tty_normal)
+
     werk = {}
     werk["id"] = next_werk_id()
     werk["date"] = int(time.time())

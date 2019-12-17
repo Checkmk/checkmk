@@ -27,12 +27,15 @@
 import os
 import signal
 import collections
+from typing import (  # pylint: disable=unused-import
+    Union, Text, Optional,
+)
 from pathlib2 import Path
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKTimeout
 import cmk.utils.cmk_subprocess as subprocess
-from cmk.utils.encoding import ensure_unicode
+from cmk.utils.encoding import ensure_bytestr
 
 import cmk_base.config as config
 import cmk_base.core_config as core_config
@@ -63,6 +66,7 @@ class ProgramDataSource(CheckMKAgentDataSource):
         return self._get_agent_info_program(command_line, command_stdin)
 
     def _get_agent_info_program(self, commandline, command_stdin):
+        # type: (Union[bytes, Text], Optional[bytes]) -> bytes
         exepath = commandline.split()[0]  # for error message, hide options!
 
         self._logger.debug("Calling external program %r" % (commandline))
@@ -77,7 +81,6 @@ class ProgramDataSource(CheckMKAgentDataSource):
                     stderr=subprocess.PIPE,
                     preexec_fn=os.setsid,
                     close_fds=True,
-                    encoding="utf-8",
                 )
             else:
                 # We can not create a separate process group when running Nagios
@@ -90,11 +93,10 @@ class ProgramDataSource(CheckMKAgentDataSource):
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     close_fds=True,
-                    encoding="utf-8",
                 )
 
             if command_stdin:
-                stdout, stderr = p.communicate(input=ensure_unicode(command_stdin))
+                stdout, stderr = p.communicate(input=ensure_bytestr(command_stdin))
             else:
                 stdout, stderr = p.communicate()
             exitstatus = p.returncode
@@ -110,6 +112,8 @@ class ProgramDataSource(CheckMKAgentDataSource):
             # Normally these pipes getting closed after p.communicate finishes
             # Closing them a second time in a OK scenario won't hurt neither..
             if p:
+                if p.stdout is None or p.stderr is None:
+                    raise Exception("stdout needs to be set")
                 p.stdout.close()
                 p.stderr.close()
 

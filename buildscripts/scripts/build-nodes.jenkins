@@ -16,7 +16,7 @@ node {
                 dir('buildscripts/infrastructure/build-nodes/gnu-toolchain/') {
                     stash name: 'bw-build-gnu-toolchain', includes: 'bw-build-gnu-toolchain.sh'
                     withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        sh './bw-build-gnu-toolchain.sh -d'
+                        sh "./bw-build-gnu-toolchain.sh -r $ARTIFACT_STORAGE -d"
                     }
                 }
                stash name: 'dockerfiles', includes: 'buildscripts/infrastructure/build-nodes/*/Dockerfile'

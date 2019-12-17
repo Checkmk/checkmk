@@ -46,8 +46,15 @@ RUN apt-get update \
     uuid-dev \
     && rm -rf /var/lib/apt/lists/*
 
+ARG ARTIFACT_STORAGE
 COPY bw-build-gnu-toolchain.sh /usr/sbin
-RUN bw-build-gnu-toolchain.sh -b
-RUN mv /usr/bin/gcc /usr/bin/gcc-old \
-    && ln -s /usr/local/bin/gcc-8 /usr/local/bin/gcc \
-    && ln -s /usr/local/bin/gcc-8 /usr/local/bin/cc
+RUN bw-build-gnu-toolchain.sh -r $ARTIFACT_STORAGE -b
+RUN cd /opt \
+    && wget https://github.com/Kitware/CMake/releases/download/v3.15.4/cmake-3.15.4-Linux-x86_64.tar.gz \
+    && tar xf cmake-3.15.4-Linux-x86_64.tar.gz \
+    && ln -s /opt/cmake-3.15.4-Linux-x86_64/bin/* /usr/bin/
+
+RUN apt-get update \
+    && apt-get install -y \
+    chrpath \
+    && rm -rf /var/lib/apt/lists/*

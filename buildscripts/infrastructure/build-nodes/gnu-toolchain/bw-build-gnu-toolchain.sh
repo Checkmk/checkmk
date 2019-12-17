@@ -12,7 +12,6 @@ PREFIX="/opt/gcc-${GCC_VERSION}"
 
 BUILD_DIR=/tmp/build-gcc-toolchain
 
-NEXUS="http://nexus:8081/repository/archives/"
 
 function download-sources() {
     # To avoid repeated downloads of the sources + the prerequisites, we
@@ -94,7 +93,7 @@ function build-all() {
     set-symlinks
 }
 
-while getopts ":hdbucgs" opt; do
+while getopts ":hdbucgsr:" opt; do
     case ${opt} in
     h)
         echo "Usage: cmd [-d] [-b] [-h]"
@@ -118,6 +117,10 @@ while getopts ":hdbucgs" opt; do
         ;;
     s)
         set-symlinks
+        ;;
+    r)
+        # Set URL to the repository where the binaries are stored
+        NEXUS=${OPTARG}repository/archives/
         ;;
     \?)
         echo "Usage: cmd [-d] [-b] [-h]"

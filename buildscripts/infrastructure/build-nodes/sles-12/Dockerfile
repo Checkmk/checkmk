@@ -59,7 +59,8 @@ RUN zypper addrepo -G http://10.9.1.101:8081/repository/sles12 sles12 \
     which \
     && zypper clean -a
 
+ARG ARTIFACT_STORAGE
 COPY bw-build-gnu-toolchain.sh /usr/sbin
-RUN bw-build-gnu-toolchain.sh -b
+RUN bw-build-gnu-toolchain.sh -r $ARTIFACT_STORAGE -b
 
 RUN rm /usr/bin/gcc /usr/bin/g++

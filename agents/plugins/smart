@@ -92,7 +92,7 @@ if which smartctl > /dev/null 2>&1 ; then
             serial=AMCC_${serial}00000000000
             echo "$serial=$twaminor"
         done)"
-    else:
+    else
         echo "tw_cli not found" >&2
     fi
 

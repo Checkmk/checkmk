@@ -26,8 +26,6 @@ import xml.etree.ElementTree as ET
 from pathlib2 import Path
 import six
 
-from omdlib.main import SiteContext, site_name
-
 import cmk_base.autochecks
 try:
     import cmk_base.cee.rrd
@@ -234,13 +232,21 @@ def parse_arguments():
     return parser.parse_args()
 
 
+def site_is_running():
+    return subprocess.call(["omd", "status"],
+                           stdout=open(os.devnull),
+                           stderr=subprocess.STDOUT,
+                           close_fds=True,
+                           shell=False) != 1
+
+
 def main():
 
     args = parse_arguments()
 
     check_df_sources_include_flag()
-    site = SiteContext(site_name())
-    if not (site.is_stopped() or args.dry_run):
+
+    if not args.dry_run and site_is_running():
         raise RuntimeError('The site needs to be stopped to run this script')
 
     if not _ask_for_confirmation_backup(args):

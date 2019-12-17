@@ -1,8 +1,11 @@
-FROM 10.9.1.101:5010/sles-15-base
+ARG DOCKER_REGISTRY
+FROM ${DOCKER_REGISTRY}/sles-15-base
 
 SHELL ["/bin/bash", "-c"]
 
-RUN zypper addrepo -G http://10.9.1.101:8081/repository/sles15 sles15 \
+ARG ARTIFACT_STORAGE
+
+RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15 sles15 \
     && zypper ref -s \
     && zypper -n in -y --force-resolution \
     apache2-devel \

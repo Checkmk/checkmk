@@ -666,7 +666,12 @@ def _metrics_used_in_definition(metric_definition):
     without_color = metric_definition.split("#")[0]
     parts = without_color.split(",")
     for part in parts:
-        metric_name = part.split(".")[0]  # drop .min, .max, .average
+        # drop .min, .max, .average
+        if any(part.endswith(cf) for cf in ['.max', '.min', '.average']):
+            metric_name = part.rsplit(".", 1)[0]
+        else:
+            metric_name = part
+
         if metric_name in rpn_operators:
             continue
 

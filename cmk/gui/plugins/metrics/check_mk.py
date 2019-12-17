@@ -5315,23 +5315,23 @@ metric_info['aws_ec2_spot_fleet_total_target_capacity'] = {
 }
 
 metric_info['aws_ec2_running_ondemand_instances_total'] = {
-    'title': _('Total Running On-Demand Instances'),
+    'title': _('Total running On-Demand Instances'),
     'unit': 'count',
-    'color': '25/a',
+    'color': '#000000',
 }
+
+for i, inst_type in enumerate(AWSEC2InstTypes):
+    metric_info['aws_ec2_running_ondemand_instances_%s' % inst_type] = {
+        'title': _('Total running On-Demand %s Instances') % inst_type,
+        'unit': 'count',
+        'color': indexed_color(i, len(AWSEC2InstTypes)),
+    }
 
 for inst_fam in AWSEC2InstFamilies:
     metric_info['aws_ec2_running_ondemand_instances_%s_vcpu' % inst_fam[0]] = {
         'title': _('Total %s vCPUs') % AWSEC2InstFamilies[inst_fam],
         'unit': 'count',
         'color': '25/a',
-    }
-
-for inst_type in AWSEC2InstTypes:
-    metric_info['aws_ec2_running_ondemand_instances_%s' % inst_type] = {
-        'title': _('Total Running On-Demand %s Instances') % inst_type,
-        'unit': 'count',
-        'color': '11/a',
     }
 
 metric_info['aws_consumed_lcus'] = {
@@ -9986,6 +9986,16 @@ perfometer_info.append({
 #          ('tablespace_used', 'area')
 
 graph_info["fan_speed"] = {"title": _("Fan speed"), "metrics": [("fan_speed", "area"),]}
+
+graph_info["aws_ec2_running_ondemand_instances"] = {
+    "title": _("Total running On-Demand Instances"),
+    "metrics": [('aws_ec2_running_ondemand_instances_total', 'line')] +
+               [('aws_ec2_running_ondemand_instances_%s' % inst_type, "stack")
+                for inst_type in AWSEC2InstTypes],
+    "optional_metrics": [
+        'aws_ec2_running_ondemand_instances_%s' % inst_type for inst_type in AWSEC2InstTypes
+    ],
+}
 
 graph_info["context_switches"] = {
     "title": _("Context switches"),

@@ -12,6 +12,9 @@ PREFIX="/opt/gcc-${GCC_VERSION}"
 
 BUILD_DIR=/tmp/build-gcc-toolchain
 
+function log() {
+    echo "+++ $1"
+}
 
 function download-sources() {
     # To avoid repeated downloads of the sources + the prerequisites, we

@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/python
+# -*- encoding: utf-8 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -23,25 +24,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import functools
-import wsgiref.util
 
-from cmk.gui.wsgi.routing import router
-
-
-def apache_env(func):
-    @functools.wraps(func)
-    def _add_apache_env(environ, start_response):
-        if not environ.get('REQUEST_URI'):
-            environ['REQUEST_URI'] = wsgiref.util.request_uri(environ)
-
-        return func(environ, start_response)
-
-    return _add_apache_env
+def dump_environ_app(environ, start_response):
+    dumped_env = "\n".join(["{0}: {1}".format(k, environ[k]) for k in environ.keys()])
+    return serve_string(dumped_env)(environ, start_response)
 
 
-def make_app():
-    return apache_env(router)
+def serve_string(_str):
+    def _server(environ, start_response):
+        status = '200 OK'
+        response_headers = [('Content-Type', 'text/plain'), ('Content-Length', str(len(_str)))]
+        start_response(status, response_headers)
 
+        return [_str]
 
-__all__ = ['make_app']
+    return _server

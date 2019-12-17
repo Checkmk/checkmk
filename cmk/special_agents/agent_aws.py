@@ -416,8 +416,9 @@ class AWSSection(six.with_metaclass(abc.ABCMeta, DataCache)):
 
 
 class AWSSectionLimits(AWSSection):
-    def __init__(self, client, region, config, distributor=None):
+    def __init__(self, client, region, config, distributor=None, quota_client=None):
         super(AWSSectionLimits, self).__init__(client, region, config, distributor=distributor)
+        self._quota_client = quota_client
         self._limits = {}
 
     def _add_limit(self, piggyback_hostname, limit):
@@ -577,6 +578,9 @@ class EC2Limits(AWSSectionLimits):
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, colleague_contents):
+        quotas = self._get_response_content(
+            self._quota_client.list_service_quotas(ServiceCode='ec2'), 'Quotas')
+
         response = self._client.describe_instances()
         reservations = self._get_response_content(response, 'Reservations')
 
@@ -598,14 +602,20 @@ class EC2Limits(AWSSectionLimits):
         response = self._client.describe_spot_fleet_requests()
         spot_fleet_requests = self._get_response_content(response, 'SpotFleetRequestConfigs')
 
-        return reservations, reserved_instances, addresses, security_groups, interfaces, spot_inst_requests, spot_fleet_requests
+        return reservations, reserved_instances, addresses, security_groups, interfaces, spot_inst_requests, spot_fleet_requests, quotas
 
     def _compute_content(self, raw_content, colleague_contents):
-        reservations, reserved_instances, addresses, security_groups, interfaces, spot_inst_requests, spot_fleet_requests = raw_content.content
+        reservations, reserved_instances, addresses, security_groups, interfaces, spot_inst_requests, spot_fleet_requests, quotas = raw_content.content
         instances = {inst['InstanceId']: inst for res in reservations for inst in res['Instances']}
         res_instances = {inst['ReservedInstancesId']: inst for inst in reserved_instances}
+        EC2InstFamiliesquotas = {
+            q['QuotaName']: q['Value']
+            for q in quotas
+            if q['QuotaName'] in AWSEC2InstFamilies.values()
+        }
 
-        self._add_instance_limits(instances, res_instances, spot_inst_requests)
+        self._add_instance_limits(instances, res_instances, spot_inst_requests,
+                                  EC2InstFamiliesquotas)
         self._add_addresses_limits(addresses)
         self._add_security_group_limits(instances, security_groups)
         self._add_interface_limits(instances, interfaces)
@@ -613,7 +623,7 @@ class EC2Limits(AWSSectionLimits):
         self._add_spot_fleet_limits(spot_fleet_requests)
         return AWSComputedContent(reservations, raw_content.cache_timestamp)
 
-    def _add_instance_limits(self, instances, res_instances, spot_inst_requests):
+    def _add_instance_limits(self, instances, res_instances, spot_inst_requests, instance_quotas):
         inst_limits = self._get_inst_limits(instances, spot_inst_requests)
         res_limits = self._get_res_inst_limits(res_instances)
 
@@ -652,11 +662,14 @@ class EC2Limits(AWSSectionLimits):
             ondemand_limit, _reserved_limit, _spot_limit = AWSEC2LimitsSpecial.get(
                 inst_type, AWSEC2LimitsDefault)
             if inst_type.endswith('_vcpu'):
+                # Maybe should raise instead of unknown family
+                inst_fam_name = AWSEC2InstFamilies.get(inst_type[0], "Unknown Instance Family")
+                ondemand_limit = instance_quotas.get(inst_fam_name, ondemand_limit)
                 self._add_limit(
                     "",
                     AWSLimit(
                         "running_ondemand_instances_%s" % inst_type.lower(),
-                        AWSEC2InstFamilies.get(inst_type[0], AWSEC2InstFamilies['_']) + " vCPUs",
+                        inst_fam_name + " vCPUs",
                         ondemand_limit,
                         count,
                     ))
@@ -694,7 +707,8 @@ class EC2Limits(AWSSectionLimits):
                 inst_az, {})[inst_type] = inst_limits.get(inst_az, {}).get(inst_type, 0) + 1
 
             vcount = inst['CpuOptions']['CoreCount'] * inst['CpuOptions']['ThreadsPerCore']
-            vcpu_family = '%s_vcpu' % (inst_type[0] if inst_type[0] in AWSEC2InstFamilies.keys() else "_")
+            vcpu_family = '%s_vcpu' % (inst_type[0]
+                                       if inst_type[0] in AWSEC2InstFamilies.keys() else "_")
             inst_limits[inst_az][vcpu_family] = inst_limits[inst_az].get(vcpu_family, 0) + vcount
         return inst_limits
 
@@ -2880,6 +2894,7 @@ class AWSSectionsGeneric(AWSSections):
         ec2_client = self._init_client('ec2')
         elb_client = self._init_client('elb')
         elbv2_client = self._init_client('elbv2')
+        service_quotas_client = self._init_client('service-quotas')
 
         glacier_client = self._init_client('glacier')
         rds_client = self._init_client('rds')
@@ -2906,7 +2921,8 @@ class AWSSectionsGeneric(AWSSections):
         cloudwatch_alarms_limits_distributor = ResultDistributor()
 
         #---sections with distributors--------------------------------------
-        ec2_limits = EC2Limits(ec2_client, region, config, ec2_limits_distributor)
+        ec2_limits = EC2Limits(ec2_client, region, config, ec2_limits_distributor,
+                               service_quotas_client)
         ec2_summary = EC2Summary(ec2_client, region, config, ec2_summary_distributor)
 
         ebs_limits = EBSLimits(ec2_client, region, config, ebs_limits_distributor)

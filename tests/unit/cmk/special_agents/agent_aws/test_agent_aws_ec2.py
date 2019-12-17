@@ -3,6 +3,7 @@
 import pytest
 from agent_aws_fake_clients import (
     FakeCloudwatchClient,
+    FakeServiceQuotasClient,
     EC2DescribeInstancesIB,
     EC2DescribeReservedInstancesIB,
     EC2DescribeAddressesIB,
@@ -99,11 +100,13 @@ def get_ec2_sections():
 
         fake_ec2_client = FakeEC2Client()
         fake_cloudwatch_client = FakeCloudwatchClient()
+        fake_service_quotas_client = FakeServiceQuotasClient()
 
         ec2_limits_distributor = ResultDistributor()
         ec2_summary_distributor = ResultDistributor()
 
-        ec2_limits = EC2Limits(fake_ec2_client, region, config, ec2_limits_distributor)
+        ec2_limits = EC2Limits(fake_ec2_client, region, config, ec2_limits_distributor,
+                               fake_service_quotas_client)
         ec2_summary = EC2Summary(fake_ec2_client, region, config, ec2_summary_distributor)
         ec2_labels = EC2Labels(fake_ec2_client, region, config)
         ec2_security_groups = EC2SecurityGroups(fake_ec2_client, region, config)

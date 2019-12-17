@@ -164,9 +164,9 @@ PYTHON_MODULES_LIST += passlib-1.7.1.tar.gz
 PYTHON_MODULES_LIST += docutils-0.14.tar.gz
 PYTHON_MODULES_LIST += futures-3.2.0.tar.gz
 PYTHON_MODULES_LIST += jmespath-0.9.3.tar.gz
-PYTHON_MODULES_LIST += botocore-1.12.43.tar.gz
-PYTHON_MODULES_LIST += s3transfer-0.1.13.tar.gz
-PYTHON_MODULES_LIST += boto3-1.9.42.tar.gz
+PYTHON_MODULES_LIST += botocore-1.13.41.tar.gz
+PYTHON_MODULES_LIST += s3transfer-0.2.1.tar.gz
+PYTHON_MODULES_LIST += boto3-1.10.41.tar.gz
 # Added for kubernetes monitoring
 PYTHON_MODULES_LIST += cachetools-3.0.0.tar.gz
 PYTHON_MODULES_LIST += rsa-4.0.tar.gz

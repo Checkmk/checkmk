@@ -104,7 +104,9 @@ debug:
 	echo $(PACKAGE_DIR)
 
 # Include rules to make packages
-include     packages/apache-omd/apache-omd.make \
+include \
+    packages/openssl/openssl.make \
+    packages/apache-omd/apache-omd.make \
     packages/stunnel/stunnel.make \
     packages/check_mk/check_mk.make \
     packages/check_multi/check_multi.make \

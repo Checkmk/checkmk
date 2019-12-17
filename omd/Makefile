@@ -15,6 +15,7 @@ include $(BUILD_BASE_DIR)/build-helper-files.make
 # PACKAGES variable there to customzie the list of packages.
 
 PACKAGES := \
+    openssl \
     libgsf \
     perl-modules \
     Python \

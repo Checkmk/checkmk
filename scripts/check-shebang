@@ -1,0 +1,32 @@
+#!/bin/bash
+#
+# This file is for execution by the pre-commit framework.
+#
+set -e -o pipefail
+
+declare -a fails
+
+for param in "$@"; do
+    if [[ "$param" == tests* ]]; then
+        continue
+    fi
+    # We only check for non-test files as the tests already reside in
+    # Python2/3 segregated directories and as such their used version
+    # doesn't need not be identified.
+    if ! head -1 $param|grep -c -E "/usr/bin/env python3?|/usr/bin/python3?" > /dev/null; then
+        fails+=($param)
+    fi
+done
+
+log() {
+    echo "$@" >&2
+}
+
+if [ ${#fails[*]} -ne 0 ]; then
+    log "These files are missing shebang lines:"
+    log ${fails[@]}
+    log
+    log "The lines are needed for the version detection to work."
+    log "Please add them."
+    exit 1
+fi

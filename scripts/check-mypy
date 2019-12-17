@@ -1,0 +1,69 @@
+#!/bin/bash
+#
+# This file is for execution by the pre-commit framework.
+#
+set -e -o pipefail
+
+# Filter out all tests/* and tests-py3/* files.
+declare -a FILES
+
+for param in "$@"; do
+    if [[ "$param" == tests* ]]; then
+        continue
+    fi
+    FILES+=($param)
+done
+
+NUM_PARAM=${#FILES[@]}
+
+if [ "$NUM_PARAM" == "0" ]; then
+    echo No files to check. >&2
+    exit 0
+fi
+
+python-files() {
+    local shebang
+    local prefix
+    if [ $1 -eq 2 ]; then
+        shebang=python
+        prefix=tests/
+    else
+        shebang=python3
+        prefix=tests-py3/
+    fi
+    for file in $2; do
+        if [[ $file == $prefix* ]]; then
+            echo $file
+            continue
+        fi
+        if head -1 $file | grep -q "^#!.*$shebang$" > /dev/null; then
+            echo $file
+            continue
+        fi
+    done
+}
+
+printf -v files " %s" ${FILES[@]}
+PYTHON2_FILES=$(python-files 2 "$files")
+PYTHON3_FILES=$(python-files 3 "$files")
+
+REPO_PATH="$(git rev-parse --show-toplevel)"
+PIPENV="$REPO_PATH/scripts/run-pipenv"
+
+export MYPYPATH="$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/omd:$REPO_PATH/tests-py3:$REPO_PATH/tests-py3/typeshed"
+
+if [ ! -z "$PYTHON2_FILES" ]; then
+    $PIPENV 3 run mypy \
+        --config-file "$REPO_PATH/mypy-raw.ini" \
+        --python-version 2.7 \
+        --scripts-are-modules \
+        $PYTHON2_FILES
+fi
+
+if [ ! -z "$PYTHON3_FILES" ]; then
+    $PIPENV 3 run mypy \
+        --config-file "$REPO_PATH/mypy-raw.ini" \
+        --python-version 3.7 \
+        --scripts-are-modules \
+        $PYTHON3_FILES
+fi

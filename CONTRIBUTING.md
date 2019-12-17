@@ -83,6 +83,41 @@ To set up the development environment do the following:
   If you like to do this, please have a look at the [How to execute tests?](#how-to-execute-tests)
   chapter.
 
+- Install pre-commit checks
+
+  In order to keep your commits to our standard we provide a [pre-commit](https://pre-commit.com/)
+  configuration and some custom made checking scripts. You can install it like this:
+
+  > Warning: Python3 is required for pre-commit! Installing it with Python 2 will break
+  > your environment and leave you unable to use pip due to a backports module clash!
+
+  ```
+  pip3 install pre-commit
+  ```
+
+  After successful installation, hook it up to your git-repository by issuing the following command inside your git repository:
+
+  ```
+  pre-commit install
+  ```
+
+  Afterwards your commits will automatically be checked for conformity by `pre-commit`. If you know a
+  check (like mypy for example) got something wrong and you don't want to fix it right away you can skip
+  execution of the checkers with `git commit -n`. Please don't push unchecked changes as this will
+  introduce delays and additional work.
+
+  Additional helpers can be found in `scripts/`. One noteable one is `scripts/check-current-commit`
+  which checks your commit *after* it has been made. You can then fix errors and amend or squash
+  your commit. You can also use this script in a rebase like such:
+
+  ```
+  git rebase --exec scripts/check-current-commit
+  ```
+
+  This will rebase your current changes and check each commit for errors. After fixing them you can
+  then continue rebasing.
+
+
 Once done, you are ready for the next chapter.
 
 ## How to change Checkmk?
@@ -279,9 +314,9 @@ names are really available and needed in the current namespace.
             sys.exit(1)
         return open(file).readline()
     ```
-    
+
     vs.
-    
+
     ```
     def get_status(file):
         try:
@@ -424,9 +459,9 @@ names are really available and needed in the current namespace.
         mercedes, \
         audi
     ```
-    
+
     vs.
-    
+
     ```
     from germany import (
         bmw,
@@ -547,7 +582,7 @@ about the error diagnosis below, if it doesn't work.
   ```
 
 - An example value of the `safe-local-variables` variable is e.g.:
-    
+
   ```
   ((eval setq flycheck-python-mypy-executable
          (concat

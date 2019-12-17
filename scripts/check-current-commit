@@ -1,0 +1,48 @@
+#!/bin/bash
+#
+# This extracts all the files of the current commit and passes it to `pre-commit` so the
+# hooks can test the commit for validity.
+#
+# You can use this script to lint your tree in a rebase like so:
+#
+#      git rebase --exec scripts/check-current-commit
+#
+# Or if you already have a commit which is ready, just execute
+#
+#      scripts/check-current-commit
+#
+REPO_PATH="$(git rev-parse --show-toplevel)"
+PIPENV=$REPO_PATH/scripts/run-pipenv
+
+run_pipenv() {
+    local pyver=$1
+    shift
+
+    local PYTHON_VERSION
+    if [ $pyver -eq 2 ]; then
+        PYTHON_VERSION=2.7
+    else
+        if [ $pyver -eq 3 ]; then
+            PYTHON_VERSION=3.7
+        else
+            echo Unknown >&2
+            exit 1
+        fi
+    fi
+
+    PIPENV_VENV_IN_PROJECT=true \
+        PIPENV_NOSPIN=true \
+        PIPENV_HIDE_EMOJIS=true \
+        PIPENV_NO_INHERIT=true \
+        PIPENV_PIPFILE="$REPO_PATH/virtual-envs/$PYTHON_VERSION/Pipfile" \
+        PIPENV_IGNORE_VIRTUALENVS=1 \
+        $PIPENV $pyver $*
+}
+
+# This has the effect that the virtual-envs are kept up-to-date before pre-commit starts.
+# If we don't do this there might be a possibility that the virtual-env will change even if
+# it's python binary is currently being executed. This would lead to a "Text file busy" OSError.
+run_pipenv 2 run true
+run_pipenv 3 run true
+
+pre-commit run --files $(git diff-tree --no-commit-id --name-only -r HEAD)

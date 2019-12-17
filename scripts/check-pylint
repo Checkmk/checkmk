@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -e -o pipefail
+
+REPO_PATH="$(git rev-parse --show-toplevel)"
+PIPENV="$REPO_PATH/scripts/run-pipenv"
+
+$PIPENV 2 run pylint "$@"

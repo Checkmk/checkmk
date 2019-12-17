@@ -1,0 +1,64 @@
+#
+# This is the configuration file for the pre-commit framework.
+# To use this you need to install it seperately and activate it for your repository.
+# To do so issue the following commands:
+#
+#     pip3 install pre-commit
+#
+# and in your repository
+#
+#     pre-commit install
+#
+# That's it. You're done.
+#
+default_stages:
+    - commit
+    - push
+    - manual
+repos:
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v2.4.0
+      hooks:
+          - id: trailing-whitespace
+          - id: check-merge-conflict
+            types: [file]
+          - id: check-docstring-first
+          - id: check-yaml
+          - id: end-of-file-fixer
+#    - repo: https://github.com/pre-commit/mirrors-scss-lint
+#      rev: v0.59.0
+#      hooks:
+#          - id: scss-lint
+#            files: \.scss$
+    - repo: https://github.com/pre-commit/mirrors-yapf
+      rev: v0.29.0
+      hooks:
+          - id: yapf
+            types: [file, python]
+    - repo: local
+      hooks:
+          - id: pylint
+            name: Check pylint
+            entry: scripts/check-pylint
+            language: script
+            types: [file, python]
+          - id: mypy
+            name: Check types with mypy
+            entry: scripts/check-mypy
+            language: script
+            types: [file, python]
+          - id: shebang
+            name: Check shebang lines
+            entry: scripts/check-shebang
+            language: script
+            types: [file, python]
+          - id: licence
+            name: Check licence headers
+            entry: scripts/check-licence
+            language: script
+            types: [file, python]
+          - id: absolute-imports
+            name: Check absolute imports
+            entry: scripts/check-absolute-imports
+            language: script
+            types: [file, python]

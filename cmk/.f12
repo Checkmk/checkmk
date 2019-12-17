@@ -16,7 +16,19 @@ sudo rsync \
     --exclude=cee.py \
     --exclude=cme \
     --exclude=cme.py \
-    -a * $ROOT/lib/python/cmk/
+    -aR \
+    cee \
+    gui \
+    __init__.py \
+    notification_plugins \
+    special_agents \
+    update_config.py \
+    utils \
+    ec/__init__.py \
+    ec/export.py \
+    ec/settings.py \
+    ec/defaults.py \
+    $ROOT/lib/python/cmk/
 
 # TODO: Enable python3 compatible parts step by step
 sudo rsync \
@@ -24,7 +36,7 @@ sudo rsync \
     --exclude=cee.py \
     --exclude=cme \
     --exclude=cme.py \
-    -a __init__.py utils $ROOT/lib/python3/cmk/
+    -a __init__.py utils ec $ROOT/lib/python3/cmk/
 
 # Restore site version after .f12
 sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" $ROOT/lib/python/cmk/__init__.py

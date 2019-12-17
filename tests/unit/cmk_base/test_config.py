@@ -10,8 +10,9 @@ from testlib.base import Scenario
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 import cmk
 import cmk.utils.paths
+import cmk.utils.piggyback as piggyback
+
 import cmk_base.config as config
-import cmk_base.piggyback as piggyback
 from cmk_base.check_utils import Service
 from cmk_base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 

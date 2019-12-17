@@ -115,10 +115,9 @@ if (process.env.WEBPACK_MODE === "quick") {
                         corejs: 3
                     }]
                 ],
+                plugins: ["@babel/plugin-transform-parameters"],
             }
         }
     };
     module.exports.module.rules.unshift(babel_loader);
 }
-
-

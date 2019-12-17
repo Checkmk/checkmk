@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 """Settings handling for the Check_MK event console."""
-
-from __future__ import print_function
 
 # For some background about various design decisions below, see the concise
 # but excellent article "Parsing Command Line Arguments" in the FPComplete blog

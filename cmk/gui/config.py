@@ -29,7 +29,7 @@ import errno
 import os
 import copy
 import json
-from typing import Set, Any, Callable, Dict, List, NewType, Optional, Tuple, Union  # pylint: disable=unused-import
+from typing import Set, Any, AnyStr, Callable, Dict, List, NewType, Optional, Text, Tuple, Union  # pylint: disable=unused-import
 import six
 from pathlib2 import Path
 from livestatus import SiteId, SiteConfiguration, SiteConfigurations  # pylint: disable=unused-import
@@ -151,6 +151,7 @@ aggregation_functions = {}  # type: Dict[str, Callable]
 
 
 def initialize():
+    # type () -> None
     clear_user_login()
     load_config()
     log.set_log_levels(log_levels)
@@ -262,15 +263,17 @@ def _apply_default_config():
 
 
 def _load_default_config(vars_before_plugins, vars_after_plugins):
+    # type: (Set, Set) -> None
     default_config.clear()
     _load_default_config_from_module_plugins()
     _load_default_config_from_legacy_plugins(vars_before_plugins, vars_after_plugins)
 
 
 def _load_default_config_from_module_plugins():
+    # type: () -> None
     # TODO: Find a better solution for this. Probably refactor declaration of default
     # config option.
-    config_plugin_vars = {}
+    config_plugin_vars = {}  # type: Dict
     for module in _config_plugin_modules():
         config_plugin_vars.update(module.__dict__)
 
@@ -285,11 +288,13 @@ def _load_default_config_from_module_plugins():
 
 
 def _load_default_config_from_legacy_plugins(vars_before_plugins, vars_after_plugins):
+    # type: (Set, Set) -> None
     new_vars = vars_after_plugins.difference(vars_before_plugins)
     default_config.update(dict([(k, copy.deepcopy(globals()[k])) for k in new_vars]))
 
 
 def _config_plugin_modules():
+    # type: () -> List
     return [
         module for name, module in sys.modules.items()
         if (name.startswith("cmk.gui.plugins.config.") or name.startswith(
@@ -299,28 +304,32 @@ def _config_plugin_modules():
 
 
 def reporting_available():
+    # type: () -> bool
     try:
         # Check the existance of one arbitrary config variable from the
         # reporting module
-        _dummy = reporting_filename
+        _dummy = reporting_filename  # type: ignore # pylint: disable=undefined-variable
         return True
     except NameError:
         return False
 
 
 def combined_graphs_available():
+    # type: () -> bool
     try:
-        _dummy = have_combined_graphs
+        _dummy = have_combined_graphs  # type: ignore # pylint: disable=undefined-variable
         return True
     except NameError:
         return False
 
 
 def hide_language(lang):
+    # type: (str) -> bool
     return lang in hide_languages
 
 
 def all_nonfunction_vars(var_dict):
+    # type: (Dict) -> Set
     return {
         name for name, value in var_dict.items()
         if name[0] != '_' and not hasattr(value, '__call__')
@@ -358,6 +367,7 @@ declare_permission_section = permissions.declare_permission_section
 # situations.
 # TODO: Clean this up
 def declare_dynamic_permissions(func):
+    # type: (Callable) -> None
     permission_declaration_functions.append(func)
 
 
@@ -365,13 +375,15 @@ def declare_dynamic_permissions(func):
 # to possible dynamic permissions
 # TODO: Clean this up
 def load_dynamic_permissions():
+    # type: () -> None
     for func in permission_declaration_functions:
         func()
 
 
 def get_role_permissions():
+    # type: () -> Dict[str, List[str]]
     """Returns the set of permissions for all roles"""
-    role_permissions = {}
+    role_permissions = {}  # type: Dict[str, List[str]]
     roleids = roles.keys()
     for perm_class in permissions.permission_registry.values():
         perm = perm_class()
@@ -385,6 +397,7 @@ def get_role_permissions():
 
 
 def _may_with_roles(some_role_ids, pname):
+    # type: (List[str], str) -> bool
     # If at least one of the given roles has this permission, it's fine
     for role_id in some_role_ids:
         role = roles[role_id]
@@ -428,7 +441,8 @@ def _may_with_roles(some_role_ids, pname):
 # TODO: Cleanup accesses to module global vars and functions
 class LoggedInUser(object):
     def __init__(self, user_id):
-        self.id = UserId(user_id)
+        # type: (Optional[Text]) -> None
+        self.id = UserId(user_id) if user_id else None
 
         self._load_confdir()
         self._load_roles()
@@ -439,6 +453,7 @@ class LoggedInUser(object):
 
     # TODO: Clean up that baserole_* stuff?
     def _load_roles(self):
+        # type: () -> None
         # Determine the roles of the user. If the user is listed in
         # users, admin_users or guest_users in multisite.mk then we
         # give him the according roles. If the user has an explicit
@@ -459,9 +474,11 @@ class LoggedInUser(object):
             self.baserole_id = "guest"
 
     def _gather_roles(self):
+        # type: () -> List
         return roles_of_user(self.id)
 
     def _load_base_roles(self):
+        # type: () -> None
         base_roles = set([])
         for r in self.role_ids:
             if r in builtin_role_ids:
@@ -472,6 +489,7 @@ class LoggedInUser(object):
         self.baserole_ids = list(base_roles)
 
     def _load_attributes(self):
+        # type: () -> None
         self.attributes = self.load_file("cached_profile", None)
         if self.attributes is None:
             if self.id in multisite_users:
@@ -485,6 +503,7 @@ class LoggedInUser(object):
         self.email = self.attributes.get("email", self.id)
 
     def _load_permissions(self):
+        # type: () -> None
         # Prepare cache of already computed permissions
         # Make sure, admin can restore permissions in any case!
         if self.id in admin_users:
@@ -502,6 +521,7 @@ class LoggedInUser(object):
         store.mkdir(self.confdir)
 
     def _load_site_config(self):
+        # type: () -> None
         self.siteconf = self.load_file("siteconfig", {})
 
     def get_button_counts(self):
@@ -510,30 +530,38 @@ class LoggedInUser(object):
         return self._button_counts
 
     def save_site_config(self):
+        # type: () -> None
         self.save_file("siteconfig", self.siteconf)
 
     def get_attribute(self, key, deflt=None):
+        # type: (str, Any) -> Any
         return self.attributes.get(key, deflt)
 
     def set_attribute(self, key, value):
+        # type: (str, Any) -> None
         self.attributes[key] = value
 
     def unset_attribute(self, key):
+        # type: (str) -> None
         try:
             del self.attributes[key]
         except KeyError:
             pass
 
     def language(self, default=None):
+        # type: (Optional[str]) -> Optional[str]
         return self.get_attribute("language", get_language(default))
 
     def contact_groups(self):
+        # type: () -> List
         return self.get_attribute("contactgroups", [])
 
     def load_stars(self):
+        # type: () -> Set[str]
         return set(self.load_file("favorites", []))
 
     def save_stars(self, stars):
+        # type: (Set[str]) -> None
         self.save_file("favorites", list(stars))
 
     def is_site_disabled(self, site_id):
@@ -575,6 +603,7 @@ class LoggedInUser(object):
         return he_may
 
     def need_permission(self, pname):
+        # type: (str) -> None
         if not self.may(pname):
             perm = permissions.permission_registry[pname]()
             raise MKAuthException(
@@ -584,6 +613,7 @@ class LoggedInUser(object):
                   "the following permission: '<b>%s</b>'.") % perm.title)
 
     def load_file(self, name, deflt, lock=False):
+        # type: (str, Any, bool) -> Any
         # In some early error during login phase there are cases where it might
         # happen that a user file is requested but the user is not yet
         # set. We have all information to set it, then do it.
@@ -594,9 +624,11 @@ class LoggedInUser(object):
         return store.load_object_from_file(path, default=deflt, lock=lock)
 
     def save_file(self, name, content, unlock=False):
+        # type: (str, Any, bool) -> None
         save_user_file(name, content, self.id, unlock)
 
     def file_modified(self, name):
+        # type: (str) -> float
         if self.confdir is None:
             return 0
 
@@ -614,55 +646,69 @@ class LoggedInUser(object):
 # TODO: Can we somehow get rid of this?
 class LoggedInSuperUser(LoggedInUser):
     def __init__(self):
+        # type: () -> None
         super(LoggedInSuperUser, self).__init__(None)
         self.alias = "Superuser for unauthenticated pages"
         self.email = "admin"
 
     def _gather_roles(self):
+        # type: () -> List[str]
         return ["admin"]
 
     def _load_confdir(self):
+        # type: () -> None
         self.confdir = None
 
     def _load_site_config(self):
+        # type: () -> None
         self.siteconf = {}
 
     def load_file(self, name, deflt, lock=False):
+        # type: (str, Any, bool) -> Any
         return deflt
 
 
 class LoggedInNobody(LoggedInUser):
     def __init__(self):
+        # type: () -> None
         super(LoggedInNobody, self).__init__(None)
         self.alias = "Unauthenticated user"
         self.email = "nobody"
 
     def _gather_roles(self):
+        # type: () -> List[str]
         return []
 
     def _load_confdir(self):
+        # type: () -> None
         self.confdir = None
 
     def _load_site_config(self):
+        # type: () -> None
         self.siteconf = {}
 
     def load_file(self, name, deflt, lock=False):
+        # type: (str, Any, bool) -> Any
         return deflt
 
 
 def clear_user_login():
+    # type: () -> None
     _set_user(LoggedInNobody())
 
 
 def set_user_by_id(user_id):
+    # type: (UserId) -> None
     _set_user(LoggedInUser(user_id))
 
 
 def set_super_user():
+    # type: () -> None
     _set_user(LoggedInSuperUser())
 
 
 def _set_user(_user):
+    # type: (LoggedInUser) -> None
     global user
     user = _user
 
@@ -687,6 +733,7 @@ user = LoggedInNobody()
 
 
 def roles_of_user(user_id):
+    # type: (Optional[UserId]) -> List[str]
     def existing_role_ids(role_ids):
         return [role_id for role_id in role_ids if role_id in roles]
 
@@ -698,7 +745,8 @@ def roles_of_user(user_id):
         return ["guest"]
     elif users is not None and user_id in users:
         return ["user"]
-    elif os.path.exists(config_dir + "/" + user_id.encode("utf-8") + "/automation.secret"):
+    elif user_id is not None and os.path.exists(config_dir + "/" + user_id.encode("utf-8") +
+                                                "/automation.secret"):
         return ["guest"]  # unknown user with automation account
     elif 'roles' in default_user_profile:
         return existing_role_ids(default_user_profile['roles'])
@@ -708,17 +756,23 @@ def roles_of_user(user_id):
 
 
 def alias_of_user(user_id):
+    # type: (Optional[UserId]) -> Optional[UserId]
     if user_id in multisite_users:
         return multisite_users[user_id].get("alias", user_id)
     return user_id
 
 
 def user_may(user_id, pname):
+    # type: (Optional[UserId], str) -> bool
     return _may_with_roles(roles_of_user(user_id), pname)
 
 
 # TODO: Check all calls for arguments (changed optional user to 3rd positional)
 def save_user_file(name, data, user_id, unlock=False):
+    # type: (str, Any, Optional[UserId], bool) -> None
+    if user_id is None:
+        raise TypeError("The profiles of LoggedInSuperUser and LoggedInNobody cannot be saved")
+
     path = config_dir + "/" + user_id.encode("utf-8") + "/" + name + ".mk"
     store.mkdir(os.path.dirname(path))
     store.save_object_to_file(path, data)
@@ -765,6 +819,7 @@ def migrate_old_site_config(site_config):
 #    This has now been split up. The top level socket settings are now used independent of the proxy.
 #    The proxy options are stored in the separate key "proxy" which is a mandatory key.
 def _migrate_pre_16_socket_config(site_cfg):
+    # type: (Dict[AnyStr, Any]) -> None
     if site_cfg.get("socket") is None:
         site_cfg["socket"] = ("local", None)
         return
@@ -799,7 +854,7 @@ def _migrate_pre_16_socket_config(site_cfg):
 
 
 def _migrate_string_encoded_socket(value):
-    # type: (str) -> Tuple[str, Union[Dict]]
+    # type: (AnyStr) -> Tuple[AnyStr, Union[Dict]]
     family_txt, address = value.split(":", 1)  # pylint: disable=no-member
 
     if family_txt == "unix":
@@ -891,14 +946,17 @@ def configured_sites():
 
 
 def has_wato_slave_sites():
+    # type: () -> bool
     return bool(wato_slave_sites())
 
 
 def is_wato_slave_site():
+    # type: () -> bool
     return _has_distributed_wato_file() and not has_wato_slave_sites()
 
 
 def _has_distributed_wato_file():
+    # type: () -> bool
     return os.path.exists(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk") \
         and os.stat(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk").st_size != 0
 
@@ -1037,6 +1095,7 @@ def get_event_console_site_choices():
 
 
 def load_plugins(force):
+    # type: (bool) -> None
     utils.load_web_plugins("config", globals())
 
     # Make sure, builtin roles are present, even if not modified and saved with WATO.
@@ -1045,6 +1104,7 @@ def load_plugins(force):
 
 
 def theme_choices():
+    # type: () -> List[Tuple[str, Any]]
     themes = {}
 
     for base_dir in [Path(cmk.utils.paths.web_dir), cmk.utils.paths.local_web_dir]:
@@ -1074,6 +1134,7 @@ def theme_choices():
 
 
 def get_page_heading():
+    # type: () -> AnyStr
     if "%s" in page_heading:
         return page_heading % (site(omd_site()).get('alias', _("GUI")))
     return page_heading

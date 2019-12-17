@@ -945,11 +945,11 @@ def check_if_common_single(item,
                                                      assumed_speed_in, assumed_speed_out)
 
         # Speed in bytes
-        speed_b_in = (assumed_speed_in // 3) if assumed_speed_in else ref_speed
-        speed_b_out = (assumed_speed_out // 3) if assumed_speed_out else ref_speed
+        speed_b_in = (assumed_speed_in // 8) if assumed_speed_in else ref_speed
+        speed_b_out = (assumed_speed_out // 8) if assumed_speed_out else ref_speed
 
         #
-        # All internal values within ths check after this point are bytes, not bits!
+        # All internal values within this check after this point are bytes, not bits!
         #
 
         # When the interface is reported as down, there is no need to try to handle,

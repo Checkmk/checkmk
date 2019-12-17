@@ -28,7 +28,7 @@ of console input / output"""
 
 import logging
 import sys
-from typing import AnyStr, Text, IO  # pylint: disable=unused-import
+from typing import Any, AnyStr, Text, IO  # pylint: disable=unused-import
 import six
 
 from cmk.utils.log import VERBOSE
@@ -50,7 +50,7 @@ logger = logging.getLogger("cmk.base")
 # would rather use "def output(text, *args, stream=sys.stdout)", but this is not possible
 # with python 2.7
 def output(text, *args, **kwargs):
-    # type: (AnyStr, *AnyStr, **IO[Text]) -> None
+    # type: (AnyStr, *AnyStr, **IO[Any]) -> None
     if args:
         text = text % args
 

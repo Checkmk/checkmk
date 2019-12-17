@@ -1,0 +1,15 @@
+Title: prometheus_custom: Addition of Prometheus custom check plugin
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1576052474
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 1.7.0i1
+
+ This commit adds the functionality of the Prometheus custom check
+ plugin to Checkmk. It allows the user to define PromQL queries and
+ generate services based upon the query results. The generic check
+ also displays information should a PromQL expression return invalid
+ or faulty results.

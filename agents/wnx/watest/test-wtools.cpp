@@ -5,6 +5,7 @@
 
 #include <chrono>
 #include <filesystem>
+#include <future>
 
 #include "cfg_details.h"
 #include "common/cfg_info.h"
@@ -15,6 +16,11 @@
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "yaml-cpp/yaml.h"
+
+namespace cma::details {
+extern bool G_Service;
+extern bool G_Test;
+}  // namespace cma::details
 
 namespace wtools {  // to become friendly for cma::cfg classes
 
@@ -427,6 +433,20 @@ TEST(Wtools, LineEnding) {
 
     auto result = ReadWholeFile(work_file);
     EXPECT_EQ(result, expected);
+}
+
+TEST(Wtools, UserGroupName) {
+    cma::OnStartTest();
+    EXPECT_TRUE(GenerateCmaUserNameInGroup(L"").empty());
+    EXPECT_EQ(GenerateCmaUserNameInGroup(L"XX"), L"test_in_XX");
+    cma::details::G_Service = true;
+    ON_OUT_OF_SCOPE(cma::details::G_Service = false;
+                    cma::details::G_Test = true);
+
+    EXPECT_EQ(GenerateCmaUserNameInGroup(L"XX"), L"check_mk_in_XX");
+    cma::details::G_Service = false;
+    cma::details::G_Test = false;
+    EXPECT_TRUE(GenerateCmaUserNameInGroup(L"XX").empty());
 }
 
 }  // namespace wtools

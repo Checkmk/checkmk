@@ -7,11 +7,11 @@ set -e -o pipefail
 REPO_PATH="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" >/dev/null 2>&1 && pwd)"
 PIPENV="$REPO_PATH/scripts/run-pipenv"
 
-VENV_PATH=$($PIPENV 3 --venv)
+VENV_MYPY_PATH="$($PIPENV 3 --venv)/bin/mypy"
 
-if [ ! -f "$VENV_PATH/bin/mypy" ]; then
+if [ ! -f "$VENV_MYPY_PATH" ]; then
     for LAST_ARG; do :; done
-    echo "$LAST_ARG:1: error: Could not find $VENV_PATH/.venv/bin/mypy"
+    echo "$LAST_ARG:1: error: Could not find $VENV_MYPY_PATH"
     exit 1
 fi
 
@@ -24,7 +24,7 @@ if [ ! -f "$FILE_ARG" ]; then
     echo "$LAST_ARG:1: error: scripts/run-mypy can not detect Python version"
     exit 1
 fi
-# Synchronize detection logic with test*/find-python-files.
+# Synchronize detection logic with scripts/find-python-files.
 if [[ $FILE_ARG =~ "/tests-py3/" ]] && [[ $FILE_ARG == *.py ]]; then
     PYTHON_VERSION=3.7
 elif head -n 1 "$FILE_ARG" | grep -q '^#!.*python3$' >/dev/null 2>&1; then

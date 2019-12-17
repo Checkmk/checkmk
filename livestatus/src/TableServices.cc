@@ -40,7 +40,7 @@
 #include "DowntimeColumn.h"
 #include "DynamicColumn.h"
 #include "DynamicServiceRRDColumn.h"
-#include "FixedIntColumn.h"
+#include "IntLambdaColumn.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
 #include "OffsetDoubleColumn.h"
@@ -595,14 +595,12 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",
         table->core(), Column::Offsets{indirect_offset, -1, -1, 0}));
-    table->addColumn(std::make_unique<FixedIntColumn>(
+    table->addColumn(std::make_unique<IntLambdaColumn::Constant>(
         prefix + "cached_at",
-        "A dummy column in order to be compatible with Check_MK Multisite",
-        Column::Offsets{}, 0));
-    table->addColumn(std::make_unique<FixedIntColumn>(
+        "A dummy column in order to be compatible with Check_MK Multisite", 0));
+    table->addColumn(std::make_unique<IntLambdaColumn::Constant>(
         prefix + "cache_interval",
-        "A dummy column in order to be compatible with Check_MK Multisite",
-        Column::Offsets{}, 0));
+        "A dummy column in order to be compatible with Check_MK Multisite", 0));
 }
 
 void TableServices::answerQuery(Query *query) {

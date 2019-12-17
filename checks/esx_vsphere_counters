@@ -50,6 +50,74 @@
 # ...
 # sys.uptime||630664|second
 
+#.
+#   .--cpu-----------------------------------------------------------------.
+#   |                                                                      |
+#   |                           ___ _ __  _   _                            |
+#   |                          / __| '_ \| | | |                           |
+#   |                         | (__| |_) | |_| |                           |
+#   |                          \___| .__/ \__,_|                           |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+
+factory_settings['esx_vsphere_counters_cpu_default_levels'] = {
+    'cpu_costop': (5.0, 10.0),
+    'cpu_ready': (5.0, 10.0)
+}
+
+
+def _parse_esx_vsphere_counters_cpu(parsed):
+    CPU = collections.namedtuple('CPU', ['ready', 'costop'])
+    cpu_values = []
+    for key in ('cpu.ready', 'cpu.costop'):
+        try:
+            cpu_values.append(float(parsed[key][''][0][0][0]))
+        except (KeyError, IndexError, TypeError, ValueError):
+            cpu_values.append(None)
+    return CPU(*cpu_values)
+
+
+def inventory_esx_vsphere_counters_cpu(parsed):
+    CPU = _parse_esx_vsphere_counters_cpu(parsed)
+    if CPU.ready is not None or CPU.costop is not None:
+        return [(None, {})]
+
+
+def check_esx_vsphere_counters_cpu(item, params, parsed):
+    # Official formula from vmware for calculating the CPU ready/Co-Stop percentage
+    # https://kb.vmware.com/s/article/2002181
+    # by default the 20sec interval (so called 'realtime') is used
+    # CPU summation value in milliseconds / 200
+    CPU = _parse_esx_vsphere_counters_cpu(parsed)
+
+    if CPU.ready is not None:
+        yield check_levels(
+            CPU.ready / 200,
+            'cpu_ready_percent',
+            params.get('cpu_ready', None),
+            human_readable_func=get_percent_human_readable,
+            infoname='CPU ready',
+        )
+
+    if CPU.costop is not None:
+        yield check_levels(
+            CPU.costop / 200,
+            'cpu_costop_percent',
+            params.get('cpu_costop', None),
+            human_readable_func=get_percent_human_readable,
+            infoname='Co-Stop',
+        )
+
+
+check_info['esx_vsphere_counters.cpu'] = {
+    'inventory_function': inventory_esx_vsphere_counters_cpu,
+    'check_function': check_esx_vsphere_counters_cpu,
+    'service_description': 'CPU usage',
+    'has_perfdata': True,
+    'default_levels_variable': 'esx_vsphere_counters_cpu_default_levels',
+    'group': 'esx_host_cpu',
+}
+
 #   .--Disk IO-------------------------------------------------------------.
 #   |                     ____  _     _      ___ ___                       |
 #   |                    |  _ \(_)___| | __ |_ _/ _ \                      |

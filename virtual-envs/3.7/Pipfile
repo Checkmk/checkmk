@@ -52,6 +52,8 @@ chardet = "==3.0.4"  # needed by requests
 urllib3 = "==1.25.7"  # needed by requests
 pyOpenSSL = "==19.1.0"  # needed by requests with extras = ["security"]
 requests = { version = "==2.22.0", extras = ["security"] }  # needed by DCD
+passlib = "==1.7.2" # needed for omdlib
+psutil = "==5.6.7" # needed for omdlib
 
 [requires]
 python_version = "3.7"

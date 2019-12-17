@@ -1,0 +1,11 @@
+Title: Windows mysql plugin has been improved to process also paths without double quotes
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1575994028
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+

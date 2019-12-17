@@ -385,7 +385,7 @@ then
     fi
 fi
 
-echo '<<<local>>>'
+echo '<<<local:sep(0)>>>'
 if cd $LOCALDIR 2>/dev/null
 then
   for skript in $(ls)

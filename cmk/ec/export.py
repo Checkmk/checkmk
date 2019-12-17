@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -52,7 +52,7 @@ except ImportError:
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
 else:
-    from pathlib2 import Path
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
 from cmk.utils.encoding import make_utf8
 import cmk.utils.log
@@ -65,7 +65,6 @@ import cmk.ec.settings
 
 class MkpRulePackBindingError(MKException):
     """Base class for exceptions related to rule pack binding"""
-    pass
 
 
 class MkpRulePackProxy(MutableMapping):
@@ -225,7 +224,7 @@ def load_config(settings):
     for path in [settings.paths.main_config_file.value] + \
             sorted(settings.paths.config_dir.value.glob('**/*.mk')):
         with open(str(path), mode="rb") as file_object:
-            exec (file_object.read().decode("utf-8"), config)  # pylint: disable=exec-used
+            exec (file_object.read(), config)  # pylint: disable=exec-used
     config.pop("MkpRulePackProxy", None)
     _bind_to_rule_pack_proxies(config['rule_packs'], config['mkp_rule_packs'])
 

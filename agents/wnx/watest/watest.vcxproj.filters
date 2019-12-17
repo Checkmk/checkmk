@@ -154,7 +154,11 @@
     </ClCompile>
     <ClCompile Include="test-commander.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>  </ItemGroup>
+    </ClCompile>
+    <ClCompile Include="test-wtools_user_control.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
   <ItemGroup>
     <None Include="..\test_files\config\check_mk.old.example.yml">
       <Filter>Resource Files</Filter>

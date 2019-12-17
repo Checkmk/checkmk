@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -26,8 +26,6 @@
 
 import os
 import time
-
-import six
 
 import cmk
 import cmk.utils.debug
@@ -135,7 +133,7 @@ def _escape_null_bytes(s):
 def _get_quoted_event(event, logger):
     new_event = {}
     fields_to_quote = ["application", "match_groups", "text", "comment", "contact"]
-    for key, value in event.iteritems():
+    for key, value in event.items():
         if key not in fields_to_quote:
             new_event[key] = value
         else:
@@ -156,7 +154,7 @@ def _get_quoted_event(event, logger):
 
 
 def _substitute_event_tags(event_columns, text, event):
-    for key, value in _get_event_tags(event_columns, event).iteritems():
+    for key, value in _get_event_tags(event_columns, event).items():
         text = text.replace('$%s$' % key.upper(), value)
     return text
 
@@ -202,10 +200,10 @@ def _send_email(config, to, subject, body, logger):
 def _execute_script(event_columns, body, event, logger):
     script_env = os.environ.copy()
 
-    for key, value in _get_event_tags(event_columns, event).iteritems():
-        if isinstance(key, six.text_type):
+    for key, value in _get_event_tags(event_columns, event).items():
+        if isinstance(key, str):
             key = key.encode("utf-8")
-        if isinstance(value, six.text_type):
+        if isinstance(value, str):
             value = value.encode("utf-8")
         script_env["CMK_" + key.upper()] = value
 
@@ -236,7 +234,7 @@ def _get_event_tags(event_columns, event):
         substs.append((varname, event.get(varname, defaultvalue)))
 
     def to_string(v):
-        if isinstance(v, six.string_types):
+        if isinstance(v, str):
             return v
         return "%s" % v
 
@@ -282,7 +280,7 @@ def do_notify(event_server, logger, event, username=None, is_cancelling=False):
 
     if logger.isEnabledFor(VERBOSE):
         logger.log(VERBOSE, "Sending notification via Check_MK with the following context:")
-        for varname, value in sorted(context.iteritems()):
+        for varname, value in sorted(context.items()):
             logger.log(VERBOSE, "  %-25s: %s", varname, value)
 
     if context["HOSTDOWNTIME"] != "0":
@@ -291,10 +289,8 @@ def do_notify(event_server, logger, event, username=None, is_cancelling=False):
         return
 
     # Send notification context via stdin.
-    context_string = "".join([
-        "%s=%s\n" % (varname, value.replace("\n", "\\n"))
-        for (varname, value) in context.iteritems()
-    ])
+    context_string = "".join(
+        ["%s=%s\n" % (varname, value.replace("\n", "\\n")) for (varname, value) in context.items()])
 
     p = subprocess.Popen(
         ["cmk", "--notify", "stdin"],
@@ -403,7 +399,7 @@ def _add_infos_from_monitoring_host(event_server, context, event):
     })
 
     # Add custom variables to the notification context
-    for key, val in host_config["custom_variables"].iteritems():
+    for key, val in host_config["custom_variables"].items():
         context["HOST_%s" % key] = val
 
     context["HOSTDOWNTIME"] = "1" if event["host_in_downtime"] else "0"

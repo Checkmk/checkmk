@@ -3,12 +3,15 @@
 # pylint: disable=redefined-outer-name
 
 from __future__ import print_function
+import logging
 import collections
 import pytest  # type: ignore
 
 from testlib import web  # pylint: disable=unused-import
 
 DefaultConfig = collections.namedtuple("DefaultConfig", ["core"])
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="module", params=["nagios", "cmc"])
@@ -119,14 +122,17 @@ def test_active_check_macros(test_cfg, site, web):
 
         for var, value in macros.items():
             description = descr(var)
+            logger.info(description)
             site.schedule_check("test-host", description, 0)
 
+            logger.info("Get service row")
             row = site.live.query_row(
                 "GET services\n"
                 "Columns: host_name description state plugin_output has_been_checked\n"
                 "Filter: host_name = test-host\n"
                 "Filter: description = %s\n" % description)
 
+            logger.info(row)
             name, description, state, plugin_output, has_been_checked = row
 
             assert name == "test-host"

@@ -25,7 +25,7 @@
 """Management of the site local CA and certificates issued by it"""
 
 import sys
-from typing import Tuple  # pylint: disable=unused-import
+from typing import List, Tuple  # pylint: disable=unused-import
 import random
 # Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:
@@ -68,7 +68,7 @@ class CertificateAuthority(object):
         self._write_pem(self._root_cert_path, [root_cert], root_key)
 
     def _create_root_certificate(self):
-        # type: () -> Tuple[crypto.PKey, str]
+        # type: () -> Tuple[crypto.X509, crypto.PKey]
         key = self._make_private_key()
 
         cert = self._make_cert(self._ca_name, CA_CERT_NOT_AFTER)
@@ -84,7 +84,7 @@ class CertificateAuthority(object):
         return cert, key
 
     def _get_root_certificate(self):
-        # type: () -> Tuple[str, str]
+        # type: () -> Tuple[crypto.X509, crypto.PKey]
         return self._read_pem(self._root_cert_path)
 
     def site_certificate_exists(self, site_id):

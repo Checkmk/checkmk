@@ -37,7 +37,9 @@ import os
 import pprint
 import tempfile
 import time
-from typing import Callable, Any, Union, Dict, Iterator, List, Text, Optional, AnyStr  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Callable, Any, Union, Dict, Iterator, List, Text, Optional, AnyStr, cast,
+)
 import six
 
 # Explicitly check for Python 3 (which is understood by mypy)
@@ -219,7 +221,7 @@ def save_to_mk_file(path, key, value, pprint_value=False):
 # TODO: Consolidate with load_mk_file?
 def load_object_from_file(path, default=None, lock=False):
     # type: (Union[Path, str], Any, bool) -> Any
-    content = _load_data_from_file(path, lock=lock)
+    content = cast(Text, _load_data_from_file(path, lock=lock, encoding="utf-8"))
     if not content:
         return default
     return ast.literal_eval(content)
@@ -227,14 +229,26 @@ def load_object_from_file(path, default=None, lock=False):
 
 def load_text_from_file(path, default=u"", lock=False):
     # type: (Union[Path, str], Text, bool) -> Text
-    content = _load_data_from_file(path, lock=lock)
+    content = cast(Text, _load_data_from_file(path, lock=lock, encoding="utf-8"))
     if not content:
         return default
     return content
 
 
-def _load_data_from_file(path, lock=False):
-    # type: (Union[Path, str], bool) -> Optional[Text]
+def load_bytes_from_file(path, default=b"", lock=False):
+    # type: (Union[Path, str], bytes, bool) -> bytes
+    content = cast(bytes, _load_data_from_file(path, lock=lock))
+    if not content:
+        return default
+    return content
+
+
+# TODO: This function has to die! Its return type depends on the value of the
+# encoding parameter, which doesn't work at all with mypy and various APIs like
+# ast.literal_eval. As a workaround, we use casts, but this isn't a real
+# solution....
+def _load_data_from_file(path, lock=False, encoding=None):
+    # type: (Union[Path, str], bool, Optional[str]) -> Optional[Union[Text, bytes]]
     if not isinstance(path, Path):
         path = Path(path)
 
@@ -243,9 +257,7 @@ def _load_data_from_file(path, lock=False):
 
     try:
         try:
-            with path.open('r', encoding="utf-8") as f:
-                return f.read().strip()
-
+            return path.read_text(encoding=encoding) if encoding else path.read_bytes()
         except IOError as e:
             if e.errno != errno.ENOENT:  # No such file or directory
                 raise

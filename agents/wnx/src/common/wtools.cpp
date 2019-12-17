@@ -18,10 +18,12 @@
 
 #include <cstdint>
 #include <numeric>
+#include <random>
 #include <string>
 
 #include "cap.h"
 #include "cfg.h"
+#include "common/wtools_user_control.h"
 #include "logger.h"
 #include "tools/_raii.h"
 #include "upgrade.h"
@@ -2340,6 +2342,80 @@ bool PatchFileLineEnding(const std::filesystem::path& fname) noexcept {
         XLOG::l("Error during patching file line ending {}", e.what());
         return false;
     }
+}
+
+std::wstring GenerateRandomString(size_t max_length) {
+    std::wstring possible_characters(
+        L"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_#@$^/?,.*&()[]{};:'|");
+
+    std::random_device rd;
+    std::mt19937 generator(rd());
+
+    std::uniform_int_distribution<> dist(
+        0, static_cast<int>(possible_characters.size()) - 1);
+    std::wstring ret;
+    for (size_t i = 0; i < max_length; i++) {
+        int random_index = dist(
+            generator);  // get index between 0 and possible_characters.size()-1
+        ret += possible_characters[random_index];
+    }
+
+    return ret;
+}
+
+std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) {
+    if (group.empty()) return {};
+    if (cma::IsService()) {
+        std::wstring name(L"check_mk_in_");
+        return name + group.data();
+    }
+    if (cma::IsTest()) {
+        std::wstring name(L"test_in_");
+        return name + group.data();
+    }
+
+    return {};
+}
+
+InternalUser MakeCmaUserInGroup(const std::wstring& group) {
+    uc::LdapControl primary_dc;
+
+    // Set up the LOCALGROUP_INFO_1 structure.
+    uc::Status add_group_status = uc::Status::exists;
+
+    if (false) {
+        wchar_t group_comment[] = L"Check MK Group created group";
+        add_group_status = primary_dc.LocalGroupAdd(group, group_comment);
+    }
+
+    if (add_group_status == uc::Status::error) return {};
+
+    std::wstring name = GenerateCmaUserNameInGroup(group);
+    std::wstring pwd = GenerateRandomString(4);
+
+    auto add_user_status = primary_dc.UserAdd(name, pwd);
+    if (add_user_status == uc::Status::error) {
+        if (add_group_status == uc::Status::success)
+            primary_dc.LocalGroupDel(group);
+        return {};
+    }
+
+    // Now add the user to the local group.
+    auto add_user_to_group_status =
+        primary_dc.LocalGroupAddMembers(group, name);
+    if (add_user_to_group_status != uc::Status::error) return {name, pwd};
+
+    if (add_user_status == uc::Status::success) primary_dc.UserDel(name);
+
+    if (add_group_status == uc::Status::success)
+        primary_dc.LocalGroupDel(group);
+
+    return {};
+}
+
+bool RemoveCmaUser(const std::wstring& user_name) {
+    uc::LdapControl primary_dc;
+    return primary_dc.UserDel(user_name) != uc::Status::error;
 }
 
 }  // namespace wtools

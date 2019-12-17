@@ -29,11 +29,6 @@
 #include "Logger.h"
 #include "Row.h"
 
-// TODO(ml): This is a generalization of HostFileColumn.
-//           The main difference is that the path where the file
-//           is located is entirely the business of the caller.
-//           This contrasts with HostFileColumn where the path
-//           must contain the host name.
 HostFileColumn::HostFileColumn(
     const std::string& name, const std::string& description,
     const Column::Offsets& offsets,

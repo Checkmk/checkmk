@@ -1,19 +1,11 @@
 import time
 import os
-import pytest
+import pytest  # type: ignore[import]
 import cmk.utils.paths
 import cmk.utils.log
-import cmk_base.piggyback as piggyback
-import cmk_base.console
-from cmk_base.config import piggyback_max_cachefile_age
+import cmk.utils.piggyback as piggyback
 
-
-@pytest.fixture(autouse=True)
-def verbose_logging():
-    old_root_log_level = cmk_base.console.logger.getEffectiveLevel()
-    cmk_base.console.logger.setLevel(cmk.utils.log.VERBOSE)
-    yield
-    cmk_base.console.logger.setLevel(old_root_log_level)
+piggyback_max_cachefile_age = 3600
 
 
 @pytest.fixture(autouse=True)
@@ -26,20 +18,29 @@ def test_config():
         f.unlink()
 
     source_file = piggyback_dir / "test-host" / "source1"
-    with source_file.open(mode="w", encoding="utf-8") as f:  # pylint: disable=no-member
-        f.write(u"<<<check_mk>>>\nlala\n")
+    with source_file.open(mode="wb") as f:  # pylint: disable=no-member
+        f.write(b"<<<check_mk>>>\nlala\n")
 
     cmk.utils.paths.piggyback_source_dir.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
     source_status_file = cmk.utils.paths.piggyback_source_dir / "source1"
-    with source_status_file.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
-        f.write(u"")
+    with source_status_file.open("wb") as f:  # pylint: disable=no-member
+        f.write(b"")
     source_stat = source_status_file.stat()  # pylint: disable=no-member
 
     os.utime(str(source_file), (source_stat.st_atime, source_stat.st_mtime))
 
 
+def test_piggyback_default_time_settings():
+    time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)]
+    piggybacked_hostname = "test-host"
+    piggyback.get_piggyback_raw_data(piggybacked_hostname, time_settings)
+    piggyback.get_source_and_piggyback_hosts(time_settings)
+    piggyback.has_piggyback_raw_data(piggybacked_hostname, time_settings)
+    piggyback.cleanup_piggyback_files(time_settings)
+
+
 def test_cleanup_piggyback_files():
-    piggyback.cleanup_piggyback_files({(None, 'max_cache_age'): -1})
+    piggyback.cleanup_piggyback_files([(None, 'max_cache_age', -1)])
     assert [
         source_host.name
         for piggybacked_dir in cmk.utils.paths.piggyback_dir.glob("*")
@@ -121,7 +122,7 @@ def test_get_piggyback_raw_data_successful(time_settings):
         assert raw_data_info.successfully_processed is True
         assert raw_data_info.reason == "Successfully processed from source 'source1'"
         assert raw_data_info.reason_status == 0
-        assert raw_data_info.raw_data == '<<<check_mk>>>\nlala\n'
+        assert raw_data_info.raw_data == b'<<<check_mk>>>\nlala\n'
 
 
 def test_get_piggyback_raw_data_not_updated():
@@ -137,7 +138,7 @@ def test_get_piggyback_raw_data_not_updated():
         assert raw_data_info.successfully_processed is False
         assert raw_data_info.reason == "Piggyback file not updated by source 'source1'"
         assert raw_data_info.reason_status == 0
-        assert raw_data_info.raw_data == '<<<check_mk>>>\nlala\n'
+        assert raw_data_info.raw_data == b'<<<check_mk>>>\nlala\n'
 
 
 def test_get_piggyback_raw_data_not_sending():
@@ -153,7 +154,7 @@ def test_get_piggyback_raw_data_not_sending():
         assert raw_data_info.successfully_processed is False
         assert raw_data_info.reason == "Source 'source1' not sending piggyback data"
         assert raw_data_info.reason_status == 0
-        assert raw_data_info.raw_data == '<<<check_mk>>>\nlala\n'
+        assert raw_data_info.raw_data == b'<<<check_mk>>>\nlala\n'
 
 
 def test_get_piggyback_raw_data_too_old_global():
@@ -165,7 +166,7 @@ def test_get_piggyback_raw_data_too_old_global():
         assert raw_data_info.successfully_processed is False
         assert raw_data_info.reason.startswith("Piggyback file too old:")
         assert raw_data_info.reason_status == 0
-        assert raw_data_info.raw_data == '<<<check_mk>>>\nlala\n'
+        assert raw_data_info.raw_data == b'<<<check_mk>>>\nlala\n'
 
 
 def test_get_piggyback_raw_data_too_old_source():
@@ -180,7 +181,7 @@ def test_get_piggyback_raw_data_too_old_source():
         assert raw_data_info.successfully_processed is False
         assert raw_data_info.reason.startswith("Piggyback file too old:")
         assert raw_data_info.reason_status == 0
-        assert raw_data_info.raw_data == '<<<check_mk>>>\nlala\n'
+        assert raw_data_info.raw_data == b'<<<check_mk>>>\nlala\n'
 
 
 def test_get_piggyback_raw_data_too_old_piggybacked_host():
@@ -196,7 +197,7 @@ def test_get_piggyback_raw_data_too_old_piggybacked_host():
         assert raw_data_info.successfully_processed is False
         assert raw_data_info.reason.startswith("Piggyback file too old:")
         assert raw_data_info.reason_status == 0
-        assert raw_data_info.raw_data == '<<<check_mk>>>\nlala\n'
+        assert raw_data_info.raw_data == b'<<<check_mk>>>\nlala\n'
 
 
 def test_has_piggyback_raw_data_no_data():
@@ -221,8 +222,8 @@ def test_store_piggyback_raw_data_new_host():
     time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)]
 
     piggyback.store_piggyback_raw_data("source2", {"pig": [
-        u"<<<check_mk>>>",
-        u"lulu",
+        b"<<<check_mk>>>",
+        b"lulu",
     ]})
 
     for raw_data_info in piggyback.get_piggyback_raw_data("pig", time_settings):
@@ -231,15 +232,15 @@ def test_store_piggyback_raw_data_new_host():
         assert raw_data_info.successfully_processed is True
         assert raw_data_info.reason.startswith("Successfully processed from source 'source2'")
         assert raw_data_info.reason_status == 0
-        assert raw_data_info.raw_data == '<<<check_mk>>>\nlulu\n'
+        assert raw_data_info.raw_data == b'<<<check_mk>>>\nlulu\n'
 
 
 def test_store_piggyback_raw_data_second_source():
     time_settings = [(None, "max_cache_age", piggyback_max_cachefile_age)]
 
     piggyback.store_piggyback_raw_data("source2", {"test-host": [
-        u"<<<check_mk>>>",
-        u"lulu",
+        b"<<<check_mk>>>",
+        b"lulu",
     ]})
 
     for raw_data_info in piggyback.get_piggyback_raw_data("test-host", time_settings):
@@ -249,14 +250,14 @@ def test_store_piggyback_raw_data_second_source():
             assert raw_data_info.successfully_processed is True
             assert raw_data_info.reason.startswith("Successfully processed from source 'source1'")
             assert raw_data_info.reason_status == 0
-            assert raw_data_info.raw_data == '<<<check_mk>>>\nlala\n'
+            assert raw_data_info.raw_data == b'<<<check_mk>>>\nlala\n'
 
         else:  # source2
             assert raw_data_info.file_path.endswith('/test-host/source2')
             assert raw_data_info.successfully_processed is True
             assert raw_data_info.reason.startswith("Successfully processed from source 'source2'")
             assert raw_data_info.reason_status == 0
-            assert raw_data_info.raw_data == '<<<check_mk>>>\nlulu\n'
+            assert raw_data_info.raw_data == b'<<<check_mk>>>\nlulu\n'
 
 
 def test_get_source_and_piggyback_hosts():
@@ -265,12 +266,12 @@ def test_get_source_and_piggyback_hosts():
 
     piggyback.store_piggyback_raw_data("source1", {
         "test-host2": [
-            u"<<<check_mk>>>",
-            u"source1",
+            b"<<<check_mk>>>",
+            b"source1",
         ],
         "test-host": [
-            u"<<<check_mk>>>",
-            u"source1",
+            b"<<<check_mk>>>",
+            b"source1",
         ]
     })
 
@@ -279,18 +280,18 @@ def test_get_source_and_piggyback_hosts():
              (time.time() - 10, time.time() - 10))
 
     piggyback.store_piggyback_raw_data("source1", {"test-host2": [
-        u"<<<check_mk>>>",
-        u"source1",
+        b"<<<check_mk>>>",
+        b"source1",
     ]})
 
     piggyback.store_piggyback_raw_data("source2", {
         "test-host2": [
-            u"<<<check_mk>>>",
-            u"source2",
+            b"<<<check_mk>>>",
+            b"source2",
         ],
         "test-host": [
-            u"<<<check_mk>>>",
-            u"source2",
+            b"<<<check_mk>>>",
+            b"source2",
         ]
     })
 
@@ -324,7 +325,7 @@ def test_get_piggyback_raw_data_source_validity(time_settings, successfully_proc
         assert raw_data_info.successfully_processed is successfully_processed
         assert raw_data_info.reason.startswith(reason)
         assert raw_data_info.reason_status == reason_status
-        assert raw_data_info.raw_data == '<<<check_mk>>>\nlala\n'
+        assert raw_data_info.raw_data == b'<<<check_mk>>>\nlala\n'
 
 
 @pytest.mark.parametrize("time_settings, successfully_processed, reason, reason_status", [
@@ -345,7 +346,7 @@ def test_get_piggyback_raw_data_source_validity2(time_settings, successfully_pro
         assert raw_data_info.successfully_processed is successfully_processed
         assert raw_data_info.reason == reason
         assert raw_data_info.reason_status == reason_status
-        assert raw_data_info.raw_data == '<<<check_mk>>>\nlala\n'
+        assert raw_data_info.raw_data == b'<<<check_mk>>>\nlala\n'
 
 
 @pytest.mark.parametrize("time_settings, successfully_processed, reason, reason_status", [
@@ -374,7 +375,7 @@ def test_get_piggyback_raw_data_piggybacked_host_validity(time_settings, success
         assert raw_data_info.successfully_processed is successfully_processed
         assert raw_data_info.reason.startswith(reason)
         assert raw_data_info.reason_status == reason_status
-        assert raw_data_info.raw_data == '<<<check_mk>>>\nlala\n'
+        assert raw_data_info.raw_data == b'<<<check_mk>>>\nlala\n'
 
 
 @pytest.mark.parametrize("time_settings, successfully_processed, reason, reason_status", [
@@ -398,7 +399,7 @@ def test_get_piggyback_raw_data_piggybacked_host_validity2(time_settings, succes
         assert raw_data_info.successfully_processed is successfully_processed
         assert raw_data_info.reason == reason
         assert raw_data_info.reason_status == reason_status
-        assert raw_data_info.raw_data == '<<<check_mk>>>\nlala\n'
+        assert raw_data_info.raw_data == b'<<<check_mk>>>\nlala\n'
 
 
 @pytest.mark.parametrize("time_settings, expected_time_setting_keys", [

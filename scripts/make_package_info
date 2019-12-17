@@ -1,8 +1,11 @@
 #!/usr/bin/python
 
-import sys, os, pprint
+import os
+import pprint
+import sys
+from typing import Dict, List  # pylint: disable=unused-import
 
-filelists = {}
+filelists = {}  # type: Dict[str, List[str]]
 
 package = {
     "name": "check_mk",
@@ -20,7 +23,7 @@ package = {
 parts = ["checks", "checkman", "agents", "web", "pnp-templates", "doc"]
 for part in parts:
     tarfile = part + ".tar.gz"
-    filelist = []
+    filelist = []  # type: List[str]
     filelists[part] = filelist
     for fn in os.popen("tar tzf %s" % tarfile, "r"):  # nosec
         fn = fn.strip()

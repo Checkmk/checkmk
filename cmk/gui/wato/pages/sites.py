@@ -32,8 +32,11 @@ import Queue
 import socket
 import contextlib
 import binascii
+
 import typing  # pylint: disable=unused-import
 from typing import Dict, List, NamedTuple, Text, Union  # pylint: disable=unused-import
+
+import six
 from OpenSSL import crypto
 from OpenSSL import SSL  # type: ignore[attr-defined]
 # mypy can't find x509 for some reason (is a c extension involved?)
@@ -1213,8 +1216,8 @@ class ModeSiteLivestatusEncryption(WatoMode):
                 CertificateDetails(
                     issued_to=get_name(crypto_cert.subject),
                     issued_by=get_name(crypto_cert.issuer),
-                    valid_from=crypto_cert.not_valid_before,
-                    valid_till=crypto_cert.not_valid_after,
+                    valid_from=six.text_type(crypto_cert.not_valid_before),
+                    valid_till=six.text_type(crypto_cert.not_valid_after),
                     signature_algorithm=crypto_cert.signature_hash_algorithm.name,
                     digest_sha256=binascii.hexlify(crypto_cert.fingerprint(hashes.SHA256())),
                     serial_number=crypto_cert.serial_number,

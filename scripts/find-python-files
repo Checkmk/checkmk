@@ -1,0 +1,81 @@
+#!/bin/bash
+# Find and print the absolute paths of all Python 2/3 source code files
+set -e
+
+if [ $# = 1 -a "$1" = 2 ]; then
+    TESTS_DIR="tests"
+    SHEBANG_PATTERN='^#!.*python$'
+elif [ $# = 1 -a "$1" = 3 ]; then
+    TESTS_DIR="tests-py3"
+    SHEBANG_PATTERN='^#!.*python3$'
+else
+    echo "usage: $(basename $0) [ 2 | 3 ]" >&2
+    exit 1
+fi
+
+REPO_PATH=$(dirname $(dirname $(realpath "$0")))
+cd "$REPO_PATH"
+
+SEARCH=
+PRUNE=
+SEARCH+=" active_checks"
+SEARCH+=" agents"
+SEARCH+=" bin"
+SEARCH+=" checks"
+SEARCH+=" cmk"
+SEARCH+=" cmk_base"
+SEARCH+=" doc"
+if [ -d "$REPO_PATH/enterprise" ]; then
+    SEARCH+=" enterprise/agents"
+    SEARCH+=" enterprise/alert_handlers"
+    SEARCH+=" enterprise/bin"
+    SEARCH+=" enterprise/cmk"
+    SEARCH+=" enterprise/cmk_base"
+    PRUNE+=" -path $(realpath enterprise/cmk/cee) -prune -o"
+    PRUNE+=" -path $(realpath enterprise/cmk/gui/cee) -prune -o"
+    PRUNE+=" -path $(realpath enterprise/cmk_base/automations/cee.py) -prune -o"
+    PRUNE+=" -path $(realpath enterprise/cmk_base/cee) -prune -o"
+    PRUNE+=" -path $(realpath enterprise/cmk_base/default_config/cee.py) -prune -o"
+    PRUNE+=" -path $(realpath enterprise/cmk_base/modes/cee.py) -prune -o"
+fi
+SEARCH+=" inventory"
+SEARCH+=" livestatus/api/python"
+SEARCH+=" locale"
+if [ -d "$REPO_PATH/managed" ]; then
+    SEARCH+=" managed"
+    PRUNE+=" -path $(realpath managed/cmk/gui/cme) -prune -o"
+    PRUNE+=" -path $(realpath managed/cmk_base/default_config/cme.py) -prune -o"
+fi
+SEARCH+=" notifications"
+# Do not search whole omd/ because it may contain unpacked sub-packages
+SEARCH+=" omd/packages/appliance"
+SEARCH+=" omd/packages/maintenance"
+SEARCH+=" omd/packages/omd"
+SEARCH+=" scripts"
+SEARCH+=" $TESTS_DIR"
+SEARCH+=" web/app"
+SEARCH+=" werk"
+
+# Resolve search paths to real paths before the search for performance reasons
+REAL_SEARCH=$(realpath $SEARCH)
+
+# TODO: What about conftest.py files?
+# NOTE 1: while read F is used to deal with files containing whitespaces
+# NOTE 2: We explicitly filter out the targets of symbolic links, too, otherwise
+# we would see files twice.
+find $REAL_SEARCH \
+    -name .mypy_cache -prune -o \
+    -name .venv -prune -o \
+    -name test_docker_parse_node_images.py -prune -o \
+    -name typeshed -prune -o \
+    -name run-clang-tidy.py -prune -o \
+    -name chroot -prune -o \
+    -name conftest.py -prune -o \
+    $PRUNE \
+    -type f -print | sort | while read F; do
+    if [[ $F =~ "$TESTS_DIR" ]] && [[ $F == *.py ]]; then
+        echo "$F"
+    elif head -n 1 "$F" | grep -q "$SHEBANG_PATTERN" >/dev/null 2>&1; then
+        echo "$F"
+    fi
+done

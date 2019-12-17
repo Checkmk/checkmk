@@ -37,6 +37,7 @@ import six
 import cmk.utils.log  # TODO: Remove this!
 from cmk.utils.log import VERBOSE
 
+import cmk.utils
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.misc
@@ -228,7 +229,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
             return
 
         may_use_outdated = config.simulation_mode or self._use_outdated_cache_file
-        cachefile_age = cmk_base.utils.cachefile_age(cachefile)
+        cachefile_age = cmk.utils.cachefile_age(cachefile)
         if not may_use_outdated and cachefile_age > self._max_cachefile_age:
             self._logger.debug("Not using cache (Too old. Age is %d sec, allowed is %s sec)" %
                                (cachefile_age, self._max_cachefile_age))

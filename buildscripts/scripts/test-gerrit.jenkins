@@ -13,8 +13,8 @@ node {
 
         // Gather the list of changed python files
         def GREP_PATTERNS = sh(script: "echo '${CHANGED_FILES_ABS}' | sed 's/^/-e /g'", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
-        def CHANGED_PYTHON_FILES = sh(script: "tests/find-python-files | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
-        def CHANGED_PYTHON3_FILES = sh(script: "tests-py3/find-python-files | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
+        def CHANGED_PYTHON_FILES = sh(script: "scripts/find-python-files 2 | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
+        def CHANGED_PYTHON3_FILES = sh(script: "scripts/find-python-files 3 | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
         def CHANGED_PYLINT_RC_FILE = sh(script: "echo '$CHANGED_FILES_ABS' | grep -h '${WORKSPACE}/.pylintrc' - || true", returnStdout: true).toString().trim()
 
         // Gather the list of changed agent plugins

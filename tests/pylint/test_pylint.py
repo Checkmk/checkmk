@@ -42,14 +42,9 @@ def test_pylint(pylint_test_dir):
 
 
 def _get_files_to_check(pylint_test_dir):
-    # Only specify the path to python packages or modules here
-    if sys.version_info[0] >= 3:
-        find_script_path = "%s/tests-py3/find-python-files" % repo_path()
-    else:
-        find_script_path = "%s/tests/find-python-files" % repo_path()
-
     p = subprocess.Popen(
-        find_script_path,
+        ["%s/scripts/find-python-files" % repo_path(),
+         str(sys.version_info[0])],
         stdout=subprocess.PIPE,
         encoding="utf-8",
         shell=False,

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -25,24 +25,21 @@
 # Boston, MA 02110-1301 USA.
 
 import os
-import string
+import struct
 import subprocess
 import threading
 import time
 
-import six
-
 import cmk.ec.actions
 from cmk.utils.log import VERBOSE
 import cmk.utils.render
-from cmk.utils.encoding import make_utf8
 
 # TODO: As one can see clearly below, we should really have a class hierarchy here...
 
 
-class History(object):
+class History:
     def __init__(self, settings, config, logger, event_columns, history_columns):
-        super(History, self).__init__()
+        super().__init__()
         self._settings = settings
         self._config = config
         self._logger = logger
@@ -106,9 +103,9 @@ except ImportError:
     Connection = None
 
 
-class MongoDB(object):
+class MongoDB:
     def __init__(self):
-        super(MongoDB, self).__init__()
+        super().__init__()
         self.connection = None
         self.db = None
 
@@ -332,28 +329,28 @@ def _add_files(history, event, what, who, addinfo):
 
         with get_logfile(history._config, history._settings.paths.history_dir.value,
                          history._active_history_period).open(mode='ab') as f:
-            f.write("\t".join(map(make_utf8, columns)) + "\n")
+            f.write(b"\t".join(columns) + "\n")
 
 
 def quote_tab(col):
     ty = type(col)
     if ty in [float, int]:
-        return str(col)
-    elif ty is bool:
-        return '1' if col else '0'
-    elif ty in [tuple, list]:
-        col = "\1" + "\1".join([quote_tab(e) for e in col])
+        return str(col).encode("utf-8")
+    if ty is bool:
+        return b'1' if col else b'0'
+    if ty in [tuple, list]:
+        col = b"\1" + b"\1".join([quote_tab(e) for e in col])
     elif col is None:
-        col = "\2"
-    elif ty is unicode:
+        col = b"\2"
+    elif ty is str:
         col = col.encode("utf-8")
 
-    return col.replace("\t", " ")
+    return col.replace(b"\t", b" ")
 
 
-class ActiveHistoryPeriod(object):
+class ActiveHistoryPeriod:
     def __init__(self):
-        super(ActiveHistoryPeriod, self).__init__()
+        super().__init__()
         self.value = None
 
 
@@ -451,7 +448,7 @@ def _get_files(history, logger, query):
         # actual logfiles. They will be joined with ".*"!
         try:
             nr = grepping_filters.index(column_name)
-            if operator_name in ['=' '~~']:
+            if operator_name in ['=', '~~']:
                 greptexts.append((nr, str(argument)))
         except Exception:
             pass
@@ -573,13 +570,13 @@ def _convert_history_line(history, values):
 
 
 def _unsplit(s):
-    if not isinstance(s, six.string_types):
+    if not isinstance(s, str):
         return s
 
-    elif s.startswith('\2'):
+    if s.startswith('\2'):
         return None  # \2 is the designator for None
 
-    elif s.startswith('\1'):
+    if s.startswith('\1'):
         if len(s) == 1:
             return ()
         return tuple(s[1:].split('\1'))
@@ -606,12 +603,13 @@ def _get_logfile_timespan(path):
 # Check_MK. To keep backwards compatibility with old history files, we have no
 # choice and continue to do it wrong... :-/
 def scrub_string(s):
+    if isinstance(s, bytes):
+        return s.translate(_scrub_string_str_table, b"\0\1\2\n")
     if isinstance(s, str):
-        return s.translate(_scrub_string_str_table, "\0\1\2\n")
-    if isinstance(s, six.text_type):
         return s.translate(_scrub_string_unicode_table)
     raise TypeError("scrub_string expects a string argument")
 
 
-_scrub_string_str_table = string.maketrans("\t", " ")
+_scrub_string_str_table = b''.join(
+    b' ' if x == ord(b'\t') else struct.Struct(">B").pack(x) for x in range(256))
 _scrub_string_unicode_table = {0: None, 1: None, 2: None, ord("\n"): None, ord("\t"): ord(" ")}

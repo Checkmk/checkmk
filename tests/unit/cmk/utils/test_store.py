@@ -200,7 +200,7 @@ def test_save_text_to_file_bytes(tmp_path, path_type, data):
 def test_save_bytes_to_file(tmp_path, path_type, data):
     path = path_type(tmp_path / "lala")
     store.save_bytes_to_file(path, data)
-    assert store._load_data_from_file(path) == data.decode("utf-8")
+    assert store.load_bytes_from_file(path) == data
 
 
 @pytest.mark.parametrize("path_type", [str, Path])

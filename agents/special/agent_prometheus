@@ -35,6 +35,7 @@ from typing import List, Dict, Any, Mapping
 from collections import OrderedDict, defaultdict
 import requests
 
+LOGGER = logging.getLogger()  # root logger for now
 
 def parse_arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__)
@@ -112,12 +113,81 @@ class PrometheusAPI:
         self.scrape_targets_dict = self._connected_scrape_targets()
 
     @staticmethod
+    def _process_single_result(promql_response):
+        """Obtain the metric value of the PromQL query response
+
+        Args:
+            promql_response: Dict which contains the metric information
+
+        Returns: Single Metric Value or Error details of failed attempt
+        """
+        if len(promql_response) == 1 and "value" in promql_response[0]:
+            return {"value": promql_response[0]["value"][1]}
+
+        # different cases for invalid/failed query expression
+        inv_info = {
+            0: "query error",
+            1: "no value",
+        }.get(len(promql_response), "unsupported query")
+        return {"invalid_info": inv_info}
+
+    def process_promql_queries(self, custom_services):
+        """Prepare Host & Piggyback data from custom defined PromQL expressions
+
+        For custom Prometheus services, only allow PromQL expressions which
+        return one single Prometheus metric.
+
+        Args:
+            custom_services: list of dicts where each dict specifies the details
+                             a Prometheus custom service including the associating
+                             metrics. Each metric is the result of a PromQL expression
+
+        Returns: dict where the key is the Piggyback Host Name and the value is
+                 a list of services for that host. Each list element
+                 contains the information of one service including the service metrics
+
+        """
+        result = {}
+        for service in custom_services:
+            # Per default assign resulting service to Prometheus Host
+            host_name = service.get("host_name", "")
+            host_services = result.setdefault(host_name, {})
+
+            service_description = service["service_description"]
+            service_metrics = []
+            for metric in service["metric_components"]:
+                metric_info = {
+                    "name": metric["metric_name"],
+                    "promql_query": metric["promql_query"]
+                }
+                try:
+                    promql_response = self.query_promql(metric["promql_query"])
+                except (KeyError, ValueError, requests.exceptions.Timeout) as exc:
+                    LOGGER.warning(exc)
+                    continue
+                metric_info.update(self._process_single_result(promql_response))
+                service_metrics.append(metric_info)
+
+            host_services[service_description] = {
+                "service_metrics": service_metrics,
+            }
+        return result
+
+    @staticmethod
     def _process_json_request(request):
         response = requests.get(request)
         response.raise_for_status()
         return response.json()
 
     def query_promql(self, promql):
+        """Query the Prometheus API using a PromQL Expression expecting a json response
+
+        Args:
+            promql: Param which contains the PromQL Expression
+
+        Returns:
+            Returns a list of dictionaries with each containing information about the specific metric
+        """
         promql_request = "%s/query?query=%s" % (self.api_endpoint, promql)
         result = self._process_json_request(promql_request)["data"]["result"]
         return result
@@ -282,9 +352,15 @@ class ApiData:
     Hub for all various metrics coming from different sources including the Prometheus
     Server & the Prometheus Exporters
     """
-    def __init__(self, api_client, custom_services_list):
-        custom_services = custom_services_list  # pylint: disable=W0612
+    def __init__(self, api_client):
+        self.api_client = api_client
         self.prometheus_server = PrometheusServer(api_client)
+
+    def promql_section(self, custom_services):
+        logging.info("Prometheus PromQl queries")
+        e = PiggybackGroup()
+        e.join('prometheus_custom', self.api_client.process_promql_queries(custom_services))
+        return '\n'.join(e.output())
 
     def server_info_section(self):
         logging.info('Prometheus Server Info')
@@ -324,12 +400,12 @@ def main(argv=None):
     try:
         config = ast.literal_eval(sys.stdin.read())
         config_args = _extract_config_args(config)
-
         # default cases always must be there
         api_client = PrometheusAPI(config_args["server_address"])
-        api_data = ApiData(api_client, config_args["custom_services"])
+        api_data = ApiData(api_client)
         print(api_data.server_info_section())
         print(api_data.scrape_targets_section())
+        print(api_data.promql_section(config_args["custom_services"]))
 
     except Exception as e:
         if args.debug:

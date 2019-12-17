@@ -1016,6 +1016,13 @@ std::string ReadWholeFile(const std::filesystem::path& fname) noexcept;
 
 bool PatchFileLineEnding(const std::filesystem::path& fname) noexcept;
 
+using InternalUser = std::pair<std::wstring, std::wstring>;  // name,pwd
+
+InternalUser MakeCmaUserInGroup(const std::wstring& group_name);
+bool RemoveCmaUser(const std::wstring& user_name);
+std::wstring GenerateRandomString(size_t max_length);
+std::wstring GenerateCmaUserNameInGroup(std::wstring_view group);
+
 }  // namespace wtools
 
 #endif  // wtools_h__

@@ -9,42 +9,29 @@ info = [
     ]
 ]
 
-discovery = {'': [(None, {})]}
+discovery = {
+    '': [
+        (None, {}),
+    ],
+}
 
 checks = {
     '': [
-        (
-            None, {
-                'levels': (150.0, 200.0)
-            }, [
-                (1, u'some error message', []),
-                (
-                    0,
-                    '54.70 GB used (46.70 GB RAM + 8.00 GB SWAP, this is 89.2% of 61.33 GB RAM + 8.00 GB SWAP)',
-                    [
-                        (
-                            'ramused', 47822.7734375, None, None, 0,
-                            62806.359375
-                        ),
-                        ('swapused', 8191.40625, None, None, 0, 8191.99609375),
-                        (
-                            'memused', 56014.1796875, 94209, 125612, 0,
-                            70998.35546875
-                        )
-                    ]
-                ),
-                (
-                    2, '',
-                    [('swap_used', 8388000, 8372604.0, 8372604.0, None, None)]
-                ),
-                (
-                    0, '', [
-                        ('mem_lnx_cached', 15342316, None, None, None, None),
-                        ('mem_lnx_buffers', 51260, None, None, None, None),
-                        ('mem_lnx_shmem', 3213064, None, None, None, None)
-                    ]
-                )
-            ]
-        )
-    ]
+        (None, { 'levels': (150.0, 200.0) }, [
+            (1, u'some error message', []),
+            (0, '54.70 GB used (46.70 GB RAM + 8.00 GB SWAP, this is 89.2% of 61.33 GB RAM + 8.00 GB SWAP)', [
+                ('ramused', 47822.7734375, None, None, 0, 62806.359375),
+                ('swapused', 8191.40625, None, None, 0, 8191.99609375),
+                ('memused', 56014.1796875, 94209.5390625, 125612.71875, 0, 70998.35546875),
+            ]),
+            (2, '', [
+                ('swap_used', 8388000, 8372604.0, 8372604.0, None, None),
+            ]),
+            (0, '', [
+                ('mem_lnx_cached', 15342316, None, None, None, None),
+                ('mem_lnx_buffers', 51260, None, None, None, None),
+                ('mem_lnx_shmem', 3213064, None, None, None, None),
+            ]),
+        ]),
+    ],
 }

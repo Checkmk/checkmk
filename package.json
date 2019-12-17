@@ -50,6 +50,7 @@
     "d3-flextree": "^2.1.1",
     "element-closest-polyfill": "^1.0.0",
     "jquery": "^3.4.1",
-    "select2": "^4.0.10"
+    "select2": "^4.0.10",
+    "whatwg-fetch": "^3.0.0"
   }
 }

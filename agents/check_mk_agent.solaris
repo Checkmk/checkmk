@@ -480,7 +480,7 @@ fi
 # Local checks
 if cd $LOCALDIR 2>/dev/null
 then
-    echo '<<<local>>>'
+    echo '<<<local:sep(0)>>>'
     for skript in $(ls)
     do
         if [ -x "$skript" ] ; then

@@ -22,26 +22,44 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef IntPointerColumn_h
-#define IntPointerColumn_h
+#ifndef IntLambdaColumn_h
+#define IntLambdaColumn_h
 
-#include "config.h"  // IWYU pragma: keep
-#include "Column.h"
+#include <functional>
+#include <string>
 #include "IntColumn.h"
+#include "contact_fwd.h"
+class Row;
 
-class IntPointerColumn : public IntColumn {
+class IntLambdaColumn : public IntColumn {
 public:
-    IntPointerColumn(const std::string& name, const std::string& description,
-                     const Column::Offsets& offsets, const int* number)
-        : IntColumn(name, description, offsets), _number(number) {}
+    struct Constant;
+    struct Reference;
+    IntLambdaColumn(std::string name, std::string description,
+                    std::function<int()> gv)
+        : IntColumn(std::move(name), std::move(description), {})
+        , get_value_(gv) {}
+    virtual ~IntLambdaColumn() = default;
 
-    int32_t getValue(Row /* row */,
-                     const contact* /* auth_user */) const override {
-        return *_number;
+    std::int32_t getValue(Row /*row*/,
+                          const contact* /*auth_user*/) const override {
+        return get_value_();
     }
 
 private:
-    const int* const _number;
+    std::function<int()> get_value_;
 };
 
-#endif  // IntPointerColumn_h
+struct IntLambdaColumn::Constant : IntLambdaColumn {
+    Constant(std::string name, std::string description, int x)
+        : IntLambdaColumn(std::move(name), std::move(description),
+                          [x] { return x; }){};
+};
+
+struct IntLambdaColumn::Reference : IntLambdaColumn {
+    Reference(std::string name, std::string description, int& x)
+        : IntLambdaColumn(std::move(name), std::move(description),
+                          [&x] { return x; }){};
+};
+
+#endif

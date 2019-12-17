@@ -517,6 +517,11 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, OutputFunnel)):
         # options such as 'selected' and 'checked' dont have a value in html tags
         options = []
 
+        # Links require href to be first attribute
+        href = attrs.pop('href', None)
+        if href:
+            yield ' href=\"%s\"' % href
+
         # render all attributes
         for k, v in attrs.iteritems():
 

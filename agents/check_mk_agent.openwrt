@@ -804,7 +804,7 @@ is_valid_plugin () {
 }
 
 # Local checks
-echo '<<<local>>>'
+echo '<<<local:sep(0)>>>'
 if cd $LOCALDIR ; then
     for skript in $(ls) ; do
         if is_valid_plugin "$skript" ; then

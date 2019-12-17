@@ -1821,7 +1821,7 @@ class Cell(object):
         # - Add in the front of the user sorters when not set
         painter_name = self.painter_name()
         sorter_name = _get_sorter_name_of_painter(painter_name)
-        if painter_name == 'svc_metrics_hist':
+        if painter_name in ['svc_metrics_hist', 'svc_metrics_forecast']:
             hash_id = ':%s' % hash(str(self.painter_parameters()))
             sorter_name += hash_id
 

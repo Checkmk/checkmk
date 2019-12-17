@@ -18,7 +18,7 @@ clean:
 	dh_testdir
 	dh_testroot
 
-	$(MAKE) --warn-undefined-variables EDITION=$(EDITION) clean
+	$(MAKE) EDITION=$(EDITION) clean
 	rm -f $(_PWD)/debian/postinst
 	rm -f $(_PWD)/debian/preinst
 	rm -f $(_PWD)/debian/prerm
@@ -40,7 +40,7 @@ install:
 	dh_installdirs
 
 	# This target compiles and installs everything needed into our DESTDIR
-	$(MAKE) --warn-undefined-variables EDITION=$(EDITION) DESTDIR=$(_PWD)/debian/`dh_listpackages` install
+	$(MAKE) EDITION=$(EDITION) DESTDIR=$(_PWD)/debian/`dh_listpackages` install
 
 	# Remove version independent things that will be created later by postinst
 	set -e ; \

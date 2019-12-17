@@ -48,6 +48,9 @@ PYTHON3_MODULES_LIST += urllib3-1.25.7.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += pyOpenSSL-19.1.0.tar.gz # needed by requests with extras = ["security"]
 PYTHON3_MODULES_LIST += requests-2.22.0.tar.gz # needed by DCD
 
+PYTHON3_MODULES_LIST += psutil-5.6.7.tar.gz # needed for omdlib
+PYTHON3_MODULES_LIST += passlib-1.7.2.tar.gz # needed for omdlib
+
 # TODO: Can we clean this up and use the intermediate install step results? Would be possible
 # in the moment we merge the build and intermediate install in a single target
 $(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(FREETDS_INTERMEDIATE_INSTALL) $(PYTHON3_MODULES_UNPACK)

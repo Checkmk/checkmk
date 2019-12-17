@@ -221,7 +221,6 @@ def _valuespec_generic_metrics_prometheus():
                   ("promql_checks",
                    ListOf(
                        Dictionary(elements=[
-                           ("host_name", TextAscii(title=_('Piggyback for: '))),
                            ("service_description",
                             TextAscii(
                                 title=_('Service description: '),
@@ -231,20 +230,61 @@ def _valuespec_generic_metrics_prometheus():
                             ListOf(Dictionary(
                                 title=_('PromQL query'),
                                 elements=[
+                                    ("metric_label",
+                                     TextAscii(title=_('Metric Label: '),
+                                               allow_empty=False,
+                                               help="The Metric Label is displayed alongside the "
+                                               "queried value within the resulting service. "
+                                               "The metric name will be taken as label if "
+                                               "nothing was specified.")),
                                     ("metric_name",
-                                     TextAscii(title=_('Metric Name: '), allow_empty=False)),
+                                     TextAscii(title=_('Metric Name: '),
+                                               allow_empty=False,
+                                               help="Feel free to specify any naming. However, "
+                                               "providing a fitting metric name results in the "
+                                               "generation of a suitable graph display of the "
+                                               "metric. One can refer to other existing check "
+                                               "plug-ins in order to inspect existing metric "
+                                               "names and examples. Otherwise one can also "
+                                               "refer to the \"Guidelines for coding check "
+                                               "plug-ins\" section in the Offical Guide for "
+                                               "further details.")),
                                     ("promql_query",
-                                     TextAscii(title=_('PromQL query: '), allow_empty=False)),
-                                ]),
+                                     TextAscii(title=_('PromQL query: '),
+                                               allow_empty=False,
+                                               size=80)),
+                                ],
+                                optional_keys=["metric_label"],
+                            ),
                                    title=_('PromQL queries for Service'),
                                    allow_empty=False,
-                                   magic='@;@')),
-                       ]),
+                                   magic='@;@',
+                                   validate=_validate_prometheus_service_metrics)),
+                           ("host_name",
+                            TextAscii(title=_('Assign service to following host: '),
+                                      allow_empty=False,
+                                      help="Specify the host to which the resulting "
+                                      "service will be assigned to. The host "
+                                      "should be configured to allow Piggyback "
+                                      "data")),
+                       ],
+                                  optional_keys=["host_name"]),
                        title=_("Service creation using PromQL queries"),
+                       allow_empty=False,
                    ))],
         title=_("Prometheus"),
-        help=_("No help yet defined"),
+        optional_keys=["port"],
     )
+
+
+def _validate_prometheus_service_metrics(value, _varprefix):
+    used_metric_names = []
+    for metric_details in value:
+        metric_name = metric_details["metric_name"]
+        if metric_name in used_metric_names:
+            raise MKUserError(metric_name, "Each metric name must be unique for a service")
+        else:
+            used_metric_names.append(metric_name)
 
 
 rulespec_registry.register((HostRulespec(

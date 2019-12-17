@@ -103,7 +103,7 @@ def check_prometheus_custom(_item, _params, data):
             yield invalid_result
             continue
 
-        infoname = _parse_metric_description(metric_name)
+        infoname = metric_details.get("label", _parse_metric_description(metric_name))
         yield check_levels(float(metric_details["value"]), metric_name, None, infoname=infoname)
 
 

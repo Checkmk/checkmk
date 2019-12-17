@@ -160,6 +160,9 @@ class PrometheusAPI:
                     "name": metric["metric_name"],
                     "promql_query": metric["promql_query"]
                 }
+                if "metric_label" in metric:
+                    metric_info.update({"label": metric["metric_label"]})
+
                 try:
                     promql_response = self.query_promql(metric["promql_query"])
                 except (KeyError, ValueError, requests.exceptions.Timeout) as exc:

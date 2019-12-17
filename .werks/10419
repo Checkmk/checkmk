@@ -1,0 +1,15 @@
+Title: AWS EC2 Limits graphs collects now all instance types in a single graph
+Knowledge: undoc
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p8
+Date: 1576683578
+
+AWS EC2 Limits check plugin displayed in the service view one graph per
+running on-demand instance type. Now all instance types are collected
+in a single graph, where they are stacked. This allows for a simpler
+overview of running instances and the total amount running.

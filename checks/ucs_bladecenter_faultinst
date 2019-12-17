@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -29,51 +29,57 @@
 # faultInst   Dn sys/chassis-2/bl...ault-F1256 Descr Local disk 1 missing on server 2/3    Severity info
 # faultInst   Dn sys/chassis-1/bl...ault-F1256 Descr Local disk 2 missing on server 1/3    Severity info
 
+factory_settings["ucs_bladecenter_faultinst_default_levels"] = {
+    "critical": 2,
+    "major": 1,
+    "warning": 1,
+    "minor": 1,
+    "info": 0,
+    "condition": 0,
+    "cleared": 0,
+    "show_only": ["critical", "major", "warning", "minor", "info", "condition", "cleared"]
+}
 
-def inventory_ucs_bladecenter_faultinst(parsed):
-    yield None, None
 
-
-def check_ucs_bladecenter_faultinst(item, _no_params, parsed):
-    severity_map = {
-        "critical": 2,
-        "major": 1,
-        "warning": 1,
-        "minor": 1,
-        "info": 0,
-        "condition": 0,
-        "cleared": 0,
-    }
-    severities = {}
-    for values in parsed.get("faultInst", {}).itervalues():
-        entry_sev = values.get("Severity").lower()
-        severities.setdefault(entry_sev, [])
-        severities[entry_sev].append(values)
-
-    if not severities.items():
+def check_ucs_bladecenter_faultinst(_no_item, params, parsed):
+    out_sev = ("critical", "major", "warning", "minor", "info", "condition", "cleared")
+    data = parsed.get('faultInst', {})
+    show_states = params.get('show_only', [])
+    if not data:
         yield 0, "No fault instances found"
         return
 
-    for sev, instances in severities.items():
-        sev_state = severity_map.get(sev, 3)
-
-        # Right now, OK instances are also reported in detail
-        # If required we can increase the state level here, so that only WARN+ messages are shown
-        if sev_state >= 0:
-            extra_info = []
-            for instance in instances:
-                extra_info.append("%s" % instance["Descr"])
-            extra_info = ": " + ", ".join(extra_info)
-        else:
-            extra_info = ""
-
-        yield sev_state, "%d %s Instances%s" % (len(instances), sev.upper(), extra_info)
+    sev = {}
+    for key, values in data.items():
+        entry_sev = values.get("Severity").lower()
+        sev.setdefault(entry_sev, [])
+        sev[entry_sev].append(values.get('Descr', 'No Describtion'))
+    long_txt = ''
+    no_output = True
+    for severity in out_sev:
+        if sev.get(severity) and severity in show_states:
+            no_output = False
+            long_txt += '\n' + severity + ' Instances:\n'
+            for msgs in sev[severity]:
+                long_txt += severity + ' --> ' + msgs + '\n'
+            long_txt += '\n'
+            txt = severity + ": " + str(len(sev[severity]))
+            txt = str(len(sev[severity])) + " " + severity + " Instances"
+            if params[severity] > 0:
+                txt += " (see Long-Output for details)"
+            yield params[severity], txt
+    if no_output:
+        yield 0, "No fault instances found (filtered)"
+    else:
+        yield 0, long_txt
 
 
 check_info["ucs_bladecenter_faultinst"] = {
     'parse_function': ucs_bladecenter_convert_info,
-    'inventory_function': inventory_ucs_bladecenter_faultinst,
+    'inventory_function': discover_single,
     'check_function': check_ucs_bladecenter_faultinst,
     'service_description': 'Fault Instances',
+    "group": "ucs_bladecenter_faultinst",
+    'default_levels_variable': 'ucs_bladecenter_faultinst_default_levels',
     'includes': ['ucs_bladecenter.include'],
 }

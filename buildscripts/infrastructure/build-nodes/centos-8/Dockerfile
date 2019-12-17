@@ -64,8 +64,9 @@ RUN yum -y makecache \
     kernel-headers \
     && yum clean all
 
+#ARG ARTIFACT_STORAGE
 #COPY bw-build-gnu-toolchain.sh /usr/sbin
-#RUN bw-build-gnu-toolchain.sh -b
+#RUN bw-build-gnu-toolchain.sh -r $ARTIFACT_STORAGE -b
 #
 #RUN mv /usr/bin/gcc /usr/bin/gcc-old || true \
 #    && mv /usr/bin/cc /usr/bin/cc-old || true \

@@ -28,6 +28,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Age,
     Dictionary,
+    DropdownChoice,
     Integer,
     MonitoringState,
     TextAscii,
@@ -44,6 +45,19 @@ from cmk.gui.plugins.wato import (
 def _parameter_valuespec_jenkins_nodes():
     return Dictionary(elements=[
         ("jenkins_offline", MonitoringState(title=_("Node state: Offline"), default_value=2)),
+        ("jenkins_mode",
+         DropdownChoice(
+             title=_("Expected mode state."),
+             help=_("Choose between Normal (Utilize this node as much "
+                    "as possible) and Exclusive (Only build jobs with label "
+                    "restrictions matching this node). The state will "
+                    "change to warning state, if the mode differs."),
+             choices=[
+                 ("NORMAL", _("Normal")),
+                 ("EXCLUSIVE", _("Exclusive")),
+             ],
+             default_value="NORMAL",
+         )),
         ('jenkins_numexecutors',
          Tuple(
              title=_("Lower level for number of executors of this node"),

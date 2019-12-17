@@ -99,8 +99,11 @@ factory_settings["jenkins_nodes_default_levels"] = {
 def check_jenkins_nodes(item, params, item_data):
     for node in item_data:
 
+        node_desc = node.get("description")
+        if node_desc and node_desc is not None:
+            yield 0, "Description: %s" % node_desc.title()
+
         for key, infotext in [
-            ("description", "Description"),
             ("jnlpAgent", "Is JNLP agent"),
             ("idle", "Is idle"),
         ]:
@@ -155,6 +158,25 @@ def check_jenkins_nodes(item, params, item_data):
 
         state = 0
         offline_state = node.get("offline")
+
+        mode = "Unknown"
+        mode_state = 3
+        mode_infotext = "Mode: "
+        try:
+            mode = node["assignedLabels"][0]["nodes"][0]["mode"]
+            mode_state = 0
+        except (KeyError, ValueError):
+            pass
+
+        mode_infotext += "%s" % mode.title()
+
+        mode_expected = params.get("jenkins_mode")
+        if params.get("jenkins_mode") is not None:
+            if mode_expected != mode:
+                mode_state = 2
+                mode_infotext += " (expected: %s)" % mode_expected.title()
+
+        yield mode_state, mode_infotext
 
         if offline_state:
             state = params["jenkins_offline"]

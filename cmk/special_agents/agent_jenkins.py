@@ -56,7 +56,7 @@ def main(argv=None):
             name="nodes",
             key="computer",
             uri=
-            "/computer/api/json?tree=displayName,busyExecutors,totalExecutors,computer[description,displayName,idle,jnlpAgent,numExecutors,assignedLabels[busyExecutors,idleExecutors],offline,offlineCause,temporarilyOffline,monitorData[*]]"
+            "/computer/api/json?tree=displayName,busyExecutors,totalExecutors,computer[description,displayName,idle,jnlpAgent,numExecutors,assignedLabels[busyExecutors,idleExecutors,nodes[mode],name],offline,offlineCause,temporarilyOffline,monitorData[*]]"
         ),
         Section(
             name="queue",

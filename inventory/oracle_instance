@@ -29,6 +29,24 @@
 # last entry: db creation time 'ddmmyyyyhh24mi'
 
 
+def _parse_raw_db_creation_time(raw_db_creation_time):
+    if raw_db_creation_time is None:
+        return None
+
+    # We just translate the format to another
+    # "%d%m%Y%H%M%S" => "%Y-%m-%d %H:%M"
+    # we cannot use time because we have no information about the timezone here.
+    try:
+        year = int(raw_db_creation_time[4:8])
+        month = int(raw_db_creation_time[2:4])
+        day = int(raw_db_creation_time[:2])
+        hours = int(raw_db_creation_time[8:10])
+        minutes = int(raw_db_creation_time[10:])
+    except (IndexError, ValueError):
+        return None
+    return "%s-%02d-%02d %02d:%02d" % (year, month, day, hours, minutes)
+
+
 def inv_oracle_instance(info, inventory_tree, status_data_tree):
     path = "software.applications.oracle.instance:"
     inv_node = inventory_tree.get_list(path)
@@ -63,18 +81,13 @@ def inv_oracle_instance(info, inventory_tree, status_data_tree):
         except (TypeError, ValueError):
             up_seconds = None
 
-        try:
-            db_creation_time = time.mktime(time.strptime(raw_db_creation_time, "%d%m%Y%H%M%S"))
-        except (TypeError, ValueError):
-            db_creation_time = None
-
         inv_node.append({
             "sid": sid,
             "version": version,
             "openmode": openmode,
             "logmode": logmode,
             "logins": logins,
-            "db_creation_time": db_creation_time,
+            "db_creation_time": _parse_raw_db_creation_time(raw_db_creation_time),
         })
 
         status_node.append({

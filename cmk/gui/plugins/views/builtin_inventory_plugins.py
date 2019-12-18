@@ -578,7 +578,7 @@ inventory_displayhints.update({
     ".software.applications.oracle.instance:*.logins": {"title": _("Logins")},
     ".software.applications.oracle.instance:*.db_uptime": {"title": _("Uptime"), "paint": "age"},
     ".software.applications.oracle.instance:*.db_creation_time": {
-        "title": _("Creation time"), "paint": "date_and_time"
+        "title": _("Creation time"),
     },
     ".software.applications.oracle.dataguard_stats:": {
         "title": _("Dataguard statistics"),

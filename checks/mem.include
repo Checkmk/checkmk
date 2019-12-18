@@ -68,46 +68,50 @@ def _get_levels_mode_from_value(warn):
     return "%s_%s" % (type_, reference)
 
 
-def _normalize_mem_levels(mode, warn, crit, perc_ref, abs_ref, render_base, unit=1):
+def normalize_mem_levels(mode, warn, crit, total, _perc_total=None, render_base=1024, render_unit=1):
     """get normalized levels and formatter
 
     Levels may be given either as
-     * MB levels on used
-     * MB levels on free
-     * percentages on used
-     * percentages on free
+     * Absolute levels on used
+     * Absolute levels on free
+     * Percentage levels on used
+     * Percentage levels on free
     Normalize levels to absolute posive levels and return formatted levels text
     """
+    # TODO: remove this weird case of different reference values.
+    if _perc_total is None:
+        _perc_total = total
+
     if warn is None or crit is None:
         return None, None, ""
 
+    mode_split = mode.split('_', 1)
+    if mode_split[0] not in ('perc', 'abs') or mode_split[-1] not in ('used', 'free'):
+        raise NotImplementedError("unknown levels mode: %r" % (mode,))
+
     # normalize percent -> absolute
     if mode.startswith("perc"):
-        warn_used = warn / 100.0 * perc_ref
-        crit_used = crit / 100.0 * perc_ref
+        warn_used = warn / 100.0 * _perc_total
+        crit_used = crit / 100.0 * _perc_total
         levels_text = "%s/%s" % (
-            get_percent_human_readable(abs(warn)),
-            get_percent_human_readable(abs(crit)),
+            get_percent_human_readable(warn),
+            get_percent_human_readable(crit),
         )
-    elif mode.startswith("abs"):
+    else:  # absolute
         warn_used = float(warn)
         crit_used = float(crit)
         levels_text = "%s/%s" % (
-            get_bytes_human_readable(abs(warn) * unit, base=render_base),
-            get_bytes_human_readable(abs(crit) * unit, base=render_base),
+            get_bytes_human_readable(warn * render_unit, base=render_base),
+            get_bytes_human_readable(crit * render_unit, base=render_base),
         )
-    else:
-        raise NotImplementedError("unknown levels mode: %r" % (mode,))
 
-    # normalize negative -> positive
+    # normalize free -> used
     if mode.endswith("free"):
-        warn_used = float(abs_ref + warn_used)  # warn_used is negative!
-        crit_used = float(abs_ref + crit_used)
+        warn_used = float(total - warn_used)
+        crit_used = float(total - crit_used)
         levels_text = "warn/crit below %s free" % levels_text
-    elif mode.endswith("used"):
+    else:  # used
         levels_text = "warn/crit at %s used" % levels_text
-    else:
-        raise NotImplementedError("unknown levels mode: %r" % (mode,))
 
     return warn_used, crit_used, levels_text
 
@@ -210,14 +214,14 @@ def check_memory(params, meminfo, render_base=1024):
     # Normalize levels and check them
     warn, crit = params.get("levels", (None, None))
     mode = _get_levels_mode_from_value(warn)
-    warn_mb, crit_mb, levels_text = _normalize_mem_levels(
+    warn_mb, crit_mb, levels_text = normalize_mem_levels(
         mode,
-        warn,
-        crit,
-        memtotal.mb,
+        abs(warn),
+        abs(crit),
         totalvirt.mb,
-        render_base,
-        unit=1024**2,
+        _perc_total=memtotal.mb,
+        render_base=render_base,
+        render_unit=1024**2,
     )
     # Check levels
     state = _get_plain_state(comp_mb, warn_mb, crit_mb)

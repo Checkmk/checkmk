@@ -98,8 +98,10 @@ To set up the development environment do the following:
   After successful installation, hook it up to your git-repository by issuing the following command inside your git repository:
 
   ```
-  pre-commit install
+  pre-commit install --allow-missing-config
   ```
+  The `--allow-missing-config` parameter is needed so that branches of older versions of Checkmk which don't
+  support this feature and are missing the configuration file won't throw errors.
 
   Afterwards your commits will automatically be checked for conformity by `pre-commit`. If you know a
   check (like mypy for example) got something wrong and you don't want to fix it right away you can skip

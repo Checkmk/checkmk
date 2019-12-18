@@ -1935,7 +1935,7 @@ do_custom_sqls () {
         fi
 
         # set custom credentials from section
-        db_connect=$(mk_ora_db_connect "$sid")
+        db_connect=$(mk_ora_db_connect "$MK_SID")
         export MK_DB_CONNECT=$db_connect
 
         unset_custom_sqls_vars
@@ -2693,9 +2693,9 @@ for sid in $SIDS; do
             "ORACLE_SID: ${ORACLE_SID}" "LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}"\
             "ORACLE_VERSION: ${ORACLE_VERSION} (${NUMERIC_ORACLE_VERSION})"
 
-
-    db_connect=$(mk_ora_db_connect "$sid")
+    # MK_SID is feauture replacement for sid
     export MK_SID=$sid
+    db_connect=$(mk_ora_db_connect "$MK_SID")
     export MK_DB_CONNECT=$db_connect
 
     do_checks

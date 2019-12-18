@@ -397,7 +397,16 @@ def _cleanup_old_source_status_files(time_settings):
                 max_cache_age_by_sources[source_host.name] = max_cache_age
 
     base_dir = str(cmk.utils.paths.piggyback_source_dir)
-    for entry in os.listdir(base_dir):
+
+    try:
+        source_hostnames = os.listdir(base_dir)
+    except OSError as e:
+        if e.errno == errno.ENOENT:
+            console.verbose("Piggyback source folder '%s': No such file or directory.\n" % base_dir)
+            return
+        raise
+
+    for entry in source_hostnames:
         if entry[0] == ".":
             continue
 
@@ -421,7 +430,16 @@ def _cleanup_old_piggybacked_files(time_settings):
     """Remove piggybacked data files which exceed configured maximum cache age."""
 
     base_dir = str(cmk.utils.paths.piggyback_dir)
-    for piggybacked_hostname in os.listdir(base_dir):
+
+    try:
+        piggyback_hostnames = os.listdir(base_dir)
+    except OSError as e:
+        if e.errno == errno.ENOENT:
+            console.verbose("Piggyback folder '%s': No such file or directory.\n" % base_dir)
+            return
+        raise
+
+    for piggybacked_hostname in piggyback_hostnames:
         if piggybacked_hostname[0] == ".":
             continue
 
@@ -446,7 +464,7 @@ def _cleanup_old_piggybacked_files(time_settings):
             os.rmdir(backed_host_dir_path)
         except OSError as e:
             if e.errno == errno.ENOTEMPTY:
-                pass
+                console.verbose("Piggyback folder '%s' not empty.\n" % backed_host_dir_path)
             else:
                 raise
         else:

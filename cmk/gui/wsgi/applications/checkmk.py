@@ -50,6 +50,131 @@ from cmk.gui.log import logger
 from cmk.utils import store
 
 
+def _plain_error():
+    """Webservice functions may decide to get a normal result code
+    but a text with an error message in case of an error"""
+    return html.request.has_var("_plain_error") or html.myfile == "webapi"
+
+
+def _profiling_enabled():
+    if config.profile is False:
+        return False  # Not enabled
+
+    if config.profile == "enable_by_var" and not html.request.has_var("_profile"):
+        return False  # Not enabled by HTTP variable
+
+    return True
+
+
+def _fail_silently():
+    """Ajax-Functions want no HTML output in case of an error but
+    just a plain server result code of 500"""
+    return html.request.has_var("_ajaxid")
+
+
+def _page_not_found():
+    # TODO: This is a page handler. It should not be located in generic application
+    # object. Move it to another place
+    if html.request.has_var("_plain_error"):
+        html.write(_("Page not found"))
+    else:
+        html.header(_("Page not found"))
+        html.show_error(_("This page was not found. Sorry."))
+    html.footer()
+
+
+def _ensure_general_access():
+    if config.user.may("general.use"):
+        return
+
+    reason = [
+        _("You are not authorized to use the Check_MK GUI. Sorry. "
+          "You are logged in as <b>%s</b>.") % config.user.id
+    ]
+
+    if config.user.role_ids:
+        reason.append(_("Your roles are <b>%s</b>.") % ", ".join(config.user.role_ids))
+    else:
+        reason.append(_("<b>You do not have any roles.</b>"))
+
+    reason.append(
+        _("If you think this is an error, please ask your administrator "
+          "to check the permissions configuration."))
+
+    if login.auth_type == 'cookie':
+        reason.append(
+            _("<p>You have been logged out. Please reload the page "
+              "to re-authenticate.</p>"))
+        login.del_auth_cookie()
+
+    raise MKAuthException(" ".join(reason))
+
+
+def _show_exception_info(e):
+    html.write_text("%s" % e)
+    if config.debug:
+        html.write_text(traceback.format_exc())
+
+
+def _handle_not_authenticated():
+    if _fail_silently():
+        # While api call don't show the login dialog
+        raise MKUnauthenticatedException(_('You are not authenticated.'))
+
+    # Redirect to the login-dialog with the current url as original target
+    # Never render the login form directly when accessing urls like "index.py"
+    # or "dashboard.py". This results in strange problems.
+    if html.myfile != 'login':
+        raise HTTPRedirect('%scheck_mk/login.py?_origtarget=%s' %
+                           (config.url_prefix(), html.urlencode(html.makeuri([]))))
+    else:
+        # This either displays the login page or validates the information submitted
+        # to the login form. After successful login a http redirect to the originally
+        # requested page is performed.
+        login_page = login.LoginPage()
+        login_page.set_no_html_output(_plain_error())
+        login_page.handle_page()
+
+    raise FinalizeRequest(httplib.OK)
+
+
+def _load_all_plugins():
+    # Optimization: in case of the graph ajax call only check the metrics module. This
+    # improves the performance for these requests.
+    # TODO: CLEANUP: Move this to the pagehandlers if this concept works out.
+    # werkzeug.wrappers.Request.script_root would be helpful here, but we don't have that yet.
+    only_modules = ["metrics"] if html.myfile == "ajax_graph" else None
+    modules.load_all_plugins(only_modules=only_modules)
+
+
+def _localize_request():
+    previous_language = cmk.gui.i18n.get_current_language()
+    user_language = html.get_ascii_input("lang", config.user.language())
+
+    html.set_language_cookie(user_language)
+    cmk.gui.i18n.localize(user_language)
+
+    # All plugins might have to be reloaded due to a language change. Only trigger
+    # a second plugin loading when the user is really using a custom localized GUI.
+    # Otherwise the load_all_plugins() at the beginning of the request is sufficient.
+    if cmk.gui.i18n.get_current_language() != previous_language:
+        _load_all_plugins()
+
+
+def _render_exception(e, title=""):
+    if title:
+        title = "%s: " % title
+
+    if _plain_error():
+        html.set_output_format("text")
+        html.write("%s%s\n" % (title, e))
+
+    elif not _fail_silently():
+        html.header(title)
+        html.show_error(e)
+        html.footer()
+
+
 class CheckmkApp(object):
     """The Check_MK GUI WSGI entry point"""
     def __init__(self, environ, start_response):
@@ -65,7 +190,7 @@ class CheckmkApp(object):
         try:
             config.initialize()
 
-            with cmk.utils.profile.Profile(enabled=self._profiling_enabled(),
+            with cmk.utils.profile.Profile(enabled=_profiling_enabled(),
                                            profile_file=os.path.join(cmk.utils.paths.var_dir,
                                                                      "multisite.profile")):
                 self._handle_request()
@@ -78,28 +203,28 @@ class CheckmkApp(object):
             self._response.status_code = e.status
 
         except livestatus.MKLivestatusNotFoundError as e:
-            self._render_exception(e, title=_("Data not found"))
+            _render_exception(e, title=_("Data not found"))
 
         except MKUserError as e:
-            self._render_exception(e, title=_("Invalid user Input"))
+            _render_exception(e, title=_("Invalid user Input"))
 
         except MKAuthException as e:
-            self._render_exception(e, title=_("Permission denied"))
+            _render_exception(e, title=_("Permission denied"))
 
         except livestatus.MKLivestatusException as e:
-            self._render_exception(e, title=_("Livestatus problem"))
+            _render_exception(e, title=_("Livestatus problem"))
             self._response.status_code = httplib.BAD_GATEWAY
 
         except MKUnauthenticatedException as e:
-            self._render_exception(e, title=_("Not authenticated"))
+            _render_exception(e, title=_("Not authenticated"))
             self._response.status_code = httplib.UNAUTHORIZED
 
         except MKConfigError as e:
-            self._render_exception(e, title=_("Configuration error"))
+            _render_exception(e, title=_("Configuration error"))
             logger.error("MKConfigError: %s", e)
 
         except MKGeneralException as e:
-            self._render_exception(e, title=_("General error"))
+            _render_exception(e, title=_("General error"))
             logger.error("MKGeneralException: %s", e)
 
         except Exception as e:
@@ -107,8 +232,7 @@ class CheckmkApp(object):
             crash_reporting.CrashReportStore().save(crash)
 
             logger.exception("Unhandled exception (Crash-ID: %s)", crash.ident_to_text())
-            crash_reporting.show_crash_dump_message(crash, self._plain_error(),
-                                                    self._fail_silently())
+            crash_reporting.show_crash_dump_message(crash, _plain_error(), _fail_silently())
 
         finally:
             try:
@@ -118,161 +242,46 @@ class CheckmkApp(object):
                 logger.exception("error releasing locks after WSGI request")
                 raise
 
-    def _render_exception(self, e, title=""):
-        if title:
-            title = "%s: " % title
-
-        if self._plain_error():
-            html.set_output_format("text")
-            html.write("%s%s\n" % (title, e))
-
-        elif not self._fail_silently():
-            html.header(title)
-            html.show_error(e)
-            html.footer()
-
     def _handle_request(self):
         html.init_modes()
 
         # Make sure all plugins are avaiable as early as possible. At least
         # we need the plugins (i.e. the permissions declared in these) at the
         # time before the first login for generating auth.php.
-        self._load_all_plugins()
+        _load_all_plugins()
 
-        handler = pages.get_page_handler(html.myfile, self._page_not_found)
+        handler = pages.get_page_handler(html.myfile, _page_not_found)
 
         # Some pages do skip authentication. This is done by adding
         # noauth: to the page hander, e.g. "noauth:run_cron" : ...
         # TODO: Eliminate those "noauth:" pages. Eventually replace it by call using
         #       the now existing default automation user.
-        if handler == self._page_not_found:
-            handler = pages.get_page_handler("noauth:" + html.myfile, self._page_not_found)
-            if handler != self._page_not_found:
+        if handler == _page_not_found:
+            handler = pages.get_page_handler("noauth:" + html.myfile, _page_not_found)
+            if handler != _page_not_found:
                 try:
                     handler()
                 except Exception as e:
                     # TODO: This misses correct error handling (log to web.log, crash reporting)
-                    self._show_exception_info(e)
+                    _show_exception_info(e)
                 raise FinalizeRequest(httplib.OK)
 
         # Ensure the user is authenticated. This call is wrapping all the different
         # authentication modes the Check_MK GUI supports and initializes the logged
         # in user objects.
         if not login.authenticate(self._request):
-            self._handle_not_authenticated()
+            _handle_not_authenticated()
 
         # Initialize the multiste cmk.gui.i18n. This will be replaced by
         # language settings stored in the user profile after the user
         # has been initialized
-        self._localize_request()
+        _localize_request()
 
         # Update the UI theme with the attribute configured by the user
         html.set_theme(config.user.get_attribute("ui_theme"))
 
-        self._ensure_general_access()
+        _ensure_general_access()
         handler()
-
-    def _load_all_plugins(self):
-        # Optimization: in case of the graph ajax call only check the metrics module. This
-        # improves the performance for these requests.
-        # TODO: CLEANUP: Move this to the pagehandlers if this concept works out.
-        # werkzeug.wrappers.Request.script_root would be helpful here, but we don't have that yet.
-        only_modules = ["metrics"] if html.myfile == "ajax_graph" else None
-        modules.load_all_plugins(only_modules=only_modules)
-
-    def _show_exception_info(self, e):
-        html.write_text("%s" % e)
-        if config.debug:
-            html.write_text(traceback.format_exc())
-
-    def _handle_not_authenticated(self):
-        if self._fail_silently():
-            # While api call don't show the login dialog
-            raise MKUnauthenticatedException(_('You are not authenticated.'))
-
-        # Redirect to the login-dialog with the current url as original target
-        # Never render the login form directly when accessing urls like "index.py"
-        # or "dashboard.py". This results in strange problems.
-        if html.myfile != 'login':
-            raise HTTPRedirect('%scheck_mk/login.py?_origtarget=%s' %
-                               (config.url_prefix(), html.urlencode(html.makeuri([]))))
-        else:
-            # This either displays the login page or validates the information submitted
-            # to the login form. After successful login a http redirect to the originally
-            # requested page is performed.
-            login_page = login.LoginPage()
-            login_page.set_no_html_output(self._plain_error())
-            login_page.handle_page()
-
-        raise FinalizeRequest(httplib.OK)
-
-    def _localize_request(self):
-        previous_language = cmk.gui.i18n.get_current_language()
-        user_language = html.get_ascii_input("lang", config.user.language())
-
-        html.set_language_cookie(user_language)
-        cmk.gui.i18n.localize(user_language)
-
-        # All plugins might have to be reloaded due to a language change. Only trigger
-        # a second plugin loading when the user is really using a custom localized GUI.
-        # Otherwise the load_all_plugins() at the beginning of the request is sufficient.
-        if cmk.gui.i18n.get_current_language() != previous_language:
-            self._load_all_plugins()
-
-    def _fail_silently(self):
-        """Ajax-Functions want no HTML output in case of an error but
-        just a plain server result code of 500"""
-        return html.request.has_var("_ajaxid")
-
-    def _plain_error(self):
-        """Webservice functions may decide to get a normal result code
-        but a text with an error message in case of an error"""
-        return html.request.has_var("_plain_error") or html.myfile == "webapi"
-
-    def _profiling_enabled(self):
-        if config.profile is False:
-            return False  # Not enabled
-
-        if config.profile == "enable_by_var" and not html.request.has_var("_profile"):
-            return False  # Not enabled by HTTP variable
-
-        return True
-
-    # TODO: This is a page handler. It should not be located in generic application
-    # object. Move it to another place
-    def _page_not_found(self):
-        if html.request.has_var("_plain_error"):
-            html.write(_("Page not found"))
-        else:
-            html.header(_("Page not found"))
-            html.show_error(_("This page was not found. Sorry."))
-        html.footer()
-
-    def _ensure_general_access(self):
-        if config.user.may("general.use"):
-            return
-
-        reason = [
-            _("You are not authorized to use the Check_MK GUI. Sorry. "
-              "You are logged in as <b>%s</b>.") % config.user.id
-        ]
-
-        if config.user.role_ids:
-            reason.append(_("Your roles are <b>%s</b>.") % ", ".join(config.user.role_ids))
-        else:
-            reason.append(_("<b>You do not have any roles.</b>"))
-
-        reason.append(
-            _("If you think this is an error, please ask your administrator "
-              "to check the permissions configuration."))
-
-        if login.auth_type == 'cookie':
-            reason.append(
-                _("<p>You have been logged out. Please reload the page "
-                  "to re-authenticate.</p>"))
-            login.del_auth_cookie()
-
-        raise MKAuthException(" ".join(reason))
 
     def __iter__(self):
         """Is called by the WSGI server to serve the current page"""

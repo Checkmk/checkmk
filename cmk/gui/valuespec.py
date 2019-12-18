@@ -2660,9 +2660,9 @@ class AbsoluteDate(ValueSpec):
 
         year, month, day, hour, mmin, sec = self.split_date(value)
         values = [
-            ("_year", year, 4),
-            ("_month", month, 2),
-            ("_day", day, 2),
+            ("_year", year, 6),
+            ("_month", month, 3),
+            ("_day", day, 3),
         ]
         if self._include_time:
             values += [

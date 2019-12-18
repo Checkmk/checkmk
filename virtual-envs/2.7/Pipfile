@@ -23,6 +23,7 @@ pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker f
 pyfakefs = "*" # used for unit tests
 webtest = "*"  # used by WSGI based tests
 yapf = "*"  # used for editor integration and the format-python Makefile target
+pre-commit = "*"  # used to fix / find issues before commiting changes
 
 [packages]
 setuptools_scm = "==3.1.0"  # needed by various setup.py

@@ -927,6 +927,15 @@ class Rule(object):
         rule_dict = self.to_config()
         rule_dict["condition"]["host_folder"] = self.folder.path_for_rule_matching()
 
+        # The cache uses some id(ruleset) to build indexes for caches. When we are using
+        # dynamically allocated ruleset list objects, that are quickly invalidated, it
+        # may happen that the address space is reused for other objects, resulting in
+        # duplicate id() results for different rulesets (because ID returns the memory
+        # address the object is located at).
+        # Since we do not work with regular rulesets here, we need to clear the cache
+        # (that is not useful in this situation)
+        matcher.ruleset_optimizer.clear_host_ruleset_cache()
+
         if match_service_conditions:
             if list(
                     matcher.get_service_ruleset_values(

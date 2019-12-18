@@ -25,6 +25,8 @@
 # Boston, MA 02110-1301 USA.
 """LDAP configuration and diagnose page"""
 
+import six
+
 import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -383,11 +385,18 @@ class ModeEditLDAPConnection(LDAPMode):
         ldap_groups = plugin.fetch_needed_groups_for_groups_to_roles(connection, params)
 
         num_groups = 0
-        for role_id, group_distinguished_names in active_plugins['groups_to_roles'].items():
-            if not isinstance(group_distinguished_names, list):
-                group_distinguished_names = [group_distinguished_names]
+        for role_id, group_specs in active_plugins['groups_to_roles'].items():
+            if not isinstance(group_specs, list):
+                group_specs = [group_specs]
 
-            for dn, _search_connection_id in group_distinguished_names:
+            for group_spec in group_specs:
+                if isinstance(group_spec, six.string_types):
+                    dn = group_spec  # be compatible to old config without connection spec
+                elif not isinstance(group_spec, tuple):
+                    continue  # skip non configured ones (old valuespecs allowed None)
+                else:
+                    dn = group_spec[0]
+
                 if dn.lower() not in ldap_groups:
                     return False, _('Could not find the group specified for role %s') % role_id
 

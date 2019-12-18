@@ -1,0 +1,10 @@
+Title: LDAP: Fix possible "TypeError: 'bool' object is not iterable" during LDAP config test
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p8
+Date: 1576671778
+Class: fix
+
+

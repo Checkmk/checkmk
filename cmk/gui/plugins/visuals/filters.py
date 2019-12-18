@@ -2130,7 +2130,13 @@ class FilterLogClass(Filter):
             html.close_tr()
         html.close_table()
 
+    def _filter_used(self):
+        return any([html.request.has_var(v) for v in self.htmlvars])
+
     def filter(self, infoname):
+        if not self._filter_used():
+            return ""  # Do not apply this filter
+
         headers = []
         for l, _c in self.log_classes:
             if html.get_checkbox("logclass%d" % l) != False:

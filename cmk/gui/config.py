@@ -601,6 +601,7 @@ class LoggedInUser(object):
         # type: (str) -> bool
         if pname in self.permissions:
             return self.permissions[pname]
+        # TODO: Why user.role_ids and not self.role_ids?
         he_may = _may_with_roles(user.role_ids, pname)
         self.permissions[pname] = he_may
         return he_may

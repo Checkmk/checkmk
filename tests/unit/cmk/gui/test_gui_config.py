@@ -4,19 +4,18 @@
 import json
 import six
 import pytest  # type: ignore
-from pathlib2 import Path
-import six
 
 import cmk
 import cmk.utils.paths
-import cmk.gui.modules as modules
 import cmk.gui.config as config
+from cmk.gui.exceptions import MKAuthException
 import cmk.gui.permissions as permissions
 from cmk.gui.globals import html
 from cmk.gui.permissions import (
     permission_section_registry,
     permission_registry,
 )
+from livestatus import SiteConfigurations
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 
@@ -922,3 +921,152 @@ def test_default_aux_tags():
         'snmp',
         'tcp',
     ])
+
+
+@pytest.mark.parametrize(
+    "user, alias, email, role_ids, baserole_id",
+    [
+        (
+            config.LoggedInNobody(),
+            "Unauthenticated user",
+            "nobody",
+            [],
+            "guest",  # TODO: Why is this guest "guest"?
+        ),
+        (
+            config.LoggedInSuperUser(),
+            "Superuser for unauthenticated pages",
+            "admin",
+            ["admin"],
+            "admin",
+        ),
+    ])
+def test_unauthenticated_users(user, alias, email, role_ids, baserole_id):
+    assert user.id is None
+    assert user.alias == alias
+    assert user.email == email
+    assert user.confdir is None
+    assert user.siteconf == {}
+
+    # Unauthenticated users don't have associated permissions. They get
+    # their permissions via their assiociated role.
+    assert user.permissions == {}
+
+    assert user.role_ids == role_ids
+    assert user.baserole_ids == role_ids
+    assert user.attributes == {"roles": role_ids}
+    assert user.get_attribute('roles') == role_ids
+    assert user.baserole_id == baserole_id
+
+    assert user.get_attribute('baz', 'default') == 'default'
+    assert user.get_attribute('foo') is None
+    user.set_attribute('foo', 'bar')
+    assert user.get_attribute('foo') == 'bar'
+    user.unset_attribute('foo')
+    assert user.get_attribute('foo') is None
+
+    assert user.get_button_counts() == {}
+    assert user.contact_groups() == []
+    assert user.load_stars() == set()
+    assert user.is_site_disabled('any_site') is False
+
+    assert user.load_file('any_file', 'default') == 'default'
+    assert user.file_modified('any_file') == 0
+
+    with pytest.raises(TypeError):
+        user.save_stars(set())
+    with pytest.raises(TypeError):
+        user.save_site_config()
+
+
+@pytest.mark.parametrize('user', [
+    config.LoggedInNobody(),
+    config.LoggedInSuperUser(),
+])
+def test_unauthenticated_users_language(mocker, user):
+    mocker.patch.object(config, 'default_language', 'esperanto')
+    assert user.language() == 'esperanto'
+
+    assert user.language('klingon') == 'klingon'
+
+    user.set_attribute('language', 'sindarin')
+    assert user.language() == 'sindarin'
+
+
+@pytest.mark.parametrize('user', [
+    config.LoggedInNobody(),
+    config.LoggedInSuperUser(),
+])
+def test_unauthenticated_users_authorized_sites(mocker, user):
+    assert user.authorized_sites(SiteConfigurations({
+        'site1': {},
+    })) == SiteConfigurations({
+        'site1': {},
+    })
+
+    mocker.patch.object(config, 'allsites', lambda: SiteConfigurations({'site1': {}, 'site2': {}}))
+    assert user.authorized_sites() == SiteConfigurations({'site1': {}, 'site2': {}})
+
+    user.set_attribute('authorized_sites', ['site1'])
+    assert user.authorized_sites() == SiteConfigurations({'site1': {}})
+
+
+@pytest.mark.parametrize('user', [
+    config.LoggedInNobody(),
+    config.LoggedInSuperUser(),
+])
+def test_unauthenticated_users_authorized_login_sites(mocker, user):
+    mocker.patch.object(config, 'get_login_slave_sites', lambda: ['slave_site'])
+    mocker.patch.object(config, 'allsites', lambda: SiteConfigurations({
+        'master_site': {},
+        'slave_site': {},
+    }))
+    assert user.authorized_login_sites() == SiteConfigurations({'slave_site': {}})
+
+
+def test_logged_in_nobody_permissions(mocker):
+    user = config.LoggedInNobody()
+
+    mocker.patch.object(config, 'roles', {})
+    mocker.patch.object(permissions, 'permission_registry')
+
+    assert user.may('any_permission') is False
+    with pytest.raises(MKAuthException):
+        user.need_permission('any_permission')
+
+
+def test_logged_in_super_user_permissions(mocker):
+    user = config.LoggedInSuperUser()
+
+    mocker.patch.object(
+        config,
+        'roles',
+        {
+            'admin': {
+                'permissions': {
+                    'eat_other_peoples_cake': True
+                }
+            },
+        },
+    )
+    mocker.patch.object(permissions, 'permission_registry')
+
+    # Both TODO cases below are False because user.may uses _may_with_roles with
+    # the config.user object
+
+    assert user.may('eat_other_peoples_cake') is False  # TODO: Should this be True?
+    assert user.may('drink_other_peoples_milk') is False
+    with pytest.raises(MKAuthException):
+        user.need_permission('eat_other_peoples_cake')
+    with pytest.raises(MKAuthException):
+        user.need_permission('drink_other_peoples_milk')
+
+    user.permissions = {'drink_other_peoples_milk': True}
+    assert user.may('eat_other_peoples_cake') is False  # TODO: Should this be True?
+    assert user.may('drink_other_peoples_milk') is True
+    with pytest.raises(MKAuthException):
+        user.need_permission('eat_other_peoples_cake')
+    user.need_permission('drink_other_peoples_milk')
+
+
+# TODO: add tests for LoggedInUser

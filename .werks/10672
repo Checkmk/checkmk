@@ -1,0 +1,12 @@
+Title: mk_oracle: Bugfix for wrong sid definition in Custom SQL
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p8
+Date: 1578486726
+
+The wrong SID was used which may lead to wrong results.

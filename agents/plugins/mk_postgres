@@ -87,7 +87,7 @@ function postgres_instances() {
     #   pgrep -af bin/postgres 2>/dev/null || pgrep -lf bin/postgres
     # but SLES 11 returns the exit code 0 for a wrong command line.
     # Newer versions of postgres are started with postmaster instead of postgres
-    ps -eo pid,command | grep -E "bin/postgres|bin/postmaster" | grep -vE '^[ ]*[0-9]+ grep '
+    ps -eo pid,command | grep -E "bin/postgres|bin/postmaster|bin/edb-postgres" | grep -vE '^[ ]*[0-9]+ grep '
 }
 
 

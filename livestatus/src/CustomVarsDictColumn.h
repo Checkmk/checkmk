@@ -67,7 +67,7 @@ public:
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const override;
 
-    [[nodiscard]] Attributes getValue(Row row) const;
+    [[nodiscard]] virtual Attributes getValue(Row row) const;
 
 private:
     const MonitoringCore *const _mc;

@@ -52,9 +52,12 @@ class Query;
 /// A table-like view for some underlying data, exposed via LQL.
 class Table {
 public:
+    struct IRow {
+        virtual ~IRow() = default;
+    };
+
     explicit Table(MonitoringCore *mc);
     virtual ~Table();
-
     void addColumn(std::unique_ptr<Column> col);
     void addDynamicColumn(std::unique_ptr<DynamicColumn> dyncol);
 

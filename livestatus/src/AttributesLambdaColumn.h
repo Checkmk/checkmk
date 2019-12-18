@@ -22,42 +22,49 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef TableContacts_h
-#define TableContacts_h
+#ifndef ListAttributesColumn_h
+#define ListAttributesColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
+#include <memory>
 #include <string>
-#include "Row.h"
-#include "Table.h"
-#include "contact_fwd.h"
-class MonitoringCore;
-class Query;
-
-#ifndef CMC
-extern contact *contact_list;
-#endif
-
-class TableContacts : public Table {
-public:
-#ifndef CMC
-    class IRow : virtual public Table::IRow {
-    public:
-        virtual const contact *getContact() const = 0;
-    };
-#endif
-    explicit TableContacts(MonitoringCore *mc);
-
-    [[nodiscard]] std::string name() const override;
-    [[nodiscard]] std::string namePrefix() const override;
-    void answerQuery(Query *query) override;
-    [[nodiscard]] Row findObject(const std::string &objectspec) const override;
+#include <utility>
+#include "Column.h"
+#include "CustomVarsDictColumn.h"
+#include "Filter.h"
+#include "MonitoringCore.h"
+#include "opids.h"
+class Aggregator;
+enum class AttributeKind;
+class Row;
+class RowRenderer;
 
 #ifdef CMC
-    static void addColumns(Table *table, const std::string &prefix,
-                           int indirect_offset);
+#include "contact_fwd.h"
 #else
-    static void addColumns(Table *table, const std::string &prefix);
+// TODO(sp) Why on earth is "contact_fwd.h" not enough???
+#include "nagios.h"
 #endif
+
+class AttributesLambdaColumn : public CustomVarsDictColumn {
+public:
+    AttributesLambdaColumn(std::string name, std::string description,
+                           std::function<Attributes(Row)> f)
+        : CustomVarsDictColumn(
+              std::move(name), std::move(description), {},
+              // TODO(ml): The hierarchy of every *LambdaColumn is wrong anyway
+              // but this is the easiest way to get rid of the pointer
+              // arithmetic by replacing inheritance with delegation without
+              // breaking anything. So here we make the "base" ctor happy with a
+              // few more junk args.
+              nullptr, AttributeKind::tags)
+        , get_value_{f} {}
+    virtual ~AttributesLambdaColumn() = default;
+    Attributes getValue(Row row) const override { return get_value_(row); }
+
+private:
+    std::function<Attributes(Row)> get_value_;
 };
 
-#endif  // TableContacts_h
+#endif

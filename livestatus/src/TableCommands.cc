@@ -41,7 +41,7 @@ std::string TableCommands::name() const { return "commands"; }
 std::string TableCommands::namePrefix() const { return "command_"; }
 
 namespace {
-class CommandRow : TableCommands::IRow {
+class CommandRow : public TableCommands::IRow {
 public:
     explicit CommandRow(Command cmd) : cmd_{std::move(cmd)} {};
     [[nodiscard]] Command getCommand() const override { return cmd_; }
@@ -54,18 +54,21 @@ private:
 // static
 void TableCommands::addColumns(Table *table, const std::string &prefix) {
     table->addColumn(std::make_unique<StringLambdaColumn>(
-        prefix + "name", "The name of the command",
-        [](Row row) { return row.rawData<IRow>()->getCommand()._name; }));
+        prefix + "name", "The name of the command", [](Row row) {
+            auto r = row.rawData<Table::IRow>();
+            return dynamic_cast<const IRow *>(r)->getCommand()._name;
+        }));
     table->addColumn(std::make_unique<StringLambdaColumn>(
         prefix + "line", "The shell command line", [](Row row) {
-            return row.rawData<IRow>()->getCommand()._command_line;
+            auto r = row.rawData<Table::IRow>();
+            return dynamic_cast<const IRow *>(r)->getCommand()._command_line;
         }));
 }
 
 void TableCommands::answerQuery(Query *query) {
     for (auto &cmd : core()->commands()) {
         auto r = CommandRow{cmd};
-        if (!query->processDataset(Row{&r})) {
+        if (!query->processDataset(Row{dynamic_cast<Table::IRow *>(&r)})) {
             break;
         }
     }

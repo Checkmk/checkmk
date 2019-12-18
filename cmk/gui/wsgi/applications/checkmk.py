@@ -23,6 +23,7 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+import contextlib
 import httplib
 import os
 import traceback
@@ -48,6 +49,10 @@ from cmk.gui.globals import AppContext, RequestContext, html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.utils import store
+
+# TODO
+#  * derive all exceptions from werkzeug's http exceptions.
+#  * consolidate page handler handling
 
 
 def _plain_error():
@@ -175,32 +180,93 @@ def _render_exception(e, title=""):
         html.footer()
 
 
+def profiling_middleware(func):
+    """Wrap an WSGI app in a profiling context manager"""
+    def profiler(environ, start_response):
+        with cmk.utils.profile.Profile(
+                enabled=_profiling_enabled(),
+                profile_file=os.path.join(cmk.utils.paths.var_dir, "multisite.profile"),
+        ):
+            return func(environ, start_response)
+
+    return profiler
+
+
+@contextlib.contextmanager
+def release_locks_afterwards():
+    yield
+    try:
+        store.release_all_locks()
+    except Exception:
+        logger.exception("error releasing locks after WSGI request")
+        raise
+
+
 class CheckmkApp(object):
     """The Check_MK GUI WSGI entry point"""
-    def __init__(self, environ, start_response):
-        self._environ = environ
-        self._start_response = start_response
-        self._request = cmk.gui.http.Request(environ)
-        self._response = cmk.gui.http.Response(is_secure=self._request.is_ssl_request)
-        with AppContext(self), \
-             RequestContext(cmk.gui.htmllib.html(self._request, self._response)):
-            self._process_request()
+    def __init__(self):
+        self.wsgi_app = profiling_middleware(self.wsgi_app)
 
-    def _process_request(self):  # pylint: disable=too-many-branches
+    def __call__(self, environ, start_response):
+        return self.wsgi_app(environ, start_response)
+
+    def wsgi_app(self, environ, start_response):  # pylint: disable=method-hidden
+        request = cmk.gui.http.Request(environ)
+        response = cmk.gui.http.Response(is_secure=request.is_secure)
+        with AppContext(self), RequestContext(cmk.gui.htmllib.html(request, response)),\
+                release_locks_afterwards():
+            self._process_request(request, response)
+        return response(environ, start_response)
+
+    def _process_request(self, request, response):  # pylint: disable=too-many-branches
         try:
             config.initialize()
+            html.init_modes()
 
-            with cmk.utils.profile.Profile(enabled=_profiling_enabled(),
-                                           profile_file=os.path.join(cmk.utils.paths.var_dir,
-                                                                     "multisite.profile")):
-                self._handle_request()
+            # Make sure all plugins are available as early as possible. At least
+            # we need the plugins (i.e. the permissions declared in these) at the
+            # time before the first login for generating auth.php.
+            _load_all_plugins()
+
+            handler = pages.get_page_handler(html.myfile, _page_not_found)
+
+            # Some pages do skip authentication. This is done by adding
+            # noauth: to the page hander, e.g. "noauth:run_cron" : ...
+            # TODO: Eliminate those "noauth:" pages. Eventually replace it by call using
+            #       the now existing default automation user.
+            if handler == _page_not_found:
+                handler = pages.get_page_handler("noauth:" + html.myfile, _page_not_found)
+                if handler != _page_not_found:
+                    try:
+                        handler()
+                    except Exception as e:
+                        # TODO: This misses correct error handling (log to web.log, crash reporting)
+                        _show_exception_info(e)
+                    raise FinalizeRequest(httplib.OK)
+
+            # Ensure the user is authenticated. This call is wrapping all the different
+            # authentication modes the Check_MK GUI supports and initializes the logged
+            # in user objects.
+            if not login.authenticate(request):
+                _handle_not_authenticated()
+
+            # Initialize the multiste cmk.gui.i18n. This will be replaced by
+            # language settings stored in the user profile after the user
+            # has been initialized
+            _localize_request()
+
+            # Update the UI theme with the attribute configured by the user
+            html.set_theme(config.user.get_attribute("ui_theme"))
+
+            _ensure_general_access()
+            handler()
 
         except HTTPRedirect as e:
-            self._response.status_code = e.status
-            self._response.headers["Location"] = e.url
+            response.status_code = e.status
+            response.headers["Location"] = e.url
 
         except FinalizeRequest as e:
-            self._response.status_code = e.status
+            response.status_code = e.status
 
         except livestatus.MKLivestatusNotFoundError as e:
             _render_exception(e, title=_("Data not found"))
@@ -213,11 +279,11 @@ class CheckmkApp(object):
 
         except livestatus.MKLivestatusException as e:
             _render_exception(e, title=_("Livestatus problem"))
-            self._response.status_code = httplib.BAD_GATEWAY
+            response.status_code = httplib.BAD_GATEWAY
 
         except MKUnauthenticatedException as e:
             _render_exception(e, title=_("Not authenticated"))
-            self._response.status_code = httplib.UNAUTHORIZED
+            response.status_code = httplib.UNAUTHORIZED
 
         except MKConfigError as e:
             _render_exception(e, title=_("Configuration error"))
@@ -227,62 +293,9 @@ class CheckmkApp(object):
             _render_exception(e, title=_("General error"))
             logger.error("MKGeneralException: %s", e)
 
-        except Exception as e:
+        except Exception:
             crash = crash_reporting.GUICrashReport.from_exception()
             crash_reporting.CrashReportStore().save(crash)
 
             logger.exception("Unhandled exception (Crash-ID: %s)", crash.ident_to_text())
             crash_reporting.show_crash_dump_message(crash, _plain_error(), _fail_silently())
-
-        finally:
-            try:
-                # TODO: Nuke this and use context managers only for locking!
-                store.release_all_locks()
-            except:
-                logger.exception("error releasing locks after WSGI request")
-                raise
-
-    def _handle_request(self):
-        html.init_modes()
-
-        # Make sure all plugins are avaiable as early as possible. At least
-        # we need the plugins (i.e. the permissions declared in these) at the
-        # time before the first login for generating auth.php.
-        _load_all_plugins()
-
-        handler = pages.get_page_handler(html.myfile, _page_not_found)
-
-        # Some pages do skip authentication. This is done by adding
-        # noauth: to the page hander, e.g. "noauth:run_cron" : ...
-        # TODO: Eliminate those "noauth:" pages. Eventually replace it by call using
-        #       the now existing default automation user.
-        if handler == _page_not_found:
-            handler = pages.get_page_handler("noauth:" + html.myfile, _page_not_found)
-            if handler != _page_not_found:
-                try:
-                    handler()
-                except Exception as e:
-                    # TODO: This misses correct error handling (log to web.log, crash reporting)
-                    _show_exception_info(e)
-                raise FinalizeRequest(httplib.OK)
-
-        # Ensure the user is authenticated. This call is wrapping all the different
-        # authentication modes the Check_MK GUI supports and initializes the logged
-        # in user objects.
-        if not login.authenticate(self._request):
-            _handle_not_authenticated()
-
-        # Initialize the multiste cmk.gui.i18n. This will be replaced by
-        # language settings stored in the user profile after the user
-        # has been initialized
-        _localize_request()
-
-        # Update the UI theme with the attribute configured by the user
-        html.set_theme(config.user.get_attribute("ui_theme"))
-
-        _ensure_general_access()
-        handler()
-
-    def __iter__(self):
-        """Is called by the WSGI server to serve the current page"""
-        return self._response(self._environ, self._start_response)

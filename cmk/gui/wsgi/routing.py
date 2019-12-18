@@ -34,12 +34,14 @@ WSGI_ENV_ARGS_NAME = 'x-checkmk.args'
 
 
 def create_url_map():
+    app = CheckmkApp()
+
     return Map([
         Submount('/<string:site>', [
             Submount("/check_mk", [
-                Rule("/", endpoint=CheckmkApp),
+                Rule("/", endpoint=app),
                 Rule("/dump.py", endpoint=dump_environ_app),
-                Rule("/<string:script>", endpoint=CheckmkApp),
+                Rule("/<string:script>", endpoint=app),
             ]),
         ])
     ])

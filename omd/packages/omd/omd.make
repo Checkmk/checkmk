@@ -39,9 +39,10 @@ $(OMD_INSTALL): omdlib-install
 	$(MKDIR) $(SKEL)/etc/bash_completion.d
 	$(TOUCH) $@
 
-omdlib-install: $(PYTHON_CACHE_PKG_PROCESS)
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib
-	install -m 644 $(PACKAGE_DIR)/$(OMD)/omdlib/*.py $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib/
-	sed -i 's|###OMD_VERSION###|$(OMD_VERSION)|g' $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib/__init__.py
-	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
-	    $(PACKAGE_PYTHON_EXECUTABLE) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib
+omdlib-install: $(PYTHON3_CACHE_PKG_PROCESS)
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python3/omdlib
+	install -m 644 $(PACKAGE_DIR)/$(OMD)/omdlib/*.py $(DESTDIR)$(OMD_ROOT)/lib/python3/omdlib/
+	sed -i 's|###OMD_VERSION###|$(OMD_VERSION)|g' $(DESTDIR)$(OMD_ROOT)/lib/python3/omdlib/__init__.py
+	LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" \
+	    $(PACKAGE_PYTHON3_EXECUTABLE) -m py_compile \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/omdlib

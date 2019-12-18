@@ -140,6 +140,7 @@ python3-modules-dump-Pipfile:
 	@echo 'yapf = "*"  # used for editor integration and the format-python Makefile target'
 	@echo 'polib = "*"  # used by locale/add-authors for working with .po files'
 	@echo 'pre-commit = "*"  # used to fix / find issues before commiting changes'
+	@echo 'pyfakefs = "*" # used for unit tests'
 	@echo ''
 	@echo '[packages]'
 	@echo $(patsubst %.zip,%,$(patsubst %.tar.gz,%,$(PYTHON3_MODULES_LIST))) | tr ' ' '\n' | sed 's/-\([0-9.]*\)$$/ = "==\1"/'

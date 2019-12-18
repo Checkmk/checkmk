@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 #       U  ___ u  __  __   ____
@@ -158,7 +158,7 @@ def _config_load_hook(site, hook_name):
 
 def load_hook_dependencies(site, config_hooks):
     # type: (SiteContext, ConfigHooks) -> ConfigHooks
-    for hook_name in sort_hooks(config_hooks.keys()):
+    for hook_name in sort_hooks(list(config_hooks.keys())):
         hook = config_hooks[hook_name]
         exitcode, _content = call_hook(site, hook_name, ["depends"])
         if exitcode:
@@ -199,6 +199,7 @@ def call_hook(site, hook_name, args):
         close_fds=True,
         shell=False,
         stdout=subprocess.PIPE,
+        encoding="utf-8",
     )
     content = p.communicate()[0].strip()
     exitcode = p.poll()

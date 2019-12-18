@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 #       U  ___ u  __  __   ____
@@ -35,7 +35,7 @@ def is_dockerized():
 
 @contextlib.contextmanager
 def chdir(path):
-    # type: (bytes) -> Iterator[None]
+    # type: (str) -> Iterator[None]
     """Change working directory and return on exit"""
     prev_cwd = os.getcwd()
     os.chdir(path)

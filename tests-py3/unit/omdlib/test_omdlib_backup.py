@@ -1,9 +1,11 @@
+#!/usr/bin/env python3
 # encoding: utf-8
 # pylint: disable=redefined-outer-name
 
 import tarfile
-import pytest  # type: ignore
-from pathlib2 import Path
+from pathlib import Path
+
+import pytest  # type: ignore[import]
 import omdlib
 import omdlib.main
 import omdlib.backup

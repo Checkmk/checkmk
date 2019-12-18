@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 #       U  ___ u  __  __   ____
@@ -28,7 +28,7 @@ from typing import Dict  # pylint: disable=unused-import
 import omdlib
 
 
-class VersionInfo(object):
+class VersionInfo:
     """Provides OMD version/platform specific infos"""
     def __init__(self, version):
         # type: (str) -> None

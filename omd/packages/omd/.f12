@@ -22,12 +22,12 @@ sudo mkdir -p $ROOT/lib/omd/scripts/post-create
 sudo mkdir -p $ROOT/lib/omd/scripts/post-update
 sudo cp -v omd.service $ROOT/share/omd
 sudo cp -v omd.bin $ROOT/bin/omd
-sudo cp -rv omdlib $ROOT/lib/python
+sudo cp -rv omdlib $ROOT/lib/python3
 
 OLD_VERSION=$(readlink $ROOT/version)
 OLD_VERSION=${OLD_VERSION##*/}
 echo $OLD_VERSION
 
 echo "Keeping version number in 'omd' at $OLD_VERSION"
-sudo sed -i "s|###OMD_VERSION###|$OLD_VERSION|g" $ROOT/lib/python/omdlib/__init__.py
-sudo sed -i 's|#!/omd/versions/.*/bin/python|#!/omd/versions/'$OLD_VERSION'/bin/python|g' $ROOT/bin/omd
+sudo sed -i "s|###OMD_VERSION###|$OLD_VERSION|g" $ROOT/lib/python3/omdlib/__init__.py
+sudo sed -i 's|#!/omd/versions/.*/bin/python3|#!/omd/versions/'$OLD_VERSION'/bin/python3|g' $ROOT/bin/omd

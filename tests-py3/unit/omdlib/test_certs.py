@@ -1,8 +1,9 @@
+#!/usr/bin/env python3
 # encoding: utf-8
 # pylint: disable=redefined-outer-name
 
-import OpenSSL
-import pytest  # type: ignore
+import OpenSSL  # type: ignore[import]
+import pytest  # type: ignore[import]
 
 import omdlib.certs as certs
 

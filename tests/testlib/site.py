@@ -401,7 +401,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         execute("sudo sed -i \"s|%s|%s|g\" %s/bin/omd" %
                 (src_version, new_version_name, self.version.version_path()))
 
-        execute("sudo sed -i \"s|%s|%s|g\" %s/lib/python/omdlib/__init__.py" %
+        execute("sudo sed -i \"s|%s|%s|g\" %s/lib/python3/omdlib/__init__.py" %
                 (src_version, new_version_name, self.version.version_path()))
 
         execute("sudo sed -i \"s|%s|%s|g\" %s/share/omd/omd.info" %
@@ -414,6 +414,9 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             execute("sudo /bin/ln -s /omd/versions /omd/v")
 
         execute("sudo chrpath -r /omd/v/%s/lib %s/bin/python" %
+                (self.version.version_directory(), self.version.version_path()))
+
+        execute("sudo chrpath -r /omd/v/%s/lib %s/bin/python3" %
                 (self.version.version_directory(), self.version.version_path()))
 
     def _update_with_f12_files(self):

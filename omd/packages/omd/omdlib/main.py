@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 #       U  ___ u  __  __   ____
@@ -43,19 +43,20 @@ import subprocess
 import signal
 import io
 import logging
+from pathlib import Path
 from typing import (  # pylint: disable=unused-import
     NoReturn, IO, Any, cast, Iterable, Union, Pattern, Iterator, Tuple, Optional, Callable, List,
     NamedTuple, Dict,
 )
+import six
 from passlib.hash import sha256_crypt  # type: ignore
 import psutil  # type: ignore
-from pathlib2 import Path
-import six
 
 import cmk.utils.log
 import cmk.utils.tty as tty
 from cmk.utils.log import VERBOSE
 from cmk.utils.exceptions import MKTerminate
+from cmk.utils.encoding import ensure_unicode
 
 import omdlib
 import omdlib.certs
@@ -87,7 +88,7 @@ cmk.utils.log.setup_console_logging()
 logger = logging.getLogger("cmk.omd")
 
 
-class StateMarkers(object):
+class StateMarkers:
     good = " " + tty.green + tty.bold + "*" + tty.normal
     warn = " " + tty.bgyellow + tty.black + tty.bold + "!" + tty.normal
     error = " " + tty.bgred + tty.white + tty.bold + "!" + tty.normal
@@ -107,10 +108,11 @@ def bail_out(message):
 # is e.g. used during "omd update" to have a chance to analyze errors
 # during past updates
 # TODO: Replace this with regular logging mechanics
-class Log(io.BytesIO):
+class Log(io.StringIO):
     def __init__(self, fd, logfile):
-        # type: (int, bytes) -> None
-        self.log = open(logfile, 'a')
+        # type: (int, str) -> None
+        super().__init__()
+        self.log = open(logfile, 'a', encoding="utf-8")
         self.fd = fd
 
         if self.fd == 1:
@@ -130,11 +132,13 @@ class Log(io.BytesIO):
             sys.stderr = self.orig
         self.log.close()
 
+    # TODO: Ensure we get Text here
     def write(self, data):
-        # type: (bytes) -> int
-        self.orig.write(data)
-        self.log.write(self.color_replace.sub('', data))
-        return len(data)
+        # type: (str) -> int
+        text = ensure_unicode(data)
+        self.orig.write(text)
+        self.log.write(self.color_replace.sub('', text))
+        return len(text)
 
     def flush(self):
         # type: () -> None
@@ -147,7 +151,7 @@ g_stderr_log = None  # type: Optional[Log]
 
 
 def start_logging(logfile):
-    # type: (bytes) -> None
+    # type: (str) -> None
     global g_stdout_log, g_stderr_log
     g_stdout_log = Log(1, logfile)
     g_stderr_log = Log(2, logfile)
@@ -366,15 +370,6 @@ def try_chown(filename, user):
             sys.stderr.write("Cannot chown %s to %s: %s\n" % (filename, user, e))
 
 
-def instantiate_skel(site, path):
-    # type: (SiteContext, str) -> str
-    try:
-        t = open(path).read()
-        return replace_tags(t, site.replacements)
-    except Exception:
-        return ""  # e.g. due to permission error
-
-
 # Walks all files in the skeleton dir to execute a function for each file
 #
 # When called with a path in 'exclude_if_in' then paths existing relative to
@@ -441,6 +436,10 @@ def patch_skeleton_files(conflict_mode, old_site, new_site):
             if targetdir.startswith(new_site.tmp_dir):
                 continue  # Skip files below tmp
             for fn in filenames:
+                # Skip some not patchable files that can be found in our standard skel
+                if _is_unpatchable_file(fn):
+                    continue
+
                 src = dirpath + "/" + fn
                 dst = targetdir + "/" + fn
                 if os.path.isfile(src) and not os.path.islink(src) \
@@ -451,6 +450,11 @@ def patch_skeleton_files(conflict_mode, old_site, new_site):
                         raise
                     except Exception as e:
                         sys.stderr.write("Error patching template file '%s': %s\n" % (dst, e))
+
+
+def _is_unpatchable_file(path):
+    # type: (str) -> bool
+    return path.endswith(".png") or path.endswith(".pdf")
 
 
 def patch_template_file(conflict_mode, src, dst, old_site, new_site):
@@ -662,8 +666,7 @@ def merge_update_file(site, conflict_mode, relpath, old_version, new_version):
                 sys.stdout.write("Successfully merged changes from %s -> %s into %s\n" %
                                  (old_version, new_version, fn))
                 return
-            else:
-                sys.stdout.write(" Merge failed again.\n")
+            sys.stdout.write(" Merge failed again.\n")
 
         else:  # install
             os.rename("%s-%s" % (user_path, new_version), user_path)
@@ -1104,12 +1107,24 @@ def filetype(p):
     return "file"
 
 
-# Returns the file contents of a site file or a skel file
 def file_contents(site, path):
     # type: (SiteContext, str) -> bytes
-    if '/skel/' in path:
-        return instantiate_skel(site, path)
-    return open(path).read()
+    """Returns the file contents of a site file or a skel file"""
+    if '/skel/' in path and not _is_unpatchable_file(path):
+        return _instantiate_skel(site, path)
+
+    with open(path, "rb") as f:
+        return f.read()
+
+
+def _instantiate_skel(site, path):
+    # type: (SiteContext, str) -> bytes
+    try:
+        with open(path, "r") as f:
+            return replace_tags(f.read(), site.replacements).encode("utf-8")
+    except Exception:
+        # TODO: This is a bad exception handler. Drop it
+        return b""  # e.g. due to permission error
 
 
 #.
@@ -1183,7 +1198,8 @@ def _prepare_tmpfs(version_info, site):
                          shell=False,
                          stdin=open(os.devnull),
                          stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT)
+                         stderr=subprocess.STDOUT,
+                         encoding="utf-8")
     exit_code = p.wait()
     if exit_code == 0:
         ok()
@@ -1443,7 +1459,7 @@ def config_set_all(site, ignored_hooks=None):
     if ignored_hooks is None:
         ignored_hooks = []
 
-    for hook_name in sort_hooks(site.conf.keys()):
+    for hook_name in sort_hooks(list(site.conf.keys())):
         value = site.conf[hook_name]
         # Hooks might vanish after and up- or downdate
         if hook_exists(site, hook_name) and hook_name not in ignored_hooks:
@@ -1729,7 +1745,11 @@ def set_environment(site):
 def hostname():
     # type: () -> str
     try:
-        p = subprocess.Popen(["hostname"], shell=False, close_fds=True, stdout=subprocess.PIPE)
+        p = subprocess.Popen(["hostname"],
+                             shell=False,
+                             close_fds=True,
+                             stdout=subprocess.PIPE,
+                             encoding="utf-8")
     except OSError:
         return "localhost"
     return p.communicate()[0].strip()
@@ -1825,7 +1845,8 @@ def call_scripts(site, phase):
                 '%s/%s' % (path, f),
                 shell=True,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT)
+                stderr=subprocess.STDOUT,
+                encoding="utf-8")
             if p.stdout is None:
                 raise Exception("stdout needs to be set")
             stdout = p.stdout.read()
@@ -1973,8 +1994,7 @@ def omd_versions():
     except OSError as e:
         if e.errno == errno.ENOENT:
             return []
-        else:
-            raise
+        raise
 
 
 def version_exists(v):
@@ -2529,14 +2549,17 @@ def print_diff(rel_path, global_opts, options, site, source_path, target_path, s
         else:
             arrow = tty.magenta + '->' + tty.normal
             if 'c' in status:
-                source_content = instantiate_skel(site, source_file)
+                source_content = file_contents(site, source_file)
                 if os.system("which colordiff > /dev/null 2>&1") == 0:  # nosec
                     diff = "colordiff"
                 else:
                     diff = "diff"
-                os.popen(  # nosec
-                    "bash -c \"%s -u <(cat) '%s'\"" % (diff, target_file),
-                    "w").write(source_content)
+                p = subprocess.Popen([diff, "-", target_file],
+                                     stdin=subprocess.PIPE,
+                                     close_fds=True,
+                                     shell=False)
+                p.communicate(source_content)
+                p.stdin.close()
             elif status == 'p':
                 sys.stdout.write("    %s %s %s\n" % (source_perm, arrow, target_perm))
             elif 't' in status:
@@ -2546,7 +2569,7 @@ def print_diff(rel_path, global_opts, options, site, source_path, target_path, s
         print_status(StateMarkers.good, fn, 'd', 'Deleted')
         return
 
-    elif changed_type and changed_content:
+    if changed_type and changed_content:
         print_status(StateMarkers.good, fn, 'tc', 'Changed type and content')
 
     elif changed_type and not changed_content:
@@ -2724,9 +2747,9 @@ def _get_edition(omd_version):
 
     if edition_short == "cre":
         return "raw"
-    elif edition_short == "cee":
+    if edition_short == "cee":
         return "enterprise"
-    elif edition_short == "cme":
+    if edition_short == "cme":
         return "managed"
     return "unknown"
 
@@ -2813,10 +2836,12 @@ def main_init_action(version_info, site, global_opts, command, args, options):
             if not global_opts.force and not site.is_autostart():
                 if bare:
                     continue
-                elif not parallel:
+
+                if not parallel:
                     sys.stdout.write("Ignoring site '%s': AUTOSTART != on\n" % site.name)
                 else:
                     parallel_output(site.name, "Ignoring since autostart is disabled\n")
+
                 continue
 
         if command == "status" and bare:
@@ -2836,16 +2861,15 @@ def main_init_action(version_info, site, global_opts, command, args, options):
         p = subprocess.Popen([sys.argv[0], command] + bare_arg + [site.name] + args,
                              stdin=open(os.devnull, "r"),
                              stdout=stdout,
-                             stderr=stderr)
-
-        if p.stdout is None:
-            raise Exception("stdout needs to be set")
+                             stderr=stderr,
+                             encoding="utf-8")
 
         if parallel:
-            # Make the output non blocking
-            fd = p.stdout.fileno()
-            fl = fcntl.fcntl(fd, fcntl.F_GETFL)
-            fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+            if p.stdout is not None:
+                # Make the output non blocking
+                fd = p.stdout.fileno()
+                fl = fcntl.fcntl(fd, fcntl.F_GETFL)
+                fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
             processes.append((site.name, p))
         else:
@@ -2953,12 +2977,12 @@ def main_backup(version_info, site, global_opts, args, options):
     dest = args[0]
 
     if dest == '-':
-        fh = sys.stdout
+        fh = sys.stdout.buffer
         tar_mode = 'w|'
     else:
         if dest[0] != '/':
             dest = global_opts.orig_working_directory + '/' + dest
-        fh = open(dest, 'w')
+        fh = open(dest, 'wb')
         tar_mode = 'w:'
 
     if "no-compression" not in options:
@@ -2980,10 +3004,10 @@ def main_restore(version_info, site, global_opts, args, options):
 
     source = args[-1]
     if source == '-':
-        fh = sys.stdin
+        fh = sys.stdin.buffer
         tar_mode = 'r|*'
     elif os.path.exists(source):
-        fh = open(source)
+        fh = open(source, "rb")
         tar_mode = 'r:*'
     else:
         bail_out("The backup archive does not exist.")
@@ -3241,7 +3265,8 @@ def site_user_processes(site, exclude_current_and_parents):
     p = subprocess.Popen(["ps", "-U", site.name, "-o", "pid", "--no-headers"],
                          close_fds=True,
                          stdin=open(os.devnull),
-                         stdout=subprocess.PIPE)
+                         stdout=subprocess.PIPE,
+                         encoding="utf-8")
     exclude.append(p.pid)
 
     pids = []
@@ -3375,7 +3400,8 @@ class PackageManager(six.with_metaclass(abc.ABCMeta, object)):
                                 close_fds=True,
                                 stdin=open(os.devnull),
                                 stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT)
+                                stderr=subprocess.STDOUT,
+                                encoding="utf-8")
 
 
 class PackageManagerDEB(PackageManager):
@@ -3414,7 +3440,7 @@ class PackageManagerRPM(PackageManager):
         if p.wait() == 1 and "not owned" in output:
             return []
 
-        elif p.wait() != 0:
+        if p.wait() != 0:
             bail_out("Failed to find packages:\n%s" % output)
 
         return output.strip().split("\n")

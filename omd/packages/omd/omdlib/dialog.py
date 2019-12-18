@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 #       U  ___ u  __  __   ____
@@ -37,7 +37,7 @@ from cmk.utils.exceptions import MKTerminate
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext  # pylint: disable=unused-import
 
-DialogResult = Tuple[bool, bytes]
+DialogResult = Tuple[bool, str]
 
 
 def dialog_menu(title, text, choices, defvalue, oktext, canceltext):
@@ -61,7 +61,7 @@ def dialog_regex(title, text, regex, value, oktext, canceltext):
         change, new_value = _run_dialog(args)
         if not change:
             return False, value
-        elif not regex.match(new_value):
+        if not regex.match(new_value):
             dialog_message("Invalid value. Please try again.")
             value = new_value
         else:
@@ -87,7 +87,10 @@ def _run_dialog(args):
         # TODO: Why de_DE?
         "LANG": "de_DE.UTF-8",
     }
-    p = subprocess.Popen(["dialog", "--shadow"] + args, env=dialog_env, stderr=subprocess.PIPE)
+    p = subprocess.Popen(["dialog", "--shadow"] + args,
+                         env=dialog_env,
+                         stderr=subprocess.PIPE,
+                         encoding="utf-8")
     if p.stderr is None:
         raise Exception()
     response = p.stderr.read()
@@ -100,9 +103,9 @@ def user_confirms(site, conflict_mode, title, message, relpath, yes_choice, yes_
     # Handle non-interactive mode
     if conflict_mode == "abort":
         raise MKTerminate("Update aborted.")
-    elif conflict_mode == "install":
+    if conflict_mode == "install":
         return False
-    elif conflict_mode == "keepold":
+    if conflict_mode == "keepold":
         return True
 
     user_path = site.dir + "/" + relpath
@@ -113,7 +116,8 @@ def user_confirms(site, conflict_mode, title, message, relpath, yes_choice, yes_
         choice = ask_user_choices(title, message, options)
         if choice == "abort":
             raise MKTerminate("Update aborted.")
-        elif choice == "shell":
+
+        if choice == "shell":
             thedir = "/".join(user_path.split("/")[:-1])
             sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
             subprocess.Popen(["bash", "-i"], cwd=thedir).wait()

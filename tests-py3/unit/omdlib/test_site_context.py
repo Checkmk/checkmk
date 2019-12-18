@@ -1,5 +1,6 @@
+#!/usr/bin/env python3
 import os
-import pytest
+import pytest  # type: ignore[import]
 
 import omdlib.main
 

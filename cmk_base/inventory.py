@@ -192,6 +192,9 @@ def _all_sources_fail(host_config, sources):
     it's not a pure piggyback host and there's no piggyback data available
     for this host.
     In this case the piggyback data source never fails (self._exception = None)."""
+    if host_config.is_cluster:
+        return False
+
     exceptions_by_source = {
         source.id(): source.exception() for source in sources.get_data_sources()
     }

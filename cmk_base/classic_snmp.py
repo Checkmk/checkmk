@@ -89,7 +89,11 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
             value = value[1:-1]
         return value
 
-    def walk(self, snmp_config, oid, check_plugin_name=None, table_base_oid=None,
+    def walk(self,
+             snmp_config,
+             oid,
+             check_plugin_name=None,
+             table_base_oid=None,
              context_name=None):
         # type: (snmp_utils.SNMPHostConfig, str, Optional[str], Optional[str], Optional[str]) -> snmp_utils.SNMPRowInfo
         protospec = self._snmp_proto_spec(snmp_config)

@@ -126,18 +126,18 @@ def configure_authorization(key):
 
 
 def handle_alert_creation(
-        key,
-        note_created,
-        action_list,
-        desc,
-        alert_source,
-        msg,
-        priority,
-        teams_list,
-        tags_list,
-        alias,
-        owner,
-        entity_value,
+    key,
+    note_created,
+    action_list,
+    desc,
+    alert_source,
+    msg,
+    priority,
+    teams_list,
+    tags_list,
+    alias,
+    owner,
+    entity_value,
 ):
     configure_authorization(key)
 

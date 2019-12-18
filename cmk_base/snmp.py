@@ -341,7 +341,11 @@ class StoredWalkSNMPBackend(snmp_utils.ABCSNMPBackend):
 
         return None
 
-    def walk(self, snmp_config, oid, check_plugin_name=None, table_base_oid=None,
+    def walk(self,
+             snmp_config,
+             oid,
+             check_plugin_name=None,
+             table_base_oid=None,
              context_name=None):
         # type: (snmp_utils.SNMPHostConfig, str, Optional[str], Optional[str], Optional[str]) -> snmp_utils.SNMPRowInfo
         if oid.startswith("."):

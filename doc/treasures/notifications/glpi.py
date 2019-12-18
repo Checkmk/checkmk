@@ -488,6 +488,7 @@ class InterfaceGLPI(TicketInterface):
             if ticket['name'].endswith(self.__format_ticket_id(ticket_id)):
                 return ticket['id']
     """
+
     def add_ticket_comment(self, ticket_id, message):
         log.info("sess %s, tick %s, cont %s", self.__session, ticket_id, message)
         response = self.__server.glpi.addTicketFollowup({

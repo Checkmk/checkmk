@@ -78,8 +78,8 @@ _marked_host_discovery_timeout = 120
 #   |  Functions for command line options -I and -II                       |
 #   '----------------------------------------------------------------------'
 
-DiscoveredServicesTable = Dict[Tuple[check_table.CheckPluginName, check_table.
-                                     Item], Tuple[str, DiscoveredService]]
+DiscoveredServicesTable = Dict[Tuple[check_table.CheckPluginName, check_table.Item],
+                               Tuple[str, DiscoveredService]]
 
 
 # Function implementing cmk -I and cmk -II. This is directly
@@ -1222,8 +1222,9 @@ def _get_cluster_services(host_config, ipaddress, sources, multi_host_sections, 
     return _merge_manual_services(host_config, cluster_items, on_error), cluster_host_labels
 
 
-CheckPreviewEntry = Tuple[str, str, Optional[str], check_table.Item, str, check_table.
-                          CheckParameters, Text, Optional[int], Text, List[Tuple], Dict[Text, Text]]
+CheckPreviewEntry = Tuple[str, str, Optional[str], check_table.Item, str,
+                          check_table.CheckParameters, Text, Optional[int], Text, List[Tuple],
+                          Dict[Text, Text]]
 CheckPreviewTable = List[CheckPreviewEntry]
 
 

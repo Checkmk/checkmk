@@ -123,8 +123,8 @@ def perfometer_logarithmic_dual(value_left, color_left, value_right, color_right
     return render_perfometer(data)
 
 
-def perfometer_logarithmic_dual_independent\
-    (value_left, color_left, half_value_left, base_left, value_right, color_right, half_value_right, base_right):
+def perfometer_logarithmic_dual_independent(value_left, color_left, half_value_left, base_left,
+                                            value_right, color_right, half_value_right, base_right):
     data = []
     data.extend(
         calculate_half_row_logarithmic("left", value_left, color_left, half_value_left, base_left))

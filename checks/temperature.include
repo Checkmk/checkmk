@@ -305,14 +305,14 @@ TempParamType = Optional[Union[TwoLevelsType, FourLevelsType, TempParamDict]]
 
 
 def check_temperature(
-        reading,  # type: Number
-        params,  # type: TempParamType
-        unique_name,  # type: Optional[AnyStr]
-        dev_unit="c",  # type: AnyStr
-        dev_levels=None,  # type: Optional[TwoLevelsType]
-        dev_levels_lower=None,  # type: Optional[TwoLevelsType]
-        dev_status=None,  # type: Optional[StatusType]
-        dev_status_name=None,  # type: AnyStr
+    reading,  # type: Number
+    params,  # type: TempParamType
+    unique_name,  # type: Optional[AnyStr]
+    dev_unit="c",  # type: AnyStr
+    dev_levels=None,  # type: Optional[TwoLevelsType]
+    dev_levels_lower=None,  # type: Optional[TwoLevelsType]
+    dev_status=None,  # type: Optional[StatusType]
+    dev_status_name=None,  # type: AnyStr
 ):
     # type: (...) -> CheckType
     """Check temperature levels and trends.

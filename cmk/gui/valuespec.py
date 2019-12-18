@@ -92,12 +92,12 @@ class ValueSpec(object):
     # TODO: Remove **kwargs once all valuespecs have been changed
     # TODO: Cleanup help argument redefined-builtin
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
-            **kwargs):
+        self,
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        **kwargs):
         super(ValueSpec, self).__init__()
         self._title = title
         self._help = help
@@ -211,13 +211,13 @@ class ValueSpec(object):
 class FixedValue(ValueSpec):
     """A fixed non-editable value, e.g. to be used in 'Alternative'"""
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            value,  # type: Any
-            totext=None,  # type: Text
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        value,  # type: Any
+        totext=None,  # type: Text
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(FixedValue, self).__init__(title=title,
                                          help=help,
@@ -251,15 +251,15 @@ class FixedValue(ValueSpec):
 class Age(ValueSpec):
     """Time in seconds"""
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            label=None,  # type: TypingOptional[Text]
-            minvalue=None,  # type: TypingOptional[int]
-            maxvalue=None,  # type: TypingOptional[Union[int, float]]
-            display=None,  # type: TypingOptional[List[str]]
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        label=None,  # type: TypingOptional[Text]
+        minvalue=None,  # type: TypingOptional[int]
+        maxvalue=None,  # type: TypingOptional[Union[int, float]]
+        display=None,  # type: TypingOptional[List[str]]
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(Age, self).__init__(title=title,
                                   help=help,
@@ -344,20 +344,20 @@ class Age(ValueSpec):
 class Integer(ValueSpec):
     """Editor for a single integer"""
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            size=None,  # type: TypingOptional[int]
-            minvalue=None,  # type: TypingOptional[Union[float, int]]
-            maxvalue=None,  # type: TypingOptional[Union[float, int]]
-            label=None,  # type: TypingOptional[Text]
-            unit="",  # type: Text
-            thousand_sep=None,  # type: TypingOptional[Text]
-            display_format="%d",  # type: Text
-            align="left",  # type: str
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        size=None,  # type: TypingOptional[int]
+        minvalue=None,  # type: TypingOptional[Union[float, int]]
+        maxvalue=None,  # type: TypingOptional[Union[float, int]]
+        label=None,  # type: TypingOptional[Text]
+        unit="",  # type: Text
+        thousand_sep=None,  # type: TypingOptional[Text]
+        display_format="%d",  # type: Text
+        align="left",  # type: str
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(Integer, self).__init__(title=title,
                                       help=help,
@@ -479,29 +479,29 @@ class TextAscii(ValueSpec):
 
     # TODO: Cleanup attrencode attribute
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            label=None,  # type: TypingOptional[Text]
-            size=25,  # type: Union[int, str]
-            try_max_width=False,  # type: bool
-            cssclass="text",  # type: str
-            strip=True,  # type: bool
-            attrencode=True,  # type: bool
-            allow_empty=True,  # type: bool
-            empty_text="",  # type: Text
-            read_only=False,  # type: bool
-            none_is_empty=False,  # type: bool
-            forbidden_chars="",  # type: Text
-            regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
-            regex_error=None,  # type: TypingOptional[Text]
-            minlen=None,  # type: TypingOptional[int]
-            onkeyup=None,  # type: TypingOptional[Text]
-            autocomplete=True,  # type: bool
-            hidden=False,  # type: bool
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        label=None,  # type: TypingOptional[Text]
+        size=25,  # type: Union[int, str]
+        try_max_width=False,  # type: bool
+        cssclass="text",  # type: str
+        strip=True,  # type: bool
+        attrencode=True,  # type: bool
+        allow_empty=True,  # type: bool
+        empty_text="",  # type: Text
+        read_only=False,  # type: bool
+        none_is_empty=False,  # type: bool
+        forbidden_chars="",  # type: Text
+        regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
+        regex_error=None,  # type: TypingOptional[Text]
+        minlen=None,  # type: TypingOptional[int]
+        onkeyup=None,  # type: TypingOptional[Text]
+        autocomplete=True,  # type: bool
+        hidden=False,  # type: bool
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(TextAscii, self).__init__(title=title,
                                         help=help,
@@ -649,34 +649,34 @@ class RegExp(TextAscii):
     complete = "complete"
 
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            mode,  # type: str
-            case_sensitive=True,  # type: bool
-            mingroups=0,  # type: int
-            maxgroups=None,  # type: TypingOptional[int]
-            # TextAscii
-            label=None,  # type: TypingOptional[Text]
-            size=25,  # type: Union[int, str]
-            try_max_width=False,  # type: bool
-            cssclass="text",  # type: str
-            strip=True,  # type: bool
-            attrencode=True,  # type: bool
-            allow_empty=True,  # type: bool
-            empty_text="",  # type: Text
-            read_only=False,  # type: bool
-            none_is_empty=False,  # type: bool
-            forbidden_chars="",  # type: Text
-            regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
-            regex_error=None,  # type: TypingOptional[Text]
-            minlen=None,  # type: TypingOptional[int]
-            onkeyup=None,  # type: TypingOptional[Text]
-            autocomplete=True,  # type: bool
-            hidden=False,  # type: bool
-            # From ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        mode,  # type: str
+        case_sensitive=True,  # type: bool
+        mingroups=0,  # type: int
+        maxgroups=None,  # type: TypingOptional[int]
+        # TextAscii
+        label=None,  # type: TypingOptional[Text]
+        size=25,  # type: Union[int, str]
+        try_max_width=False,  # type: bool
+        cssclass="text",  # type: str
+        strip=True,  # type: bool
+        attrencode=True,  # type: bool
+        allow_empty=True,  # type: bool
+        empty_text="",  # type: Text
+        read_only=False,  # type: bool
+        none_is_empty=False,  # type: bool
+        forbidden_chars="",  # type: Text
+        regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
+        regex_error=None,  # type: TypingOptional[Text]
+        minlen=None,  # type: TypingOptional[int]
+        onkeyup=None,  # type: TypingOptional[Text]
+        autocomplete=True,  # type: bool
+        hidden=False,  # type: bool
+        # From ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(RegExp, self).__init__(
             label=label,
@@ -783,30 +783,30 @@ class RegExpUnicode(TextUnicode, RegExp):
 
 class EmailAddress(TextAscii):
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            make_clickable=False,  # type: bool
-            # TextAscii
-            label=None,  # type: TypingOptional[Text]
-            size=40,  # type: Union[int, str]
-            try_max_width=False,  # type: bool
-            cssclass="text",  # type: str
-            strip=True,  # type: bool
-            attrencode=True,  # type: bool
-            allow_empty=True,  # type: bool
-            empty_text="",  # type: Text
-            read_only=False,  # type: bool
-            none_is_empty=False,  # type: bool
-            forbidden_chars="",  # type: Text
-            regex_error=None,  # type: TypingOptional[Text]
-            minlen=None,  # type: TypingOptional[int]
-            onkeyup=None,  # type: TypingOptional[Text]
-            autocomplete=True,  # type: bool
-            hidden=False,  # type: bool
-            # From ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        make_clickable=False,  # type: bool
+        # TextAscii
+        label=None,  # type: TypingOptional[Text]
+        size=40,  # type: Union[int, str]
+        try_max_width=False,  # type: bool
+        cssclass="text",  # type: str
+        strip=True,  # type: bool
+        attrencode=True,  # type: bool
+        allow_empty=True,  # type: bool
+        empty_text="",  # type: Text
+        read_only=False,  # type: bool
+        none_is_empty=False,  # type: bool
+        forbidden_chars="",  # type: Text
+        regex_error=None,  # type: TypingOptional[Text]
+        minlen=None,  # type: TypingOptional[int]
+        onkeyup=None,  # type: TypingOptional[Text]
+        autocomplete=True,  # type: bool
+        hidden=False,  # type: bool
+        # From ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(EmailAddress, self).__init__(
             label=label,
@@ -883,31 +883,31 @@ def IPv4Address(**kwargs):
 
 class TextAsciiAutocomplete(TextAscii):
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            completion_ident,  # type: Text
-            completion_params,  # type: Dict[Text, Any]
-            # TextAscii
-            label=None,  # type: TypingOptional[Text]
-            size=40,  # type: Union[int, str]
-            try_max_width=False,  # type: bool
-            cssclass="text",  # type: str
-            strip=True,  # type: bool
-            attrencode=True,  # type: bool
-            allow_empty=True,  # type: bool
-            empty_text="",  # type: Text
-            read_only=False,  # type: bool
-            none_is_empty=False,  # type: bool
-            forbidden_chars="",  # type: Text
-            regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
-            regex_error=None,  # type: TypingOptional[Text]
-            minlen=None,  # type: TypingOptional[int]
-            onkeyup=None,  # type: TypingOptional[Text]
-            hidden=False,  # type: bool
-            # From ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        completion_ident,  # type: Text
+        completion_params,  # type: Dict[Text, Any]
+        # TextAscii
+        label=None,  # type: TypingOptional[Text]
+        size=40,  # type: Union[int, str]
+        try_max_width=False,  # type: bool
+        cssclass="text",  # type: str
+        strip=True,  # type: bool
+        attrencode=True,  # type: bool
+        allow_empty=True,  # type: bool
+        empty_text="",  # type: Text
+        read_only=False,  # type: bool
+        none_is_empty=False,  # type: bool
+        forbidden_chars="",  # type: Text
+        regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
+        regex_error=None,  # type: TypingOptional[Text]
+        minlen=None,  # type: TypingOptional[int]
+        onkeyup=None,  # type: TypingOptional[Text]
+        hidden=False,  # type: bool
+        # From ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         onkeyup = "cmk.valuespecs.autocomplete(this, %s, %s, %s);%s" % \
                             (json.dumps(completion_ident),
@@ -1028,33 +1028,33 @@ def Hostname(allow_empty=False, **kwargs):
 class HostAddress(TextAscii):
     """Use this for all host / ip address input fields!"""
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            allow_host_name=True,  # type: bool
-            allow_ipv4_address=True,  # type: bool
-            allow_ipv6_address=True,  # type: bool
-            # TextAscii
-            label=None,  # type: TypingOptional[Text]
-            size=64,  # type: Union[int, str]
-            try_max_width=False,  # type: bool
-            cssclass="text",  # type: str
-            strip=True,  # type: bool
-            attrencode=True,  # type: bool
-            allow_empty=True,  # type: bool
-            empty_text="",  # type: Text
-            read_only=False,  # type: bool
-            none_is_empty=False,  # type: bool
-            forbidden_chars="",  # type: Text
-            regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
-            regex_error=None,  # type: TypingOptional[Text]
-            minlen=None,  # type: TypingOptional[int]
-            onkeyup=None,  # type: TypingOptional[Text]
-            autocomplete=True,  # type: bool
-            hidden=False,  # type: bool
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        allow_host_name=True,  # type: bool
+        allow_ipv4_address=True,  # type: bool
+        allow_ipv6_address=True,  # type: bool
+        # TextAscii
+        label=None,  # type: TypingOptional[Text]
+        size=64,  # type: Union[int, str]
+        try_max_width=False,  # type: bool
+        cssclass="text",  # type: str
+        strip=True,  # type: bool
+        attrencode=True,  # type: bool
+        allow_empty=True,  # type: bool
+        empty_text="",  # type: Text
+        read_only=False,  # type: bool
+        none_is_empty=False,  # type: bool
+        forbidden_chars="",  # type: Text
+        regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
+        regex_error=None,  # type: TypingOptional[Text]
+        minlen=None,  # type: TypingOptional[int]
+        onkeyup=None,  # type: TypingOptional[Text]
+        autocomplete=True,  # type: bool
+        hidden=False,  # type: bool
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(HostAddress, self).__init__(
             label=label,
@@ -1163,34 +1163,34 @@ def AbsoluteDirname(**kwargs):
 
 class Url(TextAscii):
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            default_scheme,  # type: Text
-            allowed_schemes,  # type: List[Text]
-            show_as_link=False,  # type: bool
-            target=None,  # type: TypingOptional[Text]
-            # TextAscii
-            label=None,  # type: TypingOptional[Text]
-            size=64,  # type: Union[int, str]
-            try_max_width=False,  # type: bool
-            cssclass="text",  # type: str
-            strip=True,  # type: bool
-            attrencode=True,  # type: bool
-            allow_empty=True,  # type: bool
-            empty_text="",  # type: Text
-            read_only=False,  # type: bool
-            none_is_empty=False,  # type: bool
-            forbidden_chars="",  # type: Text
-            regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
-            regex_error=None,  # type: TypingOptional[Text]
-            minlen=None,  # type: TypingOptional[int]
-            onkeyup=None,  # type: TypingOptional[Text]
-            autocomplete=True,  # type: bool
-            hidden=False,  # type: bool
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        default_scheme,  # type: Text
+        allowed_schemes,  # type: List[Text]
+        show_as_link=False,  # type: bool
+        target=None,  # type: TypingOptional[Text]
+        # TextAscii
+        label=None,  # type: TypingOptional[Text]
+        size=64,  # type: Union[int, str]
+        try_max_width=False,  # type: bool
+        cssclass="text",  # type: str
+        strip=True,  # type: bool
+        attrencode=True,  # type: bool
+        allow_empty=True,  # type: bool
+        empty_text="",  # type: Text
+        read_only=False,  # type: bool
+        none_is_empty=False,  # type: bool
+        forbidden_chars="",  # type: Text
+        regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
+        regex_error=None,  # type: TypingOptional[Text]
+        minlen=None,  # type: TypingOptional[int]
+        onkeyup=None,  # type: TypingOptional[Text]
+        autocomplete=True,  # type: bool
+        hidden=False,  # type: bool
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(Url, self).__init__(
             label=label,
@@ -1282,34 +1282,34 @@ def CheckMKVersion(**kwargs):
 
 class TextAreaUnicode(TextUnicode):
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            cols=60,  # type: int
-            rows=20,  # type: Union[int, Text]
-            minrows=0,  # type: int
-            monospaced=False,  # type: bool
-            # TextAscii
-            label=None,  # type: TypingOptional[Text]
-            size=64,  # type: Union[int, str]
-            try_max_width=False,  # type: bool
-            cssclass="text",  # type: str
-            strip=True,  # type: bool
-            attrencode=True,  # type: bool
-            allow_empty=True,  # type: bool
-            empty_text="",  # type: Text
-            read_only=False,  # type: bool
-            none_is_empty=False,  # type: bool
-            forbidden_chars="",  # type: Text
-            regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
-            regex_error=None,  # type: TypingOptional[Text]
-            minlen=None,  # type: TypingOptional[int]
-            onkeyup=None,  # type: TypingOptional[Text]
-            autocomplete=True,  # type: bool
-            hidden=False,  # type: bool
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        cols=60,  # type: int
+        rows=20,  # type: Union[int, Text]
+        minrows=0,  # type: int
+        monospaced=False,  # type: bool
+        # TextAscii
+        label=None,  # type: TypingOptional[Text]
+        size=64,  # type: Union[int, str]
+        try_max_width=False,  # type: bool
+        cssclass="text",  # type: str
+        strip=True,  # type: bool
+        attrencode=True,  # type: bool
+        allow_empty=True,  # type: bool
+        empty_text="",  # type: Text
+        read_only=False,  # type: bool
+        none_is_empty=False,  # type: bool
+        forbidden_chars="",  # type: Text
+        regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
+        regex_error=None,  # type: TypingOptional[Text]
+        minlen=None,  # type: TypingOptional[int]
+        onkeyup=None,  # type: TypingOptional[Text]
+        autocomplete=True,  # type: bool
+        hidden=False,  # type: bool
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(TextAreaUnicode, self).__init__(
             label=label,
@@ -1386,32 +1386,32 @@ class Filename(TextAscii):
 
     # TODO: Cleanup default / default_value?
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            default="/tmp/foo",  # type: Text
-            trans_func=None,  # type: TypingOptional[Callable[[Text], Text]]
-            # TextAscii
-            label=None,  # type: TypingOptional[Text]
-            size=60,  # type: Union[int, str]
-            try_max_width=False,  # type: bool
-            cssclass="text",  # type: str
-            strip=True,  # type: bool
-            attrencode=True,  # type: bool
-            allow_empty=True,  # type: bool
-            empty_text="",  # type: Text
-            read_only=False,  # type: bool
-            none_is_empty=False,  # type: bool
-            forbidden_chars="",  # type: Text
-            regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
-            regex_error=None,  # type: TypingOptional[Text]
-            minlen=None,  # type: TypingOptional[int]
-            onkeyup=None,  # type: TypingOptional[Text]
-            autocomplete=True,  # type: bool
-            hidden=False,  # type: bool
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        default="/tmp/foo",  # type: Text
+        trans_func=None,  # type: TypingOptional[Callable[[Text], Text]]
+        # TextAscii
+        label=None,  # type: TypingOptional[Text]
+        size=60,  # type: Union[int, str]
+        try_max_width=False,  # type: bool
+        cssclass="text",  # type: str
+        strip=True,  # type: bool
+        attrencode=True,  # type: bool
+        allow_empty=True,  # type: bool
+        empty_text="",  # type: Text
+        read_only=False,  # type: bool
+        none_is_empty=False,  # type: bool
+        forbidden_chars="",  # type: Text
+        regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
+        regex_error=None,  # type: TypingOptional[Text]
+        minlen=None,  # type: TypingOptional[int]
+        onkeyup=None,  # type: TypingOptional[Text]
+        autocomplete=True,  # type: bool
+        hidden=False,  # type: bool
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(Filename, self).__init__(
             label=label,
@@ -1473,22 +1473,22 @@ class Filename(TextAscii):
 
 class ListOfStrings(ValueSpec):
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            # ListOfStrings
-            valuespec=None,  # type: TypingOptional[ValueSpec]
-            size=25,  # type: Union[str, int]
-            orientation="vertical",  # type: Text
-            allow_empty=True,  # type: bool
-            empty_text="",  # type: Text
-            max_entries=None,  # type: TypingOptional[int]
-            separator="",  # type: Text
-            split_on_paste=True,  # type: bool
-            split_separators=";",  # type: Text
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        # ListOfStrings
+        valuespec=None,  # type: TypingOptional[ValueSpec]
+        size=25,  # type: Union[str, int]
+        orientation="vertical",  # type: Text
+        allow_empty=True,  # type: bool
+        empty_text="",  # type: Text
+        max_entries=None,  # type: TypingOptional[int]
+        separator="",  # type: Text
+        split_on_paste=True,  # type: bool
+        split_separators=";",  # type: Text
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(ListOfStrings, self).__init__(title=title,
                                             help=help,
@@ -1633,22 +1633,22 @@ class ListOf(ValueSpec):
         FLOATING = "floating"
 
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            valuespec,  # type: ValueSpec
-            magic="@!@",  # type: Text
-            add_label=None,  # type: TypingOptional[Text]
-            del_label=None,  # type: TypingOptional[Text]
-            movable=True,  # type: bool
-            style=None,  # type: TypingOptional[ListOf.Style]
-            totext=None,  # type: TypingOptional[Text]
-            text_if_empty=None,  # type: TypingOptional[Text]
-            allow_empty=True,  # type: bool
-            empty_text=None,  # type: TypingOptional[Text]
-            sort_by=None,  # type: TypingOptional[int]
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        valuespec,  # type: ValueSpec
+        magic="@!@",  # type: Text
+        add_label=None,  # type: TypingOptional[Text]
+        del_label=None,  # type: TypingOptional[Text]
+        movable=True,  # type: bool
+        style=None,  # type: TypingOptional[ListOf.Style]
+        totext=None,  # type: TypingOptional[Text]
+        text_if_empty=None,  # type: TypingOptional[Text]
+        allow_empty=True,  # type: bool
+        empty_text=None,  # type: TypingOptional[Text]
+        sort_by=None,  # type: TypingOptional[int]
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(ListOf, self).__init__(title=title,
                                      help=help,
@@ -1890,18 +1890,18 @@ class ListOfMultiple(ValueSpec):
     Each sub-valuespec can be added only once
     """
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            choices,  # type: List[TypingTuple[str, Text]]
-            choice_page_name,  # type: str
-            page_request_vars=None,  # type: Dict[Text, Text]
-            size=None,  # type: TypingOptional[int]
-            add_label=None,  # type: TypingOptional[Text]
-            del_label=None,  # type: TypingOptional[Text]
-            delete_style="default",  # type: str
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        choices,  # type: List[TypingTuple[str, Text]]
+        choice_page_name,  # type: str
+        page_request_vars=None,  # type: Dict[Text, Text]
+        size=None,  # type: TypingOptional[int]
+        add_label=None,  # type: TypingOptional[Text]
+        del_label=None,  # type: TypingOptional[Text]
+        delete_style="default",  # type: str
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(ListOfMultiple, self).__init__(title=title,
                                              help=help,
@@ -2038,23 +2038,23 @@ class ABCPageListOfMultipleGetChoice(six.with_metaclass(abc.ABCMeta, AjaxPage)):
 class Float(Integer):
     """Same as Integer, but for floating point values"""
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            decimal_separator=".",  # type: Text
-            allow_int=False,  # type: bool
-            # Integer
-            size=None,  # type: TypingOptional[int]
-            minvalue=None,  # type: TypingOptional[Union[int, float]]
-            maxvalue=None,  # type: TypingOptional[Union[int, float]]
-            label=None,  # type: TypingOptional[Text]
-            unit="",  # type: Text
-            thousand_sep=None,  # type: TypingOptional[Text]
-            display_format="%.2f",  # type: Text
-            align="left",  # type: str
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        decimal_separator=".",  # type: Text
+        allow_int=False,  # type: bool
+        # Integer
+        size=None,  # type: TypingOptional[int]
+        minvalue=None,  # type: TypingOptional[Union[int, float]]
+        maxvalue=None,  # type: TypingOptional[Union[int, float]]
+        label=None,  # type: TypingOptional[Text]
+        unit="",  # type: Text
+        thousand_sep=None,  # type: TypingOptional[Text]
+        display_format="%.2f",  # type: Text
+        align="left",  # type: str
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(Float, self).__init__(size=size,
                                     minvalue=minvalue,
@@ -2104,24 +2104,24 @@ class Float(Integer):
 
 class Percentage(Float):
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            # Float
-            decimal_separator=".",  # type: Text
-            allow_int=False,  # type: bool
-            # Integer
-            size=None,  # type: TypingOptional[int]
-            minvalue=0.0,  # type: TypingOptional[Union[int, float]]
-            maxvalue=101.0,  # type: TypingOptional[Union[int, float]]
-            label=None,  # type: TypingOptional[Text]
-            unit="%",  # type: Text
-            thousand_sep=None,  # type: TypingOptional[Text]
-            display_format="%.1f",  # type: Text
-            align="left",  # type: str
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        # Float
+        decimal_separator=".",  # type: Text
+        allow_int=False,  # type: bool
+        # Integer
+        size=None,  # type: TypingOptional[int]
+        minvalue=0.0,  # type: TypingOptional[Union[int, float]]
+        maxvalue=101.0,  # type: TypingOptional[Union[int, float]]
+        label=None,  # type: TypingOptional[Text]
+        unit="%",  # type: Text
+        thousand_sep=None,  # type: TypingOptional[Text]
+        display_format="%.1f",  # type: Text
+        align="left",  # type: str
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(Percentage, self).__init__(decimal_separator=decimal_separator,
                                          allow_int=allow_int,
@@ -2154,15 +2154,15 @@ class Percentage(Float):
 
 class Checkbox(ValueSpec):
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            label=None,  # type: TypingOptional[Text]
-            true_label=None,  # type: TypingOptional[Text]
-            false_label=None,  # type: TypingOptional[Text]
-            onclick=None,  # type: TypingOptional[Text]
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        label=None,  # type: TypingOptional[Text]
+        true_label=None,  # type: TypingOptional[Text]
+        false_label=None,  # type: TypingOptional[Text]
+        onclick=None,  # type: TypingOptional[Text]
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(Checkbox, self).__init__(title=title,
                                        help=help,
@@ -2208,29 +2208,29 @@ class DropdownChoice(ValueSpec):
 
     # TODO: Cleanup redefined builtin sorted
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            # DropdownChoice
-            choices,  # type: Union[List[TypingTuple[Any, Text]], Callable[[], List[TypingTuple[Any, Text]]]]
-            sorted=False,  # type: bool
-            label=None,  # type: TypingOptional[Text]
-            help_separator=None,  # type: Text
-            prefix_values=False,  # type: bool
-            empty_text=None,  # type: TypingOptional[Text]
-            invalid_choice="complain",  # type: TypingOptional[str]
-            invalid_choice_title=None,  # type: TypingOptional[Text]
-            invalid_choice_error=None,  # type: TypingOptional[Text]
-            no_preselect=False,  # type: bool
-            no_preselect_value=None,  # type: Any
-            no_preselect_title="",  # type: Text
-            no_preselect_error=None,  # type: Text
-            on_change=None,  # type: Text
-            read_only=False,  # type: bool
-            encode_value=True,  # type: bool
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        # DropdownChoice
+        choices,  # type: Union[List[TypingTuple[Any, Text]], Callable[[], List[TypingTuple[Any, Text]]]]
+        sorted=False,  # type: bool
+        label=None,  # type: TypingOptional[Text]
+        help_separator=None,  # type: Text
+        prefix_values=False,  # type: bool
+        empty_text=None,  # type: TypingOptional[Text]
+        invalid_choice="complain",  # type: TypingOptional[str]
+        invalid_choice_title=None,  # type: TypingOptional[Text]
+        invalid_choice_error=None,  # type: TypingOptional[Text]
+        no_preselect=False,  # type: bool
+        no_preselect_value=None,  # type: Any
+        no_preselect_title="",  # type: Text
+        no_preselect_error=None,  # type: Text
+        on_change=None,  # type: Text
+        read_only=False,  # type: bool
+        encode_value=True,  # type: bool
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(DropdownChoice, self).__init__(title=title,
                                              help=help,
@@ -2423,27 +2423,27 @@ class CascadingDropdown(ValueSpec):
         foldable = "foldable"
 
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            # TODO: Make this more specific
-            choices,  # type: Union[List[Union[TypingTuple[Text, Text], TypingTuple[Text, Text, ValueSpec]]], Callable]
-            label=None,  # type: TypingOptional[Text]
-            separator=", ",  # type: TypingOptional[Text]
-            sorted=True,  # type: bool
-            orientation="vertical",  # type: Text
-            render=None,  # type: TypingOptional[CascadingDropdown.Render]
-            encoding="tuple",  # type: Text
-            no_elements_text=None,  # type: TypingOptional[Text]
-            no_preselect=False,  # type: bool
-            no_preselect_value=None,  # type: TypingOptional[Any]
-            no_preselect_title="",  # type: Text
-            no_preselect_error=None,  # type: TypingOptional[Text]
-            render_sub_vs_page_name=None,  # type: TypingOptional[Text]
-            render_sub_vs_request_vars=None,  # type: TypingOptional[Dict]
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        # TODO: Make this more specific
+        choices,  # type: Union[List[Union[TypingTuple[Text, Text], TypingTuple[Text, Text, ValueSpec]]], Callable]
+        label=None,  # type: TypingOptional[Text]
+        separator=", ",  # type: TypingOptional[Text]
+        sorted=True,  # type: bool
+        orientation="vertical",  # type: Text
+        render=None,  # type: TypingOptional[CascadingDropdown.Render]
+        encoding="tuple",  # type: Text
+        no_elements_text=None,  # type: TypingOptional[Text]
+        no_preselect=False,  # type: bool
+        no_preselect_value=None,  # type: TypingOptional[Any]
+        no_preselect_title="",  # type: Text
+        no_preselect_error=None,  # type: TypingOptional[Text]
+        render_sub_vs_page_name=None,  # type: TypingOptional[Text]
+        render_sub_vs_request_vars=None,  # type: TypingOptional[Dict]
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(CascadingDropdown, self).__init__(title=title,
                                                 help=help,
@@ -2692,31 +2692,31 @@ class RadioChoice(DropdownChoice):
     """The same logic as the dropdown choice, but rendered as a group of radio buttons.
     columns is None or unset -> separate with '&nbsp;'"""
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            choices,  # type: List[TypingTuple[Any, Text]]
-            columns=None,  # type: TypingOptional[int]
-            orientation=None,  # typing: TypingOptional[Text]
-            # DropdownChoice
-            sorted=False,  # type: bool
-            label=None,  # type: TypingOptional[Text]
-            help_separator=None,  # type: Text
-            prefix_values=False,  # type: bool
-            empty_text=None,  # type: TypingOptional[Text]
-            invalid_choice="complain",  # type: TypingOptional[str]
-            invalid_choice_title=None,  # type: TypingOptional[Text]
-            invalid_choice_error=None,  # type: TypingOptional[Text]
-            no_preselect=False,  # type: bool
-            no_preselect_value=None,  # type: Any
-            no_preselect_title="",  # type: Text
-            no_preselect_error=None,  # type: Text
-            on_change=None,  # type: Text
-            read_only=False,  # type: bool
-            encode_value=True,  # type: bool
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        choices,  # type: List[TypingTuple[Any, Text]]
+        columns=None,  # type: TypingOptional[int]
+        orientation=None,  # typing: TypingOptional[Text]
+        # DropdownChoice
+        sorted=False,  # type: bool
+        label=None,  # type: TypingOptional[Text]
+        help_separator=None,  # type: Text
+        prefix_values=False,  # type: bool
+        empty_text=None,  # type: TypingOptional[Text]
+        invalid_choice="complain",  # type: TypingOptional[str]
+        invalid_choice_title=None,  # type: TypingOptional[Text]
+        invalid_choice_error=None,  # type: TypingOptional[Text]
+        no_preselect=False,  # type: bool
+        no_preselect_value=None,  # type: Any
+        no_preselect_title="",  # type: Text
+        no_preselect_error=None,  # type: Text
+        on_change=None,  # type: Text
+        read_only=False,  # type: bool
+        encode_value=True,  # type: bool
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(RadioChoice, self).__init__(choices=choices,
                                           sorted=sorted,
@@ -2800,22 +2800,22 @@ class ListChoice(ValueSpec):
                 for (type_id, type_name) in sorted(choices.items())]
 
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            # ListChoice
-            choices=None,  # type: TypingOptional[Union[List[TypingTuple[Text, Text]], Dict[Text, Text], Callable[[], List]]]
-            columns=1,  # type: int
-            allow_empty=True,  # type: bool
-            empty_text=None,  # type: TypingOptional[Text]
-            render_function=None,  # type: TypingOptional[Callable[[Text, Text], Text]]
-            toggle_all=False,  # type: bool
-            # TODO: Rename to "orientation" to be in line with other valuespecs
-            render_orientation="horizontal",  # type: Text
-            no_elements_text=None,  # type: TypingOptional[Text]
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        # ListChoice
+        choices=None,  # type: TypingOptional[Union[List[TypingTuple[Text, Text]], Dict[Text, Text], Callable[[], List]]]
+        columns=1,  # type: int
+        allow_empty=True,  # type: bool
+        empty_text=None,  # type: TypingOptional[Text]
+        render_function=None,  # type: TypingOptional[Callable[[Text, Text], Text]]
+        toggle_all=False,  # type: bool
+        # TODO: Rename to "orientation" to be in line with other valuespecs
+        render_orientation="horizontal",  # type: Text
+        no_elements_text=None,  # type: TypingOptional[Text]
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(ListChoice, self).__init__(title=title,
                                          help=help,
@@ -2939,29 +2939,29 @@ class DualListChoice(ListChoice):
     fix this and make it this compatible to DropdownChoice()
     """
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            # DualListChoice
-            autoheight=False,  # type: bool
-            custom_order=False,  # type: bool
-            instant_add=False,  # type: bool
-            enlarge_active=False,  # type: bool
-            rows=None,  # type: TypingOptional[int]
-            size=None,  # type: TypingOptional[int]
-            # ListChoice
-            choices=None,  # type: TypingOptional[Union[List[TypingTuple[Text, Text]], Dict[Text, Text], Callable[[], List]]]
-            columns=1,  # type: int
-            allow_empty=True,  # type: bool
-            empty_text=None,  # type: TypingOptional[Text]
-            render_function=None,  # type: TypingOptional[Callable[[Text, Text], Text]]
-            toggle_all=False,  # type: bool
-            # TODO: Rename to "orientation" to be in line with other valuespecs
-            render_orientation="horizontal",  # type: Text
-            no_elements_text=None,  # type: TypingOptional[Text]
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        # DualListChoice
+        autoheight=False,  # type: bool
+        custom_order=False,  # type: bool
+        instant_add=False,  # type: bool
+        enlarge_active=False,  # type: bool
+        rows=None,  # type: TypingOptional[int]
+        size=None,  # type: TypingOptional[int]
+        # ListChoice
+        choices=None,  # type: TypingOptional[Union[List[TypingTuple[Text, Text]], Dict[Text, Text], Callable[[], List]]]
+        columns=1,  # type: int
+        allow_empty=True,  # type: bool
+        empty_text=None,  # type: TypingOptional[Text]
+        render_function=None,  # type: TypingOptional[Callable[[Text, Text], Text]]
+        toggle_all=False,  # type: bool
+        # TODO: Rename to "orientation" to be in line with other valuespecs
+        render_orientation="horizontal",  # type: Text
+        no_elements_text=None,  # type: TypingOptional[Text]
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(DualListChoice, self).__init__(choices=choices,
                                              columns=columns,
@@ -3098,31 +3098,31 @@ class OptionalDropdownChoice(DropdownChoice):
     opens a further value spec for entering an alternative
     Value."""
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            explicit,  # type: ValueSpec
-            choices,  # type: Union[List[TypingTuple[Any, Text]], Callable[[], List[TypingTuple[Any, Text]]]]
-            otherlabel=None,  # type: TypingOptional[Text]
-            # DropdownChoice
-            sorted=False,  # type: bool
-            label=None,  # type: TypingOptional[Text]
-            help_separator=None,  # type: Text
-            prefix_values=False,  # type: bool
-            empty_text=None,  # type: TypingOptional[Text]
-            invalid_choice="complain",  # type: TypingOptional[str]
-            invalid_choice_title=None,  # type: TypingOptional[Text]
-            invalid_choice_error=None,  # type: TypingOptional[Text]
-            no_preselect=False,  # type: bool
-            no_preselect_value=None,  # type: Any
-            no_preselect_title="",  # type: Text
-            no_preselect_error=None,  # type: Text
-            on_change=None,  # type: Text
-            read_only=False,  # type: bool
-            encode_value=True,  # type: bool
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        explicit,  # type: ValueSpec
+        choices,  # type: Union[List[TypingTuple[Any, Text]], Callable[[], List[TypingTuple[Any, Text]]]]
+        otherlabel=None,  # type: TypingOptional[Text]
+        # DropdownChoice
+        sorted=False,  # type: bool
+        label=None,  # type: TypingOptional[Text]
+        help_separator=None,  # type: Text
+        prefix_values=False,  # type: bool
+        empty_text=None,  # type: TypingOptional[Text]
+        invalid_choice="complain",  # type: TypingOptional[str]
+        invalid_choice_title=None,  # type: TypingOptional[Text]
+        invalid_choice_error=None,  # type: TypingOptional[Text]
+        no_preselect=False,  # type: bool
+        no_preselect_value=None,  # type: Any
+        no_preselect_title="",  # type: Text
+        no_preselect_error=None,  # type: Text
+        on_change=None,  # type: Text
+        read_only=False,  # type: bool
+        encode_value=True,  # type: bool
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(OptionalDropdownChoice, self).__init__(choices=choices,
                                                      sorted=sorted,
@@ -3448,14 +3448,14 @@ class Timeofday(ValueSpec):
     the user does not enter a time the vs will return None.
     """
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            allow_24_00=False,  # type: bool
-            allow_empty=True,  # type: bool
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        allow_24_00=False,  # type: bool
+        allow_empty=True,  # type: bool
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(Timeofday, self).__init__(title=title,
                                         help=help,
@@ -3532,13 +3532,13 @@ class Timeofday(ValueSpec):
 class TimeofdayRange(ValueSpec):
     """Range like 00:15 - 18:30"""
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            allow_empty=True,  # type: bool
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        allow_empty=True,  # type: bool
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(TimeofdayRange, self).__init__(title=title,
                                              help=help,
@@ -3666,30 +3666,30 @@ class TimeHelper(object):
 
 class Timerange(CascadingDropdown):
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            allow_empty=False,  # type: bool
-            include_time=False,  # type: bool
-            choices=None,  # type: TypingOptional[Union[List[TypingTuple[Text, Text, ValueSpec]], Callable]]
-            # CascadingDropdown
-            # TODO: Make this more specific
-            label=None,  # type: TypingOptional[Text]
-            separator=", ",  # type: TypingOptional[Text]
-            sorted=False,  # type: bool
-            orientation="vertical",  # type: Text
-            render=None,  # type: TypingOptional[CascadingDropdown.Render]
-            encoding="tuple",  # type: Text
-            no_elements_text=None,  # type: TypingOptional[Text]
-            no_preselect=False,  # type: bool
-            no_preselect_value=None,  # type: TypingOptional[Any]
-            no_preselect_title="",  # type: Text
-            no_preselect_error=None,  # type: TypingOptional[Text]
-            render_sub_vs_page_name=None,  # type: TypingOptional[Text]
-            render_sub_vs_request_vars=None,  # type: TypingOptional[Dict]
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        allow_empty=False,  # type: bool
+        include_time=False,  # type: bool
+        choices=None,  # type: TypingOptional[Union[List[TypingTuple[Text, Text, ValueSpec]], Callable]]
+        # CascadingDropdown
+        # TODO: Make this more specific
+        label=None,  # type: TypingOptional[Text]
+        separator=", ",  # type: TypingOptional[Text]
+        sorted=False,  # type: bool
+        orientation="vertical",  # type: Text
+        render=None,  # type: TypingOptional[CascadingDropdown.Render]
+        encoding="tuple",  # type: Text
+        no_elements_text=None,  # type: TypingOptional[Text]
+        no_preselect=False,  # type: bool
+        no_preselect_value=None,  # type: TypingOptional[Any]
+        no_preselect_title="",  # type: Text
+        no_preselect_error=None,  # type: TypingOptional[Text]
+        render_sub_vs_page_name=None,  # type: TypingOptional[Text]
+        render_sub_vs_request_vars=None,  # type: TypingOptional[Dict]
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(Timerange, self).__init__(
             choices=self._prepare_choices,
@@ -3893,20 +3893,20 @@ class Optional(ValueSpec):
     The user has a checkbox for activating the option. Example:
     debug_log: it is either None or set to a filename."""
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            valuespec,  # type: ValueSpec
-            label=None,  # type: TypingOptional[Text]
-            negate=False,  # type: bool
-            none_label=None,  # type: TypingOptional[Text]
-            none_value=None,  # type: Any
-            sameline=False,  # type: bool
-            indent=True,  # type: bool
-            allow_empty=True,  # type: bool
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        valuespec,  # type: ValueSpec
+        label=None,  # type: TypingOptional[Text]
+        negate=False,  # type: bool
+        none_label=None,  # type: TypingOptional[Text]
+        none_value=None,  # type: Any
+        sameline=False,  # type: bool
+        indent=True,  # type: bool
+        allow_empty=True,  # type: bool
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(Optional, self).__init__(title=title,
                                        help=help,
@@ -3998,18 +3998,18 @@ class Alternative(ValueSpec):
     The different alternatives must have different data types that can
     be distinguished with validate_datatype."""
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            elements,  # type: List[ValueSpec]
-            match=None,  # type: TypingOptional[Callable[[Any], int]]
-            style="radio",  # type: Text
-            show_alternative_title=False,  # type: bool
-            on_change=None,  # type: TypingOptional[Text]
-            orientation="vertical",  # type: Text
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        elements,  # type: List[ValueSpec]
+        match=None,  # type: TypingOptional[Callable[[Any], int]]
+        style="radio",  # type: Text
+        show_alternative_title=False,  # type: bool
+        on_change=None,  # type: TypingOptional[Text]
+        orientation="vertical",  # type: Text
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(Alternative, self).__init__(title=title,
                                           help=help,
@@ -4164,16 +4164,16 @@ class Alternative(ValueSpec):
 class Tuple(ValueSpec):
     """Edit a n-tuple (with fixed size) of values"""
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            elements,  # type: List[ValueSpec]
-            show_titles=True,  # type: bool
-            orientation="vertical",  # type: str
-            separator=" ",  # type: Text
-            title_br=True,  # type: bool
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        elements,  # type: List[ValueSpec]
+        show_titles=True,  # type: bool
+        orientation="vertical",  # type: str
+        separator=" ",  # type: Text
+        title_br=True,  # type: bool
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(Tuple, self).__init__(title=title,
                                     help=help,
@@ -4286,27 +4286,27 @@ class Tuple(ValueSpec):
 class Dictionary(ValueSpec):
     # TODO: Cleanup ancient "migrate"
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            elements,  # type: List[TypingTuple[str, ValueSpec]]
-            empty_text=None,  # type: TypingOptional[Text]
-            default_text=None,  # type: TypingOptional[Text]
-            optional_keys=True,  # type: Union[bool, List[str]]
-            required_keys=None,  # type: TypingOptional[List[str]]
-            ignored_keys=None,  # type: TypingOptional[List[str]]
-            default_keys=None,  # type: TypingOptional[List[str]]
-            hidden_keys=None,  # type: TypingOptional[List[str]]
-            columns=1,  # type: int
-            render="normal",  # type: str
-            form_narrow=False,  # type: bool
-            form_isopen=True,  # type: bool
-            headers=None,  # type: TypingOptional[Union[str, List[Union[TypingTuple[str, List[str]], TypingTuple[str, str, List[str]]]]]]
-            migrate=None,  # type: Callable[[TypingTuple], Dict]
-            indent=True,  # type: bool
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        elements,  # type: List[TypingTuple[str, ValueSpec]]
+        empty_text=None,  # type: TypingOptional[Text]
+        default_text=None,  # type: TypingOptional[Text]
+        optional_keys=True,  # type: Union[bool, List[str]]
+        required_keys=None,  # type: TypingOptional[List[str]]
+        ignored_keys=None,  # type: TypingOptional[List[str]]
+        default_keys=None,  # type: TypingOptional[List[str]]
+        hidden_keys=None,  # type: TypingOptional[List[str]]
+        columns=1,  # type: int
+        render="normal",  # type: str
+        form_narrow=False,  # type: bool
+        form_isopen=True,  # type: bool
+        headers=None,  # type: TypingOptional[Union[str, List[Union[TypingTuple[str, List[str]], TypingTuple[str, str, List[str]]]]]]
+        migrate=None,  # type: Callable[[TypingTuple], Dict]
+        indent=True,  # type: bool
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(Dictionary, self).__init__(title=title,
                                          help=help,
@@ -4613,14 +4613,14 @@ class ElementSelection(ValueSpec):
     a function get_elements() that returns a dictionary
     from element keys to element titles."""
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            label=None,  # type: TypingOptional[Text]
-            empty_text=None,  # type: TypingOptional[Text]
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        label=None,  # type: TypingOptional[Text]
+        empty_text=None,  # type: TypingOptional[Text]
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(ElementSelection, self).__init__(title=title,
                                                help=help,
@@ -4755,14 +4755,14 @@ class Transform(ValueSpec):
     back:  function that converts a value created by the encapsulated
            vs back to the outer representation"""
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            valuespec,  # type: ValueSpec
-            back=None,  # type: TypingOptional[Callable[[Any], Any]]
-            forth=None,  # type: TypingOptional[Callable[[Any], Any]]
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        valuespec,  # type: ValueSpec
+        back=None,  # type: TypingOptional[Callable[[Any], Any]]
+        forth=None,  # type: TypingOptional[Callable[[Any], Any]]
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         super(Transform, self).__init__(title=title,
                                         help=help,
@@ -5102,15 +5102,15 @@ class Labels(ValueSpec):
         DISCOVERED = "discovered"
 
     def __init__(  # pylint: disable=redefined-builtin
-            self,
-            world,  # type: Labels.World
-            label_source=None,  # type: Labels.Source
-            max_labels=None,  # type: TypingOptional[int]
-            # ValueSpec
-            title=None,  # type: TypingOptional[Text]
-            help=None,  # type: TypingOptional[Text]
-            default_value=_DEF_VALUE,  # type: Any
-            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        self,
+        world,  # type: Labels.World
+        label_source=None,  # type: Labels.Source
+        max_labels=None,  # type: TypingOptional[int]
+        # ValueSpec
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Text]
+        default_value=_DEF_VALUE,  # type: Any
+        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
     ):
         help_ = help if help is not None else ""
         help_ += _("Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. "

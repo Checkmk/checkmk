@@ -101,7 +101,7 @@ g_last_werk = None  # type: Optional[int]
 
 def load_config():
     global g_last_werk
-    exec(open("config").read(), globals(), globals())
+    exec (open("config").read(), globals(), globals())
     try:
         g_last_werk = int(open(".last").read())
     except Exception:

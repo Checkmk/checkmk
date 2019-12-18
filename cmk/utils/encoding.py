@@ -32,11 +32,11 @@ import six
 
 
 def convert_to_unicode(
-        value,
-        encoding=None,
-        std_encoding="utf-8",
-        fallback_encoding="latin-1",
-        on_error=None,
+    value,
+    encoding=None,
+    std_encoding="utf-8",
+    fallback_encoding="latin-1",
+    on_error=None,
 ):
     # type: (AnyStr, Optional[str], str, str, Optional[Text]) -> Text
     if isinstance(value, six.text_type):

@@ -64,13 +64,13 @@ def azure_iter_informative_attrs(resource, include_keys=('location',)):
 
 
 def check_azure_metric(  # pylint: disable=too-many-locals
-        resource,
-        metric_key,
-        cmk_key,
-        display_name,
-        levels=None,
-        levels_lower=None,
-        use_rate=False):
+    resource,
+    metric_key,
+    cmk_key,
+    display_name,
+    levels=None,
+    levels_lower=None,
+    use_rate=False):
     metric = resource.get('metrics', {}).get(metric_key)
     if metric is None:
         return None

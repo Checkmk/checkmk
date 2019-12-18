@@ -4,7 +4,8 @@ import mock
 import pytest  # type: ignore
 import six
 from cmk_base.item_state import MKCounterWrapped
-from cmk_base.discovered_labels import DiscoveredHostLabels, HostLabel
+from cmk_base.discovered_labels import DiscoveredHostLabels, HostLabel, DiscoveredServiceLabels
+from cmk_base.check_api_utils import Service
 
 
 class Tuploid(object):
@@ -254,7 +255,11 @@ def assertCheckResultsEqual(actual, expected):
 class DiscoveryEntry(Tuploid):
     """A single entry as returned by the discovery (or in oldspeak: inventory) function."""
     def __init__(self, entry):
-        self.item, self.default_params = entry
+        # hack for ServiceLabel
+        if isinstance(entry, Service):
+            self.item, self.default_params, self.service_labels = entry.item, entry.parameters, entry.service_labels
+        else:
+            self.item, self.default_params = entry
         ti = type(self.item)
         assert ti in [str, unicode, type(None)], \
                "DiscoveryEntry: item %r must be of type str, unicode or None - not %r" \
@@ -289,6 +294,9 @@ class DiscoveryResult(object):
                 self.labels += entry
             elif isinstance(entry, HostLabel):
                 self.labels.add_label(entry)
+            # preparation for ServiceLabel Discovery
+            #elif isinstance(entry, Service):
+            #
             else:
                 self.entries.append(DiscoveryEntry(entry))
         self.entries.sort(key=repr)

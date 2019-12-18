@@ -32,7 +32,7 @@ checks = {
                     0, 'Number of idle executors: 1', [
                         ('jenkins_idle_executors', 1, None, None, None, None)
                     ]
-                ), (0, u'Mode: Exclusive', []), (0, 'Offline: no', []),
+                ), (0, u'Mode: Exclusive ', []), (0, 'Offline: no', []),
                 (
                     0, u'Average response time: 35.0 ms', [
                         ('avg_response_time', 0.035, None, None, None, None)
@@ -70,7 +70,7 @@ checks = {
                     0, 'Number of idle executors: 17', [
                         ('jenkins_idle_executors', 17, None, None, None, None)
                     ]
-                ), (0, u'Mode: Exclusive', []), (0, 'Offline: no', []),
+                ), (0, u'Mode: Exclusive ', []), (0, 'Offline: no', []),
                 (
                     0, u'Average response time: 0.00 s', [
                         ('avg_response_time', 0.0, None, None, None, None)

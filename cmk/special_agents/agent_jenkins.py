@@ -77,6 +77,7 @@ def main(argv=None):
 
 def handle_request(args, sections):
     url_base = "%s://%s:%s" % (args.proto, args.hostname, args.port)
+    #labels = {}
 
     for section in sections:
         if section.name not in args.sections:
@@ -97,7 +98,29 @@ def handle_request(args, sections):
         else:
             value = response.json()[section.key]
 
+        # if piggyback for nodes is implemented,
+        # use this section for Host labels
+        #
+        #if section.name == "nodes":
+        #    for line in value:
+        #        node_name = line.get("displayName")
+        #        label_data = line.get("assignedLabels")
+        #        if label_data is None or node_name is None:
+        #            continue
+        #
+        #        for label in label_data:
+        #            label_name = label.get("name")
+        #            if label_name is None:
+        #                continue
+        #
+        #            if label_name != node_name:
+        #                labels.update({"cmk/jenkins_node_label_%s" % label_name: "yes"})
+
         sys.stdout.write("%s\n" % json.dumps(value))
+
+    #if labels:
+    #    sys.stdout.write("<<<labels:sep(0)>>>\n")
+    #    sys.stdout.write("%s\n" % json.dumps(labels))
 
 
 def parse_arguments(argv):

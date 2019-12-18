@@ -1174,6 +1174,8 @@ class html(ABCHTMLGenerator):
         except KeyError:
             pass
 
+    # TODO: For historic reasons this needs to return byte strings. We will clean this up
+    # soon, before moving to Python 3.
     def get_ascii_input(self, varname, deflt=None):
         """Helper to retrieve a byte string and ensure it only contains ASCII characters
         In case a non ASCII character is found an MKUserError() is raised."""

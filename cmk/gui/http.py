@@ -134,7 +134,7 @@ class LegacyDeprecatedMixin(object):
         for name, values in self.values.lists():
             if name.startswith(prefix):
                 # Preserve previous behaviour
-                yield name, values[-1] if values else None
+                yield name, values[-1].encode("utf-8") if values else None
 
     def var(self, name, default=None):
         # TODO: Deprecated
@@ -143,7 +143,7 @@ class LegacyDeprecatedMixin(object):
             return default
 
         # Preserve previous behaviour
-        return values[-1]
+        return values[-1].encode("utf-8")
 
     def has_var(self, varname):
         # TODO: Deprecated

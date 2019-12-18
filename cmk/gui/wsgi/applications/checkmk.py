@@ -24,15 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 import contextlib
+import functools
 import httplib
 import os
-import traceback
 
 import livestatus
 
 import cmk.gui.crash_reporting as crash_reporting
 import cmk.gui.htmllib
 import cmk.gui.http
+import cmk.utils.paths
 import cmk.utils.profile
 
 from cmk.gui import config, login, pages, modules
@@ -53,6 +54,69 @@ from cmk.utils import store
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.
 #  * consolidate page handler handling
+
+
+def _auth(request, func):
+    # Ensure the user is authenticated. This call is wrapping all the different
+    # authentication modes the Check_MK GUI supports and initializes the logged
+    # in user objects.
+    @functools.wraps(func)
+    def _call_auth():
+        if not login.authenticate(request):
+            _handle_not_authenticated()
+            return
+
+        # This may raise an exception with error messages, which will then be displayed to the user.
+        _ensure_general_access()
+
+        # Initialize the multisite cmk.gui.i18n. This will be replaced by
+        # language settings stored in the user profile after the user
+        # has been initialized
+        _localize_request()
+
+        # Update the UI theme with the attribute configured by the user
+        html.set_theme(config.user.get_attribute("ui_theme"))
+
+        func()
+
+    return _call_auth
+
+
+def _noauth(func):
+    # HACK ALERT
+    #
+    # We don't have to set up anything because we assume this is only used for special calls.
+    #
+    # Currently these are:
+    #  * noauth:run_cron
+    #  * noauth:pnp_template
+    #  * noauth:deploy_agent
+    #  * noauth:ajax_graph_images
+    #  * noauth:automation
+    #
+    return func
+
+
+def get_and_wrap_page(request, script_name):
+    """Get the page handler and wrap authentication logic when needed.
+
+    For all "noauth" page handlers the wrapping part is skipped. In the `_auth` wrapper
+    everything needed to make a logged-in request is listed.
+    """
+    _handler = pages.get_page_handler(script_name)
+    if _handler is None:
+        # Some pages do skip authentication. This is done by adding
+        # noauth: to the page handler, e.g. "noauth:run_cron" : ...
+        # TODO: Eliminate those "noauth:" pages. Eventually replace it by call using
+        #       the now existing default automation user.
+        _handler = pages.get_page_handler("noauth:" + script_name)
+        if _handler is not None:
+            return _noauth(_handler)
+
+    if _handler is None:
+        return _page_not_found
+
+    return _auth(request, _handler)
 
 
 def _plain_error():
@@ -115,12 +179,6 @@ def _ensure_general_access():
     raise MKAuthException(" ".join(reason))
 
 
-def _show_exception_info(e):
-    html.write_text("%s" % e)
-    if config.debug:
-        html.write_text(traceback.format_exc())
-
-
 def _handle_not_authenticated():
     if _fail_silently():
         # While api call don't show the login dialog
@@ -139,8 +197,6 @@ def _handle_not_authenticated():
         login_page = login.LoginPage()
         login_page.set_no_html_output(_plain_error())
         login_page.handle_page()
-
-    raise FinalizeRequest(httplib.OK)
 
 
 def _load_all_plugins():
@@ -193,13 +249,20 @@ def profiling_middleware(func):
 
 
 @contextlib.contextmanager
-def release_locks_afterwards():
-    yield
+def cleanup_locks():
+    """Release all memorized locks at the end of the block.
+
+    This is a hack which should be removed. In order to make this happen, every lock shall
+    only be used as a context-manager.
+    """
     try:
-        store.release_all_locks()
-    except Exception:
-        logger.exception("error releasing locks after WSGI request")
-        raise
+        yield
+    finally:
+        try:
+            store.release_all_locks()
+        except Exception:
+            logger.exception("error releasing locks after WSGI request")
+            raise
 
 
 class CheckmkApp(object):
@@ -211,12 +274,13 @@ class CheckmkApp(object):
         return self.wsgi_app(environ, start_response)
 
     def wsgi_app(self, environ, start_response):  # pylint: disable=method-hidden
+        """Is called by the WSGI server to serve the current page"""
         request = cmk.gui.http.Request(environ)
         response = cmk.gui.http.Response(is_secure=request.is_secure)
         with AppContext(self), RequestContext(cmk.gui.htmllib.html(request, response)),\
-                release_locks_afterwards():
+                cleanup_locks():
             self._process_request(request, response)
-        return response(environ, start_response)
+            return response(environ, start_response)
 
     def _process_request(self, request, response):  # pylint: disable=too-many-branches
         try:
@@ -228,38 +292,10 @@ class CheckmkApp(object):
             # time before the first login for generating auth.php.
             _load_all_plugins()
 
-            handler = pages.get_page_handler(html.myfile, _page_not_found)
-
-            # Some pages do skip authentication. This is done by adding
-            # noauth: to the page hander, e.g. "noauth:run_cron" : ...
-            # TODO: Eliminate those "noauth:" pages. Eventually replace it by call using
-            #       the now existing default automation user.
-            if handler == _page_not_found:
-                handler = pages.get_page_handler("noauth:" + html.myfile, _page_not_found)
-                if handler != _page_not_found:
-                    try:
-                        handler()
-                    except Exception as e:
-                        # TODO: This misses correct error handling (log to web.log, crash reporting)
-                        _show_exception_info(e)
-                    raise FinalizeRequest(httplib.OK)
-
-            # Ensure the user is authenticated. This call is wrapping all the different
-            # authentication modes the Check_MK GUI supports and initializes the logged
-            # in user objects.
-            if not login.authenticate(request):
-                _handle_not_authenticated()
-
-            # Initialize the multiste cmk.gui.i18n. This will be replaced by
-            # language settings stored in the user profile after the user
-            # has been initialized
-            _localize_request()
-
-            # Update the UI theme with the attribute configured by the user
-            html.set_theme(config.user.get_attribute("ui_theme"))
-
-            _ensure_general_access()
-            handler()
+            page_handler = get_and_wrap_page(request, html.myfile)
+            page_handler()
+            # If page_handler didn't raise we assume everything is OK.
+            response.status_code = httplib.OK
 
         except HTTPRedirect as e:
             response.status_code = e.status

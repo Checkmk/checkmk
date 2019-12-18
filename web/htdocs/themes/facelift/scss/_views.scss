@@ -954,8 +954,11 @@ div.floatfilter.rangespec table.valuespec_tuple {
   width: 100%;
 
   span.title {
-    position: relative;
     top: 7px;
+  }
+
+  input {
+    padding: 3px;
   }
 }
 

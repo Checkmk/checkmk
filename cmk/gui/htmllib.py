@@ -73,6 +73,7 @@ from typing import (  # pylint: disable=unused-import
     Union, Text, Optional,
 )
 from pathlib2 import Path
+import werkzeug.datastructures
 
 import six
 
@@ -1166,6 +1167,12 @@ class html(ABCHTMLGenerator):
         # the environment. The rest of the request object stays the same.
         self.request.__dict__.pop('args', None)
         self.request.__dict__.pop('values', None)
+
+        # Temporarily hack to remove unwanted POST vars
+        try:
+            werkzeug.datastructures.MultiDict.pop(self.request.form, varname)
+        except KeyError:
+            pass
 
     def get_ascii_input(self, varname, deflt=None):
         """Helper to retrieve a byte string and ensure it only contains ASCII characters

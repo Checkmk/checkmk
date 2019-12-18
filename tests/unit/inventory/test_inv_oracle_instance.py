@@ -76,14 +76,14 @@ import pytest
         '_DATABASE_ROLE',
         '_FORCE_LOGGING',
         '_NAME',
-        'RAW_DB_CREATION_TIME',
+        '080220151025',
     ], {
         "sid": "SID",
         "version": "VERSION",
         "openmode": "OPENMODE",
         "logmode": 'LOGMODE',
         "logins": "LOGINS",
-        "db_creation_time": None,
+        "db_creation_time": "2015-02-08 10:25",
     }, {
         "sid": "SID",
         "db_uptime": None,
@@ -107,7 +107,7 @@ import pytest
         "openmode": "OPENMODE",
         "logmode": 'LOGMODE',
         "logins": "LOGINS",
-        "db_creation_time": 1423386125.0,
+        "db_creation_time": "2015-02-08 10:25",
     }, {
         "sid": "SID",
         "db_uptime": 123,
@@ -175,7 +175,7 @@ import pytest
         "openmode": "OPENMODE",
         "logmode": 'LOGMODE',
         "logins": "LOGINS",
-        "db_creation_time": 1423386125.0,
+        "db_creation_time": "2015-02-08 10:25",
     }, {
         "sid": "SID",
         "db_uptime": 123,
@@ -199,4 +199,4 @@ def test_inv_oracle_instance(inventory_plugin_manager, line, inventory_data, sta
     if status_data:
         assert sorted(node_status_data[0].items()) == sorted(status_data.items())
     else:
-        assert node_inventory_data == []
+        assert node_status_data == []

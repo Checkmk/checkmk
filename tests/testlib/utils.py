@@ -95,10 +95,11 @@ def get_cmk_download_credentials_file():
 
 
 def get_cmk_download_credentials():
+    credentials_file = get_cmk_download_credentials_file()
     try:
-        return tuple(open(get_cmk_download_credentials_file()).read().strip().split(":"))
+        return tuple(open(credentials_file).read().strip().split(":"))
     except IOError:
-        raise Exception("Missing %s file (Create with content: USER:PASSWORD)" % cred)
+        raise Exception("Missing %s file (Create with content: USER:PASSWORD)" % credentials_file)
 
 
 def site_id():

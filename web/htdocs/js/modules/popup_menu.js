@@ -200,9 +200,24 @@ export function generate_colorpicker_body(trigger_obj, varprefix, value)
     input_field.setAttribute("type", "text");
     cp_input.appendChild(input_field);
 
+    let rgb = trigger_obj.firstChild.style.backgroundColor;
+    if (rgb !== ""){
+        value = rgb2hex(rgb);
+    }
     return [menu, varprefix, value]
 }
 
+function rgb2hex(rgb) {
+    if (/^#[0-9A-F]{6}$/i.test(rgb)) return rgb;
+
+    const matches = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+
+    let hex_string = "#";
+    for (let i=1; i < rgb.length; i++){
+        hex_string += ("0" + parseInt(matches[i], 10).toString(16)).slice(-2);
+    }
+    return hex_string
+}
 
 
 function handle_render_popup_contents(data, response_text)

@@ -364,7 +364,7 @@ def test_automation_get_agent_output(test_cfg, site):
     assert len(data) == 3
 
     assert data[1] == ""
-    assert isinstance(data[2], unicode)
+    assert isinstance(data[2], bytes)
     assert "<<<uptime>>>" in data[2]
     assert data[0] is True
 

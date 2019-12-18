@@ -22,42 +22,30 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef TableContacts_h
-#define TableContacts_h
+#ifndef BoolLambdaColumn_h
+#define BoolLambdaColumn_h
 
-#include "config.h"  // IWYU pragma: keep
+#include <functional>
 #include <string>
-#include "Row.h"
-#include "Table.h"
+#include "IntColumn.h"
 #include "contact_fwd.h"
-class MonitoringCore;
-class Query;
+class Row;
 
-#ifndef CMC
-extern contact *contact_list;
-#endif
-
-class TableContacts : public Table {
+class BoolLambdaColumn : public IntColumn {
 public:
-#ifndef CMC
-    class IRow : virtual public Table::IRow {
-    public:
-        virtual const contact *getContact() const = 0;
-    };
-#endif
-    explicit TableContacts(MonitoringCore *mc);
+    BoolLambdaColumn(std::string name, std::string description,
+                     std::function<bool(Row)> f)
+        : IntColumn(std::move(name), std::move(description), {})
+        , get_value_{f} {}
+    virtual ~BoolLambdaColumn() = default;
 
-    [[nodiscard]] std::string name() const override;
-    [[nodiscard]] std::string namePrefix() const override;
-    void answerQuery(Query *query) override;
-    [[nodiscard]] Row findObject(const std::string &objectspec) const override;
+    std::int32_t getValue(Row row,
+                          const contact* /*auth_user*/) const override {
+        return get_value_(row) ? 1 : 0;
+    }
 
-#ifdef CMC
-    static void addColumns(Table *table, const std::string &prefix,
-                           int indirect_offset);
-#else
-    static void addColumns(Table *table, const std::string &prefix);
-#endif
+private:
+    std::function<bool(Row)> get_value_;
 };
 
-#endif  // TableContacts_h
+#endif  // BoolLambdaColumn.h

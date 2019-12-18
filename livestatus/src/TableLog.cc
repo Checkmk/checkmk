@@ -55,7 +55,13 @@
 #include "nagios.h"
 #endif
 
-class LogRow : TableCommands::IRow {
+namespace {
+
+class LogRow :
+#ifndef CMC
+    public TableContacts::IRow,
+#endif
+    public TableCommands::IRow {
 public:
     LogRow(LogEntry *entry_, host *hst_, service *svc_, const contact *ctc_,
            Command command_)
@@ -65,15 +71,19 @@ public:
         , ctc{ctc_}
         , command{std::move(command_)} {};
 
+#ifndef CMC
+    [[nodiscard]] const contact *getContact() const override { return ctc; }
+#endif
+    [[nodiscard]] Command getCommand() const override { return command; }
+
     LogEntry *entry;
     host *hst;
     service *svc;
-    // cppcheck is too dumb to see usage in the DANGEROUS_OFFSETOF macro
-    // cppcheck-suppress unusedStructMember
     const contact *ctc;
     Command command;
-    [[nodiscard]] Command getCommand() const override { return command; }
 };
+
+}  // namespace
 
 TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
@@ -160,9 +170,12 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     TableServices::addColumns(this, "current_service_",
                               DANGEROUS_OFFSETOF(LogRow, svc),
                               false /* no hosts table */);
+#ifdef CMC
     TableContacts::addColumns(this, "current_contact_",
                               DANGEROUS_OFFSETOF(LogRow, ctc));
-
+#else
+    TableContacts::addColumns(this, "current_contact_");
+#endif
     TableCommands::addColumns(this, "current_command_");
 }
 
@@ -243,7 +256,7 @@ bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
             reinterpret_cast<const contact *>(
                 core()->find_contact(entry->_contact_name)),
             core()->find_command(entry->_command_name)};
-        if (!query->processDataset(Row(&lr))) {
+        if (!query->processDataset(Row{dynamic_cast<Table::IRow *>(&lr)})) {
             return false;
         }
     }

@@ -76,6 +76,16 @@ def inventory_oracle_performance(parsed):
 
 
 def check_oracle_performance(item, _no_params, parsed):
+    def replace_characters(value):
+        characters = {
+            " ": "_",
+            "/": "",
+            "-": "_",
+            }
+        for char, repl in characters.iteritems():
+            value = value.replace(char, repl)
+        return value.lower()
+
     data = parsed.get(item, None)
 
     # In case of missing information we assume that the login into
@@ -103,19 +113,70 @@ def check_oracle_performance(item, _no_params, parsed):
 
     # old agents delivery not the needed data...
     # sgainfo
-    sga_info = data.get('SGA_info', None)
-    if sga_info:
-        for what, val, perfvar in [
-            ('SGA', sga_info["Maximum SGA Size"], 'oracle_sga_size'),
-            ('DB Cache', sga_info["Buffer Cache Size"], 'oracle_sga_buffer_cache'),
-            ('Shared Pool', sga_info["Shared Pool Size"], 'oracle_sga_shared_pool'),
-            ('Redo Buffers', sga_info["Redo Buffers"], 'oracle_sga_redo_buffer'),
-            ('Java Pool Size', sga_info["Java Pool Size"], 'oracle_sga_java_pool'),
-            ('Large Pool Size', sga_info["Large Pool Size"], 'oracle_sga_large_pool'),
-            ('Streams Pool Size', sga_info["Streams Pool Size"], 'oracle_sga_streams_pool'),
-        ]:
-            yield 0, "%s: %s" % (what, get_bytes_human_readable(val))
-            perfdata.append((perfvar, val))
+    sga_info = data.get('SGA_info', {})
+    valid_sgas = [ # Currently used metrics
+        'Maximum SGA Size',
+        'Buffer Cache Size',
+        'Shared Pool Size',
+        'Redo Buffers',
+        'Java Pool Size',
+        'Large Pool Size',
+        'Streams Pool Size']
+    for sga_key, sga_value in sga_info.items():
+        if sga_key not in valid_sgas:
+            continue
+        value = sga_value
+        yield 0, "%s: %s" % (sga_key, get_bytes_human_readable(sga_value))
+        perfdata.append(("oracle_sga_%s" % replace_characters(sga_key), sga_value))
+
+    # iostat_file => ios_f
+    iostat_info = data.get("iostat_file", {})
+    for iofile in iostat_info:
+        if not iostat_info:
+            break
+        waitdata = iostat_info.get(iofile, None)
+        if not waitdata:
+            continue
+        iofile = "oracle_ios_f_%s" % replace_characters(iofile)
+        for i, waitclass in [
+                (0, "s_r"),
+                (1, "l_r"),
+                (2, "s_w"),
+                (3, "l_w"),
+                (8, "s_rb"),
+                (9, "l_rb"),
+                (10, "s_wb"),
+                (11, "l_wb"),]:
+            rate = get_rate("oracle_perf.%s.iostat_file.%s.%s" % (item, iofile, waitclass),
+                            now,
+                            waitdata[i],
+                            onwrap=ZERO)
+            perfdata.append(("%s_%s" % (iofile, waitclass), rate))
+
+    # sys_wait_class -> wait_class
+    waitclass_info = data.get("sys_wait_class", {})
+    for waitfile in waitclass_info:
+        if not waitclass_info:
+            break
+        waitdata = waitclass_info.get(waitfile, None)
+        total_waited_sum = 1
+        total_waited_sum_fg = 1
+        if not waitdata:
+            continue
+        waitfile = "oracle_wait_class_%s" % replace_characters(waitfile)
+        for i, waitclass in [
+                (1, "waited"),
+                (3, "waited_fg")]:
+            rate = get_rate("oracle_perf.%s.sys_wait_class.%s.%s" % (item, waitfile, waitclass),
+                            now,
+                            waitdata[i])
+            if waitclass == "waited":
+                total_waited_sum += rate
+            else:
+                total_waited_sum_fg += rate
+            perfdata.append(("%s_%s" % (waitfile, waitclass), rate))
+        perfdata.append(("oracle_wait_class_total", total_waited_sum))
+        perfdata.append(("oracle_wait_class_total_fg", total_waited_sum_fg))
 
     # PDB is <SID>.<PDB>
     # ignore more perf-data for PDBs except CDBROOT!

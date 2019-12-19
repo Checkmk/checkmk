@@ -116,7 +116,7 @@ def normalize_mem_levels(mode, warn, crit, total, _perc_total=None, render_base=
     return warn_used, crit_used, levels_text
 
 
-def _get_plain_state(value, warn, crit):
+def _compute_state(value, warn, crit):
     if crit is not None and value >= crit:
         return 2
     if warn is not None and value >= warn:
@@ -224,7 +224,7 @@ def check_memory(params, meminfo, render_base=1024):
         render_unit=1024**2,
     )
     # Check levels
-    state = _get_plain_state(comp_mb, warn_mb, crit_mb)
+    state = _compute_state(comp_mb, warn_mb, crit_mb)
     if state and levels_text:
         infotext += ", %s" % levels_text
 

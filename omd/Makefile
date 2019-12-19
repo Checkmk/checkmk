@@ -264,9 +264,9 @@ debian/control: debian/control.in
 # c) remove the dh_prep from debian/rules
 deb: debian/changelog debian/control
 	if [ "$(DISTRO_CODE)" = "jessie" ] || [ "$(DISTRO_CODE)" = "trusty" ] || [ "$(DISTRO_CODE)" = "xenial" ]; then \
-	    TARGET="-us -uc -B" ; \
+	    NO_SIGN="-us -uc" ; \
 	else \
-	    TARGET="--no-sign -- clean binary-arch" ; \
+	    NO_SIGN="--no-sign" ; \
 	fi && \
 	    debuild \
 	    --preserve-envvar="NEXUS_*" \
@@ -277,7 +277,8 @@ deb: debian/changelog debian/control
 	    -i\.git -I\.git \
 	    -i.gitignore -I.gitignore \
 	    -rfakeroot \
-	    $$TARGET
+	    $$NO_SIGN \
+	    -- clean binary-arch
 
 setversion:
 # NEW_VERSION should be set on the command line.  Replace all '/' since sed

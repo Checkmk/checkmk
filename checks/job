@@ -117,7 +117,7 @@ def _process_start_time(value, warn, crit):
     if crit and job_age >= crit:
         return 2, display_value + "(!!) (more than %s ago)" % get_age_human_readable(crit)
     if warn and job_age >= warn:
-        return 1, display_value + "(!!) (more than %s ago)" % get_age_human_readable(warn)
+        return 1, display_value + "(!) (more than %s ago)" % get_age_human_readable(warn)
     return 0, display_value
 
 

@@ -232,7 +232,7 @@ def load_config(settings):
     for path in [settings.paths.main_config_file.value] + \
             sorted(settings.paths.config_dir.value.glob('**/*.mk')):
         with open(str(path), mode="rb") as file_object:
-            exec(file_object.read(), config)  # pylint: disable=exec-used
+            exec (file_object.read(), config)  # pylint: disable=exec-used
     config.pop("MkpRulePackProxy", None)
     _bind_to_rule_pack_proxies(config['rule_packs'], config['mkp_rule_packs'])
 
@@ -330,6 +330,8 @@ def export_rule_pack(rule_pack, pretty_print=False, dir_=None):
     directory dir_.
     """
     if isinstance(rule_pack, MkpRulePackProxy):
+        if rule_pack.rule_pack is None:
+            raise MkpRulePackBindingError("Proxy is not bound")
         rule_pack = rule_pack.rule_pack
 
     repr_ = (pprint.pformat(rule_pack) if pretty_print else repr(rule_pack))

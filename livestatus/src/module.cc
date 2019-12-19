@@ -975,6 +975,7 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
 // Called from Nagios after before we are unloaded.
 extern "C" int nebmodule_deinit(int flags __attribute__((__unused__)),
                                 int reason __attribute__((__unused__))) {
+    int i_am_unused_and_just_for_testing;
     Notice(fl_logger_nagios) << "deinitializing";
     terminate_threads();
     close_unix_socket();

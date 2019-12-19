@@ -8,6 +8,7 @@
 #include <string_view>
 
 #include "cfg.h"
+#include "cma_core.h"
 #include "common/cfg_info.h"
 #include "windows_service_api.h"
 
@@ -170,6 +171,7 @@ bool OnStart(AppType proposed_type, const std::wstring& config_file) {
 }
 
 void OnExit() {
+    cma::KillAllInternalUsers();
     if (wtools::IsWindowsComInitialized()) wtools::CloseWindowsCom();
 }
 }  // namespace cma

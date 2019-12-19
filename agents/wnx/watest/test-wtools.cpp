@@ -438,12 +438,13 @@ TEST(Wtools, LineEnding) {
 TEST(Wtools, UserGroupName) {
     cma::OnStartTest();
     EXPECT_TRUE(GenerateCmaUserNameInGroup(L"").empty());
-    EXPECT_EQ(GenerateCmaUserNameInGroup(L"XX"), L"test_in_XX");
+    EXPECT_EQ(GenerateCmaUserNameInGroup(L"XX"), L"cmk_TST_XX");
+
     cma::details::G_Service = true;
     ON_OUT_OF_SCOPE(cma::details::G_Service = false;
                     cma::details::G_Test = true);
 
-    EXPECT_EQ(GenerateCmaUserNameInGroup(L"XX"), L"check_mk_in_XX");
+    EXPECT_EQ(GenerateCmaUserNameInGroup(L"XX"), L"cmk_in_XX");
     cma::details::G_Service = false;
     cma::details::G_Test = false;
     EXPECT_TRUE(GenerateCmaUserNameInGroup(L"XX").empty());

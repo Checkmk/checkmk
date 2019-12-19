@@ -2391,9 +2391,9 @@ bool PatchFileLineEnding(const std::filesystem::path& fname) noexcept {
     }
 }
 
-std::wstring GenerateRandomString(size_t max_length) {
+std::wstring GenerateRandomString(size_t max_length) noexcept {
     std::wstring possible_characters(
-        L"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_#@$^/?,.*&()[]{};:'|");
+        L"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_#@$^&()[]{};:");
 
     std::random_device rd;
     std::mt19937 generator(rd());
@@ -2410,22 +2410,29 @@ std::wstring GenerateRandomString(size_t max_length) {
     return ret;
 }
 
-std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) {
+static std::wstring CmaUserPrefix() noexcept {
+    if (cma::IsService()) return L"cmk_in_";
+    if (cma::IsTest()) return L"cmk_TST_";
+    return {};
+}
+
+std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept {
     if (group.empty()) return {};
-    if (cma::IsService()) {
-        std::wstring name(L"check_mk_in_");
-        return name + group.data();
-    }
-    if (cma::IsTest()) {
-        std::wstring name(L"test_in_");
-        return name + group.data();
+
+    if (cma::IsService() || cma::IsTest()) {
+        auto prefix = CmaUserPrefix();
+        if (prefix.empty()) return {};
+
+        return prefix + group.data();
     }
 
     return {};
 }
 
-InternalUser MakeCmaUserInGroup(const std::wstring& group) {
+InternalUser CreateCmaUserInGroup(const std::wstring& group) noexcept {
     uc::LdapControl primary_dc;
+
+    auto g = wtools::ConvertToUTF8(group);
 
     // Set up the LOCALGROUP_INFO_1 structure.
     uc::Status add_group_status = uc::Status::exists;
@@ -2437,11 +2444,17 @@ InternalUser MakeCmaUserInGroup(const std::wstring& group) {
 
     if (add_group_status == uc::Status::error) return {};
 
-    std::wstring name = GenerateCmaUserNameInGroup(group);
-    std::wstring pwd = GenerateRandomString(4);
+    auto name = GenerateCmaUserNameInGroup(group);
+    if (name.empty()) return {};
 
+    auto n = wtools::ConvertToUTF8(name);
+
+    auto pwd = GenerateRandomString(12);
+
+    primary_dc.UserDel(name);
     auto add_user_status = primary_dc.UserAdd(name, pwd);
-    if (add_user_status == uc::Status::error) {
+    if (add_user_status != uc::Status::success) {
+        XLOG::l("Can't add user '{}'", n);
         if (add_group_status == uc::Status::success)
             primary_dc.LocalGroupDel(group);
         return {};
@@ -2452,6 +2465,8 @@ InternalUser MakeCmaUserInGroup(const std::wstring& group) {
         primary_dc.LocalGroupAddMembers(group, name);
     if (add_user_to_group_status != uc::Status::error) return {name, pwd};
 
+    // Fail situation processing
+    XLOG::l("Can't add user '{}' to group '{}'", n, g);
     if (add_user_status == uc::Status::success) primary_dc.UserDel(name);
 
     if (add_group_status == uc::Status::success)
@@ -2460,7 +2475,7 @@ InternalUser MakeCmaUserInGroup(const std::wstring& group) {
     return {};
 }
 
-bool RemoveCmaUser(const std::wstring& user_name) {
+bool RemoveCmaUser(const std::wstring& user_name) noexcept {
     uc::LdapControl primary_dc;
     return primary_dc.UserDel(user_name) != uc::Status::error;
 }

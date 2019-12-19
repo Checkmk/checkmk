@@ -153,7 +153,7 @@ TEST(ServiceProcessorTest, Base) {
             cma::carrier::kCarrierFileName, tmp.u8string());
         sp.tryToDirectCall(uptime_provider, a.getId(), "0");
         auto table = tst::ReadFileAsTable(tmp.u8string());
-        EXPECT_EQ(table.size(), 2);
+        ASSERT_EQ(table.size(), 2);
         EXPECT_EQ(table[0] + "\n", MakeHeader(cma::section::kUptimeName));
     }
 

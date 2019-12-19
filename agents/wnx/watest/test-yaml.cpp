@@ -901,7 +901,7 @@ TEST(AgentConfig, UTF16LE) {
     cma::OnStart(cma::AppType::test);
 }
 
-TEST(AgentConfig, FailScenario) {
+TEST(AgentConfig, FailScenario_Long) {
     using namespace std::filesystem;
     using namespace std;
     using namespace cma::cfg;
@@ -1457,19 +1457,101 @@ TEST(AgentConfig, ExeUnitTest) {
     EXPECT_EQ(e.timeout(), cma::cfg::kDefaultPluginTimeout);
     EXPECT_EQ(e.cacheAge(), 0);
     EXPECT_EQ(e.retry(), 0);
+    EXPECT_TRUE(e.group().empty());
+    EXPECT_TRUE(e.user().empty());
 
     e.async_ = true;
     e.run_ = false;
+    e.group_ = "g";
+    e.user_ = "u u";
 
     e.timeout_ = 1;
     e.cache_age_ = 1111;
     e.retry_ = 3;
+    EXPECT_EQ(e.async(), true);
+    EXPECT_EQ(e.run(), false);
+    EXPECT_EQ(e.timeout(), 1);
+    EXPECT_EQ(e.cacheAge(), 1111);
+    EXPECT_EQ(e.retry(), 3);
+
+    EXPECT_EQ(e.group(), "g");
+    EXPECT_EQ(e.user(), "u u");
+
     e.resetConfig();
     EXPECT_EQ(e.async(), false);
     EXPECT_EQ(e.run(), true);
     EXPECT_EQ(e.timeout(), cma::cfg::kDefaultPluginTimeout);
     EXPECT_EQ(e.cacheAge(), 0);
     EXPECT_EQ(e.retry(), 0);
+
+    EXPECT_TRUE(e.group().empty());
+    EXPECT_TRUE(e.user().empty());
+}
+
+TEST(AgentConfig, ExeUnitTestYaml) {
+    using namespace cma::cfg;
+
+    std::vector<Plugins::ExeUnit> exe_units;
+    auto execution_yaml = YAML::Load(
+        "execution:\n"
+        "- pattern     : '1'\n"
+        "  timeout     : 1\n"
+        "  run         : yes\n"
+        "\n"
+        "- pattern     : '2'\n"
+        "  timeout     : 2\n"
+        "  run         : no\n"
+        "\n"
+        "- pattern     : '3'\n"
+        "  group       : Users\n"
+        "\n"
+        "- pattern     : '4'\n"
+        "  retry_count : 4\n"
+        "  user        : users_\n"
+        "\n"
+        "- pattern     : '5'\n"
+        "  run         : false\n"
+        "  async       : true\n"
+        "  cache_age   : 5\n"
+        "  group       : 'a a a '\n"
+        "\n"
+
+    );
+    XLOG::l.t() << execution_yaml;
+    auto yaml_units =
+        GetArray<YAML::Node>(execution_yaml, vars::kPluginsExecution);
+    LoadExeUnitsFromYaml(exe_units, yaml_units);
+    ASSERT_EQ(exe_units.size(), 5);
+
+    struct Data {
+        std::string p;
+        bool async;
+        bool run;
+        int timeout;
+        int cache_age;
+        int retry;
+        std::string group;
+        std::string user;
+    } data[5] = {
+        {"1", false, true, 1, 0, 0, "", ""},
+        {"2", false, false, 2, 0, 0, "", ""},
+        {"3", false, true, kDefaultPluginTimeout, 0, 0, "Users", ""},
+        {"4", false, true, kDefaultPluginTimeout, 0, 4, "", "users_"},
+        {"5", true, false, kDefaultPluginTimeout, 120, 0, "a a a ", ""},
+    };
+
+    int i = 0;
+    for (const auto& d : data) {
+        EXPECT_EQ(exe_units[i].pattern(), d.p);
+        EXPECT_EQ(exe_units[i].async(), d.async);
+        EXPECT_EQ(exe_units[i].run(), d.run);
+        EXPECT_EQ(exe_units[i].timeout(), d.timeout);
+        EXPECT_EQ(exe_units[i].cacheAge(), d.cache_age);
+        EXPECT_EQ(exe_units[i].retry(), d.retry);
+        EXPECT_EQ(exe_units[i].group(), d.group);
+        EXPECT_EQ(exe_units[i].user(), d.user);
+        ++i;
+    }
 }
 
 #if 0

@@ -20,6 +20,11 @@
 #include "tools/_misc.h"
 
 namespace cma {
+wtools::InternalUser ObtainInternalUser(std::wstring_view group);
+void KillAllInternalUsers();
+}  // namespace cma
+
+namespace cma {
 namespace tools {
 
 // add content of file to the Buf
@@ -232,47 +237,12 @@ public:
         return false;
     }
     enum class StartMode { job, updater };
+    bool startEx(std::wstring_view Id, std::filesystem::path ExeFile,
+                 StartMode start_mode, wtools::InternalUser internal_user);
     bool start(std::wstring_view Id, std::filesystem::path ExeFile,
+
                StartMode start_mode) {
-        int count = 0;
-        std::lock_guard lk(lock_);
-        if (process_) return false;
-        sw_.start();
-        id_ = Id;
-        exec_ = ExeFile.wstring();
-
-        // send exec array entries to internal
-        try {
-            // now exec
-            auto ar = new wtools::AppRunner;
-            auto exec = cma::ConstructCommandToExec(exec_);
-            XLOG::d.t("Exec app '{}', mode [{}]", wtools::ConvertToUTF8(exec),
-                      static_cast<int>(start_mode));
-
-            switch (start_mode) {
-                case StartMode::job:
-                    proc_id_ = ar->goExecAsJob(exec);
-                    break;
-                case StartMode::updater:
-                    proc_id_ = ar->goExecAsUpdater(exec);
-                    break;
-            }
-
-            if (proc_id_) {
-                process_ = ar;
-                return true;
-            }
-
-            delete ar;  // start failed
-        } catch (const std::exception& e) {
-            XLOG::l(XLOG_FLINE + " exception {}", e.what());
-        }
-        sw_.stop();
-        // cleaning up
-        id_.clear();
-        exec_.clear();
-
-        return false;
+        return startEx(Id, ExeFile, start_mode, {});
     }
 
     // strange?
@@ -560,6 +530,8 @@ public:
         retry_ = Unit.retry();
         cache_age_ = Unit.cacheAge();
         timeout_ = Unit.timeout();
+        group_ = Unit.group();
+        user_ = Unit.user();
         bool planned_async = Unit.async() || Unit.cacheAge() > 0;
 
         if (defined() && async() != planned_async) {
@@ -576,12 +548,16 @@ public:
             }
         }
         async_ = planned_async;
-        if (async()) {
-            if (cacheAge() && cacheAge() < cma::cfg::kMinimumCacheAge)
-                cache_age_ = cma::cfg::kMinimumCacheAge;
-        } else {
+
+        if (async() &&
+            cacheAge()) {  // for async we have cache_age either 0 or > 120
+            cache_age_ = std::max(cacheAge(), cma::cfg::kMinimumCacheAge);
+        } else {  // for sync cache_age is 0 always
             cache_age_ = 0;
         }
+
+        fillInternalUser();
+
         local_ = Local;
         defined_ = true;
     }
@@ -612,6 +588,7 @@ public:
     static int threadCount() noexcept { return thread_count_.load(); }
 
 protected:
+    void fillInternalUser();
     void resetData() {
         std::lock_guard lk(data_lock_);
         return data_.clear();
@@ -640,6 +617,8 @@ protected:
     // as a rule only after timeout
     void unregisterProcess();
 
+private:
+    wtools::InternalUser iu_;
     cma::TheMiniBox minibox_;
 
     std::filesystem::path path_;  // actual path to execute
@@ -674,6 +653,7 @@ protected:
     FRIEND_TEST(PluginTest, SyncLocal);
 #endif
 };
+wtools::InternalUser PluginsExecutionUser2Iu(std::string_view user);
 
 TheMiniBox::StartMode GetStartMode(const std::filesystem::path& filepath);
 
@@ -746,8 +726,9 @@ namespace ntfs {
 #if _MSC_VER >= 1923
 [[deprecated("Should not be used with VS 19")]]  // VS 19 has good remove
 #endif
-    bool
-    Remove(const std::filesystem::path& Target, std::error_code& Ec) noexcept;
+        bool
+        Remove(const std::filesystem::path& Target,
+               std::error_code& Ec) noexcept;
 }  // namespace ntfs
 
 }  // namespace cma

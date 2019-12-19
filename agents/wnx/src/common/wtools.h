@@ -1025,10 +1025,10 @@ bool PatchFileLineEnding(const std::filesystem::path& fname) noexcept;
 
 using InternalUser = std::pair<std::wstring, std::wstring>;  // name,pwd
 
-InternalUser MakeCmaUserInGroup(const std::wstring& group_name);
-bool RemoveCmaUser(const std::wstring& user_name);
-std::wstring GenerateRandomString(size_t max_length);
-std::wstring GenerateCmaUserNameInGroup(std::wstring_view group);
+InternalUser CreateCmaUserInGroup(const std::wstring& group_name) noexcept;
+bool RemoveCmaUser(const std::wstring& user_name) noexcept;
+std::wstring GenerateRandomString(size_t max_length) noexcept;
+std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept;
 
 }  // namespace wtools
 

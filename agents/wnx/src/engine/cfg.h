@@ -889,6 +889,14 @@ public:
     int retry() const noexcept { return retry_; }
     bool defined() const noexcept { return defined_; }
 
+    void extend(std::string_view group, std::string_view user) noexcept {
+        group_ = group;
+        user_ = user;
+    }
+
+    std::string user() const noexcept { return user_; }
+    std::string group() const noexcept { return group_; }
+
 protected:
     // used only during testing
     void debugInit(bool async_value, int timeout_value, int cache_age,
@@ -901,13 +909,19 @@ protected:
     }
 
     bool defined_ = false;
-    bool async_ = false;
 
-    int timeout_ =
-        kDefaultPluginTimeout;  // from the config file, #TODO use chrono
-    int cache_age_ = 0;         // from the config file, #TODO use chrono
+    bool async_ = false;                   // from the config
+    int timeout_ = kDefaultPluginTimeout;  // from the config, #TODO chrono
+    int cache_age_ = 0;                    // from the config, #TODO chrono
+    int retry_ = 0;                        // from the config
 
-    int retry_ = 0;
+    std::string user_;   // from the config
+    std::string group_;  // from the config
+
+#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+    friend class PluginTest;
+    FRIEND_TEST(PluginTest, PluginInfoCheck);
+#endif
 };
 
 template <typename T>
@@ -973,8 +987,12 @@ public:
         }
 
         auto pattern() const noexcept { return pattern_; }
+        auto group() const noexcept { return group_; }
+        auto user() const noexcept { return user_; }
         auto run() const noexcept { return run_; }
         void assign(const YAML::Node& node) noexcept;
+        void assignGroup(std::string_view group) noexcept;
+        void assignUser(std::string_view user) noexcept;
         void apply(std::string_view filename, const YAML::Node& node) noexcept;
         const YAML::Node source() const noexcept { return source_; }
         const std::string sourceText() const noexcept { return source_text_; }
@@ -985,6 +1003,8 @@ public:
             cache_age_ = 0;
             retry_ = 0;
             run_ = true;
+            group_.clear();
+            user_.clear();
         }
 
     private:
@@ -1002,6 +1022,8 @@ public:
 
         std::string pattern_;
         std::string source_text_;
+        std::string group_;
+        std::string user_;
         bool run_ = true;
         YAML::Node source_;
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)

@@ -66,7 +66,13 @@ TEST(WtoolsRunAs, Base) {
         auto ret = ar.goExecAsJobAndUser(L"a1", L"a1",
                                          (in / "runc.cmd").wstring() + L" 1");
         EXPECT_TRUE(ret);
-        ASSERT_TRUE(WaitForExit(ar.processId()));
+        auto b = WaitForExit(ar.processId());
+        if (!b) {
+            XLOG::SendStringToStdio("Retry waiting for the process\n",
+                                    XLOG::Colors::yellow);
+            WaitForExit(ar.processId());  // we are starting waiter two times
+        }
+        ASSERT_TRUE(b);
         auto data = ReadFromHandle(ar.getStdioRead());
         ASSERT_TRUE(!data.empty());
         EXPECT_EQ("a1\r\nmarker 1\r\n", data);

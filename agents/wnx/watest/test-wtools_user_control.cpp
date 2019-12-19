@@ -65,8 +65,9 @@ TEST(WtoolsUserControl, Base) {
     ASSERT_TRUE(lc.name() == nullptr);
     auto ret = lc.chooseDomain(L"SERG-DELL", L"SERG-DELL");
     if (ret == Status::no_domain_service) {
-        XLOG::SendStringToStdio("No Domain Controller - no testing",
+        XLOG::SendStringToStdio("No Domain Controller - no testing\n",
                                 XLOG::Colors::yellow);
+
         return;
     }
     ASSERT_TRUE(ret == Status::success);

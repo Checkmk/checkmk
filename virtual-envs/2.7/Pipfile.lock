@@ -159,6 +159,12 @@
             "index": "pypi",
             "version": "==3.5.1"
         },
+        "connexion": {
+            "extras": [
+                "swagger-ui"
+            ],
+            "file": "https://github.com/smokey42/connexion/archive/2.4.0-replace-pathlib.tar.gz"
+        },
         "contextlib2": {
             "hashes": [
                 "sha256:509f9419ee91cdd00ba34443217d5ca51f5a364a404e1dce9e8979cea969ca48",

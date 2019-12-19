@@ -421,9 +421,7 @@ class ModeCheckManPage(WatoMode):
         html.close_table()
 
     def _manpage_text(self, text):
-        html_code = text.replace("<br>", "\n")\
-                        .replace("<", "&lt;")\
-                        .replace(">", "&gt;")
+        html_code = text.replace("<br>", "\n")
         html_code = re.sub("{(.*?)}", "<tt>\\1</tt>", html_code)
         html_code = re.sub("\n\n+", "<p>", html_code)
         return html_code

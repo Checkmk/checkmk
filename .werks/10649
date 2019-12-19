@@ -1,0 +1,11 @@
+Title: ceph_status.pgs: Fixed Unknown service state for 'peering'
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p8
+Date: 1576745039
+Class: fix
+
+If the device state was 'peering', the check went into UNKNOWN state.
+This has been fixed.

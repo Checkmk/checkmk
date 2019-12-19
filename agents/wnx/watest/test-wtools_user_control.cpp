@@ -3,6 +3,8 @@
 
 #include "pch.h"
 
+#include <Ntsecapi.h>
+
 #include "common/wtools_user_control.h"
 #include "logger.h"
 
@@ -12,10 +14,56 @@ namespace wtools::uc {  // to become friendly for cma::cfg classes
 //
 static const int counter = 0;
 
+// List of all domains!!!
+// This is #REFERENCE
+NTSTATUS PrintDomainName() {
+    LSA_HANDLE policy;
+
+    static LSA_OBJECT_ATTRIBUTES oa = {sizeof(oa)};
+
+    auto status = LsaOpenPolicy(0, &oa, POLICY_VIEW_LOCAL_INFORMATION, &policy);
+
+    if (!LSA_SUCCESS(status)) return status;
+    ON_OUT_OF_SCOPE(LsaClose(policy));
+
+    // I do not know why we use union
+    union {
+        PPOLICY_DNS_DOMAIN_INFO ppddi;
+        PPOLICY_ACCOUNT_DOMAIN_INFO ppadi;
+    };
+
+    status = LsaQueryInformationPolicy(policy, PolicyDnsDomainInformation,
+                                       (void**)&ppddi);
+
+    if (!LSA_SUCCESS(status)) return status;
+
+    if (ppddi->Sid) {
+        XLOG::l("DnsDomainName: '{}'",
+                wtools::ConvertToUTF8(ppddi->DnsDomainName.Buffer));
+    } else {
+        XLOG::l("'{}': not domain controller !!",
+                wtools::ConvertToUTF8(ppddi->Name.Buffer));
+        status = -1;
+    }
+
+    LsaFreeMemory(ppddi);
+    if (0 <= status) return status;
+
+    if (LSA_SUCCESS(
+            status = LsaQueryInformationPolicy(
+                policy, PolicyAccountDomainInformation, (void**)&ppadi))) {
+        XLOG::l("DomainName: '{}'",
+                wtools::ConvertToUTF8(ppadi->DomainName.Buffer));
+        LsaFreeMemory(ppadi);
+    }
+
+    return status;
+}
+
 TEST(WtoolsUserControl, Base) {
     LdapControl lc;
     ASSERT_TRUE(lc.name() == nullptr);
-    auto ret = lc.chooseDomain(L"WORKGROUP", L"SERG-DELL");
+    auto ret = lc.chooseDomain(L"SERG-DELL", L"SERG-DELL");
     if (ret == Status::no_domain_service) {
         XLOG::SendStringToStdio("No Domain Controller - no testing",
                                 XLOG::Colors::yellow);

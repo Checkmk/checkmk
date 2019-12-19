@@ -17,7 +17,8 @@ enum class FindMode { local, automatic };
 class LdapControl {
 public:
     LdapControl() {}
-    Status chooseDomain(std::wstring_view domain, std::wstring_view name);
+    Status chooseDomain(std::wstring_view server_name,
+                        std::wstring_view domain_name);
     ~LdapControl();
 
     // User

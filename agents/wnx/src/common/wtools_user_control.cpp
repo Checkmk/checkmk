@@ -215,8 +215,8 @@ Status LdapControl::LocalGroupDelMembers(std::wstring_view group_name,
     }
 }
 
-Status LdapControl::chooseDomain(std::wstring_view domain,
-                                 std::wstring_view name) {
+Status LdapControl::chooseDomain(std::wstring_view server_name,
+                                 std::wstring_view domain_name) {
     if (primary_dc_name_) {
         ::NetApiBufferFree(static_cast<void*>(primary_dc_name_));
         primary_dc_name_ = nullptr;
@@ -224,12 +224,12 @@ Status LdapControl::chooseDomain(std::wstring_view domain,
     // First get the name of the primary domain controller.
     // Be sure to free the returned buffer.
     auto err = ::NetGetDCName(
-        domain.data(),  // local computer
-        domain.data(),  // domain name
+        server_name.data(),  // local computer
+        domain_name.data(),  // domain name
         reinterpret_cast<unsigned char**>(&primary_dc_name_));  // returned PDC
 
     if (err == 0) return Status::success;
-    if (err == NERR_ServiceNotInstalled) {
+    if (err == NERR_ServiceNotInstalled || err == NERR_DCNotFound) {
         XLOG::l("Error getting DC name: [{}]", err);
         return Status::no_domain_service;
     }

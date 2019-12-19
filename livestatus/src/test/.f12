@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+SITE=${SITE:-$(cat ../../../.site 2>/dev/null || true)}
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+ROOT=/omd/sites/$SITE
+
 LANG=C make -C ../../.. config.status
 ( cd ../../.. && ./config.status )
 LANG=C make -j4 -C .. unit-test

@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 set -e
 
 SITE=${SITE:-$(cat ../../../.site 2>/dev/null || true)}

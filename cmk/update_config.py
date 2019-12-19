@@ -97,8 +97,14 @@ class UpdateConfig(object):
     def run(self):
         self._logger.log(VERBOSE, "Initializing application...")
         environ = dict(create_environ(), REQUEST_URI='')
+
+        this_html = htmllib.html(Request(environ), Response(is_secure=False))
+        # Currently the htmllib.html constructor enables the timeout by default. This side effect
+        # should really be cleaned up.
+        this_html.disable_request_timeout()
+
         with AppContext(DummyApplication(environ, None)), \
-             RequestContext(htmllib.html(Request(environ), Response(is_secure=False))):
+                RequestContext(this_html):
             self._initialize_gui_environment()
 
             self._logger.log(VERBOSE, "Updating Checkmk configuration...")

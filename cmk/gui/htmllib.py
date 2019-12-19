@@ -1014,6 +1014,7 @@ class html(ABCHTMLGenerator):
         self.request = request
         self.response = response
 
+        # TODO: Cleanup this side effect (then remove disable_request_timeout() e.g. from update_config.py)
         self.enable_request_timeout()
 
         self.response.headers["Content-type"] = "text/html; charset=UTF-8"

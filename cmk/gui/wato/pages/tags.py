@@ -715,16 +715,22 @@ def _rename_tags_after_confirmation(operation):
     if affected_folders:
         message += _("Affected folders with an explicit reference to this tag "
                      "group and that are affected by the change") + ":"
-        message += _render_affected_folders(affected_folders)
+        with html.plugged():
+            _show_affected_folders(affected_folders)
+            message += html.drain()
 
     if affected_hosts:
         message += _("Hosts where this tag group is explicitely set "
                      "and that are effected by the change") + ":"
-        message += _render_affected_hosts(affected_hosts)
+        with html.plugged():
+            _show_affected_hosts(affected_hosts)
+            message += html.drain()
 
     if affected_rulesets:
         message += _("Rulesets that contain rules with references to the changed tags") + ":"
-        message += _render_affected_rulesets(affected_rulesets)
+        with html.plugged():
+            _show_affected_rulesets(affected_rulesets)
+            message += html.drain()
 
     if message:
         wato_html_head(operation.confirm_title())
@@ -769,38 +775,43 @@ def _rename_tags_after_confirmation(operation):
     return True
 
 
-def _render_affected_folders(affected_folders):
-    # type: (List[CREFolder]) -> str
-    message = "<ul>"
+def _show_affected_folders(affected_folders):
+    # type: (List[CREFolder]) -> None
+    html.open_ul()
     for folder in affected_folders:
-        message += '<li><a href="%s">%s</a></li>' % (folder.edit_url(), folder.alias_path())
-    message += "</ul>"
-    return message
+        html.open_li()
+        html.a(folder.alias_path(), href=folder.edit_url())
+        html.close_li()
+    html.close_ul()
 
 
-def _render_affected_hosts(affected_hosts):
-    # type: (List[CREHost]) -> str
-    message = "<ul><li>"
+def _show_affected_hosts(affected_hosts):
+    # type: (List[CREHost]) -> None
+    html.open_ul()
+    html.open_li()
     for nr, host in enumerate(affected_hosts):
         if nr > 20:
-            message += "... (%d more)" % (len(affected_hosts) - 20)
+            html.write_text(_("... (%d more)") % (len(affected_hosts) - 20))
             break
+
         if nr > 0:
-            message += ", "
+            html.write_text(", ")
 
-        message += '<a href="%s">%s</a>' % (host.edit_url(), host.name())
-    message += "</li></ul>"
-    return message
+        html.a(host.name(), href=host.edit_url())
+    html.close_li()
+    html.close_ul()
 
 
-def _render_affected_rulesets(affected_rulesets):
-    # type: (List[Ruleset]) -> str
-    message = "<ul>"
+def _show_affected_rulesets(affected_rulesets):
+    # type: (List[Ruleset]) -> None
+    html.open_ul()
     for ruleset in affected_rulesets:
-        message += '<li><a href="%s">%s</a></li>' % (watolib.folder_preserving_link(
-            [("mode", "edit_ruleset"), ("varname", ruleset.name)]), ruleset.title())
-    message += "</ul>"
-    return message
+        html.open_li()
+        html.a(ruleset.title(),
+               href=watolib.folder_preserving_link([("mode", "edit_ruleset"),
+                                                    ("varname", ruleset.name)]))
+        html.close_li()
+    html.close_ul()
 
 
 def _is_removing_tags(operation):

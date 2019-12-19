@@ -26,6 +26,7 @@
 
 import os
 import time
+from typing import Set, Any, Dict
 
 import cmk
 import cmk.utils.debug
@@ -131,15 +132,16 @@ def _escape_null_bytes(s):
 
 
 def _get_quoted_event(event, logger):
-    new_event = {}
+    new_event: Dict[str, Any] = {}
     fields_to_quote = ["application", "match_groups", "text", "comment", "contact"]
     for key, value in event.items():
         if key not in fields_to_quote:
             new_event[key] = value
         else:
             try:
+                new_value: Any = None
                 if isinstance(value, list):
-                    new_value = map(quote_shell_string, value)
+                    new_value = list(map(quote_shell_string, value))
                 elif isinstance(value, tuple):
                     new_value = value
                 else:
@@ -437,7 +439,7 @@ def _rbn_groups_contacts(groups):
     query += "Or: %d\n" % len(groups)
 
     try:
-        contacts = set([])
+        contacts: Set[str] = set([])
         for contact_list in livestatus.LocalConnection().query_column(query):
             contacts.update(contact_list)
         return contacts

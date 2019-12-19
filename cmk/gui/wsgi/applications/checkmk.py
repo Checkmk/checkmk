@@ -124,7 +124,8 @@ def get_and_wrap_page(request, script_name):
 def _plain_error():
     """Webservice functions may decide to get a normal result code
     but a text with an error message in case of an error"""
-    return html.request.has_var("_plain_error") or html.myfile in ("webapi", "deploy_agent")
+    return html.request.has_var("_plain_error") or html.myfile in ("webapi", "automation",
+                                                                   "deploy_agent")
 
 
 def _profiling_enabled():
@@ -230,7 +231,7 @@ def _render_exception(e, title=""):
 
     if _plain_error():
         html.set_output_format("text")
-        if html.myfile == 'deploy_agent':
+        if html.myfile in ('automation', 'deploy_agent'):
             html.write(six.text_type(e))
         else:
             html.write("%s%s\n" % (title, e))

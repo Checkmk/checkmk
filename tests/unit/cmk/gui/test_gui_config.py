@@ -1051,21 +1051,16 @@ def test_logged_in_super_user_permissions(mocker):
     )
     mocker.patch.object(permissions, 'permission_registry')
 
-    # Both TODO cases below are False because user.may uses _may_with_roles with
-    # the config.user object
-
-    assert user.may('eat_other_peoples_cake') is False  # TODO: Should this be True?
+    assert user.may('eat_other_peoples_cake') is True
     assert user.may('drink_other_peoples_milk') is False
-    with pytest.raises(MKAuthException):
-        user.need_permission('eat_other_peoples_cake')
+    user.need_permission('eat_other_peoples_cake')
     with pytest.raises(MKAuthException):
         user.need_permission('drink_other_peoples_milk')
 
     user.permissions = {'drink_other_peoples_milk': True}
-    assert user.may('eat_other_peoples_cake') is False  # TODO: Should this be True?
+    assert user.may('eat_other_peoples_cake') is True
     assert user.may('drink_other_peoples_milk') is True
-    with pytest.raises(MKAuthException):
-        user.need_permission('eat_other_peoples_cake')
+    user.need_permission('eat_other_peoples_cake')
     user.need_permission('drink_other_peoples_milk')
 
 

@@ -264,7 +264,7 @@ debian/control: debian/control.in
 # c) remove the dh_prep from debian/rules
 deb: debian/changelog debian/control
 	if [ "$(DISTRO_CODE)" = "jessie" ] || [ "$(DISTRO_CODE)" = "trusty" ] || [ "$(DISTRO_CODE)" = "xenial" ]; then \
-	    TARGET="-us -uc clean binary-arch" ; \
+	    TARGET="-us -uc -B" ; \
 	else \
 	    TARGET="--no-sign -- clean binary-arch" ; \
 	fi && \

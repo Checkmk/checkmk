@@ -1,5 +1,6 @@
 import logging
-import pytest  # type: ignore
+from typing import Dict
+import pytest  # type: ignore[import]
 
 import cmk
 from cmk.ec.main import RuleMatcher, EventServer
@@ -47,7 +48,7 @@ def test_match_message(m, message, result, match_message, cancel_message, match_
 
     event = {"text": message}
 
-    matched_groups = {}
+    matched_groups = {}  # type: Dict
     assert m.event_rule_matches_message(rule, event, matched_groups) == result
     assert matched_groups["match_groups_message"] == match_groups
 
@@ -97,7 +98,7 @@ def test_match_priority(m, priority, match_priority, cancel_priority, has_match,
 
     event = {"priority": priority}
 
-    matched_match_priority = {}
+    matched_match_priority = {}  # type: Dict
     assert m.event_rule_determine_match_priority(rule, event, matched_match_priority) == result
     assert matched_match_priority["has_match"] == has_match
     assert matched_match_priority["has_canceling_match"] == has_canceling_match

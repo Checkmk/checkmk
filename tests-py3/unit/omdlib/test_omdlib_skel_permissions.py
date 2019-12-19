@@ -2,6 +2,7 @@
 # pylint: disable=redefined-outer-name
 
 import omdlib.skel_permissions
+import omdlib.main
 
 
 def test_read_skel_permissions(monkeypatch, tmp_path):

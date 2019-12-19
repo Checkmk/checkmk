@@ -31,11 +31,12 @@ import sys
 import argparse
 import json
 import logging
-from typing import List, Dict, Any, Mapping
+from typing import List, Dict, Any, Mapping, DefaultDict
 from collections import OrderedDict, defaultdict
 import requests
 
 LOGGER = logging.getLogger()  # root logger for now
+
 
 def parse_arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__)
@@ -147,7 +148,7 @@ class PrometheusAPI:
                  contains the information of one service including the service metrics
 
         """
-        result = {}
+        result: Dict[str, Dict] = {}
         for service in custom_services:
             # Per default assign resulting service to Prometheus Host
             host_name = service.get("host_name", "")
@@ -260,7 +261,7 @@ class PrometheusAPI:
 
         """
         scrape_targets = {}
-        scrape_target_names = defaultdict(int)
+        scrape_target_names: DefaultDict[str, int] = defaultdict(int)
         for scrape_target_info in result["data"]["activeTargets"]:
             scrape_target_labels = scrape_target_info["labels"]
             job_label = scrape_target_labels["job"]

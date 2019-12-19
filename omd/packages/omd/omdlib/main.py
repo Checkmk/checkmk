@@ -337,7 +337,7 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
     elif os.path.isdir(skel_path):
         os.makedirs(user_path)
     else:
-        open(user_path, "w").write(replace_tags(open(skel_path).read(), replacements))
+        open(user_path, "wb").write(replace_tags(open(skel_path, "rb").read(), replacements))
 
     if not os.path.islink(skel_path):
         mode = read_skel_permissions().get(relpath)
@@ -460,10 +460,10 @@ def _is_unpatchable_file(path):
 def patch_template_file(conflict_mode, src, dst, old_site, new_site):
     # type: (str, str, str, SiteContext, SiteContext) -> None
     # Create patch from old instantiated skeleton file to new one
-    content = open(src).read()
+    content = open(src, "rb").read()
     for site in [old_site, new_site]:
         filename = "%s.skel.%s" % (dst, site.name)
-        open(filename, "w").write(replace_tags(content, site.replacements))
+        open(filename, "wb").write(replace_tags(content, site.replacements))
         try_chown(filename, new_site.name)
 
     # If old and new skeleton file are identical, then do nothing
@@ -696,7 +696,7 @@ def _try_merge(site, conflict_mode, relpath, old_version, new_version):
         p = "%s/%s" % (skelroot, relpath)
         while True:
             try:
-                skel_content = open(p).read()
+                skel_content = open(p, "rb").read()
                 break
             except Exception:
                 # Do not ask the user in non-interactive mode.
@@ -713,10 +713,10 @@ def _try_merge(site, conflict_mode, relpath, old_version, new_version):
                         "in case you have made changes to it in your site. What shall we do?" %
                     (p, p), relpath, "retry", "Retry reading the file (after you've fixed it)",
                         "ignore", "Assume the file to be empty"):
-                    skel_content = ""
+                    skel_content = b""
                     break
         open("%s-%s" % (user_path, version),
-             "w").write(replace_tags(skel_content, site.replacements))
+             "wb").write(replace_tags(skel_content, site.replacements))
     version_patch = os.popen(  # nosec
         "diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version)).read()
 
@@ -1120,8 +1120,8 @@ def file_contents(site, path):
 def _instantiate_skel(site, path):
     # type: (SiteContext, str) -> bytes
     try:
-        with open(path, "r") as f:
-            return replace_tags(f.read(), site.replacements).encode("utf-8")
+        with open(path, "rb") as f:
+            return replace_tags(f.read(), site.replacements)
     except Exception:
         # TODO: This is a bad exception handler. Drop it
         return b""  # e.g. due to permission error
@@ -1802,9 +1802,9 @@ def restart_apache(version_info):
 
 
 def replace_tags(content, replacements):
-    # type: (str, Replacements) -> str
+    # type: (bytes, Replacements) -> bytes
     for var, value in replacements.items():
-        content = content.replace(var, value)
+        content = content.replace(var.encode("utf-8"), value.encode("utf-8"))
     return content
 
 

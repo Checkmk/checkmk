@@ -58,6 +58,8 @@ from cmk.gui.valuespec import (
 
 import cmk.utils.tags
 from cmk.gui.watolib.tags import TagConfigFile
+from cmk.gui.watolib.rulesets import Ruleset  # pylint: disable=unused-import
+from cmk.gui.watolib.hosts_and_folders import CREHost, CREFolder  # pylint: disable=unused-import
 
 from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,
@@ -712,30 +714,17 @@ def _rename_tags_after_confirmation(operation):
 
     if affected_folders:
         message += _("Affected folders with an explicit reference to this tag "
-                     "group and that are affected by the change") + ":<ul>"
-        for folder in affected_folders:
-            message += '<li><a href="%s">%s</a></li>' % (folder.edit_url(), folder.alias_path())
-        message += "</ul>"
+                     "group and that are affected by the change") + ":"
+        message += _render_affected_folders(affected_folders)
 
     if affected_hosts:
         message += _("Hosts where this tag group is explicitely set "
-                     "and that are effected by the change") + ":<ul><li>"
-        for nr, host in enumerate(affected_hosts):
-            if nr > 20:
-                message += "... (%d more)" % (len(affected_hosts) - 20)
-                break
-            elif nr > 0:
-                message += ", "
-
-            message += '<a href="%s">%s</a>' % (host.edit_url(), host.name())
-        message += "</li></ul>"
+                     "and that are effected by the change") + ":"
+        message += _render_affected_hosts(affected_hosts)
 
     if affected_rulesets:
-        message += _("Rulesets that contain rules with references to the changed tags") + ":<ul>"
-        for ruleset in affected_rulesets:
-            message += '<li><a href="%s">%s</a></li>' % (watolib.folder_preserving_link(
-                [("mode", "edit_ruleset"), ("varname", ruleset.name)]), ruleset.title())
-        message += "</ul>"
+        message += _("Rulesets that contain rules with references to the changed tags") + ":"
+        message += _render_affected_rulesets(affected_rulesets)
 
     if message:
         wato_html_head(operation.confirm_title())
@@ -778,6 +767,40 @@ def _rename_tags_after_confirmation(operation):
         return False
 
     return True
+
+
+def _render_affected_folders(affected_folders):
+    # type: (List[CREFolder]) -> str
+    message = "<ul>"
+    for folder in affected_folders:
+        message += '<li><a href="%s">%s</a></li>' % (folder.edit_url(), folder.alias_path())
+    message += "</ul>"
+    return message
+
+
+def _render_affected_hosts(affected_hosts):
+    # type: (List[CREHost]) -> str
+    message = "<ul><li>"
+    for nr, host in enumerate(affected_hosts):
+        if nr > 20:
+            message += "... (%d more)" % (len(affected_hosts) - 20)
+            break
+        if nr > 0:
+            message += ", "
+
+        message += '<a href="%s">%s</a>' % (host.edit_url(), host.name())
+    message += "</li></ul>"
+    return message
+
+
+def _render_affected_rulesets(affected_rulesets):
+    # type: (List[Ruleset]) -> str
+    message = "<ul>"
+    for ruleset in affected_rulesets:
+        message += '<li><a href="%s">%s</a></li>' % (watolib.folder_preserving_link(
+            [("mode", "edit_ruleset"), ("varname", ruleset.name)]), ruleset.title())
+    message += "</ul>"
+    return message
 
 
 def _is_removing_tags(operation):

@@ -94,6 +94,9 @@ const char* const kPluginCacheAge = "cache_age";  // int
 const char* const kPluginExe = "exe";             // string
 const char* const kPluginRun = "run";             // bool
 
+const char* const kPluginGroup = "group";  // string
+const char* const kPluginUser = "user";    // string
+
 // group "winperf"
 // root
 const char* const kWinPerfCounters = "counters";      // seq

@@ -317,7 +317,7 @@ class ModeTags(ABCTagMode):
         for tag_group in self._effective_config.tag_groups:
             for tag in tag_group.tags:
                 if aux_tag.id in tag.aux_tag_ids:
-                    used_tags.add(aux_tag.id)
+                    used_tags.add(tag.id)
         return sorted(used_tags)
 
 

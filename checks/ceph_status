@@ -213,7 +213,7 @@ def check_ceph_status_pgs(_no_item, params, parsed):
         "incomplete": (2, "incomplete"),
         "inconsistent": (2, "inconsistent"),
         "peered": (2, "peered"),
-        "perring": (0, "peering"),
+        "peering": (0, "peering"),
         "recovering": (0, "recovering"),
         "recovery_wait": (0, "recovery wait"),
         "remapped": (0, "remapped"),

@@ -275,7 +275,7 @@ $(LIBS_DIR)/libgtest.a: $(LIBS_DIR)/libgmock_main.a
 $(LIBS_DIR)/libgtest_main.a: $(LIBS_DIR)/libgtest.a
 
 $(GOOGLETEST_VERSION)/Makefile: $(GOOGLETEST_VERSION)/CMakeLists.txt
-	cd $(GOOGLETEST_VERSION) && \
+	@cd $(GOOGLETEST_VERSION) && \
 	cmake -DCMAKE_CXX_COMPILER=$(CXX) \
         -DCMAKE_INSTALL_PREFIX=.. \
         -DCMAKE_INSTALL_INCLUDEDIR=$(GOOGLETEST_INCLUDE) \

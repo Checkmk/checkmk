@@ -83,15 +83,21 @@ class MkpRulePackProxy(MutableMapping):
         # this is not possible because the mknotifyd.mk could specify referenced
         # objects as well.
         self.id_ = rule_pack_id  # type: str
-        self.rule_pack = None  # type: Dict[str, Any]
+        self.rule_pack = None  # type: Optional[Dict[str, Any]]
 
     def __getitem__(self, key):
+        if self.rule_pack is None:
+            raise MkpRulePackBindingError("Proxy is not bound")
         return self.rule_pack[key]
 
     def __setitem__(self, key, value):
+        if self.rule_pack is None:
+            raise MkpRulePackBindingError("Proxy is not bound")
         self.rule_pack[key] = value
 
     def __delitem__(self, key):
+        if self.rule_pack is None:
+            raise MkpRulePackBindingError("Proxy is not bound")
         del self.rule_pack[key]
 
     def __repr__(self):
@@ -112,6 +118,8 @@ class MkpRulePackProxy(MutableMapping):
     # KeysView[K], actually).
     def keys(self):
         """List of keys of this rule pack"""
+        if self.rule_pack is None:
+            raise MkpRulePackBindingError("Proxy is not bound")
         return self.rule_pack.keys()
 
     def bind_to(self, mkp_rule_pack):
@@ -224,7 +232,7 @@ def load_config(settings):
     for path in [settings.paths.main_config_file.value] + \
             sorted(settings.paths.config_dir.value.glob('**/*.mk')):
         with open(str(path), mode="rb") as file_object:
-            exec (file_object.read(), config)  # pylint: disable=exec-used
+            exec(file_object.read(), config)  # pylint: disable=exec-used
     config.pop("MkpRulePackProxy", None)
     _bind_to_rule_pack_proxies(config['rule_packs'], config['mkp_rule_packs'])
 

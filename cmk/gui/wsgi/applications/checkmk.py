@@ -27,8 +27,7 @@ import contextlib
 import functools
 import httplib
 import os
-
-import six
+import traceback
 
 import livestatus
 
@@ -85,9 +84,9 @@ def _auth(request, func):
 
 
 def _noauth(func):
-    # HACK ALERT
     #
-    # We don't have to set up anything because we assume this is only used for special calls.
+    # We don't have to set up anything because we assume this is only used for special calls. We
+    # however have to make sure all errors get written out in plaintext, without HTML.
     #
     # Currently these are:
     #  * noauth:run_cron
@@ -96,7 +95,16 @@ def _noauth(func):
     #  * noauth:ajax_graph_images
     #  * noauth:automation
     #
-    return func
+    @functools.wraps(func)
+    def _call_noauth():
+        try:
+            func()
+        except Exception as e:
+            html.write_text("%s" % e)
+            if config.debug:
+                html.write_text(traceback.format_exc())
+
+    return _call_noauth
 
 
 def get_and_wrap_page(request, script_name):
@@ -124,8 +132,7 @@ def get_and_wrap_page(request, script_name):
 def _plain_error():
     """Webservice functions may decide to get a normal result code
     but a text with an error message in case of an error"""
-    return html.request.has_var("_plain_error") or html.myfile in ("webapi", "automation",
-                                                                   "deploy_agent")
+    return html.request.has_var("_plain_error") or html.myfile == "webapi"
 
 
 def _profiling_enabled():
@@ -231,10 +238,7 @@ def _render_exception(e, title=""):
 
     if _plain_error():
         html.set_output_format("text")
-        if html.myfile in ('automation', 'deploy_agent'):
-            html.write(six.text_type(e))
-        else:
-            html.write("%s%s\n" % (title, e))
+        html.write("%s%s\n" % (title, e))
 
     elif not _fail_silently():
         html.header(title)

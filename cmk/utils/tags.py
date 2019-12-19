@@ -98,6 +98,12 @@ class ABCTag(six.with_metaclass(abc.ABCMeta, object)):
     def _parse_legacy_format(self, tag_info):
         self.id, self.title = tag_info[:2]
 
+    @property
+    def choice_title(self):
+        if self.topic:
+            return "%s / %s" % (self.topic, self.title)
+        return self.title
+
 
 class AuxTag(ABCTag):
     is_aux_tag = True
@@ -121,12 +127,6 @@ class AuxTag(ABCTag):
         if self.topic:
             response["topic"] = self.topic
         return response
-
-    @property
-    def choice_title(self):
-        if self.topic:
-            return "%s / %s" % (self.topic, self.title)
-        return self.title
 
 
 class AuxTagList(object):

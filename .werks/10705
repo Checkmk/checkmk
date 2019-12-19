@@ -1,0 +1,24 @@
+Title: New "Tag usage" page to analyze tag references
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1576768850
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+A new subpage has been added to the tag management of WATO. This page can
+be used to analyze the usage of the different tags, for example to prepare
+cleanups or redesigns of tag schemes.
+
+This page can be used to get an idea of how the tags are used in hosts, folders
+and rulesets.
+
+The usage analyzation is currently not complete, it takes the same object types
+into account as the tag deletion / rename validation that is executed when
+making changes to tags.
+
+There are a lot of different objects that are using tags, which are currently
+not checked by WATO, for example: Rule based notifications, BI aggregations,
+status view filters and some more.

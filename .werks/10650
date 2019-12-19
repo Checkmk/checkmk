@@ -1,0 +1,11 @@
+Title: job: Fixed wrong state marker
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p8
+Date: 1576763189
+Class: fix
+
+If the service was in state WARN, the state marker for CRIT was shown.
+That has been fixed.

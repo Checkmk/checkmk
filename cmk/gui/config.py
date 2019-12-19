@@ -620,6 +620,7 @@ class LoggedInUser(object):
         # In some early error during login phase there are cases where it might
         # happen that a user file is requested but the user is not yet
         # set. We have all information to set it, then do it.
+        # TODO: Can "if not user" be removed?
         if not user:
             return deflt  # No user known at this point of time
 

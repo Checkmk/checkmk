@@ -1064,4 +1064,96 @@ def test_logged_in_super_user_permissions(mocker):
     user.need_permission('drink_other_peoples_milk')
 
 
-# TODO: add tests for LoggedInUser
+MONITORING_USER_CACHED_PROFILE = {
+    'alias': u'Test user',
+    'authorized_sites': ['heute', 'heute_slave_1'],
+    'contactgroups': ['all'],
+    'disable_notifications': {},
+    'email': u'test_user@tribe29.com',
+    'fallback_contact': False,
+    'force_authuser': False,
+    'locked': False,
+    'language': 'de',
+    'pager': '',
+    'roles': ['user'],
+    'start_url': None,
+    'ui_theme': 'modern-dark',
+}
+
+MONITORING_USER_SITECONFIG = {
+    'heute_slave_1': {
+        'disabled': False
+    },
+    'heute_slave_2': {
+        'disabled': True
+    }
+}
+
+MONITORING_USER_BUTTONCOUNTS = {
+    'cb_host': 1.9024999999999999,
+    'cb_hoststatus': 1.8073749999999997,
+}
+
+MONITORING_USER_FAVORITES = ['heute;CPU load']
+
+
+@pytest.fixture
+def monitoring_user(tmp_path, mocker):
+    """Returns a "Normal monitoring user" object."""
+    config_dir = tmp_path / 'config_dir'
+    user_dir = config_dir / 'test'
+    user_dir.mkdir(parents=True)
+    user_dir.joinpath('cached_profile.mk').write_text(six.text_type(MONITORING_USER_CACHED_PROFILE))
+    # SITE STATUS snapin settings:
+    user_dir.joinpath('siteconfig.mk').write_text(six.text_type(MONITORING_USER_SITECONFIG))
+    # Ordering of the buttons:
+    user_dir.joinpath('buttoncounts.mk').write_text(six.text_type(MONITORING_USER_BUTTONCOUNTS))
+    # Favorites set in the commands menu:
+    user_dir.joinpath('favorites.mk').write_text(six.text_type(MONITORING_USER_FAVORITES))
+
+    mocker.patch.object(config, 'config_dir', str(config_dir))
+    mocker.patch.object(config, 'roles_of_user', lambda user_id: ['user'])
+
+    assert config.builtin_role_ids == ['user', 'admin', 'guest']
+    assert 'test' not in config.admin_users
+
+    return config.LoggedInUser('test')
+
+
+def test_monitoring_user(monitoring_user):
+    assert monitoring_user.id == 'test'
+    assert monitoring_user.alias == 'Test user'
+    assert monitoring_user.email == 'test_user@tribe29.com'
+    assert monitoring_user.confdir.endswith('/config_dir/test')
+    assert monitoring_user.siteconf == MONITORING_USER_SITECONFIG
+
+    assert monitoring_user.permissions == {}
+
+    assert monitoring_user.role_ids == ['user']
+    assert monitoring_user.baserole_ids == ['user']
+    assert monitoring_user.attributes == MONITORING_USER_CACHED_PROFILE
+    assert monitoring_user.get_attribute('roles') == ['user']
+    assert monitoring_user.baserole_id == 'user'
+
+    assert monitoring_user.get_attribute('ui_theme') == 'modern-dark'
+    monitoring_user.set_attribute('ui_theme', 'classic')
+    assert monitoring_user.get_attribute('ui_theme') == 'classic'
+
+    assert monitoring_user.language() == 'de'
+    assert monitoring_user.get_button_counts() == MONITORING_USER_BUTTONCOUNTS
+    assert monitoring_user.contact_groups() == ['all']
+
+    assert monitoring_user.load_stars() == set(MONITORING_USER_FAVORITES)
+    monitoring_user.save_stars({'heute;Memory'})
+    assert monitoring_user.load_stars() == {'heute;Memory'}
+
+    assert monitoring_user.is_site_disabled('heute_slave_1') is False
+    assert monitoring_user.is_site_disabled('heute_slave_2') is True
+
+    assert monitoring_user.load_file('siteconfig', None) == MONITORING_USER_SITECONFIG
+    assert monitoring_user.file_modified('siteconfig') > 0
+    assert monitoring_user.file_modified('unknown_file') == 0
+
+    monitoring_user.siteconf = {}
+    monitoring_user.save_site_config()
+    assert monitoring_user.load_file('siteconfig', None) == {}

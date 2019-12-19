@@ -27,15 +27,12 @@ checks = {
                 'levels_vmalloc': ('abs_free', (52428800, 31457280)),
                 'levels_hardwarecorrupted': ('abs_used', (1, 1))
             }, [
-                (0, 'RAM used: 1.08 GB of 8.00 GB', []),
-                (0, 'Swap used: 194.90 MB of 1.25 GB', []),
-                (
-                    0, 'Total virtual memory used: 1.27 GB of 9.25 GB (13.8%)',
-                    []
-                ),
+                (0, 'Total virtual memory: 13.78% - 1.27 GB of 9.25 GB', []),
+                (0, 'RAM: 13.56% - 1.08 GB of 8.00 GB', []),
+                (0, 'Swap: 15.23% - 194.90 MB of 1.25 GB', []),
                 (
                     2,
-                    'Largest Free VMalloc Chunk: 2.00 kB (warn/crit below 50.00 MB/30.00 MB)',
+                    'Largest Free VMalloc Chunk: 0% free - 2.00 kB of 32.00 TB VMalloc Area (warn/crit below 50.00 MB/30.00 MB free)',
                     []
                 ),
                 (

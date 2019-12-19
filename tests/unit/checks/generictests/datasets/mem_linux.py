@@ -42,15 +42,12 @@ checks = {
                 'levels_committed': ('perc_used', (100.0, 150.0)),
                 'levels_pagetables': ('perc_used', (8.0, 16.0))
             }, [
-                (0, 'RAM used: 3.05 GB of 23.56 GB', []),
-                (0, 'Swap used: 72.15 MB of 16.00 GB', []),
-                (
-                    0, 'Total virtual memory used: 3.12 GB of 39.56 GB (7.9%)',
-                    []
-                ),
+                (0, 'Total virtual memory: 7.9% - 3.12 GB of 39.56 GB', []),
+                (0, 'RAM: 12.96% - 3.05 GB of 23.56 GB', []),
+                (0, 'Swap: 0.44% - 72.15 MB of 16.00 GB', []),
                 (
                     2,
-                    'Hardware Corrupted: 6.00 kB (warn/crit at 5.00 B/10.00 B)',
+                    'Hardware Corrupted: 0.00002% - 6.00 kB of 23.56 GB RAM (warn/crit at 5.00 B/10.00 B used)',
                     []
                 ),
                 (

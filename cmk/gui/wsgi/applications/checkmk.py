@@ -28,6 +28,8 @@ import functools
 import httplib
 import os
 
+import six
+
 import livestatus
 
 import cmk.gui.crash_reporting as crash_reporting
@@ -122,7 +124,7 @@ def get_and_wrap_page(request, script_name):
 def _plain_error():
     """Webservice functions may decide to get a normal result code
     but a text with an error message in case of an error"""
-    return html.request.has_var("_plain_error") or html.myfile == "webapi"
+    return html.request.has_var("_plain_error") or html.myfile in ("webapi", "deploy_agent")
 
 
 def _profiling_enabled():
@@ -228,7 +230,10 @@ def _render_exception(e, title=""):
 
     if _plain_error():
         html.set_output_format("text")
-        html.write("%s%s\n" % (title, e))
+        if html.myfile == 'deploy_agent':
+            html.write(six.text_type(e))
+        else:
+            html.write("%s%s\n" % (title, e))
 
     elif not _fail_silently():
         html.header(title)

@@ -1,0 +1,12 @@
+Title: Fix possible timeout exception during site update
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0p8
+Date: 1576770583
+Class: fix
+
+The Checkmk update command (cmk-update-config), which is executed during "omd
+update", could be terminated with a MKTimeout exception in previous 1.6
+releases when updating larger configurations.

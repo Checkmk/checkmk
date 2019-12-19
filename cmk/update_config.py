@@ -127,6 +127,10 @@ class UpdateConfig(object):
         current_app.set_current(DummyApplication(environ, None))
         html.set_current(htmllib.html(Request(environ), Response(is_secure=False)))
 
+        # Currently the htmllib.html constructor enables the timeout by default. This side effect
+        # should really be cleaned up.
+        html.disable_request_timeout()
+
         self._logger.verbose("Loading GUI plugins...")
         cmk.gui.modules.load_all_plugins()
         failed_plugins = cmk.gui.utils.get_failed_plugins()

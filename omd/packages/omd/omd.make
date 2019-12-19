@@ -45,4 +45,4 @@ omdlib-install: $(PYTHON3_CACHE_PKG_PROCESS)
 	sed -i 's|###OMD_VERSION###|$(OMD_VERSION)|g' $(DESTDIR)$(OMD_ROOT)/lib/python3/omdlib/__init__.py
 	LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" \
 	    $(PACKAGE_PYTHON3_EXECUTABLE) -m py_compile \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/omdlib
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/omdlib/*.py

@@ -412,25 +412,27 @@ inline std::vector<std::string_view> ToView(
 
 // string splitter
 // gtest [+]
+// max_count == 0 means inifinite parsing
+
 inline std::vector<std::string> SplitString(const std::string& In,
-                                            const std::string& Delim,
-                                            int MaxCount = 0) noexcept {
+                                            const std::string& delimiter,
+                                            size_t max_count = 0) noexcept {
     // sanity
     if (In.empty()) return {};
-    if (Delim.empty()) return {In};
+    if (delimiter.empty()) return {In};
 
     size_t start = 0U;
     std::vector<std::string> result;
 
-    auto end = In.find(Delim);
+    auto end = In.find(delimiter);
     while (end != std::string::npos) {
         result.push_back(In.substr(start, end - start));
 
-        start = end + Delim.length();
-        end = In.find(Delim, start);
+        start = end + delimiter.length();
+        end = In.find(delimiter, start);
 
         // check for a skipping rest
-        if (result.size() == MaxCount) {
+        if (result.size() == max_count) {
             end = std::string::npos;
             break;
         }
@@ -445,25 +447,26 @@ inline std::vector<std::string> SplitString(const std::string& In,
 // "a.b.", "." => {"a", "b"}
 // "a.b", "." => {"a", "b"}
 // ".b", "." => { "b"}
+// max_count == 0 means inifinite parsing
 inline std::vector<std::wstring> SplitString(const std::wstring& In,
-                                             const std::wstring& Delim,
-                                             int MaxCount = 0) noexcept {
+                                             const std::wstring& delimiter,
+                                             size_t max_count = 0) noexcept {
     // sanity
     if (In.empty()) return {};
-    if (Delim.empty()) return {In};
+    if (delimiter.empty()) return {In};
 
     size_t start = 0U;
     std::vector<std::wstring> result;
 
-    auto end = In.find(Delim);
+    auto end = In.find(delimiter);
     while (end != std::string::npos) {
         result.push_back(In.substr(start, end - start));
 
-        start = end + Delim.length();
-        end = In.find(Delim, start);
+        start = end + delimiter.length();
+        end = In.find(delimiter, start);
 
         // check for a skipping rest
-        if (result.size() == MaxCount) {
+        if (result.size() == max_count) {
             end = std::string::npos;
             break;
         }
@@ -475,29 +478,27 @@ inline std::vector<std::wstring> SplitString(const std::wstring& In,
     return result;
 }
 
-// not used now!
+// special case when we are parsing to the end
+// indirectly tested in the test-cma_tools
 inline std::vector<std::wstring> SplitStringExact(const std::wstring& In,
-                                                  const std::wstring Delim,
-                                                  int MaxCount = 0) noexcept {
+                                                  const std::wstring& delimiter,
+                                                  size_t max_count) noexcept {
     // sanity
     if (In.empty()) return {};
-    if (Delim.empty()) return {In};
+    if (delimiter.empty()) return {In};
 
     size_t start = 0U;
     std::vector<std::wstring> result;
 
-    auto end = In.find(Delim);
+    auto end = In.find(delimiter);
     while (end != std::string::npos) {
         result.push_back(In.substr(start, end - start));
 
-        start = end + Delim.length();
-        end = In.find(Delim, start);
+        start = end + delimiter.length();
+        end = In.find(delimiter, start);
 
         // check for a skipping rest
-        if (result.size() == MaxCount) {
-            end = std::string::npos;
-            break;
-        }
+        if (result.size() == max_count - 1) break;
     }
 
     auto last_string = In.substr(start, end);

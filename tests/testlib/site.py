@@ -401,8 +401,11 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         execute("sudo sed -i \"s|%s|%s|g\" %s/bin/omd" %
                 (src_version, new_version_name, self.version.version_path()))
 
-        execute("sudo sed -i \"s|%s|%s|g\" %s/lib/python3/omdlib/__init__.py" %
-                (src_version, new_version_name, self.version.version_path()))
+        omd_init_path = "%s/lib/python3/omdlib/__init__.py" % self.version.version_path()
+        # Temporary hack. Can be removed after 2019-12-19
+        if not os.path.exists(omd_init_path):
+            omd_init_path = "%s/lib/python/omdlib/__init__.py" % self.version.version_path()
+        execute("sudo sed -i \"s|%s|%s|g\" %s" % (src_version, new_version_name, omd_init_path))
 
         execute("sudo sed -i \"s|%s|%s|g\" %s/share/omd/omd.info" %
                 (src_version, new_version_name, self.version.version_path()))

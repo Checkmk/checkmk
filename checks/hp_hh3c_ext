@@ -33,7 +33,7 @@ def parse_hp_hh3c_ext(info):
         name = entity_info.get(index, (None, None))
 
         # mem_size measured in 'bytes' (hh3cEntityExtMemSize)
-        # check_memory_multiitem needs values in bytes, not percent
+        # check_memory_elements needs values in bytes, not percent
         mem_total = int(mem_size)
         mem_used = 0.01 * int(mem_usage) * mem_total
 
@@ -219,17 +219,24 @@ def inventory_hp_hh3c_ext_mem(parsed):
             yield name, {}
 
 
-def check_hp_hh3c_ext_mem(item, params, parsed):
-    if item not in parsed:
-        return
-    return check_memory_multiitem(params, parsed[item])
+@get_parsed_item_data
+def check_hp_hh3c_ext_mem(item, params, data):
+    warn, crit = params.get("levels", (None, None))
+    mode = "abs_used" if isinstance(warn, int) else "perc_used"
+    return check_memory_element(
+        "Usage",
+        data["mem_used"],
+        data["mem_total"],
+        (mode, (warn, crit)),
+        metric_name="memused",
+    )
 
 
 check_info['hp_hh3c_ext.mem'] = {
     'inventory_function': inventory_hp_hh3c_ext_mem,
     'check_function': check_hp_hh3c_ext_mem,
     'service_description': 'Memory %s',
-    'includes': ['memory.include'],
+    'includes': ['mem.include'],
     'group': 'memory_multiitem',
     'has_perfdata': True,
     'default_levels_variable': 'hp_hh3c_ext_mem_default_levels',

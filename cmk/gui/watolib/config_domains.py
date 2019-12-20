@@ -214,7 +214,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     ]
 
     _PEM_RE = re.compile(b"-----BEGIN CERTIFICATE-----\r?.+?\r?-----END CERTIFICATE-----\r?\n?"
-                         "", re.DOTALL)
+                         b"", re.DOTALL)
 
     def config_dir(self):
         return multisite_dir()

@@ -40,7 +40,7 @@ sudo rsync \
     --exclude=cme \
     --exclude=cme.py \
     -aR \
-    $PYTHON2_PATHS \
+    "${PYTHON2_PATHS[@]}" \
     $ROOT/lib/python/cmk/
 
 # TODO: Enable python3 compatible parts step by step
@@ -50,7 +50,7 @@ sudo rsync \
     --exclude=cme \
     --exclude=cme.py \
     -a \
-    $PYTHON3_PATHS \
+    "${PYTHON3_PATHS[@]}" \
     $ROOT/lib/python3/cmk/
 
 # Restore site version after .f12
@@ -59,11 +59,11 @@ sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" $ROOT/lib/pytho
 
 (
     cd $ROOT/lib/python/cmk
-    sudo pycompile -q $PYTHON2_PATHS
+    sudo pycompile -q "${PYTHON2_PATHS[@]}"
 )
 (
     cd $ROOT/lib/python/cmk
-    sudo py3compile -q $PYTHON2_PATHS
+    sudo py3compile -q "${PYTHON2_PATHS[@]}"
 )
 
 # Also deploy all other directories of same type

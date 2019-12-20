@@ -2,7 +2,8 @@
 #
 # This file is for execution by the pre-commit framework.
 #
-set -e -o pipefail
+
+source "$(dirname $0)/lib-precommit"
 
 # Filter out all tests/* and tests-py3/* files.
 declare -a FILES
@@ -21,36 +22,14 @@ if [ "$NUM_PARAM" == "0" ]; then
     exit 0
 fi
 
-python-files() {
-    local shebang
-    local prefix
-    if [ $1 -eq 2 ]; then
-        shebang=python
-        prefix=tests/
-    else
-        shebang=python3
-        prefix=tests-py3/
-    fi
-    for file in $2; do
-        if [[ $file == $prefix* ]]; then
-            echo $file
-            continue
-        fi
-        if head -1 $file | grep -q "^#!.*$shebang$" > /dev/null; then
-            echo $file
-            continue
-        fi
-    done
-}
-
-printf -v files " %s" ${FILES[@]}
-PYTHON2_FILES=$(python-files 2 "$files")
-PYTHON3_FILES=$(python-files 3 "$files")
-
 REPO_PATH="$(git rev-parse --show-toplevel)"
 PIPENV="$REPO_PATH/scripts/run-pipenv"
 
 export MYPYPATH="$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/omd:$REPO_PATH/tests-py3:$REPO_PATH/tests-py3/typeshed"
+
+printf -v files " %s" ${FILES[@]}
+PYTHON2_FILES=$(python_files 2 "$files")
+PYTHON3_FILES=$(python_files 3 "$files")
 
 if [ ! -z "$PYTHON2_FILES" ]; then
     $PIPENV 3 run mypy \

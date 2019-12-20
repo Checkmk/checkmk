@@ -30,13 +30,13 @@ repos:
 #      hooks:
 #          - id: scss-lint
 #            files: \.scss$
-    - repo: https://github.com/pre-commit/mirrors-yapf
-      rev: v0.29.0
-      hooks:
-          - id: yapf
-            types: [file, python]
     - repo: local
       hooks:
+          - id: yapf
+            name: Check yapf
+            entry: scripts/check-yapf
+            language: script
+            types: [file, python]
           - id: pylint
             name: Check pylint
             entry: scripts/check-pylint

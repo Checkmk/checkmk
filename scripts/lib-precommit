@@ -1,0 +1,26 @@
+# vim: syntax=sh
+
+GIT_ROOT=$(git rev-parse --show-toplevel)
+
+function python_files() {
+    local shebang
+    local prefix
+    if [ $1 -eq 2 ]; then
+        shebang=python
+        prefix=tests/
+    else
+        shebang=python3
+        prefix=tests-py3/
+    fi
+    for file in $2; do
+        if [[ ${file#"$GIT_ROOT/"} == $prefix* ]]; then
+            echo $file
+            continue
+        fi
+        if head -1 $file | grep -q "^#!.*$shebang$" > /dev/null; then
+            echo $file
+            continue
+        fi
+
+    done
+}

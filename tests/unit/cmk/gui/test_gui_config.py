@@ -1157,3 +1157,36 @@ def test_monitoring_user(monitoring_user):
     monitoring_user.siteconf = {}
     monitoring_user.save_site_config()
     assert monitoring_user.load_file('siteconfig', None) == {}
+
+
+def test_monitoring_user_permissions(mocker, monitoring_user):
+    mocker.patch.object(
+        config,
+        'roles',
+        {
+            'user': {
+                'permissions': {
+                    'action.star': False,
+                    'general.edit_views': True,
+                }
+            },
+        },
+    )
+    mocker.patch.object(permissions, 'permission_registry')
+
+    assert monitoring_user.may('action.star') is False
+    assert monitoring_user.may('general.edit_views') is True
+    assert monitoring_user.may('unknown_permission') is False
+
+    # permissions are cached by the user instance
+    assert monitoring_user.permissions == {
+        'action.star': False,
+        'general.edit_views': True,
+        'unknown_permission': False,
+    }
+
+    with pytest.raises(MKAuthException):
+        monitoring_user.need_permission('action.start')
+    monitoring_user.need_permission('general.edit_views')
+    with pytest.raises(MKAuthException):
+        monitoring_user.need_permission('unknown_permission')

@@ -507,6 +507,8 @@ class LoggedInUser(object):
 
     def _load_permissions(self):
         # type: () -> None
+        # TODO: Is it necessary to cache the permissions for each user (see also method may)?
+        #       If yes make permissions at least a private attribute.
         # Prepare cache of already computed permissions
         # Make sure, admin can restore permissions in any case!
         if self.id in admin_users:

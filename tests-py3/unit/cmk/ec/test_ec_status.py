@@ -16,7 +16,7 @@ import cmk.ec.main
 import cmk.ec.settings
 
 
-class FakeStatusSocket(object):
+class FakeStatusSocket:
     def __init__(self, query):
         # type: (bytes) -> None
         self._query = query

@@ -8,6 +8,45 @@ KILO = 1024
 
 MEGA = KILO**2
 
+
+@pytest.mark.parametrize(
+    "label,used,total,levels,kwargs,expected",
+    [
+        # all variants of "no levels"
+        ("Longterm", 23 * MEGA, 42 * MEGA, None, {}, (
+            0, "Longterm: 54.76% - 23.00 MB of 42.00 MB")),
+        ("Longterm", 23 * MEGA, 42 * MEGA, "ignore", {}, (
+            0, "Longterm: 54.76% - 23.00 MB of 42.00 MB")),
+        ("Longterm", 23 * MEGA, 42 * MEGA, ("ignore", None), {}, (
+            0, "Longterm: 54.76% - 23.00 MB of 42.00 MB")),
+        ("Longterm", 23 * MEGA, 42 * MEGA, ("ignore", (None, None)), {}, (
+            0, "Longterm: 54.76% - 23.00 MB of 42.00 MB")),
+        # all four types of levels:
+        ("Longterm", 23 * MEGA, 42 * MEGA, ("perc_used", (50, 69)), {}, (
+            1, "Longterm: 54.76% - 23.00 MB of 42.00 MB (warn/crit at 50.0%/69.0% used)")),
+        ("Longterm", 23 * MEGA, 42 * MEGA, ("perc_free", (60, 50)), {}, (
+            2, "Longterm: 54.76% - 23.00 MB of 42.00 MB (warn/crit below 60.0%/50.0% free)")),
+        ("Longterm", 23 * MEGA, 42 * MEGA, ("abs_used", (10 * KILO, 20 * MEGA)), {}, (
+            2, "Longterm: 54.76% - 23.00 MB of 42.00 MB (warn/crit at 10.00 kB/20.00 MB used)")),
+        ("Longterm", 23 * MEGA, 42 * MEGA, ("abs_free", (20 *MEGA, 5 * MEGA)), {}, (
+            1, "Longterm: 54.76% - 23.00 MB of 42.00 MB (warn/crit below 20.00 MB/5.00 MB free)")),
+        # see if we get a metric, and show free
+        ("Longterm", 23 * MEGA, 42 * MEGA, ("perc_free", (60, 50)),
+         {"metric_name": "my_memory", "show_free": True}, (
+             2, "Longterm: 45.24% free - 19.00 MB of 42.00 MB (warn/crit below 60.0%/50.0% free)", [
+                 ("my_memory", 23 * MEGA, 17616076.8, 22020096.0, 0, 42 * MEGA)])),
+        # different total label and render SI
+        ("Longterm", 23000000, 42000000, ("perc_free", (60, 50)),
+         {"label_total": "Hirn", "render_base": 1000}, (
+             2, "Longterm: 54.76% - 23.00 MB of 42.00 MB Hirn (warn/crit below 60.0%/50.0% free)")),
+    ],
+)
+def test_check_memory_element(check_manager, label, used, total, levels, kwargs, expected):
+    check_memory_element = check_manager.get_check("mem.used").context["check_memory_element"]
+    result = check_memory_element(label, used, total, levels, **kwargs)
+    assertCheckResultsEqual(CheckResult(result), CheckResult(expected))
+
+
 MEMINFO_MINI = {  # minimal not failing case
     "MemTotal": 42 * KILO,  # value in kB, this means 42 MB.
     "MemFree": 21* KILO,
@@ -316,49 +355,6 @@ TEXT_MM_50 = "50.0% used (21.00 MB of 42.00 MB)"
     ],
 )
 def test_check_memory_multiitem(check_manager, params, data, base, expected):
-    check_memory_multiitem = check_manager.get_check("ucd_mem").context["check_memory_multiitem"]
+    check_memory_multiitem = check_manager.get_check("casa_cpu_mem").context["check_memory_multiitem"]
     result = check_memory_multiitem(params, data, base=base)
-    assertCheckResultsEqual(CheckResult(result), CheckResult(expected))
-
-
-TEXT_MS_50 = "Usage: 50.0% (Used: 21.00 MB, Total: 42.00 MB)"
-
-@pytest.mark.parametrize(
-    "params,used,total,expected",
-    [
-        ({}, 21 * MEGA, 42 * MEGA, [
-            (0, TEXT_MS_50, [
-                ('memory_used', 21 * MEGA, None, None, 0, 42 * MEGA),
-            ]),
-        ]),
-        ((), 21 * MEGA, 42 * MEGA, [
-            (0, TEXT_MS_50, [
-                ('memory_used', 21 * MEGA, None, None, 0, 42 * MEGA),
-            ]),
-        ]),
-        ((100, 100), 21 * MEGA, 42 * MEGA, [
-            (0, TEXT_MS_50, [
-                ('memory_used', 21 * MEGA, 42 * MEGA, 42 * MEGA, 0, 42 * MEGA),
-            ]),
-        ]),
-        ({"levels": "ignore"}, 21 * MEGA, 42 * MEGA, [
-            (0, TEXT_MS_50, [
-                ('memory_used', 21 * MEGA, None, None, 0, 42 * MEGA),
-            ]),
-        ]),
-        ({"levels": ("perc_used", (45, 54))}, 21 * MEGA, 42 * MEGA, [
-            (1, TEXT_MS_50 + " (warn/crit at 45.0%/54.0% used)", [
-                ('memory_used', 21 * MEGA, 19818086.400000002, 23781703.68, 0, 42 * MEGA),
-            ]),
-        ]),
-        ({"levels": ("abs_free", (90 * MEGA, 80 * MEGA))}, 21 * MEGA, 42 * MEGA, [
-            (2, TEXT_MS_50 + " (warn/crit below 90.00 MB/80.00 MB free)", [
-                ('memory_used', 21 * MEGA, -50331648, -39845888, 0, 42 * MEGA),  # FIXME
-            ]),
-        ]),
-    ],
-)
-def test_check_memory_simple(check_manager, params, used, total, expected):
-    check_memory_simple = check_manager.get_check("ucd_mem").context["check_memory_simple"]
-    result = check_memory_simple(used, total, params)
     assertCheckResultsEqual(CheckResult(result), CheckResult(expected))

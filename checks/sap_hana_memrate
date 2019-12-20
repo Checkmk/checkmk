@@ -51,8 +51,14 @@ def inventory_sap_hana_memrate(parsed):
 
 
 @get_parsed_item_data
-def check_sap_hana_memrate(item, params, data):
-    yield check_memory_simple(data['used'], data['total'], params)
+def check_sap_hana_memrate(_item, params, data):
+    yield check_memory_element(
+        "Usage",
+        data['used'],
+        data['total'],
+        params.get("levels"),
+        metric_name="memory_used",
+    )
 
 
 check_info['sap_hana_memrate'] = {
@@ -60,7 +66,7 @@ check_info['sap_hana_memrate'] = {
     'inventory_function': inventory_sap_hana_memrate,
     'check_function': check_sap_hana_memrate,
     'service_description': 'SAP HANA Memory %s',
-    'includes': ['sap_hana.include', 'memory.include'],
+    'includes': ['sap_hana.include', 'mem.include'],
     "has_perfdata": True,
     'group': 'sap_hana_memory',
     'default_levels_variable': 'sap_hana_memrate_default_levels',

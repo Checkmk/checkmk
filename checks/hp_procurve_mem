@@ -46,9 +46,19 @@ def inventory_hp_procurve_mem(info):
 
 
 def check_hp_procurve_mem(item, params, info):
-    if len(info) == 1:
-        mem_total, mem_used = [int(mem) for mem in info[0]]
-        return check_memory_simple(mem_used, mem_total, params)
+    if len(info) != 1:
+        return
+
+    if isinstance(params, tuple):
+        params = {"levels": ("perc_used", params)}
+    mem_total, mem_used = [int(mem) for mem in info[0]]
+    return check_memory_element(
+        "Usage",
+        mem_used,
+        mem_total,
+        params.get("levels"),
+        metric_name="memory_used",
+    )
 
 
 check_info["hp_procurve_mem"] = {
@@ -61,5 +71,5 @@ check_info["hp_procurve_mem"] = {
     'snmp_info': ('.1.3.6.1.4.1.11.2.14.11.5.1.1.2.1.1.1', ['5', '7']),
     'snmp_scan_function': lambda oid: ".11.2.3.7.11" in oid(".1.3.6.1.2.1.1.2.0") or ".11.2.3.7.8"
                           in oid(".1.3.6.1.2.1.1.2.0"),
-    'includes': ["memory.include"],
+    'includes': ["mem.include"],
 }

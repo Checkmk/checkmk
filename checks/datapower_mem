@@ -43,7 +43,11 @@ def check_datapower_mem(item, params, info):
     mem_total_bytes = int(info[0][0]) * 1024
     mem_used_bytes = int(info[0][1]) * 1024
 
-    return check_memory_simple(mem_used_bytes, mem_total_bytes, params)
+    return check_memory_element("Usage",
+                                mem_used_bytes,
+                                mem_total_bytes,
+                                params.get("levels"),
+                                metric_name="memory_used")
 
 
 check_info['datapower_mem'] = {
@@ -58,7 +62,7 @@ check_info['datapower_mem'] = {
         ]),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") in
                           [".1.3.6.1.4.1.14685.1.7", ".1.3.6.1.4.1.14685.1.3"],
-    "includes": ["memory.include"],
+    "includes": ["mem.include"],
     "group": "memory_simple",
     "default_levels_variable": "datapower_mem_default_levels",
     "has_perfdata": True,

@@ -68,7 +68,13 @@ def _get_levels_mode_from_value(warn):
     return "%s_%s" % (type_, reference)
 
 
-def normalize_mem_levels(mode, warn, crit, total, _perc_total=None, render_base=1024, render_unit=1):
+def normalize_mem_levels(mode,
+                         warn,
+                         crit,
+                         total,
+                         _perc_total=None,
+                         render_base=1024,
+                         render_unit=1):
     """get normalized levels and formatter
 
     Levels may be given either as
@@ -122,6 +128,47 @@ def _compute_state(value, warn, crit):
     if warn is not None and value >= warn:
         return 1
     return 0
+
+
+def check_memory_element(label,
+                         used,
+                         total,
+                         levels,
+                         label_total="",
+                         show_free=False,
+                         metric_name=None,
+                         render_base=1024):
+    """Return a check result for one memory element
+    """
+    if show_free:
+        show_value = total - used
+        show_text = " free"
+    else:
+        show_value = used
+        show_text = ""
+
+    infotext = "%s: %s%s - %s of %s%s" % (
+        label,
+        get_percent_human_readable(100.0 * show_value / total),
+        show_text,
+        get_bytes_human_readable(show_value, base=render_base),
+        get_bytes_human_readable(total, base=render_base),
+        (" %s" % label_total).rstrip(),
+    )
+
+    try:
+        mode, (warn, crit) = levels
+    except (ValueError, TypeError):  # handle None, "ignore"
+        mode, (warn, crit) = "ignore", (None, None)
+
+    warn, crit, levels_text = normalize_mem_levels(mode, warn, crit, total, render_base=render_base)
+    state = _compute_state(used, warn, crit)
+    if state and levels_text:
+        infotext = "%s (%s)" % (infotext, levels_text)
+
+    if not metric_name:
+        return state, infotext, []
+    return state, infotext, [(metric_name, used, warn, crit, 0, total)]
 
 
 def _get_total_usage(ramused, swapused, pagetables):

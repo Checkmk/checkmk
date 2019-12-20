@@ -29,6 +29,7 @@ import struct
 import subprocess
 import threading
 import time
+from typing import Any, Dict  # pylint: disable=unused-import
 
 import cmk.ec.actions
 from cmk.utils.log import VERBOSE
@@ -321,7 +322,12 @@ def _housekeeping_files(history):
 def _add_files(history, event, what, who, addinfo):
     _log_event(history._config, history._logger, event, what, who, addinfo)
     with history._lock:
-        columns = [str(time.time()), scrub_string(what), scrub_string(who), scrub_string(addinfo)]
+        columns = [
+            quote_tab(str(time.time())),
+            quote_tab(scrub_string(what)),
+            quote_tab(scrub_string(who)),
+            quote_tab(scrub_string(addinfo))
+        ]
         columns += [
             quote_tab(event.get(colname[6:], defval))  # drop "event_"
             for colname, defval in history._event_columns
@@ -329,7 +335,7 @@ def _add_files(history, event, what, who, addinfo):
 
         with get_logfile(history._config, history._settings.paths.history_dir.value,
                          history._active_history_period).open(mode='ab') as f:
-            f.write(b"\t".join(columns) + "\n")
+            f.write(b"\t".join(columns) + b"\n")
 
 
 def quote_tab(col):
@@ -381,12 +387,23 @@ def get_logfile(config, log_dir, active_history_period):
 # Return timestamp of the beginning of the current history
 # period.
 def _current_history_period(config):
-    now_broken = list(time.localtime())
-    now_broken[3:6] = [0, 0, 0]  # set clock to 00:00:00
-    now_ts = time.mktime(now_broken)  # convert to timestamp
-    if config["history_rotation"] == "weekly":
-        now_ts -= now_broken[6] * 86400  # convert to monday
-    return int(now_ts)
+    # type: (Dict[str, Any]) -> int
+    lt = time.localtime()
+    ts = time.mktime(
+        time.struct_time((
+            lt.tm_year,
+            lt.tm_mon,
+            lt.tm_mday,
+            0,  # tm_hour
+            0,  # tm_min
+            0,  # tm_sec
+            lt.tm_wday,
+            lt.tm_yday,
+            lt.tm_isdst,
+            lt.tm_zone,
+            lt.tm_gmtoff)))
+    offset = lt.tm_wday * 86400 if config["history_rotation"] == "weekly" else 0
+    return int(ts) - offset
 
 
 # Delete old log files

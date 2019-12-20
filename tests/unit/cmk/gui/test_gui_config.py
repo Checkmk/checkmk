@@ -981,12 +981,10 @@ def test_unauthenticated_users(user, alias, email, role_ids, baserole_id):
 ])
 def test_unauthenticated_users_language(mocker, user):
     mocker.patch.object(config, 'default_language', 'esperanto')
-    assert user.language() == 'esperanto'
+    assert user.language == 'esperanto'
 
-    assert user.language('klingon') == 'klingon'
-
-    user.set_attribute('language', 'sindarin')
-    assert user.language() == 'sindarin'
+    user.language = 'sindarin'
+    assert user.language == 'sindarin'
 
 
 @pytest.mark.parametrize('user', [
@@ -1127,7 +1125,7 @@ def test_monitoring_user(monitoring_user):
     monitoring_user.set_attribute('ui_theme', 'classic')
     assert monitoring_user.get_attribute('ui_theme') == 'classic'
 
-    assert monitoring_user.language() == 'de'
+    assert monitoring_user.language == 'de'
     assert monitoring_user.get_button_counts() == MONITORING_USER_BUTTONCOUNTS
     assert monitoring_user.contact_groups() == ['all']
 

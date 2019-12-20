@@ -144,7 +144,7 @@ def unlocalize():
 
 
 def localize(lang):
-    # type: (str) -> None
+    # type: (Optional[str]) -> None
     global _translation
     if lang is None:
         unlocalize()

@@ -37,7 +37,7 @@ def test_render_help_visible(register_builtin_html):
 
 
 def test_add_manual_link(register_builtin_html):
-    assert config.user.language() is None
+    assert config.user.language is None
     assert compare_html(
         html.render_help(u"[cms_introduction_docker|docker]"),
         HTML(

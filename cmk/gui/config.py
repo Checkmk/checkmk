@@ -551,9 +551,15 @@ class LoggedInUser(object):
         except KeyError:
             pass
 
-    def language(self, default=None):
-        # type: (Optional[str]) -> Optional[str]
-        return self.get_attribute("language", get_language(default))
+    @property
+    def language(self):
+        # type: () -> Optional[str]
+        return self.get_attribute("language", get_language())
+
+    @language.setter
+    def language(self, value):
+        # type: (Optional[str]) -> None
+        self.set_attribute("language", value)
 
     def contact_groups(self):
         # type: () -> List

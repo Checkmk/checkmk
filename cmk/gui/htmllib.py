@@ -1569,7 +1569,7 @@ class html(ABCHTMLGenerator):
 
     def _resolve_help_text_macros(self, text):
         # type: (Text) -> Text
-        if config.user.language() == "de":
+        if config.user.language == "de":
             cmk_base_url = "https://checkmk.de"
         else:
             cmk_base_url = "https://checkmk.com"
@@ -1769,8 +1769,8 @@ class html(ABCHTMLGenerator):
         if not isinstance(config.user, config.LoggedInNobody):
             login_text = "<b>%s</b> (%s" % (config.user.id, "+".join(config.user.role_ids))
             if self.enable_debug:
-                if config.user.language():
-                    login_text += "/%s" % config.user.language()
+                if config.user.language:
+                    login_text += "/%s" % config.user.language
             login_text += ')'
         else:
             login_text = _("not logged in")

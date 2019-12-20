@@ -152,7 +152,7 @@ def _show_page_user_profile(change_pw):
                             language = None
                         # Set custom language
                         users[config.user.id]['language'] = language
-                        config.user.set_attribute("language", language)
+                        config.user.language = language
                         html.set_language_cookie(language)
 
                     else:
@@ -162,7 +162,7 @@ def _show_page_user_profile(change_pw):
                         config.user.unset_attribute("language")
 
                     # load the new language
-                    cmk.gui.i18n.localize(config.user.language())
+                    cmk.gui.i18n.localize(config.user.language)
 
                     user = users.get(config.user.id)
                     if config.user.may('general.edit_notifications') and user.get(

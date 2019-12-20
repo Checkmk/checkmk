@@ -67,21 +67,27 @@ $(PYTHON3_UNPACK): $(PACKAGE_DIR)/$(PYTHON3)/$(PYTHON3_DIR).tar.xz
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 
-$(PYTHON3_COMPILE): $(PYTHON3_UNPACK)
+$(PYTHON3_COMPILE): $(PYTHON3_UNPACK) $(OPENSSL_INTERMEDIATE_INSTALL)
 # The build with PGO/LTO enabled is mainly sequential, so a high build
 # parallelism doesn't really help. Therefore we use just -j2.
+#
+# We need to build our own OpenSSL because older distribution, that we still
+# have to support are not able to build Python 3.7+ (See CMK-3477).
 #
 # rpath: Create some dummy rpath which has enough space for later replacement
 # by the final rpath
 	cd $(PYTHON3_BUILD_DIR) ; \
 	$(TEST) "$(DISTRO_NAME)" = "SLES" && sed -i 's,#include <panel.h>,#include <ncurses/panel.h>,' Modules/_curses_panel.c ; \
-	./configure \
-	    --prefix="" \
-	    --enable-shared \
-	    --with-ensurepip=install \
-	    $(PYTHON_ENABLE_OPTIMIZATIONS) \
-	    LDFLAGS="-Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib"
-	cd $(PYTHON3_BUILD_DIR) ; $(MAKE) -j2
+	LD_LIBRARY_PATH="$(PACKAGE_OPENSSL_LD_LIBRARY_PATH)" \
+	    ./configure \
+	        --prefix="" \
+	        --enable-shared \
+	        --with-ensurepip=install \
+	        --with-openssl=$(PACKAGE_OPENSSL_DESTDIR) \
+	        $(PYTHON_ENABLE_OPTIMIZATIONS) \
+	        LDFLAGS="-Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib $(PACKAGE_OPENSSL_LDFLAGS)"
+	cd $(PYTHON3_BUILD_DIR) ; \
+	    $(MAKE) -j2
 	$(TOUCH) $@
 
 $(PYTHON3_SITECUSTOMIZE_COMPILED): $(PYTHON3_SITECUSTOMIZE_SOURCE) $(PYTHON3_COMPILE)

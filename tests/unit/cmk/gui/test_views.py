@@ -5811,25 +5811,25 @@ def test_view_row_limit(view):
 @pytest.mark.parametrize("limit,permissions,result", [
     (None, [], 1000),
 
-    ("soft", [], 1000),
-    ("hard", [], 1000),
-    ("none", [], 1000),
+    ("soft", {}, 1000),
+    ("hard", {}, 1000),
+    ("none", {}, 1000),
 
-    ("soft", ["general.ignore_soft_limit"], 1000),
-    ("hard", ["general.ignore_soft_limit"], 5000),
+    ("soft", {"general.ignore_soft_limit": True}, 1000),
+    ("hard", {"general.ignore_soft_limit": True}, 5000),
     # Strange. Shouldn't this stick to the hard limit?
-    ("none", ["general.ignore_soft_limit"], 1000),
+    ("none", {"general.ignore_soft_limit": True}, 1000),
 
-    ("soft", ["general.ignore_soft_limit", "general.ignore_hard_limit"], 1000),
-    ("hard", ["general.ignore_soft_limit", "general.ignore_hard_limit"], 5000),
-    ("none", ["general.ignore_soft_limit", "general.ignore_hard_limit"], None),
+    ("soft", {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True}, 1000),
+    ("hard", {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True}, 5000),
+    ("none", {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True}, None),
 ])
-def test_gui_view_row_limit(register_builtin_html, monkeypatch, limit, permissions, result):
+def test_gui_view_row_limit(register_builtin_html, monkeypatch, mocker, limit, permissions, result):
     if limit is not None:
         monkeypatch.setitem(html.request._vars, "limit", limit)
 
-    for perm in permissions:
-        monkeypatch.setitem(config.user.permissions, perm, True)
+    mocker.patch.object(config, "roles", {"nobody": {"permissions": permissions}})
+    mocker.patch.object(config.user, "role_ids", ["nobody"])
     assert cmk.gui.views.get_limit() == result
 
 def test_view_only_sites(view):

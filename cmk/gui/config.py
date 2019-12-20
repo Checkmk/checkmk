@@ -507,19 +507,17 @@ class LoggedInUser(object):
 
     def _load_permissions(self):
         # type: () -> None
-        # TODO: Is it necessary to cache the permissions for each user (see also method may)?
-        #       If yes make permissions at least a private attribute.
         # Prepare cache of already computed permissions
         # Make sure, admin can restore permissions in any case!
         if self.id in admin_users:
-            self.permissions = {
+            self._permissions = {
                 "general.use": True,  # use Multisite
                 "wato.use": True,  # enter WATO
                 "wato.edit": True,  # make changes in WATO...
                 "wato.users": True,  # ... with access to user management
             }
         else:
-            self.permissions = {}
+            self._permissions = {}
 
     def _load_confdir(self):
         self.confdir = config_dir + "/" + self.id.encode("utf-8")
@@ -601,10 +599,10 @@ class LoggedInUser(object):
 
     def may(self, pname):
         # type: (str) -> bool
-        if pname in self.permissions:
-            return self.permissions[pname]
+        if pname in self._permissions:
+            return self._permissions[pname]
         he_may = _may_with_roles(self.role_ids, pname)
-        self.permissions[pname] = he_may
+        self._permissions[pname] = he_may
         return he_may
 
     def need_permission(self, pname):

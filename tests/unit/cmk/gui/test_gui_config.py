@@ -948,10 +948,6 @@ def test_unauthenticated_users(user, alias, email, role_ids, baserole_id):
     assert user.confdir is None
     assert user.siteconf == {}
 
-    # Unauthenticated users don't have associated permissions. They get
-    # their permissions via their assiociated role.
-    assert user.permissions == {}
-
     assert user.role_ids == role_ids
     assert user.baserole_ids == role_ids
     assert user.attributes == {"roles": role_ids}
@@ -1057,12 +1053,6 @@ def test_logged_in_super_user_permissions(mocker):
     with pytest.raises(MKAuthException):
         user.need_permission('drink_other_peoples_milk')
 
-    user.permissions = {'drink_other_peoples_milk': True}
-    assert user.may('eat_other_peoples_cake') is True
-    assert user.may('drink_other_peoples_milk') is True
-    user.need_permission('eat_other_peoples_cake')
-    user.need_permission('drink_other_peoples_milk')
-
 
 MONITORING_USER_CACHED_PROFILE = {
     'alias': u'Test user',
@@ -1127,8 +1117,6 @@ def test_monitoring_user(monitoring_user):
     assert monitoring_user.confdir.endswith('/config_dir/test')
     assert monitoring_user.siteconf == MONITORING_USER_SITECONFIG
 
-    assert monitoring_user.permissions == {}
-
     assert monitoring_user.role_ids == ['user']
     assert monitoring_user.baserole_ids == ['user']
     assert monitoring_user.attributes == MONITORING_USER_CACHED_PROFILE
@@ -1177,13 +1165,6 @@ def test_monitoring_user_permissions(mocker, monitoring_user):
     assert monitoring_user.may('action.star') is False
     assert monitoring_user.may('general.edit_views') is True
     assert monitoring_user.may('unknown_permission') is False
-
-    # permissions are cached by the user instance
-    assert monitoring_user.permissions == {
-        'action.star': False,
-        'general.edit_views': True,
-        'unknown_permission': False,
-    }
 
     with pytest.raises(MKAuthException):
         monitoring_user.need_permission('action.start')

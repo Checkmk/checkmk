@@ -3,6 +3,7 @@
 
 #include <shellapi.h>
 #include <shlobj.h>  // known path
+#include <yaml-cpp/yaml.h>
 
 #include <filesystem>
 #include <string>
@@ -12,7 +13,6 @@
 #include "common/wtools.h"
 #include "tools/_raii.h"  // on out
 #include "tools/_tgt.h"   // we need IsDebug
-#include "yaml-cpp/yaml.h"
 
 namespace cma::cfg {
 

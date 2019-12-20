@@ -1,6 +1,8 @@
 // HEADER ONLY(mostly) Player Engine
 
 #pragma once
+#include <fmt/format.h>
+
 #include <filesystem>
 #include <iostream>
 #include <optional>
@@ -8,7 +10,6 @@
 
 #include "cma_core.h"
 #include "common/wtools.h"
-#include "fmt/format.h"
 #include "logger.h"
 #include "tools/_misc.h"
 #include "tools/_xlog.h"

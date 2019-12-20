@@ -3,6 +3,8 @@
 
 #include "pch.h"
 
+#include <yaml-cpp/yaml.h>
+
 #include <filesystem>
 
 #include "cap.h"
@@ -13,7 +15,6 @@
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_tgt.h"
-#include "yaml-cpp/yaml.h"
 
 namespace cma::cfg::cap {
 

@@ -3,6 +3,8 @@
 
 #include "upgrade.h"
 
+#include <yaml-cpp/yaml.h>
+
 #include <cstdint>
 #include <filesystem>
 #include <string>
@@ -16,7 +18,6 @@
 #include "tools/_misc.h"
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
-#include "yaml-cpp/yaml.h"
 
 namespace cma::cfg::upgrade {
 

@@ -6,12 +6,13 @@
 #include <shellapi.h>
 #endif
 
+#include <fmt/format.h>
+
 #include <string>
 #include <tuple>
 
 #include "cfg.h"
 #include "common/wtools.h"
-#include "fmt/format.h"
 #include "logger.h"
 #include "providers/ps.h"
 #include "providers/wmi.h"

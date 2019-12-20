@@ -4,6 +4,8 @@
 
 #include "cap.h"
 
+#include <yaml-cpp/yaml.h>
+
 #include <cstdint>
 #include <filesystem>
 #include <string>
@@ -18,7 +20,6 @@
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
 #include "upgrade.h"
-#include "yaml-cpp/yaml.h"
 
 // returns TRUE only if file have been removed
 static std::string ErrorCodeToMessage(std::error_code ec) {

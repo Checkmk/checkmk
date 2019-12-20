@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <yaml-cpp/yaml.h>
+
 #include <functional>
 #include <string>
 #include <string_view>
@@ -11,7 +13,6 @@
 #include "on_start.h"
 #include "onlyfrom.h"
 #include "tools/_misc.h"
-#include "yaml-cpp/yaml.h"
 
 namespace cma::cfg {
 constexpr std::string_view kBuildHashValue = "DEFADEFADEFA";

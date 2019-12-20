@@ -3,6 +3,7 @@
 
 #include "realtime.h"
 
+#include <fmt/format.h>
 #include <time.h>
 
 #include <chrono>
@@ -12,7 +13,6 @@
 #include "asio.h"
 #include "cfg.h"
 #include "encryption.h"
-#include "fmt/format.h"
 #include "logger.h"
 #include "providers/df.h"
 #include "providers/mem.h"

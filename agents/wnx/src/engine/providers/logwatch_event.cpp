@@ -4,6 +4,8 @@
 
 #include "providers/logwatch_event.h"
 
+#include <fmt/format.h>
+
 #include <filesystem>
 #include <limits>
 #include <regex>
@@ -15,7 +17,6 @@
 #include "common/wtools.h"
 #include "eventlog/eventlogbase.h"
 #include "eventlog/eventlogvista.h"
-#include "fmt/format.h"
 #include "logger.h"
 #include "providers/logwatch_event_details.h"
 #include "tools/_raii.h"

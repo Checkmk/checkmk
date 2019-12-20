@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <fmt/format.h>
 #include <time.h>
 
 #include <chrono>
@@ -15,7 +16,6 @@
 #include "cfg.h"
 #include "common/stop_watch.h"
 #include "common/wtools.h"
-#include "fmt/format.h"
 #include "logger.h"
 #include "tools/_misc.h"
 

@@ -3,6 +3,8 @@
 
 #include "pch.h"
 
+#include <yaml-cpp/yaml.h>
+
 #include <filesystem>
 
 #include "cvt.h"
@@ -14,7 +16,6 @@
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_tgt.h"
-#include "yaml-cpp/yaml.h"
 
 template <class T>
 std::string type_name() {

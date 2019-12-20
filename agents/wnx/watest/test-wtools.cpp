@@ -3,6 +3,8 @@
 
 #include "pch.h"
 
+#include <yaml-cpp/yaml.h>
+
 #include <chrono>
 #include <filesystem>
 #include <future>
@@ -15,7 +17,6 @@
 #include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
-#include "yaml-cpp/yaml.h"
 
 namespace cma::details {
 extern bool G_Service;

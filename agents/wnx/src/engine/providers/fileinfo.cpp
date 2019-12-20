@@ -4,6 +4,8 @@
 
 #include "providers/fileinfo.h"
 
+#include <fmt/format.h>
+
 #include <filesystem>
 #include <regex>
 #include <string>
@@ -12,7 +14,6 @@
 #include "cfg.h"
 #include "cma_core.h"
 #include "common/wtools.h"
-#include "fmt/format.h"
 #include "glob_match.h"
 #include "logger.h"
 #include "providers/fileinfo_details.h"

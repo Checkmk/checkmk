@@ -11,7 +11,7 @@
 #include "common/cfg_info.h"
 #include "common/wtools.h"
 #include "fmt/color.h"
-#include "fmt/format.h"
+#include <fmt/format.h>
 #include "tools/_xlog.h"
 
 // User defined converter required to logging correctly data from wstring

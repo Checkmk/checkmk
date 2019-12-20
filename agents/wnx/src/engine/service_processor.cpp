@@ -4,6 +4,7 @@
 #include "service_processor.h"
 
 #include <shlobj_core.h>
+#include <yaml-cpp/yaml.h>
 
 #include <chrono>
 #include <cstdint>  // wchar_t when compiler options set weird
@@ -15,7 +16,6 @@
 #include "realtime.h"
 #include "tools/_process.h"
 #include "upgrade.h"
-#include "yaml-cpp/yaml.h"
 
 namespace cma::srv {
 extern bool global_stop_signaled;  // semi-hidden global variable for global

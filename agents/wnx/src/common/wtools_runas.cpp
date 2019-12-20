@@ -12,9 +12,9 @@
 #include <winsafer.h>
 // end
 
+#include <fmt/format.h>
 #include <string.h>
 
-#include "fmt/format.h"
 #include "logger.h"
 #include "tools/_misc.h"
 #include "wtools.h"

@@ -7,6 +7,7 @@
 #include <shlobj.h>  // known path
 #include <versionhelpers.h>
 #include <windows.h>
+#include <yaml-cpp/yaml.h>
 
 #include <atomic>
 #include <filesystem>
@@ -27,7 +28,6 @@
 #include "tools/_raii.h"     // on out
 #include "tools/_tgt.h"      // we need IsDebug
 #include "windows_service_api.h"
-#include "yaml-cpp/yaml.h"
 
 namespace cma::cfg {
 using ConfigRepo = MicroRepo<cma::cfg::details::ConfigInfo>;

@@ -1,6 +1,8 @@
 // Assorted routines
 #pragma once
 
+#include <fmt/format.h>
+
 #include <cctype>
 #include <chrono>
 #include <cstring>
@@ -13,7 +15,6 @@
 #include <type_traits>
 #include <vector>
 
-#include "fmt/format.h"
 #include "tools/_raii.h"
 #include "tools/_tgt.h"
 #include "tools/_xlog.h"

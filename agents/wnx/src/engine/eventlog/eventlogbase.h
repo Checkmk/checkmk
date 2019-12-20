@@ -1,6 +1,7 @@
 #ifndef EventLogBase_h
 #define EventLogBase_h
 
+#include <fmt/format.h>
 #include <time.h>
 
 #include <functional>
@@ -9,7 +10,6 @@
 
 #include "common/cfg_info.h"
 #include "common/wtools.h"
-#include "fmt/format.h"
 
 namespace cma::evl {
 class EventLogRecordBase {

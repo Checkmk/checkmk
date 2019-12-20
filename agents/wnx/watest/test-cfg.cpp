@@ -3,6 +3,8 @@
 
 #include "pch.h"
 
+#include <yaml-cpp/yaml.h>
+
 #include <filesystem>
 
 #include "cap.h"
@@ -21,7 +23,6 @@
 #include "tools/_process.h"
 #include "tools/_tgt.h"
 #include "upgrade.h"
-#include "yaml-cpp/yaml.h"
 
 // we want to avoid those data public
 namespace cma {

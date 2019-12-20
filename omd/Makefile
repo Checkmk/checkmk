@@ -257,6 +257,11 @@ debian/control: debian/control.in
 
 # Called by our release system to build DEB packages
 #
+# Check out "man debuild" and "man dpkg-buildpackage" to get a description of
+# the build mechanism.
+# Please keep in bind that we are building for multiple Ubuntu/Debian version
+# and need to be compatible to all of the tool chains shipped with them.
+#
 # In case we want to have fast package creation without need to rebuild
 # everything, we'd have to
 # a) add -nc fo jessie/trusty/xenial

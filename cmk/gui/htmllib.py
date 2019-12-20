@@ -73,7 +73,6 @@ from typing import (  # pylint: disable=unused-import
     Union, Text, Optional,
 )
 from pathlib2 import Path
-import werkzeug.datastructures
 
 import six
 
@@ -1164,16 +1163,13 @@ class html(ABCHTMLGenerator):
             (key, value) for key, value in self.request.args.items(multi=True) if key != varname
         ]
         self.request.environ['QUERY_STRING'] = urllib.urlencode(decoded_qs)
-        # We remove the args, __dict__ entry to allow @cached_property to reload the args from
+        # We remove the form entry. As this entity is never copied it will be modified within
+        # it's cache.
+        dict.pop(self.request.form, varname, None)
+        # We remove the __dict__ entries to allow @cached_property to reload them from
         # the environment. The rest of the request object stays the same.
         self.request.__dict__.pop('args', None)
         self.request.__dict__.pop('values', None)
-
-        # Temporarily hack to remove unwanted POST vars
-        try:
-            werkzeug.datastructures.MultiDict.pop(self.request.form, varname)
-        except KeyError:
-            pass
 
     # TODO: For historic reasons this needs to return byte strings. We will clean this up
     # soon, before moving to Python 3.

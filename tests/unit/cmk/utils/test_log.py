@@ -15,6 +15,8 @@ def test_get_logger():
 
 def test_setup_console_logging(capsys):
     out, err = capsys.readouterr()
+    log.clear_console_logging()
+
     assert out == ""
     assert err == ""
 

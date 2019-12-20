@@ -74,11 +74,7 @@ else:
 VERBOSE = 15
 logging.addLevelName(VERBOSE, "VERBOSE")
 
-# Set default logging handler to avoid "No handler found" warnings.
-# Python 2.7+
 logger = logging.getLogger("cmk")
-logger.addHandler(logging.NullHandler())
-logger.setLevel(logging.INFO)
 
 
 def get_formatter(format_str="%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"):
@@ -87,6 +83,17 @@ def get_formatter(format_str="%(asctime)s [%(levelno)s] [%(name)s %(process)d] %
     Check_MK log format by default. You can also set another format
     if you like."""
     return logging.Formatter(format_str)
+
+
+def clear_console_logging():
+    logger.handlers[:] = []
+    logger.addHandler(logging.NullHandler())
+    logger.setLevel(logging.INFO)
+
+
+# Set default logging handler to avoid "No handler found" warnings.
+# Python 2.7+
+clear_console_logging()
 
 
 def setup_console_logging():

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -22,15 +23,3 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
-from cmk.gui.wsgi.applications.checkmk import CheckmkApp
-from cmk.gui.wsgi.applications.rest_api import (
-    CheckmkApiApp,
-    openapi_spec_dir,
-)
-
-__all__ = [
-    'CheckmkApp',
-    'CheckmkApiApp',
-    'openapi_spec_dir',
-]

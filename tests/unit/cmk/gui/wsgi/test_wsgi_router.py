@@ -1,7 +1,6 @@
 import ast
 import json
 import os
-import logging
 from cookielib import CookieJar
 from urllib import urlencode
 
@@ -9,6 +8,7 @@ import pytest
 import webtest
 
 import cmk
+from cmk.utils import store
 from cmk.gui.wsgi import make_app
 
 # pylint: disable=redefined-outer-name
@@ -22,11 +22,10 @@ class WebTestAppForCMK(webtest.TestApp):
         self.password = None
 
     def set_credentials(self, username, password):
-        logging.warn("Setting username and password")
         self.username = username
         self.password = password
 
-    def api_request(self, action, request, output_format='json'):
+    def api_request(self, action, request, output_format='json', **kw):
         if self.username is None or self.password is None:
             raise RuntimeError("Not logged in.")
         qs = urlencode([
@@ -42,7 +41,13 @@ class WebTestAppForCMK(webtest.TestApp):
         else:
             raise NotImplementedError("Format %s not implemented" % output_format)
 
-        _resp = self.post('/NO_SITE/check_mk/webapi.py?' + qs, params={'request': request})
+        _resp = self.post('/NO_SITE/check_mk/webapi.py?' + qs,
+                          params={
+                              'request': request,
+                              '_username': self.username,
+                              '_secret': self.password
+                          },
+                          **kw)
         assert "Invalid automation secret for user" not in _resp.body
         assert "API is only available for automation users" not in _resp.body
 
@@ -57,8 +62,11 @@ class WebTestAppForCMK(webtest.TestApp):
 @pytest.fixture(scope='function')
 def wsgi_app(monkeypatch):
     monkeypatch.setenv("OMD_SITE", "NO_SITE")
+    store.makedirs(cmk.utils.paths.omd_root + '/var/check_mk/web')
+    store.makedirs(cmk.utils.paths.omd_root + '/var/check_mk/php-api')
+    store.makedirs(cmk.utils.paths.omd_root + '/var/check_mk/wato/php-api')
+    store.makedirs(cmk.utils.paths.omd_root + '/tmp/check_mk')
     wsgi_callable = make_app()
-    logging.warn('Making app %d', id(wsgi_callable))
     cookies = CookieJar()
     return WebTestAppForCMK(wsgi_callable, cookiejar=cookies)
 
@@ -74,6 +82,23 @@ def test_normal_auth(
     resp = login.form.submit('_login', index=1)
 
     assert "Invalid credentials." not in resp.body
+
+
+def test_deploy_agent(wsgi_app):
+    response = wsgi_app.get('/NO_SITE/check_mk/deploy_agent.py')
+    assert response.body.startswith("Missing or invalid")
+
+    response = wsgi_app.get('/NO_SITE/check_mk/deploy_agent.py?mode=agent')
+    assert response.body.startswith("Missing host")
+
+
+def test_openapi_app(
+    wsgi_app,  # type: WebTestAppForCMK
+    with_automation_user,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    wsgi_app.get("/NO_SITE/check_mk/api/v0/version")
 
 
 @pytest.mark.skip
@@ -114,6 +139,8 @@ def test_legacy_webapi(
             },
             output_format='python',
         )
+        assert isinstance(resp, dict), resp
+        assert isinstance(resp['result'], dict), resp['result']
         assert resp['result']['hostname'] == hostname
         assert resp['result']['attributes']['ipaddress'] == ipaddress
 
@@ -135,3 +162,31 @@ def test_legacy_webapi(
         _remove(cmk.utils.paths.omd_root + "/etc/check_mk/conf.d/wato/notifications.mk")
         _remove(cmk.utils.paths.omd_root + "/etc/check_mk/conf.d/wato/tags.mk")
         _remove(cmk.utils.paths.omd_root + "/etc/check_mk/conf.d/wato/eins/zwei/hosts.mk")
+
+
+def test_cmk_run_cron(wsgi_app):
+    wsgi_app.get("/NO_SITE/check_mk/run_cron.py", status=200)
+
+
+def test_cmk_pnp_template(wsgi_app):
+    wsgi_app.get("/NO_SITE/check_mk/pnp_template.py", status=200)
+
+
+def test_cmk_automation(wsgi_app):
+    response = wsgi_app.get("/NO_SITE/check_mk/automation.py", status=200)
+    assert response.body == "Missing secret for automation command."
+
+
+def test_cmk_ajax_graph_images(wsgi_app):
+    resp = wsgi_app.get("/NO_SITE/check_mk/ajax_graph_images.py", status=200)
+    assert resp.body.startswith("You are not allowed")
+
+    resp = wsgi_app.get("/NO_SITE/check_mk/ajax_graph_images.py",
+                        status=200,
+                        extra_environ={'REMOTE_ADDR': '127.0.0.1'})
+    assert resp.body == ""
+
+
+def test_options_disabled(wsgi_app):
+    # Should be 403 in integration test.
+    wsgi_app.options("/", status=404)

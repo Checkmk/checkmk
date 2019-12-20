@@ -487,3 +487,20 @@ def release_all_locks():
     for path in list(_acquired_locks.keys()):
         release_lock(path)
     _acquired_locks.clear()
+
+
+@contextmanager
+def cleanup_locks():
+    """Context-manager to release all memorized locks at the end of the block.
+
+    This is a hack which should be removed. In order to make this happen, every lock shall
+    itself only be used as a context-manager.
+    """
+    try:
+        yield
+    finally:
+        try:
+            release_all_locks()
+        except Exception:
+            logger.exception("Error while releasing locks after block.")
+            raise

@@ -1,6 +1,5 @@
 # pylint: disable=redefined-outer-name
 import contextlib
-import logging
 import os
 
 import pathlib2
@@ -87,7 +86,6 @@ def _create_and_destroy_user(automation=False):
     password = 'Ischbinwischtisch'
     edit_users(_mk_user_obj(username, password, automation=automation))
     yield username, password
-    logging.warn('Deleting user: %s', username)
     delete_users([username])
     if not contact_existed:
         os.unlink(contacts_mk)

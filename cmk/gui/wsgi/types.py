@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -22,15 +23,30 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+from typing import List, Union, Literal, TypedDict
 
-from cmk.gui.wsgi.applications.checkmk import CheckmkApp
-from cmk.gui.wsgi.applications.rest_api import (
-    CheckmkApiApp,
-    openapi_spec_dir,
+Scope = List[str]
+UnixTimeStamp = int  # restrict to positive numbers
+TokenType = Union[Literal["access_token"], Literal["refresh_token"]]
+Audience = Union[str, List[str]]
+RFC7662 = TypedDict(
+    'RFC7662',
+    {
+        'active': bool,
+        'scope': str,
+        'client_id': str,
+        'username': str,
+        'token_type': TokenType,
+        'exp': UnixTimeStamp,  # expires
+        'iat': UnixTimeStamp,  # issued
+        'nbf': UnixTimeStamp,  # not before
+        'sub': str,  # subject
+        'aud': Audience,
+        'iss': str,  # issuer
+        'jti': str,  # json web token-identifier
+    },
+    total=False,
 )
-
-__all__ = [
-    'CheckmkApp',
-    'CheckmkApiApp',
-    'openapi_spec_dir',
-]
+HostGroup = TypedDict('HostGroup', {
+    'alias': str,
+})

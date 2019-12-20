@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-import contextlib
 import functools
 import httplib
 import os
@@ -36,6 +35,7 @@ import cmk.gui.htmllib
 import cmk.gui.http
 import cmk.utils.paths
 import cmk.utils.profile
+import cmk.utils.store
 
 from cmk.gui import config, login, pages, modules
 from cmk.gui.exceptions import (
@@ -47,17 +47,15 @@ from cmk.gui.exceptions import (
     FinalizeRequest,
     HTTPRedirect,
 )
-from cmk.gui.globals import AppContext, RequestContext, html
+from cmk.gui.globals import AppContext, RequestContext, html, request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.utils import store
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.
-#  * consolidate page handler handling
 
 
-def _auth(request, func):
+def _auth(func):
     # Ensure the user is authenticated. This call is wrapping all the different
     # authentication modes the Check_MK GUI supports and initializes the logged
     # in user objects.
@@ -107,7 +105,7 @@ def _noauth(func):
     return _call_noauth
 
 
-def get_and_wrap_page(request, script_name):
+def get_and_wrap_page(script_name):
     """Get the page handler and wrap authentication logic when needed.
 
     For all "noauth" page handlers the wrapping part is skipped. In the `_auth` wrapper
@@ -126,7 +124,7 @@ def get_and_wrap_page(request, script_name):
     if _handler is None:
         return _page_not_found
 
-    return _auth(request, _handler)
+    return _auth(_handler)
 
 
 def _plain_error():
@@ -246,6 +244,23 @@ def _render_exception(e, title=""):
         html.footer()
 
 
+def with_context_middleware(app):
+    """Middleware which constructs the right context on each request.
+    """
+    @functools.wraps(app)
+    def with_context(environ, start_response):
+        req = cmk.gui.http.Request(environ)
+        resp = cmk.gui.http.Response(is_secure=req.is_secure)
+
+        with AppContext(app), RequestContext(cmk.gui.htmllib.html(req, resp)):
+            config.initialize()
+            html.init_modes()
+
+            return app(environ, start_response)
+
+    return with_context
+
+
 def profiling_middleware(func):
     """Wrap an WSGI app in a profiling context manager"""
     def profiler(environ, start_response):
@@ -258,26 +273,10 @@ def profiling_middleware(func):
     return profiler
 
 
-@contextlib.contextmanager
-def cleanup_locks():
-    """Release all memorized locks at the end of the block.
-
-    This is a hack which should be removed. In order to make this happen, every lock shall
-    only be used as a context-manager.
-    """
-    try:
-        yield
-    finally:
-        try:
-            store.release_all_locks()
-        except Exception:
-            logger.exception("error releasing locks after WSGI request")
-            raise
-
-
 class CheckmkApp(object):
     """The Check_MK GUI WSGI entry point"""
     def __init__(self):
+        self.wsgi_app = with_context_middleware(self.wsgi_app)
         self.wsgi_app = profiling_middleware(self.wsgi_app)
 
     def __call__(self, environ, start_response):
@@ -285,59 +284,57 @@ class CheckmkApp(object):
 
     def wsgi_app(self, environ, start_response):  # pylint: disable=method-hidden
         """Is called by the WSGI server to serve the current page"""
-        request = cmk.gui.http.Request(environ)
-        response = cmk.gui.http.Response(is_secure=request.is_secure)
-        with AppContext(self), RequestContext(cmk.gui.htmllib.html(request, response)),\
-                cleanup_locks():
-            self._process_request(request, response)
+        with cmk.utils.store.cleanup_locks():
+            _process_request()
             return response(environ, start_response)
 
-    def _process_request(self, request, response):  # pylint: disable=too-many-branches
-        try:
-            config.initialize()
-            html.init_modes()
 
-            # Make sure all plugins are available as early as possible. At least
-            # we need the plugins (i.e. the permissions declared in these) at the
-            # time before the first login for generating auth.php.
-            _load_all_plugins()
+def _process_request():  # pylint: disable=too-many-branches
+    try:
+        config.initialize()
+        html.init_modes()
 
-            page_handler = get_and_wrap_page(request, html.myfile)
-            page_handler()
-            # If page_handler didn't raise we assume everything is OK.
-            response.status_code = httplib.OK
+        # Make sure all plugins are available as early as possible. At least
+        # we need the plugins (i.e. the permissions declared in these) at the
+        # time before the first login for generating auth.php.
+        _load_all_plugins()
 
-        except HTTPRedirect as e:
-            response.status_code = e.status
-            response.headers["Location"] = e.url
+        page_handler = get_and_wrap_page(html.myfile)
+        page_handler()
+        # If page_handler didn't raise we assume everything is OK.
+        response.status_code = httplib.OK
 
-        except FinalizeRequest as e:
-            response.status_code = e.status
+    except HTTPRedirect as e:
+        response.status_code = e.status
+        response.headers["Location"] = e.url
 
-        except livestatus.MKLivestatusNotFoundError as e:
-            _render_exception(e, title=_("Data not found"))
+    except FinalizeRequest as e:
+        response.status_code = e.status
 
-        except MKUserError as e:
-            _render_exception(e, title=_("Invalid user Input"))
+    except livestatus.MKLivestatusNotFoundError as e:
+        _render_exception(e, title=_("Data not found"))
 
-        except MKAuthException as e:
-            _render_exception(e, title=_("Permission denied"))
+    except MKUserError as e:
+        _render_exception(e, title=_("Invalid user Input"))
 
-        except livestatus.MKLivestatusException as e:
-            _render_exception(e, title=_("Livestatus problem"))
-            response.status_code = httplib.BAD_GATEWAY
+    except MKAuthException as e:
+        _render_exception(e, title=_("Permission denied"))
 
-        except MKUnauthenticatedException as e:
-            _render_exception(e, title=_("Not authenticated"))
-            response.status_code = httplib.UNAUTHORIZED
+    except livestatus.MKLivestatusException as e:
+        _render_exception(e, title=_("Livestatus problem"))
+        response.status_code = httplib.BAD_GATEWAY
 
-        except MKConfigError as e:
-            _render_exception(e, title=_("Configuration error"))
-            logger.error("MKConfigError: %s", e)
+    except MKUnauthenticatedException as e:
+        _render_exception(e, title=_("Not authenticated"))
+        response.status_code = httplib.UNAUTHORIZED
 
-        except MKGeneralException as e:
-            _render_exception(e, title=_("General error"))
-            logger.error("MKGeneralException: %s", e)
+    except MKConfigError as e:
+        _render_exception(e, title=_("Configuration error"))
+        logger.error("MKConfigError: %s", e)
 
-        except Exception:
-            crash_reporting.handle_exception_as_gui_crash_report(_plain_error(), _fail_silently())
+    except MKGeneralException as e:
+        _render_exception(e, title=_("General error"))
+        logger.error("MKGeneralException: %s", e)
+
+    except Exception:
+        crash_reporting.handle_exception_as_gui_crash_report(_plain_error(), _fail_silently())

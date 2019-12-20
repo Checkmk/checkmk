@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -23,14 +23,23 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.gui.wsgi.applications.checkmk import CheckmkApp
-from cmk.gui.wsgi.applications.rest_api import (
-    CheckmkApiApp,
-    openapi_spec_dir,
-)
+import sys
 
-__all__ = [
-    'CheckmkApp',
-    'CheckmkApiApp',
-    'openapi_spec_dir',
-]
+import cmk
+from cmk.gui.globals import request
+
+
+def search(user=None, token_info=None):
+    return {
+        "site": cmk.omd_site(),
+        "group": request.environ.get('mod_wsgi.application_group', 'unknown'),
+        "versions": {
+            "apache": request.environ.get('apache.version', 'unknown'),
+            "checkmk": cmk.omd_version(),
+            "python": sys.version,
+            'mod_wsgi': request.environ.get('mod_wsgi.version', 'unknown'),
+            'wsgi': request.environ['wsgi.version'],
+        },
+        "edition": cmk.edition_short(),
+        "demo": cmk.is_demo(),
+    }

@@ -1,0 +1,131 @@
+openapi: 3.0.0
+info:
+  title: Checkmk REST API
+  description: API for Checkmk. Here you can do all the things.
+  license:
+    name: GNU General Public License version 2
+  contact:
+    name: Checkmk Team
+    email: feedback@check-mk.org
+  version: '0.0.1'
+externalDocs:
+  url: https://checkmk.com/cms.html
+
+components:
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        WWW_Authenticate:
+          schema:
+            type: string
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  parameters:
+    ident:  # This can be used for path identifiers like /resource/{identifier}
+      name: ident
+      in: path
+      required: true
+      description: The identifier.
+      schema:
+        type: string
+
+    HostGroup:
+      name: host_group
+      in: body
+      required: true
+      schema:
+        $ref: '#/components/schemas/HostGroup'
+  schemas:
+    # Schema for error response body
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - code
+        - message
+    Host:
+      type: object
+      properties:
+        alias:
+          type: string
+          nullable: true
+        ipv4:
+          type: string
+          nullable: true
+    HostGroup:
+      type: object
+      properties:
+        alias:
+          type: string
+          nullable: true
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: username password
+      x-bearerInfoFunc: cmk.gui.wsgi.auth.bearer_auth
+
+security:
+  - BearerAuth: []
+
+paths:
+  /version:
+    get:
+      summary: Tell the version of various installed components.
+      responses:
+        200:
+          description: A JSON object with the following fields.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  api:
+                    type: string
+                  checkmk:
+                    type: string
+                  site:
+                    type: string
+                  python:
+                    type: string
+  /host_group/{ident}:
+    parameters:
+      - $ref: '#/components/parameters/ident'
+    get:
+      summary: Retrieve the content of the host-group entry.
+      responses:
+        200:
+          description: A JSON object with the following fields.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostGroup'
+    post:
+      summary: Edit the content of the host-group entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HostGroup'
+      responses:
+        200:
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostGroup'

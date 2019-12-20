@@ -25,38 +25,98 @@
 import contextlib
 import threading
 
+from werkzeug.exceptions import HTTPException
 from werkzeug.routing import Map, Submount, Rule
 
-from cmk.gui.wsgi.applications.checkmk import CheckmkApp
+import cmk
+from cmk.gui.wsgi.applications import CheckmkApp, CheckmkApiApp, openapi_spec_dir
 from cmk.gui.wsgi.applications.helper_apps import dump_environ_app
 
 WSGI_ENV_ARGS_NAME = 'x-checkmk.args'
 
 
 def create_url_map():
-    app = CheckmkApp()
+    """Instantiate all WSGI Apps and put them into the URL-Map."""
+    _api_app = CheckmkApiApp(
+        __name__,
+        specification_dir=openapi_spec_dir(),
+    )
+    # NOTE
+    # The URL will always contain the most up to date major version number, so that clients
+    # exploring the API (browsers, etc.) will have a structural stability guarantee. Within major
+    # versions only additions of fields or endpoints are allowed, never field changes or removals.
+    # If a new major version is created it should be ADDED here and not replace the older version.
+    # NOTE: v0 means totally unstable until we hit v1.
+    _api_app.add_api_blueprint(
+        'checkmk.yaml',
+        base_path='/%s/check_mk/api/v0/' % cmk.omd_site(),
+        validate_responses=True,
+    )
+
+    wrapped_api_app = OverrideRequestMethod(_api_app)
+    cmk_app = CheckmkApp()
 
     return Map([
         Submount('/<string:site>', [
             Submount("/check_mk", [
-                Rule("/", endpoint=app),
+                Rule("/", endpoint=cmk_app),
                 Rule("/dump.py", endpoint=dump_environ_app),
-                Rule("/<string:script>", endpoint=app),
+                Submount('/api', [
+                    Rule("/", endpoint=wrapped_api_app),
+                    Rule("/<path:path>", endpoint=wrapped_api_app),
+                ]),
+                Rule("/<string:script>", endpoint=cmk_app),
             ]),
         ])
     ])
 
 
+class OverrideRequestMethod(object):
+    """Middleware to allow inflexible clients to override the HTTP request method.
+
+    Common convention is to allow for a X-HTTP-Method-Override HTTP header to be set.
+
+    Please be aware that no validation for a "correct" HTTP verb is being done by this middleware,
+    as this should be handled by other layers.
+    """
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        override = environ.get('HTTP_X_HTTP_METHOD_OVERRIDE')
+        if override:
+            environ['REQUEST_METHOD'] = override
+        return self.app(environ, start_response)
+
+
 def router(raw_environ, start_response, _url_map=[]):  # pylint: disable=dangerous-default-value
-    # We create the Environment as late as possible so that we can use it within our tests.
-    with threading.Lock():
-        if not _url_map:
-            _url_map.append(create_url_map())
-        url_map = _url_map[0]
+    """Route the requests to the correct application.
+
+    This router uses Werkzeug's URL-Map system to dispatch to the correct application. The
+    applications are stored as references within the URL-Map and can then be called directly,
+    without the necessity of doing import-magic.
+
+    We cache the URL-Map after it has been created at the first request. There is currently no
+    way to clear this cache, nor should there be a need to do so.
+    """
+    # We try not to hit a lock on every request, only when we assume it's the first one.
+    if not _url_map:
+        with threading.Lock():
+            # We create the URL-Map as late as possible so that the Apps are not instantiated
+            # at import-time where they would try to create their contexts prematurely.
+            if not _url_map:
+                _url_map.append(create_url_map())
+
+    url_map = _url_map[0]
 
     with _fixed_checkmk_env(raw_environ) as environ:
         urls = url_map.bind_to_environ(environ)
-        endpoint, args = urls.match()
+        try:
+            endpoint, args = urls.match()
+        except HTTPException as e:
+            # HTTPExceptions are WSGI apps
+            endpoint = e
+            args = ()
 
     raw_environ[WSGI_ENV_ARGS_NAME] = args
     return endpoint(raw_environ, start_response)

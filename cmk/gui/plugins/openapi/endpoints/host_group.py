@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -22,15 +23,19 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+from typing import Optional  # pylint: disable=unused-import
 
-from cmk.gui.wsgi.applications.checkmk import CheckmkApp
-from cmk.gui.wsgi.applications.rest_api import (
-    CheckmkApiApp,
-    openapi_spec_dir,
-)
+from cmk.gui.watolib.groups import load_host_group_information, edit_group
+from cmk.gui.wsgi.types import RFC7662, HostGroup  # pylint: disable=unused-import
 
-__all__ = [
-    'CheckmkApp',
-    'CheckmkApiApp',
-    'openapi_spec_dir',
-]
+
+def post(ident, body, user=None, token_info=None):
+    # type: (str, HostGroup, Optional[str], Optional[RFC7662]) -> HostGroup
+    edit_group(ident, 'host', body)
+    return get(ident)
+
+
+def get(ident, user=None, token_info=None):
+    # type: (str, Optional[str], Optional[RFC7662]) -> HostGroup
+    groups = load_host_group_information()
+    return groups[ident]

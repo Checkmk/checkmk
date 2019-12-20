@@ -2594,7 +2594,7 @@ class QueryGET(Query):
         # Fix this by making the default values unicode and skip unicode conversion
         # here (for performance reasons) because argument is already unicode.
         if operator_name == 'in':
-            argument = map(convert, argument.split())
+            argument = list(map(convert, argument.split()))
         else:
             argument = convert(argument)
 

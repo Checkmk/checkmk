@@ -826,7 +826,7 @@ metric_info["mem_trend"] = {
 }
 
 metric_info["trend_hoursleft"] = {
-    "title": _("Hours left until full"),
+    "title": _("Time left until full"),
     "unit": "s",
     "color": "#94b65a",
 }

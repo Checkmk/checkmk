@@ -60,6 +60,9 @@ def test_open_log(tmp_path):
 
 
 def test_set_verbosity():
+    root = logging.getLogger('cmk')
+    root.setLevel(logging.INFO)
+
     l = logging.getLogger("cmk.test_logger")
     assert l.getEffectiveLevel() == logging.INFO
     assert l.isEnabledFor(log.VERBOSE) is False
@@ -82,3 +85,6 @@ def test_set_verbosity():
 
     with pytest.raises(ValueError):
         log.logger.setLevel(log.verbosity_to_log_level(3))
+
+    # Reset verbosity for next test run.
+    log.logger.setLevel(log.verbosity_to_log_level(0))

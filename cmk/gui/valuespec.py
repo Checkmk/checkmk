@@ -85,6 +85,8 @@ seconds_per_day = 86400
 # Some arbitrary object for checking whether or not default_value was set
 _DEF_VALUE = object()
 
+ValueSpecValidateFunc = Callable[[Any, str], None]
+
 
 class ValueSpec(object):
     """Abstract base class of all value declaration classes"""
@@ -4281,6 +4283,9 @@ class Tuple(ValueSpec):
         for no, (element, val) in enumerate(zip(self._elements, value)):
             vp = varprefix + "_" + str(no)
             element.validate_datatype(val, vp)
+
+
+DictionaryEntry = TypingTuple[str, ValueSpec]
 
 
 class Dictionary(ValueSpec):

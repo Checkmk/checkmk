@@ -29,7 +29,7 @@
 
 import abc
 import time
-from typing import Dict, List, Tuple, Text, Optional  # pylint: disable=unused-import
+from typing import Union, Dict, List, Tuple, Text, Optional  # pylint: disable=unused-import
 import six
 
 from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
@@ -40,6 +40,8 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+
+VisualContext = Dict[str, Union[str, Dict[str, str]]]
 
 
 class VisualInfo(six.with_metaclass(abc.ABCMeta, object)):

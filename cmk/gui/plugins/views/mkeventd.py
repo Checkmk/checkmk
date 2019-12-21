@@ -801,7 +801,6 @@ def render_delete_event_icons(row):
             ident = int(html.request.var("id"))
 
             import cmk.gui.dashboard as dashboard
-            dashboard.load_dashboards()
             view = dashboard.get_dashlet(html.request.var("name"), ident)
 
             # These actions are not performed within the dashlet. Assume the title url still

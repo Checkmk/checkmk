@@ -27,17 +27,26 @@
 
 import abc
 import json
+import copy
 from typing import (  # pylint: disable=unused-import
     Optional, Any, Dict, Union, Tuple, Text, List, Callable)
 
 import six
 
 import cmk.utils.plugin_registry
+from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
 
+from cmk.gui.i18n import _
+from cmk.gui.exceptions import MKGeneralException
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
-from cmk.gui.globals import html
+from cmk.gui.globals import g, html
 from cmk.gui.valuespec import ValueSpec, ValueSpecValidateFunc, DictionaryEntry  # pylint: disable=unused-import
+from cmk.gui.plugins.visuals.utils import VisualContext  # pylint: disable=unused-import
+from cmk.gui.plugins.views.utils import (
+    get_permitted_views,
+    get_all_views,
+)
 
 DashboardName = str
 DashboardConfig = Dict[str, Any]
@@ -439,3 +448,208 @@ class DashletRegistry(cmk.utils.plugin_registry.ClassRegistry):
 
 
 dashlet_registry = DashletRegistry()
+
+
+# TODO: Same as in cmk.gui.plugins.views.utils.ViewStore, centralize implementation?
+class DashboardStore(object):
+    @classmethod
+    def get_instance(cls):
+        """Use the request globals to prevent multiple instances during a request"""
+        if 'dashboard_store' not in g:
+            g.dashboard_store = cls()
+        return g.dashboard_store
+
+    def __init__(self):
+        self.all = self._load_all()
+        self.permitted = self._load_permitted(self.all)
+
+    def _load_all(self):
+        # type: () -> Dict[Tuple[UserId, DashboardName], DashboardConfig]
+        """Loads all definitions from disk and returns them"""
+        _transform_builtin_dashboards()
+        return _transform_dashboards(visuals.load('dashboards', builtin_dashboards))
+
+    def _load_permitted(self, all_dashboards):
+        # type: (Dict[Tuple[UserId, DashboardName], DashboardConfig]) -> Dict[DashboardName, DashboardConfig]
+        """Returns all defitions that a user is allowed to use"""
+        return visuals.available('dashboards', all_dashboards)
+
+
+def save_all_dashboards():
+    # type: () -> None
+    visuals.save('dashboards', get_all_dashboards())
+
+
+def get_all_dashboards():
+    # type: () -> Dict[Tuple[UserId, DashboardName], DashboardConfig]
+    return DashboardStore.get_instance().all
+
+
+def get_permitted_dashboards():
+    # type: () -> Dict[DashboardName, DashboardConfig]
+    return DashboardStore.get_instance().permitted
+
+
+# During implementation of the dashboard editor and recode of the visuals
+# we had serveral different data structures, for example one where the
+# views in user dashlets were stored with a context_type instead of the
+# "single_info" key, which is the currently correct one.
+#
+# This code transforms views from user_dashboards.mk which have been
+# migrated/created with daily snapshots from 2014-08 till beginning 2014-10.
+# FIXME: Can be removed one day. Mark as incompatible change or similar.
+def _transform_dashboards(boards):
+    # type: (Dict[Tuple[UserId, DashboardName], DashboardConfig]) -> Dict[Tuple[UserId, DashboardName], DashboardConfig]
+    for dashboard in boards.itervalues():
+        visuals.transform_old_visual(dashboard)
+
+        # Also transform dashlets
+        for dashlet in dashboard['dashlets']:
+            visuals.transform_old_visual(dashlet)
+
+            if dashlet['type'] == 'pnpgraph':
+                if 'service' not in dashlet['single_infos']:
+                    dashlet['single_infos'].append('service')
+                if 'host' not in dashlet['single_infos']:
+                    dashlet['single_infos'].append('host')
+
+    return boards
+
+
+# be compatible to old definitions, where even internal dashlets were
+# referenced by url, e.g. dashboard['url'] = 'hoststats.py'
+# FIXME: can be removed one day. Mark as incompatible change or similar.
+def _transform_builtin_dashboards():
+    # type: () -> None
+    if 'builtin_dashboards_transformed' in g:
+        return  # Only do this once
+    for name, dashboard in builtin_dashboards.items():
+        # Do not transform dashboards which are already in the new format
+        if 'context' in dashboard:
+            continue
+
+        # Transform the dashlets
+        for nr, dashlet in enumerate(dashboard['dashlets']):
+            dashlet.setdefault('show_title', True)
+
+            if dashlet.get('url', '').startswith('dashlet_hoststats') or \
+                dashlet.get('url', '').startswith('dashlet_servicestats'):
+
+                # hoststats and servicestats
+                dashlet['type'] = dashlet['url'][8:].split('.', 1)[0]
+
+                if '?' in dashlet['url']:
+                    # Transform old parameters:
+                    # wato_folder
+                    # host_contact_group
+                    # service_contact_group
+                    paramstr = dashlet['url'].split('?', 1)[1]
+                    dashlet['context'] = {}
+                    for key, val in [p.split('=', 1) for p in paramstr.split('&')]:
+                        if key == 'host_contact_group':
+                            dashlet['context']['opthost_contactgroup'] = {
+                                'neg_opthost_contact_group': '',
+                                'opthost_contact_group': val,
+                            }
+                        elif key == 'service_contact_group':
+                            dashlet['context']['optservice_contactgroup'] = {
+                                'neg_optservice_contact_group': '',
+                                'optservice_contact_group': val,
+                            }
+                        elif key == 'wato_folder':
+                            dashlet['context']['wato_folder'] = {
+                                'wato_folder': val,
+                            }
+
+                del dashlet['url']
+
+            elif dashlet.get('urlfunc') and not isinstance(dashlet['urlfunc'], str):
+                raise MKGeneralException(
+                    _('Unable to transform dashlet %d of dashboard %s: '
+                      'the dashlet is using "urlfunc" which can not be '
+                      'converted automatically.') % (nr, name))
+
+            elif dashlet.get('url', '') != '' or dashlet.get('urlfunc') or dashlet.get('iframe'):
+                # Normal URL based dashlet
+                dashlet['type'] = 'url'
+
+                if dashlet.get('iframe'):
+                    dashlet['url'] = dashlet['iframe']
+                    del dashlet['iframe']
+
+            elif dashlet.get('view', '') != '':
+                # Transform views
+                # There might be more than the name in the view definition
+                view_name = dashlet['view'].split('&')[0]
+
+                # Copy the view definition into the dashlet
+                copy_view_into_dashlet(dashlet, nr, view_name, load_from_all_views=True)
+                del dashlet['view']
+
+            else:
+                raise MKGeneralException(
+                    _('Unable to transform dashlet %d of dashboard %s. '
+                      'You will need to migrate it on your own. Definition: %r') %
+                    (nr, name, html.attrencode(dashlet)))
+
+            dashlet.setdefault('context', {})
+            dashlet.setdefault('single_infos', [])
+
+        # the modification time of builtin dashboards can not be checked as on user specific
+        # dashboards. Set it to 0 to disable the modification chech.
+        dashboard.setdefault('mtime', 0)
+
+        dashboard.setdefault('show_title', True)
+        if dashboard['title'] is None:
+            dashboard['title'] = _('No title')
+            dashboard['show_title'] = False
+
+        dashboard.setdefault('single_infos', [])
+        dashboard.setdefault('context', {})
+        dashboard.setdefault('topic', _('Overview'))
+        dashboard.setdefault('description', dashboard.get('title', ''))
+    g.builtin_dashboards_transformed = True
+
+
+def copy_view_into_dashlet(dashlet, nr, view_name, add_context=None, load_from_all_views=False):
+    # type: (DashletConfig, DashletId, str, VisualContext, bool) -> None
+    permitted_views = get_permitted_views()
+
+    # it is random which user is first accessing
+    # an apache python process, initializing the dashboard loading and conversion of
+    # old dashboards. In case of the conversion we really try hard to make the conversion
+    # work in all cases. So we need all views instead of the views of the user.
+    if load_from_all_views and view_name not in permitted_views:
+        # This is not really 100% correct according to the logic of visuals.available(),
+        # but we do this for the rare edge case during legacy dashboard conversion, so
+        # this should be sufficient
+        view = None
+        for (_u, n), this_view in get_all_views().iteritems():
+            # take the first view with a matching name
+            if view_name == n:
+                view = this_view
+                break
+
+        if not view:
+            raise MKGeneralException(
+                _("Failed to convert a builtin dashboard which is referencing "
+                  "the view \"%s\". You will have to migrate it to the new "
+                  "dashboard format on your own to work properly.") % view_name)
+    else:
+        view = permitted_views[view_name]
+
+    view = copy.deepcopy(view)  # Clone the view
+    dashlet.update(view)
+    if add_context:
+        dashlet['context'].update(add_context)
+
+    # Overwrite the views default title with the context specific title
+    dashlet['title'] = visuals.visual_title('view', view)
+    dashlet['title_url'] = html.makeuri_contextless([('view_name', view_name)] +
+                                                    visuals.get_singlecontext_vars(view).items(),
+                                                    filename='view.py')
+
+    dashlet['type'] = 'view'
+    dashlet['name'] = 'dashlet_%d' % nr
+    dashlet['show_title'] = True
+    dashlet['mustsearch'] = False

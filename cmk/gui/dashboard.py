@@ -1176,17 +1176,40 @@ def page_create_dashboard():
 #   | Configures the global settings of a dashboard.                       |
 #   '----------------------------------------------------------------------'
 
-vs_dashboard = None
-
 
 @cmk.gui.pages.register("edit_dashboard")
 def page_edit_dashboard():
     # type: () -> None
-    global vs_dashboard
     load_dashboards(lock=html.is_transaction())
 
-    # This is not defined here in the function in order to be l10n'able
-    vs_dashboard = Dictionary(
+    visuals.page_edit_visual('dashboards',
+                             dashboards,
+                             create_handler=create_dashboard,
+                             custom_field_handler=custom_field_handler)
+
+
+def custom_field_handler(dashboard):
+    # type: (DashboardConfig) -> None
+    _vs_dashboard().render_input('dashboard', dashboard and dashboard or None)
+
+
+def create_dashboard(old_dashboard, dashboard):
+    # type: (DashboardConfig, DashboardConfig) -> DashboardConfig
+    vs_dashboard = _vs_dashboard()
+    board_properties = vs_dashboard.from_html_vars('dashboard')
+    vs_dashboard.validate_value(board_properties, 'dashboard')
+    dashboard.update(board_properties)
+
+    # Do not remove the dashlet configuration during general property editing
+    dashboard['dashlets'] = old_dashboard.get('dashlets', [])
+    dashboard['mtime'] = int(time.time())
+
+    return dashboard
+
+
+def _vs_dashboard():
+    # type: () -> Dictionary
+    return Dictionary(
         title=_('Dashboard Properties'),
         render='form',
         optional_keys=False,
@@ -1199,33 +1222,6 @@ def page_edit_dashboard():
              )),
         ],
     )
-
-    visuals.page_edit_visual('dashboards',
-                             dashboards,
-                             create_handler=create_dashboard,
-                             custom_field_handler=custom_field_handler)
-
-
-def custom_field_handler(dashboard):
-    # type: (DashboardConfig) -> None
-    if not vs_dashboard:
-        raise RuntimeError()  # TODO: Will be cleaned up soon
-    vs_dashboard.render_input('dashboard', dashboard and dashboard or None)
-
-
-def create_dashboard(old_dashboard, dashboard):
-    # type: (DashboardConfig, DashboardConfig) -> DashboardConfig
-    if not vs_dashboard:
-        raise RuntimeError()  # TODO: Will be cleaned up soon
-    board_properties = vs_dashboard.from_html_vars('dashboard')
-    vs_dashboard.validate_value(board_properties, 'dashboard')
-    dashboard.update(board_properties)
-
-    # Do not remove the dashlet configuration during general property editing
-    dashboard['dashlets'] = old_dashboard.get('dashlets', [])
-    dashboard['mtime'] = int(time.time())
-
-    return dashboard
 
 
 #.

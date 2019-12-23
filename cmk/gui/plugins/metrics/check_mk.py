@@ -6395,6 +6395,24 @@ metric_info['jira_diff'] = {
     "color": "11/a",
 }
 
+metric_info["memused_couchbase_bucket"] = {
+    "color": "#80ff40",
+    "title": _("Memory used"),
+    "unit": "bytes",
+}
+
+metric_info["mem_low_wat"] = {
+    "title": _("Low watermark"),
+    "unit": "bytes",
+    "color": "#7060b0",
+}
+
+metric_info["mem_high_wat"] = {
+    "title": _("High watermark"),
+    "unit": "bytes",
+    "color": "23/b",
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -12121,4 +12139,13 @@ graph_info["temperature"] = {
         "temp:warn",
         "temp:crit",
     ]
+}
+
+graph_info["couchbase_bucket_memory"] = {
+    "title": _("Bucket memory"),
+    "metrics": [
+        ("memused_couchbase_bucket", "area"),
+        ("mem_low_wat", "line"),
+        ("mem_high_wat", "line"),
+    ],
 }

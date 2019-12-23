@@ -1,0 +1,60 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+@get_parsed_item_data
+def check_couchbase_buckets_fragmentation(_item, params, data):
+
+    docs_fragmentation = data.get('couch_docs_fragmentation')
+    if docs_fragmentation is not None:
+        yield check_levels(
+            docs_fragmentation,
+            'docs_fragmentation',
+            params.get('docs'),
+            infoname="Documents fragmentation",
+            human_readable_func=get_percent_human_readable
+        )
+
+    views_fragmentation = data.get('couch_views_fragmentation')
+    if views_fragmentation is not None:
+        yield check_levels(
+            views_fragmentation,
+            'views_fragmentation',
+            params.get('views'),
+            infoname="Views fragmentation",
+            human_readable_func=get_percent_human_readable
+        )
+
+
+check_info['couchbase_buckets_fragmentation'] = {
+    'parse_function': parse_couchbase_lines,
+    'inventory_function': discover(lambda _k, v: 'couch_docs_fragmentation' in v),
+    'check_function': check_couchbase_buckets_fragmentation,
+    'service_description': 'Couchbase Bucket %s Fragmentation',
+    'includes': ['couchbase.include'],
+    'group': 'couchbase_fragmentation',
+    'has_perfdata': True
+}

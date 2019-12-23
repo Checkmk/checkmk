@@ -1,0 +1,90 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+@get_parsed_item_data
+def check_couchbase_buckets_items(_item, params, data):
+
+    total_items = data.get("curr_items_tot")
+    if total_items is not None:
+        yield check_levels(
+            int(total_items),
+            "items_count",
+            params.get('curr_items_tot'),
+            infoname="Total items in vBuckets",
+            human_readable_func=six.text_type,
+        )
+
+    write_queue = data.get("disk_write_queue")
+    if write_queue is not None:
+        yield check_levels(
+            int(write_queue),
+            "disk_write_ql",
+            params.get("disk_write_ql"),
+            infoname="Items in disk write queue",
+            human_readable_func=six.text_type,
+        )
+
+    fetched = data.get("ep_bg_fetched")
+    if fetched is not None:
+        yield check_levels(
+            int(fetched),
+            "fetched_items",
+            params.get("fetched_items"),
+            infoname="Items fetched from disk",
+            human_readable_func=six.text_type,
+        )
+
+    queue_fill = data.get("ep_diskqueue_fill")
+    if queue_fill is not None:
+        yield check_levels(
+            queue_fill,
+            "disk_fill_rate",
+            params.get("disk_fill_rate"),
+            unit="/s",
+            infoname="Disk queue fill rate",
+        )
+
+    queue_drain = data.get("ep_diskqueue_drain")
+    if queue_drain is not None:
+        yield check_levels(
+            queue_drain,
+            "disk_drain_rate",
+            params.get("disk_drain_rate"),
+            unit="/s",
+            infoname="Disk queue drain rate",
+        )
+
+
+check_info['couchbase_buckets_items'] = {
+    'parse_function': parse_couchbase_lines,
+    'inventory_function': discover(lambda _k, v: 'curr_items_tot' in v),
+    'check_function': check_couchbase_buckets_items,
+    'service_description': 'Couchbase Bucket %s Items',
+    'includes': ['couchbase.include'],
+    'group': 'couchbase_items',
+    'has_perfdata': True
+}

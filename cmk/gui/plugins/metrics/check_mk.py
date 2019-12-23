@@ -6394,6 +6394,24 @@ metric_info["resident_items_ratio"] = {
     "color": "23/a",
 }
 
+metric_info["fetched_items"] = {
+    "title": _("Number of fetched items"),
+    "unit": "count",
+    "color": "23/b",
+}
+
+metric_info["disk_fill_rate"] = {
+    "title": _("Disk fill rate"),
+    "unit": "1/s",
+    "color": "31/a",
+}
+
+metric_info["disk_drain_rate"] = {
+    "title": _("Disk drain rate"),
+    "unit": "1/s",
+    "color": "31/b",
+}
+
 # In order to use the "bytes" unit we would have to change the output of the check, (i.e. divide by
 # 1024) which means an invalidation of historic values.
 metric_info['kb_out_of_sync'] = {
@@ -10051,6 +10069,13 @@ perfometer_info.append({
 perfometer_info.append({
     "type": "linear",
     "segments": ["fragmentation"],
+})
+
+perfometer_info.append({
+    "type": "logarithmic",
+    "metric": "items_count",
+    "half_value": 1000,
+    "exponent": 2,
 })
 
 #.

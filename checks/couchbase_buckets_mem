@@ -38,7 +38,27 @@ def check_couchbase_bucket_mem(_item, params, data):
             metric_name="memused",
         )
     except (KeyError, TypeError):
-        return None
+        pass
+
+    low_watermark = data.get("ep_mem_low_wat")
+    if low_watermark is not None:
+        yield check_levels(
+            low_watermark,
+                "mem_low_wat",
+                None,
+                infoname="Low watermark",
+                human_readable_func=get_bytes_human_readable,
+    )
+
+    high_watermark = data.get("ep_mem_high_wat")
+    if high_watermark is not None:
+        yield check_levels(
+            high_watermark,
+                "mem_high_wat",
+                None,
+                infoname="High watermark",
+                human_readable_func=get_bytes_human_readable,
+    )
 
 
 check_info['couchbase_buckets_mem'] = {

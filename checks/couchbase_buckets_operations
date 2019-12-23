@@ -68,6 +68,26 @@ def check_couchbase_buckets_operations(_item, params, data):
             infoname='Sets',
         )
 
+    creates = data.get('ep_ops_create')
+    if creates is not None:
+        yield check_levels(
+            creates,
+            None,
+            None,
+            unit="/s",
+            infoname='Creates',
+        )
+
+    updates = data.get('ep_ops_update')
+    if updates is not None:
+        yield check_levels(
+            updates,
+            None,
+            None,
+            unit="/s",
+            infoname='Updates',
+        )
+
     deletes = data.get('ep_num_ops_del_meta')
     if deletes is not None:
         yield check_levels(

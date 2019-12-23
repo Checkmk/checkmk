@@ -82,6 +82,8 @@ SECTION_KEYS_SIZE = (
 SECTION_KEYS_B_MEM = (
     "mem_total",
     "mem_free",
+    "ep_mem_high_wat",
+    "ep_mem_low_wat",
 )
 
 SECTION_KEYS_B_OPERATIONS = (
@@ -89,6 +91,31 @@ SECTION_KEYS_B_OPERATIONS = (
     "cmd_get",
     "cmd_set",
     "ep_num_ops_del_meta",
+    "ep_ops_create",
+    "ep_ops_update",
+)
+
+SECTION_KEYS_B_ITEMS = (
+    "curr_items_tot",
+    "ep_bg_fetched",
+    "ep_diskqueue_drain",
+    "ep_diskqueue_fill",
+    "disk_write_queue",
+)
+
+SECTION_KEYS_B_VBUCKET = (
+    "vb_active_resident_items_ratio",
+    "vb_active_eject",
+    "vb_active_itm_memory",
+    "vb_active_ops_create",
+    "vb_pending_num",
+    "vb_replica_num",
+    "vb_replica_itm_memory",
+)
+
+SECTION_KEYS_B_FRAGMENTATION = (
+    "couch_docs_fragmentation",
+    "couch_views_fragmentation",
 )
 
 SECTION_KEYS_B_CACHE = ("ep_cache_miss_rate",)
@@ -275,6 +302,15 @@ def sections_buckets(bucket_list):
         ],
         "couchbase_buckets_cache:sep(0)": [
             _get_dump(name, data, SECTION_KEYS_B_CACHE, _average) for name, data in bucket_list
+        ],
+        "couchbase_buckets_vbuckets:sep(0)": [
+            _get_dump(name, data, SECTION_KEYS_B_VBUCKET, _average) for name, data in bucket_list
+        ],
+        "couchbase_buckets_fragmentation:sep(0)": [
+            _get_dump(name, data, SECTION_KEYS_B_FRAGMENTATION, _average) for name, data in bucket_list
+        ],
+        "couchbase_buckets_items:sep(0)": [
+            _get_dump(name, data, SECTION_KEYS_B_ITEMS, _average) for name, data in bucket_list
         ],
     }
 

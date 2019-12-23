@@ -60,6 +60,7 @@ def check_couchbase_nodes_items(_item, params, data):
 
 
 check_info['couchbase_nodes_items'] = {
+    'parse_function': parse_couchbase_lines,
     'inventory_function': discover(lambda _k, v: 'curr_items' in v),
     'check_function': check_couchbase_nodes_items,
     'service_description': 'Couchbase %s vBucket items',

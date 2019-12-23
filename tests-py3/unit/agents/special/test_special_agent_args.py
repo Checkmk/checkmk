@@ -23,6 +23,7 @@ REQUIRED_ARGUMENTS = {
     #     '--subscription', 'SUBSCRIPTION', '--client', 'CLIENT', '--tenant', 'TENANT', '--secret',
     #     'SECRET'
     # ],
+    'agent_couchbase': ['HOSTNAME'],
     'agent_elasticsearch': ['HOSTNAME'],
     'agent_graylog': ['HOSTNAME'],
     'agent_jenkins': ['HOSTNAME'],

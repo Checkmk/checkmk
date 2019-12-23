@@ -24,7 +24,6 @@ PYTHON2_PATHS=(
     special_agents/agent_appdynamics.py
     special_agents/agent_azure.py
     special_agents/agent_bi.py
-    special_agents/agent_couchbase.py
     special_agents/agent_ddn_s2a.py
     special_agents/agent_emcvnx.py
     special_agents/agent_fritzbox.py
@@ -62,6 +61,7 @@ PYTHON3_PATHS=(
     utils
     ec
     special_agents/agent_aws.py
+    special_agents/agent_couchbase.py
     special_agents/agent_elasticsearch.py
     special_agents/agent_graylog.py
     special_agents/agent_jenkins.py

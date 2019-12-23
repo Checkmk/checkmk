@@ -1,10 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Checkmk Special Agent Couchbase
 """
+Special agent for monitoring Couchbase servers with Checkmk
+"""
+
 import sys
 import argparse
 import logging
@@ -60,6 +62,8 @@ SECTION_KEYS_SIZE = (
 SECTION_KEYS_B_MEM = (
     "mem_total",
     "mem_free",
+    "ep_mem_high_wat",
+    "ep_mem_low_wat",
 )
 
 SECTION_KEYS_B_OPERATIONS = (
@@ -67,6 +71,31 @@ SECTION_KEYS_B_OPERATIONS = (
     "cmd_get",
     "cmd_set",
     "ep_num_ops_del_meta",
+    "ep_ops_create",
+    "ep_ops_update",
+)
+
+SECTION_KEYS_B_ITEMS = (
+    "curr_items_tot",
+    "ep_bg_fetched",
+    "ep_diskqueue_drain",
+    "ep_diskqueue_fill",
+    "disk_write_queue",
+)
+
+SECTION_KEYS_B_VBUCKET = (
+    "vb_active_resident_items_ratio",
+    "vb_active_eject",
+    "vb_active_itm_memory",
+    "vb_active_ops_create",
+    "vb_pending_num",
+    "vb_replica_num",
+    "vb_replica_itm_memory",
+)
+
+SECTION_KEYS_B_FRAGMENTATION = (
+    "couch_docs_fragmentation",
+    "couch_views_fragmentation",
 )
 
 SECTION_KEYS_B_CACHE = ("ep_cache_miss_rate",)
@@ -97,7 +126,11 @@ SECTION_KEYS_B_CACHE = ("ep_cache_miss_rate",)
 
 def parse_arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("-v", "--verbose", action="count", help="Enable verbose logging.")
+    parser.add_argument("-v",
+                        "--verbose",
+                        default=0,
+                        action="count",
+                        help="Enable verbose logging.")
     parser.add_argument("--debug", action="store_true", help="Raise python exceptions.")
     parser.add_argument("--vcrtrace", action=vcrtrace(filter_headers=[('authorization', '****')]))
     parser.add_argument("-t",
@@ -219,7 +252,7 @@ def sections_node(client):
     }
 
     output = []
-    for section_name, section_content in sections.iteritems():
+    for section_name, section_content in sections.items():
         output.append('<<<%s>>>' % section_name)
         output.extend(section_content)
     return output
@@ -254,16 +287,27 @@ def sections_buckets(bucket_list):
         "couchbase_buckets_cache:sep(0)": [
             _get_dump(name, data, SECTION_KEYS_B_CACHE, _average) for name, data in bucket_list
         ],
+        "couchbase_buckets_vbuckets:sep(0)": [
+            _get_dump(name, data, SECTION_KEYS_B_VBUCKET, _average) for name, data in bucket_list
+        ],
+        "couchbase_buckets_fragmentation:sep(0)": [
+            _get_dump(name, data, SECTION_KEYS_B_FRAGMENTATION, _average)
+            for name, data in bucket_list
+        ],
+        "couchbase_buckets_items:sep(0)": [
+            _get_dump(name, data, SECTION_KEYS_B_ITEMS, _average) for name, data in bucket_list
+        ],
     }
 
     output = []
-    for section_name, section_content in sections.iteritems():
+    for section_name, section_content in sections.items():
         output.append('<<<%s>>>' % section_name)
         output.extend(section_content)
     return output
 
 
 def main(argv=None):
+
     if argv is None:
         cmk.utils.password_store.replace_passwords()
         argv = sys.argv[1:]
@@ -280,7 +324,6 @@ def main(argv=None):
             raise
         return 1
 
-    # haha!
     bucket_list = list(fetch_bucket_data(client, args.buckets, args.debug))
     output += sections_buckets(bucket_list)
 

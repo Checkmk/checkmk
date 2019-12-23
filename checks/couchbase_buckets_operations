@@ -58,7 +58,7 @@ def check_couchbase_buckets_operations(_item, params, data):
             infoname='Gets',
         )
 
-    cmd_set = data.set('cmd_set')
+    cmd_set = data.get('cmd_set')
     if cmd_set is not None:
         yield check_levels(
             cmd_set,
@@ -68,7 +68,7 @@ def check_couchbase_buckets_operations(_item, params, data):
             infoname='Sets',
         )
 
-    deletes = data.set('ep_num_ops_del_meta')
+    deletes = data.get('ep_num_ops_del_meta')
     if deletes is not None:
         yield check_levels(
             deletes,

@@ -6412,6 +6412,12 @@ metric_info["disk_drain_rate"] = {
     "color": "31/b",
 }
 
+metric_info["memused"] = {
+    "color": "#80ff40",
+    "title": _("Memory used"),
+    "unit": "bytes",
+}
+
 # In order to use the "bytes" unit we would have to change the output of the check, (i.e. divide by
 # 1024) which means an invalidation of historic values.
 metric_info['kb_out_of_sync'] = {
@@ -12169,5 +12175,14 @@ graph_info["couchbase_bucket_fragmentation"] = {
     "metrics": [
         ("docs_fragmentation", "area"),
         ("views_fragmentation", "stack"),
+    ],
+}
+
+graph_info["couchbase_bucket_memory"] = {
+    "title": _("Bucket memory"),
+    "metrics": [
+        ("memused", "area"),
+        ("mem_low_wat", "line"),
+        ("mem_high_wat", "line"),
     ],
 }

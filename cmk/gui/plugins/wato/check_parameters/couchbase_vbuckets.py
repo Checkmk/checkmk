@@ -29,7 +29,6 @@ from cmk.gui.valuespec import (
     Filesize,
     Percentage,
     Integer,
-    Float,
     TextAscii,
     Tuple,
     Dictionary,

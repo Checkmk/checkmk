@@ -5,8 +5,9 @@ license: GPL
 distribution: check_mk
 description:
  This service monitors the average amount of memory used
- within the last minute.  Levels con be defined using the
- WATO rule "Main memory usage of devices with modules".
+ within the last minute.  High and low watermark are also shown.
+ Levels con be defined using the WATO rule "Main memory usage
+ of devices with modules".
 
 inventory:
  One service per bucket is created.

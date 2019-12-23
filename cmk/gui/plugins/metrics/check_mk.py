@@ -6370,6 +6370,30 @@ metric_info["views_fragmentation"] = {
     "color": "15/a",
 }
 
+metric_info["item_memory"] = {
+    "color": "26/a",
+    "title": _("Item memory"),
+    "unit": "bytes",
+}
+
+metric_info["vbuckets"] = {
+    "title": _("vBuckets"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["pending_vbuckets"] = {
+    "title": _("Pending vBuckets"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["resident_items_ratio"] = {
+    "title": _("Resident items ratio"),
+    "unit": "%",
+    "color": "23/a",
+}
+
 # In order to use the "bytes" unit we would have to change the output of the check, (i.e. divide by
 # 1024) which means an invalidation of historic values.
 metric_info['kb_out_of_sync'] = {

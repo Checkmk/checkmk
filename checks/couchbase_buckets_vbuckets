@@ -1,0 +1,103 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+@get_parsed_item_data
+def check_couchbase_buckets_vbuckets(_item, params, data):
+
+    resident_items_ratio = data.get("vb_active_resident_items_ratio")
+    if resident_items_ratio is not None:
+        yield check_levels(
+            resident_items_ratio,
+            "resident_items_ratio",
+            (None,None)+params.get("resident_items_ratio",(None,None)),
+            infoname="Resident items ratio",
+            human_readable_func=get_percent_human_readable,
+        )
+
+    item_memory = data.get("vb_active_itm_memory")
+    if item_memory is not None:
+        yield check_levels(
+            item_memory,
+            "item_memory",
+            params.get("item_memory"),
+            infoname="Item memory",
+            human_readable_func=get_bytes_human_readable,
+        )
+
+    pending_vbuckets = data.get("vb_pending_num")
+    if pending_vbuckets is not None:
+        yield check_levels(
+            int(pending_vbuckets),
+            "pending_vbuckets",
+            params.get("vb_pending_num"),
+            infoname="Pending vBuckets",
+            human_readable_func=six.text_type,
+        )
+
+
+@get_parsed_item_data
+def check_couchbase_buckets_vbuckets_replica(_item, params, data):
+
+    replica_num = data.get("vb_replica_num")
+    if replica_num is not None:
+        yield check_levels(
+            int(replica_num),
+            "vbuckets",
+            params.get("vb_replica_num"),
+            infoname="Total number",
+            human_readable_func=six.text_type,
+        )
+
+    item_memory = data.get("vb_replica_itm_memory")
+    if item_memory is not None:
+        yield check_levels(
+            item_memory,
+            "item_memory",
+            params.get("item_memory"),
+            infoname="Item memory",
+            human_readable_func=get_bytes_human_readable,
+        )
+
+check_info['couchbase_buckets_vbuckets'] = {
+    'parse_function': parse_couchbase_lines,
+    'inventory_function': discover(lambda _k, v: 'vb_active_resident_items_ratio' in v),
+    'check_function': check_couchbase_buckets_vbuckets,
+    'service_description': 'Couchbase Bucket %s active vBuckets',
+    'includes': ['couchbase.include'],
+    'group': 'couchbase_vbuckets',
+    'has_perfdata': True
+}
+
+check_info['couchbase_buckets_vbuckets.replica'] = {
+    'parse_function': parse_couchbase_lines,
+    'inventory_function': discover(lambda _k, v: 'vb_active_resident_items_ratio' in v),
+    'check_function': check_couchbase_buckets_vbuckets_replica,
+    'service_description': 'Couchbase Bucket %s replica vBuckets',
+    'includes': ['couchbase.include'],
+    'group': 'couchbase_vbuckets',
+    'has_perfdata': True
+}

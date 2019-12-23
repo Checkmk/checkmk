@@ -6363,6 +6363,18 @@ metric_info["num_streams"] = {
     "color": "11/a",
 }
 
+metric_info["docs_fragmentation"] = {
+    "title": _("Documents fragmentation"),
+    "unit": "%",
+    "color": "21/a",
+}
+
+metric_info["views_fragmentation"] = {
+    "title": _("Views fragmentation"),
+    "unit": "%",
+    "color": "15/a",
+}
+
 # In order to use the "bytes" unit we would have to change the output of the check, (i.e. divide by
 # 1024) which means an invalidation of historic values.
 metric_info['kb_out_of_sync'] = {
@@ -10018,6 +10030,11 @@ perfometer_info.append({
     'exponent': 2.0,
 })
 
+perfometer_info.append({
+    "type": "linear",
+    "segments": ["fragmentation"],
+})
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -12147,5 +12164,13 @@ graph_info["couchbase_bucket_memory"] = {
         ("memused_couchbase_bucket", "area"),
         ("mem_low_wat", "line"),
         ("mem_high_wat", "line"),
+    ],
+}
+
+graph_info["couchbase_bucket_fragmentation"] = {
+    "title": _("Fragmentation"),
+    "metrics": [
+        ("docs_fragmentation", "area"),
+        ("views_fragmentation", "stack"),
     ],
 }

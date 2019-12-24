@@ -3710,3 +3710,27 @@ def test_add_context_to_uri_vars(register_builtin_html, visual, only_count, expe
     with html.stashed_vars():
         visuals.add_context_to_uri_vars(visual, only_count)
         assert sorted(list(html.request.itervars())) == sorted(expected_vars)
+
+
+@pytest.mark.parametrize("visual,only_count,expected_vars", [
+    # No single context, no filter
+    ({"single_infos": [], "context": {}}, False, []),
+    # No single context, ignore single filter
+    ({"single_infos": [], "context": {"aaa": "uuu"}}, False, []),
+    # No single context, use multi filter
+    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, False, [('filter_var', 'eee')]),
+    # No single context, use multi filter
+    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, False, [('filter_var', 'eee')]),
+    # Single host context
+    ({"single_infos": ["host"], "context": {"host": "abc"}}, False, [("host", "abc")]),
+    # Single host context, and other filters
+    ({"single_infos": ["host"], "context": {"host": "abc", "bla": {"blub": "ble"}}}, False, [('blub', 'ble'), ('host', 'abc')]),
+    # Single host context, missing filter -> no failure
+    ({"single_infos": ["host"], "context": {}}, False, []),
+    # Single host + service context
+    ({"single_infos": ["host", "service"], "context": {"host": "abc", "service": u"äää"}}, False,
+        [("host", "abc"), ("service", u"äää")]),
+])
+def test_get_context_uri_vars(register_builtin_html, visual, only_count, expected_vars):
+    context_vars = visuals.get_context_uri_vars(visual)
+    assert sorted(context_vars) == sorted(expected_vars)

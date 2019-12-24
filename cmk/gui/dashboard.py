@@ -38,7 +38,6 @@ import cmk.gui.pages
 import cmk.gui.notify as notify
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
-import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.utils as utils
 from cmk.gui.valuespec import (
@@ -182,7 +181,7 @@ class VisualTypeDashboards(VisualType):
                 raise MKGeneralException(_("Invalid graph type '%s'") % specification[0])
 
         permitted_dashboards = get_permitted_dashboards()
-        dashboard = load_dashboard_with_cloning(permitted_dashboards, target_visual_name)
+        dashboard = _load_dashboard_with_cloning(permitted_dashboards, target_visual_name)
 
         dashlet = default_dashlet_definition(add_type)
 
@@ -463,7 +462,7 @@ def page_dashboard():
     draw_dashboard(name)
 
 
-def load_dashboard_with_cloning(permitted_dashboards, name, edit=True):
+def _load_dashboard_with_cloning(permitted_dashboards, name, edit=True):
     # type: (Dict[DashboardName, DashboardConfig], DashboardName, bool) -> DashboardConfig
     board = permitted_dashboards[name]
     if edit and board['owner'] != config.user.id:
@@ -493,30 +492,18 @@ def draw_dashboard(name):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
     permitted_dashboards = get_permitted_dashboards()
-    board = load_dashboard_with_cloning(permitted_dashboards, name, edit=mode == 'edit')
-
-    # The dashboard may be called with "wato_folder" set. In that case
-    # the dashboard is assumed to restrict the shown data to a specific
-    # WATO subfolder or file. This could be a configurable feature in
-    # future, but currently we assume, that *all* dashboards are filename
-    # sensitive.
-    wato_folder = html.request.var("wato_folder")
+    board = _load_dashboard_with_cloning(permitted_dashboards, name, edit=mode == 'edit')
+    board = _add_context_to_dashboard(board)
 
     title = visuals.visual_title('dashboard', board)
 
     # Distance from top of the screen to the lower border of the heading
     header_height = 55
 
-    # The title of the dashboard needs to be prefixed with the WATO path,
-    # in order to make it clear to the user, that he is seeing only partial
-    # data.
     if not board.get('show_title'):
         # Remove the whole header line
         html.set_render_headfoot(False)
         header_height = 0
-
-    elif wato_folder is not None:
-        title = watolib.get_folder_title(wato_folder) + " - " + title
 
     html.add_body_css_class("dashboard")
     html.header(title)
@@ -534,7 +521,7 @@ def draw_dashboard(name):
         dashlet_title_html = u""
         try:
             dashlet_type = get_dashlet_type(dashlet)
-            dashlet_instance = dashlet_type(name, board, nr, dashlet, wato_folder)
+            dashlet_instance = dashlet_type(name, board, nr, dashlet)
 
             refresh = get_dashlet_refresh(dashlet_instance)
             if refresh:
@@ -615,6 +602,7 @@ def render_dashlet_title_html(dashlet_instance):
     return title
 
 
+# TODO: Cleanup the non stashed variable special case
 def render_dashlet_content(board, dashlet_instance, is_update, stash_html_vars=True):
     # type: (DashboardConfig, Dashlet, bool, bool) -> Text
     mtime = html.get_integer_input('mtime', 0)
@@ -631,8 +619,8 @@ def render_dashlet_content(board, dashlet_instance, is_update, stash_html_vars=T
 def _update_or_show(board, dashlet_instance, is_update, mtime):
     # type: (DashboardConfig, Dashlet, bool, int) -> Text
     visuals.add_context_to_uri_vars(dashlet_instance.dashlet_spec)
-    if dashlet_instance.wato_folder is not None:
-        html.request.set_var("wato_folder", dashlet_instance.wato_folder)
+    visuals.add_context_to_uri_vars(board)
+
     with html.plugged():
         if is_update:
             dashlet_instance.update()
@@ -906,6 +894,8 @@ def ajax_dashlet():
     except KeyError:
         raise MKUserError("name", _('The requested dashboard does not exist.'))
 
+    board = _add_context_to_dashboard(board)
+
     the_dashlet = None
     for nr, dashlet in enumerate(board['dashlets']):
         if nr == ident:
@@ -918,10 +908,8 @@ def ajax_dashlet():
     if the_dashlet['type'] not in dashlet_registry:
         raise MKUserError("id", _('The requested dashlet type does not exist.'))
 
-    wato_folder = html.request.var("wato_folder")
-
     dashlet_type = get_dashlet_type(the_dashlet)
-    dashlet_instance = dashlet_type(name, board, ident, the_dashlet, wato_folder)
+    dashlet_instance = dashlet_type(name, board, ident, the_dashlet)
 
     try:
         dashlet_content_html = render_dashlet_content(board,
@@ -932,6 +920,31 @@ def ajax_dashlet():
         dashlet_content_html = render_dashlet_exception_content(dashlet_instance, ident, e)
 
     html.write_html(dashlet_content_html)
+
+
+# TODO: Is the merging with the context possibly set in the dashboard config done right?
+def _add_context_to_dashboard(board):
+    # type: (DashboardConfig) -> DashboardConfig
+    board = copy.deepcopy(board)
+
+    # Read the context from the URL variables
+    board_context = visuals.get_context_from_uri_vars(single_infos=board.get('single_infos', []))
+    board_context.update(visuals.get_singlecontext_html_vars(board))
+
+    # The dashboard may be called with "wato_folder" set. In that case
+    # the dashboard is assumed to restrict the shown data to a specific
+    # WATO subfolder or file. This could be a configurable feature in
+    # future, but currently we assume, that *all* dashboards are filename
+    # sensitive.
+    wato_folder = html.request.var("wato_folder")
+    if wato_folder is not None:
+        board_context["wato_folder"] = {
+            "wato_folder": wato_folder,
+        }
+
+    board["context"] = board_context
+
+    return board
 
 
 #.

@@ -1142,23 +1142,51 @@ def visible_filters_of_visual(visual, use_filters):
     return show_filters
 
 
+# TODO: Can we drop only_count here somehow? It is a view specific feature
 def add_context_to_uri_vars(visual, only_count=False):
-    # Populate the HTML vars with missing context vars. The context vars set
-    # in single context are enforced (can not be overwritten by URL). The normal
-    # filter vars in "multiple" context are not enforced.
-    for key in get_single_info_keys(visual):
-        if key in visual['context']:
-            html.request.set_var(key, "%s" % visual['context'][key])
+    """Populate the HTML vars with missing context vars
 
-    # Now apply the multiple context filters
-    for filter_vars in visual['context'].itervalues():
-        if isinstance(filter_vars, dict):  # this is a multi-context filter
-            # We add the filter only if *none* of its HTML variables are present on the URL
-            # This important because checkbox variables are not present if the box is not checked.
-            skip = any(html.request.has_var(uri_varname) for uri_varname in filter_vars.iterkeys())
-            if not skip or only_count:
-                for uri_varname, value in filter_vars.items():
-                    html.request.set_var(uri_varname, "%s" % value)
+    The context vars set in single context are enforced (can not be overwritten by URL). The normal
+    filter vars in "multiple" context are not enforced."""
+    uri_vars = dict(get_context_uri_vars(visual))
+    single_info_keys = get_single_info_keys(visual)
+
+    for filter_name, filter_vars in visual['context'].iteritems():
+        # Enforce the single context variables that are available in the visual context
+        if filter_name in single_info_keys:
+            html.request.set_var(filter_name, uri_vars[filter_name])
+            continue
+
+        if not isinstance(filter_vars, dict):
+            continue  # Skip invalid filter values
+
+        # This is a multi-context filter
+        # We add the filter only if *none* of its HTML variables are present on the URL. This is
+        # important because checkbox variables are not present if the box is not checked.
+        skip = any(html.request.has_var(uri_varname) for uri_varname in filter_vars.iterkeys())
+        if not skip or only_count:
+            for uri_varname in filter_vars.keys():
+                html.request.set_var(uri_varname, uri_vars[uri_varname])
+
+
+def get_context_uri_vars(visual):
+    """Produce key/value tuples for HTTP variables from the visual context"""
+    uri_vars = []
+    single_info_keys = get_single_info_keys(visual)
+
+    for filter_name, filter_vars in visual['context'].iteritems():
+        # Enforce the single context variables that are available in the visual context
+        if filter_name in single_info_keys:
+            uri_vars.append((filter_name, "%s" % visual['context'][filter_name]))
+
+        if not isinstance(filter_vars, dict):
+            continue  # Skip invalid filter values
+
+        # This is a multi-context filter
+        for uri_varname, value in filter_vars.items():
+            uri_vars.append((uri_varname, "%s" % value))
+
+    return uri_vars
 
 
 # Vice versa: find all filters that belong to the current URI variables

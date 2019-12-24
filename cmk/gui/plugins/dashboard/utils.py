@@ -28,6 +28,8 @@
 import abc
 import json
 import copy
+import urllib
+import urlparse
 from typing import (  # pylint: disable=unused-import
     Optional, Any, Dict, Union, Tuple, Text, List, Callable)
 
@@ -191,14 +193,13 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
         return html.makeuri([('type', cls.type_name()), ('back', html.makeuri([('edit', '1')]))],
                             filename='edit_dashlet.py')
 
-    def __init__(self, dashboard_name, dashboard, dashlet_id, dashlet, wato_folder):
-        # type: (DashboardName, DashboardConfig, DashletId, DashletConfig, Optional[str]) -> None
+    def __init__(self, dashboard_name, dashboard, dashlet_id, dashlet):
+        # type: (DashboardName, DashboardConfig, DashletId, DashletConfig) -> None
         super(Dashlet, self).__init__()
         self._dashboard_name = dashboard_name
         self._dashboard = dashboard
         self._dashlet_id = dashlet_id
         self._dashlet_spec = dashlet
-        self._wato_folder = wato_folder
 
     @property
     def dashlet_id(self):
@@ -209,11 +210,6 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
     def dashlet_spec(self):
         # type: () -> DashletConfig
         return self._dashlet_spec
-
-    @property
-    def wato_folder(self):
-        # type: () -> Optional[str]
-        return self._wato_folder
 
     @property
     def dashboard_name(self):
@@ -260,43 +256,28 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
         """Produces the HTML code of the dashlet content."""
         raise NotImplementedError()
 
-    # Updates the current dashlet with the current context vars maybe loaded from
-    # the dashboards global configuration or HTTP vars, but also returns a list
-    # of all HTTP vars which have been used
-    # TODO: Cleanup the side effect of this function. It should only return the URL
-    #       variables and not modify self._dashlet.
-    def _get_global_context_url_vars(self):
-        # type: () -> List[Tuple[str, str]]
-        # Either load the single object info from the dashlet or the dashlet type
-        single_infos = []
-        if 'single_infos' in self._dashlet_spec:
-            single_infos = self._dashlet_spec['single_infos']
-        elif self.single_infos():
-            single_infos = self.single_infos()
-
-        global_context = self._dashboard.get('context', {})
-
-        url_vars = []
-        for info_key in single_infos:
-            for param in visuals.info_params(info_key):
-                if param not in self._dashlet_spec['context']:
-                    # Get the vars from the global context or http vars
-                    if param in global_context:
-                        self._dashlet_spec['context'][param] = global_context[param]
-                    else:
-                        self._dashlet_spec['context'][param] = html.request.var(param)
-                        url_vars.append((param, html.request.var(param)))
-        return url_vars
-
-    def _add_wato_folder_to_url(self, url):
+    def _add_context_vars_to_url(self, url):
         # type: (str) -> str
-        if not self._wato_folder:
+        """Adds missing context variables to the given URL"""
+        # TODO: Enable this once the property is available
+        #if not self.has_context:
+        if "context" not in self._dashlet_spec:
             return url
-        if '/' in url:
-            return url  # do not append wato_folder to non-Check_MK-urls
-        if '?' in url:
-            return url + "&wato_folder=" + html.urlencode(self._wato_folder)
-        return url + "?wato_folder=" + html.urlencode(self._wato_folder)
+
+        context_vars = self._dashlet_context_vars()
+
+        parts = urlparse.urlparse(url)
+        url_vars = dict(urlparse.parse_qsl(parts.query, keep_blank_values=True))
+        url_vars.update(context_vars)
+
+        new_qs = urllib.urlencode(url_vars)
+        return urlparse.urlunparse(tuple(parts[:4] + (new_qs,) + parts[5:]))
+
+    def _dashlet_context_vars(self):
+        # type: () -> Dict[str, str]
+        url_vars = dict(visuals.get_context_uri_vars(self._dashboard))
+        url_vars.update(dict(visuals.get_context_uri_vars(self._dashlet_spec)))
+        return url_vars
 
     def size(self):
         # type: () -> DashletSize
@@ -317,13 +298,12 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
         if not self.refresh_interval():
             return None
 
-        url = self._dashlet_spec.get(
-            "url", "dashboard_dashlet.py?name=%s&id=%s" % (self._dashboard_name, self._dashlet_id))
+        url = self._get_refresh_url()
         try:
             on_refresh = self.on_refresh()
             if on_refresh:
                 return '(function() {%s})' % on_refresh
-            return '"%s"' % self._add_wato_folder_to_url(url)  # url to dashboard_dashlet.py
+            return '"%s"' % self._add_context_vars_to_url(url)  # url to dashboard_dashlet.py
         except Exception:
             # Ignore the exceptions in non debug mode, assuming the exception also occures
             # while dashlet rendering, which is then shown in the dashlet itselfs.
@@ -342,11 +322,14 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
         if self._dashlet_spec.get("url"):
             return self._dashlet_spec["url"]
 
-        return html.makeuri_contextless([
-            ("name", self._dashboard_name),
-            ("id", self._dashlet_id),
-        ],
-                                        filename="dashboard_dashlet.py")
+        return html.makeuri_contextless(
+            [
+                ('name', self._dashboard_name),
+                ('id', self._dashlet_id),
+                ('mtime', self._dashboard['mtime']),
+            ],
+            filename="dashboard_dashlet.py",
+        )
 
     # TODO: This is specific for the 'url' dashlet type. Move it to that
     # dashlets class once it has been refactored to a class
@@ -405,8 +388,6 @@ class IFrameDashlet(six.with_metaclass(abc.ABCMeta, Dashlet)):
         if not iframe_url:
             return
 
-        iframe_url = self._add_wato_folder_to_url(iframe_url)
-
         # Fix of iPad >:-P
         html.open_div(style="width: 100%; height: 100%; -webkit-overflow-scrolling:touch;")
         html.iframe('',
@@ -427,10 +408,7 @@ class IFrameDashlet(six.with_metaclass(abc.ABCMeta, Dashlet)):
         if not self.is_iframe_dashlet():
             return None
 
-        return html.makeuri_contextless([('name', self._dashboard_name), ('id', self._dashlet_id),
-                                         ('mtime', self._dashboard['mtime'])] +
-                                        self._get_global_context_url_vars(),
-                                        filename="dashboard_dashlet.py")
+        return self._add_context_vars_to_url(self._get_refresh_url())
 
     @abc.abstractmethod
     def update(self):

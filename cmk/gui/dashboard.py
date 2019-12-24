@@ -617,35 +617,37 @@ def render_dashlet_title_html(dashlet_instance):
 
 def render_dashlet_content(board, dashlet_instance, is_update, stash_html_vars=True):
     # type: (DashboardConfig, Dashlet, bool, bool) -> Text
-    def update_or_show(mtime):
-        visuals.add_context_to_uri_vars(dashlet_instance.dashlet_spec)
-        if dashlet_instance.wato_folder is not None:
-            html.request.set_var("wato_folder", dashlet_instance.wato_folder)
-        with html.plugged():
-            if is_update:
-                dashlet_instance.update()
-            else:
-                dashlet_instance.show()
-
-            if mtime < board['mtime']:
-                # prevent reloading on the dashboard which already has the current mtime,
-                # this is normally the user editing this dashboard. All others: reload
-                # the whole dashboard once.
-                html.javascript('if (cmk.dashboard.dashboard_properties.dashboard_mtime < %d) {\n'
-                                '    parent.location.reload();\n'
-                                '}' % board['mtime'])
-
-            return html.drain()
-
     mtime = html.get_integer_input('mtime', 0)
 
-    if stash_html_vars:
-        with html.stashed_vars():
-            html.request.del_vars()
-            html.request.set_var("name", dashlet_instance.dashboard_name)
-            return update_or_show(mtime)
-    else:
-        return update_or_show(mtime)
+    if not stash_html_vars:
+        return _update_or_show(board, dashlet_instance, is_update, mtime)
+
+    with html.stashed_vars():
+        html.request.del_vars()
+        html.request.set_var("name", dashlet_instance.dashboard_name)
+        return _update_or_show(board, dashlet_instance, is_update, mtime)
+
+
+def _update_or_show(board, dashlet_instance, is_update, mtime):
+    # type: (DashboardConfig, Dashlet, bool, int) -> Text
+    visuals.add_context_to_uri_vars(dashlet_instance.dashlet_spec)
+    if dashlet_instance.wato_folder is not None:
+        html.request.set_var("wato_folder", dashlet_instance.wato_folder)
+    with html.plugged():
+        if is_update:
+            dashlet_instance.update()
+        else:
+            dashlet_instance.show()
+
+        if mtime < board['mtime']:
+            # prevent reloading on the dashboard which already has the current mtime,
+            # this is normally the user editing this dashboard. All others: reload
+            # the whole dashboard once.
+            html.javascript('if (cmk.dashboard.dashboard_properties.dashboard_mtime < %d) {\n'
+                            '    parent.location.reload();\n'
+                            '}' % board['mtime'])
+
+        return html.drain()
 
 
 def render_dashlet_exception_content(dashlet_instance, nr, e):

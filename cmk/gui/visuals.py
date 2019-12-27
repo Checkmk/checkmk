@@ -1242,6 +1242,7 @@ def get_merged_context(*contexts):
 # Compute Livestatus-Filters based on a given context. Returns
 # the only_sites list and a string with the filter headers
 # TODO: Untangle only_sites and filter headers
+# TODO: Reduce redundancies with filters_of_visual()
 def get_filter_headers(table, infos, context):
     # Prepare Filter headers for Livestatus
     filter_headers = ""

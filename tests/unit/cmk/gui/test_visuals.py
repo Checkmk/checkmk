@@ -1,14 +1,13 @@
+# encoding: utf-8
 # yapf: disable
 import pytest  # type: ignore
-from pathlib2 import Path
 
 import cmk
-import cmk.gui.config as config
+from cmk.gui.globals import html
 import cmk.gui.plugins.visuals.utils as utils
 import cmk.gui.plugins.visuals
 import cmk.gui.views
 import cmk.gui.visuals as visuals
-import cmk.gui.modules as modules
 
 
 def test_get_filter():
@@ -3686,3 +3685,28 @@ def test_registered_info_attributes():
 
         assert info.multiple_site_filters == spec.get("multiple_site_filters", [])
         assert info.single_site == spec.get("single_site", True)
+
+
+@pytest.mark.parametrize("visual,only_count,expected_vars", [
+    # No single context, no filter
+    ({"single_infos": [], "context": {}}, False, []),
+    # No single context, ignore single filter
+    ({"single_infos": [], "context": {"aaa": "uuu"}}, False, []),
+    # No single context, use multi filter
+    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, False, [('filter_var', 'eee')]),
+    # No single context, use multi filter
+    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, False, [('filter_var', 'eee')]),
+    # Single host context
+    ({"single_infos": ["host"], "context": {"host": "abc"}}, False, [("host", "abc")]),
+    # Single host context, and other filters
+    ({"single_infos": ["host"], "context": {"host": "abc", "bla": {"blub": "ble"}}}, False, [('blub', 'ble'), ('host', 'abc')]),
+    # Single host context, missing filter -> no failure
+    ({"single_infos": ["host"], "context": {}}, False, []),
+    # Single host + service context
+    ({"single_infos": ["host", "service"], "context": {"host": "abc", "service": u"äää"}}, False,
+        [("host", "abc"), ("service", "äää")]),
+])
+def test_add_context_to_uri_vars(register_builtin_html, visual, only_count, expected_vars):
+    with html.stashed_vars():
+        visuals.add_context_to_uri_vars(visual, only_count)
+        assert sorted(list(html.request.itervars())) == sorted(expected_vars)

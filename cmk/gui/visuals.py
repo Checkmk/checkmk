@@ -29,6 +29,7 @@ import copy
 import sys
 import traceback
 import json
+from contextlib import contextmanager
 from typing import Dict, List, Type, Callable  # pylint: disable=unused-import
 
 import cmk.gui.pages
@@ -1187,6 +1188,14 @@ def get_context_uri_vars(visual):
             uri_vars.append((uri_varname, "%s" % value))
 
     return uri_vars
+
+
+@contextmanager
+def context_uri_vars(visual):
+    """Updates the current HTTP variable context"""
+    with html.stashed_vars():
+        add_context_to_uri_vars(visual)
+        yield
 
 
 # Vice versa: find all filters that belong to the current URI variables

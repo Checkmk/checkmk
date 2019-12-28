@@ -3746,3 +3746,32 @@ def test_verify_single_infos_missing_context():
     visual = {"single_infos": ["host"], "context": {},}
     with pytest.raises(MKGeneralException, match="Missing context information"):
         visuals.verify_single_infos(visual, visual["context"])
+
+def test_context_uri_vars(register_builtin_html):
+    visual = {
+        "single_infos": ["host"],
+        "context": {
+            "host": "abc",
+            "blubl": {
+                "ag": "1"
+            },
+        },
+    }
+
+    visual2 = {
+        "single_infos": [],
+        "context": {
+            "hu_filter": {"hu": "hu"},
+        },
+    }
+
+    html.request.set_var("bla", "blub")
+    assert html.request.var("bla") == "blub"
+
+    with visuals.context_uri_vars(visual), visuals.context_uri_vars(visual2):
+        assert html.request.var("bla") == "blub"
+        assert html.request.var("host") == "abc"
+        assert html.request.var("ag") == "1"
+        assert html.request.var("hu") == "hu"
+
+    assert list(dict(html.request.itervars()).keys()) == ["bla"]

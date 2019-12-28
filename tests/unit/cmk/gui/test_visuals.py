@@ -3,6 +3,7 @@
 import pytest  # type: ignore
 
 import cmk
+from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import html
 import cmk.gui.plugins.visuals.utils as utils
 import cmk.gui.plugins.visuals
@@ -3734,3 +3735,14 @@ def test_add_context_to_uri_vars(register_builtin_html, visual, only_count, expe
 def test_get_context_uri_vars(register_builtin_html, visual, only_count, expected_vars):
     context_vars = visuals.get_context_uri_vars(visual)
     assert sorted(context_vars) == sorted(expected_vars)
+
+
+def test_verify_single_infos_has_context():
+    visual = {"single_infos": ["host"], "context": {"host": "abc"},}
+    visuals.verify_single_infos(visual, visual["context"])
+
+
+def test_verify_single_infos_missing_context():
+    visual = {"single_infos": ["host"], "context": {},}
+    with pytest.raises(MKGeneralException, match="Missing context information"):
+        visuals.verify_single_infos(visual, visual["context"])

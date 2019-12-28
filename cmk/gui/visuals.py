@@ -1407,6 +1407,7 @@ def single_infos_spec(single_infos):
     ))
 
 
+# TODO: Can this be replaced with verify_single_infos?
 def verify_single_contexts(what, visual, link_filters):
     for k, v in get_singlecontext_html_vars(visual).items():
         if v is None and k not in link_filters:
@@ -1415,6 +1416,18 @@ def verify_single_contexts(what, visual, link_filters):
                 _('This %s can not be displayed, because the '
                   'necessary context information "%s" is missing.') %
                 (visual_type_registry[what]().title, k))
+
+
+def verify_single_infos(visual, context):
+    """Check if all single infos from the element are known"""
+    single_info_keys = get_single_info_keys(visual)
+    missing_variables = set(single_info_keys).difference(context)
+
+    if missing_variables:
+        raise MKGeneralException(
+            _("Missing context information: %s. You can either add this as a fixed "
+              "setting, or call the with the missing HTTP variables.") %
+            (", ".join(missing_variables)))
 
 
 def visual_title(what, visual):

@@ -1212,9 +1212,7 @@ def get_context_from_uri_vars(only_infos=None, single_infos=None):
             for varname in filter_object.htmlvars:
                 if html.request.has_var(varname):
                     if filter_object.info in single_infos:
-                        # TODO: This should use html.get_unicode_input() just like
-                        # _get_singlecontext_html_vars()
-                        context[filter_name] = html.request.var(varname)
+                        context[filter_name] = html.get_unicode_input(varname)
                         break
                     else:
                         this_filter_vars[varname] = html.request.var(varname)

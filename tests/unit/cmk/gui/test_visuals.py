@@ -3745,6 +3745,8 @@ def test_get_context_uri_vars(register_builtin_html, visual, only_count, expecte
     (["host"], ["host"], [], {}),
     # Single host context -> empty set
     (["host"], ["host"], [("host", "")], {"host": ""}),
+    # Single host context with non-ascii char
+    (["host"], ["host"], [("host", "äbc")], {"host": u"äbc"}),
     # Single host context, multiple services
     (["host", "service"], ["host"], [("host", "aaa"), ("service_regex", "äbc")], {"host": "aaa",
         'serviceregex': {'service_regex': 'äbc'}}),

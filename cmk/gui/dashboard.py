@@ -926,10 +926,14 @@ def ajax_dashlet():
 def _add_context_to_dashboard(board):
     # type: (DashboardConfig) -> DashboardConfig
     board = copy.deepcopy(board)
+    board.setdefault("single_infos", [])
+    board.setdefault("context", {})
 
     # Read the context from the URL variables
-    board_context = visuals.get_context_from_uri_vars(single_infos=board.get('single_infos', []))
-    board_context.update(visuals.get_singlecontext_html_vars(board))
+    board_context = visuals.get_merged_context(
+        visuals.get_context_from_uri_vars(single_infos=board['single_infos']),
+        board["context"],
+    )
 
     # The dashboard may be called with "wato_folder" set. In that case
     # the dashboard is assumed to restrict the shown data to a specific

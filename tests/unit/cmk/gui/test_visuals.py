@@ -3741,6 +3741,10 @@ def test_get_context_uri_vars(register_builtin_html, visual, only_count, expecte
     (["host"], [], [("abc", "dingeling")], {}),
     # Single host context
     (["host"], ["host"], [("host", "aaa")], {"host": "aaa"}),
+    # Single host context -> not set
+    (["host"], ["host"], [], {}),
+    # Single host context -> empty set
+    (["host"], ["host"], [("host", "")], {"host": ""}),
     # Single host context, multiple services
     (["host", "service"], ["host"], [("host", "aaa"), ("service_regex", "äbc")], {"host": "aaa",
         'serviceregex': {'service_regex': 'äbc'}}),
@@ -3757,6 +3761,30 @@ def test_get_context_from_uri_vars(register_builtin_html, infos, single_infos, u
         html.request.set_var(key, val)
 
     context = visuals.get_context_from_uri_vars(infos, single_infos)
+    assert context == expected_context
+
+
+@pytest.mark.parametrize("uri_vars,visual,expected_context", [
+    # Single host context, set via URL, with some service filter, set via context
+    ([("host", "aaa")], {"infos": ["host", "service"], "single_infos": ["host"], "context": {"service_regex":
+        {"serviceregex": "abc"}},}, {"host": "aaa", "service_regex": {"serviceregex": "abc"},}),
+    # Single host context, set via context and URL
+    ([("host", "aaa")], {"infos": ["host", "service"], "single_infos": ["host"], "context": {"host":
+        "from_context",}}, {"host": "from_context"}),
+    # No single context with some host & service filter
+    ([("host", "aaa")], {"infos": ["host", "service"], "single_infos": [], "context": {"service_regex":
+        {"serviceregex": "abc"}},}, {"host": {"host": "aaa"}, "service_regex": {"serviceregex": "abc"},}),
+    # No single context with some host filter from URL
+    ([("host", "aaa")], {"infos": ["host", "service"], "single_infos": [], "context": {}},
+        {"host": {"host": "aaa"},}),
+])
+def test_get_merged_context(register_builtin_html, uri_vars, visual, expected_context):
+    for key, val in uri_vars:
+        html.request.set_var(key, val)
+
+    url_context = visuals.get_context_from_uri_vars(visual["infos"], visual["single_infos"])
+    context = visuals.get_merged_context(url_context, visual["context"])
+
     assert context == expected_context
 
 def test_verify_single_infos_has_context():

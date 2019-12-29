@@ -1249,8 +1249,8 @@ def page_view():
 
     # Gather the page context which is needed for the "add to visual" popup menu
     # to add e.g. views to dashboards or reports
-    context = visuals.get_context_from_uri_vars(view.datasource.infos)
-    context.update(visuals.get_singlecontext_html_vars(view.spec))
+    context = visuals.get_merged_context(visuals.get_context_from_uri_vars(view.datasource.infos),
+                                         view.spec["context"])
     html.set_page_context(context)
 
     painter_options = PainterOptions.get_instance()
@@ -1315,8 +1315,8 @@ def show_view(view, view_renderer, only_count=False):
     visuals.add_context_to_uri_vars(view.spec, only_count)
 
     # Compute the context of the current view
-    context = visuals.get_context_from_uri_vars(view.datasource.infos)
-    context.update(visuals.get_singlecontext_html_vars(view.spec))
+    context = visuals.get_merged_context(visuals.get_context_from_uri_vars(view.datasource.infos),
+                                         view.spec["context"])
 
     # Check that all needed information for configured single contexts are available
     visuals.verify_single_infos(view.spec, context)

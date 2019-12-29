@@ -1213,7 +1213,7 @@ def get_context_from_uri_vars(only_infos=None, single_infos=None):
                 if html.request.has_var(varname):
                     if filter_object.info in single_infos:
                         # TODO: This should use html.get_unicode_input() just like
-                        # get_singlecontext_html_vars()
+                        # _get_singlecontext_html_vars()
                         context[filter_name] = html.request.var(varname)
                         break
                     else:
@@ -1221,6 +1221,22 @@ def get_context_from_uri_vars(only_infos=None, single_infos=None):
             if this_filter_vars:
                 context[filter_name] = this_filter_vars
     return context
+
+
+def get_merged_context(*contexts):
+    """Merges multiple filter contexts to a single one
+
+    The last context that sets a filter wins. The intended order is to provide contexts in
+    "descending order", e.g. like this for dashboards:
+
+    1. URL context
+    2. Dashboard context
+    3. Dashlet context
+    """
+    merged_context = {}
+    for c in contexts:
+        merged_context.update(c)
+    return merged_context
 
 
 # Compute Livestatus-Filters based on a given context. Returns
@@ -1449,10 +1465,7 @@ def visual_title(what, visual):
 
 
 def _add_context_title(visual, title):
-    # Beware: if a single context visual is being visited *without* a context, then
-    # the value of the context variable(s) is None. In order to avoid exceptions,
-    # we simply drop these here.
-    extra_titles = [v for v in get_singlecontext_html_vars(visual).itervalues() if v is not None]
+    extra_titles = list(_get_singlecontext_html_vars(visual).itervalues())
 
     # FIXME: Is this really only needed for visuals without single infos?
     if not visual['single_infos']:
@@ -1511,7 +1524,7 @@ def get_singlecontext_vars(visual):
     return vars_
 
 
-def get_singlecontext_html_vars(visual):
+def _get_singlecontext_html_vars(visual):
     vars_ = get_singlecontext_vars(visual)
     for key in get_single_info_keys(visual):
         val = html.get_unicode_input(key)
@@ -1528,7 +1541,7 @@ def collect_context_links(this_visual, mobile=False, only_types=None):
 
     # compute list of html variables needed for this visual
     active_filter_vars = set([])
-    for var in get_singlecontext_html_vars(this_visual).iterkeys():
+    for var in _get_singlecontext_html_vars(this_visual).iterkeys():
         if html.request.has_var(var):
             active_filter_vars.add(var)
 
@@ -1572,7 +1585,7 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
 
         # We can show a button only if all single contexts of the
         # target visual are known currently
-        needed_vars = get_singlecontext_html_vars(visual).items()
+        needed_vars = _get_singlecontext_html_vars(visual).items()
         skip = False
         vars_values = []
         for var, val in needed_vars:

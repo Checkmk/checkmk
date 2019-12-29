@@ -81,11 +81,20 @@ def _expected_intervals():
 
 
 @pytest.mark.parametrize("type_name,expected_refresh_interval", _expected_intervals())
-def test_dashlet_refresh_intervals(type_name, expected_refresh_interval):
+def test_dashlet_refresh_intervals(register_builtin_html, type_name, expected_refresh_interval):
     dashlet_type = dashboard.dashlet_registry[type_name]
     assert dashlet_type.initial_refresh_interval() == expected_refresh_interval
 
-    dashlet = dashlet_type(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={})
+    dashlet_spec = {
+        "type": type_name,
+    }
+    if dashlet_type.has_context:
+        dashlet_spec["context"] = {}
+
+    dashlet = dashlet_type(dashboard_name="main",
+                           dashboard=dashboard._add_context_to_dashboard({}),
+                           dashlet_id=1,
+                           dashlet=dashlet_spec)
 
     assert dashlet.refresh_interval() == expected_refresh_interval
 

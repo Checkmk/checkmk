@@ -54,6 +54,10 @@ class DashletStats(six.with_metaclass(abc.ABCMeta, Dashlet)):
     def initial_refresh_interval(cls):
         return 60
 
+    @property
+    def has_context(self):
+        return True
+
     @abc.abstractmethod
     def _livestatus_table(self):
         raise NotImplementedError()

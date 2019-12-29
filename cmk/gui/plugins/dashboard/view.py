@@ -61,15 +61,7 @@ class ABCViewDashlet(IFrameDashlet):
         painter_options = PainterOptions.get_instance()
         painter_options.load(self._dashlet_spec["name"])
 
-        datasource = views.data_source_registry[view_spec["datasource"]]()
-        context = visuals.get_merged_context(
-            visuals.get_context_from_uri_vars(datasource.infos),
-            # TODO: The dashboard context should be merged (like it's done for the reporting)
-            #board["context"],
-            view_spec["context"],
-        )
-
-        view = views.View(self._dashlet_spec["name"], view_spec, context)
+        view = views.View(self._dashlet_spec["name"], view_spec, self.context)
         view.row_limit = views.get_limit()
         view.only_sites = views.get_only_sites()
         view.user_sorters = views.get_user_sorters()

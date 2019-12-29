@@ -532,7 +532,10 @@ def draw_dashboard(name):
                 on_resize_dashlets[nr] = on_resize
 
             dashlet_title_html = render_dashlet_title_html(dashlet_instance)
-            dashlet_content_html = render_dashlet_content(board, dashlet_instance, is_update=False)
+            dashlet_content_html = _render_dashlet_content(board,
+                                                           dashlet_instance,
+                                                           is_update=False,
+                                                           mtime=board["mtime"])
 
         except Exception as e:
             dashlet_content_html = render_dashlet_exception_content(dashlet_instance, nr, e)
@@ -602,25 +605,31 @@ def render_dashlet_title_html(dashlet_instance):
     return title
 
 
-# TODO: Cleanup the non stashed variable special case
-def render_dashlet_content(board, dashlet_instance, is_update, stash_html_vars=True):
-    # type: (DashboardConfig, Dashlet, bool, bool) -> Text
-    mtime = html.get_integer_input('mtime', 0)
+def _render_dashlet_content(board, dashlet_instance, is_update, mtime):
+    # type: (DashboardConfig, Dashlet, bool, int) -> Text
 
-    if not stash_html_vars:
-        return _update_or_show(board, dashlet_instance, is_update, mtime)
-
+    # All outer variables are completely reset for the dashlets to have a clean, well known state.
+    # The context that has been built based on the relevant HTTP variables is applied again.
     with html.stashed_vars():
         html.request.del_vars()
         html.request.set_var("name", dashlet_instance.dashboard_name)
+        html.request.set_var("mtime", str(mtime))
+
+        if dashlet_instance.has_context:
+            # Construct some one-shot visual to be able to use visuals.add_context_to_uri_vars
+            # TODO: Change visuals.add_context_to_uri_vars API to directly accept the needed
+            # attributes without
+            visuals.add_context_to_uri_vars({
+                "single_infos": dashlet_instance.single_infos(),
+                "infos": dashlet_instance.infos(),
+                "context": dashlet_instance.context,
+            })
+
         return _update_or_show(board, dashlet_instance, is_update, mtime)
 
 
 def _update_or_show(board, dashlet_instance, is_update, mtime):
     # type: (DashboardConfig, Dashlet, bool, int) -> Text
-    visuals.add_context_to_uri_vars(dashlet_instance.dashlet_spec)
-    visuals.add_context_to_uri_vars(board)
-
     with html.plugged():
         if is_update:
             dashlet_instance.update()
@@ -911,11 +920,13 @@ def ajax_dashlet():
     dashlet_type = get_dashlet_type(the_dashlet)
     dashlet_instance = dashlet_type(name, board, ident, the_dashlet)
 
+    mtime = html.get_integer_input('mtime', 0)
+
     try:
-        dashlet_content_html = render_dashlet_content(board,
-                                                      dashlet_instance,
-                                                      stash_html_vars=False,
-                                                      is_update=True)
+        dashlet_content_html = _render_dashlet_content(board,
+                                                       dashlet_instance,
+                                                       is_update=True,
+                                                       mtime=mtime)
     except Exception as e:
         dashlet_content_html = render_dashlet_exception_content(dashlet_instance, ident, e)
 

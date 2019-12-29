@@ -200,6 +200,29 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
         self._dashboard = dashboard
         self._dashlet_id = dashlet_id
         self._dashlet_spec = dashlet
+        self._context = self._get_context()  # type: Optional[Dict]
+
+    def _get_context(self):
+        # type: () -> Optional[Dict]
+        if not self.has_context:
+            return None
+
+        return visuals.get_merged_context(
+            visuals.get_context_from_uri_vars(self.infos(), self.single_infos()),
+            self._dashboard["context"],
+            self._dashlet_spec["context"],
+        )
+
+    @property
+    def has_context(self):
+        # type: () -> bool
+        """Whether or not this dashlet is context sensitive."""
+        return False
+
+    @property
+    def context(self):
+        # type: () -> Optional[Dict]
+        return self._context
 
     @property
     def dashlet_id(self):
@@ -259,9 +282,7 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
     def _add_context_vars_to_url(self, url):
         # type: (str) -> str
         """Adds missing context variables to the given URL"""
-        # TODO: Enable this once the property is available
-        #if not self.has_context:
-        if "context" not in self._dashlet_spec:
+        if not self.has_context:
             return url
 
         context_vars = self._dashlet_context_vars()
@@ -275,9 +296,14 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
 
     def _dashlet_context_vars(self):
         # type: () -> Dict[str, str]
-        url_vars = dict(visuals.get_context_uri_vars(self._dashboard))
-        url_vars.update(dict(visuals.get_context_uri_vars(self._dashlet_spec)))
-        return url_vars
+        # TODO: Change visuals.add_context_to_uri_vars API to directly accept the needed
+        # attributes without
+        return dict(
+            visuals.get_context_uri_vars({
+                "single_infos": self.single_infos(),
+                "infos": self.infos(),
+                "context": self.context,
+            }))
 
     def size(self):
         # type: () -> DashletSize

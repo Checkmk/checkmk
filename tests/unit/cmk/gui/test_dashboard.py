@@ -391,3 +391,46 @@ def test_refresh_interval():
                            dashlet_id=1,
                            dashlet={"refresh": 22})
     assert dashlet.refresh_interval() == 22
+
+
+def test_dashlet_context_inheritance(register_builtin_html):
+    HostStats = dashboard.dashlet_registry["hoststats"]
+
+    # Set some context filter vars from URL
+    html.request.set_var("host", "bla")
+    html.request.set_var("wato_folder", "/aaa/eee")
+
+    dashboard_spec = dashboard._add_context_to_dashboard({})
+
+    dashlet_spec = {
+        'type': 'hoststats',
+        'context': {
+            'wato_folder': {
+                'wato_folder': ''
+            }
+        },
+        'single_infos': [],
+        'show_title': True,
+        'title': u'Host Statistics',
+        'refresh': 60,
+        'add_context_to_title': True,
+        'position': (61, 1),
+        'size': (30, 18),
+    }
+
+    dashlet = HostStats(dashboard_name="bla",
+                        dashboard=dashboard_spec,
+                        dashlet_id=1,
+                        dashlet=dashlet_spec)
+
+    assert dashlet.context == {
+        'host': {
+            'host': 'bla'
+        },
+        'wato_folder': {
+            'wato_folder': ''
+        },
+    }
+
+    assert sorted(dashlet._dashlet_context_vars().iteritems()) == sorted([('host', 'bla'),
+                                                                          ('wato_folder', '')])

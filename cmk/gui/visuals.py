@@ -680,7 +680,7 @@ def get_context_specs(visual, info_handler):
     if info_handler:
         info_keys = info_handler(visual)
 
-    if not info_keys:
+    if info_keys is None:
         info_keys = visual_info_registry.keys()
 
     single_info_keys = [key for key in info_keys if key in visual['single_infos']]
@@ -725,6 +725,9 @@ def process_context_specs(context_specs):
 
 
 def render_context_specs(visual, context_specs):
+    if not context_specs:
+        return
+
     forms.header(_("Context / Search Filters"))
     for info_key, spec in context_specs:
         forms.section(spec.title())

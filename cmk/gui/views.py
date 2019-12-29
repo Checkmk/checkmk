@@ -1426,7 +1426,7 @@ def show_view(view, view_renderer, only_count=False):
         layout = layout_class()
 
     # Set browser reload
-    if browser_reload and display_options.enabled(display_options.R) and not only_count:
+    if browser_reload and display_options.enabled(display_options.R):
         html.set_browser_reload(browser_reload)
 
     if config.enable_sounds and config.sounds and html.output_format == "html":

@@ -42,6 +42,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
 VisualContext = Dict[str, Union[str, Dict[str, str]]]
+SingleInfos = List[str]
 
 
 class VisualInfo(six.with_metaclass(abc.ABCMeta, object)):

@@ -221,7 +221,9 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def context(self):
-        # type: () -> Optional[Dict]
+        # type: () -> Dict
+        if self._context is None:
+            raise Exception("Missing context")
         return self._context
 
     @property
@@ -296,14 +298,7 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
 
     def _dashlet_context_vars(self):
         # type: () -> Dict[str, str]
-        # TODO: Change visuals.add_context_to_uri_vars API to directly accept the needed
-        # attributes without
-        return dict(
-            visuals.get_context_uri_vars({
-                "single_infos": self.single_infos(),
-                "infos": self.infos(),
-                "context": self.context,
-            }))
+        return dict(visuals.get_context_uri_vars(self.context, self.single_infos()))
 
     def size(self):
         # type: () -> DashletSize
@@ -649,9 +644,11 @@ def copy_view_into_dashlet(dashlet, nr, view_name, add_context=None, load_from_a
 
     # Overwrite the views default title with the context specific title
     dashlet['title'] = visuals.visual_title('view', view)
-    dashlet['title_url'] = html.makeuri_contextless([('view_name', view_name)] +
-                                                    visuals.get_singlecontext_vars(view).items(),
-                                                    filename='view.py')
+    # TODO: Shouldn't we use the self._dashlet_context_vars() here?
+    dashlet['title_url'] = html.makeuri_contextless(
+        [('view_name', view_name)] +
+        visuals.get_singlecontext_vars(view["context"], view["single_infos"]).items(),
+        filename='view.py')
 
     dashlet['type'] = 'view'
     dashlet['name'] = 'dashlet_%d' % nr

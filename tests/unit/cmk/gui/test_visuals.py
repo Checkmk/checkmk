@@ -3709,7 +3709,7 @@ def test_registered_info_attributes():
 ])
 def test_add_context_to_uri_vars(register_builtin_html, visual, only_count, expected_vars):
     with html.stashed_vars():
-        visuals.add_context_to_uri_vars(visual, only_count)
+        visuals.add_context_to_uri_vars(visual["context"], visual["single_infos"], only_count)
         assert sorted(list(html.request.itervars())) == sorted(expected_vars)
 
 
@@ -3733,7 +3733,7 @@ def test_add_context_to_uri_vars(register_builtin_html, visual, only_count, expe
         [("host", "abc"), ("service", u"äää")]),
 ])
 def test_get_context_uri_vars(register_builtin_html, visual, only_count, expected_vars):
-    context_vars = visuals.get_context_uri_vars(visual)
+    context_vars = visuals.get_context_uri_vars(visual["context"], visual["single_infos"])
     assert sorted(context_vars) == sorted(expected_vars)
 
 @pytest.mark.parametrize("infos,single_infos,uri_vars,expected_context", [
@@ -3820,7 +3820,8 @@ def test_context_uri_vars(register_builtin_html):
     html.request.set_var("bla", "blub")
     assert html.request.var("bla") == "blub"
 
-    with visuals.context_uri_vars(visual), visuals.context_uri_vars(visual2):
+    with visuals.context_uri_vars(visual["context"], visual["single_infos"]), \
+         visuals.context_uri_vars(visual2["context"], visual2["single_infos"]):
         assert html.request.var("bla") == "blub"
         assert html.request.var("host") == "abc"
         assert html.request.var("ag") == "1"

@@ -1501,7 +1501,7 @@ def _transform_old_views(all_views):
             view[
                 'show_filters'] = view['hide_filters'] + view['hard_filters'] + view['show_filters']
 
-            single_keys = visuals.get_single_info_keys(view)
+            single_keys = visuals.get_single_info_keys(view["single_infos"])
 
             # First get vars for the classic filters
             context = {}
@@ -1685,7 +1685,8 @@ class Cell(object):
                 if link_view:
                     # TODO: Clean this up here
                     for filt in [
-                            visuals.get_filter(fn) for fn in visuals.get_single_info_keys(link_view)
+                            visuals.get_filter(fn)
+                            for fn in visuals.get_single_info_keys(link_view["single_infos"])
                     ]:
                         columns.update(filt.link_columns)
 

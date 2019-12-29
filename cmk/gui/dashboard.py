@@ -616,14 +616,8 @@ def _render_dashlet_content(board, dashlet_instance, is_update, mtime):
         html.request.set_var("mtime", str(mtime))
 
         if dashlet_instance.has_context:
-            # Construct some one-shot visual to be able to use visuals.add_context_to_uri_vars
-            # TODO: Change visuals.add_context_to_uri_vars API to directly accept the needed
-            # attributes without
-            visuals.add_context_to_uri_vars({
-                "single_infos": dashlet_instance.single_infos(),
-                "infos": dashlet_instance.infos(),
-                "context": dashlet_instance.context,
-            })
+            visuals.add_context_to_uri_vars(dashlet_instance.context,
+                                            dashlet_instance.single_infos())
 
         return _update_or_show(board, dashlet_instance, is_update, mtime)
 

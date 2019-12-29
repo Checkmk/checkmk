@@ -47,6 +47,10 @@ class ABCViewDashlet(IFrameDashlet):
     def initial_size(cls):
         return (40, 20)
 
+    @property
+    def has_context(self):
+        return True
+
     def _show_view_as_dashlet(self, view_spec):
         is_reload = html.request.has_var("_reload")
 
@@ -156,9 +160,8 @@ class LinkedViewDashlet(ABCViewDashlet):
 
     def title_url(self):
         view_name = self._dashlet_spec["name"]
-        view = self._get_view_spec()
         return html.makeuri_contextless([('view_name', view_name)] +
-                                        visuals.get_singlecontext_vars(view).items(),
+                                        list(self._dashlet_context_vars().iteritems()),
                                         filename='view.py')
 
     def update(self):

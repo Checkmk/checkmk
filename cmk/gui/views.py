@@ -1317,7 +1317,7 @@ def show_view(view, view_renderer, only_count=False):
     #
     # a) single context vars of the view are enforced
     # b) multi context vars can be overwritten by existing HTML vars
-    visuals.add_context_to_uri_vars(view.spec, only_count)
+    visuals.add_context_to_uri_vars(view.spec["context"], view.spec["single_infos"], only_count)
 
     # Check that all needed information for configured single contexts are available
     visuals.verify_single_infos(view.spec, view.context)

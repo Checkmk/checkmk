@@ -204,11 +204,7 @@ class APICallGrafanaConnector(APICallCollection):
         # URL variables. This is not nice but needs a greater refactoring, so
         # we need to live with the current situation for the while.
         with html.stashed_vars():
-            # add_context_to_uri_vars needs the key "single_infos"
-            visuals.add_context_to_uri_vars({
-                "context": context,
-                "single_infos": single_infos,
-            })
+            visuals.add_context_to_uri_vars(context, single_infos)
 
             # Prepare Filter headers for Livestatus
             filter_headers = ""

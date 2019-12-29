@@ -205,11 +205,12 @@ class PermissionSectionViews(PermissionSection):
 
 class View(object):
     """Manages processing of a single view, e.g. during rendering"""
-    def __init__(self, view_name, view_spec):
-        # type: (str, Dict) -> None
+    def __init__(self, view_name, view_spec, context):
+        # type: (str, Dict, Dict) -> None
         super(View, self).__init__()
         self.name = view_name
         self.spec = view_spec
+        self.context = context
         self._row_limit = None  # type: Optional[int]
         self._only_sites = None  # type: Optional[List[str]]
         self._user_sorters = None  # type: Optional[Tuple]
@@ -1242,15 +1243,19 @@ def show_filter_form(is_open, filters):
 def page_view():
     view_spec, view_name = html.get_item_input("view_name", get_permitted_views())
 
-    view = View(view_name, view_spec)
+    datasource = data_source_registry[view_spec["datasource"]]()
+    context = visuals.get_merged_context(
+        visuals.get_context_from_uri_vars(datasource.infos),
+        view_spec["context"],
+    )
+
+    view = View(view_name, view_spec, context)
     view.row_limit = get_limit()
     view.only_sites = get_only_sites()
     view.user_sorters = get_user_sorters()
 
     # Gather the page context which is needed for the "add to visual" popup menu
     # to add e.g. views to dashboards or reports
-    context = visuals.get_merged_context(visuals.get_context_from_uri_vars(view.datasource.infos),
-                                         view.spec["context"])
     html.set_page_context(context)
 
     painter_options = PainterOptions.get_instance()
@@ -1314,12 +1319,8 @@ def show_view(view, view_renderer, only_count=False):
     # b) multi context vars can be overwritten by existing HTML vars
     visuals.add_context_to_uri_vars(view.spec, only_count)
 
-    # Compute the context of the current view
-    context = visuals.get_merged_context(visuals.get_context_from_uri_vars(view.datasource.infos),
-                                         view.spec["context"])
-
     # Check that all needed information for configured single contexts are available
-    visuals.verify_single_infos(view.spec, context)
+    visuals.verify_single_infos(view.spec, view.context)
 
     all_active_filters = _get_all_active_filters(view)
     filterheaders = get_livestatus_filter_headers(view, all_active_filters)
@@ -1328,8 +1329,7 @@ def show_view(view, view_renderer, only_count=False):
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see later)
     if html.request.var("mode") == "availability" and ("aggr" not in view.datasource.infos or
                                                        html.request.var("timeline_aggr")):
-        return cmk.gui.plugins.views.availability.render_availability_page(
-            view, context, filterheaders)
+        return cmk.gui.plugins.views.availability.render_availability_page(view, filterheaders)
 
     headers = filterheaders + view.spec.get("add_headers", "")
 

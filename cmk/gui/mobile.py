@@ -34,6 +34,7 @@ import cmk.gui.view_utils
 from cmk.gui.plugins.views.utils import (
     PainterOptions,
     command_registry,
+    data_source_registry,
 )
 
 from cmk.gui.i18n import _
@@ -225,7 +226,14 @@ def page_index():
     items = []
     for view_name, view_spec in views.get_permitted_views().items():
         if view_spec.get("mobile") and not view_spec.get("hidden"):
-            view = views.View(view_name, view_spec)
+
+            datasource = data_source_registry[view_spec["datasource"]]()
+            context = visuals.get_merged_context(
+                visuals.get_context_from_uri_vars(datasource.infos),
+                view_spec["context"],
+            )
+
+            view = views.View(view_name, view_spec, context)
             view.row_limit = views.get_limit()
             view.only_sites = views.get_only_sites()
             view.user_sorters = views.get_user_sorters()
@@ -273,7 +281,13 @@ def page_view():
     if not view_spec:
         raise MKUserError("view_name", "No view defined with the name '%s'." % view_name)
 
-    view = views.View(view_name, view_spec)
+    datasource = data_source_registry[view_spec["datasource"]]()
+    context = visuals.get_merged_context(
+        visuals.get_context_from_uri_vars(datasource.infos),
+        view_spec["context"],
+    )
+
+    view = views.View(view_name, view_spec, context)
     view.row_limit = views.get_limit()
     view.only_sites = views.get_only_sites()
     view.user_sorters = views.get_user_sorters()

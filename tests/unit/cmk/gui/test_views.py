@@ -17,7 +17,7 @@ import cmk.gui.plugins.views
 def view(register_builtin_html, load_plugins):
     view_name = "allhosts"
     view_spec = cmk.gui.views.multisite_builtin_views[view_name]
-    return cmk.gui.views.View(view_name, view_spec)
+    return cmk.gui.views.View(view_name, view_spec, view_spec.get("context", {}))
 
 
 def test_registered_painter_options():
@@ -5738,7 +5738,7 @@ def test_get_needed_regular_columns(view):
     view_name = "allhosts"
     view_spec = cmk.gui.views.multisite_builtin_views[view_name]
 
-    view = cmk.gui.views.View(view_name, view_spec)
+    view = cmk.gui.views.View(view_name, view_spec, view_spec.get("context", {}))
 
     columns = cmk.gui.views._get_needed_regular_columns(view.group_cells + view.row_cells, view.sorters, view.datasource)
     assert sorted(columns) == sorted([
@@ -5781,7 +5781,7 @@ def test_get_needed_regular_columns(view):
 def test_get_needed_join_columns(view):
     view_spec = copy.deepcopy(view.spec)
     view_spec["painters"].append(('service_description', None, None, u'CPU load'))
-    view = cmk.gui.views.View(view.name, view_spec)
+    view = cmk.gui.views.View(view.name, view_spec, view_spec.get("context", {}))
 
     columns = cmk.gui.views._get_needed_join_columns(view.join_cells, view.sorters)
     assert sorted(columns) == sorted([
@@ -5793,7 +5793,7 @@ def test_get_needed_join_columns(view):
 def test_create_view_basics():
     view_name = "allhosts"
     view_spec = cmk.gui.views.multisite_builtin_views[view_name]
-    view = cmk.gui.views.View(view_name, view_spec)
+    view = cmk.gui.views.View(view_name, view_spec, view_spec.get("context", {}))
 
     assert view.name == view_name
     assert view.spec == view_spec

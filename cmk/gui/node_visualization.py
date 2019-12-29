@@ -174,7 +174,7 @@ class ParentChildTopologyPage(Page):
     def _get_topology_view_and_filters(self):
         view_spec = get_permitted_views()["topology_filters"]
         view_name = "topology_filters"
-        view = View(view_name, view_spec)
+        view = View(view_name, view_spec, view_spec.get("context", {}))
         filters = cmk.gui.visuals.filters_of_visual(view.spec,
                                                     view.datasource.infos,
                                                     link_filters=view.datasource.link_filters)

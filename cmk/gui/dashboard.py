@@ -933,32 +933,11 @@ def ajax_dashlet():
     html.write_html(dashlet_content_html)
 
 
-# TODO: Is the merging with the context possibly set in the dashboard config done right?
 def _add_context_to_dashboard(board):
     # type: (DashboardConfig) -> DashboardConfig
     board = copy.deepcopy(board)
     board.setdefault("single_infos", [])
     board.setdefault("context", {})
-
-    # Read the context from the URL variables
-    board_context = visuals.get_merged_context(
-        visuals.get_context_from_uri_vars(single_infos=board['single_infos']),
-        board["context"],
-    )
-
-    # The dashboard may be called with "wato_folder" set. In that case
-    # the dashboard is assumed to restrict the shown data to a specific
-    # WATO subfolder or file. This could be a configurable feature in
-    # future, but currently we assume, that *all* dashboards are filename
-    # sensitive.
-    wato_folder = html.request.var("wato_folder")
-    if wato_folder is not None:
-        board_context["wato_folder"] = {
-            "wato_folder": wato_folder,
-        }
-
-    board["context"] = board_context
-
     return board
 
 

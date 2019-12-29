@@ -3736,6 +3736,28 @@ def test_get_context_uri_vars(register_builtin_html, visual, only_count, expecte
     context_vars = visuals.get_context_uri_vars(visual)
     assert sorted(context_vars) == sorted(expected_vars)
 
+@pytest.mark.parametrize("infos,single_infos,uri_vars,expected_context", [
+    # No single context, no filter
+    (["host"], [], [("abc", "dingeling")], {}),
+    # Single host context
+    (["host"], ["host"], [("host", "aaa")], {"host": "aaa"}),
+    # Single host context, multiple services
+    (["host", "service"], ["host"], [("host", "aaa"), ("service_regex", "äbc")], {"host": "aaa",
+        'serviceregex': {'service_regex': 'äbc'}}),
+    # multiple services
+    (["service", "host"], [], [("host", "aaa"), ("service_regex", "äbc")], {
+        'serviceregex': {'service_regex': 'äbc'}, 'host': {'host': 'aaa'},}),
+    # multiple services, ignore filters of unrelated infos
+    (["service"], [], [("host", "aaa"), ("service_regex", "äbc")], {
+        'serviceregex': {'service_regex': 'äbc'},}),
+])
+def test_get_context_from_uri_vars(register_builtin_html, infos, single_infos, uri_vars,
+        expected_context):
+    for key, val in uri_vars:
+        html.request.set_var(key, val)
+
+    context = visuals.get_context_from_uri_vars(infos, single_infos)
+    assert context == expected_context
 
 def test_verify_single_infos_has_context():
     visual = {"single_infos": ["host"], "context": {"host": "abc"},}

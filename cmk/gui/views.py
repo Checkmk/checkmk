@@ -1314,8 +1314,12 @@ def show_view(view, view_renderer, only_count=False):
     # b) multi context vars can be overwritten by existing HTML vars
     visuals.add_context_to_uri_vars(view.spec, only_count)
 
+    # Compute the context of the current view
+    context = visuals.get_context_from_uri_vars(view.datasource.infos)
+    context.update(visuals.get_singlecontext_html_vars(view.spec))
+
     # Check that all needed information for configured single contexts are available
-    visuals.verify_single_contexts('views', view.spec, view.datasource.link_filters)
+    visuals.verify_single_infos(view.spec, context)
 
     all_active_filters = _get_all_active_filters(view)
     filterheaders = get_livestatus_filter_headers(view, all_active_filters)
@@ -1324,10 +1328,6 @@ def show_view(view, view_renderer, only_count=False):
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see later)
     if html.request.var("mode") == "availability" and ("aggr" not in view.datasource.infos or
                                                        html.request.var("timeline_aggr")):
-
-        context = visuals.get_context_from_uri_vars(view.datasource.infos)
-        context.update(visuals.get_singlecontext_html_vars(view.spec))
-
         return cmk.gui.plugins.views.availability.render_availability_page(
             view, context, filterheaders)
 

@@ -1212,6 +1212,8 @@ def get_context_from_uri_vars(only_infos=None, single_infos=None):
             for varname in filter_object.htmlvars:
                 if html.request.has_var(varname):
                     if filter_object.info in single_infos:
+                        # TODO: This should use html.get_unicode_input() just like
+                        # get_singlecontext_html_vars()
                         context[filter_name] = html.request.var(varname)
                         break
                     else:
@@ -1416,17 +1418,6 @@ def single_infos_spec(single_infos):
     ))
 
 
-# TODO: Can this be replaced with verify_single_infos?
-def verify_single_contexts(what, visual, link_filters):
-    for k, v in get_singlecontext_html_vars(visual).items():
-        if v is None and k not in link_filters:
-            raise MKUserError(
-                k,
-                _('This %s can not be displayed, because the '
-                  'necessary context information "%s" is missing.') %
-                (visual_type_registry[what]().title, k))
-
-
 def verify_single_infos(visual, context):
     """Check if all single infos from the element are known"""
     single_info_keys = get_single_info_keys(visual)
@@ -1514,7 +1505,9 @@ def get_single_info_keys(visual):
 def get_singlecontext_vars(visual):
     vars_ = {}
     for key in get_single_info_keys(visual):
-        vars_[key] = visual['context'].get(key)
+        val = visual['context'].get(key)
+        if val is not None:
+            vars_[key] = val
     return vars_
 
 

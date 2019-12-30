@@ -1,7 +1,10 @@
 ((c++-mode . ((flycheck-cppcheck-suppressions . ("passedByValue"))))
  (python-mode . ((eval setq flycheck-python-mypy-executable
                        (concat (projectile-locate-dominating-file default-directory dir-locals-file)
-                               "scripts/run-mypy"))))
+                               "scripts/run-mypy"))
+                 (eval setq flycheck-python-pylint-executable
+                       (concat (projectile-locate-dominating-file default-directory dir-locals-file)
+                                "scripts/run-pylint"))))
  (scss-mode . ((eval setq flycheck-sass/scss-sass-lint-executable
                      (concat (projectile-locate-dominating-file default-directory dir-locals-file)
                              "node_modules/.bin/sass-lint"))))

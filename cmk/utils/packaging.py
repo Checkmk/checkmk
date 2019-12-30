@@ -8,7 +8,7 @@ import subprocess
 import json
 from io import BytesIO
 import sys
-from typing import cast, Any, BinaryIO, Dict, List, NamedTuple, Optional, Text  # pylint: disable=unused-import
+from typing import cast, Any, BinaryIO, Dict, Iterable, List, NamedTuple, Optional, Text  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
@@ -212,7 +212,7 @@ def remove_package(package):
                 try:
                     path = part.path + "/" + fn
                     if part.ident == 'ec_rule_packs':
-                        cmk.ec.export.remove_packaged_rule_packs(filenames)
+                        _remove_packaged_rule_packs(filenames)
                     else:
                         os.remove(path)
                 except Exception as e:
@@ -365,11 +365,34 @@ def install_package(file_object):
 
             if part.ident == 'ec_rule_packs':
                 to_remove = [fn for fn in filenames if fn not in keep]
-                cmk.ec.export.remove_packaged_rule_packs(to_remove, delete_export=False)
+                _remove_packaged_rule_packs(to_remove, delete_export=False)
 
     # Last but not least install package file
     write_package_info(package)
     return package
+
+
+def _remove_packaged_rule_packs(file_names, delete_export=True):
+    # type: (Iterable[str], bool) -> None
+    """
+    This function synchronizes the rule packs in rules.mk and the packaged rule packs
+    of a MKP upon deletion of that MKP. When a modified or an unmodified MKP is
+    deleted the exported rule pack and the rule pack in rules.mk are both deleted.
+    """
+    if not file_names:
+        return
+
+    rule_packs = cmk.ec.export.load_rule_packs()
+    rule_pack_ids = [rp['id'] for rp in rule_packs]
+    affected_ids = [os.path.splitext(fn)[0] for fn in file_names]
+
+    for id_ in affected_ids:
+        index = rule_pack_ids.index(id_)
+        del rule_packs[index]
+        if delete_export:
+            cmk.ec.export.remove_exported_rule_pack(id_)
+
+    cmk.ec.export.save_rule_packs(rule_packs)
 
 
 def _get_package_info_from_package(file_object):
@@ -591,6 +614,7 @@ def rule_pack_id_to_mkp():
     MKP exists, the value of that mapping is None.
     """
     package_info = get_all_package_infos()
+
     def mkp_of(rule_pack_file):
         # type: (str) -> Any
         """Find the MKP for the given file"""

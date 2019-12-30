@@ -402,26 +402,3 @@ def release_packaged_rule_packs(file_names):
 
     if save:
         save_rule_packs(rule_packs)
-
-
-def remove_packaged_rule_packs(file_names, delete_export=True):
-    # type: (Iterable[str], bool) -> None
-    """
-    This function synchronizes the rule packs in rules.mk and the packaged rule packs
-    of a MKP upon deletion of that MKP. When a modified or an unmodified MKP is
-    deleted the exported rule pack and the rule pack in rules.mk are both deleted.
-    """
-    if not file_names:
-        return
-
-    rule_packs = load_rule_packs()
-    rule_pack_ids = [rp['id'] for rp in rule_packs]
-    affected_ids = [os.path.splitext(fn)[0] for fn in file_names]
-
-    for id_ in affected_ids:
-        index = rule_pack_ids.index(id_)
-        del rule_packs[index]
-        if delete_export:
-            remove_exported_rule_pack(id_)
-
-    save_rule_packs(rule_packs)

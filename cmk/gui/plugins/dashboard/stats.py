@@ -54,8 +54,8 @@ class DashletStats(six.with_metaclass(abc.ABCMeta, Dashlet)):
     def initial_refresh_interval(cls):
         return 60
 
-    @property
-    def has_context(self):
+    @classmethod
+    def has_context(cls):
         return True
 
     @abc.abstractmethod

@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from typing import List, Optional  # pylint: disable=unused-import
 import cmk.gui.views as views
 import cmk.gui.visuals as visuals
 from cmk.gui.i18n import _
@@ -47,8 +48,8 @@ class ABCViewDashlet(IFrameDashlet):
     def initial_size(cls):
         return (40, 20)
 
-    @property
-    def has_context(self):
+    @classmethod
+    def has_context(cls):
         return True
 
     def _show_view_as_dashlet(self, view_spec):
@@ -72,6 +73,10 @@ class ABCViewDashlet(IFrameDashlet):
 
         view_renderer = views.GUIViewRenderer(view, show_buttons=False)
         views.show_view(view, view_renderer)
+
+    def _get_infos_from_view_spec(self, view_spec):
+        ds_name = view_spec["datasource"]
+        return views.data_source_registry[ds_name]().infos
 
 
 @dashlet_registry.register
@@ -112,6 +117,15 @@ class ViewDashlet(ABCViewDashlet):
     def update(self):
         self._show_view_as_dashlet(self._dashlet_spec)
 
+    def infos(self):
+        # Hack for create mode of dashlet editor. The user first selects a datasource and then the
+        # single contexts, the dashlet editor needs to use these information.
+        if html.myfile == "edit_dashlet" and html.request.has_var("datasource"):
+            ds_name = html.request.var('datasource')
+            return views.data_source_registry[ds_name]().infos
+
+        return self._get_infos_from_view_spec(self._dashlet_spec)
+
 
 @dashlet_registry.register
 class LinkedViewDashlet(ABCViewDashlet):
@@ -147,6 +161,12 @@ class LinkedViewDashlet(ABCViewDashlet):
             ),
         ]
 
+    @classmethod
+    def add_url(cls):
+        return 'create_link_view_dashlet.py?name=%s&mode=create&back=%s' % \
+            (html.urlencode(html.request.var('name')),
+             html.urlencode(html.makeuri([('edit', '1')])))
+
     def _get_view_spec(self):
         view_name = self._dashlet_spec["name"]
         view_spec = views.get_permitted_views().get(view_name)
@@ -166,3 +186,6 @@ class LinkedViewDashlet(ABCViewDashlet):
 
     def update(self):
         self._show_view_as_dashlet(self._get_view_spec())
+
+    def infos(self):
+        return self._get_infos_from_view_spec(self._get_view_spec())

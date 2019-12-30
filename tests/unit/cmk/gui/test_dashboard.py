@@ -81,15 +81,18 @@ def _expected_intervals():
 
 
 @pytest.mark.parametrize("type_name,expected_refresh_interval", _expected_intervals())
-def test_dashlet_refresh_intervals(register_builtin_html, type_name, expected_refresh_interval):
+def test_dashlet_refresh_intervals(register_builtin_html, type_name, expected_refresh_interval,
+                                   monkeypatch):
     dashlet_type = dashboard.dashlet_registry[type_name]
     assert dashlet_type.initial_refresh_interval() == expected_refresh_interval
 
     dashlet_spec = {
         "type": type_name,
     }
-    if dashlet_type.has_context:
+    if dashlet_type.has_context():
         dashlet_spec["context"] = {}
+
+    monkeypatch.setattr(dashboard.Dashlet, "_get_context", lambda s: {})
 
     dashlet = dashlet_type(dashboard_name="main",
                            dashboard=dashboard._add_context_to_dashboard({}),
@@ -267,7 +270,6 @@ def test_old_dashlet_settings():
 
 
 def test_dashlet_type_defaults(register_builtin_html):
-    assert dashboard.Dashlet.infos() == []
     assert dashboard.Dashlet.single_infos() == []
     assert dashboard.Dashlet.is_selectable() is True
     assert dashboard.Dashlet.is_resizable() is True
@@ -290,6 +292,7 @@ def test_dashlet_defaults():
                            dashboard={},
                            dashlet_id=1,
                            dashlet={"xyz": "abc"})
+    assert dashlet.infos() == []
     assert dashlet.dashlet_id == 1
     assert dashlet.dashlet_spec == {"xyz": "abc"}
     assert dashlet.dashboard_name == "main"

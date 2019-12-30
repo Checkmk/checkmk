@@ -104,10 +104,10 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
         raise NotImplementedError()
 
     @classmethod
-    def infos(cls):
-        # type: () -> List[str]
-        """Return a list of the supported infos (for the visual context) of this dashlet"""
-        return []
+    def has_context(cls):
+        # type: () -> bool
+        """Whether or not this dashlet is context sensitive."""
+        return False
 
     @classmethod
     def single_infos(cls):
@@ -202,9 +202,14 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
         self._dashlet_spec = dashlet
         self._context = self._get_context()  # type: Optional[Dict]
 
+    def infos(self):
+        # type: () -> List[str]
+        """Return a list of the supported infos (for the visual context) of this dashlet"""
+        return []
+
     def _get_context(self):
         # type: () -> Optional[Dict]
-        if not self.has_context:
+        if not self.has_context():
             return None
 
         return visuals.get_merged_context(
@@ -212,12 +217,6 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
             self._dashboard["context"],
             self._dashlet_spec["context"],
         )
-
-    @property
-    def has_context(self):
-        # type: () -> bool
-        """Whether or not this dashlet is context sensitive."""
-        return False
 
     @property
     def context(self):
@@ -284,7 +283,7 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
     def _add_context_vars_to_url(self, url):
         # type: (str) -> str
         """Adds missing context variables to the given URL"""
-        if not self.has_context:
+        if not self.has_context():
             return url
 
         context_vars = self._dashlet_context_vars()

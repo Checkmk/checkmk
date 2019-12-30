@@ -28,7 +28,7 @@ import time
 import copy
 import json
 from typing import (  # pylint: disable=unused-import
-    Any, Dict, Optional, NamedTuple, Tuple, Text, Type, List, Union,
+    Any, Dict, Optional, NamedTuple, Tuple, Text, Type, List, Union, Callable,
 )
 import six
 
@@ -297,11 +297,6 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
         return cls._spec["sort_index"]
 
     @classmethod
-    def infos(cls):
-        # type: () -> List[str]
-        return cls._spec.get("infos", [])
-
-    @classmethod
     def single_infos(cls):
         # type: () -> List[str]
         return cls._spec.get("single_infos", [])
@@ -369,6 +364,10 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
         if "add_urlfunc" in cls._spec:
             return cls._spec["add_urlfunc"]()
         return super(LegacyDashlet, cls).add_url()
+
+    def infos(self):
+        # type: () -> List[str]
+        return self._spec.get("infos", [])
 
     def display_title(self):
         # type: () -> Text
@@ -615,7 +614,7 @@ def _render_dashlet_content(board, dashlet_instance, is_update, mtime):
         html.request.set_var("name", dashlet_instance.dashboard_name)
         html.request.set_var("mtime", str(mtime))
 
-        if dashlet_instance.has_context:
+        if dashlet_instance.has_context():
             visuals.add_context_to_uri_vars(dashlet_instance.context,
                                             dashlet_instance.single_infos())
 
@@ -1045,6 +1044,21 @@ def _vs_dashboard():
 #   '----------------------------------------------------------------------'
 
 
+@cmk.gui.pages.register("create_link_view_dashlet")
+def page_create_link_view_dashlet():
+    # type: () -> None
+    """Choose an existing view from the list of available views"""
+    name = html.request.var('name')
+    choose_view(name, _('Link existing view'), _create_linked_view_dashlet_spec)
+
+
+def _create_linked_view_dashlet_spec(dashlet_id, view_name):
+    # type: (int, str) -> Dict
+    dashlet = default_dashlet_definition("linked_view")
+    dashlet["name"] = view_name
+    return dashlet
+
+
 @cmk.gui.pages.register("create_view_dashlet")
 def page_create_view_dashlet():
     # type: () -> None
@@ -1058,7 +1072,16 @@ def page_create_view_dashlet():
 
     else:
         # Choose an existing view from the list of available views
-        choose_view(name)
+        choose_view(name, _('Copy existing view'), _create_cloned_view_dashlet_spec)
+
+
+def _create_cloned_view_dashlet_spec(dashlet_id, view_name):
+    # type: (int, str) -> Dict
+    dashlet = default_dashlet_definition('view')
+
+    # save the original context and override the context provided by the view
+    copy_view_into_dashlet(dashlet, dashlet_id, view_name)
+    return dashlet
 
 
 @cmk.gui.pages.register("create_view_dashlet_infos")
@@ -1083,16 +1106,16 @@ def page_create_view_dashlet_infos():
                                                                  filename='edit_dashlet.py'))
 
 
-def choose_view(name):
-    # type: (DashboardName) -> None
+def choose_view(name, title, create_dashlet_spec_func):
+    # type: (DashboardName, Text, Callable) -> None
     import cmk.gui.views as views
     vs_view = DropdownChoice(
-        title=_('View Name'),
+        title=_('View name'),
         choices=views.view_choices,
         sorted=True,
     )
 
-    html.header(_('Create Dashlet from existing View'))
+    html.header(title)
     html.begin_context_buttons()
     back_url = html.get_url_input(
         "back", "dashboard.py?edit=1&name=%s" % html.urlencode(html.request.var('name')))
@@ -1105,13 +1128,8 @@ def choose_view(name):
             vs_view.validate_value(view_name, 'view')
 
             dashboard = get_permitted_dashboards()[name]
-
-            # Add the dashlet!
-            dashlet = default_dashlet_definition('view')
-
-            # save the original context and override the context provided by the view
             dashlet_id = len(dashboard['dashlets'])
-            copy_view_into_dashlet(dashlet, dashlet_id, view_name)
+            dashlet = create_dashlet_spec_func(dashlet_id, view_name)
             add_dashlet(dashlet, dashboard)
 
             raise HTTPRedirect('edit_dashlet.py?name=%s&id=%s' %
@@ -1120,7 +1138,7 @@ def choose_view(name):
             html.user_error(e)
 
     html.begin_form('choose_view')
-    forms.header(_('Select View'))
+    forms.header(_('Select view'))
     forms.section(vs_view.title())
     vs_view.render_input('view', '')
     html.help(vs_view.help())
@@ -1174,6 +1192,10 @@ def page_edit_dashlet():
             'single_infos': dashlet_type.single_infos(),
             'type': ty,
         }
+
+        if dashlet_type.has_context():
+            dashlet["context"] = {}
+
         ident = len(dashboard['dashlets'])
 
         single_infos_raw = html.request.var('single_infos')
@@ -1255,10 +1277,9 @@ def page_edit_dashlet():
 
     def dashlet_info_handler(dashlet):
         # type: (DashletConfig) -> List[str]
-        if dashlet['type'] == 'view':
-            import cmk.gui.views as views
-            return views.get_view_infos(dashlet)
-        return dashlet_registry[dashlet['type']].infos()
+        dashlet_type = dashlet_registry[dashlet['type']]
+        dashlet_instance = dashlet_type(board, dashboard, ident, dashlet)
+        return dashlet_instance.infos()
 
     context_specs = visuals.get_context_specs(dashlet, info_handler=dashlet_info_handler)
 

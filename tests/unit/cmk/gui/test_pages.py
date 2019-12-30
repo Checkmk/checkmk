@@ -57,6 +57,7 @@ def test_registered_pages():
         'create_view',
         'create_view_dashlet',
         'create_view_dashlet_infos',
+        'create_link_view_dashlet',
         'create_view_infos',
         'custom_snapins',
         'dashboard',

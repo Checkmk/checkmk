@@ -1114,8 +1114,8 @@ def choose_view(name):
             copy_view_into_dashlet(dashlet, dashlet_id, view_name)
             add_dashlet(dashlet, dashboard)
 
-            raise HTTPRedirect('edit_dashlet.py?name=%s&id=%d' %
-                               (html.urlencode(name), html.urlencode(dashlet_id)))
+            raise HTTPRedirect('edit_dashlet.py?name=%s&id=%s' %
+                               (html.urlencode(name), html.urlencode(str(dashlet_id))))
         except MKUserError as e:
             html.user_error(e)
 

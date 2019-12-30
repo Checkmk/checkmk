@@ -34,7 +34,7 @@ import cmk.utils.store as store
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.hooks as hooks
-from cmk.gui.globals import html
+from cmk.gui.globals import html, g
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 
@@ -76,7 +76,14 @@ def load_contact_group_information():
     return _load_group_information()["contact"]
 
 
+def _clear_group_information_request_cache():
+    g.pop("group_information", None)
+
+
 def _load_group_information():
+    if "group_information" in g:
+        return g.group_information
+
     cmk_base_groups = _load_cmk_base_groups()
     gui_groups = _load_gui_groups()
 
@@ -90,6 +97,7 @@ def _load_group_information():
             if gid in gui_groups['multisite_%sgroups' % what]:
                 groups[what][gid].update(gui_groups['multisite_%sgroups' % what][gid])
 
+    g.group_information = groups
     return groups
 
 
@@ -275,6 +283,8 @@ def save_group_information(all_groups, custom_default_config_dir=None):
             output += "multisite_%sgroups = \\\n%s\n\n" % (
                 what, format_config_value(multisite_groups[what]))
     store.save_file("%s/groups.mk" % multisite_config_dir, output)
+
+    _clear_group_information_request_cache()
 
 
 def find_usages_of_group(name, group_type):

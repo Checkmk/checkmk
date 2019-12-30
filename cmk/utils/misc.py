@@ -31,7 +31,7 @@ Please try to find a better place for the things you want to put here."""
 import itertools
 import sys
 import time
-from typing import Union  # pylint: disable=unused-import
+from typing import Set, Union  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -96,7 +96,7 @@ def total_size(o, handlers=None):
         frozenset: iter,
     }
     all_handlers.update(handlers)  # user handlers take precedence
-    seen = set()  # track which object id's have already been seen
+    seen = set()  # type: Set[int]
     default_size = sys.getsizeof(0)  # estimate sizeof object without __sizeof__
 
     def sizeof(o):

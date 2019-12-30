@@ -133,8 +133,6 @@ else:
             stdout, stderr = super(Popen, self).communicate(input=input)
 
             if self.encoding:
-                if stdout is not None:
-                    stdout = stdout.decode(self.encoding)
-                if stderr is not None:
-                    stderr = stderr.decode(self.encoding)
+                return (None if stdout is None else stdout.decode(self.encoding),
+                        None if stderr is None else stderr.decode(self.encoding))
             return (stdout, stderr)

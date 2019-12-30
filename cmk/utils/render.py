@@ -49,16 +49,18 @@ from cmk.utils.i18n import _
 #   '----------------------------------------------------------------------'
 
 
+# NOTE: strftime's format *must* be of type str, both in Python 2 and 3.
 def date(timestamp):
-    return time.strftime(_("%Y-%m-%d"), time.localtime(timestamp))
+    return time.strftime(str(_("%Y-%m-%d")), time.localtime(timestamp))
 
 
 def date_and_time(timestamp):
     return "%s %s" % (date(timestamp), time_of_day(timestamp))
 
 
+# NOTE: strftime's format *must* be of type str, both in Python 2 and 3.
 def time_of_day(timestamp):
-    return time.strftime(_("%H:%M:%S"), time.localtime(timestamp))
+    return time.strftime(str(_("%H:%M:%S")), time.localtime(timestamp))
 
 
 def timespan(seconds):

@@ -27,7 +27,7 @@
 
 import re
 import abc
-from typing import Dict  # pylint: disable=unused-import
+from typing import Any, Dict, List, Set  # pylint: disable=unused-import
 import six
 
 from cmk.utils.i18n import _
@@ -165,7 +165,7 @@ class AuxTagList(object):
                 return
 
     def validate(self):
-        seen = set()
+        seen = set()  # type: Set[str]
         for aux_tag in self._tags:
             aux_tag.validate()
 
@@ -290,7 +290,7 @@ class TagGroup(object):
         return {tag.id for tag in self.tags}
 
     def get_dict_format(self):
-        response = {"id": self.id, "title": self.title, "tags": []}
+        response = {"id": self.id, "title": self.title, "tags": []}  # type: Dict[str, Any]
         if self.topic:
             response["topic"] = self.topic
 
@@ -358,7 +358,7 @@ class TagConfig(object):
         return sorted(list(names), key=lambda x: x[1])
 
     def get_tag_groups_by_topic(self):
-        by_topic = {}
+        by_topic = {}  # type: Dict[six.text_type, List[six.text_type]]
         for tag_group in self.tag_groups:
             topic = tag_group.topic or _('Tags')
             by_topic.setdefault(topic, []).append(tag_group)
@@ -393,7 +393,7 @@ class TagConfig(object):
         return aux_tag_map
 
     def get_aux_tags_by_topic(self):
-        by_topic = {}
+        by_topic = {}  # type: Dict[six.text_type, List[six.text_type]]
         for aux_tag in self.aux_tag_list.get_tags():
             topic = aux_tag.topic or _('Tags')
             by_topic.setdefault(topic, []).append(aux_tag)
@@ -401,7 +401,7 @@ class TagConfig(object):
 
     def get_tag_ids(self):
         """Returns the raw ids of the grouped tags and the aux tags"""
-        response = set()
+        response = set()  # type: Set[six.text_type]
         for tag_group in self.tag_groups:
             response.update(tag_group.get_tag_ids())
 
@@ -474,7 +474,7 @@ class TagConfig(object):
 
     def _validate_ids(self):
         """Make sure that no tag key is used twice as aux_tag ID or tag group id"""
-        seen_ids = set()
+        seen_ids = set()   # type: Set[six.text_type]
         for tag_group in self.tag_groups:
             if tag_group.id in seen_ids:
                 raise MKGeneralException(_("The tag group ID \"%s\" is used twice.") % tag_group.id)
@@ -538,7 +538,7 @@ class TagConfig(object):
             raise MKGeneralException(_("Tag groups with only one choice must have a tag ID."))
 
     def get_dict_format(self):
-        result = {"tag_groups": [], "aux_tags": []}
+        result = {"tag_groups": [], "aux_tags": []}  # type: Dict[str, Any]
         for tag_group in self.tag_groups:
             result["tag_groups"].append(tag_group.get_dict_format())
 

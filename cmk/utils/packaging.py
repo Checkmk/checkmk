@@ -285,7 +285,7 @@ def install_package(file_object):
     # Before installing check for conflicts
     keep_files = {}
     for part in get_package_parts() + get_config_parts():
-        packaged = packaged_files_in_dir(part.ident)
+        packaged = _packaged_files_in_dir(part.ident)
         keep = []  # type: List[Text]
         keep_files[part.ident] = keep
 
@@ -549,7 +549,7 @@ def _files_in_dir(part, directory, prefix=""):
     if directory in taboo_dirs:
         return []
 
-    result = []
+    result = []  # type: List[str]
     files = os.listdir(directory)
     for f in files:
         if f in ['.', '..'] or f.startswith('.') or f.endswith('~') or f.endswith(".pyc"):
@@ -569,12 +569,12 @@ def _files_in_dir(part, directory, prefix=""):
 
 
 def unpackaged_files_in_dir(part, directory):
-    packaged = set(packaged_files_in_dir(part))
+    packaged = set(_packaged_files_in_dir(part))
     return [f for f in _files_in_dir(part, directory) if f not in packaged]
 
 
-def packaged_files_in_dir(part):
-    result = []
+def _packaged_files_in_dir(part):
+    result = []  # type: List[str]
     for pacname in all_package_names():
         package = read_package_info(pacname)
         if package:
@@ -593,7 +593,7 @@ def _package_exists(pacname):
 def write_package_info(package):
     pkg_info_path = package_dir() / package["name"]
     with pkg_info_path.open("w", encoding="utf-8") as f:
-        f.write((pprint.pformat(package) + "\n").decode("utf-8"))
+        f.write(ensure_unicode(pprint.pformat(package) + "\n"))
 
 
 def _remove_package_info(pacname):

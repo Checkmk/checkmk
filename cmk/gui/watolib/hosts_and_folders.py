@@ -336,11 +336,16 @@ class CREFolder(BaseFolder):
 
     @staticmethod
     def folder_choices():
-        return Folder.root_folder().recursive_subfolder_choices()
+        if 'folder_choices' not in g:
+            g.folder_choices = Folder.root_folder().recursive_subfolder_choices()
+        return g.folder_choices
 
     @staticmethod
     def folder_choices_fulltitle():
-        return Folder.root_folder().recursive_subfolder_choices(current_depth=0, pretty=False)
+        if 'folder_choices_full_title' not in g:
+            g.folder_choices_full_title = Folder.root_folder().recursive_subfolder_choices(
+                current_depth=0, pretty=False)
+        return g.folder_choices_full_title
 
     @staticmethod
     def folder(folder_path):
@@ -375,6 +380,8 @@ class CREFolder(BaseFolder):
     @staticmethod
     def invalidate_caches():
         g.pop('wato_folders', {})
+        for cache_id in ["folder_choices", "folder_choices_full_title"]:
+            g.pop(cache_id, None)
         Folder.root_folder().drop_caches()
 
     # Find folder that is specified by the current URL. This is either by a folder

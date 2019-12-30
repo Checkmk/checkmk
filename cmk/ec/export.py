@@ -425,24 +425,3 @@ def remove_packaged_rule_packs(file_names, delete_export=True):
             remove_exported_rule_pack(id_)
 
     save_rule_packs(rule_packs)
-
-
-def rule_pack_id_to_mkp(package_info):
-    # type: (Any) -> Dict[str, Any]
-    """
-    Returns a dictionary of rule pack ID to MKP package for a given package_info.
-    The package info has to be in the format defined by cmk_base/packaging.py.
-    Every rule pack is contained exactly once in this mapping. If no corresponding
-    MKP exists, the value of that mapping is None.
-    """
-    def mkp_of(rule_pack_file):
-        # type: (str) -> Any
-        """Find the MKP for the given file"""
-        for mkp, content in package_info.get('installed', {}).items():
-            if rule_pack_file in content.get('files', {}).get('ec_rule_packs', []):
-                return mkp
-        return None
-
-    exported_rule_packs = package_info['parts']['ec_rule_packs']['files']
-
-    return {os.path.splitext(file_)[0]: mkp_of(file_) for file_ in exported_rule_packs}

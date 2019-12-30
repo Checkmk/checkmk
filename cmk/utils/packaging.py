@@ -8,7 +8,7 @@ import subprocess
 import json
 from io import BytesIO
 import sys
-from typing import cast, NamedTuple, Dict, Optional, List, Text, BinaryIO  # pylint: disable=unused-import
+from typing import cast, Any, BinaryIO, Dict, List, NamedTuple, Optional, Text  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
@@ -581,3 +581,24 @@ def parse_package_info(python_string):
     package_info = ast.literal_eval(python_string)
     package_info.setdefault("version.usable_until", None)
     return package_info
+
+
+def rule_pack_id_to_mkp():
+    # type: () -> Dict[str, Any]
+    """
+    Returns a dictionary of rule pack ID to MKP package for a given package_info.
+    Every rule pack is contained exactly once in this mapping. If no corresponding
+    MKP exists, the value of that mapping is None.
+    """
+    package_info = get_all_package_infos()
+    def mkp_of(rule_pack_file):
+        # type: (str) -> Any
+        """Find the MKP for the given file"""
+        for mkp, content in package_info.get('installed', {}).items():
+            if rule_pack_file in content.get('files', {}).get('ec_rule_packs', []):
+                return mkp
+        return None
+
+    exported_rule_packs = package_info['parts']['ec_rule_packs']['files']
+
+    return {os.path.splitext(file_)[0]: mkp_of(file_) for file_ in exported_rule_packs}

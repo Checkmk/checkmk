@@ -1120,10 +1120,7 @@ class ABCEventConsoleMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
                             "snmpmib")
 
     def _get_rule_pack_to_mkp_map(self):
-        if cmk.is_raw_edition():
-            return {}
-        package_info = cmk.utils.packaging.get_all_package_infos()
-        return cmk.ec.export.rule_pack_id_to_mkp(package_info)
+        return {} if cmk.is_raw_edition() else cmk.utils.packaging.rule_pack_id_to_mkp()
 
     def _vs_mkeventd_event(self):
         """Valuespec for simulating an event"""

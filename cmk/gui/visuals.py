@@ -39,7 +39,7 @@ from cmk.gui.permissions import declare_permission
 from cmk.gui.pages import page_registry
 from cmk.gui.valuespec import (
     Dictionary,
-    ListChoice,
+    DualListChoice,
     ValueSpec,
     ListOfMultiple,
     ABCPageListOfMultipleGetChoice,
@@ -607,12 +607,6 @@ def _visual_can_be_linked(what, visual_name, all_visuals, visual, owner):
 def page_create_visual(what, info_keys, next_url=None):
     title = visual_type_registry[what]().title
     what_s = what[:-1]
-
-    # FIXME: Sort by (assumed) common usage
-    info_choices = []
-    for key in info_keys:
-        info_choices.append(
-            (key, _('Show information of a single %s') % visual_info_registry[key]().title))
 
     vs_infos = SingleInfoSelection(info_keys)
 
@@ -1327,15 +1321,16 @@ class VisualFilter(ValueSpec):
                               _("The value must be of type dict, but it has type %s") % type(value))
 
 
-def SingleInfoSelection(info_keys, **args):
-    info_choices = []
-    for key in info_keys:
-        info_choices.append(
-            (key, _('Show information of a single %s') % visual_info_registry[key]().title))
+def SingleInfoSelection(info_keys):
+    infos = [visual_info_registry[key]() for key in info_keys]
+    choices = [(i.ident, _('Show information of a single %s') % i.title)
+               for i in sorted(infos, key=lambda inf: (inf.sort_index, inf.title))]
 
-    args.setdefault("title", _('Specific objects'))
-    args["choices"] = info_choices
-    return ListChoice(**args)
+    return DualListChoice(
+        title=_('Specific objects'),
+        choices=choices,
+        rows=10,
+    )
 
 
 # Converts a context from the form { filtername : { ... } } into

@@ -87,6 +87,12 @@ class VisualInfo(six.with_metaclass(abc.ABCMeta, object)):
         don't add the site hint"""
         return True
 
+    @property
+    def sort_index(self):
+        # type: () -> int
+        """Used for sorting when listing multiple infos. Lower is displayed first"""
+        return 30
+
 
 class VisualInfoRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):

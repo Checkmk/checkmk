@@ -58,6 +58,10 @@ class VisualInfoHost(VisualInfo):
     def multiple_site_filters(self):
         return ["hostgroup"]
 
+    @property
+    def sort_index(self):
+        return 10
+
 
 @visual_info_registry.register
 class VisualInfoService(VisualInfo):
@@ -81,6 +85,10 @@ class VisualInfoService(VisualInfo):
     def multiple_site_filters(self):
         return ["servicegroup"]
 
+    @property
+    def sort_index(self):
+        return 10
+
 
 @visual_info_registry.register
 class VisualInfoHostgroup(VisualInfo):
@@ -103,6 +111,10 @@ class VisualInfoHostgroup(VisualInfo):
     @property
     def single_site(self):
         return False
+
+    @property
+    def sort_index(self):
+        return 10
 
 
 @visual_info_registry.register
@@ -128,6 +140,10 @@ class VisualInfoServicegroup(VisualInfo):
     @property
     def single_site(self):
         return False
+
+    @property
+    def sort_index(self):
+        return 10
 
 
 @visual_info_registry.register
@@ -253,6 +269,10 @@ class VisualInfoBIAggregation(VisualInfo):
             ('aggr_name', TextUnicode(title=_('Aggregation Name'),)),
         ]
 
+    @property
+    def sort_index(self):
+        return 20
+
 
 @visual_info_registry.register
 class VisualInfoBIAggregationGroup(VisualInfo):
@@ -273,6 +293,10 @@ class VisualInfoBIAggregationGroup(VisualInfo):
         return [
             ('aggr_group', TextUnicode(title=_('Aggregation group'),)),
         ]
+
+    @property
+    def sort_index(self):
+        return 20
 
 
 @visual_info_registry.register

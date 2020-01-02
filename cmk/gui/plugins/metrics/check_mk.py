@@ -4602,6 +4602,12 @@ metric_info["fan"] = {
     "color": "16/b",
 }
 
+metric_info["fan_perc"] = {
+    "title": _("Fan speed"),
+    "unit": "%",
+    "color": "16/b",
+}
+
 metric_info["inside_macs"] = {
     "title": _("Number of unique inside MAC addresses"),
     "unit": "count",

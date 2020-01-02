@@ -261,11 +261,22 @@ plugins:
         #  async       : yes                 # agent will not wait for async plugins. Normally you will get data later.
         #  timeout     : 120                 # after 120 seconds process will be killed.
         #  cache_age   : 3600                # only combined with async, upto 3600 seconds we may reuse plugin output
-    #                                        # default value is 0. Minimum positive value is 120.
+                                             # default value is 0. Minimum positive value is 120.
         #  retry_count : 3                   # failure on start plugin, before stopping, default 0 which means never stop attempts 
         #  cmd_line    : ''                  # reserved for future use
-        #  pattern     : '$CUSTOM_PLUGINS_PATH$\win_license.bat'   # Plugin name. * and ? are allowed
-        #  run         : no                  # do not execute this plugin even if plugin found
+        #
+        #- pattern     : '$CUSTOM_PLUGINS_PATH$\mk_scansql.vbs'    # Plugin name or absolute path . * and ? are allowed
+        #  user       : 'sql_user sql_secret' # user name(domain is allowed) and password separated with one space
+        #  run         : yes                 # execute this plugin if plugin found
+        #  
+        #- pattern     : '$CUSTOM_PLUGINS_PATH$\network_access.bat'   # Plugin requires access to the Network.
+        #  group       : 'Users'             # run plugin from the Internal Agent User belonging the this group
+        #  run         : yes
+        #  
+        #- pattern     : '$CUSTOM_PLUGINS_PATH$\win_license.bat'   # Plugin name. * and ? are allowed
+        #  run         : No                  # do not run plugin even if found
+
+
 
         - pattern     : '$CUSTOM_PLUGINS_PATH$\*.*'         # in the ProgramData folder. DO NOT REMOVE THIS ENTRY
           timeout     : 30                  # after 30 seconds process will be killed. 60 sec is default in check_mk.yml

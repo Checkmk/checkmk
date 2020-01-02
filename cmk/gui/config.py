@@ -339,10 +339,8 @@ def all_nonfunction_vars(var_dict):
     }
 
 
-def get_language(default=None):
-    if default is None:
-        return default_language
-    return default
+def get_language():
+    return default_language
 
 
 #.

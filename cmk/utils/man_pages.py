@@ -36,6 +36,7 @@ import re
 import sys
 from io import StringIO
 import subprocess
+from typing import Any, Dict, List, Optional, Tuple  # pylint: disable=unused-import
 
 # Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:
@@ -273,14 +274,16 @@ check_mk_agents = {
     "vnx_quotas": "VNX Quotas"
 }
 
-_manpage_catalog = {}  # type: ignore
+_manpage_catalog = {}  # type: Dict[Tuple[str,...], List[Dict]]
 
 
 def man_page_exists(name):
+    # type: (str) -> bool
     return man_page_path(name) is not None
 
 
 def man_page_path(name):
+    # type: (str) -> Optional[Path]
     if name[0] != "." and name[-1] != "~":
         for basedir in [
                 cmk.utils.paths.local_check_manpages_dir,
@@ -293,30 +296,27 @@ def man_page_path(name):
 
 
 def all_man_pages():
+    # type: () -> Dict[str, str]
     manuals = {}
-
     for basedir in [
-            Path(cmk.utils.paths.check_manpages_dir), cmk.utils.paths.local_check_manpages_dir
+            Path(cmk.utils.paths.check_manpages_dir),  #
+            cmk.utils.paths.local_check_manpages_dir,
     ]:
-        if not basedir.exists():
-            continue
-
-        for file_path in basedir.iterdir():
-            if file_path.name.startswith(".") or file_path.name.endswith("~"):
-                continue
-
-            manuals[file_path.name] = str(file_path)
-
+        if basedir.exists():
+            for file_path in basedir.iterdir():
+                if not file_path.name.startswith(".") and not file_path.name.endswith("~"):
+                    manuals[file_path.name] = str(file_path)
     return manuals
 
 
 def print_man_page_table():
-    table = []
+    # type: () -> None
+    table = []  # type: List[Tuple[str, str]]
     for name, path in sorted(all_man_pages().items()):
         try:
             table.append((name, _get_title_from_man_page(Path(path))))
         except MKGeneralException as e:
-            sys.stderr.write("ERROR: %s" % e)
+            sys.stderr.write(str("ERROR: %s" % e))
 
     tty.print_table(['Check type', 'Title'], [tty.bold, tty.normal], table)
 
@@ -334,7 +334,8 @@ def man_page_catalog_titles():
 
 
 def load_man_page_catalog():
-    catalog = {}
+    # type: () -> Dict[Tuple[str,...], List[Dict]]
+    catalog = {}  # type: Dict[Tuple[str,...], List[Dict]]
     for name, path in all_man_pages().items():
         try:
             parsed = _parse_man_page_header(name, Path(path))
@@ -342,23 +343,16 @@ def load_man_page_catalog():
             if cmk.utils.debug.enabled():
                 raise
             parsed = _create_fallback_man_page(name, Path(path), e)
-
-        if parsed.get("catalog"):
-            cat = parsed["catalog"]
-        else:
-            cat = ["unsorted"]
-
-        if cat[0] == "os":
-            for agent in parsed["agents"]:
-                acat = [cat[0]] + [agent] + cat[1:]
-                catalog.setdefault(tuple(acat), []).append(parsed)
-        else:
-            catalog.setdefault(tuple(cat), []).append(parsed)
-
+        cat = parsed.get("catalog", ["unsorted"])
+        cats = [[cat[0]] + [agent] + cat[1:] for agent in parsed["agents"]
+               ] if cat[0] == "os" else [cat]
+        for c in cats:
+            catalog.setdefault(tuple(c), []).append(parsed)
     return catalog
 
 
 def print_man_page_browser(cat=()):
+    # typxe: (Tuple[str]) -> None
     global _manpage_catalog
     _manpage_catalog = load_man_page_catalog()
 
@@ -456,6 +450,8 @@ def _dialog_menu(title, text, choices, defvalue, oktext, canceltext):
 def _run_dialog(args):
     env = {"TERM": os.getenv("TERM", "linux"), "LANG": "de_DE.UTF-8"}
     p = subprocess.Popen(["dialog", "--shadow"] + args, env=env, stderr=subprocess.PIPE)
+    if p.stderr is None:
+        raise Exception()
     response = p.stderr.read()
     return os.waitpid(p.pid, 0)[1] == 0, response
 
@@ -479,7 +475,7 @@ def _parse_man_page_header(name, path):
         "name": name,
         "path": str(path),
     }
-    key = None
+    key = ""
     lineno = 0
     with path.open(encoding="utf-8") as fp:
         for line in fp:
@@ -525,8 +521,8 @@ def load_man_page(name):
     if path is None:
         return
 
-    man_page = {}
-    current_section = []
+    man_page = {}  # type: Dict[str, Any]
+    current_section = []  # type: List[Tuple[str, str]]
     current_variable = None
     man_page['header'] = current_section
     empty_line_count = 0
@@ -567,7 +563,7 @@ def load_man_page(name):
                 raise MKGeneralException("Syntax error in %s line %d (%s).\n" %
                                          (path, lineno + 1, e))
 
-    header = {}
+    header = {}  # type: Dict[str, Any]
     for key, value in man_page['header']:
         header[key] = value.strip()
     header["agents"] = [a.strip() for a in header["agents"].split(",")]

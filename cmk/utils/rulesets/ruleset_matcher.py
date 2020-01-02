@@ -52,7 +52,7 @@ class RulesetMatchObject(object):
                                  if self.service_labels else None)
 
     def _generate_hash(self, service_labels):
-        return hash(frozenset(self.service_labels))
+        return hash(None if service_labels is None else frozenset(service_labels))
 
     def to_dict(self):
         # type: () -> Dict

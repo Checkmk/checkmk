@@ -597,10 +597,7 @@ class ManPageRenderer(object):
         self._header_color_left = tty.colorset(0, 2)
         self._header_color_right = tty.colorset(7, 2, 1)
 
-        self._load()
-
-    def _load(self):
-        self.man_page = load_man_page(self.name)
+        self.man_page = load_man_page(name)
         if not self.man_page:
             raise MKGeneralException("No manpage for %s. Sorry.\n" % self.name)
 

@@ -585,18 +585,6 @@ class ManPageRenderer(object):
     def __init__(self, name):
         self.name = name
         self.output = sys.stdout
-        self.width = tty.get_size()[1]
-
-        bg_color = 4
-        fg_color = 7
-        self._tty_color = tty.white + tty.bold
-        self._normal_color = tty.normal + tty.colorset(fg_color, bg_color)
-        self._title_color_left = tty.colorset(0, 7, 1)
-        self._title_color_right = tty.colorset(0, 7)
-        self._subheader_color = tty.colorset(fg_color, bg_color, 1)
-        self._header_color_left = tty.colorset(0, 2)
-        self._header_color_right = tty.colorset(7, 2, 1)
-
         man_page = load_man_page(name)
         if not man_page:
             raise MKGeneralException("No manpage for %s. Sorry.\n" % self.name)
@@ -612,23 +600,13 @@ class ManPageRenderer(object):
         self._print_header()
         self._print_manpage_title(self._header['title'])
 
-        ags = []
-        for agent in self._header['agents']:
-            ags.append(check_mk_agents.get(agent, agent.upper()))
-
         self._print_begin_splitlines()
-
-        distro = self._header['distribution']
-        if distro == 'check_mk':
-            distro = "official part of Check_MK"
-        self._print_splitline(self._header_color_left, "Distribution:            ",
-                              self._header_color_right, distro)
-
-        self._print_splitline(self._header_color_left, "License:                 ",
-                              self._header_color_right, self._header['license'])
-        self._print_splitline(self._header_color_left, "Supported Agents:        ",
-                              self._header_color_right, ", ".join(ags))
-
+        distro = ("official part of Check_MK"
+                  if self._header['distribution'] == 'check_mk' else self._header['distribution'])
+        ags = [check_mk_agents.get(agent, agent.upper()) for agent in self._header['agents']]
+        self._print_info_line("Distribution:            ", distro)
+        self._print_info_line("License:                 ", self._header['license'])
+        self._print_info_line("Supported Agents:        ", ", ".join(ags))
         self._print_end_splitlines()
 
         self._print_empty_line()
@@ -638,11 +616,7 @@ class ManPageRenderer(object):
             self._print_textbody(self._header['item'])
 
         self._print_subheader("Discovery")
-        if 'inventory' in self._header:
-            self._print_textbody(self._header['inventory'])
-        else:
-            self._print_textbody("No discovery supported.")
-
+        self._print_textbody(self._header.get('inventory', 'No discovery supported.'))
         self._print_empty_line()
         self.output.flush()
 
@@ -650,6 +624,9 @@ class ManPageRenderer(object):
         raise NotImplementedError()
 
     def _print_manpage_title(self, title):
+        raise NotImplementedError()
+
+    def _print_info_line(self, left, right):
         raise NotImplementedError()
 
     def _print_subheader(self, line):
@@ -664,9 +641,6 @@ class ManPageRenderer(object):
     def _print_end_splitlines(self):
         pass
 
-    def _print_splitline(self, attr1, left, attr2, right):
-        raise NotImplementedError()
-
     def _print_empty_line(self):
         raise NotImplementedError()
 
@@ -675,6 +649,18 @@ class ManPageRenderer(object):
 
 
 class ConsoleManPageRenderer(ManPageRenderer):
+    _tty_color = tty.white + tty.bold
+    _normal_color = tty.normal + tty.colorset(7, 4)
+    _title_color_left = tty.colorset(0, 7, 1)
+    _title_color_right = tty.colorset(0, 7)
+    _subheader_color = tty.colorset(7, 4, 1)
+    _header_color_left = tty.colorset(0, 2)
+    _header_color_right = tty.colorset(7, 2, 1)
+
+    def __init__(self, name):
+        super(ConsoleManPageRenderer, self).__init__(name)
+        self.width = tty.get_size()[1]
+
     def init_output(self):
         if os.path.exists("/usr/bin/less") and sys.stdout.isatty():
             self.output = os.popen("/usr/bin/less -S -R -Q -u -L", "w")
@@ -689,6 +675,9 @@ class ConsoleManPageRenderer(ManPageRenderer):
     def _print_manpage_title(self, title):
         self._print_splitline(self._title_color_left, "%-25s" % self.name, self._title_color_right,
                               title)
+
+    def _print_info_line(self, left, right):
+        self._print_splitline(self._header_color_left, left, self._header_color_right, right)
 
     def _print_subheader(self, line):
         self._print_empty_line()
@@ -819,6 +808,9 @@ class NowikiManPageRenderer(ManPageRenderer):
     def _print_manpage_title(self, title):
         self.output.write("<b>%s</b>\n" % title)
 
+    def _print_info_line(self, left, right):
+        self.output.write("<tr><td>%s</td><td>%s</td></tr>\n" % (left, right))
+
     def _print_subheader(self, line):
         self.output.write("H2:%s\n" % line)
 
@@ -833,9 +825,6 @@ class NowikiManPageRenderer(ManPageRenderer):
 
     def _print_end_splitlines(self):
         self.output.write("</table>\n")
-
-    def _print_splitline(self, attr1, left, attr2, right):
-        self.output.write("<tr><td>%s</td><td>%s</td></tr>\n" % (left, right))
 
     def _print_empty_line(self):
         self.output.write("\n")

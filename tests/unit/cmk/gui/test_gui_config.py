@@ -956,10 +956,6 @@ def test_unauthenticated_users(user, alias, email, role_ids, baserole_id):
 
     assert user.get_attribute('baz', 'default') == 'default'
     assert user.get_attribute('foo') is None
-    user.set_attribute('foo', 'bar')
-    assert user.get_attribute('foo') == 'bar'
-    user.unset_attribute('foo')
-    assert user.get_attribute('foo') is None
 
     assert user.get_button_counts() == {}
     assert user.contact_groups() == []
@@ -986,6 +982,9 @@ def test_unauthenticated_users_language(mocker, user):
     user.language = 'sindarin'
     assert user.language == 'sindarin'
 
+    user.reset_language()
+    assert user.language == 'esperanto'
+
 
 @pytest.mark.parametrize('user', [
     config.LoggedInNobody(),
@@ -1000,9 +999,6 @@ def test_unauthenticated_users_authorized_sites(mocker, user):
 
     mocker.patch.object(config, 'allsites', lambda: SiteConfigurations({'site1': {}, 'site2': {}}))
     assert user.authorized_sites() == SiteConfigurations({'site1': {}, 'site2': {}})
-
-    user.set_attribute('authorized_sites', ['site1'])
-    assert user.authorized_sites() == SiteConfigurations({'site1': {}})
 
 
 @pytest.mark.parametrize('user', [
@@ -1122,8 +1118,6 @@ def test_monitoring_user(monitoring_user):
     assert monitoring_user.baserole_id == 'user'
 
     assert monitoring_user.get_attribute('ui_theme') == 'modern-dark'
-    monitoring_user.set_attribute('ui_theme', 'classic')
-    assert monitoring_user.get_attribute('ui_theme') == 'classic'
 
     assert monitoring_user.language == 'de'
     assert monitoring_user.get_button_counts() == MONITORING_USER_BUTTONCOUNTS

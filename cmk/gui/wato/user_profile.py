@@ -159,7 +159,7 @@ def _show_page_user_profile(change_pw):
                         # Remove the customized language
                         if 'language' in users[config.user.id]:
                             del users[config.user.id]['language']
-                        config.user.unset_attribute("language")
+                        config.user.reset_language()
 
                     # load the new language
                     cmk.gui.i18n.localize(config.user.language)

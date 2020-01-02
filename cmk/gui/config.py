@@ -165,7 +165,7 @@ def _load_config_file(path):
     # type: (str) -> None
     """Load the given GUI configuration file"""
     try:
-        exec(open(path).read(), globals(), globals())
+        exec(open(path).read(), globals(), globals())  # yapf: disable
     except IOError as e:
         if e.errno != errno.ENOENT:  # No such file or directory
             raise
@@ -540,11 +540,11 @@ class LoggedInUser(object):
         # type: (str, Any) -> Any
         return self.attributes.get(key, deflt)
 
-    def set_attribute(self, key, value):
+    def _set_attribute(self, key, value):
         # type: (str, Any) -> None
         self.attributes[key] = value
 
-    def unset_attribute(self, key):
+    def _unset_attribute(self, key):
         # type: (str) -> None
         try:
             del self.attributes[key]
@@ -559,7 +559,11 @@ class LoggedInUser(object):
     @language.setter
     def language(self, value):
         # type: (Optional[str]) -> None
-        self.set_attribute("language", value)
+        self._set_attribute("language", value)
+
+    def reset_language(self):
+        # type: () -> None
+        self._unset_attribute("language")
 
     def contact_groups(self):
         # type: () -> List

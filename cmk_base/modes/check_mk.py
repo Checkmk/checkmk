@@ -1186,7 +1186,7 @@ modes.register(
 def mode_man(*args):
     import cmk.utils.man_pages as man_pages
     if args[0]:
-        man_pages.print_man_page(args[0][0])
+        man_pages.ConsoleManPageRenderer(args[0][0]).paint()
     else:
         man_pages.print_man_page_table()
 

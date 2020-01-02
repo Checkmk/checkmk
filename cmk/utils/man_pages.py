@@ -428,7 +428,7 @@ def _manpage_browse_entries(cat, entries):
         if x[0]:
             index = int(x[1]) - 1
             name = checks[index][1]
-            print_man_page(name)
+            ConsoleManPageRenderer(name).paint()
         else:
             break
 
@@ -575,16 +575,9 @@ def load_man_page(name):
     return man_page
 
 
-def print_man_page(name):
-    renderer = ConsoleManPageRenderer(name)
-    renderer.init_output()
-    renderer.paint()
-
-
 class ManPageRenderer(object):
     def __init__(self, name):
         self.name = name
-        self.output = sys.stdout
         man_page = load_man_page(name)
         if not man_page:
             raise MKGeneralException("No manpage for %s. Sorry.\n" % self.name)
@@ -618,7 +611,10 @@ class ManPageRenderer(object):
         self._print_subheader("Discovery")
         self._print_textbody(self._header.get('inventory', 'No discovery supported.'))
         self._print_empty_line()
-        self.output.flush()
+        self._flush()
+
+    def _flush(self):
+        raise NotImplementedError()
 
     def _print_header(self):
         raise NotImplementedError()
@@ -659,11 +655,14 @@ class ConsoleManPageRenderer(ManPageRenderer):
 
     def __init__(self, name):
         super(ConsoleManPageRenderer, self).__init__(name)
-        self.width = tty.get_size()[1]
+        self.__output = (
+            os.popen("/usr/bin/less -S -R -Q -u -L", "w")
+            if os.path.exists("/usr/bin/less") and sys.stdout.isatty()  #
+            else sys.stdout)
+        self.__width = tty.get_size()[1]
 
-    def init_output(self):
-        if os.path.exists("/usr/bin/less") and sys.stdout.isatty():
-            self.output = os.popen("/usr/bin/less -S -R -Q -u -L", "w")
+    def _flush(self):
+        self.__output.flush()
 
     def _markup(self, line, attr):
         # Replaces braces in the line but preserves the inner braces
@@ -681,9 +680,9 @@ class ConsoleManPageRenderer(ManPageRenderer):
 
     def _print_subheader(self, line):
         self._print_empty_line()
-        self.output.write(self._subheader_color + " " + tty.underline + line.upper() +
-                          self._normal_color + (" " *
-                                                (self.width - 1 - len(line))) + tty.normal + "\n")
+        self.__output.write(self._subheader_color + " " + tty.underline + line.upper() +
+                            self._normal_color + (" " * (self.__width - 1 - len(line))) +
+                            tty.normal + "\n")
 
     def _print_line(self, line, attr=None, no_markup=False):
         if attr is None:
@@ -696,17 +695,17 @@ class ConsoleManPageRenderer(ManPageRenderer):
             text = self._markup(line, attr)
             l = self._print_len(line)
 
-        self.output.write(attr + " ")
-        self.output.write(text)
-        self.output.write(" " * (self.width - 2 - l))
-        self.output.write(" " + tty.normal + "\n")
+        self.__output.write(attr + " ")
+        self.__output.write(text)
+        self.__output.write(" " * (self.__width - 2 - l))
+        self.__output.write(" " + tty.normal + "\n")
 
     def _print_splitline(self, attr1, left, attr2, right):
-        self.output.write(attr1 + " " + left)
-        self.output.write(attr2)
-        self.output.write(self._markup(right, attr2))
-        self.output.write(" " * (self.width - 1 - len(left) - self._print_len(right)))
-        self.output.write(tty.normal + "\n")
+        self.__output.write(attr1 + " " + left)
+        self.__output.write(attr2)
+        self.__output.write(self._markup(right, attr2))
+        self.__output.write(" " * (self.__width - 1 - len(left) - self._print_len(right)))
+        self.__output.write(tty.normal + "\n")
 
     def _print_empty_line(self):
         self._print_line("", tty.colorset(7, 4))
@@ -771,7 +770,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
         return line
 
     def _print_textbody(self, text):
-        wrapped = self._wrap_text(text, self.width - 2)
+        wrapped = self._wrap_text(text, self.__width - 2)
         attr = tty.colorset(7, 4)
         for line in wrapped:
             self._print_line(line, attr)
@@ -780,7 +779,10 @@ class ConsoleManPageRenderer(ManPageRenderer):
 class NowikiManPageRenderer(ManPageRenderer):
     def __init__(self, name):
         super(NowikiManPageRenderer, self).__init__(name)
-        self.output = StringIO()
+        self.__output = StringIO()
+
+    def _flush(self):
+        pass
 
     def index_entry(self):
         return "<tr><td class=\"tt\">%s</td><td>[check_%s|%s]</td></tr>\n" % \
@@ -788,7 +790,7 @@ class NowikiManPageRenderer(ManPageRenderer):
 
     def render(self):
         self.paint()
-        return self.output.getvalue()
+        return self.__output.getvalue()
 
     def _markup(self, line, ignored=None):
         # preserve the inner { and } in double braces and then replace the braces left
@@ -798,39 +800,39 @@ class NowikiManPageRenderer(ManPageRenderer):
                    .replace("}", "</tt>")
 
     def _print_header(self):
-        self.output.write("TI:Check manual page of %s\n" % self.name)
+        self.__output.write("TI:Check manual page of %s\n" % self.name)
         # It does not make much sense to print the date of the HTML generation
         # of the man page here. More useful would be the Check_MK version where
         # the plugin first appeared. But we have no access to that - alas.
-        # self.output.write("DT:%s\n" % (time.strftime("%Y-%m-%d")))
-        self.output.write("SA:check_plugins_catalog,check_plugins_list\n")
+        # self.__output.write("DT:%s\n" % (time.strftime("%Y-%m-%d")))
+        self.__output.write("SA:check_plugins_catalog,check_plugins_list\n")
 
     def _print_manpage_title(self, title):
-        self.output.write("<b>%s</b>\n" % title)
+        self.__output.write("<b>%s</b>\n" % title)
 
     def _print_info_line(self, left, right):
-        self.output.write("<tr><td>%s</td><td>%s</td></tr>\n" % (left, right))
+        self.__output.write("<tr><td>%s</td><td>%s</td></tr>\n" % (left, right))
 
     def _print_subheader(self, line):
-        self.output.write("H2:%s\n" % line)
+        self.__output.write("H2:%s\n" % line)
 
     def _print_line(self, line, attr=None, no_markup=False):
         if no_markup:
-            self.output.write("%s\n" % line)
+            self.__output.write("%s\n" % line)
         else:
-            self.output.write("%s\n" % self._markup(line))
+            self.__output.write("%s\n" % self._markup(line))
 
     def _print_begin_splitlines(self):
-        self.output.write("<table>\n")
+        self.__output.write("<table>\n")
 
     def _print_end_splitlines(self):
-        self.output.write("</table>\n")
+        self.__output.write("</table>\n")
 
     def _print_empty_line(self):
-        self.output.write("\n")
+        self.__output.write("\n")
 
     def _print_textbody(self, text):
-        self.output.write("%s\n" % self._markup(text))
+        self.__output.write("%s\n" % self._markup(text))
 
 
 if __name__ == "__main__":

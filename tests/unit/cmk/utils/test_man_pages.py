@@ -225,7 +225,7 @@ def test_print_man_page_nowiki_content(capsys):
 
 
 def test_print_man_page(capsys):
-    man_pages.print_man_page("if64")
+    man_pages.ConsoleManPageRenderer("if64").paint()
     out, err = capsys.readouterr()
     assert err == ""
 

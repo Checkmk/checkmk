@@ -38,6 +38,8 @@ from io import StringIO
 import subprocess
 from typing import Any, Dict, List, Optional, Tuple  # pylint: disable=unused-import
 
+import six  # pylint: disable=unused-import
+
 # Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -360,8 +362,8 @@ def print_man_page_browser(cat=()):
     subtree_names = _manpage_catalog_subtree_names(_manpage_catalog, cat)
 
     if entries and subtree_names:
-        sys.stderr.write("ERROR: Catalog path %s contains man pages and subfolders.\n" %
-                         ("/".join(cat)))
+        sys.stderr.write(
+            str("ERROR: Catalog path %s contains man pages and subfolders.\n") % ("/".join(cat)))
 
     if entries:
         _manpage_browse_entries(cat, entries)
@@ -494,7 +496,8 @@ def _parse_man_page_header(name, path):
             except Exception:
                 if cmk.utils.debug.enabled():
                     raise
-                sys.stderr.write("ERROR: Invalid line %d in man page %s\n%s" % (lineno, path, line))
+                sys.stderr.write(
+                    str("ERROR: Invalid line %d in man page %s\n%s") % (lineno, path, line))
                 break
 
     # verify mandatory keys. FIXME: This list may be incomplete
@@ -521,13 +524,13 @@ def load_man_page(name):
     if path is None:
         return
 
-    man_page = {}  # type: Dict[str, Any]
+    man_page = {}  # type: Dict[six.text_type, Any]
     current_section = []  # type: List[Tuple[str, str]]
     current_variable = None
     man_page['header'] = current_section
     empty_line_count = 0
 
-    with path.open(encoding="utf-8") as fp:
+    with path.open(encoding=str("utf-8")) as fp:
         for lineno, line in enumerate(fp):
             try:
                 if line.startswith(' ') and line.strip() != "":  # continuation line
@@ -563,7 +566,7 @@ def load_man_page(name):
                 raise MKGeneralException("Syntax error in %s line %d (%s).\n" %
                                          (path, lineno + 1, e))
 
-    header = {}  # type: Dict[str, Any]
+    header = {}  # type: Dict[six.text_type, Any]
     for key, value in man_page['header']:
         header[key] = value.strip()
     header["agents"] = [a.strip() for a in header["agents"].split(",")]
@@ -587,7 +590,7 @@ class ManPageRenderer(object):
         try:
             self._paint_man_page()
         except Exception as e:
-            sys.stdout.write("ERROR: Invalid check manpage %s: %s\n" % (self.name, e))
+            sys.stdout.write(str("ERROR: Invalid check manpage %s: %s\n") % (self.name, e))
 
     def _paint_man_page(self):
         self._print_header()
@@ -656,7 +659,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
     def __init__(self, name):
         super(ConsoleManPageRenderer, self).__init__(name)
         self.__output = (
-            os.popen("/usr/bin/less -S -R -Q -u -L", "w")
+            os.popen(str("/usr/bin/less -S -R -Q -u -L"), "w")
             if os.path.exists("/usr/bin/less") and sys.stdout.isatty()  #
             else sys.stdout)
         self.__width = tty.get_size()[1]

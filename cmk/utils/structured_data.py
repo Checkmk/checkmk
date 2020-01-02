@@ -31,10 +31,11 @@ structured monitoring data of Check_MK.
 import gzip
 import re
 import pprint
-from typing import Dict, List, Optional, Set  # pylint: disable=unused-import
+from typing import AnyStr, Dict, List, Optional, Set  # pylint: disable=unused-import
 
 import six
 
+from cmk.utils.encoding import ensure_unicode
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 
@@ -94,15 +95,16 @@ class StructuredDataTree(object):
         return parent.add_child(path[-1], child, tuple(path)).get_child_data()
 
     def _validate_tree_path(self, tree_path):
+        # type: (AnyStr) -> None
         if not tree_path:
             raise MKGeneralException("Empty tree path or zero.")
-        if not isinstance(
-                tree_path,
-            (six.binary_type, six.text_type)):  # TODO: Check if six.binary_type is necessary
+        # TODO: Check if six.binary_type/ensure_unicode is necessary.
+        if not isinstance(tree_path, (six.binary_type, six.text_type)):
             raise MKGeneralException("Wrong tree path format. Must be of type string.")
-        if not (tree_path.endswith(":") or tree_path.endswith(".")):
+        tp = ensure_unicode(tree_path)
+        if not tp.endswith((":", ".")):
             raise MKGeneralException("No valid tree path.")
-        if bool(re.compile('[^a-zA-Z0-9_.:-]').search(tree_path)):
+        if bool(re.compile('[^a-zA-Z0-9_.:-]').search(tp)):
             raise MKGeneralException("Specified tree path contains unexpected characters.")
 
     def _parse_tree_path(self, tree_path):
@@ -875,7 +877,7 @@ class Attributes(Leaf):
     def compare_with(self, other, keep_identical=False):
         new, changed, removed, identical = \
             _compare_dicts(other._attributes, self._attributes)
-        delta_node = None    # type: Optional[Attributes]
+        delta_node = None  # type: Optional[Attributes]
         if new or changed or removed:
             delta_node = Attributes()
             delta_node.set_child_data(new)

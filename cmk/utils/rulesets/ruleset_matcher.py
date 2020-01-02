@@ -65,7 +65,7 @@ class RulesetMatchObject(object):
         return RulesetMatchObject(**self.to_dict())
 
     def __repr__(self):
-        kwargs = ", ".join(["%s=%r" % e for e in self.to_dict().iteritems()])
+        kwargs = ", ".join("%s=%r" % e for e in self.to_dict().items())
         return "RulesetMatchObject(%s)" % kwargs
 
 

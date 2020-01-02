@@ -596,8 +596,6 @@ class ManPageRenderer(object):
         self._subheader_color = tty.colorset(fg_color, bg_color, 1)
         self._header_color_left = tty.colorset(0, 2)
         self._header_color_right = tty.colorset(7, 2, 1)
-        self._parameters_color = tty.colorset(6, 4, 1)
-        self._examples_color = tty.colorset(6, 4, 1)
 
         self._load()
 
@@ -677,21 +675,6 @@ class ManPageRenderer(object):
         raise NotImplementedError()
 
     def _print_textbody(self, text):
-        raise NotImplementedError()
-
-    def _print_splitwrap(self, attr1, left, attr2, text):
-        raise NotImplementedError()
-
-    def _begin_table(self, titles):
-        raise NotImplementedError()
-
-    def _end_table(self):
-        raise NotImplementedError()
-
-    def _begin_main_mk(self):
-        raise NotImplementedError()
-
-    def _end_main_mk(self):
         raise NotImplementedError()
 
 
@@ -808,24 +791,6 @@ class ConsoleManPageRenderer(ManPageRenderer):
         for line in wrapped:
             self._print_line(line, attr)
 
-    def _print_splitwrap(self, attr1, left, attr2, text):
-        wrapped = self._wrap_text(left + attr2 + text, self.width - 2)
-        self.output.write(attr1 + " " + wrapped[0] + " " + tty.normal + "\n")
-        for line in wrapped[1:]:
-            self.output.write(attr2 + " " + line + " " + tty.normal + "\n")
-
-    def _begin_table(self, titles):
-        pass
-
-    def _end_table(self):
-        pass
-
-    def _begin_main_mk(self):
-        pass
-
-    def _end_main_mk(self):
-        pass
-
 
 class NowikiManPageRenderer(ManPageRenderer):
     def __init__(self, name):
@@ -881,31 +846,6 @@ class NowikiManPageRenderer(ManPageRenderer):
 
     def _print_textbody(self, text):
         self.output.write("%s\n" % self._markup(text))
-
-    def _print_splitwrap(self, attr1, left, attr2, text):
-        if '(' in left:
-            name, typ = left.split('(', 1)
-            name = name.strip()
-            typ = typ.strip()[:-2]
-        else:
-            name = left
-            typ = ""
-        self.output.write("<tr><td class=tt>%s</td>"
-                          "<td>%s</td><td>%s</td></tr>\n" % (name, typ, self._markup(text)))
-
-    def _begin_table(self, titles):
-        self.output.write("<table><tr>")
-        self.output.write("".join(["<th>%s</th>" % t for t in titles]))
-        self.output.write("</tr>\n")
-
-    def _end_table(self):
-        self.output.write("</table>\n")
-
-    def _begin_main_mk(self):
-        self.output.write("F+:main.mk\n")
-
-    def _end_main_mk(self):
-        self.output.write("F-:\n")
 
 
 if __name__ == "__main__":

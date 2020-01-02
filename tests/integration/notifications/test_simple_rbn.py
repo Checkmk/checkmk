@@ -1,10 +1,10 @@
-import pytest
 import time
+import pytest  # type: ignore
 
 from testlib import web, WatchLog
 
 @pytest.fixture()
-def test_config(web):
+def test_config(web, site):
     users = {
         "hh": {
             "alias": "Harry Hirsch",
@@ -19,13 +19,18 @@ def test_config(web):
     all_users = web.get_all_users()
     assert not expected_users - set(all_users.keys())
 
-    # Notify
+    site.live.command("[%d] STOP_EXECUTING_HOST_CHECKS" % time.time())
+    site.live.command("[%d] STOP_EXECUTING_SVC_CHECKS" % time.time())
+
     web.add_host("notify-test", attributes={
         "ipaddress": "127.0.0.1",
     })
     web.activate_changes()
 
     yield
+
+    site.live.command("[%d] START_EXECUTING_HOST_CHECKS" % time.time())
+    site.live.command("[%d] START_EXECUTING_SVC_CHECKS" % time.time())
 
     web.delete_host("notify-test")
     web.delete_htpasswd_users(users.keys())

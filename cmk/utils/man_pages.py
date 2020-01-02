@@ -597,9 +597,10 @@ class ManPageRenderer(object):
         self._header_color_left = tty.colorset(0, 2)
         self._header_color_right = tty.colorset(7, 2, 1)
 
-        self.man_page = load_man_page(name)
-        if not self.man_page:
+        man_page = load_man_page(name)
+        if not man_page:
             raise MKGeneralException("No manpage for %s. Sorry.\n" % self.name)
+        self._header = man_page["header"]
 
     def paint(self):
         try:
@@ -609,38 +610,36 @@ class ManPageRenderer(object):
 
     def _paint_man_page(self):
         self._print_header()
-        header = self.man_page['header']
-
-        self._print_manpage_title(header['title'])
+        self._print_manpage_title(self._header['title'])
 
         ags = []
-        for agent in header['agents']:
+        for agent in self._header['agents']:
             ags.append(check_mk_agents.get(agent, agent.upper()))
 
         self._print_begin_splitlines()
 
-        distro = header['distribution']
+        distro = self._header['distribution']
         if distro == 'check_mk':
             distro = "official part of Check_MK"
         self._print_splitline(self._header_color_left, "Distribution:            ",
                               self._header_color_right, distro)
 
         self._print_splitline(self._header_color_left, "License:                 ",
-                              self._header_color_right, header['license'])
+                              self._header_color_right, self._header['license'])
         self._print_splitline(self._header_color_left, "Supported Agents:        ",
                               self._header_color_right, ", ".join(ags))
 
         self._print_end_splitlines()
 
         self._print_empty_line()
-        self._print_textbody(header['description'])
-        if 'item' in header:
+        self._print_textbody(self._header['description'])
+        if 'item' in self._header:
             self._print_subheader("Item")
-            self._print_textbody(header['item'])
+            self._print_textbody(self._header['item'])
 
         self._print_subheader("Discovery")
-        if 'inventory' in header:
-            self._print_textbody(header['inventory'])
+        if 'inventory' in self._header:
+            self._print_textbody(self._header['inventory'])
         else:
             self._print_textbody("No discovery supported.")
 
@@ -796,7 +795,7 @@ class NowikiManPageRenderer(ManPageRenderer):
 
     def index_entry(self):
         return "<tr><td class=\"tt\">%s</td><td>[check_%s|%s]</td></tr>\n" % \
-                  (self.name, self.name, self.man_page["header"]["title"])
+                  (self.name, self.name, self._header["title"])
 
     def render(self):
         self.paint()

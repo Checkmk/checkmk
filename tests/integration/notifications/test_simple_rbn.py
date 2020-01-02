@@ -3,8 +3,10 @@ import pytest  # type: ignore
 
 from testlib import web, WatchLog
 
-@pytest.fixture()
-def test_config(web, site):
+@pytest.fixture(params=["nagios", "cmc"])
+def test_log(request, web, site):
+    site.set_config("CORE", request.param, with_restart=True)
+
     users = {
         "hh": {
             "alias": "Harry Hirsch",
@@ -37,10 +39,7 @@ def test_config(web, site):
     web.activate_changes()
 
 
-@pytest.mark.parametrize("core", [ "nagios", "cmc" ])
-def test_simple_rbn_notification(test_config, site, core):
-    site.set_config("CORE", core, with_restart=True)
-
+def test_simple_rbn_notification(test_log, site):
     # Open the log file and scan to end
     l = WatchLog(site, "var/log/notify.log")
 

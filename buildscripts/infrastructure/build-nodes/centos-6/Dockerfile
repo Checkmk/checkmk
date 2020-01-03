@@ -58,4 +58,19 @@ RUN yum -y makecache \
 
 COPY bw-build-gnu-toolchain.sh /usr/sbin
 RUN source scl_source enable devtoolset-7 \ 
-    && bw-build-gnu-toolchain.sh -b
+    && bw-build-gnu-toolchain.sh -r $ARTIFACT_STORAGE -b
+
+RUN cd /opt \
+    && wget https://github.com/Kitware/CMake/releases/download/v3.15.4/cmake-3.15.4-Linux-x86_64.tar.gz \
+    && tar xf cmake-3.15.4-Linux-x86_64.tar.gz \
+    && ln -s /opt/cmake-3.15.4-Linux-x86_64/bin/* /usr/bin/
+
+# New packages that are not needed for the build toolchain above should be added here.
+# We avoid rebuild of the whole previous steps this way
+RUN yum -y makecache \
+    && yum -y install \
+        chrpath \
+    && yum clean all
+
+ARG VERS_TAG
+RUN echo $VERS_TAG > /version.txt

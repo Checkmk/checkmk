@@ -13,6 +13,15 @@ node {
         docker.image('ubuntu-18.04-common').inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN --network ci_local-infra') {
             stage('checkout sources') {
                 checkout(scm)
+                // Load libraries
+                str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
+                versioning = load 'buildscripts/scripts/lib/versioning.groovy'
+
+                // Image Version Tag
+                VERS_TAG = versioning.get_docker_tag(scm)
+                BRANCH = versioning.get_branch(scm)
+
+                //Stash Files for later
                 dir('buildscripts/infrastructure/build-nodes/gnu-toolchain/') {
                     stash name: 'bw-build-gnu-toolchain', includes: 'bw-build-gnu-toolchain.sh'
                     withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
@@ -35,8 +44,10 @@ DISTRO_LIST.each { DISTRO ->
                         unstash name: 'dockerfiles'
                         dir('buildscripts/infrastructure/build-nodes/' + DISTRO) {
                             unstash name: 'bw-build-gnu-toolchain'
-                            def Image = docker.build(DISTRO, "--network ci_local-infra .")
+                            def DOCKER_REGISTRY_NOHTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
+                            def Image = docker.build(DISTRO + ':' + VERS_TAG, "--build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP' --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE' --build-arg VERS_TAG='$VERS_TAG' .")
                             Image.push()
+                            Image.push(BRANCH + '-latest')
                         }
                     }
                 }

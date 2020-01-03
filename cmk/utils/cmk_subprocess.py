@@ -31,7 +31,6 @@ does. This can be removed after Python 3 migration.
 
 import sys
 import subprocess
-import six
 
 PIPE = subprocess.PIPE
 STDOUT = subprocess.STDOUT
@@ -45,7 +44,7 @@ if sys.platform == "win32":
 else:
     CREATE_NEW_PROCESS_GROUP = None
 
-if six.PY3:
+if sys.version_info[0] >= 3:
     Popen = subprocess.Popen
 
 else:
@@ -69,7 +68,8 @@ else:
             creationflags=0,
             encoding=None,
         ):
-            super(Popen, self).__init__(
+            # NOTE: We need the pragma below because of a typeshed bug!
+            super(Popen, self).__init__(  # type: ignore[call-arg]
                 args,
                 bufsize=bufsize,
                 executable=executable,
@@ -121,12 +121,12 @@ else:
 
             if input is not None:
                 if self.encoding:
-                    if not isinstance(input, six.text_type):
+                    if not isinstance(input, unicode):
                         # As Python 3 subprocess does:
                         raise AttributeError("'bytes' object has no attribute 'encode'")
                     input = input.encode(self.encoding)
                 else:
-                    if not isinstance(input, six.binary_type):
+                    if not isinstance(input, str):
                         # As Python 3 subprocess does:
                         raise TypeError("a bytes-like object is required, not 'str'")
 

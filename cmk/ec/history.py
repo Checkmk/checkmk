@@ -29,8 +29,11 @@ import struct
 import subprocess
 import threading
 import time
-from typing import Any, Dict  # pylint: disable=unused-import
+from logging import Logger  # pylint: disable=unused-import
+from pathlib import Path  # pylint: disable=unused-import
+from typing import Any, AnyStr, Dict, List, Optional, Tuple  # pylint: disable=unused-import
 
+from cmk.ec.settings import Settings  # pylint: disable=unused-import
 import cmk.ec.actions
 from cmk.utils.log import VERBOSE
 import cmk.utils.render
@@ -40,6 +43,7 @@ import cmk.utils.render
 
 class History:
     def __init__(self, settings, config, logger, event_columns, history_columns):
+        # type: (Settings, Dict[str, Any], Logger, List[Tuple[str, Any]], List[Tuple[str, Any]]) -> None
         super().__init__()
         self._settings = settings
         self._config = config
@@ -52,6 +56,7 @@ class History:
         self.reload_configuration(config)
 
     def reload_configuration(self, config):
+        # type: (Any) -> None
         self._config = config
         if self._config['archive_mode'] == 'mongodb':
             _reload_configuration_mongodb(self)
@@ -59,23 +64,28 @@ class History:
             _reload_configuration_files(self)
 
     def flush(self):
+        # type: () -> None
         if self._config['archive_mode'] == 'mongodb':
             _flush_mongodb(self)
         else:
             _flush_files(self)
 
     def add(self, event, what, who="", addinfo=""):
+        # type: (Dict[str, Any], str, str, str) -> None
         if self._config['archive_mode'] == 'mongodb':
             _add_mongodb(self, event, what, who, addinfo)
         else:
             _add_files(self, event, what, who, addinfo)
 
+    # TODO: We can't use Query in the type because of cyclic imports... :-/
     def get(self, query):
+        # type: (Any) -> List[Any]
         if self._config['archive_mode'] == 'mongodb':
             return _get_mongodb(self, query)
         return _get_files(self, self._logger, query)
 
     def housekeeping(self):
+        # type: () -> None
         if self._config['archive_mode'] == 'mongodb':
             _housekeeping_mongodb(self)
         else:
@@ -106,22 +116,26 @@ except ImportError:
 
 class MongoDB:
     def __init__(self):
+        # type: () -> None
         super().__init__()
-        self.connection = None
-        self.db = None
+        self.connection = None  # type: Connection
+        self.db = None  # type: Any
 
 
 def _reload_configuration_mongodb(history):
+    # type: (History) -> None
     # Configure the auto deleting indexes in the DB
     _update_mongodb_indexes(history._settings, history._mongodb)
     _update_mongodb_history_lifetime(history._settings, history._config, history._mongodb)
 
 
 def _housekeeping_mongodb(history):
+    # type: (History) -> None
     pass
 
 
 def _connect_mongodb(settings, mongodb):
+    # type: (Settings, MongoDB) -> None
     if Connection is None:
         raise Exception('Could not initialize MongoDB (Python-Modules are missing)')
     mongodb.connection = Connection(*_mongodb_local_connection_opts(settings))
@@ -129,6 +143,7 @@ def _connect_mongodb(settings, mongodb):
 
 
 def _mongodb_local_connection_opts(settings):
+    # type: (Settings) -> Tuple[Optional[str], Optional[int]]
     ip, port = None, None
     with settings.paths.mongodb_config_file.value.open(encoding='utf-8') as f:
         for l in f:
@@ -140,10 +155,12 @@ def _mongodb_local_connection_opts(settings):
 
 
 def _flush_mongodb(history):
-    history._mongodb._mongodb.db.ec_archive.drop()
+    # type: (History) -> None
+    history._mongodb.db.ec_archive.drop()
 
 
 def _get_mongodb_max_history_age(mongodb):
+    # type: (MongoDB) -> int
     result = mongodb.db.ec_archive.index_information()
     if 'dt_-1' not in result or 'expireAfterSeconds' not in result['dt_-1']:
         return -1
@@ -151,6 +168,7 @@ def _get_mongodb_max_history_age(mongodb):
 
 
 def _update_mongodb_indexes(settings, mongodb):
+    # type: (Settings, MongoDB) -> None
     if not mongodb.connection:
         _connect_mongodb(settings, mongodb)
     result = mongodb.db.ec_archive.index_information()
@@ -160,6 +178,7 @@ def _update_mongodb_indexes(settings, mongodb):
 
 
 def _update_mongodb_history_lifetime(settings, config, mongodb):
+    # type: (Settings, Dict[str, Any], MongoDB) -> None
     if not mongodb.connection:
         _connect_mongodb(settings, mongodb)
 
@@ -178,6 +197,7 @@ def _update_mongodb_history_lifetime(settings, config, mongodb):
 
 
 def _mongodb_next_id(mongodb, name, first_id=0):
+    # type: (MongoDB, str, int) -> int
     ret = mongodb.db.counters.find_and_modify(query={'_id': name},
                                               update={'$inc': {
                                                   'seq': 1
@@ -192,6 +212,7 @@ def _mongodb_next_id(mongodb, name, first_id=0):
 
 
 def _add_mongodb(history, event, what, who, addinfo):
+    # type: (History, Dict[str, Any], str, str, str) -> None
     _log_event(history._config, history._logger, event, what, who, addinfo)
     if not history._mongodb.connection:
         _connect_mongodb(history._settings, history._mongodb)
@@ -212,11 +233,13 @@ def _add_mongodb(history, event, what, who, addinfo):
 
 
 def _log_event(config, logger, event, what, who, addinfo):
+    # type: (Dict[str, Any], Logger, Dict[str, Any], str, str, str) -> None
     if config['debug_rules']:
         logger.info("Event %d: %s/%s/%s - %s" % (event["id"], what, who, addinfo, event["text"]))
 
 
 def _get_mongodb(history, query):
+    # type: (History, Any) -> List[Any]
     filters, limit = query.filters, query.limit
 
     history_entries = []
@@ -301,14 +324,17 @@ def _get_mongodb(history, query):
 
 
 def _reload_configuration_files(history):
+    # type: (History) -> None
     pass
 
 
 def _flush_files(history):
+    # type: (History) -> None
     _expire_logfiles(history._settings, history._config, history._logger, history._lock, True)
 
 
 def _housekeeping_files(history):
+    # type: (History) -> None
     _expire_logfiles(history._settings, history._config, history._logger, history._lock, False)
 
 
@@ -320,6 +346,7 @@ def _housekeeping_files(history):
 # 3: additional information about the action
 # 4-oo: StatusTableEvents.columns
 def _add_files(history, event, what, who, addinfo):
+    # type: (History, Dict[str, Any], str, str, str) -> None
     _log_event(history._config, history._logger, event, what, who, addinfo)
     with history._lock:
         columns = [
@@ -339,6 +366,7 @@ def _add_files(history, event, what, who, addinfo):
 
 
 def quote_tab(col):
+    # type: (Any) -> bytes
     ty = type(col)
     if ty in [float, int]:
         return str(col).encode("utf-8")
@@ -356,13 +384,15 @@ def quote_tab(col):
 
 class ActiveHistoryPeriod:
     def __init__(self):
+        # type: () -> None
         super().__init__()
-        self.value = None
+        self.value = None  # type: Optional[int]
 
 
 # Get file object to current log file, handle also
 # history and lifetime limit.
 def get_logfile(config, log_dir, active_history_period):
+    # type: (Dict[str, Any], Path, ActiveHistoryPeriod) -> Path
     log_dir.mkdir(parents=True, exist_ok=True)
     # Log into file starting at current history period,
     # but: if a newer logfile exists, use that one. This
@@ -408,6 +438,7 @@ def _current_history_period(config):
 
 # Delete old log files
 def _expire_logfiles(settings, config, logger, lock_history, flush):
+    # type: (Settings, Dict[str, Any], Logger, threading.Lock, bool) -> None
     with lock_history:
         try:
             days = config["history_lifetime"]
@@ -426,8 +457,9 @@ def _expire_logfiles(settings, config, logger, lock_history, flush):
 
 
 def _get_files(history, logger, query):
+    # type: (History, Logger, Any) -> List[Any]
     filters, limit = query.filters, query.limit
-    history_entries = []
+    history_entries = []  # type: List[Any]
     if not history._settings.paths.history_dir.value.exists():
         return []
 
@@ -459,19 +491,19 @@ def _get_files(history, logger, query):
     # It's ok if the filters don't match 100% accurately on the right lines. If in
     # doubt, you can output more lines than necessary. This is only a kind of
     # prefiltering.
-    greptexts = []
+    grep_pairs = []  # type: List[Tuple[int, str]]
     for column_name, operator_name, _predicate, argument in filters:
         # Make sure that the greptexts are in the same order as in the
         # actual logfiles. They will be joined with ".*"!
         try:
             nr = grepping_filters.index(column_name)
             if operator_name in ['=', '~~']:
-                greptexts.append((nr, str(argument)))
+                grep_pairs.append((nr, str(argument)))
         except Exception:
             pass
 
-    greptexts.sort()
-    greptexts = [x[1] for x in greptexts]
+    grep_pairs.sort()
+    greptexts = [x[1] for x in grep_pairs]
     logger.debug("Texts for grep: %r", greptexts)
 
     time_filters = [f for f in filters if f[0].split("_")[-1] == "time"]
@@ -519,7 +551,8 @@ def _get_files(history, logger, query):
 
 
 def _parse_history_file(history, path, query, greptexts, limit, logger):
-    entries = []
+    # type: (History, Path, Any, List[str], Optional[int], Logger) -> List[Any]
+    entries = []  # type: List[Any]
     line_no = 0
     # If we have greptexts we pre-filter the file using the extremely
     # fast GNU Grep
@@ -537,13 +570,13 @@ def _parse_history_file(history, path, query, greptexts, limit, logger):
             break
 
         try:
-            parts = line.decode('utf-8').rstrip('\n').split('\t')
+            parts = line.decode('utf-8').rstrip('\n').split('\t')  # type: List[Any]
             _convert_history_line(history, parts)
             values = [line_no] + parts
             if query.filter_row(values):
                 entries.append(values)
         except Exception as e:
-            logger.exception("Invalid line '%s' in history file %s: %s" % (line, path, e))
+            logger.exception("Invalid line '%r' in history file %s: %s" % (line, path, e))
 
     return entries
 
@@ -551,6 +584,7 @@ def _parse_history_file(history, path, query, greptexts, limit, logger):
 # Speed-critical function for converting string representation
 # of log line back to Python values
 def _convert_history_line(history, values):
+    # type: (History, List[Any]) -> None
     # NOTE: history_line column is missing here, so indices are off by 1! :-P
     values[0] = float(values[0])  # history_time
     values[4] = int(values[4])  # event_id
@@ -587,6 +621,7 @@ def _convert_history_line(history, values):
 
 
 def _unsplit(s):
+    # type: (Any) -> Any
     if not isinstance(s, str):
         return s
 
@@ -601,6 +636,7 @@ def _unsplit(s):
 
 
 def _get_logfile_timespan(path):
+    # type: (Path) -> Tuple[float, float]
     try:
         with path.open(encoding="utf-8") as f:
             first_entry = float(f.readline().split('\t', 1)[0])
@@ -620,6 +656,7 @@ def _get_logfile_timespan(path):
 # Check_MK. To keep backwards compatibility with old history files, we have no
 # choice and continue to do it wrong... :-/
 def scrub_string(s):
+    # type: (AnyStr) -> AnyStr
     if isinstance(s, bytes):
         return s.translate(_scrub_string_str_table, b"\0\1\2\n")
     if isinstance(s, str):

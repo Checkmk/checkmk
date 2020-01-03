@@ -540,6 +540,10 @@ inline std::string ConvertToUTF8(const std::wstring_view Src) noexcept {
 #endif  // endif
 }
 
+inline std::string ConvertToUTF8(const std::string_view src) noexcept {
+    return std::string(src);
+}
+
 // standard Windows converter from Microsoft
 // WINDOWS ONLY
 // gtest [+] in yaml

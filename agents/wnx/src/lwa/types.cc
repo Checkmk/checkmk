@@ -10,7 +10,7 @@
 #include "cfg.h"
 #include "logger.h"
 #include "stringutil.h"
-namespace fs = std::experimental::filesystem;
+namespace fs = std::filesystem;
 
 template <>
 bool from_string<bool>(const std::string &value) {

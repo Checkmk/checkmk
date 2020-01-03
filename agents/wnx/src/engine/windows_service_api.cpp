@@ -80,8 +80,7 @@ static bool execMsi() {
         return false;
     std::wstring exe = str;
     exe += L"\\msiexec.exe";
-    std::string command;
-    command.assign(exe.begin(), exe.end());
+    auto command = wtools::ConvertToUTF8(exe);
     std::wstring options =
         L" /i \"C:\\z\\m\\check_mk\\agents\\wnx\\build\\install\\Release\\check_mk_service.msi\" "
         L"REINSTALL=ALL REINSTALLMODE=amus "

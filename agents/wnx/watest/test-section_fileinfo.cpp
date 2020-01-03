@@ -420,7 +420,7 @@ TEST(FileInfoTest, Reality) {
     {
         // Glob REcursive
         fs::path public_folder_path =
-            cma::tools::win::GetSomeSystemFolderA(FOLDERID_Public);
+            cma::tools::win::GetSomeSystemFolder(FOLDERID_Public);
         std::error_code ec;
         ASSERT_TRUE(fs::exists(public_folder_path, ec));
         auto files =
@@ -439,7 +439,7 @@ TEST(FileInfoTest, Reality) {
     // Desktop.ini
     {
         fs::path public_folder_path =
-            cma::tools::win::GetSomeSystemFolderA(FOLDERID_Public);
+            cma::tools::win::GetSomeSystemFolder(FOLDERID_Public);
         std::error_code ec;
         ASSERT_TRUE(fs::exists(public_folder_path, ec));
         auto files = details::FindFilesByMask(
@@ -452,7 +452,7 @@ TEST(FileInfoTest, Reality) {
     // Desktop.ini recursive
     {
         fs::path public_folder_path =
-            cma::tools::win::GetSomeSystemFolderA(FOLDERID_Public);
+            cma::tools::win::GetSomeSystemFolder(FOLDERID_Public);
         std::error_code ec;
         ASSERT_TRUE(fs::exists(public_folder_path, ec));
         auto files = details::FindFilesByMask(

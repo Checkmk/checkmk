@@ -139,11 +139,11 @@ inline const std::string GetMailApiLog() {
     namespace fs = std::filesystem;
 
     if (kUsePublicProfileLog) {
-        fs::path path = win::GetSomeSystemFolderA(FOLDERID_Public);
+        fs::path path = win::GetSomeSystemFolder(FOLDERID_Public);
         if (!path.empty()) return (path / kMailSlotLogFileName).u8string();
     }
 
-    fs::path win_path = win::GetSomeSystemFolderA(FOLDERID_Windows);
+    fs::path win_path = win::GetSomeSystemFolder(FOLDERID_Windows);
 
     if (!win_path.empty())
         return (win_path / "Logs" / kMailSlotLogFileName).u8string();

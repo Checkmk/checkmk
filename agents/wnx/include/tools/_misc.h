@@ -233,13 +233,6 @@ auto ParseKeyValue(const T* Arg, T Splitter) {
     return ParseKeyValue(std::basic_string<T>(Arg), Splitter);
 }
 
-inline const std::string ConvertToString(const std::string& In) { return In; }
-
-inline const std::string ConvertToString(const std::wstring& In) {
-    std::string out(In.begin(), In.end());
-    return out;
-}
-
 // calculates byte offset in arbitrary data
 // returns void*
 template <typename T>

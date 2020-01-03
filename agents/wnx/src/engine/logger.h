@@ -3,6 +3,8 @@
 // see logger.cpp to understand how it works
 
 #pragma once
+#include <fmt/format.h>
+
 #include <mutex>
 #include <string>
 #include <string_view>
@@ -11,7 +13,6 @@
 #include "common/cfg_info.h"
 #include "common/wtools.h"
 #include "fmt/color.h"
-#include <fmt/format.h>
 #include "tools/_xlog.h"
 
 // User defined converter required to logging correctly data from wstring
@@ -369,9 +370,9 @@ public:
     template <>
     std::ostream& operator<<(const std::wstring& Value) {
         auto s_wide = fmt::format(L"{}", Value);
-        std::string s(s_wide.begin(), s_wide.end());
+        auto s = wtools::ConvertToUTF8(Value);
         if (!constructed()) {
-            xlog::l("Attempt to log too early '%s'", s.c_str());
+            auto _ = xlog::l("Attempt to log too early '%s'", s.c_str());
             return os_;
         }
 
@@ -381,9 +382,9 @@ public:
 
     std::ostream& operator<<(const wchar_t* Value) {
         auto s_wide = fmt::format(L"{}", Value);
-        std::string s(s_wide.begin(), s_wide.end());
+        auto s = wtools::ConvertToUTF8(Value);
         if (!constructed()) {
-            xlog::l("Attempt to log too early '%s'", s.c_str());
+            auto _ = xlog::l("Attempt to log too early '%s'", s.c_str());
             return os_;
         }
         std::lock_guard lk(lock_);
@@ -440,18 +441,10 @@ public:
     }
     // **********************************
 
-    // this if for stream operations
     void bp() {
         if (bp_allowed_) {
             xdbg::bp();
         }
-    }
-
-    XLOG::Emitter operator()(int Flags = kCopy) {
-        auto e = *this;
-        e.mods_ = Flags;
-
-        return e;
     }
 
     // Bunch of functions to provide special output
@@ -496,75 +489,85 @@ public:
         }
     }
 
+#pragma warning(push)
+#pragma warning(disable : 26444)
     // [Trace]
     template <typename... T>
-    auto t(const std::string& Format, T... args) {
+    [[maybe_unused]] auto t(const std::string& Format, T... args) {
         return exec(XLOG::kTrace, Format, args...);
     }
 
     // no prefix, just informational
     template <typename... T>
-    auto i(const std::string& Format, T... args) {
+    [[maybe_unused]] auto i(const std::string& Format, T... args) {
         return exec(XLOG::kInfo, Format, args...);
     }
 
     template <typename... T>
-    auto i(int Mods, const std::string& Format, T... args) {
+    [[maybe_unused]] auto i(int Mods, const std::string& Format, T... args) {
         return exec(XLOG::kInfo | Mods, Format, args...);
     }
 
     // [Err  ]
     template <typename... T>
-    auto e(const std::string& Format, T... args) {
+    [[maybe_unused]] auto e(const std::string& Format, T... args) {
         return exec(XLOG::kError, Format, args...);
     }
 
     // [Warn ]
     template <typename... T>
-    auto w(const std::string& Format, T... args) {
+    [[maybe_unused]] auto w(const std::string& Format, T... args) {
         return exec(XLOG::kWarning, Format, args...);
     }
 
     template <typename... T>
-    auto crit(const std::string& Format, T... args) {
+    [[maybe_unused]] auto crit(const std::string& Format, T... args) {
         return exec(XLOG::kCritError, Format, args...);
     }
     // [ERROR:CRITICAL] +  breakpoint
     template <typename... T>
-    auto bp(const std::string& Format, T... args) {
+    [[maybe_unused]] auto bp(const std::string& Format, T... args) {
         return exec(XLOG::kCritError | XLOG::kBp, Format, args...);
     }
 
-    Emitter t() {
+    // this if for stream operations
+    [[maybe_unused]] XLOG::Emitter operator()(int Flags = kCopy) {
+        auto e = *this;
+        e.mods_ = Flags;
+
+        return e;
+    }
+
+    [[maybe_unused]] Emitter t() {
         auto e = *this;
         e.mods_ = XLOG::kTrace;
         return e;
     }
 
-    Emitter w() {
+    [[maybe_unused]] Emitter w() {
         auto e = *this;
         e.mods_ = XLOG::kWarning;
         return e;
     }
 
-    Emitter i() {
+    [[maybe_unused]] Emitter i() {
         auto e = *this;
         e.mods_ = XLOG::kInfo;
         return e;
     }
 
-    Emitter e() {
+    [[maybe_unused]] Emitter e() {
         auto e = *this;
         e.mods_ = XLOG::kError;
         return e;
     }
 
-    Emitter crit() {
+    [[maybe_unused]] Emitter crit() {
         auto e = *this;
         e.mods_ = XLOG::kCritError;
         return e;
     }
-
+#pragma warning(pop)
     // set filename to log
     void configFile(const std::string& LogFile) {
         if (LogFile.empty()) {

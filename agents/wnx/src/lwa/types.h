@@ -28,7 +28,7 @@
 #include <limits.h>
 #include <stdint.h>
 
-#include <experimental/filesystem>
+#include <filesystem>
 #include <functional>
 #include <iostream>
 #include <stdexcept>
@@ -92,8 +92,8 @@ template <>
 std::string from_string<std::string>(const std::string &value);
 
 template <>
-std::experimental::filesystem::path
-from_string<std::experimental::filesystem::path>(const std::string &value);
+std::filesystem::path from_string<std::filesystem::path>(
+    const std::string &value);
 
 // Needed for only_from
 struct ipspec {

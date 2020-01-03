@@ -15,7 +15,7 @@ namespace wtools::runas {  // to become friendly for cma::cfg classes
 extern void test();
 
 static bool WaitForExit(uint32_t pid) {
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 30; i++) {
         auto [code, error] = GetProcessExitCode(pid);
         if (code == 0) return true;
         cma::tools::sleep(100);

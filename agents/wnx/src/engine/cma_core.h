@@ -721,14 +721,4 @@ std::optional<std::string> GetPiggyBackName(const std::string& in_string);
 
 bool TryToHackStringWithCachedInfo(std::string& in_string,
                                    const std::string& value_to_insert);
-
-namespace ntfs {
-#if _MSC_VER >= 1923
-[[deprecated("Should not be used with VS 19")]]  // VS 19 has good remove
-#endif
-        bool
-        Remove(const std::filesystem::path& Target,
-               std::error_code& Ec) noexcept;
-}  // namespace ntfs
-
 }  // namespace cma

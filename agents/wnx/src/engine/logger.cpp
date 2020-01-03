@@ -2,9 +2,9 @@
 
 #include "logger.h"
 
-#include "common/cfg_info.h"
 #include "cfg.h"
 #include "cma_core.h"
+#include "common/cfg_info.h"
 
 namespace XLOG {
 
@@ -247,7 +247,7 @@ void WriteToLogFileWithBackup(std::string_view filename, size_t max_size,
         }
 
         // clean main file(may be required)
-        cma::ntfs::Remove(filename, ec);
+        fs::remove(filename, ec);
     }
 
     xlog::internal_PrintStringFile(filename.data(), text.data());

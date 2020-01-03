@@ -254,7 +254,7 @@ bool Process(const std::string CapFileName, ProcMode Mode,
             if (fs::exists(full_path, ec)) FilesLeftOnDisk.push_back(full_path);
         } else if ((Mode == ProcMode::remove)) {
             std::error_code ec;
-            auto removed = cma::ntfs::Remove(full_path, ec);
+            auto removed = fs::remove(full_path, ec);
             if (removed || ec.value() == 0)
                 FilesLeftOnDisk.push_back(full_path);
             else {
@@ -335,7 +335,7 @@ bool ReinstallCaps(const std::filesystem::path &target_cap,
         if (true ==
             Process(target_cap.u8string(), ProcMode::remove, files_left)) {
             XLOG::l.t("File '{}' uninstall-ed", target_cap.u8string());
-            cma::ntfs::Remove(target_cap, ec);
+            fs::remove(target_cap, ec);
             for (auto &name : files_left)
                 XLOG::l.i("\tRemoved '{}'", wtools::ConvertToUTF8(name));
             changed = true;
@@ -394,11 +394,11 @@ bool ReinstallIni(const std::filesystem::path &target_ini,
     auto bakery_yml = cma::cfg::GetBakeryFile();
     if (!packaged_agent) {
         XLOG::l.i("Removing '{}'", bakery_yml.u8string());
-        cma::ntfs::Remove(bakery_yml, ec);
+        fs::remove(bakery_yml, ec);
     }
 
     XLOG::l.i("Removing '{}'", target_ini.u8string());
-    cma::ntfs::Remove(target_ini, ec);
+    fs::remove(target_ini, ec);
 
     // if file doesn't exists we will leave
     if (!fs::exists(source_ini, ec)) {
@@ -583,7 +583,7 @@ bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
 
     if (!fs::exists(source_file, ec)) {
         // special case, no source file => remove target file
-        cma::ntfs::Remove(target_file, ec);
+        fs::remove(target_file, ec);
         PrintInstallCopyLog("Remove failed", source_file, target_file, ec);
         return true;
     }

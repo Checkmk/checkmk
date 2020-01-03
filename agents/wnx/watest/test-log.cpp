@@ -220,7 +220,7 @@ TEST(LogTest, All) {
 
     // DEFAULT
     auto prefix = GetDefaultPrefixName();
-    std::string prefix_ascii(prefix.begin(), prefix.end());
+    auto prefix_ascii = wtools::ConvertToUTF8(prefix);
     auto& lp = l.log_param_;
 
     EXPECT_TRUE(lp.directions_ & xlog::Directions::kDebuggerPrint);

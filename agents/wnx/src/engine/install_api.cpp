@@ -121,7 +121,7 @@ bool RmFile(const std::filesystem::path& File) noexcept {
         return true;
     }
 
-    auto ret = cma::ntfs::Remove(File, ec);
+    auto ret = fs::remove(File, ec);
     if (ret || ec.value() == 0) {  // either deleted or disappeared
         XLOG::l.i("File '{}'was removed", File.u8string());
         return true;

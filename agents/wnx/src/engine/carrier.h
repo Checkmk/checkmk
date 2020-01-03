@@ -7,6 +7,7 @@
 #include <functional>  // callback in the main function
 
 #include "common/cfg_info.h"  // default logfile name
+#include "common/wtools.h"    // conversion
 #include "logger.h"
 #include "tools/_misc.h"
 #include "tools/_xlog.h"
@@ -174,11 +175,11 @@ public:
 
         auto id = ConvertToUint64(Id);
         if (id.has_value()) {
-            std::string port(Port.begin(), Port.end());
+            auto port = wtools::ConvertToUTF8(Port);
             CoreCarrier cc;
             cc.establishCommunication(port);
-            auto ret = cc.sendData(ConvertToString(PeerName), id.value(), Data,
-                                   Length);
+            auto ret = cc.sendData(wtools::ConvertToUTF8(PeerName), id.value(),
+                                   Data, Length);
             cc.shutdownCommunication();
             return ret;
         } else {
@@ -193,10 +194,10 @@ public:
     static bool FireCommand(const std::wstring& Name, const T& Port,
                             const void* Data, size_t Length) {
         CoreCarrier cc;
-        std::string port(Port.begin(), Port.end());
+        auto port = wtools::ConvertToUTF8(Port);
         cc.establishCommunication(port);
 
-        cc.sendLog(cma::tools::ConvertToString(Name), Data, Length);
+        cc.sendLog(wtools::ConvertToUTF8(Name), Data, Length);
         cc.shutdownCommunication();
         return true;
     }
@@ -206,10 +207,10 @@ public:
     static bool FireLog(const std::wstring& Name, const T& Port,
                         const void* Data, size_t Length) {
         CoreCarrier cc;
-        std::string port(Port.begin(), Port.end());
+        auto port = wtools::ConvertToUTF8(Port);
         cc.establishCommunication(port);
 
-        cc.sendLog(cma::tools::ConvertToString(Name), Data, Length);
+        cc.sendLog(wtools::ConvertToUTF8(Name), Data, Length);
         cc.shutdownCommunication();
         return true;
     }

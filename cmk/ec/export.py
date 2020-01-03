@@ -77,12 +77,13 @@ class MkpRulePackProxy(MutableMapping):
     This is achieved via the method bind_to.
     """
     def __init__(self, rule_pack_id):
+        # type: (str) -> None
         super(MkpRulePackProxy, self).__init__()
         # Ideally the 'id_' would not be necessary and the proxy object would
         # be bound to it's referenced object upon initialization. Unfortunately,
         # this is not possible because the mknotifyd.mk could specify referenced
         # objects as well.
-        self.id_ = rule_pack_id  # type: str
+        self.id_ = rule_pack_id
         self.rule_pack = None  # type: Optional[Dict[str, Any]]
 
     def __getitem__(self, key):

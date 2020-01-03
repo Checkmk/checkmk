@@ -47,7 +47,7 @@ import sys
 import threading
 import time
 import traceback
-from typing import Any, Dict, List, Optional, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Tuple, Type, Union  # pylint: disable=unused-import
 
 import cmk
 import cmk.utils.daemon
@@ -267,6 +267,7 @@ def drain_pipe(pipe):
 
 
 def match(pattern, text, complete=True):
+    # type: (str, str, bool) -> Union[bool, Tuple[str, ...]]
     """Performs an EC style matching test of pattern on text
 
     Returns False in case of no match or a tuple with the match groups.
@@ -281,14 +282,7 @@ def match(pattern, text, complete=True):
 
     # Assume compiled regex
     m = pattern.search(text)
-    if m:
-        groups = m.groups()
-        if None in groups:
-            # Remove None from result tuples and replace it with empty strings
-            return tuple([g if g is not None else '' for g in groups])
-        return groups
-
-    return False
+    return bool(m) and tuple('' if g is None else g for g in m.groups())
 
 
 def format_pattern(pat):
@@ -565,7 +559,8 @@ class Perfcounters:
 
     @classmethod
     def status_columns(cls):
-        columns = []
+        # type: (Type[Perfcounters]) -> List[Tuple[str, float]]
+        columns = []  # type: List[Tuple[str, float]]
         # Please note: status_columns() and get_status() need to produce lists with exact same column order
         for name in cls._counter_names:
             columns.append(("status_" + name, 0))
@@ -694,7 +689,7 @@ class EventServer(ECServerThread):
         ]
 
     def get_status(self):
-        row = []
+        row = []  # type: List[Any]
 
         row += self._add_general_status()
         row += self._perfcounters.get_status()
@@ -704,6 +699,7 @@ class EventServer(ECServerThread):
         return [row]
 
     def _add_general_status(self):
+        # type: () -> List[Any]
         return [
             self._config["last_reload"],
             self._event_status.num_existing_events,
@@ -715,6 +711,7 @@ class EventServer(ECServerThread):
         return int(parts[22])  # in Bytes
 
     def _add_replication_status(self):
+        # type: () -> List[Any]
         if is_replication_slave(self._config):
             return [
                 self._slave_status["mode"],
@@ -724,6 +721,7 @@ class EventServer(ECServerThread):
         return ["master", 0.0, False]
 
     def _add_event_limit_status(self):
+        # type: () -> List[Any]
         return [
             self._config["event_limit"]["by_host"]["limit"],
             self._config["event_limit"]["by_rule"]["limit"],
@@ -824,7 +822,7 @@ class EventServer(ECServerThread):
         self.process_event(self._event_creator.create_event_from_trap(trap, ipaddress))
 
     def serve(self):
-        pipe_fragment = ''
+        pipe_fragment = b''
         pipe = self.open_pipe()
         listen_list = [pipe]
 
@@ -847,7 +845,7 @@ class EventServer(ECServerThread):
         # Keep list of client connections via UNIX socket and
         # read data that is not yet processed. Map from
         # fd to (fileobject, data)
-        client_sockets = {}
+        client_sockets = {}  # type: Dict[int, Tuple[socket.socket, Any, bytes]]
         select_timeout = 1
         while not self._terminate_event.is_set():
             try:
@@ -857,19 +855,19 @@ class EventServer(ECServerThread):
                 if e.args[0] != errno.EINTR:
                     raise
                 continue
-            data = None
+            data = None  # type: Optional[bytes]
 
             # Accept new connection on event unix socket
             if self._eventsocket in readable:
                 client_socket, address = self._eventsocket.accept()
                 # pylint: disable=no-member
-                client_sockets[client_socket.fileno()] = (client_socket, address, "")
+                client_sockets[client_socket.fileno()] = (client_socket, address, b"")
 
             # Same for the TCP syslog socket
             if self._syslog_tcp and self._syslog_tcp in readable:
                 client_socket, address = self._syslog_tcp.accept()
                 # pylint: disable=no-member
-                client_sockets[client_socket.fileno()] = (client_socket, address, "")
+                client_sockets[client_socket.fileno()] = (client_socket, address, b"")
 
             # Read data from existing event unix socket connections
             # NOTE: We modify client_socket in the loop, so we need to copy below!
@@ -879,7 +877,7 @@ class EventServer(ECServerThread):
                     try:
                         new_data = cs.recv(4096)
                     except Exception:
-                        new_data = ""
+                        new_data = b""
                         address = None
 
                     # Put together with incomplete messages from last time
@@ -888,11 +886,11 @@ class EventServer(ECServerThread):
                     # Do we have incomplete data? (if the socket has been
                     # closed then we consider the pending message always
                     # as complete, even if there was no trailing \n)
-                    if new_data and not data.endswith("\n"):  # keep fragment
+                    if new_data and not data.endswith(b"\n"):  # keep fragment
                         # Do we have any complete messages?
-                        if '\n' in data:
-                            complete, rest = data.rsplit("\n", 1)
-                            self.process_raw_lines(complete + "\n", address)
+                        if b'\n' in data:
+                            complete, rest = data.rsplit(b"\n", 1)
+                            self.process_raw_lines(complete + b"\n", address)
                         else:
                             rest = data  # keep for next time
 
@@ -900,7 +898,7 @@ class EventServer(ECServerThread):
                     else:
                         if data:
                             self.process_raw_lines(data, address)
-                        rest = ""
+                        rest = b""
 
                     # Connection still open?
                     if new_data:
@@ -916,13 +914,13 @@ class EventServer(ECServerThread):
                     if data:
                         # Prepend previous beginning of message to read data
                         data = pipe_fragment + data
-                        pipe_fragment = ""
+                        pipe_fragment = b""
 
                         # Last message still incomplete?
-                        if data[-1] != '\n':
-                            if '\n' in data:  # at least one complete message contained
-                                messages, pipe_fragment = data.rsplit('\n', 1)
-                                self.process_raw_lines(messages + '\n')  # got lost in split
+                        if data[-1] != b'\n':
+                            if b'\n' in data:  # at least one complete message contained
+                                messages, pipe_fragment = data.rsplit(b'\n', 1)
+                                self.process_raw_lines(messages + b'\n')  # got lost in split
                             else:
                                 pipe_fragment = data  # keep beginning of message, wait for \n
                         else:
@@ -934,9 +932,9 @@ class EventServer(ECServerThread):
                         # Pending fragments from previos reads that are not terminated
                         # by a \n are ignored.
                         if pipe_fragment:
-                            self._logger.warning("Ignoring incomplete message '%s' from pipe" %
+                            self._logger.warning("Ignoring incomplete message '%r' from pipe" %
                                                  pipe_fragment)
-                            pipe_fragment = ""
+                            pipe_fragment = b""
                 except Exception:
                     pass
 
@@ -979,6 +977,7 @@ class EventServer(ECServerThread):
 
     # Takes several lines of messages, handles encoding and processes them separated
     def process_raw_lines(self, data, address=None):
+        # type: (bytes, Optional[Any]) -> None
         lines = data.splitlines()
         for line in lines:
             line = scrub_and_decode(line.rstrip())
@@ -1005,7 +1004,7 @@ class EventServer(ECServerThread):
     # whether or not it is still in downtime. In case the downtime has ended
     # archive the events that have been created in a downtime.
     def hk_cleanup_downtime_events(self):
-        host_downtimes = {}
+        host_downtimes = {}  # type: Dict[str, bool]
 
         for event in self._event_status.events():
             if not event["host_in_downtime"]:
@@ -1275,7 +1274,8 @@ class EventServer(ECServerThread):
     def compile_rules(self, legacy_rules, rule_packs):
         self._rules = []
         self._rule_by_id = {}
-        self._rule_hash = {}  # Speedup-Hash for rule execution
+        # Speedup-Hash for rule execution
+        self._rule_hash = {}  # type: Dict[int, Dict[str, Any]]
         count_disabled = 0
         count_rules = 0
         count_unspecific = 0
@@ -1722,10 +1722,12 @@ class EventServer(ECServerThread):
         try:
             with cmk.ec.history.get_logfile(self._config, self.settings.paths.messages_dir.value,
                                             self._message_period).open(mode='ab') as f:
-                f.write("%s %s %s%s: %s\n" %
-                        (time.strftime("%b %d %H:%M:%S", time.localtime(
-                            event["time"])), event["host"], event["application"], event["pid"] and
-                         ("[%s]" % event["pid"]) or "", event["text"]))
+                f.write("%s %s %s%s: %s\n" % (
+                    time.strftime("%b %d %H:%M:%S", time.localtime(event["time"])),  #
+                    event["host"],
+                    event["application"],
+                    event["pid"] and ("[%s]" % event["pid"]) or "",
+                    event["text"]))
         except Exception:
             if self.settings.options.debug:
                 raise
@@ -2103,7 +2105,8 @@ class EventCreator:
         return event
 
     def _parse_rfc5424_syslog_info(self, line):
-        event = {}
+        # type: (str) -> Dict[str, Any]
+        event = {}  # type: Dict[str, Any]
 
         (_unused_version, timestamp, hostname, app_name, procid, _unused_msgid,
          rest) = line.split(" ", 6)
@@ -2138,8 +2141,10 @@ class EventCreator:
 
         return event
 
+    # FIXME: Typing chaos for pid ahead!
     def _parse_syslog_info(self, line):
-        event = {}
+        # not-yet-a-type: (str) ->  Dict[str, Any]
+        event = {}  # type:  Dict[str, Any]
         # Replaced ":" by ": " here to make tags with ":" possible. This
         # is needed to process logs generated by windows agent logfiles
         # like "c://test.log".
@@ -2158,7 +2163,8 @@ class EventCreator:
         return event
 
     def _parse_monitoring_info(self, line):
-        event = {}
+        # type: (str) ->  Dict[str, Any]
+        event = {}  # type: Dict[str, Any]
         # line starts with '@'
         if line[11] == ';':
             timestamp_str, sl, contact, rest = line[1:].split(';', 3)
@@ -2227,13 +2233,13 @@ class RuleMatcher:
             return False
 
         # Determine syslog priority
-        match_priority = {}
+        match_priority = {}  # type: Dict[str, bool]
         if not self.event_rule_determine_match_priority(rule, event, match_priority):
             # Abort on negative outcome, neither positive nor negative
             return False
 
         # Determine and cleanup match_groups
-        match_groups = {}
+        match_groups = {}  # type: Dict[str, Union[bool, Tuple[str, ...]]]
         if not self.event_rule_determine_match_groups(rule, event, match_groups):
             # Abort on negative outcome, neither positive nor negative
             return False
@@ -2716,13 +2722,11 @@ class StatusTable:
             num_rows += 1
 
     def _build_result_row(self, row, requested_column_indexes):
-        result_row = []
-        for index in requested_column_indexes:
-            if index is None:
-                result_row.append(None)
-            else:
-                result_row.append(row[index])
-        return result_row
+        # type: (List[Any], List[int]) -> List[Any]
+        return [
+            (None if index is None else row[index])  #
+            for index in requested_column_indexes
+        ]
 
 
 class StatusTableEvents(StatusTable):
@@ -3037,7 +3041,8 @@ class StatusServer(ECServerThread):
 
         if query.output_format == "plain":
             for row in response:
-                client_socket.sendall(b"\t".join([cmk.ec.history.quote_tab(c) for c in row]) + b"\n")
+                client_socket.sendall(b"\t".join([cmk.ec.history.quote_tab(c) for c in row]) +
+                                      b"\n")
 
         elif query.output_format == "json":
             client_socket.sendall((json.dumps(list(response)) + "\n").encode("utf-8"))
@@ -3896,7 +3901,7 @@ def get_state_from_master(config, slave_status):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(repl_settings["connect_timeout"])
         sock.connect(repl_settings["master"])
-        sock.sendall("REPLICATE %d\n" %
+        sock.sendall(b"REPLICATE %d\n" %
                      (slave_status["last_sync"] and slave_status["last_sync"] or 0))
         sock.shutdown(socket.SHUT_WR)
 
@@ -3909,7 +3914,7 @@ def get_state_from_master(config, slave_status):
 
         return ast.literal_eval(response_text.decode("utf-8"))
     except SyntaxError as e:
-        raise Exception("Invalid response from event daemon: <pre>%s</pre>" % response_text)
+        raise Exception("Invalid response from event daemon: <pre>%r</pre>" % response_text)
 
     except IOError as e:
         raise Exception("Master not responding: %s" % e)

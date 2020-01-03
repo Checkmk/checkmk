@@ -25,6 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 import traceback
+from logging import Logger  # pylint: disable=unused-import
+from pathlib import Path  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, Optional, Tuple  # pylint: disable=unused-import
 
 # Needed for receiving traps
 import pysnmp.debug  # type: ignore[import]
@@ -41,6 +44,7 @@ import pysnmp.smi.rfc1902  # type: ignore[import]
 import pysnmp.smi.error  # type: ignore[import]
 import pyasn1.error  # type: ignore[import]
 
+from cmk.ec.settings import Settings  # pylint: disable=unused-import
 from cmk.utils.log import VERBOSE
 import cmk.utils.render
 
@@ -52,6 +56,7 @@ class SNMPTrapEngine:
         pduTypes = (pysnmp.proto.api.v1.TrapPDU.tagSet, pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet)
 
     def __init__(self, settings, config, logger, callback):
+        # type: (Settings, Dict[str, Any], Logger, Callable) -> None
         super().__init__()
         self._logger = logger
         if settings.options.snmptrap_udp is None:
@@ -72,6 +77,7 @@ class SNMPTrapEngine:
 
     @staticmethod
     def _auth_proto_for(proto_name):
+        # type: (str) -> Tuple[int, ...]
         if proto_name == "md5":
             return pysnmp.entity.config.usmHMACMD5AuthProtocol
         if proto_name == "sha":
@@ -80,6 +86,7 @@ class SNMPTrapEngine:
 
     @staticmethod
     def _priv_proto_for(proto_name):
+        # type: (str) -> Tuple[int, ...]
         if proto_name == "DES":
             return pysnmp.entity.config.usmDESPrivProtocol
         if proto_name == "AES":
@@ -87,6 +94,7 @@ class SNMPTrapEngine:
         raise Exception("Invalid SNMP priv protocol: %s" % proto_name)
 
     def _initialize_snmp_credentials(self, config):
+        # type: (Dict[str, Any]) -> None
         user_num = 0
         for spec in config["snmp_credentials"]:
             credentials = spec["credentials"]
@@ -137,6 +145,7 @@ class SNMPTrapEngine:
                     securityEngineId=pysnmp.proto.api.v2c.OctetString(hexValue=engine_id))
 
     def process_snmptrap(self, message, sender_address):
+        # type: (bytes, Any) -> None
         """Receives an incoming SNMP trap from the socket and hands it over to PySNMP for parsing
         and processing. PySNMP is calling the registered call back (self._handle_snmptrap) back."""
         self._logger.log(VERBOSE, "Trap received from %s:%d. Checking for acceptance now.",
@@ -180,6 +189,7 @@ class SNMPTrapEngine:
 
 class SNMPTrapTranslator:
     def __init__(self, settings, config, logger):
+        # type: (Settings, Dict[str, Any], Logger) -> None
         super().__init__()
         self._logger = logger
         translation_config = config["translate_snmptraps"]
@@ -200,6 +210,7 @@ class SNMPTrapTranslator:
 
     @staticmethod
     def _construct_resolver(logger, mibs_dir, load_texts):
+        # type: (Logger, Path, bool) -> Optional[pysnmp.smi.view.MibViewController]
         try:
             builder = pysnmp.smi.builder.MibBuilder()  # manages python MIB modules
 

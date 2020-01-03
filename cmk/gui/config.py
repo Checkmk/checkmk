@@ -498,7 +498,7 @@ class LoggedInUser(object):
         self.email = self._attributes.get("email", self.id)
 
         self._permissions = _initial_permission_cache(self.id)
-        self.siteconf = self.load_file("siteconfig", {})
+        self._siteconf = self.load_file("siteconfig", {})
         self._button_counts = None
 
     def _gather_roles(self, user_id):
@@ -521,10 +521,6 @@ class LoggedInUser(object):
         if not self._button_counts:
             self._button_counts = self.load_file("buttoncounts", {})
         return self._button_counts
-
-    def save_site_config(self):
-        # type: () -> None
-        self.save_file("siteconfig", self.siteconf)
 
     def get_attribute(self, key, deflt=None):
         # type: (str, Any) -> Any
@@ -574,8 +570,19 @@ class LoggedInUser(object):
 
     def is_site_disabled(self, site_id):
         # type: (SiteId) -> bool
-        siteconf = self.siteconf.get(site_id, {})
-        return siteconf.get("disabled", False)
+        return self._siteconf.get(site_id, {}).get("disabled", False)
+
+    def disable_site(self, site_id):
+        # type: (SiteId) -> None
+        self._siteconf.setdefault(site_id, {})["disabled"] = True
+
+    def enable_site(self, site_id):
+        # type: (SiteId) -> None
+        self._siteconf.setdefault(site_id, {}).pop("disabled", None)
+
+    def save_site_config(self):
+        # type: () -> None
+        self.save_file("siteconfig", self._siteconf)
 
     def authorized_sites(self, unfiltered_sites=None):
         # type: (Optional[SiteConfigurations]) -> SiteConfigurations

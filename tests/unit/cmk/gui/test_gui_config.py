@@ -946,7 +946,6 @@ def test_unauthenticated_users(user, alias, email, role_ids, baserole_id):
     assert user.alias == alias
     assert user.email == email
     assert user.confdir is None
-    assert user.siteconf == {}
 
     assert user.role_ids == role_ids
     assert user.get_attribute('roles') == role_ids
@@ -1108,7 +1107,6 @@ def test_monitoring_user(monitoring_user):
     assert monitoring_user.alias == 'Test user'
     assert monitoring_user.email == 'test_user@tribe29.com'
     assert monitoring_user.confdir.endswith('/config_dir/test')
-    assert monitoring_user.siteconf == MONITORING_USER_SITECONFIG
 
     assert monitoring_user.role_ids == ['user']
     assert monitoring_user.get_attribute('roles') == ['user']
@@ -1132,9 +1130,10 @@ def test_monitoring_user(monitoring_user):
     assert monitoring_user.file_modified('siteconfig') > 0
     assert monitoring_user.file_modified('unknown_file') == 0
 
-    monitoring_user.siteconf = {}
-    monitoring_user.save_site_config()
-    assert monitoring_user.load_file('siteconfig', None) == {}
+    monitoring_user.disable_site('heute_slave_1')
+    monitoring_user.enable_site('heute_slave_2')
+    assert monitoring_user.is_site_disabled('heute_slave_1') is True
+    assert monitoring_user.is_site_disabled('heute_slave_2') is False
 
 
 def test_monitoring_user_permissions(mocker, monitoring_user):

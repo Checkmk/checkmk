@@ -491,8 +491,8 @@ class LoggedInUser(object):
 
         self.confdir = _confdir_for_user_id(self.id)
         self.role_ids = self._gather_roles(self.id)
-        self.baserole_ids = _baserole_ids_from_role_ids(self.role_ids)
-        self.baserole_id = _most_permissive_baserole_id(self.baserole_ids)
+        baserole_ids = _baserole_ids_from_role_ids(self.role_ids)
+        self.baserole_id = _most_permissive_baserole_id(baserole_ids)
         self._attributes = self._load_attributes(self.id, self.role_ids)
         self.alias = self._attributes.get("alias", self.id)
         self.email = self._attributes.get("email", self.id)

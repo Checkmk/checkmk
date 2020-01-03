@@ -949,7 +949,6 @@ def test_unauthenticated_users(user, alias, email, role_ids, baserole_id):
     assert user.siteconf == {}
 
     assert user.role_ids == role_ids
-    assert user.baserole_ids == role_ids
     assert user.get_attribute('roles') == role_ids
     assert user.baserole_id == baserole_id
 
@@ -1112,7 +1111,6 @@ def test_monitoring_user(monitoring_user):
     assert monitoring_user.siteconf == MONITORING_USER_SITECONFIG
 
     assert monitoring_user.role_ids == ['user']
-    assert monitoring_user.baserole_ids == ['user']
     assert monitoring_user.get_attribute('roles') == ['user']
     assert monitoring_user.baserole_id == 'user'
 

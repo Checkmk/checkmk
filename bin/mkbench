@@ -1130,10 +1130,9 @@ class AgentListener(multiprocessing.Process):
                 try:
                     readable = select.select(self._sockets, [], [], 0.2)[0]
                 except select.error as e:
-                    if e[0] == 4:
-                        continue
-                    else:
+                    if e.args[0] != errno.EINTR:
                         raise
+                    continue
 
                 for s in readable:
                     time.sleep(0.5)

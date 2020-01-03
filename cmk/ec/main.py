@@ -250,9 +250,9 @@ def drain_pipe(pipe):
         try:
             readable = select.select([pipe], [], [], 0.1)[0]
         except select.error as e:
-            if e[0] == errno.EINTR:
-                continue
-            raise
+            if e.args[0] != errno.EINTR:
+                raise
+            continue
 
         data = None
         if pipe in readable:
@@ -854,9 +854,9 @@ class EventServer(ECServerThread):
                 readable = select.select(listen_list + list(client_sockets.keys()), [], [],
                                          select_timeout)[0]
             except select.error as e:
-                if e[0] == errno.EINTR:
-                    continue
-                raise
+                if e.args[0] != errno.EINTR:
+                    raise
+                continue
             data = None
 
             # Accept new connection on event unix socket
@@ -2954,9 +2954,9 @@ class StatusServer(ECServerThread):
                 try:
                     readable = select.select(listen_list, [], [], 0.2)[0]
                 except select.error as e:
-                    if e[0] == errno.EINTR:
-                        continue
-                    raise
+                    if e.args[0] != errno.EINTR:
+                        raise
+                    continue
 
                 for s in readable:
                     client_socket, addr_info = s.accept()

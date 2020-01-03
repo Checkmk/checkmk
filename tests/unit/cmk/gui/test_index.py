@@ -20,7 +20,7 @@ def test_get_start_url_default_config(monkeypatch, register_builtin_html):
 def test_get_start_url_user_config(monkeypatch, module_wide_request_context):
     monkeypatch.setattr(cmk.gui.config, "start_url", "bla.py")
 
-    monkeypatch.setattr(cmk.gui.config.user, "attributes", {
+    monkeypatch.setattr(cmk.gui.config.user, "_attributes", {
         "start_url": "user_url.py",
     })
 
@@ -48,7 +48,7 @@ def test_get_start_url_invalid(module_wide_request_context, invalid_url):
 
 
 def test_get_start_url_invalid_config(monkeypatch, module_wide_request_context):
-    monkeypatch.setattr(cmk.gui.config.user, "attributes", {
+    monkeypatch.setattr(cmk.gui.config.user, "_attributes", {
         "start_url": "http://asdasd/",
     })
     assert cmk.gui.main._get_start_url() == "dashboard.py"

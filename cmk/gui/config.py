@@ -491,17 +491,17 @@ class LoggedInUser(object):
 
     def _load_attributes(self):
         # type: () -> None
-        self.attributes = self.load_file("cached_profile", None)
-        if self.attributes is None:
+        self._attributes = self.load_file("cached_profile", None)
+        if self._attributes is None:
             if self.id in multisite_users:
-                self.attributes = multisite_users[self.id]
+                self._attributes = multisite_users[self.id]
             else:
-                self.attributes = {
+                self._attributes = {
                     "roles": self.role_ids,
                 }
 
-        self.alias = self.attributes.get("alias", self.id)
-        self.email = self.attributes.get("email", self.id)
+        self.alias = self._attributes.get("alias", self.id)
+        self.email = self._attributes.get("email", self.id)
 
     def _load_permissions(self):
         # type: () -> None
@@ -536,16 +536,16 @@ class LoggedInUser(object):
 
     def get_attribute(self, key, deflt=None):
         # type: (str, Any) -> Any
-        return self.attributes.get(key, deflt)
+        return self._attributes.get(key, deflt)
 
     def _set_attribute(self, key, value):
         # type: (str, Any) -> None
-        self.attributes[key] = value
+        self._attributes[key] = value
 
     def _unset_attribute(self, key):
         # type: (str) -> None
         try:
-            del self.attributes[key]
+            del self._attributes[key]
         except KeyError:
             pass
 
@@ -562,6 +562,11 @@ class LoggedInUser(object):
     def reset_language(self):
         # type: () -> None
         self._unset_attribute("language")
+
+    @property
+    def customer_id(self):
+        # type: () -> Optional[str]
+        return self.get_attribute("customer")
 
     def contact_groups(self):
         # type: () -> List

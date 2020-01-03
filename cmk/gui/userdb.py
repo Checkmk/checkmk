@@ -239,14 +239,13 @@ def is_customer_user_allowed_to_login(user_id):
     if not cmk.is_managed_edition():
         return True
 
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
     user = config.LoggedInUser(user_id)
-    customer_id = managed.get_customer_id(user.attributes)
 
-    if managed.is_global(customer_id):
+    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+    if managed.is_global(user.customer_id):
         return True
 
-    return managed.is_current_customer(customer_id)
+    return managed.is_current_customer(user.customer_id)
 
 
 # This function is called very often during regular page loads so it has to be efficient

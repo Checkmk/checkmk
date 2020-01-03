@@ -950,13 +950,13 @@ def test_unauthenticated_users(user, alias, email, role_ids, baserole_id):
 
     assert user.role_ids == role_ids
     assert user.baserole_ids == role_ids
-    assert user.attributes == {"roles": role_ids}
     assert user.get_attribute('roles') == role_ids
     assert user.baserole_id == baserole_id
 
     assert user.get_attribute('baz', 'default') == 'default'
     assert user.get_attribute('foo') is None
 
+    assert user.customer_id is None
     assert user.get_button_counts() == {}
     assert user.contact_groups() == []
     assert user.load_stars() == set()
@@ -1113,13 +1113,13 @@ def test_monitoring_user(monitoring_user):
 
     assert monitoring_user.role_ids == ['user']
     assert monitoring_user.baserole_ids == ['user']
-    assert monitoring_user.attributes == MONITORING_USER_CACHED_PROFILE
     assert monitoring_user.get_attribute('roles') == ['user']
     assert monitoring_user.baserole_id == 'user'
 
     assert monitoring_user.get_attribute('ui_theme') == 'modern-dark'
 
     assert monitoring_user.language == 'de'
+    assert monitoring_user.customer_id is None
     assert monitoring_user.get_button_counts() == MONITORING_USER_BUTTONCOUNTS
     assert monitoring_user.contact_groups() == ['all']
 

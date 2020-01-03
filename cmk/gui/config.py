@@ -471,6 +471,16 @@ def _initial_permission_cache(user_id):
     return {}
 
 
+def _confdir_for_user_id(user_id):
+    # type: (Optional[UserId]) -> Optional[str]
+    if user_id is None:
+        return None
+
+    confdir = config_dir + "/" + user_id.encode("utf-8")
+    store.mkdir(confdir)
+    return confdir
+
+
 # This objects intention is currently only to handle the currently logged in user after authentication.
 # But maybe this can be used for managing all user objects in future.
 # TODO: Cleanup accesses to module global vars and functions
@@ -479,7 +489,7 @@ class LoggedInUser(object):
         # type: (Optional[Text]) -> None
         self.id = UserId(user_id) if user_id else None
 
-        self._load_confdir()
+        self.confdir = _confdir_for_user_id(self.id)
         self.role_ids = self._gather_roles(self.id)
         self.baserole_ids = _baserole_ids_from_role_ids(self.role_ids)
         self.baserole_id = _most_permissive_baserole_id(self.baserole_ids)
@@ -488,7 +498,7 @@ class LoggedInUser(object):
         self.email = self._attributes.get("email", self.id)
 
         self._permissions = _initial_permission_cache(self.id)
-        self._load_site_config()
+        self.siteconf = self.load_file("siteconfig", {})
         self._button_counts = None
 
     def _gather_roles(self, user_id):
@@ -506,14 +516,6 @@ class LoggedInUser(object):
                     "roles": role_ids,
                 }
         return attributes
-
-    def _load_confdir(self):
-        self.confdir = config_dir + "/" + self.id.encode("utf-8")
-        store.mkdir(self.confdir)
-
-    def _load_site_config(self):
-        # type: () -> None
-        self.siteconf = self.load_file("siteconfig", {})
 
     def get_button_counts(self):
         if not self._button_counts:
@@ -620,6 +622,9 @@ class LoggedInUser(object):
 
     def load_file(self, name, deflt, lock=False):
         # type: (str, Any, bool) -> Any
+        if self.confdir is None:
+            return deflt
+
         path = self.confdir + "/" + name + ".mk"
         return store.load_object_from_file(path, default=deflt, lock=lock)
 
@@ -655,18 +660,6 @@ class LoggedInSuperUser(LoggedInUser):
         # type: (Optional[UserId]) -> List[str]
         return ["admin"]
 
-    def _load_confdir(self):
-        # type: () -> None
-        self.confdir = None
-
-    def _load_site_config(self):
-        # type: () -> None
-        self.siteconf = {}
-
-    def load_file(self, name, deflt, lock=False):
-        # type: (str, Any, bool) -> Any
-        return deflt
-
 
 class LoggedInNobody(LoggedInUser):
     def __init__(self):
@@ -678,18 +671,6 @@ class LoggedInNobody(LoggedInUser):
     def _gather_roles(self, _user_id):
         # type: (Optional[UserId]) -> List[str]
         return []
-
-    def _load_confdir(self):
-        # type: () -> None
-        self.confdir = None
-
-    def _load_site_config(self):
-        # type: () -> None
-        self.siteconf = {}
-
-    def load_file(self, name, deflt, lock=False):
-        # type: (str, Any, bool) -> Any
-        return deflt
 
 
 def clear_user_login():

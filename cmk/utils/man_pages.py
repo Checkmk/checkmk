@@ -520,9 +520,10 @@ def _parse_man_page_header(name, path):
 
 
 def load_man_page(name):
+    # type: (str) -> Optional[Dict[six.text_type, Any]]
     path = man_page_path(name)
     if path is None:
-        return
+        return None
 
     man_page = {}  # type: Dict[six.text_type, Any]
     current_section = []  # type: List[Tuple[str, str]]
@@ -647,6 +648,14 @@ class ManPageRenderer(object):
         raise NotImplementedError()
 
 
+def _console_stream():
+    if os.path.exists("/usr/bin/less") and sys.stdout.isatty():
+        # NOTE: We actually want to use subprocess.Popen here, but the tty is in
+        # a horrible state after rendering the man page if we do that. Why???
+        return os.popen(str("/usr/bin/less -S -R -Q -u -L"), "w")  # nosec
+    return sys.stdout
+
+
 class ConsoleManPageRenderer(ManPageRenderer):
     _tty_color = tty.white + tty.bold
     _normal_color = tty.normal + tty.colorset(7, 4)
@@ -658,10 +667,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
 
     def __init__(self, name):
         super(ConsoleManPageRenderer, self).__init__(name)
-        self.__output = (
-            os.popen(str("/usr/bin/less -S -R -Q -u -L"), "w")
-            if os.path.exists("/usr/bin/less") and sys.stdout.isatty()  #
-            else sys.stdout)
+        self.__output = _console_stream()
         self.__width = tty.get_size()[1]
 
     def _flush(self):

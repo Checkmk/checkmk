@@ -63,3 +63,6 @@ RUN yum -y install \
 # using a tmpfs for /omd/sites/[site]/tmp, which we want to have during our tests. We can
 # simply solve this by pre-creating the empty file here.
 RUN touch /etc/fstab
+
+ARG VERS_TAG
+RUN echo $VERS_TAG > /version.txt

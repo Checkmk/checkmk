@@ -33,3 +33,6 @@ RUN pip install --upgrade setuptools \
     && zypper -n --no-gpg-checks in --replacefiles \
     $PACKAGES \
     && zypper clean -a
+
+ARG VERS_TAG
+RUN echo $VERS_TAG > /version.txt

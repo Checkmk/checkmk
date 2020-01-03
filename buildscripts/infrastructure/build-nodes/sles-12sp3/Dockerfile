@@ -74,3 +74,6 @@ RUN cd /opt \
 RUN zypper -n in -y --force-resolution \
     chrpath \
     && zypper clean -a
+
+ARG VERS_TAG
+RUN echo $VERS_TAG > /version.txt

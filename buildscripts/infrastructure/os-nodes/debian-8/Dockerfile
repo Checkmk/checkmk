@@ -38,3 +38,6 @@ RUN pip uninstall -y pipenv \
 
 RUN rm -rf /bin/systemctl \
     && ln -s /bin/true /bin/systemctl
+
+ARG VERS_TAG
+RUN echo $VERS_TAG > /version.txt

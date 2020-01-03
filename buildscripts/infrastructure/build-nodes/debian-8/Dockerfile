@@ -58,3 +58,6 @@ RUN apt-get update \
     && apt-get install -y \
     chrpath \
     && rm -rf /var/lib/apt/lists/*
+
+ARG VERS_TAG
+RUN echo $VERS_TAG > /version.txt

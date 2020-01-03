@@ -35,3 +35,6 @@ RUN apt-get update \
 
 RUN rm -rf /bin/systemctl \
     && ln -s /bin/true /bin/systemctl
+
+ARG VERS_TAG
+RUN echo $VERS_TAG > /version.txt

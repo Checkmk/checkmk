@@ -61,3 +61,6 @@ RUN yum -y install \
     nodejs \
     $PACKAGES \
     && yum clean all
+
+ARG VERS_TAG
+RUN echo $VERS_TAG > /version.txt

@@ -69,3 +69,6 @@ RUN yum -y makecache \
     && yum -y install \
         chrpath \
     && yum clean all
+
+ARG VERS_TAG
+RUN echo $VERS_TAG > /version.txt

@@ -437,6 +437,26 @@ def _may_with_roles(some_role_ids, pname):
 # TODO: Shouldn't this be moved to e.g. login.py or userdb.py?
 
 
+def _baserole_ids_from_role_ids(role_ids):
+    # type: (List[str]) -> List[str]
+    base_roles = set()
+    for r in role_ids:
+        if r in builtin_role_ids:
+            base_roles.add(r)
+        else:
+            base_roles.add(roles[r]["basedon"])
+    return list(base_roles)
+
+
+def _most_permissive_baserole_id(baserole_ids):
+    # type: (List[str]) -> str
+    if "admin" in baserole_ids:
+        return "admin"
+    if "user" in baserole_ids:
+        return "user"
+    return "guest"
+
+
 # This objects intention is currently only to handle the currently logged in user after authentication.
 # But maybe this can be used for managing all user objects in future.
 # TODO: Cleanup accesses to module global vars and functions
@@ -446,48 +466,17 @@ class LoggedInUser(object):
         self.id = UserId(user_id) if user_id else None
 
         self._load_confdir()
-        self._load_roles()
+        self.role_ids = self._gather_roles(self.id)
+        self.baserole_ids = _baserole_ids_from_role_ids(self.role_ids)
+        self.baserole_id = _most_permissive_baserole_id(self.baserole_ids)
         self._load_attributes()
         self._load_permissions()
         self._load_site_config()
         self._button_counts = None
 
-    # TODO: Clean up that baserole_* stuff?
-    def _load_roles(self):
-        # type: () -> None
-        # Determine the roles of the user. If the user is listed in
-        # users, admin_users or guest_users in multisite.mk then we
-        # give him the according roles. If the user has an explicit
-        # profile in multisite_users (e.g. due to WATO), we rather
-        # use that profile. Remaining (unknown) users get the default_user_role.
-        # That can be set to None -> User has no permissions at all.
-        self.role_ids = self._gather_roles()
-
-        # Get base roles (admin/user/guest)
-        self._load_base_roles()
-
-        # Get best base roles and use as "the" role of the user
-        if "admin" in self.baserole_ids:
-            self.baserole_id = "admin"
-        elif "user" in self.baserole_ids:
-            self.baserole_id = "user"
-        else:
-            self.baserole_id = "guest"
-
-    def _gather_roles(self):
-        # type: () -> List
-        return roles_of_user(self.id)
-
-    def _load_base_roles(self):
-        # type: () -> None
-        base_roles = set([])
-        for r in self.role_ids:
-            if r in builtin_role_ids:
-                base_roles.add(r)
-            else:
-                base_roles.add(roles[r]["basedon"])
-
-        self.baserole_ids = list(base_roles)
+    def _gather_roles(self, user_id):
+        # type: (Optional[UserId]) -> List[str]
+        return roles_of_user(user_id)
 
     def _load_attributes(self):
         # type: () -> None
@@ -661,8 +650,8 @@ class LoggedInSuperUser(LoggedInUser):
         self.alias = "Superuser for unauthenticated pages"
         self.email = "admin"
 
-    def _gather_roles(self):
-        # type: () -> List[str]
+    def _gather_roles(self, _user_id):
+        # type: (Optional[UserId]) -> List[str]
         return ["admin"]
 
     def _load_confdir(self):
@@ -685,8 +674,8 @@ class LoggedInNobody(LoggedInUser):
         self.alias = "Unauthenticated user"
         self.email = "nobody"
 
-    def _gather_roles(self):
-        # type: () -> List[str]
+    def _gather_roles(self, _user_id):
+        # type: (Optional[UserId]) -> List[str]
         return []
 
     def _load_confdir(self):

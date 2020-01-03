@@ -457,6 +457,20 @@ def _most_permissive_baserole_id(baserole_ids):
     return "guest"
 
 
+def _initial_permission_cache(user_id):
+    # type: (Optional[UserId]) -> Dict[str, bool]
+    # Prepare cache of already computed permissions
+    # Make sure, admin can restore permissions in any case!
+    if user_id in admin_users:
+        return {
+            "general.use": True,  # use Multisite
+            "wato.use": True,  # enter WATO
+            "wato.edit": True,  # make changes in WATO...
+            "wato.users": True,  # ... with access to user management
+        }
+    return {}
+
+
 # This objects intention is currently only to handle the currently logged in user after authentication.
 # But maybe this can be used for managing all user objects in future.
 # TODO: Cleanup accesses to module global vars and functions
@@ -469,8 +483,11 @@ class LoggedInUser(object):
         self.role_ids = self._gather_roles(self.id)
         self.baserole_ids = _baserole_ids_from_role_ids(self.role_ids)
         self.baserole_id = _most_permissive_baserole_id(self.baserole_ids)
-        self._load_attributes()
-        self._load_permissions()
+        self._attributes = self._load_attributes(self.id, self.role_ids)
+        self.alias = self._attributes.get("alias", self.id)
+        self.email = self._attributes.get("email", self.id)
+
+        self._permissions = _initial_permission_cache(self.id)
         self._load_site_config()
         self._button_counts = None
 
@@ -478,33 +495,17 @@ class LoggedInUser(object):
         # type: (Optional[UserId]) -> List[str]
         return roles_of_user(user_id)
 
-    def _load_attributes(self):
-        # type: () -> None
-        self._attributes = self.load_file("cached_profile", None)
-        if self._attributes is None:
-            if self.id in multisite_users:
-                self._attributes = multisite_users[self.id]
+    def _load_attributes(self, user_id, role_ids):
+        # type: (Optional[UserId], List[str]) -> Any
+        attributes = self.load_file("cached_profile", None)
+        if attributes is None:
+            if user_id in multisite_users:
+                attributes = multisite_users[user_id]
             else:
-                self._attributes = {
-                    "roles": self.role_ids,
+                attributes = {
+                    "roles": role_ids,
                 }
-
-        self.alias = self._attributes.get("alias", self.id)
-        self.email = self._attributes.get("email", self.id)
-
-    def _load_permissions(self):
-        # type: () -> None
-        # Prepare cache of already computed permissions
-        # Make sure, admin can restore permissions in any case!
-        if self.id in admin_users:
-            self._permissions = {
-                "general.use": True,  # use Multisite
-                "wato.use": True,  # enter WATO
-                "wato.edit": True,  # make changes in WATO...
-                "wato.users": True,  # ... with access to user management
-            }
-        else:
-            self._permissions = {}
+        return attributes
 
     def _load_confdir(self):
         self.confdir = config_dir + "/" + self.id.encode("utf-8")

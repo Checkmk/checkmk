@@ -43,7 +43,7 @@ function download-sources() {
     log "Downloading gdb"
     if ! curl -s -O "${NEXUS}gdb-${GDB_VERSION}.tar.gz"; then
         log "File not available from ${NEXUS}. Downloading from upstream"
-        curl -s -O ftp://sourceware.org/pub/gdb/releases/gdb-${GDB_VERSION}.tar.gz
+        curl -s -O https://sourceware.org/pub/gdb/releases/gdb-${GDB_VERSION}.tar.gz
         curl -s -u "${USERNAME}:${PASSWORD}" --upload-file "gdb-${GDB_VERSION}.tar.gz" "${NEXUS}"
     fi
 }

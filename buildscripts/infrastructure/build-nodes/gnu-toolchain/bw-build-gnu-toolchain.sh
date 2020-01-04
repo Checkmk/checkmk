@@ -8,7 +8,7 @@ GCC_PATCHLEVEL="0"
 BINUTILS_VERSION="2.33.1"
 GDB_VERSION="8.3.1"
 
-MIRROR_URL="https://sourceware.org/pub"
+MIRROR_URL="https://sourceware.org/pub/"
 
 GCC_VERSION="${GCC_MAJOR}.${GCC_MINOR}.${GCC_PATCHLEVEL}"
 PREFIX="/opt/gcc-${GCC_VERSION}"
@@ -21,37 +21,49 @@ function log() {
 }
 
 function download-sources() {
-    # To avoid repeated downloads of the sources + the prerequisites, we
-    # pre-package things together:
-    # wget https://ftp.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.gz
+    log "Dowload parameters: NEXUS=[${NEXUS}], USERNAME=[${USERNAME//?/X}], PASSWORD=[${PASSWORD//?/X}]"
 
-    log "Downloading binutils"
-    if ! curl -s -O "${NEXUS}binutils-${BINUTILS_VERSION}.tar.gz"; then
-        log "File not available from ${NEXUS}. Downloading from upstream"
-        curl -s -O ${MIRROR_URL}/binutils/releases/binutils-${BINUTILS_VERSION}.tar.gz
+    log "Downloading binutils-${BINUTILS_VERSION}"
+    if curl -s -O "${NEXUS}binutils-${BINUTILS_VERSION}.tar.gz"; then
+        log "Using ${NEXUS}binutils-${BINUTILS_VERSION}.tar.gz"
+    else
+        log "File not available from ${NEXUS}binutils-${BINUTILS_VERSION}.tar.gz, downloading from ${MIRROR_URL}binutils/releases/binutils-${BINUTILS_VERSION}.tar.gz"
+        curl -s -O ${MIRROR_URL}binutils/releases/binutils-${BINUTILS_VERSION}.tar.gz
+        log "Uploading binutils-${BINUTILS_VERSION}.tar.gz to ${NEXUS}"
         curl -s -u "${USERNAME}:${PASSWORD}" --upload-file "binutils-${BINUTILS_VERSION}.tar.gz" "${NEXUS}"
+        log "Upload of binutils done"
     fi
 
-    log "Downloading gcc"
-    if ! curl -s -O "${NEXUS}gcc-${GCC_VERSION}-with-prerequisites.tar.gz"; then
-        log "File not available from ${NEXUS}. Downloading from upstream"
-        curl -s -O ${MIRROR_URL}/gcc/releases/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz
+    log "Downloading gcc-${GCC_VERSION}"
+    if curl -s -O "${NEXUS}gcc-${GCC_VERSION}-with-prerequisites.tar.gz"; then
+        log "Using ${NEXUS}gcc-${GCC_VERSION}-with-prerequisites.tar.gz"
+    else
+        log "File not available from ${NEXUS}gcc-${GCC_VERSION}-with-prerequisites.tar.gz, downloading from ${MIRROR_URL}gcc/releases/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz"
+        curl -s -O ${MIRROR_URL}gcc/releases/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz
+        # To avoid repeated downloads of the sources + the prerequisites, we pre-package things together.
+        log "Downloading and merging prerequisites"
         tar xzf gcc-${GCC_VERSION}.tar.gz
         (cd gcc-${GCC_VERSION} && ./contrib/download_prerequisites)
         tar czf gcc-${GCC_VERSION}-with-prerequisites.tar.gz gcc-${GCC_VERSION}
+        log "Uploading gcc-${GCC_VERSION}-with-prerequisites.tar.gz to ${NEXUS}"
         curl -s -u "${USERNAME}:${PASSWORD}" --upload-file "gcc-${GCC_VERSION}-with-prerequisites.tar.gz" "${NEXUS}"
+        log "Upload of gcc done"
     fi
 
-    log "Downloading gdb"
-    if ! curl -s -O "${NEXUS}gdb-${GDB_VERSION}.tar.gz"; then
-        log "File not available from ${NEXUS}. Downloading from upstream"
-        curl -s -O ${MIRROR_URL}/gdb/releases/gdb-${GDB_VERSION}.tar.gz
+    log "Downloading gdb-${GDB_VERSION}"
+    if curl -s -O "${NEXUS}gdb-${GDB_VERSION}.tar.gz"; then
+        log "Using ${NEXUS}gdb-${GDB_VERSION}.tar.gz"
+    else
+        log "File not available from ${NEXUS}gdb-${GDB_VERSION}.tar.gz, downloading from ${MIRROR_URL}gdb/releases/gdb-${GDB_VERSION}.tar.gz"
+        curl -s -O ${MIRROR_URL}gdb/releases/gdb-${GDB_VERSION}.tar.gz
+        log "Uploading gdb-${GDB_VERSION}.tar.gz ${NEXUS}"
         curl -s -u "${USERNAME}:${PASSWORD}" --upload-file "gdb-${GDB_VERSION}.tar.gz" "${NEXUS}"
+        log "Upload of gdb done"
     fi
 }
 
 function build-binutils() {
-    log "Build binutils"
+    log "Build binutils-${BINUTILS_VERSION}"
     cd ${BUILD_DIR}
     tar xzf binutils-${BINUTILS_VERSION}.tar.gz
     mkdir binutils-${BINUTILS_VERSION}-build
@@ -63,7 +75,7 @@ function build-binutils() {
 }
 
 function build-gcc() {
-    log "Build gcc"
+    log "Build gcc-${GCC_VERSION}"
     cd ${BUILD_DIR}
     tar xzf gcc-${GCC_VERSION}-with-prerequisites.tar.gz
     mkdir gcc-${GCC_VERSION}-build
@@ -79,7 +91,7 @@ function build-gcc() {
 }
 
 function build-gdb() {
-    log "Build gdb"
+    log "Build gdb-${GDB_VERSION}"
     cd ${BUILD_DIR}
     tar xzf gdb-${GDB_VERSION}.tar.gz
     mkdir gdb-${GDB_VERSION}-build

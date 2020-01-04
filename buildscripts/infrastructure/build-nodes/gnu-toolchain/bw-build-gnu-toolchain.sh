@@ -8,6 +8,8 @@ GCC_PATCHLEVEL="0"
 BINUTILS_VERSION="2.33.1"
 GDB_VERSION="8.3.1"
 
+MIRROR_URL="https://sourceware.org/pub"
+
 GCC_VERSION="${GCC_MAJOR}.${GCC_MINOR}.${GCC_PATCHLEVEL}"
 PREFIX="/opt/gcc-${GCC_VERSION}"
 
@@ -26,14 +28,14 @@ function download-sources() {
     log "Downloading binutils"
     if ! curl -s -O "${NEXUS}binutils-${BINUTILS_VERSION}.tar.gz"; then
         log "File not available from ${NEXUS}. Downloading from upstream"
-        curl -s -O https://sourceware.org/pub/binutils/releases/binutils-${BINUTILS_VERSION}.tar.gz
+        curl -s -O ${MIRROR_URL}/binutils/releases/binutils-${BINUTILS_VERSION}.tar.gz
         curl -s -u "${USERNAME}:${PASSWORD}" --upload-file "binutils-${BINUTILS_VERSION}.tar.gz" "${NEXUS}"
     fi
 
     log "Downloading gcc"
     if ! curl -s -O "${NEXUS}gcc-${GCC_VERSION}-with-prerequisites.tar.gz"; then
         log "File not available from ${NEXUS}. Downloading from upstream"
-        curl -s -O ftp://ftp.gwdg.de/pub/misc/gcc/releases/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz
+        curl -s -O ${MIRROR_URL}/gcc/releases/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz
         tar xzf gcc-${GCC_VERSION}.tar.gz
         (cd gcc-${GCC_VERSION} && ./contrib/download_prerequisites)
         tar czf gcc-${GCC_VERSION}-with-prerequisites.tar.gz gcc-${GCC_VERSION}
@@ -43,7 +45,7 @@ function download-sources() {
     log "Downloading gdb"
     if ! curl -s -O "${NEXUS}gdb-${GDB_VERSION}.tar.gz"; then
         log "File not available from ${NEXUS}. Downloading from upstream"
-        curl -s -O https://sourceware.org/pub/gdb/releases/gdb-${GDB_VERSION}.tar.gz
+        curl -s -O ${MIRROR_URL}/gdb/releases/gdb-${GDB_VERSION}.tar.gz
         curl -s -u "${USERNAME}:${PASSWORD}" --upload-file "gdb-${GDB_VERSION}.tar.gz" "${NEXUS}"
     fi
 }

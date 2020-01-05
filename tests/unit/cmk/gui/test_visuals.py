@@ -3479,7 +3479,6 @@ def test_registered_filters(load_plugins):
         bases = [c.__name__ for c in filt.__class__.__bases__] + [filt.__class__.__name__]
         assert spec["filter_class"] in bases
 
-
 expected_infos = {
     'aggr': {
         'single_spec': [('aggr_name', 'TextUnicode')],

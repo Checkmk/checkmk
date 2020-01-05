@@ -2139,7 +2139,7 @@ class FilterLogClass(Filter):
 
         headers = []
         for l, _c in self.log_classes:
-            if html.get_checkbox("logclass%d" % l) != False:
+            if html.get_checkbox("logclass%d" % l):
                 headers.append("Filter: class = %d\n" % l)
 
         if len(headers) == 0:
@@ -2315,14 +2315,18 @@ class FilterLogState(Filter):
         Filter.__init__(
             self,
             "log",
-            ["logst_" + e[0] for e in self._items],
+            ["log_state_filled"] + ["logst_" + e[0] for e in self._items],
             [],
         )
 
     def double_height(self):
         return True
 
+    def _filter_used(self):
+        return any([html.request.has_var(v) for v in self.htmlvars])
+
     def display(self):
+        html.hidden_field("log_state_filled", "1", add_var=True)
         html.open_table(class_="alertstatefilter")
         html.open_tr()
         html.open_td()
@@ -2347,8 +2351,7 @@ class FilterLogState(Filter):
     def filter(self, infoname):
         headers = []
         for varsuffix, what, state, _text in self._items:
-            if html.get_checkbox("logst_" +
-                                 varsuffix) != False:  # None = form not filled in = allow
+            if html.get_checkbox("logst_" + varsuffix):
                 headers.append("Filter: log_type ~ %s .*\nFilter: log_state = %d\nAnd: 2\n" %
                                (what.upper(), state))
         if len(headers) == 0:
@@ -3321,6 +3324,8 @@ class FilterAggrHosts(Filter):
 
 @filter_registry.register
 class FilterAggrService(Filter):
+    """Not performing filter(), nor filter_table(). The filtering is done directly in BI by
+    bi.table(), which calls service_spec()."""
     @property
     def ident(self):
         return "aggr_service"

@@ -340,8 +340,4 @@ class CheckmkApp(object):
             logger.error("MKGeneralException: %s", e)
 
         except Exception:
-            crash = crash_reporting.GUICrashReport.from_exception()
-            crash_reporting.CrashReportStore().save(crash)
-
-            logger.exception("Unhandled exception (Crash-ID: %s)", crash.ident_to_text())
-            crash_reporting.show_crash_dump_message(crash, _plain_error(), _fail_silently())
+            crash_reporting.handle_exception_as_gui_crash_report(_plain_error(), _fail_silently())

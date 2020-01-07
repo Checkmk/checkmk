@@ -42,6 +42,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 import cmk.gui.userdb as userdb
+from cmk.gui.log import logger
 from cmk.gui.plugins.views.crash_reporting import CrashReportsRowTable
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import (
@@ -54,6 +55,15 @@ import cmk.gui.forms as forms
 import cmk.utils.crash_reporting
 
 CrashReportStore = cmk.utils.crash_reporting.CrashReportStore
+
+
+def handle_exception_as_gui_crash_report(details=None, plain_error=False, fail_silently=False):
+    # type: (Optional[Dict], bool, bool) -> None
+    crash = GUICrashReport.from_exception(details=details)
+    CrashReportStore().save(crash)
+
+    logger.exception("Unhandled exception (Crash-ID: %s)", crash.ident_to_text())
+    show_crash_dump_message(crash, plain_error, fail_silently)
 
 
 def show_crash_dump_message(crash, plain_text, fail_silently):

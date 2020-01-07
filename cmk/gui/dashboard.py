@@ -33,6 +33,7 @@ from typing import (  # pylint: disable=unused-import
 import six
 
 from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
+from cmk.utils.exceptions import MKException
 
 import cmk.gui.pages
 import cmk.gui.notify as notify
@@ -40,6 +41,7 @@ import cmk.gui.config as config
 import cmk.gui.visuals as visuals
 import cmk.gui.forms as forms
 import cmk.gui.utils as utils
+import cmk.gui.crash_reporting as crash_reporting
 from cmk.gui.valuespec import (
     Transform,
     Dictionary,
@@ -537,7 +539,7 @@ def draw_dashboard(name):
                                                            mtime=board["mtime"])
 
         except Exception as e:
-            dashlet_content_html = render_dashlet_exception_content(dashlet_instance, nr, e)
+            dashlet_content_html = render_dashlet_exception_content(dashlet_instance, e)
 
         # Now after the dashlet content has been calculated render the whole dashlet
         dashlet_container_begin(nr, dashlet)
@@ -640,20 +642,35 @@ def _update_or_show(board, dashlet_instance, is_update, mtime):
         return html.drain()
 
 
-def render_dashlet_exception_content(dashlet_instance, nr, e):
-    # type: (Dashlet, DashletId, Exception) -> Text
-    logger.exception("Problem while rendering dashlet %d of type %s", nr,
+def render_dashlet_exception_content(dashlet_instance, e):
+    # type: (Dashlet, Exception) -> Text
+    logger.exception("Problem while rendering dashlet %d of type %s", dashlet_instance.dashlet_id,
                      dashlet_instance.type_name())
 
-    # Unify different string types from exception messages to a unicode string
-    try:
-        exc_txt = six.text_type(e)
-    except UnicodeDecodeError:
-        exc_txt = str(e).decode("utf-8")
+    with html.plugged():
+        if isinstance(e, MKException):
+            # Unify different string types from exception messages to a unicode string
+            try:
+                exc_txt = six.text_type(e)
+            except UnicodeDecodeError:
+                exc_txt = str(e).decode("utf-8")
 
-    return html.render_error(
-        _("Problem while rendering dashlet %d of type %s: %s. Have a look at <tt>var/log/web.log</tt> for "
-          "further information.") % (nr, dashlet_instance.type_name(), exc_txt))
+            html.header(_("Exception"), show_top_heading=False)
+            html.open_div(class_="dashlet", style="display:block")
+            html.show_error(_("Problem while rendering dashlet %d of type %s: %s. Have a look at "
+                              "<tt>var/log/web.log</tt> for further information.") % \
+                            (dashlet_instance.dashlet_id, dashlet_instance.type_name(), exc_txt))
+            html.close_div()
+            html.footer()
+            return html.drain()
+
+        crash_reporting.handle_exception_as_gui_crash_report(
+            details={
+                "dashlet_id": dashlet_instance.dashlet_id,
+                "dashlet_type": dashlet_instance.type_name(),
+                "dashlet_spec": dashlet_instance.dashlet_spec,
+            })
+        return html.drain()
 
 
 def dashboard_edit_controls(name, board):
@@ -921,7 +938,7 @@ def ajax_dashlet():
                                                        is_update=True,
                                                        mtime=mtime)
     except Exception as e:
-        dashlet_content_html = render_dashlet_exception_content(dashlet_instance, ident, e)
+        dashlet_content_html = render_dashlet_exception_content(dashlet_instance, e)
 
     html.write_html(dashlet_content_html)
 

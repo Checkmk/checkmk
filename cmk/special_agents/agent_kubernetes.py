@@ -800,14 +800,6 @@ class PersistentVolumeClaim(Metadata):
         self._spec = pvc.spec
 
     @property
-    def conditions(self):
-        # type: () -> Optional[client.V1PersistentVolumeClaimCondition]
-        # TODO: don't return client specific object
-        if self._status:
-            return self._status.conditions
-        return None
-
-    @property
     def phase(self):
         # type: () -> Optional[str]
         if self._status:
@@ -1043,7 +1035,6 @@ class PersistentVolumeClaimList(K8sList[PersistentVolumeClaim]):
         return {
             pvc.name: {
                 'namespace': pvc.namespace,
-                'condition': pvc.conditions,
                 'phase': pvc.phase,
                 'volume': pvc.volume_name,
             } for pvc in self if pvc.name

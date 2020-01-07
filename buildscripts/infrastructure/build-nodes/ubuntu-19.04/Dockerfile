@@ -50,7 +50,6 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 ARG ARTIFACT_STORAGE
-
 COPY bw-build-gnu-toolchain.sh /usr/sbin
 RUN bw-build-gnu-toolchain.sh -r $ARTIFACT_STORAGE -b
 RUN cd /opt \

@@ -20,17 +20,24 @@ log() {
     echo "+++ $1"
 }
 
-download() {
+download-from-nexus() {
+    DOWNLOAD_URL="${NEXUS_ARCHIVES_URL}$1"
+    log "Downloading ${DOWNLOAD_URL}"
+    curl --silent --fail --remote-name "${DOWNLOAD_URL}" || return
+    log "Using ${DOWNLOAD_URL}"
+}
+
+download-from-mirror() {
     FILE=$1
     DOWNLOAD_URL=$2
     log "File not available from ${NEXUS_ARCHIVES_URL}${FILE}, downloading from ${DOWNLOAD_URL}"
-    curl -s -O ${DOWNLOAD_URL}
+    curl --silent --fail --remote-name "${DOWNLOAD_URL}"
 }
 
-upload() {
+upload-to-nexus() {
     FILE=$1
     log "Uploading ${FILE} to ${NEXUS_ARCHIVES_URL}"
-    curl -s -u "${USERNAME}:${PASSWORD}" --upload-file "${FILE}" "${NEXUS_ARCHIVES_URL}"
+    curl --silent --user "${USERNAME}:${PASSWORD}" --upload-file "${FILE}" "${NEXUS_ARCHIVES_URL}"
     log "Upload of ${FILE} done"
 }
 
@@ -38,35 +45,26 @@ download-sources() {
     log "Dowload parameters: NEXUS_ARCHIVES_URL=[${NEXUS_ARCHIVES_URL}], USERNAME=[${USERNAME//?/X}], PASSWORD=[${PASSWORD//?/X}]"
 
     FILE="binutils-${BINUTILS_VERSION}.tar.gz"
-    log "Downloading ${FILE}"
-    if curl -s -O "${NEXUS_ARCHIVES_URL}${FILE}"; then
-        log "Using ${NEXUS_ARCHIVES_URL}${FILE}"
-    else
-        download "${FILE}" "${MIRROR_URL}binutils/releases/${FILE}"
-        upload "${FILE}"
+    if ! download-from-nexus "${FILE}"; then
+        download-from-mirror "${FILE}" "${MIRROR_URL}binutils/releases/${FILE}"
+        upload-to-nexus "${FILE}"
     fi
 
     FILE="gcc-${GCC_VERSION}-with-prerequisites.tar.gz"
-    log "Downloading ${FILE}"
-    if curl -s -O "${NEXUS_ARCHIVES_URL}${FILE}"; then
-        log "Using ${NEXUS_ARCHIVES_URL}${FILE}"
-    else
-        download "${FILE}" "${MIRROR_URL}gcc/releases/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz"
+    if ! download-from-nexus "${FILE}"; then
+        download-from-mirror "${FILE}" "${MIRROR_URL}gcc/releases/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz"
         # To avoid repeated downloads of the sources + the prerequisites, we pre-package things together.
         log "Downloading and merging prerequisites"
         tar xzf gcc-${GCC_VERSION}.tar.gz
         (cd gcc-${GCC_VERSION} && ./contrib/download_prerequisites)
         tar czf ${FILE} gcc-${GCC_VERSION}
-        upload "${FILE}"
+        upload-to-nexus "${FILE}"
     fi
 
     FILE="gdb-${GDB_VERSION}.tar.gz"
-    log "Downloading ${FILE}"
-    if curl -s -O "${NEXUS_ARCHIVES_URL}${FILE}"; then
-        log "Using ${NEXUS_ARCHIVES_URL}${FILE}"
-    else
-        download "${FILE}" "${MIRROR_URL}gdb/releases/${FILE}"
-        upload "${FILE}"
+    if ! download-from-nexus "${FILE}"; then
+        download-from-mirror "${FILE}" "${MIRROR_URL}gdb/releases/${FILE}"
+        upload-to-nexus "${FILE}"
     fi
 }
 

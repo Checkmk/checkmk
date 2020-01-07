@@ -71,7 +71,18 @@ perfometers = {}  # type: _Dict
 
 #helper function for perfometer tables
 def render_perfometer_td(perc, color):
+    # the hex color can have additional information about opacity
+    # internet explorer has problems with the format of rgba, e.g.: #aaaaaa4d
+    # the solution is to set the background-color value to rgb ('#aaaaaa')
+    # and use the css opacity for the opacity hex value in float '4d' -> 0.3
+    opacity = None
+    if len(color) == 9:
+        opacity = int(color[7:], 16)/255.0
+        color = color[:7]
+
     style = ["width: %d%%;" % int(float(perc)), "background-color: %s" % color]
+    if opacity is not None:
+        style += ["opacity: %s" % opacity]
     return html.render_td('', class_="inner", style=style)
 
 

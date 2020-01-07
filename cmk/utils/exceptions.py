@@ -31,7 +31,9 @@ import six
 # exceptions handleable with one call
 class MKException(Exception):
     # TODO: Remove this method after Python 3 migration.
+    # NOTE: In Python 2 the return type is WRONG, we should return str.
     def __str__(self):
+        # not-yet-a-type: () -> six.text_type
         """
         Python 3:
         - No args:

@@ -33,7 +33,7 @@ pathlib_paths = [
 
 def _check_paths(root, module):
     for var, value in module.__dict__.iteritems():
-        if not var.startswith("_") and var not in ('Path', 'os', 'sys'):
+        if not var.startswith("_") and var not in ('Path', 'os', 'sys', 'Union'):
             if var in pathlib_paths:
                 assert isinstance(value, Path)
                 assert str(value).startswith(root)

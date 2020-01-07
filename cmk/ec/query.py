@@ -24,6 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from logging import Logger  # pylint: disable=unused-import
+from typing import Any, Callable, List, Optional, Tuple  # pylint: disable=unused-import
+
 from cmk.utils.exceptions import MKException
 import cmk.utils.regex
 
@@ -32,9 +35,14 @@ class MKClientError(MKException):
     pass
 
 
+# TODO: Extract StatusServer and friends...
+_StatusServer = Any
+
+
 class Query:
     @staticmethod
     def make(status_server, raw_query, logger):
+        # type: (_StatusServer, str, Logger) -> Query
         parts = raw_query[0].split(None, 1)
         if len(parts) != 2:
             raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
@@ -48,25 +56,26 @@ class Query:
         raise MKClientError("Invalid method %s (allowed are GET, REPLICATE, COMMAND)" % method)
 
     def __init__(self, status_server, raw_query, logger):
+        # type: (_StatusServer, str, Logger) -> None
         super().__init__()
-
         self._logger = logger
         self.output_format = "python"
-
         self._raw_query = raw_query
         self._from_raw_query(status_server)
 
     def _from_raw_query(self, status_server):
+        # type: (_StatusServer) -> None
         self._parse_method_and_args()
 
     def _parse_method_and_args(self):
+        # type: () -> None
         parts = self._raw_query[0].split(None, 1)
         if len(parts) != 2:
             raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
-
         self.method, self.method_arg = parts
 
     def __repr__(self):
+        # type: () -> str
         return repr("\n".join(self._raw_query))
 
 
@@ -84,21 +93,23 @@ class _QueryGET(Query):
     }
 
     def _from_raw_query(self, status_server):
+        # type: (_StatusServer) -> None
         super()._from_raw_query(status_server)
         self._parse_table(status_server)
         self._parse_header_lines()
 
     def _parse_table(self, status_server):
+        # type: (_StatusServer) -> None
         self.table_name = self.method_arg
         self.table = status_server.table(self.table_name)
 
     def _parse_header_lines(self):
+        # type: () -> None
         self.requested_columns = self.table.column_names  # use all columns as default
         self.filters = []
         self.limit = None
         self.only_host = None
 
-        self.header_lines = []
         for line in self._raw_query[1:]:
             try:
                 header, argument = line.rstrip("\n").split(":", 1)
@@ -134,6 +145,7 @@ class _QueryGET(Query):
                 raise MKClientError("Invalid header line '%s': %s" % (line.rstrip(), e))
 
     def _parse_filter(self, textspec):
+        # type: (str) -> Tuple[str, str, Callable, Any]
         # Examples:
         # id = 17
         # name ~= This is some .* text
@@ -155,8 +167,9 @@ class _QueryGET(Query):
         # when the filter contains non ascii characters!
         # Fix this by making the default values unicode and skip unicode conversion
         # here (for performance reasons) because argument is already unicode.
+        # TODO: Fix the typing chaos below!
         if operator_name == 'in':
-            argument = list(map(convert, argument.split()))
+            argument = list(map(convert, argument.split()))  # type: ignore[assignment]
         else:
             argument = convert(argument)
 
@@ -164,11 +177,12 @@ class _QueryGET(Query):
         if not operator_function:
             raise MKClientError("Unknown filter operator '%s'" % operator_name)
 
-        return (column, operator_name, lambda x: operator_function(x, argument), argument)
+        # TODO: Fix the typing chaos below!
+        return (column, operator_name, lambda x: operator_function(x, argument), argument)  # type: ignore[misc]
 
     def requested_column_indexes(self):
+        # type: () -> List[Optional[int]]
         indexes = []
-
         for column_name in self.requested_columns:
             try:
                 column_index = self.table.column_indices[column_name]
@@ -176,10 +190,10 @@ class _QueryGET(Query):
                 # The column is not known: Use None as index and None value later
                 column_index = None
             indexes.append(column_index)
-
         return indexes
 
     def filter_row(self, row):
+        # type: (List[Any]) -> Optional[List[Any]]
         for column_name, _operator_name, predicate, _argument in self.filters:
             if not predicate(row[self.table.column_indices[column_name]]):
                 return None

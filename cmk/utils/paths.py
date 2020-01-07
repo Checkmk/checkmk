@@ -29,6 +29,8 @@ to all components of Check_MK."""
 import sys
 import os
 
+from typing import Union  # pylint: disable=unused-import
+
 # Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -38,14 +40,17 @@ else:
 
 # One bright day, when every path is really a Path, this can die... :-)
 def _path(*args):
+    # type: (*Union[str, Path]) -> str
     return str(Path(*args))
 
 
 def _omd_path(path):
+    # type: (str) -> str
     return _path(omd_root, path)
 
 
 def _local_path(global_path):
+    # type: (Union[str, Path]) -> str
     return _path(omd_root, "local", Path(global_path).relative_to(omd_root))
 
 

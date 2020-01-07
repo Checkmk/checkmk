@@ -32205,6 +32205,9 @@ msgstr "Netzteil"
 msgid "Power Supply name"
 msgstr "Name des Netzteils"
 
+msgid "Time left until full"
+msgstr "Verbleibende Zeit"
+
 msgid "Power Usage"
 msgstr "Energie Verbrauch"
 

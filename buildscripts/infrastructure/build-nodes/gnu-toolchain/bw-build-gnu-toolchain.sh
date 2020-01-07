@@ -21,7 +21,7 @@ function log() {
 }
 
 function download-sources() {
-    log "Dowload parameters: NEXUS=[${NEXUS_ARCHIVES_URL}], USERNAME=[${USERNAME//?/X}], PASSWORD=[${PASSWORD//?/X}]"
+    log "Dowload parameters: NEXUS_ARCHIVES_URL=[${NEXUS_ARCHIVES_URL}], USERNAME=[${USERNAME//?/X}], PASSWORD=[${PASSWORD//?/X}]"
 
     log "Downloading binutils-${BINUTILS_VERSION}"
     if curl -s -O "${NEXUS_ARCHIVES_URL}binutils-${BINUTILS_VERSION}.tar.gz"; then

@@ -847,14 +847,14 @@ class TransactionManager(object):
         if not self._new_transids:
             return
 
-        valid_ids = self._load_transids(lock=True)
+        valid_ids = config.user.transids(lock=True)
         cleared_ids = []
         now = time.time()
         for valid_id in valid_ids:
             timestamp = valid_id.split("/")[0]
             if now - int(timestamp) < 86400:  # one day
                 cleared_ids.append(valid_id)
-        self._save_transids((cleared_ids[-20:] + self._new_transids))
+        config.user.save_transids((cleared_ids[-20:] + self._new_transids))
 
     def transaction_valid(self):
         """Checks if the current transaction is valid
@@ -887,7 +887,7 @@ class TransactionManager(object):
             return False
 
         # Now check, if this transid is a valid one
-        return transid in self._load_transids()
+        return transid in config.user.transids(lock=False)
 
     def is_transaction(self):
         """Checks, if the current page is a transation, i.e. something that is secured by
@@ -910,24 +910,16 @@ class TransactionManager(object):
             if transid and transid != "-1":
                 self._invalidate(transid)
             return True
-        else:
-            return False
+        return False
 
     def _invalidate(self, used_id):
         """Remove the used transid from the list of valid ones"""
-        valid_ids = self._load_transids(lock=True)
+        valid_ids = config.user.transids(lock=True)
         try:
             valid_ids.remove(used_id)
         except ValueError:
             return
-        self._save_transids(valid_ids)
-
-    def _load_transids(self, lock=False):
-        return config.user.load_file("transids", [], lock)
-
-    def _save_transids(self, used_ids):
-        if config.user.id:
-            config.user.save_file("transids", used_ids)
+        config.user.save_transids(valid_ids)
 
 
 #.

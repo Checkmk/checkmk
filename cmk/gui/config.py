@@ -584,6 +584,15 @@ class LoggedInUser(object):
         # type: () -> None
         self.save_file("siteconfig", self._siteconf)
 
+    def transids(self, lock=False):
+        # type: (bool) -> List[str]
+        return self.load_file("transids", [], lock=lock)
+
+    def save_transids(self, transids):
+        # type: (List[str]) -> None
+        if self.id:
+            self.save_file("transids", transids)
+
     def authorized_sites(self, unfiltered_sites=None):
         # type: (Optional[SiteConfigurations]) -> SiteConfigurations
         if unfiltered_sites is None:
@@ -635,9 +644,9 @@ class LoggedInUser(object):
         path = self.confdir + "/" + name + ".mk"
         return store.load_object_from_file(path, default=deflt, lock=lock)
 
-    def save_file(self, name, content, unlock=False):
-        # type: (str, Any, bool) -> None
-        save_user_file(name, content, self.id, unlock)
+    def save_file(self, name, content):
+        # type: (str, Any) -> None
+        save_user_file(name, content, self.id)
 
     def file_modified(self, name):
         # type: (str) -> float
@@ -759,8 +768,8 @@ def user_may(user_id, pname):
 
 
 # TODO: Check all calls for arguments (changed optional user to 3rd positional)
-def save_user_file(name, data, user_id, unlock=False):
-    # type: (str, Any, Optional[UserId], bool) -> None
+def save_user_file(name, data, user_id):
+    # type: (str, Any, Optional[UserId]) -> None
     if user_id is None:
         raise TypeError("The profiles of LoggedInSuperUser and LoggedInNobody cannot be saved")
 

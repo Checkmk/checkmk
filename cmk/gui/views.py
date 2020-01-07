@@ -1901,7 +1901,7 @@ def update_context_links(enable_command_toggle, enable_checkbox_toggle):
 @cmk.gui.pages.register("count_context_button")
 def ajax_count_button():
     id_ = html.request.var("id")
-    counts = config.user.load_file("buttoncounts", {})
+    counts = config.user.get_button_counts()
     for i in counts:
         counts[i] *= 0.95
     counts.setdefault(id_, 0)

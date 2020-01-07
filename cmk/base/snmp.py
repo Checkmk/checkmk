@@ -27,6 +27,7 @@
 import os
 import subprocess
 from typing import Tuple, Optional, Any, Dict, List  # pylint: disable=unused-import
+import six
 
 import cmk.utils.debug
 import cmk.utils.tty as tty
@@ -499,7 +500,7 @@ def _convert_rows_for_stored_walk(rows):
 
 
 def _oid_to_bin(oid):
-    return u"".join([unichr(int(p)) for p in oid.strip(".").split(".")])
+    return u"".join([six.unichr(int(p)) for p in oid.strip(".").split(".")])
 
 
 def _extract_end_oid(prefix, complete):

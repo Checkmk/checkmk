@@ -165,7 +165,7 @@ def is_linux_meminfo(meminfo):
 def inventory_mem_linux(info):
     meminfo = parse_proc_meminfo_bytes(info)
     if is_linux_meminfo(meminfo):
-        return [(None, {})]
+        yield None, {}
 
 
 def check_mem_levels(title,
@@ -412,21 +412,21 @@ def camelcase_to_underscored(name):
     previous_lower = False
     previous_underscore = True
     result = ""
-    for c in name:
-        if c.isupper():
+    for char in name:
+        if char.isupper():
             if previous_lower and not previous_underscore:
                 result += "_"
             previous_lower = False
             previous_underscore = False
-            result += c.lower()
-        elif c == "_":
+            result += char.lower()
+        elif char == "_":
             previous_lower = False
             previous_underscore = True
-            result += c
+            result += char
         else:
             previous_lower = True
             previous_underscore = False
-            result += c
+            result += char
     return result
 
 
@@ -475,7 +475,7 @@ def inventory_mem_used(info):
     if "MemTotal" in meminfo \
         and "PageTotal" not in meminfo \
         and not is_linux_meminfo(meminfo): # handled by more modern check
-        return [(None, {})]
+        yield None, {}
 
 
 def check_mem_used(_no_item, params, info):
@@ -656,10 +656,10 @@ def inventory_mem_vmalloc(info):
         # infinitive vmalloc
         vmalloc = meminfo["VmallocTotal"] / 1024.4
         if vmalloc < 4096:
-            return [(None, "mem_vmalloc_default_levels")]
+            yield None, "mem_vmalloc_default_levels"
 
 
-def check_mem_vmalloc(item, params, info):
+def check_mem_vmalloc(_item, params, info):
     meminfo = parse_proc_meminfo(info)
     total_mb = meminfo["VmallocTotal"] / 1024.0
     used_mb = meminfo["VmallocUsed"] / 1024.0
@@ -669,33 +669,33 @@ def check_mem_vmalloc(item, params, info):
     state = 0
     infotxts = []
     perfdata = []
-    for var, w, c, v, neg, what in [("used", warn, crit, used_mb, False, "used"),
-                                    ("chunk", warn_chunk, crit_chunk, chunk_mb, True,
-                                     "largest chunk")]:
+    for var, loop_warn, loop_crit, loop_val, neg, what in [
+        ("used", warn, crit, used_mb, False, "used"),
+        ("chunk", warn_chunk, crit_chunk, chunk_mb, True, "largest chunk")
+    ]:
 
         # convert levels from percentage to MB values
-        if isinstance(w, float):
-            w_mb = total_mb * w / 100
+        if isinstance(loop_warn, float):
+            w_mb = total_mb * loop_warn / 100
         else:
-            w_mb = float(w)
+            w_mb = float(loop_warn)
 
-        if isinstance(c, float):
-            c_mb = total_mb * c / 100
+        if isinstance(loop_crit, float):
+            c_mb = total_mb * loop_crit / 100
         else:
-            c_mb = float(c)
+            c_mb = float(loop_crit)
 
-        infotxt = "%s %.1f MB" % (what, v)
-        if (v >= c_mb) != neg:
-            s = 2
+        loop_state = 0
+        infotxt = "%s %.1f MB" % (what, loop_val)
+        if (loop_val >= c_mb) != neg:
+            loop_state = 2
             infotxt += " (critical at %.1f MB!!)" % c_mb
-        elif (v >= w_mb) != neg:
-            s = 1
+        elif (loop_val >= w_mb) != neg:
+            loop_state = 1
             infotxt += " (warning at %.1f MB!)" % w_mb
-        else:
-            s = 0
-        state = max(state, s)
+        state = max(state, loop_state)
         infotxts.append(infotxt)
-        perfdata.append((var, v, w_mb, c_mb, 0, total_mb))
+        perfdata.append((var, loop_val, w_mb, c_mb, 0, total_mb))
     return (state, ("total %.1f MB, " % total_mb) + ", ".join(infotxts), perfdata)
 
 

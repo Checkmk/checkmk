@@ -515,7 +515,6 @@ def _cleanup_old_source_status_files(piggybacked_hosts_settings):
                                                time_settings)
 
             max_cache_age_of_source = max_cache_age_by_sources.get(source_host.name)
-
             if max_cache_age_of_source is None:
                 max_cache_age_by_sources[source_host.name] = max_cache_age
 
@@ -528,13 +527,22 @@ def _cleanup_old_source_status_files(piggybacked_hosts_settings):
         except MKGeneralException:
             continue  # File might've been deleted. That's ok.
 
-        max_cache_age = max_cache_age_by_sources[source_state_file.name]
-        if file_age > max_cache_age:
+        # No entry -> no file
+        max_cache_age_of_source = max_cache_age_by_sources.get(source_state_file.name)
+        if max_cache_age_of_source is None:
+            logger.log(
+                VERBOSE,
+                "No piggyback data from source '%s'",
+                source_state_file.name,
+            )
+            continue
+
+        if file_age > max_cache_age_of_source:
             logger.log(
                 VERBOSE,
                 "Piggyback source status file '%s' is outdated (File too old: %s). Remove it.",
                 source_state_file,
-                Age(file_age - max_cache_age),
+                Age(file_age - max_cache_age_of_source),
             )
             _remove_piggyback_file(source_state_file)
 

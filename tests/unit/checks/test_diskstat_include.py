@@ -4,7 +4,7 @@ import pytest
 
 from checktestlib import CheckResult, assertCheckResultsEqual
 
-from cmk_base.check_api import get_bytes_human_readable, check_levels
+from cmk.base.check_api import get_bytes_human_readable, check_levels
 pytestmark = pytest.mark.checks
 
 

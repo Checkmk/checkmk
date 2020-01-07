@@ -82,7 +82,7 @@ def _parse_perfentry(entry):
     '''parse single perfdata entry
 
     return a named tuple containing check_levels compatible levels field, as well as
-    cmk_base compatible perfdata 6-tuple.
+    cmk.base compatible perfdata 6-tuple.
 
     This function may raise Index- or ValueErrors.
     '''

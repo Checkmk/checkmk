@@ -3,9 +3,9 @@ import copy
 import mock
 import pytest  # type: ignore
 import six
-from cmk_base.item_state import MKCounterWrapped
-from cmk_base.discovered_labels import DiscoveredHostLabels, HostLabel, DiscoveredServiceLabels
-from cmk_base.check_api_utils import Service
+from cmk.base.item_state import MKCounterWrapped
+from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel, DiscoveredServiceLabels
+from cmk.base.check_api_utils import Service
 
 
 class Tuploid(object):
@@ -373,10 +373,10 @@ class MockItemState(object):
     """Mock the calls to item_state API.
 
     Due to our rather unorthodox import structure, we cannot mock
-    cmk_base.item_state.get_item_state directly (it's a global var
+    cmk.base.item_state.get_item_state directly (it's a global var
     in running checks!)
     Instead, this context manager mocks
-    cmk_base.item_state._cached_item_states.get_item_state.
+    cmk.base.item_state._cached_item_states.get_item_state.
 
     This will affect get_rate and get_average as well as
     get_item_state.
@@ -386,7 +386,7 @@ class MockItemState(object):
     with MockItemState(mock_state):
         # run your check test here
         mocked_time_diff, mocked_value = \
-            cmk_base.item_state.get_item_state('whatever_key', default="IGNORED")
+            cmk.base.item_state.get_item_state('whatever_key', default="IGNORED")
 
     There are three different types of arguments to pass to MockItemState:
 
@@ -405,7 +405,7 @@ class MockItemState(object):
 
     See for example 'test_statgrab_cpu_check.py'.
     """
-    TARGET = 'cmk_base.item_state._cached_item_states.get_item_state'
+    TARGET = 'cmk.base.item_state._cached_item_states.get_item_state'
 
     def __init__(self, mock_state):
         self.context = None
@@ -479,7 +479,7 @@ class MockHostExtraConf(object):
 
     Due to our rather unorthodox import structure, we cannot mock
     host_extra_conf_merged directly (it's a global var in running checks!)
-    Instead, we mock the calls to cmk_base.config.host_extra_conf.
+    Instead, we mock the calls to cmk.base.config.host_extra_conf.
 
     Passing a single dict to this objects init method will result in
     host_extra_conf_merged returning said dict.
@@ -518,8 +518,8 @@ class MockHostExtraConf(object):
 
     def __enter__(self):
         '''The default context: just mock get_item_state'''
-        import cmk_base.config
-        config_cache = cmk_base.config.get_config_cache()
+        import cmk.base.config
+        config_cache = cmk.base.config.get_config_cache()
         self.context = mock.patch.object(
             config_cache,
             self.target,

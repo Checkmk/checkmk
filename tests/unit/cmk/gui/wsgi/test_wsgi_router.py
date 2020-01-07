@@ -125,7 +125,7 @@ def test_legacy_webapi(
         # FIXME: Testing of delete_host can't be done until the local automation call doesn't call
         #        out to "check_mk" via subprocess anymore. In order to not break the subsequent
         #        test, we have to delete the host ourselves. This can and will actually break
-        #        unit/cmk_base/test_config.py::test_get_config_file_paths_with_confd again if
+        #        unit/cmk/base/test_config.py::test_get_config_file_paths_with_confd again if
         #        more files should be created by add_host in the future.
 
         _remove(cmk.utils.paths.omd_root + "/etc/check_mk/conf.d/fs_cap.mk")

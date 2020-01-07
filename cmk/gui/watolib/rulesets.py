@@ -56,7 +56,7 @@ from cmk.gui.watolib.utils import (
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
-import cmk_base.export  # pylint: disable=cmk-module-layer-violation
+import cmk.base.export  # pylint: disable=cmk-module-layer-violation
 
 # This macro is needed to make the to_config() methods be able to use native
 # pprint/repr for the ruleset data structures. Have a look at
@@ -64,7 +64,7 @@ import cmk_base.export  # pylint: disable=cmk-module-layer-violation
 _FOLDER_PATH_MACRO = "%#%FOLDER_PATH%#%"
 
 # Make the GUI config module reset the base config to always get the latest state of the config
-config.register_post_config_load_hook(cmk_base.export.reset_config)
+config.register_post_config_load_hook(cmk.base.export.reset_config)
 
 
 class RuleConditions(object):
@@ -288,7 +288,7 @@ class RulesetCollection(object):
 
         # Adding this instead of the full path makes it easy to move config
         # files around. The real FOLDER_PATH will be added dynamically while
-        # loading the file in cmk_base.config
+        # loading the file in cmk.base.config
         content = content.replace("'%s'" % _FOLDER_PATH_MACRO, "'/%s/' % FOLDER_PATH")
 
         store.save_mk_file(rules_file_path, content, add_header=not config.wato_use_git)
@@ -903,10 +903,10 @@ class Rule(object):
         if only_host_conditions:
             match_object = ruleset_matcher.RulesetMatchObject(hostname)
         elif self.ruleset.item_type() == "service":
-            match_object = cmk_base.export.ruleset_match_object_of_service(
+            match_object = cmk.base.export.ruleset_match_object_of_service(
                 hostname, svc_desc_or_item)
         elif self.ruleset.item_type() == "item":
-            match_object = cmk_base.export.ruleset_match_object_for_checkgroup_parameters(
+            match_object = cmk.base.export.ruleset_match_object_for_checkgroup_parameters(
                 hostname, svc_desc_or_item, svc_desc)
         elif not self.ruleset.item_type():
             match_object = ruleset_matcher.RulesetMatchObject(hostname)
@@ -922,7 +922,7 @@ class Rule(object):
             yield reason
 
     def _get_mismatch_reasons_of_match_object(self, match_object, match_service_conditions):
-        matcher = cmk_base.export.get_ruleset_matcher()
+        matcher = cmk.base.export.get_ruleset_matcher()
 
         rule_dict = self.to_config()
         rule_dict["condition"]["host_folder"] = self.folder.path_for_rule_matching()

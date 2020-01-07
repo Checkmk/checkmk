@@ -71,7 +71,7 @@
 # 4. levels:   four numbers (thresholds)
 inventory_processes_rules = []
 
-# Deprecated option since 1.6. cmk_base creates a config warning when finding rules
+# Deprecated option since 1.6. cmk.base creates a config warning when finding rules
 # for this ruleset. Can be dropped with 1.7.
 inventory_processes = []
 

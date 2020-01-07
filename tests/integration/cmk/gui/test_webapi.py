@@ -40,7 +40,7 @@ def local_test_hosts(web, site):
     for hostname in ["test-host", "test-host2"]:
         site.write_file(
             "var/check_mk/agent_output/%s" % hostname,
-            open("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
+            open("%s/tests/integration/cmk/base/test-files/linux-agent-output" %
                  repo_path()).read())
 
     yield
@@ -732,7 +732,7 @@ def graph_test_config(web, site):
         site.makedirs("var/check_mk/agent_output/")
         site.write_file(
             "var/check_mk/agent_output/test-host-get-graph",
-            open("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
+            open("%s/tests/integration/cmk/base/test-files/linux-agent-output" %
                  repo_path()).read())
 
         web.discover_services("test-host-get-graph")

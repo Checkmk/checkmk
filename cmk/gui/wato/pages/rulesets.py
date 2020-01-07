@@ -483,7 +483,7 @@ class ModeEditRuleset(WatoMode):
 
         # TODO: Clean this up. In which case is it used?
         # - The calculation for the service_description is not even correct, because it does not
-        # take translations into account (see cmk_base.config.service_description()).
+        # take translations into account (see cmk.base.config.service_description()).
         check_command = html.get_ascii_input("check_command")
         if check_command:
             checks = watolib.check_mk_local_automation("get-check-information")

@@ -26,13 +26,13 @@ import xml.etree.ElementTree as ET
 from pathlib2 import Path
 import six
 
-import cmk_base.autochecks
+import cmk.base.autochecks
 try:
-    import cmk_base.cee.rrd
+    import cmk.base.cee.rrd
 except ImportError:
     raise RuntimeError("Can only be used with the Checkmk Enterprise Editions")
-import cmk_base.config as config
-import cmk_base.check_api as check_api
+import cmk.base.config as config
+import cmk.base.check_api as check_api
 
 import cmk.utils
 import cmk.utils.store as store
@@ -84,15 +84,15 @@ def get_hostnames(config_cache):
 
 def get_info_file(hostname, servicedesc, source):
     if source == 'cmc':
-        host_dir = cmk_base.cee.rrd.rrd_cmc_host_dir(hostname)
+        host_dir = cmk.base.cee.rrd.rrd_cmc_host_dir(hostname)
         servicefile = cmk.utils.pnp_cleanup(servicedesc)
         return os.path.join(host_dir, servicefile + '.info')
-    return cmk_base.cee.rrd.xml_path_for(hostname, servicedesc)
+    return cmk.base.cee.rrd.xml_path_for(hostname, servicedesc)
 
 
 def get_metrics(filepath, source):
     if source == 'cmc':
-        return cmk_base.cee.rrd.read_existing_metrics(filepath)
+        return cmk.base.cee.rrd.read_existing_metrics(filepath)
 
     root = ET.parse(filepath).getroot()
     return [x.text for x in root.findall('.//NAME')]
@@ -116,7 +116,7 @@ def update_files(args, hostname, servicedesc, item, source):
     if update_condition:
         if source == 'cmc':
             r_metrics = ['fs_used' if x == perfvar else x for x in metrics]
-            cmk_base.cee.rrd.create_cmc_rrd_info_file(hostname, servicedesc, r_metrics)
+            cmk.base.cee.rrd.create_cmc_rrd_info_file(hostname, servicedesc, r_metrics)
         else:
             update_pnp_info_files(perfvar, 'fs_used', filepath)
 
@@ -166,7 +166,7 @@ def update_pnp_info_files(perfvar, newvar, filepath):
     - Rename matching rrdfile to use newvar
     - For all journal files, replace rrdfile with new file"""
 
-    rrdfile, rrdfilenew = cmk_base.cee.rrd.update_metric_pnp_xml_info_file(
+    rrdfile, rrdfilenew = cmk.base.cee.rrd.update_metric_pnp_xml_info_file(
         perfvar, newvar, filepath)
     os.rename(rrdfile, rrdfilenew)
     logger.info("Renamed %s -> %s", rrdfile, rrdfilenew)

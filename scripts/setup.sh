@@ -710,7 +710,6 @@ do
            mkdir -p $DESTDIR$sharedir &&
            mkdir -p $DESTDIR$python_lib_dir &&
            tar xzf $SRCDIR/lib.tar.gz -C $DESTDIR$python_lib_dir &&
-           tar xzf $SRCDIR/base.tar.gz -C $DESTDIR$python_lib_dir &&
            mkdir -p $DESTDIR$sharedir/werks &&
            tar xzf $SRCDIR/werks.tar.gz -C $DESTDIR$sharedir/werks &&
            mkdir -p $DESTDIR$localedir &&

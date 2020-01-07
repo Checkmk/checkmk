@@ -129,7 +129,7 @@ def copy_capfile():
 
 
 # Pack a directory and return the byte stream of the CAP.
-# Excerpt from enterprise/cmk_base/cee/cap.py
+# Excerpt from enterprise/cmk/base/cee/cap.py
 def pack(install_basedir):
     cap = ""
     old_cwd = os.path.abspath('.')

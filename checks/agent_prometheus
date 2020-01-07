@@ -25,13 +25,14 @@
 # Boston, MA 02110-1301 USA.
 
 import copy
-import cmk_base.data_sources.programs
+# TODO: Cleanup this separation violation. This should be accessed through the check API
+import cmk.base.data_sources.programs
 
 
 def agent_prometheus_arguments(params, _hostname, ipaddress):
     prometheus_params = copy.copy(params)
     prometheus_params.update({"host_address": ipaddress})
-    return cmk_base.data_sources.programs.SpecialAgentConfiguration("", repr(prometheus_params))
+    return cmk.base.data_sources.programs.SpecialAgentConfiguration("", repr(prometheus_params))
 
 
 special_agent_info['prometheus'] = agent_prometheus_arguments

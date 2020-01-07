@@ -3,8 +3,8 @@ from collections import namedtuple
 from six.moves import zip_longest
 import pytest # type: ignore
 import datetime
-from cmk_base.check_api import MKGeneralException
-from cmk_base.discovered_labels import DiscoveredHostLabels, HostLabel
+from cmk.base.check_api import MKGeneralException
+from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 from checktestlib import CheckResult, assertCheckResultsEqual
 from testlib import on_time
 

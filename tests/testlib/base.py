@@ -1,5 +1,5 @@
-import cmk_base.config as config
-import cmk_base.autochecks as autochecks
+import cmk.base.config as config
+import cmk.base.autochecks as autochecks
 import cmk.utils.tags
 
 

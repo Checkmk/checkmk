@@ -2,7 +2,7 @@ import pytest
 
 pytestmark = pytest.mark.checks
 
-from cmk_base.check_api import MKGeneralException
+from cmk.base.check_api import MKGeneralException
 from checktestlib import CheckResult, assertCheckResultsEqual
 
 

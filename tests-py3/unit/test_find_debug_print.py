@@ -10,11 +10,12 @@ LOGGER = logging.getLogger()
 
 check_paths = [
     "bin",
-    "cmk_base",
-    "cmk_base/cee",
-    "cmk_base/cme",
-    "cmk_base/modes",
-    "cmk_base/default_config",
+    # TODO: Why don't we check the whole cmk module?
+    "cmk/base",
+    "cmk/base/cee",
+    "cmk/base/cme",
+    "cmk/base/modes",
+    "cmk/base/default_config",
     "lib",
     "checks",
     "inventory",

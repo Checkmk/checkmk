@@ -6,9 +6,7 @@ source =
     ../checkman
     ../checks
     ../cmk
-    ../cmk_base
     ../enterprise/cmk/cee
     ../tests/unit
     ../web
 branch = True
-

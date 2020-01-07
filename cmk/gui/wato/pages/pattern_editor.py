@@ -44,7 +44,7 @@ from cmk.gui.plugins.wato import (
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
-import cmk_base.export  # pylint: disable=cmk-module-layer-violation
+import cmk.base.export  # pylint: disable=cmk-module-layer-violation
 
 
 @mode_registry.register
@@ -156,7 +156,7 @@ class ModePatternEditor(WatoMode):
         for folder, rulenr, rule in ruleset.get_rules():
             # Check if this rule applies to the given host/service
             if self._hostname:
-                service_desc = cmk_base.export.service_description(self._hostname, "logwatch",
+                service_desc = cmk.base.export.service_description(self._hostname, "logwatch",
                                                                    self._item)
 
                 # If hostname (and maybe filename) try match it

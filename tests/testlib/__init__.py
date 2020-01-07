@@ -67,7 +67,7 @@ def skip_unwanted_test_types(item):
 
 
 # Some cmk.* code is calling things like cmk. is_raw_edition() at import time
-# (e.g. cmk_base/default_config/notify.py) for edition specific variable
+# (e.g. cmk/base/default_config/notify.py) for edition specific variable
 # defaults. In integration tests we want to use the exact version of the
 # site. For unit tests we assume we are in Enterprise Edition context.
 def fake_version_and_paths():
@@ -230,7 +230,7 @@ def create_linux_test_host(request, web, site, hostname):
     site.makedirs("var/check_mk/agent_output/")
     site.write_file(
         "var/check_mk/agent_output/%s" % hostname,
-        open("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+        open("%s/tests/integration/cmk/base/test-files/linux-agent-output" % repo_path()).read())
 
 
 #.
@@ -251,8 +251,8 @@ class CheckManager(object):  # pylint: disable=useless-object-inheritance
         """Load either all check plugins or the given file_names"""
         if sys.version_info[0] < 3:
             # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk_base.config as config
-            import cmk_base.check_api as check_api
+            import cmk.base.config as config
+            import cmk.base.check_api as check_api
             import cmk.utils.paths
 
         if file_names is None:
@@ -287,9 +287,9 @@ class BaseCheck(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, name):
         if sys.version_info[0] < 3:
             # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk_base.check_api_utils
-        self.set_hostname = cmk_base.check_api_utils.set_hostname
-        self.set_service = cmk_base.check_api_utils.set_service
+            import cmk.base.check_api_utils
+        self.set_hostname = cmk.base.check_api_utils.set_hostname
+        self.set_service = cmk.base.check_api_utils.set_service
         self.name = name
         self.info = {}
 
@@ -311,7 +311,7 @@ class Check(BaseCheck):
     def __init__(self, name):
         if sys.version_info[0] < 3:
             # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk_base.config as config
+            import cmk.base.config as config
         super(Check, self).__init__(name)
         if self.name not in config.check_info:
             raise MissingCheckInfoError(self.name)
@@ -321,7 +321,7 @@ class Check(BaseCheck):
     def default_parameters(self):
         if sys.version_info[0] < 3:
             # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk_base.config as config
+            import cmk.base.config as config
         params = {}
         return config._update_with_default_check_parameters(self.name, params)
 
@@ -374,7 +374,7 @@ class ActiveCheck(BaseCheck):
     def __init__(self, name):
         if sys.version_info[0] < 3:
             # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk_base.config as config
+            import cmk.base.config as config
         super(ActiveCheck, self).__init__(name)
         assert self.name.startswith(
             'check_'), 'Specify the full name of the active check, e.g. check_http'
@@ -392,7 +392,7 @@ class SpecialAgent(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, name):
         if sys.version_info[0] < 3:
             # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk_base.config as config
+            import cmk.base.config as config
         super(SpecialAgent, self).__init__()
         self.name = name
         assert self.name.startswith(
@@ -446,8 +446,8 @@ class InventoryPluginManager(object):
     def load(self):
         if sys.version_info[0] < 3:
             # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk_base.inventory_plugins as inv_plugins
-            import cmk_base.check_api as check_api
+            import cmk.base.inventory_plugins as inv_plugins
+            import cmk.base.check_api as check_api
         g_inv_tree = MockStructuredDataTree()
         g_status_tree = MockStructuredDataTree()
 
@@ -473,7 +473,7 @@ class InventoryPlugin(object):
     def __init__(self, name, g_inv_tree, g_status_tree):
         if sys.version_info[0] < 3:
             # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk_base.inventory_plugins as inv_plugins
+            import cmk.base.inventory_plugins as inv_plugins
         super(InventoryPlugin, self).__init__()
         self.name = name
         if self.name not in inv_plugins.inv_info:

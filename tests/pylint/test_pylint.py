@@ -99,7 +99,7 @@ def _get_files_to_check(pylint_test_dir):
 def _compile_check_and_inventory_plugins(pylint_test_dir):
     with open(pylint_test_dir + "/cmk_checks.py", "w") as f:
 
-        # Fake data structures where checks register (See cmk_base/checks.py)
+        # Fake data structures where checks register (See cmk/base/checks.py)
         f.write("""
 # -*- encoding: utf-8 -*-
 check_info                         = {}
@@ -133,8 +133,8 @@ def inv_tree(path, default_value=None):
         f.write(
             "# pylint: disable=reimported,ungrouped-imports,wrong-import-order,wrong-import-position,redefined-outer-name\n"
         )
-        pylint_cmk.add_file(f, repo_path() + "/cmk_base/check_api.py")
-        pylint_cmk.add_file(f, repo_path() + "/cmk_base/inventory_plugins.py")
+        pylint_cmk.add_file(f, repo_path() + "/cmk/base/check_api.py")
+        pylint_cmk.add_file(f, repo_path() + "/cmk/base/inventory_plugins.py")
 
         # Now add the checks
         for path in pylint_cmk.check_files(repo_path() + "/checks"):
@@ -151,7 +151,7 @@ def _compile_bakery_plugins(pylint_test_dir):
         pylint_cmk.add_file(
             f,
             os.path.realpath(
-                os.path.join(repo_path(), "enterprise/cmk_base/cee/agent_bakery_plugins.py")))
+                os.path.join(repo_path(), "enterprise/cmk/base/cee/agent_bakery_plugins.py")))
         # This pylint warning is incompatible with our "concatenation technology".
         f.write("# pylint: disable=reimported,wrong-import-order,wrong-import-position\n")
 

@@ -430,7 +430,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             cmk_path() + "/agents/special",
             cmk_path() + "/agents/plugins",
             cmk_path() + "/modules",
-            cmk_path() + "/cmk_base",
+            cmk_path() + "/cmk/base",
             cmk_path() + "/cmk",
             cmk_path() + "/checks",
             cmk_path() + "/checkman",
@@ -444,7 +444,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             paths += [
                 cmc_path() + "/bin",
                 cmc_path() + "/modules",
-                cmc_path() + "/cmk_base",
+                cmc_path() + "/cmk/base",
                 cmc_path() + "/cmk",
                 cmc_path() + "/web",
                 cmc_path() + "/alert_handlers",
@@ -458,7 +458,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         if os.path.exists(cme_path()) and self.version.is_managed_edition():
             paths += [
                 cme_path(),
-                cme_path() + "/cmk_base",
+                cme_path() + "/cmk/base",
             ]
 
         # Prevent build problems of livestatus

@@ -6,7 +6,7 @@ from checktestlib import (
     assertDiscoveryResultsEqual,
 )
 
-from cmk_base.check_api import MKCounterWrapped
+from cmk.base.check_api import MKCounterWrapped
 
 pytestmark = pytest.mark.checks
 

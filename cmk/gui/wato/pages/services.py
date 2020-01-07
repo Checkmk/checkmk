@@ -494,7 +494,7 @@ class ServiceDiscoveryBackgroundJob(watolib.WatoBackgroundJob):
         job_status = self.get_status()
         job_status["is_active"] = self.is_active()
 
-        # TODO: Use the correct time. This is difficult because cmk_base does not have a single
+        # TODO: Use the correct time. This is difficult because cmk.base does not have a single
         # time for all data of a host. The data sources should be able to provide this information
         # somehow.
         check_table_created = time.time()
@@ -1033,7 +1033,7 @@ class DiscoveryPageRenderer(object):
         if not discovery_result.check_table:
             return
 
-        # We currently don't get correct information from cmk_base (the data sources). Better
+        # We currently don't get correct information from cmk.base (the data sources). Better
         # don't display this until we have the information.
         #html.write("Using discovery information from %s" % cmk.utils.render.date_and_time(
         #    discovery_result.check_table_created))

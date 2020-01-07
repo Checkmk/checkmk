@@ -49,18 +49,18 @@ import cmk.utils.debug
 import cmk.utils.log
 import cmk.utils.paths
 
-import cmk_base  # pylint: disable=cmk-module-layer-violation
-import cmk_base.console as console  # pylint: disable=cmk-module-layer-violation
-import cmk_base.config as config  # pylint: disable=cmk-module-layer-violation
-import cmk_base.profiling as profiling  # pylint: disable=cmk-module-layer-violation
-from cmk_base.modes import modes  # pylint: disable=cmk-module-layer-violation
-import cmk_base.check_api as check_api  # pylint: disable=cmk-module-layer-violation
-import cmk_base.crash_reporting  # pylint: disable=cmk-module-layer-violation
+import cmk.base  # pylint: disable=cmk-module-layer-violation
+import cmk.base.console as console  # pylint: disable=cmk-module-layer-violation
+import cmk.base.config as config  # pylint: disable=cmk-module-layer-violation
+import cmk.base.profiling as profiling  # pylint: disable=cmk-module-layer-violation
+from cmk.base.modes import modes  # pylint: disable=cmk-module-layer-violation
+import cmk.base.check_api as check_api  # pylint: disable=cmk-module-layer-violation
+import cmk.base.crash_reporting  # pylint: disable=cmk-module-layer-violation
 
 cmk.utils.log.setup_console_logging()
 logger = logging.getLogger("cmk.base")
 
-cmk_base.utils.register_sigint_handler()
+cmk.base.utils.register_sigint_handler()
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], modes.short_getopt_specs(), modes.long_getopt_specs())
@@ -117,8 +117,8 @@ except (MKGeneralException, MKBailOut) as e:
     sys.exit(3)
 
 except Exception:
-    crash = cmk_base.crash_reporting.CMKBaseCrashReport.from_exception()
-    cmk_base.crash_reporting.CrashReportStore().save(crash)
+    crash = cmk.base.crash_reporting.CMKBaseCrashReport.from_exception()
+    cmk.base.crash_reporting.CrashReportStore().save(crash)
     raise
 finally:
     profiling.output_profile()

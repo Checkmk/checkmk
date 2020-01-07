@@ -15,7 +15,7 @@ def register(linter):
 
 
 _COMPONENTS = (
-    "cmk_base",
+    "cmk.base",
     "cmk.gui",
     "cmk.ec",
     "cmk.notification_plugins",
@@ -29,8 +29,8 @@ _COMPONENTS = (
 
 _EXPLICIT_FILE_TO_COMPONENT = {
     "web/app/index.wsgi": "cmk.gui",
-    "bin/update_rrd_fs_names.py": "cmk_base",
-    "bin/check_mk": "cmk_base",
+    "bin/update_rrd_fs_names.py": "cmk.base",
+    "bin/check_mk": "cmk.base",
     "bin/cmk-update-config": "cmk.update_config",
     "bin/mkeventd": "cmk.ec",
     "enterprise/bin/liveproxyd": "cmk.cee.liveproxy",
@@ -72,7 +72,7 @@ class CMKModuleLayerChecker(BaseChecker):
             return  # No validation in tests
 
         # Pylint fails to detect the correct module path here. Instead of realizing that the file
-        # cmk_base/automations/cee.py is cmk_base.automations.cee it thinks the module is "cee".
+        # cmk/base/automations/cee.py is cmk.base.automations.cee it thinks the module is "cee".
         # We can silently ignore these files because the linked files at enterprise/... are checked.
         if os.path.islink(file_path):
             return  # Ignore symlinked files instead of checking them twice, ignore this
@@ -121,8 +121,8 @@ class CMKModuleLayerChecker(BaseChecker):
             return explicit_component == component
 
         # The check and bakery plugins are all compiled together by tests/pylint/test_pylint.py.
-        # They clearly belong to the cmk_base component.
-        if component == "cmk_base" and mod_name.startswith("cmk_pylint"):
+        # They clearly belong to the cmk.base component.
+        if component == "cmk.base" and mod_name.startswith("cmk_pylint"):
             return True
 
         if component == "cmk.notification_plugins" and file_path.startswith("notifications/"):

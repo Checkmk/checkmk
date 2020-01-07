@@ -682,7 +682,7 @@ class CREFolder(BaseFolder):
         host_labels = {}
 
         attribute_mappings = [
-            # host attr, cmk_base variable name, value, title
+            # host attr, cmk.base variable name, value, title
             ("ipaddress", "ipaddresses", {}, "Explicit IPv4 addresses"),
             ("ipv6address", "ipv6addresses", {}, "Explicit IPv6 addresses"),
             ("snmp_community", "explicit_snmp_communities", {}, "Explicit SNMP communities"),

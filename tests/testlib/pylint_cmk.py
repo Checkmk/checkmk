@@ -171,10 +171,10 @@ def register(linter):
         # Is used to disable import-error. Would be nice if no-name-in-module could be
         # disabled using this, but this does not seem to be possible :(
         linter.global_set_option("ignored-modules",
-                                 "cmk_base.cee,cmk.gui.cee,cmk.gui.cme,cmk.gui.cme.managed")
+                                 "cmk.base.cee,cmk.gui.cee,cmk.gui.cme,cmk.gui.cme.managed")
         # This disables no-member errors
         linter.global_set_option("generated-members",
-                                 r"(cmk_base\.cee|cmk\.gui\.cee|cmk\.gui\.cme)(\..*)?")
+                                 r"(cmk\.base\.cee|cmk\.gui\.cee|cmk\.gui\.cme)(\..*)?")
 
     linter.register_reporter(CMKColorizedTextReporter)
     linter.register_reporter(CMKParseableTextReporter)

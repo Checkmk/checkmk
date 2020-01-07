@@ -268,8 +268,9 @@ def fileinfo_groups_precompile(hostname, item, params):
             if group_name_pattern == item:
                 patterns.append(pattern)
 
-    import cmk_base.checking
-    precomped = cmk_base.checking.determine_check_params(params).copy()
+    # TODO: Cleanup this separation violation. This should be accessed through the check API
+    import cmk.base.checking
+    precomped = cmk.base.checking.determine_check_params(params).copy()
     precomped['precompiled_patterns'] = patterns
     return precomped
 

@@ -2060,9 +2060,6 @@ class html(ABCHTMLGenerator):
         self.close_a()
         self.close_div()
 
-    def get_button_counts(self):
-        return config.user.get_button_counts()
-
     def empty_icon_button(self):
         self.write(self.render_icon("trans", cssclass="iconbutton trans"))
 
@@ -2647,7 +2644,7 @@ class html(ABCHTMLGenerator):
         title = self.attrencode(title)
         display = "block"
         if bestof:
-            counts = self.get_button_counts()
+            counts = config.user.get_button_counts()
             weights = counts.items()
             weights.sort(key=lambda x: x[1])
             best = dict(weights[-bestof:])  # pylint: disable=invalid-unary-operand-type

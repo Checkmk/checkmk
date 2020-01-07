@@ -1,0 +1,10 @@
+Title: brocade_optical: Do not crash if device does not send temperature values for some interfaces
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p8
+Date: 1578381356
+Class: fix
+
+

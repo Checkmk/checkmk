@@ -1,0 +1,14 @@
+Title: mtr: Fixed summary state which is always OK if at least one partial result is OK
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p8
+Date: 1578467080
+
+The service consists of several partial results, ie. packet loss, round trip
+average and standard deviation. If at least one of theses results is OK the
+summary state is also OK. This has been fixed.

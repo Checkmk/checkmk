@@ -27,6 +27,12 @@ node {
                 cleanWs()
                 checkout(scm)
                 str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
+                versioning = load 'buildscripts/scripts/lib/versioning.groovy'
+
+                // Image Version Tag
+                VERS_TAG = versioning.get_docker_tag(scm)
+                BRANCH = versioning.get_branch(scm)
+
                 stash name: 'distroinfos', includes: 'omd/distros/*.mk'
                 stash name: 'dockerfiles', includes: 'buildscripts/infrastructure/os-nodes/*/Dockerfile'
             }
@@ -39,6 +45,7 @@ DISTRO_LIST.each { DISTRO ->
         node {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 def COMMON_IMAGE = docker.image('ubuntu-18.04-common')
+                COMMON_IMAGE.pull()
                 COMMON_IMAGE.inside('-u 0:0 --ulimit nofile=1024:1024  -v /var/run/docker.sock:/var/run/docker.sock --cap-add=SYS_ADMIN') {
                     stage('build ' + DISTRO + ' os-image') {
                         unstash name: 'dockerfiles'
@@ -52,13 +59,15 @@ DISTRO_LIST.each { DISTRO ->
                             def DOCKER_REGISTRY_NOHTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
                             sh """
                                 docker build \
-                                -t $DOCKER_REGISTRY_NOHTTP/$DISTRO-os-image \
+                                -t $DOCKER_REGISTRY_NOHTTP/$DISTRO-os-image:$BRANCH-latest \
+                                -t $DOCKER_REGISTRY_NOHTTP/$DISTRO-os-image:$VERS_TAG \
                                 --build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP' \
                                 --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE' \
                                 --build-arg PACKAGES='$OS_PACKAGES' \
                                 .
                             """
-                            sh "docker push $DOCKER_REGISTRY_NOHTTP/$DISTRO-os-image"
+                            sh "docker push $DOCKER_REGISTRY_NOHTTP/$DISTRO-os-image:$VERS_TAG"
+                            sh "docker push $DOCKER_REGISTRY_NOHTTP/$DISTRO-os-image:$BRANCH-latest"
                         }
                     }
                 }

@@ -163,6 +163,7 @@ def _valuespec_logwatch_rules():
                  )),
             ],
             optional_keys=["reclassify_states"],
+            ignored_keys=["pre_comp_group_patterns", "group_patterns"],
         ),
         forth=lambda x: isinstance(x, dict) and x or {"reclassify_patterns": x},
     )

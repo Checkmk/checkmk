@@ -2,6 +2,7 @@
 #
 # This file is for execution by the pre-commit framework.
 #
+set -e -o pipefail
 
 source "$(dirname $0)/lib-precommit"
 
@@ -13,9 +14,9 @@ PYTHON2_FILES=$(python_files 2 "$files")
 PYTHON3_FILES=$(python_files 3 "$files")
 
 if [ ! -z "$PYTHON3_FILES" ]; then
-    $PIPENV 3 run pylint "$PYTHON3_FILES"
+    $PIPENV 3 run pylint $PYTHON3_FILES
 fi
 
 if [ ! -z "$PYTHON2_FILES" ]; then
-    $PIPENV 2 run pylint "$PYTHON2_FILES"
+    $PIPENV 2 run pylint $PYTHON2_FILES
 fi

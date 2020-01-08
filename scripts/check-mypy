@@ -2,6 +2,7 @@
 #
 # This file is for execution by the pre-commit framework.
 #
+set -e -o pipefail
 
 source "$(dirname $0)/lib-precommit"
 

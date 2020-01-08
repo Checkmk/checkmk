@@ -2644,7 +2644,7 @@ class html(ABCHTMLGenerator):
         title = self.attrencode(title)
         display = "block"
         if bestof:
-            counts = config.user.get_button_counts()
+            counts = config.user.button_counts
             weights = counts.items()
             weights.sort(key=lambda x: x[1])
             best = dict(weights[-bestof:])  # pylint: disable=invalid-unary-operand-type

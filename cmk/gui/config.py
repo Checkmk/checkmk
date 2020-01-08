@@ -499,7 +499,8 @@ class LoggedInUser(object):
 
         self._permissions = _initial_permission_cache(self.id)
         self._siteconf = self.load_file("siteconfig", {})
-        self._button_counts = None
+        self._button_counts = {}  # type: Dict[str, float]
+        self._stars = set()  # type: Set[str]
 
     def _gather_roles(self, user_id):
         # type: (Optional[UserId]) -> List[str]
@@ -516,11 +517,6 @@ class LoggedInUser(object):
                     "roles": role_ids,
                 }
         return attributes
-
-    def get_button_counts(self):
-        if not self._button_counts:
-            self._button_counts = self.load_file("buttoncounts", {})
-        return self._button_counts
 
     def get_attribute(self, key, deflt=None):
         # type: (str, Any) -> Any
@@ -556,17 +552,32 @@ class LoggedInUser(object):
         # type: () -> Optional[str]
         return self.get_attribute("customer")
 
+    @property
     def contact_groups(self):
         # type: () -> List
         return self.get_attribute("contactgroups", [])
 
-    def load_stars(self):
-        # type: () -> Set[str]
-        return set(self.load_file("favorites", []))
+    @property
+    def button_counts(self):
+        # type: () -> Dict[str, float]
+        if not self._button_counts:
+            self._button_counts = self.load_file("buttoncounts", {})
+        return self._button_counts
 
-    def save_stars(self, stars):
-        # type: (Set[str]) -> None
-        self.save_file("favorites", list(stars))
+    def save_button_counts(self):
+        # type: () -> None
+        self.save_file("buttoncounts", self._button_counts)
+
+    @property
+    def stars(self):
+        # type: () -> Set[str]
+        if not self._stars:
+            self._stars = set(self.load_file("favorites", []))
+        return self._stars
+
+    def save_stars(self):
+        # type: () -> None
+        self.save_file("favorites", list(self._stars))
 
     def is_site_disabled(self, site_id):
         # type: (SiteId) -> bool

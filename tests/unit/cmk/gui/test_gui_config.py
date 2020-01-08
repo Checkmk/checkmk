@@ -955,16 +955,16 @@ def test_unauthenticated_users(user, alias, email, role_ids, baserole_id):
     assert user.get_attribute('foo') is None
 
     assert user.customer_id is None
-    assert user.get_button_counts() == {}
-    assert user.contact_groups() == []
-    assert user.load_stars() == set()
+    assert user.button_counts == {}
+    assert user.contact_groups == []
+    assert user.stars == set()
     assert user.is_site_disabled('any_site') is False
 
     assert user.load_file('any_file', 'default') == 'default'
     assert user.file_modified('any_file') == 0
 
     with pytest.raises(TypeError):
-        user.save_stars(set())
+        user.save_stars()
     with pytest.raises(TypeError):
         user.save_site_config()
 
@@ -1116,12 +1116,14 @@ def test_monitoring_user(monitoring_user):
 
     assert monitoring_user.language == 'de'
     assert monitoring_user.customer_id is None
-    assert monitoring_user.get_button_counts() == MONITORING_USER_BUTTONCOUNTS
-    assert monitoring_user.contact_groups() == ['all']
+    assert monitoring_user.button_counts == MONITORING_USER_BUTTONCOUNTS
+    assert monitoring_user.contact_groups == ['all']
 
-    assert monitoring_user.load_stars() == set(MONITORING_USER_FAVORITES)
-    monitoring_user.save_stars({'heute;Memory'})
-    assert monitoring_user.load_stars() == {'heute;Memory'}
+    assert monitoring_user.stars == set(MONITORING_USER_FAVORITES)
+    monitoring_user.stars.add('heute;Memory')
+    assert monitoring_user.stars == {'heute;CPU load', 'heute;Memory'}
+    monitoring_user.save_stars()
+    assert set(monitoring_user.load_file('favorites', [])) == monitoring_user.stars
 
     assert monitoring_user.is_site_disabled('heute_slave_1') is False
     assert monitoring_user.is_site_disabled('heute_slave_2') is True

@@ -112,7 +112,7 @@ def _ec_filter_host_information_of_not_permitted_hosts(rows):
     if config.user.may("mkeventd.seeall"):
         return  # Don't remove anything. The user may see everything
 
-    user_groups = set(config.user.contact_groups())
+    user_groups = set(config.user.contact_groups)
 
     def is_contact(row):
         return bool(user_groups.intersection(row["host_contact_groups"]))

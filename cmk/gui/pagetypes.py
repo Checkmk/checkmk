@@ -495,7 +495,7 @@ class Overridable(Base):
             return True
 
         if isinstance(self._["public"], tuple) and self._["public"][0] == "contact_groups":
-            if set(config.user.contact_groups()).intersection(self._["public"][1]):
+            if set(config.user.contact_groups).intersection(self._["public"][1]):
                 return True
 
         return False
@@ -1210,7 +1210,7 @@ class ContactGroupChoice(DualListChoice):
         contact_group_choices = sites.all_groups("contact")
         return [(group_id, alias)
                 for (group_id, alias) in contact_group_choices
-                if self._with_foreign_groups or group_id in config.user.contact_groups()]
+                if self._with_foreign_groups or group_id in config.user.contact_groups]
 
 
 #.

@@ -959,7 +959,7 @@ class StarsIcon(Icon):
 
     def render(self, what, row, tags, custom_vars):
         if 'stars' not in g:
-            g.stars = set(config.user.load_file("favorites", []))
+            g.stars = config.user.stars.copy()
         stars = g.stars
 
         if what == "host":

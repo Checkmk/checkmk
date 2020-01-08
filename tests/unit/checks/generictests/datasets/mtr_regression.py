@@ -53,7 +53,7 @@ checks = {
                         ('hop_2_rta', 0.0, 0.15, 0.25, None, None),
                         ('hop_2_rtmin', 0.0, None, None, None, None),
                         ('hop_2_rtmax', 0.0, None, None, None, None),
-                        ('hop_2_rtstddev', 0.0, 0.15, 0, None, None),
+                        ('hop_2_rtstddev', 0.0, 0.15, 0.25, None, None),
                         ('hop_2_response_time', 0.0, None, None, None, None),
                         ('hop_2_pl', 100.0, 10, 25, None, None)
                     ]
@@ -94,7 +94,7 @@ checks = {
                         ('hop_2_rta', 0.0, 0.15, 0.25, None, None),
                         ('hop_2_rtmin', 0.0, None, None, None, None),
                         ('hop_2_rtmax', 0.0, None, None, None, None),
-                        ('hop_2_rtstddev', 0.0, 0.15, 0, None, None),
+                        ('hop_2_rtstddev', 0.0, 0.15, 0.25, None, None),
                         ('hop_2_response_time', 0.0, None, None, None, None),
                         ('hop_2_pl', 0.0, 10, 25, None, None)
                     ]

@@ -578,6 +578,46 @@ class LoggedInUser(object):
         self.save_file("acknowledged_notifications", value)
 
     @property
+    def discovery_checkboxes(self):
+        # type: () -> bool
+        return self.load_file("discovery_checkboxes", False)
+
+    @discovery_checkboxes.setter
+    def discovery_checkboxes(self, value):
+        # type: (bool) -> None
+        self.save_file("discovery_checkboxes", value)
+
+    @property
+    def parameter_column(self):
+        # type: () -> bool
+        return self.load_file("parameter_column", False)
+
+    @parameter_column.setter
+    def parameter_column(self, value):
+        # type: (bool) -> None
+        self.save_file("parameter_column", value)
+
+    @property
+    def discovery_show_discovered_labels(self):
+        # type: () -> bool
+        return self.load_file("discovery_show_discovered_labels", False)
+
+    @discovery_show_discovered_labels.setter
+    def discovery_show_discovered_labels(self, value):
+        # type: (bool) -> None
+        self.save_file("discovery_show_discovered_labels", value)
+
+    @property
+    def discovery_show_plugin_names(self):
+        # type: () -> bool
+        return self.load_file("discovery_show_plugin_names", False)
+
+    @discovery_show_plugin_names.setter
+    def discovery_show_plugin_names(self, value):
+        # type: (bool) -> None
+        self.save_file("discovery_show_plugin_names", value)
+
+    @property
     def button_counts(self):
         # type: () -> Dict[str, float]
         if not self._button_counts:

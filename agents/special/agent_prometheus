@@ -113,6 +113,56 @@ class PrometheusAPI:
         self.api_endpoint = "%s/api/v1" % self.server_address
         self.scrape_targets_dict = self._connected_scrape_targets()
 
+    def perform_multi_result_promql(self, promql_expression, label_for_piggyback=None):
+        """Performs a PromQL query where a multi metric response is expected.
+
+        Args:
+            promql_expression: PromQL query expression
+            label_for_piggyback: Key in order to extract the value from the individual metric labels. This value
+                                 is used as piggyback host name
+
+        Returns: A dictionary where the key is the piggyback host name and the value is a list of processed
+                 metric elements
+
+        """
+        try:
+            promql_response = self.query_promql(promql_expression)
+        except (KeyError, ValueError, requests.exceptions.Timeout) as exc:
+            LOGGER.exception(exc)
+            return {}
+
+        result = {}
+        metric_label_collection = []  # in preparation label extraction algorithm
+        for metric_info in self._process_multi_result(promql_response):
+            metric_label_collection.append(metric_info["labels"])
+
+            if label_for_piggyback is not None:
+                piggyback_host = self.extract_metric_label(metric_info, label_for_piggyback)
+            else:
+                piggyback_host = self.identify_metric_origin(metric_info)
+
+            result.setdefault(piggyback_host, {}).setdefault("service_metrics",
+                                                             []).append(metric_info)
+        return result
+
+    def _process_multi_result(self, promql_response):
+        """Processes the individual metrics from the PromQL query response
+
+        Args:
+            promql_response: List resulting from the PromQL query response
+
+        Returns: The processed individual metrics
+
+        """
+        for metric in promql_response:
+            metric_info = self._process_single_result([metric])
+
+            if "invalid_info" in metric_info:
+                continue
+
+            metric_info.update({"labels": (metric["metric"])})
+            yield metric_info
+
     @staticmethod
     def _process_single_result(promql_response):
         """Obtain the metric value of the PromQL query response
@@ -132,7 +182,7 @@ class PrometheusAPI:
         }.get(len(promql_response), "unsupported query")
         return {"invalid_info": inv_info}
 
-    def process_promql_queries(self, custom_services):
+    def perform_specified_promql_queries(self, custom_services):
         """Prepare Host & Piggyback data from custom defined PromQL expressions
 
         For custom Prometheus services, only allow PromQL expressions which
@@ -182,6 +232,14 @@ class PrometheusAPI:
         response = requests.get(request)
         response.raise_for_status()
         return response.json()
+
+    @staticmethod
+    def extract_metric_label(promql_metric_info, label_key):
+        return promql_metric_info["labels"][label_key]
+
+    @staticmethod
+    def identify_metric_origin(promql_metric_info):
+        return "{job}-{instance}".format(**promql_metric_info["metric"])
 
     def query_promql(self, promql):
         """Query the Prometheus API using a PromQL Expression expecting a json response
@@ -363,7 +421,8 @@ class ApiData:
     def promql_section(self, custom_services):
         logging.info("Prometheus PromQl queries")
         e = PiggybackGroup()
-        e.join('prometheus_custom', self.api_client.process_promql_queries(custom_services))
+        e.join('prometheus_custom',
+               self.api_client.perform_specified_promql_queries(custom_services))
         return '\n'.join(e.output())
 
     def server_info_section(self):

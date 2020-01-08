@@ -74,9 +74,9 @@ RUN yum -y makecache \
 #    && ln -s /usr/bin/gcc-8 /usr/bin/gcc \
 #    && ln -s /usr/bin/gcc-8 /usr/bin/cc
 RUN cd /opt \
-    && wget https://github.com/Kitware/CMake/releases/download/v3.15.4/cmake-3.15.4-Linux-x86_64.tar.gz \
-    && tar xf cmake-3.15.4-Linux-x86_64.tar.gz \
-    && ln -s /opt/cmake-3.15.4-Linux-x86_64/bin/* /usr/bin/
+    && wget https://github.com/Kitware/CMake/releases/download/v3.16.2/cmake-3.16.2-Linux-x86_64.tar.gz \
+    && tar xf cmake-3.16.2-Linux-x86_64.tar.gz \
+    && ln -s /opt/cmake-3.16.2-Linux-x86_64/bin/* /usr/bin/
 
 # New packages that are not needed for the build toolchain above should be added here.
 # We avoid rebuild of the whole previous steps this way

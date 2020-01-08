@@ -12,7 +12,8 @@ description:
  together to logically function as one device.
 
 item:
- If stacking is used the item is prefixed by the member number.
+ The stack member number, followed by slash (/), followed by a consecutive number for each
+ PSU of this member.
 
 inventory:
  One service for each PSU of each stack member is created

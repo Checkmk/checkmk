@@ -1,0 +1,13 @@
+Title: logwatch: Invalid check parameter: Undefined key 'pre_comp_group_patterns'
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: comp
+Edition: cre
+State: unknown
+Version: 1.6.0p8
+Date: 1578485313
+
+When configuring logwatch groups the above error could be displayed in
+the WATO service configuration (however, the service functionality was not affected).

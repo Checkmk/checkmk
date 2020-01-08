@@ -151,8 +151,6 @@
 @copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
-cd $(SolutionDir)
-call prepare_to_tests.cmd $(REMOTE_MACHINE)
 )
 
 </Command>
@@ -195,8 +193,6 @@ call prepare_to_tests.cmd $(REMOTE_MACHINE)
 @copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
-cd $(SolutionDir)
-call prepare_to_tests.cmd $(REMOTE_MACHINE)
 )
 
 </Command>

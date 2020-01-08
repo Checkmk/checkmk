@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -26,7 +26,7 @@
 
 import argparse
 import sys
-import urlparse
+import urllib.parse
 import requests
 import urllib3  # type: ignore
 from cmk.utils.defines import service_state_name
@@ -52,8 +52,8 @@ def main():
 
 def handle_request(args):
 
-    url = urlparse.urlunparse((args.protocol, "%s:%d" % (args.hostname, args.port),
-                               "%s/_count" % args.index.replace(" ", ","), None, None, None))
+    url = urllib.parse.urlunparse((args.protocol, "%s:%d" % (args.hostname, args.port),
+                                   "%s/_count" % args.index.replace(" ", ","), None, None, None))
 
     query = {
         "query": {

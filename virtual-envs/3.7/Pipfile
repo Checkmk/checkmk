@@ -58,6 +58,9 @@ requests = { version = "==2.22.0", extras = ["security"] }  # needed by DCD
 requests-kerberos = "==0.12.0" # needed for check_bi_aggr
 passlib = "==1.7.2" # needed for omdlib
 psutil = "==5.6.7" # needed for omdlib
+mysqlclient = "==1.4.6" # needed by check_sql
+psycopg2 = "==2.7.6.1"  # needed by check_sql. This is actually a lie: We ship 2.6.2, but installation fails for PostgreSQL > 9. Alas, 2.7 removed support for clients < 9.1. >:-(
+pymssql = "==2.1.4" # needed by check_sql
 
 [requires]
 python_version = "3.7"

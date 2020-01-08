@@ -47,6 +47,9 @@ PYTHON3_MODULES_LIST += chardet-3.0.4.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += urllib3-1.25.7.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += pyOpenSSL-19.1.0.tar.gz # needed by requests with extras = ["security"]
 PYTHON3_MODULES_LIST += requests-2.22.0.tar.gz # needed by DCD
+# Added for check_bi_aggr with kerberos support
+PYTHON3_MODULES_LIST += pykerberos-1.2.1.tar.gz
+PYTHON3_MODULES_LIST += requests-kerberos-0.12.0.tar.gz
 
 PYTHON3_MODULES_LIST += psutil-5.6.7.tar.gz # needed for omdlib
 PYTHON3_MODULES_LIST += passlib-1.7.2.tar.gz # needed for omdlib

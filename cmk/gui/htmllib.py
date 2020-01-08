@@ -1377,7 +1377,7 @@ class html(ABCHTMLGenerator):
     def set_user_id(self, user_id):
         self._user_id = user_id
         # TODO: Shouldn't this be moved to some other place?
-        self.help_visible = config.user.load_file("help", False)  # cache for later usage
+        self.help_visible = config.user.show_help  # cache for later usage
 
     def is_mobile(self):
         return self.mobile

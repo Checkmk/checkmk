@@ -558,6 +558,26 @@ class LoggedInUser(object):
         return self.get_attribute("contactgroups", [])
 
     @property
+    def show_help(self):
+        # type: () -> bool
+        return self.load_file("help", False)
+
+    @show_help.setter
+    def show_help(self, value):
+        # type: (bool) -> None
+        self.save_file("help", value)
+
+    @property
+    def acknowledged_notifications(self):
+        # type: () -> int
+        return self.load_file("acknowledged_notifications", 0)
+
+    @acknowledged_notifications.setter
+    def acknowledged_notifications(self, value):
+        # type: (int) -> None
+        self.save_file("acknowledged_notifications", value)
+
+    @property
     def button_counts(self):
         # type: () -> Dict[str, float]
         if not self._button_counts:

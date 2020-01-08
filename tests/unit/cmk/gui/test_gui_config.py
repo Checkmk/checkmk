@@ -1137,6 +1137,15 @@ def test_monitoring_user(monitoring_user):
     assert monitoring_user.is_site_disabled('heute_slave_1') is True
     assert monitoring_user.is_site_disabled('heute_slave_2') is False
 
+    assert monitoring_user.show_help is False
+    monitoring_user.show_help = True
+    assert monitoring_user.show_help is True
+
+    assert monitoring_user.acknowledged_notifications == 0
+    timestamp = 1578479929
+    monitoring_user.acknowledged_notifications = timestamp
+    assert monitoring_user.acknowledged_notifications == timestamp
+
 
 def test_monitoring_user_permissions(mocker, monitoring_user):
     mocker.patch.object(

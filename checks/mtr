@@ -117,6 +117,7 @@ def check_mtr(item, params, parsed):
 
         if apply_levels:  # the params only apply to the last host
             hop_text_entries = []
+            hop_states = []
             for what, unit, value, warn, crit in [
                 ("Packet loss", "%", pl, pl_warn, pl_crit),
                 ("Round trip average", "ms", rta, rta_warn, rta_crit),
@@ -131,10 +132,11 @@ def check_mtr(item, params, parsed):
                 hop_text = "%s %s%s%s" % (what, value, unit,
                                           what_state and state_markers[what_state] or "")
                 if what_state:
-                    hop_text += " (Levels at %d%s/%d%s)" % (warn, unit, crit, unit)
+                    hop_text += " (warn/crit at %d%s/%d%s)" % (warn, unit, crit, unit)
                 hop_text_entries.append(hop_text)
+                hop_states.append(what_state)
 
-            return what_state, ", ".join(hop_text_entries), perfdata
+            return max(hop_states), ", ".join(hop_text_entries), perfdata
         return None, None, perfdata
 
     hc = int(hostinfo['hopcount'])

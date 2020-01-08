@@ -45,6 +45,8 @@ def _format_item_mssql_datafiles(inst, database, file_name):
 def _mssql_datafiles_process_sizes(params, used_size, allocated_size, max_size, unlimited):
     def calculate_levels(levels, reference_value):
         if isinstance(levels[0], float):
+            if reference_value == 0:
+                return None, None
             if reference_value != -1:
                 return [(x * reference_value) / 100.0 for x in levels]
         elif levels[0] is not None:

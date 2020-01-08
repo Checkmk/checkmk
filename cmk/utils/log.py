@@ -86,6 +86,7 @@ def get_formatter(format_str="%(asctime)s [%(levelno)s] [%(name)s %(process)d] %
 
 
 def clear_console_logging():
+    # type: () -> None
     logger.handlers[:] = []
     logger.addHandler(logging.NullHandler())
     logger.setLevel(logging.INFO)

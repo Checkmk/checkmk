@@ -48,7 +48,7 @@ class Query:
             raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
         method = parts[0]
         if method == "GET":
-            return _QueryGET(status_server, raw_query, logger)
+            return QueryGET(status_server, raw_query, logger)
         if method == "REPLICATE":
             return _QueryREPLICATE(status_server, raw_query, logger)
         if method == "COMMAND":
@@ -79,7 +79,7 @@ class Query:
         return repr("\n".join(self._raw_query))
 
 
-class _QueryGET(Query):
+class QueryGET(Query):
     _filter_operators = {
         "=": (lambda a, b: a == b),
         ">": (lambda a, b: a > b),

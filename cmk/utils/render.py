@@ -34,7 +34,7 @@ from __future__ import division
 import time
 import math
 from datetime import timedelta
-from typing import Tuple, Union  # pylint: disable=unused-import
+from typing import Optional, Tuple, Union  # pylint: disable=unused-import
 
 from cmk.utils.i18n import _
 
@@ -51,15 +51,18 @@ from cmk.utils.i18n import _
 
 # NOTE: strftime's format *must* be of type str, both in Python 2 and 3.
 def date(timestamp):
+    # type: (Optional[float]) -> str
     return time.strftime(str(_("%Y-%m-%d")), time.localtime(timestamp))
 
 
 def date_and_time(timestamp):
+    # type: (Optional[float]) -> str
     return "%s %s" % (date(timestamp), time_of_day(timestamp))
 
 
 # NOTE: strftime's format *must* be of type str, both in Python 2 and 3.
 def time_of_day(timestamp):
+    # type: (Optional[float]) -> str
     return time.strftime(str(_("%H:%M:%S")), time.localtime(timestamp))
 
 
@@ -76,10 +79,13 @@ def time_since(timestamp):
 class Age(object):
     """Format time difference seconds into approximated human readable text"""
     def __init__(self, secs):
+        # type: (float) -> None
         super(Age, self).__init__()
         self.__secs = secs
 
+    # NOTE: In Python 2 the return type is WRONG, we should return str.
     def __str__(self):
+        # not-yet-a-type: () -> Text
         secs = self.__secs
 
         if secs < 0:
@@ -115,11 +121,13 @@ class Age(object):
             return "%.0f %s" % (years, _("y"))
 
     def __float__(self):
+        # type: () -> float
         return float(self.__secs)
 
 
 # TODO: Make call sites use Age() directly?
 def approx_age(secs):
+    # type: (float) -> str
     return "%s" % Age(secs)
 
 

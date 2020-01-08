@@ -241,7 +241,7 @@ vs_elements_if_groups_matches = [
      Transform(
          DropdownChoice(
              title=_("Select interface port type"),
-             choices=defines.interface_port_types(),
+             choices=ListChoice.dict_choices(defines.interface_port_types()),
              help=_("Only interfaces with the given port type are put into this group. "
                     "For example 53 (propVirtual)."),
          ),

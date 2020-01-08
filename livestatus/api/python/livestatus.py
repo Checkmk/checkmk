@@ -35,7 +35,6 @@ import sys
 from typing import (  # pylint: disable=unused-import
     NewType, AnyStr, Any, Type, List, Text, cast, Tuple, Union, Dict, Pattern, Optional,
 )
-import six
 
 UserId = NewType("UserId", Text)
 SiteId = NewType("SiteId", str)
@@ -67,7 +66,7 @@ remove_cache_regex = re.compile("\nCache:[^\n]*")  # type: Pattern
 
 def _ensure_unicode(value):
     # type: (Union[Text, bytes]) -> Text
-    if isinstance(value, six.text_type):
+    if isinstance(value, Text):
         return value
     return value.decode("utf-8")
 
@@ -116,6 +115,7 @@ def lqencode(s):
 
 
 def quote_dict(s):
+    # type: (Text) -> Text
     """Apply the quoting used for dict-valued columns (See #6972)"""
     return "'%s'" % s.replace(u"'", u"''")
 
@@ -758,7 +758,7 @@ class MultiSiteConnection(Helpers):
             # Fetch all the states of status hosts of this local site in one query
             query = u"GET hosts\nColumns: name state has_been_checked last_time_up\n"
             for host in hosts:
-                query += u"Filter: name = %s\n" % six.text_type(host)
+                query += u"Filter: name = %s\n" % Text(host)
             query += u"Or: %d\n" % len(hosts)
             self.set_only_sites([sitename])  # only connect one site
             try:
@@ -1035,6 +1035,7 @@ class MultiSiteConnection(Helpers):
 
 class LocalConnection(SingleSiteConnection):
     def __init__(self, *args, **kwargs):
+        # type: (*Any, **Any) -> None
         omd_root = os.getenv("OMD_ROOT")
         if not omd_root:
             raise MKLivestatusConfigError(

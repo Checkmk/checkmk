@@ -31,12 +31,13 @@ import threading
 import time
 from logging import Logger  # pylint: disable=unused-import
 from pathlib import Path  # pylint: disable=unused-import
-from typing import Any, AnyStr, Dict, List, Optional, Tuple  # pylint: disable=unused-import
+from typing import Any, AnyStr, Dict, List, Optional, Tuple, Union  # pylint: disable=unused-import
 
+from cmk.ec.actions import quote_shell_string
+from cmk.ec.query import QueryGET
 from cmk.ec.settings import Settings  # pylint: disable=unused-import
-import cmk.ec.actions
 from cmk.utils.log import VERBOSE
-import cmk.utils.render
+from cmk.utils.render import date_and_time
 
 # TODO: As one can see clearly below, we should really have a class hierarchy here...
 
@@ -56,7 +57,7 @@ class History:
         self.reload_configuration(config)
 
     def reload_configuration(self, config):
-        # type: (Any) -> None
+        # type: (Dict[str, Any]) -> None
         self._config = config
         if self._config['archive_mode'] == 'mongodb':
             _reload_configuration_mongodb(self)
@@ -79,7 +80,7 @@ class History:
 
     # TODO: We can't use Query in the type because of cyclic imports... :-/
     def get(self, query):
-        # type: (Any) -> List[Any]
+        # type: (QueryGET) -> List[Any]
         if self._config['archive_mode'] == 'mongodb':
             return _get_mongodb(self, query)
         return _get_files(self, self._logger, query)
@@ -239,7 +240,7 @@ def _log_event(config, logger, event, what, who, addinfo):
 
 
 def _get_mongodb(history, query):
-    # type: (History, Any) -> List[Any]
+    # type: (History, QueryGET) -> List[Any]
     filters, limit = query.filters, query.limit
 
     history_entries = []
@@ -249,11 +250,11 @@ def _get_mongodb(history, query):
 
     # Construct the mongodb filtering specification. We could fetch all information
     # and do filtering on this data, but this would be way too inefficient.
-    query = {}
+    mongo_query = {}
     for column_name, operator_name, _predicate, argument in filters:
 
         if operator_name == '=':
-            mongo_filter = argument
+            mongo_filter = argument  # type: Union[str, Dict[str, str]]
         elif operator_name == '>':
             mongo_filter = {'$gt': argument}
         elif operator_name == '<':
@@ -275,16 +276,16 @@ def _get_mongodb(history, query):
                             column_name)
 
         if column_name[:6] == 'event_':
-            query['event.' + column_name[6:]] = mongo_filter
+            mongo_query['event.' + column_name[6:]] = mongo_filter
         elif column_name[:8] == 'history_':
             key = column_name[8:]
             if key == 'line':
                 key = '_id'
-            query[key] = mongo_filter
+            mongo_query[key] = mongo_filter
         else:
             raise Exception('Filter %s not implemented for MongoDB' % column_name)
 
-    result = history._mongodb.db.ec_archive.find(query).sort('time', -1)
+    result = history._mongodb.db.ec_archive.find(mongo_query).sort('time', -1)
 
     # Might be used for debugging / profiling
     #open(cmk.utils.paths.omd_root + '/var/log/check_mk/ec_history_debug.log', 'a').write(
@@ -444,11 +445,11 @@ def _expire_logfiles(settings, config, logger, lock_history, flush):
             days = config["history_lifetime"]
             min_mtime = time.time() - days * 86400
             logger.log(VERBOSE, "Expiring logfiles (Horizon: %d days -> %s)", days,
-                       cmk.utils.render.date_and_time(min_mtime))
+                       date_and_time(min_mtime))
             for path in settings.paths.history_dir.value.glob('*.log'):
                 if flush or path.stat().st_mtime < min_mtime:
                     logger.info("Deleting log file %s (age %s)" %
-                                (path, cmk.utils.render.date_and_time(path.stat().st_mtime)))
+                                (path, date_and_time(path.stat().st_mtime)))
                     path.unlink()
         except Exception as e:
             if settings.options.debug:
@@ -457,7 +458,7 @@ def _expire_logfiles(settings, config, logger, lock_history, flush):
 
 
 def _get_files(history, logger, query):
-    # type: (History, Logger, Any) -> List[Any]
+    # type: (History, Logger, QueryGET) -> List[Any]
     filters, limit = query.filters, query.limit
     history_entries = []  # type: List[Any]
     if not history._settings.paths.history_dir.value.exists():
@@ -557,9 +558,9 @@ def _parse_history_file(history, path, query, greptexts, limit, logger):
     # If we have greptexts we pre-filter the file using the extremely
     # fast GNU Grep
     # Revert lines from the log file to have the newer lines processed first
-    cmd = 'tac %s' % cmk.ec.actions.quote_shell_string(str(path))
+    cmd = 'tac %s' % quote_shell_string(str(path))
     if greptexts:
-        cmd += " | egrep -i -e %s" % cmk.ec.actions.quote_shell_string(".*".join(greptexts))
+        cmd += " | egrep -i -e %s" % quote_shell_string(".*".join(greptexts))
     grep = subprocess.Popen(cmd, shell=True, close_fds=True, stdout=subprocess.PIPE)  # nosec
 
     for line in grep.stdout:

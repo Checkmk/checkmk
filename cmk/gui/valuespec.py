@@ -2261,14 +2261,10 @@ class DropdownChoice(ValueSpec):
 
     def choices(self):
         # type: () -> List[TypingTuple[Any, Text]]
-        result = []  # type: List[TypingTuple[Any, Text]]
         if isinstance(self._choices, list):
             result = self._choices
-        elif isinstance(self._choices, dict):
-            result = ListChoice.dict_choices(self._choices)
         else:
             result = self._choices()
-
         if self._no_preselect:
             return [(self._no_preselect_value, self._no_preselect_title)] + result
         return result

@@ -12,7 +12,8 @@ properties([
     string(name: 'DISTROS', defaultValue: DISTRO_STR, description: 'List of targeted distros' ),
     string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' ),
     string(name: 'DEMO', defaultValue: 'no', description: 'Demo: yes or no' ),
-    string(name: 'VERSION', defaultValue: 'daily', description: 'Version: "daily" for current state of the branch, e.g. "1.6.0b2" for building the git tag "v1.6.0b2".' )
+    string(name: 'VERSION', defaultValue: 'daily', description: 'Version: "daily" for current state of the branch, e.g. "1.6.0b2" for building the git tag "v1.6.0b2".' ),
+    string(name: 'DOCKER_TAG_BUILD', defaultValue: '', description: 'DOCKER_TAG_BUILD: Custom Docker Tag to use for this build. Leave empty for default' )
   ])
 ])
 
@@ -47,6 +48,12 @@ if (shall_publish_package(scm, JOB_BASE_NAME)) {
     OMD_ENV_VARS = ' NEXUS_BUILD_CACHE_URL="" PYTHON_ENABLE_OPTIMIZATIONS=""'
 }
 
+def DOCKER_TAG = BRANCH + '-latest'
+if (DOCKER_TAG_BUILD != '') {
+    DOCKER_TAG = DOCKER_TAG_BUILD
+} else if (DOCKER_TAG_MASTER != '' ) {
+    DOCKER_TAG = DOCKER_TAG_MASTER
+}
 def DOCKER_BASE_ARGS = "-u 0:0 --ulimit nofile=1024:1024"
 def DOCKER_ARGS = "${DOCKER_BASE_ARGS} -v ${DAILY_DATA}:${DAILY_DATA} -v ${ARCHIVE_DIR}:${ARCHIVE_DIR}"
 
@@ -119,8 +126,9 @@ DISTRO_LIST.each { DISTRO ->
     PACKAGE_BUILDS[DISTRO] = {
         node {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                docker.image(DISTRO).inside(DOCKER_ARGS + " --privileged --hostname ${DISTRO}") {
+                docker.image(DISTRO + ':' + DOCKER_TAG).inside(DOCKER_ARGS + " --privileged --hostname ${DISTRO}") {
                     withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
+                        sh "cat /version.txt"
                         build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_ENV_VARS)
                     }
                 }

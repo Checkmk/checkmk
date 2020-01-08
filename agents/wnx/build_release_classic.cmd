@@ -65,10 +65,49 @@ set msbuild="C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\MS
 if not exist %msbuild% powershell Write-Host "MSBUILD not found, trying Visual Professional" -Foreground Yellow && set msbuild="C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\MSBuild\15.0\Bin\msbuild.exe"
 if not exist %msbuild% powershell Write-Host "Install MSBUILD, please" -Foreground Red && exit /b 99
 
-powershell -ExecutionPolicy ByPass -File msb.ps1
-if not %errorlevel% == 0 powershell Write-Host "Failed Build" -Foreground Red && exit /b 7
+set exec=check_mk_service
+%msbuild% wamain.sln /m:4 /t:%exec% /p:Configuration=Release,Platform=x86
+if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-32" -Foreground Red && exit /b 1
+%msbuild% wamain.sln /m:4 /t:%exec% /p:Configuration=Release,Platform=x64
+if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-64" -Foreground Red && exit /b 2
 
-%msbuild% wamain.sln /t:install /p:Configuration=Release,Platform=x86
+goto build_watest
+if "%SKIP_MINOR_BINARIES%" == "YES" powershell Write-Host "Skipping Minor Binaries!!!!" -Foreground Green goto build_watest
+set exec=plugin_player
+%msbuild% wamain.sln /t:%exec% /p:Configuration=Release,Platform=x86
+if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-32" -Foreground Red && exit /b 2
+%msbuild% wamain.sln /t:%exec% /p:Configuration=Release,Platform=x64
+if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-64" -Foreground Red && exit /b 3
+
+set exec=providers\perf_counter
+%msbuild% wamain.sln /t:%exec% /p:Configuration=Release,Platform=x86
+if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-32" -Foreground Red && exit /b 4
+%msbuild% wamain.sln /t:%exec% /p:Configuration=Release,Platform=x64
+if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-64" -Foreground Red && exit /b 5
+
+
+:build_watest
+set exec=watest
+%msbuild% wamain.sln /m:4 /t:%exec% /p:Configuration=Release,Platform=x86
+if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-32" -Foreground Red && exit /b 6
+%msbuild% wamain.sln /m:4 /t:%exec% /p:Configuration=Release,Platform=x64
+if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-64" -Foreground Red && exit /b 7
+
+goto skip_marker
+@rem auto install msi
+git update-index --assume-unchanged install/resources/check_mk.marker > nul
+@copy install\resources\check_mk.marker save.tmp > nul
+echo update > install\resources\check_mk.marker
+%msbuild% wamain.sln /t:install /p:Configuration=Release,Platform=x64
+set el=%errorlevel%
+@type save.tmp > install\resources\check_mk.marker
+@del save.tmp > nul
+git update-index --no-assume-unchanged install/resources/check_mk.marker > nul
+if not %el% == 0 powershell Write-Host "Failed Install build" -Foreground Red && exit /b 88
+rem move %REMOTE_MACHINE%\check_mk_service.msi %REMOTE_MACHINE%\check_mk_agent_update.msi
+
+:skip_marker
+%msbuild% wamain.sln /t:install /p:Configuration=Release,Platform=x64
 if not %errorlevel% == 0 powershell Write-Host "Failed Install build" -Foreground Red && exit /b 8
 
 @rem Patch Version Phase: Patch version value direct in the msi file

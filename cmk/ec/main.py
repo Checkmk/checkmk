@@ -2893,6 +2893,7 @@ class StatusServer(ECServerThread):
 
     # All commands are already locked with self._event_status.lock
     def handle_command_request(self, commandline):
+        # type: (str) -> None
         self._logger.info("Executing command: %s" % commandline)
         parts = commandline.split(";")
         command = parts[0]
@@ -2927,12 +2928,14 @@ class StatusServer(ECServerThread):
             raise MKClientError("Unknown command %s" % command)
 
     def handle_command_delete(self, arguments):
+        # type: (List[str]) -> None
         if len(arguments) != 2:
             raise MKClientError("Wrong number of arguments for DELETE")
         event_id, user = arguments
         self._event_status.delete_event(int(event_id), user)
 
     def handle_command_update(self, arguments):
+        # type: (List[str]) -> None
         event_id, user, acknowledged, comment, contact = arguments
         event = self._event_status.event(int(event_id))
         if not event:
@@ -2952,6 +2955,7 @@ class StatusServer(ECServerThread):
         self._history.add(event, "UPDATE", user)
 
     def handle_command_create(self, arguments):
+        # type: (List[str]) -> None
         # Would rather use process_raw_line(), but we are already
         # holding self._event_status.lock and it's sub functions are setting
         # self._event_status.lock too. The lock can not be allocated twice.
@@ -2961,6 +2965,7 @@ class StatusServer(ECServerThread):
             pipe.write(("%s\n" % ";".join(arguments)).encode("utf-8"))
 
     def handle_command_changestate(self, arguments):
+        # type: (List[str]) -> None
         event_id, user, newstate = arguments
         event = self._event_status.event(int(event_id))
         if not event:
@@ -2971,16 +2976,19 @@ class StatusServer(ECServerThread):
         self._history.add(event, "CHANGESTATE", user)
 
     def handle_command_reload(self):
+        # type: () -> None
         reload_configuration(self.settings, self._logger, self._lock_configuration, self._history,
                              self._event_status, self._event_server, self, self._slave_status)
 
     def handle_command_reopenlog(self):
+        # type: () -> None
         self._logger.info("Closing this logfile")
         log.open_log(str(self.settings.paths.log_file.value))
         self._logger.info("Opened new logfile")
 
     # Erase our current state and history!
     def handle_command_flush(self):
+        # type: () -> None
         self._history.flush()
         self._event_status.flush()
         self._event_status.save_status()
@@ -2994,16 +3002,17 @@ class StatusServer(ECServerThread):
         self._logger.info("Flushed current status and historic events.")
 
     def handle_command_sync(self):
+        # type: () -> None
         self._event_status.save_status()
 
     def handle_command_resetcounters(self, arguments):
+        # type: (List[str]) -> None
         if arguments:
-            rule_id = arguments[0]
-            self._logger.info("Resetting counters of rule " + rule_id)
+            self._logger.info("Resetting counters of rule " + arguments[0])
+            self._event_status.reset_counters(arguments[0])
         else:
-            rule_id = None  # Reset all rule counters
             self._logger.info("Resetting all rule counters")
-        self._event_status.reset_counters(rule_id)
+            self._event_status.reset_counters(None)
 
     def handle_command_action(self, arguments):
         event_id, user, action_id = arguments

@@ -42,6 +42,11 @@ repos:
             entry: scripts/check-pylint
             language: script
             types: [file, python]
+          - id: futurize
+            name: Check futurize
+            entry: scripts/check-futurize
+            language: script
+            types: [file, python]
           - id: mypy
             name: Check types with mypy
             entry: scripts/check-mypy

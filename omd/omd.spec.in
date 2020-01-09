@@ -20,6 +20,11 @@ Requires:
 %global debug_package %{nil}
 %global _build_id_links none
 
+# Avoid the annobin chaos on CentOS 8.
+%if 0%{?rhel} >= 8
+%undefine _annotated_build
+%endif
+
 %description
 Checkmk - Best-in-class infrastructure & application monitoring
 

@@ -2217,7 +2217,8 @@ def get_hostnames_from_checkboxes(filterfunc=None):
     This is needed for bulk operations."""
     show_checkboxes = html.request.var("show_checkboxes") == "1"
     if show_checkboxes:
-        selected = weblib.get_rowselection('wato-folder-/' + watolib.Folder.current().path())
+        selected = config.user.get_rowselection(weblib.selection_id(),
+                                                'wato-folder-/' + watolib.Folder.current().path())
     search_text = html.request.var("search")
 
     selected_host_names = []

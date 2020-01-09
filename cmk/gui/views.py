@@ -393,8 +393,10 @@ class GUIViewRenderer(ViewRenderer):
             # If we are currently within an action (confirming or executing), then
             # we display only the selected rows (if checkbox mode is active)
             elif show_checkboxes and html.do_actions():
-                rows = filter_selected_rows(view_spec, rows,
-                                            weblib.get_rowselection('view-' + view_spec['name']))
+                rows = filter_selected_rows(
+                    view_spec, rows,
+                    config.user.get_rowselection(weblib.selection_id(),
+                                                 'view-' + view_spec['name']))
 
             if html.do_actions() and html.transaction_valid():  # submit button pressed, no reload
                 try:
@@ -445,7 +447,9 @@ class GUIViewRenderer(ViewRenderer):
             headinfo = "%d %s" % (row_count, _("row") if row_count == 1 else _("rows"))
             if show_checkboxes:
                 selected = filter_selected_rows(
-                    view_spec, rows, weblib.get_rowselection('view-' + view_spec['name']))
+                    view_spec, rows,
+                    config.user.get_rowselection(weblib.selection_id(),
+                                                 'view-' + view_spec['name']))
                 headinfo = "%d/%s" % (len(selected), headinfo)
 
             if html.output_format == "html":

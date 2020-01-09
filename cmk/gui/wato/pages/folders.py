@@ -474,7 +474,8 @@ class ModeFolder(WatoMode):
         html.hidden_fields()
         html.end_form()
 
-        selected = weblib.get_rowselection('wato-folder-/' + self._folder.path())
+        selected = config.user.get_rowselection(weblib.selection_id(),
+                                                'wato-folder-/' + self._folder.path())
 
         row_count = len(rendered_hosts)
         headinfo = "%d %s" % (row_count, _("host") if row_count == 1 else _("hosts"))

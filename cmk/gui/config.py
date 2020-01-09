@@ -30,6 +30,7 @@ import os
 import copy
 import json
 from typing import Set, Any, AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union  # pylint: disable=unused-import
+import time
 import six
 from pathlib2 import Path
 
@@ -662,6 +663,45 @@ class LoggedInUser(object):
     def save_tree_states(self):
         # type: () -> None
         self.save_file("treestates", self._tree_states)
+
+    def get_rowselection(self, selection_id, identifier):
+        # type: (str, str) -> List[str]
+        vo = self.load_file("rowselection/%s" % selection_id, {})
+        return vo.get(identifier, [])
+
+    def set_rowselection(self, selection_id, identifier, rows, action):
+        # type: (str, str, List[str], str) -> None
+        vo = self.load_file("rowselection/%s" % selection_id, {}, lock=True)
+
+        if action == 'set':
+            vo[identifier] = rows
+
+        elif action == 'add':
+            vo[identifier] = list(set(vo.get(identifier, [])).union(rows))
+
+        elif action == 'del':
+            vo[identifier] = list(set(vo.get(identifier, [])) - set(rows))
+
+        elif action == 'unset':
+            del vo[identifier]
+
+        self.save_file("rowselection/%s" % selection_id, vo)
+
+    def cleanup_old_selections(self):
+        # type: () -> None
+        # Delete all selection files older than the defined livetime.
+        if self.confdir is None:
+            return
+
+        path = self.confdir + '/rowselection'
+        try:
+            for f in os.listdir(path):
+                if f[1] != '.' and f.endswith('.mk'):
+                    p = path + '/' + f
+                    if time.time() - os.stat(p).st_mtime > selection_livetime:
+                        os.unlink(p)
+        except OSError:
+            pass  # no directory -> no cleanup
 
     def is_site_disabled(self, site_id):
         # type: (SiteId) -> bool

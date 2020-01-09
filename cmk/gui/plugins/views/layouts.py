@@ -55,7 +55,7 @@ def init_rowselect(view):
     if not config.user.may("general.act"):
         return
 
-    selected = weblib.get_rowselection('view-' + view['name'])
+    selected = config.user.get_rowselection(weblib.selection_id(), 'view-' + view['name'])
     selection_properties = {
         "page_id": "view-%s" % view['name'],
         "selection_id": weblib.selection_id(),

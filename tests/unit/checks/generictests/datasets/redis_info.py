@@ -136,7 +136,10 @@ info = [
     [u'db0', u'keys=5,expires=0,avg_ttl=0']
 ]
 
-discovery = {'': [(u'MY_FIRST_REDIS', {}), (u'MY_SECOND_REDIS', {})]}
+discovery = {
+    '': [(u'MY_FIRST_REDIS', {}), (u'MY_SECOND_REDIS', {})],
+    'persistence': [(u'MY_FIRST_REDIS', {}), (u'MY_SECOND_REDIS', {})]
+}
 
 checks = {
     '': [
@@ -162,6 +165,38 @@ checks = {
                 ), (0, u'Version: 4.0.9', []),
                 (0, u'GCC compiler version: 7.4.0', []), (0, 'PID: 1320', []),
                 (0, u'IP: 127.0.0.1', []), (0, u'Port: 6379', [])
+            ]
+        )
+    ],
+    'persistence': [
+        (
+            u'MY_FIRST_REDIS', {
+                'rdb_last_bgsave': 1,
+                'aof_last_rewrite': 1
+            }, [
+                (0, 'Last RDB save operation: successful', []),
+                (0, 'Last AOF rewrite operation: successful', []),
+                (0, 'Last successful RDB save: 2019-12-06 08:45:57', []),
+                (
+                    0, 'Number of changes since last dump: 0', [
+                        ('redis_rdb_changes', 0, None, None, None, None)
+                    ]
+                )
+            ]
+        ),
+        (
+            u'MY_SECOND_REDIS', {
+                'rdb_last_bgsave': 1,
+                'aof_last_rewrite': 1
+            }, [
+                (0, 'Last RDB save operation: successful', []),
+                (0, 'Last AOF rewrite operation: successful', []),
+                (0, 'Last successful RDB save: 2019-12-06 08:45:58', []),
+                (
+                    0, 'Number of changes since last dump: 0', [
+                        ('redis_rdb_changes', 0, None, None, None, None)
+                    ]
+                )
             ]
         )
     ]

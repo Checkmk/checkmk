@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 """Caring about persistance of the discovered services (aka autochecks)"""
 
-from typing import Iterator, Any, Dict, Union, Tuple, Text, Optional, List  # pylint: disable=unused-import
+from typing import Iterator, Any, Dict, Union, Set, Tuple, Text, Optional, List  # pylint: disable=unused-import
 import os
 import sys
 import ast

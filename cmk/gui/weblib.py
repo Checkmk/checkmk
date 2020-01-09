@@ -122,7 +122,7 @@ def set_rowselection(ident, rows, action):
     elif action == 'unset':
         del vo[ident]
 
-    config.user.save_file("rowselection/%s" % selection_id(), vo, unlock=True)
+    config.user.save_file("rowselection/%s" % selection_id(), vo)
 
 
 @cmk.gui.pages.register("ajax_set_rowselection")

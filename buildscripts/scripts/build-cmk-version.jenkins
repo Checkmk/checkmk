@@ -48,12 +48,6 @@ if (shall_publish_package(scm, JOB_BASE_NAME)) {
     OMD_ENV_VARS = ' NEXUS_BUILD_CACHE_URL="" PYTHON_ENABLE_OPTIMIZATIONS=""'
 }
 
-def DOCKER_TAG = BRANCH + '-latest'
-if (DOCKER_TAG_BUILD != '') {
-    DOCKER_TAG = DOCKER_TAG_BUILD
-} else if (DOCKER_TAG_MASTER != '' ) {
-    DOCKER_TAG = DOCKER_TAG_MASTER
-}
 def DOCKER_BASE_ARGS = "-u 0:0 --ulimit nofile=1024:1024"
 def DOCKER_ARGS = "${DOCKER_BASE_ARGS} -v ${DAILY_DATA}:${DAILY_DATA} -v ${ARCHIVE_DIR}:${ARCHIVE_DIR}"
 
@@ -68,6 +62,12 @@ node {
                 cleanup_work_directories(DAILY_DATA)
                 dir("${DAILY_DATA}/git") {
                     checkout_git(scm, VERSION)
+                    // Load libraries
+                    versioning = load 'buildscripts/scripts/lib/versioning.groovy'
+                    withFolderProperties{
+                        DOCKER_TAG = versioning.select_docker_tag(BRANCH, DOCKER_TAG_BUILD, env.DOCKER_TAG_FOLDER)
+                    }
+
                     patch_themes(EDITION)
                     patch_demo(DEMO)
                     set_version(CMK_VERS)
@@ -122,13 +122,14 @@ node {
     }
 }
 
+
 DISTRO_LIST.each { DISTRO ->
     PACKAGE_BUILDS[DISTRO] = {
         node {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 docker.image(DISTRO + ':' + DOCKER_TAG).inside(DOCKER_ARGS + " --privileged --hostname ${DISTRO}") {
                     withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
-                        sh "cat /version.txt"
+                        versioning.print_image_tag()
                         build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_ENV_VARS)
                     }
                 }

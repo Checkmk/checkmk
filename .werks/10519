@@ -1,0 +1,15 @@
+Title: Autochecks files of cluster nodes will no longer contain duplicates from other nodes
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1578408961
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+Due to an error, previous versions could save duplicate service entries for nodes in a cluster.
+The autochecks file for these cluster nodes could grow on every service discovery.
+
+As a side effect of this bug all services of NodeA were also incorrectly discovered on NodeB.

@@ -398,8 +398,8 @@ def _set_autochecks_of_cluster(host_config, new_items):
 
     config_cache = config.get_config_cache()
 
-    new_autochecks = []  # type: List[DiscoveredService]
     for node in host_config.nodes:
+        new_autochecks = []  # type: List[DiscoveredService]
         for existing_service in parse_autochecks_file(node):
             if host_config.hostname != config_cache.host_of_clustered_service(
                     node, existing_service.description):
@@ -408,6 +408,8 @@ def _set_autochecks_of_cluster(host_config, new_items):
         for discovered_service in new_items:
             new_autochecks.append(discovered_service)
 
+        new_autochecks = _remove_duplicate_autochecks(new_autochecks)
+
         # write new autochecks file for that host
         save_autochecks_file(node, new_autochecks)
 
@@ -415,6 +417,19 @@ def _set_autochecks_of_cluster(host_config, new_items):
     # Remove them. The autochecks are only stored in the nodes autochecks files
     # these days.
     remove_autochecks_file(host_config.hostname)
+
+
+def _remove_duplicate_autochecks(autochecks):
+    # type: (List[DiscoveredService]) -> List[DiscoveredService]
+    """ Cleanup routine. Earlier versions (<1.6.0p8) may have introduced duplicates in the autochecks file"""
+    duplicates = set()  # type: Set[Tuple[CheckPluginName, Item]]
+    cleaned_autochecks = []
+    for service in autochecks:
+        service_id = (service.check_plugin_name, service.item)
+        if service_id not in duplicates:
+            duplicates.add(service_id)
+            cleaned_autochecks.append(service)
+    return cleaned_autochecks
 
 
 def has_autochecks(hostname):

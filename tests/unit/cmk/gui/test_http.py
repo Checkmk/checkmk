@@ -20,6 +20,16 @@ def test_http_request_allowed_vars():
     assert req.var("asd") == "x"
     assert req.var("_Y21rYWRtaW4=") == "aaa"
     assert req.var("foo:BAR_BAZ") == "abc"
+    assert req.var("foo:BAR_BAZ", "default") == "abc"
+
+    assert req.var("not_present") is None
+    assert req.var("not_present", "default") == "default"
+
+    req.set_var("test", "foo")
+    assert req.var("test") == "foo"
+    req.del_var("test")
+    assert req.var("test") is None
+    assert req.var("test", "default") == "default"
 
 
 def test_cookie_handling(register_builtin_html, monkeypatch):

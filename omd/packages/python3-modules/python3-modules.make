@@ -46,10 +46,37 @@ PYTHON3_MODULES_LIST += certifi-2019.9.11.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += chardet-3.0.4.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += urllib3-1.25.7.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += pyOpenSSL-19.1.0.tar.gz # needed by requests with extras = ["security"]
-PYTHON3_MODULES_LIST += requests-2.22.0.tar.gz # needed by DCD
+PYTHON3_MODULES_LIST += requests-2.22.0.tar.gz # needed by DCD, connexion
 # Added for check_bi_aggr with kerberos support
 PYTHON3_MODULES_LIST += pykerberos-1.2.1.tar.gz
 PYTHON3_MODULES_LIST += requests-kerberos-0.12.0.tar.gz
+# required by Jinja2
+PYTHON_MODULES_LIST += MarkupSafe-1.1.1.tar.gz
+# required by Flask
+PYTHON_MODULES_LIST += itsdangerous-1.1.0.tar.gz
+PYTHON_MODULES_LIST += Jinja2-2.10.3.tar.gz
+# required by zipp
+PYTHON_MODULES_LIST += more-itertools-8.0.1.tar.gz
+# required by importlib_metadata
+PYTHON_MODULES_LIST += zipp-0.6.0.tar.gz
+# required by jsonschema
+PYTHON_MODULES_LIST += attrs-19.3.0.tar.gz
+PYTHON_MODULES_LIST += importlib_metadata-1.2.0.tar.gz
+PYTHON_MODULES_LIST += pyrsistent-0.15.6.tar.gz
+# required by clickclick
+PYTHON_MODULES_LIST += Click-7.0.tar.gz
+# Needed by Flask
+PYTHON_MODULES_LIST += Werkzeug-0.16.0.tar.gz
+# required by connexion, openapi-spec-validator
+PYTHON_MODULES_LIST += jsonschema-3.2.0.tar.gz
+# required by connexion
+PYTHON_MODULES_LIST += clickclick-1.2.2.tar.gz
+PYTHON_MODULES_LIST += Flask-1.1.1.tar.gz
+PYTHON_MODULES_LIST += inflection-0.3.1.tar.gz
+PYTHON_MODULES_LIST += openapi-spec-validator-0.2.8.tar.gz
+# direct dependency
+PYTHON_MODULES_LIST += swagger_ui_bundle-0.0.6.tar.gz
+PYTHON_MODULES_LIST += connexion-2.4.0.tar.gz
 
 PYTHON3_MODULES_LIST += psutil-5.6.7.tar.gz # needed for omdlib
 PYTHON3_MODULES_LIST += passlib-1.7.2.tar.gz # needed for omdlib

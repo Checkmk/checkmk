@@ -54,10 +54,17 @@ certifi = "==2019.9.11"  # needed by requests
 chardet = "==3.0.4"  # needed by requests
 urllib3 = "==1.25.7"  # needed by requests
 pyOpenSSL = "==19.1.0"  # needed by requests with extras = ["security"]
-requests = { version = "==2.22.0", extras = ["security"] }  # needed by DCD
+requests = { version = "==2.22.0", extras = ["security"] }  # needed by DCD, connexion
 requests-kerberos = "==0.12.0" # needed for check_bi_aggr
 passlib = "==1.7.2" # needed for omdlib
 psutil = "==5.6.7" # needed for omdlib
+mysqlclient = "==1.4.6" # needed by check_sql
+psycopg2 = "==2.7.6.1"  # needed by check_sql. This is actually a lie: We ship 2.6.2, but installation fails for PostgreSQL > 9. Alas, 2.7 removed support for clients < 9.1. >:-(
+pymssql = "==2.1.4" # needed by check_sql
+more-itertools = "==8.0.1"  # needed by connexion through zipp, pytest
+importlib-metadata = "==1.2.0"  # needed by connexion through jsonschema
+Werkzeug = "==0.16.0"  # needed by connexion through Flask
+connexion = { version = "==2.4.0", extras = ["swagger-ui"] }  # direct dependency
 
 [requires]
 python_version = "3.7"

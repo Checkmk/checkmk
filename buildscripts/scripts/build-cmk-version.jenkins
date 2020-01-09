@@ -92,6 +92,13 @@ node {
                         ])
                     }
 
+                    // Load libraries
+                    versioning = load 'buildscripts/scripts/lib/versioning.groovy'
+                    withFolderProperties{
+                        DOCKER_TAG = versioning.select_docker_tag(BRANCH, DOCKER_TAG_BUILD, env.DOCKER_TAG_FOLDER)
+                    }
+
+
                     THEME_LIST = ["classic", "facelift", "modern-dark"]
                     switch(EDITION) {
                         case 'raw':
@@ -236,6 +243,7 @@ try {
                     docker.image(DISTRO).pull()
                     docker.image(DISTRO).inside("-u 0:0 --ulimit nofile=1024:1024  -v ${DAILY_DATA}:${DAILY_DATA} --privileged --network ci_local-infra --hostname ${DISTRO}") {
                         stage('build' + DISTRO + ' package') {
+                            versioning.print_image_tag()
                             sh 'rm -rf *'
                             sh 'mkdir work dest'
                             mount_overlay("${DAILY_DATA}/git", "${WORKSPACE}/dest")

@@ -170,12 +170,7 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     TableServices::addColumns(this, "current_service_",
                               DANGEROUS_OFFSETOF(LogRow, svc),
                               false /* no hosts table */);
-#ifdef CMC
-    TableContacts::addColumns(this, "current_contact_",
-                              DANGEROUS_OFFSETOF(LogRow, ctc));
-#else
     TableContacts::addColumns(this, "current_contact_");
-#endif
     TableCommands::addColumns(this, "current_command_");
 }
 

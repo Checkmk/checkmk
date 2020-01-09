@@ -103,7 +103,7 @@ class LegacyVarsMixin(object):
         if legacy_var is not None:
             if legacy_var is not self.DELETED:
                 return legacy_var
-            return None
+            return default
         # We only fall through to the real HTTP request if our var isn't set and isn't deleted.
         return super(LegacyVarsMixin, self).var(varname, default)
 

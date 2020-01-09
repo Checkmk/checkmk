@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -238,7 +238,7 @@ def _default_execute(cursor, cmd, inpt, procedure):
 
 
 def postgres_connect(host, port, db_name, user, pwd):
-    import psycopg2  # type: ignore[import] # pylint: disable=import-outside-toplevel
+    import psycopg2
     return psycopg2.connect(host=host, port=port, \
                             database=db_name, user=user, password=pwd)
 
@@ -248,7 +248,7 @@ def postgres_execute(cursor, cmd, inpt, procedure):
 
 
 def mysql_connect(host, port, db_name, user, pwd):
-    import MySQLdb  # type: ignore[import] # pylint: disable=import-outside-toplevel
+    import MySQLdb
     return MySQLdb.connect(host=host, port=port, db=db_name, \
                            user=user, passwd=pwd)
 
@@ -258,7 +258,7 @@ def mysql_execute(cursor, cmd, inpt, procedure):
 
 
 def mssql_connect(host, port, db_name, user, pwd):
-    import pymssql  # type: ignore[import] # pylint: disable=import-outside-toplevel
+    import pymssql
     return pymssql.connect(host=host, port=port, \
                            database=db_name, user=user, password=pwd)
 
@@ -279,7 +279,7 @@ def oracle_connect(host, port, db_name, user, pwd):
     sys.path.append('/usr/lib/python%s.%s/site-packages' %
                     (sys.version_info.major, sys.version_info.minor))
     try:
-        import cx_Oracle  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
+        import cx_Oracle  # pylint: disable=import-error
     except ImportError as exc:
         bail_out(3, "%s. Please install it via 'pip install cx_Oracle'." % exc)
 
@@ -289,7 +289,7 @@ def oracle_connect(host, port, db_name, user, pwd):
 
 def oracle_execute(cursor, cmd, inpt, procedure):
     try:
-        import cx_Oracle  # pylint: disable=import-error,import-outside-toplevel
+        import cx_Oracle  # pylint: disable=import-error
     except ImportError as exc:
         bail_out(3, "%s. Please install it via 'pip install cx_Oracle'." % exc)
 
@@ -326,8 +326,8 @@ def oracle_execute(cursor, cmd, inpt, procedure):
 def db2_connect(host, port, db_name, user, pwd):
     # IBM data server driver
     try:
-        import ibm_db  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
-        import ibm_db_dbi  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
+        import ibm_db  # pylint: disable=import-error
+        import ibm_db_dbi  # pylint: disable=import-error
     except ImportError as exc:
         bail_out(3, "%s. Please install it via pip." % exc)
 

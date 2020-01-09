@@ -1,0 +1,13 @@
+Title: mk_jolokia: Fixed baking configuration if server is stated in bakery rule "JMX monitoring of Java JVMs using Jolokia"
+Level: 1
+Component: agents
+Compatible: incomp
+Edition: cee
+Version: 1.6.0p8
+Date: 1578578981
+Class: fix
+
+If server is stated in the bakery rule {{JMX monitoring of Java JVMs using Jolokia}}
+the related configuration was wrong and an AttributeError occured while
+executing the agent plugin {{mk_jolokia}}. You have to bake the related rules
+and deploy the plugin and configuration file again.

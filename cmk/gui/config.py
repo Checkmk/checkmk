@@ -501,6 +501,7 @@ class LoggedInUser(object):
         self._siteconf = self.load_file("siteconfig", {})
         self._button_counts = {}  # type: Dict[str, float]
         self._stars = set()  # type: Set[str]
+        self._tree_states = {}  # type: Dict
 
     def _gather_roles(self, user_id):
         # type: (Optional[UserId]) -> List[str]
@@ -638,6 +639,29 @@ class LoggedInUser(object):
     def save_stars(self):
         # type: () -> None
         self.save_file("favorites", list(self._stars))
+
+    @property
+    def tree_states(self):
+        # type: () -> Dict
+        if not self._tree_states:
+            self._tree_states = self.load_file("treestates", {})
+        return self._tree_states
+
+    def get_tree_states(self, tree):
+        return self.tree_states.get(tree, {})
+
+    def set_tree_state(self, tree, key, val):
+        if tree not in self.tree_states:
+            self.tree_states[tree] = {}
+
+        self.tree_states[tree][key] = val
+
+    def set_tree_states(self, tree, val):
+        self.tree_states[tree] = val
+
+    def save_tree_states(self):
+        # type: () -> None
+        self.save_file("treestates", self._tree_states)
 
     def is_site_disabled(self, site_id):
         # type: (SiteId) -> bool

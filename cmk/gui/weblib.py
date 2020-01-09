@@ -39,16 +39,14 @@ from cmk.gui.exceptions import MKUserError
 
 @cmk.gui.pages.register("tree_openclose")
 def ajax_tree_openclose():
-    html.load_tree_states()
-
     tree = html.request.var("tree")
     name = html.get_unicode_input("name")
 
     if not tree or not name:
         raise MKUserError(None, _('tree or name parameter missing'))
 
-    html.set_tree_state(tree, name, html.request.var("state"))
-    html.save_tree_states()
+    config.user.set_tree_state(tree, name, html.request.var("state"))
+    config.user.save_tree_states()
     html.write('OK')  # Write out something to make debugging easier
 
 

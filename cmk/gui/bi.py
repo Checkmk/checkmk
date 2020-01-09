@@ -2649,9 +2649,9 @@ def ajax_save_treestate():
     saved_ex_level = load_ex_level()
 
     if saved_ex_level != current_ex_level:
-        html.set_tree_states('bi', {})
-    html.set_tree_state('bi', path, html.request.var("state") == "open")
-    html.save_tree_states()
+        config.user.set_tree_states('bi', {})
+    config.user.set_tree_state('bi', path, html.request.var("state") == "open")
+    config.user.save_tree_states()
 
     save_ex_level(current_ex_level)
 
@@ -2727,11 +2727,11 @@ def render_tree_json(row):
     expansion_level = int(html.request.var("expansion_level", 999))
 
     saved_expansion_level = load_ex_level()
-    treestate = html.get_tree_states('bi')
+    treestate = config.user.get_tree_states('bi')
     if expansion_level != saved_expansion_level:
         treestate = {}
-        html.set_tree_states('bi', treestate)
-        html.save_tree_states()
+        config.user.set_tree_states('bi', treestate)
+        config.user.save_tree_states()
 
     def render_node_json(tree, show_host):
         is_leaf = len(tree) == 3
@@ -2803,11 +2803,11 @@ class ABCFoldableTreeRenderer(six.with_metaclass(abc.ABCMeta, object)):
 
     def _load_tree_state(self):
         saved_expansion_level = load_ex_level()
-        self._treestate = html.get_tree_states('bi')
+        self._treestate = config.user.get_tree_states('bi')
         if self._expansion_level != saved_expansion_level:
             self._treestate = {}
-            html.set_tree_states('bi', self._treestate)
-            html.save_tree_states()
+            config.user.set_tree_states('bi', self._treestate)
+            config.user.save_tree_states()
 
     @abc.abstractmethod
     def css_class(self):

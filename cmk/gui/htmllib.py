@@ -982,7 +982,6 @@ class html(ABCHTMLGenerator):
         self.events = set([])  # currently used only for sounds
         self.status_icons = {}
         self.final_javascript_code = ""
-        self.treestates = None
         self.page_context = {}
 
         # Settings
@@ -1432,33 +1431,6 @@ class html(ABCHTMLGenerator):
 
     def render_reload_sidebar(self):
         return self.render_javascript("cmk.utils.reload_sidebar()")
-
-    #
-    # Tree states
-    #
-
-    def get_tree_states(self, tree):
-        self.load_tree_states()
-        return self.treestates.get(tree, {})
-
-    def set_tree_state(self, tree, key, val):
-        self.load_tree_states()
-
-        if tree not in self.treestates:
-            self.treestates[tree] = {}
-
-        self.treestates[tree][key] = val
-
-    def set_tree_states(self, tree, val):
-        self.load_tree_states()
-        self.treestates[tree] = val
-
-    def save_tree_states(self):
-        config.user.save_file("treestates", self.treestates)
-
-    def load_tree_states(self):
-        if self.treestates is None:
-            self.treestates = config.user.load_file("treestates", {})
 
     def finalize(self):
         """Finish the HTTP request processing before handing over to the application server"""
@@ -2586,7 +2558,7 @@ class html(ABCHTMLGenerator):
 
     def foldable_container_is_open(self, treename, id_, isopen):
         # try to get persisted state of tree
-        tree_state = self.get_tree_states(treename)
+        tree_state = config.user.get_tree_states(treename)
 
         if id_ in tree_state:
             isopen = tree_state[id_] == "on"

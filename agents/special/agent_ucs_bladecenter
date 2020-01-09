@@ -443,6 +443,12 @@ def main(args=None):
         handle.logout()
         return 1
 
+    # "ucs_bladecenter_faultinst" should always be in agent output, even no
+    # data is present
+    section_needed = "ucs_bladecenter_faultinst"
+    if entities == B_SERIES_ENTITIES and section_needed not in data:
+        sys.stdout.write("<<<%s:sep(9)>>>\n" % section_needed)
+
     for header, class_data in data.iteritems():
         sys.stdout.write("<<<%s:sep(9)>>>\n" % header)
         for class_id, values in class_data:

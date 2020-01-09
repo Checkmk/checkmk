@@ -9,7 +9,7 @@ Level: 1
 Version: 1.7.0i1
 
 Improve the usability of dashboard and report creation. The first step when
-creating a such a new object is to select whether or not it should show the
+creating such a new object is to select whether or not it should show the
 information of a single object, for example a single host. The dialog has
 now been changed like this:
 

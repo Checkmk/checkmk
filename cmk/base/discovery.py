@@ -29,7 +29,9 @@ import socket
 import time
 import signal
 import inspect
-from typing import Union, Iterator, Callable, List, Text, Optional, Dict, Tuple  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    cast, Union, Iterator, Callable, List, Text, Optional, Dict, Tuple, Set,
+)
 
 from cmk.utils.regex import regex
 import cmk.utils.tty as tty
@@ -57,7 +59,11 @@ import cmk.base.check_utils
 import cmk.base.decorator
 import cmk.base.snmp_scan as snmp_scan
 from cmk.base.exceptions import MKParseFunctionError
-from cmk.base.check_utils import DiscoveredService
+from cmk.base.utils import HostName, HostAddress  # pylint: disable=unused-import
+from cmk.base.check_utils import (  # pylint: disable=unused-import
+    CheckPluginName, CheckParameters, DiscoveredService, Item, Service, ServiceState, Metric,
+    RulesetName,
+)
 from cmk.base.discovered_labels import (
     DiscoveredServiceLabels,
     DiscoveredHostLabels,
@@ -87,6 +93,7 @@ DiscoveredServicesTable = Dict[Tuple[check_table.CheckPluginName, check_table.It
 # hostnames is already prepared by the main code. If it is
 # empty then we use all hosts and switch to using cache files.
 def do_discovery(hostnames, check_plugin_names, only_new):
+    # type: (Set[HostName], Optional[Set[CheckPluginName]], bool) -> None
     config_cache = config.get_config_cache()
     use_caches = data_sources.abstract.DataSource.get_may_use_cache_file()
     if not hostnames:
@@ -94,7 +101,7 @@ def do_discovery(hostnames, check_plugin_names, only_new):
         hostnames = config_cache.all_active_realhosts()
         use_caches = True
     else:
-        console.verbose("Discovering services on: %s\n" % ", ".join(hostnames))
+        console.verbose("Discovering services on: %s\n" % ", ".join(sorted(hostnames)))
 
     # For clusters add their nodes to the list. Clusters itself
     # cannot be discovered but the user is allowed to specify
@@ -104,13 +111,17 @@ def do_discovery(hostnames, check_plugin_names, only_new):
         host_config = config_cache.get_host_config(h)
         if host_config.is_cluster:
             cluster_hosts.append(h)
-            hostnames += host_config.nodes
+            nodes = host_config.nodes
+            if nodes is None:
+                raise MKGeneralException("Invalid cluster configuration")
+            hostnames.update(nodes)
 
     # Then remove clusters and make list unique
-    hostnames = sorted({h for h in hostnames if not config_cache.get_host_config(h).is_cluster})
+    sorted_hostnames = sorted(
+        {h for h in hostnames if not config_cache.get_host_config(h).is_cluster})
 
     # Now loop through all hosts
-    for hostname in hostnames:
+    for hostname in sorted_hostnames:
         console.section_begin(hostname)
 
         try:
@@ -149,7 +160,7 @@ def do_discovery(hostnames, check_plugin_names, only_new):
 
 def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_plugin_names,
                       only_new, on_error):
-    # type: (str, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, List[check_table.CheckPluginName], bool, str) -> None
+    # type: (str, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, Optional[Set[CheckPluginName]], bool, str) -> None
     if not check_plugin_names:
         # In 'multi_host_sections = _get_host_sections_for_discovery(..)'
         # we've already discovered the right check plugin names.
@@ -224,7 +235,7 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
 
 
 def _perform_host_label_discovery(hostname, discovered_host_labels, check_plugin_names, only_new):
-    # type: (str, DiscoveredHostLabels, Optional[List[str]], bool) -> Tuple[DiscoveredHostLabels, Dict[check_table.CheckPluginName, int]]
+    # type: (str, DiscoveredHostLabels, Optional[Set[CheckPluginName]], bool) -> Tuple[DiscoveredHostLabels, Dict[check_table.CheckPluginName, int]]
 
     new_host_labels = DiscoveredHostLabels()
 
@@ -868,6 +879,7 @@ def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_err
 
 
 def _get_sources_for_discovery(hostname, ipaddress, check_plugin_names, do_snmp_scan, on_error):
+    # type: (HostName, Optional[HostAddress], Optional[Set[CheckPluginName]], bool, str) -> data_sources.DataSources
     sources = data_sources.DataSources(hostname, ipaddress)
 
     for source in sources.get_data_sources():
@@ -985,7 +997,7 @@ def _execute_discovery_function(discovery_function, section_content):
 
 
 def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
-    # type: (str, check_table.CheckPluginName, List) -> Iterator[Union[DiscoveredService, DiscoveredHostLabels, HostLabel]]
+    # type: (str, CheckPluginName, List) -> Iterator[Union[DiscoveredService, DiscoveredHostLabels, HostLabel]]
     for entry in discovered_items:
         if isinstance(entry, check_api_utils.Service):
             item = entry.item
@@ -1222,15 +1234,15 @@ def _get_cluster_services(host_config, ipaddress, sources, multi_host_sections, 
     return _merge_manual_services(host_config, cluster_items, on_error), cluster_host_labels
 
 
-CheckPreviewEntry = Tuple[str, str, Optional[str], check_table.Item, str,
-                          check_table.CheckParameters, Text, Optional[int], Text, List[Tuple],
-                          Dict[Text, Text]]
+CheckPreviewEntry = Tuple[str, CheckPluginName, Optional[RulesetName], check_table.Item,
+                          check_table.CheckParameters, check_table.CheckParameters, Text,
+                          Optional[int], Text, List[Metric], Dict[Text, Text]]
 CheckPreviewTable = List[CheckPreviewEntry]
 
 
 # TODO: Can't we reduce the duplicate code here? Check out the "checking" code
 def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
-    # type: (str, bool, bool, str) -> Tuple[CheckPreviewTable, DiscoveredHostLabels]
+    # type: (HostName, bool, bool, str) -> Tuple[CheckPreviewTable, DiscoveredHostLabels]
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible"""
     config_cache = config.get_config_cache()
@@ -1254,21 +1266,17 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 
     table = []  # type: CheckPreviewTable
     for check_source, discovered_service in services.values():
-        params = None
-        exitcode = None
-        perfdata = []  # type: List[Tuple]
+        params = None  # type: Optional[CheckParameters]
+        exitcode = None  # type: Optional[ServiceState]
+        perfdata = []  # type: List[Metric]
         if check_source not in ['legacy', 'active', 'custom']:
             if discovered_service.check_plugin_name not in config.check_info:
                 continue  # Skip not existing check silently
 
             # apply check_parameters
             try:
-                if isinstance(discovered_service.parameters_unresolved, str):
-                    params = autochecks.resolve_paramstring(
-                        discovered_service.check_plugin_name,
-                        discovered_service.parameters_unresolved)
-                else:
-                    params = discovered_service.parameters_unresolved
+                params = autochecks.resolve_paramstring(discovered_service.check_plugin_name,
+                                                        discovered_service.parameters_unresolved)
             except Exception:
                 raise MKGeneralException(
                     "Invalid check parameter string '%s' found in discovered service %r" %
@@ -1329,21 +1337,19 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 
                 try:
                     item_state.reset_wrapped_counters()
-                    result = checking.sanitize_check_result(
+                    exitcode, output, perfdata = checking.sanitize_check_result(
                         check_function(discovered_service.item,
                                        checking.determine_check_params(params), section_content),
-                        cmk.base.check_utils.is_snmp_check(discovered_service.check_plugin_name))
+                        cmk.base.check_utils.is_snmp_check(discovered_service.check_plugin_name),
+                    )
                     item_state.raise_counter_wrap()
                 except item_state.MKCounterWrapped as e:
-                    result = (None, u"WAITING - Counter based check, cannot be done offline")
+                    output = u"WAITING - Counter based check, cannot be done offline"
                 except Exception as e:
                     if cmk.utils.debug.enabled():
                         raise
-                    result = (
-                        3, u"UNKNOWN - invalid output from agent or error in check implementation")
-                if len(result) == 2:
-                    result = (result[0], result[1], [])
-                exitcode, output, perfdata = result
+                    exitcode = 3
+                    output = u"UNKNOWN - invalid output from agent or error in check implementation"
         else:
             exitcode = None
             output = u"WAITING - %s check, cannot be done offline" % check_source.title()
@@ -1353,6 +1359,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             params = autochecks.resolve_paramstring(discovered_service.check_plugin_name,
                                                     discovered_service.parameters_unresolved)
 
+        checkgroup = None  # type: Optional[RulesetName]
         if check_source in ["legacy", "active", "custom"]:
             checkgroup = None
             if config.service_ignored(hostname, None, discovered_service.description):

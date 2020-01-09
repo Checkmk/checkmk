@@ -30,7 +30,9 @@
 #  along with Check_MK. If not, email to mk@mathias-kettner.de
 #  or write to the postal address provided at www.mathias-kettner.de
 
-from typing import Union, TypeVar, Iterable, Text, Optional, Dict, Tuple, Any, List  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Union, TypeVar, Iterable, Text, Optional, Dict, Tuple, Any, List, NoReturn,
+)
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -40,6 +42,18 @@ from cmk.base.discovered_labels import DiscoveredServiceLabels
 Item = Union[Text, None, int]
 CheckParameters = Union[None, Dict, Tuple, List, str]
 CheckPluginName = str
+RulesetName = str
+ServiceState = int
+ServiceDetails = Text
+ServiceAdditionalDetails = Text
+# TODO: Specify this (see cmk/base/checking.py::_convert_perf_data)
+Metric = List
+ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[Metric]]
+
+SectionName = str
+SectionContent = List[List[Text]]
+PersistedSection = Tuple[int, int, SectionContent]
+PersistedSections = Dict[SectionName, PersistedSection]
 
 
 class Service(object):
@@ -55,35 +69,45 @@ class Service(object):
 
     @property
     def check_plugin_name(self):
+        # type: () -> CheckPluginName
         return self._check_plugin_name
 
     @property
     def item(self):
+        # type: () -> Item
         return self._item
 
     @property
     def description(self):
+        # type: () -> Text
         return self._description
 
     @property
     def parameters(self):
+        # type: () -> CheckParameters
         return self._parameters
 
     @property
     def service_labels(self):
+        # type: () -> DiscoveredServiceLabels
         return self._service_labels
 
     def __eq__(self, other):
+        # type: (Any) -> bool
         """Is used during service discovery list computation to detect and replace duplicates
         For this the parameters and similar need to be ignored."""
+        if not isinstance(other, Service):
+            raise TypeError("Can only be compared with other Service objects")
         return self.check_plugin_name == other.check_plugin_name and self.item == other.item
 
     def __hash__(self):
+        # type: () -> int
         """Is used during service discovery list computation to detect and replace duplicates
         For this the parameters and similar need to be ignored."""
         return hash((self.check_plugin_name, self.item))
 
     def __repr__(self):
+        # type: () -> str
         return "Service(check_plugin_name=%r, item=%r, description=%r, parameters=%r, service_lables=%r)" % (
             self._check_plugin_name, self._item, self._description, self._parameters,
             self._service_labels)
@@ -110,11 +134,13 @@ class DiscoveredService(Service):
 
     @property
     def parameters(self):
+        # type: () -> NoReturn
         raise MKGeneralException(
             "Can not get the resolved parameters from a DiscoveredService object")
 
     @property
     def parameters_unresolved(self):
+        # type: () -> CheckParameters
         """Returns the unresolved check parameters discovered for this service
 
         The reason for this hack is some old check API behaviour: A check may return the name of
@@ -126,16 +152,19 @@ class DiscoveredService(Service):
         return self._parameters
 
     def __repr__(self):
+        # type: () -> str
         return "DiscoveredService(check_plugin_name=%r, item=%r, description=%r, parameters_unresolved=%r, service_lables=%r)" % (
             self._check_plugin_name, self._item, self._description, self._parameters,
             self._service_labels)
 
 
 def section_name_of(check_plugin_name):
+    # type: (str) -> str
     return check_plugin_name.split(".")[0]
 
 
 def is_snmp_check(check_plugin_name):
+    # type: (str) -> bool
     cache = cmk.base.runtime_cache.get_dict("is_snmp_check")
     try:
         return cache[check_plugin_name]
@@ -147,6 +176,7 @@ def is_snmp_check(check_plugin_name):
 
 
 def is_tcp_check(check_plugin_name):
+    # type: (str) -> bool
     cache = cmk.base.runtime_cache.get_dict("is_tcp_check")
     try:
         return cache[check_plugin_name]

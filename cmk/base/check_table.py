@@ -25,7 +25,9 @@
 # Boston, MA 02110-1301 USA.
 """Code for computing the table of checks of hosts."""
 
-from typing import Union, TypeVar, Iterable, Text, Optional, Dict, Tuple, Any, List  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Union, TypeVar, Iterable, Text, Optional, Dict, Tuple, Any, List, Set,
+)
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -34,6 +36,7 @@ import cmk.base.config as config
 import cmk.base.item_state as item_state
 import cmk.base.check_utils
 import cmk.base.check_api_utils as check_api_utils
+from cmk.base.utils import HostName  # pylint: disable=unused-import
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     Item, CheckParameters, CheckPluginName, CheckTable, Service)
 
@@ -299,18 +302,18 @@ def remove_duplicate_checks(check_table):
 
 
 def get_needed_check_names(hostname, remove_duplicates=False, filter_mode=None, skip_ignored=True):
-    # type: (str, bool, Optional[str], bool) -> List[str]
-    return [
+    # type: (HostName, bool, Optional[str], bool) -> Set[CheckPluginName]
+    return {
         s.check_plugin_name for s in get_check_table(hostname,
                                                      remove_duplicates=remove_duplicates,
                                                      filter_mode=filter_mode,
                                                      skip_ignored=skip_ignored).values()
-    ]
+    }
 
 
 # TODO: Clean this up!
 def _get_sorted_check_table(hostname, remove_duplicates=False, filter_mode=None, skip_ignored=True):
-    # type: (str, bool, Optional[str], bool) -> List[Service]
+    # type: (HostName, bool, Optional[str], bool) -> List[Service]
     # Convert from dictionary into simple tuple list. Then sort it according to
     # the service dependencies.
     # TODO: Use the Service objects from get_check_table once it returns these objects

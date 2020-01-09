@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from typing import Set, List  # pylint: disable=unused-import
 import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
 import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import]
 import pyghmi.constants as ipmi_const  # type: ignore[import]
@@ -33,6 +34,7 @@ import cmk.utils.debug
 from cmk.utils.log import VERBOSE
 
 from cmk.base.exceptions import MKAgentError
+from cmk.base.check_utils import CheckPluginName  # pylint: disable=unused-import
 
 from .abstract import CheckMKAgentDataSource, ManagementBoardDataSource
 
@@ -87,7 +89,8 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         return self.id()
 
     def _gather_check_plugin_names(self):
-        return ["mgmt_ipmi_sensors"]
+        # type: () -> Set[CheckPluginName]
+        return {"mgmt_ipmi_sensors"}
 
     def _execute(self):
         connection = None

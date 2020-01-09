@@ -66,6 +66,11 @@ import cmk.base.check_api_utils as check_api_utils
 import cmk.base.cleanup
 import cmk.base.snmp_utils
 from cmk.base.discovered_labels import DiscoveredServiceLabels  # pylint: disable=unused-import
+from cmk.base.utils import (  # pylint: disable=unused-import
+    HostName, HostAddress,
+)
+from cmk.base.check_utils import (  # pylint: disable=unused-import
+    CheckPluginName,)
 
 # TODO: Prefix helper functions with "_".
 
@@ -1772,19 +1777,21 @@ def initialize_check_type_caches():
 
 
 def discoverable_tcp_checks():
-    types = []
+    # type: () -> Set[CheckPluginName]
+    types = set()
     for check_plugin_name, check in check_info.items():
         if cmk.base.check_utils.is_tcp_check(check_plugin_name) and check["inventory_function"]:
-            types.append(check_plugin_name)
-    return sorted(types)
+            types.add(check_plugin_name)
+    return types
 
 
 def discoverable_snmp_checks():
-    types = []
+    # type: () -> Set[CheckPluginName]
+    types = set()
     for check_plugin_name, check in check_info.items():
         if cmk.base.check_utils.is_snmp_check(check_plugin_name) and check["inventory_function"]:
-            types.append(check_plugin_name)
-    return sorted(types)
+            types.add(check_plugin_name)
+    return types
 
 
 # Compute parameters for a check honoring factory settings,
@@ -1915,6 +1922,7 @@ def filter_by_management_board(hostname,
                                for_mgmt_board,
                                for_discovery=False,
                                for_inventory=False):
+    # type: (HostName, Set[CheckPluginName], bool, bool, bool) -> Set[CheckPluginName]
     """
     In order to decide which check is used for which data source
     we have to filter the found check plugins. This is done via
@@ -1948,7 +1956,7 @@ def filter_by_management_board(hostname,
     config_cache = get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
-    final_collection = set()
+    final_collection = set()  # type: Set[CheckPluginName]
     if not host_config.has_management_board:
         if host_config.is_snmp_host:
             final_collection.update(host_precedence_snmp)
@@ -1988,6 +1996,7 @@ def filter_by_management_board(hostname,
 
 
 def _get_categorized_check_plugins(check_plugin_names, for_inventory=False):
+    # type: (Set[CheckPluginName], bool) -> Tuple[Set[CheckPluginName], Set[CheckPluginName], Set[CheckPluginName], Set[CheckPluginName], Set[CheckPluginName]]
     # Local import needed to prevent import cycle. Sorry for this hack :-/
     import cmk.base.inventory_plugins  # pylint: disable=redefined-outer-name
 
@@ -2084,9 +2093,11 @@ class HostConfig(object):
             self._config_cache.ruleset_matcher, hostname)
 
         # Basic types
-        self.is_tcp_host = self._config_cache.in_binary_hostlist(hostname, tcp_hosts)
-        self.is_snmp_host = self._config_cache.in_binary_hostlist(hostname, snmp_hosts)
-        self.is_usewalk_host = self._config_cache.in_binary_hostlist(hostname, usewalk_hosts)
+        self.is_tcp_host = self._config_cache.in_binary_hostlist(hostname, tcp_hosts)  # type: bool
+        self.is_snmp_host = self._config_cache.in_binary_hostlist(hostname,
+                                                                  snmp_hosts)  # type: bool
+        self.is_usewalk_host = self._config_cache.in_binary_hostlist(hostname,
+                                                                     usewalk_hosts)  # type: bool
 
         if self.tag_groups["piggyback"] == "piggyback":
             self.is_piggyback_host = True
@@ -2096,9 +2107,9 @@ class HostConfig(object):
             self.is_piggyback_host = self.has_piggyback_data
 
         # Agent types
-        self.is_agent_host = self.is_tcp_host or self.is_piggyback_host
+        self.is_agent_host = self.is_tcp_host or self.is_piggyback_host  # type: bool
         self.management_protocol = management_protocol.get(hostname)
-        self.has_management_board = self.management_protocol is not None
+        self.has_management_board = self.management_protocol is not None  # type: bool
 
         self.is_ping_host = not self.is_snmp_host and\
                             not self.is_agent_host and\
@@ -2248,7 +2259,7 @@ class HostConfig(object):
         return used_parents
 
     def snmp_config(self, ipaddress):
-        # type: (str) -> cmk.base.snmp_utils.SNMPHostConfig
+        # type: (HostAddress) -> cmk.base.snmp_utils.SNMPHostConfig
         return cmk.base.snmp_utils.SNMPHostConfig(
             is_ipv6_primary=self.is_ipv6_primary,
             hostname=self.hostname,
@@ -3273,43 +3284,43 @@ class ConfigCache(object):
             self.ruleset_match_object_of_service(hostname, description), ruleset)
 
     def in_boolean_serviceconf_list(self, hostname, description, ruleset):
-        # type: (str, Text, List) -> bool
+        # type: (HostName, Text, List) -> bool
         """Compute outcome of a service rule set that just say yes/no"""
         return self.ruleset_matcher.is_matching_service_ruleset(
             self.ruleset_match_object_of_service(hostname, description), ruleset)
 
     def all_active_hosts(self):
-        # type: () -> Set[str]
+        # type: () -> Set[HostName]
         """Returns a set of all active hosts"""
         return self._all_active_hosts
 
     def _get_all_active_hosts(self):
-        # type: () -> Set[str]
-        hosts = set()  # type: Set[str]
+        # type: () -> Set[HostName]
+        hosts = set()  # type: Set[HostName]
         hosts.update(self.all_active_realhosts(), self.all_active_clusters())
         return hosts
 
     def all_active_realhosts(self):
-        # type: () -> Set[str]
+        # type: () -> Set[HostName]
         """Returns a set of all host names to be handled by this site hosts of other sites or disabled hosts are excluded"""
         return self._all_active_realhosts
 
     def _get_all_active_realhosts(self):
-        # type: () -> Set[str]
+        # type: () -> Set[HostName]
         return set(_filter_active_hosts(self, self._all_configured_realhosts))
 
     def all_configured_realhosts(self):
-        # type: () -> Set[str]
+        # type: () -> Set[HostName]
         return self._all_configured_realhosts
 
     def _get_all_configured_realhosts(self):
-        # type: () -> Set[str]
+        # type: () -> Set[HostName]
         """Returns a set of all host names, regardless if currently disabled or
         monitored on a remote site. Does not return cluster hosts."""
         return set(strip_tags(all_hosts))
 
     def _get_all_configured_shadow_hosts(self):
-        # type: () -> Set[str]
+        # type: () -> Set[HostName]
         """Returns a set of all shadow host names, regardless if currently disabled or
         monitored on a remote site"""
         return set(_get_shadow_hosts().keys())
@@ -3319,7 +3330,7 @@ class ConfigCache(object):
         return self._all_configured_hosts
 
     def _get_all_configured_hosts(self):
-        # type: () -> Set[str]
+        # type: () -> Set[HostName]
         """Returns a set of all hosts, regardless if currently disabled or monitored on a remote site."""
         hosts = set()  # type: Set[str]
         hosts.update(self.all_configured_realhosts(), self.all_configured_clusters(),
@@ -3334,40 +3345,40 @@ class ConfigCache(object):
             self._nodes_of_cache[clustername] = hosts
 
     def clusters_of(self, hostname):
-        # type: (str) -> List[str]
+        # type: (str) -> List[HostName]
         """Returns names of cluster hosts the host is a node of"""
         return self._clusters_of_cache.get(hostname, [])
 
     # TODO: cleanup None case
     def nodes_of(self, hostname):
-        # type: (str) -> Optional[List[str]]
+        # type: (str) -> Optional[List[HostName]]
         """Returns the nodes of a cluster. Returns None if no match.
 
         Use host_config.nodes instead of this method to get the node list"""
         return self._nodes_of_cache.get(hostname)
 
     def all_active_clusters(self):
-        # type: () -> Set[str]
+        # type: () -> Set[HostName]
         """Returns a set of all cluster host names to be handled by this site hosts of other sites or disabled hosts are excluded"""
         return self._all_active_clusters
 
     def _get_all_active_clusters(self):
-        # type: () -> Set[str]
+        # type: () -> Set[HostName]
         return set(_filter_active_hosts(self, self.all_configured_clusters()))
 
     def all_configured_clusters(self):
-        # type: () -> Set[str]
+        # type: () -> Set[HostName]
         """Returns a set of all cluster names
         Regardless if currently disabled or monitored on a remote site. Does not return normal hosts.
         """
         return self._all_configured_clusters
 
     def _get_all_configured_clusters(self):
-        # type: () -> Set[str]
+        # type: () -> Set[HostName]
         return set(strip_tags(clusters.keys()))
 
     def host_of_clustered_service(self, hostname, servicedesc, part_of_clusters=None):
-        # type: (str, Text, Optional[List[str]]) -> str
+        # type: (HostName, Text, Optional[List[str]]) -> str
         """Return hostname to assign the service to
         Determine weather a service (found on a physical host) is a clustered
         service and - if yes - return the cluster host of the service. If no,
@@ -3405,7 +3416,7 @@ class ConfigCache(object):
         return hostname
 
     def get_piggybacked_hosts_time_settings(self, piggybacked_hostname=None):
-        # type: (Optional[str]) -> List[Tuple[Optional[str], str, int]]
+        # type: (Optional[HostName]) -> List[Tuple[Optional[str], str, int]]
         time_settings = []  # type: List[Tuple[Optional[str], str, int]]
         for source_hostname in sorted(piggyback.get_source_hostnames(piggybacked_hostname)):
             time_settings.extend(self.get_host_config(source_hostname).piggybacked_host_files)
@@ -3436,18 +3447,18 @@ def get_config_cache():
 class CEEConfigCache(ConfigCache):
     """Encapsulates the CEE specific functionality"""
     def rrd_config_of_service(self, hostname, description):
-        # type: (str, Text) -> Optional[Dict]
+        # type: (HostName, Text) -> Optional[Dict]
         return self.get_service_ruleset_value(hostname,
                                               description,
                                               cmc_service_rrd_config,
                                               deflt=None)
 
     def recurring_downtimes_of_service(self, hostname, description):
-        # type: (str, Text) -> List[Dict[str, Union[int, str]]]
+        # type: (HostName, Text) -> List[Dict[str, Union[int, str]]]
         return self.service_extra_conf(hostname, description, service_recurring_downtimes)  # type: ignore # pylint: disable=undefined-variable
 
     def flap_settings_of_service(self, hostname, description):
-        # type: (str, Text) -> Tuple[float, float, float]
+        # type: (HostName, Text) -> Tuple[float, float, float]
         return self.get_service_ruleset_value(
             hostname,
             description,
@@ -3472,7 +3483,7 @@ class CEEConfigCache(ConfigCache):
         return spec
 
     def check_timeout_of_service(self, hostname, description):
-        # type: (str, Text) -> int
+        # type: (HostName, Text) -> int
         """Returns the check timeout in seconds"""
         return self.get_service_ruleset_value(
             hostname,
@@ -3481,7 +3492,7 @@ class CEEConfigCache(ConfigCache):
             deflt=cmc_check_timeout)  # type: ignore # pylint: disable=undefined-variable
 
     def graphite_metrics_of_service(self, hostname, description):
-        # type: (str, Text) -> Optional[List[str]]
+        # type: (HostName, Text) -> Optional[List[str]]
         return self.get_service_ruleset_value(
             hostname,
             description,
@@ -3490,7 +3501,7 @@ class CEEConfigCache(ConfigCache):
 
     # TODO: Cleanup the GENERIC_AGENT duplication with cmk.base.cee.agent_bakyery.GENERIC_AGENT
     def matched_agent_config_entries(self, hostname):
-        # type: (Union[bool, str]) -> Dict[str, Any]
+        # type: (Union[bool, HostName]) -> Dict[str, Any]
         GENERIC_AGENT = True
         matched = {}
         for varname, ruleset in agent_config.items() + [("agent_port", agent_ports),

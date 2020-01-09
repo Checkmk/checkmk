@@ -39,9 +39,11 @@ from cmk.utils.exceptions import MKTimeout, MKTerminate
 import cmk.base
 import cmk.base.console as console
 import cmk.base.config as config
+from cmk.base.utils import (  # pylint: disable=unused-import
+    HostName,)
 from cmk.base.exceptions import MKIPAddressLookupError
 
-IPLookupCacheId = Tuple[str, int]
+IPLookupCacheId = Tuple[HostName, int]
 NewIPLookupCache = Dict[IPLookupCacheId, str]
 LegacyIPLookupCache = Dict[str, str]
 
@@ -60,12 +62,12 @@ def enforce_localhost():
 
 
 def lookup_ipv4_address(hostname):
-    # type: (str) -> Optional[str]
+    # type: (HostName) -> Optional[str]
     return lookup_ip_address(hostname, 4)
 
 
 def lookup_ipv6_address(hostname):
-    # type: (str) -> Optional[str]
+    # type: (HostName) -> Optional[str]
     return lookup_ip_address(hostname, 6)
 
 
@@ -76,7 +78,7 @@ def lookup_ipv6_address(hostname):
 # returns None instead of raising an exception.
 # FIXME: This different handling is bad. Clean this up!
 def lookup_ip_address(hostname, family=None):
-    # type: (str, Optional[int]) -> Optional[str]
+    # type: (HostName, Optional[int]) -> Optional[str]
     # Quick hack, where all IP addresses are faked (--fake-dns)
     if _fake_dns:
         return _fake_dns
@@ -116,7 +118,7 @@ def lookup_ip_address(hostname, family=None):
 
 # Variables needed during the renaming of hosts (see automation.py)
 def cached_dns_lookup(hostname, family):
-    # type: (str, int) -> Optional[str]
+    # type: (HostName, int) -> Optional[str]
     cache = cmk.base.config_cache.get_dict("cached_dns_lookup")
     cache_id = hostname, family
 

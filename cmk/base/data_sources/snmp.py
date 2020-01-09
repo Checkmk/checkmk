@@ -27,6 +27,7 @@
 import abc
 import ast
 import time
+from typing import List  # pylint: disable=unused-import
 import six
 
 from cmk.utils.exceptions import MKGeneralException
@@ -34,8 +35,10 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk.base.config as config
 import cmk.base.snmp as snmp
 import cmk.base.snmp_utils as snmp_utils
+from cmk.base.check_utils import (  # pylint: disable=unused-import
+    CheckPluginName,)
 
-from .abstract import DataSource, ManagementBoardDataSource
+from .abstract import DataSource, ManagementBoardDataSource, RawAgentData  # pylint: disable=unused-import
 from .host_sections import HostSections
 
 #.
@@ -86,6 +89,12 @@ class SNMPDataSource(ABCSNMPDataSource):
     @property
     def _snmp_config(self):
         # type: () -> snmp_utils.SNMPHostConfig
+        # TODO: snmp_config.ipaddress is not Optional. At least classic SNMP enforces that there
+        # is an address set, Inline-SNMP has some lookup logic for some reason. We need to find
+        # out whether or not we can really have None here. Looks like it could be the case for
+        # cluster hosts which don't have an IP address set.
+        if self._ipaddress is None:
+            raise NotImplementedError("Invalid SNMP host configuration: self._ipaddress is None")
         return self._host_config.snmp_config(self._ipaddress)
 
     def describe(self):
@@ -236,6 +245,7 @@ class SNMPDataSource(ABCSNMPDataSource):
         return info
 
     def _sort_check_plugin_names(self, check_plugin_names):
+        # type: (List[CheckPluginName]) -> List[CheckPluginName]
         # In former Check_MK versions (<=1.4.0) CPU check plugins were
         # checked before other check plugins like interface checks.
         # In Check_MK versions >= 1.5.0 the order is random and
@@ -251,6 +261,7 @@ class SNMPDataSource(ABCSNMPDataSource):
                       (not ('cpu' in x or x in cpu_checks_without_cpu_in_check_name), x))
 
     def _convert_to_sections(self, raw_data):
+        # type: (RawAgentData) -> HostSections
         sections_to_persist = self._extract_persisted_sections(raw_data)
         return HostSections(raw_data, persisted_sections=sections_to_persist)
 

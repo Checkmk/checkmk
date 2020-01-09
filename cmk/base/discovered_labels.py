@@ -62,6 +62,7 @@ class ABCDiscoveredLabels(six.with_metaclass(abc.ABCMeta, collections.MutableMap
         return len(self._labels)
 
     def to_dict(self):
+        # type: () -> Dict[Text, Text]
         return self._labels
 
 
@@ -79,6 +80,7 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):
         self._labels[label.name] = label
 
     def to_dict(self):
+        # type: () -> Dict[Text, Text]
         return {
             label.name: label.to_dict()
             for label in sorted(self._labels.itervalues(), key=lambda x: x.name)

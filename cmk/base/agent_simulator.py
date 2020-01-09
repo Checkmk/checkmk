@@ -26,16 +26,20 @@
 
 from __future__ import division
 import math
+from typing import List, Optional  # pylint: disable=unused-import
 
 import cmk.utils.debug
+from cmk.base.utils import RawAgentData  # pylint: disable=unused-import
 
 
 def our_uptime():
+    # type: () -> float
     return float((open("/proc/uptime").read().split()[0]))
 
 
 # replace simulator tags in output
 def process(output):
+    # type: (RawAgentData) -> RawAgentData
     try:
         while True:
             i = output.find('%{')
@@ -55,6 +59,7 @@ def process(output):
 
 
 def agentsim_uptime(rate=1.0, period=None):  # period = sinus wave
+    # type: (float, Optional[float]) -> int
     if period is None:
         return int(our_uptime() * rate)
 
@@ -64,10 +69,12 @@ def agentsim_uptime(rate=1.0, period=None):  # period = sinus wave
 
 
 def agentsim_enum(values, period=1):  # period is in seconds
+    # type: (List[bytes], int) -> bytes
     hit = int(our_uptime() / period % len(values))  # fixed: true-division
     return values[hit]
 
 
 def agentsim_sinus(base=50, amplitude=50, period=300):
+    # type: (int, int, int) -> int
     return int(math.sin(our_uptime() * math.pi * 2.0 / period) * amplitude +
                base)  # fixed: true-division

@@ -32,6 +32,7 @@ import cmk.base.console
 
 
 def do_check_nagiosconfig():
+    # type: () -> bool
     command = [cmk.utils.paths.nagios_binary, "-vp", cmk.utils.paths.nagios_config_file]
     cmk.base.console.verbose("Running '%s'\n" % subprocess.list2cmdline(command))
     cmk.base.console.output("Validating Nagios configuration...")

@@ -31,7 +31,7 @@ import sys
 import py_compile
 import tempfile
 import errno
-from typing import Dict  # pylint: disable=unused-import
+from typing import List, Set, Dict  # pylint: disable=unused-import
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -45,6 +45,8 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.data_sources as data_sources
 import cmk.base.check_utils
 import cmk.base.check_api_utils as check_api_utils
+from cmk.base.check_utils import (  # pylint: disable=unused-import
+    CheckPluginName,)
 
 
 class NagiosCore(core_config.MonitoringCore):
@@ -1092,6 +1094,7 @@ if '-d' in sys.argv:
 
 
 def _get_needed_check_plugin_names(host_config):
+    # type: (config.HostConfig) -> Set[CheckPluginName]
     import cmk.base.check_table as check_table
     needed_check_plugin_names = set([])
 
@@ -1116,7 +1119,10 @@ def _get_needed_check_plugin_names(host_config):
     # Also include the check plugins of the cluster nodes to be able to load
     # the autochecks of the nodes
     if host_config.is_cluster:
-        for node in host_config.nodes:
+        nodes = host_config.nodes
+        if nodes is None:
+            raise MKGeneralException("Invalid cluster configuration")
+        for node in nodes:
             needed_check_plugin_names.update(
                 check_table.get_needed_check_names(node, skip_ignored=False))
 
@@ -1124,10 +1130,11 @@ def _get_needed_check_plugin_names(host_config):
 
 
 def _get_needed_check_file_names(needed_check_plugin_names):
+    # type: (Set[CheckPluginName]) -> List[str]
     # check info table
     # We need to include all those plugins that are referenced in the host's
     # check table.
-    filenames = []
+    filenames = []  # type: List[str]
     for check_plugin_name in needed_check_plugin_names:
         section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
         # Add library files needed by check (also look in local)

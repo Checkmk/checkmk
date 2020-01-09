@@ -31,7 +31,7 @@ import time
 import abc
 import logging
 import sys
-from typing import Text  # pylint: disable=unused-import
+from typing import Set, List, cast, Tuple, Union, Optional, Text  # pylint: disable=unused-import
 import six
 
 import cmk.utils.log  # TODO: Remove this!
@@ -59,6 +59,11 @@ import cmk.base.check_api_utils as check_api_utils
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData, MKSNMPError, \
                                 MKIPAddressLookupError
 from cmk.base.check_api_utils import state_markers
+from cmk.base.check_utils import (  # pylint: disable=unused-import
+    PersistedSections, SectionName, SectionContent, ServiceState, ServiceDetails,
+    ServiceCheckResult, Metric, CheckPluginName,
+)
+from cmk.base.utils import HostName, HostAddress, RawAgentData  # pylint: disable=unused-import
 
 from .host_sections import HostSections
 
@@ -86,24 +91,26 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
     _use_outdated_persisted_sections = False
 
     def __init__(self, hostname, ipaddress):
+        # type: (HostName, Optional[HostAddress]) -> None
         super(DataSource, self).__init__()
         self._hostname = hostname
         self._ipaddress = ipaddress
-        self._max_cachefile_age = None
-        self._enforced_check_plugin_names = None
+        self._max_cachefile_age = None  # type: Optional[int]
+        self._enforced_check_plugin_names = None  # type: Optional[Set[CheckPluginName]]
 
         self._logger = console.logger.getChild("data_source.%s" % self.id())
         self._setup_logger()
 
         # Runtime data (managed by self.run()) - Meant for self.get_summary_result()
-        self._exception = None
-        self._host_sections = None
-        self._persisted_sections = None
+        self._exception = None  # type: Optional[Exception]
+        self._host_sections = None  # type: Optional[HostSections]
+        self._persisted_sections = None  # type: Optional[PersistedSections]
 
         self._config_cache = config.get_config_cache()
         self._host_config = self._config_cache.get_host_config(self._hostname)
 
     def _setup_logger(self):
+        # type: () -> None
         """Add the source log prefix to the class logger"""
         self._logger.propagate = False
         handler = logging.StreamHandler(stream=sys.stdout)
@@ -113,6 +120,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         self._logger.addHandler(handler)
 
     def run(self, hostname=None, ipaddress=None, get_raw_data=False):
+        # type: (HostName, HostAddress, bool) -> Union[RawAgentData, HostSections]
         """Wrapper for self._execute() that unifies several things:
 
         a) Exception handling
@@ -174,6 +182,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         return HostSections()
 
     def _get_raw_data(self):
+        # type: () -> Tuple[RawAgentData, bool]
         """Returns the current raw data of this data source
 
         It either uses previously cached raw data of this data source or
@@ -197,11 +206,14 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         return raw_data, False
 
     def run_raw(self):
+        # type: () -> RawAgentData
         """Small wrapper for self.run() which always returns raw data source data"""
-        return self.run(get_raw_data=True)
+        # TODO: run() should be refactored to several methods return specific types
+        return cast(RawAgentData, self.run(get_raw_data=True))
 
     @abc.abstractmethod
     def _execute(self):
+        # type: () -> RawAgentData
         """Fetches the current agent data from the source specified with
         hostname and ipaddress and returns the result as "raw data" that is
         later converted by self._convert_to_sections() to a HostSection().
@@ -212,40 +224,42 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         raise NotImplementedError()
 
     def _read_cache_file(self):
+        # type: () -> Optional[RawAgentData]
         assert self._max_cachefile_age is not None
 
         cachefile = self._cache_file_path()
 
         if not os.path.exists(cachefile):
             self._logger.debug("Not using cache (Does not exist)")
-            return
+            return None
 
         if self.is_agent_cache_disabled():
             self._logger.debug("Not using cache (Cache usage disabled)")
-            return
+            return None
 
         if not self._may_use_cache_file and not config.simulation_mode:
             self._logger.debug("Not using cache (Don't try it)")
-            return
+            return None
 
         may_use_outdated = config.simulation_mode or self._use_outdated_cache_file
         cachefile_age = cmk.utils.cachefile_age(cachefile)
         if not may_use_outdated and cachefile_age > self._max_cachefile_age:
             self._logger.debug("Not using cache (Too old. Age is %d sec, allowed is %s sec)" %
                                (cachefile_age, self._max_cachefile_age))
-            return
+            return None
 
         # TODO: Use some generic store file read function to generalize error handling,
         # but there is currently no function that simply reads data from the file
         result = open(cachefile).read()
         if not result:
             self._logger.debug("Not using cache (Empty)")
-            return
+            return None
 
         self._logger.log(VERBOSE, "Using data from cache file %s", cachefile)
         return self._from_cache_file(result)
 
     def _write_cache_file(self, raw_data):
+        # type: (RawAgentData) -> None
         if self.is_agent_cache_disabled():
             self._logger.debug("Not writing data to cache file (Cache usage disabled)")
             return
@@ -271,14 +285,17 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
             raise MKGeneralException("Cannot write cache file %s: %s" % (cachefile, e))
 
     def _from_cache_file(self, raw_data):
+        # type: (RawAgentData) -> RawAgentData
         return raw_data
 
     def _to_cache_file(self, raw_data):
-        # type: (Text) -> bytes
+        # type: (RawAgentData) -> RawAgentData
+        # TODO: This does not seem to be needed
         return ensure_bytestr(raw_data)
 
     @abc.abstractmethod
     def _convert_to_sections(self, raw_data):
+        # type: (RawAgentData) -> HostSections
         """See _execute() for details"""
         raise NotImplementedError()
 
@@ -299,14 +316,16 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         return _persisted_sections_dir(self.id())
 
     def get_check_plugin_names(self):
+        # type: () -> Set[CheckPluginName]
         if self._enforced_check_plugin_names is not None:
             return self._enforced_check_plugin_names
         return self._gather_check_plugin_names()
 
     @abc.abstractmethod
     def _gather_check_plugin_names(self):
+        # type: () -> Set[CheckPluginName]
         """
-        Returns the list of check plugin names which are supported by
+        Returns a collection of check plugin names which are supported by
         the device.
 
         Example: SNMP scan
@@ -314,6 +333,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         raise NotImplementedError()
 
     def enforce_check_plugin_names(self, check_plugin_names):
+        # type: (Set[CheckPluginName]) -> None
         """
         Returns a subset of beforehand gathered check plugin names which are
         supported by the data source.
@@ -328,15 +348,18 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def _cpu_tracking_id(self):
+        # type: () -> str
         raise NotImplementedError()
 
     @abc.abstractmethod
     def id(self):
+        # type: () -> str
         """Return a unique identifier for this data source type
         It is used to identify the different data source types."""
         raise NotImplementedError()
 
     def name(self):
+        # type: () -> str
         """Return a unique (per host) textual identification of the data source
 
         This name is used to identify this data source instance compared to other
@@ -346,14 +369,16 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         It is only used during execution of Check_MK and not persisted. This means
         the algorithm can be changed at any time.
         """
-        return ":".join([self.id(), self._hostname, self._ipaddress])
+        return ":".join([self.id(), self._hostname, self._ipaddress or ""])
 
     @abc.abstractmethod
     def describe(self):
+        # type: () -> str
         """Return a short textual description of the datasource"""
         raise NotImplementedError()
 
     def _verify_ipaddress(self):
+        # type: () -> None
         if not self._ipaddress:
             raise MKIPAddressLookupError("Host as no IP address configured.")
 
@@ -362,22 +387,27 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
                 "Failed to lookup IP address and no explicit IP address configured")
 
     def set_max_cachefile_age(self, max_cachefile_age):
+        # type: (int) -> None
         self._max_cachefile_age = max_cachefile_age
 
     @classmethod
     def disable_data_source_cache(cls):
+        # type: () -> None
         cls._no_cache = True
 
     @classmethod
     def is_agent_cache_disabled(cls):
+        # type: () -> bool
         return cls._no_cache
 
     @classmethod
     def get_may_use_cache_file(cls):
+        # type: () -> bool
         return cls._may_use_cache_file
 
     @classmethod
     def set_may_use_cache_file(cls, state=True):
+        # type: (bool) -> None
         cls._may_use_cache_file = state
 
     # TODO: Refactor the returned data of this method and self._summary_result()
@@ -392,6 +422,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         return self._get_summary_result()
 
     def _get_summary_result(self, for_checking=True):
+        # type: (bool) -> ServiceCheckResult
         """Returns a three element tuple of state, output and perfdata (list) that summarizes
         the execution result of this data source.
 
@@ -418,6 +449,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         return status, exc_msg + check_api_utils.state_markers[status], []
 
     def _summary_result(self, for_checking):
+        # type: (bool) -> ServiceCheckResult
         """Produce a source specific summary result in case no exception occured.
 
         When an exception occured while processing a data source, the generic
@@ -428,6 +460,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         return 0, "Success", []
 
     def exception(self):
+        # type: () -> Optional[Exception]
         """Provides exceptions happened during last self.run() call or None"""
         return self._exception
 
@@ -445,6 +478,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
     #   '----------------------------------------------------------------------'
 
     def _store_persisted_sections(self, persisted_sections):
+        # type: (PersistedSections) -> None
         if not persisted_sections:
             return
 
@@ -462,6 +496,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
 
     def _update_info_with_persisted_sections(self, persisted_sections_from_disk, host_sections,
                                              is_cached_data):
+        # type: (PersistedSections, HostSections, bool) -> HostSections
         persisted_sections = persisted_sections_from_disk
         persisted_sections_from_raw = host_sections.persisted_sections
 
@@ -489,6 +524,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         return host_sections
 
     def _load_persisted_sections(self):
+        # type: () -> PersistedSections
         file_path = self._persisted_sections_file_path()
 
         persisted_sections = store.load_object_from_file(file_path, default={})
@@ -507,6 +543,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
     # the possible write here and simply ignore the outdated sections or lock when
     # reading and unlock after writing
     def _filter_outdated_persisted_sections(self, persisted_sections):
+        # type: (PersistedSections) -> PersistedSections
         filtered_persisted_sections = {}
         now = time.time()
         for section_name, entry in persisted_sections.iteritems():
@@ -524,10 +561,12 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
 
     @classmethod
     def use_outdated_persisted_sections(cls):
+        # type: () -> None
         cls._use_outdated_persisted_sections = True
 
     @classmethod
     def set_use_outdated_cache_file(cls, state=True):
+        # type: (bool) -> None
         cls._use_outdated_cache_file = state
 
 
@@ -546,6 +585,7 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
 
     # TODO: We should cleanup these old directories one day. Then we can remove this special case
     def set_main_agent_data_source(self):
+        # type: () -> None
         """Tell the data source that it's the main agent based data source
 
         The data source that is the "main" agent based data source uses the
@@ -556,9 +596,11 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
         self._is_main_agent_data_source = True
 
     def _gather_check_plugin_names(self):
+        # type: () -> Set[CheckPluginName]
         return config.discoverable_tcp_checks()
 
     def _cpu_tracking_id(self):
+        # type: () -> str
         return "agent"
 
     def _cache_dir(self):
@@ -586,7 +628,7 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
 
         Returns a HostSections() object.
         """
-        sections = {}
+        sections = {}  # type: Dict[SectionName, SectionContent]
         # Unparsed info for other hosts. A dictionary, indexed by the piggybacked host name.
         # The value is a list of lines which were received for this host.
         piggybacked_raw_data = {}
@@ -595,7 +637,8 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
         # Transform to seconds and give the piggybacked host a little bit more time
         piggybacked_cache_age = int(1.5 * 60 * self._host_config.check_mk_check_interval)
 
-        persisted_sections = {}  # handle sections with option persist(...)
+        # handle sections with option persist(...)
+        persisted_sections = {}  # type: PersistedSections
         section_content = []
         section_options = {}
         agent_cache_info = {}

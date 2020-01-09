@@ -27,11 +27,13 @@
 import sys
 import textwrap
 import getopt
+from typing import List  # pylint: disable=unused-import
 
 from cmk.utils.plugin_loader import load_plugins
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 
 import cmk.base.config as config
+from cmk.base.utils import HostName  # pylint: disable=unused-import
 
 
 class Modes(object):
@@ -133,6 +135,7 @@ class Modes(object):
         return options
 
     def parse_hostname_list(self, args, with_clusters=True, with_foreign_hosts=False):
+        # type: (List[str], bool, bool) -> List[HostName]
         config_cache = config.get_config_cache()
         if with_foreign_hosts:
             valid_hosts = config_cache.all_configured_realhosts()

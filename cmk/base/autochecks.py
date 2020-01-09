@@ -44,6 +44,7 @@ from cmk.base.discovered_labels import (
     DiscoveredServiceLabels,
     ServiceLabel,
 )
+from cmk.base.utils import HostName  # pylint: disable=unused-import
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     CheckPluginName, CheckParameters, DiscoveredService, Item, Service,
 )
@@ -203,16 +204,19 @@ class AutochecksManager(object):
 
 
 def resolve_paramstring(check_plugin_name, parameters_unresolved):
-    # type: (str, str) -> CheckParameters
+    # type: (CheckPluginName, CheckParameters) -> CheckParameters
     """Translates a parameter string (read from autochecks) to it's final value
-    (according to the current configuration)"""
+    (according to the current configuration). Values of other types are kept"""
+    if not isinstance(parameters_unresolved, str):
+        return parameters_unresolved
+
     check_context = config.get_check_context(check_plugin_name)
     # TODO: Can't we simply access check_context[paramstring]?
     return eval(parameters_unresolved, check_context, check_context)
 
 
 def parse_autochecks_file(hostname):
-    # type: (str) -> List[DiscoveredService]
+    # type: (HostName) -> List[DiscoveredService]
     """Read autochecks, but do not compute final check parameters"""
     path = "%s/%s.mk" % (cmk.utils.paths.autochecks_dir, hostname)
     if not os.path.exists(path):
@@ -245,7 +249,7 @@ def parse_autochecks_file(hostname):
 
 
 def _parse_autocheck_entry(hostname, entry):
-    # type: (str, Union[ast.Tuple, ast.Dict]) -> Optional[DiscoveredService]
+    # type: (HostName, Union[ast.Tuple, ast.Dict]) -> Optional[DiscoveredService]
     if isinstance(entry, ast.Tuple):
         ast_check_plugin_name, ast_item, ast_parameters_unresolved = _parse_pre_16_tuple_autocheck_entry(
             entry)
@@ -433,12 +437,12 @@ def _remove_duplicate_autochecks(autochecks):
 
 
 def has_autochecks(hostname):
-    # type: (str) -> bool
+    # type: (HostName) -> bool
     return os.path.exists(cmk.utils.paths.autochecks_dir + "/" + hostname + ".mk")
 
 
 def save_autochecks_file(hostname, items):
-    # type: (str, List[DiscoveredService]) -> None
+    # type: (HostName, List[DiscoveredService]) -> None
     if not os.path.exists(cmk.utils.paths.autochecks_dir):
         os.makedirs(cmk.utils.paths.autochecks_dir)
 
@@ -455,7 +459,7 @@ def save_autochecks_file(hostname, items):
 
 
 def remove_autochecks_file(hostname):
-    # type: (str) -> None
+    # type: (HostName) -> None
     filepath = cmk.utils.paths.autochecks_dir + "/" + hostname + ".mk"
     try:
         os.remove(filepath)
@@ -481,7 +485,7 @@ def remove_autochecks_of(host_config):
 
 
 def _remove_autochecks_of_host(hostname):
-    # type: (str) -> int
+    # type: (HostName) -> int
     removed = 0
     new_items = []  # type: List[DiscoveredService]
     config_cache = config.get_config_cache()

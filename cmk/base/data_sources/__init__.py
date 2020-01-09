@@ -41,7 +41,9 @@ import socket
 import subprocess
 import sys
 import time
-from typing import List  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Iterable, TYPE_CHECKING, List, Dict, Optional, Set,
+)
 
 import cmk.utils.paths
 import cmk.utils.debug
@@ -55,6 +57,9 @@ import cmk.base.console as console
 import cmk.base.item_state as item_state
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.check_table as check_table
+from cmk.base.check_utils import (  # pylint: disable=unused-import
+    CheckPluginName,)
+from cmk.base.utils import HostName, HostAddress  # pylint: disable=unused-import
 
 from .snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from .ipmi import IPMIManagementBoardDataSource
@@ -62,6 +67,9 @@ from .tcp import TCPDataSource
 from .piggyback import PiggyBackDataSource
 from .programs import DSProgramDataSource, SpecialAgentDataSource
 from .host_sections import HostSections, MultiHostSections
+
+if TYPE_CHECKING:
+    from .abstract import DataSource, CheckMKAgentDataSource
 
 # TODO: Cluster with different data sources, eg. TCP node and SNMP node:
 # - Discovery works.
@@ -82,6 +90,7 @@ from .host_sections import HostSections, MultiHostSections
 
 class DataSources(object):
     def __init__(self, hostname, ipaddress):
+        # type: (HostName, Optional[HostAddress]) -> None
         super(DataSources, self).__init__()
         self._hostname = hostname
         self._ipaddress = ipaddress
@@ -93,10 +102,11 @@ class DataSources(object):
 
         # Has currently no effect. The value possibly set during execution on the single data
         # sources is kept here in this object to return it later on
-        self._enforced_check_plugin_names = None
+        self._enforced_check_plugin_names = None  # type: Optional[Set[CheckPluginName]]
 
     def _initialize_data_sources(self):
-        self._sources = {}
+        # type: () -> None
+        self._sources = {}  # type: Dict[str, DataSource]
 
         if self._host_config.is_cluster:
             # Cluster hosts do not have any actual data sources
@@ -108,6 +118,7 @@ class DataSources(object):
         self._initialize_management_board_data_sources()
 
     def _initialize_agent_based_data_sources(self):
+        # type: () -> None
         if self._host_config.is_all_agents_host:
             source = self._get_agent_data_source(ignore_special_agents=True)
             source.set_main_agent_data_source()
@@ -127,10 +138,12 @@ class DataSources(object):
             self._add_source(PiggyBackDataSource(self._hostname, self._ipaddress))
 
     def _initialize_snmp_data_sources(self):
+        # type: () -> None
         if self._host_config.is_snmp_host:
             self._add_source(SNMPDataSource(self._hostname, self._ipaddress))
 
     def _initialize_management_board_data_sources(self):
+        # type: () -> None
         protocol = self._host_config.management_protocol
         if protocol == "snmp":
             # TODO: Why not hand over management board IP address?
@@ -144,13 +157,16 @@ class DataSources(object):
             raise NotImplementedError()
 
     def _add_sources(self, sources):
+        # type: (Iterable[DataSource]) -> None
         for source in sources:
             self._add_source(source)
 
     def _add_source(self, source):
+        # type: (DataSource) -> None
         self._sources[source.id()] = source
 
     def describe_data_sources(self):
+        # type: () -> str
         if self._host_config.is_all_agents_host:
             return "Normal Checkmk agent, all configured special agents"
 
@@ -163,6 +179,7 @@ class DataSources(object):
         return "No agent"
 
     def _get_agent_data_source(self, ignore_special_agents=False):
+        # type: (bool) -> CheckMKAgentDataSource
         if not ignore_special_agents:
             special_agents = self._get_special_agent_data_sources()
             if special_agents:
@@ -182,10 +199,11 @@ class DataSources(object):
         ]
 
     def get_check_plugin_names(self):
-        """Returns the list of check types the caller may execute on the sections produced
+        # type: () -> Set[CheckPluginName]
+        """Returns the collection of check types the caller may execute on the sections produced
         by these sources.
 
-        Either returns a list of enforced check types (if set before) or ask each individual
+        Either returns a set of enforced check types (if set before) or ask each individual
         data source for it's supported check types and return a list of these types.
         """
         check_plugin_names = set()
@@ -193,27 +211,32 @@ class DataSources(object):
         for source in self._sources.values():
             check_plugin_names.update(source.get_check_plugin_names())
 
-        return list(check_plugin_names)
+        return check_plugin_names
 
     def enforce_check_plugin_names(self, check_plugin_names):
+        # type: (Set[CheckPluginName]) -> None
         self._enforced_check_plugin_names = check_plugin_names
         for source in self.get_data_sources():
             source.enforce_check_plugin_names(check_plugin_names)
 
     def get_enforced_check_plugin_names(self):
+        # type: () -> Optional[Set[CheckPluginName]]
         """Returns either the collection of enforced check plugin names (when they have been set before) or None"""
         return self._enforced_check_plugin_names
 
     def get_data_sources(self):
+        # type: () -> Iterable[DataSource]
         # Always execute piggyback at the end
         return sorted(self._sources.values(),
                       key=lambda s: (isinstance(s, PiggyBackDataSource), s.id()))
 
     def set_max_cachefile_age(self, max_cachefile_age):
+        # type: (int) -> None
         for source in self.get_data_sources():
             source.set_max_cachefile_age(max_cachefile_age)
 
     def get_host_sections(self, max_cachefile_age=None):
+        # type: (Optional[int]) -> MultiHostSections
         """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
 
         Returns a dictionary object of already parsed HostSections() constructs for each related host.
@@ -239,7 +262,7 @@ class DataSources(object):
                                                                       filter_mode="only_clustered")
 
                 node_data_sources = DataSources(node_hostname, node_ipaddress)
-                node_data_sources.enforce_check_plugin_names(set(node_check_names))
+                node_data_sources.enforce_check_plugin_names(node_check_names)
                 hosts.append((node_hostname, node_ipaddress, node_data_sources,
                               config.cluster_max_cachefile_age))
         else:

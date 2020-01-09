@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import sys
+from typing import Set, List  # pylint: disable=unused-import
 
 import cmk.utils.debug
 
@@ -33,6 +34,8 @@ import cmk.base.caching as caching
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
 import cmk.base.check_utils
+from cmk.base.check_utils import (  # pylint: disable=unused-import
+    CheckPluginName,)
 
 from cmk.base.exceptions import MKParseFunctionError
 
@@ -307,6 +310,7 @@ class MultiHostSections(object):
         return section_content
 
     def get_check_plugin_names(self):
+        # type: () -> Set[CheckPluginName]
         # TODO: There is a function 'section_name_of' in check_utils.py
         # but no inverse function, ie. get all subchecks of main check.
         check_keys = set(config.check_info.keys())
@@ -316,4 +320,4 @@ class MultiHostSections(object):
                 for check_k in check_keys:
                     if check_k.startswith(k):
                         check_plugin_names.add(check_k)
-        return list(check_plugin_names)
+        return check_plugin_names

@@ -29,10 +29,11 @@
 # But at the current state of affairs we have no choice, otherwise an
 # incremental cleanup is impossible.
 
-from typing import Dict, Text  # pylint: disable=unused-import
+from typing import Optional, Dict, Text  # pylint: disable=unused-import
 
 from cmk.base.discovered_labels import DiscoveredServiceLabels, DiscoveredHostLabels  # pylint: disable=unused-import
-from cmk.base.check_utils import CheckParameters, Item  # pylint: disable=unused-import
+from cmk.base.check_utils import CheckParameters, CheckPluginName, Item  # pylint: disable=unused-import
+from cmk.base.utils import HostName, ServiceName  # pylint: disable=unused-import
 
 # Symbolic representations of states in plugin output
 state_markers = ["", "(!)", "(!!)", "(?)"]
@@ -43,9 +44,10 @@ HOST_PRECEDENCE = "host_precedence"  # Check is only executed for mgmt board (e.
 HOST_ONLY = "host_only"  # Check is only executed for real SNMP host (e.g. interfaces)
 
 # Is set before check/discovery function execution
-_hostname = None  # Host currently being checked
-_check_type = None
-_service_description = None
+# Host currently being checked
+_hostname = None  # type: Optional[HostName]
+_check_type = None  # type: Optional[CheckPluginName]
+_service_description = None  # type: Optional[ServiceName]
 
 
 class Service(object):
@@ -59,16 +61,19 @@ class Service(object):
 
 
 def set_hostname(hostname):
+    # type: (Optional[HostName]) -> None
     global _hostname
     _hostname = hostname
 
 
 def reset_hostname():
+    # type: () -> None
     global _hostname
     _hostname = None
 
 
 def host_name():
+    # type: () -> HostName
     """Returns the name of the host currently being checked or discovered."""
     if _hostname is None:
         raise RuntimeError("host name has not been set")
@@ -76,12 +81,14 @@ def host_name():
 
 
 def set_service(type_name, descr):
+    # type: (Optional[CheckPluginName], Optional[ServiceName]) -> None
     global _check_type, _service_description
     _check_type = type_name
     _service_description = descr
 
 
 def check_type():
+    # type: () -> CheckPluginName
     """Returns the name of the check type currently being checked."""
     if _check_type is None:
         raise RuntimeError("check type has not been set")
@@ -89,6 +96,7 @@ def check_type():
 
 
 def service_description():
+    # type: () -> ServiceName
     """Returns the name of the service currently being checked."""
     if _service_description is None:
         raise RuntimeError("service description has not been set")

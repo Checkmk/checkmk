@@ -41,7 +41,7 @@ import cmk.base.config as config
 import cmk.base.core_config as core_config
 from cmk.base.exceptions import MKAgentError
 
-from .abstract import CheckMKAgentDataSource
+from .abstract import CheckMKAgentDataSource, RawAgentData  # pylint: disable=unused-import
 
 #.
 #   .--Datasoure Programs--------------------------------------------------.
@@ -62,11 +62,12 @@ class ProgramDataSource(CheckMKAgentDataSource):
         return "ds"
 
     def _execute(self):
+        # type: () -> RawAgentData
         command_line, command_stdin = self._get_command_line_and_stdin()
         return self._get_agent_info_program(command_line, command_stdin)
 
     def _get_agent_info_program(self, commandline, command_stdin):
-        # type: (Union[bytes, Text], Optional[bytes]) -> bytes
+        # type: (Union[bytes, Text], Optional[bytes]) -> RawAgentData
         exepath = commandline.split()[0]  # for error message, hide options!
 
         self._logger.debug("Calling external program %r" % (commandline))

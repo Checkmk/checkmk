@@ -26,8 +26,13 @@
 
 import abc
 import functools
-from typing import List, NamedTuple, Union, Tuple, Optional  # pylint: disable=unused-import
+from typing import Callable, List, NamedTuple, Union, Tuple, Optional  # pylint: disable=unused-import
 import six
+from cmk.base.utils import HostAddress, HostName  # pylint: disable=unused-import
+
+OID = str
+OIDFunction = Callable[[OID], bool]
+ScanFunction = Callable[[OIDFunction], bool]
 
 OID_END = 0  # Suffix-part of OID that was not specified
 OID_STRING = -1  # Complete OID as string ".1.3.6.1.4.1.343...."
@@ -37,20 +42,23 @@ OID_END_OCTET_STRING = -4  # yet same, but omit first byte (assuming that is the
 
 
 def BINARY(oid):
+    # type: (OID) -> Tuple[str, str]
     """Tell Check_MK to process this OID as binary data to the check."""
     return "binary", oid
 
 
 def CACHED_OID(oid):
+    # type: (OID) -> Tuple[str, str]
     """Use this to mark OIDs as being cached for regular checks,
     but not for discovery"""
     return "cached", oid
 
 
 def binstring_to_int(binstring):
+    # type: (bytes) -> int
     """Convert a string to an integer.
 
-    This is done by consideren the string to by a little endian byte string.
+    This is done by consideren the string to be a little endian byte string.
     Such strings are sometimes used by SNMP to encode 64 bit counters without
     needed COUNTER64 (which is not available in SNMP v1)."""
     value = 0
@@ -89,8 +97,8 @@ SNMPHostConfig = NamedTuple(
     "SNMPHostConfig",
     [
         ("is_ipv6_primary", bool),
-        ("hostname", str),
-        ("ipaddress", str),
+        ("hostname", HostName),
+        ("ipaddress", HostAddress),
         ("credentials", SNMPCredentials),
         ("port", int),
         ("is_bulkwalk_host", bool),
@@ -146,19 +154,24 @@ class MutexScanRegistry(object):
     scan functions registered earlier return something falsey.
     """
     def __init__(self):
+        # type: () -> None
         super(MutexScanRegistry, self).__init__()
-        self._specific_scans = []
+        self._specific_scans = []  # type: List[ScanFunction]
 
     def _is_specific(self, oid):
+        # type: (OIDFunction) -> bool
         return any(scan(oid) for scan in self._specific_scans)
 
     def register(self, scan_function):
+        # type: (ScanFunction) -> ScanFunction
         self._specific_scans.append(scan_function)
         return scan_function
 
     def as_fallback(self, scan_function):
+        # type: (ScanFunction) -> ScanFunction
         @functools.wraps(scan_function)
         def wrapper(oid):
+            # type: (OIDFunction) -> bool
             if self._is_specific(oid):
                 return False
             return scan_function(oid)

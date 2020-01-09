@@ -30,7 +30,9 @@ import signal
 import tempfile
 import time
 import copy
-from typing import List, Tuple, Optional  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    cast, Union, Any, AnyStr, List, Tuple, Optional, Text, Iterable,
+)
 
 import six
 
@@ -56,6 +58,11 @@ from cmk.base.exceptions import MKParseFunctionError
 import cmk.base.check_utils
 import cmk.base.decorator
 import cmk.base.check_api_utils as check_api_utils
+from cmk.base.check_utils import (  # pylint: disable=unused-import
+    ServiceState, ServiceDetails, ServiceAdditionalDetails, ServiceCheckResult, Metric,
+    CheckPluginName, Item,
+)
+from cmk.base.utils import HostName, HostAddress  # pylint: disable=unused-import
 
 if not cmk.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
@@ -73,6 +80,8 @@ _checkresult_file_path = None
 _submit_to_core = True
 _show_perfdata = False
 
+ServiceCheckResultWithOptionalDetails = Tuple[ServiceState, ServiceDetails, List[Metric]]
+
 #.
 #   .--Checking------------------------------------------------------------.
 #   |               ____ _               _    _                            |
@@ -88,6 +97,7 @@ _show_perfdata = False
 
 @cmk.base.decorator.handle_check_mk_check_result("mk", "Check_MK")
 def do_check(hostname, ipaddress, only_check_plugin_names=None):
+    # type: (HostName, Optional[HostAddress], Optional[List[CheckPluginName]]) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[Text]]
     cpu_tracking.start("busy")
     console.verbose("Check_MK version %s\n" % cmk.__version__)
 
@@ -96,7 +106,10 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
 
     exit_spec = host_config.exit_code_spec()
 
-    status, infotexts, long_infotexts, perfdata = 0, [], [], []
+    status = 0  # type: ServiceState
+    infotexts = []  # type: List[ServiceDetails]
+    long_infotexts = []  # type: List[ServiceAdditionalDetails]
+    perfdata = []  # type: List[Text]
     try:
         # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
         # address is unknown). When called as non keepalive ipaddress may be None or
@@ -158,7 +171,12 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
         if _checkresult_file_fd is not None:
             _close_checkresult_file()
 
+        # "ipaddress is not None": At least when working with a cluster host it seems the ipaddress
+        # may be None.  This needs to be understood in detail and cleaned up. As the InlineSNMP
+        # stats feature is a very rarely used debugging feature, the analyzation and fix is
+        # postponed now.
         if config.record_inline_snmp_stats \
+           and ipaddress is not None \
            and host_config.snmp_config(ipaddress).is_inline_snmp_host:
             inline_snmp.save_snmp_stats()
 
@@ -194,8 +212,8 @@ def _check_missing_sections(missing_sections, exit_spec):
 # Loops over all checks for ANY host (cluster, real host), gets the data, calls the check
 # function that examines that data and sends the result to the Core.
 def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_names=None):
-    # type: (data_sources.DataSources, config.HostConfig, Optional[str], Optional[List[str]]) -> Tuple[int, List[str]]
-    hostname = host_config.hostname
+    # type: (data_sources.DataSources, config.HostConfig, Optional[HostAddress], Optional[List[str]]) -> Tuple[int, List[str]]
+    hostname = host_config.hostname  # type: HostName
     config_cache = config.get_config_cache()
 
     num_success, missing_sections = 0, set()
@@ -423,6 +441,7 @@ def _evaluate_timespecific_entry(entry):
 
 
 def is_manual_check(hostname, check_plugin_name, item):
+    # type: (HostName, CheckPluginName, Item) -> bool
     manual_checks = check_table.get_check_table(hostname,
                                                 remove_duplicates=True,
                                                 skip_autochecks=True)
@@ -430,8 +449,9 @@ def is_manual_check(hostname, check_plugin_name, item):
 
 
 def sanitize_check_result(result, is_snmp):
+    # type: (Optional[Union[ServiceCheckResult, Tuple, Iterable]], bool) -> ServiceCheckResult
     if isinstance(result, tuple):
-        return _sanitize_tuple_check_result(result)
+        return cast(ServiceCheckResult, _sanitize_tuple_check_result(result))
 
     elif result is None:
         return _item_not_found(is_snmp)
@@ -442,6 +462,7 @@ def sanitize_check_result(result, is_snmp):
 # The check function may return an iterator (using yield) since 1.2.5i5.
 # This function handles this case and converts them to tuple results
 def _sanitize_yield_check_result(result, is_snmp):
+    # type: (Iterable[Any], bool) -> ServiceCheckResult
     subresults = list(result)
 
     # Empty list? Check returned nothing
@@ -451,9 +472,9 @@ def _sanitize_yield_check_result(result, is_snmp):
     # Several sub results issued with multiple yields. Make that worst sub check
     # decide the total state, join the texts and performance data. Subresults with
     # an infotext of None are used for adding performance data.
-    perfdata = []
-    infotexts = []
-    status = 0
+    perfdata = []  # type: List[Metric]
+    infotexts = []  # type: List[ServiceDetails]
+    status = 0  # type: ServiceState
 
     for subresult in subresults:
         st, text, perf = _sanitize_tuple_check_result(subresult, allow_missing_infotext=True)
@@ -469,19 +490,23 @@ def _sanitize_yield_check_result(result, is_snmp):
 
 
 def _item_not_found(is_snmp):
+    # type: (bool) -> ServiceCheckResult
     if is_snmp:
         return 3, "Item not found in SNMP data", []
 
     return 3, "Item not found in agent output", []
 
 
+# TODO: Cleanup return value: Factor "infotext: Optional[Text]" case out and then make Tuple values
+# more specific
 def _sanitize_tuple_check_result(result, allow_missing_infotext=False):
+    # type: (Tuple, bool) -> ServiceCheckResultWithOptionalDetails
     if len(result) >= 3:
         state, infotext, perfdata = result[:3]
         _validate_perf_data_values(perfdata)
     else:
         state, infotext = result
-        perfdata = None
+        perfdata = []
 
     infotext = _sanitize_check_result_infotext(infotext, allow_missing_infotext)
 
@@ -489,6 +514,7 @@ def _sanitize_tuple_check_result(result, allow_missing_infotext=False):
 
 
 def _validate_perf_data_values(perfdata):
+    # type: (Any) -> None
     if not isinstance(perfdata, list):
         return
     for v in [value for entry in perfdata for value in entry[1:]]:
@@ -498,6 +524,7 @@ def _validate_perf_data_values(perfdata):
 
 
 def _sanitize_check_result_infotext(infotext, allow_missing_infotext):
+    # type: (Optional[AnyStr], bool) -> Optional[ServiceDetails]
     if infotext is None and not allow_missing_infotext:
         raise MKGeneralException("Invalid infotext from check: \"None\"")
 

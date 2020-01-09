@@ -56,6 +56,7 @@ import cmk.base.dump_host
 import cmk.base.backup
 import cmk.base.packaging
 import cmk.base.localize
+from cmk.base.utils import HostName, HostAddress  # pylint: disable=unused-import
 
 from cmk.base.modes import (
     modes,
@@ -1491,7 +1492,11 @@ def mode_discover(options, args):
         data_sources.abstract.DataSource.set_may_use_cache_file(
             not data_sources.abstract.DataSource.is_agent_cache_disabled())
 
-    discovery.do_discovery(hostnames, options.get("checks"), options["discover"] == 1)
+    check_plugin_names = options.get("checks")
+    if check_plugin_names is not None:
+        check_plugin_names = set(check_plugin_names)
+
+    discovery.do_discovery(set(hostnames), check_plugin_names, options["discover"] == 1)
 
 
 modes.register(
@@ -1566,11 +1571,10 @@ def mode_check(options, args):
         item_state.continue_on_counter_wrap()
 
     # handle adhoc-check
-    hostname = args[0]
+    hostname = args[0]  # type: HostName
+    ipaddress = None  # type: Optional[HostAddress]
     if len(args) == 2:
         ipaddress = args[1]
-    else:
-        ipaddress = None
 
     return checking.do_check(hostname, ipaddress, options.get("checks"))
 

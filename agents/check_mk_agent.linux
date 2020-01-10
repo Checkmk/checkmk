@@ -524,7 +524,7 @@ sed -e 1,2d /proc/net/dev | cut -d':' -f1 | sort | while read -r eth; do
     else
         # If interface down we get "Invalid argument"
         speed=$(cat "/sys/class/net/$eth/speed" 2>/dev/null)
-        if [ -n "$speed" ]; then
+        if [ -n "$speed" ] && [ $speed -ge 0 ]; then
             echo -e "\tSpeed: ${speed}Mb/s\n"
         fi
     fi

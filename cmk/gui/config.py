@@ -503,6 +503,7 @@ class LoggedInUser(object):
         self._button_counts = {}  # type: Dict[str, float]
         self._stars = set()  # type: Set[str]
         self._tree_states = {}  # type: Dict
+        self._tableoptions = {}  # type: Dict[str, Dict[str, Any]]
 
     def _gather_roles(self, user_id):
         # type: (Optional[UserId]) -> List[str]
@@ -663,6 +664,17 @@ class LoggedInUser(object):
     def save_tree_states(self):
         # type: () -> None
         self.save_file("treestates", self._tree_states)
+
+    @property
+    def tableoptions(self):
+        # type: () -> Dict[str, Dict[str, Any]]
+        if not self._tableoptions:
+            self._tableoptions = self.load_file("tableoptions", {})
+        return self._tableoptions
+
+    def save_tableoptions(self):
+        # type: () -> None
+        self.save_file("tableoptions", self._tableoptions)
 
     def get_rowselection(self, selection_id, identifier):
         # type: (str, str) -> List[str]

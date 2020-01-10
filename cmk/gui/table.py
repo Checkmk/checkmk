@@ -191,7 +191,7 @@ class Table(object):
             return
 
         # Controls whether or not actions are available for a table
-        rows, actions_enabled, actions_visible, search_term, user_opts = self._evaluate_user_opts()
+        rows, actions_visible, search_term = self._evaluate_user_opts()
 
         # Apply limit after search / sorting etc.
         num_rows_unlimited = len(rows)
@@ -203,8 +203,8 @@ class Table(object):
             num_rows_unlimited -= len([r for r in rows if r[3]])
 
         # Render header
-        show_action_row = self.options["searchable"] or (self.options["sortable"] and
-                                                         self._get_sort_column(user_opts[self.id]))
+        show_action_row = self.options["searchable"] or (
+            self.options["sortable"] and self._get_sort_column(config.user.tableoptions[self.id]))
         self._write_table(rows, show_action_row, actions_visible, search_term)
 
         if self.title and self.options["foldable"]:
@@ -216,8 +216,6 @@ class Table(object):
                   'Click <a href="%s">here</a> to disable the limitation.') %
                 (limit, num_rows_unlimited, html.makeuri([('limit', 'none')])))
 
-        if actions_enabled:
-            config.user.save_file("tableoptions", user_opts)
         return
 
     def _evaluate_user_opts(self):
@@ -228,17 +226,15 @@ class Table(object):
         actions_enabled = (self.options["searchable"] or self.options["sortable"])
 
         if not actions_enabled:
-            return rows, False, False, None, None
+            return rows, False, None
 
-        user_opts = config.user.load_file("tableoptions", {})
-        user_opts.setdefault(table_id, {})
-        table_opts = user_opts[table_id]
+        table_opts = config.user.tableoptions.setdefault(table_id, {})
 
         # Handle the initial visibility of the actions
-        actions_visible = user_opts[table_id].get('actions_visible', False)
+        actions_visible = table_opts.get('actions_visible', False)
         if html.request.var('_%s_actions' % table_id):
             actions_visible = html.request.var('_%s_actions' % table_id) == '1'
-            user_opts[table_id]['actions_visible'] = actions_visible
+            table_opts['actions_visible'] = actions_visible
 
         if html.request.var('_%s_reset' % table_id):
             html.request.del_var('_%s_search' % table_id)
@@ -268,7 +264,10 @@ class Table(object):
                 sort_col, sort_reverse = map(int, sort.split(',', 1))
                 rows = _sort_rows(rows, sort_col, sort_reverse)
 
-        return rows, actions_enabled, actions_visible, search_term, user_opts
+        if actions_enabled:
+            config.user.save_tableoptions()
+
+        return rows, actions_visible, search_term
 
     def _get_sort_column(self, table_opts):
         return html.request.var('_%s_sort' % self.id, table_opts.get('sort'))

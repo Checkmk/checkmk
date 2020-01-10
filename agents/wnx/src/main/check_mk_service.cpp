@@ -560,6 +560,12 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
         return cma::srv::ExecSection(section, delay, diag);
     }
 
+    if (param == wtools::ConvertToUTF16(kCapExtractParam) && argc > 3) {
+        std::wstring file = Argv[2];
+        std::wstring to = Argv[3];
+        return cma::srv::ExecExtractCap(file, to);
+    }
+
     if (param == wtools::ConvertToUTF16(kReloadConfigParam)) {
         cma::srv::ExecReloadConfig();
         return 0;

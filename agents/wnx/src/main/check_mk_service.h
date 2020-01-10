@@ -50,6 +50,8 @@ constexpr std::string_view kCapParam = "cap";            // install files
 constexpr std::string_view kSectionParam = "section";    // dump section
 constexpr std::string_view kSectionParamShow = "-show";  // logging sub param
 
+constexpr std::string_view kCapExtractParam = "cap_ex";  // extract all from cap
+
 constexpr std::string_view kShowConfigParam = "showconfig";  // show config
 
 // FIREWALL:

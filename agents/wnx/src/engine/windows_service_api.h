@@ -52,6 +52,8 @@ int ExecRealtimeTest(bool Print);  // on rt
 int ExecCvtIniYaml(std::filesystem::path IniFile,
                    std::filesystem::path YamlFile,
                    StdioLog stdio_log);  // on cvt
+int ExecExtractCap(std::wstring_view cap_file,
+                   std::wstring_view to);  //
 int ExecSection(const std::wstring& SecName,
                 int RepeatPause,      // if 0 no repeat
                 StdioLog stdio_log);  // on section

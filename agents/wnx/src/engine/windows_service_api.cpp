@@ -424,6 +424,12 @@ int ExecFirewall(srv::FwMode fw_mode, std::wstring_view app_name,
     return 0;
 }
 
+int ExecExtractCap(std::wstring_view cap_file, std::wstring_view to) {
+    XLOG::setup::ColoredOutputOnStdio(true);
+    XLOG::setup::DuplicateOnStdio(true);
+    return cma::cfg::cap::ExtractAll(wtools::ConvertToUTF8(cap_file), to);
+}
+
 // on -cvt
 // may be used as internal API function to convert ini to yaml
 // GTESTED internally

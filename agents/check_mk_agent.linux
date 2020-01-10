@@ -732,17 +732,21 @@ if [ -e /etc/openvpn/openvpn-status.log ]; then
         sed -e 1,3d -e '$d'
 fi
 
-TIMESYNC_STATUS=$(systemctl status ntp | awk '{if(NR==3) print $2}')
-if [ $TIMESYNC_STATUS == "active" ]; then
-    # Time synchronization with NTP
-    if inpath ntpq; then
-        # remove heading, make first column space separated
-        run_cached -s ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
+is_timesync_succesful=false
+if inpath systemctl; then
+    timesync_status=$(systemctl status ntp | awk '{if(NR==3) print $2}')
+    if [ $timesync_status == "active" ]; then
+        if inpath ntpq; then
+            # remove heading, make first column space separated
+            run_cached -s ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
+            is_timesync_succesful=true
+        fi
     fi
-else
-    # Time synchronization with systemd timesyncd
-    VERSION=$(systemd --version | awk '{if(NR==1) print $2}')
-    if [ $VERSION -ge 239 ]; then
+fi
+
+if ! $is_timesync_succesful && inpath systemd; then
+    systemd_version=$(systemd --version | awk '{if(NR==1) print $2}')
+    if [ $systemd_version -ge 239 ]; then
         if inpath timedatectl; then
             echo "<<<timesyncd>>>"
             timedatectl timesync-status

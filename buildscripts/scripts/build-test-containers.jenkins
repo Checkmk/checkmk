@@ -60,6 +60,7 @@ DISTRO_LIST.each { DISTRO ->
                                 docker build \
                                 -t $DOCKER_REGISTRY_NOHTTP/$DISTRO-os-image:$BRANCH-latest \
                                 -t $DOCKER_REGISTRY_NOHTTP/$DISTRO-os-image:$VERS_TAG \
+                                --build-arg VERS_TAG='$VERS_TAG' \
                                 --build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP' \
                                 --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE' \
                                 --build-arg PACKAGES='$OS_PACKAGES' \

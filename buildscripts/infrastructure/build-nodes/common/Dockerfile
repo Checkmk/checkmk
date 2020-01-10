@@ -112,3 +112,9 @@ RUN apt-get update \
     && apt-get install -y \
     librrd-dev \
     && rm -rf /var/lib/apt/lists/*
+
+# Addd missing packages
+RUN apt-get update \
+    && apt-get install -y \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*

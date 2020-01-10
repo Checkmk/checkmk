@@ -31,7 +31,7 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp1 sles12sp1 \
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
     && python get-pip.py
 RUN pip install --upgrade setuptools \
-    && pip install git+https://github.com/svenpanne/pipenv.git@41f30d7ac848fdfe3eb548ddd19b731bfa8c331a \
+    && pip install https://github.com/smokey42/pipenv/archive/last-checked.tar.gz \
     && zypper -n --no-gpg-checks in --replacefiles \
     $PACKAGES \
     && zypper clean -a

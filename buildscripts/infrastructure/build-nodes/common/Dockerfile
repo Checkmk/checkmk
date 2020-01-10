@@ -104,3 +104,11 @@ RUN apt-get update \
     && apt-get install -y \
     docker-ce \
     && rm -rf /var/lib/apt/lists/*
+
+# Install librrd-dev a second time
+# after the first time /usr/include/rrd.h is missing
+# Is this a docker or ubuntu bug?
+RUN apt-get update \
+    && apt-get install -y \
+    librrd-dev \
+    && rm -rf /var/lib/apt/lists/*

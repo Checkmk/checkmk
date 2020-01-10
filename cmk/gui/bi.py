@@ -2641,14 +2641,12 @@ def ajax_save_treestate():
     current_ex_level, path = path_id.split(":", 1)
     current_ex_level = int(current_ex_level)
 
-    saved_ex_level = load_ex_level()
-
-    if saved_ex_level != current_ex_level:
+    if config.user.bi_expansion_level != current_ex_level:
         config.user.set_tree_states('bi', {})
     config.user.set_tree_state('bi', path, html.request.var("state") == "open")
     config.user.save_tree_states()
 
-    save_ex_level(current_ex_level)
+    config.user.bi_expansion_level = current_ex_level
 
 
 @cmk.gui.pages.register("bi_render_tree")
@@ -2692,10 +2690,10 @@ def ajax_render_tree():
                 continue  # Not yet monitored, aggregation is not displayed
             row["aggr_group"] = aggr_group
 
-            # ZUTUN: omit_root, boxes, only_problems has HTML-Variablen
+            # TODO: omit_root, boxes, only_problems has HTML-Variablen
             renderer = renderer_cls(row,
                                     omit_root=omit_root,
-                                    expansion_level=load_ex_level(),
+                                    expansion_level=config.user.bi_expansion_level,
                                     only_problems=only_problems,
                                     lazy=False)
             html.write(renderer.render())
@@ -2718,9 +2716,8 @@ def compute_output_message(effective_state, rule):
 def render_tree_json(row):
     expansion_level = int(html.request.var("expansion_level", 999))
 
-    saved_expansion_level = load_ex_level()
     treestate = config.user.get_tree_states('bi')
-    if expansion_level != saved_expansion_level:
+    if expansion_level != config.user.bi_expansion_level:
         treestate = {}
         config.user.set_tree_states('bi', treestate)
         config.user.save_tree_states()
@@ -2794,9 +2791,8 @@ class ABCFoldableTreeRenderer(six.with_metaclass(abc.ABCMeta, object)):
         self._load_tree_state()
 
     def _load_tree_state(self):
-        saved_expansion_level = load_ex_level()
         self._treestate = config.user.get_tree_states('bi')
-        if self._expansion_level != saved_expansion_level:
+        if self._expansion_level != config.user.bi_expansion_level:
             self._treestate = {}
             config.user.set_tree_states('bi', self._treestate)
             config.user.save_tree_states()
@@ -3513,14 +3509,6 @@ def singlehost_table(view, columns, query, only_sites, limit, all_active_filters
 def debug(x):
     p = pprint.pformat(x)
     html.write("<pre>%s</pre>\n" % p)
-
-
-def load_ex_level():
-    return config.user.load_file("bi_treestate", (None,))[0]
-
-
-def save_ex_level(current_ex_level):
-    config.user.save_file("bi_treestate", (current_ex_level,))
 
 
 def status_tree_depth(tree):

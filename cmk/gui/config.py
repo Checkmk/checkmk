@@ -623,6 +623,16 @@ class LoggedInUser(object):
         self.save_file("discovery_show_plugin_names", value)
 
     @property
+    def bi_expansion_level(self):
+        # type: () -> int
+        return self.load_file("bi_treestate", (None,))[0]
+
+    @bi_expansion_level.setter
+    def bi_expansion_level(self, value):
+        # type: (int) -> None
+        self.save_file("bi_treestate", (value,))
+
+    @property
     def button_counts(self):
         # type: () -> Dict[str, float]
         if not self._button_counts:

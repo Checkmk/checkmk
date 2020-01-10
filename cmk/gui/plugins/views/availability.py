@@ -675,7 +675,7 @@ def render_bi_availability(title, aggr_rows):
 
                 renderer = bi.FoldableTreeRendererTree(row,
                                                        omit_root=False,
-                                                       expansion_level=bi.load_ex_level(),
+                                                       expansion_level=config.user.bi_expansion_level,
                                                        only_problems=False,
                                                        lazy=False)
                 tdclass, htmlcode = renderer.css_class(), renderer.render()

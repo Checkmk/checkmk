@@ -13,6 +13,23 @@ rem WNX_BUILD - in the future this is name of subfloder to build out
 rem creates # artefacts in the output folder
 SETLOCAL EnableDelayedExpansion
 
+rem CHECK FOR CHOCO
+rem if choco is absent then build is not possible(we can't dynamically control environment)
+@choco -v > nul
+@if "%errorlevel%" NEQ "0" powershell Write-Host "choco must be installed!" -Foreground Red && exit /b 55
+powershell Write-Host "[+] choco" -Foreground Green
+
+rem CHECK FOR make
+rem if make is absent then we try to install it using choco. Failure meand build fail, make is mandatory
+for /f %%i in ('where make') do set make_exe=%%i
+if "!make_exe!" == "" (
+powershell Write-Host "make not found, try to install" -Foreground Yellow 
+choco install make -y
+for /f %%i in ('where make') do set make_exe=%%i
+if "!make_exe!" == "" powershell Write-Host "make not found, something is really bad" -Foreground Red && exit /b 57
+)
+powershell Write-Host "[+] make" -Foreground Green
+ 
 rem read version from the C++ agent
 set /p wnx_version_raw=<src\common\wnx_version.h
 rem parse version
@@ -92,19 +109,21 @@ rem move %REMOTE_MACHINE%\check_mk_service.msi %REMOTE_MACHINE%\check_mk_agent_u
 %msbuild% wamain.sln /t:install /p:Configuration=Release,Platform=x64
 if not %errorlevel% == 0 powershell Write-Host "Failed Install build" -Foreground Red && exit /b 8
 
+@rem Patch Version Phase: Patch version value direct in the msi file
 rem set version:
 rem remove quotes
 echo %wnx_version:~1,-1%
 rem info
 powershell Write-Host "Setting Version in MSI: %wnx_version%" -Foreground Green
-rem command
-echo cscript.exe //nologo WiRunSQL.vbs %REMOTE_MACHINE%\check_mk_agent.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
+@rem command
+@echo cscript.exe //nologo WiRunSQL.vbs %REMOTE_MACHINE%\check_mk_agent.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
 cscript.exe //nologo WiRunSQL.vbs %REMOTE_MACHINE%\check_mk_service.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
-rem check result
+@rem check result
 if not %errorlevel% == 0 powershell Write-Host "Failed version set" -Foreground Red && exit /b 34
 
 goto end
-@rem ignored:
+@rem Unit Tests Phase: post processing/build special modules using make
+@rem this phase is skipped, there is no need to inculde unit tests in the build script
 powershell Write-Host "starting unit tests" -Foreground Cyan 
 
 pushd %REMOTE_MACHINE%
@@ -119,7 +138,10 @@ powershell Write-Host "Unit test failed" -Foreground Red
 powershell Write-Host "Killing msi in artefacts" -Foreground Red 
 call %cur_dir%\clean_artefacts.cmd 
 exit 100
+
 :end
+
+@rem Deploy Phase: post processing/build special modules using make
 copy install\resources\check_mk.user.yml %REMOTE_MACHINE%
 pushd %REMOTE_MACHINE%
 
@@ -128,8 +150,9 @@ copy check_mk_service32.exe check_mk_agent.exe || powershell Write-Host "Failed 
 copy check_mk_service64.exe check_mk_agent-64.exe || powershell Write-Host "Failed to create 64 bit agent" -Foreground Red && exit /b 35
 powershell Write-Host "File Deployment succeeded" -Foreground Green
 
-rem touching update msi
-rem copy check_mk_agent_update.msi /B+ ,,/Y > nul
 popd
+
+@rem Additional Phase: post processing/build special modules using make
+!make_exe! msi_patch || powershell Write-Host "Failed to patch MSI exec" -Foreground Red && echo set && exit /b 36
 
 

@@ -736,6 +736,14 @@ class LoggedInUser(object):
         except OSError:
             pass  # no directory -> no cleanup
 
+    def get_sidebar_configuration(self, default):
+        # type: (Dict[str, Any]) -> Dict[str, Any]
+        return self.load_file("sidebar", default)
+
+    def set_sidebar_configuration(self, configuration):
+        # type: (Dict[str, Any]) -> None
+        self.save_file("sidebar", configuration)
+
     def is_site_disabled(self, site_id):
         # type: (SiteId) -> bool
         return self._siteconf.get(site_id, {}).get("disabled", False)

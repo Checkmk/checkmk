@@ -26,7 +26,7 @@ RUN apt-get update \
     strace \
     vim \
     && pip3 install --upgrade setuptools \
-    && pip3 install https://github.com/smokey42/pipenv/archive/last-checked.tar.gz \
+    && pip3 install git+https://github.com/pypa/pipenv.git@2549656dc09e132d8ba2fa6327c939f5f9a951b7 \
     && curl -sL https://deb.nodesource.com/setup_12.x | bash - \
     && apt-get install -y nodejs \
     && apt-get install -y \

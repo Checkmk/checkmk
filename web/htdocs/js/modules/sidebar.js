@@ -877,8 +877,10 @@ export function set_snapin_site(event, ident, select_field) {
         event = window.event;
 
     ajax.get_url("sidebar_ajax_set_snapin_site.py?ident=" + encodeURIComponent(ident)
-          + "&site=" + encodeURIComponent(select_field.value));
-    location.reload();
+                 + "&site=" + encodeURIComponent(select_field.value), function(handler_data, response_body) {
+                     refresh_single_snapin(ident);
+                 }
+                );
     return utils.prevent_default_events(event);
 }
 

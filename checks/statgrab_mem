@@ -69,7 +69,7 @@ check_info["statgrab_mem"] = {
     'parse_function': parse_statgrab_mem,
     'inventory_function': inventory_statgrab_mem,
     'check_function': check_statgrab_mem,
-    'service_description': 'Memory used',
+    'service_description': 'Memory',
     'has_perfdata': True,
     'group': "memory",
     'includes': ["mem.include"],

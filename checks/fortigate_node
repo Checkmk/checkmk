@@ -203,7 +203,7 @@ def check_fortigate_node_mem(item, params, parsed):
 check_info["fortigate_node.memory"] = {
     "inventory_function": inventory_fortigate_node_mem,
     "check_function": check_fortigate_node_mem,
-    "service_description": "Memory usage %s",
+    "service_description": "Memory %s",
     "has_perfdata": True,
     "default_levels_variable": "fortigate_node_memory_default_levels",
     "group": "fortigate_node_memory",

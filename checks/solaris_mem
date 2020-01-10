@@ -85,7 +85,7 @@ check_info['solaris_mem'] = {
     "parse_function": parse_solaris_mem,
     "check_function": check_solaris_mem_used,
     "inventory_function": inventory_solaris_mem_used,
-    "service_description": "Memory used",
+    "service_description": "Memory",
     "has_perfdata": True,
     "group": "memory",
     "default_levels_variable": "memory_default_levels",

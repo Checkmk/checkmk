@@ -73,7 +73,7 @@ def check_brocade_sys_mem(item, params, parsed):
 check_info['brocade_sys.mem'] = {
     'inventory_function': inventory_brocade_sys_mem,
     'check_function': check_brocade_sys_mem,
-    'service_description': 'Memory used',
+    'service_description': 'Memory',
     'group': 'memory_relative',
     'has_perfdata': True,
 }

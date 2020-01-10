@@ -82,7 +82,7 @@ check_info["docker_container_mem"] = {
     "parse_function": parse_docker_container_mem,
     "inventory_function": discover_single,
     "check_function": check_docker_container_mem,
-    "service_description": "Memory used",
+    "service_description": "Memory",
     "has_perfdata": True,
     "group": "memory",
     "default_levels_variable": "memory_default_levels",

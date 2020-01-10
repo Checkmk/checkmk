@@ -151,7 +151,7 @@ def check_esx_vsphere_hostsystem_mem_cluster(item, params, info):
 
 check_info['esx_vsphere_hostsystem.mem_usage_cluster'] = {
     "check_function": check_esx_vsphere_hostsystem_mem_cluster,
-    "service_description": "Memory usage",  # TODO: unify this
+    "service_description": "Memory",
     "group": "mem_cluster",
     "has_perfdata": True,
     "includes": ["mem.include"],
@@ -273,7 +273,7 @@ def check_esx_vsphere_hostsystem_mem(item, params, info):
 check_info['esx_vsphere_hostsystem.mem_usage'] = {
     "inventory_function": inventory_esx_vsphere_hostsystem_mem,
     "check_function": check_esx_vsphere_hostsystem_mem,
-    "service_description": "Memory used",  # TODO: unify this
+    "service_description": "Memory",
     "group": "esx_host_memory",
     "has_perfdata": True
 }

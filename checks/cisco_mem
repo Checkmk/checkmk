@@ -33,7 +33,7 @@
 check_info["cisco_mem"] = {
     "check_function"        : check_cisco_mem,
     "inventory_function"    : inventory_cisco_mem,
-    "service_description"   : "Mem used %s",
+    "service_description"   : "Memory %s",
     "has_perfdata"          : True,
     "group"                 : "cisco_mem",
     "snmp_scan_function"    : lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() and \

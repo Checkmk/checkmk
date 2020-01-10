@@ -53,7 +53,7 @@ def check_netscaler_mem(_no_item, params, info):
 check_info["netscaler_mem"] = {
     "check_function": check_netscaler_mem,
     "inventory_function": inventory_netscaler_mem,
-    "service_description": "Memory used",
+    "service_description": "Memory",
     "has_perfdata": True,
     "group": "netscaler_mem",
     "snmp_info": (

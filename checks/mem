@@ -282,8 +282,8 @@ def check_memory_dict(meminfo, params, render_base=1024):
     # VMalloc,
     # newer kernel version report wrong data,
     # i.d. both VmallocUsed and Chunk equal zero
-    if "VmallocUsed" in meminfo and "VmallocChunk" in meminfo and (
-            meminfo["VmallocUsed"] + meminfo["VmallocChunk"]):
+    if "VmallocUsed" in meminfo and "VmallocChunk" in meminfo and (meminfo["VmallocUsed"] +
+                                                                   meminfo["VmallocChunk"]):
         results["vmalloc"] = check_memory_element(
             "Largest Free VMalloc Chunk",
             meminfo["VmallocTotal"] - meminfo["VmallocChunk"],
@@ -444,7 +444,7 @@ def check_mem_used(_no_item, params, info):
 check_info['mem.used'] = {
     "check_function": check_mem_used,
     "inventory_function": inventory_mem_used,
-    "service_description": "Memory used",
+    "service_description": "Memory",
     "has_perfdata": True,
     "group": "memory",
     "default_levels_variable": "memory_default_levels",
@@ -575,7 +575,7 @@ def check_mem_windows(_no_item, params, info):
 check_info["mem.win"] = {
     'check_function': check_mem_windows,
     'inventory_function': inventory_mem_win,
-    'service_description': 'Memory and pagefile',
+    'service_description': 'Memory',
     'has_perfdata': True,
     'group': 'memory_pagefile_win',
     'default_levels_variable': 'memory_win_default_levels',

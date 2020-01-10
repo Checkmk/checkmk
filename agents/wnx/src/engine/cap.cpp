@@ -71,8 +71,8 @@ std::string ReadFileName(std::ifstream &CapFile, uint32_t Length) {
     return std::string(dataBuffer.data());
 }
 
-// must be successful!
-std::vector<char> ReadFileData(std::ifstream &CapFile) {
+// skips too big files or invalid data
+std::optional<std::vector<char>> ReadFileData(std::ifstream &CapFile) {
     // read 32-bit length
     int32_t length = 0;
     CapFile.read(reinterpret_cast<char *>(&length), sizeof(length));
@@ -93,7 +93,7 @@ std::vector<char> ReadFileData(std::ifstream &CapFile) {
     CapFile.read(dataBuffer.data(), length);
 
     if (!CapFile.good()) {
-        XLOG::l("Unexpected problems with CAP-file adat body");
+        XLOG::l("Unexpected problems with CAP-file data body");
         return {};
     }
     return dataBuffer;
@@ -102,9 +102,9 @@ std::vector<char> ReadFileData(std::ifstream &CapFile) {
 // reads name and data
 // writes file
 // if problems or end return false
-FileInfo ExtractFile(std::ifstream &CapFile) {
+FileInfo ExtractFile(std::ifstream &cap_file) {
     // Read Filename
-    auto l = ReadFileNameLength(CapFile);
+    auto l = ReadFileNameLength(cap_file);
     if (l == 0) {
         XLOG::l.t("File CAP end!");
         return {{}, {}, true};
@@ -112,22 +112,21 @@ FileInfo ExtractFile(std::ifstream &CapFile) {
 
     if (l > 256) return {{}, {}, false};
 
-    const auto name = ReadFileName(CapFile, l);
+    const auto name = ReadFileName(cap_file, l);
 
-    if (name.empty() || !CapFile.good()) {
-        if (CapFile.eof()) return {{}, {}, false};
+    if (name.empty() || !cap_file.good()) {
+        if (cap_file.eof()) return {{}, {}, false};
 
         XLOG::l.crit("Invalid cap file, [name]");
         return {{}, {}, false};
     }
 
-    const auto content = ReadFileData(CapFile);
-    if (content.empty() || !CapFile.good()) {
-        XLOG::l.crit("Invalid cap file, [name] {}", name);
-        return {{}, {}, false};
-    }
+    const auto content = ReadFileData(cap_file);
+    if (content.has_value() && cap_file.good())
+        return {name, content.value(), false};
 
-    return {name, content, false};
+    XLOG::l.crit("Invalid cap file, [name] {}", name);
+    return {{}, {}, false};
 }
 
 // may create dirs too
@@ -188,6 +187,32 @@ bool CheckAllFilesWritable(const std::string &Directory) {
         }
     }
     return all_writable;
+}
+
+// internal or advanced usage
+bool ExtractAll(const std::string cap_name, std::filesystem::path to) {
+    std::ifstream ifs(cap_name, std::ifstream::in | std::ifstream::binary);
+    if (!ifs) {
+        XLOG::l.crit("Unable to open Check_MK-Agent package {} ", cap_name);
+        return false;
+    }
+
+    while (!ifs.eof()) {
+        auto [name, data, eof] = ExtractFile(ifs);
+        if (eof) return true;
+
+        if (name.empty()) {
+            XLOG::l("CAP file {} looks as bad", cap_name);
+            return false;
+        }
+        if (data.empty()) {
+            XLOG::t("CAP file {} has empty file {}", cap_name, name);
+        }
+        StoreFile(to / name, data);
+    }
+
+    XLOG::l("CAP file '{}' looks as bad with unexpected eof", cap_name);
+    return false;
 }
 
 bool Process(const std::string CapFileName, ProcMode Mode,

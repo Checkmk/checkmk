@@ -503,6 +503,8 @@ class LoggedInUser(object):
         self._button_counts = {}  # type: Dict[str, float]
         self._stars = set()  # type: Set[str]
         self._tree_states = {}  # type: Dict
+        self._bi_assumptions = {
+        }  # type: Dict[Union[Tuple[six.text_type, six.text_type], Tuple[six.text_type, six.text_type, six.text_type]], int]
         self._tableoptions = {}  # type: Dict[str, Dict[str, Any]]
 
     def _gather_roles(self, user_id):
@@ -664,6 +666,15 @@ class LoggedInUser(object):
     def save_tree_states(self):
         # type: () -> None
         self.save_file("treestates", self._tree_states)
+
+    @property
+    def bi_assumptions(self):
+        if not self._bi_assumptions:
+            self._bi_assumptions = self.load_file("bi_assumptions", {})
+        return self._bi_assumptions
+
+    def save_bi_assumptions(self):
+        self.save_file("bi_assumptions", self._bi_assumptions)
 
     @property
     def tableoptions(self):

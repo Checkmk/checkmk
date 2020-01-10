@@ -178,7 +178,6 @@ g_bi_job_manager = None
 g_services_items = None
 g_services = {}  # type: Dict[Tuple[Any, Any], Tuple[Any, Any, Any, Any, Any]]
 g_services_by_hostname = {}  # type: Dict[str, List[Tuple[Any, Tuple[Any, Any, Any, Any, Any]]]]
-g_assumptions = {}  # type: Dict[Any, Any]
 g_remaining_refs = []  # type: List[Tuple[Any, Any, Any]]
 # dictionary with hosts and its compiled services
 g_compiled_services_leafes = {}  # type: Dict[Any, Set[Any]]
@@ -1368,7 +1367,6 @@ def setup_bi_instances():
 def api_get_aggregation_state(filter_names=None, filter_groups=None):
     """ returns the computed aggregation states """
     compile_forest()
-    load_assumptions()  # user specific, always loaded
 
     rows = []
     missing_sites = set()
@@ -2175,7 +2173,6 @@ def execute_node(node, status_info, aggregation_options):
 
 
 def execute_leaf_node(node, status_info, aggregation_options):
-
     site, host = node["host"]
     service = node.get("service")
 
@@ -2196,7 +2193,7 @@ def execute_leaf_node(node, status_info, aggregation_options):
         key = (site, host, service)
     else:
         key = (site, host)
-    state_assumption = g_assumptions.get(key)
+    state_assumption = config.user.bi_assumptions.get(key)
 
     # assemble state
     if service:
@@ -2613,7 +2610,6 @@ def page_debug():
 def page_all():
     html.header("All")
     compile_forest()
-    load_assumptions()
     for group, trees in g_tree_cache["forest"].iteritems():
         html.write("<h2>%s</h2>" % group)
         for _inst_args, tree in trees:
@@ -2632,12 +2628,11 @@ def ajax_set_assumption():
     else:
         key = (site, host)
     state = html.request.var("state")
-    load_assumptions()
     if state == 'none':
-        del g_assumptions[key]
+        del config.user.bi_assumptions[key]
     else:
-        g_assumptions[key] = int(state)
-    save_assumptions()
+        config.user.bi_assumptions[key] = int(state)
+    config.user.save_bi_assumptions()
 
 
 @cmk.gui.pages.register("bi_save_treestate")
@@ -2682,9 +2677,6 @@ def ajax_render_tree():
         compile_forest(only_hosts=reqhosts, only_groups=[aggr_group])
     else:
         compile_forest()
-
-    # Load current assumptions
-    load_assumptions()
 
     # Now look for our aggregation
     if aggr_group not in g_tree_cache["forest"]:
@@ -2930,7 +2922,7 @@ class ABCFoldableTreeRenderer(six.with_metaclass(abc.ABCMeta, object)):
             key = (site, host, service)
         else:
             key = (site, host)
-        ass = g_assumptions.get(key)
+        ass = config.user.bi_assumptions.get(key)
         current_state = str(ass).lower()
 
         html.icon_button(
@@ -3246,7 +3238,6 @@ def create_aggregation_row(tree, status_info=None):
 
 
 def table(view, columns, query, only_sites, limit, all_active_filters):
-    load_assumptions()  # user specific, always loaded
     # Hier müsste man jetzt die Filter kennen, damit man nicht sinnlos
     # alle Aggregationen berechnet.
     rows = []
@@ -3376,7 +3367,6 @@ def singlehost_table(view, columns, query, only_sites, limit, all_active_filters
                      bygroup):
     log("--------------------------------------------------------------------")
     log("* Starting to compute singlehost_table (joinbyname = %s)" % joinbyname)
-    load_assumptions()  # user specific, always loaded
     log("* Assumptions are loaded.")
 
     # Create livestatus filter for filtering out hosts. We can
@@ -3523,15 +3513,6 @@ def singlehost_table(view, columns, query, only_sites, limit, all_active_filters
 def debug(x):
     p = pprint.pformat(x)
     html.write("<pre>%s</pre>\n" % p)
-
-
-def load_assumptions():
-    global g_assumptions
-    g_assumptions = config.user.load_file("bi_assumptions", {})
-
-
-def save_assumptions():
-    config.user.save_file("bi_assumptions", g_assumptions)
 
 
 def load_ex_level():

@@ -1819,8 +1819,6 @@ def get_bi_leaf_history(aggr_rows, time_range, livestatus_limit):
 
 
 def compute_bi_timelines(timeline_containers, time_range, timewarp, phases_list):
-    bi.load_assumptions()
-
     if not timeline_containers:
         return timeline_containers
 

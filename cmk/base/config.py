@@ -82,6 +82,10 @@ from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-
 service_service_levels = []  # type: ignore
 host_service_levels = []  # type: ignore
 
+ExitSpecSection = Tuple[Text, int]
+ExitSpec = Dict[str, Union[int, List[ExitSpecSection]]]
+AgentTargetVersion = Union[None, Text, Tuple[str, str], Tuple[str, Dict[str, str]]]
+
 
 class TimespecificParamList(list):
     pass
@@ -2399,7 +2403,7 @@ class HostConfig(object):
 
     @property
     def agent_target_version(self):
-        # type: () -> Union[None, Text, Tuple[str, str]]
+        # type: () -> AgentTargetVersion
         agent_target_versions = self._config_cache.host_extra_conf(self.hostname,
                                                                    check_mk_agent_target_versions)
         if not agent_target_versions:
@@ -2755,8 +2759,8 @@ class HostConfig(object):
                 host_attributes.get(self.hostname, {}).get("additional_ipv6addresses", []))
 
     def exit_code_spec(self, data_source_id=None):
-        # type: (Optional[str]) -> Dict[str, int]
-        spec = {}  # type: Dict[str, int]
+        # type: (Optional[str]) -> ExitSpec
+        spec = {}  # type: ExitSpec
         # TODO: Can we use host_extra_conf_merged?
         specs = self._config_cache.host_extra_conf(self.hostname, check_mk_exit_status)
         for entry in specs[::-1]:
@@ -2764,7 +2768,7 @@ class HostConfig(object):
         return self._merge_with_data_source_exit_code_spec(spec, data_source_id)
 
     def _merge_with_data_source_exit_code_spec(self, spec, data_source_id):
-        # type: (Dict, Optional[str]) -> Dict[str, int]
+        # type: (Dict, Optional[str]) -> ExitSpec
         if data_source_id is not None:
             try:
                 return spec["individual"][data_source_id]

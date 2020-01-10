@@ -34,7 +34,7 @@ import cmk.utils.debug
 from cmk.utils.log import VERBOSE
 
 from cmk.base.exceptions import MKAgentError
-from cmk.base.check_utils import CheckPluginName  # pylint: disable=unused-import
+from cmk.base.check_utils import CheckPluginName, ServiceCheckResult  # pylint: disable=unused-import
 
 from .abstract import CheckMKAgentDataSource, ManagementBoardDataSource
 
@@ -195,6 +195,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         return output
 
     def _summary_result(self, for_checking):
+        # type: (bool) -> ServiceCheckResult
         return 0, "Version: %s" % self._get_ipmi_version(), []
 
     def _get_ipmi_version(self):

@@ -107,7 +107,9 @@ import time
 # NOTE: We do not use pprint in this module, but it is part of the check API.
 import pprint  # pylint: disable=unused-import
 
-from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Set, Any, Callable, Dict, Iterable, List, Optional, Tuple, Union,
+)
 
 import six
 
@@ -129,6 +131,7 @@ import cmk.base.snmp_utils as _snmp_utils
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
 import cmk.base.check_api_utils as _check_api_utils
+from cmk.base.utils import HostName  # pylint: disable=unused-import
 
 
 def get_check_api_context():
@@ -184,6 +187,7 @@ network_interface_scan_registry = _snmp_utils.MutexScanRegistry()
 
 
 def saveint(i):
+    # type: (Any) -> int
     """Tries to cast a string to an integer and return it. In case this
     fails, it returns 0.
 
@@ -197,6 +201,7 @@ def saveint(i):
 
 
 def savefloat(f):
+    # type: (Any) -> float
     """Tries to cast a string to an float and return it. In case this fails,
     it returns 0.0.
 
@@ -213,6 +218,7 @@ class as_float(float):
     """Extends the float representation for Infinities in such way that
     they can be parsed by eval"""
     def __repr__(self):
+        # type: () -> str
         if self > sys.float_info.max:
             return '1e309'
         if self < -1 * sys.float_info.max:
@@ -259,12 +265,14 @@ def all_matching_hosts(tags, hostlist, with_foreign_hosts):
 # These functions were used in some specific checks until 1.6. Don't add it to
 # the future check API. It's kept here for compatibility reasons for now.
 def tags_of_host(hostname):
+    # type: (HostName) -> Set[str]
     return _config.get_config_cache().get_host_config(hostname).tags
 
 
 # These functions were used in some specific checks until 1.6. Don't add it to
 # the future check API. It's kept here for compatibility reasons for now.
 def is_ipv6_primary(hostname):
+    # type: (HostName) -> bool
     return _config.get_config_cache().get_host_config(hostname).is_ipv6_primary
 
 
@@ -285,6 +293,7 @@ def get_checkgroup_parameters(group, deflt=None):
 
 # TODO: Replace by some render.* function / move to render module?
 def get_filesize_human_readable(size):
+    # type: (float) -> str
     """Format size of a file for humans.
 
     Similar to get_bytes_human_readable, but optimized for file
@@ -301,6 +310,7 @@ def get_filesize_human_readable(size):
 
 # TODO: Replace by some render.* function / move to render module?
 def get_timestamp_human_readable(timestamp):
+    # type: (float) -> str
     """Format a time stamp for humans in "%Y-%m-%d %H:%M:%S" format.
     In case None is given or timestamp is 0, it returns "never"."""
     if timestamp:
@@ -310,6 +320,7 @@ def get_timestamp_human_readable(timestamp):
 
 # TODO: Replace by some render.* function / move to render module?
 def get_relative_date_human_readable(timestamp):
+    # type: (float) -> str
     """Formats the given timestamp for humans "in ..." for future times
     or "... ago" for past timestamps."""
     now = time.time()

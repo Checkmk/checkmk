@@ -42,7 +42,7 @@ import subprocess
 import sys
 import time
 from typing import (  # pylint: disable=unused-import
-    Iterable, TYPE_CHECKING, List, Dict, Optional, Set,
+    cast, Iterable, TYPE_CHECKING, List, Dict, Optional, Set,
 )
 
 import cmk.utils.paths
@@ -287,7 +287,7 @@ class DataSources(object):
                 multi_host_sections.add_or_get_host_sections(this_hostname, this_ipaddress)
 
             for source in these_sources.get_data_sources():
-                host_sections_from_source = source.run()
+                host_sections_from_source = cast(HostSections, source.run())
                 host_sections.update(host_sections_from_source)
 
             # Store piggyback information received from all sources of this host. This

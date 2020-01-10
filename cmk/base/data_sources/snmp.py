@@ -263,7 +263,8 @@ class SNMPDataSource(ABCSNMPDataSource):
     def _convert_to_sections(self, raw_data):
         # type: (RawAgentData) -> HostSections
         sections_to_persist = self._extract_persisted_sections(raw_data)
-        return HostSections(raw_data, persisted_sections=sections_to_persist)
+        # TODO: Will be fixed with one of the next commits
+        return HostSections(raw_data, persisted_sections=sections_to_persist)  # type: ignore
 
     def _extract_persisted_sections(self, raw_data):
         """Extract the sections to be persisted from the raw_data and return it

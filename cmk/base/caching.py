@@ -25,18 +25,25 @@
 # Boston, MA 02110-1301 USA.
 """Managing in-memory caches through the execution time of cmk"""
 
+import abc
+from typing import cast, Type, Dict  # pylint: disable=unused-import
+import six
+
 from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.misc
 
 
 class CacheManager(object):
     def __init__(self):
-        self._caches = {}
+        # type: () -> None
+        self._caches = {}  # type: Dict[str, Cache]
 
     def exists(self, name):
+        # type: (str) -> bool
         return name in self._caches
 
     def get(self, name, cache_class):
+        # type: (str, Type[Cache]) -> Cache
         try:
             return self._caches[name]
         except KeyError:
@@ -47,47 +54,62 @@ class CacheManager(object):
             return self._caches[name]
 
     def get_dict(self, name):
-        return self.get(name, DictCache)
+        # type: (str) -> DictCache
+        return cast(DictCache, self.get(name, DictCache))
 
     def get_set(self, name):
-        return self.get(name, SetCache)
+        # type: (str) -> SetCache
+        return cast(SetCache, self.get(name, SetCache))
 
     def get_list(self, name):
-        return self.get(name, ListCache)
+        # type: (str) -> ListCache
+        return cast(ListCache, self.get(name, ListCache))
 
     def clear_all(self):
+        # type: () -> None
         for cache in self._caches.values():
             cache.clear()
 
     def dump_sizes(self):
+        # type: () -> Dict[str, int]
         sizes = {}
         for name, cache in self._caches.items():
             sizes[name] = cmk.utils.misc.total_size(cache)
         return sizes
 
 
-class Cache(object):
+class Cache(six.with_metaclass(abc.ABCMeta, object)):
     _populated = False
 
     def is_empty(self):
+        # type: () -> bool
         """Whether or not there is something in the collection at the moment"""
         return not self
 
     def is_populated(self):
+        # type: () -> bool
         """Whether or not the cache has been marked as populated. This is just a flag
         to tell the caller the initialization state of the cache. It has to be set
         to True manually by using self.set_populated()"""
         return self._populated
 
     def set_populated(self):
+        # type: () -> None
         self._populated = True
 
     def set_not_populated(self):
+        # type: () -> None
         self._populated = False
+
+    @abc.abstractmethod
+    def clear(self):
+        # type: () -> None
+        raise NotImplementedError()
 
 
 class DictCache(dict, Cache):
     def clear(self):
+        # type: () -> None
         super(DictCache, self).clear()
         self.set_not_populated()
 
@@ -125,11 +147,13 @@ class DictCache(dict, Cache):
 
 class SetCache(set, Cache):
     def clear(self):
+        # type: () -> None
         super(SetCache, self).clear()
         self.set_not_populated()
 
 
 class ListCache(list, Cache):
     def clear(self):
+        # type: () -> None
         del self[:]  # Clear the list in place
         self.set_not_populated()

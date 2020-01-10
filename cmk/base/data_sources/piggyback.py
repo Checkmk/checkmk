@@ -32,6 +32,7 @@ from cmk.utils.paths import tmp_dir
 from cmk.utils.piggyback import get_piggyback_raw_data
 
 import cmk.base.config as config
+from cmk.base.check_utils import ServiceCheckResult  # pylint: disable=unused-import
 
 from .abstract import CheckMKAgentDataSource
 
@@ -93,6 +94,7 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
         return self._execute(), False
 
     def _summary_result(self, for_checking):
+        # type: (bool) -> ServiceCheckResult
         """Returns useful information about the data source execution
 
         Return only summary information in case there is piggyback data"""

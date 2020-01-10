@@ -31,7 +31,7 @@ import time
 import abc
 import logging
 import sys
-from typing import Set, List, cast, Tuple, Union, Optional, Text  # pylint: disable=unused-import
+from typing import AnyStr, Dict, Set, List, cast, Tuple, Union, Optional, Text  # pylint: disable=unused-import
 import six
 
 import cmk.utils.log  # TODO: Remove this!
@@ -61,7 +61,8 @@ from cmk.base.exceptions import MKAgentError, MKEmptyAgentData, MKSNMPError, \
 from cmk.base.check_api_utils import state_markers
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     PersistedSections, SectionName, SectionContent, ServiceState, ServiceDetails,
-    ServiceCheckResult, Metric, CheckPluginName,
+    ServiceCheckResult, Metric, CheckPluginName, AgentSections, PiggybackRawData,
+    AgentSectionCacheInfo,
 )
 from cmk.base.utils import HostName, HostAddress, RawAgentData  # pylint: disable=unused-import
 
@@ -413,12 +414,15 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
     # TODO: Refactor the returned data of this method and self._summary_result()
     # to some wrapped object like CheckResult(...)
     def get_summary_result_for_discovery(self):
+        # type: () -> ServiceCheckResult
         return self._get_summary_result(for_checking=False)
 
     def get_summary_result_for_inventory(self):
+        # type: () -> ServiceCheckResult
         return self._get_summary_result(for_checking=False)
 
     def get_summary_result_for_checking(self):
+        # type: () -> ServiceCheckResult
         return self._get_summary_result()
 
     def _get_summary_result(self, for_checking=True):
@@ -445,6 +449,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
 
         else:
             status = self._host_config.exit_code_spec().get("exception", 3)
+        status = cast(int, status)
 
         return status, exc_msg + check_api_utils.state_markers[status], []
 
@@ -580,6 +585,7 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
     # pylint: disable=abstract-method
 
     def __init__(self, hostname, ipaddress):
+        # type: (HostName, Optional[HostAddress]) -> None
         super(CheckMKAgentDataSource, self).__init__(hostname, ipaddress)
         self._is_main_agent_data_source = False
 
@@ -624,14 +630,15 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
         return self._parse_info(raw_data.split("\n"))
 
     def _parse_info(self, lines):
+        # type: (List[bytes]) -> HostSections
         """Split agent output in chunks, splits lines by whitespaces.
 
         Returns a HostSections() object.
         """
-        sections = {}  # type: Dict[SectionName, SectionContent]
+        sections = {}  # type: AgentSections
         # Unparsed info for other hosts. A dictionary, indexed by the piggybacked host name.
         # The value is a list of lines which were received for this host.
-        piggybacked_raw_data = {}
+        piggybacked_raw_data = {}  # type: PiggybackRawData
         piggybacked_hostname = None
         piggybacked_cached_at = int(time.time())
         # Transform to seconds and give the piggybacked host a little bit more time
@@ -639,10 +646,10 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
 
         # handle sections with option persist(...)
         persisted_sections = {}  # type: PersistedSections
-        section_content = []
-        section_options = {}
-        agent_cache_info = {}
-        separator = None
+        section_content = []  # type: SectionContent
+        section_options = {}  # type: Dict[str, Optional[str]]
+        agent_cache_info = {}  # type: AgentSectionCacheInfo
+        separator = None  # type: Optional[str]
         encoding = None
         for line in lines:
             line = line.rstrip("\r")
@@ -664,6 +671,7 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
                 headerparts = section_header.split(":")
                 section_name = headerparts[0]
                 section_options = {}
+                opt_args = None  # type: Optional[str]
                 for o in headerparts[1:]:
                     opt_parts = o.split("(")
                     opt_name = opt_parts[0]
@@ -673,26 +681,29 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
                         opt_args = None
                     section_options[opt_name] = opt_args
 
-                section_content = sections.get(section_name, None)
-                if section_content is None:  # section appears in output for the first time
+                content = sections.get(section_name, None)
+                if content is None:  # section appears in output for the first time
                     section_content = []
                     sections[section_name] = section_content
+                else:
+                    section_content = content
+
                 try:
-                    separator = chr(int(section_options["sep"]))
+                    separator = chr(int(cast(str, section_options["sep"])))
                 except Exception:
                     separator = None
 
                 # Split of persisted section for server-side caching
                 if "persist" in section_options:
-                    until = int(section_options["persist"])
+                    until = int(cast(str, section_options["persist"]))
                     cached_at = int(time.time())  # Estimate age of the data
                     cache_interval = int(until - cached_at)
                     agent_cache_info[section_name] = (cached_at, cache_interval)
                     persisted_sections[section_name] = (cached_at, until, section_content)
 
                 if "cached" in section_options:
-                    agent_cache_info[section_name] = tuple(
-                        map(int, section_options["cached"].split(",")))
+                    cache_times = map(int, cast(str, section_options["cached"]).split(","))
+                    agent_cache_info[section_name] = cache_times[0], cache_times[1]
 
                 # The section data might have a different encoding
                 encoding = section_options.get("encoding")
@@ -702,22 +713,23 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
                     line = stripped_line
 
                 if encoding:
-                    line = convert_to_unicode(line, std_encoding=encoding)
+                    decoded_line = convert_to_unicode(line, std_encoding=encoding)
                 else:
-                    line = convert_to_unicode(line)
+                    decoded_line = convert_to_unicode(line)
 
-                section_content.append(line.split(separator))
+                section_content.append(decoded_line.split(separator))
 
         return HostSections(sections, agent_cache_info, piggybacked_raw_data, persisted_sections)
 
     def _get_sanitized_and_translated_piggybacked_hostname(self, orig_piggyback_header):
+        # type: (str) -> Optional[HostName]
         piggybacked_hostname = orig_piggyback_header[4:-4]
         if not piggybacked_hostname:
-            return
+            return None
 
         piggybacked_hostname = config.translate_piggyback_host(self._hostname, piggybacked_hostname)
         if piggybacked_hostname == self._hostname or not piggybacked_hostname:
-            return  # unpiggybacked "normal" host
+            return None  # unpiggybacked "normal" host
 
         # Protect Check_MK against unallowed host names. Normally source scripts
         # like agent plugins should care about cleaning their provided host names
@@ -727,18 +739,23 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
 
     def _add_cached_info_to_piggybacked_section_header(self, orig_section_header, cached_at,
                                                        cache_age):
+        # type: (str, int, int) -> str
         if ':cached(' in orig_section_header or ':persist(' in orig_section_header:
             return orig_section_header
         return '<<<%s:cached(%s,%s)>>>' % (orig_section_header[3:-3], cached_at, cache_age)
 
     # TODO: refactor
     def _summary_result(self, for_checking):
+        # type: (bool) -> ServiceCheckResult
+        assert isinstance(self._host_sections, HostSections)
+
         cmk_section = self._host_sections.sections.get("check_mk")
         agent_info = self._get_agent_info(cmk_section)
         agent_version = agent_info["version"]
 
-        status = 0
-        output = []
+        status = 0  # type: ServiceState
+        output = []  # type: List[ServiceDetails]
+        perfdata = []  # type: List[Metric]
         if not self._host_config.is_cluster and agent_version is not None:
             output.append("Version: %s" % agent_version)
 
@@ -752,15 +769,16 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
             ]:
                 if not sub_result:
                     continue
-                sub_status, sub_output = sub_result
+                sub_status, sub_output, sub_perfdata = sub_result
                 status = max(status, sub_status)
                 output.append(sub_output)
-        return status, ", ".join(output), []
+                perfdata += sub_perfdata
+        return status, ", ".join(output), perfdata
 
     def _get_agent_info(self, cmk_section):
         agent_info = {
-            "version": "unknown",
-            "agentos": "unknown",
+            "version": u"unknown",
+            "agentos": u"unknown",
         }
 
         if self._host_sections is None or not cmk_section:
@@ -772,44 +790,54 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
         return agent_info
 
     def _sub_result_version(self, agent_info):
-        agent_version = agent_info["version"]
+        # type: (Dict[str, Text]) -> Optional[ServiceCheckResult]
+        agent_version = cast(str, agent_info["version"])
         expected_version = self._host_config.agent_target_version
 
         if expected_version and agent_version \
              and not self._is_expected_agent_version(agent_version, expected_version):
+            expected = u""
             # expected version can either be:
             # a) a single version string
             # b) a tuple of ("at_least", {'daily_build': '2014.06.01', 'release': '1.2.5i4'}
             #    (the dict keys are optional)
             if isinstance(expected_version, tuple) and expected_version[0] == 'at_least':
+                spec = cast(Dict[str, str], expected_version[1])
                 expected = 'at least'
-                if 'daily_build' in expected_version[1]:
-                    expected += ' build %s' % expected_version[1]['daily_build']
-                if 'release' in expected_version[1]:
-                    if 'daily_build' in expected_version[1]:
+                if 'daily_build' in spec:
+                    expected += ' build %s' % spec['daily_build']
+                if 'release' in spec:
+                    if 'daily_build' in spec:
                         expected += ' or'
-                    expected += ' release %s' % expected_version[1]['release']
+                    expected += ' release %s' % spec['release']
             else:
-                expected = expected_version
-            status = self._host_config.exit_code_spec().get("wrong_version", 1)
+                expected = "%s" % (expected_version,)
+            status = cast(int, self._host_config.exit_code_spec().get("wrong_version", 1))
             return (status, "unexpected agent version %s (should be %s)%s" %
-                    (agent_version, expected, state_markers[status]))
+                    (agent_version, expected, state_markers[status]), [])
 
-        elif config.agent_min_version and agent_version < config.agent_min_version:
-            status = self._host_config.exit_code_spec().get("wrong_version", 1)
+        elif config.agent_min_version and cast(int, agent_version) < config.agent_min_version:
+            # TODO: This branch seems to be wrong. Or: In which case is agent_version numeric?
+            status = cast(int, self._host_config.exit_code_spec().get("wrong_version", 1))
             return (status, "old plugin version %s (should be at least %s)%s" %
-                    (agent_version, config.agent_min_version, state_markers[status]))
+                    (agent_version, config.agent_min_version, state_markers[status]), [])
+
+        return None
 
     def _sub_result_only_from(self, agent_info):
+        # type: (Dict[str, Text]) -> Optional[ServiceCheckResult]
         agent_only_from = agent_info.get("onlyfrom")
+        if agent_only_from is None:
+            return None
+
         config_only_from = self._host_config.only_from
-        if None in (agent_only_from, config_only_from):
-            return
+        if config_only_from is None:
+            return None
 
         allowed_nets = set(_normalize_ip_addresses(agent_only_from))
         expected_nets = set(_normalize_ip_addresses(config_only_from))
         if allowed_nets == expected_nets:
-            return 0, "Allowed IP ranges: %s%s" % (" ".join(allowed_nets), state_markers[0])
+            return 0, "Allowed IP ranges: %s%s" % (" ".join(allowed_nets), state_markers[0]), []
 
         infotexts = []
         exceeding = allowed_nets - expected_nets
@@ -819,18 +847,23 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
         if missing:
             infotexts.append("missing: %s" % " ".join(sorted(missing)))
 
-        return 1, "Unexpected allowed IP ranges (%s)%s" % (", ".join(infotexts), state_markers[1])
+        return 1, "Unexpected allowed IP ranges (%s)%s" % (", ".join(infotexts),
+                                                           state_markers[1]), []
 
     def _is_expected_agent_version(self, agent_version, expected_version):
+        # type: (Optional[str], config.AgentTargetVersion) -> bool
         try:
-            if agent_version in ['(unknown)', None, 'None']:
+            if agent_version is None:
+                return False
+
+            if agent_version in ['(unknown)', 'None']:
                 return False
 
             if isinstance(expected_version, six.string_types) and expected_version != agent_version:
                 return False
 
             elif isinstance(expected_version, tuple) and expected_version[0] == 'at_least':
-                spec = expected_version[1]
+                spec = cast(Dict[str, str], expected_version[1])
                 if cmk.utils.misc.is_daily_build_version(agent_version) and 'daily_build' in spec:
                     expected = int(spec['daily_build'].replace('.', ''))
 
@@ -873,6 +906,7 @@ class ManagementBoardDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
     _for_mgmt_board = True
 
     def __init__(self, hostname, ipaddress):
+        # type: (HostName, Optional[HostAddress]) -> None
         super(ManagementBoardDataSource, self).__init__(hostname, ipaddress)
         # Do not use the (custom) ipaddress for the host. Use the management board
         # address instead
@@ -880,6 +914,7 @@ class ManagementBoardDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
         self._credentials = self._host_config.management_credentials
 
     def _management_board_ipaddress(self, hostname):
+        # type: (HostName) -> Optional[HostAddress]
         mgmt_ipaddress = self._host_config.management_address
 
         if mgmt_ipaddress is None:
@@ -896,6 +931,7 @@ class ManagementBoardDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
     # TODO: Why is it used only here?
     @staticmethod
     def _is_ipaddress(address):
+        # type: (HostAddress) -> bool
         if address is None:
             return False
 
@@ -930,6 +966,7 @@ def _persisted_sections_dir(datasource_id):
 
 
 def _normalize_ip_addresses(ip_addresses):
+    # type: (Union[AnyStr, List[AnyStr]]) -> List[AnyStr]
     '''factorize 10.0.0.{1,2,3}'''
     if not isinstance(ip_addresses, list):
         ip_addresses = ip_addresses.split()

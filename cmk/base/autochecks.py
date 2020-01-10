@@ -44,7 +44,7 @@ from cmk.base.discovered_labels import (
     DiscoveredServiceLabels,
     ServiceLabel,
 )
-from cmk.base.utils import HostName  # pylint: disable=unused-import
+from cmk.base.utils import HostName, ServiceName  # pylint: disable=unused-import
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     CheckPluginName, CheckParameters, DiscoveredService, Item, Service,
 )
@@ -59,12 +59,12 @@ class AutochecksManager(object):
         # type: () -> None
         super(AutochecksManager, self).__init__()
 
-        self._autochecks = {}  # type: Dict[str, List[Service]]
+        self._autochecks = {}  # type: Dict[HostName, List[Service]]
 
         # Extract of the autochecks. This cache is populated either on the way while
         # processing get_autochecks_of() or when directly calling discovered_labels_of().
-        self._discovered_labels_of = {}  # type: Dict[str, Dict[Text, DiscoveredServiceLabels]]
-        self._raw_autochecks_cache = {}  # type: Dict[str, List[Service]]
+        self._discovered_labels_of = {}  # type: Dict[HostName, Dict[Text, DiscoveredServiceLabels]]
+        self._raw_autochecks_cache = {}  # type: Dict[HostName, List[Service]]
 
     def get_autochecks_of(self, hostname):
         # type: (str) -> List[Service]
@@ -77,7 +77,7 @@ class AutochecksManager(object):
         return services
 
     def discovered_labels_of(self, hostname, service_desc):
-        # type: (str, Text) -> DiscoveredServiceLabels
+        # type: (HostName, ServiceName) -> DiscoveredServiceLabels
         # Check if the autochecks for the given hostname were already read
         # The service in question might have no entry in the autochecks file
         # In this scenario it gets an empty DiscoveredServiceLabels entry
@@ -102,7 +102,7 @@ class AutochecksManager(object):
         return result
 
     def _read_autochecks_of(self, hostname):
-        # type: (str) -> List[Service]
+        # type: (HostName) -> List[Service]
         """Read automatically discovered checks of one host"""
         autochecks = []
         for service in self._read_raw_autochecks_cached(hostname):
@@ -118,6 +118,7 @@ class AutochecksManager(object):
         return autochecks
 
     def _read_raw_autochecks_cached(self, hostname):
+        # type: (HostName) -> List[Service]
         if hostname in self._raw_autochecks_cache:
             return self._raw_autochecks_cache[hostname]
 
@@ -134,7 +135,7 @@ class AutochecksManager(object):
     # TODO: use store.load_object_from_file()
     # TODO: Common code with parse_autochecks_file? Cleanup.
     def _read_raw_autochecks_of(self, hostname):
-        # type: (str) -> List[Service]
+        # type: (HostName) -> List[Service]
         """Read automatically discovered checks of one host"""
         basedir = cmk.utils.paths.autochecks_dir
         filepath = basedir + '/' + hostname + '.mk'

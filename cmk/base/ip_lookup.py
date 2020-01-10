@@ -229,9 +229,9 @@ def _get_ip_lookup_cache():
     """A file based fall-back DNS cache in case resolution fails"""
     if cmk.base.config_cache.exists("ip_lookup"):
         # Return already created and initialized cache
-        return cmk.base.config_cache.get("ip_lookup", IPLookupCache)
+        return cast(IPLookupCache, cmk.base.config_cache.get("ip_lookup", IPLookupCache))
 
-    cache = cmk.base.config_cache.get("ip_lookup", IPLookupCache)
+    cache = cast(IPLookupCache, cmk.base.config_cache.get("ip_lookup", IPLookupCache))
     cache.load_persisted()
     return cache
 

@@ -31,7 +31,7 @@ import tempfile
 import time
 import copy
 from typing import (  # pylint: disable=unused-import
-    cast, Union, Any, AnyStr, List, Tuple, Optional, Text, Iterable,
+    cast, Union, Any, AnyStr, List, Tuple, Optional, Text, Iterable, Dict,
 )
 
 import six
@@ -60,9 +60,9 @@ import cmk.base.decorator
 import cmk.base.check_api_utils as check_api_utils
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     ServiceState, ServiceDetails, ServiceAdditionalDetails, ServiceCheckResult, Metric,
-    CheckPluginName, Item,
+    CheckPluginName, Item, SectionName, CheckParameters,
 )
-from cmk.base.utils import HostName, HostAddress  # pylint: disable=unused-import
+from cmk.base.utils import HostName, HostAddress, ServiceName  # pylint: disable=unused-import
 
 if not cmk.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
@@ -81,6 +81,7 @@ _submit_to_core = True
 _show_perfdata = False
 
 ServiceCheckResultWithOptionalDetails = Tuple[ServiceState, ServiceDetails, List[Metric]]
+UncleanPerfValue = Optional[Union[str, float]]
 
 #.
 #   .--Checking------------------------------------------------------------.
@@ -132,7 +133,7 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
             if source_output != "":
                 status = max(status, source_state)
                 infotexts.append("[%s] %s" % (source.id(), source_output))
-                perfdata.extend(source_perfdata)
+                perfdata.extend([_convert_perf_data(p) for p in source_perfdata])
 
         if missing_sections and num_success > 0:
             missing_sections_status, missing_sections_infotext = \
@@ -142,7 +143,7 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
 
         elif missing_sections:
             infotexts.append("Got no information from host")
-            status = max(status, exit_spec.get("empty_output", 2))
+            status = max(status, cast(int, exit_spec.get("empty_output", 2)))
 
         cpu_tracking.end()
         phase_times = cpu_tracking.get_times()
@@ -182,7 +183,10 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
 
 
 def _check_missing_sections(missing_sections, exit_spec):
-    specific_missing_sections_spec = exit_spec.get("specific_missing_sections", [])
+    # type: (List[SectionName], config.ExitSpec) -> Tuple[ServiceState, ServiceDetails]
+    specific_missing_sections_spec = \
+        cast(List[config.ExitSpecSection], exit_spec.get("specific_missing_sections", []))
+
     specific_missing_sections, generic_missing_sections = set(), set()
     for section in missing_sections:
         match = False
@@ -195,7 +199,7 @@ def _check_missing_sections(missing_sections, exit_spec):
         if not match:
             generic_missing_sections.add(section)
 
-    generic_missing_sections_status = exit_spec.get("missing_sections", 1)
+    generic_missing_sections_status = cast(int, exit_spec.get("missing_sections", 1))
     infotexts = [
         "Missing agent sections: %s%s" %
         (", ".join(sorted(generic_missing_sections)),
@@ -212,7 +216,7 @@ def _check_missing_sections(missing_sections, exit_spec):
 # Loops over all checks for ANY host (cluster, real host), gets the data, calls the check
 # function that examines that data and sends the result to the Core.
 def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_names=None):
-    # type: (data_sources.DataSources, config.HostConfig, Optional[HostAddress], Optional[List[str]]) -> Tuple[int, List[str]]
+    # type: (data_sources.DataSources, config.HostConfig, Optional[HostAddress], Optional[List[str]]) -> Tuple[int, List[SectionName]]
     hostname = host_config.hostname  # type: HostName
     config_cache = config.get_config_cache()
 
@@ -284,6 +288,7 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
 
 def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_plugin_name, item,
                   params, description):
+    # type: (config.ConfigCache, data_sources.MultiHostSections, HostName, Optional[HostAddress], CheckPluginName, Item, CheckParameters, ServiceName) -> Optional[bool]
     # Make a bit of context information globally available, so that functions
     # called by checks now this context
     check_api_utils.set_service(check_plugin_name, description)
@@ -366,6 +371,7 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
         largest_interval = None
 
         def minn(a, b):
+            # type: (Optional[int], Optional[int]) -> Optional[int]
             if a is None:
                 return b
             elif b is None:
@@ -388,6 +394,7 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
 
 
 def determine_check_params(entries):
+    # type: (CheckParameters) -> CheckParameters
     if not isinstance(entries, cmk.base.config.TimespecificParamList):
         return entries
 
@@ -402,7 +409,7 @@ def determine_check_params(entries):
             entries[0])  # A timespecific rule, determine the correct tuple
 
     # This rule is dictionary based, evaluate all entries and merge matching keys
-    timespecific_entries = {}
+    timespecific_entries = {}  # type: Dict[str, Any]
     for entry in entries[::-1]:
         timespecific_entries.update(_evaluate_timespecific_entry(entry))
 
@@ -410,6 +417,7 @@ def determine_check_params(entries):
 
 
 def _evaluate_timespecific_entry(entry):
+    # type: (Dict[str, Any]) -> Dict[str, Any]
     # Dictionary entries without timespecific settings
     if "tp_default_value" not in entry:
         return entry
@@ -535,12 +543,14 @@ def _sanitize_check_result_infotext(infotext, allow_missing_infotext):
 
 
 def _convert_perf_data(p):
+    # type: (List[UncleanPerfValue]) -> str
     # replace None with "" and fill up to 7 values
-    p = (map(_convert_perf_value, p) + ['', '', '', ''])[0:6]
-    return "%s=%s;%s;%s;%s;%s" % tuple(p)
+    normalized = (map(_convert_perf_value, p) + ['', '', '', ''])[0:6]
+    return "%s=%s;%s;%s;%s;%s" % tuple(normalized)
 
 
 def _convert_perf_value(x):
+    # type: (UncleanPerfValue) -> str
     if x is None:
         return ""
     elif isinstance(x, six.string_types):
@@ -567,6 +577,7 @@ def _convert_perf_value(x):
 
 
 def _submit_check_result(host, servicedesc, result, cached_at=None, cache_interval=None):
+    # type: (HostName, ServiceDetails, ServiceCheckResult, Optional[int], Optional[int]) -> None
     if not result:
         result = 3, "Check plugin did not return any result"
 

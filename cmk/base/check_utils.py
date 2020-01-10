@@ -38,6 +38,7 @@ from cmk.utils.exceptions import MKGeneralException
 
 import cmk.base
 from cmk.base.discovered_labels import DiscoveredServiceLabels
+from cmk.base.utils import HostName
 
 Item = Union[Text, None, int]
 CheckParameters = Union[None, Dict, Tuple, List, str]
@@ -46,7 +47,7 @@ RulesetName = str
 ServiceState = int
 ServiceDetails = Text
 ServiceAdditionalDetails = Text
-# TODO: Specify this (see cmk/base/checking.py::_convert_perf_data)
+# TODO: Specify this  (see cmk/base/checking.py::_convert_perf_data)
 Metric = List
 ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[Metric]]
 
@@ -54,6 +55,10 @@ SectionName = str
 SectionContent = List[List[Text]]
 PersistedSection = Tuple[int, int, SectionContent]
 PersistedSections = Dict[SectionName, PersistedSection]
+AgentSections = Dict[SectionName, SectionContent]
+AgentSectionCacheInfo = Dict[SectionName, Tuple[int, int]]
+PiggybackRawData = Dict[HostName, List[bytes]]
+ParsedSectionContent = Any
 
 
 class Service(object):

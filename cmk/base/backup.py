@@ -32,6 +32,7 @@ import shutil
 import tarfile
 import time
 import cStringIO as StringIO
+from typing import List, Tuple  # pylint: disable=unused-import
 
 import cmk.utils.paths
 import cmk.utils.render as render
@@ -39,8 +40,11 @@ from cmk.utils.exceptions import MKGeneralException
 
 import cmk.base.console as console
 
+BackupPath = Tuple[str, str, str, str, bool]
+
 
 def backup_paths():
+    # type: () -> List[BackupPath]
     # TODO: Refactor to named tuples
     # yapf: disable
     return [
@@ -57,6 +61,7 @@ def backup_paths():
 
 
 def do_backup(tarname):
+    # type: (str) -> None
     console.verbose("Creating backup file '%s'...\n", tarname)
     tar = tarfile.open(tarname, "w:gz")
 
@@ -75,7 +80,8 @@ def do_backup(tarname):
                 subdata = open(absdir).read()
 
             info = tarfile.TarInfo(subtarname)
-            info.mtime = time.time()
+            # mypy complains about mtime being int, but float is totally fine
+            info.mtime = time.time()  # type: ignore
             info.uid = 0
             info.gid = 0
             info.size = len(subdata)
@@ -91,6 +97,7 @@ def do_backup(tarname):
 
 
 def do_restore(tarname):
+    # type: (str) -> None
     console.verbose("Restoring from '%s'...\n", tarname)
 
     if not os.path.exists(tarname):

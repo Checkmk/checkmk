@@ -54,7 +54,7 @@ ENV BASH_ENV=/opt/rh/python27/enable \
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
     && python get-pip.py
 RUN pip install --upgrade setuptools virtualenv \
-    && pip install https://github.com/smokey42/pipenv/archive/last-checked.tar.gz
+    && pip install git+https://github.com/pypa/pipenv.git@2549656dc09e132d8ba2fa6327c939f5f9a951b7
 
 RUN curl -sL https://rpm.nodesource.com/setup_10.x | bash -
 RUN yum -y install \

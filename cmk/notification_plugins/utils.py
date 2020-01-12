@@ -33,6 +33,7 @@ from typing import (  # pylint: disable=unused-import
 import requests
 
 from cmk.utils.notify import find_wato_folder
+import cmk.utils.paths
 import cmk.utils.password_store
 import cmk.utils.cmk_subprocess as subprocess
 
@@ -162,7 +163,7 @@ def set_mail_headers(target, subject, from_address, reply_to, mail):
 
 
 def send_mail_sendmail(m, target, from_address):
-    cmd = ["/usr/sbin/sendmail"]
+    cmd = [_sendmail_path()]
     if from_address:
         cmd += ['-F', from_address, "-f", from_address]
     cmd += ["-i", target.encode("utf-8")]
@@ -181,6 +182,20 @@ def send_mail_sendmail(m, target, from_address):
 
     sys.stdout.write("Spooled mail to local mail transmission agent\n")
     return 0
+
+
+def _sendmail_path():
+    # type: () -> str
+    # We normally don't deliver the sendmail command, but our notification integration tests
+    # put some fake sendmail command into the site to prevent actual sending of mails.
+    for path in [
+            "%s/local/bin/sendmail" % cmk.utils.paths.omd_root,
+            "/usr/sbin/sendmail",
+    ]:
+        if os.path.exists(path):
+            return path
+
+    raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
 
 
 def read_bulk_contexts():

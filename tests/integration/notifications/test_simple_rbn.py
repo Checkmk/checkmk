@@ -1,16 +1,27 @@
 # pylint: disable=redefined-outer-name
 
 import time
+import os
 import pytest  # type: ignore
 
 from testlib import web, WatchLog  # pylint: disable=unused-import
+
+
+@pytest.fixture()
+def fake_sendmail(site):
+    site.write_file("local/bin/sendmail", "#!/bin/bash\n"
+                    "set -e\n"
+                    "echo \"sendmail called with: $@\"\n")
+    os.chmod(site.path("local/bin/sendmail"), 0o775)
+    yield
+    site.delete_file("local/bin/sendmail")
 
 
 @pytest.fixture(params=[
     ("nagios", "var/log/nagios.log"),
     ("cmc", "var/check_mk/core/history"),
 ])
-def test_log(request, web, site):
+def test_log(request, web, site, fake_sendmail):
     core, log = request.param
     site.set_config("CORE", core, with_restart=True)
 

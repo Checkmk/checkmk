@@ -5,7 +5,7 @@ SHELL ["/bin/bash", "-c"]
 RUN yum -y makecache \
     && yum -y --enablerepo=PowerTools install \
     bind-utils \
-    boost-devel \
+    curl \
     curl-devel \
     expat-devel \
     flex \
@@ -19,7 +19,6 @@ RUN yum -y makecache \
     isl-devel \
     kernel-headers \
     libXpm-devel \
-    libdbi-devel \
     libevent-devel \
     libffi-devel \
     libgsf-devel \
@@ -65,14 +64,9 @@ RUN yum -y makecache \
     kernel-headers \
     && yum clean all
 
-#ARG ARTIFACT_STORAGE
-#COPY bw-build-gnu-toolchain.sh /usr/sbin
-#RUN bw-build-gnu-toolchain.sh -r $ARTIFACT_STORAGE -b
-#
-#RUN mv /usr/bin/gcc /usr/bin/gcc-old || true \
-#    && mv /usr/bin/cc /usr/bin/cc-old || true \
-#    && ln -s /usr/bin/gcc-8 /usr/bin/gcc \
-#    && ln -s /usr/bin/gcc-8 /usr/bin/cc
+ARG ARTIFACT_STORAGE
+COPY bw-build-gnu-toolchain.sh /usr/sbin
+RUN bw-build-gnu-toolchain.sh -r $ARTIFACT_STORAGE -b
 RUN cd /opt \
     && wget https://github.com/Kitware/CMake/releases/download/v3.16.2/cmake-3.16.2-Linux-x86_64.tar.gz \
     && tar xf cmake-3.16.2-Linux-x86_64.tar.gz \

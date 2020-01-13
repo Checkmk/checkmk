@@ -27,7 +27,7 @@ def get_docker_tag(scm) {
 def select_docker_tag(BRANCH, BUILD_TAG, FOLDER_TAG) {
     // Empty folder prperties are null pointers
     // Other emput string variables have the value ''
-    if (FOLDERTAG != null) {
+    if (FOLDER_TAG != null) {
         return FOLDER_TAG
     }
     if (BUILD_TAG != '') {

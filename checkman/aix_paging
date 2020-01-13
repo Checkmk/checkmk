@@ -1,6 +1,6 @@
 title: AIX Paging information
 agents: aix
-catalog: environment/storage
+catalog: os/storage
 license: GPL
 distribution: check_mk
 description:

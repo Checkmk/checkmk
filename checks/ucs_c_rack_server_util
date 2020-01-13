@@ -50,15 +50,15 @@ def parse_ucs_c_rack_server_util(info):
         rack = dn.replace("dn ", "").replace("sys/",
                                              "").replace("rack-unit-",
                                                          "Rack unit ").replace("/utilization", "")
-        parsed.setdefault(rack, {})
+
         for ds_key, ds in (('overallUtilization', overall_util), ('cpuUtilization', cpu_util),
                            ('memoryUtilization', memory_util), ('ioUtilization', pci_io_util)):
             try:
-                parsed[rack][ds_key] = float(ds.replace(ds_key + " ", ""))
+                value = float(ds.replace(ds_key + " ", ""))
             except ValueError:
-                # The default value set by setdefault is None. These values are handled in the
-                # check function via check_levels() appropriatelly.
-                pass
+                continue
+            parsed.setdefault(rack, {})[ds_key] = value
+
     return parsed
 
 

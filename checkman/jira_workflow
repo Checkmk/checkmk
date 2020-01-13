@@ -1,0 +1,18 @@
+title: Jira: Workflow
+agents: jira
+catalog: app/jira
+license: GPL
+distribution: check_mk
+description:
+ With this check you can monitor the number of Issues for given projects and
+ there workflows. It outputs the number of issues of the given project and
+ workflow.
+
+ Needs the datasource "Check statistics of Jira" to be configured.
+
+item:
+ The item is the name of the project and workflow.
+
+inventory:
+ One service for each project and workflow
+ {"Jira Workflow My_project/My_workflow"} will be created.

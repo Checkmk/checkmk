@@ -6360,6 +6360,24 @@ metric_info['kb_out_of_sync'] = {
     "color": "14/a",
 }
 
+metric_info['jira_count'] = {
+    "title": _("Number of issues"),
+    "unit": "count",
+    "color": "14/a",
+}
+
+metric_info['jira_sum'] = {
+    "title": _("Result of summed up values"),
+    "unit": "count",
+    "color": "14/a",
+}
+
+metric_info['jira_avg'] = {
+    "title": _("Average value"),
+    "unit": "count",
+    "color": "14/a",
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |

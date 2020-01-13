@@ -184,6 +184,7 @@ catalog_titles = {
         "elasticsearch" : "Elasticsearch",
         "graylog"       : "Graylog",
         "jenkins"       : "Jenkins",
+        "jira"          : "Jira",
         "splunk"        : "Splunk",
         "mongodb"       : "MongoDB",
         "citrix"        : "Citrix",

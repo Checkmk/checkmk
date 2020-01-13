@@ -1,0 +1,94 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<jira_jira_custom_svc>>>
+# {"Custom Service Count": {"count": 270}, "Custom Service Sum": {"sum": 17.0},
+# "Custom Service AVG": {"avg": "0.34"}}
+
+import json
+
+
+def parse_jira_custom_svc(info):
+    parsed = {}
+
+    for line in info:
+        custom_svc = json.loads(" ".join(line))
+
+        for service in custom_svc:
+
+            svc_values = custom_svc.get(service)
+            if svc_values is None:
+                continue
+
+            try:
+                parsed.setdefault("%s" % service.title(), {}).update(svc_values)
+            except KeyError:
+                pass
+
+    return parsed
+
+
+@get_parsed_item_data
+def check_jira_custom_svc(item, params, item_data):
+    if not item_data:
+        return
+
+    msg_error = item_data.get("error")
+    if msg_error is not None:
+        yield 2, "Jira error while searching (see long output for details)\n%s" % msg_error
+        return
+
+    for computation, infotext, hr_func in [
+        ("count", "Total number of issues", int),
+        ("sum", "Result of summed up values", int),
+        ("avg", "Average value", float),
+    ]:
+
+        svc_value = item_data.get(computation)
+        if svc_value is None:
+            continue
+
+        if computation == "avg":
+            svc_value = float(svc_value)
+
+        upper_level = params.get('custom_svc_%s_upper' % computation, (None, None))
+        lower_level = params.get('custom_svc_%s_lower' % computation, (None, None))
+
+        yield check_levels(svc_value,
+                           "jira_%s" % computation,
+                           upper_level + lower_level,
+                           human_readable_func=hr_func,
+                           infoname=infotext)
+
+
+check_info["jira_custom_svc"] = {
+    "parse_function": parse_jira_custom_svc,
+    "check_function": check_jira_custom_svc,
+    'inventory_function': discover(),
+    "service_description": "Jira %s",
+    "has_perfdata": True,
+    "group": "jira_custom_svc",
+}

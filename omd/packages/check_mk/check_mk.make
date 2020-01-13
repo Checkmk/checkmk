@@ -88,12 +88,9 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS)
 	tar -xz -C $(DESTDIR)$(OMD_ROOT)/lib/python3 -f $(CHECK_MK_BUILD_DIR)/lib.tar.gz cmk/__init__.py
 	tar -xz -C $(DESTDIR)$(OMD_ROOT)/lib/python3 -f $(CHECK_MK_BUILD_DIR)/lib.tar.gz \
 	    cmk/utils \
-	    cmk/ec
-	#tar -xz -C $(DESTDIR)$(OMD_ROOT)/lib/python3 -f $(CHECK_MK_BUILD_DIR)/lib.tar.gz \
-	#    cmk/utils \
-	#    cmk/ec \
-	#    cmk/special_agents/__init__.py \
-	#    cmk/special_agents/agent_jira.py
+	    cmk/ec \
+	    cmk/special_agents/__init__.py \
+	    cmk/special_agents/agent_jira.py
 	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" ; \
 	    $(PACKAGE_PYTHON3_EXECUTABLE) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk
 

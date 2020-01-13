@@ -303,7 +303,7 @@ case "${MK_OSSTR}" in
         # Treat all pre-Solaris 10 systems as "global"
         if inpath zonename; then
             zonename=$(zonename)
-            pszone="-z $zonename"
+            pszone="-z ${zonename}"
         else
             zonename="global"
             pszone="-A"
@@ -1680,7 +1680,7 @@ section_net() {
                 else
                     # If interface down we get "Invalid argument"
                     speed=$(cat "/sys/class/net/$eth/speed" 2>/dev/null)
-                    [ -n "$speed" ] && mkecho -e "\tSpeed: ${speed}Mb/s\n"
+                    [ -n "${speed}" ] && [ "${speed}" -ge 0 ] && mkecho -e "\tSpeed: ${speed}Mb/s\n"
                 fi
                 # shellcheck disable=SC2039
                 mkecho -e "\\tAddress: $(cat "/sys/class/net/$eth/address")\\n"
@@ -1812,14 +1812,14 @@ section_netctr() {
 
             get_epoch
             while [ $Z1 -lt 15 ]; do
-              BI=$( netstat -inb | grep -Ev Name | grep Link | awk '{print $1" "$5}' | sed -ne $Z1$Z2 )
-              PI=$( netstat -in | grep -Ev Name | grep Link | awk '{print $5}' | sed -ne $Z1$Z2 )
-              EI=$( netstat -in | grep -Ev Name | grep Link | awk '{print $6}' | sed -ne $Z1$Z2 )
+              BI=$( netstat -inb | grep -Ev Name | awk '/Link/{print $1" "$5}' | sed -ne $Z1$Z2 )
+              PI=$( netstat -in | grep -Ev Name | awk '/Link/{print $5}' | sed -ne $Z1$Z2 )
+              EI=$( netstat -in | grep -Ev Name | awk '/Link/{print $6}' | sed -ne $Z1$Z2 )
               FF1="0 0 0 0 0"
-              BO=$( netstat -inb | grep -Ev Name | grep Link | awk '{print $6}' | sed -ne $Z1$Z2 )
-              PO=$( netstat -in | grep -Ev Name | grep Link | awk '{print $7}' | sed -ne $Z1$Z2 )
-              EO=$( netstat -in | grep -Ev Name | grep Link | awk '{print $8}' | sed -ne $Z1$Z2 )
-              CO=$( netstat -in | grep -Ev Name | grep Link | awk '{print $9}' | sed -ne $Z1$Z2 )
+              BO=$( netstat -inb | grep -Ev Name | awk '/Link/{print $6}' | sed -ne $Z1$Z2 )
+              PO=$( netstat -in | grep -Ev Name | awk '/Link/{print $7}' | sed -ne $Z1$Z2 )
+              EO=$( netstat -in | grep -Ev Name | awk '/Link/{print $8}' | sed -ne $Z1$Z2 )
+              CO=$( netstat -in | grep -Ev Name | awk '/Link/{print $9}' | sed -ne $Z1$Z2 )
               FF2="0 0"
                 if [ "$PI" -gt "0" ]; then
                     mkecho "$BI $PI $EI $FF1 $BO $PO $EO $FF2 $CO $FF2"
@@ -1859,25 +1859,48 @@ section_nfs() {
 }
 
 section_ntp() {
-    # Time synchronization with NTP
+    # ntpq helper function
+    get_ntpq() {
+        inpath ntpq || return 1
+        [ "${1}" = "--header" ] && mkecho '<<<ntp>>>'
+        ntpq -np | sed -e 1,2d -e 's/^\\(.\\)/\\1 /' -e 's/^ /%/' || true
+    }
+
+    # Time synchronization with NTP (ntpq required)
     if inpath ntpq; then
-        if [ "${MK_OSSTR}" = "aix" ]; then
-            if [ "$(lssrc -s xntpd|grep -c active)" -gt 0 ] ; then
-                mkecho '<<<ntp>>>'
-                ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
-            fi
-        elif [ "${MK_OSSTR}" = "solaris" ]; then
-            # 'psgrep' does not work well in this case
-            # shellcheck disable=SC2009
-            if ps -o comm $pszone | grep -w ".*ntpd" >/dev/null 2>&1; then
-                mkecho '<<<ntp>>>'
-                ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
-            fi
-        # The following should cover everything else
-        else
-            # remove heading, make first column space separated
-            run_cached ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\\(.\\)/\\1 /' -e 's/^ /%/' || true"
-        fi
+        case "${MK_OSSTR}" in
+            (aix)
+                [ "$(lssrc -s xntpd|grep -c active)" -gt 0 ] && get_ntpq --header
+            ;;
+            (solaris)
+                # 'pgrep' does not work well in this case
+                ps -o comm "${pszone}" | grepq -w ".*ntpd" && get_ntpq --header
+            ;;
+            (linux|*)
+                # Check for systemd
+                if inpath systemctl; then
+                    # Identify whether ntp/ntpd/openntpd is active, if so, run ntpq
+                    # shellcheck disable=SC2016
+                    if [ "$(systemctl awk '/(^ntp?|^openntpd).service/{print $3; exit}')" = "active" ]; then
+                        # remove heading, make first column space separated
+                        run_cached -s ntp 30 "waitmax 5 get_ntpq"
+                    fi
+                # Otherwise, we're pre-systemd... try to determine status via /etc/init.d
+                # This might also be appropriate for AIX, Solaris and others
+                else
+                    for _ntp_daemon in ntp ntpd openntpd; do
+                        # Check for a service script
+                        if [ -x /etc/init.d/"${_ntp_daemon}" ]; then
+                            # If the status returns 0, we assume we have a running service
+                            if /etc/init.d/"${_ntp_daemon}" status >/dev/null 2>&1; then
+                                run_cached -s ntp 30 "waitmax 5 get_ntpq"
+                            fi
+                        fi
+                    done
+                    unset -v _ntp_daemon
+                fi
+            ;;
+        esac
     fi
 
     # Time synchronization with Chrony
@@ -2088,7 +2111,7 @@ section_ps() {
             # ps command to get the full command line instead. What a hack.
             if [ -x /usr/ucb/ps ]; then
                 UCB_PS=$(/usr/ucb/ps -agwwwx)
-                ps -o user,vsz,rss,pcpu,etime,pid,args $pszone |
+                ps -o user,vsz,rss,pcpu,etime,pid,args "${pszone}" |
                     sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /' |
                     while read -r LINE; do
                         STATS=${LINE%) *}

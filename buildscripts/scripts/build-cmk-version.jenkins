@@ -12,7 +12,8 @@ properties([
     string(name: 'DISTROS', defaultValue: DISTRO_STR, description: 'List of targeted distros' ),
     string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' ),
     string(name: 'DEMO', defaultValue: 'no', description: 'Demo: yes or no' ),
-    string(name: 'VERSION', defaultValue: 'daily', description: 'Version: "daily" for current state of the branch, e.g. "1.6.0b2" for building the git tag "v1.6.0b2".' )
+    string(name: 'VERSION', defaultValue: 'daily', description: 'Version: "daily" for current state of the branch, e.g. "1.6.0b2" for building the git tag "v1.6.0b2".' ),
+    string(name: 'DOCKER_TAG_BUILD', defaultValue: '', description: 'DOCKER_TAG_BUILD: Custom Docker Tag to use for this build. Leave empty for default' )
   ])
 ])
 

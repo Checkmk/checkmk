@@ -82,5 +82,5 @@ check_info["cisco_cpu_memory"] = {
             ])
     ],
     'snmp_scan_function': snmp_scan_cisco_cpu_multiitem,
-    'includes': ["cisco_cpu_scan_functions.include", "cisco_mem.include"]
+    'includes': ["mem.include", "cisco_cpu_scan_functions.include", "cisco_mem.include"]
 }

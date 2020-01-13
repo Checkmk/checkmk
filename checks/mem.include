@@ -137,7 +137,8 @@ def check_memory_element(label,
                          label_total="",
                          show_free=False,
                          metric_name=None,
-                         render_base=1024):
+                         render_base=1024,
+                         create_percent_metric=False):
     """Return a check result for one memory element
     """
     if show_free:
@@ -166,9 +167,21 @@ def check_memory_element(label,
     if state and levels_text:
         infotext = "%s (%s)" % (infotext, levels_text)
 
-    if not metric_name:
-        return state, infotext, []
-    return state, infotext, [(metric_name, used, warn, crit, 0, total)]
+    perf = []
+    if metric_name:
+        perf.append((metric_name, used, warn, crit, 0, total))
+    if create_percent_metric:
+        scale_to_perc = 100.0 / total
+        perf.append((
+            "mem_used_percent",
+            used * scale_to_perc,
+            warn * scale_to_perc if warn is not None else None,
+            crit * scale_to_perc if crit is not None else None,
+            0.0,
+            None,  # some times over 100%!
+        ))
+
+    return state, infotext, perf
 
 
 def _get_total_usage(ramused, swapused, pagetables):

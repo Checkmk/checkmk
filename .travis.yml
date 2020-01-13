@@ -33,7 +33,11 @@ matrix:
         - name: "Python3 typing tests"
           python: "3.7"
           env: TEST_TARGETS="test-mypy-raw"
-            TEST_PATH=tests/static
+            TEST_PATH=tests-py3
+        - name: "Shell tests"
+          python: "3.7"
+          env: TEST_TARGETS="test-unit-sh"
+            TEST_PATH=tests
 env:
     global:
         # Optimize builds by caching pip and pipenv things
@@ -56,7 +60,7 @@ addons:
             - librrd-dev
 install:
     - pip install pipenv
-    - make virtual-envs/$TRAVIS_PYTHON_VERSION/.venv
+    - make -C virtual-envs/$TRAVIS_PYTHON_VERSION .venv
 script:
     # TODO: Some tests could be optimized for better execution time. For
     # example test-format-python optionally checks only the files in set in

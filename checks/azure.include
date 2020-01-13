@@ -35,6 +35,21 @@ _AZURE_METRIC_FMT = {
 }
 
 
+def get_data_or_go_stale(check_function):
+    """Variant of get_parsed_item_data that raises MKCounterWrapped
+    if data is not found.
+    """
+    @functools.wraps(check_function)
+    def wrapped_check_function(item, params, parsed):
+        if not isinstance(parsed, dict):
+            return 3, "Wrong usage of decorator: parsed is not a dict"
+        if item not in parsed or not parsed[item]:
+            raise MKCounterWrapped("Data not present at the moment")
+        return check_function(item, params, parsed[item])
+
+    return wrapped_check_function
+
+
 def azure_iter_informative_attrs(resource, include_keys=('location',)):
     def cap(string):  # not quite what str.title() does
         return string[0].upper() + string[1:]
@@ -48,16 +63,14 @@ def azure_iter_informative_attrs(resource, include_keys=('location',)):
             yield cap(key), value
 
 
-def check_azure_metric(
-        resource,  # pylint: disable=too-many-locals
-        metric_key,
-        cmk_key,
-        display_name,
-        levels=None,
-        levels_lower=None,
-        minv=None,
-        maxv=None,
-        use_rate=False):
+def check_azure_metric(  # pylint: disable=too-many-locals
+    resource,
+    metric_key,
+    cmk_key,
+    display_name,
+    levels=None,
+    levels_lower=None,
+    use_rate=False):
     metric = resource.get('metrics', {}).get(metric_key)
     if metric is None:
         return None
@@ -83,27 +96,14 @@ def check_azure_metric(
         value *= 100.
         unit = "percent"
 
-    formatter = _AZURE_METRIC_FMT.get(unit, str)
-    text = "%s: %s" % (display_name, formatter(value))
-
-    l_state, u_state = 0, 0
-    warn_lower, crit_lower = levels_lower or (None, None)
-    if crit_lower is not None and value <= crit_lower:
-        l_state = 2
-    elif warn_lower is not None and value <= warn_lower:
-        l_state = 1
-    if l_state != 0:
-        text += " (warn/crit below %s/%s)" % (formatter(warn_lower), formatter(crit_lower))
-
-    warn, crit = levels or (None, None)
-    if crit is not None and value >= crit:
-        u_state = 2
-    elif warn is not None and value >= warn:
-        u_state = 1
-    if u_state != 0:
-        text += " (warn/crit at %s/%s)" % (formatter(warn), formatter(crit))
-
-    return max(l_state, u_state), text, [(cmk_key, value, warn, crit, minv, maxv)]
+    return check_levels(
+        value,
+        cmk_key,
+        (levels or (None, None)) + (levels_lower or (None, None)),
+        infoname=display_name,
+        human_readable_func=_AZURE_METRIC_FMT.get(unit, str),
+        boundaries=(0, None),
+    )
 
 
 #   .--Parse---------------------------------------------------------------.

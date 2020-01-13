@@ -46,12 +46,12 @@ class Logfile {
 public:
     Logfile(Logger *logger, LogCache *log_cache, std::filesystem::path path,
             bool watch);
-    std::filesystem::path path() const { return _path; }
+    [[nodiscard]] std::filesystem::path path() const { return _path; }
 
     // for tricky protocol between LogCache::logLineHasBeenAdded and this class
-    time_t since() const { return _since; }
-    unsigned classesRead() const { return _logclasses_read; }
-    size_t size() const { return _entries.size(); }
+    [[nodiscard]] time_t since() const { return _since; }
+    [[nodiscard]] unsigned classesRead() const { return _logclasses_read; }
+    [[nodiscard]] size_t size() const { return _entries.size(); }
     long freeMessages(unsigned logclasses);
 
     // for TableStateHistory and TableLog

@@ -1,6 +1,6 @@
-LANGUAGES = de ro
-SHELL=/bin/bash -e -o pipefail
-PIPENV=LANG=C PIPENV_VENV_IN_PROJECT=true PIPENV_PIPFILE=../virtual-envs/3.7/Pipfile pipenv
+LANGUAGES := de ro
+SHELL 	  := /bin/bash -e -o pipefail
+PIPENV3   := ../scripts/run-pipenv 3
 
 .PHONY: $(LANGUAGES)
 
@@ -43,12 +43,9 @@ cleanup-%:
 	sed -i '/"PO-Revision-Date:/d' $$L/LC_MESSAGES/multisite.po ; \
 	sed -i '/"Last-Translator:/d' $$L/LC_MESSAGES/multisite.po ; \
 
-../virtual-envs/3.7/.venv:
-	$(MAKE) -C .. virtual-envs/3.7/.venv
-
-de: ../virtual-envs/3.7/.venv
+de:
 	$(MAKE) update-$@
-	$(PIPENV) run ./add-authors $@
+	$(PIPENV3) run ./add-authors $@
 	POEDITOR=$$(which poedit 2>/dev/null || which virtaal 2>/dev/null) ; \
 	if [ -z "$$POEDITOR" ]; then \
 	    echo "ERROR: Unable to find PO file editor (poedit or virtual)" ; \
@@ -64,5 +61,5 @@ ro:
 	sed -i '/^#:/d' $@/LC_MESSAGES/multisite.po
 
 
-test-%: ../virtual-envs/3.7/.venv
-	@L=$@ ; L=$${L#*-} ; $(PIPENV) run ./blame $$L
+test-%:
+	@L=$@ ; L=$${L#*-} ; $(PIPENV3) run ./blame $$L

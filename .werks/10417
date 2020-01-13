@@ -1,0 +1,16 @@
+Title: AWS EC2 default limits are preserved for unconfigured instances
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1576590802
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+AWS EC2 Limits check plugins had default values for the instance limits on
+each instance type. If user configures an specific instance with different
+limits, then all other instance defaults vanished.
+
+This werk recovers the check-plugin defaults for unconfigured instance type
+limits.

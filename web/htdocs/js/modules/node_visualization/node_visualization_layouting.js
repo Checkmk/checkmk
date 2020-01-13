@@ -74,7 +74,14 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
 
         // Instantiated styles
         this._active_styles = {}
+
+        // Register layout manager toolbar plugin
+        this.toolbar_plugin = new LayoutingToolbarPlugin(this)
+        this.viewport.main_instance.toolbar.add_toolbar_plugin_instance(this.toolbar_plugin)
+        this.viewport.main_instance.toolbar.update_toolbar_plugins()
     }
+
+
 
     create_undo_step() {
         this.layout_applier.create_undo_step()
@@ -142,24 +149,12 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
         return (this._node_dragging_enforced || this._node_dragging_allowed)
     }
 
-    register_toolbar_plugin() {
-        this.toolbar_plugin = new LayoutingToolbarPlugin(this)
-        this.viewport.main_instance.toolbar.add_toolbar_plugin_instance(this.toolbar_plugin)
-        this.viewport.main_instance.toolbar.update_toolbar_plugins()
-    }
-
-
     size_changed() {
         // TODO: check this
 //        node_visualization_layout_styles.force_simulation.size_changed()
     }
 
     update_data() {
-        if (!this.toolbar_plugin) {
-            this.register_toolbar_plugin()
-        }
-
-        // TODO: use only show_style_configuration
         this.toolbar_plugin.update_content()
 
         let sorted_styles = []
@@ -558,11 +553,11 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
     }
 
     render_togglebutton(selection) {
-        this.togglebutton_selection.style("cursor", "pointer")
-        this.togglebutton_selection.append("img")
+        selection.style("cursor", "pointer");
+        selection.append("img")
                         .attr("src", this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.png")
                         .attr("title", "Layout Designer")
-                        .style("opacity", 1)
+                        .style("opacity", 1);
     }
 
     enable_actions() {
@@ -580,21 +575,23 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
     }
 
     disable_actions() {
-        this.layout_manager.hide_layout_options()
-        this.layout_manager.viewport.update_gui_of_layers()
+        if (this.layout_manager.edit_layout) {
+            this.layout_manager.hide_layout_options();
+            this.layout_manager.viewport.update_gui_of_layers();
+        }
 
         this.content_selection
                 .transition().duration(node_visualization_utils.DefaultTransition.duration())
                 .style("opacity", 0)
-                .style("display", "none")
+                .style("display", "none");
     }
 
-    remove() {
-        this.content_selection.select("div.toolbar_layouting").transition().duration(node_visualization_utils.DefaultTransition.duration()).style("height", "0px").remove()
+    remove_content() {
+        this.content_selection.select("div.toolbar_layouting").transition().duration(node_visualization_utils.DefaultTransition.duration()).style("height", "0px").remove();
     }
 
     render_content() {
-        this.update_content()
+        this.update_content();
     }
 
     update_content() {
@@ -700,7 +697,7 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
         let table_selection = into_selection.selectAll("table#overlay_configuration").data([null]).style("width", "100%")
         let table_enter = table_selection.enter().append("table").attr("id", "overlay_configuration")
                                                     .style("width", "100%")
-                                                    .on("change", ()=>this.overlay_options_changed())
+                                                    .on("change", ()=>this._overlay_checkbox_options_changed())
 
         let row_enter = table_enter.append("tr").classed("header", true)
         row_enter.append("th").text("")
@@ -821,13 +818,13 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
         this.update_save_layout_button()
     }
 
-    set_overlay_options(overlay_id, active, configurable) {
+    set_overlay_options(overlay_id, active=false, configurable=false) {
         let current_overlay_config = this.layout_manager.layout_applier.current_layout_group.overlay_config
         current_overlay_config[overlay_id] = {active: active, configurable: configurable}
         this.layout_manager.viewport.update_active_overlays()
     }
 
-    overlay_options_changed() {
+    _overlay_checkbox_options_changed() {
         let current_overlay_config = this.layout_manager.layout_applier.current_layout_group.overlay_config
         let checkbox = d3.select(d3.event.target)
         let checked = checkbox.property("checked")
@@ -1273,7 +1270,7 @@ class LayoutApplier{
                                 let style_options = node.data.rule_layout_style.style_config;
                                 let new_style = this.layout_style_factory.instantiate_style_name(style_name, node);
                                 new_style.style_config.options = style_options;
-    
+
                                 node_chunk.layout_instance.save_style(new_style.style_config)
                                 nodes_with_style.push({node: node, style: new_style.style_config});
                             }
@@ -1318,8 +1315,6 @@ class LayoutApplier{
         // TODO: fix id handling
         if (used_layout_id)
             this.current_layout_group.id = used_layout_id
-
-        this.viewport.update_active_overlays()
 
         if (this.layout_manager.edit_layout)
             this.layout_manager.allow_layout_updates = false

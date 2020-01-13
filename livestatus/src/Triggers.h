@@ -26,6 +26,7 @@
 #define Triggers_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <condition_variable>
 #include <mutex>
@@ -44,7 +45,7 @@ public:
         program
     };
 
-    Kind find(const std::string &name);
+    static Kind find(const std::string &name);
 
     void notify_all(Kind trigger);
 

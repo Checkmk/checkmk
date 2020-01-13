@@ -157,7 +157,15 @@ class ParentChildTopologyPage(Page):
         html.javascript("topology_instance.set_max_nodes(%d)" % max_nodes)
         html.javascript("topology_instance.set_mesh_depth(%d)" % mesh_depth)
         html.javascript("topology_instance.set_theme(%s)" % json.dumps(html.get_theme()))
+        overlay_config = self._get_overlay_config()
+        if overlay_config:
+            html.javascript("topology_instance.set_initial_overlays_config(%s)" %
+                            json.dumps(overlay_config))
+
         html.javascript("topology_instance.show_topology(%s)" % json.dumps(hostnames))
+
+    def _get_overlay_config(self):
+        return []
 
     def _get_filter_headers(self):
         view, filters = self._get_topology_view_and_filters()
@@ -166,7 +174,7 @@ class ParentChildTopologyPage(Page):
     def _get_topology_view_and_filters(self):
         view_spec = get_permitted_views()["topology_filters"]
         view_name = "topology_filters"
-        view = View(view_name, view_spec)
+        view = View(view_name, view_spec, view_spec.get("context", {}))
         filters = cmk.gui.visuals.filters_of_visual(view.spec,
                                                     view.datasource.infos,
                                                     link_filters=view.datasource.link_filters)
@@ -508,7 +516,8 @@ class Topology(object):
 
     def get_info_for_host(self, hostname, mesh):
         return {
-            "name": hostname,  # Used as text in GUI
+            "name": hostname,  # Used as node text in GUI
+            "hostname": hostname,
             "has_no_parents": self.is_root_node(hostname),
             "growth_root": self.is_growth_root(hostname),
             "growth_possible": self.may_grow(hostname, mesh),
@@ -561,9 +570,7 @@ class Topology(object):
 
         self._meshes = []
         try:
-            self._growth_to_depth()
-            self._growth_to_parents()
-            self._growth_to_continue_nodes()
+            self._grow()
         except MKGrowthExceeded as e:
             # Unexpected interuption, unable to display all nodes
             self.add_error(str(e))
@@ -578,13 +585,19 @@ class Topology(object):
         meshes = self._postprocess_meshes(self._meshes)
         return meshes
 
+    def _grow(self):
+        self._growth_to_depth()
+        self._growth_to_parents()
+        self._growth_to_continue_nodes()
+
     def _check_mesh_size(self, meshes):
         total_nodes = sum(map(len, meshes))
         if total_nodes > self.max_nodes:
             raise MKGrowthExceeded(
                 _("Maximum number of nodes exceeded %d/%d") % (total_nodes, self.max_nodes))
         if total_nodes > self.growth_auto_max_nodes:
-            raise MKGrowthInterruption(_("Growth interrupted") % (total_nodes, self.max_nodes))
+            raise MKGrowthInterruption(
+                _("Growth interrupted %d/%d") % (total_nodes, self.growth_auto_max_nodes))
 
     @property
     def max_nodes(self):
@@ -835,7 +848,6 @@ class ParentChildNetworkTopology(Topology):
             info["node_type"] = "topology"
 
         info["state"] = self._map_host_state_to_service_state(info, host_info)
-        info["hostname"] = hostname
 
         if info["node_type"] == "topology_center":
             info["explicit_force_options"] = {"repulsion": -3000, "center_force": 200}

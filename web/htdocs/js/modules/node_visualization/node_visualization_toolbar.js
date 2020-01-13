@@ -35,17 +35,23 @@ import * as node_visualization_search from "node_visualization_search"
 import * as node_visualization_datasources from "node_visualization_datasources"
 
 export class Toolbar {
-    constructor(main_instance) {
+    constructor(main_instance, selection) {
+        selection.attr("id", "toolbar")
+                 .style("width", "100%")
+                 .style("height", "100%");
         this.main_instance = main_instance
-        this.selection = this.main_instance.get_div_selection().append("div")
-                                          .attr("id", "toolbar")
-                                          .classed("toolbar", true)
+        this._selection = selection
 
         this._toolbar_plugins = {}
-        this.plugins_content_selection = this.selection.append("div")
+        this._plugins_content_selection = this._selection.append("div")
                                                     .attr("id", "content")
-        this.plugins_togglebutton_selection = this.selection.append("div")
+
+        this._plugin_controls_selection = this._selection.append("div")
+                                                    .attr("id", "toolbar_controls")
+        this._plugin_buttons_selection = this._plugin_controls_selection.append("div")
                                                     .attr("id", "togglebuttons")
+        this._plugin_custom_elements_selection = this._plugin_controls_selection.append("div")
+                                                    .attr("id", "custom")
 
         this._setup_toolbar_plugins()
         this.update_toolbar_plugins()
@@ -75,29 +81,44 @@ export class Toolbar {
         })
 
         plugin_ids.forEach(plugin_id=>{
-            let plugin = this._toolbar_plugins[plugin_id]
-            if (!plugin.has_content_selection()) {
-                let content_selection = this.plugins_content_selection.append("div").attr("id", plugin_id)
-                let togglebutton_selection = null
+            let plugin = this._toolbar_plugins[plugin_id];
+            if (!plugin.content_selection) {
+                let content_selection = this._plugins_content_selection.append("div").attr("id", plugin_id);
                 if (plugin.has_toggle_button()) {
-                    togglebutton_selection = this.plugins_togglebutton_selection.append("div")
+                    let button_selection = this._plugin_buttons_selection.append("div")
+                                                        .attr("id", "togglebutton_" + plugin_id)
                                                         .classed("togglebutton", true)
                                                         .classed("noselect", true)
                                                         .classed("box", true)
                                                         .classed("on", true)
-                                                        .classed("down", false)
-                                                        .classed("up", true)
-                                                        .on("click", ()=>plugin.toggle_active())
+                                                        .classed("down", !plugin.active)
+                                                        .classed("up", plugin.active)
+                                                        .on("click", ()=>this.toggle_plugin(plugin));
+                    plugin.render_togglebutton(button_selection);
                 }
-                plugin.setup_selections(togglebutton_selection, content_selection)
-                plugin.render_togglebutton()
+                plugin.setup_selections(content_selection);
             }
-            if (plugin.active)
-                plugin.update_active_state()
+            this.set_plugin_state(plugin, plugin.active);
         })
     }
 
-    add_togglebutton() {
+    toggle_plugin(plugin) {
+        this.set_plugin_state(plugin, !plugin.active);
+    }
 
+    set_plugin_state(plugin, is_active) {
+        let plugin_button = this._plugin_buttons_selection.select("#togglebutton_" + plugin.id());
+        plugin_button.classed("up", !is_active);
+        plugin_button.classed("down", is_active);
+        if (is_active == true) {
+            plugin.enable();
+            plugin.render_content();
+        } else {
+            plugin.disable();
+        }
+    }
+
+    get_plugin(plugin_id) {
+        return this._toolbar_plugins[plugin_id]
     }
 }

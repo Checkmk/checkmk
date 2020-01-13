@@ -2,7 +2,6 @@ import pytest
 
 import cmk.gui.sidebar as sidebar
 import cmk.gui.config as config
-import cmk.gui.pages
 from cmk.gui.globals import html
 from cmk.gui.sidebar import UserSidebarSnapin
 
@@ -19,7 +18,11 @@ sidebar.load_plugins(True)
 
 
 @pytest.fixture(scope="function", autouse=True)
-def user(monkeypatch):
+def user(module_wide_request_context, monkeypatch):
+    # We use the module wide request context because the monkeypatch would roll back the user
+    # stuff after the request context has already been ended and thus throwing an error. So we
+    # actually need to fix these tests and their user-handling because the natural way to test
+    # with a request-context is to have a fresh one for each function call.
     monkeypatch.setattr(config.user, "confdir", "")
     monkeypatch.setattr(config.user, "may", lambda x: True)
 
@@ -205,7 +208,7 @@ def test_save_user_config_denied(mocker, monkeypatch):
     save_user_file_mock.assert_not_called()
 
 
-def test_save_user_config_allowed(mocker, monkeypatch):
+def test_save_user_config_allowed(register_builtin_html, mocker, monkeypatch):
     monkeypatch.setattr(config.user, "may", lambda x: x == "general.configure_sidebar")
     save_user_file_mock = mocker.patch.object(config.user, "save_file")
     user_config = sidebar.UserSidebarConfig(config.user, config.sidebar)
@@ -218,7 +221,7 @@ def test_save_user_config_allowed(mocker, monkeypatch):
     (False, "yes", True),
     (True, "", False),
 ])
-def test_ajax_fold(register_builtin_html, mocker, origin_state, fold_var, set_state):
+def test_ajax_fold(module_wide_request_context, mocker, origin_state, fold_var, set_state):
     html.request.set_var("fold", fold_var)
     m_config = mocker.patch.object(config.user,
                                    "load_file",
@@ -248,7 +251,7 @@ def test_ajax_fold(register_builtin_html, mocker, origin_state, fold_var, set_st
     ("open", "off"),
     ("closed", "off"),
 ])
-def test_ajax_openclose_close(register_builtin_html, mocker, origin_state, set_state):
+def test_ajax_openclose_close(module_wide_request_context, mocker, origin_state, set_state):
     html.request.set_var("name", "tactical_overview")
     html.request.set_var("state", set_state)
     m_config = mocker.patch.object(config.user,
@@ -283,7 +286,7 @@ def test_ajax_openclose_close(register_builtin_html, mocker, origin_state, set_s
     })
 
 
-def test_move_snapin_not_permitted(monkeypatch, mocker, register_builtin_html):
+def test_move_snapin_not_permitted(monkeypatch, mocker, module_wide_request_context):
     monkeypatch.setattr(config.user, "may", lambda x: x != "general.configure_sidebar")
     m_load = mocker.patch.object(sidebar.UserSidebarConfig, "_load")
     sidebar.move_snapin()
@@ -294,7 +297,7 @@ def test_move_snapin_not_permitted(monkeypatch, mocker, register_builtin_html):
     ("tactical_overview", "views", True),
     ("not_existing", "admin", None),
 ])
-def test_move_snapin(register_builtin_html, mocker, move, before, do_save):
+def test_move_snapin(module_wide_request_context, mocker, move, before, do_save):
     html.request.set_var("name", move)
     html.request.set_var("before", before)
     m_save = mocker.patch.object(sidebar.UserSidebarConfig, "save")

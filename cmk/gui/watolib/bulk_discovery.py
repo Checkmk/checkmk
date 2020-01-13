@@ -132,13 +132,12 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         return _("Bulk Discovery")
 
     def __init__(self):
-        kwargs = {}
-        kwargs["title"] = self.gui_title()
-        kwargs["lock_wato"] = False
-        kwargs["deletable"] = False
-        kwargs["stoppable"] = False
-
-        super(BulkDiscoveryBackgroundJob, self).__init__(self.job_prefix, **kwargs)
+        super(BulkDiscoveryBackgroundJob, self).__init__(
+            self.job_prefix,
+            title=self.gui_title(),
+            lock_wato=False,
+            stoppable=False,
+        )
 
     def _back_url(self):
         return Folder.current().url()

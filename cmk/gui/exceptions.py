@@ -29,9 +29,11 @@ from typing import Optional, Text  # pylint: disable=unused-import
 
 from werkzeug.http import HTTP_STATUS_CODES
 
-from cmk.gui.i18n import _
-
-from cmk.utils.exceptions import MKGeneralException, MKException, MKTimeout
+from cmk.utils.exceptions import (
+    MKException,
+    MKGeneralException,
+    MKTimeout,
+)
 
 
 class RequestTimeout(MKTimeout):
@@ -40,7 +42,7 @@ class RequestTimeout(MKTimeout):
     pass
 
 
-class FinalizeRequest(Exception):
+class FinalizeRequest(MKException):
     """Is used to end the HTTP request processing from deeper code levels"""
     def __init__(self, code):
         # type: (int) -> None
@@ -54,46 +56,19 @@ class HTTPRedirect(FinalizeRequest):
     def __init__(self, url):
         # type: (str) -> None
         super(HTTPRedirect, self).__init__(httplib.FOUND)
-        self.url = url  #type: str
+        self.url = url  # type: str
 
 
 class MKAuthException(MKException):
-    def __init__(self, reason):
-        # type: (str) -> None
-        self.reason = reason  # type: str
-        super(MKAuthException, self).__init__(reason)
-
-    def __str__(self):
-        # type: () -> str
-        return self.reason
-
-    def title(self):
-        # type: () -> unicode
-        return _("Permission denied")
-
-    def plain_title(self):
-        # type: () -> unicode
-        return _("Authentication error")
+    pass
 
 
 class MKUnauthenticatedException(MKGeneralException):
-    def title(self):
-        # type: () -> unicode
-        return _("Not authenticated")
-
-    def plain_title(self):
-        # type: () -> unicode
-        return _("Missing authentication credentials")
+    pass
 
 
 class MKConfigError(MKException):
-    def title(self):
-        # type: () -> unicode
-        return _("Configuration error")
-
-    def plain_title(self):
-        # type: () -> unicode
-        return self.title()
+    pass
 
 
 class MKUserError(MKException):
@@ -105,14 +80,6 @@ class MKUserError(MKException):
 
     def __str__(self):
         return self.message
-
-    def title(self):
-        # type: () -> Text
-        return _("Invalid User Input")
-
-    def plain_title(self):
-        # type: () -> Text
-        return _("User error")
 
 
 class MKInternalError(MKException):

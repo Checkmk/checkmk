@@ -23,6 +23,7 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+from typing import Union, Tuple, Optional, AnyStr, List, Literal, TypedDict
 
 
 def fahrenheit_to_celsius(tempf, relative=False):
@@ -78,16 +79,18 @@ def render_temp(n, output_unit, relative=False):
 temp_unitsym = {
     "c": u"°C",
     "f": u"°F",
-    "k": "K",
+    "k": u"K",
 }
 
 
 def check_temperature_determine_levels(dlh, usr_warn, usr_crit, usr_warn_lower, usr_crit_lower,
-                                       dev_warn, dev_crit, dev_warn_lower, dev_crit_lower,
-                                       dev_unit):
+                                       dev_warn, dev_crit, dev_warn_lower, dev_crit_lower):
     # min that deals correctly with None
     def minn(a, b):
         return min(a, b) or a or b
+
+    # Default values if none of the branches will match.
+    warn = crit = warn_lower = crit_lower = None
 
     # Ignore device's own levels
     if dlh == "usr":
@@ -199,8 +202,7 @@ def check_temperature_trend(temp, params, output_unit, crit, crit_lower, unique_
         if "trend_timeleft" in params:
             # compute time until temperature limit is reached
             # The start value of minutes_left is negative. The pnp graph and the perfometer
-            # will interpret this as inifinite -> not growing
-            minutes_left = -1
+            # will interpret this as infinite -> not growing
             limit = crit if trend > 0 else crit_lower
 
             if limit:  # crit levels may not be set, especially lower level
@@ -240,32 +242,124 @@ def check_temperature_trend(temp, params, output_unit, crit, crit_lower, unique_
 # Note: you must not specify dev_status and dev_levels at the same time!
 
 
-def check_temperature(reading,
-                      params,
-                      unique_name,
-                      dev_unit="c",
-                      dev_levels=None,
-                      dev_levels_lower=None,
-                      dev_status=None,
-                      dev_status_name=None):
-    def check_temp_levels(temp, warn, crit, warn_lower, crit_lower):
-        if crit is not None and temp >= crit:
-            status = 2
-        elif crit_lower is not None and temp < crit_lower:
-            status = 2
-        elif warn is not None and temp >= warn:
-            status = 1
-        elif warn_lower is not None and temp < warn_lower:
-            status = 1
-        else:
-            status = 0
-        return status
+def _normalize_level(entry):
+    """Collapse tuples containing only None to None itself.
 
+    >>> _normalize_level(None)
+
+    >>> _normalize_level((None, None))
+
+    >>> _normalize_level((None, None, None, None))
+
+    >>> _normalize_level((1, 2))
+    (1, 2)
+
+    """
+    if isinstance(entry, tuple) and set(entry) <= {None}:
+        return None
+    return entry
+
+
+StatusType = Union[Literal[0], Literal[1], Literal[2], Literal[3]]
+Number = Union[int, float]
+
+# ('foo', 5), ('foo', 5, 2, 7), ('foo', 5, None, None)
+PerfDataEntryType = Union[Tuple[AnyStr, Number], Tuple[AnyStr, Number, Optional[Number]]]
+PerfDataType = List[PerfDataEntryType]
+
+# Generic Check Type. Can be used elsewhere too.
+CheckType = Tuple[StatusType, AnyStr, PerfDataType]
+
+TempUnitType = Union[Literal['c'],  # celsius
+                     Literal['k'],  # kelvin = celsius starting at absolute 0
+                     Literal['f'],  # fahrenheit
+                    ]
+TwoLevelsType = Tuple[Optional[Number], Optional[Number]]
+FourLevelsType = Tuple[Optional[Number], Optional[Number], Optional[Number], Optional[Number]]
+LevelsType = Union[TwoLevelsType, FourLevelsType]
+LevelModes = Union[Literal['worst'], Literal['best'], Literal['dev'], Literal['devdefault'],
+                   Literal['usr'], Literal['usrdefault']]
+TrendComputeDict = TypedDict(
+    'TrendComputeDict',
+    {
+        'period': int,
+        'trend_levels': TwoLevelsType,
+        'trend_levels_lower': TwoLevelsType,
+        'trend_timeleft': TwoLevelsType,
+    },
+    total=False,
+)
+TempParamDict = TypedDict(
+    'TempParamDict',
+    {
+        'input_unit': TempUnitType,
+        'output_unit': TempUnitType,
+        'levels': TwoLevelsType,
+        'levels_lower': TwoLevelsType,
+        'device_levels_handling': LevelModes,
+        'trend_compute': TrendComputeDict,
+    },
+    total=False,
+)
+TempParamType = Optional[Union[TwoLevelsType, FourLevelsType, TempParamDict]]
+
+
+def check_temperature(
+    reading,  # type: Number
+    params,  # type: TempParamType
+    unique_name,  # type: Optional[AnyStr]
+    dev_unit="c",  # type: AnyStr
+    dev_levels=None,  # type: Optional[TwoLevelsType]
+    dev_levels_lower=None,  # type: Optional[TwoLevelsType]
+    dev_status=None,  # type: Optional[StatusType]
+    dev_status_name=None,  # type: AnyStr
+):
+    # type: (...) -> CheckType
+    """Check temperature levels and trends.
+
+    The function will check the supplied data and supplied user configuration against the
+    temperature reading and warn/crit on failed levels or trends.
+
+    Args:
+        reading (Number): The numeric temperature value itself.
+        params (dict): A dictionary giving the user's configuration. See below.
+        unique_name (str): The name under which to track perf-data.
+        dev_unit (str): The unit. May be one of 'c', 'f' or 'k'. Default is 'c'.
+        dev_levels (Optional[LevelsType]): The upper levels (warn, crit)
+        dev_levels_lower (Optional[LevelsType]): The lower levels (warn, crit)
+        dev_status (Optional[Number]): The status according to the device itself.
+        dev_status_name (Optional[AnyStr]): What the device thinks the status should be called.
+
+    Configuration:
+        The parameter `params` may contain user configurable settings with the following keys:
+            - ``input_unit`` -- The device's unit, user defined.
+            - ``output_unit`` -- The unit by which to report.
+            - ``levels`` -- Upper levels, user defined.
+            - ``levels_lower`` -- Lower levels, user defined.
+            - ``device_levels_handling`` -- One of the following modes:
+                - ``usrdefault`` (default) -- Use user's levels, if not there use device's levels.
+                - ``usr`` -- Always use user's levels. Ignore device's levels.
+                - ``devdefault`` -- Use device's levels, if not there use user's levels.
+                - ``dev`` -- Always use device's levels. Ignore users's levels.
+                - ``best`` -- Report on the best case of user's and device's levels.
+                - ``worst`` -- Report on the worst case of user's and device's levels.
+            - ``trend_compute`` -- A dictionary of the following values:
+                - ``period`` -- The observation period for trend computation in minutes.
+                - ``trend_levels`` -- Levels on temp increase per period. (warn, crit)
+                - ``trend_levels_lower`` -- Levels on temp decrease per period. (warn, crit)
+                - ``trend_timeleft`` -- Levels on the time left until crit (upper or lower).
+
+        The parameter `params` may also be one of the following legacy formats (do not use!):
+            - None -- discarded
+            - (None, None) -- discarded
+            - (int|float, int|float) -- reused as params['levels']
+
+    GUI:
+         - cmk/gui/plugins/wato/check_parameters/temperature.py
+
+    """
     # Convert legacy tuple params into new dict
-    if params is None or params == (None, None):
-        params = {}
-    elif isinstance(params, tuple):
-        params = {"levels": params}
+    params = _migrate_params(params)
 
     # Convert reading into Celsius
     input_unit = params.get("input_unit", dev_unit)
@@ -273,8 +367,10 @@ def check_temperature(reading,
     temp = to_celsius(reading, input_unit)
 
     # Prepare levels, dealing with user defined and device's own levels
-    usr_levels = params.get("levels")
-    usr_levels_lower = params.get("levels_lower")
+    usr_levels = _normalize_level(params.get("levels"))
+    usr_levels_lower = _normalize_level(params.get("levels_lower"))
+    dev_levels = _normalize_level(dev_levels)
+    dev_levels_lower = _normalize_level(dev_levels_lower)
 
     # Set all user levels to None. None means do not impose a level
     usr_warn, usr_crit = usr_levels or (None, None)
@@ -288,25 +384,26 @@ def check_temperature(reading,
     # "device_levels_handling". Result is four variables: {warn,crit}{,_lower}
     dlh = params.get("device_levels_handling", "usrdefault")
 
-    warn, crit, warn_lower, crit_lower =\
-        check_temperature_determine_levels(dlh, usr_warn, usr_crit,
-                                           usr_warn_lower, usr_crit_lower,
-                                           dev_warn, dev_crit,
-                                           dev_warn_lower, dev_crit_lower, dev_unit)
+    effective_levels = check_temperature_determine_levels(dlh, usr_warn, usr_crit, usr_warn_lower,
+                                                          usr_crit_lower, dev_warn, dev_crit,
+                                                          dev_warn_lower, dev_crit_lower)
 
-    if dlh == "usr" or (dlh == "userdefault" and usr_levels):
+    if dlh == "usr" or (dlh == "usrdefault" and usr_levels):
         # ignore device status if user-levels are used
         dev_status = None
 
-    # Now finally compute status. Hooray!
-    status = check_temp_levels(temp, warn, crit, warn_lower, crit_lower)
+    # infotext does some device/user specifics
+    status, _, perfdata = check_levels(  # type: ignore
+        temp,
+        "temp",
+        effective_levels,
+    )
+
     if dev_status is not None:
         if dlh == "best":
             status = min(status, dev_status)
         else:
             status = max(status, dev_status)
-
-    perfdata = [("temp", temp, warn, crit)]
 
     # Render actual temperature, e.g. "17.8 °F"
     infotext = "%s %s" % (render_temp(temp, output_unit), temp_unitsym[output_unit])
@@ -316,10 +413,10 @@ def check_temperature(reading,
 
     # In case of a non-OK status output the information about the levels
     if status != 0:
-        usr_levelstext = ""
-        usr_levelstext_lower = ""
-        dev_levelstext = ""
-        dev_levelstext_lower = ""
+        usr_levelstext = u""
+        usr_levelstext_lower = u""
+        dev_levelstext = u""
+        dev_levelstext_lower = u""
 
         if usr_levels:
             usr_levelstext = " (warn/crit at %s/%s %s)" % (render_temp(
@@ -373,9 +470,9 @@ def check_temperature(reading,
     #   the trend_compute dictionary. But a check may want to specify default levels for trends
     #   without activating them. In this case they can leave period unset to deactivate the
     #   feature.
-    if unique_name and\
-            "trend_compute" in params\
-            and "period" in params["trend_compute"]:
+    if unique_name and params.get("trend_compute", {}).get('period') is not None:
+        crit = effective_levels[1]
+        crit_lower = effective_levels[3]
         trend_status, trend_infotext =\
             check_temperature_trend(temp, params["trend_compute"], output_unit,
                                     crit, crit_lower, unique_name)
@@ -384,6 +481,45 @@ def check_temperature(reading,
             infotext += ", " + trend_infotext
 
     return status, infotext, perfdata
+
+
+def _migrate_params(params):
+    # type: (TempParamType) -> TempParamDict
+    """Migrate legacy params values to the current one.
+
+    Args:
+        params: Anything which was once a valid params entry. Concretely, 2-tuples, 4-tuples and
+                dicts with the correct values are allowed. In the case of a dict, nothing is done.
+
+    Returns:
+        A dict.
+
+    Examples:
+
+        >>> _migrate_params((1, 2))
+        {'levels': (1, 2)}
+
+        >>> _migrate_params((1, 2, 3, 4))
+        {'levels_lower': (3, 4), 'levels': (1, 2)}
+
+        >>> _migrate_params({})
+        {}
+
+        >>> _migrate_params(None)
+        {}
+
+    """
+    # Convert legacy tuple params into new dict
+    if isinstance(params, tuple):
+        if len(params) == 4:
+            # mypy doesn't handle this tuple slicing very well.
+            params = {'levels': params[:2], 'levels_lower': params[2:]}  # type: ignore
+        else:
+            params = {'levels': params[:2]}
+    elif params is None:
+        params = {}
+
+    return params
 
 
 # Wraps around check_temperature to check a list of sensors.
@@ -395,11 +531,7 @@ def check_temperature(reading,
 
 
 def check_temperature_list(sensorlist, params, unique_name):
-
-    if isinstance(params, tuple):
-        params = {"levels": params}
-    elif params is None:
-        params = {}
+    params = _migrate_params(params)
 
     output_unit = params.get("output_unit", "c")
 
@@ -458,7 +590,7 @@ def check_temperature_list(sensorlist, params, unique_name):
             check_temperature_determine_levels("usr", usr_warn, usr_crit,
                                                usr_warn_lower, usr_crit_lower,
                                                None, None,
-                                               None, None, "c")
+                                               None, None)
 
 
         trend_status, trend_infotext =\

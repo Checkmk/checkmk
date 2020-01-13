@@ -4,6 +4,8 @@
 
 #include "cap.h"
 
+#include <yaml-cpp/yaml.h>
+
 #include <cstdint>
 #include <filesystem>
 #include <string>
@@ -18,7 +20,6 @@
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
 #include "upgrade.h"
-#include "yaml-cpp/yaml.h"
 
 // returns TRUE only if file have been removed
 static std::string ErrorCodeToMessage(std::error_code ec) {
@@ -105,8 +106,8 @@ std::string ReadFileName(std::ifstream &CapFile, uint32_t Length) {
     return std::string(dataBuffer.data());
 }
 
-// must be successful!
-std::vector<char> ReadFileData(std::ifstream &CapFile) {
+// skips too big files or invalid data
+std::optional<std::vector<char>> ReadFileData(std::ifstream &CapFile) {
     // read 32-bit length
     int32_t length = 0;
     CapFile.read(reinterpret_cast<char *>(&length), sizeof(length));
@@ -127,7 +128,7 @@ std::vector<char> ReadFileData(std::ifstream &CapFile) {
     CapFile.read(dataBuffer.data(), length);
 
     if (!CapFile.good()) {
-        XLOG::l("Unexpected problems with CAP-file adat body");
+        XLOG::l("Unexpected problems with CAP-file data body");
         return {};
     }
     return dataBuffer;
@@ -136,9 +137,9 @@ std::vector<char> ReadFileData(std::ifstream &CapFile) {
 // reads name and data
 // writes file
 // if problems or end return false
-FileInfo ExtractFile(std::ifstream &CapFile) {
+FileInfo ExtractFile(std::ifstream &cap_file) {
     // Read Filename
-    auto l = ReadFileNameLength(CapFile);
+    auto l = ReadFileNameLength(cap_file);
     if (l == 0) {
         XLOG::l.t("File CAP end!");
         return {{}, {}, true};
@@ -146,22 +147,21 @@ FileInfo ExtractFile(std::ifstream &CapFile) {
 
     if (l > 256) return {{}, {}, false};
 
-    const auto name = ReadFileName(CapFile, l);
+    const auto name = ReadFileName(cap_file, l);
 
-    if (name.empty() || !CapFile.good()) {
-        if (CapFile.eof()) return {{}, {}, false};
+    if (name.empty() || !cap_file.good()) {
+        if (cap_file.eof()) return {{}, {}, false};
 
         XLOG::l.crit("Invalid cap file, [name]");
         return {{}, {}, false};
     }
 
-    const auto content = ReadFileData(CapFile);
-    if (content.empty() || !CapFile.good()) {
-        XLOG::l.crit("Invalid cap file, [name] {}", name);
-        return {{}, {}, false};
-    }
+    const auto content = ReadFileData(cap_file);
+    if (content.has_value() && cap_file.good())
+        return {name, content.value(), false};
 
-    return {name, content, false};
+    XLOG::l.crit("Invalid cap file, [name] {}", name);
+    return {{}, {}, false};
 }
 
 // may create dirs too
@@ -224,6 +224,32 @@ bool CheckAllFilesWritable(const std::string &Directory) {
     return all_writable;
 }
 
+// internal or advanced usage
+bool ExtractAll(const std::string cap_name, std::filesystem::path to) {
+    std::ifstream ifs(cap_name, std::ifstream::in | std::ifstream::binary);
+    if (!ifs) {
+        XLOG::l.crit("Unable to open Check_MK-Agent package {} ", cap_name);
+        return false;
+    }
+
+    while (!ifs.eof()) {
+        auto [name, data, eof] = ExtractFile(ifs);
+        if (eof) return true;
+
+        if (name.empty()) {
+            XLOG::l("CAP file {} looks as bad", cap_name);
+            return false;
+        }
+        if (data.empty()) {
+            XLOG::t("CAP file {} has empty file {}", cap_name, name);
+        }
+        StoreFile(to / name, data);
+    }
+
+    XLOG::l("CAP file '{}' looks as bad with unexpected eof", cap_name);
+    return false;
+}
+
 bool Process(const std::string CapFileName, ProcMode Mode,
              std::vector<std::wstring> &FilesLeftOnDisk) {
     namespace fs = std::filesystem;
@@ -253,7 +279,7 @@ bool Process(const std::string CapFileName, ProcMode Mode,
             if (fs::exists(full_path, ec)) FilesLeftOnDisk.push_back(full_path);
         } else if ((Mode == ProcMode::remove)) {
             std::error_code ec;
-            auto removed = cma::ntfs::Remove(full_path, ec);
+            auto removed = fs::remove(full_path, ec);
             if (removed || ec.value() == 0)
                 FilesLeftOnDisk.push_back(full_path);
             else {
@@ -272,8 +298,8 @@ bool Process(const std::string CapFileName, ProcMode Mode,
     return false;
 }
 
-bool IsFilesTheSame(const std::filesystem::path &Target,
-                    const std::filesystem::path &Src) {
+bool AreFilesSame(const std::filesystem::path &Target,
+                  const std::filesystem::path &Src) {
     try {
         std::ifstream f1(Target, std::ifstream::binary | std::ifstream::ate);
         std::ifstream f2(Src, std::ifstream::binary | std::ifstream::ate);
@@ -320,7 +346,7 @@ bool NeedReinstall(const std::filesystem::path &Target,
     auto src_time = fs::last_write_time(Src, ec);
     if (src_time > target_time) return true;
     XLOG::d.i("Timestamp OK, checking file content...");
-    return !IsFilesTheSame(Target, Src);
+    return !AreFilesSame(Target, Src);
 }
 
 // returns true when changes had been done
@@ -334,7 +360,7 @@ bool ReinstallCaps(const std::filesystem::path &target_cap,
         if (true ==
             Process(target_cap.u8string(), ProcMode::remove, files_left)) {
             XLOG::l.t("File '{}' uninstall-ed", target_cap.u8string());
-            cma::ntfs::Remove(target_cap, ec);
+            fs::remove(target_cap, ec);
             for (auto &name : files_left)
                 XLOG::l.i("\tRemoved '{}'", wtools::ConvertToUTF8(name));
             changed = true;
@@ -367,12 +393,11 @@ static void ConvertIniToBakery(const std::filesystem::path &bakery_yml,
     if (!yaml.has_value()) return;  // bad ini
 
     XLOG::l.i("Creating Bakery file '{}'", bakery_yml.u8string());
-    std::ofstream ofs(bakery_yml, std::ios::binary);
+    std::ofstream ofs(bakery_yml);
     if (ofs) {
         ofs << cma::cfg::upgrade::MakeComments(source_ini, true);
         ofs << *yaml;
     }
-    ofs.close();
     XLOG::l.i("Creating Bakery file SUCCESS");
 }
 
@@ -394,11 +419,11 @@ bool ReinstallIni(const std::filesystem::path &target_ini,
     auto bakery_yml = cma::cfg::GetBakeryFile();
     if (!packaged_agent) {
         XLOG::l.i("Removing '{}'", bakery_yml.u8string());
-        cma::ntfs::Remove(bakery_yml, ec);
+        fs::remove(bakery_yml, ec);
     }
 
     XLOG::l.i("Removing '{}'", target_ini.u8string());
-    cma::ntfs::Remove(target_ini, ec);
+    fs::remove(target_ini, ec);
 
     // if file doesn't exists we will leave
     if (!fs::exists(source_ini, ec)) {
@@ -483,8 +508,7 @@ bool ReinstallYaml(const std::filesystem::path &bakery_yaml,
     return true;
 }
 
-static std::tuple<std::filesystem::path, std::filesystem::path> GetInstallPair(
-    std::wstring_view name) {
+PairOfPath GetInstallPair(std::wstring_view name) {
     namespace fs = std::filesystem;
     fs::path target = cma::cfg::GetUserInstallDir();
     target /= name;
@@ -584,7 +608,7 @@ bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
 
     if (!fs::exists(source_file, ec)) {
         // special case, no source file => remove target file
-        cma::ntfs::Remove(target_file, ec);
+        fs::remove(target_file, ec);
         PrintInstallCopyLog("Remove failed", source_file, target_file, ec);
         return true;
     }
@@ -606,7 +630,7 @@ bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
     return true;
 }
 
-std::pair<std::filesystem::path, std::filesystem::path> GetExampleYmlNames() {
+PairOfPath GetExampleYmlNames() {
     using namespace cma::cfg;
     namespace fs = std::filesystem;
     fs::path src_example = GetRootInstallDir();
@@ -618,6 +642,9 @@ std::pair<std::filesystem::path, std::filesystem::path> GetExampleYmlNames() {
     return {tgt_example, src_example};
 }
 
+constexpr bool G_PatchLineEnding =
+    false;  // set to true to fix error during checkout git
+
 static void UpdateUserYmlExample(const std::filesystem::path &tgt,
                                  const std::filesystem::path &src) {
     namespace fs = std::filesystem;
@@ -626,10 +653,12 @@ static void UpdateUserYmlExample(const std::filesystem::path &tgt,
     XLOG::l.i("User Example must be updated");
     std::error_code ec;
     fs::copy(src, tgt, fs::copy_options::overwrite_existing, ec);
-    if (ec.value() == 0)
+    if (ec.value() == 0) {
         XLOG::l.i("User Example '{}' have been updated successfully from '{}'",
                   tgt.u8string(), src.u8string());
-    else
+        // #PROPERTY:
+        if (G_PatchLineEnding) wtools::PatchFileLineEnding(tgt);
+    } else
         XLOG::l.i(
             "User Example '{}' have been failed to update with error [{}] from '{}'",
             tgt.u8string(), ec.value(), src.u8string());

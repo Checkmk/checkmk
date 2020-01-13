@@ -1,0 +1,11 @@
+Title: hp_fan, hp_psu: Support for 5412rzl2 devices
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1573733308
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+

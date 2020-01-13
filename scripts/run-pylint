@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e
+
+REPO_PATH=$(dirname $(dirname $(realpath "$0")))
+PYTHON_VERSION=$("$REPO_PATH/scripts/detect-python-version" "$@")
+exec "$REPO_PATH/scripts/run-pipenv" ${PYTHON_VERSION%.?} run pylint "$@"

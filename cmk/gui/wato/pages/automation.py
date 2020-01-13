@@ -195,7 +195,7 @@ class ModeAutomation(AjaxPage):
 def _get_login_secret(create_on_demand=False):
     path = cmk.utils.paths.var_dir + "/wato/automation_secret.mk"
 
-    secret = store.load_data_from_file(path)
+    secret = store.load_object_from_file(path)
     if secret is not None:
         return secret
 
@@ -203,5 +203,5 @@ def _get_login_secret(create_on_demand=False):
         return None
 
     secret = cmk.gui.utils.get_random_string(32)
-    store.save_data_to_file(path, secret)
+    store.save_object_to_file(path, secret)
     return secret

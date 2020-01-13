@@ -26,7 +26,7 @@ jobs=0
 # TODO: Why do we need persistence?
 persistent=yes
 extension-pkg-whitelist=rrdtool,_ldap,netifaces,pymssql
-bad-functions=basestring,unicode,file,cmp,apply,execfile,reduce,reload
+bad-functions=unichr,basestring,unicode,file,cmp,apply,execfile,reduce,reload
 
 [MESSAGES CONTROL]
 disable=

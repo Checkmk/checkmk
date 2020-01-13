@@ -1,5 +1,5 @@
 import pytest  # type: ignore
-from cmk_base.check_api import MKCounterWrapped
+from cmk.base.check_api import MKCounterWrapped
 from checktestlib import CheckResult, assertCheckResultsEqual
 
 pytestmark = pytest.mark.checks
@@ -106,3 +106,43 @@ def test_if_check(check_manager, monkeypatch, item, params, result):
     output = check.run_check(item, params, parsed_change(4000000))
 
     assertCheckResultsEqual(CheckResult(output), CheckResult(result))
+
+
+@pytest.mark.parametrize('info, result', [
+    ([
+        [None, u'[start_iplink]'],
+        [
+            None, u'1:', u'wlp3s0:', u'<BROADCAST,MULTICAST>', u'mtu', u'1500', u'qdisc',
+            u'fq_codel', u'state', u'UP', u'mode', u'DORMANT', u'group', u'default', u'qlen',
+            u'1000'
+        ],
+        [None, u'link/ether', u'AA:AA:AA:AA:AA:AA', u'brd', u'BB:BB:BB:BB:BB:BB'],
+        [None, u'[end_iplink]'],
+        [None, u'wlp3s0', u'130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0'],
+    ], [
+        [
+            None, '1', 'wlp3s0', '6', '', '2', '130923553', '217262', '16078', '0', '0', '0',
+            '23586281', '142684', '0', '0', '0', '0', '0', 'wlp3s0', '\xaa\xaa\xaa\xaa\xaa\xaa'
+        ],
+    ]),
+    ([
+        [None, u'[start_iplink]'],
+        [
+            None, u'1:', u'wlp3s0:', u'<BROADCAST,MULTICAST,UP>', u'mtu', u'1500', u'qdisc',
+            u'fq_codel', u'state', u'UP', u'mode', u'DORMANT', u'group', u'default', u'qlen',
+            u'1000'
+        ],
+        [None, u'link/ether', u'BB:BB:BB:BB:BB:BB', u'brd', u'BB:BB:BB:BB:BB:BB'],
+        [None, u'[end_iplink]'],
+        [None, u'wlp3s0', u'130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0'],
+    ], [
+        [
+            None, '1', 'wlp3s0', '6', '', '1', '130923553', '217262', '16078', '0', '0', '0',
+            '23586281', '142684', '0', '0', '0', '0', '0', 'wlp3s0', '\xbb\xbb\xbb\xbb\xbb\xbb'
+        ],
+    ])
+])
+def test_lnx_if_status_flags(check_manager, info, result):
+    check = check_manager.get_check('lnx_if')
+    for a, e in zip(check.run_parse(info)[0], result):
+        assert a == e

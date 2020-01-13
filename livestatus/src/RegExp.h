@@ -44,10 +44,10 @@ public:
     RegExp(RegExp &&rhs) noexcept;
     RegExp &operator=(RegExp &&rhs) noexcept;
 
-    std::string replace(const std::string &str,
-                        const std::string &replacement) const;
-    bool match(const std::string &str) const;
-    bool search(const std::string &str) const;
+    [[nodiscard]] std::string replace(const std::string &str,
+                                      const std::string &replacement) const;
+    [[nodiscard]] bool match(const std::string &str) const;
+    [[nodiscard]] bool search(const std::string &str) const;
 
     static std::string engine();
 

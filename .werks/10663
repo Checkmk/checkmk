@@ -1,0 +1,18 @@
+Title: HW/SW Inventory: Fixed "Cannot update tree" on clusters
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1576669884
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+A real host may have several data sources like SNMP, agent or other programs.
+If all data sources of these hosts fail related the {{HW/SW Inventory}}
+services report {{WARN - Cannot update tree}} and the inventory tree will not
+be overwritten.  Otherwise the inventory archive would be polluted.
+
+This must not hold for Checkmk clusters which simply inventorize its nodes.
+This has been fixed.

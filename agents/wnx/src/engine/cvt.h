@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <yaml-cpp/yaml.h>
+
 #include <filesystem>
 #include <string>
 #include <string_view>
@@ -11,7 +13,6 @@
 #include "common/cfg_info.h"
 #include "common/wtools.h"
 #include "logger.h"
-#include "yaml-cpp/yaml.h"
 
 namespace cma::cfg::cvt {
 //

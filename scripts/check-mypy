@@ -1,0 +1,49 @@
+#!/bin/bash
+#
+# This file is for execution by the pre-commit framework.
+#
+set -e -o pipefail
+
+source "$(dirname $0)/lib-precommit"
+
+# Filter out all tests/* and tests-py3/* files.
+declare -a FILES
+
+for param in "$@"; do
+    if [[ "$param" == tests* ]]; then
+        continue
+    fi
+    FILES+=($param)
+done
+
+NUM_PARAM=${#FILES[@]}
+
+if [ "$NUM_PARAM" == "0" ]; then
+    echo No files to check. >&2
+    exit 0
+fi
+
+REPO_PATH="$(git rev-parse --show-toplevel)"
+PIPENV="$REPO_PATH/scripts/run-pipenv"
+
+export MYPYPATH="$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/omd:$REPO_PATH/tests-py3:$REPO_PATH/tests-py3/typeshed"
+
+printf -v files " %s" ${FILES[@]}
+PYTHON2_FILES=$(python_files 2 "$files")
+PYTHON3_FILES=$(python_files 3 "$files")
+
+if [ ! -z "$PYTHON2_FILES" ]; then
+    $PIPENV 3 run mypy \
+        --config-file "$REPO_PATH/mypy-raw.ini" \
+        --python-version 2.7 \
+        --scripts-are-modules \
+        $PYTHON2_FILES
+fi
+
+if [ ! -z "$PYTHON3_FILES" ]; then
+    $PIPENV 3 run mypy \
+        --config-file "$REPO_PATH/mypy-raw.ini" \
+        --python-version 3.7 \
+        --scripts-are-modules \
+        $PYTHON3_FILES
+fi

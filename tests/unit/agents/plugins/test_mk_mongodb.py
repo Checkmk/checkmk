@@ -51,9 +51,7 @@ def test_arbiter_instance_mongodb_4_0(mk_mongodb):
     """
     dataset = read_dataset("mongo_output_arbiter-4.0.10.json")
     call_mk_mongodb_functions(mk_mongodb, dataset)
-    with pytest.raises(AttributeError):
-        # AttributeError is thrown because mongodb client is None. Can be ignored here.
-        mk_mongodb.sections_replica(None, dataset)
+    mk_mongodb.sections_replica(dataset)
 
 
 def test_arbiter_instance_mongodb_3_6(mk_mongodb):
@@ -66,9 +64,7 @@ def test_arbiter_instance_mongodb_3_6(mk_mongodb):
     """
     dataset = read_dataset("mongo_output_arbiter-3.6.13.json")
     call_mk_mongodb_functions(mk_mongodb, dataset)
-    with pytest.raises(AttributeError):
-        # AttributeError is thrown because mongodb client is None. Can be ignored here.
-        mk_mongodb.sections_replica(None, dataset)
+    mk_mongodb.sections_replica(dataset)
 
 
 def test_arbiter_instance_mongodb_3_4(mk_mongodb):
@@ -81,9 +77,7 @@ def test_arbiter_instance_mongodb_3_4(mk_mongodb):
     """
     dataset = read_dataset("mongo_output_arbiter-3.4.21.json")
     call_mk_mongodb_functions(mk_mongodb, dataset)
-    with pytest.raises(AttributeError):
-        # AttributeError is thrown because mongodb client is None. Can be ignored here.
-        mk_mongodb.sections_replica(None, dataset)
+    mk_mongodb.sections_replica(dataset)
 
 
 def test_config_instance_mongodb_4_0(mk_mongodb):
@@ -95,9 +89,7 @@ def test_config_instance_mongodb_4_0(mk_mongodb):
     """
     dataset = read_dataset("mongo_output_config-4.0.10.json")
     call_mk_mongodb_functions(mk_mongodb, dataset)
-    with pytest.raises(AttributeError):
-        # AttributeError is thrown because mongodb client is None. Can be ignored here.
-        mk_mongodb.sections_replica(None, dataset)
+    mk_mongodb.sections_replica(dataset)
 
 
 def test_config_instance_mongodb_3_6(mk_mongodb):
@@ -109,9 +101,7 @@ def test_config_instance_mongodb_3_6(mk_mongodb):
     """
     dataset = read_dataset("mongo_output_config-3.6.13.json")
     call_mk_mongodb_functions(mk_mongodb, dataset)
-    with pytest.raises(AttributeError):
-        # AttributeError is thrown because mongodb client is None. Can be ignored here.
-        mk_mongodb.sections_replica(None, dataset)
+    mk_mongodb.sections_replica(dataset)
 
 
 def test_config_instance_mongodb_3_4(mk_mongodb):
@@ -123,9 +113,7 @@ def test_config_instance_mongodb_3_4(mk_mongodb):
     """
     dataset = read_dataset("mongo_output_config-3.4.21.json")
     call_mk_mongodb_functions(mk_mongodb, dataset)
-    with pytest.raises(AttributeError):
-        # AttributeError is thrown because mongodb client is None. Can be ignored here.
-        mk_mongodb.sections_replica(None, dataset)
+    mk_mongodb.sections_replica(dataset)
 
 
 def test_shard_instance_mongodb_4_0(mk_mongodb):
@@ -137,9 +125,7 @@ def test_shard_instance_mongodb_4_0(mk_mongodb):
     """
     dataset = read_dataset("mongo_output_shard-4.0.10.json")
     call_mk_mongodb_functions(mk_mongodb, dataset)
-    with pytest.raises(AttributeError):
-        # AttributeError is thrown because mongodb client is None. Can be ignored here.
-        mk_mongodb.sections_replica(None, dataset)
+    mk_mongodb.sections_replica(dataset)
 
 
 def test_shard_instance_mongodb_3_6(mk_mongodb):
@@ -151,9 +137,7 @@ def test_shard_instance_mongodb_3_6(mk_mongodb):
     """
     dataset = read_dataset("mongo_output_shard-3.6.13.json")
     call_mk_mongodb_functions(mk_mongodb, dataset)
-    with pytest.raises(AttributeError):
-        # AttributeError is thrown because mongodb client is None. Can be ignored here.
-        mk_mongodb.sections_replica(None, dataset)
+    mk_mongodb.sections_replica(dataset)
 
 
 def test_shard_instance_mongodb_3_4(mk_mongodb):
@@ -165,9 +149,7 @@ def test_shard_instance_mongodb_3_4(mk_mongodb):
     """
     dataset = read_dataset("mongo_output_shard-3.4.21.json")
     call_mk_mongodb_functions(mk_mongodb, dataset)
-    with pytest.raises(AttributeError):
-        # AttributeError is thrown because mongodb client is None. Can be ignored here.
-        mk_mongodb.sections_replica(None, dataset)
+    mk_mongodb.sections_replica(dataset)
 
 
 def test_router_instance_mongodb_4_0(mk_mongodb):
@@ -180,7 +162,7 @@ def test_router_instance_mongodb_4_0(mk_mongodb):
     """
     dataset = read_dataset("mongo_output_router-4.0.10.json")
     call_mk_mongodb_functions(mk_mongodb, dataset)
-    mk_mongodb.sections_replica(None, dataset)
+    mk_mongodb.sections_replica(dataset)
 
 
 def test_router_instance_mongodb_3_6(mk_mongodb):
@@ -193,7 +175,7 @@ def test_router_instance_mongodb_3_6(mk_mongodb):
     """
     dataset = read_dataset("mongo_output_router-3.6.13.json")
     call_mk_mongodb_functions(mk_mongodb, dataset)
-    mk_mongodb.sections_replica(None, dataset)
+    mk_mongodb.sections_replica(dataset)
 
 
 def test_router_instance_mongodb_3_4(mk_mongodb):
@@ -206,4 +188,4 @@ def test_router_instance_mongodb_3_4(mk_mongodb):
     """
     dataset = read_dataset("mongo_output_router-3.4.21.json")
     call_mk_mongodb_functions(mk_mongodb, dataset)
-    mk_mongodb.sections_replica(None, dataset)
+    mk_mongodb.sections_replica(dataset)

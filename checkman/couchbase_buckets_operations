@@ -1,0 +1,16 @@
+title: Operations of couchbase buckets
+agents: special
+catalog: app/couchbase
+license: GPL
+distribution: check_mk
+description:
+
+ This service monitors the number of operations per second per server associated
+ to a single bucket.
+ Levels can be configured in the WATO rule "Couchbase Operations".
+
+inventory:
+ One service per bucket is created.
+
+item:
+ The item is the name of the bucket.

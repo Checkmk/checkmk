@@ -36,8 +36,8 @@ class Table;
 class TableEventConsoleEvents : public TableEventConsole {
 public:
     explicit TableEventConsoleEvents(MonitoringCore *mc);
-    std::string name() const override;
-    std::string namePrefix() const override;
+    [[nodiscard]] std::string name() const override;
+    [[nodiscard]] std::string namePrefix() const override;
     static void addColumns(Table *table);
     bool isAuthorized(Row row, const contact *ctc) const override;
 };

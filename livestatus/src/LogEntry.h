@@ -122,6 +122,7 @@ public:
 
     // NOTE: line gets modified!
     LogEntry(size_t lineno, std::string line);
+    [[nodiscard]] std::string state_info() const;
     static ServiceState parseServiceState(const std::string &str);
     static HostState parseHostState(const std::string &str);
 
@@ -130,9 +131,11 @@ private:
         HostName,
         ServiceDescription,
         CommandName,
+        CommandNameWithWorkaround,
         ContactName,
         HostState,
         ServiceState,
+        ExitCode,
         State,
         StateType,
         Attempt,
@@ -151,8 +154,7 @@ private:
 
     static std::vector<LogDef> log_definitions;
 
-    bool assign(Param par, const std::string &field);
-    void applyWorkarounds();
+    void assign(Param par, const std::string &field);
     void classifyLogMessage();
     bool textStartsWith(const std::string &what);
     bool textContains(const std::string &what);

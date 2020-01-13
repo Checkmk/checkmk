@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 #       U  ___ u  __  __   ____
@@ -25,21 +25,22 @@
 """Management of the site local CA and certificates issued by it"""
 
 import sys
-from typing import Tuple  # pylint: disable=unused-import
+from typing import List, Tuple  # pylint: disable=unused-import
 import random
 # Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
+    from pathlib import Path  # pylint: disable=import-error
 else:
-    from pathlib2 import Path
-from OpenSSL import crypto
-from OpenSSL.SSL import FILETYPE_PEM  # type: ignore
+    from pathlib2 import Path  # pylint: disable=import-error
+from OpenSSL import crypto  # type: ignore[import]
+from OpenSSL.SSL import FILETYPE_PEM  # type: ignore[import]
 
 CERT_NOT_AFTER = 999 * 365 * 24 * 60 * 60  # 999 years by default
 CA_CERT_NOT_AFTER = CERT_NOT_AFTER
 
 
-class CertificateAuthority(object):
+# TODO: This module is imported by livestatus.py which is still used in Python 2
+class CertificateAuthority(object):  # pylint: disable=useless-object-inheritance
     """Management of the site local CA and certificates issued by it"""
     def __init__(self, ca_path, ca_name):
         # type: (Path, str) -> None
@@ -68,7 +69,7 @@ class CertificateAuthority(object):
         self._write_pem(self._root_cert_path, [root_cert], root_key)
 
     def _create_root_certificate(self):
-        # type: () -> Tuple[crypto.PKey, str]
+        # type: () -> Tuple[crypto.X509, crypto.PKey]
         key = self._make_private_key()
 
         cert = self._make_cert(self._ca_name, CA_CERT_NOT_AFTER)
@@ -84,7 +85,7 @@ class CertificateAuthority(object):
         return cert, key
 
     def _get_root_certificate(self):
-        # type: () -> Tuple[str, str]
+        # type: () -> Tuple[crypto.X509, crypto.PKey]
         return self._read_pem(self._root_cert_path)
 
     def site_certificate_exists(self, site_id):

@@ -1,0 +1,20 @@
+title: Redis: Server Info
+agents: linux
+catalog: app/redis
+license: GPL
+distribution: check_mk
+description:
+ With this check you can monitor Redis instances. The check gets input from
+ the redis-cli command "info" and the resulting "Server" section. It outputs the
+ mode the server is running ("standalone", "sentinel" or "cluster") and the
+ uptime. You can set levels for both values. Furthermore, it outputs the server
+ version, the GCC compiler version, the PID, IP and port the server is listening
+ on.
+
+ Needs the agent plugin "mk_redis" to be installed.
+
+item:
+ The item is the name of the Redis instance.
+
+inventory:
+ One service for each instance {"Redis MY_REDIS Server Info"} will be created.

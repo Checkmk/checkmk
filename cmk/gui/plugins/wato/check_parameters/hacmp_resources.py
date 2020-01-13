@@ -29,7 +29,6 @@ from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
     TextAscii,
-    Transform,
 )
 
 from cmk.gui.plugins.wato import (
@@ -40,21 +39,18 @@ from cmk.gui.plugins.wato import (
 
 
 def _parameter_valuespec_hacmp_resources():
-    return Transform(
-        Dictionary(
-            elements=[
-                ("expect_online_on",
-                 DropdownChoice(
-                     title=_(u"Expect resource to be online on"),
-                     choices=[
-                         ("first", _(u"the first node")),
-                         ("any", _(u"any node")),
-                     ],
-                 )),
-            ],
-            optional_keys=[],
-        ),
-        forth=lambda x: {"expect_online_on": "first"},
+    return Dictionary(
+        elements=[
+            ("expect_online_on",
+             DropdownChoice(
+                 title=_(u"Expect resource to be online on"),
+                 choices=[
+                     ("first", _(u"the first node")),
+                     ("any", _(u"any node")),
+                 ],
+             )),
+        ],
+        optional_keys=[],
     )
 
 
@@ -62,7 +58,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="hacmp_resources",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_(u"Resource Group")),
+        item_spec=lambda: TextAscii(title=_("Resource Group")),
         parameter_valuespec=_parameter_valuespec_hacmp_resources,
         title=lambda: _("AIX HACMP Resource Groups"),
     ))

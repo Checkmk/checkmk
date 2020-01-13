@@ -43,7 +43,7 @@ from cmk.gui.plugins.metrics import (
     MAX_CORES,
     indexed_color,
 )
-from cmk.utils.aws_constants import AWSEC2InstTypes
+from cmk.utils.aws_constants import AWSEC2InstTypes, AWSEC2InstFamilies
 
 # TODO Graphingsystem:
 # - Default-Template: Wenn im Graph kein "range" angegeben ist, aber
@@ -801,6 +801,12 @@ metric_info["mem_used_percent"] = {
     "unit": "%",
 }
 
+metric_info["cpu_mem_used_percent"] = {
+    "color": "#80ff40",
+    "title": _("CPU Memory used"),
+    "unit": "%",
+}
+
 metric_info["mem_perm_used"] = {
     "color": "#80ff40",
     "title": _("Permanent Generation Memory"),
@@ -820,7 +826,7 @@ metric_info["mem_trend"] = {
 }
 
 metric_info["trend_hoursleft"] = {
-    "title": _("Hours left until full"),
+    "title": _("Time left until full"),
     "unit": "s",
     "color": "#94b65a",
 }
@@ -886,13 +892,13 @@ metric_info["mem_lnx_total_used"] = {
 }
 
 metric_info["mem_lnx_cached"] = {
-    "title": _("File contents"),
+    "title": _("Cached memory"),
     "color": "#91cceb",
     "unit": "bytes",
 }
 
 metric_info["mem_lnx_buffers"] = {
-    "title": _("Filesystem structure"),
+    "title": _("Buffered memory"),
     "color": "#5bb9eb",
     "unit": "bytes",
 }
@@ -1354,6 +1360,38 @@ metric_info["mongodb_collection_storage_size"] = {
     "unit": "bytes",
 }
 
+metric_info["mongodb_collection_total_index_size"] = {
+    "title": _("Total Index Size"),
+    "help": _("The total size of all indexes for the collection"),
+    "color": "#535687",
+    "unit": "bytes",
+}
+
+metric_info["mongodb_replication_info_log_size"] = {
+    "title": _("Total size of the oplog"),
+    "help": _(
+        "Total amount of space allocated to the oplog rather than the current size of operations stored in the oplog"
+    ),
+    "color": "#3b4080",
+    "unit": "bytes",
+}
+
+metric_info["mongodb_replication_info_used"] = {
+    "title": _("Total amount of space used by the oplog"),
+    "help": _(
+        "Total amount of space currently used by operations stored in the oplog rather than the total amount of space allocated"
+    ),
+    "color": "#4d5092",
+    "unit": "bytes",
+}
+
+metric_info["mongodb_replication_info_time_diff"] = {
+    "title": _("Difference between the first and last operation in the oplog"),
+    "help": _("Difference between the first and last operation in the oplog in seconds"),
+    "color": "#535687",
+    "unit": "s",
+}
+
 metric_info["mongodb_document_count"] = {
     "title": _("Number of Documents"),
     "help": _("Number of documents per collection"),
@@ -1472,6 +1510,12 @@ metric_info["overprovisioned"] = {
     "title": _("Overprovisioned"),
     "unit": "bytes",
     "color": "24/a",
+}
+
+metric_info["precompiled"] = {
+    "title": _("Precompiled"),
+    "unit": "bytes",
+    "color": "16/a",
 }
 
 metric_info["temp"] = {
@@ -2248,6 +2292,18 @@ metric_info["cpu_time_percent"] = {
     "title": _("CPU time"),
     "unit": "%",
     "color": "#94b65a",
+}
+
+metric_info["cpu_ready_percent"] = {
+    "title": _("CPU ready"),
+    "unit": "%",
+    "color": "15/a",
+}
+
+metric_info["cpu_costop_percent"] = {
+    "title": _("Co-Stop"),
+    "unit": "%",
+    "color": "11/a",
 }
 
 metric_info["system_time"] = {
@@ -4546,6 +4602,12 @@ metric_info["fan"] = {
     "color": "16/b",
 }
 
+metric_info["fan_perc"] = {
+    "title": _("Fan speed"),
+    "unit": "%",
+    "color": "16/b",
+}
+
 metric_info["inside_macs"] = {
     "title": _("Number of unique inside MAC addresses"),
     "unit": "count",
@@ -5259,16 +5321,23 @@ metric_info['aws_ec2_spot_fleet_total_target_capacity'] = {
 }
 
 metric_info['aws_ec2_running_ondemand_instances_total'] = {
-    'title': _('Total Running On-Demand Instances'),
+    'title': _('Total running On-Demand Instances'),
     'unit': 'count',
-    'color': '25/a',
+    'color': '#000000',
 }
 
-for inst_type in AWSEC2InstTypes:
+for i, inst_type in enumerate(AWSEC2InstTypes):
     metric_info['aws_ec2_running_ondemand_instances_%s' % inst_type] = {
-        'title': _('Total Running On-Demand %s Instances') % inst_type,
+        'title': _('Total running On-Demand %s Instances') % inst_type,
         'unit': 'count',
-        'color': '11/a',
+        'color': indexed_color(i, len(AWSEC2InstTypes)),
+    }
+
+for inst_fam in AWSEC2InstFamilies:
+    metric_info['aws_ec2_running_ondemand_instances_%s_vcpu' % inst_fam[0]] = {
+        'title': _('Total %s vCPUs') % AWSEC2InstFamilies[inst_fam],
+        'unit': 'count',
+        'color': '25/a',
     }
 
 metric_info['aws_consumed_lcus'] = {
@@ -6021,16 +6090,28 @@ metric_info["jenkins_build_duration"] = {
     "color": "31/a",
 }
 
-metric_info["jenkins_numexecutors"] = {
-    "title": _("Number of executers"),
+metric_info["jenkins_num_executors"] = {
+    "title": _("Total number of executors"),
     "unit": "count",
-    "color": "31/a",
+    "color": "25/a",
+}
+
+metric_info["jenkins_busy_executors"] = {
+    "title": _("Number of busy executors"),
+    "unit": "count",
+    "color": "11/b",
+}
+
+metric_info["jenkins_idle_executors"] = {
+    "title": _("Number of idle executors"),
+    "unit": "count",
+    "color": "23/a",
 }
 
 metric_info["jenkins_clock"] = {
     "title": _("Clock difference"),
     "unit": "s",
-    "color": "43/a",
+    "color": "25/a",
 }
 
 metric_info["jenkins_temp"] = {
@@ -6265,6 +6346,12 @@ metric_info["collectors_failing"] = {
     "color": "12/a",
 }
 
+metric_info["num_streams"] = {
+    "title": _("Streams"),
+    "unit": "count",
+    "color": "11/a",
+}
+
 # In order to use the "bytes" unit we would have to change the output of the check, (i.e. divide by
 # 1024) which means an invalidation of historic values.
 metric_info['kb_out_of_sync'] = {
@@ -6411,6 +6498,8 @@ for check in [
     }
 
 check_metrics["check_mk-winperf_processor.util"].update({"util": {"name": "util_numcpu_as_max"}})
+check_metrics["check_mk-netapp_api_cpu"] = {"util": {"name": "util_numcpu_as_max"}}
+check_metrics["check_mk-netapp_api_cpu.utilization"] = {"util": {"name": "util_numcpu_as_max"}}
 
 check_metrics["check_mk-citrix_serverload"] = {
     "perf": {
@@ -6589,6 +6678,7 @@ check_metrics["check_mk-statgrab_mem"] = ram_used_swap_translation
 check_metrics["check_mk-hr_mem"] = ram_used_swap_translation
 check_metrics["check_mk-solaris_mem"] = ram_used_swap_translation
 check_metrics["check_mk-docker_container_mem"] = ram_used_swap_translation
+check_metrics["check_mk-emc_ecs_mem"] = ram_used_swap_translation
 
 check_metrics["check_mk-mem.used"] = {
     "ramused": {
@@ -7555,6 +7645,7 @@ cpu_util_unix_translate = {
 check_metrics["check_mk-kernel.util"] = cpu_util_unix_translate
 check_metrics["check_mk-statgrab_cpu"] = cpu_util_unix_translate
 check_metrics["check_mk-lxc_container_cpu"] = cpu_util_unix_translate
+check_metrics["check_mk-emc_ecs_cpu_util"] = cpu_util_unix_translate
 
 check_metrics["check_mk-lparstat_aix.cpu_util"] = {
     "wait": {
@@ -8441,6 +8532,8 @@ check_metrics["check_mk-cisco_mem"] = {
     },
 }
 
+check_metrics["check_mk-cisco_cpu_memory"] = {"mem_used": {"name": "cpu_mem_used_percent"}}
+
 check_metrics["check_mk-cisco_sys_mem"] = {
     "mem_used": {
         "name": "mem_used_percent"
@@ -8529,6 +8622,12 @@ perfometer_info.append({
 perfometer_info.append({
     "type": "linear",
     "segments": ["mem_used_percent"],
+    "total": 100.0,
+})
+
+perfometer_info.append({
+    "type": "linear",
+    "segments": ["cpu_mem_used_percent"],
     "total": 100.0,
 })
 
@@ -9063,6 +9162,24 @@ perfometer_info.append({
             "metric": "output_signal_power_dbm",
             "half_value": 4,
             "exponent": 2,
+        },
+    ],
+})
+
+perfometer_info.append({
+    "type": "dual",
+    "perfometers": [
+        {
+            "type": "logarithmic",
+            "metric": "if_in_bps",
+            "half_value": 5000000,
+            "exponent": 5,
+        },
+        {
+            "type": "logarithmic",
+            "metric": "if_out_bps",
+            "half_value": 5000000,
+            "exponent": 5,
         },
     ],
 })
@@ -9798,17 +9915,20 @@ perfometer_info.append({
     "color": "16/a",
 })
 
-perfometer_info.append(("stacked", [{
-    "type": "logarithmic",
-    "metric": "elasticsearch_size_rate",
-    "half_value": 5000,
-    "exponent": 2,
-}, {
-    "type": "logarithmic",
-    "metric": "elasticsearch_count_rate",
-    "half_value": 10,
-    "exponent": 2,
-}]))
+perfometer_info.append({
+    'type': 'stacked',
+    'perfometers': [{
+        'type': 'logarithmic',
+        'metric': 'elasticsearch_size_rate',
+        'half_value': 5000,
+        'exponent': 2,
+    }, {
+        'type': 'logarithmic',
+        'metric': 'elasticsearch_count_rate',
+        'half_value': 10,
+        'exponent': 2,
+    }],
+})
 
 perfometer_info.append({
     "type": "logarithmic",
@@ -9818,15 +9938,18 @@ perfometer_info.append({
     "unit": "count",
 })
 
-perfometer_info.append(("dual", [{
-    "type": "linear",
-    "segments": ["active_primary_shards"],
-    "total": "active_shards",
-}, {
-    "type": "linear",
-    "segments": ["active_shards"],
-    "total": "active_shards",
-}]))
+perfometer_info.append({
+    'type': 'dual',
+    'perfometers': [{
+        'type': 'linear',
+        'segments': ['active_primary_shards'],
+        'total': 'active_shards',
+    }, {
+        'type': 'linear',
+        'segments': ['active_shards'],
+        'total': 'active_shards',
+    }],
+})
 
 perfometer_info.append({
     "type": "linear",
@@ -9887,6 +10010,16 @@ perfometer_info.append({
 #          ('tablespace_used', 'area')
 
 graph_info["fan_speed"] = {"title": _("Fan speed"), "metrics": [("fan_speed", "area"),]}
+
+graph_info["aws_ec2_running_ondemand_instances"] = {
+    "title": _("Total running On-Demand Instances"),
+    "metrics": [('aws_ec2_running_ondemand_instances_total', 'line')] +
+               [('aws_ec2_running_ondemand_instances_%s' % inst_type, "stack")
+                for inst_type in AWSEC2InstTypes],
+    "optional_metrics": [
+        'aws_ec2_running_ondemand_instances_%s' % inst_type for inst_type in AWSEC2InstTypes
+    ],
+}
 
 graph_info["context_switches"] = {
     "title": _("Context switches"),
@@ -10298,6 +10431,7 @@ graph_info["cpu_utilization_numcpus"] = {
         "util_numcpu_as_max:crit",
     ],
     "range": (0, 100),
+    "optional_metrics": ["user"],
 }
 
 #TODO which warn,crit?
@@ -10857,6 +10991,12 @@ graph_info["mem_used_percent"] = {
     "range": (0, 100),
 }
 
+graph_info["cpu_mem_used_percent"] = {
+    "metrics": [("cpu_mem_used_percent", "area"),],
+    "scalars": ["cpu_mem_used_percent:warn", "cpu_mem_used_percent:crit"],
+    "range": (0, 100),
+}
+
 graph_info["mem_trend"] = {
     "metrics": [("mem_trend", "line"),],
 }
@@ -11265,6 +11405,17 @@ graph_info["net_data_traffic"] = {
         ("net_data_recv", "stack"),
         ("net_data_sent", "stack"),
     ],
+}
+
+# For the 'ps' check there are multiple graphs.
+# Without the graph info 'number_of_processes', the graph will not show,
+# because 'size_per_process' uses the variable name 'processes' as well.
+# Once a variable is used by some other graph it will not create a single graph anymore.
+# That is why we have to define a specific graph info here.
+# Further details see here: metrics/utils.py -> _get_implicit_graph_templates()
+graph_info["number_of_processes"] = {
+    "title": _("Number of processes"),
+    "metrics": [("processes", "area"),]
 }
 
 graph_info["size_of_processes"] = {
@@ -11902,5 +12053,23 @@ graph_info["write_latency"] = {
         ("nimble_write_latency_200", "line"),
         ("nimble_write_latency_500", "line"),
         ("nimble_write_latency_1000", "line"),
+    ],
+}
+
+graph_info["number_of_executors"] = {
+    "title": _("Executors"),
+    "metrics": [
+        ("jenkins_num_executors", "area"),
+        ("jenkins_busy_executors", "area"),
+        ("jenkins_idle_executors", "area"),
+    ],
+}
+
+graph_info["number_of_tasks"] = {
+    "title": _("Tasks"),
+    "metrics": [
+        ("jenkins_stuck_tasks", "area"),
+        ("jenkins_blocked_tasks", "area"),
+        ("jenkins_pending_tasks", "area"),
     ],
 }

@@ -49,12 +49,10 @@
 
 
 def inv_oracle_tablespaces(parsed, inventory_tree, status_data_tree):
-    path = "software.applications.oracle.tablespaces:"
-    inv_node = inventory_tree.get_list(path)
-    status_node = status_data_tree.get_list(path)
-
+    inv_tablespaces = []
+    status_tablespaces = []
     tablespaces, _error_sids = parsed
-    for tablespace, attrs in sorted(tablespaces.items()):
+    for tablespace, attrs in tablespaces.items():
         sid, name = tablespace
         db_version = attrs["db_version"]
         num_files = 0
@@ -124,7 +122,7 @@ def inv_oracle_tablespaces(parsed, inventory_tree, status_data_tree):
                     max_size += df_size
                     free_space += df_free_space
 
-        inv_node.append({
+        inv_tablespaces.append({
             "sid": sid,
             "name": name,
             "version": db_version or "",
@@ -132,7 +130,7 @@ def inv_oracle_tablespaces(parsed, inventory_tree, status_data_tree):
             "autoextensible": attrs["autoextensible"] and "YES" or "NO",
         })
 
-        status_node.append({
+        status_tablespaces.append({
             "sid": sid,
             "name": name,
             "current_size": current_size,
@@ -142,6 +140,14 @@ def inv_oracle_tablespaces(parsed, inventory_tree, status_data_tree):
             "increment_size": increment_size,
             "free_space": free_space,
         })
+
+    path = "software.applications.oracle.tablespaces:"
+
+    inv_node = inventory_tree.get_list(path)
+    inv_node.extend(sorted(inv_tablespaces, key=lambda r: r.get('sid') or r.get('name')))
+
+    status_node = status_data_tree.get_list(path)
+    status_node.extend(sorted(status_tablespaces, key=lambda r: r.get('sid') or r.get('name')))
 
 
 # If something changes adapt calculations in related check plugin

@@ -4,7 +4,7 @@
 
 set -ex
 
-if [[ -z $CHROOT_PATH ]] ; then
+if [[ -z $CHROOT_PATH ]]; then
     echo "CHROOT_PATH is not set"
     exit 1
 fi
@@ -14,20 +14,16 @@ ssh_key=id_rsa_windows_test
 remote_ip=$(grep "remote_ip =" $script_dir/it/remote.py | sed "s/^.*'\(.*\)'/\1/g")
 remoteuser=$(grep "remoteuser =" $script_dir/it/remote.py | sed "s/^.*'\(.*\)'/\1/g")
 
-if [[ $SUDO_USER == jenkins ]] ; then
-    home_dir=/var/lib/jenkins
-else
-    home_dir=/home/$SUDO_USER
-fi
+home_dir=/home/$SUDO_USER
 
-if [[ ! -f "$home_dir/.ssh/$ssh_key" ]] || [[ ! -f "$home_dir/.ssh/${ssh_key}.pub" ]] ; then
+if [[ ! -f "$home_dir/.ssh/$ssh_key" ]] || [[ ! -f "$home_dir/.ssh/${ssh_key}.pub" ]]; then
     echo "SSH key pair '$ssh_key' not found. Please generate a new key pair with the command"
     echo "ssh-keygen -t rsa -N '' -C '$SUDO_USER@$HOSTNAME (Windows test)' -f $home_dir/.ssh/$ssh_key"
     echo "and append the public key to \\Users\\$remoteuser\\.ssh\\authorized_keys at host $remote_ip"
     exit 1
 fi
 
-if [[ ! -d "$CHROOT_PATH/home/$SUDO_USER/.ssh" ]] ; then
+if [[ ! -d "$CHROOT_PATH/home/$SUDO_USER/.ssh" ]]; then
     su - $SUDO_USER -c bash -c "mkdir -p $CHROOT_PATH/home/$SUDO_USER/.ssh"
 fi
 
@@ -35,4 +31,3 @@ for ending in "" ".pub"; do
     cp "$home_dir/.ssh/${ssh_key}${ending}" "$CHROOT_PATH/home/$SUDO_USER/.ssh/id_rsa${ending}"
     chown $SUDO_USER:$SUDO_USER "$CHROOT_PATH/home/$SUDO_USER/.ssh/id_rsa${ending}"
 done
-

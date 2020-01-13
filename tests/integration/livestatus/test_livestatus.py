@@ -3,9 +3,13 @@
 # pylint: disable=redefined-outer-name
 
 from __future__ import print_function
+from builtins import object
 import collections
 import pytest  # type: ignore
 import six
+import uuid as _uuid
+import json as _json
+import time as _time
 
 from testlib import web, create_linux_test_host  # pylint: disable=unused-import
 
@@ -150,3 +154,58 @@ def test_service_custom_variables(configure_service_tags, default_cfg, site):
     custom_variables, tags = rows[0]
     assert custom_variables == {}
     assert tags == {u'criticality': u'prod'}
+
+
+@pytest.mark.usefixtures("default_cfg")
+class TestCrashReport(object):
+    @pytest.fixture
+    def uuid(self):
+        return str(_uuid.uuid4())
+
+    @pytest.fixture
+    def component(self):
+        return "cmp"
+
+    @pytest.fixture
+    def crash_info(self, component, uuid):
+        return _json.dumps({"component": component, "id": uuid})
+
+    @pytest.fixture(autouse=True)
+    def crash_report(self, site, component, uuid, crash_info):
+        assert site.file_exists("var/check_mk/crashes")
+        dir = "var/check_mk/crashes/%s/%s/" % (component, uuid)
+        site.makedirs(dir)
+        site.write_file(dir + "crash.info", crash_info)
+        yield
+        site.delete_dir("var/check_mk/crashes/%s" % component)
+
+    def test_list_crash_report(self, site, component, uuid):
+        rows = site.live.query("GET crashreports")
+        assert rows
+        assert [u"component", u"id"] in rows
+        assert [component, uuid] in rows
+
+    def test_read_crash_report(self, site, component, uuid, crash_info):
+        rows = site.live.query("\n".join(
+            ("GET crashreports", "Columns: file:f0:%s/%s/crash.info" % (component, uuid),
+             "Filter: id = %s" % uuid)))
+        assert rows
+        assert rows[0][0] == crash_info
+
+    def test_del_crash_report(self, site, component, uuid, crash_info):
+        before = site.live.query("GET crashreports")
+        site.live.command("[%i] DEL_CRASH_REPORT;%s" % (_time.mktime(_time.gmtime()), uuid))
+        _time.sleep(0.1)  # Kindly let it complete.
+        after = site.live.query("GET crashreports")
+        assert after != before
+        assert [component, uuid] in before
+        assert [component, uuid] not in after
+
+    def test_other_crash_report(self, site, component, uuid, crash_info):
+        before = site.live.query("GET crashreports")
+        site.live.command("[%i] DEL_CRASH_REPORT;%s" %
+                          (_time.mktime(_time.gmtime()), "01234567-0123-4567-89ab-0123456789ab"))
+        after = site.live.query("GET crashreports")
+        assert before == after
+        assert [component, uuid] in before
+        assert [component, uuid] in after

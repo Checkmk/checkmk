@@ -21,7 +21,6 @@ class AutomationCommand(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def get_request(self):
-        # type: () -> ...
         """Get request variables from environment
 
         In case an automation command needs to read variables from the HTTP request this has to be done
@@ -30,7 +29,6 @@ class AutomationCommand(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def execute(self, request):
-        # type: (...) -> ...
         raise NotImplementedError()
 
     def _verify_slave_site_config(self, site_id):

@@ -43,15 +43,15 @@ public:
         , _column(column)
         , _relOp(relOp)
         , _value(std::move(value)) {}
-    std::string columnName() const { return _column.name(); }
-    RelationalOperator oper() const { return _relOp; }
-    std::string value() const { return _value; }
+    [[nodiscard]] std::string columnName() const { return _column.name(); }
+    [[nodiscard]] RelationalOperator oper() const { return _relOp; }
+    [[nodiscard]] std::string value() const { return _value; }
     std::unique_ptr<Filter> partialFilter(
         std::function<bool(const Column &)> predicate) const override;
-    bool is_tautology() const override;
-    bool is_contradiction() const override;
-    Filters disjuncts() const override;
-    Filters conjuncts() const override;
+    [[nodiscard]] bool is_tautology() const override;
+    [[nodiscard]] bool is_contradiction() const override;
+    [[nodiscard]] Filters disjuncts() const override;
+    [[nodiscard]] Filters conjuncts() const override;
 
 private:
     const Column &_column;

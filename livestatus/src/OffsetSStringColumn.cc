@@ -27,7 +27,7 @@
 
 std::string OffsetSStringColumn::getValue(Row row) const {
     if (auto p = columnData<std::string>(row)) {
-        return p == nullptr ? "" : *p;
+        return *p;
     }
     return "";
 }

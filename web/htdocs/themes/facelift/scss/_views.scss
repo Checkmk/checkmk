@@ -54,11 +54,11 @@ div.floatfilter {
   margin: 0 4px 3px 0;
   color: $primary-font-color;
   background-color: rgba(160, 181, 190, 0.6);
-  border-color: #acc #22404d #22414d #8ab;
+  border-color: rgb(170, 204, 204) rgb(34, 64, 77) rgb(34, 65, 77) rgb(136, 170, 187);
   border-style: solid;
   border-width: 1px;
   border-radius: 5px;
-  box-shadow: 0.5px 0.5px 1px #444;
+  box-shadow: 0.5px 0.5px 1px rgb(68, 68, 68);
 
   &.double {
     display: table-cell;
@@ -73,6 +73,10 @@ div.floatfilter {
     width: 100%;
     box-sizing: border-box;
 
+    &.number {
+      text-align: center;
+    }
+
     &.neg {
       width: 229px;
     }
@@ -84,7 +88,7 @@ div.floatfilter {
     padding: 3px 5px 0;
     //margin-bottom: 1px;
     font-size: 10px;
-    color: #fff;
+    color: rgb(255, 255, 255);
     background-color: $floatfilter-bg-color;
     border-radius: 5px 5px 0 0;
   }
@@ -177,6 +181,10 @@ div.floatfilter {
     .select2-container {
       margin-left: 4px;
     }
+  }
+
+  &.downtimes span.checkbox {
+    white-space: normal;
   }
 }
 
@@ -462,11 +470,11 @@ div.optiondial {
     margin-top: 0;
     margin-left: 0;
     overflow: hidden;
-    color: #222;
-    text-shadow: 0 0.5px 0.5px #fff;
+    color: rgb(34, 34, 34);
+    text-shadow: 0 0.5px 0.5px rgb(255, 255, 255);
     cursor: pointer;
     border-radius: $primary-border-radius;
-    box-shadow: 0 0 3px #123;
+    box-shadow: 0 0 3px rgb(17, 34, 51);
   }
 
   &.num_columns {
@@ -546,10 +554,10 @@ table.tiled td {
   width: 180px;
   margin-right: 6px;
   margin-bottom: 6px;
-  background-color: #ccc;
-  border: 1px solid #000;
+  background-color: rgb(204, 204, 204);
+  border: 1px solid rgb(0, 0, 0);
   border-radius: 0;
-  box-shadow: 1px 1px 3px #000;
+  box-shadow: 1px 1px 3px rgb(0, 0, 0);
 
   img.icon {
     width: 16px;
@@ -762,13 +770,13 @@ table.data.matrix {
 
   tr.even0 {
     td.left.minority {
-      background-color: #bdd;
+      background-color: rgb(187, 221, 221);
     }
   }
 
   tr.odd0 {
     td.left.minority {
-      background-color: #cee;
+      background-color: rgb(204, 238, 238);
     }
   }
 
@@ -790,11 +798,11 @@ table.data.matrix {
 }
 
 .even0 .minority {
-  background-color: #cff;
+  background-color: rgb(204, 255, 255);
 }
 
 .odd0 .minority {
-  background-color: #dff;
+  background-color: rgb(221, 255, 255);
 }
 
 /*-------------------------------------------------------------------------.
@@ -838,8 +846,8 @@ table.views {
 
   td, th{
     padding: 2px 1ex;
-    color: #fff;
-    border: 1px solid #444;
+    color: rgb(255, 255, 255);
+    border: 1px solid rgb(68, 68, 68);
   }
 
   td {
@@ -847,29 +855,29 @@ table.views {
     padding-top: 3px;
 
     &.legend {
-      color: #fff;
-      background-color: #8eaeb8;
+      color: rgb(255, 255, 255);
+      background-color: rgb(142, 174, 184);
     }
 
     &.content {
-      color: #fff;
-      background-color: #9ebec8;
+      color: rgb(255, 255, 255);
+      background-color: rgb(158, 190, 200);
     }
 
     &.edit {
       text-align: center;
-      background-color: #6ab;
+      background-color: rgb(102, 170, 187);
     }
 
     &.buttons {
       padding: 3px;
       vertical-align: middle;
-      background-color: #8eaeb8;
+      background-color: rgb(142, 174, 184);
     }
   }
 
   th {
-    background-color: #709aa5;
+    background-color: rgb(112, 154, 165);
   }
 }
 
@@ -884,7 +892,7 @@ table.data.availability {
   }
 
   td.unused {
-    color: #888;
+    color: rgb(136, 136, 136);
   }
 
   tr.summary td {
@@ -909,10 +917,10 @@ table.data.availability {
 }
 
 table.data td.flapping, table.timeline td.flapping, div.avlegend.timeline div.state.flapping {
-  background-color: #f0f;
+  background-color: rgb(255, 0, 255);
 }
 table.data td.downtime, table.timeline td.downtime, div.avlegend.timeline div.state.downtime {
-  background-color: #0af;
+  background-color: rgb(0, 170, 255);
 }
 table.data tr.data > td.hostdown, table.timeline td.hostdown, div.avlegend.timeline div.state.hostdown {
   color: $white;
@@ -937,7 +945,7 @@ table.data.availability tr.even0 td {
 }
 
 table.timeline td.ooservice, div.avlegend.timeline div.state.ooservice {
-  background-color: #cacaca;
+  background-color: rgb(202, 202, 202);
   background-image: url("images/ooservice.png");
   background-repeat: repeat;
 }
@@ -946,8 +954,11 @@ div.floatfilter.rangespec table.valuespec_tuple {
   width: 100%;
 
   span.title {
-    position: relative;
     top: 7px;
+  }
+
+  input {
+    padding: 3px;
   }
 }
 
@@ -981,7 +992,7 @@ table.timeline {
   &.inline {
     width: 500px;
     border-style: none;
-    box-shadow: 0 0 1px #555 inset;
+    box-shadow: 0 0 1px rgb(85, 85, 85) inset;
   }
 
   td {
@@ -995,7 +1006,7 @@ table.timeline {
     }
 
     &.chaos {
-      background-color: #84f;
+      background-color: rgb(136, 68, 255);
     }
   }
 }
@@ -1017,7 +1028,7 @@ div.timelinerange {
       top: 0;
       width: 5px;
       height: 30px;
-      border-color: #666;
+      border-color: rgb(102, 102, 102);
       border-style: none none none solid;
       border-width: 0 0 0 1px;
     }
@@ -1088,7 +1099,7 @@ div.avlegend {
   h3 {
     margin-top: 0;
     font-size: 13px;
-    color: #000;
+    color: rgb(0, 0, 0);
   }
 
   div {
@@ -1110,14 +1121,14 @@ div.avlegend {
 
   &.levels div.level {
     margin-right: 15px;
-    color: #000;
+    color: rgb(0, 0, 0);
   }
 
   &.timeline div.state {
     width: 75px;
 
     &.ooservice {
-      color: #000;
+      color: rgb(0, 0, 0);
     }
   }
 }
@@ -1140,7 +1151,7 @@ td.invtree {
   /* TODO: Reproduce this html element */
   b.treeangle.title {
     font-weight: normal;
-    color: #000;
+    color: rgb(0, 0, 0);
   }
 
   ul.treeangle {
@@ -1156,7 +1167,7 @@ td.invtree {
   table td, table th {
     height: 14px;
     padding: 1px 5px;
-    border: 1px solid #888;
+    border: 1px solid rgb(136, 136, 136);
   }
 
   table th {
@@ -1164,17 +1175,17 @@ td.invtree {
   }
 
   table td {
-    background-color: #fff;
+    background-color: rgb(255, 255, 255);
   }
 }
 
 /* TODO: Reproduce this html element */
 td.invtree span.invold, span.invold table.data {
-  color: #ff0000;
+  color: rgb(255, 0, 0);
 }
 /* TODO: Reproduce this html element */
 td.invtree span.invnew, span.invnew table.data {
-  color: #00bf00;
+  color: rgb(0, 191, 0);
 }
 
 /* Positioning of the link from an inventory dicttable to the matching multisite table */
@@ -1255,7 +1266,7 @@ table.data.headerleft.sla {
   }
 
   a {
-    color: #fff;
+    color: rgb(255, 255, 255);
     text-decoration: underline;
   }
 }
@@ -1266,7 +1277,7 @@ table.timeline {
 
     td {
       padding: 0;
-      border: none solid #444;
+      border: none solid rgb(68, 68, 68);
     }
 
     &.period {
@@ -1276,28 +1287,28 @@ table.timeline {
   }
 
   td.state0.even {
-    background-color: #0b3;
+    background-color: rgb(0, 187, 51);
   }
 
   td.state0.odd {
-    background-color: #092;
+    background-color: rgb(0, 153, 34);
   }
 
   td.state2.even {
-    background-color: #f00;
+    background-color: rgb(255, 0, 0);
   }
 
   td.state2.odd {
-    background-color: #900;
+    background-color: rgb(153, 0, 0);
   }
 }
 
 div.sla_details {
-  background-color: #73a1b4;
+  background-color: rgb(115, 161, 180);
 }
 
 td.sla > div.foldable > b {
-  color: #000;
+  color: rgb(0, 0, 0);
 }
 
 h2.sla {
@@ -1313,7 +1324,7 @@ table.data tr.sla_horizontal_line > td.sla_horizontal_line {
 
   &.black {
     height: 1px;
-    border-bottom: 1px solid #000;
+    border-bottom: 1px solid rgb(0, 0, 0);
   }
 }
 

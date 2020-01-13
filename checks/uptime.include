@@ -41,43 +41,21 @@ def parse_snmp_uptime(ticks):
 #    "max" : ( 86400 * 7, 86400 * 14),  # Maximum required uptime (warn, crit)
 # }
 
+from datetime import timedelta
+
 
 def check_uptime_seconds(params, uptime_sec):
-    seconds = uptime_sec % 60
-    rem = uptime_sec // 60
-    minutes = rem % 60
-    hours = (rem % 1440) // 60
-    days = rem // 1440
-    since = time.strftime("%c", time.localtime(time.time() - uptime_sec))
-
-    state = 0
-    infotext = "Up since %s (%dd %02d:%02d:%02d)" % \
-                (since, days, hours, minutes, seconds)
 
     if params is None:  # legacy: support older versions of parameters
         params = {}
 
-    if "min" in params:
-        warn, crit = params["min"]
-        if uptime_sec < crit:
-            state = 2
-        elif uptime_sec < warn:
-            state = max(state, 1)
-
-        if state:
-            infotext += ", not up long enough!"
-
-    if "max" in params:
-        warn, crit = params["max"]
-        if uptime_sec > crit:
-            state = 2
-        elif uptime_sec > warn:
-            state = max(state, 1)
-
-        if uptime_sec > warn:
-            infotext += ", up too long!"
-
-    return (state, infotext, [("uptime", uptime_sec)])
+    params = params.get("max", (None, None)) + params.get("min", (None, None))
+    return check_levels(uptime_sec,
+                        "uptime",
+                        params,
+                        human_readable_func=lambda x: timedelta(seconds=int(x)),
+                        infoname="Up since %s, uptime" %
+                        time.strftime("%c", time.localtime(time.time() - uptime_sec)))
 
 
 #   .--snmp----------------------------------------------------------------.

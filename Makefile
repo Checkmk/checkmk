@@ -42,8 +42,9 @@ SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export CPPCHECK    := cppcheck
 export DOXYGEN     := doxygen
 export IWYU_TOOL   := iwyu_tool
-PIPENV             := PIPENV_NO_INHERIT=true PIPENV_VENV_IN_PROJECT=true PIPENV_NOSPIN=true PIPENV_HIDE_EMOJIS=true pipenv
-ARTIFACT_STORAGE   := http://nexus:8081
+ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
+PIPENV2            := scripts/run-pipenv 2
+PIPENV3            := scripts/run-pipenv 3
 
 M4_DEPS            := $(wildcard m4/*) configure.ac
 CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
@@ -97,7 +98,8 @@ THEME_RESOURCES    := $(THEME_CSS_FILES) $(THEME_JSON_FILES) $(THEME_IMAGE_DIRS)
         format-windows format-linux format-python format-shell \
         GTAGS headers help install \
         iwyu mrproper mrclean optimize-images packages setup setversion tidy version \
-        am--refresh skel
+        am--refresh skel .venv .venv-2.7 .venv-3.7
+
 
 help:
 	@echo "setup			      --> Prepare system for development and building"
@@ -178,7 +180,7 @@ endif
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
 # This tar file is only used by "omd/packages/check_mk/Makefile"
-$(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI) $(THEME_RESOURCES) ChangeLog
+$(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI) $(THEME_RESOURCES) ChangeLog agents/windows/plugins/mk_logwatch.exe agents/windows/plugins/mk_jolokia.exe
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
@@ -187,7 +189,7 @@ $(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).ta
 	tar rf $(DISTNAME)/bin.tar $(TAROPTS) -C agents/windows/msibuild msi-update
 	tar rf $(DISTNAME)/bin.tar $(TAROPTS) -C agents/windows/msibuild msi-update-legacy
 	gzip $(DISTNAME)/bin.tar
-	$(PIPENV) run python -m compileall cmk ; \
+	$(PIPENV2) run python -m compileall cmk ; \
 	  tar czf $(DISTNAME)/lib.tar.gz $(TAROPTS) \
 	    --exclude "cee" \
 	    --exclude "cee.py*" \
@@ -195,15 +197,6 @@ $(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).ta
 	    --exclude "cme.py*" \
 	    cmk/* ; \
 	  rm cmk/*.pyc
-	$(PIPENV) run python -m compileall cmk_base ; \
-	  tar czf $(DISTNAME)/base.tar.gz \
-	    $(TAROPTS) \
-	    --exclude "cee" \
-	    --exclude "cee.py*" \
-	    --exclude "cme" \
-	    --exclude "cme.py*" \
-	    cmk_base/* ; \
-	  rm cmk_base/*.pyc
 	tar czf $(DISTNAME)/werks.tar.gz $(TAROPTS) -C .werks werks
 	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)
 	tar czf $(DISTNAME)/active_checks.tar.gz $(TAROPTS) -C active_checks $$(cd active_checks ; ls)
@@ -246,7 +239,12 @@ $(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).ta
 		mk-job* \
 		waitmax \
 		windows/cfg_examples \
-		windows/check_mk_agent*.{exe,msi} \
+		windows/check_mk_agent-64.exe \
+		windows/check_mk_agent.exe \
+		windows/check_mk_agent.msi \
+		windows/check_mk_agent_legacy-64.exe \
+		windows/check_mk_agent_legacy.exe \
+		windows/check_mk_agent_legacy.msi \
 		windows/check_mk.example.ini \
 		windows/check_mk.user.yml \
 		windows/CONTENTS \
@@ -263,16 +261,22 @@ $(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).ta
 	@echo "   FINISHED. "
 	@echo "=============================================================================="
 
+agents/windows/plugins/%.exe:
+	@echo "ERROR: The build artifact $@ is missing. Needs to be created by CI system first."
+	@echo "In case you want to proceed without these files, you may simply execute \"touch $@\""
+	@echo "to create a package without that file."
+	exit 1
+
 omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe:
 	$(MAKE) -C omd openhardwaremonitor-dist
 
 omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll: omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe
 
-.werks/werks: .venv $(WERKS)
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/precompile-werks.py .werks .werks/werks cre
+.werks/werks: $(WERKS)
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV2) run scripts/precompile-werks.py .werks .werks/werks cre
 
-ChangeLog: .venv .werks/werks
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/create-changelog.py ChangeLog .werks/werks
+ChangeLog: .werks/werks
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV2) run scripts/create-changelog.py ChangeLog .werks/werks
 
 packages:
 	$(MAKE) -C agents packages
@@ -284,7 +288,10 @@ omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz:
 	mkdir -p mk-livestatus-$(VERSION)
 	tar cf -  $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) ) | tar xf - -C mk-livestatus-$(VERSION)
 	cp -a configure.ac m4 mk-livestatus-$(VERSION)
-	cd mk-livestatus-$(VERSION) && autoreconf --install --include=m4 && rm -rf autom4te.cache
+	cd mk-livestatus-$(VERSION) && \
+	    autoreconf --install --include=m4 && \
+	    rm -rf autom4te.cache && \
+	    touch ar-lib compile config.guess config.sub install-sh missing depcomp
 	tar czf omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz $(TAROPTS) mk-livestatus-$(VERSION)
 	rm -rf mk-livestatus-$(VERSION)
 
@@ -300,7 +307,8 @@ setversion:
 	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" defines.make ; \
 	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$(NEW_VERSION)"'], [mk@mathias-kettner.de])/' configure.ac ; \
 	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' bin/mkbackup ; \
-	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' cmk/__init__.py bin/mkbench bin/livedump; \
+	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' bin/mkbench bin/livedump; \
+	sed -i 's/^__version__ = u".*"$$/__version__ = u"$(NEW_VERSION)"/' cmk/__init__.py; \
 	sed -i 's/^VERSION=.*/VERSION='"$(NEW_VERSION)"'/' scripts/setup.sh ; \
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
 	$(MAKE) -C docker NEW_VERSION=$(NEW_VERSION) setversion
@@ -342,13 +350,19 @@ web/htdocs/js/%_min.js: node_modules webpack.config.js $(JAVASCRIPT_SOURCES)
 web/htdocs/themes/%/theme.css: node_modules webpack.config.js postcss.config.js web/htdocs/themes/%/theme.scss web/htdocs/themes/%/scss/*.scss
 	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
 
+# This target is used to generate a css file for the virtual appliance. It is
+# called from the cma git's Makefile and the built css file is moved to
+# ~/git/cma/skel/usr/share/cma/webconf/htdocs/
+web/htdocs/themes/facelift/cma_facelift.css: node_modules webpack.config.js postcss.config.js web/htdocs/themes/facelift/cma_facelift.scss web/htdocs/themes/facelift/scss/*.scss
+	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
+
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff
 # which is needed to run configure, this should live in a separate target. In
 # fact, we should really clean up all this cleaning-chaos and finally follow the
 # GNU standards here (see "Standard Targets for Users",
 # https://www.gnu.org/prep/standards/html_node/Standard-Targets.html).
 clean:
-	make -C omd clean
+	$(MAKE) -C omd clean
 	rm -rf clang-analyzer dist.tmp rpm.topdir *.rpm *.deb *.exe \
 	       omd/packages/mk-livestatus/mk-livestatus-*.tar.gz \
 	       $(NAME)-*.tar.gz *~ counters autochecks \
@@ -366,10 +380,13 @@ mrclean:
 	git clean -d --force -x \
 	    --exclude='\.werks/.last' \
 	    --exclude='\.werks/.my_ids' \
+	    --exclude="Pipfile" \
+	    --exclude="Pipfile.lock" \
 	    --exclude=".venv*" \
 	    --exclude="virtual-envs/*/.venv/"
 
 setup:
+# librrd-dev is still needed by the python rrd package we build in our virtual environment
 	sudo apt-get install \
 	    aptitude \
 	    autoconf \
@@ -384,6 +401,8 @@ setup:
 	    libclang-7-dev \
 	    libpcap-dev \
 	    librrd-dev \
+	    libxml2-dev \
+	    libpango1.0-dev \
 	    llvm-7-dev \
 	    libsasl2-dev \
 	    libldap2-dev \
@@ -474,7 +493,7 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src tidy
 endif
 
-iwyu: config.h
+iwyu: config.status
 	$(MAKE) -C livestatus/src iwyu
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src iwyu
@@ -512,14 +531,14 @@ format-windows:
 format-linux:
 	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT_LINUX)
 
-format-python: .venv
+format-python:
 # Explicitly specify --style [FILE] to prevent costly searching in parent directories
 # for each file specified via command line
 #
 # Saw some mixed up lines on stdout after adding the --parallel option. Leaving it on
 # for the moment to get the performance boost this option brings.
-	PYTHON_FILES=$${PYTHON_FILES-$$(tests/find-python-files)} ; \
-	$(PIPENV) run yapf --parallel --style .style.yapf --verbose -i $$PYTHON_FILES
+	PYTHON_FILES=$${PYTHON_FILES-$$(scripts/find-python-files 2)} ; \
+	$(PIPENV2) run yapf --parallel --style .style.yapf --verbose -i $$PYTHON_FILES
 
 format-shell:
 	sudo docker run --rm -v "$(realpath .):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES)
@@ -532,44 +551,19 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src documentation
 endif
 
-# TODO: The line: sed -i "/\"markers\": \"extra == /d" Pipfile.lock; \
-# can be removed if pipenv fixes this issue.
-# See: https://github.com/pypa/pipenv/issues/3140
-#      https://github.com/pypa/pipenv/issues/3026
-# The recent pipenv version 2018.10.13 has a bug that places wrong markers in the
-# Pipfile.lock. This leads to an error when installing packages with this
-# markers and prints an error message. Example:
-# Ignoring pyopenssl: markers 'extra == "security"' don't match your environment
-# TODO: pipenv and make don't really cooperate nicely: Locking alone already
-# creates a virtual environment with setuptools/pip/wheel. This could lead to a
-# wrong up-to-date status of it later, so let's remove it here. What we really
-# want is a check if the contents of .venv match the contents of Pipfile.lock.
-# We should do this via some move-if-change Kung Fu, but for now rm suffices.
-virtual-envs/%/Pipfile.lock: virtual-envs/%/Pipfile
-	cd virtual-envs/$*/; \
-	$(PIPENV) lock; \
-	sed -i "/\"markers\": \"extra == /d" Pipfile.lock; \
-	rm -rf .venv
-
-# Remake .venv everytime Pipfile or Pipfile.lock are updated. Using the 'sync'
-# mode installs the dependencies exactly as speciefied in the Pipfile.lock.
-# This is extremely fast since the dependencies do not have to be resolved.
-# Cleanup partially created pipenv. This makes us able to automatically repair
-# broken virtual environments which may have been caused by network issues.
-.PRECIOUS: virtual-envs/%/.venv
-virtual-envs/%/.venv: virtual-envs/%/Pipfile.lock
-	@type python$* >/dev/null 2>&1 || (echo "ERROR: python$* can not be found. Execute: \"make setup\"" && exit 1)
-	cd virtual-envs/$*/; \
-	$(RM) -r .venv; \
-	($(PIPENV) sync --dev && touch .venv) || ($(RM) -r .venv ; exit 1)
-
-.venv-%: virtual-envs/%/.venv
+.venv-2.7:
+	$(MAKE) -C virtual-envs/2.7 .venv
+	$(MAKE) -C virtual-envs/3.7 .venv
 	rm -rf {Pipfile,Pipfile.lock,.venv*}
-	ln -s virtual-envs/$*/{Pipfile,Pipfile.lock,.venv} .
-	touch $@
+	ln -s virtual-envs/2.7/{Pipfile,Pipfile.lock,.venv} .
 
-# This is for compatibility: The target .venv should always refer to 2.7
-# .venv is a PHONY target, so it will be remade, even if .venv is 'up to date'
+.venv-3.7:
+	$(MAKE) -C virtual-envs/2.7 .venv
+	$(MAKE) -C virtual-envs/3.7 .venv
+	rm -rf {Pipfile,Pipfile.lock,.venv*}
+	ln -s virtual-envs/3.7/{Pipfile,Pipfile.lock,.venv} .
+
+# This alias is for compatibility: The target .venv should refer to 2.7 for the moment
 .venv: .venv-2.7
 
 # This dummy rule is called from subdirectories whenever one of the

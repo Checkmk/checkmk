@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-@get_parsed_item_data
+@get_data_or_go_stale
 def check_azure_virtualnetworkgateways(_item, params, resource):
     for metric_key, cmk_key, displ in (
         ('maximum_P2SConnectionCount', 'connections', 'Point-to-site connections'),
@@ -39,8 +39,7 @@ def check_azure_virtualnetworkgateways(_item, params, resource):
                                     cmk_key,
                                     displ,
                                     levels=levels_u,
-                                    levels_lower=levels_l,
-                                    minv=0)
+                                    levels_lower=levels_l)
         if mcheck:
             yield mcheck
 

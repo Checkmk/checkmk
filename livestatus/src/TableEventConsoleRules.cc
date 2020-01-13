@@ -28,11 +28,12 @@
 
 TableEventConsoleRules::TableEventConsoleRules(MonitoringCore *mc)
     : TableEventConsole(mc) {
-    addColumn(std::make_unique<StringEventConsoleColumn>("rule_id",
-                                                         "The ID of the rule"));
+    addColumn(std::make_unique<StringEventConsoleColumn>(
+        "rule_id", "The ID of the rule", Column::Offsets{}));
 
     addColumn(std::make_unique<IntEventConsoleColumn>(
-        "rule_hits", "The times rule matched an incoming message"));
+        "rule_hits", "The times rule matched an incoming message",
+        Column::Offsets{}));
 }
 
 std::string TableEventConsoleRules::name() const { return "eventconsolerules"; }

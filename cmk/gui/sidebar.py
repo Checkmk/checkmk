@@ -856,4 +856,4 @@ def ajax_set_snapin_site():
 
     snapin_sites = config.user.load_file("sidebar_sites", {}, lock=True)
     snapin_sites[ident] = site
-    config.user.save_file("sidebar_sites", snapin_sites, unlock=True)
+    config.user.save_file("sidebar_sites", snapin_sites)

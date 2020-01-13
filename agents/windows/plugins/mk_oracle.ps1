@@ -1510,7 +1510,7 @@ Function sql_instance {
      }
      else
      {
-          if ($DBVERSION -gt 121000)
+          if ($DBVERSION -gt 121010)
           {
               $query_instance = @'
               prompt <<<oracle_instance:sep(124)>>>;

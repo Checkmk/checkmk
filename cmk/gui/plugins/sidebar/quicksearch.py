@@ -32,13 +32,17 @@ import six
 import livestatus
 
 import cmk.utils.plugin_registry
+from cmk.utils.exceptions import (
+    MKException,
+    MKGeneralException,
+)
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKException
+from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry
 
 
@@ -815,6 +819,12 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
                 lookup_dict[grouped_tag.id] = tag_group.id
         return lookup_dict
 
+    def _get_auxtag_dict(self):
+        lookup_dict = {}
+        for tag_id in config.tags.aux_tag_list.get_tag_ids():
+            lookup_dict[tag_id] = tag_id
+        return lookup_dict
+
     def get_match_topic(self):
         return _("Hosttag")
 
@@ -856,18 +866,30 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
 
         url_infos = []
         hosttag_to_group_dict = self._get_hosttag_dict()
+        auxtag_to_group_dict = self._get_auxtag_dict()
 
         for idx, entry in enumerate(used_filters.get(self.get_filter_shortname())):
-            if ":" not in entry and entry in hosttag_to_group_dict:
+            if ":" not in entry:
                 # Be compatible to pre 1.6 filtering for some time (no
                 # tag-group:tag-value, but tag-value only)
-                tag_key, tag_value = hosttag_to_group_dict[entry], entry
+                if entry in hosttag_to_group_dict:
+                    tag_key, tag_value = hosttag_to_group_dict[entry], entry
+                elif entry in auxtag_to_group_dict:
+                    tag_key, tag_value = auxtag_to_group_dict[entry], entry
+                else:
+                    continue
             else:
                 tag_key, tag_value = entry.split(":", 1)
 
-            url_infos.append(("host_tag_%d_grp" % idx, tag_key))
-            url_infos.append(("host_tag_%d_op" % idx, "is"))
-            url_infos.append(("host_tag_%d_val" % idx, tag_value))
+            # here we check which *_to_group_dict containes the tag_key
+            # we do not care about the actual data
+            # its purpose is to decide which 'url info' to use
+            if tag_key in hosttag_to_group_dict:
+                url_infos.append(("host_tag_%d_grp" % idx, tag_key))
+                url_infos.append(("host_tag_%d_op" % idx, "is"))
+                url_infos.append(("host_tag_%d_val" % idx, tag_value))
+            elif tag_key in auxtag_to_group_dict:
+                url_infos.append(("host_auxtags_%d" % idx, tag_key))
 
         return "", url_infos
 

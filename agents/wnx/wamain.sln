@@ -1,17 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28010.2048
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "install", "install\install.wixproj", "{6807DB1F-C48E-432B-8B4B-FC671BD0C9EA}"
-	ProjectSection(ProjectDependencies) = postProject
-		{F7819F8A-DDCF-4CDD-B05E-B6BCE8C64863} = {F7819F8A-DDCF-4CDD-B05E-B6BCE8C64863}
-		{FF2EBEE8-1220-462C-9F01-1E1163F949A3} = {FF2EBEE8-1220-462C-9F01-1E1163F949A3}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "check_mk_service", "src\check_mk_service.vcxproj", "{FF2EBEE8-1220-462C-9F01-1E1163F949A3}"
 	ProjectSection(ProjectDependencies) = postProject
-		{F7819F8A-DDCF-4CDD-B05E-B6BCE8C64863} = {F7819F8A-DDCF-4CDD-B05E-B6BCE8C64863}
 		{343045B4-F20A-4E48-AB2F-83E1C22C9710} = {343045B4-F20A-4E48-AB2F-83E1C22C9710}
 	EndProjectSection
 EndProject

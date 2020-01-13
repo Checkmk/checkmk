@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 #       U  ___ u  __  __   ____
@@ -30,11 +30,21 @@ import errno
 import socket
 import tarfile
 import fnmatch
-from typing import Tuple  # pylint: disable=unused-import
+from typing import cast, List, Tuple, BinaryIO  # pylint: disable=unused-import
+
+from omdlib.type_defs import CommandOptions  # pylint: disable=unused-import
+from omdlib.contexts import SiteContext
 
 
 def backup_site_to_tarfile(site, fh, mode, options, verbose):
-    tar = BackupTarFile.open(fileobj=fh, mode=mode, site=site, verbose=verbose)
+    # type: (SiteContext, BinaryIO, str, CommandOptions, bool) -> None
+
+    # Mypy does not understand this: Unexpected keyword argument "verbose" for "open" of "TarFile"
+    tar = cast(
+        BackupTarFile,
+        BackupTarFile.open(  # type: ignore
+            fileobj=fh, mode=mode, site=site, verbose=verbose))
+
     # Add the version symlink as first file to be able to
     # check a) the sitename and b) the version before reading
     # the whole tar archive. Important for streaming.
@@ -46,6 +56,7 @@ def backup_site_to_tarfile(site, fh, mode, options, verbose):
 
 
 def get_exclude_patterns(options):
+    # type: (CommandOptions) -> List[str]
     excludes = []
     if "no-rrds" in options or "no-past" in options:
         excludes.append("var/pnp4nagios/perfdata/*")
@@ -77,6 +88,7 @@ def get_exclude_patterns(options):
 
 
 def _backup_site_files_to_tarfile(site, tar, options):
+    # type: (SiteContext, BackupTarFile, CommandOptions) -> None
     exclude = get_exclude_patterns(options)
     exclude.append("tmp/*")  # Exclude all tmpfs files
 
@@ -91,15 +103,14 @@ def _backup_site_files_to_tarfile(site, tar, options):
     exclude.append("var/check_mk/persisted/*")
     exclude.append("var/check_mk/persisted_sections/*")
 
-    def filter_files(filename):
-        for glob_pattern in exclude:
-            # patterns are relative to site directory, filename is full path.
-            # strip of the site.dir prefix from full path
-            if fnmatch.fnmatch(filename[len(site.dir) + 1:], glob_pattern):
-                return True  # exclude this file
-        return False
+    def filter_files(tarinfo):
+        # patterns are relative to site directory, tarinfo.name includes site name.
+        matches_exclude = any(
+            fnmatch.fnmatch(tarinfo.name[len(site.name) + 1:], glob_pattern)
+            for glob_pattern in exclude)
+        return None if matches_exclude else tarinfo
 
-    tar.add(site.dir, site.name, exclude=filter_files)
+    tar.add(site.dir, site.name, filter=filter_files)
 
 
 class BackupTarFile(tarfile.TarFile):
@@ -119,9 +130,9 @@ class BackupTarFile(tarfile.TarFile):
     # case it is called in recursive mode and a file vanishes between the os.listdir()
     # and the first file access (often seen os.lstat()) during backup. Instead of failing
     # like this we want to skip those files silently during backup.
-    def add(self, name, arcname=None, recursive=True, exclude=None, filter=None):  # pylint: disable=redefined-builtin
+    def add(self, name, arcname=None, recursive=True, *, filter=None):  # pylint: disable=redefined-builtin
         try:
-            super(BackupTarFile, self).add(name, arcname, recursive, exclude, filter)
+            super(BackupTarFile, self).add(name, arcname, recursive, filter=filter)
         except OSError as e:
             if e.errno != errno.ENOENT or arcname == self._site.name:
                 raise
@@ -155,21 +166,25 @@ class BackupTarFile(tarfile.TarFile):
                 self._resume_rrd_update(rrd_file_path)
 
     def _suspend_rrd_update(self, path):
+        # type: (str) -> None
         if self._verbose:
             sys.stdout.write("Pausing RRD updates for %s\n" % path)
         self._send_rrdcached_command("SUSPEND %s" % path)
 
     def _resume_rrd_update(self, path):
+        # type: (str) -> None
         if self._verbose:
             sys.stdout.write("Resuming RRD updates for %s\n" % path)
         self._send_rrdcached_command("RESUME %s" % path)
 
     def _resume_all_rrds(self):
+        # type: () -> None
         if self._verbose:
             sys.stdout.write("Resuming RRD updates for ALL\n")
         self._send_rrdcached_command("RESUMEALL")
 
     def _send_rrdcached_command(self, cmd):
+        # type: (str) -> None
         if not self._sock:
             self._sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             try:
@@ -183,25 +198,23 @@ class BackupTarFile(tarfile.TarFile):
                     if self._verbose:
                         sys.stdout.write("skipping rrdcached command (%s)\n" % e)
                     return
-                else:
-                    raise
+                raise
 
         try:
             if self._verbose:
                 sys.stdout.write("rrdcached command: %s\n" % cmd)
-            self._sock.sendall("%s\n" % cmd)
+            self._sock.sendall(("%s\n" % cmd).encode("utf-8"))
 
             answer = ""
             while not answer.endswith("\n"):
-                answer += self._sock.recv(1024)
+                answer += self._sock.recv(1024).decode("utf-8")
         except socket.error as e:
             if e.errno == errno.EPIPE:
                 self._sock = None
                 if self._verbose:
                     sys.stdout.write("skipping rrdcached command (broken pipe)\n")
                 return
-            else:
-                raise
+            raise
 
         code, msg = answer.strip().split(" ", 1)
         if code == "-1":
@@ -221,6 +234,7 @@ class BackupTarFile(tarfile.TarFile):
             sys.stdout.write("rrdcached response: %r\n" % (answer))
 
     def close(self):
+        # type: () -> None
         super(BackupTarFile, self).close()
 
         if self._sock:
@@ -232,7 +246,7 @@ def get_site_and_version_from_backup(tar):
     # type: (tarfile.TarFile) -> Tuple[str, str]
     """Get the first file of the tar archive. Expecting <site>/version symlink
     for validation reasons."""
-    site_tarinfo = next(tar)
+    site_tarinfo = tar.next()
     if site_tarinfo is None:
         raise Exception("Failed to detect version of backed up site.")
 

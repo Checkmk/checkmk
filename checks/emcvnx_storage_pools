@@ -321,7 +321,10 @@ check_info['emcvnx_storage_pools.tieringtypes'] = {
 #   '----------------------------------------------------------------------'
 
 
-def _emcvnx_get_text_perf(data, key, perfname, format_func=get_bytes_human_readable,
+def _emcvnx_get_text_perf(data,
+                          key,
+                          perfname,
+                          format_func=get_bytes_human_readable,
                           factor=1024**3):
     field = data.get(key, "unknown")
     try:

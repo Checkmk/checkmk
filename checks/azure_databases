@@ -32,7 +32,7 @@ factory_settings["azure_databases_default_levels"] = {
 }
 
 
-@get_parsed_item_data
+@get_data_or_go_stale
 def check_azure_databases_storage(_item, params, resource):
 
     cmk_key = 'storage_percent'
@@ -41,8 +41,7 @@ def check_azure_databases_storage(_item, params, resource):
                                 'average_storage_percent',
                                 cmk_key,
                                 'Storage',
-                                levels=levels,
-                                minv=0)
+                                levels=levels)
     if mcheck:
         state, text, perf = mcheck
         abs_storage_metric = resource.get('metrics', {}).get('average_storage')
@@ -61,17 +60,12 @@ check_info['azure_databases.storage'] = {
 }
 
 
-@get_parsed_item_data
+@get_data_or_go_stale
 def check_azure_databases_deadlock(_item, params, resource):
 
     cmk_key = 'deadlocks'
     levels = params.get("%s_levels" % cmk_key)
-    mcheck = check_azure_metric(resource,
-                                'average_deadlock',
-                                cmk_key,
-                                'Deadlocks',
-                                levels=levels,
-                                minv=0)
+    mcheck = check_azure_metric(resource, 'average_deadlock', cmk_key, 'Deadlocks', levels=levels)
     if mcheck:
         yield mcheck
 
@@ -86,7 +80,7 @@ check_info['azure_databases.deadlock'] = {
 }
 
 
-@get_parsed_item_data
+@get_data_or_go_stale
 def check_azure_databases_cpu(_item, params, resource):
 
     metrics = resource.get('metrics', {})
@@ -110,7 +104,7 @@ check_info['azure_databases.cpu'] = {
 }
 
 
-@get_parsed_item_data
+@get_data_or_go_stale
 def check_azure_databases_dtu(_item, params, resource):
 
     cmk_key = 'dtu_percent'
@@ -119,8 +113,7 @@ def check_azure_databases_dtu(_item, params, resource):
                                 'average_dtu_consumption_percent',
                                 cmk_key,
                                 'Database throughput units',
-                                levels=levels,
-                                minv=0)
+                                levels=levels)
     if mcheck:
         yield mcheck
 
@@ -141,18 +134,12 @@ _AZURE_CONNECTIONS_METRICS = (
 )
 
 
-@get_parsed_item_data
+@get_data_or_go_stale
 def check_azure_databases_connections(_item, params, resource):
 
     for key, cmk_key, displ, use_rate in _AZURE_CONNECTIONS_METRICS:
         levels = params.get("%s_levels" % cmk_key)
-        mcheck = check_azure_metric(resource,
-                                    key,
-                                    cmk_key,
-                                    displ,
-                                    levels=levels,
-                                    minv=0,
-                                    use_rate=use_rate)
+        mcheck = check_azure_metric(resource, key, cmk_key, displ, levels=levels, use_rate=use_rate)
         if mcheck:
             yield mcheck
 
@@ -168,7 +155,7 @@ check_info['azure_databases.connections'] = {
 }
 
 
-@get_parsed_item_data
+@get_data_or_go_stale
 def check_azure_databases(_item, _no_params, resource):
     for k, v in azure_iter_informative_attrs(resource):
         yield 0, "%s: %s" % (k, v)

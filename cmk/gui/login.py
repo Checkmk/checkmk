@@ -29,7 +29,9 @@ import os
 import time
 import traceback
 from hashlib import md5
+
 import six
+from werkzeug.local import LocalProxy
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -39,14 +41,13 @@ import cmk.gui.i18n
 import cmk.gui.mobile
 from cmk.gui.pages import page_registry, Page
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, local
 from cmk.gui.htmllib import HTML
 
 import cmk.utils.paths
 
 from cmk.gui.exceptions import HTTPRedirect, MKInternalError, MKAuthException, MKUserError, FinalizeRequest
 
-auth_type = None
 auth_logger = logger.getChild("auth")
 
 
@@ -303,18 +304,28 @@ def check_auth(request):
     return user_id
 
 
+def verify_automation_secret(user_id, secret):
+    if secret and user_id and "/" not in user_id:
+        path = cmk.utils.paths.var_dir + "/web/" + user_id.encode("utf-8") + "/automation.secret"
+        if not os.path.isfile(path):
+            return False
+
+        with open(path) as f:
+            return f.read().strip() == secret
+
+    return False
+
+
 def check_auth_automation():
     secret = html.request.var("_secret", "").strip()
     user_id = html.get_unicode_input("_username", "").strip()
-    html.request.del_var('_username')
-    html.request.del_var('_secret')
-    if secret and user_id and "/" not in user_id:
-        path = cmk.utils.paths.var_dir + "/web/" + user_id.encode("utf-8") + "/automation.secret"
-        if os.path.isfile(path) and open(path).read().strip() == secret:
-            # Auth with automation secret succeeded - mark transid as unneeded in this case
-            html.transaction_manager.ignore()
-            set_auth_type("automation")
-            return user_id
+    html.del_var_from_env('_username')
+    html.del_var_from_env('_secret')
+    if verify_automation_secret(user_id, secret):
+        # Auth with automation secret succeeded - mark transid as unneeded in this case
+        html.transaction_manager.ignore()
+        set_auth_type("automation")
+        return user_id
     raise MKAuthException(_("Invalid automation secret for user %s") % user_id)
 
 
@@ -356,9 +367,11 @@ def check_auth_by_cookie():
                                   (cookie_name, traceback.format_exc()))
 
 
-def set_auth_type(ty):
-    global auth_type
-    auth_type = ty
+def set_auth_type(_auth_type):
+    local.auth_type = _auth_type
+
+
+auth_type = LocalProxy(lambda: local.auth_type)
 
 
 def do_login():

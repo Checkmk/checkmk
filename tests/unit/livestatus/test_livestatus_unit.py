@@ -13,24 +13,6 @@ import omdlib.certs as certs
 import livestatus
 
 
-@pytest.mark.parametrize("source, utf8str", [
-    ('hi', u'hi'),
-    ("há li", u"há li"),
-    (u"hé ßß", u"hé ßß"),
-])
-def test_ensure_unicode(source, utf8str):
-    assert livestatus.ensure_unicode(source) == utf8str
-
-
-@pytest.mark.parametrize("source, bytestr", [
-    ('hi', b'hi'),
-    ("há li", b"h\xc3\xa1 li"),
-    (u"hé ßß", b"h\xc3\xa9 \xc3\x9f\xc3\x9f"),
-])
-def test_ensure_bytestr(source, bytestr):
-    assert livestatus.ensure_bytestr(source) == bytestr
-
-
 @pytest.fixture
 def ca(tmp_path, monkeypatch):
     p = tmp_path / "etc" / "ssl"
@@ -162,8 +144,8 @@ def test_create_socket(tls, verify, ca, ca_file_path, monkeypatch, tmp_path):
 
     ssl_dir = tmp_path / "var/ssl"
     ssl_dir.mkdir(parents=True)
-    with ssl_dir.joinpath("ca-certificates.crt").open(mode="w", encoding="utf-8") as f:  # pylint: disable=no-member
-        f.write(ca.ca_path.joinpath("ca.pem").open(encoding="utf-8").read())
+    with (ssl_dir / "ca-certificates.crt").open(mode="w", encoding="utf-8") as f:  # pylint: disable=no-member
+        f.write((ca.ca_path / "ca.pem").open(encoding="utf-8").read())
 
     monkeypatch.setenv("OMD_ROOT", str(tmp_path))
 

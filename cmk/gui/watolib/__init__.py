@@ -65,7 +65,6 @@ import cmk.utils
 import cmk.utils.store as store
 import cmk.utils.render as render
 # It's OK to import centralized config load logic
-import cmk.ec.defaults  # pylint: disable=cmk-module-layer-violation
 import cmk.ec.export  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.regex
 import cmk.utils.plugin_registry
@@ -214,7 +213,9 @@ from cmk.gui.watolib.rulesets import (
 )
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.hosts_and_folders import (
+    CREFolder,
     Folder,
+    CREHost,
     Host,
     validate_all_hosts,
     call_hook_hosts_changed,

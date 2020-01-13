@@ -26,18 +26,13 @@
 #define OffsetDoubleColumn_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <string>
 #include "DoubleColumn.h"
 class Row;
 
 class OffsetDoubleColumn : public DoubleColumn {
 public:
-    OffsetDoubleColumn(const std::string& name, const std::string& description,
-                       int indirect_offset, int extra_offset,
-                       int extra_extra_offset, int offset)
-        : DoubleColumn(name, description, indirect_offset, extra_offset,
-                       extra_extra_offset, offset) {}
-    double getValue(Row row) const override;
+    using DoubleColumn::DoubleColumn;
+    [[nodiscard]] double getValue(Row row) const override;
 };
 
 #endif  // OffsetDoubleColumn_h

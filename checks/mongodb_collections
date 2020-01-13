@@ -7,11 +7,11 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
+# The official homepage is at https://checkmk.com/.
 #
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
@@ -25,99 +25,194 @@
 # Boston, MA 02110-1301 USA.
 
 # <<<mongodb_collections:sep(9)>>>
-# tanserver        tans        count        0
-# tanserver        tans        indexDetails        {}
-# tanserver        tans        storageSize        8192
-# tanserver        tans        ok        1.0
-# tanserver        tans        lastExtentSize        8192.0
-# tanserver        tans        userFlags        1
-# tanserver        tans        totalIndexSize        24528
-# tanserver        tans        capped        False
-# tanserver        tans        numExtents        1
-# tanserver        tans        nindexes        3
-# tanserver        tans        ns        tanserver.tans
+# json
+
+import json
+
+factory_settings["mongodb_collections_levels"] = {"levels_nindexes": (62, 65)}
 
 
 def parse_mongodb_collections(info):
-    required_keys_int = ("size", "storageSize")
-    parsed = {}
-    for line in info:
-        db_name, collection, key, value = line
-        data = parsed.setdefault("%s %s" % (db_name, collection), {})
-        if key in required_keys_int:
-            try:
-                # Observed in the wild (on MongoDB 2.4.10, we don't know about other versions):
-                # For some collections, these integer values are represented with a trailing .0
-                # This does not appear to have any significance, but would throw a ValueError
-                # when casting directly to int.
-                data[key] = int(float(value))
-            except ValueError:
-                pass
-        else:
-            data[key] = value
-    return parsed
+    if info:
+        return json.loads(str(info[0][0]))
+    return dict()
 
 
-@get_parsed_item_data
-def check_mongodb_collections(_no_item, params, data):
-    for key, label in (
-        ("size", "Uncompressed size in memory"),
-        ("storageSize", "Allocated for document storage"),
-    ):
-        if key not in data:
+def inventory_mongodb_collections(databases_dict):
+    """
+    one service per collection
+    :param databases_dict:
+    :return:
+    """
+    db_coll_list = []
+    for db_name in databases_dict:
+        db_coll_list += [("%s.%s" % (db_name, coll_name), {})
+                         for coll_name in databases_dict.get(db_name).get("collstats", [])]
+    return db_coll_list
+
+
+def check_mongodb_collections(item, params, databases_dict):
+    """
+
+    :param item:
+    :param params:
+    :param databases_dict:
+    :return:
+    """
+    database_name, collection_name = _mongodb_collections_split_namespace(item)
+    collection_stats = databases_dict.get(database_name, {}).get("collstats",
+                                                                 {}).get(collection_name, {})
+
+    for key, label in (("size", "Uncompressed size in memory"), ("storageSize",
+                                                                 "Allocated for document storage"),
+                       ("totalIndexSize", "Total size of indexes")):
+        if key not in collection_stats:
+            return
+
+        try:
+            value = int(collection_stats.get(key))
+        except (KeyError, ValueError):
             continue
-        levels = params.get("levels_%s" % key.lower())
-        if levels is not None:
-            levels = (levels[0] * 1024**2, levels[1] * 1024**2)
 
-        perfdata = _get_perfdata_key(key)
-        yield check_levels(data[key],
+        levels = params.get("levels_%s" % key)
+
+        if levels and key in ["size", "storageSize"]:
+            levels = (levels[0] * 1024**2, levels[1] * 1024**2)  # MiB to bytes
+        elif levels and key in ["totalIndexSize"]:
+            levels = (levels[0] * 1024, levels[1] * 1024)  # KByte to bytes
+
+        perfdata = _mongodb_collections_get_perfdata_key(key)
+        yield check_levels(value,
                            perfdata,
                            levels,
                            human_readable_func=get_bytes_human_readable,
                            infoname=label)
-    yield 0, _long_output(data)
+
+    # check number of indexes per collection (max is 64 indexes)
+    try:
+        yield check_levels(int(collection_stats.get("nindexes")),
+                           None,
+                           params.get("levels_nindexes"),
+                           human_readable_func=lambda v: "%d" % v,
+                           infoname="Number of indexes")
+    except (TypeError, ValueError):
+        pass
+
+    yield 0, _mongodb_collections_long_output(collection_stats)
 
 
-def _get_perfdata_key(key):
+def _mongodb_collections_split_namespace(namespace):
+    """
+    split namespace into database name and collection name
+    :param namespace:
+    :return:
+    """
+    try:
+        names = namespace.split(".", 1)
+        if len(names) > 1:
+            return names[0], names[1]
+        elif len(names) > 0:
+            return names[0], ""
+    except ValueError:
+        pass
+    except AttributeError:
+        pass
+    raise ValueError("error parsing namespace %s" % namespace)
+
+
+def _mongodb_collections_get_perfdata_key(key):
     if key == "size":
         return "mongodb_collection_size"
     elif key == "storageSize":
         return "mongodb_collection_storage_size"
+    elif key == "totalIndexSize":
+        return "mongodb_collection_total_index_size"
     return None
 
 
-def _long_output(data):
-    number_of_chunks = data.get("nchunks", None)
+def _mongodb_collections_long_output(data):
     is_sharded = data.get("sharded", None)
-    number_of_shards = data.get("shardsCount", None)
-    average_object_size = float(data.get("avgObjSize", 0))
-    number_of_documents = int(data.get("count", 0))
-    collection_size = int(data.get("size", 0))
-    storage_size = int(data.get("storageSize", 0))
-
     # output per collection
     long_output = ["Collection"]
     if is_sharded:
         long_output.append("- Sharded: %s (Data distributed in cluster)" % is_sharded)
-    if number_of_shards:
-        long_output.append("- Shards: %s (Number of shards)" % number_of_shards)
-    if number_of_chunks:
-        long_output.append("- Chunks: %s (Total number of chunks)" % number_of_chunks)
+        long_output.append("- Shards: %s (Number of shards)" %
+                           _mongodb_collections_get_as_int(data, "shardsCount"))
+        long_output.append("- Chunks: %s (Total number of chunks)" %
+                           _mongodb_collections_get_as_int(data, "nchunks"))
+
     long_output.append("- Document Count: %s (Number of documents in collection)" %
-                       number_of_documents)
-    long_output.append("- Object Size %s (Average object size)" %
-                       get_bytes_human_readable(average_object_size))
+                       _mongodb_collections_get_as_int(data, "count"))
+    long_output.append("- Object Size: %s (Average object size)" %
+                       _mongodb_collections_bytes_human_readable(data, "avgObjSize"))
     long_output.append("- Collection Size: %s (Uncompressed size in memory)" %
-                       get_bytes_human_readable(collection_size))
+                       _mongodb_collections_bytes_human_readable(data, "size"))
     long_output.append("- Storage Size: %s (Allocated for document storage)" %
-                       get_bytes_human_readable(storage_size))
+                       _mongodb_collections_bytes_human_readable(data, "storageSize"))
+
+    long_output.append("")
+    long_output.append("Indexes:")
+    long_output.append("- Total Index Size: %s (Total size of all indexes)" %
+                       _mongodb_collections_bytes_human_readable(data, "totalIndexSize"))
+    long_output.append("- Number of Indexes: %s" %
+                       _mongodb_collections_get_as_int(data, "nindexes"))
+    for index in _mongodb_collections_get_indexes_as_list(data):
+        timestamp_for_humans = _mongodb_collections_timestamp_human_readable(index[2] / 1000.0)
+        long_output.append("-- Index '%s' used %s times since %s" %
+                           (index[0], index[1], timestamp_for_humans))
+
     return "\n" + "\n".join(long_output)
 
 
+def _mongodb_collections_get_indexes_as_list(data):
+    """
+    get all indexes as a list of (name, access timestamp) and sort them
+    :param data:
+    :return:
+    """
+    if "indexStats" not in data:
+        return []
+
+    index_list = []
+    for index_stat in data.get("indexStats"):
+        index_name = index_stat.get("name", "n/a")
+        last_access = index_stat.get("accesses", {}).get("since", {}).get("$date", 0)
+        number_of_operations = index_stat.get("accesses", {}).get("ops", 0)
+        index_list.append((index_name, number_of_operations, last_access))
+
+    index_list.sort(key=_mongodb_collections_sort_second, reverse=True)
+    return index_list
+
+
+def _mongodb_collections_sort_second(tup):
+    return tup[1]
+
+
+def _mongodb_collections_bytes_human_readable(data, key):
+    try:
+        return get_bytes_human_readable(int(data.get(key)))
+    except (TypeError, ValueError):
+        return 'n/a'
+
+
+def _mongodb_collections_timestamp_human_readable(value):
+    try:
+        return get_timestamp_human_readable(int(value))
+    except (TypeError, ValueError):
+        return "n/a"
+
+
+def _mongodb_collections_get_as_int(data, key):
+    try:
+        return int(data.get(key))
+    except (TypeError, ValueError):
+        return 'n/a'
+
+
 check_info["mongodb_collections"] = {
+    "default_levels_variable": "mongodb_collections_levels",
     "parse_function": parse_mongodb_collections,
-    "inventory_function": discover(),
+    "inventory_function": inventory_mongodb_collections,
     "check_function": check_mongodb_collections,
     "service_description": "MongoDB Collection: %s",
     "group": "mongodb_collections",

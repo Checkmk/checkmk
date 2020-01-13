@@ -26,11 +26,16 @@
 #define MonitoringCore_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
+#include <filesystem>
 #include <string>
 #include <tuple>
 #include <unordered_map>
 #include <vector>
+
+#include "Metric.h"
+#include "RRDColumn.h"
 #include "StringUtils.h"
 #include "Triggers.h"
 #include "auth.h"
@@ -104,10 +109,11 @@ public:
                                                    const Contact *contact) = 0;
 
     virtual std::chrono::system_clock::time_point last_logfile_rotation() = 0;
-    virtual size_t maxLinesPerLogFile() const = 0;
+    [[nodiscard]] virtual size_t maxLinesPerLogFile() const = 0;
 
-    virtual Command find_command(const std::string &name) const = 0;
-    virtual std::vector<Command> commands() const = 0;
+    [[nodiscard]] virtual Command find_command(
+        const std::string &name) const = 0;
+    [[nodiscard]] virtual std::vector<Command> commands() const = 0;
 
     virtual std::vector<DowntimeData> downtimes_for_host(
         const Host *) const = 0;
@@ -119,21 +125,27 @@ public:
 
     virtual bool mkeventdEnabled() = 0;
 
-    virtual std::string mkeventdSocketPath() = 0;
-    virtual std::string mkLogwatchPath() = 0;
-    virtual std::string mkInventoryPath() = 0;
-    virtual std::string structuredStatusPath() = 0;
-    virtual std::string pnpPath() = 0;
-    virtual std::string historyFilePath() = 0;
-    virtual std::string logArchivePath() = 0;
-    virtual std::string rrdcachedSocketPath() = 0;
+    [[nodiscard]] virtual std::filesystem::path mkeventdSocketPath() const = 0;
+    [[nodiscard]] virtual std::filesystem::path mkLogwatchPath() const = 0;
+    [[nodiscard]] virtual std::filesystem::path mkInventoryPath() const = 0;
+    [[nodiscard]] virtual std::filesystem::path structuredStatusPath()
+        const = 0;
+    [[nodiscard]] virtual std::filesystem::path crashReportPath() const = 0;
+    [[nodiscard]] virtual std::filesystem::path pnpPath() const = 0;
+    [[nodiscard]] virtual std::filesystem::path historyFilePath() const = 0;
+    [[nodiscard]] virtual std::filesystem::path logArchivePath() const = 0;
+    [[nodiscard]] virtual std::filesystem::path rrdcachedSocketPath() const = 0;
+
+    virtual MetricLocation metricLocation(
+        const void *object, const Metric::MangledName &name,
+        const RRDColumn::Table &table) const = 0;
 
     virtual Encoding dataEncoding() = 0;
     virtual size_t maxResponseSize() = 0;
     virtual size_t maxCachedMessages() = 0;
 
-    virtual AuthorizationKind serviceAuthorization() const = 0;
-    virtual AuthorizationKind groupAuthorization() const = 0;
+    [[nodiscard]] virtual AuthorizationKind serviceAuthorization() const = 0;
+    [[nodiscard]] virtual AuthorizationKind groupAuthorization() const = 0;
 
     virtual Logger *loggerLivestatus() = 0;
     virtual Logger *loggerRRD() = 0;
@@ -153,12 +165,12 @@ public:
 
     // Our escape hatch, this should die in the long run...
     template <typename T>
-    T *impl() const {
+    [[nodiscard]] T *impl() const {
         return static_cast<T *>(implInternal());
     }
 
 private:
-    virtual void *implInternal() const = 0;
+    [[nodiscard]] virtual void *implInternal() const = 0;
 };
 
 #endif  // MonitoringCore_h

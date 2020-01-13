@@ -41,6 +41,7 @@
 #include "TableComments.h"
 #include "TableContactGroups.h"
 #include "TableContacts.h"
+#include "TableCrashReports.h"
 #include "TableDowntimes.h"
 #include "TableEventConsoleEvents.h"
 #include "TableEventConsoleHistory.h"
@@ -101,14 +102,16 @@ public:
     void registerDowntime(nebstruct_downtime_data *data);
     void registerComment(nebstruct_comment_data *data);
 #endif
-    Logger *logger() const;
+    [[nodiscard]] Logger *logger() const;
     size_t numCachedLogMessages();
 
 private:
     struct TableDummy : public Table {
         explicit TableDummy(MonitoringCore *mc) : Table(mc) {}
-        std::string name() const override { return "dummy"; }
-        std::string namePrefix() const override { return "dummy_"; }
+        [[nodiscard]] std::string name() const override { return "dummy"; }
+        [[nodiscard]] std::string namePrefix() const override {
+            return "dummy_";
+        }
         void answerQuery(Query * /*unused*/) override {}
     };
 
@@ -134,6 +137,7 @@ private:
     TableComments _table_comments;
     TableContactGroups _table_contactgroups;
     TableContacts _table_contacts;
+    TableCrashReports _table_crash_reports;
     TableDowntimes _table_downtimes;
     TableEventConsoleEvents _table_eventconsoleevents;
     TableEventConsoleHistory _table_eventconsolehistory;
@@ -174,11 +178,11 @@ private:
     class ExternalCommand {
     public:
         explicit ExternalCommand(const std::string &str);
-        ExternalCommand withName(const std::string &name) const;
-        std::string name() const { return _name; }
-        std::string arguments() const { return _arguments; }
-        std::string str() const;
-        std::vector<std::string> args() const;
+        [[nodiscard]] ExternalCommand withName(const std::string &name) const;
+        [[nodiscard]] std::string name() const { return _name; }
+        [[nodiscard]] std::string arguments() const { return _arguments; }
+        [[nodiscard]] std::string str() const;
+        [[nodiscard]] std::vector<std::string> args() const;
 
     private:
         std::string _prefix;  // including brackets and space
@@ -194,6 +198,7 @@ private:
 
     void answerCommandRequest(const ExternalCommand &command);
     void answerCommandMkLogwatchAcknowledge(const ExternalCommand &command);
+    void answerCommandDelCrashReport(const ExternalCommand &command);
     void answerCommandEventConsole(const ExternalCommand &command);
     void answerCommandNagios(const ExternalCommand &command);
 #endif

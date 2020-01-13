@@ -33,6 +33,7 @@ import json
 import logging
 import sys
 import time
+import errno
 from typing import (  # pylint: disable=unused-import
     Union, NamedTuple, Any, List,
 )
@@ -41,14 +42,17 @@ import boto3  # type: ignore
 import botocore  # type: ignore
 import six
 
+import cmk.utils.store as store
 from cmk.utils.paths import tmp_dir
 import cmk.utils.password_store
+from cmk.utils.exceptions import MKException
 from cmk.special_agents.utils import (
     datetime_serializer,
     DataCache,
 )
 from cmk.utils.aws_constants import (
     AWSRegions,
+    AWSEC2InstFamilies,
     AWSEC2InstTypes,
     AWSEC2LimitsDefault,
     AWSEC2LimitsSpecial,
@@ -412,8 +416,9 @@ class AWSSection(six.with_metaclass(abc.ABCMeta, DataCache)):
 
 
 class AWSSectionLimits(AWSSection):
-    def __init__(self, client, region, config, distributor=None):
+    def __init__(self, client, region, config, distributor=None, quota_client=None):
         super(AWSSectionLimits, self).__init__(client, region, config, distributor=distributor)
+        self._quota_client = quota_client
         self._limits = {}
 
     def _add_limit(self, piggyback_hostname, limit):
@@ -573,6 +578,9 @@ class EC2Limits(AWSSectionLimits):
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, colleague_contents):
+        quotas = self._get_response_content(
+            self._quota_client.list_service_quotas(ServiceCode='ec2'), 'Quotas')
+
         response = self._client.describe_instances()
         reservations = self._get_response_content(response, 'Reservations')
 
@@ -594,14 +602,20 @@ class EC2Limits(AWSSectionLimits):
         response = self._client.describe_spot_fleet_requests()
         spot_fleet_requests = self._get_response_content(response, 'SpotFleetRequestConfigs')
 
-        return reservations, reserved_instances, addresses, security_groups, interfaces, spot_inst_requests, spot_fleet_requests
+        return reservations, reserved_instances, addresses, security_groups, interfaces, spot_inst_requests, spot_fleet_requests, quotas
 
     def _compute_content(self, raw_content, colleague_contents):
-        reservations, reserved_instances, addresses, security_groups, interfaces, spot_inst_requests, spot_fleet_requests = raw_content.content
+        reservations, reserved_instances, addresses, security_groups, interfaces, spot_inst_requests, spot_fleet_requests, quotas = raw_content.content
         instances = {inst['InstanceId']: inst for res in reservations for inst in res['Instances']}
         res_instances = {inst['ReservedInstancesId']: inst for inst in reserved_instances}
+        EC2InstFamiliesquotas = {
+            q['QuotaName']: q['Value']
+            for q in quotas
+            if q['QuotaName'] in AWSEC2InstFamilies.values()
+        }
 
-        self._add_instance_limits(instances, res_instances, spot_inst_requests)
+        self._add_instance_limits(instances, res_instances, spot_inst_requests,
+                                  EC2InstFamiliesquotas)
         self._add_addresses_limits(addresses)
         self._add_security_group_limits(instances, security_groups)
         self._add_interface_limits(instances, interfaces)
@@ -609,7 +623,7 @@ class EC2Limits(AWSSectionLimits):
         self._add_spot_fleet_limits(spot_fleet_requests)
         return AWSComputedContent(reservations, raw_content.cache_timestamp)
 
-    def _add_instance_limits(self, instances, res_instances, spot_inst_requests):
+    def _add_instance_limits(self, instances, res_instances, spot_inst_requests, instance_quotas):
         inst_limits = self._get_inst_limits(instances, spot_inst_requests)
         res_limits = self._get_res_inst_limits(res_instances)
 
@@ -645,9 +659,23 @@ class EC2Limits(AWSSectionLimits):
         dflt_ondemand_limit, _reserved_limit, _spot_limit = AWSEC2LimitsDefault
         total_instances = 0
         for inst_type, count in ondemand_limits.iteritems():
-            total_instances += count
             ondemand_limit, _reserved_limit, _spot_limit = AWSEC2LimitsSpecial.get(
                 inst_type, AWSEC2LimitsDefault)
+            if inst_type.endswith('_vcpu'):
+                # Maybe should raise instead of unknown family
+                inst_fam_name = AWSEC2InstFamilies.get(inst_type[0], "Unknown Instance Family")
+                ondemand_limit = instance_quotas.get(inst_fam_name, ondemand_limit)
+                self._add_limit(
+                    "",
+                    AWSLimit(
+                        "running_ondemand_instances_%s" % inst_type.lower(),
+                        inst_fam_name + " vCPUs",
+                        ondemand_limit,
+                        count,
+                    ))
+                continue
+
+            total_instances += count
             self._add_limit(
                 "",
                 AWSLimit(
@@ -677,6 +705,11 @@ class EC2Limits(AWSSectionLimits):
             inst_az = inst['Placement']['AvailabilityZone']
             inst_limits.setdefault(
                 inst_az, {})[inst_type] = inst_limits.get(inst_az, {}).get(inst_type, 0) + 1
+
+            vcount = inst['CpuOptions']['CoreCount'] * inst['CpuOptions']['ThreadsPerCore']
+            vcpu_family = '%s_vcpu' % (inst_type[0]
+                                       if inst_type[0] in AWSEC2InstFamilies.keys() else "_")
+            inst_limits[inst_az][vcpu_family] = inst_limits[inst_az].get(vcpu_family, 0) + vcount
         return inst_limits
 
     def _get_res_inst_limits(self, res_instances):
@@ -2861,6 +2894,7 @@ class AWSSectionsGeneric(AWSSections):
         ec2_client = self._init_client('ec2')
         elb_client = self._init_client('elb')
         elbv2_client = self._init_client('elbv2')
+        service_quotas_client = self._init_client('service-quotas')
 
         glacier_client = self._init_client('glacier')
         rds_client = self._init_client('rds')
@@ -2887,7 +2921,8 @@ class AWSSectionsGeneric(AWSSections):
         cloudwatch_alarms_limits_distributor = ResultDistributor()
 
         #---sections with distributors--------------------------------------
-        ec2_limits = EC2Limits(ec2_client, region, config, ec2_limits_distributor)
+        ec2_limits = EC2Limits(ec2_client, region, config, ec2_limits_distributor,
+                               service_quotas_client)
         ec2_summary = EC2Summary(ec2_client, region, config, ec2_summary_distributor)
 
         ebs_limits = EBSLimits(ec2_client, region, config, ebs_limits_distributor)
@@ -3114,6 +3149,12 @@ def parse_arguments(argv):
     parser.add_argument("--secret-access-key",
                         required=True,
                         help="The secret access key for your AWS account.")
+    parser.add_argument("--assume-role",
+                        action="store_true",
+                        help="Use STS AssumeRole to assume a different IAM role")
+    parser.add_argument("--role-arn", help="The ARN of the IAM role to assume")
+    parser.add_argument("--external-id",
+                        help="Unique identifier to assume a role in another account")
     parser.add_argument("--regions",
                         nargs='+',
                         help="Regions to use:\n%s" %
@@ -3176,16 +3217,52 @@ def setup_logging(opt_debug, opt_verbose):
 
 
 def create_session(access_key_id, secret_access_key, region):
-    return boto3.session.Session(aws_access_key_id=access_key_id,
-                                 aws_secret_access_key=secret_access_key,
-                                 region_name=region)
+    try:
+        return boto3.session.Session(aws_access_key_id=access_key_id,
+                                     aws_secret_access_key=secret_access_key,
+                                     region_name=region)
+    except Exception as e:
+        raise AwsAccessError(e)
+
+
+def sts_assume_role(access_key_id, secret_access_key, role_arn, external_id, region):
+    """
+    Returns a session using a set of temporary security credentials that
+    you can use to access AWS resources from another account.
+    :param access_key_id: AWS credentials
+    :param secret_access_key: AWS credentials
+    :param role_arn: The Amazon Resource Name (ARN) of the role to assume
+    :param region: AWS region
+    :param external_id: Unique identifier to assume a role in another account (optional)
+    :return: AWS session
+    """
+    try:
+        session = create_session(access_key_id, secret_access_key, region)
+        sts_client = session.client('sts')
+        if external_id:
+            assumed_role_object = sts_client.assume_role(RoleArn=role_arn,
+                                                         RoleSessionName="AssumeRoleSession",
+                                                         ExternalId=external_id)
+        else:
+            assumed_role_object = sts_client.assume_role(RoleArn=role_arn,
+                                                         RoleSessionName="AssumeRoleSession")
+
+        credentials = assumed_role_object['Credentials']
+        return boto3.session.Session(aws_access_key_id=credentials['AccessKeyId'],
+                                     aws_secret_access_key=credentials['SecretAccessKey'],
+                                     aws_session_token=credentials['SessionToken'],
+                                     region_name=region)
+    except Exception as e:
+        raise AwsAccessError(e)
 
 
 class AWSConfig(object):
-    def __init__(self, hostname, overall_tags):
+    def __init__(self, hostname, sys_argv, overall_tags):
         self.hostname = hostname
         self._overall_tags = self._prepare_tags(overall_tags)
         self.service_config = {}
+        self._config_hash_file = AWSCacheFilePath / ("%s.config_hash" % hostname)
+        self._current_config_hash = self._compute_config_hash(sys_argv)
 
     def add_service_tags(self, tags_key, tags):
         """Convert commandline input
@@ -3197,14 +3274,15 @@ class AWSConfig(object):
         as we need in API methods if and only if keys AND values are set.
         """
         self.service_config.setdefault(tags_key, None)
-        if tags != (None, None):
+        keys, values = tags
+        if keys and values:
             self.service_config[tags_key] = self._prepare_tags(tags)
         elif self._overall_tags:
             self.service_config[tags_key] = self._overall_tags
 
     def _prepare_tags(self, tags):
-        keys, values = tags
-        if keys and values:
+        if all(tags):
+            keys, values = tags
             return [{
                 'Name': 'tag:%s' % k,
                 'Values': v
@@ -3213,6 +3291,43 @@ class AWSConfig(object):
 
     def add_single_service_config(self, key, value):
         self.service_config.setdefault(key, value)
+
+    def _compute_config_hash(self, sys_argv):
+        filtered_sys_argv = [
+            arg for arg in sys_argv if arg not in ['--debug', '--verbose', '--no-cache']
+        ]
+        return hash(tuple(sorted(filtered_sys_argv)))
+
+    def is_up_to_date(self):
+        old_config_hash = self._load_config_hash()
+        if old_config_hash is None:
+            logging.info("AWSConfig: %s: New config: '%s'", self.hostname,
+                         self._current_config_hash)
+            self._write_config_hash()
+            return False
+
+        if old_config_hash != self._current_config_hash:
+            logging.info("AWSConfig: %s: Config has changed: '%s' -> '%s'", self.hostname,
+                         old_config_hash, self._current_config_hash)
+            self._write_config_hash()
+            return False
+
+        logging.info("AWSConfig: %s: Config is up-to-date: '%s'", self.hostname,
+                     self._current_config_hash)
+        return True
+
+    def _load_config_hash(self):
+        try:
+            with self._config_hash_file.open(mode='r', encoding="utf-8") as f:  # pylint: disable=no-member
+                return int(f.read().strip())
+        except IOError as e:
+            if e.errno != errno.ENOENT:
+                # No such file or directory
+                raise
+            return None
+
+    def _write_config_hash(self):
+        store.save_file(self._config_hash_file, "%s\n" % self._current_config_hash)
 
 
 def _sanitize_aws_services_params(g_aws_services, r_aws_services):
@@ -3245,16 +3360,16 @@ def _sanitize_aws_services_params(g_aws_services, r_aws_services):
     return global_services, regional_services
 
 
-def main(args=None):
-    if args is None:
+def main(sys_argv=None):
+    if sys_argv is None:
         cmk.utils.password_store.replace_passwords()
-        args = sys.argv[1:]
+        sys_argv = sys.argv[1:]
 
-    args = parse_arguments(args)
+    args = parse_arguments(sys_argv)
     setup_logging(args.debug, args.verbose)
     hostname = args.hostname
 
-    aws_config = AWSConfig(hostname, (args.overall_tag_key, args.overall_tag_values))
+    aws_config = AWSConfig(hostname, sys_argv, (args.overall_tag_key, args.overall_tag_values))
     for service_key, service_names, service_tags, service_limits in [
         ("ec2", args.ec2_names, (args.ec2_tag_key, args.ec2_tag_values), args.ec2_limits),
         ("ebs", args.ebs_names, (args.ebs_tag_key, args.ebs_tag_values), args.ebs_limits),
@@ -3275,6 +3390,8 @@ def main(args=None):
     global_services, regional_services =\
         _sanitize_aws_services_params(args.global_services, args.services)
 
+    use_cache = aws_config.is_up_to_date() and not args.no_cache
+
     has_exceptions = False
     for aws_services, aws_regions, aws_sections in [
         (global_services, ["us-east-1"], AWSSectionsUSEast),
@@ -3284,10 +3401,20 @@ def main(args=None):
             continue
         for region in aws_regions:
             try:
-                session = create_session(args.access_key_id, args.secret_access_key, region)
+                if args.assume_role:
+                    session = sts_assume_role(args.access_key_id, args.secret_access_key,
+                                              args.role_arn, args.external_id, region)
+                else:
+                    session = create_session(args.access_key_id, args.secret_access_key, region)
+
                 sections = aws_sections(hostname, session, debug=args.debug)
                 sections.init_sections(aws_services, region, aws_config)
-                sections.run(use_cache=not args.no_cache)
+                sections.run(use_cache=use_cache)
+            except AwsAccessError as ae:
+                # can not access AWS, retreat
+                sys.stdout.write("<<<aws_exceptions>>>\n")
+                sys.stdout.write("Exception: %s\n" % ae)
+                return 0
             except AssertionError:
                 if args.debug:
                     return 1
@@ -3299,3 +3426,7 @@ def main(args=None):
     if has_exceptions:
         return 1
     return 0
+
+
+class AwsAccessError(MKException):
+    pass

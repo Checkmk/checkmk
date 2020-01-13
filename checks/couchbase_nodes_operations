@@ -59,6 +59,6 @@ check_info['couchbase_nodes_operations.total'] = {
     'inventory_function': discover(lambda k, _v: k is None),
     'check_function': check_couchbase_nodes_operations,
     'service_description': 'Couchbase Total Operations',
-    'group': 'couchbase_ops_total',
+    'group': 'couchbase_ops_nodes',
     'has_perfdata': True
 }

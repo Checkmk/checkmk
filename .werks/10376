@@ -1,0 +1,19 @@
+Title: omd: Fix possible stopped system apache after removing a site
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1572522994
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+Fixed an unlikely error which could lead to a stopped system apache
+process. This could happen when the system apache is reloaded / restarted
+while a "omd rm" call is being executed.
+
+This could happen because the site directory is removed while the sites
+system apache hook (/omd/apache/[site].conf) still points to the sites
+apache config file which does not exist anymore after removing the site
+directory.

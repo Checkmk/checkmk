@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import sys
-from PIL import Image
+from PIL import Image  # type: ignore[import]
 
 if len(sys.argv) < 3:
     sys.stderr.write('So gehts:\n')

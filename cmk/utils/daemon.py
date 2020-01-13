@@ -26,8 +26,6 @@
 
 import os
 import sys
-from pwd import getpwnam
-from grp import getgrnam
 import ctypes
 import ctypes.util
 from contextlib import contextmanager
@@ -39,11 +37,12 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path
 
-import cmk.utils.store
+import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 
 
-def daemonize(user=0, group=0):
+def daemonize():
+    # type: () -> None
     # do the UNIX double-fork magic, see Stevens' "Advanced
     # Programming in the UNIX Environment" for details (ISBN 0201563177)
     try:
@@ -61,12 +60,6 @@ def daemonize(user=0, group=0):
 
     # Create new process group with the process as leader
     os.setsid()
-
-    # Set user/group depending on params
-    if group:
-        os.setregid(getgrnam(group)[2], getgrnam(group)[2])
-    if user:
-        os.setreuid(getpwnam(user)[2], getpwnam(user)[2])
 
     # do second fork
     try:
@@ -90,6 +83,7 @@ def daemonize(user=0, group=0):
 
 
 def closefrom(lowfd):
+    # type: (int) -> None
     """Closes all file descriptors starting with "lowfd", ignoring errors
 
     Deletes all open file descriptors greater than or equal to lowfd from the
@@ -113,7 +107,7 @@ def lock_with_pid_file(path):
     Use this after daemonizing or in foreground mode to ensure there is only
     one process running.
     """
-    if not cmk.utils.store.try_aquire_lock(str(path)):
+    if not store.try_aquire_lock(str(path)):
         raise MKGeneralException("Failed to aquire PID file lock: "
                                  "Another process is already running")
 
@@ -126,10 +120,10 @@ def lock_with_pid_file(path):
 def _cleanup_locked_pid_file(path):
     # type: (Path) -> None
     """Cleanup the lock + file acquired by the function above"""
-    if not cmk.utils.store.have_lock(str(path)):
+    if not store.have_lock(str(path)):
         return
 
-    cmk.utils.store.release_lock(str(path))
+    store.release_lock(str(path))
 
     try:
         path.unlink()
@@ -149,6 +143,7 @@ def pid_file_lock(path):
 
 
 def set_cmdline(cmdline):
+    # type: (bytes) -> None
     """
     Change the process name and process command line on of the running process
     This works at least with Python 2.x on Linux
@@ -156,19 +151,24 @@ def set_cmdline(cmdline):
     argv = ctypes.POINTER(ctypes.c_char_p)()
     argc = ctypes.c_int()
     ctypes.pythonapi.Py_GetArgcArgv(ctypes.byref(argc), ctypes.byref(argv))
-    cmdlen = sum([len(argv[i]) for i in range(argc.value)]) + argc.value
+    # mypy: The type is not detected correctly
+    cmdlen = sum([len(argv[i]) for i in range(argc.value)]) + argc.value  # type: ignore
     # TODO: This can probably be simplified...
-    _new_cmdline = ctypes.c_char_p(cmdline.ljust(cmdlen, '\0'))
+    _new_cmdline = ctypes.c_char_p(cmdline.ljust(cmdlen, b'\0'))
 
     set_procname(cmdline)
 
 
 def set_procname(cmdline):
+    # type: (bytes) -> None
     """
     Change the process name of the running process
     This works at least with Python 2.x on Linux
     """
-    libc = ctypes.cdll.LoadLibrary(ctypes.util.find_library('c'))
+    lib = ctypes.util.find_library('c')
+    if not lib:
+        return
+    libc = ctypes.cdll.LoadLibrary(lib)
 
     #argv = ctypes.POINTER(ctypes.c_char_p)()
 

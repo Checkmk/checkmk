@@ -29,7 +29,7 @@
 
 import abc
 import time
-from typing import Dict, List, Tuple, Text, Optional  # pylint: disable=unused-import
+from typing import Union, Dict, List, Tuple, Text, Optional  # pylint: disable=unused-import
 import six
 
 from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
@@ -40,6 +40,8 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+
+VisualContext = Dict[str, Union[str, Dict[str, str]]]
 
 
 class VisualInfo(six.with_metaclass(abc.ABCMeta, object)):
@@ -84,6 +86,12 @@ class VisualInfo(six.with_metaclass(abc.ABCMeta, object)):
         """When there is one non single site info used by a visual
         don't add the site hint"""
         return True
+
+    @property
+    def sort_index(self):
+        # type: () -> int
+        """Used for sorting when listing multiple infos. Lower is displayed first"""
+        return 30
 
 
 class VisualInfoRegistry(cmk.utils.plugin_registry.ClassRegistry):
@@ -413,38 +421,16 @@ class FilterTime(Filter):
             return None
 
 
-class FilterCRESite(Filter):
-    def __init__(self, enforce):
-        super(FilterCRESite, self).__init__(
-            'host',
-            ["site"],
-            [],
-        )
-        self.enforce = enforce
+def filter_cre_choices():
+    return sorted([(sitename, config.site(sitename)["alias"])
+                   for sitename, state in sites.states().items()
+                   if state["state"] == "online"],
+                  key=lambda a: a[1].lower())
 
-    def display(self):
-        html.dropdown("site", self._choices())
 
-    def _choices(self):
-        if self.enforce:
-            choices = []
-        else:
-            choices = [("", "")]
-
-        for sitename, state in sites.states().items():
-            if state["state"] == "online":
-                choices.append((sitename, config.site(sitename)["alias"]))
-
-        return sorted(choices, key=lambda a: a[1].lower())
-
-    def heading_info(self):
-        current_value = html.request.var("site")
-        if current_value:
-            alias = config.site(current_value)["alias"]
-            return alias
-
-    def variable_settings(self, row):
-        return [("site", row["site"])]
+def filter_cre_heading_info():
+    current_value = html.request.var("site")
+    return config.site(current_value)["alias"] if current_value else None
 
 
 class FilterRegistry(cmk.utils.plugin_registry.ClassRegistry):

@@ -28,19 +28,35 @@ is to provide a contextmanager that can be added to existing code with
 minimal changes."""
 
 import cProfile
-import os
+import sys
 import time
+from types import TracebackType  # pylint: disable=unused-import
+from typing import Callable, Type, Union, Any, Optional  # pylint: disable=unused-import
+
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path
+
 import cmk.utils.log
 
 
 class Profile(object):
     def __init__(self, enabled=True, profile_file=None, **kwargs):
+        # type: (bool, Union[Path, str], **Any) -> None
+
+        if profile_file is None or isinstance(profile_file, Path):
+            self._profile_file = profile_file
+        else:
+            self._profile_file = Path(profile_file)
+
         self._enabled = enabled
-        self._profile_file = profile_file
         self._kwargs = kwargs
-        self._profile = None
+        self._profile = None  # type: Optional[cProfile.Profile]
 
     def __enter__(self):
+        # type: () -> Profile
         if self._enabled:
             cmk.utils.log.logger.info("Recording profile")
             self._profile = cProfile.Profile(**self._kwargs)
@@ -48,27 +64,46 @@ class Profile(object):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        # type: (Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]) -> None
         if not self._enabled:
+            return
+
+        if not self._profile:
             return
 
         self._profile.disable()
 
         if not self._profile_file:
             self._profile.print_stats()
-        else:
-            self._profile.dump_stats(self._profile_file)
-            cmk.utils.log.logger.info("Created profile file: %s", self._profile_file)
+            return
 
-            open(self._profile_file + ".py",
-                 "w").write("#!/usr/bin/env python\n"
-                            "import pstats\n"
-                            "stats = pstats.Stats(%r)\n"
-                            "stats.sort_stats('time').print_stats()\n" % self._profile_file)
-            os.chmod(self._profile_file + ".py", 0o755)
-            cmk.utils.log.logger.info("Created profile dump script: %s.py", self._profile_file)
+        self._write_profile()
+        self._write_dump_script()
+
+    def _write_profile(self):
+        # type: () -> None
+        if not self._profile:
+            return
+        self._profile.dump_stats(str(self._profile_file))
+        cmk.utils.log.logger.info("Created profile file: %s", self._profile_file)
+
+    def _write_dump_script(self):
+        # type: () -> None
+        if not self._profile_file:
+            return
+
+        script_path = self._profile_file.with_suffix(".py")
+        with script_path.open("w", encoding="utf-8") as f:
+            f.write(u"#!/usr/bin/env python\n"
+                    "import pstats\n"
+                    "stats = pstats.Stats(%r)\n"
+                    "stats.sort_stats('time').print_stats()\n" % self._profile_file)
+        script_path.chmod(0o755)
+        cmk.utils.log.logger.info("Created profile dump script: %s", script_path)
 
 
 def profile_call(base_dir, enabled=True):
+    # type: (str, bool) -> Callable
     """
 This decorator can be used to profile single functions as a starting point.
 A directory where the file will be saved has to be stated as first argument.

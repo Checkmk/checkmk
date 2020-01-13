@@ -1,0 +1,15 @@
+title: Caches of couchbase buckets
+agents: special
+catalog: app/couchbase
+license: GPL
+distribution: check_mk
+description:
+ This service reports on the buckets cache performance.
+ You may provide levels using the WATO-rule "Couchbase Cache".
+ It evaluates the rate of cache misses.
+
+inventory:
+ One service per bucket is created.
+
+item:
+ The item is the name of the bucket.

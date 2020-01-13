@@ -29,6 +29,7 @@ import copy
 import sys
 import traceback
 import json
+from contextlib import contextmanager
 from typing import Dict, List, Type, Callable  # pylint: disable=unused-import
 
 import cmk.gui.pages
@@ -39,7 +40,7 @@ from cmk.gui.permissions import declare_permission
 from cmk.gui.pages import page_registry
 from cmk.gui.valuespec import (
     Dictionary,
-    ListChoice,
+    DualListChoice,
     ValueSpec,
     ListOfMultiple,
     ABCPageListOfMultipleGetChoice,
@@ -282,7 +283,7 @@ def load_user_visuals(what, builtin_visuals, skip_func, lock):
 
 def load_visuals_of_a_user(what, builtin_visuals, skip_func, lock, path, user):
     user_visuals = {}
-    for name, visual in store.load_data_from_file(path, {}, lock).items():
+    for name, visual in store.load_object_from_file(path, default={}, lock=lock).items():
         visual["owner"] = user
         visual["name"] = name
 
@@ -329,7 +330,7 @@ def declare_custom_permissions(what):
                 path = "%s/%s.mk" % (dirpath, what)
                 if not os.path.exists(path):
                     continue
-                visuals = store.load_data_from_file(path, {})
+                visuals = store.load_object_from_file(path, default={})
                 for name, visual in visuals.items():
                     declare_visual_permission(what, name, visual)
         except Exception:
@@ -608,12 +609,6 @@ def page_create_visual(what, info_keys, next_url=None):
     title = visual_type_registry[what]().title
     what_s = what[:-1]
 
-    # FIXME: Sort by (assumed) common usage
-    info_choices = []
-    for key in info_keys:
-        info_choices.append(
-            (key, _('Show information of a single %s') % visual_info_registry[key]().title))
-
     vs_infos = SingleInfoSelection(info_keys)
 
     html.header(_('Create %s') % title)
@@ -680,7 +675,7 @@ def get_context_specs(visual, info_handler):
     if info_handler:
         info_keys = info_handler(visual)
 
-    if not info_keys:
+    if info_keys is None:
         info_keys = visual_info_registry.keys()
 
     single_info_keys = [key for key in info_keys if key in visual['single_infos']]
@@ -725,6 +720,9 @@ def process_context_specs(context_specs):
 
 
 def render_context_specs(visual, context_specs):
+    if not context_specs:
+        return
+
     forms.header(_("Context / Search Filters"))
     for info_key, spec in context_specs:
         forms.section(spec.title())
@@ -1145,23 +1143,59 @@ def visible_filters_of_visual(visual, use_filters):
     return show_filters
 
 
+# TODO: Can we drop only_count here somehow? It is a view specific feature
 def add_context_to_uri_vars(visual, only_count=False):
-    # Populate the HTML vars with missing context vars. The context vars set
-    # in single context are enforced (can not be overwritten by URL). The normal
-    # filter vars in "multiple" context are not enforced.
-    for key in get_single_info_keys(visual):
-        if key in visual['context']:
-            html.request.set_var(key, "%s" % visual['context'][key])
+    """Populate the HTML vars with missing context vars
 
-    # Now apply the multiple context filters
-    for filter_vars in visual['context'].itervalues():
-        if isinstance(filter_vars, dict):  # this is a multi-context filter
-            # We add the filter only if *none* of its HTML variables are present on the URL
-            # This important because checkbox variables are not present if the box is not checked.
-            skip = any(html.request.has_var(uri_varname) for uri_varname in filter_vars.iterkeys())
-            if not skip or only_count:
-                for uri_varname, value in filter_vars.items():
-                    html.request.set_var(uri_varname, "%s" % value)
+    The context vars set in single context are enforced (can not be overwritten by URL). The normal
+    filter vars in "multiple" context are not enforced."""
+    uri_vars = dict(get_context_uri_vars(visual))
+    single_info_keys = get_single_info_keys(visual)
+
+    for filter_name, filter_vars in visual['context'].iteritems():
+        # Enforce the single context variables that are available in the visual context
+        if filter_name in single_info_keys:
+            html.request.set_var(filter_name, uri_vars[filter_name])
+            continue
+
+        if not isinstance(filter_vars, dict):
+            continue  # Skip invalid filter values
+
+        # This is a multi-context filter
+        # We add the filter only if *none* of its HTML variables are present on the URL. This is
+        # important because checkbox variables are not present if the box is not checked.
+        skip = any(html.request.has_var(uri_varname) for uri_varname in filter_vars.iterkeys())
+        if not skip or only_count:
+            for uri_varname in filter_vars.keys():
+                html.request.set_var(uri_varname, uri_vars[uri_varname])
+
+
+def get_context_uri_vars(visual):
+    """Produce key/value tuples for HTTP variables from the visual context"""
+    uri_vars = []
+    single_info_keys = get_single_info_keys(visual)
+
+    for filter_name, filter_vars in visual['context'].iteritems():
+        # Enforce the single context variables that are available in the visual context
+        if filter_name in single_info_keys:
+            uri_vars.append((filter_name, "%s" % visual['context'][filter_name]))
+
+        if not isinstance(filter_vars, dict):
+            continue  # Skip invalid filter values
+
+        # This is a multi-context filter
+        for uri_varname, value in filter_vars.items():
+            uri_vars.append((uri_varname, "%s" % value))
+
+    return uri_vars
+
+
+@contextmanager
+def context_uri_vars(visual):
+    """Updates the current HTTP variable context"""
+    with html.stashed_vars():
+        add_context_to_uri_vars(visual)
+        yield
 
 
 # Vice versa: find all filters that belong to the current URI variables
@@ -1178,6 +1212,8 @@ def get_context_from_uri_vars(only_infos=None, single_infos=None):
             for varname in filter_object.htmlvars:
                 if html.request.has_var(varname):
                     if filter_object.info in single_infos:
+                        # TODO: This should use html.get_unicode_input() just like
+                        # _get_singlecontext_html_vars()
                         context[filter_name] = html.request.var(varname)
                         break
                     else:
@@ -1187,9 +1223,26 @@ def get_context_from_uri_vars(only_infos=None, single_infos=None):
     return context
 
 
+def get_merged_context(*contexts):
+    """Merges multiple filter contexts to a single one
+
+    The last context that sets a filter wins. The intended order is to provide contexts in
+    "descending order", e.g. like this for dashboards:
+
+    1. URL context
+    2. Dashboard context
+    3. Dashlet context
+    """
+    merged_context = {}
+    for c in contexts:
+        merged_context.update(c)
+    return merged_context
+
+
 # Compute Livestatus-Filters based on a given context. Returns
 # the only_sites list and a string with the filter headers
 # TODO: Untangle only_sites and filter headers
+# TODO: Reduce redundancies with filters_of_visual()
 def get_filter_headers(table, infos, context):
     # Prepare Filter headers for Livestatus
     filter_headers = ""
@@ -1324,15 +1377,16 @@ class VisualFilter(ValueSpec):
                               _("The value must be of type dict, but it has type %s") % type(value))
 
 
-def SingleInfoSelection(info_keys, **args):
-    info_choices = []
-    for key in info_keys:
-        info_choices.append(
-            (key, _('Show information of a single %s') % visual_info_registry[key]().title))
+def SingleInfoSelection(info_keys):
+    infos = [visual_info_registry[key]() for key in info_keys]
+    choices = [(i.ident, _('Show information of a single %s') % i.title)
+               for i in sorted(infos, key=lambda inf: (inf.sort_index, inf.title))]
 
-    args.setdefault("title", _('Specific objects'))
-    args["choices"] = info_choices
-    return ListChoice(**args)
+    return DualListChoice(
+        title=_('Specific objects'),
+        choices=choices,
+        rows=10,
+    )
 
 
 # Converts a context from the form { filtername : { ... } } into
@@ -1381,14 +1435,16 @@ def single_infos_spec(single_infos):
     ))
 
 
-def verify_single_contexts(what, visual, link_filters):
-    for k, v in get_singlecontext_html_vars(visual).items():
-        if v is None and k not in link_filters:
-            raise MKUserError(
-                k,
-                _('This %s can not be displayed, because the '
-                  'necessary context information "%s" is missing.') %
-                (visual_type_registry[what]().title, k))
+def verify_single_infos(visual, context):
+    """Check if all single infos from the element are known"""
+    single_info_keys = get_single_info_keys(visual)
+    missing_variables = set(single_info_keys).difference(context)
+
+    if missing_variables:
+        raise MKGeneralException(
+            _("Missing context information: %s. You can either add this as a fixed "
+              "setting, or call the with the missing HTTP variables.") %
+            (", ".join(missing_variables)))
 
 
 def visual_title(what, visual):
@@ -1410,10 +1466,7 @@ def visual_title(what, visual):
 
 
 def _add_context_title(visual, title):
-    # Beware: if a single context visual is being visited *without* a context, then
-    # the value of the context variable(s) is None. In order to avoid exceptions,
-    # we simply drop these here.
-    extra_titles = [v for v in get_singlecontext_html_vars(visual).itervalues() if v is not None]
+    extra_titles = list(_get_singlecontext_html_vars(visual).itervalues())
 
     # FIXME: Is this really only needed for visuals without single infos?
     if not visual['single_infos']:
@@ -1466,11 +1519,13 @@ def get_single_info_keys(visual):
 def get_singlecontext_vars(visual):
     vars_ = {}
     for key in get_single_info_keys(visual):
-        vars_[key] = visual['context'].get(key)
+        val = visual['context'].get(key)
+        if val is not None:
+            vars_[key] = val
     return vars_
 
 
-def get_singlecontext_html_vars(visual):
+def _get_singlecontext_html_vars(visual):
     vars_ = get_singlecontext_vars(visual)
     for key in get_single_info_keys(visual):
         val = html.get_unicode_input(key)
@@ -1487,7 +1542,7 @@ def collect_context_links(this_visual, mobile=False, only_types=None):
 
     # compute list of html variables needed for this visual
     active_filter_vars = set([])
-    for var in get_singlecontext_html_vars(this_visual).iterkeys():
+    for var in _get_singlecontext_html_vars(this_visual).iterkeys():
         if html.request.has_var(var):
             active_filter_vars.add(var)
 
@@ -1531,7 +1586,7 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
 
         # We can show a button only if all single contexts of the
         # target visual are known currently
-        needed_vars = get_singlecontext_html_vars(visual).items()
+        needed_vars = _get_singlecontext_html_vars(visual).items()
         skip = False
         vars_values = []
         for var, val in needed_vars:
@@ -1556,16 +1611,20 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
             skip = not visual_type.is_enabled_for(this_visual, visual, vars_values)
 
         if not skip:
+            filename = visual_type.show_url
+            if mobile and visual_type.show_url == 'view.py':
+                filename = 'mobile_' + visual_type.show_url
+
             # add context link to this visual. For reports we put in
             # the *complete* context, even the non-single one.
             if visual_type.multicontext_links:
-                uri = html.makeuri([(visual_type.ident_attr, name)], filename=visual_type.show_url)
+                uri = html.makeuri([(visual_type.ident_attr, name)], filename=filename)
 
             # For views and dashboards currently the current filter
             # settings
             else:
                 uri = html.makeuri_contextless(vars_values + [(visual_type.ident_attr, name)],
-                                               filename=visual_type.show_url)
+                                               filename=filename)
             icon = visual.get("icon")
             buttonid = "cb_" + name
             context_links.append((_u(linktitle), uri, icon, buttonid))

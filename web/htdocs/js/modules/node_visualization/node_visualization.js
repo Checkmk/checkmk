@@ -45,7 +45,7 @@ class NodeVisualization {
 
         this.gui_theme = "facelift"
 
-        this.div_selection = null
+        this._div_selection = null
         this.datasource_manager = null
         this.viewport = null
         this.infobox = null
@@ -64,20 +64,33 @@ class NodeVisualization {
         this.gui_theme = new_theme
     }
 
+    set_initial_overlays_config(overlay_config) {
+        this._initial_overlay_config = overlay_config
+    }
+
+    get_initial_overlays_config() {
+        return this._initial_overlay_config
+    }
+
     _initialize_components() {
-        this.div_selection = d3.select("#" + this.div_id).append("div")
+        this._div_selection = d3.select("#" + this.div_id).append("div")
                                         .attr("id", "node_visualization_root_div")
                                         .attr("div_id", this.div_id)
                                         .classed("node_vis", true) // Main indicator for most NodeVisualization css styles
 
+
+        let viewport_selection = this._div_selection.append("div")
+        let toolbar_selection = this._div_selection.append("div")
+        let infobox_selection = this._div_selection.append("div")
+
         this.datasource_manager = new node_visualization_datasources.DatasourceManager()
-        this.viewport = new node_visualization_viewport.Viewport(this)
-        this.infobox = new node_visualization_infobox.InfoBox(this)
-        this.toolbar = new node_visualization_toolbar.Toolbar(this)
+        this.toolbar = new node_visualization_toolbar.Toolbar(this, toolbar_selection)
+        this.viewport = new node_visualization_viewport.Viewport(this, viewport_selection)
+        this.infobox = new node_visualization_infobox.InfoBox(this, infobox_selection)
     }
 
     get_div_selection() {
-        return this.div_selection;
+        return this._div_selection;
     }
 }
 
@@ -117,6 +130,7 @@ export class TopologyVisualization extends NodeVisualization {
         this._mesh_depth = 0 // Number of hops from growth root
         this._max_nodes = 200 // Maximum allowed nodes
         this._growth_auto_max_nodes = null // Automatically stop growth when this limit is reached (handled on server side)
+        this.custom_topology_fetch_parameters = {} // Custom parameter, added to each fetch request
     }
     show_topology(list_of_hosts) {
         let topo_ds = this.datasource_manager.get_datasource(node_visualization_datasources.TopologyDatasource.id())
@@ -210,7 +224,7 @@ export class TopologyVisualization extends NodeVisualization {
     }
 
     add_depth_slider() {
-        let slider = d3.select("#togglebuttons").selectAll("div.mesh_depth_slider").data([null])
+        let slider = d3.select("div#toolbar_controls div#custom").selectAll("div.mesh_depth_slider").data([null])
         let slider_enter = slider.enter().append("div")
                     .classed("topology_slider", true)
 
@@ -235,7 +249,7 @@ export class TopologyVisualization extends NodeVisualization {
     }
 
     add_max_nodes_slider() {
-        let slider = d3.select("#togglebuttons").selectAll("div.max_nodes_slider").data([null])
+        let slider = d3.select("div#toolbar_controls div#custom").selectAll("div.max_nodes_slider").data([null])
         let slider_enter = slider.enter().append("div")
                     .classed("topology_slider", true)
 
@@ -289,11 +303,18 @@ export class TopologyVisualization extends NodeVisualization {
         })
 
         let ds = this.datasource_manager.get_datasource(node_visualization_datasources.TopologyDatasource.id())
-        ds.fetch_hosts({growth_root_nodes: growth_root_nodes,
-                        mesh_depth: this._mesh_depth,
-                        max_nodes: this._max_nodes,
-                        growth_forbidden_nodes: growth_forbidden_nodes,
-                        growth_continue_nodes: growth_continue_nodes,
-                        mode: this._mode});
+
+
+        let config = {growth_root_nodes: growth_root_nodes,
+                  mesh_depth: this._mesh_depth,
+                  max_nodes: this._max_nodes,
+                  growth_forbidden_nodes: growth_forbidden_nodes,
+                  growth_continue_nodes: growth_continue_nodes,
+                  mode: this._mode};
+
+        for (let key in this.custom_topology_fetch_parameters) {
+            config[key] = this.custom_topology_fetch_parameters[key]
+        }
+        ds.fetch_hosts(config)
     }
 }

@@ -1,7 +1,7 @@
 # -*- encoding: utf-8
 # yapf: disable
 
-from cmk_base.discovered_labels import HostLabel
+from cmk.base.discovered_labels import HostLabel
 checkname = 'docker_node_info'
 
 info = [[

@@ -35,14 +35,15 @@ extern contactgroup *contactgroup_list;
 
 TableContactGroups::TableContactGroups(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<OffsetStringColumn>(
-        "name", "The name of the contactgroup", -1, -1, -1,
-        DANGEROUS_OFFSETOF(contactgroup, group_name)));
+        "name", "The name of the contactgroup",
+        Column::Offsets{-1, -1, -1,
+                        DANGEROUS_OFFSETOF(contactgroup, group_name)}));
     addColumn(std::make_unique<OffsetStringColumn>(
-        "alias", "The alias of the contactgroup", -1, -1, -1,
-        DANGEROUS_OFFSETOF(contactgroup, alias)));
+        "alias", "The alias of the contactgroup",
+        Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(contactgroup, alias)}));
     addColumn(std::make_unique<ContactGroupsMemberColumn>(
-        "members", "A list of all members of this contactgroup", -1, -1, -1,
-        0));
+        "members", "A list of all members of this contactgroup",
+        Column::Offsets{}));
 }
 
 std::string TableContactGroups::name() const { return "contactgroups"; }

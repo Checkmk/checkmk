@@ -20,7 +20,7 @@ LEGACY_STATE_FILE_NAME = "mk_logwatch_aix.last_reported"
 
 
 def _prepare_mock_errpt(tmp_path, errpt_output):
-    errpt_name = str(tmp_path.joinpath('errpt'))
+    errpt_name = str(tmp_path / 'errpt')
     errpt_script = ''.join(['#!/bin/sh\n'] + ['echo "%s"\n' % line for line in errpt_output])
     with open(errpt_name, 'w') as errpt_file:
         errpt_file.write(errpt_script)
@@ -37,20 +37,20 @@ def prepare_state(filepath, write_name, state):
     # make sure we have no left-over files
     for base_file in (STATE_FILE_NAME, LEGACY_STATE_FILE_NAME):
         try:
-            filepath.joinpath(base_file).unlink()
+            (filepath / base_file).unlink()
         except OSError:
             pass
 
     if state is None:
         return
 
-    with filepath.joinpath(write_name).open('w') as statefile:
+    with (filepath / write_name).open('w') as statefile:
         statefile.write(u"%s\n" % state)
 
 
 def read_state(filepath):
     try:
-        with filepath.joinpath(STATE_FILE_NAME).open() as statefile:
+        with (filepath / STATE_FILE_NAME).open() as statefile:
             new_state = statefile.read()
             assert new_state[-1] == u"\n"
             return new_state[:-1]

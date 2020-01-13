@@ -32,6 +32,7 @@
 # Darin die vertikalen Balken.
 
 import math
+from typing import Dict as _Dict  # pylint: disable=unused-import
 
 import cmk.gui.utils as utils
 import cmk.gui.metrics as metrics
@@ -53,7 +54,8 @@ from cmk.utils.plugin_loader import load_plugins
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
-perfometers = {}
+# TODO: Is this unused?
+perfometers = {}  # type: _Dict
 
 #   .--Old Style-----------------------------------------------------------.
 #   |                ___  _     _   ____  _         _                      |
@@ -69,7 +71,18 @@ perfometers = {}
 
 #helper function for perfometer tables
 def render_perfometer_td(perc, color):
+    # the hex color can have additional information about opacity
+    # internet explorer has problems with the format of rgba, e.g.: #aaaaaa4d
+    # the solution is to set the background-color value to rgb ('#aaaaaa')
+    # and use the css opacity for the opacity hex value in float '4d' -> 0.3
+    opacity = None
+    if len(color) == 9:
+        opacity = int(color[7:], 16)/255.0
+        color = color[:7]
+
     style = ["width: %d%%;" % int(float(perc)), "background-color: %s" % color]
+    if opacity is not None:
+        style += ["opacity: %s" % opacity]
     return html.render_td('', class_="inner", style=style)
 
 
@@ -121,8 +134,8 @@ def perfometer_logarithmic_dual(value_left, color_left, value_right, color_right
     return render_perfometer(data)
 
 
-def perfometer_logarithmic_dual_independent\
-    (value_left, color_left, half_value_left, base_left, value_right, color_right, half_value_right, base_right):
+def perfometer_logarithmic_dual_independent(value_left, color_left, half_value_left, base_left,
+                                            value_right, color_right, half_value_right, base_right):
     data = []
     data.extend(
         calculate_half_row_logarithmic("left", value_left, color_left, half_value_left, base_left))

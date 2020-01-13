@@ -47,10 +47,10 @@ $yellow:	rgb(255, 215, 3); // yellow
 
 $lightgrey:     $grey-1; // light grey
 
-$color-text:                          #1a243d; // dark
-$color-background:                    #f0f2f4; // light grey
+$color-text:                          rgb(26, 36, 61); // dark
+$color-background:                    rgb(240, 242, 244); // light grey
 
-$color-text-light:                    #e6e6e6; // light grey
+$color-text-light:                    rgb(230, 230, 230); // light grey
 
 
 // -----------------------------------------------------------------------------
@@ -94,8 +94,8 @@ $bg-color-tertiary:	  $white;
 // -----------------------------------------------------------------------------
 // Buttons
 // -----------------------------------------------------------------------------
-$button-background-hover:             #f7f7f7;
-$button-border:                       #d9d9d9;
+$button-background-hover:             rgb(247, 247, 247);
+$button-border:                       rgb(217, 217, 217);
 $button-height:                       28px;
 
 
@@ -114,31 +114,31 @@ $theme-border-radius:                       4px;
 // States
 // -----------------------------------------------------------------------------
 $color-state-1-background:	    $yellow;
-$color-state-1-border:		    #e9c400; // yellow
+$color-state-1-border:		    rgb(233, 196, 0); // yellow
 
-$color-state-2-background:            #e85555;
-$color-state-2-border:                #e53f3f;
+$color-state-2-background:            rgb(232, 85, 85);
+$color-state-2-border:                rgb(229, 63, 63);
 
-$color-state-3-background:            #fcb97b;
-$color-state-3-border:                #fbac62;
+$color-state-3-background:            rgb(252, 185, 123);
+$color-state-3-border:                rgb(251, 172, 98);
 
-$color-state-4-background:            #888;
-$color-state-4-border:                #7b7b7b;
+$color-state-4-background:            rgb(136, 136, 136);
+$color-state-4-border:                rgb(123, 123, 123);
 
-$color-state-5-background:            #48cbf0;
+$color-state-5-background:            rgb(72, 203, 240);
 
-$color-state-6-background:            #b9ecfa;
+$color-state-6-background:            rgb(185, 236, 250);
 
-$color-state-7-background:            #e9806e;
+$color-state-7-background:            rgb(233, 128, 110);
 
-$color-state-8-background:            #f1aea2;
+$color-state-8-background:            rgb(241, 174, 162);
 
-$color-state-9-background:            #bf5abf;
+$color-state-9-background:            rgb(191, 90, 191);
 
-$color-state-error-border:            #e22828; // red
+$color-state-error-border:            rgb(226, 40, 40); // red
 
-$color-state-success-background:      #aae199; // green
-$color-state-success-border:          #9adb85; // green
+$color-state-success-background:      rgb(170, 225, 153); // green
+$color-state-success-border:          rgb(154, 219, 133); // green
 
 $color-perfometer-title:              $color-text;
 
@@ -146,24 +146,22 @@ $color-perfometer-title:              $color-text;
 // -----------------------------------------------------------------------------
 // Tables
 // -----------------------------------------------------------------------------
-$color-table-border:                  #cccfdb; // grey
-$color-table-background:              #fafafa; // light grey
+$color-table-border:                  rgb(204, 207, 219); // grey
+$color-table-background:              rgb(250, 250, 250); // light grey
 
-$color-table-border-dark:             #0d0f0f; // dark grey
-$color-table-background-dark:         #1c2528; // dark grey
+$color-table-border-dark:             rgb(13, 15, 15); // dark grey
+$color-table-background-dark:         rgb(28, 37, 40); // dark grey
 
-$color-table-border-dark-2:           #313638; // dark grey
+$color-table-border-dark-2:           rgb(49, 54, 56); // dark grey
 
 $theme-font-table-header:                   16px;
-
-$color-table-header-text:             #2a2a2a80; // half transparent
 
 
 // -----------------------------------------------------------------------------
 // Sidebar
 // -----------------------------------------------------------------------------
-$color-sidebar-background:            #25292a; // dark grey
-$color-sidebar-border:                #3d4346; // dark grey
+$color-sidebar-background:            rgb(37, 41, 42); // dark grey
+$color-sidebar-border:                rgb(61, 67, 70); // dark grey
 
 $theme-snapin-width:                        230px;
 
@@ -171,23 +169,23 @@ $theme-snapin-width:                        230px;
 // -----------------------------------------------------------------------------
 // Nuances (Colors only used once)
 // -----------------------------------------------------------------------------
-$color-nuance-1:                      #afb2c6; // blue grey
-$color-nuance-2:                      #afb; // light green
-$color-nuance-3:                      #8288a6; // dark grey
-$color-nuance-4:                      #f6f7f8; // light grey
-$color-nuance-5:                      #c5c5c5; // grey
-$color-nuance-6:                      #ffeb83; // yellow
-$color-nuance-7:                      #333; // dark grey
-$color-nuance-8:                      #d7d7d7; // grey
-$color-nuance-9:                      #cfcfcf; // grey
-$color-nuance-10:                     #191c1d; // grey
-$color-nuance-11:                     #222f33; // dark grey
-$color-nuance-12:                     #9ee273; // green
-$color-nuance-13:                     #f3f4f6; // light grey
+$color-nuance-1:                      rgb(175, 178, 198); // blue grey
+$color-nuance-2:                      rgb(170, 255, 187); // light green
+$color-nuance-3:                      rgb(130, 136, 166); // dark grey
+$color-nuance-4:                      rgb(246, 247, 248); // light grey
+$color-nuance-5:                      rgb(197, 197, 197); // grey
+$color-nuance-6:                      rgb(255, 235, 131); // yellow
+$color-nuance-7:                      rgb(51, 51, 51); // dark grey
+$color-nuance-8:                      rgb(215, 215, 215); // grey
+$color-nuance-9:                      rgb(207, 207, 207); // grey
+$color-nuance-10:                     rgb(25, 28, 29); // grey
+$color-nuance-11:                     rgb(34, 47, 51); // dark grey
+$color-nuance-12:                     rgb(158, 226, 115); // green
+$color-nuance-13:                     rgb(243, 244, 246); // light grey
 $color-nuance-14:                     rgba(37, 41, 42, .3); // transparent grey
-$color-nuance-15:                     #f7c5c5; // light red
-$color-nuance-16:                     #fb9f49; // orange
-$color-nuance-17:                     #a1e6f8; // light blue
+$color-nuance-15:                     rgb(247, 197, 197); // light red
+$color-nuance-16:                     rgb(251, 159, 73); // orange
+$color-nuance-17:                     rgb(161, 230, 248); // light blue
 
 
 // -----------------------------------------------------------------------------
@@ -200,7 +198,7 @@ $tag-opacity:				    null;
 $tag-discovered-opacity:		    null;
 $tag-hover-opacity:			    .5;
 
-$tag-input-bg-color:			    #cccfdb;
+$tag-input-bg-color:			    rgb(204, 207, 219);
 $tag-dropdown-active-color:		    inherit;
 $tag-dropdown-active-bg-color:		    null;
 
@@ -217,23 +215,23 @@ $primary-border:			    null;
 $primary-table-border:			    1px solid $color-table-border;
 $secondary-table-border:		    null;
 
-$primary-th-bg-color:			    #f5f5f5;
+$primary-th-bg-color:			    rgb(245, 245, 245);
 $primary-td-bg-color:			    $color-table-background;
 
-$primary-box-shadow:			    0.5px 0.5px 1px #ccc;
+$primary-box-shadow:			    0.5px 0.5px 1px rgb(204, 204, 204);
 $primary-border-radius:			    $theme-border-radius;
 
 $dashboard-stats-bg-color:		    $white;
 $dashboard-tr-border-bottom:		    null;
 
-$checkbox-border-color:			    #73767a;
-$checkbox-shadow:			    #888;
+$checkbox-border-color:			    rgb(115, 118, 122);
+$checkbox-shadow:			    rgb(136, 136, 136);
 $checkbox-checked-color:		    $primary-font-color;
-$checkbox-checked-bg-color:		    #ddd;
+$checkbox-checked-bg-color:		    rgb(221, 221, 221);
 
-$toggle-switch-on-bg-color:		    #54a626;
+$toggle-switch-on-bg-color:		    rgb(84, 166, 38);
 $toggle-switch-on-border:		    null;
-$toggle-switch-off-bg-color:		    #f60000;
+$toggle-switch-off-bg-color:		    rgb(246, 0, 0);
 $toggle-switch-off-border:		    null;
 $toggle-switch-font-color:		    $white;
 $toggle-switch-height:			    17px;
@@ -243,12 +241,13 @@ $toggle-button-off-border:		    null;
 $toggle-button-down-bg-color:		    $color-text-light;
 $toggle-button-down-border-color:	    $button-border;
 $toggle-button-down-hover-bg-color:	    $button-border;
-$toggle-button-down-hover-border-color:	    #ccc;
+$toggle-button-down-hover-border-color:	    rgb(204, 204, 204);
 $toggle-button-search-img-filter:	    null;
 
-$success-bg-color:			    #9dbecd;
+$success-bg-color:			    rgb(157, 190, 205);
 
-$filter-inversion-percentage:		    100%;
+$treeangle-img-filter:			    invert(100%);
+$treeangle-img-filter-sidebar:		    invert(20%);
 
 $color-div-border-color:		    $black;
 
@@ -269,7 +268,7 @@ $data-table-state-border-top:		    null;
 $data-table-state-border-bottom:	    null;
 
 $input-button-bg-color:			    $success;
-$input-button-hover-bg-color:		    #11bd7b;
+$input-button-hover-bg-color:		    rgb(17, 189, 123);
 $input-button-color:			    $grey-5;
 
 $odd-tr-bg-color:			    null;
@@ -288,9 +287,9 @@ $td-single-bg-color:			    $white;
 $wato-tr-bg-color:			    transparent;
 $wato-a-hover-bg-color:			    $color-table-background;
 
-$td-unused-color:			    #256;
+$td-unused-color:			    rgb(34, 85, 102);
 
-$color-div-box-shadow:			    0.5px 0.5px 1px #888;
+$color-div-box-shadow:			    0.5px 0.5px 1px rgb(136, 136, 136);
 
 $graph-legend-color:			    null;
 
@@ -336,21 +335,21 @@ $wato-a-border:				    null;
 
 $wato-subtitle-color:			    $darkgrey;
 
-$footnote-link-color:			    #13d389;
+$footnote-link-color:			    rgb(19, 211, 137);
 
 $table-data-single-padding:		    8px 16px;
 $td-single-left-border-right:		    1px solid $color-table-border;
 $td-single-left-padding:		    2px 20px 2px 16px;
 
-$host-diag-success-bg-color:		    #efe;
-$host-diag-failed-bg-color:		    #fee;
+$host-diag-success-bg-color:		    rgb(238, 255, 238);
+$host-diag-failed-bg-color:		    rgb(255, 238, 238);
 
-$wato-inherited-color:			    #444;
+$wato-inherited-color:			    rgb(68, 68, 68);
 
 $hot-bg-color:				    rgb(255, 160, 66);
 $hot-font-color:			    $grey-5;
 
-$input-hover-bg-color:			    #edeceb;
+$input-hover-bg-color:			    rgb(237, 236, 235);
 
 $data-th-sort-hover-bg-color:		    inherit;
 
@@ -371,10 +370,10 @@ $groupheader-first-padding-top:		    null;
 
 $boxlayout-tr-bg-color:			    transparent;
 
-$age-font-color:			    #666;
+$age-font-color:			    rgb(102, 102, 102);
 
-$mk-search-results-bg-color:		    #dfdfdf;
-$mk-search-results-hover-bg-color:	    #bfbfbf;
+$mk-search-results-bg-color:		    rgb(223, 223, 223);
+$mk-search-results-hover-bg-color:	    rgb(191, 191, 191);
 $mk-search-results-border:		    1px solid $white;
 
 $repprogress-msg-color:			    null;
@@ -384,14 +383,12 @@ $repprogress-progress-border-color:	    $color-nuance-17;
 $first-child-border-radius:		    4px 0 0 4px;
 $last-child-border-radius:		    0 4px 4px 0;
 
-$nform-table-hr-color:			    #e5e5e5;
+$nform-table-hr-color:			    rgb(229, 229, 229);
 
 $iconbutton-filter:			    invert(0%);
 
 $multiple-select-bg-color:		    $white;
 $popup-menu-select-bg-color:		    $white;
-
-$tree-collapse-img-filter:		    null;
 
 $input-focus-box-shadow-color:		    $grey-5;
 
@@ -449,7 +446,7 @@ $node-vis-search-box-border:		    null;
 $node-vis-search-box-bg-color:		    null;
 $node-vis-search-field-border-color:	    transparent;
 $node-vis-box-border:			    1px solid rgb(204, 207, 219); // grey
-$node-vis-box-shadow:			    2px 2px 2px #444;
+$node-vis-box-shadow:			    2px 2px 2px rgb(68, 68, 68);
 $node-vis-toggle-hover-bg-color:	    $grey-1;
 $node-vis-toggle-down-bg-color:		    rgb(230, 230, 230); // light grey
 $node-vis-toggle-down-border-color:	    rgb(204, 204, 204); // light grey
@@ -462,9 +459,9 @@ $node-vis-growth-root-color:		    rgb(25, 90, 230); // blue
 $topology-filter-bg-color:		    null;
 $topology-filter-border-color:		    null;
 
-$host-folder-font-color:		    #bde;
+$host-folder-font-color:		    rgb(187, 221, 238);
 
-$snapin-link-hover-color:		    #fff;
+$snapin-link-hover-color:		    rgb(255, 255, 255);
 
 $if-state-up-font-color:		    null;
 
@@ -483,7 +480,7 @@ $pnp4nagios-img-filter:			    null;
 $matches-search-bg-color:		    $color-nuance-2;
 $matches-search-font-color:		    null;
 
-$help-bg-color:				    #ffc;
+$help-bg-color:				    rgb(255, 255, 204);
 $help-link-color:			    $color-text;
 
 $minority-font-color:			    null;
@@ -498,14 +495,14 @@ $timetable-hilite-even-bg-color:	    null;
 $timetable-hilite-odd-bg-color:		    null;
 
 $pnp-graph-img-border-color:		    $color-table-border;
-$graph-hover-popup-font-color:		    #1a243d;
-$graph-hover-popup-bg-color:		    #f0f2f4;
-$graph-hover-popup-border:		    1px solid #cccfdb;
-$graph-hover-popup-box-shadow:		    0.5px 0.5px 2px #ccc;
+$graph-hover-popup-font-color:		    $color-text;
+$graph-hover-popup-bg-color:		    $color-background;
+$graph-hover-popup-border:		    1px solid rgb(204, 207, 219);
+$graph-hover-popup-box-shadow:		    0.5px 0.5px 2px rgb(204, 204, 204);
 
-$globalvars-modified-border-color:	    #cdf;
-$globalvars-modified-box-shadow:	    3px 3px 5px #eee inset;
-$globalvars-modified-globally-box-shadow:   3px 3px 5px #8bc7e5 inset;
+$globalvars-modified-border-color:	    rgb(204, 221, 255);
+$globalvars-modified-box-shadow:	    3px 3px 5px rgb(238, 238, 238) inset;
+$globalvars-modified-globally-box-shadow:   3px 3px 5px rgb(139, 199, 229) inset;
 
 $dashlet-inner-bg-color:		    $white;
 

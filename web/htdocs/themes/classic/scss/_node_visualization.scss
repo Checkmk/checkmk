@@ -34,6 +34,30 @@ Boston, MA 02110-1301 USA.
     bottom: 10px;
 }
 
+#topology_filters {
+  position: absolute;
+  top: 124px;
+  right: 22px;
+  left: 22px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.topology_center, .topology_remote {
+  fill: transparent;
+}
+
+#topology_filters div.floatfilter, #topology_filters input#search {
+  pointer-events: all;
+  background-color: rgb(80, 138, 161);
+  border-color: rgb(80, 138, 161);
+  color: rgb(255, 255, 255);
+
+  .legend {
+    background-color: rgba(255,255,255,.2);//rgb(109, 161, 184);
+  }
+}
+
 #node_visualization_root_div {
     position: absolute;
     top: 0px;
@@ -67,13 +91,15 @@ div.node_vis #togglebuttons {
 
 div.node_vis .togglebutton {
     padding: 5px;
+    margin-right: 5px;
 }
 
 div.node_vis div.box, div.node_vis img.box {
+    background-color: rgb(80, 138, 161);
+    border: 1px solid rgb(80, 138, 161);
     border-radius: 4px;
-    border: 1px solid #cccfdb;
-    background: #FFFFFF;
-    box-shadow: 2px 2px 2px #444;
+    box-shadow: 2px 2px 2px rgba(80, 138, 161, .5);
+    color: rgb(255, 255, 255);
 }
 
 
@@ -182,10 +208,6 @@ div.node_vis .delete_icon {
     width: 48px;
 }
 
-div.node_vis img.treeangle {
-    filter: invert(100%);
-}
-
 div.node_vis .path_details table th {
     text-align: left;
 }
@@ -244,6 +266,17 @@ div.node_vis .state3 {
 // State pending
 div.node_vis .state-1 {
     fill: #888;
+}
+
+/* topology depth */
+div.node_vis div.topology_slider {
+    float: left;
+    padding-top: 4px;
+    padding-right: 8px;
+
+  input {
+      width: 80px;
+  }
 }
 
 line.dashed, path.dashed{

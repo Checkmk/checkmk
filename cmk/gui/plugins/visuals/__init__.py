@@ -38,7 +38,6 @@ from cmk.utils.plugin_loader import load_plugins
 
 from cmk.gui.plugins.visuals.utils import (
     Filter,
-    FilterCRESite,
     FilterTime,
     FilterTristate,
     FilterUnicodeFilter,

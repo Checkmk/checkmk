@@ -32,9 +32,11 @@ import sys
 import struct
 import termios
 import io
-import cmk.utils
+import six
+from cmk.utils.encoding import make_utf8
 
 if sys.stdout.isatty():
+    black = '\033[30m'
     red = '\033[31m'
     green = '\033[32m'
     yellow = '\033[33m'
@@ -45,10 +47,14 @@ if sys.stdout.isatty():
     bgblue = '\033[44m'
     bgmagenta = '\033[45m'
     bgwhite = '\033[47m'
+    bgyellow = '\033[43m'
+    bgred = '\033[41m'
+    bgcyan = '\033[46m'
     bold = '\033[1m'
     underline = '\033[4m'
     normal = '\033[0m'
 else:
+    black = ''
     red = ''
     green = ''
     yellow = ''
@@ -58,11 +64,16 @@ else:
     white = ''
     bgblue = ''
     bgmagenta = ''
+    bgyellow = ''
+    bgred = ''
+    bgcyan = ''
     bold = ''
     underline = ''
     normal = ''
 
 ok = green + bold + 'OK' + normal
+warn = yellow + bold + 'WARNING' + normal
+error = red + bold + 'ERROR' + normal
 
 states = {0: green, 1: yellow, 2: red, 3: magenta}
 
@@ -108,7 +119,7 @@ def print_table(headers, colors, rows, indent=""):
     lengths = _column_lengths(headers, rows, num_columns)
     fmt = _row_template(lengths, colors, indent)
     for index, row in enumerate([headers] + rows):
-        sys.stdout.write(fmt % tuple(str(cmk.utils.make_utf8(c)) for c in row[:num_columns]))
+        sys.stdout.write(fmt % tuple(make_utf8(c) for c in row[:num_columns]))
         if index == 0:
             sys.stdout.write(fmt % tuple("-" * l for l in lengths))
 
@@ -117,7 +128,11 @@ def _column_lengths(headers, rows, num_columns):
     lengths = [len(h) for h in headers]
     for row in rows:
         for index, column in enumerate(row[:num_columns]):
-            lengths[index] = max(len(str(cmk.utils.make_utf8(column))), lengths[index])
+            # FIXME alignment by reference to lengths of utf-8 strings?
+            # column can be None, str, data structures, ...
+            if not isinstance(column, six.string_types):
+                column = six.binary_type(column)
+            lengths[index] = max(len(make_utf8(column)), lengths[index])
     return lengths
 
 

@@ -25,8 +25,6 @@
 # boston, ma 02110-1301 usa.
 
 import re
-import os
-import time
 
 import cmk.gui.config as config
 import cmk.gui.utils as utils
@@ -39,16 +37,14 @@ from cmk.gui.exceptions import MKUserError
 
 @cmk.gui.pages.register("tree_openclose")
 def ajax_tree_openclose():
-    html.load_tree_states()
-
     tree = html.request.var("tree")
     name = html.get_unicode_input("name")
 
     if not tree or not name:
         raise MKUserError(None, _('tree or name parameter missing'))
 
-    html.set_tree_state(tree, name, html.request.var("state"))
-    html.save_tree_states()
+    config.user.set_tree_state(tree, name, html.request.var("state"))
+    config.user.save_tree_states()
     html.write('OK')  # Write out something to make debugging easier
 
 
@@ -67,23 +63,7 @@ def ajax_tree_openclose():
 def init_selection():
     # Generate the initial selection_id
     selection_id()
-
-    cleanup_old_selections()
-
-
-def cleanup_old_selections():
-    # Loop all selection files and compare the last modification time with
-    # the current time and delete the selection file when it is older than
-    # the livetime.
-    path = config.user.confdir + '/rowselection'
-    try:
-        for f in os.listdir(path):
-            if f[1] != '.' and f.endswith('.mk'):
-                p = path + '/' + f
-                if time.time() - os.stat(p).st_mtime > config.selection_livetime:
-                    os.unlink(p)
-    except OSError:
-        pass  # no directory -> no cleanup
+    config.user.cleanup_old_selections()
 
 
 # Generates a selection id or uses the given one
@@ -102,29 +82,6 @@ def selection_id():
     return sel_id
 
 
-def get_rowselection(ident):
-    vo = config.user.load_file("rowselection/%s" % selection_id(), {})
-    return vo.get(ident, [])
-
-
-def set_rowselection(ident, rows, action):
-    vo = config.user.load_file("rowselection/%s" % selection_id(), {}, lock=True)
-
-    if action == 'set':
-        vo[ident] = rows
-
-    elif action == 'add':
-        vo[ident] = list(set(vo.get(ident, [])).union(rows))
-
-    elif action == 'del':
-        vo[ident] = list(set(vo.get(ident, [])) - set(rows))
-
-    elif action == 'unset':
-        del vo[ident]
-
-    config.user.save_file("rowselection/%s" % selection_id(), vo, unlock=True)
-
-
 @cmk.gui.pages.register("ajax_set_rowselection")
 def ajax_set_rowselection():
     ident = html.request.var('id')
@@ -135,4 +92,4 @@ def ajax_set_rowselection():
 
     rows = html.request.var('rows', '').split(',')
 
-    set_rowselection(ident, rows, action)
+    config.user.set_rowselection(selection_id(), ident, rows, action)

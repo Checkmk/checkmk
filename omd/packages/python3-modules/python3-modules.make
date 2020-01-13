@@ -2,70 +2,117 @@ PYTHON3_MODULES := python3-modules
 PYTHON3_MODULES_VERS := $(OMD_VERSION)
 PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
 
-PYTHON3_MODULES_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-build
-PYTHON3_MODULES_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-install
 PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
+PYTHON3_MODULES_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-build
+PYTHON3_MODULES_INTERMEDIATE_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-install-intermediate
+PYTHON3_MODULES_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-install
 
-.PHONY: $(PYTHON3_MODULES) $(PYTHON3_MODULES)-install $(PYTHON3_MODULES)-clean
+PYTHON3_MODULES_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(PYTHON3_MODULES_DIR)
+PYTHON3_MODULES_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(PYTHON3_MODULES_DIR)
+PYTHON3_MODULES_WORK_DIR := $(PACKAGE_WORK_DIR)/$(PYTHON3_MODULES_DIR)
 
-$(PYTHON3_MODULES): $(PYTHON3_MODULES_BUILD)
-
-$(PYTHON3_MODULES)-install: $(PYTHON3_MODULES_INSTALL)
+# Used by other OMD packages
+PACKAGE_PYTHON3_MODULES_DESTDIR    := $(PYTHON3_MODULES_INSTALL_DIR)
+PACKAGE_PYTHON3_MODULES_PYTHONPATH := $(PACKAGE_PYTHON3_MODULES_DESTDIR)/lib/python3
 
 PYTHON3_MODULES_LIST :=
 
 PYTHON3_MODULES_LIST += setuptools_scm-3.3.3.tar.gz # needed by various setup.py
 PYTHON3_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
-PYTHON3_MODULES_LIST += six-1.12.0.tar.gz # direct dependency, indirect via python-dateutil, vcrpy
+PYTHON3_MODULES_LIST += six-1.13.0.tar.gz # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, pyOpenSSL
 PYTHON3_MODULES_LIST += python-dateutil-2.8.0.tar.gz # direct dependency
 
-PYTHON3_MODULES_LIST += PyYAML-5.1.2.tar.gz # indirect via vcrpy
-PYTHON3_MODULES_LIST += wrapt-1.11.2.tar.gz # indirect via vcrpy
-PYTHON3_MODULES_LIST += yarl-1.3.0.tar.gz # indirect via vcrpy
-PYTHON3_MODULES_LIST += multidict-4.5.2.tar.gz # indirect via vcrpy
-PYTHON3_MODULES_LIST += idna-2.8.tar.gz # indirect via vcrpy
-PYTHON3_MODULES_LIST += vcrpy-2.1.0.tar.gz # direct dependency
+PYTHON3_MODULES_LIST += PyYAML-5.1.2.tar.gz # needed by vcrpy
+PYTHON3_MODULES_LIST += wrapt-1.11.2.tar.gz # needed by vcrpy
+PYTHON3_MODULES_LIST += yarl-1.3.0.tar.gz # needed by vcrpy
+PYTHON3_MODULES_LIST += multidict-4.5.2.tar.gz # needed by yarl
+PYTHON3_MODULES_LIST += idna-2.8.tar.gz # needed by yarl, requests
+PYTHON3_MODULES_LIST += vcrpy-2.1.0.tar.gz # used by various unit tests to mock HTTP transactions
 
-PYTHON3_MODULES_LIST += pycparser-2.19.tar.gz # indirect via paramiko
-PYTHON3_MODULES_LIST += cffi-1.13.1.tar.gz # indirect via paramiko
-PYTHON3_MODULES_LIST += PyNaCl-1.3.0.tar.gz # indirect via paramiko
-PYTHON3_MODULES_LIST += cryptography-2.8.tar.gz # indirect via paramiko
-PYTHON3_MODULES_LIST += bcrypt-3.1.7.tar.gz # indirect via paramiko
-PYTHON3_MODULES_LIST += paramiko-2.6.0.tar.gz # direct dependency
+PYTHON3_MODULES_LIST += pycparser-2.19.tar.gz # needed by cffi
+PYTHON3_MODULES_LIST += cffi-1.13.1.tar.gz # needed by PyNaCl, cryptography, bcrypt
+PYTHON3_MODULES_LIST += PyNaCl-1.3.0.tar.gz # needed by paramiko
+PYTHON3_MODULES_LIST += cryptography-2.8.tar.gz # needed by paramiko, pyOpenSSL
+PYTHON3_MODULES_LIST += bcrypt-3.1.7.tar.gz # needed by paramiko
+PYTHON3_MODULES_LIST += paramiko-2.6.0.tar.gz # direct dependency, used for SFTP transactions in check_sftp
 
-$(PYTHON3_MODULES_BUILD): $(PYTHON3_BUILD) $(FREETDS_BUILD) $(PYTHON3_MODULES_UNPACK)
-	set -e ; cd $(PYTHON3_MODULES_DIR) ; \
+PYTHON3_MODULES_LIST += pyasn1-0.4.7.tar.gz # needed by pysnmp
+PYTHON3_MODULES_LIST += pycryptodomex-3.9.3.tar.gz # needed by pysnmp
+PYTHON3_MODULES_LIST += ply-3.11.tar.gz # needed by pysmi
+PYTHON3_MODULES_LIST += pysmi-0.3.4.tar.gz # needed by pysnmp
+PYTHON3_MODULES_LIST += pysnmp-4.4.12.tar.gz # needed by Event Console
+
+PYTHON3_MODULES_LIST += certifi-2019.9.11.tar.gz # needed by requests
+PYTHON3_MODULES_LIST += chardet-3.0.4.tar.gz # needed by requests
+PYTHON3_MODULES_LIST += urllib3-1.25.7.tar.gz # needed by requests
+PYTHON3_MODULES_LIST += pyOpenSSL-19.1.0.tar.gz # needed by requests with extras = ["security"]
+PYTHON3_MODULES_LIST += requests-2.22.0.tar.gz # needed by DCD, connexion
+# Added for check_bi_aggr with kerberos support
+PYTHON3_MODULES_LIST += pykerberos-1.2.1.tar.gz
+PYTHON3_MODULES_LIST += requests-kerberos-0.12.0.tar.gz
+# required by Jinja2
+PYTHON_MODULES_LIST += MarkupSafe-1.1.1.tar.gz
+# required by Flask
+PYTHON_MODULES_LIST += itsdangerous-1.1.0.tar.gz
+PYTHON_MODULES_LIST += Jinja2-2.10.3.tar.gz
+# required by zipp
+PYTHON_MODULES_LIST += more-itertools-8.0.1.tar.gz
+# required by importlib_metadata
+PYTHON_MODULES_LIST += zipp-0.6.0.tar.gz
+# required by jsonschema
+PYTHON_MODULES_LIST += attrs-19.3.0.tar.gz
+PYTHON_MODULES_LIST += importlib_metadata-1.2.0.tar.gz
+PYTHON_MODULES_LIST += pyrsistent-0.15.6.tar.gz
+# required by clickclick
+PYTHON_MODULES_LIST += Click-7.0.tar.gz
+# Needed by Flask
+PYTHON_MODULES_LIST += Werkzeug-0.16.0.tar.gz
+# required by connexion, openapi-spec-validator
+PYTHON_MODULES_LIST += jsonschema-3.2.0.tar.gz
+# required by connexion
+PYTHON_MODULES_LIST += clickclick-1.2.2.tar.gz
+PYTHON_MODULES_LIST += Flask-1.1.1.tar.gz
+PYTHON_MODULES_LIST += inflection-0.3.1.tar.gz
+PYTHON_MODULES_LIST += openapi-spec-validator-0.2.8.tar.gz
+# direct dependency
+PYTHON_MODULES_LIST += swagger_ui_bundle-0.0.6.tar.gz
+PYTHON_MODULES_LIST += connexion-2.4.0.tar.gz
+
+PYTHON3_MODULES_LIST += psutil-5.6.7.tar.gz # needed for omdlib
+PYTHON3_MODULES_LIST += passlib-1.7.2.tar.gz # needed for omdlib
+
+# TODO: Can we clean this up and use the intermediate install step results? Would be possible
+# in the moment we merge the build and intermediate install in a single target
+$(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_INSTALL) $(FREETDS_INTERMEDIATE_INSTALL) $(PYTHON3_MODULES_UNPACK)
+	set -e ; cd $(PYTHON3_MODULES_BUILD_DIR) ; \
+	    unset DESTDIR MAKEFLAGS ; \
 	    $(MKDIR) $(PACKAGE_PYTHON3_MODULES_PYTHONPATH) ; \
 	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON3_MODULES_PYTHONPATH)" ; \
 	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON3_PYTHONPATH)" ; \
-	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include" ; \
-	    export LDFLAGS="$(PACKAGE_PYTHON3_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS)" ; \
-	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" ; \
-	    PATH="$(abspath ./bin):$$PATH" ; \
+	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include:$(PACKAGE_OPENSSL_INCLUDE_PATH)" ; \
+	    export LDFLAGS="$(PACKAGE_PYTHON3_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS) $(PACKAGE_OPENSSL_LDFLAGS)" ; \
+	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH):$(PACKAGE_OPENSSL_LD_LIBRARY_PATH)" ; \
+	    export PATH="$(PACKAGE_PYTHON3_BIN):$$PATH" ; \
 	    for M in $(PYTHON3_MODULES_LIST); do \
-		echo "Building $$M..." ; \
+		echo "=== Building $$M..." ; \
 		PKG=$${M//.tar.gz/} ; \
 		PKG=$${PKG//.zip/} ; \
-		if [ $$PKG = pysnmp-git ]; then \
-		    PKG=pysnmp-master ; \
-		fi ; \
-	    	echo $$PWD ;\
 		cd $$PKG ; \
 		$(PACKAGE_PYTHON3_EXECUTABLE) setup.py build ; \
 		$(PACKAGE_PYTHON3_EXECUTABLE) setup.py install \
-		    --root=$(PACKAGE_PYTHON3_MODULES_DESTDIR) \
+		    --root=$(PYTHON3_MODULES_INSTALL_DIR) \
 		    --prefix='' \
 		    --install-data=/share \
-		    --install-platlib=/lib \
-		    --install-purelib=/lib ; \
+		    --install-platlib=/lib/python3 \
+		    --install-purelib=/lib/python3 ; \
 		cd .. ; \
 	    done
 	$(TOUCH) $@
 
 $(PYTHON3_MODULES_UNPACK): $(addprefix $(PACKAGE_DIR)/$(PYTHON3_MODULES)/src/,$(PYTHON3_MODULES_LIST))
-	$(RM) -r $(PYTHON3_MODULES_DIR)
-	$(MKDIR) $(PYTHON3_MODULES_DIR)
-	cd $(PYTHON3_MODULES_DIR) && \
+	$(RM) -r $(PYTHON3_MODULES_BUILD_DIR)
+	$(MKDIR) $(PYTHON3_MODULES_BUILD_DIR)
+	cd $(PYTHON3_MODULES_BUILD_DIR) && \
 	    for M in $(PYTHON3_MODULES_LIST); do \
 		echo "Unpacking $$M..." ; \
 		if echo $$M | grep .tar.gz; then \
@@ -77,33 +124,22 @@ $(PYTHON3_MODULES_UNPACK): $(addprefix $(PACKAGE_DIR)/$(PYTHON3_MODULES)/src/,$(
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 
-# NOTE: Setting SODIUM_INSTALL variable below is an extremely cruel hack to
-# avoid installing libsodium headers and libraries. The need for this hack
-# arises because of our "interesting" flag use for "setup.py install" and our
-# double installation. We should really switch to e.g. pipenv here.
-$(PYTHON3_MODULES_INSTALL): $(PYTHON3_MODULES_BUILD)
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python3
-	set -e ; cd $(PYTHON3_MODULES_DIR) ; \
-	    export SODIUM_INSTALL="system" ; \
-	    export PYTHONPATH=$$PYTHONPATH:"$(PACKAGE_PYTHON3_MODULES_PYTHONPATH)" ; \
-	    export PYTHONPATH=$$PYTHONPATH:"$(PACKAGE_PYTHON3_PYTHONPATH)" ; \
-	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include" ; \
-	    export LDFLAGS="$(PACKAGE_PYTHON3_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS)" ; \
-	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" ; \
-	    for M in $$(ls); do \
-		echo "Installing $$M..." ; \
-		cd $$M ; \
-		$(PACKAGE_PYTHON3_EXECUTABLE) setup.py install \
-		    --root=$(DESTDIR)$(OMD_ROOT) \
-		    --prefix='' \
-		    --install-data=/share \
-		    --install-platlib=/lib/python3 \
-		    --install-purelib=/lib/python3 ; \
-		cd .. ; \
-	    done
+$(PYTHON3_MODULES_INTERMEDIATE_INSTALL): $(PYTHON3_MODULES_BUILD)
+# Ensure all native modules have the correct rpath set
+	set -e ; for F in $$(find $(PACKAGE_PYTHON3_MODULES_PYTHONPATH) -name \*.so); do \
+	    echo -n "Test rpath of $$F..." ; \
+		if chrpath "$$F" | grep "=$(OMD_ROOT)/lib" >/dev/null 2>&1; then \
+		    echo OK ; \
+		else \
+		    echo "ERROR ($$(chrpath $$F))"; \
+		    exit 1 ; \
+		fi \
+	done
 	$(TOUCH) $@
 
-$(PYTHON3_MODULES)-skel:
+$(PYTHON3_MODULES_INSTALL): $(PYTHON3_MODULES_INTERMEDIATE_INSTALL)
+	$(RSYNC) $(PYTHON3_MODULES_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
+	$(TOUCH) $@
 
 python3-modules-dump-Pipfile:
 	@echo '# ATTENTION: Most of this file is generated by omd/packages/python3-modules/python3-modules.make'
@@ -130,14 +166,14 @@ python3-modules-dump-Pipfile:
 	@echo 'pytest = "*"  # used by various test/Makefile targets'
 	@echo 'pytest-cov = "*"  # used (indirectly) by test/Makefile'"'"'s test-unit-coverage-html target, see comment there'
 	@echo 'pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker fixture'
+	@echo 'webtest = "*"  # used for WSGI tests'
 	@echo 'yapf = "*"  # used for editor integration and the format-python Makefile target'
-	@echo 'polib = "*" # used by locale/add-authors for working with .po files'
+	@echo 'polib = "*"  # used by locale/add-authors for working with .po files'
+	@echo 'pre-commit = "*"  # used to fix / find issues before commiting changes'
+	@echo 'pyfakefs = "*" # used for unit tests'
 	@echo ''
 	@echo '[packages]'
 	@echo $(patsubst %.zip,%,$(patsubst %.tar.gz,%,$(PYTHON3_MODULES_LIST))) | tr ' ' '\n' | sed 's/-\([0-9.]*\)$$/ = "==\1"/'
 	@echo ''
 	@echo '[requires]'
 	@echo 'python_version = "3.7"'
-
-$(PYTHON3_MODULES)-clean:
-	rm -rf $(PYTHON3_MODULES_DIR) $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES)*

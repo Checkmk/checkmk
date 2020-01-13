@@ -35,6 +35,7 @@ import requests
 import urllib3  # type: ignore
 
 import cmk.utils
+from cmk.utils.encoding import make_utf8
 
 import cmk.gui.config as config
 import cmk.gui.hooks as hooks
@@ -86,7 +87,7 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
     if command in ['restart', 'reload']:
         call_hook_pre_activate_changes()
 
-    cmd = [cmk.utils.make_utf8(a) for a in cmd]
+    cmd = [make_utf8(a) for a in cmd]
     try:
         # This debug output makes problems when doing bulk inventory, because
         # it garbles the non-HTML response output

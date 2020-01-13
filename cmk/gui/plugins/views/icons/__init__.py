@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import traceback
+from typing import Any as _Any, Dict as _Dict  # pylint: disable=unused-import
 
 import six
 
@@ -53,7 +54,7 @@ from cmk.gui.plugins.views.icons.utils import (
 
 # Use this structure for new icons
 # TODO: Move this to cmk.gui.views once this is only used by legacy view/icon plugins
-multisite_icons_and_actions = {}
+multisite_icons_and_actions = {}  # type: _Dict[str, _Dict[str, _Any]]
 
 
 def get_multisite_icons():

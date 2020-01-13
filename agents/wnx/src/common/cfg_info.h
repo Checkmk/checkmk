@@ -4,13 +4,13 @@
 #pragma once
 #define NOMINMAX     // must before every windows include
 #include <shlobj.h>  // known path
+#include <yaml-cpp/yaml.h>
 
 #include <chrono>
 #include <filesystem>
 #include <string>
 
 #include "common/cfg_yaml.h"
-#include "yaml-cpp/yaml.h"
 
 namespace cma {
 // set only when executable works as a service

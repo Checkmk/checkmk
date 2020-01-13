@@ -3,6 +3,8 @@
 
 #include "pch.h"
 
+#include <yaml-cpp/yaml.h>
+
 #include <filesystem>
 
 #include "cap.h"
@@ -13,18 +15,17 @@
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_tgt.h"
-#include "yaml-cpp/yaml.h"
 
 namespace cma::cfg::cap {
 
-TEST(CapTest, CheckIsFilesTheSame) {
-    EXPECT_TRUE(IsFilesTheSame("c:\\windows\\explorer.exe",
-                               "c:\\windows\\explorer.exe"));
-    EXPECT_FALSE(IsFilesTheSame("c:\\windows\\explorer.exe",
-                                "c:\\windows\\HelpPane.exe"));
+TEST(CapTest, CheckAreFilesSame) {
+    EXPECT_TRUE(
+        AreFilesSame("c:\\windows\\explorer.exe", "c:\\windows\\explorer.exe"));
+    EXPECT_FALSE(
+        AreFilesSame("c:\\windows\\explorer.exe", "c:\\windows\\HelpPane.exe"));
 
     EXPECT_FALSE(
-        IsFilesTheSame("c:\\windows\\explorer.exe", "c:\\windows\\ssd.exe"));
+        AreFilesSame("c:\\windows\\explorer.exe", "c:\\windows\\ssd.exe"));
     namespace fs = std::filesystem;
     tst::SafeCleanTempDir();
     auto [file1, file2] = tst::CreateInOut();
@@ -34,7 +35,7 @@ TEST(CapTest, CheckIsFilesTheSame) {
     {
         tst::ConstructFile(file1 / name, "abcde0");
         tst::ConstructFile(file2 / name, "abcde1");
-        EXPECT_FALSE(IsFilesTheSame(file1 / name, file2 / name));
+        EXPECT_FALSE(AreFilesSame(file1 / name, file2 / name));
         EXPECT_TRUE(NeedReinstall(file2 / name, file1 / name));
     }
 }

@@ -214,11 +214,17 @@ def check_brocade_optical(item, params, parsed):
         else:
             yield 0, 'Operational %s' % oper_status_readable
 
-        if 'temp' in iface and iface['temp'][0] is not None:
-            yield check_temperature(iface['temp'][0],
-                                    params,
-                                    "brocade_optical_%s" % item,
-                                    dev_status=nagios_state(iface, 'temp'))
+        try:
+            temp = iface['temp'][0]
+        except KeyError:
+            temp = None
+        if temp is not None:
+            yield check_temperature(
+                temp,
+                params,
+                "brocade_optical_%s" % item,
+                dev_status=nagios_state(iface, 'temp'),
+            )
 
         if 'tx_light' in iface and iface['tx_light'][0] is not None:
             yield nagios_state(iface, 'tx_light'), infotext(iface['tx_light'], "TX Light", "dBm"),\

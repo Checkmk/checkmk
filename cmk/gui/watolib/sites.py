@@ -561,6 +561,8 @@ class CEESiteManagement(SiteManagement):
                 "socket": siteconf["socket"],
             }
 
+            conf[siteid]["connect_timeout"] = siteconf.get("timeout", 2)
+
             if "tcp" in proxy_params:
                 conf[siteid]["tcp"] = proxy_params["tcp"]
 
@@ -756,7 +758,7 @@ class AutomationPushSnapshot(AutomationCommand):
 
             multitar.extract_from_buffer(tarcontent, [("dir", "sitespecific", tmp_dir)])
 
-            site_globals = store.load_data_from_file(tmp_dir + "/sitespecific.mk", {})
+            site_globals = store.load_object_from_file(tmp_dir + "/sitespecific.mk", default={})
             save_site_global_settings(site_globals)
         finally:
             shutil.rmtree(tmp_dir)

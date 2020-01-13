@@ -1,0 +1,18 @@
+Title: Extension packages: Add informational "Valid until version" field
+Class: feature
+Compatible: compat
+Component: core
+Date: 1574969312
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+Checkmk extension packages (MKPs) can now have a new field, which is named
+"Valid until Checkmk version". A package provider can now declare that a
+package is useful until a specific Checkmmk version. This may be useful when
+backporting fixes or features to older versions where it is already known that
+the official Checkmk package ships the same things as the package.
+
+Please note that this field is only for informational purposes at the moment.
+There is no automatic disabling of extension packages based on this field.

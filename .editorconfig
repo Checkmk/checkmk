@@ -1,0 +1,39 @@
+# To see what this is about, have a look at
+# https://editorconfig.org/
+
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+tab_width = 8
+charset = utf-8
+
+[*.{bat,ps1,vbs,cmd}]
+end_of_line = crlf
+
+[*.md]
+max_line_length = 80
+
+[active_checks/check_*]
+max_line_length = 100
+
+[checks/[!.]*]
+max_line_length = 100
+
+[*.{cc,h,js,py,pl,pm,t}]
+trim_trailing_whitespace = true
+
+[*.{cc,h}]
+max_line_length = 100
+
+[*.{js,py,pl,pm,t}]
+max_line_length = 100
+
+[{package.json,.envrc}]
+indent_size = 2
+
+[{Makefile,*.make,*.am}]
+indent_style = tab

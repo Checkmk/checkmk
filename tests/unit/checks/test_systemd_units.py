@@ -1,6 +1,6 @@
 import pytest
 import collections
-from cmk_base.check_api import MKGeneralException
+from cmk.base.check_api import MKGeneralException
 
 pytestmark = pytest.mark.checks
 

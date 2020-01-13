@@ -30,6 +30,8 @@ import time
 import json
 import sys
 import requests
+import urllib3  # type: ignore
+urllib3.disable_warnings(urllib3.exceptions.SubjectAltNameWarning)
 
 GraylogSection = NamedTuple("GraylogSection", [
     ("name", Text),
@@ -49,16 +51,18 @@ def main(argv=None):
     # Add new queries here
     sections = [
         GraylogSection(name="alerts", uri="/streams/alerts?limit=300"),
-        GraylogSection(name="collectors", uri="/plugins/org.graylog.plugins.collector/collectors"),
         GraylogSection(name="cluster_health", uri="/system/indexer/cluster/health"),
         GraylogSection(name="cluster_inputstates", uri="/cluster/inputstates"),
         GraylogSection(name="cluster_stats", uri="/system/cluster/stats"),
         GraylogSection(name="cluster_traffic", uri="/system/cluster/traffic?days=1&daily=false"),
         GraylogSection(name="failures", uri="/system/indexer/failures/count/?since=%s" % since),
         GraylogSection(name="jvm", uri="/system/metrics/namespace/jvm.memory.heap"),
+        GraylogSection(name="license", uri="/plugins/org.graylog.plugins.license/licenses/status"),
         GraylogSection(name="messages", uri="/count/total"),
         GraylogSection(name="nodes", uri="/cluster"),
         GraylogSection(name="sidecars", uri="/sidecars"),
+        GraylogSection(name="sources", uri="/sources"),
+        GraylogSection(name="streams", uri="/streams"),
     ]
 
     try:
@@ -98,14 +102,14 @@ def handle_request(args, sections):
             for node in node_inputstates:
                 if node in value:
                     value[node].update({"inputstates": node_inputstates[node]})
-                    value = {node: value[node]}
+                    new_value = {node: value[node]}
                     if args.display_node_details == "node":
-                        handle_piggyback(value, args, value[node]["hostname"], section.name)
+                        handle_piggyback(new_value, args, new_value[node]["hostname"], section.name)
                         continue
-                    node_list.append(value)
+                    node_list.append(new_value)
 
-                if node_list:
-                    handle_output(node_list, section.name, args)
+            if node_list:
+                handle_output(node_list, section.name, args)
 
         if section.name == "jvm":
             metric_data = value.get("metrics")
@@ -137,7 +141,22 @@ def handle_request(args, sections):
                 if sidecar_list:
                     handle_output(sidecar_list, section.name, args)
 
-        if section.name not in ["nodes", "sidecars"]:
+        if section.name == "sources":
+            sources = value.get("sources")
+            if sources is not None:
+                source_list = []
+                if args.display_source_details == "source":
+                    for source, messages in sources.iteritems():
+                        value = {"sources": {source: messages}}
+                        handle_piggyback(value, args, source, section.name)
+                        continue
+                else:
+                    source_list.append(value)
+
+                if source_list:
+                    handle_output(source_list, section.name, args)
+
+        if section.name not in ["nodes", "sidecars", "sources"]:
             handle_output(value, section.name, args)
 
 
@@ -164,6 +183,7 @@ def handle_output(value, section, args):
     for name, param_piggyback, value_piggyback in [
         ("nodes", args.display_node_details, "node"),
         ("sidecars", args.display_sidecar_details, "sidecar"),
+        ("sources", args.display_source_details, "source"),
     ]:
         if section == name and param_piggyback == value_piggyback:
             sys.stdout.write("<<<<>>>>\n")
@@ -179,8 +199,8 @@ def handle_piggyback(value, args, piggyback_name, section):
 
 def parse_arguments(argv):
     sections = [
-        "alerts", "cluster_stats", "cluster_traffic", "collectors", "failures", "jvm", "messages",
-        "nodes", "sidecars"
+        "alerts", "cluster_stats", "cluster_traffic", "failures", "jvm", "license", "messages",
+        "nodes", "sidecars", "sources", "streams"
     ]
 
     parser = argparse.ArgumentParser(description=__doc__)
@@ -217,6 +237,11 @@ def parse_arguments(argv):
                         choices=('host', 'sidecar'),
                         help="""You can optionally choose, where the sidecar details are shown.
         Default is the queried graylog host. Possible values: host, sidecar (default: host)""")
+    parser.add_argument("--display_source_details",
+                        default="host",
+                        choices=('host', 'source'),
+                        help="""You can optionally choose, where the source details are shown.
+        Default is the queried graylog host. Possible values: host, source (default: host)""")
     parser.add_argument("--debug",
                         action="store_true",
                         help="Debug mode: let Python exceptions come through")
@@ -225,7 +250,7 @@ def parse_arguments(argv):
                         metavar="HOSTNAME",
                         help="Name of the graylog instance to query.")
 
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 if __name__ == "__main__":

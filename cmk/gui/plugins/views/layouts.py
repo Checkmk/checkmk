@@ -55,7 +55,7 @@ def init_rowselect(view):
     if not config.user.may("general.act"):
         return
 
-    selected = weblib.get_rowselection('view-' + view['name'])
+    selected = config.user.get_rowselection(weblib.selection_id(), 'view-' + view['name'])
     selection_properties = {
         "page_id": "view-%s" % view['name'],
         "selection_id": weblib.selection_id(),
@@ -301,7 +301,7 @@ def grouped_row_title(index, group_spec, num_rows, trclass, num_cells):
                  onclick="cmk.views.toggle_grouped_rows('grouped_rows', '%s', this, %d)" %
                  (index, num_rows))
 
-    html.img(html.theme_url("images/tree_black_closed.png"),
+    html.img(html.theme_url("images/tree_closed.png"),
              align="absbottom",
              class_=["treeangle", "nform", "open" if is_open else "closed"])
     html.write_text("%s (%d)" % (group_spec["title"], num_rows))

@@ -54,7 +54,7 @@ from werkzeug.test import create_environ
 # places of Checkmk. We may centralize the conversion and move the persistance
 # to a specific layer in the future, but for the the moment we need to deal
 # with it.
-import cmk_base.autochecks  # pylint: disable=cmk-module-layer-violation
+import cmk.base.autochecks  # pylint: disable=cmk-module-layer-violation
 
 import cmk.utils.log as log
 from cmk.utils.log import VERBOSE
@@ -97,8 +97,14 @@ class UpdateConfig(object):
     def run(self):
         self._logger.log(VERBOSE, "Initializing application...")
         environ = dict(create_environ(), REQUEST_URI='')
+
+        this_html = htmllib.html(Request(environ), Response(is_secure=False))
+        # Currently the htmllib.html constructor enables the timeout by default. This side effect
+        # should really be cleaned up.
+        this_html.disable_request_timeout()
+
         with AppContext(DummyApplication(environ, None)), \
-             RequestContext(htmllib.html(Request(environ), Response(is_secure=False))):
+                RequestContext(this_html):
             self._initialize_gui_environment()
 
             self._logger.log(VERBOSE, "Updating Checkmk configuration...")
@@ -131,8 +137,8 @@ class UpdateConfig(object):
     def _rewrite_autochecks(self):
         for autocheck_file in Path(cmk.utils.paths.autochecks_dir).glob("*.mk"):
             hostname = autocheck_file.stem
-            autochecks = cmk_base.autochecks.parse_autochecks_file(hostname)
-            cmk_base.autochecks.save_autochecks_file(hostname, autochecks)
+            autochecks = cmk.base.autochecks.parse_autochecks_file(hostname)
+            cmk.base.autochecks.save_autochecks_file(hostname, autochecks)
 
     def _rewrite_wato_rulesets(self):
         all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()

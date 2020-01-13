@@ -35,9 +35,9 @@ import copy
 import pathlib2 as pathlib
 import six
 
-import cmk.utils
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.encoding import make_utf8
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -239,14 +239,13 @@ def is_customer_user_allowed_to_login(user_id):
     if not cmk.is_managed_edition():
         return True
 
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
     user = config.LoggedInUser(user_id)
-    customer_id = managed.get_customer_id(user.attributes)
 
-    if managed.is_global(customer_id):
+    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+    if managed.is_global(user.customer_id):
         return True
 
-    return managed.is_current_customer(customer_id)
+    return managed.is_current_customer(user.customer_id)
 
 
 # This function is called very often during regular page loads so it has to be efficient
@@ -766,7 +765,7 @@ def load_users(lock=False):
 
 
 def custom_attr_path(userid, key):
-    return cmk.utils.paths.var_dir + "/web/" + cmk.utils.make_utf8(userid) + "/" + key + ".mk"
+    return cmk.utils.paths.var_dir + "/web/" + make_utf8(userid) + "/" + key + ".mk"
 
 
 def load_custom_attr(userid, key, conv_func, default=None):
@@ -1010,7 +1009,7 @@ def _save_auth_serials(updated_profiles):
     # Write out the users serials
     serials = ""
     for user_id, user in updated_profiles.items():
-        serials += '%s:%d\n' % (cmk.utils.make_utf8(user_id), user.get('serial', 0))
+        serials += '%s:%d\n' % (make_utf8(user_id), user.get('serial', 0))
     store.save_file('%s/auth.serials' % os.path.dirname(cmk.utils.paths.htpasswd_file), serials)
 
 
@@ -1377,12 +1376,11 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
         return _("User synchronization")
 
     def __init__(self):
-        kwargs = {}
-        kwargs["title"] = self.gui_title()
-        kwargs["deletable"] = False
-        kwargs["stoppable"] = False
-
-        super(UserSyncBackgroundJob, self).__init__(self.job_prefix, **kwargs)
+        super(UserSyncBackgroundJob, self).__init__(
+            self.job_prefix,
+            title=self.gui_title(),
+            stoppable=False,
+        )
 
     def _back_url(self):
         return html.makeuri_contextless([("mode", "users")], filename="wato.py")

@@ -1,0 +1,18 @@
+#!/bin/bash
+#
+# This file is for execution by the pre-commit framework.
+#
+set -e -o pipefail
+
+source "$(dirname $0)/lib-precommit"
+
+REPO_PATH="$(git rev-parse --show-toplevel)"
+PIPENV="$REPO_PATH/scripts/run-pipenv"
+
+printf -v files " %s" "$@"
+PYTHON_FILES=$(python_files 2 "$files")
+
+if [ ! -z "$PYTHON2_FILES" ]; then
+    export PYTHON_FILES
+    tests/test-futurize
+fi

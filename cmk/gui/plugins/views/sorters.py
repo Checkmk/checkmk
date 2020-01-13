@@ -534,6 +534,7 @@ declare_simple_sorter("downtime_entry_time", _("Downtime entry time"), "downtime
 declare_1to1_sorter("log_plugin_output", cmp_simple_string)
 declare_1to1_sorter("log_attempt", cmp_simple_string)
 declare_1to1_sorter("log_state_type", cmp_simple_string)
+declare_1to1_sorter("log_state_info", cmp_simple_string)
 declare_1to1_sorter("log_type", cmp_simple_string)
 declare_1to1_sorter("log_contact_name", cmp_simple_string)
 declare_1to1_sorter("log_time", cmp_simple_number)
@@ -585,3 +586,6 @@ declare_simple_sorter("alerts_problem", _("Number of problem alerts"), "log_aler
 # Aggregations
 declare_simple_sorter("aggr_name", _("Aggregation name"), "aggr_name", cmp_simple_string)
 declare_simple_sorter("aggr_group", _("Aggregation group"), "aggr_group", cmp_simple_string)
+
+# Crash reports
+declare_simple_sorter("crash_time", _("Crash time"), "crash_time", cmp_simple_number)

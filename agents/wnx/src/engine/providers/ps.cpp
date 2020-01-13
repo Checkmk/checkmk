@@ -6,12 +6,13 @@
 #include <shellapi.h>
 #endif
 
+#include <fmt/format.h>
+
 #include <string>
 #include <tuple>
 
 #include "cfg.h"
 #include "common/wtools.h"
-#include "fmt/format.h"
 #include "logger.h"
 #include "providers/ps.h"
 #include "providers/wmi.h"
@@ -187,6 +188,7 @@ time_t ConvertWmiTimeToHumanTime(const std::string &creation_date) noexcept {
     creation_tm.tm_hour = std::strtoul(hour.c_str(), nullptr, 0);
     creation_tm.tm_min = std::strtoul(minutes.c_str(), nullptr, 0);
     creation_tm.tm_sec = std::strtoul(seconds.c_str(), nullptr, 0);
+    creation_tm.tm_isdst = -1;  // we do not know DST, so we will ask system
 
     // calculate with possible correction of not-so-important fields
     return ::mktime(&creation_tm);

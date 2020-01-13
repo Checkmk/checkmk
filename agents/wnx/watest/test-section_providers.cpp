@@ -241,7 +241,7 @@ TEST(SectionHeaders, All) {
     EXPECT_EQ(ret, "<<<>>>\n");
 
     ret = cma::section::MakeLocalHeader();
-    EXPECT_EQ(ret, "<<<local>>>\n");
+    EXPECT_EQ(ret, "<<<local:sep(0)>>>\n");
 }
 
 }  // namespace cma::provider

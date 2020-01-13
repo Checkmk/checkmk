@@ -7,7 +7,7 @@ from testlib import cmk_path
 
 import cmk
 import cmk.utils.man_pages as man_pages
-import cmk_base.config as config
+import cmk.base.config as config
 
 # TODO: Add tests for module internal functions
 
@@ -143,7 +143,7 @@ def _is_pure_section_declaration(check):
 def test_find_missing_manpages():
     all_check_manuals = man_pages.all_man_pages()
 
-    import cmk_base.check_api as check_api
+    import cmk.base.check_api as check_api
     config.load_all_checks(check_api.get_check_api_context)
     checks_sorted = sorted([ (name, entry) for (name, entry) in config.check_info.items()
                       if not _is_pure_section_declaration(entry) ] + \
@@ -225,7 +225,7 @@ def test_print_man_page_nowiki_content(capsys):
 
 
 def test_print_man_page(capsys):
-    man_pages.print_man_page("if64")
+    man_pages.ConsoleManPageRenderer("if64").paint()
     out, err = capsys.readouterr()
     assert err == ""
 

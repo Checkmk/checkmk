@@ -39,7 +39,7 @@ def test_uptime_check_basic(check_manager):
     assert len(result) == 3
     assert result[0] == 0
     assert "Up since " in result[1]
-    assert result[2] == [("uptime", 123.0)]
+    assert result[2] == [("uptime", 123.0, None, None)]
 
 
 def test_uptime_check_zero(check_manager):
@@ -50,7 +50,7 @@ def test_uptime_check_zero(check_manager):
     assert len(result) == 3
     assert result[0] == 0
     assert "Up since " in result[1]
-    assert result[2] == [("uptime", 0.0)]
+    assert result[2] == [("uptime", 0.0, None, None)]
 
 
 @pytest.mark.parametrize('info, reference', [
@@ -61,7 +61,7 @@ def test_uptime_check_zero(check_manager):
           u'4:58pm', u'up', u'6:19,', u'2', u'users,', u'load', u'average:', u'0.18,', u'0.06,',
           u'0.03'
       ], [u'unix:0:system_misc:snaptime', u'22737.886916295'], [u'[uptime_solaris_end]']],
-     (0, 'Up since Sun Apr 15 12:31:09 2018 (0d 06:18:51)', [('uptime', 22731)])),
+     (0, 'Up since Sun Apr 15 12:31:09 2018, uptime: 6:18:51', [('uptime', 22731)])),
     ([[u'1122'], [u'[uptime_solaris_start]'],
       [u'SunOS', u'unknown', u'5.10', u'Generic_147148-26', u'i86pc', u'i386', u'i86pc'],
       [u'global'],
@@ -69,14 +69,16 @@ def test_uptime_check_zero(check_manager):
           u'4:23pm', u'up', u'19', u'min(s),', u'2', u'users,', u'load', u'average:', u'0.03,',
           u'0.09,', u'0.09'
       ], [u'unix:0:system_misc:snaptime', u'1131.467157594'], [u'[uptime_solaris_end]']],
-     (0, 'Up since Sun Apr 15 18:31:18 2018 (0d 00:18:42)', [('uptime', 1122)])),
+     (0, 'Up since Sun Apr 15 18:31:18 2018, uptime: 0:18:42', [('uptime', 1122)])),
     ([[u'1553086171'], [u'[uptime_solaris_start]'], [u'SunOS', u'Solaris', u'11.3', u'X86'],
       [u'non-global', u'zone'],
       [
           u'1:53pm', u'up', u'335', u'day(s),', u'23:13,', u'0', u'users,', u'load', u'average:',
           u'0.36,', u'0.34,', u'0.34'
       ], [u'unix:0:system_misc:snaptime', u'29027808.0471184'], [u'[uptime_solaris_end]']],
-     (0, 'Up since Sun May 14 19:33:11 2017 (335d 23:16:48)', [('uptime', 29027808.0471184)])),
+     (0, 'Up since Sun May 14 19:33:11 2017, uptime: 335 days, 23:16:48', [
+         ('uptime', 29027808.0471184)
+     ])),
     ([[u'54043590'], [u'[uptime_solaris_start]'],
       [u'SunOS', u'sveqdcmk01', u'5.10', u'Generic_150401-49', u'i86pc', u'i386', u'i86pc'],
       [u'sveqdcmk01'],

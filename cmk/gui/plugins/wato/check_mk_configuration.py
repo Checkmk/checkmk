@@ -42,6 +42,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     TextAscii,
     TextUnicode,
+    HTTPUrl,
     DropdownChoice,
     Tuple,
     ListOf,
@@ -635,6 +636,26 @@ class ConfigVariableEscapePluginOutput(ConfigVariable):
 
 
 @config_variable_registry.register
+class ConfigVariableCrashReportURL(ConfigVariable):
+    def group(self):
+        return ConfigVariableGroupUserInterface
+
+    def domain(self):
+        return ConfigDomainGUI
+
+    def ident(self):
+        return "crash_report_url"
+
+    def valuespec(self):
+        return HTTPUrl(
+            title=_("Crash report HTTP URL"),
+            help=_("By default crash reports will be sent to our crash reporting server."),
+            size=80,
+            show_as_link=False,
+        )
+
+
+@config_variable_registry.register
 class ConfigVariableCrashReportTarget(ConfigVariable):
     def group(self):
         return ConfigVariableGroupUserInterface
@@ -647,7 +668,7 @@ class ConfigVariableCrashReportTarget(ConfigVariable):
 
     def valuespec(self):
         return TextAscii(
-            title=_("Fallback mail address for crash reports"),
+            title=_("Crash report fallback mail address"),
             help=_("By default crash reports will be sent to our crash reporting server. In case "
                    "this fails for some reason, the crash reports can be sent by mail to the "
                    "address configured here."),
@@ -3704,76 +3725,6 @@ def _vs_periodic_discovery():
                          (False, _("Just rely on existing check files, detect new items only")),
                      ],
                  )),
-                ("inventory_rediscovery",
-                 Dictionary(
-                     title=_("Automatically update service configuration"),
-                     help=_("If active the check will not only notify about un-monitored services, "
-                            "it will also automatically add/remove them as neccessary."),
-                     elements=[
-                         ("mode",
-                          DropdownChoice(
-                              title=_("Mode"),
-                              choices=[
-                                  (0, _("Add unmonitored services, new host labels")),
-                                  (1, _("Remove vanished services")),
-                                  (2,
-                                   _("Add unmonitored & remove vanished services and host labels")),
-                                  (3, _("Refresh all services and host labels (tabula rasa)"))
-                              ],
-                              default_value=0,
-                          )),
-                         ("group_time",
-                          Age(
-                              title=_("Group discovery and activation for up to"),
-                              help=_(
-                                  "A delay can be configured here so that multiple "
-                                  "discoveries can be activated in one go. This avoids frequent core "
-                                  "restarts in situations with frequent services changes."),
-                              default_value=15 * 60,
-                              display=["hours", "minutes"],
-                          )),
-                         ("excluded_time",
-                          ListOfTimeRanges(
-                              title=
-                              _("Never do discovery or activate changes in the following time ranges"
-                               ),
-                              help=_("This avoids automatic changes during these times so "
-                                     "that the automatic system doesn't interfere with "
-                                     "user activity."),
-                          )),
-                         ("activation",
-                          DropdownChoice(
-                              title=_("Automatic activation"),
-                              choices=[
-                                  (True, _("Automatically activate changes")),
-                                  (False, _("Do not activate changes")),
-                              ],
-                              default_value=True,
-                              help=_("Here you can have the changes activated whenever services "
-                                     "have been added or removed."),
-                          )),
-                         ("service_whitelist",
-                          ListOfStrings(
-                              title=_("Activate only services matching"),
-                              allow_empty=False,
-                              help=_(
-                                  "Set service names or regular expression patterns here to "
-                                  "allow only matching services to be activated automatically. "
-                                  "If you set both this and \'Don't activate services matching\', "
-                                  "both rules have to apply for a service to be activated."),
-                          )),
-                         ("service_blacklist",
-                          ListOfStrings(
-                              title=_("Don't activate services matching"),
-                              allow_empty=False,
-                              help=_(
-                                  "Set service names or regular expression patterns here to "
-                                  "prevent matching services from being activated automatically. "
-                                  "If you set both this and \'Activate only services matching\', "
-                                  "both rules have to apply for a service to be activated."),
-                          )),
-                     ],
-                 )),
                 ("inventory_rediscovery", _valuespec_automatic_rediscover_parameters()),
             ],
             optional_keys=["inventory_rediscovery"],
@@ -3944,114 +3895,6 @@ rulespec_registry.register(
         item_type="service",
         name="extra_service_conf:service_period",
         valuespec=_valuespec_extra_service_conf_service_period,
-    ))
-
-
-def _validate_max_cache_ages_and_validity_periods(params, varprefix):
-    global_max_cache_age = params.get("global_max_cache_age")
-    global_period = params.get("global_validity", {}).get('period')
-    _validate_max_cache_age_and_validity_period(global_max_cache_age, global_period, varprefix)
-
-    for exception in params.get("per_piggybacked_host", []):
-        max_cache_age = exception.get("max_cache_age")
-        period = exception.get("validity", {}).get('period', global_period)
-        if max_cache_age == "global":
-            _validate_max_cache_age_and_validity_period(global_max_cache_age, period, varprefix)
-        else:
-            _validate_max_cache_age_and_validity_period(max_cache_age, period, varprefix)
-
-
-def _validate_max_cache_age_and_validity_period(max_cache_age, period, varprefix):
-    if isinstance(max_cache_age, int) and isinstance(period, int)\
-       and max_cache_age < period:
-        raise MKUserError(varprefix, _("Maximum cache age must be greater than period."))
-
-
-def _valuespec_piggybacked_host_files():
-    global_max_cache_age_uri = html.makeuri_contextless(
-        [('mode', 'edit_configvar'), ('varname', 'piggyback_max_cachefile_age')],
-        filename="wato.py")
-
-    global_max_cache_age_title = _("Use maximum age from <a href=\"%s\">global settings</a>" %
-                                   global_max_cache_age_uri)
-    max_cache_age_title = _("Use maximum age from <a href=\"%s\">global settings</a> or above" %
-                            global_max_cache_age_uri)
-
-    return Dictionary(
-        title=_("Piggybacked Host Files"),
-        optional_keys=[],
-        elements=[
-            ("global_max_cache_age", _vs_max_cache_age(global_max_cache_age_title)),
-            ("global_validity", _vs_validity()),
-            ("per_piggybacked_host",
-             ListOf(
-                 Dictionary(
-                     optional_keys=[],
-                     elements=[
-                         ("piggybacked_hostname",
-                          TextUnicode(
-                              title=_("Piggybacked host name"),
-                              allow_empty=False,
-                          )),
-                         ("max_cache_age", _vs_max_cache_age(max_cache_age_title)),
-                         ("validity", _vs_validity()),
-                     ],
-                 ),
-                 title=_("Exceptions for piggybacked hosts"),
-                 add_label=_("Add exception"),
-             )),
-        ],
-        help=_(
-            "We assume that a source host is sending piggyback data every check interval "
-            "by default. If this is not the case for some source hosts then the <b>Check_MK</b> "
-            "and <b>Check_MK Disovery</b> services of the piggybacked hosts report "
-            "<b>Got no information from host</b> resp. <b>vanished services</b> if the piggybacked "
-            "data is missing within a check interval. "
-            "This rule helps you to get more control over the piggybacked host data handling. "
-            "The source host names have to be set in the condition field <i>Explicit hosts</i>."),
-        validate=_validate_max_cache_ages_and_validity_periods,
-    )
-
-
-def _vs_max_cache_age(max_cache_age_title):
-    return Alternative(
-        title=_("Set maximum age how long piggyback files are kept"),
-        elements=[
-            FixedValue(
-                "global",
-                title=max_cache_age_title,
-                totext="",
-            ),
-            Age(
-                title=_("Set maximum age"),
-                default_value=3600,
-            ),
-        ],
-    )
-
-
-def _vs_validity():
-    return Dictionary(
-        title=_("Set period how long piggyback files are treated as valid"),
-        elements=[
-            ("period", Age(
-                title=_("Period"),
-                default_value=60,
-            )),
-            ("check_mk_state",
-             MonitoringState(
-                 title=_("Check MK status within this period"),
-                 default_value=0,
-             )),
-        ],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringConfigurationHostChecks,
-        name="piggybacked_host_files",
-        valuespec=_valuespec_piggybacked_host_files,
     ))
 
 #.
@@ -4987,4 +4830,136 @@ rulespec_registry.register(
         group=RulespecGroupAgentSNMP,
         name="snmpv3_contexts",
         valuespec=_valuespec_snmpv3_contexts,
+    ))
+
+
+def _validate_max_cache_ages_and_validity_periods(params, varprefix):
+    global_max_cache_age = params.get("global_max_cache_age")
+    global_period = params.get("global_validity", {}).get('period')
+    _validate_max_cache_age_and_validity_period(global_max_cache_age, global_period, varprefix)
+
+    for exception in params.get("per_piggybacked_host", []):
+        max_cache_age = exception.get("max_cache_age")
+        period = exception.get("validity", {}).get('period', global_period)
+        if max_cache_age == "global":
+            _validate_max_cache_age_and_validity_period(global_max_cache_age, period, varprefix)
+        else:
+            _validate_max_cache_age_and_validity_period(max_cache_age, period, varprefix)
+
+
+def _validate_max_cache_age_and_validity_period(max_cache_age, period, varprefix):
+    if isinstance(max_cache_age, int) and isinstance(period, int)\
+       and max_cache_age < period:
+        raise MKUserError(varprefix, _("Maximum cache age must be greater than period."))
+
+
+def _transform_piggybacked_exception(p):
+    if "piggybacked_hostname" in p:
+        piggybacked_hostname = p["piggybacked_hostname"]
+        del p["piggybacked_hostname"]
+        p["piggybacked_hostname_expressions"] = [piggybacked_hostname]
+    return p
+
+
+def _valuespec_piggybacked_host_files():
+    global_max_cache_age_uri = html.makeuri_contextless(
+        [('mode', 'edit_configvar'), ('varname', 'piggyback_max_cachefile_age')],
+        filename="wato.py")
+
+    global_max_cache_age_title = _("Use maximum age from <a href=\"%s\">global settings</a>" %
+                                   global_max_cache_age_uri)
+    max_cache_age_title = _("Use maximum age from <a href=\"%s\">global settings</a> or above" %
+                            global_max_cache_age_uri)
+
+    return Dictionary(
+        title=_("Processing of Piggybacked Host Data"),
+        optional_keys=[],
+        elements=[
+            ("global_max_cache_age", _vs_max_cache_age(global_max_cache_age_title)),
+            ("global_validity", _vs_validity()),
+            ("per_piggybacked_host",
+             ListOf(
+                 Transform(
+                     Dictionary(
+                         optional_keys=[],
+                         elements=[
+                             ("piggybacked_hostname_expressions",
+                              ListOfStrings(
+                                  title=_("Piggybacked host name expressions"),
+                                  orientation="horizontal",
+                                  valuespec=RegExpUnicode(
+                                      size=30,
+                                      mode=RegExpUnicode.prefix,
+                                  ),
+                                  allow_empty=False,
+                                  help=_(
+                                      'Here you can specify explicit piggybacked host names or '
+                                      'regex patterns to match specific piggybacked host names.'),
+                              )),
+                             ("max_cache_age", _vs_max_cache_age(max_cache_age_title)),
+                             ("validity", _vs_validity()),
+                         ],
+                     ),
+                     forth=_transform_piggybacked_exception,
+                 ),
+                 title=_("Exceptions for piggybacked hosts (VMs, ...)"),
+                 add_label=_("Add exception"),
+             )),
+        ],
+        help=_(
+            "We assume that a source host is sending piggyback data every check interval "
+            "by default. If this is not the case for some source hosts then the <b>Check_MK</b> "
+            "and <b>Check_MK Disovery</b> services of the piggybacked hosts report "
+            "<b>Got no information from host</b> resp. <b>vanished services</b> if the piggybacked "
+            "data is missing within a check interval. "
+            "This rule helps you to get more control over the piggybacked host data handling. "
+            "The source host names have to be set in the condition field <i>Explicit hosts</i>."),
+        validate=_validate_max_cache_ages_and_validity_periods,
+    )
+
+
+def _vs_max_cache_age(max_cache_age_title):
+    return Alternative(
+        title=_("Set maximum age how long piggyback files are kept"),
+        elements=[
+            FixedValue(
+                "global",
+                title=max_cache_age_title,
+                totext="",
+            ),
+            Age(
+                title=_("Set maximum age"),
+                default_value=3600,
+            ),
+        ],
+    )
+
+
+def _vs_validity():
+    return Dictionary(
+        title=_("Set period how long outdated piggyback data is treated as valid"),
+        elements=[
+            ("period", Age(
+                title=_("Period for outdated piggybacked host data"),
+                default_value=60,
+            )),
+            ("check_mk_state",
+             MonitoringState(
+                 title=_("Check MK status of piggybacked host within this period"),
+                 default_value=0,
+             )),
+        ],
+        help=_("If a source host does not send data for its piggybacked hosts at all "
+               "or for single piggybacked hosts then a period can be set in order to "
+               "treat outdated piggybacked host files/data as valid within this period. "
+               "Moreover the status of the <b>Check_MK</b> service of these piggybacked "
+               "hosts can be specified for this period."),
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupAgentGeneralSettings,
+        name="piggybacked_host_files",
+        valuespec=_valuespec_piggybacked_host_files,
     ))

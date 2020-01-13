@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -34,24 +34,40 @@ from enum import Enum
 import logging
 import os
 import pprint
+import sys
 from typing import Any, Dict, Iterable, List, Optional, Tuple  # pylint: disable=unused-import
-import UserDict
+try:
+    # Python has a totally braindead history of changes in this area:
+    #   * In the dark ages: Hmmm, one can't subclass dict, so we have to provide UserDict.
+    #   * Python 2.2: Well, now we can subclass dict, but let's keep UserDict.
+    #   * Python 2.3: Actually, DictMixin might often be a better idea.
+    #   * Python 2.6: It is recommended to use collections.MutableMapping instead of DictMixin.
+    #   * Python 3.0: UserDict is gone...
+    #   * Python 3.3: Let's just move the ABCs from collections to collections.abc, keeping the old stuff for now.
+    #   * Python 3.8: To *really* annoy people, let's nuke the ABCs from collection! >:-)
+    from collections.abc import MutableMapping  # type: ignore
+except ImportError:
+    from collections import MutableMapping
 
-from pathlib2 import Path
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
+from cmk.utils.encoding import make_utf8
 import cmk.utils.log
 import cmk.utils.paths
-import cmk.utils.store
+import cmk.utils.store as store
+from cmk.utils.exceptions import MKException
 import cmk.ec.defaults
 import cmk.ec.settings
 
 
-class MkpRulePackBindingError(Exception):
+class MkpRulePackBindingError(MKException):
     """Base class for exceptions related to rule pack binding"""
-    pass
 
 
-class MkpRulePackProxy(UserDict.DictMixin):
+class MkpRulePackProxy(MutableMapping):
     """
     An object of this class represents an entry (i.e. a rule pack) in
     mkp_rule_packs. It is used as a reference to an EC rule pack
@@ -61,20 +77,28 @@ class MkpRulePackProxy(UserDict.DictMixin):
     This is achieved via the method bind_to.
     """
     def __init__(self, rule_pack_id):
+        # type: (str) -> None
+        super(MkpRulePackProxy, self).__init__()
         # Ideally the 'id_' would not be necessary and the proxy object would
         # be bound to it's referenced object upon initialization. Unfortunately,
         # this is not possible because the mknotifyd.mk could specify referenced
         # objects as well.
-        self.id_ = rule_pack_id  # type: str
-        self.rule_pack = None  # type: Dict[str, Any]
+        self.id_ = rule_pack_id
+        self.rule_pack = None  # type: Optional[Dict[str, Any]]
 
     def __getitem__(self, key):
+        if self.rule_pack is None:
+            raise MkpRulePackBindingError("Proxy is not bound")
         return self.rule_pack[key]
 
     def __setitem__(self, key, value):
+        if self.rule_pack is None:
+            raise MkpRulePackBindingError("Proxy is not bound")
         self.rule_pack[key] = value
 
-    def __delattr__(self, key):
+    def __delitem__(self, key):
+        if self.rule_pack is None:
+            raise MkpRulePackBindingError("Proxy is not bound")
         del self.rule_pack[key]
 
     def __repr__(self):
@@ -89,9 +113,14 @@ class MkpRulePackProxy(UserDict.DictMixin):
     def __len__(self):
         return len(self.keys())
 
+    # NOTE: One cannot portably give a type for this method because of the
+    # braindead incompatible type changes of Mapping.keys(): In Python 2 it has
+    # to be a List[K], while in Python 3 it has to be an AbstractSet[K] (it's a
+    # KeysView[K], actually).
     def keys(self):
-        # type: () -> List[str]
         """List of keys of this rule pack"""
+        if self.rule_pack is None:
+            raise MkpRulePackBindingError("Proxy is not bound")
         return self.rule_pack.keys()
 
     def bind_to(self, mkp_rule_pack):
@@ -203,8 +232,8 @@ def load_config(settings):
     config["MkpRulePackProxy"] = MkpRulePackProxy
     for path in [settings.paths.main_config_file.value] + \
             sorted(settings.paths.config_dir.value.glob('**/*.mk')):
-        with open(str(path)) as file_object:
-            exec (file_object, config)  # pylint: disable=exec-used
+        with open(str(path), mode="rb") as file_object:
+            exec (file_object.read(), config)  # pylint: disable=exec-used
     config.pop("MkpRulePackProxy", None)
     _bind_to_rule_pack_proxies(config['rule_packs'], config['mkp_rule_packs'])
 
@@ -282,7 +311,7 @@ def save_rule_packs(rule_packs, pretty_print=False, dir_=None):
     if not dir_:
         dir_ = rule_pack_dir()
     dir_.mkdir(parents=True, exist_ok=True)
-    cmk.utils.store.save_file(str(dir_ / "rules.mk"), output)
+    store.save_file(str(dir_ / "rules.mk"), make_utf8(output))
 
 
 # NOTE: It is essential that export_rule_pack() is called *before*
@@ -302,6 +331,8 @@ def export_rule_pack(rule_pack, pretty_print=False, dir_=None):
     directory dir_.
     """
     if isinstance(rule_pack, MkpRulePackProxy):
+        if rule_pack.rule_pack is None:
+            raise MkpRulePackBindingError("Proxy is not bound")
         rule_pack = rule_pack.rule_pack
 
     repr_ = (pprint.pformat(rule_pack) if pretty_print else repr(rule_pack))
@@ -314,7 +345,7 @@ def export_rule_pack(rule_pack, pretty_print=False, dir_=None):
     if not dir_:
         dir_ = mkp_rule_pack_dir()
     dir_.mkdir(parents=True, exist_ok=True)
-    cmk.utils.store.save_file(str(dir_ / ("%s.mk" % rule_pack['id'])), output)
+    store.save_file(str(dir_ / ("%s.mk" % rule_pack['id'])), make_utf8(output))
 
 
 def add_rule_pack_proxies(file_names):
@@ -372,47 +403,3 @@ def release_packaged_rule_packs(file_names):
 
     if save:
         save_rule_packs(rule_packs)
-
-
-def remove_packaged_rule_packs(file_names, delete_export=True):
-    # type: (Iterable[str], bool) -> None
-    """
-    This function synchronizes the rule packs in rules.mk and the packaged rule packs
-    of a MKP upon deletion of that MKP. When a modified or an unmodified MKP is
-    deleted the exported rule pack and the rule pack in rules.mk are both deleted.
-    """
-    if not file_names:
-        return
-
-    rule_packs = load_rule_packs()
-    rule_pack_ids = [rp['id'] for rp in rule_packs]
-    affected_ids = [os.path.splitext(fn)[0] for fn in file_names]
-
-    for id_ in affected_ids:
-        index = rule_pack_ids.index(id_)
-        del rule_packs[index]
-        if delete_export:
-            remove_exported_rule_pack(id_)
-
-    save_rule_packs(rule_packs)
-
-
-def rule_pack_id_to_mkp(package_info):
-    # type: (Any) -> Dict[str, Any]
-    """
-    Returns a dictionary of rule pack ID to MKP package for a given package_info.
-    The package info has to be in the format defined by cmk_base/packaging.py.
-    Every rule pack is contained exactly once in this mapping. If no corresponding
-    MKP exists, the value of that mapping is None.
-    """
-    def mkp_of(rule_pack_file):
-        # type: (str) -> Any
-        """Find the MKP for the given file"""
-        for mkp, content in package_info.get('installed', {}).iteritems():
-            if rule_pack_file in content.get('files', {}).get('ec_rule_packs', []):
-                return mkp
-        return None
-
-    exported_rule_packs = package_info['parts']['ec_rule_packs']['files']
-
-    return {os.path.splitext(file_)[0]: mkp_of(file_) for file_ in exported_rule_packs}

@@ -1,7 +1,9 @@
 *.a
 *.la
 *.o
+*.o.tmp
 *.so
+.clangd/
 .cproject
 .deps
 Makefile
@@ -14,6 +16,7 @@ html/
 includes/
 libs/
 livecheck
+rrdtool-*
 test_detail.xml
 test_neb
 unixcat

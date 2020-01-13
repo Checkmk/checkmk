@@ -23,10 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostSpecialDoubleColumn.h"
+#include <chrono>
 #include "Row.h"
 
 #ifdef CMC
-#include <chrono>
 #include "Object.h"
 #include "State.h"
 #include "Timeperiod.h"

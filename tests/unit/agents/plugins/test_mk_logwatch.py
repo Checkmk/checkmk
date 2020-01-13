@@ -18,7 +18,7 @@ def mk_logwatch():
 def test_options_defaults(mk_logwatch):
     opt = mk_logwatch.Options()
     for attribute in ('encoding', 'maxfilesize', 'maxlines', 'maxtime', 'maxlinesize', 'regex',
-                      'overflow', 'nocontext', 'maxoutputsize'):
+                      'overflow', 'nocontext', 'maxcontextlines', 'maxoutputsize'):
         assert getattr(opt, attribute) == mk_logwatch.Options.DEFAULTS[attribute]
 
 
@@ -31,6 +31,7 @@ def test_options_defaults(mk_logwatch):
     ("overflow=I", 'overflow', 'I'),
     ("nocontext=tRuE", 'nocontext', True),
     ("nocontext=FALse", 'nocontext', False),
+    ("maxcontextlines=17,23", 'maxcontextlines', (17, 23)),
     ("fromstart=1", 'fromstart', True),
     ("fromstart=yEs", 'fromstart', True),
     ("fromstart=0", 'fromstart', False),
@@ -60,7 +61,7 @@ def test_get_config_files(mk_logwatch, tmp_path):
     fake_config_dir = tmp_path / "test"
     fake_config_dir.mkdir()
     (fake_config_dir / "logwatch.d").mkdir()
-    (fake_config_dir / "logwatch.d").joinpath("custom.cfg").open(mode="w")
+    (fake_config_dir / "logwatch.d" / "custom.cfg").open(mode="w")
 
     expected = [
         str(fake_config_dir / "logwatch.cfg"),
@@ -75,7 +76,7 @@ def test_iter_config_lines(mk_logwatch, tmp_path):
     # setup
     fake_config_path = tmp_path / "test"
     fake_config_path.mkdir()
-    fake_config_file = fake_config_path.joinpath("logwatch.cfg")
+    fake_config_file = fake_config_path / "logwatch.cfg"
     fake_config_file.write_text(u"# this is a comment\nthis is a line   ", encoding="utf-8")
     files = [str(fake_config_file)]
 
@@ -274,7 +275,7 @@ def test_get_status_filename(mk_logwatch, env_var, istty, statusfile, monkeypatc
 ])
 def test_state_load(mk_logwatch, tmp_path, state_data, state_dict):
     # setup for reading
-    file_path = tmp_path.joinpath("logwatch.state.testcase")
+    file_path = tmp_path / "logwatch.state.testcase"
     file_path.write_text(state_data, encoding="utf-8")
 
     # loading and __getitem__
@@ -306,7 +307,7 @@ def test_state_load(mk_logwatch, tmp_path, state_data, state_dict):
 ])
 def test_state_write(mk_logwatch, tmp_path, state_dict):
     # setup for writing
-    file_path = tmp_path.joinpath("logwatch.state.testcase")
+    file_path = tmp_path / "logwatch.state.testcase"
     state = mk_logwatch.State(str(file_path))
     assert not state._data
 
@@ -371,31 +372,31 @@ def test_ip_in_subnetwork(mk_logwatch):
 ])
 def test_log_lines_iter_encoding(mk_logwatch, monkeypatch, buff, encoding, position):
     monkeypatch.setattr(os, 'open', lambda *_args: None)
+    monkeypatch.setattr(os, 'close', lambda *_args: None)
     monkeypatch.setattr(os, 'read', lambda *_args: buff)
     monkeypatch.setattr(os, 'lseek', lambda *_args: len(buff))
-    log_iter = mk_logwatch.LogLinesIter('void', None)
-    assert log_iter._enc == encoding
-    assert log_iter.get_position() == position
+    with mk_logwatch.LogLinesIter('void', None) as log_iter:
+        assert log_iter._enc == encoding
+        assert log_iter.get_position() == position
 
 
 def test_log_lines_iter(mk_logwatch):
-    log_iter = mk_logwatch.LogLinesIter(mk_logwatch.__file__, None)
+    with mk_logwatch.LogLinesIter(mk_logwatch.__file__, None) as log_iter:
+        log_iter.set_position(710)
+        assert log_iter.get_position() == 710
 
-    log_iter.set_position(710)
-    assert log_iter.get_position() == 710
+        line = log_iter.next_line()
+        assert isinstance(line, unicode)
+        assert line == u"# This file is part of Check_MK.\n"
+        assert log_iter.get_position() == 743
 
-    line = log_iter.next_line()
-    assert isinstance(line, six.text_type)
-    assert line == u"# This file is part of Check_MK.\n"
-    assert log_iter.get_position() == 743
+        log_iter.push_back_line(u'Täke this!')
+        assert log_iter.get_position() == 732
+        assert log_iter.next_line() == u'Täke this!'
 
-    log_iter.push_back_line(u'Täke this!')
-    assert log_iter.get_position() == 732
-    assert log_iter.next_line() == u'Täke this!'
-
-    log_iter.skip_remaining()
-    assert log_iter.next_line() is None
-    assert log_iter.get_position() == os.stat(mk_logwatch.__file__).st_size
+        log_iter.skip_remaining()
+        assert log_iter.next_line() is None
+        assert log_iter.get_position() == os.stat(mk_logwatch.__file__).st_size
 
 
 @pytest.mark.parametrize(
@@ -435,23 +436,23 @@ def test_log_lines_iter(mk_logwatch):
 def test_non_ascii_line_processing(mk_logwatch, tmp_path, monkeypatch, use_specific_encoding, lines,
                                    expected_result):
     # Write test logfile first
-    log_path = tmp_path.joinpath("testlog")
+    log_path = tmp_path / "testlog"
     with log_path.open("wb") as f:
         f.write(b"\n".join(lines) + "\n")
 
     # Now test processing
-    log_iter = mk_logwatch.LogLinesIter(str(log_path), None)
-    if use_specific_encoding:
-        log_iter._enc = use_specific_encoding
+    with mk_logwatch.LogLinesIter(str(log_path), None) as log_iter:
+        if use_specific_encoding:
+            log_iter._enc = use_specific_encoding
 
-    result = []
-    while True:
-        l = log_iter.next_line()
-        if l is None:
-            break
-        result.append(l)
+        result = []
+        while True:
+            l = log_iter.next_line()
+            if l is None:
+                break
+            result.append(l)
 
-    assert result == expected_result
+        assert result == expected_result
 
 
 class MockStdout(object):
@@ -530,12 +531,23 @@ def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, s
     section._compiled_patterns = patterns
 
     monkeypatch.setattr(sys, 'stdout', MockStdout())
-    output = mk_logwatch.process_logfile(section, state, False)
+    header, warning_and_errors = mk_logwatch.process_logfile(section, state, False)
+    output = [header] + warning_and_errors
     assert all(isinstance(item, six.text_type) for item in output)
     assert output == expected_output
     if len(output) > 1:
         assert isinstance(state['offset'], int)
         assert state['offset'] >= 15000  # about the size of this file
+
+
+@pytest.mark.parametrize("input_lines, before, after, expected_output",
+                         [([], 2, 3, []),
+                          (["0", "1", "2", "C 3", "4", "5", "6", "7", "8", "9", "W 10"
+                           ], 2, 3, ["1", "2", "C 3", "4", "5", "6", "8", "9", "W 10"]),
+                          (["C 0", "1", "2"], 12, 17, ["C 0", "1", "2"])])
+def test_filter_maxcontextlines(mk_logwatch, input_lines, before, after, expected_output):
+
+    assert expected_output == list(mk_logwatch._filter_maxcontextlines(input_lines, before, after))
 
 
 @pytest.fixture

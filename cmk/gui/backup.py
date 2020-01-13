@@ -114,19 +114,26 @@ def is_cma():
     return os.path.exists("/etc/cma/cma.conf")
 
 
+def is_canonical(directory):
+    if not directory.endswith("/"):
+        directory += "/"
+    return (os.path.isabs(directory) and
+            os.path.commonprefix([os.path.realpath(directory) + '/', directory]) == directory)
+
+
 # TODO: Locking!
 class Config(object):
     def __init__(self, file_path):
         self._file_path = file_path
 
     def load(self):
-        return store.load_data_from_file(self._file_path, {
+        return store.load_object_from_file(self._file_path, default={
             "targets": {},
             "jobs": {},
         })
 
     def save(self, config):
-        store.save_data_to_file(self._file_path, config)
+        store.save_object_to_file(self._file_path, config)
 
 
 #.
@@ -1291,6 +1298,9 @@ class BackupTargetLocal(ABCBackupTargetType):
 
     @classmethod
     def validate_local_directory(cls, value, varprefix):
+        if not is_canonical(value):
+            raise MKUserError(varprefix, _("You have to provide a canonical path."))
+
         if is_cma() and not value.startswith("/mnt/"):
             raise MKUserError(
                 varprefix,

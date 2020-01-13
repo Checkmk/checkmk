@@ -288,11 +288,12 @@ def check_diskstat_generic(item, params, this_time, info, mode='sectors'):
     summed_up = [0] * 13
     matching = 0
 
-    for line in info:
-        if item == 'SUMMARY' and line[0] is not None:
-            return 3, "summary mode not supported in a cluster"
+    has_multiple_nodes = len(set(line[0] for line in info)) > 1
+    if item == 'SUMMARY' and has_multiple_nodes:
+        return 3, "summary mode not supported in a cluster"
 
-        elif item == 'SUMMARY' and ' ' in line[1]:
+    for line in info:
+        if item == 'SUMMARY' and ' ' in line[1]:
             continue  # skip non-physical disks
 
         elif item == 'SUMMARY' or line[1] == item:
@@ -467,7 +468,7 @@ def check_diskstat_dict(item, params, disks):
         yield check_levels(util,
                            "disk_utilization",
                            params.get("utilization"),
-                           human_readable_func=get_percent_human_readable,
+                           human_readable_func=lambda x: get_percent_human_readable(x * 100.0),
                            scale=0.01,
                            statemarkers=False,
                            infoname=prefix + "Utilization")

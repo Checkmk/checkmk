@@ -96,6 +96,7 @@ import traceback
 import copy
 import inspect
 from hashlib import sha256
+from typing import Any, Dict  # pylint: disable=unused-import
 
 import cmk
 import cmk.utils.paths
@@ -271,7 +272,7 @@ if cmk.is_managed_edition():
     import cmk.gui.cme.plugins.wato  # pylint: disable=no-name-in-module
     import cmk.gui.cme.plugins.wato.managed  # pylint: disable=no-name-in-module
 else:
-    managed = None
+    managed = None  # type: ignore[assignment]
 
 wato_root_dir = watolib.wato_root_dir
 multisite_dir = watolib.multisite_dir
@@ -355,7 +356,7 @@ from cmk.gui.plugins.watolib.utils import (
     configvar_order,
 )
 
-modes = {}
+modes = {}  # type: Dict[Any, Any]
 
 from cmk.gui.plugins.wato.utils.html_elements import (
     wato_confirm,
@@ -508,8 +509,9 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
             html.add_user_error(e.varname, action_message)
 
         except MKAuthException as e:
-            action_message = e.reason
-            html.add_user_error(None, e.reason)
+            reason = e.args[0]
+            action_message = reason
+            html.add_user_error(None, reason)
 
     wato_html_head(mode.title(),
                    show_body_start=display_options.enabled(display_options.H),

@@ -1338,9 +1338,9 @@ class CommandFavorites(Command):
 
     def executor(self, command, site):
         _unused, star, spec = command.split(";", 2)
-        stars = config.user.load_stars()
+        stars = config.user.stars
         if star == "0" and spec in stars:
             stars.remove(spec)
         elif star == "1":
             stars.add(spec)
-        config.user.save_stars(stars)
+        config.user.save_stars()

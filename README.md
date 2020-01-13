@@ -39,7 +39,7 @@ To prepare your system for building, you need to execute this command:
 
 This will install the missing build dependencies, at least if you are working on
 a supported Linux distribution. Then you can either create RPM or DEB packages,
-depending on your distro.
+depending on your Linux-distribution.
 
 To build an RPM:
 

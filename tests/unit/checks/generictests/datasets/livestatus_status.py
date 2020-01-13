@@ -193,9 +193,7 @@ checks = {'': [(u'heute',
                  (0, '44 Services', [(u'heute', 44, None, None, None, None)]),
                  (0, u'Core version: Check_MK 2019.08.07', []),
                  (0, u'Livestatus version: 2019.08.07', []),
-                 (0,
-                  'Site certificate validity (until 3017-12-08 12:31:38): 364495.69 days',
-                  [])])]}
+                ])]}
 
 
 freeze_time = "2019-12-24T19:00:00"
@@ -209,7 +207,7 @@ extra_sections = {'': [[[u'[azure_test]'],
                         [u'/omd/sites/beta/etc/ssl/ca.pem', u'33066708720'],
                         [u'/omd/sites/beta/etc/ssl/sites/beta.pem', u'33066708720'],
                         [u'[heute]'],
-                        [u'/omd/sites/heute/etc/ssl/ca.pem', u'33069641498'],
-                        [u'/omd/sites/heute/etc/ssl/sites/heute.pem', u'33069641498'],
+                        [u'/omd/sites/heute/etc/ssl/ca.pem', u''],
+                        [u'/omd/sites/heute/etc/ssl/sites/heute.pem', u''],
                         [u'[stable14]'],
                         [u'[stable15]']]]}

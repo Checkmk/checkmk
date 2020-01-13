@@ -30,19 +30,37 @@ RUN yum -y --enablerepo=extras install \
     sudo \
     vim \
     which
+
+# CentOS 6 has 2.6.6 installed by default. The pipenv we need does not work with
+# Python < 2.7.9. For this reason we install the 2.7.16 from centos-release-scl-rh
+# which installs it's files to /opt/rh/python27.
+#
+# Enable the Python 2.7 installed from centos-release-scl-rh in all shells by default
+# - https://access.redhat.com/solutions/527703
+#
+# It's not enough to write something to /etc/bashrc or similar, because the bashrc
+# is not loaded in all cases. The following approach handles more cases:
+#
+# - https://github.com/sclorg/s2i-base-container/tree/8d9514866b4f4600638d0a07603552b21aa77707
+#
+# When bash is started non-interactively, to run a shell script, for example it
+# looks for this variable and source the content of this file. This will enable
+# the SCL for all scripts without need to do 'scl enable'.
+ENV BASH_ENV=/opt/rh/python27/enable \
+    ENV=/opt/rh/python27/enable \
+    PROMPT_COMMAND=". /opt/rh/python27/enable"
+
+# Now bring pip and pipenv to our standard version used in all environments.
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
-    && scl enable python27 'python get-pip.py' \
-    && scl enable python27 'pip install --upgrade setuptools virtualenv' \
-    && scl enable python27 'pip install git+https://github.com/svenpanne/pipenv.git@41f30d7ac848fdfe3eb548ddd19b731bfa8c331a' \
-    && curl -sL https://rpm.nodesource.com/setup_10.x | bash -
+    && python get-pip.py
+RUN pip install --upgrade setuptools virtualenv \
+    && pip install git+https://github.com/pypa/pipenv.git@2549656dc09e132d8ba2fa6327c939f5f9a951b7
+
+RUN curl -sL https://rpm.nodesource.com/setup_10.x | bash -
 RUN yum -y install \
     nodejs \
     $PACKAGES \
     && yum clean all
 
-# Set Environment Variables to activate python27
-ENV PATH=/opt/rh/python27/root/usr/bin${PATH:+:${PATH}}
-ENV LD_LIBRARY_PATH=/opt/rh/python27/root/usr/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
-ENV MANPATH=/opt/rh/python27/root/usr/share/man:${MANPATH}
-ENV XDG_DATA_DIRS=/opt/rh/python27/root/usr/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}
-ENV PKG_CONFIG_PATH=/opt/rh/python27/root/usr/lib64/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}
+ARG VERS_TAG
+RUN echo $VERS_TAG > /version.txt

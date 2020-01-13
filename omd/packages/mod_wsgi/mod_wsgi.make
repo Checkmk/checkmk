@@ -23,37 +23,30 @@ ifneq ("$(wildcard /usr/bin/apxs2-prefork)","")
     APXS := /usr/bin/apxs2-prefork
 endif
 
+MOD_WSGI_PATCHING := $(BUILD_HELPER_DIR)/$(MOD_WSGI_DIR)-patching
 MOD_WSGI_BUILD := $(BUILD_HELPER_DIR)/$(MOD_WSGI_DIR)-build
 MOD_WSGI_INSTALL := $(BUILD_HELPER_DIR)/$(MOD_WSGI_DIR)-install
-MOD_WSGI_PATCHING := $(BUILD_HELPER_DIR)/$(MOD_WSGI_DIR)-patching
 
-.PHONY: $(MOD_WSGI) $(MOD_WSGI)-install $(MOD_WSGI)-skel $(MOD_WSGI)-clean
+#MOD_WSGI_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(MOD_WSGI_DIR)
+MOD_WSGI_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(MOD_WSGI_DIR)
+#MOD_WSGI_WORK_DIR := $(PACKAGE_WORK_DIR)/$(MOD_WSGI_DIR)
 
-$(MOD_WSGI): $(MOD_WSGI_BUILD)
-
-$(MOD_WSGI)-install: $(MOD_WSGI_INSTALL)
-
-$(MOD_WSGI)-skel:
-
-$(MOD_WSGI_BUILD): $(MOD_WSGI_PATCHING) $(PYTHON_BUILD) 
+$(MOD_WSGI_BUILD): $(MOD_WSGI_PATCHING) $(PYTHON_CACHE_PKG_PROCESS)
 	set -e ; \
 	export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH)" ; \
 	export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS)" ; \
 	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
 	export CFLAGS="-I$(PACKAGE_PYTHON_DESTDIR)/include/python2.7" ; \
-	cd $(MOD_WSGI_DIR) ; \
+	cd $(MOD_WSGI_BUILD_DIR) ; \
 	./configure \
 	    --prefix=$(OMD_ROOT) \
 	    --with-apxs=$(APXS) \
 	    --with-python=$(PACKAGE_PYTHON_EXECUTABLE)
-	$(MAKE) -C $(MOD_WSGI_DIR)
+	$(MAKE) -C $(MOD_WSGI_BUILD_DIR)
 	$(TOUCH) $@
 
 $(MOD_WSGI_INSTALL): $(MOD_WSGI_BUILD)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
-	cp $(MOD_WSGI_DIR)/src/server/.libs/mod_wsgi.so $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
+	cp $(MOD_WSGI_BUILD_DIR)/src/server/.libs/mod_wsgi.so $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
 	chmod 644 $(DESTDIR)$(OMD_ROOT)/lib/apache/modules/mod_wsgi.so
 	$(TOUCH) $@
-
-$(MOD_WSGI)-clean:
-	$(RM) -r $(MOD_WSGI_DIR) $(BUILD_HELPER_DIR)/$(MOD_WSGI)*

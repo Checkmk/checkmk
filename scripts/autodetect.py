@@ -25,7 +25,10 @@
 # Boston, MA 02110-1301 USA.
 
 from __future__ import print_function
-import os, sys, stat
+import os
+import stat
+import sys
+from typing import List, Tuple  # pylint: disable=unused-import
 
 opt_debug = "-d" in sys.argv or "--debug" in sys.argv
 
@@ -67,9 +70,7 @@ target_values = {
 
 
 class Sorry(Exception):
-    def __init__(self, reason):
-        self.reason = reason
-        super(Sorry, self).__init__(reason)
+    pass
 
 
 def find_pid_and_configfile():
@@ -93,7 +94,7 @@ def find_pid_and_configfile():
                         # another process as parent!
                     if os.path.exists(configfile):
                         return int(pid), user, configfile
-            except Exception as e:
+            except Exception:
                 if opt_debug:
                     raise
 
@@ -137,7 +138,7 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
                 else:
                     try:
                         confdirs += scan_apacheconf(parts[1])  # recursive scan
-                    except:
+                    except Exception:
                         pass
         return confdirs
 
@@ -163,9 +164,9 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
             if len(confdirs) > 0:
                 apache_confdir = confdirs[0]
 
-            for dir in confdirs:
-                if dir.endswith("/conf.d"):
-                    apache_confdir = dir
+            for c1dir in confdirs:
+                if c1dir.endswith("/conf.d"):
+                    apache_confdir = c1dir
 
             # Search for Nagios configuration. We are interested
             # in the authentication configuration. Most Nagios
@@ -179,7 +180,7 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
                         text = text[1:]
                     if text[-1] in '"\'':
                         text = text[:-1]
-                except:
+                except Exception:
                     pass
                 return text
 
@@ -198,9 +199,9 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
                                     file_good = True
                                 parts = line.split()
                                 if len(parts) == 2 and parts[0].lower() == "authuserfile":
-                                    path = remove_quotes(parts[1])
-                                    if os.path.exists(path):
-                                        new_auth_files.append(path)
+                                    rqpath = remove_quotes(parts[1])
+                                    if os.path.exists(rqpath):
+                                        new_auth_files.append(rqpath)
                                 if len(parts) > 1 and parts[0].lower() == "authname":
                                     parts = line.split(None, 1)
                                     new_auth_names.append(remove_quotes(parts[1].strip()))
@@ -211,28 +212,28 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
                                                                  "").replace(">",
                                                                              "").replace('"', "")
                                         cleanedup = cleanedup[9:]
-                                        dir = cleanedup.strip()
-                                        if os.path.exists(dir) and os.path.exists(
-                                                dir + "/application/config/config.php"):
-                                            result['pnphtdocsdir'] = dir
-                                            result['pnptemplates'] = dir + "/templates"
-                                except Exception as e:
+                                        c2dir = cleanedup.strip()
+                                        if os.path.exists(c2dir) and os.path.exists(
+                                                c2dir + "/application/config/config.php"):
+                                            result['pnphtdocsdir'] = c2dir
+                                            result['pnptemplates'] = c2dir + "/templates"
+                                except Exception:
                                     pass
                             if file_good:
                                 auth_names += new_auth_names
                                 auth_files += new_auth_files
 
-                        except Exception as e:
+                        except Exception:
                             pass
                     if len(auth_files) > 0:
                         nagios_htpasswd_file = auth_files[0]
                     if len(auth_names) > 0:
                         nagios_auth_name = auth_names[0]
-            except:
+            except Exception:
                 if opt_debug:
                     raise
 
-    except:
+    except Exception:
         if opt_debug:
             raise
         apache_confdir = None
@@ -263,17 +264,17 @@ def process_environment(pid):
         env = {}
         for line in open("/proc/%d/environ" % pid).read().split("\0"):
             if '=' in line:
-                var, value = entry.split('=', 1)
-                env[var] = value
+                the_var, the_value = line.split('=', 1)
+                env[the_var] = the_value
         return env
-    except:
+    except Exception:
         raise Sorry("Cannot get environment of process %d. Aren't you root?" % pid)
 
 
 def process_executable(pid):
     try:
         return os.readlink("/proc/%d/exe" % pid).split(" ", 1)[0]
-    except:
+    except Exception:
         raise Sorry("Cannot get executable of process %d. Aren't you root?" % pid)
 
 
@@ -283,20 +284,20 @@ def open_files(pid):
         # denn hier sieht man z.B. die Commandpipe
         procpath = "/proc/%d/fd" % pid
         return [os.readlink(procpath + "/" + entry) for entry in os.listdir(procpath)]
-    except:
+    except Exception:
         raise Sorry("Cannot get open files of process %d. Aren't you root?" % pid)
 
 
-def find_pipes(filenames):
-    pipes = []
-    for f in filenames:
+def find_pipes(file_names):
+    the_pipes = []
+    for f in file_names:
         try:
-            mode = os.stat(f)[stat.ST_MODE]
-            if stat.S_ISFIFO(mode):
-                pipes.append(f)
-        except:
+            the_mode = os.stat(f)[stat.ST_MODE]
+            if stat.S_ISFIFO(the_mode):
+                the_pipes.append(f)
+        except Exception:
             pass
-    return pipes
+    return the_pipes
 
 
 def parse_nagios_config(configfile):
@@ -306,9 +307,9 @@ def parse_nagios_config(configfile):
         if line == "" or line[0] == '#':
             continue
         try:
-            key, value = line.split('=', 1)
-            conf.append((key, value))
-        except:
+            the_key, the_value = line.split('=', 1)
+            conf.append((the_key, the_value))
+        except Exception:
             pass  # ignore invalid line (as Nagios seems to do)
     return conf
 
@@ -323,17 +324,17 @@ def detect_pnp():
     # klappt nur bei PNP 0.4
     if 'pnptemplates' not in result:
         try:
-            found = []
+            tmpl_found = []
 
-            def func(arg, dirname, names):
-                if 'templates' in names and 'templates.dist' in names:
-                    found.append(dirname + "/templates")
+            def func(arg, the_dirname, the_names):
+                if 'templates' in the_names and 'templates.dist' in the_names:
+                    tmpl_found.append(the_dirname + "/templates")
 
             os.path.walk(cgiconf['physical_html_path'], func, None)
-            result['pnptemplates'] = found[0]
+            result['pnptemplates'] = tmpl_found[0]
             if 'pnphtdocsdir' not in result:
                 result['pnphtdocsdir'] = result['pnptemplates'].rsplit('/', 1)[0]
-        except:
+        except Exception:
             pass
 
     # Suche die Konfigurationsdatei von PNP4Nagios. Denn ich will
@@ -350,7 +351,7 @@ def detect_pnp():
                 result['pnpconffile'] = pnpconffile
                 result['pnpconfdir'] = pnpconffile.rsplit("/", 1)[0]
                 break
-    except:
+    except Exception:
         pass
 
     try:
@@ -362,12 +363,12 @@ def detect_pnp():
                     line = line.strip()
                     if not line.startswith("#") and "pnp_etc_path" in line:
                         last = line.split('=')[-1].strip()
-                        dir = last.replace("'", "").replace(";", "").replace('"', "")
-                        if os.path.exists(dir):
-                            result['pnpconfdir'] = dir
-                            result['pnpconffile'] = dir + "/config.php"
+                        c3dir = last.replace("'", "").replace(";", "").replace('"', "")
+                        if os.path.exists(c3dir):
+                            result['pnpconfdir'] = c3dir
+                            result['pnpconffile'] = c3dir + "/config.php"
 
-    except:
+    except Exception:
         pass
 
     try:
@@ -385,7 +386,7 @@ def detect_pnp():
                 if not pnp_url.endswith("/"):
                     pnp_url += "/"
                 result["pnp_url"] = pnp_url
-    except:
+    except Exception:
         pass
 
 
@@ -394,33 +395,32 @@ def detect_omd():
     root = os.getenv("OMD_ROOT")
     if not site or not root:
         return None
-    else:
-        return {
-            'apache_config_dir': root + "/etc/apache/conf.d",
-            'cgiurl': "/" + site + "/nagios/cgi-bin/",
-            'check_icmp_path': root + "/lib/nagios/plugins/check_icmp",
-            'htdocsdir': root + "/share/nagios/htdocs",
-            'htpasswd_file': root + "/etc/htpasswd",
-            'livestatus_in_nagioscfg': False,
-            'nagconfdir': root + "/etc/nagios/conf.d",
-            'nagiosaddconf': "",
-            'nagios_auth_name': "OMD Monitoring Site " + site,
-            'nagios_binary': root + "/bin/nagios",
-            'nagios_config_file': root + "/tmp/nagios/nagios.cfg",
-            'nagios_startscript': root + "/etc/init.d/nagios",
-            'nagios_status_file': root + "/var/nagios/status.dat",
-            'nagiosurl': "/" + site + "/nagios/",
-            'nagiosuser': site,
-            'nagpipe': root + "/tmp/run/nagios.cmd",
-            'check_result_path': root + "/tmp/nagios/checkresults",
-            'pnp_url': "/" + site + "/pnp4nagios/",
-            'pnpconffile': root + "/etc/pnp4nagios/config.php",
-            'pnphtdocsdir': root + "/share/pnp4nagios/htdocs",
-            'pnptemplates': root + "/local/share/check_mk/pnp-templates",
-            'rrddir': root + "/var/pnp4nagios/perfdata",
-            'wwwgroup': site,
-            'wwwuser': site,
-        }
+    return {
+        'apache_config_dir': root + "/etc/apache/conf.d",
+        'cgiurl': "/" + site + "/nagios/cgi-bin/",
+        'check_icmp_path': root + "/lib/nagios/plugins/check_icmp",
+        'htdocsdir': root + "/share/nagios/htdocs",
+        'htpasswd_file': root + "/etc/htpasswd",
+        'livestatus_in_nagioscfg': False,
+        'nagconfdir': root + "/etc/nagios/conf.d",
+        'nagiosaddconf': "",
+        'nagios_auth_name': "OMD Monitoring Site " + site,
+        'nagios_binary': root + "/bin/nagios",
+        'nagios_config_file': root + "/tmp/nagios/nagios.cfg",
+        'nagios_startscript': root + "/etc/init.d/nagios",
+        'nagios_status_file': root + "/var/nagios/status.dat",
+        'nagiosurl': "/" + site + "/nagios/",
+        'nagiosuser': site,
+        'nagpipe': root + "/tmp/run/nagios.cmd",
+        'check_result_path': root + "/tmp/nagios/checkresults",
+        'pnp_url': "/" + site + "/pnp4nagios/",
+        'pnpconffile': root + "/etc/pnp4nagios/config.php",
+        'pnphtdocsdir': root + "/share/pnp4nagios/htdocs",
+        'pnptemplates': root + "/local/share/check_mk/pnp-templates",
+        'rrddir': root + "/var/pnp4nagios/perfdata",
+        'wwwgroup': site,
+        'wwwuser': site,
+    }
 
 
 #                    _
@@ -435,22 +435,22 @@ try:
     if not result:
         result = {}
 
-        pid, nagiosuser, configfile = find_pid_and_configfile()
-        nagios_dir = os.path.dirname(configfile)
-        result['nagios_config_file'] = configfile
-        result['nagiosuser'] = nagiosuser
-        pipes = find_pipes(open_files(pid))
+        the_pid, the_nagiosuser, the_configfile = find_pid_and_configfile()
+        nagios_dir = os.path.dirname(the_configfile)
+        result['nagios_config_file'] = the_configfile
+        result['nagiosuser'] = the_nagiosuser
+        pipes = find_pipes(open_files(the_pid))
         if len(pipes) > 0:
             result['nagpipe'] = pipes[0]
 
         # Path to executable
-        result['nagios_binary'] = process_executable(pid)
+        result['nagios_binary'] = process_executable(the_pid)
 
         # Nagios version
         result['nagios_version'] = ""
-        for line in os.popen(result["nagios_binary"] + " --version 2>/dev/null"):  # nosec
-            if line.startswith("Nagios Core") or line.startswith("Icinga Core"):
-                result['nagios_version'] = line.split()[2]
+        for nline in os.popen(result["nagios_binary"] + " --version 2>/dev/null"):  # nosec
+            if nline.startswith("Nagios Core") or nline.startswith("Icinga Core"):
+                result['nagios_version'] = nline.split()[2]
 
         # Path to startscript
         for path in ['/etc/init.d/nagios', '/etc/init.d/nagios3', '/etc/init.d/icinga']:
@@ -458,21 +458,21 @@ try:
                 result['nagios_startscript'] = path
                 break
 
-        nagconf = parse_nagios_config(configfile)
+        nagconf = parse_nagios_config(the_configfile)
         nagconf_dict = dict(nagconf)
         if "check_result_path" in nagconf_dict:
             result['check_result_path'] = nagconf_dict['check_result_path']
 
         try:
-            cgifile = os.path.dirname(configfile) + "/cgi.cfg"
+            cgifile = os.path.dirname(the_configfile) + "/cgi.cfg"
             cgiconf = dict(parse_nagios_config(cgifile))
             result['htdocsdir'] = cgiconf['physical_html_path']
-        except:
+        except Exception:
             cgiconf = {}
 
         # Suche nach cfg_dir Direktiven. Wir suchen
         # einen flauschigen Platz fuer unsere Konfigdateien
-        cfg_dirs = [value for key, value in nagconf if key == 'cfg_dir']
+        cfg_dirs = [nvalue for nkey, nvalue in nagconf if nkey == 'cfg_dir']
         if len(cfg_dirs) > 0:
             # Wenn es mehrere gibt, bevorzuge ich das, das im gleichen
             # Verzeichnis, wie die Nagios-Konfigdatei selbst liegt.
@@ -480,9 +480,9 @@ try:
             if len(cfg_dirs) == 1:
                 result['nagconfdir'] = cfg_dirs[0]
             else:
-                dir = os.path.dirname(configfile)
+                c4dir = os.path.dirname(the_configfile)
                 for d in cfg_dirs:
-                    if os.path.dirname(d) == dir:
+                    if os.path.dirname(d) == c4dir:
                         result['nagconfdir'] = d
                         break
                 else:
@@ -505,16 +505,14 @@ try:
             for stats_name in ["stats", "tats"]:
                 try:
                     stats_bin = result['nagios_binary'] + stats_name
-                    for line in os.popen(stats_bin + " 2>/dev/null"):  # nosec
-                        if line.startswith("Status File:"):
-                            parts = line.split()
-                            nagios_status_file = parts[-1]
+                    for sline in os.popen(stats_bin + " 2>/dev/null"):  # nosec
+                        if sline.startswith("Status File:"):
+                            nagios_status_file = sline.split()[-1]
                             break
-                        elif line.startswith("Error reading status file"):
-                            parts = line.split()
-                            nagios_status_file = parts[-1][1:-1]
+                        elif sline.startswith("Error reading status file"):
+                            nagios_status_file = sline.split()[-1][1:-1]
                             break
-                except:
+                except Exception:
                     pass
 
         if nagios_status_file:
@@ -524,23 +522,23 @@ try:
         # auftauchen koennen.
         uservars = {}
         try:
-            for line in open(nagconf_dict['resource_file']):
-                line = line.strip()
-                if line.startswith('$') and '=' in line:
-                    varname, value = line.split('=', 1)
+            for rline in open(nagconf_dict['resource_file']):
+                rline = rline.strip()
+                if rline.startswith('$') and '=' in rline:
+                    varname, value = rline.split('=', 1)
                     uservars[varname.strip()] = value.strip()
-        except:
+        except Exception:
             pass
 
         # Suche nach einem Eintrag zum Laden des livestatus
         # Moduls. Er darf auch auskommentiert sein. Dann lassen
         # wir den Benutzer damit in Ruhe
-        found = False
-        for line in open(configfile):
-            if "broker_module=" in line and "/livestatus.o" in line:
-                found = True
+        ls_found = False
+        for cfline in open(the_configfile):
+            if "broker_module=" in cfline and "/livestatus.o" in cfline:
+                ls_found = True
                 break
-        result['livestatus_in_nagioscfg'] = found
+        result['livestatus_in_nagioscfg'] = ls_found
 
         # Jetzt wird's schwieriger: Ich suche nach check_icmp.
         # Ich will keinen find machen, da das erstens ewig
@@ -552,44 +550,46 @@ try:
         # liegen. Dort suche ich dann nach check_icmp. Zur Sicherheit
         # suche ich aber auch unter '/usr/lib/nagios' und '/usr/local/nagios/libexec'
         # und '/usr/local/nagios/plugins'
-        found = []
-        for dir in cfg_dirs:
-            os.path.walk(dir, lambda x, dirname, names: found.append((dirname, names)), None)
-        plugin_paths = []
+        found = []  # type: List[Tuple[str, List[str]]]
+        for c5dir in cfg_dirs:
+            os.path.walk(c5dir, lambda x, dirname, names: found.append((dirname, names)), None)
+        plugin_paths = []  # type: List[str]
         for dirname, names in found:
             for name in names:
                 if name.endswith(".cfg"):
                     path = dirname + "/" + name
                     try:
-                        for line in open(path):
-                            if line.strip() == '':
+                        for cfgline in open(path):
+                            if cfgline.strip() == '':
                                 continue
-                            parts = line.strip().split()
-                            if parts[0] == "command_line":
-                                path = parts[1]
+                            cfgparts = cfgline.strip().split()
+                            if cfgparts[0] == "command_line":
+                                path = cfgparts[1]
                                 for var, value in uservars.items():
                                     path = path.replace(var, value)
                                 if path.startswith('/') and path not in plugin_paths:
                                     plugin_paths.append(path)
-                    except:
+                    except Exception:
                         pass
 
-        for dir in plugin_paths + \
+        for c8dir in plugin_paths + \
             [ '/usr/lib/nagios/plugins',
               '/usr/lib64/nagios/plugins',
               '/usr/local/nagios/libexec',
               '/usr/local/nagios/plugins' ]:
             try:
-                mode = os.stat(dir)[stat.ST_MODE]
+                mode = os.stat(c8dir)[stat.ST_MODE]
                 if not stat.S_ISDIR(mode):
-                    dir = os.path.dirname(dir)
-                filenames = os.listdir(dir)
+                    c9dir = os.path.dirname(c8dir)
+                else:
+                    c9dir = c8dir
+                filenames = os.listdir(c9dir)
 
                 for filename in filenames:
                     if filename == 'check_icmp':
-                        result['check_icmp_path'] = dir + '/' + filename
+                        result['check_icmp_path'] = c9dir + '/' + filename
                         break
-            except:
+            except Exception:
                 pass
 
         # Die Basis-Url fuer Nagios ist leider auch nicht immer
@@ -597,24 +597,24 @@ try:
         try:
             result['nagiosurl'] = cgiconf['url_html_path']
             result['cgiurl'] = result['nagiosurl'] + "/cgi-bin"
-        except:
+        except Exception:
             pass
 
         # Suche eine Gruppe, die Nagios mit dem Apache gemeinsam
         # hat. Diese brauchen wir z.B. für logwatch
         try:
-            wwwuser, wwwgroup, apache_confdir, nagios_htpasswd_file, nagios_auth_name = \
-                     find_apache_properties(nagiosuser, result['htdocsdir'])
-            if wwwuser:
-                result['wwwuser'] = wwwuser
+            the_wwwuser, wwwgroup, the_apache_confdir, the_nagios_htpasswd_file, the_nagios_auth_name = \
+                     find_apache_properties(the_nagiosuser, result['htdocsdir'])
+            if the_wwwuser:
+                result['wwwuser'] = the_wwwuser
             if wwwgroup:
                 result['wwwgroup'] = wwwgroup
-            if apache_confdir:
-                result['apache_config_dir'] = apache_confdir
-            if nagios_htpasswd_file:
-                result['htpasswd_file'] = nagios_htpasswd_file
-            if nagios_auth_name:
-                result['nagios_auth_name'] = nagios_auth_name
+            if the_apache_confdir:
+                result['apache_config_dir'] = the_apache_confdir
+            if the_nagios_htpasswd_file:
+                result['htpasswd_file'] = the_nagios_htpasswd_file
+            if the_nagios_auth_name:
+                result['nagios_auth_name'] = the_nagios_auth_name
         except Exception as e:
             sys.stderr.write("\033[1;41;35m Cannot determine Apache properties. \033[0m\n"
                              "Reason: %s\n" % e)
@@ -638,7 +638,7 @@ try:
             print("# NOT DETECTED: %s" % var)
 
 except Sorry as e:
-    sys.stderr.write("\033[1;41;35m Sorry: %s \033[0m\n" % e.reason)
+    sys.stderr.write("\033[1;41;35m Sorry: %s \033[0m\n" % e.args[0])
     sys.exit(1)
 
 except Exception as e:

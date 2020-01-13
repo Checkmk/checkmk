@@ -1852,4 +1852,21 @@ class FakeCloudwatchClient(object):
         }
 
 
+class FakeServiceQuotasClient(object):
+    def list_service_quotas(self, ServiceCode):
+        q_val = Float('Value')
+        return {
+            'Quotas': [{
+                "QuotaName": name,
+                'Value': q_val.create(None, None)
+            } for name in [
+                'Running On-Demand F instances',
+                'Running On-Demand G instances',
+                'Running On-Demand P instances',
+                'Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances',
+                'Running On-Demand X instances',
+            ]]
+        }
+
+
 #.

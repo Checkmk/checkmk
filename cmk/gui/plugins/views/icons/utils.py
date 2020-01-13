@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import abc
-from typing import Union, Optional, Tuple  # pylint: disable=unused-import
+from typing import List, Optional, Tuple, TYPE_CHECKING, Union  # pylint: disable=unused-import
 import six
 
 import cmk.gui.config as config
@@ -36,6 +36,9 @@ from cmk.gui.permissions import (
     PermissionSection,
     declare_permission,
 )
+
+if TYPE_CHECKING:
+    from cmk.gui.htmllib import HTML  # pylint: disable=unused-import
 
 
 @permission_section_registry.register

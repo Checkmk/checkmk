@@ -54,7 +54,8 @@ check_info["domino_users"] = {
     "inventory_function": inventory_domino_users,
     "service_description": "Domino Users",
     "has_perfdata": True,
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.311.1.1.3.1.2",
+    "snmp_scan_function": scan_domino,
     "snmp_info": (".1.3.6.1.4.1.334.72.1.1.6.3", [6]),
-    "group": "domino_users"
+    "includes": ["domino.include"],
+    "group": "domino_users",
 }

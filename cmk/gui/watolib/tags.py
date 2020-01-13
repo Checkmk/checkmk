@@ -47,7 +47,7 @@ class TagConfigFile(WatoSimpleConfigFile):
     the pre 1.6 tag configuration from hosttags.mk
 
     When saving the configuration it also writes out the tags.mk for
-    the cmk_base world.
+    the cmk.base world.
     """
     def __init__(self):
         file_path = Path(multisite_dir()) / "tags.mk"
@@ -59,7 +59,7 @@ class TagConfigFile(WatoSimpleConfigFile):
         return super(TagConfigFile, self)._load_file(lock=lock)
 
     def _pre_16_hosttags_path(self):
-        return Path(multisite_dir()).joinpath("hosttags.mk")
+        return Path(multisite_dir(), "hosttags.mk")
 
     def _load_pre_16_config(self, lock):
         legacy_cfg = store.load_mk_file(str(self._pre_16_hosttags_path()), {

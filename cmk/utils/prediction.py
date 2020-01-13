@@ -23,16 +23,15 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+import json
 import logging
 import os
-import json
 import time
+from typing import List, Optional, Tuple  # pylint: disable=unused-import
 
 import six
-# suppress "Cannot find module" error from mypy
-import livestatus  # type: ignore
-from livestatus import MKLivestatusNotFoundError
 
+import livestatus
 from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.debug
 from cmk.utils.log import VERBOSE
@@ -60,6 +59,30 @@ def rrd_timestamps(twindow):
     return [t + step for t in range(start, end, step)]
 
 
+def aggregation_functions(series, aggr):
+    # type: (List[float], Optional[str]) -> Optional[float]
+    """Aggregate data in series list according to aggr
+
+    If series has None values they are dropped before aggregation"""
+    if aggr is None:
+        aggr = "max"
+    aggr = aggr.lower()
+
+    if not series or all(x is None for x in series):
+        return None
+
+    series = [x for x in series if x is not None]
+
+    if aggr == 'average':
+        return sum(series) / float(len(series))
+    if aggr == 'max':
+        return max(series)
+    if aggr == 'min':
+        return min(series)
+
+    raise ValueError("Invalid Aggregation function %s, only max, min, average allowed" % aggr)
+
+
 class TimeSeries(object):
     """Describes the returned time series returned by livestatus
 
@@ -77,16 +100,14 @@ class TimeSeries(object):
 
     """
     def __init__(self, data, timewindow=None):
-        if timewindow:
-            self.start = timewindow[0]
-            self.end = timewindow[1]
-            self.step = timewindow[2]
-            self.values = data
-        else:
-            self.start = data[0]
-            self.end = data[1]
-            self.step = data[2]
-            self.values = data[3:]
+        # type: (List[float], Optional[Tuple[float,float,float]]) -> None
+        if timewindow is None:
+            timewindow = data[0], data[1], data[2]
+            data = data[3:]
+        self.start = timewindow[0]
+        self.end = timewindow[1]
+        self.step = timewindow[2]
+        self.values = data
 
     @property
     def twindow(self):
@@ -110,6 +131,35 @@ class TimeSeries(object):
 
             return upsa
 
+        return self.values
+
+    def downsample(self, twindow, cf='max'):
+        """Downsample time series by consolidation function
+
+        twindow : 3-tuple, (start, end, step)
+             description of target time interval
+        cf : str ('max', 'average', 'min')
+             consolidation function imitating RRD methods
+"""
+        dwsa = []
+        i = 0
+        co = []  # type: List[float]
+        start, end, step = twindow
+        desired_times = rrd_timestamps(twindow)
+        if start != self.start or end != self.end or step != self.step:
+            for t, val in self.time_data_pairs():
+                if t > desired_times[i]:
+                    dwsa.append(aggregation_functions(co, cf))
+                    co = []
+                    i += 1
+                co.append(val)
+
+            diff_len = len(desired_times) - len(dwsa)
+            if diff_len > 0:
+                dwsa.append(aggregation_functions(co, cf))
+                dwsa = dwsa + [None] * (diff_len - 1)
+
+            return dwsa
         return self.values
 
     def time_data_pairs(self):
@@ -194,7 +244,7 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
         connection = livestatus.SingleSiteConnection("unix:%s" %
                                                      cmk.utils.paths.livestatus_unix_socket)
         response = connection.query_value(lql)
-    except MKLivestatusNotFoundError as e:
+    except livestatus.MKLivestatusNotFoundError as e:
         if cmk.utils.debug.enabled():
             raise
         raise MKGeneralException("Cannot get historic metrics via Livestatus: %s" % e)
@@ -256,7 +306,7 @@ def estimate_levels(reference, params, levels_factor):
         return ref_value, [None, None, None, None]
 
     stdev = reference["stdev"]
-    levels = []
+    levels = []  # type: List[Optional[float]]
     for what, sig in [("upper", 1), ("lower", -1)]:
         p = "levels_" + what
         if p in params:

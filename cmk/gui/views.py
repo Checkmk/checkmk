@@ -31,7 +31,7 @@ import os
 import pprint
 import traceback
 import json
-from typing import Dict, Optional, List  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Sequence, Set  # pylint: disable=unused-import
 import six
 
 import livestatus
@@ -133,12 +133,12 @@ loaded_with_language = False
 
 # TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
 # will be displayed.
-multisite_painter_options = {}
-multisite_layouts = {}
-multisite_commands = []
-multisite_datasources = {}
-multisite_painters = {}
-multisite_sorters = {}
+multisite_painter_options = {}  # type: Dict[str, Any]
+multisite_layouts = {}  # type: Dict[str, Any]
+multisite_commands = []  # type: List[Dict[str, Any]]
+multisite_datasources = {}  # type: Dict[str, Any]
+multisite_painters = {}  # type: Dict[str, Dict[str, Any]]
+multisite_sorters = {}  # type: Dict[str, Any]
 
 
 @visual_type_registry.register
@@ -205,11 +205,12 @@ class PermissionSectionViews(PermissionSection):
 
 class View(object):
     """Manages processing of a single view, e.g. during rendering"""
-    def __init__(self, view_name, view_spec):
-        # type: (str, Dict) -> None
+    def __init__(self, view_name, view_spec, context):
+        # type: (str, Dict, Dict) -> None
         super(View, self).__init__()
         self.name = view_name
         self.spec = view_spec
+        self.context = context
         self._row_limit = None  # type: Optional[int]
         self._only_sites = None  # type: Optional[List[str]]
         self._user_sorters = None  # type: Optional[Tuple]
@@ -232,9 +233,9 @@ class View(object):
 
     @property
     def row_cells(self):
-        # type: () -> List[Cell]
+        # type: () -> Sequence[Cell]
         """Regular cells are displaying information about the rows of the type the view is about"""
-        cells = []
+        cells = []  # type: List[Cell]
         for e in self.spec["painters"]:
             if not painter_exists(e):
                 continue
@@ -393,8 +394,10 @@ class GUIViewRenderer(ViewRenderer):
             # If we are currently within an action (confirming or executing), then
             # we display only the selected rows (if checkbox mode is active)
             elif show_checkboxes and html.do_actions():
-                rows = filter_selected_rows(view_spec, rows,
-                                            weblib.get_rowselection('view-' + view_spec['name']))
+                rows = filter_selected_rows(
+                    view_spec, rows,
+                    config.user.get_rowselection(weblib.selection_id(),
+                                                 'view-' + view_spec['name']))
 
             if html.do_actions() and html.transaction_valid():  # submit button pressed, no reload
                 try:
@@ -445,7 +448,9 @@ class GUIViewRenderer(ViewRenderer):
             headinfo = "%d %s" % (row_count, _("row") if row_count == 1 else _("rows"))
             if show_checkboxes:
                 selected = filter_selected_rows(
-                    view_spec, rows, weblib.get_rowselection('view-' + view_spec['name']))
+                    view_spec, rows,
+                    config.user.get_rowselection(weblib.selection_id(),
+                                                 'view-' + view_spec['name']))
                 headinfo = "%d/%s" % (len(selected), headinfo)
 
             if html.output_format == "html":
@@ -702,8 +707,11 @@ def DatasourceSelection():
 
 
 @cmk.gui.pages.register("create_view")
-def page_create_view(next_url=None):
+def page_create_view():
+    show_create_view_dialog()
 
+
+def show_create_view_dialog(next_url=None):
     vs_ds = DatasourceSelection()
 
     ds = 'services'  # Default selection
@@ -1235,15 +1243,19 @@ def show_filter_form(is_open, filters):
 def page_view():
     view_spec, view_name = html.get_item_input("view_name", get_permitted_views())
 
-    view = View(view_name, view_spec)
+    datasource = data_source_registry[view_spec["datasource"]]()
+    context = visuals.get_merged_context(
+        visuals.get_context_from_uri_vars(datasource.infos),
+        view_spec["context"],
+    )
+
+    view = View(view_name, view_spec, context)
     view.row_limit = get_limit()
     view.only_sites = get_only_sites()
     view.user_sorters = get_user_sorters()
 
     # Gather the page context which is needed for the "add to visual" popup menu
     # to add e.g. views to dashboards or reports
-    context = visuals.get_context_from_uri_vars(view.datasource.infos)
-    context.update(visuals.get_singlecontext_html_vars(view.spec))
     html.set_page_context(context)
 
     painter_options = PainterOptions.get_instance()
@@ -1308,7 +1320,7 @@ def show_view(view, view_renderer, only_count=False):
     visuals.add_context_to_uri_vars(view.spec, only_count)
 
     # Check that all needed information for configured single contexts are available
-    visuals.verify_single_contexts('views', view.spec, view.datasource.link_filters)
+    visuals.verify_single_infos(view.spec, view.context)
 
     all_active_filters = _get_all_active_filters(view)
     filterheaders = get_livestatus_filter_headers(view, all_active_filters)
@@ -1317,12 +1329,7 @@ def show_view(view, view_renderer, only_count=False):
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see later)
     if html.request.var("mode") == "availability" and ("aggr" not in view.datasource.infos or
                                                        html.request.var("timeline_aggr")):
-
-        context = visuals.get_context_from_uri_vars(view.datasource.infos)
-        context.update(visuals.get_singlecontext_html_vars(view.spec))
-
-        return cmk.gui.plugins.views.availability.render_availability_page(
-            view, context, filterheaders)
+        return cmk.gui.plugins.views.availability.render_availability_page(view, filterheaders)
 
     headers = filterheaders + view.spec.get("add_headers", "")
 
@@ -1419,7 +1426,7 @@ def show_view(view, view_renderer, only_count=False):
         layout = layout_class()
 
     # Set browser reload
-    if browser_reload and display_options.enabled(display_options.R) and not only_count:
+    if browser_reload and display_options.enabled(display_options.R):
         html.set_browser_reload(browser_reload)
 
     if config.enable_sounds and config.sounds and html.output_format == "html":
@@ -1588,7 +1595,7 @@ def _do_table_join(view, master_rows, master_filters, sorters):
         row["JOIN"] = joininfo
 
 
-g_alarm_sound_states = set([])
+g_alarm_sound_states = set([])  # type: Set[str]
 
 
 def clear_alarm_sound_states():
@@ -1898,12 +1905,12 @@ def update_context_links(enable_command_toggle, enable_checkbox_toggle):
 @cmk.gui.pages.register("count_context_button")
 def ajax_count_button():
     id_ = html.request.var("id")
-    counts = config.user.load_file("buttoncounts", {})
+    counts = config.user.button_counts
     for i in counts:
         counts[i] *= 0.95
     counts.setdefault(id_, 0)
     counts[id_] += 1
-    config.user.save_file("buttoncounts", counts)
+    config.user.save_button_counts()
 
 
 # Sort data according to list of sorters. The tablename
@@ -2396,10 +2403,7 @@ def ajax_popup_action_menu():
                 if url.startswith('onclick:'):
                     onclick = url[8:]
                     url = 'javascript:void(0);'
-                target = None
-                if target_frame and target_frame != "_self":
-                    target = target_frame
-                html.open_a(href=url, target=target, onclick=onclick)
+                html.open_a(href=url, target=target_frame, onclick=onclick)
 
             html.icon('', icon_name)
             if title:

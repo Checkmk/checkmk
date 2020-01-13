@@ -4,6 +4,7 @@
 #include "service_processor.h"
 
 #include <shlobj_core.h>
+#include <yaml-cpp/yaml.h>
 
 #include <chrono>
 #include <cstdint>  // wchar_t when compiler options set weird
@@ -15,7 +16,6 @@
 #include "realtime.h"
 #include "tools/_process.h"
 #include "upgrade.h"
-#include "yaml-cpp/yaml.h"
 
 namespace cma::srv {
 extern bool global_stop_signaled;  // semi-hidden global variable for global
@@ -675,7 +675,8 @@ bool SystemMailboxCallback(const cma::MailSlot*, const void* data, int len,
             std::string cmd(static_cast<const char*>(dt->data()),
                             static_cast<size_t>(dt->length()));
             std::string peer(cma::commander::kMainPeer);
-            cma::commander::RunCommand(peer, cmd);
+            auto rcp = cma::commander::ObtainRunCommandProcessor();
+            if (rcp) rcp(peer, cmd);
 
             break;
         }

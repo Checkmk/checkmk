@@ -35,6 +35,9 @@
 namespace wtools {
 constexpr const wchar_t* kWToolsLogName = L"check_mk_wtools.log";
 
+// returns <exit_code, 0>, <0, error> or <-1, error>
+std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid);
+
 uint32_t GetParentPid(uint32_t pid);
 
 //
@@ -259,6 +262,10 @@ public:
     // returns process id
     uint32_t goExecAsJob(std::wstring_view CommandLine) noexcept;
 
+    // returns process id
+    uint32_t goExecAsJobAndUser(std::wstring_view user,
+                                std::wstring_view password,
+                                std::wstring_view CommandLine) noexcept;
     // returns process id
     uint32_t goExecAsUpdater(std::wstring_view CommandLine) noexcept;
 
@@ -531,6 +538,10 @@ inline std::string ConvertToUTF8(const std::wstring_view Src) noexcept {
         return "";
     }
 #endif  // endif
+}
+
+inline std::string ConvertToUTF8(const std::string_view src) noexcept {
+    return std::string(src);
 }
 
 // standard Windows converter from Microsoft
@@ -1011,6 +1022,17 @@ private:
     _bstr_t path_;       // path
     AceList* ace_list_;  // list of Access Control Entries
 };
+
+std::string ReadWholeFile(const std::filesystem::path& fname) noexcept;
+
+bool PatchFileLineEnding(const std::filesystem::path& fname) noexcept;
+
+using InternalUser = std::pair<std::wstring, std::wstring>;  // name,pwd
+
+InternalUser CreateCmaUserInGroup(const std::wstring& group_name) noexcept;
+bool RemoveCmaUser(const std::wstring& user_name) noexcept;
+std::wstring GenerateRandomString(size_t max_length) noexcept;
+std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept;
 
 }  // namespace wtools
 

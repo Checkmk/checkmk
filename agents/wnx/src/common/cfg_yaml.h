@@ -27,6 +27,7 @@ constexpr const char* const kFileInfo = "fileinfo";
 constexpr const char* const kMrpe = "mrpe";
 constexpr const char* const kLogWatchEvent = "logwatch";
 constexpr const char* const kLocal = "local";
+constexpr const char* const kSystem = "system";
 }  // namespace groups
 
 // ALL name of variables in the YAML
@@ -92,6 +93,9 @@ const char* const kPluginRetry = "retry_count";   // int
 const char* const kPluginCacheAge = "cache_age";  // int
 const char* const kPluginExe = "exe";             // string
 const char* const kPluginRun = "run";             // bool
+
+const char* const kPluginGroup = "group";  // string
+const char* const kPluginUser = "user";    // string
 
 // group "winperf"
 // root
@@ -166,5 +170,29 @@ const char* const kFileInfoPath = "path";  // sequence
 const char* const kMrpeConfig = "config";      // sequence
 const char* const kMrpeParallel = "parallel";  // boool
 
+// group "system"
+constexpr const char* const kFirewall = "firewall";  // dictionary
+constexpr const char* const kFirewallMode = "mode";  // string
+constexpr const char* const kFirewallPort = "port";  // string
+
+constexpr const char* const kCleanupUninstall = "cleanup_uninstall";  // string
+
 }  // namespace vars
+
+namespace values {
+// Firewall.Mode
+constexpr const char* const kModeConfigure = "configure";  // install [*]
+constexpr const char* const kModeNone = "none";            // does noting
+constexpr const char* const kModeRemove = "remove";        // remove
+
+// Firewall.Port
+constexpr const char* const kFirewallPortAll = "all";    // open all ports
+constexpr const char* const kFirewallPortAuto = "auto";  // port in config, [*]
+
+// CleanupUninstall
+constexpr const char* const kCleanupNone = "none";    // delete nothing
+constexpr const char* const kCleanupSmart = "smart";  // delete only owned [*]
+constexpr const char* const kCleanupAll = "all";      // delete all
+
+}  // namespace values
 }  // namespace cma::cfg

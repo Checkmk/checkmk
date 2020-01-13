@@ -488,6 +488,7 @@ def get_av_computation_options():
              unit=_("status entries"),
              minvalue=0,
              default_value=5000,
+             size=6,
          )),
     ]
 
@@ -1147,7 +1148,7 @@ def melt_short_intervals(entries, duration, dont_merge):
 
 def save_annotations(annotations):
     path = cmk.utils.paths.var_dir + "/availability_annotations.mk"
-    store.save_data_to_file(path, annotations)
+    store.save_object_to_file(path, annotations)
 
 
 def load_annotations(lock=False):
@@ -1156,7 +1157,7 @@ def load_annotations(lock=False):
         # Support legacy old wrong name-clashing path
         path = cmk.utils.paths.var_dir + "/web/statehist_annotations.mk"
 
-    return store.load_data_from_file(path, {}, lock)
+    return store.load_object_from_file(path, default={}, lock=lock)
 
 
 def update_annotations(site_host_svc, annotation, replace_existing):

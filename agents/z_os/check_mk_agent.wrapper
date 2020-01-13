@@ -1,0 +1,8 @@
+#!/bin/sh
+#exec 2>&-
+#exit
+export _EDC_ADD_ERRNO2=1
+export PATH=/bin
+set -o pipecurrent
+cd $(dirname $0)/
+. ./check_mk_agent | iconv -fIM1047 -tUTF8 | cat

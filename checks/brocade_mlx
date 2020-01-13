@@ -149,17 +149,26 @@ def inventory_brocade_mlx_module_mem(info):
 
 def check_brocade_mlx_module_mem(item, params, info):
     parsed = parse_brocade_mlx_module_mem(info)
-    if item not in parsed:
-        yield 3, '%s not found in agent output' % item
+    data = parsed.get(item)
+    if data is None:
         return
 
-    data = parsed[item]
     state_readable = data['state_readable']
     if state_readable.lower() != "running":
-        yield 3, "Module is not running (Current State: %s)" % state_readable
-        return
+        return 3, "Module is not running (Current State: %s)" % state_readable
 
-    yield check_memory_multiitem(params, data)
+    warn, crit = params.get("levels", (None, None))
+    mode = "abs_used" if isinstance(warn, int) else "perc_used"
+    try:
+        return check_memory_element(
+            "Usage",
+            data["mem_total"] - data["mem_avail"],
+            data["mem_total"],
+            (mode, (warn, crit)),
+            metric_name="memused",
+        )
+    except KeyError:
+        return None
 
 
 check_info["brocade_mlx.module_mem"] = {
@@ -170,7 +179,7 @@ check_info["brocade_mlx.module_mem"] = {
     "snmp_scan_function": brocade_mlx_scan,
     "has_perfdata": True,
     "group": "memory_multiitem",
-    "includes": ["memory.include"],
+    "includes": ["mem.include"],
 }
 
 #.

@@ -83,7 +83,7 @@ def _get_host(params):
         address = "$_HOSTADDRESS_%s$" % family[-1]
 
     HostSettings = collections.namedtuple("HostSettings", ("address", "port", "family", "virtual"))
-    return HostSettings(address, host.get("port"), family, host.get("virthost", address))
+    return HostSettings(address, host.get("port"), family, host.get("virthost"))
 
 
 def _get_proxy(params):
@@ -196,8 +196,30 @@ def _url_args(host, _proxy, settings):
     return args
 
 
+def _server_address(host, proxy):
+    if proxy:
+        return proxy.address
+    return host.address
+
+
+def _host_name(host, proxy, params):
+    if proxy and host.port:
+        return "%s:%s" % (host.address, host.port)
+    if proxy:
+        return host.address
+    if host.virtual:
+        return host.virtual
+    if params['mode'][0] == 'cert':
+        return host.address
+    # Don't return the address in this case, because check_http would
+    # automatically set the HTTP Host header and use HTTP/1.1 instead of
+    # HTTP/1.0. This can lead to request timeouts on hosts which are
+    # not compliant with HTTP/1.1.
+    return None
+
+
 def _common_args(host, proxy, params):
-    args = ["-H", host.virtual]
+    args = []
 
     if host.family == "ipv6":
         args.append("-6")
@@ -211,12 +233,10 @@ def _common_args(host, proxy, params):
         args += ["-p", "%s" % specify_port]
 
     # last two arguments correspond to -I/-H, respectively
-    if proxy:
-        args.append(proxy.address)
-    address = host.address
-    if proxy and host.port:
-        address += ":%s" % host.port
-    args.append(address)
+    args += [_server_address(host, proxy)]
+    host_name = _host_name(host, proxy, params)
+    if host_name:
+        args += [host_name]
 
     return args
 

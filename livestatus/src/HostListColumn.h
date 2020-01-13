@@ -30,6 +30,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "Column.h"
 #include "ListColumn.h"
 #include "contact_fwd.h"
 enum class HostState;
@@ -40,11 +41,9 @@ class RowRenderer;
 class HostListColumn : public ListColumn {
 public:
     HostListColumn(const std::string &name, const std::string &description,
-                   int indirect_offset, int extra_offset,
-                   int extra_extra_offset, int offset, MonitoringCore *mc,
+                   const Column::Offsets &offsets, MonitoringCore *mc,
                    bool show_state)
-        : ListColumn(name, description, indirect_offset, extra_offset,
-                     extra_extra_offset, offset)
+        : ListColumn(name, description, offsets)
         , _mc(mc)
         , _show_state(show_state) {}
 

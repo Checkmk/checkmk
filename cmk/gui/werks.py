@@ -178,7 +178,7 @@ def acknowledge_werks(werks, check_permission=True):
 
 
 def save_acknowledgements(acknowledged_werks):
-    store.save_data_to_file(acknowledgement_path, acknowledged_werks)
+    store.save_object_to_file(acknowledgement_path, acknowledged_werks)
 
 
 def acknowledge_all_werks(check_permission=True):
@@ -192,7 +192,7 @@ def werk_is_pre_127(werk):
 
 
 def load_acknowledgements():
-    return store.load_data_from_file(acknowledgement_path, [])
+    return store.load_object_from_file(acknowledgement_path, default=[])
 
 
 def unacknowledged_incompatible_werks():
@@ -314,7 +314,8 @@ _SORT_AND_GROUP = {
     ),
     "week": (
         cmk.utils.werks.sort_by_date,
-        lambda werk: time.strftime("%s %%U - %%Y" % _("Week"), time.localtime(werk["date"]))  #
+        lambda werk: time.strftime("%s %%U - %%Y" % _("Week").encode("utf-8"),
+                                   time.localtime(werk["date"]))  #
     ),
     None: (
         cmk.utils.werks.sort_by_date,

@@ -1,0 +1,25 @@
+Title: Temperature check GUI: fix rendering crash when rules are set
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1572871306
+Edition: cre
+Knowledge: undoc
+Level: 2
+State: unknown
+Version: 1.7.0i1
+
+10290 FIX Temperature check: fix rendering crash and reporting mismatch
+
+When a check sends a device-specific levels in a specific format
+the temperature rendering function of the service display
+could crash due to a type mismatch. This werk fixes this crash.
+
+Upon fixing this crash another bug was discovered and fixed. In the case
+of user specified levels being set and the service being in mode
+"Use your own levels if present, otherwise the device's", the device
+levels were not ignored and thus the wrong levels were checked. This
+is now fixed as well.
+
+No additional action is needed.
+

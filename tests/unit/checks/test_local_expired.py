@@ -1,5 +1,5 @@
 import pytest  # type: ignore
-from cmk_base.check_api import MKCounterWrapped
+from cmk.base.check_api import MKCounterWrapped
 from checktestlib import CheckResult
 
 pytestmark = pytest.mark.checks

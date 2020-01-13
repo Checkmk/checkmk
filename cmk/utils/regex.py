@@ -26,16 +26,16 @@
 """This module wraps some regex handling functions used by Check_MK"""
 
 import re
-from typing import Dict, Pattern, Tuple  # pylint:disable=unused-import
+from typing import Any, AnyStr, Dict, Pattern, Tuple  # pylint:disable=unused-import
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
-g_compiled_regexes = {}  # type: Dict[Tuple[str, int], Pattern]
+g_compiled_regexes = {}  # type: Dict[Tuple[Any, int], Pattern]
 
 
 def regex(pattern, flags=0):
-    # type: (str, int) -> Pattern
+    # type: (AnyStr, int) -> Pattern[AnyStr]
     """Compile regex or look it up in already compiled regexes.
     (compiling is a CPU consuming process. We cache compiled regexes)."""
     try:

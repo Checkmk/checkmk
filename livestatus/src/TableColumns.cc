@@ -32,17 +32,17 @@
 
 TableColumns::TableColumns(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<ColumnsColumn>(
-        "table", "The name of the table", -1, -1, -1, 0,
+        "table", "The name of the table", Column::Offsets{},
         ColumnsColumn::Type::table, *this));
     addColumn(std::make_unique<ColumnsColumn>(
-        "name", "The name of the column within the table", -1, -1, -1, 0,
+        "name", "The name of the column within the table", Column::Offsets{},
         ColumnsColumn::Type::name, *this));
     addColumn(std::make_unique<ColumnsColumn>(
-        "description", "A description of the column", -1, -1, -1, 0,
+        "description", "A description of the column", Column::Offsets{},
         ColumnsColumn::Type::description, *this));
     addColumn(std::make_unique<ColumnsColumn>(
-        "type", "The data type of the column (int, float, string, list)", -1,
-        -1, -1, 0, ColumnsColumn::Type::type, *this));
+        "type", "The data type of the column (int, float, string, list)",
+        Column::Offsets{}, ColumnsColumn::Type::type, *this));
 }
 
 std::string TableColumns::name() const { return "columns"; }

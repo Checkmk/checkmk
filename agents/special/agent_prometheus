@@ -1,0 +1,482 @@
+#!/usr/bin/env python3
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+"""
+Special agent for monitoring Prometheus with Checkmk.
+"""
+import ast
+import sys
+import argparse
+import json
+import logging
+from typing import List, Dict, Any, Mapping, DefaultDict
+from collections import OrderedDict, defaultdict
+import requests
+
+LOGGER = logging.getLogger()  # root logger for now
+
+
+def parse_arguments(argv):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--debug",
+                        action="store_true",
+                        help='''Debug mode: raise Python exceptions''')
+    parser.add_argument("-v",
+                        "--verbose",
+                        action="count",
+                        default=0,
+                        help='''Verbose mode (for even more output use -vvv)''')
+    parser.add_argument("--timeout",
+                        default=10,
+                        type=int,
+                        help='''Timeout for individual processes in seconds (default 10)''')
+
+    args = parser.parse_args(argv)
+    return args
+
+
+def setup_logging(verbosity):
+    if verbosity >= 3:
+        lvl = logging.DEBUG
+    elif verbosity == 2:
+        lvl = logging.INFO
+    elif verbosity == 1:
+        lvl = logging.WARN
+    else:
+        logging.disable(logging.CRITICAL)
+        lvl = logging.CRITICAL
+    logging.basicConfig(level=lvl, format='%(asctime)s %(levelname)s %(message)s')
+
+
+class ABCDataSource:
+    """
+    All Prometheus metrics serving instances will be referred as Exporters.
+    Not to confuse with actual Exporters since some softwares (non Exporters)
+    naturally serve metrics.
+    """
+    def __init__(self, api_client):
+        self.api_client = api_client
+        self._sections = {}
+
+
+class PrometheusServer:
+    """
+    Query and process general information from the Prometheus Server including
+    its own status and the connected scrape targets
+    """
+    def __init__(self, api_client):
+        self.api_client = api_client
+
+    def scrape_targets_health(self):
+        result = {}
+        for scrape_target_name, attributes in self.api_client.scrape_targets_attributes():
+            result[scrape_target_name] = {
+                "health": attributes["health"],
+                "lastScrape": attributes["lastScrape"],
+                "labels": attributes["labels"]
+            }
+        return result
+
+    def health(self):
+        response = self.api_client.query_static_endpoint("/-/healthy")
+        return {"status_code": response.status_code, "status_text": response.reason}
+
+
+class PrometheusAPI:
+    """
+    Realizes communication with the Prometheus API
+    """
+    def __init__(self, server_address):
+        self.server_address = "http://%s" % server_address
+        self.api_endpoint = "%s/api/v1" % self.server_address
+        self.scrape_targets_dict = self._connected_scrape_targets()
+
+    def perform_multi_result_promql(self, promql_expression, label_for_piggyback=None):
+        """Performs a PromQL query where a multi metric response is expected.
+
+        Args:
+            promql_expression: PromQL query expression
+            label_for_piggyback: Key in order to extract the value from the individual metric labels. This value
+                                 is used as piggyback host name
+
+        Returns: A dictionary where the key is the piggyback host name and the value is a list of processed
+                 metric elements
+
+        """
+        try:
+            promql_response = self.query_promql(promql_expression)
+        except (KeyError, ValueError, requests.exceptions.Timeout) as exc:
+            LOGGER.exception(exc)
+            return {}
+
+        result = {}
+        metric_label_collection = []  # in preparation label extraction algorithm
+        for metric_info in self._process_multi_result(promql_response):
+            metric_label_collection.append(metric_info["labels"])
+
+            if label_for_piggyback is not None:
+                piggyback_host = self.extract_metric_label(metric_info, label_for_piggyback)
+            else:
+                piggyback_host = self.identify_metric_origin(metric_info)
+
+            result.setdefault(piggyback_host, {}).setdefault("service_metrics",
+                                                             []).append(metric_info)
+        return result
+
+    def _process_multi_result(self, promql_response):
+        """Processes the individual metrics from the PromQL query response
+
+        Args:
+            promql_response: List resulting from the PromQL query response
+
+        Returns: The processed individual metrics
+
+        """
+        for metric in promql_response:
+            metric_info = self._process_single_result([metric])
+
+            if "invalid_info" in metric_info:
+                continue
+
+            metric_info.update({"labels": (metric["metric"])})
+            yield metric_info
+
+    @staticmethod
+    def _process_single_result(promql_response):
+        """Obtain the metric value of the PromQL query response
+
+        Args:
+            promql_response: Dict which contains the metric information
+
+        Returns: Single Metric Value or Error details of failed attempt
+        """
+        if len(promql_response) == 1 and "value" in promql_response[0]:
+            return {"value": promql_response[0]["value"][1]}
+
+        # different cases for invalid/failed query expression
+        inv_info = {
+            0: "query error",
+            1: "no value",
+        }.get(len(promql_response), "unsupported query")
+        return {"invalid_info": inv_info}
+
+    def perform_specified_promql_queries(self, custom_services):
+        """Prepare Host & Piggyback data from custom defined PromQL expressions
+
+        For custom Prometheus services, only allow PromQL expressions which
+        return one single Prometheus metric.
+
+        Args:
+            custom_services: list of dicts where each dict specifies the details
+                             a Prometheus custom service including the associating
+                             metrics. Each metric is the result of a PromQL expression
+
+        Returns: dict where the key is the Piggyback Host Name and the value is
+                 a list of services for that host. Each list element
+                 contains the information of one service including the service metrics
+
+        """
+        result: Dict[str, Dict] = {}
+        for service in custom_services:
+            # Per default assign resulting service to Prometheus Host
+            host_name = service.get("host_name", "")
+            host_services = result.setdefault(host_name, {})
+
+            service_description = service["service_description"]
+            service_metrics = []
+            for metric in service["metric_components"]:
+                metric_info = {
+                    "name": metric["metric_name"],
+                    "promql_query": metric["promql_query"]
+                }
+                if "metric_label" in metric:
+                    metric_info.update({"label": metric["metric_label"]})
+
+                try:
+                    promql_response = self.query_promql(metric["promql_query"])
+                except (KeyError, ValueError, requests.exceptions.Timeout) as exc:
+                    LOGGER.warning(exc)
+                    continue
+                metric_info.update(self._process_single_result(promql_response))
+                service_metrics.append(metric_info)
+
+            host_services[service_description] = {
+                "service_metrics": service_metrics,
+            }
+        return result
+
+    @staticmethod
+    def _process_json_request(request):
+        response = requests.get(request)
+        response.raise_for_status()
+        return response.json()
+
+    @staticmethod
+    def extract_metric_label(promql_metric_info, label_key):
+        return promql_metric_info["labels"][label_key]
+
+    @staticmethod
+    def identify_metric_origin(promql_metric_info):
+        return "{job}-{instance}".format(**promql_metric_info["metric"])
+
+    def query_promql(self, promql):
+        """Query the Prometheus API using a PromQL Expression expecting a json response
+
+        Args:
+            promql: Param which contains the PromQL Expression
+
+        Returns:
+            Returns a list of dictionaries with each containing information about the specific metric
+        """
+        promql_request = "%s/query?query=%s" % (self.api_endpoint, promql)
+        result = self._process_json_request(promql_request)["data"]["result"]
+        return result
+
+    def query_json_endpoint(self, endpoint):
+        """Query the given endpoint of the Prometheus API expecting a json response
+
+        Args:
+            endpoint: Param which contains the Prometheus API endpoint to be queried
+
+        Returns:
+            Returns a response object containing the json response
+        """
+
+        endpoint_request = "%s%s" % (self.server_address, endpoint)
+        result = self._process_json_request(endpoint_request)
+        return result
+
+    def query_static_endpoint(self, endpoint):
+        """Query the given endpoint of the Prometheus API expecting a text response
+
+        Args:
+            endpoint: Param which contains the Prometheus API endpoint to be queried
+
+        Returns:
+            Returns a response object containing the status code and description
+        """
+
+        endpoint_request = "%s%s" % (self.server_address, endpoint)
+        response = requests.get(endpoint_request)
+        response.raise_for_status()
+        return response
+
+    def scrape_targets_attributes(self):
+        """Format the scrape_targets_dict for information processing
+
+        Returns:
+              Tuples consisting of the Scrape Target name and its general attributes. The
+              job-instance labels combination is hereby omitted
+
+        """
+        for _scrape_target_label, info in self.scrape_targets_dict.items():
+            scrape_target_name = info["name"]
+            yield scrape_target_name, info["attributes"]
+
+    def _connected_scrape_targets(self):
+        """Query and parse the information concerning the connected Scrape Targets
+
+        Returns:
+            A dictionary having the job-instance labels combination of each scrape target
+            as keys and the values being dictionaries including the name and the general attributes
+            of the scrape target. Having the job-label combination allows to unique identify each scrape
+            target
+        """
+        result = self.query_json_endpoint("/api/v1/targets")
+        scrape_targets = self.test(result)
+        return scrape_targets
+
+    def test(self, result):
+        """
+
+        Args:
+            result:
+
+        Returns:
+
+
+        """
+        scrape_targets = {}
+        scrape_target_names: DefaultDict[str, int] = defaultdict(int)
+        for scrape_target_info in result["data"]["activeTargets"]:
+            scrape_target_labels = scrape_target_info["labels"]
+            job_label = scrape_target_labels["job"]
+
+            if job_label not in scrape_target_names:
+                scrape_target_name = job_label
+            else:
+                scrape_target_name = "%s-%s" % (job_label, scrape_target_names[job_label])
+
+            scrape_target_names[job_label] += 1
+            instance_label = scrape_target_labels["instance"]
+            scrape_targets.update({
+                "%s:%s" % (job_label, instance_label): {
+                    "name": scrape_target_name,
+                    "attributes": scrape_target_info
+                }
+            })
+        return scrape_targets
+
+
+class Section:
+    """
+    An agent section.
+    """
+    def __init__(self) -> None:
+        self._content: OrderedDict[str, Dict[str, Any]] = OrderedDict()
+
+    def insert(self, check_data: Dict[str, Any]) -> None:
+        for key, value in check_data.items():
+            if key not in self._content:
+                self._content[key] = value
+            else:
+                if isinstance(value, dict):
+                    self._content[key].update(value)
+                else:
+                    raise ValueError('Key %s is already present and cannot be merged' % key)
+
+    def output(self) -> str:
+        return json.dumps(self._content)
+
+
+class PiggybackHost:
+    """
+    An element that bundles a collection of sections.
+    """
+    def __init__(self) -> None:
+        super(PiggybackHost, self).__init__()
+        self._sections: OrderedDict[str, Section] = OrderedDict()
+
+    def get(self, section_name: str) -> Section:
+        if section_name not in self._sections:
+            self._sections[section_name] = Section()
+        return self._sections[section_name]
+
+    def output(self) -> List[str]:
+        data = []
+        for name, section in self._sections.items():
+            data.append('<<<%s:sep(0)>>>' % name)
+            data.append(section.output())
+        return data
+
+
+class PiggybackGroup:
+    """
+    A group of elements where an element is e.g. a piggyback host.
+    """
+    def __init__(self) -> None:
+        self._elements: OrderedDict[str, PiggybackHost] = OrderedDict()
+
+    def get(self, element_name: str) -> PiggybackHost:
+        if element_name not in self._elements:
+            self._elements[element_name] = PiggybackHost()
+        return self._elements[element_name]
+
+    def join(self, section_name: str, pairs: Mapping[str, Dict[str, Any]]) -> "PiggybackGroup":
+        for element_name, data in pairs.items():
+            section = self.get(element_name).get(section_name)
+            section.insert(data)
+        return self
+
+    def output(self, piggyback_prefix: str = "") -> List[str]:
+        data = []
+        for name, element in self._elements.items():
+            data.append('<<<<%s>>>>' % (piggyback_prefix + name))
+            data.extend(element.output())
+            data.append('<<<<>>>>')
+        return data
+
+
+class ApiData:
+    """
+    Hub for all various metrics coming from different sources including the Prometheus
+    Server & the Prometheus Exporters
+    """
+    def __init__(self, api_client):
+        self.api_client = api_client
+        self.prometheus_server = PrometheusServer(api_client)
+
+    def promql_section(self, custom_services):
+        logging.info("Prometheus PromQl queries")
+        e = PiggybackGroup()
+        e.join('prometheus_custom',
+               self.api_client.perform_specified_promql_queries(custom_services))
+        return '\n'.join(e.output())
+
+    def server_info_section(self):
+        logging.info('Prometheus Server Info')
+        g = PiggybackHost()
+        g.get('prometheus_api_server').insert(self.prometheus_server.health())
+        return '\n'.join(g.output())
+
+    def scrape_targets_section(self):
+        e = PiggybackGroup()
+        e.join('prometheus_scrape_target', self.prometheus_server.scrape_targets_health())
+        return '\n'.join(e.output())
+
+
+def _extract_config_args(config):
+    server_address = config["host_address"]
+    if "port" in config:
+        server_address += ":%s" % config["port"]
+    return {
+        "server_address": server_address,
+        "custom_services": config.get("promql_checks", []),
+    }
+
+
+def _get_host_label(labels):
+    return "%s:%s" % (labels["job"], labels["instance"])
+
+
+class ApiError(Exception):
+    pass
+
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
+    args = parse_arguments(argv)
+
+    try:
+        config = ast.literal_eval(sys.stdin.read())
+        config_args = _extract_config_args(config)
+        # default cases always must be there
+        api_client = PrometheusAPI(config_args["server_address"])
+        api_data = ApiData(api_client)
+        print(api_data.server_info_section())
+        print(api_data.scrape_targets_section())
+        print(api_data.promql_section(config_args["custom_services"]))
+
+    except Exception as e:
+        if args.debug:
+            raise
+        sys.stderr.write("%s\n" % e)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

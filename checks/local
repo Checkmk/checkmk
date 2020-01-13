@@ -34,6 +34,8 @@
 # P Has-no-var - This has no variable
 # P No-Text hirn=-8;-20
 
+import shlex
+
 
 def float_ignore_uom(value):
     '''16MB -> 16.0'''
@@ -80,7 +82,7 @@ def _parse_perfentry(entry):
     '''parse single perfdata entry
 
     return a named tuple containing check_levels compatible levels field, as well as
-    cmk_base compatible perfdata 6-tuple.
+    cmk.base compatible perfdata 6-tuple.
 
     This function may raise Index- or ValueErrors.
     '''
@@ -145,7 +147,13 @@ def parse_local(info):
     now = time.time()
     parsed = {}
     for line in info:
-        node, stripped_line = line[0], line[1:]
+        # allows blank characters in service description
+        if len(line) == 2:
+            # from agent version 1.7, local section with ":sep(0)"
+            stripped_line = shlex.split(line[1])
+        else:
+            stripped_line = line[1:]
+        node = line[0]
         expired, stripped_line = _parse_cache(stripped_line, now)
         if not _is_valid_line(stripped_line):
             # just pass on the line, to report the offending ouput

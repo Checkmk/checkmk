@@ -5,10 +5,6 @@
 #ifndef fileinfo_h__
 #define fileinfo_h__
 
-#if defined(USE_EXPERIMENTAL_FILESYSTEM)
-#include <experimental/filesystem>
-#endif
-
 #include <filesystem>
 #include <string>
 

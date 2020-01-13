@@ -55,11 +55,12 @@ def translate_storeonce_status(status):
 
 
 def _get_storeonce_space_values(values, type_):
-    key = "%s Space in bytes" % type_
+    key = "%s in bytes" % type_
     if key in values:
         return float(values[key]), 0, 0
 
     # combined(total) = local + cloud
+    type_ = type_.replace(" Space", "")
     combined_key = "combined%sBytes" % type_
     cloud_key = "cloud%sBytes" % type_
     local_key = "local%sBytes" % type_
@@ -70,7 +71,8 @@ def _get_storeonce_space_values(values, type_):
 
 def check_storeonce_space(item, params, values):
     total_bytes, cloud_bytes, local_bytes = _get_storeonce_space_values(values, "Capacity")
-    free_bytes, free_cloud_bytes, free_local_bytes = _get_storeonce_space_values(values, "Free")
+    free_bytes, free_cloud_bytes, free_local_bytes = _get_storeonce_space_values(
+        values, "Free Space")
     factor = 1024 * 2
     yield df_check_filesystem_list(
         item, params,

@@ -24,6 +24,7 @@
 
 #include "Query.h"
 #include <algorithm>
+#include <cassert>
 #include <cctype>
 #include <chrono>
 #include <cmath>
@@ -462,7 +463,7 @@ void Query::parseColumnsLine(char *line) {
                 << "replacing non-existing column '" << column_name
                 << "' with null column, reason: " << e.what();
             column = std::make_shared<NullColumn>(
-                column_name, "non-existing column", -1, -1, -1, 0);
+                column_name, "non-existing column", Column::Offsets{});
         }
         _columns.push_back(column);
         _all_columns.insert(column);
@@ -556,7 +557,7 @@ void Query::parseWaitTimeoutLine(char *line) {
 }
 
 void Query::parseWaitTriggerLine(char *line) {
-    _wait_trigger = _table.core()->triggers().find(nextStringArgument(&line));
+    _wait_trigger = Triggers::find(nextStringArgument(&line));
 }
 
 void Query::parseWaitObjectLine(char *line) {
@@ -607,6 +608,8 @@ bool Query::process() {
                        _separators, _data_encoding);
     doWait();
     QueryRenderer q(*renderer, EmitBeginEnd::on);
+    // TODO(sp) The construct below is horrible, refactor this!
+    // cppcheck-suppress danglingLifetime
     _renderer_query = &q;
     start(q);
     _table.answerQuery(this);
@@ -699,6 +702,7 @@ bool Query::processDataset(Row row) {
                 aggr->consume(row, _auth_user, timezoneOffset());
             }
         } else {
+            assert(_renderer_query);  // Missing call to `process()`.
             RowRenderer r(*_renderer_query);
             for (const auto &column : _columns) {
                 column->output(row, r, _auth_user, _timezone_offset);

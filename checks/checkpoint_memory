@@ -44,9 +44,18 @@ def inventory_checkpoint_memory(info):
 
 
 def check_checkpoint_memory(item, params, info):
+    if isinstance(params, tuple):
+        params = {"levels": ("perc_used", params)}
+
     mem_total_bytes, mem_used_bytes = \
         map(int, info[0])
-    return check_memory_simple(mem_used_bytes, mem_total_bytes, params)
+    return check_memory_element(
+        "Usage",
+        mem_used_bytes,
+        mem_total_bytes,
+        params.get("levels"),
+        metric_name="memory_used",
+    )
 
 
 check_info['checkpoint_memory'] = {
@@ -66,5 +75,5 @@ check_info['checkpoint_memory'] = {
     'snmp_scan_function': scan_checkpoint,
     'default_levels_variable': 'checkpoint_memory_default_levels',
     'group': 'memory_simple',
-    'includes': ["checkpoint.include", "memory.include"],
+    'includes': ["checkpoint.include", "mem.include"],
 }

@@ -7,11 +7,11 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
+# The official homepage is at https://checkmk.com/.
 #
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
@@ -30,17 +30,31 @@
 # arbiters    test0069.testsite.de:2701
 
 
+def parse_mongodb_replica(info):
+    """
+    :param info: dictionary with all data for all checks and subchecks
+    :return:
+    """
+    if info:
+        return info
+    return {}
+
+
 def inventory_mongodb_replica(info):
     return [(None, None)]
 
 
 def check_mongodb_replica(_no_item, _no_params, info):
     for line in info:
-        yield 0, "%s: %s" % (line[0].title(), line[1])
+        if line[0] == "primary" and line[1] == "n/a":
+            yield 2, "Replica set does not have a primary node"
+        else:
+            yield 0, "%s: %s" % (line[0].title(), line[1])
 
 
 check_info["mongodb_replica"] = {
+    "parse_function": parse_mongodb_replica,
     "check_function": check_mongodb_replica,
     "inventory_function": inventory_mongodb_replica,
-    "service_description": "MongoDB Replica Status",
+    "service_description": "MongoDB Replica Set Status",
 }

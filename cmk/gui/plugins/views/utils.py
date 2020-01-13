@@ -460,7 +460,7 @@ class Command(six.with_metaclass(abc.ABCMeta, object)):
     def executor(self, command, site):
         # type: (str, str) -> None
         """Function that is called to execute this action"""
-        sites.live().command("[%d] %s" % (int(time.time()), command), site)
+        sites.live().command("[%d] %s" % (int(time.time()), command), livestatus.SiteId(site))
 
 
 class CommandRegistry(cmk.utils.plugin_registry.ClassRegistry):
@@ -678,7 +678,9 @@ class RowTableLivestatus(RowTable):
         datasource = view.datasource
         merge_column = datasource.merge_by
         if merge_column:
-            columns = [merge_column] + columns
+            # Prevent merge column from being duplicated in the query. It needs
+            # to be at first position, see _merge_data()
+            columns = [merge_column] + [c for c in columns if c != merge_column]
 
         # Most layouts need current state of object in order to
         # choose background color - even if no painter for state
@@ -723,6 +725,7 @@ class RowTableLivestatus(RowTable):
 
         if datasource.merge_by:
             data = _merge_data(data, columns)
+
         # convert lists-rows into dictionaries.
         # performance, but makes live much easier later.
         columns = ["site"] + columns + datasource.add_columns
@@ -1818,7 +1821,7 @@ class Cell(object):
         # - Add in the front of the user sorters when not set
         painter_name = self.painter_name()
         sorter_name = _get_sorter_name_of_painter(painter_name)
-        if painter_name == 'svc_metrics_hist':
+        if painter_name in ['svc_metrics_hist', 'svc_metrics_forecast']:
             hash_id = ':%s' % hash(str(self.painter_parameters()))
             sorter_name += hash_id
 
@@ -1883,7 +1886,7 @@ class Cell(object):
         # TODO: Move this somewhere else!
         def find_htdocs_image_path(filename):
             for file_path in [
-                    cmk.utils.paths.local_web_dir.joinpath("htdocs", filename),
+                    cmk.utils.paths.local_web_dir / "htdocs" / filename,
                     Path(cmk.utils.paths.web_dir, "htdocs", filename),
             ]:
                 if file_path.exists():
@@ -1952,7 +1955,8 @@ class Cell(object):
 
 
 SorterEntry = namedtuple("SorterEntry", ["sorter", "negate", "join_key"])
-SorterEntry.__new__.__defaults__ = (None,) * len(SorterEntry._fields)
+# TODO: WTF?
+SorterEntry.__new__.__defaults__ = (None,) * len(SorterEntry._fields)  # type: ignore[attr-defined]
 
 
 def _encode_sorter_url(sorters):

@@ -72,7 +72,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="storage_throughput",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_(u"Port index or 'Total'")),
+        item_spec=lambda: TextAscii(title=_("Port index or 'Total'")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_storage_throughput,
         title=lambda: _("Throughput for DDN S2A devices"),

@@ -1,0 +1,14 @@
+title: Zerto VPG RPO
+agents: linux
+catalog: hw/app/zerto
+license: GPL
+distribution: check_mk
+description:
+ This check monitors if a VPG meets the SLA specification for the journal history
+ or the RPO SLA setting. If the SLA specification is not met, the check will be
+ {CRIT}. If the VPG is initializing, in failover or move operations, being deleted
+ or recovered, the check will be {WARN}.
+ The VPG data is piggybacked to each VM.
+
+inventory:
+ One service is created per VPG.

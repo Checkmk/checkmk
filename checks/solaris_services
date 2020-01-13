@@ -46,7 +46,7 @@ def parse_solaris_services(info):
     for line in info:
         if len(line) < 3 or line == [u'STATE', u'STIME', u'FMRI']:
             continue
-        svc_descr = line[2]
+        svc_descr = line[-1]
         type_, category, name, instance = get_parts_of_descr(svc_descr)
         parsed.setdefault(
             svc_descr, {

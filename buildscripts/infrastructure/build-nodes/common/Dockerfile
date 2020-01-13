@@ -31,6 +31,7 @@ RUN apt-get update \
     git-buildpackage \
     ksh \
     libclang-7-dev \
+    curl \
     libcurl4-openssl-dev \
     libevent-dev \
     libffi-dev \
@@ -65,6 +66,7 @@ RUN apt-get update \
     pngcrush \
     poedit \
     python-pip \
+    python3.7-dev \
     python-polib \
     rpcbind \
     rpm \
@@ -80,7 +82,7 @@ run curl -sL https://deb.nodesource.com/setup_12.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install -U git+https://github.com/svenpanne/pipenv.git@41f30d7ac848fdfe3eb548ddd19b731bfa8c331a
+RUN pip install -U git+https://github.com/pypa/pipenv.git@2549656dc09e132d8ba2fa6327c939f5f9a951b7
 
 RUN pip install \
     pathlib2 \
@@ -101,4 +103,18 @@ RUN apt-get update \
     && apt-get update \
     && apt-get install -y \
     docker-ce \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install librrd-dev a second time
+# after the first time /usr/include/rrd.h is missing
+# Is this a docker or ubuntu bug?
+RUN apt-get update \
+    && apt-get install -y \
+    librrd-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Addd missing packages
+RUN apt-get update \
+    && apt-get install -y \
+    libssl-dev \
     && rm -rf /var/lib/apt/lists/*

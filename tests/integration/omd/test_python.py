@@ -19,7 +19,7 @@ def test_02_python_interpreter_path(site):
 def test_03_python_interpreter_version(site):
     p = site.execute(["python", "-V"], stderr=subprocess.PIPE)
     version = p.stderr.read()
-    assert version.startswith("Python 2.7.16")
+    assert version.startswith("Python 2.7.17")
 
 
 def test_03_python_path(site):
@@ -48,7 +48,7 @@ def test_02_pip_path(site):
 def test_03_pip_interpreter_version(site):
     p = site.execute(["pip", "-V"], stdout=subprocess.PIPE)
     version = p.stdout.read()
-    assert version.startswith("pip 18.1")
+    assert version.startswith("pip 19.2.3")
 
 
 # TODO: Improve this test to automatically adapt the expected modules from our Pipfile
@@ -90,7 +90,6 @@ def test_python_modules(site, module_name):
     assert module.__file__.startswith(site.root)
 
 
-@pytest.mark.skip("Skip until 2019-09-11")
 def test_python_preferred_encoding():
     import locale
     assert locale.getpreferredencoding() == "UTF-8"

@@ -40,22 +40,18 @@ class RowRenderer;
 
 class ListColumn : public Column {
 public:
-    ListColumn(const std::string &name, const std::string &description,
-               int indirect_offset, int extra_offset, int extra_extra_offset,
-               int offset)
-        : Column(name, description, indirect_offset, extra_offset,
-                 extra_extra_offset, offset) {}
+    using Column::Column;
 
-    ColumnType type() const override { return ColumnType::list; }
+    [[nodiscard]] ColumnType type() const override { return ColumnType::list; }
 
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;
 
-    std::unique_ptr<Filter> createFilter(
+    [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
         const std::string &value) const override;
 
-    std::unique_ptr<Aggregator> createAggregator(
+    [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const override;
 
     // TODO(sp) What we actually want here is a stream of strings, not a

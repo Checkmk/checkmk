@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "commander.h"
+#include "common/mailslot_transport.h"
 #include "logger.h"
 #include "tools/_misc.h"
 
@@ -181,7 +182,8 @@ bool CoreCarrier::fileSlotSend(DataType Type, const std::string& PeerName,
                 break;
             case kCommand: {
                 std::string cmd(static_cast<const char*>(Data), Length);
-                cma::commander::RunCommand(PeerName, cmd);
+                auto rcp = cma::commander::ObtainRunCommandProcessor();
+                if (rcp) rcp(PeerName, cmd);
             } break;
 
             default:
@@ -218,6 +220,17 @@ bool CoreCarrier::asioSlotSend(DataType Type, const std::string& PeerName,
                                uint64_t Marker, const void* Data,
                                size_t Length) {
     return false;
+}
+
+void InformByMailSlot(std::string_view mail_slot, std::string_view cmd) {
+    cma::carrier::CoreCarrier cc;
+
+    using namespace cma::carrier;
+    auto internal_port = BuildPortName(kCarrierMailslotName, mail_slot.data());
+    auto ret = cc.establishCommunication(internal_port);
+    cc.sendCommand(cma::commander::kMainPeer, cmd);
+
+    cc.shutdownCommunication();
 }
 
 }  // namespace cma::carrier

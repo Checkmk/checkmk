@@ -31,8 +31,13 @@ import sys
 import tempfile
 import uuid
 import six
+from cmk.utils import msi_patch
 
-from pathlib2 import Path
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path
 
 opt_verbose = True
 
@@ -89,40 +94,9 @@ def add_cab(path_to_msibuild, new_msi_filename, working_dir):
 
 
 # tested
-def update_package_code(msi_filename, new_msi_file):
-    package_code = ("{%s}" % uuid.uuid1()).upper()
-    summary_info = {
-        "new_msi_file": new_msi_file,
-        "start": package_code[:16],
-        "end": package_code[16:]
-    }
-    default_package_codes = {
-        # left as example for possible control
-        "vanilla_container.msi": {
-            "dftl_start": "{08012468-53DE-4",
-            "dftl_end": "2A3-BAA9-FE4C2A129135}"
-        },
-        # used in production
-        "check_mk_agent.msi": {
-            "dftl_start": "{BAEBF560-7308-4",
-            "dftl_end": "D53-B426-903EA74B1D7E}"
-        },
-        # may be used in production(just other name)
-        "baked_container.msi": {
-            "dftl_start": "{BAEBF560-7308-4",
-            "dftl_end": "D53-B426-903EA74B1D7E}"
-        },
-        # used for a testing
-        "check_mk_agent_update.msi": {
-            "dftl_start": "{BAEBF560-7308-4",
-            "dftl_end": "D53-B426-903EA74B1D7E}"
-        }
-    }
-    summary_info.update(default_package_codes[os.path.basename(msi_filename)])
-    if os.system(  # nosec
-            "sed -i -e 's/%(dftl_start)s/%(start)s/' -e 's/%(dftl_end)s/%(end)s/' %(new_msi_file)s"
-            % summary_info) != 0:
-        bail_out('sed is failed ')
+def update_package_code(new_msi_file):
+    if not msi_patch.patch_package_code_by_marker(new_msi_file):
+        raise Exception("Failed to patch package code")
 
 
 def read_file_as_lines(f_to_read):
@@ -134,9 +108,9 @@ def patch_msi_files(dir_name, version_build):
     use_dir = Path(dir_name)
 
     name = "File.idt"
-    lines_file_idt = read_file_as_lines(use_dir.joinpath(name))
+    lines_file_idt = read_file_as_lines(use_dir / name)
 
-    with use_dir.joinpath(name + ".new").open('w', newline='', encoding='utf8') as out_file:
+    with (use_dir / (name + ".new")).open('w', newline='', encoding='utf8') as out_file:
         # first three lines of the table write back
         to_write = u"".join(lines_file_idt[:3])
         out_file.write(to_write)
@@ -147,7 +121,7 @@ def patch_msi_files(dir_name, version_build):
             # check every file from the table whether it should be replaced
             for file_to_replace in msi_file_table():  # sorted(cabinet_files):
                 if file_to_replace == filename:
-                    work_file = use_dir.joinpath(filename)
+                    work_file = use_dir / filename
                     if work_file.exists():
                         file_stats = work_file.stat()
                         new_size = file_stats.st_size
@@ -165,9 +139,9 @@ def patch_msi_components(dir_name):
     use_dir = Path(dir_name)
 
     name = "Component.idt"
-    lines_component_idt = read_file_as_lines(use_dir.joinpath(name))
+    lines_component_idt = read_file_as_lines(use_dir / name)
 
-    with use_dir.joinpath(name + ".new").open('w', newline='', encoding='utf8') as out_file:
+    with (use_dir / (name + ".new")).open('w', newline='', encoding='utf8') as out_file:
         out_file.write(u"".join(lines_component_idt[:3]))
 
         for l in lines_component_idt[3:]:
@@ -181,8 +155,8 @@ def patch_msi_properties(dir_name, product_code, version_build):
     use_dir = Path(dir_name)
 
     name = "Property.idt"
-    lines_property_idt = read_file_as_lines(use_dir.joinpath(name))
-    with use_dir.joinpath(name + ".new").open('w', newline='', encoding='utf8') as out_file:
+    lines_property_idt = read_file_as_lines(use_dir / name)
+    with (use_dir / (name + ".new")).open('w', newline='', encoding='utf8') as out_file:
         out_file.write(u"".join(lines_property_idt[:3]))
 
         for line in lines_property_idt[3:]:
@@ -202,7 +176,7 @@ def patch_msi_properties(dir_name, product_code, version_build):
 # tested
 def copy_file_safe(s, d):
     try:
-        shutil.copy(s.__fspath__(), d.__fspath__())
+        shutil.copy(str(s), str(d))
         return True
     except IOError as ex:
         verbose("exception in copy safe {}".format(ex))
@@ -328,12 +302,12 @@ def msi_update_core(msi_file, source_dir, revision, version_name):
 
         # Convert Input Files to Internal-MSI Presentation
         file_dir = work_dir
-        ini_file = Path(source_dir).joinpath("check_mk.ini")
-        ini_target = Path(file_dir).joinpath("check_mk_ini")
+        ini_file = Path(source_dir, "check_mk.ini")
+        ini_target = Path(file_dir, "check_mk_ini")
         copy_or_create(ini_file, ini_target, u"# test file\r\n[global]\r\n port = 6556\r\n")
 
-        yml_file = Path(source_dir).joinpath("check_mk.install.yml")
-        yml_target = Path(file_dir).joinpath("check_mk_install_yml")
+        yml_file = Path(source_dir, "check_mk.install.yml")
+        yml_target = Path(file_dir, "check_mk_install_yml")
         copy_or_create(yml_file, yml_target,
                        u"# test file\r\nglobal:\r\n  enabled: yes\r\n  install: no\r\n")
 
@@ -353,7 +327,7 @@ def msi_update_core(msi_file, source_dir, revision, version_name):
 
         # Rename modified tables
         for entry in ["Property", "File", "Component"]:
-            p = Path(work_dir).joinpath(entry).with_suffix(".idt.new")
+            p = Path(work_dir, entry).with_suffix(".idt.new")
             p.rename(p.with_suffix(""))
 
         for entry in ["Property", "File", "Component"]:
@@ -370,7 +344,7 @@ def msi_update_core(msi_file, source_dir, revision, version_name):
         # the unqiue identifier for this package. Inside the package the uuid is split into two halfs.
         # Each of it is updated with the corresponding new package code. Since msi-update uses the
         # vanilla_container.msi as well as the baked_container.msi we need to handle both..
-        update_package_code(msi_file, new_msi_file)
+        update_package_code(new_msi_file)
 
         # Remove original product.cab from stream
         remove_cab(path_prefix, new_msi_file)

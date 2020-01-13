@@ -30,6 +30,7 @@
 #include <filesystem>
 #include <string>
 #include <vector>
+#include "Column.h"
 #include "ListColumn.h"
 #include "contact_fwd.h"
 class MonitoringCore;
@@ -38,11 +39,8 @@ class Row;
 class LogwatchListColumn : public ListColumn {
 public:
     LogwatchListColumn(const std::string &name, const std::string &description,
-                       int indirect_offset, int extra_offset,
-                       int extra_extra_offset, int offset, MonitoringCore *mc)
-        : ListColumn(name, description, indirect_offset, extra_offset,
-                     extra_extra_offset, offset)
-        , _mc(mc) {}
+                       const Column::Offsets &offsets, MonitoringCore *mc)
+        : ListColumn(name, description, offsets), _mc(mc) {}
 
     std::vector<std::string> getValue(
         Row row, const contact *auth_user,
@@ -51,8 +49,8 @@ public:
 private:
     MonitoringCore *_mc;
 
-    std::filesystem::path getDirectory(Row row) const;
-    std::string getHostName(Row row) const;
+    [[nodiscard]] std::filesystem::path getDirectory(Row row) const;
+    [[nodiscard]] std::string getHostName(Row row) const;
 };
 
 #endif  // LogwatchListColumn_h

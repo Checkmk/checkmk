@@ -72,18 +72,20 @@ protected:
 
     struct StringEventConsoleColumn : public StringColumn {
         StringEventConsoleColumn(const std::string &name,
-                                 const std::string &description)
-            : StringColumn(name, description, -1, -1, -1, 0) {}
+                                 const std::string &description,
+                                 const Column::Offsets &offsets)
+            : StringColumn(name, description, offsets) {}
 
-        std::string getValue(Row row) const override {
+        [[nodiscard]] std::string getValue(Row row) const override {
             return getRaw(row, *this, "");
         }
     };
 
     struct IntEventConsoleColumn : public IntColumn {
         IntEventConsoleColumn(const std::string &name,
-                              const std::string &description)
-            : IntColumn(name, description, -1, -1, -1, 0) {}
+                              const std::string &description,
+                              const Column::Offsets &offsets)
+            : IntColumn(name, description, offsets) {}
 
         int32_t getValue(Row row,
                          const contact * /* auth_user */) const override {
@@ -93,21 +95,23 @@ protected:
 
     struct DoubleEventConsoleColumn : public DoubleColumn {
         DoubleEventConsoleColumn(const std::string &name,
-                                 const std::string &description)
-            : DoubleColumn(name, description, -1, -1, -1, 0) {}
+                                 const std::string &description,
+                                 const Column::Offsets &offsets)
+            : DoubleColumn(name, description, offsets) {}
 
-        double getValue(Row row) const override {
+        [[nodiscard]] double getValue(Row row) const override {
             return atof(getRaw(row, *this, "0").c_str());
         }
     };
 
     struct TimeEventConsoleColumn : public TimeColumn {
         TimeEventConsoleColumn(const std::string &name,
-                               const std::string &description)
-            : TimeColumn(name, description, -1, -1, -1, 0) {}
+                               const std::string &description,
+                               const Column::Offsets &offsets)
+            : TimeColumn(name, description, offsets) {}
 
     private:
-        std::chrono::system_clock::time_point getRawValue(
+        [[nodiscard]] std::chrono::system_clock::time_point getRawValue(
             Row row) const override {
             return std::chrono::system_clock::from_time_t(
                 static_cast<std::time_t>(
@@ -117,8 +121,9 @@ protected:
 
     struct ListEventConsoleColumn : public ListColumn {
         ListEventConsoleColumn(const std::string &name,
-                               const std::string &description)
-            : ListColumn(name, description, -1, -1, -1, 0) {}
+                               const std::string &description,
+                               const Column::Offsets &offsets)
+            : ListColumn(name, description, offsets) {}
 
         std::vector<std::string> getValue(
             Row row, const contact * /*auth_user*/,
@@ -129,7 +134,9 @@ protected:
                        : mk::split(result.substr(1), '\001');
         }
 
-        bool isNone(Row row) const { return getRaw(row, *this, "") == "\002"; }
+        [[nodiscard]] bool isNone(Row row) const {
+            return getRaw(row, *this, "") == "\002";
+        }
     };
 
     bool isAuthorizedForEvent(Row row, const contact *ctc) const;

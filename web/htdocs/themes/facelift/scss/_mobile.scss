@@ -39,11 +39,11 @@ body.mobile {
 
   div.error {
     color: $color-text;
-    background-color: #fcc;
+    background-color: rgb(255, 204, 204);
   }
 
   div.command_group a {
-    color: #000;
+    color: rgb(0, 0, 0);
   }
 
   table.data {
@@ -53,7 +53,7 @@ body.mobile {
     td {
       padding: 2px 3px;
       overflow: hidden;
-      border: 1px solid #ddd;
+      border: 1px solid rgb(221, 221, 221);
     }
   }
 
@@ -61,19 +61,19 @@ body.mobile {
     width: 100%;
 
     tr.header {
-      color: #000;
+      color: rgb(0, 0, 0);
     }
 
     > tbody > tr.data > td {
       padding: 4px 6px;
       font-size: 13px;
-      border: 1px solid #aaa;
+      border: 1px solid rgb(170, 170, 170);
       border-radius: 5px;
     }
   }
 
   td.nonstatus {
-    background-color: #fff;
+    background-color: rgb(255, 255, 255);
   }
 
   /* Forms for filters and commands */
@@ -118,12 +118,12 @@ body.mobile {
       padding: 0;
       font-size: 9px;
       font-weight: normal;
-      color: #333;
+      color: rgb(51, 51, 51);
     }
 
     div.content {
       width: 69px;
-      background-color: #ff0;
+      background-color: rgb(255, 255, 0);
     }
 
     div.title {
@@ -154,7 +154,7 @@ body.mobile {
     width: 4.5em;
     text-align: center;
     border-radius: 5px;
-    box-shadow: 0 0 2px #444;
+    box-shadow: 0 0 2px rgb(68, 68, 68);
   }
 
   td.pnpgraph img {
@@ -166,7 +166,7 @@ body.mobile {
   }
 
   #loginhead, #loginfoot {
-    color: #444;
+    color: rgb(68, 68, 68);
     text-align: center;
   }
 
@@ -212,7 +212,7 @@ body.mobile {
         display: inline-block;
         width: 40px;
         overflow: hidden;
-        color: #000;
+        color: rgb(0, 0, 0);
 
         img {
           margin-left: 0;

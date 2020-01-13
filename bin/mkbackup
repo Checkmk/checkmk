@@ -37,7 +37,6 @@ import re
 import shutil
 import socket
 import signal
-import subprocess
 import sys
 import syslog
 import tempfile
@@ -48,6 +47,7 @@ import traceback
 import json
 from tarfile import TarFile, ReadError
 from hashlib import md5
+from typing import Any, Dict  # pylint: disable=unused-import
 
 from OpenSSL import crypto
 from Cryptodome.Cipher import AES, PKCS1_OAEP
@@ -58,6 +58,8 @@ import cmk.utils.render as render
 import cmk.utils.schedule as schedule
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKTerminate, MKGeneralException
+
+import cmk.utils.cmk_subprocess as subprocess
 
 VERSION = "1.4.0i1"
 
@@ -111,7 +113,8 @@ def stop_logging():
 
 
 def log(s):
-    sys.stdout.write("%s %s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), s))
+    msg = "%s %s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), s)
+    sys.stdout.write(msg.encode("utf-8"))
     if is_cma():
         syslog.syslog(s)
 
@@ -334,7 +337,7 @@ def add_site_info_to_backup_info(info):
 
 
 def add_system_info_to_backup_info(info):
-    import cma  # pylint: disable=import-error
+    import cma  # type: ignore[import] # pylint: disable=import-error
     cma.load_config()
     info["cma_version"] = cma.version()
 
@@ -697,12 +700,15 @@ def start_site(site):
 def omd_command(*args):
     cmd = ["omd"] + list(args)
     verbose("Command: %s" % " ".join(cmd))
-    p = subprocess.Popen(cmd,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT,
-                         stdin=open(os.devnull),
-                         close_fds=True)
-    stdout = p.communicate()[0]
+    p = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        stdin=open(os.devnull),
+        close_fds=True,
+        encoding="utf-8",
+    )
+    stdout, _stderr = p.communicate()
     verbose(stdout)
     if p.returncode != 0:
         raise MKGeneralException("Failed to run <tt>%s</tt>: %s" % (" ".join(cmd), stdout))
@@ -1210,18 +1216,15 @@ def existing_sites():
 
 
 def backup_files_to_tarfile(fobj, base_path, exclude_patterns=None):
-    if exclude_patterns:
+    if exclude_patterns is None:
+        exclude_patterns = []
 
-        def filter_files(filename):
-            for glob_pattern in exclude_patterns:
-                # patterns are relative to base_path, filename is full path.
-                # strip of the base_path prefix from full path
-                if fnmatch.fnmatch(filename[len(base_path.rstrip("/")) + 1:], glob_pattern):
-                    return True  # exclude this file
-            return False
-
-    else:
-        filter_files = lambda x: False
+    def filter_files(tarinfo):
+        # patterns are relative to base_path, tarinfo.name is full path without leading slash.
+        matches_exclude = any(
+            fnmatch.fnmatch(tarinfo.name[len(base_path.rstrip("/")):], glob_pattern)
+            for glob_pattern in exclude_patterns)
+        return None if matches_exclude else tarinfo
 
     tar_mode = "w|gz" if compress_archives() else "w|"
     try:
@@ -1230,12 +1233,11 @@ def backup_files_to_tarfile(fobj, base_path, exclude_patterns=None):
         if not opt_debug and e.errno == errno.ESPIPE:
             log("Failed to init backup to tarfile: %s" % e)
             return
-        else:
-            raise
+        raise
 
     # Don't add base path itself
     for f in os.listdir(base_path):
-        tar.add(base_path + "/" + f, exclude=filter_files)
+        tar.add(base_path + "/" + f, filter=filter_files)
     tar.close()
 
 
@@ -1646,7 +1648,7 @@ def setup_standalone_environment(info):
 def enable_drbd_ip_addresses():
     # These modules are only available when mkbackup is executed on OS level on the appliance
     import cma  # pylint: disable=import-error
-    import cma_net  # pylint: disable=import-error
+    import cma_net  # type: ignore[import] # pylint: disable=import-error
     cma.load_config()
     cma_net.load_config()
 
@@ -1889,7 +1891,7 @@ def init_logging():
         syslog.openlog("mkbackup")
 
 
-g_config = {}
+g_config = {}  # type: Dict[str, Any]
 opt_verbose = 0
 opt_debug = False
 

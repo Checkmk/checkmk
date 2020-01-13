@@ -39,6 +39,7 @@
 
 import os
 import json
+from typing import Dict  # pylint: disable=unused-import
 
 import cmk.utils.store as store
 
@@ -236,7 +237,7 @@ class Base(object):
     # Store for all instances of this page type. The key into
     # this dictionary????
     # TODO: Brauchen wir hier überhaupt ein dict??
-    __instances = {}
+    __instances = {}  # type: Dict[str, Base]
 
     @classmethod
     def clear_instances(cls):
@@ -494,7 +495,7 @@ class Overridable(Base):
             return True
 
         if isinstance(self._["public"], tuple) and self._["public"][0] == "contact_groups":
-            if set(config.user.contact_groups()).intersection(self._["public"][1]):
+            if set(config.user.contact_groups).intersection(self._["public"][1]):
                 return True
 
         return False
@@ -790,7 +791,7 @@ class Overridable(Base):
                 if not userdb.user_exists(user):
                     continue
 
-                user_pages = store.load_data_from_file(path, {})
+                user_pages = store.load_object_from_file(path, default={})
                 for name, page_dict in user_pages.items():
                     page_dict["owner"] = user
                     page_dict["name"] = name
@@ -964,9 +965,13 @@ class Overridable(Base):
                     # Actions
                     table.cell(_('Actions'), css='buttons visuals')
 
+                    # View
+                    if isinstance(instance, PageRenderer):
+                        html.icon_button(instance.page_url(), _("View"), "new_" + cls.type_name())
+
                     # Clone / Customize
-                    buttontext = _("Create a customized copy of this")
-                    html.icon_button(instance.clone_url(), buttontext, "new_" + cls.type_name())
+                    html.icon_button(instance.clone_url(), _("Create a customized copy of this"),
+                                     "clone")
 
                     # Delete
                     if instance.may_delete():
@@ -1205,7 +1210,7 @@ class ContactGroupChoice(DualListChoice):
         contact_group_choices = sites.all_groups("contact")
         return [(group_id, alias)
                 for (group_id, alias) in contact_group_choices
-                if self._with_foreign_groups or group_id in config.user.contact_groups()]
+                if self._with_foreign_groups or group_id in config.user.contact_groups]
 
 
 #.

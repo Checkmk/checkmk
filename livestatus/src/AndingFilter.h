@@ -49,23 +49,23 @@ public:
                  std::chrono::seconds timezone_offset) const override;
     std::unique_ptr<Filter> partialFilter(
         std::function<bool(const Column &)> predicate) const override;
-    std::optional<std::string> stringValueRestrictionFor(
+    [[nodiscard]] std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const override;
-    std::optional<int32_t> greatestLowerBoundFor(
+    [[nodiscard]] std::optional<int32_t> greatestLowerBoundFor(
         const std::string &column_name,
         std::chrono::seconds timezone_offset) const override;
-    std::optional<int32_t> leastUpperBoundFor(
+    [[nodiscard]] std::optional<int32_t> leastUpperBoundFor(
         const std::string &column_name,
         std::chrono::seconds timezone_offset) const override;
-    std::optional<std::bitset<32>> valueSetLeastUpperBoundFor(
+    [[nodiscard]] std::optional<std::bitset<32>> valueSetLeastUpperBoundFor(
         const std::string &column_name,
         std::chrono::seconds timezone_offset) const override;
-    std::unique_ptr<Filter> copy() const override;
-    std::unique_ptr<Filter> negate() const override;
-    bool is_tautology() const override;
-    bool is_contradiction() const override;
-    Filters disjuncts() const override;
-    Filters conjuncts() const override;
+    [[nodiscard]] std::unique_ptr<Filter> copy() const override;
+    [[nodiscard]] std::unique_ptr<Filter> negate() const override;
+    [[nodiscard]] bool is_tautology() const override;
+    [[nodiscard]] bool is_contradiction() const override;
+    [[nodiscard]] Filters disjuncts() const override;
+    [[nodiscard]] Filters conjuncts() const override;
 
     // NOTE: This is effectively private, but it can't be declared like this
     // because of std::make_unique.

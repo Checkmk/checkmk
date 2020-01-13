@@ -26,7 +26,18 @@
 
 import sys
 import logging
-from typing import IO, Any  # pylint: disable=unused-import
+from typing import AnyStr, Text, Union, IO, Any  # pylint: disable=unused-import
+
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path
+
+if sys.version_info[0] >= 3:
+    IOLog = IO[Text]
+else:
+    IOLog = IO[AnyStr]
 
 # Just for reference, the predefined logging levels:
 #
@@ -63,11 +74,7 @@ from typing import IO, Any  # pylint: disable=unused-import
 VERBOSE = 15
 logging.addLevelName(VERBOSE, "VERBOSE")
 
-# Set default logging handler to avoid "No handler found" warnings.
-# Python 2.7+
 logger = logging.getLogger("cmk")
-logger.addHandler(logging.NullHandler())
-logger.setLevel(logging.INFO)
 
 
 def get_formatter(format_str="%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"):
@@ -76,6 +83,18 @@ def get_formatter(format_str="%(asctime)s [%(levelno)s] [%(name)s %(process)d] %
     Check_MK log format by default. You can also set another format
     if you like."""
     return logging.Formatter(format_str)
+
+
+def clear_console_logging():
+    # type: () -> None
+    logger.handlers[:] = []
+    logger.addHandler(logging.NullHandler())
+    logger.setLevel(logging.INFO)
+
+
+# Set default logging handler to avoid "No handler found" warnings.
+# Python 2.7+
+clear_console_logging()
 
 
 def setup_console_logging():
@@ -90,14 +109,19 @@ def setup_console_logging():
     setup_logging_handler(sys.stdout, get_formatter("%(message)s"))
 
 
-# TODO: Cleanup IO[Any] to IO[Text]
 def open_log(log_file_path):
-    # type: (str) -> IO[Any]
+    # type: (Union[str, Path]) -> IOLog
     """Open logfile and fall back to stderr if this is not successfull
     The opened file-like object is returned.
     """
+    if not isinstance(log_file_path, Path):
+        log_file_path = Path(log_file_path)
+
     try:
-        logfile = open(log_file_path, "a")  # type: IO[Any]
+        if sys.version_info[0] >= 3:
+            logfile = log_file_path.open("a", encoding="utf-8")  # type: IOLog
+        else:
+            logfile = log_file_path.open("ab")  # type: IOLog
         logfile.flush()
     except Exception as e:
         logger.exception("Cannot open log file '%s': %s", log_file_path, e)
@@ -107,7 +131,7 @@ def open_log(log_file_path):
 
 
 def setup_logging_handler(stream, formatter=None):
-    # type: (IO[Any], logging.Formatter) -> None
+    # type: (IOLog, logging.Formatter) -> None
     """This method enables all log messages to be written to the given
     stream file object. The messages are formated in Check_MK standard
     logging format.

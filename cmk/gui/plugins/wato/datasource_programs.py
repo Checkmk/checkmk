@@ -210,6 +210,90 @@ rulespec_registry.register(
     ))
 
 
+def _valuespec_generic_metrics_prometheus():
+    return Dictionary(
+        elements=[("port",
+                   Integer(
+                       title=_('API-Port'),
+                       help=_("If no port is given a default vaulue of 443 will be used."),
+                       default_value=443,
+                   )),
+                  ("promql_checks",
+                   ListOf(
+                       Dictionary(elements=[
+                           ("service_description",
+                            TextAscii(
+                                title=_('Service description: '),
+                                allow_empty=False,
+                            )),
+                           ("metric_components",
+                            ListOf(Dictionary(
+                                title=_('PromQL query'),
+                                elements=[
+                                    ("metric_label",
+                                     TextAscii(title=_('Metric Label: '),
+                                               allow_empty=False,
+                                               help="The Metric Label is displayed alongside the "
+                                               "queried value within the resulting service. "
+                                               "The metric name will be taken as label if "
+                                               "nothing was specified.")),
+                                    ("metric_name",
+                                     TextAscii(title=_('Metric Name: '),
+                                               allow_empty=False,
+                                               help="Feel free to specify any naming. However, "
+                                               "providing a fitting metric name results in the "
+                                               "generation of a suitable graph display of the "
+                                               "metric. One can refer to other existing check "
+                                               "plug-ins in order to inspect existing metric "
+                                               "names and examples. Otherwise one can also "
+                                               "refer to the \"Guidelines for coding check "
+                                               "plug-ins\" section in the Offical Guide for "
+                                               "further details.")),
+                                    ("promql_query",
+                                     TextAscii(title=_('PromQL query: '),
+                                               allow_empty=False,
+                                               size=80)),
+                                ],
+                                optional_keys=["metric_label"],
+                            ),
+                                   title=_('PromQL queries for Service'),
+                                   allow_empty=False,
+                                   magic='@;@',
+                                   validate=_validate_prometheus_service_metrics)),
+                           ("host_name",
+                            TextAscii(title=_('Assign service to following host: '),
+                                      allow_empty=False,
+                                      help="Specify the host to which the resulting "
+                                      "service will be assigned to. The host "
+                                      "should be configured to allow Piggyback "
+                                      "data")),
+                       ],
+                                  optional_keys=["host_name"]),
+                       title=_("Service creation using PromQL queries"),
+                       allow_empty=False,
+                   ))],
+        title=_("Prometheus"),
+        optional_keys=["port"],
+    )
+
+
+def _validate_prometheus_service_metrics(value, _varprefix):
+    used_metric_names = []
+    for metric_details in value:
+        metric_name = metric_details["metric_name"]
+        if metric_name in used_metric_names:
+            raise MKUserError(metric_name, "Each metric name must be unique for a service")
+        else:
+            used_metric_names.append(metric_name)
+
+
+rulespec_registry.register((HostRulespec(
+    group=RulespecGroupDatasourcePrograms,
+    name="special_agents:prometheus",
+    valuespec=_valuespec_generic_metrics_prometheus,
+)))
+
+
 def _factory_default_special_agents_vsphere():
     # No default, do not use setting if no rule matches
     return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
@@ -1859,6 +1943,29 @@ def _valuespec_special_agents_aws():
                  title=_("The secret access key for your AWS account"),
                  allow_empty=False,
              )),
+            ("assume_role",
+             Dictionary(
+                 title=_("Assume a different IAM role"),
+                 elements=
+                 [("role_arn_id",
+                   Tuple(
+                       title=_("Use STS AssumeRole to assume a different IAM role"),
+                       elements=[
+                           TextAscii(
+                               title=_("The ARN of the IAM role to assume"),
+                               size=50,
+                               help=_("The Amazon Resource Name (ARN) of the role to assume.")),
+                           TextAscii(
+                               title=_("External ID (optional)"),
+                               size=50,
+                               help=
+                               _("A unique identifier that might be required when you assume a role in another "
+                                 +
+                                 "account. If the administrator of the account to which the role belongs provided "
+                                 +
+                                 "you with an external ID, then provide that value in the External ID parameter. "
+                                ))
+                       ]))])),
             ("global_services",
              Dictionary(
                  title=_("Global services to monitor"),
@@ -2237,6 +2344,39 @@ rulespec_registry.register(
     ))
 
 
+def _factory_default_special_agents_zerto():
+    # No default, do not use setting if no rule matches
+    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+
+def _valuespec_special_agents_zerto():
+    return Dictionary(
+        elements=[
+            ("authentication",
+             DropdownChoice(title=_('Authentication method'),
+                            choices=[
+                                ('windows', _('Windows authentication')),
+                                ('vcenter', _('VCenter authentication')),
+                            ],
+                            help=_("Default is Windows authentication"))),
+            ('username', TextAscii(title=_('Username'), allow_empty=False)),
+            ('password', TextAscii(
+                title=_('Password'),
+                allow_empty=False,
+            )),
+        ],
+        title=_("Check state of Zerto"),
+        help=_("This rule selects the Zerto special agent for an existing Checkmk host"))
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupDatasourcePrograms,
+        name="special_agents:zerto",
+        valuespec=_valuespec_special_agents_zerto,
+    ))
+
+
 def _factory_default_special_agents_graylog():
     # No default, do not use setting if no rule matches
     return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
@@ -2245,13 +2385,13 @@ def _factory_default_special_agents_graylog():
 def _valuespec_special_agents_graylog():
     return Dictionary(
         title=_("Check state of Graylog"),
-        help=_("Requests node, cluster and indice data from a graylog "
+        help=_("Requests node, cluster and indice data from a Graylog "
                "instance."),
         optional_keys=["port"],
         elements=[
             ("instance",
              TextAscii(
-                 title=_("Graylog instance to query."),
+                 title=_("Graylog instance to query"),
                  help=_("Use this option to set which instance should be "
                         "checked by the special agent. Please add the "
                         "hostname here, eg. my_graylog.com."),
@@ -2262,7 +2402,7 @@ def _valuespec_special_agents_graylog():
              TextAscii(
                  title=_("Username"),
                  help=_("The username that should be used for accessing the "
-                        "graylog API. Has to have read permissions at least."),
+                        "Graylog API. Has to have read permissions at least."),
                  size=32,
                  allow_empty=False,
              )),
@@ -2289,31 +2429,33 @@ def _valuespec_special_agents_graylog():
             ("since",
              Age(
                  title=_("Time for coverage of failures"),
-                 help=_(
-                     "Use this option to set the timeframe in which failures should be covered."),
+                 help=_("If you choose to query for failed index operations, use "
+                        "this option to set the timeframe in which failures "
+                        "should be covered. The check will output the total "
+                        "number of failures and the number of failures in this "
+                        "given timeframe."),
                  default_value=1800,
              )),
             ("sections",
              ListChoice(
-                 title=_("Informations to query"),
-                 help=_("Defines what information to query. You can choose "
-                        "between the alarms, collectors, cluster statistics, "
-                        "failures, jvm heap size, message count, nodes and sidecar "
-                        "fleet."),
+                 title=_("Information to query"),
+                 help=_("Defines what information to query."),
                  choices=[
                      ("alerts", _("Alarms")),
-                     ("collectors", _("Collectors")),
                      ("cluster_stats", _("Cluster statistics")),
                      ("cluster_traffic", _("Cluster traffic statistics")),
                      ("failures", _("Failed index operations")),
                      ("jvm", _("JVM heap size")),
+                     ("license", _("License state")),
                      ("messages", _("Message count")),
                      ("nodes", _("Nodes")),
-                     ("sidecars", _("Sidecar fleet")),
+                     ("sidecars", _("Sidecars")),
+                     ("sources", _("Sources")),
+                     ("streams", _("Streams")),
                  ],
                  default_value=[
-                     "alerts", "collectors", "cluster_stats", "cluster_traffic", "failures", "jvm",
-                     "messages", "nodes", "sidecars"
+                     "alerts", "cluster_stats", "cluster_traffic", "failures", "jvm", "license",
+                     "messages", "nodes", "sidecars", "streams"
                  ],
                  allow_empty=False,
              )),
@@ -2321,10 +2463,10 @@ def _valuespec_special_agents_graylog():
              DropdownChoice(
                  title=_("Display node details on"),
                  help=_("The node details can be displayed either on the "
-                        "queried host or the graylog node."),
+                        "queried host or the Graylog node."),
                  choices=[
-                     ("host", _("The queried graylog host")),
-                     ("node", _("The graylog node")),
+                     ("host", _("The queried Graylog host")),
+                     ("node", _("The Graylog node")),
                  ],
                  default_value="host",
              )),
@@ -2334,8 +2476,19 @@ def _valuespec_special_agents_graylog():
                  help=_("The sidecar details can be displayed either on the "
                         "queried host or the sidecar host."),
                  choices=[
-                     ("host", _("The queried graylog host")),
+                     ("host", _("The queried Graylog host")),
                      ("sidecar", _("The sidecar host")),
+                 ],
+                 default_value="host",
+             )),
+            ("display_source_details",
+             DropdownChoice(
+                 title=_("Display source details on"),
+                 help=_("The source details can be displayed either on the "
+                        "queried host or the source host."),
+                 choices=[
+                     ("host", _("The queried Graylog host")),
+                     ("source", _("The source host")),
                  ],
                  default_value="host",
              )),

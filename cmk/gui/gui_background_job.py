@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 import cmk
-import cmk.utils.store
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKGeneralException
 
@@ -495,8 +494,8 @@ class JobRenderer(object):
         # Dynamic data
         loginfo = job_status.get("loginfo")
         runtime_info = cmk.utils.render.timespan(job_status.get("duration", 0))
-        if job_status[
-                "state"] == background_job.JobStatusStates.RUNNING and "estimated_duration" in job_status:
+        if job_status["state"] == background_job.JobStatusStates.RUNNING \
+            and job_status.get("estimated_duration") is not None:
             runtime_info += " (%s: %s)" % (_("estimated duration"),
                                            cmk.utils.render.timespan(
                                                job_status["estimated_duration"]))

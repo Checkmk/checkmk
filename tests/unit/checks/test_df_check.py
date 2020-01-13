@@ -42,10 +42,12 @@ info_df_lnx_docker = [
     [u'/dev/sda2', u'ext4', u'143786696', u'101645524', u'34814148', u'75%', u'/var/lib/docker'],
     [u'/dev/sda3', u'ext4', u'143786696', u'101645524', u'34814148', u'75%', u'/var/lib/docker-latest'],
     [u'/dev/sda4', u'ext4', u'143786696', u'101645524', u'34814148', u'75%', u'/var/lib/docker/some-fs/mnt/grtzlhash'],
+    [u'/dev/sdb1', u'ext4', u'131586052', u'75701024', u'49157812', u'61%', u'/var/lib/docker/volumes'],
     [u'[df_inodes_start]'],
     [u'/dev/sda2', u'ext4', u'9142272', u'1654272', u'7488000', u'19%', u'/var/lib/docker'],
     [u'/dev/sda3', u'ext4', u'9142272', u'1654272', u'7488000', u'19%', u'/var/lib/docker-latest'],
     [u'/dev/sda4', u'ext4', u'9142272', u'1654272', u'7488000', u'19%', u'/var/lib/docker/some-fs/mnt/grtzlhash'],
+    [u'/dev/sdb1', u'ext4', u'8388608', u'586810', u'7801798', u'7%', u'/var/lib/docker/volumes'],
     [u'[df_inodes_end]']
 ]
 # yapf:enable

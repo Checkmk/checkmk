@@ -1,0 +1,20 @@
+title: Huawei Switches: Stack
+agents: snmp
+catalog: hw/network/huawei
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the stack composition of Huawei switches and the roles of its members.
+
+ The stacking function allows multiple devices to be connected together to logically function as one device.
+
+ There are three kinds of roles that members of a stack can be in: "master", "standby" and "slave".
+
+ If the current role of a member is different from when it was discovered the state of the service changes to CRIT.
+
+item:
+ The stack member number.
+
+inventory:
+ One service for each stack member is created.
+ This check does not discover any services if the stacking function is disabled.

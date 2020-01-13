@@ -75,7 +75,7 @@ class PathPrefixAction(argparse.Action):
         setattr(namespace, self.dest, path_prefix)
 
 
-def parse(args):
+def parse_arguments(args):
     # type: (List[str]) -> argparse.Namespace
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--debug', action='store_true', help='Debug mode: raise Python exceptions')
@@ -435,6 +435,7 @@ class Pod(Metadata):
 
         status = pod.status
         if status:
+            self.phase = status.phase
             self.host_ip = status.host_ip
             self.pod_ip = status.pod_ip
             self.qos_class = status.qos_class
@@ -442,6 +443,7 @@ class Pod(Metadata):
                                         if status.container_statuses else [])
             self._conditions = status.conditions if status.conditions else []
         else:
+            self.phase = None
             self.host_ip = None
             self.pod_ip = None
             self.qos_class = None
@@ -798,14 +800,6 @@ class PersistentVolumeClaim(Metadata):
         self._spec = pvc.spec
 
     @property
-    def conditions(self):
-        # type: () -> Optional[client.V1PersistentVolumeClaimCondition]
-        # TODO: don't return client specific object
-        if self._status:
-            return self._status.conditions
-        return None
-
-    @property
     def phase(self):
         # type: () -> Optional[str]
         if self._status:
@@ -949,13 +943,13 @@ class PodList(K8sList[Pod]):
         return {
             node: {
                 'requests': {
-                    'pods': len(list(pods))
+                    'pods': len([pod for pod in pods if pod.phase not in ["Succeeded", "Failed"]])
                 }
             } for node, pods in by_node if node is not None
         }
 
     def pods_in_cluster(self):
-        return {'requests': {'pods': len(self)}}
+        return {'requests': {'pods': len([pod for pod in self if pod.phase not in ["Succeeded", "Failed"]])}}
 
     def info(self):
         return {pod.name: pod.info for pod in self}
@@ -1041,7 +1035,6 @@ class PersistentVolumeClaimList(K8sList[PersistentVolumeClaim]):
         return {
             pvc.name: {
                 'namespace': pvc.namespace,
-                'condition': pvc.conditions,
                 'phase': pvc.phase,
                 'volume': pvc.volume_name,
             } for pvc in self if pvc.name
@@ -1445,7 +1438,7 @@ def main(args=None):
     if args is None:
         cmk.utils.password_store.replace_passwords()
         args = sys.argv[1:]
-    arguments = parse(args)
+    arguments = parse_arguments(args)
 
     try:
         setup_logging(arguments.verbose)

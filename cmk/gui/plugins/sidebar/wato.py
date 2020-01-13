@@ -260,9 +260,8 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         selected_topic, selected_target = config.user.load_file("foldertree",
                                                                 (_('Hosts'), 'allhosts'))
 
-        dashboard.load_dashboards()
         topic_views = visuals_by_topic(views.get_permitted_views().items() +
-                                       dashboard.permitted_dashboards().items())
+                                       dashboard.get_permitted_dashboards().items())
         topics = [(t, t) for t, _s in topic_views]
 
         html.open_table()

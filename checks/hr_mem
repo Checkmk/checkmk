@@ -92,33 +92,33 @@ def check_hr_mem(_no_item, params, parsed):
     totalvirt_mb, virtused_mb = usage.get("virtual memory", (0, 0))
     totalmem_mb, totalused_mb = totalram_mb + totalvirt_mb, ramused_mb + virtused_mb
 
-    if totalmem_mb > 0 and totalram_mb > 0:
-        totalused_perc = 100 * totalused_mb / totalram_mb
+    if totalmem_mb <= 0 or totalram_mb <= 0:
+        return 3, "Invalid information. Total memory is empty."
 
-        perfdata = [('ramused', str(ramused_mb) + 'MB', None, None, 0, totalram_mb),
-                    ('swapused', str(virtused_mb) + 'MB', None, None, 0, totalvirt_mb)]
+    totalused_perc = 100 * totalused_mb / totalram_mb
 
-        infotext = "%.2f GB used (%.2f GB RAM + %.2f GB SWAP, this is %.1f%% of %.2f GB RAM)" % \
-               (totalused_mb / 1024.0, ramused_mb / 1024.0, virtused_mb / 1024.0, totalused_perc, totalram_mb / 1024.0)
+    perfdata = [('ramused', ramused_mb, None, None, 0, totalram_mb),
+                ('swapused', virtused_mb, None, None, 0, totalvirt_mb)]
 
-        warn, crit = params
-        if isinstance(warn, float):
-            perfdata.append(('memused', str(totalused_mb) + 'MB', int(warn / 100.0 * totalram_mb),
-                             int(crit / 100.0 * totalram_mb), 0, totalvirt_mb))
-            if totalused_perc >= crit:
-                return (2, '%s, critical at %.1f%%' % (infotext, crit), perfdata)
-            elif totalused_perc >= warn:
-                return (1, '%s, warning at %.1f%%' % (infotext, warn), perfdata)
-            return (0, '%s' % infotext, perfdata)
+    infotext = "%.2f GB used (%.2f GB RAM + %.2f GB SWAP, this is %.1f%% of %.2f GB RAM)" % \
+           (totalused_mb / 1024.0, ramused_mb / 1024.0, virtused_mb / 1024.0, totalused_perc, totalram_mb / 1024.0)
 
-        perfdata.append(('memused', str(totalused_mb) + 'MB', warn, crit, 0, totalram_mb))
-        if totalused_mb >= crit:
-            return (2, '%s, critical at %.2f GB' % (infotext, crit / 1024.0), perfdata)
-        elif totalused_mb >= warn:
-            return (1, '%s, warning at %.2f GB' % (infotext, warn / 1024.0), perfdata)
+    warn, crit = params
+    if isinstance(warn, float):
+        perfdata.append(('memused', totalused_mb, int(warn / 100.0 * totalram_mb),
+                         int(crit / 100.0 * totalram_mb), 0, totalvirt_mb))
+        if totalused_perc >= crit:
+            return (2, '%s, critical at %.1f%%' % (infotext, crit), perfdata)
+        elif totalused_perc >= warn:
+            return (1, '%s, warning at %.1f%%' % (infotext, warn), perfdata)
         return (0, '%s' % infotext, perfdata)
 
-    return 3, "Invalid information. Total memory is empty."
+    perfdata.append(('memused', totalused_mb, warn, crit, 0, totalram_mb))
+    if totalused_mb >= crit:
+        return (2, '%s, critical at %.2f GB' % (infotext, crit / 1024.0), perfdata)
+    elif totalused_mb >= warn:
+        return (1, '%s, warning at %.2f GB' % (infotext, warn / 1024.0), perfdata)
+    return (0, '%s' % infotext, perfdata)
 
 
 check_info["hr_mem"] = {

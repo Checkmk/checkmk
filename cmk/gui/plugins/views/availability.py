@@ -168,7 +168,7 @@ def render_availability_options(what):
 # Render the page showing availability table or timelines. It
 # is (currently) called by views.py, when showing a view but
 # availability mode is activated.
-def render_availability_page(view, context, filterheaders):
+def render_availability_page(view, filterheaders):
     config.user.need_permission("general.see_availability")
 
     if handle_edit_annotations():
@@ -226,7 +226,7 @@ def render_availability_page(view, context, filterheaders):
                 and "timeline_long_output" in avoptions["labelling"]
         av_rawdata, has_reached_logrow_limit = availability.get_availability_rawdata(
             what,
-            context,
+            view.context,
             filterheaders,
             view.only_sites,
             av_object=av_object,

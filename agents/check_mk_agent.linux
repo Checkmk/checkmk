@@ -25,8 +25,16 @@
 # Boston, MA 02110-1301 USA.
 
 # Remove locale settings to eliminate localized outputs where possible
-export LC_ALL=C
+# The locale logic here is used to make the Python encoding detection
+# work (see CMK-2778).
 unset LANG
+INSTALLED_LOCALES=$(locale -a)
+for i in "C.UTF-8" "C.utf8" "C"; do
+    if echo "$INSTALLED_LOCALES" | grep -q -w -F "$i"; then
+        export LC_ALL="$i"
+        break
+    fi
+done
 
 export MK_LIBDIR=${MK_LIBDIR:-/usr/lib/check_mk_agent}
 export MK_CONFDIR=${MK_CONFDIR:-/etc/check_mk}
@@ -528,13 +536,19 @@ fi
 
 echo '<<<lnx_if:sep(58)>>>'
 sed 1,2d /proc/net/dev
-if inpath ethtool; then
-    sed -e 1,2d /proc/net/dev | cut -d':' -f1 | sort | while read -r eth; do
-        echo "[$eth]"
+sed -e 1,2d /proc/net/dev | cut -d':' -f1 | sort | while read -r eth; do
+    echo "[$eth]"
+    if inpath ethtool; then
         ethtool "$eth" | grep -E '(Speed|Duplex|Link detected|Auto-negotiation):'
-        echo -e "\tAddress: $(cat "/sys/class/net/$eth/address")\n"
-    done
-fi
+    else
+        # If interface down we get "Invalid argument"
+        speed=$(cat "/sys/class/net/$eth/speed" 2>/dev/null)
+        if [ -n "$speed" ] && [ $speed -ge 0 ]; then
+            echo -e "\tSpeed: ${speed}Mb/s\n"
+        fi
+    fi
+    echo -e "\tAddress: $(cat "/sys/class/net/$eth/address")\n"
+done
 
 # Current state of bonding interfaces
 if [ -e /proc/net/bonding ]; then
@@ -737,17 +751,21 @@ if [ -e /etc/openvpn/openvpn-status.log ]; then
         sed -e 1,3d -e '$d'
 fi
 
-TIMESYNC_STATUS=$(systemctl status ntp | awk '{if(NR==3) print $2}')
-if [ $TIMESYNC_STATUS == "active" ]; then
-    # Time synchronization with NTP
-    if inpath ntpq; then
-        # remove heading, make first column space separated
-        run_cached -s ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
+is_timesync_succesful=false
+if inpath systemctl; then
+    timesync_status=$(systemctl status ntp | awk '{if(NR==3) print $2}')
+    if [ $timesync_status == "active" ]; then
+        if inpath ntpq; then
+            # remove heading, make first column space separated
+            run_cached -s ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
+            is_timesync_succesful=true
+        fi
     fi
-else
-    # Time synchronization with systemd timesyncd
-    VERSION=$(systemd --version | awk '{if(NR==1) print $2}')
-    if [ $VERSION -ge 239 ]; then
+fi
+
+if ! $is_timesync_succesful && inpath systemd; then
+    systemd_version=$(systemd --version | awk '{if(NR==1) print $2}')
+    if [ $systemd_version -ge 239 ]; then
         if inpath timedatectl; then
             echo "<<<timesyncd>>>"
             timedatectl timesync-status
@@ -808,9 +826,7 @@ read_postfix_queue_dirs() {
     postfix_queue_dir=$1
     if [ -n "$postfix_queue_dir" ]; then
         echo '<<<postfix_mailq>>>'
-        if [ -n "$2" ]; then
-            echo "[[[${2}]]]"
-        fi
+        echo "[[[${2}]]]"
         for queue in deferred active; do
             count=$(find "${postfix_queue_dir}/$queue" -type f | wc -l)
             size=$(du -s "${postfix_queue_dir}/$queue" | awk '{print $1 }')
@@ -839,11 +855,9 @@ if inpath postconf; then
                 read_postfix_queue_dirs "$postfix_queue_dir" "$queue_dir"
             fi
         done
-
-    else
-        postfix_queue_dir=$(postconf -h queue_directory 2>/dev/null)
-        read_postfix_queue_dirs "$postfix_queue_dir"
     fi
+    # Always check for the default queue. It can exist even if multiple instances are configured
+    read_postfix_queue_dirs "$(postconf -h queue_directory 2>/dev/null)"
 
 elif [ -x /usr/sbin/ssmtp ]; then
     echo '<<<postfix_mailq>>>'
@@ -1185,7 +1199,7 @@ if [ -e "$MK_CONFDIR/runas.cfg" ]; then
                             fi
 
                             if [ -n "$PREFIX" ]; then
-                                cmdline="$PREFIX\'$cmdline\'"
+                                cmdline="$PREFIX'$cmdline'"
                             fi
                             if [ -z "$interval" ]; then
                                 run_mrpe "$descr" "$cmdline"
@@ -1197,7 +1211,7 @@ if [ -e "$MK_CONFDIR/runas.cfg" ]; then
                 # local and plugin includes
                 elif [ "$type" == "local" -o "$type" == "plugin" ]; then
                     if [ "$type" == "local" ]; then
-                        echo "<<<local>>>"
+                        echo "<<<local:sep(0)>>>"
                     fi
 
                     find "$include" -executable -type f |
@@ -1225,7 +1239,7 @@ is_valid_plugin() {
 }
 
 # Local checks
-echo '<<<local>>>'
+echo '<<<local:sep(0)>>>'
 if cd "$LOCALDIR"; then
     for skript in ./*; do
         if is_valid_plugin "$skript"; then

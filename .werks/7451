@@ -13,19 +13,13 @@ future behavior of this metric.
 Forecast Graphs in Checkmk implements its time series prediction using
 Facebook's Prophet tool. This external tool is not packaged inside Checkmk
 and needs to be installed separately. The following instructions assist on
-the installation processes and strip unnecessary dependencies. Within your
-site execute the following instructions.
+the installation processes and strip unnecessary dependencies. Do the
+installation on the sites you want to calculate and visualize the forecast.
+Slave sites which only do monitoring don't need the package.
 
-<code>
-    pip install pystan
-    pip install fbprophet
-    pip uninstall -y matplotlib
-    find local/lib/ -iname tests | xargs rm -rf
-    find local/lib/ -name test | xargs rm -rf
-    rm -rf local/lib/python/pystan/stan/src
-    rm -rf local/lib/python/pystan/stan/lib/stan_math
-    omd restart
-</code>
+To install the dependencies run the script in
+{bin/install_fbprophet}. This script has additional flags {-u} if you
+want to uninstall the dependencies and {-h} for a help summary.
 
 The easiest way to use a metric data for Forecast is from the service view
 under "Service Metrics" to click in the graph icon and select "Use this

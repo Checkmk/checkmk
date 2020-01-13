@@ -32,23 +32,12 @@
 factory_settings["pse_poe_default_levels"] = {"levels": (90.0, 95.0)}
 
 
-#  constants for operational status
-class Status(enum.IntEnum):
-    ON = 1
-    OFF = 2
-    FAULTY = 3
-
-
-# PSE/PoE data
-PseData = collections.namedtuple('PseValues', 'poe_max poe_used pse_op_status')
-
-
 def parse_pse_poe(info):
     """
     parse info data and create dictionary with namedtuples for each OID.
 
     {
-       oid_end : PseData(poe_max, poe_used, pse_op_status)
+       oid_end : PoeValues(poe_max, poe_used, poe_status, poe_status_detail)
     }
 
     :param info: parsed snmp data
@@ -56,9 +45,10 @@ def parse_pse_poe(info):
     """
     poe_dict = {}
     for oid_end, poe_max, pse_op_status, poe_used in info:
-        poe_dict[str(oid_end)] = PseData(poe_max=int(poe_max),
-                                         poe_used=int(poe_used),
-                                         pse_op_status=int(pse_op_status))
+        poe_dict[str(oid_end)] = PoeValues(poe_max=int(poe_max),
+                                           poe_used=int(poe_used),
+                                           poe_status=int(pse_op_status),
+                                           poe_status_detail=None)
     return poe_dict
 
 
@@ -67,33 +57,8 @@ def inventory_pse_poe(parsed):
 
 
 @get_parsed_item_data
-def check_pse_poe(item, params, pse_data):
-    # data sanity-check
-    if pse_data.poe_max < 0 or pse_data.poe_used < 0 or pse_data.pse_op_status not in range(1, 4):
-        return 3, "Device returned faulty data: nominal power: %s, power consumption: %s, operational status: %s" % (
-            str(pse_data.poe_max), str(pse_data.poe_used), str(pse_data.pse_op_status))
-
-    # PoE on device is turned ON
-    if pse_data.pse_op_status == Status.ON:
-
-        # calculate percentage of power consumption
-        poe_used_percentage = ((float(pse_data.poe_used) / float(pse_data.poe_max)) *
-                               100) if pse_data.poe_max > 0 else 0
-
-        return check_levels(poe_used_percentage,
-                            "power_usage_percentage",
-                            params["levels"],
-                            human_readable_func=get_percent_human_readable,
-                            infoname="POE usage (%sW/%sW): " %
-                            (pse_data.poe_used, pse_data.poe_max))
-
-    # PoE on device is turned OFF
-    if pse_data.pse_op_status == Status.OFF:
-        return 0, "Operational status of the main PSE is OFF"
-
-    # PoE on device is FAULTY
-    if pse_data.pse_op_status == Status.FAULTY:
-        return 2, "Operational status of the main PSE is FAULTY"
+def check_pse_poe(item, params, poe_data):
+    return check_poe_data(params, poe_data)
 
 
 check_info["pse_poe"] = {
@@ -104,5 +69,6 @@ check_info["pse_poe"] = {
     "service_description": "POE%s consumption ",
     "has_perfdata": True,
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.105.1.3.1.1.*"),
-    "snmp_info": (".1.3.6.1.2.1.105.1.3.1.1", [OID_END, "2", "3", "4"])
+    "snmp_info": (".1.3.6.1.2.1.105.1.3.1.1", [OID_END, "2", "3", "4"]),
+    'includes': ["poe.include"],
 }

@@ -29,6 +29,7 @@ import ast
 import os
 import shutil
 import time
+from typing import List, Tuple, Union  # pylint: disable=unused-import
 import multiprocessing
 
 import cmk.utils
@@ -88,7 +89,7 @@ ACTIVATION_TIME_PROFILE_SYNC = "profile-sync"
 var_dir = cmk.utils.paths.var_dir + "/wato/"
 
 # Directories and files to synchronize during replication
-_replication_paths = []
+_replication_paths = []  # type: List[Union[Tuple[str, str, str], Tuple[str, str, str, List[str]]]]
 
 
 def add_replication_paths(paths):
@@ -131,11 +132,15 @@ def get_replication_paths():
 
 
 def _load_site_replication_status(site_id, lock=False):
-    return store.load_data_from_file(_site_replication_status_path(site_id), {}, lock)
+    return store.load_object_from_file(
+        _site_replication_status_path(site_id),
+        default={},
+        lock=lock,
+    )
 
 
 def _save_site_replication_status(site_id, repl_status):
-    store.save_data_to_file(_site_replication_status_path(site_id), repl_status, pretty=False)
+    store.save_object_to_file(_site_replication_status_path(site_id), repl_status, pretty=False)
     _cleanup_legacy_replication_status()
 
 
@@ -334,7 +339,7 @@ class ActivateChanges(object):
         manager = ActivateChangesManager()
         site_state_path = os.path.join(manager.activation_persisted_dir,
                                        manager.site_filename(site_id))
-        return store.load_data_from_file(site_state_path, {})
+        return store.load_object_from_file(site_state_path, {})
 
     def _get_last_change_id(self):
         return self._changes[-1][1]["id"]
@@ -517,7 +522,7 @@ class ActivateChangesManager(ActivateChanges):
                                               site_id)
 
     def _load_activation(self):
-        self.__dict__.update(store.load_data_from_file(self._info_path(), {}))
+        self.__dict__.update(store.load_object_from_file(self._info_path(), {}))
 
     def _save_activation(self):
         try:
@@ -528,7 +533,7 @@ class ActivateChangesManager(ActivateChanges):
             else:
                 raise
 
-        return store.save_data_to_file(
+        return store.save_object_to_file(
             self._info_path(), {
                 "_sites": self._sites,
                 "_activate_until": self._activate_until,
@@ -701,7 +706,7 @@ class ActivateChangesManager(ActivateChanges):
                                               userdb.user_sync_default_config(site_id)),
         })
 
-        store.save_data_to_file(tmp_dir + "/sitespecific.mk", site_globals)
+        store.save_object_to_file(tmp_dir + "/sitespecific.mk", site_globals)
 
     def _start_activation(self):
         self._log_activation()
@@ -752,7 +757,7 @@ class ActivateChangesManager(ActivateChanges):
         return self._load_site_state(site_id)
 
     def _load_site_state(self, site_id):
-        return store.load_data_from_file(self.site_state_path(site_id), {})
+        return store.load_object_from_file(self.site_state_path(site_id), {})
 
     def site_state_path(self, site_id):
         return os.path.join(self.activation_tmp_base_dir, self._activation_id,
@@ -1131,7 +1136,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                                   self._activation_id,
                                   ActivateChangesManager.site_filename(self._site_id))
 
-        return store.save_data_to_file(
+        return store.save_object_to_file(
             state_path, {
                 "_site_id": self._site_id,
                 "_phase": self._phase,

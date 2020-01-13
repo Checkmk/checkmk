@@ -27,18 +27,13 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <cstdint>
-#include <string>
 #include "IntColumn.h"
 #include "contact_fwd.h"
 class Row;
 
 class OffsetIntColumn : public IntColumn {
 public:
-    OffsetIntColumn(const std::string& name, const std::string& description,
-                    int indirect_offset, int extra_offset,
-                    int extra_extra_offset, int offset)
-        : IntColumn(name, description, indirect_offset, extra_offset,
-                    extra_extra_offset, offset) {}
+    using IntColumn::IntColumn;
     int32_t getValue(Row row, const contact* auth_user) const override;
 };
 

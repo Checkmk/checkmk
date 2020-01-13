@@ -25,149 +25,27 @@
 # Boston, MA 02110-1301 USA.
 """Wrapper layer between WSGI and the GUI application code"""
 
-import re
-
 import six
-import werkzeug.http
 import werkzeug.wrappers
+from werkzeug.utils import get_content_type
 
-import cmk.gui.log as log
 from cmk.gui.i18n import _
 
-# TODO: For some aracane reason, we are a bit restrictive about the allowed
-# variable names. Try to figure out why...
-_VARNAME_REGEX = re.compile(r'^[:\w.%*+=-]+$')
 
+class LegacyVarsMixin(object):
+    """Holds a dict of vars.
 
-def _valid_varname(v):
-    return _VARNAME_REGEX.match(v)
+    These vars are being set throughout the codebase. Using this Mixin the vars will
+    not modify the default request variables but rather shadow them. In the case of vars
+    being removed, the variables from the request will show up again (given they were
+    shadowed in the first place).
+    """
+    DELETED = object()
 
+    def __init__(self, *args, **kw):
+        super(LegacyVarsMixin, self).__init__(*args, **kw)
+        self.legacy_vars = self._vars = {}
 
-class Request(object):
-    """Provides information about the users HTTP request to the application
-
-    This class essentially wraps the information provided with the WSGI environment
-    and provides some low level functions to the application for accessing these
-    information. These should be basic HTTP request handling things and no application
-    specific mechanisms."""
-    def __init__(self, wsgi_environ):
-        super(Request, self).__init__()
-        self._logger = log.logger.getChild("http.Request")
-        self._wsgi_environ = wsgi_environ
-
-        # Last occurrence takes precedence, making appending to current URL simpler
-        wrequest = werkzeug.wrappers.Request(wsgi_environ)
-        self._vars = {k: vs[-1].encode("utf-8") \
-                      for k, vs in wrequest.values.lists()
-                      if _valid_varname(k)}
-
-        # NOTE: There could be multiple entries with the same key, we ignore that for now...
-        self._uploads = {}
-        for k, f in wrequest.files.iteritems():
-            # TODO: We read the whole data here and remember it. Should we
-            # offer the underlying stream directly?
-            self._uploads[k] = (f.filename, f.mimetype, f.read())
-            f.close()
-
-        # TODO: To be compatible with Check_MK <1.5 handling / code base we
-        # prevent parse_cookie() from decoding the stuff to unicode. One bright
-        # day we'll switch all input stuff to be parsed to unicode, then we'll
-        # clean this up!
-        self.cookies = werkzeug.http.parse_cookie(wsgi_environ, charset=None)
-
-    @property
-    def requested_file(self):
-        return self._wsgi_environ["SCRIPT_NAME"]
-
-    @property
-    def requested_url(self):
-        return self._wsgi_environ["REQUEST_URI"]
-
-    @property
-    def request_method(self):
-        return self._wsgi_environ['REQUEST_METHOD']
-
-    @property
-    def remote_ip(self):
-        try:
-            return self._wsgi_environ["HTTP_X_FORWARDED_FOR"].split(",")[-1].strip()
-        except KeyError:
-            return self._wsgi_environ["REMOTE_ADDR"]
-
-    @property
-    def remote_user(self):
-        """Returns either the REMOTE_USER authenticated with the web server or None"""
-        return self._wsgi_environ.get("REMOTE_USER")
-
-    @property
-    def is_ssl_request(self):
-        return self._wsgi_environ.get("HTTP_X_FORWARDED_PROTO") == "https"
-
-    @property
-    def is_multithreaded(self):
-        return self._wsgi_environ.get("wsgi.multithread", False)
-
-    @property
-    def user_agent(self):
-        return self._wsgi_environ.get("USER_AGENT", "")
-
-    @property
-    def referer(self):
-        return self._wsgi_environ.get("REFERER")
-
-    @property
-    def request_timeout(self):
-        """The system web servers configured request timeout. This is the time
-        before the request is terminated from the view of the client."""
-        # TODO: Found no way to get this information from WSGI environment. Hard code
-        # the timeout for the moment.
-        return 110
-
-    def get_request_header(self, key, deflt=None):
-        """Returns the value of a HTTP request header
-
-        Applies the CGI variable name mangling to the requested variable name
-        which is used by Apache 2.4+ and mod_wsgi to finally produce the
-        wsgi_environ.
-
-        a) mod_wsgi/Apache only make the variables available that consist of alpha numeric
-           and minus characters. Other variables are skipped.
-        b) e.g. X-Remote-User is available as HTTP_X_REMOTE_USER
-        """
-        env_key = "HTTP_%s" % key.upper().replace("-", "_")
-        return self._wsgi_environ.get(env_key, deflt)
-
-    def has_cookie(self, varname):
-        """Whether or not the client provides a cookie with the given name"""
-        return varname in self.cookies
-
-    def get_cookie_names(self):
-        """Return the names of all cookies sent by the client"""
-        return self.cookies.keys()
-
-    def cookie(self, varname, deflt=None):
-        """Return either the value of the cookie provided by the client, the given deflt value or None"""
-        try:
-            return self.cookies[varname]
-        except KeyError:
-            return deflt
-
-    #
-    # Variable handling
-    #
-
-    def var(self, varname, deflt=None):
-        return self._vars.get(varname, deflt)
-
-    def has_var(self, varname):
-        return varname in self._vars
-
-    def itervars(self, prefix=""):
-        return (item \
-                for item in self._vars.iteritems() \
-                if item[0].startswith(prefix))
-
-    # TODO: self._vars should be strictly read only in the Request() object
     def set_var(self, varname, value):
         if not isinstance(value, six.string_types):
             raise TypeError(_("Only str and unicode values are allowed, got %s") % type(value))
@@ -177,23 +55,171 @@ class Request(object):
         # the HTTP request.
         if isinstance(varname, six.text_type):
             varname = varname.encode("utf-8")
+
         if isinstance(value, six.text_type):
             value = value.encode("utf-8")
 
-        self._vars[varname] = value
+        self.legacy_vars[varname] = value
 
-    # TODO: self._vars should be strictly read only in the Request() object
     def del_var(self, varname):
-        self._vars.pop(varname, None)
+        if isinstance(varname, six.text_type):
+            varname = varname.encode("utf-8")
+        self.legacy_vars[varname] = self.DELETED
 
-    # TODO: self._vars should be strictly read only in the Request() object
     def del_vars(self, prefix=""):
-        for varname, _value in list(self.itervars(prefix)):
-            self.del_var(varname)
+        for varname, _value in list(self.legacy_vars.items()):
+            if varname.startswith(prefix):
+                self.del_var(varname)
 
-    def uploaded_file(self, varname):
-        # returns either a triple of (filename, mime-type, content) or None
-        return self._uploads.get(varname)
+    def itervars(self, prefix=""):
+        skip = []
+        for name, value in self.legacy_vars.items():
+            if name.startswith(prefix):
+                skip.append(name)
+                if value is self.DELETED:
+                    continue
+                yield name, value
+
+        # We only fall through to the real HTTP request if our var isn't set and isn't deleted.
+        for name, value in super(LegacyVarsMixin, self).itervars(prefix=prefix):
+            if name in skip:
+                continue
+            yield name, value
+
+    def has_var(self, varname):
+        if isinstance(varname, six.text_type):
+            varname = varname.encode("utf-8")
+        if varname in self.legacy_vars:
+            return self.legacy_vars[varname] is not self.DELETED
+
+        # We only fall through to the real HTTP request if our var isn't set and isn't deleted.
+        return super(LegacyVarsMixin, self).has_var(varname)
+
+    def var(self, varname, default=None):
+        if isinstance(varname, six.text_type):
+            varname = varname.encode("utf-8")
+
+        legacy_var = self.legacy_vars.get(varname, None)
+        if legacy_var is not None:
+            if legacy_var is not self.DELETED:
+                return legacy_var
+            return default
+        # We only fall through to the real HTTP request if our var isn't set and isn't deleted.
+        return super(LegacyVarsMixin, self).var(varname, default)
+
+
+class LegacyUploadMixin(object):
+    def __init__(self, *args, **kw):
+        super(LegacyUploadMixin, self).__init__(*args, **kw)
+        self.upload_cache = {}
+
+    def uploaded_file(self, name):
+        # NOTE: There could be multiple entries with the same key, we ignore that for now...
+        f = self.files.get(name)
+        if name not in self.upload_cache and f:
+            self.upload_cache[name] = (f.filename, f.mimetype, f.read())
+            f.close()
+
+        return self.upload_cache[name]
+
+
+class LegacyDeprecatedMixin(object):
+    """Some wrappers which are still used while their use is considered deprecated.
+
+    They are to be removed as they provide no additional value over the already available
+    methods and properties in Request itself.
+    """
+    def itervars(self, prefix=""):
+        # TODO: Deprecated
+        for name, values in self.values.lists():
+            if name.startswith(prefix):
+                # Preserve previous behaviour
+                yield name, values[-1].encode("utf-8") if values else None
+
+    def var(self, name, default=None):
+        # TODO: Deprecated
+        values = self.values.getlist(name)
+        if not values:
+            return default
+
+        # Preserve previous behaviour
+        return values[-1].encode("utf-8")
+
+    def has_var(self, varname):
+        # TODO: Deprecated
+        return varname in self.values
+
+    def has_cookie(self, varname):
+        """Whether or not the client provides a cookie with the given name"""
+        # TODO: Deprecated
+        return varname in self.cookies
+
+    def cookie(self, varname, default=None):
+        """Return the value of the cookie provided by the client.
+
+        If the cookie has not been set, None will be returned as a default.
+        This default can be changed by passing is as the second parameter."""
+        # TODO: Deprecated
+        value = self.cookies.get(varname, default)
+        if value is not None:
+            # Why would we want to do that? test_http.py requires it though.
+            return value.encode('utf-8')
+
+    def get_request_header(self, key, default=None):
+        # TODO: Deprecated
+        return self.headers.get(key, default)
+
+    def get_cookie_names(self):
+        # TODO: Deprecated
+        return self.cookies.keys()
+
+    @property
+    def referer(self):
+        # TODO: Deprecated
+        return self.referrer
+
+    @property
+    def request_method(self):
+        # TODO: Deprecated
+        return self.method
+
+    @property
+    def requested_url(self):
+        # TODO: Deprecated
+        return self.url
+
+    @property
+    def requested_file(self):
+        # TODO: Deprecated
+        return self.base_url
+
+    @property
+    def is_ssl_request(self):
+        # TODO: Deprecated
+        return self.is_secure
+
+    @property
+    def remote_ip(self):
+        # TODO: Deprecated
+        return self.remote_addr
+
+
+class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, werkzeug.wrappers.Request):
+    """Provides information about the users HTTP request to the application
+
+    This class essentially wraps the information provided with the WSGI environment
+    and provides some low level functions to the application for accessing these
+    information. These should be basic HTTP request handling things and no application
+    specific mechanisms.
+    """
+    # pylint: disable=too-many-ancestors
+    @property
+    def request_timeout(self):
+        """The system web servers configured request timeout. This is the time
+        before the request is terminated from the view of the client."""
+        # TODO: Found no way to get this information from WSGI environment. Hard code
+        #       the timeout for the moment.
+        return 110
 
 
 class Response(werkzeug.wrappers.Response):
@@ -206,5 +232,9 @@ class Response(werkzeug.wrappers.Response):
 
     def set_http_cookie(self, key, value, secure=None):
         if secure is None:
+            # TODO: Use the request-self proxy for this so the callers don't have to supply this
             secure = self._is_secure
         super(Response, self).set_cookie(key, value, secure=secure, httponly=True)
+
+    def set_content_type(self, mime_type):
+        self.headers["Content-type"] = get_content_type(mime_type, self.charset)

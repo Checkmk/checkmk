@@ -3,8 +3,11 @@
 
 #include "pch.h"
 
+#include <yaml-cpp/yaml.h>
+
 #include <chrono>
 #include <filesystem>
+#include <future>
 
 #include "cfg_details.h"
 #include "common/cfg_info.h"
@@ -14,13 +17,16 @@
 #include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
-#include "yaml-cpp/yaml.h"
+
+namespace cma::details {
+extern bool G_Service;
+extern bool G_Test;
+}  // namespace cma::details
 
 namespace wtools {  // to become friendly for cma::cfg classes
 
 TEST(Wtools, ScanProcess) {
     using namespace std::chrono;
-    ON_OUT_OF_SCOPE(printf("eof ScanProcess\n"));
     try {
         std::vector<std::string> names;
 
@@ -110,7 +116,6 @@ TEST(Wtools, ScanProcess) {
 }
 
 TEST(Wtools, ConditionallyConvertLowLevel) {
-    ON_OUT_OF_SCOPE(printf("eof CCLL\n"));
     {
         std::vector<uint8_t> v = {0xFE, 0xFE};
         EXPECT_FALSE(wtools::IsVectorMarkedAsUTF16(v));
@@ -406,6 +411,42 @@ TEST(Wtools, Acl) {
         auto ret = info_temp.query();
         if (ret == S_OK) XLOG::l("\n{}", info_temp.output());
     }
+}
+
+TEST(Wtools, LineEnding) {
+    cma::OnStartTest();
+    tst::SafeCleanTempDir();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+    std::filesystem::path tmp = cma::cfg::GetTempDir();
+
+    auto work_file = tmp / "lf.test";
+
+    const std::string s = "a\nb\r\nc\nd\n\n";
+    const std::string expected = "a\r\nb\r\r\nc\r\nd\r\n\r\n";
+
+    std::ofstream tst(work_file, std::ios::binary);
+    tst.write(s.c_str(), s.size());
+    tst.close();
+
+    wtools::PatchFileLineEnding(work_file);
+
+    auto result = ReadWholeFile(work_file);
+    EXPECT_EQ(result, expected);
+}
+
+TEST(Wtools, UserGroupName) {
+    cma::OnStartTest();
+    EXPECT_TRUE(GenerateCmaUserNameInGroup(L"").empty());
+    EXPECT_EQ(GenerateCmaUserNameInGroup(L"XX"), L"cmk_TST_XX");
+
+    cma::details::G_Service = true;
+    ON_OUT_OF_SCOPE(cma::details::G_Service = false;
+                    cma::details::G_Test = true);
+
+    EXPECT_EQ(GenerateCmaUserNameInGroup(L"XX"), L"cmk_in_XX");
+    cma::details::G_Service = false;
+    cma::details::G_Test = false;
+    EXPECT_TRUE(GenerateCmaUserNameInGroup(L"XX").empty());
 }
 
 }  // namespace wtools

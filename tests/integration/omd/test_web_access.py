@@ -27,7 +27,7 @@ def test_base_path_redirects(site):
     web.check_redirect("/%s/check_mk" % site.id, expected_target=expected_target)
 
 
-def test_cmk_base_path_access(site):
+def test_base_path_access(site):
     web = CMKWebSession(site)
     expected_target = "/%s/check_mk/login.py?_origtarget=index.py" % site.id
 

@@ -4,19 +4,18 @@
 import json
 import six
 import pytest  # type: ignore
-from pathlib2 import Path
-import six
 
 import cmk
 import cmk.utils.paths
-import cmk.gui.modules as modules
 import cmk.gui.config as config
+from cmk.gui.exceptions import MKAuthException
 import cmk.gui.permissions as permissions
 from cmk.gui.globals import html
 from cmk.gui.permissions import (
     permission_section_registry,
     permission_registry,
 )
+from livestatus import SiteConfigurations
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 
@@ -100,6 +99,7 @@ def test_registered_permissions():
         'action.remove_all_downtimes',
         'action.reschedule',
         'action.star',
+        'action.delete_crash_report',
         'background_jobs.delete_foreign_jobs',
         'background_jobs.delete_jobs',
         'background_jobs.manage_jobs',
@@ -281,6 +281,7 @@ def test_registered_permissions():
         'view.comments_of_host',
         'view.comments_of_service',
         'view.contactnotifications',
+        'view.crash_reports',
         'view.downtime_history',
         'view.downtimes',
         'view.downtimes_of_host',
@@ -312,9 +313,18 @@ def test_registered_permissions():
         'view.host_warn',
         'view.hostevents',
         'view.hostgroup',
+        'view.hostgroup_up',
+        'view.hostgroup_down',
+        'view.hostgroup_unreach',
+        'view.hostgroup_pend',
         'view.hostgroupgrid',
         'view.hostgroups',
         'view.hostgroupservices',
+        'view.hostgroupservices_ok',
+        'view.hostgroupservices_warn',
+        'view.hostgroupservices_crit',
+        'view.hostgroupservices_unknwn',
+        'view.hostgroupservices_pend',
         'view.hostnotifications',
         'view.hostpnp',
         'view.hostproblems',
@@ -405,6 +415,11 @@ def test_registered_permissions():
         'view.servicegroup',
         'view.sitehosts',
         'view.sitesvcs',
+        'view.sitesvcs_crit',
+        'view.sitesvcs_ok',
+        'view.sitesvcs_pend',
+        'view.sitesvcs_unknwn',
+        'view.sitesvcs_warn',
         'view.stale_hosts',
         'view.starred_hosts',
         'view.starred_services',
@@ -804,7 +819,7 @@ def my_theme(theme_dirs):
     theme_path = theme_dirs[0]
     my_dir = theme_path / "my_theme"
     my_dir.mkdir()
-    my_dir.joinpath("theme.json").open(mode="w", encoding="utf-8").write(
+    (my_dir / "theme.json").open(mode="w", encoding="utf-8").write(
         six.text_type(json.dumps({"title": "Määh Theme :-)"})))
     return my_dir
 
@@ -822,7 +837,7 @@ def test_theme_choices_local_theme(theme_dirs, my_theme):
 
     my_dir = local_theme_path / "my_improved_theme"
     my_dir.mkdir()
-    my_dir.joinpath("theme.json").open(mode="w", encoding="utf-8").write(
+    (my_dir / "theme.json").open(mode="w", encoding="utf-8").write(
         six.text_type(json.dumps({"title": "Määh Bettr Theme :-D"})))
 
     assert config.theme_choices() == sorted([
@@ -836,7 +851,7 @@ def test_theme_choices_override(theme_dirs, my_theme):
 
     my_dir = local_theme_path / "my_theme"
     my_dir.mkdir()
-    my_dir.joinpath("theme.json").open(mode="w", encoding="utf-8").write(
+    (my_dir / "theme.json").open(mode="w", encoding="utf-8").write(
         six.text_type(json.dumps({"title": "Fixed theme"})))
 
     assert config.theme_choices() == sorted([
@@ -845,7 +860,7 @@ def test_theme_choices_override(theme_dirs, my_theme):
 
 
 def test_theme_broken_meta(my_theme):
-    my_theme.joinpath("theme.json").open(mode="w", encoding="utf-8").write(
+    (my_theme / "theme.json").open(mode="w", encoding="utf-8").write(
         six.text_type("{\"titlewrong\": xyz\"bla\"}"))
 
     assert config.theme_choices() == sorted([
@@ -906,3 +921,253 @@ def test_default_aux_tags():
         'snmp',
         'tcp',
     ])
+
+
+@pytest.mark.parametrize(
+    "user, alias, email, role_ids, baserole_id",
+    [
+        (
+            config.LoggedInNobody(),
+            "Unauthenticated user",
+            "nobody",
+            [],
+            "guest",  # TODO: Why is this guest "guest"?
+        ),
+        (
+            config.LoggedInSuperUser(),
+            "Superuser for unauthenticated pages",
+            "admin",
+            ["admin"],
+            "admin",
+        ),
+    ])
+def test_unauthenticated_users(user, alias, email, role_ids, baserole_id):
+    assert user.id is None
+    assert user.alias == alias
+    assert user.email == email
+    assert user.confdir is None
+
+    assert user.role_ids == role_ids
+    assert user.get_attribute('roles') == role_ids
+    assert user.baserole_id == baserole_id
+
+    assert user.get_attribute('baz', 'default') == 'default'
+    assert user.get_attribute('foo') is None
+
+    assert user.customer_id is None
+    assert user.button_counts == {}
+    assert user.contact_groups == []
+    assert user.stars == set()
+    assert user.is_site_disabled('any_site') is False
+
+    assert user.load_file('any_file', 'default') == 'default'
+    assert user.file_modified('any_file') == 0
+
+    with pytest.raises(TypeError):
+        user.save_stars()
+    with pytest.raises(TypeError):
+        user.save_site_config()
+
+
+@pytest.mark.parametrize('user', [
+    config.LoggedInNobody(),
+    config.LoggedInSuperUser(),
+])
+def test_unauthenticated_users_language(mocker, user):
+    mocker.patch.object(config, 'default_language', 'esperanto')
+    assert user.language == 'esperanto'
+
+    user.language = 'sindarin'
+    assert user.language == 'sindarin'
+
+    user.reset_language()
+    assert user.language == 'esperanto'
+
+
+@pytest.mark.parametrize('user', [
+    config.LoggedInNobody(),
+    config.LoggedInSuperUser(),
+])
+def test_unauthenticated_users_authorized_sites(mocker, user):
+    assert user.authorized_sites(SiteConfigurations({
+        'site1': {},
+    })) == SiteConfigurations({
+        'site1': {},
+    })
+
+    mocker.patch.object(config, 'allsites', lambda: SiteConfigurations({'site1': {}, 'site2': {}}))
+    assert user.authorized_sites() == SiteConfigurations({'site1': {}, 'site2': {}})
+
+
+@pytest.mark.parametrize('user', [
+    config.LoggedInNobody(),
+    config.LoggedInSuperUser(),
+])
+def test_unauthenticated_users_authorized_login_sites(mocker, user):
+    mocker.patch.object(config, 'get_login_slave_sites', lambda: ['slave_site'])
+    mocker.patch.object(config, 'allsites', lambda: SiteConfigurations({
+        'master_site': {},
+        'slave_site': {},
+    }))
+    assert user.authorized_login_sites() == SiteConfigurations({'slave_site': {}})
+
+
+def test_logged_in_nobody_permissions(mocker):
+    user = config.LoggedInNobody()
+
+    mocker.patch.object(config, 'roles', {})
+    mocker.patch.object(permissions, 'permission_registry')
+
+    assert user.may('any_permission') is False
+    with pytest.raises(MKAuthException):
+        user.need_permission('any_permission')
+
+
+def test_logged_in_super_user_permissions(mocker):
+    user = config.LoggedInSuperUser()
+
+    mocker.patch.object(
+        config,
+        'roles',
+        {
+            'admin': {
+                'permissions': {
+                    'eat_other_peoples_cake': True
+                }
+            },
+        },
+    )
+    mocker.patch.object(permissions, 'permission_registry')
+
+    assert user.may('eat_other_peoples_cake') is True
+    assert user.may('drink_other_peoples_milk') is False
+    user.need_permission('eat_other_peoples_cake')
+    with pytest.raises(MKAuthException):
+        user.need_permission('drink_other_peoples_milk')
+
+
+MONITORING_USER_CACHED_PROFILE = {
+    'alias': u'Test user',
+    'authorized_sites': ['heute', 'heute_slave_1'],
+    'contactgroups': ['all'],
+    'disable_notifications': {},
+    'email': u'test_user@tribe29.com',
+    'fallback_contact': False,
+    'force_authuser': False,
+    'locked': False,
+    'language': 'de',
+    'pager': '',
+    'roles': ['user'],
+    'start_url': None,
+    'ui_theme': 'modern-dark',
+}
+
+MONITORING_USER_SITECONFIG = {
+    'heute_slave_1': {
+        'disabled': False
+    },
+    'heute_slave_2': {
+        'disabled': True
+    }
+}
+
+MONITORING_USER_BUTTONCOUNTS = {
+    'cb_host': 1.9024999999999999,
+    'cb_hoststatus': 1.8073749999999997,
+}
+
+MONITORING_USER_FAVORITES = ['heute;CPU load']
+
+
+@pytest.fixture
+def monitoring_user(tmp_path, mocker):
+    """Returns a "Normal monitoring user" object."""
+    config_dir = tmp_path / 'config_dir'
+    user_dir = config_dir / 'test'
+    user_dir.mkdir(parents=True)
+    user_dir.joinpath('cached_profile.mk').write_text(six.text_type(MONITORING_USER_CACHED_PROFILE))
+    # SITE STATUS snapin settings:
+    user_dir.joinpath('siteconfig.mk').write_text(six.text_type(MONITORING_USER_SITECONFIG))
+    # Ordering of the buttons:
+    user_dir.joinpath('buttoncounts.mk').write_text(six.text_type(MONITORING_USER_BUTTONCOUNTS))
+    # Favorites set in the commands menu:
+    user_dir.joinpath('favorites.mk').write_text(six.text_type(MONITORING_USER_FAVORITES))
+
+    mocker.patch.object(config, 'config_dir', str(config_dir))
+    mocker.patch.object(config, 'roles_of_user', lambda user_id: ['user'])
+
+    assert config.builtin_role_ids == ['user', 'admin', 'guest']
+    assert 'test' not in config.admin_users
+
+    return config.LoggedInUser('test')
+
+
+def test_monitoring_user(monitoring_user):
+    assert monitoring_user.id == 'test'
+    assert monitoring_user.alias == 'Test user'
+    assert monitoring_user.email == 'test_user@tribe29.com'
+    assert monitoring_user.confdir.endswith('/config_dir/test')
+
+    assert monitoring_user.role_ids == ['user']
+    assert monitoring_user.get_attribute('roles') == ['user']
+    assert monitoring_user.baserole_id == 'user'
+
+    assert monitoring_user.get_attribute('ui_theme') == 'modern-dark'
+
+    assert monitoring_user.language == 'de'
+    assert monitoring_user.customer_id is None
+    assert monitoring_user.button_counts == MONITORING_USER_BUTTONCOUNTS
+    assert monitoring_user.contact_groups == ['all']
+
+    assert monitoring_user.stars == set(MONITORING_USER_FAVORITES)
+    monitoring_user.stars.add('heute;Memory')
+    assert monitoring_user.stars == {'heute;CPU load', 'heute;Memory'}
+    monitoring_user.save_stars()
+    assert set(monitoring_user.load_file('favorites', [])) == monitoring_user.stars
+
+    assert monitoring_user.is_site_disabled('heute_slave_1') is False
+    assert monitoring_user.is_site_disabled('heute_slave_2') is True
+
+    assert monitoring_user.load_file('siteconfig', None) == MONITORING_USER_SITECONFIG
+    assert monitoring_user.file_modified('siteconfig') > 0
+    assert monitoring_user.file_modified('unknown_file') == 0
+
+    monitoring_user.disable_site('heute_slave_1')
+    monitoring_user.enable_site('heute_slave_2')
+    assert monitoring_user.is_site_disabled('heute_slave_1') is True
+    assert monitoring_user.is_site_disabled('heute_slave_2') is False
+
+    assert monitoring_user.show_help is False
+    monitoring_user.show_help = True
+    assert monitoring_user.show_help is True
+
+    assert monitoring_user.acknowledged_notifications == 0
+    timestamp = 1578479929
+    monitoring_user.acknowledged_notifications = timestamp
+    assert monitoring_user.acknowledged_notifications == timestamp
+
+
+def test_monitoring_user_permissions(mocker, monitoring_user):
+    mocker.patch.object(
+        config,
+        'roles',
+        {
+            'user': {
+                'permissions': {
+                    'action.star': False,
+                    'general.edit_views': True,
+                }
+            },
+        },
+    )
+    mocker.patch.object(permissions, 'permission_registry')
+
+    assert monitoring_user.may('action.star') is False
+    assert monitoring_user.may('general.edit_views') is True
+    assert monitoring_user.may('unknown_permission') is False
+
+    with pytest.raises(MKAuthException):
+        monitoring_user.need_permission('action.start')
+    monitoring_user.need_permission('general.edit_views')
+    with pytest.raises(MKAuthException):
+        monitoring_user.need_permission('unknown_permission')

@@ -648,13 +648,17 @@ def _create_tag_group_attribute(tag_group):
 
     return type("HostAttributeTag%s" % str(tag_group.id).title(), (base_class,), {
         "_tag_group": tag_group,
+        "help": lambda _: tag_group.help,
     })
 
 
 def declare_custom_host_attrs():
     for attr in transform_pre_16_host_topics(config.wato_host_attrs):
         if attr['type'] == "TextAscii":
-            vs = TextAscii(title=attr['title'], help=attr['help'])
+            # Hack: The API does not perform validate_datatype and we can currently not enable
+            # this as fix in 1.6 (see cmk/gui/plugins/webapi/utils.py::ABCHostAttributeValueSpec.validate_input()).
+            # As a local workaround we use a custom validate function here to ensure we only get ascii characters
+            vs = TextAscii(title=attr['title'], help=attr['help'], validate=_validate_is_ascii)
         else:
             raise NotImplementedError()
 
@@ -675,6 +679,19 @@ def declare_custom_host_attrs():
             topic=topic_class,
             from_config=True,
         )
+
+
+def _validate_is_ascii(value, varprefix):
+    if isinstance(value, six.text_type):
+        try:
+            value.encode("ascii")
+        except UnicodeEncodeError:
+            raise MKUserError(varprefix, _("Non-ASCII characters are not allowed here."))
+    elif isinstance(value, six.binary_type):
+        try:
+            value.decode("ascii")
+        except UnicodeDecodeError:
+            raise MKUserError(varprefix, _("Non-ASCII characters are not allowed here."))
 
 
 def transform_pre_16_host_topics(custom_attributes):
@@ -813,6 +830,16 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
 
     def default_value(self):
         return self.valuespec().default_value()
+
+    def is_explicit(self):
+        """The return value indicates if this attribute represents an explicit set
+        value. Explicit attributes do not require cpu-intensive rule evaluations.
+        Instead, an exclicit_host_config entry will be generated, e.g.
+        explicit_host_config["alias"][hostname] = value
+
+        Used in: cmk.gui.watolib.hosts_and_folders:CREFolder:_save_hosts_file
+        """
+        return False
 
     def paint(self, value, hostname):
         return "", self.valuespec().value_to_text(value)

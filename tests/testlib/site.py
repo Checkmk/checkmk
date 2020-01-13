@@ -8,6 +8,7 @@ import subprocess
 import pipes
 import time
 import shutil
+import logging
 import six
 from six.moves.urllib.parse import urlparse
 
@@ -21,6 +22,8 @@ from testlib.utils import (
 )
 from testlib.web_session import CMKWebSession
 from testlib.version import CMKVersion
+
+logger = logging.getLogger(__name__)
 
 
 class Site(object):  # pylint: disable=useless-object-inheritance
@@ -142,11 +145,18 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                                           command_timestamp, expected_state)
 
     def schedule_check(self, hostname, service_description, expected_state):
+        logger.debug("%s;%s schedule check", hostname, service_description)
         last_check_before = self._last_service_check(hostname, service_description)
+        logger.debug("%s;%s last check before %r", hostname, service_description, last_check_before)
+
         command_timestamp = self._command_timestamp(last_check_before)
-        self.live.command(
-            "[%d] SCHEDULE_FORCED_SVC_CHECK;%s;%s;%d" %
-            (command_timestamp, hostname, service_description.encode("utf-8"), command_timestamp))
+
+        command = "[%d] SCHEDULE_FORCED_SVC_CHECK;%s;%s;%d" % \
+            (command_timestamp, hostname, service_description.encode("utf-8"), command_timestamp)
+
+        logger.debug("%s;%s: %r", hostname, service_description, command)
+        self.live.command(command)
+
         self._wait_for_next_service_check(hostname, service_description, last_check_before,
                                           command_timestamp, expected_state)
 
@@ -185,6 +195,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             "WaitTimeout: %d\n" \
             "WaitCondition: last_check > %d\n" \
             "WaitCondition: state = %d\n" \
+            "WaitCondition: has_been_checked = 1\n" \
             "WaitTrigger: check\n" % (hostname, service_description, hostname, service_description, wait_timeout*1000, last_check_before, expected_state))
         self._verify_next_check_output(command_timestamp, last_check, last_check_before, state,
                                        expected_state, plugin_output, wait_timeout)
@@ -390,8 +401,11 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         execute("sudo sed -i \"s|%s|%s|g\" %s/bin/omd" %
                 (src_version, new_version_name, self.version.version_path()))
 
-        execute("sudo sed -i \"s|%s|%s|g\" %s/lib/python/omdlib/__init__.py" %
-                (src_version, new_version_name, self.version.version_path()))
+        omd_init_path = "%s/lib/python3/omdlib/__init__.py" % self.version.version_path()
+        # Temporary hack. Can be removed after 2019-12-19
+        if not os.path.exists(omd_init_path):
+            omd_init_path = "%s/lib/python/omdlib/__init__.py" % self.version.version_path()
+        execute("sudo sed -i \"s|%s|%s|g\" %s" % (src_version, new_version_name, omd_init_path))
 
         execute("sudo sed -i \"s|%s|%s|g\" %s/share/omd/omd.info" %
                 (src_version, new_version_name, self.version.version_path()))
@@ -405,15 +419,18 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         execute("sudo chrpath -r /omd/v/%s/lib %s/bin/python" %
                 (self.version.version_directory(), self.version.version_path()))
 
+        execute("sudo chrpath -r /omd/v/%s/lib %s/bin/python3" %
+                (self.version.version_directory(), self.version.version_path()))
+
     def _update_with_f12_files(self):
         paths = [
             cmk_path() + "/omd/packages/omd",
             cmk_path() + "/livestatus",
-            cmk_path() + "/livestatus/api/python",
             cmk_path() + "/bin",
             cmk_path() + "/agents/special",
+            cmk_path() + "/agents/plugins",
             cmk_path() + "/modules",
-            cmk_path() + "/cmk_base",
+            cmk_path() + "/cmk/base",
             cmk_path() + "/cmk",
             cmk_path() + "/checks",
             cmk_path() + "/checkman",
@@ -427,7 +444,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             paths += [
                 cmc_path() + "/bin",
                 cmc_path() + "/modules",
-                cmc_path() + "/cmk_base",
+                cmc_path() + "/cmk/base",
                 cmc_path() + "/cmk",
                 cmc_path() + "/web",
                 cmc_path() + "/alert_handlers",
@@ -441,7 +458,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         if os.path.exists(cme_path()) and self.version.is_managed_edition():
             paths += [
                 cme_path(),
-                cme_path() + "/cmk_base",
+                cme_path() + "/cmk/base",
             ]
 
         # Prevent build problems of livestatus
@@ -534,6 +551,9 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                 print("The site %s is not running yet, sleeping... (round %d)" % (self.id, i))
                 sys.stdout.flush()
                 time.sleep(0.2)
+
+        assert os.path.ismount(self.path("tmp")), \
+            "The site does not have a tmpfs mounted! We require this for good performing tests"
 
     def stop(self):
         if not self.is_running():

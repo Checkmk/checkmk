@@ -32,13 +32,18 @@ RUN_CLANG_TIDY ?= \
         -clang-tidy-binary=clang-tidy-$(CLANG_VERSION) \
         -clang-apply-replacements-binary=clang-apply-replacements-$(CLANG_VERSION)
 VALGRIND ?= $(shell valgrind --version > /dev/null 2>&1 && echo "valgrind --quiet")
-PIPENV := LANG=C PIPENV_VENV_IN_PROJECT=true PIPENV_PIPFILE=$(abs_top_srcdir)/virtual-envs/2.7/Pipfile pipenv
 INCLUDES_DIR := includes
 LIBS_DIR := libs
 
 PACKAGE_ASIO := $(abs_top_srcdir)/omd/packages/asio
 ASIO_VERSION := asio-asio-1-14-0
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
+
+RRDTOOL_VERSION := rrdtool-1.7.1
+RRDTOOL_SRC_DIR := $(abs_top_srcdir)/omd/build/package_build/$(RRDTOOL_VERSION)/src
+RRDTOOL_BUILD_LOG := $(RRDTOOL_SRC_DIR)/build.log
+RRDTOOL_LD_FLAGS := -lrrd -L$(RRDTOOL_SRC_DIR)/.libs
+RRDTOOL_CPPFLAGS := -I$(RRDTOOL_SRC_DIR)
 
 PACKAGE_GOOGLETEST := $(abs_top_srcdir)/omd/packages/googletest
 GOOGLETEST_VERSION := googletest-release-1.10.0
@@ -63,34 +68,52 @@ unixcat_LDADD = -lpthread
 
 test_neb_SOURCES = \
     test/DummyNagios.cc \
-    test/test_utilities.cc \
+    test/TableQueryHelper.cc \
+    test/test_CrashReport.cc \
     test/test_CustomVarsDictFilter.cc \
-    test/test_OffsetStringMacroColumn.cc
-$(test_neb_SOURCES): $(ASIO_INCLUDE) $(GOOGLETEST_INCLUDE)
+    test/test_FileSystemHelper.cc \
+    test/test_LogEntry.cc \
+    test/test_Metric.cc \
+    test/test_OffsetStringMacroColumn.cc \
+    test/test_Queue.cc \
+    test/test_RegExp.cc \
+    test/test_StringUtil.cc \
+    test/test_utilities.cc
+$(test_neb_SOURCES): $(ASIO_INCLUDE) $(GOOGLETEST_INCLUDE) $(RRDTOOL_VERSION)
 test_neb_CPPFLAGS = \
     $(AM_CPPFLAGS) \
-    -I$(GOOGLETEST_INCLUDE)
+    -I$(GOOGLETEST_INCLUDE) \
+    $(RRDTOOL_CPPFLAGS)
+test_neb_LDFLAGS = \
+    $(AM_LDFLAGS) \
+    $(RRDTOOL_LD_FLAGS)
 test_neb_LDADD = \
     liblivestatus.a \
     -lstdc++fs \
-    -lpthread \
     @RE2_LIBS@ \
     $(LIBS_DIR)/libgtest.a \
-    $(LIBS_DIR)/libgtest_main.a
-
+    $(LIBS_DIR)/libgtest_main.a \
+    -lrrd \
+    -lpthread
 
 unit-test: test_neb$(EXEEXT)
 	GTEST_OUTPUT=xml $(VALGRIND) ./test_neb$(EXEEXT)
 
 pkglib_LIBRARIES = liblivestatus.a
 
+liblivestatus_a_CXXFLAGS = -fPIC
+liblivestatus_a_CPPFLAGS = \
+    $(AM_CPPFLAGS) \
+    $(RRDTOOL_CPPFLAGS)
+liblivestatus_a_LD_FLAGS = \
+    $(AM_LDFLAGS) \
+    $(RRDTOOL_LD_FLAGS)
 liblivestatus_a_SOURCES = \
         AndingFilter.cc \
         AttributeListAsIntColumn.cc \
         AttributeListColumn.cc \
         Average.cc \
         BlobColumn.cc \
-        ClientQueue.cc \
         Column.cc \
         ColumnFilter.cc \
         ColumnsColumn.cc \
@@ -98,6 +121,7 @@ liblivestatus_a_SOURCES = \
         ContactGroupsColumn.cc \
         ContactGroupsMemberColumn.cc \
         CountAggregator.cc \
+        CrashReport.cc \
         CustomTimeperiodColumn.cc \
         CustomVarsDictColumn.cc \
         CustomVarsDictFilter.cc \
@@ -111,14 +135,20 @@ liblivestatus_a_SOURCES = \
         DowntimesOrComments.cc \
         DynamicColumn.cc \
         DynamicEventConsoleReplicationColumn.cc \
-        DynamicLogwatchFileColumn.cc \
+        DynamicHostFileColumn.cc \
+        DynamicHostRRDColumn.cc \
+        DynamicRRDColumn.cc \
+        DynamicServiceRRDColumn.cc \
         EventConsoleConnection.cc \
+        FileSystemHelper.cc \
         Filter.cc \
         HostContactsColumn.cc \
         HostFileColumn.cc \
         HostGroupsColumn.cc \
         HostListColumn.cc \
         HostListStateColumn.cc \
+        HostMetricsColumn.cc \
+        HostRRDColumn.cc \
         HostServiceState.cc \
         HostSpecialDoubleColumn.cc \
         HostSpecialIntColumn.cc \
@@ -129,10 +159,11 @@ liblivestatus_a_SOURCES = \
         ListFilter.cc \
         LogCache.cc \
         LogEntry.cc \
+        LogEntryStringColumn.cc \
         Logfile.cc \
         Logger.cc \
         LogwatchListColumn.cc \
-        MetricsColumn.cc \
+        Metric.cc \
         NagiosCore.cc \
         NullColumn.cc \
         OffsetBoolColumn.cc \
@@ -156,15 +187,17 @@ liblivestatus_a_SOURCES = \
         RendererJSON.cc \
         RendererPython.cc \
         RendererPython3.cc \
+        RRDColumn.cc \
         ServiceContactsColumn.cc \
         ServiceGroupMembersColumn.cc \
         ServiceGroupsColumn.cc \
         ServiceListColumn.cc \
         ServiceListStateColumn.cc \
+        ServiceMetricsColumn.cc \
+        ServiceRRDColumn.cc \
         ServiceSpecialDoubleColumn.cc \
         ServiceSpecialIntColumn.cc \
         StatsColumn.cc \
-        StatusSpecialIntColumn.cc \
         Store.cc \
         StringColumn.cc \
         StringFilter.cc \
@@ -175,6 +208,7 @@ liblivestatus_a_SOURCES = \
         TableComments.cc \
         TableContactGroups.cc \
         TableContacts.cc \
+        TableCrashReports.cc \
         TableDowntimes.cc \
         TableEventConsole.cc \
         TableEventConsoleEvents.cc \
@@ -206,7 +240,7 @@ liblivestatus_a_SOURCES = \
         opids.cc \
         pnp4nagios.cc \
         strutil.cc
-$(liblivestatus_a_SOURCES): $(ASIO_INCLUDE)
+$(liblivestatus_a_SOURCES): $(ASIO_INCLUDE) $(RRDTOOL_VERSION)
 
 $(ASIO_INCLUDE): $(ASIO_VERSION)
 	mkdir -p $(ASIO_INCLUDE)
@@ -217,6 +251,17 @@ $(ASIO_INCLUDE): $(ASIO_VERSION)
 $(ASIO_VERSION): $(PACKAGE_ASIO)/$(ASIO_VERSION).tar.gz
 	$(RM) -r $@
 	tar xzf $<
+	touch $@
+
+$(RRDTOOL_VERSION):
+# TODO: This is specialized for OMD environments. We need make this automatically detect the
+# OMD scenario and perform specific things for OMD and other things for rrdtool standalone.
+	@echo Building rrdtool library...
+# Building rrdtool with modern compilers results in *tons* of warnings, which
+# would totally hide any output of our own stuff, so we write it to a log file
+# in case something goes seriously wrong.
+	mkdir -p $$(dirname $(RRDTOOL_BUILD_LOG))
+	LANG=C make -j4 -C $$(dirname $$(dirname $$(dirname $$(dirname $(RRDTOOL_SRC_DIR))))) rrdtool-build-library >$(RRDTOOL_BUILD_LOG) 2>&1
 	touch $@
 
 $(GOOGLETEST_INCLUDE): $(GOOGLETEST_VERSION)/Makefile
@@ -230,7 +275,7 @@ $(LIBS_DIR)/libgtest.a: $(LIBS_DIR)/libgmock_main.a
 $(LIBS_DIR)/libgtest_main.a: $(LIBS_DIR)/libgtest.a
 
 $(GOOGLETEST_VERSION)/Makefile: $(GOOGLETEST_VERSION)/CMakeLists.txt
-	cd $(GOOGLETEST_VERSION) && \
+	@cd $(GOOGLETEST_VERSION) && \
 	cmake -DCMAKE_CXX_COMPILER=$(CXX) \
         -DCMAKE_INSTALL_PREFIX=.. \
         -DCMAKE_INSTALL_INCLUDEDIR=$(GOOGLETEST_INCLUDE) \
@@ -243,27 +288,25 @@ $(GOOGLETEST_VERSION)/CMakeLists.txt: $(PACKAGE_GOOGLETEST)/$(GOOGLETEST_VERSION
 	tar xzf $<
 	touch $@
 
-liblivestatus_a_CXXFLAGS = -fPIC
-
 livestatus.o: $(liblivestatus_a_OBJECTS)
 # Note: libstdc++fs is only available as a static library, so we are lucky. For
 # RE2 we make sure that this is the case, too.
 	$(CXXLINK) -shared $^ -lstdc++fs -lpthread $(AM_LDFLAGS) @RE2_LIBS@
 # To make sure we can dlopen() our NEB later
 	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) -c NagiosMockup.cc -o NagiosMockup.o
-	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup
+	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup $(liblivestatus_a_LD_FLAGS)
 	$(RM) NagiosMockup
 
+# NOTE: Using make's -B flag destroys all dependencies via the am--depfiles
+# target, so we use a cruel sed hack below. :-P
 compile_commands.json: $(unixcat_SOURCES) $(test_neb_SOURCES) $(liblivestatus_a_SOURCES)
-	$(MAKE) -C $(top_srcdir) .venv
-	$(PIPENV) --venv
-	$(PIPENV) run compiledb --no-build make
+	@$(MAKE) -nwk $$(echo " $^" | sed 's/ / -W /g') | $(top_srcdir)/scripts/run-pipenv 2 run compiledb
 
 tidy: compile_commands.json
 	$(RUN_CLANG_TIDY) -quiet -j6 $(FILES_TO_CHECK)
 
 iwyu: compile_commands.json
-	$(IWYU_TOOL) --output-format=clang -p . $(FILES_TO_CHECK) -- --mapping_file=$(abs_top_srcdir)/livestatus/iwyu-mappings/check_mk.imp
+	$(IWYU_TOOL) --output-format=clang -p . $(FILES_TO_CHECK) -- -Xiwyu --mapping_file=$(abs_top_srcdir)/livestatus/iwyu-mappings/check_mk.imp
 
 # NOTE: cppcheck seems to ignore files on the command line when --project=... is given.  :-P
 cppcheck: compile_commands.json

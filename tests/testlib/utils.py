@@ -48,7 +48,9 @@ def is_managed_repo():
 
 
 def virtualenv_path():
-    venv = subprocess.check_output(["pipenv", "--bare", "--venv"])
+    venv = subprocess.check_output(
+        [repo_path() + "/scripts/run-pipenv",
+         str(sys.version_info[0]), "--bare", "--venv"])
     if not isinstance(venv, six.text_type):
         venv = venv.decode("utf-8")
     return Path(venv.rstrip("\n"))
@@ -88,12 +90,16 @@ def current_base_branch_name():
     return branch_name
 
 
+def get_cmk_download_credentials_file():
+    return "%s/.cmk-credentials" % os.environ["HOME"]
+
+
 def get_cmk_download_credentials():
-    cred = "%s/.cmk-credentials" % os.environ["HOME"]
+    credentials_file = get_cmk_download_credentials_file()
     try:
-        return tuple(open(cred).read().strip().split(":"))
+        return tuple(open(credentials_file).read().strip().split(":"))
     except IOError:
-        raise Exception("Missing %s file (Create with content: USER:PASSWORD)" % cred)
+        raise Exception("Missing %s file (Create with content: USER:PASSWORD)" % credentials_file)
 
 
 def site_id():
@@ -174,3 +180,9 @@ def InterProcessLock(filename):
         print("[%0.2f] Released lock: %s" % (time.time(), filename))
         if fd:
             os.close(fd)
+
+
+class DummyApplication(object):
+    def __init__(self, environ, start_response):
+        self._environ = environ
+        self._start_response = start_response

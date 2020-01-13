@@ -32,6 +32,7 @@ import json
 import requests
 
 import cmk.utils.password_store
+from cmk.special_agents.utils import vcrtrace
 
 cmk.utils.password_store.replace_passwords()
 
@@ -78,39 +79,49 @@ SECTION_KEYS_SIZE = (
     "couch_views_data_size",
 )
 
-STATS_KEYS_BUCKET = (
-    "ep_cache_miss_rate",
-    "ep_num_ops_del_meta",
-    "ep_ops_create",
-    "ep_diskqueue_drain",
-    "ep_diskqueue_fill",
-    "ep_bg_fetched",
-    "ep_ops_update",
-    "disk_write_queue",
-    "couch_docs_fragmentation",
-    "couch_views_fragmentation",
-    "ep_mem_high_wat",
-    "ep_mem_low_wat",
+SECTION_KEYS_B_MEM = (
     "mem_total",
     "mem_free",
+)
+
+SECTION_KEYS_B_OPERATIONS = (
     "ops",
     "cmd_get",
     "cmd_set",
-    "vb_active_resident_items_ratio",
-    "vb_active_eject",
-    "vb_active_itm_memory",
-    "vb_active_ops_create",
-    "vb_pending_num",
-    "vb_replica_num",
-    "vb_replica_itm_memory",
-    "curr_items_tot",
+    "ep_num_ops_del_meta",
 )
+
+SECTION_KEYS_B_CACHE = ("ep_cache_miss_rate",)
+
+#
+# These bucket related keys are not (yet) in use.
+#
+#    "ep_ops_create",
+#    "ep_diskqueue_drain",
+#    "ep_diskqueue_fill",
+#    "ep_bg_fetched",
+#    "ep_ops_update",
+#    "disk_write_queue",
+#    "couch_docs_fragmentation",
+#    "couch_views_fragmentation",
+#    "ep_mem_high_wat",
+#    "ep_mem_low_wat",
+#    "vb_active_resident_items_ratio",
+#    "vb_active_eject",
+#    "vb_active_itm_memory",
+#    "vb_active_ops_create",
+#    "vb_pending_num",
+#    "vb_replica_num",
+#    "vb_replica_itm_memory",
+#    "curr_items_tot",
+#
 
 
 def parse_arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("-v", "--verbose", action="count", help="Enable verbose logging.")
     parser.add_argument("--debug", action="store_true", help="Raise python exceptions.")
+    parser.add_argument("--vcrtrace", action=vcrtrace(filter_headers=[('authorization', '****')]))
     parser.add_argument("-t",
                         "--timeout",
                         default=10,
@@ -184,11 +195,11 @@ class CouchbaseClient(object):
         return self._get_suburi("/buckets/%s/stats" % bucket)
 
 
-def _get_dump(node_name, raw_data, filter_keys):
+def _get_dump(node_name, raw_data, filter_keys, process=lambda x: x):
     data = {"name": node_name}
     for key in filter_keys:
         if key in raw_data:
-            data[key] = raw_data[key]
+            data[key] = process(raw_data[key])
     return json.dumps(data)
 
 
@@ -236,24 +247,42 @@ def sections_node(client):
     return output
 
 
-def section_bucket(client, bucket):
-    """query server for bucket specific info"""
-    response = client.get_bucket(bucket)
-    try:
-        raw_data = response['op']['samples']
-    except KeyError:
-        LOGGER.warning('Invalid response: %r', response)
-        raise
+def fetch_bucket_data(client, buckets, debug):
+    for bucket in buckets:
+        try:
+            response = client.get_bucket(bucket)
+        except (ValueError, KeyError, requests.ConnectionError, requests.HTTPError):
+            if debug:
+                raise
+            continue
+        yield bucket, response.get('op', {}).get('samples', {})
 
-    out_data = {"name": bucket}
-    for key in STATS_KEYS_BUCKET:
-        if key in raw_data:
-            out_data[key] = raw_data[key]
 
-    return [
-        '<<<couchbase_buckets:sep(0)>>>',
-        json.dumps(out_data),
-    ]
+def _average(value_list):
+    if value_list:
+        return sum(value_list) / float(len(value_list))
+    return None
+
+
+def sections_buckets(bucket_list):
+
+    sections = {
+        "couchbase_buckets_mem:sep(0)": [
+            _get_dump(name, data, SECTION_KEYS_B_MEM, _average) for name, data in bucket_list
+        ],
+        "couchbase_buckets_operations:sep(0)": [
+            _get_dump(name, data, SECTION_KEYS_B_OPERATIONS, _average) for name, data in bucket_list
+        ],
+        "couchbase_buckets_cache:sep(0)": [
+            _get_dump(name, data, SECTION_KEYS_B_CACHE, _average) for name, data in bucket_list
+        ],
+    }
+
+    output = []
+    for section_name, section_content in sections.iteritems():
+        output.append('<<<%s>>>' % section_name)
+        output.extend(section_content)
+    return output
 
 
 def main(argv=None):
@@ -273,13 +302,9 @@ def main(argv=None):
             raise
         return 1
 
-    for bucket in args.buckets:
-        try:
-            output += section_bucket(client, bucket)
-        except (ValueError, KeyError, requests.ConnectionError, requests.HTTPError):
-            if args.debug:
-                raise
-            continue
+    # haha!
+    bucket_list = list(fetch_bucket_data(client, args.buckets, args.debug))
+    output += sections_buckets(bucket_list)
 
     output.append('')
     sys.stdout.write('\n'.join(output))

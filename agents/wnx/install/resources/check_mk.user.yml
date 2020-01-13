@@ -29,21 +29,21 @@
 # Overriding values from the bakery( or defauts )
 # For example we want to change sections set in output
 
-# 1. No sections at all:
-# sections: []  # <--- this is accepted as empty list of sections, agent does not send any data
+# 1. All sections are included:
+# sections: []  # <--- this is accepted as FULL list of sections, agent sends all data. To save your keystrokes
 
 # 2a. Two sections:
 # sections: [check_mk, systemtime]  # <--- this is accepted as list of two sections
 
 # 2b. One section:
-# sections: [plugins]  # <--- this is accepted as list of two sections
+# sections: [plugins]  # <--- this is accepted as list of one section
 
 # 3. We want to return back(Use values combined from default and bakery if present)
 # 3a. 
 # sections: ~   # <--- this line is skipped, this value is estimated as undefined
 
 # 3a. 
-# _sections: ~   # <--- this name, '_sections' is unknown and will be silently ignored
+# _sections: [plugins]   # <--- this name, '_sections' is unknown and will be ignored too
 
 
 global:
@@ -80,6 +80,11 @@ global:
     # async: yes
 
     # Just output certain sections
+
+    # Include all possible sections:
+    # sections: []
+
+    # Valid example, but section is renamed to _sections and wil be ignored
     _sections: 
         - check_mk 
         - mrpe 
@@ -104,10 +109,17 @@ global:
 
     # Useful example
     # sections: ~   # <--- this line is skipped as undefined
-    # sections: []  # <--- this is accepted as empty list of sections, agent does not send any data
+    # sections: []  # <--- this is accepted as FULL list of sections, agent send data from all sections
 
-    # forced to not use
-    _disabled_sections: []
+    # To disable section you have enumerate disabled section explicitly
+    # To disable ps and fileinfo:
+    _disabled_sections: [ps, fileinfo]
+    
+    # To ignore disabled_sections, you can use ~:
+    # _disabled_sections: ~
+    
+    # In this case disabled_sections will be ignored too
+    # disabled_sections: []
 
     #realtime data description
     # to control section manually change name from _realtime to realtime.
@@ -158,7 +170,7 @@ global:
 ps:
     # enabled: yes
     # use_wmi: yes
-    # full_path: yes
+    # full_path: yes # This value has effect only when use_wmi is set
 
 winperf:
     # enabled: yes
@@ -249,11 +261,22 @@ plugins:
         #  async       : yes                 # agent will not wait for async plugins. Normally you will get data later.
         #  timeout     : 120                 # after 120 seconds process will be killed.
         #  cache_age   : 3600                # only combined with async, upto 3600 seconds we may reuse plugin output
-    #                                        # default value is 0. Minimum positive value is 120.
+                                             # default value is 0. Minimum positive value is 120.
         #  retry_count : 3                   # failure on start plugin, before stopping, default 0 which means never stop attempts 
         #  cmd_line    : ''                  # reserved for future use
-        #  pattern     : '$CUSTOM_PLUGINS_PATH$\win_license.bat'   # Plugin name. * and ? are allowed
-        #  run         : no                  # do not execute this plugin even if plugin found
+        #
+        #- pattern     : '$CUSTOM_PLUGINS_PATH$\mk_scansql.vbs'    # Plugin name or absolute path . * and ? are allowed
+        #  user       : 'sql_user sql_secret' # user name(domain is allowed) and password separated with one space
+        #  run         : yes                 # execute this plugin if plugin found
+        #  
+        #- pattern     : '$CUSTOM_PLUGINS_PATH$\network_access.bat'   # Plugin requires access to the Network.
+        #  group       : 'Users'             # run plugin from the Internal Agent User belonging the this group
+        #  run         : yes
+        #  
+        #- pattern     : '$CUSTOM_PLUGINS_PATH$\win_license.bat'   # Plugin name. * and ? are allowed
+        #  run         : No                  # do not run plugin even if found
+
+
 
         - pattern     : '$CUSTOM_PLUGINS_PATH$\*.*'         # in the ProgramData folder. DO NOT REMOVE THIS ENTRY
           timeout     : 30                  # after 30 seconds process will be killed. 60 sec is default in check_mk.yml
@@ -304,3 +327,11 @@ mrpe:
         # - include user_name = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
         # - include = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
 
+system:
+    enabled: yes
+
+    #firewall:
+    #    mode: configure # allowed none, remove, configure
+    #    port: auto # allowed all or auto
+
+    #cleanup_uninstall: smart # allowed none, smart and all

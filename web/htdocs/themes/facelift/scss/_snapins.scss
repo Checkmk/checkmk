@@ -75,7 +75,7 @@ table.hostmatrix {
 
   td {
     padding: 0;
-    border: 1px solid #123a4a;
+    border: 1px solid rgb(18, 58, 74);
     border-spacing: 0;
   }
 }
@@ -116,7 +116,7 @@ body.main .popup_menu .hostmatrix td.state0 span {
 div.snapin table.master_control {
   width: 100%;
   margin: 0;
-  border-spacing: 8px;
+  border-spacing: 0;
 
   td {
     div.toggle_switch {
@@ -132,6 +132,7 @@ div.snapin table.master_control {
       display: inline-block;
       font-size: $font-size-default;
       font-weight: $font-weight-default;
+      line-height: 22px;
       letter-spacing: $letter-spacing-table;
       color: $color-nuance-9;
       text-align: left;
@@ -156,7 +157,7 @@ div.snapin table.master_control {
   padding: $performance-table-shared-padding;
   background-color: $color-table-background-dark;
   border: 1px solid $color-table-border-dark;
-  border-spacing: 4px;
+  border-spacing: 0 4px;
   box-sizing: border-box;
 
   td {
@@ -174,7 +175,7 @@ table.mkeventd_performance {
   border-radius: 2px;
 
   td {
-    padding: 0 2px;
+    padding: 0;
     font-size: 11px;
 
     &:nth-of-type(2) {
@@ -197,18 +198,18 @@ table.mkeventd_performance {
  */
 div.state1 {
   &.statea, &.stated {
-    border-color: #ff0;
+    border-color: rgb(255, 255, 0);
   }
 }
 
 div.state2 {
   &.statea, &.stated {
-    border-color: #f00;
+    border-color: rgb(255, 0, 0);
   }
 }
 
 div.statea, div.stated {
-  background-color: #0b3;
+  background-color: rgb(0, 187, 51);
 }
 
 /*
@@ -220,7 +221,7 @@ table.performance {
   border-radius: 2px;
 
   td {
-    padding: 0 2px;
+    padding: 0;
     font-size: 11px;
 
     &.right {
@@ -436,7 +437,7 @@ div.spacertop {
     height: 8px;
     margin-right: 0;
     border-radius: 50%;
-    box-shadow: 0 0 0.7px #284850;
+    box-shadow: 0 0 0.7px rgb(40, 72, 80);
   }
 
   ul > div.statebullet.leaf {
@@ -629,11 +630,17 @@ div.spacertop {
 
 table.cmc_stats {
   width: $snapin-cmc-table-width;
+  background-color: $color-table-background-dark;
+  border: 1px solid $color-table-border-dark;
   border-radius: 2px;
+  border-spacing: 0 4px;
+  box-sizing: border-box;
 
   td {
-    padding: 0 2px;
+    padding: 0;
     font-size: 11px;
+    font-weight: $font-weight-default;
+    letter-spacing: $letter-spacing-table;
 
     &.right {
       padding: 0;
@@ -649,7 +656,7 @@ table.cmc_stats {
  */
 #snapin_reports {
   i {
-    color: #000;
+    color: rgb(0, 0, 0);
   }
 
   input {

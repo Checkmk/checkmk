@@ -3,6 +3,7 @@
 import pytest
 import time
 
+import cmk.gui.config as config
 import cmk.gui.http as http
 from cmk.gui.globals import html
 import cmk.gui.htmllib as htmllib
@@ -29,6 +30,17 @@ def test_transaction_new_id(tm):
     assert tm._new_transids == [trans_id]
 
 
+class MockLoggedInUser(object):
+    def __init__(self, ids):
+        self._ids = ids
+
+    def transids(self, lock=False):
+        return self._ids
+
+    def save_transids(self, ids):
+        pass
+
+
 @pytest.mark.parametrize("transid,ignore_transids,result,is_existing", [
     (None, False, False, False),
     (None, True, False, False),
@@ -43,7 +55,7 @@ def test_transaction_new_id(tm):
     ("%d/abc" % time.time(), False, False, False),
     ("%d/abc" % time.time(), False, True, True),
 ])
-def test_transaction_valid(tm, transid, ignore_transids, result, monkeypatch, is_existing):
+def test_transaction_valid(tm, transid, ignore_transids, result, mocker, is_existing):
     assert tm._ignore_transids == False
     if ignore_transids:
         tm.ignore()
@@ -55,9 +67,9 @@ def test_transaction_valid(tm, transid, ignore_transids, result, monkeypatch, is
         assert tm._request.var("_transid") == transid
 
     if is_existing:
-        monkeypatch.setattr(tm, "_load_transids", lambda: [transid])
+        mocker.patch.object(config, "user", MockLoggedInUser([transid]))
     else:
-        monkeypatch.setattr(tm, "_load_transids", lambda: [])
+        mocker.patch.object(config, "user", MockLoggedInUser([]))
 
     assert tm.transaction_valid() == result
 
@@ -76,7 +88,7 @@ def test_check_transaction_valid(tm, monkeypatch, mocker):
     valid_transid = "%d/abc" % time.time()
     tm._request.set_var("_transid", valid_transid)
 
-    monkeypatch.setattr(tm, "_load_transids", lambda: [valid_transid])
+    mocker.patch.object(config, "user", MockLoggedInUser([valid_transid]))
 
     invalidate = mocker.patch.object(tm, "_invalidate")
     assert tm.check_transaction() == True

@@ -25,6 +25,7 @@
 import $ from "jquery";
 import "select2";
 import Tagify from "@yaireo/tagify";
+import "element-closest-polyfill";
 
 import * as utils from "utils";
 import * as ajax from "ajax";

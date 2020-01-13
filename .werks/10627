@@ -1,0 +1,12 @@
+Title: esx_vsphere_counters.cpu: Add new CPU usage check for ESX host systems
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1575535307
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+You can now monitor the CPU ready and Co-Stop values for ESX host systems. The values are the percentage of time in a check interval that vCPU(s) are ready but are no physical CPU is free and assigned to them.
+VMWare calls this check interval 'realtime' which by default is equal to 20 seconds. The recommended VMWare levels are 5% for warning and 10% for critical.

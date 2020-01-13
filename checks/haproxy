@@ -39,80 +39,82 @@
 # 0=frontend, 1=backend, 2=server, 3=socket/listener
 
 
-def _is_discoverable(line, type_):
-    return len(line) >= 33 and line[32] == type_
-
-
-def inventory_haproxy_frontend(info):
+def parse_haproxy(info):
+    parsed = {}
     for line in info:
-        if _is_discoverable(line, "0"):
-            yield line[0], None
+        if len(line) <= 32 or line[32] not in ('0', '2'):
+            continue
+
+        data = {"status": line[17]}
+
+        if line[32] == "0":
+            data["type"] = "frontend"
+            item = line[0]
+            try:
+                data["stot"] = int(line[7])
+            except ValueError:
+                continue
+
+        elif line[32] == "2":
+            data["type"] = "server"
+            item = "%s/%s" % (line[0], line[1])
+            data["layer_check"] = line[36]
+            for key, idx in (("uptime", 23), ("active", 19), ("backup", 20)):
+                try:
+                    data[key] = int(line[idx])
+                except ValueError:
+                    continue
+
+        parsed[item] = data
+
+    return parsed
 
 
-def check_haproxy_frontend(item, _no_params, info):
-    for line in info:
-        if line[0] == item:
-            now = time.time()
-            status = line[17]
-            stot = int(line[7])
-            session_rate = get_rate("sessions.%s" % item, now, stot)
+check_info["haproxy"] = {
+    'parse_function': parse_haproxy,
+}
 
-            infotext = "%s, Session Rate: %.2f/s" % (status, session_rate)
-            perfdata = [("session_rate", session_rate)]
 
-            if status == "OPEN":
-                state = 0
-            else:
-                state = 2
+@get_parsed_item_data
+def check_haproxy_frontend(item, _no_params, data):
+    status = data.get("status")
+    yield 0 if status == "OPEN" else 2, "Status: %s" % status
 
-            return state, infotext, perfdata
+    stot = data.get("stot")
+    if stot is not None:
+        session_rate = get_rate("sessions.%s" % item, time.time(), stot)
+        yield check_levels(session_rate, 'session_rate', None, infoname="Session Rate")
 
 
 check_info["haproxy.frontend"] = {
     'check_function': check_haproxy_frontend,
-    'inventory_function': inventory_haproxy_frontend,
+    'inventory_function': discover(lambda _k, v: v.get("type") == "frontend"),
     'service_description': 'HAProxy Frontend %s',
     'has_perfdata': True,
 }
 
 
-def inventory_haproxy_server(info):
-    for line in info:
-        if _is_discoverable(line, "2"):
-            yield "%s/%s" % (line[0], line[1]), None
+@get_parsed_item_data
+def check_haproxy_server(_item, _no_params, data):
+    status = data.get("status")
+    yield 0 if status == "UP" else 2, "Status: %s" % status
 
+    if data.get("active"):
+        yield 0, "Active"
+    elif data.get("backup"):
+        yield 0, "Backup"
+    else:
+        yield 2, "Neither active nor backup"
 
-def check_haproxy_server(item, _no_params, info):
-    for line in info:
-        if "%s/%s" % (line[0], line[1]) == item:
-            status = line[17]
-            uptime_str = line[23]
-            layer_check = line[36]
-            active = int(line[19])
-            backup = int(line[20])
+    yield 0, "Layer Check: %s" % data['layer_check']
 
-            infotext = "Status: %s" % status
-            if uptime_str:
-                infotext += " since %s" % get_age_human_readable(int(uptime_str))
-
-            if status == "UP" and (active or backup):
-                state = 0
-            else:
-                state = 2
-
-            infotext += ", Layer Check: %s" % layer_check
-            if active:
-                infotext += ", active"
-            elif backup:
-                infotext += ", backup"
-            else:
-                infotext += ", neither active nor backup (!!)"
-
-            return state, infotext
+    uptime = data.get("uptime")
+    if uptime is not None:
+        yield 0, "Up since %s" % get_age_human_readable(uptime)
 
 
 check_info["haproxy.server"] = {
     'check_function': check_haproxy_server,
-    'inventory_function': inventory_haproxy_server,
+    'inventory_function': discover(lambda _k, v: v.get("type") == "server"),
     'service_description': 'HAProxy Server %s',
 }

@@ -27,20 +27,16 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
-#include <string>
 #include "TimeColumn.h"
 class Row;
 
 class OffsetTimeColumn : public TimeColumn {
 public:
-    OffsetTimeColumn(const std::string& name, const std::string& description,
-                     int indirect_offset, int extra_offset,
-                     int extra_extra_offset, int offset)
-        : TimeColumn(name, description, indirect_offset, extra_offset,
-                     extra_extra_offset, offset) {}
+    using TimeColumn::TimeColumn;
 
 private:
-    std::chrono::system_clock::time_point getRawValue(Row row) const override;
+    [[nodiscard]] std::chrono::system_clock::time_point getRawValue(
+        Row row) const override;
 };
 
 #endif  // OffsetTimeColumn_h

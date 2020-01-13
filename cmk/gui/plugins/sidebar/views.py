@@ -59,8 +59,6 @@ class Views(SidebarSnapin):
         return _("Links to global views and dashboards")
 
     def show(self):
-        dashboard.load_dashboards()
-
         def render_topic(topic, entries):
             first = True
             for t, title, name, is_view in entries:
@@ -101,7 +99,7 @@ class Views(SidebarSnapin):
                     page_type_topics.setdefault(t, []).append((t, title, url, False))
 
         visuals_topics_with_entries = visuals_by_topic(views.get_permitted_views().items() +
-                                                       dashboard.permitted_dashboards().items())
+                                                       dashboard.get_permitted_dashboards().items())
         all_topics_with_entries = []
         for topic, entries in visuals_topics_with_entries:
             if topic in page_type_topics:

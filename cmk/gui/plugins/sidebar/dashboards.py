@@ -52,8 +52,6 @@ class Dashboards(SidebarSnapin):
         return _("Links to all dashboards")
 
     def show(self):
-        dashboard.load_dashboards()
-
         def render_topic(topic, s, foldable=True):
             first = True
             for t, title, name, _is_view in s:
@@ -78,7 +76,7 @@ class Dashboards(SidebarSnapin):
                 else:
                     html.open_ul()
 
-        by_topic = visuals_by_topic(dashboard.permitted_dashboards().items(),
+        by_topic = visuals_by_topic(dashboard.get_permitted_dashboards().items(),
                                     default_order=[_('Overview')])
         topics = [topic for topic, _entry in by_topic]
 

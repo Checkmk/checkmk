@@ -20,14 +20,17 @@ namespace cma {
 // Related to Service Agent Logic
 namespace srv {
 enum class StdioLog { no, yes, extended };
+enum class FwMode { show, configure, clear };
 class ServiceProcessor;
-int InstallMainService();                  // on install
-int RemoveMainService();                   // on remove
-int TestIo();                              // on check -io
-int TestMt();                              // on check -mt
-int TestMainServiceSelf(int Interval);     // on check self
-int TestLegacy();                          // on test
-int RestoreWATOConfig();                   // on restore
+int InstallMainService();               // on install
+int RemoveMainService();                // on remove
+int TestIo();                           // on check -io
+int TestMt();                           // on check -mt
+int TestMainServiceSelf(int Interval);  // on check self
+int TestLegacy();                       // on test
+int RestoreWATOConfig();                // on restore
+int ExecFirewall(srv::FwMode fw_mode, std::wstring_view app_name,
+                 std::wstring_view name);  // on fw
 int ExecMainService(StdioLog stdio_log);   // on exec
 int ExecStartLegacy();                     // on start_legacy
 int ExecStopLegacy();                      // on stop_legacy
@@ -41,18 +44,25 @@ int ExecSkypeTest();  // on skype :hidden
 int ExecResetOhm();   // on resetohm :hidden
 
 int ExecReloadConfig();
+int ExecUninstallAlert();
 int ExecRemoveLegacyAgent();
+void ExecUninstallClean();
 
 int ExecRealtimeTest(bool Print);  // on rt
 int ExecCvtIniYaml(std::filesystem::path IniFile,
                    std::filesystem::path YamlFile,
                    StdioLog stdio_log);  // on cvt
+int ExecExtractCap(std::wstring_view cap_file,
+                   std::wstring_view to);  //
 int ExecSection(const std::wstring& SecName,
                 int RepeatPause,      // if 0 no repeat
                 StdioLog stdio_log);  // on section
-int ServiceAsService(std::chrono::milliseconds Delay,
+int ServiceAsService(std::wstring_view app_name,
+                     std::chrono::milliseconds Delay,
                      std::function<bool(const void* Processor)>
                          InternalCallback) noexcept;  // service execution
+
+void ProcessFirewallConfiguration(std::wstring_view app_name);
 
 // NAMES
 constexpr const wchar_t* kServiceName = L"CheckMkService";
@@ -64,6 +74,9 @@ constexpr int kServiceStartType = SERVICE_DEMAND_START;  //  SERVICE_AUTO_START;
 constexpr const wchar_t* kServiceDependencies = L"";
 constexpr const wchar_t* kServiceAccount = L"NT AUTHORITY\\LocalService";
 constexpr const wchar_t* kServicePassword = nullptr;
+
+constexpr std::wstring_view kSrvFirewallRuleName = L"CheckMk Service Rule";
+constexpr std::wstring_view kAppFirewallRuleName = L"CheckMk Application Rule";
 
 // service configuration
 // main call

@@ -31,14 +31,19 @@ import re
 import os
 import ast
 import ssl
-from typing import Tuple, Union, Dict, Pattern, Optional  # pylint: disable=unused-import
+import sys
+from typing import (  # pylint: disable=unused-import
+    NewType, AnyStr, Any, Type, List, Text, cast, Tuple, Union, Dict, Pattern, Optional,
+)
 
-try:
-    # Tolerate this violation for the moment. It's OK to have unlocalized
-    # texts when used in other components than our GUI.
-    from cmk.gui.i18n import _  # pylint: disable=cmk-module-layer-violation
-except ImportError:
-    _ = lambda x: x
+UserId = NewType("UserId", Text)
+SiteId = NewType("SiteId", str)
+SiteConfiguration = NewType("SiteConfiguration", Dict[str, Any])
+SiteConfigurations = NewType("SiteConfigurations", Dict[SiteId, SiteConfiguration])
+
+LivestatusColumn = Any
+LivestatusRow = NewType("LivestatusRow", List[LivestatusColumn])
+LivestatusResponse = NewType("LivestatusResponse", List[LivestatusRow])
 
 #   .--Globals-------------------------------------------------------------.
 #   |                    ____ _       _           _                        |
@@ -59,35 +64,15 @@ persistent_connections = {}  # type: Dict[str, socket.socket]
 remove_cache_regex = re.compile("\nCache:[^\n]*")  # type: Pattern
 
 
-def ensure_unicode(text):
-    if hasattr(text, "decode"):
-        try:
-            return text.decode("utf-8")
-        except UnicodeEncodeError:
-            return text
-    return text
-
-
-def ensure_bytestr(text):
-    try:
-        return text.encode("utf-8")
-    except UnicodeDecodeError:
-        return text
+def _ensure_unicode(value):
+    # type: (Union[Text, bytes]) -> Text
+    if isinstance(value, Text):
+        return value
+    return value.decode("utf-8")
 
 
 class MKLivestatusException(Exception):
-    def __init__(self, value):
-        self.parameter = value
-        super(MKLivestatusException, self).__init__(value)
-
-    def __str__(self):
-        return str(self.parameter)
-
-    def plain_title(self):
-        return _("Livestatus problem")
-
-    def title(self):
-        return _("Livestatus problem")
+    pass
 
 
 class MKLivestatusSocketError(MKLivestatusException):
@@ -107,14 +92,7 @@ class MKLivestatusQueryError(MKLivestatusException):
 
 
 class MKLivestatusNotFoundError(MKLivestatusException):
-    def __str__(self):
-        return "No matching entries found for query %s" % str(self.parameter)
-
-    def plain_title(self):
-        return _("Livestatus-data not found")
-
-    def title(self):
-        return _("Data not found")
+    pass
 
 
 class MKLivestatusTableNotFoundError(MKLivestatusException):
@@ -129,18 +107,21 @@ NO_DEFAULT = lambda: None
 # use them in livestatus queries. Prevent injections of livestatus
 # protocol related chars or strings
 def lqencode(s):
+    # type: (AnyStr) -> Text
     # It is not enough to strip off \n\n, because one might submit "\n \n",
     # which is also interpreted as termination of the last query and beginning
     # of the next query.
-    return ensure_unicode(s).replace(u"\n", u"")
+    return _ensure_unicode(s).replace(u"\n", u"")
 
 
 def quote_dict(s):
+    # type: (Text) -> Text
     """Apply the quoting used for dict-valued columns (See #6972)"""
     return "'%s'" % s.replace(u"'", u"''")
 
 
 def site_local_ca_path():
+    # type: () -> str
     """Path to the site local CA bundle"""
     omd_root = os.getenv("OMD_ROOT")
     if not omd_root:
@@ -150,6 +131,7 @@ def site_local_ca_path():
 
 
 def create_client_socket(family, tls, verify, ca_file_path):
+    # type: (socket.AddressFamily, bool, bool, Optional[str]) -> socket.socket
     """Create a client socket object for the livestatus connection"""
     sock = socket.socket(family, socket.SOCK_STREAM)
 
@@ -185,72 +167,99 @@ def create_client_socket(family, tls, verify, ca_file_path):
 
 
 class Helpers(object):
-    def query(self, query, add_headers=""):
+    def query(self, query, add_headers=u""):
+        # type: (QueryTypes, Union[Text, bytes]) -> LivestatusResponse
         raise NotImplementedError()
 
     def query_value(self, query, deflt=NO_DEFAULT):
+        # type: (QueryTypes, Any) -> LivestatusColumn
         """Issues a query that returns exactly one line and one columns and returns
            the response as a single value"""
-        result = self.query(query, "ColumnHeaders: off\n")
+        normalized_query = Query(query) if not isinstance(query, Query) else query
+
+        result = self.query(normalized_query, "ColumnHeaders: off\n")
         try:
             return result[0][0]
         except IndexError:
             if deflt == NO_DEFAULT:
-                raise MKLivestatusNotFoundError(query)
-            else:
-                return deflt
+                raise MKLivestatusNotFoundError("No matching entries found for query: %s" %
+                                                normalized_query)
+            return deflt
 
     def query_row(self, query):
+        # type: (QueryTypes) -> LivestatusRow
         """Issues a query that returns one line of data and returns the elements
            of that line as list"""
-        result = self.query(query, "ColumnHeaders: off\n")
+        normalized_query = Query(query) if not isinstance(query, Query) else query
+
+        result = self.query(normalized_query, "ColumnHeaders: off\n")
         try:
             return result[0]
         except IndexError:
-            raise MKLivestatusNotFoundError(query)
+            raise MKLivestatusNotFoundError("No matching entries found for query: %s" %
+                                            normalized_query)
 
     def query_row_assoc(self, query):
+        # type: (QueryTypes) -> Dict[Text, Any]
         """Issues a query that returns one line of data and returns the elements
            of that line as a dictionary from column names to values"""
-        r = self.query(query, "ColumnHeaders: on\n")[0:2]
+        normalized_query = Query(query) if not isinstance(query, Query) else query
+
+        r = self.query(normalized_query, "ColumnHeaders: on\n")[0:2]
         return dict(zip(r[0], r[1]))
 
     def query_column(self, query):
+        # type: (QueryTypes) -> List[LivestatusColumn]
         """Issues a query that returns exactly one column and returns the values
            of all lines in that column as a single list"""
-        return [l[0] for l in self.query(query, "ColumnHeaders: off\n")]
+        normalized_query = Query(query) if not isinstance(query, Query) else query
+
+        return [l[0] for l in self.query(normalized_query, "ColumnHeaders: off\n")]
 
     def query_column_unique(self, query):
+        # type: (QueryTypes) -> List[LivestatusColumn]
         """Issues a query that returns exactly one column and returns the values
            of all lines with duplicates removed"""
-        result = []
-        for line in self.query(query, "ColumnHeaders: off\n"):
+        normalized_query = Query(query) if not isinstance(query, Query) else query
+
+        result = []  # type: List[LivestatusColumn]
+        for line in self.query(normalized_query, "ColumnHeaders: off\n"):
             if line[0] not in result:
                 result.append(line[0])
         return result
 
     def query_table(self, query):
+        # type: (QueryTypes) -> LivestatusResponse
         """Issues a query that may return multiple lines and columns and returns
            a list of lists"""
-        return self.query(query, "ColumnHeaders: off\n")
+        normalized_query = Query(query) if not isinstance(query, Query) else query
+
+        return self.query(normalized_query, "ColumnHeaders: off\n")
 
     def query_table_assoc(self, query):
+        # type: (QueryTypes) -> List[Dict[Text, Any]]
         """Issues a query that may return multiple lines and columns and returns
            a dictionary from column names to values for each line. This can be
            very ineffective for large response sets."""
-        response = self.query(query, "ColumnHeaders: on\n")
+        normalized_query = Query(query) if not isinstance(query, Query) else query
+
+        response = self.query(normalized_query, "ColumnHeaders: on\n")
         headers = response[0]
         result = []
         for line in response[1:]:
             result.append(dict(zip(headers, line)))
         return result
 
-    def query_summed_stats(self, query, add_headers=""):
+    def query_summed_stats(self, query, add_headers=u""):
+        # type: (QueryTypes, Union[Text, bytes]) -> List[int]
         """Convenience function for adding up numbers from Stats queries
         Adds up results column-wise. This is useful for multisite queries."""
-        data = self.query(query, add_headers)
+        normalized_query = Query(query) if not isinstance(query, Query) else query
+
+        data = self.query(normalized_query, add_headers)
         if not data:
-            raise MKLivestatusNotFoundError("Empty result to Stats-Query")
+            raise MKLivestatusNotFoundError(
+                "No matching entries found for query: Empty result to Stats-Query")
         return [sum(column) for column in zip(*data)]
 
 
@@ -267,12 +276,13 @@ class Query(object):
     query. The object can be used to hand over the handling code some flags, for
     example to influence the error handling during query processing."""
 
-    default_suppressed_exceptions = [MKLivestatusTableNotFoundError]
+    default_suppressed_exceptions = [MKLivestatusTableNotFoundError]  # type: List[Type[Exception]]
 
     def __init__(self, query, suppress_exceptions=None):
+        # type: (Union[Text, bytes], Optional[List[Type[Exception]]]) -> None
         super(Query, self).__init__()
 
-        self._query = ensure_unicode(query)
+        self._query = _ensure_unicode(query)
 
         if suppress_exceptions is None:
             self.suppress_exceptions = self.default_suppressed_exceptions
@@ -280,11 +290,19 @@ class Query(object):
             self.suppress_exceptions = suppress_exceptions
 
     def __unicode__(self):
+        # type: () -> Text
         return self._query
 
     def __str__(self):
+        # type: () -> str
+        if sys.version_info[0] >= 3:
+            return self._query
         return self._query.encode("utf-8")
 
+
+QueryTypes = Union[Text, bytes, Query]
+OnlySites = Optional[List[SiteId]]
+DeadSite = Dict[str, Union[str, int, Exception, SiteConfiguration]]
 
 #.
 #   .--SingleSiteConn------------------------------------------------------.
@@ -311,17 +329,17 @@ class SingleSiteConnection(Helpers):
         """Create a new connection to a MK Livestatus socket"""
         super(SingleSiteConnection, self).__init__()
         self.prepend_site = False
-        self.auth_users = {}  # type: Dict[str, str]
+        self.auth_users = {}  # type: Dict[str, UserId]
         # never filled, just to have the same API as MultiSiteConnection (TODO: Cleanup)
-        self.deadsites = {}  # type: Dict[str, Dict[str, str]]
-        self.limit = None
-        self.add_headers = ""
-        self.auth_header = ""
+        self.deadsites = {}  # type: Dict[SiteId, DeadSite]
+        self.limit = None  # type: Optional[int]
+        self.add_headers = u""
+        self.auth_header = u""
         self.persist = persist
         self.allow_cache = allow_cache
         self.socketurl = socketurl
-        self.socket = None
-        self.timeout = None
+        self.socket = None  # type: Optional[socket.socket]
+        self.timeout = None  # type: Optional[int]
         self.successful_persistence = False
 
         # Whether to establish an encrypted connection
@@ -343,14 +361,17 @@ class SingleSiteConnection(Helpers):
         return self.successful_persistence
 
     def add_header(self, header):
+        # type: (Text) -> None
         self.add_headers += header + "\n"
 
     def set_timeout(self, timeout):
+        # type: (int) -> None
         self.timeout = timeout
         if self.socket:
             self.socket.settimeout(float(timeout))
 
     def connect(self):
+        # type: () -> None
         if self.persist and self.socketurl in persistent_connections:
             self.socket = persistent_connections[self.socketurl]
             self.successful_persistence = True
@@ -420,6 +441,7 @@ class SingleSiteConnection(Helpers):
                                       "Must begin with 'tcp:', 'tcp6:' or 'unix:'" % url)
 
     def _create_socket(self, family):
+        # type: (socket.AddressFamily) -> socket.socket
         """Creates the Livestatus client socket
 
         It ensures that either a TLS secured socket or a plain text socket
@@ -427,6 +449,7 @@ class SingleSiteConnection(Helpers):
         return create_client_socket(family, self.tls, self.tls_verify, self._tls_ca_file_path)
 
     def disconnect(self):
+        # type: () -> None
         self.socket = None
         if self.persist:
             try:
@@ -435,6 +458,10 @@ class SingleSiteConnection(Helpers):
                 pass
 
     def receive_data(self, size):
+        # type: (int) -> bytes
+        if self.socket is None:
+            raise MKLivestatusSocketError("Socket to '%s' is not connected" % self.socketurl)
+
         result = b""
         # Timeout is only honored when connecting
         self.socket.settimeout(None)
@@ -447,14 +474,17 @@ class SingleSiteConnection(Helpers):
             result += packet
         return result
 
-    def do_query(self, query, add_headers=""):
+    # TODO: change all call sites to hand over Query + Text
+    def do_query(self, query, add_headers=u""):
+        # type: (Query, Text) -> LivestatusResponse
         self.send_query(query, add_headers)
         return self.recv_response(query, add_headers)
 
-    def send_query(self, query_obj, add_headers="", do_reconnect=True):
+    def send_query(self, query_obj, add_headers=u"", do_reconnect=True):
+        # type: (Query, Text, bool) -> None
         orig_query = query_obj
 
-        query = "%s" % query_obj
+        query = u"%s" % query_obj
         if not self.allow_cache:
             query = remove_cache_regex.sub("", query)
 
@@ -472,10 +502,13 @@ class SingleSiteConnection(Helpers):
             query += "\n"
         query += "\n"
 
+        if self.socket is None:
+            raise MKLivestatusSocketError("Socket to '%s' is not connected" % self.socketurl)
+
         try:
+            # TODO: Use socket.sendall()
             # socket.send() only works with byte strings
-            query = ensure_bytestr(query)
-            self.socket.send(query)
+            self.socket.send(query.encode("utf-8"))
         except IOError as e:
             if self.persist:
                 del persistent_connections[self.socketurl]
@@ -495,10 +528,11 @@ class SingleSiteConnection(Helpers):
     # by the livestatus server, we automatically make a reconnect and send
     # the query again (once). This is due to timeouts during keepalive.
     def recv_response(self, query=None, add_headers="", timeout_at=None):
+        # type: (Query, Text, Optional[float]) -> LivestatusResponse
         try:
             # Headers are always ASCII encoded
             resp = self.receive_data(16)
-            code = resp[0:3]
+            code = resp[0:3].decode("ascii")
             try:
                 length = int(resp[4:15].lstrip())
             except:
@@ -541,8 +575,7 @@ class SingleSiteConnection(Helpers):
                 return self.recv_response(
                     query, add_headers,
                     timeout_at)  # do not send query again -> danger of infinite loop
-            else:
-                raise MKLivestatusSocketError(str(e))
+            raise MKLivestatusSocketError(str(e))
 
         except MKLivestatusTableNotFoundError:
             raise
@@ -555,32 +588,55 @@ class SingleSiteConnection(Helpers):
             raise MKLivestatusSocketError("Unhandled exception: %s" % e)
 
     def set_prepend_site(self, p):
+        # type: (bool) -> None
         self.prepend_site = p
 
     def set_only_sites(self, sites=None):
+        # type: (Optional[List[SiteId]]) -> None
         pass
 
     def set_limit(self, limit=None):
+        # type: (Optional[int]) -> None
         self.limit = limit
 
-    def query(self, query, add_headers=""):
-        if self.limit is not None:
-            query += "Limit: %d\n" % self.limit
-        data = self.do_query(query, add_headers)
-        if self.prepend_site:
-            return [[''] + line for line in data]
-        return data
+    def query(self, query, add_headers=u""):
+        # type: (QueryTypes, Union[Text, bytes]) -> LivestatusResponse
 
+        # Normalize argument types
+        normalized_add_headers = _ensure_unicode(add_headers)
+        normalized_query = Query(query) if not isinstance(query, Query) else query
+
+        if self.limit is not None:
+            normalized_query = Query(u"%sLimit: %d\n" % (normalized_query, self.limit),
+                                     normalized_query.suppress_exceptions)
+
+        response = self.do_query(normalized_query, normalized_add_headers)
+        if self.prepend_site:
+            for row in response:
+                row.insert(0, b"")
+        return response
+
+    # TODO: Cleanup all call sites to hand over Text types
     def command(self, command, site=None):
+        # type: (AnyStr, Optional[SiteId]) -> None
         self.do_command(command)
 
     def do_command(self, command):
+        # type: (AnyStr) -> None
+        cmd = _ensure_unicode(command)
+
         if self.socket is None:
             self.connect()
-        if not command.endswith("\n"):
-            command += "\n"
+
+        # Mypy does not understand that self.connect() either sets self.socket to a socket object or
+        # raises an exception.
+        sock = cast(socket.socket, self.socket)
+
+        if not cmd.endswith(u"\n"):
+            cmd += u"\n"
+
         try:
-            self.socket.send("COMMAND " + command + "\n")
+            sock.send(("COMMAND %s\n" % cmd).encode("utf-8"))
         except IOError as e:
             self.socket = None
             if self.persist:
@@ -589,6 +645,7 @@ class SingleSiteConnection(Helpers):
 
     # Set user to be used in certain authorization domain
     def set_auth_user(self, domain, user):
+        # type: (str, UserId) -> None
         if user:
             self.auth_users[domain] = user
         elif domain in self.auth_users:
@@ -596,11 +653,12 @@ class SingleSiteConnection(Helpers):
 
     # Switch future request to new authorization domain
     def set_auth_domain(self, domain):
+        # type: (str) -> None
         auth_user = self.auth_users.get(domain)
         if auth_user:
             self.auth_header = "AuthUser: %s\n" % auth_user
         else:
-            self.auth_header = ""
+            self.auth_header = u""
 
 
 #.
@@ -626,15 +684,16 @@ class SingleSiteConnection(Helpers):
 
 class MultiSiteConnection(Helpers):
     def __init__(self, sites, disabled_sites=None):
+        # type: (SiteConfigurations, Optional[SiteConfigurations]) -> None
         if disabled_sites is None:
-            disabled_sites = {}
+            disabled_sites = SiteConfigurations({})
 
         self.sites = sites
-        self.connections = []
-        self.deadsites = {}
+        self.connections = []  # type: List[Tuple[SiteId, SiteConfiguration, SingleSiteConnection]]
+        self.deadsites = {}  # type: Dict[SiteId, DeadSite]
         self.prepend_site = False
-        self.only_sites = None
-        self.limit = None
+        self.only_sites = None  # type: OnlySites
+        self.limit = None  # type: Optional[int]
         self.parallelize = True
 
         # Status host: A status host helps to prevent trying to connect
@@ -662,14 +721,15 @@ class MultiSiteConnection(Helpers):
                 status_sitenames.add(s)
 
             for sitename in status_sitenames:
-                site = disabled_sites.get(sitename)
-                if site:
-                    extra_status_sites[sitename] = site
+                status_site = disabled_sites.get(sitename)
+                if status_site:
+                    extra_status_sites[sitename] = status_site
 
         # First connect to sites without status host. Collect status
         # hosts at the same time.
 
-        status_hosts = {}  # dict from site to list of status_hosts
+        # dict from site to list of status_hosts
+        status_hosts = {}  # type: Dict[SiteId, List[bytes]]
         sites_dict = sites.copy()
         sites_dict.update(extra_status_sites)
         for sitename, site in sites_dict.items():
@@ -696,10 +756,10 @@ class MultiSiteConnection(Helpers):
         status_host_states = {}
         for sitename, hosts in status_hosts.items():
             # Fetch all the states of status hosts of this local site in one query
-            query = "GET hosts\nColumns: name state has_been_checked last_time_up\n"
+            query = u"GET hosts\nColumns: name state has_been_checked last_time_up\n"
             for host in hosts:
-                query += "Filter: name = %s\n" % host
-            query += "Or: %d\n" % len(hosts)
+                query += u"Filter: name = %s\n" % Text(host)
+            query += u"Or: %d\n" % len(hosts)
             self.set_only_sites([sitename])  # only connect one site
             try:
                 result = self.query_table(query)
@@ -753,6 +813,7 @@ class MultiSiteConnection(Helpers):
                     }
 
     def connect_to_site(self, sitename, site, temporary=False):
+        # type: (SiteId, SiteConfiguration, bool) -> SingleSiteConnection
         """Helper function for connecting to a site"""
         url = site["socket"]
         persist = not temporary and site.get("persist", False)
@@ -774,6 +835,7 @@ class MultiSiteConnection(Helpers):
 
     # Needed for temporary connection for status_hosts in disabled sites
     def _disconnect_site(self, sitename):
+        # type: (SiteId) -> None
         i = 0
         for name, _site, _connection in self.connections:
             if name == sitename:
@@ -782,13 +844,16 @@ class MultiSiteConnection(Helpers):
             i += 1
 
     def add_header(self, header):
+        # type: (Text) -> None
         for _sitename, _site, connection in self.connections:
             connection.add_header(header)
 
     def set_prepend_site(self, p):
+        # type: (bool) -> None
         self.prepend_site = p
 
     def set_only_sites(self, sites=None):
+        # type: (OnlySites) -> None
         """Make future queries only contact the given sites.
 
         Provide a list of site IDs to not contact all configured sites, but only the listed
@@ -798,35 +863,48 @@ class MultiSiteConnection(Helpers):
 
     # Impose Limit on number of returned datasets (distributed amoung sites)
     def set_limit(self, limit=None):
+        # type: (Optional[int]) -> None
         self.limit = limit
 
     def dead_sites(self):
+        # type: () -> Dict[SiteId, DeadSite]
         return self.deadsites
 
     def alive_sites(self):
+        # type: () -> List[SiteId]
         return [s[0] for s in self.connections]
 
     def successfully_persisted(self):
+        # type: () -> bool
         for _sitename, _site, connection in self.connections:
             if connection.successfully_persisted():
                 return True
         return False
 
     def set_auth_user(self, domain, user):
+        # type: (str, UserId) -> None
         for _sitename, _site, connection in self.connections:
             connection.set_auth_user(domain, user)
 
     def set_auth_domain(self, domain):
+        # type: (str) -> None
         for _sitename, _site, connection in self.connections:
             connection.set_auth_domain(domain)
 
-    def query(self, query, add_headers=""):
-        if self.parallelize:
-            return self.query_parallel(query, add_headers)
-        return self.query_non_parallel(query, add_headers)
+    def query(self, query, add_headers=u""):
+        # type: (QueryTypes, Union[Text, bytes]) -> LivestatusResponse
 
-    def query_non_parallel(self, query, add_headers=""):
-        result = []
+        # Normalize argument types
+        normalized_add_headers = _ensure_unicode(add_headers)
+        normalized_query = Query(query) if not isinstance(query, Query) else query
+
+        if self.parallelize:
+            return self.query_parallel(normalized_query, normalized_add_headers)
+        return self.query_non_parallel(normalized_query, normalized_add_headers)
+
+    def query_non_parallel(self, query, add_headers=u""):
+        # type: (Query, Text) -> LivestatusResponse
+        result = LivestatusResponse([])
         stillalive = []
         limit = self.limit
         for sitename, site, connection in self.connections:
@@ -840,7 +918,8 @@ class MultiSiteConnection(Helpers):
                     limit_header = ""
                 r = connection.query(query, add_headers + limit_header)
                 if self.prepend_site:
-                    r = [[sitename] + l for l in r]
+                    for row in r:
+                        row.insert(0, sitename)
                 if limit is not None:
                     limit -= len(r)  # Account for portion of limit used by this site
                 result += r
@@ -857,7 +936,8 @@ class MultiSiteConnection(Helpers):
     # New parallelized version of query(). The semantics differs in the handling
     # of Limit: since all sites are queried in parallel, the Limit: is simply
     # applied to all sites - resulting in possibly more results then Limit requests.
-    def query_parallel(self, query, add_headers=""):
+    def query_parallel(self, query, add_headers=u""):
+        # type: (Query, Text) -> LivestatusResponse
         stillalive = []
         if self.only_sites is not None:
             connect_to_sites = [c for c in self.connections if c[0] in self.only_sites]
@@ -868,9 +948,9 @@ class MultiSiteConnection(Helpers):
 
         limit = self.limit
         if limit is not None:
-            limit_header = "Limit: %d\n" % limit
+            limit_header = u"Limit: %d\n" % limit
         else:
-            limit_header = ""
+            limit_header = u""
 
         # First send all queries
         for sitename, site, connection in connect_to_sites:
@@ -882,20 +962,18 @@ class MultiSiteConnection(Helpers):
                     "site": site,
                 }
 
-        if isinstance(query, Query):
-            suppress_exceptions = tuple(query.suppress_exceptions)
-        else:
-            suppress_exceptions = tuple(Query.default_suppressed_exceptions)
+        suppress_exceptions = tuple(query.suppress_exceptions)
 
         # Then retrieve all answers. We will be as slow as the slowest of all
         # connections.
-        result = []
+        result = LivestatusResponse([])
         for sitename, site, connection in connect_to_sites:
             try:
                 r = connection.recv_response(query, add_headers + limit_header)
                 stillalive.append((sitename, site, connection))
                 if self.prepend_site:
-                    r = [[sitename] + l for l in r]
+                    for row in r:
+                        row.insert(0, sitename)
                 result += r
             except suppress_exceptions:  # pylint: disable=catching-non-exception
                 stillalive.append((sitename, site, connection))
@@ -911,7 +989,10 @@ class MultiSiteConnection(Helpers):
         self.connections = stillalive
         return result
 
-    def command(self, command, sitename="local"):
+    # TODO: Is this SiteId(...) the way to go? Without this mypy complains about incompatible bytes
+    # vs. Optional[SiteId]
+    def command(self, command, sitename=SiteId("local")):
+        # type: (AnyStr, Optional[SiteId]) -> None
         if sitename in self.deadsites:
             raise MKLivestatusSocketError("Connection to site %s is dead: %s" % \
                     (sitename, self.deadsites[sitename]["exception"]))
@@ -923,13 +1004,14 @@ class MultiSiteConnection(Helpers):
 
     # Return connection to localhost (UNIX), if available
     def local_connection(self):
+        # type: () -> SingleSiteConnection
         for _sitename, site, connection in self.connections:
             if site["socket"].startswith("unix:") and "liveproxy" not in site["socket"]:
                 return connection
         raise MKLivestatusConfigError("No livestatus connection to local host")
 
     def get_connection(self, site_id):
-        # type: (str) -> SingleSiteConnection
+        # type: (SiteId) -> SingleSiteConnection
         for this_site_id, _site, connection in self.connections:
             if this_site_id == site_id:
                 return connection
@@ -953,6 +1035,7 @@ class MultiSiteConnection(Helpers):
 
 class LocalConnection(SingleSiteConnection):
     def __init__(self, *args, **kwargs):
+        # type: (*Any, **Any) -> None
         omd_root = os.getenv("OMD_ROOT")
         if not omd_root:
             raise MKLivestatusConfigError(

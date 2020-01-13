@@ -62,6 +62,10 @@ body.side {
   &.screenshotmode {
     background-image: url("");
   }
+
+  img.treeangle {
+    filter: $treeangle-img-filter-sidebar;
+  }
 }
 
 /* Top logo part */
@@ -156,7 +160,7 @@ body.main .popup_menu #side_header > span {
     padding: 2px;
     color: $primary-sidebar-font-color;
     cursor: pointer;
-    background-color: #f00;
+    background-color: rgb(255, 0, 0);
     border-radius: 10px;
   }
 }
@@ -168,7 +172,7 @@ body.main .popup_menu #side_header > span {
   width: 100%;
   padding-left: 0;
   overflow: hidden;
-  color: #000;
+  color: rgb(0, 0, 0);
 
   &.scroll {
     overflow-y: scroll;
@@ -243,8 +247,8 @@ span#msg_label {
   z-index: 15;
   padding: 1px;
   font-size: $font-size-global;
-  color: #f00;
-  background-color: #fff;
+  color: rgb(255, 0, 0);
+  background-color: rgb(255, 255, 255);
   border-radius: 5px;
 }
 
@@ -411,18 +415,18 @@ div.snapin {
   div.snapinexception {
     width: 220px;
     padding: 3px;
-    background-color: #f88;
-    border: 1px solid #f00;
+    background-color: rgb(255, 136, 136);
+    border: 1px solid rgb(255, 0, 0);
     border-radius: 4px;
 
     h2 {
       margin-top: 0;
       font-size: 12px;
-      color: #f00;
+      color: rgb(255, 0, 0);
     }
 
     p {
-      color: #800;
+      color: rgb(136, 0, 0);
     }
   }
 
@@ -466,8 +470,8 @@ div.snapin {
     height: 10px;
     margin-right: 6px;
     margin-left: 0;
-    border: 1px solid #123a4a;
-    box-shadow: 0 0 1px #123a4a;
+    border: 1px solid rgb(18, 58, 74);
+    box-shadow: 0 0 1px rgb(18, 58, 74);
   }
 }
 
@@ -527,9 +531,9 @@ div#snapinDragIndicator {
   margin: 0 0 0 11px;
   font-size: 1px;
   line-height: 1px;
-  background-color: #fff;
+  background-color: rgb(255, 255, 255);
   border-radius: 3px;
-  box-shadow: 0 0 3px #fff;
+  box-shadow: 0 0 3px rgb(255, 255, 255);
 }
 
 
@@ -647,7 +651,7 @@ div.popup_msg {
   left: 20px;
   width: 200px;
   padding: 3px;
-  background-color: #244452;
+  background-color: rgb(36, 68, 82);
 
   .close {
     display: block;
@@ -659,7 +663,7 @@ span#msg_label {
   position: relative;
   z-index: 15;
   padding: 1px;
-  color: #ff0000;
-  background-color: #fff;
+  color: rgb(255, 0, 0);
+  background-color: rgb(255, 255, 255);
   border-radius: 5px;
 }

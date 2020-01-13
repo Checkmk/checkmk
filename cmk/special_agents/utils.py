@@ -42,7 +42,7 @@ import requests
 from pathlib2 import Path
 import six
 
-import cmk.utils.store
+import cmk.utils.store as store
 
 
 class AgentJSON(object):
@@ -200,20 +200,19 @@ class DataCache(six.with_metaclass(abc.ABCMeta, object)):
                     raise
 
         live_data = self.get_live_data(*args)
-        if use_cache:
-            try:
-                self._write_to_cache(live_data)
-            except (OSError, IOError, TypeError) as exc:
-                logging.info("Failed to write data to cache file: %s", exc)
-                if self.debug:
-                    raise
+        try:
+            self._write_to_cache(live_data)
+        except (OSError, IOError, TypeError) as exc:
+            logging.info("Failed to write data to cache file: %s", exc)
+            if self.debug:
+                raise
         return live_data
 
     def _write_to_cache(self, raw_content):
         self._cache_file_dir.mkdir(parents=True, exist_ok=True)
 
         json_dump = json.dumps(raw_content, default=datetime_serializer)
-        cmk.utils.store.save_file(str(self._cache_file), json_dump)
+        store.save_file(str(self._cache_file), json_dump)
 
 
 class _NullContext(object):
@@ -226,6 +225,12 @@ class _NullContext(object):
 
     def __exit__(self, *_args):
         pass
+
+    def __bool__(self):
+        return False
+
+    # python2 uses __nonzero__ instead of __bool__:
+    __nonzero__ = __bool__
 
 
 def vcrtrace(**vcr_init_kwargs):

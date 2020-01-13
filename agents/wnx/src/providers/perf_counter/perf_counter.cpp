@@ -31,7 +31,7 @@
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
 
-#include "fmt/format.h"
+#include <fmt/format.h>
 
 #include "providers/p_perf_counters.h"
 #include "providers/perf_counters_cl.h"

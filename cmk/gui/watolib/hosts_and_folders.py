@@ -541,6 +541,13 @@ class CREFolder(BaseFolder):
         attributes = self._transform_none_value_site_attribute(attributes)
         attributes = self._add_missing_meta_data(attributes)
         attributes = self._transform_tag_snmp_ds(attributes)
+        attributes = self._transform_cgconf_attributes(attributes)
+        return attributes
+
+    def _transform_cgconf_attributes(self, attributes):
+        cgconf = attributes.get("contactgroups")
+        if cgconf:
+            attributes["contactgroups"] = convert_cgroups_from_tuple(cgconf)
         return attributes
 
     # In versions previous to 1.6 Checkmk had a tag group named "snmp" and an
@@ -577,6 +584,9 @@ class CREFolder(BaseFolder):
 
         if "tag_snmp" in attributes:
             return attributes  # Already in new format, no transformation necessary
+
+        if "meta_data" in attributes:
+            return attributes  # These attributes were already saved with version 1.6+
 
         value = attributes["tag_agent"]
 
@@ -622,6 +632,7 @@ class CREFolder(BaseFolder):
             "management_snmp_credentials": {},
             "management_ipmi_credentials": {},
             "management_protocol": {},
+            "explicit_host_conf": {},
             "extra_host_conf": {
                 "alias": []
             },
@@ -663,12 +674,15 @@ class CREFolder(BaseFolder):
         clusters = {}  # type: Dict[str, List[str]]
         hostnames = sorted(self.hosts().keys())
         custom_macros = {}  # collect value for attributes that are to be present in Nagios
+
+        explicit_host_settings = {
+        }  # collect value for attributes that are explicitly set for one host
         cleaned_hosts = {}
         host_tags = {}
         host_labels = {}
 
         attribute_mappings = [
-            # host attr, cmk_base variable name, value, title
+            # host attr, cmk.base variable name, value, title
             ("ipaddress", "ipaddresses", {}, "Explicit IPv4 addresses"),
             ("ipv6address", "ipv6addresses", {}, "Explicit IPv6 addresses"),
             ("snmp_community", "explicit_snmp_communities", {}, "Explicit SNMP communities"),
@@ -744,9 +758,12 @@ class CREFolder(BaseFolder):
                         value = effective.get(attrname)
                         nagstring = attr.to_nagios(value)
                         if nagstring is not None:
-                            if custom_varname not in custom_macros:
-                                custom_macros[custom_varname] = {}
-                            custom_macros[custom_varname][hostname] = nagstring
+                            if attr.is_explicit():
+                                explicit_host_settings.setdefault(custom_varname, {})
+                                explicit_host_settings[custom_varname][hostname] = nagstring
+                            else:
+                                custom_macros.setdefault(custom_varname, {})
+                                custom_macros[custom_varname][hostname] = nagstring
 
         if all_hosts:
             out.write("all_hosts += %s\n" % format_config_value(all_hosts))
@@ -773,6 +790,12 @@ class CREFolder(BaseFolder):
                 out.write("\n# Settings for %s\n" % custom_varname)
                 out.write("extra_host_conf.setdefault(%r, []).extend(\n" % custom_varname)
                 out.write("  %s)\n" % format_config_value(macrolist))
+
+        for varname, entries in explicit_host_settings.items():
+            if len(entries) > 0:
+                out.write("\n# Explicit settings for %s\n" % varname)
+                out.write("explicit_host_conf.setdefault(%r, {})\n" % varname)
+                out.write("explicit_host_conf['%s'].update(%r)\n" % (varname, entries))
 
         # If the contact groups of the folder are set to be used for the monitoring,
         # we create an according rule for the folder here and an according rule for
@@ -827,7 +850,7 @@ class CREFolder(BaseFolder):
             self._save_wato_info()
 
     def _load_wato_info(self):
-        return store.load_data_from_file(self.wato_info_path(), {})
+        return store.load_object_from_file(self.wato_info_path(), default={})
 
     def save(self):
         self._save_wato_info()
@@ -835,7 +858,7 @@ class CREFolder(BaseFolder):
 
     def _save_wato_info(self):
         self._ensure_folder_directory()
-        store.save_data_to_file(self.wato_info_path(), self.get_wato_info())
+        store.save_object_to_file(self.wato_info_path(), self.get_wato_info())
 
     def get_wato_info(self):
         return {

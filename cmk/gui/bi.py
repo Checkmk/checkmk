@@ -36,6 +36,7 @@ import fcntl
 import multiprocessing
 from contextlib import contextmanager
 import traceback
+from typing import Any, Dict, List, Set, Tuple  # pylint: disable=unused-import
 
 import six
 
@@ -171,26 +172,25 @@ NT_REMAINING = 3
 NT_PLACEHOLDER = 4  # temporary dummy entry needed for REMAINING
 
 # Global variables
-g_cache = {}
 g_bi_cache_manager = None
 g_bi_sitedata_manager = None
 g_bi_job_manager = None
 g_services_items = None
-g_services = {}
-g_services_by_hostname = {}
-g_assumptions = {}
-g_remaining_refs = []
+g_services = {}  # type: Dict[Tuple[Any, Any], Tuple[Any, Any, Any, Any, Any]]
+g_services_by_hostname = {}  # type: Dict[str, List[Tuple[Any, Tuple[Any, Any, Any, Any, Any]]]]
+g_assumptions = {}  # type: Dict[Any, Any]
+g_remaining_refs = []  # type: List[Tuple[Any, Any, Any]]
 # dictionary with hosts and its compiled services
-g_compiled_services_leafes = {}
+g_compiled_services_leafes = {}  # type: Dict[Any, Set[Any]]
 
-g_tree_cache = {}
+g_tree_cache = {}  # type: Dict[str, Any]
 g_config_information = None  # for invalidating cache after config change
 did_compilation = False  # Is set to true if anything has been compiled
 
-regex_host_hit_cache = set()
-regex_host_miss_cache = set()
-regex_svc_hit_cache = set()
-regex_svc_miss_cache = set()
+regex_host_hit_cache = set()  # type: Set[Tuple[Any, Any]]
+regex_host_miss_cache = set()  # type: Set[Tuple[Any, Any]]
+regex_svc_hit_cache = set()  # type: Set[Tuple[Any, Any]]
+regex_svc_miss_cache = set()  # type: Set[Tuple[Any, Any]]
 
 
 # Load the static configuration of all services and hosts (including tags)
@@ -285,16 +285,16 @@ def get_aggregation_group_trees():
     # - "GROUP"
     # - ["GROUP_1", "GROUP2", ..]
     migrate_bi_configuration()  # convert bi_packs into legacy variables
-    groups = []
+    groups = set()
     for aggr_def in config.aggregations + config.host_aggregations:
         if aggr_def[0].get("disabled"):
             continue
         legacy_group = aggr_def[1]
         if isinstance(legacy_group, list):
-            groups.extend(legacy_group)
+            groups.update(legacy_group)
         else:
-            groups.append(legacy_group)
-    return groups
+            groups.add(legacy_group)
+    return sorted(groups)
 
 
 def aggregation_group_choices():
@@ -2649,9 +2649,9 @@ def ajax_save_treestate():
     saved_ex_level = load_ex_level()
 
     if saved_ex_level != current_ex_level:
-        html.set_tree_states('bi', {})
-    html.set_tree_state('bi', path, html.request.var("state") == "open")
-    html.save_tree_states()
+        config.user.set_tree_states('bi', {})
+    config.user.set_tree_state('bi', path, html.request.var("state") == "open")
+    config.user.save_tree_states()
 
     save_ex_level(current_ex_level)
 
@@ -2727,11 +2727,11 @@ def render_tree_json(row):
     expansion_level = int(html.request.var("expansion_level", 999))
 
     saved_expansion_level = load_ex_level()
-    treestate = html.get_tree_states('bi')
+    treestate = config.user.get_tree_states('bi')
     if expansion_level != saved_expansion_level:
         treestate = {}
-        html.set_tree_states('bi', treestate)
-        html.save_tree_states()
+        config.user.set_tree_states('bi', treestate)
+        config.user.save_tree_states()
 
     def render_node_json(tree, show_host):
         is_leaf = len(tree) == 3
@@ -2803,11 +2803,11 @@ class ABCFoldableTreeRenderer(six.with_metaclass(abc.ABCMeta, object)):
 
     def _load_tree_state(self):
         saved_expansion_level = load_ex_level()
-        self._treestate = html.get_tree_states('bi')
+        self._treestate = config.user.get_tree_states('bi')
         if self._expansion_level != saved_expansion_level:
             self._treestate = {}
-            html.set_tree_states('bi', self._treestate)
-            html.save_tree_states()
+            config.user.set_tree_states('bi', self._treestate)
+            config.user.save_tree_states()
 
     @abc.abstractmethod
     def css_class(self):
@@ -3026,7 +3026,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
 
         if mousecode:
             if img_class:
-                html.img(src=html.theme_url("images/tree_black_closed.png"),
+                html.img(src=html.theme_url("images/tree_closed.png"),
                          class_=["treeangle", img_class],
                          onclick=mousecode)
 
@@ -3569,7 +3569,7 @@ def get_state_name(node):
     return _service_state_names()[node[0]['state']]
 
 
-_rule_to_pack_lookup = {}
+_rule_to_pack_lookup = {}  # type: Dict[str, str]
 
 
 def migrate_bi_configuration():

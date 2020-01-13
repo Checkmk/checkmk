@@ -1,0 +1,22 @@
+Title: ps: cleanup counters of processes which do not exist anymore
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1572421809
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+The new section ps_lnx was introduced in version 1.6.0. Unfortunately,
+counters of processes which do not exist anymore were not cleaned
+up for this section. This may lead to slowly growing files in
+tmp/check_mk/counters for hosts with the ps_lnx section. Since the
+check helpers have to parse this files on a regular basis this leads
+to an increased CPU load.
+
+It's worth to note that counters only accumulate if you use process
+monitoring and only if the PIDs of these processes change frequently.
+If you do not use process monitoring or the PIDs of your monitored
+processes do not change, you are not affected by this issue.

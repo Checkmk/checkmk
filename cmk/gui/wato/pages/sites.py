@@ -32,9 +32,13 @@ import Queue
 import socket
 import contextlib
 import binascii
+
 import typing  # pylint: disable=unused-import
-from typing import Text, TypeVar, List, Dict, NamedTuple  # pylint: disable=unused-import
-from OpenSSL import crypto, SSL
+from typing import Dict, List, NamedTuple, Text, Union  # pylint: disable=unused-import
+
+import six
+from OpenSSL import crypto
+from OpenSSL import SSL  # type: ignore[attr-defined]
 # mypy can't find x509 for some reason (is a c extension involved?)
 from cryptography.x509.oid import ExtensionOID, NameOID  # type: ignore
 from cryptography import x509  # type: ignore
@@ -526,7 +530,6 @@ class ModeDistributedMonitoring(WatoMode):
                   "assigned to it. You can use the <a href=\"%s\">host "
                   "search</a> to get a list of the hosts.") % search_url)
 
-
         c = wato_confirm(_("Confirm deletion of site %s") % html.render_tt(delete_id),
                          _("Do you really want to delete the connection to the site %s?") % \
                          html.render_tt(delete_id))
@@ -824,7 +827,7 @@ PingResult = NamedTuple("PingResult", [
 ReplicationStatus = NamedTuple("ReplicationStatus", [
     ("site_id", str),
     ("success", bool),
-    ("response", TypeVar("ReplicationResponse", PingResult, Exception)),
+    ("response", Union[PingResult, Exception]),
 ])
 
 
@@ -1213,8 +1216,8 @@ class ModeSiteLivestatusEncryption(WatoMode):
                 CertificateDetails(
                     issued_to=get_name(crypto_cert.subject),
                     issued_by=get_name(crypto_cert.issuer),
-                    valid_from=crypto_cert.not_valid_before,
-                    valid_till=crypto_cert.not_valid_after,
+                    valid_from=six.text_type(crypto_cert.not_valid_before),
+                    valid_till=six.text_type(crypto_cert.not_valid_after),
                     signature_algorithm=crypto_cert.signature_hash_algorithm.name,
                     digest_sha256=binascii.hexlify(crypto_cert.fingerprint(hashes.SHA256())),
                     serial_number=crypto_cert.serial_number,

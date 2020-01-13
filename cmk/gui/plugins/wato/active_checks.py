@@ -653,15 +653,13 @@ def _valuespec_active_checks_sql():
                     ]),
             ),
             ("levels",
-             Tuple(
-                 title=_("Upper levels for first output item"),
-                 elements=[Float(title=_("Warning if above")),
-                           Float(title=_("Critical if above"))])),
+             Tuple(title=_("Upper levels for first output item"),
+                   elements=[Float(title=_("Warning at")),
+                             Float(title=_("Critical at"))])),
             ("levels_low",
-             Tuple(
-                 title=_("Lower levels for first output item"),
-                 elements=[Float(title=_("Warning if below")),
-                           Float(title=_("Critical if below"))])),
+             Tuple(title=_("Lower levels for first output item"),
+                   elements=[Float(title=_("Warning below")),
+                             Float(title=_("Critical below"))])),
             ("perfdata",
              FixedValue(
                  title=_("Performance Data"),
@@ -896,12 +894,13 @@ def _active_checks_http_hostspec():
     return Dictionary(
         title=_("Host settings"),
         help=_("Usually Check_MK will nail this check to the primary IP address of the host"
-               " it is attached to. It will use corresponding IP version (IPv4/IPv6) and"
-               " the default port (80/443). With this option you can override either of these"
-               " parameters. By default the host name / IP address will be used as virtual"
-               " host as well. In some setups however, you may want to distiguish the contacted"
-               " servers address from your virtual host name (e.g. if the virtual host name is"
-               " not resolvable by DNS)."),
+               " it is attached to. It will use the corresponding IP version (IPv4/IPv6) and"
+               " default port (80/443). With this option you can override either of these"
+               " parameters. By default no virtual host is set and HTTP/1.0 will be used."
+               " In some setups however, you may want to distiguish the contacted server"
+               " address from your virtual host name (e.g. if the virtual host name is"
+               " not resolvable by DNS). In this case the HTTP Host header will be set and "
+               "HTTP/1.1 is used."),
         elements=[
             ("address", TextAscii(title=_("Hosts name / IP address"), allow_empty=False)),
             ("port", _active_checks_http_portspec(443)),
@@ -1570,7 +1569,7 @@ rulespec_registry.register(
 def _valuespec_custom_checks():
     return Dictionary(
         title=_("Classical active and passive Monitoring checks"),
-        help=_("With this ruleset you can configure &quot;classical Monitoring checks&quot; "
+        help=_("With this ruleset you can configure \"classical Monitoring checks\" "
                "to be executed directly on your monitoring server. These checks "
                "will not use Check_MK. It is also possible to configure passive "
                "checks that are fed with data from external sources via the "

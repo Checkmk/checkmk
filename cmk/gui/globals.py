@@ -29,15 +29,16 @@
 
 from functools import partial
 import logging
-from typing import Any, Union  # pylint: disable=unused-import
 
-from werkzeug.local import LocalProxy
-from werkzeug.local import LocalStack
+from typing import Any, TYPE_CHECKING  # pylint: disable=unused-import
 
-import cmk.gui.htmllib  # pylint: disable=unused-import
+from werkzeug.local import LocalProxy, LocalStack
 
 #####################################################################
 # a namespace for storing data during an application context
+# Cyclical import
+if TYPE_CHECKING:
+    from cmk.gui import htmllib, http  # pylint: disable=unused-import
 
 _sentinel = object()
 
@@ -111,12 +112,30 @@ def _lookup_req_object(name):
     top = _request_ctx_stack.top
     if top is None:
         raise RuntimeError("Working outside of request context.")
+
+    if name is None:
+        return top
+
     return getattr(top, name)
 
 
 class RequestContext(object):
     def __init__(self, html_obj):
         self.html = html_obj
+        self.auth_type = None
+        # TODO: cyclical import with config -> globals -> config -> ...
+        from cmk.gui.config import LoggedInNobody
+        self.user = LoggedInNobody()
+
+    # These properties are needed so that we can replace the Request object from within html
+    # This actually is a hack which should be removed once the filtering can be done via middleware.
+    @property
+    def request(self):
+        return self.html.request
+
+    @property
+    def response(self):
+        return self.html.response
 
     def __enter__(self):
         _request_ctx_stack.push(self)
@@ -129,16 +148,34 @@ class RequestContext(object):
 
     def __exit__(self, exc_type, exc_value, tb):
         self._web_log_handler.removeFilter(self._prepend_url_filter)
-        _request_ctx_stack.pop()
+        # TODO: html.finalize needs to be called before popping the stack, because it does
+        #       something with the user object.
         self.html.finalize()
+        _request_ctx_stack.pop()
 
 
 # NOTE: Flask offers the proxies below, and we should go into that direction,
 # too. But currently our html class is a swiss army knife with tons of
-# resposibilites which we should really, really split up...
-#
-# request = LocalProxy(partial(_lookup_req_object, "request"))
-# session = LocalProxy(partial(_lookup_req_object, "session"))
+# responsibilities which we should really, really split up...
+def request_local_attr(name=None):
+    """Delegate access to the corresponding attribute on RequestContext
 
-html = LocalProxy(partial(_lookup_req_object,
-                          "html"))  # type: Union[cmk.gui.htmllib.html, LocalProxy]
+    When the returned object is accessed, the Proxy will fetch the current
+    RequestContext from the LocalStack and return the attribute given by `name`.
+
+    Args:
+        name (str): The name of the attribute on RequestContext
+
+    Returns:
+        A proxy which wraps the value stored on RequestContext.
+
+    """
+    return LocalProxy(partial(_lookup_req_object, name))
+
+
+local = request_local_attr()  # None as name will get the whole object.
+
+user = request_local_attr('user')
+request = request_local_attr('request')
+response = request_local_attr('response')
+html = request_local_attr('html')

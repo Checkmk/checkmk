@@ -92,7 +92,7 @@ if which smartctl > /dev/null 2>&1 ; then
             serial=AMCC_${serial}00000000000
             echo "$serial=$twaminor"
         done)"
-    else:
+    else
         echo "tw_cli not found" >&2
     fi
 
@@ -152,7 +152,7 @@ if which smartctl > /dev/null 2>&1 ; then
                 TEMP=
                 # create temperature output as expected by checks/smart
                 # this is a hack, TODO: change checks/smart to support SCSI-disks
-                eval "$(smartctl -d scsi -i -A "$D" | while read -r a b c d ; do
+                eval "$(smartctl -d scsi -i -A "$D" | while read -r a b c d _rest ; do
                     [ "$a" == Serial ] && echo SN="$c"
                     [ "$a" == Current ] && [ "$b" == Drive ] && [ "$c" == Temperature: ] && echo TEMP="$d"
                 done)"

@@ -1,44 +1,20 @@
 throttle(['Gerrit']){
 node {
     def WORKSPACE = pwd()
-    
+
     try {
         stage("Auschecken: Checkmk") {
-            checkout([$class: 'GitSCM',
-                branches: [
-                    [name: '${GERRIT_PATCHSET_REVISION}']
-                ],
-                browser: [
-                    $class: 'GitWeb',
-                    repoUrl: 'https://review.lan.mathias-kettner.de/git/?p=check_mk.git'
-                ],
-                doGenerateSubmoduleConfigurations: false,
-                extensions: [[
-                    $class: 'CloneOption',
-                    //honorRefspec: true,
-                    //reference: '/home/gerrit/gerrit_data/git/check_mk.git',
-                    noTags: true,
-                    shallow: false
-                ]],
-                submoduleCfg: [],
-                userRemoteConfigs: [
-                    [
-                        credentialsId: '058f09c4-21c9-49ae-b72b-0b9d2f465da6',
-                        url: 'ssh://jenkins@review.lan.mathias-kettner.de:29418/check_mk',
-                        refspec: "${GERRIT_REFSPEC}"
-                    ]
-                ]
-            ])
+            checkout(scm)
         }
-        
+
         // Creates a \n separated list of changed files
         def CHANGED_FILES_REL = sh(script: "git diff-tree --no-commit-id --name-only -r ${GERRIT_PATCHSET_REVISION}", returnStdout: true).toString().trim()
         def CHANGED_FILES_ABS = sh(script: "echo '${CHANGED_FILES_REL}' | sed 's|^|${WORKSPACE}/|g'", returnStdout: true).toString().trim()
 
         // Gather the list of changed python files
         def GREP_PATTERNS = sh(script: "echo '${CHANGED_FILES_ABS}' | sed 's/^/-e /g'", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
-        def CHANGED_PYTHON_FILES = sh(script: "tests/find-python-files | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
-        def CHANGED_PYTHON3_FILES = sh(script: "tests-py3/find-python-files | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
+        def CHANGED_PYTHON_FILES = sh(script: "scripts/find-python-files 2 | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
+        def CHANGED_PYTHON3_FILES = sh(script: "scripts/find-python-files 3 | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
         def CHANGED_PYLINT_RC_FILE = sh(script: "echo '$CHANGED_FILES_ABS' | grep -h '${WORKSPACE}/.pylintrc' - || true", returnStdout: true).toString().trim()
 
         // Gather the list of changed agent plugins
@@ -54,15 +30,25 @@ node {
 
         stage("Python typing") {
             if (CHANGED_PYTHON_FILES != "") {
-                dir("tests/static") {
+                dir("tests-py3") {
                     sh ". /bauwelt/bin/bw-setup-jenkins-env ; make --quiet test-mypy"
                 }
             } else {
                 println "No python files changed. Skipping."
             }
         }
-        
-        
+
+
+        stage("Python3 typing") {
+            if (CHANGED_PYTHON3_FILES != "") {
+                dir("tests-py3") {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; make --quiet test-mypy3"
+                }
+            } else {
+                println "No python3 files changed. Skipping."
+            }
+        }
+
         stage("Python format") {
             if (CHANGED_PYTHON_FILES != "") {
                 dir('tests') {
@@ -72,7 +58,7 @@ node {
                 println "No python files changed. Skipping."
             }
         }
-        
+
         stage("Python futurize") {
             CHANGED_TEST_FUTURIZE_FILE = sh(script: "echo '$CHANGED_FILES_ABS' | grep -h '${WORKSPACE}/tests/test-futurize' - || true", returnStdout: true).toString().trim()
             if (CHANGED_TEST_FUTURIZE_FILE != "") {
@@ -90,7 +76,7 @@ node {
                 }
             }
         }
-        
+
         stage("Python linting") {
             if (CHANGED_PYLINT_RC_FILE == "" && CHANGED_PYTHON_FILES == "") {
                 println "Neither .pylintrc nor python files changed. Skipping."
@@ -105,7 +91,7 @@ node {
                 }
             }
         }
-        
+
         stage("Python3 linting") {
             if (CHANGED_PYLINT_RC_FILE == "" && CHANGED_PYTHON3_FILES == "") {
                 println "Neither .pylintrc nor python3 files changed. Skipping."
@@ -145,7 +131,13 @@ node {
                 sh ". /bauwelt/bin/bw-setup-jenkins-env ; make --quiet test-format-shell"
             }
         }
-        
+
+        stage("Shell Unit Tests") {
+            dir('tests') {
+                sh ". /bauwelt/bin/bw-setup-jenkins-env ; make test-unit-sh"
+            }
+        }
+
         stage("Agent integration tests") {
             if (CHANGED_AGENT_PLUGINS != "") {
                 dir('tests') {
@@ -214,22 +206,13 @@ node {
         currentBuild.result = "FAILED"
         throw e
     } finally {
-        step([
-            $class: 'WarningsPublisher',
-            canComputeNew: false,
-            canResolveRelativePaths: false,
-            canRunOnFailed: true,
-            defaultEncoding: '',
-            excludePattern: '',
-            healthy: '',
-            includePattern: '',
-            messagesPattern: '',
-            consoleParsers: [[parserName: 'GNU Make + GNU C Compiler (gcc)'], [parserName: 'Clang (LLVM based)'], [parserName: 'PyLint']],
-            unHealthy: '',
-            defaultEncoding: 'UTF-8',
-            failedTotalAll: '0',
-            unstableTotalAll: '0'
-        ])
+        stage("Analyse Issues") {
+            def CLANG = scanForIssues tool: clang()
+            def GCC = scanForIssues tool: gcc()
+            def PYLINT = scanForIssues tool: pyLint()
+
+            publishIssues issues:[CLANG,GCC,PYLINT], trendChartType: 'TOOLS_ONLY'
+        }
     }
 }
 }

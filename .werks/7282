@@ -1,0 +1,14 @@
+Title: liveproxyd: Reduced CPU usage
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1572446835
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+Introduced first fixes to reduce the CPU usage of the liveproxyd. More to come.
+
+

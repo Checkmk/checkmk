@@ -1,0 +1,116 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+import json
+
+NAME_TRANSLATION = {
+    "mem": "Memory",
+    "perc": "Percentage",
+    "ql": "Queue Length",
+    "recv": "Received",
+}
+
+ERROR_DETAILS = {
+    "query error": "does not produce a valid result",
+    "unsupported query": "produces more than one result (only one allowed)",
+    "no value": "returns no value",
+}
+
+
+def parse_prometheus_custom(info):
+    parsed = {}
+    for line in info:
+        try:
+            prometheus_data = json.loads(line[0])
+        except ValueError:
+            continue
+        parsed.update(prometheus_data)
+    return parsed
+
+
+def _parse_metric_description(metric_name):
+    name_elements = metric_name.split("_")
+    if len(name_elements) == 1:
+        return metric_name.capitalize()
+    name_elements = [NAME_TRANSLATION.get(element, element) for element in name_elements]
+    return " ".join(name_elements).title()
+
+
+def _check_for_invalid_result(metric_details, promql_expression):
+    """Produces the output including service status and infotext for a invalid/failed
+       PromQL query (and therefore service metric)
+
+       This function also verifies if the given PromQL expression previously gave a valid output
+       and has now become invalid due to changes on the Prometheus side
+
+    Args:
+        metric_details: Dict which contains the information of the metric including an error message
+                        in case the PromQL query has failed
+        promql_expression: String expression of the failed/invalid PromQL query
+
+    Returns: Empty Tuple in case the query gave a valid output or a tuple containing the status and
+             infotext for the service to display
+
+    """
+    expression_has_been_valid_before = get_item_state(promql_expression, False)
+    expression_is_valid_now = "value" in metric_details
+
+    if expression_is_valid_now:
+        # Keep a record of the PromQL expressions which gave a valid result at least once
+        set_item_state(promql_expression, True)
+        return ()
+
+    if expression_has_been_valid_before:
+        status = 1
+        infotext = "previously valid is now invalid"
+    else:
+        status = 2
+        infotext = ERROR_DETAILS[metric_details["invalid_info"]]
+    return status, "PromQL expression (%s) %s" % (promql_expression, infotext), []
+
+
+@get_parsed_item_data
+def check_prometheus_custom(_item, _params, data):
+    for metric_details in data["service_metrics"]:
+        promql_expression = metric_details["promql_query"]
+        metric_name = metric_details["name"]
+
+        invalid_result = _check_for_invalid_result(metric_details, promql_expression)
+        if invalid_result:
+            yield invalid_result
+            continue
+
+        infoname = metric_details.get("label", _parse_metric_description(metric_name))
+        yield check_levels(float(metric_details["value"]), metric_name, None, infoname=infoname)
+
+
+check_info["prometheus_custom"] = {
+    'parse_function': parse_prometheus_custom,
+    'check_function': check_prometheus_custom,
+    'inventory_function': discover(),
+    'service_description': '%s',
+    'has_perfdata': False,
+}

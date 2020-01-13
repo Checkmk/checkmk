@@ -61,7 +61,7 @@ services = [
     "Gnogomatic Garglebox",
 ]
 
-print('<<<local>>>')
+print('<<<local:sep(0)>>>')
 state_names = ["OK", "WARN", "CRIT", "UNKNOWN"]
 state_texts = [
     "Everying is OK now",

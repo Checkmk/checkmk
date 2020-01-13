@@ -60,8 +60,10 @@ factory_settings["oracle_jobs_defaults"] = {
 
 def inventory_oracle_jobs(info):
     for line in info:
+        if len(line) <= 2:
+            continue
         # old format < RDBMS 12.1
-        if len(line) >= 3 and len(line) <= 10:
+        elif 3 <= len(line) <= 10:
             yield "%s.%s.%s" % (line[0], line[1], line[2]), {}
         else:
             # new format: sid.pdb_name.job_owner.job_name
@@ -79,6 +81,15 @@ def check_oracle_jobs(item, params, info):
     for line in info:
         service_found = False
 
+        if len(line) < 2:
+            # ignore wrong/corrupted lines
+            continue
+
+        elif line[1].startswith(' Debug '):
+            # Skip invalid lines from Agent
+            continue
+
+        # we need to check against valid lines before the following comparisonq
         if line[0] == sid:
             data_found = True
 
@@ -102,8 +113,9 @@ def check_oracle_jobs(item, params, info):
             sid, job_owner, job_name, job_state, job_runtime, _job_run_count, \
             job_enabled, job_nextrun, job_schedule, job_last_state = line
 
-        else:
+        elif len(line) > 8:
             # really old plugins without job_owner...
+            # The > 8 is expected, due to missing field seperator.
             # this should be removed in a future release!
 
             # sid.job_name
@@ -119,6 +131,10 @@ def check_oracle_jobs(item, params, info):
             job_nextrun = " ".join(line[7:-3])
             job_schedule = line[-2]
             job_last_state = line[-1]
+
+        else:
+            # invalid line/format from agent
+            continue
 
         if   (lineformat == 3 and itemname == job_name and itemowner == job_owner and itempdb == job_pdb and itemsid == sid) \
            or(lineformat == 2 and itemname == job_name and itemowner == job_owner and itemsid == sid) \

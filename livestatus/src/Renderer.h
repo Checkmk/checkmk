@@ -163,8 +163,8 @@ public:
         }
     }
 
-    Renderer &renderer() const { return _renderer; }
-    EmitBeginEnd emitBeginEnd() const { return _emitBeginEnd; }
+    [[nodiscard]] Renderer &renderer() const { return _renderer; }
+    [[nodiscard]] EmitBeginEnd emitBeginEnd() const { return _emitBeginEnd; }
 
 private:
     Renderer &_renderer;
@@ -199,7 +199,7 @@ public:
         }
     }
 
-    Renderer &renderer() const { return _query.renderer(); }
+    [[nodiscard]] Renderer &renderer() const { return _query.renderer(); }
 
     void output(const RowFragment &value) {
         separate();
@@ -237,6 +237,7 @@ public:
                 _list.renderer().separateListElements();
             }
         }
+        ~BeginEnd() = default;
 
     private:
         ListRenderer &_list;
@@ -249,7 +250,7 @@ public:
 
     ~ListRenderer() { renderer().endList(); }
 
-    Renderer &renderer() const { return _row.renderer(); }
+    [[nodiscard]] Renderer &renderer() const { return _row.renderer(); }
 
     template <typename T>
     void output(T value) {
@@ -274,6 +275,7 @@ public:
                 _sublist.renderer().separateSublistElements();
             }
         }
+        ~BeginEnd() = default;
 
     private:
         SublistRenderer &_sublist;
@@ -286,7 +288,7 @@ public:
 
     ~SublistRenderer() { renderer().endSublist(); }
 
-    Renderer &renderer() const { return _list.renderer(); }
+    [[nodiscard]] Renderer &renderer() const { return _list.renderer(); }
 
     template <typename T>
     void output(T value) {
@@ -311,6 +313,7 @@ public:
                 _dict.renderer().separateDictElements();
             }
         }
+        ~BeginEnd() = default;
 
     private:
         DictRenderer &_dict;
@@ -323,7 +326,7 @@ public:
 
     ~DictRenderer() { renderer().endDict(); }
 
-    Renderer &renderer() const { return _row.renderer(); }
+    [[nodiscard]] Renderer &renderer() const { return _row.renderer(); }
 
     void output(const std::string &key, const std::string &value) {
         BeginEnd be(*this);

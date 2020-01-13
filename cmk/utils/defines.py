@@ -26,6 +26,8 @@
 """This module serves constants which are needed in several components
 of Check_MK."""
 
+from typing import Dict, List, Text, Tuple  # pylint: disable=unused-import
+
 from cmk.utils.i18n import _
 
 # TODO: Investigate Check_MK code for more defines and other places
@@ -35,6 +37,7 @@ from cmk.utils.i18n import _
 
 # TODO: Rename to service_state_names()
 def core_state_names():
+    # type: () -> Dict[int, Text]
     return {
         -1: _("NODATA"),
         0: _("OK"),
@@ -44,11 +47,13 @@ def core_state_names():
     }
 
 
-def service_state_name(state_num, deflt=""):
+def service_state_name(state_num, deflt=u""):
+    # type: (int, Text) -> Text
     return core_state_names().get(state_num, deflt)
 
 
 def short_service_state_names():
+    # type: () -> Dict[int, Text]
     return {
         -1: _("PEND"),
         0: _("OK"),
@@ -58,11 +63,13 @@ def short_service_state_names():
     }
 
 
-def short_service_state_name(state_num, deflt=""):
+def short_service_state_name(state_num, deflt=u""):
+    # type: (int, Text) -> Text
     return short_service_state_names().get(state_num, deflt)
 
 
-def host_state_name(state_num, deflt=""):
+def host_state_name(state_num, deflt=u""):
+    # type: (int, Text) -> Text
     states = {
         0: _("UP"),
         1: _("DOWN"),
@@ -71,22 +78,26 @@ def host_state_name(state_num, deflt=""):
     return states.get(state_num, deflt)
 
 
-def short_host_state_name(state_num, deflt=""):
+def short_host_state_name(state_num, deflt=u""):
+    # type: (int, Text) -> Text
     states = {0: _("UP"), 1: _("DOWN"), 2: _("UNREACH")}
     return states.get(state_num, deflt)
 
 
 def weekday_name(day_num):
+    # type: (int) -> Text
     """Returns the human readable day name of a given weekday number (starting with 0 at Monday)"""
     return weekdays()[day_num]
 
 
 def weekday_ids():
+    # type: () -> List[str]
     """Returns a list of the internal week day names"""
     return [d[0] for d in weekdays_by_name()]
 
 
 def weekdays():
+    # type: () -> Dict[int, Text]
     """Returns a map of weekday number (starting with 0 at Monday) to the human readable day name"""
     return {
         0: _("Monday"),
@@ -100,6 +111,7 @@ def weekdays():
 
 
 def weekdays_by_name():
+    # type: () -> List[Tuple[str, Text]]
     """Returns a list of two element tuples containing the weekday ID and the human readable day name"""
     return [
         ("monday", _("Monday")),
@@ -113,6 +125,7 @@ def weekdays_by_name():
 
 
 def month_name(month_num):
+    # type: (int) -> Text
     """Returns the human readable month name of a given month number
     (starting with 0 = January)"""
     return [
@@ -131,11 +144,13 @@ def month_name(month_num):
     ][month_num]
 
 
-def interface_oper_state_name(state_num, deflt=""):
+def interface_oper_state_name(state_num, deflt=u""):
+    # type: (int, Text) -> Text
     return interface_oper_states().get(state_num, deflt)
 
 
 def interface_oper_states():
+    # type: () -> Dict[int, Text]
     return {
         1: _("up"),
         2: _("down"),
@@ -150,6 +165,7 @@ def interface_oper_states():
 
 
 def interface_port_types():
+    # type: () -> Dict[int, str]
     return {
         1: "other",
         2: "regular1822",

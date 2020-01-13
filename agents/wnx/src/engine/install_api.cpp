@@ -121,7 +121,7 @@ bool RmFile(const std::filesystem::path& File) noexcept {
         return true;
     }
 
-    auto ret = cma::ntfs::Remove(File, ec);
+    auto ret = fs::remove(File, ec);
     if (ret || ec.value() == 0) {  // either deleted or disappeared
         XLOG::l.i("File '{}'was removed", File.u8string());
         return true;
@@ -251,8 +251,9 @@ static void BackupLogFile(std::filesystem::path log_file_name) {
     XLOG::l.i("File '{0}' exists, backing up to '{0}.bak'",
               log_file_name.u8string());
 
-    auto success =
-        MvFile(log_file_name, log_file_name.replace_extension(".log.bak"));
+    auto log_bak_file_name = log_file_name;
+    log_bak_file_name.replace_extension(".log.bak");
+    auto success = MvFile(log_file_name, log_bak_file_name);
 
     if (!success) XLOG::d("Backing up of msi log failed");
 }

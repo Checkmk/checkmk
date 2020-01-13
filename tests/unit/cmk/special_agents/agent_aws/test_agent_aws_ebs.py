@@ -58,7 +58,7 @@ class FakeEC2Client(object):
 def get_ebs_sections():
     def _create_ebs_sections(names, tags):
         region = 'region'
-        config = AWSConfig('hostname', (None, None))
+        config = AWSConfig('hostname', [], (None, None))
         config.add_single_service_config('ebs_names', names)
         config.add_service_tags('ebs_tags', tags)
         config.add_single_service_config('ec2_names', None)

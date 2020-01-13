@@ -25,6 +25,7 @@ def fixup_ip_lookup(monkeypatch):
     # Fix IP lookup when
     def _getaddrinfo(host, port, family=None, socktype=None, proto=None, flags=None):
         if family == socket.AF_INET:
+            # TODO: This is broken. It should return (family, type, proto, canonname, sockaddr)
             return "0.0.0.0"
         raise NotImplementedError()
 

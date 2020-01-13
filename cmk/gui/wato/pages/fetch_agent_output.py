@@ -67,7 +67,7 @@ from cmk.gui.watolib import (
 
 class FetchAgentOutputRequest(object):
     def __init__(self, host, agent_type):
-        # type: (watolib.Host, str) -> None
+        # type: (watolib.CREHost, str) -> None
         self.host = host
         self.agent_type = agent_type
 
@@ -265,7 +265,7 @@ class FetchAgentOutputBackgroundJob(watolib.WatoBackgroundJob):
                                  self._request.agent_type)
         title = _("Fetching %s of %s / %s") % (self._request.agent_type, host.site_id(),
                                                host.name())
-        super(FetchAgentOutputBackgroundJob, self).__init__(job_id, title=title, deletable=False)
+        super(FetchAgentOutputBackgroundJob, self).__init__(job_id, title=title)
 
         self.set_function(self._fetch_agent_output)
 

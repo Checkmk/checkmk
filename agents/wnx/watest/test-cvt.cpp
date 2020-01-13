@@ -3,6 +3,8 @@
 
 #include "pch.h"
 
+#include <yaml-cpp/yaml.h>
+
 #include <filesystem>
 
 #include "cvt.h"
@@ -14,7 +16,6 @@
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_tgt.h"
-#include "yaml-cpp/yaml.h"
 
 template <class T>
 std::string type_name() {
@@ -108,6 +109,24 @@ void printType(T x) {
 }
 
 namespace cma::cfg::cvt {
+
+TEST(CvtTest, CrLf) {
+    auto yaml = YAML::Load("global:\n  test: True\n");
+    cma::OnStartTest();
+
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+    std::filesystem::path p = cma::cfg::GetTempDir();
+    p /= "tst.yml";
+    {
+        std::ofstream ofs(p);
+        ofs << yaml;
+    }
+    std::ifstream in(p.u8string(), std::ios::binary);
+    std::stringstream sstr;
+    sstr << in.rdbuf();
+    auto content = sstr.str();
+    EXPECT_TRUE(content.find("\r\n") != std::string::npos);
+}
 
 void AddKeyedPattern(YAML::Node Node, const std::string Key,
                      const std::string& Pattern, const std::string& Value);

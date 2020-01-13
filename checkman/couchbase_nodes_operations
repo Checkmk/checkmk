@@ -6,7 +6,7 @@ distribution: check_mk
 description:
 
  This service monitors the number of operations per second on a single node.
- Levels can be configured in the WATO rule "Couchbase Node Operations".
+ Levels can be configured in the WATO rule "Couchbase Operations".
 
 inventory:
  One service per node is created.

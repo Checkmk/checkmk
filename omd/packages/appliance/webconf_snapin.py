@@ -24,11 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.plugins.sidebar import (
-    SidebarSnapin,
-    snapin_registry,
+# Does not detect the module hierarchy correctly. Imports are fine.
+from cmk.gui.i18n import _  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.globals import html  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.sidebar import (  # pylint: disable=cmk-module-layer-violation
+    SidebarSnapin, snapin_registry,
 )
 
 

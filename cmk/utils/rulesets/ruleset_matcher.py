@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 """This module provides generic Check_MK ruleset processing functionality"""
 
-from typing import Any, Set, Optional, Generator, Dict, Text, Pattern, Tuple, List  # pylint: disable=unused-import
+from typing import Any, Dict, Generator, List, Optional, Pattern, Set, Text, Tuple  # pylint: disable=unused-import
 
 from cmk.utils.rulesets.tuple_rulesets import (
     ALL_HOSTS,
@@ -52,7 +52,8 @@ class RulesetMatchObject(object):
                                  if self.service_labels else None)
 
     def _generate_hash(self, service_labels):
-        return hash(frozenset(self.service_labels))
+        # type: (Optional[Dict[Text, Text]]) -> int
+        return hash(None if service_labels is None else frozenset(service_labels))
 
     def to_dict(self):
         # type: () -> Dict
@@ -60,10 +61,11 @@ class RulesetMatchObject(object):
         return {k: getattr(self, k) for k in self.__slots__ if getattr(self, k) is not None}
 
     def copy(self):
+        # type: () -> RulesetMatchObject
         return RulesetMatchObject(**self.to_dict())
 
     def __repr__(self):
-        kwargs = ", ".join(["%s=%r" % e for e in self.to_dict().iteritems()])
+        kwargs = ", ".join("%s=%r" % e for e in self.to_dict().items())
         return "RulesetMatchObject(%s)" % kwargs
 
 
@@ -266,7 +268,7 @@ class RulesetOptimizer(object):
         # A factor which indicates how much hosts share the same host tag configuration (excluding folders).
         # len(all_processed_hosts) / len(different tag combinations)
         # It is used to determine the best rule evualation method
-        self._all_processed_hosts_similarity = 1
+        self._all_processed_hosts_similarity = 1.0
 
         self._service_ruleset_cache = {}
         self._host_ruleset_cache = {}
@@ -286,6 +288,10 @@ class RulesetOptimizer(object):
         # TODO: Clean this one up?
         self._initialize_host_lookup()
 
+    def clear_host_ruleset_cache(self):
+        # type: () -> None
+        self._host_ruleset_cache.clear()
+
     def all_processed_hosts(self):
         # type: () -> Set[str]
         """Returns a set of all processed hosts"""
@@ -294,7 +300,7 @@ class RulesetOptimizer(object):
     def set_all_processed_hosts(self, all_processed_hosts):
         self._all_processed_hosts = set(all_processed_hosts)
 
-        nodes_and_clusters = set()
+        nodes_and_clusters = set()  #  type: Set[str]
         for hostname in self._all_processed_hosts:
             nodes_and_clusters.update(self._nodes_of.get(hostname, []))
             nodes_and_clusters.update(self._clusters_of.get(hostname, []))
@@ -321,7 +327,7 @@ class RulesetOptimizer(object):
             used_groups.add(self._host_grouped_ref.get(hostname, ()))
 
         if not used_groups:
-            self._all_processed_hosts_similarity = 1
+            self._all_processed_hosts_similarity = 1.0
             return
 
         self._all_processed_hosts_similarity = (1.0 * len(self._all_processed_hosts) /
@@ -343,7 +349,7 @@ class RulesetOptimizer(object):
         Instead of a ruleset like list structure with precomputed host lists we compute a
         direct map for hostname based lookups for the matching rule values
         """
-        host_values = {}
+        host_values = {}  # type: Dict[str, List[Any]]
         for rule in ruleset:
             if "options" in rule and "disabled" in rule["options"]:
                 continue
@@ -533,7 +539,7 @@ class RulesetOptimizer(object):
         return True
 
     def _condition_cache_id(self, hostlist, tags, labels, rule_path):
-        host_parts = []
+        host_parts = []  # type: List[Optional[str]]
 
         if hostlist is None:
             host_parts.append(None)
@@ -583,8 +589,8 @@ class RulesetOptimizer(object):
             positive_match_tags.add(tag)
 
         # TODO:
-        #if has_specific_folder_tag or self._all_processed_hosts_similarity < 3:
-        if self._all_processed_hosts_similarity < 3:
+        #if has_specific_folder_tag or self._all_processed_hosts_similarity < 3.0:
+        if self._all_processed_hosts_similarity < 3.0:
             # Without shared folders
             for hostname in valid_hosts:
                 host_tags = self._host_tag_lists[hostname]
@@ -596,7 +602,7 @@ class RulesetOptimizer(object):
             return matching
 
         # With shared folders
-        checked_hosts = set()
+        checked_hosts = set()  # type: Set[str]
         for hostname in valid_hosts:
             if hostname in checked_hosts:
                 continue
@@ -717,7 +723,7 @@ class RulesetToDictTransformer(object):
     def _transform_rule(self, tuple_rule, is_service, is_binary):
         rule = {
             "condition": {},
-        }
+        }  # type: Dict[str, Any]
 
         tuple_rule = list(tuple_rule)
 
@@ -791,7 +797,7 @@ class RulesetToDictTransformer(object):
             host_tags = tuple_rule[0]
             host_list = tuple_rule[1]
 
-        condition = {}
+        condition = {}  # type: Dict[str, str]
         condition.update(self.transform_host_tags(host_tags))
         condition.update(self._transform_host_list(host_list))
         return condition

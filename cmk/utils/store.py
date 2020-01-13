@@ -37,7 +37,10 @@ import os
 import pprint
 import tempfile
 import time
-from typing import Callable, Any, Union, Dict, Iterator, List  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Callable, Any, Union, Dict, Iterator, List, Text, Optional, AnyStr, cast,
+)
+import six
 
 # Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:
@@ -45,16 +48,16 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path
 
-from cmk.utils.exceptions import MKGeneralException, MKTimeout
+from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKTerminate
 from cmk.utils.i18n import _
 from cmk.utils.paths import default_config_dir
+from cmk.utils.encoding import ensure_bytestr
 
 logger = logging.getLogger("cmk.store")
 
 # TODO: Make all methods handle paths the same way. e.g. mkdir() and makedirs()
 # care about encoding a path to UTF-8. The others don't to that.
 
-#.
 #   .--Predefined----------------------------------------------------------.
 #   |          ____               _       __ _                _            |
 #   |         |  _ \ _ __ ___  __| | ___ / _(_)_ __   ___  __| |           |
@@ -89,7 +92,6 @@ def lock_exclusive():
     aquire_lock(configuration_lockfile())
 
 
-#.
 #.
 #   .--Directories---------------------------------------------------------.
 #   |           ____  _               _             _                      |
@@ -161,7 +163,7 @@ def load_mk_file(path, default=None, lock=False):
                 raise
         return default
 
-    except MKTimeout:
+    except (MKTerminate, MKTimeout):
         raise
     except Exception as e:
         # TODO: How to handle debug mode or logging?
@@ -187,11 +189,66 @@ def save_mk_file(path, mk_content, add_header=True):
     save_file(path, content)
 
 
+# A simple wrapper for cases where you only have to write a single value to a .mk file.
+def save_to_mk_file(path, key, value, pprint_value=False):
+    # type: (Union[Path, str], str, Any, bool) -> None
+    format_func = repr
+    if pprint_value:
+        format_func = pprint.pformat
+
+    # mypy complains: "[mypy:] Cannot call function of unknown type"
+    if isinstance(value, dict):
+        formated = "%s.update(%s)" % (key, format_func(value))
+    else:
+        formated = "%s += %s" % (key, format_func(value))
+
+    save_mk_file(path, formated)
+
+
+#.
+#   .--load/save-----------------------------------------------------------.
+#   |             _                 _    __                                |
+#   |            | | ___   __ _  __| |  / /__  __ ___   _____              |
+#   |            | |/ _ \ / _` |/ _` | / / __|/ _` \ \ / / _ \             |
+#   |            | | (_) | (_| | (_| |/ /\__ \ (_| |\ V /  __/             |
+#   |            |_|\___/ \__,_|\__,_/_/ |___/\__,_| \_/ \___|             |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
 # Handle .mk files that are only holding a python data structure and often
 # directly read via file/open and then parsed using eval.
 # TODO: Consolidate with load_mk_file?
-def load_data_from_file(path, default=None, lock=False):
+def load_object_from_file(path, default=None, lock=False):
     # type: (Union[Path, str], Any, bool) -> Any
+    content = cast(Text, _load_data_from_file(path, lock=lock, encoding="utf-8"))
+    if not content:
+        return default
+    return ast.literal_eval(content)
+
+
+def load_text_from_file(path, default=u"", lock=False):
+    # type: (Union[Path, str], Text, bool) -> Text
+    content = cast(Text, _load_data_from_file(path, lock=lock, encoding="utf-8"))
+    if not content:
+        return default
+    return content
+
+
+def load_bytes_from_file(path, default=b"", lock=False):
+    # type: (Union[Path, str], bytes, bool) -> bytes
+    content = cast(bytes, _load_data_from_file(path, lock=lock))
+    if not content:
+        return default
+    return content
+
+
+# TODO: This function has to die! Its return type depends on the value of the
+# encoding parameter, which doesn't work at all with mypy and various APIs like
+# ast.literal_eval. As a workaround, we use casts, but this isn't a real
+# solution....
+def _load_data_from_file(path, lock=False, encoding=None):
+    # type: (Union[Path, str], bool, Optional[str]) -> Optional[Union[Text, bytes]]
     if not isinstance(path, Path):
         path = Path(path)
 
@@ -200,20 +257,13 @@ def load_data_from_file(path, default=None, lock=False):
 
     try:
         try:
-            with path.open() as f:
-                content = f.read().strip()
-
-            if not content:
-                # May be created empty during locking
-                return default
-
-            return ast.literal_eval(content)
+            return path.read_text(encoding=encoding) if encoding else path.read_bytes()
         except IOError as e:
             if e.errno != errno.ENOENT:  # No such file or directory
                 raise
-            return default
+            return None
 
-    except MKTimeout:
+    except (MKTerminate, MKTimeout):
         if lock:
             release_lock(path)
         raise
@@ -228,7 +278,7 @@ def load_data_from_file(path, default=None, lock=False):
 
 # A simple wrapper for cases where you want to store a python data
 # structure that is then read by load_data_from_file() again
-def save_data_to_file(path, data, pretty=True):
+def save_object_to_file(path, data, pretty=False):
     # type: (Union[Path, str], Any, bool) -> None
     if pretty:
         try:
@@ -246,10 +296,30 @@ def save_data_to_file(path, data, pretty=True):
     save_file(path, "%s\n" % formated_data)
 
 
+def save_text_to_file(path, content, mode=0o660):
+    # type: (Union[Path, str], Text, int) -> None
+    if not isinstance(content, six.text_type):
+        raise TypeError("content argument must be Text, not bytes")
+    _save_data_to_file(path, content.encode("utf-8"), mode)
+
+
+def save_bytes_to_file(path, content, mode=0o660):
+    # type: (Union[Path, str], bytes, int) -> None
+    if not isinstance(content, six.binary_type):
+        raise TypeError("content argument must be bytes, not Text")
+    _save_data_to_file(path, content, mode)
+
+
+def save_file(path, content, mode=0o660):
+    # type: (Union[Path, str], AnyStr, int) -> None
+    # Just to be sure: ensure_bytestr
+    _save_data_to_file(path, ensure_bytestr(content), mode=mode)
+
+
 # Saving assumes a locked destination file (usually done by loading code)
 # Then the new file is written to a temporary file and moved to the target path
-def save_file(path, content, mode=0o660):
-    # type: (Union[Path, str], str, int) -> None
+def _save_data_to_file(path, content, mode=0o660):
+    # type: (Union[Path, str], bytes, int) -> None
     if not isinstance(path, Path):
         path = Path(path)
 
@@ -261,10 +331,11 @@ def save_file(path, content, mode=0o660):
         # Please note that this already creates the file with 0 bytes (in case it is missing).
         aquire_lock(path)
 
-        with tempfile.NamedTemporaryFile("w",
+        with tempfile.NamedTemporaryFile("wb",
                                          dir=str(path.parent),
                                          prefix=".%s.new" % path.name,
                                          delete=False) as tmp:
+
             tmp_path = tmp.name
             os.chmod(tmp_path, mode)
             tmp.write(content)
@@ -296,7 +367,7 @@ def save_file(path, content, mode=0o660):
 
         os.rename(tmp_path, str(path))
 
-    except MKTimeout:
+    except (MKTerminate, MKTimeout):
         raise
     except Exception as e:
         # In case an exception happens during saving cleanup the tempfile created for writing
@@ -312,22 +383,6 @@ def save_file(path, content, mode=0o660):
 
     finally:
         release_lock(path)
-
-
-# A simple wrapper for cases where you only have to write a single value to a .mk file.
-def save_to_mk_file(path, key, value, pprint_value=False):
-    # type: (Union[Path, str], str, Any, bool) -> None
-    format_func = repr
-    if pprint_value:
-        format_func = pprint.pformat
-
-    # mypy complains: "[mypy:] Cannot call function of unknown type"
-    if isinstance(value, dict):
-        formated = "%s.update(%s)" % (key, format_func(value))
-    else:
-        formated = "%s += %s" % (key, format_func(value))
-
-    save_mk_file(path, formated)
 
 
 #.
@@ -429,6 +484,6 @@ def release_all_locks():
     # type: () -> None
     logger.debug("Releasing all locks")
     logger.debug("_acquired_locks: %r", _acquired_locks)
-    for path in list(_acquired_locks.iterkeys()):
+    for path in list(_acquired_locks.keys()):
         release_lock(path)
     _acquired_locks.clear()

@@ -37,7 +37,7 @@ else:
     from pathlib2 import Path
 
 import cmk.utils.paths
-import cmk.utils.store
+import cmk.utils.store as store
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject  # pylint: disable=unused-import
 
 
@@ -89,7 +89,7 @@ class LabelManager(object):
         # type: (str) -> Dict
         return {
             label_id: label["value"]
-            for label_id, label in DiscoveredHostLabelsStore(hostname).load().iteritems()
+            for label_id, label in DiscoveredHostLabelsStore(hostname).load().items()
         }
 
     def labels_of_service(self, ruleset_matcher, hostname, service_desc):
@@ -144,8 +144,9 @@ class ABCDiscoveredLabelsStore(six.with_metaclass(abc.ABCMeta, object)):
         # type: () -> Dict
         # Skip labels discovered by the previous HW/SW inventory approach (which was addded+removed in 1.6 beta)
         return {
-            k: v for k, v in cmk.utils.store.load_data_from_file(str(
-                self.file_path), default={}).iteritems() if isinstance(v, dict)
+            k: v
+            for k, v in store.load_object_from_file(str(self.file_path), default={}).items()
+            if isinstance(v, dict)
         }
 
     def save(self, labels):
@@ -156,7 +157,7 @@ class ABCDiscoveredLabelsStore(six.with_metaclass(abc.ABCMeta, object)):
             return
 
         self.file_path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
-        cmk.utils.store.save_data_to_file(str(self.file_path), labels)
+        store.save_object_to_file(str(self.file_path), labels)
 
 
 class DiscoveredHostLabelsStore(ABCDiscoveredLabelsStore):

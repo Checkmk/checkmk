@@ -1,0 +1,13 @@
+Title: Kubernetes: don't crash if resized PVCs exist
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1578394436
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+If at least one Persistent Volume Claim in a Kubernetes cluster
+was resized the special agent crashed. This is fixed.

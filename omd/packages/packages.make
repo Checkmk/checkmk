@@ -17,51 +17,96 @@ TEST := $(shell which test)
 TOUCH := $(shell which touch)
 UNZIP := $(shell which unzip) -o
 
+HUMAN_INSTALL_TARGETS := $(foreach package,$(PACKAGES),$(addsuffix -install,$(package)))
+HUMAN_BUILD_TARGETS := $(foreach package,$(PACKAGES),$(addsuffix -build,$(package)))
+
+.PHONY: $(HUMAN_INSTALL_TARGETS) $(HUMAN_BUILD_TARGETS)
+
+# Provide some targets for convenience: [pkg] instead of /abs/path/to/[pkg]/[pkg]-[version]-install
+$(HUMAN_INSTALL_TARGETS): %-install:
+# TODO: Can we make this work as real dependency without submake?
+	$(MAKE) $($(addsuffix _INSTALL, $(call package_target_prefix,$*)))
+
+$(HUMAN_BUILD_TARGETS): %-build:
+# TODO: Can we make this work as real dependency without submake?
+	$(MAKE) $($(addsuffix _BUILD, $(call package_target_prefix,$*)))
+
+# Each package may have a packages/[pkg]/skel directory which contents will be
+# packed into destdir/skel. These files will be installed, e.g. [site]/etc/...
+# and may contain macros that are replaced during site creation/update.
+#
+# These files here need to be installed into skel/ before the install target is
+# executed, because the install target is allowed to do modifications to the
+# files.
+$(INSTALL_TARGETS): $(BUILD_HELPER_DIR)/%-install: $(BUILD_HELPER_DIR)/%-skel-dir
+$(BUILD_HELPER_DIR)/%-skel-dir: $(PRE_INSTALL)
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel
+	set -e ; \
+	    PACKAGE_PATH="$(PACKAGE_DIR)/$$(echo "$*" | sed 's/-[0-9.]\+.*//')"; \
+	    if [ -d "$$PACKAGE_PATH/skel" ]; then \
+		tar cf - -C "$$PACKAGE_PATH/skel" \
+		    --exclude="*~" \
+		    --exclude=".gitignore" \
+		    . | tar xvf - -C $(DESTDIR)$(OMD_ROOT)/skel ; \
+            fi
+
 # Rules for patching
 $(BUILD_HELPER_DIR)/%-patching: $(BUILD_HELPER_DIR)/%-unpack
 	set -e ; DIR=$$($(ECHO) $* | $(SED) 's/-[0-9.]\+.*//'); \
 	for P in $$($(LS) $(PACKAGE_DIR)/$$DIR/patches/*.dif); do \
 	    $(ECHO) "applying $$P..." ; \
-	    $(PATCH) -p1 -b -d $* < $$P ; \
+	    $(PATCH) -p1 -b -d $(PACKAGE_BUILD_DIR)/$* < $$P ; \
 	done
 	$(TOUCH) $@
 
 # Rules for unpacking
 $(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.tar.xz
-	$(RM) -r $*
+	$(RM) -r $(PACKAGE_BUILD_DIR)/$*
+	$(MKDIR) $(PACKAGE_BUILD_DIR)
+	$(TAR_XZ) $< -C $(PACKAGE_BUILD_DIR)
+
 	$(MKDIR) $(BUILD_HELPER_DIR)
-	$(TAR_XZ) $<
 	$(TOUCH) $@
 
 $(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.tar.gz
-	$(RM) -r $*
+	$(RM) -r $(PACKAGE_BUILD_DIR)/$*
+	$(MKDIR) $(PACKAGE_BUILD_DIR)
+	$(TAR_GZ) $< -C $(PACKAGE_BUILD_DIR)
+
 	$(MKDIR) $(BUILD_HELPER_DIR)
-	$(TAR_GZ) $<
 	$(TOUCH) $@
 
 $(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.tgz
-	$(RM) -r $*
+	$(RM) -r $(PACKAGE_BUILD_DIR)/$*
+	$(MKDIR) $(PACKAGE_BUILD_DIR)
+	$(TAR_GZ) $< -C $(PACKAGE_BUILD_DIR)
+
 	$(MKDIR) $(BUILD_HELPER_DIR)
-	$(TAR_GZ) $<
 	$(TOUCH) $@
 
 $(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.tar.bz2
-	$(RM) -r $*
+	$(RM) -r $(PACKAGE_BUILD_DIR)/$*
+	$(MKDIR) $(PACKAGE_BUILD_DIR)
+	$(TAR_BZ2) $< -C $(PACKAGE_BUILD_DIR)
+
 	$(MKDIR) $(BUILD_HELPER_DIR)
-	$(TAR_BZ2) $<
 	$(TOUCH) $@
 
 $(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.zip
-	$(RM) -r $*
+	$(RM) -r $(PACKAGE_BUILD_DIR)/$*
+	$(MKDIR) $(PACKAGE_BUILD_DIR)
+	$(UNZIP) $< -d $(PACKAGE_BUILD_DIR)
+
 	$(MKDIR) $(BUILD_HELPER_DIR)
-	$(UNZIP) $<
 	$(TOUCH) $@
 
 debug:
 	echo $(PACKAGE_DIR)
 
 # Include rules to make packages
-include     packages/apache-omd/apache-omd.make \
+include \
+    packages/openssl/openssl.make \
+    packages/apache-omd/apache-omd.make \
     packages/stunnel/stunnel.make \
     packages/check_mk/check_mk.make \
     packages/check_multi/check_multi.make \
@@ -70,32 +115,32 @@ include     packages/apache-omd/apache-omd.make \
     packages/dokuwiki/dokuwiki.make \
     packages/freetds/freetds.make \
     packages/heirloom-pkgtools/heirloom-pkgtools.make \
+    packages/perl-modules/perl-modules.make \
     packages/jmx4perl/jmx4perl.make \
     packages/libgsf/libgsf.make \
     packages/maintenance/maintenance.make \
-    packages/mk-livestatus/mk-livestatus.make \
     packages/mod_fcgid/mod_fcgid.make \
-    packages/mod_wsgi/mod_wsgi.make \
     packages/monitoring-plugins/monitoring-plugins.make \
     packages/msitools/msitools.make \
     packages/nagios/nagios.make \
     packages/nagvis/nagvis.make \
     packages/heirloom-mailx/heirloom-mailx.make \
     packages/navicli/navicli.make \
-    packages/net-snmp/net-snmp.make \
     packages/nrpe/nrpe.make \
     packages/nsca/nsca.make \
-    packages/omd/omd.make \
     packages/openhardwaremonitor/openhardwaremonitor.make \
     packages/patch/patch.make \
-    packages/perl-modules/perl-modules.make \
     packages/pnp4nagios/pnp4nagios.make \
     packages/Python/Python.make \
     packages/Python3/Python3.make \
     packages/python-modules/python-modules.make \
     packages/python3-modules/python3-modules.make \
+    packages/omd/omd.make \
+    packages/net-snmp/net-snmp.make \
+    packages/mod_wsgi/mod_wsgi.make \
     packages/re2/re2.make \
     packages/rrdtool/rrdtool.make \
+    packages/mk-livestatus/mk-livestatus.make \
     packages/snap7/snap7.make \
     packages/Webinject/Webinject.make \
     packages/appliance/appliance.make

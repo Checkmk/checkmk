@@ -41,7 +41,7 @@ from cmk.gui.plugins.wato import (
 
 def _parameter_valuespec_couchbase_operations():
     return Dictionary(
-        title=_('Couchbase Nodes: Operations'),
+        title=_('Couchbase Operations'),
         elements=[
             ('ops',
              Tuple(
@@ -60,16 +60,25 @@ rulespec_registry.register(
         check_group_name="couchbase_ops",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        item_spec=lambda: TextAscii(title=_('Node name')),
+        item_spec=lambda: TextAscii(title=_('Node or bucket name')),
         parameter_valuespec=_parameter_valuespec_couchbase_operations,
-        title=lambda: _("Couchbase Node Operations"),
+        title=lambda: _("Couchbase Operations"),
     ))
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
-        check_group_name="couchbase_ops_total",
+        check_group_name="couchbase_ops_nodes",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_couchbase_operations,
-        title=lambda: _("Couchbase Total Operations"),
+        title=lambda: _("Couchbase Total Node Operations"),
+    ))
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="couchbase_ops_buckets",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_couchbase_operations,
+        title=lambda: _("Couchbase Total Bucket Operations"),
     ))

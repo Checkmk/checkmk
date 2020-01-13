@@ -25,59 +25,47 @@
 # Boston, MA 02110-1301 USA.
 
 #<<<jenkins_nodes>>>
-# [{"displayName": "master", "description": "the master Jenkins node",
+# [[u'[{"displayName": "master", "description": "the master Jenkins node",
 # "temporarilyOffline": false, "monitorData":
 # {"hudson.node_monitors.SwapSpaceMonitor": {"totalPhysicalMemory":
-# 67429339136, "availableSwapSpace": 47768457216, "_class":
+# 67429359616, "availableSwapSpace": 59097583616, "_class":
 # "hudson.node_monitors.SwapSpaceMonitor$MemoryUsage2",
-# "availablePhysicalMemory": 13439528960, "totalSwapSpace": 64000876544},
+# "availablePhysicalMemory": 4450242560, "totalSwapSpace": 64000876544},
 # "hudson.node_monitors.ClockMonitor": {"diff": 0, "_class":
-# "hudson.util.ClockDifference"},
-# "hudson.node_monitors.DiskSpaceMonitor": {"size": 332634664960,
-# "timestamp": 1566969226922, "_class":
-# "hudson.node_monitors.DiskSpaceMonitorDescriptor$DiskSpace",
-# "path": "/var/lib/jenkins"},
-# "hudson.node_monitors.TemporarySpaceMonitor": {"size": 23989067776,
-# "timestamp": 1566969227236, "_class":
-# "hudson.node_monitors.DiskSpaceMonitorDescriptor$DiskSpace",
-# "path": "/tmp"}, "hudson.node_monitors.ResponseTimeMonitor":
-# {"timestamp": 1566969226923, "average": 0, "_class":
-# "hudson.node_monitors.ResponseTimeMonitor$Data"},
+# "hudson.util.ClockDifference"}, "hudson.node_monitors.DiskSpaceMonitor":
+# {"size": 290845855744, "timestamp": 1573468791686, "_class":
+# "hudson.node_monitors.DiskSpaceMonitorDescriptor$DiskSpace", "path":
+# "/var/lib/jenkins"}, "hudson.node_monitors.TemporarySpaceMonitor": {"size":
+# 32569888768, "timestamp": 1573468792277, "_class":
+# "hudson.node_monitors.DiskSpaceMonitorDescriptor$DiskSpace", "path": "/tmp"},
+# "hudson.node_monitors.ResponseTimeMonitor": {"timestamp": 1573468791687,
+# "average": 0, "_class": "hudson.node_monitors.ResponseTimeMonitor$Data"},
 # "hudson.node_monitors.ArchitectureMonitor": "Linux (amd64)"},
-# "numExecutors": 10, "idle": true, "offlineCause": null, "offline": false,
-# "_class": "hudson.model.Hudson$MasterComputer", "jnlpAgent": false},
-# {"displayName": "Windows", "description": "Name: MY-NODE",
+# "assignedLabels": [{"busyExecutors": 3, "idleExecutors": 17},
+# {"busyExecutors": 3, "idleExecutors": 17}], "numExecutors": 20, "idle":
+# false, "offlineCause": null, "offline": false, "_class":
+# "hudson.model.Hudson$MasterComputer", "jnlpAgent": false}, {"displayName":
+# "Windows", "description": "Name: MYNAME, IP-Address: 1.1.1.1",
 # "temporarilyOffline": false, "monitorData":
 # {"hudson.node_monitors.SwapSpaceMonitor": {"totalPhysicalMemory":
-# 17179332608, "availableSwapSpace": 14135590912, "_class":
+# 17179332608, "availableSwapSpace": 8569982976, "_class":
 # "hudson.node_monitors.SwapSpaceMonitor$MemoryUsage2",
-# "availablePhysicalMemory": 9060417536, "totalSwapSpace":
-# 22548041728}, "hudson.node_monitors.ClockMonitor": {"diff": -4,
-# "_class": "hudson.util.ClockDifference"},
-# "hudson.node_monitors.DiskSpaceMonitor": {"size": 14138306560,
-# "timestamp": 1566969226949, "_class":
-# "hudson.node_monitors.DiskSpaceMonitorDescriptor$DiskSpace",
-# "path": "C:\\"}, "hudson.node_monitors.TemporarySpaceMonitor":
-# {"size": 14138306560, "timestamp": 1566969227263, "_class":
-# "hudson.node_monitors.DiskSpaceMonitorDescriptor$DiskSpace",
-# "path": "C:\\Windows\\Temp"},
-# "hudson.node_monitors.ResponseTimeMonitor": {"timestamp":
-# 1566969226952, "average": 27, "_class":
+# "availablePhysicalMemory": 5656227840, "totalSwapSpace": 22548041728},
+# "hudson.node_monitors.ClockMonitor": {"diff": 8, "_class":
+# "hudson.util.ClockDifference"}, "hudson.node_monitors.DiskSpaceMonitor":
+# {"size": 15085674496, "timestamp": 1573468791711, "_class":
+# "hudson.node_monitors.DiskSpaceMonitorDescriptor$DiskSpace", "path":
+# "C:\\\\"}, "hudson.node_monitors.TemporarySpaceMonitor": {"size":
+# 15085674496, "timestamp": 1573468792334, "_class":
+# "hudson.node_monitors.DiskSpaceMonitorDescriptor$DiskSpace", "path":
+# "C:\\\\Windows\\\\Temp"}, "hudson.node_monitors.ResponseTimeMonitor":
+# {"timestamp": 1573468791722, "average": 35, "_class":
 # "hudson.node_monitors.ResponseTimeMonitor$Data"},
-# "hudson.node_monitors.ArchitectureMonitor": "Windows Server 2010
-# (x86)"}, "numExecutors": 1, "idle": true, "offlineCause": null,
-# "offline": false, "_class": "hudson.slaves.SlaveComputer",
-# "jnlpAgent": true}, {"displayName": "Windows",
-# "description": "vM", "temporarilyOffline": false,
-# "monitorData": {"hudson.node_monitors.SwapSpaceMonitor": null,
-# "hudson.node_monitors.ClockMonitor": null,
-# "hudson.node_monitors.DiskSpaceMonitor": null,
-# "hudson.node_monitors.TemporarySpaceMonitor": null,
-# "hudson.node_monitors.ResponseTimeMonitor": null,
-# "hudson.node_monitors.ArchitectureMonitor": null},
-# "numExecutors": 1, "idle": true, "offlineCause": null,
-# "offline": true, "_class": "hudson.slaves.SlaveComputer",
-# "jnlpAgent": true}]
+# "hudson.node_monitors.ArchitectureMonitor": "Windows Server"},
+# "assignedLabels": [{"busyExecutors": 0, "idleExecutors": 1},
+# {"busyExecutors": 0, "idleExecutors": 1}], "numExecutors": 1, "idle": true,
+# "offlineCause": null, "offline": false, "_class":
+# "hudson.slaves.SlaveComputer", "jnlpAgent": true}]']]
 
 import json
 
@@ -107,12 +95,36 @@ factory_settings["jenkins_nodes_default_levels"] = {
 }
 
 
+def inventory_jenkins_nodes(parsed):
+    if parsed:
+        for item, values in parsed.iteritems():
+            for line in values:
+                label_data = line.get("assignedLabels")
+                if label_data is None:
+                    continue
+
+                service_labels = ServiceLabels()
+                for label in label_data:
+                    label_name = label.get("name")
+                    if label_name is None:
+                        continue
+
+                    if label_name != item:
+                        service_labels.add_label(
+                            ServiceLabel(u'cmk/jenkins_node_label_%s' % label_name, u'yes'))
+
+            yield Service(item=item, parameters={}, service_labels=service_labels)
+
+
 @get_parsed_item_data
 def check_jenkins_nodes(item, params, item_data):
     for node in item_data:
 
+        node_desc = node.get("description")
+        if node_desc and node_desc is not None:
+            yield 0, "Description: %s" % node_desc.title()
+
         for key, infotext in [
-            ("description", "Description"),
             ("jnlpAgent", "Is JNLP agent"),
             ("idle", "Is idle"),
         ]:
@@ -132,12 +144,72 @@ def check_jenkins_nodes(item, params, item_data):
             exec_name = "jenkins_%s" % exec_key.lower()
 
             yield check_levels(exec_data,
-                               exec_name, (None, None) + params.get(exec_name, (None, None)),
+                               "jenkins_num_executors",
+                               (None, None) + params.get(exec_name, (None, None)),
                                human_readable_func=int,
-                               infoname="Number of executers")
+                               infoname="Total number of executors")
+
+        for key, infotext in [
+            ("busyExecutors", "Number of busy executors"),
+            ("idleExecutors", "Number of idle executors"),
+        ]:
+
+            exec_label_data = node.get("assignedLabels")
+
+            if exec_label_data is None:
+                continue
+
+            for executor in exec_label_data:
+                # list of two dicts like [{"busyExecutors": 0,
+                # "idleExecutors": 1}, {"busyExecutors": 0,
+                # "idleExecutors": 1}], we only need one entry here
+                executors = executor.get(key)
+                break
+
+            if executors is None:
+                continue
+
+            executor_name = "jenkins_%s" % key.lower()
+
+            yield check_levels(executors,
+                               "jenkins_%s_executors" % key[0:4],
+                               params.get(executor_name),
+                               human_readable_func=int,
+                               infoname=infotext)
 
         state = 0
         offline_state = node.get("offline")
+
+        # get labels for each node
+        labels_data = node.get("assignedLabels")
+        label_collection = ""
+        if labels_data is not None:
+            for labels in labels_data:
+                label_name = labels.get("name")
+                if label_name is not None and label_name != item:
+                    label_collection += " %s" % label_name
+
+        mode = "Unknown"
+        mode_state = 3
+        mode_infotext = "Mode: "
+        try:
+            mode = node["assignedLabels"][0]["nodes"][0]["mode"]
+            mode_state = 0
+        except (KeyError, ValueError):
+            pass
+
+        mode_infotext += "%s " % mode.title()
+
+        if mode == "EXCLUSIVE" and label_collection:
+            mode_infotext += "(Labels:%s)" % label_collection
+
+        mode_expected = params.get("jenkins_mode")
+        if params.get("jenkins_mode") is not None:
+            if mode_expected != mode:
+                mode_state = 2
+                mode_infotext += " (expected: %s)" % mode_expected.title()
+
+        yield mode_state, mode_infotext
 
         if offline_state:
             state = params["jenkins_offline"]
@@ -177,7 +249,7 @@ def check_jenkins_nodes(item, params, item_data):
 check_info["jenkins_nodes"] = {
     "parse_function": parse_jenkins_nodes,
     "check_function": check_jenkins_nodes,
-    'inventory_function': discover(),
+    'inventory_function': inventory_jenkins_nodes,
     'default_levels_variable': "jenkins_nodes_default_levels",
     "service_description": "Jenkins Node %s",
     "has_perfdata": True,

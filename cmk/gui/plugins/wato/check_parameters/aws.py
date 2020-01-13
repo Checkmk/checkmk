@@ -48,6 +48,7 @@ from cmk.gui.plugins.wato import (
 )
 from cmk.utils.aws_constants import (
     AWSEC2InstTypes,
+    AWSEC2InstFamilies,
     AWSEC2LimitsDefault,
     AWSEC2LimitsSpecial,
 )
@@ -160,7 +161,7 @@ def _vs_latency():
 
 
 def _vs_limits(resource, default_limit, vs_limit_cls=None):
-    # type: (Text, int, Optional[Type[Filesize]]) -> Alternative
+    # type: (str, int, Optional[Type[Filesize]]) -> Alternative
     if vs_limit_cls is None:
         vs_limit = Integer(
             unit=_("%s" % resource),
@@ -484,6 +485,19 @@ def _vs_limits_inst_types():
     )
 
 
+def _vs_limits_vcpu_families():
+    return ListOf(
+        CascadingDropdown(orientation="horizontal",
+                          choices=[("%s_vcpu" % inst_fam, fam_name,
+                                    _vs_limits(
+                                        fam_name,
+                                        AWSEC2LimitsSpecial.get("%s_vcpu" % inst_fam,
+                                                                AWSEC2LimitsDefault)[0]))
+                                   for inst_fam, fam_name in AWSEC2InstFamilies.items()]),
+        title=_("Set limits and levels for running on-demand vCPUs on instance Families"),
+    )
+
+
 def _parameter_valuespec_aws_ec2_limits():
     return Dictionary(elements=[
         ('vpc_elastic_ip_addresses', _vs_limits("VPC Elastic IP Addresses", 5)),
@@ -495,7 +509,9 @@ def _parameter_valuespec_aws_ec2_limits():
         ('active_spot_fleet_requests', _vs_limits("Active Spot Fleet Requests", 1000)),
         ('spot_fleet_total_target_capacity',
          _vs_limits("Spot Fleet Requests Total Target Capacity", 5000)),
-        ('running_ondemand_instances_total', _vs_limits("Total Running On-Demand Instances", 20)),
+        ('running_ondemand_instances_total',
+         _vs_limits("Total Running On-Demand Instances(Deprecated by AWS)", 20)),
+        ('running_ondemand_instances_vcpus', _vs_limits_vcpu_families()),
         ('running_ondemand_instances', _vs_limits_inst_types()),
     ])
 

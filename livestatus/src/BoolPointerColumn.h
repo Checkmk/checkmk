@@ -38,7 +38,7 @@ class BoolPointerColumn : public IntColumn {
 public:
     BoolPointerColumn(const std::string& name, const std::string& description,
                       const bool* pointer)
-        : IntColumn(name, description, -1, -1, -1, 0), _pointer(pointer) {}
+        : IntColumn(name, description, {}), _pointer(pointer) {}
 
     int32_t getValue(Row /* row */,
                      const contact* /* auth_user */) const override {

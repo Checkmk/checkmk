@@ -59,7 +59,7 @@ def inventory_oracle_instance(info):
 
                 # every pdb has a con_id != 0
                 # Multitenant use DB_NAME.PDB_NAME as Service
-                if line[12] == ('TRUE') and line[13] != '0':
+                if line[12] == 'TRUE' and line[13] != '0':
                     inv_list.append((("%s.%s" % (line[0], line[14])), {}))
                     continue
 
@@ -81,7 +81,7 @@ def check_oracle_instance(item, params, info):
 
     def state_marker(state, infotext, param, column, data):
         value = params.get(param)
-        if value is not None and column == data:
+        if value is not None and column.lower() == data.lower():
             state = max(state, value)
             if value == 1:
                 infotext += '(!)'
@@ -99,7 +99,7 @@ def check_oracle_instance(item, params, info):
 
         if len(line) > 12:
             # Multitenant!
-            if line[12] == ('TRUE') and line[13] != '0':
+            if line[12] == 'TRUE' and line[13] != '0':
                 itemname = ("%s.%s" % (line[0], line[14]))
                 pdb = True
 
@@ -136,11 +136,11 @@ def check_oracle_instance(item, params, info):
             else:
                 return 2, "Database not running, login failed or unvalid data from agent"
 
-            if pdb is True:
-                if prestricted.lower == 'no':
-                    logins = 'restricted'
+            if pdb:
+                if prestricted.lower() == 'no':
+                    logins = 'RESTRICTED'
                 else:
-                    logins = 'allowd'
+                    logins = 'ALLOWED'
 
                 openmode = popenmode
                 up_seconds = pup_seconds
@@ -165,7 +165,7 @@ def check_oracle_instance(item, params, info):
                 elif state == 0:
                     infotext += ' (allowed by rule)'
 
-            if pdb is False:
+            if not pdb:
                 infotext += ", Role %s, Version %s" % (database_role, version)
 
             # ORACLE is sick and cannot handle timezone changes >:-P
@@ -200,7 +200,7 @@ def check_oracle_instance(item, params, info):
                     state, infotext = state_marker(state, infotext, 'logins', logins, 'RESTRICTED')
 
                 # the new internal database _MGMTDB from 12.1.0.2 is always in NOARCHIVELOG mode
-                if name != '_MGMTDB' and sid != '-MGMTDB' and pdb is False:
+                if name != '_MGMTDB' and sid != '-MGMTDB' and not pdb:
                     infotext += ', Log Mode %s' % (log_mode.lower())
                     state, infotext = state_marker(state, infotext, 'archivelog', log_mode,
                                                    'ARCHIVELOG')
@@ -222,7 +222,7 @@ def check_oracle_instance(item, params, info):
 
             perfdata = [('uptime', up_seconds)]
 
-            if pdb is True:
+            if pdb:
                 infotext += ', PDB Size %s' % get_bytes_human_readable(int(ptotal_size))
                 perfdata.append(('fs_size', int(ptotal_size)))
 

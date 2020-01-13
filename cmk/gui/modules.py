@@ -49,6 +49,7 @@ import errno
 import os
 import sys
 from types import ModuleType
+from typing import Any, Dict, List  # pylint: disable=unused-import
 
 import cmk
 import cmk.utils.paths
@@ -66,12 +67,12 @@ if cmk.is_managed_edition():
     import cmk.gui.cme.plugins.main_modules  # pylint: disable=no-name-in-module
 
 # TODO: Both kept for compatibility with old plugins. Drop this one day
-pagehandlers = {}
+pagehandlers = {}  # type: Dict[Any, Any]
 # Modules to be loaded within the application by default. These
 # modules are loaded on application initialization. The module
 # function load_plugins() is called for all these modules to
 # initialize them.
-_legacy_modules = []
+_legacy_modules = []  # type: List[ModuleType]
 
 
 def register_handlers(handlers):

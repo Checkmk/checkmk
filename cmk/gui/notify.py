@@ -26,10 +26,10 @@
 
 import os
 import time
-import subprocess
 from typing import Dict, Any  # pylint: disable=unused-import
 
 import cmk.utils.store as store
+import cmk.utils.cmk_subprocess as subprocess
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -60,7 +60,7 @@ def get_gui_messages(user_id=None):
     if user_id is None:
         user_id = config.user.id
     path = config.config_dir + "/" + user_id.encode("utf-8") + '/messages.mk'
-    messages = store.load_data_from_file(path, [])
+    messages = store.load_object_from_file(path, default=[])
 
     # Delete too old messages
     updated = False
@@ -90,7 +90,7 @@ def save_gui_messages(messages, user_id=None):
         user_id = config.user.id
     path = config.config_dir + "/" + user_id.encode("utf-8") + '/messages.mk'
     store.mkdir(os.path.dirname(path))
-    store.save_data_to_file(path, messages)
+    store.save_object_to_file(path, messages)
 
 
 def _notify_methods():
@@ -379,21 +379,24 @@ def notify_mail(user_id, msg):
             _('No UTF-8 encoding found in your locale -a! Please provide C.UTF-8 encoding.'))
 
     try:
-        p = subprocess.Popen(command,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT,
-                             stdin=subprocess.PIPE,
-                             close_fds=True)
+        p = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            stdin=subprocess.PIPE,
+            close_fds=True,
+            encoding="utf-8",
+        )
     except OSError as e:
         raise MKInternalError(
             _('Mail could not be delivered. '
               'Failed to execute command "%s": %s') % (" ".join(command), e))
 
-    output = p.communicate(body.encode("utf-8"))[0]
+    stdout, _stderr = p.communicate(input=body)
     exitcode = p.returncode
     if exitcode != 0:
         raise MKInternalError(
             _('Mail could not be delivered. Exit code of command is %r. '
-              'Output is: %s') % (exitcode, output))
+              'Output is: %s') % (exitcode, stdout))
     else:
         return True

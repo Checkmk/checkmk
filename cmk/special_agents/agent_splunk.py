@@ -28,11 +28,16 @@ from collections import namedtuple
 import argparse
 import sys
 import requests
+import urllib3  # type: ignore
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 Section = namedtuple('Section', ['name', 'uri', 'handler'])
 
 
-def main():
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
     # Sections to query
     # https://docs.splunk.com/Documentation/Splunk/7.2.6/RESTREF/RESTlicense#licenser.2Fpools
     sections = [
@@ -47,7 +52,7 @@ def main():
         Section(name="alerts", uri="/services/alerts/fired_alerts", handler=handle_alerts),
     ]
 
-    args = parse_arguments()
+    args = parse_arguments(argv)
 
     sys.stdout.write("<<<check_mk>>>\n")
 
@@ -68,7 +73,8 @@ def handle_request(args, sections):
                                     auth=(args.user, args.password),
                                     data={"output_mode": "json"})
 
-        except requests.exceptions.RequestException:
+        except requests.exceptions.RequestException as e:
+            sys.stderr.write("Error: %s\n" % e)
             if args.debug:
                 raise
         else:
@@ -79,9 +85,7 @@ def handle_request(args, sections):
             section.handler(value)
 
 
-def parse_arguments(argv=None):
-    if argv is None:
-        argv = sys.argv[1:]
+def parse_arguments(argv):
 
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawTextHelpFormatter)
@@ -113,7 +117,7 @@ def parse_arguments(argv=None):
                         metavar="HOSTNAME",
                         help="Name of the splunk instance to query.")
 
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def handle_license_state(value):

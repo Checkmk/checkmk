@@ -92,6 +92,7 @@ then
     if type ip > /dev/null ; then
         echo "<<<lnx_ip_r:persist($UNTIL)>>>"
         ip r
+        ip -6 r
     fi
 
 fi

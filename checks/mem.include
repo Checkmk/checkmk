@@ -23,6 +23,7 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+from typing import NamedTuple
 
 memused_default_levels = (150.0, 200.0)
 
@@ -43,124 +44,248 @@ def parse_proc_meminfo_bytes(info):
     return meminfo
 
 
-def check_memory(params, meminfo):
-    swapused_kb = meminfo['SwapTotal'] - meminfo['SwapFree']
-    swapused = swapused_kb * 1024.0
-    memused_kb = meminfo['MemTotal'] - meminfo['MemFree']
-    memused = memused_kb * 1024.0
+class MemBytes(NamedTuple('MemBytes', [('bytes', int), ('kb', float), ('mb', float),
+                                       ('base', int)])):
+    def __new__(cls, value, base):
+        return super(MemBytes, cls).__new__(cls, int(value * 1024), float(value), value / 1024.0,
+                                            int(base))
 
-    # Buffers and Cached are optional. On Linux both mean basically the same.
-    caches_kb = meminfo.get('Buffers', 0) + meminfo.get('Cached', 0)
-    caches = caches_kb * 1024.0
+    def render(self):
+        return get_bytes_human_readable(self.bytes, base=self.base)
+
+
+def _get_levels_mode_from_value(warn):
+    """get levels mode by looking at the value
+
+    Levels may be given either as
+     * positive int -> absolute levels on used
+     * negative int -> absolute levels on free
+     * positive float -> percentages on used
+     * negative float -> percentages on free
+    """
+    type_ = "perc" if isinstance(warn, float) else "abs"
+    reference = "used" if warn > 0 else "free"
+    return "%s_%s" % (type_, reference)
+
+
+def normalize_mem_levels(mode,
+                         warn,
+                         crit,
+                         total,
+                         _perc_total=None,
+                         render_base=1024,
+                         render_unit=1):
+    """get normalized levels and formatter
+
+    Levels may be given either as
+     * Absolute levels on used
+     * Absolute levels on free
+     * Percentage levels on used
+     * Percentage levels on free
+    Normalize levels to absolute posive levels and return formatted levels text
+    """
+    # TODO: remove this weird case of different reference values.
+    if _perc_total is None:
+        _perc_total = total
+
+    if warn is None or crit is None:
+        return None, None, ""
+
+    mode_split = mode.split('_', 1)
+    if mode_split[0] not in ('perc', 'abs') or mode_split[-1] not in ('used', 'free'):
+        raise NotImplementedError("unknown levels mode: %r" % (mode,))
+
+    # normalize percent -> absolute
+    if mode.startswith("perc"):
+        warn_used = warn / 100.0 * _perc_total
+        crit_used = crit / 100.0 * _perc_total
+        levels_text = "%s/%s" % (
+            get_percent_human_readable(warn),
+            get_percent_human_readable(crit),
+        )
+    else:  # absolute
+        warn_used = float(warn)
+        crit_used = float(crit)
+        levels_text = "%s/%s" % (
+            get_bytes_human_readable(warn * render_unit, base=render_base),
+            get_bytes_human_readable(crit * render_unit, base=render_base),
+        )
+
+    # normalize free -> used
+    if mode.endswith("free"):
+        warn_used = float(total - warn_used)
+        crit_used = float(total - crit_used)
+        levels_text = "warn/crit below %s free" % levels_text
+    else:  # used
+        levels_text = "warn/crit at %s used" % levels_text
+
+    return warn_used, crit_used, levels_text
+
+
+def _compute_state(value, warn, crit):
+    if crit is not None and value >= crit:
+        return 2
+    if warn is not None and value >= warn:
+        return 1
+    return 0
+
+
+def check_memory_element(label,
+                         used,
+                         total,
+                         levels,
+                         label_total="",
+                         show_free=False,
+                         metric_name=None,
+                         render_base=1024):
+    """Return a check result for one memory element
+    """
+    if show_free:
+        show_value = total - used
+        show_text = " free"
+    else:
+        show_value = used
+        show_text = ""
+
+    infotext = "%s: %s%s - %s of %s%s" % (
+        label,
+        get_percent_human_readable(100.0 * show_value / total),
+        show_text,
+        get_bytes_human_readable(show_value, base=render_base),
+        get_bytes_human_readable(total, base=render_base),
+        (" %s" % label_total).rstrip(),
+    )
+
+    try:
+        mode, (warn, crit) = levels
+    except (ValueError, TypeError):  # handle None, "ignore"
+        mode, (warn, crit) = "ignore", (None, None)
+
+    warn, crit, levels_text = normalize_mem_levels(mode, warn, crit, total, render_base=render_base)
+    state = _compute_state(used, warn, crit)
+    if state and levels_text:
+        infotext = "%s (%s)" % (infotext, levels_text)
+
+    if not metric_name:
+        return state, infotext, []
+    return state, infotext, [(metric_name, used, warn, crit, 0, total)]
+
+
+def _get_total_usage(ramused, swapused, pagetables):
+    """get total usage and a description how it was computed
+    """
+    totalused_kb = ramused.kb
+    details = ["%s RAM" % ramused.render()]
+
+    if swapused.kb:
+        totalused_kb += swapused.kb
+        details.append("%s SWAP" % swapused.render())
+
+    if pagetables.kb:
+        totalused_kb += pagetables.kb
+        details.append("%s Pagetables" % pagetables.render())
+
+    totalused = MemBytes(totalused_kb, ramused.base)
+    if len(details) == 1:
+        return totalused, ""
+    return totalused, " + ".join(details) + ", "
+
+
+def check_memory(params, meminfo, render_base=1024):
+    if isinstance(params, tuple):
+        params = {"levels": params}
+
+    zerobytes = MemBytes(0, render_base)
+
+    memtotal = MemBytes(meminfo['MemTotal'], render_base)
+    memused = MemBytes(memtotal.kb - meminfo['MemFree'], render_base)
+
+    if "SwapFree" in meminfo:
+        swaptotal = MemBytes(meminfo['SwapTotal'], render_base)
+        swapused = MemBytes(swaptotal.kb - meminfo['SwapFree'], render_base)
+        perfdata = [('swapused', swapused.mb, None, None, 0, swaptotal.mb)]
+    else:
+        swaptotal = zerobytes
+        swapused = zerobytes
+        perfdata = []
 
     # Size of Pagetable on Linux can be relevant e.g. on ORACLE
     # servers with much memory, that do not use HugeTables. We account
     # that for used
-    pagetables_kb = meminfo.get('PageTables', 0)
-    pagetables_mb = pagetables_kb / 1024.0
-
-    totalused_kb = (swapused_kb + memused_kb - caches_kb + pagetables_kb)
-    totalused_mb = totalused_kb / 1024.0
-    totalused = totalused_kb * 1024.0
-    totalmem_kb = meminfo['MemTotal']
-    totalmem_mb = totalmem_kb / 1024.0
-    totalmem = totalmem_kb * 1024.0
-    totalused_perc = 100 * (float(totalused_kb) / float(totalmem_kb))
-    totalvirt_mb = (meminfo['SwapTotal'] + meminfo['MemTotal']) / 1024.0
-
-    if isinstance(params, tuple):
-        params = {"levels": params}
-    warn, crit = params["levels"]
-
-    details = []
-    if swapused:
-        details.append("%s SWAP" % get_bytes_human_readable(swapused))
-
-    if pagetables_kb:
-        details.append("%s Pagetables" % get_bytes_human_readable(pagetables_kb * 1024.0))
-
-    if details:
-        details.insert(0, "%s RAM" % get_bytes_human_readable(memused - caches))
-        details_txt = " + ".join(details) + ", "
+    if 'PageTables' in meminfo:
+        pagetables = MemBytes(meminfo['PageTables'], render_base)
+        perfdata.append(('pagetables', pagetables.mb))
     else:
-        details_txt = ""
+        pagetables = zerobytes
 
-    if meminfo["SwapTotal"]:
-        swap_txt = (" + %s SWAP" % get_bytes_human_readable(meminfo["SwapTotal"] * 1024.0))
+    # Buffers and Cached are optional. On Linux both mean basically the same.
+    caches = MemBytes(meminfo.get('Buffers', 0) + meminfo.get('Cached', 0), render_base)
+
+    ramused = MemBytes(memused.kb - caches.kb, render_base)
+    if perfdata:
+        # if perfdata is empty here, ramused and totalused would be the same anyway.
+        perfdata.append(('ramused', ramused.mb, None, None, 0, memtotal.mb))
+
+    totalused, totalused_descr = _get_total_usage(ramused, swapused, pagetables)
+    totalused_perc = 100.0 * totalused.kb / memtotal.kb
+    totalvirt = MemBytes(swaptotal.kb + memtotal.kb, render_base)
+
+    if swaptotal.kb:
+        swap_txt = (" + %s SWAP" % swaptotal.render())
     else:
         swap_txt = ""
 
-    infotext = "%s used (%sthis is %.1f%% of %s RAM%s)" % \
-               (get_bytes_human_readable(totalused), details_txt,
-                totalused_perc, get_bytes_human_readable(totalmem), swap_txt)
+    infotext = "%s used (%sthis is %.1f%% of %s RAM%s)" % (
+        totalused.render(),
+        totalused_descr,
+        totalused_perc,
+        memtotal.render(),
+        swap_txt,
+    )
 
     # Take into account averaging
     average_min = params.get("average")
     if average_min:
         totalused_mb_avg = get_average("mem.used.total",
                                        time.time(),
-                                       totalused_mb,
+                                       totalused.mb,
                                        average_min,
                                        initialize_zero=False)
-        totalused_perc_avg = totalused_mb_avg / totalmem_mb * 100
+        totalused_perc_avg = totalused_mb_avg / memtotal.mb * 100
         infotext += ", %d min average %.1f%%" % (average_min, totalused_perc_avg)
+        perfdata.append(('memusedavg', totalused_mb_avg))
         comp_mb = totalused_mb_avg
     else:
-        comp_mb = totalused_mb
+        comp_mb = totalused.mb
 
-    # levels may be given either in int -> MB or in float -> percentages. So convert
-    # effective levels to MB now
-    if isinstance(warn, float):
-        warn_mb = int(warn / 100.0 * totalmem_mb)
-        crit_mb = int(crit / 100.0 * totalmem_mb)
-        leveltext = lambda x: "%.1f%%" % x
-    else:
-        warn_mb = warn
-        crit_mb = crit
-        leveltext = lambda x: "%.2f GB" % (x / 1024.0)
-
-    # Prepare performance data
-    perfdata = [
-        ('ramused', (memused_kb - caches_kb) / 1024.0, None, None, 0, totalmem_mb),
-        ('swapused', swapused_kb / 1024.0, None, None, 0, meminfo['SwapTotal'] / 1024.0),
-        ('memused', totalused_mb, warn_mb, crit_mb, 0, totalvirt_mb),
-    ]
-
-    if average_min:
-        perfdata.append(('memusedavg', totalused_mb_avg))
-
+    # Normalize levels and check them
+    warn, crit = params.get("levels", (None, None))
+    mode = _get_levels_mode_from_value(warn)
+    warn_mb, crit_mb, levels_text = normalize_mem_levels(
+        mode,
+        abs(warn),
+        abs(crit),
+        totalvirt.mb,
+        _perc_total=memtotal.mb,
+        render_base=render_base,
+        render_unit=1024**2,
+    )
     # Check levels
-    state = 0
-    if warn_mb > 0:  # positive levels - used memory
-        if comp_mb >= crit_mb:
-            state = 2
-            infotext += ", critical at %s used" % leveltext(crit)
-        elif comp_mb >= warn_mb:
-            state = 1
-            infotext += ", warning at %s used" % leveltext(warn)
-    else:  # negative levels - free memory
-        freemem_mb = totalvirt_mb - comp_mb
-        if freemem_mb <= -crit_mb:
-            state = 2
-            infotext += ", critical at %s free" % leveltext(-crit)
-        elif freemem_mb <= -warn_mb:
-            state = 1
-            infotext += ", warning at %s free" % leveltext(-warn)
+    state = _compute_state(comp_mb, warn_mb, crit_mb)
+    if state and levels_text:
+        infotext += ", %s" % levels_text
+
+    perfdata.append(('memused', totalused.mb, warn_mb, crit_mb, 0, totalvirt.mb))
 
     # Add additional metrics, provided by Linux.
-    mapped = meminfo.get('Mapped')
-    if mapped:
-        mapped_mb = int(mapped) / 1024.0
-        committed_as_mb = int(meminfo.get('Committed_AS', 0)) / 1024.0
-        shared_mb = int(meminfo.get('Shmem', 0)) / 1024.0
-
-        perfdata += [
-            ('mapped', mapped_mb),
-            ('committed_as', committed_as_mb),
-            ('pagetables', pagetables_mb),
-            ('shared', shared_mb),
-        ]
-        infotext += ", %.1f mapped, %.1f committed, %.1f shared" % \
-                    (mapped_mb / 1024.0, committed_as_mb / 1024.0, shared_mb / 1024.0)
+    if meminfo.get('Mapped'):
+        for key, label, metric in (
+            ('Mapped', 'mapped', 'mapped'),
+            ('Committed_AS', 'committed', 'committed_as'),
+            ('Shmem', 'shared', 'shared'),
+        ):
+            value = MemBytes(meminfo.get(key, 0), render_base)
+            perfdata.append((metric, value.mb))
+            infotext += ", %s %s" % (value.render(), label)
 
     return state, infotext, perfdata

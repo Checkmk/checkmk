@@ -28,35 +28,20 @@ from __future__ import division
 import argparse
 import sys
 import requests
+import urllib3  # type: ignore
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-def main():
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
 
-    args = parse_arguments()
-
-    try:
-        user = args.user
-    except TypeError:
-        user = None
-    try:
-        pwd = args.password
-    except TypeError:
-        pwd = None
-
-    opt_port = args.port
-    query_objects = args.modules
-    opt_proto = args.proto
-    opt_debug = args.debug
-    elastic_host = args.HOSTNAME
+    args = parse_arguments(argv)
 
     sys.stdout.write('<<<check_mk>>>\n')
-    handle_request(user, pwd, opt_port, query_objects, opt_proto, opt_debug, elastic_host)
-
-
-def handle_request(user, pwd, opt_port, query_objects, opt_proto, opt_debug, elastic_host):
-
-    for host in elastic_host:
-        url_base = "%s://%s:%d" % (opt_proto, host, int(opt_port))
+    for host in args.hosts:
+        url_base = "%s://%s:%d" % (args.proto, host, args.port)
 
         # Sections to query
         # Cluster health: https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-health.html
@@ -69,36 +54,33 @@ def handle_request(user, pwd, opt_port, query_objects, opt_proto, opt_debug, ela
         }
 
         try:
-            for section in query_objects:
+            for section in args.modules:
                 url = url_base + sections[section]
 
+                auth = (args.user, args.password) if args.user and args.password else None
                 try:
-                    if user and pwd:
-                        response = requests.get(url, auth=(user, pwd))
-                    else:
-                        response = requests.get(url)
-                except requests.exceptions.RequestException:
-                    if opt_debug:
+                    response = requests.get(url, auth=auth)
+                except requests.exceptions.RequestException as e:
+                    sys.stderr.write("Error: %s\n" % e)
+                    if args.debug:
                         raise
                 else:
                     sys.stdout.write("<<<elasticsearch_%s>>>\n" % section)
 
-                if section == 'cluster_health' and 'cluster_health' in query_objects:
-                    handle_cluster_health(response)
-                elif section == 'nodes' and 'nodes' in query_objects:
-                    handle_nodes(response)
-                # checks for stats section follow soon
-                elif section == 'stats' and 'stats' in query_objects:
-                    handle_stats(response)
+                json_response = response.json()
+                if section == 'cluster_health':
+                    handle_cluster_health(json_response)
+                elif section == 'nodes':
+                    handle_nodes(json_response)
+                elif section == 'stats':
+                    handle_stats(json_response)
             sys.exit(0)
         except Exception:
-            if opt_debug:
+            if args.debug:
                 raise
 
 
-def parse_arguments(argv=None):
-    if argv is None:
-        argv = sys.argv[1:]
+def parse_arguments(argv):
 
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawTextHelpFormatter)
@@ -110,7 +92,11 @@ def parse_arguments(argv=None):
         "--proto",
         default="https",
         help="Use 'http' or 'https' for connection to elasticsearch (default=https)")
-    parser.add_argument("-p", "--port", default=9200, help="Use alternative port (default: 9200)")
+    parser.add_argument("-p",
+                        "--port",
+                        default=9200,
+                        type=int,
+                        help="Use alternative port (default: 9200)")
     parser.add_argument(
         "-m",
         "--modules",
@@ -124,58 +110,74 @@ def parse_arguments(argv=None):
                         help="Debug mode: let Python exceptions come through")
 
     parser.add_argument(
-        "HOSTNAME",
-        nargs="*",
+        "hosts",
+        metavar="HOSTNAME",
+        nargs="+",
         help=
         "You can define one or more elasticsearch instances to query. First instance where data is queried wins."
     )
 
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def handle_cluster_health(response):
-    for item, value in response.json().iteritems():
+    for item, value in response.iteritems():
         sys.stdout.write("%s %s\n" % (item, value))
 
 
 def handle_nodes(response):
-    for node in response.json()["nodes"]:
-        node = response.json()["nodes"][node]
-        proc = node["process"]
-        cpu = proc["cpu"]
-        mem = proc["mem"]
+    nodes_data = response.get("nodes")
+    if nodes_data is not None:
+        for node in nodes_data:
+            node = nodes_data[node]
+            proc = node["process"]
+            cpu = proc["cpu"]
+            mem = proc["mem"]
 
-        sys.stdout.write("%s open_file_descriptors %s\n" %
-                         (node["name"], proc["open_file_descriptors"]))
-        sys.stdout.write("%s max_file_descriptors %s\n" %
-                         (node["name"], proc["max_file_descriptors"]))
-        sys.stdout.write("%s cpu_percent %s\n" % (node["name"], cpu["percent"]))
-        sys.stdout.write("%s cpu_total_in_millis %s\n" % (node["name"], cpu["total_in_millis"]))
-        sys.stdout.write("%s mem_total_virtual_in_bytes %s\n" %
-                         (node["name"], mem["total_virtual_in_bytes"]))
+            sys.stdout.write("%s open_file_descriptors %s\n" %
+                             (node["name"], proc["open_file_descriptors"]))
+            sys.stdout.write("%s max_file_descriptors %s\n" %
+                             (node["name"], proc["max_file_descriptors"]))
+            sys.stdout.write("%s cpu_percent %s\n" % (node["name"], cpu["percent"]))
+            sys.stdout.write("%s cpu_total_in_millis %s\n" % (node["name"], cpu["total_in_millis"]))
+            sys.stdout.write("%s mem_total_virtual_in_bytes %s\n" %
+                             (node["name"], mem["total_virtual_in_bytes"]))
 
 
 def handle_stats(response):
-    sys.stdout.write("<<<elasticsearch_shards>>>\n")
-    shards = response.json()["_shards"]
-    sys.stdout.write("%s %s %s\n" % (shards["total"], shards["successful"], shards["failed"]))
+    shards = response.get("_shards")
+    if shards is not None:
+        sys.stdout.write("<<<elasticsearch_shards>>>\n")
 
-    sys.stdout.write("<<<elasticsearch_cluster>>>\n")
-    if "docs" in response.json()["_all"]["total"]:
-        count = response.json()["_all"]["total"]["docs"]["count"]
-        size = response.json()["_all"]["total"]["store"]["size_in_bytes"]
+        sys.stdout.write("%s %s %s\n" %
+                         (shards.get("total"), shards.get("successful"), shards.get("failed")))
+
+    docs = response.get("_all", {}).get("total")
+    if docs is not None:
+        sys.stdout.write("<<<elasticsearch_cluster>>>\n")
+        count = docs.get("docs", {}).get("count")
+        size = docs.get("store", {}).get("size_in_bytes")
+
         sys.stdout.write("%s %s\n" % (count, size))
 
-    sys.stdout.write("<<<elasticsearch_indices>>>\n")
-    indices = set()
-    for ind in response.json()["indices"]:
-        indices.add(ind[:-11])
-    for indice in list(indices):
-        all_counts = []
-        all_sizes = []
-        for ind in response.json()["indices"]:
-            if ind[:-11] == indice:
-                all_counts.append(response.json()["indices"][ind]["total"]["docs"]["count"])
-                all_sizes.append(response.json()["indices"][ind]["total"]["store"]["size_in_bytes"])
-        sys.stdout.write("%s %s %s\n" % (indice, sum(all_counts) / len(all_counts),
-                                         sum(all_sizes) / len(all_sizes)))  # fixed: true-division
+    indices_data = response.get("indices")
+    if indices_data is not None:
+        indices = set()
+
+        sys.stdout.write("<<<elasticsearch_indices>>>\n")
+        for index in indices_data:
+            indices.add(index.split("-")[0])
+        for indice in list(indices):
+            all_counts = []
+            all_sizes = []
+            for index in indices_data:
+                if index.split("-")[0] == indice:
+                    all_counts.append(
+                        indices_data.get(index, {}).get("primaries", {}).get("docs",
+                                                                             {}).get("count"))
+                    all_sizes.append(
+                        indices_data.get(index, {}).get("total", {}).get("store",
+                                                                         {}).get("size_in_bytes"))
+            sys.stdout.write("%s %s %s\n" %
+                             (indice, sum(all_counts) / len(all_counts),
+                              sum(all_sizes) / len(all_sizes)))  # fixed: true-division

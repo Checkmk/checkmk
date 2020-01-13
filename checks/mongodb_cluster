@@ -144,7 +144,7 @@ def check_mongodb_cluster_shards(item, params, databases_dict):
     if "databases" not in databases_dict:
         return
 
-    database_name, collection_name = _split_namespace(item)
+    database_name, collection_name = _mongodb_cluster_split_namespace(item)
 
     #
     # output if collection is sharded or unsharded
@@ -157,7 +157,7 @@ def check_mongodb_cluster_shards(item, params, databases_dict):
     # check if collection is balanced
     #
     if is_sharded:
-        yield _check_mongodb_cluster_collection_is_balanced(
+        yield _mongodb_cluster_collection_is_balanced(
             databases_dict.get("databases").get(database_name).get("collstats",
                                                                    {}).get(collection_name, {}))
 
@@ -165,7 +165,7 @@ def check_mongodb_cluster_shards(item, params, databases_dict):
     # check if balancer is disabled for collection
     #
     if is_sharded:
-        yield _check_mongodb_cluster_is_balancer_disabled(
+        yield _mongodb_cluster_is_balancer_disabled(
             databases_dict.get("databases").get(database_name).get("collstats",
                                                                    {}).get(collection_name, {}))
 
@@ -173,7 +173,7 @@ def check_mongodb_cluster_shards(item, params, databases_dict):
     # check if shard contains jumbo chunks
     #
     if is_sharded:
-        yield _check_mongodb_cluster_shard_has_jumbos(
+        yield _mongodb_cluster_shard_has_jumbos(
             params.get("levels_number_jumbo"),
             databases_dict.get("databases").get(database_name).get("collstats",
                                                                    {}).get(collection_name, {}))
@@ -181,7 +181,7 @@ def check_mongodb_cluster_shards(item, params, databases_dict):
     #
     # generate long output
     #
-    perf_data = _generate_performance_data(
+    perf_data = _mongodb_cluster_generate_performance_data(
         databases_dict.get("databases").get(database_name).get("collstats",
                                                                {}).get(collection_name, {}), params)
     yield _generate_mongodb_cluster_long_output(
@@ -192,7 +192,7 @@ def check_mongodb_cluster_shards(item, params, databases_dict):
         databases_dict.get("settings", {}), databases_dict.get("shards", {}), perf_data)
 
 
-def _check_mongodb_cluster_is_balancer_disabled(collection_dict):
+def _mongodb_cluster_is_balancer_disabled(collection_dict):
     """
     check if balancer is enabled for the collection.
     if balancer is disabled, "noBalance" is present and set to true
@@ -204,7 +204,7 @@ def _check_mongodb_cluster_is_balancer_disabled(collection_dict):
     return 0, "Balancer: enabled"
 
 
-def _check_mongodb_cluster_shard_has_jumbos(levels, collection_dict):
+def _mongodb_cluster_shard_has_jumbos(levels, collection_dict):
     """
     loop through shards and check if jumbo key is set
 
@@ -231,7 +231,7 @@ def _check_mongodb_cluster_shard_has_jumbos(levels, collection_dict):
                                          ", ".join(warning_info) if warning_level > 0 else "0")
 
 
-def _check_mongodb_cluster_collection_is_balanced(collection_dict):
+def _mongodb_cluster_collection_is_balanced(collection_dict):
     """
     get chunks per shard and compare to expected number of chunks per shard. based on mongoDB thresholds (2, 4 or 8)
     for the balancer, mark collections as unbalanced
@@ -255,8 +255,8 @@ def _check_mongodb_cluster_collection_is_balanced(collection_dict):
             "numberOfChunks", 0)
 
         # check if shard is in balance
-        balanced &= _is_balanced(total_number_of_chunks, average_chunks_per_shard,
-                                 number_of_chunks_in_shard)
+        balanced &= _mongodb_cluster_is_balanced(total_number_of_chunks, average_chunks_per_shard,
+                                                 number_of_chunks_in_shard)
 
         # generate additional warning output
         warning_info.append("%s (%d chunks)" % (shard_name, number_of_chunks_in_shard))
@@ -266,7 +266,8 @@ def _check_mongodb_cluster_collection_is_balanced(collection_dict):
     return 1, "Chunks: unbalanced [%s]" % ", ".join(warning_info)
 
 
-def _is_balanced(total_number_of_chunks, average_chunks_per_shard, number_of_chunks_in_shard):
+def _mongodb_cluster_is_balanced(total_number_of_chunks, average_chunks_per_shard,
+                                 number_of_chunks_in_shard):
     """
     check if deviation of chunks in shard is in range depended on total number of chunks
 
@@ -332,13 +333,14 @@ def _generate_mongodb_cluster_long_output(is_sharded, collection_dict, primary_s
         aggregated_shards_dict["hostname"] = shards_dict.get(shard_name, {}).get("host", "unknown")
         aggregated_shards_dict["name"] = shard_name
         aggregated_shards_dict["is_primary"] = shard_name == primary_shard_name
-        shard_info.append("\n" + _get_shard_statistic_info(
+        shard_info.append("\n" + _mongodb_cluster_get_shard_statistic_info(
             is_sharded, aggregated_shards_dict, total_collection_size, total_number_of_documents))
 
     return 0, "\n%s\n%s" % ("\n".join(collections_info), "\n".join(shard_info)), perf_data
 
 
-def _get_shard_statistic_info(is_sharded, shard_dict, total_shard_size, total_number_of_documents):
+def _mongodb_cluster_get_shard_statistic_info(is_sharded, shard_dict, total_shard_size,
+                                              total_number_of_documents):
     """
     create output for shard information
     :param is_sharded: boolean, is shard sharded or unsharded
@@ -382,7 +384,7 @@ def _get_shard_statistic_info(is_sharded, shard_dict, total_shard_size, total_nu
     return "\n".join(output)
 
 
-def _generate_performance_data(collection_dict, params):
+def _mongodb_cluster_generate_performance_data(collection_dict, params):
     """
     create all performance data
     :param collection_dict: dictionary holding collections information
@@ -420,7 +422,7 @@ def _generate_performance_data(collection_dict, params):
     return perfdata
 
 
-def _split_namespace(namespace):
+def _mongodb_cluster_split_namespace(namespace):
     """
     split namespace into database name and collection name
     :param namespace:

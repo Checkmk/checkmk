@@ -26,14 +26,14 @@
 """Manage the variable config.wato_host_tags -> The set of tags to be assigned
 to hosts and that is the basis of the rules."""
 
-from typing import Text, Dict, List  # pylint: disable=unused-import
+from typing import Set, Text, Dict, List  # pylint: disable=unused-import
 import abc
 from enum import Enum
 import six
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-from cmk.gui.table import table_element
+from cmk.gui.table import table_element, Table  # pylint: disable=unused-import
 import cmk.gui.forms as forms
 from cmk.gui.exceptions import (
     MKUserError,
@@ -58,6 +58,8 @@ from cmk.gui.valuespec import (
 
 import cmk.utils.tags
 from cmk.gui.watolib.tags import TagConfigFile
+from cmk.gui.watolib.rulesets import Ruleset  # pylint: disable=unused-import
+from cmk.gui.watolib.hosts_and_folders import CREHost, CREFolder  # pylint: disable=unused-import
 
 from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,
@@ -104,6 +106,15 @@ class ABCTagMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
         self._effective_config.parse_config(self._tag_config.get_dict_format())
         self._effective_config += self._builtin_config
 
+    def _get_tags_using_aux_tag(self, aux_tag):
+        # type: (cmk.utils.tags.AuxTag) -> Set[cmk.utils.tags.GroupedTag]
+        used_tags = set()
+        for tag_group in self._effective_config.tag_groups:
+            for tag in tag_group.tags:
+                if aux_tag.id in tag.aux_tag_ids:
+                    used_tags.add(tag)
+        return used_tags
+
 
 @mode_registry.register
 class ModeTags(ABCTagMode):
@@ -124,6 +135,8 @@ class ModeTags(ABCTagMode):
                             watolib.folder_preserving_link([("mode", "edit_tag")]), "new")
         html.context_button(_("New aux tag"),
                             watolib.folder_preserving_link([("mode", "edit_auxtag")]), "new")
+        html.context_button(_("Tag usage"), watolib.folder_preserving_link([("mode", "tag_usage")]),
+                            "tag")
 
     def action(self):
         if html.request.has_var("_delete"):
@@ -189,7 +202,7 @@ class ModeTags(ABCTagMode):
                 raise MKUserError(None, "%s" % e)
             self._save_tags_and_update_hosts(self._tag_config.get_dict_format())
             add_change("edit-tags", _("Removed auxiliary tag %s (%s)") % (message, del_id))
-            return "tags", message != True and message or None
+            return "tags", message if message is not True else None
 
     def _move_tag_group(self):
         move_nr = html.get_integer_input("_move")
@@ -264,6 +277,8 @@ class ModeTags(ABCTagMode):
                 table.text_cell(_("Title"), tag_group.title)
                 table.text_cell(_("Topic"), tag_group.topic or _("Tags"))
                 table.cell(_("Demonstration"), sortable=False)
+                if tag_group.help:
+                    html.help(tag_group.help)
                 html.begin_form("tag_%s" % tag_group.id)
                 tag_group_attribute = watolib.host_attribute("tag_%s" % tag_group.id)
                 tag_group_attribute.render_input("", tag_group_attribute.default_value())
@@ -301,28 +316,26 @@ class ModeTags(ABCTagMode):
             for aux_tag in self._effective_config.aux_tag_list.get_tags():
                 table.row()
                 table.cell(_("Actions"), css="buttons")
-                if aux_tag.id in self._builtin_config.aux_tag_list.get_tag_ids():
-                    html.i("(%s)" % _("builtin"))
-                else:
-                    edit_url = watolib.folder_preserving_link([("mode", "edit_auxtag"),
-                                                               ("edit", aux_tag.id)])
-                    delete_url = make_action_link([("mode", "tags"), ("_del_aux", aux_tag.id)])
-                    html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
-                    html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")
+                self._show_aux_tag_icons(aux_tag)
+
                 table.text_cell(_("ID"), aux_tag.id)
 
                 table.text_cell(_("Title"), _u(aux_tag.title))
                 table.text_cell(_("Topic"), _u(aux_tag.topic) or _("Tags"))
-                table.text_cell(_("Tags using this auxiliary tag"),
-                                ", ".join(self._get_tags_using_aux_tag(aux_tag)))
+                table.text_cell(
+                    _("Tags using this auxiliary tag"),
+                    ", ".join(sorted([tag.id for tag in self._get_tags_using_aux_tag(aux_tag)])))
 
-    def _get_tags_using_aux_tag(self, aux_tag):
-        used_tags = set()
-        for tag_group in self._effective_config.tag_groups:
-            for tag in tag_group.tags:
-                if aux_tag.id in tag.aux_tag_ids:
-                    used_tags.add(aux_tag.id)
-        return sorted(used_tags)
+    def _show_aux_tag_icons(self, aux_tag):
+        # type: (cmk.utils.tags.AuxTag) -> None
+        if aux_tag.id in self._builtin_config.aux_tag_list.get_tag_ids():
+            html.i("(%s)" % _("builtin"))
+            return
+
+        edit_url = watolib.folder_preserving_link([("mode", "edit_auxtag"), ("edit", aux_tag.id)])
+        delete_url = make_action_link([("mode", "tags"), ("_del_aux", aux_tag.id)])
+        html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
+        html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")
 
 
 class ABCEditTagMode(six.with_metaclass(abc.ABCMeta, ABCTagMode)):
@@ -364,6 +377,10 @@ class ABCEditTagMode(six.with_metaclass(abc.ABCMeta, ABCTagMode)):
                 allow_empty=False,
             )),
             ("topic", self._get_topic_valuespec()),
+            ("help", TextUnicode(
+                title=_("Help"),
+                size=60,
+            )),
         ]
 
     def _get_topic_valuespec(self):
@@ -376,6 +393,124 @@ class ABCEditTagMode(six.with_metaclass(abc.ABCMeta, ABCTagMode)):
             help=_("Different tags can be grouped in topics to make the visualization and "
                    "selections in the GUI more comfortable."),
         )
+
+
+@mode_registry.register
+class ModeTagUsage(ABCTagMode):
+    @classmethod
+    def name(cls):
+        # type: () -> str
+        return "tag_usage"
+
+    @classmethod
+    def permissions(cls):
+        # type: () -> List[str]
+        return ["hosttags"]
+
+    def title(self):
+        # type: () -> Text
+        return _("Tag usage")
+
+    def buttons(self):
+        # type: () -> None
+        html.context_button(_("All tags"), watolib.folder_preserving_link([("mode", "tags")]),
+                            "back")
+
+    def page(self):
+        # type: () -> None
+        self._show_tag_list()
+        self._show_aux_tag_list()
+
+    def _show_tag_list(self):
+        # type: () -> None
+        with table_element("tag_usage", _("Tags")) as table:
+            for tag_group in self._effective_config.tag_groups:
+                for tag in tag_group.tags:
+                    self._show_tag_row(table, tag_group, tag)
+
+    def _show_tag_row(self, table, tag_group, tag):
+        # type: (Table, cmk.utils.tags.TagGroup, cmk.utils.tags.GroupedTag) -> None
+        table.row()
+
+        table.cell(_("Actions"), css="buttons")
+        self._show_tag_group_icons(tag_group)
+
+        table.text_cell(_("Tag group"), _u(tag_group.choice_title))
+        table.text_cell(_("Tag"), _u(tag.title))
+
+        operation = OperationReplaceGroupedTags(tag_group.id,
+                                                remove_tag_ids=[tag.id],
+                                                replace_tag_ids={})
+        affected_folders, affected_hosts, affected_rulesets = \
+            _change_host_tags_in_folders(operation, TagCleanupMode.CHECK, watolib.Folder.root_folder())
+
+        table.cell(_("Explicitly set on folders"))
+        if affected_folders:
+            _show_affected_folders(affected_folders)
+
+        table.cell(_("Explicitly set on hosts"))
+        if affected_hosts:
+            _show_affected_hosts(affected_hosts)
+
+        table.cell(_("Used in rulesets"))
+        if affected_rulesets:
+            _show_affected_rulesets(affected_rulesets)
+
+    def _show_tag_group_icons(self, tag_group):
+        # type: (cmk.utils.tags.TagGroup) -> None
+        # Tag groups were made builtin with ~1.4. Previously users could modify
+        # these groups.  These users now have the modified tag groups in their
+        # user configuration and should be able to cleanup this using the GUI
+        # for the moment. Make the buttons available to the users.
+        if self._builtin_config.tag_group_exists(
+                tag_group.id) and not self._tag_config.tag_group_exists(tag_group.id):
+            html.i("(%s)" % _("builtin"))
+            return
+
+        edit_url = watolib.folder_preserving_link([("mode", "edit_tag"), ("edit", tag_group.id)])
+        html.icon_button(edit_url, _("Edit this tag group"), "edit")
+
+    def _show_aux_tag_list(self):
+        # type: () -> None
+        with table_element("aux_tag_usage", _("Auxiliary tags")) as table:
+            for aux_tag in self._effective_config.aux_tag_list.get_tags():
+                self._show_aux_tag_row(table, aux_tag)
+
+    def _show_aux_tag_row(self, table, aux_tag):
+        # type: (Table, cmk.utils.tags.AuxTag) -> None
+        table.row()
+
+        table.cell(_("Actions"), css="buttons")
+        self._show_aux_tag_icons(aux_tag)
+
+        table.text_cell(_("Tag"), _u(aux_tag.choice_title))
+        table.text_cell(_("Used by tags"))
+        _show_aux_tag_used_by_tags(self._get_tags_using_aux_tag(aux_tag))
+
+        operation = OperationRemoveAuxTag(aux_tag.id)
+        affected_folders, affected_hosts, affected_rulesets = \
+            _change_host_tags_in_folders(operation, TagCleanupMode.CHECK, watolib.Folder.root_folder())
+
+        table.cell(_("Explicitly set on folders"))
+        if affected_folders:
+            _show_affected_folders(affected_folders)
+
+        table.cell(_("Explicitly set on hosts"))
+        if affected_hosts:
+            _show_affected_hosts(affected_hosts)
+
+        table.cell(_("Used in rulesets"))
+        if affected_rulesets:
+            _show_affected_rulesets(affected_rulesets)
+
+    def _show_aux_tag_icons(self, aux_tag):
+        # type: (cmk.utils.tags.AuxTag) -> None
+        if aux_tag.id in self._builtin_config.aux_tag_list.get_tag_ids():
+            html.i("(%s)" % _("builtin"))
+            return
+
+        edit_url = watolib.folder_preserving_link([("mode", "edit_auxtag"), ("edit", aux_tag.id)])
+        html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
 
 
 @mode_registry.register
@@ -634,7 +769,7 @@ class TagCleanupMode(Enum):
 
 class ABCOperation(six.with_metaclass(abc.ABCMeta, object)):
     """Base for all tag cleanup operations"""
-    @abc.abstractproperty
+    @abc.abstractmethod
     def confirm_title(self):
         # type: () -> Text
         raise NotImplementedError()
@@ -706,30 +841,23 @@ def _rename_tags_after_confirmation(operation):
 
     if affected_folders:
         message += _("Affected folders with an explicit reference to this tag "
-                     "group and that are affected by the change") + ":<ul>"
-        for folder in affected_folders:
-            message += '<li><a href="%s">%s</a></li>' % (folder.edit_url(), folder.alias_path())
-        message += "</ul>"
+                     "group and that are affected by the change") + ":"
+        with html.plugged():
+            _show_affected_folders(affected_folders)
+            message += html.drain()
 
     if affected_hosts:
         message += _("Hosts where this tag group is explicitely set "
-                     "and that are effected by the change") + ":<ul><li>"
-        for nr, host in enumerate(affected_hosts):
-            if nr > 20:
-                message += "... (%d more)" % (len(affected_hosts) - 20)
-                break
-            elif nr > 0:
-                message += ", "
-
-            message += '<a href="%s">%s</a>' % (host.edit_url(), host.name())
-        message += "</li></ul>"
+                     "and that are effected by the change") + ":"
+        with html.plugged():
+            _show_affected_hosts(affected_hosts)
+            message += html.drain()
 
     if affected_rulesets:
-        message += _("Rulesets that contain rules with references to the changed tags") + ":<ul>"
-        for ruleset in affected_rulesets:
-            message += '<li><a href="%s">%s</a></li>' % (watolib.folder_preserving_link(
-                [("mode", "edit_ruleset"), ("varname", ruleset.name)]), ruleset.title())
-        message += "</ul>"
+        message += _("Rulesets that contain rules with references to the changed tags") + ":"
+        with html.plugged():
+            _show_affected_rulesets(affected_rulesets)
+            message += html.drain()
 
     if message:
         wato_html_head(operation.confirm_title())
@@ -772,6 +900,68 @@ def _rename_tags_after_confirmation(operation):
         return False
 
     return True
+
+
+def _show_aux_tag_used_by_tags(tags):
+    # type: (Set[cmk.utils.tags.GroupedTag]) -> None
+    if not tags:
+        return
+
+    html.open_ul()
+    html.open_li()
+    builtin_config = cmk.utils.tags.BuiltinTagConfig()
+    for index, tag in enumerate(sorted(tags, key=lambda t: t.choice_title)):
+        if index > 0:
+            html.write_text(", ")
+
+        # Builtin tag groups can not be edited
+        if builtin_config.tag_group_exists(tag.group.id):
+            html.write_text(_u(tag.choice_title))
+        else:
+            edit_url = watolib.folder_preserving_link([("mode", "edit_tag"),
+                                                       ("edit", tag.group.id)])
+            html.a(_u(tag.choice_title), href=edit_url)
+    html.close_li()
+    html.close_ul()
+
+
+def _show_affected_folders(affected_folders):
+    # type: (List[CREFolder]) -> None
+    html.open_ul()
+    for folder in affected_folders:
+        html.open_li()
+        html.a(folder.alias_path(), href=folder.edit_url())
+        html.close_li()
+    html.close_ul()
+
+
+def _show_affected_hosts(affected_hosts):
+    # type: (List[CREHost]) -> None
+    html.open_ul()
+    html.open_li()
+    for nr, host in enumerate(affected_hosts):
+        if nr > 20:
+            html.write_text(_("... (%d more)") % (len(affected_hosts) - 20))
+            break
+
+        if nr > 0:
+            html.write_text(", ")
+
+        html.a(host.name(), href=host.edit_url())
+    html.close_li()
+    html.close_ul()
+
+
+def _show_affected_rulesets(affected_rulesets):
+    # type: (List[Ruleset]) -> None
+    html.open_ul()
+    for ruleset in affected_rulesets:
+        html.open_li()
+        html.a(ruleset.title(),
+               href=watolib.folder_preserving_link([("mode", "edit_ruleset"),
+                                                    ("varname", ruleset.name)]))
+        html.close_li()
+    html.close_ul()
 
 
 def _is_removing_tags(operation):

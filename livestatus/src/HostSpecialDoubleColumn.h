@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
+#include "Column.h"
 #include "DoubleColumn.h"
 class Row;
 
@@ -39,14 +40,11 @@ public:
     enum class Type { staleness };
 
     HostSpecialDoubleColumn(const std::string& name,
-                            const std::string& description, int indirect,
-                            int extra_offset, int extra_extra_offset,
-                            int offset, Type hsdc_type)
-        : DoubleColumn(name, description, indirect, extra_offset,
-                       extra_extra_offset, offset)
-        , _type(hsdc_type) {}
+                            const std::string& description,
+                            const Column::Offsets& offsets, Type hsdc_type)
+        : DoubleColumn(name, description, offsets), _type(hsdc_type) {}
 
-    double getValue(Row row) const override;
+    [[nodiscard]] double getValue(Row row) const override;
 
 #ifdef CMC
     static double staleness(const Object* object);

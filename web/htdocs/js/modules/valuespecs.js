@@ -615,6 +615,7 @@ export function listofmultiple_add(varprefix, choice_page_name, page_request_var
             }
 
             tbody.appendChild(new_row);
+            forms.enable_dynamic_form_elements(new_row);
             utils.execute_javascript_by_object(new_row);
 
             // Add it to the list of active elements
@@ -626,7 +627,7 @@ export function listofmultiple_add(varprefix, choice_page_name, page_request_var
 
             // Put in a line break following the table if the added row is the first
             if (tbody.childNodes.length == 1)
-                table.after(document.createElement("br"));
+                table.parentNode.insertBefore(document.createElement("br"), table.nextSibling);
         }
     });
 }
@@ -676,7 +677,7 @@ export function listofmultiple_init(varprefix) {
     listofmultiple_disable_selected_options(varprefix);
     // Put in a line break following the table if it's not empty
     if (tbody.childNodes.length >= 1)
-        table.after(document.createElement("br"));
+        table.parentNode.insertBefore(document.createElement("br"), table.nextSibling);
 }
 
 // The <option> elements in the <select> field of the currently choosen
@@ -758,33 +759,80 @@ function autocomplete_handle_error(handler_data, status_code, error_msg)
 
 function autocomplete_show_choices(input_id, on_change, choices)
 {
-    var code = "<ul>";
-    for(var i = 0; i < choices.length; i++) {
-        var value = choices[i][0];
-        var label = choices[i][1];
+    var select = $('<select>', {
+        'id': input_id + '_select',
+        'onchange': on_change
+    })
 
-        code += "<li onclick=\"cmk.valuespecs.autocomplete_choose('"
-                    + input_id + "', '" + value + "');"
-                    + on_change + "\">" + label + "</li>";
-    }
-    code += "</ul>";
+    // empty option as first entry so no input is possible
+    choices.sort()
+    choices.unshift([' ', ' '])
 
-    autocomplete_show(input_id, code);
+    choices.forEach( function(choice) {
+        select.append(
+            $('<option>', {
+                'value' : choice[0],
+                'text' : choice[1]
+            })
+        )
+    })
+
+    autocomplete_show(input_id, select);
 }
 
-export function autocomplete_choose(input_id, value)
+function autocomplete_show(input_id, select)
 {
-    var input = document.getElementById(input_id);
-    input.value = value;
-    autocomplete_close(input_id);
+    var input = $(`#${input_id}`)
+    input.parent().append(select)
+    input.parent().addClass('vs_autocomplete')
+    // make sure select is at the correct position
+    select.insertBefore(input)
+    // hide original input field
+    input.hide()
+
+    // initialize select to be select2 instance
+    select.select2({
+        width: input.outerWidth(),
+        tags: true,
+        allowClear: true
+    });
+
+    select.on('select2:open', function (e) {
+        var value = input.val()
+        var search_field = $('input.select2-search__field')
+        search_field.closest('.select2-container').addClass('vs_autocomplete')
+        search_field.prop('value', value);
+        // IE does not automatically set the cursor to the end of the input element
+        search_field.focus();
+        search_field[0].setSelectionRange(value.length, value.length);
+    });
+
+    select.on('select2:close', function (e) {
+        autocomplete_close(input_id)
+        input.trigger('change')
+    });
+
+    select.select2('open');
+}
+
+function autocomplete_close(input_id)
+{
+    // update and show original input field
+    var input = $(`#${input_id}`)
+    var select = $(`#${input_id}_select`)
+    if (select.length != 0) {
+        // if the input is empty/nothing, make sure to remove whitespaces
+        var value = select.val().trim()
+        input.val(value)
+    }
+    input.show()
+
+    // close and remove select-input
+    select.select2('destroy');
+    select.remove()
 }
 
 function autocomplete_show_error(input_id, msg)
-{
-    autocomplete_show(input_id, "<div class=error>ERROR: " + msg + "</div>");
-}
-
-function autocomplete_show(input_id, inner_html)
 {
     var popup = document.getElementById(input_id + "_popup");
     if (!popup) {
@@ -798,8 +846,7 @@ function autocomplete_show(input_id, inner_html)
         popup.style.minWidth = input.clientWidth + "px";
     }
 
-    popup.innerHTML = inner_html;
-
+    popup.innerHTML = "<div class=error>ERROR: " + msg + "</div>";
     // Register some unfocus handlers for hiding
     autocomplete_hide_on_unrelated_events(popup);
 }
@@ -828,13 +875,6 @@ export function autocomplete_hide_on_unrelated_events(origin_element) {
 
     document.addEventListener("click", outside_click_listener);
     origin_element.addEventListener("blur", outside_click_listener);
-}
-
-function autocomplete_close(input_id)
-{
-    var popup = document.getElementById(input_id + "_popup");
-    if (popup)
-        popup.parentNode.removeChild(popup);
 }
 
 

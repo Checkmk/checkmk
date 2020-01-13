@@ -23,6 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 import * as node_visualization_utils from "node_visualization_utils"
+import * as node_visualization_viewport_utils from "node_visualization_viewport_utils"
+
 import * as node_visualization_datasources from "node_visualization_datasources"
 import * as node_visualization_viewport_layers from "node_visualization_viewport_layers"
 import * as node_visualization_layouting from "node_visualization_layouting"
@@ -31,11 +33,10 @@ import * as d3 from "d3"
 
 // The main viewport
 export class Viewport {
-    constructor(main_instance) {
+    constructor(main_instance, selection) {
         this.main_instance = main_instance;
-        this.selection = this.main_instance.get_div_selection().append("div")
-                                  .attr("id", "viewport")
-                                  .classed("viewport", true);
+        selection.attr("id", "viewport")
+        this.selection = selection
 
         this._viewport_plugins = {}
         this.current_viewport = null
@@ -79,25 +80,6 @@ export class Viewport {
 }
 
 
-export class AbstractViewportPlugin {
-    static id() {
-        return "abstract_viewport_plugin"
-    }
-
-    constructor(master_viewport) {
-        this._master_viewport = master_viewport
-        this.main_instance = this._master_viewport.main_instance
-    }
-
-    setup(into_selection) {}
-
-    feed_data(json_data) {}
-
-    get_current_datasource() {
-        return this._master_viewport.get_current_datasource()
-    }
-}
-
 
 //#.
 //#   .-Layered Viewport---------------------------------------------------.
@@ -114,8 +96,8 @@ export class AbstractViewportPlugin {
 //#   |              \_/  |_|\___| \_/\_/ | .__/ \___/|_|   \__|           |
 //#   |                                   |_|                              |
 //#   +--------------------------------------------------------------------+
-class LayeredViewportPlugin extends AbstractViewportPlugin {
-    id() {
+class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractViewportPlugin {
+    static id() {
         return "layered_viewport"
     }
 
@@ -221,11 +203,20 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
     }
 
     update_active_overlays() {
+        let initial_overlays_config = this.main_instance.get_initial_overlays_config()
+
         let overlay_config = this.layout_manager.get_overlay_config()
         let active_overlays = {}
+
+        for (let idx in initial_overlays_config) {
+            let overlay = initial_overlays_config[idx]
+            if (overlay && overlay.active == true)
+                active_overlays[idx] = true
+        }
+
         for (let idx in overlay_config) {
             let overlay = overlay_config[idx]
-            if (overlay.active == true)
+            if (overlay && overlay.active == true)
                 active_overlays[idx] = true
         }
 
@@ -332,6 +323,7 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         this.update_layers()
         this.layout_manager.layout_applier.apply_multiple_layouts(this.get_hierarchy_list(),  this._chunks_changed || this.always_update_layout)
         this.layout_manager.compute_node_positions()
+        this.update_active_overlays()
     }
 
     _consume_chunk_rawdata(chunk_rawdata) {

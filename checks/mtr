@@ -73,6 +73,16 @@ def inventory_mtr(parsed):
         yield host, {}
 
 
+def _transform_mtr_params(p):
+    if "avg" in p:
+        p["rta"] = p.pop("avg")
+    if "stddev" in p:
+        p["rtstddev"] = p.pop("stddev")
+    if "loss" in p:
+        p["pl"] = p.pop("loss")
+    return p
+
+
 def check_mtr(item, params, parsed):
     hostinfo = parsed.get(item)
     if not hostinfo:
@@ -81,6 +91,8 @@ def check_mtr(item, params, parsed):
     if hostinfo["hopcount"] == 0:
         yield 3, "Insufficient data: No hop information available"
         return
+
+    params = _transform_mtr_params(params)
 
     hopnames = []
     perfdata = []
@@ -106,17 +118,18 @@ def check_mtr(item, params, parsed):
         pl = float(hop['pl'])
         #        snt    = float(hop['snt'])
         #        perfdata.append( ( 'hop_%d_snt' % idx, snt, "", "", "", "" ) )  # packets sent
-        perfdata.append(('hop_%d_rta' % idx, rta / 1000.0, rta_warn and rta_warn / 1000.0),
-                        rta_crit and rta_crit / 1000.0)
+        perfdata.append(('hop_%d_rta' % idx, rta / 1000.0, rta_warn and
+                         rta_warn / 1000.0, rta_crit and rta_crit / 1000.0))
         perfdata.append(('hop_%d_rtmin' % idx, rtmin / 1000.0))
         perfdata.append(('hop_%d_rtmax' % idx, rtmax / 1000.0))
-        perfdata.append( ('hop_%d_rtstddev'      % idx, rtstddev / 1000.0, rtstddev_warn and rtstddev_warn / 1000.0,\
-                                                   rtstddev_crit and rtstddev_crit / 1000) )
-        perfdata.append(('hop_%d_response_time' % idx, response_time / 1000))
+        perfdata.append(('hop_%d_rtstddev' % idx, rtstddev / 1000.0, rtstddev_warn and
+                         rtstddev_warn / 1000.0, rtstddev_crit and rtstddev_crit / 1000.0))
+        perfdata.append(('hop_%d_response_time' % idx, response_time / 1000.0))
         perfdata.append(('hop_%d_pl' % idx, pl, pl_warn, pl_crit))
 
         if apply_levels:  # the params only apply to the last host
             hop_text_entries = []
+            hop_states = []
             for what, unit, value, warn, crit in [
                 ("Packet loss", "%", pl, pl_warn, pl_crit),
                 ("Round trip average", "ms", rta, rta_warn, rta_crit),
@@ -131,10 +144,11 @@ def check_mtr(item, params, parsed):
                 hop_text = "%s %s%s%s" % (what, value, unit,
                                           what_state and state_markers[what_state] or "")
                 if what_state:
-                    hop_text += " (Levels at %d%s/%d%s)" % (warn, unit, crit, unit)
+                    hop_text += " (warn/crit at %d%s/%d%s)" % (warn, unit, crit, unit)
                 hop_text_entries.append(hop_text)
+                hop_states.append(what_state)
 
-            return what_state, ", ".join(hop_text_entries), perfdata
+            return max(hop_states), ", ".join(hop_text_entries), perfdata
         return None, None, perfdata
 
     hc = int(hostinfo['hopcount'])

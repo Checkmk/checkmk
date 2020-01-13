@@ -2,7 +2,7 @@
 
 We welcome contributions to [Checkmk on Github](https://github.com/tribe29/checkmk).
 
-Most contributions to Checkmk are small bugfixes, enhancements of existing
+Most contributions to Checkmk are small bug-fixes, enhancements of existing
 features, or completely new plugins. The guidelines below address these types
 of contributions.
 
@@ -83,6 +83,43 @@ To set up the development environment do the following:
   If you like to do this, please have a look at the [How to execute tests?](#how-to-execute-tests)
   chapter.
 
+- Install pre-commit checks
+
+  In order to keep your commits to our standard we provide a [pre-commit](https://pre-commit.com/)
+  configuration and some custom made checking scripts. You can install it like this:
+
+  > Warning: Python3 is required for pre-commit! Installing it with Python 2 will break
+  > your environment and leave you unable to use pip due to a backports module clash!
+
+  ```
+  pip3 install pre-commit
+  ```
+
+  After successful installation, hook it up to your git-repository by issuing the following command inside your git repository:
+
+  ```
+  pre-commit install --allow-missing-config
+  ```
+  The `--allow-missing-config` parameter is needed so that branches of older versions of Checkmk which don't
+  support this feature and are missing the configuration file won't throw errors.
+
+  Afterwards your commits will automatically be checked for conformity by `pre-commit`. If you know a
+  check (like mypy for example) got something wrong and you don't want to fix it right away you can skip
+  execution of the checkers with `git commit -n`. Please don't push unchecked changes as this will
+  introduce delays and additional work.
+
+  Additional helpers can be found in `scripts/`. One noteable one is `scripts/check-current-commit`
+  which checks your commit *after* it has been made. You can then fix errors and amend or squash
+  your commit. You can also use this script in a rebase like such:
+
+  ```
+  git rebase --exec scripts/check-current-commit
+  ```
+
+  This will rebase your current changes and check each commit for errors. After fixing them you can
+  then continue rebasing.
+
+
 Once done, you are ready for the next chapter.
 
 ## How to change Checkmk?
@@ -113,7 +150,7 @@ Now start developing and create one or multiple commits.
 **Important**: Do one thing in one commit, e.g. don't mix code reorganization and
 changes of the moved lines. Separate this in two commits.
 
-Make sure that you commit in logical blocks and write [good commit messages](#commit-messages).
+Make sure that you commit in logical blocks and write [good commit messages](#style-guide-commit-messages).
 
 If you have finished your work, it's a good time to [execute the tests locally](#how-to-execute-tests)
 to ensure you did not break anything.
@@ -207,11 +244,11 @@ don't need to execute the formatting test at all.
 You could also push your changed to your forked repository and wait for Travis
 to execute the tests for you, but that takes several minutes for each try.
 
-## Styleguide: Guidelines for coding check plug-ins
+## Style guide: Guidelines for coding check plug-ins
 
 Respect the [Guidelines for coding check plug-ins](https://checkmk.com/cms_dev_guidelines.html).
 
-## Styleguide: Commit messages
+## Style guide: Commit messages
 
 - Use the present tense ("Add feature" not "Added feature")
 - Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
@@ -219,7 +256,7 @@ Respect the [Guidelines for coding check plug-ins](https://checkmk.com/cms_dev_g
 - Reference issues and pull requests liberally after the first line
 - Write [good commit messages](https://chris.beams.io/posts/git-commit/)
 
-## Styleguide: Python
+## Style guide: Python
 
 The guidelines listed here are binding for the development at Checkmk in
 Python.
@@ -241,7 +278,7 @@ the language to use.
 Only rely on non-standard modules that are mentioned in the `Pipfile`.
 <!--- TODO: How to add new modules? -->
 
-### Agent plugins: Supported python versions
+### Agent plugins: Supported Python versions
 
 The agent plugins need to be executed on older Linux systems which may
 have very old Python versions available. For this reason we need to use
@@ -279,9 +316,9 @@ names are really available and needed in the current namespace.
             sys.exit(1)
         return open(file).readline()
     ```
-    
+
     vs.
-    
+
     ```
     def get_status(file):
         try:
@@ -293,26 +330,26 @@ names are really available and needed in the current namespace.
 
 - Be as specific as possible when catching exceptions
 - Keep try-blocks as small as possible
-- Don't use `except:` (Slighlty better for special cases: `except Exception`)
+- Don't use `except:` (Slightly better for special cases: `except Exception`)
 
 ### Paths and files
 
-- Use `pathlib2` / `pathlib` (in python 3). To be more future-proof, import like this:
+- Use `pathlib2` / `pathlib` (in Python 3). To be more future-proof, import like this:
 
   ```
   from pathlib2 import Path
   ```
 
-- Use `with` to open files
+- Use context-managers (the `with` keyword) to open files.
 - You are welcome to refactor old style file IO to pathlib (with tests :-))
 
-### String formating
+### String formatting
 
 - Use classic format strings (`%s`) for the time being. We'll move over to the
   new `format()` syntax in the future, but for the moment we'd like to stay
   consistent.
 
-### Subprocesses
+### Sub processes
 
 - Use mechanisms that are natively available in Python instead of
   subprocess/command line tools. Example: Don't use `tar` command line tools.
@@ -349,8 +386,8 @@ names are really available and needed in the current namespace.
 
 ### Comments
 
-- Document the non-obvious. Don't document the how, do document the why
-- Use doc strings for classes and methods.
+- Document the non-obvious. Don't document the how, do document the why.
+- Use doc-strings for classes and methods.
 
 ### Code structuring
 
@@ -376,8 +413,8 @@ names are really available and needed in the current namespace.
       in disguise, so we should not use them like that.
     - A `class` with mypy type annotations: This is the optimum.  Now we're
       talking OO and mypy can help us tremendously during e.g. refactorings.
-- Don't use global variables except you have to
-- Don't assign variables to function namespace
+- Don't use global variables unless you have to and can do so thread-safe.
+- Don't assign attributes to function objects.
 - Use `abc` for specifying abstract classes, methods and properties and add
   `raise NotImplementedError()` in abstract methods and properties)
 - Make class attributes explicit in the constructor or helper functions (Don't
@@ -387,7 +424,7 @@ names are really available and needed in the current namespace.
   access make use of `@property`
 - Use `@staticmethod` and `@classmethod` decorators for methods without
   references to `cls` or `self`
-- Use early exits in your functions
+- Use early exits in your functions.
 
 ### Module: cmk
 * The entire Python code of Checkmk should be under the main module `cmk` in
@@ -409,10 +446,14 @@ names are really available and needed in the current namespace.
 * For the CME/CEE there is a module hierarchy under `cmk/cee` or `cmk/cme`.
   The same rules apply as for `cmk` itself.
 
+### Code formatting
 
-### Code format
-
-- We use YAPF for automatic formatting of our python code. Have a look [below](#automatic-formatting) for further information.
+- We supply an `.editorconfig` file, which is used to automatically configure
+  your editor to adhere to the most basic formatting style, like indents or
+  line-lengths. If your editor doesn't already come with Editorconfig support,
+  install [one of the available plugins](https://editorconfig.org/#download).
+- We use YAPF for automatic formatting of the Python code.
+  Have a look [below](#automatic-formatting) for further information.
 - Multi line imports: Use braces instead of continuation character
 
     ```
@@ -420,9 +461,9 @@ names are really available and needed in the current namespace.
         mercedes, \
         audi
     ```
-    
+
     vs.
-    
+
     ```
     from germany import (
         bmw,
@@ -435,10 +476,10 @@ names are really available and needed in the current namespace.
 
 The style definition file, `.style.yapf`, lives in the root directory of the
 project repository, where YAPF picks it up automatically. YAPF itself lives in
-a virtualenv managed by pipenv in `check_mk/.venv`, you can run it with
-`make format-python` or pipenv run yapf`.
+a virtualenv managed by pipenv in `check_mk/virtual-envs/2.7/.venv`, you can run it with
+`make format-python` or `scripts/run-pipenv run yapf`.
 
-#### Manual invocation: Single file ===
+#### Manual invocation: Single file
 
 ```
 yapf -i [the_file.py]
@@ -446,7 +487,7 @@ yapf -i [the_file.py]
 
 #### Manual invocation: Whole code base
 
-If you want to format all python files in the repository, you can run:
+If you want to format all Python files in the repository, you can run:
 
 ```
 make format-python
@@ -460,14 +501,14 @@ Our CI executes the following formatting test on the whole code base:
 make -C tests test-format-python
 ```
 
-Our review tests jobs prevent unformatted code from being added to the
+Our review tests jobs prevent un-formatted code from being added to the
 repository.
 
 #### Editor integration: *macs
 
 - plugins for vim and emacs with installation instructions can be found here:
   https://github.com/google/yapf/tree/master/plugins
-- in Spacemacs yapfify-buffer is available in the python layer; formatting on
+- in Spacemacs yapfify-buffer is available in the Python layer; formatting on
   save can be enabled by setting ''python-enable-yapf-format-on-save'' to
   ''t''
 - In Emacs with elpy call the function 'elpy-yapf-fix-code'. Because there
@@ -476,9 +517,9 @@ repository.
 
 #### Editor integration: vim
 
-- It is recommended to use yapf as fixer for [ALE](https://github.com/w0rp/ale)
+- It is recommended to use yapf as fixer for [ALE](https://github.com/dense-analysis/ale)
 
-In der `~/vimrc` YAPF als Fixer konfigurieren (fixt nach dem speichern):
+Configure YAPF as fixer in your `~/vimrc`. This way the file gets fixed on every save:
 
 ```
 let g:ale_fixers = {'python': ['isort']}
@@ -489,7 +530,7 @@ let g:ale_fix_on_save = 1
 
 ### Type checking: mypy
 
-Code can be checked manually with `make -C tests/static test-mypy`.
+Code can be checked manually with `make -C tests-py3 test-mypy`.
 
 The configuration file is `mypy.ini` and lives in the root directory of the
 Checkmk repository. For info about how to type hint refer to
@@ -511,8 +552,8 @@ This is where [ALE](https://github.com/w0rp/ale) comes in again. To include mypy
 - Then tell the linter how to run mypy:
 
   ```
-  let g:ale_python_mypy_executable = 'tests/static/run_mypy'
-  let g:ale_python_mypy_options = '--config-file=../../mypy.ini'
+  let g:ale_python_mypy_executable = 'scripts/run-mypy'
+  let g:ale_python_mypy_options = '--config-file=../mypy.ini'
   ```
 
 The mypy-Checker should run with this. With ":ALEInfo" you get information
@@ -539,28 +580,29 @@ about the error diagnosis below, if it doesn't work.
   (eval setq flycheck-python-mypy-executable
              (concat
               (projectile-locate-dominating-file default-directory dir-locals-file)
-              "tests/static/run_mypy"))
+              "scripts/run-mypy"))
   ```
 
 - An example value of the `safe-local-variables` variable is e.g.:
-    
+
   ```
   ((eval setq flycheck-python-mypy-executable
          (concat
           (projectile-locate-dominating-file default-directory dir-locals-file)
-          "tests/static/run_mypy"))
+          "scripts/run-mypy"))
    (py-indent-offset . 4)
    (encoding . utf-8))
   ```
 
 
-## Styleguide: Shell scripts
+## Style guide: Shell scripts
 
 The Linux / Unix agents and several plugins are written in shell code for best
 portability and transparency. In case you want to change something respect the
 following things:
 
 - Bash scripts are written for Bash version 3.1 or newer
+- Set `set -e -o pipefail` at the top of your script
 - Use [shellcheck](https://www.shellcheck.net/) for your changes before
   submitting patches.
 

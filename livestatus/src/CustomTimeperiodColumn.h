@@ -29,6 +29,7 @@
 #include <cstdint>
 #include <string>
 #include <utility>
+#include "Column.h"
 #include "IntColumn.h"
 #include "nagios.h"
 class MonitoringCore;
@@ -37,13 +38,12 @@ class Row;
 class CustomTimeperiodColumn : public IntColumn {
 public:
     CustomTimeperiodColumn(const std::string &name,
-                           const std::string &description, int indirect_offset,
-                           int extra_offset, int extra_extra_offset, int offset,
+                           const std::string &description, Offsets offsets,
                            const MonitoringCore *mc, std::string varname)
-        : IntColumn(name, description, indirect_offset, extra_offset,
-                    extra_extra_offset, offset)
+        : IntColumn(name, description, offsets)
         , _mc(mc)
         , _varname(std::move(varname)) {}
+
     int32_t getValue(Row row, const contact *auth_user) const override;
 
 private:

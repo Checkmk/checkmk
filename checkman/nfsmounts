@@ -19,9 +19,8 @@ description:
  If the NFS mount is "stale", then {stat -f} returns immediately but with
  a size of {-1}. The check detects that and results in a warning state.
 
- Please note, that though this check outputs the current usage of the remote
- filesystem, no levels can be defined for the used space and no performance
- data is output. Please do a check for used space directly on the NFS server.
+ To configure usage levels and whether or not to output metrics use the
+ WATO rule "Network filesystem - overall status and usage (e.g. NFS)"
 
 item:
  The mount point.

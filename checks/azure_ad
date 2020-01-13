@@ -1,0 +1,141 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_azure_ad(info):
+    parsed = {}
+    for line in info:
+        key = line[0]
+        value = _AZURE_AGENT_SEPARATOR.join(line[1:])
+        if key == 'users_count':
+            try:
+                parsed[None] = {'count': int(value)}
+            except ValueError:
+                pass
+        elif key == 'ad_connect':
+            for data in json.loads(value):
+                data['onPremisesLastSyncDateTime_parsed'] = _str_to_seconds(
+                    data['onPremisesLastSyncDateTime'])
+                item = data['displayName']
+                parsed[item] = data
+    return parsed
+
+
+def _str_to_seconds(value):
+    try:
+        return time.mktime(time.strptime(value, '%Y-%m-%dT%H:%M:%SZ'))
+    except (ValueError, TypeError):
+        return None
+
+
+#.
+#   .--user----------------------------------------------------------------.
+#   |                                                                      |
+#   |                         _   _ ___  ___ _ __                          |
+#   |                        | | | / __|/ _ \ '__|                         |
+#   |                        | |_| \__ \  __/ |                            |
+#   |                         \__,_|___/\___|_|                            |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | user accounts                                                        |
+#   '----------------------------------------------------------------------'
+
+
+def discover_ad_users(parsed):
+    if None in parsed:
+        yield None, {}
+
+
+@get_parsed_item_data
+def check_azure_users(item, _no_params, data):
+    count = data.get('count')
+    if count is not None:
+        yield check_levels(
+            count,
+            item,
+            None,
+            unit='User Accounts',
+            human_readable_func=int,
+        )
+
+
+check_info['azure_ad'] = {
+    'parse_function': parse_azure_ad,
+    'inventory_function': discover_ad_users,
+    'check_function': check_azure_users,
+    'service_description': 'AD Users',
+    'includes': ['azure.include'],
+}
+
+#.
+#   .--sync----------------------------------------------------------------.
+#   |                                                                      |
+#   |                        ___ _   _ _ __   ___                          |
+#   |                       / __| | | | '_ \ / __|                         |
+#   |                       \__ \ |_| | | | | (__                          |
+#   |                       |___/\__, |_| |_|\___|                         |
+#   |                            |___/                                     |
+#   +----------------------------------------------------------------------+
+#   | AD Connect sync to on-premise directory                              |
+#   '----------------------------------------------------------------------'
+
+
+def discover_sync(parsed):
+    # Only discover the service if the sync is enabled
+    # There are two keys important for synchronization data
+    # onPremisesSyncEnabled: if the sync is enabled at all
+    # onPremisesLastSyncDateTime: the actual sync data
+    return [(key, {}) for key, data in parsed.iteritems() if key is not None \
+                and data.get('onPremisesSyncEnabled') is not None]
+
+
+@get_parsed_item_data
+def check_azure_sync(item, params, data):
+    sync_enabled = data.get('onPremisesSyncEnabled')
+    if sync_enabled is None:
+        yield 1, 'Synchronization has been disabled'
+        return
+
+    sync_time = data.get('onPremisesLastSyncDateTime_parsed')
+    if sync_time is None:
+        yield 1, 'Has never been synchronized'
+        return
+
+    time_delta = time.time() - sync_time
+    yield check_levels(time_delta,
+                       None,
+                       params.get('age'),
+                       human_readable_func=get_age_human_readable,
+                       infoname='Time since last synchronization')
+
+
+check_info['azure_ad.sync'] = {
+    'parse_function': parse_azure_ad,
+    'inventory_function': discover_sync,
+    'check_function': check_azure_sync,
+    'service_description': 'AD Sync %s',
+    'group': 'azure_ad',
+}

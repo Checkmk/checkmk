@@ -45,6 +45,7 @@ from email.mime.text import MIMEText
 
 from cmk.notification_plugins import utils
 import cmk.utils.site as site
+from cmk.utils.exceptions import MKException
 
 
 def tmpl_head_html(html_section):
@@ -481,7 +482,7 @@ opt_debug = '-d' in sys.argv
 bulk_mode = '--bulk' in sys.argv
 
 
-class GraphException(Exception):
+class GraphException(MKException):
     pass
 
 

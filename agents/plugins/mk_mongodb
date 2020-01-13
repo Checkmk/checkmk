@@ -11,9 +11,7 @@ Important: 1) If MongoDB runs as single instance the agent data is assigned
               replica set name, or use the piggyback translation rule to modify the
               hostname according to your needs.
 """
-from __future__ import with_statement
 import os
-import pprint
 import sys
 import time
 import inspect
@@ -21,6 +19,7 @@ import json
 from collections import defaultdict
 from contextlib import contextmanager
 import pymongo  # pylint: disable=import-error
+from bson.json_util import dumps
 
 MK_VARDIR = os.environ.get("MK_VARDIR")
 
@@ -91,8 +90,9 @@ def section_flushing(server_status):
                      flushing_info.get("ffrom bson.json_util import dumpslushes", "n/a"))
 
 
-def sections_replica(client, server_status):
+def sections_replica(server_status):
     repl_info = server_status.get("repl")
+
     if not repl_info:
         return
     sys.stdout.write("<<<mongodb_replica:sep(9)>>>\n")
@@ -103,9 +103,65 @@ def sections_replica(client, server_status):
     if repl_info.get("arbiters"):
         sys.stdout.write("arbiters\t%s\n" % " ".join(repl_info.get("arbiters")))
 
-    sys.stdout.write("<<<mongodb_replstatus>>>\n")
-    sys.stdout.write(pprint.pformat(client.admin.command("replSetGetStatus")))
-    sys.stdout.write("\n")
+
+def sections_replica_set(client):
+    sys.stdout.write("<<<mongodb_replica_set:sep(9)>>>\n")
+    rep_set_status = client.admin.command("replSetGetStatus")
+    sys.stdout.write("%s\n" % json.dumps(json.loads(dumps(rep_set_status)), separators=(',', ':')))
+
+
+def sections_replication_info(client, databases):
+    """
+
+    :param client:
+    :param databases:
+    :return:
+    """
+    if "oplog.rs" not in databases.get("local", {}).get("collections", {}):
+        # replication not detected
+        return
+
+    sys.stdout.write("<<<mongodb_replication_info:sep(9)>>>\n")
+    result_dict = _get_replication_info(client, databases)
+    sys.stdout.write("%s\n" % json.dumps(result_dict, separators=(',', ':')))
+
+
+def _get_replication_info(client, databases):
+    """
+
+    :param client: mongdb client
+    :return: result
+    """
+    oplog = databases.get("local", {}).get("collstats", {}).get("oplog.rs", {})
+    result = dict()
+
+    # Returns the total size of the oplog in bytes
+    # This refers to the total amount of space allocated to the oplog rather than
+    # the current size of operations stored in the oplog.
+    if "maxSize" in oplog:
+        result["logSizeBytes"] = oplog.get("maxSize")
+    else:
+        return result
+
+    # Returns the total amount of space used by the oplog in bytes.
+    # This refers to the total amount of space currently used by operations stored in the oplog rather than
+    # the total amount of space allocated.
+    result["usedBytes"] = oplog.get("size", 0)
+
+    # Returns a timestamp for the first and last (i.e. earliest/latest) operation in the oplog.
+    # Compare this value to the last write operation issued against the server.
+    # Timestamp is time in seconds since epoch UTC
+    firstc = client.local.oplog.rs.find().sort('{$natural: 1}').limit(1)
+    lastc = client.local.oplog.rs.find().sort('{$natural: -1}').limit(1)
+    if firstc and lastc:
+        timestamp_first_operation = firstc.next().get("ts", None)
+        timestamp_last_operation = lastc.next().get("ts", None)
+        if timestamp_first_operation and timestamp_last_operation:
+            result["tFirst"] = timestamp_first_operation.time
+            result["tLast"] = timestamp_last_operation.time
+
+    result["now"] = int(time.time())
+    return result
 
 
 def section_cluster(client, databases):
@@ -413,20 +469,51 @@ def section_by_keys(section_name, keys, server_status, output_key=False):
             sys.stdout.write(fmt % item)
 
 
-def section_collections(databases):
+def section_collections(client, databases):
     sys.stdout.write("<<<mongodb_collections:sep(9)>>>\n")
-    for dbname, dbdata in databases.items():
-        for collname, colldata in dbdata.get("collstats", {}).items():
-            for key, value in colldata.items():
-                # sort irrelevant data
-                if key.startswith("$") or key in [
-                        "indexDetails", "wiredTiger", "indexSizes", "operationTime"
-                ]:
-                    continue
-                if isinstance(value, dict):
-                    key += "Count"
-                    value = len(value)
-                sys.stdout.write("%s\t%s\t%s\t%s\n" % (dbname, collname, key, value))
+    database_collection = databases.copy()
+    indexes_dict = _get_indexes_information(client, databases)
+
+    for database_name in database_collection:
+        database = database_collection.get(database_name)
+
+        # remove stats section
+        _remove_keys(database, ["stats"])
+
+        # clean up collections data
+        for collection_name in database.get("collstats", {}):
+            collection = database.get("collstats").get(collection_name)
+            # remove irrelevant data
+            _remove_keys(collection, [
+                "indexDetails", "wiredTiger", "operationTime", "lastCommittedOpTime", "$gleStats",
+                "$configServerState", "$clusterTime", "shards"
+            ])
+            collection["indexStats"] = indexes_dict.get(database_name,
+                                                        {}).get(collection_name,
+                                                                {}).get("indexStats", {})
+
+    sys.stdout.write("%s\n" %
+                     json.dumps(json.loads(dumps(database_collection)), separators=(',', ':')))
+    database_collection.clear()
+
+
+def _get_indexes_information(client, databases):
+    """
+    get all documents from shards collection
+    :param client: mongodb client
+    :return: dictionary with shards information
+    """
+    indexes_def_dict = lambda: defaultdict(indexes_def_dict)
+    indexes_dict = indexes_def_dict()
+    for database_name in databases:
+        database = databases.get(database_name)
+        for collection_name in database.get("collections", []):
+            indexes_dict[database_name][collection_name]["indexStats"] = client[database_name][
+                collection_name].aggregate([{
+                    "$indexStats": {}
+                }])
+
+    return indexes_dict
 
 
 def get_timestamp(text):
@@ -510,6 +597,11 @@ def main():
     section_instance(server_status)
     repl_info = server_status.get("repl")
     if repl_info and not repl_info.get("ismaster"):
+        # this is a special case: replica set without master
+        # this is detected here
+        if "primary" in repl_info and not repl_info.get("primary"):
+            sys.stdout.write("<<<mongodb_replica:sep(9)>>>\n")
+            sys.stdout.write("primary\tn/a\n")
         return
 
     with piggyback(repl_info):
@@ -517,7 +609,8 @@ def main():
 
 
 def potentially_piggybacked_sections(client, server_status):
-    sections_replica(client, server_status)
+    sections_replica(server_status)
+    sections_replica_set(client)
     section_by_keys("asserts", ("asserts",), server_status)
     section_by_keys("connections", ("connections",), server_status)
     databases = get_database_info(client)
@@ -525,8 +618,9 @@ def potentially_piggybacked_sections(client, server_status):
     section_flushing(server_status)
     section_by_keys("mem", ("mem", "extra_info"), server_status)
     section_by_keys("counters", ("opcounters", "opcountersRepl"), server_status, output_key=True)
-    section_collections(databases)
+    section_collections(client, databases)
     section_cluster(client, databases)
+    sections_replication_info(client, databases)
     section_logwatch(client)
 
 

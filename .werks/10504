@@ -1,0 +1,11 @@
+Title: mk_oracle: Fixed invalid line "elapsed-time" in Oracle instance section if a SQL error occurs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1575291359
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+

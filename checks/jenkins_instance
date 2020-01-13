@@ -53,15 +53,15 @@ def inventory_jenkins_instance(parsed):
     yield None, {}
 
 
-factory_settings["jenkins_instance_default_levels"] = {'mode': 'NORMAL'}
-
-
-def check_jenkins_instance(no_item, params, parsed):
+def check_jenkins_instance(_no_item, _no_params, parsed):
     if not parsed:
         return
 
-    for key, value, infotext in [("mode", params["mode"], "Mode"),
-                                 ("quietingDown", False, "Quieting Down"),
+    inst_desc = parsed.get("nodeDescription")
+    if inst_desc is not None:
+        yield 0, "Description: %s" % inst_desc.title()
+
+    for key, value, infotext in [("quietingDown", False, "Quieting Down"),
                                  ("useSecurity", True, "Security used")]:
 
         state = 0
@@ -79,7 +79,5 @@ check_info["jenkins_instance"] = {
     "parse_function": parse_jenkins_instance,
     "check_function": check_jenkins_instance,
     "inventory_function": inventory_jenkins_instance,
-    "default_levels_variable": "jenkins_instance_default_levels",
     "service_description": "Jenkins Instance",
-    "group": "jenkins_instance",
 }

@@ -22,9 +22,6 @@
     <Filter Include="lwa">
       <UniqueIdentifier>{96efc889-0a49-4c63-a0bd-5010caf93b62}</UniqueIdentifier>
     </Filter>
-    <Filter Include="scripts">
-      <UniqueIdentifier>{897997e0-20c6-487c-97ea-3336f5d105c4}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -216,13 +213,19 @@
     <ClInclude Include="on_start.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\object_repo.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="cfg_engine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="firewall.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\common\cma_yml.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cfg_engine.h">
+    <ClInclude Include="..\common\object_repo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\wtools_user_control.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -443,6 +446,15 @@
     <ClCompile Include="commander.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="firewall.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\wtools_runas.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\wtools_user_control.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\common\object_repo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -451,6 +463,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="unpack_packs.cmd">
+      <Filter>Source Files</Filter>
+    </None>
     <None Include="..\..\test_files\config\check_mk.example.ini">
       <Filter>data</Filter>
     </None>
@@ -465,9 +480,6 @@
     </None>
     <None Include="..\..\test_files\config\check_mk_dev_unit_testing.yml">
       <Filter>data</Filter>
-    </None>
-    <None Include="unpack_packs.cmd">
-      <Filter>scripts</Filter>
     </None>
   </ItemGroup>
 </Project>

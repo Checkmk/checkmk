@@ -28,6 +28,41 @@ Boston, MA 02110-1301 USA.
 /* Styles for Check_MK mobile interface */
 
 body.mobile {
+    h3 {
+        color: #2f3e46,
+    }
+
+    /* OK/UP */
+    /* TODO: Replace class "odd0" with "odd state0" */
+    .state0, .hstate0, .state0 a, .hstate0 a {
+        background-color: rgb(19, 211, 137);
+    }
+
+    /* WARN */
+    .state1, .even1 .state1, .state1 a, tr.groupheader td.state1 {
+        background-color: rgb(255, 215, 3);
+    }
+
+    /* CRIT/DOWN */
+    .state2, .even0 .state2, .even2 .state2, .hstate1, .state2 a, .hstate2 a {
+        background-color: rgb(232, 85, 85);
+    }
+
+    /* UNKNOWN / UNREACH */
+    .state3, .hstate2, .state3 a, .hstate2 a {
+        background-color: rgb(255, 179, 0);
+    }
+
+    /* PENDING */
+    .statep, .hstatep, .statep a, .hstatep a {
+        background-color: #888;
+    }
+
+    /* in DOWNTIME */
+    .stated, .hstated, .stated a, .hstated a {
+        background-color: #48cbf0;
+    }
+
     div.really,
     div.success,
     div.error,
@@ -227,4 +262,17 @@ body.mobile {
         margin: 0px;
     }
 
+    input.button {
+        background-color: transparent;
+        border-color: transparent;
+    }
+
+    input[type=checkbox]+label:before {
+        display: none;
+    }
+
+    input[type=password], input[type=text] {
+        height: 36.7812px;
+        padding: 6.4px;
+    }
 }

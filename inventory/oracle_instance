@@ -29,26 +29,57 @@
 # last entry: db creation time 'ddmmyyyyhh24mi'
 
 
+def _parse_raw_db_creation_time(raw_db_creation_time):
+    if raw_db_creation_time is None:
+        return None
+
+    # We just translate the format to another
+    # "%d%m%Y%H%M%S" => "%Y-%m-%d %H:%M"
+    # we cannot use time because we have no information about the timezone here.
+    try:
+        year = int(raw_db_creation_time[4:8])
+        month = int(raw_db_creation_time[2:4])
+        day = int(raw_db_creation_time[:2])
+        hours = int(raw_db_creation_time[8:10])
+        minutes = int(raw_db_creation_time[10:])
+    except (IndexError, ValueError):
+        return None
+    return "%s-%02d-%02d %02d:%02d" % (year, month, day, hours, minutes)
+
+
 def inv_oracle_instance(info, inventory_tree, status_data_tree):
     path = "software.applications.oracle.instance:"
     inv_node = inventory_tree.get_list(path)
     status_node = status_data_tree.get_list(path)
     for line in info:
-        db_creation_time = None
+        raw_db_creation_time = None
+        raw_up_seconds = None
+        logmode = None
+
         if len(line) == 6:
             sid, version, openmode, logins, _unused, _unused2 = line
-            logmode = None
-            up_seconds = None
 
-        elif len(line) >= 11:
-            sid, version, openmode, logins, _archiver, up_seconds_str, _dbid, \
-                logmode, _database_role, _force_logging, _name = line[:11]
-            up_seconds = int(up_seconds_str)
-            if len(line) > 11:
-                db_creation_time = time.mktime(time.strptime(line[11], "%d%m%Y%H%M%S"))
+        elif len(line) == 11:
+            sid, version, openmode, logins, _archiver, raw_up_seconds, _dbid, \
+                logmode, _database_role, _force_logging, _name = line
+
+        elif len(line) == 12:
+            sid, version, openmode, logins, _archiver, raw_up_seconds, _dbid, \
+                logmode, _database_role, _force_logging, _name, raw_db_creation_time = line
+
+        elif len(line) == 22:
+            sid, version, openmode, logins, _archiver, raw_up_seconds, _dbid, \
+                logmode, _database_role, _force_logging, _name, raw_db_creation_time, _pluggable, \
+                _con_id, _pname, _pdbid, _popenmode, _prestricted, _ptotal_size, _precovery_status, \
+                _pup_seconds, _pblock_size = line
 
         else:
             continue
+
+        try:
+            up_seconds = int(raw_up_seconds)
+        except (TypeError, ValueError):
+            up_seconds = None
 
         inv_node.append({
             "sid": sid,
@@ -56,7 +87,7 @@ def inv_oracle_instance(info, inventory_tree, status_data_tree):
             "openmode": openmode,
             "logmode": logmode,
             "logins": logins,
-            "db_creation_time": db_creation_time,
+            "db_creation_time": _parse_raw_db_creation_time(raw_db_creation_time),
         })
 
         status_node.append({

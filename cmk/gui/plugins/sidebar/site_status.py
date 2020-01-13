@@ -126,7 +126,9 @@ class SiteStatus(SidebarSnapin):
                 if sitename not in config.sitenames():
                     continue
 
-                d = config.user.siteconf.get(sitename, {})
-                d["disabled"] = onoff != "on"
-                config.user.siteconf[sitename] = d
+                if onoff == "on":
+                    config.user.enable_site(sitename)
+                else:
+                    config.user.disable_site(sitename)
+
             config.user.save_site_config()

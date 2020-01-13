@@ -437,10 +437,10 @@ class BackgroundJob(object):
 
     def start(self):
         try:
-            cmk.utils.store.aquire_lock(self._job_initializiation_lock)
+            store.aquire_lock(self._job_initializiation_lock)
             self._start()
         finally:
-            cmk.utils.store.release_lock(self._job_initializiation_lock)
+            store.release_lock(self._job_initializiation_lock)
 
     def _start(self):
         if self.is_active():
@@ -527,14 +527,14 @@ class JobStatus(object):
             try:
                 # Read this data with an explicit lock
                 # This prevents a race condition where an empty jobstatus.mk file is read
-                data = store.load_data_from_file(str(self._jobstatus_path), default={}, lock=True)
+                data = store.load_object_from_file(str(self._jobstatus_path), default={}, lock=True)
 
                 # Repair broken/invalid files
                 if "state" not in data:
                     data["state"] = "initialized"
                     data["started"] = time.time()
             finally:
-                cmk.utils.store.release_lock(str(self._jobstatus_path))
+                store.release_lock(str(self._jobstatus_path))
 
         data.setdefault("pid", None)
         data["loginfo"] = {}
@@ -565,7 +565,7 @@ class JobStatus(object):
 
         if params:
             try:
-                status = store.load_data_from_file(str(self._jobstatus_path), {}, lock=True)
+                status = store.load_object_from_file(str(self._jobstatus_path), {}, lock=True)
                 status.update(params)
                 store.save_mk_file(str(self._jobstatus_path), self._format_value(status))
             finally:

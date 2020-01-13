@@ -27,14 +27,14 @@
 import sys
 import StringIO
 import traceback
-from typing import NamedTuple
+from typing import Callable, Dict, List, NamedTuple  # pylint: disable=unused-import
 
 import cmk.gui.config as config
 import cmk.gui.i18n
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
-hooks = {}
+hooks = {}  # type: Dict[str, List[Hook]]
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
@@ -74,7 +74,7 @@ def register_from_plugin(name, func):
     register(name, func, is_builtin=False)
 
 
-Hook = NamedTuple("Hook", [("handler", type(lambda: None)), ("is_builtin", bool)])
+Hook = NamedTuple("Hook", [("handler", Callable), ("is_builtin", bool)])
 
 
 # Kept public for compatibility with pre 1.6 plugins (is_builtin needs to be optional for pre 1.6)

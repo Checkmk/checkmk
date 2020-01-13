@@ -30,6 +30,7 @@ import time
 
 import cmk
 import cmk.utils.store as store
+from cmk.utils.encoding import convert_to_unicode
 
 import cmk.gui.view_utils
 import cmk.gui.wato.user_profile
@@ -77,6 +78,7 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.watolib.notifications import (
     save_notification_rules,
     load_notification_rules,
+    load_user_notification_rules,
 )
 
 
@@ -372,7 +374,6 @@ class NotificationsMode(EventsMode):
                             isopen=False,
                             title=title,
                             indent=False,
-                            tree_img="tree_black",
                         )
                         html.write(vs_match_conditions.value_to_text(rule))
                         html.end_foldable_container()
@@ -566,7 +567,10 @@ class ModeNotifications(NotificationsMode):
         if not self._show_backlog:
             return
 
-        backlog = store.load_data_from_file(cmk.utils.paths.var_dir + "/notify/backlog.mk", [])
+        backlog = store.load_object_from_file(
+            cmk.utils.paths.var_dir + "/notify/backlog.mk",
+            default=[],
+        )
         if not backlog:
             return
 
@@ -661,14 +665,7 @@ class ModeNotifications(NotificationsMode):
         # Convert all values to unicode
         for key, value in context.iteritems():
             if isinstance(value, str):
-                try:
-                    value_unicode = value.decode("utf-8")
-                except UnicodeDecodeError:
-                    try:
-                        value_unicode = value.decode("latin-1")
-                    except UnicodeDecodeError:
-                        value_unicode = u"(Invalid byte sequence)"
-                context[key] = value_unicode
+                context[key] = convert_to_unicode(value, on_error=u"(Invalid byte sequence)")
 
     # TODO: Refactor this
     def _show_rules(self):
@@ -685,19 +682,17 @@ class ModeNotifications(NotificationsMode):
         start_nr += len(rules)
 
         if self._show_user_rules:
-            users = userdb.load_users()
-            userids = sorted(users.keys())
-            for userid in userids:
-                user = users[userid]
-                user_rules = user.get("notification_rules", [])
-                if user_rules:
-                    self._render_notification_rules(user_rules,
-                                                    userid,
-                                                    show_title=True,
-                                                    show_buttons=False,
-                                                    analyse=analyse,
-                                                    start_nr=start_nr)
-                    start_nr += len(user_rules)
+            for user_id, user_rules in sorted(load_user_notification_rules().iteritems(),
+                                              key=lambda u: u[0]):
+                self._render_notification_rules(
+                    user_rules,
+                    user_id,
+                    show_title=True,
+                    show_buttons=False,
+                    analyse=analyse,
+                    start_nr=start_nr,
+                )
+                start_nr += len(user_rules)
 
         if analyse:
             with table_element(table_id="plugins", title=_("Resulting notifications")) as table:

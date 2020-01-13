@@ -1,0 +1,15 @@
+Title: mk_oracle: removed ts_quotas from plugin output
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1576149701
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+The SQL for ts_quotas has beend added and enabled a long time ago but checkcode
+is still missing. The SQL need a redesign before a check code be added. Due to
+the problem with the SQL and missing checkcode the Section is removed from
+ASYNC_SECTIONS and will not be executed anymore.
+It will be fixed and reenabled at a later time.

@@ -26,15 +26,6 @@
 
 import imaplib, sys, email, email.header, re, getopt
 
-
-class MKImapError(Exception):
-    def __init__(self, reason):
-        self.reason = reason
-
-    def __str__(self):
-        return "Error accessing IMAP folder: " + str(self.reason) + "\n"
-
-
 state_names = {
     0: "OK",
     1: "WARN",

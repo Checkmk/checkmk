@@ -52,8 +52,6 @@ cisco_temp_perf_envmon_states = {
 
 
 def inventory_cisco_temp_perf(info):
-    #    for line in info:
-    #        yield cisco_sensor_item(line[0], line[4]), None
     return []
 
 

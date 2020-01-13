@@ -1,0 +1,14 @@
+Title: storeonce_servicesets.capacity: Fixed handling of old format
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1577956069
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+Since werk #6488, the check shows zero used capacity, if the API output
+contains the old format. Result was a WARN state of the service. This has been
+fixed.

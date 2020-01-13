@@ -75,7 +75,6 @@ def _parameter_valuespec_timesyncd_time():
                   ("last_synchronized",
                    Tuple(
                        title=_("Allowed duration since last synchronisation"),
-                       help=_(""),
                        elements=[
                            Age(
                                title=_("Warning at"),

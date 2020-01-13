@@ -1,11 +1,13 @@
-FROM nexus.lan.tribe29.com:4000/sles-12sp3-base
+ARG DOCKER_REGISTRY
+FROM ${DOCKER_REGISTRY}/sles-12sp3-base
 
 SHELL ["/bin/bash", "-c"]
 
+ARG ARTIFACT_STORAGE
 ARG PACKAGES
 
-RUN zypper addrepo -G http://nexus:8081/repository/sles12sp3 sles12sp3 \
-    && zypper addrepo -G http://nexus:8081/repository/sles12spx-web-scripting web-scripting \
+RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp3 sles12sp3 \
+    && zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12spx-web-scripting web-scripting \
     && zypper -n --no-gpg-checks in --replacefiles \
     curl \
     cyrus-sasl-devel \
@@ -22,11 +24,15 @@ RUN zypper addrepo -G http://nexus:8081/repository/sles12sp3 sles12sp3 \
     python-openssl \
     python-xml \
     rrdtool-devel \
-    sudo
+    sudo \
+    && zypper clean -a
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
     && python get-pip.py
 RUN pip install --upgrade setuptools \
-    && pip install git+https://github.com/svenpanne/pipenv.git@41f30d7ac848fdfe3eb548ddd19b731bfa8c331a \
+    && pip install git+https://github.com/pypa/pipenv.git@2549656dc09e132d8ba2fa6327c939f5f9a951b7 \
     && zypper -n --no-gpg-checks in --replacefiles \
     $PACKAGES \
     && zypper clean -a
+
+ARG VERS_TAG
+RUN echo $VERS_TAG > /version.txt

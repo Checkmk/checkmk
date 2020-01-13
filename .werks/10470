@@ -1,0 +1,13 @@
+Title: New plugin: Cache performance of Couchbase buckets
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1572640827
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+A new plugin is introduced monitoring the Couchbase buckets' cache performance.
+Please configure the Couchbase special agent to discover these services.
+

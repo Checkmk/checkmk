@@ -1,0 +1,43 @@
+Title: Windows plugins and local checks can be called using non-system account
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1578559822
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 1.7.0i1
+
+Previously the plugins and local check were always called using <i>Windows 
+System account</i>. Such approach could restrict access to some resources, 
+for example, network shares. Now this problem has been resolved.
+
+The new ruleset in Bakery <tt>Run plugins and local checks using non-system 
+account</tt> gives the possibility to run any Windows script using a given 
+user account. 
+
+There are two modes of the rule: 
+
+<i>group mode</i>, in this case Windows Agent provides its own internal 
+user in the requested group to run a script.
+
+<i>user mode</i>, in this case the credentials for the given user account 
+must be fully specified. 
+
+The <i>group mode</i> is more secure, because no credentials need to be 
+stored anywhere, except in the agent internally. When using the 
+<i>user mode</i>, the provided credentials are stored on all Checkmk 
+servers to which the configuration is applied. Also, the credentials will 
+be baked into the distributed to target systems agent bakery 
+packages(MSI files).
+
+The same functionality in Raw Edition can be achieved using Agent configuration 
+file. 
+
+To set <i>group mode</i>  for desired plugin pattern you should assign 
+the name of the local group to the key <tt>group</tt>. To set <i>user mode</i> 
+for desired plugin pattern you should assign string with user name and password 
+separated with one space to the key <tt>user</tt>. Detailed example you may found 
+in the provided configuration file.
+
+We highly recommend using the <i>group mode</i> whenever possible.

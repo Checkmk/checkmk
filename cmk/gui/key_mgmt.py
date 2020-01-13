@@ -70,7 +70,7 @@ class KeypairStore(object):
         return variables[self._attr]
 
     def save(self, keys):
-        store.mkdir(os.path.dirname(self._path))
+        store.makedirs(os.path.dirname(self._path))
         store.save_mk_file(self._path, "%s.update(%s)" % (self._attr, pprint.pformat(keys)))
 
     def choices(self):

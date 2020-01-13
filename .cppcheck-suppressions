@@ -3,18 +3,14 @@ missingIncludeSystem
 unusedFunction
 useStlAlgorithm
 // The TEST/TEST_F macros from googletest do not contain "override".
-missingOverride:test_*.cc
 missingOverride:test/test_*.cc
+// funny unreadVariable false positives regarding gtest_ar
+unreadVariable:test/test_*.cc
 // We do not care about warnings in our libraries.
-*:*/includes/asio/*
-*:*/includes/googletest/*
-*:*/include/gtest/*
+*:*/includes/*
 *:*/include/re2/*
 // Why on earth do we need this???
-unmatchedSuppression:test_*.cc
 unmatchedSuppression:test/test_*.cc
-unmatchedSuppression:*/includes/asio/*
-unmatchedSuppression:*/includes/googletest/*
-unmatchedSuppression:*/include/gtest/*
+unmatchedSuppression:*/includes/*
 unmatchedSuppression:*/include/re2/*
 unmatchedSuppression

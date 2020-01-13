@@ -28,15 +28,16 @@ import time
 import copy
 import json
 from typing import (  # pylint: disable=unused-import
-    Any, Dict, Optional,
+    Any, Dict, Optional, NamedTuple, Tuple, Text, Type, List, Union,
 )
 import six
+
+from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
 
 import cmk.gui.pages
 import cmk.gui.notify as notify
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
-import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.utils as utils
 from cmk.gui.valuespec import (
@@ -47,6 +48,7 @@ from cmk.gui.valuespec import (
     Checkbox,
     FixedValue,
 )
+from cmk.gui.valuespec import ValueSpec, ValueSpecValidateFunc, DictionaryEntry  # pylint: disable=unused-import
 import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
 from cmk.gui.log import logger
@@ -68,6 +70,7 @@ from cmk.gui.plugins.visuals.utils import (
     visual_type_registry,
     VisualType,
 )
+from cmk.gui.plugins.visuals.utils import VisualContext  # pylint: disable=unused-import
 
 import cmk.gui.plugins.dashboard
 
@@ -77,11 +80,7 @@ if not cmk.is_raw_edition():
 if cmk.is_managed_edition():
     import cmk.gui.cme.plugins.dashboard  # pylint: disable=no-name-in-module
 
-from cmk.gui.plugins.views.utils import (
-    data_source_registry,
-    get_permitted_views,
-    get_all_views,
-)
+from cmk.gui.plugins.views.utils import data_source_registry
 from cmk.gui.plugins.dashboard.utils import (
     builtin_dashboards,
     GROW,
@@ -89,10 +88,18 @@ from cmk.gui.plugins.dashboard.utils import (
     dashlet_types,
     dashlet_registry,
     Dashlet,
+    get_all_dashboards,
+    save_all_dashboards,
+    get_permitted_dashboards,
+    copy_view_into_dashlet,
+)
+from cmk.gui.plugins.dashboard.utils import (  # pylint: disable=unused-import
+    DashletType, DashletTypeName, DashletRefreshInterval, DashletRefreshAction, DashletConfig,
+    DashboardConfig, DashboardName, DashletSize, DashletInputFunc, DashletHandleInputFunc,
+    DashletId,
 )
 
-loaded_with_language = False
-builtin_dashboards_transformed = False
+loaded_with_language = False  # type: Optional[Union[bool, str]]
 
 # These settings might go into the config module, sometime in future,
 # in order to allow the user to customize this.
@@ -136,8 +143,7 @@ class VisualTypeDashboards(VisualType):
         if add_type in ["availability", "graph_collection"]:
             return
 
-        load_dashboards()
-        return [(name, board["title"]) for (name, board) in available_dashboards.items()]
+        return [(name, board["title"]) for (name, board) in get_permitted_dashboards().items()]
 
     def add_visual_handler(self, target_visual_name, add_type, context, parameters):
         if not config.user.may("general.edit_dashboards"):
@@ -174,11 +180,8 @@ class VisualTypeDashboards(VisualType):
             else:
                 raise MKGeneralException(_("Invalid graph type '%s'") % specification[0])
 
-        load_dashboards(lock=True)
-
-        if target_visual_name not in available_dashboards:
-            return
-        dashboard = load_dashboard_with_cloning(target_visual_name)
+        permitted_dashboards = get_permitted_dashboards()
+        dashboard = _load_dashboard_with_cloning(permitted_dashboards, target_visual_name)
 
         dashlet = default_dashlet_definition(add_type)
 
@@ -193,7 +196,7 @@ class VisualTypeDashboards(VisualType):
         if add_type == 'view':
             # save the original context and override the context provided by the view
             context = dashlet['context']
-            load_view_into_dashlet(dashlet,
+            copy_view_into_dashlet(dashlet,
                                    len(dashboard['dashlets']),
                                    view_name,
                                    add_context=context)
@@ -210,11 +213,11 @@ class VisualTypeDashboards(VisualType):
         html.write('OK dashboard.py?name=' + target_visual_name + '&edit=1')
 
     def load_handler(self):
-        load_dashboards()
+        pass
 
     @property
     def permitted_visuals(self):
-        return permitted_dashboards()
+        return get_permitted_dashboards()
 
 
 @permission_section_registry.register
@@ -237,13 +240,13 @@ class PermissionSectionDashboard(PermissionSection):
 # thus must be reinitialized everytime a language-change has
 # been detected.
 def load_plugins(force):
-    global loaded_with_language, dashboards, builtin_dashboards_transformed
+    # type: (bool) -> None
+    global loaded_with_language
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
     # Load plugins for dashboards. Currently these files
     # just may add custom dashboards by adding to builtin_dashboards.
-    builtin_dashboards_transformed = False
     utils.load_web_plugins("dashboard", globals())
 
     _transform_old_dict_based_dashlets()
@@ -252,10 +255,6 @@ def load_plugins(force):
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
     loaded_with_language = cmk.gui.i18n.get_current_language()
-
-    # Clear this structure to prevent users accessing dashboard structures created
-    # by other users, make them see these dashboards
-    dashboards = {}
 
     visuals.declare_visual_permissions('dashboards', _("dashboards"))
 
@@ -274,110 +273,133 @@ def load_plugins(force):
 
 class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
     """Helper to be able to handle pre 1.6 dashlet_type declared dashlets"""
-    _type_name = ""
-    _spec = {}  # type: Dict[str, Any]
+    _type_name = ""  # type: DashletTypeName
+    _spec = {}  # type: DashletConfig
 
     @classmethod
     def type_name(cls):
+        # type: () -> str
         return cls._type_name
 
     @classmethod
     def title(cls):
+        # type: () -> Text
         return cls._spec["title"]
 
     @classmethod
     def description(cls):
+        # type: () -> Text
         return cls._spec["description"]
 
     @classmethod
     def sort_index(cls):
+        # type: () -> int
         return cls._spec["sort_index"]
 
     @classmethod
     def infos(cls):
+        # type: () -> List[str]
         return cls._spec.get("infos", [])
 
     @classmethod
     def single_infos(cls):
+        # type: () -> List[str]
         return cls._spec.get("single_infos", [])
 
     @classmethod
     def is_selectable(cls):
+        # type: () -> bool
         return cls._spec.get("selectable", True)
 
     @classmethod
     def is_resizable(cls):
+        # type: () -> bool
         return cls._spec.get("resizable", True)
 
     @classmethod
     def is_iframe_dashlet(cls):
+        # type: () -> bool
         return "iframe_render" in cls._spec or "iframe_urlfunc" in cls._spec
 
     @classmethod
     def initial_size(cls):
+        # type: () -> DashletSize
         return cls._spec.get("size", Dashlet.minimum_size)
 
     @classmethod
     def vs_parameters(cls):
+        # type: () -> Optional[Union[List[DictionaryEntry], ValueSpec, Tuple[DashletInputFunc, DashletHandleInputFunc]]]
         return cls._spec.get("parameters", None)
 
     @classmethod
     def opt_parameters(cls):
+        # type: () -> Optional[List[DictionaryEntry]]
         """List of optional parameters in case vs_parameters() returns a list"""
         return cls._spec.get("opt_params")
 
     @classmethod
     def validate_parameters_func(cls):
+        # type: () -> Optional[ValueSpecValidateFunc]
         """Optional validation function in case vs_parameters() returns a list"""
         return cls._spec.get("validate_params")
 
     @classmethod
     def initial_refresh_interval(cls):
+        # type: () -> DashletRefreshInterval
         return cls._spec.get("refresh", False)
 
     @classmethod
     def allowed_roles(cls):
+        # type: () -> List[str]
         return cls._spec.get("allowed", config.builtin_role_ids)
 
     @classmethod
     def styles(cls):
+        # type: () -> Optional[str]
         return cls._spec.get("styles")
 
     @classmethod
     def script(cls):
+        # type: () -> Optional[str]
         return cls._spec.get("script")
 
     @classmethod
     def add_url(cls):
+        # type: () -> str
         if "add_urlfunc" in cls._spec:
             return cls._spec["add_urlfunc"]()
         return super(LegacyDashlet, cls).add_url()
 
     def display_title(self):
+        # type: () -> Text
         title_func = self._spec.get("title_func")
         if title_func:
             return title_func(self._dashlet_spec)
         return self.title()
 
     def on_resize(self):
+        # type: () -> Optional[str]
         on_resize_func = self._spec.get("on_resize")
         if on_resize_func:
             return on_resize_func(self._dashlet_id, self._dashlet_spec)
         return None
 
     def on_refresh(self):
+        # type: () -> Optional[str]
         on_refresh_func = self._spec.get("on_refresh")
         if on_refresh_func:
             return on_refresh_func(self._dashlet_id, self._dashlet_spec)
         return None
 
     def update(self):
+        # type: () -> None
         if self.is_iframe_dashlet():
             self._spec['iframe_render'](self._dashlet_id, self._dashlet_spec)
         else:
             self._spec['render'](self._dashlet_id, self._dashlet_spec)
 
     def show(self):
+        # type: () -> None
         if "render" in self._spec:
             self._spec['render'](self._dashlet_id, self._dashlet_spec)
 
@@ -413,6 +435,7 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
 # Convert it to objects to be compatible
 # TODO: Deprecate this one day.
 def _transform_old_dict_based_dashlets():
+    # type: () -> None
     for dashlet_type_id, dashlet_spec in dashlet_types.items():
 
         @dashlet_registry.register
@@ -423,206 +446,25 @@ def _transform_old_dict_based_dashlets():
         _it_is_really_used = LegacyDashletType  # help pylint
 
 
-dashboards = {}  # type: Dict
-available_dashboards = {}  # type: Dict
-
-
-def load_dashboards(lock=False):
-    global dashboards, available_dashboards
-    transform_builtin_dashboards()
-    dashboards = visuals.load('dashboards', builtin_dashboards, lock=lock)
-    transform_dashboards(dashboards)
-    available_dashboards = visuals.available('dashboards', dashboards)
-
-
-# During implementation of the dashboard editor and recode of the visuals
-# we had serveral different data structures, for example one where the
-# views in user dashlets were stored with a context_type instead of the
-# "single_info" key, which is the currently correct one.
-#
-# This code transforms views from user_dashboards.mk which have been
-# migrated/created with daily snapshots from 2014-08 till beginning 2014-10.
-# FIXME: Can be removed one day. Mark as incompatible change or similar.
-def transform_dashboards(boards):
-    for dashboard in boards.itervalues():
-        visuals.transform_old_visual(dashboard)
-
-        # Also transform dashlets
-        for dashlet in dashboard['dashlets']:
-            visuals.transform_old_visual(dashlet)
-
-            if dashlet['type'] == 'pnpgraph':
-                if 'service' not in dashlet['single_infos']:
-                    dashlet['single_infos'].append('service')
-                if 'host' not in dashlet['single_infos']:
-                    dashlet['single_infos'].append('host')
-
-
-# be compatible to old definitions, where even internal dashlets were
-# referenced by url, e.g. dashboard['url'] = 'hoststats.py'
-# FIXME: can be removed one day. Mark as incompatible change or similar.
-def transform_builtin_dashboards():
-    global builtin_dashboards_transformed
-    if builtin_dashboards_transformed:
-        return  # Only do this once
-    for name, dashboard in builtin_dashboards.items():
-        # Do not transform dashboards which are already in the new format
-        if 'context' in dashboard:
-            continue
-
-        # Transform the dashlets
-        for nr, dashlet in enumerate(dashboard['dashlets']):
-            dashlet.setdefault('show_title', True)
-
-            if dashlet.get('url', '').startswith('dashlet_hoststats') or \
-                dashlet.get('url', '').startswith('dashlet_servicestats'):
-
-                # hoststats and servicestats
-                dashlet['type'] = dashlet['url'][8:].split('.', 1)[0]
-
-                if '?' in dashlet['url']:
-                    # Transform old parameters:
-                    # wato_folder
-                    # host_contact_group
-                    # service_contact_group
-                    paramstr = dashlet['url'].split('?', 1)[1]
-                    dashlet['context'] = {}
-                    for key, val in [p.split('=', 1) for p in paramstr.split('&')]:
-                        if key == 'host_contact_group':
-                            dashlet['context']['opthost_contactgroup'] = {
-                                'neg_opthost_contact_group': '',
-                                'opthost_contact_group': val,
-                            }
-                        elif key == 'service_contact_group':
-                            dashlet['context']['optservice_contactgroup'] = {
-                                'neg_optservice_contact_group': '',
-                                'optservice_contact_group': val,
-                            }
-                        elif key == 'wato_folder':
-                            dashlet['context']['wato_folder'] = {
-                                'wato_folder': val,
-                            }
-
-                del dashlet['url']
-
-            elif dashlet.get('urlfunc') and not isinstance(dashlet['urlfunc'], str):
-                raise MKGeneralException(
-                    _('Unable to transform dashlet %d of dashboard %s: '
-                      'the dashlet is using "urlfunc" which can not be '
-                      'converted automatically.') % (nr, name))
-
-            elif dashlet.get('url', '') != '' or dashlet.get('urlfunc') or dashlet.get('iframe'):
-                # Normal URL based dashlet
-                dashlet['type'] = 'url'
-
-                if dashlet.get('iframe'):
-                    dashlet['url'] = dashlet['iframe']
-                    del dashlet['iframe']
-
-            elif dashlet.get('view', '') != '':
-                # Transform views
-                # There might be more than the name in the view definition
-                view_name = dashlet['view'].split('&')[0]
-
-                # Copy the view definition into the dashlet
-                load_view_into_dashlet(dashlet, nr, view_name, load_from_all_views=True)
-                del dashlet['view']
-
-            else:
-                raise MKGeneralException(
-                    _('Unable to transform dashlet %d of dashboard %s. '
-                      'You will need to migrate it on your own. Definition: %r') %
-                    (nr, name, html.attrencode(dashlet)))
-
-            dashlet.setdefault('context', {})
-            dashlet.setdefault('single_infos', [])
-
-        # the modification time of builtin dashboards can not be checked as on user specific
-        # dashboards. Set it to 0 to disable the modification chech.
-        dashboard.setdefault('mtime', 0)
-
-        dashboard.setdefault('show_title', True)
-        if dashboard['title'] is None:
-            dashboard['title'] = _('No title')
-            dashboard['show_title'] = False
-
-        dashboard.setdefault('single_infos', [])
-        dashboard.setdefault('context', {})
-        dashboard.setdefault('topic', _('Overview'))
-        dashboard.setdefault('description', dashboard.get('title', ''))
-    builtin_dashboards_transformed = True
-
-
-def load_view_into_dashlet(dashlet, nr, view_name, add_context=None, load_from_all_views=False):
-    permitted_views = get_permitted_views()
-
-    # it is random which user is first accessing
-    # an apache python process, initializing the dashboard loading and conversion of
-    # old dashboards. In case of the conversion we really try hard to make the conversion
-    # work in all cases. So we need all views instead of the views of the user.
-    if load_from_all_views and view_name not in permitted_views:
-        # This is not really 100% correct according to the logic of visuals.available(),
-        # but we do this for the rare edge case during legacy dashboard conversion, so
-        # this should be sufficient
-        view = None
-        for (_u, n), this_view in get_all_views().iteritems():
-            # take the first view with a matching name
-            if view_name == n:
-                view = this_view
-                break
-
-        if not view:
-            raise MKGeneralException(
-                _("Failed to convert a builtin dashboard which is referencing "
-                  "the view \"%s\". You will have to migrate it to the new "
-                  "dashboard format on your own to work properly.") % view_name)
-    else:
-        view = permitted_views[view_name]
-
-    view = copy.deepcopy(view)  # Clone the view
-    dashlet.update(view)
-    if add_context:
-        dashlet['context'].update(add_context)
-
-    # Overwrite the views default title with the context specific title
-    dashlet['title'] = visuals.visual_title('view', view)
-    dashlet['title_url'] = html.makeuri_contextless([('view_name', view_name)] +
-                                                    visuals.get_singlecontext_vars(view).items(),
-                                                    filename='view.py')
-
-    dashlet['type'] = 'view'
-    dashlet['name'] = 'dashlet_%d' % nr
-    dashlet['show_title'] = True
-    dashlet['mustsearch'] = False
-
-
-def save_dashboards(us):
-    visuals.save('dashboards', dashboards)
-
-
-def permitted_dashboards():
-    return available_dashboards
-
-
 # HTML page handler for generating the (a) dashboard. The name
 # of the dashboard to render is given in the HTML variable 'name'.
 # This defaults to "main".
 @cmk.gui.pages.register("dashboard")
 def page_dashboard():
-    load_dashboards()
-
+    # type: () -> None
     name = html.request.var("name")
     if not name:
         name = "main"
         html.request.set_var("name", name)  # make sure that URL context is always complete
-    if name not in available_dashboards:
+    if name not in get_permitted_dashboards():
         raise MKUserError("name", _('The requested dashboard does not exist.'))
 
     draw_dashboard(name)
 
 
-def load_dashboard_with_cloning(name, edit=True):
-    board = available_dashboards[name]
+def _load_dashboard_with_cloning(permitted_dashboards, name, edit=True):
+    # type: (Dict[DashboardName, DashboardConfig], DashboardName, bool) -> DashboardConfig
+    board = permitted_dashboards[name]
     if edit and board['owner'] != config.user.id:
         # This dashboard which does not belong to the current user is about to
         # be edited. In order to make this possible, the dashboard is being
@@ -631,15 +473,17 @@ def load_dashboard_with_cloning(name, edit=True):
         board['owner'] = config.user.id
         board['public'] = False
 
-        dashboards[(config.user.id, name)] = board
-        available_dashboards[name] = board
-        visuals.save('dashboards', dashboards)
+        all_dashboards = get_all_dashboards()
+        all_dashboards[(config.user.id, name)] = board
+        permitted_dashboards[name] = board
+        save_all_dashboards()
 
     return board
 
 
 # Actual rendering function
 def draw_dashboard(name):
+    # type: (DashboardName) -> None
     mode = 'display'
     if html.request.var('edit') == '1':
         mode = 'edit'
@@ -647,30 +491,19 @@ def draw_dashboard(name):
     if mode == 'edit' and not config.user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
-    board = load_dashboard_with_cloning(name, edit=mode == 'edit')
-
-    # The dashboard may be called with "wato_folder" set. In that case
-    # the dashboard is assumed to restrict the shown data to a specific
-    # WATO subfolder or file. This could be a configurable feature in
-    # future, but currently we assume, that *all* dashboards are filename
-    # sensitive.
-    wato_folder = html.request.var("wato_folder")
+    permitted_dashboards = get_permitted_dashboards()
+    board = _load_dashboard_with_cloning(permitted_dashboards, name, edit=mode == 'edit')
+    board = _add_context_to_dashboard(board)
 
     title = visuals.visual_title('dashboard', board)
 
     # Distance from top of the screen to the lower border of the heading
     header_height = 55
 
-    # The title of the dashboard needs to be prefixed with the WATO path,
-    # in order to make it clear to the user, that he is seeing only partial
-    # data.
     if not board.get('show_title'):
         # Remove the whole header line
         html.set_render_headfoot(False)
         header_height = 0
-
-    elif wato_folder is not None:
-        title = watolib.get_folder_title(wato_folder) + " - " + title
 
     html.add_body_css_class("dashboard")
     html.header(title)
@@ -684,11 +517,11 @@ def draw_dashboard(name):
     dashlet_coords = []  # Dimensions and positions of dashlet
     on_resize_dashlets = {}  # javascript function to execute after ressizing the dashlet
     for nr, dashlet in enumerate(board["dashlets"]):
-        dashlet_content_html = ""
-        dashlet_title_html = ""
+        dashlet_content_html = u""
+        dashlet_title_html = u""
         try:
             dashlet_type = get_dashlet_type(dashlet)
-            dashlet_instance = dashlet_type(name, board, nr, dashlet, wato_folder)
+            dashlet_instance = dashlet_type(name, board, nr, dashlet)
 
             refresh = get_dashlet_refresh(dashlet_instance)
             if refresh:
@@ -699,7 +532,10 @@ def draw_dashboard(name):
                 on_resize_dashlets[nr] = on_resize
 
             dashlet_title_html = render_dashlet_title_html(dashlet_instance)
-            dashlet_content_html = render_dashlet_content(dashlet_instance, is_update=False)
+            dashlet_content_html = _render_dashlet_content(board,
+                                                           dashlet_instance,
+                                                           is_update=False,
+                                                           mtime=board["mtime"])
 
         except Exception as e:
             dashlet_content_html = render_dashlet_exception_content(dashlet_instance, nr, e)
@@ -742,6 +578,7 @@ cmk.dashboard.register_event_handlers();
 
 
 def dashlet_container_begin(nr, dashlet):
+    # type: (DashletId, DashletConfig) -> None
     dashlet_type = get_dashlet_type(dashlet)
 
     classes = ['dashlet', dashlet['type']]
@@ -752,10 +589,12 @@ def dashlet_container_begin(nr, dashlet):
 
 
 def dashlet_container_end():
+    # type: () -> None
     html.close_div()
 
 
 def render_dashlet_title_html(dashlet_instance):
+    # type: (Dashlet) -> Text
     title = dashlet_instance.display_title()
     if title is not None and dashlet_instance.show_title():
         url = dashlet_instance.title_url()
@@ -766,28 +605,50 @@ def render_dashlet_title_html(dashlet_instance):
     return title
 
 
-def render_dashlet_content(dashlet_instance, is_update, stash_html_vars=True):
-    def update_or_show():
-        visuals.add_context_to_uri_vars(dashlet_instance.dashlet_spec)
-        if dashlet_instance.wato_folder is not None:
-            html.request.set_var("wato_folder", dashlet_instance.wato_folder)
-        with html.plugged():
-            if is_update:
-                dashlet_instance.update()
-            else:
-                dashlet_instance.show()
-            return html.drain()
+def _render_dashlet_content(board, dashlet_instance, is_update, mtime):
+    # type: (DashboardConfig, Dashlet, bool, int) -> Text
 
-    if stash_html_vars:
-        with html.stashed_vars():
-            html.request.del_vars()
-            html.request.set_var("name", dashlet_instance.dashboard_name)
-            return update_or_show()
-    else:
-        return update_or_show()
+    # All outer variables are completely reset for the dashlets to have a clean, well known state.
+    # The context that has been built based on the relevant HTTP variables is applied again.
+    with html.stashed_vars():
+        html.request.del_vars()
+        html.request.set_var("name", dashlet_instance.dashboard_name)
+        html.request.set_var("mtime", str(mtime))
+
+        if dashlet_instance.has_context:
+            # Construct some one-shot visual to be able to use visuals.add_context_to_uri_vars
+            # TODO: Change visuals.add_context_to_uri_vars API to directly accept the needed
+            # attributes without
+            visuals.add_context_to_uri_vars({
+                "single_infos": dashlet_instance.single_infos(),
+                "infos": dashlet_instance.infos(),
+                "context": dashlet_instance.context,
+            })
+
+        return _update_or_show(board, dashlet_instance, is_update, mtime)
+
+
+def _update_or_show(board, dashlet_instance, is_update, mtime):
+    # type: (DashboardConfig, Dashlet, bool, int) -> Text
+    with html.plugged():
+        if is_update:
+            dashlet_instance.update()
+        else:
+            dashlet_instance.show()
+
+        if mtime < board['mtime']:
+            # prevent reloading on the dashboard which already has the current mtime,
+            # this is normally the user editing this dashboard. All others: reload
+            # the whole dashboard once.
+            html.javascript('if (cmk.dashboard.dashboard_properties.dashboard_mtime < %d) {\n'
+                            '    parent.location.reload();\n'
+                            '}' % board['mtime'])
+
+        return html.drain()
 
 
 def render_dashlet_exception_content(dashlet_instance, nr, e):
+    # type: (Dashlet, DashletId, Exception) -> Text
     logger.exception("Problem while rendering dashlet %d of type %s", nr,
                      dashlet_instance.type_name())
 
@@ -803,6 +664,7 @@ def render_dashlet_exception_content(dashlet_instance, nr, e):
 
 
 def dashboard_edit_controls(name, board):
+    # type: (DashboardName, DashboardConfig) -> None
     # Show the edit menu to all users which are allowed to edit dashboards
     if not config.user.may("general.edit_dashboards"):
         return
@@ -831,31 +693,13 @@ def dashboard_edit_controls(name, board):
         # The dashlet types which can be added to the view
         html.open_ul(style="display:none", class_=["menu", "sub"], id_="control_add_sub")
 
-        # TODO: Why is this done like this? Looks like a dirty hack.
-        # - Mypy does not understand this. We could probably use type(..., ..., ...) here instead.
-        # - Or event better: Just produce a new menu entry below without registering something new
-        #   to the dashlet registry.
-        class ExistingView(dashlet_registry['view']):  # type: ignore
-            @classmethod
-            def title(cls):
-                return _('Existing View')
-
-            @classmethod
-            def add_url(cls):
-                return 'create_view_dashlet.py?name=%s&create=0&back=%s' % \
-                            (html.urlencode(name), html.urlencode(html.makeuri([('edit', '1')])))
-
-        dashlet_registry.register(ExistingView)
-
-        for ty, dashlet_type in sorted(dashlet_registry.items(), key=lambda x: x[1].sort_index()):
-            if dashlet_type.is_selectable():
-                url = dashlet_type.add_url()
-                html.open_li()
-                html.open_a(href=url)
-                html.icon(title=dashlet_type.title(), icon="dashlet_%s" % ty)
-                html.write(dashlet_type.title())
-                html.close_a()
-                html.close_li()
+        for menu_entry in _get_add_menu_entries(name):
+            html.open_li()
+            html.open_a(href=menu_entry.url)
+            html.icon(title=menu_entry.title, icon=menu_entry.icon_name)
+            html.write(menu_entry.title)
+            html.close_a()
+            html.close_li()
         html.close_ul()
 
         html.close_li()
@@ -907,6 +751,35 @@ def dashboard_edit_controls(name, board):
     html.close_div()
 
 
+MenuEntry = NamedTuple("MenuEntry", [
+    ("title", six.text_type),
+    ("url", six.text_type),
+    ("icon_name", six.text_type),
+])
+
+
+def _get_add_menu_entries(name):
+    entries = [
+        MenuEntry(
+            title=_('Copy existing view'),
+            url='create_view_dashlet.py?name=%s&create=0&back=%s' %
+            (html.urlencode(name), html.urlencode(html.makeuri([('edit', '1')]))),
+            icon_name="dashlet_view",
+        ),
+    ]
+
+    for ty, dashlet_type in sorted(dashlet_registry.items(), key=lambda x: x[1].sort_index()):
+        if dashlet_type.is_selectable():
+            entries.append(
+                MenuEntry(
+                    url=dashlet_type.add_url(),
+                    title=dashlet_type.title(),
+                    icon_name="dashlet_%s" % ty,
+                ))
+
+    return entries
+
+
 # Render dashlet custom scripts
 def dashlet_javascripts(board):
     scripts = '\n'.join([ty.script() for ty in used_dashlet_types(board) if ty.script()])
@@ -931,20 +804,22 @@ def used_dashlet_types(board):
 # refreshed by us but need to do that themselves.
 # TODO: Refactor this to Dashlet or later Dashboard class
 def get_dashlet_refresh(dashlet_instance):
+    # type: (Dashlet) -> Optional[Tuple[DashletId, DashletRefreshInterval, DashletRefreshAction]]
     if dashlet_instance.type_name() == "url" or (not dashlet_instance.is_iframe_dashlet() and
                                                  dashlet_instance.refresh_interval()):
         refresh = dashlet_instance.refresh_interval()
         if not refresh:
-            return
+            return None
 
         action = dashlet_instance.get_refresh_action()
         if action:
-            return [dashlet_instance.dashlet_id, refresh, action]
+            return (dashlet_instance.dashlet_id, refresh, action)
     return None
 
 
 # TODO: Refactor this to Dashlet or later Dashboard class
 def get_dashlet_on_resize(dashlet_instance):
+    # type: (Dashlet) -> Optional[str]
     on_resize = dashlet_instance.on_resize()
     if on_resize:
         return '(function() {%s})' % on_resize
@@ -953,6 +828,7 @@ def get_dashlet_on_resize(dashlet_instance):
 
 # TODO: Refactor this to Dashlet or later Dashboard class
 def get_dashlet_dimensions(dashlet_instance):
+    # type: (Dashlet) -> Dict[str, int]
     dimensions = {}
     dimensions['x'], dimensions['y'] = dashlet_instance.position()
     dimensions['w'], dimensions['h'] = dashlet_instance.size()
@@ -960,13 +836,16 @@ def get_dashlet_dimensions(dashlet_instance):
 
 
 def get_dashlet_type(dashlet):
+    # type: (DashletConfig) -> Type[Dashlet]
     return dashlet_registry[dashlet["type"]]
 
 
 def get_dashlet(board, ident):
-    if board not in available_dashboards:
+    # type: (DashboardName, DashletId) -> DashletConfig
+    try:
+        dashboard = get_permitted_dashboards()[board]
+    except KeyError:
         raise MKUserError("name", _('The requested dashboard does not exist.'))
-    dashboard = available_dashboards[board]
 
     try:
         return dashboard['dashlets'][ident]
@@ -975,6 +854,7 @@ def get_dashlet(board, ident):
 
 
 def draw_dashlet(dashlet_instance, dashlet_content_html, dashlet_title_html):
+    # type: (Dashlet, Text, Text) -> None
     """Draws the initial HTML code for one dashlet
 
     Each dashlet has an id "dashlet_%d", where %d is its index (in
@@ -1011,26 +891,19 @@ def draw_dashlet(dashlet_instance, dashlet_content_html, dashlet_title_html):
 
 @cmk.gui.pages.register("dashboard_dashlet")
 def ajax_dashlet():
+    # type: () -> None
     name = html.request.var('name')
     if not name:
         raise MKUserError("name", _('The name of the dashboard is missing.'))
 
     ident = html.get_integer_input("id")
 
-    load_dashboards()
-
-    if name not in available_dashboards:
+    try:
+        board = get_permitted_dashboards()[name]
+    except KeyError:
         raise MKUserError("name", _('The requested dashboard does not exist.'))
-    board = available_dashboards[name]
 
-    mtime = html.get_integer_input('mtime', 0)
-    if mtime < board['mtime']:
-        # prevent reloading on the dashboard which already has the current mtime,
-        # this is normally the user editing this dashboard. All others: reload
-        # the whole dashboard once.
-        html.javascript('if (cmk.dashboard.dashboard_properties.dashboard_mtime < %d) {\n'
-                        '    parent.location.reload();\n'
-                        '}' % board['mtime'])
+    board = _add_context_to_dashboard(board)
 
     the_dashlet = None
     for nr, dashlet in enumerate(board['dashlets']):
@@ -1044,19 +917,49 @@ def ajax_dashlet():
     if the_dashlet['type'] not in dashlet_registry:
         raise MKUserError("id", _('The requested dashlet type does not exist.'))
 
-    wato_folder = html.request.var("wato_folder")
-
     dashlet_type = get_dashlet_type(the_dashlet)
-    dashlet_instance = dashlet_type(name, board, ident, the_dashlet, wato_folder)
+    dashlet_instance = dashlet_type(name, board, ident, the_dashlet)
+
+    mtime = html.get_integer_input('mtime', 0)
 
     try:
-        dashlet_content_html = render_dashlet_content(dashlet_instance,
-                                                      stash_html_vars=False,
-                                                      is_update=True)
+        dashlet_content_html = _render_dashlet_content(board,
+                                                       dashlet_instance,
+                                                       is_update=True,
+                                                       mtime=mtime)
     except Exception as e:
         dashlet_content_html = render_dashlet_exception_content(dashlet_instance, ident, e)
 
     html.write_html(dashlet_content_html)
+
+
+# TODO: Is the merging with the context possibly set in the dashboard config done right?
+def _add_context_to_dashboard(board):
+    # type: (DashboardConfig) -> DashboardConfig
+    board = copy.deepcopy(board)
+    board.setdefault("single_infos", [])
+    board.setdefault("context", {})
+
+    # Read the context from the URL variables
+    board_context = visuals.get_merged_context(
+        visuals.get_context_from_uri_vars(single_infos=board['single_infos']),
+        board["context"],
+    )
+
+    # The dashboard may be called with "wato_folder" set. In that case
+    # the dashboard is assumed to restrict the shown data to a specific
+    # WATO subfolder or file. This could be a configurable feature in
+    # future, but currently we assume, that *all* dashboards are filename
+    # sensitive.
+    wato_folder = html.request.var("wato_folder")
+    if wato_folder is not None:
+        board_context["wato_folder"] = {
+            "wato_folder": wato_folder,
+        }
+
+    board["context"] = board_context
+
+    return board
 
 
 #.
@@ -1074,8 +977,8 @@ def ajax_dashlet():
 
 @cmk.gui.pages.register("edit_dashboards")
 def page_edit_dashboards():
-    load_dashboards(lock=html.is_transaction())
-    visuals.page_list('dashboards', _("Edit Dashboards"), dashboards)
+    # type: () -> None
+    visuals.page_list('dashboards', _("Edit Dashboards"), get_all_dashboards())
 
 
 #.
@@ -1094,6 +997,7 @@ def page_edit_dashboards():
 
 @cmk.gui.pages.register("create_dashboard")
 def page_create_dashboard():
+    # type: () -> None
     visuals.page_create_visual('dashboards', visual_info_registry.keys())
 
 
@@ -1109,40 +1013,24 @@ def page_create_dashboard():
 #   | Configures the global settings of a dashboard.                       |
 #   '----------------------------------------------------------------------'
 
-vs_dashboard = None
-
 
 @cmk.gui.pages.register("edit_dashboard")
 def page_edit_dashboard():
-    global vs_dashboard
-    load_dashboards(lock=html.is_transaction())
-
-    # This is not defined here in the function in order to be l10n'able
-    vs_dashboard = Dictionary(
-        title=_('Dashboard Properties'),
-        render='form',
-        optional_keys=None,
-        elements=[
-            ('show_title',
-             Checkbox(
-                 title=_('Display dashboard title'),
-                 label=_('Show the header of the dashboard with the configured title.'),
-                 default_value=True,
-             )),
-        ],
-    )
-
+    # type: () -> None
     visuals.page_edit_visual('dashboards',
-                             dashboards,
+                             get_all_dashboards(),
                              create_handler=create_dashboard,
                              custom_field_handler=custom_field_handler)
 
 
 def custom_field_handler(dashboard):
-    vs_dashboard.render_input('dashboard', dashboard and dashboard or None)
+    # type: (DashboardConfig) -> None
+    _vs_dashboard().render_input('dashboard', dashboard and dashboard or None)
 
 
 def create_dashboard(old_dashboard, dashboard):
+    # type: (DashboardConfig, DashboardConfig) -> DashboardConfig
+    vs_dashboard = _vs_dashboard()
     board_properties = vs_dashboard.from_html_vars('dashboard')
     vs_dashboard.validate_value(board_properties, 'dashboard')
     dashboard.update(board_properties)
@@ -1152,6 +1040,23 @@ def create_dashboard(old_dashboard, dashboard):
     dashboard['mtime'] = int(time.time())
 
     return dashboard
+
+
+def _vs_dashboard():
+    # type: () -> Dictionary
+    return Dictionary(
+        title=_('Dashboard Properties'),
+        render='form',
+        optional_keys=False,
+        elements=[
+            ('show_title',
+             Checkbox(
+                 title=_('Display dashboard title'),
+                 label=_('Show the header of the dashboard with the configured title.'),
+                 default_value=True,
+             )),
+        ],
+    )
 
 
 #.
@@ -1169,13 +1074,14 @@ def create_dashboard(old_dashboard, dashboard):
 
 @cmk.gui.pages.register("create_view_dashlet")
 def page_create_view_dashlet():
+    # type: () -> None
     create = html.request.var('create', '1') == '1'
     name = html.request.var('name')
 
     if create:
         import cmk.gui.views as views
         url = html.makeuri([('back', html.makeuri([]))], filename="create_view_dashlet_infos.py")
-        views.page_create_view(next_url=url)
+        views.show_create_view_dialog(next_url=url)
 
     else:
         # Choose an existing view from the list of available views
@@ -1184,6 +1090,7 @@ def page_create_view_dashlet():
 
 @cmk.gui.pages.register("create_view_dashlet_infos")
 def page_create_view_dashlet_infos():
+    # type: () -> None
     ds_name = html.request.var('datasource')
     if ds_name not in data_source_registry:
         raise MKUserError("datasource", _('The given datasource is not supported'))
@@ -1204,6 +1111,7 @@ def page_create_view_dashlet_infos():
 
 
 def choose_view(name):
+    # type: (DashboardName) -> None
     import cmk.gui.views as views
     vs_view = DropdownChoice(
         title=_('View Name'),
@@ -1223,18 +1131,18 @@ def choose_view(name):
             view_name = vs_view.from_html_vars('view')
             vs_view.validate_value(view_name, 'view')
 
-            load_dashboards(lock=True)
-            dashboard = available_dashboards[name]
+            dashboard = get_permitted_dashboards()[name]
 
             # Add the dashlet!
             dashlet = default_dashlet_definition('view')
 
             # save the original context and override the context provided by the view
             dashlet_id = len(dashboard['dashlets'])
-            load_view_into_dashlet(dashlet, dashlet_id, view_name)
+            copy_view_into_dashlet(dashlet, dashlet_id, view_name)
             add_dashlet(dashlet, dashboard)
 
-            raise HTTPRedirect('edit_dashlet.py?name=%s&id=%d' % (name, dashlet_id))
+            raise HTTPRedirect('edit_dashlet.py?name=%s&id=%d' %
+                               (html.urlencode(name), html.urlencode(dashlet_id)))
         except MKUserError as e:
             html.user_error(e)
 
@@ -1254,6 +1162,7 @@ def choose_view(name):
 
 @cmk.gui.pages.register("edit_dashlet")
 def page_edit_dashlet():
+    # type: () -> None
     if not config.user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
@@ -1271,11 +1180,10 @@ def page_edit_dashlet():
     if ident is None and not ty:
         raise MKUserError("id", _('The ID of the dashlet is missing.'))
 
-    load_dashboards(lock=html.is_transaction())
-
-    if board not in available_dashboards:
+    try:
+        dashboard = get_permitted_dashboards()[board]
+    except KeyError:
         raise MKUserError("name", _('The requested dashboard does not exist.'))
-    dashboard = available_dashboards[board]
 
     if ident is None:
         mode = 'add'
@@ -1373,6 +1281,7 @@ def page_edit_dashlet():
     )
 
     def dashlet_info_handler(dashlet):
+        # type: (DashletConfig) -> List[str]
         if dashlet['type'] == 'view':
             import cmk.gui.views as views
             return views.get_view_infos(dashlet)
@@ -1380,7 +1289,7 @@ def page_edit_dashlet():
 
     context_specs = visuals.get_context_specs(dashlet, info_handler=dashlet_info_handler)
 
-    vs_type = None
+    vs_type = None  # type: Optional[ValueSpec]
     params = dashlet_type.vs_parameters()
     render_input_func = None
     handle_input_func = None
@@ -1397,9 +1306,9 @@ def page_edit_dashlet():
     elif isinstance(params, (Dictionary, Transform)):
         vs_type = params
 
-    elif hasattr(params, '__call__'):
+    elif isinstance(params, tuple):
         # It's a tuple of functions which should be used to render and parse the params
-        render_input_func, handle_input_func = params()
+        render_input_func, handle_input_func = params
 
     if html.request.var('save') and html.transaction_valid():
         try:
@@ -1426,7 +1335,7 @@ def page_edit_dashlet():
             if mode == "add":
                 dashboard['dashlets'].append(dashlet)
 
-            visuals.save('dashboards', dashboards)
+            save_all_dashboards()
 
             html.immediate_browser_redirect(1, next_url)
             if mode == 'edit':
@@ -1461,6 +1370,7 @@ def page_edit_dashlet():
 
 @cmk.gui.pages.register("delete_dashlet")
 def page_delete_dashlet():
+    # type: () -> None
     if not config.user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
@@ -1470,11 +1380,10 @@ def page_delete_dashlet():
 
     ident = html.get_integer_input("id")
 
-    load_dashboards(lock=True)
-
-    if board not in available_dashboards:
+    try:
+        dashboard = get_permitted_dashboards()[board]
+    except KeyError:
         raise MKUserError("name", _('The requested dashboard does not exist.'))
-    dashboard = available_dashboards[board]
 
     try:
         _dashlet = dashboard['dashlets'][ident]
@@ -1498,7 +1407,7 @@ def page_delete_dashlet():
         try:
             dashboard['dashlets'].pop(ident)
             dashboard['mtime'] = int(time.time())
-            visuals.save('dashboards', dashboards)
+            save_all_dashboards()
 
             html.message(_('The dashlet has been deleted.'))
         except MKUserError as e:
@@ -1524,6 +1433,7 @@ def page_delete_dashlet():
 
 
 def check_ajax_update():
+    # type: () -> Tuple[DashletConfig, DashboardConfig]
     if not config.user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
@@ -1533,11 +1443,10 @@ def check_ajax_update():
 
     ident = html.get_integer_input("id")
 
-    load_dashboards(lock=True)
-
-    if board not in available_dashboards:
+    try:
+        dashboard = get_permitted_dashboards()[board]
+    except KeyError:
         raise MKUserError("name", _('The requested dashboard does not exist.'))
-    dashboard = available_dashboards[board]
 
     try:
         dashlet = dashboard['dashlets'][ident]
@@ -1549,18 +1458,20 @@ def check_ajax_update():
 
 @cmk.gui.pages.register("ajax_dashlet_pos")
 def ajax_dashlet_pos():
+    # type: () -> None
     dashlet, board = check_ajax_update()
 
     board['mtime'] = int(time.time())
 
     dashlet['position'] = int(html.request.var('x')), int(html.request.var('y'))
     dashlet['size'] = int(html.request.var('w')), int(html.request.var('h'))
-    visuals.save('dashboards', dashboards)
+    save_all_dashboards()
     html.write('OK %d' % board['mtime'])
 
 
 @cmk.gui.pages.register("ajax_delete_user_notification")
 def ajax_delete_user_notification():
+    # type: () -> None
     msg_id = html.request.var("id")
     notify.delete_gui_message(msg_id)
 
@@ -1580,6 +1491,7 @@ def ajax_delete_user_notification():
 
 # TODO: Move this to the Dashlet class
 def default_dashlet_definition(ty):
+    # type: (DashletTypeName) -> DashletConfig
     return {
         'type': ty,
         'position': dashlet_registry[ty].initial_position(),
@@ -1589,6 +1501,7 @@ def default_dashlet_definition(ty):
 
 
 def add_dashlet(dashlet, dashboard):
+    # type: (DashletConfig, DashboardConfig) -> None
     dashboard['dashlets'].append(dashlet)
     dashboard['mtime'] = int(time.time())
-    visuals.save('dashboards', dashboards)
+    save_all_dashboards()

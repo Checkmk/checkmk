@@ -126,7 +126,7 @@ def parse_oracle_rman(info):
             if sid_level0 in parsed and parsed[sid_level0]['backupage'] < parsed[line]['backupage']:
 
                 parsed[line].update({
-                    "backupage": backupage,
+                    "backupage": parsed[sid_level0]['backupage'],
                     "used_incr_0": True,
                 })
 

@@ -40,7 +40,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _parameter_valuespec_couchbase_cache():
-    return Dictionary(title=_('Couchbase Node: Cache'),
+    return Dictionary(title=_('Couchbase: Cache'),
                       elements=[
                           ("cache_misses",
                            Tuple(
@@ -52,7 +52,7 @@ def _parameter_valuespec_couchbase_cache():
                            )),
                           ('cache_hits',
                            Tuple(
-                               title='Lower levels for hits in %',
+                               title='Nodes only: Lower levels for hits in %',
                                elements=[
                                    Percentage(title='warn',),
                                    Percentage(title='crit',),
@@ -66,7 +66,7 @@ rulespec_registry.register(
         check_group_name="couchbase_cache",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        item_spec=lambda: TextAscii(title=_('Node name')),
+        item_spec=lambda: TextAscii(title=_('Node or bucket name')),
         parameter_valuespec=_parameter_valuespec_couchbase_cache,
         title=lambda: _("Couchbase Cache"),
     ))

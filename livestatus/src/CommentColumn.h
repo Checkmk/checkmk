@@ -29,6 +29,7 @@
 #include <chrono>
 #include <string>
 #include <vector>
+#include "Column.h"
 #include "ListColumn.h"
 #include "contact_fwd.h"
 struct CommentData;
@@ -39,11 +40,9 @@ class Row;
 class CommentColumn : public ListColumn {
 public:
     CommentColumn(const std::string &name, const std::string &description,
-                  int indirect_offset, int extra_offset, int extra_extra_offset,
-                  int offset, MonitoringCore *mc, bool is_service,
+                  Offsets offsets, MonitoringCore *mc, bool is_service,
                   bool with_info, bool with_extra_info)
-        : ListColumn(name, description, indirect_offset, extra_offset,
-                     extra_extra_offset, offset)
+        : ListColumn(name, description, offsets)
         , _mc(mc)
         , _is_service(is_service)
         , _with_info(with_info)
@@ -62,7 +61,7 @@ private:
     bool _with_info;
     bool _with_extra_info;
 
-    std::vector<CommentData> comments_for_row(Row row) const;
+    [[nodiscard]] std::vector<CommentData> comments_for_row(Row row) const;
 };
 
 #endif  // CommentColumn_h

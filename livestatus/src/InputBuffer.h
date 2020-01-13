@@ -53,7 +53,7 @@ public:
                 std::chrono::milliseconds query_timeout,
                 std::chrono::milliseconds idle_timeout);
     Result readRequest();
-    bool empty() const;
+    [[nodiscard]] bool empty() const;
     std::string nextLine();
 
 private:

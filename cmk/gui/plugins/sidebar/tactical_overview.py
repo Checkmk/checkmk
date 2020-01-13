@@ -32,7 +32,7 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 import cmk.gui.notifications as notifications
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.globals import html
 from cmk.gui.valuespec import Checkbox, ListOf, CascadingDropdown, Dictionary, TextUnicode
 # Things imported here are used by pre legacy (pre 1.6) cron plugins)
@@ -115,6 +115,11 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                  title=_("Show failed notifications"),
                  default_value=True,
              )),
+            ("show_sites_not_connected",
+             Checkbox(
+                 title=_("Display a message if sites are not connected"),
+                 default_value=True,
+             )),
         ]
 
     @classmethod
@@ -122,6 +127,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         return {
             "show_stale": True,
             "show_failed_notifications": True,
+            "show_sites_not_connected": True,
             "rows": [{
                 "query": ("hosts", {}),
                 "title": u"Hosts"
@@ -137,6 +143,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
     def show(self):
         self._show_rows()
         self._show_failed_notifications()
+        self._show_site_status()
 
     def _show_rows(self):
         rows = self._get_rows()
@@ -417,6 +424,41 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             )[0]
         except livestatus.MKLivestatusNotFoundError:
             return None
+
+    def _show_site_status(self):
+        if not self.parameters().get("show_sites_not_connected"):
+            return
+
+        sites_not_connected = [
+            site_id for site_id, site_status in sites.states().iteritems()
+            if site_status["state"] != "online"
+        ]
+        if len(sites_not_connected) == 0:
+            return
+
+        html.open_div(class_="spacertop")
+        html.open_div(class_="tacticalalert")
+
+        message_template = ungettext("%d site is not connected", "%d sites are not connected",
+                                     len(sites_not_connected))
+        tooltip_template = ungettext(
+            "Associated hosts, services and events are not included "
+            "in the Tactical Overview. The disconnected site is %s.",
+            "Associated hosts, services and events are not included "
+            "in the Tactical Overview. The disconnected sites are %s.", len(sites_not_connected))
+        message = message_template % len(sites_not_connected)
+        tooltip = tooltip_template % ', '.join(sites_not_connected)
+
+        if config.user.may("wato.sites"):
+            url = html.makeuri_contextless([("mode", "sites")], filename="wato.py")
+            html.icon_button(url, tooltip, "sites", target="main")
+            html.a(message, target="main", href=url)
+        else:
+            html.icon(tooltip, "sites")
+            html.write_text(message)
+
+        html.close_div()
+        html.close_div()
 
     @classmethod
     def allowed_roles(cls):

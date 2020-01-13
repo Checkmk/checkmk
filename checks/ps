@@ -71,7 +71,7 @@
 # 4. levels:   four numbers (thresholds)
 inventory_processes_rules = []
 
-# Deprecated option since 1.6. cmk_base creates a config warning when finding rules
+# Deprecated option since 1.6. cmk.base creates a config warning when finding rules
 # for this ruleset. Can be dropped with 1.7.
 inventory_processes = []
 
@@ -244,12 +244,7 @@ def ps_parse_process_entries(pre_parsed):
 # Third element:  The process command line
 def parse_ps(info):
     cpu_cores, parsed = ps_merge_wmic_info(info)
-
     parsed = ps_parse_process_entries(parsed)
-
-    # Cleanup counters of processes which do not exist anymore
-    ps_cleanup_counters(parsed)
-
     return cpu_cores, parsed
 
 
@@ -268,6 +263,9 @@ def check_ps(item, params, info):
         cpu_cores, parsed = 1, parse_ps_lnx(ps_lnx_info)
     else:
         cpu_cores, parsed = parse_ps(ps_info)
+
+    # Cleanup counters of processes which do not exist anymore
+    ps_cleanup_counters(parsed)
 
     mem_info, solaris_mem_info, statgrab_mem_info, aix_memory_info, cpu_info = info[2:]
 

@@ -151,20 +151,17 @@ def _get_schedule(period, timeofday):
     t = datetime.time(*timeofday)
 
     if period == "day":
-        schedule = DaySchedule(t)
-    elif period[0] == "week":
+        return DaySchedule(t)
+    if period[0] == "week":
         weekday = period[1]
-        schedule = WeekSchedule(weekday, t)
-    elif period[0] == "month_begin":
+        return WeekSchedule(weekday, t)
+    if period[0] == "month_begin":
         day = period[1]
-        schedule = StartMonthSchedule(day, t)
-    elif period[0] == "month_end":
+        return StartMonthSchedule(day, t)
+    if period[0] == "month_end":
         days_from_end = period[1]
-        schedule = EndMonthSchedule(days_from_end, t)
-    else:
-        raise ValueError('Unknown period')
-
-    return schedule
+        return EndMonthSchedule(days_from_end, t)
+    raise ValueError('Unknown period')
 
 
 def last_scheduled_time(period, timeofday, dt=None):

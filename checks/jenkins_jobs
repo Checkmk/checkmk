@@ -40,20 +40,30 @@ JenkinsJobInfo = collections.namedtuple("job_info", [
 ])
 
 MAP_JOB_STATES = {
-    "aborted": 0,
-    "aborted_anime": 0,
-    "blue": 0,
-    "blue_anime": 0,  # running
-    "disabled": 0,
-    "disabled_anime": 0,
-    "grey": 0,
-    "grey_anime": 0,
-    "notbuilt": 0,
-    "notbuilt_anime": 0,
-    "red": 2,
-    "red_anime": 0,
-    "yellow": 1,
-    "yellow_anime": 0,
+    "aborted": {
+        "state": 0,
+        "info": "Aborted"
+    },
+    "blue": {
+        "state": 0,
+        "info": "Success"
+    },
+    "disabled": {
+        "state": 0,
+        "info": "Disabled"
+    },
+    "notbuilt": {
+        "state": 0,
+        "info": "Not built"
+    },
+    "red": {
+        "state": 2,
+        "info": "Failed"
+    },
+    "yellow": {
+        "state": 1,
+        "info": "Unstable"
+    },
 }
 
 MAP_BUILD_STATES = {
@@ -85,9 +95,16 @@ def check_jenkins_jobs(item, params, item_data):
 
     job_state = item_data[0].state
     if job_state is not None:
-        yield params.get("job_state",
-                         {}).get(job_state,
-                                 MAP_JOB_STATES[job_state]), "State: %s" % job_state.title()
+        if "grey" in job_state:
+            job_state = "aborted"
+
+        job_cleanup = job_state.replace("_anime", "")
+        infotext = "State: %s" % MAP_JOB_STATES[job_cleanup]["info"]
+        state = MAP_JOB_STATES[job_cleanup]["state"]
+        if "_anime" in job_state:
+            infotext += " (in progress)"
+
+        yield params.get("job_state", {}).get(job_cleanup, state), infotext
 
     time_since_last_suc = None
     if item_data[0].last_suc_build:

@@ -34,7 +34,7 @@ from __future__ import division
 import time
 import math
 from datetime import timedelta
-from typing import Tuple, Union  # pylint: disable=unused-import
+from typing import Optional, Text, Tuple, Union  # pylint: disable=unused-import
 
 from cmk.utils.i18n import _
 
@@ -49,16 +49,21 @@ from cmk.utils.i18n import _
 #   '----------------------------------------------------------------------'
 
 
+# NOTE: strftime's format *must* be of type str, both in Python 2 and 3.
 def date(timestamp):
-    return time.strftime(_("%Y-%m-%d"), time.localtime(timestamp))
+    # type: (Optional[float]) -> str
+    return time.strftime(str(_("%Y-%m-%d")), time.localtime(timestamp))
 
 
 def date_and_time(timestamp):
+    # type: (Optional[float]) -> str
     return "%s %s" % (date(timestamp), time_of_day(timestamp))
 
 
+# NOTE: strftime's format *must* be of type str, both in Python 2 and 3.
 def time_of_day(timestamp):
-    return time.strftime(_("%H:%M:%S"), time.localtime(timestamp))
+    # type: (Optional[float]) -> str
+    return time.strftime(str(_("%H:%M:%S")), time.localtime(timestamp))
 
 
 def timespan(seconds):
@@ -74,10 +79,13 @@ def time_since(timestamp):
 class Age(object):
     """Format time difference seconds into approximated human readable text"""
     def __init__(self, secs):
+        # type: (float) -> None
         super(Age, self).__init__()
         self.__secs = secs
 
+    # NOTE: In Python 2 the return type is WRONG, we should return str.
     def __str__(self):
+        # not-yet-a-type: () -> Text
         secs = self.__secs
 
         if secs < 0:
@@ -113,11 +121,13 @@ class Age(object):
             return "%.0f %s" % (years, _("y"))
 
     def __float__(self):
+        # type: () -> float
         return float(self.__secs)
 
 
 # TODO: Make call sites use Age() directly?
 def approx_age(secs):
+    # type: (float) -> str
     return "%s" % Age(secs)
 
 
@@ -133,7 +143,7 @@ def approx_age(secs):
 
 
 def scale_factor_prefix(value, base, prefixes=('', 'k', 'M', 'G', 'T', 'P')):
-    # type: (int, float, Tuple[str, ...]) -> Tuple[float, str]
+    # type: (float, float, Tuple[str, ...]) -> Tuple[float, str]
     base = float(base)
 
     prefix = prefixes[-1]
@@ -160,16 +170,11 @@ def drop_dotzero(v, digits=2):
     return t
 
 
-def fmt_number_with_precision(v, *args, **kwargs):
-    factor, prefix = scale_factor_prefix(v, base=kwargs.get('base', 1000.0))
+def fmt_number_with_precision(v, base=1000.0, precision=2, drop_zeroes=False, unit=""):
+    # type: (float, float, int, bool, str) -> str
+    factor, prefix = scale_factor_prefix(v, base)
     value = float(v) / factor
-    precision = kwargs.get("precision", 2)
-    if kwargs.get("drop_zeroes", False):
-        number = drop_dotzero(value, precision)
-    else:
-        number = '%.*f' % (precision, value)
-
-    unit = kwargs.get("unit", "")
+    number = drop_dotzero(value, precision) if drop_zeroes else '%.*f' % (precision, value)
     return '%s %s' % (number, prefix + unit)
 
 
@@ -187,6 +192,7 @@ def fmt_bytes(b, base=1024.0, precision=2, unit="B"):
 # 1234 -> "1234"
 # 12345 => "12,345"
 def filesize(size):
+    # type: (float) -> str
     dec_sep = ","
     if size < 10000:
         return str(size)
@@ -211,6 +217,7 @@ def filesize(size):
 
 
 def percent(perc, scientific_notation=False):
+    # type: (float, bool) -> str
     """Renders a given number as percentage string"""
     # 0 / 0.0 -> 0%
     # 9.0e-05 -> 0.00009%
@@ -269,6 +276,7 @@ def percent(perc, scientific_notation=False):
 
 
 def scientific(v, precision=3):
+    # type: (float, int) -> str
     """Renders a given number in scientific notation (E-notation)"""
     if v == 0:
         return "0"
@@ -295,6 +303,7 @@ def scientific(v, precision=3):
 # Note if the type of v is integer, then the precision cut
 # down to the precision of the actual number
 def physical_precision(v, precision, unit_symbol):
+    # type: (float, int, Text) -> Text
     if v < 0:
         return "-" + physical_precision(-v, precision, unit_symbol)
 
@@ -305,6 +314,7 @@ def physical_precision(v, precision, unit_symbol):
 
 
 def calculate_physical_precision(v, precision):
+    # type: (float, int) -> Tuple[Text, int, int]
     if v == 0:
         return "", precision - 1, 1
 
@@ -349,6 +359,7 @@ def calculate_physical_precision(v, precision):
 
 
 def fmt_nic_speed(speed):
+    # type: (str) -> str
     """Format network speed (bit/s) for humans."""
     try:
         speedi = int(speed)
@@ -374,6 +385,7 @@ def fmt_nic_speed(speed):
 
 
 def _frexp10(x):
+    # type: (float) -> Tuple[float, int]
     return _frexpb(x, 10)
 
 

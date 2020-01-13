@@ -13,6 +13,7 @@
 
 #include "common/cfg_info.h"
 #include "logger.h"
+#include "section_header.h"       // names
 #include "windows_service_api.h"  // global situation
 
 namespace cma::srv {
@@ -145,9 +146,11 @@ bool AsyncAnswer::addSegment(
         segments_.push_back({SectionName, Data.size()});
 
         // reserve + array math
-        if (order_ == Order::plugins_last && SectionName == "plugins") {
+        if (order_ == Order::plugins_last &&
+            SectionName == cma::section::kPlugins) {
             plugins_ = Data;
-        } else if (order_ == Order::plugins_last && SectionName == "local") {
+        } else if (order_ == Order::plugins_last &&
+                   SectionName == cma::section::kLocal) {
             local_ = Data;
         } else if (!Data.empty()) {
             if (!AddVectorGracefully(data_, Data)) segments_.back().length_ = 0;

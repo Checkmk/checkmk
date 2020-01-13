@@ -90,13 +90,12 @@ function handle_popup_close(event) {
 // url_vars:    vars are added to ajax_popup_*.py calls for rendering the popup menu
 // resizable:   Allow the user to resize the popup by drag/drop (not persisted)
 var on_popup_close = null;
-export function toggle_popup(event, trigger_obj, ident, what, data, url_vars, menu_content, onclose, resizable)
+export function toggle_popup(event, trigger_obj, ident, what, data, url_vars, menu_content, onclose, resizable, content_body)
 {
     on_popup_close = onclose;
 
     if (!event)
         event = window.event;
-    var container = trigger_obj.parentNode;
 
     if (popup_id) {
         if (popup_id === ident) {
@@ -109,17 +108,74 @@ export function toggle_popup(event, trigger_obj, ident, what, data, url_vars, me
     }
     popup_id = ident;
 
-    utils.add_event_handler("click", handle_popup_close);
+    utils.add_event_handler("click", handle_popup_close)
 
-    var menu = document.createElement("div");
-    menu.setAttribute("id", "popup_menu");
-    menu.className = "popup_menu";
+    var container = trigger_obj.parentNode;
+
+    if (content_body) {
+        var menu = content_body[0]
+        var varprefix = content_body[1];
+        var value = content_body[2];
+    } else {
+        var menu = document.createElement("div");
+        menu.setAttribute("id", "popup_menu");
+        menu.className = "popup_menu";
+
+        var wrapper = document.createElement("div");
+        wrapper.className = "wrapper";
+
+        var content = document.createElement("div");
+        content.className = "content";
+        wrapper.appendChild(content);
+        menu.appendChild(wrapper);
+    }
 
     if (resizable)
-        utils.add_class(menu, "resizable");
+	utils.add_class(menu, "resizable");
 
     container.appendChild(menu);
     fix_popup_menu_position(event, menu);
+
+    if (content_body) {
+        /*The requirement for add_color_picker function to work is that the menu element is
+        appended to the container element prior to the function call. In consequence, the
+        add_color_picker function cannot not be called in the generate_colorpicker_body function.
+        Modifying the add_color_picker to take elements as arguments will also not work in the
+        current iteration due to the restrictions of the Colorpicker function. The Colorpicker
+        prerequisites the current window as it accesses multiple attributes such as the
+        offsetHeight of its slideElement
+        */
+        cmk.valuespecs.add_color_picker(varprefix, value);
+    }
+
+
+    if (resizable) {
+        // Add a handle because we can not customize the styling of the default resize handle using css
+        var resize = document.createElement("div");
+        resize.className = "resizer";
+        wrapper.appendChild(resize);
+    }
+    // update the menus contents using a webservice
+    if (what) {
+        popup_data = data;
+        content.innerHTML = "<img src=\"themes/facelift/images/icon_reload.png\" class=\"icon reloading\">";
+        url_vars = !url_vars ? "" : "?"+url_vars;
+        ajax.get_url("ajax_popup_"+what+".py"+url_vars, handle_render_popup_contents, {
+            ident: ident,
+            content: content,
+            event: event,
+        });
+    } else if (content_body === null) {
+        content.innerHTML = menu_content;
+        utils.execute_javascript_by_object(content);
+    }
+}
+
+export function generate_colorpicker_body(trigger_obj, varprefix, value)
+{
+    var menu = document.createElement("div");
+    menu.setAttribute("id", "popup_menu");
+    menu.className = "popup_menu";
 
     var wrapper = document.createElement("div");
     wrapper.className = "wrapper";
@@ -129,30 +185,40 @@ export function toggle_popup(event, trigger_obj, ident, what, data, url_vars, me
     content.className = "content";
     wrapper.appendChild(content);
 
-    if (resizable) {
-        // Add a handle because we can not customize the styling of the default resize handle using css
-        var resize = document.createElement("div");
-        resize.className = "resizer";
-        wrapper.appendChild(resize);
+    var picker = document.createElement("div");
+    picker.className = "cp-small";
+    picker.setAttribute("id", varprefix + "_picker");
+    content.appendChild(picker)
+
+    var cp_input = document.createElement("div");
+    cp_input.className = "cp-input";
+    cp_input.innerHTML = "Hex color:";
+    content.appendChild(cp_input);
+
+    var input_field = document.createElement("input");
+    input_field.setAttribute("id", varprefix + "_input");
+    input_field.setAttribute("type", "text");
+    cp_input.appendChild(input_field);
+
+    let rgb = trigger_obj.firstChild.style.backgroundColor;
+    if (rgb !== ""){
+        value = rgb2hex(rgb);
     }
-
-    // update the menus contents using a webservice
-    if (what) {
-        popup_data = data;
-
-        content.innerHTML = "<img src=\"themes/facelift/images/icon_reload.png\" class=\"icon reloading\">";
-
-        url_vars = !url_vars ? "" : "?"+url_vars;
-        ajax.get_url("ajax_popup_"+what+".py"+url_vars, handle_render_popup_contents, {
-            ident: ident,
-            content: content,
-            event: event,
-        });
-    } else {
-        content.innerHTML = menu_content;
-        utils.execute_javascript_by_object(content);
-    }
+    return [menu, varprefix, value]
 }
+
+function rgb2hex(rgb) {
+    if (/^#[0-9A-F]{6}$/i.test(rgb)) return rgb;
+
+    const matches = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+
+    let hex_string = "#";
+    for (let i=1; i < rgb.length; i++){
+        hex_string += ("0" + parseInt(matches[i], 10).toString(16)).slice(-2);
+    }
+    return hex_string
+}
+
 
 function handle_render_popup_contents(data, response_text)
 {

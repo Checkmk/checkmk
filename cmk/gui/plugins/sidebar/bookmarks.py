@@ -219,7 +219,7 @@ class BookmarkList(pagetypes.Overridable):
     @classmethod
     def _do_load_legacy_bookmarks(cls):
         path = config.user.confdir + "/bookmarks.mk"
-        return store.load_data_from_file(path, [])
+        return store.load_object_from_file(path, default=[])
 
     @classmethod
     def new_bookmark(cls, title, url):

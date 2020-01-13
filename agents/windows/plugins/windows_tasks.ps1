@@ -22,4 +22,4 @@ if ($lang -eq 1031){
 	}
 } elseif ($lang -eq 1033){
 	schtasks /query /fo csv -v | ConvertFrom-Csv | ? {$_.HostName -match "^$($Env:Computername)$" -and $_.TaskName -notlike '\Microsoft*' -and $_.TaskName -notlike '*zachteHRM*'} | fl taskname,"last run time","next run time","last result","scheduled task state"
-}
+}

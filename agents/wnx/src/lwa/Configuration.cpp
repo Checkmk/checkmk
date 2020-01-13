@@ -45,7 +45,7 @@
 #include "types.h"
 
 #define __STDC_FORMAT_MACROS
-namespace fs = std::experimental::filesystem;
+namespace fs = std::filesystem;
 
 namespace {
 

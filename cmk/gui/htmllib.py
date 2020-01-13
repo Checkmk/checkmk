@@ -95,6 +95,7 @@ json.JSONEncoder.default = _default  # type: ignore
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.encoding import ensure_unicode
 from cmk.gui.exceptions import MKUserError, RequestTimeout
 
 import cmk.gui.utils as utils
@@ -188,7 +189,7 @@ class Encoder(object):
         assert isinstance(vars_, list)
         pairs = []
         for varname, value in sorted(vars_):
-            assert isinstance(varname, str)
+            assert isinstance(varname, basestring)
 
             if isinstance(value, int):
                 value = str(value)
@@ -252,11 +253,12 @@ class HTML(object):
         super(HTML, self).__init__()
         self.value = self._ensure_unicode(value)
 
-    def _ensure_unicode(self, thing, encoding_index=0):
-        try:
-            return six.text_type(thing)
-        except UnicodeDecodeError:
-            return thing.decode("utf-8")
+    def _ensure_unicode(self, value):
+        # value can of of any type: HTML, int, float, None, str, ...
+        # TODO cleanup call sites
+        if not isinstance(value, six.string_types):
+            value = six.text_type(value)
+        return ensure_unicode(value)
 
     def __bytebatzen__(self):
         return self.value.encode("utf-8")
@@ -514,6 +516,11 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, OutputFunnel)):
 
         # options such as 'selected' and 'checked' dont have a value in html tags
         options = []
+
+        # Links require href to be first attribute
+        href = attrs.pop('href', None)
+        if href:
+            yield ' href=\"%s\"' % href
 
         # render all attributes
         for k, v in attrs.iteritems():
@@ -840,14 +847,14 @@ class TransactionManager(object):
         if not self._new_transids:
             return
 
-        valid_ids = self._load_transids(lock=True)
+        valid_ids = config.user.transids(lock=True)
         cleared_ids = []
         now = time.time()
         for valid_id in valid_ids:
             timestamp = valid_id.split("/")[0]
             if now - int(timestamp) < 86400:  # one day
                 cleared_ids.append(valid_id)
-        self._save_transids((cleared_ids[-20:] + self._new_transids))
+        config.user.save_transids((cleared_ids[-20:] + self._new_transids))
 
     def transaction_valid(self):
         """Checks if the current transaction is valid
@@ -880,7 +887,7 @@ class TransactionManager(object):
             return False
 
         # Now check, if this transid is a valid one
-        return transid in self._load_transids()
+        return transid in config.user.transids(lock=False)
 
     def is_transaction(self):
         """Checks, if the current page is a transation, i.e. something that is secured by
@@ -903,24 +910,16 @@ class TransactionManager(object):
             if transid and transid != "-1":
                 self._invalidate(transid)
             return True
-        else:
-            return False
+        return False
 
     def _invalidate(self, used_id):
         """Remove the used transid from the list of valid ones"""
-        valid_ids = self._load_transids(lock=True)
+        valid_ids = config.user.transids(lock=True)
         try:
             valid_ids.remove(used_id)
         except ValueError:
             return
-        self._save_transids(valid_ids)
-
-    def _load_transids(self, lock=False):
-        return config.user.load_file("transids", [], lock)
-
-    def _save_transids(self, used_ids):
-        if config.user.id:
-            config.user.save_file("transids", used_ids)
+        config.user.save_transids(valid_ids)
 
 
 #.
@@ -934,6 +933,18 @@ class TransactionManager(object):
 #   +----------------------------------------------------------------------+
 #   | Caution! The class needs to be derived from Outputfunnel first!      |
 #   '----------------------------------------------------------------------'
+
+OUTPUT_FORMAT_MIME_TYPES = {
+    "json": "application/json",
+    "jsonp": "application/javascript",
+    "csv": "text/csv",
+    "csv_export": "text/csv",
+    "python": "text/plain",
+    "text": "text/plain",
+    "html": "text/html",
+    "xml": "text/xml",
+    "pdf": "application/pdf",
+}
 
 
 class html(ABCHTMLGenerator):
@@ -971,7 +982,6 @@ class html(ABCHTMLGenerator):
         self.events = set([])  # currently used only for sounds
         self.status_icons = {}
         self.final_javascript_code = ""
-        self.treestates = None
         self.page_context = {}
 
         # Settings
@@ -994,6 +1004,7 @@ class html(ABCHTMLGenerator):
         self.request = request
         self.response = response
 
+        # TODO: Cleanup this side effect (then remove disable_request_timeout() e.g. from update_config.py)
         self.enable_request_timeout()
 
         self.response.headers["Content-type"] = "text/html; charset=UTF-8"
@@ -1053,7 +1064,7 @@ class html(ABCHTMLGenerator):
         return "themes/%s/%s" % (self._theme, rel_url)
 
     def _verify_not_using_threaded_mpm(self):
-        if self.request.is_multithreaded:
+        if self.request.is_multithread:
             raise MKGeneralException(
                 _("You are trying to Check_MK together with a threaded Apache multiprocessing module (MPM). "
                   "Check_MK is only working with the prefork module. Please change the MPM module to make "
@@ -1104,7 +1115,7 @@ class html(ABCHTMLGenerator):
             self.mobile = self.request.cookie("mobile", "0") == "1"
 
         else:
-            self.mobile = self._is_mobile_client(self.request.user_agent)
+            self.mobile = self._is_mobile_client(self.request.user_agent.string)
 
     def _is_mobile_client(self, user_agent):
         # These regexes are taken from the public domain code of Matt Sullivan
@@ -1132,6 +1143,27 @@ class html(ABCHTMLGenerator):
             for varname, value in saved_vars.iteritems():
                 self.request.set_var(varname, value)
 
+    def del_var_from_env(self, varname):
+        # HACKY WORKAROUND, REMOVE WHEN NO LONGER NEEDED
+        # We need to get rid of query-string entries which can contain secret information.
+        # As this is the only location where these are stored on the WSGI environment this
+        # should be enough.
+        # See also cmk.gui.globals:RequestContext
+        # Filter the variables even if there are multiple copies of them (this is allowed).
+        decoded_qs = [
+            (key, value) for key, value in self.request.args.items(multi=True) if key != varname
+        ]
+        self.request.environ['QUERY_STRING'] = urllib.urlencode(decoded_qs)
+        # We remove the form entry. As this entity is never copied it will be modified within
+        # it's cache.
+        dict.pop(self.request.form, varname, None)
+        # We remove the __dict__ entries to allow @cached_property to reload them from
+        # the environment. The rest of the request object stays the same.
+        self.request.__dict__.pop('args', None)
+        self.request.__dict__.pop('values', None)
+
+    # TODO: For historic reasons this needs to return byte strings. We will clean this up
+    # soon, before moving to Python 3.
     def get_ascii_input(self, varname, deflt=None):
         """Helper to retrieve a byte string and ensure it only contains ASCII characters
         In case a non ASCII character is found an MKUserError() is raised."""
@@ -1225,7 +1257,9 @@ class html(ABCHTMLGenerator):
 
         for key, val in self.request.itervars():
             if key not in ["request", "output_format"] + exclude_vars:
-                request[key] = val.decode("utf-8")
+                if isinstance(val, bytes):
+                    val = val.decode("utf-8")
+                request[key] = val
 
         return request
 
@@ -1319,35 +1353,11 @@ class html(ABCHTMLGenerator):
     #
 
     def set_output_format(self, f):
-        if f == "json":
-            content_type = "application/json; charset=UTF-8"
-
-        elif f == "jsonp":
-            content_type = "application/javascript; charset=UTF-8"
-
-        elif f in ("csv", "csv_export"):  # Cleanup: drop one of these
-            content_type = "text/csv; charset=UTF-8"
-
-        elif f == "python":
-            content_type = "text/plain; charset=UTF-8"
-
-        elif f == "text":
-            content_type = "text/plain; charset=UTF-8"
-
-        elif f == "html":
-            content_type = "text/html; charset=UTF-8"
-
-        elif f == "xml":
-            content_type = "text/xml; charset=UTF-8"
-
-        elif f == "pdf":
-            content_type = "application/pdf"
-
-        else:
+        if f not in OUTPUT_FORMAT_MIME_TYPES:
             raise MKGeneralException(_("Unsupported context type '%s'") % f)
 
         self.output_format = f
-        self.response.headers["Content-type"] = content_type
+        self.response.set_content_type(OUTPUT_FORMAT_MIME_TYPES[f])
 
     def is_api_call(self):
         return self.output_format != "html"
@@ -1366,7 +1376,7 @@ class html(ABCHTMLGenerator):
     def set_user_id(self, user_id):
         self._user_id = user_id
         # TODO: Shouldn't this be moved to some other place?
-        self.help_visible = config.user.load_file("help", False)  # cache for later usage
+        self.help_visible = config.user.show_help  # cache for later usage
 
     def is_mobile(self):
         return self.mobile
@@ -1421,33 +1431,6 @@ class html(ABCHTMLGenerator):
 
     def render_reload_sidebar(self):
         return self.render_javascript("cmk.utils.reload_sidebar()")
-
-    #
-    # Tree states
-    #
-
-    def get_tree_states(self, tree):
-        self.load_tree_states()
-        return self.treestates.get(tree, {})
-
-    def set_tree_state(self, tree, key, val):
-        self.load_tree_states()
-
-        if tree not in self.treestates:
-            self.treestates[tree] = {}
-
-        self.treestates[tree][key] = val
-
-    def set_tree_states(self, tree, val):
-        self.load_tree_states()
-        self.treestates[tree] = val
-
-    def save_tree_states(self):
-        config.user.save_file("treestates", self.treestates)
-
-    def load_tree_states(self):
-        if self.treestates is None:
-            self.treestates = config.user.load_file("treestates", {})
 
     def finalize(self):
         """Finish the HTTP request processing before handing over to the application server"""
@@ -1550,12 +1533,12 @@ class html(ABCHTMLGenerator):
 
     def _resolve_help_text_macros(self, text):
         # type: (Text) -> Text
-        if config.user.language() == "de":
+        if config.user.language == "de":
             cmk_base_url = "https://checkmk.de"
         else:
             cmk_base_url = "https://checkmk.com"
-        return re.sub(r"\[([a-z0-9_-]+)\|([^\]]+)\]",
-                      "<a href=\"%s/\\1.html\" target=\"_blank\">\\2</a>" % cmk_base_url, text)
+        return re.sub(r"\[([a-z0-9_-]+)(#[a-z0-9_-]+|)\|([^\]]+)\]",
+                      "<a href=\"%s/\\1.html\\2\" target=\"_blank\">\\3</a>" % cmk_base_url, text)
 
     def enable_help_toggle(self):
         self.have_help = True
@@ -1613,7 +1596,6 @@ class html(ABCHTMLGenerator):
 
     def default_html_headers(self):
         self.meta(httpequiv="Content-Type", content="text/html; charset=utf-8")
-        self.meta(httpequiv="X-UA-Compatible", content="IE=edge")
         self.write_html(
             self._render_opening_tag('link',
                                      rel="shortcut icon",
@@ -1672,7 +1654,7 @@ class html(ABCHTMLGenerator):
         plugin_stylesheets = set([])
         for directory in [
                 Path(cmk.utils.paths.web_dir, "htdocs", "css"),
-                cmk.utils.paths.local_web_dir.joinpath("htdocs", "css"),
+                cmk.utils.paths.local_web_dir / "htdocs" / "css",
         ]:
             if directory.exists():
                 for entry in directory.iterdir():
@@ -1751,8 +1733,8 @@ class html(ABCHTMLGenerator):
         if not isinstance(config.user, config.LoggedInNobody):
             login_text = "<b>%s</b> (%s" % (config.user.id, "+".join(config.user.role_ids))
             if self.enable_debug:
-                if config.user.language():
-                    login_text += "/%s" % config.user.language()
+                if config.user.language:
+                    login_text += "/%s" % config.user.language
             login_text += ')'
         else:
             login_text = _("not logged in")
@@ -2049,9 +2031,6 @@ class html(ABCHTMLGenerator):
         self.icon(title=None, icon=icon)
         self.close_a()
         self.close_div()
-
-    def get_button_counts(self):
-        return config.user.get_button_counts()
 
     def empty_icon_button(self):
         self.write(self.render_icon("trans", cssclass="iconbutton trans"))
@@ -2500,8 +2479,7 @@ class html(ABCHTMLGenerator):
                                  icon=None,
                                  fetch_url=None,
                                  title_url=None,
-                                 title_target=None,
-                                 tree_img="tree"):
+                                 title_target=None):
         self.folding_indent = indent
 
         if self._user_id:
@@ -2524,7 +2502,7 @@ class html(ABCHTMLGenerator):
             else:
                 self.img(id_=img_id,
                          class_=["treeangle", "nform", "open" if isopen else "closed"],
-                         src="themes/%s/images/%s_closed.png" % (self._theme, tree_img),
+                         src="themes/%s/images/tree_closed.png" % (self._theme),
                          align="absbottom")
             self.write_text(title)
             self.close_td()
@@ -2537,7 +2515,7 @@ class html(ABCHTMLGenerator):
             if not icon:
                 self.img(id_=img_id,
                          class_=["treeangle", "open" if isopen else "closed"],
-                         src="themes/%s/images/%s_closed.png" % (self._theme, tree_img),
+                         src="themes/%s/images/tree_closed.png" % (self._theme),
                          align="absbottom",
                          onclick=onclick)
             if isinstance(title, HTML):  # custom HTML code
@@ -2580,7 +2558,7 @@ class html(ABCHTMLGenerator):
 
     def foldable_container_is_open(self, treename, id_, isopen):
         # try to get persisted state of tree
-        tree_state = self.get_tree_states(treename)
+        tree_state = config.user.get_tree_states(treename)
 
         if id_ in tree_state:
             isopen = tree_state[id_] == "on"
@@ -2638,7 +2616,7 @@ class html(ABCHTMLGenerator):
         title = self.attrencode(title)
         display = "block"
         if bestof:
-            counts = self.get_button_counts()
+            counts = config.user.button_counts
             weights = counts.items()
             weights.sort(key=lambda x: x[1])
             best = dict(weights[-bestof:])  # pylint: disable=invalid-unary-operand-type
@@ -2804,22 +2782,28 @@ class html(ABCHTMLGenerator):
                              menu_content=None,
                              cssclass=None,
                              onclose=None,
-                             resizable=False):
+                             resizable=False,
+                             content_body=None):
 
-        onclick = 'cmk.popup_menu.toggle_popup(event, this, %s, %s, %s, %s, %s, %s, %s);' % \
+        onclick = 'cmk.popup_menu.toggle_popup(event, this, %s, %s, %s, %s, %s, %s, %s, %s);' % \
                     (json.dumps(ident),
                      json.dumps(what if what else None),
                      json.dumps(data if data else None),
                      json.dumps(self.urlencode_vars(url_vars) if url_vars else None),
                      json.dumps(menu_content if menu_content else None),
                      json.dumps(onclose.replace("'", "\\'") if onclose else None),
-                     json.dumps(resizable))
+                     json.dumps(resizable),
+                     content_body if content_body else json.dumps(None))
 
         #TODO: Check if HTML'ing content is correct and necessary!
-        atag = self.render_a(HTML(content),
-                             class_="popup_trigger",
-                             href="javascript:void(0);",
-                             onclick=onclick)
+        atag = self.render_a(
+            HTML(content),
+            class_="popup_trigger",
+            href="javascript:void(0);",
+            # Needed to prevent wrong linking when views are parts of dashlets
+            target="_self",
+            onclick=onclick,
+        )
 
         return self.render_div(atag,
                                class_=["popup_trigger", cssclass],

@@ -40,7 +40,6 @@ from typing import Optional as TypingOptional, List, Callable, Text, Union  # py
 import six
 
 import cmk.utils.plugin_registry
-import cmk.utils.store
 
 from cmk.gui.globals import g
 import cmk.gui.mkeventd
@@ -281,11 +280,11 @@ def _list_user_icons_and_actions():
 
 
 def SNMPCredentials(  # pylint: disable=redefined-builtin
-        title=None,  # type: TypingOptional[Text]
-        help=None,  # type: TypingOptional[Text]
-        only_v3=False,  # type: bool
-        default_value="public",  # type: Text
-        allow_none=False  # type: bool
+    title=None,  # type: TypingOptional[Text]
+    help=None,  # type: TypingOptional[Text]
+    only_v3=False,  # type: bool
+    default_value="public",  # type: Text
+    allow_none=False  # type: bool
 ):  # type: (...) -> Alternative
     def alternative_match(x):
         if only_v3:
@@ -609,16 +608,16 @@ def _group_choices(group_information):
 
 
 def passwordstore_choices():
-    store = PasswordStore()
+    pw_store = PasswordStore()
     return [(ident, pw["title"])
-            for ident, pw in store.filter_usable_entries(store.load_for_reading()).items()]
+            for ident, pw in pw_store.filter_usable_entries(pw_store.load_for_reading()).items()]
 
 
 def PasswordFromStore(  # pylint: disable=redefined-builtin
-        title=None,  # type: TypingOptional[Text]
-        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-        allow_empty=True,  # type: bool
-        size=25,  # type: int
+    title=None,  # type: TypingOptional[Text]
+    help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+    allow_empty=True,  # type: bool
+    size=25,  # type: int
 ):  # -> CascadingDropdown
     return CascadingDropdown(
         title=title,
@@ -643,10 +642,10 @@ def PasswordFromStore(  # pylint: disable=redefined-builtin
 
 
 def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
-        title=None,  # type: TypingOptional[Text]
-        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-        allow_empty=True,  # type: bool
-        size=25,  # type: int
+    title=None,  # type: TypingOptional[Text]
+    help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+    allow_empty=True,  # type: bool
+    size=25,  # type: int
 ):
     return Transform(
         PasswordFromStore(
@@ -2218,7 +2217,8 @@ def get_hostnames_from_checkboxes(filterfunc=None):
     This is needed for bulk operations."""
     show_checkboxes = html.request.var("show_checkboxes") == "1"
     if show_checkboxes:
-        selected = weblib.get_rowselection('wato-folder-/' + watolib.Folder.current().path())
+        selected = config.user.get_rowselection(weblib.selection_id(),
+                                                'wato-folder-/' + watolib.Folder.current().path())
     search_text = html.request.var("search")
 
     selected_host_names = []

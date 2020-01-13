@@ -26,12 +26,12 @@
 
 import os
 import glob
-import subprocess
 import traceback
 from pathlib2 import Path
 
 import cmk.utils.paths
 import cmk.utils.store as store
+import cmk.utils.cmk_subprocess as subprocess
 
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
@@ -291,7 +291,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         for k, v in sorted(config.items()):
             output += '%s = %r\n' % (k, v)
 
-        cmk.utils.store.save_file(self.diskspace_config, output)
+        store.save_file(self.diskspace_config, output)
 
     def save_site_globals(self, settings):
         pass
@@ -422,14 +422,16 @@ class ConfigDomainApache(ABCConfigDomain):
         try:
             self._write_config_file()
 
-            p = subprocess.Popen(["omd", "reload", "apache"],
-                                 shell=False,
-                                 stdin=open(os.devnull),
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT,
-                                 close_fds=True)
+            p = subprocess.Popen(
+                ["omd", "reload", "apache"],
+                stdin=open(os.devnull),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                close_fds=True,
+                encoding="utf-8",
+            )
 
-            stdout = p.communicate()[0]
+            stdout, _stderr = p.communicate()
             if p.returncode != 0:
                 raise Exception(stdout)
 
@@ -539,14 +541,16 @@ class ConfigDomainRRDCached(ABCConfigDomain):
         try:
             self._write_config_file()
 
-            p = subprocess.Popen(["omd", "restart", "rrdcached"],
-                                 shell=False,
-                                 stdin=open(os.devnull),
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT,
-                                 close_fds=True)
+            p = subprocess.Popen(
+                ["omd", "restart", "rrdcached"],
+                stdin=open(os.devnull),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                close_fds=True,
+                encoding="utf-8",
+            )
 
-            stdout = p.communicate()[0]
+            stdout, _stderr = p.communicate()
             if p.returncode != 0:
                 raise Exception(stdout)
 

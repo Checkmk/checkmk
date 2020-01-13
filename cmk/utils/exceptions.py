@@ -24,43 +24,54 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.utils.i18n import _
+import six
 
 
 # never used directly in the code. Just some wrapper to make all of our
 # exceptions handleable with one call
 class MKException(Exception):
-    # TODO: The comment and the method below are nonsense: If we want unicode,
-    # it is __unicode__'s task. This just seems to be a workaround for incorrect
-    # call sites confusing both kinds of strings. Sometimes returning a unicode
-    # string below just asks for trouble when e.g. this is spliced into a byte
-    # string, and it *is* a byte string when __str__ is called: Splicing into a
-    # unicode string would call __unicode__.
-    #
-    # Do not use the Exception() __str__, because it uses str()
-    # to convert the message. We want to keep unicode strings untouched
-    # And don't use self.message, because older python versions don't
-    # have this variable set. self.args[0] seems to be the most portable
-    # way at the moment.
+    # TODO: Remove this method after Python 3 migration.
+    # NOTE: In Python 2 the return type is WRONG, we should return str.
     def __str__(self):
-        if self.args:
-            return '%s' % self.args[0]
-        return ''
+        # not-yet-a-type: () -> six.text_type
+        """
+        Python 3:
+        - No args:
+          >>> str(Exception())
+          ''
+
+        - Bytes input:
+          >>> str(Exception(b"h\xc3\xa9 \xc3\x9f\xc3\x9f"))
+          "b'h\\xc3\\xa9 \\xc3\\x9f\\xc3\\x9f'"
+
+        - Unicode input:
+          >>> str(Exception("hé ßß"))
+          'hé ßß'
+
+        - Multiple args:
+          >>> str(Exception(b"h\xc3\xa9 \xc3\x9f\xc3\x9f", 123, "hé ßß"))
+          "(b'h\\xc3\\xa9 \\xc3\\x9f\\xc3\\x9f', 123, 'hé ßß')"
+        """
+
+        if not self.args:
+            return six.text_type("")
+
+        if len(self.args) == 1:
+            arg = self.args[0]
+            if isinstance(arg, six.binary_type):
+                # Python 3 immediately returns repr of bytestr but we try to decode first.
+                # We always return a unicode str.
+                try:
+                    return arg.decode("utf-8")
+                except UnicodeDecodeError:
+                    return u"b%s" % repr(arg)
+            return six.text_type(arg)
+
+        return six.text_type(self.args)
 
 
 class MKGeneralException(MKException):
-    def __init__(self, reason):
-        self.reason = reason
-        super(MKGeneralException, self).__init__(reason)
-
-    def __str__(self):
-        return self.reason
-
-    def plain_title(self):
-        return _("General error")
-
-    def title(self):
-        return _("Error")
+    pass
 
 
 # This exception is raises when the current program execution should be
@@ -70,20 +81,15 @@ class MKGeneralException(MKException):
 # "normal" case and no exception handling like printing a stack trace
 # nor an error message should be done. The program is stopped with
 # exit code 0.
-class MKTerminate(Exception):
+class MKTerminate(MKException):
     pass
 
 
 # This is raised to print an error message and then end the program.
 # The program should catch this at top level and end exit the program
 # with exit code 3, in order to be compatible with monitoring plugin API.
-class MKBailOut(Exception):
-    def __init__(self, reason):
-        self.reason = reason
-        super(MKBailOut, self).__init__(reason)
-
-    def __str__(self):
-        return self.reason
+class MKBailOut(MKException):
+    pass
 
 
 # This exception is raised when a previously configured timeout is reached.

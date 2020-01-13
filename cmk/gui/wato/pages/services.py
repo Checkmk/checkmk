@@ -38,7 +38,6 @@ from hashlib import sha256
 from typing import Dict, NamedTuple, Text, List, Optional  # pylint: disable=unused-import
 
 import cmk
-import cmk.utils.store
 from cmk.utils.defines import short_service_state_name
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 
@@ -148,8 +147,8 @@ DiscoveryOptions = NamedTuple("DiscoveryOptions", [
 ])
 
 StartDiscoveryRequest = NamedTuple("StartDiscoveryRequest", [
-    ("host", watolib.Host),
-    ("folder", watolib.Folder),
+    ("host", watolib.CREHost),
+    ("folder", watolib.CREFolder),
     ("options", DiscoveryOptions),
 ])
 
@@ -186,15 +185,15 @@ class ModeDiscovery(WatoMode):
 
         action = DiscoveryAction.NONE
         if config.user.may("wato.services"):
-            show_checkboxes = config.user.load_file("discovery_checkboxes", False)
+            show_checkboxes = config.user.discovery_checkboxes
             if html.request.var("_scan") == "1":
                 action = DiscoveryAction.SCAN
         else:
             show_checkboxes = False
 
-        show_parameters = config.user.load_file("parameter_column", False)
-        show_discovered_labels = config.user.load_file("discovery_show_discovered_labels", False)
-        show_plugin_names = config.user.load_file("discovery_show_plugin_names", False)
+        show_parameters = config.user.parameter_column
+        show_discovered_labels = config.user.discovery_show_discovered_labels
+        show_plugin_names = config.user.discovery_show_plugin_names
 
         self._options = DiscoveryOptions(
             action=action,
@@ -431,16 +430,15 @@ class ServiceDiscoveryBackgroundJob(watolib.WatoBackgroundJob):
     def __init__(self, host_name):
         # type: (str) -> None
         job_id = "%s-%s" % (self.job_prefix, host_name)
-        kwargs = {
-            "title": _("Service discovery"),
-            "stoppable": True,
-            "host_name": host_name,
-        }
         last_job_status = watolib.WatoBackgroundJob(job_id).get_status()
-        if "duration" in last_job_status:
-            kwargs["estimated_duration"] = last_job_status["duration"]
 
-        super(ServiceDiscoveryBackgroundJob, self).__init__(job_id, **kwargs)
+        super(ServiceDiscoveryBackgroundJob, self).__init__(
+            job_id,
+            title=_("Service discovery"),
+            stoppable=True,
+            host_name=host_name,
+            estimated_duration=last_job_status.get("duration"),
+        )
 
     def discover(self, request, job_interface):
         # type: (StartDiscoveryRequest, BackgroundProcessInterface) -> None
@@ -496,7 +494,7 @@ class ServiceDiscoveryBackgroundJob(watolib.WatoBackgroundJob):
         job_status = self.get_status()
         job_status["is_active"] = self.is_active()
 
-        # TODO: Use the correct time. This is difficult because cmk_base does not have a single
+        # TODO: Use the correct time. This is difficult because cmk.base does not have a single
         # time for all data of a host. The data sources should be able to provide this information
         # somehow.
         check_table_created = time.time()
@@ -684,22 +682,21 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             StartDiscoveryRequest(self._host, self._host.folder(), self._options))
 
     def _update_persisted_discovery_options(self):
-        show_checkboxes = config.user.load_file("discovery_checkboxes", False)
+        show_checkboxes = config.user.discovery_checkboxes
         if show_checkboxes != self._options.show_checkboxes:
-            config.user.save_file("discovery_checkboxes", self._options.show_checkboxes)
+            config.user.discovery_checkboxes = self._options.show_checkboxes
 
-        show_parameters = config.user.load_file("parameter_column", False)
+        show_parameters = config.user.parameter_column
         if show_parameters != self._options.show_parameters:
-            config.user.save_file("parameter_column", self._options.show_parameters)
+            config.user.parameter_column = self._options.show_parameters
 
-        show_discovered_labels = config.user.load_file("discovery_show_discovered_labels", False)
+        show_discovered_labels = config.user.discovery_show_discovered_labels
         if show_discovered_labels != self._options.show_discovered_labels:
-            config.user.save_file("discovery_show_discovered_labels",
-                                  self._options.show_discovered_labels)
+            config.user.discovery_show_discovered_labels = self._options.show_discovered_labels
 
-        show_plugin_names = config.user.load_file("discovery_plugin_names", False)
+        show_plugin_names = config.user.discovery_show_plugin_names
         if show_plugin_names != self._options.show_plugin_names:
-            config.user.save_file("discovery_show_plugin_names", self._options.show_plugin_names)
+            config.user.discovery_show_plugin_names = self._options.show_plugin_names
 
     def _handle_action(self, discovery_result, request):
         # type: (DiscoveryResult, dict) -> DiscoveryResult
@@ -976,7 +973,7 @@ class DiscoveryPageRenderer(object):
         return sha256(key.encode('utf-8')).hexdigest()
 
     def __init__(self, host, options):
-        # type: (watolib.Host, DiscoveryOptions) -> None
+        # type: (watolib.CREHost, DiscoveryOptions) -> None
         super(DiscoveryPageRenderer, self).__init__()
         self._host = host
         self._options = options
@@ -1035,7 +1032,7 @@ class DiscoveryPageRenderer(object):
         if not discovery_result.check_table:
             return
 
-        # We currently don't get correct information from cmk_base (the data sources). Better
+        # We currently don't get correct information from cmk.base (the data sources). Better
         # don't display this until we have the information.
         #html.write("Using discovery information from %s" % cmk.utils.render.date_and_time(
         #    discovery_result.check_table_created))

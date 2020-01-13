@@ -41,19 +41,22 @@
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
+#include <deque>
+#include <filesystem>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <type_traits>
 #include <vector>
 #include "Average.h"
 #include "ChronoUtils.h"
-#include "ClientQueue.h"
 #include "InputBuffer.h"
 #include "Logger.h"
 #include "NagiosCore.h"
 #include "OutputBuffer.h"
 #include "Poller.h"
+#include "Queue.h"
 #include "RegExp.h"
 #include "TimeperiodsCache.h"
 #include "Triggers.h"
@@ -113,7 +116,8 @@ Encoding fl_data_encoding{Encoding::utf8};
 
 static Logger *fl_logger_nagios = nullptr;
 static LogLevel fl_livestatus_log_level = LogLevel::notice;
-static ClientQueue *fl_client_queue = nullptr;
+using ClientQueue_t = Queue<std::deque<int>>;
+static ClientQueue_t *fl_client_queue = nullptr;
 TimeperiodsCache *g_timeperiods_cache = nullptr;
 
 /* simple statistics data for TableStatus */
@@ -188,7 +192,7 @@ void livestatus_cleanup_after_fork() {
     // not atomic :-(
 
     // Eventuell sollte man hier anstelle von store_deinit() nicht
-    // darauf verlassen, dass die ClientQueue alle Verbindungen zumacht.
+    // darauf verlassen, dass die fl_client_queue alle Verbindungen zumacht.
     // Es sind ja auch Dateideskriptoren offen, die von Threads gehalten
     // werden und nicht mehr in der Queue sind. Und in store_deinit()
     // wird mit mutexes rumgemacht....
@@ -236,7 +240,10 @@ void *main_thread(void *data) {
             if (cc > g_max_fd_ever) {
                 g_max_fd_ever = cc;
             }
-            fl_client_queue->addConnection(cc);  // closes fd
+            if (!fl_client_queue->try_push(cc)) {
+                generic_error ge("cannot enqueue client socket");
+                Warning(logger) << ge;
+            }
             g_num_queued_connections++;
             counterIncrement(Counter::connections);
         }
@@ -249,12 +256,11 @@ void *client_thread(void *data) {
     tl_info = static_cast<ThreadInfo *>(data);
     auto logger = fl_core->loggerLivestatus();
     while (!fl_should_terminate) {
-        int cc = fl_client_queue->popConnection();
         g_num_queued_connections--;
         g_livestatus_active_connections++;
-        if (cc >= 0) {
-            Debug(logger) << "accepted client connection on fd " << cc;
-            InputBuffer input_buffer(cc, fl_should_terminate, logger,
+        if (auto cc = fl_client_queue->pop()) {
+            Debug(logger) << "accepted client connection on fd " << *cc;
+            InputBuffer input_buffer(*cc, fl_should_terminate, logger,
                                      fl_query_timeout, fl_idle_timeout);
             bool keepalive = true;
             unsigned requestnr = 0;
@@ -264,10 +270,10 @@ void *client_thread(void *data) {
                                   << " on same connection";
                 }
                 counterIncrement(Counter::requests);
-                OutputBuffer output_buffer(cc, fl_should_terminate, logger);
+                OutputBuffer output_buffer(*cc, fl_should_terminate, logger);
                 keepalive = fl_core->answerRequest(input_buffer, output_buffer);
             }
-            close(cc);
+            close(*cc);
         }
         g_livestatus_active_connections--;
     }
@@ -376,7 +382,10 @@ void terminate_threads() {
         pthread_join(fl_thread_info[0].id, nullptr);
         Informational(fl_logger_nagios)
             << "waiting for client threads to terminate...";
-        fl_client_queue->terminate();
+        fl_client_queue->join();
+        while (auto fd = fl_client_queue->try_pop()) {
+            close(*fd);
+        }
         for (const auto &info : fl_thread_info) {
             if (pthread_join(info.id, nullptr) != 0) {
                 Warning(fl_logger_nagios)
@@ -590,7 +599,7 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
         case NEBTYPE_PROCESS_START:
             fl_core = new NagiosCore(fl_paths, fl_limits, fl_authorization,
                                      fl_data_encoding);
-            fl_client_queue = new ClientQueue();
+            fl_client_queue = new ClientQueue_t{};
             g_timeperiods_cache = new TimeperiodsCache(fl_logger_nagios);
             break;
         case NEBTYPE_PROCESS_EVENTLOOPSTART:
@@ -850,6 +859,9 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                 }
             } else if (left == "pnp_path") {
                 fl_paths._pnp = check_path("PNP perfdata directory", right);
+            } else if (left == "crash_report_path") {
+                fl_paths._crash_reports_path =
+                    check_path("Path to the crash reports", right);
             } else if (left == "mk_inventory_path") {
                 fl_paths._mk_inventory =
                     check_path("Check_MK Inventory directory", right);

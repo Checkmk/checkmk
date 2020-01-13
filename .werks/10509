@@ -1,0 +1,16 @@
+Title: oracle_rman: Fixed wrong incremental Level 1 Backup
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1572511911
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+The detection for an incremental Level 1 Backup could
+be wrong, when the last incremental Level 0 was younger
+and some other backup information was in the output of
+the plugin.
+
+This issue has been introduced with Werk 6482.

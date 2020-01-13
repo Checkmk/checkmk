@@ -64,10 +64,10 @@ h3 {
 
 
 body {
-  color: #fff;
+  color: rgb(255, 255, 255);
 
   a, a:link, a:visited {
-    color: #fff;
+    color: rgb(255, 255, 255);
   }
 
   &.hidden:after {
@@ -100,14 +100,14 @@ body {
        This can be selected in multisite.mk with screenshotmode = True or screenshotmode=1
        on the URL */
     &.screenshotmode {
-      background-color: #fff;
+      background-color: rgb(255, 255, 255);
       background-image: url("");
     }
 
     /* TODO: Reproduce this div.main element */
     div.main {
       padding-left: 10px;
-      border-left: 1px solid #f00;
+      border-left: 1px solid rgb(255, 0, 0);
     }
 
     /* The content page header containing the title, user, date */
@@ -121,14 +121,14 @@ body {
       max-width: 100%;
       padding: 8px 32px;
       margin: 0 0 5px;
-      color: #fff;
+      color: rgb(255, 255, 255);
       background: $bg-color-secondary;
       border-bottom: $table-header-border-bottom;
       border-spacing: 0;
 
       td {
 	overflow: hidden;
-	color: #fff;
+	color: rgb(255, 255, 255);
 	text-overflow: ellipsis;
 	-o-text-overflow: ellipsis;
 	vertical-align: middle;
@@ -194,8 +194,8 @@ body {
       height: 1px;
       padding: 0;
       margin: 0;
-      color: #fff;
-      background-color: #fff;
+      color: rgb(255, 255, 255);
+      background-color: rgb(255, 255, 255);
       border: none;
     }
 
@@ -206,7 +206,7 @@ body {
       width: 100%;
       font-family: monospace;
       font-size: 11px;
-      color: #fff;
+      color: rgb(255, 255, 255);
     }
 
     /* The content page footer containing optional status icons */
@@ -224,7 +224,7 @@ body {
     table.footer td.left   { text-align: left; }
     table.footer td.middle { text-align: center; }
     table.footer td.right  { text-align: right; }
-    table.footer a { color: #246; }
+    table.footer a { color: rgb(34, 68, 102); }
   }
 }
 
@@ -250,7 +250,7 @@ div#foot_refresh, div#foot_refresh_time {
   padding: 10px;
   text-align: center;
   text-decoration: none;
-  background-color: #111;
+  background-color: rgb(17, 17, 17);
   border-radius: 5px;
   opacity: 0.8;
   filter: alpha(opacity=80); /* For IE8 and earlier */
@@ -262,7 +262,7 @@ div#foot_refresh, div#foot_refresh_time {
   height: 60px;
   margin-top: 5px;
   margin-bottom: 5px;
-  background-color: #fff;
+  background-color: rgb(255, 255, 255);
   border-radius: 5px;
   opacity: 0.9;
   filter: alpha(opacity=90); /* For IE8 and earlier */
@@ -578,7 +578,7 @@ table.data {
     }
 
     &.unused {
-      color: #888;
+      color: rgb(136, 136, 136);
     }
 
     &:not(.state) {
@@ -599,7 +599,7 @@ table.data {
   /* Two-lined header, for example in WATO: ChangeLog->Site Status */
   /* TODO: Reproduce this html element */
   tr.dualheader th {
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid rgb(204, 204, 204);
   }
 
   tr.data {
@@ -767,7 +767,7 @@ table.data {
   tr th a.toggle_actions img,
   tr th body.main .popup_menu span.toggle_actions img,
   body.main .popup_menu & tr th span.toggle_actions img {
-    filter: invert($filter-inversion-percentage);
+    filter: $treeangle-img-filter;
   }
 
   tr.groupheader,
@@ -824,16 +824,16 @@ tr.data.grouped_row_header {
 }
 
 tr.data.group_end {
-  border-bottom: 2px solid #ccc;
+  border-bottom: 2px solid rgb(204, 204, 204);
 }
 
 /* state in group header must have fixed width */
 .groupheader td.state {
   width: 50px;
   padding: 2px 5px;
-  border: 1px solid #000;
+  border: 1px solid rgb(0, 0, 0);
   border-radius: 5px;
-  box-shadow: 1px 1px 2px #444;
+  box-shadow: 1px 1px 2px rgb(68, 68, 68);
 }
 
 tr.groupheader {
@@ -1023,7 +1023,7 @@ input[type=text], input[type=password] {
 }
 
 input[type=password] {
-  box-shadow: 0.1px 1.2px 1.8px 0 #800 inset;
+  box-shadow: 0.1px 1.2px 1.8px 0 rgb(136, 0, 0) inset;
 }
 
 select {
@@ -1099,7 +1099,7 @@ td.content hr {
 /* TODO: Reproduce these html elements (also have a look at .tab and .tabactive
  *       elemenets in _logwatch.scss)
  */
-input.tab#results, input.tabactive#results { background-color: #fe6; }
+input.tab#results, input.tabactive#results { background-color: rgb(255, 238, 102); }
 input.date, input.time {
   font-family: monospace;
 }
@@ -1148,7 +1148,7 @@ table.nform {
   empty-cells: show;
 
   body.main.screenshotmode & {
-    background-color: #fff;
+    background-color: rgb(255, 255, 255);
     background-image: none;
   }
 
@@ -1178,7 +1178,6 @@ table.nform {
 
     img.treeangle.nform {
       margin: 0 8px 0 0;
-      filter: invert($filter-inversion-percentage);
     }
   }
 
@@ -1340,13 +1339,13 @@ div.really, div.success, div.error, div.message, div.warning {
     margin-left: 0;
     font-size: 16px;
     font-weight: bold;
-    color: #fff;
+    color: rgb(255, 255, 255);
   }
 }
 
 // TODO: Check whether this must be $primary-font-color as is for .success
 div.message {
-  color: #000;
+  color: rgb(0, 0, 0);
 }
 
 div.really {
@@ -1380,7 +1379,7 @@ body.main table.header td.right a#helpbutton img {
 }
 
 a#helpbutton.passive {
-  filter: #808080;
+  filter: rgb(128, 128, 128);
   -webkit-filter: grayscale(1);
 }
 
@@ -1391,7 +1390,7 @@ div.help {
   margin: 8px 0;
   font-size: 12px;
   font-weight: normal;
-  color: #000;
+  color: rgb(0, 0, 0);
   text-align: left;
   background-color: $help-bg-color;
   background-image: none;
@@ -1424,7 +1423,7 @@ div.help {
 
   table.help td {
     vertical-align: top;
-    border: 1px solid #000;
+    border: 1px solid rgb(0, 0, 0);
   }
 
   table.help td.tt {
@@ -1433,12 +1432,12 @@ div.help {
 
   tt {
     font-family: courier, monospace;
-    color: #009;
+    color: rgb(0, 0, 153);
   }
 }
 
 table.data div.help {
-  box-shadow: 0 0 3px #000;
+  box-shadow: 0 0 3px rgb(0, 0, 0);
 }
 
 /*--Popupmenu--------------------------------------------------------------.
@@ -1454,7 +1453,7 @@ body.main .popup_menu {
   position: absolute;
   z-index: 50;
   min-width: 300px;
-  color: #fff;
+  color: rgb(255, 255, 255);
   white-space: normal;
   background-color: $bg-color-tertiary;
   border: 1px solid $color-table-border;
@@ -1479,7 +1478,7 @@ body.main .popup_menu {
       height: 15px;
       pointer-events: none;
       cursor: se-resize;
-      background-color: #508aa1;
+      background-color: rgb(80, 138, 161);
     }
 
     div.content {
@@ -1554,15 +1553,15 @@ body.main .popup_menu span {
       line-height: 21px;
 
       &:hover {
-        color: #fff;
+        color: rgb(255, 255, 255);
         text-decoration: none;
-        background-color: #629bb1;
+        background-color: rgb(98, 155, 177);
       }
     }
 
     &.active a {
       color: $primary-font-color;
-      border-bottom: 1px solid #508aa1;
+      border-bottom: 1px solid rgb(80, 138, 161);
     }
   }
 
@@ -1631,14 +1630,14 @@ div.keysym {
   display: inline-block;
   padding: 2px 5px;
   margin: 0 1px;
-  color: #fff; /* font-style: italic; */
+  color: rgb(255, 255, 255); /* font-style: italic; */
   text-align: center;
-  background-color: #333;
-  border-color: #888 #444 #000 #666;
+  background-color: rgb(51, 51, 51);
+  border-color: rgb(136, 136, 136) rgb(68, 68, 68) rgb(0, 0, 0) rgb(102, 102, 102);
   border-style: solid;
   border-width: 2px;
   border-radius: 4px;
-  box-shadow: 0.5px 0.5px 1px #000;
+  box-shadow: 0.5px 0.5px 1px rgb(0, 0, 0);
 
   /* Contextlinks with embedded keyboard button */
   div.contextlink & {
@@ -1647,8 +1646,8 @@ div.keysym {
     right: 5px;
     padding: 1px 5px;
     font-size: 8px;
-    background-color: #467;
-    border-color: #8ab #245 #134 #79a;
+    background-color: rgb(68, 102, 119);
+    border-color: rgb(136, 170, 187) rgb(34, 68, 85) rgb(17, 51, 68) rgb(119, 153, 170);
     border-width: 2px;
   }
 }
@@ -1718,25 +1717,25 @@ table.debug_vars {
 
   th {
     font-weight: bold;
-    background-color: #8c8;
-    border: 1px solid #080;
+    background-color: rgb(136, 204, 136);
+    border: 1px solid rgb(0, 136, 0);
   }
 
   td {
     padding: 2px 6px;
     font-family: courier, monospace;
-    border: 1px solid #050;
+    border: 1px solid rgb(0, 85, 0);
 
     &.left {
       font-weight: bold;
-      color: #fff;
-      background-color: #395;
+      color: rgb(255, 255, 255);
+      background-color: rgb(51, 153, 85);
     }
 
     &.right {
       font-weight: bold;
-      color: #000;
-      background-color: #8fc;
+      color: rgb(0, 0, 0);
+      background-color: rgb(136, 255, 204);
     }
   }
 }
@@ -1796,9 +1795,9 @@ table.data tr.data td.pnpgraph {
 
 td.job_state {
   font-weight: bold;
-  color: #fff;
+  color: rgb(255, 255, 255);
   text-align: center;
-  box-shadow: 0.5px 0.5px 2px #000 inset;
+  box-shadow: 0.5px 0.5px 2px rgb(0, 0, 0) inset;
 }
 
 table.data > tbody > tr > td.job_state {
@@ -1820,7 +1819,7 @@ table.data > tbody > tr > td.job_state {
 
   &.job_initialized {
     color: $black;
-    background-color: #ccc;
+    background-color: rgb(204, 204, 204);
   }
 }
 
@@ -1925,7 +1924,7 @@ table.data.job_table {
     }
 
     > div {
-      color: #000;
+      color: rgb(0, 0, 0);
     }
   }
 
@@ -1939,23 +1938,23 @@ table.data.job_table {
       right: 0;
       bottom: 0;
       left: 0;
-      background: #00a8b5;
+      background: rgb(0, 168, 181);
       opacity: $tag-opacity;
       box-shadow: none;
       animation: none;
     }
 
     &.explicit > div::before {
-      background: #774898;
+      background: rgb(119, 72, 152);
     }
 
     &.discovered > div::before {
-      background: #f3ae4b;
+      background: rgb(243, 174, 75);
       opacity: $tag-discovered-opacity;
     }
 
     &.ruleset > div::before {
-      background: #de4383;
+      background: rgb(222, 67, 131);
     }
   }
 

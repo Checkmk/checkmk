@@ -59,13 +59,12 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
         return _("Parent scan")
 
     def __init__(self):
-        kwargs = {}
-        kwargs["title"] = _("Parent scan")
-        kwargs["lock_wato"] = False
-        kwargs["deletable"] = False
-        kwargs["stoppable"] = False
-
-        super(ParentScanBackgroundJob, self).__init__(self.job_prefix, **kwargs)
+        super(ParentScanBackgroundJob, self).__init__(
+            self.job_prefix,
+            title=_("Parent scan"),
+            lock_wato=False,
+            stoppable=False,
+        )
 
     def _back_url(self):
         return watolib.Folder.current().url()

@@ -273,8 +273,8 @@ class MultiHostSections(object):
                     new_entry.append([node_text] + entry)
                 new_section_content.append(new_entry)
             else:
-                new_section_content.append([node_text] + line)
-        return new_section_content
+                new_section_content.append([node_text] + line)  # type: ignore
+        return new_section_content  # type: ignore
 
     def _update_with_extra_sections(self, section_content, hostname, ipaddress, section_name,
                                     for_discovery):

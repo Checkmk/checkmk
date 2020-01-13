@@ -54,7 +54,7 @@ class MemBytes(NamedTuple('MemBytes', [('bytes', int), ('kb', float), ('mb', flo
         return get_bytes_human_readable(self.bytes, base=self.base)
 
 
-def _get_levels_mode_from_value(warn):
+def get_levels_mode_from_value(warn):
     """get levels mode by looking at the value
 
     Levels may be given either as
@@ -260,7 +260,7 @@ def check_memory(params, meminfo, render_base=1024):
 
     # Normalize levels and check them
     warn, crit = params.get("levels", (None, None))
-    mode = _get_levels_mode_from_value(warn)
+    mode = get_levels_mode_from_value(warn)
     warn_mb, crit_mb, levels_text = normalize_mem_levels(
         mode,
         abs(warn),

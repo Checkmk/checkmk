@@ -28,6 +28,7 @@ from __future__ import print_function
 from typing import Optional, Tuple  # pylint: disable=unused-import
 
 import sys
+import re
 
 import uuid
 import yaml
@@ -41,6 +42,8 @@ else:
 TRADITIONAL_UUID = "{BAEBF560-7308-4D53-B426-903EA74B1D7E}"
 MSI_PACKAGE_CODE_MARKER = "Intel;1033"
 MSI_PACKAGE_CODE_OFFSET = len("Intel;1033") + 10  #
+# UUID regex
+regex = re.compile('^{[a-f0-9]{8}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{12}}', re.I)
 
 
 # used normally only in Windows build chain to patch
@@ -60,6 +63,12 @@ def parse_command_line(argv):
 def generate_uuid():
     # type: () -> str
     return ("{%s}" % uuid.uuid1()).upper()
+
+
+# converts any text to SHA-1 based uuid
+def generate_uuid_from_base(base):
+    # type: (str) -> str
+    return ("{%s}" % uuid.uuid5(uuid.NAMESPACE_DNS, base)).upper()
 
 
 def write_state_file(path_to_state, pos, code):
@@ -130,6 +139,12 @@ def patch_package_code_by_state_file(f_name, state_file, package_code=None):
     return patch_package_code(f_name, mask=id_, package_code=package_code)
 
 
+def valid_uuid(uuid_value):
+    # type: (str) -> bool
+    match = regex.match(uuid_value)
+    return bool(match)
+
+
 # engine to patch MSI file with new code
 # search for 'Intel;1033' marker, add offset and patch code
 def patch_package_code_by_marker(f_name, package_code=None, state_file=None):
@@ -139,8 +154,10 @@ def patch_package_code_by_marker(f_name, package_code=None, state_file=None):
     if not p.exists():
         return False
 
-    if package_code is None or len(package_code) == 0:
+    if package_code is None:
         package_code = generate_uuid()
+    elif not valid_uuid(package_code):
+        package_code = generate_uuid_from_base(package_code)
 
     data = p.read_bytes()  # type:ignore
     location = data.find(MSI_PACKAGE_CODE_MARKER.encode('ascii'))

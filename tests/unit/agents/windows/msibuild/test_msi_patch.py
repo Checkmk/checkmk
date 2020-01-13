@@ -138,6 +138,23 @@ def check_content(new_content, base_content, pos, uuid, marker):
     assert new_content[pos + len(uuid):] == base_content[pos + len(uuid):]
 
 
+def test_uuid():
+    # relative random set of data, probably better to divide data in few arrays
+    assert not msi_patch.valid_uuid("")
+    assert not msi_patch.valid_uuid("1")
+    assert msi_patch.valid_uuid("{80312934-35F7-11EA-A177-0800271CD485}")
+    assert msi_patch.valid_uuid("{80312934-35F7-11EA-A177-0800271CD485}".lower())
+    assert not msi_patch.valid_uuid("{80312934-35F7-11EA-A177-0800271CD_85}")
+    assert not msi_patch.valid_uuid("{80312934-35F7-11EA-A177-0800271CDX85}")
+    assert not msi_patch.valid_uuid("80312934-35F7-11EA-A177-0800271CDX85")
+    assert not msi_patch.valid_uuid("DEFADEFADEFA")
+
+
+def test_uuid_base():
+    assert "{21fac8ef-8042-50ca-8c85-fbca566e726e}".upper() == msi_patch.generate_uuid_from_base(
+        "012")
+
+
 def test_patch_package_code_by_marker(conf_dir, cmk_dir):
     # prepare file to tests
     if not cmk_dir.exists():

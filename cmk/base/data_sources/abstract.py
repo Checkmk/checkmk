@@ -138,8 +138,8 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
             raise TypeError("Got invalid type: %r" % result)
         return result
 
-    def _run(self, hostname=None, ipaddress=None, get_raw_data=False):
-        # type: (HostName, HostAddress, bool) -> Union[RawAgentData, HostSections]
+    def _run(self, hostname, ipaddress, get_raw_data):
+        # type: (Optional[HostName], Optional[HostAddress], bool) -> Union[RawAgentData, HostSections]
         """Wrapper for self._execute() that unifies several things:
 
         a) Exception handling

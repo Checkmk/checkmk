@@ -120,7 +120,25 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         del self._logger.handlers[:]  # Remove all previously existing handlers
         self._logger.addHandler(handler)
 
-    def run(self, hostname=None, ipaddress=None, get_raw_data=False):
+    def run(self, hostname=None, ipaddress=None):
+        # type: (Optional[HostName], Optional[HostAddress]) -> HostSections
+        result = self._run(hostname, ipaddress, get_raw_data=False)
+        if not isinstance(result, HostSections):
+            raise TypeError("Got invalid type: %r" % result)
+        return result
+
+    def run_raw(self, hostname=None, ipaddress=None):
+        # type: (Optional[HostName], Optional[HostAddress]) -> RawAgentData
+        """Small wrapper for self._run() which always returns raw data source data
+
+        Both hostname and ipaddress are optional, used for virtual
+        Check_MK clusters."""
+        result = self._run(hostname, ipaddress, get_raw_data=True)
+        if not isinstance(result, RawAgentData):
+            raise TypeError("Got invalid type: %r" % result)
+        return result
+
+    def _run(self, hostname=None, ipaddress=None, get_raw_data=False):
         # type: (HostName, HostAddress, bool) -> Union[RawAgentData, HostSections]
         """Wrapper for self._execute() that unifies several things:
 
@@ -137,6 +155,7 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         Both hostname and ipaddress are optional, used for virtual
         Check_MK clusters."""
 
+        # TODO: This is manipulating the state that has been initialized with the constructor?!
         if hostname is not None:
             self._hostname = hostname
         if ipaddress is not None:
@@ -205,12 +224,6 @@ class DataSource(six.with_metaclass(abc.ABCMeta, object)):
         raw_data = self._execute()
         self._write_cache_file(raw_data)
         return raw_data, False
-
-    def run_raw(self):
-        # type: () -> RawAgentData
-        """Small wrapper for self.run() which always returns raw data source data"""
-        # TODO: run() should be refactored to several methods return specific types
-        return cast(RawAgentData, self.run(get_raw_data=True))
 
     @abc.abstractmethod
     def _execute(self):

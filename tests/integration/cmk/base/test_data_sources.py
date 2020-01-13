@@ -122,7 +122,7 @@ def _patch_data_source_run(monkeypatch, **kwargs):
     }
     defaults.update(kwargs)
 
-    def run(self, hostname=None, ipaddress=None, get_raw_data=False):
+    def _run(self, hostname=None, ipaddress=None, get_raw_data=False):
         assert self._may_use_cache_file == defaults["_may_use_cache_file"]
         assert self._no_cache == defaults["_no_cache"]
         assert self._max_cachefile_age == defaults["_max_cachefile_age"]
@@ -138,7 +138,7 @@ def _patch_data_source_run(monkeypatch, **kwargs):
             assert self._use_snmpwalk_cache == defaults["_use_snmpwalk_cache"]
             assert self._ignore_check_interval == defaults["_ignore_check_interval"]
 
-        result = self._run(hostname, ipaddress, get_raw_data)
+        result = self._test_run(hostname, ipaddress, get_raw_data)
 
         global _counter_run
         _counter_run += 1
@@ -146,10 +146,10 @@ def _patch_data_source_run(monkeypatch, **kwargs):
         return result
 
     monkeypatch.setattr(cmk.base.data_sources.abstract.DataSource,
-                        "_run",
-                        cmk.base.data_sources.abstract.DataSource.run,
+                        "_test_run",
+                        cmk.base.data_sources.abstract.DataSource._run,
                         raising=False)
-    monkeypatch.setattr(cmk.base.data_sources.abstract.DataSource, "run", run)
+    monkeypatch.setattr(cmk.base.data_sources.abstract.DataSource, "_run", _run)
 
 
 # When called without hosts, it uses all hosts and defaults to using the data source cache

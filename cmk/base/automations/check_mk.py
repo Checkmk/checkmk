@@ -1436,7 +1436,7 @@ class AutomationGetAgentOutput(Automation):
                 agent_output = ""
                 for source in sources.get_data_sources():
                     if isinstance(source, data_sources.abstract.CheckMKAgentDataSource):
-                        agent_output += source.run(hostname, ipaddress, get_raw_data=True)
+                        agent_output += source.run_raw(hostname, ipaddress)
                 info = agent_output
 
                 # Optionally show errors of problematic data sources

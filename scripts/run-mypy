@@ -4,15 +4,22 @@
 set -e
 
 REPO_PATH=$(dirname $(dirname $(realpath "$0")))
+PYTHON_VERSION=3.7
 
 # Detect whether or not mypy is available and print out an error that is in the
 # same format as mypy issues. This message is understood by e.g. vims ALE and
 # displays and error that mypy could not be executed.
-VENV_MYPY_PATH="$REPO_PATH/virtual-envs/3.7/.venv/bin/mypy"
+VENV_MYPY_PATH="$REPO_PATH/virtual-envs/$PYTHON_VERSION/.venv/bin/mypy"
 if [ ! -f "$VENV_MYPY_PATH" ]; then
-    for LAST_ARG; do :; done
-    echo "$LAST_ARG:1: error: Could not find $VENV_MYPY_PATH"
-    exit 1
+    # Try to fix this first
+    rm -rf "$REPO_PATH/virtual-envs/$PYTHON_VERSION/.venv"
+    make --silent -C "$REPO_PATH/virtual-envs/$PYTHON_VERSION" .venv 1>&2
+
+    if [ ! -f "$VENV_MYPY_PATH" ]; then
+        for LAST_ARG; do :; done
+        echo "$LAST_ARG:1: error: Could not find $VENV_MYPY_PATH"
+        exit 1
+    fi
 fi
 
 # NOTE: We should NOT run this in "$REPO_PATH", otherwise mypy will make paths

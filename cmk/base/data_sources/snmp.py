@@ -27,7 +27,7 @@
 import abc
 import ast
 import time
-from typing import List  # pylint: disable=unused-import
+from typing import cast, Set, Optional, Dict, List, Union  # pylint: disable=unused-import
 import six
 
 from cmk.utils.exceptions import MKGeneralException
@@ -35,11 +35,18 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk.base.config as config
 import cmk.base.snmp as snmp
 import cmk.base.snmp_utils as snmp_utils
+from cmk.base.utils import (  # pylint: disable=unused-import
+    HostName, HostAddress,
+)
 from cmk.base.check_utils import (  # pylint: disable=unused-import
-    CheckPluginName,)
+    CheckPluginName, PiggybackRawData, SectionCacheInfo, SectionName,
+)
+from cmk.base.snmp_utils import (  # pylint: disable=unused-import
+    OIDInfo, SNMPTable, RawSNMPData, PersistedSNMPSections, SNMPSections, SNMPSectionContent,
+)
 
-from .abstract import DataSource, ManagementBoardDataSource, RawAgentData  # pylint: disable=unused-import
-from .host_sections import HostSections
+from .abstract import DataSource, ManagementBoardDataSource  # pylint: disable=unused-import
+from .host_sections import AbstractHostSections
 
 #.
 #   .--SNMP----------------------------------------------------------------.
@@ -54,10 +61,33 @@ from .host_sections import HostSections
 #   '----------------------------------------------------------------------'
 
 
+class SNMPHostSections(AbstractHostSections[RawSNMPData, SNMPSections, PersistedSNMPSections,
+                                            SNMPSectionContent]):
+    def __init__(self,
+                 sections=None,
+                 cache_info=None,
+                 piggybacked_raw_data=None,
+                 persisted_sections=None):
+        # type: (Optional[SNMPSections], Optional[SectionCacheInfo], Optional[PiggybackRawData], Optional[PersistedSNMPSections]) -> None
+        super(SNMPHostSections, self).__init__(
+            sections=sections if sections is not None else {},
+            cache_info=cache_info if cache_info is not None else {},
+            piggybacked_raw_data=piggybacked_raw_data if piggybacked_raw_data is not None else {},
+            persisted_sections=persisted_sections if persisted_sections is not None else {},
+        )
+
+    def _extend_section(self, section_name, section_content):
+        # type: (SectionName, SNMPSectionContent) -> None
+        raise NotImplementedError()
+
+
 # TODO: Move common functionality of SNMPManagementBoardDataSource and
 # SNMPDataSource to ABCSNMPDataSource and make SNMPManagementBoardDataSource
 # inherit from ABCSNMPDataSource instead of SNMPDataSource
-class ABCSNMPDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
+class ABCSNMPDataSource(
+        six.with_metaclass(
+            abc.ABCMeta, DataSource[RawSNMPData, SNMPSections, PersistedSNMPSections,
+                                    SNMPHostSections])):
     @abc.abstractproperty
     def _snmp_config(self):
         # type: () -> snmp_utils.SNMPHostConfig
@@ -78,12 +108,15 @@ class SNMPDataSource(ABCSNMPDataSource):
         self._fetched_check_plugin_names = []
 
     def id(self):
+        # type: () -> str
         return "snmp"
 
     def title(self):
+        # type: () -> str
         return "SNMP"
 
     def _cpu_tracking_id(self):
+        # type: () -> str
         return "snmp"
 
     @property
@@ -98,6 +131,7 @@ class SNMPDataSource(ABCSNMPDataSource):
         return self._host_config.snmp_config(self._ipaddress)
 
     def describe(self):
+        # type: () -> str
         snmp_config = self._snmp_config
         if snmp_config.is_usewalk_host:
             return "SNMP (use stored walk)"
@@ -120,20 +154,33 @@ class SNMPDataSource(ABCSNMPDataSource):
         return "%s (%s, Bulk walk: %s, Port: %d, Inline: %s)" % \
                (self.title(), credentials_text, bulk, snmp_config.port, inline)
 
+    def _empty_raw_data(self):
+        # type: () -> RawSNMPData
+        return {}
+
+    def _empty_host_sections(self):
+        # type: () -> SNMPHostSections
+        return SNMPHostSections()
+
     def _from_cache_file(self, raw_data):
+        # type: (bytes) -> RawSNMPData
         return ast.literal_eval(raw_data)
 
     def _to_cache_file(self, raw_data):
+        # type: (RawSNMPData) -> bytes
         return repr(raw_data) + "\n"
 
     def set_ignore_check_interval(self, ignore_check_interval):
+        # type: (bool) -> None
         self._ignore_check_interval = ignore_check_interval
 
     def set_use_snmpwalk_cache(self, use_snmpwalk_cache):
+        # type: (bool) -> None
         self._use_snmpwalk_cache = use_snmpwalk_cache
 
     # TODO: Check if this can be dropped
     def set_on_error(self, on_error):
+        # type: (str) -> None
         self._on_error = on_error
 
     # TODO: Check if this can be dropped
@@ -141,6 +188,7 @@ class SNMPDataSource(ABCSNMPDataSource):
         self._do_snmp_scan = do_snmp_scan
 
     def get_do_snmp_scan(self):
+        # type: () -> bool
         return self._do_snmp_scan
 
     def set_check_plugin_name_filter(self, filter_func):
@@ -157,6 +205,7 @@ class SNMPDataSource(ABCSNMPDataSource):
         self._fetched_check_plugin_names = check_plugin_names
 
     def _gather_check_plugin_names(self):
+        # type: () -> Set[CheckPluginName]
         """Returns a list of check types that shal be executed with this source.
 
         The logic is only processed once per hostname+ipaddress combination. Once processed
@@ -178,6 +227,7 @@ class SNMPDataSource(ABCSNMPDataSource):
             return check_plugin_names
 
     def _execute(self):
+        # type: () -> RawSNMPData
         import cmk.base.inventory_plugins
 
         self._verify_ipaddress()
@@ -185,7 +235,8 @@ class SNMPDataSource(ABCSNMPDataSource):
         check_plugin_names = self.get_check_plugin_names()
 
         snmp_config = self._snmp_config
-        info = {}
+        info = {}  # type: RawSNMPData
+        oid_info = None  # type: Optional[OIDInfo]
         for check_plugin_name in self._sort_check_plugin_names(check_plugin_names):
             # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
             # Please note, that if the check_plugin_name is foo.bar then we lookup the
@@ -193,7 +244,7 @@ class SNMPDataSource(ABCSNMPDataSource):
             has_snmp_info = False
             section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
             if section_name in config.snmp_info:
-                oid_info = config.snmp_info[section_name]
+                oid_info = config.snmp_info[section_name]  # type: ignore
             elif section_name in cmk.base.inventory_plugins.inv_info:
                 oid_info = cmk.base.inventory_plugins.inv_info[section_name].get("snmp_info")
                 if oid_info:
@@ -225,27 +276,20 @@ class SNMPDataSource(ABCSNMPDataSource):
             # oid_info can now be a list: Each element  of that list is interpreted as one real oid_info
             # and fetches a separate snmp table.
             if isinstance(oid_info, list):
-                check_info = []
+                check_info = []  # type: List[SNMPTable]
                 for entry in oid_info:
                     check_info_part = snmp.get_snmp_table(snmp_config, check_plugin_name, entry,
                                                           self._use_snmpwalk_cache)
-
-                    # If at least one query fails, we discard the whole info table
-                    if check_info_part is None:
-                        check_info = None
-                        break
-                    else:
-                        check_info.append(check_info_part)
+                    check_info.append(check_info_part)
+                info[section_name] = check_info
             else:
-                check_info = snmp.get_snmp_table(snmp_config, check_plugin_name, oid_info,
-                                                 self._use_snmpwalk_cache)
-
-            info[section_name] = check_info
+                info[section_name] = snmp.get_snmp_table(snmp_config, check_plugin_name, oid_info,
+                                                         self._use_snmpwalk_cache)
 
         return info
 
     def _sort_check_plugin_names(self, check_plugin_names):
-        # type: (List[CheckPluginName]) -> List[CheckPluginName]
+        # type: (Set[CheckPluginName]) -> List[CheckPluginName]
         # In former Check_MK versions (<=1.4.0) CPU check plugins were
         # checked before other check plugins like interface checks.
         # In Check_MK versions >= 1.5.0 the order is random and
@@ -261,19 +305,20 @@ class SNMPDataSource(ABCSNMPDataSource):
                       (not ('cpu' in x or x in cpu_checks_without_cpu_in_check_name), x))
 
     def _convert_to_sections(self, raw_data):
-        # type: (RawAgentData) -> HostSections
+        # type: (RawSNMPData) -> SNMPHostSections
+        raw_data = cast(RawSNMPData, raw_data)
         sections_to_persist = self._extract_persisted_sections(raw_data)
-        # TODO: Will be fixed with one of the next commits
-        return HostSections(raw_data, persisted_sections=sections_to_persist)  # type: ignore
+        return SNMPHostSections(raw_data, persisted_sections=sections_to_persist)
 
     def _extract_persisted_sections(self, raw_data):
+        # type: (RawSNMPData) -> PersistedSNMPSections
         """Extract the sections to be persisted from the raw_data and return it
 
         Gather the check types to be persisted, extract the related data from
         the raw data, calculate the times and store the persisted info for
         later use.
         """
-        persisted_sections = {}
+        persisted_sections = {}  #  type: PersistedSNMPSections
 
         for section_name, section_content in raw_data.items():
             check_interval = self._host_config.snmp_check_interval(section_name)
@@ -306,9 +351,11 @@ class SNMPDataSource(ABCSNMPDataSource):
 
 class SNMPManagementBoardDataSource(ManagementBoardDataSource, SNMPDataSource):
     def id(self):
+        # type: () -> str
         return "mgmt_snmp"
 
     def title(self):
+        # type: () -> str
         return "Management board - SNMP"
 
     @property

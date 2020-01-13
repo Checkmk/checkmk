@@ -26,13 +26,40 @@
 
 import abc
 import functools
-from typing import Callable, List, NamedTuple, Union, Tuple, Optional  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Text, Callable, List, NamedTuple, Union, Tuple, Optional, Dict, TypeVar,
+)
 import six
 from cmk.base.utils import HostAddress, HostName  # pylint: disable=unused-import
+from cmk.base.check_utils import SectionName, CheckPluginName  # pylint: disable=unused-import
 
+ContextName = str
 OID = str
+SNMPValueEncoding = str
+Column = Union[str, Tuple[SNMPValueEncoding, str]]
+Columns = List[Column]
 OIDFunction = Callable[[OID], bool]
 ScanFunction = Callable[[OIDFunction], bool]
+OIDWithColumns = Tuple[OID, Columns]
+OIDWithSubOIDsAndColumns = Tuple[OID, List[OID], Columns]
+SingleOIDInfo = Union[OIDWithColumns, OIDWithSubOIDsAndColumns]
+MultiOIDInfo = List[SingleOIDInfo]
+OIDInfo = Union[SingleOIDInfo, MultiOIDInfo]
+RawValue = str
+SNMPRowInfo = List[Tuple[OID, RawValue]]
+ResultColumnsUnsanitized = List[Tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
+ResultColumnsSanitized = List[Tuple[List[RawValue], SNMPValueEncoding]]
+DecodedString = Text
+DecodedBinary = List[int]
+DecodedValues = Union[DecodedString, DecodedBinary]
+ResultColumnsDecoded = List[List[DecodedValues]]
+SNMPTable = List[List[DecodedValues]]
+
+SNMPSectionContent = Union[SNMPTable, List[SNMPTable]]
+SNMPSections = Dict[SectionName, SNMPSectionContent]
+PersistedSNMPSection = Tuple[int, int, SNMPSectionContent]
+PersistedSNMPSections = Dict[SectionName, PersistedSNMPSection]
+RawSNMPData = SNMPSections
 
 OID_END = 0  # Suffix-part of OID that was not specified
 OID_STRING = -1  # Complete OID as string ".1.3.6.1.4.1.343...."
@@ -113,13 +140,11 @@ SNMPHostConfig = NamedTuple(
         ("is_inline_snmp_host", bool),
     ])
 
-SNMPRowInfo = List[Tuple[str, str]]
-
 
 class ABCSNMPBackend(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractmethod
     def get(self, snmp_config, oid, context_name=None):
-        # type: (SNMPHostConfig, str, Optional[str]) -> Optional[str]
+        # type: (SNMPHostConfig, OID, Optional[ContextName]) -> Optional[RawValue]
         """Fetch a single OID from the given host in the given SNMP context
 
         The OID may end with .* to perform a GETNEXT request. Otherwise a GET
@@ -134,7 +159,7 @@ class ABCSNMPBackend(six.with_metaclass(abc.ABCMeta, object)):
              check_plugin_name=None,
              table_base_oid=None,
              context_name=None):
-        # type: (SNMPHostConfig, str, Optional[str], Optional[str], Optional[str]) -> SNMPRowInfo
+        # type: (SNMPHostConfig, OID, Optional[CheckPluginName], Optional[OID], Optional[ContextName]) -> SNMPRowInfo
         return []
 
 

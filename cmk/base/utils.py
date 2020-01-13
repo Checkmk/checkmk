@@ -28,7 +28,7 @@ Check_MK modules and/or cmk.base modules code."""
 
 import signal
 from types import FrameType  # pylint: disable=unused-import
-from typing import Text, NoReturn, Optional  # pylint: disable=unused-import
+from typing import Text, NoReturn, Optional, Union, TYPE_CHECKING  # pylint: disable=unused-import
 
 from cmk.utils.exceptions import MKTerminate
 
@@ -37,7 +37,6 @@ from cmk.utils.exceptions import MKTerminate
 HostName = str
 HostAddress = str
 ServiceName = Text
-RawAgentData = bytes
 
 
 def worst_service_state(*states):

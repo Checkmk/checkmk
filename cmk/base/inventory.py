@@ -50,6 +50,7 @@ import cmk.base.data_sources as data_sources
 import cmk.base.cleanup
 import cmk.base.decorator
 import cmk.base.check_api as check_api
+from cmk.base.data_sources.snmp import SNMPHostSections
 
 #.
 #   .--Inventory-----------------------------------------------------------.
@@ -290,7 +291,8 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
                 # SNMP data source: If 'do_status_data_inv' is enabled there may be
                 # sections for inventory plugins which were not fetched yet.
                 source.enforce_check_plugin_names(None)
-                host_sections = multi_host_sections.add_or_get_host_sections(hostname, ipaddress)
+                host_sections = multi_host_sections.add_or_get_host_sections(
+                    hostname, ipaddress, deflt=SNMPHostSections())
                 source.set_fetched_check_plugin_names(host_sections.sections.keys())
                 host_sections_from_source = source.run()
                 host_sections.update(host_sections_from_source)

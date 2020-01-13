@@ -31,7 +31,7 @@
 #  or write to the postal address provided at www.mathias-kettner.de
 
 from typing import (  # pylint: disable=unused-import
-    Union, TypeVar, Iterable, Text, Optional, Dict, Tuple, Any, List, NoReturn,
+    TYPE_CHECKING, Union, TypeVar, Iterable, Text, Optional, Dict, Tuple, Any, List, NoReturn,
 )
 
 from cmk.utils.exceptions import MKGeneralException
@@ -39,6 +39,11 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk.base
 from cmk.base.discovered_labels import DiscoveredServiceLabels
 from cmk.base.utils import HostName
+
+if TYPE_CHECKING:
+    from cmk.base.snmp_utils import (  # pylint: disable=unused-import
+        RawSNMPData, SNMPSections, PersistedSNMPSections, SNMPSectionContent,
+    )
 
 Item = Union[Text, None, int]
 CheckParameters = Union[None, Dict, Tuple, List, str]
@@ -51,14 +56,30 @@ ServiceAdditionalDetails = Text
 Metric = List
 ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[Metric]]
 
+RawAgentData = bytes
+
 SectionName = str
-SectionContent = List[List[Text]]
-PersistedSection = Tuple[int, int, SectionContent]
-PersistedSections = Dict[SectionName, PersistedSection]
-AgentSections = Dict[SectionName, SectionContent]
-AgentSectionCacheInfo = Dict[SectionName, Tuple[int, int]]
+SectionCacheInfo = Dict[SectionName, Tuple[int, int]]
+
+AgentSectionContent = List[List[Text]]
+PersistedAgentSection = Tuple[int, int, AgentSectionContent]
+PersistedAgentSections = Dict[SectionName, PersistedAgentSection]
+AgentSections = Dict[SectionName, AgentSectionContent]
+
 PiggybackRawData = Dict[HostName, List[bytes]]
 ParsedSectionContent = Any
+
+AbstractSectionContent = Union[AgentSectionContent, "SNMPSectionContent"]
+AbstractRawData = Union[RawAgentData, "RawSNMPData"]
+AbstractSections = Union[AgentSections, "SNMPSections"]
+AbstractPersistedSections = Union[PersistedAgentSections, "PersistedSNMPSections"]
+
+BoundedAbstractRawData = TypeVar("BoundedAbstractRawData", bound=AbstractRawData)
+BoundedAbstractSectionContent = TypeVar("BoundedAbstractSectionContent",
+                                        bound=AbstractSectionContent)
+BoundedAbstractSections = TypeVar("BoundedAbstractSections", bound=AbstractSections)
+BoundedAbstractPersistedSections = TypeVar("BoundedAbstractPersistedSections",
+                                           bound=AbstractPersistedSections)
 
 
 class Service(object):

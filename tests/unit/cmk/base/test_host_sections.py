@@ -1,7 +1,8 @@
 import pytest  # type: ignore
 from testlib.base import Scenario
 import cmk.base.ip_lookup as ip_lookup
-import cmk.base.data_sources.host_sections as host_sections
+from cmk.base.data_sources.host_sections import MultiHostSections
+from cmk.base.data_sources.abstract import AgentHostSections
 
 node1 = [
     ["node1 data 1"],
@@ -78,11 +79,11 @@ def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster
     def host_of_clustered_service(hostname, service_description):
         return cluster_mapping[hostname]
 
-    multi_host_sections = host_sections.MultiHostSections()
+    multi_host_sections = MultiHostSections()
     for nodename, node_section_content in host_entries:
         multi_host_sections.add_or_get_host_sections(
             nodename, "127.0.0.1",
-            host_sections.HostSections(sections={"check_plugin_name": node_section_content}))
+            AgentHostSections(sections={"check_plugin_name": node_section_content}))
 
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", lambda h: "127.0.0.1")
     monkeypatch.setattr(config_cache, "host_of_clustered_service", host_of_clustered_service)

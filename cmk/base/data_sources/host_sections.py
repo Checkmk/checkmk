@@ -24,8 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import abc
 import sys
-from typing import Callable, cast, Union, Tuple, Dict, Set, List, Optional  # pylint: disable=unused-import
+from typing import Callable, cast, Union, Tuple, Dict, Set, List, Optional, Generic  # pylint: disable=unused-import
 import six
 
 import cmk.utils.debug
@@ -37,14 +38,19 @@ import cmk.base.item_state as item_state
 import cmk.base.check_utils
 from cmk.base.utils import HostName, HostAddress, ServiceName  # pylint: disable=unused-import
 from cmk.base.check_utils import (  # pylint: disable=unused-import
-    CheckPluginName, AgentSectionCacheInfo, AgentSections, PiggybackRawData, PersistedSections,
-    SectionContent, SectionName, ParsedSectionContent,
+    CheckPluginName, SectionCacheInfo, AbstractSections, PiggybackRawData,
+    AbstractPersistedSections, AbstractSectionContent, SectionName, ParsedSectionContent,
+    BoundedAbstractRawData, BoundedAbstractSections, BoundedAbstractPersistedSections,
+    BoundedAbstractSectionContent, RawAgentData,
 )
 
 from cmk.base.exceptions import MKParseFunctionError
 
 
-class HostSections(object):
+class AbstractHostSections(
+        six.with_metaclass(
+            abc.ABCMeta, Generic[BoundedAbstractRawData, BoundedAbstractSections,
+                                 BoundedAbstractPersistedSections, BoundedAbstractSectionContent])):
     """A wrapper class for the host information read by the data sources
 
     It contains the following information:
@@ -56,17 +62,13 @@ class HostSections(object):
         4. cache_info:              Agent cache information
                                     (dict section name -> (cached_at, cache_interval))
     """
-    def __init__(self,
-                 sections=None,
-                 cache_info=None,
-                 piggybacked_raw_data=None,
-                 persisted_sections=None):
-        # type: (Optional[AgentSections], Optional[AgentSectionCacheInfo], Optional[PiggybackRawData], Optional[PersistedSections]) -> None
-        super(HostSections, self).__init__()
-        self.sections = sections if sections is not None else {}
-        self.cache_info = cache_info if cache_info is not None else {}
-        self.piggybacked_raw_data = piggybacked_raw_data if piggybacked_raw_data is not None else {}
-        self.persisted_sections = persisted_sections if persisted_sections is not None else {}
+    def __init__(self, sections, cache_info, piggybacked_raw_data, persisted_sections):
+        # type: (BoundedAbstractSections, SectionCacheInfo, PiggybackRawData, BoundedAbstractPersistedSections) -> None
+        super(AbstractHostSections, self).__init__()
+        self.sections = sections
+        self.cache_info = cache_info
+        self.piggybacked_raw_data = piggybacked_raw_data
+        self.persisted_sections = persisted_sections
 
     # TODO: It should be supported that different sources produce equal sections.
     # this is handled for the self.sections data by simply concatenating the lines
@@ -74,10 +76,10 @@ class HostSections(object):
     # TODO: checking.execute_check() is using the oldest cached_at and the largest interval.
     #       Would this be correct here?
     def update(self, host_sections):
-        # type: (HostSections) -> None
+        # type: (AbstractHostSections) -> None
         """Update this host info object with the contents of another one"""
-        for section_name, lines in host_sections.sections.items():
-            self.sections.setdefault(section_name, []).extend(lines)
+        for section_name, section_content in host_sections.sections.items():
+            self._extend_section(section_name, section_content)
 
         for hostname, raw_lines in host_sections.piggybacked_raw_data.items():
             self.piggybacked_raw_data.setdefault(hostname, []).extend(raw_lines)
@@ -88,13 +90,19 @@ class HostSections(object):
         if host_sections.persisted_sections:
             self.persisted_sections.update(host_sections.persisted_sections)
 
+    @abc.abstractmethod
+    def _extend_section(self, section_name, section_content):
+        # type: (SectionName, BoundedAbstractSectionContent) -> None
+        raise NotImplementedError()
+
     def add_cached_section(self, section_name, section, persisted_from, persisted_until):
-        # type: (SectionName, SectionContent, int, int) -> None
+        # type: (SectionName, BoundedAbstractSectionContent , int, int) -> None
         self.cache_info[section_name] = (persisted_from, persisted_until - persisted_from)
-        self.sections[section_name] = section
+        # TODO: Find out why mypy complains about this
+        self.sections[section_name] = section  # type: ignore
 
 
-MultiHostSectionsData = Dict[Tuple[HostName, Optional[HostAddress]], HostSections]
+MultiHostSectionsData = Dict[Tuple[HostName, Optional[HostAddress]], AbstractHostSections]
 
 
 class MultiHostSections(object):
@@ -108,10 +116,8 @@ class MultiHostSections(object):
         self._multi_host_sections = {}  # type: MultiHostSectionsData
         self._section_content_cache = caching.DictCache()
 
-    def add_or_get_host_sections(self, hostname, ipaddress, deflt=None):
-        # type: (HostName, Optional[HostAddress], Optional[HostSections]) -> HostSections
-        if deflt is None:
-            deflt = HostSections()
+    def add_or_get_host_sections(self, hostname, ipaddress, deflt):
+        # type: (HostName, Optional[HostAddress], AbstractHostSections) -> AbstractHostSections
         return self._multi_host_sections.setdefault((hostname, ipaddress), deflt)
 
     def get_host_sections(self):
@@ -198,7 +204,7 @@ class MultiHostSections(object):
 
         # Now get the section_content from the required hosts and merge them together to
         # a single section_content. For each host optionally add the node info.
-        section_content = None  # type: Optional[SectionContent]
+        section_content = None  # type: Optional[AbstractSectionContent]
         for host_entry in host_entries:
             if nodes_of_clustered_service and host_entry[0] not in nodes_of_clustered_service:
                 continue
@@ -213,9 +219,9 @@ class MultiHostSections(object):
                                                                  for_discovery)
 
             if section_content is None:
-                section_content = []
-
-            section_content += host_section_content
+                section_content = host_section_content[:]
+            else:
+                section_content += host_section_content
 
         if section_content is None:
             return None
@@ -237,7 +243,7 @@ class MultiHostSections(object):
                 for node_hostname in host_config.nodes]
 
     def _update_with_node_column(self, section_content, check_plugin_name, hostname, for_discovery):
-        # type: (SectionContent, CheckPluginName, HostName, bool) -> SectionContent
+        # type: (AbstractSectionContent, CheckPluginName, HostName, bool) -> AbstractSectionContent
         """Add cluster node information to the section content
 
         If the check want's the node column, we add an additional column (as the first column) with the
@@ -261,16 +267,17 @@ class MultiHostSections(object):
 
         return self._add_node_column(section_content, node_name)
 
-    # TODO: Add correct type hint for node wrapped SectionContent
+    # TODO: Add correct type hint for node wrapped SectionContent. We would have to create some kind
+    # of AbstractSectionContentWithNodeInfo.
     def _add_node_column(self, section_content, nodename):
-        # type: (SectionContent, Optional[HostName]) -> SectionContent
+        # type: (AbstractSectionContent, Optional[HostName]) -> AbstractSectionContent
         new_section_content = []
         node_text = six.text_type(nodename) if isinstance(nodename, str) else nodename
         for line in section_content:
             if len(line) > 0 and isinstance(line[0], list):
                 new_entry = []
                 for entry in line:
-                    new_entry.append([node_text] + entry)
+                    new_entry.append([node_text] + entry)  # type: ignore
                 new_section_content.append(new_entry)
             else:
                 new_section_content.append([node_text] + line)  # type: ignore
@@ -293,15 +300,12 @@ class MultiHostSections(object):
         section_contents = [section_content]
         for extra_section_name in config.check_info[section_name]["extra_sections"]:
             section_contents.append(
-                cast(
-                    ParsedSectionContent,
-                    self.get_section_content(hostname, ipaddress, extra_section_name,
-                                             for_discovery)))
+                self.get_section_content(hostname, ipaddress, extra_section_name, for_discovery))
 
         return section_contents
 
     def _update_with_parse_function(self, section_content, section_name):
-        # type: (SectionContent, SectionName) -> ParsedSectionContent
+        # type: (AbstractSectionContent, SectionName) -> ParsedSectionContent
         """Transform the section_content using the defined parse functions.
 
         Some checks define a parse function that is used to transform the section_content
@@ -316,7 +320,7 @@ class MultiHostSections(object):
         if section_name not in config.check_info:
             return section_content
 
-        parse_function = cast(Callable[[SectionContent], ParsedSectionContent],
+        parse_function = cast(Callable[[AbstractSectionContent], ParsedSectionContent],
                               config.check_info[section_name]["parse_function"])
         if not parse_function:
             return section_content

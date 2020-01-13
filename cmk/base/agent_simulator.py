@@ -29,7 +29,7 @@ import math
 from typing import List, Optional  # pylint: disable=unused-import
 
 import cmk.utils.debug
-from cmk.base.utils import RawAgentData  # pylint: disable=unused-import
+from cmk.base.check_utils import RawAgentData  # pylint: disable=unused-import
 
 
 def our_uptime():

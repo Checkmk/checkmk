@@ -883,8 +883,10 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_snmpget(*args):
-    snmp.do_snmpget(*args)
+def mode_snmpget(args):
+    if not args:
+        raise MKBailOut("You need to specify an OID.")
+    snmp.do_snmpget(args[0], args[1:])
 
 
 modes.register(

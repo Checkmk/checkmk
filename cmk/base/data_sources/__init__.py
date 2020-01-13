@@ -66,7 +66,8 @@ from .ipmi import IPMIManagementBoardDataSource
 from .tcp import TCPDataSource
 from .piggyback import PiggyBackDataSource
 from .programs import DSProgramDataSource, SpecialAgentDataSource
-from .host_sections import HostSections, MultiHostSections
+from .host_sections import MultiHostSections
+from .abstract import AgentHostSections
 
 if TYPE_CHECKING:
     from .abstract import DataSource, CheckMKAgentDataSource
@@ -147,10 +148,14 @@ class DataSources(object):
         protocol = self._host_config.management_protocol
         if protocol == "snmp":
             # TODO: Why not hand over management board IP address?
-            self._add_source(SNMPManagementBoardDataSource(self._hostname, self._ipaddress))
+            # TODO: Don't know why pylint does not understand the class hierarchy here. Cleanup the
+            # multiple inheritance should solve the issue.
+            self._add_source(SNMPManagementBoardDataSource(self._hostname, self._ipaddress))  # pylint: disable=abstract-class-instantiated
         elif protocol == "ipmi":
             # TODO: Why not hand over management board IP address?
-            self._add_source(IPMIManagementBoardDataSource(self._hostname, self._ipaddress))
+            # TODO: Don't know why pylint does not understand the class hierarchy here. Cleanup the
+            # multiple inheritance should solve the issue.
+            self._add_source(IPMIManagementBoardDataSource(self._hostname, self._ipaddress))  # pylint: disable=abstract-class-instantiated
         elif protocol is None:
             return None
         else:
@@ -284,10 +289,11 @@ class DataSources(object):
                 these_sources.set_max_cachefile_age(this_max_cachefile_age)
 
             host_sections =\
-                multi_host_sections.add_or_get_host_sections(this_hostname, this_ipaddress)
+                multi_host_sections.add_or_get_host_sections(this_hostname, this_ipaddress,
+                        deflt=AgentHostSections())
 
             for source in these_sources.get_data_sources():
-                host_sections_from_source = cast(HostSections, source.run())
+                host_sections_from_source = source.run()
                 host_sections.update(host_sections_from_source)
 
             # Store piggyback information received from all sources of this host. This

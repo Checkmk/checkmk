@@ -93,15 +93,23 @@ def fake_version_and_paths():
     monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.notifications_dir", Path(cmk_path()) / "notifications")
     monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % cmk_path())
+    monkeypatch.setattr("cmk.utils.paths.inventory_output_dir",
+                        os.path.join(tmp_dir, "var/check_mk/inventory"))
+    monkeypatch.setattr("cmk.utils.paths.inventory_archive_dir",
+                        os.path.join(tmp_dir, "var/check_mk/inventory_archive"))
     monkeypatch.setattr("cmk.utils.paths.check_manpages_dir", "%s/checkman" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.omd_root", tmp_dir)
     monkeypatch.setattr("cmk.utils.paths.tmp_dir", os.path.join(tmp_dir, "tmp/check_mk"))
+    monkeypatch.setattr("cmk.utils.paths.counters_dir",
+                        os.path.join(tmp_dir, "tmp/check_mk/counters"))
     monkeypatch.setattr("cmk.utils.paths.tcp_cache_dir", os.path.join(tmp_dir,
                                                                       "tmp/check_mk/cache"))
     monkeypatch.setattr("cmk.utils.paths.data_source_cache_dir",
                         os.path.join(tmp_dir, "tmp/check_mk/data_source_cache"))
     monkeypatch.setattr("cmk.utils.paths.var_dir", os.path.join(tmp_dir, "var/check_mk"))
+    monkeypatch.setattr("cmk.utils.paths.autochecks_dir",
+                        os.path.join(tmp_dir, "var/check_mk/autochecks"))
     monkeypatch.setattr("cmk.utils.paths.precompiled_checks_dir",
                         os.path.join(tmp_dir, "var/check_mk/precompiled_checks"))
     monkeypatch.setattr("cmk.utils.paths.crash_dir", Path(cmk.utils.paths.var_dir) / "crashes")

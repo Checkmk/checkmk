@@ -6,85 +6,60 @@
 # caching is checked
 
 from __future__ import print_function
+from pathlib2 import Path
 import pytest  # type: ignore
-from testlib import web, repo_path  # pylint: disable=unused-import
 
+from testlib import repo_path
+from testlib.base import Scenario
+from testlib import CheckManager, InventoryPluginManager
+
+import cmk.utils.paths
 import cmk.base.config as config
 import cmk.base.modes
 import cmk.base.automations
+import cmk.base.inventory_plugins
+from cmk.utils.log import logger
 
-#
-# INTEGRATION TESTS
-#
+# TODO: These tests need to be tuned, because they involve a lot of checks being loaded which takes
+# too much time.
 
 
-@pytest.fixture(scope="module")
-def test_cfg(web, site):
-    print("Applying default config")
-    web.add_host("ds-test-host1", attributes={
-        "ipaddress": "127.0.0.1",
-    })
-    web.add_host("ds-test-host2", attributes={
-        "ipaddress": "127.0.0.1",
-    })
-    web.add_host("ds-test-node1", attributes={
-        "ipaddress": "127.0.0.1",
-    })
-    web.add_host("ds-test-node2", attributes={
-        "ipaddress": "127.0.0.1",
-    })
+# Load some common checks to have at least some for the test execution
+# Modes that have needs_checks=True set would miss the checks
+# without this fixtures
+@pytest.fixture(scope="module", autouse=True)
+def load_plugins():
+    CheckManager().load(["df", "cpu", "chrony", "lnx_if"])
+    InventoryPluginManager().load()
 
-    web.add_host(
-        "ds-test-cluster1",
-        attributes={
-            "ipaddress": "127.0.0.1",
-        },
-        cluster_nodes=[
-            "ds-test-node1",
-            "ds-test-node2",
-        ],
-    )
 
-    site.write_file(
-        "etc/check_mk/conf.d/ds-test-host.mk",
-        "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ALL_HOSTS))\n")
+@pytest.fixture()
+def test_cfg(monkeypatch):
+    test_hosts = ["ds-test-host1", "ds-test-host2", "ds-test-node1", "ds-test-node2"]
 
-    site.makedirs("var/check_mk/agent_output/")
-    for h in ["ds-test-host1", "ds-test-host2", "ds-test-node1", "ds-test-node2"]:
-        site.write_file(
-            "var/check_mk/agent_output/%s" % h,
-            open("%s/tests/integration/cmk/base/test-files/linux-agent-output" %
-                 repo_path()).read())
+    ts = Scenario()
 
-    web.activate_changes()
+    for h in test_hosts:
+        ts.add_host(h)
 
-    import cmk.utils.debug
-    cmk.utils.debug.enable()
+    ts.set_option("ipaddresses", dict((h, "127.0.0.1") for h in test_hosts))
+    ts.add_cluster("ds-test-cluster1", nodes=["ds-test-node1", "ds-test-node2"])
 
-    # Needs to be done together, even when the checks are not directly needed
-    import cmk.base.check_api as check_api
-    config.load_all_checks(check_api.get_check_api_context)
-    config.load()
+    ts.set_ruleset("datasource_programs", [
+        ('cat %s/<HOST>' % cmk.utils.paths.tcp_cache_dir, [], test_hosts, {}),
+    ])
 
-    yield None
+    with open("%s/tests/integration/cmk/base/test-files/linux-agent-output" % repo_path()) as f:
+        linux_agent_output = f.read().decode("utf-8")
 
-    #
-    # Cleanup code
-    #
-    print("Cleaning up test config")
+    for h in test_hosts:
+        cache_path = Path(cmk.utils.paths.tcp_cache_dir, h)
+        cache_path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
 
-    cmk.utils.debug.disable()
+        with cache_path.open("w", encoding="utf-8") as f:
+            f.write(linux_agent_output)
 
-    site.delete_dir("var/check_mk/agent_output")
-    site.delete_file("etc/check_mk/conf.d/ds-test-host.mk")
-
-    web.delete_host("ds-test-host1")
-    web.delete_host("ds-test-host2")
-    web.delete_host("ds-test-node1")
-    web.delete_host("ds-test-node2")
-    web.delete_host("ds-test-cluster1")
-
-    web.activate_changes()
+    return ts.apply(monkeypatch)
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -182,6 +157,10 @@ def _patch_data_source_run(monkeypatch, **kwargs):
     (False, {}),
 ])
 def test_mode_inventory_caching(test_cfg, hosts, cache, force, monkeypatch):
+    # Plugins have been loaded by module level fixture, disable loading in mode_inventory() to
+    # improve speed of the test execution
+    monkeypatch.setattr(cmk.base.inventory_plugins, "load_plugins", lambda x, y: None)
+
     kwargs = {}
     kwargs.update(hosts[1])
     kwargs.update(cache[1])
@@ -376,8 +355,12 @@ def test_automation_try_discovery_caching(test_cfg, scan, raise_errors, monkeypa
 
     _patch_data_source_run(monkeypatch, **kwargs)
 
-    cmk.base.automations.check_mk.AutomationTryDiscovery().execute(args)
-    assert _counter_run == 2
+    orig_level = logger.getEffectiveLevel()
+    try:
+        cmk.base.automations.check_mk.AutomationTryDiscovery().execute(args)
+        assert _counter_run == 2
+    finally:
+        logger.setLevel(orig_level)
 
 
 @pytest.mark.parametrize(("raise_errors"), [

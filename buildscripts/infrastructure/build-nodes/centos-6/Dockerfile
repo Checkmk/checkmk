@@ -56,6 +56,7 @@ RUN yum -y makecache \
     && yum -y install devtoolset-7 \
     && yum clean all
 
+ARG ARTIFACT_STORAGE
 COPY bw-build-gnu-toolchain.sh /usr/sbin
 RUN source scl_source enable devtoolset-7 \ 
     && bw-build-gnu-toolchain.sh -r $ARTIFACT_STORAGE -b

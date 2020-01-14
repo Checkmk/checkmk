@@ -99,39 +99,11 @@ else
     unset IS_LXC_CONTAINER
 fi
 
-# Function to list CIFS mounts for use by section_nfs
-get_cifs_mounts() {
-    if [ -r /proc/mounts ]; then
-        sed -n '/ cifs\? /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts | sed 's/\\040/ /g'
-    else
-        mount | awk '/ cifs/{print $3;}'
-    fi
-}
-
-# Function to list NFS mounts for use by section_nfs
-get_nfs_mounts() {
-    if [ -r /proc/mounts ]; then
-        sed -n '/ nfs4\? /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts | sed 's/\\040/ /g'
-    else
-        mount | awk '/ nfs/{print $3;}'
-    fi
-}
-
 # Function to replace "if type [somecmd]" idiom
 # 'command -v' tends to be more robust vs 'which' and 'type' based tests
 inpath() {
     command -v "${1:?No command to test}" >/dev/null 2>&1
 }
-
-# 'coreutils' 5.3.0 broke how 'stat' handled its output.  This was reverted
-# in 5.9.4 STABLE.  Just in case we happen across this particular version
-# we catch it and build a workaround to correct its behaviour globally
-# See: https://lists.gnu.org/archive/html/bug-coreutils/2005-12/msg00157.html
-if stat --version 2>&1 | head -n 1 | grep "5.3.0" >/dev/null 2>&1; then
-    stat() {
-        printf -- '%s\n' "$(command stat "${@}")"
-    }
-fi
 
 # Prefer (relatively) new /usr/bin/timeout from coreutils against
 # our shipped waitmax. waitmax is statically linked and crashes on
@@ -182,31 +154,6 @@ section_mem() {
     fi
 }
 
-section_nfs() {
-    # Check NFS mounts by accessing them with stat -f (System call statfs()). 
-    # If this lasts more then 2 seconds we consider it as hanging. We need waitmax.
-    if inpath waitmax; then
-        echo '<<<nfsmounts>>>'
-        get_nfs_mounts | while read -r mountPoint; do
-            waitmax -s 9 5 stat -f -c "${mountPoint} ok %b %f %a %s" "${mountPoint}" \
-            || echo "${mountPoint} hanging 0 0 0 0"
-        done
-
-        echo '<<<cifsmounts>>>'
-        get_cifs_mounts | while read -r mountPoint; do
-            if [ ! -r "${mountPoint}" ]; then
-                echo "${mountPoint} Permission denied"
-            else
-                waitmax -s 9 2 stat -f -c "${mountPoint} ok %b %f %a %s" "${mountPoint}" \
-                    || echo "${mountPoint} hanging 0 0 0 0"
-            fi
-        done
-    fi
-
-    # Clean up our function variables
-    unset mountPoint
-}
-
 section_cpu() {
     if [ "$(uname -m)" = "armv7l" ]; then
         CPU_REGEX='^processor'
@@ -222,6 +169,7 @@ section_cpu() {
             cat /proc/sys/kernel/threads-max
         fi
     else
+
         if [ -n "$IS_DOCKERIZED" ]; then
             echo '<<<docker_container_cpu>>>'
         else
@@ -275,7 +223,7 @@ section_df() {
     echo '[df_inodes_end]'
 }
 
-section_systemd() {
+sections_systemd() {
     if inpath systemctl; then
         echo '<<<systemd_units>>>'
         echo "[list-unit-files]"
@@ -486,7 +434,7 @@ fi
 
 section_df
 
-section_systemd
+sections_systemd
 
 # Filesystem usage for ZFS
 if inpath zfs; then
@@ -497,8 +445,41 @@ if inpath zfs; then
     df -PTlk -t zfs | sed 1d
 fi
 
-# NFS and CIFS mounts
-section_nfs
+# Check NFS mounts by accessing them with stat -f (System
+# call statfs()). If this lasts more then 2 seconds we
+# consider it as hanging. We need waitmax.
+if inpath waitmax; then
+    STAT_VERSION=$(stat --version | head -1 | cut -d" " -f4)
+    STAT_BROKE="5.3.0"
+
+    echo '<<<nfsmounts>>>'
+    sed -n '/ nfs4\? /s/[^ ]* \([^ ]*\) .*/\1/p' </proc/mounts |
+        sed 's/\\040/ /g' |
+        while read -r MP; do
+            if [ "$STAT_VERSION" != "$STAT_BROKE" ]; then
+                waitmax -s 9 5 stat -f -c "$MP ok %b %f %a %s" "$MP" ||
+                    echo "$MP hanging 0 0 0 0"
+            else
+                waitmax -s 9 5 stat -f -c "$MP ok %b %f %a %s" "$MP" &&
+                    printf '\n' || echo "$MP hanging 0 0 0 0"
+            fi
+        done
+
+    echo '<<<cifsmounts>>>'
+    sed -n '/ cifs\? /s/[^ ]* \([^ ]*\) .*/\1/p' </proc/mounts |
+        sed 's/\\040/ /g' |
+        while read -r MP; do
+            if [ ! -r "$MP" ]; then
+                echo "$MP Permission denied"
+            elif [ "$STAT_VERSION" != "$STAT_BROKE" ]; then
+                waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" ||
+                    echo "$MP hanging 0 0 0 0"
+            else
+                waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" &&
+                    printf '\n' || echo "$MP hanging 0 0 0 0"
+            fi
+        done
+fi
 
 # Check mount options. Filesystems may switch to 'ro' in case
 # of a read error.
@@ -751,26 +732,35 @@ if [ -e /etc/openvpn/openvpn-status.log ]; then
         sed -e 1,3d -e '$d'
 fi
 
-is_timesync_succesful=false
+# Check if we're on a systemd based host
 if inpath systemctl; then
-    timesync_status=$(systemctl status ntp | awk '{if(NR==3) print $2}')
-    if [ $timesync_status == "active" ]; then
-        if inpath ntpq; then
-            # remove heading, make first column space separated
-            run_cached -s ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
-            is_timesync_succesful=true
-        fi
-    fi
-fi
+    # We treat timesyncd separately
+    if inpath timedatectl; then
+       # Starting by getting the systemd version to ensure that 'timesync-status' is a supported arg
+        # Calling systemctl appears to be more portable across more systemd versions
+        systemd_version=$(systemctl --version | awk '{if(NR==1) print $2}')
 
-if ! $is_timesync_succesful && inpath systemd; then
-    systemd_version=$(systemd --version | awk '{if(NR==1) print $2}')
-    if [ $systemd_version -ge 239 ]; then
-        if inpath timedatectl; then
+        # Only act if it's greater than or equal to version 239
+        if [ "${systemd_version}" -ge 239 ]; then
             echo "<<<timesyncd>>>"
             timedatectl timesync-status
             stat -c %Y /var/lib/systemd/timesync/clock | awk '{print "[[["$1"]]]"}'
         fi
+    fi
+
+    # Identify whether ntp/ntpd/openntpd is active
+    # shellcheck disable=SC2016
+    if [ "$(systemctl | awk '/ntp.service|ntpd.service/{print $3; exit}')" = "active" ]; then
+        # If so, check for ntpq, if it's present, run it
+        if inpath ntpq; then
+            # remove heading, make first column space separated
+            run_cached -s ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
+        fi
+    fi
+# If we're not on a systemd based host, try ntpq anyway
+else
+    if inpath ntpq; then
+        run_cached -s ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
     fi
 fi
 
@@ -1208,7 +1198,7 @@ if [ -e "$MK_CONFDIR/runas.cfg" ]; then
                             fi
                         done
 
-                # local and plugin includes
+                    # local and plugin includes
                 elif [ "$type" == "local" -o "$type" == "plugin" ]; then
                     if [ "$type" == "local" ]; then
                         echo "<<<local:sep(0)>>>"

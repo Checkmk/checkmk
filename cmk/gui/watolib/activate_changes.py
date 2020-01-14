@@ -37,6 +37,8 @@ import cmk.utils.daemon as daemon
 import cmk.utils.store as store
 import cmk.utils.render as render
 
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+
 import cmk.gui.utils
 import cmk.gui.hooks as hooks
 import cmk.gui.sites
@@ -122,10 +124,10 @@ def get_replication_paths():
     # Include rule configuration into backup/restore/replication. Current
     # status is not backed up.
     if config.mkeventd_enabled:
-        _rule_pack_dir = str(cmk.ec.export.rule_pack_dir())
+        _rule_pack_dir = str(ec.rule_pack_dir())
         paths.append(("dir", "mkeventd", _rule_pack_dir, ["sitespecific.mk"]))
 
-        _mkp_rule_pack_dir = str(cmk.ec.export.mkp_rule_pack_dir())
+        _mkp_rule_pack_dir = str(ec.mkp_rule_pack_dir())
         paths.append(("dir", "mkeventd_mkp", _mkp_rule_pack_dir))
 
     return paths + _replication_paths

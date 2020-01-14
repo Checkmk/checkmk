@@ -36,7 +36,7 @@ import livestatus
 
 import cmk.utils.paths
 # It's OK to import centralized config load logic
-import cmk.ec.export  # pylint: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.encoding import make_utf8
 
 import cmk.gui.config as config
@@ -173,9 +173,9 @@ def eventd_configuration():
     if cached_config and cached_config[0] is html:
         return cached_config[1]
 
-    settings = cmk.ec.export.settings('', Path(cmk.utils.paths.omd_root),
-                                      Path(cmk.utils.paths.default_config_dir), [''])
-    cfg = cmk.ec.export.load_config(settings)
+    settings = ec.settings('', Path(cmk.utils.paths.omd_root),
+                           Path(cmk.utils.paths.default_config_dir), [''])
+    cfg = ec.load_config(settings)
     cached_config = (html, cfg)
     return cfg
 

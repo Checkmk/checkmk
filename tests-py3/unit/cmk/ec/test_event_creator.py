@@ -2,7 +2,7 @@
 import logging
 import pytest  # type: ignore
 from testlib import on_time
-import cmk.ec.export
+import cmk.ec.export as ec
 import cmk.ec.main
 
 
@@ -10,7 +10,7 @@ import cmk.ec.main
 def event_creator():
     logger = logging.getLogger("cmk.mkeventd")
 
-    config = cmk.ec.export.default_config()
+    config = ec.default_config()
     config["debug_rules"] = True
 
     return cmk.ec.main.EventCreator(logger, config)

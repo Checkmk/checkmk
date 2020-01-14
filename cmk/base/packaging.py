@@ -31,8 +31,6 @@ import tarfile
 from typing import NamedTuple, List  # pylint: disable=unused-import
 from pathlib2 import Path
 
-# It's OK to import centralized config load logic
-import cmk.ec.export  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.log import VERBOSE
 import cmk.utils.paths
 import cmk.utils.tty as tty

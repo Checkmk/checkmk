@@ -36,7 +36,7 @@ import cmk
 import cmk.utils.store as store
 import cmk.utils.cmk_subprocess as subprocess
 
-import cmk.ec.export  # pylint: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.hooks as hooks
 import cmk.gui.config as config
@@ -181,7 +181,7 @@ class ConfigDomainEventConsole(ABCConfigDomain):
         return config.mkeventd_enabled
 
     def config_dir(self):
-        return str(cmk.ec.export.rule_pack_dir())
+        return str(ec.rule_pack_dir())
 
     def activate(self):
         if getattr(config, "mkeventd_enabled", False):
@@ -192,7 +192,7 @@ class ConfigDomainEventConsole(ABCConfigDomain):
                 hooks.call("mkeventd-activate-changes")
 
     def default_globals(self):
-        return cmk.ec.export.default_config()
+        return ec.default_config()
 
 
 @config_domain_registry.register

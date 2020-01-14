@@ -52,7 +52,7 @@ import cmk.utils.store as store
 import cmk.utils.render
 
 # It's OK to import centralized config load logic
-import cmk.ec.export  # pylint: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -977,7 +977,7 @@ def vs_mkeventd_rule(customer=None):
 
 
 def load_mkeventd_rules():
-    rule_packs = cmk.ec.export.load_rule_packs()
+    rule_packs = ec.load_rule_packs()
 
     # Add information about rule hits: If we are running on OMD then we know
     # the path to the state retention file of mkeventd and can read the rule
@@ -999,11 +999,11 @@ def load_mkeventd_rules():
 
 
 def save_mkeventd_rules(rule_packs):
-    cmk.ec.export.save_rule_packs(rule_packs, config.mkeventd_pprint_rules)
+    ec.save_rule_packs(rule_packs, config.mkeventd_pprint_rules)
 
 
 def export_mkp_rule_pack(rule_pack):
-    cmk.ec.export.export_rule_pack(rule_pack, config.mkeventd_pprint_rules)
+    ec.export_rule_pack(rule_pack, config.mkeventd_pprint_rules)
 
 
 @sample_config_generator_registry.register
@@ -1017,7 +1017,7 @@ class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
         return 50
 
     def generate(self):
-        save_mkeventd_rules([cmk.ec.export.default_rule_pack([])])
+        save_mkeventd_rules([ec.default_rule_pack([])])
 
 
 #.
@@ -1283,7 +1283,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 raise MKUserError("_export", _("The requested rule pack does not exist"))
 
             export_mkp_rule_pack(rule_pack)
-            self._rule_packs[nr] = cmk.ec.export.MkpRulePackProxy(rule_pack['id'])
+            self._rule_packs[nr] = ec.MkpRulePackProxy(rule_pack['id'])
             save_mkeventd_rules(self._rule_packs)
             self._add_change("export-rule-pack",
                              _("Made rule pack %s available for MKP export") % rule_pack["id"])
@@ -1296,7 +1296,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             except KeyError:
                 raise MKUserError("_dissolve", _("The requested rule pack does not exist"))
             save_mkeventd_rules(self._rule_packs)
-            cmk.ec.export.remove_exported_rule_pack(self._rule_packs[nr]["id"])
+            ec.remove_exported_rule_pack(self._rule_packs[nr]["id"])
             self._add_change("dissolve-rule-pack",
                              _("Removed rule_pack %s from MKP export") % self._rule_packs[nr]["id"])
 
@@ -1304,7 +1304,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         elif html.request.has_var("_reset"):
             nr = html.get_integer_input("_reset")
             try:
-                self._rule_packs[nr] = cmk.ec.export.MkpRulePackProxy(self._rule_packs[nr]['id'])
+                self._rule_packs[nr] = ec.MkpRulePackProxy(self._rule_packs[nr]['id'])
             except KeyError:
                 raise MKUserError("_reset", _("The requested rule pack does not exist"))
             save_mkeventd_rules(self._rule_packs)
@@ -1318,7 +1318,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             nr = html.get_integer_input("_synchronize")
             export_mkp_rule_pack(self._rule_packs[nr])
             try:
-                self._rule_packs[nr] = cmk.ec.export.MkpRulePackProxy(self._rule_packs[nr]['id'])
+                self._rule_packs[nr] = ec.MkpRulePackProxy(self._rule_packs[nr]['id'])
             except KeyError:
                 raise MKUserError("_synchronize", _("The requested rule pack does not exist"))
             save_mkeventd_rules(self._rule_packs)
@@ -1376,7 +1376,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         with table_element(css="ruleset", limit=None, sortable=False, title=title) as table:
             for nr, rule_pack in enumerate(self._rule_packs):
                 id_ = rule_pack['id']
-                type_ = cmk.ec.export.RulePackType.type_of(rule_pack, id_to_mkp)
+                type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
 
                 if id_ in found_packs:
                     css_matches_search = "matches_search"
@@ -1397,17 +1397,17 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 drag_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_move", nr)])
                 html.element_dragger_url("tr", base_url=drag_url)
 
-                if type_ == cmk.ec.export.RulePackType.internal:
+                if type_ == ec.RulePackType.internal:
                     delete_url = make_action_link([("mode", "mkeventd_rule_packs"),
                                                    ("_delete", nr)])
                     html.icon_button(delete_url, _("Delete this rule pack"), "delete")
-                elif type_ == cmk.ec.export.RulePackType.exported:
+                elif type_ == ec.RulePackType.exported:
                     dissolve_url = make_action_link([("mode", "mkeventd_rule_packs"),
                                                      ("_dissolve", nr)])
                     html.icon_button(dissolve_url,
                                      _("Remove this rule pack from the Extension Packages module"),
                                      "release_mkp_yellow")
-                elif type_ == cmk.ec.export.RulePackType.modified_mkp:
+                elif type_ == ec.RulePackType.modified_mkp:
                     reset_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_reset", nr)])
                     html.icon_button(reset_url, _("Reset rule pack to the MKP version"),
                                      "release_mkp")
@@ -1422,7 +1422,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 rules_url = html.makeuri_contextless(rules_url_vars)
                 html.icon_button(rules_url, _("Edit the rules in this pack"), "mkeventd_rules")
 
-                if type_ == cmk.ec.export.RulePackType.internal:
+                if type_ == ec.RulePackType.internal:
                     export_url = make_action_link([("mode", "mkeventd_rule_packs"),
                                                    ("_export", nr)])
                     html.icon_button(
@@ -1432,14 +1432,14 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
                 # Icons for mkp export and disabling
                 table.cell("", css="buttons")
-                if type_ == cmk.ec.export.RulePackType.unmodified_mkp:
+                if type_ == ec.RulePackType.unmodified_mkp:
                     html.icon(
                         _("This rule pack is provided via the MKP %s.") % id_to_mkp[id_], "mkps")
-                elif type_ == cmk.ec.export.RulePackType.exported:
+                elif type_ == ec.RulePackType.exported:
                     html.icon(
                         _("This is rule pack can be packaged with the Extension Packages module."),
                         "package")
-                elif type_ == cmk.ec.export.RulePackType.modified_mkp:
+                elif type_ == ec.RulePackType.modified_mkp:
                     html.icon(
                         _("This rule pack is modified. Originally it was provided via the MKP %s.")
                         % id_to_mkp[id_], "new_mkp")
@@ -1555,7 +1555,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
     def action(self):
         id_to_mkp = self._get_rule_pack_to_mkp_map()
-        type_ = cmk.ec.export.RulePackType.type_of(self._rule_pack, id_to_mkp)
+        type_ = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
 
         if html.request.var("_move_to"):
             if html.check_transaction():
@@ -1565,20 +1565,19 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         other_pack_nr, other_pack = self._rule_pack_with_id(
                             html.request.var(move_var))
 
-                        other_type_ = cmk.ec.export.RulePackType.type_of(other_pack, id_to_mkp)
-                        if other_type_ == cmk.ec.export.RulePackType.unmodified_mkp:
-                            cmk.ec.export.override_rule_pack_proxy(other_pack_nr, self._rule_packs)
+                        other_type_ = ec.RulePackType.type_of(other_pack, id_to_mkp)
+                        if other_type_ == ec.RulePackType.unmodified_mkp:
+                            ec.override_rule_pack_proxy(other_pack_nr, self._rule_packs)
 
-                        if type_ == cmk.ec.export.RulePackType.unmodified_mkp:
-                            cmk.ec.export.override_rule_pack_proxy(self._rule_pack_nr,
-                                                                   self._rule_packs)
+                        if type_ == ec.RulePackType.unmodified_mkp:
+                            ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
 
                         self._rule_packs[other_pack_nr]["rules"][0:0] = [rule]
                         del self._rule_packs[self._rule_pack_nr]["rules"][move_nr]
 
-                        if other_type_ == cmk.ec.export.RulePackType.exported:
+                        if other_type_ == ec.RulePackType.exported:
                             export_mkp_rule_pack(other_pack)
-                        if type_ == cmk.ec.export.RulePackType.exported:
+                        if type_ == ec.RulePackType.exported:
                             export_mkp_rule_pack(self._rule_pack)
                         save_mkeventd_rules(self._rule_packs)
 
@@ -1602,13 +1601,13 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 (rule["id"], rule.get("description", "")))
             if c:
                 self._add_change("delete-rule", _("Deleted rule %s") % self._rules[nr]["id"])
-                if type_ == cmk.ec.export.RulePackType.unmodified_mkp:
-                    cmk.ec.export.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
+                if type_ == ec.RulePackType.unmodified_mkp:
+                    ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
                     rules = self._rule_packs[self._rule_pack_nr]['rules']
 
                 del rules[nr]
 
-                if type_ == cmk.ec.export.RulePackType.exported:
+                if type_ == ec.RulePackType.exported:
                     export_mkp_rule_pack(self._rule_pack)
                 save_mkeventd_rules(self._rule_packs)
             elif c is False:
@@ -1622,15 +1621,15 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 to_pos = html.get_integer_input("_index")
 
                 rules = self._rules
-                if type_ == cmk.ec.export.RulePackType.unmodified_mkp:
-                    cmk.ec.export.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
+                if type_ == ec.RulePackType.unmodified_mkp:
+                    ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
                     rules = self._rule_packs[self._rule_pack_nr]['rules']
 
                 rule = rules[from_pos]
                 del rules[from_pos]  # make to_pos now match!
                 rules[to_pos:to_pos] = [rule]
 
-                if type_ == cmk.ec.export.RulePackType.exported:
+                if type_ == ec.RulePackType.exported:
                     export_mkp_rule_pack(self._rule_pack)
                 save_mkeventd_rules(self._rule_packs)
 
@@ -1837,7 +1836,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
                                     "edit does not exist."))
 
         id_to_mkp = self._get_rule_pack_to_mkp_map()
-        self._type = cmk.ec.export.RulePackType.type_of(self._rule_pack, id_to_mkp)
+        self._type = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
 
     def title(self):
         if self._new:
@@ -1880,7 +1879,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         if self._new:
             self._rule_packs = [self._rule_pack] + self._rule_packs
         else:
-            if self._type == cmk.ec.export.RulePackType.internal or self._type == cmk.ec.export.RulePackType.modified_mkp:
+            if self._type == ec.RulePackType.internal or self._type == ec.RulePackType.modified_mkp:
                 self._rule_packs[self._edit_nr] = self._rule_pack
             else:
                 self._rule_packs[self._edit_nr].rule_pack = self._rule_pack
@@ -1906,7 +1905,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         html.end_form()
 
     def _valuespec(self):
-        if self._type == cmk.ec.export.RulePackType.internal:
+        if self._type == ec.RulePackType.internal:
             return vs_mkeventd_rule_pack()
         return vs_mkeventd_rule_pack(fixed_id=self._rule_pack['id'],
                                      fixed_title=self._rule_pack['title'])
@@ -2041,9 +2040,9 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                 pass
 
         id_to_mkp = self._get_rule_pack_to_mkp_map()
-        type_ = cmk.ec.export.RulePackType.type_of(self._rule_pack, id_to_mkp)
-        if type_ == cmk.ec.export.RulePackType.unmodified_mkp:
-            cmk.ec.export.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
+        type_ = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
+        if type_ == ec.RulePackType.unmodified_mkp:
+            ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
             self._rules = self._rule_packs[self._rule_pack_nr]['rules']
 
         if self._new and self._clone_nr >= 0:
@@ -2053,7 +2052,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         else:
             self._rules[self._edit_nr] = self._rule
 
-        if type_ == cmk.ec.export.RulePackType.exported:
+        if type_ == ec.RulePackType.exported:
             export_mkp_rule_pack(self._rule_pack)
         save_mkeventd_rules(self._rule_packs)
 

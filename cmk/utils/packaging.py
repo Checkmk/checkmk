@@ -18,7 +18,7 @@ else:
 import six  # pylint: disable=unused-import
 
 # It's OK to import centralized config load logic
-import cmk.ec.export  # pylint: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.log import VERBOSE
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -62,7 +62,7 @@ PERM_MAP = (
     (str(cmk.utils.paths.local_mib_dir), 0o644),
     (os.path.join(cmk.utils.paths.share_dir, "alert_handlers"), 0o755),
     (str(cmk.utils.paths.local_share_dir / "alert_handlers"), 0o755),
-    (str(cmk.ec.export.mkp_rule_pack_dir()), 0o644),
+    (str(ec.mkp_rule_pack_dir()), 0o644),
 )
 
 
@@ -102,8 +102,7 @@ _package_parts = [
 ]
 
 _config_parts = [
-    PackagePart("ec_rule_packs", "Event Console rule packs",
-                str(cmk.ec.export.mkp_rule_pack_dir())),
+    PackagePart("ec_rule_packs", "Event Console rule packs", str(ec.mkp_rule_pack_dir())),
 ]
 
 package_ignored_files = {
@@ -140,7 +139,7 @@ def release_package(pacname):
             for f in filenames:
                 logger.log(VERBOSE, "    %s", f)
             if part.ident == 'ec_rule_packs':
-                cmk.ec.export.release_packaged_rule_packs(filenames)
+                ec.release_packaged_rule_packs(filenames)
     _remove_package_info(pacname)
 
 
@@ -347,7 +346,7 @@ def install_package(file_object):
                     os.chmod(path, desired_perm)
 
             if part.ident == 'ec_rule_packs':
-                cmk.ec.export.add_rule_pack_proxies(filenames)
+                ec.add_rule_pack_proxies(filenames)
 
     # In case of an update remove files from old_package not present in new one
     if update:
@@ -382,7 +381,7 @@ def _remove_packaged_rule_packs(file_names, delete_export=True):
     if not file_names:
         return
 
-    rule_packs = cmk.ec.export.load_rule_packs()
+    rule_packs = ec.load_rule_packs()
     rule_pack_ids = [rp['id'] for rp in rule_packs]
     affected_ids = [os.path.splitext(fn)[0] for fn in file_names]
 
@@ -390,9 +389,9 @@ def _remove_packaged_rule_packs(file_names, delete_export=True):
         index = rule_pack_ids.index(id_)
         del rule_packs[index]
         if delete_export:
-            cmk.ec.export.remove_exported_rule_pack(id_)
+            ec.remove_exported_rule_pack(id_)
 
-    cmk.ec.export.save_rule_packs(rule_packs)
+    ec.save_rule_packs(rule_packs)
 
 
 def _get_package_info_from_package(file_object):

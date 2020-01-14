@@ -1,0 +1,13 @@
+Title: skype: fixed magnitude of latency value
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p9
+Date: 1578990146
+
+The state falsely changed to warning. A missing conversion to the correct magnitude for a value in the Skype Sproc latency check,
+caused this wrong state change.

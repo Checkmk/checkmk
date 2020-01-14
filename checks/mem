@@ -500,7 +500,7 @@ def check_mem_windows(_no_item, params, info):
             crit = total_mb - levels[1]
         return warn, crit
 
-    for title, prefix, paramname in [("Memory usage", "Mem", "memory"),
+    for title, prefix, paramname in [("RAM", "Mem", "memory"),
                                      ("Commit charge", "Page", "pagefile")]:
 
         total_kb = meminfo.get("%sTotal" % prefix)
@@ -516,9 +516,12 @@ def check_mem_windows(_no_item, params, info):
 
         warn, crit = _get_levels_on_used_mb(paramname, total_mb)
 
-        infotext = "%s: %s (%s/%s)" % (title, get_percent_human_readable(perc),
-                                       get_bytes_human_readable(used_kb * 1024),
-                                       get_bytes_human_readable(total_kb * 1024))
+        infotext = check_memory_element(
+            title,
+            used_kb * 1024,
+            total_kb * 1024,
+            None,
+        )[1]
 
         perfdata = [(paramname, used_mb, warn, crit, 0, total_mb)]
         if prefix == "Mem":
@@ -580,6 +583,7 @@ check_info["mem.win"] = {
     'group': 'memory_pagefile_win',
     'default_levels_variable': 'memory_win_default_levels',
     "handle_real_time_checks": True,
+    "includes": ["mem.include"],
 }
 
 #.

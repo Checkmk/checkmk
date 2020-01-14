@@ -107,7 +107,7 @@ def do_discovery(hostnames, check_plugin_names, only_new):
     # cannot be discovered but the user is allowed to specify
     # them and we do discovery on the nodes instead.
     cluster_hosts = []
-    for h in hostnames:
+    for h in list(hostnames):
         host_config = config_cache.get_host_config(h)
         if host_config.is_cluster:
             cluster_hosts.append(h)

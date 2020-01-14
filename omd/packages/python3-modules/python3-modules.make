@@ -81,6 +81,14 @@ PYTHON3_MODULES_LIST += connexion-2.4.0.tar.gz
 PYTHON3_MODULES_LIST += psutil-5.6.7.tar.gz # needed for omdlib
 PYTHON3_MODULES_LIST += passlib-1.7.2.tar.gz # needed for omdlib
 
+PYTHON3_MODULES_LIST += defusedxml-0.6.0.tar.gz # needed for jira
+PYTHON3_MODULES_LIST += oauthlib-3.1.0.tar.gz # needed for requests-oauthlib and jira
+PYTHON3_MODULES_LIST += pbr-5.4.4.tar.gz # needed for jira
+PYTHON3_MODULES_LIST += requests-oauthlib-1.3.0.tar.gz # needed for jira
+PYTHON3_MODULES_LIST += requests-toolbelt-0.9.1.tar.gz # needed for jira
+PYTHON3_MODULES_LIST += PyJWT-1.7.1.tar.gz # needed for jira
+PYTHON3_MODULES_LIST += jira-2.0.0.tar.gz # needed for jira
+
 # TODO: Can we clean this up and use the intermediate install step results? Would be possible
 # in the moment we merge the build and intermediate install in a single target
 $(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_INSTALL) $(FREETDS_INTERMEDIATE_INSTALL) $(PYTHON3_MODULES_UNPACK)

@@ -1,0 +1,12 @@
+Title: df: addition of ignoring inodes levels option
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p9
+Date: 1579000277
+Class: feature
+
+ This implementation readds the option to ignore the levels of the used inodes.
+ While this was previously possible by specifying 0 values for warn and crit levels,
+ this new implementation now offers an explicit option.

@@ -235,7 +235,8 @@ def get_filesystem_levels(mountpoint, size_gb, params):
         crit_hr = get_bytes_human_readable(crit * mega)
         levels["levels_text"] = "(%s %s/%s)" % (label, warn_hr, crit_hr)
 
-    if "inodes_levels" in params:
+    inodes_levels = params.get("inodes_levels")
+    if inodes_levels:
         if isinstance(levels["inodes_levels"], tuple):
             warn, crit = levels["inodes_levels"]
         else:
@@ -426,7 +427,12 @@ def check_inodes(levels, inodes_total, inodes_avail):
                                                   human_readable_func=human_readable_func,
                                                   infoname="Inodes Used")
 
-    i_perf[0] += (0, inodes_total)  # because check_levels does not include min, max
+    # Appending boundaries to generated perf_data list
+    if len(i_perf[0]) == 2:  # no values for warn and crit
+        perf_boundaries = (None, None, 0, inodes_total)
+    else:
+        perf_boundaries = (0, inodes_total)
+    i_perf[0] += perf_boundaries  # because check_levels does not include min, max
 
     # Only show inodes if they are at less then 50%
     show_inodes = levels["show_inodes"]

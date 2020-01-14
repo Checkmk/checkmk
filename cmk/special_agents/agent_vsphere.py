@@ -1572,7 +1572,7 @@ def convert_hostname(hostname, opt):
 def write_output(lines, opt):
     if opt.agent:
         for chunk in get_agent_info_tcp(opt.host_address, opt.timeout, opt.debug):
-            sys.stdout.write(chunk)
+            sys.stdout.write(chunk + "\n")
 
     for line in lines:
         sys.stdout.write((line.encode("utf-8") if isinstance(line, six.text_type) else line) + "\n")

@@ -92,6 +92,7 @@ TEST(SectionProviders, BasicSystemTime) {
     auto& e4 = system_time_provider.getEngine();
     auto system_time = e4.generateContent(section_name);
     ASSERT_TRUE(!system_time.empty());
+    EXPECT_EQ(system_time.back(), '\n');
     auto result = cma::tools::SplitString(system_time, "\n");
     EXPECT_EQ(result.size(), 2);
     EXPECT_EQ(result[0], "<<<systemtime>>>");

@@ -6,7 +6,7 @@
 # 2019 (c) tribe29
 # 
 
-$sln = (Get-Item -Path ".\").FullName + "\wamain.sln"  # 'c:\z\m\check_mk\agents\wnx\wamain.sln'
+$sln = (Get-Item -Path ".\").FullName + "\wamain_build.sln"  # 'c:\z\m\check_mk\agents\wnx\wamain.sln'
 # string below is used to quckly switch to the Powershell ISE, do not delete it
 # $sln = 'c:\z\m\check_mk\agents\wnx\wamain.sln'
 

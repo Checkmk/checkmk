@@ -23,13 +23,18 @@ set pkg=upx
 set version=
 call :process
 
-rem upx, version is latest
+rem rsync, version is latest
 set pkg=rsync
 set version=
 call :process
 
-rem upx, version is latest
+rem grep, version is latest
 set pkg=grep
+set version=
+call :process
+
+rem diff, version is latest
+set pkg=diffutils
 set version=
 call :process
 

@@ -383,11 +383,6 @@
     <None Include="check_watest.cmd" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\src\engine\engine.vcxproj">
-      <Project>{343045b4-f20a-4e48-ab2f-83e1c22c9710}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -37,6 +37,12 @@ repos:
             entry: scripts/check-yapf -i
             language: script
             types: [file, python]
+          - id: omd-python-modules
+            name: Check Python modules in OMD
+            entry: scripts/check-omd-python-modules
+            language: script
+            files: omd/packages/python3?-modules
+            types: [file]
           - id: pylint
             name: Check pylint
             entry: scripts/check-pylint

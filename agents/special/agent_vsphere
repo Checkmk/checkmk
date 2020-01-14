@@ -1186,7 +1186,7 @@ def output(ln):
 def write_output(lines, fetch_agent, address):
     if fetch_agent:
         win_agent_output = get_agent_info_tcp(address)
-        sys.stdout.write(win_agent_output)
+        sys.stdout.write(win_agent_output + "\n")
 
     for ln in lines:
         sys.stdout.write((ln.encode("utf-8") if isinstance(ln, unicode) else ln) + "\n")

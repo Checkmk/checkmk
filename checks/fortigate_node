@@ -195,7 +195,7 @@ def check_fortigate_node_mem(item, params, parsed):
         current,
         "mem_usage",  # FIXME: CMK-3581
         (warn, crit),
-        # infoname="Usage",  # TODO: include this when changing service description
+        infoname="Usage",
         human_readable_func=get_percent_human_readable,
     )
 

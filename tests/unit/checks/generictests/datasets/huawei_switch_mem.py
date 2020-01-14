@@ -54,7 +54,7 @@ checks = {
             },
             [(
                 0,
-                '22.0%',
+                'Usage: 22.0%',
                 [('mem_used_percent', 22.0, 80.0, 90.0, None, None)],
             )],
         ),
@@ -65,7 +65,7 @@ checks = {
             },
             [(
                 1,
-                '85.0% (warn/crit at 80.0%/90.0%)',
+                'Usage: 85.0% (warn/crit at 80.0%/90.0%)',
                 [('mem_used_percent', 85.0, 80.0, 90.0, None, None)],
             )],
         ),
@@ -76,7 +76,7 @@ checks = {
             },
             [(
                 2,
-                '95.0% (warn/crit at 80.0%/90.0%)',
+                'Usage: 95.0% (warn/crit at 80.0%/90.0%)',
                 [('mem_used_percent', 95.0, 80.0, 90.0, None, None)],
             )],
         ),

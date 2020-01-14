@@ -42,6 +42,7 @@ def check_huawei_switch_mem(item, params, item_data):
     return check_levels(mem,
                         "mem_used_percent",
                         params.get('levels', (None, None)),
+                        infoname="Usage",
                         human_readable_func=get_percent_human_readable)
 
 

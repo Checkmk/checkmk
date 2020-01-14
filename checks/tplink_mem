@@ -46,6 +46,7 @@ def check_tplink_mem(_no_item, params, info):
     return check_levels(mem_used,
                         "mem_used_percent",
                         params.get('levels', (None, None)),
+                        infoname="Usage",
                         human_readable_func=get_percent_human_readable)
 
 

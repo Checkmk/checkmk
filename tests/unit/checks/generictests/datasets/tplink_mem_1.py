@@ -10,7 +10,7 @@ checks = {
     '': [
         (
             None, {}, [
-                (0, '50.0%', [('mem_used_percent', 50.0)])
+                (0, 'Usage: 50.0%', [('mem_used_percent', 50.0)])
             ]
         )
     ]

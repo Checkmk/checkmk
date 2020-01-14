@@ -13,7 +13,7 @@ from testlib import CMKEventConsole
 import cmk.utils.paths
 import cmk.ec.history
 import cmk.ec.main
-import cmk.ec.settings
+import cmk.ec.export
 
 
 class FakeStatusSocket:
@@ -47,8 +47,8 @@ class FakeStatusSocket:
 
 @pytest.fixture(name="settings", scope="function")
 def fixture_settings():
-    return cmk.ec.settings.settings('1.2.3i45', pathlib.Path(cmk.utils.paths.omd_root),
-                                    pathlib.Path(cmk.utils.paths.default_config_dir), ['mkeventd'])
+    return cmk.ec.export.settings('1.2.3i45', pathlib.Path(cmk.utils.paths.omd_root),
+                                  pathlib.Path(cmk.utils.paths.default_config_dir), ['mkeventd'])
 
 
 @pytest.fixture(name="lock_configuration", scope="function")
@@ -63,7 +63,7 @@ def fixture_slave_status():
 
 @pytest.fixture(name="config", scope="function")
 def fixture_config():
-    return cmk.ec.defaults.default_config()
+    return cmk.ec.export.default_config()
 
 
 @pytest.fixture(name="history", scope="function")

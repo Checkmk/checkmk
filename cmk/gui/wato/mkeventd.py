@@ -53,7 +53,6 @@ import cmk.utils.render
 
 # It's OK to import centralized config load logic
 import cmk.ec.export  # pylint: disable=cmk-module-layer-violation
-import cmk.ec.defaults  # pylint: disable=cmk-module-layer-violation
 
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -1018,7 +1017,7 @@ class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
         return 50
 
     def generate(self):
-        save_mkeventd_rules([cmk.ec.defaults.default_rule_pack([])])
+        save_mkeventd_rules([cmk.ec.export.default_rule_pack([])])
 
 
 #.

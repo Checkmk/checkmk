@@ -53,8 +53,8 @@ import cmk
 import cmk.utils.daemon
 import cmk.utils.defines
 import cmk.ec.actions
-import cmk.ec.export
 import cmk.ec.history
+import cmk.ec.rule_packs
 import cmk.ec.settings
 import cmk.ec.snmp
 import cmk.utils.log as log
@@ -3817,7 +3817,7 @@ def update_slave_status(slave_status, settings, config):
 
 
 def load_configuration(settings, logger, slave_status):
-    config = cmk.ec.export.load_config(settings)
+    config = cmk.ec.rule_packs.load_config(settings)
 
     # If not set by command line, set the log level by configuration
     if settings.options.verbosity == 0:

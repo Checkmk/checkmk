@@ -223,8 +223,8 @@ PYTHON_MODULES_LIST += openapi-spec-validator-0.2.8.tar.gz
 # direct dependency
 PYTHON_MODULES_LIST += swagger_ui_bundle-0.0.6.tar.gz
 # patched version without dependency on pathlib
-PYTHON_MODULES_LIST += connexion-2.4.0.tar.gz
-# PYTHON_MODULES_LIST += connexion-2018.0.dev1.tar.gz
+# PYTHON_MODULES_LIST += connexion-2.4.0.tar.gz
+PYTHON_MODULES_LIST += connexion-2018.0.dev1.tar.gz
 
 # NOTE: Setting SODIUM_INSTALL variable below is an extremely cruel hack to
 # avoid installing libsodium headers and libraries. The need for this hack

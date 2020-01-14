@@ -1881,7 +1881,7 @@ section_ntp() {
                 if inpath systemctl; then
                     # Identify whether ntp/ntpd/openntpd is active, if so, run ntpq
                     # shellcheck disable=SC2016
-                    if [ "$(systemctl awk '/(^ntp?|^openntpd).service/{print $3; exit}')" = "active" ]; then
+                    if [ "$(systemctl | awk '/ntp.service|ntpd.service/{print $3; exit}')" = "active" ]; then
                         # remove heading, make first column space separated
                         run_cached -s ntp 30 "waitmax 5 get_ntpq"
                     fi

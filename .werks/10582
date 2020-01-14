@@ -1,0 +1,17 @@
+Title: fortigate_memory: Wrong interpretation levels other than 'percent used'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1578992819
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+Using the WATO rule "Main memory usage (UNIX / Other Devices)", users could specify levels
+as absolute values or percent and on used or free memory.
+
+Previously only the 'percent used' combination worked correctly. Now 'percent used' and
+'percent free' are supported, while absolute values will result in a warning state,
+as this device does not provide absolute values.
+

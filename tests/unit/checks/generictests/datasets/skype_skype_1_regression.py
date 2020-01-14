@@ -6688,7 +6688,7 @@ checks = {
                                                      2.0, None, None)]),
         (0, '0.00 incoming requests dropped/sec', [('sip_incoming_requests_dropped', 0.0, 1.0, 2.0,
                                                     None, None)]),
-        (2, '0.30 ms queue latency (warn/crit at 0.1/0.2)',
+        (0, '0.30 ms queue latency',
          [('usrv_queue_latency', 0.00029864475533854544, 0.1, 0.2, None, None)]),
         (0, '0.00 ms sproc latency', [('usrv_sproc_latency', 8.385077343119278e-07, 0.1, 0.2, None,
                                        None)]),

@@ -531,7 +531,7 @@ def wmi_yield_raw_average(table, row, column, label, perfvar, levels=None, perfs
     except KeyError:
         return 3, "item not present anymore", []
 
-    status, levels_text = wmi_determine_status(average, levels)
+    status, levels_text = wmi_determine_status(average * perfscale, levels)
 
     return (status, "%.2f%s%s" % (average, label, levels_text),
             [wmi_make_perfvar(perfvar, average, perfscale, levels)])

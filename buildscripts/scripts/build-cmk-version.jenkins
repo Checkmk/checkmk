@@ -241,8 +241,8 @@ try {
         PACKAGE_BUILDS[DISTRO] = {
             node {
                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                    docker.image(DISTRO + ':' + DISTRO_TAG).pull()
-                    docker.image(DISTRO + ':' + DISTRO_TAG).inside("-u 0:0 --ulimit nofile=1024:1024  -v ${DAILY_DATA}:${DAILY_DATA} --privileged --network ci_local-infra --hostname ${DISTRO}") {
+                    docker.image(DISTRO + ':' + DOCKER_TAG).pull()
+                    docker.image(DISTRO + ':' + DOCKER_TAG).inside("-u 0:0 --ulimit nofile=1024:1024  -v ${DAILY_DATA}:${DAILY_DATA} --privileged --network ci_local-infra --hostname ${DISTRO}") {
                         stage('build' + DISTRO + ' package') {
                             versioning.print_image_tag()
                             sh 'rm -rf *'

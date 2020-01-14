@@ -50,7 +50,7 @@ logger = logging.getLogger("cmk.base")
 # would rather use "def output(text, *args, stream=sys.stdout)", but this is not possible
 # with python 2.7
 def output(text, *args, **kwargs):
-    # type: (AnyStr, *AnyStr, **IO[Any]) -> None
+    # type: (AnyStr, *Any, **IO[Any]) -> None
     if args:
         text = text % args
 
@@ -71,12 +71,14 @@ def output(text, *args, **kwargs):
 
 # Output text if opt_verbose is set (-v). Adds no linefeed
 def verbose(text, *args, **kwargs):
+    # type: (AnyStr, *Any, **IO[Any]) -> None
     if logger.isEnabledFor(VERBOSE):
         output(text, *args, **kwargs)
 
 
 # Output text if, opt_verbose >= 2 (-vv).
 def vverbose(text, *args, **kwargs):
+    # type: (AnyStr, *Any, **IO[Any]) -> None
     if logger.isEnabledFor(logging.DEBUG):
         verbose(text, *args, **kwargs)
 
@@ -88,6 +90,7 @@ def vverbose(text, *args, **kwargs):
 
 # TODO: Inconsistent -> Adds newline and other functions don't
 def warning(text, *args, **kwargs):
+    # type: (AnyStr, *Any, **IO[Any]) -> None
     kwargs.setdefault("stream", sys.stderr)
 
     stripped = text.lstrip()
@@ -99,24 +102,30 @@ def warning(text, *args, **kwargs):
 
 
 def error(text, *args):
+    # type: (AnyStr, *Any) -> None
     output(text, *args, stream=sys.stderr)
 
 
 def section_begin(text, *args, **kwargs):
+    # type: (AnyStr, *Any, **IO[Any]) -> None
     verbose(tty.bold + text + tty.normal + ":\n")
 
 
 def section_success(text):
+    # type: (AnyStr) -> None
     verbose("%sSUCCESS%s - %s\n" % (tty.green, tty.normal, text))
 
 
 def section_error(text):
+    # type: (AnyStr) -> None
     verbose("%sERROR%s - %s\n" % (tty.red, tty.normal, text))
 
 
 def step(text):
+    # type: (AnyStr) -> None
     verbose("%s+%s %s\n" % (tty.yellow, tty.normal, text.upper()))
 
 
 def step_error(text):
+    # type: (AnyStr) -> None
     verbose(text + "\n")

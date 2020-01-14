@@ -38,6 +38,7 @@ _config_loaded = False
 
 # TODO: This should be solved in the config module / ConfigCache object
 def _load_config():
+    # type: () -> None
     global _config_loaded
     if not _config_loaded:
         config.load(validate_hosts=False)
@@ -45,6 +46,7 @@ def _load_config():
 
 
 def reset_config():
+    # type: () -> None
     global _config_loaded
     _config_loaded = False
 

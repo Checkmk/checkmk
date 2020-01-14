@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from typing import Set, List, Optional, Iterable  # pylint: disable=unused-import
+
 from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.tty as tty
 
@@ -32,7 +34,9 @@ import cmk.base.config as config
 import cmk.base.console as console
 from cmk.base.exceptions import MKSNMPError
 import cmk.base.snmp as snmp
+from cmk.base.snmp_utils import SNMPHostConfig, ScanFunction  # pylint: disable=unused-import
 import cmk.base.check_api_utils as check_api_utils
+from cmk.base.check_utils import CheckPluginName  # pylint: disable=unused-import
 
 
 # gather auto_discovered check_plugin_names for this host
@@ -41,7 +45,8 @@ def gather_snmp_check_plugin_names(host_config,
                                    do_snmp_scan,
                                    for_inventory=False,
                                    for_mgmt_board=False):
-    check_plugin_names = set()
+    # type: (SNMPHostConfig, str, bool, bool, bool) -> List[CheckPluginName]
+    check_plugin_names = set()  # type: Set[CheckPluginName]
 
     try:
         check_plugin_names.update(
@@ -64,6 +69,7 @@ def _snmp_scan(host_config,
                for_inv=False,
                do_snmp_scan=True,
                for_mgmt_board=False):
+    # type: (SNMPHostConfig, str, bool, bool, bool) -> List[CheckPluginName]
     import cmk.base.inventory_plugins as inventory_plugins
 
     # Make hostname globally available for scan functions.
@@ -91,14 +97,14 @@ def _snmp_scan(host_config,
         snmp.set_single_oid_cache(".1.3.6.1.2.1.1.1.0", "")
         snmp.set_single_oid_cache(".1.3.6.1.2.1.1.2.0", "")
 
-    found_check_plugin_names = []
+    found_check_plugin_names = set()  # type: Set[CheckPluginName]
     if for_inv:
         items = inventory_plugins.inv_info.items()
     else:
         items = config.check_info.items()
 
-    positive_found = []
-    default_found = []
+    positive_found = []  # type: List[CheckPluginName]
+    default_found = []  # type: List[CheckPluginName]
 
     for check_plugin_name, _unused_check in items:
         if config.service_ignored(host_config.hostname, check_plugin_name, None):
@@ -114,6 +120,7 @@ def _snmp_scan(host_config,
         # subchecks sharing the same SNMP info of course should have
         # an identical scan function. But some checks do not do this
         # correctly
+        scan_function = None  # type: Optional[ScanFunction]
         if check_plugin_name in config.snmp_scan_functions:
             scan_function = config.snmp_scan_functions[check_plugin_name]
         elif section_name in config.snmp_scan_functions:
@@ -141,7 +148,7 @@ def _snmp_scan(host_config,
                     elif on_error == "raise":
                         raise MKGeneralException("SNMP Scan aborted.")
                 elif result:
-                    found_check_plugin_names.append(check_plugin_name)
+                    found_check_plugin_names.add(check_plugin_name)
                     positive_found.append(check_plugin_name)
             except MKGeneralException:
                 # some error messages which we explicitly want to show to the user
@@ -153,7 +160,7 @@ def _snmp_scan(host_config,
                 elif on_error == "raise":
                     raise
         else:
-            found_check_plugin_names.append(check_plugin_name)
+            found_check_plugin_names.add(check_plugin_name)
             default_found.append(check_plugin_name)
 
     _output_snmp_check_plugins("SNMP scan found", positive_found)
@@ -172,6 +179,7 @@ def _snmp_scan(host_config,
 
 
 def _output_snmp_check_plugins(title, collection):
+    # type: (str, Iterable[CheckPluginName]) -> None
     if collection:
         collection_out = " ".join(sorted(collection))
     else:

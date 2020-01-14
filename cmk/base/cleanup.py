@@ -26,14 +26,18 @@
 """Hacky module to avoid cyclic imports, using a naive observer pattern.
 This should die..."""
 
+from typing import Callable  # pylint: disable=unused-import
+
 cleanup_functions = set()
 
 
 def register_cleanup(func):
+    # type: (Callable) -> None
     cleanup_functions.add(func)
 
 
 def unregister_cleanup(func):
+    # type: (Callable) -> None
     cleanup_functions.remove(func)
 
 
@@ -41,5 +45,6 @@ def unregister_cleanup(func):
 # keepalive mode. We could in fact do some positive caching in keepalive mode,
 # e.g. the counters of the hosts could be saved in memory.
 def cleanup_globals():
+    # type: () -> None
     for func in cleanup_functions:
         func()

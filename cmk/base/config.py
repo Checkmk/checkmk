@@ -71,6 +71,8 @@ from cmk.base.utils import (  # pylint: disable=unused-import
 )
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     CheckPluginName,)
+from cmk.base.snmp_utils import (  # pylint: disable=unused-import
+    ScanFunction,)
 
 # TODO: Prefix helper functions with "_".
 
@@ -1209,7 +1211,7 @@ check_config_variables = []  # type:  List[Any]
 # whichs OIDs to fetch for which check (for tabular information)
 snmp_info = {}  # type: Dict[str, Union[Tuple[Any], List[Tuple[Any]]]]
 # SNMP autodetection
-snmp_scan_functions = {}  # type: Dict[str, Callable[[Callable[[str], str]], bool]]
+snmp_scan_functions = {}  # type: Dict[str, ScanFunction]
 # definitions of active "legacy" checks
 active_check_info = {}  # type: Dict[str, Dict[str, Any]]
 special_agent_info = {

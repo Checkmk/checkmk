@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import time
+from typing import Optional  # pylint: disable=unused-import
 
 import cmk.utils.tty as tty
 import cmk.utils.render
@@ -38,16 +39,22 @@ import cmk.base.data_sources as data_sources
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.check_table as check_table
 import cmk.base.checking as checking
+from cmk.base.utils import HostName  # pylint: disable=unused-import
+from cmk.base.check_utils import CheckParameters  # pylint: disable=unused-import
 
 
 def dump_host(hostname):
+    # type: (HostName) -> None
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
     console.output("\n")
     if host_config.is_cluster:
+        nodes = host_config.nodes
+        if nodes is None:
+            raise RuntimeError()
         color = tty.bgmagenta
-        add_txt = " (cluster of " + (", ".join(host_config.nodes)) + ")"
+        add_txt = " (cluster of " + (", ".join(nodes)) + ")"
     else:
         color = tty.bgblue
         add_txt = ""
@@ -56,7 +63,7 @@ def dump_host(hostname):
 
     ipaddress = _ip_address_for_dump_host(host_config)
 
-    addresses = ""
+    addresses = ""  # type: Optional[str]
     if not host_config.is_ipv4v6_host:
         addresses = ipaddress
     else:
@@ -89,6 +96,8 @@ def dump_host(hostname):
     # TODO: Clean this up once cluster parent handling has been moved to HostConfig
     if host_config.is_cluster:
         parents_list = host_config.nodes
+        if parents_list is None:
+            raise RuntimeError()
     else:
         parents_list = host_config.parents
     if len(parents_list) > 0:
@@ -127,7 +136,7 @@ def dump_host(hostname):
                           key=lambda s: s.description):
         table_data.append([
             service.check_plugin_name,
-            make_utf8(service.item),
+            make_utf8("%s" % service.item),
             _evaluate_params(service.parameters),
             make_utf8(service.description),
             make_utf8(",".join(config_cache.servicegroups_of_service(hostname,
@@ -138,8 +147,9 @@ def dump_host(hostname):
 
 
 def _evaluate_params(params):
+    # type: (CheckParameters) -> str
     if not isinstance(params, cmk.base.config.TimespecificParamList):
-        return params
+        return "%r" % (params,)
 
     current_params = checking.determine_check_params(params)
     return "Timespecific parameters at %s: %r" % (cmk.utils.render.date_and_time(
@@ -147,6 +157,7 @@ def _evaluate_params(params):
 
 
 def _ip_address_for_dump_host(host_config, family=None):
+    # type: (config.HostConfig, Optional[int]) -> Optional[str]
     if host_config.is_cluster:
         try:
             return ip_lookup.lookup_ip_address(host_config.hostname, family)

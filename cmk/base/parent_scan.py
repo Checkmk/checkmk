@@ -30,6 +30,7 @@ import socket
 import subprocess
 import time
 import pprint
+from typing import Union, Tuple, Optional, Set, Dict, List  # pylint: disable=unused-import
 
 import six
 
@@ -42,18 +43,23 @@ import cmk.base.utils
 import cmk.base.console as console
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
+from cmk.base.utils import HostName, HostAddress  # pylint: disable=unused-import
+
+Gateways = List[Tuple[Optional[Tuple[Optional[HostName], HostAddress, Optional[HostName]]], str,
+                      int, str]]
 
 
 def do_scan_parents(hosts):
+    # type: (List[HostName]) -> None
     config_cache = config.get_config_cache()
 
     if not hosts:
-        hosts = config_cache.all_active_realhosts()
+        hosts = list(sorted(config_cache.all_active_realhosts()))
 
     parent_hosts = []
-    parent_ips = {}
+    parent_ips = {}  # type: Dict[HostName, HostAddress]
     parent_rules = []
-    gateway_hosts = set([])
+    gateway_hosts = set()  # type: Set[HostName]
 
     if config.max_num_processes < 1:
         config.max_num_processes = 1
@@ -75,7 +81,7 @@ def do_scan_parents(hosts):
 
     console.output("Scanning for parents (%d processes)..." % config.max_num_processes)
     while hosts:
-        chunk = []
+        chunk = []  # type: List[HostName]
         while len(chunk) < config.max_num_processes and len(hosts) > 0:
             host = hosts.pop()
 
@@ -127,13 +133,16 @@ def do_scan_parents(hosts):
 
 
 def traceroute_available():
+    # type: () -> Optional[str]
     for path in os.environ['PATH'].split(os.pathsep):
         f = path + '/traceroute'
         if os.path.exists(f) and os.access(f, os.X_OK):
             return f
+    return None
 
 
 def scan_parents_of(config_cache, hosts, silent=False, settings=None):
+    # type: (config.ConfigCache, List[HostName], bool, Optional[Dict[str, int]]) -> Gateways
     if settings is None:
         settings = {}
 
@@ -146,11 +155,13 @@ def scan_parents_of(config_cache, hosts, silent=False, settings=None):
     os.putenv("LC_ALL", "")
 
     # Start processes in parallel
-    procs = []
+    procs = []  # type: List[Tuple[HostName, Optional[HostAddress], Union[str, subprocess.Popen]]]
     for host in hosts:
         console.verbose("%s " % host)
         try:
             ip = ip_lookup.lookup_ipv4_address(host)
+            if ip is None:
+                raise RuntimeError()
             command = [
                 "traceroute", "-w",
                 "%d" % settings.get("timeout", 8), "-q",
@@ -176,13 +187,15 @@ def scan_parents_of(config_cache, hosts, silent=False, settings=None):
 
     # Now all run and we begin to read the answers. For each host
     # we add a triple to gateways: the gateway, a scan state  and a diagnostic output
-    gateways = []
+    gateways = []  # type: Gateways
     for host, ip, proc_or_error in procs:
         if isinstance(proc_or_error, six.string_types):
             lines = [proc_or_error]
             exitstatus = 1
         else:
             exitstatus = proc_or_error.wait()
+            if proc_or_error.stdout is None:
+                raise RuntimeError()
             lines = [l.strip() for l in proc_or_error.stdout.readlines()]
 
         if exitstatus:
@@ -228,7 +241,7 @@ def scan_parents_of(config_cache, hosts, silent=False, settings=None):
         # 10  216.239.48.53  45.608 ms  47.121 ms 64.233.174.29  43.126 ms
         # 11  209.85.255.245  49.265 ms  40.470 ms  39.870 ms
         # 12  8.8.8.8  28.339 ms  28.566 ms  28.791 ms
-        routes = []
+        routes = []  # type: List[Optional[str]]
         for line in lines[1:]:
             parts = line.split()
             route = parts[1]
@@ -265,7 +278,7 @@ def scan_parents_of(config_cache, hosts, silent=False, settings=None):
         # Try far most route which is not identical with host itself
         ping_probes = settings.get("ping_probes", 5)
         skipped_gateways = 0
-        route = None
+        this_route = None  # type: Optional[HostAddress]
         for r in routes[::-1]:
             if not r or (r == ip):
                 continue
@@ -276,9 +289,9 @@ def scan_parents_of(config_cache, hosts, silent=False, settings=None):
                     console.verbose("(not using %s, not reachable)\n", r, stream=sys.stderr)
                     skipped_gateways += 1
                     continue
-            route = r
+            this_route = r
             break
-        if not route:
+        if not this_route:
             error = "No usable routing information"
             if not silent:
                 console.error("%s: %s\n" % (host, error))
@@ -287,8 +300,8 @@ def scan_parents_of(config_cache, hosts, silent=False, settings=None):
             continue
 
         # TTLs already have been filtered out)
-        gateway_ip = route
-        gateway = _ip_to_hostname(config_cache, route)
+        gateway_ip = this_route
+        gateway = _ip_to_hostname(config_cache, this_route)
         if gateway:
             console.verbose("%s(%s) ", gateway, gateway_ip)
         else:
@@ -302,6 +315,7 @@ def scan_parents_of(config_cache, hosts, silent=False, settings=None):
 
 
 def gateway_reachable_via_ping(ip, probes):
+    # type: (HostAddress, int) -> bool
     return subprocess.call(
         ["ping", "-q", "-i", "0.2", "-l", "3", "-c",
          "%d" % probes, "-W", "5", ip],
@@ -315,6 +329,7 @@ def gateway_reachable_via_ping(ip, probes):
 # want to find the DNS name but the name of a matching host
 # from all_hosts
 def _ip_to_hostname(config_cache, ip):
+    # type: (config.ConfigCache, Optional[HostAddress]) -> Optional[HostName]
     if not cmk.base.config_cache.exists("ip_to_hostname"):
         cache = cmk.base.config_cache.get_dict("ip_to_hostname")
 
@@ -330,6 +345,7 @@ def _ip_to_hostname(config_cache, ip):
 
 
 def _ip_to_dnsname(ip):
+    # type: (HostAddress) -> Optional[HostName]
     try:
         return socket.gethostbyaddr(ip)[0]
     except Exception:

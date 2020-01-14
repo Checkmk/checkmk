@@ -29,6 +29,9 @@
 # logfiles and then compress them. Do *not* compress compressed
 # files again.
 import logging
+from typing import (  # pylint: disable=unused-import
+    BinaryIO, Dict, Set, Optional, List, Tuple,
+)
 
 from cmk.utils.exceptions import MKBailOut
 from cmk.utils.log import VERBOSE
@@ -38,6 +41,7 @@ logger = logging.getLogger("cmk.base.compress_history")
 
 
 def do_compress_history(args):
+    # type: (List[str]) -> None
     if not args:
         raise MKBailOut("Please specify files to compress.")
 
@@ -52,7 +56,8 @@ def do_compress_history(args):
 
 
 def compress_history_file(input_path, output_path):
-    known_services = {}
+    # type: (str, str) -> None
+    known_services = {}  # type: Dict[str, Set[Optional[str]]]
     machine_state = "START"
 
     output = open(output_path, "w")
@@ -66,17 +71,24 @@ def compress_history_file(input_path, output_path):
         if line_type == "RESTART" or line_type == "LOGGING_INITIAL":
             if machine_state != "START":
                 machine_state = "AFTER_RESTART"
-                services_after_reload = {}
+                services_after_reload = {}  # type: Dict[str, Set[Optional[str]]]
             if line_type == "LOGGING_INITIAL":
                 skip_this_line = True
 
         elif line_type == "CURRENT":
+            if host is None:
+                raise Exception("Unexpected line %s (while in state %s); Host is None" %
+                                (line, machine_state))
             if machine_state not in ("START", "CURRENT", "AFTER_RESTART"):
                 raise Exception("Unexpected line %s (while in state %s)" % (line, machine_state))
             machine_state = "CURRENT"
             known_services.setdefault(host, set([])).add(service)
 
         elif line_type == "INITIAL":
+            if host is None:
+                raise Exception("Unexpected line %s (while in state %s); Host is None" %
+                                (line, machine_state))
+
             if machine_state == "OPERATION":
                 pass  # happens at CMC. That does not create a log entry on reload
             elif machine_state == "START":
@@ -115,6 +127,7 @@ def compress_history_file(input_path, output_path):
 
 
 def parse_history_line(line):
+    # type: (str) -> Tuple[str, Optional[str], Optional[str]]
     command = get_line_command(line)
     if "INITIAL" in command:
         host, service = get_host_service_from_history_line(command, line)
@@ -132,6 +145,7 @@ def parse_history_line(line):
 
 
 def get_host_service_from_history_line(command, line):
+    # type: (str, str) -> Tuple[str, Optional[str]]
     arguments = line.split(":")[1].strip().split(";")
     if "HOST" in command:
         return arguments[0], None
@@ -139,12 +153,14 @@ def get_host_service_from_history_line(command, line):
 
 
 def get_line_command(line):
+    # type: (str) -> str
     if ":" in line:
         return line.split(":")[0].split("]")[1].strip()
     return line.split("]")[1].strip()
 
 
 def log_vanished_object(output, timestamp, host, service):
+    # type: (BinaryIO, int, str, Optional[str]) -> None
     if service:
         output.write("[%s] VANISHED SERVICE: %s;%s\n" % (timestamp, host, service))
     else:

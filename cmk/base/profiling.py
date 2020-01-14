@@ -34,6 +34,7 @@ _profile_path = "profile.out"
 
 
 def enable():
+    # type: () -> None
     global _profile
     import cProfile
     _profile = cProfile.Profile()
@@ -42,10 +43,12 @@ def enable():
 
 
 def enabled():
+    # type: () -> bool
     return _profile is not None
 
 
 def output_profile():
+    # type: () -> None
     if not _profile:
         return
 

@@ -441,7 +441,7 @@ def wmi_fix_levels(levels):
     return levels
 
 
-def wmi_yield_raw_persec(table, row, column, label, perfvar, levels=None, perfscale=1.0):
+def wmi_yield_raw_persec(table, row, column, label, perfvar, levels=None):
     if table is None:
         # This case may be when a check was discovered with a table which subsequently
         # disappeared again. We expect to get None in this case and return some "nothing happened"
@@ -462,10 +462,10 @@ def wmi_yield_raw_persec(table, row, column, label, perfvar, levels=None, perfsc
     status, levels_text = wmi_determine_status(value_per_sec, levels)
 
     return (status, "%.2f%s%s" % (value_per_sec, label, levels_text),
-            [wmi_make_perfvar(perfvar, value_per_sec, perfscale, levels)])
+            [wmi_make_perfvar(perfvar, value_per_sec, 1.0, levels)])
 
 
-def wmi_yield_raw_counter(table, row, column, label, perfvar, levels=None, perfscale=1.0):
+def wmi_yield_raw_counter(table, row, column, label, perfvar, levels=None):
     if row == "":
         row = 0
 
@@ -479,7 +479,7 @@ def wmi_yield_raw_counter(table, row, column, label, perfvar, levels=None, perfs
     status, levels_text = wmi_determine_status(value, levels)
 
     return (status, "%s%s%s" % (value, label, levels_text),
-            [wmi_make_perfvar(perfvar, value, perfscale, levels)])
+            [wmi_make_perfvar(perfvar, value, 1.0, levels)])
 
 
 def wmi_calculate_raw_average(table, row, column, factor):
@@ -539,7 +539,7 @@ def wmi_yield_raw_average(table, row, column, label, perfvar, levels=None, perfs
             [wmi_make_perfvar(perfvar, average, perfscale, levels)])
 
 
-def wmi_yield_raw_average_timer(table, row, column, label, perfvar, levels=None, perfscale=1.0):
+def wmi_yield_raw_average_timer(table, row, column, label, perfvar, levels=None):
     levels = wmi_fix_levels(levels)
 
     try:
@@ -549,7 +549,7 @@ def wmi_yield_raw_average_timer(table, row, column, label, perfvar, levels=None,
     status, levels_text = wmi_determine_status(average, levels)
 
     return (status, "%.2f%s%s" % (average, label, levels_text),
-            [wmi_make_perfvar(perfvar, average, perfscale, levels)])
+            [wmi_make_perfvar(perfvar, average, 1.0, levels)])
 
 
 def wmi_yield_raw_fraction(table, row, column, label, perfvar, levels=None):

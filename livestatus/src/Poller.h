@@ -33,6 +33,7 @@
 #include <unordered_map>
 #include <vector>
 #include "BitMask.h"
+#include "Logger.h"
 
 enum class PollEvents { in = 1 << 0, out = 1 << 1, hup = 1 << 2 };
 IS_BIT_MASK(PollEvents);
@@ -56,6 +57,47 @@ public:
                             static_cast<int>(millis.count()));
         } while (retval == -1 && errno == EINTR);
         return retval;
+    }
+
+    template <typename Rep, typename Period>
+    [[nodiscard]] bool wait(std::chrono::duration<Rep, Period> timeout,
+                            const int fd, const PollEvents e,
+                            Logger* const logger) {
+        this->addFileDescriptor(fd, e);
+        if (const int retval = this->poll(timeout); retval == -1) {
+            generic_error ge{"Polling failed"};
+            Error(logger) << ge;
+            return false;
+        } else if (retval == 0) {
+            errno = ETIMEDOUT;
+            generic_error ge{"Polling failed"};
+            Debug(logger) << ge;
+            return false;
+        }
+        if (!this->isFileDescriptorSet(fd, e)) {
+            errno = EBADF;
+            generic_error ge{"Polling failed"};
+            Error(logger) << ge;
+            return false;
+        }
+        return true;
+    }
+
+    template <typename Rep, typename Period>
+    [[nodiscard]] bool wait(std::chrono::duration<Rep, Period> timeout,
+                            const int fd, const PollEvents e) {
+        this->addFileDescriptor(fd, e);
+        if (const int retval = this->poll(timeout); retval == -1) {
+            return false;
+        } else if (retval == 0) {
+            errno = ETIMEDOUT;
+            return false;
+        }
+        if (!this->isFileDescriptorSet(fd, e)) {
+            errno = EBADF;
+            return false;
+        }
+        return true;
     }
 
     void addFileDescriptor(int fd, PollEvents e) {

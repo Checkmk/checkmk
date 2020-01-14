@@ -24,6 +24,7 @@
 
 #include "OutputBuffer.h"
 #include <unistd.h>
+#include <cerrno>
 #include <chrono>
 #include <cstddef>
 #include <iomanip>
@@ -70,21 +71,22 @@ void OutputBuffer::writeData(std::ostringstream &os) {
     const char *buffer = static_cast<Hack *>(os.rdbuf())->base();
     size_t bytes_to_write = os.tellp();
     while (!shouldTerminate() && bytes_to_write > 0) {
-        Poller poller;
-        poller.addFileDescriptor(_fd, PollEvents::out);
-        int retval = poller.poll(100ms);
-        if (retval > 0 && poller.isFileDescriptorSet(_fd, PollEvents::out)) {
-            ssize_t bytes_written = write(_fd, buffer, bytes_to_write);
-            if (bytes_written == -1) {
-                generic_error ge("could not write " +
-                                 std::to_string(bytes_to_write) +
-                                 " bytes to client socket");
-                Informational(_logger) << ge;
-                break;
+        if (!Poller{}.wait(100ms, _fd, PollEvents::out, _logger)) {
+            if (errno == ETIMEDOUT) {
+                continue;
             }
-            buffer += bytes_written;
-            bytes_to_write -= bytes_written;
+            break;
         }
+        ssize_t bytes_written = write(_fd, buffer, bytes_to_write);
+        if (bytes_written == -1) {
+            generic_error ge("could not write " +
+                             std::to_string(bytes_to_write) +
+                             " bytes to client socket");
+            Informational(_logger) << ge;
+            break;
+        }
+        buffer += bytes_written;
+        bytes_to_write -= bytes_written;
     }
 }
 

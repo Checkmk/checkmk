@@ -42,7 +42,7 @@ _StatusServer = Any
 class Query:
     @staticmethod
     def make(status_server, raw_query, logger):
-        # type: (_StatusServer, str, Logger) -> Query
+        # type: (_StatusServer, List[str], Logger) -> Query
         parts = raw_query[0].split(None, 1)
         if len(parts) != 2:
             raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
@@ -56,27 +56,17 @@ class Query:
         raise MKClientError("Invalid method %s (allowed are GET, REPLICATE, COMMAND)" % method)
 
     def __init__(self, status_server, raw_query, logger):
-        # type: (_StatusServer, str, Logger) -> None
+        # type: (_StatusServer, List[str], Logger) -> None
         super().__init__()
-        self._logger = logger
         self.output_format = "python"
-        self._raw_query = raw_query
-        self._from_raw_query(status_server)
-
-    def _from_raw_query(self, status_server):
-        # type: (_StatusServer) -> None
-        self._parse_method_and_args()
-
-    def _parse_method_and_args(self):
-        # type: () -> None
-        parts = self._raw_query[0].split(None, 1)
+        parts = raw_query[0].split(None, 1)
         if len(parts) != 2:
             raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
         self.method, self.method_arg = parts
 
     def __repr__(self):
         # type: () -> str
-        return repr("\n".join(self._raw_query))
+        return self.method + " " + self.method_arg
 
 
 class QueryGET(Query):
@@ -92,25 +82,21 @@ class QueryGET(Query):
         "in": (lambda a, b: a in b),
     }
 
-    def _from_raw_query(self, status_server):
-        # type: (_StatusServer) -> None
-        super()._from_raw_query(status_server)
-        self._parse_table(status_server)
-        self._parse_header_lines()
-
-    def _parse_table(self, status_server):
-        # type: (_StatusServer) -> None
+    def __init__(self, status_server, raw_query, logger):
+        # type: (_StatusServer, List[str], Logger) -> None
+        super().__init__(status_server, raw_query, logger)
         self.table_name = self.method_arg
         self.table = status_server.table(self.table_name)
+        self.__parse_header_lines(raw_query, logger)
 
-    def _parse_header_lines(self):
-        # type: () -> None
+    def __parse_header_lines(self, raw_query, logger):
+        # type: (List[str], Logger) -> None
         self.requested_columns = self.table.column_names  # use all columns as default
         self.filters = []
         self.limit = None
         self.only_host = None
 
-        for line in self._raw_query[1:]:
+        for line in raw_query[1:]:
             try:
                 header, argument = line.rstrip("\n").split(":", 1)
                 argument = argument.lstrip(" ")
@@ -127,7 +113,7 @@ class QueryGET(Query):
                     self.requested_columns = argument.split(" ")
 
                 elif header == "Filter":
-                    column_name, operator_name, predicate, argument = self._parse_filter(argument)
+                    column_name, operator_name, predicate, argument = self.__parse_filter(argument)
 
                     # Needed for later optimization (check_mkevents)
                     if column_name == "event_host" and operator_name == 'in':
@@ -139,12 +125,12 @@ class QueryGET(Query):
                     self.limit = int(argument)
 
                 else:
-                    self._logger.info("Ignoring not-implemented header %s" % header)
+                    logger.info("Ignoring not-implemented header %s" % header)
 
             except Exception as e:
                 raise MKClientError("Invalid header line '%s': %s" % (line.rstrip(), e))
 
-    def _parse_filter(self, textspec):
+    def __parse_filter(self, textspec):
         # type: (str) -> Tuple[str, str, Callable, Any]
         # Examples:
         # id = 17
@@ -174,11 +160,15 @@ class QueryGET(Query):
             argument = convert(argument)
 
         operator_function = self._filter_operators.get(operator_name)
-        if not operator_function:
+        if operator_function is None:
             raise MKClientError("Unknown filter operator '%s'" % operator_name)
 
         # TODO: Fix the typing chaos below!
-        return (column, operator_name, lambda x: operator_function(x, argument), argument)  # type: ignore[misc]
+        return (
+            column,
+            operator_name,
+            lambda x: operator_function(x, argument),  # type: ignore[misc]
+            argument)
 
     def requested_column_indexes(self):
         # type: () -> List[Optional[int]]

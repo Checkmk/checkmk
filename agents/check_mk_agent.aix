@@ -41,6 +41,21 @@ export MK_VARDIR=${MK_VARDIR:-/tmp/check_mk}
 # Optionally set a tempdir for all subsequent calls
 #export TMPDIR=
 
+#Check if agent output should be SSL encrypted
+if [ -f "$MK_CONFDIR/encryption.cfg" ]; then
+    # shellcheck source=/dev/null
+    . "$MK_CONFDIR/encryption.cfg"
+fi
+
+#MF
+#To prepare for SSL encrypted output we copy STDOUT file descriptor
+#and send STDOUT to a file
+#
+if [ "$ENCRYPTED" == "yes" ]; then
+   exec 6>&1
+   exec >/tmp/agent_out
+fi
+
 # Provide information about the remote host. That helps when data
 # is being sent only once to each remote host.
 if [ "$REMOTE_HOST" ] ; then
@@ -71,7 +86,7 @@ if [ "$1" = -d ]
 then
     set -xv
 else
-    exec </dev/null 2>/dev/null
+    exec <&- 2>/dev/null
 fi
 
 # Shell version of the waitmax utility, that limits the runtime of
@@ -140,7 +155,7 @@ function run_cached {
 }
 
 echo "<<<check_mk>>>"
-echo "Version: 1.7.0i1"
+echo "Version: 1.6.0p3"
 echo "AgentOS: aix"
 echo "Hostname: $(hostname)"
 echo "AgentDirectory: $MK_CONFDIR"
@@ -188,7 +203,7 @@ if type stat >/dev/null 2>&1 ; then
 fi
 
 echo '<<<ps>>>'
-ps -ef -F user,vszsize,rssize,pcpu,etime,pid,args | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
+ps -ef -F user,vszsize,rssize,pcpu,args | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 
 if type lparstat >/dev/null 2>&1
 then
@@ -208,9 +223,6 @@ swap -s
 
 echo '<<<mpstat_aix>>>'
 mpstat -a | tail -n1
-
-echo '<<<aix_paging>>>'
-lsps -a
 
 # CPU output of Linux agent simulated
 # (thanks to Cameron Pierce)
@@ -385,7 +397,7 @@ then
     fi
 fi
 
-echo '<<<local:sep(0)>>>'
+echo '<<<local>>>'
 if cd $LOCALDIR 2>/dev/null
 then
   for skript in $(ls)
@@ -450,4 +462,18 @@ if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
         cat "$file"
     done
     cd - > /dev/null
+fi
+
+
+if [ "$ENCRYPTED" == "yes" ]; then
+   OPENSSL_VERSION=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')
+   if [ $OPENSSL_VERSION -ge 10000 ]; then
+      exec 1>&6 6>&-
+      printf "02"
+      /usr/bin/openssl enc -aes-256-cbc -md sha256 -k "$PASSPHRASE" -nosalt -in /tmp/agent_out
+   else
+      exec 1>&6 6>&-
+      printf "00"
+      openssl enc -aes-256-cbc -md md5 -k "$PASSPHRASE" -nosalt
+   fi
 fi

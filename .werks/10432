@@ -1,0 +1,20 @@
+Title: cmk-update-agent.exe: Fix security issue on Windows
+Knowledge: doc
+Level: 2
+Component: agents
+Class: security
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0p24
+Date: 1579075205
+
+Recently, a vulnerability of PyInstaller, that we use to compile
+the cmk-update-agent.exe executable on windows to one file, has been
+discovered, see
+<a href=https://github.com/pyinstaller/pyinstaller/security/advisories/GHSA-7fcj-pq9j-wh2r>here</a>.
+
+Only the windows version of the cmk-update-agent binary is affected. Unix versions and the python script
+are not affected.
+
+We fix this issue by updating to PyIntaller 3.6.

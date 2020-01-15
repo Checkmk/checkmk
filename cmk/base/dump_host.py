@@ -131,17 +131,14 @@ def dump_host(hostname):
     headers = ["checktype", "item", "params", "description", "groups"]
     colors = [tty.normal, tty.blue, tty.normal, tty.green, tty.normal]
 
-    table_data = []
+    table_data = []  # type: tty.TableRows
     for service in sorted(check_table.get_check_table(hostname).values(),
                           key=lambda s: s.description):
-        table_data.append([
-            service.check_plugin_name,
-            make_utf8("%s" % service.item),
-            _evaluate_params(service.parameters),
-            make_utf8(service.description),
-            make_utf8(",".join(config_cache.servicegroups_of_service(hostname,
-                                                                     service.description)))
-        ])
+        table_data.append(
+            (service.check_plugin_name, make_utf8("%s" % service.item),
+             _evaluate_params(service.parameters), make_utf8(service.description),
+             make_utf8(",".join(config_cache.servicegroups_of_service(hostname,
+                                                                      service.description)))))
 
     tty.print_table(headers, colors, table_data, "  ")
 

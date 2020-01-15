@@ -53,7 +53,7 @@ from cmk.base.check_utils import (  # pylint: disable=unused-import
 from cmk.base.snmp_utils import (  # pylint: disable=unused-import
     OIDInfo, OIDWithColumns, OIDWithSubOIDsAndColumns, OID, Columns, Column, SNMPValueEncoding,
     SNMPHostConfig, SNMPRowInfo, SNMPTable, ResultColumnsUnsanitized, ResultColumnsSanitized,
-    ResultColumnsDecoded, RawValue, ContextName, DecodedBinary,
+    ResultColumnsDecoded, RawValue, ContextName, DecodedBinary, SNMPContext,
 )
 
 try:
@@ -69,6 +69,8 @@ _g_single_oid_ipaddress = None  # type: Optional[HostAddress]
 _g_single_oid_cache = None  # type: Optional[Dict[OID, Optional[RawValue]]]
 # TODO: Move to StoredWalkSNMPBackend?
 _g_walk_cache = {}  # type: Dict[str, List[str]]
+
+SNMPWalkOptions = Dict[str, List[OID]]
 
 #.
 #   .--caching-------------------------------------------------------------.
@@ -560,6 +562,7 @@ def _key_oid_pairs(pair1):
 
 
 def _snmpv3_contexts_of(snmp_config, check_plugin_name):
+    # type: (SNMPHostConfig, CheckPluginName) -> List[SNMPContext]
     for ty, rules in snmp_config.snmpv3_contexts:
         if ty is None or ty == check_plugin_name:
             return rules
@@ -788,6 +791,7 @@ def do_snmptranslate(walk_filename):
         raise MKGeneralException("The walk '%s' does not exist" % walk_path)
 
     def translate(lines):
+        # type: (List[bytes]) -> List[Tuple[bytes, bytes]]
         result_lines = []
         try:
             oids_for_command = []
@@ -801,6 +805,8 @@ def do_snmptranslate(walk_filename):
                                  stderr=open(os.devnull, "w"),
                                  close_fds=True)
             p.wait()
+            if p.stdout is None:
+                raise RuntimeError()
             output = p.stdout.read()
             result = output.split("\n")[0::2]
             for idx, line in enumerate(result):
@@ -813,7 +819,7 @@ def do_snmptranslate(walk_filename):
 
     # Translate n-oid's per cycle
     entries_per_cycle = 500
-    translated_lines = []  # type: List[str]
+    translated_lines = []  # type: List[Tuple[bytes, bytes]]
 
     walk_lines = open(walk_path).readlines()
     console.error("Processing %d lines.\n" % len(walk_lines))
@@ -830,9 +836,6 @@ def do_snmptranslate(walk_filename):
     # Output formatted
     for translation, line in translated_lines:
         console.output("%s --> %s\n" % (line, translation))
-
-
-SNMPWalkOptions = Dict[str, List[OID]]
 
 
 def do_snmpwalk(options, hostnames):

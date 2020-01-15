@@ -137,7 +137,7 @@ class ABCDiscoveredLabelsStore(six.with_metaclass(abc.ABCMeta, object)):
     """Managing persistance of discovered labels"""
     @abc.abstractproperty
     def file_path(self):
-        # type () -> Path
+        # type: () -> Path
         raise NotImplementedError()
 
     def load(self):
@@ -168,5 +168,5 @@ class DiscoveredHostLabelsStore(ABCDiscoveredLabelsStore):
 
     @property
     def file_path(self):
-        # type () -> Path
+        # type: () -> Path
         return (cmk.utils.paths.discovered_host_labels_dir / self._hostname).with_suffix(".mk")

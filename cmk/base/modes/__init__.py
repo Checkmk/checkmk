@@ -27,13 +27,13 @@
 import sys
 import textwrap
 import getopt
-from typing import List  # pylint: disable=unused-import
+from typing import Optional, Dict, List  # pylint: disable=unused-import
 
 from cmk.utils.plugin_loader import load_plugins
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
+from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
 
 import cmk.base.config as config
-from cmk.base.utils import HostName  # pylint: disable=unused-import
 
 
 class Modes(object):

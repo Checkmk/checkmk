@@ -28,17 +28,22 @@
 import os
 import sys
 import traceback
-from typing import (Optional, Text, Tuple)  # pylint: disable=unused-import
+from typing import (Dict, Optional, Text, Tuple)  # pylint: disable=unused-import
 from pathlib2 import Path
 
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.encoding
 import cmk.utils.crash_reporting as crash_reporting
+from cmk.utils.type_defs import (  # pylint: disable=unused-import
+    HostName, CheckPluginName, Item, ServiceName,
+)
 
 import cmk.base.utils
 import cmk.base.check_utils
 import cmk.base.config as config
+from cmk.base.data_sources.host_sections import FinalSectionContent  # pylint: disable=unused-import
+from cmk.base.check_utils import CheckParameters, RawAgentData  # pylint: disable=unused-import
 
 CrashReportStore = crash_reporting.CrashReportStore
 
@@ -47,10 +52,12 @@ CrashReportStore = crash_reporting.CrashReportStore
 class CMKBaseCrashReport(crash_reporting.ABCCrashReport):
     @classmethod
     def type(cls):
+        # type: () -> Text
         return "base"
 
     @classmethod
     def from_exception(cls, details=None, type_specific_attributes=None):
+        # type: (Dict, Dict) -> crash_reporting.ABCCrashReport
         return super(CMKBaseCrashReport, cls).from_exception(details={
             "argv": sys.argv,
             "env": dict(os.environ),
@@ -59,13 +66,14 @@ class CMKBaseCrashReport(crash_reporting.ABCCrashReport):
 
 def create_check_crash_dump(hostname, check_plugin_name, item, is_manual_check, params, description,
                             info):
+    # type: (HostName, CheckPluginName, Item, bool, CheckParameters, ServiceName, FinalSectionContent) -> Text
     """Create a crash dump from an exception occured during check execution
 
     The crash dump is put into a tarball, base64 encoded and appended to the long output
     of the check. The GUI (cmk.gui.crash_reporting) is able to parse it and send it to
     the Checkmk team.
     """
-    text = "check failed - please submit a crash report!"
+    text = u"check failed - please submit a crash report!"
     try:
         crash = CheckCrashReport.from_exception_and_context(
             hostname=hostname,
@@ -90,11 +98,13 @@ def create_check_crash_dump(hostname, check_plugin_name, item, is_manual_check, 
 class CheckCrashReport(crash_reporting.ABCCrashReport):
     @classmethod
     def type(cls):
+        # type: () -> Text
         return "check"
 
     @classmethod
     def from_exception_and_context(cls, hostname, check_plugin_name, item, is_manual_check, params,
                                    description, info, text):
+        # type: (HostName, CheckPluginName, Item, bool, CheckParameters, ServiceName, FinalSectionContent, Text) -> crash_reporting.ABCCrashReport
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
 
@@ -124,12 +134,13 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
         )
 
     def __init__(self, crash_info, snmp_info, agent_output):
+        # type: (Dict, Optional[Text], Optional[Text]) -> None
         super(CheckCrashReport, self).__init__(crash_info)
         self.snmp_info = snmp_info
         self.agent_output = agent_output
 
     def _serialize_attributes(self):
-        # type: () -> dict
+        # type: () -> Dict
         """Serialize object type specific attributes for transport"""
         attributes = super(CheckCrashReport, self)._serialize_attributes()
         attributes.update({

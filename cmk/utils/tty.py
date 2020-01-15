@@ -32,7 +32,10 @@ import sys
 import struct
 import termios
 import io
+
+from typing import AnyStr, List, Tuple  # pylint: disable=unused-import
 import six
+
 from cmk.utils.encoding import make_utf8
 
 if sys.stdout.isatty():
@@ -77,8 +80,14 @@ error = red + bold + 'ERROR' + normal
 
 states = {0: green, 1: yellow, 2: red, 3: magenta}
 
+TableColors = List[AnyStr]
+TableHeaders = List[AnyStr]
+TableRow = Tuple[AnyStr, ...]
+TableRows = List[TableRow]
+
 
 def colorset(fg=-1, bg=-1, attr=-1):
+    # type: (int, int, int) -> str
     if not sys.stdout.isatty():
         return ""
 
@@ -93,6 +102,7 @@ def colorset(fg=-1, bg=-1, attr=-1):
 
 
 def get_size():
+    # type: () -> Tuple[int, int]
     try:
         ws = struct.pack("HHHH", 0, 0, 0, 0)
         ws = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, ws)
@@ -115,16 +125,18 @@ def get_size():
 
 
 def print_table(headers, colors, rows, indent=""):
+    # type: (TableHeaders, TableColors, TableRows, str) -> None
     num_columns = len(headers)
     lengths = _column_lengths(headers, rows, num_columns)
     fmt = _row_template(lengths, colors, indent)
-    for index, row in enumerate([headers] + rows):
+    for index, row in enumerate([tuple(headers)] + rows):
         sys.stdout.write(fmt % tuple(make_utf8(c) for c in row[:num_columns]))
         if index == 0:
             sys.stdout.write(fmt % tuple("-" * l for l in lengths))
 
 
 def _column_lengths(headers, rows, num_columns):
+    # type: (TableHeaders, TableRows, int) -> List[int]
     lengths = [len(h) for h in headers]
     for row in rows:
         for index, column in enumerate(row[:num_columns]):
@@ -137,6 +149,7 @@ def _column_lengths(headers, rows, num_columns):
 
 
 def _row_template(lengths, colors, indent):
+    # type: (List[int], TableColors, str) -> str
     fmt = indent
     sep = ""
     for l, c in zip(lengths, colors):

@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 """Code for predictive monitoring / anomaly detection"""
 from __future__ import division
-from typing import List, cast, Dict, Union, Callable, Tuple  # pylint: disable=unused-import
+from typing import Optional, List, cast, Dict, Union, Callable, Tuple  # pylint: disable=unused-import
 
 import json
 import logging
@@ -48,6 +48,9 @@ logger = logging.getLogger("cmk.prediction")
 GroupByFunction = Callable[[Timestamp], Tuple[Timegroup, Timestamp]]
 PeriodInfo = Dict[str, Union[GroupByFunction, int]]
 TimeSlices = List[Tuple[Timestamp, Timestamp]]
+DataStatValue = Optional[float]
+DataStat = List[DataStatValue]
+DataStats = List[DataStat]
 
 
 def window_start(timestamp, span):
@@ -168,9 +171,10 @@ def retrieve_grouped_data_from_rrd(rrd_column, time_windows):
 
 
 def data_stats(slices):
+    # type: (List[TimeSeriesValues]) -> DataStats
     "Statistically summarize all the upsampled RRD data"
 
-    descriptors = []
+    descriptors = []  # type: DataStats
 
     for time_column in zip(*slices):
         point_line = [x for x in time_column if x is not None]
@@ -189,6 +193,7 @@ def data_stats(slices):
 
 
 def calculate_data_for_prediction(time_windows, rrd_datacolumn):
+    # type: (TimeSlices, RRDColumnFunction) -> Dict
     twindow, slices = retrieve_grouped_data_from_rrd(rrd_datacolumn, time_windows)
 
     descriptors = data_stats(slices)

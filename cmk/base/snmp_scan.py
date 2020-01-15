@@ -34,7 +34,7 @@ import cmk.base.config as config
 import cmk.base.console as console
 from cmk.base.exceptions import MKSNMPError
 import cmk.base.snmp as snmp
-from cmk.base.snmp_utils import SNMPHostConfig, ScanFunction  # pylint: disable=unused-import
+from cmk.base.snmp_utils import SNMPHostConfig, OID, RawValue, ScanFunction  # pylint: disable=unused-import
 import cmk.base.check_api_utils as check_api_utils
 from cmk.base.check_utils import CheckPluginName  # pylint: disable=unused-import
 
@@ -134,6 +134,7 @@ def _snmp_scan(host_config,
             try:
 
                 def oid_function(oid, default_value=None, cp_name=check_plugin_name):
+                    # type: (OID, Optional[RawValue], Optional[CheckPluginName]) -> Optional[RawValue]
                     value = snmp.get_single_oid(host_config,
                                                 oid,
                                                 cp_name,

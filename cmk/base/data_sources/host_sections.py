@@ -46,6 +46,9 @@ from cmk.base.check_utils import (  # pylint: disable=unused-import
 
 from cmk.base.exceptions import MKParseFunctionError
 
+MultiHostSectionsData = Dict[Tuple[HostName, Optional[HostAddress]], "AbstractHostSections"]
+FinalSectionContent = Optional[Union[ParsedSectionContent, List[ParsedSectionContent]]]
+
 
 class AbstractHostSections(
         six.with_metaclass(
@@ -102,9 +105,6 @@ class AbstractHostSections(
         self.sections[section_name] = section  # type: ignore
 
 
-MultiHostSectionsData = Dict[Tuple[HostName, Optional[HostAddress]], AbstractHostSections]
-
-
 class MultiHostSections(object):
     """Container object for wrapping the host sections of a host being processed
     or multiple hosts when a cluster is processed. Also holds the functionality for
@@ -130,7 +130,7 @@ class MultiHostSections(object):
                             check_plugin_name,
                             for_discovery,
                             service_description=None):
-        # type: (HostName, Optional[HostAddress], CheckPluginName, bool, Optional[ServiceName]) -> Optional[Union[ParsedSectionContent, List[ParsedSectionContent]]]
+        # type: (HostName, Optional[HostAddress], CheckPluginName, bool, Optional[ServiceName]) -> FinalSectionContent
         """Prepares the section_content construct for a Check_MK check on ANY host
 
         The section_content construct is then handed over to the check, inventory or

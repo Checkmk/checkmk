@@ -24,10 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from typing import Optional, Dict  # pylint: disable=unused-import
+
 import cmk.base.config
+import cmk.base.core_config as core_config  # pylint: disable=unused-import
 
 
 def create_core(options=None):
+    # type: (Optional[Dict]) -> core_config.MonitoringCore
     if cmk.base.config.monitoring_core == "cmc":
         from cmk.base.cee.core_cmc import CMC  # pylint: disable=no-name-in-module
         return CMC(options)

@@ -30,6 +30,7 @@ import importlib
 
 
 def load_plugins(init_file_path, package_name):
+    # type: (str, str) -> None
     plugin_files = sorted(glob.glob(os.path.join(os.path.dirname(init_file_path), "*.py")))
     plugins = [
         os.path.basename(f)[:-3]

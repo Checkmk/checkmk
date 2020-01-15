@@ -182,6 +182,7 @@ def scan_parents_of(config_cache, hosts, silent=False, settings=None):
 
     # Output marks with status of each single scan
     def dot(color, dot='o'):
+        # type: (str, str) -> None
         if not silent:
             console.output(tty.bold + color + dot + tty.normal)
 

@@ -313,7 +313,7 @@ def all_man_pages():
 
 def print_man_page_table():
     # type: () -> None
-    table = []  # type: List[Tuple[str, str]]
+    table = []  # type: tty.TableRows
     for name, path in sorted(all_man_pages().items()):
         try:
             table.append((name, _get_title_from_man_page(Path(path))))

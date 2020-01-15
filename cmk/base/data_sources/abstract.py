@@ -854,22 +854,23 @@ class CheckMKAgentDataSource(
         return status, ", ".join(output), perfdata
 
     def _get_agent_info(self, cmk_section):
+        # type: (Optional[AgentSectionContent]) -> Dict[str, Optional[Text]]
         agent_info = {
             "version": u"unknown",
             "agentos": u"unknown",
-        }
+        }  # type: Dict[str, Optional[Text]]
 
         if self._host_sections is None or not cmk_section:
             return agent_info
 
         for line in cmk_section:
             value = " ".join(line[1:]) if len(line) > 1 else None
-            agent_info[line[0][:-1].lower()] = value
+            agent_info[str(line[0][:-1].lower())] = value
         return agent_info
 
     def _sub_result_version(self, agent_info):
-        # type: (Dict[str, Text]) -> Optional[ServiceCheckResult]
-        agent_version = cast(str, agent_info["version"])
+        # type: (Dict[str, Optional[Text]]) -> Optional[ServiceCheckResult]
+        agent_version = str(agent_info["version"])
         expected_version = self._host_config.agent_target_version
 
         if expected_version and agent_version \
@@ -903,7 +904,7 @@ class CheckMKAgentDataSource(
         return None
 
     def _sub_result_only_from(self, agent_info):
-        # type: (Dict[str, Text]) -> Optional[ServiceCheckResult]
+        # type: (Dict[str, Optional[Text]]) -> Optional[ServiceCheckResult]
         agent_only_from = agent_info.get("onlyfrom")
         if agent_only_from is None:
             return None

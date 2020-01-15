@@ -2947,7 +2947,7 @@ class ConfigCache(object):
         return ruleset_matcher.get_tag_to_group_map(tags)
 
     def get_host_config(self, hostname):
-        # type: (str) -> HostConfig
+        # type: (HostName) -> HostConfig
         """Returns a HostConfig instance for the given host
 
         It lazy initializes the host config object and caches the objects during the livetime

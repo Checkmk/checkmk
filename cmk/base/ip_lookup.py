@@ -39,24 +39,26 @@ from cmk.utils.exceptions import MKTimeout, MKTerminate
 import cmk.base
 import cmk.base.console as console
 import cmk.base.config as config
-from cmk.base.utils import (  # pylint: disable=unused-import
-    HostName,)
+from cmk.utils.type_defs import (  # pylint: disable=unused-import
+    HostName, HostAddress)
 from cmk.base.exceptions import MKIPAddressLookupError
 
 IPLookupCacheId = Tuple[HostName, int]
 NewIPLookupCache = Dict[IPLookupCacheId, str]
 LegacyIPLookupCache = Dict[str, str]
 
-_fake_dns = None  # type: Optional[str]
+_fake_dns = None  # type: Optional[HostAddress]
 _enforce_localhost = False
 
 
 def enforce_fake_dns(address):
+    # type: (HostAddress) -> None
     global _fake_dns
     _fake_dns = address
 
 
 def enforce_localhost():
+    # type: () -> None
     global _enforce_localhost
     _enforce_localhost = True
 
@@ -173,10 +175,12 @@ def cached_dns_lookup(hostname, family):
 
 class IPLookupCache(cmk.base.caching.DictCache):
     def __init__(self):
+        # type: () -> None
         super(IPLookupCache, self).__init__()
         self.persist_on_update = True
 
     def load_persisted(self):
+        # type: () -> None
         try:
             self.update(_load_ip_lookup_cache(lock=False))
         except (MKTerminate, MKTimeout):
@@ -221,6 +225,7 @@ class IPLookupCache(cmk.base.caching.DictCache):
             store.release_lock(_cache_path())
 
     def save_persisted(self):
+        # type: () -> None
         store.save_object_to_file(_cache_path(), self, pretty=False)
 
 
@@ -261,10 +266,12 @@ def _convert_legacy_ip_lookup_cache(cache):
 
 
 def _cache_path():
+    # type: () -> str
     return cmk.utils.paths.var_dir + "/ipaddresses.cache"
 
 
 def update_dns_cache():
+    # type: () -> Tuple[int, List[HostName]]
     failed = []
 
     ip_lookup_cache = _get_ip_lookup_cache()

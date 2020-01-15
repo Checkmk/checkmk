@@ -33,6 +33,7 @@ def test_registered_automations(site):
         'try-inventory',
         'update-dns-cache',
         'update-host-labels',
+        'get-rule-mismatch-reason',
     ]
 
     if cmk.is_enterprise_edition():

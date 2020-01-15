@@ -885,7 +885,6 @@ class Rule(object):
 
     def get_mismatch_reasons(self, host_folder, hostname, svc_desc_or_item, svc_desc,
                              only_host_conditions):
-
         match_service_conditions = self.ruleset.rulespec.is_for_services
         if only_host_conditions:
             match_service_conditions = False
@@ -893,11 +892,23 @@ class Rule(object):
         rule_dict = self.to_config()
         rule_dict["condition"]["host_folder"] = self.folder.path_for_rule_matching()
 
-        for reason in check_mk_local_automation("get-rule-mismatch-reasons", [
-                hostname, svc_desc_or_item, svc_desc, only_host_conditions,
-                match_service_conditions, rule_dict
-        ]):
-            yield reason
+        result = check_mk_local_automation("get-rule-mismatch-reason", [
+            repr([
+                hostname,
+                svc_desc_or_item,
+                svc_desc,
+                only_host_conditions,
+                match_service_conditions,
+                rule_dict,
+                self.ruleset.item_type(),
+                self.ruleset.rulespec.is_binary_ruleset,
+            ])
+        ])
+
+        if result is None:
+            return
+
+        yield result
 
     # TODO: re-enable once the GUI is using Python3
     #def get_mismatch_reasons(self, host_folder, hostname, svc_desc_or_item, svc_desc,

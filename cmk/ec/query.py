@@ -69,19 +69,28 @@ class Query:
         return self.method + " " + self.method_arg
 
 
-class QueryGET(Query):
-    _filter_operators = {
-        "=": (lambda a, b: a == b),
-        ">": (lambda a, b: a > b),
-        "<": (lambda a, b: a < b),
-        ">=": (lambda a, b: a >= b),
-        "<=": (lambda a, b: a <= b),
-        "~": (lambda a, b: cmk.utils.regex.regex(b).search(a)),
-        "=~": (lambda a, b: a.lower() == b.lower()),
-        "~~": (lambda a, b: cmk.utils.regex.regex(b.lower()).search(a.lower())),
-        "in": (lambda a, b: a in b),
-    }
+_filter_operators = {
+    "=": (lambda a, b: a == b),
+    ">": (lambda a, b: a > b),
+    "<": (lambda a, b: a < b),
+    ">=": (lambda a, b: a >= b),
+    "<=": (lambda a, b: a <= b),
+    "~": (lambda a, b: cmk.utils.regex.regex(b).search(a)),
+    "=~": (lambda a, b: a.lower() == b.lower()),
+    "~~": (lambda a, b: cmk.utils.regex.regex(b.lower()).search(a.lower())),
+    "in": (lambda a, b: a in b),
+}
 
+
+def operator_for(name):
+    # type: (str) -> Callable
+    func = _filter_operators.get(name)
+    if func is None:
+        raise MKClientError("Unknown filter operator '%s'" % name)
+    return func
+
+
+class QueryGET(Query):
     def __init__(self, status_server, raw_query, logger):
         # type: (_StatusServer, List[str], Logger) -> None
         super().__init__(status_server, raw_query, logger)
@@ -159,16 +168,8 @@ class QueryGET(Query):
         else:
             argument = convert(argument)
 
-        operator_function = self._filter_operators.get(operator_name)
-        if operator_function is None:
-            raise MKClientError("Unknown filter operator '%s'" % operator_name)
-
-        # TODO: Fix the typing chaos below!
-        return (
-            column,
-            operator_name,
-            lambda x: operator_function(x, argument),  # type: ignore[misc]
-            argument)
+        operator_function = operator_for(operator_name)
+        return (column, operator_name, lambda x: operator_function(x, argument), argument)
 
     def requested_column_indexes(self):
         # type: () -> List[Optional[int]]

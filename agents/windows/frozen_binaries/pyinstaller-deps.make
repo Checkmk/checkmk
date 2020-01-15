@@ -25,10 +25,11 @@ ipaddress = $(SRC_DIR)/pip/ipaddress-1.0.22-py2.py3-none-any.whl
 macholib = $(SRC_DIR)/pip/macholib-1.9-py2.py3-none-any.whl
 pefile = $(SRC_DIR)/pip/pefile-2017.11.5.tar.gz
 pycparser = $(SRC_DIR)/pip/pycparser-2.18.tar.gz
-PyInstaller = $(SRC_DIR)/pip/PyInstaller-3.3.1.tar.gz
+PyInstaller = $(SRC_DIR)/pip/PyInstaller-3.6.tar.gz
 PySocks = $(SRC_DIR)/pip/PySocks-1.6.8.tar.gz
 pyOpenSSL = $(SRC_DIR)/pip/pyOpenSSL-17.5.0-py2.py3-none-any.whl
 pypiwin32 = $(SRC_DIR)/pip/pywin32-223-cp27-cp27m-win32.whl
+pywin32_ctypes = $(SRC_DIR)/pip/pywin32_ctypes-0.2.0-py2.py3-none-any.whl
 requests = $(SRC_DIR)/pip/requests-2.21.0-py2.py3-none-any.whl
 setuptools = $(SRC_DIR)/pip/setuptools-39.1.0-py2.py3-none-any.whl
 six = $(SRC_DIR)/pip/six-1.11.0-py2.py3-none-any.whl
@@ -58,6 +59,7 @@ PYTHON_PACKAGE_FILES = \
 	$(PySocks) \
 	$(pyOpenSSL) \
 	$(pypiwin32) \
+	$(pywin32_ctypes) \
 	$(requests) \
 	$(setuptools) \
 	$(six) \
@@ -85,6 +87,7 @@ PYTHON_PACKAGES = \
 	PySocks \
 	pyOpenSSL \
 	pypiwin32 \
+	pywin32_ctypes \
 	requests \
 	setuptools \
 	six \
@@ -110,10 +113,11 @@ $(ipaddress) := ipaddress==1.0.22
 $(macholib) := macholib==1.9
 $(pefile) := pefile==2017.11.5
 $(pycparser) := pycparser==2.18
-$(PyInstaller) := PyInstaller==3.3.1
+$(PyInstaller) := PyInstaller==3.6
 $(PySocks) := PySocks==1.6.8
 $(pyOpenSSL) := pyOpenSSL==17.5.0
 $(pypiwin32) := pypiwin32==223
+$(pywin32_ctypes) := pywin32_ctypes==0.2.0
 $(requests) := requests==2.21.0
 $(setuptools) := setuptools==39.1.0
 $(six) := six==1.11.0

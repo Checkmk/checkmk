@@ -49,7 +49,7 @@ def quote_shell_string(s):
 
 # TODO: Change to better name like: quote_pnp_string()
 def pnp_cleanup(s):
-    # type: (AnyStr) -> AnyStr
+    # type: (str) -> str
     """Quote a string (host name or service description) in PNP4Nagios format"""
     return s \
         .replace(' ', '_') \

@@ -35,6 +35,7 @@ from typing import (  # pylint: disable=unused-import
 )
 
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import Item, CheckPluginName  # pylint: disable=unused-import
 
 import cmk.base
 from cmk.base.discovered_labels import DiscoveredServiceLabels
@@ -45,9 +46,7 @@ if TYPE_CHECKING:
         RawSNMPData, SNMPSections, PersistedSNMPSections, SNMPSectionContent,
     )
 
-Item = Union[Text, None, int]
 CheckParameters = Union[None, Dict, Tuple, List, str]
-CheckPluginName = str
 RulesetName = str
 ServiceState = int
 ServiceDetails = Text

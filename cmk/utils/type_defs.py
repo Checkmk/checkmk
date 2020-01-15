@@ -25,11 +25,13 @@
 # Boston, MA 02110-1301 USA.
 """Checkmk wide type definitions"""
 
-from typing import NewType, Text
+from typing import NewType, Text, Optional
 
 HostName = str
 HostAddress = str
 ServiceName = Text
 MetricName = str
+CheckPluginName = str
+Item = Optional[Text]
 
 UserId = NewType("UserId", Text)

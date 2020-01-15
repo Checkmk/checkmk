@@ -148,15 +148,6 @@ def test_parse_autochecks_file_not_existing():
                 ('df', u'/', "{}"),
             ],
         ),
-        # Tuple: Allow non string items
-        (
-            u"""[
-          ('df', 123, {}),
-        ]""",
-            [
-                ('df', 123, "{}"),
-            ],
-        ),
         # Tuple: Regular processing
         (
             u"""[
@@ -178,15 +169,6 @@ def test_parse_autochecks_file_not_existing():
                 ('if64', u'00001001',
                  "{'average': if_default_average, 'errors': if_default_error_levels, 'speed': 1000000000, 'state': '1', 'traffic': if_default_traffic_levels}"
                 ),
-            ],
-        ),
-        # Dict: Allow non string items
-        (
-            u"""[
-          {'check_plugin_name': 'df', 'item': 123, 'parameters': {}, 'service_labels': {}},
-        ]""",
-            [
-                ('df', 123, "{}"),
             ],
         ),
         # Dict: Regular processing

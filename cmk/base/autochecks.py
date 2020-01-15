@@ -187,14 +187,16 @@ class AutochecksManager(object):
                 raise MKGeneralException("Invalid entry '%r' in check table of host '%s': "
                                          "The check type must be a string." % (entry, hostname))
 
+            check_plugin_name = str(entry["check_plugin_name"])
+
             try:
-                description = config.service_description(hostname, entry["check_plugin_name"], item)
+                description = config.service_description(hostname, check_plugin_name, item)
             except Exception:
                 continue  # ignore
 
             result.append(
                 Service(
-                    check_plugin_name=str(entry["check_plugin_name"]),
+                    check_plugin_name=check_plugin_name,
                     item=item,
                     description=description,
                     parameters=entry["parameters"],
@@ -269,7 +271,7 @@ def _parse_autocheck_entry(hostname, entry):
     if isinstance(ast_item, ast.Str):
         item = ast_item.s
     elif isinstance(ast_item, ast.Num):
-        item = int(ast_item.n)
+        item = "%s" % int(ast_item.n)
     elif isinstance(ast_item, ast.Name) and ast_item.id == "None":
         item = None
     else:

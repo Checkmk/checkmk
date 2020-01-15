@@ -56,6 +56,9 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
 from cmk.utils.encoding import convert_to_unicode
 import cmk.utils.piggyback as piggyback
+from cmk.utils.type_defs import (  # pylint: disable=unused-import
+    HostName, ServiceName, Item, HostAddress, CheckPluginName,
+)
 
 import cmk.base
 import cmk.base.console as console
@@ -66,11 +69,6 @@ import cmk.base.check_api_utils as check_api_utils
 import cmk.base.cleanup
 import cmk.base.snmp_utils
 from cmk.base.discovered_labels import DiscoveredServiceLabels  # pylint: disable=unused-import
-from cmk.base.utils import (  # pylint: disable=unused-import
-    HostName, HostAddress,
-)
-from cmk.base.check_utils import (  # pylint: disable=unused-import
-    CheckPluginName,)
 from cmk.base.snmp_utils import (  # pylint: disable=unused-import
     ScanFunction,)
 
@@ -768,6 +766,10 @@ def all_configured_offline_hosts():
 
 # Cleanup! .. some day
 def _get_old_cmciii_temp_description(item):
+    # type: (Item) -> Tuple[bool, ServiceName]
+    if item is None:
+        raise TypeError()
+
     if "Temperature" in item:
         return False, item  # old item format, no conversion
 
@@ -845,6 +847,7 @@ _old_service_descriptions = {
 
 
 def service_description(hostname, check_plugin_name, item):
+    # type: (HostName, CheckPluginName, Item) -> ServiceName
     if check_plugin_name not in check_info:
         if item:
             return "Unimplemented check %s / %s" % (check_plugin_name, item)
@@ -860,7 +863,7 @@ def service_description(hostname, check_plugin_name, item):
 
             # Can be a fucntion to generate the old description more flexible.
             old_descr = _old_service_descriptions[check_plugin_name]
-            if hasattr(old_descr, '__call__'):
+            if callable(old_descr):
                 add_item, descr_format = old_descr(item)
             else:
                 descr_format = old_descr
@@ -3188,7 +3191,7 @@ class ConfigCache(object):
         return result
 
     def ruleset_match_object_for_checkgroup_parameters(self, hostname, item, svc_desc):
-        # type: (str, Optional[Text], Text) -> RulesetMatchObject
+        # type: (HostName, Item, ServiceName) -> RulesetMatchObject
         """Construct the object that is needed to match checkgroup parameters rulesets
 
         Please note that the host attributes like host_folder and host_tags are

@@ -27,6 +27,8 @@
 
 import re
 
+from cmk.utils.type_defs import CheckPluginName, HostName, ServiceName, Item  # pylint: disable=unused-import
+
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
 import cmk.gui.forms as forms
@@ -156,8 +158,7 @@ class ModePatternEditor(WatoMode):
         for folder, rulenr, rule in ruleset.get_rules():
             # Check if this rule applies to the given host/service
             if self._hostname:
-                service_desc = cmk.base.export.service_description(self._hostname, "logwatch",
-                                                                   self._item)
+                service_desc = self._get_service_description(self._hostname, "logwatch", self._item)
 
                 # If hostname (and maybe filename) try match it
                 rule_matches = rule.matches_host_and_item(watolib.Folder.current(), self._hostname,
@@ -246,3 +247,7 @@ class ModePatternEditor(WatoMode):
                 html.icon_button(edit_url, _("Edit this rule"), "edit")
 
             html.end_foldable_container()
+
+    def _get_service_description(self, hostname, check_plugin_name, item):
+        # type: (HostName, CheckPluginName, Item) -> ServiceName
+        return cmk.base.export.service_description(hostname, check_plugin_name, item)

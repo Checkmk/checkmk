@@ -36,6 +36,7 @@ from cmk.utils.rulesets.tuple_rulesets import (
 )
 from cmk.utils.regex import regex
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import HostName, ServiceName  # pylint: disable=unused-import
 
 
 class RulesetMatchObject(object):
@@ -43,7 +44,7 @@ class RulesetMatchObject(object):
     __slots__ = ["host_name", "service_description", "service_labels", "service_cache_id"]
 
     def __init__(self, host_name=None, service_description=None, service_labels=None):
-        # type: (Optional[str], Optional[Text], Optional[Dict[Text, Text]]) -> None
+        # type: (Optional[HostName], Optional[ServiceName], Optional[Dict[Text, Text]]) -> None
         super(RulesetMatchObject, self).__init__()
         self.host_name = host_name
         self.service_description = service_description

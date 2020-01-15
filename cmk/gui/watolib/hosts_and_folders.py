@@ -336,11 +336,16 @@ class CREFolder(BaseFolder):
 
     @staticmethod
     def folder_choices():
-        return Folder.root_folder().recursive_subfolder_choices()
+        if "folder_choices" not in current_app.g:
+            current_app.g["folder_choices"] = Folder.root_folder().recursive_subfolder_choices()
+        return current_app.g["folder_choices"]
 
     @staticmethod
     def folder_choices_fulltitle():
-        return Folder.root_folder().recursive_subfolder_choices(current_depth=0, pretty=False)
+        if "folder_choices_full_title" not in current_app.g:
+            current_app.g["folder_choices_full_title"] = Folder.root_folder(
+            ).recursive_subfolder_choices(current_depth=0, pretty=False)
+        return current_app.g["folder_choices_full_title"]
 
     @staticmethod
     def folder(folder_path):
@@ -374,10 +379,11 @@ class CREFolder(BaseFolder):
 
     @staticmethod
     def invalidate_caches():
-        try:
-            del current_app.g["wato_folders"]
-        except KeyError:
-            pass
+        for cache_id in ["wato_folders", "folder_choices", "folder_choices_full_title"]:
+            try:
+                del current_app.g[cache_id]
+            except KeyError:
+                pass
         Folder.root_folder().drop_caches()
 
     # Find folder that is specified by the current URL. This is either by a folder

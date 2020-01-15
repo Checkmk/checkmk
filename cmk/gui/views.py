@@ -1309,7 +1309,8 @@ def show_view(view, view_renderer, only_count=False):
     # with the current mode.
     if _is_ec_unrelated_host_view(view):
         # Set the value for the event host filter
-        if not html.request.has_var("event_host"):
+        if not html.request.has_var("event_host") and (html.request.has_var("event_host") or
+                                                       html.request.has_var("host")):
             html.request.set_var("event_host", html.request.var("host"))
 
     # Now populate the HTML vars with context vars from the view definition. Hard

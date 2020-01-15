@@ -25,7 +25,7 @@ ipaddress = $(SRC_DIR)/pip/ipaddress-1.0.22-py2.py3-none-any.whl
 macholib = $(SRC_DIR)/pip/macholib-1.11-py2.py3-none-any.whl
 pefile = $(SRC_DIR)/pip/pefile-2018.8.8.tar.gz
 pycparser = $(SRC_DIR)/pip/pycparser-2.19.tar.gz
-PyInstaller = $(SRC_DIR)/pip/PyInstaller-3.4.tar.gz
+PyInstaller = $(SRC_DIR)/pip/PyInstaller-3.6.tar.gz
 pyOpenSSL = $(SRC_DIR)/pip/pyOpenSSL-19.0.0-py2.py3-none-any.whl
 pypiwin32 = $(SRC_DIR)/pip/pypiwin32-223.tar.gz
 PySocks = $(SRC_DIR)/pip/PySocks-1.6.8.tar.gz
@@ -119,7 +119,7 @@ $(ipaddress) := ipaddress==1.0.22
 $(macholib) := macholib==1.11
 $(pefile) := pefile==2018.8.8
 $(pycparser) := pycparser==2.19
-$(PyInstaller) := PyInstaller==3.4
+$(PyInstaller) := PyInstaller==3.6
 $(pyOpenSSL) := pyOpenSSL==19.0.0
 $(pypiwin32) := pypiwin32==223
 $(PySocks) := PySocks==1.6.8

@@ -193,8 +193,8 @@ def test_get_single_oid_cache(snmp_config):
     expected_value = "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
     assert snmp.get_single_oid(snmp_config, oid) == expected_value
-    assert snmp._is_in_single_oid_cache(snmp_config.hostname, oid)
-    cached_oid = snmp._get_oid_from_single_oid_cache(snmp_config.hostname, oid)
+    assert snmp._is_in_single_oid_cache(oid)
+    cached_oid = snmp._get_oid_from_single_oid_cache(oid)
     assert cached_oid == expected_value
     # TODO: Encoding is incosistent between single oids and walks
     assert isinstance(cached_oid, str)

@@ -1,0 +1,13 @@
+Title: docker_container_mem: consider caches and drop zero metrics
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1579072585
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+Previously the caches where not taken into account correctly, this has been fixed.
+Users might observe a slight drop in the used memory metric.
+In addition, the swap metric is no longer produced, as it allways reported zero.

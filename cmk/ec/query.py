@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 from logging import Logger  # pylint: disable=unused-import
-from typing import Any, Callable, List, Optional, Tuple  # pylint: disable=unused-import
+from typing import Any, Callable, List, Optional, Set, Tuple  # pylint: disable=unused-import
 
 from cmk.utils.exceptions import MKException
 import cmk.utils.regex
@@ -96,50 +96,42 @@ class QueryGET(Query):
         super().__init__(status_server, raw_query, logger)
         self.table_name = self.method_arg
         self.table = status_server.table(self.table_name)
-        self.__parse_header_lines(raw_query, logger)
+        self.requested_columns = self.table.column_names
+        self.filters = []  # type: List[Tuple[str, str, Callable, str]]
+        self.limit = None  # type: Optional[int]
+        self.only_host = None  # type: Optional[Set[Any]]
+        self._parse_header_lines(raw_query, logger)
 
-    def __parse_header_lines(self, raw_query, logger):
+    def _parse_header_lines(self, raw_query, logger):
         # type: (List[str], Logger) -> None
-        self.requested_columns = self.table.column_names  # use all columns as default
-        self.filters = []
-        self.limit = None
-        self.only_host = None
-
         for line in raw_query[1:]:
             try:
                 header, argument = line.rstrip("\n").split(":", 1)
-                argument = argument.lstrip(" ")
-
-                if header == "OutputFormat":
-                    if argument not in ["python", "plain", "json"]:
-                        raise MKClientError(
-                            "Invalid output format \"%s\" (allowed are: python, plain, json)" %
-                            argument)
-
-                    self.output_format = argument
-
-                elif header == "Columns":
-                    self.requested_columns = argument.split(" ")
-
-                elif header == "Filter":
-                    column_name, operator_name, predicate, argument = self.__parse_filter(argument)
-
-                    # Needed for later optimization (check_mkevents)
-                    if column_name == "event_host" and operator_name == 'in':
-                        self.only_host = set(argument)
-
-                    self.filters.append((column_name, operator_name, predicate, argument))
-
-                elif header == "Limit":
-                    self.limit = int(argument)
-
-                else:
-                    logger.info("Ignoring not-implemented header %s" % header)
-
+                self._parse_header_line(header, argument.lstrip(" "), logger)
             except Exception as e:
                 raise MKClientError("Invalid header line '%s': %s" % (line.rstrip(), e))
 
-    def __parse_filter(self, textspec):
+    def _parse_header_line(self, header, argument, logger):
+        # type: (str, str, Logger) -> None
+        if header == "OutputFormat":
+            if argument not in ["python", "plain", "json"]:
+                raise MKClientError(
+                    "Invalid output format \"%s\" (allowed are: python, plain, json)" % argument)
+            self.output_format = argument
+        elif header == "Columns":
+            self.requested_columns = argument.split(" ")
+        elif header == "Filter":
+            column_name, operator_name, predicate, argument = self._parse_filter(argument)
+            # Needed for later optimization (check_mkevents)
+            if column_name == "event_host" and operator_name == 'in':
+                self.only_host = set(argument)
+            self.filters.append((column_name, operator_name, predicate, argument))
+        elif header == "Limit":
+            self.limit = int(argument)
+        else:
+            logger.info("Ignoring not-implemented header %s" % header)
+
+    def _parse_filter(self, textspec):
         # type: (str) -> Tuple[str, str, Callable, Any]
         # Examples:
         # id = 17

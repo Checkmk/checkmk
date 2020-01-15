@@ -37,11 +37,6 @@ http://mathias-kettner.com/.
 %setup -q -n check-mk-%{edition}-%{version}
 
 %build
-cd omd
-make -j 4
-make pack
-
-%install
 # Avoid the annobin chaos on CentOS 8, part 2:
 # Empty the already existing spec file, it is referenced by various system stuff, e.g. Perl.
 if test -f /usr/lib/rpm/redhat/redhat-annobin-cc1; then
@@ -49,6 +44,11 @@ if test -f /usr/lib/rpm/redhat/redhat-annobin-cc1; then
     touch /usr/lib/rpm/redhat/redhat-annobin-cc1
 fi
 
+cd omd
+make -j 4
+make pack
+
+%install
 mkdir -p $RPM_BUILD_ROOT
 tar xzf omd/check-mk-%{edition}-bin-%{version}.tar.gz -C $RPM_BUILD_ROOT
 # Remove all global symbolic links from package. They are shared

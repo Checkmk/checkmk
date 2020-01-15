@@ -10,7 +10,7 @@ bandit = "*"  # used by test/Makefile's test-bandit target
 "beautifulsoup4" = "*"  # used by the GUI crawler and various tests
 compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json
 docker = "*"  # used by test_docker test and mk_docker agent plugin
-freezegun = "*"  # used by various unit tests
+freezegun = "!=0.3.13"  # used by various unit tests
 isort = "*"  # used as a plugin for editors
 lxml = "*"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent
 mock = "*"  # used in checktestlib in unit tests

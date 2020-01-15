@@ -1585,3 +1585,17 @@ class AutomationGetLabelsOf(Automation):
 
 
 automations.register(AutomationGetLabelsOf())
+
+
+# Temporary automation call to support base/GUI Python 3 transition
+class AutomationGetServiceName(Automation):
+    cmd = "get-service-name"
+    needs_config = True
+    needs_checks = True
+
+    def execute(self, args):
+        hostname, check_plugin_name, item = args
+        return config.service_description(hostname, check_plugin_name, item)
+
+
+automations.register(AutomationGetServiceName())

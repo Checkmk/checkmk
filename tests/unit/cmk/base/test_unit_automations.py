@@ -19,6 +19,7 @@ def test_registered_automations(site):
         'get-configuration',
         'get-labels-of',
         'get-real-time-checks',
+        'get-service-name',
         'get-service-configurations',
         'inventory',
         'notification-analyse',

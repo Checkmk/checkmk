@@ -46,7 +46,7 @@ from cmk.gui.plugins.wato import (
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
-import cmk.base.export  # pylint: disable=cmk-module-layer-violation
+#import cmk.base.export  # pylint: disable=cmk-module-layer-violation
 
 
 @mode_registry.register
@@ -250,4 +250,7 @@ class ModePatternEditor(WatoMode):
 
     def _get_service_description(self, hostname, check_plugin_name, item):
         # type: (HostName, CheckPluginName, Item) -> ServiceName
-        return cmk.base.export.service_description(hostname, check_plugin_name, item)
+        # TODO: re-enable once the GUI is using Python3
+        #return cmk.base.export.service_description(hostname, check_plugin_name, item)
+        return watolib.check_mk_local_automation("get-service-name",
+                                                 [hostname, check_plugin_name, item])

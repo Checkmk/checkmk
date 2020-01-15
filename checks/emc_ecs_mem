@@ -64,7 +64,8 @@ def check_emc_ecs_mem(items, params, entry):
         yield 1, entry['error_swap_msg']
 
     # memory + swap
-    yield check_memory(params, entry)
+    for subresult in check_memory(params, entry):
+        yield subresult
 
     # swap
     # SwapMinimum is the minimum amount of free swap space

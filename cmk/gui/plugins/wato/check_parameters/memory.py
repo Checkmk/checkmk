@@ -56,7 +56,7 @@ def _parameter_valuespec_memory():
                         match=match_dual_level_type,
                         help=
                         _("The used and free levels for the memory on UNIX systems take into account the "
-                          "currently used memory (RAM or SWAP) by all processes and sets this in relation "
+                          "currently used memory (RAM or Swap) by all processes and sets this in relation "
                           "to the total RAM of the system. This means that the memory usage can exceed 100%. "
                           "A usage of 200% means that the total size of all processes is twice as large as "
                           "the main memory, so <b>at least</b> half of it is currently swapped out. For systems "
@@ -112,7 +112,7 @@ def _parameter_valuespec_memory():
                                 ),
                                 title=_("Levels for free memory"),
                                 help=
-                                _("Keep in mind that if you have 1GB RAM and 1GB SWAP you need to "
+                                _("Keep in mind that if you have 1GB RAM and 1GB Swap you need to "
                                   "specify 120% or 1200MB to get an alert if there is only 20% free RAM available. "
                                   "The free memory levels do not work with the fortigate check, because it does "
                                   "not provide total memory data."),

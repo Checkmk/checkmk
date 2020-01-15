@@ -10976,7 +10976,7 @@ graph_info["ram_swap_used"] = {
     ],
     "conflicting_metrics": ["swap_total"],
     "scalars": [
-        ("swap_used:max,mem_used:max,+#008080", _("Total RAM + SWAP installed")),
+        ("swap_used:max,mem_used:max,+#008080", _("Total RAM + Swap installed")),
         ("mem_used:max#80ffff", _("Total RAM installed")),
     ],
     "range": (0, "swap_used:max,mem_used:max,+"),

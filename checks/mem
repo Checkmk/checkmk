@@ -438,7 +438,8 @@ def inventory_mem_used(info):
 
 def check_mem_used(_no_item, params, info):
     meminfo = parse_proc_meminfo(info)
-    return check_memory(params, meminfo)
+    for subresult in check_memory(params, meminfo):
+        yield subresult
 
 
 check_info['mem.used'] = {

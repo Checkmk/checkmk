@@ -78,7 +78,8 @@ def inventory_solaris_mem_used(parsed):
 
 
 def check_solaris_mem_used(_no_item, params, parsed):
-    return check_memory(params, parsed)
+    for subresult in check_memory(params, parsed):
+        yield subresult
 
 
 check_info['solaris_mem'] = {

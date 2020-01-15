@@ -119,167 +119,201 @@ MEMINFO_PAGE_MAPPED = {
 def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception):
     check_memory = check_manager.get_check("mem.used").context["check_memory"]
     with pytest.raises(fail_with_exception):
-        check_memory(params, meminfo)
+        list(check_memory(params, meminfo))
 
 @pytest.mark.parametrize(
     "params,meminfo,expected",
     [
         # POSITIVE ABSOLUTE levels of OK, WARN, CRIT
         ((43, 43), MEMINFO_MINI, [
-            (0, "21.00 MB used (this is 50.0% of 42.00 MB RAM)", [
+            (0, "RAM: 50.0% - 21.00 MB of 42.00 MB", [
                 ('memused', 21.0, 43, 43, 0, 42.0),
             ]),
         ]),
         # ABSOLUTE levels of OK, WARN, CRIT
         ((43, 43), MEMINFO_SWAP_ZERO, [
-            (0, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP)", [
+            (0, "Total (RAM + Swap): 50.0% - 21.00 MB of 42.00 MB RAM", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, 43, 43, 0, 42.0),
             ]),
+            (0, "RAM: 50.0% - 21.00 MB of 42.00 MB", []),
         ]),
         ({"levels": (20, 43)}, MEMINFO_SWAP_ZERO, [
-            (1, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP), warn/crit at 20.00 MB/43.00 MB used", [
+            (1, "Total (RAM + Swap): 50.0% - 21.00 MB of 42.00 MB RAM (warn/crit at 20.00 MB/43.00 MB used)", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, 20, 43, 0, 42.0),
             ]),
+            (0, "RAM: 50.0% - 21.00 MB of 42.00 MB", []),
         ]),
         ({"levels": (20, 20)}, MEMINFO_SWAP_ZERO, [
-            (2, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP), warn/crit at 20.00 MB/20.00 MB used", [
+            (2, "Total (RAM + Swap): 50.0% - 21.00 MB of 42.00 MB RAM (warn/crit at 20.00 MB/20.00 MB used)", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, 20, 20, 0, 42.0),
             ]),
+            (0, "RAM: 50.0% - 21.00 MB of 42.00 MB", []),
         ]),
         # NEGATIVE ABSOLUTE levels OK, WARN, CRIT
         ((-4, -3), MEMINFO_SWAP_ZERO, [
-            (0, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP)", [
+            (0, "Total (RAM + Swap): 50.0% - 21.00 MB of 42.00 MB RAM", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, 38.0, 39.0, 0, 42.0),
             ]),
+            (0, "RAM: 50.0% - 21.00 MB of 42.00 MB", []),
         ]),
         ((-43, -3), MEMINFO_SWAP_ZERO, [
-            (1, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP), warn/crit below 43.00 MB/3.00 MB free", [
+            (1, "Total (RAM + Swap): 50.0% - 21.00 MB of 42.00 MB RAM (warn/crit below 43.00 MB/3.00 MB free)", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, -1.00, 39.0, 0, 42.0),
             ]),
+            (0, "RAM: 50.0% - 21.00 MB of 42.00 MB", []),
         ]),
         ((-41, -41), MEMINFO_SWAP_ZERO, [
-            (2, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP), warn/crit below 41.00 MB/41.00 MB free", [
+            (2, "Total (RAM + Swap): 50.0% - 21.00 MB of 42.00 MB RAM (warn/crit below 41.00 MB/41.00 MB free)", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, 1.0, 1.0, 0, 42.0),
             ]),
+            (0, "RAM: 50.0% - 21.00 MB of 42.00 MB", []),
         ]),
         # POSITIVE Percentage levels OK, WARN, CRIT
         ((80.0, 90.0), MEMINFO_SWAP_ZERO, [
-            (0, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP)", [
+            (0, "Total (RAM + Swap): 50.0% - 21.00 MB of 42.00 MB RAM", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, 33.6, 37.800000000000004, 0, 42.0),  # sorry
             ]),
+            (0, "RAM: 50.0% - 21.00 MB of 42.00 MB", []),
         ]),
         ((10.0, 90.0), MEMINFO_SWAP_ZERO, [
-            (1, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP), warn/crit at 10.0%/90.0% used", [
+            (1, "Total (RAM + Swap): 50.0% - 21.00 MB of 42.00 MB RAM (warn/crit at 10.0%/90.0% used)", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, 4.2, 37.800000000000004, 0, 42.0),
             ]),
+            (0, "RAM: 50.0% - 21.00 MB of 42.00 MB", []),
         ]),
         ((10.0, 10.0), MEMINFO_SWAP_ZERO, [
-            (2, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP), warn/crit at 10.0%/10.0% used", [
+            (2, "Total (RAM + Swap): 50.0% - 21.00 MB of 42.00 MB RAM (warn/crit at 10.0%/10.0% used)", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, 4.2, 4.2, 0, 42.0),
             ]),
+            (0, "RAM: 50.0% - 21.00 MB of 42.00 MB", []),
         ]),
         # NEGATIVE Percentage levels OK, WARN, CRIT
         ((-10.0, -10.0), MEMINFO_SWAP_ZERO, [
-            (0, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP)", [
+            (0, "Total (RAM + Swap): 50.0% - 21.00 MB of 42.00 MB RAM", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, 37.8, 37.8, 0, 42.0),
             ]),
+            (0, "RAM: 50.0% - 21.00 MB of 42.00 MB", []),
         ]),
         ((-90.0, -10.0), MEMINFO_SWAP_ZERO, [
-            (1, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP), warn/crit below 90.0%/10.0% free", [
+            (1, "Total (RAM + Swap): 50.0% - 21.00 MB of 42.00 MB RAM (warn/crit below 90.0%/10.0% free)", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, 4.199999999999996, 37.8, 0, 42.0),
             ]),
+            (0, "RAM: 50.0% - 21.00 MB of 42.00 MB", []),
         ]),
         ((-90.0, -80.0), MEMINFO_SWAP_ZERO, [
-            (2, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP), warn/crit below 90.0%/80.0% free", [
+            (2, "Total (RAM + Swap): 50.0% - 21.00 MB of 42.00 MB RAM (warn/crit below 90.0%/80.0% free)", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, 4.199999999999996, 8.399999999999999, 0, 42.0),
             ]),
+            (0, "RAM: 50.0% - 21.00 MB of 42.00 MB", []),
         ]),
         # now with swap != 0
         ((43, 43), MEMINFO_SWAP, [
-            (0, "42.00 MB used (21.00 MB RAM + 21.00 MB SWAP, this is 100.0% of 42.00 MB RAM + 42.00 MB SWAP)", [
+            (0, "Total (RAM + Swap): 100% - 42.00 MB of 42.00 MB RAM", [
                 ('swapused', 21.0, None, None, 0, 42.0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 42.0, 43, 43, 0, 84.0),
             ]),
+            (0, "RAM: 50.0% - 21.00 MB of 42.00 MB", []),
+            (0, "Swap: 50.0% - 21.00 MB of 42.00 MB", []),
         ]),
         ({"levels": (23, 43)}, MEMINFO_SWAP, [
-            (1, "42.00 MB used (21.00 MB RAM + 21.00 MB SWAP, this is 100.0% of 42.00 MB RAM + 42.00 MB SWAP)" + ", warn/crit at 23.00 MB/43.00 MB used", [
+            (1, "Total (RAM + Swap): 100% - 42.00 MB of 42.00 MB RAM (warn/crit at 23.00 MB/43.00 MB used)", [
                 ('swapused', 21.0, None, None, 0, 42.0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 42.0, 23, 43, 0, 84.0),
             ]),
+            (0, "RAM: 50.0% - 21.00 MB of 42.00 MB", []),
+            (0, "Swap: 50.0% - 21.00 MB of 42.00 MB", []),
         ]),
         ({"levels": (23, 23)}, MEMINFO_SWAP, [
-            (2, "42.00 MB used (21.00 MB RAM + 21.00 MB SWAP, this is 100.0% of 42.00 MB RAM + 42.00 MB SWAP)" + ", warn/crit at 23.00 MB/23.00 MB used", [
+            (2, "Total (RAM + Swap): 100% - 42.00 MB of 42.00 MB RAM (warn/crit at 23.00 MB/23.00 MB used)", [
                 ('swapused', 21.0, None, None, 0, 42.0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 42.0, 23, 23, 0, 84.0),
             ]),
+            (0, "RAM: 50.0% - 21.00 MB of 42.00 MB", []),
+            (0, "Swap: 50.0% - 21.00 MB of 42.00 MB", []),
         ]),
         # Buffer + Cached
         ((43, 43), MEMINFO_SWAP_BUFFERS, [
-            (0, "42.00 MB used (21.00 MB RAM + 21.00 MB SWAP, this is 100.0% of 42.00 MB RAM + 42.00 MB SWAP)", [
+            (0, "Total (RAM + Swap): 100% - 42.00 MB of 42.00 MB RAM", [
                 ('swapused', 21.0, None, None, 0, 42.0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 42.0, 43, 43, 0, 84.0),
             ]),
+            (0, "RAM: 50.0% - 21.00 MB of 42.00 MB", []),
+            (0, "Swap: 50.0% - 21.00 MB of 42.00 MB", []),
         ]),
         ((43, 43), MEMINFO_SWAP_CACHED, [
-            (0, "42.00 MB used (21.00 MB RAM + 21.00 MB SWAP, this is 100.0% of 42.00 MB RAM + 42.00 MB SWAP)", [
+            (0, "Total (RAM + Swap): 100% - 42.00 MB of 42.00 MB RAM", [
                 ('swapused', 21.0, None, None, 0, 42.0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 42.0, 43, 43, 0, 84.0),
             ]),
+            (0, "RAM: 50.0% - 21.00 MB of 42.00 MB", []),
+            (0, "Swap: 50.0% - 21.00 MB of 42.00 MB", []),
         ]),
         # page tables
         ((43, 43), MEMINFO_PAGE, [
-            (0, "42.00 MB used (14.00 MB RAM + 21.00 MB SWAP + 7.00 MB Pagetables, this is 100.0% of 42.00 MB RAM + 42.00 MB SWAP)", [
+            (0, "Total (RAM + Swap + Pagetables): 100% - 42.00 MB of 42.00 MB RAM", [
                 ('swapused', 21.0, None, None, 0, 42.0),
                 ('pagetables', 7),
                 ('ramused', 14.0, None, None, 0, 42.0),
                 ('memused', 42.0, 43, 43, 0, 84.0),
             ]),
+            (0, "RAM: 33.33% - 14.00 MB of 42.00 MB", []),
+            (0, "Swap: 50.0% - 21.00 MB of 42.00 MB", []),
+            (0, "Pagetables: 7.00 MB", []),
         ]),
         # averaging
         ({"average": 3, "levels": (43, 43)}, MEMINFO_MINI, [
-            (0, "21.00 MB used (this is 50.0% of 42.00 MB RAM), 3 min average 50.0%", [
+            (0, "RAM: 50.0% - 21.00 MB of 42.00 MB, 3 min average 50.0%", [
                 ('memusedavg', 21.0, None, None, None, None),
                 ('memused', 21.0, 43, 43, 0, 42.0),
             ]),
         ]),
         # Mapped
         ((150.0, 190.0), MEMINFO_PAGE_MAPPED, [
-            (0, "42.00 MB used (14.00 MB RAM + 21.00 MB SWAP + 7.00 MB Pagetables, this is 100.0% of 42.00 MB RAM + 42.00 MB SWAP), 12.00 MB mapped, 3.00 MB committed, 1.00 MB shared", [
+            (0, "Total (RAM + Swap + Pagetables): 100% - 42.00 MB of 42.00 MB RAM", [
                 ('swapused', 21, None, None, 0, 42.0),
                 ('pagetables', 7),
                 ('ramused', 14.0, None, None, 0, 42.0),
                 ('memused', 42.0, 63.0, 79.8, 0, 84.0),
+            ]),
+            (0, "RAM: 33.33% - 14.00 MB of 42.00 MB", []),
+            (0, "Swap: 50.0% - 21.00 MB of 42.00 MB", []),
+            (0, "Pagetables: 7.00 MB", []),
+            (0, "Mapped: 12.00 MB", [
                 ('mapped', 12),
+            ]),
+            (0, "Committed: 3.00 MB", [
                 ('committed_as', 3),
+            ]),
+            (0, "Shared: 1.00 MB", [
                 ('shared', 1),
             ]),
         ]),

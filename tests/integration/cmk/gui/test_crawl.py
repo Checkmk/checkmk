@@ -123,6 +123,7 @@ class Worker(threading.Thread):
                 "application/x-tgz",
                 "application/x-redhat-package-manager",
                 "application/x-pkg",
+                "application/x-tar",
                 "text/x-chdr",
                 "text/x-c++src",
                 "text/x-sh",

@@ -34,18 +34,18 @@ node {
                     sh ". /bauwelt/bin/bw-setup-jenkins-env ; make --quiet test-mypy"
                 }
             } else {
-                println "No python files changed. Skipping."
+                println "No Python 2 files changed. Skipping."
             }
         }
 
 
         stage("Python3 typing") {
-            if (CHANGED_PYTHON3_FILES != "") {
+            if (CHANGED_PYTHON_FILES != "" || CHANGED_PYTHON3_FILES != "") {
                 dir("tests-py3") {
                     sh ". /bauwelt/bin/bw-setup-jenkins-env ; make --quiet test-mypy3"
                 }
             } else {
-                println "No python3 files changed. Skipping."
+                println "No Python 2/3 files changed. Skipping."
             }
         }
 
@@ -54,8 +54,12 @@ node {
                 dir('tests') {
                     sh ". /bauwelt/bin/bw-setup-jenkins-env ; PYTHON_FILES='${CHANGED_PYTHON_FILES}' make --quiet test-format-python"
                 }
+            } else if (CHANGED_PYTHON3_FILES != "") {
+                dir('tests') {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; PYTHON_FILES='${CHANGED_PYTHON3_FILES}' make --quiet test-format-python"
+                }
             } else {
-                println "No python files changed. Skipping."
+                println "No Python 2/3 files changed. Skipping."
             }
         }
 
@@ -72,33 +76,33 @@ node {
                         sh ". /bauwelt/bin/bw-setup-jenkins-env ; PYTHON_FILES='${CHANGED_PYTHON_FILES}' make --quiet test-python-futurize"
                     }
                 } else {
-                    println "No python files changed. Skipping."
+                    println "No Python 2 files changed. Skipping."
                 }
             }
         }
 
         stage("Python linting") {
-            if (CHANGED_PYLINT_RC_FILE == "" && CHANGED_PYTHON_FILES == "") {
-                println "Neither .pylintrc nor python files changed. Skipping."
-            } else {
+            if (CHANGED_PYLINT_RC_FILE != "" || CHANGED_PYTHON_FILES != "") {
                 dir('tests') {
                     withEnv(["WORKDIR=${WORKSPACE}/tmp",
-                         'PYLINT_ARGS=--output-format=cmk_parseable']) {
+                             'PYLINT_ARGS=--output-format=cmk_parseable']) {
                         sh 'if [ -d "${WORKDIR}" ]; then rm -rf "${WORKDIR}"; fi'
                         sh 'mkdir "${WORKDIR}"'
                         sh ". /bauwelt/bin/bw-setup-jenkins-env && make -C .. --what-if Pipfile.lock .venv && make test-pylint"
                     }
                 }
+            } else {
+                println "Neither .pylintrc nor Python 2 files changed. Skipping."
             }
         }
 
         stage("Python3 linting") {
-            if (CHANGED_PYLINT_RC_FILE == "" && CHANGED_PYTHON3_FILES == "") {
-                println "Neither .pylintrc nor python3 files changed. Skipping."
-            } else {
+            if (CHANGED_PYLINT_RC_FILE != "" || CHANGED_PYTHON3_FILES != "") {
                 dir('tests-py3') {
                     sh 'make test-pylint'
                 }
+            } else {
+                println "Neither .pylintrc nor Python 3 files changed. Skipping."
             }
         }
 
@@ -110,19 +114,19 @@ node {
                     }
                 }
             } else {
-                println "No python files changed. Skipping."
+                println "No Python 2 files changed. Skipping."
             }
         }
 
         stage("Python3 unit tests") {
-            if (CHANGED_PYTHON3_FILES != "") {
+            if (CHANGED_PYTHON_FILES != "" || CHANGED_PYTHON3_FILES != "") {
                 dir('tests-py3') {
                     withEnv(["PYTEST_ADDOPTS=\"--junitxml='$WORKSPACE/junit.xml'\""]) {
                         sh ". /bauwelt/bin/bw-setup-jenkins-env ; make test-unit"
                     }
                 }
             } else {
-                println "No python3 files changed. Skipping."
+                println "No Python 2/3 files changed. Skipping."
             }
         }
 

@@ -28,7 +28,7 @@ checks = {
                 ' this is 168.4% of 4.00 GB RAM + 8.00 GB SWAP), warn/crit at 150%/200% used', [
                 ('swapused', 3446.1328125, None, None, 0, 8192),
                 ('ramused', 3449.7265625, None, None, 0, 4096.0),
-                ('memused', 6895.859375, 6144, 8192, 0, 12288.0),
+                ('memused', 6895.859375, 6144.0, 8192.0, 0, 12288.0),
             ]),
         ]),
     ],

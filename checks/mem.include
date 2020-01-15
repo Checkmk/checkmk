@@ -190,11 +190,11 @@ def _get_total_usage(ramused, swapused, pagetables):
     totalused_kb = ramused.kb
     details = ["%s RAM" % ramused.render()]
 
-    if swapused.kb:
+    if swapused:
         totalused_kb += swapused.kb
         details.append("%s SWAP" % swapused.render())
 
-    if pagetables.kb:
+    if pagetables:
         totalused_kb += pagetables.kb
         details.append("%s Pagetables" % pagetables.render())
 
@@ -208,8 +208,6 @@ def check_memory(params, meminfo, render_base=1024):
     if isinstance(params, tuple):
         params = {"levels": params}
 
-    zerobytes = MemBytes(0, render_base)
-
     memtotal = MemBytes(meminfo['MemTotal'], render_base)
     memused = MemBytes(memtotal.kb - meminfo['MemFree'], render_base)
 
@@ -218,8 +216,8 @@ def check_memory(params, meminfo, render_base=1024):
         swapused = MemBytes(swaptotal.kb - meminfo['SwapFree'], render_base)
         perfdata = [('swapused', swapused.mb, None, None, 0, swaptotal.mb)]
     else:
-        swaptotal = zerobytes
-        swapused = zerobytes
+        swaptotal = None
+        swapused = None
         perfdata = []
 
     # Size of Pagetable on Linux can be relevant e.g. on ORACLE
@@ -229,7 +227,7 @@ def check_memory(params, meminfo, render_base=1024):
         pagetables = MemBytes(meminfo['PageTables'], render_base)
         perfdata.append(('pagetables', pagetables.mb))
     else:
-        pagetables = zerobytes
+        pagetables = None
 
     # Buffers and Cached are optional. On Linux both mean basically the same.
     caches = MemBytes(meminfo.get('Buffers', 0) + meminfo.get('Cached', 0), render_base)
@@ -241,9 +239,9 @@ def check_memory(params, meminfo, render_base=1024):
 
     totalused, totalused_descr = _get_total_usage(ramused, swapused, pagetables)
     totalused_perc = 100.0 * totalused.kb / memtotal.kb
-    totalvirt = MemBytes(swaptotal.kb + memtotal.kb, render_base)
+    totalvirt = MemBytes((swaptotal.kb if swaptotal is not None else 0) + memtotal.kb, render_base)
 
-    if swaptotal.kb:
+    if swaptotal:
         swap_txt = (" + %s SWAP" % swaptotal.render())
     else:
         swap_txt = ""

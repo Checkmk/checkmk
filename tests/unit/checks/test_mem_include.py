@@ -60,8 +60,6 @@ MEMINFO_SWAP_ZERO = {
     "SwapFree": 0,
 }
 
-TEXT_MINI = "21.00 MB used (this is 50.0% of 42.00 MB RAM)"
-
 
 MEMINFO_SWAP = {
     "MemTotal": 42 * KILO,
@@ -89,9 +87,6 @@ MEMINFO_SWAP_BUFFERS = {
 }
 
 
-TEXT_SWAP = "42.00 MB used (21.00 MB RAM + 21.00 MB SWAP, this is 100.0% of 42.00 MB RAM + 42.00 MB SWAP)"
-
-
 MEMINFO_PAGE = {
     "MemTotal": 42 * KILO,
     "MemFree": 28 * KILO,
@@ -113,12 +108,6 @@ MEMINFO_PAGE_MAPPED = {
 }
 
 
-TEXT_PAGE = (
-    "42.00 MB used (14.00 MB RAM + 21.00 MB SWAP + 7.00 MB Pagetables,"
-    " this is 100.0% of 42.00 MB RAM + 42.00 MB SWAP)"
-)
-
-
 # The function currently fails with KeyError if input is incomplete:
 @pytest.mark.parametrize(
     "params,meminfo,fail_with_exception",
@@ -137,27 +126,27 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
     [
         # POSITIVE ABSOLUTE levels of OK, WARN, CRIT
         ((43, 43), MEMINFO_MINI, [
-            (0, TEXT_MINI, [
+            (0, "21.00 MB used (this is 50.0% of 42.00 MB RAM)", [
                 ('memused', 21.0, 43, 43, 0, 42.0),
             ]),
         ]),
         # ABSOLUTE levels of OK, WARN, CRIT
         ((43, 43), MEMINFO_SWAP_ZERO, [
-            (0, TEXT_MINI, [
+            (0, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP)", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, 43, 43, 0, 42.0),
             ]),
         ]),
         ({"levels": (20, 43)}, MEMINFO_SWAP_ZERO, [
-            (1, TEXT_MINI + ", warn/crit at 20.00 MB/43.00 MB used", [
+            (1, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP), warn/crit at 20.00 MB/43.00 MB used", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, 20, 43, 0, 42.0),
             ]),
         ]),
         ({"levels": (20, 20)}, MEMINFO_SWAP_ZERO, [
-            (2, TEXT_MINI + ", warn/crit at 20.00 MB/20.00 MB used", [
+            (2, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP), warn/crit at 20.00 MB/20.00 MB used", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, 20, 20, 0, 42.0),
@@ -165,21 +154,21 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
         ]),
         # NEGATIVE ABSOLUTE levels OK, WARN, CRIT
         ((-4, -3), MEMINFO_SWAP_ZERO, [
-            (0, TEXT_MINI, [
+            (0, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP)", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, 38.0, 39.0, 0, 42.0),
             ]),
         ]),
         ((-43, -3), MEMINFO_SWAP_ZERO, [
-            (1, TEXT_MINI + ", warn/crit below 43.00 MB/3.00 MB free", [
+            (1, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP), warn/crit below 43.00 MB/3.00 MB free", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, -1.00, 39.0, 0, 42.0),
             ]),
         ]),
         ((-41, -41), MEMINFO_SWAP_ZERO, [
-            (2, TEXT_MINI + ", warn/crit below 41.00 MB/41.00 MB free", [
+            (2, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP), warn/crit below 41.00 MB/41.00 MB free", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, 1.0, 1.0, 0, 42.0),
@@ -187,21 +176,21 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
         ]),
         # POSITIVE Percentage levels OK, WARN, CRIT
         ((80.0, 90.0), MEMINFO_SWAP_ZERO, [
-            (0, TEXT_MINI, [
+            (0, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP)", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, 33.6, 37.800000000000004, 0, 42.0),  # sorry
             ]),
         ]),
         ((10.0, 90.0), MEMINFO_SWAP_ZERO, [
-            (1, TEXT_MINI + ", warn/crit at 10.0%/90.0% used", [
+            (1, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP), warn/crit at 10.0%/90.0% used", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, 4.2, 37.800000000000004, 0, 42.0),
             ]),
         ]),
         ((10.0, 10.0), MEMINFO_SWAP_ZERO, [
-            (2, TEXT_MINI + ", warn/crit at 10.0%/10.0% used", [
+            (2, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP), warn/crit at 10.0%/10.0% used", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, 4.2, 4.2, 0, 42.0),
@@ -209,21 +198,21 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
         ]),
         # NEGATIVE Percentage levels OK, WARN, CRIT
         ((-10.0, -10.0), MEMINFO_SWAP_ZERO, [
-            (0, TEXT_MINI, [
+            (0, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP)", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, 37.8, 37.8, 0, 42.0),
             ]),
         ]),
         ((-90.0, -10.0), MEMINFO_SWAP_ZERO, [
-            (1, TEXT_MINI + ", warn/crit below 90.0%/10.0% free", [
+            (1, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP), warn/crit below 90.0%/10.0% free", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, 4.199999999999996, 37.8, 0, 42.0),
             ]),
         ]),
         ((-90.0, -80.0), MEMINFO_SWAP_ZERO, [
-            (2, TEXT_MINI + ", warn/crit below 90.0%/80.0% free", [
+            (2, "21.00 MB used (21.00 MB RAM + 0.00 B SWAP, this is 50.0% of 42.00 MB RAM + 0.00 B SWAP), warn/crit below 90.0%/80.0% free", [
                 ('swapused', 0, None, None, 0, 0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 21.0, 4.199999999999996, 8.399999999999999, 0, 42.0),
@@ -231,21 +220,21 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
         ]),
         # now with swap != 0
         ((43, 43), MEMINFO_SWAP, [
-            (0, TEXT_SWAP, [
+            (0, "42.00 MB used (21.00 MB RAM + 21.00 MB SWAP, this is 100.0% of 42.00 MB RAM + 42.00 MB SWAP)", [
                 ('swapused', 21.0, None, None, 0, 42.0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 42.0, 43, 43, 0, 84.0),
             ]),
         ]),
         ({"levels": (23, 43)}, MEMINFO_SWAP, [
-            (1, TEXT_SWAP + ", warn/crit at 23.00 MB/43.00 MB used", [
+            (1, "42.00 MB used (21.00 MB RAM + 21.00 MB SWAP, this is 100.0% of 42.00 MB RAM + 42.00 MB SWAP)" + ", warn/crit at 23.00 MB/43.00 MB used", [
                 ('swapused', 21.0, None, None, 0, 42.0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 42.0, 23, 43, 0, 84.0),
             ]),
         ]),
         ({"levels": (23, 23)}, MEMINFO_SWAP, [
-            (2, TEXT_SWAP + ", warn/crit at 23.00 MB/23.00 MB used", [
+            (2, "42.00 MB used (21.00 MB RAM + 21.00 MB SWAP, this is 100.0% of 42.00 MB RAM + 42.00 MB SWAP)" + ", warn/crit at 23.00 MB/23.00 MB used", [
                 ('swapused', 21.0, None, None, 0, 42.0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 42.0, 23, 23, 0, 84.0),
@@ -253,14 +242,14 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
         ]),
         # Buffer + Cached
         ((43, 43), MEMINFO_SWAP_BUFFERS, [
-            (0, TEXT_SWAP, [
+            (0, "42.00 MB used (21.00 MB RAM + 21.00 MB SWAP, this is 100.0% of 42.00 MB RAM + 42.00 MB SWAP)", [
                 ('swapused', 21.0, None, None, 0, 42.0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 42.0, 43, 43, 0, 84.0),
             ]),
         ]),
         ((43, 43), MEMINFO_SWAP_CACHED, [
-            (0, TEXT_SWAP, [
+            (0, "42.00 MB used (21.00 MB RAM + 21.00 MB SWAP, this is 100.0% of 42.00 MB RAM + 42.00 MB SWAP)", [
                 ('swapused', 21.0, None, None, 0, 42.0),
                 ('ramused', 21.0, None, None, 0, 42.0),
                 ('memused', 42.0, 43, 43, 0, 84.0),
@@ -268,7 +257,7 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
         ]),
         # page tables
         ((43, 43), MEMINFO_PAGE, [
-            (0, TEXT_PAGE, [
+            (0, "42.00 MB used (14.00 MB RAM + 21.00 MB SWAP + 7.00 MB Pagetables, this is 100.0% of 42.00 MB RAM + 42.00 MB SWAP)", [
                 ('swapused', 21.0, None, None, 0, 42.0),
                 ('pagetables', 7),
                 ('ramused', 14.0, None, None, 0, 42.0),
@@ -277,14 +266,14 @@ def test_check_memory_fails(check_manager, params, meminfo, fail_with_exception)
         ]),
         # averaging
         ({"average": 3, "levels": (43, 43)}, MEMINFO_MINI, [
-            (0, TEXT_MINI + ", 3 min average 50.0%", [
+            (0, "21.00 MB used (this is 50.0% of 42.00 MB RAM), 3 min average 50.0%", [
                 ('memusedavg', 21.0, None, None, None, None),
                 ('memused', 21.0, 43, 43, 0, 42.0),
             ]),
         ]),
         # Mapped
         ((150.0, 190.0), MEMINFO_PAGE_MAPPED, [
-            (0, TEXT_PAGE + ", 12.00 MB mapped, 3.00 MB committed, 1.00 MB shared", [
+            (0, "42.00 MB used (14.00 MB RAM + 21.00 MB SWAP + 7.00 MB Pagetables, this is 100.0% of 42.00 MB RAM + 42.00 MB SWAP), 12.00 MB mapped, 3.00 MB committed, 1.00 MB shared", [
                 ('swapused', 21, None, None, 0, 42.0),
                 ('pagetables', 7),
                 ('ramused', 14.0, None, None, 0, 42.0),

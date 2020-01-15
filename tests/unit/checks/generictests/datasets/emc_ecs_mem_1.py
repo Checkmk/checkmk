@@ -19,7 +19,7 @@ checks = {
             }, [
                 (
                     0,
-                    '35.16 GB used (this is 57.3% of 61.33 GB RAM + 8.00 GB SWAP)',
+                    '35.16 GB used (35.16 GB RAM + 0.00 B SWAP, this is 57.3% of 61.33 GB RAM + 8.00 GB SWAP)',
                     [
                         ('swapused', 0.0, None, None, 0, 8191.99609375),
                         ('ramused', 36003.4375, None, None, 0, 62806.359375),

@@ -42,19 +42,22 @@ discovery = {'': [(None, 'memused_default_levels')]}
 checks = {
     '': [
         (None, (150.0, 200.0), [
-            (0, '19.70 GB used (12.55 GB RAM + 7.15 GB SWAP, this is 126.9% of 15.53 GB RAM)', [
-                ('ramused', 12854.8984375, None, None, 0, 15901.234375),
+            (0, 'Total (RAM + Swap): 126% - 19.70 GB of 15.53 GB RAM', [
                 ('swapused', 7319.03125, None, None, 0, 65535.93359375),
-                ('memused', 20173.9296875, 23851, 31802, 0, 65535.93359375),
+                ('ramused', 12854.8984375, None, None, 0, 15901.234375),
+                ('memused', 20173.9296875, 23851.8515625, 31802.46875, 0, 81437.16796875),
             ]),
+            (0, "RAM: 80.84% - 12.55 GB of 15.53 GB", []),
+            (0, "Swap: 11.17% - 7.15 GB of 64.00 GB", []),
         ]),
         (None, (1500, 2000), [
-            (2, '19.70 GB used (12.55 GB RAM + 7.15 GB SWAP, this is 126.9% of 15.53 GB RAM), critical at 1.95 GB', [
-                ('ramused', 12854.8984375, None, None, 0, 15901.234375),
+            (2, 'Total (RAM + Swap): 126% - 19.70 GB of 15.53 GB RAM (warn/crit at 1.46 GB/1.95 GB used)', [
                 ('swapused', 7319.03125, None, None, 0, 65535.93359375),
-                # TODO: Why has this a different max?
-                ('memused', 20173.9296875, 1500, 2000, 0, 15901.234375),
+                ('ramused', 12854.8984375, None, None, 0, 15901.234375),
+                ('memused', 20173.9296875, 1500, 2000, 0, 81437.16796875),
             ]),
+            (0, "RAM: 80.84% - 12.55 GB of 15.53 GB", []),
+            (0, "Swap: 11.17% - 7.15 GB of 64.00 GB", []),
         ]),
     ],
 }

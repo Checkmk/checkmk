@@ -1,4 +1,4 @@
-Title: mem.used, statgrab_mem, aix_memory, docker_container_mem, solaris_mem, emc_ecs_mem: Unify service output
+Title: mem.used, statgrab_mem, aix_memory, docker_container_mem, solaris_mem, emc_ecs_mem, hr_mem: Unify service output
 Class: feature
 Compatible: compat
 Component: checks

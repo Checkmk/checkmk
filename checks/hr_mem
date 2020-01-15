@@ -42,8 +42,8 @@ def parse_hr_mem(info):
     parsed = {}
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
         try:
-            size = int(hrsize) * int(hrunits) / 1048576.0
-            used = int(hrused) * int(hrunits) / 1048576.0
+            size = int(hrsize) * int(hrunits)
+            used = int(hrused) * int(hrunits)
             parsed.setdefault(map_types[hrtype], []).append((hrdescr.lower(), size, used))
         except (ValueError, KeyError):
             pass
@@ -59,66 +59,52 @@ memused_default_levels = (150.0, 200.0)
 # and hrStorageRam
 def inventory_hr_mem(parsed):
     # Do we find at least one entry concerning memory?
-    for _, size, __ in parsed.get('RAM', []) + parsed.get('virtual memory', []):
-        if size > 1:
-            # some device have zero (broken) values
-            return [(None, "memused_default_levels")]
+    # some device have zero (broken) values
+    if any(size > 0 for _, size, __ in parsed.get('RAM', [])):
+        return [(None, "memused_default_levels")]
 
 
-def check_hr_mem(_no_item, params, parsed):
-    # This check does not yet support averaging. We need to
-    # convert it to mem.include
-    if isinstance(params, dict):
-        params = params["levels"]
+def aggregate_meminfo(parsed):
+    """return a meminfo dict as expected by check_memory from mem.include"""
+    meminfo = {'Cached': 0, 'Buffers': 0}
 
-    usage = {}
-    cached_mb = 0
     for type_readable, entries in parsed.iteritems():
         for descr, size, used in entries:
             if type_readable in ['RAM', 'virtual memory'] and descr != "virtual memory":
                 # We use only the first entry of each type. We have
                 # seen devices (pfSense), that have lots of additional
                 # entries that are not useful.
-                usage.setdefault(type_readable, (size, used))
+                if type_readable == 'RAM':
+                    meminfo.setdefault("MemTotal", size / 1024.0)
+                    meminfo.setdefault("MemFree", (size - used) / 1024.0)
+                else:
+                    # Strictly speaking, swap space is a part of the hard
+                    # disk drive that is used for virtual memory.
+                    # We use the name "Swap" here for consistency.
+                    meminfo.setdefault("SwapTotal", size / 1024.0)
+                    meminfo.setdefault("SwapFree", (size - used) / 1024.0)
 
             if descr in ["cached memory", "memory buffers"] and used > 0:
                 # Account for cached memory (this works at least for systems using
                 # the UCD snmpd (such as Linux based applicances)
                 # some devices report negative used cache values...
-                cached_mb += used
+                if descr == "cached memory":
+                    meminfo["Cached"] += used / 1024.0
+                else:
+                    meminfo["Buffers"] += used / 1024.0
 
-    totalram_mb, ramused_mb = usage.get("RAM", (0, 0))
-    ramused_mb -= cached_mb
-    totalvirt_mb, virtused_mb = usage.get("virtual memory", (0, 0))
-    totalmem_mb, totalused_mb = totalram_mb + totalvirt_mb, ramused_mb + virtused_mb
+    return meminfo
 
-    if totalmem_mb <= 0 or totalram_mb <= 0:
-        return 3, "Invalid information. Total memory is empty."
 
-    totalused_perc = 100 * totalused_mb / totalram_mb
+def check_hr_mem(_no_item, params, parsed):
+    meminfo = aggregate_meminfo(parsed)
 
-    perfdata = [('ramused', ramused_mb, None, None, 0, totalram_mb),
-                ('swapused', virtused_mb, None, None, 0, totalvirt_mb)]
+    if not meminfo.get('MemTotal'):
+        yield 3, "Invalid information. Total memory is empty."
+        return
 
-    infotext = "%.2f GB used (%.2f GB RAM + %.2f GB SWAP, this is %.1f%% of %.2f GB RAM)" % \
-           (totalused_mb / 1024.0, ramused_mb / 1024.0, virtused_mb / 1024.0, totalused_perc, totalram_mb / 1024.0)
-
-    warn, crit = params
-    if isinstance(warn, float):
-        perfdata.append(('memused', totalused_mb, int(warn / 100.0 * totalram_mb),
-                         int(crit / 100.0 * totalram_mb), 0, totalvirt_mb))
-        if totalused_perc >= crit:
-            return (2, '%s, critical at %.1f%%' % (infotext, crit), perfdata)
-        elif totalused_perc >= warn:
-            return (1, '%s, warning at %.1f%%' % (infotext, warn), perfdata)
-        return (0, '%s' % infotext, perfdata)
-
-    perfdata.append(('memused', totalused_mb, warn, crit, 0, totalram_mb))
-    if totalused_mb >= crit:
-        return (2, '%s, critical at %.2f GB' % (infotext, crit / 1024.0), perfdata)
-    elif totalused_mb >= warn:
-        return (1, '%s, warning at %.2f GB' % (infotext, warn / 1024.0), perfdata)
-    return (0, '%s' % infotext, perfdata)
+    for subresult in check_memory(params, meminfo):
+        yield subresult
 
 
 check_info["hr_mem"] = {
@@ -141,5 +127,5 @@ check_info["hr_mem"] = {
     # cases instead
     'snmp_scan_function': is_hr_mem,
     'group': 'memory',
-    'includes': ["ucd_hr.include"]
+    'includes': ["mem.include", "ucd_hr.include"]
 }

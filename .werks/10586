@@ -1,0 +1,16 @@
+Title: hr_mem: Wrong handling of levels on free memory
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1579093360
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+Using the WATO rule "Main memory usage (UNIX / Other Devices)", users could specify levels
+as absolute values or percent and on used or free memory.
+
+Previously only the levels on 'used' worked correctly. Now levels on free memory are supported
+as well.
+

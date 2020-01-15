@@ -201,7 +201,7 @@ PYTHON_MODULES_LIST += MarkupSafe-1.1.1.tar.gz
 PYTHON_MODULES_LIST += itsdangerous-1.1.0.tar.gz
 PYTHON_MODULES_LIST += Jinja2-2.10.3.tar.gz
 # required by zipp
-PYTHON_MODULES_LIST += more-itertools-8.0.1.tar.gz
+PYTHON_MODULES_LIST += more-itertools-5.0.0.tar.gz
 # required by importlib_metadata
 PYTHON_MODULES_LIST += configparser-4.0.2.tar.gz
 PYTHON_MODULES_LIST += contextlib2-0.6.0.post1.tar.gz

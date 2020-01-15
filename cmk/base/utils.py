@@ -31,12 +31,10 @@ from types import FrameType  # pylint: disable=unused-import
 from typing import Text, NoReturn, Optional, Union, TYPE_CHECKING  # pylint: disable=unused-import
 
 from cmk.utils.exceptions import MKTerminate
+# TODO: Cleanup all imports of cmk.base.utils.* and purge these intermediate imports
+from cmk.utils.type_defs import HostName, HostAddress, ServiceName, MetricName  # pylint: disable=unused-import
 
 # TODO: Try to find a better place for them.
-
-HostName = str
-HostAddress = str
-ServiceName = Text
 
 
 def worst_service_state(*states):

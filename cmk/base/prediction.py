@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 """Code for predictive monitoring / anomaly detection"""
 from __future__ import division
+from typing import List, cast, Dict, Union, Callable, Tuple  # pylint: disable=unused-import
 
 import json
 import logging
@@ -38,11 +39,19 @@ import cmk.utils.defines as defines
 from cmk.utils.log import VERBOSE
 import cmk.utils.prediction
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.prediction import (  # pylint: disable=unused-import
+    Timestamp, Timegroup, TimeSeriesValues, Seconds, TimeWindow, RRDColumnFunction,
+)
 
 logger = logging.getLogger("cmk.prediction")
 
+GroupByFunction = Callable[[Timestamp], Tuple[Timegroup, Timestamp]]
+PeriodInfo = Dict[str, Union[GroupByFunction, int]]
+TimeSlices = List[Tuple[Timestamp, Timestamp]]
+
 
 def window_start(timestamp, span):
+    # type: (int, int) -> int
     """If time is partitioned in SPAN intervals, how many seconds is TIMESTAMP away from the start
 
     It works well across time zones, but has an unfair behavior with daylight savings time."""
@@ -50,20 +59,24 @@ def window_start(timestamp, span):
 
 
 def group_by_wday(t):
+    # type: (Timestamp) -> Tuple[Timegroup, Timestamp]
     wday = time.localtime(t).tm_wday
     return defines.weekday_ids()[wday], window_start(t, 86400)
 
 
 def group_by_day(t):
+    # type: (Timestamp) -> Tuple[Timegroup, Timestamp]
     return "everyday", window_start(t, 86400)
 
 
 def group_by_day_of_month(t):
+    # type: (Timestamp) -> Tuple[Timegroup, Timestamp]
     mday = time.localtime(t).tm_mday
     return str(mday), window_start(t, 86400)
 
 
 def group_by_everyhour(t):
+    # type: (Timestamp) -> Tuple[Timegroup, Timestamp]
     return "everyhour", window_start(t, 3600)
 
 
@@ -92,6 +105,7 @@ prediction_periods = {
 
 
 def get_prediction_timegroup(t, period_info):
+    # type: (Timestamp, PeriodInfo) -> Tuple[Timegroup, Timestamp, Timestamp, Seconds]
     """
     Return:
     timegroup: name of the group, like 'monday' or '12'
@@ -101,13 +115,18 @@ def get_prediction_timegroup(t, period_info):
     rel_time: seconds offset of now in the current slice
     """
     # Convert to local timezone
-    timegroup, rel_time = period_info["groupby"](t)
+    group_by_function = period_info["groupby"]
+    if not callable(group_by_function):
+        raise RuntimeError()
+
+    timegroup, rel_time = group_by_function(t)
     from_time = t - rel_time
-    until_time = from_time + period_info["slice"]
+    until_time = from_time + cast(int, period_info["slice"])
     return timegroup, from_time, until_time, rel_time
 
 
 def time_slices(timestamp, horizon, period_info, timegroup):
+    # type: (Timestamp, Seconds, PeriodInfo, Timegroup) -> TimeSlices
     "Collect all slices back into the past until time horizon is reached"
     timestamp = int(timestamp)
     abs_begin = timestamp - horizon
@@ -123,7 +142,8 @@ def time_slices(timestamp, horizon, period_info, timegroup):
 
     # Have fun understanding the tests for this function.
 
-    for begin in range(timestamp, abs_begin, -period_info["slice"]):
+    sl = cast(int, period_info["slice"])
+    for begin in range(timestamp, abs_begin, -sl):
         tg, start, end = get_prediction_timegroup(begin, period_info)[:3]
         if tg == timegroup:
             slices.append((start, end))
@@ -131,6 +151,7 @@ def time_slices(timestamp, horizon, period_info, timegroup):
 
 
 def retrieve_grouped_data_from_rrd(rrd_column, time_windows):
+    # type: (RRDColumnFunction, TimeSlices) -> Tuple[TimeWindow, List[TimeSeriesValues]]
     "Collect all time slices and up-sample them to same resolution"
     from_time = time_windows[0][0]
 
@@ -182,6 +203,7 @@ def calculate_data_for_prediction(time_windows, rrd_datacolumn):
 
 
 def save_predictions(pred_file, info, data_for_pred):
+    # type: (str, Dict, Dict) -> None
     with open(pred_file + '.info', "w") as fname:
         json.dump(info, fname)
     with open(pred_file, "w") as fname:

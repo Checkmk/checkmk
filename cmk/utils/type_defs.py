@@ -27,4 +27,9 @@
 
 from typing import NewType, Text
 
+HostName = str
+HostAddress = str
+ServiceName = Text
+MetricName = str
+
 UserId = NewType("UserId", Text)

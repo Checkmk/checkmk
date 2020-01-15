@@ -31,7 +31,7 @@ Please try to find a better place for the things you want to put here."""
 import itertools
 import sys
 import time
-from typing import Any, Dict, Optional, Set, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, AnyStr, Dict, Optional, Set, Tuple, Union  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -49,7 +49,7 @@ def quote_shell_string(s):
 
 # TODO: Change to better name like: quote_pnp_string()
 def pnp_cleanup(s):
-    # type: (str) -> str
+    # type: (AnyStr) -> AnyStr
     """Quote a string (host name or service description) in PNP4Nagios format"""
     return s \
         .replace(' ', '_') \

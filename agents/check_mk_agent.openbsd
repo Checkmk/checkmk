@@ -63,7 +63,7 @@ else
 fi
 
 echo '<<<check_mk>>>'
-echo Version: 1.5.0p24
+echo Version: 1.5.0p25
 echo AgentOS: openbsd
 
 osver="$(uname -r)"

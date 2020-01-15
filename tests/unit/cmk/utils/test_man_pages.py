@@ -225,6 +225,13 @@ def test_print_man_page_nowiki_content(capsys):
 
 
 def test_print_man_page(capsys):
+    if man_pages.ConsoleManPageRenderer._tty_color != "":
+        # NOTE
+        # This is test-isolation problem. As the color information resides on a class and is
+        # finalised at import-time, we cannot bring this test into the correct state if it is wrong.
+        # Ideally this will be fixed in ConsoleManPageRenderer, leading to the color being chosen
+        # at runtime.
+        raise pytest.skip("ConsoleManPageRenderer was imported from a tty-look-alike.")
     man_pages.ConsoleManPageRenderer("if64").paint()
     out, err = capsys.readouterr()
     assert err == ""

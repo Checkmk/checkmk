@@ -97,8 +97,10 @@ class QueryGET(Query):
         self.table_name = self.method_arg
         self.table = status_server.table(self.table_name)
         self.requested_columns = self.table.column_names
+        # NOTE: history's _get_mongodb and _get_files access filters and limits directly.
         self.filters = []  # type: List[Tuple[str, str, Callable, str]]
         self.limit = None  # type: Optional[int]
+        # NOTE: StatusTableEvents uses only_host for optimization.
         self.only_host = None  # type: Optional[Set[Any]]
         self._parse_header_lines(raw_query, logger)
 
@@ -165,22 +167,17 @@ class QueryGET(Query):
 
     def requested_column_indexes(self):
         # type: () -> List[Optional[int]]
-        indexes = []
-        for column_name in self.requested_columns:
-            try:
-                column_index = self.table.column_indices[column_name]
-            except KeyError:
-                # The column is not known: Use None as index and None value later
-                column_index = None
-            indexes.append(column_index)
-        return indexes
+        # If a column is not known: Use None as index and None value later.
+        return [
+            self.table.column_indices.get(column_name)  #
+            for column_name in self.requested_columns
+        ]
 
     def filter_row(self, row):
-        # type: (List[Any]) -> Optional[List[Any]]
-        for column_name, _operator_name, predicate, _argument in self.filters:
-            if not predicate(row[self.table.column_indices[column_name]]):
-                return None
-        return row
+        # type: (List[Any]) -> bool
+        return all(
+            predicate(row[self.table.column_indices[column_name]])
+            for column_name, _operator_name, predicate, _argument in self.filters)
 
 
 class _QueryREPLICATE(Query):

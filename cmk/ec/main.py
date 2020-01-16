@@ -2545,16 +2545,11 @@ class StatusTable:
         for row in self._enumerate(query):
             if query.limit is not None and num_rows >= query.limit:
                 break  # The maximum number of rows has been reached
-
             # Apply filters
             # TODO: History filtering is done in history load code. Check for improvements
-            if query.filters and query.table_name != "history":
-                matched = query.filter_row(row)
-                if not matched:
-                    continue
-
-            yield self._build_result_row(row, requested_column_indexes)
-            num_rows += 1
+            if query.table_name == "history" or query.filter_row(row):
+                yield self._build_result_row(row, requested_column_indexes)
+                num_rows += 1
 
     def _build_result_row(self, row, requested_column_indexes):
         # type: (List[Any], List[int]) -> List[Any]

@@ -190,7 +190,7 @@ def check_aws_limits(aws_service, params, parsed):
         long_output.append(infotext)
 
     if levels_reached:
-        yield max_state, 'Levels reached: %s' % ", ".join(levels_reached), perfdata
+        yield max_state, 'Levels reached: %s' % ", ".join(sorted(levels_reached)), perfdata
     else:
         yield 0, 'No levels reached', perfdata
 

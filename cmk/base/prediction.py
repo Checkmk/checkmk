@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 """Code for predictive monitoring / anomaly detection"""
 from __future__ import division
-from typing import Optional, List, cast, Dict, Union, Callable, Tuple  # pylint: disable=unused-import
+from typing import Optional, List, Any, cast, Dict, Union, Callable, Tuple  # pylint: disable=unused-import
 
 import json
 import logging
@@ -36,11 +36,14 @@ import time
 import cmk.utils.debug
 import cmk.utils
 import cmk.utils.defines as defines
+import cmk.utils.store as store
 from cmk.utils.log import VERBOSE
 import cmk.utils.prediction
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import HostName, ServiceName, MetricName  # pylint: disable=unused-import
 from cmk.utils.prediction import (  # pylint: disable=unused-import
-    Timestamp, Timegroup, TimeSeriesValues, Seconds, TimeWindow, RRDColumnFunction,
+    Timestamp, Timegroup, TimeSeriesValues, Seconds, TimeWindow, RRDColumnFunction, PredictionInfo,
+    ConsolidationFunctionName, EstimatedLevels,
 )
 
 logger = logging.getLogger("cmk.prediction")
@@ -51,6 +54,7 @@ TimeSlices = List[Tuple[Timestamp, Timestamp]]
 DataStatValue = Optional[float]
 DataStat = List[DataStatValue]
 DataStats = List[DataStat]
+PredictionParameters = Dict[str, Any]
 
 
 def window_start(timestamp, span):
@@ -208,7 +212,7 @@ def calculate_data_for_prediction(time_windows, rrd_datacolumn):
 
 
 def save_predictions(pred_file, info, data_for_pred):
-    # type: (str, Dict, Dict) -> None
+    # type: (str, PredictionInfo, Dict) -> None
     with open(pred_file + '.info', "w") as fname:
         json.dump(info, fname)
     with open(pred_file, "w") as fname:
@@ -216,6 +220,7 @@ def save_predictions(pred_file, info, data_for_pred):
 
 
 def stdev(point_line, average):
+    # type: (List[float], float) -> float
     samples = len(point_line)
     # In the case of a single data-point an unbiased standard deviation is
     # undefined. In this case we take the magnitude of the measured value
@@ -226,19 +231,21 @@ def stdev(point_line, average):
 
 
 def is_prediction_up2date(pred_file, timegroup, params):
-    # Check, if we need to (re-)compute the prediction file. This is
-    # the case if:
-    # - no prediction has been done yet for this time group
-    # - the prediction from the last time is outdated
-    # - the prediction from the last time was done with other parameters
+    # type: (str, Timegroup, PredictionParameters) -> bool
+    """Check, if we need to (re-)compute the prediction file.
 
+    This is the case if:
+    - no prediction has been done yet for this time group
+    - the prediction from the last time is outdated
+    - the prediction from the last time was done with other parameters
+    """
     last_info = cmk.utils.prediction.retrieve_data_for_prediction(pred_file + ".info", timegroup)
     if last_info is None:
         return False
 
     period_info = prediction_periods[params["period"]]
     now = time.time()
-    if last_info["time"] + period_info["valid"] * period_info["slice"] < now:
+    if last_info["time"] + cast(int, period_info["valid"]) * cast(int, period_info["slice"]) < now:
         logger.log(VERBOSE, "Prediction of %s outdated", timegroup)
         return False
 
@@ -255,23 +262,23 @@ def is_prediction_up2date(pred_file, timegroup, params):
 # in the cpu.loads check the multiplies the levels by the number of CPU
 # cores.
 def get_levels(hostname, service_description, dsname, params, cf, levels_factor=1.0):
-    # Compute timegroup
-    now = time.time()
-    period_info = prediction_periods[params["period"]]
+    # type: (HostName, ServiceName, MetricName, PredictionParameters, ConsolidationFunctionName, float) -> Tuple[int, EstimatedLevels]
+    now = int(time.time())
+    period_info = prediction_periods[params["period"]]  # type: Dict
 
-    timegroup, rel_time = period_info["groupby"](now)
+    timegroup, rel_time = cast(GroupByFunction, period_info["groupby"])(now)
 
-    pred_dir = cmk.utils.prediction.predictions_dir(hostname,
-                                                    service_description,
-                                                    dsname,
-                                                    create=True)
+    pred_dir = cmk.utils.prediction.predictions_dir(hostname, service_description, dsname)
+    store.makedirs(pred_dir)
 
     pred_file = os.path.join(pred_dir, timegroup)
     cmk.utils.prediction.clean_prediction_files(pred_file)
 
+    data_for_pred = None
     if is_prediction_up2date(pred_file, timegroup, params):
         data_for_pred = cmk.utils.prediction.retrieve_data_for_prediction(pred_file, timegroup)
-    else:
+
+    if data_for_pred is None:
         logger.log(VERBOSE, "Calculating prediction data for time group %s", timegroup)
         cmk.utils.prediction.clean_prediction_files(pred_file, force=True)
 
@@ -289,10 +296,10 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
             u"dsname": dsname,
             u"slice": period_info["slice"],
             u"params": params,
-        }
+        }  # type: PredictionInfo
         save_predictions(pred_file, info, data_for_pred)
 
     # Find reference value in data_for_pred
-    index = int(rel_time / data_for_pred["step"])  # fixed: true-division
+    index = int(rel_time / cast(int, data_for_pred["step"]))  # fixed: true-division
     reference = dict(zip(data_for_pred["columns"], data_for_pred["points"][index]))
     return cmk.utils.prediction.estimate_levels(reference, params, levels_factor)

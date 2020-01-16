@@ -33,7 +33,7 @@ import time
 import shutil
 import cStringIO
 import contextlib
-from typing import Tuple, Optional, Dict, Any, Text, List, Union  # pylint: disable=unused-import
+from typing import IO, Iterator, Tuple, Optional, Dict, Any, Text, List, Union  # pylint: disable=unused-import
 
 import cmk.utils.paths
 import cmk.utils.debug
@@ -170,6 +170,7 @@ automations.register(AutomationDiscovery())
 # Python 3? use contextlib.redirect_stdout
 @contextlib.contextmanager
 def redirect_output(where):
+    # type: (IO[str]) -> Iterator[IO[str]]
     """Redirects stdout/stderr to the given file like object"""
     prev_stdout, prev_stderr = sys.stdout, sys.stderr
     prev_stdout.flush()
@@ -194,7 +195,8 @@ class AutomationTryDiscovery(Automation):
             log.logger.setLevel(log.VERBOSE)
             check_preview_table, host_labels = self._execute_discovery(args)
             return {
-                "output": buf.getvalue(),
+                # TODO: How to make mypy accept this?
+                "output": buf.getvalue(),  # type: ignore
                 "check_table": check_preview_table,
                 "host_labels": host_labels.to_dict(),
             }
@@ -815,7 +817,7 @@ class AutomationDeleteHosts(Automation):
         return None
 
     def _delete_if_exists(self, path):
-        # tyep: (str) -> None
+        # type: (str) -> None
         """Delete the given file in case it exists"""
         try:
             os.unlink(path)
@@ -949,6 +951,7 @@ class AutomationReload(AutomationRestart):
     cmd = "reload"
 
     def _mode(self):
+        # type: () -> str
         if self._check_plugins_have_changed():
             return "restart"
         return "reload"
@@ -1696,7 +1699,7 @@ class AutomationGetRuleMismatchReason(Automation):
 
     def get_mismatch_reason(self, hostname, svc_desc_or_item, svc_desc, only_host_conditions,
                             match_service_conditions, rule_dict, item_type, is_binary_ruleset):
-        # type: (HostName, ServiceName, ServiceName, bool, bool, Dict, str, bool) -> Text
+        # type: (HostName, ServiceName, ServiceName, bool, bool, Dict, str, bool) -> Optional[Text]
         """A generator that provides the reasons why a given folder/host/item not matches this rule"""
 
         config_cache = config.get_config_cache()
@@ -1730,6 +1733,7 @@ class AutomationGetRuleMismatchReason(Automation):
     def _get_mismatch_reason_of_match_object(self, config_cache, match_object,
                                              match_service_conditions, rule_dict,
                                              is_binary_ruleset):
+        # type: (config.ConfigCache, ruleset_matcher.RulesetMatchObject, bool, Dict, bool) -> Optional[Text]
         matcher = config_cache.ruleset_matcher
 
         if match_service_conditions:

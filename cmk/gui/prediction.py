@@ -54,8 +54,8 @@ def page_graph():
     # Get current value from perf_data via Livestatus
     current_value = get_current_perfdata(host, service, dsname)
 
-    pred_dir = prediction.predictions_dir(host, service, dsname, create=False)
-    if pred_dir is None:
+    pred_dir = prediction.predictions_dir(host, service, dsname)
+    if not os.path.exists(pred_dir):
         raise MKGeneralException(
             _("There is currently no prediction information "
               "available for this service."))

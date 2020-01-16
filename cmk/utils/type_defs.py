@@ -29,9 +29,14 @@ from typing import NewType, Text, Optional
 
 HostName = str
 HostAddress = str
+HostgroupName = str
 ServiceName = Text
+ServicegroupName = str
+TimeperiodName = str
 MetricName = str
 CheckPluginName = str
+ActiveCheckPluginName = str
 Item = Optional[Text]
+TagValue = str
 
 UserId = NewType("UserId", Text)

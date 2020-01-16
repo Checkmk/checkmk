@@ -24,10 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import abc
 import signal
 import sys
 import pprint
-from typing import Optional  # pylint: disable=unused-import
+from types import FrameType  # pylint: disable=unused-import
+from typing import NoReturn, Dict, Any, List, Optional  # pylint: disable=unused-import
+import six
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKTimeout
@@ -49,14 +52,19 @@ class MKAutomationError(MKException):
 
 class Automations(object):
     def __init__(self):
+        # type: () -> None
         # TODO: This disable is needed because of a pylint bug. Remove one day.
         super(Automations, self).__init__()  # pylint: disable=bad-super-call
-        self._automations = {}
+        self._automations = {}  # type: Dict[str, Automation]
 
     def register(self, automation):
+        # type: (Automation) -> None
+        if automation.cmd is None:
+            raise TypeError()
         self._automations[automation.cmd] = automation
 
     def execute(self, cmd, args):
+        # type: (str, List[str]) -> Any
         self._handle_generic_arguments(args)
 
         try:
@@ -95,26 +103,31 @@ class Automations(object):
 
         return 0
 
-    # Handle generic arguments (currently only the optional timeout argument)
     def _handle_generic_arguments(self, args):
+        # type: (List[str]) -> None
+        """Handle generic arguments (currently only the optional timeout argument)"""
         if len(args) > 1 and args[0] == "--timeout":
             args.pop(0)
             timeout = int(args.pop(0))
 
             if timeout:
-                MKTimeout.timeout = timeout
                 signal.signal(signal.SIGALRM, self._raise_automation_timeout)
                 signal.alarm(timeout)
 
     def _raise_automation_timeout(self, signum, stackframe):
-        raise MKTimeout("Action timed out. The timeout of %d "
-                        "seconds was reached." % MKTimeout.timeout)
+        # type: (int, Optional[FrameType]) -> NoReturn
+        raise MKTimeout("Action timed out.")
 
 
-class Automation(object):
+class Automation(six.with_metaclass(abc.ABCMeta, object)):
     cmd = None  # type: Optional[str]
     needs_checks = False
     needs_config = False
+
+    @abc.abstractmethod
+    def execute(self, args):
+        # type: (List[str]) -> Any
+        raise NotImplementedError()
 
 
 #

@@ -66,7 +66,10 @@ try:
     opts, args = getopt.getopt(sys.argv[1:], modes.short_getopt_specs(), modes.long_getopt_specs())
 except getopt.GetoptError as err:
     console.error("ERROR: %s\n\n" % err)
-    modes.get("help").handler_function()
+    help_function = modes.get("help").handler_function
+    if help_function is None:
+        raise TypeError()
+    help_function()
     sys.exit(1)
 
 # First load the general modifying options
@@ -101,7 +104,10 @@ try:
         if (args and len(args) <= 2) or "--keepalive" in [o[0] for o in opts]:
             exit_status = modes.call("--check", None, opts, args)
         else:
-            modes.get("help").handler_function()
+            help_function = modes.get("help").handler_function
+            if help_function is None:
+                raise TypeError()
+            help_function()
             exit_status = 0
 
     sys.exit(exit_status)

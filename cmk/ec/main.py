@@ -47,7 +47,7 @@ import sys
 import threading
 import time
 import traceback
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, Union  # pylint: disable=unused-import
+from typing import Any, AnyStr, Dict, Iterable, List, Optional, Text, Tuple, Type, Union  # pylint: disable=unused-import
 
 import cmk
 import cmk.utils.daemon
@@ -55,8 +55,6 @@ import cmk.utils.defines
 import cmk.ec.actions
 import cmk.ec.history
 import cmk.ec.rule_packs
-import cmk.ec.settings
-import cmk.ec.snmp
 import cmk.utils.log as log
 from cmk.utils.log import VERBOSE
 import cmk.utils.paths
@@ -67,11 +65,13 @@ import cmk.utils.debug
 from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.exceptions import MKException
 import cmk.utils.store as store
-from cmk.ec.crash_reporting import ECCrashReport, CrashReportStore
-from cmk.ec.query import MKClientError, Query, QueryGET
+import livestatus
 
-# suppress "Cannot find module" error from mypy
-import livestatus  # type: ignore
+from .crash_reporting import ECCrashReport, CrashReportStore
+from .history import ActiveHistoryPeriod, History
+from .query import MKClientError, Query, QueryGET
+from .settings import FileDescriptor, PortNumber, Settings, settings as create_settings
+from .snmp import SNMPTrapEngine
 
 
 class SyslogPriority:
@@ -144,6 +144,7 @@ class SyslogFacility:
 
 
 def scrub_and_decode(s):
+    # type: (AnyStr) -> Text
     return convert_to_unicode(cmk.ec.history.scrub_string(s))
 
 
@@ -162,13 +163,14 @@ def scrub_and_decode(s):
 
 class ECLock:
     def __init__(self, logger):
+        # type: (Logger) -> None
         super().__init__()
         self._logger = logger
         self._lock = threading.Lock()
 
     def acquire(self, blocking=True):
+        # type: (bool) -> bool
         self._logger.debug("[%s] Trying to acquire lock", threading.current_thread().name)
-
         # Suppression due to https://github.com/PyCQA/pylint/issues/3212,
         # already fixed in astroid, but no released version yet. :-/
         ret = self._lock.acquire(blocking)  # pylint: disable=assignment-from-no-return
@@ -176,14 +178,15 @@ class ECLock:
             self._logger.debug("[%s] Acquired lock", threading.current_thread().name)
         else:
             self._logger.debug("[%s] Non-blocking aquire failed", threading.current_thread().name)
-
         return ret
 
     def release(self):
+        # type: () -> None
         self._logger.debug("[%s] Releasing lock", threading.current_thread().name)
         self._lock.release()
 
     def __enter__(self):
+        # type: () -> None
         self.acquire()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -194,10 +197,12 @@ class ECLock:
 class ECServerThread(threading.Thread):
     @abc.abstractmethod
     def serve(self):
+        # type: () -> None
         raise NotImplementedError()
 
     def __init__(self, name, logger, settings, config, slave_status, profiling_enabled,
                  profile_file):
+        # type: (Any, Logger, Settings, Dict[str, Any], Dict[str, Any], bool, Path) -> None
         super().__init__(name=name)
         self.settings = settings
         self._config = config
@@ -208,8 +213,8 @@ class ECServerThread(threading.Thread):
         self._logger = logger
 
     def run(self):
+        # type: () -> None
         self._logger.info("Starting up")
-
         while not self._terminate_event.is_set():
             try:
                 with cmk.utils.profile.Profile(enabled=self._profiling_enabled,
@@ -220,25 +225,28 @@ class ECServerThread(threading.Thread):
                 if self.settings.options.debug:
                     raise
                 time.sleep(1)
-
         self._logger.info("Terminated")
 
     def terminate(self):
+        # type: () -> None
         self._terminate_event.set()
 
 
 def terminate(terminate_main_event, event_server, status_server):
+    # type: (threading.Event, EventServer, StatusServer) -> None
     terminate_main_event.set()
     status_server.terminate()
     event_server.terminate()
 
 
 def bail_out(logger, reason):
+    # type: (Logger, str) -> None
     logger.error("FATAL ERROR: %s" % reason)
     sys.exit(1)
 
 
 def process_exists(pid):
+    # type: (int) -> bool
     try:
         os.kill(pid, 0)
         return True
@@ -637,7 +645,7 @@ class EventServer(ECServerThread):
         self._history = history
         self._event_status = event_status
         self._event_columns = event_columns
-        self._message_period = cmk.ec.history.ActiveHistoryPeriod()
+        self._message_period = ActiveHistoryPeriod()
         self._rule_matcher = RuleMatcher(self._logger, config)
         self._event_creator = EventCreator(self._logger, config)
 
@@ -646,9 +654,8 @@ class EventServer(ECServerThread):
         self.open_syslog()
         self.open_syslog_tcp()
         self.open_snmptrap()
-        self._snmp_trap_engine = cmk.ec.snmp.SNMPTrapEngine(self.settings, self._config,
-                                                            self._logger.getChild("snmp"),
-                                                            self.handle_snmptrap)
+        self._snmp_trap_engine = SNMPTrapEngine(self.settings, self._config,
+                                                self._logger.getChild("snmp"), self.handle_snmptrap)
 
     @classmethod
     def status_columns(cls):
@@ -747,12 +754,12 @@ class EventServer(ECServerThread):
     def open_syslog(self):
         endpoint = self.settings.options.syslog_udp
         try:
-            if isinstance(endpoint, cmk.ec.settings.FileDescriptor):
+            if isinstance(endpoint, FileDescriptor):
                 self._syslog = socket.fromfd(endpoint.value, socket.AF_INET, socket.SOCK_DGRAM)
                 os.close(endpoint.value)
                 self._logger.info("Opened builtin syslog server on inherited filedescriptor %d" %
                                   endpoint.value)
-            if isinstance(endpoint, cmk.ec.settings.PortNumber):
+            if isinstance(endpoint, PortNumber):
                 self._syslog = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 self._syslog.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 self._syslog.bind(("0.0.0.0", endpoint.value))
@@ -763,14 +770,14 @@ class EventServer(ECServerThread):
     def open_syslog_tcp(self):
         endpoint = self.settings.options.syslog_tcp
         try:
-            if isinstance(endpoint, cmk.ec.settings.FileDescriptor):
+            if isinstance(endpoint, FileDescriptor):
                 self._syslog_tcp = socket.fromfd(endpoint.value, socket.AF_INET, socket.SOCK_STREAM)
                 self._syslog_tcp.listen(20)
                 os.close(endpoint.value)
                 self._logger.info(
                     "Opened builtin syslog-tcp server on inherited filedescriptor %d" %
                     endpoint.value)
-            if isinstance(endpoint, cmk.ec.settings.PortNumber):
+            if isinstance(endpoint, PortNumber):
                 self._syslog_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self._syslog_tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 self._syslog_tcp.bind(("0.0.0.0", endpoint.value))
@@ -783,12 +790,12 @@ class EventServer(ECServerThread):
     def open_snmptrap(self):
         endpoint = self.settings.options.snmptrap_udp
         try:
-            if isinstance(endpoint, cmk.ec.settings.FileDescriptor):
+            if isinstance(endpoint, FileDescriptor):
                 self._snmptrap = socket.fromfd(endpoint.value, socket.AF_INET, socket.SOCK_DGRAM)
                 os.close(endpoint.value)
                 self._logger.info("Opened builtin snmptrap server on inherited filedescriptor %d" %
                                   endpoint.value)
-            if isinstance(endpoint, cmk.ec.settings.PortNumber):
+            if isinstance(endpoint, PortNumber):
                 self._snmptrap = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 self._snmptrap.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 self._snmptrap.bind(("0.0.0.0", endpoint.value))
@@ -819,6 +826,7 @@ class EventServer(ECServerThread):
         self.process_event(self._event_creator.create_event_from_trap(trap, ipaddress))
 
     def serve(self):
+        # type: () -> None
         pipe_fragment = b''
         pipe = self.open_pipe()
         listen_list = [pipe]
@@ -976,8 +984,8 @@ class EventServer(ECServerThread):
     def process_raw_lines(self, data, address=None):
         # type: (bytes, Optional[Any]) -> None
         lines = data.splitlines()
-        for line in lines:
-            line = scrub_and_decode(line.rstrip())
+        for line_bytes in lines:
+            line = scrub_and_decode(line_bytes.rstrip())
             if line:
                 try:
 
@@ -990,6 +998,7 @@ class EventServer(ECServerThread):
                                            e)
 
     def do_housekeeping(self):
+        # type: () -> None
         with self._event_status.lock:
             with self._lock_configuration:
                 self.hk_handle_event_timeouts()
@@ -1001,6 +1010,7 @@ class EventServer(ECServerThread):
     # whether or not it is still in downtime. In case the downtime has ended
     # archive the events that have been created in a downtime.
     def hk_cleanup_downtime_events(self):
+        # type: () -> None
         host_downtimes = {}  # type: Dict[str, bool]
 
         for event in self._event_status.events():
@@ -1021,6 +1031,7 @@ class EventServer(ECServerThread):
             self._event_status.remove_event(event)
 
     def hk_handle_event_timeouts(self):
+        # type: () -> None
         # 1. Automatically delete all events that are in state "counting"
         #    and have not reached the required number of hits and whose
         #    time is elapsed.
@@ -1127,6 +1138,7 @@ class EventServer(ECServerThread):
             self._event_status.remove_event(events[nr])
 
     def hk_check_expected_messages(self):
+        # type: () -> None
         now = time.time()
         # "Expecting"-rules are rules that require one or several
         # occurrances of a message within a defined time period.
@@ -1259,10 +1271,10 @@ class EventServer(ECServerThread):
                 self._event_status.remove_event(event)
 
     def reload_configuration(self, config):
+        # type: (Dict[str, Any]) -> None
         self._config = config
-        self._snmp_trap_engine = cmk.ec.snmp.SNMPTrapEngine(self.settings, self._config,
-                                                            self._logger.getChild("snmp"),
-                                                            self.handle_snmptrap)
+        self._snmp_trap_engine = SNMPTrapEngine(self.settings, self._config,
+                                                self._logger.getChild("snmp"), self.handle_snmptrap)
         self.compile_rules(self._config["rules"], self._config["rule_packs"])
         self.host_config = HostConfig(self._logger)
 
@@ -2620,7 +2632,7 @@ class StatusTableHistory(StatusTable):
     ] + StatusTableEvents.columns
 
     def __init__(self, logger, history):
-        # type: (Logger, cmk.ec.history.History) -> None
+        # type: (Logger, History) -> None
         super().__init__(logger)
         self._history = history
 
@@ -2676,7 +2688,7 @@ class StatusTableStatus(StatusTable):
 class StatusServer(ECServerThread):
     def __init__(self, logger, settings, config, slave_status, perfcounters, lock_configuration,
                  history, event_status, event_server, terminate_main_event):
-        # type: (Logger, cmk.ec.settings.Settings, Dict[str, Any], Dict[str, Any], Perfcounters, ECLock, cmk.ec.history.History, EventStatus, EventServer, threading.Event) -> None
+        # type: (Logger, Settings, Dict[str, Any], Dict[str, Any], Perfcounters, ECLock, History, EventStatus, EventServer, threading.Event) -> None
         super().__init__(name="StatusServer",
                          logger=logger,
                          settings=settings,
@@ -2783,6 +2795,7 @@ class StatusServer(ECServerThread):
         self._reopen_sockets = True
 
     def serve(self):
+        # type: () -> None
         while not self._terminate_event.is_set():
             try:
                 client_socket = None
@@ -2844,12 +2857,14 @@ class StatusServer(ECServerThread):
             client_socket = None  # close without danger of exception
 
     def handle_client(self, client_socket, allow_commands, client_ip):
+        # type: (socket.socket, bool, str) -> Any
         for query in Queries(self, client_socket, self._logger):
             self._logger.log(VERBOSE, "Client livestatus query: %r", query)
 
             with self._event_status.lock:
                 if query.method == "GET":
-                    response = self.table(query.table_name).query(query)
+                    response = self.table(query.table_name).query(
+                        query)  # type: Optional[Iterable[List[Any]]]
 
                 elif query.method == "REPLICATE":
                     response = self.handle_replicate(query.method_arg, client_ip)
@@ -2876,9 +2891,12 @@ class StatusServer(ECServerThread):
     # Only GET queries have customizable output formats. COMMAND is always
     # a dictionay and COMMAND is always None and always output as "python"
     def _answer_query(self, client_socket, query, response):
+        # type: (socket.socket, Query, Optional[Iterable[List[Any]]]) -> None
         if query.method != "GET":
             self._answer_query_python(client_socket, response)
             return
+        if response is None:
+            raise NotImplementedError()  # Make mypy happy
 
         if query.output_format == "plain":
             for row in response:
@@ -3082,6 +3100,7 @@ class StatusServer(ECServerThread):
 
 def run_eventd(terminate_main_event, settings, config, lock_configuration, history, perfcounters,
                event_status, event_server, status_server, slave_status, logger):
+    # type: (Any, Settings, Dict[str, Any], ECLock, History, Perfcounters, EventStatus, EventServer, StatusServer, Dict[str, Any], Logger) -> None
     status_server.start()
     event_server.start()
     now = time.time()
@@ -3160,6 +3179,7 @@ def run_eventd(terminate_main_event, settings, config, lock_configuration, histo
 
 class EventStatus:
     def __init__(self, settings, config, perfcounters, history, logger):
+        # type: (Settings, Dict[str, Any], Perfcounters, History, Logger) -> None
         self.settings = settings
         self._config = config
         self._perfcounters = perfcounters
@@ -3169,13 +3189,17 @@ class EventStatus:
         self.flush()
 
     def reload_configuration(self, config):
+        # type: (Dict[str, Any]) -> None
         self._config = config
 
     def flush(self):
-        self._events = []
+        # type: () -> None
+        # TODO: Improve types!
+        self._events = []  # type: List[Any]
         self._next_event_id = 1
-        self._rule_stats = {}
-        self._interval_starts = {}  # needed for expecting rules
+        self._rule_stats = {}  # type: Dict[str, int]
+        # needed for expecting rules
+        self._interval_starts = {}  # type: Dict[str, int]
         self._initialize_event_limit_status()
 
         # TODO: might introduce some performance counters, like:
@@ -3184,6 +3208,8 @@ class EventStatus:
         # - number of rule misses
 
     def events(self):
+        # type: () -> List[Any]
+        # TODO: Improve type!
         return self._events
 
     def event(self, eid):
@@ -3621,6 +3647,7 @@ def replication_allow_command(config, command, slave_status):
 
 
 def replication_send(config, lock_configuration, event_status, last_update):
+    # type: (Dict[str, Any], ECLock, EventStatus, int) -> Dict[str, Any]
     response = {}
     with lock_configuration:
         response["status"] = event_status.pack_status()
@@ -3634,6 +3661,7 @@ def replication_send(config, lock_configuration, event_status, last_update):
 
 def replication_pull(settings, config, lock_configuration, perfcounters, event_status, event_server,
                      slave_status, logger):
+    # type: (Settings, Dict[str, Any], ECLock, Perfcounters, EventStatus, EventServer, Dict[str, Any], Logger) -> None
     # We distinguish two modes:
     # 1. slave mode: just pull the current state from the master.
     #    if the master is not reachable then decide whether to
@@ -3710,7 +3738,7 @@ def replication_pull(settings, config, lock_configuration, perfcounters, event_s
 
 
 def replication_update_state(settings, config, event_status, event_server, new_state):
-
+    # type: (Settings, Dict[str, Any], EventStatus, EventServer, Dict[str, Any]) -> None
     # Keep a copy of the masters' rules and actions and also prepare using them
     if "rules" in new_state:
         save_master_config(settings, new_state)
@@ -3722,19 +3750,20 @@ def replication_update_state(settings, config, event_status, event_server, new_s
 
 
 def save_master_config(settings, new_state):
+    # type: (Settings, Dict[str, Any]) -> None
     path = settings.paths.master_config_file.value
     path_new = path.parent / (path.name + '.new')
-    path_new.write_bytes(
-        repr({
-            "rules": new_state["rules"],
-            "rule_packs": new_state["rule_packs"],
-            "actions": new_state["actions"],
-        }) + "\n")
+    path_new.write_text(repr({
+        "rules": new_state["rules"],
+        "rule_packs": new_state["rule_packs"],
+        "actions": new_state["actions"],
+    }) + "\n",
+                        encoding="utf-8")
     path_new.rename(path)
 
 
 def load_master_config(settings, config, logger):
-    # type: (cmk.ec.settings.Settings, Dict[str, Any], Logger) -> None
+    # type: (Settings, Dict[str, Any], Logger) -> None
     path = settings.paths.master_config_file.value
     try:
         config = ast.literal_eval(path.read_text(encoding="utf-8"))
@@ -3749,7 +3778,7 @@ def load_master_config(settings, config, logger):
 
 
 def get_state_from_master(config, slave_status):
-    # type: (Dict[str, Any], Dict[str, Any]) -> None
+    # type: (Dict[str, Any], Dict[str, Any]) -> Any
     repl_settings = config["replication"]
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -3778,7 +3807,7 @@ def get_state_from_master(config, slave_status):
 
 
 def save_slave_status(settings, slave_status):
-    # type: (cmk.ec.settings.Settings, Dict[str, Any]) -> None
+    # type: (Settings, Dict[str, Any]) -> None
     settings.paths.slave_status_file.value.write_text(repr(slave_status) + "\n", encoding="utf-8")
 
 
@@ -3803,7 +3832,7 @@ def default_slave_status_sync():
 
 
 def update_slave_status(slave_status, settings, config):
-    # type: (Dict[str, Any], cmk.ec.settings.Settings, Dict[str, Any]) -> None
+    # type: (Dict[str, Any], Settings, Dict[str, Any]) -> None
     path = settings.paths.slave_status_file.value
     if is_replication_slave(config):
         try:
@@ -3831,7 +3860,7 @@ def update_slave_status(slave_status, settings, config):
 
 
 def load_configuration(settings, logger, slave_status):
-    # type: (cmk.ec.settings.Settings, Logger, Dict[str, Any]) -> Dict[str, Any]
+    # type: (Settings, Logger, Dict[str, Any]) -> Dict[str, Any]
     config = cmk.ec.rule_packs.load_config(settings)
 
     # If not set by command line, set the log level by configuration
@@ -3867,6 +3896,7 @@ def load_configuration(settings, logger, slave_status):
 
 def reload_configuration(settings, logger, lock_configuration, history, event_status, event_server,
                          status_server, slave_status):
+    # type: (Settings, Logger, ECLock, History, EventStatus, EventServer, StatusServer, Dict[str, Any]) -> None
     with lock_configuration:
         config = load_configuration(settings, logger, slave_status)
         history.reload_configuration(config)
@@ -3894,8 +3924,8 @@ def main():
     # type: () -> None
     os.unsetenv("LANG")
     logger = getLogger("cmk.mkeventd")
-    settings = cmk.ec.settings.settings(cmk.__version__, Path(cmk.utils.paths.omd_root),
-                                        Path(cmk.utils.paths.default_config_dir), sys.argv)
+    settings = create_settings(cmk.__version__, Path(cmk.utils.paths.omd_root),
+                               Path(cmk.utils.paths.default_config_dir), sys.argv)
 
     pid_path = None
     try:
@@ -3911,8 +3941,8 @@ def main():
 
         slave_status = default_slave_status_master()
         config = load_configuration(settings, logger, slave_status)
-        history = cmk.ec.history.History(settings, config, logger, StatusTableEvents.columns,
-                                         StatusTableHistory.columns)
+        history = History(settings, config, logger, StatusTableEvents.columns,
+                          StatusTableHistory.columns)
 
         pid_path = settings.paths.pid_file.value
         if pid_path.exists():
@@ -3997,7 +4027,7 @@ def main():
                 settings.options.snmptrap_udp
         ]:
             try:
-                if isinstance(fd, cmk.ec.settings.FileDescriptor):
+                if isinstance(fd, FileDescriptor):
                     os.close(fd.value)
             except Exception:
                 pass

@@ -55,6 +55,7 @@ ssize_t read_with_timeout(int from, char *buffer, int size,
                           std::chrono::microseconds timeout) {
     Poller poller;
     poller.addFileDescriptor(from, PollEvents::in);
+    // Do not handle FD errors.
     return poller.poll(timeout) > 0 ? read(from, buffer, size) : -2;
 }
 

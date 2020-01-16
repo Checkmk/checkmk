@@ -21,7 +21,7 @@ namespace wtools {
 
 namespace uc {
 
-Status LdapControl::UserAdd(std::wstring_view user_name,
+Status LdapControl::userAdd(std::wstring_view user_name,
                             std::wstring_view pwd_string) {
     USER_INFO_1 user_info;
     // Set up the USER_INFO_1 structure.
@@ -58,7 +58,22 @@ Status LdapControl::UserAdd(std::wstring_view user_name,
     }
 }
 
-Status LdapControl::UserDel(std::wstring_view user_name) {
+// this function tested indirectly in runas (difficult top test)
+Status LdapControl::changeUserPassword(std::wstring_view user_name,
+                                       std::wstring_view pwd_string) {
+    USER_INFO_1003 pwd_data;
+    pwd_data.usri1003_password = const_cast<wchar_t*>(pwd_string.data());
+
+    auto ret = ::NetUserSetInfo(primary_dc_name_, user_name.data(), 1003,
+                                reinterpret_cast<BYTE*>(&pwd_data), nullptr);
+
+    if (ret == NERR_Success) return Status::success;
+
+    XLOG::l("Error setting user: [{}]", ret);
+    return Status::error;
+}
+
+Status LdapControl::userDel(std::wstring_view user_name) {
     auto err =
         ::NetUserDel(primary_dc_name_,                         // PDC name
                      const_cast<wchar_t*>(user_name.data()));  // user name
@@ -106,7 +121,7 @@ static bool CheckGroupIsForbidden(std::wstring_view group_name) {
         [group_name](std::wstring_view name) { return group_name == name; });
 }
 
-Status LdapControl::LocalGroupAdd(std::wstring_view group_name,
+Status LdapControl::localGroupAdd(std::wstring_view group_name,
                                   std::wstring_view group_comment) {
     auto forbidden = CheckGroupIsForbidden(group_name);
     if (forbidden) {
@@ -138,7 +153,7 @@ Status LdapControl::LocalGroupAdd(std::wstring_view group_name,
     }
 }
 
-Status LdapControl::LocalGroupDel(std::wstring_view group_name) {
+Status LdapControl::localGroupDel(std::wstring_view group_name) {
     auto forbidden = CheckGroupIsForbidden(group_name);
     if (forbidden) {
         XLOG::d("Groups is '{}' predefined group", ConvertToUTF8(group_name));
@@ -163,7 +178,7 @@ Status LdapControl::LocalGroupDel(std::wstring_view group_name) {
     }
 }
 
-Status LdapControl::LocalGroupAddMembers(std::wstring_view group_name,
+Status LdapControl::localGroupAddMembers(std::wstring_view group_name,
                                          std::wstring_view user_name) {
     LOCALGROUP_MEMBERS_INFO_3 lg_members;
     lg_members.lgrmi3_domainandname = const_cast<wchar_t*>(user_name.data());
@@ -190,7 +205,7 @@ Status LdapControl::LocalGroupAddMembers(std::wstring_view group_name,
     }
 }
 
-Status LdapControl::LocalGroupDelMembers(std::wstring_view group_name,
+Status LdapControl::localGroupDelMembers(std::wstring_view group_name,
                                          std::wstring_view user_name) {
     LOCALGROUP_MEMBERS_INFO_3 lg_members;
     lg_members.lgrmi3_domainandname = const_cast<wchar_t*>(user_name.data());

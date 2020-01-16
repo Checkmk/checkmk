@@ -8,6 +8,7 @@
 #include "cma_core.h"
 #include "common/wtools.h"
 #include "common/wtools_runas.h"
+#include "common/wtools_user_control.h"
 #include "test_tools.h"
 
 namespace wtools::runas {  // to become friendly for cma::cfg classes
@@ -37,7 +38,7 @@ static std::string ReadFromHandle(HANDLE h) {
     return reinterpret_cast<char*>(buf.data());
 }
 
-TEST(WtoolsRunAs, Base) {
+TEST(WtoolsRunAs, NoUser) {
     using namespace std::chrono_literals;
     using namespace std::string_literals;
     cma::OnStartTest();
@@ -60,23 +61,45 @@ TEST(WtoolsRunAs, Base) {
         EXPECT_EQ(cma::tools::win::GetEnv("USERNAME"s) + "\r\nmarker 1\r\n",
                   data);
     }
+}
 
-    {
-        wtools::AppRunner ar;
-        auto ret = ar.goExecAsJobAndUser(L"a1", L"a1",
-                                         (in / "runc.cmd").wstring() + L" 1");
-        EXPECT_TRUE(ret);
-        auto b = WaitForExit(ar.processId());
-        if (!b) {
-            XLOG::SendStringToStdio("Retry waiting for the process\n",
-                                    XLOG::Colors::yellow);
-            WaitForExit(ar.processId());  // we are starting waiter two times
-        }
-        ASSERT_TRUE(b);
-        auto data = ReadFromHandle(ar.getStdioRead());
-        ASSERT_TRUE(!data.empty());
-        EXPECT_EQ("a1\r\nmarker 1\r\n", data);
+TEST(WtoolsRunAs, TestUser) {
+    wtools::uc::LdapControl lc;
+    auto pwd = GenerateRandomString(12);
+    std::wstring user = L"a1";
+    auto status = lc.userAdd(user, pwd);
+    if (status == uc::Status::exists) {
+        status = lc.changeUserPassword(user, pwd);
     }
-    //
+    if (status != uc::Status::success) {
+        GTEST_SKIP() << "failed to set password, maybe not admin?";
+    }
+
+    using namespace std::chrono_literals;
+    using namespace std::string_literals;
+    cma::OnStartTest();
+    auto [in, out] = tst::CreateInOut();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+    tst::CreateWorkFile(in / "runc.cmd",
+                        "@powershell  Start-Sleep -Milliseconds 150\n"
+                        "@echo %USERNAME%\n"
+                        "@powershell  Start-Sleep -Milliseconds 150\n"
+                        "@echo marker %1");
+
+    wtools::AppRunner ar;
+
+    auto ret =
+        ar.goExecAsJobAndUser(user, pwd, (in / "runc.cmd").wstring() + L" 1");
+    ASSERT_TRUE(ret) << "probably password is invalid or expired";
+    auto b = WaitForExit(ar.processId());
+    if (!b) {
+        XLOG::SendStringToStdio("Retry waiting for the process\n",
+                                XLOG::Colors::yellow);
+        WaitForExit(ar.processId());  // we are starting waiter two times
+    }
+    ASSERT_TRUE(b);
+    auto data = ReadFromHandle(ar.getStdioRead());
+    ASSERT_TRUE(!data.empty());
+    EXPECT_EQ("a1\r\nmarker 1\r\n", data);
 }
 }  // namespace wtools::runas

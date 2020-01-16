@@ -2438,7 +2438,7 @@ InternalUser CreateCmaUserInGroup(const std::wstring& group) noexcept {
 
     if (false) {
         wchar_t group_comment[] = L"Check MK Group created group";
-        add_group_status = primary_dc.LocalGroupAdd(group, group_comment);
+        add_group_status = primary_dc.localGroupAdd(group, group_comment);
     }
 
     if (add_group_status == uc::Status::error) return {};
@@ -2450,33 +2450,33 @@ InternalUser CreateCmaUserInGroup(const std::wstring& group) noexcept {
 
     auto pwd = GenerateRandomString(12);
 
-    primary_dc.UserDel(name);
-    auto add_user_status = primary_dc.UserAdd(name, pwd);
+    primary_dc.userDel(name);
+    auto add_user_status = primary_dc.userAdd(name, pwd);
     if (add_user_status != uc::Status::success) {
         XLOG::l("Can't add user '{}'", n);
         if (add_group_status == uc::Status::success)
-            primary_dc.LocalGroupDel(group);
+            primary_dc.localGroupDel(group);
         return {};
     }
 
     // Now add the user to the local group.
     auto add_user_to_group_status =
-        primary_dc.LocalGroupAddMembers(group, name);
+        primary_dc.localGroupAddMembers(group, name);
     if (add_user_to_group_status != uc::Status::error) return {name, pwd};
 
     // Fail situation processing
     XLOG::l("Can't add user '{}' to group '{}'", n, g);
-    if (add_user_status == uc::Status::success) primary_dc.UserDel(name);
+    if (add_user_status == uc::Status::success) primary_dc.userDel(name);
 
     if (add_group_status == uc::Status::success)
-        primary_dc.LocalGroupDel(group);
+        primary_dc.localGroupDel(group);
 
     return {};
 }
 
 bool RemoveCmaUser(const std::wstring& user_name) noexcept {
     uc::LdapControl primary_dc;
-    return primary_dc.UserDel(user_name) != uc::Status::error;
+    return primary_dc.userDel(user_name) != uc::Status::error;
 }
 
 }  // namespace wtools

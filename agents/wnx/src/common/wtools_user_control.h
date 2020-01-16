@@ -22,18 +22,22 @@ public:
     ~LdapControl();
 
     // User
-    Status UserAdd(std::wstring_view user_name, std::wstring_view pwd_string);
-    Status UserDel(std::wstring_view user_name);
+    Status userAdd(std::wstring_view user_name, std::wstring_view pwd_string);
+    Status userDel(std::wstring_view user_name);
+
+    // indirectly tested
+    Status changeUserPassword(std::wstring_view user_name,
+                              std::wstring_view pwd_string);
 
     // Local Group
-    Status LocalGroupAdd(std::wstring_view group_name,
+    Status localGroupAdd(std::wstring_view group_name,
                          std::wstring_view group_comment);
-    Status LocalGroupDel(std::wstring_view group_name);
+    Status localGroupDel(std::wstring_view group_name);
 
     // Group Member
-    Status LocalGroupAddMembers(std::wstring_view group_name,
+    Status localGroupAddMembers(std::wstring_view group_name,
                                 std::wstring_view user_name);
-    Status LocalGroupDelMembers(std::wstring_view group_name,
+    Status localGroupDelMembers(std::wstring_view group_name,
                                 std::wstring_view user_name);
 
     // this is trash to access old Windows API

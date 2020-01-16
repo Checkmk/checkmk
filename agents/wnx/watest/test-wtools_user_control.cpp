@@ -76,41 +76,41 @@ TEST(WtoolsUserControl, Base) {
 TEST(WtoolsUserControl, AddDeleteUser) {
     LdapControl lc;
     std::wstring_view u = L"x_test_user";
-    lc.UserDel(u);
-    ON_OUT_OF_SCOPE(lc.UserDel(u));
-    EXPECT_EQ(Status::absent, lc.UserDel(u));
-    EXPECT_EQ(Status::success, lc.UserAdd(u, L"xufdrgebd_1"));
-    EXPECT_EQ(Status::exists, lc.UserAdd(u, L"xufdrgebd_1"));
-    EXPECT_EQ(Status::success, lc.UserDel(u));
-    EXPECT_EQ(Status::absent, lc.UserDel(u));
+    lc.userDel(u);
+    ON_OUT_OF_SCOPE(lc.userDel(u));
+    EXPECT_EQ(Status::absent, lc.userDel(u));
+    EXPECT_EQ(Status::success, lc.userAdd(u, L"xufdrgebd_1"));
+    EXPECT_EQ(Status::exists, lc.userAdd(u, L"xufdrgebd_1"));
+    EXPECT_EQ(Status::success, lc.userDel(u));
+    EXPECT_EQ(Status::absent, lc.userDel(u));
 }
 
 TEST(WtoolsUserControl, AddDeleteUserToUsers) {
     LdapControl lc;
     std::wstring_view g = L"Users";
     std::wstring_view u = L"x_user_name";
-    ASSERT_EQ(Status::success, lc.UserAdd(u, L"aaaaasxwxwwxwecfwecwe"));
-    EXPECT_EQ(Status::success, lc.LocalGroupAddMembers(g, u));
-    EXPECT_EQ(Status::success, lc.LocalGroupDelMembers(g, u));
-    EXPECT_EQ(Status::absent, lc.LocalGroupDelMembers(g, u));
+    ASSERT_EQ(Status::success, lc.userAdd(u, L"aaaaasxwxwwxwecfwecwe"));
+    EXPECT_EQ(Status::success, lc.localGroupAddMembers(g, u));
+    EXPECT_EQ(Status::success, lc.localGroupDelMembers(g, u));
+    EXPECT_EQ(Status::absent, lc.localGroupDelMembers(g, u));
 
-    EXPECT_EQ(Status::success, lc.LocalGroupAddMembers(g, u));
-    EXPECT_EQ(Status::error, lc.LocalGroupDel(g));
-    ASSERT_EQ(Status::success, lc.UserDel(u));
-    EXPECT_EQ(Status::error, lc.LocalGroupDel(g));
+    EXPECT_EQ(Status::success, lc.localGroupAddMembers(g, u));
+    EXPECT_EQ(Status::error, lc.localGroupDel(g));
+    ASSERT_EQ(Status::success, lc.userDel(u));
+    EXPECT_EQ(Status::error, lc.localGroupDel(g));
 }
 
 TEST(WtoolsUserControl, AddDeleteCheckGroup) {
     LdapControl lc;
     std::wstring_view g = L"x_test_group";
     std::wstring_view c = L"Check MK Testing Group";
-    lc.LocalGroupDel(g);
-    ON_OUT_OF_SCOPE(lc.LocalGroupDel(g));
-    EXPECT_EQ(Status::absent, lc.LocalGroupDel(g));
-    EXPECT_EQ(Status::success, lc.LocalGroupAdd(g, c));
-    EXPECT_EQ(Status::exists, lc.LocalGroupAdd(g, c));
-    EXPECT_EQ(Status::success, lc.LocalGroupDel(g));
-    EXPECT_EQ(Status::absent, lc.LocalGroupDel(g));
+    lc.localGroupDel(g);
+    ON_OUT_OF_SCOPE(lc.localGroupDel(g));
+    EXPECT_EQ(Status::absent, lc.localGroupDel(g));
+    EXPECT_EQ(Status::success, lc.localGroupAdd(g, c));
+    EXPECT_EQ(Status::exists, lc.localGroupAdd(g, c));
+    EXPECT_EQ(Status::success, lc.localGroupDel(g));
+    EXPECT_EQ(Status::absent, lc.localGroupDel(g));
 }
 
 TEST(WtoolsUserControl, AddDeleteCheckForbiddenGroup) {
@@ -138,7 +138,7 @@ TEST(WtoolsUserControl, AddDeleteCheckForbiddenGroup) {
         L"Users"s};
     for (auto& g : groups) {
         //
-        EXPECT_EQ(Status::error, lc.LocalGroupDel(g));
+        EXPECT_EQ(Status::error, lc.localGroupDel(g));
     }
 }
 
@@ -147,24 +147,24 @@ TEST(WtoolsUserControl, AddDeleteMembers) {
     std::wstring_view g = L"x_test_group";
     std::wstring_view u = L"x_user_name";
     std::wstring_view c = L"Check MK Testing Group";
-    lc.LocalGroupDel(g);
-    ON_OUT_OF_SCOPE(lc.UserDel(u); lc.LocalGroupDel(g));
+    lc.localGroupDel(g);
+    ON_OUT_OF_SCOPE(lc.userDel(u); lc.localGroupDel(g));
 
-    EXPECT_EQ(Status::absent, lc.LocalGroupDel(g));
-    EXPECT_EQ(Status::error, lc.LocalGroupAddMembers(g, u));
+    EXPECT_EQ(Status::absent, lc.localGroupDel(g));
+    EXPECT_EQ(Status::error, lc.localGroupAddMembers(g, u));
 
-    ASSERT_EQ(Status::success, lc.LocalGroupAdd(g, c));
-    EXPECT_EQ(Status::error, lc.LocalGroupAddMembers(g, u));
-    ASSERT_EQ(Status::success, lc.UserAdd(u, L"aaaaasxwxwwxwecfwecwe"));
-    EXPECT_EQ(Status::success, lc.LocalGroupAddMembers(g, u));
+    ASSERT_EQ(Status::success, lc.localGroupAdd(g, c));
+    EXPECT_EQ(Status::error, lc.localGroupAddMembers(g, u));
+    ASSERT_EQ(Status::success, lc.userAdd(u, L"aaaaasxwxwwxwecfwecwe"));
+    EXPECT_EQ(Status::success, lc.localGroupAddMembers(g, u));
 
-    EXPECT_EQ(Status::success, lc.LocalGroupDelMembers(g, u));
-    EXPECT_EQ(Status::absent, lc.LocalGroupDelMembers(g, u));
+    EXPECT_EQ(Status::success, lc.localGroupDelMembers(g, u));
+    EXPECT_EQ(Status::absent, lc.localGroupDelMembers(g, u));
 
-    EXPECT_EQ(Status::success, lc.LocalGroupAddMembers(g, u));
-    EXPECT_EQ(Status::success, lc.LocalGroupDel(g));
-    ASSERT_EQ(Status::success, lc.UserDel(u));
-    EXPECT_EQ(Status::absent, lc.LocalGroupDel(g));
+    EXPECT_EQ(Status::success, lc.localGroupAddMembers(g, u));
+    EXPECT_EQ(Status::success, lc.localGroupDel(g));
+    ASSERT_EQ(Status::success, lc.userDel(u));
+    EXPECT_EQ(Status::absent, lc.localGroupDel(g));
 }
 
 }  // namespace wtools::uc

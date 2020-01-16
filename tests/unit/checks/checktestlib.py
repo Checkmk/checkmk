@@ -1,3 +1,4 @@
+import os
 import types
 import copy
 import mock
@@ -147,16 +148,20 @@ def assertBasicCheckResultsEqual(actual, expected):
     """
     assert isinstance(actual, BasicCheckResult), "not a BasicCheckResult: %r" % actual
     assert isinstance(expected, BasicCheckResult), "not a BasicCheckResult: %r" % expected
-    assert expected.status == actual.status, "expected %r, but status is %r" % (expected,
-                                                                                actual.status)
-    assert expected.infotext == actual.infotext, "expected %r, but infotext is %r" % (
-        expected, actual.infotext)
-    assert len(expected.perfdata) == len(
-        actual.perfdata), "expected %r, but got %d perfdata" % (expected, len(actual.perfdata))
+
+    msg = "expected %r, but %%s is %%r" % expected
+    assert expected.status == actual.status, msg % ("status", actual.status)
+
+    diff_idx = len(os.path.commonprefix((expected.infotext, actual.infotext)))
+    diff_msg = ", differing at char %r" % diff_idx
+    assert expected.infotext == actual.infotext, msg % ("infotext", actual.infotext) + diff_msg
+
+    perf_count = len(actual.perfdata)
+    assert len(expected.perfdata) == perf_count, msg % ("perfdata count", perf_count)
     for pact, pexp in zip(actual.perfdata, expected.perfdata):
         assertPerfValuesEqual(pact, pexp)
-    assert expected.multiline == actual.multiline, "expected %r, but multiline is %r" % (
-        expected, actual.multiline)
+
+    assert expected.multiline == actual.multiline, msg % ("multiline", actual.multiline)
 
 
 class CheckResult(object):

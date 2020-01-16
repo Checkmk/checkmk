@@ -299,13 +299,9 @@ def rrd_datacolum(hostname, service_description, varname, cf):
 
 def predictions_dir(hostname, service_description, dsname, create=False):
     # type: (HostName, ServiceName, MetricName, bool) -> Optional[Text]
-    pred_dir = os.path.join(
-        cmk.utils.paths.var_dir,
-        "prediction",
-        hostname,
-        # TODO: Cleanup once we are on Python 3
-        cmk.utils.pnp_cleanup(service_description),  # type: ignore
-        cmk.utils.pnp_cleanup(dsname))
+    pred_dir = os.path.join(cmk.utils.paths.var_dir, "prediction", hostname,
+                            cmk.utils.pnp_cleanup(service_description.encode("utf-8")),
+                            cmk.utils.pnp_cleanup(dsname))
 
     if not os.path.exists(pred_dir):
         if create:

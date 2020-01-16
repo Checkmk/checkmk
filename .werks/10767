@@ -1,0 +1,15 @@
+Title: Implement Forecast Graph prediction engine
+Class: feature
+Compatible: compat
+Component: metrics
+Date: 1579519270
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+To avoid the need for extenal dependencies for the Forecasting Graphs we
+have reimplemented the prediction algorithm within Checkmk.
+
+This Werk replaces Werk #7451. The {bin/install_fbprophet} script can be
+used to uninstall previously installed dependencies.

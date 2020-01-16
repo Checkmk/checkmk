@@ -41,8 +41,15 @@
 # OVERALL 2
 
 
-def inventory_omd_status(info):
+def inventory_omd_status(sections):
+    info = sections[0]
+    omd_info = sections[1]
     for site in info.keys():
+        # if we have omd_info we want to ensure that checks are only executed for sites
+        # that do have autostart enabled
+        if omd_info and 'sites' in omd_info and site in omd_info['sites']:
+            if omd_info['sites'][site]['autostart'] == '0':
+                continue
         yield site, None
 
 
@@ -60,6 +67,7 @@ def parse_omd_status(info):
             node = line[0]
             parsed[item][node] = {}
             parsed[item][node]["stopped"] = []
+            parsed[item][node]["existing"] = []  # this information is required for inventory
             active = True
         elif active and line[1] == 'OVERALL':
             if line[2] == '0':
@@ -67,14 +75,19 @@ def parse_omd_status(info):
             elif line[2] == '1':
                 parsed[item][node]["overall"] = "stopped"
             active = False
-        elif active and line[2] != '0':
-            parsed[item][node]["stopped"].append(line[1])
-            parsed[item][node]["overall"] = "partially"
+        elif active:
+            parsed[item][node]["existing"].append(line[1])
+
+            if line[2] != '0':
+                parsed[item][node]["stopped"].append(line[1])
+                parsed[item][node]["overall"] = "partially"
 
     return parsed
 
 
-def check_omd_status(item, _no_params, parsed):
+def check_omd_status(item, _no_params, sections):
+    parsed = sections[0]
+
     if item not in parsed:
         return
 
@@ -121,4 +134,5 @@ check_info["omd_status"] = {
     'parse_function': parse_omd_status,
     'service_description': 'OMD %s status',
     'node_info': True,
+    "extra_sections": ["omd_info"],
 }

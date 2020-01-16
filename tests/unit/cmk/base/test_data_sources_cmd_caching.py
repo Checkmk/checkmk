@@ -29,7 +29,7 @@ from cmk.utils.log import logger
 # without this fixtures
 @pytest.fixture(scope="module", autouse=True)
 def load_plugins():
-    CheckManager().load(["df", "cpu", "chrony", "lnx_if"])
+    CheckManager().load(["df", "cpu", "chrony", "lnx_if", "livestatus_status", "omd_status"])
     InventoryPluginManager().load()
 
 

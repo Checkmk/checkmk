@@ -1,0 +1,106 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2020             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+import cmk
+
+
+def _service_status(status, service_name):
+    if not status:
+        return "unknown"
+    if service_name not in status['existing']:
+        return "not existent"
+    if service_name in status['stopped']:
+        return "stopped"
+    return "running"
+
+
+def _overall_status_to_num(overall):
+    if overall == 'running':
+        return 1
+    elif overall == 'partially':
+        return 2
+    elif overall == 'stopped':
+        return 3
+    return 4  # unknown
+
+
+# We use this function to merge the status data of this inventory plugin with the one
+# from "livestatus_status" and we don't know the order in which the plugins are executed
+def _append_or_merge(list_node, data, key):
+    for entry in list_node:
+        if entry[key] == data[key]:
+            entry.update(data)
+            return
+    list_node.append(data)
+
+
+def inv_omd_status(info, inventory_tree, status_data_tree):
+    status_info = info[0]
+    status_node = status_data_tree.get_list("software.applications.check_mk.sites:")
+
+    if cmk.is_raw_edition():
+        services = [
+            "nagios",
+            "npcd",
+        ]
+    else:
+        services = [
+            "cmc",
+            "dcd",
+            "liveproxyd",
+            "mknotifyd",
+        ]
+
+    services += [
+        "apache",
+        "crontab",
+        "mkeventd",
+        "rrdcached",
+        "stunnel",
+        "xinetd",
+    ]
+
+    for site, status_per_node in status_info.iteritems():
+        best_status = None
+        for status in status_per_node.values():
+            if (not best_status or _overall_status_to_num(status['overall']) <
+                    _overall_status_to_num(best_status['overall'])):
+                best_status = status
+
+        line = {
+            'site': site,
+        }
+        # create a column for each service
+        for service in services:
+            line[service] = _service_status(best_status, service)
+
+        _append_or_merge(status_node, line, 'site')
+
+
+inv_info['omd_status'] = {
+    'inv_function': inv_omd_status,
+    'has_status_data': True,
+}

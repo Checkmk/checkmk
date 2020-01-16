@@ -886,7 +886,7 @@ if inpath omd; then
     echo '<<<labels:sep(0)>>>'
     echo '{"cmk/check_mk_server": "yes"}'
 
-    run_cached -s omd_status 60 "omd status --bare --auto || true"
+    run_cached -s omd_status 60 "omd status --bare || true"
     echo '<<<mknotifyd:sep(0)>>>'
     date +%s
     for statefile in /omd/sites/*/var/log/mknotifyd.state; do
@@ -909,6 +909,40 @@ if inpath omd; then
             # prevent next section to fail caused by a missing newline at the end of the statsfile
             echo
         fi
+    done
+
+    echo '<<<omd_info:sep(59)>>>'
+    echo '[versions]'
+    echo 'version;number;edition;demo'
+    for versiondir in /omd/versions/*; do
+        version=${versiondir#/omd/versions/}
+
+        # filter out special directory 'default'
+        if [[ $version == "default" ]]; then
+            continue
+        fi
+
+        number=$version
+        demo="0"
+        if [[ "$version" == *.demo ]]; then
+            number=${version%.demo}
+            demo="1"
+        fi
+        edition=${number##*.}
+        number=${number%.*}
+        echo "$version;$number;$edition;$demo"
+    done
+    echo '[sites]'
+    echo 'site;used_version;autostart'
+    for sitedir in /omd/sites/*; do
+        site=${sitedir#/omd/sites/}
+        used_version=$(readlink ${sitedir}/version)
+        used_version=${used_version##*/}
+        autostart="0"
+        if grep -q "CONFIG_AUTOSTART[[:blank:]]*=[[:blank:]]*'on'" $sitedir/etc/omd/site.conf; then
+            autostart="1"
+        fi
+        echo "$site;$used_version;$autostart"
     done
 fi
 

@@ -1,0 +1,62 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2020             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# We use this function to merge the status data of this inventory plugin with the one
+# from "omd_status" and we don't know the order in which the plugins are executed
+def _append_or_merge(list_node, data, key):
+    for entry in list_node:
+        if entry[key] == data[key]:
+            entry.update(data)
+            return
+    list_node.append(data)
+
+
+def inv_livestatus_status(info, inventory_tree, status_data_tree):
+    livestatus = info[0]
+
+    sites_node = status_data_tree.get_list("software.applications.check_mk.sites:")
+    for site, status in livestatus.iteritems():
+        helper_usage_cmk = float(status['helper_usage_cmk']) * 100
+        helper_usage_generic = float(status['helper_usage_generic']) * 100
+        livestatus_usage = float(status['livestatus_usage']) * 100
+
+        site_data = {
+            'site': site,
+            'num_hosts': status['num_hosts'],
+            'num_services': status['num_services'],
+            'check_helper_usage': ("%.2f%%" % helper_usage_generic),
+            'check_mk_helper_usage': ("%.2f%%" % helper_usage_cmk),
+            'livestatus_usage': ("%.2f%%" % livestatus_usage),
+        }
+
+        _append_or_merge(sites_node, site_data, 'site')
+
+
+inv_info['livestatus_status'] = {
+    'inv_function': inv_livestatus_status,
+    'has_status_data': True,
+}

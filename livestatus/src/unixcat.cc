@@ -53,9 +53,10 @@ void printErrno(const std::string &msg) {
 
 ssize_t read_with_timeout(int from, char *buffer, int size,
                           std::chrono::microseconds timeout) {
-    return Poller{}.wait(timeout, from, PollEvents::in)
-               ? read(from, buffer, size)
-               : -2;
+    Poller poller;
+    poller.addFileDescriptor(from, PollEvents::in);
+    // Do not handle FD errors.
+    return poller.poll(timeout) > 0 ? read(from, buffer, size) : -2;
 }
 
 void *copy_thread(void *info) {

@@ -47,14 +47,11 @@ import sys
 import threading
 import time
 import traceback
-from typing import Any, AnyStr, Dict, Iterable, List, Optional, Text, Tuple, Type, Union  # pylint: disable=unused-import
+from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union  # pylint: disable=unused-import
 
 import cmk
 import cmk.utils.daemon
 import cmk.utils.defines
-import cmk.ec.actions
-import cmk.ec.history
-import cmk.ec.rule_packs
 import cmk.utils.log as log
 from cmk.utils.log import VERBOSE
 import cmk.utils.paths
@@ -67,9 +64,11 @@ from cmk.utils.exceptions import MKException
 import cmk.utils.store as store
 import livestatus
 
+from .actions import do_notify, do_event_action, do_event_actions, event_has_opened
 from .crash_reporting import ECCrashReport, CrashReportStore
-from .history import ActiveHistoryPeriod, History
+from .history import ActiveHistoryPeriod, History, scrub_string, quote_tab, get_logfile
 from .query import MKClientError, Query, QueryGET
+from .rule_packs import load_config as load_config_using
 from .settings import FileDescriptor, PortNumber, Settings, settings as create_settings
 from .snmp import SNMPTrapEngine
 
@@ -87,6 +86,7 @@ class SyslogPriority:
     }
 
     def __init__(self, value):
+        # type: (int) -> None
         super().__init__()
         self.value = int(value)
 
@@ -130,6 +130,7 @@ class SyslogFacility:
     }
 
     def __init__(self, value):
+        # type: (int) -> None
         super().__init__()
         self.value = int(value)
 
@@ -144,8 +145,8 @@ class SyslogFacility:
 
 
 def scrub_and_decode(s):
-    # type: (AnyStr) -> Text
-    return convert_to_unicode(cmk.ec.history.scrub_string(s))
+    # type: (AnyStr) -> str
+    return convert_to_unicode(scrub_string(s))
 
 
 #.
@@ -365,6 +366,7 @@ def replace_groups(text, origtext, match_groups):
 
 class MKSignalException(MKException):
     def __init__(self, signum):
+        # type: (int) -> None
         MKException.__init__(self, "Got signal %d" % signum)
         self._signum = signum
 
@@ -384,6 +386,7 @@ class MKSignalException(MKException):
 
 class TimePeriods:
     def __init__(self, logger):
+        # type: (Logger) -> None
         super().__init__()
         self._logger = logger
         self._periods = None
@@ -430,9 +433,10 @@ class TimePeriods:
 
 class HostConfig:
     def __init__(self, logger):
+        # type: (Logger) -> None
         self._logger = logger
         self._lock = threading.Lock()
-        self._hosts_by_name = {}
+        self._hosts_by_name = {}  # type: Dict[str, Dict[str, Any]]
         self._hosts_by_designation = {}  # type: Dict[str, str]
         self._cache_timestamp = -1  # sentinel, always less than a real timestamp
 
@@ -454,6 +458,7 @@ class HostConfig:
             return self._hosts_by_designation.get(event_host_name.lower(), "")
 
     def _update_cache(self):
+        # type: () -> None
         self._logger.debug("Fetching host config from core")
         self._hosts_by_name.clear()
         self._hosts_by_designation.clear()
@@ -470,11 +475,13 @@ class HostConfig:
         self._logger.debug("Got %d hosts from core" % len(self._hosts_by_name))
 
     def _get_host_configs(self):
+        # type: () -> List[Dict[str, Any]]
         return livestatus.LocalConnection().query_table_assoc(
             "GET hosts\n"
             "Columns: name alias address custom_variables contacts contact_groups")
 
     def _get_config_timestamp(self):
+        # type: () -> livestatus.LivestatusColumn
         return livestatus.LocalConnection().query_value("GET status\n"  #
                                                         "Columns: program_start")
 
@@ -517,15 +524,16 @@ class Perfcounters:
 
     # TODO: Why aren't self._times / self._rates / ... not initialized with their defaults?
     def __init__(self, logger):
+        # type: (Logger) -> None
         super().__init__()
         self._lock = ECLock(logger)
 
         # Initialize counters
         self._counters = {n: 0 for n in self._counter_names}
-        self._old_counters = {}
-        self._rates = {}
-        self._average_rates = {}
-        self._times = {}
+        self._old_counters = {}  # type: Dict[str, int]
+        self._rates = {}  # type: Dict[str, float]
+        self._average_rates = {}  # type: Dict[str, float]
+        self._times = {}  # type: Dict[str, float]
         self._last_statistics = None
 
         self._logger = logger.getChild("Perfcounters")
@@ -551,7 +559,7 @@ class Perfcounters:
             for name, value in self._counters.items():
                 if duration:
                     delta = value - self._old_counters[name]
-                    rate = delta / duration  # fixed: true-divsion
+                    rate = delta / duration
                     self._rates[name] = rate
                     if name in self._average_rates:
                         # We could make the weight configurable
@@ -623,6 +631,7 @@ class EventServer(ECServerThread):
 
     def __init__(self, logger, settings, config, slave_status, perfcounters, lock_configuration,
                  history, event_status, event_columns):
+        # type: (Logger, Settings, Dict[str, Any], Dict[str, Any], Perfcounters, ECLock, History, EventStatus, List[Tuple[str, Any]]) -> None
         super().__init__(name="EventServer",
                          logger=logger,
                          settings=settings,
@@ -634,7 +643,8 @@ class EventServer(ECServerThread):
         self._syslog_tcp = None
         self._snmptrap = None
 
-        self._rules = []
+        # TODO: Improve type!
+        self._rules = []  # type: List[Any]
         self._hash_stats = []
         for _unused_facility in range(32):
             self._hash_stats.append([0] * 8)
@@ -1109,9 +1119,8 @@ class EventServer(ECServerThread):
                     event["phase"] = "open"
                     self._history.add(event, "DELAYOVER")
                     if rule:
-                        cmk.ec.actions.event_has_opened(self._history, self.settings, self._config,
-                                                        self._logger, self, self._event_columns,
-                                                        rule, event)
+                        event_has_opened(self._history, self.settings, self._config, self._logger,
+                                         self, self._event_columns, rule, event)
                         if rule.get("autodelete"):
                             event["phase"] = "closed"
                             self._history.add(event, "AUTODELETE")
@@ -1263,8 +1272,8 @@ class EventServer(ECServerThread):
             self.rewrite_event(rule, event, {})
             self._event_status.new_event(event)
             self._history.add(event, "COUNTFAILED")
-            cmk.ec.actions.event_has_opened(self._history, self.settings, self._config,
-                                            self._logger, self, self._event_columns, rule, event)
+            event_has_opened(self._history, self.settings, self._config, self._logger, self,
+                             self._event_columns, rule, event)
             if rule.get("autodelete"):
                 event["phase"] = "closed"
                 self._history.add(event, "AUTODELETE")
@@ -1528,10 +1537,9 @@ class EventServer(ECServerThread):
                             existing_event["delay_until"] = time.time() + rule["delay"]
                             existing_event["phase"] = "delayed"
                         else:
-                            cmk.ec.actions.event_has_opened(self._history, self.settings,
-                                                            self._config, self._logger, self,
-                                                            self._event_columns, rule,
-                                                            existing_event)
+                            event_has_opened(self._history, self.settings, self._config,
+                                             self._logger, self, self._event_columns, rule,
+                                             existing_event)
 
                         self._history.add(existing_event, "COUNTREACHED")
 
@@ -1554,9 +1562,8 @@ class EventServer(ECServerThread):
 
                     if self.new_event_respecting_limits(event):
                         if event["phase"] == "open":
-                            cmk.ec.actions.event_has_opened(self._history, self.settings,
-                                                            self._config, self._logger, self,
-                                                            self._event_columns, rule, event)
+                            event_has_opened(self._history, self.settings, self._config,
+                                             self._logger, self, self._event_columns, rule, event)
                             if rule.get("autodelete"):
                                 event["phase"] = "closed"
                                 self._history.add(event, "AUTODELETE")
@@ -1729,8 +1736,8 @@ class EventServer(ECServerThread):
 
     def log_message(self, event):
         try:
-            with cmk.ec.history.get_logfile(self._config, self.settings.paths.messages_dir.value,
-                                            self._message_period).open(mode='ab') as f:
+            with get_logfile(self._config, self.settings.paths.messages_dir.value,
+                             self._message_period).open(mode='ab') as f:
                 f.write("%s %s %s%s: %s\n" % (
                     time.strftime("%b %d %H:%M:%S", time.localtime(event["time"])),  #
                     event["host"],
@@ -1836,7 +1843,7 @@ class EventServer(ECServerThread):
 
         if "notify" in action:
             self._logger.info("  Creating overflow notification")
-            cmk.ec.actions.do_notify(self, self._logger, overflow_event)
+            do_notify(self, self._logger, overflow_event)
 
         return False
 
@@ -1923,6 +1930,7 @@ class EventServer(ECServerThread):
 
 class EventCreator:
     def __init__(self, logger, config):
+        # type: (Logger, Dict[str, Any]) -> None
         super().__init__()
         self._logger = logger
         self._config = config
@@ -2221,6 +2229,7 @@ class EventCreator:
 
 class RuleMatcher:
     def __init__(self, logger, config):
+        # type: (Logger, Dict[str, Any]) -> None
         super().__init__()
         self._logger = logger
         self._config = config
@@ -2459,6 +2468,7 @@ class RuleMatcher:
 
 class Queries:
     def __init__(self, status_server, sock, logger):
+        # type: (StatusServer, socket.socket, Logger) -> None
         super().__init__()
         self._status_server = status_server
         self._socket = sock
@@ -2466,9 +2476,11 @@ class Queries:
         self._buffer = b""
 
     def _query(self, request):
+        # type: (bytes) -> Query
         return Query.make(self._status_server, request.decode("utf-8").splitlines(), self._logger)
 
     def __iter__(self):
+        # type: () -> Iterator[Query]
         while True:
             parts = self._buffer.split(b"\n\n", 1)
             if len(parts) > 1:
@@ -2863,6 +2875,8 @@ class StatusServer(ECServerThread):
 
             with self._event_status.lock:
                 if query.method == "GET":
+                    if not isinstance(query, QueryGET):
+                        raise NotImplementedError()  # make mypy happy
                     response = self.table(query.table_name).query(
                         query)  # type: Optional[Iterable[List[Any]]]
 
@@ -2900,8 +2914,7 @@ class StatusServer(ECServerThread):
 
         if query.output_format == "plain":
             for row in response:
-                client_socket.sendall(b"\t".join([cmk.ec.history.quote_tab(c) for c in row]) +
-                                      b"\n")
+                client_socket.sendall(b"\t".join([quote_tab(c) for c in row]) + b"\n")
 
         elif query.output_format == "json":
             client_socket.sendall((json.dumps(list(response)) + "\n").encode("utf-8"))
@@ -3045,11 +3058,7 @@ class StatusServer(ECServerThread):
             event["owner"] = user
 
         if action_id == "@NOTIFY":
-            cmk.ec.actions.do_notify(self._event_server,
-                                     self._logger,
-                                     event,
-                                     user,
-                                     is_cancelling=False)
+            do_notify(self._event_server, self._logger, event, user, is_cancelling=False)
         else:
             with self._lock_configuration:
                 if action_id not in self._config["action"]:
@@ -3057,8 +3066,8 @@ class StatusServer(ECServerThread):
                         "The action '%s' is not defined. After adding new commands please "
                         "make sure that you activate the changes in the Event Console." % action_id)
                 action = self._config["action"][action_id]
-            cmk.ec.actions.do_event_action(self._history, self.settings, self._config, self._logger,
-                                           self._event_columns, action, event, user)
+            do_event_action(self._history, self.settings, self._config, self._logger,
+                            self._event_columns, action, event, user)
 
     def handle_command_switchmode(self, arguments):
         new_mode = arguments[0]
@@ -3437,15 +3446,15 @@ class EventStatus:
                                     "Do not execute cancelling actions, event %s's phase "
                                     "is not 'open' but '%s'" % (event["id"], previous_phase))
                             else:
-                                cmk.ec.actions.do_event_actions(self._history,
-                                                                self.settings,
-                                                                self._config,
-                                                                self._logger,
-                                                                event_server,
-                                                                event_columns,
-                                                                actions,
-                                                                event,
-                                                                is_cancelling=True)
+                                do_event_actions(self._history,
+                                                 self.settings,
+                                                 self._config,
+                                                 self._logger,
+                                                 event_server,
+                                                 event_columns,
+                                                 actions,
+                                                 event,
+                                                 is_cancelling=True)
 
                         to_delete.append(nr)
 
@@ -3861,7 +3870,7 @@ def update_slave_status(slave_status, settings, config):
 
 def load_configuration(settings, logger, slave_status):
     # type: (Settings, Logger, Dict[str, Any]) -> Dict[str, Any]
-    config = cmk.ec.rule_packs.load_config(settings)
+    config = load_config_using(settings)
 
     # If not set by command line, set the log level by configuration
     if settings.options.verbosity == 0:
@@ -3985,6 +3994,7 @@ def main():
 
         # Install signal hander
         def signal_handler(signum, stack_frame):
+            # type: (int, Any) -> None
             logger.log(VERBOSE, "Got signal %d.", signum)
             raise MKSignalException(signum)
 

@@ -44,9 +44,10 @@ import pysnmp.smi.rfc1902  # type: ignore[import]
 import pysnmp.smi.error  # type: ignore[import]
 import pyasn1.error  # type: ignore[import]
 
-from cmk.ec.settings import Settings  # pylint: disable=unused-import
 from cmk.utils.log import VERBOSE
 import cmk.utils.render
+
+from .settings import Settings  # pylint: disable=unused-import
 
 
 class SNMPTrapEngine:

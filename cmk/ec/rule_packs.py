@@ -59,8 +59,9 @@ import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKException
-import cmk.ec.defaults
-import cmk.ec.settings
+
+from .defaults import default_config, default_rule_pack
+from .settings import Settings, settings as create_settings
 
 
 class MkpRulePackBindingError(MKException):
@@ -178,10 +179,10 @@ class RulePackType(Enum):  # pylint: disable=too-few-public-methods
 
 
 def _default_settings():
-    # type: () -> cmk.ec.settings.Settings
+    # type: () -> Settings
     """Returns default EC settings. This function should vanish in the long run!"""
-    return cmk.ec.settings.settings('', Path(cmk.utils.paths.omd_root),
-                                    Path(cmk.utils.paths.default_config_dir), [''])
+    return create_settings('', Path(cmk.utils.paths.omd_root),
+                           Path(cmk.utils.paths.default_config_dir), [''])
 
 
 def rule_pack_dir():
@@ -226,14 +227,14 @@ def _bind_to_rule_pack_proxies(rule_packs, mkp_rule_packs):
 
 
 def load_config(settings):
-    # type: (cmk.ec.settings.Settings) -> Dict[str, Any]
+    # type: (Settings) -> Dict[str, Any]
     """Load event console configuration."""
-    config = cmk.ec.defaults.default_config()
+    config = default_config()
     config["MkpRulePackProxy"] = MkpRulePackProxy
     for path in [settings.paths.main_config_file.value] + \
             sorted(settings.paths.config_dir.value.glob('**/*.mk')):
         with open(str(path), mode="rb") as file_object:
-            exec (file_object.read(), config)  # pylint: disable=exec-used
+            exec(file_object.read(), config)  # pylint: disable=exec-used
     config.pop("MkpRulePackProxy", None)
     _bind_to_rule_pack_proxies(config['rule_packs'], config['mkp_rule_packs'])
 
@@ -248,7 +249,7 @@ def load_config(settings):
     # ignore legacy rules if there are rule packs alreday. It's a bit unclear
     # if we really want that, but at least that's how it worked in the past...
     if config["rules"] and not config["rule_packs"]:
-        config["rule_packs"] = [cmk.ec.defaults.default_rule_pack(config["rules"])]
+        config["rule_packs"] = [default_rule_pack(config["rules"])]
     config["rules"] = []
 
     for rule_pack in config["rule_packs"]:

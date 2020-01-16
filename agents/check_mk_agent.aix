@@ -451,3 +451,20 @@ if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
     done
     cd - > /dev/null
 fi
+
+# job monitoring 
+if [ -d "$MK_VARDIR/job" ]; then
+    echo '<<<job>>>'
+    CDIR=$(pwd)
+    cd $MK_VARDIR/job > /dev/null
+    for username in *; do
+        if [ -d "$username" ] && cd "$username"; then
+            for i in *; do
+               echo "==> $i <=="
+               cat $i
+            done
+            cd .. > /dev/null
+        fi
+    done
+    cd $CDIR > /dev/null
+fi

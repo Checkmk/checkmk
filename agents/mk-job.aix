@@ -1,0 +1,84 @@
+#!/usr/bin/ksh
+# mk-job.aix: runs monitored jobs on AIX
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# export MK_VARDIR=/var/lib/check_mk
+export MK_VARDIR=/var/lib/check_mk_agent
+
+help() {
+    echo "Usage: mk-job IDENT PROGRAM [ARGS...]"
+    echo ""
+    echo "Execute PROGRAM as subprocess while measuring performance information"
+    echo "about the running process and writing it to an output file. This file"
+    echo "can be monitored using Check_MK. The Check_MK Agent will forward the"
+    echo "information of all job files to the monitoring server."
+    echo ""
+    echo "This file is being distributed with the Check_MK Agent."
+}
+
+if [ $# -lt 2 ]; then
+    help >&2
+    exit 1
+fi
+
+MYSELF=$(whoami)
+OUTPUT_PATH=$MK_VARDIR/job/$MYSELF
+IDENT=$1
+RUNNING_FILE="$OUTPUT_PATH/$IDENT.$$running"
+TMP_FILE="/tmp/$IDENT.$$running"
+shift
+
+if [ ! -d "$OUTPUT_PATH" ]; then
+    if [ "$MYSELF" = root ] ; then
+        mkdir -p "$OUTPUT_PATH"
+    else
+        echo "ERROR: Missing output directory $OUTPUT_PATH for non-root user '$MYSELF'." >&2
+        exit 1
+    fi
+fi
+
+if ! type $1 >/dev/null 2>&1; then
+    echo -e "ERROR: Cannot run $1. Command not found.\n" >&2
+    help >&2
+    exit 1
+fi
+
+echo "start_time `perl -e 'print time'`" > "$RUNNING_FILE"
+
+/usr/bin/time -p "$@" 2>$TMP_FILE                # execute the command
+RC=$?                                            # save return code
+echo "exit_code $RC" >> "$RUNNING_FILE"          # then add the return code
+                                                 # and finally add the output of /usr/bin/time
+egrep  '^real   |^user   |^sys    ' $TMP_FILE | sed \
+       -e 's/,/\./g' \
+       -e 's/^real  /real_time/g' \
+       -e 's/^user  /user_time/g' \
+       -e 's/^sys   /system_time/g' \
+       >> "$RUNNING_FILE"
+echo "reads 0\nwrites 0\nmax_res_kbytes 0\navg_mem_kbytes 0\ninvol_context_switches 0\nvol_context_switches 0" >> "$RUNNING_FILE"
+
+mv "$RUNNING_FILE" "$OUTPUT_PATH/$IDENT"
+rm $TMP_FILE
+exit $RC

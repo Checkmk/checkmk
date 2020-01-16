@@ -256,8 +256,8 @@ system:
     service:
         restart_on_crash: yes  # service will restart if crashed, you may set no to disable restarting
                                # no may be used if you have serious problems with crasghing and starting
-        eventlog: yes          # yes or no to write info to eventlog
-        start: auto            # Possible values are: auto - service starts with boot, demand - requires manual starting
+        log_events: yes        # yes or no to write info to eventlog
+        start_mode: auto       # Possible values are: auto - service starts with boot, demand - requires manual starting
                                # disabled - service cannot be started manually and should be enabled
 
 

@@ -853,6 +853,16 @@ TEST(AgentConfig, WorkScenario) {
             GetVal(groups::kSystem, vars::kCleanupUninstall, std::string("xx"));
         EXPECT_TRUE(mode == values::kCleanupSmart);
     }
+
+    {
+        auto service = GetNode(groups::kSystem, vars::kService);
+        auto restart_on_crash = GetVal(service, vars::kRestartOnCrash, false);
+        EXPECT_TRUE(restart_on_crash);
+        auto log_events = GetVal(service, vars::kLogEvents, false);
+        EXPECT_TRUE(log_events);
+        auto start_mode = GetVal(service, vars::kStartMode, std::string("aaa"));
+        EXPECT_EQ(start_mode, values::kStartModeAuto);
+    }
 }
 
 TEST(AgentConfig, UTF16LE) {

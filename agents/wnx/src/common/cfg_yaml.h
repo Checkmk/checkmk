@@ -177,6 +177,11 @@ constexpr const char* const kFirewallPort = "port";  // string
 
 constexpr const char* const kCleanupUninstall = "cleanup_uninstall";  // string
 
+constexpr const char* const kService = "service";                  // dictionary
+constexpr const char* const kRestartOnCrash = "restart_on_crash";  // bool
+constexpr const char* const kLogEvents = "log_events";             // bool
+constexpr const char* const kStartMode = "start_mode";             // string
+
 }  // namespace vars
 
 namespace values {
@@ -193,6 +198,11 @@ constexpr const char* const kFirewallPortAuto = "auto";  // port in config, [*]
 constexpr const char* const kCleanupNone = "none";    // delete nothing
 constexpr const char* const kCleanupSmart = "smart";  // delete only owned [*]
 constexpr const char* const kCleanupAll = "all";      // delete all
+
+// service.start_mode
+constexpr const char* const kStartModeAuto = "auto";          // start on boot
+constexpr const char* const kStartModeDemand = "demand";      // start manually
+constexpr const char* const kStartModeDisabled = "disabled";  // start disabled
 
 }  // namespace values
 }  // namespace cma::cfg

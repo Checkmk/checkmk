@@ -19,7 +19,7 @@ Here you can switch to the new descriptions for selected check types.
 
 Renaming the services will mean you loose all historic data. If you want to rename
 the services but keep the recorded metrics, you have to rename the RRD files in
-<tt>~/var/pnp4nagios/perfdata/$HOST$</tt> or <tt>~/var/check_mk/rrd/$HSOT$</tt>
+<tt>~/var/pnp4nagios/perfdata/$HOST$</tt> or <tt>~/var/check_mk/rrd/$HOST$</tt>
 according to the service name change.
 
 Affected check plugins are:

@@ -42,6 +42,8 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.check_utils import Service  # pylint: disable=unused-import
 
+ConfigurationWarnings = List[str]
+
 
 class MonitoringCore(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractmethod
@@ -68,7 +70,7 @@ _failed_ip_lookups = []
 #   | Managing of warning messages occuring during configuration building  |
 #   '----------------------------------------------------------------------'
 
-g_configuration_warnings = []  # type: List[Any]
+g_configuration_warnings = []  # type: ConfigurationWarnings
 
 
 def initialize_warnings():
@@ -77,11 +79,13 @@ def initialize_warnings():
 
 
 def warning(text):
+    # type: (str) -> None
     g_configuration_warnings.append(text)
     console.warning("\n%s", text, stream=sys.stdout)
 
 
 def get_configuration_warnings():
+    # type: () -> ConfigurationWarnings
     num_warnings = len(g_configuration_warnings)
 
     if num_warnings > 10:
@@ -218,6 +222,7 @@ def check_icmp_arguments_of(config_cache, hostname, add_defaults=True, family=No
 
 # TODO: Move to modes?
 def do_create_config(core, with_agents):
+    # type: (MonitoringCore, bool) -> None
     console.output("Generating configuration for core (type %s)..." % config.monitoring_core)
     create_core_config(core)
     console.output(tty.ok + "\n")
@@ -231,6 +236,7 @@ def do_create_config(core, with_agents):
 
 
 def create_core_config(core):
+    # type: (MonitoringCore) -> ConfigurationWarnings
     initialize_warnings()
 
     _verify_non_duplicate_hosts()

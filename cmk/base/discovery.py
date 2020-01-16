@@ -73,6 +73,13 @@ from cmk.base.discovered_labels import (
 # Run the discovery queued by check_discovery() - if any
 _marked_host_discovery_timeout = 120
 
+DiscoveredServicesTable = Dict[Tuple[check_table.CheckPluginName, check_table.Item],
+                               Tuple[str, DiscoveredService]]
+CheckPreviewEntry = Tuple[str, CheckPluginName, Optional[RulesetName], check_table.Item,
+                          check_table.CheckParameters, check_table.CheckParameters, Text,
+                          Optional[int], Text, List[Metric], Dict[Text, Text]]
+CheckPreviewTable = List[CheckPreviewEntry]
+
 #   .--cmk -I--------------------------------------------------------------.
 #   |                                  _           ___                     |
 #   |                    ___ _ __ ___ | | __      |_ _|                    |
@@ -83,9 +90,6 @@ _marked_host_discovery_timeout = 120
 #   +----------------------------------------------------------------------+
 #   |  Functions for command line options -I and -II                       |
 #   '----------------------------------------------------------------------'
-
-DiscoveredServicesTable = Dict[Tuple[check_table.CheckPluginName, check_table.Item],
-                               Tuple[str, DiscoveredService]]
 
 
 # Function implementing cmk -I and cmk -II. This is directly
@@ -1232,12 +1236,6 @@ def _get_cluster_services(host_config, ipaddress, sources, multi_host_sections, 
 
     # Now add manual and active serivce and handle ignored services
     return _merge_manual_services(host_config, cluster_items, on_error), cluster_host_labels
-
-
-CheckPreviewEntry = Tuple[str, CheckPluginName, Optional[RulesetName], check_table.Item,
-                          check_table.CheckParameters, check_table.CheckParameters, Text,
-                          Optional[int], Text, List[Metric], Dict[Text, Text]]
-CheckPreviewTable = List[CheckPreviewEntry]
 
 
 # TODO: Can't we reduce the duplicate code here? Check out the "checking" code

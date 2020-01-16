@@ -278,6 +278,8 @@ check_mk_agents = {
 
 _manpage_catalog = {}  # type: Dict[Tuple[str,...], List[Dict]]
 
+ManPage = Dict[six.text_type, Any]
+
 
 def man_page_exists(name):
     # type: (str) -> bool
@@ -520,12 +522,12 @@ def _parse_man_page_header(name, path):
 
 
 def load_man_page(name):
-    # type: (str) -> Optional[Dict[six.text_type, Any]]
+    # type: (str) -> Optional[ManPage]
     path = man_page_path(name)
     if path is None:
         return None
 
-    man_page = {}  # type: Dict[six.text_type, Any]
+    man_page = {}  # type: ManPage
     current_section = []  # type: List[Tuple[str, str]]
     current_variable = None
     man_page['header'] = current_section

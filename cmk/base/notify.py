@@ -42,7 +42,7 @@ import re
 import signal
 import sys
 import time
-from typing import Text  # pylint: disable=unused-import
+from typing import Dict, Tuple, List, Text  # pylint: disable=unused-import
 
 import livestatus
 import cmk.utils.debug
@@ -80,6 +80,18 @@ logger.addHandler(logging.NullHandler())
 
 _log_to_stdout = False
 notify_mode = "notify"
+
+ContactName = str
+NotifyRule = Dict  # TODO: Improve this
+NotifyPluginParams = Dict  # TODO: Improve this
+NotifyBulkParameters = Dict  # TODO: Improve this
+NotifyRuleInfo = Tuple[str, NotifyRule, str]
+NotifyPluginName = str
+NotifyPluginInfo = Tuple[ContactName, NotifyPluginName, NotifyPluginParams, NotifyBulkParameters]
+NotifyAnalysisInfo = Tuple[List[NotifyRuleInfo], List[NotifyPluginInfo]]
+
+NotifyBulk = Tuple[str, int, str, str, int, str]
+NotifyBulks = List[NotifyBulk]
 
 #   .--Configuration-------------------------------------------------------.
 #   |    ____             __ _                       _   _                 |
@@ -309,6 +321,7 @@ def _complete_raw_context_with_notification_vars(raw_context):
 # 2. Flexible Notifications   (since 1.2.2)
 # 3. Plain email notification (refer to git log if you are really interested)
 def locally_deliver_raw_context(raw_context, analyse=False):
+    # -> Optional[
     contactname = raw_context.get("CONTACTNAME")
     try:
 
@@ -421,6 +434,7 @@ def notify_keepalive():
 #   '----------------------------------------------------------------------'
 
 
+# TODO: type (RawNotifyContext, bool) -> NotifyAnalysisInfo
 def notify_rulebased(raw_context, analyse=False):
     # First step: go through all rules and construct our table of
     # notification plugins to call. This is a dict from (users, plugin) to
@@ -1618,10 +1632,12 @@ def remove_if_orphaned(bulk_dir, max_age, ref_time=None):
 
 
 def find_bulks(only_ripe):
+    # type: (bool) -> NotifyBulks
     if not os.path.exists(notification_bulkdir):
         return []
 
     def listdir_visible(path):
+        # type: (str) -> List[str]
         return [x for x in os.listdir(path) if not x.startswith(".")]
 
     bulks, now = [], time.time()

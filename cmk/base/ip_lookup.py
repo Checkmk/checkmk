@@ -46,6 +46,7 @@ from cmk.base.exceptions import MKIPAddressLookupError
 IPLookupCacheId = Tuple[HostName, int]
 NewIPLookupCache = Dict[IPLookupCacheId, str]
 LegacyIPLookupCache = Dict[str, str]
+UpdateDNSCacheResult = Tuple[int, List[HostName]]
 
 _fake_dns = None  # type: Optional[HostAddress]
 _enforce_localhost = False
@@ -271,7 +272,7 @@ def _cache_path():
 
 
 def update_dns_cache():
-    # type: () -> Tuple[int, List[HostName]]
+    # type: () -> UpdateDNSCacheResult
     failed = []
 
     ip_lookup_cache = _get_ip_lookup_cache()

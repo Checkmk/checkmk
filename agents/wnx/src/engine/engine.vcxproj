@@ -118,6 +118,7 @@
       </ShowIncludes>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>26444</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -147,6 +148,7 @@
       </ShowIncludes>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>26444</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -177,6 +179,7 @@
       <ShowIncludes>
       </ShowIncludes>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>26444</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -210,6 +213,7 @@
       <ShowIncludes>
       </ShowIncludes>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>26444</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -468,6 +472,7 @@
     <ClCompile Include="..\common\cma_yml.cpp" />
     <ClCompile Include="..\common\object_repo.cpp" />
     <ClCompile Include="..\common\wtools.cpp" />
+    <ClCompile Include="..\common\wtools_service.cpp" />
     <ClCompile Include="..\common\wtools_user_control.cpp" />
     <ClCompile Include="..\common\wtools_runas.cpp" />
     <ClCompile Include="..\lwa\Configuration.cpp" />

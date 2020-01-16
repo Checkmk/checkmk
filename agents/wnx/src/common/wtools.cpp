@@ -30,7 +30,6 @@
 #include "upgrade.h"
 
 namespace wtools {
-
 std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid) {
     auto h = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,  // not on XP
                            FALSE, pid);
@@ -218,8 +217,8 @@ ServiceController::StopType ServiceController::registerAndRun(
         if (!ret) {
             auto error = GetLastError();
 
-            // this normal situation when we are starting service from command
-            // line without parameters
+            // this normal situation when we are starting service from
+            // command line without parameters
             if (error == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT)
                 return StopType::no_connect;
 
@@ -899,8 +898,8 @@ const PERF_OBJECT_TYPE* FindPerfObject(const DataSequence& Db,
     auto object = FindFirstObject(data_block);
 
     for (DWORD i = 0; i < data_block->NumObjectTypes; ++i) {
-        // iterate to the object we requested since apparently there can be more
-        // than that in the buffer returned
+        // iterate to the object we requested since apparently there can be
+        // more than that in the buffer returned
         if (object->ObjectNameTitleIndex == counter_index) {
             return object;
         } else {
@@ -1024,9 +1023,9 @@ static uint64_t GetCounterValueFromBlock(
             return 0;
         case PERF_SIZE_VARIABLE_LEN:
         default: {
-            // handle other data generically. This is wrong in some situation.
-            // Once upon a time in future we might implement a conversion as
-            // described in
+            // handle other data generically. This is wrong in some
+            // situation. Once upon a time in future we might implement a
+            // conversion as described in
             // http://msdn.microsoft.com/en-us/library/aa373178%28v=vs.85%29.aspx
             int size = Counter.CounterSize;
             if (size == 4) return static_cast<uint64_t>(dwords[0]);
@@ -1670,9 +1669,9 @@ HMODULE LoadWindowsLibrary(const std::wstring& DllPath) {
         dllpath_expanded.resize(required - 1);
     }
 
-    // load the library as a datafile without loading referenced dlls. This is
-    // quicker but most of all it prevents problems if dependent dlls can't be
-    // loaded.
+    // load the library as a datafile without loading referenced dlls. This
+    // is quicker but most of all it prevents problems if dependent dlls
+    // can't be loaded.
     return LoadLibraryExW(
         dllpath_expanded.c_str(), nullptr,
         DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
@@ -2402,8 +2401,8 @@ std::wstring GenerateRandomString(size_t max_length) noexcept {
         0, static_cast<int>(possible_characters.size()) - 1);
     std::wstring ret;
     for (size_t i = 0; i < max_length; i++) {
-        int random_index = dist(
-            generator);  // get index between 0 and possible_characters.size()-1
+        int random_index = dist(generator);  // get index between 0 and
+                                             // possible_characters.size()-1
         ret += possible_characters[random_index];
     }
 

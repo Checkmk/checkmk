@@ -393,6 +393,12 @@ TEST(Wtools, KillTree) {
     EXPECT_FALSE(kProcessTreeKillAllowed);
 }
 
+TEST(Wtools, IsHandleValid) {
+    EXPECT_FALSE(IsHandleValid(nullptr));
+    EXPECT_FALSE(IsHandleValid(INVALID_HANDLE_VALUE));
+    EXPECT_TRUE(IsHandleValid(reinterpret_cast<HANDLE>(4)));
+}
+
 TEST(Wtools, Acl) {
     wtools::ACLInfo info("c:\\windows\\notepad.exe");
     auto ret = info.query();

@@ -35,6 +35,28 @@
 namespace wtools {
 constexpr const wchar_t* kWToolsLogName = L"check_mk_wtools.log";
 
+inline bool IsHandleValid(HANDLE h) noexcept {
+    return h != nullptr && h != INVALID_HANDLE_VALUE;
+}
+
+// this is functor to kill any pointer allocated with ::LocalAlloc
+// usually this pointer comes from Windows API
+template <typename T>
+struct LocalAllocDeleter {
+    void operator()(T* r) noexcept {
+        if (r) ::LocalFree(reinterpret_cast<HLOCAL>(r));
+    }
+};
+
+// usage
+#if (0)
+LocalResource<SERVICE_FAILURE_ACTIONS> actions(
+    ::WindowsApiToGetActions(handle_to_service));
+#endif
+//
+template <typename T>
+using LocalResource = std::unique_ptr<T, LocalAllocDeleter<T>>;
+
 // returns <exit_code, 0>, <0, error> or <-1, error>
 std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid);
 
@@ -532,7 +554,7 @@ inline std::string ConvertToUTF8(const std::wstring_view Src) noexcept {
 #else
     // standard but deprecated
     try {
-        return wstring_convert<codecvt_utf8<wchar_t> >().to_bytes(Src);
+        return wstring_convert<codecvt_utf8<wchar_t>>().to_bytes(Src);
     } catch (const exception& e) {
         xlog::l("Failed to convert %ls", Src.c_str());
         return "";

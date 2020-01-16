@@ -461,6 +461,9 @@
     <ClCompile Include="..\common\cma_yml.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\wtools_service.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="unpack_packs.cmd">

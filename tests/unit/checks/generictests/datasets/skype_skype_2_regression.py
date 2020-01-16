@@ -1156,7 +1156,7 @@ checks = {
             'upper': (1.0, 2.0)
         },
         'queue_latency': {
-            'upper': (0.1, 0.2)
+            'upper': (0.0001, 0.2)
         },
         'message_processing_time': {
             'upper': (1.0, 2.0)
@@ -1185,8 +1185,8 @@ checks = {
                                                      2.0, None, None)]),
         (0, '0.00 incoming requests dropped/sec', [('sip_incoming_requests_dropped', 0.0, 1.0, 2.0,
                                                     None, None)]),
-        (0, '0.21 ms queue latency',
-         [('usrv_queue_latency', 0.00020967983362125592, 0.1, 0.2, None, None)]),
+        (1, u'0.21 ms queue latency (warn/crit at 100 \xb5s/200 ms)',
+         [('usrv_queue_latency', 0.00020967983362125592, 0.0001, 0.2, None, None)]),
         (0, '0.00 ms sproc latency', [('usrv_sproc_latency', 1.1562460162588214e-06, 0.1, 0.2, None,
                                        None)]),
         (0, '0.00 throttled requests/sec', [('usrv_throttled_requests', 0.0, 0.2, 0.4, None,

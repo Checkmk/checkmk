@@ -31,7 +31,7 @@ import threading
 import time
 from logging import Logger  # pylint: disable=unused-import
 from pathlib import Path  # pylint: disable=unused-import
-from typing import Any, AnyStr, Dict, List, Optional, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, AnyStr, Dict, Iterable, List, Optional, Tuple, Union  # pylint: disable=unused-import
 
 from cmk.ec.actions import quote_shell_string
 from cmk.ec.query import QueryGET
@@ -78,9 +78,8 @@ class History:
         else:
             _add_files(self, event, what, who, addinfo)
 
-    # TODO: We can't use Query in the type because of cyclic imports... :-/
     def get(self, query):
-        # type: (QueryGET) -> List[Any]
+        # type: (QueryGET) -> Iterable[Any]
         if self._config['archive_mode'] == 'mongodb':
             return _get_mongodb(self, query)
         return _get_files(self, self._logger, query)
@@ -240,7 +239,7 @@ def _log_event(config, logger, event, what, who, addinfo):
 
 
 def _get_mongodb(history, query):
-    # type: (History, QueryGET) -> List[Any]
+    # type: (History, QueryGET) -> Iterable[Any]
     filters, limit = query.filters, query.limit
 
     history_entries = []
@@ -458,7 +457,7 @@ def _expire_logfiles(settings, config, logger, lock_history, flush):
 
 
 def _get_files(history, logger, query):
-    # type: (History, Logger, QueryGET) -> List[Any]
+    # type: (History, Logger, QueryGET) -> Iterable[Any]
     filters, limit = query.filters, query.limit
     history_entries = []  # type: List[Any]
     if not history._settings.paths.history_dir.value.exists():

@@ -35,7 +35,7 @@ import abc
 import ast
 import errno
 import json
-import logging
+from logging import Logger, getLogger
 import os
 from pathlib import Path
 import pprint
@@ -47,7 +47,7 @@ import sys
 import threading
 import time
 import traceback
-from typing import Any, Dict, List, Optional, Tuple, Type, Union  # pylint: disable=unused-import
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, Union  # pylint: disable=unused-import
 
 import cmk
 import cmk.utils.daemon
@@ -68,7 +68,7 @@ from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.exceptions import MKException
 import cmk.utils.store as store
 from cmk.ec.crash_reporting import ECCrashReport, CrashReportStore
-from cmk.ec.query import MKClientError, Query
+from cmk.ec.query import MKClientError, Query, QueryGET
 
 # suppress "Cannot find module" error from mypy
 import livestatus  # type: ignore
@@ -2517,24 +2517,20 @@ class StatusTable:
     # columns of the table
     @abc.abstractmethod
     def _enumerate(self, query):
+        # type: (QueryGET) -> Iterable[List[Any]]
         raise NotImplementedError()
 
     def __init__(self, logger):
+        # type: (Logger) -> None
         super().__init__()
         self._logger = logger.getChild("status_table.%s" % self.prefix)
-        self._populate_column_views()
-
-    def _populate_column_views(self):
-        self.column_names = [c[0] for c in self.columns]
         self.column_defaults = dict(self.columns)
-
-        self.column_types = {}
-        for name, def_val in self.columns:
-            self.column_types[name] = type(def_val)
-
+        self.column_names = [name for name, _def_val in self.columns]
+        self.column_types = {name: type(def_val) for name, def_val in self.columns}
         self.column_indices = {name: index for index, name in enumerate(self.column_names)}
 
     def query(self, query):
+        # type: (QueryGET) -> Iterable[List[Any]]
         requested_column_indexes = query.requested_column_indexes()
 
         # Output the column headers
@@ -2552,7 +2548,7 @@ class StatusTable:
                 num_rows += 1
 
     def _build_result_row(self, row, requested_column_indexes):
-        # type: (List[Any], List[int]) -> List[Any]
+        # type: (List[Any], List[Optional[int]]) -> List[Any]
         return [
             (None if index is None else row[index])  #
             for index in requested_column_indexes
@@ -2590,10 +2586,12 @@ class StatusTableEvents(StatusTable):
     ]
 
     def __init__(self, logger, event_status):
+        # type: (Logger, EventStatus) -> None
         super().__init__(logger)
         self._event_status = event_status
 
     def _enumerate(self, query):
+        # type: (QueryGET) -> Iterable[List[Any]]
         for event in self._event_status.get_events():
             # Optimize filters that are set by the check_mkevents active check. Since users
             # may have a lot of those checks running, it is a good idea to optimize this.
@@ -2622,10 +2620,12 @@ class StatusTableHistory(StatusTable):
     ] + StatusTableEvents.columns
 
     def __init__(self, logger, history):
+        # type: (Logger, cmk.ec.history.History) -> None
         super().__init__(logger)
         self._history = history
 
     def _enumerate(self, query):
+        # type: (QueryGET) -> Iterable[List[Any]]
         return self._history.get(query)
 
 
@@ -2637,10 +2637,12 @@ class StatusTableRules(StatusTable):
     ]
 
     def __init__(self, logger, event_status):
+        # type: (Logger, EventStatus) -> None
         super().__init__(logger)
         self._event_status = event_status
 
     def _enumerate(self, query):
+        # type: (QueryGET) -> Iterable[List[Any]]
         return self._event_status.get_rule_stats()
 
 
@@ -2649,10 +2651,12 @@ class StatusTableStatus(StatusTable):
     columns = EventServer.status_columns()
 
     def __init__(self, logger, event_server):
+        # type: (Logger, EventServer) -> None
         super().__init__(logger)
         self._event_server = event_server
 
     def _enumerate(self, query):
+        # type: (QueryGET) -> Iterable[List[Any]]
         return self._event_server.get_status()
 
 
@@ -2672,6 +2676,7 @@ class StatusTableStatus(StatusTable):
 class StatusServer(ECServerThread):
     def __init__(self, logger, settings, config, slave_status, perfcounters, lock_configuration,
                  history, event_status, event_server, terminate_main_event):
+        # type: (Logger, cmk.ec.settings.Settings, Dict[str, Any], Dict[str, Any], Perfcounters, ECLock, cmk.ec.history.History, EventStatus, EventServer, threading.Event) -> None
         super().__init__(name="StatusServer",
                          logger=logger,
                          settings=settings,
@@ -2679,8 +2684,8 @@ class StatusServer(ECServerThread):
                          slave_status=slave_status,
                          profiling_enabled=settings.options.profile_status,
                          profile_file=settings.paths.status_server_profile.value)
-        self._socket = None
-        self._tcp_socket = None
+        self._socket = None  # type: Optional[socket.socket]
+        self._tcp_socket = None  # type: Optional[socket.socket]
         self._reopen_sockets = False
 
         self._table_events = StatusTableEvents(logger, event_status)
@@ -2699,6 +2704,7 @@ class StatusServer(ECServerThread):
         self.open_tcp_socket()
 
     def table(self, name):
+        # type: (str) -> StatusTable
         if name == "events":
             return self._table_events
         if name == "history":
@@ -2711,6 +2717,7 @@ class StatusServer(ECServerThread):
                             name)
 
     def open_unix_socket(self):
+        # type: () -> None
         path = self.settings.paths.unix_socket.value
         if path.exists():
             path.unlink()
@@ -2723,6 +2730,7 @@ class StatusServer(ECServerThread):
         self._unix_socket_queue_len = self._config['socket_queue_len']  # detect changes in config
 
     def open_tcp_socket(self):
+        # type: () -> None
         if self._config["remote_status"]:
             try:
                 self._tcp_port, self._tcp_allow_commands = self._config["remote_status"][:2]
@@ -2749,16 +2757,19 @@ class StatusServer(ECServerThread):
             self._tcp_access_list = None
 
     def close_unix_socket(self):
+        # type: () -> None
         if self._socket:
             self._socket.close()
             self._socket = None
 
     def close_tcp_socket(self):
+        # type: () -> None
         if self._tcp_socket:
             self._tcp_socket.close()
             self._tcp_socket = None
 
     def reopen_sockets(self):
+        # type: () -> None
         if self._unix_socket_queue_len != self._config["socket_queue_len"]:
             self._logger.info("socket_queue_len has changed. Reopening UNIX socket.")
             self.close_unix_socket()
@@ -3596,11 +3607,13 @@ class EventStatus:
 
 
 def is_replication_slave(config):
+    # type: (Dict[str, Any]) -> bool
     repl_settings = config["replication"]
     return repl_settings and not repl_settings.get("disabled")
 
 
 def replication_allow_command(config, command, slave_status):
+    # type: (Dict[str, Any], str, Dict[str, Any]) -> None
     if is_replication_slave(config) and slave_status["mode"] == "sync" \
        and command in ["DELETE", "UPDATE", "CHANGESTATE", "ACTION"]:
         raise MKClientError("This command is not allowed on a replication slave "
@@ -3721,6 +3734,7 @@ def save_master_config(settings, new_state):
 
 
 def load_master_config(settings, config, logger):
+    # type: (cmk.ec.settings.Settings, Dict[str, Any], Logger) -> None
     path = settings.paths.master_config_file.value
     try:
         config = ast.literal_eval(path.read_text(encoding="utf-8"))
@@ -3735,6 +3749,7 @@ def load_master_config(settings, config, logger):
 
 
 def get_state_from_master(config, slave_status):
+    # type: (Dict[str, Any], Dict[str, Any]) -> None
     repl_settings = config["replication"]
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -3763,10 +3778,12 @@ def get_state_from_master(config, slave_status):
 
 
 def save_slave_status(settings, slave_status):
-    settings.paths.slave_status_file.value.write_bytes(repr(slave_status) + "\n")
+    # type: (cmk.ec.settings.Settings, Dict[str, Any]) -> None
+    settings.paths.slave_status_file.value.write_text(repr(slave_status) + "\n", encoding="utf-8")
 
 
 def default_slave_status_master():
+    # type: () -> Dict[str, Any]
     return {
         "last_sync": 0,
         "last_master_down": None,
@@ -3776,6 +3793,7 @@ def default_slave_status_master():
 
 
 def default_slave_status_sync():
+    # type: () -> Dict[str, Any]
     return {
         "last_sync": 0,
         "last_master_down": None,
@@ -3785,6 +3803,7 @@ def default_slave_status_sync():
 
 
 def update_slave_status(slave_status, settings, config):
+    # type: (Dict[str, Any], cmk.ec.settings.Settings, Dict[str, Any]) -> None
     path = settings.paths.slave_status_file.value
     if is_replication_slave(config):
         try:
@@ -3812,6 +3831,7 @@ def update_slave_status(slave_status, settings, config):
 
 
 def load_configuration(settings, logger, slave_status):
+    # type: (cmk.ec.settings.Settings, Logger, Dict[str, Any]) -> Dict[str, Any]
     config = cmk.ec.rule_packs.load_config(settings)
 
     # If not set by command line, set the log level by configuration
@@ -3871,8 +3891,9 @@ def reload_configuration(settings, logger, lock_configuration, history, event_st
 
 
 def main():
+    # type: () -> None
     os.unsetenv("LANG")
-    logger = logging.getLogger("cmk.mkeventd")
+    logger = getLogger("cmk.mkeventd")
     settings = cmk.ec.settings.settings(cmk.__version__, Path(cmk.utils.paths.omd_root),
                                         Path(cmk.utils.paths.default_config_dir), sys.argv)
 

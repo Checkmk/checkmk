@@ -142,7 +142,7 @@ class QueryGET(Query):
         parts = textspec.split(None, 2)
         if len(parts) == 2:
             parts.append("")
-        column, operator_name, argument = parts
+        column, operator_name, raw_argument = parts
 
         try:
             convert = self.table.column_types[column]
@@ -157,10 +157,8 @@ class QueryGET(Query):
         # Fix this by making the default values unicode and skip unicode conversion
         # here (for performance reasons) because argument is already unicode.
         # TODO: Fix the typing chaos below!
-        if operator_name == 'in':
-            argument = list(map(convert, argument.split()))  # type: ignore[assignment]
-        else:
-            argument = convert(argument)
+        argument = [convert(arg) for arg in raw_argument.split()
+                   ] if operator_name == 'in' else convert(raw_argument)
 
         operator_function = operator_for(operator_name)
         return (column, operator_name, lambda x: operator_function(x, argument), argument)

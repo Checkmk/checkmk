@@ -77,7 +77,7 @@ def render_perfometer_td(perc, color):
     # and use the css opacity for the opacity hex value in float '4d' -> 0.3
     opacity = None
     if len(color) == 9:
-        opacity = int(color[7:], 16)/255.0
+        opacity = int(color[7:], 16) / 255.0
         color = color[:7]
 
     style = ["width: %d%%;" % int(float(perc)), "background-color: %s" % color]

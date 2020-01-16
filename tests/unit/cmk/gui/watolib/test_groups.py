@@ -10,6 +10,7 @@ from cmk.gui.globals import AppContext, RequestContext
 from werkzeug.test import create_environ
 from testlib.utils import DummyApplication
 
+
 @pytest.fixture(autouse=True)
 def patch_config_paths(monkeypatch, tmp_path):
     cmk_confd = tmp_path / "check_mk" / "conf.d"

@@ -949,7 +949,11 @@ class PodList(K8sList[Pod]):
         }
 
     def pods_in_cluster(self):
-        return {'requests': {'pods': len([pod for pod in self if pod.phase not in ["Succeeded", "Failed"]])}}
+        return {
+            'requests': {
+                'pods': len([pod for pod in self if pod.phase not in ["Succeeded", "Failed"]])
+            }
+        }
 
     def info(self):
         return {pod.name: pod.info for pod in self}

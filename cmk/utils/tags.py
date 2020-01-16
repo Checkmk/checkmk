@@ -474,7 +474,7 @@ class TagConfig(object):
 
     def _validate_ids(self):
         """Make sure that no tag key is used twice as aux_tag ID or tag group id"""
-        seen_ids = set()   # type: Set[six.text_type]
+        seen_ids = set()  # type: Set[six.text_type]
         for tag_group in self.tag_groups:
             if tag_group.id in seen_ids:
                 raise MKGeneralException(_("The tag group ID \"%s\" is used twice.") % tag_group.id)

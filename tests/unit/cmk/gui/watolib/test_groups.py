@@ -17,13 +17,13 @@ def patch_config_paths(monkeypatch, tmp_path):
     (gui_confd / "wato").mkdir(parents=True)
 
 
-def test_load_group_information_empty(tmp_path):
+def test_load_group_information_empty(tmp_path, register_builtin_html):
     assert groups.load_contact_group_information() == {}
     assert groups.load_host_group_information() == {}
     assert groups.load_service_group_information() == {}
 
 
-def test_load_group_information(tmp_path):
+def test_load_group_information(tmp_path, register_builtin_html):
     with open(cmk.utils.paths.check_mk_config_dir + "/wato/groups.mk", "w") as f:
         f.write("""# encoding: utf-8
 

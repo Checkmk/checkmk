@@ -23,12 +23,15 @@ def test_del_vars():
         html.del_var_from_env("_username")
         html.del_var_from_env("_password")
 
-        assert html.request.query_string == 'foo=foo&bar=bar'
+        # Make test independent of dict sorting
+        assert html.request.query_string in ['foo=foo&bar=bar', 'bar=bar&foo=foo']
+
         assert '_password' not in html.request.args
         assert '_username' not in html.request.args
 
         # Check the request local proxied version too.
-        assert request.query_string == 'foo=foo&bar=bar'
+        # Make test independent of dict sorting
+        assert request.query_string in ['foo=foo&bar=bar', 'bar=bar&foo=foo']
         assert '_password' not in request.args
         assert '_username' not in request.args
 

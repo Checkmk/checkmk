@@ -31,9 +31,13 @@ import sys
 import argparse
 import json
 import logging
-from typing import List, Dict, Any, Mapping, DefaultDict
+from typing import List, Dict, Any, Mapping, DefaultDict, Optional, Iterator, Tuple
 from collections import OrderedDict, defaultdict
+import math
+from urllib.parse import quote, urljoin
 import requests
+
+PromQLMetric = Dict[str, Any]
 
 LOGGER = logging.getLogger()  # root logger for now
 
@@ -70,15 +74,197 @@ def setup_logging(verbosity):
     logging.basicConfig(level=lvl, format='%(asctime)s %(levelname)s %(message)s')
 
 
-class ABCDataSource:
+class PromQLResponse:
+    def __init__(self, promql_response: List[Dict[str, Any]]) -> None:
+        self.response = promql_response
+
+    def process_single_result(self) -> Dict[str, Any]:
+        """Process the PromQL response which is restricted to 1 single element
+
+        Returns: The queried PromQL metric
+
+        """
+        if len(self.response) == 1 and "value" in self.response[0]:
+            return PromQLResponse._extract_metric_value(self.response[0])
+
+        # different cases for invalid/failed query expression
+        inv_info = {
+            0: "query error",
+            1: "no value",
+        }.get(len(self.response), "unsupported query")
+        return {"invalid_info": inv_info}
+
+    @staticmethod
+    def _extract_metric_value(promql_metric: Dict[str, Any]) -> Dict[str, float]:
+        if "value" in promql_metric:
+            return {"value": promql_metric["value"][1]}
+        return {}
+
+    @staticmethod
+    def _identify_metric_scrape_target(promql_metric_info: PromQLMetric) -> str:
+        promql_metric_labels = promql_metric_info["labels"]
+        scrape_target_name = "%s-%s" % (promql_metric_labels["job"],
+                                        promql_metric_labels["instance"])
+        return scrape_target_name
+
+    @staticmethod
+    def _extract_metric_label(promql_metric_info: PromQLMetric, label_key: str) -> str:
+        return promql_metric_info["labels"][label_key]
+
+    @staticmethod
+    def _extract_metric_labels(metric_labels_dict: Dict[str, str],
+                               promql_labels_subset: List[str]) -> str:
+        metric_labels_holder = ""
+        for promql_label in promql_labels_subset:
+            metric_labels_holder += metric_labels_dict[promql_label]
+        return metric_labels_holder
+
+
+class PromQLMultiResponse(PromQLResponse):
+    """PromQL Response where one or more metric results are expected
     """
-    All Prometheus metrics serving instances will be referred as Exporters.
-    Not to confuse with actual Exporters since some softwares (non Exporters)
-    naturally serve metrics.
-    """
-    def __init__(self, api_client):
-        self.api_client = api_client
-        self._sections = {}
+    def __init__(self, promql_response: List[Dict[str, Any]]) -> None:
+        super(PromQLMultiResponse, self).__init__(promql_response)
+        self.labels_overall_frequencies: Dict[str, Dict[str, float]] = {}
+        self.promql_metrics = self._process_multi_result()
+
+    def get_piggybacked_services(self,
+                                 promql_label_for_piggyback: str = None
+                                ) -> Dict[str, Dict[str, Any]]:
+        """Process PromQL response to get "piggybacked" services
+
+        Args:
+            promql_label_for_piggyback: PromQL label used to determine the piggyback host
+
+        Returns:
+            Dict: where key is the piggyback host and the value is a dict containing the services metrics
+
+        """
+        result: Dict[str, Dict[str, Any]] = {}
+        for promql_metric in self.promql_metrics:
+            if promql_label_for_piggyback is not None:
+                piggyback_host = self._extract_metric_label(promql_metric,
+                                                            promql_label_for_piggyback)
+            else:
+                piggyback_host = self._identify_metric_scrape_target(promql_metric)
+            result.setdefault(piggyback_host, {}).setdefault("service_metrics",
+                                                             []).append(promql_metric)
+        return result
+
+    def get_piggybacked_services_with_least_labels(
+            self,
+            label_for_piggyback: Optional[str] = None) -> Dict[str, Dict[str, Dict[str, Any]]]:
+        """Piggybacked services with subset of unique making PromQL labels
+
+        Args:
+            label_for_piggyback: PromQL label used to determine the piggyback host
+
+        Returns:
+            Piggybacked services dict which additionally includes the subset of PromQL labels
+
+        """
+        piggybacked_services = self.get_piggybacked_services(label_for_piggyback)
+        unique_least_promql_labels = self._get_unique_least_promql_labels()
+        for _piggyback_host_name, services_info in piggybacked_services.items():
+            services_info["unique_labels"] = unique_least_promql_labels
+        return piggybacked_services
+
+    def _process_multi_result(self) -> List[PromQLMetric]:
+        result: List[PromQLMetric] = []
+        if not self.response:
+            return result
+        for metric in self.response:
+            metric_info = PromQLResponse._extract_metric_value(metric)
+            if not metric_info:
+                continue
+            metric_info.update({"labels": metric["metric"]})
+            self._update_labels_overall_frequencies(metric["metric"])
+            result.append(metric_info)
+        return result
+
+    def _update_labels_overall_frequencies(self, metric_labels: Dict[str, str]) -> None:
+        for promql_specific_label, metric_specific_label in metric_labels.items():
+            promql_specific_label_frequencies = self.labels_overall_frequencies.setdefault(
+                promql_specific_label, defaultdict(int))
+            promql_specific_label_frequencies[metric_specific_label] += 1
+            promql_specific_label_frequencies["total_count"] += 1
+
+    def _get_unique_least_promql_labels(self) -> List[str]:
+        information_gains = self._determine_promql_labels_information_gains()
+        promql_labels_by_relevance = PromQLMultiResponse._extract_promql_labels_by_relevance(
+            information_gains)
+        unique_least_labels = self._determine_unique_least_labels_combination(
+            promql_labels_by_relevance)
+        return unique_least_labels
+
+    def _determine_promql_labels_information_gains(self) -> Dict[str, float]:
+        """Calculates the information gain for each PromQL label
+
+        An information gain value of 0 for a PromQL label signifies that all metric labels are the same across the
+        list of metrics. In consequence, a higher information gain value signifies that more distinctive information is
+        gained by analysing this PromQL label.
+
+        """
+        information_gains = {}
+        for promql_label, metric_labels_frequencies in self.labels_overall_frequencies.items():
+            promql_label_total_count = metric_labels_frequencies["total_count"]
+            metric_label_probabilities = [
+                metric_label_count / promql_label_total_count
+                for metric_label, metric_label_count in metric_labels_frequencies.items()
+                if metric_label != "total_count"
+            ]
+            information_gains[promql_label] = sum([
+                PromQLMultiResponse._determine_single_entropy(metric_label_probability)
+                for metric_label_probability in metric_label_probabilities
+            ])
+        return information_gains
+
+    @staticmethod
+    def _determine_single_entropy(p: float) -> float:
+        if p > 1.0 or p <= 0.0:
+            return 0
+        return -p * math.log2(p)
+
+    @staticmethod
+    def _extract_promql_labels_by_relevance(information_gains: Dict[str, float]) -> List[str]:
+        """Creates a list with the PromQL labels sorted by information gain relevance
+        """
+        promql_labels_by_relevance = [
+            a for a, b in sorted(information_gains.items(), key=lambda x: x[1], reverse=True)
+        ]
+        if all(label in promql_labels_by_relevance for label in ("pod", "pod_name")):
+            promql_labels_by_relevance.remove("pod_name")
+        return promql_labels_by_relevance
+
+    def _determine_unique_least_labels_combination(
+            self, promql_labels_by_relevance: List[str]) -> List[str]:
+        """Determines the smallest, valid subset of PromQL labels which allows to uniquely identify
+        each PromQL metric from the PromQL query result set. It should be noted that this approach does not
+        find the exact solution to the underlying problem as the problem cannot be solved in polynomial time (NP-Hard)
+        """
+        promql_labels_subset = []
+
+        for promql_label in promql_labels_by_relevance:
+            promql_labels_subset.append(promql_label)
+            if self._verify_all_unique(promql_labels_subset):
+                return promql_labels_subset
+
+        return promql_labels_by_relevance
+
+    def _verify_all_unique(self, promql_labels_subset: List[str]) -> bool:
+        seen_labels_combination: List[str] = []
+        for promql_metric in self.promql_metrics:
+            metric_labels_dict = promql_metric["labels"]
+            metric_labels_subset = PromQLMultiResponse._extract_metric_labels(
+                metric_labels_dict, promql_labels_subset)
+
+            if metric_labels_subset in seen_labels_combination:
+                # this subset was already seen before meaning that the current selection of promql labels
+                # does not make each metric unique of the given promql query
+                return False
+
+            seen_labels_combination.append(metric_labels_subset)
+        return True
 
 
 class PrometheusServer:
@@ -86,10 +272,10 @@ class PrometheusServer:
     Query and process general information from the Prometheus Server including
     its own status and the connected scrape targets
     """
-    def __init__(self, api_client):
+    def __init__(self, api_client: 'PrometheusAPI') -> None:
         self.api_client = api_client
 
-    def scrape_targets_health(self):
+    def scrape_targets_health(self) -> Dict[str, Dict[str, Any]]:
         result = {}
         for scrape_target_name, attributes in self.api_client.scrape_targets_attributes():
             result[scrape_target_name] = {
@@ -99,7 +285,7 @@ class PrometheusServer:
             }
         return result
 
-    def health(self):
+    def health(self) -> Dict[str, Any]:
         response = self.api_client.query_static_endpoint("/-/healthy")
         return {"status_code": response.status_code, "status_text": response.reason}
 
@@ -108,81 +294,25 @@ class PrometheusAPI:
     """
     Realizes communication with the Prometheus API
     """
-    def __init__(self, server_address):
+    def __init__(self, server_address: str) -> None:
         self.server_address = "http://%s" % server_address
-        self.api_endpoint = "%s/api/v1" % self.server_address
+        self.api_endpoint = "%s/api/v1/" % self.server_address
         self.scrape_targets_dict = self._connected_scrape_targets()
 
-    def perform_multi_result_promql(self, promql_expression, label_for_piggyback=None):
-        """Performs a PromQL query where a multi metric response is expected.
+    def scrape_targets_attributes(self) -> Iterator[Tuple[str, Dict[str, Any]]]:
+        """Format the scrape_targets_dict for information processing
 
-        Args:
-            promql_expression: PromQL query expression
-            label_for_piggyback: Key in order to extract the value from the individual metric labels. This value
-                                 is used as piggyback host name
-
-        Returns: A dictionary where the key is the piggyback host name and the value is a list of processed
-                 metric elements
+        Returns:
+              Tuples consisting of the Scrape Target name and its general attributes. The
+              job-instance labels combination is hereby omitted
 
         """
-        try:
-            promql_response = self.query_promql(promql_expression)
-        except (KeyError, ValueError, requests.exceptions.Timeout) as exc:
-            LOGGER.exception(exc)
-            return {}
+        for _scrape_target_label, info in self.scrape_targets_dict.items():
+            scrape_target_name = info["name"]
+            yield scrape_target_name, info["attributes"]
 
-        result = {}
-        metric_label_collection = []  # in preparation label extraction algorithm
-        for metric_info in self._process_multi_result(promql_response):
-            metric_label_collection.append(metric_info["labels"])
-
-            if label_for_piggyback is not None:
-                piggyback_host = self.extract_metric_label(metric_info, label_for_piggyback)
-            else:
-                piggyback_host = self.identify_metric_origin(metric_info)
-
-            result.setdefault(piggyback_host, {}).setdefault("service_metrics",
-                                                             []).append(metric_info)
-        return result
-
-    def _process_multi_result(self, promql_response):
-        """Processes the individual metrics from the PromQL query response
-
-        Args:
-            promql_response: List resulting from the PromQL query response
-
-        Returns: The processed individual metrics
-
-        """
-        for metric in promql_response:
-            metric_info = self._process_single_result([metric])
-
-            if "invalid_info" in metric_info:
-                continue
-
-            metric_info.update({"labels": (metric["metric"])})
-            yield metric_info
-
-    @staticmethod
-    def _process_single_result(promql_response):
-        """Obtain the metric value of the PromQL query response
-
-        Args:
-            promql_response: Dict which contains the metric information
-
-        Returns: Single Metric Value or Error details of failed attempt
-        """
-        if len(promql_response) == 1 and "value" in promql_response[0]:
-            return {"value": promql_response[0]["value"][1]}
-
-        # different cases for invalid/failed query expression
-        inv_info = {
-            0: "query error",
-            1: "no value",
-        }.get(len(promql_response), "unsupported query")
-        return {"invalid_info": inv_info}
-
-    def perform_specified_promql_queries(self, custom_services):
+    def perform_specified_promql_queries(
+            self, custom_services: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
         """Prepare Host & Piggyback data from custom defined PromQL expressions
 
         For custom Prometheus services, only allow PromQL expressions which
@@ -198,7 +328,7 @@ class PrometheusAPI:
                  contains the information of one service including the service metrics
 
         """
-        result: Dict[str, Dict] = {}
+        result: Dict[str, Dict[str, Any]] = {}
         for service in custom_services:
             # Per default assign resulting service to Prometheus Host
             host_name = service.get("host_name", "")
@@ -211,15 +341,12 @@ class PrometheusAPI:
                     "name": metric["metric_name"],
                     "promql_query": metric["promql_query"]
                 }
-                if "metric_label" in metric:
-                    metric_info.update({"label": metric["metric_label"]})
-
                 try:
-                    promql_response = self.query_promql(metric["promql_query"])
+                    promql_response = PromQLResponse(self._query_promql(metric["promql_query"]))
                 except (KeyError, ValueError, requests.exceptions.Timeout) as exc:
-                    LOGGER.warning(exc)
+                    LOGGER.exception(exc)
                     continue
-                metric_info.update(self._process_single_result(promql_response))
+                metric_info.update(promql_response.process_single_result())
                 service_metrics.append(metric_info)
 
             host_services[service_description] = {
@@ -227,48 +354,7 @@ class PrometheusAPI:
             }
         return result
 
-    @staticmethod
-    def _process_json_request(request):
-        response = requests.get(request)
-        response.raise_for_status()
-        return response.json()
-
-    @staticmethod
-    def extract_metric_label(promql_metric_info, label_key):
-        return promql_metric_info["labels"][label_key]
-
-    @staticmethod
-    def identify_metric_origin(promql_metric_info):
-        return "{job}-{instance}".format(**promql_metric_info["metric"])
-
-    def query_promql(self, promql):
-        """Query the Prometheus API using a PromQL Expression expecting a json response
-
-        Args:
-            promql: Param which contains the PromQL Expression
-
-        Returns:
-            Returns a list of dictionaries with each containing information about the specific metric
-        """
-        promql_request = "%s/query?query=%s" % (self.api_endpoint, promql)
-        result = self._process_json_request(promql_request)["data"]["result"]
-        return result
-
-    def query_json_endpoint(self, endpoint):
-        """Query the given endpoint of the Prometheus API expecting a json response
-
-        Args:
-            endpoint: Param which contains the Prometheus API endpoint to be queried
-
-        Returns:
-            Returns a response object containing the json response
-        """
-
-        endpoint_request = "%s%s" % (self.server_address, endpoint)
-        result = self._process_json_request(endpoint_request)
-        return result
-
-    def query_static_endpoint(self, endpoint):
+    def query_static_endpoint(self, endpoint: str) -> requests.models.Response:
         """Query the given endpoint of the Prometheus API expecting a text response
 
         Args:
@@ -277,47 +363,49 @@ class PrometheusAPI:
         Returns:
             Returns a response object containing the status code and description
         """
-
         endpoint_request = "%s%s" % (self.server_address, endpoint)
         response = requests.get(endpoint_request)
         response.raise_for_status()
         return response
 
-    def scrape_targets_attributes(self):
-        """Format the scrape_targets_dict for information processing
-
-        Returns:
-              Tuples consisting of the Scrape Target name and its general attributes. The
-              job-instance labels combination is hereby omitted
-
+    def perform_multi_result_promql(self, promql_expression: str) -> Optional[PromQLMultiResponse]:
+        """Performs a PromQL query where multi metrics response is allowed
         """
-        for _scrape_target_label, info in self.scrape_targets_dict.items():
-            scrape_target_name = info["name"]
-            yield scrape_target_name, info["attributes"]
+        try:
+            promql_response = PromQLMultiResponse(self._query_promql(promql_expression))
+        except (KeyError, ValueError, requests.exceptions.Timeout) as exc:
+            logging.exception(exc)
+            return None
 
-    def _connected_scrape_targets(self):
+        return promql_response
+
+    def _query_promql(self, promql: str) -> List[Dict[str, Any]]:
+        api_query_expression = "query?query=%s" % quote(promql)
+        promql_request = urljoin(self.api_endpoint, api_query_expression)
+        result = self._process_json_request(promql_request)["data"]["result"]
+        return result
+
+    def _query_json_endpoint(self, endpoint: str) -> Dict[str, Any]:
+        """Query the given endpoint of the Prometheus API expecting a json response
+        """
+        endpoint_request = "%s%s" % (self.server_address, endpoint)
+        result = self._process_json_request(endpoint_request)
+        return result
+
+    def _connected_scrape_targets(self) -> Dict[str, Any]:
         """Query and parse the information concerning the connected Scrape Targets
-
-        Returns:
-            A dictionary having the job-instance labels combination of each scrape target
-            as keys and the values being dictionaries including the name and the general attributes
-            of the scrape target. Having the job-label combination allows to unique identify each scrape
-            target
         """
-        result = self.query_json_endpoint("/api/v1/targets")
+        result = self._query_json_endpoint("/api/v1/targets")
         scrape_targets = self.test(result)
         return scrape_targets
 
-    def test(self, result):
-        """
+    @staticmethod
+    def _process_json_request(request: str) -> Dict[str, Any]:
+        response = requests.get(request)
+        response.raise_for_status()
+        return response.json()
 
-        Args:
-            result:
-
-        Returns:
-
-
-        """
+    def test(self, result: Dict[str, Any]) -> Dict[str, Any]:
         scrape_targets = {}
         scrape_target_names: DefaultDict[str, int] = defaultdict(int)
         for scrape_target_info in result["data"]["activeTargets"]:
@@ -414,30 +502,30 @@ class ApiData:
     Hub for all various metrics coming from different sources including the Prometheus
     Server & the Prometheus Exporters
     """
-    def __init__(self, api_client):
+    def __init__(self, api_client: PrometheusAPI) -> None:
         self.api_client = api_client
         self.prometheus_server = PrometheusServer(api_client)
 
-    def promql_section(self, custom_services):
+    def promql_section(self, custom_services: List[Dict[str, Any]]) -> str:
         logging.info("Prometheus PromQl queries")
         e = PiggybackGroup()
         e.join('prometheus_custom',
                self.api_client.perform_specified_promql_queries(custom_services))
         return '\n'.join(e.output())
 
-    def server_info_section(self):
+    def server_info_section(self) -> str:
         logging.info('Prometheus Server Info')
         g = PiggybackHost()
         g.get('prometheus_api_server').insert(self.prometheus_server.health())
         return '\n'.join(g.output())
 
-    def scrape_targets_section(self):
+    def scrape_targets_section(self) -> str:
         e = PiggybackGroup()
         e.join('prometheus_scrape_target', self.prometheus_server.scrape_targets_health())
         return '\n'.join(e.output())
 
 
-def _extract_config_args(config):
+def _extract_config_args(config) -> Dict[str, Any]:
     server_address = config["host_address"]
     if "port" in config:
         server_address += ":%s" % config["port"]
@@ -469,7 +557,6 @@ def main(argv=None):
         print(api_data.server_info_section())
         print(api_data.scrape_targets_section())
         print(api_data.promql_section(config_args["custom_services"]))
-
     except Exception as e:
         if args.debug:
             raise

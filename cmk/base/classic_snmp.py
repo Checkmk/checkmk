@@ -27,7 +27,7 @@
 import os
 import subprocess
 import signal
-from typing import Optional  # pylint: disable=unused-import
+from typing import List, Optional  # pylint: disable=unused-import
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
@@ -35,10 +35,14 @@ from cmk.utils.exceptions import MKGeneralException, MKTimeout
 import cmk.base.console as console
 import cmk.base.snmp_utils as snmp_utils
 from cmk.base.exceptions import MKSNMPError
+from cmk.base.snmp_utils import (  # pylint: disable=unused-import
+    SNMPHostConfig, ContextName, RawValue, SNMPCommunity, OID,
+)
 
 
 class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
     def get(self, snmp_config, oid, context_name=None):
+        # type: (SNMPHostConfig, OID, Optional[ContextName]) -> Optional[RawValue]
         if oid.endswith(".*"):
             oid_prefix = oid[:-2]
             commandtype = "getnext"
@@ -63,6 +67,8 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE)
         exitstatus = snmp_process.wait()
+        if snmp_process.stderr is None or snmp_process.stdout is None:
+            raise TypeError()
         if exitstatus:
             console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error\n")
             console.verbose(snmp_process.stderr.read() + "\n")
@@ -73,6 +79,7 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
             console.verbose("Error in response to snmpget.\n")
             return None
 
+        value = None  # type: Optional[RawValue]
         item, value = line.split("=", 1)
         value = value.strip()
         console.vverbose("SNMP answer: ==> [%s]\n" % value)
@@ -148,6 +155,10 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
         return rowinfo
 
     def _get_rowinfo_from_snmp_process(self, snmp_process):
+        # type: (subprocess.Popen) -> snmp_utils.SNMPRowInfo
+        if snmp_process.stdout is None:
+            raise TypeError()
+
         line_iter = snmp_process.stdout
         # Ugly(1): in some cases snmpwalk inserts line feed within one
         # dataset. This happens for example on hexdump outputs longer
@@ -197,6 +208,7 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
         return ":%d" % snmp_config.port
 
     def _snmp_walk_command(self, snmp_config, context_name):
+        # type: (snmp_utils.SNMPHostConfig, Optional[ContextName]) -> List[str]
         """Returns command lines for snmpwalk and snmpget
 
         Including options for authentication. This handles communities and
@@ -213,6 +225,7 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
     # (5) privacy protocol (DES|AES) (-x)
     # (6) privacy protocol pass phrase (-X)
     def _snmp_base_command(self, what, snmp_config, context_name):
+        # type: (str, snmp_utils.SNMPHostConfig, Optional[ContextName]) -> List[str]
         options = []
 
         if what == 'get':
@@ -238,6 +251,8 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
                 else:
                     options.append('-v1')
 
+            if not isinstance(snmp_config.credentials, str):
+                raise TypeError()
             options += ["-c", snmp_config.credentials]
 
         else:
@@ -292,6 +307,7 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
 
 
 def strip_snmp_value(value):
+    # type: (str) -> RawValue
     v = value.strip()
     if v.startswith('"'):
         v = v[1:-1]
@@ -306,6 +322,7 @@ def strip_snmp_value(value):
 
 
 def _is_hex_string(value):
+    # type: (str) -> bool
     # as far as I remember, snmpwalk puts a trailing space within
     # the quotes in case of hex strings. So we require that space
     # to be present in order make sure, we really deal with a hex string.
@@ -325,6 +342,7 @@ def _is_hex_string(value):
 
 
 def _convert_from_hex(value):
+    # type: (str) -> str
     hexparts = value.split()
     r = ""
     for hx in hexparts:

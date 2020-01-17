@@ -225,6 +225,9 @@ PYTHON_MODULES_LIST += swagger_ui_bundle-0.0.6.tar.gz
 # patched version without dependency on pathlib
 # PYTHON_MODULES_LIST += connexion-2.4.0.tar.gz
 PYTHON_MODULES_LIST += connexion-2018.0.dev1.tar.gz
+# For forecasting graphs
+PYTHON_MODULES_LIST += numpy-1.16.6.tar.gz
+
 
 # NOTE: Setting SODIUM_INSTALL variable below is an extremely cruel hack to
 # avoid installing libsodium headers and libraries. The need for this hack

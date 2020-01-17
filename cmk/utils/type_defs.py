@@ -35,6 +35,7 @@ ServicegroupName = str
 TimeperiodName = str
 MetricName = str
 CheckPluginName = str
+InventoryPluginName = str
 ActiveCheckPluginName = str
 Item = Optional[Text]
 TagValue = str

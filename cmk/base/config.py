@@ -96,6 +96,7 @@ AgentTargetVersion = Union[None, Text, Tuple[str, str], Tuple[str, Dict[str, str
 RRDConfig = Dict[str, Any]
 CheckContext = Dict[str, Any]
 GetCheckApiContext = Callable[[], Dict[str, Any]]
+GetInventoryApiContext = Callable[[], Dict[str, Any]]
 CheckIncludes = List[str]
 Ruleset = List  # TODO: Improve this type
 TagValue = str

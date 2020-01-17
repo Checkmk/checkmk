@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import os
-from typing import Any, Dict  # pylint: disable=unused-import
+from typing import Any, Dict, Set, Iterator, Tuple  # pylint: disable=unused-import
 
 import cmk.utils.paths
 import cmk.utils.debug
@@ -35,6 +35,9 @@ import cmk.base.config as config
 import cmk.base.console as console
 import cmk.base.check_utils
 
+from cmk.utils.type_defs import CheckPluginName, InventoryPluginName  # pylint: disable=unused-import
+InventoryInfo = Dict[str, Any]
+
 # Inventory plugins have dependencies to check plugins and the inventory
 # plugins need the check API. This is the easiest solution to get this
 # working at the moment. In future some kind of OOP approach would be better.
@@ -42,7 +45,7 @@ import cmk.base.check_utils
 #from cmk.base.config import *
 
 # Inventory plugins
-inv_info = {}  # type: Dict[str, Dict[str, Any]]
+inv_info = {}  # type: Dict[InventoryPluginName, InventoryInfo]
 # Inventory export hooks
 inv_export = {}  # type: Dict[str, Dict[str, Any]]
 # The checks are loaded into this dictionary. Each check
@@ -53,7 +56,8 @@ _include_contexts = {}  # type: Dict[str, Any]
 
 
 def load_plugins(get_check_api_context, get_inventory_context):
-    loaded_files = set()
+    # type: (config.GetCheckApiContext, config.GetInventoryApiContext) -> None
+    loaded_files = set()  # type: Set[str]
     filelist = config.get_plugin_paths(str(cmk.utils.paths.local_inventory_dir),
                                        cmk.utils.paths.inventory_dir)
 
@@ -86,6 +90,7 @@ def load_plugins(get_check_api_context, get_inventory_context):
 
 
 def _new_inv_context(get_check_api_context, get_inventory_context):
+    # type: (config.GetCheckApiContext, config.GetInventoryApiContext) -> Dict
     # Add the data structures where the inventory plugins register with Check_MK
     context = {
         "inv_info": inv_info,
@@ -104,6 +109,7 @@ def _new_inv_context(get_check_api_context, get_inventory_context):
 # Working with imports when specifying the includes would be much cleaner,
 # sure. But we need to deal with the current check API.
 def _load_plugin_includes(check_file_path, plugin_context):
+    # type: (str, Dict) -> None
     for name in config.includes_of_plugin(check_file_path):
         path = _include_file_path(name)
         try:
@@ -115,6 +121,7 @@ def _load_plugin_includes(check_file_path, plugin_context):
 
 
 def _include_file_path(name):
+    # type: (str) -> str
     local_path = cmk.utils.paths.local_inventory_dir / name
     if local_path.exists():
         return str(local_path)
@@ -125,18 +132,19 @@ def _include_file_path(name):
     return config.check_include_file_path(name)
 
 
-def is_snmp_plugin(plugin_type):
-    section_name = cmk.base.check_utils.section_name_of(plugin_type)
+def is_snmp_plugin(check_plugin_name):
+    # type: (str) -> bool
+    section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
     return "snmp_info" in inv_info.get(section_name, {}) \
-           or cmk.base.check_utils.is_snmp_check(plugin_type)
+           or cmk.base.check_utils.is_snmp_check(check_plugin_name)
 
 
 def sorted_inventory_plugins():
-
+    # type: () -> Iterator[Tuple[CheckPluginName, InventoryInfo]]
     # First resolve *all* dependencies. This ensures that there
     # are no cyclic dependencies, and that the 'depends on'
     # relation is transitive.
-    resolved_dependencies = {}
+    resolved_dependencies = {}  # type: Dict[str, Set[str]]
 
     def resolve_plugin_dependencies(plugin_name, known_dependencies=None):
         '''recursively aggregate all plugin dependencies'''
@@ -166,7 +174,7 @@ def sorted_inventory_plugins():
     # the 'depends on' relation. That means we can iteratively
     # yield the minimal elements
     remaining_plugins = set(inv_info.keys())
-    yielded_plugins = set()
+    yielded_plugins = set()  # type: Set[str]
     while remaining_plugins:
         for plugin_name in sorted(remaining_plugins):
             dependencies = resolved_dependencies[plugin_name]

@@ -1097,7 +1097,8 @@ class RulespecRegistry(cmk.utils.plugin_registry.InstanceRegistry):
         return Rulespec
 
     def plugin_name(self, instance):
-        # type: (Rulespec) -> str
+        # type: (Any) -> str
+        # not-yet-a-type: (Rulespec) -> str
         return instance.name
 
     def get_by_group(self, group_name):
@@ -1120,7 +1121,8 @@ class RulespecRegistry(cmk.utils.plugin_registry.InstanceRegistry):
         return list(set(gc.group_name for gc in self.values()))
 
     def register(self, instance):
-        # type: (Rulespec) -> None
+        # type: (Any) -> Any
+        # not-yet-a-type: (Rulespec) -> None
         if not isinstance(instance, Rulespec):
             raise MKGeneralException(_("Tried to register incompatible rulespec: %r") % instance)
 
@@ -1135,7 +1137,7 @@ class RulespecRegistry(cmk.utils.plugin_registry.InstanceRegistry):
 
                 super(RulespecRegistry, self).register(manual_instance)
 
-        super(RulespecRegistry, self).register(instance)
+        return super(RulespecRegistry, self).register(instance)
 
     def register_without_manual_check_rulespec(self, instance):
         # type: (Rulespec) -> None

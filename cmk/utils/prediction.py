@@ -50,6 +50,7 @@ TimeSeriesValues = List[TimeSeriesValue]
 ConsolidationFunctionName = str
 Timegroup = str
 EstimatedLevels = List[Optional[float]]
+PredictionInfo = Dict  # TODO: improve this type
 
 
 def is_dst(timestamp):
@@ -297,19 +298,11 @@ def rrd_datacolum(hostname, service_description, varname, cf):
     return time_boundaries
 
 
-def predictions_dir(hostname, service_description, dsname, create=False):
-    # type: (HostName, ServiceName, MetricName, bool) -> Optional[Text]
-    pred_dir = os.path.join(cmk.utils.paths.var_dir, "prediction", hostname,
-                            cmk.utils.pnp_cleanup(service_description.encode("utf-8")),
-                            cmk.utils.pnp_cleanup(dsname))
-
-    if not os.path.exists(pred_dir):
-        if create:
-            os.makedirs(pred_dir)
-        else:
-            return None
-
-    return pred_dir
+def predictions_dir(hostname, service_description, dsname):
+    # type: (HostName, ServiceName, MetricName) -> str
+    return os.path.join(cmk.utils.paths.var_dir, "prediction", hostname,
+                        cmk.utils.pnp_cleanup(service_description.encode("utf-8")),
+                        cmk.utils.pnp_cleanup(dsname))
 
 
 def clean_prediction_files(pred_file, force=False):
@@ -324,7 +317,7 @@ def clean_prediction_files(pred_file, force=False):
 
 
 def retrieve_data_for_prediction(info_file, timegroup):
-    # type: (Text, Timegroup) -> None
+    # type: (Text, Timegroup) -> Optional[PredictionInfo]
     try:
         return json.loads(open(info_file).read())
     except IOError:
@@ -337,7 +330,7 @@ def retrieve_data_for_prediction(info_file, timegroup):
 
 
 def estimate_levels(reference, params, levels_factor):
-    # type: (Dict[str, int], Dict, int) -> Tuple[int, EstimatedLevels]
+    # type: (Dict[str, int], Dict, float) -> Tuple[int, EstimatedLevels]
     ref_value = reference["average"]
     if not ref_value:  # No reference data available
         return ref_value, [None, None, None, None]
@@ -359,7 +352,7 @@ def estimate_levels(reference, params, levels_factor):
 
 
 def estimate_level_bounds(ref_value, stdev, sig, params, levels_factor):
-    # type: (int, int, int, Dict, int) -> Tuple[float, float]
+    # type: (int, int, int, Dict, float) -> Tuple[float, float]
     how, (warn, crit) = params
     if how == "absolute":
         return (

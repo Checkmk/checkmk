@@ -68,7 +68,7 @@ from cmk.gui.plugins.sidebar.utils import (  # pylint: disable=unused-import
 
 from cmk.gui.plugins.sidebar.quicksearch import QuicksearchMatchPlugin  # pylint: disable=unused-import
 
-quicksearch_match_plugins = []  # type: List[QuicksearchMatchPlugin]
+quicksearch_match_plugins = []  # type: List[Type[QuicksearchMatchPlugin]]
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
@@ -294,7 +294,7 @@ class UserSidebarSnapin(object):
     """An instance of a snapin that is configured in the users sidebar"""
     @staticmethod
     def from_config(cfg):
-        # type: (Dict[str, Type[cmk.gui.plugins.sidebar.SidebarSnapin]]) -> UserSidebarSnapin
+        # type: (Dict[str, Any]) -> UserSidebarSnapin
         """ Construct a UserSidebarSnapin object from the persisted data structure"""
         snapin_class = snapin_registry[cfg["snapin_type_id"]]
         return UserSidebarSnapin(snapin_class, SnapinVisibility(cfg["visibility"]))

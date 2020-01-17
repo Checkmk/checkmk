@@ -27,7 +27,7 @@
 import sys
 import textwrap
 import getopt
-from typing import Optional, Dict, List  # pylint: disable=unused-import
+from typing import Union, Tuple, Callable, Optional, Dict, List  # pylint: disable=unused-import
 
 from cmk.utils.plugin_loader import load_plugins
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
@@ -35,23 +35,37 @@ from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
 
 import cmk.base.config as config
 
+OptionSpec = str
+Argument = str
+OptionName = str
+OptionFunction = Callable
+ModeFunction = Callable
+ConvertFunction = Callable
+Options = List[Tuple[OptionSpec, Argument]]
+Arguments = List[str]
+
 
 class Modes(object):
     def __init__(self):
+        # type: () -> None
         # TODO: This disable is needed because of a pylint bug. Remove one day.
         super(Modes, self).__init__()  # pylint: disable=bad-super-call
-        self._mode_map = {}
-        self._modes = []
-        self._general_options = []
+        self._mode_map = {}  # type: Dict[OptionName, Mode]
+        self._modes = []  # type: List[Mode]
+        self._general_options = []  # type: List[Option]
 
     def register(self, mode):
+        # type: (Mode) -> None
         self._modes.append(mode)
 
         self._mode_map[mode.long_option] = mode
         if mode.has_short_option():
+            if mode.short_option is None:
+                raise TypeError()
             self._mode_map[mode.short_option] = mode
 
     def exists(self, opt):
+        # type: (OptionName) -> bool
         try:
             self._get(opt)
             return True
@@ -59,10 +73,11 @@ class Modes(object):
             return False
 
     def call(self, opt, arg, all_opts, all_args):
+        # type: (str, Optional[Argument], Options, Arguments) -> int
         mode = self._get(opt)
         sub_options = mode.get_sub_options(all_opts)
 
-        handler_args = []
+        handler_args = []  # type: List
         if mode.sub_options:
             handler_args.append(sub_options)
 
@@ -71,13 +86,19 @@ class Modes(object):
         elif mode.argument:
             handler_args.append(arg)
 
-        return mode.handler_function(*handler_args)
+        handler = mode.handler_function
+        if handler is None:
+            raise TypeError()
+
+        return handler(*handler_args)
 
     def _get(self, opt):
+        # type: (str) -> Mode
         opt_name = self._strip_dashes(opt)
         return self._mode_map[opt_name]
 
     def _strip_dashes(self, opt):
+        # type: (str) -> str
         if opt.startswith("--"):
             return opt[2:]
         elif opt.startswith("-"):
@@ -86,9 +107,11 @@ class Modes(object):
             raise NotImplementedError()
 
     def get(self, name):
+        # type: (OptionName) -> Mode
         return self._mode_map[name]
 
     def short_getopt_specs(self):
+        # type: () -> str
         options = ""
         for mode in self._modes:
             options += "".join(mode.short_getopt_specs())
@@ -97,7 +120,8 @@ class Modes(object):
         return options
 
     def long_getopt_specs(self):
-        options = []
+        # type: () -> List[str]
+        options = []  # type: List[str]
         for mode in self._modes:
             options += mode.long_getopt_specs()
         for option in self._general_options:
@@ -105,6 +129,7 @@ class Modes(object):
         return options
 
     def short_help(self):
+        # type: () -> str
         texts = []
         for mode in self._modes:
             text = mode.short_help_text(" cmk %-36s")
@@ -113,6 +138,7 @@ class Modes(object):
         return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
     def long_help(self):
+        # type: () -> str
         texts = []
         for mode in self._modes:
             text = mode.long_help_text()
@@ -121,14 +147,16 @@ class Modes(object):
         return "\n\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
     def non_config_options(self):
-        options = []
+        # type: () -> List[str]
+        options = []  # type: List[str]
         for mode in self._modes:
             if not mode.needs_config:
                 options += mode.options()
         return options
 
     def non_checks_options(self):
-        options = []
+        # type: () -> List[str]
+        options = []  # type: List[str]
         for mode in self._modes:
             if not mode.needs_checks:
                 options += mode.options()
@@ -170,13 +198,18 @@ class Modes(object):
     #
 
     def register_general_option(self, option):
+        # type: (Option) -> None
         self._general_options.append(option)
 
     def process_general_options(self, all_opts):
+        # type: (Options) -> None
         for o, a in all_opts:
             option = self._get_general_option(o)
             if not option:
                 continue
+
+            if option.handler_function is None:
+                raise TypeError()
 
             if option.takes_argument():
                 option.handler_function(a)
@@ -184,6 +217,7 @@ class Modes(object):
                 option.handler_function()
 
     def general_option_help(self):
+        # type: () -> str
         texts = []
         for option in self._general_options:
             text = option.short_help_text(fmt="  %-21s")
@@ -192,6 +226,7 @@ class Modes(object):
         return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
     def _get_general_option(self, opt):
+        # type: (str) -> Optional[Option]
         opt_name = self._strip_dashes(opt)
         for option in self._general_options:
             if opt_name == option.long_option or opt_name == option.short_option:
@@ -210,6 +245,7 @@ class Option(object):
                  argument_optional=False,
                  count=False,
                  handler_function=None):
+        # type: (str, str, str, bool, str, ConvertFunction, bool, bool, OptionFunction) -> None
         # TODO: This disable is needed because of a pylint bug. Remove one day.
         super(Option, self).__init__()  # pylint: disable=bad-super-call
         self.long_option = long_option
@@ -228,9 +264,11 @@ class Option(object):
         self.handler_function = handler_function
 
     def name(self):
+        # type: () -> str
         return self.long_option
 
     def options(self):
+        # type: () -> List[str]
         options = []
         if self.short_option:
             options.append("-%s" % self.short_option)
@@ -238,14 +276,17 @@ class Option(object):
         return options
 
     def has_short_option(self):
+        # type: () -> bool
         return self.short_option is not None
 
     def takes_argument(self):
+        # type: () -> bool
         return self.argument
 
     def short_help_text(self, fmt):
+        # type: (str) -> Optional[str]
         if self.short_help is None:
-            return
+            return None
 
         option_txt = " %s" % (", ".join(self.options()))
 
@@ -267,15 +308,19 @@ class Option(object):
         return wrapper.fill(self.short_help)
 
     def short_getopt_specs(self):
+        # type: () -> List[str]
         if not self.has_short_option():
             return []
 
         spec = self.short_option
+        if spec is None:
+            raise TypeError()
         if self.argument and not self.argument_optional:
             spec += ":"
         return [spec]
 
     def long_getopt_specs(self):
+        # type: () -> List[str]
         spec = self.long_option
         if self.argument and not self.argument_optional:
             spec += "="
@@ -296,6 +341,7 @@ class Mode(Option):
                  needs_config=True,
                  needs_checks=True,
                  sub_options=None):
+        # type: (OptionName, ModeFunction, str, Optional[OptionName], bool, Optional[str], ConvertFunction, bool, Optional[List[str]], bool, bool, Optional[List[Option]]) -> None
         # TODO: This disable is needed because of a pylint bug. Remove one day.
         # pylint: disable=bad-super-call
         super(Mode, self).__init__(long_option,
@@ -312,6 +358,7 @@ class Mode(Option):
         self.sub_options = sub_options or []
 
     def short_getopt_specs(self):
+        # type: () -> List[str]
         # TODO: This disable is needed because of a pylint bug. Remove one day.
         specs = super(Mode, self).short_getopt_specs()  # pylint: disable=bad-super-call
         for option in self.sub_options:
@@ -319,6 +366,7 @@ class Mode(Option):
         return specs
 
     def long_getopt_specs(self):
+        # type: () -> List[str]
         # TODO: This disable is needed because of a pylint bug. Remove one day.
         specs = super(Mode, self).long_getopt_specs()  # pylint: disable=bad-super-call
         for option in self.sub_options:
@@ -330,10 +378,11 @@ class Mode(Option):
     #  hosts. If you add the option -f, --force then persisted sections
     #  will be used even if they are outdated.
     def long_help_text(self):
+        # type: () -> Optional[str]
         if not self.long_help and not self.sub_options:
-            return
+            return None
 
-        text = []
+        text = []  # type: List[str]
 
         option_text = "  "
         if self.short_option:
@@ -359,16 +408,19 @@ class Mode(Option):
         if self.sub_options:
             sub_texts = []
             for option in self.sub_options:
-                sub_texts.append(option.short_help_text(fmt="    %-21s"))
+                short_help_text = option.short_help_text(fmt="    %-21s")
+                if short_help_text is not None:
+                    sub_texts.append(short_help_text)
             text.append("    Additional options:\n\n%s" % "\n".join(sub_texts))
 
         return "\n\n".join(text)
 
     def get_sub_options(self, all_opts):
+        # type: (Options) -> Optional[Dict[OptionName, Union[Argument, int, bool]]]
         if not self.sub_options:
-            return
+            return None
 
-        options = {}
+        options = {}  # type: Dict[OptionName, Union[Argument, int, bool]]
 
         for o, a in all_opts:
             for option in self.sub_options:
@@ -378,21 +430,24 @@ class Mode(Option):
                 if a and not option.takes_argument():
                     raise MKGeneralException("No argument to %s expected." % o)
 
+                val = a  # type: Union[Argument, bool]
                 if not option.takes_argument():
                     if option.count:
-                        options.setdefault(option.name(), 0)
-                        options[option.name()] += 1
+                        value = options.setdefault(option.name(), 0)
+                        if not isinstance(value, int):
+                            raise TypeError()
+                        options[option.name()] = value + 1
                         continue
                     else:
-                        a = True
+                        val = True
                 else:
                     if option.argument_conv:
                         try:
-                            a = option.argument_conv(a)
+                            val = option.argument_conv(a)
                         except ValueError:
                             raise MKGeneralException("%s: Invalid argument" % o)
 
-                options[option.name()] = a
+                options[option.name()] = val
 
         return options
 

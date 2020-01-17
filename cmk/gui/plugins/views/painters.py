@@ -4522,9 +4522,7 @@ class PainterLogPluginOutput(Painter):
 
     @property
     def columns(self):
-        return [
-            'log_plugin_output', 'log_type', 'log_state_type', 'log_comment', 'custom_variables'
-        ]
+        return ['log_plugin_output', 'log_type', 'log_state_type', 'log_comment']
 
     def render(self, row, cell):
         output = row["log_plugin_output"]

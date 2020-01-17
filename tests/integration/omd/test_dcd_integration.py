@@ -15,8 +15,8 @@ def test_dcd_path(site):
 
 
 def test_dcd_version(site):
-    p = site.execute(["dcd", "-V"], stderr=subprocess.PIPE)
-    version = p.stderr.read()
+    p = site.execute(["dcd", "-V"], stdout=subprocess.PIPE)
+    version = p.stdout.read()
     assert version.startswith("dcd version %s" % site.version.version)
 
 

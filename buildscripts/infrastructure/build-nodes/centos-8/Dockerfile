@@ -77,6 +77,8 @@ RUN cd /opt \
 RUN yum -y makecache \
     && yum -y install \
         chrpath \
+    joe \
+    vim \
     && yum clean all
 
 ARG VERS_TAG

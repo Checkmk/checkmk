@@ -30,8 +30,9 @@ import signal
 import tempfile
 import time
 import copy
+from types import FrameType  # pylint: disable=unused-import
 from typing import (  # pylint: disable=unused-import
-    cast, Union, Any, AnyStr, List, Tuple, Optional, Text, Iterable, Dict,
+    cast, IO, Union, Any, AnyStr, List, Tuple, Optional, Text, Iterable, Dict,
 )
 
 import six
@@ -73,7 +74,8 @@ else:
 
 # global variables used to cache temporary values that do not need
 # to be reset after a configuration change.
-_nagios_command_pipe = None  # Filedescriptor to open nagios command pipe.
+# Filedescriptor to open nagios command pipe.
+_nagios_command_pipe = None  # type: Union[bool, IO[bytes], None]
 _checkresult_file_fd = None
 _checkresult_file_path = None
 
@@ -628,6 +630,7 @@ def _submit_check_result(host, servicedesc, result, cached_at=None, cache_interv
 
 
 def _output_check_result(servicedesc, state, infotext, perftexts):
+    # type: (ServiceName, ServiceState, ServiceDetails, List[str]) -> None
     if _show_perfdata:
         infotext_fmt = "%-56s"
         p = ' (%s)' % (" ".join(perftexts))
@@ -640,6 +643,7 @@ def _output_check_result(servicedesc, state, infotext, perftexts):
 
 
 def _do_submit_to_core(host, service, state, output, cached_at=None, cache_interval=None):
+    # type: (HostName, ServiceName, ServiceState, ServiceDetails, Optional[int], Optional[int]) -> None
     if _in_keepalive_mode():
         # Regular case for the CMC - check helpers are running in keepalive mode
         keepalive.add_keepalive_check_result(host, service, state, output, cached_at,
@@ -658,6 +662,7 @@ def _do_submit_to_core(host, service, state, output, cached_at=None, cache_inter
 
 
 def _submit_via_check_result_file(host, service, state, output):
+    # type: (HostName, ServiceName, ServiceState, ServiceDetails) -> None
     output = output.replace("\n", "\\n")
     _open_checkresult_file()
     if _checkresult_file_fd:
@@ -678,6 +683,7 @@ output=%s
 
 
 def _open_checkresult_file():
+    # type: () -> None
     global _checkresult_file_fd
     global _checkresult_file_path
     if _checkresult_file_fd is None:
@@ -690,17 +696,19 @@ def _open_checkresult_file():
 
 
 def _close_checkresult_file():
+    # type: () -> None
     global _checkresult_file_fd
-    if _checkresult_file_fd is not None:
+    if _checkresult_file_fd is not None and _checkresult_file_path is not None:
         os.close(_checkresult_file_fd)
         open(_checkresult_file_path + ".ok", "w")
         _checkresult_file_fd = None
 
 
 def _submit_via_command_pipe(host, service, state, output):
+    # type: (HostName, ServiceName, ServiceState, ServiceDetails) -> None
     output = output.replace("\n", "\\n")
     _open_command_pipe()
-    if _nagios_command_pipe:
+    if _nagios_command_pipe is not None and not isinstance(_nagios_command_pipe, bool):
         # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
         _nagios_command_pipe.write(
             "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" %
@@ -711,6 +719,7 @@ def _submit_via_command_pipe(host, service, state, output):
 
 
 def _open_command_pipe():
+    # type: () -> None
     global _nagios_command_pipe
     if _nagios_command_pipe is None:
         if not os.path.exists(cmk.utils.paths.nagios_command_pipe_path):
@@ -729,6 +738,7 @@ def _open_command_pipe():
 
 
 def _core_pipe_open_timeout(signum, stackframe):
+    # type: (int, Optional[FrameType]) -> None
     raise IOError("Timeout while opening pipe")
 
 
@@ -746,16 +756,19 @@ def _core_pipe_open_timeout(signum, stackframe):
 
 
 def show_perfdata():
+    # type: () -> None
     global _show_perfdata
     _show_perfdata = True
 
 
 def disable_submit():
+    # type: () -> None
     global _submit_to_core
     _submit_to_core = False
 
 
 def _in_keepalive_mode():
+    # type: () -> bool
     if keepalive:
         return keepalive.enabled()
     return False

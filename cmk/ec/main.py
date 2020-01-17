@@ -47,6 +47,7 @@ import sys
 import threading
 import time
 import traceback
+from types import FrameType  # pylint: disable=unused-import
 from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union  # pylint: disable=unused-import
 
 import cmk
@@ -3994,7 +3995,7 @@ def main():
 
         # Install signal hander
         def signal_handler(signum, stack_frame):
-            # type: (int, Any) -> None
+            # type: (int, Optional[FrameType]) -> None
             logger.log(VERBOSE, "Got signal %d.", signum)
             raise MKSignalException(signum)
 

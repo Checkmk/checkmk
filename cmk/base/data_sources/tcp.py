@@ -25,12 +25,17 @@
 # Boston, MA 02110-1301 USA.
 
 import socket
+from typing import Tuple, List, Optional  # pylint: disable=unused-import
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKTerminate
 import cmk.utils.werks
 
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
+from cmk.base.utils import (  # pylint: disable=unused-import
+    HostName, HostAddress,
+)
+from cmk.base.check_utils import RawAgentData  # pylint: disable=unused-import
 
 from .abstract import CheckMKAgentDataSource
 
@@ -51,32 +56,39 @@ class TCPDataSource(CheckMKAgentDataSource):
     _use_only_cache = False
 
     def __init__(self, hostname, ipaddress):
+        # type: (HostName, Optional[HostAddress]) -> None
         super(TCPDataSource, self).__init__(hostname, ipaddress)
-        self._port = None
-        self._timeout = None
+        self._port = None  # type: Optional[int]
+        self._timeout = None  # type: Optional[float]
 
     def id(self):
+        # type: () -> str
         return "agent"
 
     def set_port(self, port):
+        # type: (int) -> None
         self._port = port
 
     def _get_port(self):
+        # type: () -> int
         if self._port is not None:
             return self._port
 
         return self._host_config.agent_port
 
     def set_timeout(self, timeout):
+        # type: (float) -> None
         self._timeout = timeout
 
     def _get_timeout(self):
+        # type: () -> float
         if self._timeout:
             return self._timeout
 
         return self._host_config.tcp_connect_timeout
 
     def _execute(self):
+        # type: () -> RawAgentData
         if self._use_only_cache:
             raise MKAgentError("Got no data: No usable cache file present at %s" %
                                self._cache_file_path())
@@ -92,7 +104,7 @@ class TCPDataSource(CheckMKAgentDataSource):
 
         timeout = self._get_timeout()
 
-        output = []
+        output_lines = []  # type: List[bytes]
         self._logger.debug("Connecting via TCP to %s:%d (%ss timeout)" %
                            (self._ipaddress, port, timeout))
         try:
@@ -106,7 +118,7 @@ class TCPDataSource(CheckMKAgentDataSource):
                 data = s.recv(4096, socket.MSG_WAITALL)
 
                 if data and len(data) > 0:
-                    output.append(data)
+                    output_lines.append(data)
                 else:
                     break
         except MKTerminate:
@@ -118,7 +130,8 @@ class TCPDataSource(CheckMKAgentDataSource):
             raise MKAgentError("Communication failed: %s" % e)
         finally:
             s.close()
-        output = ''.join(output)
+
+        output = b''.join(output_lines)
 
         if len(output) == 0:  # may be caused by xinetd not allowing our address
             raise MKEmptyAgentData("Empty output from agent at TCP port %d" % port)
@@ -151,16 +164,18 @@ class TCPDataSource(CheckMKAgentDataSource):
         return output
 
     def _decrypt_package(self, encrypted_pkg, encryption_key, protocol):
+        # type: (bytes, str, int) -> RawAgentData
         from Cryptodome.Cipher import AES
         if protocol == 2:
             from hashlib import sha256 as encrypt_digest
         else:
-            from hashlib import md5 as encrypt_digest
+            from hashlib import md5 as encrypt_digest  # type: ignore
 
         unpad = lambda s: s[0:-ord(s[-1])]
 
         # Adapt OpenSSL handling of key and iv
         def derive_key_and_iv(password, key_length, iv_length):
+            # type: (str, int, int) -> Tuple[str, str]
             d = d_i = ''
             while len(d) < key_length + iv_length:
                 d_i = encrypt_digest(d_i + password).digest()
@@ -174,9 +189,11 @@ class TCPDataSource(CheckMKAgentDataSource):
         return unpad(decrypted_pkg)
 
     def describe(self):
+        # type: () -> str
         """Return a short textual description of the agent"""
         return "TCP: %s:%d" % (self._ipaddress, self._host_config.agent_port)
 
     @classmethod
     def use_only_cache(cls):
+        # type: () -> None
         cls._use_only_cache = True

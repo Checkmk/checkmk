@@ -28,7 +28,7 @@ import os
 import logging
 import sys
 import tarfile
-from typing import NamedTuple, List  # pylint: disable=unused-import
+from typing import BinaryIO, cast, NamedTuple, List  # pylint: disable=unused-import
 from pathlib2 import Path
 
 from cmk.utils.log import VERBOSE
@@ -56,8 +56,11 @@ from cmk.utils.packaging import (
 logger = logging.getLogger("cmk.base.packaging")
 _pac_ext = ".mkp"
 
+PackageName = str
+
 
 def packaging_usage():
+    # type: () -> None
     sys.stdout.write("""Usage: check_mk [-v] -P|--package COMMAND [ARGS]
 
 Available commands are:
@@ -80,6 +83,7 @@ Package files are located in %s.
 
 
 def do_packaging(args):
+    # type: (List[str]) -> None
     if len(args) == 0:
         packaging_usage()
         sys.exit(1)
@@ -112,15 +116,19 @@ def do_packaging(args):
 
 
 def package_list(args):
+    # type: (List[str]) -> None
     if len(args) > 0:
         for name in args:
             show_package_contents(name)
     else:
         if logger.isEnabledFor(VERBOSE):
-            table = []
+            table = []  # type: tty.TableRows
             for pacname in all_package_names():
                 package = read_package_info(pacname)
-                table.append((pacname, package["title"], package["num_files"]))
+                if package is None:
+                    table.append((pacname, "package info is missing or broken", 0))
+                else:
+                    table.append((pacname, package["title"], package["num_files"]))
             tty.print_table(["Name", "Title", "Files"], [tty.bold, "", ""], table)
         else:
             for pacname in all_package_names():
@@ -128,6 +136,7 @@ def package_list(args):
 
 
 def package_info(args):
+    # type: (List[str]) -> None
     if len(args) == 0:
         raise PackageException("Usage: check_mk -P show NAME|PACKAGE.mkp")
     for name in args:
@@ -135,23 +144,30 @@ def package_info(args):
 
 
 def show_package_contents(name):
+    # type: (PackageName) -> None
     show_package(name, False)
 
 
 def show_package_info(name):
+    # type: (PackageName) -> None
     show_package(name, True)
 
 
 def show_package(name, show_info=False):
+    # type: (PackageName, bool) -> None
     try:
         if name.endswith(_pac_ext):
             tar = tarfile.open(name, "r:gz")
             info = tar.extractfile("info")
+            if info is None:
+                raise PackageException("Failed to extract \"info\"")
             package = parse_package_info(info.read())
         else:
-            package = read_package_info(name)
-            if not package:
+            this_package = read_package_info(name)
+            if not this_package:
                 raise PackageException("No such package %s." % name)
+
+            package = this_package
             if show_info:
                 sys.stdout.write("Package file:                  %s%s\n" % (package_dir(), name))
     except PackageException:
@@ -188,6 +204,7 @@ def show_package(name, show_info=False):
 
 
 def package_create(args):
+    # type: (List[str]) -> None
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P create NAME")
 
@@ -197,7 +214,7 @@ def package_create(args):
 
     logger.log(VERBOSE, "Creating new package %s...", pacname)
     package = get_initial_package_info(pacname)
-    filelists = package_info["files"]
+    filelists = package["files"]
     num_files = 0
     for part in get_package_parts():
         files = unpackaged_files_in_dir(part.ident, part.path)
@@ -215,6 +232,7 @@ def package_create(args):
 
 
 def package_find(_no_args):
+    # type: (List[str]) -> None
     first = True
     for part in get_package_parts() + get_config_parts():
         files = unpackaged_files_in_dir(part.ident, part.path)
@@ -235,6 +253,7 @@ def package_find(_no_args):
 
 
 def package_release(args):
+    # type: (List[str]) -> None
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P release NAME")
     pacname = args[0]
@@ -242,6 +261,7 @@ def package_release(args):
 
 
 def package_pack(args):
+    # type: (List[str]) -> None
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P pack NAME")
 
@@ -263,11 +283,12 @@ def package_pack(args):
 
     logger.log(VERBOSE, "Packing %s into %s...", pacname, tarfilename)
     with Path(tarfilename).open("wb") as f:
-        create_mkp_file(package, f)
+        create_mkp_file(package, cast(BinaryIO, f))
     logger.log(VERBOSE, "Successfully created %s", tarfilename)
 
 
 def package_remove(args):
+    # type: (List[str]) -> None
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P remove NAME")
     pacname = args[0]
@@ -281,10 +302,11 @@ def package_remove(args):
 
 
 def package_install(args):
+    # type: (List[str]) -> None
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P install NAME")
     path = Path(args[0])
     if not path.exists():
         raise PackageException("No such file %s." % path)
 
-    return install_package_by_path(path)
+    install_package_by_path(path)

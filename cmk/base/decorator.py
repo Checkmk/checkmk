@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from typing import cast, Any, Callable  # pylint: disable=unused-import
+
 import cmk
 import cmk.utils.debug
 import cmk.utils.defines as defines
@@ -33,6 +35,8 @@ import cmk.base.config as config
 import cmk.base.console as console
 import cmk.base.crash_reporting
 from cmk.base.exceptions import MKAgentError, MKSNMPError, MKIPAddressLookupError
+from cmk.base.check_utils import CheckPluginName  # pylint: disable=unused-import
+from cmk.base.utils import HostName, ServiceName  # pylint: disable=unused-import
 
 if not cmk.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
@@ -41,10 +45,13 @@ else:
 
 
 def handle_check_mk_check_result(check_plugin_name, description):
+    # type: (CheckPluginName, ServiceName) -> Callable
     """Decorator function used to wrap all functions used to execute the "Check_MK *" checks
     Main purpose: Equalize the exception handling of all such functions"""
     def wrap(check_func):
+        # type: (Callable) -> Callable
         def wrapped_check_func(hostname, *args, **kwargs):
+            # type: (HostName, Any, Any) -> int
             host_config = config.get_config_cache().get_host_config(hostname)
             exit_spec = host_config.exit_code_spec()
 
@@ -61,15 +68,15 @@ def handle_check_mk_check_result(check_plugin_name, description):
                     raise
                 else:
                     infotexts.append("Timed out")
-                    status = max(status, exit_spec.get("timeout", 2))
+                    status = max(status, cast(int, exit_spec.get("timeout", 2)))
 
             except (MKAgentError, MKSNMPError, MKIPAddressLookupError) as e:
                 infotexts.append("%s" % e)
-                status = exit_spec.get("connection", 2)
+                status = cast(int, exit_spec.get("connection", 2))
 
             except MKGeneralException as e:
                 infotexts.append("%s" % e)
-                status = max(status, exit_spec.get("exception", 3))
+                status = max(status, cast(int, exit_spec.get("exception", 3)))
 
             except Exception:
                 if cmk.utils.debug.enabled():
@@ -77,7 +84,7 @@ def handle_check_mk_check_result(check_plugin_name, description):
                 crash_output = cmk.base.crash_reporting.create_check_crash_dump(
                     hostname, check_plugin_name, None, False, None, description, [])
                 infotexts.append(crash_output.replace("Crash dump:\n", "Crash dump:\\n"))
-                status = max(status, exit_spec.get("exception", 3))
+                status = max(status, cast(int, exit_spec.get("exception", 3)))
 
             # Produce the service check result output
             output_txt = "%s - %s" % (defines.short_service_state_name(status),
@@ -102,4 +109,5 @@ def handle_check_mk_check_result(check_plugin_name, description):
 
 
 def _in_keepalive_mode():
-    return keepalive and keepalive.enabled()
+    # type: () -> bool
+    return bool(keepalive and keepalive.enabled())

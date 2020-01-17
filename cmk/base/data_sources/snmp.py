@@ -27,7 +27,7 @@
 import abc
 import ast
 import time
-from typing import cast, Set, Optional, Dict, List, Union  # pylint: disable=unused-import
+from typing import Callable, Tuple, cast, Set, Optional, Dict, List, Union  # pylint: disable=unused-import
 import six
 
 from cmk.utils.exceptions import MKGeneralException
@@ -47,6 +47,9 @@ from cmk.base.snmp_utils import (  # pylint: disable=unused-import
 
 from .abstract import DataSource, ManagementBoardDataSource  # pylint: disable=unused-import
 from .host_sections import AbstractHostSections
+
+PluginNameFilterFunction = Callable[[snmp_utils.SNMPHostConfig, str, bool, bool],
+                                    Set[CheckPluginName]]
 
 #.
 #   .--SNMP----------------------------------------------------------------.
@@ -98,14 +101,16 @@ class SNMPDataSource(ABCSNMPDataSource):
     _for_mgmt_board = False
 
     def __init__(self, hostname, ipaddress):
+        # type: (HostName, Optional[HostAddress]) -> None
         super(SNMPDataSource, self).__init__(hostname, ipaddress)
-        self._check_plugin_name_filter_func = None
-        self._check_plugin_names = {}
+        self._check_plugin_name_filter_func = None  # type: Optional[PluginNameFilterFunction]
+        self._check_plugin_names = {
+        }  # type: Dict[Tuple[HostName, Optional[HostAddress]], Set[CheckPluginName]]
         self._do_snmp_scan = False
         self._on_error = "raise"
         self._use_snmpwalk_cache = True
         self._ignore_check_interval = False
-        self._fetched_check_plugin_names = []
+        self._fetched_check_plugin_names = set()  # type: Set[CheckPluginName]
 
     def id(self):
         # type: () -> str
@@ -185,6 +190,7 @@ class SNMPDataSource(ABCSNMPDataSource):
 
     # TODO: Check if this can be dropped
     def set_do_snmp_scan(self, do_snmp_scan):
+        # type: (bool) -> None
         self._do_snmp_scan = do_snmp_scan
 
     def get_do_snmp_scan(self):
@@ -192,9 +198,11 @@ class SNMPDataSource(ABCSNMPDataSource):
         return self._do_snmp_scan
 
     def set_check_plugin_name_filter(self, filter_func):
+        # type: (PluginNameFilterFunction) -> None
         self._check_plugin_name_filter_func = filter_func
 
     def set_fetched_check_plugin_names(self, check_plugin_names):
+        # type: (Set[CheckPluginName]) -> None
         """Sets a list of already fetched host sections/check plugin names.
 
         Especially for SNMP data sources there are already fetched
@@ -218,7 +226,8 @@ class SNMPDataSource(ABCSNMPDataSource):
         try:
             return self._check_plugin_names[(self._hostname, self._ipaddress)]
         except KeyError:
-            check_plugin_names = self._check_plugin_name_filter_func(
+            # mypy complains: Unexpected keyword argument "for_mgmt_board"
+            check_plugin_names = self._check_plugin_name_filter_func(  # type: ignore
                 self._snmp_config,
                 on_error=self._on_error,
                 do_snmp_scan=self._do_snmp_scan,

@@ -101,6 +101,9 @@ CheckIncludes = List[str]
 Ruleset = List  # TODO: Improve this type
 TagValue = str
 Tags = Dict[str, TagValue]
+DiscoveryCheckParameters = Dict
+SpecialAgentInfoFunction = Callable[[Dict[str, Any], HostName, Optional[HostAddress]],
+                                    Union[str, List[str]]]
 
 
 class TimespecificParamList(list):
@@ -1142,7 +1145,7 @@ def get_service_translations(hostname):
 
 
 def prepare_check_command(command_spec, hostname, description):
-    # type: (str, HostName, ServiceName) -> str
+    # type: (Union[str, List[str]], HostName, Optional[ServiceName]) -> str
     """Prepares a check command for execution by Check_MK.
 
     This function either accepts a string or a list of arguments as
@@ -1157,7 +1160,8 @@ def prepare_check_command(command_spec, hostname, description):
     if not isinstance(command_spec, list):
         raise NotImplementedError()
 
-    passwords, formated = [], []
+    passwords = []  # type: List[Tuple[str, str, str]]
+    formated = []  # type: List[str]
     for arg in command_spec:
         arg_type = type(arg)
 
@@ -1299,8 +1303,7 @@ snmp_info = {}  # type: Dict[str, Union[Tuple[Any], List[Tuple[Any]]]]
 snmp_scan_functions = {}  # type: Dict[str, ScanFunction]
 # definitions of active "legacy" checks
 active_check_info = {}  # type: Dict[str, Dict[str, Any]]
-special_agent_info = {
-}  # type: Dict[str, Callable[[Dict[str, Any], str, str], Union[str, List[str]]]]
+special_agent_info = {}  # type: Dict[str, SpecialAgentInfoFunction]
 
 # Names of variables registered in the check files. This is used to
 # keep track of the variables needed by each file. Those variables are then
@@ -2632,7 +2635,7 @@ class HostConfig(object):
 
     @property
     def discovery_check_parameters(self):
-        # type: () -> Optional[Dict]
+        # type: () -> Optional[DiscoveryCheckParameters]
         """Compute the parameters for the discovery check for a host
 
         Note:

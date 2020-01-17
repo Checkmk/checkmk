@@ -26,38 +26,51 @@
 
 import os
 import json
+from typing import Tuple, Optional, List, Set  # pylint: disable=unused-import
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import tmp_dir
-from cmk.utils.piggyback import get_piggyback_raw_data
+from cmk.utils.piggyback import (  # pylint: disable=unused-import
+    get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings,
+)
 
 import cmk.base.config as config
-from cmk.base.check_utils import ServiceCheckResult  # pylint: disable=unused-import
+from cmk.base.check_utils import (  # pylint: disable=unused-import
+    RawAgentData, ServiceCheckResult, ServiceState, ServiceDetails,
+)
+from cmk.utils.type_defs import HostName, HostAddress  # pylint: disable=unused-import
 
 from .abstract import CheckMKAgentDataSource
 
 
 def _raw_data(hostname, time_settings):
+    # type: (HostName, PiggybackTimeSettings) -> List[PiggybackRawDataInfo]
     return get_piggyback_raw_data(hostname, time_settings)
 
 
 class PiggyBackDataSource(CheckMKAgentDataSource):
     def __init__(self, hostname, ipaddress):
+        # type: (HostName, Optional[HostAddress]) -> None
         super(PiggyBackDataSource, self).__init__(hostname, ipaddress)
-        self._processed_file_reasons = set()
+        self._processed_file_reasons = set()  # type: Set[Tuple[ServiceState, ServiceDetails]]
         self._time_settings = config.get_config_cache().get_piggybacked_hosts_time_settings(
             piggybacked_hostname=self._hostname)
 
     def id(self):
+        # type: () -> str
         return "piggyback"
 
     def describe(self):
+        # type: () -> str
         path = os.path.join(tmp_dir, "piggyback", self._hostname)
         return "Process piggyback data from %s" % path
 
     def _execute(self):
-        raw_data_from_sources = _raw_data(self._hostname, self._time_settings)\
-                                + _raw_data(self._ipaddress, self._time_settings)
+        # type: () -> RawAgentData
+        raw_data_from_sources = _raw_data(self._hostname, self._time_settings)
+
+        if self._ipaddress is not None:
+            raw_data_from_sources += _raw_data(self._ipaddress, self._time_settings)
 
         raw_data = ""
         for source_raw_data in raw_data_from_sources:
@@ -77,6 +90,7 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
             [source_raw_data.source_hostname for source_raw_data in raw_data_from_sources])
 
     def _get_source_labels_section(self, source_hostnames):
+        # type: (List[HostName]) -> RawAgentData
         """Return a <<<labels>>> agent section which adds the piggyback sources
         to the labels of the current host"""
         if not source_hostnames:
@@ -86,6 +100,7 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
         return '<<<labels:sep(0)>>>\n%s\n' % json.dumps(labels)
 
     def _get_raw_data(self):
+        # type: () -> Tuple[RawAgentData, bool]
         """Returns the current raw data of this data source
 
         Special for piggyback: No caching of raw data

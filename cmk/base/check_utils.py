@@ -49,6 +49,7 @@ if TYPE_CHECKING:
 CheckParameters = Union[None, Dict, Tuple, List, str]
 RulesetName = str
 ServiceState = int
+HostState = int
 ServiceDetails = Text
 ServiceAdditionalDetails = Text
 # TODO: Specify this  (see cmk/base/checking.py::_convert_perf_data)
@@ -67,6 +68,7 @@ AgentSections = Dict[SectionName, AgentSectionContent]
 
 PiggybackRawData = Dict[HostName, List[bytes]]
 ParsedSectionContent = Any
+FinalSectionContent = Optional[Union[ParsedSectionContent, List[ParsedSectionContent]]]
 
 AbstractSectionContent = Union[AgentSectionContent, "SNMPSectionContent"]
 AbstractRawData = Union[RawAgentData, "RawSNMPData"]

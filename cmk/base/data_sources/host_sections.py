@@ -41,13 +41,12 @@ from cmk.base.check_utils import (  # pylint: disable=unused-import
     CheckPluginName, SectionCacheInfo, AbstractSections, PiggybackRawData,
     AbstractPersistedSections, AbstractSectionContent, SectionName, ParsedSectionContent,
     BoundedAbstractRawData, BoundedAbstractSections, BoundedAbstractPersistedSections,
-    BoundedAbstractSectionContent, RawAgentData,
+    BoundedAbstractSectionContent, RawAgentData, FinalSectionContent,
 )
 
 from cmk.base.exceptions import MKParseFunctionError
 
 MultiHostSectionsData = Dict[Tuple[HostName, Optional[HostAddress]], "AbstractHostSections"]
-FinalSectionContent = Optional[Union[ParsedSectionContent, List[ParsedSectionContent]]]
 
 
 class AbstractHostSections(

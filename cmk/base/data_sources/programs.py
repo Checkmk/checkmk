@@ -28,7 +28,7 @@ import os
 import signal
 import collections
 from typing import (  # pylint: disable=unused-import
-    Union, Text, Optional,
+    Set, Union, Text, Optional, Tuple, Dict,
 )
 from pathlib2 import Path
 
@@ -40,6 +40,9 @@ from cmk.utils.encoding import ensure_bytestr
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 from cmk.base.exceptions import MKAgentError
+from cmk.base.check_utils import CheckPluginName  # pylint: disable=unused-import
+from cmk.base.utils import (  # pylint: disable=unused-import
+    HostName, HostAddress)
 
 from .abstract import CheckMKAgentDataSource, RawAgentData  # pylint: disable=unused-import
 
@@ -59,6 +62,7 @@ from .abstract import CheckMKAgentDataSource, RawAgentData  # pylint: disable=un
 class ProgramDataSource(CheckMKAgentDataSource):
     """Abstract base class for all data source classes that execute external programs"""
     def _cpu_tracking_id(self):
+        # type: () -> str
         return "ds"
 
     def _execute(self):
@@ -127,10 +131,12 @@ class ProgramDataSource(CheckMKAgentDataSource):
         return stdout
 
     def _get_command_line_and_stdin(self):
+        # type: () -> Tuple[str, Optional[str]]
         """Returns the final command line to be executed"""
         raise NotImplementedError()
 
     def describe(self):
+        # type: () -> str
         """Return a short textual description of the agent"""
         command_line, command_stdin = self._get_command_line_and_stdin()
         response = ["Program: %s" % command_line]
@@ -141,19 +147,23 @@ class ProgramDataSource(CheckMKAgentDataSource):
 
 class DSProgramDataSource(ProgramDataSource):
     def __init__(self, hostname, ipaddress, command_template):
+        # type: (HostName, Optional[HostAddress], str) -> None
         super(DSProgramDataSource, self).__init__(hostname, ipaddress)
         self._command_template = command_template
 
     def id(self):
+        # type: () -> str
         return "agent"
 
     def name(self):
+        # type: () -> str
         """Return a unique (per host) textual identification of the data source"""
         command_line, _command_stdin = self._get_command_line_and_stdin()
         program = command_line.split(" ")[0]
         return os.path.basename(program)
 
     def _get_command_line_and_stdin(self):
+        # type: () -> Tuple[str, Optional[str]]
         cmd = self._command_template
 
         cmd = self._translate_legacy_macros(cmd)
@@ -162,10 +172,12 @@ class DSProgramDataSource(ProgramDataSource):
         return cmd, None
 
     def _translate_legacy_macros(self, cmd):
+        # type: (str) -> str
         # Make "legacy" translation. The users should use the $...$ macros in future
         return cmd.replace("<IP>", self._ipaddress or "").replace("<HOST>", self._hostname)
 
     def _translate_host_macros(self, cmd):
+        # type: (str) -> str
         attrs = core_config.get_host_attributes(self._hostname, self._config_cache)
         if self._host_config.is_cluster:
             parents_list = core_config.get_cluster_nodes_for_config(self._config_cache,
@@ -184,22 +196,27 @@ SpecialAgentConfiguration = collections.namedtuple("SpecialAgentConfiguration", 
 
 class SpecialAgentDataSource(ProgramDataSource):
     def __init__(self, hostname, ipaddress, special_agent_id, params):
+        # type: (HostName, Optional[HostAddress], str, Dict) -> None
         self._special_agent_id = special_agent_id
         super(SpecialAgentDataSource, self).__init__(hostname, ipaddress)
         self._params = params
 
     def id(self):
+        # type: () -> str
         return "special_%s" % self._special_agent_id
 
     @property
     def special_agent_plugin_file_name(self):
+        # type: () -> str
         return "agent_%s" % self._special_agent_id
 
     # TODO: Can't we make this more specific in case of special agents?
     def _gather_check_plugin_names(self):
+        # type: () -> Set[CheckPluginName]
         return config.discoverable_tcp_checks()
 
     def _get_command_line_and_stdin(self):
+        # type: () -> Tuple[str, Optional[str]]
         """Create command line using the special_agent_info"""
         info_func = config.special_agent_info[self._special_agent_id]
         agent_configuration = info_func(self._params, self._hostname, self._ipaddress)

@@ -74,13 +74,21 @@ def _get_permissions(path):
     raise PackageException("could not determine permissions for %r" % path)
 
 
+PackageName = str
+PartName = str
+PartPath = str
+
 PackagePart = NamedTuple("PackagePart", [
-    ("ident", str),
+    ("ident", PartName),
     ("title", str),
-    ("path", str),
+    ("path", PartPath),
 ])
 
 PackageInfo = Dict
+Packages = Dict[PackageName, PackageInfo]
+PartFiles = List[str]
+PackageFiles = Dict[PartName, PartFiles]
+PackagePartInfo = Dict[PartName, Any]
 
 _package_parts = [
     PackagePart("checks", "Checks", str(cmk.utils.paths.local_checks_dir)),
@@ -126,11 +134,13 @@ def get_package_parts():
 
 
 def release_package(pacname):
-    # type: (Text) -> None
+    # type: (PackageName) -> None
     if not pacname or not _package_exists(pacname):
         raise PackageException("Package %s not installed or corrupt." % pacname)
 
     package = read_package_info(pacname)
+    if package is None:
+        raise PackageException("Package %s not installed or corrupt." % pacname)
     logger.log(VERBOSE, "Releasing files of package %s into freedom...", pacname)
     for part in get_package_parts() + get_config_parts():
         filenames = package["files"].get(part.ident, [])
@@ -186,6 +196,7 @@ def create_mkp_file(package, file_object=None):
 
 
 def get_initial_package_info(pacname):
+    # type: (str) -> PackageInfo
     return {
         "title": "Title of %s" % pacname,
         "name": pacname,
@@ -233,7 +244,7 @@ def create_package(pkg_info):
 
 
 def edit_package(pacname, new_package_info):
-    # type: (Text, PackageInfo) -> None
+    # type: (PackageName, PackageInfo) -> None
     if not _package_exists(pacname):
         raise PackageException("No such package")
 
@@ -288,7 +299,7 @@ def install_package(file_object):
         keep = []  # type: List[Text]
         keep_files[part.ident] = keep
 
-        if update:
+        if update and old_package is not None:
             old_files = old_package["files"].get(part.ident, [])
 
         for fn in package["files"].get(part.ident, []):
@@ -349,7 +360,7 @@ def install_package(file_object):
                 ec.add_rule_pack_proxies(filenames)
 
     # In case of an update remove files from old_package not present in new one
-    if update:
+    if update and old_package is not None:
         for part in get_package_parts() + get_config_parts():
             filenames = old_package["files"].get(part.ident, [])
             keep = keep_files.get(part.ident, [])
@@ -404,10 +415,13 @@ def _get_package_info_from_package(file_object):
 
 
 def _validate_package_files(pacname, files):
+    # type: (PackageName, PackageFiles) -> None
     """Packaged files must either be unpackaged or already belong to that package"""
-    packages = {}
+    packages = {}  # type: Packages
     for package_name in all_package_names():
-        packages[package_name] = read_package_info(package_name)
+        package_info = read_package_info(package_name)
+        if package_info is not None:
+            packages[package_name] = package_info
 
     for part in get_package_parts():
         _validate_package_files_part(packages, pacname, part.ident, part.path,
@@ -415,6 +429,7 @@ def _validate_package_files(pacname, files):
 
 
 def _validate_package_files_part(packages, pacname, part, directory, rel_paths):
+    # type: (Packages, PackageName, PartName, PartPath, PartFiles) -> None
     for rel_path in rel_paths:
         path = os.path.join(directory, rel_path)
         if not os.path.exists(path):
@@ -428,11 +443,12 @@ def _validate_package_files_part(packages, pacname, part, directory, rel_paths):
 
 
 def _verify_check_mk_version(package):
+    # type: (PackageInfo) -> None
     """Checks whether or not the minimum required Check_MK version is older than the
     current Check_MK version. Raises an exception if not. When the Check_MK version
     can not be parsed or is a daily build, the check is simply passing without error."""
     min_version = package["version.min_required"]
-    cmk_version = cmk.__version__
+    cmk_version = str(cmk.__version__)
 
     if cmk.utils.misc.is_daily_build_version(min_version):
         min_branch = cmk.utils.misc.branch_of_daily_build(min_version)
@@ -466,6 +482,7 @@ def _verify_check_mk_version(package):
 
 
 def get_all_package_infos():
+    # type: () -> Packages
     packages = {}
     for package_name in all_package_names():
         packages[package_name] = read_package_info(package_name)
@@ -479,7 +496,7 @@ def get_all_package_infos():
 
 
 def get_optional_package_infos():
-    # type: () -> Dict[Text, Dict]
+    # type: () -> Dict[Text, PackageInfo]
     optional = {}
     for pkg_path in _get_optional_package_paths():
         with pkg_path.open("rb") as pkg:
@@ -497,6 +514,7 @@ def _get_optional_package_paths():
 
 
 def unpackaged_files():
+    # type: () -> Dict[PackageName, List[str]]
     unpackaged = {}
     for part in get_package_parts() + get_config_parts():
         unpackaged[part.ident] = unpackaged_files_in_dir(part.ident, part.path)
@@ -504,7 +522,8 @@ def unpackaged_files():
 
 
 def package_part_info():
-    part_info = {}
+    # type: () -> PackagePartInfo
+    part_info = {}  # type: PackagePartInfo
     for part in get_package_parts() + get_config_parts():
         try:
             files = os.listdir(part.path)
@@ -522,6 +541,7 @@ def package_part_info():
 
 
 def read_package_info(pacname):
+    # type: (PackageName) -> Optional[PackageInfo]
     pkg_info_path = package_dir() / pacname
     try:
         with pkg_info_path.open("r", encoding="utf-8") as f:
@@ -540,6 +560,7 @@ def read_package_info(pacname):
 
 
 def _files_in_dir(part, directory, prefix=""):
+    # type: (str, str, str) -> List[str]
     if directory is None or not os.path.exists(directory):
         return []
 
@@ -568,11 +589,13 @@ def _files_in_dir(part, directory, prefix=""):
 
 
 def unpackaged_files_in_dir(part, directory):
+    # type: (PartName, str) -> List[str]
     packaged = set(_packaged_files_in_dir(part))
     return [f for f in _files_in_dir(part, directory) if f not in packaged]
 
 
 def _packaged_files_in_dir(part):
+    # type: (PartName) -> List[str]
     result = []  # type: List[str]
     for pacname in all_package_names():
         package = read_package_info(pacname)
@@ -582,24 +605,29 @@ def _packaged_files_in_dir(part):
 
 
 def all_package_names():
+    # type: () -> List[str]
     return sorted([p.name for p in package_dir().iterdir()])
 
 
 def _package_exists(pacname):
+    # type: (PackageName) -> bool
     return (package_dir() / pacname).exists()  # pylint: disable=no-member
 
 
 def write_package_info(package):
+    # type: (PackageInfo) -> None
     pkg_info_path = package_dir() / package["name"]
     with pkg_info_path.open("w", encoding="utf-8") as f:
         f.write(ensure_unicode(pprint.pformat(package) + "\n"))
 
 
 def _remove_package_info(pacname):
+    # type: (PackageName) -> None
     (package_dir() / pacname).unlink()  # pylint: disable=no-member
 
 
 def parse_package_info(python_string):
+    # type: (str) -> PackageInfo
     package_info = ast.literal_eval(python_string)
     package_info.setdefault("version.usable_until", None)
     return package_info

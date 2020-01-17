@@ -644,9 +644,9 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_packaging(*args):
-    # type: (str) -> None
-    cmk.base.packaging.do_packaging(*args)
+def mode_packaging(args):
+    # type: (List[str]) -> None
+    cmk.base.packaging.do_packaging(args)
 
 
 modes.register(

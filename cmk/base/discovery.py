@@ -29,8 +29,10 @@ import socket
 import time
 import signal
 import inspect
+from types import FrameType  # pylint: disable=unused-import
 from typing import (  # pylint: disable=unused-import
-    cast, Union, Iterator, Callable, List, Text, Optional, Dict, Tuple, Set,
+    Pattern, AnyStr, cast, Union, Iterator, Callable, List, Text, Optional, Dict, Tuple, Set,
+    NoReturn,
 )
 
 from cmk.utils.regex import regex
@@ -60,9 +62,10 @@ import cmk.base.decorator
 import cmk.base.snmp_scan as snmp_scan
 from cmk.base.exceptions import MKParseFunctionError
 from cmk.base.utils import HostName, HostAddress  # pylint: disable=unused-import
+from cmk.base.core_config import MonitoringCore  # pylint: disable=unused-import
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     CheckPluginName, CheckParameters, DiscoveredService, Item, Service, ServiceState, Metric,
-    RulesetName,
+    RulesetName, HostState, FinalSectionContent,
 )
 from cmk.base.discovered_labels import (
     DiscoveredServiceLabels,
@@ -79,6 +82,10 @@ CheckPreviewEntry = Tuple[str, CheckPluginName, Optional[RulesetName], check_tab
                           check_table.CheckParameters, check_table.CheckParameters, Text,
                           Optional[int], Text, List[Metric], Dict[Text, Text]]
 CheckPreviewTable = List[CheckPreviewEntry]
+DiscoveryEntry = Union[check_api_utils.Service, DiscoveredHostLabels, HostLabel,
+                       Tuple[Item, CheckParameters]]
+DiscoveryResult = List[DiscoveryEntry]
+DiscoveryFunction = Callable[[FinalSectionContent], DiscoveryResult]
 
 #   .--cmk -I--------------------------------------------------------------.
 #   |                                  _           ___                     |
@@ -533,7 +540,9 @@ def check_discovery(hostname, ipaddress):
 
 
 def _set_rediscovery_flag(hostname):
+    # type: (HostName) -> None
     def touch(filename):
+        # type: (str) -> None
         if not os.path.exists(filename):
             f = open(filename, "w")
             f.close()
@@ -550,25 +559,30 @@ class DiscoveryTimeout(MKException):
     pass
 
 
-def _handle_discovery_timeout():
+def _handle_discovery_timeout(signum, stack_frame):
+    # type: (int, Optional[FrameType]) -> NoReturn
     raise DiscoveryTimeout()
 
 
 def _set_discovery_timeout():
+    # type: () -> None
     signal.signal(signal.SIGALRM, _handle_discovery_timeout)
     # Add an additional 10 seconds as grace period
     signal.alarm(_marked_host_discovery_timeout + 10)
 
 
 def _clear_discovery_timeout():
+    # type: () -> None
     signal.alarm(0)
 
 
 def _get_autodiscovery_dir():
+    # type: () -> str
     return cmk.utils.paths.var_dir + '/autodiscovery'
 
 
 def discover_marked_hosts(core):
+    # type: (MonitoringCore) -> None
     console.verbose("Doing discovery for all marked hosts:\n")
     autodiscovery_dir = _get_autodiscovery_dir()
 
@@ -632,17 +646,19 @@ def discover_marked_hosts(core):
 
 
 def _fetch_host_states():
-    host_states = {}
+    # type: () -> Dict[HostName, HostState]
+    host_states = {}  # type: Dict[HostName, HostState]
     try:
         import livestatus
         query = "GET hosts\nColumns: name state"
-        host_states = dict(livestatus.LocalConnection().query(query))
+        host_states.update(dict(livestatus.LocalConnection().query(query)))  # type: ignore
     except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
         pass
     return host_states
 
 
 def _discover_marked_host_exists(config_cache, hostname):
+    # type: (config.ConfigCache, HostName) -> bool
     if hostname in config_cache.all_configured_hosts():
         return True
 
@@ -657,6 +673,7 @@ def _discover_marked_host_exists(config_cache, hostname):
 
 
 def _discover_marked_host(config_cache, host_config, now_ts, oldest_queued):
+    # type: (config.ConfigCache, config.HostConfig, float, float) -> bool
     hostname = host_config.hostname
     something_changed = False
 
@@ -666,7 +683,12 @@ def _discover_marked_host(config_cache, host_config, now_ts, oldest_queued):
     host_flag_path = os.path.join(_get_autodiscovery_dir(), hostname)
 
     params = host_config.discovery_check_parameters
+    if params is None:
+        console.verbose("  failed: discovery check disabled\n")
+        return False
+
     params_rediscovery = params.get("inventory_rediscovery", {})
+    item_filters = None  # type: Optional[Callable[[HostName, CheckPluginName, Item], bool]]
     if "service_blacklist" in params_rediscovery or "service_whitelist" in params_rediscovery:
         # whitelist. if none is specified, this matches everything
         whitelist = regex("|".join(
@@ -676,8 +698,6 @@ def _discover_marked_host(config_cache, host_config, now_ts, oldest_queued):
             ["(%s)" % pat for pat in params_rediscovery.get("service_blacklist", ["(?!x)x"])]))
         item_filters = lambda hostname, check_plugin_name, item:\
             _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, blacklist)
-    else:
-        item_filters = None
 
     why_not = _may_rediscover(params, now_ts, oldest_queued)
     if not why_not:
@@ -734,6 +754,7 @@ def _discover_marked_host(config_cache, host_config, now_ts, oldest_queued):
 
 
 def _queue_age():
+    # type: () -> float
     autodiscovery_dir = _get_autodiscovery_dir()
     oldest = time.time()
     for filename in os.listdir(autodiscovery_dir):
@@ -742,6 +763,7 @@ def _queue_age():
 
 
 def _may_rediscover(params, now_ts, oldest_queued):
+    # type: (config.DiscoveryCheckParameters, float, float) -> Optional[str]
     if "inventory_rediscovery" not in params:
         return "automatic discovery disabled for this host"
 
@@ -764,6 +786,7 @@ def _may_rediscover(params, now_ts, oldest_queued):
 
 
 def _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, blacklist):
+    # type: (HostName, CheckPluginName, Item, Pattern[AnyStr], Pattern[AnyStr]) -> bool
     description = config.service_description(hostname, check_plugin_name, item)
     return whitelist.match(description) is not None and\
         blacklist.match(description) is None
@@ -784,6 +807,7 @@ def _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, bla
 
 # TODO: Move to livestatus module!
 def schedule_discovery_check(hostname):
+    # type: (HostName) -> None
     try:
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         s.connect(cmk.utils.paths.livestatus_unix_socket)
@@ -902,6 +926,7 @@ def _get_sources_for_discovery(hostname, ipaddress, check_plugin_names, do_snmp_
 
 
 def _get_host_sections_for_discovery(sources, use_caches):
+    # type: (data_sources.DataSources, bool) -> data_sources.MultiHostSections
     max_cachefile_age = config.inventory_max_cachefile_age if use_caches else 0
     return sources.get_host_sections(max_cachefile_age)
 
@@ -961,6 +986,7 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
 
 
 def _get_discovery_function_of(check_plugin_name):
+    # type: (CheckPluginName) -> DiscoveryFunction
     try:
         discovery_function = config.check_info[check_plugin_name]["inventory_function"]
     except KeyError:
@@ -982,11 +1008,13 @@ def _get_discovery_function_of(check_plugin_name):
 
 
 def _no_discovery_possible(check_plugin_name):
+    # type: (CheckPluginName) -> List
     console.verbose("%s does not support discovery. Skipping it.\n", check_plugin_name)
     return []
 
 
 def _execute_discovery_function(discovery_function, section_content):
+    # type: (DiscoveryFunction, FinalSectionContent) -> DiscoveryResult
     discovered_items = discovery_function(section_content)
 
     # tolerate function not explicitely returning []
@@ -1001,7 +1029,7 @@ def _execute_discovery_function(discovery_function, section_content):
 
 
 def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
-    # type: (str, CheckPluginName, List) -> Iterator[Union[DiscoveredService, DiscoveredHostLabels, HostLabel]]
+    # type: (str, CheckPluginName, DiscoveryResult) -> Iterator[Union[DiscoveredService, DiscoveredHostLabels, HostLabel]]
     for entry in discovered_items:
         if isinstance(entry, check_api_utils.Service):
             item = entry.item
@@ -1018,7 +1046,7 @@ def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
             if len(entry) == 2:  # comment is now obsolete
                 item, parameters_unresolved = entry
             elif len(entry) == 3:  # allow old school
-                item, __, parameters_unresolved = entry
+                item, __, parameters_unresolved = entry  # type: ignore
             else:
                 # we really don't want longer tuples (or 1-tuples).
                 console.error(

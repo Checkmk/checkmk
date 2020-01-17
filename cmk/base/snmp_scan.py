@@ -45,7 +45,7 @@ def gather_snmp_check_plugin_names(host_config,
                                    do_snmp_scan,
                                    for_inventory=False,
                                    for_mgmt_board=False):
-    # type: (SNMPHostConfig, str, bool, bool, bool) -> List[CheckPluginName]
+    # type: (SNMPHostConfig, str, bool, bool, bool) -> Set[CheckPluginName]
     check_plugin_names = set()  # type: Set[CheckPluginName]
 
     try:
@@ -61,7 +61,7 @@ def gather_snmp_check_plugin_names(host_config,
         elif on_error == "warn":
             console.error("SNMP scan failed: %s\n" % e)
 
-    return list(check_plugin_names)
+    return check_plugin_names
 
 
 def _snmp_scan(host_config,

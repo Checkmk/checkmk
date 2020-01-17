@@ -68,6 +68,8 @@ PiggybackRawDataInfo = NamedTuple('PiggybackRawData', [
     ('raw_data', bytes),
 ])
 
+PiggybackTimeSettings = List[Tuple[Optional[str], str, int]]
+
 # ***** Terminology *****
 # "piggybacked_host_folder":
 # - tmp/check_mk/piggyback/HOST
@@ -87,7 +89,7 @@ PiggybackRawDataInfo = NamedTuple('PiggybackRawData', [
 
 
 def get_piggyback_raw_data(piggybacked_hostname, time_settings):
-    # type: (str, List[Tuple[Optional[str], str, int]]) -> List[PiggybackRawDataInfo]
+    # type: (str, PiggybackTimeSettings) -> List[PiggybackRawDataInfo]
     """Returns the usable piggyback data for the given host
 
     A list of two element tuples where the first element is
@@ -155,7 +157,7 @@ def get_piggyback_raw_data(piggybacked_hostname, time_settings):
 
 
 def get_source_and_piggyback_hosts(time_settings):
-    # type: (List[Tuple[Optional[str], str, int]]) -> Iterator[Tuple[str, str]]
+    # type: (PiggybackTimeSettings) -> Iterator[Tuple[str, str]]
     """Generates all piggyback pig/piggybacked host pairs that have up-to-date data"""
 
     # Pylint bug (https://github.com/PyCQA/pylint/issues/1660). Fixed with pylint 2.x
@@ -170,7 +172,7 @@ def get_source_and_piggyback_hosts(time_settings):
 
 
 def has_piggyback_raw_data(piggybacked_hostname, time_settings):
-    # type: (str, List[Tuple[Optional[str], str, int]]) -> bool
+    # type: (str, PiggybackTimeSettings) -> bool
     for file_info in _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings):
         if file_info.successfully_processed:
             return True
@@ -178,7 +180,7 @@ def has_piggyback_raw_data(piggybacked_hostname, time_settings):
 
 
 def _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings):
-    # type: (str, List[Tuple[Optional[str], str, int]]) -> List[PiggybackFileInfo]
+    # type: (str, PiggybackTimeSettings) -> List[PiggybackFileInfo]
     """Gather a list of piggyback files to read for further processing.
 
     Please note that there may be multiple parallel calls executing the
@@ -207,7 +209,7 @@ def _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings):
 
 
 def _get_matching_time_settings(source_hostnames, piggybacked_hostname, time_settings):
-    # type: (List[str], str, List[Tuple[Optional[str], str, int]]) -> Dict[Tuple[Optional[str], str], int]
+    # type: (List[str], str, PiggybackTimeSettings) -> Dict[Tuple[Optional[str], str], int]
     matching_time_settings = {}  # type: Dict[Tuple[Optional[str], str], int]
     for expr, key, value in time_settings:
         # expr may be

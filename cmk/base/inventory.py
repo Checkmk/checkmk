@@ -293,7 +293,7 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
                 source.enforce_check_plugin_names(None)
                 host_sections = multi_host_sections.add_or_get_host_sections(
                     hostname, ipaddress, deflt=SNMPHostSections())
-                source.set_fetched_check_plugin_names(host_sections.sections.keys())
+                source.set_fetched_check_plugin_names(set(host_sections.sections.keys()))
                 host_sections_from_source = source.run()
                 host_sections.update(host_sections_from_source)
 

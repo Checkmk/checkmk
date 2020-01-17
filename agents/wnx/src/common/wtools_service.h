@@ -13,8 +13,15 @@ namespace wtools {
 class WinService {
 public:
     enum class StartMode { disabled, stopped, started };
-    enum class LogMode { disabled, enabled };
+    enum class ErrorMode { ignore, log };
     explicit WinService(std::wstring_view name);
+
+    static constexpr std::string_view kRegErrorControl = "ErrorControl";
+    static constexpr std::string_view kRegStart = "Start";
+
+    // API to simple access to configuration
+    static uint32_t ReadUint32(std::wstring_view service,
+                               std::string_view name);
 
     // no copy
     WinService(const WinService& rhs) = delete;
@@ -52,7 +59,7 @@ public:
 
     bool configureStart(StartMode mode);
 
-    bool configureLog(LogMode log_mode);
+    bool configureError(ErrorMode log_mode);
 
 private:
     mutable std::mutex lock_;

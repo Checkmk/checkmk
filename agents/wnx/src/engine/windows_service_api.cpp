@@ -15,6 +15,7 @@
 #include "commander.h"
 #include "common/version.h"
 #include "common/wtools.h"
+#include "common/wtools_service.h"
 #include "cvt.h"
 #include "external_port.h"  // windows api abstracted
 #include "firewall.h"
@@ -935,11 +936,17 @@ int ExecRealtimeTest(bool Print) {
     return 0;
 }
 
-void ProcessFirewallConfiguration(std::wstring_view app_name) {
+static YAML::Node GetNodeFromSystem(std::string_view node) {
     using namespace cma::cfg;
+
     auto cfg = GetLoadedConfig();
     auto os = GetNode(cfg, groups::kSystem);
-    auto firewall = GetNode(os, vars::kFirewall);
+    return GetNode(os, std::string(node));
+}
+
+void ProcessFirewallConfiguration(std::wstring_view app_name) {
+    using namespace cma::cfg;
+    auto firewall = GetNodeFromSystem(vars::kFirewall);
 
     auto firewall_mode =
         GetVal(firewall, vars::kFirewallMode, std::string(values::kModeNone));
@@ -982,6 +989,70 @@ void ProcessFirewallConfiguration(std::wstring_view app_name) {
     }
 }
 
+wtools::WinService::StartMode GetServiceStartModeFromCfg(
+    std::string_view text) {
+    using namespace cma::tools;
+    using namespace cma::cfg;
+    using namespace wtools;
+
+    if (IsEqual(text, values::kStartModeDemand))
+        return WinService::StartMode::stopped;
+
+    if (IsEqual(text, values::kStartModeDisabled))
+        return WinService::StartMode::disabled;
+
+    if (IsEqual(text, values::kStartModeAuto))
+        return WinService::StartMode::started;
+
+    return WinService::StartMode::started;
+}
+
+wtools::WinService::ErrorMode GetServiceErrorModeFromCfg(
+    std::string_view mode) {
+
+    using namespace cma::tools;
+    using namespace cma::cfg;
+    using namespace wtools;
+
+    if (IsEqual(mode, values::kErrorModeIgnore))
+        return WinService::ErrorMode::ignore;
+
+    if (IsEqual(mode, values::kErrorModeLog)) return WinService::ErrorMode::log;
+
+    return WinService::ErrorMode::log;
+}
+
+// called once on start of the service
+// also on reload of the config
+bool ProcessServiceConfiguration(std::wstring_view service_name) {
+    using namespace cma::cfg;
+
+    wtools::WinService ws(service_name);
+
+    if (!ws.isOpened()) {
+        XLOG::l("Cannot open own configuration");
+        return false;
+    }
+
+    auto service = GetNodeFromSystem(vars::kService);
+
+    auto start_mode =
+        GetVal(service, vars::kStartMode, std::string(defaults::kStartMode));
+    auto restart_on_crash =
+        GetVal(service, vars::kRestartOnCrash, defaults::kRestartOnCrash);
+    auto error_mode =
+        GetVal(service, vars::kErrorMode, std::string(defaults::kErrorMode));
+
+    XLOG::l.i("Applying config {} restart_on_crash:{} error_mode: {}",
+              start_mode, restart_on_crash, error_mode);
+
+    ws.configureError(GetServiceErrorModeFromCfg(error_mode));
+    ws.configureRestart(restart_on_crash);
+    ws.configureStart(GetServiceStartModeFromCfg(start_mode));
+
+    return true;
+}
+
 static void TryCleanOnExit() {
     using namespace cma::cfg;
     if (!cma::G_UninstallALert.isSet()) {
@@ -1003,7 +1074,6 @@ static void TryCleanOnExit() {
 // exception free
 // returns -1 on failure
 int ServiceAsService(
-
     std::wstring_view app_name, std::chrono::milliseconds Delay,
     std::function<bool(const void* Processor)> InternalCallback) noexcept {
     XLOG::l.i("service to run");
@@ -1014,9 +1084,18 @@ int ServiceAsService(
     SelfConfigure();
 
     ProcessFirewallConfiguration(app_name);
+    ProcessServiceConfiguration(kServiceName);
 
-    // infinite loop to protect from exception
+    // infinite loop to protect from exception in future SEH too
     while (1) {
+        using namespace wtools;
+        // we can exit from the service if service set to disabled
+        if (SERVICE_DISABLED ==
+            WinService::ReadUint32(kServiceName, WinService::kRegStart)) {
+            XLOG::l("Service is disabled in config, leaving");
+            return -1;
+        }
+
         try {
             using namespace cma::cfg;
 
@@ -1045,6 +1124,17 @@ int ServiceAsService(
             XLOG::l.crit("Exception hit {} in ServiceAsService", e.what());
         } catch (...) {
             XLOG::l.crit("Unknown Exception in ServiceAsService");
+        }
+
+        // here only on internal crash, i.e post processing
+        using namespace cma::cfg;
+        auto service = GetNodeFromSystem(vars::kService);
+        auto restart_on_crash =
+            GetVal(service, vars::kRestartOnCrash, defaults::kRestartOnCrash);
+
+        if (!restart_on_crash) {
+            XLOG::l("Leaving Loop while restart on crash is false");
+            return -1;
         }
     }
     // reachable only on service stop

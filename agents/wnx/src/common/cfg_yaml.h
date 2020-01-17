@@ -179,7 +179,7 @@ constexpr const char* const kCleanupUninstall = "cleanup_uninstall";  // string
 
 constexpr const char* const kService = "service";                  // dictionary
 constexpr const char* const kRestartOnCrash = "restart_on_crash";  // bool
-constexpr const char* const kLogEvents = "log_events";             // bool
+constexpr const char* const kErrorMode = "error_mode";             // string
 constexpr const char* const kStartMode = "start_mode";             // string
 
 }  // namespace vars
@@ -204,5 +204,16 @@ constexpr const char* const kStartModeAuto = "auto";          // start on boot
 constexpr const char* const kStartModeDemand = "demand";      // start manually
 constexpr const char* const kStartModeDisabled = "disabled";  // start disabled
 
+constexpr const char* const kErrorModeIgnore = "ignore";  // do nothing
+constexpr const char* const kErrorModeLog = "log";        // log situation
+
 }  // namespace values
+
+namespace defaults {
+constexpr const char* const kStartMode = values::kStartModeAuto;
+constexpr const char* const kErrorMode = values::kErrorModeLog;
+constexpr bool kRestartOnCrash = true;
+
+}  // namespace defaults
+
 }  // namespace cma::cfg

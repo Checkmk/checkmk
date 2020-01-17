@@ -43,13 +43,6 @@ static void CheckThe(const SERVICE_FAILURE_ACTIONS* x,
     }
 }
 
-static uint32_t ReadKey(std::wstring_view service, std::string_view name) {
-    std::string base = R"(SYSTEM\CurrentControlSet\Services\)";
-    auto val = LocalReadUint32((base + wtools::ConvertToUTF8(service)).c_str(),
-                               name.data(), -1);
-    return val;
-}
-
 TEST(WtoolsService, All) {
     WinService ws_main(cma::srv::kServiceName);
     if (ws_main.handle_ == nullptr) {
@@ -83,34 +76,38 @@ TEST(WtoolsService, All) {
         }
         // log
         {
-            constexpr std::string_view name = "ErrorControl";
-            auto sav = ReadKey(cma::srv::kServiceName, name);
-            std::pair<uint32_t, WinService::LogMode> checks[] = {
-                {SERVICE_ERROR_IGNORE, WinService::LogMode::disabled},
-                {SERVICE_ERROR_NORMAL, WinService::LogMode::enabled}};
+            constexpr std::string_view name = WinService::kRegErrorControl;
+            ASSERT_EQ(name, "ErrorControl");
+            ASSERT_EQ(WinService::kRegStart, "Start");
+            auto sav = WinService::ReadUint32(cma::srv::kServiceName, name);
+            std::pair<uint32_t, WinService::ErrorMode> checks[] = {
+                {SERVICE_ERROR_IGNORE, WinService::ErrorMode::ignore},
+                {SERVICE_ERROR_NORMAL, WinService::ErrorMode::log}};
 
             if (!std::any_of(std::begin(checks), std::end(checks),
                              [sav](auto check) { return check.first == sav; }))
                 GTEST_SKIP() << "bad value start " << sav << "in registry";
 
-            ON_OUT_OF_SCOPE(if (sav != ReadKey(cma::srv::kServiceName, name)) {
+            ON_OUT_OF_SCOPE(if (sav != WinService::ReadUint32(
+                                           cma::srv::kServiceName, name)) {
                 for (auto c : checks) {
                     if (c.first == sav) {
-                        ws.configureLog(c.second);
+                        ws.configureError(c.second);
                         break;
                     }
                 }
             });
 
             for (auto c : checks) {
-                ASSERT_TRUE(ws.configureLog(c.second));
-                EXPECT_EQ(ReadKey(cma::srv::kServiceName, name), c.first);
+                ASSERT_TRUE(ws.configureError(c.second));
+                EXPECT_EQ(WinService::ReadUint32(cma::srv::kServiceName, name),
+                          c.first);
             }
         }
         // start
         {
             constexpr std::string_view name = "Start";
-            auto sav = ReadKey(cma::srv::kServiceName, name);
+            auto sav = WinService::ReadUint32(cma::srv::kServiceName, name);
 
             std::pair<uint32_t, WinService::StartMode> checks[] = {
                 {SERVICE_DISABLED, WinService::StartMode::disabled},
@@ -121,7 +118,8 @@ TEST(WtoolsService, All) {
                              [sav](auto check) { return check.first == sav; }))
                 GTEST_SKIP() << "bad value start " << sav << "in registry";
 
-            ON_OUT_OF_SCOPE(if (sav != ReadKey(cma::srv::kServiceName, name)) {
+            ON_OUT_OF_SCOPE(if (sav != WinService::ReadUint32(
+                                           cma::srv::kServiceName, name)) {
                 for (auto c : checks) {
                     if (c.first == sav) {
                         ws.configureStart(c.second);
@@ -132,7 +130,8 @@ TEST(WtoolsService, All) {
 
             for (auto c : checks) {
                 ASSERT_TRUE(ws.configureStart(c.second));
-                EXPECT_EQ(ReadKey(cma::srv::kServiceName, name), c.first);
+                EXPECT_EQ(WinService::ReadUint32(cma::srv::kServiceName, name),
+                          c.first);
             }
         }
     }

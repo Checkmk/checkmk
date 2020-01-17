@@ -858,10 +858,11 @@ TEST(AgentConfig, WorkScenario) {
         auto service = GetNode(groups::kSystem, vars::kService);
         auto restart_on_crash = GetVal(service, vars::kRestartOnCrash, false);
         EXPECT_TRUE(restart_on_crash);
-        auto log_events = GetVal(service, vars::kLogEvents, false);
-        EXPECT_TRUE(log_events);
+        auto error_control =
+            GetVal(service, vars::kErrorMode, std::string("bb"));
+        EXPECT_EQ(error_control, defaults::kErrorMode);
         auto start_mode = GetVal(service, vars::kStartMode, std::string("aaa"));
-        EXPECT_EQ(start_mode, values::kStartModeAuto);
+        EXPECT_EQ(start_mode, defaults::kStartMode);
     }
 }
 

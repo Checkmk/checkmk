@@ -12,6 +12,14 @@
 
 namespace wtools {
 
+uint32_t WinService::ReadUint32(std::wstring_view service,
+                                std::string_view name) {
+    std::string base = R"(SYSTEM\CurrentControlSet\Services\)";
+    auto val = wtools::LocalReadUint32(
+        (base + wtools::ConvertToUTF8(service)).c_str(), name.data(), -1);
+    return val;
+}
+
 WinService::WinService(std::wstring_view name) {
     auto manager_handle = ::OpenSCManager(nullptr, nullptr, SC_MANAGER_CONNECT);
     if (nullptr == manager_handle) {
@@ -138,11 +146,11 @@ static uint32_t StartMode2WinApi(WinService::StartMode mode) {
     return SERVICE_NO_CHANGE;
 }
 
-static uint32_t LogMode2WinApi(WinService::LogMode mode) {
+static uint32_t LogMode2WinApi(WinService::ErrorMode mode) {
     switch (mode) {
-        case WinService::LogMode::disabled:
+        case WinService::ErrorMode::ignore:
             return SERVICE_ERROR_IGNORE;
-        case WinService::LogMode::enabled:
+        case WinService::ErrorMode::log:
             return SERVICE_ERROR_NORMAL;
     }
 
@@ -153,25 +161,22 @@ bool WinService::configureStart(StartMode mode) {
     auto m = StartMode2WinApi(mode);
 
     auto error_code = CallChangeServiceConfig(handle_, m, SERVICE_NO_CHANGE);
-    if (error_code) {
-        XLOG::l("Failed to set service start to [{}], error isn [{}]", m,
-                error_code);
-        return false;
-    }
+    if (error_code == 0) return true;
 
-    return true;
+    XLOG::l("Failed to set service start to [{}], error isn [{}]", m,
+            error_code);
+    return false;
 }
 
-bool WinService::configureLog(LogMode log_mode) {
+bool WinService::configureError(ErrorMode log_mode) {
     auto m = LogMode2WinApi(log_mode);
     auto error_code = CallChangeServiceConfig(handle_, SERVICE_NO_CHANGE, m);
-    if (error_code) {
-        XLOG::l("Failed to set service log to [{}], error isn [{}]", m,
-                error_code);
-        return false;
-    }
+    if (error_code == 0) return true;
 
-    return true;
-}
+    XLOG::l("Failed to set service error control to [{}], error isn [{}]", m,
+            error_code);
+    return false;
+
+}  // namespace wtools
 
 }  // namespace wtools

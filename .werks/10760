@@ -1,4 +1,4 @@
-Title: Fix missing "Log: Output" column
+Title: Fix missing "Log Entries: Log: Output" column
 Class: fix
 Compatible: compat
 Component: multisite
@@ -9,6 +9,6 @@ Level: 1
 State: unknown
 Version: 1.7.0i1
 
-If you edited existing views which used the column "Log Entries: Log Output",
+If you edited existing views which used the column "Log Entries: Log: Output",
 the column field was empty and this option was not available to choose.
 This has been fixed.

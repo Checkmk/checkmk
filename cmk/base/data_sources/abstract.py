@@ -390,7 +390,7 @@ class DataSource(
         raise NotImplementedError()
 
     def enforce_check_plugin_names(self, check_plugin_names):
-        # type: (Set[CheckPluginName]) -> None
+        # type: (Optional[Set[CheckPluginName]]) -> None
         """
         Returns a subset of beforehand gathered check plugin names which are
         supported by the data source.

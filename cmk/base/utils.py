@@ -32,7 +32,7 @@ from typing import Text, NoReturn, Optional, Union, TYPE_CHECKING  # pylint: dis
 
 from cmk.utils.exceptions import MKTerminate
 # TODO: Cleanup all imports of cmk.base.utils.* and purge these intermediate imports
-from cmk.utils.type_defs import HostName, HostAddress, ServiceName, MetricName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, HostAddress, ServiceName, MetricName, CheckPluginName  # pylint: disable=unused-import
 
 # TODO: Try to find a better place for them.
 

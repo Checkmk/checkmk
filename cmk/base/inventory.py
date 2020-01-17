@@ -30,7 +30,7 @@ In the future all inventory code should be moved to this module."""
 
 import inspect
 import os
-from typing import Tuple, Optional  # pylint: disable=unused-import
+from typing import Tuple, Optional, List, Dict, Text  # pylint: disable=unused-import
 
 import cmk
 import cmk.utils.paths
@@ -52,6 +52,12 @@ import cmk.base.decorator
 import cmk.base.check_api as check_api
 from cmk.base.data_sources.snmp import SNMPHostSections
 
+from cmk.base.utils import HostName, HostAddress, CheckPluginName  # pylint: disable=unused-import
+from cmk.base.snmp_utils import SNMPHostConfig  # pylint: disable=unused-import
+from cmk.base.check_utils import (  # pylint: disable=unused-import
+    ServiceState, ServiceDetails, ServiceAdditionalDetails, Metric,
+)
+
 #.
 #   .--Inventory-----------------------------------------------------------.
 #   |            ___                      _                                |
@@ -66,6 +72,7 @@ from cmk.base.data_sources.snmp import SNMPHostSections
 
 
 def do_inv(hostnames):
+    # type: (List[HostName]) -> None
     store.makedirs(cmk.utils.paths.inventory_output_dir)
     store.makedirs(cmk.utils.paths.inventory_archive_dir)
 
@@ -110,6 +117,7 @@ def _show_inventory_results_on_console(inventory_tree, status_data_tree):
 @cmk.base.decorator.handle_check_mk_check_result("check_mk_active-cmk_inv",
                                                  "Check_MK HW/SW Inventory")
 def do_inv_check(hostname, options):
+    # type: (HostName, Dict[str, int]) -> Tuple[ServiceState, List[ServiceDetails], List[ServiceAdditionalDetails], Metric]
     _inv_hw_changes = options.get("hw-changes", 0)
     _inv_sw_changes = options.get("sw-changes", 0)
     _inv_sw_missing = options.get("sw-missing", 0)
@@ -117,14 +125,17 @@ def do_inv_check(hostname, options):
                                    1)  # State in case of an error (default: WARN)
 
     config_cache = config.get_config_cache()
-    host_config = config_cache.get_host_config(hostname)
+    host_config = config_cache.get_host_config(hostname)  # type: config.HostConfig
 
     if host_config.is_cluster:
         ipaddress = None
     else:
         ipaddress = ip_lookup.lookup_ip_address(hostname)
 
-    status, infotexts, long_infotexts, perfdata = 0, [], [], []
+    status = 0
+    infotexts = []  # type: List[Text]
+    long_infotexts = []  # type: List[Text]
+    perfdata = []  # type: List[Tuple]
 
     sources = data_sources.DataSources(hostname, ipaddress)
     inventory_tree, status_data_tree = _do_inv_for(
@@ -207,7 +218,7 @@ def _all_sources_fail(host_config, sources):
 
 
 def do_inventory_actions_during_checking_for(sources, multi_host_sections, host_config, ipaddress):
-    # type: (data_sources.DataSources, data_sources.MultiHostSections, config.HostConfig, Optional[str]) -> None
+    # type: (data_sources.DataSources, data_sources.MultiHostSections, config.HostConfig, Optional[HostAddress]) -> None
     hostname = host_config.hostname
     do_status_data_inventory = not host_config.is_cluster and host_config.do_status_data_inventory
 
@@ -234,7 +245,7 @@ def do_inventory_actions_during_checking_for(sources, multi_host_sections, host_
 
 
 def _cleanup_status_data(hostname):
-    # type: (str) -> None
+    # type: (HostName) -> None
     filepath = "%s/%s" % (cmk.utils.paths.status_data_dir, hostname)
     if os.path.exists(filepath):  # Remove empty status data files.
         os.remove(filepath)
@@ -243,7 +254,7 @@ def _cleanup_status_data(hostname):
 
 
 def _do_inv_for(sources, multi_host_sections, host_config, ipaddress):
-    # type: (data_sources.DataSources, data_sources.MultiHostSections, config.HostConfig, Optional[str]) -> Tuple[StructuredDataTree, StructuredDataTree]
+    # type: (data_sources.DataSources, Optional[data_sources.MultiHostSections], config.HostConfig, Optional[HostAddress]) -> Tuple[StructuredDataTree, StructuredDataTree]
     hostname = host_config.hostname
 
     _initialize_inventory_tree()
@@ -278,6 +289,7 @@ def _do_inv_for_cluster(host_config, inventory_tree):
 
 def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ipaddress,
                          inventory_tree, status_data_tree):
+    # type: (config.HostConfig, data_sources.DataSources, Optional[data_sources.MultiHostSections], HostName, Optional[HostAddress], StructuredDataTree, StructuredDataTree) -> None
     for source in sources.get_data_sources():
         if isinstance(source, data_sources.SNMPDataSource):
             source.set_on_error("raise")
@@ -345,11 +357,12 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
     console.verbose("\n")
 
 
-def _gather_snmp_check_plugin_names_inventory(host_config,
+def _gather_snmp_check_plugin_names_inventory(snmp_host_config,
                                               on_error,
                                               do_snmp_scan,
                                               for_mgmt_board=False):
-    return snmp_scan.gather_snmp_check_plugin_names(host_config,
+    # type: (SNMPHostConfig, str, bool, bool) -> List[CheckPluginName]
+    return snmp_scan.gather_snmp_check_plugin_names(snmp_host_config,
                                                     on_error,
                                                     do_snmp_scan,
                                                     for_inventory=True,
@@ -372,22 +385,25 @@ g_inv_tree = StructuredDataTree()  # TODO Remove one day. Deprecated with versio
 
 
 def _initialize_inventory_tree():  # TODO Remove one day. Deprecated with version 1.5.0i3??
+    # type: () -> None
     global g_inv_tree
     g_inv_tree = StructuredDataTree()
 
 
 # Dict based
 def inv_tree(path):  # TODO Remove one day. Deprecated with version 1.5.0i3??
+    # type: (str) -> Dict
     return g_inv_tree.get_dict(path)
 
 
 # List based
 def inv_tree_list(path):  # TODO Remove one day. Deprecated with version 1.5.0i3??
+    # type: (str) -> List
     return g_inv_tree.get_list(path)
 
 
 def _save_inventory_tree(hostname, inventory_tree):
-    # type: (str, StructuredDataTree) -> Optional[StructuredDataTree]
+    # type: (HostName, StructuredDataTree) -> Optional[StructuredDataTree]
     store.makedirs(cmk.utils.paths.inventory_output_dir)
 
     filepath = cmk.utils.paths.inventory_output_dir + "/" + hostname
@@ -418,12 +434,14 @@ def _save_inventory_tree(hostname, inventory_tree):
 
 
 def _save_status_data_tree(hostname, status_data_tree):
+    # type: (HostName, StructuredDataTree) -> None
     if status_data_tree and not status_data_tree.is_empty():
         store.makedirs(cmk.utils.paths.status_data_dir)
         status_data_tree.save_to(cmk.utils.paths.status_data_dir, hostname)
 
 
 def _run_inventory_export_hooks(host_config, inventory_tree):
+    # type: (config.HostConfig, StructuredDataTree) -> None
     import cmk.base.inventory_plugins as inventory_plugins
     hooks = host_config.inventory_export_hooks
 
@@ -461,6 +479,7 @@ from cmk.base.discovered_labels import HostLabel
 
 
 def get_inventory_context():
+    # type: () -> config.InventoryContext
     return {
         "inv_tree_list": inv_tree_list,
         "inv_tree": inv_tree,

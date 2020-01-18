@@ -1,0 +1,13 @@
+Title: Fix some reflected XSS issues
+Class: security
+Compatible: compat
+Component: multisite
+Date: 1579373419
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+Fixed several reflected XSS issues that were possible because some webservice
+responses that may contain user provided strings were not correctly encoded.

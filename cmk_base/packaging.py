@@ -478,6 +478,14 @@ def edit_package(pacname, new_package_info):
     write_package_info(new_package_info)
 
 
+def install_optional_package(package_file_name):
+    if package_file_name not in [p.name.decode("utf-8") for p in get_optional_package_paths()]:
+        raise PackageException("Optional package %s does not exist" % package_file_name)
+
+    return install_package(
+        "%s" % cmk.utils.paths.optional_packages_dir.joinpath(package_file_name.encode("utf-8")))
+
+
 # Packaged files must either be unpackaged or already
 # belong to that package
 def validate_package_files(pacname, files):
@@ -678,6 +686,30 @@ def files_in_dir(part, directory, prefix=""):
             result.append(prefix + f)
     result.sort()
     return result
+
+
+def get_optional_package_infos():
+    optional = {}
+    for pkg_path in get_optional_package_paths():
+        with pkg_path.open("rb") as pkg:
+            pkg_info = get_package_info_from_package(pkg)
+            optional[pkg_path.name.decode("utf-8")] = pkg_info
+
+    return optional
+
+
+def get_package_info_from_package(file_object):
+    tar = tarfile.open(fileobj=file_object, mode="r:gz")
+    package_info_file = tar.extractfile("info")
+    if package_info_file is None:
+        raise PackageException("Failed to open package info file")
+    return parse_package_info(package_info_file.read())
+
+
+def get_optional_package_paths():
+    if not cmk.utils.paths.optional_packages_dir.exists():
+        return []
+    return list(cmk.utils.paths.optional_packages_dir.iterdir())
 
 
 def unpackaged_files():

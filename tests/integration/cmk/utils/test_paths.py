@@ -9,6 +9,7 @@ pathlib_paths = [
     "discovered_host_labels_dir",
     "piggyback_dir",
     "piggyback_source_dir",
+    "optional_packages_dir",
 ]
 
 

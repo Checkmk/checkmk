@@ -246,8 +246,10 @@ def show_package(name, show_info=False):
     if show_info:
         sys.stdout.write("Name:                          %s\n" % package["name"])
         sys.stdout.write("Version:                       %s\n" % package["version"])
-        sys.stdout.write("Packaged on Check_MK Version:  %s\n" % package["version.packaged"])
-        sys.stdout.write("Required Check_MK Version:     %s\n" % package["version.min_required"])
+        sys.stdout.write("Packaged on Checkmk Version:   %s\n" % package["version.packaged"])
+        sys.stdout.write("Required Checkmk Version:      %s\n" % package["version.min_required"])
+        valid_until_text = package["version.usable_until"] or "No version limitation"
+        sys.stdout.write("Valid until Checkmk version:   %s\n" % valid_until_text)
         sys.stdout.write("Title:                         %s\n" % package["title"])
         sys.stdout.write("Author:                        %s\n" % package["author"])
         sys.stdout.write("Download-URL:                  %s\n" % package["download_url"])
@@ -286,6 +288,7 @@ def package_create(args):
         "version": "1.0",
         "version.packaged": cmk.__version__,
         "version.min_required": cmk.__version__,
+        "version.usable_until": None,
         "author": "Add your name here",
         "download_url": "http://example.com/%s/" % pacname,
         "files": filelists
@@ -779,4 +782,6 @@ def all_package_names():
 
 
 def parse_package_info(python_string):
-    return ast.literal_eval(python_string)
+    pkg_info = ast.literal_eval(python_string)
+    pkg_info.setdefault("version.usable_until", None)
+    return pkg_info

@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -816,7 +816,6 @@ def do_snmptranslate(walk_filename):
     translated_lines = []  # type: List[Tuple[bytes, bytes]]
 
     walk_lines = open(walk_path).readlines()
-    reveal_type(walk_lines)
     console.error("Processing %d lines.\n" % len(walk_lines))
 
     i = 0

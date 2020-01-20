@@ -30,7 +30,7 @@ In the future all inventory code should be moved to this module."""
 
 import inspect
 import os
-from typing import Tuple, Optional, List, Dict, Text  # pylint: disable=unused-import
+from typing import Set, Tuple, Optional, List, Dict, Text  # pylint: disable=unused-import
 
 import cmk
 import cmk.utils.paths
@@ -361,7 +361,7 @@ def _gather_snmp_check_plugin_names_inventory(snmp_host_config,
                                               on_error,
                                               do_snmp_scan,
                                               for_mgmt_board=False):
-    # type: (SNMPHostConfig, str, bool, bool) -> List[CheckPluginName]
+    # type: (SNMPHostConfig, str, bool, bool) -> Set[CheckPluginName]
     return snmp_scan.gather_snmp_check_plugin_names(snmp_host_config,
                                                     on_error,
                                                     do_snmp_scan,

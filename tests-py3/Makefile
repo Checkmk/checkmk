@@ -43,7 +43,7 @@ MYPY2_FILES=$(shell \
     grep -v $$(realpath '../doc/bi-example-oracle.mk') | \
     grep -v $$(realpath '../doc/bi-example.mk') | \
     if test -d ../enterprise; then \
-        grep -v $$(realpath '../enterprise/agents/bakery') | \
+        grep -v $$(realpath '../agents')/bakery | \
         grep -v $$(realpath '../enterprise/agents/plugins'); \
     else \
         cat; \

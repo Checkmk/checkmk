@@ -148,7 +148,7 @@ class CMKFixFileMixin(object):  # pylint: disable=useless-object-inheritance
         return orig_file, went_back
 
 
-class CMKOutputScanTimesMixin(object):
+class CMKOutputScanTimesMixin(object):  # pylint: disable=useless-object-inheritance
     """Prints out the files being checked and the time needed
 
     Can be useful to track down pylint performance issues. Simply make the

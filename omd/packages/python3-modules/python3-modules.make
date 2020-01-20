@@ -20,7 +20,7 @@ PYTHON3_MODULES_LIST :=
 PYTHON3_MODULES_LIST += setuptools_scm-3.3.3.tar.gz # needed by various setup.py
 PYTHON3_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
 PYTHON3_MODULES_LIST += six-1.13.0.tar.gz # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, pyOpenSSL
-PYTHON3_MODULES_LIST += python-dateutil-2.8.0.tar.gz # direct dependency
+PYTHON3_MODULES_LIST += python-dateutil-2.8.1.tar.gz # direct dependency
 
 PYTHON3_MODULES_LIST += PyYAML-5.2.tar.gz # needed by vcrpy
 PYTHON3_MODULES_LIST += wrapt-1.11.2.tar.gz # needed by vcrpy
@@ -46,6 +46,7 @@ PYTHON3_MODULES_LIST += certifi-2019.9.11.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += chardet-3.0.4.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += urllib3-1.25.7.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += pyOpenSSL-19.1.0.tar.gz # needed by requests with extras = ["security"]
+PYTHON3_MODULES_LIST += pyghmi-1.5.3.tar.gz # needed by base for IPMI
 PYTHON3_MODULES_LIST += requests-2.22.0.tar.gz # needed by DCD, connexion
 # Added for check_bi_aggr with kerberos support
 PYTHON3_MODULES_LIST += pykerberos-1.2.1.tar.gz

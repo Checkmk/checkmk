@@ -32,7 +32,7 @@ pyfakefs = "*" # used for unit tests
 setuptools_scm = "==3.3.3"  # needed by various setup.py
 setuptools-git = "==1.2"  # needed by various setup.py
 six = "==1.13.0"  # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy
-python-dateutil = "==2.8.0"  # direct dependency
+python-dateutil = "==2.8.1"  # direct dependency
 PyYAML = "==5.1.2"  # needed by vcrpy
 wrapt = "==1.11.2"  # needed by vcrpy
 yarl = "==1.3.0"  # needed by vcrpy
@@ -72,6 +72,7 @@ requests-oauthlib = "==1.3.0" # needed by jira
 requests-toolbelt = "==0.9.1" # needed by jira
 PyJWT = "==1.7.1" # needed by jira
 jira = "==2.0.0" # needed by jira
+pyghmi = "==1.5.3" # needed by base for IPMI
 
 [requires]
 python_version = "3.7"

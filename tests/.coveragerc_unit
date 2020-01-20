@@ -10,3 +10,6 @@ source =
     ../tests/unit
     ../web
 branch = True
+# TEMPORARY HACK: We need to exclude all Python 3 stuff, not only this module...
+omit =
+    ../enterprise/cmk/cee/dcd/connectors/utils.py

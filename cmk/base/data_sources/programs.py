@@ -188,7 +188,7 @@ class DSProgramDataSource(ProgramDataSource):
                                                    parents_list))
 
         macros = core_config.get_host_macros_from_attributes(self._hostname, attrs)
-        return core_config.replace_macros(cmd, macros)
+        return ensure_bytestr(core_config.replace_macros(cmd, macros))
 
 
 SpecialAgentConfiguration = collections.namedtuple("SpecialAgentConfiguration", ["args", "stdin"])

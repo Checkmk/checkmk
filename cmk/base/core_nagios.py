@@ -557,25 +557,27 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
 
     # No check_mk service, no legacy service -> create PING service
     if not have_at_least_one_service and not actchecks and not custchecks:
-        _add_ping_service(cfg, config_cache, host_config, host_attrs["address"],
-                          host_config.is_ipv6_primary and 6 or 4, "PING", host_attrs["_NODEIPS"])
+        _add_ping_service(cfg, config_cache, host_config,
+                          host_attrs["address"], host_config.is_ipv6_primary and 6 or 4, "PING",
+                          host_attrs.get("_NODEIPS"))
 
     if host_config.is_ipv4v6_host:
         if host_config.is_ipv6_primary:
             _add_ping_service(cfg, config_cache, host_config, host_attrs["_ADDRESS_4"], 4,
-                              "PING IPv4", host_attrs["_NODEIPS_4"])
+                              "PING IPv4", host_attrs.get("_NODEIPS_4"))
         else:
             _add_ping_service(cfg, config_cache, host_config, host_attrs["_ADDRESS_6"], 6,
-                              "PING IPv6", host_attrs["_NODEIPS_6"])
+                              "PING IPv6", host_attrs.get("_NODEIPS_6"))
 
 
 def _add_ping_service(cfg, config_cache, host_config, ipaddress, family, descr, node_ips):
-    # type: (NagiosConfig, ConfigCache, HostConfig, HostAddress, int, ServiceName, str) -> None
+    # type: (NagiosConfig, ConfigCache, HostConfig, HostAddress, int, ServiceName, Optional[str]) -> None
     hostname = host_config.hostname
     arguments = core_config.check_icmp_arguments_of(config_cache, hostname, family=family)
 
     ping_command = 'check-mk-ping'
     if host_config.is_cluster:
+        assert node_ips is not None
         arguments += ' -m 1 ' + node_ips
     else:
         arguments += ' ' + ipaddress

@@ -29,7 +29,7 @@ import numbers
 import os
 import sys
 from typing import (  # pylint: disable=unused-import
-    Callable, Text, Optional, Any, Tuple, Union, List, Dict, NewType, Literal,
+    Callable, Text, Optional, Any, Tuple, Union, List, Dict, NewType, Literal, AnyStr,
 )
 import six
 
@@ -49,7 +49,7 @@ from cmk.base.config import (  # pylint: disable=unused-import
 from cmk.base.check_utils import Service, CheckParameters  # pylint: disable=unused-import
 
 ConfigurationWarnings = List[str]
-ObjectMacros = Dict[str, str]
+ObjectMacros = Dict[str, AnyStr]
 CoreCommandName = str
 CoreCommand = str
 
@@ -184,15 +184,17 @@ def host_check_command(config_cache, host_config, ip, is_clust, default_host_che
 
 
 def autodetect_plugin(command_line):
-    # type: (str) -> str
+    # type: (Text)-> Text
     plugin_name = command_line.split()[0]
     if command_line[0] in ['$', '/']:
         return command_line
+
     for directory in ["/local", ""]:
         path = cmk.utils.paths.omd_root + directory + "/lib/nagios/plugins/"
         if os.path.exists(path + plugin_name):
-            command_line = path + command_line
+            command_line = six.text_type(path + command_line)
             break
+
     return command_line
 
 
@@ -632,7 +634,7 @@ def get_host_macros_from_attributes(hostname, attrs):
 
 
 def replace_macros(s, macros):
-    # type: (str, ObjectMacros) -> str
+    # type: (Text, ObjectMacros) -> Text
     for key, value in macros.items():
         if isinstance(value, (numbers.Integral, float)):
             value = str(value)  # e.g. in _EC_SL (service level)

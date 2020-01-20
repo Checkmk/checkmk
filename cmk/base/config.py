@@ -111,6 +111,8 @@ SpecialAgentInfoFunction = Callable[[Dict[str, Any], HostName, Optional[HostAddr
 HostCheckCommand = Optional[Union[str, Tuple[str, Union[int, str]]]]
 PingLevels = Dict[str, Union[int, Tuple[float, float]]]
 ObjectAttributes = Dict  # TODO: Improve this. Have seen Dict[str, Union[str, unicode, int]]
+GroupDefinitions = Dict[str, Text]
+RecurringDowntime = Dict[str, Union[int, str]]
 
 
 class TimespecificParamList(list):
@@ -3581,7 +3583,7 @@ class CEEConfigCache(ConfigCache):
                                               deflt=None)
 
     def recurring_downtimes_of_service(self, hostname, description):
-        # type: (HostName, ServiceName) -> List[Dict[str, Union[int, str]]]
+        # type: (HostName, ServiceName) -> List[RecurringDowntime]
         return self.service_extra_conf(hostname, description, service_recurring_downtimes)  # type: ignore # pylint: disable=undefined-variable
 
     def flap_settings_of_service(self, hostname, description):
@@ -3657,7 +3659,7 @@ class CEEHostConfig(HostConfig):
 
     @property
     def recurring_downtimes(self):
-        # type: () -> List[Dict[str, Union[int, str]]]
+        # type: () -> List[RecurringDowntime]
         return self._config_cache.host_extra_conf(self.hostname, host_recurring_downtimes)  # type: ignore # pylint: disable=undefined-variable
 
     @property

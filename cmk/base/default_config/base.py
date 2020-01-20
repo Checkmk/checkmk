@@ -24,7 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from typing import Dict as _Dict, List as _List, Optional as _Optional  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Dict as _Dict, List as _List, Optional as _Optional, Text as _Text,
+)
 
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
@@ -205,7 +207,7 @@ host_contactgroups = []  # type: _List
 parents = []  # type: _List
 define_hostgroups = None
 define_servicegroups = None
-define_contactgroups = None
+define_contactgroups = None  # type: _Optional[_Dict[str, _Text]]
 contactgroup_members = {}  # type: _Dict
 contacts = {}  # type: _Dict
 # needed for WATO

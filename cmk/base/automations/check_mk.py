@@ -1394,8 +1394,8 @@ class AutomationActiveCheck(Automation):
 
                 command_line = self._replace_core_macros(hostname, entry.get("command_line", ""))
                 if command_line:
-                    command_line = core_config.autodetect_plugin(command_line)
-                    return self._execute_check_plugin(command_line)
+                    cmd = core_config.autodetect_plugin(command_line)
+                    return self._execute_check_plugin(cmd)
 
                 return -1, "Passive check - cannot be executed"
 
@@ -1417,8 +1417,8 @@ class AutomationActiveCheck(Automation):
                                                               act_info["argument_function"](params))
             command_line = self._replace_core_macros(
                 hostname, act_info["command_line"].replace("$ARG1$", command_args))
-            command_line = core_config.autodetect_plugin(command_line)
-            return self._execute_check_plugin(command_line)
+            cmd = core_config.autodetect_plugin(command_line)
+            return self._execute_check_plugin(cmd)
 
         return None
 
@@ -1451,9 +1451,9 @@ class AutomationActiveCheck(Automation):
         return commandline
 
     def _execute_check_plugin(self, commandline):
-        # type: (str) -> Tuple[ServiceState, ServiceDetails]
+        # type: (Text) -> Tuple[ServiceState, ServiceDetails]
         try:
-            p = os.popen(commandline + " 2>&1")  # nosec
+            p = os.popen(commandline.encode("utf-8") + " 2>&1")  # nosec
             output = p.read().strip()
             ret = p.close()
             if not ret:

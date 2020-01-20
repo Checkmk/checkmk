@@ -18,7 +18,16 @@ PYTHON2_PATHS=(
     gui
     __init__.py
     notification_plugins
-    special_agents
+    special_agents/agent_aws.py
+    special_agents/agent_azure.py
+    special_agents/agent_elasticsearch.py
+    special_agents/agent_graylog.py
+    special_agents/agent_jenkins.py
+    special_agents/agent_kubernetes.py
+    special_agents/agent_splunk.py
+    special_agents/agent_vsphere.py
+    special_agents/__init__.py
+    special_agents/utils.py
     update_config.py
     utils
     ec/__init__.py
@@ -31,6 +40,8 @@ PYTHON3_PATHS=(
     __init__.py
     utils
     ec
+    #    special_agents/agent_jira.py
+    #    special_agents/__init__.py
 )
 
 echo "Copy CRE files..."
@@ -49,7 +60,7 @@ sudo rsync \
     --exclude=cee.py \
     --exclude=cme \
     --exclude=cme.py \
-    -a \
+    -aR \
     "${PYTHON3_PATHS[@]}" \
     $ROOT/lib/python3/cmk/
 

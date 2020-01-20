@@ -11,7 +11,6 @@ import cmk.gui.visuals # Triggers plugin loading
 import cmk.gui.inventory
 from cmk.gui.globals import html
 import cmk.gui.plugins.visuals
-import cmk.gui.cee.agent_bakery
 
 from testlib import on_time
 
@@ -981,7 +980,10 @@ def test_filters_filter_table(register_builtin_html, test, monkeypatch):
             },
             "zzz": {},
         }[host_name]
-    monkeypatch.setattr(cmk.gui.cee.agent_bakery, "get_cached_deployment_status", deployment_states)
+
+    if not cmk.is_raw_edition():
+        import cmk.gui.cee.agent_bakery # pylint: disable=redefined-outer-name
+        monkeypatch.setattr(cmk.gui.cee.agent_bakery, "get_cached_deployment_status", deployment_states)
 
     # Needed for FilterInvFloat test
     monkeypatch.setattr(cmk.gui.inventory, "get_inventory_data", get_inventory_data_patch)

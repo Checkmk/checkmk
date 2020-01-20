@@ -38,5 +38,13 @@ RUN apt-get update \
 RUN rm -rf /bin/systemctl \
     && ln -s /bin/true /bin/systemctl
 
+# New packages that are not needed for the build toolchain above should be added here.
+# We avoid rebuild of the whole previous steps this way
+RUN apt-get update \
+    && apt-get install -y \
+    joe \
+    vim \
+    && rm -rf /var/lib/apt/lists/*
+
 ARG VERS_TAG
 RUN echo $VERS_TAG > /version.txt

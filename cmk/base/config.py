@@ -365,7 +365,7 @@ def _transform_mgmt_config_vars_from_140_to_150():
     # 1.4.0 to 1.5.0 some config variables are not known in cmk.base. These variables
     # are 'management_protocol' and 'management_snmp_community'.
     # Clean this up one day!
-    for hostname, attributes in host_attributes.iteritems():
+    for hostname, attributes in host_attributes.items():
         for name, var in [
             ('management_protocol', management_protocol),
             ('management_snmp_community', management_snmp_credentials),
@@ -707,8 +707,8 @@ def _get_shadow_hosts():
 def _all_active_hosts_with_duplicates():
     # type: () -> List[str]
     return _filter_active_hosts(get_config_cache(),
-                                (strip_tags(all_hosts) + strip_tags(clusters.keys()) +
-                                 strip_tags(_get_shadow_hosts().keys())))
+                                (strip_tags(all_hosts) + strip_tags(list(clusters.keys())) +
+                                 strip_tags(list(_get_shadow_hosts().keys()))))
 
 
 def _filter_active_hosts(config_cache, hostlist, keep_offline_hosts=False):
@@ -1633,7 +1633,7 @@ def includes_of_plugin(check_file_path):
                 elif target.value.id == "check_includes":
                     _load_from_check_includes(child)
 
-    return include_names.keys()
+    return list(include_names.keys())
 
 
 def _plugin_pathnames_in_directory(path):
@@ -1718,7 +1718,7 @@ def get_check_variables():
     We assume a single variable has the same value in all relevant contexts, which means
     that it is enough to get the variable from the first context."""
     check_config = {}
-    for varname, context_ident_list in _check_variables.iteritems():
+    for varname, context_ident_list in _check_variables.items():
         check_config[varname] = _check_contexts[context_ident_list[0]][varname]
     return check_config
 
@@ -1796,7 +1796,7 @@ def convert_check_info():
             check_includes[section_name] += info.get("includes", [])
 
     # Make sure that setting for node_info of check and subcheck matches
-    for check_plugin_name, info in check_info.iteritems():
+    for check_plugin_name, info in check_info.items():
         if "." in check_plugin_name:
             section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
             if section_name not in check_info:
@@ -1813,7 +1813,7 @@ def convert_check_info():
     # Now gather snmp_info and snmp_scan_function back to the
     # original arrays. Note: these information is tied to a "agent section",
     # not to a check. Several checks may use the same SNMP info and scan function.
-    for check_plugin_name, info in check_info.iteritems():
+    for check_plugin_name, info in check_info.items():
         section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
         if info["snmp_info"] and section_name not in snmp_info:
             snmp_info[section_name] = info["snmp_info"]
@@ -2627,7 +2627,7 @@ class HostConfig(object):
 
         hostname = self.hostname
         cache = {}
-        for key, hostnames in explicit_host_conf.iteritems():
+        for key, hostnames in explicit_host_conf.items():
             if hostname in hostnames:
                 cache[key] = hostnames[hostname]
         self._explicit_attributes_lookup = cache
@@ -3043,7 +3043,7 @@ class ConfigCache(object):
     def _get_host_paths(self, config_host_paths):
         """Reference hostname -> dirname including /"""
         host_dirs = {}
-        for hostname, filename in config_host_paths.iteritems():
+        for hostname, filename in config_host_paths.items():
             dirname_of_host = os.path.dirname(filename)
             if dirname_of_host[-1] != "/":
                 dirname_of_host += "/"
@@ -3077,7 +3077,7 @@ class ConfigCache(object):
                 host_tags[hostname] = self._tag_list_to_tag_groups(tag_to_group_map,
                                                                    self._hosttags[hostname])
 
-        for shadow_host_name, shadow_host_spec in _get_shadow_hosts().iteritems():
+        for shadow_host_name, shadow_host_spec in _get_shadow_hosts().items():
             self._hosttags[shadow_host_name] = set(
                 shadow_host_spec.get("custom_variables", {}).get("TAGS", "").split())
             host_tags[shadow_host_name] = self._tag_list_to_tag_groups(
@@ -3088,7 +3088,7 @@ class ConfigCache(object):
         # The pre 1.6 tags contained only the tag group values (-> chosen tag id),
         # but there was a single tag group added with it's leading tag group id. This
         # was the internal "site" tag that is created by HostAttributeSite.
-        tags = set(v for k, v in tag_groups.iteritems() if k != "site")
+        tags = set(v for k, v in tag_groups.items() if k != "site")
         tags.add(host_path)
         tags.add("site:%s" % tag_groups["site"])
         return tags
@@ -3186,7 +3186,7 @@ class ConfigCache(object):
         attrs = {
             "check_interval": 1.0,  # 1 minute
         }
-        for key, ruleset in extra_service_conf.iteritems():
+        for key, ruleset in extra_service_conf.items():
             values = self.service_extra_conf(hostname, description, ruleset)
             if not values:
                 continue
@@ -3494,7 +3494,7 @@ class ConfigCache(object):
 
     def _get_all_configured_clusters(self):
         # type: () -> Set[HostName]
-        return set(strip_tags(clusters.keys()))
+        return set(strip_tags(list(clusters.keys())))
 
     def host_of_clustered_service(self, hostname, servicedesc, part_of_clusters=None):
         # type: (HostName, Text, Optional[List[str]]) -> str
@@ -3517,7 +3517,7 @@ class ConfigCache(object):
                 return cluster
 
         # 1. New style: explicitly assigned services
-        for cluster, conf in clustered_services_of.iteritems():
+        for cluster, conf in clustered_services_of.items():
             nodes = self.nodes_of(cluster)
             if not nodes:
                 raise MKGeneralException(
@@ -3621,8 +3621,9 @@ class CEEConfigCache(ConfigCache):
     def matched_agent_config_entries(self, hostname):
         # type: (Union[bool, HostName]) -> Dict[str, Any]
         matched = {}
-        for varname, ruleset in agent_config.items() + [("agent_port", agent_ports),
-                                                        ("agent_encryption", agent_encryption)]:
+        for varname, ruleset in list(agent_config.items()) + [("agent_port", agent_ports),
+                                                              ("agent_encryption", agent_encryption)
+                                                             ]:
             # mypy compatible check of cmk.base.cee.agent_bakyery.GENERIC_AGENT
             # GENERIC_AGENT = True
             if isinstance(hostname, bool):

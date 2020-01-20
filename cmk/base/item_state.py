@@ -89,7 +89,7 @@ class CachedItemStates(object):
 
     def clear_all_item_states(self):
         # type: () -> None
-        removed_item_state_keys = self._item_states.keys()
+        removed_item_state_keys = list(self._item_states.keys())
         self.reset()
         self._removed_item_state_keys = removed_item_state_keys
 

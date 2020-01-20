@@ -697,7 +697,7 @@ def discover(selector=None, default_params=None):
     """
     def roller(parsed):
         if isinstance(parsed, dict):
-            return parsed.iteritems()
+            return parsed.items()
         elif isinstance(parsed, (list, tuple)):
             return parsed
         raise ValueError("Discovery function only works with dictionaries,"

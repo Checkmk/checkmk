@@ -146,7 +146,7 @@ def handle_request(args, sections):
             if sources is not None:
                 source_list = []
                 if args.display_source_details == "source":
-                    for source, messages in sources.iteritems():
+                    for source, messages in sources.items():
                         value = {"sources": {source: messages}}
                         handle_piggyback(value, args, source, section.name)
                         continue

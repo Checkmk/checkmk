@@ -292,7 +292,7 @@ def remove_duplicate_checks(check_table):
     have_with_tcp = {}  # type: Dict[Text, Tuple[CheckPluginName, Item]]
     have_with_snmp = {}  # type: Dict[Text, Tuple[CheckPluginName, Item]]
     without_duplicates = {}  # type: CheckTable
-    for key, service in check_table.iteritems():
+    for key, service in check_table.items():
         if cmk.base.check_utils.is_snmp_check(service.check_plugin_name):
             if service.description in have_with_tcp:
                 continue

@@ -189,7 +189,7 @@ def expand_backslashes(value):
 
 def convert_context_to_unicode(context):
     # Convert all values to unicode
-    for key, value in context.iteritems():
+    for key, value in context.items():
         if isinstance(value, str):
             context[key] = convert_to_unicode(value, on_error=u"(Invalid byte sequence)")
 

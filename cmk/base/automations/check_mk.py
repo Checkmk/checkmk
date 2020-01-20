@@ -257,7 +257,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
             descr = config.service_description(hostname, check_plugin_name, item)
 
             service_labels = DiscoveredServiceLabels()
-            for label_id, label_value in raw_service_labels.iteritems():
+            for label_id, label_value in raw_service_labels.items():
                 service_labels.add_label(ServiceLabel(label_id, label_value))
 
             new_services.append(

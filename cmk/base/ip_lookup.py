@@ -255,7 +255,7 @@ def _convert_legacy_ip_lookup_cache(cache):
         return {}
 
     # New version has (hostname, ip family) as key
-    if isinstance(cache.keys()[0], tuple):
+    if isinstance(list(cache.keys())[0], tuple):
         return cast(NewIPLookupCache, cache)
 
     cache = cast(LegacyIPLookupCache, cache)

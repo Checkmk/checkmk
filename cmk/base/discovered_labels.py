@@ -71,7 +71,7 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):
     @classmethod
     def from_dict(cls, dict_labels):
         labels = cls()
-        for k, v in dict_labels.iteritems():
+        for k, v in dict_labels.items():
             labels.add_label(HostLabel.from_dict(k, v))
         return labels
 
@@ -83,11 +83,11 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):
         # type: () -> Dict[Text, Text]
         return {
             label.name: label.to_dict()
-            for label in sorted(self._labels.itervalues(), key=lambda x: x.name)
+            for label in sorted(self._labels.values(), key=lambda x: x.name)
         }
 
     def to_list(self):
-        return [label for label in sorted(self._labels.itervalues(), key=lambda x: x.name)]
+        return [label for label in sorted(self._labels.values(), key=lambda x: x.name)]
 
     def __add__(self, other):
         if not isinstance(other, DiscoveredHostLabels):

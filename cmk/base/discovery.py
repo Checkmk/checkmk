@@ -258,13 +258,13 @@ def _perform_host_label_discovery(hostname, discovered_host_labels, check_plugin
 
     # Take over old items if -I is selected or if -II is selected with
     # --checks= and the check type is not one of the listed ones
-    for existing_label in existing_host_labels.itervalues():
+    for existing_label in existing_host_labels.values():
         if only_new or (check_plugin_names and
                         existing_label.plugin_name not in check_plugin_names):
             new_host_labels.add_label(existing_label)
 
     host_labels_per_plugin = {}  # type: Dict[check_table.CheckPluginName, int]
-    for discovered_label in discovered_host_labels.itervalues():
+    for discovered_label in discovered_host_labels.values():
         if discovered_label.name not in new_host_labels:
             new_host_labels.add_label(discovered_label)
             host_labels_per_plugin.setdefault(discovered_label.plugin_name, 0)
@@ -878,7 +878,7 @@ def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_err
                         entry.plugin_name = check_plugin_name
                         discovered_host_labels.add_label(entry)
                     elif isinstance(entry, DiscoveredHostLabels):
-                        for host_label in entry.itervalues():
+                        for host_label in entry.values():
                             host_label.plugin_name = check_plugin_name
                             discovered_host_labels.add_label(host_label)
             except (KeyboardInterrupt, MKTimeout):

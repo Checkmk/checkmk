@@ -1300,7 +1300,7 @@ def get_section_counters(connection, hostsystems, datastores, opt):
     section_lines = []
     counters_available_by_host = fetch_available_counters(connection, hostsystems)
     counters_available_all = functools.reduce(lambda x, y: x.union(y),
-                                              counters_available_by_host.itervalues(), set())
+                                              counters_available_by_host.values(), set())
     net_extra_info = fetch_extra_interface_counters(connection, opt)
     counters_description = fetch_counters_syntax(connection, counters_available_all)
 
@@ -1309,7 +1309,7 @@ def get_section_counters(connection, hostsystems, datastores, opt):
 
         counters_selected = [
             (id_, instances)
-            for id_, instances in counters_avail.iteritems()
+            for id_, instances in counters_avail.items()
             if counters_description.get(id_, {}).get("key") in REQUESTED_COUNTERS_KEYS
         ]
 
@@ -1456,16 +1456,16 @@ def fetch_hostsystem_data(connection):
 def get_sections_hostsystem_sensors(hostsystems_properties, hostsystems_sensors, opt):
     # TODO: improve error handling: check if multiple results
     section_lines = []
-    for hostname, properties in hostsystems_properties.iteritems():
+    for hostname, properties in hostsystems_properties.items():
         if not opt.direct:
             section_lines.append("<<<<%s>>>>" % convert_hostname(properties["name"][0], opt))
 
         section_lines.append("<<<esx_vsphere_hostsystem>>>")
-        for key, data in sorted(properties.iteritems()):
+        for key, data in sorted(properties.items()):
             section_lines.append("%s %s" % (key, " ".join(data)))
 
         section_lines.append("<<<esx_vsphere_sensors:sep(59)>>>")
-        for key, data in sorted(hostsystems_sensors[hostname].iteritems()):
+        for key, data in sorted(hostsystems_sensors[hostname].items()):
             if data["key"].lower() in ("green", "unknown"):
                 continue
             section_lines.append('%s;%s;%s;%s;%s;%s;%s;%s;%s' %
@@ -1495,7 +1495,7 @@ def get_sections_hostsystem_sensors(hostsystems_properties, hostsystems_sensors,
 
 def get_vm_power_states(vms, hostsystems, opt):
     piggy_data = {}
-    for used_hostname, vm_data in vms.iteritems():
+    for used_hostname, vm_data in vms.items():
         runtime_host = vm_data.get("runtime.host")
         running_on = hostsystems.get(runtime_host, runtime_host)
         power_state = vm_data.get("runtime.powerState")
@@ -1512,7 +1512,7 @@ def get_vm_power_states(vms, hostsystems, opt):
 
 def _get_vms_by_hostsystem(vms, hostsystems):
     vms_by_hostsys = {}
-    for vm_name, vm_data in vms.iteritems():
+    for vm_name, vm_data in vms.items():
         runtime_host = vm_data.get("runtime.host")
         running_on = hostsystems.get(runtime_host, runtime_host)
         vms_by_hostsys.setdefault(running_on, []).append(vm_name)
@@ -1527,7 +1527,7 @@ def get_hostsystem_power_states(vms, hostsystems, hostsystems_properties, opt):
         override_hostname = opt.hostname
 
     piggy_data = {}
-    for data in hostsystems_properties.itervalues():
+    for data in hostsystems_properties.values():
         orig_hostname = data["name"][0]
         used_hostname = override_hostname or convert_hostname(orig_hostname, opt)
         power_state = data["runtime.powerState"][0]
@@ -1545,7 +1545,7 @@ def get_hostsystem_power_states(vms, hostsystems, hostsystems_properties, opt):
 
 def _format_piggybacked_objects_sections(piggy_data):
     output = []
-    for piggy_target, info in piggy_data.iteritems():
+    for piggy_target, info in piggy_data.items():
         output += ["<<<<%s>>>>" % piggy_target, "<<<esx_vsphere_objects:sep(9)>>>"] + info
     return output + ["<<<<>>>>"]
 
@@ -1616,7 +1616,7 @@ def get_pattern(pattern, line):
 def get_sections_aggregated_snapshots(vms, hostsystems):
 
     aggregated = {}
-    for data in vms.itervalues():
+    for data in vms.values():
         if hostsystems is not None:
             running_on = hostsystems.get(data.get("runtime.host"), data.get("runtime.host"))
         else:
@@ -1626,7 +1626,7 @@ def get_sections_aggregated_snapshots(vms, hostsystems):
             aggregated.setdefault(running_on, []).append(snapshots)
 
     section_lines = []
-    for piggytarget, sn_list in aggregated.iteritems():
+    for piggytarget, sn_list in aggregated.items():
         section_lines += [
             '<<<<%s>>>>' % piggytarget, '<<<esx_vsphere_vm>>>',
             'snapshot.rootSnapshotList %s' % '|'.join(sn_list), '<<<<>>>>'
@@ -1808,10 +1808,10 @@ def fetch_virtual_machines(connection, hostsystems, datastores, opt):
 
 def get_section_vm(vms):
     section_lines = []
-    for vm_name, vm_data in sorted(vms.iteritems()):
+    for vm_name, vm_data in sorted(vms.items()):
         if vm_data.get("name"):
             section_lines += ["<<<<%s>>>>" % vm_name, "<<<esx_vsphere_vm>>>"]
-            section_lines.extend("%s %s" % entry for entry in sorted(vm_data.iteritems()))
+            section_lines.extend("%s %s" % entry for entry in sorted(vm_data.items()))
     return section_lines
 
 

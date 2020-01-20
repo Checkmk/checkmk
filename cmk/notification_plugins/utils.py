@@ -106,7 +106,7 @@ def html_escape_context(context):
         'PARAMETER_FROM',
         'PARAMETER_REPLY_TO',
     }
-    for variable, value in context.iteritems():
+    for variable, value in context.items():
         if variable not in unescaped_variables:
             context[variable] = html_escape(value)
 

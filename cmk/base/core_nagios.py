@@ -256,7 +256,7 @@ def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
 
     # Custom configuration last -> user may override all other values
     # TODO: Find a generic mechanism for CMC and Nagios
-    for key, value in host_config.extra_host_attributes.iteritems():
+    for key, value in host_config.extra_host_attributes.items():
         if host_config.is_cluster and key == "parents":
             continue
         host_spec[key] = value
@@ -567,7 +567,7 @@ def _add_ping_service(cfg, config_cache, host_config, ipaddress, family, descr, 
 
 def _format_nagios_object(object_type, object_spec):
     cfg = ["define %s {" % object_type]
-    for key, val in sorted(object_spec.iteritems(), key=lambda x: x[0]):
+    for key, val in sorted(object_spec.items(), key=lambda x: x[0]):
         # Use a base16 encoding for names and values of tags, labels and label
         # sources to work around the syntactic restrictions in Nagios' object
         # configuration files.

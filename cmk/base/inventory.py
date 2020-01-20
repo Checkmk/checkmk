@@ -203,7 +203,7 @@ def _all_sources_fail(host_config, sources):
        and not host_config.has_piggyback_data:
         del exceptions_by_source["piggyback"]
 
-    return all(exception is not None for exception in exceptions_by_source.itervalues())
+    return all(exception is not None for exception in exceptions_by_source.values())
 
 
 def do_inventory_actions_during_checking_for(sources, multi_host_sections, host_config, ipaddress):

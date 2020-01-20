@@ -170,11 +170,11 @@ def handle_jobs(value):
 def handle_health(value):
     sys.stdout.write("Overall_state %s\n" % value[0].get("content", {}).get("health"))
 
-    for func, state in value[0]["content"]["features"].iteritems():
+    for func, state in value[0]["content"]["features"].items():
         func_name = "%s%s" % (func[0].upper(), func[1:].lower())
         sys.stdout.write("%s %s\n" % (func_name.replace(" ", "_"), state.get("health", {})))
 
-        for feature, status in state["features"].iteritems():
+        for feature, status in state["features"].items():
             feature_name = "%s%s" % (feature[0].upper(), feature[1:].lower())
             sys.stdout.write(
                 "%s %s %s\n" %

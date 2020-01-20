@@ -121,7 +121,7 @@ def parse_arguments(argv):
 
 
 def handle_cluster_health(response):
-    for item, value in response.iteritems():
+    for item, value in response.items():
         sys.stdout.write("%s %s\n" % (item, value))
 
 

@@ -386,7 +386,7 @@ class RulesetOptimizer(object):
             service_labels_condition = rule["condition"].get("service_labels", {})
             service_labels_condition_cache_id = tuple(
                 (label_id, _tags_or_labels_cache_id(label_spec))
-                for label_id, label_spec in service_labels_condition.iteritems())
+                for label_id, label_spec in service_labels_condition.items())
 
             # And now preprocess the configured patterns in the servlist
             new_rules.append(
@@ -561,9 +561,9 @@ class RulesetOptimizer(object):
         return (
             tuple(sorted(host_parts)),
             tuple((tag_id, _tags_or_labels_cache_id(tag_spec))
-                  for tag_id, tag_spec in tags.iteritems()),
+                  for tag_id, tag_spec in tags.items()),
             tuple((label_id, _tags_or_labels_cache_id(label_spec))
-                  for label_id, label_spec in labels.iteritems()),
+                  for label_id, label_spec in labels.items()),
             rule_path,
         )
 
@@ -680,7 +680,7 @@ def _tags_or_labels_cache_id(tag_or_label_spec):
 
 
 def _matches_labels(object_labels, required_labels):
-    for label_group_id, label_spec in required_labels.iteritems():
+    for label_group_id, label_spec in required_labels.items():
         is_not = isinstance(label_spec, dict)
         if is_not:
             label_spec = label_spec["$ne"]

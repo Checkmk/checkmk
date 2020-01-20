@@ -352,15 +352,14 @@ def _extra_service_attributes(hostname, description, config_cache, checkname, pa
 
     # Add service custom_variables. Name conflicts are prevented by the GUI, but just
     # to be sure, add them first. The other definitions will override the custom attributes.
-    for varname, value in config_cache.custom_attributes_of_service(hostname,
-                                                                    description).iteritems():
+    for varname, value in config_cache.custom_attributes_of_service(hostname, description).items():
         attrs["_%s" % varname.upper()] = value
 
     attrs.update(config_cache.extra_attributes_of_service(hostname, description))
 
     # Add explicit custom_variables
-    for varname, value in config_cache.get_explicit_service_custom_variables(
-            hostname, description).iteritems():
+    for varname, value in config_cache.get_explicit_service_custom_variables(hostname,
+                                                                             description).items():
         attrs["_%s" % varname.upper()] = value
 
     # Add custom user icons and actions
@@ -452,7 +451,7 @@ def get_host_attributes(hostname, config_cache):
 
 
 def _get_tag_attributes(collection, prefix):
-    return {u"__%s_%s" % (prefix, k): six.text_type(v) for k, v in collection.iteritems()}
+    return {u"__%s_%s" % (prefix, k): six.text_type(v) for k, v in collection.items()}
 
 
 def get_cluster_attributes(config_cache, host_config, nodes):

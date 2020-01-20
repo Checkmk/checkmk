@@ -1404,7 +1404,7 @@ def notification_script_env(plugin_context):
 
     notify_env = os.environ.copy()
     notify_env.update(
-        {"NOTIFY_" + variable: format_(value) for variable, value in plugin_context.iteritems()})
+        {"NOTIFY_" + variable: format_(value) for variable, value in plugin_context.items()})
 
     return notify_env
 
@@ -1771,7 +1771,7 @@ def notify_bulk(dirname, uuids):
                                      NotificationContext(context)))
 
             context_lines.append("\n")
-            for varname, value in context.iteritems():
+            for varname, value in context.items():
                 line = "%s=%s\n" % (varname, value.replace("\r", "").replace("\n", "\1"))
                 context_lines.append(line)
 

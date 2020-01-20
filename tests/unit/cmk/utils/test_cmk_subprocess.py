@@ -1,5 +1,5 @@
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
-import pytest
+import pytest  # type: ignore[import]
 import six
 import cmk.utils.cmk_subprocess as subprocess
 

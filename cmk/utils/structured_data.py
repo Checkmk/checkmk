@@ -195,7 +195,7 @@ class StructuredDataTree(object):
             # Skipping invalid entries such as
             # {u'KEY': [LIST OF STRINGS], ...}
             try:
-                for v in entry.itervalues():
+                for v in entry.values():
                     if isinstance(v, list):
                         return False
             except AttributeError:
@@ -460,7 +460,7 @@ class Container(NodeAttribute):
 
     def _has_nested_numeration_node(self, node_data):
         for entry in node_data:
-            for v in entry.itervalues():
+            for v in entry.values():
                 if isinstance(v, list):
                     return True
         return False

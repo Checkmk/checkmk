@@ -1,0 +1,14 @@
+Title: ps: Handling of non-ASCII characters during process discovery
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p9
+Date: 1579515445
+Class: fix
+
+This fixes a rare encoding related exception during process discovery.
+
+If one of the matched groups contained a non-ASCII character and that
+matched group was supposed to be formatted into the service description,
+the discovery crashed.

@@ -677,9 +677,9 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_localize(*args):
-    # type: (str) -> None
-    cmk.base.localize.do_localize(*args)
+def mode_localize(args):
+    # type: (List[str]) -> None
+    cmk.base.localize.do_localize(args)
 
 
 modes.register(
@@ -1221,11 +1221,11 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_man(*args):
-    # type: (str) -> None
+def mode_man(args):
+    # type: (List[str]) -> None
     import cmk.utils.man_pages as man_pages
-    if args[0]:
-        man_pages.ConsoleManPageRenderer(args[0][0]).paint()
+    if args:
+        man_pages.ConsoleManPageRenderer(args[0]).paint()
     else:
         man_pages.print_man_page_table()
 
@@ -1427,13 +1427,12 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_notify(options, *args):
-    # type: (Dict, str) -> None
+def mode_notify(options, args):
+    # type: (Dict, List[str]) -> None
     import cmk.base.notify as notify
     with store.lock_checkmk_configuration():
         config.load(with_conf_d=True, validate_hosts=False)
-    # TODO: Fix the code and remove the pragma below!
-    return notify.do_notify(options, *args)  # pylint: disable=no-value-for-parameter
+    return notify.do_notify(options, args)
 
 
 modes.register(

@@ -36,5 +36,13 @@ RUN pip install --upgrade setuptools \
     $PACKAGES \
     && zypper clean -a
 
+# New packages that are not needed for the build toolchain above should be added here.
+# We avoid rebuild of the whole previous steps this way
+RUN zypper ref \
+    && zypper -n in -y --force-resolution \
+    joe \
+    vim \
+    && zypper clean -a
+
 ARG VERS_TAG
 RUN echo $VERS_TAG > /version.txt

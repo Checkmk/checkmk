@@ -41,6 +41,7 @@ from cmk.gui.valuespec import (
     RadioChoice,
     RegExp,
     TextAscii,
+    TextUnicode,
     Transform,
     Tuple,
     ListOf,
@@ -301,7 +302,7 @@ def validate_process_discovery_descr_option(description, varprefix):
 
 
 def process_discovery_descr_option():
-    return TextAscii(
+    return TextUnicode(
         title=_('Process Name'),
         allow_empty=False,
         validate=validate_process_discovery_descr_option,

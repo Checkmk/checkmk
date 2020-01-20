@@ -96,9 +96,9 @@ def warning(text, *args, **kwargs):
     stripped = text.lstrip()
     indent = text[:len(text) - len(stripped)]
 
-    text = "%s%s%sWARNING:%s %s\n" % (indent, tty.bold, tty.yellow, tty.normal, stripped)
+    wtext = "%s%s%sWARNING:%s %s\n" % (indent, tty.bold, tty.yellow, tty.normal, stripped)
 
-    output(text, *args, **kwargs)
+    output(wtext, *args, **kwargs)
 
 
 def error(text, *args):

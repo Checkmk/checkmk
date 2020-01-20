@@ -42,14 +42,14 @@ def process(output):
     # type: (RawAgentData) -> RawAgentData
     try:
         while True:
-            i = output.find('%{')
+            i = output.find(b'%{')
             if i == -1:
                 break
-            e = output.find('}', i)
+            e = output.find(b'}', i)
             if e == -1:
                 break
             simfunc = output[i + 2:e]
-            replacement = str(eval("agentsim_" + simfunc))  # nosec
+            replacement = str(eval(b"agentsim_" + simfunc)).encode("utf-8")  # nosec
             output = output[:i] + replacement + output[e + 1:]
     except Exception as e:
         if cmk.utils.debug.enabled():

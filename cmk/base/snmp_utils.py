@@ -91,8 +91,8 @@ def binstring_to_int(binstring):
     needed COUNTER64 (which is not available in SNMP v1)."""
     value = 0
     mult = 1
-    for byte in binstring[::-1]:
-        value += mult * ord(byte)
+    for byte in six.iterbytes(binstring[::-1]):
+        value += mult * byte
         mult *= 256
     return value
 

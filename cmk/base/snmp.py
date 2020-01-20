@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -295,8 +295,7 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
     if oid[0] != '.':
         if cmk.utils.debug.enabled():
             raise MKGeneralException("OID definition '%s' does not begin with a '.'" % oid)
-        else:
-            oid = '.' + oid
+        oid = '.' + oid
 
     # TODO: Use generic cache mechanism
     if _is_in_single_oid_cache(oid):
@@ -352,15 +351,12 @@ class StoredWalkSNMPBackend(snmp_utils.ABCSNMPBackend):
     def get(self, snmp_config, oid, context_name=None):
         # type: (SNMPHostConfig, OID, Optional[ContextName]) -> Optional[RawValue]
         walk = self.walk(snmp_config, oid)
-
         # get_stored_snmpwalk returns all oids that start with oid but here
         # we need an exact match
         if len(walk) == 1 and oid == walk[0][0]:
             return walk[0][1]
-
-        elif oid.endswith(".*") and len(walk) > 0:
+        if oid.endswith(".*") and len(walk) > 0:
             return walk[0][1]
-
         return None
 
     def walk(self,
@@ -405,7 +401,7 @@ class StoredWalkSNMPBackend(snmp_utils.ABCSNMPBackend):
             hit = self._compare_oids(oid_prefix, comp)
             if hit == 0:
                 break
-            elif hit == 1:  # we are too low
+            if hit == 1:  # we are too low
                 begin = current + 1
             else:
                 end = current
@@ -446,8 +442,7 @@ class StoredWalkSNMPBackend(snmp_utils.ABCSNMPBackend):
         if index >= len(lines):
             if direction > 0:
                 return []
-            else:
-                index -= 1
+            index -= 1
         while True:
             line = lines[index]
             parts = line.split(None, 1)
@@ -541,8 +536,7 @@ def _extract_end_oid(prefix, complete):
 def _oid_to_intlist(oid):
     # type: (OID) -> List[int]
     if oid:
-        return map(int, oid.split('.'))
-
+        return list(map(int, oid.split('.')))
     return []
 
 
@@ -651,15 +645,15 @@ def _sanitize_snmp_encoding(snmp_config, columns):
     new_columns = []  # type: ResultColumnsDecoded
     for column, value_encoding in columns:
         if value_encoding == "string":
-            new_columns.append(map(decode_string_func, column))
+            new_columns.append(list(map(decode_string_func, column)))
         else:
-            new_columns.append(map(_snmp_decode_binary, column))
+            new_columns.append(list(map(_snmp_decode_binary, column)))
     return new_columns
 
 
 def _snmp_decode_binary(text):
     # type: (RawValue) -> DecodedBinary
-    return map(ord, text)
+    return list(map(ord, text))
 
 
 def _sanitize_snmp_table_columns(columns):
@@ -796,10 +790,10 @@ def do_snmptranslate(walk_filename):
         try:
             oids_for_command = []
             for line in lines:
-                oids_for_command.append(line.split(" ")[0])
+                oids_for_command.append(line.split(b" ")[0])
 
-            command = ["snmptranslate", "-m", "ALL",
-                       "-M+%s" % cmk.utils.paths.local_mib_dir] + oids_for_command
+            command = [b"snmptranslate", b"-m", b"ALL",
+                       b"-M+%s" % cmk.utils.paths.local_mib_dir] + oids_for_command
             p = subprocess.Popen(command,
                                  stdout=subprocess.PIPE,
                                  stderr=open(os.devnull, "w"),
@@ -808,7 +802,7 @@ def do_snmptranslate(walk_filename):
             if p.stdout is None:
                 raise RuntimeError()
             output = p.stdout.read()
-            result = output.split("\n")[0::2]
+            result = output.split(b"\n")[0::2]
             for idx, line in enumerate(result):
                 result_lines.append((line.strip(), lines[idx].strip()))
 
@@ -822,6 +816,7 @@ def do_snmptranslate(walk_filename):
     translated_lines = []  # type: List[Tuple[bytes, bytes]]
 
     walk_lines = open(walk_path).readlines()
+    reveal_type(walk_lines)
     console.error("Processing %d lines.\n" % len(walk_lines))
 
     i = 0

@@ -169,11 +169,11 @@ class SNMPDataSource(ABCSNMPDataSource):
 
     def _from_cache_file(self, raw_data):
         # type: (bytes) -> RawSNMPData
-        return ast.literal_eval(raw_data)
+        return ast.literal_eval(raw_data.decode("utf-8"))
 
     def _to_cache_file(self, raw_data):
         # type: (RawSNMPData) -> bytes
-        return repr(raw_data) + "\n"
+        return (repr(raw_data) + "\n").encode("utf-8")
 
     def set_ignore_check_interval(self, ignore_check_interval):
         # type: (bool) -> None

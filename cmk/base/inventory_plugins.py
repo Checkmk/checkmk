@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import os
-from typing import Any, Dict, Set, Iterator, Tuple  # pylint: disable=unused-import
+from typing import Any, Dict, Set, Iterator, Tuple, Optional  # pylint: disable=unused-import
 
 import cmk.utils.paths
 import cmk.utils.debug
@@ -147,6 +147,7 @@ def sorted_inventory_plugins():
     resolved_dependencies = {}  # type: Dict[str, Set[str]]
 
     def resolve_plugin_dependencies(plugin_name, known_dependencies=None):
+        # type: (CheckPluginName, Optional[Set[CheckPluginName]]) -> Set[CheckPluginName]
         '''recursively aggregate all plugin dependencies'''
         if known_dependencies is None:
             known_dependencies = set()

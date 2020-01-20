@@ -673,11 +673,12 @@ def render_bi_availability(title, aggr_rows):
                     "aggr_group": html.request.var("aggr_group"),
                 }
 
-                renderer = bi.FoldableTreeRendererTree(row,
-                                                       omit_root=False,
-                                                       expansion_level=config.user.bi_expansion_level,
-                                                       only_problems=False,
-                                                       lazy=False)
+                renderer = bi.FoldableTreeRendererTree(
+                    row,
+                    omit_root=False,
+                    expansion_level=config.user.bi_expansion_level,
+                    only_problems=False,
+                    lazy=False)
                 tdclass, htmlcode = renderer.css_class(), renderer.render()
 
                 with html.plugged():

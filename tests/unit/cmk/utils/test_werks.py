@@ -82,8 +82,7 @@ def test_werk_versions_after_tagged(precompiled_werks):
         "The following Werks are not found in the git tag corresponding to their Version. "
         "Looks like the wrong version was declared in these werks:\n" +
         "\n".join("Werk #%d has version %s, not found in git tag %s, first found in %s" % entry
-                  for entry in list_of_offenders)
-        )
+                  for entry in list_of_offenders))
 
 
 @cmk.utils.memoize.MemoizeCache

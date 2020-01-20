@@ -3786,7 +3786,7 @@ class EventFilterState(Filter):
             return ""
 
         filters = []
-        for sel in selected:
+        for sel in sorted(selected):
             filters.append("Filter: %s = %s" % (self.ident, sel))
 
         f = "\n".join(filters)

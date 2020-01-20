@@ -3,6 +3,7 @@
 from collections import namedtuple
 import pytest  # type: ignore
 
+import cmk
 import cmk.utils.tags
 
 import cmk.gui.config
@@ -982,8 +983,8 @@ def test_filters_filter_table(register_builtin_html, test, monkeypatch):
         }[host_name]
 
     if not cmk.is_raw_edition():
-        import cmk.gui.cee.agent_bakery # pylint: disable=redefined-outer-name
-        monkeypatch.setattr(cmk.gui.cee.agent_bakery, "get_cached_deployment_status", deployment_states)
+        import cmk.gui.cee.agent_bakery as agent_bakery # pylint: disable=redefined-outer-name
+        monkeypatch.setattr(agent_bakery, "get_cached_deployment_status", deployment_states)
 
     # Needed for FilterInvFloat test
     monkeypatch.setattr(cmk.gui.inventory, "get_inventory_data", get_inventory_data_patch)

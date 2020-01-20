@@ -61,7 +61,8 @@ REAL_SEARCH=$(realpath $SEARCH)
 # NOTE 1: while read F is used to deal with files containing whitespaces
 # NOTE 2: We explicitly filter out the targets of symbolic links, too, otherwise
 # we would see files twice.
-find $REAL_SEARCH \
+find -L \
+     $REAL_SEARCH \
     -name .mypy_cache -prune -o \
     -name .venv -prune -o \
     -name test_docker_parse_node_images.py -prune -o \

@@ -36,6 +36,8 @@ from typing import List, Set, Dict  # pylint: disable=unused-import
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import (  # pylint: disable=unused-import
+    ServiceName,)
 
 import cmk.base.utils
 import cmk.base.console as console
@@ -47,6 +49,7 @@ import cmk.base.check_utils
 import cmk.base.check_api_utils as check_api_utils
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     CheckPluginName,)
+from cmk.base.core_config import CoreCommand  # pylint: disable=unused-import
 
 
 class NagiosCore(core_config.MonitoringCore):
@@ -206,6 +209,7 @@ def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
             host_spec[key] = value
 
     def host_check_via_service_status(service):
+        # type: (ServiceName) -> CoreCommand
         command = "check-mk-host-custom-%d" % (len(cfg.hostcheck_commands_to_define) + 1)
         cfg.hostcheck_commands_to_define.append(
             (command, 'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' %

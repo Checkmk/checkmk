@@ -1413,10 +1413,10 @@ class AutomationActiveCheck(Automation):
             if description != item:
                 continue
 
-            args = core_config.active_check_arguments(hostname, description,
-                                                      act_info["argument_function"](params))
+            command_args = core_config.active_check_arguments(hostname, description,
+                                                              act_info["argument_function"](params))
             command_line = self._replace_core_macros(
-                hostname, act_info["command_line"].replace("$ARG1$", args))
+                hostname, act_info["command_line"].replace("$ARG1$", command_args))
             command_line = core_config.autodetect_plugin(command_line)
             return self._execute_check_plugin(command_line)
 

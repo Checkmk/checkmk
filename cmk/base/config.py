@@ -75,7 +75,8 @@ from cmk.base.discovered_labels import DiscoveredServiceLabels  # pylint: disabl
 from cmk.base.snmp_utils import (  # pylint: disable=unused-import
     ScanFunction,)
 from cmk.base.check_utils import (  # pylint: disable=unused-import
-    SectionName,)
+    SectionName, CheckParameters,
+)
 
 # TODO: Prefix helper functions with "_".
 
@@ -102,9 +103,14 @@ CheckIncludes = List[str]
 Ruleset = List  # TODO: Improve this type
 TagValue = str
 Tags = Dict[str, TagValue]
+Labels = Dict[Text, Text]
+LabelSources = Dict[Text, str]
 DiscoveryCheckParameters = Dict
 SpecialAgentInfoFunction = Callable[[Dict[str, Any], HostName, Optional[HostAddress]],
                                     Union[str, List[str]]]
+HostCheckCommand = Optional[Union[str, Tuple[str, Union[int, str]]]]
+PingLevels = Dict[str, Union[int, Tuple[float, float]]]
+ObjectAttributes = Dict  # TODO: Improve this. Have seen Dict[str, Union[str, unicode, int]]
 
 
 class TimespecificParamList(list):
@@ -2572,7 +2578,7 @@ class HostConfig(object):
 
     @property
     def explicit_check_command(self):
-        # type: () -> Optional[str]
+        # type: () -> HostCheckCommand
         entries = self._config_cache.host_extra_conf(self.hostname, host_check_commands)
         if not entries:
             return None
@@ -2584,8 +2590,8 @@ class HostConfig(object):
 
     @property
     def ping_levels(self):
-        # type: () -> Dict[str, Union[int, float]]
-        levels = {}  # type: Dict[str, Union[int, float]]
+        # type: () -> PingLevels
+        levels = {}  # type: PingLevels
 
         values = self._config_cache.host_extra_conf(self.hostname, ping_levels)
         # TODO: Use host_extra_conf_merged?)
@@ -2601,8 +2607,8 @@ class HostConfig(object):
 
     @property
     def extra_host_attributes(self):
-        # type: () -> Dict[str, str]
-        attrs = {}  # type: Dict
+        # type: () -> ObjectAttributes
+        attrs = {}  # type: ObjectAttributes
         attrs.update(self._explicit_host_attributes)
 
         for key, ruleset in extra_host_conf.items():
@@ -2623,6 +2629,7 @@ class HostConfig(object):
 
     @property
     def _explicit_host_attributes(self):
+        # type: () -> ObjectAttributes
         if self._explicit_attributes_lookup is not None:
             return self._explicit_attributes_lookup
 
@@ -3166,7 +3173,7 @@ class ConfigCache(object):
         return tags
 
     def labels_of_service(self, hostname, svc_desc):
-        # type: (HostName, ServiceName) -> Dict[Text, Text]
+        # type: (HostName, ServiceName) -> Labels
         """Returns the effective set of service labels from all available sources
 
         1. Discovered labels
@@ -3177,7 +3184,7 @@ class ConfigCache(object):
         return self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc)
 
     def label_sources_of_service(self, hostname, svc_desc):
-        # type: (HostName, ServiceName) -> Dict[Text, str]
+        # type: (HostName, ServiceName) -> LabelSources
         """Returns the effective set of service label keys with their source identifier instead of the value
         Order and merging logic is equal to labels_of_service()"""
         return self.labels.label_sources_of_service(self.ruleset_matcher, hostname, svc_desc)
@@ -3207,7 +3214,7 @@ class ConfigCache(object):
         return attrs
 
     def icons_and_actions_of_service(self, hostname, description, checkname, params):
-        # type: (HostName, ServiceName, CheckPluginName, Dict) -> List[str]
+        # type: (HostName, ServiceName, Optional[CheckPluginName], CheckParameters) -> List[str]
         actions = set(self.service_extra_conf(hostname, description, service_icons_and_actions))
 
         # Some WATO rules might register icons on their own

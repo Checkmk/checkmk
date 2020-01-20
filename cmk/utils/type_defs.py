@@ -32,6 +32,7 @@ HostAddress = str
 HostgroupName = str
 ServiceName = Text
 ServicegroupName = str
+ContactgroupName = str
 TimeperiodName = str
 MetricName = str
 CheckPluginName = str

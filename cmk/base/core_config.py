@@ -50,6 +50,7 @@ from cmk.base.check_utils import Service, CheckParameters  # pylint: disable=unu
 
 ConfigurationWarnings = List[str]
 ObjectMacros = Dict[str, str]
+CoreCommandName = str
 CoreCommand = str
 
 

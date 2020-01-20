@@ -31,7 +31,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 2.2.4\n"
+"X-Generator: Poedit 2.0.6\n"
 "X-Poedit-Basepath: .\n"
 "X-Poedit-Bookmarks: -1,-1,1412,-1,-1,-1,-1,-1,-1,-1\n"
 "X-Poedit-SearchPath-0: /home/mk/git/check_mk/web/htdocs\n"
@@ -2492,6 +2492,10 @@ msgstr "Aktion"
 
 msgid "Action ID"
 msgstr "Aktions ID"
+
+#, fuzzy
+msgid "Action on Error"
+msgstr "Anmeldungsfehler"
 
 msgid "Actions"
 msgstr "Aktionen"
@@ -5321,6 +5325,10 @@ msgstr "Berechtigte Instanzen"
 
 msgid "Auto - adjust to actual values"
 msgstr "Auto - an tatsächliche Werte anpassen"
+
+#, fuzzy
+msgid "Auto Restart on Crash"
+msgstr "Autostart-Dienste"
 
 msgid "Auto close off"
 msgstr "Auto-Close aus"
@@ -8204,6 +8212,10 @@ msgstr "Agentenversion"
 #, fuzzy
 msgid "Checkmk Version"
 msgstr "Check_MK-Version"
+
+#, fuzzy
+msgid "Checkmk Windows agent service settings"
+msgstr "Agentenversion"
 
 #, fuzzy
 msgid "Checkmk agent network service (Linux)"
@@ -36565,6 +36577,10 @@ msgstr "Service-Servicelevel"
 msgid "Service staleness value"
 msgstr "Service Veraltungswert"
 
+#, fuzzy
+msgid "Service start type"
+msgstr "Service Zustandstyp"
+
 msgid "Service state"
 msgstr "Service-Status"
 
@@ -48143,7 +48159,7 @@ msgid "Time Left on Battery at and below which a critical state is triggered"
 msgstr "Restzeit der Batterie, aber der ein kritischer Status augelöst wird"
 
 msgid "Time MTR waits between sending pings"
-msgstr "Zeit die das Plugin zwischen dein einzelnen Pings wartet"
+msgstr "Zeit die das Plugin zwischen den einzelnen Pings wartet"
 
 msgid "Time Periods"
 msgstr "Zeitperioden"
@@ -51007,6 +51023,21 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Use this ruleset to choose desirable start mode of the Windows service. You "
+"may also prevent the service from start."
+msgstr ""
+
+msgid ""
+"Use this ruleset to control some actions which can be performed upon crash or "
+"other problems."
+msgstr ""
+
+msgid ""
+"Use this ruleset to enable or disable automatic service restart on crash or "
+"other internal errors."
+msgstr ""
+
+msgid ""
 "Use this ruleset to make the long output available in the monitoring history "
 "(which also makes it available for availability processing). Be aware: "
 "Enabling this option may increase the filesystem space consumption of your "
@@ -53568,6 +53599,32 @@ msgstr "Erkennung von Windowsservices"
 
 msgid "Windows Service Summary"
 msgstr "Windows-Dienste (Zusammengefasst)"
+
+#, fuzzy
+msgid "Windows Service does nothing"
+msgstr "Windows Services"
+
+msgid "Windows Service doesn't restart automatically"
+msgstr ""
+
+#, fuzzy
+msgid "Windows Service is disabled and can't be started"
+msgstr "Diese Regel ist zur Zeit deaktiviert und wird nicht angewendet"
+
+#, fuzzy
+msgid "Windows Service restarts automatically"
+msgstr "Windows-Dienste (Zusammengefasst)"
+
+#, fuzzy
+msgid "Windows Service starts automatically"
+msgstr "Windows-Dienste (Zusammengefasst)"
+
+#, fuzzy
+msgid "Windows Service starts on demand"
+msgstr "Erkennung von Windowsservices"
+
+msgid "Windows Service writes information to the Event Log"
+msgstr ""
 
 msgid "Windows Services"
 msgstr "Windows Services"
@@ -57341,9 +57398,6 @@ msgstr "gestern"
 
 msgid "z/OS"
 msgstr "z/OS"
-
-#~ msgid "Authentication error"
-#~ msgstr "Anmeldungsfehler"
 
 #~ msgid "Consolidated rrd data column"
 #~ msgstr "Spalte der konsolidierten RRD Daten"

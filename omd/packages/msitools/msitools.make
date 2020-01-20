@@ -25,7 +25,8 @@ GSF_CONFIGURE_VARS :=
 endif
 
 $(MSITOOLS_BUILD): $(LIBGSF_INTERMEDIATE_INSTALL) $(MSITOOLS_PATCHING) $(BUILD_HELPER_DIR)/$(LCAB_DIR)-unpack
-	cd $(MSITOOLS_BUILD_DIR) && $(GSF_CONFIGURE_VARS) ./configure --prefix=$(OMD_ROOT) ; then \
+	cd $(MSITOOLS_BUILD_DIR) && \
+          $(GSF_CONFIGURE_VARS) ./configure --prefix=$(OMD_ROOT) ; \
 	  $(MAKE) -C libmsi ; \
 	  $(MAKE) msibuild ; \
 	  $(MAKE) msiinfo ; \

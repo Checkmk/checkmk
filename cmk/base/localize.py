@@ -28,7 +28,7 @@ import logging
 import os
 import subprocess
 import sys
-from typing import Text  # pylint: disable=unused-import
+from typing import Optional, List, Text  # pylint: disable=unused-import
 from pathlib2 import Path
 
 from cmk.utils.log import VERBOSE
@@ -38,6 +38,8 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKException
 
 logger = logging.getLogger("cmk.base.localize")
+
+LanguageName = str
 
 
 # TODO: Inherit from MKGeneralException?
@@ -81,7 +83,8 @@ def _alias_file(lang):
     return Path(_locale_base(), lang, "alias")
 
 
-def _localize_usage(err=''):
+def _localize_usage():
+    # type: () -> None
     sys.stdout.write("""Usage: check_mk [-v] --localize COMMAND [ARGS]
 
 Available commands are:
@@ -104,17 +107,22 @@ Available commands are:
 
 
 def do_localize(args):
+    # type: (List[str]) -> None
     if len(args) == 0:
         _localize_usage()
         sys.exit(1)
 
     command = args[0]
-    if len(args) > 1:
-        lang = args[1]
-    else:
-        lang = None
 
-    alias = None
+    try:
+        lang = args[1]  # type: LanguageName
+    except IndexError:
+        raise LocalizeException('No language given')
+
+    if not lang:
+        raise LocalizeException('No language given')
+
+    alias = None  # type: Optional[Text]
     if len(args) > 2:
         alias = args[2].decode("utf-8")
 
@@ -142,7 +150,7 @@ def do_localize(args):
 
 
 def _write_alias(lang, alias):
-    # type: (str, Text) -> None
+    # type: (LanguageName, Optional[Text]) -> None
     if not alias:
         return
 
@@ -156,18 +164,21 @@ def _write_alias(lang, alias):
 
 
 def _check_binaries():
-    # Are the xgettext utils available?
+    # type: () -> None
+    """Are the xgettext utils available?"""
     for b in ['xgettext', 'msgmerge', 'msgfmt']:
         if subprocess.call(['which', b], stdout=open(os.devnull, "wb")) != 0:
             raise LocalizeException('%s binary not found in PATH\n' % b)
 
 
 def _get_languages():
+    # type: () -> List[LanguageName]
     return [l for l in os.listdir(_locale_base()) if os.path.isdir(_locale_base() + '/' + l)]
 
 
 def _localize_update_po(lang):
-    # Merge the current .pot file with a given .po file
+    # type: (LanguageName) -> None
+    """Merge the current .pot file with a given .po file"""
     logger.log(VERBOSE, "Merging translations...")
     if subprocess.call(
         ['msgmerge', '-U', _po_file(lang), _pot_file()], stdout=open(os.devnull, "wb")) != 0:
@@ -177,6 +188,7 @@ def _localize_update_po(lang):
 
 
 def _localize_init_po(lang):
+    # type: (LanguageName) -> None
     if subprocess.call(
         ['msginit', '-i',
          _pot_file(), '--no-translator', '-l', lang, '-o',
@@ -185,8 +197,9 @@ def _localize_init_po(lang):
         logger.error('Failed!\n')
 
 
-# Dig into the source code and generate a new .pot file
 def _localize_sniff():
+    # type: () -> None
+    """Dig into the source code and generate a new .pot file"""
     logger.info('Sniffing source code...')
 
     paths = [
@@ -256,6 +269,7 @@ msgstr ""
 
 
 def _localize_edit(lang):
+    # type: (LanguageName) -> None
     _localize_update(lang)
 
     editor = os.getenv("VISUAL", os.getenv("EDITOR", "/usr/bin/vi"))
@@ -268,11 +282,9 @@ def _localize_edit(lang):
         logger.error("Aborted.")
 
 
-# Start translating in a new language
 def _localize_update(lang):
-    if not lang:
-        raise LocalizeException('No language given')
-
+    # type: (LanguageName) -> None
+    """Start translating in a new language"""
     po_file = _po_file(lang)
     _initialize_local_po_file(lang)
     _localize_sniff()
@@ -285,10 +297,9 @@ def _localize_update(lang):
         _localize_update_po(lang)
 
 
-# Create a .mo file from the given .po file
 def _localize_compile(lang):
-    if not lang:
-        raise LocalizeException('No language given')
+    # type: (LanguageName) -> None
+    """Create a .mo file from the given .po file"""
     if lang not in _get_languages():
         raise LocalizeException('Invalid language given. Available: %s' %
                                 ' '.join(_get_languages()))
@@ -306,7 +317,7 @@ def _localize_compile(lang):
 
 
 def _initialize_local_po_file(lang):
-    # type: (str) -> None
+    # type: (LanguageName) -> None
     """Initialize the file in the local hierarchy with the file in the default hierarchy if needed"""
     po_file = _po_file(lang)
 

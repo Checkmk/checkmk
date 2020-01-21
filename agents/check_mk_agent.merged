@@ -1191,40 +1191,51 @@ section_jobs() {
     # is a sub directory per user that ran a job. That directory must be
     # owned by the user so that a symlink or hardlink attack for reading
     # arbitrary files can be avoided.
-    if [ "${MK_OSSTR}" = "linux" ]; then
-        (
-            cd "${MK_VARDIR}/job" || return
-            mkecho '<<<job>>>'
-            for _username in *; do
-                if [ -d "${_username}" ] && cd "${_username}"; then
-                    if [ "${EUID}" -eq 0 ]; then
-                        su -s "${SHELL}" "${_username}" -c "head -n -0 -v *"
-                    else
-                        head -n -0 -v ./*
+    (
+        cd "${MK_VARDIR}/job" || return
+        mkecho '<<<job>>>'
+        case "${MK_OSSTR}" in
+            (aix)
+                for _username in *; do
+                    if [ -d "${_username}" ] && cd "${_username}"; then
+                        for _filename in *; do
+                            # Maybe a cursory "if [ -r "${_filename}" ]" could go here?
+                            mkecho "==> ${_filename} <=="
+                            cat "${_filename}"
+                        done
+                        cd ..
                     fi
-                    cd ..
-                fi
-            done
-        )
-    elif [ "${MK_OSSTR}" = "solaris" ]; then
-        (
-            cd "${MK_VARDIR}/job" || return
-            mkecho '<<<job>>>'
-            for _username in *; do
-                if [ -d "${_username}" ] && cd "${_username}" ; then
-                    _count=$(su -s "${SHELL}" "${_username}" -c "ls -1 * | wc -l")
-
-                    if [ "${_count}" -eq "1" ]; then
-                        _filename=$(su -s "${SHELL}" "${_username}" -c "ls -1 *")
-                        mkecho "==> ${_filename} <=="
+                done
+            ;;
+            (linux)
+                for _username in *; do
+                    if [ -d "${_username}" ] && cd "${_username}"; then
+                        if [ "${EUID}" -eq 0 ]; then
+                            su -s "${SHELL}" "${_username}" -c "head -n -0 -v *"
+                        else
+                            head -n -0 -v ./*
+                        fi
+                        cd ..
                     fi
+                done
+            ;;
+            (solaris)
+                for _username in *; do
+                    if [ -d "${_username}" ] && cd "${_username}" ; then
+                        _count=$(su -s "${SHELL}" "${_username}" -c "ls -1 * | wc -l")
 
-                    su -s "${SHELL}" "${_username}" -c "head -n1000 *"
-                    cd ..
-                fi
-            done
-        )
-    fi
+                        if [ "${_count}" -eq "1" ]; then
+                            _filename=$(su -s "${SHELL}" "${_username}" -c "ls -1 *")
+                            mkecho "==> ${_filename} <=="
+                        fi
+
+                        su -s "${SHELL}" "${_username}" -c "head -n1000 *"
+                        cd ..
+                    fi
+                done
+            ;;
+        esac
+    )
     unset -v _username _filename _count
 }
 

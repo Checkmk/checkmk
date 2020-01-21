@@ -2097,10 +2097,10 @@ def welcome_message(site, admin_password):
         "  The admin user for the web applications is %scmkadmin%s with password: %s%s%s\n" %
         (tty.bold, tty.normal, tty.bold, admin_password, tty.normal))
     sys.stdout.write(
-        "  (It can be changed with 'htpasswd -m ~/etc/htpasswd cmkadmin' as site user.\n)")
-    sys.stdout.write("\n")
-    sys.stdout.write("  Please do a %ssu - %s%s for administration of this site.\n" %
-                     (tty.bold, site.name, tty.normal))
+        "  For command line administration of the site, log in with %s'omd su %s'%s.\n" %
+        (tty.bold, site.name, tty.normal))
+    sys.stdout.write("  After logging in, you can change the password for cmkadmin with "
+                     "%s'htpasswd etc/htpasswd cmkadmin'%s.\n" % (tty.bold, tty.normal))
     sys.stdout.write("\n")
 
 

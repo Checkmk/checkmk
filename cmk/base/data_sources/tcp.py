@@ -163,6 +163,7 @@ class TCPDataSource(CheckMKAgentDataSource):
 
         return output
 
+    # TODO: Sync with real_type_checks._decrypt_rtc_package
     def _decrypt_package(self, encrypted_pkg, encryption_key, protocol):
         # type: (bytes, str, int) -> RawAgentData
         from Cryptodome.Cipher import AES

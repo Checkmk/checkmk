@@ -1,0 +1,10 @@
+Title: Snapshot generation: Improved performance by using more cpus for the config computation
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cme
+Version: 1.6.0p9
+Date: 1569500950
+Class: feature
+
+

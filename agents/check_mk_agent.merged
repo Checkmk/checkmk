@@ -135,6 +135,12 @@ if [ -z "${HOME}" ]; then
     readonly HOME; export HOME
 fi
 
+# If USER isn't set, then set it
+if [ -z "${USER}" ]; then
+    USER=$(getent passwd | awk -F':' -v EUID="${EUID}" '$3 == EUID{print $1}')
+    readonly USER; export USER
+fi
+
 # date +%s is not portable, so we provide this function
 # To do this in pure shell is... fun... however 'perl' is assumed
 # elsewhere in this agent, so we may as well depend on that for our failover option

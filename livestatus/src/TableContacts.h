@@ -29,22 +29,11 @@
 #include <string>
 #include "Row.h"
 #include "Table.h"
-#include "contact_fwd.h"
 class MonitoringCore;
 class Query;
 
-#ifndef CMC
-extern contact *contact_list;
-#endif
-
 class TableContacts : public Table {
 public:
-#ifndef CMC
-    class IRow : virtual public Table::IRow {
-    public:
-        virtual const contact *getContact() const = 0;
-    };
-#endif
     explicit TableContacts(MonitoringCore *mc);
 
     [[nodiscard]] std::string name() const override;
@@ -52,12 +41,8 @@ public:
     void answerQuery(Query *query) override;
     [[nodiscard]] Row findObject(const std::string &objectspec) const override;
 
-#ifdef CMC
     static void addColumns(Table *table, const std::string &prefix,
                            int indirect_offset);
-#else
-    static void addColumns(Table *table, const std::string &prefix);
-#endif
 };
 
 #endif  // TableContacts_h

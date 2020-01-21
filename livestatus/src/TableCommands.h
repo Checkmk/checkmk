@@ -34,8 +34,9 @@ struct Command;
 
 class TableCommands : public Table {
 public:
-    class IRow : virtual public Table::IRow {
+    class IRow {
     public:
+        virtual ~IRow() = default;
         virtual Command getCommand() const = 0;
     };
     explicit TableCommands(MonitoringCore *mc);

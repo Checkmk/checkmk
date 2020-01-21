@@ -38,7 +38,7 @@ public:
     IntLambdaColumn(std::string name, std::string description,
                     std::function<int(Row)> gv)
         : IntColumn(std::move(name), std::move(description), {})
-        , get_value_{gv} {}
+        , get_value_(gv) {}
     virtual ~IntLambdaColumn() = default;
 
     std::int32_t getValue(Row row,

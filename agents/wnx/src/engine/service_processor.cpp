@@ -12,10 +12,12 @@
 #include "commander.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
+#include "common/wtools_service.h"
 #include "external_port.h"
 #include "realtime.h"
 #include "tools/_process.h"
 #include "upgrade.h"
+#include "windows_service_api.h"
 
 namespace cma::srv {
 extern bool global_stop_signaled;  // semi-hidden global variable for global
@@ -481,6 +483,8 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop() {
     auto ipv6 = groups::global.ipv6();
     auto port = groups::global.port();
     auto uniq_cfg_id = GetCfg().uniqId();
+    ProcessServiceConfiguration(kServiceName);
+
     while (1) {
         using namespace std::chrono;
 
@@ -504,6 +508,17 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop() {
             XLOG::l.t("Stop request is set");
             break;  // signaled stop
         }
+
+        if (SERVICE_DISABLED ==
+            wtools::WinService::ReadUint32(cma::srv::kServiceName,
+                                           wtools::WinService::kRegStart)) {
+            XLOG::l("Service is disabled in config, leaving...");
+
+            cma::tools::RunDetachedCommand(std::string("net stop ") +
+                                           wtools::ConvertToUTF8(kServiceName));
+            break;
+        }
+
         restartBinariesIfCfgChanged(uniq_cfg_id);
     }
     XLOG::l.t("main Wait Loop END");

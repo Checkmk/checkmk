@@ -177,6 +177,6 @@ bool WinService::configureError(ErrorMode log_mode) {
             error_code);
     return false;
 
-}  // namespace wtools
+}
 
 }  // namespace wtools

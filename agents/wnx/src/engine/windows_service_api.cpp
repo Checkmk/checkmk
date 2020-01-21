@@ -980,10 +980,10 @@ void ProcessFirewallConfiguration(std::wstring_view app_name) {
         while (cma::fw::RemoveRule(kSrvFirewallRuleName, app_name)) ++count;
         if (count)
             XLOG::l.i(
-                "Firewall rule '[]' had been added successfully [{}] times",
+                "Firewall rule '{}' had been added successfully [{}] times",
                 wtools::ConvertToUTF8(kSrvFirewallRuleName), count);
         else
-            XLOG::l.i("Firewall rule '[]' is absent",
+            XLOG::l.i("Firewall rule '{}' is absent",
                       wtools::ConvertToUTF8(kSrvFirewallRuleName));
         return;
     }
@@ -1084,18 +1084,11 @@ int ServiceAsService(
     SelfConfigure();
 
     ProcessFirewallConfiguration(app_name);
-    ProcessServiceConfiguration(kServiceName);
 
     // infinite loop to protect from exception in future SEH too
     while (1) {
         using namespace wtools;
         // we can exit from the service if service set to disabled
-        if (SERVICE_DISABLED ==
-            WinService::ReadUint32(kServiceName, WinService::kRegStart)) {
-            XLOG::l("Service is disabled in config, leaving");
-            return -1;
-        }
-
         try {
             using namespace cma::cfg;
 

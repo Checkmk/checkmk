@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from typing import Set, List  # pylint: disable=unused-import
+from typing import Set, List, Tuple  # pylint: disable=unused-import
 import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
 import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import]
 import pyghmi.constants as ipmi_const  # type: ignore[import]
@@ -34,12 +34,15 @@ import cmk.utils.debug
 from cmk.utils.log import VERBOSE
 
 from cmk.base.exceptions import MKAgentError
-from cmk.base.check_utils import CheckPluginName, ServiceCheckResult  # pylint: disable=unused-import
+from cmk.base.check_utils import (  # pylint: disable=unused-import
+    CheckPluginName, ServiceCheckResult, RawAgentData, ServiceDetails,
+)
 
 from .abstract import CheckMKAgentDataSource, ManagementBoardDataSource
 
 
 def _handle_false_positive_warnings(reading):
+    # type: (ipmi_sdr.SensorReading) -> RawAgentData
     """This is a workaround for a pyghmi bug
     (bug report: https://bugs.launchpad.net/pyghmi/+bug/1790120)
 
@@ -73,12 +76,15 @@ def _handle_false_positive_warnings(reading):
 
 class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataSource):
     def id(self):
+        # type: () -> str
         return "mgmt_ipmi"
 
     def title(self):
+        # type: () -> str
         return "Management board - IPMI"
 
     def describe(self):
+        # type: () -> str
         return "%s (Address: %s, User: %s)" % (
             self.title(),
             self._ipaddress,
@@ -86,6 +92,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         )
 
     def _cpu_tracking_id(self):
+        # type: () -> str
         return self.id()
 
     def _gather_check_plugin_names(self):
@@ -93,6 +100,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         return {"mgmt_ipmi_sensors"}
 
     def _execute(self):
+        # type: () -> RawAgentData
         connection = None
         try:
             connection = self._create_ipmi_connection()
@@ -116,6 +124,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
                 connection.ipmi_session.logout()
 
     def _create_ipmi_connection(self):
+        # type: () -> ipmi_cmd.Command
         # Do not use the (custom) ipaddress for the host. Use the management board
         # address instead
         credentials = self._credentials
@@ -128,13 +137,14 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
                                 privlevel=2)
 
     def _fetch_ipmi_sensors_section(self, connection):
+        # type: (ipmi_cmd.Command) -> RawAgentData
         self._logger.debug("Fetching sensor data via UDP from %s:623" % (self._ipaddress))
 
         try:
             sdr = ipmi_sdr.SDR(connection)
         except NotImplementedError as e:
             self._logger.log(VERBOSE, "Failed to fetch sensor data: %r", e)
-            self._logger.debug("Exception", exc_info=e)
+            self._logger.debug("Exception", exc_info=True)
             return ""
 
         sensors = []
@@ -148,12 +158,13 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
                 sensors.append(self._parse_sensor_reading(number, reading))
 
         output = "<<<mgmt_ipmi_sensors:sep(124)>>>\n" \
-               + "".join([ "|".join(sensor) + "\n"  for sensor in sensors ])
+               + "".join(["|".join(sensor) + "\n"  for sensor in sensors])
 
         return output
 
     @staticmethod
     def _parse_sensor_reading(number, reading):
+        # type: (int, ipmi_sdr.SensorReading) -> List[RawAgentData]
         # {'states': [], 'health': 0, 'name': 'CPU1 Temp', 'imprecision': 0.5,
         #  'units': '\xc2\xb0C', 'state_ids': [], 'type': 'Temperature',
         #  'value': 25.0, 'unavailable': 0}]]
@@ -179,6 +190,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         ]
 
     def _fetch_ipmi_firmware_section(self, connection):
+        # type: (ipmi_cmd.Command) -> RawAgentData
         self._logger.debug("Fetching firmware information via UDP from %s:623" % (self._ipaddress))
         try:
             firmware_entries = connection.get_firmware()
@@ -199,6 +211,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         return 0, "Version: %s" % self._get_ipmi_version(), []
 
     def _get_ipmi_version(self):
+        # type: () -> ServiceDetails
         if self._host_sections is None:
             return "unknown"
 

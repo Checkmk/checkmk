@@ -139,12 +139,12 @@ def check_livestatus_status(item, params, sections):
                                infoname=title)
 
     yield check_levels(int(status["num_hosts"]),
-                       item,
+                       "monitored_hosts",
                        params.get("levels_hosts"),
                        unit="Hosts",
                        human_readable_func=int)
     yield check_levels(int(status["num_services"]),
-                       item,
+                       "monitored_services",
                        params.get("levels_services"),
                        unit="Services",
                        human_readable_func=int)

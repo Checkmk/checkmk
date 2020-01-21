@@ -119,15 +119,17 @@ inline std::wstring FindPowershellExe() noexcept {
     // file not found on path
     auto powershell_path =
         cma::tools::win::GetSomeSystemFolder(FOLDERID_System);
-    fs::path ps(powershell_path);
-    ps /= L"WindowsPowerShell";
-    ps /= L"v1.0";
-    ps /= powershell_name;
+
     try {
+        fs::path ps(powershell_path);
+        ps /= L"WindowsPowerShell";
+        ps /= L"v1.0";
+        ps /= powershell_name;
         if (fs::exists(ps)) return ps;
         XLOG::l("Not found powershell");
     } catch (const std::exception& e) {
-        XLOG::l("malformed name {} e:{}", ps.u8string(), e.what());
+        XLOG::l("malformed name {} e:{}",
+                wtools::ConvertToUTF8(powershell_path), e.what());
     }
     return {};
 }
@@ -246,7 +248,7 @@ public:
     }
 
     // strange?
-    uint32_t getProcessId() {
+    [[nodiscard]] uint32_t getProcessId() {
         uint32_t proc_id;
         std::unique_lock lk(lock_);
         proc_id = process_->processId();
@@ -255,7 +257,7 @@ public:
     }
 
     // really obtained proc id. Safe function
-    uint32_t startedProcId() const { return proc_id_; }
+    [[nodiscard]] uint32_t startedProcId() const { return proc_id_; }
 
     bool appendResult(HANDLE Handle, std::vector<char>& Buf) {
         if (Buf.size() == 0) return true;
@@ -277,7 +279,7 @@ public:
         return false;
     }
 
-    bool const failed() const noexcept { return failed_; }
+    [[nodiscard]] bool const failed() const noexcept { return failed_; }
 
     // very special, only used for cmk-updater
     bool waitForUpdater(std::chrono::milliseconds Timeout);
@@ -345,7 +347,8 @@ private:
         if (buf.size()) appendResult(read_handle, buf);
     }
 
-    static std::string formatProcessInLog(uint32_t pid, std::wstring name) {
+    static std::string formatProcessInLog(uint32_t pid,
+                                          const std::wstring_view name) {
         return fmt::format("Process '{}' pid [{}]", wtools::ConvertToUTF8(name),
                            pid);
     }
@@ -375,7 +378,7 @@ private:
         return true;
     }
 
-    bool isExecValid(const std::filesystem::path& FileExec) const {
+    static inline bool isExecValid(const std::filesystem::path& FileExec) {
         if (!IsValidFile(FileExec)) return false;  // sanity
 
         auto execute_string = ConstructCommandToExec(FileExec);
@@ -634,7 +637,7 @@ private:
 
     std::vector<char> data_;                           // cache
     std::chrono::steady_clock::time_point data_time_;  // when
-    time_t legacy_time_;                               // I'm nice guy
+    time_t legacy_time_ = 0;                           // I'm nice guy
 
     mutable std::mutex lock_;  // thread control
     std::unique_ptr<std::thread> main_thread_;
@@ -713,7 +716,8 @@ using StringSet = std::set<std::string>;
 bool AddUniqStringToSetIgnoreCase(StringSet& cache,
                                   const std::string& value) noexcept;
 // returns true if string added
-bool AddUniqStringToSetAsIs(StringSet& cache, const std::string value) noexcept;
+bool AddUniqStringToSetAsIs(StringSet& cache,
+                            const std::string& value) noexcept;
 }  // namespace tools
 
 // finds piggyback template <<<<name>>>>, if found returns 'name'

@@ -6,7 +6,15 @@
 # 2019 (c) tribe29
 # 
 
+$make_exe = $Env:make_exe
+if( "$make_exe" -eq "" ){
+	Write-Host "make_exe should be defined for  the build" -foreground Red
+        return 1
+}
+
 $sln = (Get-Item -Path ".\").FullName + "\wamain_build.sln"  # 'c:\z\m\check_mk\agents\wnx\wamain.sln'
+$makefile = (Get-Item -Path ".\").FullName + "\Makefile" 
+$host_dir = (Get-Item -Path ".\").FullName
 # string below is used to quckly switch to the Powershell ISE, do not delete it
 # $sln = 'c:\z\m\check_mk\agents\wnx\wamain.sln'
 
@@ -60,6 +68,21 @@ else {
 }
 }
 
+$mk = {
+& "$Env:make_exe" $args 
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Error: " $LASTEXITCODE -foreground Red
+    throw "Failed make"
+}
+else {
+    Write-Host "Success make!" -foreground Green
+}
+}
+
+# disabled as unstable
+# $j_make = start-job -Init ([ScriptBlock]::Create("Set-Location '$pwd'")) -scriptblock $mk -argumentlist "-w", "-j", "2", "frozen_binaries"
+
+
 # Exe 32 & 64 bits
 $j_s = @()
 $target = "engine"
@@ -106,6 +129,13 @@ Write-Host "Jobs ready" -foreground Blue
 foreach ($job in $j_w) {
     RcvJob $job $job.Name
 }
+
+# disabled as unstable ###############
+# Wait-Job -Job $j_make | Out-Null
+#
+# Write-Host "Make ready" -foreground Blue
+# RcvJob $j_make $j_make.Name
+
 
 if($err -ne 0)
 {

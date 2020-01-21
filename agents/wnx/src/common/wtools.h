@@ -230,7 +230,7 @@ private:
     HANDLE read_;
     HANDLE write_;
     bool sa_initialized_;
-    SECURITY_DESCRIPTOR sd_;
+    SECURITY_DESCRIPTOR sd_ = {0};
     SECURITY_ATTRIBUTES sa_;
 };
 

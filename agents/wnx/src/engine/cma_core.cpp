@@ -339,7 +339,7 @@ bool AddUniqStringToSetIgnoreCase(std::set<std::string>& cache,
 }
 
 bool AddUniqStringToSetAsIs(std::set<std::string>& cache,
-                            const std::string value) noexcept {
+                            const std::string& value) noexcept {
     auto found = cache.find(value);
 
     if (found == cache.end()) {

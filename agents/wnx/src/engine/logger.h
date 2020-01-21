@@ -146,7 +146,7 @@ inline std::string formatString(int Fl, const char* Prefix,
     try {
         s.reserve(length);
         if (prefix != nullptr) s = prefix;
-        s += String;
+        if (String != nullptr) s += String;
     } catch (const std::exception&) {
         return {};
     }
@@ -472,7 +472,7 @@ public:
         try {
             auto s = fmt::format(Format, args...);
             // check construction
-            if (this == nullptr || !this->constructed_) return s;
+            if (!this->constructed_) return s;
             auto e = *this;
             e.mods_ |= Modifications;
             e.postProcessAndPrint(s);
@@ -481,7 +481,7 @@ public:
             // we do not want any exceptions during logging
             auto s =
                 fmt::format("Invalid parameters for log string \"{}\"", Format);
-            if (this == nullptr || !this->constructed_) return s;
+            if (!this->constructed_) return s;
             auto e = *this;
             e.mods_ |= XLOG::kCritError;
             e.postProcessAndPrint(s);

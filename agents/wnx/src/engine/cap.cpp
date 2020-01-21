@@ -61,7 +61,7 @@ std::wstring ProcessPluginPath(const std::string &File) {
     namespace fs = std::filesystem;
 
     // Extract basename and dirname from path
-    fs::path fpath = File;
+    fs::path fpath(File);
     fs::path plugin_folder = cma::cfg::GetUserDir();
 
     plugin_folder /= fpath;
@@ -89,7 +89,8 @@ uint32_t ReadFileNameLength(std::ifstream &CapFile) {
 // File format
 // [BYTE][variable][INT32][variable]
 std::string ReadFileName(std::ifstream &CapFile, uint32_t Length) {
-    size_t buffer_length = Length + 1;
+    size_t buffer_length = Length;
+    ++buffer_length;
 
     std::vector<char> dataBuffer(buffer_length, 0);
     CapFile.read(dataBuffer.data(), Length);
@@ -116,7 +117,8 @@ std::optional<std::vector<char>> ReadFileData(std::ifstream &CapFile) {
         return {};
     }
     XLOG::d.t("Processing {} bytes of data", length);
-    if (length > 20 * 1024 * 1024) {
+    constexpr uint32_t kMaxSizeSupported = 20 * 1024 * 1024;
+    if (length > kMaxSizeSupported) {
         XLOG::l.crit("Size of data is too big {} ", length);
         return {};
     }
@@ -145,7 +147,8 @@ FileInfo ExtractFile(std::ifstream &cap_file) {
         return {{}, {}, true};
     }
 
-    if (l > 256) return {{}, {}, false};
+    constexpr uint32_t kInternalNax = 256;
+    if (l > kInternalNax) return {{}, {}, false};
 
     const auto name = ReadFileName(cap_file, l);
 
@@ -198,7 +201,7 @@ bool CheckAllFilesWritable(const std::string &Directory) {
     bool all_writable = true;
     for (auto &p : fs::recursive_directory_iterator(Directory)) {
         std::error_code ec;
-        auto path = p.path();
+        auto const &path = p.path();
         if (fs::is_directory(path, ec)) continue;
         if (!fs::is_regular_file(path, ec)) continue;
 
@@ -212,7 +215,7 @@ bool CheckAllFilesWritable(const std::string &Directory) {
                                    OPEN_EXISTING,
                                    FILE_ATTRIBUTE_NORMAL,  // normal file
                                    nullptr);
-        if (handle && handle != INVALID_HANDLE_VALUE) {
+        if (handle != nullptr && handle != INVALID_HANDLE_VALUE) {
             ::CloseHandle(handle);
         } else {
             XLOG::d("file '{}' is not writable, error {}", path.u8string(),
@@ -225,7 +228,7 @@ bool CheckAllFilesWritable(const std::string &Directory) {
 }
 
 // internal or advanced usage
-bool ExtractAll(const std::string cap_name, std::filesystem::path to) {
+bool ExtractAll(const std::string &cap_name, const std::filesystem::path &to) {
     std::ifstream ifs(cap_name, std::ifstream::in | std::ifstream::binary);
     if (!ifs) {
         XLOG::l.crit("Unable to open Check_MK-Agent package {} ", cap_name);
@@ -250,12 +253,12 @@ bool ExtractAll(const std::string cap_name, std::filesystem::path to) {
     return false;
 }
 
-bool Process(const std::string CapFileName, ProcMode Mode,
+bool Process(const std::string &cap_name, ProcMode Mode,
              std::vector<std::wstring> &FilesLeftOnDisk) {
     namespace fs = std::filesystem;
-    std::ifstream ifs(CapFileName, std::ifstream::in | std::ifstream::binary);
+    std::ifstream ifs(cap_name, std::ifstream::in | std::ifstream::binary);
     if (!ifs) {
-        XLOG::l.crit("Unable to open Check_MK-Agent package {} ", CapFileName);
+        XLOG::l.crit("Unable to open Check_MK-Agent package {} ", cap_name);
         return false;
     }
 
@@ -264,11 +267,11 @@ bool Process(const std::string CapFileName, ProcMode Mode,
         if (eof) return true;
 
         if (name.empty()) {
-            XLOG::l("CAP file {} looks as bad", CapFileName);
+            XLOG::l("CAP file {} looks as bad", cap_name);
             return false;
         }
         if (data.empty()) {
-            XLOG::l("CAP file {} looks as bad for file {}", CapFileName, name);
+            XLOG::l("CAP file {} looks as bad for file {}", cap_name, name);
             return false;
         }
         const auto full_path = ProcessPluginPath(name);
@@ -277,7 +280,7 @@ bool Process(const std::string CapFileName, ProcMode Mode,
             StoreFile(full_path, data);
             std::error_code ec;
             if (fs::exists(full_path, ec)) FilesLeftOnDisk.push_back(full_path);
-        } else if ((Mode == ProcMode::remove)) {
+        } else if (Mode == ProcMode::remove) {
             std::error_code ec;
             auto removed = fs::remove(full_path, ec);
             if (removed || ec.value() == 0)
@@ -286,7 +289,7 @@ bool Process(const std::string CapFileName, ProcMode Mode,
                 XLOG::l("Cannot remove '{}' error {}",
                         wtools::ConvertToUTF8(full_path), ec.value());
             }
-        } else if ((Mode == ProcMode::list)) {
+        } else if (Mode == ProcMode::list) {
             FilesLeftOnDisk.push_back(full_path);
         }
     }
@@ -294,7 +297,7 @@ bool Process(const std::string CapFileName, ProcMode Mode,
     // CheckAllFilesWritable(wtools::ConvertToUTF8(cma::cfg::GetUserPluginsDir()));
     // CheckAllFilesWritable(wtools::ConvertToUTF8(cma::cfg::GetLocalDir()));
 
-    XLOG::l("CAP file {} looks as bad with unexpected eof", CapFileName);
+    XLOG::l("CAP file {} looks as bad with unexpected eof", cap_name);
     return false;
 }
 
@@ -357,8 +360,7 @@ bool ReinstallCaps(const std::filesystem::path &target_cap,
     std::error_code ec;
     std::vector<std::wstring> files_left;
     if (fs::exists(target_cap, ec)) {
-        if (true ==
-            Process(target_cap.u8string(), ProcMode::remove, files_left)) {
+        if (Process(target_cap.u8string(), ProcMode::remove, files_left)) {
             XLOG::l.t("File '{}' uninstall-ed", target_cap.u8string());
             fs::remove(target_cap, ec);
             for (auto &name : files_left)
@@ -371,8 +373,7 @@ bool ReinstallCaps(const std::filesystem::path &target_cap,
 
     files_left.clear();
     if (fs::exists(source_cap, ec)) {
-        if (true ==
-            Process(source_cap.u8string(), ProcMode::install, files_left)) {
+        if (Process(source_cap.u8string(), ProcMode::install, files_left)) {
             XLOG::l.t("File '{}' installed", source_cap.u8string());
             fs::copy_file(source_cap, target_cap, ec);
             for (auto &name : files_left)
@@ -465,7 +466,6 @@ void InstallYaml(const std::filesystem::path &bakery_yaml,
 bool ReinstallYaml(const std::filesystem::path &bakery_yaml,
                    const std::filesystem::path &target_yaml,
                    const std::filesystem::path &source_yaml) {
-    namespace fs = std::filesystem;
     std::error_code ec;
 
     XLOG::l.i("This Option/YML installation form MSI is ENABLED");
@@ -565,8 +565,8 @@ static void InstallYmlFile() {
 }
 
 static void PrintInstallCopyLog(std::string_view info_on_error,
-                                std::filesystem::path in_file,
-                                std::filesystem::path out_file,
+                                const std::filesystem::path &in_file,
+                                const std::filesystem::path &out_file,
                                 const std::error_code &ec) noexcept {
     if (ec.value() == 0)
         XLOG::l.i("\tSuccess");

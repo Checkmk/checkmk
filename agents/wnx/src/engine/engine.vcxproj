@@ -80,6 +80,12 @@
     <IntDir>../../build/engine\$(Platform)\$(Configuration)\obj\</IntDir>
     <TargetName>engine</TargetName>
     <CustomBuildBeforeTargets>Run</CustomBuildBeforeTargets>
+    <CodeAnalysisRuleSet>cpp-all.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
+    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
+    <ClangTidyChecks>
+    </ClangTidyChecks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -87,6 +93,12 @@
     <IntDir>../../build/engine\$(Platform)\$(Configuration)\obj\</IntDir>
     <TargetName>engine</TargetName>
     <CustomBuildBeforeTargets>Run</CustomBuildBeforeTargets>
+    <CodeAnalysisRuleSet>cpp-all.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
+    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
+    <ClangTidyChecks>
+    </ClangTidyChecks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -94,6 +106,12 @@
     <IntDir>../../build/engine\$(Platform)\$(Configuration)\obj\</IntDir>
     <TargetName>engine</TargetName>
     <CustomBuildBeforeTargets>Run</CustomBuildBeforeTargets>
+    <CodeAnalysisRuleSet>cpp-all.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
+    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
+    <ClangTidyChecks>
+    </ClangTidyChecks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -101,6 +119,12 @@
     <IntDir>../../build/engine\$(Platform)\$(Configuration)\obj\</IntDir>
     <TargetName>engine</TargetName>
     <CustomBuildBeforeTargets>Run</CustomBuildBeforeTargets>
+    <CodeAnalysisRuleSet>cpp-all.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
+    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
+    <ClangTidyChecks>
+    </ClangTidyChecks>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -544,4 +568,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <PropertyGroup Condition="'$(Language)'=='C++'">
+    <CAExcludePath>..\..\extlibs;$(CAExcludePath)</CAExcludePath>
+  </PropertyGroup>
 </Project>

@@ -179,7 +179,7 @@ inline bool IsElevated() {
     return false;
 }
 
-inline std::wstring GetSomeSystemFolder(const KNOWNFOLDERID& rfid) {
+inline std::wstring GetSomeSystemFolder(const KNOWNFOLDERID& rfid) noexcept {
     wchar_t* str = nullptr;
     if (SHGetKnownFolderPath(rfid, KF_FLAG_DEFAULT, NULL, &str) != S_OK ||
         !str)  // probably impossible case when executed ok, but str is nullptr

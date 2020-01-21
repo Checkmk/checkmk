@@ -490,7 +490,7 @@ def get_host_attributes(hostname, config_cache):
         attrs["_ACTIONS"] = ",".join(actions)
 
     if cmk.is_managed_edition():
-        attrs["_CUSTOMER"] = config.current_customer  # pylint: disable=no-member
+        attrs["_CUSTOMER"] = config.current_customer  # type: ignore # pylint: disable=no-member
 
     return attrs
 

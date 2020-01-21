@@ -1881,25 +1881,24 @@ section_ntp() {
             fi
         fi
 
-        # Next, we try to check time synchronization with Chrony
-        # Force successful exit code. Otherwise section will be missing if daemon not running
-        #
-        # The "| cat" has been added for some kind of regression in RedHat 7.5. The
-        # SELinux rules shipped with that release were denying the chronyc call without cat.
-        if inpath chronyc; then
-            # Identify if the daemon is active...
-            if [ "$(systemctl | awk '/chronyd.service/{print $3; exit}')" = "active" ]; then
-                run_cached chrony 30 "waitmax 5 chronyc -n tracking | cat || true"
-                return
-            fi
-        fi
-
         # Finally, try to identify whether ntp/ntpd/openntpd is active, if so, run ntpq
         # shellcheck disable=SC2016
         if [ "$(systemctl | awk '/ntp.service|ntpd.service/{print $3; exit}')" = "active" ]; then
             # remove heading, make first column space separated
             run_cached -s ntp 30 "waitmax 5 get_ntpq"
             return
+        fi
+    fi
+
+    # Next, we try to check time synchronization with Chrony
+    # Force successful exit code. Otherwise section will be missing if daemon not running
+    #
+    # The "| cat" has been added for some kind of regression in RedHat 7.5. The
+    # SELinux rules shipped with that release were denying the chronyc call without cat.
+    if inpath chronyc; then
+        # Identify if the daemon is active...
+        if [ "$(systemctl | awk '/chronyd.service/{print $3; exit}')" = "active" ]; then
+            run_cached chrony 30 "waitmax 5 chronyc -n tracking | cat || true"
         fi
     fi
 

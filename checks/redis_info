@@ -236,3 +236,64 @@ check_info["redis_info.persistence"] = {
     "default_levels_variable": "redis_info_persistence_default_levels",
 }
 #.
+#   .--Clients-------------------------------------------------------------.
+#   |                     ____ _ _            _                            |
+#   |                    / ___| (_) ___ _ __ | |_ ___                      |
+#   |                   | |   | | |/ _ \ '_ \| __/ __|                     |
+#   |                   | |___| | |  __/ | | | |_\__ \                     |
+#   |                    \____|_|_|\___|_| |_|\__|___/                     |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+# ...
+# Clients
+# connected_clients:1
+# client_longest_output_list:0
+# client_biggest_input_buf:0
+# blocked_clients:0
+
+# Description of possible output:
+# connected_clients - Number of client connections (excluding connections from replicas)
+# client_longest_output_list - longest output list among current client connections
+# client_biggest_input_buf - biggest input buffer among current client connections
+# blocked_clients - Number of clients pending on a blocking call (BLPOP, BRPOP, BRPOPLPUSH)
+
+
+def check_redis_info_clients(item, params, item_data):
+    clients_data = item_data.get(item, {}).get("Clients")
+    if not clients_data or clients_data is None:
+        return
+
+    for data_key, param_key, infotext in [
+        ("connected_clients", "connected", "Number of client connections"),
+        ("client_longest_output_list", "output", "Longest output list"),
+        ("client_biggest_input_buf", "input", "Biggest input buffer"),
+        ("blocked_clients", "blocked", "Number of clients pending on a blocking call"),
+    ]:
+
+        clients_value = clients_data.get(data_key)
+        if clients_value is None:
+            continue
+
+        upper_level = params.get("%s_upper" % param_key, (None, None))
+        lower_level = params.get("%s_lower" % param_key, (None, None))
+
+        yield check_levels(
+            clients_value,
+            "redis_clients_%s" % param_key,
+            upper_level + lower_level,
+            human_readable_func=int,
+            infoname=infotext,
+        )
+
+
+check_info["redis_info.clients"] = {
+    "check_function": check_redis_info_clients,
+    "inventory_function": discover(lambda k, values: "Clients" in values),
+    "service_description": "Redis %s Clients",
+    "has_perfdata": True,
+    "group": "redis_info_clients",
+}
+#.

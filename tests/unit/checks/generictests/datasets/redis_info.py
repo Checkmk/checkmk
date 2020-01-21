@@ -138,6 +138,7 @@ info = [
 
 discovery = {
     '': [(u'MY_FIRST_REDIS', {}), (u'MY_SECOND_REDIS', {})],
+    'clients': [(u'MY_FIRST_REDIS', {}), (u'MY_SECOND_REDIS', {})],
     'persistence': [(u'MY_FIRST_REDIS', {}), (u'MY_SECOND_REDIS', {})]
 }
 
@@ -165,6 +166,56 @@ checks = {
                 ), (0, u'Version: 4.0.9', []),
                 (0, u'GCC compiler version: 7.4.0', []), (0, 'PID: 1320', []),
                 (0, u'IP: 127.0.0.1', []), (0, u'Port: 6379', [])
+            ]
+        )
+    ],
+    'clients': [
+        (
+            u'MY_FIRST_REDIS', {}, [
+                (
+                    0, 'Number of client connections: 1', [
+                        ('redis_clients_connected', 1, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, 'Longest output list: 0', [
+                        ('redis_clients_output', 0, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, 'Biggest input buffer: 0', [
+                        ('redis_clients_input', 0, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, 'Number of clients pending on a blocking call: 0', [
+                        ('redis_clients_blocked', 0, None, None, None, None)
+                    ]
+                )
+            ]
+        ),
+        (
+            u'MY_SECOND_REDIS', {}, [
+                (
+                    0, 'Number of client connections: 1', [
+                        ('redis_clients_connected', 1, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, 'Longest output list: 0', [
+                        ('redis_clients_output', 0, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, 'Biggest input buffer: 0', [
+                        ('redis_clients_input', 0, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, 'Number of clients pending on a blocking call: 0', [
+                        ('redis_clients_blocked', 0, None, None, None, None)
+                    ]
+                )
             ]
         )
     ],

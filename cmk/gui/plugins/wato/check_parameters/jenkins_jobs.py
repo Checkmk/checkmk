@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -49,6 +49,14 @@ def _parameter_valuespec_jenkins_jobs():
              elements=[
                  Integer(title=_("Warning below"), unit="%"),
                  Integer(title=_("Critical below"), unit="%"),
+             ],
+         )),
+        ("jenkins_last_build",
+         Tuple(
+             title=_("Time since last build"),
+             elements=[
+                 Age(title=_("Warning if older than")),
+                 Age(title=_("Critical if older than")),
              ],
          )),
         ("jenkins_time_since",

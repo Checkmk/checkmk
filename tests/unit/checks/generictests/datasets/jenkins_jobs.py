@@ -34,14 +34,18 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Time since last successful build: 156 m', [
+                    0, u'Time since last build: 156 m', [
+                        ('jenkins_last_build', 9406.0, None, None, None, None)
+                    ]
+                ),
+                (
+                    0, u'Time since last successful build: 156 m', [
                         (
                             'jenkins_time_since', 9405.039999961853, None,
                             None, None, None
                         )
                     ]
-                ), (0, 'Last build at: 2019-09-09 13:42:14', []),
-                (0, 'Build id: 1', []),
+                ), (0, 'Build id: 1', []),
                 (
                     0, u'Build duration: 98.0 ms', [
                         (

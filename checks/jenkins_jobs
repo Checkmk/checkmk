@@ -106,22 +106,27 @@ def check_jenkins_jobs(item, params, item_data):
 
         yield params.get("job_state", {}).get(job_cleanup, state), infotext
 
+    now = time.time()
+    time_since_last_build = None
+    if item_data[0].build_timestamp:
+        time_since_last_build = now - item_data[0].build_timestamp
+
     time_since_last_suc = None
     if item_data[0].last_suc_build:
-        time_since_last_suc = time.time() - item_data[0].last_suc_build
+        time_since_last_suc = now - item_data[0].last_suc_build
 
     for key, value, infotext, hr_func in [
         ("jenkins_job_score", item_data[0].job_score, "Job score", get_percent_human_readable),
+        ("jenkins_last_build", time_since_last_build, "Time since last build",
+         get_age_human_readable),
         ("jenkins_time_since", time_since_last_suc, "Time since last successful build",
          get_age_human_readable),
-        (None, item_data[0].build_timestamp, "Last build at", get_timestamp_human_readable),
         (None, item_data[0].build_id, "Build id", int),
         ("jenkins_build_duration", item_data[0].build_duration, "Build duration",
          get_age_human_readable),
     ]:
 
         param_checking = (None, None)
-
         if params.get(key):
             warn, crit = params.get(key)
             if key == "jenkins_job_score":

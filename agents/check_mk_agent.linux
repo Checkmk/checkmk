@@ -415,6 +415,69 @@ run_real_time_checks() {
     done
 }
 
+# Function to pull out NTP metrics
+section_ntp() {
+    # ntpq helper function
+    get_ntpq() {
+        inpath ntpq || return 1
+        [ "${1}" = "--header" ] && echo '<<<ntp>>>'
+        ntpq -np | sed -e 1,2d -e 's/^\\(.\\)/\\1 /' -e 's/^ /%/' || true
+    }
+
+    # First we check for systemd, and then attempt the methods that we know about
+    # Our goal here is to avoid multiple outputs e.g. timedatectl + ntpq
+    if inpath systemctl; then
+        # Attempt to check time synchronization with systemd-timesyncd
+        if inpath timedatectl; then
+            # This timedatectl arg seems to be available from systemd version >=239
+            if timedatectl timesync-status >/dev/null 2>&1; then
+                echo "<<<timesyncd>>>"
+                timedatectl timesync-status
+                get_file_mtime /var/lib/systemd/timesync/clock | awk '{print "[[["$1"]]]"}'
+
+                # Return to get out of 'section_ntp()' with no further processing
+                return
+            fi
+        fi
+
+        # Otherwise, try to identify whether ntp/ntpd/openntpd is active, if so, run ntpq
+        # shellcheck disable=SC2016
+        if [ "$(systemctl | awk '/ntp.service|ntpd.service/{print $3; exit}')" = "active" ]; then
+            # remove heading, make first column space separated
+            run_cached -s ntp 30 "waitmax 5 get_ntpq"
+            return
+        fi
+    fi
+
+    # Next, we try to check time synchronization with Chrony
+    # Force successful exit code. Otherwise section will be missing if daemon not running
+    #
+    # The "| cat" has been added for some kind of regression in RedHat 7.5. The
+    # SELinux rules shipped with that release were denying the chronyc call without cat.
+    if inpath chronyc; then
+        # Identify if the daemon is active...
+        if [ "$(systemctl | awk '/chronyd.service/{print $3; exit}')" = "active" ]; then
+            run_cached chrony 30 "waitmax 5 chronyc -n tracking | cat || true"
+        fi
+    fi
+
+    # If we get to this point, we attempt via classic ntp daemons (ntpq required)
+    if inpath ntpq; then
+        # Try to determine status via /etc/init.d
+        # This might also be appropriate for AIX, Solaris and others
+        for _ntp_daemon in ntp ntpd openntpd; do
+            # Check for a service script
+            if [ -x /etc/init.d/"${_ntp_daemon}" ]; then
+                # If the status returns 0, we assume we have a running service
+                if /etc/init.d/"${_ntp_daemon}" status >/dev/null 2>&1; then
+                    run_cached -s ntp 30 "waitmax 5 get_ntpq"
+                fi
+            fi
+        done
+        unset -v _ntp_daemon
+    fi
+}
+
 echo "<<<check_mk>>>"
 echo "Version: 1.7.0i1"
 echo "AgentOS: linux"
@@ -732,47 +795,8 @@ if [ -e /etc/openvpn/openvpn-status.log ]; then
         sed -e 1,3d -e '$d'
 fi
 
-# Check if we're on a systemd based host
-if inpath systemctl; then
-    # We treat timesyncd separately
-    if inpath timedatectl; then
-       # Starting by getting the systemd version to ensure that 'timesync-status' is a supported arg
-        # Calling systemctl appears to be more portable across more systemd versions
-        systemd_version=$(systemctl --version | awk '{if(NR==1) print $2}')
-
-        # Only act if it's greater than or equal to version 239
-        if [ "${systemd_version}" -ge 239 ]; then
-            echo "<<<timesyncd>>>"
-            timedatectl timesync-status
-            stat -c %Y /var/lib/systemd/timesync/clock | awk '{print "[[["$1"]]]"}'
-        fi
-    fi
-
-    # Identify whether ntp/ntpd/openntpd is active
-    # shellcheck disable=SC2016
-    if [ "$(systemctl | awk '/ntp.service|ntpd.service/{print $3; exit}')" = "active" ]; then
-        # If so, check for ntpq, if it's present, run it
-        if inpath ntpq; then
-            # remove heading, make first column space separated
-            run_cached -s ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
-        fi
-    fi
-# If we're not on a systemd based host, try ntpq anyway
-else
-    if inpath ntpq; then
-        run_cached -s ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
-    fi
-fi
-
-# Time synchronization with Chrony
-if inpath chronyc; then
-    # Force successful exit code. Otherwise section will be missing if daemon not running
-    #
-    # The "| cat" has been added for some kind of regression in RedHat 7.5. The
-    # SELinux rules shipped with that release were denying the chronyc call
-    # without cat.
-    run_cached -s chrony 30 "waitmax 5 chronyc -n tracking | cat || true"
-fi
+# Call the NTP audit function
+section_ntp
 
 if inpath nvidia-settings && [ -S /tmp/.X11-unix/X0 ]; then
     echo '<<<nvidia>>>'

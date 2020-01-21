@@ -26,24 +26,31 @@
 
 import abc
 import collections
-from typing import Optional, Tuple, Text, List, Dict  # pylint: disable=unused-import
+from typing import Iterator, Any, Union, Optional, Tuple, Text, List, Dict  # pylint: disable=unused-import
 import six
 
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import Labels, CheckPluginName  # pylint: disable=unused-import
+
+HostLabelValueDict = Dict[str, Union[Text, Optional[CheckPluginName]]]
+DiscoveredHostLabelsDict = Dict[Text, HostLabelValueDict]
 
 
 class ABCDiscoveredLabels(six.with_metaclass(abc.ABCMeta, collections.MutableMapping, object)):
     def __init__(self, *args):
+        # type: (ABCLabel) -> None
         super(ABCDiscoveredLabels, self).__init__()
-        self._labels = {}
+        self._labels = {}  # type: Dict[Text, Any]
         for entry in args:
             self.add_label(entry)
 
     @abc.abstractmethod
     def add_label(self, label):
+        # type: (ABCLabel) -> None
         raise NotImplementedError()
 
     def is_empty(self):
+        # type: () -> bool
         return not self._labels
 
     def __getitem__(self, key):
@@ -53,16 +60,19 @@ class ABCDiscoveredLabels(six.with_metaclass(abc.ABCMeta, collections.MutableMap
         self._labels[key] = value
 
     def __delitem__(self, key):
+        # type: (Text) -> None
         del self._labels[key]
 
     def __iter__(self):
+        # type: () -> Iterator
         return iter(self._labels)
 
     def __len__(self):
+        # type: () -> int
         return len(self._labels)
 
     def to_dict(self):
-        # type: () -> Dict[Text, Text]
+        # type: () -> Dict
         return self._labels
 
 
@@ -70,26 +80,35 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):
     """Encapsulates the discovered labels of a single host during runtime"""
     @classmethod
     def from_dict(cls, dict_labels):
+        # type: (DiscoveredHostLabelsDict) -> DiscoveredHostLabels
         labels = cls()
         for k, v in dict_labels.items():
             labels.add_label(HostLabel.from_dict(k, v))
         return labels
 
-    def add_label(self, label):
+    def __init__(self, *args):
         # type: (HostLabel) -> None
+        self._labels = {}  # type: Dict[Text, HostLabel]
+        super(DiscoveredHostLabels, self).__init__(*args)
+
+    def add_label(self, label):
+        # type: (ABCLabel) -> None
+        assert isinstance(label, HostLabel)
         self._labels[label.name] = label
 
     def to_dict(self):
-        # type: () -> Dict[Text, Text]
+        # type: () -> DiscoveredHostLabelsDict
         return {
             label.name: label.to_dict()
             for label in sorted(self._labels.values(), key=lambda x: x.name)
         }
 
     def to_list(self):
+        # type: () -> List[HostLabel]
         return [label for label in sorted(self._labels.values(), key=lambda x: x.name)]
 
     def __add__(self, other):
+        # type: (DiscoveredHostLabels) -> DiscoveredHostLabels
         if not isinstance(other, DiscoveredHostLabels):
             raise TypeError('%s not type DiscoveredHostLabels' % other)
         data = self.to_dict().copy()
@@ -97,6 +116,7 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):
         return DiscoveredHostLabels.from_dict(data)
 
     def __repr__(self):
+        # type: () -> str
         return "DiscoveredHostLabels(%r)" % (repr(arg) for arg in self.to_list())
 
 
@@ -124,14 +144,17 @@ class ABCLabel(object):
 
     @property
     def name(self):
+        # type: () -> Text
         return self._name
 
     @property
     def value(self):
+        # type: () -> Text
         return self._value
 
     @property
     def label(self):
+        # type: () -> Text
         return "%s:%s" % (self._name, self._value)
 
 
@@ -148,10 +171,17 @@ class HostLabel(ABCLabel):
 
     @classmethod
     def from_dict(cls, name, dict_label):
-        return cls(name, dict_label["value"], dict_label["plugin_name"])
+        # type: (Text, HostLabelValueDict) -> HostLabel
+        value = dict_label["value"]
+        assert isinstance(value, six.text_type)
+
+        plugin_name = dict_label["plugin_name"]
+        assert isinstance(plugin_name, str) or plugin_name is None
+
+        return cls(name, value, plugin_name)
 
     def __init__(self, name, value, plugin_name=None):
-        # type: (Text, Text, Optional[str]) -> None
+        # type: (Text, Text, Optional[CheckPluginName]) -> None
         super(HostLabel, self).__init__(name, value)
         self._plugin_name = plugin_name
 
@@ -166,26 +196,36 @@ class HostLabel(ABCLabel):
         self._plugin_name = plugin_name
 
     def to_dict(self):
+        # type: () -> HostLabelValueDict
         return {
             "value": self.value,
             "plugin_name": self.plugin_name,
         }
 
     def __repr__(self):
+        # type: () -> str
         return "HostLabel(%r, %r, plugin_name=%r)" % (self.name, self.value, self.plugin_name)
 
     def __eq__(self, other):
+        # type: (Any) -> bool
         if not isinstance(other, HostLabel):
             raise TypeError('%s not type HostLabel' % other)
         return (self.name == other.name and self.value == other.value and
                 self.plugin_name == other.plugin_name)
 
     def __ne__(self, other):
+        # type: (Any) -> bool
         return not self.__eq__(other)
 
 
 class DiscoveredServiceLabels(ABCDiscoveredLabels):
     """Encapsulates the discovered labels of a single service during runtime"""
-    def add_label(self, label):
+    def __init__(self, *args):
         # type: (ServiceLabel) -> None
+        self._labels = {}  # type: Labels
+        super(DiscoveredServiceLabels, self).__init__(*args)
+
+    def add_label(self, label):
+        # type: (ABCLabel) -> None
+        assert isinstance(label, ServiceLabel)
         self._labels[label.name] = label.value

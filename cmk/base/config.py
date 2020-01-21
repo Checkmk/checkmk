@@ -60,7 +60,7 @@ from cmk.utils.encoding import convert_to_unicode
 import cmk.utils.piggyback as piggyback
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, ServiceName, Item, HostAddress, CheckPluginName, ActiveCheckPluginName,
-    TimeperiodName, ServicegroupName,
+    TimeperiodName, ServicegroupName, Labels,
 )
 
 import cmk.base
@@ -103,7 +103,6 @@ CheckIncludes = List[str]
 Ruleset = List  # TODO: Improve this type
 TagValue = str
 Tags = Dict[str, TagValue]
-Labels = Dict[Text, Text]
 LabelSources = Dict[Text, str]
 DiscoveryCheckParameters = Dict
 SpecialAgentInfoFunction = Callable[[Dict[str, Any], HostName, Optional[HostAddress]],

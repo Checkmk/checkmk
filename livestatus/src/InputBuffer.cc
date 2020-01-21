@@ -25,7 +25,6 @@
 #include "InputBuffer.h"
 #include <unistd.h>
 #include <cctype>
-#include <cerrno>
 #include <cstring>
 #include <ostream>
 #include <type_traits>
@@ -225,23 +224,21 @@ InputBuffer::Result InputBuffer::readData() {
             return Result::timeout;
         }
 
-        if (!Poller{}.wait(std::chrono::milliseconds(200), _fd, PollEvents::in,
-                           _logger)) {
-            if (errno == ETIMEDOUT) {
-                continue;
+        Poller poller;
+        poller.addFileDescriptor(_fd, PollEvents::in);
+        int retval = poller.poll(std::chrono::milliseconds(200));
+        if (retval > 0 && poller.isFileDescriptorSet(_fd, PollEvents::in)) {
+            ssize_t r = read(_fd, &_readahead_buffer[_write_index],
+                             _readahead_buffer.capacity() - _write_index);
+            if (r < 0) {
+                return Result::eof;
             }
-            break;
+            if (r == 0) {
+                return Result::eof;
+            }
+            _write_index += r;
+            return Result::data_read;
         }
-        ssize_t r = read(_fd, &_readahead_buffer[_write_index],
-                         _readahead_buffer.capacity() - _write_index);
-        if (r < 0) {
-            return Result::eof;
-        }
-        if (r == 0) {
-            return Result::eof;
-        }
-        _write_index += r;
-        return Result::data_read;
     }
     return Result::should_terminate;
 }

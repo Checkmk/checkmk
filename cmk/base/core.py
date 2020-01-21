@@ -30,11 +30,13 @@ import os
 import subprocess
 import sys
 import errno
+from typing import Optional  # pylint: disable=unused-import
 
 import cmk.utils.paths
 import cmk.utils.debug
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
+from cmk.utils.type_defs import TimeperiodName  # pylint: disable=unused-import
 
 import cmk.base.console as console
 import cmk.base.config as config
@@ -42,9 +44,10 @@ import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
 from cmk.base import config_cache
 import cmk.base.cleanup
+from cmk.base.core_config import MonitoringCore  # pylint: disable=unused-import
 
 # suppress "Cannot find module" error from mypy
-import livestatus  # type: ignore
+import livestatus
 
 _restart_lock_fd = None
 
@@ -62,11 +65,13 @@ _restart_lock_fd = None
 
 
 def do_reload(core):
+    # type: (MonitoringCore) -> None
     do_restart(core, only_reload=True)
 
 
 # TODO: Cleanup duplicate code with automation_restart()
 def do_restart(core, only_reload=False):
+    # type: (MonitoringCore, bool) -> None
     try:
         backup_path = None
 
@@ -134,6 +139,7 @@ def do_restart(core, only_reload=False):
 
 
 def try_get_activation_lock():
+    # type: () -> bool
     global _restart_lock_fd
     # In some bizarr cases (as cmk -RR) we need to avoid duplicate locking!
     if config.restart_locking and _restart_lock_fd is None:
@@ -152,6 +158,7 @@ def try_get_activation_lock():
 
 # Action can be restart, reload, start or stop
 def do_core_action(action, quiet=False):
+    # type: (str, bool) -> None
     if not quiet:
         console.output("%sing monitoring core..." % action.title())
 
@@ -164,6 +171,7 @@ def do_core_action(action, quiet=False):
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
     result = p.wait()
     if result != 0:
+        assert p.stdout is not None
         output = p.stdout.read()
         if not quiet:
             console.output("ERROR: %s\n" % output)
@@ -186,10 +194,11 @@ def do_core_action(action, quiet=False):
 #   '----------------------------------------------------------------------'
 
 
-# Check if a timeperiod is currently active. We have no other way than
-# doing a Livestatus query. This is not really nice, but if you have a better
-# idea, please tell me...
 def check_timeperiod(timeperiod):
+    # type: (TimeperiodName) -> bool
+    """Check if a timeperiod is currently active. We have no other way than
+    doing a Livestatus query. This is not really nice, but if you have a better
+    idea, please tell me..."""
     # Let exceptions happen, they will be handled upstream.
     try:
         update_timeperiods_cache()
@@ -208,19 +217,21 @@ def check_timeperiod(timeperiod):
     return config_cache.get_dict("timeperiods_cache").get(timeperiod, True)
 
 
-# Returns
-# True : active
-# False: inactive
-# None : unknown timeperiod
-#
-# Raises an exception if e.g. a timeout or connection error appears.
-# This way errors can be handled upstream.
 def timeperiod_active(timeperiod):
+    # type: (TimeperiodName) -> Optional[bool]
+    """Returns
+    True : active
+    False: inactive
+    None : unknown timeperiod
+
+    Raises an exception if e.g. a timeout or connection error appears.
+    This way errors can be handled upstream."""
     update_timeperiods_cache()
     return config_cache.get_dict("timeperiods_cache").get(timeperiod)
 
 
 def update_timeperiods_cache():
+    # type: () -> None
     # { "last_update": 1498820128, "timeperiods": [{"24x7": True}] }
     # The value is store within the config cache since we need a fresh start on reload
     tp_cache = config_cache.get_dict("timeperiods_cache")
@@ -232,6 +243,7 @@ def update_timeperiods_cache():
 
 
 def cleanup_timeperiod_caches():
+    # type: () -> None
     config_cache.get_dict("timeperiods_cache").clear()
 
 

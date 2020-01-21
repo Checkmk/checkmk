@@ -169,7 +169,10 @@ def _read_agent_output(hostname):
         real_time_checks = None  # type: ignore
 
     if real_time_checks and real_time_checks.is_real_time_check_helper():
-        return real_time_checks.get_rtc_package()
+        rtc_package = real_time_checks.get_rtc_package()
+        if rtc_package is not None:
+            return cmk.utils.encoding.convert_to_unicode(rtc_package)
+        return None
 
     cache_path = Path(cmk.utils.paths.tcp_cache_dir, hostname)
     try:

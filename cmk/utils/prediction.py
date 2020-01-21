@@ -27,7 +27,7 @@ import json
 import logging
 import os
 import time
-from typing import Dict, AnyStr, Text, Union, Callable, List, Optional, Tuple  # pylint: disable=unused-import
+from typing import Dict, AnyStr, Text, Union, Callable, List, Optional, Tuple, cast  # pylint: disable=unused-import
 
 import six
 
@@ -49,7 +49,8 @@ TimeSeriesValue = Optional[float]
 TimeSeriesValues = List[TimeSeriesValue]
 ConsolidationFunctionName = str
 Timegroup = str
-EstimatedLevels = List[Optional[float]]
+EstimatedLevel = Optional[float]
+EstimatedLevels = Tuple[EstimatedLevel, EstimatedLevel, EstimatedLevel, EstimatedLevel]
 PredictionInfo = Dict  # TODO: improve this type
 
 
@@ -333,22 +334,25 @@ def estimate_levels(reference, params, levels_factor):
     # type: (Dict[str, int], Dict, float) -> Tuple[int, EstimatedLevels]
     ref_value = reference["average"]
     if not ref_value:  # No reference data available
-        return ref_value, [None, None, None, None]
+        return ref_value, (None, None, None, None)
 
     stdev = reference["stdev"]
-    levels = []  # type: EstimatedLevels
-    for what, sig in [("upper", 1), ("lower", -1)]:
-        p = "levels_" + what
-        if p in params:
-            this_levels = estimate_level_bounds(ref_value, stdev, sig, params[p], levels_factor)
 
-            if what == "upper" and "levels_upper_min" in params:
-                limit_warn, limit_crit = params["levels_upper_min"]
-                this_levels = (max(limit_warn, this_levels[0]), max(limit_crit, this_levels[1]))
-            levels.extend(this_levels)
-        else:
-            levels.extend((None, None))
-    return ref_value, levels
+    def _get_levels_from_params(what, sig):
+        # type: (str, int) -> Tuple[EstimatedLevel, EstimatedLevel]
+        p = "levels_" + what
+        if p not in params:
+            return None, None
+
+        this_levels = estimate_level_bounds(ref_value, stdev, sig, params[p], levels_factor)
+        if what == "upper" and "levels_upper_min" in params:
+            limit_warn, limit_crit = params["levels_upper_min"]
+            this_levels = (max(limit_warn, this_levels[0]), max(limit_crit, this_levels[1]))
+        return this_levels
+
+    upper_warn, upper_crit = _get_levels_from_params("upper", 1)
+    lower_warn, lower_crit = _get_levels_from_params("lower", -1)
+    return ref_value, (upper_warn, upper_crit, lower_warn, lower_crit)
 
 
 def estimate_level_bounds(ref_value, stdev, sig, params, levels_factor):

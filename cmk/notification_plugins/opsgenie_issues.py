@@ -51,9 +51,10 @@ def main():
     note_created = 'Alert created by Check_MK' or context.get('PARAMETER_NOTE_CREATED')
     note_closed = 'Alert closed by Check_MK' or context.get('PARAMETER_NOTE_CLOSED')
     priority = context.get('PARAMETER_PRIORITY')
-    alert_source = None or context.get('PARAMETER_SOURCE')
-    owner = None or context.get('PARAMETER_OWNER')
-    entity_value = None or context.get('PARAMETER_ENTITY')
+    alert_source = context.get('PARAMETER_SOURCE')
+    owner = context.get('PARAMETER_OWNER')
+    entity_value = context.get('PARAMETER_ENTITY')
+    host_url = context.get("PARAMETER_URL")
 
     if context.get('PARAMETER_TAGSS'):
         tags_list = None or context.get('PARAMETER_TAGSS').split(" ")
@@ -110,36 +111,40 @@ $LONGSERVICEOUTPUT$
             alias,
             owner,
             entity_value,
+            host_url,
         )
     elif context['NOTIFICATIONTYPE'] == 'RECOVERY':
-        handle_alert_deletion(key, owner, alias, alert_source, note_closed)
+        handle_alert_deletion(key, owner, alias, alert_source, note_closed, host_url)
     elif context['NOTIFICATIONTYPE'] == 'ACKNOWLEDGEMENT':
-        handle_alert_ack(key, ack_author, ack_comment, alias, alert_source)
+        handle_alert_ack(key, ack_author, ack_comment, alias, alert_source, host_url)
     else:
-        sys.stdout.write('Noticication type %s not supported\n' % (context['NOTIFICATIONTYPE']))
+        sys.stdout.write('Notification type %s not supported\n' % (context['NOTIFICATIONTYPE']))
         return 0
 
 
-def configure_authorization(key):
+def configure_authorization(key, host_url):
     configuration.api_key['Authorization'] = key
     configuration.api_key_prefix['Authorization'] = 'GenieKey'
+    if host_url is not None:
+        configuration.host = '%s' % host_url
 
 
 def handle_alert_creation(
-        key,
-        note_created,
-        action_list,
-        desc,
-        alert_source,
-        msg,
-        priority,
-        teams_list,
-        tags_list,
-        alias,
-        owner,
-        entity_value,
+    key,
+    note_created,
+    action_list,
+    desc,
+    alert_source,
+    msg,
+    priority,
+    teams_list,
+    tags_list,
+    alias,
+    owner,
+    entity_value,
+    host_url,
 ):
-    configure_authorization(key)
+    configure_authorization(key, host_url)
 
     body = CreateAlertRequest(  # type: ignore
         note=note_created,
@@ -165,8 +170,8 @@ def handle_alert_creation(
         return 2
 
 
-def handle_alert_deletion(key, owner, alias, alert_source, note_closed):
-    configure_authorization(key)
+def handle_alert_deletion(key, owner, alias, alert_source, note_closed, host_url):
+    configure_authorization(key, host_url)
 
     body = CloseAlertRequest(
         source=alert_source,
@@ -184,8 +189,8 @@ def handle_alert_deletion(key, owner, alias, alert_source, note_closed):
         return 2
 
 
-def handle_alert_ack(key, ack_author, ack_comment, alias, alert_source):
-    configure_authorization(key)
+def handle_alert_ack(key, ack_author, ack_comment, alias, alert_source, host_url):
+    configure_authorization(key, host_url)
 
     body = AcknowledgeAlertRequest(  # type: ignore
         source=alert_source,

@@ -1,18 +1,46 @@
 # -*- coding: utf-8 -*-
 
-import pytest  # type: ignore
-import cmk.utils.tty
+import cmk.utils.tty as tty
 
 
-@pytest.mark.parametrize("row", [
-    ['check.type', None],
-    ['check.type', ""],
-    ['check.type', b"h\xc3\xa9 \xc3\x9f\xc3\x9f"],
-    ['check.type', u"hé ßß"],
-    ['check.type', 123],
-    ['check.type', 123.4],
-    ['check.type', {}],
-    ['check.type', []],
-])
-def test_print_table(capsys, row):
-    cmk.utils.tty.print_table(["foo", "bar"], ["", ""], [row])
+def test_print_table(capsys):
+    tty.reinit()
+    tty.print_table(
+        ['foo', 'bar'],  #
+        ['', ''],
+        [['Guildo', 'Horn'], ['Dieter Thomas', 'Kuhn']])
+    captured = capsys.readouterr()
+    assert captured.out == ('foo           bar \n'
+                            '------------- ----\n'
+                            'Guildo        Horn\n'
+                            'Dieter Thomas Kuhn\n')
+    assert captured.err == ''
+
+
+def test_print_colored_table(capsys):
+    tty.reinit()
+    tty.print_table(
+        ['foo', 'bar'],  #
+        ['XX', 'YY'],
+        [['Angus', 'Young'], ['Estas', 'Tonne']])
+    captured = capsys.readouterr()
+    assert captured.out == ('XXfoo  YY bar  \n'
+                            'XX-----YY -----\n'
+                            'XXAngusYY Young\n'
+                            'XXEstasYY Tonne\n')
+    assert captured.err == ''
+
+
+def test_print_indented_colored_table(capsys):
+    tty.reinit()
+    tty.print_table(
+        ['foo', 'bar'],  #
+        ['XX', 'YY'],
+        [['Dieter', 'Bohlen'], ['Thomas', 'Anders']],
+        indent='====')
+    captured = capsys.readouterr()
+    assert captured.out == ('====XXfoo   YY bar   \n'
+                            '====XX------YY ------\n'
+                            '====XXDieterYY Bohlen\n'
+                            '====XXThomasYY Anders\n')
+    assert captured.err == ''

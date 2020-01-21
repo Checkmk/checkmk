@@ -122,13 +122,13 @@ def package_list(args):
             show_package_contents(name)
     else:
         if logger.isEnabledFor(VERBOSE):
-            table = []  # type: tty.TableRows
+            table = []
             for pacname in all_package_names():
                 package = read_package_info(pacname)
                 if package is None:
-                    table.append((pacname, "package info is missing or broken", 0))
+                    table.append([pacname, "package info is missing or broken", "0"])
                 else:
-                    table.append((pacname, package["title"], package["num_files"]))
+                    table.append([pacname, package["title"], str(package["num_files"])])
             tty.print_table(["Name", "Title", "Files"], [tty.bold, "", ""], table)
         else:
             for pacname in all_package_names():

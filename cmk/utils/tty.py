@@ -28,62 +28,98 @@ on ttys while being compatible when the command is not attached to a TTY"""
 
 import errno
 import fcntl
-import sys
-import struct
-import termios
 import io
+import itertools
+import struct
+import sys
+import termios
 
-from typing import AnyStr, List, Tuple  # pylint: disable=unused-import
-import six
+from typing import Dict, Iterable, List, Tuple  # pylint: disable=unused-import
 
-from cmk.utils.encoding import make_utf8
+# TODO: Implementing the colors below as simple global variables is a bad idea,
+# because their actual values depend on sys.stdout at *import* time! sys.stdout
+# can be something different when the colors are used, and a scenario where
+# this actually goes wrong is during a pytest run: At the time when the
+# conftest.py modules are imported, sys.stdout has not been changed yet, so it
+# might be a TTY. Later during test execution, sys.stdout has been changed to
+# an internal stream, which is not a TTY, see the capsys fixture.
+#
+# In a nutshell: The colors below should probably be functions, not simple
+# variables, but this involves fixing all call sites.
 
-if sys.stdout.isatty():
-    black = '\033[30m'
-    red = '\033[31m'
-    green = '\033[32m'
-    yellow = '\033[33m'
-    blue = '\033[34m'
-    magenta = '\033[35m'
-    cyan = '\033[36m'
-    white = '\033[37m'
-    bgblue = '\033[44m'
-    bgmagenta = '\033[45m'
-    bgwhite = '\033[47m'
-    bgyellow = '\033[43m'
-    bgred = '\033[41m'
-    bgcyan = '\033[46m'
-    bold = '\033[1m'
-    underline = '\033[4m'
-    normal = '\033[0m'
-else:
-    black = ''
-    red = ''
-    green = ''
-    yellow = ''
-    blue = ''
-    magenta = ''
-    cyan = ''
-    white = ''
-    bgblue = ''
-    bgmagenta = ''
-    bgyellow = ''
-    bgred = ''
-    bgcyan = ''
-    bold = ''
-    underline = ''
-    normal = ''
+black = ''
+red = ''
+green = ''
+yellow = ''
+blue = ''
+magenta = ''
+cyan = ''
+white = ''
+bgblue = ''
+bgmagenta = ''
+bgwhite = ''
+bgyellow = ''
+bgred = ''
+bgcyan = ''
+bold = ''
+underline = ''
+normal = ''
+ok = ''
+warn = ''
+error = ''
+states = {}  # type: Dict[int, str]
 
-ok = green + bold + 'OK' + normal
-warn = yellow + bold + 'WARNING' + normal
-error = red + bold + 'ERROR' + normal
 
-states = {0: green, 1: yellow, 2: red, 3: magenta}
+def reinit():
+    global black, red, green, yellow, blue, magenta, cyan, white
+    global bgblue, bgmagenta, bgwhite, bgyellow, bgred, bgcyan
+    global bold, underline, normal, ok, warn, error, states
+    if sys.stdout.isatty():
+        black = '\033[30m'
+        red = '\033[31m'
+        green = '\033[32m'
+        yellow = '\033[33m'
+        blue = '\033[34m'
+        magenta = '\033[35m'
+        cyan = '\033[36m'
+        white = '\033[37m'
+        bgblue = '\033[44m'
+        bgmagenta = '\033[45m'
+        bgwhite = '\033[47m'
+        bgyellow = '\033[43m'
+        bgred = '\033[41m'
+        bgcyan = '\033[46m'
+        bold = '\033[1m'
+        underline = '\033[4m'
+        normal = '\033[0m'
+    else:
+        black = ''
+        red = ''
+        green = ''
+        yellow = ''
+        blue = ''
+        magenta = ''
+        cyan = ''
+        white = ''
+        bgblue = ''
+        bgmagenta = ''
+        bgwhite = ''
+        bgyellow = ''
+        bgred = ''
+        bgcyan = ''
+        bold = ''
+        underline = ''
+        normal = ''
+    ok = green + bold + 'OK' + normal
+    warn = yellow + bold + 'WARNING' + normal
+    error = red + bold + 'ERROR' + normal
+    states = {0: green, 1: yellow, 2: red, 3: magenta}
 
-TableColors = List[AnyStr]
-TableHeaders = List[AnyStr]
-TableRow = Tuple[AnyStr, ...]
-TableRows = List[TableRow]
+
+reinit()
+
+TableRow = List[str]
+TableColors = TableRow
 
 
 def colorset(fg=-1, bg=-1, attr=-1):
@@ -125,26 +161,21 @@ def get_size():
 
 
 def print_table(headers, colors, rows, indent=""):
-    # type: (TableHeaders, TableColors, TableRows, str) -> None
+    # type: (TableRow, TableColors, Iterable[TableRow], str) -> None
     num_columns = len(headers)
     lengths = _column_lengths(headers, rows, num_columns)
+    dashes = ["-" * l for l in lengths]
     fmt = _row_template(lengths, colors, indent)
-    for index, row in enumerate([tuple(headers)] + rows):
-        sys.stdout.write(fmt % tuple(make_utf8(c) for c in row[:num_columns]))
-        if index == 0:
-            sys.stdout.write(fmt % tuple("-" * l for l in lengths))
+    for row in itertools.chain([headers, dashes], rows):
+        sys.stdout.write(fmt % tuple(row[:num_columns]))
 
 
 def _column_lengths(headers, rows, num_columns):
-    # type: (TableHeaders, TableRows, int) -> List[int]
+    # type: (TableRow, Iterable[TableRow], int) -> List[int]
     lengths = [len(h) for h in headers]
     for row in rows:
         for index, column in enumerate(row[:num_columns]):
-            # FIXME alignment by reference to lengths of utf-8 strings?
-            # column can be None, str, data structures, ...
-            if not isinstance(column, six.string_types):
-                column = six.binary_type(column)
-            lengths[index] = max(len(make_utf8(column)), lengths[index])
+            lengths[index] = max(len(column), lengths[index])
     return lengths
 
 

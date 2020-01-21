@@ -315,14 +315,14 @@ def all_man_pages():
 
 def print_man_page_table():
     # type: () -> None
-    table = []  # type: tty.TableRows
+    table = []
     for name, path in sorted(all_man_pages().items()):
         try:
-            table.append((name, _get_title_from_man_page(Path(path))))
+            table.append([name, _get_title_from_man_page(Path(path))])
         except MKGeneralException as e:
             sys.stderr.write(str("ERROR: %s" % e))
 
-    tty.print_table(['Check type', 'Title'], [tty.bold, tty.normal], table)
+    tty.print_table([str('Check type'), str('Title')], [tty.bold, tty.normal], table)
 
 
 def _get_title_from_man_page(path):
@@ -659,18 +659,19 @@ def _console_stream():
 
 
 class ConsoleManPageRenderer(ManPageRenderer):
-    _tty_color = tty.white + tty.bold
-    _normal_color = tty.normal + tty.colorset(7, 4)
-    _title_color_left = tty.colorset(0, 7, 1)
-    _title_color_right = tty.colorset(0, 7)
-    _subheader_color = tty.colorset(7, 4, 1)
-    _header_color_left = tty.colorset(0, 2)
-    _header_color_right = tty.colorset(7, 2, 1)
-
     def __init__(self, name):
         super(ConsoleManPageRenderer, self).__init__(name)
         self.__output = _console_stream()
+        # NOTE: We must use instance variables for the TTY stuff because TTY-related
+        # stuff might have been changed since import time, consider e.g. pytest.
         self.__width = tty.get_size()[1]
+        self._tty_color = tty.white + tty.bold
+        self._normal_color = tty.normal + tty.colorset(7, 4)
+        self._title_color_left = tty.colorset(0, 7, 1)
+        self._title_color_right = tty.colorset(0, 7)
+        self._subheader_color = tty.colorset(7, 4, 1)
+        self._header_color_left = tty.colorset(0, 2)
+        self._header_color_right = tty.colorset(7, 2, 1)
 
     def _flush(self):
         self.__output.flush()

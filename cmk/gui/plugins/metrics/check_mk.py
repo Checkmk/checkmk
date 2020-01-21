@@ -471,6 +471,12 @@ metric_info["age"] = {
     "color": "#80f000",
 }
 
+metric_info["age_oldest"] = {
+    "title": _("Oldest age"),
+    "unit": "s",
+    "color": "35/a",
+}
+
 metric_info["last_updated"] = {
     "title": _("Last Updated"),
     "unit": "s",

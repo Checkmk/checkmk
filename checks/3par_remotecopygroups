@@ -1,0 +1,89 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2020             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+factory_settings['threepar_remotecopygroup_default_levels'] = {
+    "0": 2,  # INVALID
+    "1": 1,  # NEW
+    "2": 1,  # STARTING
+    "3": 0,  # STARTED
+    "4": 1,  # RESTART
+    "5": 2,  # STOPPED
+    "6": 2,  # BACKUP
+    "7": 2,  # FAILSAFE
+    "8": 3,  # UNKNOWN
+    "9": 1,  # LOGGING
+}
+
+
+def inventory_3par_remotecopygroups(parsed):
+    for item in parsed.get("members"):
+        yield item.get("remoteGroupName"), {}
+
+
+def check_3par_remotecopygroups(item, params, parsed):
+    mode_translate = {
+        0: (3, "UNKNOWN"),
+        1: (0, "SYNC"),
+        2: (0, "PERIODIC"),
+        3: (0, "PERIODIC"),
+        4: (0, "ASYNC"),
+        5: (2, "STOPPED"),
+    }
+    status_translate = {
+        0: "INVALID",
+        1: "NEW",
+        2: "STARTING",
+        3: "STARTED",
+        4: "RESTART",
+        5: "STOPPED",
+        6: "BACKUP",
+        7: "FAILSAFE",
+        8: "UNKNOWN",
+        9: "LOGGING",
+    }
+
+    for name in parsed.get("members"):
+        if item in name.get("remoteGroupName"):
+            for target in name.get("targets", None):
+                target_name = "%s:%s" % (target.get(
+                    "target", "Target not found"), target.get("remoteSnapCPG", "None"))
+                mode, mode_readable = mode_translate[target.get('mode', 1)]
+                state = target.get('state', 8)
+                state_readable = status_translate[state]
+                yield params.get(str(state), 3), "Status: %s" % state_readable
+                yield mode, "Target: %s, Mode: %s" % (target_name, mode_readable)
+
+
+check_info['3par_remotecopygroups'] = {
+    'parse_function': parse_3par,
+    'inventory_function': inventory_3par_remotecopygroups,
+    'check_function': check_3par_remotecopygroups,
+    'service_description': "Remote copy group: %s",
+    'default_levels_variable': "threepar_remotecopygroup_default_levels",
+    'group': "gp_threepar_remotecopygroups",
+    'has_perfdata': False,
+    'includes': ["3par.include"],
+}

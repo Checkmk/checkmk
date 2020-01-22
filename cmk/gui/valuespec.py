@@ -4934,9 +4934,15 @@ class LogLevelChoice(DropdownChoice):
 
 def MetricName():
     """Factory of a Dropdown menu from all known metric names"""
+    def _require_metric(value, varprefix):
+        if value is None:
+            raise MKUserError(varprefix, _("You need to select a metric"))
+
     return DropdownChoice(
         title=_("Metric Name"),
         sorted=True,
-        choices=[
-            (metric_id, metric_detail['title']) for metric_id, metric_detail in metric_info.items()
-        ])
+        default_value=None,
+        validate=_require_metric,
+        choices=[(None, "")] +
+        [(metric_id, metric_detail['title']) for metric_id, metric_detail in metric_info.items()],
+    )

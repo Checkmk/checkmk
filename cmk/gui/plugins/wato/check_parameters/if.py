@@ -418,7 +418,7 @@ def _parameter_valuespec_if():
                  ListOf(
                      Tuple(orientation="horizontal",
                            elements=[
-                               DropdownChoice(choices=defines.interface_oper_states()),
+                               ListChoice(choices=defines.interface_oper_states()),
                                MonitoringState()
                            ]),
                      title=_('Map operational states'),

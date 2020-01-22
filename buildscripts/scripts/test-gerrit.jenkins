@@ -1,4 +1,7 @@
 throttle(['Gerrit']){
+properties([
+  buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
+])
 node {
     def WORKSPACE = pwd()
 

@@ -1,4 +1,7 @@
 import java.text.SimpleDateFormat
+properties([
+  buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
+])
 
 node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {

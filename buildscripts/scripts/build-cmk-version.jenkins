@@ -8,6 +8,7 @@ if(JOB_BASE_NAME == 'nightly_build_containerized') {
 }
 
 properties([
+  buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
   parameters([
     string(name: 'DISTROS', defaultValue: DISTRO_STR, description: 'List of targeted distros' ),
     string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' ),

@@ -1,4 +1,5 @@
 properties([
+    buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
     pipelineTriggers([triggers: [upstream(upstreamProjects: "cmk_master/windows-agent-build", threshold: hudson.model.Result.SUCCESS)]]),
 ])
 

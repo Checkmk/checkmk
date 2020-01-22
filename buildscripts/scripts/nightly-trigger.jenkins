@@ -2,6 +2,7 @@ BRANCH_NAME = scm.branches[0].name
 FOLDER_ID = BRANCH_NAME.replaceAll('\\.','')
 
 properties([
+    buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
     parameters([
         string(name: 'DISTROS', defaultValue: DISTRO_LIST_MASTER, description: 'List of targeted distros' ),
         string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' )

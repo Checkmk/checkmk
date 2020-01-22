@@ -1573,7 +1573,7 @@ class AutomationNotificationAnalyse(Automation):
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args):
-        # type: (List[str]) -> notify.NotifyAnalysisInfo
+        # type: (List[str]) -> Optional[notify.NotifyAnalysisInfo]
         nr = args[0]
         return notify.notification_analyse_backlog(int(nr))
 

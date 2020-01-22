@@ -1430,7 +1430,7 @@ modes.register(
 
 
 def mode_notify(options, args):
-    # type: (Dict, List[str]) -> None
+    # type: (Dict, List[str]) -> Optional[int]
     import cmk.base.notify as notify
     with store.lock_checkmk_configuration():
         config.load(with_conf_d=True, validate_hosts=False)

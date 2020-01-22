@@ -42,7 +42,9 @@ import re
 import signal
 import sys
 import time
-from typing import Dict, Tuple, List, Text  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Dict, Tuple, List, Text, Any, Optional, FrozenSet, Set, Union, cast,
+)
 
 import livestatus
 import cmk.utils.debug
@@ -75,6 +77,8 @@ try:
 except ImportError:
     keepalive = None  # type: ignore
 
+from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
+
 logger = logging.getLogger('cmk.base.notify')
 logger.addHandler(logging.NullHandler())
 
@@ -82,16 +86,40 @@ _log_to_stdout = False
 notify_mode = "notify"
 
 ContactName = str
+
+RawNotifyContext = Dict  # TODO: Improve this
+NotifyContext = Dict  # TODO: Improve this
+
 NotifyRule = Dict  # TODO: Improve this
 NotifyPluginParams = Dict  # TODO: Improve this
 NotifyBulkParameters = Dict  # TODO: Improve this
 NotifyRuleInfo = Tuple[str, NotifyRule, str]
 NotifyPluginName = str
-NotifyPluginInfo = Tuple[ContactName, NotifyPluginName, NotifyPluginParams, NotifyBulkParameters]
+NotifyPluginInfo = Tuple[ContactName, NotifyPluginName, NotifyPluginParams,
+                         Optional[NotifyBulkParameters]]
 NotifyAnalysisInfo = Tuple[List[NotifyRuleInfo], List[NotifyPluginInfo]]
 
-NotifyBulk = Tuple[str, int, str, str, int, str]
+UUIDs = List[Tuple[float, str]]
+NotifyBulk = Tuple[str, float, Union[None, str, int], Union[None, str, int], int, UUIDs]
 NotifyBulks = List[NotifyBulk]
+
+PluginName = str
+PluginContext = Dict  # TODO: Improve this
+
+NotificationTableEntry = Dict[str, Union[PluginName, List]]
+NotificationTable = List[NotificationTableEntry]
+
+Event = str
+
+ContactId = str
+Contact = Dict[str, Union[str, bool, Dict[str, Any]]]
+Contacts = List[Contact]
+ConfigContacts = Dict[ContactName, Contact]
+ContactNames = FrozenSet[ContactName]  # Must be hasable
+
+NotificationKey = Tuple[ContactNames, PluginName]
+NotificationValue = Tuple[bool, NotifyPluginParams, Optional[NotifyBulkParameters]]
+Notifications = Dict[NotificationKey, NotificationValue]
 
 #   .--Configuration-------------------------------------------------------.
 #   |    ____             __ _                       _   _                 |
@@ -151,14 +179,19 @@ $LONGSERVICEOUTPUT$
 
 
 def _initialize_logging():
+    # type: () -> None
     log.logger.setLevel(config.notification_logging)
     log.open_log(notification_log)
 
 
 def _transform_user_disable_notifications_opts(contact):
+    # type: (Contact) -> Dict[str, Any]
     if "disable_notifications" in contact and isinstance(contact["disable_notifications"], bool):
         return {"disable": contact["disable_notifications"]}
-    return contact.get("disable_notifications", {})
+
+    disable_notifications = contact.get("disable_notifications", {})
+    assert isinstance(disable_notifications, dict)
+    return disable_notifications
 
 
 #.
@@ -175,6 +208,7 @@ def _transform_user_disable_notifications_opts(contact):
 
 
 def notify_usage():
+    # type: () -> None
     console.error("""Usage: check_mk --notify [--keepalive]
        check_mk --notify spoolfile <filename>
 
@@ -197,6 +231,7 @@ Available commands:
 # keepalive mode (used by CMC), sends out one notifications from
 # several possible sources or sends out all ripe bulk notifications.
 def do_notify(options, args):
+    # type: (Dict[str, bool], List[str]) -> Optional[int]
     global _log_to_stdout, notify_mode
     _log_to_stdout = options.get("log-to-stdout", _log_to_stdout)
 
@@ -253,9 +288,11 @@ def do_notify(options, args):
             os.makedirs(crash_dir)
         open(crash_dir + "/crash.log", "a").write(
             "CRASH (%s):\n%s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), format_exception()))
+    return None
 
 
 def convert_legacy_configuration():
+    # type: () -> None
     # Convert legacy spooling configuration to new one (see above)
     if config.notification_spooling in (True, False):
         if config.notification_spool_to:
@@ -282,6 +319,7 @@ def convert_legacy_configuration():
 # should be spooled or not. In the latter cased a local delivery
 # is being done.
 def notify_notify(raw_context, analyse=False):
+    # type: (RawNotifyContext, bool) -> Optional[NotifyAnalysisInfo]
     if not analyse:
         store_notification_backlog(raw_context)
 
@@ -306,11 +344,13 @@ def notify_notify(raw_context, analyse=False):
 
     if config.notification_spooling != "remote":
         return locally_deliver_raw_context(raw_context, analyse=analyse)
+    return None
 
 
 # Add some notification specific variables to the context. These are currently
 # not added to alert handler scripts
 def _complete_raw_context_with_notification_vars(raw_context):
+    # type: (RawNotifyContext) -> None
     raw_context["LOGDIR"] = notification_logdir
     raw_context["MAIL_COMMAND"] = notification_mail_command
 
@@ -321,7 +361,7 @@ def _complete_raw_context_with_notification_vars(raw_context):
 # 2. Flexible Notifications   (since 1.2.2)
 # 3. Plain email notification (refer to git log if you are really interested)
 def locally_deliver_raw_context(raw_context, analyse=False):
-    # -> Optional[
+    # type: (RawNotifyContext, bool) -> Optional[NotifyAnalysisInfo]
     contactname = raw_context.get("CONTACTNAME")
     try:
 
@@ -339,12 +379,13 @@ def locally_deliver_raw_context(raw_context, analyse=False):
             return notify_rulebased(raw_context, analyse=analyse)
 
         if analyse:
-            return  # Analysis only possible when rule based notifications are enabled
+            return None  # Analysis only possible when rule based notifications are enabled
 
         # Now fetch all configuration about that contact (it needs to be configure via
         # Check_MK for that purpose). If we do not know that contact then we cannot use
         # flexible notifications even if they are enabled.
-        contact = config.contacts.get(contactname)
+        # TODO find a common place for type hint 'Contact'/'Contacts'
+        contact = cast(Contact, config.contacts.get(contactname))
 
         disable_notifications_opts = _transform_user_disable_notifications_opts(contact)
         if disable_notifications_opts.get("disable", False):
@@ -352,12 +393,12 @@ def locally_deliver_raw_context(raw_context, analyse=False):
             if start is None or end is None:
                 logger.info("Notifications for %s are disabled in personal settings. Skipping.",
                             contactname)
-                return
+                return None
             elif start <= time.time() <= end:
                 logger.info(
                     "Notifications for %s are disabled in personal settings from %s to %s. Skipping.",
                     contactname, start, end)
-                return
+                return None
 
         # Get notification settings for the contact in question - if available.
         if contact:
@@ -379,9 +420,11 @@ def locally_deliver_raw_context(raw_context, analyse=False):
         if cmk.utils.debug.enabled():
             raise
         logger.exception("ERROR:")
+    return None
 
 
 def notification_replay_backlog(nr):
+    # type: (int) -> None
     global notify_mode
     notify_mode = "replay"
     _initialize_logging()
@@ -390,6 +433,7 @@ def notification_replay_backlog(nr):
 
 
 def notification_analyse_backlog(nr):
+    # type: (int) -> Optional[NotifyAnalysisInfo]
     global notify_mode
     notify_mode = "replay"
     _initialize_logging()
@@ -413,6 +457,7 @@ def notification_analyse_backlog(nr):
 
 # TODO: Make use of the generic do_keepalive() mechanism?
 def notify_keepalive():
+    # type: () -> None
     cmk.base.utils.register_sigint_handler()
     events.event_keepalive(
         event_function=notify_notify,
@@ -434,8 +479,8 @@ def notify_keepalive():
 #   '----------------------------------------------------------------------'
 
 
-# TODO: type (RawNotifyContext, bool) -> NotifyAnalysisInfo
 def notify_rulebased(raw_context, analyse=False):
+    # type: (RawNotifyContext, bool) -> NotifyAnalysisInfo
     # First step: go through all rules and construct our table of
     # notification plugins to call. This is a dict from (users, plugin) to
     # a triple of (locked, parameters, bulk). If locked is True, then a user
@@ -447,7 +492,7 @@ def notify_rulebased(raw_context, analyse=False):
     #       'groupby': 'host', 'interval': 60} ] ),
     # }
 
-    notifications = {}
+    notifications = {}  # type: Notifications
     num_rule_matches = 0
     rule_info = []
 
@@ -471,14 +516,14 @@ def notify_rulebased(raw_context, analyse=False):
 
             # Handle old-style and new-style rules
             if "notify_method" in rule:  # old-style
-                plugin = rule["notify_plugin"]
+                plugin_name = rule["notify_plugin"]
                 plugin_parameters = rule[
                     "notify_method"]  # None: do cancel, [ str ]: plugin parameters
             else:
-                plugin, plugin_parameters = rule["notify_plugin"]
-            plugintxt = plugin or "plain email"
+                plugin_name, plugin_parameters = rule["notify_plugin"]
+            plugintxt = plugin_name or "plain email"
 
-            key = contacts, plugin
+            key = contacts, plugin_name
             if plugin_parameters is None:  # cancelling
                 # FIXME: In Python 2, notifications.keys() already produces a
                 # copy of the keys, while in Python 3 it is only a view of the
@@ -490,7 +535,7 @@ def notify_rulebased(raw_context, analyse=False):
                     notify_contacts, notify_plugin = notify_key
 
                     overlap = notify_contacts.intersection(contacts)
-                    if plugin != notify_plugin or not overlap:
+                    if plugin_name != notify_plugin or not overlap:
                         continue
 
                     locked, plugin_parameters, bulk = notifications[notify_key]
@@ -507,7 +552,7 @@ def notify_rulebased(raw_context, analyse=False):
                     if not remaining:
                         del notifications[notify_key]
                     else:
-                        new_key = remaining, plugin
+                        new_key = remaining, plugin_name
                         notifications[new_key] = notifications.pop(notify_key)
             elif contacts:
                 if key in notifications:
@@ -519,9 +564,11 @@ def notify_rulebased(raw_context, analyse=False):
                     logger.info("   - modifying notification of %s via %s", contactstxt, plugintxt)
                 else:
                     logger.info("   - adding notification of %s via %s", contactstxt, plugintxt)
+
                 bulk = rbn_get_bulk_params(rule)
-                final_parameters = rbn_finalize_plugin_parameters(raw_context["HOSTNAME"], plugin,
-                                                                  plugin_parameters)
+
+                final_parameters = rbn_finalize_plugin_parameters(raw_context["HOSTNAME"],
+                                                                  plugin_name, plugin_parameters)
                 notifications[key] = (not rule.get("allow_disable"), final_parameters, bulk)
 
             rule_info.append(("match", rule, ""))
@@ -546,11 +593,10 @@ def notify_rulebased(raw_context, analyse=False):
     else:
         # Now do the actual notifications
         logger.info("Executing %d notifications:", len(notifications))
-        entries = sorted(notifications.items())
-        for (contacts, plugin), (locked, params, bulk) in entries:
+        for (contacts, plugin_name), (locked, params, bulk) in sorted(notifications.items()):
             verb = "would notify" if analyse else "notifying"
             contactstxt = ", ".join(contacts)
-            plugintxt = plugin or "plain email"
+            plugintxt = plugin_name or "plain email"
             paramtxt = ", ".join(params) if params else "(no parameters)"
             bulktxt = "yes" if bulk else "no"
             logger.info("  * %s %s via %s, parameters: %s, bulk: %s", verb, contactstxt, plugintxt,
@@ -561,7 +607,7 @@ def notify_rulebased(raw_context, analyse=False):
                 rbn_add_contact_information(plugin_context, contacts)
 
                 split_contexts = (
-                    plugin not in ["", "mail", "asciimail", "slack"] or
+                    plugin_name not in ["", "mail", "asciimail", "slack"] or
                     # params can be a list (e.g. for custom notificatios)
                     params.get("disable_multiplexing") or bulk)
                 if not split_contexts:
@@ -570,47 +616,50 @@ def notify_rulebased(raw_context, analyse=False):
                     plugin_contexts = rbn_split_plugin_context(plugin_context)
 
                 for context in plugin_contexts:
-                    plugin_info.append((context["CONTACTNAME"], plugin, params, bulk))
+                    plugin_info.append((context["CONTACTNAME"], plugin_name, params, bulk))
 
                     if analyse:
                         continue
                     elif bulk:
-                        do_bulk_notify(plugin, params, context, bulk)
+                        do_bulk_notify(plugin_name, params, context, bulk)
                     elif config.notification_spooling in ("local", "both"):
-                        create_spoolfile({"context": context, "plugin": plugin})
+                        create_spoolfile({"context": context, "plugin": plugin_name})
                     else:
-                        call_notification_script(plugin, context)
+                        call_notification_script(plugin_name, context)
 
             except Exception:
                 if cmk.utils.debug.enabled():
                     raise
                 logger.exception("    ERROR:")
 
-    analysis_info = rule_info, plugin_info
-    return analysis_info
+    return rule_info, plugin_info
 
 
 def rbn_fallback_contacts():
-    fallback_contacts = []
+    # type: () -> Contacts
+    fallback_contacts = []  # type: Contacts
     if config.notification_fallback_email:
         fallback_contacts.append(rbn_fake_email_contact(config.notification_fallback_email))
 
-    for contact_name, contact in config.contacts.items():
+    # TODO find a common place for type hint 'Contact'/'Contacts'
+    contacts = cast(ConfigContacts, config.contacts)
+    for contact_name, contact in contacts.items():
         if contact.get("fallback_contact", False) and contact.get("email"):
             fallback_contact = {
                 "name": contact_name,
-            }
+            }  # type: Contact
             fallback_contact.update(contact)
             fallback_contacts.append(fallback_contact)
 
     return fallback_contacts
 
 
-def rbn_finalize_plugin_parameters(hostname, plugin, rule_parameters):
+def rbn_finalize_plugin_parameters(hostname, plugin_name, rule_parameters):
+    # type: (HostName, PluginName, NotifyPluginParams) -> NotifyPluginParams
     # Right now we are only able to finalize notification plugins with dict parameters..
     if isinstance(rule_parameters, dict):
         host_config = config.get_config_cache().get_host_config(hostname)
-        parameters = host_config.notification_plugin_parameters(plugin).copy()
+        parameters = host_config.notification_plugin_parameters(plugin_name).copy()
         parameters.update(rule_parameters)
         return parameters
 
@@ -621,6 +670,7 @@ def rbn_finalize_plugin_parameters(hostname, plugin, rule_parameters):
 # create deterministic order, so that rule analyses can depend on
 # rule indices
 def user_notification_rules():
+    # type: () -> List[NotifyRule]
     user_rules = []
     contactnames = sorted(config.contacts.keys())
     for contactname in contactnames:
@@ -648,6 +698,7 @@ def user_notification_rules():
 
 
 def rbn_fake_email_contact(email):
+    # type: (str) -> Contact
     return {
         "name": "mailto:" + email,
         "alias": "Explicit email adress " + email,
@@ -657,6 +708,7 @@ def rbn_fake_email_contact(email):
 
 
 def rbn_add_contact_information(plugin_context, contacts):
+    # type: (PluginContext, Union[Contacts, ContactNames]) -> None
     # TODO tb: Make contacts a reliable type. Righ now contacts can be
     # a list of dicts or a frozenset of strings.
     contact_dicts = []
@@ -681,11 +733,12 @@ def rbn_add_contact_information(plugin_context, contacts):
 
     for key in keys:
         context_key = "CONTACT" + key.upper()
-        items = [contact.get(key, "") for contact in contact_dicts]
+        items = [str(contact.get(key, "")) for contact in contact_dicts]
         plugin_context[context_key] = ",".join(items)
 
 
 def rbn_split_plugin_context(plugin_context):
+    # type: (PluginContext) -> List[PluginContext]
     """Takes a plugin_context containing multiple contacts and returns
     a list of plugin_contexts with a context for each contact"""
     num_contacts = len(plugin_context["CONTACTNAME"].split(","))
@@ -706,6 +759,7 @@ def rbn_split_plugin_context(plugin_context):
 
 
 def rbn_get_bulk_params(rule):
+    # type: (NotifyRule) -> Optional[NotifyBulkParameters]
     bulk = rule.get("bulk")
 
     if not bulk:
@@ -740,6 +794,7 @@ def rbn_get_bulk_params(rule):
 
 
 def rbn_match_rule(rule, context):
+    # type: (NotifyRule, NotifyContext) -> Optional[str]
     if rule.get("disabled"):
         return "This rule is disabled"
 
@@ -750,6 +805,7 @@ def rbn_match_rule(rule, context):
 
 
 def rbn_match_escalation(rule, context):
+    # type: (NotifyRule, NotifyContext) -> Optional[str]
     if "match_escalation" in rule:
         from_number, to_number = rule["match_escalation"]
         if context["WHAT"] == "HOST":
@@ -759,55 +815,63 @@ def rbn_match_escalation(rule, context):
         if not from_number <= notification_number <= to_number:
             return "The notification number %d does not lie in range %d ... %d" % (
                 notification_number, from_number, to_number)
+    return None
 
 
 def rbn_match_escalation_throtte(rule, context):
+    # type: (NotifyRule, NotifyContext) -> Optional[str]
     if "match_escalation_throttle" in rule:
         # We do not want to suppress recovery notifications.
         if (context["WHAT"] == "HOST" and context.get("HOSTSTATE", "UP") == "UP") or \
            (context["WHAT"] == "SERVICE" and context.get("SERVICESTATE", "OK") == "OK"):
-            return
+            return None
         from_number, rate = rule["match_escalation_throttle"]
         if context["WHAT"] == "HOST":
             notification_number = int(context.get("HOSTNOTIFICATIONNUMBER", 1))
         else:
             notification_number = int(context.get("SERVICENOTIFICATIONNUMBER", 1))
         if notification_number <= from_number:
-            return
+            return None
         if (notification_number - from_number) % rate != 0:
             return "This notification is being skipped due to throttling. The next number will be %d" % \
                 (notification_number + rate - ((notification_number - from_number) % rate))
+    return None
 
 
 def rbn_match_host_event(rule, context):
+    # type: (NotifyRule, NotifyContext) -> Optional[str]
     if "match_host_event" in rule:
         if context["WHAT"] != "HOST":
             if "match_service_event" not in rule:
                 return "This is a service notification, but the rule just matches host events"
-            return  # Let this be handled by match_service_event
+            return None  # Let this be handled by match_service_event
 
         allowed_events = rule["match_host_event"]
         state = context["HOSTSTATE"]
         last_state = context["PREVIOUSHOSTHARDSTATE"]
         event_map = {"UP": 'r', "DOWN": 'd', "UNREACHABLE": 'u'}
         return rbn_match_event(context, state, last_state, event_map, allowed_events)
+    return None
 
 
 def rbn_match_service_event(rule, context):
+    # type: (NotifyRule, NotifyContext) -> Optional[str]
     if "match_service_event" in rule:
         if context["WHAT"] != "SERVICE":
             if "match_host_event" not in rule:
                 return "This is a host notification, but the rule just matches service events"
-            return  # Let this be handled by match_host_event
+            return None  # Let this be handled by match_host_event
 
         allowed_events = rule["match_service_event"]
         state = context["SERVICESTATE"]
         last_state = context["PREVIOUSSERVICEHARDSTATE"]
         event_map = {"OK": 'r', "WARNING": 'w', "CRITICAL": 'c', "UNKNOWN": 'u'}
         return rbn_match_event(context, state, last_state, event_map, allowed_events)
+    return None
 
 
 def rbn_match_event(context, state, last_state, event_map, allowed_events):
+    # type: (NotifyContext, str, str, Dict[str, str], List[str]) -> Optional[str]
     notification_type = context["NOTIFICATIONTYPE"]
 
     if notification_type == "RECOVERY":
@@ -832,14 +896,15 @@ def rbn_match_event(context, state, last_state, event_map, allowed_events):
         if event == allowed or \
            (allowed[0] == '?' and len(event) > 1 and event[1] == allowed[1]) or \
            (event[0] == '?' and len(allowed) > 1 and event[1] == allowed[1]):
-            return
+            return None
 
     return "Event type '%s' not handled by this rule. Allowed are: %s" % (event,
                                                                           ", ".join(allowed_events))
 
 
 def rbn_rule_contacts(rule, context):
-    the_contacts = set([])
+    # type: (NotifyRule, NotifyContext) -> ContactNames
+    the_contacts = set()
     if rule.get("contact_object"):
         the_contacts.update(rbn_object_contact_names(context))
     if rule.get("contact_all"):
@@ -858,7 +923,8 @@ def rbn_rule_contacts(rule, context):
         if contactname == config.notification_fallback_email:
             contact = rbn_fake_email_contact(config.notification_fallback_email)
         else:
-            contact = config.contacts.get(contactname)
+            # TODO find a common place for type hint 'Contact'/'Contacts'
+            contact = cast(Contact, config.contacts.get(contactname))
 
         if contact:
             disable_notifications_opts = _transform_user_disable_notifications_opts(contact)
@@ -891,9 +957,10 @@ def rbn_rule_contacts(rule, context):
 
 
 def rbn_match_contact_macros(rule, contactname, contact):
+    # type: (NotifyRule, ContactName, Contact) -> Optional[str]
     if "contact_match_macros" in rule:
         for macro_name, regexp in rule["contact_match_macros"]:
-            value = contact.get("_" + macro_name, "")
+            value = str(contact.get("_" + macro_name, ""))
             if not regexp.endswith("$"):
                 regexp = regexp + "$"
             if not regex(regexp).match(value):
@@ -904,30 +971,40 @@ def rbn_match_contact_macros(rule, contactname, contact):
                 ])
                 return "value '%s' for macro '%s' does not match '%s'. His macros are: %s" % (
                     value, macro_name, regexp, macro_overview)
+    return None
 
 
 def rbn_match_contact_groups(rule, contactname, contact):
+    # type: (NotifyRule, ContactName, Contact) -> Optional[str]
     if "contact_match_groups" in rule:
         if "contactgroups" not in contact:
             logger.info("Warning: cannot determine contact groups of %s: skipping restrictions",
                         contactname)
-            return
+            return None
+
         for required_group in rule["contact_match_groups"]:
-            if required_group not in contact["contactgroups"]:
-                return "he/she is not member of the contact group %s (his groups are %s)" % (
-                    required_group, ", ".join(contact["contactgroups"] or ["<None>"]))
+            contactgroups = contact["contactgroups"]
+            assert isinstance(contactgroups, (tuple, list))
+
+            if required_group not in contactgroups:
+                return "he/she is not member of the contact group %s (his groups are %s)" \
+                       % (required_group, ", ".join(contactgroups or ["<None>"]))
+    return None
 
 
 def rbn_match_notification_comment(rule, context):
+    # type: (NotifyRule, NotifyContext) -> Optional[str]
     if "match_notification_comment" in rule:
         r = regex(rule["match_notification_comment"])
         notification_comment = context.get("NOTIFICATIONCOMMENT", "")
         if not r.match(notification_comment):
             return "The beginning of the notification comment '%s' is not matched by the regex '%s'" % (
                 notification_comment, rule["match_notification_comment"])
+    return None
 
 
 def rbn_match_event_console(rule, context):
+    # type: (NotifyRule, NotifyContext) -> Optional[str]
     if "match_ec" in rule:
         match_ec = rule["match_ec"]
         is_ec_notification = "EC_ID" in context
@@ -966,51 +1043,58 @@ def rbn_match_event_console(rule, context):
                 if not r.search(context["EC_COMMENT"]):
                     return "The event comment '%s' does not match the regular expression '%s'" % (
                         context["EC_COMMENT"], match_ec["match_comment"])
+    return None
 
 
 def rbn_object_contact_names(context):
+    # type: (NotifyContext) -> List[ContactName]
     commasepped = context.get("CONTACTS")
     if commasepped == "?":
         logger.info("Warning: Contacts of %s cannot be determined. Using fallback contacts",
                     events.find_host_service_in_context(context))
-        return [contact["name"] for contact in rbn_fallback_contacts()]
+        return [str(contact["name"]) for contact in rbn_fallback_contacts()]
+
     elif commasepped:
         return commasepped.split(",")
 
     return []
 
 
-def rbn_all_contacts(with_email=None):
+def rbn_all_contacts(with_email=False):
+    # type: (bool) -> List[ContactId]
     if not with_email:
-        return config.contacts.keys()  # We have that via our main.mk contact definitions!
+        return list(config.contacts.keys())  # We have that via our main.mk contact definitions!
 
     return [contact_id for (contact_id, contact) in config.contacts.items() if contact.get("email")]
 
 
 def rbn_groups_contacts(groups):
+    # type: (List[str]) -> Set[str]
     if not groups:
-        return {}
+        return set()
+
     query = "GET contactgroups\nColumns: members\n"
     for group in groups:
         query += "Filter: name = %s\n" % group
     query += "Or: %d\n" % len(groups)
 
     try:
-        contacts = set([])
+        contacts = set()  # type: Set[ContactName]
         for contact_list in livestatus.LocalConnection().query_column(query):
             contacts.update(contact_list)
         return contacts
 
     except livestatus.MKLivestatusNotFoundError:
-        return []
+        return set()
 
     except Exception:
         if cmk.utils.debug.enabled():
             raise
-        return []
+        return set()
 
 
 def rbn_emails_contacts(emails):
+    # type: (List[str]) -> List[str]
     return ["mailto:" + e for e in emails]
 
 
@@ -1029,20 +1113,25 @@ def rbn_emails_contacts(emails):
 
 
 def notify_flexible(raw_context, notification_table):
-
+    # type: (RawNotifyContext, NotificationTable) -> None
     for entry in notification_table:
-        plugin = entry["plugin"]
-        logger.info(" Notification channel with plugin %s", (plugin or "plain email"))
+        plugin_name = entry["plugin"]
+        assert isinstance(plugin_name, str)
+
+        logger.info(" Notification channel with plugin %s", (plugin_name or "plain email"))
 
         if not should_notify(raw_context, entry):
             continue
 
-        plugin_context = create_plugin_context(raw_context, entry.get("parameters", []))
+        parameters = entry.get("parameters", [])
+        assert isinstance(parameters, list)
+
+        plugin_context = create_plugin_context(raw_context, parameters)
 
         if config.notification_spooling in ("local", "both"):
-            create_spoolfile({"context": plugin_context, "plugin": plugin})
+            create_spoolfile({"context": plugin_context, "plugin": plugin_name})
         else:
-            call_notification_script(plugin, plugin_context)
+            call_notification_script(plugin_name, plugin_context)
 
 
 # may return
@@ -1050,6 +1139,7 @@ def notify_flexible(raw_context, notification_table):
 # 1  : currently not OK  -> try to process later on
 # >=2: invalid           -> discard
 def should_notify(context, entry):
+    # type: (RawNotifyContext, NotificationTableEntry) -> bool
     # Check disabling
     if entry.get("disabled"):
         logger.info(" - Skipping: it is disabled for this user")
@@ -1070,11 +1160,11 @@ def should_notify(context, entry):
                 regex_match = True
                 h = h[1:]
 
-            if not regex_match and hostname == h:
+            if not regex_match and hostname is not None and hostname == h:
                 skip = negate
                 break
 
-            elif regex_match and re.match(h, hostname):
+            elif regex_match and hostname is not None and re.match(h, hostname):
                 skip = negate
                 break
         if skip:
@@ -1131,8 +1221,12 @@ def should_notify(context, entry):
                 return False
 
     # Check notification type
-    event, allowed_events = check_notification_type(context, entry["host_events"],
-                                                    entry["service_events"])
+    host_events = entry["host_events"]
+    assert isinstance(host_events, list)
+    service_events = entry["service_events"]
+    assert isinstance(service_events, list)
+    event, allowed_events = check_notification_type(context, host_events, service_events)
+
     if event not in allowed_events:
         logger.info(" - Skipping: wrong notification type %s (%s), only %s are allowed", event,
                     context["NOTIFICATIONTYPE"], ",".join(allowed_events))
@@ -1141,10 +1235,14 @@ def should_notify(context, entry):
     # Check notification number (in case of repeated notifications/escalations)
     if "escalation" in entry:
         from_number, to_number = entry["escalation"]
+        assert isinstance(from_number, (int, float))
+        assert isinstance(to_number, (int, float))
+
         if context["WHAT"] == "HOST":
             notification_number = int(context.get("HOSTNOTIFICATIONNUMBER", 1))
         else:
             notification_number = int(context.get("SERVICENOTIFICATIONNUMBER", 1))
+
         if notification_number < from_number or notification_number > to_number:
             logger.info(" - Skipping: notification number %d does not lie in range %d ... %d",
                         notification_number, from_number, to_number)
@@ -1153,13 +1251,14 @@ def should_notify(context, entry):
     if "timeperiod" in entry:
         timeperiod = entry["timeperiod"]
         if timeperiod and timeperiod != "24X7":
-            if not cmk.base.core.check_timeperiod(timeperiod):
+            if not cmk.base.core.check_timeperiod(str(timeperiod)):
                 logger.info(" - Skipping: time period %s is currently not active", timeperiod)
                 return False
     return True
 
 
 def check_notification_type(context, host_events, service_events):
+    # type: (RawNotifyContext, List[Event], List[Event]) -> Tuple[Event, List[Event]]
     notification_type = context["NOTIFICATIONTYPE"]
     if context["WHAT"] == "HOST":
         allowed_events = host_events
@@ -1199,6 +1298,7 @@ def check_notification_type(context, host_events, service_events):
 
 
 def notify_plain_email(raw_context):
+    # type: (RawNotifyContext) -> None
     plugin_context = create_plugin_context(raw_context, [])
 
     if config.notification_spooling in ("local", "both"):
@@ -1209,6 +1309,7 @@ def notify_plain_email(raw_context):
 
 
 def notify_via_email(plugin_context):
+    # type: (PluginContext) -> int
     logger.info(substitute_context(notification_log_template, plugin_context))
 
     if plugin_context["WHAT"] == "SERVICE":
@@ -1292,6 +1393,7 @@ def notify_via_email(plugin_context):
 # - dict, the new style for scripts with WATO rule. This will lead to
 #         PARAMETER_FOO_BAR for a dict key named "foo_bar".
 def create_plugin_context(raw_context, params):
+    # type: (RawNotifyContext, Union[List, NotifyPluginParams]) -> PluginContext
     plugin_context = {}
     plugin_context.update(raw_context)  # Make a real copy
     events.add_to_event_context(plugin_context, "PARAMETER", params)
@@ -1299,6 +1401,7 @@ def create_plugin_context(raw_context, params):
 
 
 def create_bulk_parameter_context(params):
+    # type: (NotifyPluginParams) -> List[str]
     dict_context = create_plugin_context({}, params)
     return [
         "%s=%s\n" % (varname, value.replace("\r", "").replace("\n", "\1"))
@@ -1306,16 +1409,17 @@ def create_bulk_parameter_context(params):
     ]
 
 
-def path_to_notification_script(plugin):
+def path_to_notification_script(plugin_name):
+    # type: (PluginName) -> Optional[str]
     # Call actual script without any arguments
-    local_path = cmk.utils.paths.local_notifications_dir / plugin
+    local_path = cmk.utils.paths.local_notifications_dir / plugin_name
     if local_path.exists():
         path = local_path
     else:
-        path = cmk.utils.paths.notifications_dir / plugin
+        path = cmk.utils.paths.notifications_dir / plugin_name
 
     if not path.exists():
-        logger.info("Notification plugin '%s' not found", plugin)
+        logger.info("Notification plugin '%s' not found", plugin_name)
         logger.info("  not in %s", cmk.utils.paths.notifications_dir)
         logger.info("  and not in %s", cmk.utils.paths.local_notifications_dir)
         return None
@@ -1331,20 +1435,22 @@ def path_to_notification_script(plugin):
 # that are actually sent out.
 #
 # Note: this function is *not* being called for bulk notification.
-def call_notification_script(plugin, plugin_context):
+def call_notification_script(plugin_name, plugin_context):
+    # type: (PluginName, PluginContext) -> int
     _log_to_history(
-        notification_message(NotificationPluginName(plugin or "plain email"),
+        notification_message(NotificationPluginName(plugin_name or "plain email"),
                              NotificationContext(plugin_context)))
 
     def plugin_log(s):
+        # type: (Text) -> None
         logger.info("     %s", s)
 
     # The "Pseudo"-Plugin None means builtin plain email
-    if not plugin:
+    if not plugin_name:
         return notify_via_email(plugin_context)
 
     # Call actual script without any arguments
-    path = path_to_notification_script(plugin)
+    path = path_to_notification_script(plugin_name)
     if not path:
         return 2
 
@@ -1357,10 +1463,12 @@ def call_notification_script(plugin, plugin_context):
                              env=notification_script_env(plugin_context),
                              close_fds=True)
 
+        stdout = p.stdout
+        assert stdout is not None
         while True:
             # read and output stdout linewise to ensure we don't force python to produce
             # one - potentially huge - memory buffer
-            line = p.stdout.readline()
+            line = stdout.readline()
             if line != '':
                 plugin_log("Output: %s" % line.decode('utf-8').rstrip())
                 if _log_to_stdout:
@@ -1386,6 +1494,7 @@ def call_notification_script(plugin, plugin_context):
 
 # Construct the environment for the notification script
 def notification_script_env(plugin_context):
+    # type: (PluginContext) -> Dict[str, bytes]
     # Use half of the maximum allowed string length MAX_ARG_STRLEN
     # which is usually 32 pages on Linux (see "man execve").
     #
@@ -1398,6 +1507,7 @@ def notification_script_env(plugin_context):
         max_length = 32 * 4046 // 2
 
     def format_(value):
+        # type: (str) -> bytes
         if len(value) > max_length:
             value = value[:max_length] + "...\nAttention: Removed remaining content because it was too long."
         return value.encode("utf-8")
@@ -1414,15 +1524,18 @@ class NotificationTimeout(MKException):
 
 
 def handle_notification_timeout(signum, frame):
+    # type: (int, Any) -> None
     raise NotificationTimeout()
 
 
 def set_notification_timeout():
+    # type: () -> None
     signal.signal(signal.SIGALRM, handle_notification_timeout)
     signal.alarm(config.notification_plugin_timeout)
 
 
 def clear_notification_timeout():
+    # type: () -> None
     signal.alarm(0)
 
 
@@ -1440,6 +1553,7 @@ def clear_notification_timeout():
 
 
 def create_spoolfile(data):
+    # type: (Any) -> None
     if not os.path.exists(notification_spooldir):
         os.makedirs(notification_spooldir)
     file_path = "%s/%s" % (notification_spooldir, fresh_uuid())
@@ -1453,17 +1567,18 @@ def create_spoolfile(data):
 # 3. Notifications that *were* forwarded (e.g. received from a slave). Contain neither of both.
 # Spool files of type 1 are not handled here!
 def handle_spoolfile(spoolfile):
+    # type: (str) -> int
     notif_uuid = spoolfile.rsplit("/", 1)[-1]
     logger.info("----------------------------------------------------------------------")
     try:
         data = store.load_object_from_file(spoolfile, default={})
         if "plugin" in data:
             plugin_context = data["context"]
-            plugin = data["plugin"]
+            plugin_name = data["plugin"]
             logger.info("Got spool file %s (%s) for local delivery via %s", notif_uuid[:8],
                         events.find_host_service_in_context(plugin_context),
-                        (plugin or "plain mail"))
-            return call_notification_script(plugin, plugin_context)
+                        (plugin_name or "plain mail"))
+            return call_notification_script(plugin_name, plugin_context)
 
         # We received a forwarded raw notification. We need to process
         # this with our local notification rules in order to call one,
@@ -1495,7 +1610,8 @@ def handle_spoolfile(spoolfile):
 #   '----------------------------------------------------------------------'
 
 
-def do_bulk_notify(plugin, params, plugin_context, bulk):
+def do_bulk_notify(plugin_name, params, plugin_context, bulk):
+    # type: (PluginName, NotifyPluginParams, PluginContext, NotifyBulkParameters) -> None
     # First identify the bulk. The following elements identify it:
     # 1. contact
     # 2. plugin
@@ -1510,44 +1626,72 @@ def do_bulk_notify(plugin, params, plugin_context, bulk):
     what = plugin_context["WHAT"]
     contact = plugin_context["CONTACTNAME"]
     if bulk.get("timeperiod"):
-        bulk_path = (contact, plugin, 'timeperiod:' + bulk["timeperiod"], str(bulk["count"]))
+        bulk_path = [contact, plugin_name, 'timeperiod:' + bulk["timeperiod"],
+                     str(bulk["count"])]  # type: List[str]
     else:
-        bulk_path = (contact, plugin, str(bulk["interval"]), str(bulk["count"]))
-    bulkby = bulk["groupby"]
+        bulk_path = [contact, plugin_name, str(bulk["interval"]), str(bulk["count"])]
 
+    bulkby = bulk["groupby"]
     if "bulk_subject" in bulk:
         plugin_context["PARAMETER_BULK_SUBJECT"] = bulk["bulk_subject"]
 
     if "host" in bulkby:
-        bulk_path += ("host", plugin_context["HOSTNAME"])
+        bulk_path.extend([
+            "host",
+            plugin_context["HOSTNAME"],
+        ])
 
     elif "folder" in bulkby:
-        bulk_path += ("folder", find_wato_folder(plugin_context))
+        bulk_path.extend([
+            "folder",
+            str(find_wato_folder(NotificationContext(plugin_context))),
+        ])
 
     if "service" in bulkby:
-        bulk_path += ("service", plugin_context.get("SERVICEDESC", ""))
+        bulk_path.extend([
+            "service",
+            plugin_context.get("SERVICEDESC", ""),
+        ])
 
     if "sl" in bulkby:
-        bulk_path += ("sl", plugin_context.get(what + "_SL", ""))
+        bulk_path.extend([
+            "sl",
+            plugin_context.get(what + "_SL", ""),
+        ])
 
     if "check_type" in bulkby:
-        bulk_path += ("check_type", plugin_context.get(what + "CHECKCOMMAND", "").split("!")[0])
+        bulk_path.extend([
+            "check_type",
+            plugin_context.get(what + "CHECKCOMMAND", "").split("!")[0],
+        ])
 
     if "state" in bulkby:
-        bulk_path += ("state", plugin_context.get(what + "STATE", ""))
+        bulk_path.extend([
+            "state",
+            plugin_context.get(what + "STATE", ""),
+        ])
 
     if "ec_contact" in bulkby:
-        bulk_path += ("ec_contact", plugin_context.get("EC_CONTACT", ""))
+        bulk_path.extend([
+            "ec_contact",
+            plugin_context.get("EC_CONTACT", ""),
+        ])
 
     if "ec_comment" in bulkby:
-        bulk_path += ("ec_comment", plugin_context.get("EC_COMMENT", ""))
+        bulk_path.extend([
+            "ec_comment",
+            plugin_context.get("EC_COMMENT", ""),
+        ])
 
     # User might have specified _FOO instead of FOO
     bulkby_custom = bulk.get("groupby_custom", [])
     for macroname in bulkby_custom:
         macroname = macroname.lstrip("_").upper()
         value = plugin_context.get(what + "_" + macroname, "")
-        bulk_path += (macroname.lower(), value)
+        bulk_path.extend([
+            macroname.lower(),
+            value,
+        ])
 
     logger.info("    --> storing for bulk notification %s", "|".join(bulk_path))
     bulk_dirname = create_bulk_dirname(bulk_path)
@@ -1559,6 +1703,7 @@ def do_bulk_notify(plugin, params, plugin_context, bulk):
 
 
 def create_bulk_dirname(bulk_path):
+    # type: (List[str]) -> str
     dirname = os.path.join(notification_bulkdir, bulk_path[0], bulk_path[1],
                            ",".join([b.replace("/", "\\") for b in bulk_path[2:]]))
 
@@ -1581,10 +1726,12 @@ def create_bulk_dirname(bulk_path):
 
 
 def bulk_parts(method_dir, bulk):
+    # type: (str, str) -> Optional[Tuple[Optional[int], Optional[str], int]]
     parts = bulk.split(',')
 
     try:
-        interval, timeperiod = int(parts[0]), None
+        interval = int(parts[0])  # type: Optional[int]
+        timeperiod = None  # type: Optional[str]
     except ValueError:
         entry = parts[0].split(':')
         if entry[0] == 'timeperiod' and len(entry) == 2:
@@ -1603,6 +1750,7 @@ def bulk_parts(method_dir, bulk):
 
 
 def bulk_uuids(bulk_dir):
+    # type: (str) -> Tuple[UUIDs, float]
     uuids, oldest = [], time.time()
     for uuid in os.listdir(bulk_dir):  # 4ded0fa2-f0cd-4b6a-9812-54374a04069f
         if uuid.endswith(".new"):
@@ -1619,6 +1767,7 @@ def bulk_uuids(bulk_dir):
 
 
 def remove_if_orphaned(bulk_dir, max_age, ref_time=None):
+    # type: (str, float, Optional[float]) -> None
     if not ref_time:
         ref_time = time.time()
 
@@ -1640,7 +1789,8 @@ def find_bulks(only_ripe):
         # type: (str) -> List[str]
         return [x for x in os.listdir(path) if not x.startswith(".")]
 
-    bulks, now = [], time.time()
+    bulks = []  # type: NotifyBulks
+    now = time.time()
     for contact in listdir_visible(notification_bulkdir):
         contact_dir = os.path.join(notification_bulkdir, contact)
         for method in listdir_visible(contact_dir):
@@ -1656,7 +1806,7 @@ def find_bulks(only_ripe):
 
                 # e.g. 60,10,host,localhost OR timeperiod:late_night,1000,host,localhost
                 parts = bulk_parts(method_dir, bulk)
-                if not parts:
+                if parts is None:
                     continue
                 interval, timeperiod, count = parts
 
@@ -1674,7 +1824,7 @@ def find_bulks(only_ripe):
                     bulks.append((bulk_dir, age, interval, 'n.a.', count, uuids))
                 else:
                     try:
-                        active = cmk.base.core.timeperiod_active(timeperiod)
+                        active = cmk.base.core.timeperiod_active(str(timeperiod))
                     except Exception:
                         # This prevents sending bulk notifications if a
                         # livestatus connection error appears. It also implies
@@ -1705,11 +1855,11 @@ def find_bulks(only_ripe):
                                     timeperiod)
 
                     bulks.append((bulk_dir, age, 'n.a.', timeperiod, count, uuids))
-
     return bulks
 
 
 def send_ripe_bulks():
+    # type: () -> None
     ripe = find_bulks(True)
     if ripe:
         logger.info("Sending out %d ripe bulk notifications", len(ripe))
@@ -1723,17 +1873,18 @@ def send_ripe_bulks():
 
 
 def notify_bulk(dirname, uuids):
+    # type: (str, UUIDs) -> None
     parts = dirname.split("/")
     contact = parts[-3]
-    plugin = parts[-2]
-    logger.info("   -> %s/%s %s", contact, plugin, dirname)
+    plugin_name = parts[-2]
+    logger.info("   -> %s/%s %s", contact, plugin_name, dirname)
     # If new entries are created in this directory while we are working
     # on it, nothing bad happens. It's just that we cannot remove
     # the directory after our work. It will be the starting point for
     # the next bulk with the same ID, which is completely OK.
     bulk_context = []
     old_params = None
-    unhandled_uuids = []
+    unhandled_uuids = []  # type: UUIDs
     for mtime, uuid in uuids:
         try:
             params, context = store.load_object_from_file(dirname + "/" + uuid)
@@ -1760,12 +1911,13 @@ def notify_bulk(dirname, uuids):
         if isinstance(old_params, dict) and old_params.get("bulk_sort_order") == "newest_first":
             bulk_context.reverse()
 
+        assert isinstance(old_params, dict)
         context_lines = create_bulk_parameter_context(old_params)
         for context in bulk_context:
             # Do not forget to add this to the monitoring log. We create
             # a single entry for each notification contained in the bulk.
             # It is important later to have this precise information.
-            plugin_name = "bulk " + (plugin or "plain email")
+            plugin_name = "bulk " + (plugin_name or "plain email")
             _log_to_history(
                 notification_message(NotificationPluginName(plugin_name),
                                      NotificationContext(context)))
@@ -1775,12 +1927,12 @@ def notify_bulk(dirname, uuids):
                 line = "%s=%s\n" % (varname, value.replace("\r", "").replace("\n", "\1"))
                 context_lines.append(line)
 
-        exitcode, output_lines = call_bulk_notification_script(plugin, context_lines)
+        exitcode, output_lines = call_bulk_notification_script(plugin_name, context_lines)
 
         for context in bulk_context:
             _log_to_history(
                 notification_result_message(
-                    NotificationPluginName("bulk " + (plugin or "plain email")),
+                    NotificationPluginName("bulk " + (plugin_name or "plain email")),
                     NotificationContext(context),
                     NotificationResultCode(exitcode),
                     output_lines,
@@ -1809,10 +1961,11 @@ def notify_bulk(dirname, uuids):
             logger.info("Warning: cannot remove directory %s: %s", dirname, e)
 
 
-def call_bulk_notification_script(plugin, context_lines):
-    path = path_to_notification_script(plugin)
+def call_bulk_notification_script(plugin_name, context_lines):
+    # type: (PluginName, List[str]) -> Tuple[int, List[Text]]
+    path = path_to_notification_script(plugin_name)
     if not path:
-        raise MKGeneralException("Notification plugin %s not found" % plugin)
+        raise MKGeneralException("Notification plugin %s not found" % plugin_name)
 
     stdout = stderr = ""
     try:
@@ -1844,9 +1997,10 @@ def call_bulk_notification_script(plugin, context_lines):
     if exitcode:
         logger.info("ERROR: script %s --bulk returned with exit code %s", path, exitcode)
 
-    output_lines = (stdout + stderr).splitlines()
+    # TODO remove cast when cmk_subprocess is typed
+    output_lines = cast(List[Text], (stdout + stderr).splitlines())
     for line in output_lines:
-        logger.info("%s: %s", plugin, line.rstrip())
+        logger.info("%s: %s", plugin_name, line.rstrip())
 
     return exitcode, output_lines
 
@@ -1871,6 +2025,7 @@ def call_bulk_notification_script(plugin, context_lines):
 # and the GUI. TODO Maybe we should centralize the encoding here and save the
 # backlock already encoded.
 def store_notification_backlog(raw_context):
+    # type: (RawNotifyContext) -> None
     path = notification_logdir + "/backlog.mk"
     if not config.notification_backlog:
         if os.path.exists(path):
@@ -1886,6 +2041,7 @@ def store_notification_backlog(raw_context):
 
 
 def raw_context_from_backlog(nr):
+    # type: (int) -> RawNotifyContext
     backlog = store.load_object_from_file(notification_logdir + "/backlog.mk", default=[])
 
     if nr < 0 or nr >= len(backlog):
@@ -1897,6 +2053,7 @@ def raw_context_from_backlog(nr):
 
 
 def raw_context_from_stdin():
+    # type: () -> RawNotifyContext
     context = {}
     for line in sys.stdin:
         varname, value = line.strip().split("=", 1)
@@ -1905,6 +2062,7 @@ def raw_context_from_stdin():
 
 
 def raw_context_from_env():
+    # type: () -> RawNotifyContext
     # Information about notification is excpected in the
     # environment in variables with the prefix NOTIFY_
     return dict([(var[7:], value)
@@ -1913,6 +2071,7 @@ def raw_context_from_env():
 
 
 def substitute_context(template, context):
+    # type: (Text, PluginContext) -> Text
     # First replace all known variables
     for varname, value in context.items():
         template = template.replace('$' + varname + '$', value)
@@ -1936,6 +2095,7 @@ def substitute_context(template, context):
 
 
 def format_exception():
+    # type: () -> str
     import traceback
     import StringIO
 
@@ -1946,6 +2106,7 @@ def format_exception():
 
 
 def dead_nagios_variable(value):
+    # type: (str) -> bool
     if len(value) < 3:
         return False
     if value[0] != '$' or value[-1] != '$':
@@ -1957,6 +2118,7 @@ def dead_nagios_variable(value):
 
 
 def fresh_uuid():
+    # type: () -> str
     try:
         return open('/proc/sys/kernel/random/uuid').read().strip()
     except IOError:

@@ -29,7 +29,6 @@
 #include <string>
 #include "Row.h"
 #include "Table.h"
-#include "contact_fwd.h"
 class MonitoringCore;
 class Query;
 

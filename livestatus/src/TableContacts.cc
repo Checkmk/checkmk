@@ -42,6 +42,7 @@
 #include "TimeperiodsCache.h"  // IWYU pragma: keep
 #include "nagios.h"
 
+extern contact *contact_list;
 extern TimeperiodsCache *g_timeperiods_cache;
 
 using namespace std::literals;

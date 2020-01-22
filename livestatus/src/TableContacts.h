@@ -33,7 +33,7 @@ class MonitoringCore;
 class Query;
 
 #ifndef CMC
-extern contact *contact_list;
+#include "contact_fwd.h"
 #endif
 
 class TableContacts : public Table {

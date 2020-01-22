@@ -108,4 +108,4 @@ checks = {'cpu': [(None,
           'mounted_devices': [(None, {}, [(0, 'HA functionality guaranteed', [])])],
           'name': [(None, {}, [(0, u'scwagprc01.widag.local', [])])],
           'running_on': [(None, {}, [(0, u'Running on zh1wagesx02.widag.local', [])])],
-          'snapshots': [(None, {}, [(0, 'No snapshots found', [])])]}
+          'snapshots': [(None, {}, [(0, 'Count: 0', [])])]}

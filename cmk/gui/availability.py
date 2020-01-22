@@ -46,7 +46,6 @@ from cmk.gui.valuespec import (
     ListChoice,
     Optional,
     Timerange,
-    RadioChoice,
 )
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -233,7 +232,7 @@ def get_av_display_options(what):
          Tuple(
              title=_("Format time ranges"),
              elements=[
-                 RadioChoice(
+                 DropdownChoice(
                      choices=[
                          ("both", _("Percent and time")),
                          ("perc", _("Only percent")),

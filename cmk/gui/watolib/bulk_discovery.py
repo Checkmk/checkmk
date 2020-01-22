@@ -33,7 +33,7 @@ from cmk.gui.globals import html
 from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
-    RadioChoice,
+    DropdownChoice,
     Tuple,
     Integer,
 )
@@ -93,9 +93,8 @@ def vs_bulk_discovery(render_form=False, include_subfolders=True):
         render=render,
         elements=[
             ("mode",
-             RadioChoice(
+             DropdownChoice(
                  title=_("Mode"),
-                 orientation="vertical",
                  default_value="new",
                  choices=[
                      ("new", _("Add unmonitored services and new host labels")),

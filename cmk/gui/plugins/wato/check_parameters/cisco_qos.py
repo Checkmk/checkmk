@@ -28,9 +28,9 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Alternative,
     Dictionary,
+    DropdownChoice,
     Integer,
     Percentage,
-    RadioChoice,
     TextAscii,
     Tuple,
 )
@@ -45,7 +45,7 @@ from cmk.gui.plugins.wato import (
 def _parameter_valuespec_cisco_qos():
     return Dictionary(elements=[
         ("unit",
-         RadioChoice(
+         DropdownChoice(
              title=_("Measurement unit"),
              help=_("Here you can specifiy the measurement unit of the network interface"),
              default_value="bit",

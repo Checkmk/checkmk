@@ -25,7 +25,14 @@
 # Boston, MA 02110-1301 USA.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (Checkbox, Dictionary, Integer, TextAscii, Transform, RadioChoice)
+from cmk.gui.valuespec import (
+    Checkbox,
+    Dictionary,
+    DropdownChoice,
+    Integer,
+    TextAscii,
+    Transform,
+)
 
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithoutItem,
@@ -116,9 +123,8 @@ def _parameter_valuespec_heartbeat_crm():
                  help=_("The expected number of resources in the cluster"),
              )),
             ("show_failed_actions",
-             RadioChoice(
+             DropdownChoice(
                  title=_('Show "Failed Actions"'),
-                 orientation='vertical',
                  choices=[
                      (False, _('Don\'t show or warn if "Failed Actions" are present (default)')),
                      (True, _('Show "Failed Actions" and warn if any is present')),

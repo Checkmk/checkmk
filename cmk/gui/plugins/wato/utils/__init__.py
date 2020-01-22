@@ -58,7 +58,6 @@ from cmk.gui.valuespec import (
     TextAscii,
     TextAsciiAutocomplete,
     Dictionary,
-    RadioChoice,
     Tuple,
     Checkbox,
     Integer,

@@ -27,8 +27,6 @@
 # FIXME: Cleanups
 # - Consolidate ListChoice and DualListChoice to use the same class
 #   and rename to better name
-# - Consolidate RadioChoice and DropdownChoice to use same class
-#   and rename to better name
 # - Consolidate ListOf and ListOfStrings/ListOfIntegers
 # - Checkbox
 #   -> rename to Boolean
@@ -2685,110 +2683,6 @@ class CascadingDropdown(ValueSpec):
                 self._custom_validate(value, varprefix)
                 return
         raise MKUserError(varprefix + "_sel", _("Value %r is not allowed here.") % (value,))
-
-
-class RadioChoice(DropdownChoice):
-    """The same logic as the dropdown choice, but rendered as a group of radio buttons.
-    columns is None or unset -> separate with '&nbsp;'"""
-    def __init__(  # pylint: disable=redefined-builtin
-        self,
-        choices,  # type: List[TypingTuple[Any, Text]]
-        columns=None,  # type: TypingOptional[int]
-        orientation=None,  # typing: TypingOptional[Text]
-        # DropdownChoice
-        sorted=False,  # type: bool
-        label=None,  # type: TypingOptional[Text]
-        help_separator=None,  # type: Text
-        prefix_values=False,  # type: bool
-        empty_text=None,  # type: TypingOptional[Text]
-        invalid_choice="complain",  # type: TypingOptional[str]
-        invalid_choice_title=None,  # type: TypingOptional[Text]
-        invalid_choice_error=None,  # type: TypingOptional[Text]
-        no_preselect=False,  # type: bool
-        no_preselect_value=None,  # type: Any
-        no_preselect_title="",  # type: Text
-        no_preselect_error=None,  # type: Text
-        on_change=None,  # type: Text
-        read_only=False,  # type: bool
-        encode_value=True,  # type: bool
-        # ValueSpec
-        title=None,  # type: TypingOptional[Text]
-        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-        default_value=_DEF_VALUE,  # type: Any
-        validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
-    ):
-        super(RadioChoice, self).__init__(choices=choices,
-                                          sorted=sorted,
-                                          label=label,
-                                          help_separator=help_separator,
-                                          prefix_values=prefix_values,
-                                          empty_text=empty_text,
-                                          invalid_choice=invalid_choice,
-                                          invalid_choice_title=invalid_choice_title,
-                                          invalid_choice_error=invalid_choice_error,
-                                          no_preselect=no_preselect,
-                                          no_preselect_value=no_preselect_value,
-                                          no_preselect_title=no_preselect_title,
-                                          no_preselect_error=no_preselect_error,
-                                          on_change=on_change,
-                                          read_only=read_only,
-                                          encode_value=encode_value,
-                                          title=title,
-                                          help=help,
-                                          default_value=default_value,
-                                          validate=validate)
-        self._columns = columns
-        # Allow orientation as corner cases of columns
-        orientation = orientation
-        if orientation == "vertical":
-            self._columns = 1
-        elif orientation == "horizontal":
-            self._columns = 9999999
-
-    def render_input(self, varprefix, value):
-        html.begin_radio_group()
-        if self._columns is not None:
-            html.open_table(class_=["radiochoice"])
-            html.open_tr()
-
-        if self._sorted:
-            choices = self._choices[:]
-            choices.sort(key=lambda x: x[1])
-        else:
-            choices = self._choices
-
-        for index, entry in enumerate(choices):
-            if self._columns is not None:
-                html.open_td()
-
-            if len(entry) > 2 and entry[2] is not None:  # icon!
-                label = html.render_icon(entry[2], entry[1])
-            else:
-                label = entry[1]
-
-            html.radiobutton(varprefix, self.option_id(entry[0]), value == entry[0], label)
-
-            if len(entry) > 3 and entry[3]:
-                html.open_p()
-                html.write(entry[3])
-                html.close_p()
-
-            if self._columns is not None:
-                html.close_td()
-                if (index + 1) % self._columns == 0 and (index + 1) < len(self._choices):
-                    html.tr('')
-            else:
-                html.nbsp()
-
-        if self._columns is not None:
-            mod = len(self._choices) % self._columns
-            if mod:
-                for _td_counter in range(self._columns - mod - 1):
-                    html.td('')
-            html.close_tr()
-            html.close_table()
-
-        html.end_radio_group()
 
 
 class ListChoice(ValueSpec):

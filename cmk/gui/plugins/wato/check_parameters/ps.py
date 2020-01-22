@@ -38,7 +38,6 @@ from cmk.gui.valuespec import (
     FixedValue,
     Integer,
     Percentage,
-    RadioChoice,
     RegExp,
     TextAscii,
     TextUnicode,
@@ -66,7 +65,7 @@ from cmk.gui.htmllib import HTML
 def process_level_elements():
     return [
         ("cpu_rescale_max",
-         RadioChoice(
+         DropdownChoice(
              title=_("CPU rescale maximum load"),
              help=_("CPU utilization is delivered by the Operating "
                     "System as a per CPU core basis. Thus each core contributes "
@@ -75,7 +74,6 @@ def process_level_elements():
                     "can be rescaled down, making 100% the maximum and thinking "
                     "in terms of total CPU utilization."),
              default_value=True,
-             orientation="vertical",
              choices=[
                  (True, _("100% is all cores at full load")),
                  (False,

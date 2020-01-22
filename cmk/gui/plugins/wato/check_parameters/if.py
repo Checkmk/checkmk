@@ -40,7 +40,6 @@ from cmk.gui.valuespec import (
     Optional,
     OptionalDropdownChoice,
     Percentage,
-    RadioChoice,
     RegExp,
     TextAscii,
     Transform,
@@ -463,7 +462,7 @@ def _parameter_valuespec_if():
                                       label=_("Bits per second"),
                                       size=12))),
                 ("unit",
-                 RadioChoice(
+                 DropdownChoice(
                      title=_("Measurement unit"),
                      help=_("Here you can specifiy the measurement unit of the network interface"),
                      default_value="byte",

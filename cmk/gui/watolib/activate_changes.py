@@ -107,7 +107,7 @@ def get_replication_paths():
         # Also replicate the user-settings of Multisite? While the replication
         # as such works pretty well, the count of pending changes will not
         # know.
-        ("dir", "usersettings", cmk.utils.paths.var_dir + "/web"),
+        ("dir", "usersettings", cmk.utils.paths.var_dir + "/web", ["*/report-thumbnails"]),
         ("dir", "mkps", cmk.utils.paths.var_dir + "/packages"),
         ("dir", "local", cmk.utils.paths.omd_root + "/local"),
     ]

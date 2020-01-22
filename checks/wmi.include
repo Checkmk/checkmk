@@ -394,13 +394,12 @@ def get_wmi_time(table, row):
     return float(timestamp) / float(frequency)
 
 
-def wmi_make_perfvar(varname, value, perfscale, levels, min_value=None, max_value=None):
-    value = value * perfscale
+def wmi_make_perfvar(varname, value, levels, boundaries=()):
     if levels is not None:
         upper_levels = levels.get('upper', (None, None))
     else:
         upper_levels = (None, None)
-    return (varname, value, upper_levels[0], upper_levels[1], min_value, max_value)
+    return (varname, value, upper_levels[0], upper_levels[1]) + boundaries
 
 
 def wmi_determine_status(value, levels, human_readable_func=None):
@@ -465,7 +464,7 @@ def wmi_yield_raw_persec(table, row, column, label, perfvar, levels=None):
     status, levels_text = wmi_determine_status(value_per_sec, levels)
 
     return (status, "%.2f%s%s" % (value_per_sec, label, levels_text),
-            [wmi_make_perfvar(perfvar, value_per_sec, 1.0, levels)])
+            [wmi_make_perfvar(perfvar, value_per_sec, levels)])
 
 
 def wmi_yield_raw_counter(table, row, column, label, perfvar, levels=None):
@@ -482,7 +481,7 @@ def wmi_yield_raw_counter(table, row, column, label, perfvar, levels=None):
     status, levels_text = wmi_determine_status(value, levels)
 
     return (status, "%s%s%s" % (value, label, levels_text),
-            [wmi_make_perfvar(perfvar, value, 1.0, levels)])
+            [wmi_make_perfvar(perfvar, value, levels)])
 
 
 def wmi_calculate_raw_average(table, row, column, factor):
@@ -541,7 +540,7 @@ def wmi_yield_raw_average(table, row, column, label, perfvar, levels=None, perfs
                                                human_readable_func=get_age_human_readable)
 
     return (status, "%.2f%s%s" % (average, label, levels_text),
-            [wmi_make_perfvar(perfvar, average, perfscale, levels)])
+            [wmi_make_perfvar(perfvar, average * perfscale, levels)])
 
 
 def wmi_yield_raw_average_timer(table, row, column, label, perfvar, levels=None):
@@ -555,7 +554,7 @@ def wmi_yield_raw_average_timer(table, row, column, label, perfvar, levels=None)
     status, levels_text = wmi_determine_status(average, levels)
 
     return (status, "%.2f%s%s" % (average, label, levels_text),
-            [wmi_make_perfvar(perfvar, average, 1.0, levels)])
+            [wmi_make_perfvar(perfvar, average, levels)])
 
 
 def wmi_yield_raw_fraction(table, row, column, label, perfvar, levels=None):
@@ -569,7 +568,7 @@ def wmi_yield_raw_fraction(table, row, column, label, perfvar, levels=None):
     status, levels_text = wmi_determine_status(average, levels)
 
     return (status, "%.2f%s%s" % (average, label, levels_text),
-            [wmi_make_perfvar(perfvar, average, 1.0, levels, 0, 100)])
+            [wmi_make_perfvar(perfvar, average, levels, boundaries=(0, 100))])
 
 
 #.

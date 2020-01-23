@@ -76,6 +76,7 @@ def test_normal_auth(
     assert "Invalid credentials." not in resp.body
 
 
+@pytest.mark.skip
 def test_legacy_webapi(
     wsgi_app,  # type: WebTestAppForCMK
     with_automation_user,

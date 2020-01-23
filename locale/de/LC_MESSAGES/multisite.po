@@ -2087,7 +2087,7 @@ msgid "AWS Tags"
 msgstr "Merkmale"
 
 msgid "AWS/CE Costs and Usage"
-msgstr "% benutzt"
+msgstr "AWS/CE Kosten und Nutzung"
 
 msgid "AWS/Cloudwatch Alarms Limits"
 msgstr "Grenzwerte von AWS/Cloudwatch Alarme"
@@ -6064,6 +6064,14 @@ msgstr "den besten Zustand aller Nodes verwenden"
 
 msgid "Best state"
 msgstr "Bester Status"
+
+#, fuzzy
+msgid "Biggest input buffer lower level"
+msgstr "Untere Schwellwerte für Container"
+
+#, fuzzy
+msgid "Biggest input buffer upper level"
+msgstr "Obere Schwellwerte für Container"
 
 msgid "Bike"
 msgstr "Rad"
@@ -25376,6 +25384,14 @@ msgstr "Check-Plugin: Mehrzeilige Ausgabe"
 msgid "Longest"
 msgstr "Längster"
 
+#, fuzzy
+msgid "Longest output list lower level"
+msgstr "Gesamtzahl von Bändern"
+
+#, fuzzy
+msgid "Longest output list upper level"
+msgstr "Gesamtzahl von Bändern"
+
 msgid "Looking back"
 msgstr "Blicke zurück"
 
@@ -28933,10 +28949,6 @@ msgstr "In keiner Gruppe enthalten"
 
 msgid "Not enabled"
 msgstr "Nicht aktiviert"
-
-#, fuzzy
-msgid "Not enough data to process"
-msgstr "Verarbeitete Datenmenge"
 
 msgid "Not executed in OMD environment!"
 msgstr "Nicht in Instanz ausgeführt!"
@@ -33627,6 +33639,10 @@ msgstr "Rot"
 
 msgid "Redirect URL (has to be https)"
 msgstr "URL für die Umleitung (muss HTTPS verwenden)"
+
+#, fuzzy
+msgid "Redis clients"
+msgstr "Clients"
 
 #, fuzzy
 msgid "Redis info"
@@ -48296,6 +48312,10 @@ msgstr "Zeit seit letztem UPS-Selbsttest"
 msgid "Time since last backup"
 msgstr "Zeit seit der letzten Sicherung"
 
+#, fuzzy
+msgid "Time since last build"
+msgstr "Zeit seit der letzten Sicherung"
+
 msgid "Time since last checkpoint"
 msgstr "Zeit seit letztem Checkpoint"
 
@@ -48788,6 +48808,22 @@ msgstr "Erwartete Anzahl von aktiven Shards in Prozent"
 #, fuzzy
 msgid "Total number of active shards upper level"
 msgstr "Erwartete Anzahl von aktiven Shards in Prozent"
+
+#, fuzzy
+msgid "Total number of client connections lower level"
+msgstr "Maximale Anzahl von Verbindungen oder Listeners"
+
+#, fuzzy
+msgid "Total number of client connections upper level"
+msgstr "Maximale Anzahl von Verbindungen oder Listeners"
+
+#, fuzzy
+msgid "Total number of clients pending on a blocking call lower level"
+msgstr "Anzahl von Ordnern, die pro Level anzulegen sind"
+
+#, fuzzy
+msgid "Total number of clients pending on a blocking call upper level"
+msgstr "Anzahl von Ordnern, die pro Level anzulegen sind"
 
 #, fuzzy
 msgid "Total number of collections lower level"
@@ -57398,6 +57434,10 @@ msgstr "gestern"
 
 msgid "z/OS"
 msgstr "z/OS"
+
+#, fuzzy
+#~ msgid "Not enough data to process"
+#~ msgstr "Verarbeitete Datenmenge"
 
 #~ msgid "Consolidated rrd data column"
 #~ msgstr "Spalte der konsolidierten RRD Daten"

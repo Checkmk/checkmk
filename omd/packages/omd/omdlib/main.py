@@ -1351,7 +1351,8 @@ def initialize_site_ca(site):
         ca_name="Site '%s' local CA" % site.name,
     )
     ca.initialize()
-    ca.create_site_certificate(site.name)
+    if not ca.site_certificate_path(site.name).exists():
+        ca.create_site_certificate(site.name)
 
 
 def config_change(version_info, site, config_hooks):

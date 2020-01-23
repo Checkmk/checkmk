@@ -284,7 +284,7 @@ class HTML(object):
         # This is problematic:
         #   html.write("%s" % HTML("ä"))
         #
-        # Bottom line: We should relly cleanup internal unicode/str handling.
+        # Bottom line: We should really cleanup internal unicode/str handling.
         return self.value
 
     def __repr__(self):

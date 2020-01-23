@@ -43,6 +43,7 @@ def test_dashlet_registry_plugins():
         'linked_view',
         'notify_users',
         'nodata',
+        'single_metric',
         'snapin',
     ]
 

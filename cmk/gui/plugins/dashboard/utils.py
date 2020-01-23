@@ -192,6 +192,15 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
         return html.makeuri([('type', cls.type_name()), ('back', html.makeuri([('edit', '1')]))],
                             filename='edit_dashlet.py')
 
+    @classmethod
+    def default_settings(cls):
+        """Overwrite specific default settings for dashlets by returning a dict
+            return { key: default_value, ... }
+        e.g. to have a dashlet default to not showing its title
+            return { "show_title": False }
+        """
+        return {}
+
     def __init__(self, dashboard_name, dashboard, dashlet_id, dashlet):
         # type: (DashboardName, DashboardConfig, DashletId, DashletConfig) -> None
         super(Dashlet, self).__init__()
@@ -269,7 +278,8 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
         # type: () -> None
         """Called by the ajax call to update dashlet contents
 
-        This is normally equivalent to the .show() method. Differs only for iframe dashlets.
+        This is normally equivalent to the .show() method. Differs only for
+        iframe and single metric dashlets.
         """
         self.show()
 

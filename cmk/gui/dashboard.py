@@ -1209,6 +1209,7 @@ def page_edit_dashlet():
             'single_infos': dashlet_type.single_infos(),
             'type': ty,
         }
+        dashlet.update(dashlet_type.default_settings())
 
         if dashlet_type.has_context():
             dashlet["context"] = {}

@@ -72,11 +72,11 @@ class GraphDashlet(Dashlet):
 
     @classmethod
     def infos(cls):
-        return ["service", "host"]
+        return ["host", "service"]
 
     @classmethod
     def single_infos(cls):
-        return ["service", "host"]
+        return ["host", "service"]
 
     @classmethod
     def vs_parameters(cls):

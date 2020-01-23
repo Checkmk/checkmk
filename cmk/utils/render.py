@@ -89,7 +89,7 @@ class Age(object):
         secs = self.__secs
 
         if secs < 0:
-            return "- " + approx_age(-secs)
+            return "-" + approx_age(-secs)
         elif secs > 0 and secs < 1:  # ms
             return physical_precision(secs, 3, _("s"))
         elif secs < 10:

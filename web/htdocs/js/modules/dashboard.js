@@ -102,10 +102,17 @@ function size_dashlets() {
 
             oDashInner.style.left   = dashboard_properties.dashlet_padding[3] + "px";
             oDashInner.style.top    = top_padding + "px";
+            if (!has_title) {
+                oDashInner.style.top = top_padding + 8 + "px";
+            }
             if (netto_width > 0)
                 oDashInner.style.width  = netto_width + "px";
-            if (netto_height > 0)
+            if (netto_height > 0) {
                 oDashInner.style.height = netto_height + "px";
+                if (!has_title) {
+                    oDashInner.style.height = netto_height - 8 + "px";
+                }
+            }
 
             if (old_width != oDashInner.clientWidth || old_height != oDashInner.clientHeight) {
                 if (!g_resizing || parseInt(g_resizing.parentNode.parentNode.id.replace("dashlet_", "")) != d_number) {
@@ -120,6 +127,18 @@ function size_dashlets() {
             set_control_size(oDashControls, d_width, d_height);
         }
     }
+}
+
+export function adjust_single_metric_font_size(oTdMetricValue) {
+    var originalFontSize = parseFloat(oTdMetricValue.style.fontSize);
+    var oAMetricValue = oTdMetricValue.childNodes[0];
+    if (oAMetricValue.scrollWidth > oTdMetricValue.clientWidth * 9/10)
+        oTdMetricValue.style.fontSize = originalFontSize * 9/10 + "px";
+    else
+        oTdMetricValue.style.fontSize = oTdMetricValue.clientHeight * 4/5 + "px";
+
+    if (oAMetricValue.scrollWidth > oTdMetricValue.clientWidth * 9/10)
+        adjust_single_metric_font_size(oTdMetricValue);
 }
 
 function set_control_size(dash_controls, width, height)

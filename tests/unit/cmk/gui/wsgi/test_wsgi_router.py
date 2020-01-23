@@ -85,6 +85,8 @@ def test_normal_auth(
 
 
 def test_deploy_agent(wsgi_app):
+    if not cmk.is_enterprise_edition():
+        raise pytest.skip("No applicable.")
     response = wsgi_app.get('/NO_SITE/check_mk/deploy_agent.py')
     assert response.body.startswith("Missing or invalid")
 
@@ -178,6 +180,8 @@ def test_cmk_automation(wsgi_app):
 
 
 def test_cmk_ajax_graph_images(wsgi_app):
+    if not cmk.is_enterprise_edition():
+        raise pytest.skip("No applicable.")
     resp = wsgi_app.get("/NO_SITE/check_mk/ajax_graph_images.py", status=200)
     assert resp.body.startswith("You are not allowed")
 

@@ -112,7 +112,7 @@ class Scenario(object):
         if self._autochecks:
             monkeypatch.setattr(self.config_cache._autochecks_manager,
                                 "_raw_autochecks",
-                                {e[0]: e[1] for e in self._autochecks.iteritems()},
+                                dict(self._autochecks.items()),
                                 raising=False)
 
             monkeypatch.setattr(autochecks.AutochecksManager, "_read_raw_autochecks_of",

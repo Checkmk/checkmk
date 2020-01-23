@@ -156,7 +156,7 @@ class CMKParseableTextReporter(CMKFixFileMixin, ParseableTextReporter):
 
 
 def verify_pylint_version():
-    import pylint  # type: ignore[import]
+    import pylint  # type: ignore[import] # pylint: disable=import-outside-toplevel
     if tuple(map(int, pylint.__version__.split("."))) < (1, 5, 5):
         raise Exception("You need to use at least pylint 1.5.5. Run \"make setup\" in "
                         "pylint directory to get the current version.")

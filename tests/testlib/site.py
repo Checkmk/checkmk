@@ -68,7 +68,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
     @property
     def live(self):
-        import livestatus
+        import livestatus  # pylint: disable=import-outside-toplevel
         # Note: If the site comes from a SiteFactory instance, the TCP connection
         # is insecure, i.e. no TLS.
         live = (livestatus.LocalConnection() if self._is_running_as_site_user() else
@@ -94,7 +94,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         # core restart/reload, so e.g. querying a Livestatus table immediately
         # might not reflect the changes yet. Ask the core for a successful reload.
         def config_reloaded():
-            import livestatus
+            import livestatus  # pylint: disable=import-outside-toplevel
             try:
                 new_t = self.live.query_value("GET status\nColumns: program_start\n")
             except livestatus.MKLivestatusException:

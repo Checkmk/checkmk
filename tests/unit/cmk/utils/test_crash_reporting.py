@@ -104,10 +104,10 @@ def test_format_var_for_export_strip_nested_dict_with_list():
 
 @pytest.fixture
 def crash_dir():
-    dir = cmk.utils.paths.crash_dir / "test"
-    yield dir
+    d = cmk.utils.paths.crash_dir / "test"
+    yield d
     try:
-        shutil.rmtree(str(dir))
+        shutil.rmtree(str(d))
     except OSError:
         pass
 

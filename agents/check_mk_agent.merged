@@ -791,6 +791,18 @@ section_aix() {
     lsvg -L -l rootvg
 }
 
+# Function to pull timesync information from chrony
+section_chrony() {
+    # The "| cat" has been added for some kind of regression in RedHat 7.5. The
+    # SELinux rules shipped with that release were denying the chronyc call without cat.
+    if inpath chronyc; then
+        # Identify if the daemon is active...
+        if [ "$(systemctl | awk '/chronyd.service/{print $3; exit}')" = "active" ]; then
+            run_cached chrony 30 "waitmax 5 chronyc -n tracking | cat || true"
+        fi
+    fi
+}
+
 section_cpu() {
     case "${MK_OSSTR}" in
         (aix)
@@ -1883,40 +1895,34 @@ section_ntp() {
         ntpq -np | sed -e 1,2d -e 's/^\\(.\\)/\\1 /' -e 's/^ /%/' || true
     }
 
+    # Function to pull timesync information via timedatectl (if possible)
+    get_timesyncd() {
+        inpath timedatectl || return 1
+        timedatectl timesync-status >/dev/null 2>&1 || return 1
+        mkecho "<<<timesyncd>>>"
+        timedatectl timesync-status
+        get_file_mtime /var/lib/systemd/timesync/clock | awk '{print "[[["$1"]]]"}'
+        return 0
+    }
+
     # First we check for systemd, and then attempt the methods that we know about
     # Our goal here is to avoid multiple outputs e.g. timedatectl + ntpq
     if inpath systemctl; then
-        # Attempt to check time synchronization with systemd-timesyncd
-        if inpath timedatectl; then
-            if timedatectl timesync-status >/dev/null 2>&1; then
-                mkecho "<<<timesyncd>>>"
-                timedatectl timesync-status
-                get_file_mtime /var/lib/systemd/timesync/clock | awk '{print "[[["$1"]]]"}'
+        # First we try with timedatectl
+        get_timesyncd
+        _timesync_rc="${?}"
 
-                # Return to get out of 'section_ntp()' with no further processing
-                return
+        # If we don't get a success from get_timesyncd, we try ntpq
+        if [ "${_timesync_rc}" -gt 0 ]; then
+            # shellcheck disable=SC2016
+            if [ "$(systemctl | awk '/ntp.service|ntpd.service/{print $3; exit}')" = "active" ]; then
+                # remove heading, make first column space separated
+                run_cached -s ntp 30 "waitmax 5 get_ntpq"
             fi
         fi
-
-        # Finally, try to identify whether ntp/ntpd/openntpd is active, if so, run ntpq
-        # shellcheck disable=SC2016
-        if [ "$(systemctl | awk '/ntp.service|ntpd.service/{print $3; exit}')" = "active" ]; then
-            # remove heading, make first column space separated
-            run_cached -s ntp 30 "waitmax 5 get_ntpq"
-            return
-        fi
-    fi
-
-    # Next, we try to check time synchronization with Chrony
-    # Force successful exit code. Otherwise section will be missing if daemon not running
-    #
-    # The "| cat" has been added for some kind of regression in RedHat 7.5. The
-    # SELinux rules shipped with that release were denying the chronyc call without cat.
-    if inpath chronyc; then
-        # Identify if the daemon is active...
-        if [ "$(systemctl | awk '/chronyd.service/{print $3; exit}')" = "active" ]; then
-            run_cached chrony 30 "waitmax 5 chronyc -n tracking | cat || true"
-        fi
+        unset -v _timesync_rc
+        # Return to leave the function with no further processing
+        return
     fi
 
     # If we get to this point, we attempt via classic ntp daemons (ntpq required)
@@ -2779,6 +2785,7 @@ main() {
     section_netctr
     section_tcp_stats
     section_ntp
+    section_chrony
     section_mail
     section_uptime
     section_kernel

@@ -211,7 +211,7 @@ class RulesetMatcher(object):
             return not negate
         return negate
 
-    # TODO: Find a way to use the generic get_values
+    # TODO: Find a way to use the generic get_host_ruleset_values
     def get_values_for_generic_agent_host(self, ruleset):
         """Compute ruleset for "generic" host
 
@@ -228,6 +228,10 @@ class RulesetMatcher(object):
             hostlist = rule["condition"].get("host_name")
             tags = rule["condition"].get("host_tags", {})
             labels = rule["condition"].get("host_labels", {})
+            rule_path = rule["condition"].get("host_folder", "/")
+
+            if rule_path != "/":
+                continue
 
             if tags and not self.ruleset_optimizer.matches_host_tags([], tags):
                 continue

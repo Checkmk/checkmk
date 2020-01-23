@@ -560,8 +560,8 @@ class RulesetOptimizer(object):
 
         return (
             tuple(sorted(host_parts)),
-            tuple((tag_id, _tags_or_labels_cache_id(tag_spec))
-                  for tag_id, tag_spec in tags.items()),
+            tuple(
+                (tag_id, _tags_or_labels_cache_id(tag_spec)) for tag_id, tag_spec in tags.items()),
             tuple((label_id, _tags_or_labels_cache_id(label_spec))
                   for label_id, label_spec in labels.items()),
             rule_path,
@@ -882,7 +882,7 @@ def get_tag_to_group_map(tag_config):
     """The old rules only have a list of tags and don't know anything about the
     tag groups they are coming from. Create a map based on the current tag config
     """
-    tag_id_to_tag_group_id_map = {}
+    tag_id_to_tag_group_id_map = {}  # type: Dict[str, str]
 
     for aux_tag in tag_config.aux_tag_list.get_tags():
         tag_id_to_tag_group_id_map[aux_tag.id] = aux_tag.id

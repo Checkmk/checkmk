@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from typing import Set, List, Tuple  # pylint: disable=unused-import
+from typing import cast, Optional, Set, List, Tuple  # pylint: disable=unused-import
 import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
 import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import]
 import pyghmi.constants as ipmi_const  # type: ignore[import]
@@ -32,8 +32,10 @@ from pyghmi.exceptions import IpmiException  # type: ignore[import]
 
 import cmk.utils.debug
 from cmk.utils.log import VERBOSE
+from cmk.utils.type_defs import HostAddress, HostName  # pylint: disable=unused-import
 
 from cmk.base.exceptions import MKAgentError
+from cmk.base.config import IPMICredentials  # pylint: disable=unused-import
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     CheckPluginName, ServiceCheckResult, RawAgentData, ServiceDetails,
 )
@@ -75,6 +77,11 @@ def _handle_false_positive_warnings(reading):
 
 
 class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataSource):
+    def __init__(self, hostname, ipaddress):
+        # type: (HostName, Optional[HostAddress]) -> None
+        super(IPMIManagementBoardDataSource, self).__init__(hostname, ipaddress)
+        self._credentials = cast(IPMICredentials, self._host_config.management_credentials)
+
     def id(self):
         # type: () -> str
         return "mgmt_ipmi"

@@ -990,7 +990,6 @@ class ManagementBoardDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
         # Do not use the (custom) ipaddress for the host. Use the management board
         # address instead
         self._ipaddress = self._management_board_ipaddress(hostname)
-        self._credentials = self._host_config.management_credentials
 
     def _management_board_ipaddress(self, hostname):
         # type: (HostName) -> Optional[HostAddress]

@@ -34,6 +34,7 @@ ServiceName = Text
 ServicegroupName = str
 ContactgroupName = str
 TimeperiodName = str
+RulesetName = str
 MetricName = str
 CheckPluginName = str
 InventoryPluginName = str
@@ -41,5 +42,6 @@ ActiveCheckPluginName = str
 Item = Optional[Text]
 TagValue = str
 Labels = Dict[Text, Text]
+LabelSources = Dict[Text, str]
 
 UserId = NewType("UserId", Text)

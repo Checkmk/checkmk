@@ -38,7 +38,9 @@ import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.password_store
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostName, HostAddress, ServiceName, CheckPluginName  # pylint: disable=unused-import
+from cmk.utils.type_defs import (  # pylint: disable=unused-import
+    LabelSources, Labels, HostName, HostAddress, ServiceName, CheckPluginName,
+)
 
 import cmk.base.console as console
 import cmk.base.config as config
@@ -496,7 +498,7 @@ def get_host_attributes(hostname, config_cache):
 
 
 def _get_tag_attributes(collection, prefix):
-    # type: (Tags, str) -> ObjectAttributes
+    # type: (Union[Tags, Labels, LabelSources], str) -> ObjectAttributes
     return {u"__%s_%s" % (prefix, k): six.text_type(v) for k, v in collection.items()}
 
 

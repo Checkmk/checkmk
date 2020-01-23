@@ -717,13 +717,14 @@ class AutomationAnalyseServices(Automation):
 
         # 4. Active checks
         for plugin_name, entries in host_config.active_checks:
-            for params in entries:
-                description = config.active_check_service_description(hostname, plugin_name, params)
+            for active_check_params in entries:
+                description = config.active_check_service_description(hostname, plugin_name,
+                                                                      active_check_params)
                 if description == servicedesc:
                     return {
                         "origin": "active",
                         "checktype": plugin_name,
-                        "parameters": params,
+                        "parameters": active_check_params,
                     }
 
         return {}  # not found

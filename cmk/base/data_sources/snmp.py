@@ -43,6 +43,7 @@ from cmk.base.check_utils import (  # pylint: disable=unused-import
 )
 from cmk.base.snmp_utils import (  # pylint: disable=unused-import
     OIDInfo, SNMPTable, RawSNMPData, PersistedSNMPSections, SNMPSections, SNMPSectionContent,
+    SNMPCredentials,
 )
 
 from .abstract import DataSource, ManagementBoardDataSource  # pylint: disable=unused-import
@@ -359,6 +360,11 @@ class SNMPDataSource(ABCSNMPDataSource):
 
 
 class SNMPManagementBoardDataSource(ManagementBoardDataSource, SNMPDataSource):
+    def __init__(self, hostname, ipaddress):
+        # type: (HostName, Optional[HostAddress]) -> None
+        super(SNMPManagementBoardDataSource, self).__init__(hostname, ipaddress)
+        self._credentials = cast(SNMPCredentials, self._host_config.management_credentials)
+
     def id(self):
         # type: () -> str
         return "mgmt_snmp"

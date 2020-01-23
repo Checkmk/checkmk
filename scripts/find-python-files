@@ -67,6 +67,7 @@ find $REAL_SEARCH \
     -name test_docker_parse_node_images.py -prune -o \
     -name typeshed -prune -o \
     -name run-clang-tidy.py -prune -o \
+    -name iwyu_tool -prune -o \
     -name chroot -prune -o \
     -name conftest.py -prune -o \
     $PRUNE \

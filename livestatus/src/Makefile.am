@@ -26,7 +26,7 @@ CLANG_VERSION ?= 8
 
 CPPCHECK ?= cppcheck
 DOXYGEN ?= doxygen
-IWYU_TOOL ?= iwyu_tool
+IWYU_TOOL ?= $(abs_top_srcdir)/scripts/iwyu_tool
 RUN_CLANG_TIDY ?= \
     $(abs_top_srcdir)/scripts/run-clang-tidy.py \
         -clang-tidy-binary=clang-tidy-$(CLANG_VERSION) \

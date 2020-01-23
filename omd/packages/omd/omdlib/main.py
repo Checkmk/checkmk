@@ -2214,7 +2214,7 @@ def finalize_site(version_info, site, what, apache_reload):
 
             # avoid executing hook 'TMPFS' and cleaning an initialized tmp directory
             # see CMK-3067
-            finalize_size_as_user(version_info, site, what, ignored_hooks=["TMPFS"])
+            finalize_site_as_user(version_info, site, what, ignored_hooks=["TMPFS"])
             sys.exit(0)
         except Exception as e:
             bail_out("%s" % e)
@@ -2232,7 +2232,7 @@ def finalize_site(version_info, site, what, apache_reload):
         restart_apache(version_info)
 
 
-def finalize_size_as_user(version_info, site, what, ignored_hooks=None):
+def finalize_site_as_user(version_info, site, what, ignored_hooks=None):
     # type: (VersionInfo, SiteContext, str, Optional[List[str]]) -> None
     # Mount and create contents of tmpfs. This must be done as normal
     # user. We also could do this at 'omd start', but this might confuse
@@ -3300,7 +3300,7 @@ def postprocess_restore_as_site_user(version_info, site, options, orig_apache_po
     site.conf["APACHE_TCP_PORT"] = orig_apache_port
     save_site_conf(site)
 
-    finalize_size_as_user(version_info, site, "restore")
+    finalize_site_as_user(version_info, site, "restore")
 
 
 def main_cleanup(version_info, site, global_opts, args, options):

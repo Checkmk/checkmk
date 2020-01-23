@@ -14,5 +14,5 @@ description:
   This check needs the agent plugin {netstat_an.bat} to be installed.
 
 item:
-  A user defined identifier of the connection.
-
+  This is a manual Checkplugin. One service is created for every rule set up
+  using the WATO ruleset "Monitor specific TCP/UDP connections and listeners".

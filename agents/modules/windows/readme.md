@@ -4,12 +4,18 @@
 ## TREE
 
 .
+|
+|-- tmp/
+|    |-- ready/
+|    |-- out/
+|    |-- uninstall/
+|    +-- to_install/
+|
 |-- lhm/
 |
 |-- python/
      |
-     |-- tmp/
-     |    |-- out/
-     |    +-- to_install/
-     +-- cpython-3.8
+     |-- cpython-3.8.timestamp
+     |
+     +-- cpython-3.8/
 

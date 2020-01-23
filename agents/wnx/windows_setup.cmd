@@ -38,11 +38,6 @@ set pkg=diffutils
 set version=
 call :process
 
-rem 7zip, version is latest
-set pkg=7zip
-set version=
-call :process
-
 goto eof
 :process
 @echo @choco install %pkg% !version! -y -r > nul 2>&1

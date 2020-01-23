@@ -28,15 +28,10 @@ of console input / output"""
 
 import logging
 import sys
-from typing import Any, AnyStr, Text, IO  # pylint: disable=unused-import
-import six
+from typing import Any, IO, Text  # pylint: disable=unused-import
 
 from cmk.utils.log import VERBOSE
 import cmk.utils.tty as tty
-from cmk.utils.encoding import (
-    ensure_bytestr,
-    ensure_unicode,
-)
 
 # NOTE: This is a hack! We abuse the global logger just to pass around the
 # verbosity setting.
@@ -50,19 +45,12 @@ logger = logging.getLogger("cmk.base")
 # would rather use "def output(text, *args, stream=sys.stdout)", but this is not possible
 # with python 2.7
 def output(text, *args, **kwargs):
-    # type: (AnyStr, *Any, **IO[Any]) -> None
+    # type: (str, *Any, **IO[str]) -> None
     if args:
         text = text % args
-
-    if six.PY3:
-        ensured_text = ensure_unicode(text)  # type: Text
-    else:
-        ensured_text = ensure_bytestr(text)  # type: bytes
-
     stream = kwargs.get("stream", sys.stdout)
-
     try:
-        stream.write(ensured_text)
+        stream.write(text)
         stream.flush()
     except Exception:
         # TODO: Way to generic!
@@ -71,14 +59,14 @@ def output(text, *args, **kwargs):
 
 # Output text if opt_verbose is set (-v). Adds no linefeed
 def verbose(text, *args, **kwargs):
-    # type: (AnyStr, *Any, **IO[Any]) -> None
+    # type: (str, *Any, **IO[str]) -> None
     if logger.isEnabledFor(VERBOSE):
         output(text, *args, **kwargs)
 
 
 # Output text if, opt_verbose >= 2 (-vv).
 def vverbose(text, *args, **kwargs):
-    # type: (AnyStr, *Any, **IO[Any]) -> None
+    # type: (str, *Any, **IO[str]) -> None
     if logger.isEnabledFor(logging.DEBUG):
         verbose(text, *args, **kwargs)
 
@@ -90,42 +78,34 @@ def vverbose(text, *args, **kwargs):
 
 # TODO: Inconsistent -> Adds newline and other functions don't
 def warning(text, *args, **kwargs):
-    # type: (AnyStr, *Any, **IO[Any]) -> None
+    # type: (str, *Any, **IO[str]) -> None
     kwargs.setdefault("stream", sys.stderr)
-
     stripped = text.lstrip()
     indent = text[:len(text) - len(stripped)]
-
     wtext = "%s%s%sWARNING:%s %s\n" % (indent, tty.bold, tty.yellow, tty.normal, stripped)
-
     output(wtext, *args, **kwargs)
 
 
 def error(text, *args):
-    # type: (AnyStr, *Any) -> None
+    # type: (str, *Any) -> None
     output(text, *args, stream=sys.stderr)
 
 
-def section_begin(text, *args, **kwargs):
-    # type: (AnyStr, *Any, **IO[Any]) -> None
-    verbose(tty.bold + text + tty.normal + ":\n")
+def section_begin(text, **kwargs):
+    # type: (str, **IO[str]) -> None
+    verbose("%s%s%s:\n", tty.bold, text, tty.normal)
 
 
 def section_success(text):
-    # type: (AnyStr) -> None
-    verbose("%sSUCCESS%s - %s\n" % (tty.green, tty.normal, text))
+    # type: (str) -> None
+    verbose("%sSUCCESS%s - %s\n", tty.green, tty.normal, text)
 
 
 def section_error(text):
-    # type: (AnyStr) -> None
-    verbose("%sERROR%s - %s\n" % (tty.red, tty.normal, text))
+    # type: (str) -> None
+    verbose("%sERROR%s - %s\n", tty.red, tty.normal, text)
 
 
 def step(text):
-    # type: (AnyStr) -> None
-    verbose("%s+%s %s\n" % (tty.yellow, tty.normal, text.upper()))
-
-
-def step_error(text):
-    # type: (AnyStr) -> None
-    verbose(text + "\n")
+    # type: (str) -> None
+    verbose("%s+%s %s\n", tty.yellow, tty.normal, text.upper())

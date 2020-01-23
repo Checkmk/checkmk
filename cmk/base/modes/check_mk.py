@@ -28,6 +28,8 @@ import os
 import sys
 from typing import Optional, Dict, List  # pylint: disable=unused-import
 
+import six
+
 import cmk
 import cmk.utils.tty as tty
 import cmk.utils.paths
@@ -414,7 +416,7 @@ def mode_dump_agent(hostname):
         for source in sources.get_data_sources():
             source_state, source_output, _source_perfdata = source.get_summary_result_for_checking()
             if source_state != 0:
-                console.error("ERROR [%s]: %s\n" % (source.id(), source_output))
+                console.error("ERROR [%s]: %s\n", source.id(), six.ensure_str(source_output))
                 has_errors = True
 
         console.output(output)
@@ -1687,7 +1689,8 @@ modes.register(
 
 def mode_version():
     # type: () -> None
-    console.output("""This is Check_MK version %s %s
+    console.output(
+        """This is Check_MK version %s %s
 Copyright (C) 2009 Mathias Kettner
 
     This program is free software; you can redistribute it and/or modify
@@ -1705,7 +1708,7 @@ Copyright (C) 2009 Mathias Kettner
     the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
     Boston, MA 02111-1307, USA.
 
-""" % (cmk.__version__, cmk.edition_short().upper()))
+""", cmk.__version__, six.ensure_str(cmk.edition_short().upper()))
 
 
 modes.register(

@@ -102,7 +102,7 @@ UncleanPerfValue = Optional[Union[str, float]]
 def do_check(hostname, ipaddress, only_check_plugin_names=None):
     # type: (HostName, Optional[HostAddress], Optional[List[CheckPluginName]]) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[Text]]
     cpu_tracking.start("busy")
-    console.verbose("Check_MK version %s\n" % cmk.__version__)
+    console.verbose("Check_MK version %s\n", six.ensure_str(cmk.__version__))
 
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
@@ -300,10 +300,11 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
     period = config_cache.check_period_of_service(hostname, description)
     if period is not None:
         if not cmk.base.core.check_timeperiod(period):
-            console.verbose("Skipping service %s: currently not in timeperiod %s.\n" %
-                            (description, period))
+            console.verbose("Skipping service %s: currently not in timeperiod %s.\n",
+                            six.ensure_str(description), period)
             return None
-        console.vverbose("Service %s: timeperiod %s is currently active.\n" % (description, period))
+        console.vverbose("Service %s: timeperiod %s is currently active.\n",
+                         six.ensure_str(description), period)
 
     section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
 
@@ -352,7 +353,8 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
         # handle check implementations that do not yet support the
         # handling of wrapped counters via exception on their own.
         # Do not submit any check result in that case:
-        console.verbose("%-20s PEND - Cannot compute check result: %s\n" % (description, e))
+        console.verbose("%-20s PEND - Cannot compute check result: %s\n",
+                        six.ensure_str(description), e)
         dont_submit = True
 
     except MKTimeout:

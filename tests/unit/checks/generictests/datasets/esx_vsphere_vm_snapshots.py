@@ -20,9 +20,9 @@ discovery = {
 
 checks = {
     'snapshots': [(None, {}, [
-        (0, 'Number of Snapshots 2', []),
-        (0, 'Powered On: LinuxI Testsnapshot', []),
-        (0, 'Latest Snapshot: LinuxI Testsnapshot 2014-10-22 13:37:07', []),
-        (0, 'Oldest Snapshot: 20130318_105600_snapshot_LinuxI 2013-03-18 09:52:14', []),
+        (0, 'Count: 2', []),
+        (0, 'Powered on: LinuxI Testsnapshot', []),
+        (0, 'Latest: LinuxI Testsnapshot 2014-10-22 13:37:07', []),
+        (0, 'Oldest: 20130318_105600_snapshot_LinuxI 2013-03-18 09:52:14', []),
     ]),]
 }

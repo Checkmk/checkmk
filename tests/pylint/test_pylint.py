@@ -59,8 +59,10 @@ def _get_files_to_check(pylint_test_dir):
         rel_path = fname[len(repo_path()) + 1:]
 
         # Can currently not be checked alone. Are compiled together below
-        if rel_path.startswith("checks/") or rel_path.startswith("inventory/") \
-            or rel_path.startswith("enterprise/agents/bakery/"):
+        if rel_path.startswith("checks/") or \
+           rel_path.startswith("inventory/") or \
+           rel_path.startswith("agents/bakery/") or \
+           rel_path.startswith("enterprise/agents/bakery/"):
             continue
 
         # TODO: We should also test them...

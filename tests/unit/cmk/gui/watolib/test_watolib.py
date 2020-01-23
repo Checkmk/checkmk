@@ -246,7 +246,6 @@ def test_registered_configvars():
             'reporting_rangespec',
             'reporting_table_layout',
             'reporting_time_format',
-            'reporting_toc',
             'reporting_use',
             'reporting_view_limit',
             'site_liveproxyd',

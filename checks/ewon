@@ -245,17 +245,16 @@ def _check_oxyreduct(params, data):
             )
 
         # if it's a bitmask, try to determine if they are good flags
-        if "flags" in tag_params:
-            value_bin = to_binary(value)
-            for i in range(len(tag_params["flags"])):
-                state = "active" if value_bin[i] == "1" else "inactive"
+        flags = tag_params.get("flags", [])
+        for name, flag, value_bin in zip(tag_params["flag_names"], flags, to_binary(value)):
+            state = "active" if value_bin == "1" else "inactive"
 
-                if tag_params["flags"][i] in ["1", "0"] and tag_params["flags"][i] != value_bin[i]:
-                    yield 2, "%s %s" % (tag_params["flag_names"][i], state)
-                elif tag_params["flags"][i] == "*":
-                    yield 0, "%s %s" % (tag_params["flag_names"][i], state)
-                elif tag_params["flags"][i] == "+" and value_bin[i] == "1":
-                    yield 0, "%s" % tag_params["flag_names"][i]
+            if flag in ("1", "0") and flag != value_bin:
+                yield 2, "%s %s" % (name, state)
+            elif flag == "*":
+                yield 0, "%s %s" % (name, state)
+            elif flag == "+" and value_bin == "1":
+                yield 0, "%s" % name
 
 
 def parse_ewon(info):

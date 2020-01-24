@@ -89,7 +89,7 @@ class OverrideRequestMethod(object):
         return self.app(environ, start_response)
 
 
-def router(raw_environ, start_response, _url_map=[]):  # pylint: disable=dangerous-default-value
+def router(environ, start_response, _url_map=[]):  # pylint: disable=dangerous-default-value
     """Route the requests to the correct application.
 
     This router uses Werkzeug's URL-Map system to dispatch to the correct application. The
@@ -109,7 +109,7 @@ def router(raw_environ, start_response, _url_map=[]):  # pylint: disable=dangero
 
     url_map = _url_map[0]
 
-    with _fixed_checkmk_env(raw_environ) as environ:
+    with _fixed_checkmk_env(environ):
         urls = url_map.bind_to_environ(environ)
         try:
             endpoint, args = urls.match()
@@ -118,14 +118,13 @@ def router(raw_environ, start_response, _url_map=[]):  # pylint: disable=dangero
             endpoint = e
             args = ()
 
-    raw_environ[WSGI_ENV_ARGS_NAME] = args
-    return endpoint(raw_environ, start_response)
+        environ[WSGI_ENV_ARGS_NAME] = args
+        return endpoint(environ, start_response)
 
 
 @contextlib.contextmanager
-def _fixed_checkmk_env(raw_environ):
+def _fixed_checkmk_env(environ):
     # The WSGI spec doesn't require PATH_INFO to be set, yet Werkzeug's routing requires it.
-    environ = raw_environ.copy()
     path_info = environ.get('PATH_INFO')
     if not path_info or path_info == '/':
         environ['PATH_INFO'] = environ['SCRIPT_NAME']

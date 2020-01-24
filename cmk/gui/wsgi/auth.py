@@ -31,9 +31,11 @@ from typing import Optional  # pylint: disable=unused-import
 
 from connexion import problem  # type: ignore
 
+from cmk.gui import crash_reporting
 from cmk.gui.config import clear_user_login
 from cmk.gui.exceptions import MKException, MKAuthException, MKUserError
 from cmk.gui.globals import html
+from cmk.gui.log import logger
 from cmk.gui.login import verify_automation_secret, set_auth_type, login
 
 from cmk.gui.wsgi.types import RFC7662  # pylint: disable=unused-import
@@ -93,7 +95,13 @@ def with_user(func):
 
         try:
             with verify_user(user, token_info):
-                return func(*args, **kw)
+                try:
+                    return func(*args, **kw)
+                except MKException:
+                    crash = crash_reporting.GUICrashReport.from_exception()
+                    crash_reporting.CrashReportStore().save(crash)
+                    logger.exception("Unhandled exception (Crash-ID: %s)", crash.ident_to_text())
+                    raise
         except MKException as exc:
             return problem(
                 status=MK_STATUS.get(type(exc), 500),

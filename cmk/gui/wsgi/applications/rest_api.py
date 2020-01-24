@@ -33,8 +33,6 @@ import werkzeug
 from connexion import FlaskApi, AbstractApp, RestyResolver, problem  # type: ignore
 from connexion.apps.flask_app import FlaskJSONEncoder  # type: ignore
 
-from cmk.gui import crash_reporting
-from cmk.gui.log import logger
 from cmk.gui.wsgi.auth import with_user
 from cmk.utils import paths
 
@@ -82,10 +80,6 @@ class CheckmkApiApp(AbstractApp):
         return api
 
     def log_error(self, exception):
-        crash = crash_reporting.GUICrashReport.from_exception()
-        crash_reporting.CrashReportStore().save(crash)
-        logger.exception("Unhandled exception (Crash-ID: %s)", crash.ident_to_text())
-
         _, exc_val, exc_tb = sys.exc_info()
         if hasattr(exception, 'name'):
             resp = problem(

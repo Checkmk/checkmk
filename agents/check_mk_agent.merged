@@ -404,6 +404,14 @@ get_nfs_mounts() {
     fi
 }
 
+# Helper function for 'section_ntp()'
+get_ntpq() {
+    # If 'ntpq' isn't in PATH, there's no point going further
+    inpath ntpq || return 1
+    [ "${1}" = "--header" ] && mkecho '<<<ntp>>>'
+    ntpq -np | sed -e 1,2d -e 's/^\\(.\\)/\\1 /' -e 's/^ /%/' || true
+}
+
 # In theory, this is how these functions should work:
 # If the GNU stat approach fails, its failure will be silenced
 # and the BSD stat approach will be tried.  Failing that, it's perl to the rescue.
@@ -1887,19 +1895,14 @@ section_nfs() {
     unset mountPoint statFmt
 }
 
+# Requires 'get_ntpq()'
 section_ntp() {
     # If '${timesync_rc}' is 0, then 'section_timesyncd()' has returned successfully in
-    # which case we do not want to proceed with ntpq, so return and skip further processing
+    # which case we do not want to proceed with 'ntpq', so return and skip further processing
     [ "${timesync_rc}" -eq 0 ] && return 0
 
-    # If ntpq isn't in PATH, there's no point going further
+    # If 'ntpq' isn't in PATH, there's no point going further
     inpath ntpq || return 1
-
-    # If we get to this point, declare our ntpq helper function
-    get_ntpq() {
-        [ "${1}" = "--header" ] && mkecho '<<<ntp>>>'
-        ntpq -np | sed -e 1,2d -e 's/^\\(.\\)/\\1 /' -e 's/^ /%/' || true
-    }
 
     # First we try to identify if we're beholden to systemd
     if inpath systemctl; then
@@ -1936,7 +1939,6 @@ section_ntp() {
             unset -v _ntp_daemon
         ;;
     esac
-
 }
 
 section_nvidia() {

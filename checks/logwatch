@@ -28,12 +28,8 @@ import errno
 import os
 import collections
 import io
-import sys
 
-if sys.version_info[0] >= 3:
-    import pathlib as pathlib_  # pylint: disable=import-error
-else:
-    import pathlib2 as pathlib_  # pylint: disable=import-error
+import pathlib2
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -557,7 +553,7 @@ class LogwatchBlockCollector(object):
 
 def check_logwatch_generic(item, params, loglines, found):
     import hashlib
-    logmsg_dir = pathlib_.Path(logwatch_dir, host_name())
+    logmsg_dir = pathlib2.Path(logwatch_dir, host_name())
 
     logmsg_dir.mkdir(parents=True, exist_ok=True)
 

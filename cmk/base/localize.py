@@ -29,11 +29,7 @@ import os
 import subprocess
 import sys
 from typing import Optional, List, Text  # pylint: disable=unused-import
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from pathlib2 import Path
 
 from cmk.utils.log import VERBOSE
 import cmk.utils.tty as tty

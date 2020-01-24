@@ -199,16 +199,16 @@ oxyreduct_tag_map = {
 }
 
 
-def inventory_oxyreduct(parsed):
+def _inventory_oxyreduct_names(parsed):
     for name, area_info in parsed.iteritems():
         tagids = area_info.keys()
         if min(tagids) < 10:
-            yield name, {}
+            yield name
         else:
             # for the "optional" rooms the lsb of the last bitmask says whether the room is used
             flags = int(area_info[max(tagids)])
             if flags % 2 == 1:
-                yield name, {}
+                yield name
 
 
 def check_oxyreduct(item, params, parsed):
@@ -301,17 +301,14 @@ def parse_ewon(info):
 
 def inventory_ewon(parsed):
     settings = host_extra_conf(host_name(), ewon_discovery_rules)
-    deviceName = None
-    if settings:
-        deviceName = settings[0]
+    device_name = settings[0] if settings else None
+    discovery_params = {"device": device_name}
 
-    yield "eWON Status", {"device": deviceName}
+    yield "eWON Status", discovery_params.copy()
 
-    if deviceName == "oxyreduct":
-        for res in inventory_oxyreduct(parsed):
-            item, params = res
-            params["device"] = deviceName
-            yield item, params
+    if device_name == "oxyreduct":
+        for item in _inventory_oxyreduct_names(parsed):
+            yield item, discovery_params.copy()
 
 
 def check_ewon(item, params, parsed):
@@ -320,9 +317,10 @@ def check_ewon(item, params, parsed):
             return 1, "This device requires configuration. Plese pick the device type."
         return 0, "Configured for %s" % params["device"]
 
-    deviceName = params["device"]
-    if deviceName == "oxyreduct":
-        return check_oxyreduct(item, params.get(deviceName, {}), parsed)
+    device_name = params["device"]
+    if device_name == "oxyreduct":
+        return check_oxyreduct(item, params.get(device_name, {}), parsed)
+    return None
 
 
 check_info["ewon"] = {

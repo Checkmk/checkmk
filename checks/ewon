@@ -279,7 +279,7 @@ def inventory_ewon(parsed):
 def check_ewon(item, params, parsed):
     if item == "eWON Status":
         if params["device"] is None:
-            yield 1, "This device requires configuration. Plese pick the device type."
+            yield 1, "This device requires configuration. Please pick the device type."
         else:
             yield 0, "Configured for %s" % params["device"]
         return

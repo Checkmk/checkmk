@@ -328,3 +328,41 @@ builtin_dashboards["simple_problems"] = {
         },
     ]
 }
+
+builtin_dashboards["cmk_overview"] = {
+    'topic': u'Overview',
+    'name': 'cmk_overview',
+    'hidebutton': False,
+    'title': u'Checkmk overview',
+    'description': u'Displays an overview of all Checkmk servers and instances\n',
+    'add_context_to_title': False,
+    'context': {},
+    'hidden': False,
+    "mtime": 0,
+    'linktitle': u'Checkmk',
+    'show_title': True,
+    'dashlets': [{
+        'background': True,
+        'type': 'linked_view',
+        'name': 'cmk_servers',
+        'add_context_to_title': True,
+        'context': {},
+        'position': (1, 1),
+        'show_title': True,
+        'single_infos': [],
+        'size': (0, 0)
+    }, {
+        'name': 'cmk_sites',
+        'title': u'Site overview',
+        'show_title': True,
+        'background': True,
+        'add_context_to_title': True,
+        'context': {},
+        'position': (1, 47),
+        'type': 'linked_view',
+        'single_infos': [],
+        'size': (0, 0)
+    }],
+    'single_infos': [],
+    'icon': 'checkmk'
+}

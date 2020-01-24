@@ -27,23 +27,19 @@
 from __future__ import division
 import time
 import six
+
 from cmk.utils.regex import regex
-
 import cmk.utils.defines as defines
-
 import cmk.utils.render
 
 import cmk.gui.pages
-
 import cmk.gui.config as config
-
 import cmk.gui.sites as sites
 import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import Dictionary, Checkbox, Hostname
-
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.visuals import (
     filter_registry,
@@ -793,6 +789,7 @@ def declare_invtable_columns(infoname, invpath, topic):
 def declare_invtable_column(infoname, name, topic, title, short_title, sortfunc, paint_function,
                             filter_class):
     column = infoname + "_" + name
+
     register_painter(
         column, {
             "title": topic + ": " + title,
@@ -1037,6 +1034,18 @@ declare_invtable_view(
     ".hardware.components.backplanes:",
     _("Backplane"),
     _("Backplanes"),
+)
+declare_invtable_view(
+    "invcmksites",
+    ".software.applications.check_mk.sites:",
+    _("Checkmk site"),
+    _("Checkmk sites"),
+)
+declare_invtable_view(
+    "invcmkversions",
+    ".software.applications.check_mk.versions:",
+    _("Checkmk version"),
+    _("Checkmk versions"),
 )
 declare_invtable_view(
     "invcontainer",

@@ -26,6 +26,7 @@
 
 from typing import Optional as _Optional, Tuple as _Tuple  # pylint: disable=unused-import
 
+import cmk
 from cmk.gui.i18n import _
 
 from . import (
@@ -4863,8 +4864,139 @@ multisite_builtin_views['crash_reports'] = {
         ('crash_exception', None, None),
     ],
     'play_sounds': False,
-    'public': False,
     'single_infos': [],
     'sorters': [('sitealias', False), ('crash_time', True)],
+    'user_sortable': True,
+}
+
+multisite_builtin_views['cmk_servers'] = {
+    'add_context_to_title': False,
+    'browser_reload': 0,
+    'column_headers': 'pergroup',
+    'context': {
+        'host_labels': {
+            'host_label': '[{"value":"cmk/check_mk_server:yes"}]'
+        }
+    },
+    'datasource': 'hosts',
+    'description': u'Displaying the overall state of Checkmk servers\n',
+    'force_checkboxes': False,
+    'group_painters': [],
+    'hidden': False,
+    'hidebutton': True,
+    'icon': None,
+    'layout': 'table',
+    'linktitle': u'Checkmk servers',
+    'mobile': False,
+    'mustsearch': False,
+    'name': 'cmk_servers',
+    'num_columns': 1,
+    'painters': [
+        (('host', {
+            'color_choices': [
+                'colorize_up', 'colorize_down', 'colorize_unreachable', 'colorize_pending',
+                'colorize_downtime'
+            ]
+        }), 'host', 'host_addresses'),
+        (('inv_software_os_name', {
+            'use_short': True
+        }), None, None),
+        (('inv_hardware_cpu_cores', {
+            'use_short': True
+        }), None, None),
+        (('inv_hardware_memory_total_ram_usable', {
+            'use_short': True
+        }), None, None),
+        ('perfometer', None, None, u'CPU utilization'),
+        ('perfometer', None, None, u'CPU load'),
+        ('perfometer', None, None, u'Memory'),
+        ('perfometer', None, None, u'Disk IO SUMMARY'),
+    ],
+    'play_sounds': False,
+    'single_infos': [],
+    'sorters': [('sitealias', False), ('host_name', False)],
+    'title': u'Checkmk servers',
+    'topic': u'Applications',
+    'user_sortable': True
+}
+
+
+def cmk_sites_painters():
+    service_painters = []
+    if not cmk.is_raw_edition():
+        service_painters += [
+            ('invcmksites_cmc', None, None),
+            ('invcmksites_dcd', None, None),
+            ('invcmksites_liveproxyd', None, None),
+            ('invcmksites_mknotifyd', None, None),
+        ]
+    else:
+        service_painters += [
+            ('invcmksites_nagios', None, None),
+        ]
+
+    service_painters += [
+        ('invcmksites_mkeventd', None, None),
+        ('invcmksites_apache', None, None),
+        ('invcmksites_rrdcached', None, None),
+        ('invcmksites_xinetd', None, None),
+        ('invcmksites_crontab', None, None),
+        ('invcmksites_stunnel', None, None),
+    ]
+
+    if cmk.is_raw_edition():
+        service_painters += [
+            ('invcmksites_npcd', None, None),
+        ]
+
+    return [
+        (('host', {
+            'color_choices': [
+                'colorize_up', 'colorize_down', 'colorize_unreachable', 'colorize_pending',
+                'colorize_downtime'
+            ]
+        }), 'host', 'host_addresses'),
+        ('invcmksites_site', None, None),
+        ('invcmksites_used_version', None, None),
+        ('invcmksites_num_hosts', None, None),
+        ('invcmksites_num_services', None, None),
+        ('invcmksites_check_helper_usage', None, None),
+        ('invcmksites_check_mk_helper_usage', None, None),
+        ('invcmksites_livestatus_usage', None, None),
+    ] + service_painters
+
+
+multisite_builtin_views['cmk_sites'] = {
+    'add_context_to_title': False,
+    'browser_reload': 0,
+    'column_headers': 'pergroup',
+    'context': {
+        'host_labels': {
+            'host_label': '[{"value":"cmk/check_mk_server:yes"}]'
+        },
+        'invcmksites_autostart': {
+            'invcmksites_autostart_from': '1',
+            'invcmksites_autostart_to': '1'
+        }
+    },
+    'datasource': 'invcmksites',
+    'description': u'Displaying the state of Checkmk sites\n',
+    'force_checkboxes': False,
+    'group_painters': [],
+    'hidden': False,
+    'hidebutton': True,
+    'icon': None,
+    'layout': 'table',
+    'linktitle': u'Checkmk sites',
+    'mobile': False,
+    'mustsearch': False,
+    'name': 'cmk_sites',
+    'num_columns': 1,
+    'painters': cmk_sites_painters(),
+    'play_sounds': False,
+    'single_infos': [],
+    'sorters': [('sitealias', False), ('host_name', False)],
+    'title': u'Checkmk sites',
+    'topic': u'Applications',
     'user_sortable': True,
 }

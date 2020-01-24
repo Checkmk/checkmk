@@ -343,6 +343,10 @@ def test_registered_permissions():
         'view.invbackplane_search',
         'view.invchassis_of_host',
         'view.invchassis_search',
+        'view.invcmksites_of_host',
+        'view.invcmksites_search',
+        'view.invcmkversions_of_host',
+        'view.invcmkversions_search',
         'view.invcontainer_of_host',
         'view.invcontainer_search',
         'view.invdockercontainers_of_host',
@@ -567,6 +571,9 @@ def test_registered_permissions():
             'general.publish_custom_graph',
             'general.publish_to_foreign_groups_custom_graph',
             'icons_and_actions.deployment_status',
+            'view.cmk_servers',
+            'view.cmk_sites',
+            'dashboard.cmk_overview',
         ]
 
     assert sorted(expected_permissions) == sorted(permission_registry.keys())

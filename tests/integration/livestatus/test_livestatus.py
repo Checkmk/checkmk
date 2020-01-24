@@ -3,17 +3,20 @@
 # pylint: disable=redefined-outer-name
 
 from __future__ import print_function
-from builtins import object
 import collections
-import pytest  # type: ignore
-import six
+import logging
 import uuid as _uuid
 import json as _json
 import time as _time
 
+import pytest  # type: ignore
+import six
+
 from testlib import web, create_linux_test_host  # pylint: disable=unused-import
 
 DefaultConfig = collections.namedtuple("DefaultConfig", ["core"])
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="module", params=["nagios", "cmc"])
@@ -40,6 +43,7 @@ def test_tables(default_cfg, site):
     assert len(existing_tables) > 5
 
     for table in existing_tables:
+        logger.debug("Test table: %s\n", table)
         if default_cfg.core == "nagios" and table == "statehist":
             continue  # the statehist table in nagios can not be fetched without time filter
 

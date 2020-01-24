@@ -29,7 +29,7 @@ import numbers
 import os
 import sys
 from typing import (  # pylint: disable=unused-import
-    Callable, Text, Optional, Any, Tuple, Union, List, Dict, NewType, Literal, AnyStr,
+    Callable, Text, Optional, Any, Tuple, Union, List, Dict, NewType, AnyStr,
 )
 import six
 

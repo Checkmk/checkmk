@@ -23,7 +23,7 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-from typing import Union, Tuple, Optional, AnyStr, List, Literal, TypedDict
+from typing import Union, Tuple, Optional, AnyStr, List, TypedDict
 
 
 def fahrenheit_to_celsius(tempf, relative=False):
@@ -260,7 +260,20 @@ def _normalize_level(entry):
     return entry
 
 
-StatusType = Union[Literal[0], Literal[1], Literal[2], Literal[3]]
+# TODO: Just for documentation purposes for now, add typing_extensions and use this.
+#
+# StatusType = Union[Literal[0], Literal[1], Literal[2], Literal[3]]
+# TempUnitType = Union[Literal['c'],  # celsius
+#                      Literal['k'],  # kelvin = celsius starting at absolute 0
+#                      Literal['f'],  # fahrenheit
+#                     ]
+# LevelModes = Union[Literal['worst'], Literal['best'], Literal['dev'], Literal['devdefault'],
+#                    Literal['usr'], Literal['usrdefault']]
+
+StatusType = int
+TempUnitType = str
+LevelModes = str
+
 Number = Union[int, float]
 
 # ('foo', 5), ('foo', 5, 2, 7), ('foo', 5, None, None)
@@ -270,15 +283,9 @@ PerfDataType = List[PerfDataEntryType]
 # Generic Check Type. Can be used elsewhere too.
 CheckType = Tuple[StatusType, AnyStr, PerfDataType]
 
-TempUnitType = Union[Literal['c'],  # celsius
-                     Literal['k'],  # kelvin = celsius starting at absolute 0
-                     Literal['f'],  # fahrenheit
-                    ]
 TwoLevelsType = Tuple[Optional[Number], Optional[Number]]
 FourLevelsType = Tuple[Optional[Number], Optional[Number], Optional[Number], Optional[Number]]
 LevelsType = Union[TwoLevelsType, FourLevelsType]
-LevelModes = Union[Literal['worst'], Literal['best'], Literal['dev'], Literal['devdefault'],
-                   Literal['usr'], Literal['usrdefault']]
 TrendComputeDict = TypedDict(
     'TrendComputeDict',
     {

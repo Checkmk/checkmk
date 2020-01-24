@@ -43,7 +43,6 @@ def test_tables(default_cfg, site):
         if default_cfg.core == "nagios" and table == "statehist":
             continue  # the statehist table in nagios can not be fetched without time filter
 
-        raise Exception()
         result = site.live.query("GET %s\n" % table)
         assert isinstance(result, list)
 

@@ -4,7 +4,7 @@ See chapter "Module hierarchy" in coding_guidelines_python in wiki
 for further information.
 """
 
-import os.path
+import os
 from pylint.checkers import BaseChecker, utils  # type: ignore
 from pylint.interfaces import IAstroidChecker  # type: ignore
 from testlib import cmk_path
@@ -91,9 +91,10 @@ class CMKModuleLayerChecker(BaseChecker):
         that we link/copy our CEE/CME parts to the cmk.* module in the site.
         Fake the final module name here.
         """
-        if file_path.startswith("enterprise/cmk") or file_path.startswith("managed/cmk"):
-            return self._get_module_path_from_shadowed_file_path(file_path)
-        return node.root().name
+        module_name = node.root().name
+        if module_name.startswith("cee.") or module_name.startswith("cme."):
+            return "cmk.%s" % module_name
+        return module_name
 
     # Only works for our enterprise / managed directories
     def _get_module_path_from_shadowed_file_path(self, file_path):
@@ -103,11 +104,13 @@ class CMKModuleLayerChecker(BaseChecker):
 
     def _is_import_allowed(self, file_path, mod_name, import_modname):
         for component in _COMPONENTS:
-            if self._is_part_of_component(mod_name, file_path, component):
-                if self._is_import_in_component(import_modname, component):
-                    return True
+            if not self._is_part_of_component(mod_name, file_path, component):
+                continue
 
-            elif self._is_import_in_cee_component_part(mod_name, import_modname, component):
+            if self._is_import_in_component(import_modname, component):
+                return True
+
+            if self._is_import_in_cee_component_part(mod_name, import_modname, component):
                 return True
 
         return self._is_utility_import(import_modname)

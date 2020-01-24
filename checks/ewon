@@ -212,8 +212,8 @@ def _inventory_oxyreduct_names(parsed):
 
 
 def _check_oxyreduct(params, data):
-    def to_binary(n):
-        return ''.join(str(1 & int(n) >> i) for i in range(16)[::-1])
+    def to_binary(number):
+        return ''.join(str(1 & int(number) >> i) for i in range(16)[::-1])
 
     for tagid, value in data.iteritems():
         ref_tagid = tagid
@@ -233,46 +233,24 @@ def _check_oxyreduct(params, data):
                 condition_tagid = tagid + tag_params["condition_flag"][0]
                 if not int(data[condition_tagid]) & tag_params["condition_flag"][1]:
                     continue
-            value = int(value)
-            unit = tag_params.get("unit", "")
-            status = 0
-            if "scale" in tag_params:
-                value = float(value) * tag_params["scale"]
 
-            if "levels_name" in tag_params and tag_params["levels_name"] in params:
-                warn, crit, warn_lower, crit_lower = params[tag_params["levels_name"]]
-
-            elif "levels" in tag_params:
-                warn, crit, warn_lower, crit_lower = tag_params["levels"]
-
-            if warn and crit and warn_lower and crit_lower:
-                if (value >= crit) or (value <= crit_lower):
-                    status = 2
-                elif (value >= warn) or (value <= warn_lower):
-                    status = 1
-
-            levels_text = ""
-            if status != 0:
-                levels_text = " (warn/crit at %s%s/%s%s and below %s%s/%s%s)" %\
-                    (warn, unit, crit, unit, warn_lower, unit, crit_lower, unit)
-
-            perfdata = []
-            if "perfvar" in tag_params:
-                perfdata.append((tag_params["perfvar"], value, warn, crit))
-            yield status, "%s%s %s%s" %\
-                (value, unit, tag_params["name"], levels_text), perfdata
+            value = int(value) * float(tag_params.get("scale", 1.0))
+            levels_name = tag_params.get("levels_name", "levels")
+            yield check_levels(
+                value,
+                tag_params.get("perfvar"),
+                params.get(levels_name),
+                unit=tag_params.get("unit", ""),
+                infoname=tag_params["name"],
+            )
 
         # if it's a bitmask, try to determine if they are good flags
         if "flags" in tag_params:
             value_bin = to_binary(value)
             for i in range(len(tag_params["flags"])):
-                if value_bin[i] == "1":
-                    state = "active"
-                else:
-                    state = "inactive"
+                state = "active" if value_bin[i] == "1" else "inactive"
 
-                if tag_params["flags"][i] in ["1", "0"] and\
-                   tag_params["flags"][i] != value_bin[i]:
+                if tag_params["flags"][i] in ["1", "0"] and tag_params["flags"][i] != value_bin[i]:
                     yield 2, "%s %s" % (tag_params["flag_names"][i], state)
                 elif tag_params["flags"][i] == "*":
                     yield 0, "%s %s" % (tag_params["flag_names"][i], state)

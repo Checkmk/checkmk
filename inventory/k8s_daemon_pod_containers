@@ -31,7 +31,7 @@ def inv_k8s_daemon_pod_containers(info, inventory_tree, _status_data_tree):
     path = "software.applications.kubernetes.daemon_pod_containers:"
     inv_node = inventory_tree.get_list(path)
 
-    for container_name, container_data in sorted(parsed.iteritems()):
+    for container_name, container_data in sorted(parsed.items()):
         inv_node.append({
             'name': container_name,
             'image': container_data['image'],

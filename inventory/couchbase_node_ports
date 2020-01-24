@@ -33,7 +33,7 @@
 def inv_couchbase_nodes_ports(info, inventory_tree, status_data_tree):
     parsed = parse_couchbase_lines(info)
 
-    for node_name, data in parsed.iteritems():
+    for node_name, data in parsed.items():
 
         path = "software.applications.couchbase.nodes.%s.ports" % node_name
         inventory_ports = inventory_tree.get_dict(path)

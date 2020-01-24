@@ -29,7 +29,7 @@
 
 def _parse_hosts(hosts):
     results = []
-    for secret_name, hosts_ in hosts.iteritems():
+    for secret_name, hosts_ in hosts.items():
         results.extend({"host": host, "secret_name": secret_name} for host in hosts_)
     return results
 
@@ -44,7 +44,7 @@ def _parse_backends(backends):
 
 def inv_k8s_ingresses(parsed, inventory_tree, status_data_tree):
     path = "software.applications.kubernetes.ingresses.%s:"
-    for name, data in sorted(parsed.iteritems()):
+    for name, data in sorted(parsed.items()):
         inv_node = inventory_tree.get_dict(path % name)
         inv_node.update({
             'backends': _parse_backends(data['backends']),

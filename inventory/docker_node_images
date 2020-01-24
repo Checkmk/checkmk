@@ -52,7 +52,7 @@ def parse_docker_node_images(info):
     i_containers = (docker_json_get_obj(c) for c in subsections.get('containers', []))
     containers = {c["Id"]: c for c in i_containers if c is not None}
 
-    running_images = [c['Image'] for c in containers.itervalues()]
+    running_images = [c['Image'] for c in containers.values()]
 
     for image_id in images:
         images[image_id]['amount_containers'] = running_images.count(image_id)
@@ -67,7 +67,7 @@ def inv_docker_node_images(info, inventory_tree, status_data_tree):
     inv_node = inventory_tree.get_list(path)
     status_node = status_data_tree.get_list(path)
 
-    for image_id, image in sorted(images.iteritems()):
+    for image_id, image in sorted(images.items()):
         repodigests = ", ".join(image.get("RepoDigests", []))
         fallback_repotag = repodigests.split('@', 1)[:1] if '@' in repodigests else []
         inv_node.append({
@@ -87,7 +87,7 @@ def inv_docker_node_images(info, inventory_tree, status_data_tree):
     containers = parsed.get("containers", {})
     status_node = status_data_tree.get_list("software.applications.docker.containers:")
 
-    for container_id, container in sorted(containers.iteritems()):
+    for container_id, container in sorted(containers.items()):
         status_node.append({
             "id": docker_get_short_id(container_id),  # pylint: disable=undefined-variable
             "image": docker_get_short_id(container["Image"]),  # pylint: disable=undefined-variable

@@ -31,7 +31,7 @@ def inv_k8s_service_info(info, inventory_tree):
     path = "software.applications.kubernetes.service_info."
     inv_node = inventory_tree.get_dict(path)
 
-    for key, value in sorted(parsed.iteritems()):
+    for key, value in sorted(parsed.items()):
         inv_node[key] = value
 
 

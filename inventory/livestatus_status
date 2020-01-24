@@ -39,7 +39,7 @@ def inv_livestatus_status(info, inventory_tree, status_data_tree):
     livestatus = info[0]
 
     sites_node = status_data_tree.get_list("software.applications.check_mk.sites:")
-    for site, status in livestatus.iteritems():
+    for site, status in livestatus.items():
         helper_usage_cmk = float(status['helper_usage_cmk']) * 100
         helper_usage_generic = float(status['helper_usage_generic']) * 100
         livestatus_usage = float(status['livestatus_usage']) * 100

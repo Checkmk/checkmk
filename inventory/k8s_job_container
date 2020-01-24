@@ -32,7 +32,7 @@ def inv_k8s_job_container(info, inventory_tree, status_data_tree):
     path = "software.applications.kubernetes.job_container:"
     inv_node = inventory_tree.get_list(path)
 
-    for container_name, container_data in sorted(parsed.iteritems()):
+    for container_name, container_data in sorted(parsed.items()):
         inv_node.append({
             'name': container_name,
             'image': container_data['image'],

@@ -64,8 +64,7 @@ def inv_statgrab_net(info, params, inventory_tree):
         if entry.get("port_type") in usage_port_types:
             total_ethernet_ports += 1
 
-    for entry in parsed.values():
-        node.append(entry)
+    node.extend(parsed.values())
 
     node = inventory_tree.get_dict("networking.")
     node["total_ethernet_ports"] = total_ethernet_ports

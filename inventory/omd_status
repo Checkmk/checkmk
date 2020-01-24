@@ -83,7 +83,7 @@ def inv_omd_status(info, inventory_tree, status_data_tree):
         "xinetd",
     ]
 
-    for site, status_per_node in status_info.iteritems():
+    for site, status_per_node in status_info.items():
         best_status = None
         for status in status_per_node.values():
             if (not best_status or _overall_status_to_num(status['overall']) <

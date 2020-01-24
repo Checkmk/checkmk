@@ -36,7 +36,6 @@ import struct
 import sys
 import itertools
 import contextlib
-from compiler.ast import Node  # type: ignore[import] # pylint: disable=unused-import
 from typing import (  # pylint: disable=unused-import
     TYPE_CHECKING, Pattern, Iterator, Iterable, Set, Text, Any, Callable, Dict, List, Tuple, Union,
     Optional, cast,
@@ -1631,7 +1630,7 @@ def includes_of_plugin(check_file_path):
     include_names = OrderedDict()
 
     def _load_from_check_info(node):
-        # type: (Node) -> None
+        # type: (ast.Assign) -> None
         if not isinstance(node.value, ast.Dict):
             return
 
@@ -1650,7 +1649,7 @@ def includes_of_plugin(check_file_path):
                                              "found '%s'" % type(val))
 
     def _load_from_check_includes(node):
-        # type: (Node) -> None
+        # type: (ast.Assign) -> None
         if isinstance(node.value, ast.List):
             for element in node.value.elts:
                 if not isinstance(element, ast.Str):

@@ -1180,6 +1180,8 @@ def should_notify(context, entry):
         else:
             sl = events.saveint(context.get('HOST_SL'))
 
+        assert isinstance(from_sl, (int, float))
+        assert isinstance(to_sl, (int, float))
         if sl < from_sl or sl > to_sl:
             logger.info(" - Skipping: service level %d not between %d and %d", sl, from_sl, to_sl)
             return False

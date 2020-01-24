@@ -54,9 +54,11 @@ class ABCDiscoveredLabels(six.with_metaclass(abc.ABCMeta, collections.MutableMap
         return not self._labels
 
     def __getitem__(self, key):
+        # type: (Text) -> Any
         return self._labels[key]
 
     def __setitem__(self, key, value):
+        # type: (Text, Any) -> None
         self._labels[key] = value
 
     def __delitem__(self, key):

@@ -84,7 +84,7 @@ def test_normal_auth(
     assert "Invalid credentials." not in resp.body
 
 
-@pytest.mark.skipif(cmk.is_raw_edition(), "No agent deployment in raw edition")
+@pytest.mark.skipif(cmk.is_raw_edition(), reason="No agent deployment in raw edition")
 def test_deploy_agent(wsgi_app):
     response = wsgi_app.get('/NO_SITE/check_mk/deploy_agent.py')
     assert response.body.startswith("Missing or invalid")
@@ -178,7 +178,7 @@ def test_cmk_automation(wsgi_app):
     assert response.body == "Missing secret for automation command."
 
 
-@pytest.mark.skipif(cmk.is_raw_edition(), "No AJAX graphs in raw edition")
+@pytest.mark.skipif(cmk.is_raw_edition(), reason="No AJAX graphs in raw edition")
 def test_cmk_ajax_graph_images(wsgi_app):
     resp = wsgi_app.get("/NO_SITE/check_mk/ajax_graph_images.py", status=200)
     assert resp.body.startswith("You are not allowed")

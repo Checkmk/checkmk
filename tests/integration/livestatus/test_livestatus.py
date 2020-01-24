@@ -4,7 +4,6 @@
 
 from __future__ import print_function
 import collections
-import logging
 import uuid as _uuid
 import json as _json
 import time as _time
@@ -15,8 +14,6 @@ import six
 from testlib import web, create_linux_test_host  # pylint: disable=unused-import
 
 DefaultConfig = collections.namedtuple("DefaultConfig", ["core"])
-
-logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="module", params=["nagios", "cmc"])
@@ -35,18 +32,18 @@ def default_cfg(request, site, web):
 # Simply detects all tables by querying the columns table and then
 # queries each of those tables without any columns and filters
 def test_tables(default_cfg, site):
-    existing_tables = set([])
-
+    columns_per_table = {}
     for row in site.live.query_table_assoc("GET columns\n"):
-        existing_tables.add(row["table"])
+        columns_per_table.setdefault(row["table"], []).append(row["name"])
+    assert len(columns_per_table) > 5
 
-    assert len(existing_tables) > 5
+    for table, _columns in columns_per_table.items():
+        print("Test table: %s" % table)
 
-    for table in existing_tables:
-        logger.debug("Test table: %s\n", table)
         if default_cfg.core == "nagios" and table == "statehist":
             continue  # the statehist table in nagios can not be fetched without time filter
 
+        raise Exception()
         result = site.live.query("GET %s\n" % table)
         assert isinstance(result, list)
 

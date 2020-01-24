@@ -35,6 +35,10 @@ import socket
 import time
 import urllib
 
+from typing import (  # pylint: disable=unused-import
+    Callable, Optional, Dict, List, Union, Any, Text,
+)
+
 import six
 
 # suppress "Cannot find module" error from mypy
@@ -48,6 +52,14 @@ from cmk.utils.encoding import convert_to_unicode
 import cmk.base.config as config
 import cmk.base.core
 
+from cmk.utils.type_defs import (  # pylint: disable=unused-import
+    HostName, ServiceName,
+)
+
+Context = Dict  # TODO Improve this
+ContactList = List  # TODO Improve this
+Rule = Dict  # TODO Improve this
+
 logger = logging.getLogger('cmk.base.events')
 logger.addHandler(logging.NullHandler())
 
@@ -56,6 +68,7 @@ def event_keepalive(event_function,
                     call_every_loop=None,
                     loop_interval=None,
                     shutdown_function=None):
+    # type: (Callable, Optional[Callable], Optional[int], Optional[Callable]) -> None
     last_config_timestamp = config_timestamp()
 
     # Send signal that we are ready to receive the next event, but
@@ -146,6 +159,7 @@ def event_keepalive(event_function,
 
 
 def config_timestamp():
+    # type: () -> float
     mtime = 0
     for dirpath, _unused_dirnames, filenames in os.walk(cmk.utils.paths.check_mk_config_dir):
         for f in filenames:
@@ -163,10 +177,12 @@ def config_timestamp():
 
 
 def event_data_available(loop_interval):
+    # type: (Optional[int]) -> bool
     return bool(select.select([0], [], [], loop_interval)[0])
 
 
 def raw_context_from_string(data):
+    # type: (str) -> Context
     # Context is line-by-line in g_notify_readahead_buffer
     context = {}
     try:
@@ -180,6 +196,7 @@ def raw_context_from_string(data):
 
 
 def expand_backslashes(value):
+    # type: (str) -> str
     # We cannot do the following:
     # value.replace(r"\n", "\n").replace("\\\\", "\\")
     # \\n would be exapnded to \<LF> instead of \n. This was a bug
@@ -188,6 +205,7 @@ def expand_backslashes(value):
 
 
 def convert_context_to_unicode(context):
+    # type: (Context) -> None
     # Convert all values to unicode
     for key, value in context.items():
         if isinstance(value, str):
@@ -195,6 +213,7 @@ def convert_context_to_unicode(context):
 
 
 def render_context_dump(raw_context):
+    # type: (Context) -> str
     encoded_context = dict(raw_context.items())
     convert_context_to_unicode(encoded_context)
     return "Raw context:\n" \
@@ -202,6 +221,7 @@ def render_context_dump(raw_context):
 
 
 def find_host_service_in_context(context):
+    # type: (Context) -> str
     host = context.get("HOSTNAME", "UNKNOWN")
     service = context.get("SERVICEDESC")
     if service:
@@ -213,6 +233,7 @@ def find_host_service_in_context(context):
 # neccessary for notifications from Nagios, which does not send this
 # information in macros.
 def livestatus_fetch_contacts(host, service):
+    # type: (HostName, Optional[ServiceName]) -> Optional[ContactList]
     try:
         if service:
             query = "GET services\nFilter: host_name = %s\nFilter: service_description = %s\nColumns: contacts" % (
@@ -239,6 +260,7 @@ def livestatus_fetch_contacts(host, service):
 
 
 def add_rulebased_macros(raw_context):
+    # type: (Context) -> None
     # For the rule based notifications we need the list of contacts
     # an object has. The CMC does send this in the macro "CONTACTS"
     if "CONTACTS" not in raw_context:
@@ -258,6 +280,7 @@ def add_rulebased_macros(raw_context):
 
 
 def complete_raw_context(raw_context, with_dump):
+    # type: (Context, bool) -> None
     """Extend the raw notification context
 
     This ensures that all raw contexts processed in the notification code has specific variables
@@ -379,6 +402,7 @@ def complete_raw_context(raw_context, with_dump):
 
 # TODO: Use cmk.utils.render.*?
 def get_readable_rel_date(timestamp):
+    # type: (Any) -> str
     try:
         change = int(timestamp)
     except ValueError:
@@ -393,6 +417,7 @@ def get_readable_rel_date(timestamp):
 
 
 def event_match_rule(rule, context):
+    # type: (Rule, Context) -> Optional[str]
     return \
         event_match_site(rule, context)                                   or \
         event_match_folder(rule, context)                                 or \
@@ -415,8 +440,9 @@ def event_match_rule(rule, context):
 
 
 def event_match_site(rule, context):
+    # type: (Rule, Context) -> Optional[str]
     if "match_site" not in rule:
-        return
+        return None
 
     required_site_ids = rule["match_site"]
 
@@ -426,9 +452,11 @@ def event_match_site(rule, context):
     if site_id not in required_site_ids:
         return "The site '%s' is not in the required sites list: %s" % \
                         (site_id, ",".join(required_site_ids))
+    return None
 
 
 def event_match_folder(rule, context):
+    # type: (Rule, Context) -> Optional[str]
     if "match_folder" in rule:
         mustfolder = rule["match_folder"]
         mustpath = mustfolder.split("/")
@@ -440,7 +468,7 @@ def event_match_folder(rule, context):
                 if mustpath == [
                         "",
                 ]:
-                    return  # Match is on main folder, always OK
+                    return None  # Match is on main folder, always OK
                 while mustpath:
                     if not haspath or mustpath[0] != haspath[0]:
                         return "The rule requires WATO folder '%s', but the host is in '%s'" % (
@@ -450,18 +478,22 @@ def event_match_folder(rule, context):
 
         if hasfolder is None:
             return "The host is not managed via WATO, but the rule requires a WATO folder"
+    return None
 
 
 def event_match_hosttags(rule, context):
+    # type: (Rule, Context) -> Optional[str]
     required = rule.get("match_hosttags")
     if required:
         tags = context.get("HOSTTAGS", "").split()
         if not config.hosttags_match_taglist(tags, required):
             return "The host's tags %s do not match the required tags %s" % ("|".join(tags),
                                                                              "|".join(required))
+    return None
 
 
 def event_match_servicegroups(rule, context, is_regex=False):
+    # type: (Rule, Context, bool) -> Optional[str]
     if is_regex:
         match_type, required_groups = rule.get("match_servicegroups_regex", (None, None))
     else:
@@ -470,7 +502,7 @@ def event_match_servicegroups(rule, context, is_regex=False):
     if context["WHAT"] != "SERVICE":
         if required_groups:
             return "This rule requires membership in a service group, but this is a host notification"
-        return
+        return None
 
     if required_groups is not None:
         sgn = context.get("SERVICEGROUPNAMES")
@@ -487,15 +519,19 @@ def event_match_servicegroups(rule, context, is_regex=False):
             if is_regex:
                 r = regex(group)
                 for sg in servicegroups:
+                    if config.define_servicegroups is None:
+                        continue
                     match_value = config.define_servicegroups[
                         sg] if match_type == "match_alias" else sg
                     if r.search(match_value):
-                        return
+                        return None
             elif group in servicegroups:
-                return
+                return None
 
         if is_regex:
             if match_type == "match_alias":
+                if config.define_servicegroups is None:
+                    return "No service groups defined."
                 return "The service is only in the groups %s. None of these patterns match: %s" % (
                     '"' + '", "'.join(config.define_servicegroups[x] for x in servicegroups) + '"',
                     '"' + '" or "'.join(required_groups)) + '"'
@@ -505,9 +541,11 @@ def event_match_servicegroups(rule, context, is_regex=False):
 
         return "The service is only in the groups %s, but %s is required" % (
             sgn, " or ".join(required_groups))
+    return None
 
 
 def event_match_exclude_servicegroups(rule, context, is_regex=False):
+    # type: (Rule, Context, bool) -> Optional[str]
     if is_regex:
         match_type, excluded_groups = rule.get("match_exclude_servicegroups_regex", (None, None))
     else:
@@ -515,13 +553,13 @@ def event_match_exclude_servicegroups(rule, context, is_regex=False):
 
     if context["WHAT"] != "SERVICE":
         # excluded_groups do not apply to a host notification
-        return
+        return None
 
     if excluded_groups is not None:
         context_sgn = context.get("SERVICEGROUPNAMES")
         if context_sgn is None:
             # No actual groups means no possible negative match
-            return
+            return None
 
         servicegroups = context_sgn.split(",")
 
@@ -529,6 +567,8 @@ def event_match_exclude_servicegroups(rule, context, is_regex=False):
             if is_regex:
                 r = regex(group)
                 for sg in servicegroups:
+                    if config.define_servicegroups is None:
+                        continue
                     match_value = config.define_servicegroups[
                         sg] if match_type == "match_alias" else sg
                     match_value_inverse = sg if match_type == "match_alias" else config.define_servicegroups[
@@ -539,11 +579,13 @@ def event_match_exclude_servicegroups(rule, context, is_regex=False):
                              (match_value, match_value_inverse, group)
             elif group in servicegroups:
                 return "The service group %s is excluded" % group
+    return None
 
 
 def event_match_contacts(rule, context):
+    # type: (Rule, Context) -> Optional[str]
     if "match_contacts" not in rule:
-        return
+        return None
 
     required_contacts = rule["match_contacts"]
     contacts_text = context["CONTACTS"]
@@ -553,16 +595,17 @@ def event_match_contacts(rule, context):
     contacts = contacts_text.split(",")
     for contact in required_contacts:
         if contact in contacts:
-            return
+            return None
 
     return "The object has the contacts %s, but %s is required" % (contacts_text,
                                                                    " or ".join(required_contacts))
 
 
 def event_match_contactgroups(rule, context):
+    # type: (Rule, Context) -> Optional[str]
     required_groups = rule.get("match_contactgroups")
     if required_groups is None:
-        return
+        return None
 
     if context["WHAT"] == "SERVICE":
         cgn = context.get("SERVICECONTACTGROUPNAMES")
@@ -570,20 +613,22 @@ def event_match_contactgroups(rule, context):
         cgn = context.get("HOSTCONTACTGROUPNAMES")
 
     if cgn is None:
-        return
+        return None
+
     if not cgn:
         return "The object is in no group, but %s is required" % (" or ".join(required_groups))
 
     contactgroups = cgn.split(",")
     for group in required_groups:
         if group in contactgroups:
-            return
+            return None
 
     return "The object is only in the groups %s, but %s is required" % (
         cgn, " or ".join(required_groups))
 
 
 def event_match_hostgroups(rule, context):
+    # type: (Rule, Context) -> Optional[str]
     required_groups = rule.get("match_hostgroups")
     if required_groups is not None:
         hgn = context.get("HOSTGROUPNAMES")
@@ -597,26 +642,32 @@ def event_match_hostgroups(rule, context):
 
         for group in required_groups:
             if group in hostgroups:
-                return
+                return None
 
         return "The host is only in the groups %s, but %s is required" % (
             hgn, " or ".join(required_groups))
+    return None
 
 
 def event_match_hosts(rule, context):
+    # type: (Rule, Context) -> Optional[str]
     if "match_hosts" in rule:
         hostlist = rule["match_hosts"]
         if context["HOSTNAME"] not in hostlist:
             return "The host's name '%s' is not on the list of allowed hosts (%s)" % (
                 context["HOSTNAME"], ", ".join(hostlist))
+    return None
 
 
 def event_match_exclude_hosts(rule, context):
+    # type: (Rule, Context) -> Optional[str]
     if context["HOSTNAME"] in rule.get("match_exclude_hosts", []):
         return "The host's name '%s' is on the list of excluded hosts" % context["HOSTNAME"]
+    return None
 
 
 def event_match_services(rule, context):
+    # type: (Rule, Context) -> Optional[str]
     if "match_services" in rule:
         if context["WHAT"] != "SERVICE":
             return "The rule specifies a list of services, but this is a host notification."
@@ -625,19 +676,23 @@ def event_match_services(rule, context):
         if not config.in_extraconf_servicelist(servicelist, service):
             return "The service's description '%s' does not match by the list of " \
                    "allowed services (%s)" % (service, ", ".join(servicelist))
+    return None
 
 
 def event_match_exclude_services(rule, context):
+    # type: (Rule, Context) -> Optional[str]
     if context["WHAT"] != "SERVICE":
-        return
+        return None
     excludelist = rule.get("match_exclude_services", [])
     service = context["SERVICEDESC"]
     if config.in_extraconf_servicelist(excludelist, service):
         return "The service's description '%s' matches the list of excluded services" \
           % context["SERVICEDESC"]
+    return None
 
 
 def event_match_plugin_output(rule, context):
+    # type: (Rule, Context) -> Optional[str]
     if "match_plugin_output" in rule:
         r = regex(rule["match_plugin_output"])
 
@@ -648,9 +703,11 @@ def event_match_plugin_output(rule, context):
         if not r.search(output):
             return "The expression '%s' cannot be found in the plugin output '%s'" % \
                 (rule["match_plugin_output"], output)
+    return None
 
 
 def event_match_checktype(rule, context):
+    # type: (Rule, Context) -> Optional[str]
     if "match_checktype" in rule:
         if context["WHAT"] != "SERVICE":
             return "The rule specifies a list of Check_MK plugins, but this is a host notification."
@@ -662,16 +719,20 @@ def event_match_checktype(rule, context):
         if plugin not in allowed:
             return "The Check_MK plugin '%s' is not on the list of allowed plugins (%s)" % \
               (plugin, ", ".join(allowed))
+    return None
 
 
 def event_match_timeperiod(rule):
+    # type: (Rule) -> Optional[str]
     if "match_timeperiod" in rule:
         timeperiod = rule["match_timeperiod"]
         if timeperiod != "24X7" and not cmk.base.core.check_timeperiod(timeperiod):
             return "The timeperiod '%s' is currently not active." % timeperiod
+    return None
 
 
 def event_match_servicelevel(rule, context):
+    # type: (Rule, Context) -> Optional[str]
     if "match_sl" in rule:
         from_sl, to_sl = rule["match_sl"]
         if context['WHAT'] == "SERVICE" and context.get('SVC_SL', '').isdigit():
@@ -681,9 +742,11 @@ def event_match_servicelevel(rule, context):
 
         if sl < from_sl or sl > to_sl:
             return "The service level %d is not between %d and %d." % (sl, from_sl, to_sl)
+    return None
 
 
 def add_context_to_environment(plugin_context, prefix):
+    # type: (Context, str) -> None
     for key in plugin_context:
         os.putenv(prefix + key, plugin_context[key].encode('utf-8'))
 
@@ -696,6 +759,7 @@ def add_context_to_environment(plugin_context, prefix):
 #   PARAMETER_LVL1_1_VALUE = 42
 #   PARAMETER_LVL1_2_VALUE = 13
 def add_to_event_context(plugin_context, prefix, param):
+    # type: (Context, str, Union[List, Dict]) -> None
     if isinstance(param, list):
         plugin_context[prefix + "S"] = " ".join(param)
         for nr, value in enumerate(param):
@@ -719,6 +783,7 @@ def add_to_event_context(plugin_context, prefix, param):
 
 
 def plugin_param_to_string(value):
+    # type: (Any) -> Union[Text, str]
     if isinstance(value, six.string_types):
         return value
     elif isinstance(value, (int, float)):
@@ -739,6 +804,7 @@ def plugin_param_to_string(value):
 # cannot be converted to a number
 # TODO: Clean this up!
 def saveint(i):
+    # type: (Any) -> int
     try:
         return int(i)
     except (TypeError, ValueError):

@@ -120,10 +120,12 @@ function run_cached {
     # Check if file exists and is recent enough
     if [ -s $CACHEFILE ]
     then
-        MTIME=$(/usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' $CACHEFILE )
-        if (( $MTIME < $MAXAGE )) ; then
+        AGE=$(/usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' $CACHEFILE )
+        if (( $AGE < $MAXAGE )) ; then
             USE_CACHEFILE=1
         fi
+        # get file time for cache
+        MTIME=$(/usr/bin/perl -e 'print((stat shift)[9])' $CACHEFILE)
         CACHE_INFO="cached($MTIME,$MAXAGE)"
         if [[ $NAME == local_* ]]; then
             sed -e "s/^/$CACHE_INFO /" "$CACHEFILE"

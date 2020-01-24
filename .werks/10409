@@ -8,6 +8,6 @@ Knowledge: undoc
 Level: 1
 Version: 1.7.0i1
 
-Reports can not be configured to have a table of contents at the begining
-of the report. This option remains deactivated by default, but you can
-configure it under {Report properties}.
+Table of contents is a new report content element that you can use to
+describe the content of your report. However, it only has an effect when
+placed within a front matter template, see werk #10768.

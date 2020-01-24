@@ -65,6 +65,7 @@ PYTHON_MODULES_LIST += cffi-1.11.5.tar.gz # needed by e.g. Pillow
 PYTHON_MODULES_LIST += Pillow-5.3.0.tar.gz # needed by reportlab (pillow>=2.4.0)
 PYTHON_MODULES_LIST += reportlab-3.5.9.tar.gz # needed by reporting
 PYTHON_MODULES_LIST += PyPDF2-1.26.0.tar.gz # needed by reporting
+PYTHON_MODULES_LIST += roman-3.2.tar.gz # needed by reporting frontmatter
 
 PYTHON_MODULES_LIST += npyscreen-4.10.5.tar.gz # needed for mkbench
 PYTHON_MODULES_LIST += psutil-5.4.7.tar.gz # needed for mkbench

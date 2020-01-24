@@ -30,7 +30,12 @@ import collections
 from typing import (  # pylint: disable=unused-import
     Set, Union, Text, Optional, Tuple, Dict,
 )
-from pathlib2 import Path
+import sys
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKTimeout

@@ -29,7 +29,12 @@ from typing import Iterator, Any, Dict, Union, Set, Tuple, Text, Optional, List 
 import os
 import sys
 import ast
-from pathlib2 import Path
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+
 import six
 
 import cmk.utils.debug

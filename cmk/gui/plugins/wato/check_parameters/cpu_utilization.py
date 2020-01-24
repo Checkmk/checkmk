@@ -57,11 +57,11 @@ cpu_util_common_dict = Dictionary(
                  Age(title=_("Warning after "), default_value=5 * 60),
                  Age(title=_("Critical after "), default_value=15 * 60),
              ],
-             help=_(
-                 "With this configuration, check_mk will alert if the total CPU is "
-                 "exceeding a utilization threshold over an extended period of time. "
-                 "ATTENTION: This configuration cannot be used for check <i>lparstat_aix.cpu_util</i>!"
-             ))),
+             help=
+             _("With this configuration, check_mk will alert if the actual (not averaged) total CPU is "
+               "exceeding a utilization threshold over an extended period of time. "
+               "ATTENTION: This configuration cannot be used for check <i>lparstat_aix.cpu_util</i>!"
+              ))),
         ("core_util_time",
          Tuple(title=_("Levels over an extended time period on a single core CPU utilization"),
                elements=[

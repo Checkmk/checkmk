@@ -31,7 +31,7 @@ import sys
 import argparse
 import json
 import logging
-from typing import List, Dict, Any, Mapping, DefaultDict, Optional, Iterator, Tuple
+from typing import List, Dict, Any, Mapping, DefaultDict, Optional, Iterator, Tuple, Callable
 from collections import OrderedDict, defaultdict
 import math
 from urllib.parse import quote, urljoin
@@ -72,6 +72,28 @@ def setup_logging(verbosity):
         logging.disable(logging.CRITICAL)
         lvl = logging.CRITICAL
     logging.basicConfig(level=lvl, format='%(asctime)s %(levelname)s %(message)s')
+
+
+class CAdvisorExporter:
+    def __init__(self, api_client):
+        self.api_client = api_client
+
+    def diskstat_summary(self, group_element: str) -> List[Dict[str, Dict[str, Any]]]:
+        disk_info = {
+            "disk_utilisation": 'sum by ({group_element})(container_fs_usage_bytes) / sum by({group_element})(container_fs_limit_bytes) * 100',
+            "disk_write_operation": 'sum by ({group_element})(rate(container_fs_writes_total[5m]))',
+            "disk_read_operation": 'sum by ({group_element})(rate(container_fs_reads_total[5m]))',
+            "disk_write_throughput": 'sum by ({group_element})(rate(container_fs_writes_bytes_total[5m]))',
+            "disk_read_throughput": 'sum by ({group_element})(rate(container_fs_reads_bytes_total[5m]))'
+        }
+        result = []
+        for diskstat_name, diskstat_promql in disk_info.items():
+            promql_query = diskstat_promql.format(group_element=group_element)
+            promql_result = self.api_client.perform_multi_result_promql(
+                promql_query).get_piggybacked_services(metric_description=diskstat_name,
+                                                       promql_label_for_piggyback=group_element)
+            result.append(promql_result)
+        return result
 
 
 class PromQLResponse:
@@ -128,12 +150,14 @@ class PromQLMultiResponse(PromQLResponse):
         self.labels_overall_frequencies: Dict[str, Dict[str, float]] = {}
         self.promql_metrics = self._process_multi_result()
 
-    def get_piggybacked_services(self,
-                                 promql_label_for_piggyback: str = None
-                                ) -> Dict[str, Dict[str, Any]]:
+    def get_piggybacked_services(
+            self,
+            metric_description: str,
+            promql_label_for_piggyback: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
         """Process PromQL response to get "piggybacked" services
 
         Args:
+            metric_description: Name of Metric
             promql_label_for_piggyback: PromQL label used to determine the piggyback host
 
         Returns:
@@ -147,26 +171,35 @@ class PromQLMultiResponse(PromQLResponse):
                                                             promql_label_for_piggyback)
             else:
                 piggyback_host = self._identify_metric_scrape_target(promql_metric)
-            result.setdefault(piggyback_host, {}).setdefault("service_metrics",
+
+            if piggyback_host == "":
+                continue
+
+            result.setdefault(piggyback_host, {}).setdefault(metric_description,
                                                              []).append(promql_metric)
         return result
 
     def get_piggybacked_services_with_least_labels(
-            self,
-            label_for_piggyback: Optional[str] = None) -> Dict[str, Dict[str, Dict[str, Any]]]:
+        self,
+        metric_description: str,
+        promql_label_for_piggyback: Optional[str] = None,
+    ) -> Dict[str, Dict[str, Dict[str, Any]]]:
         """Piggybacked services with subset of unique making PromQL labels
 
         Args:
-            label_for_piggyback: PromQL label used to determine the piggyback host
+            metric_description: Name of Metric
+            promql_label_for_piggyback: PromQL label used to determine the piggyback host
 
         Returns:
             Piggybacked services dict which additionally includes the subset of PromQL labels
 
         """
-        piggybacked_services = self.get_piggybacked_services(label_for_piggyback)
+        piggybacked_services = self.get_piggybacked_services(metric_description,
+                                                             promql_label_for_piggyback)
         unique_least_promql_labels = self._get_unique_least_promql_labels()
-        for _piggyback_host_name, services_info in piggybacked_services.items():
-            services_info["unique_labels"] = unique_least_promql_labels
+        for _piggyback_host_name, service_info in piggybacked_services.items():
+            service_info.setdefault("unique_labels",
+                                    {})[metric_description] = unique_least_promql_labels
         return piggybacked_services
 
     def _process_multi_result(self) -> List[PromQLMetric]:
@@ -505,6 +538,7 @@ class ApiData:
     def __init__(self, api_client: PrometheusAPI) -> None:
         self.api_client = api_client
         self.prometheus_server = PrometheusServer(api_client)
+        self.cadvisor_exporter = CAdvisorExporter(api_client)
 
     def promql_section(self, custom_services: List[Dict[str, Any]]) -> str:
         logging.info("Prometheus PromQl queries")
@@ -524,6 +558,26 @@ class ApiData:
         e.join('prometheus_scrape_target', self.prometheus_server.scrape_targets_health())
         return '\n'.join(e.output())
 
+    def cadvisor_section(self, cadvisor_options: Dict[str, List[str]]) -> Iterator[str]:
+        cadvisor_summaries = {
+            "diskio": self.cadvisor_exporter.diskstat_summary,
+        }
+        if "diskio" in cadvisor_options:
+            yield from self._output_cadvisor_summary("cadvisor_diskstat",
+                                                     cadvisor_summaries["diskio"],
+                                                     cadvisor_options["diskio"])
+
+    @staticmethod
+    def _output_cadvisor_summary(cadvisor_service_name: str, retrieve_cadvisor_summary: Callable,
+                                 summary_group_options: List[str]) -> Iterator[str]:
+        for group_option in summary_group_options:
+            e = PiggybackGroup()
+            promql_result = retrieve_cadvisor_summary(group_option)
+            piggyback_prefix = "pod_" if group_option == "pod" else ""
+            for diskio_element in promql_result:
+                e.join(cadvisor_service_name, diskio_element)
+            yield '\n'.join(e.output(piggyback_prefix=piggyback_prefix))
+
 
 def _extract_config_args(config) -> Dict[str, Any]:
     server_address = config["host_address"]
@@ -532,6 +586,7 @@ def _extract_config_args(config) -> Dict[str, Any]:
     return {
         "server_address": server_address,
         "custom_services": config.get("promql_checks", []),
+        "exporter_options": config.get("exporter", {})
     }
 
 
@@ -551,12 +606,16 @@ def main(argv=None):
     try:
         config = ast.literal_eval(sys.stdin.read())
         config_args = _extract_config_args(config)
+        exporter_options = config_args["exporter_options"]
         # default cases always must be there
         api_client = PrometheusAPI(config_args["server_address"])
         api_data = ApiData(api_client)
         print(api_data.server_info_section())
         print(api_data.scrape_targets_section())
         print(api_data.promql_section(config_args["custom_services"]))
+
+        if "cadvisor" in exporter_options:
+            print(*list(api_data.cadvisor_section(exporter_options["cadvisor"])))
     except Exception as e:
         if args.debug:
             raise

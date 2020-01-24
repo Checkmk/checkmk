@@ -210,70 +210,114 @@ rulespec_registry.register(
     ))
 
 
+def _check_not_empty_exporter_dict(value, _varprefix):
+    if not value:
+        raise MKUserError("dict_selection", "Please select at least one element")
+
+
 def _valuespec_generic_metrics_prometheus():
     return Dictionary(
-        elements=[("port",
-                   Integer(
-                       title=_('API-Port'),
-                       help=_("If no port is given a default vaulue of 443 will be used."),
-                       default_value=443,
-                   )),
-                  ("promql_checks",
-                   ListOf(
-                       Dictionary(elements=[
-                           ("service_description",
-                            TextAscii(
-                                title=_('Service description: '),
-                                allow_empty=False,
-                            )),
-                           ("metric_components",
-                            ListOf(Dictionary(
-                                title=_('PromQL query'),
-                                elements=[
-                                    ("metric_label",
-                                     TextAscii(title=_('Metric Label: '),
-                                               allow_empty=False,
-                                               help="The Metric Label is displayed alongside the "
-                                               "queried value within the resulting service. "
-                                               "The metric name will be taken as label if "
-                                               "nothing was specified.")),
-                                    ("metric_name",
-                                     TextAscii(title=_('Metric Name: '),
-                                               allow_empty=False,
-                                               help="Feel free to specify any naming. However, "
-                                               "providing a fitting metric name results in the "
-                                               "generation of a suitable graph display of the "
-                                               "metric. One can refer to other existing check "
-                                               "plug-ins in order to inspect existing metric "
-                                               "names and examples. Otherwise one can also "
-                                               "refer to the \"Guidelines for coding check "
-                                               "plug-ins\" section in the Offical Guide for "
-                                               "further details.")),
-                                    ("promql_query",
-                                     TextAscii(title=_('PromQL query: '),
-                                               allow_empty=False,
-                                               size=80)),
-                                ],
-                                optional_keys=["metric_label"],
-                            ),
-                                   title=_('PromQL queries for Service'),
-                                   allow_empty=False,
-                                   magic='@;@',
-                                   validate=_validate_prometheus_service_metrics)),
-                           ("host_name",
-                            TextAscii(title=_('Assign service to following host: '),
+        elements=[
+            ("port",
+             Integer(
+                 title=_('API-Port'),
+                 help=_("If no port is given a default vaulue of 443 will be used."),
+                 default_value=443,
+             )),
+            (
+                "exporter",
+                Dictionary(
+                    elements=[
+                        ("cadvisor",
+                         Dictionary(
+                             elements=[
+                                 ("diskio",
+                                  ListChoice(
+                                      choices=[("container", _("Group by Container")),
+                                               ("pod", _("Group by Pod"))],
+                                      title=_("Disk IO"),
                                       allow_empty=False,
-                                      help="Specify the host to which the resulting "
-                                      "service will be assigned to. The host "
-                                      "should be configured to allow Piggyback "
-                                      "data")),
-                       ],
-                                  optional_keys=["host_name"]),
-                       title=_("Service creation using PromQL queries"),
-                       allow_empty=False,
-                   ))],
+                                      help=_("You must specify by which entity level you "
+                                             "would like the Disk IO information to be "
+                                             "aggregated. It is possible to select multiple "
+                                             "options here."),
+                                  )),
+                             ],
+                             title=_("CAdvisor"),
+                             validate=_check_not_empty_exporter_dict,
+                         ))
+                    ],
+                    title=_("Exporters"),
+                    validate=_check_not_empty_exporter_dict,
+                    help=_("You can specify which Source Targets including Exporters "
+                           "are connected to your Prometheus instance. The Prometheus "
+                           "Special Agent will automatically generate services for the "
+                           "selected monitoring information. You can create your own "
+                           "defined services with the custom PromQL query option below "
+                           "if one of the Source Target types are not listed here."),
+                ),
+            ),
+            ("promql_checks",
+             ListOf(
+                 Dictionary(elements=[
+                     ("service_description",
+                      TextAscii(
+                          title=_('Service description: '),
+                          allow_empty=False,
+                      )),
+                     ("metric_components",
+                      ListOf(
+                          Dictionary(
+                              title=_('PromQL query'),
+                              elements=[
+                                  ("metric_label",
+                                   TextAscii(
+                                       title=_('Metric Label'),
+                                       allow_empty=False,
+                                       help=_("The metric label is displayed alongside the "
+                                              "queried value within the resulting service. "
+                                              "The metric name will be taken as label if "
+                                              "nothing was specified."),
+                                   )),
+                                  ("metric_name",
+                                   TextAscii(
+                                       title=_('Metric Name: '),
+                                       allow_empty=False,
+                                       help=_("Feel free to specify any naming. However, "
+                                              "providing a fitting metric name results in the "
+                                              "generation of a suitable graph display of the "
+                                              "metric. One can refer to other existing check "
+                                              "plug-ins in order to inspect existing metric "
+                                              "names and examples. Otherwise one can also "
+                                              "refer to the \"Guidelines for coding check "
+                                              "plug-ins\" section in the Offical Guide for "
+                                              "further details."),
+                                   )),
+                                  ("promql_query",
+                                   TextAscii(title=_('PromQL query: '), allow_empty=False,
+                                             size=80)),
+                              ],
+                              optional_keys=["metric_label"],
+                          ),
+                          title=_('PromQL queries for Service'),
+                          allow_empty=False,
+                          magic='@;@',
+                          validate=_validate_prometheus_service_metrics,
+                      )),
+                     ("host_name",
+                      TextAscii(title=_('Assign service to following host: '),
+                                allow_empty=False,
+                                help="Specify the host to which the resulting "
+                                "service will be assigned to. The host "
+                                "should be configured to allow Piggyback "
+                                "data")),
+                 ],
+                            optional_keys=["host_name"]),
+                 title=_("Service creation using PromQL queries"),
+             ))
+        ],
         title=_("Prometheus"),
-        optional_keys=["port"],
+        optional_keys=["port", "exporter"],
     )
 
 

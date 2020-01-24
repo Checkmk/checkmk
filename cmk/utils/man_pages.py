@@ -254,6 +254,7 @@ catalog_titles = {
         "aws"         : "Amazon Web Services",
         "quanta"      : "Quanta Cloud Technology",
     "containerization" : "Containerization",
+        "cadvisor"     : "cAdvisor",
         "docker"       : "Docker",
         "kubernetes"   : "Kubernetes",
         "lxc"          : "Linux Container",

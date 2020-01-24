@@ -32,6 +32,7 @@ import time
 from typing import Union, Dict, List, Tuple, Text, Optional  # pylint: disable=unused-import
 import six
 
+from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
 
 import cmk.utils.plugin_registry
@@ -101,6 +102,16 @@ class VisualInfoRegistry(cmk.utils.plugin_registry.ClassRegistry):
 
     def plugin_name(self, plugin_class):
         return plugin_class().ident
+
+    # At least painter <> info matching extracts the info name from the name of the painter by
+    # splitting at first "_" and use the text before it as info name. See
+    # cmk.gui.views.infos_needed_by_painter().
+    def registration_hook(self, plugin_class):
+        ident = plugin_class().ident
+        if ident == "aggr_group":
+            return  # TODO: Allow this broken thing for the moment
+        if "_" in ident:
+            raise MKGeneralException("Underscores must not be used in info names: %s" % ident)
 
 
 visual_info_registry = VisualInfoRegistry()

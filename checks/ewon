@@ -211,85 +211,73 @@ def _inventory_oxyreduct_names(parsed):
                 yield name
 
 
-def check_oxyreduct(item, params, parsed):
+def _check_oxyreduct(params, data):
     def to_binary(n):
         return ''.join(str(1 & int(n) >> i) for i in range(16)[::-1])
 
-    found = False
-    returned = False
+    for tagid, value in data.iteritems():
+        ref_tagid = tagid
+        if ref_tagid > 17:
+            ref_tagid = ((ref_tagid - 18) % 8) + 10
 
-    if item in parsed:
-        for tagid, value in parsed[item].iteritems():
-            ref_tagid = tagid
-            found = True
-            if ref_tagid > 17:
-                ref_tagid = ((ref_tagid - 18) % 8) + 10
+        tag_params = oxyreduct_tag_map.get(ref_tagid)
 
-            tag_params = oxyreduct_tag_map.get(ref_tagid)
+        # resolve tag parameters where multiple tags follow the same pattern
+        if "same_as" in tag_params:
+            ref_tag_id = tag_params["same_as"]
+            tag_params = oxyreduct_tag_map[ref_tag_id]
 
-            # resolve tag parameters where multiple tags follow the same pattern
-            if "same_as" in tag_params:
-                ref_tag_id = tag_params["same_as"]
-                tag_params = oxyreduct_tag_map[ref_tag_id]
+        # if it's a measure, check levels
+        if "name" in tag_params:
+            if "condition_flag" in tag_params:
+                condition_tagid = tagid + tag_params["condition_flag"][0]
+                if not int(data[condition_tagid]) & tag_params["condition_flag"][1]:
+                    continue
+            value = int(value)
+            unit = tag_params.get("unit", "")
+            status = 0
+            if "scale" in tag_params:
+                value = float(value) * tag_params["scale"]
 
-            # if it's a measure, check levels
-            if "name" in tag_params:
-                if "condition_flag" in tag_params:
-                    condition_tagid = tagid + tag_params["condition_flag"][0]
-                    if not int(parsed[item][condition_tagid]) & tag_params["condition_flag"][1]:
-                        continue
-                value = int(value)
-                unit = tag_params.get("unit", "")
-                status = 0
-                if "scale" in tag_params:
-                    value = float(value) * tag_params["scale"]
+            if "levels_name" in tag_params and tag_params["levels_name"] in params:
+                warn, crit, warn_lower, crit_lower = params[tag_params["levels_name"]]
 
-                if "levels_name" in tag_params and tag_params["levels_name"] in params:
-                    warn, crit, warn_lower, crit_lower = params[tag_params["levels_name"]]
+            elif "levels" in tag_params:
+                warn, crit, warn_lower, crit_lower = tag_params["levels"]
 
-                elif "levels" in tag_params:
-                    warn, crit, warn_lower, crit_lower = tag_params["levels"]
+            if warn and crit and warn_lower and crit_lower:
+                if (value >= crit) or (value <= crit_lower):
+                    status = 2
+                elif (value >= warn) or (value <= warn_lower):
+                    status = 1
 
-                if warn and crit and warn_lower and crit_lower:
-                    if (value >= crit) or (value <= crit_lower):
-                        status = 2
-                    elif (value >= warn) or (value <= warn_lower):
-                        status = 1
+            levels_text = ""
+            if status != 0:
+                levels_text = " (warn/crit at %s%s/%s%s and below %s%s/%s%s)" %\
+                    (warn, unit, crit, unit, warn_lower, unit, crit_lower, unit)
 
-                levels_text = ""
-                if status != 0:
-                    levels_text = " (warn/crit at %s%s/%s%s and below %s%s/%s%s)" %\
-                        (warn, unit, crit, unit, warn_lower, unit, crit_lower, unit)
+            perfdata = []
+            if "perfvar" in tag_params:
+                perfdata.append((tag_params["perfvar"], value, warn, crit))
+            yield status, "%s%s %s%s" %\
+                (value, unit, tag_params["name"], levels_text), perfdata
 
-                perfdata = []
-                if "perfvar" in tag_params:
-                    perfdata.append((tag_params["perfvar"], value, warn, crit))
-                yield status, "%s%s %s%s" %\
-                    (value, unit, tag_params["name"], levels_text), perfdata
-                returned = True
+        # if it's a bitmask, try to determine if they are good flags
+        if "flags" in tag_params:
+            value_bin = to_binary(value)
+            for i in range(len(tag_params["flags"])):
+                if value_bin[i] == "1":
+                    state = "active"
+                else:
+                    state = "inactive"
 
-            # if it's a bitmask, try to determine if they are good flags
-            if "flags" in tag_params:
-                value_bin = to_binary(value)
-                for i in range(len(tag_params["flags"])):
-                    if value_bin[i] == "1":
-                        state = "active"
-                    else:
-                        state = "inactive"
-
-                    if tag_params["flags"][i] in ["1", "0"] and\
-                       tag_params["flags"][i] != value_bin[i]:
-                        returned = True
-                        yield 2, "%s %s" % (tag_params["flag_names"][i], state)
-                    elif tag_params["flags"][i] == "*":
-                        returned = True
-                        yield 0, "%s %s" % (tag_params["flag_names"][i], state)
-                    elif tag_params["flags"][i] == "+" and value_bin[i] == "1":
-                        returned = True
-                        yield 0, "%s" % tag_params["flag_names"][i]
-
-    if found and not returned:
-        yield 0, "no messages"
+                if tag_params["flags"][i] in ["1", "0"] and\
+                   tag_params["flags"][i] != value_bin[i]:
+                    yield 2, "%s %s" % (tag_params["flag_names"][i], state)
+                elif tag_params["flags"][i] == "*":
+                    yield 0, "%s %s" % (tag_params["flag_names"][i], state)
+                elif tag_params["flags"][i] == "+" and value_bin[i] == "1":
+                    yield 0, "%s" % tag_params["flag_names"][i]
 
 
 def parse_ewon(info):
@@ -314,13 +302,23 @@ def inventory_ewon(parsed):
 def check_ewon(item, params, parsed):
     if item == "eWON Status":
         if params["device"] is None:
-            return 1, "This device requires configuration. Plese pick the device type."
-        return 0, "Configured for %s" % params["device"]
+            yield 1, "This device requires configuration. Plese pick the device type."
+        else:
+            yield 0, "Configured for %s" % params["device"]
+        return
 
     device_name = params["device"]
-    if device_name == "oxyreduct":
-        return check_oxyreduct(item, params.get(device_name, {}), parsed)
-    return None
+    if device_name != "oxyreduct":
+        return
+
+    data = parsed.get(item)
+    dev_results = list(_check_oxyreduct(params.get(device_name, {}), data)) if data else []
+    if not dev_results:
+        yield 0, "no messages"
+        return
+
+    for dev_result in dev_results:
+        yield dev_result
 
 
 check_info["ewon"] = {

@@ -3,7 +3,7 @@ import cmk.base.autochecks as autochecks
 import cmk.utils.tags
 
 
-class Scenario(object):
+class Scenario(object):  # pylint: disable=useless-object-inheritance
     """Helper class to modify the Check_MK base configuration for unit tests"""
     def __init__(self, site_id="unit"):
         super(Scenario, self).__init__()

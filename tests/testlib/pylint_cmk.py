@@ -112,7 +112,7 @@ def is_python_file(path):
 # python sources
 # TODO: This can be dropped once we have refactored checks/inventory/bakery plugins
 # to real modules
-class CMKFixFileMixin(object):
+class CMKFixFileMixin(object):  # pylint: disable=useless-object-inheritance
     def handle_message(self, msg):
         new_path, new_line = self._orig_location_from_compiled_file(msg)
 

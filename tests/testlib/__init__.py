@@ -53,7 +53,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def skip_unwanted_test_types(item):
-    import pytest  # type: ignore[import]
+    import pytest  # type: ignore[import] # pylint: disable=import-outside-toplevel
     test_type = item.get_closest_marker("type")
     if test_type is None:
         raise Exception("Test is not TYPE marked: %s" % item)
@@ -74,11 +74,11 @@ def fake_version_and_paths():
     if is_running_as_site_user():
         return
 
-    import _pytest.monkeypatch  # type: ignore
+    import _pytest.monkeypatch  # type: ignore # pylint: disable=import-outside-toplevel
     monkeypatch = _pytest.monkeypatch.MonkeyPatch()
     tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
 
-    import cmk
+    import cmk  # pylint: disable=import-outside-toplevel
 
     # TODO: handle CME case
     #if is_managed_repo():
@@ -143,10 +143,10 @@ def import_module(pathname):
     modpath = os.path.join(cmk_path(), pathname)
 
     if sys.version_info[0] >= 3:
-        import importlib
+        import importlib  # pylint: disable=import-outside-toplevel
         return importlib.machinery.SourceFileLoader(modname, modpath).load_module()  # pylint: disable=no-value-for-parameter,deprecated-method
 
-    import imp
+    import imp  # pylint: disable=import-outside-toplevel
     try:
         return imp.load_source(modname, modpath)
     finally:
@@ -259,9 +259,9 @@ class CheckManager(object):  # pylint: disable=useless-object-inheritance
         """Load either all check plugins or the given file_names"""
         if sys.version_info[0] < 3:
             # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk.base.config as config
-            import cmk.base.check_api as check_api
-            import cmk.utils.paths
+            import cmk.base.config as config  # pylint: disable=import-outside-toplevel
+            import cmk.base.check_api as check_api  # pylint: disable=import-outside-toplevel
+            import cmk.utils.paths  # pylint: disable=import-outside-toplevel
 
         if file_names is None:
             config.load_all_checks(check_api.get_check_api_context)  # loads all checks
@@ -295,7 +295,7 @@ class BaseCheck(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, name):
         if sys.version_info[0] < 3:
             # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk.base.check_api_utils
+            import cmk.base.check_api_utils  # pylint: disable=import-outside-toplevel
         self.set_hostname = cmk.base.check_api_utils.set_hostname
         self.set_service = cmk.base.check_api_utils.set_service
         self.name = name
@@ -319,7 +319,7 @@ class Check(BaseCheck):
     def __init__(self, name):
         if sys.version_info[0] < 3:
             # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk.base.config as config
+            import cmk.base.config as config  # pylint: disable=import-outside-toplevel
         super(Check, self).__init__(name)
         if self.name not in config.check_info:
             raise MissingCheckInfoError(self.name)
@@ -329,7 +329,7 @@ class Check(BaseCheck):
     def default_parameters(self):
         if sys.version_info[0] < 3:
             # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk.base.config as config
+            import cmk.base.config as config  # pylint: disable=import-outside-toplevel
         params = {}
         return config._update_with_default_check_parameters(self.name, params)
 
@@ -382,7 +382,7 @@ class ActiveCheck(BaseCheck):
     def __init__(self, name):
         if sys.version_info[0] < 3:
             # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk.base.config as config
+            import cmk.base.config as config  # pylint: disable=import-outside-toplevel
         super(ActiveCheck, self).__init__(name)
         assert self.name.startswith(
             'check_'), 'Specify the full name of the active check, e.g. check_http'
@@ -400,7 +400,7 @@ class SpecialAgent(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, name):
         if sys.version_info[0] < 3:
             # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk.base.config as config
+            import cmk.base.config as config  # pylint: disable=import-outside-toplevel
         super(SpecialAgent, self).__init__()
         self.name = name
         assert self.name.startswith(
@@ -439,7 +439,7 @@ def on_time(utctime, timezone):
 #   '----------------------------------------------------------------------'
 
 
-class MockStructuredDataTree(object):
+class MockStructuredDataTree(object):  # pylint: disable=useless-object-inheritance
     def __init__(self):
         self.data = {}
 
@@ -450,12 +450,12 @@ class MockStructuredDataTree(object):
         return self.data.setdefault(path, list())
 
 
-class InventoryPluginManager(object):
+class InventoryPluginManager(object):  # pylint: disable=useless-object-inheritance
     def load(self):
         if sys.version_info[0] < 3:
             # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk.base.inventory_plugins as inv_plugins
-            import cmk.base.check_api as check_api
+            import cmk.base.inventory_plugins as inv_plugins  # pylint: disable=import-outside-toplevel
+            import cmk.base.check_api as check_api  # pylint: disable=import-outside-toplevel
         g_inv_tree = MockStructuredDataTree()
         g_status_tree = MockStructuredDataTree()
 
@@ -477,11 +477,11 @@ class MissingInvInfoError(KeyError):
     pass
 
 
-class InventoryPlugin(object):
+class InventoryPlugin(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, name, g_inv_tree, g_status_tree):
         if sys.version_info[0] < 3:
             # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk.base.inventory_plugins as inv_plugins
+            import cmk.base.inventory_plugins as inv_plugins  # pylint: disable=import-outside-toplevel
         super(InventoryPlugin, self).__init__()
         self.name = name
         if self.name not in inv_plugins.inv_info:

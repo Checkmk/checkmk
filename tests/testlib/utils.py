@@ -182,7 +182,7 @@ def InterProcessLock(filename):
             os.close(fd)
 
 
-class DummyApplication(object):
+class DummyApplication(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, environ, start_response):
         self._environ = environ
         self._start_response = start_response

@@ -2200,9 +2200,12 @@ section_ntp() {
         ;;
     esac
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 >>>>>>> Split ntp and timesyncd into separate functions and plumb them together
+=======
+>>>>>>> Promote 'get_ntpq()' to toplevel
 }
 
 section_nvidia() {

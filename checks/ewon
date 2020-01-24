@@ -231,18 +231,19 @@ def _check_oxyreduct(params, data):
                     continue
 
             value = int(value) * float(tag_params.get("scale", 1.0))
-            levels_name = tag_params.get("levels_name", "levels")
+            levels_name = tag_params.get("levels_name")
+            levels = params[levels_name] if levels_name in params else tag_params.get("levels")
             yield check_levels(
                 value,
                 tag_params.get("perfvar"),
-                params.get(levels_name),
+                levels,
                 unit=tag_params.get("unit", ""),
                 infoname=tag_params["name"],
             )
 
         # if it's a bitmask, try to determine if they are good flags
         flags = tag_params.get("flags", [])
-        for name, flag, value_bin in zip(tag_params["flag_names"], flags, to_binary(value)):
+        for name, flag, value_bin in zip(tag_params.get("flag_names", []), flags, to_binary(value)):
             state = "active" if value_bin == "1" else "inactive"
 
             if flag in ("1", "0") and flag != value_bin:

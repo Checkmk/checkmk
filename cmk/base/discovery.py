@@ -28,7 +28,6 @@ import os
 import socket
 import time
 import signal
-import inspect
 from types import FrameType  # pylint: disable=unused-import
 from typing import (  # pylint: disable=unused-import
     Pattern, AnyStr, cast, Union, Iterator, Callable, List, Text, Optional, Dict, Tuple, Set,
@@ -36,6 +35,7 @@ from typing import (  # pylint: disable=unused-import
 )
 
 from cmk.utils.regex import regex
+import cmk.utils.misc
 import cmk.utils.tty as tty
 import cmk.utils.debug
 import cmk.utils.paths
@@ -995,7 +995,7 @@ def _get_discovery_function_of(check_plugin_name):
     if discovery_function is None:
         return lambda _info: _no_discovery_possible(check_plugin_name)
 
-    discovery_function_args = inspect.getargspec(discovery_function).args
+    discovery_function_args = cmk.utils.misc.getfuncargs(discovery_function)
     if len(discovery_function_args) != 1:
         raise MKGeneralException(
             "The discovery function \"%s\" of the check \"%s\" is expected to take a "

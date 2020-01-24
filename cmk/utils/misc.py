@@ -31,12 +31,17 @@ Please try to find a better place for the things you want to put here."""
 import itertools
 import sys
 import time
-from typing import Any, AnyStr, Dict, Optional, Set, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, AnyStr, Callable, Dict, List, Optional, Set, Tuple, Union  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
 else:
-    from pathlib2 import Path
+    from pathlib2 import Path  # pylint: disable=import-error
+
+if sys.version_info[0] >= 3:
+    from inspect import getfullargspec as _getargspec
+else:
+    from inspect import getargspec as _getargspec
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -145,3 +150,19 @@ def cachefile_age(path):
         return time.time() - path.stat().st_mtime
     except Exception as e:
         raise MKGeneralException("Cannot determine age of cache file %s: %s" % (path, e))
+
+
+def getfuncargs(func):
+    # type: (Callable) -> List[str]
+    # pylint is too dumb to see that we do NOT use the deprecated variant. :-P
+    return _getargspec(func).args  # pylint: disable=deprecated-method
+
+
+def make_kwargs_for(function, **kwargs):
+    # type: (Callable, **Any) -> Dict[str, Any]
+    return {
+        arg_indicator: arg  #
+        for arg_name in getfuncargs(function)
+        for arg_indicator, arg in kwargs.items()
+        if arg_name == arg_indicator
+    }

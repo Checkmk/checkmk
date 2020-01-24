@@ -498,19 +498,12 @@ class InventoryPlugin(object):  # pylint: disable=useless-object-inheritance
                                       "has no inv function defined.")
 
         # As in inventory._do_inv_for_realhost
-        inv_function_args = inspect.getargspec(inv_function).args
-
         inventory_tree = MockStructuredDataTree()
         status_data_tree = MockStructuredDataTree()
-        kwargs = {}
-        for dynamic_arg_name, dynamic_arg_value in [
-            ("inventory_tree", inventory_tree),
-            ("status_data_tree", status_data_tree),
-        ]:
-            if dynamic_arg_name in inv_function_args:
-                inv_function_args.remove(dynamic_arg_name)
-                kwargs[dynamic_arg_name] = dynamic_arg_value
-
+        from cmk.utils.misc import make_kwargs_for  # pylint: disable=import-outside-toplevel
+        kwargs = make_kwargs_for(inv_function,
+                                 inventory_tree=inventory_tree,
+                                 status_data_tree=status_data_tree)
         inv_function(*args, **kwargs)
         if kwargs:
             return inventory_tree.data, status_data_tree.data

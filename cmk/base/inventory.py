@@ -28,11 +28,11 @@ while the inventory is performed for one host.
 
 In the future all inventory code should be moved to this module."""
 
-import inspect
 import os
 from typing import Set, Tuple, Optional, List, Dict, Text  # pylint: disable=unused-import
 
 import cmk
+import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
@@ -337,22 +337,13 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
         # Inventory functions can optionally have a second argument: parameters.
         # These are configured via rule sets (much like check parameters).
         inv_function = plugin["inv_function"]
-        inv_function_args = inspect.getargspec(inv_function).args
-
-        kwargs = {}
-        for dynamic_arg_name, dynamic_arg_value in [
-            ("inventory_tree", inventory_tree),
-            ("status_data_tree", status_data_tree),
-        ]:
-            if dynamic_arg_name in inv_function_args:
-                inv_function_args.remove(dynamic_arg_name)
-                kwargs[dynamic_arg_name] = dynamic_arg_value
-
-        if len(inv_function_args) == 2:
-            params = host_config.inventory_parameters(section_name)
-            args = [section_content, params]
-        else:
-            args = [section_content]
+        kwargs = cmk.utils.misc.make_kwargs_for(inv_function,
+                                                inventory_tree=inventory_tree,
+                                                status_data_tree=status_data_tree)
+        non_kwargs = set(cmk.utils.misc.getfuncargs(inv_function)) - set(kwargs.keys())
+        args = [section_content]
+        if len(non_kwargs) == 2:
+            args += [host_config.inventory_parameters(section_name)]
         inv_function(*args, **kwargs)
     console.verbose("\n")
 

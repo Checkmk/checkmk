@@ -205,6 +205,7 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	tar czf $(DISTNAME)/checkman.tar.gz $(TAROPTS) -C checkman $$(cd checkman ; ls)
 	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web \
       app \
+      htdocs/openapi \
       htdocs/css \
       htdocs/images \
       htdocs/jquery \

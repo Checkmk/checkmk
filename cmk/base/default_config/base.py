@@ -175,13 +175,13 @@ service_label_rules = []  # type: _List
 host_paths = {}  # type: _Dict
 snmp_hosts = [
     (['snmp'], _ALL_HOSTS),
-]
+]  # type: _List
 tcp_hosts = [
     (['tcp'], _ALL_HOSTS),
     (_NEGATE, ['snmp'], _ALL_HOSTS),
     # Match all those that don't have ping and don't have no-agent set
     (['!ping', '!no-agent'], _ALL_HOSTS),
-]
+]  # type: _List
 bulkwalk_hosts = []  # type: _List
 snmpv2c_hosts = []  # type: _List
 snmp_without_sys_descr = []  # type: _List

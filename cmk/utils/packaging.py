@@ -67,6 +67,7 @@ PERM_MAP = (
 
 
 def _get_permissions(path):
+    # type: (str) -> int
     """Determine permissions by the first matching beginning of 'path'"""
     for path_begin, perm in PERM_MAP:
         if path.startswith(path_begin):

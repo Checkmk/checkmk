@@ -491,6 +491,7 @@ def release_all_locks():
 
 @contextmanager
 def cleanup_locks():
+    # type: () -> Iterator[None]
     """Context-manager to release all memorized locks at the end of the block.
 
     This is a hack which should be removed. In order to make this happen, every lock shall

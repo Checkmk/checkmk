@@ -63,7 +63,7 @@ import cmk.utils.piggyback as piggyback
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, ServiceName, Item, HostAddress, CheckPluginName, ActiveCheckPluginName,
     TimeperiodName, ServicegroupName, Labels, RulesetName, ContactgroupName, HostgroupName,
-    LabelSources,
+    LabelSources, TagID, TagValue, TaggroupID, Tags, TagList, TagGroups, Ruleset,
 )
 
 import cmk.base
@@ -107,12 +107,6 @@ InventoryContext = Dict[str, Any]
 GetCheckApiContext = Callable[[], Dict[str, Any]]
 GetInventoryApiContext = Callable[[], Dict[str, Any]]
 CheckIncludes = List[str]
-Ruleset = List  # TODO: Improve this type
-TagID = str
-TagValue = str
-TaggroupID = str
-Tags = Dict[TagID, TagValue]
-TagList = Set[TagValue]
 DiscoveryCheckParameters = Dict
 SpecialAgentInfoFunction = Callable[[Dict[str, Any], HostName, Optional[HostAddress]],
                                     Union[str, List[str]]]
@@ -3090,7 +3084,7 @@ class ConfigCache(object):
         self._host_configs = {}  # type: Dict[HostName, HostConfig]
 
     def get_tag_to_group_map(self):
-        # type: () -> Dict[TagID, TaggroupID]
+        # type: () -> TagGroups
         tags = cmk.utils.tags.get_effective_tag_config(tag_config)
         return ruleset_matcher.get_tag_to_group_map(tags)
 
@@ -3131,7 +3125,7 @@ class ConfigCache(object):
         return self._host_paths.get(hostname, "/")
 
     def _collect_hosttags(self, tag_to_group_map):
-        # type: (Dict[TagID, TaggroupID]) -> None
+        # type: (TagGroups) -> None
         """Calculate the effective tags for all configured hosts
 
         WATO ensures that all hosts configured with WATO have host_tags set, but there may also be hosts defined
@@ -3171,7 +3165,7 @@ class ConfigCache(object):
         return tags
 
     def _tag_list_to_tag_groups(self, tag_to_group_map, tag_list):
-        # type: (Dict[TagID, TaggroupID], TagList) -> Tags
+        # type: (TagGroups, TagList) -> Tags
         # This assumes all needed aux tags of grouped are already in the tag_list
 
         # Ensure the internal mandatory tag groups are set for all hosts

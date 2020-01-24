@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 """Checkmk wide type definitions"""
 
-from typing import NewType, Text, Optional, Dict
+from typing import NewType, Any, Text, Optional, Dict, Set, List
 
 HostName = str
 HostAddress = str
@@ -35,6 +35,8 @@ ServicegroupName = str
 ContactgroupName = str
 TimeperiodName = str
 RulesetName = str
+RuleValue = Any  # TODO: Improve this type
+Ruleset = List[Dict]  # TODO: Improve this type
 MetricName = str
 CheckPluginName = str
 InventoryPluginName = str
@@ -43,5 +45,10 @@ Item = Optional[Text]
 TagValue = str
 Labels = Dict[Text, Text]
 LabelSources = Dict[Text, str]
+TagID = str
+TaggroupID = str
+Tags = Dict[TagID, TagValue]
+TagList = Set[TagValue]
+TagGroups = Dict[TagID, TaggroupID]
 
 UserId = NewType("UserId", Text)

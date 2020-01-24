@@ -198,7 +198,7 @@ def do_inv_check(hostname, options):
 
 
 def _all_sources_fail(host_config, sources):
-    # type (config.HostConfig, data_sources.DataSources) -> bool
+    # type: (config.HostConfig, data_sources.DataSources) -> bool
     """We want to check if ALL data sources of a host fail:
     By default a host has the auto-piggyback data source. We remove it if
     it's not a pure piggyback host and there's no piggyback data available

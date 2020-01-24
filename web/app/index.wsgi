@@ -26,12 +26,12 @@
 
 from werkzeug.debug import DebuggedApplication
 
-import cmk.gui.modules as modules
 import cmk.gui.log as log
+log.init_logging()  # Initialize logging as early as possible
+
+import cmk.gui.modules as modules
 from cmk.gui.wsgi import make_app
 
-# Early initialization upon first start of the application by the server
-log.init_logging()
 modules.init_modules()
 
 DEBUG = False

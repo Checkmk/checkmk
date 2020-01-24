@@ -2199,6 +2199,10 @@ section_ntp() {
             unset -v _ntp_daemon
         ;;
     esac
+<<<<<<< HEAD
+=======
+
+>>>>>>> Split ntp and timesyncd into separate functions and plumb them together
 }
 
 section_nvidia() {

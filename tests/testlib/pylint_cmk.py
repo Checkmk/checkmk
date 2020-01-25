@@ -7,6 +7,7 @@ import os
 import sys
 import getpass
 import glob
+import time
 import multiprocessing
 import subprocess
 
@@ -145,6 +146,28 @@ class CMKFixFileMixin(object):  # pylint: disable=useless-object-inheritance
             went_back = None
 
         return orig_file, went_back
+
+
+class CMKOutputScanTimesMixin(object):
+    """Prints out the files being checked and the time needed
+
+    Can be useful to track down pylint performance issues. Simply make the
+    reporter class inherit from this class to use it."""
+    def on_set_current_module(self, modname, filepath):
+        super(CMKOutputScanTimesMixin, self).on_set_current_module(modname, filepath)
+        if hasattr(self, "_current_start_time"):
+            print("% 8.3fs %s" % (time.time() - self._current_start_time, self._current_filepath))
+
+        print("          %s..." % filepath)
+        self._current_name = modname
+        self._current_name = modname
+        self._current_filepath = filepath
+        self._current_start_time = time.time()
+
+    def on_close(self, stats, previous_stats):
+        super(CMKOutputScanTimesMixin, self).on_close(stats, previous_stats)
+        if hasattr(self, "_current_start_time"):
+            print("% 8.3fs %s" % (time.time() - self._current_start_time, self._current_filepath))
 
 
 class CMKColorizedTextReporter(CMKFixFileMixin, ColorizedTextReporter):

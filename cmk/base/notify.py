@@ -825,7 +825,7 @@ def rbn_match_rule(rule, context):
             rbn_match_event_console,
     ]:
         result = matcher(rule, context)
-        if result:
+        if result is not None:
             return result
 
     return None

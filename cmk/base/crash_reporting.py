@@ -56,7 +56,7 @@ CrashReportStore = crash_reporting.CrashReportStore
 class CMKBaseCrashReport(crash_reporting.ABCCrashReport):
     @classmethod
     def type(cls):
-        # type: () -> Text
+        # type: () -> str
         return "base"
 
     @classmethod
@@ -102,7 +102,7 @@ def create_check_crash_dump(hostname, check_plugin_name, item, is_manual_check, 
 class CheckCrashReport(crash_reporting.ABCCrashReport):
     @classmethod
     def type(cls):
-        # type: () -> Text
+        # type: () -> str
         return "check"
 
     @classmethod
@@ -138,7 +138,7 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
         )
 
     def __init__(self, crash_info, snmp_info, agent_output):
-        # type: (Dict, Optional[Text], Optional[Text]) -> None
+        # type: (Dict, Optional[str], Optional[str]) -> None
         super(CheckCrashReport, self).__init__(crash_info)
         self.snmp_info = snmp_info
         self.agent_output = agent_output
@@ -155,10 +155,10 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
 
 
 def _read_snmp_info(hostname):
-    # type: (str) -> Optional[Text]
+    # type: (str) -> Optional[bytes]
     cache_path = Path(cmk.utils.paths.data_source_cache_dir, "snmp", hostname)
     try:
-        with cache_path.open(encoding="utf-8") as f:
+        with cache_path.open(mode="rb") as f:
             return f.read()
     except IOError:
         pass
@@ -166,27 +166,19 @@ def _read_snmp_info(hostname):
 
 
 def _read_agent_output(hostname):
-    # type: (str) -> Optional[Text]
+    # type: (str) -> Optional[RawAgentData]
     try:
         import cmk.base.cee.real_time_checks as real_time_checks
     except ImportError:
         real_time_checks = None  # type: ignore
 
     if real_time_checks and real_time_checks.is_real_time_check_helper():
-        rtc_package = real_time_checks.get_rtc_package()
-        if rtc_package is not None:
-            return cmk.utils.encoding.convert_to_unicode(rtc_package)
-        return None
+        return real_time_checks.get_rtc_package()
 
     cache_path = Path(cmk.utils.paths.tcp_cache_dir, hostname)
     try:
-        # Use similar decoding logic as cmk.base/data_sources/abstract.py does. In case this is not
-        # working as intended, we may have to keep working with bytes here.
-        with cache_path.open() as f:
-            output = u""
-            for l in f:
-                output += cmk.utils.encoding.convert_to_unicode(l)
-            return output
+        with cache_path.open(mode="rb") as f:
+            return f.read()
     except IOError:
         pass
     return None

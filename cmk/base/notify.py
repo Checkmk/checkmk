@@ -815,10 +815,20 @@ def rbn_match_rule(rule, context):
     if rule.get("disabled"):
         return "This rule is disabled"
 
-    return (events.event_match_rule(rule, context) or rbn_match_escalation(rule, context) or
-            rbn_match_escalation_throtte(rule, context) or rbn_match_host_event(rule, context) or
-            rbn_match_service_event(rule, context) or
-            rbn_match_notification_comment(rule, context) or rbn_match_event_console(rule, context))
+    for matcher in [
+            events.event_match_rule,
+            rbn_match_escalation,
+            rbn_match_escalation_throtte,
+            rbn_match_host_event,
+            rbn_match_service_event,
+            rbn_match_notification_comment,
+            rbn_match_event_console,
+    ]:
+        result = matcher(rule, context)
+        if result:
+            return result
+
+    return None
 
 
 def rbn_match_escalation(rule, context):

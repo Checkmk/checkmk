@@ -39,9 +39,9 @@ else:
     from pathlib2 import Path  # pylint: disable=import-error
 
 if sys.version_info[0] >= 3:
-    from inspect import getfullargspec as _getargspec
+    from inspect import getfullargspec as _getargspec  # pylint: disable=no-name-in-module
 else:
-    from inspect import getargspec as _getargspec
+    from inspect import getargspec as _getargspec  # pylint: disable=no-name-in-module
 
 from cmk.utils.exceptions import MKGeneralException
 

@@ -497,12 +497,9 @@ def notify_rulebased(raw_context, analyse=False):
     rule_info = []
 
     for rule in config.notification_rules + user_notification_rules():
-        if "contact" in rule:
-            contact_info = "User %s's rule '%s'..." % (rule["contact"], rule["description"])
-        else:
-            contact_info = "Global rule '%s'..." % rule["description"]
+        contact_info = _get_contact_info_text(rule)
 
-        why_not = rbn_match_rule(rule, raw_context)  # also checks disabling
+        why_not = rbn_match_rule(rule, raw_context)
         if why_not:
             logger.log(log.VERBOSE, contact_info)
             logger.log(log.VERBOSE, " -> does not match: %s", why_not)
@@ -511,68 +508,88 @@ def notify_rulebased(raw_context, analyse=False):
             logger.info(contact_info)
             logger.info(" -> matches!")
             num_rule_matches += 1
-            contacts = rbn_rule_contacts(rule, raw_context)
-            contactstxt = ", ".join(contacts)
 
-            # Handle old-style and new-style rules
-            if "notify_method" in rule:  # old-style
-                plugin_name = rule["notify_plugin"]
-                plugin_parameters = rule[
-                    "notify_method"]  # None: do cancel, [ str ]: plugin parameters
+            notifications, rule_info = _create_notifications(raw_context, rule, notifications,
+                                                             rule_info)
+
+    plugin_info = _process_notifications(raw_context, notifications, num_rule_matches, analyse)
+
+    return rule_info, plugin_info
+
+
+def _get_contact_info_text(rule):
+    # type: (NotifyRule) -> str
+    if "contact" in rule:
+        return "User %s's rule '%s'..." % (rule["contact"], rule["description"])
+    return "Global rule '%s'..." % rule["description"]
+
+
+def _create_notifications(raw_context, rule, notifications, rule_info):
+    # type: (RawNotifyContext, NotifyRule, Notifications, List[NotifyRuleInfo]) -> Tuple[Notifications, List[NotifyRuleInfo]]
+    contacts = rbn_rule_contacts(rule, raw_context)
+    contactstxt = ", ".join(contacts)
+
+    # Handle old-style and new-style rules
+    if "notify_method" in rule:  # old-style
+        plugin_name = rule["notify_plugin"]
+        plugin_parameters = rule["notify_method"]  # None: do cancel, [ str ]: plugin parameters
+    else:
+        plugin_name, plugin_parameters = rule["notify_plugin"]
+    plugintxt = plugin_name or "plain email"
+
+    key = contacts, plugin_name
+    if plugin_parameters is None:  # cancelling
+        # FIXME: In Python 2, notifications.keys() already produces a
+        # copy of the keys, while in Python 3 it is only a view of the
+        # underlying dict (modifications would result in an exception).
+        # To be explicit and future-proof, we make this hack explicit.
+        # Anyway, this is extremely ugly and an anti-patter, and it
+        # should be rewritten to something more sane.
+        for notify_key in list(notifications.keys()):
+            notify_contacts, notify_plugin = notify_key
+
+            overlap = notify_contacts.intersection(contacts)
+            if plugin_name != notify_plugin or not overlap:
+                continue
+
+            locked, plugin_parameters, bulk = notifications[notify_key]
+
+            if locked and "contact" in rule:
+                logger.info("   - cannot cancel notification of %s via %s: it is locked",
+                            contactstxt, plugintxt)
+                continue
+
+            logger.info("   - cancelling notification of %s via %s", ", ".join(overlap), plugintxt)
+
+            remaining = notify_contacts.difference(contacts)
+            if not remaining:
+                del notifications[notify_key]
             else:
-                plugin_name, plugin_parameters = rule["notify_plugin"]
-            plugintxt = plugin_name or "plain email"
+                new_key = remaining, plugin_name
+                notifications[new_key] = notifications.pop(notify_key)
+    elif contacts:
+        if key in notifications:
+            locked = notifications[key][0]
+            if locked and "contact" in rule:
+                logger.info("   - cannot modify notification of %s via %s: it is locked",
+                            contactstxt, plugintxt)
+                return notifications, rule_info
+            logger.info("   - modifying notification of %s via %s", contactstxt, plugintxt)
+        else:
+            logger.info("   - adding notification of %s via %s", contactstxt, plugintxt)
 
-            key = contacts, plugin_name
-            if plugin_parameters is None:  # cancelling
-                # FIXME: In Python 2, notifications.keys() already produces a
-                # copy of the keys, while in Python 3 it is only a view of the
-                # underlying dict (modifications would result in an exception).
-                # To be explicit and future-proof, we make this hack explicit.
-                # Anyway, this is extremely ugly and an anti-patter, and it
-                # should be rewritten to something more sane.
-                for notify_key in list(notifications.keys()):
-                    notify_contacts, notify_plugin = notify_key
+        bulk = rbn_get_bulk_params(rule)
 
-                    overlap = notify_contacts.intersection(contacts)
-                    if plugin_name != notify_plugin or not overlap:
-                        continue
+        final_parameters = rbn_finalize_plugin_parameters(raw_context["HOSTNAME"], plugin_name,
+                                                          plugin_parameters)
+        notifications[key] = (not rule.get("allow_disable"), final_parameters, bulk)
 
-                    locked, plugin_parameters, bulk = notifications[notify_key]
+    rule_info.append(("match", rule, ""))
+    return notifications, rule_info
 
-                    if locked and "contact" in rule:
-                        logger.info("   - cannot cancel notification of %s via %s: it is locked",
-                                    contactstxt, plugintxt)
-                        continue
 
-                    logger.info("   - cancelling notification of %s via %s", ", ".join(overlap),
-                                plugintxt)
-
-                    remaining = notify_contacts.difference(contacts)
-                    if not remaining:
-                        del notifications[notify_key]
-                    else:
-                        new_key = remaining, plugin_name
-                        notifications[new_key] = notifications.pop(notify_key)
-            elif contacts:
-                if key in notifications:
-                    locked = notifications[key][0]
-                    if locked and "contact" in rule:
-                        logger.info("   - cannot modify notification of %s via %s: it is locked",
-                                    contactstxt, plugintxt)
-                        continue
-                    logger.info("   - modifying notification of %s via %s", contactstxt, plugintxt)
-                else:
-                    logger.info("   - adding notification of %s via %s", contactstxt, plugintxt)
-
-                bulk = rbn_get_bulk_params(rule)
-
-                final_parameters = rbn_finalize_plugin_parameters(raw_context["HOSTNAME"],
-                                                                  plugin_name, plugin_parameters)
-                notifications[key] = (not rule.get("allow_disable"), final_parameters, bulk)
-
-            rule_info.append(("match", rule, ""))
-
+def _process_notifications(raw_context, notifications, num_rule_matches, analyse):
+    # type: (RawNotifyContext, Notifications, int, bool) -> List[NotifyPluginInfo]
     plugin_info = []
 
     if not notifications:
@@ -593,7 +610,7 @@ def notify_rulebased(raw_context, analyse=False):
     else:
         # Now do the actual notifications
         logger.info("Executing %d notifications:", len(notifications))
-        for (contacts, plugin_name), (locked, params, bulk) in sorted(notifications.items()):
+        for (contacts, plugin_name), (_locked, params, bulk) in sorted(notifications.items()):
             verb = "would notify" if analyse else "notifying"
             contactstxt = ", ".join(contacts)
             plugintxt = plugin_name or "plain email"
@@ -632,7 +649,7 @@ def notify_rulebased(raw_context, analyse=False):
                     raise
                 logger.exception("    ERROR:")
 
-    return rule_info, plugin_info
+    return plugin_info
 
 
 def rbn_fallback_contacts():

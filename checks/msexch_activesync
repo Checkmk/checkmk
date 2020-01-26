@@ -29,7 +29,7 @@ def check_msexch_activesync(item, params, parsed):
     yield wmi_yield_raw_persec(parsed[""],
                                item,
                                "RequestsPersec",
-                               label=" requests/sec",
+                               infoname="Requests/sec",
                                perfvar="requests_per_sec")
 
 

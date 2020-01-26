@@ -171,28 +171,28 @@ def check_skype(item, params, parsed):
     yield wmi_yield_raw_persec(parsed.get("LS:WEB - Address Book Web Query"),
                                item,
                                "WEB - Failed search requests/sec",
-                               label=" failed search requests/sec",
+                               infoname="Failed search requests/sec",
                                perfvar="failed_search_requests",
                                levels=params['failed_search_requests'])
 
     yield wmi_yield_raw_persec(parsed.get("LS:WEB - Location Information Service"),
                                item,
                                "WEB - Failed Get Locations Requests/Second",
-                               label=" failed location requests/sec",
+                               infoname="Failed location requests/sec",
                                perfvar="failed_location_requests",
                                levels=params['failed_locations_requests'])
 
     yield wmi_yield_raw_persec(parsed.get("LS:WEB - Distribution List Expansion"),
                                item,
                                "WEB - Timed out Active Directory Requests/sec",
-                               label=" timeout AD requests/sec",
+                               infoname="Timeout AD requests/sec",
                                perfvar="failed_ad_requests",
                                levels=params['timedout_ad_requests'])
 
     yield wmi_yield_raw_persec(parsed.get("LS:WEB - UCWA"),
                                item,
                                "UCWA - HTTP 5xx Responses/Second",
-                               label="  HTTP 5xx/sec",
+                               infoname="HTTP 5xx/sec",
                                perfvar="http_5xx",
                                levels=params['5xx_responses'])
 
@@ -207,7 +207,7 @@ def check_skype(item, params, parsed):
         yield wmi_yield_raw_persec(parsed.get("LS:WEB - Address Book File Download"),
                                    item,
                                    "WEB - Failed File Requests/Second",
-                                   label=" failed file requests/sec",
+                                   infoname="Failed file requests/sec",
                                    perfvar="failed_file_requests",
                                    levels=params['failed_file_requests'])
 
@@ -298,7 +298,7 @@ def check_skype_conferencing(item, params, parsed):
     yield wmi_yield_raw_persec(parsed.get("LS:CAA - Operations"),
                                item,
                                "CAA - Incomplete calls per sec",
-                               label=" incomplete calls/sec",
+                               infoname="Incomplete calls/sec",
                                perfvar="caa_incomplete_calls",
                                levels=params['incomplete_calls'])
 
@@ -357,14 +357,14 @@ def check_skype_sip_stack(item, params, parsed):
     yield wmi_yield_raw_persec(parsed.get("LS:SIP - Protocol"),
                                item,
                                "SIP - Incoming Responses Dropped /Sec",
-                               label=" incoming responses dropped/sec",
+                               infoname="Incoming responses dropped/sec",
                                perfvar="sip_incoming_responses_dropped",
                                levels=params['incoming_responses_dropped'])
 
     yield wmi_yield_raw_persec(parsed.get("LS:SIP - Protocol"),
                                item,
                                "SIP - Incoming Requests Dropped /Sec",
-                               label=" incoming requests dropped/sec",
+                               infoname="Incoming requests dropped/sec",
                                perfvar="sip_incoming_requests_dropped",
                                levels=params['incoming_requests_dropped'])
 
@@ -387,14 +387,14 @@ def check_skype_sip_stack(item, params, parsed):
     yield wmi_yield_raw_persec(parsed.get("LS:USrv - DBStore"),
                                item,
                                "USrv - Throttled requests/sec",
-                               label=" throttled requests/sec",
+                               infoname="Throttled requests/sec",
                                perfvar="usrv_throttled_requests",
                                levels=params['throttled_requests'])
 
     yield wmi_yield_raw_persec(parsed.get("LS:SIP - Responses"),
                                item,
                                "SIP - Local 503 Responses /Sec",
-                               label=" local 503 responses/sec",
+                               infoname="Local 503 responses/sec",
                                perfvar="sip_503_responses",
                                levels=params['local_503_responses'])
 
@@ -429,7 +429,7 @@ def check_skype_sip_stack(item, params, parsed):
     yield wmi_yield_raw_persec(parsed.get("LS:SIP - Peers"),
                                item,
                                "SIP - Sends Timed-Out /Sec",
-                               label=" sends timed out/sec",
+                               infoname="Sends timed out/sec",
                                perfvar="sip_sends_timed_out",
                                levels=params['timedout_sends'])
 
@@ -437,7 +437,7 @@ def check_skype_sip_stack(item, params, parsed):
         yield wmi_yield_raw_persec(parsed.get("LS:SIP - Authentication"),
                                    item,
                                    "SIP - Authentication System Errors /Sec",
-                                   label=" authentication errors/sec",
+                                   infoname="Authentication errors/sec",
                                    perfvar="sip_authentication_errors",
                                    levels=params['authentication_errors'])
 
@@ -518,7 +518,7 @@ def check_skype_edge_auth(item, params, parsed):
     yield wmi_yield_raw_persec(parsed.get("LS:A/V Auth - Requests"),
                                item,
                                "- Bad Requests Received/sec",
-                               label=" bad requests/sec",
+                               infoname="Bad requests/sec",
                                perfvar="avauth_failed_requests",
                                levels=params['bad_requests'])
 
@@ -544,42 +544,42 @@ def check_skype_av_edge(item, params, parsed):
     yield wmi_yield_raw_persec(parsed.get("LS:A/V Edge - UDP Counters"),
                                item,
                                "A/V Edge - Authentication Failures/sec",
-                               label=" UDP auth failures/sec",
+                               infoname="UDP auth failures/sec",
                                perfvar="edge_udp_failed_auth",
                                levels=params['authentication_failures'])
 
     yield wmi_yield_raw_persec(parsed.get("LS:A/V Edge - TCP Counters"),
                                item,
                                "A/V Edge - Authentication Failures/sec",
-                               label=" TCP auth failures/sec",
+                               infoname="TCP auth failures/sec",
                                perfvar="edge_tcp_failed_auth",
                                levels=params['authentication_failures'])
 
     yield wmi_yield_raw_persec(parsed.get("LS:A/V Edge - UDP Counters"),
                                item,
                                "A/V Edge - Allocate Requests Exceeding Port Limit/sec",
-                               label=" UDP allocate requests > port limit/sec",
+                               infoname="UDP allocate requests > port limit/sec",
                                perfvar="edge_udp_allocate_requests_exceeding_port_limit",
                                levels=params['allocate_requests_exceeding'])
 
     yield wmi_yield_raw_persec(parsed.get("LS:A/V Edge - TCP Counters"),
                                item,
                                "A/V Edge - Allocate Requests Exceeding Port Limit/sec",
-                               label=" TCP allocate requests > port limit/sec",
+                               infoname="TCP allocate requests > port limit/sec",
                                perfvar="edge_tcp_allocate_requests_exceeding_port_limit",
                                levels=params['allocate_requests_exceeding'])
 
     yield wmi_yield_raw_persec(parsed.get("LS:A/V Edge - UDP Counters"),
                                item,
                                "A/V Edge - Packets Dropped/sec",
-                               label=" UDP packets dropped/sec",
+                               infoname="UDP packets dropped/sec",
                                perfvar="edge_udp_packets_dropped",
                                levels=params['packets_dropped'])
 
     yield wmi_yield_raw_persec(parsed.get("LS:A/V Edge - TCP Counters"),
                                item,
                                "A/V Edge - Packets Dropped/sec",
-                               label=" TCP packets dropped/sec",
+                               infoname="TCP packets dropped/sec",
                                perfvar="edge_tcp_packets_dropped",
                                levels=params['packets_dropped'])
 
@@ -630,14 +630,14 @@ def check_skype_xmpp_proxy(item, params, parsed):
     yield wmi_yield_raw_persec(parsed.get("LS:XmppFederationProxy - Streams"),
                                item,
                                "XmppFederationProxy - Failed outbound stream establishes/sec",
-                               label=" failed outbound streams",
+                               infoname="Failed outbound streams",
                                perfvar="xmpp_failed_outbound_streams",
                                levels=params['failed_outbound_streams'])
 
     yield wmi_yield_raw_persec(parsed.get("LS:XmppFederationProxy - Streams"),
                                item,
                                "XmppFederationProxy - Failed inbound stream establishes/sec",
-                               label=" failed inbound streams",
+                               infoname="Failed inbound streams",
                                perfvar="xmpp_failed_inbound_streams",
                                levels=params['failed_inbound_streams'])
 

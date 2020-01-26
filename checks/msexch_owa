@@ -30,7 +30,7 @@ def check_msexch_owa(item, params, parsed):
     yield wmi_yield_raw_persec(table,
                                item,
                                "RequestsPersec",
-                               label=" requests/sec",
+                               infoname="Requests/sec",
                                perfvar="requests_per_sec")
     yield wmi_yield_raw_counter(table,
                                 item,

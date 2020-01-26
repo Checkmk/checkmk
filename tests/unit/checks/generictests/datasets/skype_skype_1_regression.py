@@ -6485,15 +6485,15 @@ checks = {
         'timedout_ad_requests': {
             'upper': (0.01, 0.02)
         }
-    }, [(0, '0.00 failed search requests/sec', [('failed_search_requests', 0.0, 1.0, 2.0, None,
+    }, [(0, 'Failed search requests/sec: 0.00', [('failed_search_requests', 0.0, 1.0, 2.0, None,
                                                  None)]),
-        (0, '0.00 failed location requests/sec', [('failed_location_requests', 0.0, 1.0, 2.0, None,
+        (0, 'Failed location requests/sec: 0.00', [('failed_location_requests', 0.0, 1.0, 2.0, None,
                                                    None)]),
-        (0, '0.00 timeout AD requests/sec', [('failed_ad_requests', 0.0, 0.01, 0.02, None, None)]),
-        (0, '0.00  HTTP 5xx/sec', [('http_5xx', 0.0, 1.0, 2.0, None, None)]),
+        (0, 'Timeout AD requests/sec: 0.00', [('failed_ad_requests', 0.0, 0.01, 0.02, None, None)]),
+        (0, 'HTTP 5xx/sec: 0.00', [('http_5xx', 0.0, 1.0, 2.0, None, None)]),
         (2, '42 requests rejected (warn/crit at 1/2)', [('asp_requests_rejected', 42.0, 1, 2, None,
                                                          None)]),
-        (0, '0.00 failed file requests/sec', [('failed_file_requests', 0.0, 1.0, 2.0, None, None)]),
+        (0, 'Failed file requests/sec: 0.00', [('failed_file_requests', 0.0, 1.0, 2.0, None, None)]),
         (0, '0 join failures', [('join_failures', 0.0, 1, 2, None, None)]),
         (0, '0 failed cert validations', [('failed_validate_cert_calls', 0.0, 1, 2, None,
                                            None)])])],
@@ -6507,7 +6507,7 @@ checks = {
         'incomplete_calls': {
             'upper': (20, 40)
         }
-    }, [(0, '0.00 incomplete calls/sec', [('caa_incomplete_calls', 0.0, 20, 40, None, None)]),
+    }, [(0, 'Incomplete calls/sec: 0.00', [('caa_incomplete_calls', 0.0, 20, 40, None, None)]),
         (0, '0.00 create conference latency', [('usrv_create_conference_latency',
                                                 8.188653369338694e-07, 5000, 10000, None, None)]),
         (0, '0.00 allocation latency', [('usrv_allocation_latency', 1.885229636950111e-06, 5000,
@@ -6535,15 +6535,15 @@ checks = {
             'packets_dropped': {
                 'upper': (200, 400)
             }
-        }, [(0, '0.00 UDP auth failures/sec', [('edge_udp_failed_auth', 0.0, 20, 40, None, None)]),
-            (0, '0.00 TCP auth failures/sec', [('edge_tcp_failed_auth', 0.0, 20, 40, None, None)]),
-            (0, '0.00 UDP allocate requests > port limit/sec',
+        }, [(0, 'UDP auth failures/sec: 0.00', [('edge_udp_failed_auth', 0.0, 20, 40, None, None)]),
+            (0, 'TCP auth failures/sec: 0.00', [('edge_tcp_failed_auth', 0.0, 20, 40, None, None)]),
+            (0, 'UDP allocate requests > port limit/sec: 0.00',
              [('edge_udp_allocate_requests_exceeding_port_limit', 0.0, 20, 40, None, None)]),
-            (0, '0.00 TCP allocate requests > port limit/sec',
+            (0, 'TCP allocate requests > port limit/sec: 0.00',
              [('edge_tcp_allocate_requests_exceeding_port_limit', 0.0, 20, 40, None, None)]),
-            (0, '0.00 UDP packets dropped/sec', [('edge_udp_packets_dropped', 0.0, 200, 400, None,
+            (0, 'UDP packets dropped/sec: 0.00', [('edge_udp_packets_dropped', 0.0, 200, 400, None,
                                                   None)]),
-            (0, '0.00 TCP packets dropped/sec', [('edge_tcp_packets_dropped', 0.0, 200, 400, None,
+            (0, 'TCP packets dropped/sec: 0.00', [('edge_tcp_packets_dropped', 0.0, 200, 400, None,
                                                   None)])]),
         (u'Private IPv6 Network Interface', {
             'allocate_requests_exceeding': {
@@ -6555,15 +6555,15 @@ checks = {
             'packets_dropped': {
                 'upper': (200, 400)
             }
-        }, [(0, '0.00 UDP auth failures/sec', [('edge_udp_failed_auth', 0.0, 20, 40, None, None)]),
-            (0, '0.00 TCP auth failures/sec', [('edge_tcp_failed_auth', 0.0, 20, 40, None, None)]),
-            (0, '0.00 UDP allocate requests > port limit/sec',
+        }, [(0, 'UDP auth failures/sec: 0.00', [('edge_udp_failed_auth', 0.0, 20, 40, None, None)]),
+            (0, 'TCP auth failures/sec: 0.00', [('edge_tcp_failed_auth', 0.0, 20, 40, None, None)]),
+            (0, 'UDP allocate requests > port limit/sec: 0.00',
              [('edge_udp_allocate_requests_exceeding_port_limit', 0.0, 20, 40, None, None)]),
-            (0, '0.00 TCP allocate requests > port limit/sec',
+            (0, 'TCP allocate requests > port limit/sec: 0.00',
              [('edge_tcp_allocate_requests_exceeding_port_limit', 0.0, 20, 40, None, None)]),
-            (0, '0.00 UDP packets dropped/sec', [('edge_udp_packets_dropped', 0.0, 200, 400, None,
+            (0, 'UDP packets dropped/sec: 0.00', [('edge_udp_packets_dropped', 0.0, 200, 400, None,
                                                   None)]),
-            (0, '0.00 TCP packets dropped/sec', [('edge_tcp_packets_dropped', 0.0, 200, 400, None,
+            (0, 'TCP packets dropped/sec: 0.00', [('edge_tcp_packets_dropped', 0.0, 200, 400, None,
                                                   None)])]),
         (u'Public IPv4 Network Interface', {
             'allocate_requests_exceeding': {
@@ -6575,15 +6575,15 @@ checks = {
             'packets_dropped': {
                 'upper': (200, 400)
             }
-        }, [(0, '0.00 UDP auth failures/sec', [('edge_udp_failed_auth', 0.0, 20, 40, None, None)]),
-            (0, '0.00 TCP auth failures/sec', [('edge_tcp_failed_auth', 0.0, 20, 40, None, None)]),
-            (0, '0.00 UDP allocate requests > port limit/sec',
+        }, [(0, 'UDP auth failures/sec: 0.00', [('edge_udp_failed_auth', 0.0, 20, 40, None, None)]),
+            (0, 'TCP auth failures/sec: 0.00', [('edge_tcp_failed_auth', 0.0, 20, 40, None, None)]),
+            (0, 'UDP allocate requests > port limit/sec: 0.00',
              [('edge_udp_allocate_requests_exceeding_port_limit', 0.0, 20, 40, None, None)]),
-            (0, '0.00 TCP allocate requests > port limit/sec',
+            (0, 'TCP allocate requests > port limit/sec: 0.00',
              [('edge_tcp_allocate_requests_exceeding_port_limit', 0.0, 20, 40, None, None)]),
-            (0, '0.00 UDP packets dropped/sec', [('edge_udp_packets_dropped', 0.0, 200, 400, None,
+            (0, 'UDP packets dropped/sec: 0.00', [('edge_udp_packets_dropped', 0.0, 200, 400, None,
                                                   None)]),
-            (0, '0.00 TCP packets dropped/sec', [('edge_tcp_packets_dropped', 0.0, 200, 400, None,
+            (0, 'TCP packets dropped/sec: 0.00', [('edge_tcp_packets_dropped', 0.0, 200, 400, None,
                                                   None)])]),
         (u'Public IPv6 Network Interface', {
             'allocate_requests_exceeding': {
@@ -6595,22 +6595,22 @@ checks = {
             'packets_dropped': {
                 'upper': (200, 400)
             }
-        }, [(0, '0.00 UDP auth failures/sec', [('edge_udp_failed_auth', 0.0, 20, 40, None, None)]),
-            (0, '0.00 TCP auth failures/sec', [('edge_tcp_failed_auth', 0.0, 20, 40, None, None)]),
-            (0, '0.00 UDP allocate requests > port limit/sec',
+        }, [(0, 'UDP auth failures/sec: 0.00', [('edge_udp_failed_auth', 0.0, 20, 40, None, None)]),
+            (0, 'TCP auth failures/sec: 0.00', [('edge_tcp_failed_auth', 0.0, 20, 40, None, None)]),
+            (0, 'UDP allocate requests > port limit/sec: 0.00',
              [('edge_udp_allocate_requests_exceeding_port_limit', 0.0, 20, 40, None, None)]),
-            (0, '0.00 TCP allocate requests > port limit/sec',
+            (0, 'TCP allocate requests > port limit/sec: 0.00',
              [('edge_tcp_allocate_requests_exceeding_port_limit', 0.0, 20, 40, None, None)]),
-            (0, '0.00 UDP packets dropped/sec', [('edge_udp_packets_dropped', 0.0, 200, 400, None,
+            (0, 'UDP packets dropped/sec: 0.00', [('edge_udp_packets_dropped', 0.0, 200, 400, None,
                                                   None)]),
-            (0, '0.00 TCP packets dropped/sec', [('edge_tcp_packets_dropped', 0.0, 200, 400, None,
+            (0, 'TCP packets dropped/sec: 0.00', [('edge_tcp_packets_dropped', 0.0, 200, 400, None,
                                                   None)])])
     ],
     'edge_auth': [(None, {
         'bad_requests': {
             'upper': (20, 40)
         }
-    }, [(0, '0.00 bad requests/sec', [('avauth_failed_requests', 0.0, 20, 40, None, None)])])],
+    }, [(0, 'Bad requests/sec: 0.00', [('avauth_failed_requests', 0.0, 20, 40, None, None)])])],
     'mcu': [(None, {}, [(0, 'DATAMCU: Normal', []), (0, 'AVMCU: Normal', []),
                         (0, 'ASMCU: Normal', []), (0, 'IMMCU: Normal', [])])],
     'mediation_server': [(None, {
@@ -6684,17 +6684,17 @@ checks = {
         }
     }, [(0, '0.00 avg incoming message processing time', [('sip_message_processing_time', 0.0, 1.0,
                                                            2.0, None, None)]),
-        (0, '0.00 incoming responses dropped/sec', [('sip_incoming_responses_dropped', 0.0, 1.0,
+        (0, 'Incoming responses dropped/sec: 0.00', [('sip_incoming_responses_dropped', 0.0, 1.0,
                                                      2.0, None, None)]),
-        (0, '0.00 incoming requests dropped/sec', [('sip_incoming_requests_dropped', 0.0, 1.0, 2.0,
+        (0, 'Incoming requests dropped/sec: 0.00', [('sip_incoming_requests_dropped', 0.0, 1.0, 2.0,
                                                     None, None)]),
         (0, '0.30 ms queue latency',
          [('usrv_queue_latency', 0.00029864475533854544, 0.1, 0.2, None, None)]),
         (0, '0.00 ms sproc latency', [('usrv_sproc_latency', 8.385077343119278e-07, 0.1, 0.2, None,
                                        None)]),
-        (0, '0.00 throttled requests/sec', [('usrv_throttled_requests', 0.0, 0.2, 0.4, None,
+        (0, 'Throttled requests/sec: 0.00', [('usrv_throttled_requests', 0.0, 0.2, 0.4, None,
                                              None)]),
-        (0, '0.00 local 503 responses/sec', [('sip_503_responses', 0.0, 0.01, 0.02, None, None)]),
+        (0, 'Local 503 responses/sec: 0.00', [('sip_503_responses', 0.0, 0.01, 0.02, None, None)]),
         (0, '0 incoming messages timed out', [('sip_incoming_messages_timed_out', 0.0, 2, 4, None,
                                                None)]),
         (0, '0.00 avg holding time for incoming messages',
@@ -6703,7 +6703,7 @@ checks = {
                                                None)]),
         (0, '0.00 avg outgoing queue delay', [('sip_avg_outgoing_queue_delay', 0.0, 2.0, 4.0, None,
                                                None)]),
-        (0, '0.00 sends timed out/sec', [('sip_sends_timed_out', 0.0, 0.01, 0.02, None, None)]),
-        (0, '0.00 authentication errors/sec', [('sip_authentication_errors', 0.0, 1, 2, None,
+        (0, 'Sends timed out/sec: 0.00', [('sip_sends_timed_out', 0.0, 0.01, 0.02, None, None)]),
+        (0, 'Authentication errors/sec: 0.00', [('sip_authentication_errors', 0.0, 1, 2, None,
                                                 None)])])]
 }

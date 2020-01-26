@@ -433,6 +433,16 @@ def wmi_determine_status(value, levels, human_readable_func=None):
     return status, levels_text
 
 
+def _get_levels_quadruple(params):
+    if params is None:
+        return (None, None, None, None)
+    if isinstance(params, tuple):
+        return (params[0], params[1], None, None)
+    upper = params.get('upper') or (None, None)
+    lower = params.get('lower') or (None, None)
+    return upper + lower
+
+
 # to make wato rules simpler, levels are allowed to be passed as tuples if the level
 # specifies the upper limit
 def wmi_fix_levels(levels):
@@ -441,7 +451,7 @@ def wmi_fix_levels(levels):
     return levels
 
 
-def wmi_yield_raw_persec(table, row, column, label, perfvar, levels=None):
+def wmi_yield_raw_persec(table, row, column, infoname, perfvar, levels=None):
     if table is None:
         # This case may be when a check was discovered with a table which subsequently
         # disappeared again. We expect to get None in this case and return some "nothing happened"
@@ -450,19 +460,19 @@ def wmi_yield_raw_persec(table, row, column, label, perfvar, levels=None):
     if row == "":
         row = 0
 
-    levels = wmi_fix_levels(levels)
-
     try:
         value = int(table.get(row, column))
     except KeyError:
-        return 3, "item not present anymore", []
+        return 3, "Item not present anymore", []
 
     value_per_sec = get_rate("%s_%s" % (column, table.name()), get_wmi_time(table, row), value)
 
-    status, levels_text = wmi_determine_status(value_per_sec, levels)
-
-    return (status, "%.2f%s%s" % (value_per_sec, label, levels_text),
-            [wmi_make_perfvar(perfvar, value_per_sec, levels)])
+    return check_levels(
+        value_per_sec,
+        perfvar,
+        _get_levels_quadruple(levels),
+        infoname=infoname,
+    )
 
 
 def wmi_yield_raw_counter(table, row, column, label, perfvar, levels=None):

@@ -53,7 +53,7 @@ def check_msexch_isclienttype(item, params, parsed):
     yield wmi_yield_raw_persec(parsed[""],
                                item,
                                "RPCRequests",
-                               label=" RPC Requests",
+                               infoname="RPC Requests/sec",
                                perfvar="requests_per_sec",
                                levels=params['clienttype_requests'])
 

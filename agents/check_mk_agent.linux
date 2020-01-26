@@ -415,43 +415,16 @@ run_real_time_checks() {
     done
 }
 
-# Function to pull out NTP metrics
-section_ntp() {
-    # ntpq helper function
-    get_ntpq() {
-        inpath ntpq || return 1
-        [ "${1}" = "--header" ] && echo '<<<ntp>>>'
-        ntpq -np | sed -e 1,2d -e 's/^\\(.\\)/\\1 /' -e 's/^ /%/' || true
-    }
+# Helper function for 'section_ntp()'
+get_ntpq() {
+    # If 'ntpq' isn't in PATH, there's no point going further
+    inpath ntpq || return 1
+    [ "${1}" = "--header" ] && echo '<<<ntp>>>'
+    ntpq -np | sed -e 1,2d -e 's/^\\(.\\)/\\1 /' -e 's/^ /%/' || true
+}
 
-    # First we check for systemd, and then attempt the methods that we know about
-    # Our goal here is to avoid multiple outputs e.g. timedatectl + ntpq
-    if inpath systemctl; then
-        # Attempt to check time synchronization with systemd-timesyncd
-        if inpath timedatectl; then
-            # This timedatectl arg seems to be available from systemd version >=239
-            if timedatectl timesync-status >/dev/null 2>&1; then
-                echo "<<<timesyncd>>>"
-                timedatectl timesync-status
-                get_file_mtime /var/lib/systemd/timesync/clock | awk '{print "[[["$1"]]]"}'
-
-                # Return to get out of 'section_ntp()' with no further processing
-                return
-            fi
-        fi
-
-        # Otherwise, try to identify whether ntp/ntpd/openntpd is active, if so, run ntpq
-        # shellcheck disable=SC2016
-        if [ "$(systemctl | awk '/ntp.service|ntpd.service/{print $3; exit}')" = "active" ]; then
-            # remove heading, make first column space separated
-            run_cached -s ntp 30 "waitmax 5 get_ntpq"
-            return
-        fi
-    fi
-
-    # Next, we try to check time synchronization with Chrony
-    # Force successful exit code. Otherwise section will be missing if daemon not running
-    #
+# Function to pull timesync information from chrony
+section_chrony() {
     # The "| cat" has been added for some kind of regression in RedHat 7.5. The
     # SELinux rules shipped with that release were denying the chronyc call without cat.
     if inpath chronyc; then
@@ -460,22 +433,53 @@ section_ntp() {
             run_cached chrony 30 "waitmax 5 chronyc -n tracking | cat || true"
         fi
     fi
+}
 
-    # If we get to this point, we attempt via classic ntp daemons (ntpq required)
-    if inpath ntpq; then
-        # Try to determine status via /etc/init.d
-        # This might also be appropriate for AIX, Solaris and others
-        for _ntp_daemon in ntp ntpd openntpd; do
-            # Check for a service script
-            if [ -x /etc/init.d/"${_ntp_daemon}" ]; then
-                # If the status returns 0, we assume we have a running service
-                if /etc/init.d/"${_ntp_daemon}" status >/dev/null 2>&1; then
-                    run_cached -s ntp 30 "waitmax 5 get_ntpq"
-                fi
-            fi
-        done
-        unset -v _ntp_daemon
+# Requires 'get_ntpq()'
+section_ntp() {
+    # If '${timesync_rc}' is 0, then 'section_timesyncd()' has returned successfully in
+    # which case we do not want to proceed with 'ntpq', so return and skip further processing
+    [ "${timesync_rc}" -eq 0 ] && return 0
+
+    # If 'ntpq' isn't in PATH, there's no point going further
+    inpath ntpq || return 1
+
+    # First we try to identify if we're beholden to systemd
+    if inpath systemctl; then
+        # shellcheck disable=SC2016
+        if [ "$(systemctl | awk '/ntp.service|ntpd.service/{print $3; exit}')" = "active" ]; then
+            # remove heading, make first column space separated
+            run_cached -s ntp 30 "waitmax 5 get_ntpq"
+        fi
+        # Return to leave the function with no further processing
+        return
     fi
+
+    # If we get to this point, we attempt to test classic ntp daemons
+    # Try to determine status via /etc/init.d
+    # This might also be appropriate for AIX, Solaris and others
+    for _ntp_daemon in ntp ntpd openntpd; do
+        # Check for a service script
+        if [ -x /etc/init.d/"${_ntp_daemon}" ]; then
+            # If the status returns 0, we assume we have a running service
+            if /etc/init.d/"${_ntp_daemon}" status >/dev/null 2>&1; then
+                run_cached -s ntp 30 "waitmax 5 get_ntpq"
+            fi
+        fi
+    done
+    unset -v _ntp_daemon
+}
+
+# Function to pull timesync information via timedatectl (if possible)
+section_timesyncd() {
+    # If 'timedatectl' is not in path, or if it doesn't support 'timesync-status'
+    # then return and skip further processing
+    inpath timedatectl || return 1
+    timedatectl timesync-status >/dev/null 2>&1 || return 1
+    echo "<<<timesyncd>>>"
+    timedatectl timesync-status
+    get_file_mtime /var/lib/systemd/timesync/clock | awk '{print "[[["$1"]]]"}'
+    return 0
 }
 
 echo "<<<check_mk>>>"
@@ -795,8 +799,14 @@ if [ -e /etc/openvpn/openvpn-status.log ]; then
         sed -e 1,3d -e '$d'
 fi
 
-# Call the NTP audit function
+# Call the NTP audit functions
+section_timesyncd
+# Grab the exit code from 'section_timesyncd()' as this determines 'section_ntp()'s behaviour
+# Our goal here is to avoid multiple outputs e.g. timedatectl + ntpq
+timesync_rc="${?}"
 section_ntp
+unset -v timesync_rc
+section_chrony
 
 if inpath nvidia-settings && [ -S /tmp/.X11-unix/X0 ]; then
     echo '<<<nvidia>>>'

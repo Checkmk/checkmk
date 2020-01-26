@@ -223,8 +223,17 @@ def create_linux_test_host(request, web, site, hostname):
     def finalizer():
         web.delete_host(hostname)
         web.activate_changes()
-        site.delete_file("var/check_mk/agent_output/%s" % hostname)
-        site.delete_file("etc/check_mk/conf.d/linux_test_host_%s.mk" % hostname)
+
+        for path in [
+                "var/check_mk/agent_output/%s" % hostname,
+                "etc/check_mk/conf.d/linux_test_host_%s.mk" % hostname,
+                "tmp/check_mk/status_data/%s" % hostname,
+                "tmp/check_mk/status_data/%s.gz" % hostname,
+                "var/check_mk/inventory/%s" % hostname,
+                "var/check_mk/inventory/%s.gz" % hostname,
+        ]:
+            if os.path.exists(path):
+                site.delete_file(path)
 
     request.addfinalizer(finalizer)
 

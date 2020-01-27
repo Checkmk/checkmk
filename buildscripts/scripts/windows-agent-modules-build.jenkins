@@ -1,16 +1,16 @@
-// builds windows agent
+// builds python module for windows agent
 
 properties([
     buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
-    pipelineTriggers([pollSCM('H/2 * * * *')])
+    pipelineTriggers([pollSCM('H/15 * * * *')])
 ])
 
 node ('windows') {
     stage('git checkout') {
         checkout(scm)
     }
-    stage('Windows agent build') {
-        bat 'cd agents\\wnx && call build_release.cmd'
+    stage('Windows python module build') {
+        bat 'cd agents\\modules\windows && call build_the_module.cmd python'
         dir('artefacts') {
             archiveArtifacts "*"
         }

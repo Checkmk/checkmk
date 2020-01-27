@@ -368,8 +368,7 @@ def _parse_winperf_if_nic_attrs(raw_nic_names, agent_section):
         nic_name = winperf_if_canonize_nic_name(raw_nic_name)
         nic_attrs.setdefault(
             nic_name,
-            NICAttr(idx + 1,
-                    {counter: int(line[idx]) for counter, line in agent_section.items()}))
+            NICAttr(idx + 1, {counter: int(line[idx]) for counter, line in agent_section.items()}))
     return nic_attrs
 
 

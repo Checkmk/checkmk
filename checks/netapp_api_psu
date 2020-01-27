@@ -72,9 +72,7 @@ def discovery_netapp_api_psu_summary(parsed):
 
 def _get_psus_with_power_supply(psus):
     return {
-        key: psu
-        for key, psu in psus.items()
-        if psu.get("power-supply-is-not-installed") != "true"
+        key: psu for key, psu in psus.items() if psu.get("power-supply-is-not-installed") != "true"
     }
 
 

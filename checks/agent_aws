@@ -42,7 +42,7 @@ def _get_services_config(services):
     #   'ebs': {'selection': ('names', ['ebs1', 'ebs2'])},
     # }
     service_args = []
-    for service_name, service_config in services.iteritems():
+    for service_name, service_config in services.items():
         if service_config is None:
             continue
 

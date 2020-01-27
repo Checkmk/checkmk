@@ -32,7 +32,7 @@ def inventory_apc_ats_status(info):
 
 
 def check_apc_ats_status(_no_item, source, info):
-    comstatus, selected_source, redundancy, overcurrent, ps5, ps24 = map(saveint, info[0])
+    comstatus, selected_source, redundancy, overcurrent, ps5, ps24 = list(map(saveint, info[0]))
     state = 0
     messages = []
 

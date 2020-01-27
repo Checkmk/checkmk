@@ -29,7 +29,7 @@ factory_settings['levels_azure_usagedetails'] = {}
 
 def parse_azure_usagedetails(info):
     parsed = {}
-    for detail in parse_azure(info).values():
+    for detail in list(parse_azure(info).values()):
         props = detail['properties']
         service_name = props['consumedService']
         data = parsed.setdefault(
@@ -43,10 +43,10 @@ def parse_azure_usagedetails(info):
 
     if parsed:
         parsed[u"Summary"] = {
-            'costs': sum((d['costs'] for d in parsed.values()), collections.Counter()),
-            'usage': sum(d['usage'] for d in parsed.values()),
+            'costs': sum((d['costs'] for d in list(parsed.values())), collections.Counter()),
+            'usage': sum(d['usage'] for d in list(parsed.values())),
             # use any subscription_name, they're all the same
-            'subscription_name': parsed.values()[0]["subscription_name"],
+            'subscription_name': list(parsed.values())[0]["subscription_name"],
         }
 
     return parsed
@@ -55,7 +55,7 @@ def parse_azure_usagedetails(info):
 @get_data_or_go_stale
 def check_azure_usagedetails(_no_item, params, data):
 
-    for currency, amount in data.get('costs', {}).items():
+    for currency, amount in list(data.get('costs', {}).items()):
         levels = params.get('levels')
         yield check_levels(amount, 'service_costs_%s' % currency.lower(), levels, currency)
 

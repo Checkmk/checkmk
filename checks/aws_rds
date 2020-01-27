@@ -56,7 +56,7 @@ def parse_aws_rds(info):
             #"MaximumUsedTransactionIDs",
         ],
             parse_aws(info),
-            extra_keys=['DBInstanceIdentifier', 'AllocatedStorage']).itervalues():
+            extra_keys=['DBInstanceIdentifier', 'AllocatedStorage']).values():
 
         for key, factor in [
             ('AllocatedStorage', 1.074e+9),
@@ -349,7 +349,7 @@ check_info['aws_rds.replication_slot_usage'] = {
 def check_aws_rds_disk_io(item, params, parsed):
     now = time.time()
     disks = {}
-    for disk_name, metrics in parsed.iteritems():
+    for disk_name, metrics in parsed.items():
         disk = disks.setdefault(disk_name, {})
         for key, metric_key, scale, comp_rate in [
             ('read_ios', 'ReadIOPS', 1.0, True),

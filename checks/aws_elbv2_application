@@ -51,7 +51,7 @@ def parse_aws_elbv2_application(info):
     # We get exactly one entry: {INST-ID: METRICS}
     # INST-ID is the piggyback host name
     try:
-        return metrics.values()[-1]
+        return list(metrics.values())[-1]
     except IndexError:
         return {}
 

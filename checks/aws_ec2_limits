@@ -57,7 +57,7 @@ def _transform_ec2_limits(params):
     transformed = instance_limits(default_running_ondemand_instances)
     transformed.update(instance_limits(default_running_ondemand_instance_families))
 
-    for k, v in params.iteritems():
+    for k, v in params.items():
         if isinstance(v, tuple):
             transformed[k] = v
         elif isinstance(v, list):

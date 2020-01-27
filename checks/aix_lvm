@@ -87,7 +87,7 @@ def parse_aix_lvm(info):
 
 def inventory_aix_lvm(info):
     inventory = []
-    for vg, volumes in parse_aix_lvm(info).iteritems():
+    for vg, volumes in parse_aix_lvm(info).items():
         for lv in volumes:
             #inventory.append(("%s/%s" % (vg, lv), ('%s' % volumes[lv][4],)))
             inventory.append(("%s/%s" % (vg, lv), None))

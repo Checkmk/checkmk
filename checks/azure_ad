@@ -108,7 +108,7 @@ def discover_sync(parsed):
     # There are two keys important for synchronization data
     # onPremisesSyncEnabled: if the sync is enabled at all
     # onPremisesLastSyncDateTime: the actual sync data
-    return [(key, {}) for key, data in parsed.iteritems() if key is not None \
+    return [(key, {}) for key, data in parsed.items() if key is not None \
                 and data.get('onPremisesSyncEnabled') is not None]
 
 

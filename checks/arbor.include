@@ -74,7 +74,7 @@ def check_arbor_memory(no_item, params, parsed):
     def combine_infotext(*blocks):
         return ", ".join([b for b in blocks if b])
 
-    ram_perc, swap_perc = map(int, parsed['memory'])
+    ram_perc, swap_perc = list(map(int, parsed['memory']))
 
     ram_warn, ram_crit = params['levels_ram'][1]
     swap_warn, swap_crit = params['levels_swap'][1]

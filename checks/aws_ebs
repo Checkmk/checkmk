@@ -58,7 +58,7 @@ def parse_aws_ebs(info):
 def check_aws_ebs(item, params, parsed):
     now = time.time()
     disks = {}
-    for disk_name, metrics in parsed.iteritems():
+    for disk_name, metrics in parsed.items():
         disks.setdefault(
             disk_name, {
                 "read_ios": get_rate("aws_ebs_disk_io_read_ios.%s" % item, now,

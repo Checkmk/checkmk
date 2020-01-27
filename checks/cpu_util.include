@@ -85,7 +85,7 @@ class CpuInfo(
 
 
 def cpu_info(elements, caster=int):
-    entries = [elements[0]] + map(caster, elements[1:])
+    entries = [elements[0]] + list(map(caster, elements[1:]))
     entries.extend([0] * (11 - len(entries)))
     return CpuInfo(*entries)
 

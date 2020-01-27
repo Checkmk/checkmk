@@ -62,7 +62,7 @@ def parse_cisco_fru_powerusage(info):
                         replace("@", "").replace("v", "").strip())
 
         if oidend == powervals[0][0]:
-            system_total, system_drawn, inline_total, inline_drawn = map(float, powervals[0][1:])
+            system_total, system_drawn, inline_total, inline_drawn = list(map(float, powervals[0][1:]))
             for what, val in [
                 ("system total", system_total),  # Gesamtstrom
                 ("system drawn", system_drawn),  # aufgenommene Gesamtstromstaerke

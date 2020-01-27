@@ -64,7 +64,7 @@ def check_cpu_load(item, params, info):
     else:
         num_cpus = 1
 
-    load = map(float, info[0][0:3])
+    load = list(map(float, info[0][0:3]))
     return check_cpu_load_generic(params, load, num_cpus)
 
 

@@ -46,7 +46,7 @@ def check_cmctc_temp(item, params, info):
         if line[0] != item:
             continue
 
-        status, current, crit, low, warn = map(int, line[2:7])
+        status, current, crit, low, warn = list(map(int, line[2:7]))
 
         return check_temperature(
             current,

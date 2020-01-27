@@ -39,7 +39,7 @@ def parse_casa_cpu_mem(info):
 
 def inventory_casa_cpu_mem(parsed):
     inventory = []
-    for k, v in parsed.iteritems():
+    for k, v in parsed.items():
         if v.get("mem_total"):
             inventory.append((k, {}))
     return inventory

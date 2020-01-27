@@ -124,7 +124,7 @@ cisco_qos_default_levels = (None, None, 0.01, 0.01)
 
 
 def cisco_qos_get_config_entries_by_class_id(config, class_id):
-    return [if_index.split('.') for if_index, value in config.iteritems() if value == class_id]
+    return [if_index.split('.') for if_index, value in config.items() if value == class_id]
 
 
 def inventory_cisco_qos(info):
@@ -180,14 +180,14 @@ def check_cisco_qos(item, params, info):
 
     # Gather the class id by class_name
     class_id = None
-    for cid, cname in classes.iteritems():
+    for cid, cname in classes.items():
         if class_name == cname:
             class_id = cid
             break
 
     # Gather the interface id by class_name
     if_id = None
-    for iid2 in ifs.itervalues():
+    for iid2 in ifs.values():
         if if_name == if_names.get(iid2):
             if_id = iid2
             break
@@ -223,9 +223,7 @@ def check_cisco_qos(item, params, info):
     drop_b = drop_bytes.get(policy_id + '.' + objects_id, 0)
     speed = saveint(if_speeds[if_id])
 
-    parent_value_cache = {}
-    for a_key, a_value in config.items():
-        parent_value_cache.update({a_value: a_key.split(".")[1]})
+    parent_value_cache = {a_value: a_key.split(".")[1] for a_key, a_value in config.items()}
 
     # if a_value == class_id:
     #     parent_value = a_key.split(".")[1]

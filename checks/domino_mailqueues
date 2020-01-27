@@ -39,7 +39,7 @@ def inventory_domino_mailqueues(info):
     for line in info:
         if line:
             val = int(line[0][0].split(".")[12])
-            if val in domino_mailqueues.keys():
+            if val in domino_mailqueues:
                 yield domino_mailqueues[val][0], {}
 
 
@@ -72,9 +72,8 @@ check_info["domino_mailqueues"] = {
     "has_perfdata": True,
     "default_levels_variable": "domino_mailqueues_defaults",
     "snmp_scan_function": scan_domino,
-    "snmp_info": [
-        (".1.3.6.1.4.1.334.72.1.1.4", [OID_STRING, x]) for x in sorted(domino_mailqueues.keys())
-    ],
+    "snmp_info": [(".1.3.6.1.4.1.334.72.1.1.4", [OID_STRING, x]) for x in sorted(domino_mailqueues)
+                 ],
     "includes": ["domino.include"],
     "group": "domino_mailqueues",
 }

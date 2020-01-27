@@ -98,7 +98,7 @@ check_info['aws_costs_and_usage'] = {
 
 
 def inventory_aws_costs_and_usage_per_service(parsed):
-    for (_timeperiod, service_name) in parsed.keys():
+    for (_timeperiod, service_name) in parsed:
         yield service_name, {}
 
 

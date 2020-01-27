@@ -133,7 +133,7 @@ def parse_rstcli(info):
 
 
 def inventory_rstcli(parsed):
-    return [(name, None) for name in parsed.keys()]
+    return [(name, None) for name in parsed]
 
 
 # Help! There is no documentation, what are the possible values?

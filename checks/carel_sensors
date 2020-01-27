@@ -81,7 +81,7 @@ def carel_sensors_parse(info):
 
 
 def inventory_carel_sensors_temp(parsed):
-    for sensor in parsed.keys():
+    for sensor in parsed:
         levels = carel_temp_defaultlevels[sensor]
         yield sensor, {"levels": levels}
 

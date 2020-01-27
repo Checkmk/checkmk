@@ -55,7 +55,7 @@ def parse_ruckus_spot_ap(info):
 
 
 def inventory_ruckus_spot_ap(parsed):
-    for band in parsed.keys():
+    for band in parsed:
         if band in ruckus_spot_ap_bands:
             yield ruckus_spot_ap_bands[band], "ruckus_spot_ap_default_levels"
 

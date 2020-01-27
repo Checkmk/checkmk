@@ -51,7 +51,7 @@ def parse_citrix_licenses(info):
 
 
 def inventory_citrix_licenses(parsed):
-    return [(license_type, None) for license_type in parsed.keys()]
+    return [(license_type, None) for license_type in parsed]
 
 
 @get_parsed_item_data

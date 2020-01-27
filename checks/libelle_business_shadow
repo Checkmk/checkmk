@@ -286,7 +286,7 @@ def inventory_libelle_business_shadow_info(info):
 
 def check_libelle_business_shadow_info(_no_item, _no_params, info):
     parsed = check_libelle_business_shadow_parse(info)
-    parsed_keys = list(parsed.keys())
+    parsed_keys = list(parsed)
     message = "Libelle Business Shadow"
     if "host" in parsed_keys:
         message += ", Host: %s" % parsed["host"]
@@ -317,7 +317,7 @@ check_info["libelle_business_shadow.info"] = {
 
 def inventory_libelle_business_shadow_status(info):
     parsed = check_libelle_business_shadow_parse(info)
-    if "libelle_status" in parsed.keys():
+    if "libelle_status" in parsed:
         return [(None, None)]
     return []
 
@@ -325,7 +325,7 @@ def inventory_libelle_business_shadow_status(info):
 def check_libelle_business_shadow_status(_no_item, _no_params, info):
     parsed = check_libelle_business_shadow_parse(info)
     status = 0
-    if "libelle_status" in parsed.keys():
+    if "libelle_status" in parsed:
         message = "Status is: %s" % parsed["libelle_status"]
         if parsed["libelle_status"] != "RUN":
             status = 2
@@ -355,7 +355,7 @@ check_info["libelle_business_shadow.status"] = {
 
 def inventory_libelle_business_shadow_process(info):
     parsed = check_libelle_business_shadow_parse(info)
-    if "process" in parsed.keys():
+    if "process" in parsed:
         return [(None, None)]
     return []
 
@@ -363,7 +363,7 @@ def inventory_libelle_business_shadow_process(info):
 def check_libelle_business_shadow_process(_no_item, _no_params, info):
     parsed = check_libelle_business_shadow_parse(info)
     status = 0
-    if "process" in parsed.keys():
+    if "process" in parsed:
         message = "Active Process is: %s, Status: %s" % \
             (parsed["process"], parsed["process_status"])
         if parsed["process_status"] != "RUN":
@@ -394,7 +394,7 @@ check_info["libelle_business_shadow.process"] = {
 
 def inventory_libelle_business_shadow_archive_dir(info):
     parsed = check_libelle_business_shadow_parse(info)
-    parsed_keys = list(parsed.keys())
+    parsed_keys = list(parsed)
     if "arch_total_mb" in parsed_keys and "arch_free_mb" in parsed_keys:
         return [("Archive Dir", {})]
     return []

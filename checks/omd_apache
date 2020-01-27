@@ -67,7 +67,7 @@ def parse_omd_apache(info):
 
 
 def inventory_omd_apache(parsed):
-    return [(k, None) for k in parsed.keys()]
+    return [(k, None) for k in parsed]
 
 
 def check_omd_apache(item, _no_params, parsed):

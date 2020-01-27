@@ -36,7 +36,7 @@ factory_settings["netapp_api_luns_default_levels"] = {
 
 
 def inventory_netapp_api_luns(parsed):
-    for lun in parsed.keys():
+    for lun in parsed:
         yield lun, {}
 
 

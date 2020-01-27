@@ -84,7 +84,7 @@ df_zos_exclude_list = ['AUTOMNT', 'TFS', 'NFS']
 def inventory_df_zos(parsed):
     mplist = []
 
-    for item in parsed.keys():
+    for item in parsed:
         fs_rw = False
         fs_ex = False
 

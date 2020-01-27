@@ -44,13 +44,13 @@ def parse_brocade_mlx_power(info):
 def inventory_brocade_mlx_power(parsed):
     inventory = []
 
-    for powersupply_id in parsed.keys():
+    for powersupply_id in parsed:
         inventory.append((powersupply_id, None))
     return inventory
 
 
 def check_brocade_mlx_power(item, _no_params, parsed):
-    if item not in parsed.keys():
+    if item not in parsed:
         yield 3, "Power supply not found"
 
     for powersupply_id, powersupply_data in parsed.items():

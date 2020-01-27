@@ -73,7 +73,7 @@ hp_msa_health_state_numeric_map = {
 
 
 def inventory_hp_msa_fan(parsed):
-    for item in parsed.keys():
+    for item in parsed:
         yield item, None
 
 

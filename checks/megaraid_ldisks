@@ -53,7 +53,7 @@ def parse_megaraid_ldisks(info):
             item = "%d/%d" % (adapter, disk)
             parsed[item] = {}
 
-        elif item is not None and item in parsed.keys():
+        elif item is not None and item in parsed:
 
             if line[0].startswith("State"):
                 parsed[item]["state"] = l.split(":")[1].strip()
@@ -72,7 +72,7 @@ def parse_megaraid_ldisks(info):
 
 
 def inventory_megaraid_ldisks(parsed):
-    for item in parsed.keys():
+    for item in parsed:
         yield item, None
 
 

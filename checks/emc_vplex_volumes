@@ -63,7 +63,7 @@ def parse_emc_vplex_volumes(info):
 
 
 def inventory_emc_vplex_volumes(parsed):
-    return inventory_diskstat_generic([(None, x) for x in parsed.keys()])
+    return inventory_diskstat_generic([(None, x) for x in parsed])
 
 
 def check_emc_vplex_volumes(item, params, parsed):

@@ -227,7 +227,7 @@ def esx_vsphere_counters_get_item_mapping(parsed):
             "read", "write", "datastoreReadIops", "datastoreWriteIops", "totalReadLatency",
             "totalWriteLatency", "sizeNormalizedDatastoreLatency"
     ]:
-        for instance in parsed.get("datastore." + counter, {}).keys():
+        for instance in parsed.get("datastore." + counter, {}):
             map_instance_to_item[instance] = instance
 
     for instance, values in parsed.get("datastore.name", {}).items():
@@ -332,7 +332,7 @@ def convert_esx_counters_if(parsed):
     #         'bandwidth': 10000000,
     #     },
     # }
-    nics = sorted(by_item.keys())
+    nics = sorted(by_item)
 
     # This is for the if Check
     converted = [
@@ -511,7 +511,7 @@ def check_esx_vsphere_counters_ramdisk(item, params, parsed):
         raise MKCounterWrapped("Counter data is missing")
 
     ramdisks = []
-    for instance in parsed.get("sys.resourceMemConsumed").keys():
+    for instance in parsed.get("sys.resourceMemConsumed"):
         if instance.startswith('host/system/kernel/kmanaged/visorfs/'):
             name = instance.split('/')[-1]
             try:

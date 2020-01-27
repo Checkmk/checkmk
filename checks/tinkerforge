@@ -81,7 +81,7 @@ def parse_tinkerforge(info):
 
 
 def inventory_tinkerforge(brick_type, parsed):
-    for path in parsed.get(brick_type, {}).keys():
+    for path in parsed.get(brick_type, {}):
         if brick_type == "humidity":
             yield path, "tinkerforge_humidity_default_levels"
         elif brick_type == "ambient":

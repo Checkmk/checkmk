@@ -50,7 +50,7 @@ factory_settings["climaveneta_temp_default_levels"] = {"levels": (28, 30)}
 def inventory_climaveneta_temp(info):
     for sensor_id, value in info:
         sensor_id = int(sensor_id.split('.')[0])
-        if sensor_id in climaveneta_sensors.keys() and int(value) > 0:
+        if sensor_id in climaveneta_sensors and int(value) > 0:
             yield climaveneta_sensors[sensor_id], {}
 
 

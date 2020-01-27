@@ -118,7 +118,7 @@ def get_aggregated_values(vserver):
         "packet_velocity_asic"
     }
     # Calculate counters
-    for what in counter_keys & set(vserver.keys()):
+    for what in counter_keys & set(vserver):
         for idx, entry in enumerate(vserver[what]):
             rate = get_rate("%s.%s" % (what, idx), now, entry)
             aggregation[what] += rate

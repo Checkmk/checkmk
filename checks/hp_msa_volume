@@ -201,7 +201,7 @@ check_info['hp_msa_volume'] = {
 
 
 def inventory_hp_msa_volume_df(parsed):
-    for key in parsed.keys():
+    for key in parsed:
         yield key, {}
 
 

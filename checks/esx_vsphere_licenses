@@ -45,7 +45,7 @@ def parse_esx_vsphere_licenses(info):
 
 
 def inventory_esx_vsphere_licenses(parsed):
-    return [(key, None) for key in parsed.keys()]
+    return [(key, None) for key in parsed]
 
 
 def check_esx_vsphere_licenses(item, params, parsed):

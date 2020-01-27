@@ -63,7 +63,7 @@ def inventory_netapp_api_cpu_utilization(parsed):
 
 def inventory_netapp_api_cpu(parsed):
     if "clustermode" in parsed:
-        for node in parsed.get("clustermode", {}).keys():
+        for node in parsed.get("clustermode", {}):
             yield node, {}
 
 

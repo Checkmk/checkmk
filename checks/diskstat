@@ -383,7 +383,7 @@ def diskstat_convert_info(parsed):
 
     # Remove any left-over device mapper devices that are not part of a
     # known multipath device, LVM device or whatever
-    for device in list(converted_disks.keys()):
+    for device in list(converted_disks):
         if device.startswith("dm-"):
             del converted_disks[device]
 

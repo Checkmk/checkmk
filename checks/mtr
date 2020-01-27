@@ -69,7 +69,7 @@ def parse_mtr(info):
 
 
 def inventory_mtr(parsed):
-    for host in parsed.keys():
+    for host in parsed:
         yield host, {}
 
 

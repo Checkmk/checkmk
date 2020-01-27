@@ -204,7 +204,7 @@ def check_cisco_qos(item, params, info):
         # Get the policy_map_id. To retrieve this get one of the config entries
         # of type "policy map" from the config table. All of this type should have
         # the same value, which is then the policy_map_id.
-        for key in object_types.keys():
+        for key in object_types:
             if key.startswith(this_policy_id + '.') and object_types[key] == '1':
                 policy_map_id = config[key]
                 break

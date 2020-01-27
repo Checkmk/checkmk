@@ -130,7 +130,7 @@ def check_cbl_airlaser_hw(item, params, info):
             val = s[0]
             if sensor.lower().endswith("value"):
                 val = saveint(val)
-                if sensor in params.keys():
+                if sensor in params:
                     warn, crit = params[sensor]
                     perfdata.append(("%s" % sensor, "%d" % val, warn, crit, 0, 90))
                     if val > crit:

@@ -109,7 +109,7 @@ def check_inotify(item, params, parsed):
                 return (1, "> %s" % get_age_human_readable(warn))
         return
 
-    for mode in sorted(last_status.keys()):
+    for mode in sorted(last_status):
         attr = last_status[mode]
         levels_info = _check_levels(mode)
         if levels_info:

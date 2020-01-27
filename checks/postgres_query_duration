@@ -44,7 +44,7 @@
 
 
 def inventory_postgres_query_duration(parsed):
-    for entry in parsed.keys():
+    for entry in parsed:
         yield entry, {}
 
 

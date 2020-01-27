@@ -49,7 +49,7 @@ check_config_variables.append("cmctc_pcm_m_sensor_types")
 def inventory_cmctc_psm_m(info):
     return [(line[7] + " " + line[0], None)
             for line in info
-            if saveint(line[1]) in cmctc_pcm_m_sensor_types.keys()]
+            if saveint(line[1]) in cmctc_pcm_m_sensor_types]
 
 
 def check_cmctc_psm_m(item, no_params, info):

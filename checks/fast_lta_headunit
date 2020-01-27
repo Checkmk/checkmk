@@ -86,7 +86,7 @@ def check_fast_lta_headunit_status(item, _no_params, info):
     else:
         status = 2
 
-    if head_unit_status in head_unit_status_map.keys():
+    if head_unit_status in head_unit_status_map:
         message = "Head Unit status is %s." % head_unit_status_map[head_unit_status]
     else:
         message = "Head Unit status is %s." % head_unit_status
@@ -138,7 +138,7 @@ def check_fast_lta_headunit_replication(item, _no_params, info):
         message = "Replication is not running (!!)."
         status = 2
 
-    if node_replication_mode in head_unit_replication_map.keys():
+    if node_replication_mode in head_unit_replication_map:
         message += " This node is %s." \
                    % head_unit_replication_map[node_replication_mode]
     else:

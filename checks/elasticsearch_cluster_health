@@ -78,11 +78,11 @@ def parse_elasticsearch_cluster_health(info):
                 inst = parsed.setdefault(("Shards"), {line[0]: [line[1], shards_info[line[0]]]})
             if any(s in line for s in tasks_info):
                 inst = parsed.setdefault(("Tasks"), {line[0]: [line[1], tasks_info[line[0]]]})
-            if any(s in list(inst.keys()) for s in cluster_info) and "status" not in line:
+            if any(s in inst for s in cluster_info) and "status" not in line:
                 inst[line[0]] = line[1], cluster_info[line[0]]
-            elif any(s in list(inst.keys()) for s in shards_info):
+            elif any(s in inst for s in shards_info):
                 inst[line[0]] = line[1], shards_info[line[0]]
-            elif any(s in list(inst.keys()) for s in tasks_info):
+            elif any(s in inst for s in tasks_info):
                 inst[line[0]] = line[1], tasks_info[line[0]]
 
         except (IndexError, ValueError):

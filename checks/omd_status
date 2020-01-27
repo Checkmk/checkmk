@@ -44,7 +44,7 @@
 def inventory_omd_status(sections):
     info = sections[0]
     omd_info = sections[1]
-    for site in info.keys():
+    for site in info:
         # if we have omd_info we want to ensure that checks are only executed for sites
         # that do have autostart enabled
         if omd_info and 'sites' in omd_info and site in omd_info['sites']:

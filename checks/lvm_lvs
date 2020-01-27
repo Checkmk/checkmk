@@ -48,7 +48,7 @@ def parse_lvm_lvs(info):
 
 
 def inventory_lvm_lvs(parsed):
-    for key in parsed.keys():
+    for key in parsed:
         yield (key, {})
 
 

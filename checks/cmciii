@@ -468,7 +468,7 @@ check_info['cmciii.access'] = {
 
 
 def inventory_cmciii_temp(parsed):
-    for entry in parsed.get("temp", {}).keys():
+    for entry in parsed.get("temp", {}):
         yield entry, {}
 
 

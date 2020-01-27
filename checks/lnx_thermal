@@ -94,7 +94,7 @@ def _parse_temp_value_str(line):
 
 
 def inventory_lnx_thermal(parsed):
-    for item in parsed.keys():
+    for item in parsed:
         yield item, {}
 
 

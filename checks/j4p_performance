@@ -97,7 +97,7 @@ def inventory_j4p_performance_apps(info, what):
     if what == 'app_sess':
         levels = 'j4p_performance_app_sess_default_levels'
     for inst, vals in parsed.items():
-        for app in vals.get('apps', {}).keys():
+        for app in vals.get('apps', {}):
             inv.append(('%s %s' % (inst, app), levels))
     return inv
 
@@ -110,7 +110,7 @@ def inventory_j4p_performance_serv(info, what):
         levels = 'j4p_performance_serv_req_default_levels'
     for inst, vals in parsed.items():
         for app, val in vals.get('apps', {}).items():
-            for serv in val.get('servlets', {}).keys():
+            for serv in val.get('servlets', {}):
                 inv.append(('%s %s %s' % (inst, app, serv), levels))
     return inv
 

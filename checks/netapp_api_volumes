@@ -47,7 +47,7 @@ def parse_netapp_api_volumes(info):
 
 
 def inventory_netapp_api_volumes(parsed):
-    for volume in parsed.keys():
+    for volume in parsed:
         yield volume, {}
 
 

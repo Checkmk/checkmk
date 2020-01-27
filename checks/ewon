@@ -202,7 +202,7 @@ oxyreduct_tag_map = {
 
 def _inventory_oxyreduct_names(parsed):
     for name, area_info in parsed.iteritems():
-        tagids = area_info.keys()
+        tagids = area_info
         if min(tagids) < 10:
             yield name
         else:

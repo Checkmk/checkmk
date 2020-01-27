@@ -383,7 +383,7 @@ def diskstat_select_disk(disks, item):
             for device, disk in disks.items():
                 # If all disks are idle the summarized dict would have no keys
                 # So we take care that at least all keys of this disk are set
-                for key in disk.keys():
+                for key in disk:
                     if key != "node":
                         summarized.setdefault(key, 0.0)
 
@@ -556,7 +556,7 @@ def check_diskstat_dict(item, params, disks):
 
     # Send everything as performance data now. Sort keys alphabetically
     perfdata = []
-    for key in sorted(disk.keys()):
+    for key in sorted(disk):
         value = disk[key]
         if isinstance(value, (int, float)):
             # Currently the levels are not shown in the perfdata

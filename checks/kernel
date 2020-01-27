@@ -60,7 +60,7 @@ def parse_kernel(info):
 
     parsed = {}
     for line in info[1:]:
-        if line[0] in kernel_counter_names.keys():
+        if line[0] in kernel_counter_names:
             try:
                 parsed.setdefault(kernel_counter_names[line[0]], []).append((line[0], int(line[1])))
             except (IndexError, ValueError):

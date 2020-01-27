@@ -156,7 +156,7 @@ def inventory_brocade_optical(parsed):
     match_desc = settings.get('match_desc')
 
     if parsed:
-        pad_width = max([int(len(key)) for key in parsed.keys()])
+        pad_width = max(map(len, parsed))
     else:
         pad_width = 0
 

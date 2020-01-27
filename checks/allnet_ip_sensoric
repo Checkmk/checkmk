@@ -104,7 +104,7 @@ def parse_allnet_ip_sensoric(info):
 
 def allnet_ip_sensoric_compose_item(sensor_id, sensor):
     sensor_id = re.sub("sensor", "", sensor_id)
-    if "name" in list(sensor.keys()):
+    if "name" in sensor:
         item = "%s Sensor %s" % (sensor["name"], sensor_id)
     else:
         item = "Sensor %s" % (sensor_id)
@@ -124,7 +124,7 @@ def allnet_ip_sensoric_compose_item(sensor_id, sensor):
 def inventory_allnet_ip_sensoric_tension(parsed):
     inventory = []
     for sensor, sensor_data in parsed.items():
-        if "function" in list(sensor_data.keys()) and sensor_data["function"] == "12":
+        if "function" in sensor_data and sensor_data["function"] == "12":
             item = allnet_ip_sensoric_compose_item(sensor, sensor_data)
             inventory.append((item, None))
     return inventory
@@ -133,7 +133,7 @@ def inventory_allnet_ip_sensoric_tension(parsed):
 def check_allnet_ip_sensoric_tension(item, _no_params, parsed):
     sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
 
-    if sensor_id not in list(parsed.keys()):
+    if sensor_id not in parsed:
         return 3, "%s not found in agent output" % item
 
     value = float(parsed[sensor_id]["value_float"])
@@ -178,7 +178,7 @@ def inventory_allnet_ip_sensoric_temp(parsed):
 def check_allnet_ip_sensoric_temp(item, params, parsed):
     sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
 
-    if sensor_id not in list(parsed.keys()):
+    if sensor_id not in parsed:
         return 3, "Sensor not found in agent output"
 
     temp = float(parsed[sensor_id]["value_float"])
@@ -212,7 +212,7 @@ allnet_ip_sensoric_humidity_default_levels = (35, 40, 60, 65)
 def inventory_allnet_ip_sensoric_humidity(parsed):
     inventory = []
     for sensor, sensor_data in parsed.items():
-        if "function" in list(sensor_data.keys()) and sensor_data["function"] == "2":
+        if "function" in sensor_data and sensor_data["function"] == "2":
             item = allnet_ip_sensoric_compose_item(sensor, sensor_data)
             inventory.append((item, "allnet_ip_sensoric_humidity_default_levels"))
     return inventory
@@ -220,7 +220,7 @@ def inventory_allnet_ip_sensoric_humidity(parsed):
 
 def check_allnet_ip_sensoric_humidity(item, params, parsed):
     sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
-    if sensor_id not in list(parsed.keys()):
+    if sensor_id not in parsed:
         return 3, "%s not found in agent output" % item
 
     return check_humidity(float(parsed[sensor_id]["value_float"]), params)
@@ -249,7 +249,7 @@ check_info["allnet_ip_sensoric.humidity"] = {
 def inventory_allnet_ip_sensoric_pressure(parsed):
     inventory = []
     for sensor, sensor_data in parsed.items():
-        if "function" in list(sensor_data.keys()) and sensor_data["function"] == "16":
+        if "function" in sensor_data and sensor_data["function"] == "16":
             item = allnet_ip_sensoric_compose_item(sensor, sensor_data)
             inventory.append((item, None))
     return inventory
@@ -258,7 +258,7 @@ def inventory_allnet_ip_sensoric_pressure(parsed):
 def check_allnet_ip_sensoric_pressure(item, _no_params, parsed):
     sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
 
-    if sensor_id not in list(parsed.keys()):
+    if sensor_id not in parsed:
         return 3, "%s not found in agent output" % item
 
     pressure = float(parsed[sensor_id]["value_float"]) / 1000

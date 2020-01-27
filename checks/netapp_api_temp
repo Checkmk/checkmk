@@ -29,7 +29,7 @@
 
 
 def inventory_netapp_api_temp(parsed):
-    shelfs = {x.split(".")[0] for x in parsed.keys()}
+    shelfs = {x.split(".")[0] for x in parsed}
     for shelf in shelfs:
         yield "Internal Shelf %s" % shelf, {}
         yield "Ambient Shelf %s" % shelf, {}

@@ -43,7 +43,7 @@ factory_settings["oracle_dataguard_stats"] = {
 
 
 def inventory_oracle_dataguard_stats(parsed):
-    for instance in parsed.keys():
+    for instance in parsed:
         yield instance, {}
 
 
@@ -185,7 +185,7 @@ def check_oracle_dataguard_stats(item, params, parsed):
             else:
                 yield 2, "Managed Recovery Process not started"
 
-        for dgstat_param in sorted(dgdata['dgstat'].keys()):
+        for dgstat_param in sorted(dgdata['dgstat']):
 
             if dgstat_param in ('apply lag', 'transport lag') and dgdata['dgstat'][dgstat_param]:
                 seconds = get_seconds(dgdata['dgstat'][dgstat_param])

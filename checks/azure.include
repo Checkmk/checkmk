@@ -203,7 +203,7 @@ def discover_azure_by_metrics(*desired_metrics):
     def discovery_function(parsed):
         for name, resource in parsed.items():
             metr = resource.get('metrics', {})
-            if set(desired_metrics) & set(metr.keys()):
+            if set(desired_metrics) & set(metr):
                 yield name, {}
 
     return discovery_function

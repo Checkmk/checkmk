@@ -733,7 +733,7 @@ def inventory_jolokia_metrics_gc(info):
     for inst, vals in parsed.items():
         if vals is None:
             continue  # no data from agent
-        for gc in vals.get('gc', {}).keys():
+        for gc in vals.get('gc', {}):
             inv.append(("%s GC %s" % (inst, gc), {}))
     return inv
 

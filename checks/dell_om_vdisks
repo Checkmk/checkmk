@@ -48,7 +48,7 @@
 
 
 def inventory_dell_om_vdisks(parsed):
-    return [(key, None) for key in parsed.keys()]
+    return [(key, None) for key in parsed]
 
 
 def check_dell_om_vdisks(item, params, parsed):

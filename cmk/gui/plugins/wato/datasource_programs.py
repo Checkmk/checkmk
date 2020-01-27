@@ -2455,7 +2455,7 @@ def _valuespec_special_agents_graylog():
                  ],
                  default_value=[
                      "alerts", "cluster_stats", "cluster_traffic", "failures", "jvm", "license",
-                     "messages", "nodes", "sidecars", "streams"
+                     "messages", "nodes", "sidecars", "sources", "streams"
                  ],
                  allow_empty=False,
              )),

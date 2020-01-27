@@ -31,7 +31,7 @@ def discover_k8s_stats_network(parsed):
     if lnx_info:
         return
 
-    for key, value in parsed.iteritems():
+    for key, value in parsed.items():
         if key != 'network':
             continue
 
@@ -44,7 +44,7 @@ def discover_k8s_stats_fs(parsed):
     parsed, _ = parsed
     ignore_fs = ['tmpfs', 'rootfs']
 
-    for key, value in parsed.iteritems():
+    for key, value in parsed.items():
         if key != 'filesystem':
             continue
 

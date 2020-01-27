@@ -39,7 +39,7 @@ def parse_raritan_pdu_plugs(info):
 
 
 def inventory_raritan_pdu_plugs(parsed):
-    for key, value in parsed.iteritems():
+    for key, value in parsed.items():
         yield key, {'discovered_state': value["state"][1]}
 
 

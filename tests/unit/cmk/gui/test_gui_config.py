@@ -491,6 +491,9 @@ def test_registered_permissions():
         'wato.update_dns_cache',
         'wato.use',
         'wato.users',
+        'view.cmk_servers',
+        'view.cmk_sites',
+        'dashboard.cmk_overview',
     ]
 
     if not cmk.is_raw_edition():
@@ -571,9 +574,6 @@ def test_registered_permissions():
             'general.publish_custom_graph',
             'general.publish_to_foreign_groups_custom_graph',
             'icons_and_actions.deployment_status',
-            'view.cmk_servers',
-            'view.cmk_sites',
-            'dashboard.cmk_overview',
         ]
 
     assert sorted(expected_permissions) == sorted(permission_registry.keys())

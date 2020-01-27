@@ -4,7 +4,7 @@
 @rem always return back to current dir
 @rem *********************************************
 
-@echo on
+@echo off
 set p_name=cpython-3.8
 set p_full_name=python-3.8.1
 set work_dir=%cd%

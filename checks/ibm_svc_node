@@ -57,7 +57,7 @@ def parse_ibm_svc_node(info):
         'site_name',
     ]
     parsed = {}
-    for rows in parse_ibm_svc_with_header(info, dflt_header).itervalues():
+    for rows in parse_ibm_svc_with_header(info, dflt_header).values():
         for data in rows:
             parsed.setdefault(data['IO_group_name'], []).append(data)
     return parsed

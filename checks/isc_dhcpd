@@ -71,7 +71,7 @@ def parse_isc_dhcpd(info):
 
         elif mode == "general":
             if line[0] == "PID:":
-                parsed["pids"] = map(int, line[1:])
+                parsed["pids"] = list(map(int, line[1:]))
 
         elif mode == "pools":
             if 'bootp' in line[0]:

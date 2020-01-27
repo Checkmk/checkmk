@@ -89,7 +89,7 @@ def parse_ibm_svc_mdiskgrp(info):
         u'site_name',
     ]
     parsed = {}
-    for rows in parse_ibm_svc_with_header(info, dflt_header).itervalues():
+    for rows in parse_ibm_svc_with_header(info, dflt_header).values():
         try:
             data = rows[0]
         except IndexError:
@@ -99,7 +99,7 @@ def parse_ibm_svc_mdiskgrp(info):
 
 
 def inventory_ibm_svc_mdiskgrp(parsed):
-    for mdisk_name in parsed.iterkeys():
+    for mdisk_name in parsed:
         yield mdisk_name, {}
 
 

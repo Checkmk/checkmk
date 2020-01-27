@@ -69,7 +69,7 @@ def parse_ibm_svc_disks(info):
         'drive_class_id',
     ]
     parsed = []
-    for rows in parse_ibm_svc_with_header(info, dflt_header).itervalues():
+    for rows in parse_ibm_svc_with_header(info, dflt_header).values():
         parsed.extend(rows)
     return parsed
 

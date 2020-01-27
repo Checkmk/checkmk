@@ -58,7 +58,7 @@ def check_ibm_svc_host(item, params, parsed):
     active = 0
     inactive = 0
     other = 0
-    for rows in parsed.itervalues():
+    for rows in parsed.values():
         for data in rows:
             status = data['status']
             if status == 'degraded':

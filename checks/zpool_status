@@ -150,15 +150,15 @@ def check_zpool_status(_no_item, _no_params, info):
             pool_messages[last_pool].append(" ".join(line))
             continue
 
-    for pool, msg in pool_messages.iteritems():
+    for pool, msg in pool_messages.items():
         state = 1
         message.append("%s: %s" % (pool, " ".join(msg)))
 
-    for pool, msg in warning_pools.iteritems():
+    for pool, msg in warning_pools.items():
         state = 1
         message.append("%s CKSUM: %d" % (pool, saveint(msg[3])))
 
-    for pool, msg in error_pools.iteritems():
+    for pool, msg in error_pools.items():
         state = 2
         message.append("%s state: %s" % (pool, msg[0]))
 

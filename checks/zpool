@@ -52,7 +52,7 @@ def parse_zpool(info):
 
 
 def inventory_zpool(parsed):
-    return df_inventory(parsed.keys())
+    return df_inventory(list(parsed))
 
 
 def check_zpool(item, params, parsed):
@@ -69,7 +69,7 @@ def check_zpool(item, params, parsed):
         return num * (1024**(unit - 2))
 
     fslist = []
-    for pool, entry in parsed.iteritems():
+    for pool, entry in parsed.items():
         if "patterns" in params or item == pool:
             fslist.append((pool, mb(entry['size']), mb(entry['free']), 0))
 

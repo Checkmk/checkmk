@@ -103,7 +103,7 @@ def _parse_zfs(lines):
     # several device names per mount point, and we know only
     # later which one to take
     parsed = {}
-    for entry in data.itervalues():
+    for entry in data.values():
         if entry["mountpoint"].startswith("/"):
             entry["is_pool"] = "/" not in entry["name"]
             if entry["available"] != 0 and entry["type"] == "filesystem":
@@ -129,10 +129,10 @@ def _parse_df(lines, parsed_zfs):
                 # 'first' contians all elements from the beginning until the first kbytes item
                 # we compare 'first' to zfs mountpoint names and take the device name with the highest similarity
                 matches = []
-                for name in parsed_zfs.keys():
+                for name in parsed_zfs:
                     matches.append(_get_similarity_of_strings(name, _first))
                 if matches and max(matches) > 0.5:
-                    device = parsed_zfs.keys()[matches.index(max(matches))]
+                    device = list(parsed_zfs)[matches.index(max(matches))]
                 else:
                     # TODO: fix special case that will fail here if not zfs item exists
                     # white space in name and fs_type ("/foo", "bar", "zfs")
@@ -193,7 +193,7 @@ def parse_zfsget(info):
     parsed_df = _parse_df(info_df, parsed_zfs)
 
     # parsed_df and parsed_final have the mount point as key
-    for mountpoint, entry_df in parsed_df.iteritems():
+    for mountpoint, entry_df in parsed_df.items():
         # for every mount point in the df section, if the device name
         # is also present in the "parsed" variable, we take those data
         for name, entry_zfs in parsed_zfs.items():
@@ -210,7 +210,7 @@ def parse_zfsget(info):
 
 def inventory_zfsget(parsed):
     mplist = []
-    for mountpoint in parsed.iterkeys():
+    for mountpoint in parsed:
         if mountpoint not in inventory_df_exclude_mountpoints:
             mplist.append(mountpoint)
     return df_inventory(mplist)

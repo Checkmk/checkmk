@@ -26,14 +26,14 @@
 
 
 def inventory_3par_capacity(parsed):
-    for key, value in parsed.iteritems():
+    for key, value in parsed.items():
         if value['totalMiB'] == 0:
             continue
         yield (key.replace("Capacity", ""), {})
 
 
 def check_3par_capacity(item, params, parsed):
-    for key, value in parsed.iteritems():
+    for key, value in parsed.items():
         if key.replace("Capacity", "") == item:
             total = value['totalMiB']
             free = value['freeMiB']

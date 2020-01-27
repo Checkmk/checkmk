@@ -95,6 +95,7 @@ $(PYTHON_MODULE): venv ## zipping venv
 
 $(PYTHON_ARTE): $(PYTHON_MODULE) ## copy to artefacts
 	@echo "Target $@"
+	@if not exist $(ARTE_PATH) mkdir $(ARTE_PATH) 2> nul
 	@copy /Y $< $@ 
 
 build: unpack $(PYTHON_ARTE) ## building all

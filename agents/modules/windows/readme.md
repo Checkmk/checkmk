@@ -12,6 +12,7 @@ CPYTHON, 3.8.1, git.
 2. Python 3.7 or newer
 3. Normal make
 4. 7zip
+5. psexec
 
 ### IMPORTANT
 

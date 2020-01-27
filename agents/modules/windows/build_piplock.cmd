@@ -12,6 +12,8 @@ mkdir %ready_dir% 2> nul
 cd %ready_dir% || powershell Write-Host "Failed enter %ready_dir%" -foreground red && exit /b 5
 
 set PIPENV_VENV_IN_PROJECT=true
-%install_dir%\python.exe -m pipenv lock
+%install_dir%\python.exe --version
+%install_dir%\python.exe -m pipenv lock 
+if not %errorlevel% == 0 powershell Write-Host "Python lock failed" -foreground Red && exit /b 34
 
 powershell Write-Host "Pipfile is locked" -foreground green

@@ -35,7 +35,7 @@ def check_msexch_owa(item, params, parsed):
     yield wmi_yield_raw_counter(table,
                                 item,
                                 "CurrentUniqueUsers",
-                                label=" unique users",
+                                infoname="Unique users",
                                 perfvar="current_users")
 
 

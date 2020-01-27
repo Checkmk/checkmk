@@ -1102,7 +1102,7 @@ checks = {
                                                    None)]),
         (0, 'Timeout AD requests/sec: 0.00', [('failed_ad_requests', 0.0, 0.01, 0.02, None, None)]),
         (0, 'HTTP 5xx/sec: 0.00', [('http_5xx', 0.0, 1.0, 2.0, None, None)]),
-        (0, '0 requests rejected', [('asp_requests_rejected', 0.0, 1, 2, None, None)])])],
+        (0, 'Requests rejected: 0', [('asp_requests_rejected', 0.0, 1, 2, None, None)])])],
     'edge_auth': [(None, {
         'bad_requests': {
             'upper': (20, 40)
@@ -1123,13 +1123,13 @@ checks = {
         'failed_calls_because_of_gateway': {
             'upper': (10, 20)
         }
-    }, [(0, '0 load call failure index', [('mediation_load_call_failure_index', 0.0, 10, 20, None,
+    }, [(0, 'Load call failure index: 0', [('mediation_load_call_failure_index', 0.0, 10, 20, None,
                                            None)]),
-        (0, '5 failed calls because of proxy', [('mediation_failed_calls_because_of_proxy', 5.0, 10,
+        (0, 'Failed calls because of proxy: 5', [('mediation_failed_calls_because_of_proxy', 5.0, 10,
                                                  20, None, None)]),
-        (0, '0 failed calls because of gateway', [('mediation_failed_calls_because_of_gateway', 0.0,
+        (0, 'Failed calls because of gateway: 0', [('mediation_failed_calls_because_of_gateway', 0.0,
                                                    10, 20, None, None)]),
-        (0, '0 media connectivity check failure', [('mediation_media_connectivity_failure', 0.0, 1,
+        (0, 'Media connectivity check failure: 0', [('mediation_media_connectivity_failure', 0.0, 1,
                                                     2, None, None)])])],
     'mobile': [(None, {
         'requests_processing': {
@@ -1138,7 +1138,7 @@ checks = {
     }, [(0, 'Android: 0 active', [('ucwa_active_sessions_android', 0.0, None, None, None, None)]),
         (0, 'iPad: 0 active', [('ucwa_active_sessions_ipad', 0.0, None, None, None, None)]),
         (0, 'iPhone: 0 active', [('ucwa_active_sessions_iphone', 0.0, None, None, None, None)]),
-        (0, '1 requested', [('web_requests_processing', 1.0, 10000, 20000, None, None)])])],
+        (0, 'Requested: 1', [('web_requests_processing', 1.0, 10000, 20000, None, None)])])],
     'sip_stack': [(None, {
         'authentication_errors': {
             'upper': (1, 2)
@@ -1192,11 +1192,11 @@ checks = {
         (0, 'Throttled requests/sec: 0.00', [('usrv_throttled_requests', 0.0, 0.2, 0.4, None,
                                              None)]),
         (0, 'Local 503 responses/sec: 0.00', [('sip_503_responses', 0.0, 0.01, 0.02, None, None)]),
-        (0, '0 incoming messages timed out', [('sip_incoming_messages_timed_out', 0.0, 2, 4, None,
+        (0, 'Incoming messages timed out: 0', [('sip_incoming_messages_timed_out', 0.0, 2, 4, None,
                                                None)]),
         (0, '0.00 avg holding time for incoming messages',
          [('sip_avg_holding_time_incoming_messages', 0.0, 6.0, 12.0, None, None)]),
-        (0, '0 flow-controlled connections', [('sip_flow_controlled_connections', 0.0, 1, 2, None,
+        (0, 'Flow-controlled connections: 0', [('sip_flow_controlled_connections', 0.0, 1, 2, None,
                                                None)]),
         (0, '0.00 avg outgoing queue delay', [('sip_avg_outgoing_queue_delay', 0.0, 2.0, 4.0, None,
                                                None)]),

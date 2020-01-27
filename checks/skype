@@ -199,7 +199,7 @@ def check_skype(item, params, parsed):
     yield wmi_yield_raw_counter(parsed.get("ASP.NET Apps v4.0.30319"),
                                 item,
                                 "Requests Rejected",
-                                label=" requests rejected",
+                                infoname="Requests rejected",
                                 perfvar="asp_requests_rejected",
                                 levels=params['asp_requests_rejected'])
 
@@ -215,7 +215,7 @@ def check_skype(item, params, parsed):
         yield wmi_yield_raw_counter(parsed.get("LS:JoinLauncher - Join Launcher Service Failures"),
                                     item,
                                     "JOINLAUNCHER - Join failures",
-                                    label=" join failures",
+                                    infoname="Join failures",
                                     perfvar="join_failures",
                                     levels=params['join_failures'])
 
@@ -223,7 +223,7 @@ def check_skype(item, params, parsed):
         yield wmi_yield_raw_counter(parsed.get("LS:WEB - Auth Provider related calls"),
                                     item,
                                     "WEB - Failed validate cert calls to the cert auth provider",
-                                    label=" failed cert validations",
+                                    infoname="Failed cert validations",
                                     perfvar="failed_validate_cert_calls",
                                     levels=params['failed_validate_cert'])
 
@@ -401,7 +401,7 @@ def check_skype_sip_stack(item, params, parsed):
     yield wmi_yield_raw_counter(parsed.get("LS:SIP - Load Management"),
                                 item,
                                 "SIP - Incoming Messages Timed out",
-                                label=" incoming messages timed out",
+                                infoname="Incoming messages timed out",
                                 perfvar="sip_incoming_messages_timed_out",
                                 levels=params['timedout_incoming_messages'])
 
@@ -415,7 +415,7 @@ def check_skype_sip_stack(item, params, parsed):
     yield wmi_yield_raw_counter(parsed.get("LS:SIP - Peers"),
                                 item,
                                 "SIP - Flow-controlled Connections",
-                                label=" flow-controlled connections",
+                                infoname="Flow-controlled connections",
                                 perfvar="sip_flow_controlled_connections",
                                 levels=params['flow_controlled_connections'])
 
@@ -468,7 +468,7 @@ def check_skype_mediation_server(item, params, parsed):
     yield wmi_yield_raw_counter(parsed.get("LS:MediationServer - Health Indices"),
                                 item,
                                 "- Load Call Failure Index",
-                                label=" load call failure index",
+                                infoname="Load call failure index",
                                 perfvar="mediation_load_call_failure_index",
                                 levels=params["load_call_failure_index"])
 
@@ -476,7 +476,7 @@ def check_skype_mediation_server(item, params, parsed):
         parsed.get("LS:MediationServer - Global Counters"),
         item,
         "- Total failed calls caused by unexpected interaction from the Proxy",
-        label=" failed calls because of proxy",
+        infoname="Failed calls because of proxy",
         perfvar="mediation_failed_calls_because_of_proxy",
         levels=params['failed_calls_because_of_proxy'])
 
@@ -484,14 +484,14 @@ def check_skype_mediation_server(item, params, parsed):
         parsed.get("LS:MediationServer - Global Per Gateway Counters"),
         item,
         "- Total failed calls caused by unexpected interaction from a gateway",
-        label=" failed calls because of gateway",
+        infoname="Failed calls because of gateway",
         perfvar="mediation_failed_calls_because_of_gateway",
         levels=params['failed_calls_because_of_gateway'])
 
     yield wmi_yield_raw_counter(parsed.get("LS:MediationServer - Media Relay"),
                                 item,
                                 "- Media Connectivity Check Failure",
-                                label=" media connectivity check failure",
+                                infoname="Media connectivity check failure",
                                 perfvar="mediation_media_connectivity_failure",
                                 levels=params['media_connectivity_failure'])
 
@@ -602,7 +602,7 @@ def check_skype_data_proxy(item, params, parsed):
         parsed.get("LS:DATAPROXY - Server Connections"),
         item,
         "DATAPROXY - Current count of server connections that are throttled",
-        label=" server connections throttled",
+        infoname="Server connections throttled",
         perfvar="dataproxy_connections_throttled",
         levels=params['throttled_connections'])
 
@@ -678,7 +678,7 @@ def check_skype_mobile(item, params, parsed):
     yield wmi_yield_raw_counter(parsed.get("LS:WEB - Throttling and Authentication"),
                                 item,
                                 "WEB - Total Requests In Processing",
-                                label=" requested",
+                                infoname="Requested",
                                 perfvar="web_requests_processing",
                                 levels=params['requests_processing'])
 

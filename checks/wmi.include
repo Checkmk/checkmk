@@ -475,21 +475,23 @@ def wmi_yield_raw_persec(table, row, column, infoname, perfvar, levels=None):
     )
 
 
-def wmi_yield_raw_counter(table, row, column, label, perfvar, levels=None):
+def wmi_yield_raw_counter(table, row, column, infoname, perfvar, levels=None, unit=""):
     if row == "":
         row = 0
-
-    levels = wmi_fix_levels(levels)
 
     try:
         value = int(table.get(row, column))
     except KeyError:
         return 3, "counter %r not present anymore" % ((row, column),), []
 
-    status, levels_text = wmi_determine_status(value, levels)
-
-    return (status, "%s%s%s" % (value, label, levels_text),
-            [wmi_make_perfvar(perfvar, value, levels)])
+    return check_levels(
+        value,
+        perfvar,
+        _get_levels_quadruple(levels),
+        infoname=infoname,
+        unit=unit,
+        human_readable_func=str,
+    )
 
 
 def wmi_calculate_raw_average(table, row, column, factor):

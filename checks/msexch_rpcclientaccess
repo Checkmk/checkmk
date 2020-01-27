@@ -39,20 +39,25 @@ def check_msexch_rpcclientaccess(item, params, parsed):
     yield wmi_yield_raw_counter(table,
                                 item,
                                 "RPCAveragedLatency",
-                                label="ms average latency",
+                                infoname="Average latency",
                                 perfvar="average_latency",
-                                levels=params['latency'])
+                                levels=params['latency'],
+                                unit="ms")
     yield wmi_yield_raw_persec(table,
                                item,
                                "RPCRequests",
                                infoname="RPC Requests/sec",
                                perfvar="requests_per_sec",
                                levels=params['requests'])
-    yield wmi_yield_raw_counter(table, item, "UserCount", label=" users", perfvar="current_users")
+    yield wmi_yield_raw_counter(table,
+                                item,
+                                "UserCount",
+                                infoname="Users",
+                                perfvar="current_users")
     yield wmi_yield_raw_counter(table,
                                 item,
                                 "ActiveUserCount",
-                                label=" active users",
+                                infoname="Active users",
                                 perfvar="active_users")
 
 

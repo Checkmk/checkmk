@@ -3575,7 +3575,7 @@ class Timerange(CascadingDropdown):
         self,
         allow_empty=False,  # type: bool
         include_time=False,  # type: bool
-        choices=None,  # type: TypingOptional[Union[List[TypingTuple[Text, Text, ValueSpec]], Callable]]
+        choices=None,  # type: TypingOptional[Union[List[Union[TypingTuple[Text, Text], TypingTuple[Text, Text, ValueSpec]]], Callable]]
         # CascadingDropdown
         # TODO: Make this more specific
         label=None,  # type: TypingOptional[Text]
@@ -3679,6 +3679,17 @@ class Timerange(CascadingDropdown):
             ]
 
     def compute_range(self, rangespec):
+        def _month_edge_days(now, day_id):
+            # type: (float, Text) -> TypingTuple[TypingTuple[float, float], Text]
+            # base time is current time rounded down to month
+            from_time = TimeHelper.round(now, 'm')
+            if day_id == 'f1':
+                from_time = TimeHelper.add(from_time, -1, 'm')
+            if day_id == 'l1':
+                from_time -= 3600 * 24
+            end_time = from_time + 3600 * 24
+            return (from_time, end_time), time.strftime("%d/%m/%Y", time.localtime(from_time))
+
         if rangespec is None:
             rangespec = "4h"
 
@@ -3730,6 +3741,10 @@ class Timerange(CascadingDropdown):
                 return (from_time, now), title
 
             year, month = time.localtime(now)[:2]
+
+            if rangespec in ['f0', 'f1', 'l1']:
+                return _month_edge_days(now, rangespec)
+
             # base time is current time rounded down to the nearest unit (day, week, ...)
             from_time = TimeHelper.round(now, rangespec[0])
             # derive titles from unit ()

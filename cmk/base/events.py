@@ -59,6 +59,9 @@ from cmk.utils.type_defs import (  # pylint: disable=unused-import
 Context = Dict  # TODO Improve this
 ContactList = List  # TODO Improve this
 Rule = Dict  # TODO Improve this
+# We actually want to use Matcher for all our matchers, but mypy is too dumb to
+# use that for function types, see https://github.com/python/mypy/issues/1641.
+# Matcher = Callable[[Rule, Context], Optional[str]]
 
 logger = logging.getLogger('cmk.base.events')
 logger.addHandler(logging.NullHandler())
@@ -423,10 +426,10 @@ def event_match_rule(rule, context):
         event_match_folder(rule, context)                                 or \
         event_match_hosttags(rule, context)                               or \
         event_match_hostgroups(rule, context)                             or \
-        event_match_servicegroups(rule, context)                          or \
-        event_match_exclude_servicegroups(rule, context)                  or \
-        event_match_servicegroups(rule, context, is_regex = True)         or \
-        event_match_exclude_servicegroups(rule, context, is_regex = True) or \
+        event_match_servicegroups_fixed(rule, context)                    or \
+        event_match_exclude_servicegroups_fixed(rule, context)            or \
+        event_match_servicegroups_regex(rule, context)                    or \
+        event_match_exclude_servicegroups_regex(rule, context)            or \
         event_match_contacts(rule, context)                               or \
         event_match_contactgroups(rule, context)                          or \
         event_match_hosts(rule, context)                                  or \
@@ -435,7 +438,7 @@ def event_match_rule(rule, context):
         event_match_exclude_services(rule, context)                       or \
         event_match_plugin_output(rule, context)                          or \
         event_match_checktype(rule, context)                              or \
-        event_match_timeperiod(rule)                                      or \
+        event_match_timeperiod(rule, context)                             or \
         event_match_servicelevel(rule, context)
 
 
@@ -492,7 +495,17 @@ def event_match_hosttags(rule, context):
     return None
 
 
-def event_match_servicegroups(rule, context, is_regex=False):
+def event_match_servicegroups_fixed(rule, context):
+    # type: (Rule, Context) -> Optional[str]
+    return _event_match_servicegroups(rule, context, is_regex=False)
+
+
+def event_match_servicegroups_regex(rule, context):
+    # type: (Rule, Context) -> Optional[str]
+    return _event_match_servicegroups(rule, context, is_regex=True)
+
+
+def _event_match_servicegroups(rule, context, is_regex):
     # type: (Rule, Context, bool) -> Optional[str]
     if is_regex:
         match_type, required_groups = rule.get("match_servicegroups_regex", (None, None))
@@ -544,7 +557,17 @@ def event_match_servicegroups(rule, context, is_regex=False):
     return None
 
 
-def event_match_exclude_servicegroups(rule, context, is_regex=False):
+def event_match_exclude_servicegroups_fixed(rule, context):
+    # type: (Rule, Context) -> Optional[str]
+    return _event_match_exclude_servicegroups(rule, context, is_regex=False)
+
+
+def event_match_exclude_servicegroups_regex(rule, context):
+    # type: (Rule, Context) -> Optional[str]
+    return _event_match_exclude_servicegroups(rule, context, is_regex=True)
+
+
+def _event_match_exclude_servicegroups(rule, context, is_regex):
     # type: (Rule, Context, bool) -> Optional[str]
     if is_regex:
         match_type, excluded_groups = rule.get("match_exclude_servicegroups_regex", (None, None))
@@ -722,8 +745,8 @@ def event_match_checktype(rule, context):
     return None
 
 
-def event_match_timeperiod(rule):
-    # type: (Rule) -> Optional[str]
+def event_match_timeperiod(rule, _context):
+    # type: (Rule, Context) -> Optional[str]
     if "match_timeperiod" in rule:
         timeperiod = rule["match_timeperiod"]
         if timeperiod != "24X7" and not cmk.base.core.check_timeperiod(timeperiod):

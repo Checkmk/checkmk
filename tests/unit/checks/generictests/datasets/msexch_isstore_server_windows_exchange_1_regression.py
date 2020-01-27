@@ -157,7 +157,7 @@ checks = {
             'clienttype_latency': {
                 'upper': (40.0, 50.0)
             }
-        }, [(0, '0.46ms average latency', [('average_latency', 0.45888430902913163, 40.0, 50.0,
+        }, [(0, 'Average latency: 0.46 ms', [('average_latency', 0.45888430902913163, 40.0, 50.0,
                                             None, None)])]),
         (u'db3', {
             'store_latency': {
@@ -169,7 +169,7 @@ checks = {
             'clienttype_latency': {
                 'upper': (40.0, 50.0)
             }
-        }, [(0, '0.46ms average latency', [('average_latency', 0.45888430902913163, 40.0, 50.0,
+        }, [(0, 'Average latency: 0.46 ms', [('average_latency', 0.45888430902913163, 40.0, 50.0,
                                             None, None)])]),
     ]
 }

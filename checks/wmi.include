@@ -392,47 +392,8 @@ def get_wmi_time(table, row):
     return float(timestamp) / float(frequency)
 
 
-def wmi_make_perfvar(varname, value, levels, boundaries=()):
-    if levels is not None:
-        upper_levels = levels.get('upper', (None, None))
-    else:
-        upper_levels = (None, None)
-    return (varname, value, upper_levels[0], upper_levels[1]) + boundaries
-
-
-def wmi_determine_status(value, levels, human_readable_func=None):
-    if human_readable_func is None:
-        human_readable_func = lambda x: x
-
-    status, levels_text = 0, ""
-    if levels:
-        if 'upper' in levels:
-            upper_status = 0
-            if value >= levels['upper'][1]:
-                upper_status = 2
-            elif value >= levels['upper'][0]:
-                upper_status = 1
-
-            if upper_status:
-                status = max(status, upper_status)
-                levels_text += " (warn/crit at %s/%s)" % tuple(
-                    human_readable_func(x) for x in levels['upper'])
-
-        if 'lower' in levels:
-            lower_status = 0
-            if value < levels['lower'][1]:
-                lower_status = 2
-            elif value < levels['lower'][0]:
-                lower_status = 1
-
-            if lower_status:
-                status = max(status, lower_status)
-                levels_text += " (warn/crit below %s/%s)" % tuple(
-                    human_readable_func(x) for x in levels['lower'])
-
-    return status, levels_text
-
-
+# to make wato rules simpler, levels are allowed to be passed as tuples if the level
+# specifies the upper limit
 def _get_levels_quadruple(params):
     if params is None:
         return (None, None, None, None)
@@ -441,14 +402,6 @@ def _get_levels_quadruple(params):
     upper = params.get('upper') or (None, None)
     lower = params.get('lower') or (None, None)
     return upper + lower
-
-
-# to make wato rules simpler, levels are allowed to be passed as tuples if the level
-# specifies the upper limit
-def wmi_fix_levels(levels):
-    if isinstance(levels, tuple):
-        return {'upper': levels}
-    return levels
 
 
 def wmi_yield_raw_persec(table, row, column, infoname, perfvar, levels=None):
@@ -537,20 +490,19 @@ def wmi_calculate_raw_average_time(table, row, column):
     return value_per_sec / base_per_sec  # fixed: true-division
 
 
-def wmi_yield_raw_average(table, row, column, label, perfvar, levels=None, perfscale=1.0):
-    levels = wmi_fix_levels(levels)
-
+def wmi_yield_raw_average(table, row, column, infoname, perfvar, levels=None, perfscale=1.0):
     try:
-        average = wmi_calculate_raw_average(table, row, column, 1)
+        average = wmi_calculate_raw_average(table, row, column, 1) * perfscale
     except KeyError:
         return 3, "item not present anymore", []
 
-    status, levels_text = wmi_determine_status(average * perfscale,
-                                               levels,
-                                               human_readable_func=get_age_human_readable)
-
-    return (status, "%.2f%s%s" % (average, label, levels_text),
-            [wmi_make_perfvar(perfvar, average * perfscale, levels)])
+    return check_levels(
+        average,
+        perfvar,
+        _get_levels_quadruple(levels),
+        infoname=infoname,
+        human_readable_func=get_age_human_readable,
+    )
 
 
 def wmi_yield_raw_average_timer(table, row, column, infoname, perfvar, levels=None):

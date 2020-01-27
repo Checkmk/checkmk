@@ -305,14 +305,14 @@ def check_skype_conferencing(item, params, parsed):
     yield wmi_yield_raw_average(parsed.get("LS:USrv - Conference Mcu Allocator"),
                                 item,
                                 "USrv - Create Conference Latency (msec)",
-                                label=" create conference latency",
+                                infoname="Create conference latency",
                                 perfvar="usrv_create_conference_latency",
                                 levels=params['create_conference_latency'])
 
     yield wmi_yield_raw_average(parsed.get("LS:USrv - Conference Mcu Allocator"),
                                 item,
                                 "USrv - Allocation Latency (msec)",
-                                label=" allocation latency",
+                                infoname="Allocation latency",
                                 perfvar="usrv_allocation_latency",
                                 levels=params['allocation_latency'])
 
@@ -371,7 +371,7 @@ def check_skype_sip_stack(item, params, parsed):
     yield wmi_yield_raw_average(parsed.get("LS:USrv - DBStore"),
                                 item,
                                 "USrv - Queue Latency (msec)",
-                                label=" ms queue latency",
+                                infoname="Queue latency",
                                 perfvar="usrv_queue_latency",
                                 perfscale=0.001,
                                 levels=params['queue_latency'])
@@ -379,7 +379,7 @@ def check_skype_sip_stack(item, params, parsed):
     yield wmi_yield_raw_average(parsed.get("LS:USrv - DBStore"),
                                 item,
                                 "USrv - Sproc Latency (msec)",
-                                label=" ms sproc latency",
+                                infoname="Sproc latency",
                                 perfvar="usrv_sproc_latency",
                                 perfscale=0.001,
                                 levels=params['sproc_latency'])

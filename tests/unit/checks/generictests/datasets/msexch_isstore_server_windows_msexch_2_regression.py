@@ -159,7 +159,7 @@ checks = {
             },
             [(
                 0,
-                '0.16ms average latency',
+                'Average latency: 0.16 ms',
                 [('average_latency', 0.15550288783670518, 40.0, 50.0, None, None)],
             )],
         ),
@@ -178,7 +178,7 @@ checks = {
             },
             [(
                 0,
-                '0.16ms average latency',
+                'Average latency: 0.16 ms',
                 [('average_latency', 0.15550288783670518, 40.0, 50.0, None, None)],
             )],
         ),

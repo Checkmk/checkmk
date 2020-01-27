@@ -44,12 +44,19 @@ factory_settings['msexch_isclienttype_defaultlevels'] = {
 
 
 def check_msexch_isclienttype(item, params, parsed):
-    yield wmi_yield_raw_average(parsed[""],
-                                item,
-                                "RPCAverageLatency",
-                                label="ms average latency",
-                                perfvar="average_latency",
-                                levels=params['clienttype_latency'])
+    try:
+        average = wmi_calculate_raw_average(parsed[""], item, "RPCAverageLatency", 1)
+    except KeyError:
+        yield 3, "item not present anymore", []
+    else:
+        yield check_levels(
+            average,
+            "average_latency",
+            params['clienttype_latency'].get('upper'),
+            infoname="Average latency",
+            unit="ms",
+        )
+
     yield wmi_yield_raw_persec(parsed[""],
                                item,
                                "RPCRequests",

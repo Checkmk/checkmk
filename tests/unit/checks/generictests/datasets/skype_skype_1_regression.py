@@ -6508,9 +6508,9 @@ checks = {
             'upper': (20, 40)
         }
     }, [(0, 'Incomplete calls/sec: 0.00', [('caa_incomplete_calls', 0.0, 20, 40, None, None)]),
-        (0, '0.00 create conference latency', [('usrv_create_conference_latency',
+        (0, 'Create conference latency: 819 ns', [('usrv_create_conference_latency',
                                                 8.188653369338694e-07, 5000, 10000, None, None)]),
-        (0, '0.00 allocation latency', [('usrv_allocation_latency', 1.885229636950111e-06, 5000,
+        (0, u'Allocation latency: 1.89 \xb5s', [('usrv_allocation_latency', 1.885229636950111e-06, 5000,
                                          10000, None, None)])])],
     'data_proxy': [(u'pbwvw-skype03.intern.rossmann.de', {
         'throttled_connections': {
@@ -6688,9 +6688,9 @@ checks = {
                                                      2.0, None, None)]),
         (0, 'Incoming requests dropped/sec: 0.00', [('sip_incoming_requests_dropped', 0.0, 1.0, 2.0,
                                                     None, None)]),
-        (0, '0.30 ms queue latency',
+        (0, u'Queue latency: 299 \xb5s',
          [('usrv_queue_latency', 0.00029864475533854544, 0.1, 0.2, None, None)]),
-        (0, '0.00 ms sproc latency', [('usrv_sproc_latency', 8.385077343119278e-07, 0.1, 0.2, None,
+        (0, 'Sproc latency: 839 ns', [('usrv_sproc_latency', 8.385077343119278e-07, 0.1, 0.2, None,
                                        None)]),
         (0, 'Throttled requests/sec: 0.00', [('usrv_throttled_requests', 0.0, 0.2, 0.4, None,
                                              None)]),

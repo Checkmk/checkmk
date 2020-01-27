@@ -47,7 +47,7 @@ def vxvm_objstatus_disks(info):
 
 
 def inventory_vxvm_objstatus(info):
-    return vxvm_objstatus_disks(info).items()
+    return list(vxvm_objstatus_disks(info).items())
 
 
 def check_vxvm_objstatus(item, params, info):

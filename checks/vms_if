@@ -40,7 +40,7 @@ def convert_vms_if(info):
         ifInOctets, ifInUcastPkts, ifInMulticastPkts, ifInBroadcastPkts, \
         ifInDiscards, ifInErrors, ifOutOctets, ifOutUcastPkts, \
         ifOutMulticastPkts, ifOutBroadcastPkts, ifOutDiscards, ifOutErrors = \
-          map(wrap_negative, line[1:13])
+            map(wrap_negative, line[1:13])
 
         ifIndex += 1
         new_info.append((

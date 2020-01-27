@@ -1,6 +1,5 @@
 # -*- encoding: utf-8
 # yapf: disable
-
 checkname = 'graylog_nodes'
 
 info = [
@@ -35,7 +34,7 @@ checks = {
                 (0, 'Load balancer state: alive', []),
                 (0, 'Lifecycle is: running', []),
                 (0, 'Is processing: yes', []),
-                (0, 'Inputs: 3', [('num_inputs', 3, None, None, None, None)]),
+                (0, 'Inputs: 3', [('num_input', 3, None, None, None, None)]),
                 (
                     1,
                     'One or more inputs not in state running, see long output for more details',

@@ -149,7 +149,7 @@ def check_graylog_nodes(item, params, parsed):
         input_nr_levels = params.get('input_count_upper', (None, None))
         input_nr_levels_lower = params.get('input_count_lower', (None, None))
         yield check_levels(len(value_inputstates),
-                           "num_inputs",
+                           "num_input",
                            input_nr_levels + input_nr_levels_lower,
                            human_readable_func=int,
                            infoname="Inputs")

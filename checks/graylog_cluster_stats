@@ -74,7 +74,7 @@ def check_graylog_cluster_stats(no_item, params, parsed):
         ("input_count", "Number of inputs", "num_input"),
         ("output_count", "Number of outputs", "num_output"),
         ("stream_count", "Number of streams", "streams"),
-        ("stream_rule_count", "Number of stream rules", "num_stream_rules"),
+        ("stream_rule_count", "Number of stream rules", "num_stream_rule"),
         ("extractor_count", "Number of extractors", "num_extractor"),
         ("user_count", "Number of user", "num_user"),
     ]:

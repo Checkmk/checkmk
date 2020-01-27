@@ -398,8 +398,8 @@ def _do_check_levels(value, levels, human_readable_func, unit_info):
 
 def _levelsinfo_ty(ty, warn, crit, human_readable_func, unit_info):
     # type: (Text, Warn, Crit, Callable, Text) -> Text
-    return " (warn/crit {0} {1}{3}/{2}{3})".format(ty, human_readable_func(warn),
-                                                   human_readable_func(crit), unit_info)
+    return u" (warn/crit {0} {1}{3}/{2}{3})".format(ty, human_readable_func(warn),
+                                                    human_readable_func(crit), unit_info)
 
 
 def _build_perfdata(dsname, value, scale_value, levels, boundaries, ref_value=None):

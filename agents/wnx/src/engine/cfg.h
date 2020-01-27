@@ -1133,17 +1133,17 @@ enum class InstallationType { packaged, wato, unknown };
 InstallationType DetermineInstallationType() noexcept;
 void SetTestInstallationType(cma::cfg::InstallationType installation_type);
 std::filesystem::path ConstructInstallFileName(
-    const std::filesystem::path& dir) noexcept;
+    const std::filesystem::path& dir);
 std::string ConstructTimeString();
 
 namespace products {
 constexpr std::string_view kLegacyAgent = "Check_mk Agent";
 }
 
-std::string CreateWmicCommand(std::string_view product_name) noexcept;
+std::string CreateWmicCommand(std::string_view product_name);
 bool UninstallProduct(std::string_view name);
 std::filesystem::path CreateWmicUninstallFile(
-    std::filesystem::path temp_dir, std::string_view product_name) noexcept;
+    const std::filesystem::path& temp_dir, std::string_view product_name);
 }  // namespace cma::cfg
 
 #include "cfg_details.h"

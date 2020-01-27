@@ -484,5 +484,8 @@
     <None Include="..\..\test_files\config\check_mk_dev_unit_testing.yml">
       <Filter>data</Filter>
     </None>
+    <None Include=".clang-tidy">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

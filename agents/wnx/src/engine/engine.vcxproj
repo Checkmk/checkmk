@@ -563,6 +563,7 @@
     <None Include="..\..\test_files\config\check_mk_dev_default.yml" />
     <None Include="..\..\test_files\config\check_mk_dev_minimum.yml" />
     <None Include="..\..\test_files\config\check_mk_dev_unit_testing.yml" />
+    <None Include=".clang-tidy" />
     <None Include="unpack_packs.cmd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

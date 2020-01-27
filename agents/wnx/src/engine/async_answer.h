@@ -33,7 +33,7 @@ public:
     AsyncAnswer()
         : timeout_(5), awaited_segments_(0), tp_id_(GenerateAnswerId()) {}
 
-    bool isAnswerOlder(std::chrono::milliseconds Milli) const;
+    bool isAnswerOlder(std::chrono::milliseconds period) const;
 
     auto getId() const { return tp_id_; }
 
@@ -46,7 +46,7 @@ public:
     void dropAnswer();  // owner does it, reset all to initial state
 
     //
-    bool waitAnswer(std::chrono::milliseconds MillisecondsToWait);
+    bool waitAnswer(std::chrono::milliseconds to_wait);
 
     void exeKickedCount(int Count) {
         std::lock_guard lk(lock_);
@@ -61,14 +61,14 @@ public:
     // #TODO gtest
     auto getAllClear() {}
 
-    bool prepareAnswer(std::string_view Ip) noexcept;
+    bool prepareAnswer(std::string_view Ip);
     uint64_t num() const noexcept { return sw_.getCount(); }
 
     // Reporting Function, which called by the sections
     // #TODO gtest
-    bool addSegment(const std::string SegmentProviderName,  // name
-                    const AnswerId RequiredAnswerId,        // "password"
-                    const std::vector<uint8_t> data         // data for section
+    bool addSegment(const std::string& section_name,  // name
+                    const AnswerId answer_id,         // "password"
+                    const std::vector<uint8_t>& data  // data for section
     );
 
     // #TODO gtest

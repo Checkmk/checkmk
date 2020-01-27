@@ -567,7 +567,7 @@ static void InstallYmlFile() {
 static void PrintInstallCopyLog(std::string_view info_on_error,
                                 const std::filesystem::path &in_file,
                                 const std::filesystem::path &out_file,
-                                const std::error_code &ec) noexcept {
+                                const std::error_code &ec) {
     if (ec.value() == 0)
         XLOG::l.i("\tSuccess");
     else

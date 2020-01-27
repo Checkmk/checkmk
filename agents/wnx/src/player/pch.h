@@ -10,6 +10,7 @@
 #define NOMINMAX
 #define _CRT_SECURE_NO_WARNINGS
 #define _SILENCE_CXX17_STRSTREAM_DEPRECATION_WARNING
+#define FMT_HEADER_ONLY
 
 #include <filesystem>
 inline std::filesystem::path G_ProjectPath = PROJECT_DIR;

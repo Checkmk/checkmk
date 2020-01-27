@@ -153,14 +153,17 @@ bool CoreCarrier::mailSlotSend(DataType Type, const std::string& PeerName,
     return postman.ExecPost(cdh.get(), cdh->fullLength());
 }
 
-bool CoreCarrier::dumpSlotSend(DataType Type, const std::string&, uint64_t,
-                               const void* Data, size_t) {
-    auto data = static_cast<const char*>(Data);
-    if (Data) {
-        if (Type == kSegment)
-            std::cout << (const char*)Data;
+bool CoreCarrier::dumpSlotSend(DataType type, const std::string& peer_name,
+                               uint64_t marker, const void* data_in,
+                               size_t length)
+
+{
+    auto data = static_cast<const char*>(data_in);
+    if (data) {
+        if (type == kSegment)
+            std::cout << data;
         else
-            std::cerr << (const char*)Data << '\n';
+            std::cerr << data << '\n';
     }
     return true;
 }
@@ -209,16 +212,14 @@ bool CoreCarrier::fileSlotSend(DataType Type, const std::string& PeerName,
 }
 
 // nothing
-bool CoreCarrier::nullSlotSend(DataType Type, const std::string& PeerName,
-                               uint64_t Marker, const void* Data,
-                               size_t Length) {
+bool CoreCarrier::nullSlotSend(DataType, const std::string&, uint64_t,
+                               const void*, size_t) {
     return true;
 }
 
 // nothing
-bool CoreCarrier::asioSlotSend(DataType Type, const std::string& PeerName,
-                               uint64_t Marker, const void* Data,
-                               size_t Length) {
+bool CoreCarrier::asioSlotSend(DataType, const std::string&, uint64_t,
+                               const void*, size_t) {
     return false;
 }
 

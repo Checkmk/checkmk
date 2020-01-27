@@ -379,7 +379,7 @@ public:
     static bool smartMerge(YAML::Node Target, YAML::Node Src, Combine combine);
 
     // THIS IS ONLY FOR TESTING
-    bool loadDirect(const std::filesystem::path& FullPath);
+    bool loadDirect(const std::filesystem::path& file);
 
     uint64_t uniqId() const noexcept { return uniq_id_; }
 

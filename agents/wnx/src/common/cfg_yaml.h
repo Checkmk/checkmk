@@ -1,5 +1,6 @@
 // Configuration Parameters for YAML and YAML-INI related configs
 #pragma once
+#include <cstdint>
 namespace cma::cfg {
 
 namespace yml_var {
@@ -213,6 +214,7 @@ namespace defaults {
 constexpr const char* const kStartMode = values::kStartModeAuto;
 constexpr const char* const kErrorMode = values::kErrorModeLog;
 constexpr bool kRestartOnCrash = true;
+constexpr uint32_t kMrpeTimeout = 10;
 
 }  // namespace defaults
 

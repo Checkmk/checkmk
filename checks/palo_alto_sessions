@@ -34,7 +34,7 @@ def inventory_palo_alto_sessions(info):
 
 
 def check_palo_alto_sessions(_no_item, params, info):
-    sessions_supported, total, tcp, udp, icmp, sslproxy = map(int, info[0])
+    sessions_supported, total, tcp, udp, icmp, sslproxy = list(map(int, info[0]))
 
     if sessions_supported == 0:
         sessions_used_perc = 0

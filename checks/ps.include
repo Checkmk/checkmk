@@ -112,8 +112,7 @@ def inventory_ps_common(invrules, parsed):
 
             if inv not in inventory:
                 inventory.append(inv)
-                inventory_labels.append(
-                    HostLabels(*[HostLabel(k, v) for k, v in labels.iteritems()]))
+                inventory_labels.append(HostLabels(*[HostLabel(k, v) for k, v in labels.items()]))
 
     return inventory + inventory_labels
 

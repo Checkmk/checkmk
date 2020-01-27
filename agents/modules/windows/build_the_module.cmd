@@ -19,7 +19,7 @@ powershell Write-Host 'Simulating fail build...' -foreground Cyan
 exit /b 11
 
 :python_build
-powershell Write-Host 'Building pyhon...' -foreground Cyan
+powershell Write-Host 'Building python...' -foreground Cyan
 make 
 goto exit
 

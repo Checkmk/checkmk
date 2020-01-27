@@ -66,8 +66,8 @@ unpack: 7zip $(PYTHON_TIMESTAMP) ## unpacking python sources
 python_install: $(PYTHON_TIMESTAMP)    ## python installation
 	@echo "Target $@"
 	@call exec_cmd.bat build_python.cmd
-	@call exec_cmd.bat uninstall.cmd
-	@call exec_cmd.bat install.cmd
+	@call exec_cmd.bat uninstall_python.cmd
+	@call exec_cmd.bat install_python.cmd
 	@call exec_cmd.bat upgrade_pip.cmd
 	@call exec_cmd.bat install_pipenv.cmd
 	@powershell Write-Host -foreground Green "Python is build and ready to use"
@@ -75,7 +75,7 @@ python_install: $(PYTHON_TIMESTAMP)    ## python installation
 
 $(PIPFILE): $(GIT_PIPFILE) ## pifile copy and patch
 	@echo "Target $@"
-	@mkdir $(PYTHON_READY_DIR) 2> nul
+	@if not exist $(PYTHON_READY_DIR) mkdir $(PYTHON_READY_DIR) 2> nul
 	@copy /Y $< $@
 	@py -3 patch_pipfile.py $@
 
@@ -99,7 +99,7 @@ $(PYTHON_ARTE): $(PYTHON_MODULE) ## copy to artefacts
 
 build: unpack $(PYTHON_ARTE) ## building all
 	@powershell Write-Host -foreground Green "Build finished, uninstalling python"
-	@call exec_cmd.bat uninstall.cmd
+	@call exec_cmd.bat uninstall_python.cmd
 	
 
 clean:

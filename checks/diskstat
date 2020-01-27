@@ -333,7 +333,7 @@ def diskstat_extract_name_info(info):
                     info_plain.append(line)
             elif phase == 'dmsetup_info':
                 try:
-                    major, minor = map(int, line[2].split(':'))
+                    major, minor = list(map(int, line[2].split(':')))
                     if len(line) == 5:
                         name = "LVM %s" % line[1]
                     else:
@@ -353,7 +353,7 @@ def diskstat_extract_name_info(info):
 
 def diskstat_convert_info(parsed):
     disks, multipath_info = parsed
-    converted_disks = dict(disks.items())  # we must not modify info!
+    converted_disks = dict(disks)  # we must not modify info!
 
     # If we have information about multipathing, then remove the
     # physical path devices from the disks array. But only do this,
@@ -383,7 +383,7 @@ def diskstat_convert_info(parsed):
 
     # Remove any left-over device mapper devices that are not part of a
     # known multipath device, LVM device or whatever
-    for device in converted_disks.keys():
+    for device in list(converted_disks.keys()):
         if device.startswith("dm-"):
             del converted_disks[device]
 

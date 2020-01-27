@@ -50,5 +50,5 @@ def docker_get_short_id(string):
 def docker_format_labels(obj):
     labels = obj.get("Labels") or {}
     if isinstance(labels, dict):
-        labels = labels.iteritems()
+        labels = iter(labels.items())
     return ", ".join("%s: %s" % item for item in sorted(labels))

@@ -106,8 +106,8 @@ def inventory_df_zos(parsed):
 def check_df_zos(item, params, parsed):
     fslist = []
 
-    for filesystem in parsed.keys():
-        (size_mb, used_mb, avail_mb) = map(float, parsed[filesystem]['size'][0:3])
+    for filesystem, fs_data in parsed.items():
+        (size_mb, used_mb, avail_mb) = list(map(float, fs_data['size'][0:3]))
         size_mb /= 1024
         used_mb /= 1024
         avail_mb /= 1024

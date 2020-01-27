@@ -66,7 +66,7 @@ def with_unused_counter_removal(plugin_name):
             this_time = time.time()
 
             age_counters = [(this_time - value[0], ident)
-                            for (ident, value) in get_all_item_states().iteritems()
+                            for (ident, value) in get_all_item_states().items()
                             if is_plugin_counter_with_age(ident, value)]
 
             if age_counters:
@@ -194,7 +194,7 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
     # Process IOs when available
     ios_per_sec = None
     if len(line) >= 6 and line[4] >= 0 and line[5] > 0:
-        reads, writes = map(int, line[4:6])
+        reads, writes = list(map(int, line[4:6]))
         if "read_ios" in params:
             warn, crit = params["read_ios"]
             if reads >= crit:

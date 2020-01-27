@@ -49,7 +49,7 @@ def inventory_dell_powerconnect_cpu(info):
 # Check of dell power connect CPU details.
 def check_dell_powerconnect_cpu(item, params, info):
     try:
-        enabled, onesecondperc, oneminuteperc, fiveminutesperc = map(int, info[0])
+        enabled, onesecondperc, oneminuteperc, fiveminutesperc = list(map(int, info[0]))
     except ValueError:
         raise MKCounterWrapped("Ignoring empty data from SNMP agent")
     if int(enabled) == 1:

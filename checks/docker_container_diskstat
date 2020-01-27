@@ -53,8 +53,8 @@ def _parse_docker_container_diskstat_plugin(info):
     raw = docker_json_get_obj(info[1])
 
     devices = {}
-    for major_minor, name in raw["names"].iteritems():
-        major, minor = map(int, major_minor.split(':', 1))
+    for major_minor, name in raw["names"].items():
+        major, minor = list(map(int, major_minor.split(':', 1)))
         devices[(major, minor)] = {
             "name": name,
             "bytes": {},
@@ -98,9 +98,9 @@ def _parse_docker_container_diskstat_agent(info):
             devices = sections.setdefault("devices", {})
 
             if phase == "names":
-                major, minor = map(int, line[1].split(":"))
+                major, minor = list(map(int, line[1].split(":")))
             else:
-                major, minor = map(int, line[0].split(":"))
+                major, minor = list(map(int, line[0].split(":")))
 
             device_id = major, minor
             device = devices.setdefault(device_id, {})

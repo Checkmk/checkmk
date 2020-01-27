@@ -29,15 +29,15 @@ def parse_ddn_s2a_errors(info):
     preparsed = parse_ddn_s2a_api_response(info)
     return {
         "port_type": preparsed[u"port_type"],
-        "link_failure_errs": map(int, preparsed[u"link_failure_errs"]),
-        "lost_sync_errs": map(int, preparsed[u"lost_sync_errs"]),
-        "loss_of_signal_errs": map(int, preparsed[u"loss_of_sig_errs"]),
-        "prim_seq_errs": map(int, preparsed[u"prim_seq_errs"]),
-        "crc_errs": map(int, preparsed[u"CRC_errs"]),
-        "receive_errs": map(int, preparsed[u"receive_errs"]),
-        "ctio_timeouts": map(int, preparsed[u"CTIO_timeouts"]),
-        "ctio_xmit_errs": map(int, preparsed[u"CTIO_xmit_errs"]),
-        "ctio_other_errs": map(int, preparsed[u"CTIO_other_errs"]),
+        "link_failure_errs": list(map(int, preparsed[u"link_failure_errs"])),
+        "lost_sync_errs": list(map(int, preparsed[u"lost_sync_errs"])),
+        "loss_of_signal_errs": list(map(int, preparsed[u"loss_of_sig_errs"])),
+        "prim_seq_errs": list(map(int, preparsed[u"prim_seq_errs"])),
+        "crc_errs": list(map(int, preparsed[u"CRC_errs"])),
+        "receive_errs": list(map(int, preparsed[u"receive_errs"])),
+        "ctio_timeouts": list(map(int, preparsed[u"CTIO_timeouts"])),
+        "ctio_xmit_errs": list(map(int, preparsed[u"CTIO_xmit_errs"])),
+        "ctio_other_errs": list(map(int, preparsed[u"CTIO_other_errs"])),
     }
 
 

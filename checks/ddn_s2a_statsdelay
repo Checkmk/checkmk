@@ -34,7 +34,7 @@ def parse_ddn_s2a_statsdelay(info):
     parsed = parse_ddn_s2a_api_response(info)
 
     for key in [u"host_reads", u"host_writes", u"disk_reads", u"disk_writes"]:
-        parsed[key] = map(int, parsed[key])
+        parsed[key] = list(map(int, parsed[key]))
 
     # Regarding the special treatment of the >10.0 value here: This API does not provide
     # more detailed information than this. We assume a value of 30, but we really have no way

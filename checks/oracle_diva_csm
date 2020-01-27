@@ -157,7 +157,7 @@ def inventory_oracle_diva_csm_objects(info):
 def check_oracle_diva_csm_objects(item, params, info):
     GB = 1024 * 1024 * 1024
     if len(info) > 4 and len(info[4]) > 0:
-        object_count, remaining_size, total_size = map(int, info[4][0])
+        object_count, remaining_size, total_size = list(map(int, info[4][0]))
 
         infotext = "managed objects: %s, remaining size: %s GB of %s GB" % (
             object_count, remaining_size, total_size)

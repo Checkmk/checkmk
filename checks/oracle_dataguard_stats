@@ -43,7 +43,7 @@ factory_settings["oracle_dataguard_stats"] = {
 
 
 def inventory_oracle_dataguard_stats(parsed):
-    for instance in parsed.iterkeys():
+    for instance in parsed.keys():
         yield instance, {}
 
 

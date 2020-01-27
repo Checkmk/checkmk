@@ -95,7 +95,7 @@ def check_omd_status(item, _no_params, sections):
     number_nodes = len(parsed_site)
     stopped_nodes = 0
 
-    for node, services in parsed_site.iteritems():
+    for node, services in parsed_site.items():
         if "overall" in services and services["overall"] == "stopped":
             stopped_nodes += 1
 
@@ -105,7 +105,7 @@ def check_omd_status(item, _no_params, sections):
     else:
         state = 0
 
-    for node, services in parsed_site.iteritems():
+    for node, services in parsed_site.items():
         if node:
             node_text = " on %s" % node
         else:

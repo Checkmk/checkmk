@@ -227,7 +227,7 @@ check_info['openhardwaremonitor'] = {
 def check_openhardwaremonitor_temperature(item, params, parsed):
     if not 'levels' in params:
         found = False
-        for key in params.iterkeys():
+        for key in params.keys():
             if key in item:
                 params = params[key]
                 found = True
@@ -336,7 +336,7 @@ def inventory_openhardwaremonitor_smart(parsed):
 
 
 def check_openhardwaremonitor_smart(item, params, parsed):
-    for sensor_type, readings in openhardwaremonitor_smart_readings.iteritems():
+    for sensor_type, readings in openhardwaremonitor_smart_readings.items():
         for reading in readings:
             reading_name = "%s %s" % (item, reading['name'])
 

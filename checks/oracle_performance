@@ -65,7 +65,7 @@ def parse_oracle_performance(info):
         if len(counters) == 1:
             parsed[line[0]][line[1]].setdefault(line[2], int(counters[0]))
         else:
-            parsed[line[0]][line[1]].setdefault(line[2], map(int, counters))
+            parsed[line[0]][line[1]].setdefault(line[2], list(map(int, counters)))
 
     return parsed
 

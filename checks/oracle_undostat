@@ -44,8 +44,8 @@ def check_oracle_undostat(item, params, info):
         if line[0] == item:
             infotext = ''
 
-            activeblks, maxconcurrency, tuned_undoretention, maxquerylen, nospaceerrcnt = map(
-                int, line[1:])
+            activeblks, maxconcurrency, tuned_undoretention, maxquerylen, nospaceerrcnt = \
+                list(map(int, line[1:]))
             warn, crit = params["levels"]
 
             if tuned_undoretention == -1:

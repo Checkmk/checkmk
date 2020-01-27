@@ -18,7 +18,7 @@ details.
 ## Getting started
 
 Please have a look at the [official
-handbook](https://checkmk.com/cms_introduction.html) on how to get
+handbook](https://checkmk.com/cms_intro.html) on how to get
 started with Checkmk.
 
 ## Want to contribute?

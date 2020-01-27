@@ -194,7 +194,7 @@ def inventory_jolokia_metrics_apps(info, what):
     # this handles information from BEA, they stack one level
     # higher than the rest.
     if what == 'bea_app_sess':
-        for inst, vals in parsed.iteritems():
+        for inst, vals in parsed.items():
             if vals is None:
                 continue  # no data from agent
 
@@ -206,7 +206,7 @@ def inventory_jolokia_metrics_apps(info, what):
                                 inv.append(('%s %s %s' % (inst, app, servlet), levels))
                                 continue
     # This does the same for tomcat
-    for inst, vals in parsed.iteritems():
+    for inst, vals in parsed.items():
         if vals is None:
             continue  # no data from agent
 

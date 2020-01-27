@@ -103,9 +103,10 @@ def parse_juniper_fru(info):
 
 
 def inventory_juniper_fru(parsed, fru_type):
-    return [ (fru_name, None) for fru_name, fru_data in parsed.items() \
-             if fru_data["fru_type"] == fru_type
-                and fru_data["fru_state"] != "2" ] # ignore "empty" states
+    return [(fru_name, None)
+            for fru_name, fru_data in parsed.items()
+            if fru_data["fru_type"] == fru_type and fru_data["fru_state"] != "2"
+           ]  # ignore "empty" states
 
 
 def check_juniper_fru(item, _no_params, parsed):

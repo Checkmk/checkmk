@@ -32,7 +32,7 @@ def inventory_juniper_mem_generic(info):
 
 
 def check_juniper_mem_generic(_no_item, params, info):
-    usage_kb, mem_size_kb = map(int, info[0])  # Kilobyte
+    usage_kb, mem_size_kb = list(map(int, info[0]))  # Kilobyte
     mem_size = mem_size_kb * 1024
     usage = usage_kb * 1024
     usage_perc = (float(usage_kb) / mem_size_kb) * 100

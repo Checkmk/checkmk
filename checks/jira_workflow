@@ -66,7 +66,7 @@ def check_jira_workflow(item, params, item_data):
         yield 2, "Jira error while searching (see long output for details)\n%s" % msg_error
         return
 
-    for _workflow, issue_count in item_data.iteritems():
+    for _workflow, issue_count in item_data.items():
 
         issue_nr_levels = params.get('workflow_count_upper', (None, None))
         issue_nr_levels_lower = params.get('workflow_count_lower', (None, None))

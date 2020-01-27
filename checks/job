@@ -105,7 +105,7 @@ def parse_job(info):
 
 
 def inventory_job(parsed):
-    for jobname, nodes in parsed.iteritems():
+    for jobname, nodes in parsed.items():
         for jobattrs in nodes.values():
             if jobattrs["state"] != "running":
                 yield jobname, {}
@@ -166,7 +166,7 @@ def _process_job_stats(job, age_levels):
 def check_job(_no_item, params, nodes):
     warn, crit = params['age']
     results = []
-    for node_info, job in nodes.iteritems():
+    for node_info, job in nodes.items():
         prefix = "[%s] " % node_info if node_info else ""
 
         if job.get("exit_code") is None:

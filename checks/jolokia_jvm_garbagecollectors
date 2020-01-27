@@ -28,7 +28,7 @@
 def parse_jolokia_jvm_garbagecollectors(info):
     parsed = {}
     for instance, _mbean, bulk_data in parse_jolokia_json_output(info):
-        for data in bulk_data.itervalues():
+        for data in bulk_data.values():
             name = data.get("Name")
             if not name:
                 continue

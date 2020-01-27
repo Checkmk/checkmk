@@ -81,7 +81,7 @@ def parse_juniper_trpz_aps_sessions(info):
                 radio_oid, radio_number = radio_data.rsplit('.', 1)
             except ValueError:
                 continue
-            for ap_data in parsed.itervalues():
+            for ap_data in parsed.values():
                 if radio_oid == ap_data.get('end_oid') and \
                    radio_node == ap_data.get('active_node'):
                     ap_data['radios'][radio_number] = {

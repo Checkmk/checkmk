@@ -97,7 +97,7 @@ factory_settings["jenkins_nodes_default_levels"] = {
 
 def inventory_jenkins_nodes(parsed):
     if parsed:
-        for item, values in parsed.iteritems():
+        for item, values in parsed.items():
             for line in values:
                 label_data = line.get("assignedLabels")
                 if label_data is None:

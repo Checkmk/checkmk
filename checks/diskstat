@@ -333,7 +333,7 @@ def diskstat_extract_name_info(info):
                     info_plain.append(line)
             elif phase == 'dmsetup_info':
                 try:
-                    major, minor = list(map(int, line[2].split(':')))
+                    major, minor = map(int, line[2].split(':'))
                     if len(line) == 5:
                         name = "LVM %s" % line[1]
                     else:

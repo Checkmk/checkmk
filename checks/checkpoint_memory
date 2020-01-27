@@ -47,7 +47,7 @@ def check_checkpoint_memory(item, params, info):
     if isinstance(params, tuple):
         params = {"levels": ("perc_used", params)}
 
-    mem_total_bytes, mem_used_bytes = list(map(int, info[0]))
+    mem_total_bytes, mem_used_bytes = map(int, info[0])
     return check_memory_element(
         "Usage",
         mem_used_bytes,

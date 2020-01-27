@@ -65,7 +65,7 @@ def check_alcatel_timetra_chassis(item, _no_params, info):
     }
     for line in info:
         if line[0] == item:
-            adminstate, operstate, alarmstate = list(map(int, line[1:]))
+            adminstate, operstate, alarmstate = map(int, line[1:])
             if operstate != adminstate:
                 if admin_states[adminstate][0] != 0:
                     yield admin_states[adminstate][

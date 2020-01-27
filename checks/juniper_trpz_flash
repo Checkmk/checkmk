@@ -33,7 +33,7 @@ def inventory_juniper_trpz_flash(info):
 
 def check_juniper_trpz_flash(_no_item, params, info):
     warn, crit = params
-    used, total = list(map(savefloat, info[0]))
+    used, total = map(savefloat, info[0])
     message = "Used: %s of %s " % (get_bytes_human_readable(used), get_bytes_human_readable(total))
     perc_used = (used / total) * 100  # fixed: true-division
     if isinstance(crit, float):

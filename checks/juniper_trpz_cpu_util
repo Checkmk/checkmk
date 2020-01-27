@@ -32,7 +32,7 @@ def inventory_juniper_trpz_cpu_util(info):
 
 
 def check_juniper_trpz_cpu_util(_no_item, params, info):
-    utilc, util1, util5 = list(map(savefloat, info[0]))
+    utilc, util1, util5 = map(savefloat, info[0])
 
     warn, crit = params.get("util", (None, None)) if isinstance(params, dict) else params
 

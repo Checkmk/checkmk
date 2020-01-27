@@ -41,7 +41,7 @@ def inventory_prism_container(parsed):
 def check_prism_container(item, params, parsed):
     for row in parsed:
         if row['name'] == item:
-            usage, capacity = list(map(int, (row['usage'], row['capacity'])))
+            usage, capacity = map(int, (row['usage'], row['capacity']))
 
             warn, crit = params['levels']
             if isinstance(warn, float):

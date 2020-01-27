@@ -32,7 +32,7 @@ def inventory_juniper_screenos_cpu(info):
 
 
 def check_juniper_screenos_cpu(_no_item, params, info):
-    util1, util15 = list(map(float, info[0]))
+    util1, util15 = map(float, info[0])
     warn, crit = params.get("util", (None, None)) if isinstance(params, dict) else params
     label15 = ""
     state = 0

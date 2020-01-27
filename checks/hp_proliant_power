@@ -45,7 +45,7 @@ def check_hp_proliant_power(item, params, info):
         2: "present",
         3: "absent",
     }
-    status, reading = list(map(int, info[0]))
+    status, reading = map(int, info[0])
     if status != 2:
         return 2, "Power Meter state: %s" % (status_table[status])
     warn, crit = params

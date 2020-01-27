@@ -135,7 +135,7 @@ def parse_emka_modules(info):
 
         equation = equation[1:]
         if len(equation) == 2:
-            m, a = list(map(float, equation))
+            m, a = map(float, equation)
         else:
             m, a = 1.0, 0.0
 

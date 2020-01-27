@@ -40,7 +40,7 @@ def parse_graylog_sources(info):
         if source_name is None:
             continue
 
-        for name, messages in source_name.iteritems():
+        for name, messages in source_name.items():
 
             parsed.setdefault(name, {
                 "messages": int(messages),

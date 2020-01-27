@@ -116,7 +116,7 @@ def check_graylog_streams(_no_item, params, parsed):
                        infoname="Number of streams")
 
     long_output = []
-    for stream, values in parsed.iteritems():
+    for stream, values in parsed.items():
         long_output_str = "%s" % stream
 
         if values["is_default"]:

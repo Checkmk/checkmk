@@ -56,7 +56,7 @@ def parse_graylog_nodes(info):
     for line in info:
         node_details = json.loads(line[0])
 
-        for node, detail in node_details.iteritems():
+        for node, detail in node_details.items():
             try:
                 parsed.setdefault(node, []).append(detail)
             except KeyError:
@@ -98,7 +98,7 @@ def check_graylog_nodes(item, params, parsed):
         yield 2, "Missing in agent output (graylog service running?)"
         return
 
-    for node_name, details in parsed.iteritems():
+    for node_name, details in parsed.items():
         if item != node_name:
             continue
 

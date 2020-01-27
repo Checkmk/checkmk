@@ -51,6 +51,14 @@ import functools
 import multiprocessing
 import logging
 
+def which(prg):
+    for path in os.environ["PATH"].split(os.pathsep):
+        if os.path.isfile(os.path.join(path,prg)) and os.access(os.path.join(path,prg), os.X_OK):
+            return os.path.join(path,prg)
+    return None
+if not os.path.isfile('/var/lib/docker') and not os.path.isfile('/var/run/docker') and not which('docker'):
+    sys.exit(1)
+
 try:
     import ConfigParser as configparser
 except ImportError:  # Python3

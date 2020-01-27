@@ -244,11 +244,12 @@ def parse_lnx_if(info):
         except ValueError:
             ifPhysAddress = ''
 
-        row = [node_info] + list(map(str, [
-            ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast,
-            ifInDiscards, ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards,
-            ifOutErrors, ifOutQLen, ifAlias, ifPhysAddress
-        ]))
+        row = [node_info] + list(
+            map(str, [
+                ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast,
+                inbcast, ifInDiscards, ifInErrors, ifOutOctets, outucast, outmcast, outbcast,
+                ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias, ifPhysAddress
+            ]))
 
         if_table.append(row)
 

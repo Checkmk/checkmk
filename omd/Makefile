@@ -30,6 +30,7 @@ PACKAGES := \
     apache-omd \
     mod_fcgid \
     mod_wsgi \
+    python3-mod_wsgi \
     check_mk \
     check_multi \
     check_mysql_health \

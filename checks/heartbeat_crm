@@ -356,7 +356,7 @@ def inventory_heartbeat_crm_resources(info):
     # resource_slapslave  (ocf::heartbeat:OpenLDAP):  Started smwp
     inventory = []
     settings = host_extra_conf_merged(host_name(), inventory_heartbeat_crm_rules)
-    for name, resources in heartbeat_crm_parse_resources(info).iteritems():
+    for name, resources in heartbeat_crm_parse_resources(info).items():
         # In naildown mode only resources which are started somewhere can be
         # inventorized
         if settings.get('naildown_resources', False) and resources[0][2] != 'Stopped':

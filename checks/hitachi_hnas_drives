@@ -50,7 +50,7 @@ def check_hitachi_hnas_drives(_no_item, params, info):
         ("Formatting", 2),
         ("Unknown", 3),
     )
-    for status, count in info.iteritems():
+    for status, count in info.items():
         infotext = "%s: %d" % (status_map[int(status) - 1][0], count)
         yield status_map[int(status) - 1][1], infotext
 

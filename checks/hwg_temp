@@ -64,7 +64,7 @@ def parse_hwg_temp(info):
 
 
 def inventory_hwg_temp(parsed):
-    for index, attrs in parsed.iteritems():
+    for index, attrs in parsed.items():
         if attrs["dev_status_name"] not in ["invalid", ""] \
            and attrs["dev_unit"] in ["c", "f", "k"]:
             yield index, {}

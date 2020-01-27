@@ -138,7 +138,7 @@
 def _get_item_data(item, parsed):
     # ensure backward compatibility: get data in case either item is
     # "durable-id" (old) or item is "volume-name" (new)
-    for k, v in parsed.iteritems():
+    for k, v in parsed.items():
         if item in [k, v["durable-id"]]:
             return {item: v}
     return {}
@@ -175,7 +175,7 @@ def parse_hp_msa_volume(info):
 
     # replace numerical id with volume-name as uid for items, convert data
     parsed = {}
-    for v in pre_parsed.itervalues():
+    for v in pre_parsed.values():
         parsed.setdefault(v['volume-name'], v)
 
     return parsed
@@ -252,8 +252,7 @@ def check_hp_msa_volume_io(item, params, parsed):
     if item != "SUMMARY":
         yield 0, "%s (%s)" % (parsed[item]["virtual-disk-name"], parsed[item]["raidtype"])
 
-    subresults = list(check_diskstat_dict(item, params, disks))
-    for entry in subresults:
+    for entry in check_diskstat_dict(item, params, disks):
         yield entry
 
 

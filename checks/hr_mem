@@ -68,7 +68,7 @@ def aggregate_meminfo(parsed):
     """return a meminfo dict as expected by check_memory from mem.include"""
     meminfo = {'Cached': 0, 'Buffers': 0}
 
-    for type_readable, entries in parsed.iteritems():
+    for type_readable, entries in parsed.items():
         for descr, size, used in entries:
             if type_readable in ['RAM', 'virtual memory'] and descr != "virtual memory":
                 # We use only the first entry of each type. We have

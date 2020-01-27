@@ -29,7 +29,7 @@ def hitachi_hnas_fc_if_convert_info(info):
     converted = []
     for line in info:
         converted.append(
-            map(
+            list(map(
                 str,
                 [
                     "%d%03d" % (int(line[0]), int(line[1])),  # ifIndex
@@ -52,7 +52,7 @@ def hitachi_hnas_fc_if_convert_info(info):
                     0,  # ifOutQLen
                     line[0] + "." + line[1],  # ifAlias, same as description
                     "",  # ifPhysAddress
-                ]))
+                ])))
     return converted
 
 

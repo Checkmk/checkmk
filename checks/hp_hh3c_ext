@@ -60,7 +60,7 @@ def parse_hp_hh3c_ext(info):
 
 
 def inventory_hp_hh3c_ext(parsed):
-    for k, v in parsed.iteritems():
+    for k, v in parsed.items():
         # The invalid value is 65535.
         # We assume: If mem_total <= 0, this module is not installed or
         # does not provide reasonable data or is not a real sensor.
@@ -117,7 +117,7 @@ check_info['hp_hh3c_ext'] = {
 
 
 def inventory_hp_hh3c_ext_states(parsed):
-    for k, v in parsed.iteritems():
+    for k, v in parsed.items():
         if v["mem_total"] > 0:
             # We assume: if mem_total > 0 then
             # this module is installed and provides
@@ -172,7 +172,7 @@ check_info['hp_hh3c_ext.states'] = {
 
 
 def inventory_hp_hh3c_ext_cpu(parsed):
-    for k, v in parsed.iteritems():
+    for k, v in parsed.items():
         if v["mem_total"] > 0:
             # We assume: if mem_total > 0 then
             # this module is installed and provides
@@ -211,7 +211,7 @@ factory_settings['hp_hh3c_ext_mem_default_levels'] = {
 
 
 def inventory_hp_hh3c_ext_mem(parsed):
-    for name, attrs in parsed.iteritems():
+    for name, attrs in parsed.items():
         if attrs["mem_total"] > 0:
             # We assume: if mem_total > 0 then
             # this module is installed and provides

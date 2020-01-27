@@ -341,7 +341,7 @@ def check_mem_linux(_no_item, params, info):
     yield results.pop("ram", (0, ""))[:2]
     yield results.pop("swap", (0, ""))[:2]
     # show rest only if not OK:
-    for state, infotext, _perf in results.itervalues():
+    for state, infotext, _perf in results.values():
         if state:
             yield state, infotext
 

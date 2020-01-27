@@ -106,7 +106,7 @@ def parse_mssql_instance(info):
 
 
 def inventory_mssql_instance(parsed):
-    for instance_id in parsed.iterkeys():
+    for instance_id in parsed:
         yield instance_id, {}
 
 

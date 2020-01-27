@@ -46,9 +46,9 @@ inventory_mssql_counters_rules = []
 
 def inventory_mssql_counters_generic(parsed, want_counters, dflt=None):
     want_counters = set(want_counters)
-    for (obj, instance), node_data in parsed.iteritems():
+    for (obj, instance), node_data in parsed.items():
         for counters in node_data.values():
-            if not want_counters.intersection(counters.keys()):
+            if not want_counters.intersection(counters):
                 continue
             yield "%s %s" % (obj, instance), dflt
 
@@ -150,9 +150,9 @@ def inventory_mssql_counters_cache_hits(parsed, want_counters):
     add_zero_based_services = host_extra_conf_merged(host_name(), inventory_mssql_counters_rules)\
                               .get('add_zero_based_services', False)
 
-    for (obj, instance), node_data in parsed.iteritems():
+    for (obj, instance), node_data in parsed.items():
         for counters in node_data.values():
-            for counter in counters.keys():
+            for counter in counters:
                 if counter not in want_counters:
                     continue
 
@@ -167,7 +167,7 @@ def check_mssql_counters_cache_hits(item, params, parsed):
     obj, instance, counter = item.split()
     node_data = parsed.get((obj, instance), {})
 
-    for node_name, counters in node_data.iteritems():
+    for node_name, counters in node_data.items():
         value = counters.get(counter)
         base = counters.get("%s_base" % counter, 0)
 
@@ -228,7 +228,7 @@ def check_mssql_counters_transactions(item, params, parsed):
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
 
-    for node_name, counters in node_data.iteritems():
+    for node_name, counters in node_data.items():
         now = counters.get('utc_time')
         if now is None:
             now = time.time()
@@ -274,7 +274,7 @@ def check_mssql_counters_locks(item, params, parsed):
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
 
-    for node_name, counters in node_data.iteritems():
+    for node_name, counters in node_data.items():
         now = counters.get('utc_time')
         if now is None:
             now = time.time()
@@ -326,7 +326,7 @@ check_info['mssql_counters.locks'] = {
 
 
 def inventory_mssql_counters_sqlstats(parsed, want_counters, dflt=None):
-    for (obj, instance), node_data in parsed.iteritems():
+    for (obj, instance), node_data in parsed.items():
         for counters in node_data.values():
             for counter in counters:
                 if counter not in want_counters:
@@ -343,7 +343,7 @@ def check_mssql_counters_sqlstats(item, params, parsed):
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
 
-    for node_name, counters in node_data.iteritems():
+    for node_name, counters in node_data.items():
         value = counters.get(counter)
         if value is None:
             return
@@ -392,7 +392,7 @@ def check_mssql_counters_pageactivity(item, params, parsed):
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
 
-    for node_name, counters in node_data.iteritems():
+    for node_name, counters in node_data.items():
         now = counters.get('utc_time')
         if now is None:
             now = time.time()
@@ -441,9 +441,8 @@ check_info['mssql_counters.pageactivity'] = {
 
 
 def inventory_mssql_counters_locks_per_batch(parsed):
-    db_names = [(obj.split(":")[0], node_name)
-                for (obj, _instance), node_data in parsed.iteritems() if ":" in obj
-                for node_name in node_data]
+    db_names = [(obj.split(":")[0], node_name) for (obj, _instance), node_data in parsed.items()
+                if ":" in obj for node_name in node_data]
 
     for db_name, node_name in db_names:
         if "lock_requests/sec" in parsed.get(("%s:Locks" % db_name, "_Total"), {})\
@@ -457,12 +456,12 @@ def check_mssql_counters_locks_per_batch(item, params, parsed):
     data_locks_data = parsed.get(("%s:Locks" % item, "_Total"), {})
     data_stats_data = parsed.get(("%s:SQL_Statistics" % item, "None"), {})
 
-    if not any(data_locks_data.values() + data_stats_data.values()):
+    if not any(list(data_locks_data.values()) + list(data_stats_data.values())):
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
 
-    for node_name in set(data_locks_data.keys() + data_stats_data.keys()):
+    for node_name in set(list(data_locks_data) + list(data_stats_data)):
         data_locks = data_locks_data[node_name]
         data_stats = data_stats_data[node_name]
         now = data_locks.get('utc_time', data_stats.get('utc_time'))
@@ -532,7 +531,7 @@ def check_mssql_file_sizes(item, params, parsed):
     if not params:
         params = {}
 
-    for node_name, counters in node_data.iteritems():
+    for node_name, counters in node_data.items():
         node_info = ""
         if node_name:
             node_info = "[%s] " % node_name

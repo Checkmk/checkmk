@@ -136,7 +136,7 @@ def parse_mknotifyd(info):
     # port is irrelevant. It changes randomly. But there might anyway be
     # more than one connection from the same remote host, so we are forced
     # to create artificial numbers if that is the case
-    for stats in parsed["sites"].itervalues():
+    for stats in parsed["sites"].values():
         remote_addresses = {}
         for connection_name, connection in stats["connections"].items():
             if connection["Type"] == "incoming":

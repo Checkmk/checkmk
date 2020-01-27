@@ -122,7 +122,7 @@ def check_mysql_sessions(_no_item, params, data):
 
 
 check_info['mysql.sessions'] = {
-    "inventory_function": discover(lambda k, values: len(values.keys()) > 200),
+    "inventory_function": discover(lambda k, values: len(values) > 200),
     "check_function": check_mysql_sessions,
     "service_description": "MySQL Sessions %s",
     "has_perfdata": True,
@@ -240,7 +240,7 @@ check_info['mysql.connections'] = {
 
 
 def inventory_mysql_galerasync(parsed):
-    for instance, data in parsed.iteritems():
+    for instance, data in parsed.items():
         if data.get('wsrep_provider') is not None and 'wsrep_local_state_comment' in data:
             yield instance, {}
 
@@ -276,7 +276,7 @@ check_info['mysql.galerasync'] = {
 
 
 def inventory_mysql_galeradonor(parsed):
-    for instance, data in parsed.iteritems():
+    for instance, data in parsed.items():
         if data.get('wsrep_provider') is not None and 'wsrep_sst_donor' in data:
             yield instance, {'wsrep_sst_donor': data['wsrep_sst_donor']}
 
@@ -316,7 +316,7 @@ check_info['mysql.galeradonor'] = {
 
 
 def inventory_mysql_galerastartup(parsed):
-    for instance, data in parsed.iteritems():
+    for instance, data in parsed.items():
         if data.get('wsrep_provider') is not None and 'wsrep_cluster_address' in data:
             yield instance, {}
 
@@ -356,7 +356,7 @@ check_info['mysql.galerastartup'] = {
 
 
 def inventory_mysql_galerasize(parsed):
-    for instance, data in parsed.iteritems():
+    for instance, data in parsed.items():
         if data.get('wsrep_provider') is not None and 'wsrep_cluster_size' in data:
             yield instance, {'invsize': data['wsrep_cluster_size']}
 
@@ -396,7 +396,7 @@ check_info['mysql.galerasize'] = {
 
 
 def inventory_mysql_galerastatus(parsed):
-    for instance, data in parsed.iteritems():
+    for instance, data in parsed.items():
         if data.get('wsrep_provider') is not None and 'wsrep_cluster_status' in data:
             yield instance, {}
 

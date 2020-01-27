@@ -56,7 +56,7 @@ def parse_mysql_capacity(info):
 
 @discover
 def inventory_mysql_size(instance, data):
-    for dbname, values in data.iteritems():
+    for dbname, values in data.items():
         if dbname not in ("information_schema", "mysql", "performance_schema") \
             and 'NULL' not in values:
             yield "%s:%s" % (instance, dbname)

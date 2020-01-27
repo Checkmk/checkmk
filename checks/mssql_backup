@@ -201,13 +201,13 @@ def inventory_mssql_backup_per_type(parsed):
     discovery_mode = _mssql_backup_discovery_mode()
     if discovery_mode != "per_type":
         return
-    for db_name, attrs in parsed.iteritems():
+    for db_name, attrs in parsed.items():
         for backup in attrs:
             yield _mssql_backup_per_type_item(db_name, backup), {}
 
 
 def check_mssql_backup_per_type(item, params, parsed):
-    for db_name, attrs in parsed.iteritems():
+    for db_name, attrs in parsed.items():
         for backup in attrs:
             if item == _mssql_backup_per_type_item(db_name, backup):
                 return _check_mssql_backup(backup, params.get("levels", (None, None)), "backup_age")

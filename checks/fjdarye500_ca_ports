@@ -56,7 +56,7 @@ def inventory_fjdarye500_ca_ports(parsed):
     settings = host_extra_conf_merged(host_name(), inventory_fujitsu_ca_ports)
     indices = settings.get('indices')
     modes = settings.get('modes', ['CA', 'CARA'])
-    for index, attrs in parsed.iteritems():
+    for index, attrs in parsed.items():
         if indices and index not in indices:
             continue
         if modes and attrs['mode'] not in modes:

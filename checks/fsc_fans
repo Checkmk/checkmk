@@ -41,7 +41,7 @@ def parse_fsc_fans(info):
 
 
 def inventory_fsc_fans(parsed):
-    return [(fan_name, {}) for fan_name in parsed.iterkeys()]
+    return [(fan_name, {}) for fan_name in parsed]
 
 
 @get_parsed_item_data

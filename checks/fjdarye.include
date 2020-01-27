@@ -152,7 +152,7 @@ def check_fjdarye_disks(item, params, parsed):
 
 def fjdarye_disks_summary(parsed):
     states = {}
-    for attrs in parsed.itervalues():
+    for attrs in parsed.values():
         if attrs["state_disk"] != "3":
             states.setdefault(attrs["state_readable"], 0)
             states[attrs["state_readable"]] += 1

@@ -184,7 +184,7 @@ def inventory_fileinfo_common(parsed, case):
 
     inventory_groups = host_extra_conf(host_name(), fileinfo_groups)
 
-    for item in parsed['files'].itervalues():
+    for item in parsed['files'].values():
         found_groups = {}
         for group_patterns in inventory_groups:
             found_groups.update(fileinfo_groups_get_group_name(group_patterns, item.name, reftime))
@@ -330,7 +330,7 @@ def check_fileinfo_groups(_item, params, parsed):
         group_patterns.add(entry)
 
     # Start counting values on all files
-    for file_stat in parsed['files'].itervalues():
+    for file_stat in parsed['files'].values():
 
         for pattern in group_patterns:
             if isinstance(pattern, str):  # support old format
@@ -415,7 +415,7 @@ def check_fileinfo_groups(_item, params, parsed):
     if any(exclude_patterns):
         long_output.append("Exclude patterns: %s" % ", ".join(exclude_patterns))
 
-    for filename, attrs in sorted(files_matching.iteritems(), key=lambda x: x[0]):
+    for filename, attrs in sorted(iter(files_matching.items()), key=lambda x: x[0]):
         long_output.append("[%s] Age: %s, Size: %s%s" % \
                           (filename, get_age_human_readable(attrs["age"]),
                            get_filesize_human_readable(attrs["size"]),

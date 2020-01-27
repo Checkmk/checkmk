@@ -50,7 +50,7 @@ def parse_fireeye_mailq(info):
 
 
 def check_fireeye_mailq(item, params, parsed):
-    for queue, value in parsed.iteritems():
+    for queue, value in parsed.items():
         infotext = 'Mails in %s queue: %s' % (queue.lower(), value)
         warn, crit = params.get(queue.lower(), (None, None))
         counter = 'mail_queue_%s_length' % queue.lower()

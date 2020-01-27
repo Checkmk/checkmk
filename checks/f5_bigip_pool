@@ -54,7 +54,7 @@ def parse_f5_bigip_pool(info):
 
         # Status information
         elif len(block[0]) == 6:
-            for key, val in parsed.iteritems():
+            for key, val in parsed.items():
                 for line in block:
                     if key == line[0]:
                         val["down_info"].append(line)
@@ -63,7 +63,7 @@ def parse_f5_bigip_pool(info):
 
 def inventory_f5_bigip_pool(parsed):
     # inventorize all pools and their member count
-    for item in parsed.keys():
+    for item in parsed:
         if item != "":
             yield item, "f5_bigip_pool_default_levels"
 

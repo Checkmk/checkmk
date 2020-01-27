@@ -45,18 +45,17 @@ def parse_fortisandbox_queues(info):
         'Executable', 'PDF', 'Office', 'Flash', 'Web', 'Android', 'MAC', 'URL job', 'User defined',
         'Non Sandboxing', 'Job Queue Assignment'
     ]
-    length = map(int, info[0])
-    parsed = dict(zip(queues, length))
+    parsed = dict(zip(queues, map(int, info[0])))
     return parsed
 
 
 def inventory_fortisandbox_queues(parsed):
-    for queue in parsed.keys():
+    for queue in parsed:
         yield queue, {}
 
 
 def check_fortisandbox_queues(item, params, parsed):
-    for queue, length in parsed.iteritems():
+    for queue, length in parsed.items():
         if queue == item:
             warn, crit = params.get('length', (None, None))
             state = 0

@@ -39,7 +39,7 @@ def inventory_bluecat_ntp(info):
 
 
 def check_bluecat_ntp(item, params, info):
-    oper_state, sys_leap, stratum = map(int, info[0])
+    oper_state, sys_leap, stratum = list(map(int, info[0]))
     oper_states = {
         1: "running normally",
         2: "not running",

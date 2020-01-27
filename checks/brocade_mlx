@@ -137,7 +137,7 @@ def parse_brocade_mlx_module_mem(info):
 def inventory_brocade_mlx_module_mem(info):
     parsed = parse_brocade_mlx_module_mem(info)
     inventory = []
-    for k, v in parsed.iteritems():
+    for k, v in parsed.items():
         # do not inventorize modules reported as empty or "Blocked for full height card"
         # and: monitor cpu only on NI-MLX and BR-MLX modules
         descr = v["descr"]

@@ -56,7 +56,7 @@ def check_bluecat_dhcp(item, params, info):
 
     # Collect  states of nodes
     for node, oper_state, leases in info:
-        oper_state, leases_sec = map(int, (oper_state, leases))
+        oper_state, leases_sec = list(map(int, (oper_state, leases)))
         temp_state = 0
         if oper_state in params['oper_states']['warning']:
             state = max(state, 1)
@@ -85,7 +85,7 @@ def check_bluecat_dhcp(item, params, info):
             ]
         else:
             # None of the nodes is ok:
-            for node, data in states.items():
+            for node, data in list(states.items()):
                 yield data['state'], "%s on %s" % (data['oper_state'], node)
         return
 

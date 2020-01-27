@@ -70,7 +70,7 @@ def inventory_blade_blowers(info):
 
 
 def check_blade_blowers(item, _no_params, info):
-    blower, num_blowers = map(int, item.split("/"))
+    blower, num_blowers = list(map(int, item.split("/")))
     text = info[blower - 1][0]
     perfdata = []
     output = ''

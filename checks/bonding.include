@@ -95,8 +95,7 @@ def check_bonding(item, params, parsed):
         if expect == "primary":
             expected_active = primary
         elif expect == "lowest":
-            slaves = status["interfaces"].keys()
-            expected_active = min(slaves)
+            expected_active = min(status["interfaces"].keys())
 
         if expected_active is not None and expected_active != active:
             state = 1

@@ -44,7 +44,7 @@ def _identify_ignored_port_types(discovery_ignored):
 
 def discovery_netapp_api_port(parsed):
     ignored_ports = _identify_ignored_port_types(discovery_netapp_api_ports_ignored)
-    for item, values in parsed.iteritems():
+    for item, values in parsed.items():
         if values.get("port-type") in ignored_ports:
             continue
         if "health-status" in values:

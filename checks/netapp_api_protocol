@@ -33,7 +33,7 @@
 
 
 def inventory_netapp_api_protocol(parsed):
-    for values in parsed.itervalues():
+    for values in parsed.values():
         if len(values) > 2:  # only create checks for protocols with infos
             yield values["protocol"], None
 

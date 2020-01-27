@@ -49,7 +49,7 @@ def discover_api_environment(predicate=None):
         A function which takes a parsed item and discovers it or not, depending on the predicate.
     """
     def discovery_netapp_api_environment(parsed):
-        for item_name, values in parsed.iteritems():
+        for item_name, values in parsed.items():
             if predicate is None:
                 yield item_name, None
             elif predicate(values):

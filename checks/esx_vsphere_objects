@@ -130,10 +130,10 @@ def check_esx_vsphere_objects_count(_no_item, params, parsed):
     if params is None:
         params = {}
 
-    virtualmachines = [o for o in parsed.itervalues() if o.name.startswith("VM ")]
+    virtualmachines = [o for o in parsed.values() if o.name.startswith("VM ")]
     yield 0, "Virtualmachines: %d" % len(virtualmachines), [('vms', len(virtualmachines))]
 
-    hostsystems = [o for o in parsed.itervalues() if o.name.startswith("HostSystem")]
+    hostsystems = [o for o in parsed.values() if o.name.startswith("HostSystem")]
     if not hostsystems:
         return
 

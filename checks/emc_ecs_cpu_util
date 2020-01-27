@@ -56,7 +56,7 @@ def check_emc_ecs_cpu_util(items, params, entry):
     # calculate the rate for every value
     cpu_ticks = cpu_info(['cpu'] + entry['raw_cpu_ticks'])
     rates = []
-    for key, val in cpu_ticks._asdict().items()[1:]:
+    for key, val in list(cpu_ticks._asdict().items())[1:]:
         rates.append(get_rate(key, now, val))
 
     cpu_rates = cpu_info(['cpu'] + rates)

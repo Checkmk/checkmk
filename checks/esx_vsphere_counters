@@ -143,7 +143,7 @@ def inventory_esx_vsphere_counters_diskio(parsed):
 
 def _concat_instance_multivalues(parsed, key):
     all_multivalues = []
-    for data in parsed.get(key, {}).itervalues():
+    for data in parsed.get(key, {}).values():
         multivalues, _unit = data[0]
         all_multivalues.extend(multivalues)
     return all_multivalues
@@ -255,7 +255,8 @@ def check_esx_vsphere_counters_datastoreio(item, params, parsed):
         ("write_ios", lambda x: int(esx_vsphere_get_average(x)), "datastore.datastoreWriteIops", 1),
         ("read_latency", lambda x: max(map(int, x)), "datastore.totalReadLatency", 1e-3),
         ("write_latency", lambda x: max(map(int, x)), "datastore.totalWriteLatency", 1e-3),
-        ("latency", lambda x: max(map(int, x)), "datastore.sizeNormalizedDatastoreLatency", 1e-6),
+        ("latency", lambda x: max(map(int, x)), "datastore.sizeNormalizedDatastoreLatency",
+         1e-6),
     ]:
         field_data = parsed.get(name, {})
 
@@ -511,7 +512,7 @@ def check_esx_vsphere_counters_ramdisk(item, params, parsed):
         raise MKCounterWrapped("Counter data is missing")
 
     ramdisks = []
-    for instance in parsed.get("sys.resourceMemConsumed").iterkeys():
+    for instance in parsed.get("sys.resourceMemConsumed").keys():
         if instance.startswith('host/system/kernel/kmanaged/visorfs/'):
             name = instance.split('/')[-1]
             try:

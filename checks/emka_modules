@@ -81,7 +81,7 @@ def parse_emka_modules(info):
     for oidend, module_link, value, mode in info[1]:
         table = map_component_types[oidend.split(".", 1)[0]]
         location = ".".join(module_link.split(".")[-2:])
-        for entry, attrs in parsed.get(table, {}).items():
+        for entry, attrs in list(parsed.get(table, {}).items()):
             item_location = attrs["_location_"]
             if item_location != location:
                 continue
@@ -97,7 +97,7 @@ def parse_emka_modules(info):
         else:
             ty = "levels"
 
-        for entry, attrs in parsed.get("sensor", {}).items():
+        for entry, attrs in list(parsed.get("sensor", {}).items()):
             if attrs["_location_"].startswith("%s." % location):
                 attrs[ty] = (threshold, threshold)
 
@@ -135,7 +135,7 @@ def parse_emka_modules(info):
 
         equation = equation[1:]
         if len(equation) == 2:
-            m, a = map(float, equation)
+            m, a = list(map(float, equation))
         else:
             m, a = 1.0, 0.0
 
@@ -149,8 +149,8 @@ def parse_emka_modules(info):
                 parsed[sensor_ty].setdefault(
                     sensor, {
                         "value": scale_f(attrs["value"]),
-                        "levels": map(scale_f, attrs["levels"]),
-                        "levels_lower": map(scale_f, attrs["levels_lower"]),
+                        "levels": list(map(scale_f, attrs["levels"])),
+                        "levels_lower": list(map(scale_f, attrs["levels_lower"])),
                     })
                 break
 
@@ -282,7 +282,7 @@ check_info["emka_modules.alarm"] = {
 
 
 def inventory_emka_modules_handle(parsed):
-    for entry, spec in parsed.get("handle", {}).iteritems():
+    for entry, spec in parsed.get("handle", {}).items():
         if 'value' in spec:
             yield entry, None
 

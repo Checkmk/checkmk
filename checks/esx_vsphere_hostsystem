@@ -68,7 +68,7 @@ esx_host_cpu_default_levels = {}
 
 def inventory_esx_vsphere_hostsystem_cpu(info):
     hostsystem_info, winperf_info = info
-    data = esx_vsphere_hostsystem_convert(hostsystem_info).keys()
+    data = list(esx_vsphere_hostsystem_convert(hostsystem_info).keys())
     if all([
             not winperf_info,
             'summary.quickStats.overallCpuUsage' in data,
@@ -244,7 +244,7 @@ esx_host_mem_default_levels = (80.0, 90.0)
 
 def inventory_esx_vsphere_hostsystem_mem(info):
     info, _ = info
-    data = esx_vsphere_hostsystem_convert(info).keys()
+    data = list(esx_vsphere_hostsystem_convert(info).keys())
     if 'summary.quickStats.overallMemoryUsage' in data and 'hardware.memorySize' in data:
         return [(None, 'esx_host_mem_default_levels')]
 
@@ -291,7 +291,7 @@ check_info['esx_vsphere_hostsystem.mem_usage'] = {
 
 def inventory_esx_vsphere_hostsystem_state(info):
     info, _ = info
-    data = esx_vsphere_hostsystem_convert(info).keys()
+    data = list(esx_vsphere_hostsystem_convert(info).keys())
     if 'runtime.inMaintenanceMode' in data:
         return [(None, None)]
 
@@ -425,7 +425,7 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
     message = ""
     path_names = []
 
-    for path, states in esx_vsphere_multipath_convert(info).iteritems():
+    for path, states in esx_vsphere_multipath_convert(info).items():
         if path == item:
             # Collect states
             for path_state, path_name in states:

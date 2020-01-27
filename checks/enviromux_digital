@@ -26,7 +26,7 @@
 
 
 def inventory_enviromux_digital(parsed):
-    for item in parsed.iterkeys():
+    for item in parsed.keys():
         yield item, {}
 
 

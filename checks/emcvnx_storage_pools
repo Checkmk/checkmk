@@ -184,7 +184,7 @@ def parse_emcvnx_time_to_complete(time_to_complete):
 
 
 def inventory_emcvnx_storage_pools_tiering(parsed):
-    for pool_name in parsed.iterkeys():
+    for pool_name in parsed.keys():
         yield pool_name, {}
 
 

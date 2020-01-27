@@ -29,7 +29,7 @@ factory_settings["sap_hana_memrate_default_levels"] = {"levels": ('perc_used', (
 
 def parse_sap_hana_memrate(info):
     parsed = {}
-    for sid_instance, lines in parse_sap_hana(info).iteritems():
+    for sid_instance, lines in parse_sap_hana(info).items():
         inst_data = {}
         for line in lines:
             if len(line) < 3 or line[0] != 'mem_rate':
@@ -46,7 +46,7 @@ def parse_sap_hana_memrate(info):
 
 
 def inventory_sap_hana_memrate(parsed):
-    for item in parsed.iterkeys():
+    for item in parsed:
         yield item, {}
 
 

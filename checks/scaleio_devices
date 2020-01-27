@@ -48,7 +48,7 @@ def parse_scaleio_devices(info):
             device[key] = value
 
     parsed = {}
-    for attrs in devices.itervalues():
+    for attrs in devices.values():
         parsed.setdefault(attrs["SDS_ID"], []).append(attrs)
     return parsed
 

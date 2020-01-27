@@ -80,12 +80,12 @@ def _get_item(data):
 
 
 def inventory_storeonce_stores(parsed):
-    for values in parsed.itervalues():
+    for values in parsed.values():
         yield _get_item(values), {}
 
 
 def check_storeonce_stores(item, _no_params, parsed):
-    for values in parsed.itervalues():
+    for values in parsed.values():
         if _get_item(values) != item:
             continue
 

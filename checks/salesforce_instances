@@ -40,7 +40,7 @@ def parse_salesforce(info):
 
 
 def inventory_salesforce_instances(parsed):
-    for instance, attrs in parsed.iteritems():
+    for instance, attrs in parsed.items():
         if attrs.get("isActive"):
             yield instance, {}
 

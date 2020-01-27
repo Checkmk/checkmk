@@ -27,7 +27,7 @@
 
 def parse_sap_hana_diskusage(info):
     parsed = {}
-    for sid_instance, lines in parse_sap_hana(info).iteritems():
+    for sid_instance, lines in parse_sap_hana(info).items():
         for line in lines:
             if len(line) < 3:
                 continue
@@ -54,7 +54,7 @@ def _extract_size_and_used_from_line(line):
 
 
 def inventory_sap_hana_diskusage(parsed):
-    for item in parsed.iterkeys():
+    for item in parsed:
         yield item, {}
 
 

@@ -145,7 +145,7 @@ def inventory_smart_stats(info):
     disks = parse_smart_raw_values(info)
     inventory = []
     for disk_name, disk in disks.items():
-        for field in disk.keys():
+        for field in disk:
             if field in smart_stats_fields:  # found at least one interesting field
                 cleaned = dict([(f, disk[f]) for f in smart_stats_fields if f in disk])
                 inventory.append((disk_name, cleaned))
@@ -238,7 +238,7 @@ check_info["smart.stats"] = {
 
 def inventory_smart_temp(info):
     disks = parse_smart_raw_values(info)
-    for disk_name, disk in disks.iteritems():
+    for disk_name, disk in disks.items():
         if "Temperature_Celsius" in disk or \
            "Temperature_Internal" in disk or \
            "Temperature" in disk:

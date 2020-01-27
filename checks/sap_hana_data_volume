@@ -27,7 +27,7 @@
 
 def parse_sap_hana_data_volume(info):
     parsed = {}
-    for (sid_instance, node), lines in parse_sap_hana_cluster_aware(info).iteritems():
+    for (sid_instance, node), lines in parse_sap_hana_cluster_aware(info).items():
         for line in lines:
             if len(line) < 8:
                 continue
@@ -60,17 +60,17 @@ def parse_sap_hana_data_volume(info):
 
 
 def inventory_sap_hana_data_volume(parsed):
-    for item in parsed.iterkeys():
+    for item in parsed:
         yield item, {}
 
 
 @get_parsed_item_data
 def check_sap_hana_data_volume(item, params, node_data):
-    nodes = [n for n in node_data.keys() if n]
+    nodes = [n for n in node_data if n]
     if nodes:
         yield 0, 'Nodes: %s' % ", ".join(nodes)
 
-    for data in node_data.itervalues():
+    for data in node_data.values():
         size = data['size']
         used = data['used']
         avail = size - used

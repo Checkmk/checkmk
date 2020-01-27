@@ -63,12 +63,12 @@ def check_site_object_counts(item, params, parsed):
 
     summary = {}
     details = []
-    for site, data in parsed.iteritems():
+    for site, data in parsed.items():
         site_infos = []
-        for type_, type_data in data.iteritems():
+        for type_, type_data in data.items():
             summary_of_type = summary.setdefault(type_, {})
             data_info = []
-            for k, v in type_data.iteritems():
+            for k, v in type_data.items():
                 summary_of_type.setdefault(k, 0)
                 summary_of_type[k] += v
                 data_info.append("%s %s" % (v, k))
@@ -77,9 +77,9 @@ def check_site_object_counts(item, params, parsed):
 
     infotexts = []
     perfdata = []
-    for type_, data in summary.iteritems():
+    for type_, data in summary.items():
         type_infos = []
-        for k, v in data.iteritems():
+        for k, v in data.items():
             perfdata.append((("%s %s" % (type_, k)).lower()\
                                                    .replace(" ", "_")\
                                                    .replace(".", "_"), v))

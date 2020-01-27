@@ -83,7 +83,7 @@ def parse_security_master(info):
     }
 
     parsed = {}
-    for value in supported_sensors.itervalues():
+    for value in supported_sensors.values():
         parsed[value] = {}
 
     for oid, sensor in info[0]:
@@ -117,7 +117,7 @@ def parse_security_master(info):
             elif num + ".10.0" == oid_second:
                 crit_high = savefloat(saveint(sensor_second) / 1000.)
 
-        if sensor_id in supported_sensors.keys():
+        if sensor_id in supported_sensors:
             parsed[supported_sensors[sensor_id]][service_name] = {
                 'name': sensor,
                 'value': value,

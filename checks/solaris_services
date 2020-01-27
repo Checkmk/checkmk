@@ -106,7 +106,7 @@ def inventory_solaris_services(parsed):
         names = settings.get("names", [])
         instances = settings.get("instances", [])
         state = settings.get("state")
-        for svc_descr, attrs in parsed.iteritems():
+        for svc_descr, attrs in parsed.items():
             if regex_match(descriptions, svc_descr) \
                and regex_match(categories, attrs["category"]) \
                and regex_match(names, attrs["name"]) \
@@ -120,7 +120,7 @@ def inventory_solaris_services(parsed):
 
 
 def check_solaris_services(item, params, parsed):
-    for svc_name, attrs in parsed.iteritems():
+    for svc_name, attrs in parsed.items():
         if item in svc_name or svc_name in params['additional_servicenames']:
             svc_state = attrs["state"]
             svc_stime = attrs["stime"]
@@ -173,11 +173,11 @@ def check_solaris_services_summary(_no_item, params, parsed):
     yield 0, "%d services" % len(parsed)
 
     services_by_state = {}
-    for svc_name, attrs in parsed.iteritems():
+    for svc_name, attrs in parsed.items():
         services = services_by_state.setdefault(attrs["state"], [])
         services.append(svc_name)
 
-    for svc_state, svc_names in services_by_state.iteritems():
+    for svc_state, svc_names in services_by_state.items():
         state = 0
         extra_info = ""
         if svc_state == "maintenance" and params.get("maintenance_state", 0):

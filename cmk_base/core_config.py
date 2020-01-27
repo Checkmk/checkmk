@@ -537,7 +537,7 @@ def _ip_address_of(host_config, family=None):
         if not _ignore_ip_lookup_failures:
             warning("Cannot lookup IP address of '%s' (%s). "
                     "The host will not be monitored correctly." % (host_config.hostname, e))
-        return fallback_ip_for(host_config.hostname, family)
+        return fallback_ip_for(host_config, family)
 
 
 def ignore_ip_lookup_failures():

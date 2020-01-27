@@ -105,6 +105,7 @@ locale_dir = _omd_path("share/check_mk/locale")
 bin_dir = _omd_path("bin")
 lib_dir = _omd_path("lib")
 mib_dir = _omd_path("share/snmp/mibs")
+optional_packages_dir = Path(_omd_path("share/check_mk/optional_packages"))
 
 local_share_dir = _local_path(share_dir)
 local_checks_dir = _local_path(checks_dir)

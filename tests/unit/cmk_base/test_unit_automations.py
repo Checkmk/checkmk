@@ -45,6 +45,7 @@ def test_registered_automations(site):
             'remove-package',
             'release-package',
             'remove-unpackaged-file',
+            'install-optional-package',
         ]
 
     registered_automations = cmk_base.automations.automations._automations.keys()

@@ -3,7 +3,9 @@
 Description=Check_MK
 
 [Service]
-ExecStart=/usr/bin/check_mk_agent
+# "-" path prefix makes systemd record the exit code,
+# but the unit is not set to failed.
+ExecStart=-/usr/bin/check_mk_agent
 Type=forking
 
 User=root

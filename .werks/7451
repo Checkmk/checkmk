@@ -19,8 +19,12 @@ installation on the sites you want to calculate and visualize the forecast.
 Slave sites which only do monitoring don't need the package.
 
 To install the dependencies run the script in
-{bin/install_fbprophet}. This script has additional flags {-u} if you
-want to uninstall the dependencies and {-h} for a help summary.
+{{bin/install_fbprophet}}. This script has additional flags {{-u}} if you
+want to uninstall the dependencies and {{-h}} for a help summary.
+
+The install script is available since version 1.6.0p7, earlier versions of
+Chechmk 1.6 do support Forecast Graph but to install dependencies you would
+need to download the install script from our online code repository.
 
 The easiest way to use a metric data for Forecast is from the service view
 under "Service Metrics" to click in the graph icon and select "Use this

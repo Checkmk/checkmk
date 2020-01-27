@@ -41,6 +41,7 @@ from cmk.gui.valuespec import (
     RadioChoice,
     RegExp,
     TextAscii,
+    TextUnicode,
     Transform,
     Tuple,
     ListChoice,
@@ -292,7 +293,7 @@ def match_alt(x):
 
 
 def process_discovery_descr_option():
-    return TextAscii(
+    return TextUnicode(
         title=_('Process Name'),
         style="dropdown",
         allow_empty=False,

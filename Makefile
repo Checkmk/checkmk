@@ -41,7 +41,7 @@ CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
 SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export CPPCHECK    := cppcheck
 export DOXYGEN     := doxygen
-export IWYU_TOOL   := iwyu_tool
+export IWYU_TOOL   := $(realpath scripts/iwyu_tool)
 PIPENV             := PIPENV_NO_INHERIT=true PIPENV_VENV_IN_PROJECT=true pipenv
 
 M4_DEPS            := $(wildcard m4/*) configure.ac

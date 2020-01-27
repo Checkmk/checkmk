@@ -62,5 +62,13 @@ RUN yum -y install \
     $PACKAGES \
     && yum clean all
 
+# New packages that are not needed for the build toolchain above should be added here.
+# We avoid rebuild of the whole previous steps this way
+RUN yum -y makecache \
+    && yum -y install \
+    joe \
+    vim \
+    && yum clean all
+
 ARG VERS_TAG
 RUN echo $VERS_TAG > /version.txt

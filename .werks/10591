@@ -1,0 +1,12 @@
+Title: ewon: Unbreak check plugin
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p9
+Date: 1579850947
+
+From versions 1.6.0 onwards the checkplugin ewon was not working.

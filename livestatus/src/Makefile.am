@@ -26,7 +26,7 @@ CLANG_VERSION ?= 8
 
 CPPCHECK ?= cppcheck
 DOXYGEN ?= doxygen
-IWYU_TOOL ?= iwyu_tool
+IWYU_TOOL ?= $(abs_top_srcdir)/scripts/iwyu_tool
 RUN_CLANG_TIDY ?= \
     $(abs_top_srcdir)/scripts/run-clang-tidy.py \
         -clang-tidy-binary=clang-tidy-$(CLANG_VERSION) \
@@ -191,7 +191,7 @@ iwyu: compile_commands.json
 
 # NOTE: cppcheck seems to ignore files on the command line when --project=... is given.  :-P
 cppcheck: compile_commands.json
-	$(CPPCHECK) -UCMC --enable=all --suppressions-list=$(abs_top_srcdir)/.cppcheck-suppressions --inline-suppr --project=compile_commands.json --quiet --template=gcc
+	$(CPPCHECK) -UCMC --enable=all --suppressions-list=$(abs_top_srcdir)/.cppcheck-suppressions --inline-suppr --project=compile_commands.json --quiet --template=gcc --error-exitcode=2
 
 # We need to mangle the result a bit to make Jenkins' Cppcheck plugin happy
 cppcheck-xml: compile_commands.json

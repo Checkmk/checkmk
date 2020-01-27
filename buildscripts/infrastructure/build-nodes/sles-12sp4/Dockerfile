@@ -73,8 +73,11 @@ RUN cd /opt \
 
 # New packages that are not needed for the build toolchain above should be added here.
 # We avoid rebuild of the whole previous steps this way
-RUN zypper -n in -y --force-resolution \
+RUN zypper ref \
+    && zypper -n in -y --force-resolution \
     chrpath \
+    joe \
+    vim \
     && zypper clean -a
 
 ARG VERS_TAG

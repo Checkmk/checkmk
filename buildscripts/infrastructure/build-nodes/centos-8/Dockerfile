@@ -72,11 +72,19 @@ RUN cd /opt \
     && tar xf cmake-3.16.2-Linux-x86_64.tar.gz \
     && ln -s /opt/cmake-3.16.2-Linux-x86_64/bin/* /usr/bin/
 
+# epel release is needed for joe
+RUN yum -y makecache \
+    && yum -y install \
+    epel-release \
+    && yum clean all
+
 # New packages that are not needed for the build toolchain above should be added here.
 # We avoid rebuild of the whole previous steps this way
 RUN yum -y makecache \
-    && yum -y install \
+    && yum -y --enablerepo=PowerTools install \
         chrpath \
+    joe \
+    vim \
     && yum clean all
 
 ARG VERS_TAG

@@ -2070,7 +2070,8 @@ def initialize_site_ca(site):
         ca_name="Site '%s' local CA" % site.name,
     )
     ca.initialize()
-    ca.create_site_certificate(site.name)
+    if not ca.site_certificate_path(site.name).exists():
+        ca.create_site_certificate(site.name)
 
 
 def config_change(site, config_hooks):
@@ -2869,7 +2870,7 @@ def finalize_site(site, what, apache_reload):
             # From now on we run as normal site user!
             switch_to_site_user(site)
 
-            finalize_size_as_user(site, what)
+            finalize_site_as_user(site, what)
             sys.exit(0)
         except Exception as e:
             bail_out(e)
@@ -2887,7 +2888,7 @@ def finalize_site(site, what, apache_reload):
         restart_apache()
 
 
-def finalize_size_as_user(site, what):
+def finalize_site_as_user(site, what):
     # Mount and create contents of tmpfs. This must be done as normal
     # user. We also could do this at 'omd start', but this might confuse
     # users. They could create files below tmp which would be shadowed
@@ -3929,7 +3930,7 @@ def postprocess_restore_as_site_user(site, options, orig_apache_port):
     site.conf["APACHE_TCP_PORT"] = orig_apache_port
     save_site_conf(site)
 
-    finalize_size_as_user(site, "restore")
+    finalize_site_as_user(site, "restore")
 
 
 def main_cleanup(site, args, options=None):

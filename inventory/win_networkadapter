@@ -40,23 +40,31 @@
 
 def inv_win_networkadapter(info):
     node = inv_tree_list("hardware.nwadapter:")
-    array = {}
     first_varname = None
+    array = {}
     addrtypes = {}
+
     for line in info:
+        # return 'lost' double-colons back
         if len(line) > 2:
             line = [line[0], ":".join(line[1:])]
+
+        # parse and kill leading/trailing spaces
         varname, value = line
         varname = re.sub(" *", "", varname)
         value = re.sub("^ ", "", value)
 
+        # empty? skip!
         if not value:
             continue
 
+        # Check whether we have a new instance
+        # if we meet varname again, then we assume that this
+        # is new instance
         if first_varname and varname == first_varname:
-            # Looks like we have a new instance
             node.append(array)
             array = {}
+            addrtypes = {}
 
         if not first_varname:
             first_varname = varname
@@ -71,24 +79,19 @@ def inv_win_networkadapter(info):
             array["speed"] = int(value)
         elif varname == "Address":
             for address in value.split(' '):
-                addrtype = "ipv4"
-                if ':' in address:
-                    addrtype = "ipv6"
+                addrtype = "ipv6" if ':' in address else "ipv4"
                 addrtypes.setdefault(addrtype + "_address", []).append(address)
         elif varname == "Subnet":
             for address in value.split(' '):
-                addrtype = "ipv6"
-                if '.' in address:
-                    addrtype = "ipv4"
-                #addrtypes.setdefault(addrtype, {}).setdefault("subnet", []).append(address)
+                addrtype = "ipv4" if '.' in address else "ipv6"
                 addrtypes.setdefault(addrtype + "_subnet", []).append(address)
         elif varname == "DefaultGateway":
             array["gateway"] = value
 
-    for addrtype in addrtypes:
-        array[addrtype] = ', '.join(addrtypes[addrtype])
-        #for type in addrtypes[addrtype]:
-        #    array[addrtype + '_' + type] = ', '.join(addrtypes[addrtype][type])
+        # address string array in comma-separated string packing: ['a1','a2',...] -> 'a1,a2...'
+        for addrtype in addrtypes:
+            array[addrtype] = ', '.join(addrtypes[addrtype])
+
     node.append(array)
 
 

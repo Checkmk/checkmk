@@ -10,7 +10,7 @@ node ('windows') {
         checkout(scm)
     }
     stage('Windows python module build') {
-        bat 'cd agents\\modules\windows && call build_the_module.cmd python'
+        bat 'cd agents\\modules\\windows && call build_the_module.cmd python'
         dir('artefacts') {
             archiveArtifacts "*"
         }

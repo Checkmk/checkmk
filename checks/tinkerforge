@@ -67,7 +67,7 @@ def parse_tinkerforge(info):
     # position in the topology. items higher up in the topology come first, and among
     # "siblings" they are sorted by the port on this host.
     res = {}
-    for brick_type, bricks in temp.iteritems():
+    for brick_type, bricks in temp.items():
         counter = 1
         for brick in sorted(bricks,
                             key=lambda b: gen_pos(b[0], b[1]).rjust(len(master_index) + 1, ' ')):

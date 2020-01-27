@@ -90,7 +90,7 @@ def create_check_crash_dump(hostname, check_plugin_name, item, is_manual_check, 
             text=text,
         )
         CrashReportStore().save(crash)
-        text += "(Crash-ID: %s)" % crash.ident_to_text()
+        text += " (Crash-ID: %s)" % crash.ident_to_text()
         return text
     except Exception:
         if cmk.utils.debug.enabled():
@@ -112,7 +112,8 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
 
-        snmp_info, agent_output = None, None
+        snmp_info = None  # type: Optional[bytes]
+        agent_output = None  # type: Optional[bytes]
         if cmk.base.check_utils.is_snmp_check(check_plugin_name):
             snmp_info = _read_snmp_info(hostname)
         else:
@@ -137,8 +138,8 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
             },
         )
 
-    def __init__(self, crash_info, snmp_info, agent_output):
-        # type: (Dict, Optional[str], Optional[str]) -> None
+    def __init__(self, crash_info, snmp_info=None, agent_output=None):
+        # type: (Dict, Optional[bytes], Optional[bytes]) -> None
         super(CheckCrashReport, self).__init__(crash_info)
         self.snmp_info = snmp_info
         self.agent_output = agent_output
@@ -147,10 +148,14 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
         # type: () -> Dict
         """Serialize object type specific attributes for transport"""
         attributes = super(CheckCrashReport, self)._serialize_attributes()
-        attributes.update({
-            "snmp_info": self.snmp_info,
-            "agent_output": self.agent_output,
-        })
+
+        for key, val in [
+            ("snmp_info", self.snmp_info),
+            ("agent_output", self.agent_output),
+        ]:
+            if val is not None:
+                attributes[key] = val
+
         return attributes
 
 

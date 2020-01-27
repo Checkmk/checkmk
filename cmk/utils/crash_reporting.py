@@ -84,8 +84,16 @@ class CrashReportStore(object):
 
         for key, value in crash.serialize().items():
             fname = "crash.info" if key == "crash_info" else key
-            store.save_file(str(crash.crash_dir() / fname),
-                            json.dumps(value, cls=RobustJSONEncoder) + "\n")
+
+            if value is None:
+                continue
+
+            if fname == "crash.info":
+                store.save_text_to_file(
+                    crash.crash_dir() / fname,
+                    six.text_type(json.dumps(value, cls=RobustJSONEncoder)) + "\n")
+            else:
+                store.save_bytes_to_file(crash.crash_dir() / fname, value)
 
         self._cleanup_old_crashes(crash.crash_dir().parent)
 
@@ -129,16 +137,25 @@ class CrashReportStore(object):
     def load_from_directory(self, crash_dir):
         # type: (Path) -> ABCCrashReport
         """Populate the crash info from the given crash directory"""
-        return ABCCrashReport.deserialize(self.load_serialized_from_directory(crash_dir))
+        return ABCCrashReport.deserialize(self._load_decoded_from_directory(crash_dir))
+
+    def _load_decoded_from_directory(self, crash_dir):
+        # type: (Path) -> Dict[str, Any]
+        serialized = self.load_serialized_from_directory(crash_dir)
+        serialized["crash_info"] = json.loads(serialized["crash_info"])
+        return serialized
 
     def load_serialized_from_directory(self, crash_dir):
-        # type: (Path) -> Dict[str, Any]
-        """Load the raw serialized crash report from the given directory"""
+        # type: (Path) -> Dict[str, bytes]
+        """Load the raw serialized crash report from the given directory
+
+        Nothing is decoded here, the plain files are read into a dictionary. This creates a
+        data structure similar to CrashReportsRowTable() in the GUI code."""
         serialized = {}
         for file_path in crash_dir.iterdir():
-            with file_path.open(encoding="utf-8") as f:
-                key = "crash_info" if file_path.name == "crash.info" else file_path.name
-                serialized[key] = json.load(f)
+            key = "crash_info" if file_path.name == "crash.info" else file_path.name
+            with file_path.open(mode="rb") as f:
+                serialized[key] = f.read()
         return serialized
 
 

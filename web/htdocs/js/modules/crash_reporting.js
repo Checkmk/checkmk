@@ -38,6 +38,7 @@ export function submit(url, post_data)
             post_data        : post_data,
             response_handler : handle_crash_report_response,
             error_handler    : handle_crash_report_error,
+            add_ajax_id      : false,
             handler_data     : {
                 base_url: url
             }

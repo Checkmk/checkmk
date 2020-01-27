@@ -27,7 +27,7 @@
 import abc
 import base64
 import tarfile
-import StringIO
+import io
 import time
 import pprint
 import traceback
@@ -258,10 +258,12 @@ class PageCrash(ABCCrashReportPage):
                   "checkmk_support_contract.html\" target=\"_blank\">our website</a>."))
             html.close_div()
             html.open_div(id_="fail_msg", style="display:none")
-            report_url = html.makeuri([
-                ("subject", "Checkmk Crash Report - " + self._get_version()),
-            ],
-                                      filename="mailto:" + self._get_crash_report_target())
+            report_url = html.makeuri_contextless(
+                [
+                    ("subject", "Checkmk Crash Report - " + self._get_version()),
+                ],
+                filename="mailto:" + self._get_crash_report_target(),
+            )
             html.show_error(
                 _("Failed to send the crash report. Please download it manually and send it "
                   "to <a href=\"%s\">%s</a>") % (report_url, self._get_crash_report_target()))
@@ -569,14 +571,16 @@ class PageDownloadCrashReport(ABCCrashReportPage):
 
 
 def _pack_crash_report(serialized_crash_report):
-    # type: (Dict) -> Text
+    # type: (Dict[str, Optional[bytes]]) -> bytes
     """Returns a byte string representing the current crash report in tar archive format"""
-    buf = StringIO.StringIO()
+    buf = io.BytesIO()
     with tarfile.open(mode="w:gz", fileobj=buf) as tar:
         for key, content in serialized_crash_report.iteritems():
+            if content is None:
+                continue
+
             tar_info = tarfile.TarInfo(name="crash.info" if key == "crash_info" else key)
             tar_info.size = len(content)
-
-            tar.addfile(tar_info, StringIO.StringIO(content))
+            tar.addfile(tar_info, io.BytesIO(content))
 
     return buf.getvalue()

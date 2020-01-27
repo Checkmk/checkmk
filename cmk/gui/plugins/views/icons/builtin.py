@@ -1053,14 +1053,14 @@ class CrashdumpsIcon(Icon):
                     "to view and submit crash reports to the development team.")
 
             # Extract the crash ID produced by cmk/base/crash_reporting.py from output
-            match = re.search(r"\(Crash dump: ([^)]+)\)$", row["service_plugin_output"])
+            match = re.search(r"\(Crash-ID: ([^\)]+)\)$", row["service_plugin_output"])
             if not match:
                 return 'crash', _(
                     "This check crashed, but no crash dump is available, please report this "
                     "to the development team.")
 
             crash_id = match.group(1)
-            crashurl = html.makeuri(
+            crashurl = html.makeuri_contextless(
                 [
                     ("site", row["site"]),
                     ("crash_id", crash_id),

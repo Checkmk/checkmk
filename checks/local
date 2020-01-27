@@ -215,7 +215,7 @@ def _calculate_local_best_state(collected_stats):
     infotexts = []
     perfdatas = []
     for nodename, attrs in collected_stats.items():
-        for state, output, perfdata in attrs.itervalues():
+        for state, output, perfdata in attrs.values():
             if nodename is not None:
                 output = "On node %s: %s" % (nodename, output)
             states.append(state)
@@ -226,7 +226,7 @@ def _calculate_local_best_state(collected_stats):
 
 def _calculate_local_worst_state(collected_stats):
     for nodename, attrs in collected_stats.items():
-        for state, output, perfdata in attrs.itervalues():
+        for state, output, perfdata in attrs.values():
             if nodename is not None:
                 output = "On node %s: %s" % (nodename, output)
             yield state, output, perfdata

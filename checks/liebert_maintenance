@@ -41,7 +41,7 @@ def inventory_liebert_maintenance(parsed):
 
 def check_liebert_maintenance(_no_item, params, parsed):
     month, year = None, None
-    for key, value in parsed.iteritems():
+    for key, value in parsed.items():
         if "month" in key.lower():
             month = value
         elif "year" in key.lower():

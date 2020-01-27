@@ -117,7 +117,7 @@ def lnx_quota_limit_check(mode, what, user, used, soft, hard, grace):
 
 
 def inventory_lnx_quota(parsed):
-    for item, data in parsed.iteritems():
+    for item, data in parsed.items():
         yield item, {'user': 'usr' in data, 'group': 'grp' in data}
 
 

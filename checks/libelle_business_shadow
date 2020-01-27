@@ -286,12 +286,13 @@ def inventory_libelle_business_shadow_info(info):
 
 def check_libelle_business_shadow_info(_no_item, _no_params, info):
     parsed = check_libelle_business_shadow_parse(info)
+    parsed_keys = list(parsed.keys())
     message = "Libelle Business Shadow"
-    if "host" in parsed.keys():
+    if "host" in parsed_keys:
         message += ", Host: %s" % parsed["host"]
-    if "release" in parsed.keys():
+    if "release" in parsed_keys:
         message += ", Release: %s" % parsed["release"]
-    if "start_time" in parsed.keys():
+    if "start_time" in parsed_keys:
         message += ", Start Time: %s" % parsed["start_time"]
 
     return 0, message
@@ -393,7 +394,8 @@ check_info["libelle_business_shadow.process"] = {
 
 def inventory_libelle_business_shadow_archive_dir(info):
     parsed = check_libelle_business_shadow_parse(info)
-    if "arch_total_mb" in parsed.keys() and "arch_free_mb" in parsed.keys():
+    parsed_keys = list(parsed.keys())
+    if "arch_total_mb" in parsed_keys and "arch_free_mb" in parsed_keys:
         return [("Archive Dir", {})]
     return []
 

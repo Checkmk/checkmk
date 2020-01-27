@@ -32,7 +32,7 @@ import json
 
 
 def discover_labels(parsed):
-    yield HostLabels(*[HostLabel(k, v) for k, v in parsed.iteritems()])
+    yield HostLabels(*[HostLabel(k, v) for k, v in parsed.items()])
 
 
 def parse_labels(info):

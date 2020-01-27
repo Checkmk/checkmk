@@ -48,14 +48,14 @@ def parse_lvm_lvs(info):
 
 
 def inventory_lvm_lvs(parsed):
-    for key in parsed.iterkeys():
+    for key in parsed.keys():
         yield (key, {})
 
 
 def check_lvm_lvs(item, params, parsed):
-    for key, values in parsed.iteritems():
+    for key, values in parsed.items():
         if item == key:
-            for key, value in values.iteritems():
+            for key, value in values.items():
                 value = float(value)
                 warn, crit = params["levels_%s" % key]
                 if value >= crit:

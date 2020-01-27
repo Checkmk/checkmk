@@ -38,7 +38,7 @@
 
 def check_liebert_system_events(_no_item, _no_params, parsed):
     no_event = True
-    for key, value in parsed.iteritems():
+    for key, value in parsed.items():
         if not (value or key):
             continue
         if not value.lower() == "inactive event":

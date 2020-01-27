@@ -34,13 +34,13 @@
 
 
 def inventory_liebert_chilled_water(parsed):
-    for key in parsed.iterkeys():
+    for key in parsed.keys():
         if key:
             yield (key, {})
 
 
 def check_liebert_chilled_water(item, _params, parsed):
-    for key, value in parsed.iteritems():
+    for key, value in parsed.items():
         if item == key and value.lower() == "inactive event":
             yield 0, "Normal"
         elif item == key:

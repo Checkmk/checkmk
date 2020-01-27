@@ -102,7 +102,10 @@ def check_citrix_controller_registered(_no_item, params, info):
 
             levels = params.get("levels", (None, None)) + params.get("levels_lower", (None, None))
 
-            return check_levels(count_desktops, "registered_desktops", levels, human_readable_func=int)
+            return check_levels(count_desktops,
+                                "registered_desktops",
+                                levels,
+                                human_readable_func=int)
 
 
 check_info["citrix_controller.registered"] = {

@@ -1,3 +1,6 @@
+@rem pipenv installer script
+@rem May be called only from exec_cmd.bat
+
 @echo off
 powershell Write-Host "Installing pipenv" -foreground cyan
 if not defined install_dir powershell Write-Host "This script must be called using exec_cmd" -foreground red && exit /b 2

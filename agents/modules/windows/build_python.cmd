@@ -1,3 +1,6 @@
+@rem Builds Python
+@rem May be called only from exec_cmd.bat
+
 @echo off
 if not defined build_dir powershell Write-Host "This script must be called using exec_cmd" -foreground red && exit /b 2
 powershell Write-Host "Making build folder" -foreground Green

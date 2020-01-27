@@ -1,3 +1,7 @@
+@rem  Python installer script
+@rem  May be called only from exec_cmd.bat
+
+
 @echo off
 powershell Write-Host "Installing Python ..." -foreground Cyan 
 mkdir %uninstall_dir% 2> nul

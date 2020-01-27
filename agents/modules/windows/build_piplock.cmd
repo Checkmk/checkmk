@@ -1,3 +1,6 @@
+@rem Makes lock file
+@rem be called only from exec_cmd.bat
+
 @echo off
 powershell Write-Host "Building piplock" -foreground cyan
 

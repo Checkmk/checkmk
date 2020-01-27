@@ -1,1 +1,3 @@
+@rem deprecated
+
 @make unpack

@@ -1,3 +1,6 @@
+@rem Pip Upgrading script
+@rem May be called only from exec_cmd.bat
+
 @echo off
 set p_full_name=python-3.8.1
 powershell Write-Host "Uninstalling Python ..." -foreground Cyan 

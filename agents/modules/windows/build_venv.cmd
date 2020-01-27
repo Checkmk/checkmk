@@ -1,3 +1,6 @@
+@rem  Builds venv
+@rem  May be called only from exec_cmd.bat
+
 @echo off
 powershell Write-Host "Building venv" -foreground cyan
 if not defined ready_dir powershell Write-Host "This script must be called using exec_cmd" -foreground red && exit /b 3

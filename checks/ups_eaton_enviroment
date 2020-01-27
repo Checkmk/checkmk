@@ -37,7 +37,7 @@ def inventory_ups_eaton_enviroment(info):
 
 
 def check_ups_eaton_enviroment(item, params, info):
-    wert = map(saveint, info[0])
+    wert = list(map(saveint, info[0]))
     i = 0
     state = 0
     messages = []

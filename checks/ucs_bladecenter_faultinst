@@ -45,12 +45,12 @@ def check_ucs_bladecenter_faultinst(item, _no_params, parsed):
         "cleared": 0,
     }
     severities = {}
-    for values in parsed.get("faultInst", {}).itervalues():
+    for values in parsed.get("faultInst", {}).values():
         entry_sev = values.get("Severity").lower()
         severities.setdefault(entry_sev, [])
         severities[entry_sev].append(values)
 
-    if not severities.items():
+    if not severities:
         yield 0, "No fault instances found"
         return
 

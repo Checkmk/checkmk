@@ -6682,7 +6682,7 @@ checks = {
         'timedout_sends': {
             'upper': (0.01, 0.02)
         }
-    }, [(0, '0.00 avg incoming message processing time', [('sip_message_processing_time', 0.0, 1.0,
+    }, [(0, 'Avg incoming message processing time: 0.00', [('sip_message_processing_time', 0.0, 1.0,
                                                            2.0, None, None)]),
         (0, 'Incoming responses dropped/sec: 0.00', [('sip_incoming_responses_dropped', 0.0, 1.0,
                                                      2.0, None, None)]),
@@ -6697,11 +6697,11 @@ checks = {
         (0, 'Local 503 responses/sec: 0.00', [('sip_503_responses', 0.0, 0.01, 0.02, None, None)]),
         (0, 'Incoming messages timed out: 0', [('sip_incoming_messages_timed_out', 0.0, 2, 4, None,
                                                None)]),
-        (0, '0.00 avg holding time for incoming messages',
+        (0, 'Avg holding time for incoming messages: 0.00',
          [('sip_avg_holding_time_incoming_messages', 0.0, 6.0, 12.0, None, None)]),
         (0, 'Flow-controlled connections: 0', [('sip_flow_controlled_connections', 0.0, 1, 2, None,
                                                None)]),
-        (0, '0.00 avg outgoing queue delay', [('sip_avg_outgoing_queue_delay', 0.0, 2.0, 4.0, None,
+        (0, 'Avg outgoing queue delay: 0.00', [('sip_avg_outgoing_queue_delay', 0.0, 2.0, 4.0, None,
                                                None)]),
         (0, 'Sends timed out/sec: 0.00', [('sip_sends_timed_out', 0.0, 0.01, 0.02, None, None)]),
         (0, 'Authentication errors/sec: 0.00', [('sip_authentication_errors', 0.0, 1, 2, None,

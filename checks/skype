@@ -350,7 +350,7 @@ def check_skype_sip_stack(item, params, parsed):
     yield wmi_yield_raw_average_timer(parsed.get("LS:SIP - Protocol"),
                                       item,
                                       "SIP - Average Incoming Message Processing Time",
-                                      label=" avg incoming message processing time",
+                                      infoname="Avg incoming message processing time",
                                       perfvar="sip_message_processing_time",
                                       levels=params['message_processing_time'])
 
@@ -408,7 +408,7 @@ def check_skype_sip_stack(item, params, parsed):
     yield wmi_yield_raw_average_timer(parsed.get("LS:SIP - Load Management"),
                                       item,
                                       "SIP - Average Holding Time For Incoming Messages",
-                                      label=" avg holding time for incoming messages",
+                                      infoname="Avg holding time for incoming messages",
                                       perfvar="sip_avg_holding_time_incoming_messages",
                                       levels=params['holding_time_incoming'])
 
@@ -422,7 +422,7 @@ def check_skype_sip_stack(item, params, parsed):
     yield wmi_yield_raw_average_timer(parsed.get("LS:SIP - Peers"),
                                       item,
                                       "SIP - Average Outgoing Queue Delay",
-                                      label=" avg outgoing queue delay",
+                                      infoname="Avg outgoing queue delay",
                                       perfvar="sip_avg_outgoing_queue_delay",
                                       levels=params['outgoing_queue_delay'])
 

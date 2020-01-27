@@ -36,8 +36,7 @@ import time
 import urllib
 
 from typing import (  # pylint: disable=unused-import
-    Callable, Optional, Dict, List, Union, Any, Text,
-)
+    Any, Callable, Dict, Iterable, List, Optional, Text, Union)
 
 import six
 
@@ -61,7 +60,7 @@ ContactList = List  # TODO Improve this
 Rule = Dict  # TODO Improve this
 # We actually want to use Matcher for all our matchers, but mypy is too dumb to
 # use that for function types, see https://github.com/python/mypy/issues/1641.
-# Matcher = Callable[[Rule, Context], Optional[str]]
+Matcher = Callable[[Rule, Context], Optional[str]]
 
 logger = logging.getLogger('cmk.base.events')
 logger.addHandler(logging.NullHandler())
@@ -419,27 +418,39 @@ def get_readable_rel_date(timestamp):
     return '%dd %02d:%02d:%02d' % (days, hours, minutes, seconds)
 
 
+# While the rest of the world increasingly embraces lambdas and folds, the
+# Python world moves backwards in time. :-P So let's introduce this helper...
+def apply_matchers(matchers, rule, context):
+    # type: (Iterable[Matcher], Rule, Context) -> Optional[str]
+    for matcher in matchers:
+        result = matcher(rule, context)
+        if result is not None:
+            return result
+    return None
+
+
 def event_match_rule(rule, context):
     # type: (Rule, Context) -> Optional[str]
-    return \
-        event_match_site(rule, context)                                   or \
-        event_match_folder(rule, context)                                 or \
-        event_match_hosttags(rule, context)                               or \
-        event_match_hostgroups(rule, context)                             or \
-        event_match_servicegroups_fixed(rule, context)                    or \
-        event_match_exclude_servicegroups_fixed(rule, context)            or \
-        event_match_servicegroups_regex(rule, context)                    or \
-        event_match_exclude_servicegroups_regex(rule, context)            or \
-        event_match_contacts(rule, context)                               or \
-        event_match_contactgroups(rule, context)                          or \
-        event_match_hosts(rule, context)                                  or \
-        event_match_exclude_hosts(rule, context)                          or \
-        event_match_services(rule, context)                               or \
-        event_match_exclude_services(rule, context)                       or \
-        event_match_plugin_output(rule, context)                          or \
-        event_match_checktype(rule, context)                              or \
-        event_match_timeperiod(rule, context)                             or \
-        event_match_servicelevel(rule, context)
+    return apply_matchers([
+        event_match_site,
+        event_match_folder,
+        event_match_hosttags,
+        event_match_hostgroups,
+        event_match_servicegroups_fixed,
+        event_match_exclude_servicegroups_fixed,
+        event_match_servicegroups_regex,
+        event_match_exclude_servicegroups_regex,
+        event_match_contacts,
+        event_match_contactgroups,
+        event_match_hosts,
+        event_match_exclude_hosts,
+        event_match_services,
+        event_match_exclude_services,
+        event_match_plugin_output,
+        event_match_checktype,
+        event_match_timeperiod,
+        event_match_servicelevel,
+    ], rule, context)
 
 
 def event_match_site(rule, context):

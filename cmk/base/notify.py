@@ -88,6 +88,8 @@ notify_mode = "notify"
 ContactName = str
 
 RawNotifyContext = Dict  # TODO: Improve this
+# TODO: It doesn't really make sense to have NotifyContext when we already have
+# a Context type in cmk.base.events. The same holds for NotifyRule and Rule.
 NotifyContext = Dict  # TODO: Improve this
 
 NotifyRule = Dict  # TODO: Improve this
@@ -812,23 +814,21 @@ def rbn_get_bulk_params(rule):
 
 def rbn_match_rule(rule, context):
     # type: (NotifyRule, NotifyContext) -> Optional[str]
-    if rule.get("disabled"):
-        return "This rule is disabled"
+    return events.apply_matchers([
+        rbn_match_rule_disabled,
+        events.event_match_rule,
+        rbn_match_escalation,
+        rbn_match_escalation_throtte,
+        rbn_match_host_event,
+        rbn_match_service_event,
+        rbn_match_notification_comment,
+        rbn_match_event_console,
+    ], rule, context)
 
-    for matcher in [
-            events.event_match_rule,
-            rbn_match_escalation,
-            rbn_match_escalation_throtte,
-            rbn_match_host_event,
-            rbn_match_service_event,
-            rbn_match_notification_comment,
-            rbn_match_event_console,
-    ]:
-        result = matcher(rule, context)
-        if result is not None:
-            return result
 
-    return None
+def rbn_match_rule_disabled(rule, _context):
+    # type: (NotifyRule, NotifyContext) -> Optional[str]
+    return "This rule is disabled" if rule.get("disabled") else None
 
 
 def rbn_match_escalation(rule, context):

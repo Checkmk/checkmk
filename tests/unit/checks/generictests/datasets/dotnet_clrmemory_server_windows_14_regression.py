@@ -43,7 +43,11 @@ info = [
 discovery = {'': [(u'_Global_', 'dotnet_clrmemory_defaultlevels')]}
 
 checks = {
-    '': [(u'_Global_', {
-        "upper": (10.0, 15.0)
-    }, [(0, '8.78% time in GC', [('percent', 8.778833599942464, 10.0, 15.0, 0, 100)])])]
+    '': [
+        (u'_Global_', {"upper": (10.0, 15.0)}, [
+            (0, 'Time in GC: 8.78%', [
+                ('percent', 8.778833599942464, 10.0, 15.0, 0, 100),
+            ]),
+        ]),
+    ],
 }

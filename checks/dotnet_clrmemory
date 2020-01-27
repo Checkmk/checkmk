@@ -35,7 +35,7 @@ def check_dotnet_clrmemory(item, params, parsed):
     yield wmi_yield_raw_fraction(parsed[""],
                                  item,
                                  "PercentTimeinGC",
-                                 label="% time in GC",
+                                 infoname="Time in GC",
                                  perfvar="percent",
                                  levels=params)
 

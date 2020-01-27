@@ -1,8 +1,12 @@
 @rem  Python installer script
 @rem  May be called only from exec_cmd.bat
 
-
-@echo off
+@rem echo on
+if not defined pexe powershell Write-Host "Must be called from the exec_cmd.bat, pexe" -foreground Red && exit /b 3
+if not defined pexe_uninstall powershell Write-Host "Must be called from the exec_cmd.bat, pexe_uninstall" -foreground Red && exit /b 3
+if not defined install_dir powershell Write-Host "Must be called from the exec_cmd.bat, install_dir" -foreground Red && exit /b 3
+if not defined uninstall_dir powershell Write-Host "Must be called from the exec_cmd.bat, uninstall_dir" -foreground Red && exit /b 3
+if not exist %install_dir% powershell Write-Host "%install_dir% doesnt exist" -foreground Red && exit /b 3
 powershell Write-Host "Installing Python ..." -foreground Cyan 
 mkdir %uninstall_dir% 2> nul
 copy /y %pexe%  %pexe_uninstall% > nul

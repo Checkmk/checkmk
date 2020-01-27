@@ -112,27 +112,27 @@ def winperf_phydisk_convert(info):
                         disk_id = "%s_%s" % (disk_id[-1], disk_id[0])
                     current_disks.append(disk_id)
             elif line[1] == '-14':
-                current_disk_read_bytes = map(int, line[2:-2])
+                current_disk_read_bytes = list(map(int, line[2:-2]))
             elif line[1] == '-12':
-                current_disk_write_bytes = map(int, line[2:-2])
+                current_disk_write_bytes = list(map(int, line[2:-2]))
             elif line[1] == '-20':
-                current_disk_reads = map(int, line[2:-2])
+                current_disk_reads = list(map(int, line[2:-2]))
             elif line[1] == '-18':
-                current_disk_writes = map(int, line[2:-2])
+                current_disk_writes = list(map(int, line[2:-2]))
             elif line[1] == '1168':  # Average Disk Read Queue Length
-                current_disk_readq_ctrs = map(int, line[2:-2])
+                current_disk_readq_ctrs = list(map(int, line[2:-2]))
             elif line[1] == '1170':  # Average Disk Read Queue Length
-                current_disk_writeq_ctrs = map(int, line[2:-2])
+                current_disk_writeq_ctrs = list(map(int, line[2:-2]))
             elif line[1] == '-24':
                 if line[-1] == 'average_base':
-                    current_disk_seconds_per_write_base = map(int, line[2:-2])
+                    current_disk_seconds_per_write_base = list(map(int, line[2:-2]))
                 else:
-                    current_disk_seconds_per_write = map(int, line[2:-2])
+                    current_disk_seconds_per_write = list(map(int, line[2:-2]))
             elif line[1] == '-26':
                 if line[-1] == 'average_base':
-                    current_disk_seconds_per_read_base = map(int, line[2:-2])
+                    current_disk_seconds_per_read_base = list(map(int, line[2:-2]))
                 else:
-                    current_disk_seconds_per_read = map(int, line[2:-2])
+                    current_disk_seconds_per_read = list(map(int, line[2:-2]))
     except StopIteration:
         if current_node != "":
             entries.extend(finalize_block(current_node))

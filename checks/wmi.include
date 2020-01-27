@@ -82,7 +82,7 @@ class WMITable(object):
                 self.__key_index = self.__headers[self._normalize_key(key_field)]
             except KeyError as e:
                 raise KeyError(e.message + " missing, valid keys: " +
-                               ", ".join(self.__headers.keys()))
+                               ", ".join(self.__headers))
 
         self.__row_lookup = {}
         self.__rows = []
@@ -99,7 +99,7 @@ class WMITable(object):
                     key_field = header
 
         headers = [
-            name for name, index in sorted(self.__headers.iteritems(), lambda x, y: x[1] - y[1])
+            name for name, index in sorted(iter(self.__headers.items()), lambda x, y: x[1] - y[1])
         ]
 
         return "%s(%r, %r, %r, %r, %r, %r)" % (self.__class__.__name__, self.__name, headers,
@@ -165,11 +165,11 @@ class WMITable(object):
                 col_index = self.__headers[self._normalize_key(column)]
             except KeyError as e:
                 raise KeyError(e.message + " missing, valid keys: " +
-                               ", ".join(self.__headers.keys()))
+                               ", ".join(self.__headers))
         return self.__rows[row_index][col_index]
 
     def row_labels(self):
-        return self.__row_lookup.keys()
+        return list(self.__row_lookup)
 
     def row_count(self):
         return len(self.__rows)
@@ -314,12 +314,12 @@ def wmi_filter_global_only(tables, row):
 
 
 def _required_tables_missing(tables, required_tables):
-    return not set(required_tables).issubset(set(tables.keys()))
+    return not set(required_tables).issubset(set(tables))
 
 
 def inventory_wmi_table_instances(tables, required_tables=None, filt=None, levels=None):
     if required_tables is None:
-        required_tables = tables.keys()
+        required_tables = tables
 
     if _required_tables_missing(tables, required_tables):
         return []
@@ -341,7 +341,7 @@ def inventory_wmi_table_instances(tables, required_tables=None, filt=None, level
 
 def inventory_wmi_table_total(tables, required_tables=None, filt=None, levels=None):
     if required_tables is None:
-        required_tables = tables.keys()
+        required_tables = tables
 
     if not tables or _required_tables_missing(tables, required_tables):
         return []

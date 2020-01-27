@@ -83,8 +83,7 @@ factory_settings["wut_webtherm_defaultlevels"] = {
 
 
 def inventory_wut_webtherm(parsed):
-    return [ (sensor_id, {}) for sensor_id, values in parsed.items() \
-             if values["type"] == "temp" ]
+    return [(sensor_id, {}) for sensor_id, values in parsed.items() if values["type"] == "temp"]
 
 
 def check_wut_webtherm(item, params, parsed):
@@ -124,8 +123,9 @@ check_info["wut_webtherm"] = {
 
 
 def inventory_wut_webtherm_pressure(parsed):
-    return [ (sensor_id, None) for sensor_id, values in parsed.items() \
-             if values["type"] == "air_pressure" ]
+    return [(sensor_id, None)
+            for sensor_id, values in parsed.items()
+            if values["type"] == "air_pressure"]
 
 
 def check_wut_webtherm_pressure(item, _no_params, parsed):

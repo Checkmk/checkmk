@@ -229,7 +229,7 @@ def _prepare_winperf_if_dhcp_section(nic_names, dhcp_section):
 
 def _prepare_winperf_if_teaming_section(teaming_section):
     return {
-        guid: {k: v.strip() for k, v in dict_entry.iteritems()} for dict_entry in teaming_section
+        guid: {k: v.strip() for k, v in dict_entry.items()} for dict_entry in teaming_section
         for guid in dict_entry.get('GUID', '').split(';')
     }
 
@@ -369,7 +369,7 @@ def _parse_winperf_if_nic_attrs(raw_nic_names, agent_section):
         nic_attrs.setdefault(
             nic_name,
             NICAttr(idx + 1,
-                    {counter: int(line[idx]) for counter, line in agent_section.iteritems()}))
+                    {counter: int(line[idx]) for counter, line in agent_section.items()}))
     return nic_attrs
 
 
@@ -382,7 +382,7 @@ def parse_winperf_if(info):
 
     # Based on the raw nic names we structure the interface table
     nic_attrs = _parse_winperf_if_nic_attrs(raw_nic_names, agent_section)
-    nic_names = nic_attrs.keys()
+    nic_names = list(nic_attrs)
 
     teaming_info = _prepare_winperf_if_teaming_section(teaming_section)
     plugin_info = _prepare_winperf_if_plugin_section(nic_names, plugin_section, teaming_info)
@@ -407,7 +407,7 @@ def check_winperf_if(item, params, parsed):
 
 
 def check_if_dhcp(item, dhcp_info):
-    for nic_name, attrs in dhcp_info.iteritems():
+    for nic_name, attrs in dhcp_info.items():
         try:
             match = attrs.get('index') == int(item)
         except (KeyError, ValueError):

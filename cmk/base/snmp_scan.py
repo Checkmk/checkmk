@@ -99,14 +99,14 @@ def _snmp_scan(host_config,
 
     found_check_plugin_names = set()  # type: Set[CheckPluginName]
     if for_inv:
-        items = inventory_plugins.inv_info.items()
+        these_plugin_names = inventory_plugins.inv_info
     else:
-        items = config.check_info.items()
+        these_plugin_names = config.check_info
 
     positive_found = []  # type: List[CheckPluginName]
     default_found = []  # type: List[CheckPluginName]
 
-    for check_plugin_name, _unused_check in items:
+    for check_plugin_name, _unused_check in these_plugin_names.items():
         if config.service_ignored(host_config.hostname, check_plugin_name, None):
             continue
         else:

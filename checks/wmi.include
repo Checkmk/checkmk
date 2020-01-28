@@ -477,17 +477,17 @@ def wmi_calculate_raw_average_time(table, row, column):
     if row == "":
         row = 0
 
-    value = int(table.get(row, column))
+    measure = int(table.get(row, column))
     base = int(table.get(row, column + "_Base"))
 
     sample_time = get_wmi_time(table, row)
 
-    value_per_sec = get_rate("%s_%s" % (column, table.name()), sample_time, value)
+    measure_per_sec = get_rate("%s_%s" % (column, table.name()), sample_time, measure)
     base_per_sec = get_rate("%s_%s_Base" % (column, table.name()), sample_time, base)
 
     if base_per_sec == 0:
         return 0
-    return value_per_sec / base_per_sec  # fixed: true-division
+    return measure_per_sec / base_per_sec  # fixed: true-division
 
 
 def wmi_yield_raw_average(table, row, column, infoname, perfvar, levels=None, perfscale=1.0):

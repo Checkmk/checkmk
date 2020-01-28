@@ -216,7 +216,7 @@ def convert_context_to_unicode(context):
 
 def render_context_dump(raw_context):
     # type: (EventContext) -> str
-    encoded_context = dict(raw_context.items())
+    encoded_context = dict(raw_context)
     convert_context_to_unicode(encoded_context)
     return "Raw context:\n" \
                + "\n".join(["                    %s=%s" % v for v in sorted(encoded_context.items())])
@@ -292,7 +292,8 @@ def complete_raw_context(raw_context, with_dump):
     forwarded to another site and the analysis is executed on that site, this function will be
     executed on the central site. So be sure not to overwrite site specific things.
     """
-    raw_keys = list(raw_context.keys())
+
+    raw_keys = list(raw_context)
 
     try:
         raw_context["WHAT"] = "SERVICE" if raw_context.get("SERVICEDESC") else "HOST"

@@ -29,11 +29,11 @@ def inv_omd_info(info, inventory_tree, status_data_tree):
     versions = info['versions']
     sites = info['sites']
 
-    for version in list(versions.values()):
+    for version in versions.values():
         version.setdefault('num_sites', 0)
         version['demo'] = (version['demo'] == "1")
 
-    for site in list(sites.values()):
+    for site in sites.values():
         site['autostart'] = (site['autostart'] == "1")
         version = versions.get(site['used_version'])
         if version:

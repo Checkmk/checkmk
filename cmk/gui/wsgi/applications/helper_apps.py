@@ -23,6 +23,7 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+from pprint import pformat
 
 
 def dump_environ_app(environ, start_response):
@@ -39,3 +40,26 @@ def serve_string(_str):
         return [_str]
 
     return _server
+
+
+def test_formdata(environ, start_response):
+    # show the environment:
+    output = [
+        '<pre>',
+        pformat(environ),
+        '</pre>',
+        '<form method="post">',
+        '<input type="text" name="test">',
+        '<input type="submit">',
+        '</form>',
+    ]
+
+    if environ['REQUEST_METHOD'] == 'POST':
+        # show form data as received by POST:
+        output.append('<h1>FORM DATA</h1>')
+        output.append(pformat(environ['wsgi.input'].read()))
+
+    # send results
+    output_len = sum(len(line) for line in output)
+    start_response('200 OK', [('Content-type', 'text/html'), ('Content-Length', str(output_len))])
+    return output

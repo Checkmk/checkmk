@@ -122,22 +122,20 @@ def _lookup_req_object(name):
 
 
 class RequestContext(object):
-    def __init__(self, html_obj):
+    def __init__(self, html_obj=None, req=None, resp=None):
         self.html = html_obj
         self.auth_type = None
+
+        if req is None and html_obj:
+            req = html_obj.request
+        if resp is None and html_obj:
+            resp = html_obj.response
+
+        self.request = req
+        self.response = resp
         # TODO: cyclical import with config -> globals -> config -> ...
         from cmk.gui.config import LoggedInNobody
         self.user = LoggedInNobody()
-
-    # These properties are needed so that we can replace the Request object from within html
-    # This actually is a hack which should be removed once the filtering can be done via middleware.
-    @property
-    def request(self):
-        return self.html.request
-
-    @property
-    def response(self):
-        return self.html.response
 
     def __enter__(self):
         _request_ctx_stack.push(self)
@@ -150,9 +148,11 @@ class RequestContext(object):
 
     def __exit__(self, exc_type, exc_value, tb):
         self._web_log_handler.removeFilter(self._prepend_url_filter)
-        # TODO: html.finalize needs to be called before popping the stack, because it does
-        #       something with the user object.
-        self.html.finalize()
+        # html.finalize needs to be called before popping the stack, because it does
+        # something with the user object. We make this optional, so we can use the RequestContext
+        # without the html object (for APIs for example).
+        if self.html is not None:
+            self.html.finalize()
         _request_ctx_stack.pop()
 
 

@@ -22,7 +22,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-import contextlib
 import threading
 
 from werkzeug.exceptions import HTTPException
@@ -30,7 +29,8 @@ from werkzeug.routing import Map, Submount, Rule
 
 import cmk
 from cmk.gui.wsgi.applications import CheckmkApp, CheckmkApiApp, openapi_spec_dir
-from cmk.gui.wsgi.applications.helper_apps import dump_environ_app
+from cmk.gui.wsgi.applications.helper_apps import dump_environ_app, test_formdata
+from cmk.gui.wsgi.middleware import OverrideRequestMethod, with_context_middleware
 
 WSGI_ENV_ARGS_NAME = 'x-checkmk.args'
 
@@ -53,7 +53,7 @@ def create_url_map():
         validate_responses=True,
     )
 
-    wrapped_api_app = OverrideRequestMethod(_api_app)
+    wrapped_api_app = with_context_middleware(OverrideRequestMethod(_api_app).wsgi_app)
     cmk_app = CheckmkApp()
 
     return Map([
@@ -61,6 +61,7 @@ def create_url_map():
             Submount("/check_mk", [
                 Rule("/", endpoint=cmk_app),
                 Rule("/dump.py", endpoint=dump_environ_app),
+                Rule("/form.py", endpoint=test_formdata),
                 Submount('/api', [
                     Rule("/", endpoint=wrapped_api_app),
                     Rule("/<path:path>", endpoint=wrapped_api_app),
@@ -69,24 +70,6 @@ def create_url_map():
             ]),
         ])
     ])
-
-
-class OverrideRequestMethod(object):
-    """Middleware to allow inflexible clients to override the HTTP request method.
-
-    Common convention is to allow for a X-HTTP-Method-Override HTTP header to be set.
-
-    Please be aware that no validation for a "correct" HTTP verb is being done by this middleware,
-    as this should be handled by other layers.
-    """
-    def __init__(self, app):
-        self.app = app
-
-    def __call__(self, environ, start_response):
-        override = environ.get('HTTP_X_HTTP_METHOD_OVERRIDE')
-        if override:
-            environ['REQUEST_METHOD'] = override
-        return self.app(environ, start_response)
 
 
 def router(environ, start_response, _url_map=[]):  # pylint: disable=dangerous-default-value
@@ -109,23 +92,13 @@ def router(environ, start_response, _url_map=[]):  # pylint: disable=dangerous-d
 
     url_map = _url_map[0]
 
-    with _fixed_checkmk_env(environ):
-        urls = url_map.bind_to_environ(environ)
-        try:
-            endpoint, args = urls.match()
-        except HTTPException as e:
-            # HTTPExceptions are WSGI apps
-            endpoint = e
-            args = ()
+    urls = url_map.bind_to_environ(environ)
+    try:
+        endpoint, args = urls.match()
+    except HTTPException as e:
+        # HTTPExceptions are WSGI apps
+        endpoint = e
+        args = ()
 
-        environ[WSGI_ENV_ARGS_NAME] = args
-        return endpoint(environ, start_response)
-
-
-@contextlib.contextmanager
-def _fixed_checkmk_env(environ):
-    # The WSGI spec doesn't require PATH_INFO to be set, yet Werkzeug's routing requires it.
-    path_info = environ.get('PATH_INFO')
-    if not path_info or path_info == '/':
-        environ['PATH_INFO'] = environ['SCRIPT_NAME']
-    yield environ
+    environ[WSGI_ENV_ARGS_NAME] = args
+    return endpoint(environ, start_response)

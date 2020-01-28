@@ -34,7 +34,6 @@ from connexion import problem  # type: ignore
 from cmk.gui import crash_reporting
 from cmk.gui.config import clear_user_login
 from cmk.gui.exceptions import MKException, MKAuthException, MKUserError
-from cmk.gui.globals import html
 from cmk.gui.log import logger
 from cmk.gui.login import verify_automation_secret, set_auth_type, login
 
@@ -76,25 +75,24 @@ def _subject(user_id):
 
 
 @contextlib.contextmanager
-def verify_user(user, token_info):
-    if user and token_info and user == token_info.get('sub'):
-        login(user)
+def verify_user(user_id, token_info):
+    if user_id and token_info and user_id == token_info.get('sub'):
+        login(user_id)
         set_auth_type("automation")
         yield
-        html.finalize()
         clear_user_login()
     else:
-        raise MKAuthException("Unauthorized")
+        raise MKAuthException("Unauthorized by verify_user")
 
 
 def with_user(func):
     @functools.wraps(func)
     def wrapper(*args, **kw):
-        user = kw.get('user')
+        user_id = kw.get('user')
         token_info = kw.get('token_info')
 
         try:
-            with verify_user(user, token_info):
+            with verify_user(user_id, token_info):
                 try:
                     return func(*args, **kw)
                 except MKException:

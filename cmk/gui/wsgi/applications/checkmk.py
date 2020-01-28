@@ -31,13 +31,11 @@ import six
 import livestatus
 
 import cmk.gui.crash_reporting as crash_reporting
-import cmk.gui.htmllib
-import cmk.gui.http
 import cmk.utils.paths
 import cmk.utils.profile
 import cmk.utils.store
 
-from cmk.gui import config, login, pages, modules
+from cmk.gui import config, login, pages, modules, http, htmllib
 from cmk.gui.exceptions import (
     MKUserError,
     MKConfigError,
@@ -47,7 +45,7 @@ from cmk.gui.exceptions import (
     FinalizeRequest,
     HTTPRedirect,
 )
-from cmk.gui.globals import AppContext, RequestContext, html, request, response
+from cmk.gui.globals import html, request, response, RequestContext, AppContext
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 
@@ -244,23 +242,6 @@ def _render_exception(e, title=""):
         html.footer()
 
 
-def with_context_middleware(app):
-    """Middleware which constructs the right context on each request.
-    """
-    @functools.wraps(app)
-    def with_context(environ, start_response):
-        req = cmk.gui.http.Request(environ)
-        resp = cmk.gui.http.Response(is_secure=req.is_secure)
-
-        with AppContext(app), RequestContext(cmk.gui.htmllib.html(req, resp)):
-            config.initialize()
-            html.init_modes()
-
-            return app(environ, start_response)
-
-    return with_context
-
-
 def profiling_middleware(func):
     """Wrap an WSGI app in a profiling context manager"""
     def profiler(environ, start_response):
@@ -276,11 +257,16 @@ def profiling_middleware(func):
 class CheckmkApp(object):
     """The Check_MK GUI WSGI entry point"""
     def __init__(self):
-        self.wsgi_app = with_context_middleware(self.wsgi_app)
+        self.wsgi_app = self.wsgi_app
         self.wsgi_app = profiling_middleware(self.wsgi_app)
 
     def __call__(self, environ, start_response):
-        return self.wsgi_app(environ, start_response)
+        req = http.Request(environ)
+        resp = http.Response(is_secure=req.is_secure)
+        with AppContext(self), RequestContext(req=req, resp=resp, html_obj=htmllib.html(req, resp)):
+            config.initialize()
+            html.init_modes()
+            return self.wsgi_app(environ, start_response)
 
     def wsgi_app(self, environ, start_response):  # pylint: disable=method-hidden
         """Is called by the WSGI server to serve the current page"""

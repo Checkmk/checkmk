@@ -23,21 +23,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import functools
-import wsgiref.util
-
+from cmk.gui.wsgi.middleware import apache_env
 from cmk.gui.wsgi.routing import router
-
-
-def apache_env(func):
-    @functools.wraps(func)
-    def _add_apache_env(environ, start_response):
-        if not environ.get('REQUEST_URI'):
-            environ['REQUEST_URI'] = wsgiref.util.request_uri(environ)
-
-        return func(environ, start_response)
-
-    return _add_apache_env
 
 
 def make_app():

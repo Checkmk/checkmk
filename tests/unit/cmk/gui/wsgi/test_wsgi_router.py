@@ -99,7 +99,7 @@ def test_openapi_app(
 ):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    wsgi_app.get("/NO_SITE/check_mk/api/v0/version")
+    wsgi_app.get("/NO_SITE/check_mk/api/v0/version", status=200)
 
 
 @pytest.mark.skip

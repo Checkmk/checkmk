@@ -28,9 +28,10 @@
 # Rewrites existing logfiles for CMC. You can concatenate several
 # logfiles and then compress them. Do *not* compress compressed
 # files again.
+import io
 import logging
 from typing import (  # pylint: disable=unused-import
-    Dict, Set, Optional, List, TextIO, Tuple,
+    Dict, IO, List, Optional, Set, Tuple,
 )
 
 from cmk.utils.exceptions import MKBailOut
@@ -60,7 +61,7 @@ def compress_history_file(input_path, output_path):
     known_services = {}  # type: Dict[str, Set[Optional[str]]]
     machine_state = "START"
 
-    output = open(output_path, "w")
+    output = io.open(output_path, "wt")
     for line in open(input_path):
         skip_this_line = False
         timestamp = int(line[1:11])
@@ -158,7 +159,7 @@ def get_line_command(line):
 
 
 def log_vanished_object(output, timestamp, host, service):
-    # type: (TextIO, int, str, Optional[str]) -> None
+    # type: (IO[str], int, str, Optional[str]) -> None
     if service:
         output.write("[%s] VANISHED SERVICE: %s;%s\n" % (timestamp, host, service))
     else:

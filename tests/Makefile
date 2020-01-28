@@ -54,7 +54,8 @@ test-format-python: ../.style.yapf
 	@PYTHON_FILES=$${PYTHON_FILES-$$(../scripts/find-python-files 2)} ; \
 	$(YAPF) --parallel --style ../.style.yapf --verbose --diff $$PYTHON_FILES | \
 	grep '^+++ .*(reformatted)$$' | \
-	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/'
+	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/' ; \
+	exit $${PIPESTATUS[0]}
 
 test-format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)

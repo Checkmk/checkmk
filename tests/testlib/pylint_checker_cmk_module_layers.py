@@ -92,6 +92,10 @@ class CMKModuleLayerChecker(BaseChecker):
         Fake the final module name here.
         """
         module_name = node.root().name
+
+        if file_path.startswith("cmk/base/cee/") or file_path.startswith("cmk/base/cme/"):
+            return "cmk.base.%s" % module_name
+
         if module_name.startswith("cee.") or module_name.startswith("cme."):
             return "cmk.%s" % module_name
         return module_name

@@ -112,7 +112,7 @@ def do_packaging(args):
             logger.error("%s", e)
             sys.exit(1)
     else:
-        allc = sorted(commands.keys())
+        allc = sorted(commands)
         allc = [tty.bold + c + tty.normal for c in allc]
         logger.error("Invalid packaging command. Allowed are: %s and %s.", ", ".join(allc[:-1]),
                      allc[-1])
@@ -190,7 +190,7 @@ def show_package(name, show_info=False):
         sys.stdout.write("Author:                        %s\n" % package["author"])
         sys.stdout.write("Download-URL:                  %s\n" % package["download_url"])
         sys.stdout.write("Files:                         %s\n" % \
-                " ".join([ "%s(%d)" % (part, len(fs)) for part, fs in package["files"].items() ]))
+                " ".join(["%s(%d)" % (part, len(fs)) for part, fs in package["files"].items()]))
         sys.stdout.write("Description:\n  %s\n" % package["description"])
     else:
         if logger.isEnabledFor(VERBOSE):

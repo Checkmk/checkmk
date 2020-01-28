@@ -675,7 +675,7 @@ def _create_nagios_config_contactgroups(cfg):
     if config.define_contactgroups is False:
         return
 
-    cgs = list(cfg.contactgroups_to_define)
+    cgs = cfg.contactgroups_to_define
     if not cgs:
         return
 
@@ -748,7 +748,7 @@ def _create_nagios_config_timeperiods(cfg):
         cfg.outfile.write("\n# ------------------------------------------------------------\n")
         cfg.outfile.write("# Timeperiod definitions (controlled by variable 'timeperiods')\n")
         cfg.outfile.write("# ------------------------------------------------------------\n\n")
-        tpnames = sorted(config.timeperiods.keys())
+        tpnames = sorted(config.timeperiods)
         for name in tpnames:
             tp = config.timeperiods[name]
             timeperiod_spec = {
@@ -777,7 +777,7 @@ def _create_nagios_config_contacts(cfg, hostnames):
         outfile.write("\n# ------------------------------------------------------------\n")
         outfile.write("# Contact definitions (controlled by variable 'contacts')\n")
         outfile.write("# ------------------------------------------------------------\n\n")
-        cnames = sorted(config.contacts.keys())
+        cnames = sorted(config.contacts)
         for cname in cnames:
             contact = config.contacts[cname]
             # Create contact groups in nagios, even when they are empty. This is needed
@@ -822,14 +822,14 @@ def _create_nagios_config_contacts(cfg, hostnames):
                     no = "n"
 
                 contact_spec.update({
-                    "%s_notification_options" % what: ",".join(list(no)),
+                    "%s_notification_options" % what: ",".join(no),
                     "%s_notification_period" % what: contact.get("notification_period", "24X7"),
                     "%s_notification_commands" % what: contact.get(
                         "%s_notification_commands" % what, "check-mk-notify"),
                 })
 
             # Add custom macros
-            for macro in [m for m in contact.keys() if m.startswith('_')]:
+            for macro in [m for m in contact if m.startswith('_')]:
                 contact_spec[macro] = contact[macro]
 
             contact_spec["contactgroups"] = ", ".join(cgrs)

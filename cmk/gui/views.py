@@ -1397,7 +1397,7 @@ def show_view(view, view_renderer, only_count=False):
     # TODO: Use livestatus Stats: instead of fetching rows!
     if only_count:
         for filter_vars in view.spec["context"].itervalues():
-            for varname in filter_vars.iterkeys():
+            for varname in filter_vars:
                 html.request.del_var(varname)
         return len(rows)
 

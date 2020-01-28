@@ -1004,9 +1004,7 @@ class DiscoveryPageRenderer(object):
                     labels,
                     "host",
                     with_links=False,
-                    label_sources={
-                        k: "discovered" for k in discovery_result.host_labels.iterkeys()
-                    },
+                    label_sources={k: "discovered" for k in discovery_result.host_labels},
                 )
                 table.text_cell(_("Check plugin"), plugin_name)
                 table.cell(_("Host labels"), labels_html)

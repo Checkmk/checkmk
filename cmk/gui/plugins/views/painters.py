@@ -5305,9 +5305,7 @@ class PainterHostDockerNode(Painter):
 
     def render(self, row, cell):
         source_hosts = [
-            k[21:]
-            for k in get_labels(row, "host").iterkeys()
-            if k.startswith("cmk/piggyback_source_")
+            k[21:] for k in get_labels(row, "host") if k.startswith("cmk/piggyback_source_")
         ]
 
         if not source_hosts:

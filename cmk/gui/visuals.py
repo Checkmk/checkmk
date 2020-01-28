@@ -1169,7 +1169,7 @@ def add_context_to_uri_vars(context, single_infos, only_count=False):
         # This is a multi-context filter
         # We add the filter only if *none* of its HTML variables are present on the URL. This is
         # important because checkbox variables are not present if the box is not checked.
-        skip = any(html.request.has_var(uri_varname) for uri_varname in filter_vars.iterkeys())
+        skip = any(html.request.has_var(uri_varname) for uri_varname in filter_vars)
         if not skip or only_count:
             for uri_varname in filter_vars.keys():
                 html.request.set_var(uri_varname, uri_vars[uri_varname])
@@ -1551,8 +1551,7 @@ def collect_context_links(this_visual, mobile=False, only_types=None):
 
     # compute list of html variables needed for this visual
     active_filter_vars = set([])
-    for var in _get_singlecontext_html_vars(this_visual["context"],
-                                            this_visual["single_infos"]).iterkeys():
+    for var in _get_singlecontext_html_vars(this_visual["context"], this_visual["single_infos"]):
         if html.request.has_var(var):
             active_filter_vars.add(var)
 

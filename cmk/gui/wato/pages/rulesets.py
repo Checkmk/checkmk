@@ -777,7 +777,7 @@ class ModeEditRuleset(WatoMode):
             return _("This rule does not match: %s") % " ".join(reasons), 'nmatch'
         ruleset = rule.ruleset
         if ruleset.match_type() == "dict":
-            new_keys = set(rule.value.iterkeys())
+            new_keys = set(rule.value.keys())
             already_existing = match_state["keys"] & new_keys
             match_state["keys"] |= new_keys
             if not new_keys:

@@ -721,7 +721,7 @@ class Topology(object):
                 self._border_hosts.remove(hostname)
 
         meshes = []
-        for hostname in self._known_hosts.iterkeys():
+        for hostname in self._known_hosts:
             meshes.append(set([hostname] + incoming_nodes[hostname] + outgoing_nodes[hostname]))
         self._combine_meshes_inplace(meshes)
 

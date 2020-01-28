@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+
 import os
 import ast
 import logging

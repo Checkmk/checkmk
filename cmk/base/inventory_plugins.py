@@ -71,7 +71,7 @@ def load_plugins(get_check_api_context, get_inventory_context):
 
         try:
             plugin_context = _new_inv_context(get_check_api_context, get_inventory_context)
-            known_plugins = inv_info.keys()
+            known_plugins = inv_info
 
             _load_plugin_includes(f, plugin_context)
 
@@ -85,7 +85,7 @@ def load_plugins(get_check_api_context, get_inventory_context):
                 continue
 
         # Now store the check context for all plugins found in this file
-        for check_plugin_name in set(inv_info.keys()).difference(known_plugins):
+        for check_plugin_name in set(inv_info).difference(known_plugins):
             _plugin_contexts[check_plugin_name] = plugin_context
 
 
@@ -174,7 +174,7 @@ def sorted_inventory_plugins():
     # The plugins are now a partially ordered set with respect to
     # the 'depends on' relation. That means we can iteratively
     # yield the minimal elements
-    remaining_plugins = set(inv_info.keys())
+    remaining_plugins = set(inv_info)
     yielded_plugins = set()  # type: Set[str]
     while remaining_plugins:
         for plugin_name in sorted(remaining_plugins):

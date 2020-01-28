@@ -15,9 +15,16 @@ CPYTHON, 3.8.1, git.
 
 ### IMPORTANT
 
-You must uninstall Python before deleting folders and or building.
+* You must uninstall Python before deleting folders and or building.
 Normally this is done automatically by build scripts. Just do not forget this 
 if you are modifying scripts
+
+* Patch the registry with the ~WindowsServerPatch.reg~ if you are using Windows Server.
+Windows Server by default disables MSI installation even on per-user basis. 
+This is quite strange.
+
+* You must switch jenkins slave to real user-admin account, otherwise installation is
+not possible. This is Windows.
 
 ### PROCESS
 

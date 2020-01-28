@@ -343,10 +343,10 @@ class MultiHostSections(object):
         # type: () -> Set[CheckPluginName]
         # TODO: There is a function 'section_name_of' in check_utils.py
         # but no inverse function, ie. get all subchecks of main check.
-        check_keys = set(config.check_info.keys())
+        check_keys = set(config.check_info)
         check_plugin_names = set()
         for v in self._multi_host_sections.values():
-            for k in v.sections.keys():
+            for k in v.sections:
                 for check_k in check_keys:
                     if check_k.startswith(k):
                         check_plugin_names.add(check_k)

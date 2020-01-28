@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -30,7 +30,7 @@
 # files again.
 import logging
 from typing import (  # pylint: disable=unused-import
-    BinaryIO, Dict, Set, Optional, List, Tuple,
+    Dict, Set, Optional, List, TextIO, Tuple,
 )
 
 from cmk.utils.exceptions import MKBailOut
@@ -68,7 +68,7 @@ def compress_history_file(input_path, output_path):
 
         logger.debug("%s  (%s) %s / %s / %s", line, machine_state, line_type, host, service)
 
-        if line_type == "RESTART" or line_type == "LOGGING_INITIAL":
+        if line_type in ("RESTART", "LOGGING_INITIAL"):
             if machine_state != "START":
                 machine_state = "AFTER_RESTART"
                 services_after_reload = {}  # type: Dict[str, Set[Optional[str]]]
@@ -132,14 +132,12 @@ def parse_history_line(line):
     if "INITIAL" in command:
         host, service = get_host_service_from_history_line(command, line)
         return "INITIAL", host, service
-    elif "CURRENT" in command:
+    if "CURRENT" in command:
         host, service = get_host_service_from_history_line(command, line)
         return "CURRENT", host, service
-    elif "logging intitial" in command \
-        or "logging initial" in command:
+    if "logging intitial" in command or "logging initial" in command:
         return "LOGGING_INITIAL", None, None
-    elif "LOG ROTATION" in command \
-        or "LOG VERSION" in command:
+    if "LOG ROTATION" in command or "LOG VERSION" in command:
         return "RESTART", None, None
     return "OPERATION", None, None
 
@@ -160,7 +158,7 @@ def get_line_command(line):
 
 
 def log_vanished_object(output, timestamp, host, service):
-    # type: (BinaryIO, int, str, Optional[str]) -> None
+    # type: (TextIO, int, str, Optional[str]) -> None
     if service:
         output.write("[%s] VANISHED SERVICE: %s;%s\n" % (timestamp, host, service))
     else:

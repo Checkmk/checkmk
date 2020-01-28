@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -77,7 +77,7 @@ def do_backup(tarname):
                 subdata = subfile.getvalue()
             else:
                 subtarname = canonical_name
-                subdata = open(absdir).read()
+                subdata = open(absdir, mode="rb").read()
 
             info = tarfile.TarInfo(subtarname)
             # mypy complains about mtime being int, but float is totally fine

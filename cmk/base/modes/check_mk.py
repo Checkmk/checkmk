@@ -343,8 +343,10 @@ def mode_list_checks():
     import cmk.utils.man_pages as man_pages
     all_check_manuals = man_pages.all_man_pages()
 
-    checks_sorted = sorted(config.check_info.items() + \
-       [ ("check_" + name, entry) for (name, entry) in config.active_check_info.items() ])
+    checks_sorted = sorted(
+        list(config.check_info.items()) +
+        [("check_" + name, entry) for (name, entry) in config.active_check_info.items()])
+
     for check_plugin_name, check in checks_sorted:
         man_filename = all_check_manuals.get(check_plugin_name)
         try:
@@ -1578,7 +1580,7 @@ modes.register(
                  short_help="Restrict discovery to certain check types",
                  argument=True,
                  argument_descr="C",
-                 argument_conv=lambda x: config.check_info.keys() if x == "@all" else x.split(","),
+                 argument_conv=lambda x: list(config.check_info) if x == "@all" else x.split(","),
              ),
          ]))
 
@@ -1664,7 +1666,7 @@ modes.register(
                  short_help="Restrict discovery to certain check types",
                  argument=True,
                  argument_descr="C",
-                 argument_conv=lambda x: config.check_info.keys() if x == "@all" else x.split(","),
+                 argument_conv=lambda x: list(config.check_info) if x == "@all" else x.split(","),
              ),
              keepalive_option,
              Option(

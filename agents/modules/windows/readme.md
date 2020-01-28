@@ -8,11 +8,10 @@ CPYTHON, 3.8.1, git.
 
 ### Required Tools
 
-1. Visual Studio 2019
+1. Visual Studio 2019 and v140 toolchain
 2. Python 3.7 or newer
 3. Normal make
 4. 7zip
-5. psexec
 
 ### IMPORTANT
 
@@ -29,14 +28,15 @@ run make
 #### Steps
 
 1. Deploy package from the ~omd/packages~
-2. Build to the ~out~
-3. Install to ~to_install~
+2. Build  and copy results t the ~out~
+3. Uninstall from backuped python-3.8.exe in ~uninstall~
+4. Install to the ~to_install~
 4. Backup python-3.8.exe to ~uninstall~
 5. Upgrade pip 
 6. Install pipenv
-7. Create .venv in ~ready~ using ~check_mk/virtual-envs/Windows/3.8/Pipfile~
-8. Process Pipfile.lock in ~ready~
-9. Zip ~ready/.venv~
+7. Create .venv in ~tmp/work~ using ~check_mk/virtual-envs/Windows/3.8/Pipfile~
+8. Process Pipfile.lock in ~tmp/work~
+9. Zip ~tmp/ready/.venv~
 10. Copy to artefacts
 11. Uninstall python from ~to_install~
 
@@ -47,9 +47,12 @@ run make
 .
 |
 |-- tmp/
-|    |-- ready/		~ venv ~
+|    |-- work/		~ venv ~
+|    |
 |    |-- out/		~ output from the build ~
+|    |
 |    |-- uninstall/	~ backed up installer ~
+|    |
 |    +-- to_install/	~ installation of the Python ~
 |
 |-- lhm/

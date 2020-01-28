@@ -24,6 +24,9 @@ make
 goto exit
 
 :usage:
+@rem we are using powershell to call the executable with admin rights and wait
+@rem this trick is required to install python in non very interactive environments
+@rem like jenkins build
 @if "%1"==""  powershell Write-Host "Possible parameters:`n `tpython `t- builds python module`n`tsuccess`t- always return success`n`tfail `t- always returns fail" -foreground Cyan && exit /b 9
 
 :exit

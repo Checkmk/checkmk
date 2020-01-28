@@ -367,7 +367,7 @@ def _find_usages_of_contact_group_in_hosts_and_folders(name, folder):
     if name in attributes.get("contactgroups", {}).get("groups", []):
         used_in.append((_("Folder: %s") % folder.alias_path(), folder.edit_url()))
 
-    for host in folder.hosts().itervalues():
+    for host in folder.hosts().values():
         attributes = host.attributes()
         if name in attributes.get("contactgroups", {}).get("groups", []):
             used_in.append((_("Host: %s") % host.name(), host.edit_url()))

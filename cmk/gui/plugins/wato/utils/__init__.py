@@ -1472,7 +1472,7 @@ def configure_attributes(new,
             values = []
             num_have_locked_it = 0
             num_haveit = 0
-            for host in hosts.itervalues():
+            for host in hosts.values():
                 if not host:
                     continue
 

@@ -661,7 +661,7 @@ def execute_network_scan_job():
 # folder object.
 def find_folder_to_scan():
     folder_to_scan = None
-    for folder in watolib.Folder.all_folders().itervalues():
+    for folder in watolib.Folder.all_folders().values():
         scheduled_time = folder.next_network_scan_at()
         if scheduled_time is not None and scheduled_time < time.time():
             if folder_to_scan is None:

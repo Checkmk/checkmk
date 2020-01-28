@@ -1413,7 +1413,7 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
         html.context_button(_("Back"), html.makeuri_contextless([("mode", "backup")]), "back")
 
     def _key_in_use(self, key_id, key):
-        for job in self.jobs().objects.itervalues():
+        for job in self.jobs().objects.values():
             job_key_id = job.key_ident()
             if job_key_id is not None and key_id == job_key_id:
                 return True

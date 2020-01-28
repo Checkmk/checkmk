@@ -154,7 +154,7 @@ class RuleConditions(object):
     @property
     def tag_list(self):
         tag_list = []
-        for tag_spec in self.host_tags.itervalues():
+        for tag_spec in self.host_tags.values():
             is_not = isinstance(tag_spec, dict) and "$ne" in tag_spec
             if is_not:
                 tag_id = tag_spec["$ne"]
@@ -311,7 +311,7 @@ class RulesetCollection(object):
     # Groups the rulesets in 3 layers (main group, sub group, rulesets)
     def get_grouped(self):
         grouped_dict = {}
-        for ruleset in self._rulesets.itervalues():
+        for ruleset in self._rulesets.values():
             main_group = grouped_dict.setdefault(ruleset.rulespec.main_group_name, {})
             group_rulesets = main_group.setdefault(ruleset.rulespec.group_name, [])
             group_rulesets.append(ruleset)

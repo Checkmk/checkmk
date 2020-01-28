@@ -75,7 +75,7 @@ class KeypairStore(object):
 
     def choices(self):
         choices = []
-        for key in self.load().itervalues():
+        for key in self.load().values():
             cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
             digest = cert.digest("md5")
             choices.append((digest, key["alias"]))

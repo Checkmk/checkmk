@@ -164,7 +164,7 @@ def _mask_bits_to_int(n):
 def _known_ip_addresses():
     addresses = set()
 
-    for host in Host.all().itervalues():
+    for host in Host.all().values():
         attributes = host.attributes()
 
         address = attributes.get("ipaddress")

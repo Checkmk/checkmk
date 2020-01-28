@@ -927,7 +927,7 @@ def write_contacts_and_users_file(profiles, custom_default_config_dir=None):
 
     non_contact_attributes_cache = {}
     multisite_attributes_cache = {}
-    for user_settings in updated_profiles.itervalues():
+    for user_settings in updated_profiles.values():
         connector = user_settings.get("connector")
         if connector not in non_contact_attributes_cache:
             non_contact_attributes_cache[connector] = non_contact_attributes(

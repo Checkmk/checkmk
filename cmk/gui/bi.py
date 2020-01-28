@@ -1499,7 +1499,7 @@ def check_title_uniqueness(forest):
     # Legacy, will be removed any decade from now
     # One aggregation cannot be in mutliple groups.
     known_titles = set()
-    for aggrs in forest.itervalues():
+    for aggrs in forest.values():
         for aggr in aggrs:
             title = aggr["title"]
             if title in known_titles:

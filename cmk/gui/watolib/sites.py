@@ -310,7 +310,7 @@ class SiteManagement(object):
             return config.default_single_site_configuration()
 
         sites = config.migrate_old_site_config(config_vars["sites"])
-        for site in sites.itervalues():
+        for site in sites.values():
             if site["proxy"] is not None:
                 site["proxy"] = cls.transform_old_connection_params(site["proxy"])
 

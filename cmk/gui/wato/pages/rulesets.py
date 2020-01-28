@@ -1751,7 +1751,7 @@ class RuleConditionRenderer(object):
 
     def _tag_conditions(self, conditions):
         # type: (RuleConditions) -> Generator
-        for tag_spec in conditions.host_tags.itervalues():
+        for tag_spec in conditions.host_tags.values():
             if isinstance(tag_spec, dict) and "$or" in tag_spec:
                 yield HTML(" <i>or</i> ").join(
                     [self._single_tag_condition(sub_spec) for sub_spec in tag_spec["$or"]])

@@ -886,7 +886,7 @@ class APICallHosttags(APICallCollection):
 
         all_rulesets = watolib.AllRulesets()
         all_rulesets.load()
-        for ruleset in all_rulesets.get_rulesets().itervalues():
+        for ruleset in all_rulesets.get_rulesets().values():
             for _folder, _rulenr, rule in ruleset.get_rules():
                 for tag_group_id, tag_spec in rule.conditions.host_tags.items():
                     if isinstance(tag_spec, dict):

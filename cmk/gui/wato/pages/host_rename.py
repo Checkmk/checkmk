@@ -535,7 +535,7 @@ def rename_host_in_event_rules(oldname, newname):
 
     users = userdb.load_users(lock=True)
     some_user_changed = False
-    for user in users.itervalues():
+    for user in users.values():
         if user.get("notification_rules"):
             rules = user["notification_rules"]
             num_changed = rename_in_event_rules(rules)
@@ -558,7 +558,7 @@ def rename_host_in_event_rules(oldname, newname):
                 alert_handling.save_alert_handler_rules(rules)
 
     # Notification channels of flexible notifications also can have host conditions
-    for user in users.itervalues():
+    for user in users.values():
         method = user.get("notification_method")
         if method and isinstance(method, tuple) and method[0] == "flexible":
             channels_changed = 0

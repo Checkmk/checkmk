@@ -188,7 +188,7 @@ def iconpainter_columns(what, toplevel):
             'service_custom_variable_values',
         ])
 
-    for icon in get_multisite_icons().itervalues():
+    for icon in get_multisite_icons().values():
         if toplevel is None or toplevel == icon.toplevel():
             cols.update([what + '_' + c for c in icon.columns()])
             cols.update(["host_" + c for c in icon.host_columns()])

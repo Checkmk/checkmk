@@ -959,7 +959,7 @@ class ModeBI(WatoMode, BIManagement):
         level = 0
         rule_refs = 0
         for pack in self._packs.values():
-            for rule in pack["rules"].itervalues():
+            for rule in pack["rules"].values():
                 l = self.rule_uses_rule(rule, ruleid)
                 level = max(l, level)
                 if l == 1:

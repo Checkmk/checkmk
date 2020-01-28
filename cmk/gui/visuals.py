@@ -1471,7 +1471,7 @@ def visual_title(what, visual):
 
 def _add_context_title(visual, title):
     extra_titles = list(
-        _get_singlecontext_html_vars(visual["context"], visual["single_infos"]).itervalues())
+        _get_singlecontext_html_vars(visual["context"], visual["single_infos"]).values())
 
     # FIXME: Is this really only needed for visuals without single infos?
     if not visual['single_infos']:

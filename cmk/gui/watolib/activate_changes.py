@@ -920,7 +920,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         manager.activate_until()
 
     def _set_done_result(self, configuration_warnings):
-        if any(configuration_warnings.itervalues()):
+        if any(configuration_warnings.values()):
             self._warnings = configuration_warnings
             details = self._render_warnings(configuration_warnings)
             self._set_result(PHASE_DONE, _("Activated"), details, state=STATE_WARNING)

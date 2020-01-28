@@ -445,7 +445,7 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
 
     def execute(self):
         jobs = SiteBackupJobs()
-        for job in jobs.objects.itervalues():
+        for job in jobs.objects.values():
             if job.is_encrypted():
                 yield ACResultOK(_("The job \"%s\" is encrypted") % job.title())
             else:
@@ -765,7 +765,7 @@ class ACTestSizeOfExtensions(ACTest):
 
     def _replicates_mkps(self):
         replicates_mkps = False
-        for site in config.wato_slave_sites().itervalues():
+        for site in config.wato_slave_sites().values():
             if site.get("replicate_mkps"):
                 replicates_mkps = True
                 break

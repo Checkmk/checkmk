@@ -497,7 +497,7 @@ def get_permitted_dashboards():
 # FIXME: Can be removed one day. Mark as incompatible change or similar.
 def _transform_dashboards(boards):
     # type: (Dict[Tuple[UserId, DashboardName], DashboardConfig]) -> Dict[Tuple[UserId, DashboardName], DashboardConfig]
-    for dashboard in boards.itervalues():
+    for dashboard in boards.values():
         visuals.transform_old_visual(dashboard)
 
         # Also transform dashlets

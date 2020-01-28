@@ -518,7 +518,7 @@ class ModeNotifications(NotificationsMode):
         if current_settings.get("notification_fallback_email"):
             return True
 
-        for user in userdb.load_users(lock=False).itervalues():
+        for user in userdb.load_users(lock=False).values():
             if user.get("fallback_contact", False):
                 return True
 

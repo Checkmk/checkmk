@@ -2096,7 +2096,7 @@ def get_groups_of_user(connection, user_id, ldap_user, cg_names, nested, other_c
 
     # Now add the groups the user is a member off
     group_cns = []
-    for group in ldap_groups.itervalues():
+    for group in ldap_groups.values():
         if user_cmp_val in group['members']:
             group_cns.append(group['cn'])
 
@@ -2641,7 +2641,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
 
     def _get_groups_to_fetch(self, connection, params):
         groups_to_fetch = {}
-        for group_specs in params.itervalues():
+        for group_specs in params.values():
             if isinstance(group_specs, list):
                 for group_spec in group_specs:
                     if isinstance(group_spec, tuple):

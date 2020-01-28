@@ -478,7 +478,7 @@ class GUIViewRenderer(ViewRenderer):
         if config.show_livestatus_errors \
            and display_options.enabled(display_options.W) \
            and html.output_format == "html":
-            for info in sites.live().dead_sites().itervalues():
+            for info in sites.live().dead_sites().values():
                 html.show_error("<b>%s - %s</b><br>%s" %
                                 (info["site"]["alias"], _('Livestatus error'), info["exception"]))
 
@@ -1396,7 +1396,7 @@ def show_view(view, view_renderer, only_count=False):
 
     # TODO: Use livestatus Stats: instead of fetching rows!
     if only_count:
-        for filter_vars in view.spec["context"].itervalues():
+        for filter_vars in view.spec["context"].values():
             for varname in filter_vars:
                 html.request.del_var(varname)
         return len(rows)
@@ -2266,7 +2266,7 @@ def get_context_link(user, viewname):
 
 @cmk.gui.pages.register("export_views")
 def ajax_export():
-    for view in get_permitted_views().itervalues():
+    for view in get_permitted_views().values():
         view["owner"] = ''
         view["public"] = True
     html.write(pprint.pformat(get_permitted_views()))

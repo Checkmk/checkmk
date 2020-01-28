@@ -1010,7 +1010,7 @@ def _change_host_tags_in_folders(operation, mode, folder):
 
 def _change_host_tags_in_hosts(operation, mode, folder):
     affected_hosts = []
-    for host in folder.hosts().itervalues():
+    for host in folder.hosts().values():
         aff_hosts = _change_host_tags_in_host_or_folder(operation, mode, host)
         affected_hosts += aff_hosts
 
@@ -1073,7 +1073,7 @@ def _change_host_tags_in_rules(operation, mode, folder):
     rulesets = watolib.FolderRulesets(folder)
     rulesets.load()
 
-    for ruleset in rulesets.get_rulesets().itervalues():
+    for ruleset in rulesets.get_rulesets().values():
         for _folder, _rulenr, rule in ruleset.get_rules():
             affected_rulesets.update(_change_host_tags_in_rule(operation, mode, ruleset, rule))
 

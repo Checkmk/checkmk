@@ -281,7 +281,7 @@ class SetFolderPathAbstract(object):
         # type: (List[str]) -> None
         if self._current_path is None:
             return
-        for hostname in strip_tags(new_hosts):
+        for hostname in strip_tags(list(new_hosts)):
             host_paths[hostname] = self._current_path
 
 
@@ -310,7 +310,7 @@ class SetFolderPathDict(SetFolderPathAbstract, dict):
     # TODO: How to annotate this?
     def update(self, new_hosts):  # type: ignore
         # not-yet-a-type
-        self._set_folder_paths(new_hosts.keys())
+        self._set_folder_paths(new_hosts)
         return super(SetFolderPathDict, self).update(new_hosts)
 
     # Probably unused
@@ -737,8 +737,8 @@ def _get_shadow_hosts():
 def _all_active_hosts_with_duplicates():
     # type: () -> List[str]
     return _filter_active_hosts(get_config_cache(),
-                                (strip_tags(all_hosts) + strip_tags(list(clusters.keys())) +
-                                 strip_tags(list(_get_shadow_hosts().keys()))))
+                                (strip_tags(list(all_hosts)) + strip_tags(list(clusters)) +
+                                 strip_tags(list(_get_shadow_hosts()))))
 
 
 def _filter_active_hosts(config_cache, hostlist, keep_offline_hosts=False):
@@ -786,7 +786,7 @@ def duplicate_hosts():
         else:
             seen_hostnames.add(hostname)
 
-    return sorted(list(duplicates))
+    return sorted(duplicates)
 
 
 # Returns a list of all hosts which are associated with this site,
@@ -1429,9 +1429,10 @@ def load_checks(get_check_api_context, filelist):
         try:
             check_context = new_check_context(get_check_api_context)
 
-            known_vars = check_context.keys()
-            known_checks = check_info.keys()
-            known_active_checks = active_check_info.keys()
+            # Make a copy of known check plugin names
+            known_vars = set(check_context)
+            known_checks = set(check_info)
+            known_active_checks = set(active_check_info)
 
             load_check_includes(f, check_context)
 
@@ -1448,8 +1449,8 @@ def load_checks(get_check_api_context, filelist):
             else:
                 continue
 
-        new_checks = set(check_info.keys()).difference(known_checks)
-        new_active_checks = set(active_check_info.keys()).difference(known_active_checks)
+        new_checks = set(check_info).difference(known_checks)
+        new_active_checks = set(active_check_info).difference(known_active_checks)
 
         # Now store the check context for all checks found in this file
         for check_plugin_name in new_checks:
@@ -1461,7 +1462,7 @@ def load_checks(get_check_api_context, filelist):
         # Collect all variables that the check file did introduce compared to the
         # default check context
         new_check_vars = {}
-        for varname in set(check_context.keys()).difference(known_vars):
+        for varname in set(check_context).difference(known_vars):
             new_check_vars[varname] = check_context[varname]
 
         # The default_levels_variable of check_info also declares use of a global
@@ -1674,7 +1675,7 @@ def includes_of_plugin(check_file_path):
                 elif target.value.id == "check_includes":
                     _load_from_check_includes(child)
 
-    return list(include_names.keys())
+    return list(include_names)
 
 
 def _plugin_pathnames_in_directory(path):
@@ -1741,7 +1742,7 @@ def _precompiled_plugin_path(path):
 
 def check_variable_names():
     # type: () -> List[str]
-    return list(_check_variables.keys())
+    return list(_check_variables)
 
 
 def get_check_variable_defaults():
@@ -1831,7 +1832,7 @@ def convert_check_info():
             }
         else:
             # Ensure that there are only the known keys set. Is meant to detect typos etc.
-            for key in info.keys():
+            for key in info:
                 if key != "includes" and key not in check_info_defaults:
                     raise MKGeneralException(
                         "The check '%s' declares an unexpected key '%s' in 'check_info'." %
@@ -1917,7 +1918,7 @@ def checks_by_checkgroup():
 def initialize_check_type_caches():
     # type: () -> None
     snmp_cache = cmk.base.runtime_cache.get_set("check_type_snmp")
-    snmp_cache.update(snmp_info.keys())
+    snmp_cache.update(snmp_info)
 
     tcp_cache = cmk.base.runtime_cache.get_set("check_type_tcp")
     for check_plugin_name in check_info:
@@ -3137,7 +3138,7 @@ class ConfigCache(object):
         """
         # Would be better to use self._all_configured_hosts, but that is not possible as long as we need the tags
         # from the old all_hosts / clusters.keys().
-        for tagged_host in all_hosts + clusters.keys():
+        for tagged_host in all_hosts + list(clusters):
             parts = tagged_host.split("|")
             hostname = parts[0]
 
@@ -3151,7 +3152,7 @@ class ConfigCache(object):
                 host_tags[hostname] = self._tag_list_to_tag_groups(tag_to_group_map,
                                                                    self._hosttags[hostname])
 
-        for shadow_host_name, shadow_host_spec in _get_shadow_hosts().items():
+        for shadow_host_name, shadow_host_spec in list(_get_shadow_hosts().items()):
             self._hosttags[shadow_host_name] = set(
                 shadow_host_spec.get("custom_variables", {}).get("TAGS", "").split())
             host_tags[shadow_host_name] = self._tag_list_to_tag_groups(
@@ -3517,7 +3518,7 @@ class ConfigCache(object):
         # type: () -> Set[HostName]
         """Returns a set of all shadow host names, regardless if currently disabled or
         monitored on a remote site"""
-        return set(_get_shadow_hosts().keys())
+        return set(_get_shadow_hosts())
 
     def all_configured_hosts(self):
         # type: () -> Set[HostName]
@@ -3570,7 +3571,7 @@ class ConfigCache(object):
 
     def _get_all_configured_clusters(self):
         # type: () -> Set[HostName]
-        return set(strip_tags(list(clusters.keys())))
+        return set(strip_tags(list(clusters)))
 
     def host_of_clustered_service(self, hostname, servicedesc, part_of_clusters=None):
         # type: (HostName, Text, Optional[List[str]]) -> str

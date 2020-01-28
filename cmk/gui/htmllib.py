@@ -1172,13 +1172,21 @@ class html(ABCHTMLGenerator):
     def get_ascii_input(self, varname, deflt=None):
         """Helper to retrieve a byte string and ensure it only contains ASCII characters
         In case a non ASCII character is found an MKUserError() is raised."""
-        try:
-            value = self.request.var(varname, deflt)
-            if value is not None:
-                value.decode("ascii")
+        value = self.request.var(varname, deflt)
+
+        if value is None:
             return value
-        except UnicodeDecodeError:
-            raise MKUserError(varname, _("The given text must only contain ASCII characters."))
+
+        if sys.version_info[0] >= 3:
+            if not value.isascii():
+                raise MKUserError(varname, _("The given text must only contain ASCII characters."))
+        else:
+            try:
+                value.decode("ascii")
+            except UnicodeDecodeError:
+                raise MKUserError(varname, _("The given text must only contain ASCII characters."))
+
+        return value
 
     def get_unicode_input(self, varname, deflt=None):
         try:

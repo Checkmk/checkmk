@@ -26,14 +26,18 @@
 
 # TODO: Rework connection management and multiplexing
 
+import sys
 from typing import Any, Callable, Dict, List, Optional, Tuple  # pylint: disable=unused-import
 import time
 import os
 import traceback
 import copy
-
-import pathlib2 as pathlib
 import six
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -258,7 +262,7 @@ def user_exists(username):
     if _user_exists_according_to_profile(username):
         return True
 
-    return Htpasswd(pathlib.Path(cmk.utils.paths.htpasswd_file)).exists(username)
+    return Htpasswd(Path(cmk.utils.paths.htpasswd_file)).exists(username)
 
 
 def _user_exists_according_to_profile(username):

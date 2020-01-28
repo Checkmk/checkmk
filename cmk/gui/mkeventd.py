@@ -25,13 +25,18 @@
 # Boston, MA 02110-1301 USA.
 
 from __future__ import division
+import sys
 import ast
 import re
 import socket
 import time
 from typing import List, Tuple, Text  # pylint: disable=unused-import
 
-from pathlib2 import Path
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+
 import livestatus
 
 import cmk.utils.paths

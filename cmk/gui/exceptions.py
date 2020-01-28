@@ -24,9 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import httplib
 from typing import Optional, Text  # pylint: disable=unused-import
-
+import six
 from werkzeug.http import HTTP_STATUS_CODES
 
 from cmk.utils.exceptions import (
@@ -55,7 +54,7 @@ class HTTPRedirect(FinalizeRequest):
     and making the client request another page after receiving the response."""
     def __init__(self, url):
         # type: (str) -> None
-        super(HTTPRedirect, self).__init__(httplib.FOUND)
+        super(HTTPRedirect, self).__init__(six.moves.http_client.FOUND)
         self.url = url  # type: str
 
 

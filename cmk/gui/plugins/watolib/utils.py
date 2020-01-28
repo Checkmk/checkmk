@@ -39,6 +39,7 @@ from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
 
 
 def wato_fileheader():
+    # type: () -> str
     return "# Created by WATO\n# encoding: utf-8\n\n"
 
 

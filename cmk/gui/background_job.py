@@ -36,7 +36,11 @@ import time
 import traceback
 
 import psutil  # type: ignore
-from pathlib2 import Path
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 from cmk.gui.i18n import _
 import cmk

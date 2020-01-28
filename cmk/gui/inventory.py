@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import sys
 import ast
 import json
 import os
@@ -32,7 +33,11 @@ import time
 import xml.dom.minidom  # type: ignore[import]
 
 import dicttoxml  # type: ignore[import]
-from pathlib2 import Path
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import livestatus
 

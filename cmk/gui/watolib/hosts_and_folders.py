@@ -28,8 +28,8 @@ import os
 import time
 import re
 import shutil
-import cStringIO
 from typing import Type, Union, List, Text, Dict  # pylint: disable=unused-import
+import six
 
 import cmk
 import cmk.utils.store as store
@@ -674,7 +674,7 @@ class CREFolder(BaseFolder):
                 os.remove(self.hosts_file_path())
             return
 
-        out = cStringIO.StringIO()
+        out = six.StringIO()
         out.write(wato_fileheader())
 
         all_hosts = []  # type: List[str]

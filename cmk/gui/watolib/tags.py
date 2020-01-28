@@ -25,10 +25,15 @@
 # Boston, MA 02110-1301 USA.
 """Helper functions for dealing with host tags"""
 
+import sys
 import os
 import errno
-from pathlib2 import Path
 import six
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
 import cmk.utils.paths
 import cmk.utils.store as store

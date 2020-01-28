@@ -32,7 +32,7 @@ import os
 import tarfile
 import time
 import shutil
-import cStringIO
+import io
 import glob
 import fnmatch
 import traceback
@@ -374,7 +374,7 @@ def create(tar_filename, components):
                 basedir = os.path.dirname(abspath)
                 filename = os.path.basename(abspath)
 
-            subtar_buffer = cStringIO.StringIO()
+            subtar_buffer = io.BytesIO()
             with tarfile.TarFile(fileobj=subtar_buffer, mode="w") as subtar_obj:
 
                 def exclude_filter(x, excludes=excludes):
@@ -413,7 +413,7 @@ def filter_subtar_files(tarinfo, excludes):
 
 
 def extract_from_buffer(buffer_, elements):
-    stream = cStringIO.StringIO()
+    stream = io.BytesIO()
     stream.write(buffer_)
     stream.seek(0)
     if isinstance(elements, list):

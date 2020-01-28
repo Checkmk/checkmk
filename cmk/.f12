@@ -38,6 +38,7 @@ PYTHON2_PATHS=(
 
 PYTHON3_PATHS=(
     __init__.py
+    gui
     utils
     ec
     special_agents/agent_jira.py

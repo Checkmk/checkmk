@@ -581,6 +581,7 @@ def _pack_crash_report(serialized_crash_report):
 
             tar_info = tarfile.TarInfo(name="crash.info" if key == "crash_info" else key)
             tar_info.size = len(content)
+
             tar.addfile(tar_info, io.BytesIO(content))
 
     return buf.getvalue()

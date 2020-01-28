@@ -25,8 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 import sys
-import StringIO
 import traceback
+import io
 from typing import Callable, Dict, List, NamedTuple  # pylint: disable=unused-import
 
 import cmk.gui.config as config
@@ -99,7 +99,7 @@ def call(name, *args):
             hook.handler(*args)
         except Exception as e:
             if config.debug:
-                txt = StringIO.StringIO()
+                txt = io.StringIO()
                 t, v, tb = sys.exc_info()
                 traceback.print_exception(t, v, tb, None, txt)
                 html.show_error("<h1>" + _("Error executing hook") + " %s #%d: %s</h1>"

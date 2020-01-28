@@ -27,6 +27,7 @@
 
 # TODO: More feature related splitting up would be better
 
+import sys
 import abc
 from collections import namedtuple
 import time
@@ -35,7 +36,11 @@ import hashlib
 import traceback
 from typing import Tuple, List, Optional, Union, Text, Dict, Callable, Type  # pylint: disable=unused-import
 import six
-from pathlib2 import Path
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import livestatus
 

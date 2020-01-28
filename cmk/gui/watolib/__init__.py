@@ -29,10 +29,10 @@ This component contains classes, functions and globals that are being used by
 WATO. It does not contain any acutal page handlers or WATO modes. Nor complex
 HTML creation. This is all contained in cmk.gui.wato."""
 
+import sys
 import abc
 import ast
 import base64
-import cStringIO
 import copy
 import glob
 from hashlib import sha256
@@ -54,8 +54,12 @@ from typing import NamedTuple, List  # pylint: disable=unused-import
 
 import requests
 import urllib3  # type: ignore
-from pathlib2 import Path
 import six
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import cmk
 import cmk.utils.daemon as daemon

@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import os
+import io
 import six
 
 import cmk.utils.paths
@@ -126,8 +127,7 @@ class ModeIcons(WatoMode):
     def _upload_icon(self, icon_info):
         # Add the icon category to the PNG comment
         from PIL import Image, PngImagePlugin  # type: ignore[import]
-        from StringIO import StringIO
-        im = Image.open(StringIO(icon_info['icon'][2]))
+        im = Image.open(io.BytesIO(icon_info['icon'][2]))
         im.info['Comment'] = icon_info['category']
         meta = PngImagePlugin.PngInfo()
         for k, v in im.info.iteritems():

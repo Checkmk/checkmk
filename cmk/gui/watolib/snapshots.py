@@ -29,7 +29,7 @@ import time
 import shutil
 import traceback
 import tarfile
-import cStringIO
+import io
 from hashlib import sha256
 from typing import Any, Dict  # pylint: disable=unused-import
 
@@ -102,7 +102,7 @@ def _do_create_snapshot(data):
             tarinfo = get_basic_tarinfo(key)
             encoded_value = data[key].encode("utf-8")
             tarinfo.size = len(encoded_value)
-            tar_in_progress.addfile(tarinfo, cStringIO.StringIO(encoded_value))
+            tar_in_progress.addfile(tarinfo, io.BytesIO(encoded_value))
 
         tar_in_progress.close()
 
@@ -163,7 +163,7 @@ def _do_create_snapshot(data):
         tar_in_progress = tarfile.open(filename_work, "a")
         tarinfo = get_basic_tarinfo("checksums")
         tarinfo.size = len(info)
-        tar_in_progress.addfile(tarinfo, cStringIO.StringIO(info))
+        tar_in_progress.addfile(tarinfo, io.BytesIO(info))
         tar_in_progress.close()
 
         shutil.move(filename_work, filename_target)
@@ -259,7 +259,7 @@ def get_snapshot_status(snapshot, validate_checksums=False, check_correct_core=T
         if "check_mk.tar.gz" not in status["files"]:
             return
 
-        cmk_tar = cStringIO.StringIO(
+        cmk_tar = io.BytesIO(
             access_snapshot(lambda x: multitar.get_file_content(x, 'check_mk.tar.gz')))
         files = multitar.list_tar_content(cmk_tar)
         using_cmc = os.path.exists(cmk.utils.paths.omd_root + '/etc/check_mk/conf.d/microcore.mk')

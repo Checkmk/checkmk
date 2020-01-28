@@ -807,10 +807,9 @@ def render_delete_event_icons(row):
             # links to the source view where the action can be performed.
             title_url = view.get("title_url")
             if title_url:
-                from urlparse import urlparse, parse_qsl
-                url = urlparse(title_url)
+                url = six.moves.urllib.parse.urlparse(title_url)
                 filename = url.path
-                urlvars += parse_qsl(url.query)
+                urlvars += six.moves.urllib.parse.parse_qsl(url.query)
         else:
             # Regular view
             view = get_permitted_views()[(html.request.var("view_name"))]

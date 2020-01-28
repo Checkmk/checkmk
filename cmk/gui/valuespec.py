@@ -47,18 +47,29 @@ import math
 import numbers
 import os
 import re
+import io
 import socket
 import sre_constants
 import time
 import types
-import urlparse
-from UserDict import DictMixin
-from StringIO import StringIO
 from typing import (  # pylint: disable=unused-import
     Dict, Pattern, Type, Union, Callable, Text, Any, List, Optional as TypingOptional, Tuple as
     TypingTuple,
 )
 from PIL import Image  # type: ignore
+
+try:
+    # Python has a totally braindead history of changes in this area:
+    #   * In the dark ages: Hmmm, one can't subclass dict, so we have to provide UserDict.
+    #   * Python 2.2: Well, now we can subclass dict, but let's keep UserDict.
+    #   * Python 2.3: Actually, DictMixin might often be a better idea.
+    #   * Python 2.6: It is recommended to use collections.MutableMapping instead of DictMixin.
+    #   * Python 3.0: UserDict is gone...
+    #   * Python 3.3: Let's just move the ABCs from collections to collections.abc, keeping the old stuff for now.
+    #   * Python 3.8: To *really* annoy people, let's nuke the ABCs from collection! >:-)
+    from collections.abc import MutableMapping  # type: ignore
+except ImportError:
+    from collections import MutableMapping
 
 import six
 from Cryptodome.PublicKey import RSA
@@ -1228,7 +1239,7 @@ class Url(TextAscii):
             self._custom_validate(value, varprefix)
             return
 
-        parts = urlparse.urlparse(value)
+        parts = six.moves.urllib.parse.urlparse(value)
         if not parts.scheme or not parts.netloc:
             raise MKUserError(varprefix, _("Invalid URL given"))
 
@@ -1248,7 +1259,7 @@ class Url(TextAscii):
             value = self._default_scheme + "://" + value
 
         try:
-            parts = urlparse.urlparse(value)
+            parts = six.moves.urllib.parse.urlparse(value)
             if parts.path in ['', '/']:
                 text = parts.netloc
             else:
@@ -4250,14 +4261,14 @@ class Dictionary(ValueSpec):
 
     def render_input_as_form(self, varprefix, value):
         value = self.migrate(value)
-        if not isinstance(value, (dict, DictMixin)):
+        if not isinstance(value, MutableMapping):
             value = {}  # makes code simpler in complain phase
 
         self._render_input_form(varprefix, value)
 
     def render_input(self, varprefix, value):
         value = self.migrate(value)
-        if not isinstance(value, (dict, DictMixin)):
+        if not isinstance(value, MutableMapping):
             value = {}  # makes code simpler in complain phase
 
         if self._render == "form":
@@ -4879,7 +4890,7 @@ class ImageUpload(FileUpload):
             raise MKUserError(varprefix, _('Please choose a PNG image.'))
 
         try:
-            im = Image.open(StringIO(content))
+            im = Image.open(io.BytesIO(content))
         except IOError:
             raise MKUserError(varprefix, _('Please choose a valid PNG image.'))
 

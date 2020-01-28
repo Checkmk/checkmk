@@ -24,15 +24,20 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import sys
 import abc
 import logging
 import os
 import re
+import io
 import time
 import zipfile
-import cStringIO
 from typing import Union, Dict, Text  # pylint: disable=unused-import
-from pathlib2 import Path  # pylint: disable=unused-import
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
 from pysmi.compiler import MibCompiler  # type: ignore
 from pysmi.parser.smiv1compat import SmiV1CompatParser  # type: ignore
@@ -2370,7 +2375,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
     def _upload_mib(self, filename, mimetype, content):
         self._validate_mib_file_name(filename)
 
-        if self._is_zipfile(cStringIO.StringIO(content)):
+        if self._is_zipfile(io.BytesIO(content)):
             msg = self._process_uploaded_zip_file(filename, content)
         else:
             if mimetype == "application/tar" or filename.lower().endswith(
@@ -2381,7 +2386,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 
         return msg
 
-    # Used zipfile.is_zipfile(cStringIO.StringIO(content)) before, but this only
+    # Used zipfile.is_zipfile(io.BytesIO(content)) before, but this only
     # possible with python 2.7. zipfile is only supporting checking of files by
     # their path.
     def _is_zipfile(self, fo):
@@ -2392,7 +2397,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             return False
 
     def _process_uploaded_zip_file(self, filename, content):
-        zip_obj = zipfile.ZipFile(cStringIO.StringIO(content))
+        zip_obj = zipfile.ZipFile(io.BytesIO(content))
         messages = []
         for entry in zip_obj.infolist():
             success, fail = 0, 0

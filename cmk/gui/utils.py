@@ -28,13 +28,17 @@ usable in all components of the Web GUI of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 
+import sys
 import re
 import uuid
 import marshal
-import urlparse
 import itertools
 import six
-from pathlib2 import Path
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import cmk.utils.paths
 
@@ -72,7 +76,7 @@ def key_num_split(a):
 def is_allowed_url(url):
     """Checks whether or not the given URL is a URL it is allowed to redirect the user to"""
     # Also prevent using of "javascript:" URLs which could used to inject code
-    parsed = urlparse.urlparse(url)
+    parsed = six.moves.urllib.parse.urlparse(url)
 
     # Don't allow the user to set a URL scheme
     if parsed.scheme != "":

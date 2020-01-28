@@ -56,6 +56,7 @@
 #   handling (vars, cookies, ...) up into separate classes to make
 #   the different tasks clearer. For ABCHTMLGenerator() or similar.
 
+import sys
 import time
 import os
 import urllib
@@ -72,9 +73,13 @@ from html import escape as html_escape  # type: ignore
 from typing import (  # pylint: disable=unused-import
     Union, Text, Optional,
 )
-from pathlib2 import Path
 
 import six
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 
 # TODO: Cleanup this dirty hack. Import of htmllib must not magically modify the behaviour of

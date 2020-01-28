@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -107,7 +107,7 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):
 
     def to_list(self):
         # type: () -> List[HostLabel]
-        return [label for label in sorted(self._labels.values(), key=lambda x: x.name)]
+        return sorted(self._labels.values(), key=lambda x: x.name)
 
     def __add__(self, other):
         # type: (DiscoveredHostLabels) -> DiscoveredHostLabels
@@ -122,7 +122,7 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):
         return "DiscoveredHostLabels(%r)" % (repr(arg) for arg in self.to_list())
 
 
-class ABCLabel(object):
+class ABCLabel(object):  # pylint: disable=useless-object-inheritance
     """Representing a service label in Checkmk
 
     This class is meant to be exposed to the check API. It will be usable in

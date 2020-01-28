@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # .------------------------------------------------------------------------.
 # |                ____ _               _        __  __ _  __              |
@@ -83,7 +83,7 @@ BoundedAbstractPersistedSections = TypeVar("BoundedAbstractPersistedSections",
                                            bound=AbstractPersistedSections)
 
 
-class Service(object):
+class Service(object):  # pylint: disable=useless-object-inheritance
     __slots__ = ["_check_plugin_name", "_item", "_description", "_parameters", "_service_labels"]
 
     def __init__(self, check_plugin_name, item, description, parameters, service_labels=None):

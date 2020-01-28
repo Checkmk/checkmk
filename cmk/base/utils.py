@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -28,7 +28,7 @@ Check_MK modules and/or cmk.base modules code."""
 
 import signal
 from types import FrameType  # pylint: disable=unused-import
-from typing import Text, NoReturn, Optional, Union, TYPE_CHECKING  # pylint: disable=unused-import
+from typing import NoReturn, Optional  # pylint: disable=unused-import
 
 from cmk.utils.exceptions import MKTerminate
 # TODO: Cleanup all imports of cmk.base.utils.* and purge these intermediate imports

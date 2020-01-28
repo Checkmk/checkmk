@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -27,7 +27,6 @@
 components, former called modules. This hosts the checking,
 discovery and a lot of other functionality."""
 
-import sys
 from .caching import CacheManager
 
 # This cache manager holds all caches that rely on the configuration

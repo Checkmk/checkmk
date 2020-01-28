@@ -43,8 +43,10 @@ import signal
 import sys
 import time
 from typing import (  # pylint: disable=unused-import
-    Dict, Tuple, List, Text, Any, Optional, FrozenSet, Set, Union, cast,
+    Dict, Tuple, List, Text, Any, Optional, FrozenSet, Set, Union, cast, IO,
 )
+
+import six
 
 import livestatus
 import cmk.utils.debug
@@ -2121,12 +2123,11 @@ def substitute_context(template, context):
 def format_exception():
     # type: () -> str
     import traceback
-    import StringIO
 
-    txt = StringIO.StringIO()
+    txt = six.StringIO()
     t, v, tb = sys.exc_info()
     traceback.print_exception(t, v, tb, None, txt)
-    return txt.getvalue()
+    return str(txt.getvalue())
 
 
 def dead_nagios_variable(value):

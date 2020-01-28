@@ -31,7 +31,7 @@ import os
 import shutil
 import tarfile
 import time
-import cStringIO as StringIO
+import io
 from typing import List, Tuple  # pylint: disable=unused-import
 
 import cmk.utils.paths
@@ -71,7 +71,7 @@ def do_backup(tarname):
         if os.path.exists(path):
             if is_dir:
                 subtarname = name + ".tar"
-                subfile = StringIO.StringIO()
+                subfile = io.BytesIO()
                 subtar = tarfile.open(mode="w", fileobj=subfile, dereference=True)
                 subtar.add(path, arcname=".")
                 subdata = subfile.getvalue()
@@ -90,7 +90,7 @@ def do_backup(tarname):
             info.name = subtarname
             console.verbose("  Added %s (%s) with a size of %s\n", descr, absdir,
                             render.fmt_bytes(info.size))
-            tar.addfile(info, StringIO.StringIO(subdata))
+            tar.addfile(info, io.BytesIO(subdata))
 
     tar.close()
     console.verbose("Successfully created backup.\n")

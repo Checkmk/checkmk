@@ -544,7 +544,7 @@ def _create_notifications(raw_context, rule, notifications, rule_info):
         # To be explicit and future-proof, we make this hack explicit.
         # Anyway, this is extremely ugly and an anti-patter, and it
         # should be rewritten to something more sane.
-        for notify_key in list(notifications.keys()):
+        for notify_key in list(notifications):
             notify_contacts, notify_plugin = notify_key
 
             overlap = notify_contacts.intersection(contacts)
@@ -688,7 +688,7 @@ def rbn_finalize_plugin_parameters(hostname, plugin_name, rule_parameters):
 def user_notification_rules():
     # type: () -> List[EventRule]
     user_rules = []
-    contactnames = sorted(config.contacts.keys())
+    contactnames = sorted(config.contacts)
     for contactname in contactnames:
         contact = config.contacts[contactname]
         for rule in contact.get("notification_rules", []):
@@ -745,7 +745,7 @@ def rbn_add_contact_information(plugin_context, contacts):
             contact_dict["name"] = contact
 
         contact_dicts.append(contact_dict)
-        keys.update([key for key in contact_dict.keys() if key.startswith("_")])
+        keys |= {key for key in contact_dict if key.startswith("_")}
 
     for key in keys:
         context_key = "CONTACT" + key.upper()
@@ -762,8 +762,8 @@ def rbn_split_plugin_context(plugin_context):
         return [plugin_context]
 
     contexts = []
-    keys_to_split = {"CONTACTNAME", "CONTACTALIAS", "CONTACTEMAIL", "CONTACTPAGER"}
-    keys_to_split.update([key for key in plugin_context.keys() if key.startswith("CONTACT_")])
+    keys_to_split = {"CONTACTNAME", "CONTACTALIAS", "CONTACTEMAIL", "CONTACTPAGER"} \
+                    | {key for key in plugin_context if key.startswith("CONTACT_")}
 
     for i in range(num_contacts):
         context = plugin_context.copy()
@@ -1087,7 +1087,7 @@ def rbn_object_contact_names(context):
 def rbn_all_contacts(with_email=False):
     # type: (bool) -> List[ContactId]
     if not with_email:
-        return list(config.contacts.keys())  # We have that via our main.mk contact definitions!
+        return list(config.contacts)  # We have that via our main.mk contact definitions!
 
     return [contact_id for (contact_id, contact) in config.contacts.items() if contact.get("email")]
 

@@ -42,6 +42,24 @@ ewon_discovery_rules = []
 #    "*" - add the flag to the infotext but don't derive a state from it
 #    "+" - add the flag to the infotext if it is set but don't derive a state from it
 # Also, we provide the names of flags for proper info texts.
+
+_O2_MINIMUM = {
+    "name": "O2 minimum",
+    "levels": (16, 17, 14, 13),
+    "scale": 0.01,
+    "unit": "%",
+    "perfvar": "o2_percentage",
+    "condition_flag": (1, 15)
+}
+
+_FLAGS_7_9 = {
+    "flags": "?????000??00000*",
+    "flag_names": [
+        "", "", "", "", "", "luminous field", "optical alarm", "acoustic alarm", "", "", "warnings",
+        "operation report", "shutdown", "incidents", "alarm", "O2 Sensor"
+    ],
+}
+
 oxyreduct_tag_map = {
     1: {
         "name": "alarms",
@@ -84,27 +102,10 @@ oxyreduct_tag_map = {
             "N2-supply locked", "N2-supply open"
         ]
     },
-    6: {
-        "name": "O2 minimum",
-        "levels": (16, 17, 14, 13),
-        "scale": 0.01,
-        "unit": "%",
-        "perfvar": "o2_percentage",
-        "condition_flag": (1, 15)
-    },
-    7: {
-        "flags": "?????000??00000*",
-        "flag_names": [
-            "", "", "", "", "", "luminous field", "optical alarm", "acoustic alarm", "", "",
-            "warnings", "operation report", "shutdown", "incidents", "alarm", "O2 Sensor"
-        ]
-    },
-    8: {
-        "same_as": 6
-    },
-    9: {
-        "same_as": 7
-    },
+    6: _O2_MINIMUM,
+    7: _FLAGS_7_9,
+    8: _O2_MINIMUM,
+    9: _FLAGS_7_9,
     10: {
         "name": "O2 average",
         "levels_name": "o2_levels",
@@ -221,11 +222,6 @@ def _check_oxyreduct(params, data):
             ref_tagid = ((ref_tagid - 18) % 8) + 10
 
         tag_params = oxyreduct_tag_map.get(ref_tagid)
-
-        # resolve tag parameters where multiple tags follow the same pattern
-        if "same_as" in tag_params:
-            ref_tag_id = tag_params["same_as"]
-            tag_params = oxyreduct_tag_map[ref_tag_id]
 
         # if it's a measure, check levels
         if "name" in tag_params:

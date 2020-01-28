@@ -149,7 +149,7 @@ def assertBasicCheckResultsEqual(actual, expected):
     assert isinstance(actual, BasicCheckResult), "not a BasicCheckResult: %r" % actual
     assert isinstance(expected, BasicCheckResult), "not a BasicCheckResult: %r" % expected
 
-    msg = "expected %r, but %%s is %%r" % expected
+    msg = "expected %s, but %%s is %%r" % repr(expected).replace('%', '%%')
     assert expected.status == actual.status, msg % ("status", actual.status)
 
     diff_idx = len(os.path.commonprefix((expected.infotext, actual.infotext)))

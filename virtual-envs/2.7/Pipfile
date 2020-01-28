@@ -113,7 +113,7 @@ mock = "==3.0.5"
 wrapt = "==1.11.2"
 vcrpy = "==2.1.0"
 connexion = "==2.4.0"
-numpy = "==1.16.6"
+numpy = "==1.15.4"  # Downgraded to 1.15.4 due to https://github.com/numpy/numpy/issues/14384
 
 [requires]
 python_version = "2.7"

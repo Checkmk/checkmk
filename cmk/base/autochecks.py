@@ -318,8 +318,8 @@ def _parse_dict_autocheck_entry(entry):
         if isinstance(key, ast.Str):
             values[key.s] = entry.values[index]
 
-    if set(values.keys()) != {"check_plugin_name", "item", "parameters", "service_labels"}:
-        raise MKGeneralException("Invalid autocheck: Wrong keys found: %r" % values.keys())
+    if set(values) != {"check_plugin_name", "item", "parameters", "service_labels"}:
+        raise MKGeneralException("Invalid autocheck: Wrong keys found: %r" % list(values))
 
     return values["check_plugin_name"], values["item"], values["parameters"], values[
         "service_labels"]

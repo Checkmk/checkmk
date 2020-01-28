@@ -225,7 +225,7 @@ class ModeCheckPlugins(WatoMode):
             subtree = tree
             for component in path[:-1]:
                 subtree = subtree.setdefault(component, {})
-            subtree[path[-1]] = map(strip_manpage_entry, entries)
+            subtree[path[-1]] = list(map(strip_manpage_entry, entries))
 
         for p in only_path:
             try:

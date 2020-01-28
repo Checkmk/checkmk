@@ -286,7 +286,7 @@ class APICallHosts(APICallCollection):
 
         # Add host
         if cluster_nodes:
-            cluster_nodes = map(str, cluster_nodes)
+            cluster_nodes = list(map(str, cluster_nodes))
         watolib.Folder.folder(folder_path).create_hosts([(hostname, attributes, cluster_nodes)])
 
     def _add_hosts(self, request):
@@ -340,7 +340,7 @@ class APICallHosts(APICallCollection):
             cluster_nodes = host.cluster_nodes()
 
         if cluster_nodes:
-            cluster_nodes = map(str, cluster_nodes)
+            cluster_nodes = list(map(str, cluster_nodes))
 
         host.edit(current_attributes, cluster_nodes)
 

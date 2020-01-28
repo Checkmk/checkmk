@@ -1137,7 +1137,7 @@ def get_graph_timerange_from_painter_options():
     painter_options = PainterOptions.get_instance()
     value = painter_options.get("pnp_timerange")
     vs = painter_options.get_valuespec_of("pnp_timerange")
-    return map(int, vs.compute_range(value)[0])
+    return tuple(map(int, vs.compute_range(value)[0]))
 
 
 def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what='past'):

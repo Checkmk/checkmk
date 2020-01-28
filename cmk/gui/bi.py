@@ -470,7 +470,7 @@ class JobWorker(multiprocessing.Process):
             return hashlib.md5(repr(entry)).hexdigest()
 
         for group in {g for g in groups}:  # Flattened groups
-            new_entries_hash = map(get_hash, new_entries)
+            new_entries_hash = list(map(get_hash, new_entries))
             if group not in new_data['forest']:
                 new_data['forest_ref'][group] = new_entries_hash
             else:
@@ -3551,13 +3551,14 @@ def migrate_bi_configuration():
         for packname, pack in config.bi_packs.iteritems():
             for rule_id in pack["rules"]:
                 _rule_to_pack_lookup[rule_id] = packname
-            converted_host_aggregations += map(_convert_aggregation, pack["host_aggregations"])
-            converted_aggregations += map(_convert_aggregation, pack["aggregations"])
+            converted_host_aggregations += list(map(_convert_aggregation,
+                                                    pack["host_aggregations"]))
+            converted_aggregations += list(map(_convert_aggregation, pack["aggregations"]))
             converted_aggregation_rules.update(pack["rules"])
         config.bi_packs = {}
 
-    converted_host_aggregations += map(_convert_aggregation, config.host_aggregations)
-    converted_aggregations += map(_convert_aggregation, config.aggregations)
+    converted_host_aggregations += list(map(_convert_aggregation, config.host_aggregations))
+    converted_aggregations += list(map(_convert_aggregation, config.aggregations))
     converted_aggregation_rules.update({
         rule_id: _convert_legacy_aggregation_rule(rule)
         for rule_id, rule in config.aggregation_rules.iteritems()

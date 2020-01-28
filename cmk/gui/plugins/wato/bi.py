@@ -361,7 +361,7 @@ class BIManagement(object):
             }
         crule = {}
         crule.update(rule)
-        crule["nodes"] = map(self._convert_node_from_bi, rule["nodes"])
+        crule["nodes"] = list(map(self._convert_node_from_bi, rule["nodes"]))
         parts = rule["aggregation"].split("!")
         crule["aggregation"] = (parts[0], tuple(map(tryint, parts[1:])))
         crule["id"] = ruleid
@@ -372,8 +372,9 @@ class BIManagement(object):
         brule.update(rule)
         if "id" in brule:
             del brule["id"]
-        brule["nodes"] = map(self._convert_node_to_bi, rule["nodes"])
-        brule["aggregation"] = "!".join([rule["aggregation"][0]] + map(str, rule["aggregation"][1]))
+        brule["nodes"] = list(map(self._convert_node_to_bi, rule["nodes"]))
+        brule["aggregation"] = "!".join([rule["aggregation"][0]] +
+                                        list(map(str, rule["aggregation"][1])))
         return brule
 
     # Convert node-Tuple into format used by CascadingDropdown
@@ -1285,7 +1286,7 @@ class ModeBIAggregations(ModeBI):
             target_pack = self._packs[target]
             self.must_be_contact_for_pack(target_pack)
 
-        selection = map(int, self._get_selection("aggregation"))
+        selection = list(map(int, self._get_selection("aggregation")))
         if selection and target_pack is not None:
             c = wato_confirm(_("Confirm moving of %d aggregations to %s") % \
                               (len(selection), target_pack['title']),
@@ -1649,7 +1650,7 @@ class ModeBIRules(ModeBI):
 
                     table.text_cell(
                         _("Aggregation"),
-                        "/".join([rule["aggregation"][0]] + map(str, rule["aggregation"][1])))
+                        "/".join([rule["aggregation"][0]] + list(map(str, rule["aggregation"][1]))))
                     table.text_cell(_("Nodes"), len(rule["nodes"]), css="number")
                     table.cell(_("Used by"))
                     have_this = set([])

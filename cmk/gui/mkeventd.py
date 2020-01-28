@@ -203,7 +203,7 @@ def send_event(event):
         (event["sl"], event["host"], event["ipaddress"], event["application"], event["text"]),
     ]
 
-    execute_command("CREATE", map(make_utf8, rfc), site=event["site"])
+    execute_command("CREATE", list(map(make_utf8, rfc)), site=event["site"])
 
     return ";".join(rfc)
 
@@ -467,7 +467,7 @@ def match_ipv4_network(pattern, ipaddress_text):
 
 
 def parse_ipv4_address(text):
-    parts = map(int, text.split("."))
+    parts = tuple(map(int, text.split(".")))
     return (parts[0] << 24) + (parts[1] << 16) + (parts[2] << 8) + parts[3]
 
 

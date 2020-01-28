@@ -118,12 +118,13 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
                 self._logger.exception(msg)
 
     def _execute_parent_scan(self, task, settings):
-        params = map(str, [
-            settings["timeout"],
-            settings["probes"],
-            settings["max_ttl"],
-            settings["ping_probes"],
-        ])
+        params = list(
+            map(str, [
+                settings["timeout"],
+                settings["probes"],
+                settings["max_ttl"],
+                settings["ping_probes"],
+            ]))
         return watolib.check_mk_automation(task.site_id, "scan-parents", params + [task.host_name])
 
     def _process_parent_scan_results(self, task, settings, gateways):

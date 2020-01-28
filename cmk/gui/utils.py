@@ -107,8 +107,8 @@ def cmp_version(a, b):
     """
     if a is None or b is None:
         return (a > b) - (a < b)
-    aa = map(num_split, a.split("."))
-    bb = map(num_split, b.split("."))
+    aa = list(map(num_split, a.split(".")))
+    bb = list(map(num_split, b.split(".")))
     return (aa > bb) - (aa < bb)
 
 

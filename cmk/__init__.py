@@ -54,9 +54,9 @@ def omd_version():
 
 
 def omd_site():
-    # type: () -> Text
+    # type: () -> str
     try:
-        return ensure_unicode(os.environ["OMD_SITE"])
+        return os.environ["OMD_SITE"]
     except KeyError:
         raise MKGeneralException(
             _("OMD_SITE environment variable not set. You can "

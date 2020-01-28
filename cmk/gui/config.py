@@ -1067,12 +1067,12 @@ def _migrate_string_encoded_socket(value):
 
 def omd_site():
     # type: () -> SiteId
-    return SiteId(bytes(cmk.omd_site()))
+    return SiteId(cmk.omd_site())
 
 
 def url_prefix():
     # type: () -> str
-    return "/%s/" % bytes(cmk.omd_site())
+    return "/%s/" % cmk.omd_site()
 
 
 use_siteicons = False

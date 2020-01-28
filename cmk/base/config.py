@@ -3181,7 +3181,7 @@ class ConfigCache(object):
             'agent': 'cmk-agent',
             'criticality': 'prod',
             'snmp_ds': 'no-snmp',
-            'site': str(cmk.omd_site()),
+            'site': cmk.omd_site(),
             'address_family': 'ip-v4-only',
         }  #  type: Tags
 
@@ -3225,7 +3225,7 @@ class ConfigCache(object):
             'agent': 'cmk-agent',
             'criticality': 'prod',
             'snmp_ds': 'no-snmp',
-            'site': str(cmk.omd_site()),
+            'site': cmk.omd_site(),
             'address_family': 'ip-v4-only',
         }
 

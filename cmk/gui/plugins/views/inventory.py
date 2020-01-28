@@ -735,7 +735,7 @@ def inv_find_subtable_columns(invpath):
     order = dict(swapped)
 
     columns = []
-    for path in inventory_displayhints.iterkeys():
+    for path in inventory_displayhints:
         if path.startswith(invpath + "*."):
             # ".networking.interfaces:*.port_type" -> "port_type"
             columns.append(path.split(".")[-1])
@@ -744,7 +744,7 @@ def inv_find_subtable_columns(invpath):
         if key not in columns:
             columns.append(key)
 
-    columns.sort(key=lambda x: order.get(x, 999) or x)
+    columns.sort(key=lambda x: (order.get(x, 999), x))
     return columns
 
 
@@ -753,7 +753,8 @@ def declare_invtable_columns(infoname, invpath, topic):
         sub_invpath = invpath + "*." + name
         hint = inventory_displayhints.get(sub_invpath, {})
 
-        sortfunc = hint.get("sort", cmp)
+        cmp_func = lambda a, b: (a > b) - (a < b)
+        sortfunc = hint.get("sort", cmp_func)
         if "paint" in hint:
             paint_name = hint["paint"]
             paint_function = globals()["inv_paint_" + paint_name]

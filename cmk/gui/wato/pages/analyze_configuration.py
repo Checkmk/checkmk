@@ -30,9 +30,9 @@ checks and tells the user what could be improved.
 
 import time
 import multiprocessing
-import Queue
 import traceback
 import ast
+import six
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -288,7 +288,7 @@ class ModeAnalyzeConfig(WatoMode):
                 else:
                     raise NotImplementedError()
 
-            except Queue.Empty:
+            except six.moves.queue.Empty:
                 time.sleep(0.5)  # wait some time to prevent CPU hogs
 
             except Exception as e:

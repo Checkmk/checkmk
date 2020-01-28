@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 """Functions for logging changes and keeping the "Activate Changes" state and finally activating changes."""
 
+import sys
 import ast
 import errno
 import os
@@ -32,7 +33,10 @@ import time
 from typing import Dict, List  # pylint: disable=unused-import
 import six
 
-import pathlib2 as pathlib
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import cmk.utils
 import cmk.utils.store as store
@@ -51,7 +55,7 @@ import cmk.gui.watolib.sidebar_reload
 from cmk.gui.plugins.watolib import config_domain_registry
 
 var_dir = cmk.utils.paths.var_dir + "/wato/"
-audit_log_path = pathlib.Path(var_dir, "log", "audit.log")
+audit_log_path = Path(var_dir, "log", "audit.log")
 
 
 def log_entry(linkinfo, action, message, user_id=None):

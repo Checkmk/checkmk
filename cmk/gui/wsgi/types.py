@@ -23,30 +23,35 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-from typing import List, Union, Literal, TypedDict
+from typing import List, Union, Any, Dict
 
 Scope = List[str]
 UnixTimeStamp = int  # restrict to positive numbers
-TokenType = Union[Literal["access_token"], Literal["refresh_token"]]
 Audience = Union[str, List[str]]
-RFC7662 = TypedDict(
-    'RFC7662',
-    {
-        'active': bool,
-        'scope': str,
-        'client_id': str,
-        'username': str,
-        'token_type': TokenType,
-        'exp': UnixTimeStamp,  # expires
-        'iat': UnixTimeStamp,  # issued
-        'nbf': UnixTimeStamp,  # not before
-        'sub': str,  # subject
-        'aud': Audience,
-        'iss': str,  # issuer
-        'jti': str,  # json web token-identifier
-    },
-    total=False,
-)
-HostGroup = TypedDict('HostGroup', {
-    'alias': str,
-})
+
+# TODO: Re-enable once we are using Python >= 3.8
+TokenType = str
+RFC7662 = Dict[str, Any]
+HostGroup = Dict[str, str]
+#TokenType = Union[Literal["access_token"], Literal["refresh_token"]]
+#RFC7662 = TypedDict(
+#    'RFC7662',
+#    {
+#        'active': bool,
+#        'scope': str,
+#        'client_id': str,
+#        'username': str,
+#        'token_type': TokenType,
+#        'exp': UnixTimeStamp,  # expires
+#        'iat': UnixTimeStamp,  # issued
+#        'nbf': UnixTimeStamp,  # not before
+#        'sub': str,  # subject
+#        'aud': Audience,
+#        'iss': str,  # issuer
+#        'jti': str,  # json web token-identifier
+#    },
+#    total=False,
+#)
+#HostGroup = TypedDict('HostGroup', {
+#    'alias': str,
+#})

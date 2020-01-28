@@ -83,7 +83,6 @@ import json
 import math
 import multiprocessing
 import pprint
-import Queue
 import random
 import re
 import tarfile
@@ -97,6 +96,7 @@ import copy
 import inspect
 from hashlib import sha256
 from typing import Any, Dict  # pylint: disable=unused-import
+import six
 
 import cmk
 import cmk.utils.paths

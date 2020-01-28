@@ -28,7 +28,6 @@
 import traceback
 import time
 import multiprocessing
-import Queue
 import socket
 import contextlib
 import binascii
@@ -858,7 +857,7 @@ class ReplicationStatusFetcher(object):
                 result = result_queue.get_nowait()
                 result_queue.task_done()
                 results_by_site[result.site_id] = result
-            except Queue.Empty:
+            except six.moves.queue.Empty:
                 time.sleep(0.5)  # wait some time to prevent CPU hogs
 
             except Exception as e:

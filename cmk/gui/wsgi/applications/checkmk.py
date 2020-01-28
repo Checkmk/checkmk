@@ -24,9 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 import functools
-import httplib
 import os
 import traceback
+import six
 
 import livestatus
 
@@ -302,7 +302,7 @@ def _process_request():  # pylint: disable=too-many-branches
         page_handler = get_and_wrap_page(html.myfile)
         page_handler()
         # If page_handler didn't raise we assume everything is OK.
-        response.status_code = httplib.OK
+        response.status_code = six.moves.http_client.OK
 
     except HTTPRedirect as e:
         response.status_code = e.status
@@ -322,11 +322,11 @@ def _process_request():  # pylint: disable=too-many-branches
 
     except livestatus.MKLivestatusException as e:
         _render_exception(e, title=_("Livestatus problem"))
-        response.status_code = httplib.BAD_GATEWAY
+        response.status_code = six.moves.http_client.BAD_GATEWAY
 
     except MKUnauthenticatedException as e:
         _render_exception(e, title=_("Not authenticated"))
-        response.status_code = httplib.UNAUTHORIZED
+        response.status_code = six.moves.http_client.UNAUTHORIZED
 
     except MKConfigError as e:
         _render_exception(e, title=_("Configuration error"))

@@ -41,6 +41,7 @@ import os
 import re
 
 import cmk.utils.paths
+from cmk.utils.encoding import ensure_unicode
 
 from cmk.gui.i18n import _u
 
@@ -69,7 +70,7 @@ def _load_user_scripts_from(adir):
     scripts = {}
     if os.path.exists(adir):
         for entry in os.listdir(adir):
-            entry = entry.decode("utf-8")
+            entry = ensure_unicode(entry)
             path = adir + "/" + entry
             if os.path.isfile(path) and os.access(path, os.X_OK):
                 info = {"title": entry, "bulk": False}

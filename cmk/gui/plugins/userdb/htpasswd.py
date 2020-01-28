@@ -25,9 +25,13 @@
 # Boston, MA 02110-1301 USA.
 
 import os
+import sys
 from typing import Dict, Text  # pylint: disable=unused-import
 
-import pathlib2 as pathlib
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
 # TODO: Import errors from passlib are suppressed right now since now
 # stub files for mypy are not available.
@@ -53,7 +57,7 @@ crypt_context = CryptContext(schemes=[
 class Htpasswd(object):
     """Thin wrapper for loading and saving the htpasswd file"""
     def __init__(self, path):
-        # type: (pathlib.Path) -> None
+        # type: (Path) -> None
         super(Htpasswd, self).__init__()
         self._path = path
 
@@ -176,4 +180,4 @@ class HtpasswdUserConnector(UserConnector):
         self._get_htpasswd().save(entries)
 
     def _get_htpasswd(self):
-        return Htpasswd(pathlib.Path(cmk.utils.paths.htpasswd_file))
+        return Htpasswd(Path(cmk.utils.paths.htpasswd_file))

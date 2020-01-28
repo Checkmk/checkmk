@@ -83,11 +83,6 @@ from cmk.gui.plugins.wato import (
     DictHostTagCondition,
 )
 
-if watolib.has_agent_bakery():
-    import cmk.gui.cee.plugins.wato.agent_bakery as agent_bakery  # pylint: disable=import-error,no-name-in-module
-else:
-    agent_bakery = None  # type: ignore
-
 
 @mode_registry.register
 class ModeRuleEditor(WatoMode):
@@ -598,6 +593,10 @@ class ModeEditRuleset(WatoMode):
                                                     ("service", self._service or self._item)]),
                     "rulesets")
 
+        if watolib.has_agent_bakery():
+            import cmk.gui.cee.plugins.wato.agent_bakery as agent_bakery  # pylint: disable=import-error,no-name-in-module
+        else:
+            agent_bakery = None  # type: ignore
         if agent_bakery:
             agent_bakery.agent_bakery_context_button(self._name)
 

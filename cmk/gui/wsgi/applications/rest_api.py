@@ -27,8 +27,12 @@ import sys
 import traceback
 
 import flask
-import pathlib2
 import werkzeug
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 from connexion import FlaskApi, AbstractApp, RestyResolver, problem  # type: ignore
 from connexion.apps.flask_app import FlaskJSONEncoder  # type: ignore
@@ -71,7 +75,7 @@ class CheckmkApiApp(AbstractApp):
         return app
 
     def get_root_path(self):
-        return pathlib2.Path(self.app.root_path)
+        return Path(self.app.root_path)
 
     def add_api_blueprint(self, specification, **kwargs):
         api = self.add_api(specification, **kwargs)  # type: CheckmkApi

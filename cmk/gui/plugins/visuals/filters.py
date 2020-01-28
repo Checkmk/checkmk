@@ -3158,7 +3158,7 @@ class FilterAggrGroupTree(FilterUnicodeFilter):
 
         def _build_selection(selection, tree, index):
             index += 1
-            for _, sub_tree in tree.iteritems():
+            for _, sub_tree in tree.items():
                 selection.append(_get_selection_entry(sub_tree, index, True))
                 _build_selection(selection, sub_tree.get("__children__", {}), index)
 
@@ -3176,7 +3176,7 @@ class FilterAggrGroupTree(FilterUnicodeFilter):
 
         selection = []
         index = 0
-        for _, sub_tree in tree.iteritems():
+        for _, sub_tree in tree.items():
             selection.append(_get_selection_entry(sub_tree, index))
             _build_selection(selection, sub_tree.get("__children__", {}), index)
 

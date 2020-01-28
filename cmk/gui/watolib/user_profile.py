@@ -53,7 +53,7 @@ def push_user_profiles_to_site_transitional_wrapper(site, user_profiles):
     except MKAutomationException as e:
         if "Invalid automation command: push-profiles" in "%s" % e:
             failed_info = []
-            for user_id, user in user_profiles.iteritems():
+            for user_id, user in user_profiles.items():
                 result = _legacy_push_user_profile_to_site(site, user_id, user)
                 if result != True:
                     failed_info.append(result)
@@ -116,7 +116,7 @@ class PushUserProfilesToSite(AutomationCommand):
             raise MKGeneralException(_('Invalid call: No profiles set.'))
 
         users = userdb.load_users(lock=True)
-        for user_id, profile in user_profiles.iteritems():
+        for user_id, profile in user_profiles.items():
             users[user_id] = profile
         userdb.save_users(users)
         return True

@@ -106,7 +106,7 @@ def all_groups(what):
     query = "GET %sgroups\nCache: reload\nColumns: name alias\n" % what
     groups = cast(List[Tuple[Text, Text]], live().query(query))
     # The dict() removes duplicate group names. Aliases don't need be deduplicated.
-    return sorted([(name, alias or name) for name, alias in dict(groups).iteritems()],
+    return sorted([(name, alias or name) for name, alias in dict(groups).items()],
                   key=lambda e: e[1].lower())
 
 
@@ -201,7 +201,7 @@ def _get_enabled_and_disabled_sites(user):
     enabled_sites = SiteConfigurations({})
     disabled_sites = SiteConfigurations({})
 
-    for site_id, site in user.authorized_sites().iteritems():
+    for site_id, site in user.authorized_sites().items():
         site = _site_config_for_livestatus(site_id, site)
 
         if user.is_site_disabled(site_id):

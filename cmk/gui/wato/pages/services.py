@@ -992,13 +992,12 @@ class DiscoveryPageRenderer(object):
             return
 
         host_labels_by_plugin = {}  # type: Dict[str, Dict[Text, Text]]
-        for label_id, label in discovery_result.host_labels.iteritems():
+        for label_id, label in discovery_result.host_labels.items():
             host_labels_by_plugin.setdefault(label["plugin_name"], {})[label_id] = label["value"]
 
         with table_element(css="data", searchable=False, limit=None, sortable=False) as table:
             table.groupheader(_("Discovered host labels"))
-            for plugin_name, labels in sorted(host_labels_by_plugin.iteritems(),
-                                              key=lambda x: x[0]):
+            for plugin_name, labels in sorted(host_labels_by_plugin.items(), key=lambda x: x[0]):
                 table.row()
                 labels_html = render_labels(
                     labels,

@@ -41,7 +41,7 @@ def init_logging():
 
 
 def set_log_levels(log_levels):
-    for name, level in _augmented_log_levels(log_levels).iteritems():
+    for name, level in _augmented_log_levels(log_levels).items():
         logging.getLogger(name).setLevel(level)
 
 

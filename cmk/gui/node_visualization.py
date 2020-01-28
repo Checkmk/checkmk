@@ -834,7 +834,7 @@ class ParentChildNetworkTopology(Topology):
         self._known_hosts[central_node["name"]] = central_node
 
         combinator_mesh = {central_node["name"]}
-        for node_name, settings in site_nodes.iteritems():
+        for node_name, settings in site_nodes.items():
             self._known_hosts[node_name] = settings
             combinator_mesh.add(node_name)
             combinator_mesh.update(set(settings["incoming"]))

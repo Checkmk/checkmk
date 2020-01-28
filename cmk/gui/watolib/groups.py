@@ -383,7 +383,7 @@ def _find_usages_of_contact_group_in_notification_rules(name):
             title = "%s: %s" % (_("Notification rule"), rule.get("description", ""))
             used_in.append((title, "wato.py?mode=notifications"))
 
-    for user_id, user_rules in load_user_notification_rules().iteritems():
+    for user_id, user_rules in load_user_notification_rules().items():
         for rule in user_rules:
             if _used_in_notification_rule(name, rule):
                 title = "%s: %s" % (_("Notification rules of user %s") % user_id,

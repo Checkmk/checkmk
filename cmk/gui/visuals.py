@@ -1157,7 +1157,7 @@ def add_context_to_uri_vars(context, single_infos, only_count=False):
     uri_vars = dict(get_context_uri_vars(context, single_infos))
     single_info_keys = get_single_info_keys(single_infos)
 
-    for filter_name, filter_vars in context.iteritems():
+    for filter_name, filter_vars in context.items():
         # Enforce the single context variables that are available in the visual context
         if filter_name in single_info_keys:
             html.request.set_var(filter_name, uri_vars[filter_name])
@@ -1181,7 +1181,7 @@ def get_context_uri_vars(context, single_infos):
     uri_vars = []  # type: List[Tuple[str, str]]
     single_info_keys = get_single_info_keys(single_infos)
 
-    for filter_name, filter_vars in context.iteritems():
+    for filter_name, filter_vars in context.items():
         # Enforce the single context variables that are available in the visual context
         if filter_name in single_info_keys:
             uri_vars.append((filter_name, "%s" % context[filter_name]))
@@ -1300,8 +1300,7 @@ class VisualFilterList(ListOfMultiple):
     @classmethod
     def _get_filters(cls, infos, ignore):
         return {
-            fname: fspec._filter
-            for fname, fspec in cls._get_filter_specs(infos, ignore).iteritems()
+            fname: fspec._filter for fname, fspec in cls._get_filter_specs(infos, ignore).items()
         }
 
     @classmethod

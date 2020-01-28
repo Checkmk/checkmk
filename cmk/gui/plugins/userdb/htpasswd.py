@@ -84,7 +84,7 @@ class Htpasswd(object):
     def save(self, entries):
         # type: (Dict[Text, Text]) -> None
         """Save the dictionary entries (unicode username and hash) to the htpasswd file"""
-        output = "\n".join("%s:%s" % entry for entry in sorted(entries.iteritems())) + "\n"
+        output = "\n".join("%s:%s" % entry for entry in sorted(entries.items())) + "\n"
         store.save_file("%s" % self._path, output.encode("utf-8"))
 
 

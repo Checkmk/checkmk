@@ -298,7 +298,7 @@ class ActivateChanges(object):
     # affected sites.
     def dirty_and_active_activation_sites(self):
         dirty = []
-        for site_id, site in activation_sites().iteritems():
+        for site_id, site in activation_sites().items():
             status = self._get_site_status(site_id, site)[1]
             is_online = self._site_is_online(status)
             is_logged_in = self._site_is_logged_in(site_id, site)

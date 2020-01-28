@@ -663,7 +663,7 @@ class ModeNotifications(NotificationsMode):
 
     def _convert_context_to_unicode(self, context):
         # Convert all values to unicode
-        for key, value in context.iteritems():
+        for key, value in context.items():
             if isinstance(value, str):
                 context[key] = convert_to_unicode(value, on_error=u"(Invalid byte sequence)")
 
@@ -682,7 +682,7 @@ class ModeNotifications(NotificationsMode):
         start_nr += len(rules)
 
         if self._show_user_rules:
-            for user_id, user_rules in sorted(load_user_notification_rules().iteritems(),
+            for user_id, user_rules in sorted(load_user_notification_rules().items(),
                                               key=lambda u: u[0]):
                 self._render_notification_rules(
                     user_rules,

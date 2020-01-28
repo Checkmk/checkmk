@@ -142,7 +142,7 @@ class NagVisMaps(SidebarSnapin):
         html.close_ul()
 
     def _show_tree_nodes(self, maps, children):
-        for map_name, map_cfg in maps.iteritems():
+        for map_name, map_cfg in maps.items():
             html.open_li()
             if map_name in children:
                 html.begin_foldable_container(treename="nagvis",

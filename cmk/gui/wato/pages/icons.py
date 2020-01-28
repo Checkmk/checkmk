@@ -130,7 +130,7 @@ class ModeIcons(WatoMode):
         im = Image.open(io.BytesIO(icon_info['icon'][2]))
         im.info['Comment'] = icon_info['category']
         meta = PngImagePlugin.PngInfo()
-        for k, v in im.info.iteritems():
+        for k, v in im.info.items():
             if isinstance(v, (six.binary_type, six.text_type)):
                 meta.add_text(k, v, 0)
 

@@ -784,7 +784,7 @@ class LoggedInUser(object):
 
         return SiteConfigurations({
             site_id: s  #
-            for site_id, s in unfiltered_sites.iteritems()
+            for site_id, s in unfiltered_sites.items()
             if site_id in authorized_sites
         })
 
@@ -966,7 +966,7 @@ def migrate_old_site_config(site_config):
         # configuration in that case.
         return default_single_site_configuration()
 
-    for site_id, site_cfg in site_config.iteritems():
+    for site_id, site_cfg in site_config.items():
         # Until 1.6 "replication" could be not present or
         # set to "" instead of None
         if site_cfg.get("replication", "") == "":
@@ -1153,7 +1153,7 @@ def get_login_slave_sites():
     # type: () -> List[SiteId]
     """Returns a list of site ids which are WATO slave sites and users can login"""
     login_sites = []
-    for site_id, site_spec in wato_slave_sites().iteritems():
+    for site_id, site_spec in wato_slave_sites().items():
         if site_spec.get('user_login', True) and not site_is_local(site_id):
             login_sites.append(site_id)
     return login_sites
@@ -1170,7 +1170,7 @@ def wato_slave_sites():
 
 def sorted_sites():
     # type: () -> List[Tuple[SiteId, str]]
-    return sorted([(site_id, s['alias']) for site_id, s in user.authorized_sites().iteritems()],
+    return sorted([(site_id, s['alias']) for site_id, s in user.authorized_sites().items()],
                   key=lambda k: k[1].lower())
 
 

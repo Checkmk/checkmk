@@ -87,7 +87,7 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
             self._build_tree(children, child, path)
 
     def _render_tree(self, tree):
-        for group, attrs in tree.iteritems():
+        for group, attrs in tree.items():
             fetch_url = html.makeuri_contextless([
                 ("view_name", "aggr_all"),
                 ("aggr_group_tree", "/".join(attrs["__path__"])),

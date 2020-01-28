@@ -5382,7 +5382,7 @@ class AbstractPainterSpecificMetric(Painter):
             choices = g.painter_specific_metric_choices
         else:
             choices = []
-            for key, value in metrics.metric_info.iteritems():
+            for key, value in metrics.metric_info.items():
                 choices.append((key, value.get("title")))
             choices.sort(key=lambda x: x[1])
             g.painter_specific_metric_choices = choices

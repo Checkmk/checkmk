@@ -61,7 +61,7 @@ def save_notification_rules(rules):
 def load_user_notification_rules():
     # type: () -> Dict[Text, List]
     rules = {}
-    for user_id, user in userdb.load_users().iteritems():
+    for user_id, user in userdb.load_users().items():
         user_rules = user.get("notification_rules")
         if user_rules:
             rules[user_id] = user_rules

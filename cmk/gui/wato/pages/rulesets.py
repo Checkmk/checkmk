@@ -1710,7 +1710,7 @@ class LabelCondition(Transform):
 
     def _to_valuespec(self, label_conditions):
         valuespec_value = []
-        for label_id, label_value in label_conditions.iteritems():
+        for label_id, label_value in label_conditions.items():
             valuespec_value.append(self._single_label_to_valuespec(label_id, label_value))
         return valuespec_value
 
@@ -1805,7 +1805,7 @@ class RuleConditionRenderer(object):
             return
 
         labels_html = (self._single_label_condition(object_type, label_id, label_spec)
-                       for label_id, label_spec in label_conditions.iteritems())
+                       for label_id, label_spec in label_conditions.items())
         yield HTML(
             _("%s matching labels: %s") %
             (object_title, html.render_i(_("and"), class_="label_operator").join(labels_html)))

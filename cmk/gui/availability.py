@@ -800,8 +800,8 @@ def compute_availability(what, av_rawdata, avoptions):
     grouping = avoptions["grouping"]
 
     # Note: in case of timeline, we have data from exacly one host/service
-    for site_host, site_host_entry in reclassified_rawdata.iteritems():
-        for service, service_entry in site_host_entry.iteritems():
+    for site_host, site_host_entry in reclassified_rawdata.items():
+        for service, service_entry in site_host_entry.items():
 
             if grouping == "host":
                 group_ids = [site_host]
@@ -937,10 +937,10 @@ def reclassify_by_annotations(what, av_rawdata):
         return av_rawdata
 
     reclassified_rawdata = {}
-    for (site, host_name), service_entries in av_rawdata.iteritems():
+    for (site, host_name), service_entries in av_rawdata.items():
         new_entries = {}
         reclassified_rawdata[(site, host_name)] = new_entries
-        for service_description, service_history in service_entries.iteritems():
+        for service_description, service_history in service_entries.items():
             cycles = [((site, host_name, service_description or None), "in_downtime")]
             if what == "service":
                 cycles = [((site, host_name, None), "in_host_downtime")] + cycles

@@ -779,7 +779,7 @@ def get_relevant_annotations(annotations, by_host, what, avoptions):
     annos_to_render = []
     annos_rendered = set()
 
-    for site_host, avail_entries in by_host.iteritems():
+    for site_host, avail_entries in by_host.items():
         for service in avail_entries.keys():
             for search_what in ["host", "service"]:
                 if what == "host" and search_what == "service":

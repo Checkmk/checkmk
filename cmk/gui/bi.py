@@ -270,7 +270,7 @@ def get_current_sitestats():
     program_start_times = dict(result)
     sites.live().set_prepend_site(False)
 
-    for site, values in sites.states().iteritems():
+    for site, values in sites.states().items():
         current_world["known_sites"].add((site, program_start_times.get(site, 0)))
         if values.get("state") == "online":
             current_world["online_sites"].add((site, program_start_times.get(site, 0)))
@@ -408,12 +408,12 @@ class JobWorker(multiprocessing.Process):
             g_services_by_hostname = {}
 
             required_hosts = job_info["queued_hosts"]
-            for key, values in self._site_data["services"].iteritems():
+            for key, values in self._site_data["services"].items():
                 if key in required_hosts:
                     g_services[key] = values
 
             hostnames = [x[1] for x in required_hosts]
-            for key, values in self._site_data["services_by_hostname"].iteritems():
+            for key, values in self._site_data["services_by_hostname"].items():
                 if key in hostnames:
                     g_services_by_hostname[key] = values
 
@@ -782,7 +782,7 @@ class BISitedataManager(object):
         return online_sites - site_data_on_disk
 
     def _absorb_sitedata(self, siteinfo, new_data):
-        for key, values in new_data.iteritems():
+        for key, values in new_data.items():
             self._data.setdefault(key, {})
             self._data[key].update(values)
         self._have_sites.add(siteinfo)
@@ -805,7 +805,7 @@ class BISitedataManager(object):
                 for site in sites_with_no_data:
                     new_data[site] = {}
 
-                for site, sitedata in new_data.iteritems():
+                for site, sitedata in new_data.items():
                     # Write data to disk
                     siteinfo = (site, dict(missing_sites).get(site))
                     sitedata_filepath = self._get_sitedata_filepath(siteinfo)
@@ -1172,7 +1172,7 @@ class BICacheManager(object):
                     "affected_services",
             ]:
                 self._compiled_trees[what] = {}
-                for key, values in self._compiled_trees["%s_ref" % what].iteritems():
+                for key, values in self._compiled_trees["%s_ref" % what].items():
                     self._compiled_trees[what].setdefault(key, [])
                     for value in values:
                         new_value = value
@@ -1180,7 +1180,7 @@ class BICacheManager(object):
                             new_value = self._compiled_trees["aggr_ref"][value[1]]
                         self._compiled_trees[what][key].append((value[0], new_value))
 
-            for key, values in self._compiled_trees["forest_ref"].iteritems():
+            for key, values in self._compiled_trees["forest_ref"].items():
                 self._compiled_trees["forest"][key] = []
                 for aggr in values:
                     new_value = aggr
@@ -1264,7 +1264,7 @@ class BICacheManager(object):
                 "host_aggregations",
                 "affected_services",
         ]:
-            for key, ref_values in new_data.get("%s_ref" % what, {}).iteritems():
+            for key, ref_values in new_data.get("%s_ref" % what, {}).items():
                 self._compiled_trees["%s_ref" % what].setdefault(key, []).extend(ref_values)
 
                 self._compiled_trees[what].setdefault(key, [])
@@ -1273,7 +1273,7 @@ class BICacheManager(object):
                     linked_aggr = new_data["aggr_ref"][ref_value]
                     self._compiled_trees[what][key].append((ident, linked_aggr))
 
-        for key, ref_values in new_data.get("forest_ref", {}).iteritems():
+        for key, ref_values in new_data.get("forest_ref", {}).items():
             self._compiled_trees["forest_ref"].setdefault(key, []).extend(ref_values)
 
             for ref_value in ref_values:
@@ -1390,7 +1390,7 @@ def api_get_aggregation_state(filter_names=None, filter_groups=None):
     required_trees = set()
     tree_lookup = {}
 
-    for group, trees in g_tree_cache["forest"].iteritems():
+    for group, trees in g_tree_cache["forest"].items():
         if filter_groups and group not in filter_groups:
             continue
 
@@ -1697,7 +1697,7 @@ def do_match(reg, text):
 
 # Debugging function
 def render_forest():
-    for group, trees in g_tree_cache["forest"].iteritems():
+    for group, trees in g_tree_cache["forest"].items():
         html.write("<h2>%s</h2>" % group)
         for tree in trees:
             ascii = render_tree(tree)
@@ -1980,7 +1980,7 @@ def subst_vars(pattern, arginfo):
     elif isinstance(pattern, tuple):
         return tuple([subst_vars(x, arginfo) for x in pattern])
 
-    for name, value in arginfo.iteritems():
+    for name, value in arginfo.items():
         if isinstance(pattern, six.string_types):
             pattern = pattern.replace('$' + name + '$', value)
     return pattern
@@ -2610,7 +2610,7 @@ def page_debug():
 def page_all():
     html.header("All")
     compile_forest()
-    for group, trees in g_tree_cache["forest"].iteritems():
+    for group, trees in g_tree_cache["forest"].items():
         html.write("<h2>%s</h2>" % group)
         for _inst_args, tree in trees:
             state = execute_tree(tree)
@@ -3294,14 +3294,14 @@ def table(view, columns, query, only_sites, limit, all_active_filters):
         return True
 
     required_hosts = set()
-    for group, trees in items.iteritems():
+    for group, trees in items.items():
         for tree in trees:
             if not is_tree_required(tree):
                 continue
             required_hosts.update(tree.get("reqhosts"))
     status_info = get_status_info(required_hosts)
 
-    for group, trees in items.iteritems():
+    for group, trees in items.items():
         if only_group not in [None, group]:
             continue
 
@@ -3548,7 +3548,7 @@ def migrate_bi_configuration():
     if config.bi_packs:
         global _rule_to_pack_lookup
         _rule_to_pack_lookup = {}
-        for packname, pack in config.bi_packs.iteritems():
+        for packname, pack in config.bi_packs.items():
             for rule_id in pack["rules"]:
                 _rule_to_pack_lookup[rule_id] = packname
             converted_host_aggregations += list(map(_convert_aggregation,
@@ -3561,7 +3561,7 @@ def migrate_bi_configuration():
     converted_aggregations += list(map(_convert_aggregation, config.aggregations))
     converted_aggregation_rules.update({
         rule_id: _convert_legacy_aggregation_rule(rule)
-        for rule_id, rule in config.aggregation_rules.iteritems()
+        for rule_id, rule in config.aggregation_rules.items()
     })
 
     config.host_aggregations = converted_host_aggregations

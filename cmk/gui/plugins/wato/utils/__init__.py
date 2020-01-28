@@ -1375,7 +1375,7 @@ class EventsMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
 def sort_sites(sites):
     # type: (SiteConfigurations) -> typing.List[typing.Tuple[SiteId, SiteConfiguration]]
     """Sort given sites argument by local, followed by remote sites"""
-    return sorted(sites.iteritems(),
+    return sorted(sites.items(),
                   key=lambda sid_s: (sid_s[1].get("replication"), sid_s[1].get("alias"), sid_s[0]))
 
 
@@ -1819,7 +1819,7 @@ class DictHostTagCondition(Transform):
 
     def _to_valuespec(self, host_tag_conditions):
         valuespec_value = {}
-        for tag_group_id, tag_condition in host_tag_conditions.iteritems():
+        for tag_group_id, tag_condition in host_tag_conditions.items():
             if isinstance(tag_condition, dict) and "$or" in tag_condition:
                 value = self._ored_tags_to_valuespec(tag_condition["$or"])
             elif isinstance(tag_condition, dict) and "$nor" in tag_condition:
@@ -1846,7 +1846,7 @@ class DictHostTagCondition(Transform):
 
     def _from_valuespec(self, valuespec_value):
         tag_conditions = {}
-        for tag_group_id, (operator, operand) in valuespec_value.iteritems():
+        for tag_group_id, (operator, operand) in valuespec_value.items():
             if operator in ["is", "is_not"]:
                 tag_group_value = self._single_tag_from_valuespec(operator, operand)
             elif operator in ["or", "nor"]:

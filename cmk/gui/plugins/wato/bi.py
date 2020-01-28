@@ -186,12 +186,12 @@ class BIManagement(object):
     def _add_missing_aggr_ids(self):
         # Determine existing IDs
         used_aggr_ids = set()
-        for pack_id, pack in self._packs.iteritems():
+        for pack_id, pack in self._packs.items():
             used_aggr_ids.update({x["ID"] for x in pack["aggregations"] if "ID" in x})
 
         # Compute missing IDs
         new_id = ""
-        for pack_id, pack in self._packs.iteritems():
+        for pack_id, pack in self._packs.items():
             aggr_id_counter = 0
             for aggregation in pack["aggregations"]:
                 if "ID" not in aggregation:
@@ -431,7 +431,7 @@ class BIManagement(object):
 
     def find_aggregation_rule_usages(self):
         aggregations_that_use_rule = {}
-        for pack_id, pack in self._packs.iteritems():
+        for pack_id, pack in self._packs.items():
             for aggr_id, aggregation in enumerate(pack["aggregations"]):
                 rule_id, _description = self.rule_called_by_node(aggregation["node"])
                 aggregations_that_use_rule.setdefault(rule_id, []).append(
@@ -539,10 +539,10 @@ class ModeBI(WatoMode, BIManagement):
 
     def _allowed_rule_choices(self):
         choices = []
-        for pack_id, pack in sorted(self._packs.iteritems()):
+        for pack_id, pack in sorted(self._packs.items()):
             if self.may_use_rules_in_pack(pack):
                 pack_choices = [(rule_id, "%s (%s)" % (rule["title"], rule["id"]))
-                                for rule_id, rule in pack["rules"].iteritems()]
+                                for rule_id, rule in pack["rules"].items()]
                 choices.append((pack_id, "%s (%s)" % (pack["title"], pack["id"]),
                                 DropdownChoice(choices=sorted(pack_choices))))
         return choices
@@ -1761,7 +1761,7 @@ class ModeBIEditAggregation(ModeBI):
 
     def _get_aggregations_by_id(self):
         ids = {}
-        for _pack, settings in self._packs.iteritems():
+        for _pack, settings in self._packs.items():
             for aggregation in settings["aggregations"]:
                 if "ID" in aggregation:
                     ids[aggregation["ID"]] = (settings["title"], aggregation)
@@ -1909,11 +1909,11 @@ class ModeBIEditRule(ModeBI):
 
     def _get_forbidden_packs_using_rule(self):
         forbidden_packs = set()
-        for packid, packinfo in self._packs.iteritems():
+        for packid, packinfo in self._packs.items():
             uses_rule = False
             if self._pack == packinfo:
                 continue
-            for ruleid, rule_info in packinfo['rules'].iteritems():
+            for ruleid, rule_info in packinfo['rules'].items():
                 if ruleid == self._ruleid:
                     uses_rule = True
                     break
@@ -1937,8 +1937,8 @@ class ModeBIEditRule(ModeBI):
 
     def _rename_ruleid_after_confirm(self, new_ruleid):
         new_packs = self._packs.copy()
-        for packid, packinfo in self._packs.iteritems():
-            for ruleid, rule_info in packinfo['rules'].iteritems():
+        for packid, packinfo in self._packs.items():
+            for ruleid, rule_info in packinfo['rules'].items():
                 if ruleid == self._ruleid:
                     new_rule_info = rule_info.copy()
                     new_rule_info['id'] = new_ruleid

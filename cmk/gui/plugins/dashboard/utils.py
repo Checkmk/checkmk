@@ -621,7 +621,7 @@ def copy_view_into_dashlet(dashlet, nr, view_name, add_context=None, load_from_a
         # but we do this for the rare edge case during legacy dashboard conversion, so
         # this should be sufficient
         view = None
-        for (_u, n), this_view in get_all_views().iteritems():
+        for (_u, n), this_view in get_all_views().items():
             # take the first view with a matching name
             if view_name == n:
                 view = this_view

@@ -1675,7 +1675,7 @@ class NodeRenderer(object):
                 return len(keyorder) + 1, key
 
         html.open_table()
-        for key, value in sorted(attributes.get_child_data().iteritems(), key=_sort_attributes):
+        for key, value in sorted(attributes.get_child_data().items(), key=_sort_attributes):
             sub_invpath = "%s.%s" % (invpath, key)
             _icon, title = inv_titleinfo(sub_invpath, key)
             hint = _inv_display_hint(sub_invpath)

@@ -5056,7 +5056,7 @@ class Labels(ValueSpec):
         return labels
 
     def _validate_value(self, value, varprefix):
-        for k, v in value.iteritems():
+        for k, v in value.items():
             if not isinstance(k, six.text_type):
                 raise MKUserError(
                     varprefix,

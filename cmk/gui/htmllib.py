@@ -528,7 +528,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, OutputFunnel)):
             yield ' href=\"%s\"' % href
 
         # render all attributes
-        for k, v in attrs.iteritems():
+        for k, v in attrs.items():
 
             if v is None:
                 continue
@@ -1145,7 +1145,7 @@ class html(ABCHTMLGenerator):
             yield
         finally:
             self.request.del_vars()
-            for varname, value in saved_vars.iteritems():
+            for varname, value in saved_vars.items():
                 self.request.set_var(varname, value)
 
     def del_var_from_env(self, varname):
@@ -2170,7 +2170,7 @@ class html(ABCHTMLGenerator):
             "onkeydown": onkeydown,
         }
 
-        for key, val in attrs.iteritems():
+        for key, val in attrs.items():
             if key not in attributes and key not in ["name", "type", "type_"]:
                 attributes[key] = val
             elif key in attributes and attributes[key] is None:
@@ -2850,7 +2850,7 @@ class html(ABCHTMLGenerator):
         self.end_foldable_container()
 
     def debug_vars(self, prefix=None, hide_with_mouse=True, vars_=None):
-        it = self.request.itervars() if vars_ is None else vars_.iteritems()
+        it = self.request.itervars() if vars_ is None else vars_.items()
         hover = "this.style.display=\'none\';"
         self.open_table(class_=["debug_vars"], onmouseover=hover if hide_with_mouse else None)
         self.tr(self.render_th(_("POST / GET Variables"), colspan="2"))

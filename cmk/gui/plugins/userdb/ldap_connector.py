@@ -605,7 +605,7 @@ class LDAPUserConnector(UserConnector):
                         if dn is None:
                             continue  # skip unwanted answers
                         new_obj = {}
-                        for key, val in obj.iteritems():
+                        for key, val in obj.items():
                             # Convert all keys to lower case!
                             new_obj[key.decode('utf-8').lower()] = [i.decode('utf-8') for i in val]
                         result.append((dn.decode('utf-8').lower(), new_obj))

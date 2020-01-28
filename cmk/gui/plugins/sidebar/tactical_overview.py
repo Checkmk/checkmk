@@ -430,7 +430,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             return
 
         sites_not_connected = [
-            site_id for site_id, site_status in sites.states().iteritems()
+            site_id for site_id, site_status in sites.states().items()
             if site_status["state"] != "online"
         ]
         if len(sites_not_connected) == 0:

@@ -164,7 +164,7 @@ class ABCCrashReportPage(six.with_metaclass(abc.ABCMeta, cmk.gui.pages.Page)):
     def _get_serialized_crash_report(self):
         return {
             k: v
-            for k, v in self._get_crash_row().iteritems()
+            for k, v in self._get_crash_row().items()
             if k not in ["site", "crash_id", "crash_type"]
         }
 
@@ -575,7 +575,7 @@ def _pack_crash_report(serialized_crash_report):
     """Returns a byte string representing the current crash report in tar archive format"""
     buf = io.BytesIO()
     with tarfile.open(mode="w:gz", fileobj=buf) as tar:
-        for key, content in serialized_crash_report.iteritems():
+        for key, content in serialized_crash_report.items():
             if content is None:
                 continue
 

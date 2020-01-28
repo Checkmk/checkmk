@@ -406,7 +406,7 @@ class APICallHosts(APICallCollection):
         for hostname in delete_hostnames:
             grouped_by_folders.setdefault(all_hosts[hostname].folder(), []).append(hostname)
 
-        for folder, hostnames in grouped_by_folders.iteritems():
+        for folder, hostnames in grouped_by_folders.items():
             folder.delete_hosts(hostnames)
 
 
@@ -1006,7 +1006,7 @@ class APICallSites(APICallCollection):
         if "configuration_hash" in request:
             validate_config_hash(request["configuration_hash"], all_sites)
 
-        for site_id, site_config in request["sites"].iteritems():
+        for site_id, site_config in request["sites"].items():
             site_mgmt.validate_configuration(site_id, site_config, request["sites"])
 
         site_mgmt.save_sites(config.migrate_old_site_config(request["sites"]))

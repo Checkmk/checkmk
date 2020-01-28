@@ -341,7 +341,7 @@ class GUIBackgroundStatusSnapshot(object):
         self._job_status = job.get_status()
         self._logger = job._logger.getChild("snapshot")
 
-        for name, value in GUIBackgroundJobSnapshottedFunctions.__dict__.iteritems():
+        for name, value in GUIBackgroundJobSnapshottedFunctions.__dict__.items():
             if hasattr(value, "__call__"):
                 self._job_status[name] = getattr(job, name)()
 

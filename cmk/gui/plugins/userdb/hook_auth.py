@@ -77,7 +77,7 @@ def format_php(data, lvl=1):
         s += '    ' * (lvl - 1) + ')'
     elif isinstance(data, dict):
         s += 'array(\n'
-        for key, val in data.iteritems():
+        for key, val in data.items():
             s += '    ' * lvl + format_php(key, lvl + 1) + ' => ' + format_php(val, lvl + 1) + ',\n'
         s += '    ' * (lvl - 1) + ')'
     elif isinstance(data, str):

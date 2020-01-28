@@ -91,7 +91,7 @@ class ModeSearch(WatoMode):
             keep_vars.update(html.request.itervars(prefix=attr_prefix))
 
         html.request.del_vars("host_search_")
-        for varname, value in keep_vars.iteritems():
+        for varname, value in keep_vars.items():
             html.request.set_var(varname, value)
 
     def page(self):

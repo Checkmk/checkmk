@@ -258,6 +258,6 @@ def activation_sites():
     return {
         site_id: site
         for site_id, site in config.user.authorized_sites(
-            unfiltered_sites=config.configured_sites()).iteritems()
+            unfiltered_sites=config.configured_sites()).items()
         if config.site_is_local(site_id) or site.get("replication")
     }

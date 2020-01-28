@@ -551,7 +551,7 @@ class DataSource(
                 raise
 
         store.save_object_to_file(file_path, persisted_sections, pretty=False)
-        self._logger.debug("Stored persisted sections: %s" % (", ".join(persisted_sections.keys())))
+        self._logger.debug("Stored persisted sections: %s" % (", ".join(persisted_sections)))
 
     def _update_info_with_persisted_sections(self, persisted_sections_from_disk, host_sections,
                                              is_cached_data):
@@ -779,7 +779,7 @@ class CheckMKAgentDataSource(
                     persisted_sections[section_name] = (cached_at, until, section_content)
 
                 if "cached" in section_options:
-                    cache_times = map(int, cast(str, section_options["cached"]).split(","))
+                    cache_times = list(map(int, cast(str, section_options["cached"]).split(",")))
                     agent_cache_info[section_name] = cache_times[0], cache_times[1]
 
                 # The section data might have a different encoding

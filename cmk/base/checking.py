@@ -284,7 +284,7 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
     inventory.do_inventory_actions_during_checking_for(sources, multi_host_sections, host_config,
                                                        ipaddress)
 
-    missing_section_list = sorted(list(missing_sections))
+    missing_section_list = sorted(missing_sections)
     return num_success, missing_section_list
 
 
@@ -549,7 +549,7 @@ def _sanitize_check_result_infotext(infotext, allow_missing_infotext):
 def _convert_perf_data(p):
     # type: (List[UncleanPerfValue]) -> str
     # replace None with "" and fill up to 7 values
-    normalized = (map(_convert_perf_value, p) + ['', '', '', ''])[0:6]
+    normalized = (list(map(_convert_perf_value, p)) + ['', '', '', ''])[0:6]
     return "%s=%s;%s;%s;%s;%s" % tuple(normalized)
 
 

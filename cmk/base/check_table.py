@@ -26,7 +26,7 @@
 """Code for computing the table of checks of hosts."""
 
 from typing import (  # pylint: disable=unused-import
-    Union, TypeVar, Iterable, Text, Optional, Dict, Tuple, Any, List, Set, Callable, cast,
+    Union, TypeVar, Iterable, Text, Optional, Dict, Tuple, Any, List, Set, Callable, cast, Iterator,
 )
 
 from cmk.utils.exceptions import MKGeneralException
@@ -113,7 +113,7 @@ class HostCheckTable(object):
         return check_table
 
     def _get_static_check_entries(self, host_config):
-        # type: (config.HostConfig) -> List[Service]
+        # type: (config.HostConfig) -> Iterator[Service]
         entries = []  # type: List[Service]
         for _checkgroup_name, check_plugin_name, item, params in host_config.static_checks:
             # Make sure, that for dictionary based checks at least those keys
@@ -134,7 +134,7 @@ class HostCheckTable(object):
         # because users assume that earlier rules have precedence over later
         # ones. For static checks that is important if there are two rules for
         # a host with the same combination of check type and item.
-        return list(reversed(entries))
+        return reversed(entries)
 
     def _handle_service(self, service):
         # type: (Service) -> CheckTable
@@ -192,7 +192,7 @@ class HostCheckTable(object):
         for node in self._host_config.nodes or []:
             # TODO: Cleanup this to work exactly like the logic above (for a single host)
             node_config = self._config_cache.get_host_config(node)
-            node_checks = self._get_static_check_entries(node_config)
+            node_checks = list(self._get_static_check_entries(node_config))
             if not skip_autochecks:
                 node_checks += self._config_cache.get_autochecks_of(node)
 

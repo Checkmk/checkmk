@@ -90,6 +90,13 @@ PYTHON3_MODULES_LIST += requests-toolbelt-0.9.1.tar.gz # needed for jira
 PYTHON3_MODULES_LIST += PyJWT-1.7.1.tar.gz # needed for jira
 PYTHON3_MODULES_LIST += jira-2.0.0.tar.gz # needed for jira
 
+PYTHON3_MODULES_LIST += Pillow-7.0.0.tar.gz # needed by GUI, reportlab
+PYTHON3_MODULES_LIST += python-ldap-3.2.0.tar.gz # needed by GUI (User sync)
+PYTHON3_MODULES_LIST += dicttoxml-1.7.4.tar.gz # needed by GUI (API XML format)
+PYTHON3_MODULES_LIST += numpy-1.18.1.tar.gz # needed by GUI (forecast graphs)
+PYTHON3_MODULES_LIST += reportlab-3.5.34.tar.gz # needed by GUI (reporting)
+PYTHON3_MODULES_LIST += PyPDF2-1.26.0.tar.gz # needed by GUI (reporting)
+
 # TODO: Can we clean this up and use the intermediate install step results? Would be possible
 # in the moment we merge the build and intermediate install in a single target
 $(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_INSTALL) $(FREETDS_INTERMEDIATE_INSTALL) $(PYTHON3_MODULES_UNPACK)

@@ -73,6 +73,12 @@ requests-toolbelt = "==0.9.1" # needed by jira
 PyJWT = "==1.7.1" # needed by jira
 jira = "==2.0.0" # needed by jira
 pyghmi = "==1.5.3" # needed by base for IPMI
+Pillow = "==7.0.0" # needed by GUI
+python-ldap = "==3.2.0" # needed by GUI (User sync)
+dicttoxml = "==1.7.4" # needed by GUI (API XML format)
+numpy = "==1.18.1" # needed by GUI (forecast graphs)
+reportlab = "==3.5.34" # needed by GUI (reporting)
+PyPDF2 = "==1.26.0" # needed by GUI (reporting)
 
 [requires]
 python_version = "3.7"

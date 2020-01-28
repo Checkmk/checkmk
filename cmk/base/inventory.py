@@ -305,7 +305,7 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
                 source.enforce_check_plugin_names(None)
                 host_sections = multi_host_sections.add_or_get_host_sections(
                     hostname, ipaddress, deflt=SNMPHostSections())
-                source.set_fetched_check_plugin_names(set(host_sections.sections.keys()))
+                source.set_fetched_check_plugin_names(set(host_sections.sections))
                 host_sections_from_source = source.run()
                 host_sections.update(host_sections_from_source)
 
@@ -340,7 +340,7 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
         kwargs = cmk.utils.misc.make_kwargs_for(inv_function,
                                                 inventory_tree=inventory_tree,
                                                 status_data_tree=status_data_tree)
-        non_kwargs = set(cmk.utils.misc.getfuncargs(inv_function)) - set(kwargs.keys())
+        non_kwargs = set(cmk.utils.misc.getfuncargs(inv_function)) - set(kwargs)
         args = [section_content]
         if len(non_kwargs) == 2:
             args += [host_config.inventory_parameters(section_name)]

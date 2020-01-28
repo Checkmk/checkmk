@@ -71,6 +71,7 @@ import cmk.base.config as config
 import cmk.base.console as console
 import cmk.base.core
 import cmk.base.events as events
+from cmk.base.events import EventRule, EventContext  # pylint: disable=unused-import
 
 try:
     import cmk.base.cee.keepalive as keepalive
@@ -87,15 +88,9 @@ notify_mode = "notify"
 
 ContactName = str
 
-RawNotifyContext = Dict  # TODO: Improve this
-# TODO: It doesn't really make sense to have NotifyContext when we already have
-# a Context type in cmk.base.events. The same holds for NotifyRule and Rule.
-NotifyContext = Dict  # TODO: Improve this
-
-NotifyRule = Dict  # TODO: Improve this
 NotifyPluginParams = Dict  # TODO: Improve this
 NotifyBulkParameters = Dict  # TODO: Improve this
-NotifyRuleInfo = Tuple[str, NotifyRule, str]
+NotifyRuleInfo = Tuple[str, EventRule, str]
 NotifyPluginName = str
 NotifyPluginInfo = Tuple[ContactName, NotifyPluginName, NotifyPluginParams,
                          Optional[NotifyBulkParameters]]
@@ -321,7 +316,7 @@ def convert_legacy_configuration():
 # should be spooled or not. In the latter cased a local delivery
 # is being done.
 def notify_notify(raw_context, analyse=False):
-    # type: (RawNotifyContext, bool) -> Optional[NotifyAnalysisInfo]
+    # type: (EventContext, bool) -> Optional[NotifyAnalysisInfo]
     if not analyse:
         store_notification_backlog(raw_context)
 
@@ -352,7 +347,7 @@ def notify_notify(raw_context, analyse=False):
 # Add some notification specific variables to the context. These are currently
 # not added to alert handler scripts
 def _complete_raw_context_with_notification_vars(raw_context):
-    # type: (RawNotifyContext) -> None
+    # type: (EventContext) -> None
     raw_context["LOGDIR"] = notification_logdir
     raw_context["MAIL_COMMAND"] = notification_mail_command
 
@@ -363,7 +358,7 @@ def _complete_raw_context_with_notification_vars(raw_context):
 # 2. Flexible Notifications   (since 1.2.2)
 # 3. Plain email notification (refer to git log if you are really interested)
 def locally_deliver_raw_context(raw_context, analyse=False):
-    # type: (RawNotifyContext, bool) -> Optional[NotifyAnalysisInfo]
+    # type: (EventContext, bool) -> Optional[NotifyAnalysisInfo]
     contactname = raw_context.get("CONTACTNAME")
     try:
 
@@ -482,7 +477,7 @@ def notify_keepalive():
 
 
 def notify_rulebased(raw_context, analyse=False):
-    # type: (RawNotifyContext, bool) -> NotifyAnalysisInfo
+    # type: (EventContext, bool) -> NotifyAnalysisInfo
     # First step: go through all rules and construct our table of
     # notification plugins to call. This is a dict from (users, plugin) to
     # a triple of (locked, parameters, bulk). If locked is True, then a user
@@ -520,14 +515,14 @@ def notify_rulebased(raw_context, analyse=False):
 
 
 def _get_contact_info_text(rule):
-    # type: (NotifyRule) -> str
+    # type: (EventRule) -> str
     if "contact" in rule:
         return "User %s's rule '%s'..." % (rule["contact"], rule["description"])
     return "Global rule '%s'..." % rule["description"]
 
 
 def _create_notifications(raw_context, rule, notifications, rule_info):
-    # type: (RawNotifyContext, NotifyRule, Notifications, List[NotifyRuleInfo]) -> Tuple[Notifications, List[NotifyRuleInfo]]
+    # type: (EventContext, EventRule, Notifications, List[NotifyRuleInfo]) -> Tuple[Notifications, List[NotifyRuleInfo]]
     contacts = rbn_rule_contacts(rule, raw_context)
     contactstxt = ", ".join(contacts)
 
@@ -591,7 +586,7 @@ def _create_notifications(raw_context, rule, notifications, rule_info):
 
 
 def _process_notifications(raw_context, notifications, num_rule_matches, analyse):
-    # type: (RawNotifyContext, Notifications, int, bool) -> List[NotifyPluginInfo]
+    # type: (EventContext, Notifications, int, bool) -> List[NotifyPluginInfo]
     plugin_info = []
 
     if not notifications:
@@ -689,7 +684,7 @@ def rbn_finalize_plugin_parameters(hostname, plugin_name, rule_parameters):
 # create deterministic order, so that rule analyses can depend on
 # rule indices
 def user_notification_rules():
-    # type: () -> List[NotifyRule]
+    # type: () -> List[EventRule]
     user_rules = []
     contactnames = sorted(config.contacts.keys())
     for contactname in contactnames:
@@ -778,7 +773,7 @@ def rbn_split_plugin_context(plugin_context):
 
 
 def rbn_get_bulk_params(rule):
-    # type: (NotifyRule) -> Optional[NotifyBulkParameters]
+    # type: (EventRule) -> Optional[NotifyBulkParameters]
     bulk = rule.get("bulk")
 
     if not bulk:
@@ -813,7 +808,7 @@ def rbn_get_bulk_params(rule):
 
 
 def rbn_match_rule(rule, context):
-    # type: (NotifyRule, NotifyContext) -> Optional[str]
+    # type: (EventRule, EventContext) -> Optional[str]
     return events.apply_matchers([
         rbn_match_rule_disabled,
         events.event_match_rule,
@@ -827,12 +822,12 @@ def rbn_match_rule(rule, context):
 
 
 def rbn_match_rule_disabled(rule, _context):
-    # type: (NotifyRule, NotifyContext) -> Optional[str]
+    # type: (EventRule, EventContext) -> Optional[str]
     return "This rule is disabled" if rule.get("disabled") else None
 
 
 def rbn_match_escalation(rule, context):
-    # type: (NotifyRule, NotifyContext) -> Optional[str]
+    # type: (EventRule, EventContext) -> Optional[str]
     if "match_escalation" in rule:
         from_number, to_number = rule["match_escalation"]
         if context["WHAT"] == "HOST":
@@ -846,7 +841,7 @@ def rbn_match_escalation(rule, context):
 
 
 def rbn_match_escalation_throtte(rule, context):
-    # type: (NotifyRule, NotifyContext) -> Optional[str]
+    # type: (EventRule, EventContext) -> Optional[str]
     if "match_escalation_throttle" in rule:
         # We do not want to suppress recovery notifications.
         if (context["WHAT"] == "HOST" and context.get("HOSTSTATE", "UP") == "UP") or \
@@ -866,7 +861,7 @@ def rbn_match_escalation_throtte(rule, context):
 
 
 def rbn_match_host_event(rule, context):
-    # type: (NotifyRule, NotifyContext) -> Optional[str]
+    # type: (EventRule, EventContext) -> Optional[str]
     if "match_host_event" in rule:
         if context["WHAT"] != "HOST":
             if "match_service_event" not in rule:
@@ -882,7 +877,7 @@ def rbn_match_host_event(rule, context):
 
 
 def rbn_match_service_event(rule, context):
-    # type: (NotifyRule, NotifyContext) -> Optional[str]
+    # type: (EventRule, EventContext) -> Optional[str]
     if "match_service_event" in rule:
         if context["WHAT"] != "SERVICE":
             if "match_host_event" not in rule:
@@ -898,7 +893,7 @@ def rbn_match_service_event(rule, context):
 
 
 def rbn_match_event(context, state, last_state, event_map, allowed_events):
-    # type: (NotifyContext, str, str, Dict[str, str], List[str]) -> Optional[str]
+    # type: (EventContext, str, str, Dict[str, str], List[str]) -> Optional[str]
     notification_type = context["NOTIFICATIONTYPE"]
 
     if notification_type == "RECOVERY":
@@ -930,7 +925,7 @@ def rbn_match_event(context, state, last_state, event_map, allowed_events):
 
 
 def rbn_rule_contacts(rule, context):
-    # type: (NotifyRule, NotifyContext) -> ContactNames
+    # type: (EventRule, EventContext) -> ContactNames
     the_contacts = set()
     if rule.get("contact_object"):
         the_contacts.update(rbn_object_contact_names(context))
@@ -984,7 +979,7 @@ def rbn_rule_contacts(rule, context):
 
 
 def rbn_match_contact_macros(rule, contactname, contact):
-    # type: (NotifyRule, ContactName, Contact) -> Optional[str]
+    # type: (EventRule, ContactName, Contact) -> Optional[str]
     if "contact_match_macros" in rule:
         for macro_name, regexp in rule["contact_match_macros"]:
             value = str(contact.get("_" + macro_name, ""))
@@ -1002,7 +997,7 @@ def rbn_match_contact_macros(rule, contactname, contact):
 
 
 def rbn_match_contact_groups(rule, contactname, contact):
-    # type: (NotifyRule, ContactName, Contact) -> Optional[str]
+    # type: (EventRule, ContactName, Contact) -> Optional[str]
     if "contact_match_groups" in rule:
         if "contactgroups" not in contact:
             logger.info("Warning: cannot determine contact groups of %s: skipping restrictions",
@@ -1020,7 +1015,7 @@ def rbn_match_contact_groups(rule, contactname, contact):
 
 
 def rbn_match_notification_comment(rule, context):
-    # type: (NotifyRule, NotifyContext) -> Optional[str]
+    # type: (EventRule, EventContext) -> Optional[str]
     if "match_notification_comment" in rule:
         r = regex(rule["match_notification_comment"])
         notification_comment = context.get("NOTIFICATIONCOMMENT", "")
@@ -1031,7 +1026,7 @@ def rbn_match_notification_comment(rule, context):
 
 
 def rbn_match_event_console(rule, context):
-    # type: (NotifyRule, NotifyContext) -> Optional[str]
+    # type: (EventRule, EventContext) -> Optional[str]
     if "match_ec" in rule:
         match_ec = rule["match_ec"]
         is_ec_notification = "EC_ID" in context
@@ -1074,7 +1069,7 @@ def rbn_match_event_console(rule, context):
 
 
 def rbn_object_contact_names(context):
-    # type: (NotifyContext) -> List[ContactName]
+    # type: (EventContext) -> List[ContactName]
     commasepped = context.get("CONTACTS")
     if commasepped == "?":
         logger.info("Warning: Contacts of %s cannot be determined. Using fallback contacts",
@@ -1140,7 +1135,7 @@ def rbn_emails_contacts(emails):
 
 
 def notify_flexible(raw_context, notification_table):
-    # type: (RawNotifyContext, NotificationTable) -> None
+    # type: (EventContext, NotificationTable) -> None
     for entry in notification_table:
         plugin_name = entry["plugin"]
         assert isinstance(plugin_name, str)
@@ -1166,7 +1161,7 @@ def notify_flexible(raw_context, notification_table):
 # 1  : currently not OK  -> try to process later on
 # >=2: invalid           -> discard
 def should_notify(context, entry):
-    # type: (RawNotifyContext, NotificationTableEntry) -> bool
+    # type: (EventContext, NotificationTableEntry) -> bool
     # Check disabling
     if entry.get("disabled"):
         logger.info(" - Skipping: it is disabled for this user")
@@ -1287,7 +1282,7 @@ def should_notify(context, entry):
 
 
 def check_notification_type(context, host_events, service_events):
-    # type: (RawNotifyContext, List[Event], List[Event]) -> Tuple[Event, List[Event]]
+    # type: (EventContext, List[Event], List[Event]) -> Tuple[Event, List[Event]]
     notification_type = context["NOTIFICATIONTYPE"]
     if context["WHAT"] == "HOST":
         allowed_events = host_events
@@ -1327,7 +1322,7 @@ def check_notification_type(context, host_events, service_events):
 
 
 def notify_plain_email(raw_context):
-    # type: (RawNotifyContext) -> None
+    # type: (EventContext) -> None
     plugin_context = create_plugin_context(raw_context, [])
 
     if config.notification_spooling in ("local", "both"):
@@ -1422,7 +1417,7 @@ def notify_via_email(plugin_context):
 # - dict, the new style for scripts with WATO rule. This will lead to
 #         PARAMETER_FOO_BAR for a dict key named "foo_bar".
 def create_plugin_context(raw_context, params):
-    # type: (RawNotifyContext, Union[List, NotifyPluginParams]) -> PluginContext
+    # type: (EventContext, Union[List, NotifyPluginParams]) -> PluginContext
     plugin_context = {}
     plugin_context.update(raw_context)  # Make a real copy
     events.add_to_event_context(plugin_context, "PARAMETER", params)
@@ -2054,7 +2049,7 @@ def call_bulk_notification_script(plugin_name, context_lines):
 # and the GUI. TODO Maybe we should centralize the encoding here and save the
 # backlock already encoded.
 def store_notification_backlog(raw_context):
-    # type: (RawNotifyContext) -> None
+    # type: (EventContext) -> None
     path = notification_logdir + "/backlog.mk"
     if not config.notification_backlog:
         if os.path.exists(path):
@@ -2070,7 +2065,7 @@ def store_notification_backlog(raw_context):
 
 
 def raw_context_from_backlog(nr):
-    # type: (int) -> RawNotifyContext
+    # type: (int) -> EventContext
     backlog = store.load_object_from_file(notification_logdir + "/backlog.mk", default=[])
 
     if nr < 0 or nr >= len(backlog):
@@ -2082,7 +2077,7 @@ def raw_context_from_backlog(nr):
 
 
 def raw_context_from_stdin():
-    # type: () -> RawNotifyContext
+    # type: () -> EventContext
     context = {}
     for line in sys.stdin:
         varname, value = line.strip().split("=", 1)
@@ -2091,7 +2086,7 @@ def raw_context_from_stdin():
 
 
 def raw_context_from_env():
-    # type: () -> RawNotifyContext
+    # type: () -> EventContext
     # Information about notification is excpected in the
     # environment in variables with the prefix NOTIFY_
     return dict([(var[7:], value)

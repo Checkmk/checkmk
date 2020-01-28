@@ -1,6 +1,7 @@
 #
 # Builds CPython for Windows as zip file
-# Expected Python 3.7 installed, used by python build toolchain
+# Expected some Python installed, used by python build toolchain
+# Expected python.exe is python3 reasonably updated
 #
 # Usage:
 #  make 
@@ -8,6 +9,7 @@
 # internal dirs:
 PYTHON_SRC_DIR     := python
 PYTHON_TMP_DIR     := tmp
+PYTHON_SYSTEM_EXE  := python.exe
 
 PYTHON_INSTALL_DIR := $(PYTHON_TMP_DIR)\to_install
 PYTHON_WORK_DIR    := $(PYTHON_TMP_DIR)\work
@@ -78,7 +80,7 @@ $(PYTHON_PIPFILE): $(SRC_PIPFILE) ## pifile copy and patch
 	@powershell Write-Host "Target $@" -foreground white
 	@if not exist $(PYTHON_WORK_DIR) mkdir $(PYTHON_WORK_DIR) 2> nul
 	@copy /Y $< $@
-	@py -3 patch_pipfile.py $@
+	@$(PYTHON_SYSTEM_EXE) patch_pipfile.py $@
 
 $(PYTHON_PIPFILE_LOCK): $(PYTHON_PIPFILE) ## piplock building
 	@powershell Write-Host "Target $@" -foreground white

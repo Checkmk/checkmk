@@ -31,10 +31,9 @@ import os
 import sys
 import time
 import shutil
+import cStringIO
 import contextlib
 from typing import IO, Iterator, Tuple, Optional, Dict, Any, Text, List, Union  # pylint: disable=unused-import
-
-import six
 
 import cmk.utils.paths
 import cmk.utils.debug
@@ -191,7 +190,7 @@ class AutomationTryDiscovery(Automation):
 
     def execute(self, args):
         # type: (List[str]) -> Dict[str, Any]
-        with redirect_output(six.StringIO()) as buf:
+        with redirect_output(cStringIO.StringIO()) as buf:
             log.setup_console_logging()
             log.logger.setLevel(log.VERBOSE)
             check_preview_table, host_labels = self._execute_discovery(args)

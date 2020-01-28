@@ -93,8 +93,15 @@ class CMKModuleLayerChecker(BaseChecker):
         """
         module_name = node.root().name
 
-        if file_path.startswith("cmk/base/cee/") or file_path.startswith("cmk/base/cme/"):
-            return "cmk.base.%s" % module_name
+        for component in ["base", "gui"]:
+            for prefix in [
+                    "cmk/%s/cee/" % component,
+                    "cmk/%s/cme/" % component,
+                    "enterprise/cmk/%s/cee/" % component,
+                    "managed/cmk/%s/cme/" % component,
+            ]:
+                if file_path.startswith(prefix):
+                    return "cmk.%s.%s" % (component, module_name)
 
         if module_name.startswith("cee.") or module_name.startswith("cme."):
             return "cmk.%s" % module_name

@@ -5,6 +5,7 @@
 if not defined pexe_uninstall powershell Write-Host "This script must be called with exec_cmd.bat" -foreground Red && exit /b 5
 powershell Write-Host "Uninstalling Python ..." -foreground Cyan 
 if not exist %pexe_uninstall% powershell Write-Host "Python was not correctly installed" -foreground Green && exit /b 0
-powershell Start-Process %pexe_uninstall% -ArgumentList "/uninstall, /quiet" -Verb RunAs -Wait
+el %pexe_uninstall% /uninstall /quiet
+call wait_for_process %p_full_name%
 powershell Write-Host "Python uninstalled" -foreground Green
 

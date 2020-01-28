@@ -76,7 +76,7 @@ pyghmi = "==1.5.3" # needed by base for IPMI
 Pillow = "==7.0.0" # needed by GUI
 # python-ldap = "==3.2.0" # needed by GUI (User sync)  DEACTIVATED FOR NOW BECAUSE OF BUILD PROBLEMS
 dicttoxml = "==1.7.4" # needed by GUI (API XML format)
-numpy = "==1.18.1" # needed by GUI (forecast graphs)
+# numpy = "==1.18.1" # needed by GUI (forecast graphs)  DEACTIVATED FOR NOW BECAUSE OF BUILD PROBLEMS
 reportlab = "==3.5.34" # needed by GUI (reporting)
 PyPDF2 = "==1.26.0" # needed by GUI (reporting)
 

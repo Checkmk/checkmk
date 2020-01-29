@@ -217,9 +217,8 @@ def lq_logic(filter_condition, values, join):
     return conditions + connective
 
 
-# TODO: Investigate: Are there multiple service_descriptions call sites?
-def livestatus_lql(host_names, columns, service_descriptions=None):
-    # type: (Union[HostName, List[HostName]], Union[AnyStr, List[AnyStr]], Optional[Union[ServiceName, List[ServiceName]]]) -> Text
+def livestatus_lql(host_names, columns, service_description=None):
+    # type: (Union[HostName, List[HostName]], Union[AnyStr, List[AnyStr]], Optional[ServiceName]) -> Text
     if isinstance(columns, list):
         columns = " ".join(columns)
 
@@ -228,13 +227,11 @@ def livestatus_lql(host_names, columns, service_descriptions=None):
         host_names = [host_names]
     query_filter += lq_logic(u"Filter: host_name =", host_names, u"Or")
 
-    if service_descriptions == "_HOST_" or service_descriptions is None:
+    if service_description == "_HOST_" or service_description is None:
         what = 'host'
     else:
         what = 'service'
-        if not isinstance(service_descriptions, list):
-            service_descriptions = [service_descriptions]
-        query_filter += lq_logic(u"Filter: service_description =", service_descriptions, u"Or")
+        query_filter += lq_logic(u"Filter: service_description =", [service_description], u"Or")
 
     return "GET %ss\n%s" % (what, query_filter)
 

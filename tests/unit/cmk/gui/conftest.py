@@ -85,6 +85,7 @@ def _create_and_destroy_user(automation=False):
     username = 'test123-' + get_random_string(size=5, from_ascii=ord('a'), to_ascii=ord('z'))
     password = 'Ischbinwischtisch'
     edit_users(_mk_user_obj(username, password, automation=automation))
+    config.load_config()
     yield username, password
     delete_users([username])
     if not contact_existed:

@@ -36,7 +36,6 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.debug
 from cmk.utils.log import VERBOSE
 import cmk.utils.paths
-from cmk.utils.encoding import ensure_unicode
 from cmk.utils.type_defs import MetricName, ServiceName, HostName  # pylint: disable=unused-import
 
 logger = logging.getLogger("cmk.prediction")
@@ -211,16 +210,11 @@ class TimeSeries(object):
 
 
 def lq_logic(filter_condition, values, join):
-    # type: (str, Union[AnyStr, List[AnyStr]], str) -> Text
+    # type: (Text, List[AnyStr], Text) -> Text
     """JOIN with (Or, And) FILTER_CONDITION the VALUES for a livestatus query"""
-    if isinstance(values, six.string_types):
-        values = [values]
-    conds = [u"%s %s" % (filter_condition, livestatus.lqencode(x)) for x in values]
-    if len(conds) > 1:
-        return ensure_unicode("\n".join(conds) + "\n%s: %d\n" % (join, len(conds)))
-    if conds:
-        return conds[0] + u'\n'
-    return u""
+    conditions = u"".join(u"%s %s\n" % (filter_condition, livestatus.lqencode(x)) for x in values)
+    connective = u"%s: %d\n" % (join, len(values)) if len(values) > 1 else u""
+    return conditions + connective
 
 
 # TODO: Investigate: Are there multiple service_descriptions call sites?
@@ -230,13 +224,17 @@ def livestatus_lql(host_names, columns, service_descriptions=None):
         columns = " ".join(columns)
 
     query_filter = u"Columns: %s\n" % columns
-    query_filter += lq_logic("Filter: host_name =", host_names, "Or")
+    if not isinstance(host_names, list):
+        host_names = [host_names]
+    query_filter += lq_logic(u"Filter: host_name =", host_names, u"Or")
 
     if service_descriptions == "_HOST_" or service_descriptions is None:
         what = 'host'
     else:
         what = 'service'
-        query_filter += lq_logic("Filter: service_description =", service_descriptions, "Or")
+        if not isinstance(service_descriptions, list):
+            service_descriptions = [service_descriptions]
+        query_filter += lq_logic(u"Filter: service_description =", service_descriptions, u"Or")
 
     return "GET %ss\n%s" % (what, query_filter)
 

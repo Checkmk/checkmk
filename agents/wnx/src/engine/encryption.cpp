@@ -18,18 +18,18 @@ Commander::Commander() : algorithm_(Algorithm::kDefault) {
     checkAndConfigure();
 }
 
-Commander::Commander(const std::string &Password, Length KeyLength)
+Commander::Commander(const std::string &key, Length length)
     : algorithm_(Algorithm::kDefault) {
     crypt_provider_ = obtainContext();
-    key_ = deriveOpenSSLKey(Password, KeyLength, 1);
+    key_ = deriveOpenSSLKey(key, length, 1);
 
     checkAndConfigure();
 }
 
-Commander::Commander(const BYTE *key, DWORD KeySize)
+Commander::Commander(const BYTE *key, DWORD length)
     : algorithm_(Algorithm::kDefault) {
     crypt_provider_ = obtainContext();
-    key_ = importKey(key, KeySize);
+    key_ = importKey(key, length);
 
     checkAndConfigure();
 }
@@ -41,20 +41,21 @@ void Commander::cleanup() {
     releaseContext();
 }
 
-std::tuple<bool, size_t> Commander::encode(void *InOut, size_t InputSize,
-                                           size_t BufferSize,
-                                           bool LastBlock) const {
+std::tuple<bool, size_t> Commander::encode(void *in_out, size_t size,
+                                           size_t buffer_size,
+                                           bool last_block) const {
     if (!available()) return {false, 0};
 
-    auto input_size = static_cast<DWORD>(InputSize);
+    auto input_size = static_cast<DWORD>(size);
     if (input_size == 0) return {true, 0};
-    if (nullptr == InOut) {
+    if (nullptr == in_out) {
         XLOG::l.crit(XLOG_FLINE + " nullptr in param");
         return {false, 0};
     }
 
-    if (!::CryptEncrypt(key_, 0, LastBlock, 0, static_cast<BYTE *>(InOut),
-                        &input_size, static_cast<DWORD>(BufferSize))) {
+    if (FALSE == ::CryptEncrypt(key_, 0, last_block ? TRUE : FALSE, 0,
+                                static_cast<BYTE *>(in_out), &input_size,
+                                static_cast<DWORD>(buffer_size))) {
         // special case, when error is recoverable
         if (GetLastError() == ERROR_MORE_DATA) return {false, input_size};
 
@@ -65,20 +66,20 @@ std::tuple<bool, size_t> Commander::encode(void *InOut, size_t InputSize,
     return {true, input_size};
 }
 
-std::tuple<bool, size_t> Commander::decode(void *InOut, size_t InputSize,
-                                           bool LastBlock) {
+std::tuple<bool, size_t> Commander::decode(void *in_out, size_t size,
+                                           bool last_block) {
     if (!available()) return {false, 0};
 
-    auto input_size = static_cast<DWORD>(InputSize);
+    auto input_size = static_cast<DWORD>(size);
     if (input_size == 0) return {true, 0};
 
-    if (nullptr == InOut) {
+    if (nullptr == in_out) {
         XLOG::l.crit(XLOG_FLINE + " nullptr in param");
         return {false, 0};
     }
 
-    if (!::CryptDecrypt(key_, 0, LastBlock, 0, static_cast<BYTE *>(InOut),
-                        &input_size)) {
+    if (FALSE == ::CryptDecrypt(key_, 0, last_block ? TRUE : FALSE, 0,
+                                static_cast<BYTE *>(in_out), &input_size)) {
         // special case, when error is recoverable
         if (GetLastError() == ERROR_MORE_DATA) return {false, input_size};
 
@@ -89,21 +90,24 @@ std::tuple<bool, size_t> Commander::decode(void *InOut, size_t InputSize,
     return {true, input_size};
 }
 
+static bool IsAesAlgorithm(Algorithm algorithm) {
+    return (algorithm == CALG_AES_128) || (algorithm == CALG_AES_192) ||
+           (algorithm == CALG_AES_256);
+}
+
 // called from ctor
 HCRYPTPROV Commander::obtainContext() {
     HCRYPTPROV handle = 0;
 
-    BOOL res = FALSE;
+    auto provider =
+        IsAesAlgorithm(algorithm_) ? MS_ENH_RSA_AES_PROV : MS_DEF_PROV;
 
-    if ((algorithm_ == CALG_AES_128) || (algorithm_ == CALG_AES_192) ||
-        (algorithm_ == CALG_AES_256)) {
-        res = ::CryptAcquireContext(&handle, nullptr, MS_ENH_RSA_AES_PROV,
-                                    PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
-    } else {
-        res = ::CryptAcquireContext(&handle, nullptr, MS_DEF_PROV,
-                                    PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
-    }
-    if (!res) {
+    auto provider_type =
+        IsAesAlgorithm(algorithm_) ? PROV_RSA_AES : PROV_RSA_FULL;
+
+    auto res = ::CryptAcquireContext(&handle, nullptr, provider, provider_type,
+                                     CRYPT_VERIFYCONTEXT);
+    if (FALSE == res) {
         XLOG::l.crit("Cannot obtain crypto context error is [{}]",
                      GetLastError());
         return 0;
@@ -115,7 +119,7 @@ HCRYPTPROV Commander::obtainContext() {
 // called from destructor
 void Commander::releaseContext() {
     //
-    if (crypt_provider_) {
+    if (0 != crypt_provider_) {
         ::CryptReleaseContext(crypt_provider_, 0);
         crypt_provider_ = 0;
     }
@@ -123,21 +127,21 @@ void Commander::releaseContext() {
 
 // called only from constructor
 void Commander::checkAndConfigure() {
-    if (!key_) {
+    if (0 == key_) {
         cleanup();
         return;
     }
 
     DWORD mode = CRYPT_MODE_CBC;
     auto pmode = reinterpret_cast<BYTE *>(&mode);
-    if (!::CryptSetKeyParam(key_, KP_MODE, pmode, 0)) {
+    if (FALSE == ::CryptSetKeyParam(key_, KP_MODE, pmode, 0)) {
         XLOG::l.crit("Cannot set crypto mode error is [{}]", GetLastError());
         return;
     }
 
     // in fact, pkcs5 seems to be the only padding supported by MS bundled CSPs?
     mode = PKCS5_PADDING;
-    if (!::CryptSetKeyParam(key_, KP_PADDING, pmode, 0)) {
+    if (FALSE == ::CryptSetKeyParam(key_, KP_PADDING, pmode, 0)) {
         XLOG::l.crit("Cannot set pad mode error is [{}]", GetLastError());
         return;
     }
@@ -148,9 +152,10 @@ void Commander::checkAndConfigure() {
 HCRYPTKEY Commander::generateKey(Length key_length) const {
     HCRYPTKEY hkey = 0;
     if (crypt_provider_ == 0) return 0;
-    if (!::CryptGenKey(crypt_provider_, algorithm_,
-                       static_cast<unsigned>(key_length) | CRYPT_EXPORTABLE,
-                       &hkey)) {
+    if (FALSE ==
+        ::CryptGenKey(crypt_provider_, algorithm_,
+                      static_cast<unsigned>(key_length) | CRYPT_EXPORTABLE,
+                      &hkey)) {
         XLOG::l.crit(XLOG_FLINE + "Cannot generate key, error is [{}]",
                      GetLastError());
         return 0;
@@ -160,7 +165,7 @@ HCRYPTKEY Commander::generateKey(Length key_length) const {
 }
 
 // #TODO revamp
-HCRYPTKEY Commander::importKey(const BYTE *Key, DWORD KeySize) const {
+HCRYPTKEY Commander::importKey(const BYTE *key, DWORD key_size) const {
     if (crypt_provider_ == 0) return 0;
 
     // the key structure we pass to the api needs to be "decorated"
@@ -178,24 +183,25 @@ HCRYPTKEY Commander::importKey(const BYTE *Key, DWORD KeySize) const {
                     insert_ptr + sizeof(BLOBHEADER));
 
     // insert size field
-    insert_ptr = reinterpret_cast<BYTE *>(&KeySize);
+    insert_ptr = reinterpret_cast<BYTE *>(&key_size);
     key_blob.insert(key_blob.end(), insert_ptr, insert_ptr + sizeof(DWORD));
 
     // insert the actual key
-    key_blob.insert(key_blob.end(), Key, Key + KeySize);
+    key_blob.insert(key_blob.end(), key, key + key_size);
 
-    HCRYPTKEY hkey = 0;
-    if (!::CryptImportKey(crypt_provider_, &key_blob[0],
-                          static_cast<DWORD>(key_blob.size()), 0, 0, &hkey)) {
+    HCRYPTKEY crypt_key = 0;
+    if (FALSE == ::CryptImportKey(crypt_provider_, &key_blob[0],
+                                  static_cast<DWORD>(key_blob.size()), 0, 0,
+                                  &crypt_key)) {
         XLOG::l.crit(XLOG_FLINE + " Cannot import key, error is [{}]",
                      GetLastError());
         return 0;
     }
-    return hkey;
+    return crypt_key;
 }
 
-size_t Commander::keySize(ALG_ID AlgorithmId) {
-    switch (AlgorithmId) {
+size_t Commander::keySize(ALG_ID algorithm) {
+    switch (algorithm) {
         case CALG_AES_128:
             return 128;
         case CALG_AES_192:
@@ -206,21 +212,24 @@ size_t Commander::keySize(ALG_ID AlgorithmId) {
     }
 }
 
-std::tuple<HCRYPTHASH, size_t> GetHash(HCRYPTPROV Provider) {
+std::tuple<HCRYPTHASH, size_t> GetHash(HCRYPTPROV crypt_provider) {
     HCRYPTHASH hash = 0;
-    if (!::CryptCreateHash(Provider, Algorithm::kHash, 0, 0, &hash)) {
+
+    if (FALSE ==
+        ::CryptCreateHash(crypt_provider, Algorithm::kHash, 0, 0, &hash)) {
         XLOG::l("Can't create hash [{}]", GetLastError());
         return {};
     }
     DWORD hash_size = 0;
     DWORD sizeof_hashsize = sizeof(DWORD);
 
-    if (!::CryptGetHashParam(hash, HP_HASHSIZE,
-                             reinterpret_cast<BYTE *>(&hash_size),
-                             &sizeof_hashsize, 0)) {
+    if (FALSE == ::CryptGetHashParam(hash, HP_HASHSIZE,
+                                     reinterpret_cast<BYTE *>(&hash_size),
+                                     &sizeof_hashsize, 0)) {
         XLOG::l("Can't get hash size [{}]", GetLastError());
         return {hash, 0};
     }
+
     return {hash, hash_size};
 }
 
@@ -236,18 +245,18 @@ auto GetHashData(HCRYPTHASH Hash, T &Value) {
     return ::CryptGetHashParam(Hash, HP_HASHVAL, &Value[0], &buffer_size, 0);
 }
 
-HCRYPTHASH DuplicateHash(HCRYPTHASH Hash) {
-    HCRYPTHASH hash = 0;
-    auto result = ::CryptDuplicateHash(Hash, 0, 0, &hash);
-    if (!result) return 0;
-    return hash;
+HCRYPTHASH DuplicateHash(HCRYPTHASH hash) {
+    HCRYPTHASH hash_out = 0;
+    auto result = ::CryptDuplicateHash(hash, nullptr, 0, &hash_out);
+    if (0 == result) return 0;
+    return hash_out;
 }
 
-std::optional<uint32_t> BlockSize(HCRYPTKEY Key) {
+std::optional<uint32_t> BlockSize(HCRYPTKEY key) {
     DWORD block_length = 0;
     DWORD param_length = sizeof(block_length);
-    if (!::CryptGetKeyParam(Key, KP_BLOCKLEN, (BYTE *)&block_length,
-                            &param_length, 0)) {
+    if (FALSE == ::CryptGetKeyParam(key, KP_BLOCKLEN, (BYTE *)&block_length,
+                                    &param_length, 0)) {
         XLOG::l("Failure getting block len [{}]", GetLastError());
         return {};
     }
@@ -255,19 +264,19 @@ std::optional<uint32_t> BlockSize(HCRYPTKEY Key) {
 }
 
 std::optional<uint32_t> Commander::blockSize() const {
-    if (!key_) return {};
+    if (0 == key_) return {};
 
     return BlockSize(key_);
 }
 
 // Stupid function from the LWA
-HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &Password,
-                                      Length KeyLength, int iterations) {
+HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
+                                      Length key_length, int iterations) {
     if (crypt_provider_ == 0) return 0;
 
     auto [base_hash, hash_size] = GetHash(crypt_provider_);
 
-    ON_OUT_OF_SCOPE(if (base_hash)::CryptDestroyHash(base_hash));
+    ON_OUT_OF_SCOPE(if (base_hash)::CryptDestroyHash(base_hash););
     if (hash_size == 0) return 0;
 
     cma::ByteVector buffer;
@@ -278,16 +287,16 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &Password,
     size_t key_offset = 0;
     size_t iv_offset = 0;
 
-    auto key_size = (KeyLength == Length::kDefault)
+    auto key_size = (key_length == Length::kDefault)
                         ? keySize(algorithm_) / 8
-                        : static_cast<size_t>(KeyLength);
+                        : static_cast<size_t>(key_length);
 
     std::vector<BYTE> key(key_size);
     std::vector<BYTE> iv;
 
     while ((key_offset < key.size()) || (iv_offset < iv.size())) {
         HCRYPTHASH hash = DuplicateHash(base_hash);
-        if (!hash) return 0;
+        if (0 == hash) return 0;
 
         ON_OUT_OF_SCOPE(::CryptDestroyHash(hash));
 
@@ -296,23 +305,22 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &Password,
         if (first_iteration) {
             first_iteration = false;
         } else {
-            if (!HashData(hash, buffer)) return 0;
+            if (FALSE == HashData(hash, buffer)) return 0;
         }
         // include password in hash (duh!)
-        if (!HashData(hash, Password)) return 0;
+        if (FALSE == HashData(hash, password)) return 0;
 
-        // TODO include salt
-
-        if (!GetHashData(hash, buffer)) return 0;
+        // #TODO: include salt
+        if (FALSE == GetHashData(hash, buffer)) return 0;
 
         for (int i = 1; i < iterations; ++i) {
             auto hash_inner = DuplicateHash(base_hash);
-            if (hash_inner) return 0;
+            if (FALSE == hash_inner) return 0;
 
             ON_OUT_OF_SCOPE(::CryptDestroyHash(hash_inner));
 
-            if (!HashData(hash_inner, buffer)) return 0;
-            if (!GetHashData(hash_inner, buffer)) return 0;
+            if (FALSE == HashData(hash_inner, buffer)) return 0;
+            if (FALSE == GetHashData(hash_inner, buffer)) return 0;
         }
 
         size_t usable_bytes = buffer.size();
@@ -345,7 +353,7 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &Password,
     }
 
     // apply iv
-    if (hkey && !::CryptSetKeyParam(hkey, KP_IV, &iv[0], 0)) {
+    if (hkey != 0 && FALSE == ::CryptSetKeyParam(hkey, KP_IV, &iv[0], 0)) {
         ::CryptDestroyKey(hkey);
         XLOG::l("Failure applying key [{}]", GetLastError());
         return 0;
@@ -355,7 +363,7 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &Password,
 }
 
 void Commander::releaseKey() {
-    if (key_) {
+    if (0 != key_) {
         ::CryptDestroyKey(key_);
         key_ = 0;
     }
@@ -365,15 +373,16 @@ std::optional<cma::ByteVector> Commander::getKey() const {
     if (!available()) return {};
 
     DWORD key_size = 0;
-    if (!::CryptExportKey(key_, 0, PLAINTEXTKEYBLOB, 0, NULL, &key_size)) {
+    if (FALSE ==
+        ::CryptExportKey(key_, 0, PLAINTEXTKEYBLOB, 0, nullptr, &key_size)) {
         XLOG::l("Failed to get key size, error [{}]", GetLastError());
         return {};
     }
 
     std::vector<BYTE> result;
     result.resize(key_size);
-    if (!::CryptExportKey(key_, 0, PLAINTEXTKEYBLOB, 0, &result[0],
-                          &key_size)) {
+    if (FALSE ==
+        ::CryptExportKey(key_, 0, PLAINTEXTKEYBLOB, 0, &result[0], &key_size)) {
         XLOG::l("Failed to export key, error [{}]", GetLastError());
         return {};
     }
@@ -382,11 +391,12 @@ std::optional<cma::ByteVector> Commander::getKey() const {
     return std::vector<BYTE>(result.begin() + sizeof(BLOBHEADER), result.end());
 }
 
-bool Commander::randomizeBuffer(void *Buffer, size_t BufferSize) const {
+bool Commander::randomizeBuffer(void *buffer, size_t buffer_size) const {
     if (!available()) return false;
 
-    if (!::CryptGenRandom(crypt_provider_, static_cast<DWORD>(BufferSize),
-                          static_cast<BYTE *>(Buffer))) {
+    if (FALSE == ::CryptGenRandom(crypt_provider_,
+                                  static_cast<DWORD>(buffer_size),
+                                  static_cast<BYTE *>(buffer))) {
         XLOG::l("Failed generate random data, error [{}]", GetLastError());
         return false;
     }
@@ -406,7 +416,7 @@ std::unique_ptr<Commander> MakeCrypt() {
 }
 
 // calculate additional size of buffer in bytes to compress DataSize
-std::optional<size_t> Commander::CalcBufferOverhead(size_t DataSize) const
+std::optional<size_t> Commander::CalcBufferOverhead(size_t data_size) const
     noexcept {
     if (!blockSize().has_value()) {
         XLOG::l("Impossible situation, crypt engine is absent");
@@ -420,7 +430,7 @@ std::optional<size_t> Commander::CalcBufferOverhead(size_t DataSize) const
 
     auto block_size = blockSize().value();
 
-    return block_size - (DataSize % block_size);
+    return block_size - (data_size % block_size);
 }
 
 }  // namespace cma::encrypt

@@ -59,9 +59,11 @@ RUN yum -y makecache \
     wget \
     which \
     && yum clean all
+# Workaround for failing installation, not locally reproducable
 RUN yum -y makecache \
     && yum -y --enablerepo=PowerTools reinstall \
     kernel-headers \
+    --nogpgcheck \
     && yum clean all
 
 ARG ARTIFACT_STORAGE

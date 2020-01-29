@@ -24,13 +24,17 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os
 import sys
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import cmk.base.console as console
 
 _profile = None
-_profile_path = "profile.out"
+_profile_path = Path("profile.out")
 
 
 def enable():
@@ -52,19 +56,21 @@ def output_profile():
     if not _profile:
         return
 
-    _profile.dump_stats(_profile_path)
-    show_profile = os.path.join(os.path.dirname(_profile_path), "show_profile.py")
-    with open(show_profile, "w") as f:
-        f.write("#!/usr/bin/env python\n"
-                "import sys\n"
-                "import pstats\n"
-                "try:\n"
-                "    profile_file = sys.argv[1]\n"
-                "except IndexError:\n"
-                "    profile_file = %r\n"
-                "stats = pstats.Stats(profile_file)\n"
-                "stats.sort_stats('time').print_stats()\n" % _profile_path)
-    os.chmod(show_profile, 0o755)
+    _profile.dump_stats(str(_profile_path))
+    show_profile = _profile_path.with_name("show_profile.py")
 
+    # TODO Change shebang as soon as we migrate to Python 3
+    with show_profile.open("w") as f:
+        f.write("""#!/usr/bin/env python
+import sys
+import pstats
+try:
+    profile_file = sys.argv[1]
+except IndexError:
+    profile_file = %s
+stats = pstats.Stats(profile_file)
+stats.sort_stats('time').print_stats()""" % _profile_path)
+
+    show_profile.chmod(0o755)
     console.output("Profile '%s' written. Please run %s.\n" % (_profile_path, show_profile),
                    stream=sys.stderr)

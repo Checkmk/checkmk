@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -72,7 +72,7 @@ class MKCounterWrapped(MKException):
     pass
 
 
-class CachedItemStates(object):
+class CachedItemStates(object):  # pylint: disable=useless-object-inheritance
     def __init__(self):
         # type: () -> None
         super(CachedItemStates, self).__init__()
@@ -288,12 +288,11 @@ def get_rate(user_key, this_time, this_val, allow_negative=False, onwrap=SKIP, i
     except MKCounterWrapped as e:
         if onwrap is RAISE:
             raise
-        elif onwrap is SKIP:
+        if onwrap is SKIP:
             global g_last_counter_wrap
             g_last_counter_wrap = e
             return 0.0
-        else:
-            return onwrap
+        return onwrap
 
 
 # Helper for get_rate(). Note: this function has been part of the official check API

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -50,7 +50,7 @@ _check_type = None  # type: Optional[CheckPluginName]
 _service_description = None  # type: Optional[ServiceName]
 
 
-class Service(object):
+class Service(object):  # pylint: disable=useless-object-inheritance
     """Can be used to by the discovery function to tell Checkmk about a new service"""
     def __init__(self, item, parameters=None, service_labels=None, host_labels=None):
         # type: (Item, CheckParameters, DiscoveredServiceLabels, DiscoveredHostLabels) -> None

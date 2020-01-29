@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -164,7 +164,7 @@ class ABCSNMPBackend(six.with_metaclass(abc.ABCMeta, object)):
         return []
 
 
-class MutexScanRegistry(object):
+class MutexScanRegistry(object):  # pylint: disable=useless-object-inheritance
     """Register scan functions that are checked before a fallback is used
 
     Add any number of scan functions to a registry instance by decorating

@@ -56,7 +56,7 @@ class SnapinDashlet(IFrameDashlet):
 
     @classmethod
     def initial_size(cls):
-        return (27, 20)
+        return (28, 20)
 
     @classmethod
     def initial_refresh_interval(cls):

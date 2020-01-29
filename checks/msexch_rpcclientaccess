@@ -32,33 +32,37 @@ factory_settings['msexch_rpcclientaccess_defaultlevels'] = {
 }
 
 
-def check_msexch_rpcclientaccess(item, params, parsed):
+def discover_msexch_rpcclientaccess(parsed):
+    return inventory_wmi_table_total(parsed)
+
+
+def check_msexch_rpcclientaccess(_no_item, params, parsed):
     # despite the source being raw-data, the averaged latency is
     # pre-processed
     table = parsed[""]
     yield wmi_yield_raw_counter(table,
-                                item,
+                                None,
                                 "RPCAveragedLatency",
                                 infoname="Average latency",
                                 perfvar="average_latency",
                                 levels=params['latency'],
                                 unit="ms")
     yield wmi_yield_raw_persec(table,
-                               item,
+                               None,
                                "RPCRequests",
                                infoname="RPC Requests/sec",
                                perfvar="requests_per_sec",
                                levels=params['requests'])
-    yield wmi_yield_raw_counter(table, item, "UserCount", infoname="Users", perfvar="current_users")
+    yield wmi_yield_raw_counter(table, None, "UserCount", infoname="Users", perfvar="current_users")
     yield wmi_yield_raw_counter(table,
-                                item,
+                                None,
                                 "ActiveUserCount",
                                 infoname="Active users",
                                 perfvar="active_users")
 
 
 check_info['msexch_rpcclientaccess'] = {
-    'inventory_function': lambda p: inventory_wmi_table(p),  # pylint: disable=unnecessary-lambda
+    'inventory_function': discover_msexch_rpcclientaccess,
     'check_function': check_msexch_rpcclientaccess,
     'parse_function': parse_wmi_table,
     'has_perfdata': True,

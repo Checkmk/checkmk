@@ -43,6 +43,10 @@ factory_settings['msexch_info_store_defaultlevels'] = {
 }
 
 
+def discover_msexch_isstore(parsed):
+    return inventory_wmi_table_instances(parsed)
+
+
 def check_msexch_isstore(item, params, parsed):
     try:
         average = wmi_calculate_raw_average(parsed[""], item, "RPCAverageLatency", 1)
@@ -59,7 +63,7 @@ def check_msexch_isstore(item, params, parsed):
 
 
 check_info['msexch_isstore'] = {
-    'inventory_function': lambda p: inventory_wmi_table(p),  # pylint: disable=unnecessary-lambda
+    'inventory_function': discover_msexch_isstore,
     'check_function': check_msexch_isstore,
     'parse_function': parse_wmi_table,
     'has_perfdata': True,

@@ -355,23 +355,6 @@ def inventory_wmi_table_total(tables, required_tables=None, filt=None, levels=No
     return [(None, levels)]
 
 
-def inventory_wmi_table(tables, required_tables=None, filt=None, levels=None):
-    '''DO NOT USE
-
-    Please use either inventory_wmi_table_instances or inventory_wmi_table_total
-    directly. This function sometimes returns strings and sometimes None as an item.
-    '''
-    instances = inventory_wmi_table_instances(tables, required_tables, filt, levels)
-    if instances:
-        return instances
-
-    total = inventory_wmi_table_total(tables, required_tables, filt, levels)
-    if total:
-        return total
-
-    return []
-
-
 #.
 #   .--Check---------------------------------------------------------------.
 #   |                      ____ _               _                          |

@@ -32,10 +32,9 @@ RUN apt-get update \
     $PACKAGES \
     && pip install --upgrade pip \
     && pip install --upgrade setuptools \
+    && pip install enum34 typing \
     && pip install git+https://github.com/pypa/pipenv.git@2549656dc09e132d8ba2fa6327c939f5f9a951b7 \
     && rm -rf /var/lib/apt/lists/*
-RUN pip uninstall -y pipenv \
-    && pip install git+https://github.com/pypa/pipenv.git@2549656dc09e132d8ba2fa6327c939f5f9a951b7
 
 RUN rm -rf /bin/systemctl \
     && ln -s /bin/true /bin/systemctl

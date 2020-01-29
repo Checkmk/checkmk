@@ -104,6 +104,26 @@ rulespec_registry.register(
     ))
 
 
+def _valuespec_special_agents_proxmox():
+    return Dictionary(
+        elements=[
+            ("username", TextAscii(title=_(u"Username"), allow_empty=False)),
+            ("password", IndividualOrStoredPassword(title=_(u"Password"), allow_empty=False)),
+            ("port", Integer(title=_(u"Port"), default_value=8006)),
+        ],
+        optional_keys=["port"],
+        title=_(u"Proxmox"),
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupDatasourcePrograms,
+        name="special_agents:proxmox",
+        valuespec=_valuespec_special_agents_proxmox,
+    ))
+
+
 def _special_agents_kubernetes_transform(value):
     if 'infos' not in value:
         value['infos'] = ['nodes']

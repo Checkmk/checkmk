@@ -26,6 +26,7 @@ REQUIRED_ARGUMENTS = {
     'agent_prometheus': [],
     'agent_splunk': ['HOSTNAME'],
     'agent_vsphere': ['HOSTNAME'],
+    'agent_proxmox': ['HOSTNAME'],
 }  # type: Dict
 
 

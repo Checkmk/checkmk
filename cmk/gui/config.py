@@ -813,7 +813,7 @@ class LoggedInUser(object):
             raise MKAuthException(
                 _("We are sorry, but you lack the permission "
                   "for this operation. If you do not like this "
-                  "then please ask you administrator to provide you with "
+                  "then please ask your administrator to provide you with "
                   "the following permission: '<b>%s</b>'.") % perm.title)
 
     def load_file(self, name, deflt, lock=False):

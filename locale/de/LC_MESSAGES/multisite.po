@@ -52377,7 +52377,7 @@ msgstr "Gesamtgröße der Logdatei überwachen"
 #, python-format
 msgid ""
 "We are sorry, but you lack the permission for this operation. If you do not "
-"like this then please ask you administrator to provide you with the following "
+"like this then please ask your administrator to provide you with the following "
 "permission: '<b>%s</b>'."
 msgstr ""
 "Leider haben Sie nicht die erforderliche Berechtigung. Wenden Sie sich an den "

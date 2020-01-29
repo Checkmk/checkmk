@@ -31,7 +31,7 @@ import signal
 from types import FrameType  # pylint: disable=unused-import
 from typing import (  # pylint: disable=unused-import
     Pattern, AnyStr, cast, Union, Iterator, Callable, List, Text, Optional, Dict, Tuple, Set,
-    NoReturn,
+    NoReturn, Any,
 )
 
 from cmk.utils.regex import regex
@@ -446,20 +446,7 @@ def check_discovery(hostname, ipaddress):
 
     need_rediscovery = False
 
-    params_rediscovery = params.get("inventory_rediscovery", {})
-
-    item_filters = None  # type: Optional[Callable]
-    if params_rediscovery.get("service_whitelist", []) or\
-            params_rediscovery.get("service_blacklist", []):
-        # whitelist. if none is specified, this matches everything
-        whitelist = regex("|".join(
-            ["(%s)" % pat for pat in params_rediscovery.get("service_whitelist", [".*"])]))
-        # blacklist. if none is specified, this matches nothing
-        blacklist = regex("|".join(
-            ["(%s)" % pat for pat in params_rediscovery.get("service_blacklist", ["(?!x)x"])]))
-
-        item_filters = lambda hostname, check_plugin_name, item:\
-                _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, blacklist)
+    item_filters = _get_item_filter_func(params.get("inventory_rediscovery", {}))
 
     for check_state, title, params_key, default_state in [
         ("new", "unmonitored", "severity_unmonitored", config.inventory_check_severity),
@@ -476,8 +463,8 @@ def check_discovery(hostname, ipaddress):
                 affected_check_plugin_names.setdefault(discovered_service.check_plugin_name, 0)
                 affected_check_plugin_names[discovered_service.check_plugin_name] += 1
 
-                if not unfiltered and\
-                        (item_filters is None or item_filters(hostname, discovered_service.check_plugin_name, discovered_service.item)):
+                if not unfiltered and (item_filters is None or item_filters(
+                        hostname, discovered_service.check_plugin_name, discovered_service.item)):
                     unfiltered = True
 
                 long_infotexts.append(
@@ -687,17 +674,7 @@ def _discover_marked_host(config_cache, host_config, now_ts, oldest_queued):
         console.verbose("  failed: discovery check disabled\n")
         return False
 
-    params_rediscovery = params.get("inventory_rediscovery", {})
-    item_filters = None  # type: Optional[Callable[[HostName, CheckPluginName, Item], bool]]
-    if "service_blacklist" in params_rediscovery or "service_whitelist" in params_rediscovery:
-        # whitelist. if none is specified, this matches everything
-        whitelist = regex("|".join(
-            ["(%s)" % pat for pat in params_rediscovery.get("service_whitelist", [".*"])]))
-        # blacklist. if none is specified, this matches nothing
-        blacklist = regex("|".join(
-            ["(%s)" % pat for pat in params_rediscovery.get("service_blacklist", ["(?!x)x"])]))
-        item_filters = lambda hostname, check_plugin_name, item:\
-            _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, blacklist)
+    item_filters = _get_item_filter_func(params.get("inventory_rediscovery", {}))
 
     why_not = _may_rediscover(params, now_ts, oldest_queued)
     if not why_not:
@@ -785,11 +762,33 @@ def _may_rediscover(params, now_ts, oldest_queued):
     return None
 
 
+def _get_item_filter_func(params_rediscovery):
+    # type: (Dict[str, Any]) -> Optional[Callable[[HostName, CheckPluginName, Item], bool]]
+    service_whitelist = params_rediscovery.get("service_whitelist")  # type: Optional[List[str]]
+    service_blacklist = params_rediscovery.get("service_blacklist")  # type: Optional[List[str]]
+
+    if not service_whitelist and not service_blacklist:
+        return None
+
+    if not service_whitelist:
+        # whitelist. if none is specified, this matches everything
+        service_whitelist = [".*"]
+
+    if not service_blacklist:
+        # blacklist. if none is specified, this matches nothing
+        service_blacklist = ["(?!x)x"]
+
+    whitelist = regex("|".join(["(%s)" % p for p in service_whitelist]))
+    blacklist = regex("|".join(["(%s)" % p for p in service_blacklist]))
+
+    return lambda hostname, check_plugin_name, item:\
+           _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, blacklist)
+
+
 def _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, blacklist):
     # type: (HostName, CheckPluginName, Item, Pattern[AnyStr], Pattern[AnyStr]) -> bool
     description = config.service_description(hostname, check_plugin_name, item)
-    return whitelist.match(description) is not None and\
-        blacklist.match(description) is None
+    return whitelist.match(description) is not None and blacklist.match(description) is None
 
 
 #.

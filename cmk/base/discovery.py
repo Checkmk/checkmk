@@ -953,7 +953,10 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
                 else:
                     # re-raise the original exception to not destory the trace. This may raise a MKCounterWrapped
                     # exception which need to lead to a skipped check instead of a crash
-                    raise x[0], x[1], x[2]
+                    # TODO CMK-3729, PEP-3109
+                    new_exception = x[0](x[1])
+                    new_exception.__traceback__ = x[2]  # type: ignore
+                    raise new_exception
 
             elif on_error == "warn":
                 section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
@@ -1324,7 +1327,10 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                         x = e.exc_info()
                         # re-raise the original exception to not destory the trace. This may raise a MKCounterWrapped
                         # exception which need to lead to a skipped check instead of a crash
-                        raise x[0], x[1], x[2]
+                        # TODO CMK-3729, PEP-3109
+                        new_exception = x[0](x[1])
+                        new_exception.__traceback__ = x[2]  # type: ignore
+                        raise new_exception
                     else:
                         raise
             except Exception as e:

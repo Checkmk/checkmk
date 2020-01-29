@@ -323,7 +323,10 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
             x = e.exc_info()
             # re-raise the original exception to not destory the trace. This may raise a MKCounterWrapped
             # exception which need to lead to a skipped check instead of a crash
-            raise x[0], x[1], x[2]
+            # TODO CMK-3729, PEP-3109
+            new_exception = x[0](x[1])
+            new_exception.__traceback__ = x[2]  # type: ignore
+            raise new_exception
 
         # TODO: Move this to a helper function
         if section_content is None:  # No data for this check type

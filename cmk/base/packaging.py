@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -34,6 +34,8 @@ if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
 else:
     from pathlib2 import Path  # pylint: disable=import-error
+
+import six
 
 from cmk.utils.log import VERBOSE
 import cmk.utils.paths
@@ -165,7 +167,7 @@ def show_package(name, show_info=False):
             info = tar.extractfile("info")
             if info is None:
                 raise PackageException("Failed to extract \"info\"")
-            package = parse_package_info(info.read())
+            package = parse_package_info(six.ensure_str(info.read()))
         else:
             this_package = read_package_info(name)
             if not this_package:

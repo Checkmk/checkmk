@@ -302,7 +302,7 @@ def rrd_datacolum(hostname, service_description, varname, cf):
 def predictions_dir(hostname, service_description, dsname):
     # type: (HostName, ServiceName, MetricName) -> str
     return os.path.join(cmk.utils.paths.var_dir, "prediction", hostname,
-                        cmk.utils.pnp_cleanup(service_description.encode("utf-8")),
+                        cmk.utils.pnp_cleanup(six.ensure_str(service_description)),
                         cmk.utils.pnp_cleanup(dsname))
 
 
@@ -363,7 +363,7 @@ def estimate_level_bounds(ref_value, stdev, sig, params, levels_factor):
             ref_value + (sig * warn * levels_factor),
             ref_value + (sig * crit * levels_factor),
         )
-    elif how == "relative":
+    if how == "relative":
         return (
             ref_value + sig * (ref_value * warn / 100.0),
             ref_value + sig * (ref_value * crit / 100.0),

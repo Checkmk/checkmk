@@ -16,7 +16,7 @@ from typing import cast, Any, BinaryIO, Dict, Iterable, List, NamedTuple, Option
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
 else:
-    from pathlib2 import Path
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
 import six  # pylint: disable=unused-import
 
@@ -415,7 +415,7 @@ def _get_package_info_from_package(file_object):
     package_info_file = tar.extractfile("info")
     if package_info_file is None:
         raise PackageException("Failed to open package info file")
-    return parse_package_info(package_info_file.read())
+    return parse_package_info(six.ensure_str(package_info_file.read()))
 
 
 def _validate_package_files(pacname, files):
@@ -458,17 +458,15 @@ def _verify_check_mk_version(package):
         min_branch = cmk.utils.misc.branch_of_daily_build(min_version)
         if min_branch == "master":
             return  # can not check exact version
-        else:
-            # use the branch name (e.g. 1.2.8 as min version)
-            min_version = min_branch
+        # use the branch name (e.g. 1.2.8 as min version)
+        min_version = min_branch
 
     if cmk.utils.misc.is_daily_build_version(cmk_version):
         branch = cmk.utils.misc.branch_of_daily_build(cmk_version)
         if branch == "master":
             return  # can not check exact version
-        else:
-            # use the branch name (e.g. 1.2.8 as min version)
-            cmk_version = branch
+        # use the branch name (e.g. 1.2.8 as min version)
+        cmk_version = branch
 
     compatible = True
     try:

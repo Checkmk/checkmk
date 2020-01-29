@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -34,6 +34,8 @@ if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
 else:
     from pathlib2 import Path  # pylint: disable=import-error
+
+import six
 
 from cmk.utils.log import VERBOSE
 import cmk.utils.tty as tty
@@ -128,7 +130,7 @@ def do_localize(args):
 
     alias = None  # type: Optional[Text]
     if len(args) > 2:
-        alias = args[2].decode("utf-8")
+        alias = six.ensure_text(args[2])
 
     commands = {
         "update": _localize_update,

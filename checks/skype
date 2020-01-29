@@ -333,7 +333,20 @@ check_info['skype.conferencing'] = {
 }
 
 
-def check_skype_sip_stack(item, params, parsed):
+def discover_skype_sip_stack(parsed):
+    return inventory_wmi_table_total(
+        parsed,
+        required_tables=[
+            "LS:SIP - Protocol",
+            "LS:USrv - DBStore",
+            "LS:SIP - Responses",
+            "LS:SIP - Load Management",
+            "LS:SIP - Peers",
+        ],
+    )
+
+
+def check_skype_sip_stack(_no_item, params, parsed):
     # LS:SIP - Protocol\SIP - Average Incoming Message Processing Time
     # LS:SIP - Protocol\SIP - Incoming Responses Dropped /Sec
     # LS:SIP - Protocol\SIP - Incoming Requests Dropped /Sec
@@ -348,28 +361,28 @@ def check_skype_sip_stack(item, params, parsed):
     # LS:SIP - Peers\SIP - Average Outgoing Queue Delay
     # LS:SIP - Peers(*)\SIP-Sends Timed-Out/sec
     yield wmi_yield_raw_average_timer(parsed.get("LS:SIP - Protocol"),
-                                      item,
+                                      None,
                                       "SIP - Average Incoming Message Processing Time",
                                       infoname="Avg incoming message processing time",
                                       perfvar="sip_message_processing_time",
                                       levels=params['message_processing_time'])
 
     yield wmi_yield_raw_persec(parsed.get("LS:SIP - Protocol"),
-                               item,
+                               None,
                                "SIP - Incoming Responses Dropped /Sec",
                                infoname="Incoming responses dropped/sec",
                                perfvar="sip_incoming_responses_dropped",
                                levels=params['incoming_responses_dropped'])
 
     yield wmi_yield_raw_persec(parsed.get("LS:SIP - Protocol"),
-                               item,
+                               None,
                                "SIP - Incoming Requests Dropped /Sec",
                                infoname="Incoming requests dropped/sec",
                                perfvar="sip_incoming_requests_dropped",
                                levels=params['incoming_requests_dropped'])
 
     yield wmi_yield_raw_average(parsed.get("LS:USrv - DBStore"),
-                                item,
+                                None,
                                 "USrv - Queue Latency (msec)",
                                 infoname="Queue latency",
                                 perfvar="usrv_queue_latency",
@@ -377,7 +390,7 @@ def check_skype_sip_stack(item, params, parsed):
                                 levels=params['queue_latency'])
 
     yield wmi_yield_raw_average(parsed.get("LS:USrv - DBStore"),
-                                item,
+                                None,
                                 "USrv - Sproc Latency (msec)",
                                 infoname="Sproc latency",
                                 perfvar="usrv_sproc_latency",
@@ -385,49 +398,49 @@ def check_skype_sip_stack(item, params, parsed):
                                 levels=params['sproc_latency'])
 
     yield wmi_yield_raw_persec(parsed.get("LS:USrv - DBStore"),
-                               item,
+                               None,
                                "USrv - Throttled requests/sec",
                                infoname="Throttled requests/sec",
                                perfvar="usrv_throttled_requests",
                                levels=params['throttled_requests'])
 
     yield wmi_yield_raw_persec(parsed.get("LS:SIP - Responses"),
-                               item,
+                               None,
                                "SIP - Local 503 Responses /Sec",
                                infoname="Local 503 responses/sec",
                                perfvar="sip_503_responses",
                                levels=params['local_503_responses'])
 
     yield wmi_yield_raw_counter(parsed.get("LS:SIP - Load Management"),
-                                item,
+                                None,
                                 "SIP - Incoming Messages Timed out",
                                 infoname="Incoming messages timed out",
                                 perfvar="sip_incoming_messages_timed_out",
                                 levels=params['timedout_incoming_messages'])
 
     yield wmi_yield_raw_average_timer(parsed.get("LS:SIP - Load Management"),
-                                      item,
+                                      None,
                                       "SIP - Average Holding Time For Incoming Messages",
                                       infoname="Avg holding time for incoming messages",
                                       perfvar="sip_avg_holding_time_incoming_messages",
                                       levels=params['holding_time_incoming'])
 
     yield wmi_yield_raw_counter(parsed.get("LS:SIP - Peers"),
-                                item,
+                                None,
                                 "SIP - Flow-controlled Connections",
                                 infoname="Flow-controlled connections",
                                 perfvar="sip_flow_controlled_connections",
                                 levels=params['flow_controlled_connections'])
 
     yield wmi_yield_raw_average_timer(parsed.get("LS:SIP - Peers"),
-                                      item,
+                                      None,
                                       "SIP - Average Outgoing Queue Delay",
                                       infoname="Avg outgoing queue delay",
                                       perfvar="sip_avg_outgoing_queue_delay",
                                       levels=params['outgoing_queue_delay'])
 
     yield wmi_yield_raw_persec(parsed.get("LS:SIP - Peers"),
-                               item,
+                               None,
                                "SIP - Sends Timed-Out /Sec",
                                infoname="Sends timed out/sec",
                                perfvar="sip_sends_timed_out",
@@ -435,7 +448,7 @@ def check_skype_sip_stack(item, params, parsed):
 
     if "LS:SIP - Authentication" in parsed:
         yield wmi_yield_raw_persec(parsed.get("LS:SIP - Authentication"),
-                                   item,
+                                   None,
                                    "SIP - Authentication System Errors /Sec",
                                    infoname="Authentication errors/sec",
                                    perfvar="sip_authentication_errors",
@@ -443,14 +456,7 @@ def check_skype_sip_stack(item, params, parsed):
 
 
 check_info['skype.sip_stack'] = {
-    'inventory_function': lambda parsed: inventory_wmi_table(parsed,
-                                                             required_tables=[
-                                                                 "LS:SIP - Protocol",
-                                                                 "LS:USrv - DBStore",
-                                                                 "LS:SIP - Responses",
-                                                                 "LS:SIP - Load Management",
-                                                                 "LS:SIP - Peers",
-                                                             ]),
+    'inventory_function': discover_skype_sip_stack,
     'check_function': check_skype_sip_stack,
     'has_perfdata': True,
     'service_description': "Skype SIP Stack",

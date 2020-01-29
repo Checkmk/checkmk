@@ -474,9 +474,6 @@ def wmi_calculate_raw_average(table, row, column, factor):
 
 
 def wmi_calculate_raw_average_time(table, row, column):
-    if row == "":
-        row = 0
-
     measure = int(table.get(row, column))
     base = int(table.get(row, column + "_Base"))
 

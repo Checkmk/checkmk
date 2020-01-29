@@ -32,6 +32,7 @@ import six
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.utils as utils
+import cmk.gui.escaping as escaping
 from cmk.gui.table import table_element
 import cmk.gui.weblib as weblib
 import cmk.gui.forms as forms
@@ -302,7 +303,7 @@ class ModeFolder(WatoMode):
             self._show_subfolder_buttons(subfolder)
             html.close_div()  # hoverarea
         else:
-            html.icon(html.strip_tags(subfolder.reason_why_may_not("read")),
+            html.icon(escaping.strip_tags(subfolder.reason_why_may_not("read")),
                       "autherr",
                       class_=["autherr"])
             html.div('', class_="hoverarea")
@@ -551,7 +552,7 @@ class ModeFolder(WatoMode):
                 else:
                     tdclass, tdcontent = attr.paint(effective.get(attrname), hostname)
                     tdclass += " inherited"
-                table.cell(attr.title(), html.attrencode(tdcontent), css=tdclass)
+                table.cell(attr.title(), escaping.escape_attribute(tdcontent), css=tdclass)
 
         # Am I authorized?
         reason = host.reason_why_may_not("read")
@@ -560,7 +561,7 @@ class ModeFolder(WatoMode):
             title = _("You have permission to this host.")
         else:
             icon = "autherr"
-            title = html.strip_tags(reason)
+            title = escaping.strip_tags(reason)
 
         table.cell(_('Auth'), html.render_icon(icon, title), css="buttons", sortable=False)
 

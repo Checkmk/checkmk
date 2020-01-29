@@ -34,10 +34,10 @@ import cmk.utils.defines
 
 import cmk.gui.sites
 import cmk.gui.config as config
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import html
 
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.sites import SiteManagementFactory
@@ -195,7 +195,7 @@ class ACTest(object):
             logger.exception("error executing configuration test %s", self.__class__.__name__)
             result = ACResultCRIT(
                 "<pre>%s</pre>" % _("Failed to execute the test %s: %s") %
-                (html.attrencode(self.__class__.__name__), traceback.format_exc()))
+                (escaping.escape_attribute(self.__class__.__name__), traceback.format_exc()))
             result.from_test(self)
             yield result
 

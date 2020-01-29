@@ -36,6 +36,7 @@ import cmk
 import cmk.utils.paths
 
 import cmk.gui.i18n
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 import cmk.gui.utils as utils
@@ -573,8 +574,9 @@ class SidebarRenderer(object):
                 html.write_text(msg['text'].replace('\n', '<br>\n'))
                 html.close_div()
             if 'gui_popup' in msg['methods']:
-                html.javascript('alert(\'%s\'); cmk.sidebar.mark_message_read("%s")' %
-                                (html.attrencode(msg['text']).replace('\n', '\\n'), msg['id']))
+                html.javascript(
+                    'alert(\'%s\'); cmk.sidebar.mark_message_read("%s")' %
+                    (escaping.escape_attribute(msg['text']).replace('\n', '\\n'), msg['id']))
 
 
 @cmk.gui.pages.register("side")

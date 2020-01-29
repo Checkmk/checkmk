@@ -30,6 +30,7 @@ import abc
 
 import cmk
 import cmk.gui.config as config
+import cmk.gui.escaping as escaping
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 from cmk.gui.valuespec import Checkbox, Transform
@@ -155,7 +156,7 @@ class GlobalSettingsMode(WatoMode):
                     title_text,
                     href=edit_url,
                     class_="modified" if varname in self._current_settings else None,
-                    title=html.strip_tags(help_text))
+                    title=escaping.strip_tags(help_text))
 
                 if varname in self._current_settings:
                     value = self._current_settings[varname]

@@ -31,6 +31,7 @@ import pprint
 
 import cmk
 import cmk.utils.store as store
+import cmk.gui.escaping as escaping
 
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -513,7 +514,7 @@ class ModeBI(WatoMode, BIManagement):
     def title(self):
         title = _("Business Intelligence")
         if self._pack:
-            title += " - " + html.attrencode(self._pack["title"])
+            title += " - " + escaping.escape_attribute(self._pack["title"])
         return title
 
     def buttons(self):
@@ -1839,7 +1840,8 @@ class ModeBIEditRule(ModeBI):
     def title(self):
         if self._new:
             return ModeBI.title(self) + " - " + _("Create New Rule")
-        return ModeBI.title(self) + " - " + _("Edit Rule") + " " + html.attrencode(self._ruleid)
+        return ModeBI.title(self) + " - " + _("Edit Rule") + " " + escaping.escape_attribute(
+            self._ruleid)
 
     def buttons(self):
         html.context_button(_("Abort"), html.makeuri([("mode", "bi_rules")]), "abort")

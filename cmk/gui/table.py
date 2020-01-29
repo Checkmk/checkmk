@@ -31,6 +31,7 @@ import six
 
 import cmk.gui.utils as utils
 import cmk.gui.config as config
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -138,7 +139,7 @@ class Table(object):
                   sortable=True,
                   escape_text=False):
         if escape_text:
-            text = html.permissive_attrencode(text)
+            text = escaping.escape_text(text)
         else:
             if isinstance(text, HTML):
                 text = "%s" % text
@@ -396,14 +397,15 @@ class Table(object):
         # If we have no group headers then paint the headers now
         if not omit_headers and self.rows and self.rows[0][2] != "header":
             html.write(
-                csv_separator.join(
-                    [html.strip_tags(header) or ""
-                     for (header, _css, _help, _sortable) in headers]) + "\n")
+                csv_separator.join([
+                    escaping.strip_tags(header) or ""
+                    for (header, _css, _help, _sortable) in headers
+                ]) + "\n")
 
         for row_spec, _css, _state, _fixed, _attrs in rows:
             html.write(
                 csv_separator.join([
-                    html.strip_tags(cell_content)
+                    escaping.strip_tags(cell_content)
                     for cell_content, _css_classes, _colspan in row_spec
                 ]))
             html.write("\n")
@@ -423,7 +425,8 @@ class Table(object):
             text = header
 
             if help_txt:
-                header = '<span title="%s">%s</span>' % (html.attrencode(help_txt), header)
+                header = '<span title="%s">%s</span>' % (escaping.escape_attribute(help_txt),
+                                                         header)
 
             css_class = "header_%s" % css if css else None
 
@@ -505,7 +508,7 @@ def _sort_rows(rows, sort_col, sort_reverse):
     # sorting. This gives the user the chance to change the sorting and
     # see the table in the first place.
     try:
-        rows.sort(key=lambda x: utils.key_num_split(html.strip_tags(x[0][sort_col][0])),
+        rows.sort(key=lambda x: utils.key_num_split(escaping.strip_tags(x[0][sort_col][0])),
                   reverse=sort_reverse == 1)
     except IndexError:
         pass

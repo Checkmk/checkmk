@@ -72,6 +72,7 @@ import cmk.utils.store as store
 
 import cmk.gui.config as config
 import cmk.gui.log as log
+import cmk.gui.escaping as escaping
 from cmk.gui.valuespec import (
     FixedValue,
     Dictionary,
@@ -91,7 +92,6 @@ from cmk.gui.valuespec import (
     Password,
 )
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKUserError, RequestTimeout
 from cmk.gui.plugins.userdb.utils import (
     UserConnector,
@@ -644,8 +644,9 @@ class LDAPUserConnector(UserConnector):
                 raise MKLDAPException(
                     _('Unable to successfully perform the LDAP search '
                       '(Base: %s, Scope: %s, Filter: %s, Columns: %s): %s') %
-                    (html.attrencode(base), html.attrencode(scope), html.attrencode(filt),
-                     html.attrencode(','.join(columns)), last_exc))
+                    (escaping.escape_attribute(base), escaping.escape_attribute(scope),
+                     escaping.escape_attribute(filt), escaping.escape_attribute(
+                         ','.join(columns)), last_exc))
             else:
                 raise MKLDAPException(
                     _('Unable to successfully perform the LDAP search (%s)') % last_exc)

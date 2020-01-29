@@ -49,6 +49,7 @@ import cmk.utils.render
 import cmk.utils.regex
 
 import cmk.gui.config as config
+import cmk.gui.escaping as escaping
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 import cmk.gui.forms as forms
@@ -1880,7 +1881,7 @@ class Cell(object):
         if content and self.has_tooltip():
             tooltip_cell = Cell(self._view, (self.tooltip_painter_name(), None))
             _tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row)
-            tooltip_text = html.strip_tags(tooltip_content)
+            tooltip_text = escaping.strip_tags(tooltip_content)
             if tooltip_text:
                 content = '<span title="%s">%s</span>' % (tooltip_text, content)
 
@@ -1917,11 +1918,11 @@ class Cell(object):
                     txt = img_filename
 
             if isinstance(txt, HTML):
-                txt = html.strip_tags("%s" % txt)
+                txt = escaping.strip_tags("%s" % txt)
 
             elif not isinstance(txt, tuple):
-                txt = html.escaper.unescape_attributes(txt)
-                txt = html.strip_tags(txt)
+                txt = escaping.unescape_attributes(txt)
+                txt = escaping.strip_tags(txt)
 
             return css_classes, txt
         except Exception:

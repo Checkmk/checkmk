@@ -34,10 +34,12 @@ import traceback
 import json
 from typing import Dict, Text, Optional  # pylint: disable=unused-import
 import six
+
 import livestatus
 
 import cmk.gui.pages
 import cmk.gui.i18n
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -94,7 +96,7 @@ def show_crash_dump_message(crash, plain_text, fail_silently):
 
     if plain_text:
         html.set_output_format("text")
-        html.write("%s\n" % html.strip_tags(message))
+        html.write("%s\n" % escaping.strip_tags(message))
         return
 
     if fail_silently:
@@ -366,7 +368,7 @@ class PageCrash(ABCCrashReportPage):
         _crash_row(_("Python Version"), info.get("python_version", _("Unknown")), False)
 
         joined_paths = "<br>".join(
-            [html.attrencode(p) for p in info.get("python_paths", [_("Unknown")])])
+            [escaping.escape_attribute(p) for p in info.get("python_paths", [_("Unknown")])])
         _crash_row(_("Python Module Paths"), joined_paths, odd=False)
 
         html.close_table()
@@ -553,7 +555,7 @@ def format_params(params):
 def _show_output_box(title, content):
     html.h3(title)
     html.open_div(class_="log_output")
-    html.write(html.attrencode(content).replace("\n", "<br>").replace(' ', '&nbsp;'))
+    html.write(escaping.escape_attribute(content).replace("\n", "<br>").replace(' ', '&nbsp;'))
     html.close_div()
 
 

@@ -50,6 +50,7 @@ import cmk.gui.pages
 import cmk.gui.i18n
 import cmk.gui.utils
 import cmk.gui.view_utils
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
 from cmk.gui.htmllib import HTML
@@ -1507,7 +1508,8 @@ def check_title_uniqueness(forest):
                     _("Duplicate BI aggregation with the title \"<b>%s</b>\". "
                       "Please check your BI configuration and make sure that within each group no aggregation has "
                       "the same title as any other. Note: you can use arguments in the top level "
-                      "aggregation rule, like <tt>Host $HOST$</tt>.") % (html.attrencode(title)))
+                      "aggregation rule, like <tt>Host $HOST$</tt>.") %
+                    (escaping.escape_attribute(title)))
             else:
                 known_titles.add(title)
 
@@ -1521,7 +1523,7 @@ def check_aggregation_title_uniqueness(aggregations):
                      "Please check your BI configuration and make sure that within each group no aggregation has "
                      "the same title as any other. Note: you can use arguments in the top level "
                      "aggregation rule, like <tt>Host $HOST$</tt>.") % \
-                     (html.attrencode(title)))
+                     (escaping.escape_attribute(title)))
         else:
             known_titles.add(title)
 
@@ -2709,7 +2711,7 @@ def compute_output_message(effective_state, rule):
 
     str_state = str(effective_state["state"])
     if str_state in rule.get("state_messages", {}):
-        output.append(html.attrencode(rule["state_messages"][str_state]))
+        output.append(escaping.escape_attribute(rule["state_messages"][str_state]))
     return ", ".join(output)
 
 

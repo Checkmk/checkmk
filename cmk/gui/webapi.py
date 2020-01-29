@@ -36,6 +36,7 @@ import cmk
 import cmk.utils.store as store
 
 import cmk.gui.pages
+import cmk.gui.escaping as escaping
 from cmk.gui.log import logger
 import cmk.gui.utils as utils
 import cmk.gui.config as config
@@ -173,7 +174,7 @@ def _get_api_call():
         api_call = cls().get_api_calls().get(action)
         if api_call:
             return api_call
-    raise MKUserError(None, "Unknown API action %s" % html.attrencode(action))
+    raise MKUserError(None, "Unknown API action %s" % escaping.escape_attribute(action))
 
 
 def _check_permissions(api_call):

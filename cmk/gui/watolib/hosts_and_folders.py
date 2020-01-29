@@ -37,6 +37,7 @@ import cmk.utils.store as store
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.hooks as hooks
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import (
     MKGeneralException,
@@ -223,7 +224,7 @@ class BaseFolder(WithPermissionsAndAttributes):
         def render_component(folder):
             return '<a href="%s">%s</a>' % \
                 (uri_func([ ("folder", folder.path())] + keepvars),
-                 html.attrencode(folder.title()))
+                 escaping.escape_attribute(folder.title()))
 
         def breadcrump_element_start(end='', z_index=0):
             html.open_li(style="z-index:%d;" % z_index)
@@ -241,7 +242,7 @@ class BaseFolder(WithPermissionsAndAttributes):
         if link_to_folder:
             parts.append(render_component(self))
         else:
-            parts.append(html.attrencode(self.title()))
+            parts.append(escaping.escape_attribute(self.title()))
 
         # Render the folder path
         html.open_div(class_=["folderpath"])
@@ -1012,9 +1013,9 @@ class CREFolder(BaseFolder):
                 title_prefix = (u"\u00a0" * 6 * current_depth) + u"\u2514\u2500 "
             else:
                 title_prefix = ""
-            title = HTML(title_prefix + html.attrencode(self.title()))
+            title = HTML(title_prefix + escaping.escape_attribute(self.title()))
         else:
-            title = HTML(html.attrencode("/".join(self.title_path_without_root())))
+            title = HTML(escaping.escape_attribute("/".join(self.title_path_without_root())))
 
         sel = [(self.path(), title)]
 

@@ -42,11 +42,10 @@ import cmk.utils
 import cmk.utils.store as store
 
 import cmk.gui.utils
-import cmk.gui.config as config
+from cmk.gui import config, escaping
 from cmk.gui.config import SiteId, SiteConfiguration  # pylint: disable=unused-import
 from cmk.gui.i18n import _
 from cmk.gui.htmllib import HTML
-from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
 
 import cmk.gui.watolib.git
@@ -59,12 +58,6 @@ audit_log_path = Path(var_dir, "log", "audit.log")
 
 
 def log_entry(linkinfo, action, message, user_id=None):
-    # Using attrencode here is against our regular rule to do the escaping
-    # at the last possible time: When rendering. But this here is the last
-    # place where we can distinguish between HTML() encapsulated (already)
-    # escaped / allowed HTML and strings to be escaped.
-    message = html.attrencode(message).strip()
-
     # TODO: Create a more generic referencing
     # linkinfo identifies the object operated on. It can be a Host or a Folder
     # or a text.
@@ -94,8 +87,13 @@ def log_entry(linkinfo, action, message, user_id=None):
 def log_audit(linkinfo, action, message, user_id=None):
     if config.wato_use_git:
         if isinstance(message, HTML):
-            message = html.strip_tags(message.value)
+            message = escaping.strip_tags(message.value)
         cmk.gui.watolib.git.add_message(message)
+    # Using escape_attribute here is against our regular rule to do the escaping
+    # at the last possible time: When rendering. But this here is the last
+    # place where we can distinguish between HTML() encapsulated (already)
+    # escaped / allowed HTML and strings to be escaped.
+    message = escaping.escape_attribute(message).strip()
     log_entry(linkinfo, action, message, user_id)
 
 
@@ -158,7 +156,7 @@ class ActivateChangesWriter(object):
         # at the last possible time: When rendering. But this here is the last
         # place where we can distinguish between HTML() encapsulated (already)
         # escaped / allowed HTML and strings to be escaped.
-        text = html.attrencode(text)
+        text = escaping.escape_attribute(text)
 
         SiteChanges(site_id).save_change({
             "id": change_id,

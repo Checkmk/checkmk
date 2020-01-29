@@ -40,7 +40,7 @@
 #
 # - Fix names of message() show_error() show_warning()
 #
-# - change naming of html.attrencode() to html.render()
+# - change naming of escaping.escape_attribute() to html.render()
 #
 # - General rules:
 # 1. values of type str that are passed as arguments or
@@ -69,7 +69,6 @@ import abc
 import pprint
 from contextlib import contextmanager
 # suppress missing import error from mypy
-from html import escape as html_escape  # type: ignore
 from typing import (  # pylint: disable=unused-import
     Union, Text, Optional,
 )
@@ -103,72 +102,11 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.encoding import ensure_unicode
 from cmk.gui.exceptions import MKUserError, RequestTimeout
 
+import cmk.gui.escaping as escaping
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.log as log
 from cmk.gui.i18n import _
-
-#.
-#   .--Escaper-------------------------------------------------------------.
-#   |                 _____                                                |
-#   |                | ____|___  ___ __ _ _ __   ___ _ __                  |
-#   |                |  _| / __|/ __/ _` | '_ \ / _ \ '__|                 |
-#   |                | |___\__ \ (_| (_| | |_) |  __/ |                    |
-#   |                |_____|___/\___\__,_| .__/ \___|_|                    |
-#   |                                    |_|                               |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------
-
-
-class Escaper(object):
-    def __init__(self):
-        super(Escaper, self).__init__()
-        self._unescaper_text = re.compile(
-            r'&lt;(/?)(h1|h2|b|tt|i|u|br(?: /)?|nobr(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
-        self._quote = re.compile(r"(?:&quot;|&#x27;)")
-        self._a_href = re.compile(r'&lt;a href=((?:&quot;|&#x27;).*?(?:&quot;|&#x27;))&gt;')
-
-    # Encode HTML attributes. Replace HTML syntax with HTML text.
-    # For example: replace '"' with '&quot;', '<' with '&lt;'.
-    # This code is slow. Works on str and unicode without changing
-    # the type. Also works on things that can be converted with '%s'.
-    def escape_attribute(self, value):
-        attr_type = type(value)
-        if value is None:
-            return ''
-        elif attr_type == int:
-            return str(value)
-        elif isinstance(value, HTML):
-            return "%s" % value  # This is HTML code which must not be escaped
-        elif not isinstance(attr_type, six.string_types):  # also possible: type Exception!
-            value = "%s" % value  # Note: this allows Unicode. value might not have type str now
-        return html_escape(value, quote=True)
-
-    def unescape_attributes(self, value):
-        # In python3 use html.unescape
-        return value.replace("&amp;", "&")\
-                    .replace("&quot;", "\"")\
-                    .replace("&lt;", "<")\
-                    .replace("&gt;", ">")
-
-    # render HTML text.
-    # We only strip od some tags and allow some simple tags
-    # such as <h1>, <b> or <i> to be part of the string.
-    # This is useful for messages where we want to keep formatting
-    # options. (Formerly known as 'permissive_attrencode') """
-    # for the escaping functions
-    def escape_text(self, text):
-        if isinstance(text, HTML):
-            return "%s" % text  # This is HTML code which must not be escaped
-
-        text = self.escape_attribute(text)
-        text = self._unescaper_text.sub(r'<\1\2>', text)
-        for a_href in self._a_href.finditer(text):
-            text = text.replace(a_href.group(0),
-                                "<a href=%s>" % self._quote.sub("\"", a_href.group(1)))
-        return text.replace("&amp;nbsp;", "&nbsp;")
-
 
 #.
 #   .--Encoding------------------------------------------------------------.
@@ -240,7 +178,7 @@ class Encoder(object):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 #   | This is a simple class which wraps a unicode string provided by      |
-#   | the caller to make html.attrencode() know that this string should    |
+#   | the caller to make escaping.escape_attribute() know that this string should    |
 #   | not be escaped.                                                      |
 #   |                                                                      |
 #   | This way we can implement encodings while still allowing HTML code.  |
@@ -264,6 +202,9 @@ class HTML(object):
         if not isinstance(value, six.string_types):
             value = six.text_type(value)
         return ensure_unicode(value)
+
+    def __html__(self):
+        return "%s" % self
 
     def __bytebatzen__(self):
         return self.value.encode("utf-8")
@@ -499,10 +440,6 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, OutputFunnel)):
     # Of course all shortcut tags can be used as well.
     _tag_names.update(_shortcut_tags)
 
-    def __init__(self):
-        super(ABCHTMLGenerator, self).__init__()
-        self.escaper = Escaper()
-
     #
     # Rendering
     #
@@ -533,14 +470,14 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, OutputFunnel)):
             if v is None:
                 continue
 
-            k = self.escaper.escape_attribute(k.rstrip('_'))
+            k = escaping.escape_attribute(k.rstrip('_'))
 
             if v == '':
                 options.append(k)
                 continue
 
             if not isinstance(v, list):
-                v = self.escaper.escape_attribute(v)
+                v = escaping.escape_attribute(v)
             else:
                 if k == "class":
                     sep = ' '
@@ -549,7 +486,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, OutputFunnel)):
                 else:
                     sep = '_'
 
-                v = sep.join([a for a in (self.escaper.escape_attribute(vi) for vi in v) if a])
+                v = sep.join([a for a in (escaping.escape_attribute(vi) for vi in v) if a])
 
                 if sep.startswith(';'):
                     v = re.sub(';+', ';', v)
@@ -576,7 +513,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, OutputFunnel)):
         if not tag_content:
             tag_content = ""
         elif not isinstance(tag_content, HTML):
-            tag_content = self.escaper.escape_text(tag_content)
+            tag_content = escaping.escape_text(tag_content)
 
         return HTML("%s%s</%s>" % (open_tag, tag_content, tag_name))
 
@@ -621,7 +558,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, OutputFunnel)):
     #
 
     def render_text(self, text):
-        return HTML(self.escaper.escape_text(text))
+        return HTML(escaping.escape_text(text))
 
     def write_text(self, text):
         """ Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped. """
@@ -1305,53 +1242,6 @@ class html(ABCHTMLGenerator):
         return self.encoder.urlencode(value)
 
     #
-    # escaping - deprecated functions
-    #
-    # Encode HTML attributes: e.g. replace '"' with '&quot;', '<' and '>' with '&lt;' and '&gt;'
-    # TODO: Cleanup all call sites to self.escaper.*
-    def attrencode(self, value):
-        return self.escaper.escape_attribute(value)
-
-    # Only strip off some tags. We allow some simple tags like <b> or <tt>.
-    # TODO: Cleanup all call sites to self.escaper.*
-    def permissive_attrencode(self, obj):
-        return self.escaper.escape_text(obj)
-
-    #
-    # Stripping
-    #
-
-    # remove all HTML-tags
-    def strip_tags(self, ht):
-
-        if isinstance(ht, HTML):
-            ht = "%s" % ht
-
-        if not isinstance(ht, six.string_types):
-            return ht
-
-        while True:
-            x = ht.find('<')
-            if x == -1:
-                break
-            y = ht.find('>', x)
-            if y == -1:
-                break
-            ht = ht[0:x] + ht[y + 1:]
-        return ht.replace("&nbsp;", " ")
-
-    def strip_scripts(self, ht):
-        while True:
-            x = ht.find('<script')
-            if x == -1:
-                break
-            y = ht.find('</script>')
-            if y == -1:
-                break
-            ht = ht[0:x] + ht[y + 9:]
-        return ht
-
-    #
     # Timeout handling
     #
 
@@ -1494,7 +1384,7 @@ class html(ABCHTMLGenerator):
             if self.mobile:
                 code += self.render_center(code)
         else:
-            code += self.render_text('%s: %s\n' % (prefix, self.strip_tags(msg)))
+            code += self.render_text('%s: %s\n' % (prefix, escaping.strip_tags(msg)))
 
         return code
 
@@ -1767,7 +1657,7 @@ class html(ABCHTMLGenerator):
         # HTML() is needed here to prevent a double escape when we do  self._escape_attribute
         # here and self.a() escapes the content (with permissive escaping) again. We don't want
         # to handle "title" permissive.
-        title = HTML(self.escaper.escape_attribute(title))
+        title = HTML(escaping.escape_attribute(title))
         self.a(title,
                href="#",
                onfocus="if (this.blur) this.blur();",
@@ -2626,7 +2516,7 @@ class html(ABCHTMLGenerator):
                         bestof=None,
                         hover_title=None,
                         class_=None):
-        title = self.attrencode(title)
+        title = escaping.escape_attribute(title)
         display = "block"
         if bestof:
             counts = config.user.button_counts

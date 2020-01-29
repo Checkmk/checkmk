@@ -36,7 +36,7 @@ from cmk.gui.plugins.views.utils import (
     command_registry,
     data_source_registry,
 )
-
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -195,7 +195,7 @@ def page_login():
     # Keep information about original target URL
     default_origtarget = "index.py" if html.myfile in ["login", "logout"] else html.makeuri([])
     origtarget = html.get_url_input("_origtarget", default_origtarget)
-    html.hidden_field('_origtarget', html.attrencode(origtarget))
+    html.hidden_field('_origtarget', escaping.escape_attribute(origtarget))
 
     html.text_input("_username", label=_("Username:"), autocomplete="username")
     html.password_input("_password",
@@ -305,7 +305,7 @@ def page_view():
         logger.exception("error showing mobile view")
         if config.debug:
             raise
-        html.write("ERROR showing view: %s" % html.attrencode(e))
+        html.write("ERROR showing view: %s" % escaping.escape_attribute(e))
 
     mobile_html_foot()
 

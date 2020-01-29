@@ -80,6 +80,7 @@ import cmk.utils.defines as defines
 
 import cmk.gui.forms as forms
 import cmk.gui.utils as utils
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.pages import page_registry, Page, AjaxPage
 from cmk.gui.globals import html
@@ -572,7 +573,7 @@ class TextAscii(ValueSpec):
             return self._empty_text
 
         if self._attrencode:
-            return html.attrencode(value)
+            return escaping.escape_attribute(value)
         return value
 
     def from_html_vars(self, varprefix):
@@ -1356,7 +1357,7 @@ class TextAreaUnicode(TextUnicode):
         if self._monospaced:
             # TODO: This is a workaround for a bug. This function needs to return str objects right now.
             return "%s" % html.render_pre(HTML(value), class_="ve_textarea")
-        return html.attrencode(value).replace("\n", "<br>")
+        return escaping.escape_attribute(value).replace("\n", "<br>")
 
     def render_input(self, varprefix, value):
         if value is None:
@@ -2335,9 +2336,10 @@ class DropdownChoice(ValueSpec):
             val, title = entry[:2]
             if value == val:
                 if self._help_separator:
-                    return html.attrencode(title.split(self._help_separator, 1)[0].strip())
-                return html.attrencode(title)
-        return html.attrencode(self._get_invalid_choice_title(value))
+                    return escaping.escape_attribute(
+                        title.split(self._help_separator, 1)[0].strip())
+                return escaping.escape_attribute(title)
+        return escaping.escape_attribute(self._get_invalid_choice_title(value))
 
     def from_html_vars(self, varprefix):
         choices = self.choices()
@@ -4039,7 +4041,7 @@ class Alternative(ValueSpec):
                 output = "%s<br>" % vs.title()
             return output + vs.value_to_text(value)
         else:
-            return _("invalid:") + " " + html.attrencode(str(value))
+            return _("invalid:") + " " + escaping.escape_attribute(str(value))
 
     def from_html_vars(self, varprefix):
         nr = int(html.request.var(varprefix + "_use"))
@@ -4563,7 +4565,7 @@ class ElementSelection(ValueSpec):
 
     def value_to_text(self, value):
         self.load_elements()
-        return html.attrencode(self._elements.get(value, value))
+        return escaping.escape_attribute(self._elements.get(value, value))
 
     def from_html_vars(self, varprefix):
         return html.request.var(varprefix)
@@ -5621,4 +5623,4 @@ def _type_name(v):
     try:
         return type(v).__name__
     except Exception:
-        return html.attrencode(type(v))
+        return escaping.escape_attribute(type(v))

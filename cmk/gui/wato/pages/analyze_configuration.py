@@ -39,6 +39,7 @@ import cmk.utils.store as store
 
 import cmk.gui.watolib as watolib
 import cmk.gui.config as config
+import cmk.gui.escaping as escaping
 from cmk.gui.table import table_element
 import cmk.gui.log as log
 from cmk.gui.exceptions import MKUserError, MKGeneralException
@@ -243,7 +244,7 @@ class ModeAnalyzeConfig(WatoMode):
                     continue
 
                 html.open_tr()
-                html.td(html.attrencode(site_id))
+                html.td(escaping.escape_attribute(site_id))
                 html.td("%s: %s" % (result.status_name(), result.text))
                 html.close_tr()
             html.close_table()

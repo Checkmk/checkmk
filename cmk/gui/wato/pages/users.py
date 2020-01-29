@@ -35,6 +35,7 @@ import cmk.utils.render as render
 import cmk.gui.userdb as userdb
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
+import cmk.gui.escaping as escaping
 from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 import cmk.gui.background_job as background_job
@@ -392,7 +393,7 @@ class ModeUsers(WatoMode):
                 # the visible custom attributes
                 for name, attr in visible_custom_attrs:
                     vs = attr.valuespec()
-                    table.cell(html.attrencode(_u(vs.title())))
+                    table.cell(escaping.escape_attribute(_u(vs.title())))
                     html.write(vs.value_to_text(user.get(name, vs.default_value())))
 
         html.button("_bulk_delete_users", _("Bulk Delete"), "submit", style="margin-top:10px")

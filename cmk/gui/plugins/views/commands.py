@@ -31,6 +31,7 @@ import cmk.gui.config as config
 import cmk.gui.utils as utils
 import cmk.gui.bi as bi
 import cmk.gui.sites as sites
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
@@ -528,8 +529,8 @@ class CommandFakeCheckResult(Command):
             if statename:
                 pluginoutput = html.get_unicode_input("_fake_output").strip()
                 if not pluginoutput:
-                    pluginoutput = _("Manually set to %s by %s") % (html.attrencode(statename),
-                                                                    config.user.id)
+                    pluginoutput = _("Manually set to %s by %s") % (
+                        escaping.escape_attribute(statename), config.user.id)
                 perfdata = html.request.var("_fake_perfdata")
                 if perfdata:
                     pluginoutput += "|" + perfdata
@@ -537,8 +538,8 @@ class CommandFakeCheckResult(Command):
                     cmdtag = "SERVICE"
                 command = "PROCESS_%s_CHECK_RESULT;%s;%s;%s" % (cmdtag, spec, s,
                                                                 livestatus.lqencode(pluginoutput))
-                title = _("<b>manually set check results to %s</b> for") % html.attrencode(
-                    statename)
+                title = _("<b>manually set check results to %s</b> for"
+                         ) % escaping.escape_attribute(statename)
                 return command, title
 
 

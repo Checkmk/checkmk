@@ -28,6 +28,7 @@ import re
 import json
 import six
 
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -51,7 +52,7 @@ def format_plugin_output(output, row=None, shall_escape=True):
             shall_escape = custom_vars["ESCAPE_PLUGIN_OUTPUT"] == "1"
 
     if shall_escape:
-        output = html.attrencode(output)
+        output = escaping.escape_attribute(output)
 
     output = output.replace("(!)", warn_marker) \
               .replace("(!!)", crit_marker) \

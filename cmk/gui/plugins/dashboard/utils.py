@@ -37,6 +37,7 @@ import six
 import cmk.utils.plugin_registry
 from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
 
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 import cmk.gui.config as config
@@ -597,7 +598,7 @@ def _transform_builtin_dashboards():
                 raise MKGeneralException(
                     _('Unable to transform dashlet %d of dashboard %s. '
                       'You will need to migrate it on your own. Definition: %r') %
-                    (nr, name, html.attrencode(dashlet)))
+                    (nr, name, escaping.escape_attribute(dashlet)))
 
             dashlet.setdefault('context', {})
             dashlet.setdefault('single_infos', [])

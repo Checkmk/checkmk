@@ -28,6 +28,7 @@ import json
 import time
 import six
 
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.plugins.views import (
@@ -87,7 +88,7 @@ class LayoutPython(Layout):
             for cell in cells:
                 joined_row = join_row(row, cell)
                 _tdclass, content = cell.render_content(joined_row)
-                html.write(repr(html.strip_tags(content)))
+                html.write(repr(escaping.strip_tags(content)))
                 html.write_text(",")
             html.write_text("],")
         html.write_text("\n]\n")
@@ -99,7 +100,7 @@ class JSONLayout(Layout):
 
         header_row = []
         for cell in cells:
-            header_row.append(html.strip_tags(cell.export_title()))
+            header_row.append(escaping.strip_tags(cell.export_title()))
         painted_rows.append(header_row)
 
         for row in rows:
@@ -117,7 +118,7 @@ class JSONLayout(Layout):
                         content = content.encode("utf-8")
                     else:
                         content = "%s" % content
-                    content = html.strip_tags(content.replace("<br>", "\n"))
+                    content = escaping.strip_tags(content.replace("<br>", "\n"))
 
                 painted_row.append(content)
 
@@ -226,7 +227,7 @@ class CSVLayout(Layout):
     def _format_for_csv(self, raw_data):
         # raw_data can also be int, float
         content = "%s" % raw_data
-        stripped = html.strip_tags(content).replace('\n', '').replace('"', '""')
+        stripped = escaping.strip_tags(content).replace('\n', '').replace('"', '""')
         return stripped.encode("utf-8")
 
 

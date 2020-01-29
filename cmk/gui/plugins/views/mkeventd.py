@@ -25,8 +25,10 @@
 # Boston, MA 02110-1301 USA.
 
 import six
+
 from cmk.utils.defines import short_service_state_name
 
+import cmk.gui.escaping as escaping
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 
@@ -362,7 +364,7 @@ class PainterEventText(Painter):
         return ['event_text']
 
     def render(self, row, cell):
-        return ("", html.attrencode(row["event_text"]).replace("\x01", "<br>"))
+        return "", escaping.escape_attribute(row["event_text"]).replace("\x01", "<br>")
 
 
 @painter_registry.register

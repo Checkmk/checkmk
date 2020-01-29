@@ -35,6 +35,7 @@ import cmk.utils.plugin_registry
 
 import cmk.gui.pages
 import cmk.gui.config as config
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _, _u
 from cmk.gui.globals import html
 from cmk.gui.permissions import (
@@ -274,7 +275,7 @@ def write_snapin_exception(e):
 
 
 def heading(text):
-    html.write("<h3>%s</h3>\n" % html.attrencode(text))
+    html.write("<h3>%s</h3>\n" % escaping.escape_attribute(text))
 
 
 # TODO: Better change to context manager?

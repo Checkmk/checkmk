@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import cmk.gui.escaping as escaping
 import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.utils as utils
@@ -43,7 +44,8 @@ def page_index():
     <frame src="%s" name="main" noresize>
 </frameset>
 </html>
-""" % (html.attrencode(config.get_page_heading()), html.attrencode(_get_start_url())))
+""" % (escaping.escape_attribute(
+        config.get_page_heading()), escaping.escape_attribute(_get_start_url())))
 
 
 def _get_start_url():

@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import cmk.gui.config as config
+import cmk.gui.escaping as escaping
 import cmk.gui.metrics as metrics
 from cmk.gui.i18n import _
 
@@ -273,7 +274,7 @@ class PainterPerfometer(Painter):
             disabled = True
 
         return " ".join(classes), \
-            html.render_a(content=content, href=url, title=html.strip_tags(title),
+            html.render_a(content=content, href=url, title=escaping.strip_tags(title),
                           class_=["disabled" if disabled else None])
 
 

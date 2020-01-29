@@ -46,6 +46,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.config as config
 import cmk.gui.multitar as multitar
 import cmk.gui.log as log
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
 from cmk.gui.log import logger
@@ -934,7 +935,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         for domain, warnings in sorted(configuration_warnings.items()):
             for warning in warnings:
                 html_code += "<li>%s: %s</li>" % \
-                    (html.attrencode(domain), html.attrencode(warning))
+                    (escaping.escape_attribute(domain), escaping.escape_attribute(warning))
         html_code += "</ul>"
         html_code += "</div>"
         return html_code
@@ -1030,7 +1031,8 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             return ast.literal_eval(response_text)
         except SyntaxError:
             raise cmk.gui.watolib.automations.MKAutomationException(
-                _("Garbled automation response: <pre>%s</pre>") % (html.attrencode(response_text)))
+                _("Garbled automation response: <pre>%s</pre>") %
+                (escaping.escape_attribute(response_text)))
 
     def _upload_file(self, url, insecure):
         return cmk.gui.watolib.automations.get_url(

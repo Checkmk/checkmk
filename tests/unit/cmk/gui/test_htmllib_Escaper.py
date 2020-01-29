@@ -3,14 +3,12 @@
 import pytest  # type: ignore
 
 import cmk.gui.htmllib as htmllib
-from cmk.gui.globals import html
+from cmk.gui import escaping
 
 
 def test_htmllib_integration(register_builtin_html):
-    assert isinstance(html.escaper, htmllib.Escaper)
-
-    assert html.attrencode("") == ""
-    assert html.permissive_attrencode("") == ""
+    assert escaping.escape_attribute("") == ""
+    assert escaping.escape_text("") == ""
 
 
 @pytest.mark.parametrize("inp,out", [
@@ -23,7 +21,7 @@ def test_htmllib_integration(register_builtin_html):
     ("'", "&#x27;"),
 ])
 def test_escape_attribute(inp, out):
-    assert htmllib.Escaper().escape_attribute(inp) == out
+    assert escaping.escape_attribute(inp) == out
 
 
 @pytest.mark.parametrize("inp,out", [
@@ -31,7 +29,7 @@ def test_escape_attribute(inp, out):
     ("&lt;", "<"),
 ])
 def test_unescape_attribute(inp, out):
-    assert htmllib.Escaper().unescape_attributes(inp) == out
+    assert escaping.unescape_attributes(inp) == out
 
 
 @pytest.mark.parametrize(
@@ -71,4 +69,4 @@ def test_unescape_attribute(inp, out):
 def test_escape_text(inp, out):
     if out is None:
         out = inp
-    assert htmllib.Escaper().escape_text(inp) == out
+    assert escaping.escape_text(inp) == out

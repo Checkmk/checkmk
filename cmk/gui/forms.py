@@ -27,6 +27,7 @@
 import base64
 import six
 
+import cmk.gui.escaping as escaping
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -287,8 +288,8 @@ def section(title=None,
         html.open_td(class_=["legend", "simple" if simple else None])
         if title:
             html.open_div(class_=["title", "withcheckbox" if checkbox else None],
-                          title=html.strip_tags(title))
-            html.write(html.permissive_attrencode(title))
+                          title=escaping.strip_tags(title))
+            html.write(escaping.escape_text(title))
             html.span('.' * 200, class_="dots")
             html.close_div()
         if checkbox:

@@ -33,6 +33,7 @@ import os
 import cmk
 
 import cmk.utils.tags
+import cmk.gui.escaping as escaping
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
@@ -43,7 +44,6 @@ from cmk.utils.exceptions import (
 )
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
 from cmk.gui.exceptions import (
     MKUserError,
     MKAuthException,
@@ -1171,7 +1171,7 @@ class APICallOther(APICallCollection):
         if mode == "specific":
             for site in sites:
                 if site not in config.allsites().keys():
-                    raise MKUserError(None, _("Unknown site %s") % html.attrencode(site))
+                    raise MKUserError(None, _("Unknown site %s") % escaping.escape_attribute(site))
 
         manager = watolib.ActivateChangesManager()
         manager.load()

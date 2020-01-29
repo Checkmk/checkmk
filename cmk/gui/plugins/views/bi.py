@@ -23,9 +23,9 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 from cmk.utils.defines import short_service_state_name
 
+import cmk.gui.escaping as escaping
 import cmk.gui.bi as bi
 from cmk.gui.valuespec import (DropdownChoice)
 from cmk.gui.htmllib import HTML
@@ -392,7 +392,7 @@ class PainterAggrGroup(Painter):
         return ['aggr_group']
 
     def render(self, row, cell):
-        return ("", html.attrencode(row["aggr_group"]))
+        return "", escaping.escape_attribute(row["aggr_group"])
 
 
 @painter_registry.register
@@ -414,7 +414,7 @@ class PainterAggrName(Painter):
         return ['aggr_name']
 
     def render(self, row, cell):
-        return ("", html.attrencode(row["aggr_name"]))
+        return "", escaping.escape_attribute(row["aggr_name"])
 
 
 @painter_registry.register

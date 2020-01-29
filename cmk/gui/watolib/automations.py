@@ -42,7 +42,7 @@ import cmk.gui.hooks as hooks
 from cmk.gui.htmllib import Encoder
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.globals import html
+import cmk.gui.escaping as escaping
 from cmk.gui.watolib.sites import SiteManagementFactory
 from cmk.gui.watolib.utils import mk_repr
 from cmk.gui.exceptions import (
@@ -329,7 +329,7 @@ def do_site_login(site_id, name, password):
                        data=post_data).strip()
     if '<html>' in response.lower():
         message = _("Authentication to web service failed.<br>Message:<br>%s") % \
-            html.strip_tags(html.strip_scripts(response))
+                  escaping.strip_tags(escaping.strip_scripts(response))
         if config.debug:
             message += "<br>" + _("Automation URL:") + " <tt>%s</tt><br>" % url
         raise MKAutomationException(message)

@@ -35,6 +35,7 @@ import cmk.utils.render
 import cmk.utils.man_pages as man_pages
 from cmk.utils.defines import short_service_state_name, short_host_state_name
 
+import cmk.gui.escaping as escaping
 import cmk.gui.config as config
 import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
@@ -190,7 +191,7 @@ def paint_custom_var(what, key, row, choices=None):
         custom_val = custom_vars[key]
         if choices:
             custom_val = dict(choices).get(int(custom_val), custom_val)
-        return key, html.attrencode(custom_val)
+        return key, escaping.escape_attribute(custom_val)
 
     return key, ""
 
@@ -391,7 +392,7 @@ class PainterSitealias(Painter):
         return ['site']
 
     def render(self, row, cell):
-        return (None, html.attrencode(config.site(row["site"])["alias"]))
+        return (None, escaping.escape_attribute(config.site(row["site"])["alias"]))
 
 
 #.
@@ -684,7 +685,7 @@ class PainterSvcCheckCommand(Painter):
         return ['service_check_command']
 
     def render(self, row, cell):
-        return (None, html.attrencode(row["service_check_command"]))
+        return (None, escaping.escape_attribute(row["service_check_command"]))
 
 
 @painter_registry.register
@@ -706,7 +707,7 @@ class PainterSvcCheckCommandExpanded(Painter):
         return ['service_check_command_expanded']
 
     def render(self, row, cell):
-        return (None, html.attrencode(row["service_check_command_expanded"]))
+        return (None, escaping.escape_attribute(row["service_check_command_expanded"]))
 
 
 @painter_registry.register
@@ -1536,7 +1537,8 @@ class PainterCheckManpage(Painter):
 
 def paint_comments(prefix, row):
     comments = row[prefix + "comments_with_info"]
-    text = ", ".join(["<i>%s</i>: %s" % (a, html.attrencode(c)) for _id, a, c in comments])
+    text = ", ".join(
+        ["<i>%s</i>: %s" % (a, escaping.escape_attribute(c)) for _id, a, c in comments])
     return "", text
 
 
@@ -2636,7 +2638,7 @@ class PainterAlias(Painter):
         return ['host_alias']
 
     def render(self, row, cell):
-        return ("", html.attrencode(row["host_alias"]))
+        return ("", escaping.escape_attribute(row["host_alias"]))
 
 
 @painter_registry.register
@@ -3152,7 +3154,8 @@ class PainterHostGroupMemberlist(Painter):
         for group in row["host_groups"]:
             link = "view.py?view_name=hostgroup&hostgroup=" + group
             if html.request.var("display_options"):
-                link += "&display_options=%s" % html.attrencode(html.request.var("display_options"))
+                link += "&display_options=%s" % escaping.escape_attribute(
+                    html.request.var("display_options"))
             links.append(html.render_a(group, link))
         return "", HTML(", ").join(links)
 
@@ -3780,7 +3783,7 @@ class PainterHgAlias(Painter):
         return ['hostgroup_alias']
 
     def render(self, row, cell):
-        return (None, html.attrencode(row["hostgroup_alias"]))
+        return (None, escaping.escape_attribute(row["hostgroup_alias"]))
 
 
 #    ____                  _
@@ -3986,7 +3989,7 @@ class PainterSgAlias(Painter):
         return ['servicegroup_alias']
 
     def render(self, row, cell):
-        return (None, html.attrencode(row["servicegroup_alias"]))
+        return (None, escaping.escape_attribute(row["servicegroup_alias"]))
 
 
 #     ____                                     _
@@ -4503,7 +4506,7 @@ class PainterLogMessage(Painter):
         return ['log_message']
 
     def render(self, row, cell):
-        return ("", html.attrencode(row["log_message"]))
+        return ("", escaping.escape_attribute(row["log_message"]))
 
 
 @painter_registry.register
@@ -4532,7 +4535,7 @@ class PainterLogPluginOutput(Painter):
             return "", format_plugin_output(output, row)
 
         elif comment:
-            return "", html.attrencode(comment)
+            return "", escaping.escape_attribute(comment)
 
         else:
             log_type = row["log_type"]
@@ -4648,7 +4651,7 @@ class PainterLogStateInfo(Painter):
         if not info:
             info = row["log_state_type"]
 
-        return ("", html.attrencode(info))
+        return ("", escaping.escape_attribute(info))
 
 
 @painter_registry.register
@@ -4840,7 +4843,7 @@ class PainterLogOptions(Painter):
         return ['log_options']
 
     def render(self, row, cell):
-        return ("", html.attrencode(row["log_options"]))
+        return ("", escaping.escape_attribute(row["log_options"]))
 
 
 @painter_registry.register
@@ -4866,7 +4869,7 @@ class PainterLogComment(Painter):
         if ';' in msg:
             parts = msg.split(';')
             if len(parts) > 6:
-                return ("", html.attrencode(parts[-1]))
+                return ("", escaping.escape_attribute(parts[-1]))
         return ("", "")
 
 

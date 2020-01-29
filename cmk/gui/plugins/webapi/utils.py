@@ -36,9 +36,9 @@ import cmk.utils.plugin_registry
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
+import cmk.gui.escaping as escaping
 from cmk.gui.watolib.host_attributes import host_attribute_registry
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import Hostname
@@ -126,7 +126,7 @@ def _validate_general_host_attributes(host_attributes, new):
     all_host_attribute_names = host_attribute_registry.keys() + ["inventory_failed", "site"]
     for name, value in host_attributes.items():
         if name not in all_host_attribute_names:
-            raise MKUserError(None, _("Unknown attribute: %s") % html.attrencode(name))
+            raise MKUserError(None, _("Unknown attribute: %s") % escaping.escape_attribute(name))
 
         # For real host attributes validate the values
         try:
@@ -140,7 +140,7 @@ def _validate_general_host_attributes(host_attributes, new):
 
         # The site attribute gets an extra check
         if name == "site" and value not in config.allsites().keys():
-            raise MKUserError(None, _("Unknown site %s") % html.attrencode(value))
+            raise MKUserError(None, _("Unknown site %s") % escaping.escape_attribute(value))
 
 
 # Check if the tag group exists and the tag value is valid
@@ -152,7 +152,8 @@ def _validate_host_tags(host_tags):
                     if grouped_tag.id == tag_id:
                         break
                 else:
-                    raise MKUserError(None, _("Unknown tag %s") % html.attrencode(tag_id))
+                    raise MKUserError(None, _("Unknown tag %s") % escaping.escape_attribute(tag_id))
                 break
         else:
-            raise MKUserError(None, _("Unknown tag group %s") % html.attrencode(tag_group_id))
+            raise MKUserError(None,
+                              _("Unknown tag group %s") % escaping.escape_attribute(tag_group_id))

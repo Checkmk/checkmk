@@ -32,6 +32,7 @@ import re
 import json
 from typing import Dict, Generator, Text, NamedTuple, List, Optional  # pylint: disable=unused-import
 
+import cmk.gui.escaping as escaping
 from cmk.utils.regex import escape_regex_chars
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 
@@ -300,7 +301,7 @@ class RulesetMode(WatoMode):
                     if not config.wato_hide_help_in_lists:
                         float_cls = "nofloat" if html.help_visible else "float"
                     html.open_div(class_=["ruleset", float_cls],
-                                  title=html.strip_tags(ruleset.help() or ''))
+                                  title=escaping.strip_tags(ruleset.help() or ''))
                     html.open_div(class_="text")
 
                     url_vars = [

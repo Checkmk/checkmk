@@ -46,7 +46,7 @@ def parse_azure_ad(info):
 
 def _str_to_seconds(value):
     try:
-        return time.mktime(time.strptime(value, '%Y-%m-%dT%H:%M:%SZ'))
+        return utc_mktime(time.strptime(value, '%Y-%m-%dT%H:%M:%SZ'))
     except (ValueError, TypeError):
         return None
 

@@ -13,9 +13,17 @@ info = [
 discovery = {'': [(None, {})], 'sync': [(u'Standardverzeichnis', {})]}
 
 checks = {
-    '': [(None, {}, [(0, '2 User Accounts', [])])],
+    '': [
+        (None, {}, [
+            (0, '2 User Accounts', []),
+        ]),
+    ],
     'sync': [
-                (u'Standardverzeichnis', {}, [(0, 'Time since last synchronization: 105 m', [])]),
-                (u'Standardverzeichnis', {'age': (1800, 3600)}, [(2, 'Time since last synchronization: 105 m (warn/crit at 30 m/60 m)', [])])
-    ]
+        (u'Standardverzeichnis', {}, [
+            (0, 'Time since last synchronization: 45 m', []),
+        ]),
+        (u'Standardverzeichnis', {'age': (1800, 3600)}, [
+            (1, 'Time since last synchronization: 45 m (warn/crit at 30 m/60 m)', []),
+        ]),
+    ],
 }

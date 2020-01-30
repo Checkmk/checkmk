@@ -1625,13 +1625,13 @@ metric_info["util15"] = {
 metric_info["cpu_entitlement"] = {
     "title": _("Entitlement"),
     "unit": "",
-    "color": "#66FF66",
+    "color": "#77FF77",
 }
 
 metric_info["cpu_entitlement_util"] = {
-    "title": _("Utilization"),
+    "title": _("Physical CPU consumption"),
     "unit": "",
-    "color": "#FF5555",
+    "color": "#FF0000",
 }
 
 for i in range(MAX_CORES):

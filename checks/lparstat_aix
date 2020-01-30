@@ -59,7 +59,7 @@ def parse_lparstat_aix(info):
         if name in ('user', 'sys', 'idle', 'wait'):
             parsed.setdefault('cpu', {})[name] = value
         else:
-            parsed.setdefault('util', []).append((name, value, uom))
+            parsed.setdefault('util', collections.OrderedDict())[name] = (value, uom)
 
     return parsed
 
@@ -76,8 +76,8 @@ def check_lparstat(_no_item, _no_params, parsed):
         yield 3, "Please upgrade your AIX agent."
         return
 
-    utilization = parsed.get('util', [])
-    for name, value, uom in utilization:
+    utilization = parsed.get('util', collections.OrderedDict())
+    for name, (value, uom) in utilization.items():
         yield 0, "%s: %s%s" % (name.title(), value, uom), [(name, value)]
 
 
@@ -107,7 +107,6 @@ def check_lparstat_aix_cpu(_no_item, params, parsed):
     if None in (user, system, wait):
         return
 
-    util = user + system + wait
     # ancient legacy rule
     # and legacy None defaults before 1.6
     params = transform_cpu_iowait(params)
@@ -117,24 +116,21 @@ def check_lparstat_aix_cpu(_no_item, params, parsed):
     for util_result in check_cpu_util_unix(values, params, values_counter=False):
         yield util_result
 
-    config = parsed.get('system_config', {})
-    partition_type = config.get('type', '').lower()
     try:
-        kwargs = {
-            'shared': {
-                'infoname': "100% corresponding to entitled processing capacity",
-                'unit': "CPUs"
-            },
-            'dedicated': {
-                'infoname': "100% corresponding to",
-                'unit': "physical processors"
-            },
-        }[partition_type]
-        cpu_entitlement = float(config['ent'])
+        cpu_entitlement = float(parsed['system_config']['ent'])
+        phys_cpu_consumption, _unit = parsed['util']['physc']
     except (KeyError, ValueError):
         return
-    yield check_levels(cpu_entitlement, 'cpu_entitlement', None, **kwargs)
-    yield 0, "", [('cpu_entitlement_util', util / 100. * cpu_entitlement)]
+    yield check_levels(phys_cpu_consumption,
+                       'cpu_entitlement_util',
+                       None,
+                       infoname="Physical CPU consumption",
+                       unit="CPUs")
+    yield check_levels(cpu_entitlement,
+                       'cpu_entitlement',
+                       None,
+                       infoname="Entitlement",
+                       unit="CPUs")
 
 
 check_info['lparstat_aix.cpu_util'] = {

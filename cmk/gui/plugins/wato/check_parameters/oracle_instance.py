@@ -27,11 +27,9 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Transform,
-    Age,
     Dictionary,
     MonitoringState,
     TextAscii,
-    Tuple,
 )
 
 from cmk.gui.plugins.wato import (
@@ -46,6 +44,8 @@ def _oracle_instance_transform_oracle_instance_params(p):
         if p["ignore_noarchivelog"]:
             p["noarchivelog"] = 0
         del p["ignore_noarchivelog"]
+    if "uptime_min" in p:
+        del p["uptime_min"]
     return p
 
 
@@ -93,14 +93,6 @@ def _parameter_valuespec_oracle_instance():
                     title=_("State in case of Database is PRIMARY and not OPEN: "),
                 ),
             ),
-            ('uptime_min',
-             Tuple(
-                 title=_("Minimum required uptime"),
-                 elements=[
-                     Age(title=_("Warning if below")),
-                     Age(title=_("Critical if below")),
-                 ],
-             )),
         ],
     ),
                      forth=_oracle_instance_transform_oracle_instance_params)

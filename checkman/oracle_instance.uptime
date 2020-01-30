@@ -1,0 +1,12 @@
+title: Oracle Database Instance: Uptime
+agents: linux, aix, hpux, solaris, windows
+distribution: check_mk
+catalog: app/oracle
+license: GPL
+description:
+ This check monitors the uptime of an Oracle Instance.
+
+ There are no default levels. Upper and lower levels can be configured in WATO.
+
+item:
+ ORA <ORACLE_SID> Uptime

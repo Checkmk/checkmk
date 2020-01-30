@@ -51,47 +51,27 @@ def inv_oracle_instance(info, inventory_tree, status_data_tree):
     path = "software.applications.oracle.instance:"
     inv_node = inventory_tree.get_list(path)
     status_node = status_data_tree.get_list(path)
-    for line in info:
-        raw_db_creation_time = None
-        raw_up_seconds = None
-        logmode = None
 
-        if len(line) == 6:
-            sid, version, openmode, logins, _unused, _unused2 = line
-
-        elif len(line) == 11:
-            sid, version, openmode, logins, _archiver, raw_up_seconds, _dbid, \
-                logmode, _database_role, _force_logging, _name = line
-
-        elif len(line) == 12:
-            sid, version, openmode, logins, _archiver, raw_up_seconds, _dbid, \
-                logmode, _database_role, _force_logging, _name, raw_db_creation_time = line
-
-        elif len(line) == 22:
-            sid, version, openmode, logins, _archiver, raw_up_seconds, _dbid, \
-                logmode, _database_role, _force_logging, _name, raw_db_creation_time, _pluggable, \
-                _con_id, _pname, _pdbid, _popenmode, _prestricted, _ptotal_size, _precovery_status, \
-                _pup_seconds, _pblock_size = line
-
-        else:
+    for item_data in info.values():
+        if item_data['invalid_data']:
             continue
 
+        inv_node.append({
+            "sid": item_data['sid'],
+            "version": item_data['version'],
+            "openmode": item_data['openmode'],
+            "logmode": item_data['log_mode'],
+            "logins": item_data['logins'],
+            "db_creation_time": _parse_raw_db_creation_time(item_data['db_creation_time']),
+        })
+
         try:
-            up_seconds = int(raw_up_seconds)
+            up_seconds = int(item_data['up_seconds'])
         except (TypeError, ValueError):
             up_seconds = None
 
-        inv_node.append({
-            "sid": sid,
-            "version": version,
-            "openmode": openmode,
-            "logmode": logmode,
-            "logins": logins,
-            "db_creation_time": _parse_raw_db_creation_time(raw_db_creation_time),
-        })
-
         status_node.append({
-            "sid": sid,
+            "sid": item_data['sid'],
             "db_uptime": up_seconds,
         })
 

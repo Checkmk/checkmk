@@ -35,6 +35,8 @@
 # ERROR:$
 # ORA-28002: the password will expire within 1 days$
 
+import datetime
+
 factory_settings["oracle_instance_defaults"] = {
     "logins": 2,
     "noforcelogging": 1,
@@ -43,29 +45,98 @@ factory_settings["oracle_instance_defaults"] = {
 }
 
 
-def inventory_oracle_instance(info):
+def create_oracle_instance(info_line):
+    result = {}
+    result['general_error'] = None
+    # In case of a general error (e.g. authentication failed), the second
+    # column contains the word "FAILURE"
+    if info_line[1] == 'FAILURE':
+        result['general_error'] = " ".join(info_line[2:])
 
-    inv_list = []
+    # lines can have different length
+    line_len = len(info_line)
+    result['invalid_data'] = result['general_error'] is not None or line_len not in [6, 11, 12, 22]
+
+    def getcolumn(column_index, default=None):
+        if (result['general_error'] and column_index != 0) or column_index >= line_len:
+            return default
+        return info_line[column_index]
+
+    # assign columns
+    result['sid'] = getcolumn(0)
+    result['version'] = getcolumn(1)
+    result['openmode'] = getcolumn(2)
+    result['logins'] = getcolumn(3)
+    result['archiver'] = getcolumn(4) if line_len > 6 else None
+    result['up_seconds'] = getcolumn(5) if line_len > 6 else None
+    # line_len > 6
+    result['_dbid'] = getcolumn(6)
+    result['log_mode'] = getcolumn(7)
+    result['database_role'] = getcolumn(8)
+    result['force_logging'] = getcolumn(9)
+    result['name'] = getcolumn(10)
+    # line_len > 11
+    result['db_creation_time'] = getcolumn(11)
+    # line_len > 12
+    result['pluggable'] = getcolumn(12, "FALSE")
+    result['_con_id'] = getcolumn(13)
+    result['pname'] = getcolumn(14)
+    result['_pdbid'] = getcolumn(15)
+    result['popenmode'] = getcolumn(16)
+    result['prestricted'] = getcolumn(17)
+    result['ptotal_size'] = getcolumn(18)
+    result['_precovery_status'] = getcolumn(19)
+    result['pup_seconds'] = getcolumn(20)
+    result['_pblock_size'] = getcolumn(21)
+
+    result['old_agent'] = False
+    result['pdb'] = False
+
+    if not result['general_error']:
+        # Detect old oracle agent plugin output
+        if line_len == 6:
+            result['old_agent'] = True
+
+        # possible multitenant entry?
+        # every pdb has a con_id != 0
+        if line_len > 12 and result['pluggable'] == 'TRUE' and result['_con_id'] != '0':
+            result['pdb'] = True
+
+            if result['prestricted'].lower() == 'no':
+                result['logins'] = 'RESTRICTED'
+            else:
+                result['logins'] = 'ALLOWED'
+
+            result['openmode'] = result['popenmode']
+            result['up_seconds'] = result['pup_seconds']
+
+    return result
+
+
+def parse_oracle_instance(info):
+    parsed = {}
 
     for line in info:
+        if not line:
+            continue
 
         # Skip ORA- error messages from broken old oracle agent
         # <<<oracle_instance:sep(124)>>>
         # ORA-99999 tnsping failed for +ASM1
-        if not (line[0].startswith('ORA-') and line[0][4].isdigit() and len(line[0]) < 16):
+        if line[0].startswith('ORA-') and line[0][4].isdigit() and len(line[0]) < 16:
+            continue
 
-            # possible multitenant entry?
-            if len(line) > 12:
+        item_data = create_oracle_instance(line)
 
-                # every pdb has a con_id != 0
-                # Multitenant use DB_NAME.PDB_NAME as Service
-                if line[12] == 'TRUE' and line[13] != '0':
-                    inv_list.append((("%s.%s" % (line[0], line[14])), {}))
-                    continue
+        item_name = item_data['sid']
 
-            inv_list.append((line[0], {}))
+        # Multitenant use DB_NAME.PDB_NAME as Service
+        if item_data['pdb']:
+            item_name = "%s.%s" % (item_data['sid'], item_data['pname'])
 
-    return inv_list
+        parsed[item_name] = item_data
+
+    return parsed
 
 
 def _transform_oracle_instance_params(p):
@@ -76,7 +147,8 @@ def _transform_oracle_instance_params(p):
     return p
 
 
-def check_oracle_instance(item, params, info):
+@get_parsed_item_data
+def check_oracle_instance(item, params, item_data):
     params = _transform_oracle_instance_params(params)
 
     def state_marker(state, infotext, param, column, data):
@@ -89,157 +161,120 @@ def check_oracle_instance(item, params, info):
                 infotext += '(!!)'
         return state, infotext
 
+    if item_data['general_error']:
+        return 2, item_data['general_error']
+
+    if item_data['invalid_data']:
+        return 2, "Database not running, login failed or unvalid data from agent"
+
     state = 0
 
-    for line in info:
+    # Handle old oracle agent plugin output
+    if item_data['old_agent']:
+        infotext = 'Status %s, Version %s, Logins %s' % (
+            item_data['openmode'], item_data['version'], item_data['logins'].lower())
+        state, infotext = state_marker(state, infotext, 'logins', item_data['logins'], 'RESTRICTED')
+        return state, infotext
 
-        itemname = line[0]
-        pdb = False
-        pluggable = "false"
-
-        if len(line) > 12:
-            # Multitenant!
-            if line[12] == 'TRUE' and line[13] != '0':
-                itemname = ("%s.%s" % (line[0], line[14]))
-                pdb = True
-
-        if itemname == item:
-            # In case of a general error (e.g. authentication failed), the second
-            # column contains the word "FAILURE"
-            if line[1] == 'FAILURE':
-                return 2, " ".join(line[2:])
-
-            state = 0
-
-            # Be compatible to old oracle agent plugin output
-            if len(line) == 6:
-                sid, version, openmode, logins, _unused, _unused2 = line
-
-                infotext = 'Status %s, Version %s, Logins %s' % (openmode, version, logins.lower())
-                state, infotext = state_marker(state, infotext, 'logins', logins, 'RESTRICTED')
-                return state, infotext
-
-            elif len(line) == 11:
-                sid, version, openmode, logins, archiver, up_seconds, _dbid, \
-                    log_mode, database_role, force_logging, name = line
-
-            elif len(line) == 12:
-                sid, version, openmode, logins, archiver, up_seconds, _dbid, \
-                    log_mode, database_role, force_logging, name, _dbcreated = line
-
-            elif len(line) == 22:
-                sid, version, openmode, logins, archiver, up_seconds, _dbid, \
-                    log_mode, database_role, force_logging, name, _dbcreated, pluggable, \
-                    _con_id, pname, _pdbid, popenmode, prestricted, ptotal_size, _precovery_status, \
-                    pup_seconds, _pblock_size = line
-
-            else:
-                return 2, "Database not running, login failed or unvalid data from agent"
-
-            if pdb:
-                if prestricted.lower() == 'no':
-                    logins = 'RESTRICTED'
-                else:
-                    logins = 'ALLOWED'
-
-                openmode = popenmode
-                up_seconds = pup_seconds
-
-                infotext = "PDB Name %s.%s, Status %s" % \
-                           (name, pname, popenmode)
-            else:
-                if pluggable.lower() == 'true':
-                    infotext = "CDB Name %s, Status %s" % \
-                               (name, openmode)
-                else:
-                    infotext = "Database Name %s, Status %s" % \
-                               (name, openmode)
-
-            # Check state for PRIMARY Database. Normaly there are always OPEN
-            if database_role == 'PRIMARY' and openmode not in ('OPEN', 'READ ONLY', 'READ WRITE'):
-                state = params.get('primarynotopen')
-                if state == 1:
-                    infotext += '(!)'
-                elif state == 2:
-                    infotext += '(!!)'
-                elif state == 0:
-                    infotext += ' (allowed by rule)'
-
-            if not pdb:
-                infotext += ", Role %s, Version %s" % (database_role, version)
-
-            # ORACLE is sick and cannot handle timezone changes >:-P
-            up_seconds = max(0, int(up_seconds))
-            infotext += ", Up since %s (%s)" % (
-                       time.strftime("%F %T", time.localtime(time.time() - up_seconds)), \
-                       get_age_human_readable(up_seconds))
-
-            if params.get('uptime_min'):
-                warn, crit = params.get('uptime_min')
-                warn = int(warn)
-                crit = int(crit)
-
-                infotext += ' (warn/crit at %s/%s)' % (get_age_human_readable(warn),
-                                                       get_age_human_readable(crit))
-                if up_seconds == -1:
-                    # PDB in mounted state has no uptime information
-                    state = 0
-                elif up_seconds <= crit:
-                    state = 2
-                    infotext += '(!!) not long enough up'
-                elif up_seconds <= warn:
-                    state = max(state, 1)
-                    infotext += '(!) not long enough up'
-
-            # ASM has no login and archivelog check
-            if database_role != 'ASM':
-
-                # logins are only possible when the database is open
-                if openmode == 'OPEN':
-                    infotext += ', Logins %s' % (logins.lower())
-                    state, infotext = state_marker(state, infotext, 'logins', logins, 'RESTRICTED')
-
-                # the new internal database _MGMTDB from 12.1.0.2 is always in NOARCHIVELOG mode
-                if name != '_MGMTDB' and sid != '-MGMTDB' and not pdb:
-                    infotext += ', Log Mode %s' % (log_mode.lower())
-                    state, infotext = state_marker(state, infotext, 'archivelog', log_mode,
-                                                   'ARCHIVELOG')
-                    state, infotext = state_marker(state, infotext, 'noarchivelog', log_mode,
-                                                   'NOARCHIVELOG')
-
-                    # archivelog is only valid in non pdb
-                    # force logging is only usable when archivelog is enabled
-                    if log_mode == 'ARCHIVELOG':
-                        if archiver != 'STARTED':
-                            infotext += '. Archiver %s(!!)' % (archiver.lower())
-                            state = 2
-
-                        infotext += ', Force Logging %s' % (force_logging.lower())
-                        state, infotext = state_marker(state, infotext, 'forcelogging',
-                                                       force_logging, 'YES')
-                        state, infotext = state_marker(state, infotext, 'noforcelogging',
-                                                       force_logging, 'NO')
-
-            perfdata = [('uptime', up_seconds)]
-
-            if pdb:
-                infotext += ', PDB Size %s' % get_bytes_human_readable(int(ptotal_size))
-                perfdata.append(('fs_size', int(ptotal_size)))
-
-            return state, infotext, perfdata
-
-    if '.' in item:
-        # no error from PDB when CDB is down
-        raise MKCounterWrapped("CDB possible down. No results for PDB availible!")
+    if item_data['pdb']:
+        infotext = "PDB Name %s.%s, Status %s" % \
+                    (item_data['name'], item_data['pname'], item_data['popenmode'])
     else:
-        return 2, "Database not running or login failed"
+        if item_data['pluggable'].lower() == 'true':
+            infotext = "CDB Name %s, Status %s" % \
+                        (item_data['name'], item_data['openmode'])
+        else:
+            infotext = "Database Name %s, Status %s" % \
+                        (item_data['name'], item_data['openmode'])
+
+    # Check state for PRIMARY Database. Normaly there are always OPEN
+    if item_data['database_role'] == 'PRIMARY' and item_data['openmode'] not in ('OPEN',
+                                                                                 'READ ONLY',
+                                                                                 'READ WRITE'):
+        state = params.get('primarynotopen')
+        if state == 1:
+            infotext += '(!)'
+        elif state == 2:
+            infotext += '(!!)'
+        elif state == 0:
+            infotext += ' (allowed by rule)'
+
+    if not item_data['pdb']:
+        infotext += ", Role %s, Version %s" % (item_data['database_role'], item_data['version'])
+
+    # ASM has no login and archivelog check
+    if item_data['database_role'] != 'ASM':
+
+        # logins are only possible when the database is open
+        if item_data['openmode'] == 'OPEN':
+            infotext += ', Logins %s' % (item_data['logins'].lower())
+            state, infotext = state_marker(state, infotext, 'logins', item_data['logins'],
+                                           'RESTRICTED')
+
+        # the new internal database _MGMTDB from 12.1.0.2 is always in NOARCHIVELOG mode
+        if item_data['name'] != '_MGMTDB' and item_data['sid'] != '-MGMTDB' and not item_data['pdb']:
+            infotext += ', Log Mode %s' % (item_data['log_mode'].lower())
+            state, infotext = state_marker(state, infotext, 'archivelog', item_data['log_mode'],
+                                           'ARCHIVELOG')
+            state, infotext = state_marker(state, infotext, 'noarchivelog', item_data['log_mode'],
+                                           'NOARCHIVELOG')
+
+            # archivelog is only valid in non pdb
+            # force logging is only usable when archivelog is enabled
+            if item_data['log_mode'] == 'ARCHIVELOG':
+                if item_data['archiver'] != 'STARTED':
+                    infotext += '. Archiver %s(!!)' % (item_data['archiver'].lower())
+                    state = 2
+
+                infotext += ', Force Logging %s' % (item_data['force_logging'].lower())
+                state, infotext = state_marker(state, infotext, 'forcelogging',
+                                               item_data['force_logging'], 'YES')
+                state, infotext = state_marker(state, infotext, 'noforcelogging',
+                                               item_data['force_logging'], 'NO')
+
+    perfdata = []
+
+    if item_data['pdb']:
+        infotext += ', PDB Size %s' % get_bytes_human_readable(int(item_data['ptotal_size']))
+        perfdata.append(('fs_size', int(item_data['ptotal_size'])))
+
+    return state, infotext, perfdata
 
 
 check_info['oracle_instance'] = {
+    "parse_function": parse_oracle_instance,
     "check_function": check_oracle_instance,
-    "inventory_function": inventory_oracle_instance,
+    "inventory_function": discover(),
     "service_description": "ORA %s Instance",
     "default_levels_variable": "oracle_instance_defaults",
     "group": "oracle_instance",
+    "has_perfdata": True,
+}
+
+
+@get_parsed_item_data
+def check_oracle_instance_uptime(item, params, item_data):
+    if item_data['general_error']:
+        return 2, item_data['general_error']
+
+    if item_data['invalid_data']:
+        return 2, "Database not running, login failed or unvalid data from agent"
+
+    up_seconds = max(0, int(item_data['up_seconds']))
+
+    params = params.get("max", (None, None)) + params.get("min", (None, None))
+    return check_levels(up_seconds,
+                        "uptime",
+                        params,
+                        human_readable_func=lambda x: datetime.timedelta(seconds=int(x)),
+                        infoname="Up since %s, uptime" %
+                        time.strftime("%F %T", time.localtime(time.time() - up_seconds)))
+
+
+check_info['oracle_instance.uptime'] = {
+    "check_function": check_oracle_instance_uptime,
+    "inventory_function": discover(),
+    "service_description": "ORA %s Uptime",
+    "group": "uptime_multiitem",
     "has_perfdata": True,
 }

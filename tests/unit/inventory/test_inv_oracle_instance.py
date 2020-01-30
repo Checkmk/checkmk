@@ -181,9 +181,15 @@ import pytest
         "db_uptime": 123,
     }),
 ])
-def test_inv_oracle_instance(inventory_plugin_manager, line, inventory_data, status_data):
+def test_inv_oracle_instance(inventory_plugin_manager, check_manager, line, inventory_data,
+                             status_data):
+    check_plugin = check_manager.get_check('oracle_instance')
+    parse_function = check_plugin.info.get("parse_function")
+
+    parsed = parse_function([line])
+
     inv_plugin = inventory_plugin_manager.get_inventory_plugin('oracle_instance')
-    inventory_tree_data, status_tree_data = inv_plugin.run_inventory([line])
+    inventory_tree_data, status_tree_data = inv_plugin.run_inventory(parsed)
 
     path = "software.applications.oracle.instance:"
     assert path in inventory_tree_data

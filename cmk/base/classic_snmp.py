@@ -29,6 +29,8 @@ import subprocess
 import signal
 from typing import List, Optional  # pylint: disable=unused-import
 
+import six
+
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 
@@ -71,7 +73,7 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
             raise TypeError()
         if exitstatus:
             console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error\n")
-            console.verbose(snmp_process.stderr.read() + "\n")
+            console.verbose(six.ensure_str(snmp_process.stderr.read()) + "\n")
             return None
 
         line = snmp_process.stdout.readline().strip()
@@ -83,13 +85,15 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
         item, value = line.split("=", 1)
         value = value.strip()
         console.vverbose("SNMP answer: ==> [%s]\n" % value)
-        if value.startswith('No more variables') or value.startswith('End of MIB') \
-           or value.startswith('No Such Object available') or value.startswith('No Such Instance currently exists'):
-            value = None
+        if value.startswith('No more variables') or \
+           value.startswith('End of MIB') or \
+           value.startswith('No Such Object available') or \
+           value.startswith('No Such Instance currently exists'):
+            return None
 
         # In case of .*, check if prefix is the one we are looking for
         if commandtype == "getnext" and not item.startswith(oid_prefix + "."):
-            value = None
+            return None
 
         # Strip quotes
         if value and value.startswith('"') and value.endswith('"'):
@@ -149,9 +153,9 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
 
         if exitstatus:
             console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal +
-                            "SNMP error: %s\n" % error.strip())
+                            "SNMP error: %s\n" % six.ensure_str(error).strip())
             raise MKSNMPError("SNMP Error on %s: %s (Exit-Code: %d)" %
-                              (ipaddress, error.strip(), exitstatus))
+                              (ipaddress, six.ensure_str(error).strip(), exitstatus))
         return rowinfo
 
     def _get_rowinfo_from_snmp_process(self, snmp_process):

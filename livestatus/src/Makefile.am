@@ -120,6 +120,7 @@ liblivestatus_a_SOURCES = \
         ServiceListStateColumn.cc \
         ServiceSpecialDoubleColumn.cc \
         ServiceSpecialIntColumn.cc \
+        SocketUtils.cc \
         StatsColumn.cc \
         StatusSpecialIntColumn.cc \
         Store.cc \

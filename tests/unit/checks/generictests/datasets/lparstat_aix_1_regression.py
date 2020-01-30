@@ -31,7 +31,7 @@ checks = {
         (0, 'System: 0.4%', [('system', 0.4)]),
         (0, 'Wait: 0%', [('wait', 0.0)]),
         (0, 'Total CPU: 0.6%', [('util', 0.6000000000000001, None, None, 0, None)]),
-        (0, '100% corresponding to: 7.00 physical processors', [('cpu_entitlement', 7.0)]),
-        (0, "", [('cpu_entitlement_util', 0.04200000000000001)]),
+        (0, "Physical CPU consumption: 0.02 CPUs", [('cpu_entitlement_util', 0.02)]),
+        (0, 'Entitlement: 7.00 CPUs', [('cpu_entitlement', 7.0)]),
     ]),],
 }

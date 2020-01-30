@@ -5,11 +5,14 @@ license: GPL
 distribution: check_mk
 description:
  The check executes the {lparstat} command on a logical partition (LPAR) under
- AIX and reports CPU utilization extracted from it's output. See section
- perfdata for description of the single values.
+ AIX and reports the CPU utilization extracted from it's output.
 
- A level can be set only on {wait} (disk wait).
+ The CPU utilization is always calculated with respect to the allocated number
+ of CPUs and never exceeds 100%.
+
+ On shared partitions the physical CPU consumption as well as the entitlement
+ is displayed.
 
 inventory:
- On each LPAR one check is generated.
+ On each LPAR one service is generated.
 

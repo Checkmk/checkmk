@@ -374,7 +374,7 @@ def _load_config(with_conf_d, exclude_parents_mk):
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
-            elif sys.stderr.isatty():
+            if sys.stderr.isatty():
                 console.error("Cannot read in configuration file %s: %s\n", _f, e)
             sys.exit(1)
 
@@ -857,13 +857,12 @@ def _get_old_cmciii_temp_description(item):
     if parts[0] == "Ambient":
         return False, "%s Temperature" % parts[1]
 
-    elif len(parts) == 2:
+    if len(parts) == 2:
         return False, "%s %s.Temperature" % (parts[1], parts[0])
 
-    else:
-        if parts[1] == "LCP":
-            parts[1] = "Liquid_Cooling_Package"
-        return False, "%s %s.%s-Temperature" % (parts[1], parts[0], parts[2])
+    if parts[1] == "LCP":
+        parts[1] = "Liquid_Cooling_Package"
+    return False, "%s %s.%s-Temperature" % (parts[1], parts[0], parts[2])
 
 
 _old_service_descriptions = {
@@ -1446,8 +1445,7 @@ def load_checks(get_check_api_context, filelist):
             console.error("Error in plugin file %s: %s\n", f, e)
             if cmk.utils.debug.enabled():
                 raise
-            else:
-                continue
+            continue
 
         new_checks = set(check_info).difference(known_checks)
         new_active_checks = set(active_check_info).difference(known_active_checks)
@@ -1560,8 +1558,7 @@ def load_check_includes(check_file_path, check_context):
             console.error("Error in check include file %s: %s\n", include_file_path, e)
             if cmk.utils.debug.enabled():
                 raise
-            else:
-                continue
+            continue
 
 
 def check_include_file_path(include_file_name):
@@ -2187,9 +2184,8 @@ def _get_categorized_check_plugins(check_plugin_names, for_inventory=False):
             msg = "Unknown plugin file %s" % check_plugin_name
             if cmk.utils.debug.enabled():
                 raise MKGeneralException(msg)
-            else:
-                console.verbose("%s\n" % msg)
-                continue
+            console.verbose("%s\n" % msg)
+            continue
 
         is_snmp_check_ = is_snmp_check_f(check_plugin_name)
         mgmt_board = _get_management_board_precedence(check_plugin_name, plugins_info)
@@ -2584,12 +2580,12 @@ class HostConfig(object):
         spec = agent_target_versions[0]
         if spec == "ignore":
             return None
-        elif spec == "site":
+        if spec == "site":
             return cmk.__version__
-        elif isinstance(spec, str):
+        if isinstance(spec, str):
             # Compatibility to old value specification format (a single version string)
             return spec
-        elif spec[0] == 'specific':
+        if spec[0] == 'specific':
             return spec[1]
 
         return spec  # return the whole spec in case of an "at least version" config

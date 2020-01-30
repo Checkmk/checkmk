@@ -59,7 +59,7 @@ RUN yum -y makecache \
     wget \
     which \
     && yum clean all
-# Workaround for failing installation, not locally reproducable
+# --nogpgcheck: Workaround for failing installation, not locally reproducable
 RUN yum -y makecache \
     && yum -y --enablerepo=PowerTools reinstall \
     kernel-headers \
@@ -75,18 +75,22 @@ RUN cd /opt \
     && ln -s /opt/cmake-3.16.2-Linux-x86_64/bin/* /usr/bin/
 
 # epel release is needed for joe
+# --nogpgcheck: Workaround for failing installation, not locally reproducable
 RUN yum -y makecache \
     && yum -y install \
     epel-release \
+    --nogpgcheck \
     && yum clean all
 
 # New packages that are not needed for the build toolchain above should be added here.
 # We avoid rebuild of the whole previous steps this way
+# --nogpgcheck: Workaround for failing installation, not locally reproducable
 RUN yum -y makecache \
     && yum -y --enablerepo=PowerTools install \
-        chrpath \
+    chrpath \
     joe \
     vim \
+    --nogpgcheck \
     && yum clean all
 
 ARG VERS_TAG

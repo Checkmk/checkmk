@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -28,6 +28,8 @@ import os
 import subprocess
 import signal
 from typing import List, Optional  # pylint: disable=unused-import
+
+import six
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
@@ -71,29 +73,32 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
             raise TypeError()
         if exitstatus:
             console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error\n")
-            console.verbose(snmp_process.stderr.read() + "\n")
+            console.verbose(six.ensure_str(snmp_process.stderr.read()) + "\n")
             return None
 
-        line = snmp_process.stdout.readline().strip()
+        line = six.ensure_str(snmp_process.stdout.readline()).strip()
         if not line:
             console.verbose("Error in response to snmpget.\n")
             return None
 
-        value = None  # type: Optional[RawValue]
-        item, value = line.split("=", 1)
-        value = value.strip()
+        parts = line.split("=", 1)
+        if len(parts) != 2:
+            return None
+        item, value = parts
         console.vverbose("SNMP answer: ==> [%s]\n" % value)
-        if value.startswith('No more variables') or value.startswith('End of MIB') \
-           or value.startswith('No Such Object available') or value.startswith('No Such Instance currently exists'):
-            value = None
+        if value.startswith('No more variables') or \
+           value.startswith('End of MIB') or \
+           value.startswith('No Such Object available') or \
+           value.startswith('No Such Instance currently exists'):
+            return None
 
         # In case of .*, check if prefix is the one we are looking for
         if commandtype == "getnext" and not item.startswith(oid_prefix + "."):
-            value = None
+            return None
 
         # Strip quotes
-        if value and value.startswith('"') and value.endswith('"'):
-            value = value[1:-1]
+        if value.startswith('"') and value.endswith('"'):
+            return value[1:-1]
         return value
 
     def walk(self,
@@ -149,9 +154,9 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
 
         if exitstatus:
             console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal +
-                            "SNMP error: %s\n" % error.strip())
+                            "SNMP error: %s\n" % six.ensure_str(error).strip())
             raise MKSNMPError("SNMP Error on %s: %s (Exit-Code: %d)" %
-                              (ipaddress, error.strip(), exitstatus))
+                              (ipaddress, six.ensure_str(error).strip(), exitstatus))
         return rowinfo
 
     def _get_rowinfo_from_snmp_process(self, snmp_process):

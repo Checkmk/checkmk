@@ -967,8 +967,9 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
             return
 
         # In case of SNMP checks but missing agent response, skip this check.
-        # Special checks which still need to be called even with empty data
-        # may declare this.
+        # TODO: This feature predates the 'parse_function', and is not needed anymore.
+        # # Special checks which still need to be called even with empty data
+        # # may declare this.
         if not section_content and cmk.base.check_utils.is_snmp_check(check_plugin_name) \
            and not config.check_info[check_plugin_name]["handle_empty_info"]:
             return

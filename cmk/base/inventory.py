@@ -320,8 +320,6 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
                                                                   ipaddress,
                                                                   section_name,
                                                                   for_discovery=False)
-        # TODO: Don't we need to take config.check_info[check_plugin_name]["handle_empty_info"]:
-        #       like it is done in checking.execute_check()? Standardize this!
         if not section_content:  # section not present (None or [])
             # Note: this also excludes existing sections without info..
             continue

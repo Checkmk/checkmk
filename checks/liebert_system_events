@@ -36,21 +36,25 @@
 # and much more...
 
 
+def parse_liebert_system_events(info):
+    return {"events": parse_liebert_without_unit(info, str)}
+
+
 def check_liebert_system_events(_no_item, _no_params, parsed):
-    no_event = True
-    for key, value in parsed.items():
+    events = parsed.get("events", {})
+    if not events:
+        yield 0, "Normal"
+        return
+
+    for key, value in events.items():
         if not (value or key):
             continue
         if not value.lower() == "inactive event":
-            no_event = False
             yield 2, "%s: %s" % (key, value)
-
-    if no_event:
-        yield 0, "Normal"
 
 
 check_info['liebert_system_events'] = {
-    'parse_function': lambda info: parse_liebert_without_unit(info, str),
+    'parse_function': parse_liebert_system_events,
     'inventory_function': lambda _parsed: [(None, {})],
     'check_function': check_liebert_system_events,
     'service_description': 'System events',
@@ -62,5 +66,4 @@ check_info['liebert_system_events'] = {
         ]),
     'snmp_scan_function': scan_liebert,
     'includes': ['liebert.include'],
-    'handle_empty_info': True,
 }

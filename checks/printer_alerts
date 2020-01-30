@@ -179,19 +179,25 @@ printer_alerts_text_map = {
 }
 
 
-def inventory_printer_alerts(info):
+def parse_printer_alerts(info):
+    return {
+        # Filter out empty status lines (e.g. sent by Brother)
+        "alerts": [i for i in info if i[1:5] != ["0", "0", "0", ""]],
+    }
+
+
+def inventory_printer_alerts(_parsed):
     return [(None, None)]
 
 
-def check_printer_alerts(_not_used, _not_used1, info):
-    # Filter out empty status lines (e.g. sent by Brother)
-    info = [i for i in info if i[1:5] != ["0", "0", "0", ""]]
-    if not info:
-        return (0, 'No alerts present')
+def check_printer_alerts(_no_item, _no_params, parsed):
+    alerts = parsed.get("alerts", [])
+    if not alerts:
+        return 0, 'No alerts present'
 
     sum_state = 0
     sum_txt = []
-    for sev, group, group_index, code, desc in info:
+    for sev, group, group_index, code, desc in alerts:
 
         code_txt, state = printer_code_map.get(code, ('unknown alert code: %s' % code, 3))
 
@@ -250,6 +256,5 @@ check_info["printer_alerts"] = {
             '7',  # prtAlertCode
             '8',  # prtAlertDescription
         ]),
-    'handle_empty_info': True,
     'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.43.11.1.1.6.1.1") is not None,
 }

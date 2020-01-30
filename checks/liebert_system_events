@@ -51,7 +51,7 @@ def check_liebert_system_events(_no_item, _no_params, parsed):
 
 check_info['liebert_system_events'] = {
     'parse_function': lambda info: parse_liebert_without_unit(info, str),
-    'inventory_function': discover_single,
+    'inventory_function': lambda _parsed: [(None, {})],
     'check_function': check_liebert_system_events,
     'service_description': 'System events',
     'snmp_info': (

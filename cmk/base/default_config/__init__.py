@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 # Load plugin names into this module to have a single set of default settings
-# pylint: disable=wildcard-import
+# pylint: disable=wildcard-import,unused-wildcard-import
 
 from .base import *
 from .notify import *

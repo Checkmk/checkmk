@@ -168,10 +168,9 @@ def cached_dns_lookup(hostname, family):
         if cached_ip:
             cache[cache_id] = cached_ip
             return cached_ip
-        else:
-            cache[cache_id] = None
-            raise MKIPAddressLookupError("Failed to lookup IPv%d address of %s via DNS: %s" %
-                                         (family, hostname, e))
+        cache[cache_id] = None
+        raise MKIPAddressLookupError("Failed to lookup IPv%d address of %s via DNS: %s" %
+                                     (family, hostname, e))
 
 
 class IPLookupCache(cmk.base.caching.DictCache):

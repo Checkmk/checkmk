@@ -157,7 +157,7 @@ class HostCheckTable(object):
         if self.filter_mode is None and not svc_is_mine:
             return {}
 
-        elif self.filter_mode == "only_clustered" and svc_is_mine:
+        if self.filter_mode == "only_clustered" and svc_is_mine:
             return {}
 
         check_table[(service.check_plugin_name, service.item)] = service

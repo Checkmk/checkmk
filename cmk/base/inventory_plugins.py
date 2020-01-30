@@ -81,8 +81,7 @@ def load_plugins(get_check_api_context, get_inventory_context):
             console.error("Error in inventory plugin file %s: %s\n", f, e)
             if cmk.utils.debug.enabled():
                 raise
-            else:
-                continue
+            continue
 
         # Now store the check context for all plugins found in this file
         for check_plugin_name in set(inv_info).difference(known_plugins):

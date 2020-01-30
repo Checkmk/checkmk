@@ -949,13 +949,12 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
                 x = e.exc_info()
                 if x[0] == item_state.MKCounterWrapped:
                     return
-                else:
-                    # re-raise the original exception to not destory the trace. This may raise a MKCounterWrapped
-                    # exception which need to lead to a skipped check instead of a crash
-                    # TODO CMK-3729, PEP-3109
-                    new_exception = x[0](x[1])
-                    new_exception.__traceback__ = x[2]  # type: ignore
-                    raise new_exception
+                # re-raise the original exception to not destory the trace. This may raise a MKCounterWrapped
+                # exception which need to lead to a skipped check instead of a crash
+                # TODO CMK-3729, PEP-3109
+                new_exception = x[0](x[1])
+                new_exception.__traceback__ = x[2]  # type: ignore
+                raise new_exception
 
             elif on_error == "warn":
                 section_name = cmk.base.check_utils.section_name_of(check_plugin_name)

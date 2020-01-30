@@ -340,8 +340,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
                 (service.description, hostname, cn, it, service.check_plugin_name, service.item))
             continue
 
-        else:
-            used_descriptions[service.description] = (service.check_plugin_name, service.item)
+        used_descriptions[service.description] = (service.check_plugin_name, service.item)
         if config.check_info[service.check_plugin_name].get("has_perfdata", False):
             template = config.passive_service_template_perf
         else:
@@ -420,8 +419,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
                     (description, hostname, cn, it, acttype))
                 continue
 
-            else:
-                used_descriptions[description] = ("active(" + acttype + ")", description)
+            used_descriptions[description] = ("active(" + acttype + ")", description)
 
             template = "check_mk_perf," if has_perfdata else ""
 
@@ -499,8 +497,8 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
                     " - 2nd occurrance: checktype = custom(%s), item = %r\n" %
                     (description, hostname, cn, it, command_name, description))
                 continue
-            else:
-                used_descriptions[description] = ("custom(%s)" % command_name, description)
+
+            used_descriptions[description] = ("custom(%s)" % command_name, description)
 
             template = "check_mk_perf," if has_perfdata else ""
             command = "%s!%s" % (command_name, command_line)
@@ -1106,8 +1104,7 @@ if '-d' in sys.argv:
             console.verbose(" (%s is unchanged)\n", source_filename, stream=sys.stderr)
             os.remove(source_filename + ".new")
             return
-        else:
-            console.verbose(" (new content)", stream=sys.stderr)
+        console.verbose(" (new content)", stream=sys.stderr)
 
     os.rename(source_filename + ".new", source_filename)
     if not config.delay_precompile:

@@ -381,7 +381,7 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
             # type: (Optional[int], Optional[int]) -> Optional[int]
             if a is None:
                 return b
-            elif b is None:
+            if b is None:
                 return a
             return min(a, b)
 
@@ -468,7 +468,7 @@ def sanitize_check_result(result, is_snmp):
     if isinstance(result, tuple):
         return cast(ServiceCheckResult, _sanitize_tuple_check_result(result))
 
-    elif result is None:
+    if result is None:
         return _item_not_found(is_snmp)
 
     return _sanitize_yield_check_result(result, is_snmp)
@@ -560,9 +560,9 @@ def _convert_perf_value(x):
     # type: (UncleanPerfValue) -> str
     if x is None:
         return ""
-    elif isinstance(x, six.string_types):
+    if isinstance(x, six.string_types):
         return x
-    elif isinstance(x, float):
+    if isinstance(x, float):
         return ("%.6f" % x).rstrip("0").rstrip(".")
 
     return str(x)
@@ -731,15 +731,14 @@ def _open_command_pipe():
             _nagios_command_pipe = False  # False means: tried but failed to open
             raise MKGeneralException("Missing core command pipe '%s'" %
                                      cmk.utils.paths.nagios_command_pipe_path)
-        else:
-            try:
-                signal.signal(signal.SIGALRM, _core_pipe_open_timeout)
-                signal.alarm(3)  # three seconds to open pipe
-                _nagios_command_pipe = open(cmk.utils.paths.nagios_command_pipe_path, 'w')
-                signal.alarm(0)  # cancel alarm
-            except Exception as e:
-                _nagios_command_pipe = False
-                raise MKGeneralException("Error writing to command pipe: %s" % e)
+        try:
+            signal.signal(signal.SIGALRM, _core_pipe_open_timeout)
+            signal.alarm(3)  # three seconds to open pipe
+            _nagios_command_pipe = open(cmk.utils.paths.nagios_command_pipe_path, 'w')
+            signal.alarm(0)  # cancel alarm
+        except Exception as e:
+            _nagios_command_pipe = False
+            raise MKGeneralException("Error writing to command pipe: %s" % e)
 
 
 def _core_pipe_open_timeout(signum, stackframe):

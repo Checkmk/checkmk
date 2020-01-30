@@ -821,17 +821,16 @@ def plugin_param_to_string(value):
     # type: (Any) -> Union[Text, str]
     if isinstance(value, six.string_types):
         return value
-    elif isinstance(value, (int, float)):
+    if isinstance(value, (int, float)):
         return str(value)
-    elif value is None:
+    if value is None:
         return ""
-    elif value is True:
+    if value is True:
         return "yes"
-    elif value is False:
+    if value is False:
         return ""
-    elif isinstance(value, (tuple, list)):
+    if isinstance(value, (tuple, list)):
         return "\t".join(value)
-
     return repr(value)  # Should never happen
 
 

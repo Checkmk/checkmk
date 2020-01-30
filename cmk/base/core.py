@@ -176,9 +176,8 @@ def do_core_action(action, quiet=False):
         if not quiet:
             console.output("ERROR: %s\n" % output)
         raise MKGeneralException("Cannot %s the monitoring core: %s" % (action, output))
-    else:
-        if not quiet:
-            console.output(tty.ok + "\n")
+    if not quiet:
+        console.output(tty.ok + "\n")
 
 
 #.

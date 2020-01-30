@@ -266,7 +266,8 @@ def do_notify(options, args):
         if notify_mode == "spoolfile":
             filename = args[1]
             return handle_spoolfile(filename)
-        elif keepalive and keepalive.enabled():
+
+        if keepalive and keepalive.enabled():
             notify_keepalive()
         elif notify_mode == 'replay':
             try:
@@ -393,7 +394,7 @@ def locally_deliver_raw_context(raw_context, analyse=False):
                 logger.info("Notifications for %s are disabled in personal settings. Skipping.",
                             contactname)
                 return None
-            elif start <= time.time() <= end:
+            if start <= time.time() <= end:
                 logger.info(
                     "Notifications for %s are disabled in personal settings from %s to %s. Skipping.",
                     contactname, start, end)
@@ -636,7 +637,7 @@ def _process_notifications(raw_context, notifications, num_rule_matches, analyse
 
                     if analyse:
                         continue
-                    elif bulk:
+                    if bulk:
                         do_bulk_notify(plugin_name, params, context, bulk)
                     elif config.notification_spooling in ("local", "both"):
                         create_spoolfile({"context": context, "plugin": plugin_name})
@@ -780,7 +781,7 @@ def rbn_get_bulk_params(rule):
 
     if not bulk:
         return None
-    elif isinstance(bulk, dict):  # old format: treat as "Always Bulk"
+    if isinstance(bulk, dict):  # old format: treat as "Always Bulk"
         method, params = "always", bulk
     else:
         method, params = bulk
@@ -788,7 +789,7 @@ def rbn_get_bulk_params(rule):
     if method == "always":
         return params
 
-    elif method == "timeperiod":
+    if method == "timeperiod":
         try:
             active = cmk.base.core.timeperiod_active(params["timeperiod"])
         except Exception:
@@ -958,7 +959,7 @@ def rbn_rule_contacts(rule, context):
                     logger.info("   - skipping contact %s: he/she has disabled notifications",
                                 contactname)
                     continue
-                elif start <= time.time() <= end:
+                if start <= time.time() <= end:
                     logger.info(
                         "   - skipping contact %s: he/she has disabled notifications from %s to %s.",
                         contactname, start, end)
@@ -1034,7 +1035,7 @@ def rbn_match_event_console(rule, context):
         is_ec_notification = "EC_ID" in context
         if match_ec is False and is_ec_notification:
             return "Notification has been created by the Event Console."
-        elif match_ec is not False and not is_ec_notification:
+        if match_ec is not False and not is_ec_notification:
             return "Notification has not been created by the Event Console."
 
         if match_ec is not False:
@@ -1078,7 +1079,7 @@ def rbn_object_contact_names(context):
                     events.find_host_service_in_context(context))
         return [str(contact["name"]) for contact in rbn_fallback_contacts()]
 
-    elif commasepped:
+    if commasepped:
         return commasepped.split(",")
 
     return []
@@ -1188,7 +1189,7 @@ def should_notify(context, entry):
                 skip = negate
                 break
 
-            elif regex_match and hostname is not None and re.match(h, hostname):
+            if regex_match and hostname is not None and re.match(h, hostname):
                 skip = negate
                 break
         if skip:

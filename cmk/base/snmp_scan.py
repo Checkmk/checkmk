@@ -58,7 +58,7 @@ def gather_snmp_check_plugin_names(host_config,
     except Exception as e:
         if on_error == "raise":
             raise
-        elif on_error == "warn":
+        if on_error == "warn":
             console.error("SNMP scan failed: %s\n" % e)
 
     return check_plugin_names
@@ -109,11 +109,10 @@ def _snmp_scan(host_config,
     for check_plugin_name, _unused_check in these_plugin_names.items():
         if config.service_ignored(host_config.hostname, check_plugin_name, None):
             continue
-        else:
-            if for_inv and not inventory_plugins.is_snmp_plugin(check_plugin_name):
-                continue
-            elif not for_inv and not cmk.base.check_utils.is_snmp_check(check_plugin_name):
-                continue
+        if for_inv and not inventory_plugins.is_snmp_plugin(check_plugin_name):
+            continue
+        if not for_inv and not cmk.base.check_utils.is_snmp_check(check_plugin_name):
+            continue
 
         section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
         # The scan function should be assigned to the section_name, because

@@ -319,7 +319,7 @@ def get_filesize_human_readable(size):
     get_bytes_human_readable()."""
     if size < 4 * 1024 * 1024:
         return "%d B" % int(size)
-    elif size < 4 * 1024 * 1024 * 1024:
+    if size < 4 * 1024 * 1024 * 1024:
         return "%.2f MB" % (float(size) / (1024 * 1024))
     return "%.2f GB" % (float(size) / (1024 * 1024 * 1024))
 
@@ -500,7 +500,7 @@ def check_levels(value,
         return 0, infotext, perf
 
     # Pair of numbers -> static levels
-    elif isinstance(params, tuple):
+    if isinstance(params, tuple):
         levels = tuple(scale_value(v) for v in _normalize_levels(params))
         ref_value = None
 
@@ -667,7 +667,7 @@ def validate_filter(filter_function):
 
     if hasattr(filter_function, '__call__'):
         return filter_function
-    elif filter_function is not None:
+    if filter_function is not None:
         raise ValueError("Filtering function is not a callable,"
                          " a {} has been given.".format(type(filter_function)))
     return lambda *entry: entry[0]
@@ -737,7 +737,7 @@ def discover(selector=None, default_params=None):
         # type: (Any) -> Any
         if isinstance(parsed, dict):
             return parsed.items()
-        elif isinstance(parsed, (list, tuple)):
+        if isinstance(parsed, (list, tuple)):
             return parsed
         raise ValueError("Discovery function only works with dictionaries,"
                          " lists, and tuples you gave a {}".format(type(parsed)))

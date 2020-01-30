@@ -66,9 +66,8 @@ def handle_check_mk_check_result(check_plugin_name, description):
             except MKTimeout:
                 if _in_keepalive_mode():
                     raise
-                else:
-                    infotexts.append("Timed out")
-                    status = max(status, cast(int, exit_spec.get("timeout", 2)))
+                infotexts.append("Timed out")
+                status = max(status, cast(int, exit_spec.get("timeout", 2)))
 
             except (MKAgentError, MKSNMPError, MKIPAddressLookupError) as e:
                 infotexts.append("%s" % e)

@@ -212,15 +212,14 @@ def scan_parents_of(config_cache, hosts, silent=False, settings=None):
             gateways.append((None, "dnserror", 0, message))
             continue
 
-        elif len(lines) == 0:
+        if len(lines) == 0:
             if cmk.utils.debug.enabled():
                 raise MKGeneralException(
                     "Cannot execute %s. Is traceroute installed? Are you root?" % command)
-            else:
-                dot(tty.red, '!')
+            dot(tty.red, '!')
             continue
 
-        elif len(lines) < 2:
+        if len(lines) < 2:
             if not silent:
                 console.error("%s: %s\n" % (host, ' '.join(lines)))
             gateways.append((None, "garbled", 0,
@@ -265,7 +264,7 @@ def scan_parents_of(config_cache, hosts, silent=False, settings=None):
         # if nagios is not the parent itself. Problem here: How can we determine
         # if the host in question is the monitoring host? The user must configure
         # this in monitoring_host.
-        elif len(routes) == 1:
+        if len(routes) == 1:
             if ip == nagios_ip:
                 gateways.append((None, "root", 0, ""))  # We are the root-monitoring host
                 dot(tty.white, 'N')

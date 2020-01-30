@@ -210,7 +210,7 @@ class TimeSeries(object):
 
 
 def lq_logic(filter_condition, values, join):
-    # type: (Text, List[AnyStr], Text) -> Text
+    # type: (Text, List[Text], Text) -> Text
     """JOIN with (Or, And) FILTER_CONDITION the VALUES for a livestatus query"""
     conditions = u"".join(u"%s %s\n" % (filter_condition, livestatus.lqencode(x)) for x in values)
     connective = u"%s: %d\n" % (join, len(values)) if len(values) > 1 else u""
@@ -218,21 +218,16 @@ def lq_logic(filter_condition, values, join):
 
 
 def livestatus_lql(host_names, columns, service_description=None):
-    # type: (Union[HostName, List[HostName]], Union[AnyStr, List[AnyStr]], Optional[ServiceName]) -> Text
-    if isinstance(columns, list):
-        columns = " ".join(columns)
-
-    query_filter = u"Columns: %s\n" % columns
-    if not isinstance(host_names, list):
-        host_names = [host_names]
-    query_filter += lq_logic(u"Filter: host_name =", host_names, u"Or")
-
+    # type: (List[HostName], List[Text], Optional[ServiceName]) -> Text
+    query_filter = u"Columns: %s\n" % u" ".join(columns)
+    query_filter += lq_logic(u"Filter: host_name =", [six.ensure_text(n) for n in host_names],
+                             u"Or")
     if service_description == "_HOST_" or service_description is None:
         what = 'host'
     else:
         what = 'service'
-        query_filter += lq_logic(u"Filter: service_description =", [service_description], u"Or")
-
+        query_filter += lq_logic(u"Filter: service_description =",
+                                 [six.ensure_text(service_description)], u"Or")
     return "GET %ss\n%s" % (what, query_filter)
 
 
@@ -266,7 +261,7 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
         livestatus.lqencode(str(x)) for x in (fromtime, untiltime, step, max_entries))
     column = "rrddata:m1:%s:%s" % (rpn, point_range)
 
-    lql = livestatus_lql(hostname, column, service_description) + "OutputFormat: python\n"
+    lql = livestatus_lql([hostname], [column], service_description) + "OutputFormat: python\n"
 
     try:
         connection = livestatus.SingleSiteConnection("unix:%s" %

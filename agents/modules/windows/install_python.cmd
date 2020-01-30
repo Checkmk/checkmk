@@ -13,6 +13,12 @@ copy /y %pexe%  %pexe_uninstall% > nul
 if not exist %pexe_uninstall% powershell Write-Host "Can not backup installation" -foreground Red && exit /b 2
 %pexe% /quiet InstallAllUsers=0 Include_launcher=0 Include_test=0 Include_doc=0 Include_dev=1 InstallLauncherAllUsers=0 Include_tcltk=0 Shortcuts=0 AssociateFiles=0 TargetDir=%install_dir%
 if not exist %install_dir%\python.exe powershell Write-Host "Can not install python" -foreground Red && exit /b 2
-powershell Write-Host "Python installed" -foreground Green
+powershell Write-Host "Python installed, checking pip..." -foreground Cyan
+cd %install_dir%
+if exist .\Scripts\pip3.exe powershell Write-Host "Python and Pip installed" -foreground Green && exit /b 0
+powershell Write-Host "Installing pip..." -foreground Cyan
+.\python.exe  -m ensurepip
+if not exist .\Scripts\pip3.exe powershell Write-Host "Pip installation failed" -foreground Red && exit /b 7
+powershell Write-Host "Python and Pip installed" -foreground Green
 
 

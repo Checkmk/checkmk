@@ -658,13 +658,13 @@ class CREFolder(BaseFolder):
         self.need_unlocked_hosts()
         self.need_permission("write")
         if self._hosts is not None:
-            self._save_hosts_file()
-
             # Clean up caches of all hosts in this folder, just to be sure. We could also
             # check out all call sites of save_hosts() and partially drop the caches of
             # individual hosts to optimize this.
             for host in self._hosts.values():
                 host.drop_caches()
+
+            self._save_hosts_file()
 
         call_hook_hosts_changed(self)
 

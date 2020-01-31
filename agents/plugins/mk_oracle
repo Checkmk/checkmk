@@ -639,7 +639,61 @@ sql_performance () {
                      ||'|'|| b.invalidations
               from v\$instance i
               join V\$librarycache b on b.con_id = 0
-              join v\$database d on 1=1;"
+              join v\$database d on 1=1;
+SET SERVEROUTPUT ON
+SET FEEDBACK OFF
+DECLARE
+    l_i_cursor_id     INTEGER;
+    l_n_rowcount      NUMBER;
+    l_vc_name   VARCHAR2(200);
+    l_vc_value  VARCHAR2(200);
+    l_vc_unit   VARCHAR2(20);
+    l_vc_sql    VARCHAR2(200);
+    l_vc_step   VARCHAR2(20);
+BEGIN
+    dbms_output.enable(200000);
+    l_i_cursor_id := dbms_sql.open_cursor(security_level => 2);
+    l_vc_step := 'before con';
+    FOR con IN (
+        SELECT
+         upper(DECODE(d.cdb,'NO',i.instance_name
+                           ,i.instance_name || '.' || c.name
+                     )
+              ) iname, c.name
+        FROM
+            v\$containers c,
+            v\$database d,
+            v\$instance i
+        WHERE
+            c.open_mode LIKE 'READ %'
+            AND c.name <> 'PDB\$SEED'
+        ORDER BY c.con_id) LOOP
+        l_vc_sql := 'select name, value, unit from v\$pgastat order by name';
+        l_vc_step := 'parse: ' || con.name;
+        dbms_sql.parse(c => l_i_cursor_id, statement => l_vc_sql, language_flag => dbms_sql
+        .native, container => con.name);
+        dbms_sql.define_column(l_i_cursor_id, 1, l_vc_name, 200);
+        dbms_sql.define_column(l_i_cursor_id, 2, l_vc_value, 200);
+        dbms_sql.define_column(l_i_cursor_id, 3, l_vc_unit, 200);
+        l_vc_step := 'execute: ' || con.name;
+        l_n_rowcount := dbms_sql.execute_and_fetch(l_i_cursor_id);
+        LOOP
+            EXIT WHEN dbms_sql.fetch_rows(l_i_cursor_id) = 0;
+            dbms_sql.column_value(l_i_cursor_id, 1, l_vc_name);
+            dbms_sql.column_value(l_i_cursor_id, 2, l_vc_value);
+            dbms_sql.column_value(l_i_cursor_id, 3, l_vc_unit);
+            dbms_output.put_line(con.iname ||'|PGA_info|'||l_vc_name||'|'||l_vc_value||'|'||l_vc_unit);
+        END LOOP;
+    END LOOP;
+    dbms_sql.close_cursor(l_i_cursor_id);
+EXCEPTION
+    WHEN OTHERS THEN
+        FOR cur1 in (select upper(i.instance_name) instance_name from  v\$instance i) LOOP
+            dbms_output.put_line(cur1.instance_name || '| Debug: '|| l_vc_step || ': ' || sqlerrm);
+        END LOOP;
+END;
+/
+"
 
     elif [ "$NUMERIC_ORACLE_VERSION" -ge 101 ]; then
         echo "PROMPT <<<oracle_performance:sep(124)>>>"

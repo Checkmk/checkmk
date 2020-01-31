@@ -2856,7 +2856,7 @@ class FilterECServiceLevelRange(Filter):
         html.close_div()
         html.open_div(class_="service_level max")
         html.write_text("To")
-        html.select(self.upper_bound_varname, selection)
+        html.dropdown(self.upper_bound_varname, selection)
         html.close_div()
 
     def filter(self, infoname):

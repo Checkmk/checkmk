@@ -1330,14 +1330,14 @@ class ModeBIAggregations(ModeBI):
                     html.javascript('cmk.selection.update_bulk_moveto("%s")' %
                                     html.request.var('bulk_moveto', ''))
 
-                html.select("bulk_moveto",
-                            move_choices,
-                            "@",
-                            onchange="cmk.selection.update_bulk_moveto(this.value)",
-                            attrs={
-                                'class': 'bulk_moveto',
-                                'style': fieldstyle
-                            })
+                html.dropdown(
+                    "bulk_moveto",
+                    move_choices,
+                    "@",
+                    onchange="cmk.selection.update_bulk_moveto(this.value)",
+                    class_='bulk_moveto',
+                    style=fieldstyle,
+                )
         html.end_form()
 
     def _render_aggregations(self):
@@ -1576,14 +1576,14 @@ class ModeBIRules(ModeBI):
                     html.javascript('cmk.selection.update_bulk_moveto("%s")' %
                                     html.request.var('bulk_moveto', ''))
 
-                html.select("bulk_moveto",
-                            move_choices,
-                            "@",
-                            onchange="cmk.selection.update_bulk_moveto(this.value)",
-                            attrs={
-                                'class': 'bulk_moveto',
-                                'style': fieldstyle
-                            })
+                html.dropdown(
+                    "bulk_moveto",
+                    move_choices,
+                    "@",
+                    onchange="cmk.selection.update_bulk_moveto(this.value)",
+                    class_='bulk_moveto',
+                    style_=fieldstyle,
+                )
         html.end_form()
 
     def render_rules(self, title, only_unused):

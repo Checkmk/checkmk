@@ -2206,22 +2206,6 @@ class html(ABCHTMLGenerator):
         if error:
             self.close_x()
 
-    # TODO: DEPRECATED!!
-    def sorted_select(self, varname, choices, deflt='', onchange=None, attrs=None):
-        if attrs is None:
-            attrs = {}
-        self.dropdown(varname, choices, deflt=deflt, onchange=onchange, ordered=True, **attrs)
-
-    # TODO: DEPRECATED!!
-    def select(self, varname, choices, deflt='', onchange=None, attrs=None):
-        if attrs is None:
-            attrs = {}
-        self.dropdown(varname, choices, deflt=deflt, onchange=onchange, **attrs)
-
-    # TODO: DEPRECATED!!
-    def icon_select(self, varname, choices, deflt=''):
-        self.icon_dropdown(varname, choices, deflt=deflt)
-
     # Choices is a list pairs of (key, title). They keys of the choices
     # and the default value must be of type None, str or unicode.
     def dropdown(self, varname, choices, deflt='', ordered=False, **attrs):

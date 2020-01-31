@@ -976,8 +976,7 @@ class CommandScheduleDowntimes(Command):
         html.datetime_input("_down_to", time.time() + 7200, submit="_down_custom")
         html.hr()
         html.checkbox("_down_flexible", False, label="%s " % _('flexible with max. duration'))
-        html.time_input("_down_duration", 2, 0)
-        html.write_text(" " + _('(HH:MM)'))
+        self._vs_duration().render_input("_down_duration", 7200)
         if what == "host":
             html.hr()
             html.checkbox("_include_childs", False, label=_('Also set downtime on child hosts'))
@@ -1123,7 +1122,8 @@ class CommandScheduleDowntimes(Command):
                                   _("You need to supply a comment for your downtime."))
             if html.request.var("_down_flexible"):
                 fixed = 0
-                duration = html.get_time_input("_down_duration", _("the duration"))
+                duration = self._vs_duration().from_html_vars("_down_duration")
+                self._vs_duration().validate_value(duration, "_down_duration")
             else:
                 fixed = 1
                 duration = 0
@@ -1167,6 +1167,13 @@ class CommandScheduleDowntimes(Command):
                 commands = [make_command(spec, cmdtag) for spec in specs]
 
             return commands, title
+
+    def _vs_duration(self):
+        return Age(
+            display=["hours", "minutes"],
+            title=_("Duration"),
+            cssclass="inline",
+        )
 
     def _get_duration_human_readable(self, secs):
         days, rest = divmod(secs, 86400)

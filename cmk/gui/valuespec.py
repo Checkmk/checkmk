@@ -272,6 +272,7 @@ class Age(ValueSpec):
         help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
         default_value=_DEF_VALUE,  # type: Any
         validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+        cssclass=None,  # type: TypingOptional[str]
     ):
         super(Age, self).__init__(title=title,
                                   help=help,
@@ -282,6 +283,7 @@ class Age(ValueSpec):
         self._maxvalue = maxvalue
         self._display = display if display is not None else \
             ["days", "hours", "minutes", "seconds"]
+        self._cssclass = cssclass
 
     def canonical_value(self):
         if self._minvalue:
@@ -293,7 +295,7 @@ class Age(ValueSpec):
         hours, rest = divmod(rest, 60 * 60)
         minutes, seconds = divmod(rest, 60)
 
-        html.open_div()
+        html.open_div(class_=["vs_age", self._cssclass])
         if self._label:
             html.write(self._label + " ")
 

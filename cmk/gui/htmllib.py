@@ -2158,11 +2158,6 @@ class html(ABCHTMLGenerator):
         self.a(_("on") if enabled else _("off"), title=help_txt, **link_attrs)
         self.close_div()
 
-    def number_input(self, varname, deflt="", size=8, style="", submit=None):
-        if deflt is not None:
-            deflt = str(deflt)
-        self.text_input(varname, deflt, "number", size=size, style=style, submit=submit)
-
     def password_input(self, varname, default_value="", size=12, **args):
         self.text_input(varname, default_value, type_="password", size=size, **args)
 
@@ -2859,6 +2854,12 @@ class html(ABCHTMLGenerator):
     #
 
     # TODO: Remove this specific legacy function. Change code using this to valuespecs
+    def number_input(self, varname, deflt="", size=8, style="", submit=None):
+        if deflt is not None:
+            deflt = str(deflt)
+        self.text_input(varname, deflt, "number", size=size, style=style, submit=submit)
+
+    # TODO: Remove this specific legacy function. Change code using this to valuespecs
     def datetime_input(self, varname, default_value, submit=None):
         try:
             t = self.get_datetime_input(varname)
@@ -2871,14 +2872,14 @@ class html(ABCHTMLGenerator):
             self.set_focus(varname + "_date")
 
         br = time.localtime(t)
-        self.date_input(varname + "_date", br.tm_year, br.tm_mon, br.tm_mday, submit=submit)
+        self._date_input(varname + "_date", br.tm_year, br.tm_mon, br.tm_mday, submit=submit)
         self.write_text(" ")
-        self.time_input(varname + "_time", br.tm_hour, br.tm_min, submit=submit)
+        self._time_input(varname + "_time", br.tm_hour, br.tm_min, submit=submit)
         self.form_vars.append(varname + "_date")
         self.form_vars.append(varname + "_time")
 
     # TODO: Remove this specific legacy function. Change code using this to valuespecs
-    def time_input(self, varname, hours, mins, submit=None):
+    def _time_input(self, varname, hours, mins, submit=None):
         self.text_input(varname,
                         "%02d:%02d" % (hours, mins),
                         cssclass="time",
@@ -2887,7 +2888,7 @@ class html(ABCHTMLGenerator):
                         omit_css_width=True)
 
     # TODO: Remove this specific legacy function. Change code using this to valuespecs
-    def date_input(self, varname, year, month, day, submit=None):
+    def _date_input(self, varname, year, month, day, submit=None):
         self.text_input(varname,
                         "%04d-%02d-%02d" % (year, month, day),
                         cssclass="date",
@@ -2909,19 +2910,3 @@ class html(ABCHTMLGenerator):
             raise MKUserError([varname + "_date", varname + "_time"],
                               _("Please enter the date/time in the format YYYY-MM-DD HH:MM."))
         return int(time.mktime(br))
-
-    # TODO: Remove this specific legacy function. Change code using this to valuespecs
-    def get_time_input(self, varname, what):
-        t = self.request.var(varname)
-        if not t:
-            raise MKUserError(varname, _("Please specify %s.") % what)
-
-        try:
-            h, m = t.split(":")
-            m = int(m)
-            h = int(h)
-            if m < 0 or m > 59 or h < 0:
-                raise Exception()
-        except:
-            raise MKUserError(varname, _("Please enter the time in the format HH:MM."))
-        return m * 60 + h * 3600

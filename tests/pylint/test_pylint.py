@@ -149,13 +149,13 @@ def inv_tree(path, default_value=None):
 
 def _compile_bakery_plugins(pylint_test_dir):
     with open(pylint_test_dir + "/cmk_bakery_plugins.py", "w") as f:
+        # This pylint warning is incompatible with our "concatenation technology".
+        f.write("# pylint: disable=reimported,wrong-import-order,wrong-import-position\n")
 
         pylint_cmk.add_file(
             f,
             os.path.realpath(
                 os.path.join(repo_path(), "enterprise/cmk/base/cee/agent_bakery_plugins.py")))
-        # This pylint warning is incompatible with our "concatenation technology".
-        f.write("# pylint: disable=reimported,wrong-import-order,wrong-import-position\n")
 
         # Also add bakery plugins
         for path in pylint_cmk.check_files(os.path.join(repo_path(), "enterprise/agents/bakery")):

@@ -70,7 +70,7 @@ import pprint
 from contextlib import contextmanager
 # suppress missing import error from mypy
 from typing import (  # pylint: disable=unused-import
-    Union, Text, Optional, List, Dict, Tuple, Any, Iterable,
+    Union, Text, Optional, List, Dict, Tuple, Any, Iterable, Iterator,
 )
 
 import six
@@ -111,6 +111,7 @@ from cmk.gui.i18n import _
 # TODO: Cleanup this mess.
 HTMLInput = Union["HTML", int, float, None, str, Text]
 CSSSpec = Union[None, List[str], str]
+OutputFunnelInput = Union[str, Text, "HTML"]
 
 #.
 #   .--Encoding------------------------------------------------------------.
@@ -340,19 +341,19 @@ class HTML(object):
 
 class OutputFunnel(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self):
+        # type: () -> None
         super(OutputFunnel, self).__init__()
-        self.plug_text = []
+        self.plug_text = []  # type: List[List[Text]]
 
-    # Accepts str and unicode objects only!
-    # The plugged functionality can be used for debugging.
     def write(self, text):
+        # type: (OutputFunnelInput) -> None
         if not text:
             return
 
         if isinstance(text, HTML):
             text = "%s" % text
 
-        if not isinstance(text, six.string_types):  # also possible: type Exception!
+        if not isinstance(text, six.string_types):
             raise MKGeneralException(
                 _('Type Error: html.write accepts str and unicode input objects only!'))
 
@@ -368,10 +369,12 @@ class OutputFunnel(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def _lowlevel_write(self, text):
+        # type: (bytes) -> None
         raise NotImplementedError()
 
     @contextmanager
     def plugged(self):
+        # type: () -> Iterator[None]
         self.plug_text.append([])
         try:
             yield
@@ -381,10 +384,12 @@ class OutputFunnel(six.with_metaclass(abc.ABCMeta, object)):
             self.write(text)
 
     def _is_plugged(self):
+        # type: () -> bool
         return bool(self.plug_text)
 
-    # Get the sink content in order to do something with it.
     def drain(self):
+        # type: () -> Text
+        """Get the sink content in order to do something with it."""
         if not self._is_plugged():  # TODO: Raise exception or even remove "if"?
             return ''
 

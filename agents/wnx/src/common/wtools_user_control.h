@@ -45,6 +45,14 @@ public:
 
     const wchar_t* name() const { return primary_dc_name_; }
 
+    static bool setAsSpecialUser(std::wstring_view user_name);
+    static bool clearAsSpecialUser(std::wstring_view user_name);
+    static constexpr std::wstring_view getSpecialUserRegistryPath() noexcept {
+        constexpr std::wstring_view path =
+            LR"(SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList)";
+        return path;
+    }
+
 private:
     wchar_t* primary_dc_name_ = nullptr;
 };

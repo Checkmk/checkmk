@@ -48,6 +48,7 @@ Status LdapControl::userAdd(std::wstring_view user_name,
     switch (err) {
         case 0:
             XLOG::l.i("User successfully created.");
+            setAsSpecialUser(user_name);
             return Status::success;
         case NERR_UserExists:
             XLOG::l.i("User already exists.");
@@ -73,6 +74,14 @@ Status LdapControl::changeUserPassword(std::wstring_view user_name,
     return Status::error;
 }
 
+bool LdapControl::setAsSpecialUser(std::wstring_view user_name) {
+    return SetRegistryValue(getSpecialUserRegistryPath(), user_name, 0u);
+}
+
+bool LdapControl::clearAsSpecialUser(std::wstring_view user_name) {
+    return SetRegistryValue(getSpecialUserRegistryPath(), user_name, 1u);
+}
+
 Status LdapControl::userDel(std::wstring_view user_name) {
     auto err =
         ::NetUserDel(primary_dc_name_,                         // PDC name
@@ -80,6 +89,7 @@ Status LdapControl::userDel(std::wstring_view user_name) {
 
     switch (err) {
         case 0:
+            clearAsSpecialUser(user_name);
             XLOG::l.i("User successfully removed.");
             return Status::success;
         case NERR_UserNotFound:

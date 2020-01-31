@@ -989,20 +989,24 @@ HMODULE LoadWindowsLibrary(const std::wstring& DllPath);
 std::vector<std::string> EnumerateAllRegistryKeys(const char* RegPath);
 
 // returns data from the root machine registry
-uint32_t GetRegistryValue(const std::wstring& Key, const std::wstring& Value,
-                          uint32_t Default) noexcept;
+uint32_t GetRegistryValue(std::wstring_view path, std::wstring_view value_name,
+                          uint32_t dflt) noexcept;
+
+// deletes registry value by path
+bool DeleteRegistryValue(std::wstring_view path,
+                         std::wstring_view value_name) noexcept;
 
 // returns true on success
-bool SetRegistryValue(std::wstring_view path, std::wstring_view key,
+bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
                       std::wstring_view value);
 
 // returns true on success
-bool SetRegistryValue(const std::wstring& Key, const std::wstring& Value,
-                      uint32_t Data) noexcept;
+bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
+                      uint32_t value) noexcept;
 
-std::wstring GetRegistryValue(const std::wstring& Key,
-                              const std::wstring& Value,
-                              const std::wstring& Default) noexcept;
+std::wstring GetRegistryValue(std::wstring_view path,
+                              std::wstring_view value_name,
+                              std::wstring_view dflt) noexcept;
 std::wstring GetArgv(uint32_t index) noexcept;
 
 size_t GetOwnVirtualSize() noexcept;

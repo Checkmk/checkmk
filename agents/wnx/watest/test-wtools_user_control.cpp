@@ -167,4 +167,21 @@ TEST(WtoolsUserControl, AddDeleteMembers) {
     EXPECT_EQ(Status::absent, lc.localGroupDel(g));
 }
 
+TEST(WtoolsUserControl, SpecialUsers) {
+    auto path = LdapControl::getSpecialUserRegistryPath();
+    ASSERT_EQ(
+        path,
+        LR"(SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList)");
+
+    constexpr std::wstring_view name = L"cmk_unit_test_user";
+    constexpr uint32_t weird_value = 103'456'789u;
+    ASSERT_TRUE(LdapControl::setAsSpecialUser(name));
+    ON_OUT_OF_SCOPE(wtools::DeleteRegistryValue(path, name));
+    auto value = wtools::GetRegistryValue(path, name, weird_value);
+    EXPECT_EQ(value, 0);
+    EXPECT_TRUE(LdapControl::clearAsSpecialUser(name));
+    value = wtools::GetRegistryValue(path, name, weird_value);
+    EXPECT_EQ(value, 1);
+}
+
 }  // namespace wtools::uc

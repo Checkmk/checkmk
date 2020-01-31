@@ -455,4 +455,37 @@ TEST(Wtools, UserGroupName) {
     EXPECT_TRUE(GenerateCmaUserNameInGroup(L"XX").empty());
 }
 
+TEST(Wtools, Registry) {
+    constexpr std::wstring_view path = LR"(SOFTWARE\checkmk_tst\unit_test)";
+    constexpr std::wstring_view name = L"cmk_test";
+
+    // clean
+    DeleteRegistryValue(path, name);
+    EXPECT_TRUE(DeleteRegistryValue(path, name));
+    ON_OUT_OF_SCOPE(DeleteRegistryValue(path, name));
+
+    {
+        constexpr uint32_t value = 2;
+        constexpr uint32_t weird_value = 546'444;
+        constexpr std::wstring_view str_value = L"aaa";
+        ASSERT_TRUE(SetRegistryValue(path, name, value));
+        EXPECT_EQ(GetRegistryValue(path, name, weird_value), value);
+        EXPECT_EQ(GetRegistryValue(path, name, str_value), str_value);
+        ASSERT_TRUE(SetRegistryValue(path, name, value + 1));
+        EXPECT_EQ(GetRegistryValue(path, name, weird_value), value + 1);
+        EXPECT_TRUE(DeleteRegistryValue(path, name));
+    }
+
+    {
+        constexpr std::wstring_view value = L"21";
+        constexpr std::wstring_view weird_value = L"_____";
+        constexpr uint32_t uint_value = 123;
+        ASSERT_TRUE(wtools::SetRegistryValue(path, name, value));
+        EXPECT_EQ(wtools::GetRegistryValue(path, name, weird_value),
+                  std::wstring(value));
+        EXPECT_EQ(GetRegistryValue(path, name, uint_value), uint_value);
+        EXPECT_TRUE(wtools::DeleteRegistryValue(path, name));
+    }
+}
+
 }  // namespace wtools

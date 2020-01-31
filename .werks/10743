@@ -1,0 +1,10 @@
+Title: Cisco UCS check plugins: add support for UCS C240 M5 devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p9
+Date: 1580471327
+Class: feature
+
+

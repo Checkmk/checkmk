@@ -58,31 +58,28 @@ def parse_mssql_blocked_sessions(info):
         if line[-1].startswith("ERROR:"):
             continue
 
-        if len(line) == 2 and line[1] == NO_BLOCKING_SESSIONS_MSG:
-            parsed.setdefault(line[0], NO_BLOCKING_SESSIONS_MSG)
-            continue
-
-        elif len(line) == 1 and line[-1] == NO_BLOCKING_SESSIONS_MSG:
-            parsed.setdefault("", NO_BLOCKING_SESSIONS_MSG)
-            continue
-
+        if len(line) == 1 and line[0] == NO_BLOCKING_SESSIONS_MSG:
+            parsed.setdefault("", [])
+        elif len(line) == 2 and line[1] == NO_BLOCKING_SESSIONS_MSG:
+            parsed.setdefault(line[0], [])
         elif len(line) == 4:
             session_id, wait_duration_ms, wait_type, blocking_session_id = line
-            inst = ""
-
+            parsed.setdefault("", []).append(
+                db_instance(
+                    session_id,
+                    wait_type,
+                    blocking_session_id,
+                    float(wait_duration_ms) / 1000,
+                ))
         elif len(line) == 5:
             inst, session_id, wait_duration_ms, wait_type, blocking_session_id = line
-
-        else:
-            continue
-
-        parsed.setdefault(inst, []).append(
-            db_instance(
-                session_id,
-                wait_type,
-                blocking_session_id,
-                float(wait_duration_ms) / 1000,
-            ))
+            parsed.setdefault(inst, []).append(
+                db_instance(
+                    session_id,
+                    wait_type,
+                    blocking_session_id,
+                    float(wait_duration_ms) / 1000,
+                ))
 
     return parsed
 
@@ -96,8 +93,7 @@ def check_mssql_blocked_sessions(item, params, parsed):
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to retrieve data from database")
-
-    if data == NO_BLOCKING_SESSIONS_MSG:
+    if not data:
         yield 0, NO_BLOCKING_SESSIONS_MSG
         return
 
@@ -135,9 +131,8 @@ def check_mssql_blocked_sessions(item, params, parsed):
                 get_age_human_readable(warn), get_age_human_readable(crit))
         for state, infotext in details:
             yield state, "\n%s" % infotext
-
     else:
-        yield 0, "No blocked sessions"
+        yield 0, NO_BLOCKING_SESSIONS_MSG
 
     if ignored_waittypes:
         yield 0, "\nIgnored wait types: %s" % ", ".join(ignored_waittypes)

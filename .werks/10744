@@ -1,0 +1,12 @@
+Title: mssql_blocked_sessions: don't crash in clustered setup
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p9
+Date: 1580474123
+Class: fix
+
+In a clustered setup the mssql_blocked_sessions check plugin crashed
+if an instance is moved from one node to another and one node reported
+blocked sessions while the other node did not. This is fixed.

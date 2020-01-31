@@ -70,7 +70,7 @@ import pprint
 from contextlib import contextmanager
 # suppress missing import error from mypy
 from typing import (  # pylint: disable=unused-import
-    Union, Text, Optional,
+    Union, Text, Optional, List, Dict,
 )
 
 import six
@@ -107,6 +107,8 @@ import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.log as log
 from cmk.gui.i18n import _
+
+CSSSpec = Union[None, List[str], str]
 
 #.
 #   .--Encoding------------------------------------------------------------.
@@ -445,14 +447,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, OutputFunnel)):
     #
 
     def _render_attributes(self, **attrs):
-        # make class attribute foolproof
-        css = []
-        for k in ["class_", "css", "cssclass", "class"]:
-            if k in attrs:
-                if isinstance(attrs[k], list):
-                    css.extend(attrs.pop(k))
-                elif attrs[k] is not None:
-                    css.append(attrs.pop(k))
+        css = self._get_normalized_css_classes(attrs)
         if css:
             attrs["class"] = css
 
@@ -495,6 +490,19 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, OutputFunnel)):
 
         for k in options:
             yield " %s=\'\'" % k
+
+    def _get_normalized_css_classes(self, attrs):
+        # type: (Dict[str, CSSSpec]) -> List[str]
+        # make class attribute foolproof
+        css = []  # type: List[str]
+        for k in ["class_", "css", "cssclass", "class"]:
+            if k in attrs:
+                cls_spec = attrs.pop(k)
+                if isinstance(cls_spec, list):
+                    css.extend(cls_spec)
+                elif cls_spec is not None:
+                    css.append(cls_spec)
+        return css
 
     # applies attribute encoding to prevent code injections.
     def _render_opening_tag(self, tag_name, close_tag=False, **attrs):
@@ -599,7 +607,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, OutputFunnel)):
                                      close_tag=True))
 
     #
-    # Scriptingi
+    # Scripting
     #
 
     def render_javascript(self, code):
@@ -921,7 +929,6 @@ class html(ABCHTMLGenerator):
         self._user_id = None
         self.user_errors = {}
         self.focus_object = None
-        self.events = set([])  # currently used only for sounds
         self.status_icons = {}
         self.final_javascript_code = ""
         self.page_context = {}

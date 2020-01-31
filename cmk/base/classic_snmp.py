@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -76,14 +76,16 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
             console.verbose(six.ensure_str(snmp_process.stderr.read()) + "\n")
             return None
 
-        line = snmp_process.stdout.readline().strip()
+        line = six.ensure_str(snmp_process.stdout.readline()).strip()
         if not line:
             console.verbose("Error in response to snmpget.\n")
             return None
 
-        value = None  # type: Optional[RawValue]
-        item, value = line.split("=", 1)
-        value = value.strip()
+        parts = line.split("=", 1)
+        if len(parts) != 2:
+            return None
+        item = parts[0]
+        value = parts[1].strip()
         console.vverbose("SNMP answer: ==> [%s]\n" % value)
         if value.startswith('No more variables') or \
            value.startswith('End of MIB') or \
@@ -96,8 +98,8 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
             return None
 
         # Strip quotes
-        if value and value.startswith('"') and value.endswith('"'):
-            value = value[1:-1]
+        if value.startswith('"') and value.endswith('"'):
+            return value[1:-1]
         return value
 
     def walk(self,

@@ -370,7 +370,7 @@ class DataSource(
 
     def _persisted_sections_dir(self):
         # type: () -> str
-        return _persisted_sections_dir(self.id())
+        return os.path.join(cmk.utils.paths.var_dir, "persisted_sections", self.id())
 
     def get_check_plugin_names(self):
         # type: () -> Set[CheckPluginName]
@@ -1026,16 +1026,6 @@ class ManagementBoardDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
         except socket.error:
             # no ipv6 address either
             return False
-
-
-def has_persisted_agent_sections(datasource_id, hostname):
-    # type: (str, str) -> bool
-    return os.path.exists(os.path.join(_persisted_sections_dir(datasource_id), hostname))
-
-
-def _persisted_sections_dir(datasource_id):
-    # type: (str) -> str
-    return os.path.join(cmk.utils.paths.var_dir, "persisted_sections", datasource_id)
 
 
 def _normalize_ip_addresses(ip_addresses):

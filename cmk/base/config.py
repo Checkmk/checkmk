@@ -2310,8 +2310,8 @@ class HostConfig(object):
         if piggyback.has_piggyback_raw_data(self.hostname, time_settings):
             return True
 
-        from cmk.base.data_sources.abstract import has_persisted_agent_sections
-        return has_persisted_agent_sections("piggyback", self.hostname)
+        return Path(cmk.utils.paths.var_dir, "persisted_sections", "piggyback",
+                    self.hostname).exists()
 
     @property
     def piggybacked_host_files(self):

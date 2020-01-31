@@ -114,7 +114,6 @@ def parse_arguments(argv):
     parser.add_argument("--debug",
                         action="store_true",
                         help="Debug mode: let Python exceptions come through")
-
     parser.add_argument("hostname",
                         metavar="HOSTNAME",
                         help="Name of the splunk instance to query.")

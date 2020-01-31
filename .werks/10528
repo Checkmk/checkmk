@@ -1,0 +1,11 @@
+Title: Host changes from normal monitoring users were not always applied on the first save
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1580475890
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 1.6.0p9
+
+Users without the role <tt>Read access to all hosts and folders</tt> had to save hosts twice to get their changes applied.

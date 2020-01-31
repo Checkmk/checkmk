@@ -26,6 +26,7 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
+    Age,
     Dictionary,
     Float,
     Integer,
@@ -42,6 +43,13 @@ from cmk.gui.plugins.wato import (
 
 def _parameter_valuespec_jira_custom_svc():
     return Dictionary(elements=[
+        ("count_diff",
+         Age(
+             title=_("Timespan for difference calculation of total number of "
+                     "issues"),
+             display=["days", "hours", "minutes"],
+             default_value=86400 * 7,
+         )),
         ("custom_svc_count_lower",
          Tuple(
              title=_("Total number of issues lower level"),
@@ -58,6 +66,29 @@ def _parameter_valuespec_jira_custom_svc():
                  Integer(title=_("Critical at"), unit="issues"),
              ],
          )),
+        ("count_diff_lower",
+         Tuple(
+             title=_("Difference on total number of issues lower level"),
+             elements=[
+                 Integer(title=_("Warning if less then"), unit="issues"),
+                 Integer(title=_("Critical if less then"), unit="íssues"),
+             ],
+         )),
+        ("count_diff_upper",
+         Tuple(
+             title=_("Difference on total number of issues upper level"),
+             elements=[
+                 Integer(title=_("Warning at"), unit="issues"),
+                 Integer(title=_("Critical at"), unit="issues"),
+             ],
+         )),
+        ("sum_diff",
+         Age(
+             title=_("Timespan for difference calculation of summed up "
+                     "values"),
+             display=["days", "hours", "minutes"],
+             default_value=86400 * 7,
+         )),
         ("custom_svc_sum_lower",
          Tuple(
              title=_("Summed up values lower level"),
@@ -72,6 +103,22 @@ def _parameter_valuespec_jira_custom_svc():
              elements=[
                  Integer(title=_("Warning at")),
                  Integer(title=_("Critical at")),
+             ],
+         )),
+        ("sum_diff_lower",
+         Tuple(
+             title=_("Difference on summed up values lower level"),
+             elements=[
+                 Integer(title=_("Warning if less then"), unit="issues"),
+                 Integer(title=_("Critical if less then"), unit="íssues"),
+             ],
+         )),
+        ("sum_diff_upper",
+         Tuple(
+             title=_("Difference on summed up values upper level"),
+             elements=[
+                 Integer(title=_("Warning at"), unit="issues"),
+                 Integer(title=_("Critical at"), unit="issues"),
              ],
          )),
         ("custom_svc_avg_lower",

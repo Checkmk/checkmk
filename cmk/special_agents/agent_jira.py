@@ -204,6 +204,12 @@ def _handle_custom_query(jira, args):
             key = "avg"
             value = "%.2f" % (total / len(issues))
 
+        if key == "avg":
+            result_dict.setdefault(svc_desc, {}).update({
+                "avg_sum": total,
+                "avg_total": len(issues)
+            })
+
         result_dict.setdefault(svc_desc, {}).update({key: value})
 
     if result_dict:

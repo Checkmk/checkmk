@@ -24,9 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<jira_jira_custom_svc>>>
-# {"Custom Service Count": {"count": 270}, "Custom Service Sum": {"sum": 17.0},
-# "Custom Service AVG": {"avg": "0.34"}}
+# <<<jira_custom_svc>>>
+# {"Jira custom 2": {"count": 3200}, "Custom avg": {"avg_sum": 42.0,
+# "avg_total": 50, "avg": "0.84"}} {"Custom Service Count": {"count": 270},
+# "Custom Service Sum": {"sum": 17.0}, "Custom Service AVG": {"avg": "0.34"}}
 
 import json
 
@@ -83,12 +84,58 @@ def check_jira_custom_svc(item, params, item_data):
                            human_readable_func=hr_func,
                            infoname=infotext)
 
+        if computation == "avg":
+            avg_total = item_data.get("avg_total")
+            avg_sum = item_data.get("avg_sum")
+            if avg_total is not None and avg_sum is not None:
+                yield 0, "(Summed up values: %s / Total search results: %s)" % (avg_sum, avg_total)
+
+        else:
+            diff_key = "%s_diff" % computation
+            timespan = params.get(diff_key, 604800)
+            diff_levels_upper = params.get('%s_upper' % diff_key, (None, None))
+            diff_levels_lower = params.get('%s_lower' % diff_key, (None, None))
+
+            diff = _get_value_diff("jira_%s" % diff_key, svc_value, timespan)
+
+            yield check_levels(
+                diff,
+                None,
+                diff_levels_upper + diff_levels_lower,
+                infoname="Difference last %s" % get_age_human_readable(timespan),
+            )
+
+
+# get_rate() and get_average() do not help here
+def _get_value_diff(diff_name, svc_value, timespan):
+    this_time = time.time()
+    old_state = get_item_state(diff_name, None)
+
+    # first call: take current value as diff or assume 0.0
+    if old_state is None:
+        diff_val = 0
+        set_item_state(diff_name, (this_time, diff_val))
+        return diff_val
+
+    # Get previous value and time difference
+    last_time, last_val = old_state
+    timedif = this_time - last_time
+    if timedif < 0:
+        timedif = 0
+    if timedif < float(timespan):
+        diff_val = svc_value - last_val
+    else:
+        diff_val = 0
+        set_item_state(diff_name, (this_time, svc_value))
+
+    return diff_val
+
 
 check_info["jira_custom_svc"] = {
     "parse_function": parse_jira_custom_svc,
     "check_function": check_jira_custom_svc,
     'inventory_function': discover(),
     "service_description": "Jira %s",
-    "has_perfdata": True,
+    'has_perfdata': True,
     "group": "jira_custom_svc",
 }

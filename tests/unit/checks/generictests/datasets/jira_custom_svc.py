@@ -11,36 +11,45 @@ info = [
         u'query.', u'(line', u'1,', u'character', u'40)"}}'
     ],
     [
-        u'{"Jira', u'custom', u'2":', u'{"count":', u'398},', u'"Charged',
-        u'avg":', u'{"avg":', u'"0.96"},', u'"Charged', u'sum":', u'{"sum":',
-        u'48.0}}'
+        u'{"Custom', u'error":', u'{"error":', u'"Jira', u'error', u'400:',
+        u'Error', u'in', u'the', u'JQL', u'Query:', u'Expecting', u'operator',
+        u'but', u'got', u"'closed'.", u'The', u'valid', u'operators', u'are',
+        u"'=',", u"'!=',", u"'<',", u"'>',", u"'<=',", u"'>=',", u"'~',",
+        u"'!~',", u"'IN',", u"'NOT", u"IN',", u"'IS'", u'and', u"'IS",
+        u"NOT'.", u'(line', u'1,', u'character', u'30)"}}'
+    ],
+    [
+        u'{"Jira', u'custom', u'2":', u'{"count":', u'414},', u'"Custom',
+        u'avg":', u'{"avg_sum":', u'37.0,', u'"avg_total":', u'50,', u'"avg":',
+        u'"0.74"},', u'"Custom', u'sum":', u'{"sum":', u'37.0}}'
     ]
 ]
 
 discovery = {
     '': [
-        (u'Charged Avg', {}), (u'Charged Sum', {}), (u'Custom Service', {}),
-        (u'Jira Custom 2', {})
+        (u'Custom Avg', {}), (u'Custom Error', {}), (u'Custom Service', {}),
+        (u'Custom Sum', {}), (u'Jira Custom 2', {})
     ]
 }
 
 checks = {
     '': [
         (
-            u'Charged Avg', {}, [
+            u'Custom Avg', {}, [
                 (
-                    0, 'Average value: 0.96', [
-                        ('jira_avg', 0.96, None, None, None, None)
+                    0, 'Average value: 0.74', [
+                        ('jira_avg', 0.74, None, None, None, None)
                     ]
-                )
+                ),
+                (0, '(Summed up values: 37.0 / Total search results: 50)', [])
             ]
         ),
         (
-            u'Charged Sum', {}, [
+            u'Custom Error', {}, [
                 (
-                    0, 'Result of summed up values: 48', [
-                        ('jira_sum', 48.0, None, None, None, None)
-                    ]
+                    2,
+                    u"Jira error while searching (see long output for details)\nJira error 400: Error in the JQL Query: Expecting operator but got 'closed'. The valid operators are '=', '!=', '<', '>', '<=', '>=', '~', '!~', 'IN', 'NOT IN', 'IS' and 'IS NOT'. (line 1, character 30)",
+                    []
                 )
             ]
         ),
@@ -54,12 +63,21 @@ checks = {
             ]
         ),
         (
+            u'Custom Sum', {}, [
+                (
+                    0, 'Result of summed up values: 37', [
+                        ('jira_sum', 37.0, None, None, None, None)
+                    ]
+                ), (0, u'Difference last 7 d: 0.00', [])
+            ]
+        ),
+        (
             u'Jira Custom 2', {}, [
                 (
-                    0, 'Total number of issues: 398', [
-                        ('jira_count', 398, None, None, None, None)
+                    0, 'Total number of issues: 414', [
+                        ('jira_count', 414, None, None, None, None)
                     ]
-                )
+                ), (0, u'Difference last 7 d: 0.00', [])
             ]
         )
     ]

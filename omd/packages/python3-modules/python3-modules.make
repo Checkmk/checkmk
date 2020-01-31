@@ -93,7 +93,7 @@ PYTHON3_MODULES_LIST += jira-2.0.0.tar.gz # needed for jira
 PYTHON3_MODULES_LIST += Pillow-7.0.0.tar.gz # needed by GUI, reportlab
 # PYTHON3_MODULES_LIST += python-ldap-3.2.0.tar.gz # needed by GUI (User sync)  DEACTIVATED FOR NOW BECAUSE OF BUILD PROBLEMS
 PYTHON3_MODULES_LIST += dicttoxml-1.7.4.tar.gz # needed by GUI (API XML format)
-# PYTHON3_MODULES_LIST += numpy-1.18.1.tar.gz # needed by GUI (forecast graphs)  DEACTIVATED FOR NOW BECAUSE OF BUILD PROBLEMS
+PYTHON3_MODULES_LIST += numpy-1.15.4.tar.gz # needed by GUI (forecast graphs)
 PYTHON3_MODULES_LIST += reportlab-3.5.34.tar.gz # needed by GUI (reporting)
 PYTHON3_MODULES_LIST += PyPDF2-1.26.0.tar.gz # needed by GUI (reporting)
 

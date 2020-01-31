@@ -1,0 +1,18 @@
+Title: Correct plugin name for netstat
+Knowledge: doc
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p9
+Date: 1580477186
+
+This Werk fixes a regression for Linux and AIX since Werk #6314
+
+When shipped via the agent bakery, the netstat agent plugin executable
+is now correctly named "netstat" instead of "netstat.linux" and "netstat.aix"
+respectively.
+
+However, the incorrect naming did not interfere with correct plugin execution.

@@ -70,7 +70,7 @@ import pprint
 from contextlib import contextmanager
 # suppress missing import error from mypy
 from typing import (  # pylint: disable=unused-import
-    Union, Text, Optional, List, Dict,
+    Union, Text, Optional, List, Dict, Tuple, Any, Iterable,
 )
 
 import six
@@ -108,6 +108,8 @@ import cmk.gui.config as config
 import cmk.gui.log as log
 from cmk.gui.i18n import _
 
+# TODO: Cleanup this mess.
+HTMLInput = Union["HTML", int, float, None, str, Text]
 CSSSpec = Union[None, List[str], str]
 
 #.
@@ -125,6 +127,7 @@ CSSSpec = Union[None, List[str], str]
 
 class Encoder(object):
     def urlencode_vars(self, vars_):
+        # type: (List[Tuple[str, Optional[Union[int, str, Text]]]]) -> str
         """Convert a mapping object or a sequence of two-element tuples to a “percent-encoded” string
 
         This function returns a str object, never unicode!
@@ -154,6 +157,7 @@ class Encoder(object):
         return urllib.urlencode(pairs)
 
     def urlencode(self, value):
+        # type: (Optional[Union[str, Text]]) -> str
         """Replace special characters in string using the %xx escape.
 
         This function returns a str object, never unicode!
@@ -195,10 +199,12 @@ class Encoder(object):
 
 class HTML(object):
     def __init__(self, value=u''):
+        # type: (HTMLInput) -> None
         super(HTML, self).__init__()
         self.value = self._ensure_unicode(value)
 
     def _ensure_unicode(self, value):
+        # type: (HTMLInput) -> Text
         # value can of of any type: HTML, int, float, None, str, ...
         # TODO cleanup call sites
         if not isinstance(value, six.string_types):
@@ -206,12 +212,16 @@ class HTML(object):
         return ensure_unicode(value)
 
     def __html__(self):
+
         return "%s" % self
 
     def __bytebatzen__(self):
+        # type: () -> bytes
         return self.value.encode("utf-8")
 
-    def __str__(self):
+    # TODO: Cleanup once we are using Python 3
+    def __str__(self):  # type: ignore
+        # type: () -> Text
         # Against the sense of the __str__() method, we need to return the value
         # as unicode here. Why? There are many cases where something like
         # "%s" % HTML(...) is done in the GUI code. This calls the __str__ function
@@ -231,36 +241,51 @@ class HTML(object):
         return self.value
 
     def __repr__(self):
-        return ("HTML(\"%s\")" % self.value).encode("utf-8")
+        # type: () -> str
+        repr_val = "HTML(\"%s\")" % self.value
+
+        if sys.version_info[0] >= 3:
+            return repr_val
+        return repr_val.encode("utf-8")
 
     def to_json(self):
+        # type: () -> Text
         return self.value
 
     def __add__(self, other):
+        # type: (HTMLInput) -> HTML
         return HTML(self.value + self._ensure_unicode(other))
 
     def __iadd__(self, other):
+        # type: (HTMLInput) -> HTML
         return self.__add__(other)
 
     def __radd__(self, other):
+        # type: (HTMLInput) -> HTML
         return HTML(self._ensure_unicode(other) + self.value)
 
     def join(self, iterable):
+        # type: (Iterable[HTMLInput]) -> HTML
         return HTML(self.value.join(map(self._ensure_unicode, iterable)))
 
     def __eq__(self, other):
+        # type: (Any) -> bool
         return self.value == self._ensure_unicode(other)
 
     def __ne__(self, other):
+        # type: (Any) -> bool
         return self.value != self._ensure_unicode(other)
 
     def __len__(self):
+        # type: () -> int
         return len(self.value)
 
     def __getitem__(self, index):
+        # type: (int) -> HTML
         return HTML(self.value[index])
 
     def __contains__(self, item):
+        # type: (HTMLInput) -> bool
         return self._ensure_unicode(item) in self.value
 
     def count(self, sub, *args):
@@ -282,9 +307,11 @@ class HTML(object):
         return HTML(self.value.strip(*args))
 
     def lower(self):
+        # type: () -> HTML
         return HTML(self.value.lower())
 
     def upper(self):
+        # type: () -> HTML
         return HTML(self.value.upper())
 
     def startswith(self, prefix, *args):

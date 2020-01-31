@@ -366,7 +366,7 @@ class DataSource(
 
     def _persisted_sections_file_path(self):
         # type: () -> str
-        return _persisted_sections_file_path(self._persisted_sections_dir(), self._hostname)
+        return os.path.join(self._persisted_sections_dir(), self._hostname)
 
     def _persisted_sections_dir(self):
         # type: () -> str
@@ -1030,12 +1030,7 @@ class ManagementBoardDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
 
 def has_persisted_agent_sections(datasource_id, hostname):
     # type: (str, str) -> bool
-    return os.path.exists(_persisted_sections_file_path(datasource_id, hostname))
-
-
-def _persisted_sections_file_path(datasource_id, hostname):
-    # type: (str, str) -> str
-    return os.path.join(_persisted_sections_dir(datasource_id), hostname)
+    return os.path.exists(os.path.join(_persisted_sections_dir(datasource_id), hostname))
 
 
 def _persisted_sections_dir(datasource_id):

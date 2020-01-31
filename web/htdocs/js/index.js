@@ -5,6 +5,11 @@
 import "core-js/stable";
 
 import $ from "jquery";
+import * as d3 from "d3";
+import * as d3_flextree from "d3-flextree";
+import * as d3_sankey from "d3-sankey";
+import * as crossfilter from "crossfilter2";
+import * as dc from "dc";
 import * as forms from "forms";
 import * as ajax from "ajax";
 import * as prediction from "prediction";
@@ -34,13 +39,13 @@ import * as reload_pause from "reload_pause";
 import * as graph_integration from "graph_integration";
 import * as dashboard from "dashboard";
 
-import * as d3 from "d3";
-import * as d3_flextree from "d3-flextree";
+
 import * as node_visualization from "node_visualization";
 import * as node_visualization_utils from "node_visualization_utils";
 import * as node_visualization_layout_styles from "node_visualization_layout_styles";
 import * as node_visualization_viewport_utils from "node_visualization_viewport_utils";
 import * as node_visualization_viewport_layers from "node_visualization_viewport_layers";
+
 import {fetch} from "whatwg-fetch";
 
 // Optional import is currently not possible using the ES6 imports
@@ -59,6 +64,10 @@ $(() => {
 });
 
 export const cmk_export = {
+    crossfilter: crossfilter.default,
+    d3: d3,
+    dc: dc,
+    sankey: d3_sankey,
     cmk: {
         forms: forms,
         prediction: prediction,
@@ -98,3 +107,4 @@ export const cmk_export = {
         d3_flextree: d3_flextree,
     }
 };
+

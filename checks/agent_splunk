@@ -43,7 +43,10 @@ def agent_splunk_arguments(params, hostname, ipaddress):
     if "port" in params:
         args += ["-p", params["port"]]
 
-    args += [params["instance"]]
+    if "instance" in params:
+        hostname = params["instance"]
+
+    args += [hostname]
 
     return args
 

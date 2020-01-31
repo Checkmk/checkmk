@@ -2060,7 +2060,7 @@ def _valuespec_special_agents_splunk():
     return Dictionary(
         title=_("Check state of Splunk"),
         help=_("Requests data from a Splunk instance."),
-        optional_keys=["port"],
+        optional_keys=["instance", "port"],
         elements=[
             ("instance",
              TextAscii(

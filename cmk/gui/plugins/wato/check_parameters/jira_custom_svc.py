@@ -54,8 +54,8 @@ def _parameter_valuespec_jira_custom_svc():
          Tuple(
              title=_("Total number of issues lower level"),
              elements=[
-                 Integer(title=_("Warning if less then"), unit="issues"),
-                 Integer(title=_("Critical if less then"), unit="íssues"),
+                 Integer(title=_("Warning below"), unit="issues"),
+                 Integer(title=_("Critical below"), unit="íssues"),
              ],
          )),
         ("custom_svc_count_upper",
@@ -70,8 +70,8 @@ def _parameter_valuespec_jira_custom_svc():
          Tuple(
              title=_("Difference on total number of issues lower level"),
              elements=[
-                 Integer(title=_("Warning if less then"), unit="issues"),
-                 Integer(title=_("Critical if less then"), unit="íssues"),
+                 Integer(title=_("Warning below"), unit="issues"),
+                 Integer(title=_("Critical below"), unit="íssues"),
              ],
          )),
         ("count_diff_upper",
@@ -93,8 +93,8 @@ def _parameter_valuespec_jira_custom_svc():
          Tuple(
              title=_("Summed up values lower level"),
              elements=[
-                 Integer(title=_("Warning if less then"), unit="issues"),
-                 Integer(title=_("Critical if less then"), unit="íssues"),
+                 Integer(title=_("Warning below"), unit="issues"),
+                 Integer(title=_("Critical below"), unit="íssues"),
              ],
          )),
         ("custom_svc_sum_upper",
@@ -109,8 +109,8 @@ def _parameter_valuespec_jira_custom_svc():
          Tuple(
              title=_("Difference on summed up values lower level"),
              elements=[
-                 Integer(title=_("Warning if less then"), unit="issues"),
-                 Integer(title=_("Critical if less then"), unit="íssues"),
+                 Integer(title=_("Warning below"), unit="issues"),
+                 Integer(title=_("Critical below"), unit="íssues"),
              ],
          )),
         ("sum_diff_upper",
@@ -124,10 +124,8 @@ def _parameter_valuespec_jira_custom_svc():
         ("custom_svc_avg_lower",
          Tuple(
              title=_("Averaged values lower level"),
-             elements=[
-                 Float(title=_("Warning if less then")),
-                 Float(title=_("Critical if less then"))
-             ],
+             elements=[Float(title=_("Warning below")),
+                       Float(title=_("Critical below"))],
          )),
         ("custom_svc_avg_upper",
          Tuple(

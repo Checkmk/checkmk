@@ -30,15 +30,17 @@
 from functools import partial
 import logging
 
-from typing import Any, TYPE_CHECKING  # pylint: disable=unused-import
+from typing import TYPE_CHECKING
 
 from werkzeug.local import LocalProxy, LocalStack
 
 #####################################################################
 # a namespace for storing data during an application context
 # Cyclical import
+
 if TYPE_CHECKING:
-    from cmk.gui import htmllib, http  # pylint: disable=unused-import
+    from typing import Any, Union  # pylint: disable=unused-import
+    from cmk.gui import htmllib, http, config  # pylint: disable=unused-import
 
 _sentinel = object()
 
@@ -98,7 +100,7 @@ g = LocalProxy(partial(_lookup_app_object, "g"))  # type: Any
 class _PrependURLFilter(logging.Filter):
     def filter(self, record):
         if record.levelno >= logging.ERROR:
-            record.msg = "%s %s" % (html.request.requested_url, record.msg)
+            record.msg = "%s %s" % (request.requested_url, record.msg)
         return True
 
 
@@ -175,7 +177,7 @@ def request_local_attr(name=None):
 
 local = request_local_attr()  # None as name will get the whole object.
 
-user = request_local_attr('user')
-request = request_local_attr('request')
-response = request_local_attr('response')
-html = request_local_attr('html')
+user = request_local_attr('user')  # type: Union[config.LoggedInUser, LocalProxy]
+request = request_local_attr('request')  # type: Union[http.Request, LocalProxy]
+response = request_local_attr('response')  # type: Union[http.Response, LocalProxy]
+html = request_local_attr('html')  # type: Union[htmllib.html, LocalProxy]

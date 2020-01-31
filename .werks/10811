@@ -1,0 +1,11 @@
+Title: agent_splunk: Password store can now be used
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p9
+Date: 1580485303
+Class: fix
+
+If you used a password from password store, the agent exited with an error
+"unrecognized arguments". This has been fixed.

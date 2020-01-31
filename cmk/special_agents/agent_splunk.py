@@ -29,8 +29,10 @@ import argparse
 import sys
 import requests
 import urllib3  # type: ignore
+import cmk.utils.password_store
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+cmk.utils.password_store.replace_passwords()
 
 Section = namedtuple('Section', ['name', 'uri', 'handler'])
 

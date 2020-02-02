@@ -3256,7 +3256,7 @@ class AbsoluteDate(ValueSpec):
                 ("_sec", sec, 2),
             ]
 
-        if not self._show_titles:
+        if self._show_titles:
             titles = [_("Year"), _("Month"), _("Day")]
             if self._include_time:
                 titles += ['', _("Hour"), _("Minute"), _("Sec.")]

@@ -307,7 +307,10 @@ class Age(ValueSpec):
             if uid in self._display:
                 val += takeover
                 takeover = 0
-                html.number_input(varprefix + "_" + uid, val, 4)
+                html.text_input(varprefix + "_" + uid,
+                                default_value=str(val),
+                                size=4,
+                                cssclass="number")
                 html.write(" %s " % title)
             else:
                 takeover = (takeover + val) * tkovr_fac
@@ -406,9 +409,17 @@ class Integer(ValueSpec):
         else:
             style = ""
         if value == "":  # This is needed for ListOfIntegers
-            html.text_input(varprefix, "", "number", size=self._size, style=style)
+            html.text_input(varprefix,
+                            default_value="",
+                            cssclass="number",
+                            size=self._size,
+                            style=style)
         else:
-            html.number_input(varprefix, self._render_value(value), size=self._size, style=style)
+            html.text_input(varprefix,
+                            self._render_value(value),
+                            size=self._size,
+                            style=style,
+                            cssclass="number")
         if self._unit:
             html.nbsp()
             html.write(self._unit)
@@ -471,7 +482,10 @@ class Filesize(Integer):
 
     def render_input(self, varprefix, value):
         exp, count = self.get_exponent(value)
-        html.number_input(varprefix + '_size', count, size=self._size)
+        html.text_input(varprefix + '_size',
+                        default_value=str(count),
+                        size=self._size,
+                        cssclass="number")
         html.nbsp()
         choices = [(str(nr), name) for (nr, name) in enumerate(self._names)]
         html.dropdown(varprefix + '_unit', choices, deflt=str(exp))
@@ -3215,6 +3229,7 @@ class AbsoluteDate(ValueSpec):
         # and makes the value able to be None when no time is set.
         # FIXME: Shouldn't this be the default?
         self._none_means_empty = kwargs.get("none_means_empty", False)
+        self._submit_form_name = kwargs.get("submit_form_name")
 
     def default_value(self):
         if self._default_value is not None:
@@ -3273,7 +3288,13 @@ class AbsoluteDate(ValueSpec):
                 if val is None:
                     html.nbsp()
                 else:
-                    html.number_input(varprefix + val[0], val[1], size=val[2])
+                    html.text_input(
+                        varprefix + val[0],
+                        default_value=str(val[1]),
+                        size=val[2],
+                        cssclass="number",
+                        submit=self._submit_form_name,
+                    )
                 html.close_td()
             html.close_tr()
 
@@ -3286,7 +3307,13 @@ class AbsoluteDate(ValueSpec):
                 if val is None:
                     html.nbsp()
                 else:
-                    html.number_input(varprefix + val[0], val[1], size=val[2])
+                    html.text_input(
+                        varprefix + val[0],
+                        default_value=str(val[1]),
+                        size=val[2],
+                        cssclass="number",
+                        submit=self._submit_form_name,
+                    )
 
     def set_focus(self, varprefix):
         html.set_focus(varprefix + "_year")

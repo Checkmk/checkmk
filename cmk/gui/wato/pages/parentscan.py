@@ -408,7 +408,7 @@ class ModeParentScan(WatoMode):
         html.write_text(_("Timeout for responses") + ":")
         html.close_td()
         html.open_td()
-        html.number_input("timeout", self._settings["timeout"], size=2)
+        html.text_input("timeout", str(self._settings["timeout"]), size=2, cssclass="number")
         html.write_text(_("sec"))
         html.close_td()
         html.close_tr()
@@ -418,7 +418,7 @@ class ModeParentScan(WatoMode):
         html.write_text(_("Number of probes per hop") + ":")
         html.close_td()
         html.open_td()
-        html.number_input("probes", self._settings["probes"], size=2)
+        html.text_input("probes", str(self._settings["probes"]), size=2, cssclass="number")
         html.close_td()
         html.close_tr()
 
@@ -427,7 +427,7 @@ class ModeParentScan(WatoMode):
         html.write_text(_("Maximum distance (TTL) to gateway") + ":")
         html.close_td()
         html.open_td()
-        html.number_input("max_ttl", self._settings["max_ttl"], size=2)
+        html.text_input("max_ttl", str(self._settings["max_ttl"]), size=2, cssclass="number")
         html.close_td()
         html.close_tr()
 
@@ -441,7 +441,10 @@ class ModeParentScan(WatoMode):
               "the number of PING probes to 0."))
         html.close_td()
         html.open_td()
-        html.number_input("ping_probes", self._settings.get("ping_probes", 5), size=2)
+        html.text_input("ping_probes",
+                        str(self._settings.get("ping_probes", 5)),
+                        size=2,
+                        cssclass="number")
         html.close_td()
         html.close_tr()
         html.close_table()

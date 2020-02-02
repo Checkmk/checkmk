@@ -35,7 +35,7 @@ import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.valuespec import Age
+from cmk.gui.valuespec import Age, AbsoluteDate
 
 from cmk.gui.permissions import (
     permission_section_registry,
@@ -136,7 +136,7 @@ class CommandReschedule(Command):
     def render(self, what):
         html.button("_resched_checks", _("Reschedule"))
         html.write_text(" " + _("and spread over") + " ")
-        html.number_input("_resched_spread", 0, size=3)
+        html.text_input("_resched_spread", default_value="0", size=3, cssclass="number")
         html.write_text(" " + _("minutes") + " ")
 
     def action(self, cmdtag, spec, row, row_index, num_rows):
@@ -952,7 +952,11 @@ class CommandScheduleDowntimes(Command):
         html.hr()
         html.button("_down_from_now", _("From now for"))
         html.nbsp()
-        html.number_input("_down_minutes", 60, size=4, submit="_down_from_now")
+        html.text_input("_down_minutes",
+                        default_value="60",
+                        size=4,
+                        submit="_down_from_now",
+                        cssclass="number")
         html.write_text("&nbsp; " + _("minutes"))
         html.hr()
         for time_range in config.user_downtime_timeranges:
@@ -971,9 +975,9 @@ class CommandScheduleDowntimes(Command):
             html.hr()
 
         html.button("_down_custom", _("Custom time range"))
-        html.datetime_input("_down_from", time.time(), submit="_down_custom")
+        self._vs_down_from().render_input("_down_from", time.time())
         html.write_text("&nbsp; " + _('to') + " &nbsp;")
-        html.datetime_input("_down_to", time.time() + 7200, submit="_down_custom")
+        self._vs_down_to().render_input("_down_to", time.time() + 7200)
         html.hr()
         html.checkbox("_down_flexible", False, label="%s " % _('flexible with max. duration'))
         self._vs_duration().render_input("_down_duration", 7200)
@@ -1076,8 +1080,12 @@ class CommandScheduleDowntimes(Command):
             title = _("<b>%s for the next %d minutes</b> on") % (title_start, minutes)
 
         elif html.request.var("_down_custom"):
-            down_from = html.get_datetime_input("_down_from")
-            down_to = html.get_datetime_input("_down_to")
+            down_from = self._vs_down_from().from_html_vars("_down_from")
+            self._vs_down_from().validate_value(down_from, "_down_from")
+
+            down_to = self._vs_down_to().from_html_vars("_down_to")
+            self._vs_down_to().validate_value(down_to, "_down_to")
+
             if down_to < time.time():
                 raise MKUserError(
                     "_down_to",
@@ -1167,6 +1175,20 @@ class CommandScheduleDowntimes(Command):
                 commands = [make_command(spec, cmdtag) for spec in specs]
 
             return commands, title
+
+    def _vs_down_from(self):
+        return AbsoluteDate(
+            title=_("From"),
+            include_time=True,
+            submit_form_name="_down_custom",
+        )
+
+    def _vs_down_to(self):
+        return AbsoluteDate(
+            title=_("Until"),
+            include_time=True,
+            submit_form_name="_down_custom",
+        )
 
     def _vs_duration(self):
         return Age(

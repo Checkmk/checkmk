@@ -154,9 +154,9 @@ class FilterInvtableIDRange(six.with_metaclass(abc.ABCMeta, Filter)):
 
     def display(self):
         html.write_text(_("from:") + " ")
-        html.number_input(self.ident + "_from")
+        html.text_input(self.ident + "_from", size=8, cssclass="number")
         html.write_text("&nbsp; %s: " % _("to"))
-        html.number_input(self.ident + "_to")
+        html.text_input(self.ident + "_to", size=8, cssclass="number")
 
     def filter_table(self, rows):
         from_value = utils.saveint(html.request.var(self.ident + "_from"))
@@ -415,14 +415,14 @@ class FilterInvFloat(six.with_metaclass(abc.ABCMeta, Filter)):
         html.write_text(_("From: "))
         htmlvar = self.htmlvars[0]
         current_value = html.request.var(htmlvar, "")
-        html.number_input(htmlvar, current_value)
+        html.text_input(htmlvar, default_value=str(current_value), size=8, cssclass="number")
         if self._unit:
             html.write(self._unit)
 
         html.write_text("&nbsp;&nbsp;" + _("To: "))
         htmlvar = self.htmlvars[1]
         current_value = html.request.var(htmlvar, "")
-        html.number_input(htmlvar, current_value)
+        html.text_input(htmlvar, default_value=str(current_value), size=8, cssclass="number")
         if self._unit:
             html.write(self._unit)
 

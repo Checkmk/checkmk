@@ -3748,9 +3748,9 @@ class FilterEventCount(Filter):
 
     def display(self):
         html.write_text("from: ")
-        html.number_input(self._name + "_from", "")
+        html.text_input(self._name + "_from", default_value="", size=8, cssclass="number")
         html.write_text(" to: ")
-        html.number_input(self._name + "_to", "")
+        html.text_input(self._name + "_to", default_value="", size=8, cssclass="number")
 
     def filter(self, infoname):
         f = ""

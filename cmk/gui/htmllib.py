@@ -106,74 +106,13 @@ import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.log as log
 from cmk.gui.utils.transaction_manager import TransactionManager
+from cmk.gui.utils.url_encoder import URLEncoder
 from cmk.gui.i18n import _
 
 # TODO: Cleanup this mess.
 HTMLInput = Union["HTML", int, float, None, str, Text]
 CSSSpec = Union[None, List[str], str]
 OutputFunnelInput = Union[str, Text, "HTML"]
-
-#.
-#   .--Encoding------------------------------------------------------------.
-#   |              _____                     _ _                           |
-#   |             | ____|_ __   ___ ___   __| (_)_ __   __ _               |
-#   |             |  _| | '_ \ / __/ _ \ / _` | | '_ \ / _` |              |
-#   |             | |___| | | | (_| (_) | (_| | | | | | (_| |              |
-#   |             |_____|_| |_|\___\___/ \__,_|_|_| |_|\__, |              |
-#   |                                                  |___/               |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-class Encoder(object):
-    def urlencode_vars(self, vars_):
-        # type: (List[Tuple[str, Optional[Union[int, str, Text]]]]) -> str
-        """Convert a mapping object or a sequence of two-element tuples to a “percent-encoded” string
-
-        This function returns a str object, never unicode!
-        Note: This should be changed once we change everything to
-        unicode internally.
-        """
-        assert isinstance(vars_, list)
-        pairs = []
-        for varname, value in sorted(vars_):
-            assert isinstance(varname, basestring)
-
-            if isinstance(value, int):
-                value = str(value)
-            elif isinstance(value, six.text_type):
-                value = value.encode("utf-8")
-            elif value is None:
-                # TODO: This is not ideal and should better be cleaned up somehow. Shouldn't
-                # variables with None values simply be skipped? We currently can not find the
-                # call sites easily. This may be cleaned up once we establish typing. Until then
-                # we need to be compatible with the previous behavior.
-                value = ""
-
-            #assert type(value) == str, "%s: %s" % (varname, value)
-
-            pairs.append((varname, value))
-
-        return urllib.urlencode(pairs)
-
-    def urlencode(self, value):
-        # type: (Optional[Union[str, Text]]) -> str
-        """Replace special characters in string using the %xx escape.
-
-        This function returns a str object, never unicode!
-        Note: This should be changed once we change everything to
-        unicode internally.
-        """
-        if isinstance(value, six.text_type):
-            value = value.encode("utf-8")
-        elif value is None:
-            return ""
-
-        assert isinstance(value, str)
-
-        return urllib.quote_plus(value)
-
 
 #.
 #   .--HTML----------------------------------------------------------------.
@@ -850,7 +789,7 @@ class html(ABCHTMLGenerator):
         self.last_measurement = self.start_time
 
         # Register helpers
-        self.encoder = Encoder()
+        self.encoder = URLEncoder()
         self.timeout_manager = TimeoutManager()
         self.transaction_manager = TransactionManager(request)
         self.request = request

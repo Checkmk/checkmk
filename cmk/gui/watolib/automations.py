@@ -39,7 +39,7 @@ from cmk.utils.encoding import make_utf8
 
 import cmk.gui.config as config
 import cmk.gui.hooks as hooks
-from cmk.gui.htmllib import Encoder
+from cmk.gui.utils.url_encoder import URLEncoder
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 import cmk.gui.escaping as escaping
@@ -253,7 +253,7 @@ def do_remote_automation(site, command, vars_, timeout=None):
         raise MKAutomationException(_("You are not logged into the remote site."))
 
     url = base_url + "automation.py?" + \
-        Encoder().urlencode_vars([
+        URLEncoder().urlencode_vars([
                ("command", command),
                ("secret",  secret),
                ("debug",   config.debug and '1' or '')

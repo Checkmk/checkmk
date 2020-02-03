@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import pytest
+import pytest  # type: ignore
 
-import cmk.gui.htmllib as htmllib
 from cmk.gui.globals import html
+from cmk.gui.utils.url_encoder import URLEncoder
 
 
 def test_htmllib_integration(register_builtin_html):
-    assert isinstance(html.encoder, htmllib.Encoder)
+    assert isinstance(html.encoder, URLEncoder)
 
     assert html.urlencode_vars([]) == ""
     assert html.urlencode("") == ""
@@ -27,7 +27,7 @@ def test_htmllib_integration(register_builtin_html):
     ([("a", None)], "a="),
 ])
 def test_urlencode_vars(inp, out):
-    result = htmllib.Encoder().urlencode_vars(inp)
+    result = URLEncoder().urlencode_vars(inp)
     assert isinstance(result, str)
     assert result == out
 
@@ -46,6 +46,6 @@ def test_urlencode_vars(inp, out):
         ("/", "%2F"),
     ])
 def test_urlencode(inp, out):
-    result = htmllib.Encoder().urlencode(inp)
+    result = URLEncoder().urlencode(inp)
     assert isinstance(result, str)
     assert result == out

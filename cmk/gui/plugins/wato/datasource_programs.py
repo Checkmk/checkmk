@@ -242,6 +242,17 @@ def _valuespec_generic_metrics_prometheus():
                                              "aggregated. It is possible to select multiple "
                                              "options here."),
                                   )),
+                                 ("cpu",
+                                  ListChoice(
+                                      choices=[("container", _("Group by Container")),
+                                               ("pod", _("Group by Pod"))],
+                                      title=_("CPU Utilisation"),
+                                      allow_empty=False,
+                                      help=_("You must specify by which entity level you "
+                                             "would like the CPU information to be "
+                                             "aggregated. It is possible to select multiple "
+                                             "options here."),
+                                  )),
                              ],
                              title=_("CAdvisor"),
                              validate=_check_not_empty_exporter_dict,

@@ -10458,6 +10458,22 @@ graph_info["cpu_utilization_numcpus"] = {
     "optional_metrics": ["user"],
 }
 
+graph_info["cpu_utilization_simple"] = {
+    "title": _("CPU utilization"),
+    "metrics": [
+        ("user", "area"),
+        ("system", "stack"),
+        ("util#004080", "line", _("Total")),
+    ],
+    "conflicting_metrics": [
+        "idle",
+        "cpu_util_guest",
+        "cpu_util_steal",
+        "io_wait",
+    ],
+    "range": (0, 100),
+}
+
 #TODO which warn,crit?
 graph_info["cpu_utilization_3"] = {
     "title": _("CPU utilization"),

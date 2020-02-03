@@ -660,7 +660,15 @@ def declare_inventory_columns():
 
 
 def _create_inv_rows(hostrow, invpath, infoname):
-    merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
+    try:
+        merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
+    except inventory.LoadStructuredDataError:
+        html.add_user_error(
+            "load_inventory_tree",
+            _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.") %
+            inventory.get_short_inventory_filepath(hostrow.get("host_name", "")))
+        return []
+
     if merged_tree is None:
         return []
     invdata = inventory.get_inventory_data(merged_tree, invpath)
@@ -950,7 +958,10 @@ def _create_view_enabled_check_func(invpath, is_history=False):
 
         # FIXME In order to decide whether this view is enabled
         # do we really need to load the whole tree?
-        struct_tree = _get_struct_tree(is_history, hostname, context.get("site"))
+        try:
+            struct_tree = _get_struct_tree(is_history, hostname, context.get("site"))
+        except inventory.LoadStructuredDataError:
+            return False
 
         if not struct_tree:
             return False
@@ -1284,7 +1295,14 @@ class RowTableInventoryHistory(RowTable):
 
 
 def _create_hist_rows(hostname, columns):
-    for timestamp, delta_info in inventory.get_history_deltas(hostname):
+    history_deltas, corrupted_history_files = inventory.get_history_deltas(hostname)
+    if corrupted_history_files:
+        html.add_user_error(
+            "load_inventory_delta_tree",
+            _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files." %
+              ", ".join(sorted(corrupted_history_files))))
+
+    for timestamp, delta_info in history_deltas:
         new, changed, removed, delta_tree = delta_info
         newrow = {
             "invhist_time": int(timestamp),
@@ -1771,12 +1789,28 @@ def ajax_inv_render_tree():
     invpath = html.request.var("path")
     tree_id = html.request.var("treeid", "")
     show_internal_tree_paths = bool(html.request.var("show_internal_tree_paths"))
+
     if tree_id:
-        struct_tree = inventory.load_delta_tree(hostname, int(tree_id[1:]))
+        struct_tree, corrupted_history_files = \
+            inventory.load_delta_tree(hostname, int(tree_id[1:]))
+        if corrupted_history_files:
+            html.add_user_error(
+                "load_inventory_delta_tree",
+                _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files.") \
+                % ", ".join(corrupted_history_files))
+            return
         tree_renderer = DeltaNodeRenderer(site_id, hostname, tree_id, invpath)
+
     else:
         row = inventory.get_status_data_via_livestatus(site_id, hostname)
-        struct_tree = inventory.load_filtered_and_merged_tree(row)
+        try:
+            struct_tree = inventory.load_filtered_and_merged_tree(row)
+        except inventory.LoadStructuredDataError:
+            html.add_user_error(
+                "load_inventory_tree",
+                _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.") %
+                inventory.get_short_inventory_filepath(hostname))
+            return
         tree_renderer = AttributeRenderer(site_id,
                                           hostname,
                                           "",
@@ -1785,6 +1819,7 @@ def ajax_inv_render_tree():
 
     if struct_tree is None:
         html.show_error(_("No such inventory tree."))
+        return
 
     parsed_path, _attribute_keys = inventory.parse_tree_path(invpath)
     if parsed_path:

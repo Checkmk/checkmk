@@ -43,15 +43,36 @@ def main(argv=None):
     # Sections to query
     # https://docs.splunk.com/Documentation/Splunk/7.2.6/RESTREF/RESTlicense#licenser.2Fpools
     sections = [
-        Section(name="license_state",
-                uri="/services/licenser/licenses",
-                handler=handle_license_state),
-        Section(name="license_usage", uri="/services/licenser/usage", handler=handle_license_usage),
-        Section(name="system_msg", uri="/services/messages", handler=handle_system_msg),
-        Section(name="jobs", uri="/services/search/jobs", handler=handle_jobs),
-        Section(name="health", uri="/services/server/health/splunkd/details",
-                handler=handle_health),
-        Section(name="alerts", uri="/services/alerts/fired_alerts", handler=handle_alerts),
+        Section(
+            name="license_state",
+            uri="/services/licenser/licenses",
+            handler=handle_license_state,
+        ),
+        Section(
+            name="license_usage",
+            uri="/services/licenser/usage",
+            handler=handle_license_usage,
+        ),
+        Section(
+            name="system_msg",
+            uri="/services/messages",
+            handler=handle_system_msg,
+        ),
+        Section(
+            name="jobs",
+            uri="/services/search/jobs",
+            handler=handle_jobs,
+        ),
+        Section(
+            name="health",
+            uri="/services/server/health/splunkd/details",
+            handler=handle_health,
+        ),
+        Section(
+            name="alerts",
+            uri="/services/alerts/fired_alerts",
+            handler=handle_alerts,
+        ),
     ]
 
     args = parse_arguments(argv)
@@ -60,7 +81,8 @@ def main(argv=None):
 
     try:
         handle_request(args, sections)
-    except Exception:
+    except Exception as e:
+        sys.stderr.write("Unhandled exception: %s\n" % e)
         if args.debug:
             return 1
 
@@ -69,21 +91,29 @@ def handle_request(args, sections):
     url_base = "%s://%s:%d" % (args.proto, args.hostname, args.port)
 
     for section in sections:
-        try:
-            url = url_base + section.uri
-            response = requests.get(url,
-                                    auth=(args.user, args.password),
-                                    data={"output_mode": "json"})
-
-        except requests.exceptions.RequestException as e:
-            sys.stderr.write("Error: %s\n" % e)
-            if args.debug:
-                raise
-        else:
-            sys.stdout.write("<<<splunk_%s>>>\n" % section.name)
-
         if section.name in args.modules:
-            value = response.json()['entry']
+            try:
+                url = url_base + section.uri
+
+                response = requests.get(
+                    url,
+                    auth=(args.user, args.password),
+                    data={"output_mode": "json"},
+                )
+
+                response.raise_for_status()
+
+            except requests.exceptions.RequestException as e:
+                sys.stderr.write("Error: %s\n" % e)
+                if args.debug:
+                    raise
+                return 1
+
+            value = response.json().get('entry')
+            if value is None:
+                continue
+
+            sys.stdout.write("<<<splunk_%s>>>\n" % section.name)
             section.handler(value)
 
 

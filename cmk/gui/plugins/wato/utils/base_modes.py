@@ -70,7 +70,7 @@ class WatoMode(six.with_metaclass(abc.ABCMeta, object)):
         pass
 
     def page(self):
-        html.message(_("(This module is not yet implemented)"))
+        html.show_message(_("(This module is not yet implemented)"))
 
     def handle_page(self):
         return self.page()

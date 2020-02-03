@@ -216,7 +216,7 @@ def show_file(site, host_name, file_name):
 
     elif log_chunks == []:
         html.end_context_buttons()
-        html.message(_("This logfile contains no unacknowledged messages."))
+        html.show_message(_("This logfile contains no unacknowledged messages."))
         html.footer()
         return
 
@@ -339,8 +339,9 @@ def do_log_ack(site, host_name, file_name):
             html.footer()
             return
 
-    html.message('<b>%s</b><p>%s</p>' %
-                 (_('Acknowledged %s') % ack_msg, _('Acknowledged all messages in %s.') % ack_msg))
+    html.show_message(
+        '<b>%s</b><p>%s</p>' %
+        (_('Acknowledged %s') % ack_msg, _('Acknowledged all messages in %s.') % ack_msg))
     html.footer()
 
 

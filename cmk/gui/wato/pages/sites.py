@@ -644,7 +644,7 @@ class ModeDistributedMonitoring(WatoMode):
         sites = sort_sites(self._site_mgmt.load_sites())
 
         if cmk.is_demo():
-            html.show_info(_get_demo_message())
+            html.show_message(_get_demo_message())
 
         html.div("", id_="message_container")
         with table_element(
@@ -1129,7 +1129,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
     def page(self):
         if not is_livestatus_encrypted(self._site):
-            html.show_info(
+            html.show_message(
                 _("The livestatus connection to this site configured not to be encrypted."))
             return
 

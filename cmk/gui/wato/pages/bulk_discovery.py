@@ -115,7 +115,7 @@ class ModeBulkDiscovery(WatoMode):
 
         job_status_snapshot = self._job.get_status_snapshot()
         if job_status_snapshot.is_active():
-            html.message(
+            html.show_message(
                 _("Bulk discovery currently running in <a href=\"%s\">background</a>.") %
                 self._job.detail_url())
             return

@@ -122,14 +122,14 @@ class ModeBackgroundJobDetails(WatoMode):
 
         job = gui_background_job.GUIBackgroundJob(job_id)
         if not job.exists():
-            html.message(_("Background job info is not available"))
+            html.show_message(_("Background job info is not available"))
             return
 
         try:
             # Race condition, the job might get deleted during snapshot generation
             job_snapshot = job.get_status_snapshot()
         except Exception:
-            html.message(_("Background job info is not available"))
+            html.show_message(_("Background job info is not available"))
             logger.error(traceback.format_exc())
             return
 

@@ -212,7 +212,7 @@ class Table(object):
             html.end_foldable_container()
 
         if limit is not None and num_rows_unlimited > limit:
-            html.message(
+            html.show_message(
                 _('This table is limited to show only %d of %d rows. '
                   'Click <a href="%s">here</a> to disable the limitation.') %
                 (limit, num_rows_unlimited, html.makeuri([('limit', 'none')])))

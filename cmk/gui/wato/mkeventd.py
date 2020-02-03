@@ -1368,11 +1368,11 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         # Simulator
         event = self._show_event_simulator()
         if not self._rule_packs:
-            html.message(
+            html.show_message(
                 _("You have not created any rule packs yet. The Event Console is useless unless "
                   "you have activated <i>Force message archiving</i> in the global settings."))
         elif search_expression and not found_packs:
-            html.message(_("Found no rules packs."))
+            html.show_message(_("Found no rules packs."))
             return
 
         id_to_mkp = self._get_rule_pack_to_mkp_map()
@@ -1652,10 +1652,10 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         # Simulator
         event = self._show_event_simulator()
         if not self._rules:
-            html.message(_("This package does not yet contain any rules."))
+            html.show_message(_("This package does not yet contain any rules."))
             return
         elif search_expression and not found_rules:
-            html.message(_("No rules found."))
+            html.show_message(_("No rules found."))
             return
 
         if len(self._rule_packs) > 1:

@@ -289,7 +289,7 @@ def _process_notify_message(msg):
 
     message += _('<p>Sent notification to: %s</p>') % ', '.join(recipients)
     message += '<a href="%s">%s</a>' % (html.makeuri([]), _('Back to previous page'))
-    html.message(HTML(message))
+    html.show_message(HTML(message))
 
     if errors:
         error_message = ""

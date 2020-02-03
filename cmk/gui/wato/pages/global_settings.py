@@ -204,7 +204,7 @@ class GlobalSettingsMode(WatoMode):
             if header_is_painted:
                 forms.end()
         if not at_least_one_painted and search:
-            html.message(_('Did not find any global setting matching your search.'))
+            html.show_message(_('Did not find any global setting matching your search.'))
         html.close_div()
 
 

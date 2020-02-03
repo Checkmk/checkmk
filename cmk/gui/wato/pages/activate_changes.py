@@ -146,7 +146,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         home_button()
         html.end_context_buttons()
 
-        html.message(_("Successfully discarded all pending changes."))
+        html.show_message(_("Successfully discarded all pending changes."))
         html.javascript("hide_changes_buttons();")
         html.footer()
 
@@ -196,7 +196,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
     def _activation_msg(self):
         html.open_div(id_="async_progress_msg", style="display:none")
-        html.show_info("")
+        html.show_message("")
         html.close_div()
 
     def _activation_form(self):
@@ -205,7 +205,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             return
 
         if not self._changes:
-            html.show_info(_("Currently there are no changes to activate."))
+            html.show_message(_("Currently there are no changes to activate."))
             return
 
         if not config.user.may("wato.activateforeign") \

@@ -200,7 +200,7 @@ class ModeDiagHost(WatoMode):
 
     def _show_diagnose_output(self):
         if not html.request.var('_try'):
-            html.message(
+            html.show_message(
                 _('You can diagnose the connection to a specific host using this dialog. '
                   'You can either test whether your current configuration is still working '
                   'or investigate in which ways a host can be reached. Simply configure the '

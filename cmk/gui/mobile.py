@@ -471,7 +471,7 @@ def do_commands(view, what, rows):
                 count += 1
 
     if count > 0:
-        html.message(_("Successfully sent %d commands.") % count)
+        html.show_message(_("Successfully sent %d commands.") % count)
     return True  # Show commands again
 
 

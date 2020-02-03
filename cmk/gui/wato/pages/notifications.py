@@ -225,7 +225,7 @@ class NotificationsMode(EventsMode):
                                    start_nr=0,
                                    profilemode=False):
         if not rules:
-            html.message(_("You have not created any rules yet."))
+            html.show_message(_("You have not created any rules yet."))
             return
 
         vs_match_conditions = Dictionary(elements=self._rule_match_conditions())
@@ -528,7 +528,7 @@ class ModeNotifications(NotificationsMode):
         if self._show_bulks:
             # Warn if there are unsent bulk notifications
             if not self._render_bulks(only_ripe=False):
-                html.message(_("Currently there are no unsent notification bulks pending."))
+                html.show_message(_("Currently there are no unsent notification bulks pending."))
         else:
             # Warn if there are unsent bulk notifications
             self._render_bulks(only_ripe=True)

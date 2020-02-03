@@ -724,14 +724,14 @@ class ActionHandler(object):
 
         html.header("Interuption of job")
         if self.confirm_dialog_opened() and not job.is_active():
-            html.message(_("No longer able to stop job. Background job just finished."))
+            html.show_message(_("No longer able to stop job. Background job just finished."))
             return
 
         c = html.confirm(_("Stop job %s%s?") % (job_id, self._get_extra_info(job)))
         if c and job.may_stop():
             job.stop()
             self._did_stop_job = True
-            html.message(_("Background job has been stopped"))
+            html.show_message(_("Background job has been stopped"))
 
     def delete_job(self):
         job_id = html.request.var(self.delete_job_var)
@@ -747,7 +747,7 @@ class ActionHandler(object):
         if c and job.may_delete():
             job.delete()
             self._did_delete_job = True
-            html.message(_("Background job has been deleted"))
+            html.show_message(_("Background job has been deleted"))
 
     def _get_extra_info(self, job):
         job_status = job.get_status()

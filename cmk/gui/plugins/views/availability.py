@@ -344,7 +344,7 @@ def do_render_availability(what, av_rawdata, av_data, av_mode, av_object, avopti
 
 def render_availability_tables(availability_tables, what, avoptions):
     if not availability_tables:
-        html.message(_("No matching hosts/services."))
+        html.show_message(_("No matching hosts/services."))
         return
 
     for group_title, availability_table in availability_tables:

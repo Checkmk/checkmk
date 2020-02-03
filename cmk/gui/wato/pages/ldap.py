@@ -252,7 +252,7 @@ class ModeEditLDAPConnection(LDAPMode):
         html.open_td(style="padding-left:10px;vertical-align:top")
         html.h2(_('Diagnostics'))
         if not html.request.var('_test') or not self._connection_id:
-            html.message(
+            html.show_message(
                 HTML(
                     '<p>%s</p><p>%s</p>' %
                     (_('You can verify the single parts of your ldap configuration using this '

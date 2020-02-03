@@ -1674,7 +1674,7 @@ class CREFolder(BaseFolder):
             else:
                 li_elements = "".join(["<li>%s</li>" % m for m in lock_messages])
                 lock_message = "<ul>" + li_elements + "</ul>"
-            html.show_info(lock_message)
+            html.show_message(lock_message)
 
 
 def validate_host_uniqueness(varname, host_name):

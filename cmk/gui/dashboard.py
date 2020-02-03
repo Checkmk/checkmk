@@ -1351,9 +1351,9 @@ def page_edit_dashlet():
 
             html.immediate_browser_redirect(1, next_url)
             if mode == 'edit':
-                html.message(_('The dashlet has been saved.'))
+                html.show_message(_('The dashlet has been saved.'))
             else:
-                html.message(_('The dashlet has been added to the dashboard.'))
+                html.show_message(_('The dashlet has been added to the dashboard.'))
             html.reload_sidebar()
             html.footer()
             return
@@ -1421,7 +1421,7 @@ def page_delete_dashlet():
             dashboard['mtime'] = int(time.time())
             save_all_dashboards()
 
-            html.message(_('The dashlet has been deleted.'))
+            html.show_message(_('The dashlet has been deleted.'))
         except MKUserError as e:
             html.div(e.message, class_="error")
             return

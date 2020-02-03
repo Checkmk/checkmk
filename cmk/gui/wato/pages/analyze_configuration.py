@@ -120,7 +120,7 @@ class ModeAnalyzeConfig(WatoMode):
 
     def page(self):
         if not self._analyze_sites():
-            html.show_info(
+            html.show_message(
                 _("Analyze configuration can only be used with the local site and "
                   "distributed WATO slave sites. You currently have no such site configured."))
             return

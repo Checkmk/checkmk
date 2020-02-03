@@ -238,10 +238,10 @@ class PageCrash(ABCCrashReportPage):
                  base64.b64encode(_pack_crash_report(self._get_serialized_crash_report()))),
             ])
             html.open_div(id_="pending_msg", style="display:none")
-            html.message(_("Submitting crash report..."))
+            html.show_message(_("Submitting crash report..."))
             html.close_div()
             html.open_div(id_="success_msg", style="display:none")
-            html.message(
+            html.show_message(
                 _("Your crash report has been submitted (ID: ###ID###). Thanks for your participation, "
                   "it is very important for the quality of Checkmk.<br><br>"
                   "Please note:"

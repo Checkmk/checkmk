@@ -1383,29 +1383,26 @@ class html(ABCHTMLGenerator):
     # Messages
     #
 
-    def show_info(self, msg):
-        self.message(msg, 'message')
+    def show_message(self, msg):
+        self.write(self._render_message(msg, 'message'))
 
     def show_error(self, msg):
-        self.message(msg, 'error')
+        self.write(self._render_message(msg, 'error'))
 
     def show_warning(self, msg):
-        self.message(msg, 'warning')
+        self.write(self._render_message(msg, 'warning'))
 
-    def render_info(self, msg):
-        return self.render_message(msg, 'message')
+    def render_message(self, msg):
+        return self._render_message(msg, 'message')
 
     def render_error(self, msg):
-        return self.render_message(msg, 'error')
+        return self._render_message(msg, 'error')
 
     def render_warning(self, msg):
-        return self.render_message(msg, 'warning')
-
-    def message(self, msg, what='message'):
-        self.write(self.render_message(msg, what))
+        return self._render_message(msg, 'warning')
 
     # obj might be either a string (str or unicode) or an exception object
-    def render_message(self, msg, what='message'):
+    def _render_message(self, msg, what='message'):
         if what == 'message':
             cls = 'success'
             prefix = _('MESSAGE')

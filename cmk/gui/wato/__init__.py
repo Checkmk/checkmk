@@ -489,7 +489,7 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
             elif newmode is not None:
                 if newmode == "":  # no further information: configuration dialog, etc.
                     if action_message:
-                        html.message(action_message)
+                        html.show_message(action_message)
                         wato_html_footer()
                     return
                 mode_permissions, mode_class = get_mode_permission_and_class(newmode)
@@ -531,7 +531,7 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
     if html.has_user_errors():
         html.show_error(action_message)
     elif action_message:
-        html.message(action_message)
+        html.show_message(action_message)
 
     # Show content
     mode.handle_page()

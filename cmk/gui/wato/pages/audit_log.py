@@ -102,7 +102,7 @@ class ModeAuditLog(WatoMode):
         audit = self._parse_audit_log()
 
         if not audit:
-            html.show_info(_("The audit log is empty."))
+            html.show_message(_("The audit log is empty."))
 
         elif self._options["display"] == "daily":
             self._display_daily_audit_log(audit)

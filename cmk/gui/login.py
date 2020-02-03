@@ -511,7 +511,7 @@ def normal_login_page(called_directly=True):
 
     if config.login_screen.get("login_message"):
         html.open_div(id_="login_message")
-        html.show_info(config.login_screen["login_message"])
+        html.show_message(config.login_screen["login_message"])
         html.close_div()
 
     footer = []

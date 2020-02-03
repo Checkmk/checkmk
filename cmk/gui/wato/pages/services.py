@@ -263,7 +263,7 @@ class ModeDiscovery(WatoMode):
 
     def _async_progress_msg_container(self):
         html.open_div(id_="async_progress_msg")
-        html.show_info(_("Loading..."))
+        html.show_message(_("Loading..."))
         html.close_div()
 
     def _service_container(self):
@@ -1013,14 +1013,14 @@ class DiscoveryPageRenderer(object):
         # type: (DiscoveryResult, dict) -> None
         if not discovery_result.check_table and self._is_active(discovery_result):
             html.br()
-            html.show_info(_("Discovered no service yet."))
+            html.show_message(_("Discovered no service yet."))
             return
 
         if not discovery_result.check_table and self._host.is_cluster():
             html.br()
             url = watolib.folder_preserving_link([("mode", "edit_ruleset"),
                                                   ("varname", "clustered_services")])
-            html.show_info(
+            html.show_message(
                 _("Could not find any service for your cluster. You first need to "
                   "specify which services of your nodes shal be added to the "
                   "cluster. This is done using the <a href=\"%s\">%s</a> ruleset.") %

@@ -79,7 +79,7 @@ class MasterControlSnapin(SidebarSnapin):
                 html.show_error(site_state["exception"])
 
             elif site_state["state"] == "disabled":
-                html.show_info(_("Site is disabled"))
+                html.show_message(_("Site is disabled"))
 
             elif site_state["state"] == "unknown":
                 if site_state.get("exception"):

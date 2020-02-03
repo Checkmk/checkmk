@@ -235,7 +235,7 @@ class ModeFolder(WatoMode):
         self._folder.show_breadcrump()
 
         if not self._folder.may("read"):
-            html.message(
+            html.show_message(
                 html.render_icon("autherr", cssclass="authicon") + " " +
                 self._folder.reason_why_may_not("read"))
 
@@ -246,7 +246,7 @@ class ModeFolder(WatoMode):
 
         if not self._folder.has_hosts():
             if self._folder.is_search_folder():
-                html.message(_("No matching hosts found."))
+                html.show_message(_("No matching hosts found."))
             elif not self._folder.has_subfolders() and self._folder.may("write"):
                 self._show_empty_folder_menu()
 

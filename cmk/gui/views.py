@@ -2236,7 +2236,7 @@ def do_actions(view, what, action_rows, backurl):
                                                         _('Back to view with checkboxes reset'))
             if html.request.var("_show_result") == "0":
                 html.immediate_browser_redirect(0.5, backurl)
-        html.message(message)
+        html.show_message(message)
 
     return True
 

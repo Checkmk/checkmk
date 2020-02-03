@@ -1166,7 +1166,7 @@ class Overridable(Base):
                 redirect_url = back_url
 
             html.immediate_browser_redirect(0.5, redirect_url)
-            html.message(_('Your changes haven been saved.'))
+            html.show_message(_('Your changes haven been saved.'))
             # Reload sidebar.TODO: This code logically belongs to PageRenderer. How
             # can we simply move it there?
             # TODO: This is not true for all cases. e.g. the BookmarkList is not

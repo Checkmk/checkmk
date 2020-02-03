@@ -967,7 +967,7 @@ def page_edit_visual(what,
                     save(what, all_visuals, owner_user_id)
 
                 html.immediate_browser_redirect(1, back_url)
-                html.message(_('Your %s has been saved.') % visual_type.title)
+                html.show_message(_('Your %s has been saved.') % visual_type.title)
                 html.reload_sidebar()
                 html.footer()
                 return

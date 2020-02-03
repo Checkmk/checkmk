@@ -171,7 +171,7 @@ class ModeUsers(WatoMode):
 
         elif self._job_snapshot.is_active():
             # Still running
-            html.message(
+            html.show_message(
                 HTML(_("User synchronization currently running: ")) + self._job_details_link())
             url = html.makeuri([])
             html.immediate_browser_redirect(2, url)
@@ -180,7 +180,7 @@ class ModeUsers(WatoMode):
              and not self._job_snapshot.acknowledged_by():
             # Just finished, auto-acknowledge
             userdb.UserSyncBackgroundJob().acknowledge(config.user.id)
-            #html.message(_("User synchronization successful"))
+            #html.show_message(_("User synchronization successful"))
 
         elif not self._job_snapshot.acknowledged_by() and self._job_snapshot.has_exception():
             # Finished, but not OK - show info message with links to details

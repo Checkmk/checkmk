@@ -52,7 +52,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException
 def page_show():
     site = html.request.var("site")  # optional site hint
     host_name = html.request.var("host", "")
-    file_name = html.request.var("file", "")
+    file_name = html.get_unicode_input("file", "")
 
     # Fix problem when URL is missing certain illegal characters
     try:

@@ -169,7 +169,7 @@ def main():
 
     # Create the mail and send it
     from_address = utils.format_address(context.get("PARAMETER_FROM_DISPLAY_NAME", u""),
-                                        context.get("PARAMETER_FROM", u""))
+                                        context.get("PARAMETER_FROM", utils.default_from_address()))
     reply_to = utils.format_address(context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", u""),
                                     context.get("PARAMETER_REPLY_TO", u""))
     m = utils.set_mail_headers(mailto, subject, from_address, reply_to,

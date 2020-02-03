@@ -576,10 +576,6 @@ def send_mail_smtp(message, target, from_address, context):
     return 2
 
 
-def default_from_address():
-    return os.environ.get("OMD_SITE", "checkmk") + "@" + socket.getfqdn()
-
-
 def send_mail_smtp_impl(message, target, smarthost, from_address, context):
     import smtplib
     import types
@@ -917,10 +913,12 @@ class BulkEmailContent(object):
 
         # TODO: cleanup duplicate code with SingleEmailContent
         # TODO: the context is only needed because of SMPT settings used in send_mail
-        self.from_address = utils.format_address(last_context.get("PARAMETER_FROM_DISPLAY_NAME", u""),
-                                                 last_context.get("PARAMETER_FROM", default_from_address()))
-        self.reply_to = utils.format_address(last_context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", u""),
-                                             last_context.get("PARAMETER_REPLY_TO", u""))
+        self.from_address = utils.format_address(
+            last_context.get("PARAMETER_FROM_DISPLAY_NAME", u""),
+            last_context.get("PARAMETER_FROM", utils.default_from_address()))
+        self.reply_to = utils.format_address(
+            last_context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", u""),
+            last_context.get("PARAMETER_REPLY_TO", u""))
         self.context = last_context
 
 
@@ -941,8 +939,9 @@ class SingleEmailContent(object):
 
         # TODO: cleanup duplicate code with BulkEmailContent
         # TODO: the context is only needed because of SMPT settings used in send_mail
-        self.from_address = utils.format_address(context.get("PARAMETER_FROM_DISPLAY_NAME", u""),
-                                                 context.get("PARAMETER_FROM", default_from_address()))
+        self.from_address = utils.format_address(
+            context.get("PARAMETER_FROM_DISPLAY_NAME", u""),
+            context.get("PARAMETER_FROM", utils.default_from_address()))
         self.reply_to = utils.format_address(context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", u""),
                                              context.get("PARAMETER_REPLY_TO", u""))
         self.context = context

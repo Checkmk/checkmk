@@ -27,6 +27,7 @@ from email.utils import formataddr
 import os
 from quopri import encodestring
 import re
+import socket
 import sys
 from html import escape as html_escape  # type: ignore
 from typing import (  # pylint: disable=unused-import
@@ -74,6 +75,10 @@ def format_address(display_name, email_address):
     except UnicodeEncodeError:
         display_name = u'=?utf-8?q?%s?=' % encodestring(display_name.encode('utf-8')).decode('ascii')
     return formataddr((display_name, email_address))
+
+
+def default_from_address():
+    return os.environ.get("OMD_SITE", "checkmk") + "@" + socket.getfqdn()
 
 
 def _base_url(context):

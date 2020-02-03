@@ -1236,7 +1236,7 @@ class html(ABCHTMLGenerator):
 
     def show_localization_hint(self):
         url = "wato.py?mode=edit_configvar&varname=user_localizations"
-        self.message(
+        self.show_message(
             self.render_sup("*") + _("These texts may be localized depending on the users' "
                                      "language. You can configure the localizations %s.") %
             self.render_a("in the global settings", href=url))

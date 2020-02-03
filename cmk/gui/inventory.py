@@ -148,26 +148,27 @@ def load_delta_tree(hostname, timestamp):
     # Timestamp is timestamp of the younger of both trees. For the oldest
     # tree we will just return the complete tree - without any delta
     # computation.
-    delta_history = get_history_deltas(hostname, search_timestamp=str(timestamp))
+    delta_history, corrupted_history_files = \
+        get_history_deltas(hostname, search_timestamp=str(timestamp))
     if not delta_history:
-        return
-    return delta_history[0][1][3]
+        return None, []
+    return delta_history[0][1][3], corrupted_history_files
 
 
 def get_history_deltas(hostname, search_timestamp=None):
     if '/' in hostname:
-        return None  # just for security reasons
+        return None, []  # just for security reasons
 
     inventory_path = "%s/inventory/%s" % (cmk.utils.paths.var_dir, hostname)
     if not os.path.exists(inventory_path):
-        return []
+        return [], []
 
     latest_timestamp = str(int(os.stat(inventory_path).st_mtime))
     inventory_archive_dir = "%s/inventory_archive/%s" % (cmk.utils.paths.var_dir, hostname)
     try:
         archived_timestamps = sorted(os.listdir(inventory_archive_dir))
     except OSError:
-        return []
+        return [], []
 
     all_timestamps = archived_timestamps + [latest_timestamp]
     previous_timestamp = None
@@ -202,6 +203,7 @@ def get_history_deltas(hostname, search_timestamp=None):
                 StructuredDataTree().load_from(inventory_archive_path))
         return tree_lookup[timestamp]
 
+    corrupted_history_files = []
     delta_history = []
     for _idx, timestamp in enumerate(required_timestamps):
         cached_delta_path = os.path.join(cmk.utils.paths.var_dir, "inventory_delta_cache", hostname,
@@ -232,12 +234,23 @@ def get_history_deltas(hostname, search_timestamp=None):
                 delta_history.append((timestamp, delta_data))
         except RequestTimeout:
             raise
-        except Exception:
-            return []  # No inventory for this host
+        except LoadStructuredDataError:
+            corrupted_history_files.append(
+                str(get_short_inventory_history_filepath(hostname, timestamp)))
 
         previous_timestamp = timestamp
 
-    return delta_history
+    return delta_history, corrupted_history_files
+
+
+def get_short_inventory_filepath(hostname):
+    return Path(cmk.utils.paths.inventory_output_dir).joinpath(hostname).relative_to(
+        cmk.utils.paths.omd_root)
+
+
+def get_short_inventory_history_filepath(hostname, timestamp):
+    return Path(cmk.utils.paths.inventory_archive_dir).joinpath(
+        "%s/%s" % (hostname, timestamp)).relative_to(cmk.utils.paths.omd_root)
 
 
 def parent_path(invpath):
@@ -263,6 +276,10 @@ def parent_path(invpath):
 #   '----------------------------------------------------------------------'
 
 
+class LoadStructuredDataError(MKException):
+    pass
+
+
 def _load_inventory_tree(hostname):
     # Load data of a host, cache it in the current HTTP request
     if not hostname:
@@ -276,7 +293,12 @@ def _load_inventory_tree(hostname):
             # just for security reasons
             return
         cache_path = "%s/inventory/%s" % (cmk.utils.paths.var_dir, hostname)
-        inventory_tree = StructuredDataTree().load_from(cache_path)
+        try:
+            inventory_tree = StructuredDataTree().load_from(cache_path)
+        except Exception as e:
+            if config.debug:
+                html.show_warning(e)
+            raise LoadStructuredDataError()
         inventory_tree_cache[hostname] = inventory_tree
     return inventory_tree
 

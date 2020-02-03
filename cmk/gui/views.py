@@ -36,6 +36,7 @@ from typing import Dict, Optional, List  # pylint: disable=unused-import
 import livestatus
 
 import cmk.utils.paths
+from cmk.utils.structured_data import StructuredDataTree
 
 import cmk.gui.utils as utils
 import cmk.gui.config as config
@@ -1363,9 +1364,25 @@ def show_view(view, view_renderer, only_count=False):
         # If any painter, sorter or filter needs the information about the host's
         # inventory, then we load it and attach it as column "host_inventory"
         if is_inventory_data_needed(group_cells, cells, sorters, all_active_filters):
+            corrupted_inventory_files = []
             for row in rows:
-                if "host_name" in row:
+                if "host_name" not in row:
+                    continue
+                try:
                     row["host_inventory"] = inventory.load_filtered_and_merged_tree(row)
+                except inventory.LoadStructuredDataError:
+                    # The inventory row may be joined with other rows (perf-o-meter, ...).
+                    # Therefore we initialize the corrupt inventory tree with an empty tree
+                    # in order to display all other rows.
+                    row["host_inventory"] = StructuredDataTree()
+                    corrupted_inventory_files.append(
+                        str(inventory.get_short_inventory_filepath(row["host_name"])))
+
+            if corrupted_inventory_files:
+                html.add_user_error(
+                    "load_structured_data_tree",
+                    _("Cannot load HW/SW inventory trees %s. Please remove the corrupted files.") %
+                    ", ".join(sorted(corrupted_inventory_files)))
 
         if not cmk.is_raw_edition():
             import cmk.gui.cee.sla as sla

@@ -65,6 +65,7 @@ display_usage () {
 MK_ORA_DEBUG=false
 MK_ORA_DEBUG_CONNECT=false
 MK_ORA_LOGGING=false
+export MK_ORA_LOGGING
 
 
 while test -n "$1"; do
@@ -87,7 +88,6 @@ while test -n "$1"; do
 
         -l|--log)
             MK_ORA_LOGGING=true
-            export MK_ORA_LOGGING
             shift
             ;;
 

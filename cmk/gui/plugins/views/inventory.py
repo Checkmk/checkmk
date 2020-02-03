@@ -41,6 +41,7 @@ from cmk.gui.globals import g, html
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import Dictionary, Checkbox, Hostname
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.escaping import escape_text
 from cmk.gui.plugins.visuals import (
     filter_registry,
     VisualInfo,
@@ -315,7 +316,7 @@ def inv_paint_generic(v):
         return "number", "%.2f" % v
     elif isinstance(v, int):
         return "number", "%d" % v
-    return "", html.escaper.escape_text("%s" % v)
+    return "", escape_text("%s" % v)
 
 
 @decorate_inv_paint

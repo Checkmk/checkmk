@@ -40,6 +40,7 @@ import cmk.gui.background_job as background_job
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.pages import page_registry, Page
+from cmk.gui.escaping import escape_attribute
 from cmk.gui.exceptions import (
     MKGeneralException,
     HTTPRedirect,
@@ -120,8 +121,7 @@ class AgentOutputPage(six.with_metaclass(abc.ABCMeta, Page)):
         if not host:
             raise MKGeneralException(
                 _("Host is not managed by WATO. "
-                  "Click <a href=\"%s\">here</a> to go back.") %
-                html.escaper.escape_attribute(self._back_url))
+                  "Click <a href=\"%s\">here</a> to go back.") % escape_attribute(self._back_url))
         host.need_permission("read")
 
         self._request = FetchAgentOutputRequest(host=host, agent_type=ty)

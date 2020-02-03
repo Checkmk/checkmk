@@ -32,6 +32,7 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.escaping import escape_text
 
 from cmk.gui.plugins.views import (
     data_source_registry,
@@ -212,7 +213,7 @@ class PainterCrashType(Painter):
         return ["crash_type"]
 
     def render(self, row, cell):
-        return (None, html.escaper.escape_text(row["crash_type"]))
+        return (None, escape_text(row["crash_type"]))
 
 
 @painter_registry.register
@@ -260,7 +261,7 @@ class PainterCrashVersion(Painter):
         return ["crash_version"]
 
     def render(self, row, cell):
-        return (None, html.escaper.escape_text(row["crash_version"]))
+        return (None, escape_text(row["crash_version"]))
 
 
 @painter_registry.register
@@ -283,7 +284,7 @@ class PainterCrashException(Painter):
 
     def render(self, row, cell):
         return (None, "%s: %s" % \
-            (html.escaper.escape_text(row["crash_exc_type"]), html.escaper.escape_text(row["crash_exc_value"])))
+            (escape_text(row["crash_exc_type"]), escape_text(row["crash_exc_value"])))
 
 
 @sorter_registry.register

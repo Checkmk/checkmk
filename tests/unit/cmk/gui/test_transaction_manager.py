@@ -1,18 +1,19 @@
 #!/usr/bin/env python
+# pylint: disable=redefined-outer-name
 
-import pytest
 import time
+import pytest  # type: ignore
 
 import cmk.gui.config as config
 import cmk.gui.http as http
 from cmk.gui.globals import html
-import cmk.gui.htmllib as htmllib
+from cmk.gui.utils.transaction_manager import TransactionManager
 
 
 @pytest.fixture()
 def tm():
     request = http.Request({"wsgi.input": "", "SCRIPT_NAME": ""})
-    return htmllib.TransactionManager(request)
+    return TransactionManager(request)
 
 
 def test_htmllib_integration(register_builtin_html):
@@ -56,10 +57,10 @@ class MockLoggedInUser(object):
     ("%d/abc" % time.time(), False, True, True),
 ])
 def test_transaction_valid(tm, transid, ignore_transids, result, mocker, is_existing):
-    assert tm._ignore_transids == False
+    assert tm._ignore_transids is False
     if ignore_transids:
         tm.ignore()
-        assert tm._ignore_transids == True
+        assert tm._ignore_transids is True
 
     if transid is not None:
         tm._request.set_var("_transid", transid)
@@ -81,7 +82,7 @@ def test_is_transaction(tm):
 
 
 def test_check_transaction_invalid(tm, monkeypatch):
-    assert tm.check_transaction() == False
+    assert tm.check_transaction() is False
 
 
 def test_check_transaction_valid(tm, monkeypatch, mocker):
@@ -91,7 +92,7 @@ def test_check_transaction_valid(tm, monkeypatch, mocker):
     mocker.patch.object(config, "user", MockLoggedInUser([valid_transid]))
 
     invalidate = mocker.patch.object(tm, "_invalidate")
-    assert tm.check_transaction() == True
+    assert tm.check_transaction() is True
     invalidate.assert_called_once_with(valid_transid)
 
 
@@ -100,5 +101,5 @@ def test_check_transaction_automation(tm, monkeypatch, mocker):
     tm._request.set_var("_transid", "-1")
 
     invalidate = mocker.patch.object(tm, "_invalidate")
-    assert tm.check_transaction() == True
+    assert tm.check_transaction() is True
     invalidate.assert_not_called()

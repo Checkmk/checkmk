@@ -433,10 +433,6 @@ section_timesyncd() {
 }
 
 section_ntp() {
-    # If '${timesync_rc}' is 0, then 'section_timesyncd()' has returned successfully in
-    # which case we do not want to proceed with ntpq, so return and skip further processing
-    [ "${timesync_rc}" -eq 0 ] && return 0
-
     # First we try to identify if we're beholden to systemd
     if inpath systemctl; then
         # shellcheck disable=SC2016

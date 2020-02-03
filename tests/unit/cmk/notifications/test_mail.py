@@ -425,6 +425,6 @@ def test_mail_content_from_host_context(mocker):
     assert content.mailto == 'test@abc.de'
     assert content.subject == 'Check_MK: heute - DOWN -> UP'
     assert content.from_address == u'checkmk@mysite.com'
-    assert content.reply_to is None
+    assert content.reply_to == u''
     assert content.content_txt == HOST_CONTENT_TXT
     assert content.attachments == []

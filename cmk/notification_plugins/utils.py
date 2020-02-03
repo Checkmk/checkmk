@@ -23,7 +23,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from email.utils import formataddr
 import os
+from quopri import encodestring
 import re
 import sys
 from html import escape as html_escape  # type: ignore
@@ -50,6 +52,28 @@ def collect_context():
 def format_link(template, url, text):
     # type: (AnyStr, AnyStr, AnyStr) -> AnyStr
     return template % (url, text) if url else text
+
+
+def format_address(display_name, email_address):
+    # type: (Text, Text) -> Text
+    """
+    Returns an email address with an optional display name suitable for an email header like From or Reply-To.
+    The function handles the following cases:
+
+      * If an empty display name is given, only the email address is returned.
+      * If a display name is given a, string of the form "display_name <email_address>" is returned.
+      * If the display name contains non ASCII characters, it is converted to an encoded word (see RFC2231).
+      * If the display_name contains special characters like e.g. '.' the display string is enclosed in quotes.
+      * If the display_name contains backslashes or quotes, a backslash is prepended before these characters.
+    """
+    if not email_address:
+        return ''
+
+    try:
+        display_name.encode('ascii')
+    except UnicodeEncodeError:
+        display_name = u'=?utf-8?q?%s?=' % encodestring(display_name.encode('utf-8')).decode('ascii')
+    return formataddr((display_name, email_address))
 
 
 def _base_url(context):
@@ -104,7 +128,9 @@ def html_escape_context(context):
         'PARAMETER_HOST_SUBJECT',
         'PARAMETER_SERVICE_SUBJECT',
         'PARAMETER_FROM',
+        'PARAMETER_FROM_DISPLAY_NAME',
         'PARAMETER_REPLY_TO',
+        'PARAMETER_REPLY_TO_DISPLAY_NAME',
     }
     for variable, value in context.items():
         if variable not in unescaped_variables:

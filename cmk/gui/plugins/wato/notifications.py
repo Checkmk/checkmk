@@ -89,6 +89,75 @@ def local_site_url():
     return "http://" + socket.gethostname() + "/" + config.omd_site() + "check_mk/",
 
 
+def _vs_add_common_mail_elements(elements):
+    header = [
+        ("from", EmailAddress(
+            title=_("From: Address"),
+            size=40,
+            allow_empty=False,
+        )),
+        ("from_display_name", TextUnicode(
+            title=_("From: Display Name"),
+            size=40,
+            allow_empty=False,
+        )),
+        ("reply_to", EmailAddress(
+            title=_("Reply-To: Address"),
+            size=40,
+            allow_empty=False,
+        )),
+        ("reply_to_display_name",
+         TextUnicode(
+             title=_("Reply-To: Display name"),
+             size=40,
+             allow_empty=False,
+         )),
+        ("host_subject",
+         TextUnicode(
+             title=_("Subject for host notifications"),
+             help=_("Here you are allowed to use all macros that are defined in the "
+                    "notification context."),
+             default_value="Check_MK: $HOSTNAME$ - $EVENT_TXT$",
+             size=64,
+         )),
+        ("service_subject",
+         TextUnicode(
+             title=_("Subject for service notifications"),
+             help=_("Here you are allowed to use all macros that are defined in the "
+                    "notification context."),
+             default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
+             size=64,
+         )),
+    ]
+
+    footer = [
+        ('bulk_sort_order',
+         DropdownChoice(
+             choices=[
+                 ('oldest_first', _('Oldest first')),
+                 ('newest_first', _('Newest first')),
+             ],
+             help=_(
+                 "With this option you can specify, whether the oldest (default) or "
+                 "the newest notification should get shown at the top of the notification mail."),
+             title=_("Notification sort order for bulk notifications"),
+             default_value="oldest_first",
+         )),
+        ("disable_multiplexing",
+         FixedValue(
+             True,
+             title=_("Send seperate notifications to every recipient"),
+             totext=_("A seperate notification is send to every recipient. Recipients "
+                      "cannot see which other recipients were notified."),
+             help=_("Per default only one notification is generated for all recipients. "
+                    "Therefore, all recipients can see who was notified and reply to "
+                    "all other recipients."),
+         )),
+    ]
+
+    return header + elements + footer
+
+
 @notification_parameter_registry.register
 class NotificationParameterMail(NotificationParameter):
     @property
@@ -102,33 +171,7 @@ class NotificationParameterMail(NotificationParameter):
             elements=self._parameter_elements,)
 
     def _parameter_elements(self):
-        elements = [
-            ("from", EmailAddress(
-                title=_("From: Address"),
-                size=40,
-                allow_empty=False,
-            )),
-            ("reply_to", EmailAddress(
-                title=_("Reply-To: Address"),
-                size=40,
-                allow_empty=False,
-            )),
-            ("host_subject",
-             TextUnicode(
-                 title=_("Subject for host notifications"),
-                 help=_("Here you are allowed to use all macros that are defined in the "
-                        "notification context."),
-                 default_value="Check_MK: $HOSTNAME$ - $EVENT_TXT$",
-                 size=64,
-             )),
-            ("service_subject",
-             TextUnicode(
-                 title=_("Subject for service notifications"),
-                 help=_("Here you are allowed to use all macros that are defined in the "
-                        "notification context."),
-                 default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
-                 size=64,
-             )),
+        elements = _vs_add_common_mail_elements([
             ("elements",
              ListChoice(
                  title=_("Information to be displayed in the email body"),
@@ -193,30 +236,7 @@ class NotificationParameterMail(NotificationParameter):
                         "nearby. You can enable this option to show the graphs among each "
                         "other."),
              )),
-            ('bulk_sort_order',
-             DropdownChoice(
-                 choices=[
-                     ('oldest_first', _('Oldest first')),
-                     ('newest_first', _('Newest first')),
-                 ],
-                 help=_(
-                     "With this option you can specify, whether the oldest (default) or "
-                     "the newest notification should get shown at the top of the notification mail."
-                 ),
-                 title=_("Notification sort order for bulk notifications"),
-                 default_value="oldest_first",
-             )),
-            ("disable_multiplexing",
-             FixedValue(
-                 True,
-                 title=_("Send seperate notifications to every recipient"),
-                 totext=_("A seperate notification is send to every recipient. Recipients "
-                          "cannot see which other recipients were notified."),
-                 help=_("Per default only one notification is generated for all recipients. "
-                        "Therefore, all recipients can see who was notified and reply to "
-                        "all other recipients."),
-             )),
-        ]
+        ])
 
         if not cmk.is_raw_edition():
             elements += cmk.gui.cee.plugins.wato.syncsmtp.cee_html_mail_smtp_sync_option  # pylint: disable=no-member
@@ -410,33 +430,7 @@ class NotificationParameterASCIIMail(NotificationParameter):
 
     @property
     def spec(self):
-        return Dictionary(elements=[
-            ("from", EmailAddress(
-                title=_("From: Address"),
-                size=40,
-                allow_empty=False,
-            )),
-            ("reply_to", EmailAddress(
-                title=_("Reply-To: Address"),
-                size=40,
-                allow_empty=False,
-            )),
-            ("host_subject",
-             TextUnicode(
-                 title=_("Subject for host notifications"),
-                 help=_("Here you are allowed to use all macros that are defined in the "
-                        "notification context."),
-                 default_value="Check_MK: $HOSTNAME$ - $EVENT_TXT$",
-                 size=64,
-             )),
-            ("service_subject",
-             TextUnicode(
-                 title=_("Subject for service notifications"),
-                 help=_("Here you are allowed to use all macros that are defined in the "
-                        "notification context."),
-                 default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
-                 size=64,
-             )),
+        elements = _vs_add_common_mail_elements([
             ("common_body",
              TextAreaUnicode(
                  title=_("Body head for both host and service notifications"),
@@ -473,30 +467,8 @@ Perfdata: $SERVICEPERFDATA$
 $LONGSERVICEOUTPUT$
 """,
              )),
-            ('bulk_sort_order',
-             DropdownChoice(
-                 choices=[
-                     ('oldest_first', _('Oldest first')),
-                     ('newest_first', _('Newest first')),
-                 ],
-                 help=_(
-                     "With this option you can specify, whether the oldest (default) or "
-                     "the newest notification should get shown at the top of the notification mail."
-                 ),
-                 title=_("Notification sort order for bulk notifications"),
-                 default_value="oldest_first",
-             )),
-            ("disable_multiplexing",
-             FixedValue(
-                 True,
-                 title=_("Send seperate notifications to every recipient"),
-                 totext=_("A seperate notification is send to every recipient. Recipients "
-                          "cannot see which other recipients were notified."),
-                 help=_("Per default only one notification is generated for all recipients. "
-                        "Therefore, all recipients can see who was notified and reply to "
-                        "all other recipients."),
-             )),
-        ],)
+        ])
+        return Dictionary(elements=elements)
 
 
 @notification_parameter_registry.register

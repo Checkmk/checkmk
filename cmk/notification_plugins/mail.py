@@ -917,8 +917,10 @@ class BulkEmailContent(object):
 
         # TODO: cleanup duplicate code with SingleEmailContent
         # TODO: the context is only needed because of SMPT settings used in send_mail
-        self.from_address = last_context.get("PARAMETER_FROM") or default_from_address()
-        self.reply_to = last_context.get("PARAMETER_REPLY_TO")
+        self.from_address = utils.format_address(last_context.get("PARAMETER_FROM_DISPLAY_NAME", u""),
+                                                 last_context.get("PARAMETER_FROM", default_from_address()))
+        self.reply_to = utils.format_address(last_context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", u""),
+                                             last_context.get("PARAMETER_REPLY_TO", u""))
         self.context = last_context
 
 
@@ -939,8 +941,10 @@ class SingleEmailContent(object):
 
         # TODO: cleanup duplicate code with BulkEmailContent
         # TODO: the context is only needed because of SMPT settings used in send_mail
-        self.from_address = context.get("PARAMETER_FROM") or default_from_address()
-        self.reply_to = context.get("PARAMETER_REPLY_TO")
+        self.from_address = utils.format_address(context.get("PARAMETER_FROM_DISPLAY_NAME", u""),
+                                                 context.get("PARAMETER_FROM", default_from_address()))
+        self.reply_to = utils.format_address(context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", u""),
+                                             context.get("PARAMETER_REPLY_TO", u""))
         self.context = context
 
 

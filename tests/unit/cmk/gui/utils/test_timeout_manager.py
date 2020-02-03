@@ -3,7 +3,7 @@
 import time
 import pytest  # type: ignore
 
-import cmk.gui.htmllib as htmllib
+from cmk.gui.utils.timeout_manager import TimeoutManager
 from cmk.gui.globals import html
 from cmk.gui.exceptions import RequestTimeout
 
@@ -16,7 +16,7 @@ def test_htmllib_integration(register_builtin_html):
 
 
 def test_timeout_manager_raises_timeout():
-    tm = htmllib.TimeoutManager()
+    tm = TimeoutManager()
 
     with pytest.raises(RequestTimeout):
         tm.enable_timeout(1)
@@ -24,7 +24,7 @@ def test_timeout_manager_raises_timeout():
 
 
 def test_timeout_manager_disable():
-    tm = htmllib.TimeoutManager()
+    tm = TimeoutManager()
 
     tm.enable_timeout(1)
     tm.disable_timeout()

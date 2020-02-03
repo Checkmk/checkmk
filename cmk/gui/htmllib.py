@@ -62,7 +62,6 @@ import os
 import urllib
 import ast
 import re
-import signal
 import json
 import abc
 import pprint
@@ -99,7 +98,7 @@ json.JSONEncoder.default = _default  # type: ignore
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 
-from cmk.gui.exceptions import MKUserError, RequestTimeout
+from cmk.gui.exceptions import MKUserError
 import cmk.gui.escaping as escaping
 import cmk.gui.utils as utils
 import cmk.gui.config as config
@@ -107,6 +106,7 @@ import cmk.gui.log as log
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel, OutputFunnelInput  # pylint: disable=unused-import
 from cmk.gui.utils.transaction_manager import TransactionManager
+from cmk.gui.utils.timeout_manager import TimeoutManager
 from cmk.gui.utils.url_encoder import URLEncoder
 from cmk.gui.i18n import _
 
@@ -1038,51 +1038,6 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
     def render_ul(self, content, **kwargs):
         # type: (HTMLTagContent, HTMLTagAttributes) -> HTML
         return self._render_content_tag("ul", content, **kwargs)
-
-
-#.
-#   .--TimeoutMgr.---------------------------------------------------------.
-#   |      _____ _                            _   __  __                   |
-#   |     |_   _(_)_ __ ___   ___  ___  _   _| |_|  \/  | __ _ _ __        |
-#   |       | | | | '_ ` _ \ / _ \/ _ \| | | | __| |\/| |/ _` | '__|       |
-#   |       | | | | | | | | |  __/ (_) | |_| | |_| |  | | (_| | | _        |
-#   |       |_| |_|_| |_| |_|\___|\___/ \__,_|\__|_|  |_|\__, |_|(_)       |
-#   |                                                    |___/             |
-#   '----------------------------------------------------------------------'
-
-
-class TimeoutManager(object):
-    """Request timeout handling
-
-    The system apache process will end the communication with the client after
-    the timeout configured for the proxy connection from system apache to site
-    apache. This is done in /omd/sites/[site]/etc/apache/proxy-port.conf file
-    in the "timeout=x" parameter of the ProxyPass statement.
-
-    The regular request timeout configured here should always be lower to make
-    it possible to abort the page processing and send a helpful answer to the
-    client.
-
-    It is possible to disable the applications request timeout (temoporarily)
-    or totally for specific calls, but the timeout to the client will always
-    be applied by the system webserver. So the client will always get a error
-    page while the site apache continues processing the request (until the
-    first try to write anything to the client) which will result in an
-    exception.
-    """
-    def enable_timeout(self, duration):
-        def handle_request_timeout(signum, frame):
-            raise RequestTimeout(
-                _("Your request timed out after %d seconds. This issue may be "
-                  "related to a local configuration problem or a request which works "
-                  "with a too large number of objects. But if you think this "
-                  "issue is a bug, please send a crash report.") % duration)
-
-        signal.signal(signal.SIGALRM, handle_request_timeout)
-        signal.alarm(duration)
-
-    def disable_timeout(self):
-        signal.alarm(0)
 
 
 #.

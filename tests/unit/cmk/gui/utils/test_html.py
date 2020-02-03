@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import pytest  # type: ignore
-
 import json
+import pytest  # type: ignore
 import six
-from cmk.gui.htmllib import HTML
+
+from cmk.gui.utils.html import HTML
 
 
 # Monkey patch in order to make the HTML class below json-serializable without changing the default json calls.

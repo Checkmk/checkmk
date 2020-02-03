@@ -1,13 +1,15 @@
 #!/usr/bin/env python
+# pylint: disable=redefined-outer-name
 
 import pytest  # type: ignore
 
 from cmk.gui.htmllib import OutputFunnel
+from cmk.gui.http import Response
 
 
 class OutputFunnelTester(OutputFunnel):
-    def __init__(self):
-        super(OutputFunnelTester, self).__init__()
+    def __init__(self, response):
+        super(OutputFunnelTester, self).__init__(response)
         self.written = ""
 
     def _lowlevel_write(self, text):
@@ -16,7 +18,8 @@ class OutputFunnelTester(OutputFunnel):
 
 @pytest.fixture()
 def html():
-    return OutputFunnelTester()
+    response = Response(is_secure=False)
+    return OutputFunnelTester(response)
 
 
 def test_output_funnel_not_plugged(html):
@@ -66,8 +69,6 @@ def test_output_funnel_context_nesting(html):
 
 
 def test_output_funnel_context_drain(html):
-    html = OutputFunnelTester()
-
     html.write("A")
     assert html.written == "A"
     with html.plugged():

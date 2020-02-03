@@ -98,244 +98,20 @@ json.JSONEncoder.default = _default  # type: ignore
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.encoding import ensure_unicode
-from cmk.gui.exceptions import MKUserError, RequestTimeout
 
+from cmk.gui.exceptions import MKUserError, RequestTimeout
 import cmk.gui.escaping as escaping
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.log as log
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.output_funnel import OutputFunnel, OutputFunnelInput  # pylint: disable=unused-import
 from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.url_encoder import URLEncoder
 from cmk.gui.i18n import _
 
 # TODO: Cleanup this mess.
-HTMLInput = Union["HTML", int, float, None, str, Text]
 CSSSpec = Union[None, List[str], str]
-OutputFunnelInput = Union[str, Text, "HTML"]
-
-#.
-#   .--HTML----------------------------------------------------------------.
-#   |                      _   _ _____ __  __ _                            |
-#   |                     | | | |_   _|  \/  | |                           |
-#   |                     | |_| | | | | |\/| | |                           |
-#   |                     |  _  | | | | |  | | |___                        |
-#   |                     |_| |_| |_| |_|  |_|_____|                       |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | This is a simple class which wraps a unicode string provided by      |
-#   | the caller to make escaping.escape_attribute() know that this string should    |
-#   | not be escaped.                                                      |
-#   |                                                                      |
-#   | This way we can implement encodings while still allowing HTML code.  |
-#   | This is useful when one needs to print out HTML tables in messages   |
-#   | or help texts.                                                       |
-#   |                                                                      |
-#   | The HTML class is implemented as an immutable type.                  |
-#   | Every instance of the class is a unicode string.                     |
-#   | Only utf-8 compatible encodings are supported.                       |
-#   '----------------------------------------------------------------------'
-
-
-class HTML(object):
-    def __init__(self, value=u''):
-        # type: (HTMLInput) -> None
-        super(HTML, self).__init__()
-        self.value = self._ensure_unicode(value)
-
-    def _ensure_unicode(self, value):
-        # type: (HTMLInput) -> Text
-        # value can of of any type: HTML, int, float, None, str, ...
-        # TODO cleanup call sites
-        if not isinstance(value, six.string_types):
-            value = six.text_type(value)
-        return ensure_unicode(value)
-
-    def __html__(self):
-
-        return "%s" % self
-
-    def __bytebatzen__(self):
-        # type: () -> bytes
-        return self.value.encode("utf-8")
-
-    # TODO: Cleanup once we are using Python 3
-    def __str__(self):  # type: ignore
-        # type: () -> Text
-        # Against the sense of the __str__() method, we need to return the value
-        # as unicode here. Why? There are many cases where something like
-        # "%s" % HTML(...) is done in the GUI code. This calls the __str__ function
-        # because the origin is a str() object. The call will then return a UTF-8
-        # encoded str() object. This brings a lot of compatbility issues to the code
-        # which can not be solved easily.
-        # To deal with this situation we need the implicit conversion from str to
-        # unicode that happens when we return a unicode value here. In all relevant
-        # cases this does exactly what we need. It would only fail if the origin
-        # string contained characters that can not be decoded with the ascii codec
-        # which is not relevant for us here.
-        #
-        # This is problematic:
-        #   html.write("%s" % HTML("ä"))
-        #
-        # Bottom line: We should really cleanup internal unicode/str handling.
-        return self.value
-
-    def __repr__(self):
-        # type: () -> str
-        repr_val = "HTML(\"%s\")" % self.value
-
-        if sys.version_info[0] >= 3:
-            return repr_val
-        return repr_val.encode("utf-8")
-
-    def to_json(self):
-        # type: () -> Text
-        return self.value
-
-    def __add__(self, other):
-        # type: (HTMLInput) -> HTML
-        return HTML(self.value + self._ensure_unicode(other))
-
-    def __iadd__(self, other):
-        # type: (HTMLInput) -> HTML
-        return self.__add__(other)
-
-    def __radd__(self, other):
-        # type: (HTMLInput) -> HTML
-        return HTML(self._ensure_unicode(other) + self.value)
-
-    def join(self, iterable):
-        # type: (Iterable[HTMLInput]) -> HTML
-        return HTML(self.value.join(map(self._ensure_unicode, iterable)))
-
-    def __eq__(self, other):
-        # type: (Any) -> bool
-        return self.value == self._ensure_unicode(other)
-
-    def __ne__(self, other):
-        # type: (Any) -> bool
-        return self.value != self._ensure_unicode(other)
-
-    def __len__(self):
-        # type: () -> int
-        return len(self.value)
-
-    def __getitem__(self, index):
-        # type: (int) -> HTML
-        return HTML(self.value[index])
-
-    def __contains__(self, item):
-        # type: (HTMLInput) -> bool
-        return self._ensure_unicode(item) in self.value
-
-    def count(self, sub, *args):
-        return self.value.count(self._ensure_unicode(sub), *args)
-
-    def index(self, sub, *args):
-        return self.value.index(self._ensure_unicode(sub), *args)
-
-    def lstrip(self, *args):
-        args = tuple(map(self._ensure_unicode, args[:1])) + args[1:]
-        return HTML(self.value.lstrip(*args))
-
-    def rstrip(self, *args):
-        args = tuple(map(self._ensure_unicode, args[:1])) + args[1:]
-        return HTML(self.value.rstrip(*args))
-
-    def strip(self, *args):
-        args = tuple(map(self._ensure_unicode, args[:1])) + args[1:]
-        return HTML(self.value.strip(*args))
-
-    def lower(self):
-        # type: () -> HTML
-        return HTML(self.value.lower())
-
-    def upper(self):
-        # type: () -> HTML
-        return HTML(self.value.upper())
-
-    def startswith(self, prefix, *args):
-        return self.value.startswith(self._ensure_unicode(prefix), *args)
-
-
-#.
-#   .--OutputFunnel--------------------------------------------------------.
-#   |     ___        _               _   _____                       _     |
-#   |    / _ \ _   _| |_ _ __  _   _| |_|  ___|   _ _ __  _ __   ___| |    |
-#   |   | | | | | | | __| '_ \| | | | __| |_ | | | | '_ \| '_ \ / _ \ |    |
-#   |   | |_| | |_| | |_| |_) | |_| | |_|  _|| |_| | | | | | | |  __/ |    |
-#   |    \___/ \__,_|\__| .__/ \__,_|\__|_|   \__,_|_| |_|_| |_|\___|_|    |
-#   |                   |_|                                                |
-#   +----------------------------------------------------------------------+
-#   | Provides the write functionality. The method _lowlevel_write needs   |
-#   | to be overwritten in the specific subclass!                          |
-#   |                                                                      |
-#   |  Usage of plugged context:                                           |
-#   |          with html.plugged():                                        |
-#   |             html.write("something")                                  |
-#   |             html_code = html.drain()                                 |
-#   |          print html_code                                             |
-#   '----------------------------------------------------------------------'
-
-
-class OutputFunnel(six.with_metaclass(abc.ABCMeta, object)):
-    def __init__(self):
-        # type: () -> None
-        super(OutputFunnel, self).__init__()
-        self.plug_text = []  # type: List[List[Text]]
-
-    def write(self, text):
-        # type: (OutputFunnelInput) -> None
-        if not text:
-            return
-
-        if isinstance(text, HTML):
-            text = "%s" % text
-
-        if not isinstance(text, six.string_types):
-            raise MKGeneralException(
-                _('Type Error: html.write accepts str and unicode input objects only!'))
-
-        if self._is_plugged():
-            self.plug_text[-1].append(text)
-        else:
-            # encode when really writing out the data. Not when writing plugged,
-            # because the plugged code will be handled somehow by our code. We
-            # only encode when leaving the pythonic world.
-            if isinstance(text, six.text_type):
-                text = text.encode("utf-8")
-            self._lowlevel_write(text)
-
-    @abc.abstractmethod
-    def _lowlevel_write(self, text):
-        # type: (bytes) -> None
-        raise NotImplementedError()
-
-    @contextmanager
-    def plugged(self):
-        # type: () -> Iterator[None]
-        self.plug_text.append([])
-        try:
-            yield
-        finally:
-            text = self.drain()
-            self.plug_text.pop()
-            self.write(text)
-
-    def _is_plugged(self):
-        # type: () -> bool
-        return bool(self.plug_text)
-
-    def drain(self):
-        # type: () -> Text
-        """Get the sink content in order to do something with it."""
-        if not self._is_plugged():  # TODO: Raise exception or even remove "if"?
-            return ''
-
-        text = "".join(self.plug_text.pop())
-        self.plug_text.append([])
-        return text
-
 
 #.
 #   .--HTML Generator------------------------------------------------------.
@@ -356,7 +132,7 @@ class OutputFunnel(six.with_metaclass(abc.ABCMeta, object)):
 #   '----------------------------------------------------------------------'
 
 
-class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, OutputFunnel)):
+class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
     """ Usage Notes:
 
           - Tags can be opened using the open_[tag]() call where [tag] is one of the possible tag names.
@@ -537,15 +313,23 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, OutputFunnel)):
     #
 
     def render_text(self, text):
+        # type: (Text) -> HTML
         return HTML(escaping.escape_text(text))
 
     def write_text(self, text):
+        # type: (Text) -> None
         """ Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped. """
         self.write(self.render_text(text))
 
     def write_html(self, content):
+        # type: (HTML) -> None
         """ Write HTML code directly, without escaping. """
         self.write(content)
+
+    @abc.abstractmethod
+    def write(self, text):
+        # type: (OutputFunnelInput) -> None
+        raise NotImplementedError()
 
     def comment(self, comment_text):
         self.write("<!--%s-->" % self.encode_attribute(comment_text))
@@ -792,6 +576,7 @@ class html(ABCHTMLGenerator):
         self.encoder = URLEncoder()
         self.timeout_manager = TimeoutManager()
         self.transaction_manager = TransactionManager(request)
+        self.output_funnel = OutputFunnel(response)
         self.request = request
         self.response = response
 
@@ -812,9 +597,6 @@ class html(ABCHTMLGenerator):
             self.set_output_format(self.get_ascii_input("output_format", "html").lower())
         except (MKUserError, MKGeneralException):
             pass  # Silently ignore unsupported formats
-
-    def _lowlevel_write(self, text):
-        self.response.stream.write(text)
 
     def init_modes(self):
         """Initializes the operation mode of the html() object. This is called
@@ -1089,6 +871,24 @@ class html(ABCHTMLGenerator):
     # TODO: Cleanup all call sites to self.encoder.*
     def urlencode(self, value):
         return self.encoder.urlencode(value)
+
+    #
+    # output funnel
+    #
+
+    def write(self, text):
+        # type: (OutputFunnelInput) -> None
+        self.output_funnel.write(text)
+
+    @contextmanager
+    def plugged(self):
+        # type: () -> Iterator[None]
+        with self.output_funnel.plugged():
+            yield
+
+    def drain(self):
+        # type: () -> Text
+        return self.output_funnel.drain()
 
     #
     # Timeout handling

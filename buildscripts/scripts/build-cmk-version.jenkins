@@ -76,7 +76,7 @@ node {
                     // Remember files needed for building the windows agent on the windows node later
                     stash(
                         name: 'WinDep',
-                        includes: 'agents/**/*, virtual-envs/**/*, omd/packages/asio/**/*, omd/packages/cpython/**/*, omd/packages/fmt/**/*, omd/packages/googletest/**/*,  omd/packages/simpleini/**/*'
+                        includes: 'agents/**/*, virtual-envs/**/*, omd/packages/asio/**/*, omd/packages/cpython/**/*, omd/packages/fmt/**/*, omd/packages/googletest/**/*,  omd/packages/simpleini/**/*, cmk/utils/**/*'
                     )
                 }
             }

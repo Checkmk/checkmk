@@ -266,7 +266,6 @@ class AutomationSetAutochecks(DiscoveryAutomation):
 
         autochecks.set_autochecks_of(host_config, new_services)
         self._trigger_discovery_check(config_cache, host_config)
-        return None
 
 
 automations.register(AutomationSetAutochecks())
@@ -287,7 +286,6 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
         self._trigger_discovery_check(config_cache, host_config)
-        return None
 
 
 automations.register(AutomationUpdateHostLabels())
@@ -760,7 +758,6 @@ class AutomationDeleteHosts(Automation):
         # type: (List[str]) -> None
         for hostname in args:
             self._delete_host_files(hostname)
-        return None
 
     def _delete_host_files(self, hostname):
         # type: (HostName) -> None
@@ -814,8 +811,6 @@ class AutomationDeleteHosts(Automation):
             except OSError as e:
                 if e.errno != errno.ENOENT:
                     raise
-
-        return None
 
     def _delete_if_exists(self, path):
         # type: (str) -> None
@@ -1226,7 +1221,7 @@ class AutomationDiagHost(Automation):
                 response = p.stdout.read()
                 return (p.wait(), response)
 
-            elif test == 'agent':
+            if test == 'agent':
                 sources = data_sources.DataSources(hostname, ipaddress)
                 sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
@@ -1259,7 +1254,7 @@ class AutomationDiagHost(Automation):
 
                 return state, output
 
-            elif test == 'traceroute':
+            if test == 'traceroute':
                 family_flag = "-6" if host_config.is_ipv6_primary else "-4"
                 try:
                     p = subprocess.Popen(['traceroute', family_flag, '-n', ipaddress],
@@ -1268,13 +1263,12 @@ class AutomationDiagHost(Automation):
                 except OSError as e:
                     if e.errno == errno.ENOENT:
                         return 1, "Cannot find binary <tt>traceroute</tt>."
-                    else:
-                        raise
+                    raise
                 if p.stdout is None:
                     raise RuntimeError()
                 return (p.wait(), p.stdout.read().decode("utf-8"))
 
-            elif test.startswith('snmp'):
+            if test.startswith('snmp'):
                 # SNMPv3 tuples
                 # ('noAuthNoPriv', "username")
                 # ('authNoPriv', 'md5', '11111111', '22222222')
@@ -1364,8 +1358,7 @@ class AutomationDiagHost(Automation):
 
                 return 1, 'Got empty SNMP response'
 
-            else:
-                return 1, "Command not implemented"
+            return 1, "Command not implemented"
 
         except Exception as e:
             if cmk.utils.debug.enabled():

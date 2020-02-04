@@ -68,7 +68,7 @@ import pprint
 from contextlib import contextmanager
 # suppress missing import error from mypy
 from typing import (  # pylint: disable=unused-import
-    Union, Text, Optional, List, Dict, Tuple, Any, Iterable, Iterator, cast,
+    Union, Text, Optional, List, Dict, Tuple, Any, Iterable, Iterator, cast, Mapping,
 )
 
 import six
@@ -109,6 +109,8 @@ from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.timeout_manager import TimeoutManager
 from cmk.gui.utils.url_encoder import URLEncoder
 from cmk.gui.i18n import _
+from cmk.gui.http import Request, Response  # pylint: disable=unused-import
+from cmk.gui.type_defs import VisualContext  # pylint: disable=unused-import
 
 # TODO: Cleanup this mess.
 CSSSpec = Union[None, List[str], str]
@@ -1101,6 +1103,7 @@ OUTPUT_FORMAT_MIME_TYPES = {
 
 class html(ABCHTMLGenerator):
     def __init__(self, request, response):
+        # type: (Request, Response) -> None
         super(html, self).__init__()
 
         self._logger = log.logger.getChild("html")
@@ -1123,26 +1126,26 @@ class html(ABCHTMLGenerator):
         self.output_format = "html"
         self.browser_reload = 0
         self.browser_redirect = ''
-        self.link_target = None
-        self.myfile = None
+        self.link_target = None  # type: Optional[str]
+        self.myfile = None  # type: Optional[str]
 
         # Browser options
-        self.user_errors = {}
-        self.focus_object = None
-        self.status_icons = {}
+        self.user_errors = {}  # type: Dict[Optional[str], Text]
+        self.focus_object = None  # type: Optional[Union[Tuple[Optional[str], str], str]]
+        self.status_icons = {}  # type: Dict[str, Union[Tuple[Text, str], Text]]
         self.final_javascript_code = ""
-        self.page_context = {}
+        self.page_context = {}  # type: VisualContext
 
         # Settings
         self.mobile = False
         self._theme = "facelift"
 
         # Forms
-        self.form_name = None
-        self.form_vars = []
+        self.form_name = None  # type: Optional[str]
+        self.form_vars = []  # type: List[str]
 
         # Time measurement
-        self.times = {}
+        self.times = {}  # type: Dict[str, float]
         self.start_time = time.time()
         self.last_measurement = self.start_time
 
@@ -1168,11 +1171,14 @@ class html(ABCHTMLGenerator):
         self.response.headers["Cache-Control"] = "no-cache"
 
         try:
-            self.set_output_format(self.get_ascii_input("output_format", "html").lower())
+            output_format = self.get_ascii_input("output_format", "html")
+            assert output_format is not None
+            self.set_output_format(output_format.lower())
         except (MKUserError, MKGeneralException):
             pass  # Silently ignore unsupported formats
 
     def init_modes(self):
+        # type: () -> None
         """Initializes the operation mode of the html() object. This is called
         after the Check_MK GUI configuration has been loaded, so it is safe
         to rely on the config."""
@@ -1184,12 +1190,14 @@ class html(ABCHTMLGenerator):
         self.init_theme()
 
     def _init_webapi_cors_header(self):
+        # type: () -> None
         # Would be better to put this to page individual code, but we currently have
         # no mechanism for a page to set do this before the authentication is made.
         if self.myfile == "webapi":
             self.response.headers["Access-Control-Allow-Origin"] = "*"
 
     def init_theme(self):
+        # type: () -> None
         self.set_theme(config.ui_theme)
 
     def set_theme(self, theme_id):
@@ -1211,6 +1219,7 @@ class html(ABCHTMLGenerator):
         return "themes/%s/%s" % (self._theme, rel_url)
 
     def _verify_not_using_threaded_mpm(self):
+        # type: () -> None
         if self.request.is_multithread:
             raise MKGeneralException(
                 _("You are trying to Check_MK together with a threaded Apache multiprocessing module (MPM). "
@@ -1218,6 +1227,7 @@ class html(ABCHTMLGenerator):
                   "Check_MK work."))
 
     def _init_debug_mode(self):
+        # type: () -> None
         # Debug flag may be set via URL to override the configuration
         if self.request.var("debug"):
             config.debug = True
@@ -1226,10 +1236,12 @@ class html(ABCHTMLGenerator):
     # Enabling the screenshot mode omits the fancy background and
     # makes it white instead.
     def _init_screenshot_mode(self):
+        # type: () -> None
         if self.request.var("screenshotmode", config.screenshotmode):
             self.screenshotmode = True
 
     def _requested_file_name(self):
+        # type: () -> Optional[str]
         parts = self.request.requested_file.rstrip("/").split("/")
 
         if len(parts) == 3 and parts[-1] == "check_mk":
@@ -1252,6 +1264,7 @@ class html(ABCHTMLGenerator):
         return myfile
 
     def init_mobile(self):
+        # type: () -> None
         if self.request.has_var("mobile"):
             # TODO: Make private
             self.mobile = bool(self.request.var("mobile"))
@@ -1265,6 +1278,7 @@ class html(ABCHTMLGenerator):
             self.mobile = self._is_mobile_client(self.request.user_agent.string)
 
     def _is_mobile_client(self, user_agent):
+        # type: (str) -> bool
         # These regexes are taken from the public domain code of Matt Sullivan
         # http://sullerton.com/2011/03/django-mobile-browser-detection-middleware/
         reg_b = re.compile(
@@ -1274,7 +1288,7 @@ class html(ABCHTMLGenerator):
             r"1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\\-(n|u)|c55\\/|capi|ccwa|cdm\\-|cell|chtm|cldc|cmd\\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\\-s|devi|dica|dmob|do(c|p)o|ds(12|\\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\\-|_)|g1 u|g560|gene|gf\\-5|g\\-mo|go(\\.w|od)|gr(ad|un)|haie|hcit|hd\\-(m|p|t)|hei\\-|hi(pt|ta)|hp( i|ip)|hs\\-c|ht(c(\\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\\-(20|go|ma)|i230|iac( |\\-|\\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\\/)|klon|kpt |kwc\\-|kyo(c|k)|le(no|xi)|lg( g|\\/(k|l|u)|50|54|e\\-|e\\/|\\-[a-w])|libw|lynx|m1\\-w|m3ga|m50\\/|ma(te|ui|xo)|mc(01|21|ca)|m\\-cr|me(di|rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\\-2|po(ck|rt|se)|prox|psio|pt\\-g|qa\\-a|qc(07|12|21|32|60|\\-[2-7]|i\\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\\-|oo|p\\-)|sdk\\/|se(c(\\-|0|1)|47|mc|nd|ri)|sgh\\-|shar|sie(\\-|m)|sk\\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\\-|v\\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\\-|tdg\\-|tel(i|m)|tim\\-|t\\-mo|to(pl|sh)|ts(70|m\\-|m3|m5)|tx\\-9|up(\\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|xda(\\-|2|g)|yas\\-|your|zeto|zte\\-",
             re.I | re.M)
 
-        return reg_b.search(user_agent) or reg_v.search(user_agent[0:4])
+        return reg_b.search(user_agent) is not None or reg_v.search(user_agent[0:4]) is not None
 
     #
     # HTTP variable processing
@@ -1282,6 +1296,7 @@ class html(ABCHTMLGenerator):
 
     @contextmanager
     def stashed_vars(self):
+        # type: () -> Iterator[None]
         saved_vars = dict(self.request.itervars())
         try:
             yield
@@ -1291,6 +1306,7 @@ class html(ABCHTMLGenerator):
                 self.request.set_var(varname, value)
 
     def del_var_from_env(self, varname):
+        # type: (str) -> None
         # HACKY WORKAROUND, REMOVE WHEN NO LONGER NEEDED
         # We need to get rid of query-string entries which can contain secret information.
         # As this is the only location where these are stored on the WSGI environment this
@@ -1312,6 +1328,7 @@ class html(ABCHTMLGenerator):
     # TODO: For historic reasons this needs to return byte strings. We will clean this up
     # soon, before moving to Python 3.
     def get_ascii_input(self, varname, deflt=None):
+        # type: (str, Optional[str]) -> Optional[str]
         """Helper to retrieve a byte string and ensure it only contains ASCII characters
         In case a non ASCII character is found an MKUserError() is raised."""
         value = self.request.var(varname, deflt)
@@ -1331,6 +1348,7 @@ class html(ABCHTMLGenerator):
         return value
 
     def get_unicode_input(self, varname, deflt=None):
+        # type: (str, Optional[Text]) -> Optional[Text]
         try:
             val = self.request.var(varname, deflt)
             return val.decode("utf-8") if isinstance(val, str) else val
@@ -1341,14 +1359,17 @@ class html(ABCHTMLGenerator):
                   "You need to provide a UTF-8 encoded text."))
 
     def get_item_input(self, varname, collection):
+        # type: (str, Mapping[str, str]) -> Tuple[str, str]
         """Helper to get an item from the given collection
         Raises a MKUserError() in case the requested item is not available."""
         item = self.get_ascii_input(varname)
         if item not in collection:
             raise MKUserError(varname, _("The requested item %s does not exist") % item)
+        assert item is not None
         return collection[item], item
 
     def get_integer_input(self, varname, deflt=None):
+        # type: (str, Optional[int]) -> int
         if deflt is not None and not self.request.has_var(varname):
             return deflt
 
@@ -1363,6 +1384,7 @@ class html(ABCHTMLGenerator):
     # TODO: This is only protecting against some not allowed URLs but does not
     #       really verify that this is some kind of URL.
     def get_url_input(self, varname, deflt=None):
+        # type: (str, Optional[str]) -> str
         """Helper function to retrieve a URL from HTTP parameters
 
         This is mostly used to the "back url" which can then be used to create

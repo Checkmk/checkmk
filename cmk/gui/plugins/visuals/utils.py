@@ -41,8 +41,8 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.type_defs import VisualContext  # pylint: disable=unused-import
 
-VisualContext = Dict[str, Union[str, Dict[str, str]]]
 SingleInfos = List[str]
 
 

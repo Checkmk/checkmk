@@ -579,7 +579,7 @@ sql_performance () {
                    JOIN v\$instance i ON 1 = 1
                    JOIN v\$database d ON 1 = 1
                ORDER BY vd.con_id, io.filetype_name;
-              select upper(decode(con_id, null, instance_name
+              select upper(decode(cdb, 'NO', instance_name
                                            ,instance_name || '.'||con_name))
                      ||'|'|| 'sys_wait_class'
                      ||'|'|| WAIT_CLASS
@@ -590,7 +590,7 @@ sql_performance () {
               from (
                   select i.instance_name, vd.con_id, S.WAIT_CLASS
                         , s.total_waits, s.time_waited, s.total_waits_fg
-                        , s.time_waited_fg, vd.name con_name
+                        , s.time_waited_fg, vd.name con_name, d.cdb
                   from v\$instance i
                   join v\$database d on d.cdb = 'YES'
                   join v\$containers vd on 1=1
@@ -599,7 +599,7 @@ sql_performance () {
                   union all
                   select i.instance_name, 0, S.WAIT_CLASS
                         , s.total_waits, s.time_waited, s.total_waits_fg
-                        , s.time_waited_fg, null
+                        , s.time_waited_fg, null, d.cdb
                   from v\$instance i
                   join v\$database d on d.cdb = 'NO'
                   join v\$system_wait_class s on s.WAIT_CLASS <> 'Idle'

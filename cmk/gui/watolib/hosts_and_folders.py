@@ -961,7 +961,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 if value:
                     dictionary[hostname] = value
 
-            # Create contact group rule entries for hosts with explicitely set
+            # Create contact group rule entries for hosts with explicitly set
             # values Note: since the type if this entry is a list, not a single
             # contact group, all other list entries coming after this one will
             # be ignored. That way the host-entries have precedence over the

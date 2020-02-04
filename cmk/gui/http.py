@@ -260,16 +260,16 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
     """Provides information about the users HTTP-request to the application
 
     This class essentially wraps the information provided with the WSGI environment
-    and provides some low level functions to the application for accessing these
-    information. These should be basic HTTP request handling things and no application
-    specific mechanisms.
+    and provides some low level functions to the application for accessing this information.
+    These should be basic HTTP request handling things and no application specific mechanisms.
     """
     # pylint: disable=too-many-ancestors
     @property
     def request_timeout(self):
         # type: () -> int
-        """The system web servers configured request timeout. This is the time
-        before the request is terminated from the view of the client."""
+        """The system web servers configured request timeout.
+
+        This is the time before the request terminates from the view of the client."""
         # TODO: Found no way to get this information from WSGI environment. Hard code
         #       the timeout for the moment.
         return 110
@@ -378,7 +378,7 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
 
 
 class Response(werkzeug.wrappers.Response):
-    # NOTE: Currently we rely on a *relavtive* Location header in redirects!
+    # NOTE: Currently we rely on a *relative* Location header in redirects!
     autocorrect_location_header = False
 
     def __init__(self, is_secure, *args, **kwargs):
@@ -389,7 +389,7 @@ class Response(werkzeug.wrappers.Response):
     def set_http_cookie(self, key, value, secure=None):
         # type: (str, str, Optional[bool]) -> None
         if secure is None:
-            # TODO: Use the request-self proxy for this so the callers don't have to supply this
+            # TODO: Use the request-self proxy for this, so the callers don't have to supply this.
             secure = self._is_secure
         super(Response, self).set_cookie(key, value, secure=secure, httponly=True)
 

@@ -115,18 +115,13 @@ class AutochecksManager(object):
 
     def _read_raw_autochecks_cached(self, hostname):
         # type: (HostName) -> List[Service]
-        if hostname in self._raw_autochecks_cache:
-            return self._raw_autochecks_cache[hostname]
-
-        raw_autochecks = self._read_raw_autochecks_of(hostname)
-        self._raw_autochecks_cache[hostname] = raw_autochecks
-
-        # create cache from autocheck labels
-        self._discovered_labels_of.setdefault(hostname, {})
-        for service in raw_autochecks:
-            self._discovered_labels_of[hostname][service.description] = service.service_labels
-
-        return raw_autochecks
+        if hostname not in self._raw_autochecks_cache:
+            self._raw_autochecks_cache[hostname] = self._read_raw_autochecks_of(hostname)
+            # create cache from autocheck labels
+            self._discovered_labels_of.setdefault(hostname, {})
+            for service in self._raw_autochecks_cache[hostname]:
+                self._discovered_labels_of[hostname][service.description] = service.service_labels
+        return self._raw_autochecks_cache[hostname]
 
     # TODO: use store.load_object_from_file()
     # TODO: Common code with parse_autochecks_file? Cleanup.

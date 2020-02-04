@@ -56,7 +56,6 @@ import cmk.base.discovery as discovery
 import cmk.base.check_table as check_table
 from cmk.base.automations import automations, Automation, MKAutomationError
 import cmk.base.check_utils
-import cmk.base.autochecks as autochecks
 import cmk.base.nagios_utils
 import cmk.base.checking
 from cmk.base.core_factory import create_core
@@ -264,7 +263,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
                 discovery.DiscoveredService(check_plugin_name, item, descr, paramstr,
                                             service_labels))
 
-        autochecks.set_autochecks_of(host_config, new_services)
+        host_config.set_autochecks(new_services)
         self._trigger_discovery_check(config_cache, host_config)
 
 

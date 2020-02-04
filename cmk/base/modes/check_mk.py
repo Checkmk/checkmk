@@ -44,7 +44,6 @@ import cmk.base.data_sources as data_sources
 import cmk.base.console as console
 import cmk.base.config as config
 import cmk.base.discovery as discovery
-import cmk.base.autochecks as autochecks
 import cmk.base.inventory as inventory
 import cmk.base.inventory_plugins as inventory_plugins
 import cmk.base.check_api as check_api
@@ -1005,7 +1004,7 @@ def mode_flush(hosts):
                 console.output(tty.bold + tty.magenta + " logfiles(%d)" % d)
 
         # autochecks
-        count = autochecks.remove_autochecks_of(host_config)
+        count = host_config.remove_autochecks()
         if count:
             flushed = True
             console.output(tty.bold + tty.cyan + " autochecks(%d)" % count)

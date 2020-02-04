@@ -315,8 +315,7 @@ def discover_on_host(config_cache,
         # checks of the host, so that _get_host_services() does show us the
         # new discovered check parameters.
         if mode == "refresh":
-            counts["self_removed"] += autochecks.remove_autochecks_of(
-                host_config)  # this is cluster-aware!
+            counts["self_removed"] += host_config.remove_autochecks()  # this is cluster-aware!
 
         if host_config.is_cluster:
             ipaddress = None
@@ -375,7 +374,7 @@ def discover_on_host(config_cache,
 
             else:
                 raise MKGeneralException("Unknown check source '%s'" % check_source)
-        autochecks.set_autochecks_of(host_config, new_items)
+        host_config.set_autochecks(new_items)
 
     except MKTimeout:
         raise  # let general timeout through

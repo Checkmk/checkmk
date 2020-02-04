@@ -82,7 +82,7 @@ from cmk.base.snmp_utils import (  # pylint: disable=unused-import
     ScanFunction, SNMPCredentials,
 )
 from cmk.base.check_utils import (  # pylint: disable=unused-import
-    SectionName, CheckParameters,
+    SectionName, CheckParameters, DiscoveredService,
 )
 
 if TYPE_CHECKING:
@@ -2987,6 +2987,30 @@ class HostConfig(object):
         if not entries:
             return None
         return entries[0]
+
+    def set_autochecks(self, new_items):
+        # type: (List[DiscoveredService]) -> None
+        """Merge existing autochecks with the given autochecks for a host and save it"""
+        from cmk.base.autochecks import set_autochecks_of_cluster, set_autochecks_of_real_hosts
+        if self.is_cluster:
+            if self.nodes:
+                set_autochecks_of_cluster(self.nodes, self.hostname, new_items,
+                                          self._config_cache.host_of_clustered_service)
+        else:
+            set_autochecks_of_real_hosts(self.hostname, new_items)
+
+    def remove_autochecks(self):
+        # type: () -> int
+        """Remove all autochecks of a host while being cluster-aware
+
+        Cluster aware means that the autocheck files of the nodes are handled. Instead
+        of removing the whole file the file is loaded and only the services associated
+        with the given cluster are removed."""
+        from cmk.base.autochecks import remove_autochecks_of_host
+        hostnames = self.nodes if self.nodes else [self.hostname]
+        return sum(
+            remove_autochecks_of_host(hostname, self._config_cache.host_of_clustered_service)
+            for hostname in hostnames)
 
 
 #.

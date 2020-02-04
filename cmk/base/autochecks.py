@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 """Caring about persistance of the discovered services (aka autochecks)"""
 
-from typing import Iterator, Any, Dict, Union, Set, Tuple, Text, Optional, List  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Text, Tuple, Union  # pylint: disable=unused-import
 import sys
 import ast
 
@@ -63,7 +63,7 @@ class AutochecksManager(object):
         # type: () -> None
         super(AutochecksManager, self).__init__()
         self._autochecks = {}  # type: Dict[HostName, List[Service]]
-        # Extract of the autochecks. This cache is populated either on the way while
+        # Extract of the autochecks: This cache is populated either on the way while
         # processing get_autochecks_of() or when directly calling discovered_labels_of().
         self._discovered_labels_of = {}  # type: Dict[HostName, Dict[Text, DiscoveredServiceLabels]]
         self._raw_autochecks_cache = {}  # type: Dict[HostName, List[Service]]
@@ -348,22 +348,13 @@ def _parse_discovered_service_label_from_ast(ast_service_labels):
     return labels
 
 
-def set_autochecks_of(host_config, new_items):
-    # type: (config.HostConfig, List[DiscoveredService]) -> None
-    """Merge existing autochecks with the given autochecks for a host and save it"""
-    if host_config.is_cluster:
-        _set_autochecks_of_cluster(host_config, new_items)
-    else:
-        _set_autochecks_of_real_hosts(host_config, new_items)
-
-
-def _set_autochecks_of_real_hosts(host_config, new_items):
-    # type: (config.HostConfig, List[DiscoveredService]) -> None
+def set_autochecks_of_real_hosts(hostname, new_items):
+    # type: (HostName, List[DiscoveredService]) -> None
     new_autochecks = []  # type: List[DiscoveredService]
 
     # write new autochecks file, but take parameters_unresolved from existing ones
     # for those checks which are kept
-    for existing_service in parse_autochecks_file(host_config.hostname):
+    for existing_service in parse_autochecks_file(hostname):
         # TODO: Need to implement a list class that realizes in / not in correctly
         if existing_service in new_items:
             new_autochecks.append(existing_service)
@@ -373,24 +364,18 @@ def _set_autochecks_of_real_hosts(host_config, new_items):
             new_autochecks.append(discovered_service)
 
     # write new autochecks file for that host
-    save_autochecks_file(host_config.hostname, new_autochecks)
+    save_autochecks_file(hostname, new_autochecks)
 
 
-def _set_autochecks_of_cluster(host_config, new_items):
-    # type: (config.HostConfig, List[DiscoveredService]) -> None
+def set_autochecks_of_cluster(nodes, hostname, new_items, host_of_clustered_service):
+    # type: (List[HostName], HostName, List[DiscoveredService], Callable[[HostName, Text], str]) -> None
     """A Cluster does not have an autochecks file. All of its services are located
     in the nodes instead. For clusters we cycle through all nodes remove all
     clustered service and add the ones we've got as input."""
-    if not host_config.nodes:
-        return
-
-    config_cache = config.get_config_cache()
-
-    for node in host_config.nodes:
+    for node in nodes:
         new_autochecks = []  # type: List[DiscoveredService]
         for existing_service in parse_autochecks_file(node):
-            if host_config.hostname != config_cache.host_of_clustered_service(
-                    node, existing_service.description):
+            if hostname != host_of_clustered_service(node, existing_service.description):
                 new_autochecks.append(existing_service)
 
         for discovered_service in new_items:
@@ -404,7 +389,7 @@ def _set_autochecks_of_cluster(host_config, new_items):
     # Check whether or not the cluster host autocheck files are still existant.
     # Remove them. The autochecks are only stored in the nodes autochecks files
     # these days.
-    remove_autochecks_file(host_config.hostname)
+    remove_autochecks_file(hostname)
 
 
 def _remove_duplicate_autochecks(autochecks):
@@ -443,27 +428,12 @@ def remove_autochecks_file(hostname):
         pass
 
 
-def remove_autochecks_of(host_config):
-    # type: (config.HostConfig) -> int
-    """Remove all autochecks of a host while being cluster-aware
-
-    Cluster aware means that the autocheck files of the nodes are handled. Instead
-    of removing the whole file the file is loaded and only the services associated
-    with the given cluster are removed."""
-    hostnames = host_config.nodes if host_config.nodes else [host_config.hostname]
-    return sum(_remove_autochecks_of_host(hostname) for hostname in hostnames)
-
-
-def _remove_autochecks_of_host(hostname):
-    # type: (HostName) -> int
+def remove_autochecks_of_host(hostname, host_of_clustered_service):
+    # type: (HostName, Callable[[HostName, Text], str]) -> int
     removed = 0
     new_items = []  # type: List[DiscoveredService]
-    config_cache = config.get_config_cache()
-
-    old_items = parse_autochecks_file(hostname)
-    for existing_service in old_items:
-        if hostname != config_cache.host_of_clustered_service(hostname,
-                                                              existing_service.description):
+    for existing_service in parse_autochecks_file(hostname):
+        if hostname != host_of_clustered_service(hostname, existing_service.description):
             new_items.append(existing_service)
         else:
             removed += 1

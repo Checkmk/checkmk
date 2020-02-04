@@ -127,6 +127,6 @@ check_info['printer_supply_ricoh'] = {
     "has_perfdata": True,
     "group": "printer_supply",
     "snmp_info": (".1.3.6.1.4.1.367.3.2.1.2.24.1.1", [2, 5]),
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.367.1.1"],
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.367.1.1",
     "default_levels_variable": "printer_supply_ricoh_default_levels",
 }

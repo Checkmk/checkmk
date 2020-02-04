@@ -23,10 +23,10 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-"""Wrapper layer between WSGI and the GUI application code"""
-
+"""Wrapper layer between WSGI and GUI application code"""
 import six
 import werkzeug.wrappers
+import werkzeug.wrappers.json as json  # type: ignore[import]
 from werkzeug.utils import get_content_type
 
 from cmk.gui.i18n import _
@@ -204,8 +204,9 @@ class LegacyDeprecatedMixin(object):
         return self.remote_addr
 
 
-class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, werkzeug.wrappers.Request):
-    """Provides information about the users HTTP request to the application
+class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JSONMixin,
+              werkzeug.wrappers.Request):
+    """Provides information about the users HTTP-request to the application
 
     This class essentially wraps the information provided with the WSGI environment
     and provides some low level functions to the application for accessing these

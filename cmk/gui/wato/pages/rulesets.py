@@ -299,7 +299,7 @@ class RulesetMode(WatoMode):
                 for ruleset in group_rulesets:
                     float_cls = None
                     if not config.wato_hide_help_in_lists:
-                        float_cls = "nofloat" if html.help_visible else "float"
+                        float_cls = "nofloat" if config.user.show_help else "float"
                     html.open_div(class_=["ruleset", float_cls],
                                   title=escaping.strip_tags(ruleset.help() or ''))
                     html.open_div(class_="text")

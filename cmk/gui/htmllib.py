@@ -1084,7 +1084,6 @@ class html(ABCHTMLGenerator):
         self.enable_debug = False
         self.screenshotmode = False
         self.have_help = False
-        self.help_visible = False
 
         # browser options
         self.output_format = "html"
@@ -1094,7 +1093,6 @@ class html(ABCHTMLGenerator):
         self.myfile = None
 
         # Browser options
-        self._user_id = None
         self.user_errors = {}
         self.focus_object = None
         self.status_icons = {}
@@ -1467,11 +1465,6 @@ class html(ABCHTMLGenerator):
         self.times[name] += elapsed
         self.last_measurement = now
 
-    def set_user_id(self, user_id):
-        self._user_id = user_id
-        # TODO: Shouldn't this be moved to some other place?
-        self.help_visible = config.user.show_help  # cache for later usage
-
     def is_mobile(self):
         return self.mobile
 
@@ -1619,7 +1612,7 @@ class html(ABCHTMLGenerator):
         help_text = self._resolve_help_text_macros(stripped)
 
         self.enable_help_toggle()
-        style = "display:%s;" % ("block" if self.help_visible else "none")
+        style = "display:%s;" % ("block" if config.user.show_help else "none")
         return self.render_div(HTML(help_text), class_="help", style=style)
 
     def _resolve_help_text_macros(self, text):
@@ -1853,7 +1846,7 @@ class html(ABCHTMLGenerator):
         self.close_td()
 
     def top_heading_right(self):
-        cssclass = "active" if self.help_visible else "passive"
+        cssclass = "active" if config.user.show_help else "passive"
 
         self.icon_button(None,
                          _("Toggle context help texts"),
@@ -2552,8 +2545,7 @@ class html(ABCHTMLGenerator):
                                  title_target=None):
         self.folding_indent = indent
 
-        if self._user_id:
-            isopen = self.foldable_container_is_open(treename, id_, isopen)
+        isopen = self.foldable_container_is_open(treename, id_, isopen)
 
         onclick = "cmk.foldable_container.toggle(%s, %s, %s)"\
                     % (json.dumps(treename), json.dumps(id_), json.dumps(fetch_url if fetch_url else ''))

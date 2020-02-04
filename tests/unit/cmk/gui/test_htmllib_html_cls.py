@@ -29,9 +29,9 @@ def test_render_help_text(register_builtin_html):
                         HTML(u"<div style=\"display:none\" class=\"help\">äbc</div>"))
 
 
-def test_render_help_visible(register_builtin_html):
-    assert html.help_visible is False
-    html.help_visible = True
+def test_render_help_visible(module_wide_request_context, register_builtin_html, monkeypatch):
+    monkeypatch.setattr(config.LoggedInUser, "show_help", property(lambda s: True))
+    assert config.user.show_help is True
     assert compare_html(html.render_help(u"äbc"),
                         HTML(u"<div style=\"display:block\" class=\"help\">äbc</div>"))
 

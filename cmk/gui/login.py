@@ -74,7 +74,6 @@ def login(user_id):
     if not isinstance(user_id, six.text_type):
         raise MKInternalError("Invalid user id type")
     config.set_user_by_id(user_id)
-    html.set_user_id(user_id)
 
 
 def auth_cookie_name():

@@ -133,7 +133,11 @@ def check_mssql_backup(item, params, parsed):
 
     for backup in data:
         if backup.state == "no backup found":
-            yield params.get("not_found", 1), "No backup found"
+            state = 1
+            # tempdb has no backup by default, so don't treat this as warning
+            if item.split(" ", 1)[1] == "tempdb":
+                state = 0
+            yield params.get("not_found", state), "No backup found"
             continue
         if backup.state.startswith("ERROR: "):
             yield 2, backup.state[7:]

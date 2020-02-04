@@ -1,0 +1,13 @@
+Title: mssql_backup: Do not warn if tempdb has no backup
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1580844607
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+Database tempdb has no backup by default. So far, this has led to state WARN.
+This has been fixed and the status is now OK.

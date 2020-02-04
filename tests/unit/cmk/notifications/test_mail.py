@@ -247,8 +247,8 @@ def mock_service_context():
         'SUBJECT': u'Check_MK: heute/CPU utilization OK -> WARN',
         'SVC_SL': u'',
         'WHAT': u'SERVICE',
-        'PARAMETER_FROM': u'check_mk@myinstance.com',
-        'PARAMETER_REPLY_TO': u'reply@myinstance.com',
+        'PARAMETER_FROM_ADDRESS': u'check_mk@myinstance.com',
+        'PARAMETER_REPLY_TO_ADDRESS': u'reply@myinstance.com',
         'PARAMETER_URL_PREFIX_AUTOMATIC': u'http',
     }
 

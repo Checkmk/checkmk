@@ -535,6 +535,8 @@ def _create_notifications(raw_context, rule, notifications, rule_info):
         plugin_parameters = rule["notify_method"]  # None: do cancel, [ str ]: plugin parameters
     else:
         plugin_name, plugin_parameters = rule["notify_plugin"]
+    _transform_parameters(plugin_name, plugin_parameters)
+
     plugintxt = plugin_name or "plain email"
 
     key = contacts, plugin_name
@@ -586,6 +588,21 @@ def _create_notifications(raw_context, rule, notifications, rule_info):
 
     rule_info.append(("match", rule, ""))
     return notifications, rule_info
+
+
+def _transform_parameters(plugin, params):
+    # type: (str, Union[List, NotifyPluginParams]) -> None
+    if not isinstance(params, NotifyPluginParams):
+        return
+
+    if plugin in ["asiimail", "mail"]:
+        from_ = params.get("from")
+        if from_ and not isinstance(from_, dict):
+            params["from"] = {'address': from_}
+
+        reply_to = params.get('reply_to')
+        if reply_to and not isinstance(reply_to, dict):
+            params["reply_to"] = {'address': reply_to}
 
 
 def _process_notifications(raw_context, notifications, num_rule_matches, analyse):

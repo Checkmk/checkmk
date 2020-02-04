@@ -941,9 +941,9 @@ class SingleEmailContent(object):
         # TODO: the context is only needed because of SMPT settings used in send_mail
         self.from_address = utils.format_address(
             context.get("PARAMETER_FROM_DISPLAY_NAME", u""),
-            context.get("PARAMETER_FROM", utils.default_from_address()))
+            context.get("PARAMETER_FROM_ADDRESS", utils.default_from_address()))
         self.reply_to = utils.format_address(context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", u""),
-                                             context.get("PARAMETER_REPLY_TO", u""))
+                                             context.get("PARAMETER_REPLY_TO_ADDRESS", u""))
         self.context = context
 
 

@@ -168,10 +168,11 @@ def main():
         sys.exit(2)
 
     # Create the mail and send it
-    from_address = utils.format_address(context.get("PARAMETER_FROM_DISPLAY_NAME", u""),
-                                        context.get("PARAMETER_FROM", utils.default_from_address()))
+    from_address = utils.format_address(
+        context.get("PARAMETER_FROM_DISPLAY_NAME", u""),
+        context.get("PARAMETER_FROM_ADDRESS", utils.default_from_address()))
     reply_to = utils.format_address(context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", u""),
-                                    context.get("PARAMETER_REPLY_TO", u""))
+                                    context.get("PARAMETER_REPLY_TO_ADDRESS", u""))
     m = utils.set_mail_headers(mailto, subject, from_address, reply_to,
                                MIMEText(content_txt, 'plain', _charset='utf-8'))
     try:

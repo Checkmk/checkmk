@@ -11368,3 +11368,12 @@ graph_info["nodes_by_type"] = {
         ("number_of_data_nodes", "area"),
     ],
 }
+
+graph_info["temperature"] = {
+    "title": _("Temperature"),
+    "metrics": [("temp", "area"),],
+    "scalars": [
+        "temp:warn",
+        "temp:crit",
+    ]
+}

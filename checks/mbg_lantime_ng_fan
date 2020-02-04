@@ -32,8 +32,9 @@ def inventory_mbg_lantime_ng_fan(info):
 
 def check_mbg_lantime_ng_fan(item, _no_params, info):
     fan_states = {
-        "1": (0, "on"),
-        "2": (2, "off"),
+        "0": (0, "not available"),
+        "1": (0, "off"),
+        "2": (2, "on"),
     }
     fan_errors = {
         "0": (0, "not available"),

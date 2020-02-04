@@ -59,7 +59,7 @@ class HTML(object):
         return ensure_unicode(value)
 
     def __html__(self):
-
+        # type: () -> Text
         return "%s" % self
 
     def __bytebatzen__(self):

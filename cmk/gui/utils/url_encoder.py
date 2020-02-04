@@ -29,11 +29,13 @@ from typing import List, Tuple, Optional, Union, Text  # pylint: disable=unused-
 import urllib
 import six
 
+HTTPVariables = List[Tuple[str, Optional[Union[int, str, Text]]]]
+
 
 # TODO: Change methods to simple helper functions. The URLEncoder class is not really needed
 class URLEncoder(object):
     def urlencode_vars(self, vars_):
-        # type: (List[Tuple[str, Optional[Union[int, str, Text]]]]) -> str
+        # type: (HTTPVariables) -> str
         """Convert a mapping object or a sequence of two-element tuples to a “percent-encoded” string
 
         This function returns a str object, never unicode!

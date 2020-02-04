@@ -25,6 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 import signal
+from types import FrameType  # pylint: disable=unused-import
+from typing import Optional  # pylint: disable=unused-import
 from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.i18n import _
 
@@ -49,7 +51,9 @@ class TimeoutManager(object):
     exception.
     """
     def enable_timeout(self, duration):
+        # type: (int) -> None
         def handle_request_timeout(signum, frame):
+            # type: (int, Optional[FrameType]) -> None
             raise RequestTimeout(
                 _("Your request timed out after %d seconds. This issue may be "
                   "related to a local configuration problem or a request which works "
@@ -60,4 +64,5 @@ class TimeoutManager(object):
         signal.alarm(duration)
 
     def disable_timeout(self):
+        # type: () -> None
         signal.alarm(0)

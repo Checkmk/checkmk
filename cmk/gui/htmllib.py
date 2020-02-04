@@ -68,7 +68,7 @@ import pprint
 from contextlib import contextmanager
 # suppress missing import error from mypy
 from typing import (  # pylint: disable=unused-import
-    Union, Text, Optional, List, Dict, Tuple, Any, Iterable, Iterator, cast, Mapping,
+    Union, Text, Optional, List, Dict, Tuple, Any, Iterable, Iterator, cast, Mapping, Set,
 )
 
 import six
@@ -107,7 +107,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel, OutputFunnelInput  # pylint: disable=unused-import
 from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.timeout_manager import TimeoutManager
-from cmk.gui.utils.url_encoder import URLEncoder
+from cmk.gui.utils.url_encoder import URLEncoder, HTTPVariables  # pylint: disable=unused-import
 from cmk.gui.i18n import _
 from cmk.gui.http import Request, Response  # pylint: disable=unused-import
 from cmk.gui.type_defs import VisualContext  # pylint: disable=unused-import
@@ -118,6 +118,8 @@ HTMLTagName = str
 HTMLTagContent = Optional[Union[str, Text, HTML]]
 HTMLTagAttributeValue = Union[None, CSSSpec, str, Text, List[Union[str, Text]]]
 HTMLTagAttributes = Dict[str, HTMLTagAttributeValue]
+HTMLMessageInput = Union[HTML, Text]
+
 #.
 #   .--HTML Generator------------------------------------------------------.
 #   |                      _   _ _____ __  __ _                            |
@@ -191,23 +193,22 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
             yield ' href=\"%s\"' % href
 
         # render all attributes
-        for k, v in attrs.items():
-
+        for key_unescaped, v in attrs.items():
             if v is None:
                 continue
 
-            k = escaping.escape_attribute(k.rstrip('_'))
+            key = escaping.escape_attribute(key_unescaped.rstrip('_'))
 
             if v == '':
-                options.append(k)
+                options.append(key)
                 continue
 
             if not isinstance(v, list):
                 v = escaping.escape_attribute(v)
             else:
-                if k == "class":
+                if key == "class":
                     sep = ' '
-                elif k == "style" or k.startswith('on'):
+                elif key == "style" or key.startswith('on'):
                     sep = '; '
                 else:
                     sep = '_'
@@ -220,7 +221,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
 
                 v = joined_value
 
-            yield ' %s=\"%s\"' % (k, v)
+            yield ' %s=\"%s\"' % (key, v)
 
         for k in options:
             yield " %s=\'\'" % k
@@ -267,7 +268,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
     #
 
     def render_text(self, text):
-        # type: (Text) -> HTML
+        # type: (Union[Text, HTML]) -> HTML
         return HTML(escaping.escape_text(text))
 
     def write_text(self, text):
@@ -1124,7 +1125,7 @@ class html(ABCHTMLGenerator):
 
         # browser options
         self.output_format = "html"
-        self.browser_reload = 0
+        self.browser_reload = 0.0
         self.browser_redirect = ''
         self.link_target = None  # type: Optional[str]
         self.myfile = None  # type: Optional[str]
@@ -1407,11 +1408,15 @@ class html(ABCHTMLGenerator):
 
         return url
 
-    # Returns a dictionary containing all parameters the user handed over to this request.
-    # The concept is that the user can either provide the data in a single "request" variable,
-    # which contains the request data encoded as JSON, or provide multiple GET/POST vars which
-    # are then used as top level entries in the request object.
     def get_request(self, exclude_vars=None):
+        # type: (Optional[List[str]]) -> Dict[Text, Text]
+        """Returns a dictionary containing all parameters the user handed over to this request.
+
+        The concept is that the user can either provide the data in a single "request" variable,
+        which contains the request data encoded as JSON, or provide multiple GET/POST vars which
+        are then used as top level entries in the request object.
+        """
+
         if exclude_vars is None:
             exclude_vars = []
 
@@ -1446,14 +1451,17 @@ class html(ABCHTMLGenerator):
 
     # TODO: Cleanup all call sites to self.transaction_manager.*
     def transaction_valid(self):
+        # type: () -> bool
         return self.transaction_manager.transaction_valid()
 
     # TODO: Cleanup all call sites to self.transaction_manager.*
     def is_transaction(self):
+        # type: () -> bool
         return self.transaction_manager.is_transaction()
 
     # TODO: Cleanup all call sites to self.transaction_manager.*
     def check_transaction(self):
+        # type: () -> bool
         return self.transaction_manager.check_transaction()
 
     #
@@ -1462,10 +1470,12 @@ class html(ABCHTMLGenerator):
 
     # TODO: Cleanup all call sites to self.encoder.*
     def urlencode_vars(self, vars_):
+        # type: (List[Tuple[str, Optional[Union[int, str, Text]]]]) -> str
         return self.encoder.urlencode_vars(vars_)
 
     # TODO: Cleanup all call sites to self.encoder.*
     def urlencode(self, value):
+        # type: (Optional[Union[str, Text]]) -> str
         return self.encoder.urlencode(value)
 
     #
@@ -1491,9 +1501,11 @@ class html(ABCHTMLGenerator):
     #
 
     def enable_request_timeout(self):
+        # type: () -> None
         self.timeout_manager.enable_timeout(self.request.request_timeout)
 
     def disable_request_timeout(self):
+        # type: () -> None
         self.timeout_manager.disable_timeout()
 
     #
@@ -1501,6 +1513,7 @@ class html(ABCHTMLGenerator):
     #
 
     def set_output_format(self, f):
+        # type: (str) -> None
         if f not in OUTPUT_FORMAT_MIME_TYPES:
             raise MKGeneralException(_("Unsupported context type '%s'") % f)
 
@@ -1508,6 +1521,7 @@ class html(ABCHTMLGenerator):
         self.response.set_content_type(OUTPUT_FORMAT_MIME_TYPES[f])
 
     def is_api_call(self):
+        # type: () -> bool
         return self.output_format != "html"
 
     #
@@ -1515,6 +1529,7 @@ class html(ABCHTMLGenerator):
     #
 
     def measure_time(self, name):
+        # type: (str) -> None
         self.times.setdefault(name, 0.0)
         now = time.time()
         elapsed = now - self.last_measurement
@@ -1522,60 +1537,77 @@ class html(ABCHTMLGenerator):
         self.last_measurement = now
 
     def is_mobile(self):
+        # type: () -> bool
         return self.mobile
 
     def set_page_context(self, c):
+        # type: (VisualContext) -> None
         self.page_context = c
 
     def set_link_target(self, framename):
+        # type: (str) -> None
         self.link_target = framename
 
     def set_focus(self, varname):
+        # type: (str) -> None
         self.focus_object = (self.form_name, varname)
 
     def set_focus_by_id(self, dom_id):
+        # type: (str) -> None
         self.focus_object = dom_id
 
     def set_render_headfoot(self, render):
+        # type: (bool) -> None
         self.render_headfoot = render
 
     def set_browser_reload(self, secs):
+        # type: (float) -> None
         self.browser_reload = secs
 
     def set_browser_redirect(self, secs, url):
+        # type: (float, str) -> None
         self.browser_reload = secs
         self.browser_redirect = url
 
     def clear_default_javascript(self):
+        # type: () -> None
         del self._default_javascripts[:]
 
     def add_default_javascript(self, name):
+        # type: (str) -> None
         if name not in self._default_javascripts:
             self._default_javascripts.append(name)
 
     def immediate_browser_redirect(self, secs, url):
+        # type: (float, str) -> None
         self.javascript("cmk.utils.set_reload(%s, '%s');" % (secs, url))
 
     def add_body_css_class(self, cls):
+        # type: (str) -> None
         self._body_classes.append(cls)
 
     def add_status_icon(self, img, tooltip, url=None):
+        # type: (str, Text, Optional[str]) -> None
         if url:
             self.status_icons[img] = tooltip, url
         else:
             self.status_icons[img] = tooltip
 
     def final_javascript(self, code):
+        # type: (str) -> None
         self.final_javascript_code += code + "\n"
 
     def reload_sidebar(self):
+        # type: () -> None
         if not self.request.has_var("_ajaxid"):
             self.write_html(self.render_reload_sidebar())
 
     def render_reload_sidebar(self):
+        # type: () -> HTML
         return self.render_javascript("cmk.utils.reload_sidebar()")
 
     def finalize(self):
+        # type: () -> None
         """Finish the HTTP request processing before handing over to the application server"""
         self.transaction_manager.store_new()
         self.disable_request_timeout()
@@ -1585,25 +1617,32 @@ class html(ABCHTMLGenerator):
     #
 
     def show_message(self, msg):
+        # type: (HTMLMessageInput) -> None
         self.write(self._render_message(msg, 'message'))
 
     def show_error(self, msg):
+        # type: (HTMLMessageInput) -> None
         self.write(self._render_message(msg, 'error'))
 
     def show_warning(self, msg):
+        # type: (HTMLMessageInput) -> None
         self.write(self._render_message(msg, 'warning'))
 
     def render_message(self, msg):
+        # type: (HTMLMessageInput) -> HTML
         return self._render_message(msg, 'message')
 
     def render_error(self, msg):
+        # type: (HTMLMessageInput) -> HTML
         return self._render_message(msg, 'error')
 
     def render_warning(self, msg):
+        # type: (HTMLMessageInput) -> HTML
         return self._render_message(msg, 'warning')
 
     # obj might be either a string (str or unicode) or an exception object
     def _render_message(self, msg, what='message'):
+        # type: (HTMLMessageInput, str) -> HTML
         if what == 'message':
             cls = 'success'
             prefix = _('MESSAGE')
@@ -1614,7 +1653,7 @@ class html(ABCHTMLGenerator):
             cls = 'error'
             prefix = _('ERROR')
 
-        code = ""
+        code = HTML()
 
         if self.output_format == "html":
             code += self.render_div(self.render_text(msg), class_=cls)
@@ -1626,6 +1665,7 @@ class html(ABCHTMLGenerator):
         return code
 
     def show_localization_hint(self):
+        # type: () -> None
         url = "wato.py?mode=edit_configvar&varname=user_localizations"
         self.show_message(
             self.render_sup("*") + _("These texts may be localized depending on the users' "
@@ -1633,6 +1673,7 @@ class html(ABCHTMLGenerator):
             self.render_a("in the global settings", href=url))
 
     def del_language_cookie(self):
+        # type: () -> None
         self.response.delete_cookie("language")
 
     def set_language_cookie(self, lang):
@@ -1681,6 +1722,7 @@ class html(ABCHTMLGenerator):
                       "<a href=\"%s/\\1.html\\2\" target=\"_blank\">\\3</a>" % cmk_base_url, text)
 
     def enable_help_toggle(self):
+        # type: () -> None
         self.have_help = True
 
     #
@@ -1688,6 +1730,7 @@ class html(ABCHTMLGenerator):
     #
 
     def debug(self, *x):
+        # type: (*Any) -> None
         for element in x:
             try:
                 formatted = pprint.pformat(element)
@@ -1699,8 +1742,8 @@ class html(ABCHTMLGenerator):
     # URL building
     #
 
-    # [('varname1', value1), ('varname2', value2) ]
     def makeuri(self, addvars, remove_prefix=None, filename=None, delvars=None):
+        # type: (HTTPVariables, Optional[str], Optional[str], Optional[List[str]]) -> str
         new_vars = [nv[0] for nv in addvars]
         vars_ = [(v, val)
                  for v, val in self.request.itervars()
@@ -1715,18 +1758,22 @@ class html(ABCHTMLGenerator):
         return filename
 
     def makeuri_contextless(self, vars_, filename=None):
+        # type: (HTTPVariables, Optional[str]) -> str
         if not filename:
+            assert self.myfile is not None
             filename = self.myfile + ".py"
         if vars_:
             return filename + "?" + self.urlencode_vars(vars_)
         return filename
 
     def makeactionuri(self, addvars, filename=None, delvars=None):
+        # type: (HTTPVariables, Optional[str], Optional[List[str]]) -> str
         return self.makeuri(addvars + [("_transid", self.transaction_manager.get())],
                             filename=filename,
                             delvars=delvars)
 
     def makeactionuri_contextless(self, addvars, filename=None):
+        # type: (HTTPVariables, Optional[str]) -> str
         return self.makeuri_contextless(addvars + [("_transid", self.transaction_manager.get())],
                                         filename=filename)
 
@@ -1735,6 +1782,7 @@ class html(ABCHTMLGenerator):
     #
 
     def default_html_headers(self):
+        # type: () -> None
         self.meta(httpequiv="Content-Type", content="text/html; charset=utf-8")
         self.write_html(
             self._render_opening_tag('link',
@@ -1744,6 +1792,7 @@ class html(ABCHTMLGenerator):
                                      close_tag=True))
 
     def _head(self, title, javascripts=None):
+        # type: (Text, Optional[List[str]]) -> None
         javascripts = javascripts if javascripts else []
 
         self.open_head()
@@ -1769,7 +1818,7 @@ class html(ABCHTMLGenerator):
             if filename_for_browser:
                 self.javascript_file(filename_for_browser)
 
-        if self.browser_reload != 0:
+        if self.browser_reload != 0.0:
             if self.browser_redirect != '':
                 self.javascript('cmk.utils.set_reload(%s, \'%s\')' %
                                 (self.browser_reload, self.browser_redirect))
@@ -1779,6 +1828,7 @@ class html(ABCHTMLGenerator):
         self.close_head()
 
     def _add_custom_style_sheet(self):
+        # type: () -> None
         for css in self._plugin_stylesheets():
             self.write('<link rel="stylesheet" type="text/css" href="css/%s">\n' % css)
 
@@ -1791,6 +1841,7 @@ class html(ABCHTMLGenerator):
             gui_colors.GUIColors().render_html()
 
     def _plugin_stylesheets(self):
+        # type: () -> Set[str]
         plugin_stylesheets = set([])
         for directory in [
                 Path(cmk.utils.paths.web_dir, "htdocs", "css"),

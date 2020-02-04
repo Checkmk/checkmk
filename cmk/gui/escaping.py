@@ -24,10 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 import re
-
+from typing import Text, Union  # pylint: disable=unused-import
 import six
 
 from future.moves.html import escape as html_escape  # type: ignore
+
+from cmk.utils.encoding import ensure_unicode
+from cmk.gui.utils.html import HTML
 
 #.
 #   .--Escaper-------------------------------------------------------------.
@@ -47,7 +50,9 @@ _QUOTE = re.compile(r"(?:&quot;|&#x27;)")
 _A_HREF = re.compile(r'&lt;a href=((?:&quot;|&#x27;).*?(?:&quot;|&#x27;))&gt;')
 
 
+# TODO: Cleanup the accepted types!
 def escape_attribute(value):
+    # type: (Union[None, int, HTML, str, Text]) -> Text
     """Escape HTML attributes.
 
     For example: replace '"' with '&quot;', '<' with '&lt;'.
@@ -71,25 +76,27 @@ def escape_attribute(value):
     """
     attr_type = type(value)
     if value is None:
-        return ''
+        return u''
     elif attr_type == int:
-        return str(value)
-    elif hasattr(value, '__html__'):
+        return six.text_type(value)
+    elif isinstance(value, HTML):
         return value.__html__()  # This is HTML code which must not be escaped
     elif not isinstance(attr_type, six.string_types):  # also possible: type Exception!
-        value = "%s" % value  # Note: this allows Unicode. value might not have type str now
-    return html_escape(value, quote=True)
+        value = u"%s" % value
+    return ensure_unicode(html_escape(value, quote=True))
 
 
 def unescape_attributes(value):
+    # type: (str) -> Text
     # In python3 use html.unescape
-    return value.replace("&amp;", "&")\
+    return ensure_unicode(value.replace("&amp;", "&")\
                 .replace("&quot;", "\"")\
                 .replace("&lt;", "<")\
-                .replace("&gt;", ">")
+                .replace("&gt;", ">"))
 
 
 def escape_text(text):
+    # type: (Union[None, int, HTML, str, Text]) -> Text
     """Escape HTML text
 
     We only strip some tags and allow some simple tags
@@ -113,17 +120,18 @@ def escape_text(text):
     Returns:
 
     """
-    if hasattr(text, '__html__'):  # This is HTML code which must not be escaped
+    if isinstance(text, HTML):
         return text.__html__()
 
     text = escape_attribute(text)
     text = _UNESCAPER_TEXT.sub(r'<\1\2>', text)
     for a_href in _A_HREF.finditer(text):
-        text = text.replace(a_href.group(0), "<a href=%s>" % _QUOTE.sub("\"", a_href.group(1)))
-    return text.replace("&amp;nbsp;", "&nbsp;")
+        text = text.replace(a_href.group(0), u"<a href=%s>" % _QUOTE.sub(u"\"", a_href.group(1)))
+    return text.replace(u"&amp;nbsp;", u"&nbsp;")
 
 
 def strip_scripts(ht):
+    # type: (Text) -> Text
     """Strip script tags from text.
 
     This function does not handle all the possible edge cases. Beware.
@@ -162,6 +170,7 @@ def strip_scripts(ht):
 
 
 def strip_tags(ht):
+    # type: (Union[HTML, str, Text]) -> Text
     """Strip all HTML tags from a text.
 
     Args:
@@ -180,11 +189,13 @@ def strip_tags(ht):
         A string without working HTML tags.
 
     """
-    if hasattr(ht, '__html__'):
+    if isinstance(ht, HTML):
         ht = ht.__html__()
 
     if not isinstance(ht, six.string_types):
-        return ht
+        return u"%s" % ht
+
+    ht = ensure_unicode(ht)
 
     while True:
         x = ht.find('<')

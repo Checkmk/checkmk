@@ -26,32 +26,38 @@
 
 import time
 import random
+from typing import List, Optional  # pylint: disable=unused-import
 
 import cmk.gui.config as config
+from cmk.gui.http import Request  # pylint: disable=unused-import
 
 
 class TransactionManager(object):
     """Manages the handling of transaction IDs used by the GUI to prevent against
     performing the same action multiple times."""
     def __init__(self, request):
+        # type: (Request) -> None
         super(TransactionManager, self).__init__()
         self._request = request
 
-        self._new_transids = []
+        self._new_transids = []  # type: List[str]
         self._ignore_transids = False
-        self._current_transid = None
+        self._current_transid = None  # type: Optional[str]
 
     def ignore(self):
+        # type: () -> None
         """Makes the GUI skip all transaction validation steps"""
         self._ignore_transids = True
 
     def get(self):
+        # type: () -> str
         """Returns a transaction ID that can be used during a subsequent action"""
         if not self._current_transid:
             self._current_transid = self.fresh_transid()
         return self._current_transid
 
     def fresh_transid(self):
+        # type: () -> str
         """Compute a (hopefully) unique transaction id.
 
         This is generated during rendering of a form or an action link, stored
@@ -65,6 +71,7 @@ class TransactionManager(object):
         return transid
 
     def store_new(self):
+        # type: () -> None
         """All generated transids are saved per user.
 
         They are stored in the transids.mk.  Per user only up to 20 transids of
@@ -83,6 +90,7 @@ class TransactionManager(object):
         config.user.save_transids((cleared_ids[-20:] + self._new_transids))
 
     def transaction_valid(self):
+        # type: () -> bool
         """Checks if the current transaction is valid
 
         i.e. in case of browser reload a browser reload, the form submit should
@@ -116,11 +124,13 @@ class TransactionManager(object):
         return transid in config.user.transids(lock=False)
 
     def is_transaction(self):
+        # type: () -> bool
         """Checks, if the current page is a transation, i.e. something that is secured by
         a transid (such as a submitted form)"""
         return self._request.has_var("_transid")
 
     def check_transaction(self):
+        # type: () -> bool
         """called by page functions in order to check, if this was a reload or the original form submission.
 
         Increases the transid of the user, if the latter was the case.
@@ -139,6 +149,7 @@ class TransactionManager(object):
         return False
 
     def _invalidate(self, used_id):
+        # type: (str) -> None
         """Remove the used transid from the list of valid ones"""
         valid_ids = config.user.transids(lock=True)
         try:

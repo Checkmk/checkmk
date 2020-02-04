@@ -219,6 +219,9 @@
     <ClInclude Include="firewall.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="file_encryption.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -438,6 +441,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="firewall.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file_encryption.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

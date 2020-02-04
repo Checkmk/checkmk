@@ -29,6 +29,7 @@ copy .\install\resources\check_mk.ini  	%root%\ > nul         || powershell Writ
 powershell Write-Host "1. Test machine preparation: Shared Folder"  -Foreground Green
 if not exist "%shared_fldr%" powershell Write-Host Making folder %shared_fldr% -Foreground Yellow && mkdir %shared_fldr%
 copy .\test_files\shared_public     	%shared_fldr% > nul   || powershell Write-Host "Failed shared_public copy" -Foreground Red &&  exit /b 6
+powershell Write-Host "You must have in  Shared Folder at least one file with UNICODE name. This file must be created Manually."  -Foreground Cyan
 if not exist "%LOGONSERVER%\shared_public" powershell Write-Host Sharing %shared_fldr% -Foreground Yellow && net share shared_public=%shared_fldr% /grant:everyone,FULL 1> nul && Icacls %shared_fldr% /grant Everyone:F /inheritance:e /T 1> nul
 
 powershell Write-Host "2. Test machine preparation: Root Folder"  -Foreground Green

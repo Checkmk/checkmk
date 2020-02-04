@@ -56,7 +56,7 @@ mklogwatch: $(MKLOGWATCH_EXE_BUILD)
 $(MSI_STATE_FILE): $(MSI_AGENT_FILE) $(MSI_PATCH_FILE)
 	@powershell Write-Host "Patching '$(MSI_AGENT_FILE)'" -Foreground Green
 	@del $(MSI_STATE_FILE)  2> nul
-	py -2 $(MSI_PATCH_FILE) 1033 $(MSI_AGENT_FILE) $(MSI_STATE_FILE)
+	py -3 $(MSI_PATCH_FILE) 1033 $(MSI_AGENT_FILE) $(MSI_STATE_FILE)
 
 msi_patch: $(MSI_STATE_FILE)
 	@if NOT exist "$(MSI_STATE_FILE)" powershell Write-Host "Patch of '$(MSI_AGENT_FILE)' failed" -Foreground Red && exit /b 1

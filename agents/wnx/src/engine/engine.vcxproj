@@ -257,6 +257,7 @@
     <ClInclude Include="eventlog\eventlogbase.h" />
     <ClInclude Include="eventlog\eventlogstd.h" />
     <ClInclude Include="eventlog\eventlogvista.h" />
+    <ClInclude Include="file_encryption.h" />
     <ClInclude Include="firewall.h" />
     <ClInclude Include="install_api.h" />
     <ClInclude Include="logger.h" />
@@ -477,6 +478,7 @@
     <ClCompile Include="eventlog\eventlogstd.cpp" />
     <ClCompile Include="eventlog\eventlogvista.cpp" />
     <ClCompile Include="external_port.cpp" />
+    <ClCompile Include="file_encryption.cpp" />
     <ClCompile Include="firewall.cpp" />
     <ClCompile Include="groups.cpp" />
     <ClCompile Include="install_api.cpp" />

@@ -149,7 +149,7 @@ def patch_package_code_by_marker(f_name, package_code=None, state_file=None):
 
     location += MSI_PACKAGE_CODE_OFFSET
 
-    if data[location] != b"{":
+    if data[location:location + 1] != b"{":
         return False
 
     start = location

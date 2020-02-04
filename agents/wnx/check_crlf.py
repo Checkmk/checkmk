@@ -5,7 +5,7 @@ import os
 
 with open("install\\resources\\check_mk.user.yml", "rb") as f:
     content = f.read()
-    if content.count("\r\n") < 10:
+    if content.count(b"\r\n") < 10:
         exit(1)
 
 exit(0)

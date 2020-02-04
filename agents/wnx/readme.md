@@ -6,6 +6,7 @@
 3. build scripts
 4. CMakeLists.txt 
 5. .gitignore
+6. Makefile
 
 ## Test Scripts
 call_unit_tests.cmd

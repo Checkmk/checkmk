@@ -61,6 +61,7 @@ TEST(ServiceProcessorTest, Generate) {
 
     AsyncAnswer::DataBlock db;
     auto ret = sp.wrapResultWithStaticSections(db);
+    ret.push_back(0);
     std::string data = reinterpret_cast<const char*>(ret.data());
     ASSERT_TRUE(ret.size() > 5);
     auto t = cma::tools::SplitString(data, "\n");

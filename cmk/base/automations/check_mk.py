@@ -31,7 +31,7 @@ import os
 import sys
 import time
 import shutil
-import cStringIO
+import io
 import contextlib
 from typing import IO, Iterator, Tuple, Optional, Dict, Any, Text, List, Union  # pylint: disable=unused-import
 
@@ -189,7 +189,11 @@ class AutomationTryDiscovery(Automation):
 
     def execute(self, args):
         # type: (List[str]) -> Dict[str, Any]
-        with redirect_output(cStringIO.StringIO()) as buf:
+        if sys.version_info[0] >= 3:
+            fileobj = io.StringIO()
+        else:
+            fileobj = io.BytesIO()
+        with redirect_output(fileobj) as buf:
             log.setup_console_logging()
             log.logger.setLevel(log.VERBOSE)
             check_preview_table, host_labels = self._execute_discovery(args)

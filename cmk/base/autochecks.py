@@ -26,7 +26,6 @@
 """Caring about persistance of the discovered services (aka autochecks)"""
 
 from typing import Iterator, Any, Dict, Union, Set, Tuple, Text, Optional, List  # pylint: disable=unused-import
-import os
 import sys
 import ast
 
@@ -63,9 +62,7 @@ class AutochecksManager(object):
     def __init__(self):
         # type: () -> None
         super(AutochecksManager, self).__init__()
-
         self._autochecks = {}  # type: Dict[HostName, List[Service]]
-
         # Extract of the autochecks. This cache is populated either on the way while
         # processing get_autochecks_of() or when directly calling discovered_labels_of().
         self._discovered_labels_of = {}  # type: Dict[HostName, Dict[Text, DiscoveredServiceLabels]]
@@ -73,13 +70,23 @@ class AutochecksManager(object):
 
     def get_autochecks_of(self, hostname):
         # type: (str) -> List[Service]
-        if hostname in self._autochecks:
-            return self._autochecks[hostname]
+        if hostname not in self._autochecks:
+            self._autochecks[hostname] = self._get_autochecks_of_uncached(hostname)
+        return self._autochecks[hostname]
 
-        services = self._read_autochecks_of(hostname)
-        self._autochecks[hostname] = services
-
-        return services
+    def _get_autochecks_of_uncached(self, hostname):
+        # type: (HostName) -> List[Service]
+        """Read automatically discovered checks of one host"""
+        return [
+            Service(
+                check_plugin_name=service.check_plugin_name,
+                item=service.item,
+                description=service.description,
+                parameters=config.compute_check_parameters(hostname, service.check_plugin_name,
+                                                           service.item, service.parameters),
+                service_labels=service.service_labels,
+            ) for service in self._read_raw_autochecks_cached(hostname)
+        ]
 
     def discovered_labels_of(self, hostname, service_desc):
         # type: (HostName, ServiceName) -> DiscoveredServiceLabels
@@ -106,22 +113,6 @@ class AutochecksManager(object):
 
         return result
 
-    def _read_autochecks_of(self, hostname):
-        # type: (HostName) -> List[Service]
-        """Read automatically discovered checks of one host"""
-        autochecks = []
-        for service in self._read_raw_autochecks_cached(hostname):
-            autochecks.append(
-                Service(
-                    check_plugin_name=service.check_plugin_name,
-                    item=service.item,
-                    description=service.description,
-                    parameters=config.compute_check_parameters(hostname, service.check_plugin_name,
-                                                               service.item, service.parameters),
-                    service_labels=service.service_labels,
-                ))
-        return autochecks
-
     def _read_raw_autochecks_cached(self, hostname):
         # type: (HostName) -> List[Service]
         if hostname in self._raw_autochecks_cache:
@@ -142,29 +133,24 @@ class AutochecksManager(object):
     def _read_raw_autochecks_of(self, hostname):
         # type: (HostName) -> List[Service]
         """Read automatically discovered checks of one host"""
-        basedir = cmk.utils.paths.autochecks_dir
-        filepath = basedir + '/' + hostname + '.mk'
-
         result = []  # type: List[Service]
-        if not os.path.exists(filepath):
+        path = _autochecks_path_for(hostname)
+        if not path.exists():
             return result
 
         check_config = config.get_check_variables()
         try:
-            cmk.base.console.vverbose("Loading autochecks from %s\n", filepath)
+            cmk.base.console.vverbose("Loading autochecks from %s\n", path)
             autochecks_raw = eval(
-                open(filepath).read().decode("utf-8"), check_config,
+                open(str(path)).read().decode("utf-8"), check_config,
                 check_config)  # type: List[Dict]
         except SyntaxError as e:
-            cmk.base.console.verbose("Syntax error in file %s: %s\n",
-                                     filepath,
-                                     e,
-                                     stream=sys.stderr)
+            cmk.base.console.verbose("Syntax error in file %s: %s\n", path, e, stream=sys.stderr)
             if cmk.utils.debug.enabled():
                 raise
             return result
         except Exception as e:
-            cmk.base.console.verbose("Error in file %s:\n%s\n", filepath, e, stream=sys.stderr)
+            cmk.base.console.verbose("Error in file %s:\n%s\n", path, e, stream=sys.stderr)
             if cmk.utils.debug.enabled():
                 raise
             return result
@@ -176,7 +162,7 @@ class AutochecksManager(object):
                     "entry is in pre Checkmk 1.6 format and needs to be converted. This is "
                     "normally done by \"cmk-update-config -v\" during \"omd update\". Please "
                     "execute \"cmk-update-config -v\" for convertig the old configuration." %
-                    (entry, hostname, filepath))
+                    (entry, hostname, path))
 
             labels = DiscoveredServiceLabels()
             for label_id, label_value in entry["service_labels"].items():
@@ -211,6 +197,16 @@ class AutochecksManager(object):
         return result
 
 
+def _autochecks_path_for(hostname):
+    # type: (HostName) -> Path
+    return Path(cmk.utils.paths.autochecks_dir, hostname + ".mk")
+
+
+def has_autochecks(hostname):
+    # type: (HostName) -> bool
+    return _autochecks_path_for(hostname).exists()
+
+
 def resolve_paramstring(check_plugin_name, parameters_unresolved):
     # type: (CheckPluginName, CheckParameters) -> CheckParameters
     """Translates a parameter string (read from autochecks) to it's final value
@@ -226,14 +222,13 @@ def resolve_paramstring(check_plugin_name, parameters_unresolved):
 def parse_autochecks_file(hostname):
     # type: (HostName) -> List[DiscoveredService]
     """Read autochecks, but do not compute final check parameters"""
-    path = "%s/%s.mk" % (cmk.utils.paths.autochecks_dir, hostname)
-    if not os.path.exists(path):
-        return []
-
     services = []  # type: List[DiscoveredService]
+    path = _autochecks_path_for(hostname)
+    if not path.exists():
+        return services
 
     try:
-        tree = ast.parse(open(path).read())
+        tree = ast.parse(open(str(path)).read())
     except SyntaxError as e:
         if cmk.utils.debug.enabled():
             raise
@@ -444,17 +439,10 @@ def _remove_duplicate_autochecks(autochecks):
     return cleaned_autochecks
 
 
-def has_autochecks(hostname):
-    # type: (HostName) -> bool
-    return os.path.exists(cmk.utils.paths.autochecks_dir + "/" + hostname + ".mk")
-
-
 def save_autochecks_file(hostname, items):
     # type: (HostName, List[DiscoveredService]) -> None
-    if not os.path.exists(cmk.utils.paths.autochecks_dir):
-        os.makedirs(cmk.utils.paths.autochecks_dir)
-
-    filepath = Path(cmk.utils.paths.autochecks_dir) / ("%s.mk" % hostname)
+    path = _autochecks_path_for(hostname)
+    path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
     content = []
     content.append("[")
     for discovered_service in sorted(items, key=lambda s: (s.check_plugin_name, s.item)):
@@ -463,14 +451,13 @@ def save_autochecks_file(hostname, items):
             (discovered_service.check_plugin_name, discovered_service.item,
              discovered_service.parameters_unresolved, discovered_service.service_labels.to_dict()))
     content.append("]\n")
-    store.save_file(str(filepath), "\n".join(content))
+    store.save_file(path, "\n".join(content))
 
 
 def remove_autochecks_file(hostname):
     # type: (HostName) -> None
-    filepath = cmk.utils.paths.autochecks_dir + "/" + hostname + ".mk"
     try:
-        os.remove(filepath)
+        _autochecks_path_for(hostname).unlink()
     except OSError:
         pass
 

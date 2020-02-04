@@ -366,18 +366,22 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
     #
 
     def render_label(self, content, for_, **attrs):
+        # type: (HTMLTagContent, str, **HTMLTagAttributeValue) -> HTML
         attrs['for'] = for_
         return self._render_content_tag('label', content, **attrs)
 
     def label(self, content, for_, **attrs):
+        # type: (HTMLTagContent, str, **HTMLTagAttributeValue) -> None
         self.write_html(self.render_label(content, for_, **attrs))
 
     def render_input(self, name, type_, **attrs):
+        # type: (str, str, **HTMLTagAttributeValue) -> HTML
         attrs['type_'] = type_
         attrs['name'] = name
         return self._render_opening_tag('input', close_tag=True, **attrs)
 
     def input(self, name, type_, **attrs):
+        # type: (str, str, **HTMLTagAttributeValue) -> None
         self.write_html(self.render_input(name, type_, **attrs))
 
     #
@@ -385,6 +389,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
     #
 
     def li(self, content, **attrs):
+        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
         """ Only for text content. You can't put HTML structure here. """
         self.write_html(self._render_content_tag('li', content, **attrs))
 
@@ -393,31 +398,39 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
     #
 
     def render_heading(self, content):
-        """ <h2>%(content)</h2> """
+        # type: (HTMLTagContent) -> HTML
         return self._render_content_tag('h2', content)
 
     def heading(self, content):
+        # type: (HTMLTagContent) -> None
         self.write_html(self.render_heading(content))
 
     def render_br(self):
+        # type: () -> HTML
         return HTML("<br/>")
 
     def br(self):
+        # type: () -> None
         self.write_html(self.render_br())
 
     def render_hr(self, **attrs):
+        # type: (**HTMLTagAttributeValue) -> HTML
         return self._render_opening_tag('hr', close_tag=True, **attrs)
 
     def hr(self, **attrs):
+        # type: (**HTMLTagAttributeValue) -> None
         self.write_html(self.render_hr(**attrs))
 
     def rule(self):
-        return self.hr()
+        # type: () -> None
+        self.hr()
 
     def render_nbsp(self):
+        # type: () -> HTML
         return HTML("&nbsp;")
 
     def nbsp(self):
+        # type: () -> None
         self.write_html(self.render_nbsp())
 
     #

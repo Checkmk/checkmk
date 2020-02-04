@@ -4,10 +4,12 @@ properties([
 ])
 node {
     def WORKSPACE = pwd()
+    def RESULTS = WORKSPACE + "/results"
 
     try {
         stage("Auschecken: Checkmk") {
             checkout(scm)
+            sh "rm -rf ${RESULTS}; mkdir ${RESULTS}"
         }
 
         // Creates a \n separated list of changed files
@@ -34,7 +36,7 @@ node {
         stage("Python typing") {
             if (CHANGED_PYTHON_FILES != "") {
                 dir("tests-py3") {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; make --quiet test-mypy"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; JUNIT_XML='--junit-xml ${RESULTS}/mypy.xml' make --quiet test-mypy"
                 }
             } else {
                 println "No Python 2 files changed. Skipping."
@@ -45,7 +47,7 @@ node {
         stage("Python3 typing") {
             if (CHANGED_PYTHON_FILES != "" || CHANGED_PYTHON3_FILES != "") {
                 dir("tests-py3") {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; make --quiet test-mypy3"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; JUNIT_XML='--junit-xml ${RESULTS}/mypy3.xml' make --quiet test-mypy3"
                 }
             } else {
                 println "No Python 2/3 files changed. Skipping."
@@ -55,11 +57,11 @@ node {
         stage("Python format") {
             if (CHANGED_PYTHON_FILES != "") {
                 dir('tests') {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; PYTHON_FILES='${CHANGED_PYTHON_FILES}' make --quiet test-format-python"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; PYTHON_FILES='${CHANGED_PYTHON_FILES}' make --quiet test-format-python &> ${RESULTS}/python-yapf.txt"
                 }
             } else if (CHANGED_PYTHON3_FILES != "") {
                 dir('tests') {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; PYTHON_FILES='${CHANGED_PYTHON3_FILES}' make --quiet test-format-python"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; PYTHON_FILES='${CHANGED_PYTHON3_FILES}' make --quiet test-format-python &> ${RESULTS}/python3-yapf.txt"
                 }
             } else {
                 println "No Python 2/3 files changed. Skipping."
@@ -91,7 +93,7 @@ node {
                              'PYLINT_ARGS=--output-format=cmk_parseable']) {
                         sh 'if [ -d "${WORKDIR}" ]; then rm -rf "${WORKDIR}"; fi'
                         sh 'mkdir "${WORKDIR}"'
-                        sh ". /bauwelt/bin/bw-setup-jenkins-env && make -C .. --what-if Pipfile.lock .venv && make test-pylint"
+                        sh ". /bauwelt/bin/bw-setup-jenkins-env && make -C .. --what-if Pipfile.lock .venv && make test-pylint &> ${RESULTS}/pylint.txt"
                     }
                 }
             } else {
@@ -102,7 +104,7 @@ node {
         stage("Python3 linting") {
             if (CHANGED_PYLINT_RC_FILE != "" || CHANGED_PYTHON3_FILES != "") {
                 dir('tests-py3') {
-                    sh 'make test-pylint'
+                    sh "make test-pylint &> ${RESUTS}/pylint3.xml"
                 }
             } else {
                 println "Neither .pylintrc nor Python 3 files changed. Skipping."
@@ -112,7 +114,7 @@ node {
         stage("Python unit tests") {
             if (CHANGED_PYTHON_FILES != "") {
                 dir('tests') {
-                    withEnv(["PYTEST_ADDOPTS=\"--junitxml='$WORKSPACE/junit.xml'\""]) {
+                    withEnv(["PYTEST_ADDOPTS=\"--junitxml='$RESULTS/python-unit-junit.xml'\""]) {
                         sh ". /bauwelt/bin/bw-setup-jenkins-env ; make test-unit"
                     }
                 }
@@ -124,7 +126,7 @@ node {
         stage("Python3 unit tests") {
             if (CHANGED_PYTHON_FILES != "" || CHANGED_PYTHON3_FILES != "") {
                 dir('tests-py3') {
-                    withEnv(["PYTEST_ADDOPTS=\"--junitxml='$WORKSPACE/junit.xml'\""]) {
+                    withEnv(["PYTEST_ADDOPTS=\"--junitxml='$RESULTS/python3-unit-junit.xml'\""]) {
                         sh ". /bauwelt/bin/bw-setup-jenkins-env ; make test-unit"
                     }
                 }
@@ -135,20 +137,20 @@ node {
 
         stage("Shell format") {
             dir('tests') {
-                sh ". /bauwelt/bin/bw-setup-jenkins-env ; make --quiet test-format-shell"
+                sh ". /bauwelt/bin/bw-setup-jenkins-env ; make --quiet test-format-shell &> ${RESULTS}/shell-format.txt"
             }
         }
 
         stage("Shell Unit Tests") {
             dir('tests') {
-                sh ". /bauwelt/bin/bw-setup-jenkins-env ; make test-unit-sh"
+                sh ". /bauwelt/bin/bw-setup-jenkins-env ; make test-unit-sh &> ${RESULTS}/shell-unit.txt"
             }
         }
 
         stage("Agent integration tests") {
             if (CHANGED_AGENT_PLUGINS != "") {
                 dir('tests') {
-                    withEnv(["PYTEST_ADDOPTS=\"--junitxml='$WORKSPACE/junit-agent-integration.xml'\""]) {
+                    withEnv(["PYTEST_ADDOPTS=\"--junitxml='$RESULTS/agent-integration-junit.xml'\""]) {
                         sh ". /bauwelt/bin/bw-setup-jenkins-env ; make test-agent-integration"
                     }
                 }
@@ -160,10 +162,10 @@ node {
         stage("Cppcheck") {
             if (CHANGED_CORE_FILES != "") {
                 dir("livestatus/src") {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck ${GERRIT_PATCHSET_REVISION}"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck-xml ${GERRIT_PATCHSET_REVISION}"
                 }
                 dir("enterprise/core/src") {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck ${GERRIT_PATCHSET_REVISION}"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck-xml ${GERRIT_PATCHSET_REVISION}"
                 }
             } else {
                 println "No core files changed. Skipping."
@@ -173,10 +175,10 @@ node {
         stage("Clang-Tidy") {
             if (CHANGED_CORE_FILES != "") {
                 dir("livestatus/src") {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter tidy ${GERRIT_PATCHSET_REVISION}"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter tidy ${GERRIT_PATCHSET_REVISION} &> ${RESULTS}/livestatus-tidy.txt"
                 }
                 dir("enterprise/core/src") {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter tidy ${GERRIT_PATCHSET_REVISION}"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter tidy ${GERRIT_PATCHSET_REVISION} &> ${RESULTS}/core-tidy.txt"
                 }
             } else {
                 println "No core files changed. Skipping."
@@ -186,10 +188,10 @@ node {
         stage("IWYU") {
             if (CHANGED_CORE_FILES != "") {
                 dir("livestatus/src") {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter iwyu ${GERRIT_PATCHSET_REVISION}"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter iwyu ${GERRIT_PATCHSET_REVISION} &> ${RESULTS}/livestatus-iwyu.txt"
                 }
                 dir("enterprise/core/src") {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter iwyu ${GERRIT_PATCHSET_REVISION}"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter iwyu ${GERRIT_PATCHSET_REVISION} &> ${RESULTS}/core-iwyu.txt"
                 }
             } else {
                 println "No core files changed. Skipping."
@@ -199,10 +201,10 @@ node {
         stage("NEB/CMC Unit Tests") {
             if (CHANGED_CORE_FILES != "") {
                 dir("livestatus/src/test") {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ./.f12"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ./.f12 &> ${RESULTS}/livestatus-neb-cmc.txt"
                 }
                 dir("enterprise/core/src/test") {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ./.f12"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ./.f12 &> ${RESULTS}/core-neb-cmc.txt"
                 }
             } else {
                 println "No core files changed. Skipping."
@@ -214,11 +216,14 @@ node {
         throw e
     } finally {
         stage("Analyse Issues") {
-            def CLANG = scanForIssues tool: clang()
-            def GCC = scanForIssues tool: gcc()
-            def PYLINT = scanForIssues tool: pyLint()
+            def CLANG = scanForIssues tool: clang(pattern: "results/*-tidy.txt")
+            def GCC = scanForIssues tool: gcc(pattern: "results/*.iwyu.txt,results/*neb-cmc.txt,results/*yapf.txt")
+            def PYLINT = scanForIssues tool: pyLint(pattern: "results/pylint*.txt")
+            def MYPY = scanForIssues tool: myPy(pattern: "results/mypy*.xml")
+            def CPPCHECK = scanForIssues tool: cppCheck(pattern: '**/cppcheck-result.xml')
 
-            publishIssues issues:[CLANG,GCC,PYLINT], trendChartType: 'TOOLS_ONLY'
+            publishIssues issues:[CLANG,GCC,PYLINT,MYPY,CPPCHECK], trendChartType: 'TOOLS_ONLY'
+            xunit([Custom(customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl", deleteOutputFiles: false, failIfNotNew: true, pattern: "results/*junit.xml", skipNoTestFiles: true, stopProcessingIfError: true)])
         }
     }
 }

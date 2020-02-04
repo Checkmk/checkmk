@@ -115,7 +115,7 @@ class Scenario(object):  # pylint: disable=useless-object-inheritance
                                 dict(self._autochecks.items()),
                                 raising=False)
 
-            monkeypatch.setattr(autochecks.AutochecksManager, "_read_raw_autochecks_of",
+            monkeypatch.setattr(autochecks.AutochecksManager, "_read_raw_autochecks_uncached",
                                 lambda self, hostname: self._raw_autochecks.get(hostname, []))
 
         return self.config_cache

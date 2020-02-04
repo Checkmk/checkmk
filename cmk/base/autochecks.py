@@ -85,38 +85,24 @@ class AutochecksManager(object):
                 parameters=config.compute_check_parameters(hostname, service.check_plugin_name,
                                                            service.item, service.parameters),
                 service_labels=service.service_labels,
-            ) for service in self._read_raw_autochecks_cached(hostname)
+            ) for service in self._read_raw_autochecks(hostname)
         ]
 
     def discovered_labels_of(self, hostname, service_desc):
         # type: (HostName, ServiceName) -> DiscoveredServiceLabels
-        # Check if the autochecks for the given hostname were already read
-        # The service in question might have no entry in the autochecks file
-        # In this scenario it gets an empty DiscoveredServiceLabels entry
-        host_results = self._discovered_labels_of.get(hostname)
-        if host_results is not None:
-            service_result = host_results.get(service_desc)
-            if service_result is None:
-                host_results[service_desc] = DiscoveredServiceLabels()
-            return host_results[service_desc]
+        if hostname not in self._discovered_labels_of:
+            # Only read the raw autochecks here, do not compute the effective
+            # check parameters. The latter would involve ruleset matching which
+            # in turn would require already computed labels.
+            self._read_raw_autochecks(hostname)
+        if service_desc not in self._discovered_labels_of[hostname]:
+            self._discovered_labels_of[hostname][service_desc] = DiscoveredServiceLabels()
+        return self._discovered_labels_of[hostname][service_desc]
 
-        # Only read the raw autochecks here. Do not compute the effective check parameters,
-        # because that would invole ruleset matching which in would require the labels to
-        # be already computed.
-        # The following function reads the autochecks and populates the the discovered labels cache
-        self._read_raw_autochecks_cached(hostname)
-        result = self._discovered_labels_of.get(hostname, {}).get(service_desc)
-        if result is None:
-            # The service was not present in the autochecks, create an empty instance
-            result = DiscoveredServiceLabels()
-            self._discovered_labels_of.setdefault(hostname, {})[service_desc] = result
-
-        return result
-
-    def _read_raw_autochecks_cached(self, hostname):
+    def _read_raw_autochecks(self, hostname):
         # type: (HostName) -> List[Service]
         if hostname not in self._raw_autochecks_cache:
-            self._raw_autochecks_cache[hostname] = self._read_raw_autochecks_of(hostname)
+            self._raw_autochecks_cache[hostname] = self._read_raw_autochecks_uncached(hostname)
             # create cache from autocheck labels
             self._discovered_labels_of.setdefault(hostname, {})
             for service in self._raw_autochecks_cache[hostname]:
@@ -125,7 +111,7 @@ class AutochecksManager(object):
 
     # TODO: use store.load_object_from_file()
     # TODO: Common code with parse_autochecks_file? Cleanup.
-    def _read_raw_autochecks_of(self, hostname):
+    def _read_raw_autochecks_uncached(self, hostname):
         # type: (HostName) -> List[Service]
         """Read automatically discovered checks of one host"""
         result = []  # type: List[Service]
@@ -424,12 +410,12 @@ def _set_autochecks_of_cluster(host_config, new_items):
 def _remove_duplicate_autochecks(autochecks):
     # type: (List[DiscoveredService]) -> List[DiscoveredService]
     """ Cleanup routine. Earlier versions (<1.6.0p8) may have introduced duplicates in the autochecks file"""
-    duplicates = set()  # type: Set[Tuple[CheckPluginName, Item]]
+    seen = set()  # type: Set[Tuple[CheckPluginName, Item]]
     cleaned_autochecks = []
     for service in autochecks:
         service_id = (service.check_plugin_name, service.item)
-        if service_id not in duplicates:
-            duplicates.add(service_id)
+        if service_id not in seen:
+            seen.add(service_id)
             cleaned_autochecks.append(service)
     return cleaned_autochecks
 
@@ -464,14 +450,8 @@ def remove_autochecks_of(host_config):
     Cluster aware means that the autocheck files of the nodes are handled. Instead
     of removing the whole file the file is loaded and only the services associated
     with the given cluster are removed."""
-    removed = 0
-    if host_config.nodes:
-        for node_name in host_config.nodes:
-            removed += _remove_autochecks_of_host(node_name)
-    else:
-        removed += _remove_autochecks_of_host(host_config.hostname)
-
-    return removed
+    hostnames = host_config.nodes if host_config.nodes else [host_config.hostname]
+    return sum(_remove_autochecks_of_host(hostname) for hostname in hostnames)
 
 
 def _remove_autochecks_of_host(hostname):

@@ -37,10 +37,9 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _
-from cmk.gui.globals import g, html
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
-from cmk.gui.valuespec import Dictionary, Checkbox, Hostname
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.valuespec import Dictionary, Checkbox
 from cmk.gui.escaping import escape_text
 from cmk.gui.plugins.visuals import (
     filter_registry,
@@ -70,7 +69,6 @@ from cmk.gui.plugins.views import (
     PainterOptions,
     inventory_displayhints,
     multisite_builtin_views,
-    view_is_enabled,
     paint_age,
     declare_1to1_sorter,
     cmp_simple_number,
@@ -925,6 +923,10 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
         'description': _('A view for the %s of one host') % title_plural,
         'hidden': True,
         'mustsearch': False,
+        'link_from': {
+            'single_infos': ['host'],
+            'has_inventory_tree': invpath,
+        },
 
         # Columns
         'painters': painters,
@@ -936,65 +938,6 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
         'hide_filters': ["host"],
     }
     multisite_builtin_views[infoname + "_of_host"].update(view_spec)
-
-    # View enabled checker for the _of_host view
-    view_is_enabled[infoname + "_of_host"] = _create_view_enabled_check_func(invpath)
-
-
-def _create_view_enabled_check_func(invpath, is_history=False):
-    def _check_view_enabled(linking_view, rows, view, context_vars):
-        context = dict(context_vars)
-        hostname = context.get("host")
-        if hostname is None:
-            return True  # No host data? Keep old behaviour
-        elif hostname == "":
-            return False
-
-        # TODO: host is not correctly validated by visuals. Do it here for the moment.
-        try:
-            Hostname().validate_value(hostname, None)
-        except MKUserError:
-            return False
-
-        # FIXME In order to decide whether this view is enabled
-        # do we really need to load the whole tree?
-        try:
-            struct_tree = _get_struct_tree(is_history, hostname, context.get("site"))
-        except inventory.LoadStructuredDataError:
-            return False
-
-        if not struct_tree:
-            return False
-
-        if struct_tree.is_empty():
-            return False
-
-        parsed_path, _attribute_keys = inventory.parse_tree_path(invpath)
-        if parsed_path:
-            children = struct_tree.get_sub_children(parsed_path)
-        else:
-            children = [struct_tree.get_root_container()]
-        if children is None:
-            return False
-        return True
-
-    return _check_view_enabled
-
-
-def _get_struct_tree(is_history, hostname, site_id):
-    struct_tree_cache = g.setdefault("struct_tree_cache", {})
-    cache_id = (is_history, hostname, site_id)
-    if cache_id in struct_tree_cache:
-        return struct_tree_cache[cache_id]
-
-    if is_history:
-        struct_tree = inventory.load_filtered_inventory_tree(hostname)
-    else:
-        row = inventory.get_status_data_via_livestatus(site_id, hostname)
-        struct_tree = inventory.load_filtered_and_merged_tree(row)
-
-    struct_tree_cache[cache_id] = struct_tree
-    return struct_tree
 
 
 # Now declare Multisite views for a couple of embedded tables
@@ -1157,6 +1100,10 @@ multisite_builtin_views["inv_host"] = {
     'hidebutton': False,
     'public': True,
     'hidden': True,
+    'link_from': {
+        'single_infos': ['host'],
+        'has_inventory_tree': '.',
+    },
 
     # Layout options
     'layout': 'dataset',
@@ -1183,8 +1130,6 @@ multisite_builtin_views["inv_host"] = {
     'show_filters': [],
     'sorters': [],
 }
-
-view_is_enabled["inv_host"] = _create_view_enabled_check_func(".")
 
 generic_host_filters = multisite_builtin_views["allhosts"]["show_filters"]
 
@@ -1477,6 +1422,10 @@ multisite_builtin_views["inv_host_history"] = {
     'hidebutton': False,
     'public': True,
     'hidden': True,
+    'link_from': {
+        'single_infos': ['host'],
+        'has_inventory_tree_history': '.',
+    },
 
     # Layout options
     'layout': 'table',
@@ -1506,8 +1455,6 @@ multisite_builtin_views["inv_host_history"] = {
     'show_filters': [],
     'sorters': [('invhist_time', False)],
 }
-
-view_is_enabled["inv_host_history"] = _create_view_enabled_check_func(".", is_history=True)
 
 #.
 #   .--Node Renderer-------------------------------------------------------.

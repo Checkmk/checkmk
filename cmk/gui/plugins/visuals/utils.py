@@ -41,6 +41,7 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.view_utils import get_labels
 from cmk.gui.type_defs import VisualContext  # pylint: disable=unused-import
 
 SingleInfos = List[str]
@@ -179,12 +180,53 @@ class VisualType(six.with_metaclass(abc.ABCMeta, object)):
         """Get the permitted visuals of this type"""
         raise NotImplementedError()
 
-    def is_enabled_for(self, view, rows, visual, context_vars):
-        """Optional feature of visuals: Make them dynamically available as links or not
+    def link_from(self, linking_view, linking_view_rows, visual, context_vars):
+        """Dynamically show/hide links to other visuals (e.g. reports, dashboards, views) from views
 
-        This has been implemented for HW/SW inventory views which are often useless when a host
-        has no such information available. For example the "Oracle Tablespaces" inventory view
-        is useless on hosts that don't host Oracle databases."""
+        This method uses the conditions read from the "link_from" attribute of a given visual to
+        decide whether or not the given linking_view should show a link to the given visual.
+
+        The decision can be made based on the given context_vars, linking_view definition and
+        linking_view_rows. Currently there is only a small set of conditions implemented here.
+
+        single_infos: Only link when the given list of single_infos match.
+        host_labels: Only link when the given host labels match.
+
+        Example: The visual with this definition will only be linked from host detail pages of hosts
+        that are Checkmk servers.
+
+        'link_from': {
+            'single_infos': ["host"],
+            'host_labels': {
+                'cmk/check_mk_server': 'yes'
+            }
+        }
+        """
+        link_from = visual["link_from"]
+        if not link_from:
+            return True  # No link from filtering: Always display this.
+
+        single_info_condition = link_from.get("single_infos")
+        if single_info_condition and not set(single_info_condition).issubset(
+                linking_view.spec["single_infos"]):
+            return False  # Not matching required single infos
+
+        # Currently implemented very specific for the cases we need at the moment. Build something
+        # more generic once we need it.
+        if single_info_condition != ["host"]:
+            raise NotImplementedError()
+
+        # In case we have rows of a single host context we only have a single row that holds the
+        # host information. In case we have multiple rows, we normally have service rows which
+        # all hold the same host information in their host columns.
+        row = linking_view_rows[0]
+
+        # Exclude by host labels
+        host_labels = get_labels(row, "host")
+        for label_group_id, label_value in link_from.get("host_labels", {}).items():
+            if host_labels.get(label_group_id) != label_value:
+                return False
+
         return True
 
 

@@ -124,6 +124,12 @@ def query_limit_exceeded_warn(limit, user_config):
     html.show_warning(text)
 
 
+def get_labels(row, what):
+    # Sites with old versions that don't have the labels column return
+    # None for this field. Convert this to the default value
+    return row.get("%s_labels" % what, {}) or {}
+
+
 def render_labels(labels, object_type, with_links, label_sources):
     return _render_tag_groups_or_labels(labels,
                                         object_type,

@@ -418,6 +418,7 @@ def test_dashlet_context_inheritance(register_builtin_html):
         'title': u'Host Statistics',
         'refresh': 60,
         'add_context_to_title': True,
+        'link_from': {},
         'position': (61, 1),
         'size': (30, 18),
     }

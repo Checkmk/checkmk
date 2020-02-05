@@ -64,7 +64,7 @@ from cmk.gui.globals import g, html
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.display_options import display_options
 from cmk.gui.permissions import permission_registry
-from cmk.gui.view_utils import render_tag_groups, render_labels  # pylint: disable=unused-import
+from cmk.gui.view_utils import render_tag_groups, render_labels, get_labels  # pylint: disable=unused-import
 
 
 # TODO: Better name it PainterOptions or DisplayOptions? There are options which only affect
@@ -1120,12 +1120,6 @@ def get_tag_groups(row, what):
     # Sites with old versions that don't have the tag groups column return
     # None for this field. Convert this to the default value
     return row.get("%s_tags" % what, {}) or {}
-
-
-def get_labels(row, what):
-    # Sites with old versions that don't have the labels column return
-    # None for this field. Convert this to the default value
-    return row.get("%s_labels" % what, {}) or {}
 
 
 def get_label_sources(row, what):

@@ -51,6 +51,7 @@ import cmk.gui.pages
 import cmk.gui.view_utils
 from cmk.gui.display_options import display_options
 from cmk.gui.valuespec import (
+    Hostname,
     DropdownChoice,
     Integer,
     ListChoice,
@@ -65,7 +66,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, g
 from cmk.gui.exceptions import (
     HTTPRedirect,
     MKGeneralException,
@@ -182,11 +183,88 @@ class VisualTypeViews(VisualType):
     def permitted_visuals(self):
         return get_permitted_views()
 
-    def is_enabled_for(self, view, rows, visual, context_vars):
-        if visual["name"] not in view_is_enabled:
-            return True  # Not registered are always visible!
+    def link_from(self, linking_view, linking_view_rows, visual, context_vars):
+        """This has been implemented for HW/SW inventory views which are often useless when a host
+        has no such information available. For example the "Oracle Tablespaces" inventory view is
+        useless on hosts that don't host Oracle databases."""
+        result = super(VisualTypeViews, self).link_from(linking_view, linking_view_rows, visual,
+                                                        context_vars)
+        if result is False:
+            return False
 
-        return view_is_enabled[visual["name"]](view, rows, visual, context_vars)
+        link_from = visual["link_from"]
+        if not link_from:
+            return True  # No link from filtering: Always display this.
+
+        inventory_tree_condition = link_from.get("has_inventory_tree")
+        if inventory_tree_condition and not _has_inventory_tree(
+                linking_view, linking_view_rows, visual, context_vars, inventory_tree_condition):
+            return False
+
+        inventory_tree_history_condition = link_from.get("has_inventory_tree_history")
+        if inventory_tree_history_condition and not _has_inventory_tree(
+                linking_view,
+                linking_view_rows,
+                visual,
+                context_vars,
+                inventory_tree_history_condition,
+                is_history=True):
+            return False
+
+        return True
+
+
+def _has_inventory_tree(linking_view, rows, view, context_vars, invpath, is_history=False):
+    context = dict(context_vars)
+    hostname = context.get("host")
+    if hostname is None:
+        return True  # No host data? Keep old behaviour
+    elif hostname == "":
+        return False
+
+    # TODO: host is not correctly validated by visuals. Do it here for the moment.
+    try:
+        Hostname().validate_value(hostname, None)
+    except MKUserError:
+        return False
+
+    # FIXME In order to decide whether this view is enabled
+    # do we really need to load the whole tree?
+    try:
+        struct_tree = _get_struct_tree(is_history, hostname, context.get("site"))
+    except inventory.LoadStructuredDataError:
+        return False
+
+    if not struct_tree:
+        return False
+
+    if struct_tree.is_empty():
+        return False
+
+    parsed_path, _attribute_keys = inventory.parse_tree_path(invpath)
+    if parsed_path:
+        children = struct_tree.get_sub_children(parsed_path)
+    else:
+        children = [struct_tree.get_root_container()]
+    if children is None:
+        return False
+    return True
+
+
+def _get_struct_tree(is_history, hostname, site_id):
+    struct_tree_cache = g.setdefault("struct_tree_cache", {})
+    cache_id = (is_history, hostname, site_id)
+    if cache_id in struct_tree_cache:
+        return struct_tree_cache[cache_id]
+
+    if is_history:
+        struct_tree = inventory.load_filtered_inventory_tree(hostname)
+    else:
+        row = inventory.get_status_data_via_livestatus(site_id, hostname)
+        struct_tree = inventory.load_filtered_and_merged_tree(row)
+
+    struct_tree_cache[cache_id] = struct_tree
+    return struct_tree
 
 
 @permission_section_registry.register
@@ -1507,6 +1585,16 @@ def _get_needed_regular_columns(cells, sorters, datasource):
     except KeyError:
         pass
 
+    # In the moment the context buttons are shown, the link_from mechanism is used
+    # to decide to which other views/dashboards the context buttons should link to.
+    # This decision is partially made on attributes of the object currently shown.
+    # E.g. on a "single host" page the host labels are needed for the decision.
+    # This is currently realized explicitly until we need a more flexible mechanism.
+    if display_options.enabled(display_options.B) \
+        and html.output_format == "html" \
+        and "host" in datasource.infos:
+        columns.add("host_labels")
+
     return list(columns)
 
 
@@ -1990,7 +2078,7 @@ def _collect_context_links_of(visual_type_name, view, rows, singlecontext_reques
         # has no such information available. For example the "Oracle Tablespaces" inventory view
         # is useless on hosts that don't host Oracle databases.
         if not skip:
-            skip = not visual_type.is_enabled_for(view, rows, visual, vars_values)
+            skip = not visual_type.link_from(view, rows, visual, vars_values)
 
         if not skip:
             filename = visual_type.show_url

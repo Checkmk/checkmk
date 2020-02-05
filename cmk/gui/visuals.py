@@ -242,6 +242,7 @@ def transform_old_visual(visual):
     """Prepare visuals for working with them. Migrate old formats or add default settings, for example"""
     visual.setdefault('single_infos', [])
     visual.setdefault('context', {})
+    visual.setdefault('link_from', {})
 
     # 1.6 introduced this setting: Ensure all visuals have it set
     visual.setdefault("add_context_to_title", True)
@@ -919,7 +920,8 @@ def page_edit_visual(what,
                 general_properties['topic'] = _("Other")
 
             old_visual = visual
-            visual = {}
+            # TODO: Currently not editable, but keep settings
+            visual = {'link_from': old_visual['link_from']}
 
             # The dict of the value spec does not match exactly the dict
             # of the visual. We take over some keys...

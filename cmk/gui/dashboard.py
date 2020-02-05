@@ -520,6 +520,7 @@ def draw_dashboard(name):
     for nr, dashlet in enumerate(board["dashlets"]):
         dashlet_content_html = u""
         dashlet_title_html = u""
+        dashlet_instance = None
         try:
             dashlet_type = get_dashlet_type(dashlet)
             dashlet_instance = dashlet_type(name, board, nr, dashlet)
@@ -539,7 +540,9 @@ def draw_dashboard(name):
                                                            mtime=board["mtime"])
 
         except Exception as e:
-            dashlet_content_html = render_dashlet_exception_content(dashlet_instance, e)
+            if dashlet_instance is None:
+                dashlet_instance = _fallback_dashlet_instance(name, board, dashlet, nr)
+            dashlet_content_html = render_dashlet_exception_content(dashlet, nr, e)
 
         # Now after the dashlet content has been calculated render the whole dashlet
         dashlet_container_begin(nr, dashlet)
@@ -642,10 +645,10 @@ def _update_or_show(board, dashlet_instance, is_update, mtime):
         return html.drain()
 
 
-def render_dashlet_exception_content(dashlet_instance, e):
-    # type: (Dashlet, Exception) -> Text
-    logger.exception("Problem while rendering dashlet %d of type %s", dashlet_instance.dashlet_id,
-                     dashlet_instance.type_name())
+def render_dashlet_exception_content(dashlet_spec, dashlet_id, e):
+    # type: (DashletConfig, int, Exception) -> Text
+    logger.exception("Problem while rendering dashlet %d of type %s", dashlet_id,
+                     dashlet_spec["type"])
 
     with html.plugged():
         if isinstance(e, MKException):
@@ -655,22 +658,29 @@ def render_dashlet_exception_content(dashlet_instance, e):
             except UnicodeDecodeError:
                 exc_txt = str(e).decode("utf-8")
 
-            html.header(_("Exception"), show_top_heading=False)
-            html.open_div(class_="dashlet", style="display:block")
             html.show_error(_("Problem while rendering dashlet %d of type %s: %s. Have a look at "
                               "<tt>var/log/web.log</tt> for further information.") % \
-                            (dashlet_instance.dashlet_id, dashlet_instance.type_name(), exc_txt))
-            html.close_div()
-            html.footer()
+                            (dashlet_id, dashlet_spec["type"], exc_txt))
             return html.drain()
 
         crash_reporting.handle_exception_as_gui_crash_report(
             details={
-                "dashlet_id": dashlet_instance.dashlet_id,
-                "dashlet_type": dashlet_instance.type_name(),
-                "dashlet_spec": dashlet_instance.dashlet_spec,
+                "dashlet_id": dashlet_id,
+                "dashlet_type": dashlet_spec["type"],
+                "dashlet_spec": dashlet_spec,
             })
         return html.drain()
+
+
+def _fallback_dashlet_instance(name, board, dashlet_spec, dashlet_id):
+    # type: (DashboardName, DashboardConfig, DashletConfig, int) -> Dashlet
+    """Create some place holder dashlet instance in case the dashlet_instance could not be
+    initialized"""
+    dashlet_spec = dashlet_spec.copy()
+    dashlet_spec.update({"type": "nodata", "text": ""})
+
+    dashlet_type = get_dashlet_type(dashlet_spec)
+    return dashlet_type(name, board, dashlet_id, dashlet_spec)
 
 
 def dashboard_edit_controls(name, board):
@@ -927,18 +937,21 @@ def ajax_dashlet():
     if the_dashlet['type'] not in dashlet_registry:
         raise MKUserError("id", _('The requested dashlet type does not exist.'))
 
-    dashlet_type = get_dashlet_type(the_dashlet)
-    dashlet_instance = dashlet_type(name, board, ident, the_dashlet)
-
     mtime = html.get_integer_input('mtime', 0)
 
+    dashlet_instance = None
     try:
+        dashlet_type = get_dashlet_type(the_dashlet)
+        dashlet_instance = dashlet_type(name, board, ident, the_dashlet)
+
         dashlet_content_html = _render_dashlet_content(board,
                                                        dashlet_instance,
                                                        is_update=True,
                                                        mtime=mtime)
     except Exception as e:
-        dashlet_content_html = render_dashlet_exception_content(dashlet_instance, e)
+        if dashlet_instance is None:
+            dashlet_instance = _fallback_dashlet_instance(name, board, the_dashlet, ident)
+        dashlet_content_html = render_dashlet_exception_content(the_dashlet, ident, e)
 
     html.write_html(dashlet_content_html)
 

@@ -41,11 +41,11 @@ def test_config(monkeypatch):
         # Dict: Allow non string items
         (
             u"""[
-  {'check_plugin_name': 'df', 'item': 123, 'parameters': {}, 'service_labels': {}},
+  {'check_plugin_name': 'df', 'item': u'123', 'parameters': {}, 'service_labels': {}},
 ]""",
             [
                 Service(
-                    'df', 123, u"", {
+                    'df', '123', u"", {
                         'inodes_levels': (10.0, 5.0),
                         'levels': (80.0, 90.0),
                         'levels_low': (50.0, 60.0),

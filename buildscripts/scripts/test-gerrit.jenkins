@@ -104,7 +104,7 @@ node {
         stage("Python3 linting") {
             if (CHANGED_PYLINT_RC_FILE != "" || CHANGED_PYTHON3_FILES != "") {
                 dir('tests-py3') {
-                    sh "make test-pylint &> ${RESUTS}/pylint3.xml"
+                    sh "make test-pylint &> ${RESULTS}/pylint3.xml"
                 }
             } else {
                 println "Neither .pylintrc nor Python 3 files changed. Skipping."

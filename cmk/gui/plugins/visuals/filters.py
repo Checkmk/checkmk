@@ -2349,11 +2349,15 @@ class FilterLogState(Filter):
         html.close_table()
 
     def filter(self, infoname):
+        if not self._filter_used():
+            return ""  # Do not apply this filter
+
         headers = []
         for varsuffix, what, state, _text in self._items:
             if html.get_checkbox("logst_" + varsuffix):
                 headers.append("Filter: log_type ~ %s .*\nFilter: log_state = %d\nAnd: 2\n" %
                                (what.upper(), state))
+
         if len(headers) == 0:
             return "Limit: 0\n"  # no allowed state
         elif len(headers) == len(self._items):

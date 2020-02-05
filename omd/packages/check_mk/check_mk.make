@@ -93,7 +93,12 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS)
 	    cmk/special_agents/__init__.py \
 	    cmk/special_agents/agent_aws.py \
 	    cmk/special_agents/agent_jira.py \
-	    cmk/special_agents/agent_kubernetes.py
+	    cmk/special_agents/agent_kubernetes.py \
+	    cmk/special_agents/agent_elasticsearch.py \
+	    cmk/special_agents/agent_graylog.py \
+	    cmk/special_agents/agent_jenkins.py \
+	    cmk/special_agents/agent_splunk.py \
+	    cmk/special_agents/agent_vsphere.py
 	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" ; \
 	    $(PACKAGE_PYTHON3_EXECUTABLE) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk
 

@@ -1,12 +1,9 @@
 # -*- encoding: utf-8
 # pylint: disable=redefined-outer-name
-import imp
-import os
 
-import pytest
+import pytest  # type: ignore
 
 from cmk.special_agents import agent_vsphere
-from testlib import cmk_path  # pylint: disable=import-error
 
 DEFAULT_AGRS = {
     "debug": False,

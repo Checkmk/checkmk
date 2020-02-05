@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -194,7 +194,6 @@ def handle_output(value, section, args):
 def handle_piggyback(value, args, piggyback_name, section):
     sys.stdout.write("<<<<%s>>>>\n" % piggyback_name)
     handle_output(value, section, args)
-    return
 
 
 def parse_arguments(argv):

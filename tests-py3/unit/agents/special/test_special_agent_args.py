@@ -18,13 +18,13 @@ REQUIRED_ARGUMENTS = {
     #     '--subscription', 'SUBSCRIPTION', '--client', 'CLIENT', '--tenant', 'TENANT', '--secret',
     #     'SECRET'
     # ],
-    # 'agent_elasticsearch': ['HOSTNAME'],
-    # 'agent_graylog': ['HOSTNAME'],
-    # 'agent_jenkins': ['HOSTNAME'],
+    'agent_elasticsearch': ['HOSTNAME'],
+    'agent_graylog': ['HOSTNAME'],
+    'agent_jenkins': ['HOSTNAME'],
     'agent_jira': ['-P', 'PROTOCOL', '-u', 'USER', '-s', 'PASSWORD', '--hostname', 'HOSTNAME'],
     'agent_kubernetes': ['--token', 'TOKEN', '--infos', 'INFOS', 'HOST'],
-    # 'agent_splunk': ['HOSTNAME'],
-    # 'agent_vsphere': ['HOSTNAME'],
+    'agent_splunk': ['HOSTNAME'],
+    'agent_vsphere': ['HOSTNAME'],
 }  # type: Dict
 
 

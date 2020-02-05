@@ -1928,20 +1928,19 @@ def collect_context_links(view, rows, mobile=False, only_types=None):
     if only_types is None:
         only_types = []
 
-    # compute list of html variables needed for this visual
-    active_filter_vars = set([])
-    for var in visuals.get_singlecontext_html_vars(view.spec["context"], view.spec["single_infos"]):
-        if html.request.has_var(var):
-            active_filter_vars.add(var)
+    # compute collections of set single context related request variables needed for this visual
+    singlecontext_request_vars = visuals.get_singlecontext_html_vars(view.spec["context"],
+                                                                     view.spec["single_infos"])
 
     context_links = []
     for what in visual_type_registry.keys():
         if not only_types or what in only_types:
-            context_links += _collect_context_links_of(what, view, rows, active_filter_vars, mobile)
+            context_links += _collect_context_links_of(what, view, rows, singlecontext_request_vars,
+                                                       mobile)
     return context_links
 
 
-def _collect_context_links_of(visual_type_name, view, rows, active_filter_vars, mobile):
+def _collect_context_links_of(visual_type_name, view, rows, singlecontext_request_vars, mobile):
     context_links = []
 
     visual_type = visual_type_registry[visual_type_name]()
@@ -1970,15 +1969,13 @@ def _collect_context_links_of(visual_type_name, view, rows, active_filter_vars, 
 
         # We can show a button only if all single contexts of the
         # target visual are known currently
-        needed_vars = visuals.get_singlecontext_html_vars(visual["context"],
-                                                          visual["single_infos"]).items()
         skip = False
         vars_values = []
-        for var, val in needed_vars:
-            if var not in active_filter_vars:
+        for var in visuals.get_single_info_keys(visual["single_infos"]):
+            if var not in singlecontext_request_vars:
                 skip = True  # At least one single context missing
                 break
-            vars_values.append((var, val))
+            vars_values.append((var, singlecontext_request_vars[var]))
 
         add_site_hint = visuals.may_add_site_hint(name,
                                                   info_keys=visual_info_registry.keys(),

@@ -20,10 +20,10 @@ PYTHON3_MODULES_LIST :=
 
 PYTHON3_MODULES_LIST += setuptools_scm-3.3.3.tar.gz # needed by various setup.py
 PYTHON3_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
-PYTHON3_MODULES_LIST += six-1.13.0.tar.gz # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, pyOpenSSL
+PYTHON3_MODULES_LIST += six-1.14.0.tar.gz # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, pyOpenSSL
 PYTHON3_MODULES_LIST += python-dateutil-2.8.1.tar.gz # direct dependency
 
-PYTHON3_MODULES_LIST += PyYAML-5.2.tar.gz # needed by vcrpy
+PYTHON3_MODULES_LIST += PyYAML-5.3.tar.gz # needed by vcrpy
 PYTHON3_MODULES_LIST += wrapt-1.11.2.tar.gz # needed by vcrpy
 PYTHON3_MODULES_LIST += yarl-1.3.0.tar.gz # needed by vcrpy
 PYTHON3_MODULES_LIST += multidict-4.5.2.tar.gz # needed by yarl
@@ -37,15 +37,16 @@ PYTHON3_MODULES_LIST += cryptography-2.8.tar.gz # needed by paramiko, pyOpenSSL
 PYTHON3_MODULES_LIST += bcrypt-3.1.7.tar.gz # needed by paramiko
 PYTHON3_MODULES_LIST += paramiko-2.6.0.tar.gz # direct dependency, used for SFTP transactions in check_sftp
 
-PYTHON3_MODULES_LIST += pyasn1-0.4.7.tar.gz # needed by pysnmp
+PYTHON3_MODULES_LIST += pyasn1-0.4.8.tar.gz # needed by pysnmp
+PYTHON3_MODULES_LIST += pyasn1-modules-0.2.8.tar.gz # needed by kubernetes
 PYTHON3_MODULES_LIST += pycryptodomex-3.9.3.tar.gz # needed by pysnmp
 PYTHON3_MODULES_LIST += ply-3.11.tar.gz # needed by pysmi
 PYTHON3_MODULES_LIST += pysmi-0.3.4.tar.gz # needed by pysnmp
 PYTHON3_MODULES_LIST += pysnmp-4.4.12.tar.gz # needed by Event Console
 
-PYTHON3_MODULES_LIST += certifi-2019.9.11.tar.gz # needed by requests
+PYTHON3_MODULES_LIST += certifi-2019.11.28.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += chardet-3.0.4.tar.gz # needed by requests
-PYTHON3_MODULES_LIST += urllib3-1.25.7.tar.gz # needed by requests
+PYTHON3_MODULES_LIST += urllib3-1.25.8.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += pyOpenSSL-19.1.0.tar.gz # needed by requests with extras = ["security"]
 PYTHON3_MODULES_LIST += pyghmi-1.5.3.tar.gz # needed by base for IPMI
 PYTHON3_MODULES_LIST += requests-2.22.0.tar.gz # needed by DCD, connexion
@@ -87,6 +88,13 @@ PYTHON3_MODULES_LIST += numpy-1.15.4.tar.gz # needed by GUI (forecast graphs)
 PYTHON3_MODULES_LIST += reportlab-3.5.34.tar.gz # needed by GUI (reporting)
 PYTHON3_MODULES_LIST += PyPDF2-1.26.0.tar.gz # needed by GUI (reporting)
 PYTHON3_MODULES_LIST += roman-3.2.tar.gz # needed by reporting frontmatter
+
+PYTHON3_MODULES_LIST += cachetools-4.0.0.tar.gz # needed by kubernetes
+PYTHON3_MODULES_LIST += google-auth-1.11.0.tar.gz # needed by kubernetes
+PYTHON3_MODULES_LIST += rsa-4.0.tar.gz # needed by kubernetes
+PYTHON3_MODULES_LIST += websocket_client-0.57.0.tar.gz # needed by kubernetes
+PYTHON3_MODULES_LIST += kubernetes-10.0.1.tar.gz # needed by kubernetes
+
 
 # TODO: Can we clean this up and use the intermediate install step results? Would be possible
 # in the moment we merge the build and intermediate install in a single target

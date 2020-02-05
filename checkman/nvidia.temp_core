@@ -6,15 +6,12 @@ distribution: check_mk
 description:
  This checks monitors the temperatures of the
  GPU core temperatur of an NVIDIA graphics card using the
- command line tool {nvidia-settings}. The check only works
- if that tool is installed and a X server is running on
- display {:0}.
+ command line tool {nvidia-smi}. The check only works
+ if that tool is installed.
 
 item:
- The name of the sensor as reported by {nvidia-settings -q all}
+ GPUCoreTemp
 
 inventory:
  All available temperature sensors are automatically inventorized except
  for the core which is handled in nvidia.temp_core
-
-

@@ -528,11 +528,14 @@ if type chronyc > /dev/null 2>&1 ; then
     run_cached -s chrony 30 "waitmax 5 chronyc tracking || true"
 fi
 
-if type nvidia-settings >/dev/null && [ -S /tmp/.X11-unix/X0 ]
-then
-    echo '<<<nvidia>>>'
-    for var in GPUErrors GPUCoreTemp
-    do
+if inpath nvidia-smi; then
+    echo '<<<nvidia-smi>>>'
+    waitmax 2 nvidia-smi --query-gpu=temperature.gpu --format=csv,nounits,noheader | sed "s/^/GPUCoreTemp: /"
+fi
+
+if inpath nvidia-settings && [ -S /tmp/.X11-unix/X0 ]; then
+    echo '<<<nvidia-settings>>>'
+    for var in GPUErrors; do
         DISPLAY=:0 waitmax 2 nvidia-settings -t -q $var | sed "s/^/$var: /"
     done
 fi

@@ -5000,3 +5000,35 @@ multisite_builtin_views['cmk_sites'] = {
     'topic': u'Applications',
     'user_sortable': True,
 }
+
+multisite_builtin_views['cmk_sites_of_host'] = {
+    'add_context_to_title': True,
+    'browser_reload': 0,
+    'column_headers': 'pergroup',
+    'context': {
+        'invcmksites_autostart': {
+            'invcmksites_autostart_from': '1',
+            'invcmksites_autostart_to': '1'
+        }
+    },
+    'datasource': 'invcmksites',
+    'description': u'Displaying the state of Checkmk sites of the given host\n',
+    'force_checkboxes': False,
+    'group_painters': [],
+    'hidden': True,
+    'hidebutton': True,
+    'icon': None,
+    'layout': 'table',
+    'linktitle': u'Checkmk sites',
+    'mobile': False,
+    'mustsearch': False,
+    'name': 'cmk_sites',
+    'num_columns': 1,
+    'painters': cmk_sites_painters(),
+    'play_sounds': False,
+    'single_infos': ['host'],
+    'sorters': [('sitealias', False), ('host_name', False)],
+    'title': u'Checkmk sites of host',
+    'topic': u'Applications',
+    'user_sortable': True,
+}

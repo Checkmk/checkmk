@@ -493,7 +493,9 @@ def test_registered_permissions():
         'wato.users',
         'view.cmk_servers',
         'view.cmk_sites',
+        'view.cmk_sites_of_host',
         'dashboard.cmk_overview',
+        'dashboard.cmk_host',
     ]
 
     if not cmk.is_raw_edition():

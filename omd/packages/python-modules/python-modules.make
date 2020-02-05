@@ -159,7 +159,7 @@ PYTHON_MODULES_LIST += PyJWT-1.6.4.tar.gz
 PYTHON_MODULES_LIST += adal-1.2.0.tar.gz
 PYTHON_MODULES_LIST += oauthlib-2.1.0.tar.gz
 PYTHON_MODULES_LIST += requests-oauthlib-1.0.0.tar.gz
-PYTHON_MODULES_LIST += configparser-3.5.1.tar.gz
+PYTHON_MODULES_LIST += configparser-4.0.2.tar.gz
 # Added for the GUI
 PYTHON_MODULES_LIST += passlib-1.7.1.tar.gz
 # Added for AWS special agent
@@ -191,7 +191,7 @@ PYTHON_MODULES_LIST += PySnooper-0.0.31.tar.gz
 # Added to support Python 3 transition
 PYTHON_MODULES_LIST += future-0.17.1.tar.gz
 # Added VCR + Dependencies for testing special agents (CMK-2414)
-PYTHON_MODULES_LIST += contextlib2-0.5.5.tar.gz
+PYTHON_MODULES_LIST += contextlib2-0.6.0.post1.tar.gz
 PYTHON_MODULES_LIST += funcsigs-1.0.2.tar.gz
 PYTHON_MODULES_LIST += mock-3.0.5.tar.gz
 PYTHON_MODULES_LIST += wrapt-1.11.2.tar.gz
@@ -204,8 +204,6 @@ PYTHON_MODULES_LIST += Jinja2-2.10.3.tar.gz
 # required by zipp
 PYTHON_MODULES_LIST += more-itertools-5.0.0.tar.gz
 # required by importlib_metadata
-PYTHON_MODULES_LIST += configparser-4.0.2.tar.gz
-PYTHON_MODULES_LIST += contextlib2-0.6.0.post1.tar.gz
 PYTHON_MODULES_LIST += zipp-0.6.0.tar.gz
 # required by jsonschema
 PYTHON_MODULES_LIST += attrs-19.3.0.tar.gz
@@ -227,7 +225,7 @@ PYTHON_MODULES_LIST += swagger_ui_bundle-0.0.6.tar.gz
 # PYTHON_MODULES_LIST += connexion-2.4.0.tar.gz
 PYTHON_MODULES_LIST += connexion-2018.0.dev1.tar.gz
 # For forecasting graphs
-PYTHON_MODULES_LIST += numpy-1.15.4.tar.gz
+PYTHON_MODULES_LIST += numpy-1.15.4.tar.gz  # Downgraded to 1.15.4 due to https://github.com/numpy/numpy/issues/14384
 
 
 # NOTE: Setting SODIUM_INSTALL variable below is an extremely cruel hack to
@@ -322,7 +320,7 @@ python-modules-dump-Pipfile:
 	@echo '"beautifulsoup4" = "*"  # used by the GUI crawler and various tests'
 	@echo 'compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json'
 	@echo 'docker = "*"  # used by test_docker test and mk_docker agent plugin'
-	@echo 'freezegun = "*"  # used by various unit tests'
+	@echo 'freezegun = "!=0.3.13"  # used by various unit tests'
 	@echo 'isort = "*"  # used as a plugin for editors'
 	@echo 'lxml = "*"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent'
 	@echo 'mock = "*"  # used in checktestlib in unit tests'
@@ -332,7 +330,8 @@ python-modules-dump-Pipfile:
 	@echo 'pytest = "*"  # used by various test/Makefile targets'
 	@echo 'pytest-cov = "*"  # used (indirectly) by test/Makefile'"'"'s test-unit-coverage-html target, see comment there'
 	@echo 'pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker fixture'
-	@echo 'webtest = "*"  # used for WSGI tests'
+	@echo 'pyfakefs = "*" # used for unit tests'
+	@echo 'webtest = "*"  # used by WSGI based tests'
 	@echo 'yapf = "*"  # used for editor integration and the format-python Makefile target'
 	@echo 'pre-commit = "*"  # used to fix / find issues before commiting changes'
 	@echo ''

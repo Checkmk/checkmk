@@ -264,6 +264,12 @@ def _valuespec_generic_metrics_prometheus():
                                              "aggregated. It is possible to select multiple "
                                              "options here."),
                                   )),
+                                 ("if",
+                                  ListChoice(
+                                      choices=[("pod", _("Group by Pod"))],
+                                      title=_("Network"),
+                                      allow_empty=False,
+                                  )),
                              ],
                              title=_("CAdvisor"),
                              validate=_check_not_empty_exporter_dict,

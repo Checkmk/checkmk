@@ -7354,6 +7354,7 @@ check_metrics["check_mk-if_lancom"] = if_translation
 check_metrics["check_mk-if_brocade"] = if_translation
 check_metrics["check_mk-if"] = if_translation
 check_metrics["check_mk-lnx_if"] = if_translation
+check_metrics["check_mk-cadvisor_if"] = if_translation
 check_metrics["check_mk-mcdata_fcport"] = if_translation
 check_metrics["check_mk-netapp_api_if"] = if_translation
 check_metrics["check_mk-statgrab_net"] = if_translation

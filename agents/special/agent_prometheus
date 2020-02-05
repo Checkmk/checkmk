@@ -105,6 +105,17 @@ class CAdvisorExporter:
         }
         return self._retrieve_cadvisor_info(df_info, group_element)
 
+    def if_summary(self, group_element):
+        if_info = {
+            "if_in_total": 'sum by ({group_element})(rate(container_network_receive_bytes_total[5m]))',
+            "if_in_discards": 'sum by ({group_element})(rate(container_network_receive_packets_dropped_total[5m]))',
+            "if_in_errors": 'sum by ({group_element})(rate(container_network_receive_errors_total[5m]))',
+            "if_out_total": 'sum by ({group_element})(rate(container_network_transmit_bytes_total[5m]))',
+            "if_out_discards": 'sum by ({group_element})(rate(container_network_transmit_packets_dropped_total[5m]))',
+            "if_out_errors": 'sum by ({group_element})(rate(container_network_transmit_errors_total[5m]))',
+        }
+        return self._retrieve_cadvisor_info(if_info, group_element)
+
     def _retrieve_cadvisor_info(self, entity_info: Dict[str, str],
                                 group_element: str) -> List[Dict[str, Dict[str, Any]]]:
         result = []
@@ -584,6 +595,7 @@ class ApiData:
             "diskio": self.cadvisor_exporter.diskstat_summary,
             "cpu": self.cadvisor_exporter.cpu_summary,
             "df": self.cadvisor_exporter.df_summary,
+            "if": self.cadvisor_exporter.if_summary,
         }
 
         if "diskio" in cadvisor_options:
@@ -597,6 +609,9 @@ class ApiData:
         if "df" in cadvisor_options:
             yield from self._output_cadvisor_summary("cadvisor_df", cadvisor_summaries["df"],
                                                      cadvisor_options["df"])
+        if "if" in cadvisor_options:
+            yield from self._output_cadvisor_summary("cadvisor_if", cadvisor_summaries["if"],
+                                                     cadvisor_options["if"])
 
     @staticmethod
     def _output_cadvisor_summary(cadvisor_service_name: str, retrieve_cadvisor_summary: Callable,

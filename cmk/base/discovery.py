@@ -1302,8 +1302,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 
             # apply check_parameters
             try:
-                params = autochecks.resolve_paramstring(discovered_service.check_plugin_name,
-                                                        discovered_service.parameters_unresolved)
+                params = _get_check_parameters(discovered_service)
             except Exception:
                 raise MKGeneralException(
                     "Invalid check parameter string '%s' found in discovered service %r" %
@@ -1386,8 +1385,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             perfdata = []
 
         if check_source == "active":
-            params = autochecks.resolve_paramstring(discovered_service.check_plugin_name,
-                                                    discovered_service.parameters_unresolved)
+            params = _get_check_parameters(discovered_service)
 
         checkgroup = None  # type: Optional[RulesetName]
         if check_source in ["legacy", "active", "custom"]:
@@ -1411,3 +1409,15 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                       discovered_service.service_labels.to_dict()))
 
     return table, discovered_host_labels
+
+
+def _get_check_parameters(discovered_service):
+    # type: (DiscoveredService) -> CheckParameters
+    """Retrieves the check parameters (read from autochecks), possibly resolving a
+    string to its actual value."""
+    params = discovered_service.parameters_unresolved
+    if not isinstance(params, str):
+        return params
+    check_context = config.get_check_context(discovered_service.check_plugin_name)
+    # TODO: Can't we simply access check_context[paramstring]?
+    return eval(params, check_context, check_context)

@@ -188,18 +188,6 @@ def has_autochecks(hostname):
     return _autochecks_path_for(hostname).exists()
 
 
-def resolve_paramstring(check_plugin_name, parameters_unresolved):
-    # type: (CheckPluginName, CheckParameters) -> CheckParameters
-    """Translates a parameter string (read from autochecks) to it's final value
-    (according to the current configuration). Values of other types are kept"""
-    if not isinstance(parameters_unresolved, str):
-        return parameters_unresolved
-
-    check_context = config.get_check_context(check_plugin_name)
-    # TODO: Can't we simply access check_context[paramstring]?
-    return eval(parameters_unresolved, check_context, check_context)
-
-
 def parse_autochecks_file(hostname):
     # type: (HostName) -> List[DiscoveredService]
     """Read autochecks, but do not compute final check parameters"""

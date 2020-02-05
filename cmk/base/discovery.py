@@ -205,7 +205,7 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
     if not check_plugin_names and not only_new:
         existing_services = []  # type: List[DiscoveredService]
     else:
-        existing_services = autochecks.parse_autochecks_file(hostname)
+        existing_services = autochecks.parse_autochecks_file(hostname, config.service_description)
 
     # Take over old items if -I is selected or if -II is selected with
     # --checks= and the check type is not one of the listed ones
@@ -1147,7 +1147,7 @@ def _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, 
                             ("new", discovered_service))
 
     # Match with existing items -> "old" and "vanished"
-    for existing_service in autochecks.parse_autochecks_file(hostname):
+    for existing_service in autochecks.parse_autochecks_file(hostname, config.service_description):
         table_id = existing_service.check_plugin_name, existing_service.item
         check_source = "vanished" if table_id not in services else "old"
         services[table_id] = check_source, existing_service

@@ -188,8 +188,8 @@ def has_autochecks(hostname):
     return _autochecks_path_for(hostname).exists()
 
 
-def parse_autochecks_file(hostname):
-    # type: (HostName) -> List[DiscoveredService]
+def parse_autochecks_file(hostname, service_description):
+    # type: (HostName, Callable[[HostName, CheckPluginName, Item], ServiceName]) -> List[DiscoveredService]
     """Read autochecks, but do not compute final check parameters"""
     services = []  # type: List[DiscoveredService]
     path = _autochecks_path_for(hostname)
@@ -213,15 +213,15 @@ def parse_autochecks_file(hostname):
             if not isinstance(entry, (ast.Tuple, ast.Dict)):
                 continue
 
-            service = _parse_autocheck_entry(hostname, entry)
+            service = _parse_autocheck_entry(hostname, entry, service_description)
             if service:
                 services.append(service)
 
     return services
 
 
-def _parse_autocheck_entry(hostname, entry):
-    # type: (HostName, Union[ast.Tuple, ast.Dict]) -> Optional[DiscoveredService]
+def _parse_autocheck_entry(hostname, entry, service_description):
+    # type: (HostName, Union[ast.Tuple, ast.Dict], Callable[[HostName, CheckPluginName, Item], ServiceName]) -> Optional[DiscoveredService]
     if isinstance(entry, ast.Tuple):
         ast_check_plugin_name, ast_item, ast_parameters_unresolved = _parse_pre_16_tuple_autocheck_entry(
             entry)
@@ -253,7 +253,7 @@ def _parse_autocheck_entry(hostname, entry):
         item = convert_to_unicode(item)
 
     try:
-        description = config.service_description(hostname, check_plugin_name, item)
+        description = service_description(hostname, check_plugin_name, item)
     except Exception:
         return None  # ignore
 
@@ -342,7 +342,7 @@ def set_autochecks_of_real_hosts(hostname, new_items):
 
     # write new autochecks file, but take parameters_unresolved from existing ones
     # for those checks which are kept
-    for existing_service in parse_autochecks_file(hostname):
+    for existing_service in parse_autochecks_file(hostname, config.service_description):
         # TODO: Need to implement a list class that realizes in / not in correctly
         if existing_service in new_items:
             new_autochecks.append(existing_service)
@@ -362,7 +362,7 @@ def set_autochecks_of_cluster(nodes, hostname, new_items, host_of_clustered_serv
     clustered service and add the ones we've got as input."""
     for node in nodes:
         new_autochecks = []  # type: List[DiscoveredService]
-        for existing_service in parse_autochecks_file(node):
+        for existing_service in parse_autochecks_file(node, config.service_description):
             if hostname != host_of_clustered_service(node, existing_service.description):
                 new_autochecks.append(existing_service)
 
@@ -420,7 +420,7 @@ def remove_autochecks_of_host(hostname, host_of_clustered_service):
     # type: (HostName, Callable[[HostName, Text], str]) -> int
     removed = 0
     new_items = []  # type: List[DiscoveredService]
-    for existing_service in parse_autochecks_file(hostname):
+    for existing_service in parse_autochecks_file(hostname, config.service_description):
         if hostname != host_of_clustered_service(hostname, existing_service.description):
             new_items.append(existing_service)
         else:

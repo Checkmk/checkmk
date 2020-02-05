@@ -82,7 +82,7 @@ check_info["test_check_1"] = {
     web.discover_services("modes-test-host")
 
     # Verify that the discovery worked as expected
-    services = autochecks.parse_autochecks_file("modes-test-host")
+    services = autochecks.parse_autochecks_file("modes-test-host", config.service_description)
     assert services[0].check_plugin_name == "test_check_1"
     assert services[0].item is None
     assert services[0].parameters_unresolved == "test_check_1_default_levels"
@@ -167,7 +167,7 @@ check_info["test_check_2"] = {
     web.discover_services("modes-test-host")
 
     # Verify that the discovery worked as expected
-    services = autochecks.parse_autochecks_file("modes-test-host")
+    services = autochecks.parse_autochecks_file("modes-test-host", config.service_description)
     assert services[0].check_plugin_name == "test_check_2"
     assert services[0].item is None
     assert services[0].parameters_unresolved == "{}"
@@ -222,7 +222,7 @@ check_info["test_check_3"] = {
     web.discover_services("modes-test-host")
 
     # Verify that the discovery worked as expected
-    services = autochecks.parse_autochecks_file("modes-test-host")
+    services = autochecks.parse_autochecks_file("modes-test-host", config.service_description)
     assert services[0].check_plugin_name == "test_check_3"
     assert services[0].item is None
     assert services[0].parameters_unresolved == "{}"

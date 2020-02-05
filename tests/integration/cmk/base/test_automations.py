@@ -10,6 +10,7 @@ import six
 from testlib import web, repo_path  # pylint: disable=unused-import
 
 import cmk.base.autochecks as autochecks
+import cmk.base.config as config
 import cmk.utils.paths
 
 
@@ -238,7 +239,7 @@ def test_automation_set_autochecks(test_cfg, site):
         autochecks_file = "%s/%s.mk" % (cmk.utils.paths.autochecks_dir, "blablahost")
         assert os.path.exists(autochecks_file)
 
-        data = autochecks.parse_autochecks_file("blablahost")
+        data = autochecks.parse_autochecks_file("blablahost", config.service_description)
         services = [((s.check_plugin_name, s.item), s.parameters_unresolved,
                      s.service_labels.to_dict()) for s in data]
         assert sorted(services) == [

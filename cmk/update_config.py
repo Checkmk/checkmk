@@ -55,6 +55,7 @@ from werkzeug.test import create_environ
 # to a specific layer in the future, but for the the moment we need to deal
 # with it.
 import cmk.base.autochecks  # pylint: disable=cmk-module-layer-violation
+import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 
 import cmk.utils.log as log
 from cmk.utils.log import VERBOSE
@@ -137,7 +138,8 @@ class UpdateConfig(object):
     def _rewrite_autochecks(self):
         for autocheck_file in Path(cmk.utils.paths.autochecks_dir).glob("*.mk"):
             hostname = autocheck_file.stem
-            autochecks = cmk.base.autochecks.parse_autochecks_file(hostname)
+            autochecks = cmk.base.autochecks.parse_autochecks_file(
+                hostname, cmk.base.config.service_description)
             cmk.base.autochecks.save_autochecks_file(hostname, autochecks)
 
     def _rewrite_wato_rulesets(self):

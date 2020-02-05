@@ -10,6 +10,7 @@ import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 
 import cmk.base.autochecks as autochecks
+import cmk.base.config as config
 import cmk.base.discovery as discovery
 from cmk.base.check_utils import Service
 from cmk.base.discovered_labels import (
@@ -123,7 +124,7 @@ def test_manager_get_autochecks_of(test_config, autochecks_content, expected_res
 
 
 def test_parse_autochecks_file_not_existing():
-    assert autochecks.parse_autochecks_file("host") == []
+    assert autochecks.parse_autochecks_file("host", config.service_description) == []
 
 
 @pytest.mark.parametrize(
@@ -198,10 +199,10 @@ def test_parse_autochecks_file(test_config, autochecks_content, expected_result)
 
     if expected_result is MKGeneralException:
         with pytest.raises(MKGeneralException):
-            autochecks.parse_autochecks_file("host")
+            autochecks.parse_autochecks_file("host", config.service_description)
         return
 
-    parsed = autochecks.parse_autochecks_file("host")
+    parsed = autochecks.parse_autochecks_file("host", config.service_description)
     assert len(parsed) == len(expected_result)
 
     for index, service in enumerate(parsed):

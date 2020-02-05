@@ -83,6 +83,12 @@ security:
   - BearerAuth: []
 
 paths:
+  /user:
+    get:
+      summary: The currently logged in user
+      responses:
+        200:
+          description: The user object
   /version:
     get:
       summary: Tell the version of various installed components.

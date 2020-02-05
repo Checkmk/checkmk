@@ -1470,7 +1470,7 @@ def visual_title(what, visual):
 
 def _add_context_title(visual, title):
     extra_titles = list(
-        _get_singlecontext_html_vars(visual["context"], visual["single_infos"]).values())
+        get_singlecontext_html_vars(visual["context"], visual["single_infos"]).values())
 
     # FIXME: Is this really only needed for visuals without single infos?
     if not visual['single_infos']:
@@ -1532,7 +1532,7 @@ def get_singlecontext_vars(context, single_infos):
     return vars_
 
 
-def _get_singlecontext_html_vars(context, single_infos):
+def get_singlecontext_html_vars(context, single_infos):
     # type: (VisualContext, SingleInfos) -> Dict[str, str]
     vars_ = get_singlecontext_vars(context, single_infos)
     for key in get_single_info_keys(single_infos):
@@ -1540,105 +1540,6 @@ def _get_singlecontext_html_vars(context, single_infos):
         if val is not None:
             vars_[key] = val
     return vars_
-
-
-# Collect all visuals that share a context with visual. For example
-# if a visual has a host context, get all relevant visuals.
-def collect_context_links(this_visual, mobile=False, only_types=None):
-    if only_types is None:
-        only_types = []
-
-    # compute list of html variables needed for this visual
-    active_filter_vars = set([])
-    for var in _get_singlecontext_html_vars(this_visual["context"], this_visual["single_infos"]):
-        if html.request.has_var(var):
-            active_filter_vars.add(var)
-
-    context_links = []
-    for what in visual_type_registry.keys():
-        if not only_types or what in only_types:
-            context_links += collect_context_links_of(what, this_visual, active_filter_vars, mobile)
-    return context_links
-
-
-def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, mobile):
-    context_links = []
-
-    visual_type = visual_type_registry[visual_type_name]()
-    visual_type.load_handler()
-    available_visuals = visual_type.permitted_visuals
-
-    # sort buttons somehow
-    visuals = available_visuals.values()
-    visuals.sort(key=lambda x: x.get('icon'))
-
-    for visual in visuals:
-        name = visual["name"]
-        linktitle = visual.get("linktitle")
-        if not linktitle:
-            linktitle = visual["title"]
-        if visual == this_visual:
-            continue
-        if visual.get("hidebutton", False):
-            continue  # this visual does not want a button to be displayed
-
-        if not mobile and visual.get('mobile') \
-           or mobile and not visual.get('mobile'):
-            continue
-
-        # For dashboards and views we currently only show a link button,
-        # if the target dashboard/view shares a single info with the
-        # current visual.
-        if not visual['single_infos'] and not visual_type.multicontext_links:
-            continue  # skip non single visuals for dashboard, views
-
-        # We can show a button only if all single contexts of the
-        # target visual are known currently
-        needed_vars = _get_singlecontext_html_vars(visual["context"],
-                                                   visual["single_infos"]).items()
-        skip = False
-        vars_values = []
-        for var, val in needed_vars:
-            if var not in active_filter_vars:
-                skip = True  # At least one single context missing
-                break
-            vars_values.append((var, val))
-
-        add_site_hint = may_add_site_hint(name,
-                                          info_keys=visual_info_registry.keys(),
-                                          single_info_keys=visual["single_infos"],
-                                          filter_names=dict(vars_values).keys())
-
-        if add_site_hint and html.request.var('site'):
-            vars_values.append(('site', html.request.var('site')))
-
-        # Optional feature of visuals: Make them dynamically available as links or not.
-        # This has been implemented for HW/SW inventory views which are often useless when a host
-        # has no such information available. For example the "Oracle Tablespaces" inventory view
-        # is useless on hosts that don't host Oracle databases.
-        if not skip:
-            skip = not visual_type.is_enabled_for(this_visual, visual, vars_values)
-
-        if not skip:
-            filename = visual_type.show_url
-            if mobile and visual_type.show_url == 'view.py':
-                filename = 'mobile_' + visual_type.show_url
-
-            # add context link to this visual. For reports we put in
-            # the *complete* context, even the non-single one.
-            if visual_type.multicontext_links:
-                uri = html.makeuri([(visual_type.ident_attr, name)], filename=filename)
-
-            # For views and dashboards currently the current filter
-            # settings
-            else:
-                uri = html.makeuri_contextless(vars_values + [(visual_type.ident_attr, name)],
-                                               filename=filename)
-            icon = visual.get("icon")
-            buttonid = "cb_" + name
-            context_links.append((_u(linktitle), uri, icon, buttonid))
-
-    return context_links
 
 
 def may_add_site_hint(visual_name, info_keys, single_info_keys, filter_names):

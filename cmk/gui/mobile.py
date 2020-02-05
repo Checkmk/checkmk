@@ -330,7 +330,10 @@ class MobileViewRenderer(views.ViewRenderer):
             navbar.append(("commands", _("Commands"), "gear", False))
 
         # Should we show a page with context links?
-        context_links = visuals.collect_context_links(view_spec, mobile=True, only_types=['views'])
+        context_links = views.collect_context_links(self.view,
+                                                    rows,
+                                                    mobile=True,
+                                                    only_types=['views'])
 
         if context_links:
             navbar.append(("context", _("Context"), "arrow-r", False))

@@ -179,7 +179,7 @@ class VisualType(six.with_metaclass(abc.ABCMeta, object)):
         """Get the permitted visuals of this type"""
         raise NotImplementedError()
 
-    def is_enabled_for(self, this_visual, visual, context_vars):
+    def is_enabled_for(self, view, rows, visual, context_vars):
         """Optional feature of visuals: Make them dynamically available as links or not
 
         This has been implemented for HW/SW inventory views which are often useless when a host

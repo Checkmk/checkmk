@@ -182,11 +182,11 @@ class VisualTypeViews(VisualType):
     def permitted_visuals(self):
         return get_permitted_views()
 
-    def is_enabled_for(self, this_visual, visual, context_vars):
+    def is_enabled_for(self, view, rows, visual, context_vars):
         if visual["name"] not in view_is_enabled:
             return True  # Not registered are always visible!
 
-        return view_is_enabled[visual["name"]](this_visual, visual, context_vars)
+        return view_is_enabled[visual["name"]](view, rows, visual, context_vars)
 
 
 @permission_section_registry.register
@@ -370,6 +370,7 @@ class GUIViewRenderer(ViewRenderer):
         if self._show_buttons:
             _show_context_links(
                 self.view,
+                rows,
                 show_filters,
                 # Take into account: permissions, display_options
                 row_count > 0 and command_form,
@@ -1729,7 +1730,8 @@ def ajax_set_viewoption():
     painter_options.save_to_config(view_name)
 
 
-def _show_context_links(view, show_filters, enable_commands, enable_checkboxes, show_checkboxes):
+def _show_context_links(view, rows, show_filters, enable_commands, enable_checkboxes,
+                        show_checkboxes):
     if html.output_format != "html":
         return
 
@@ -1835,7 +1837,7 @@ def _show_context_links(view, show_filters, enable_commands, enable_checkboxes, 
                                 class_="context_pdf_export")
 
         # Buttons to other views, dashboards, etc.
-        links = visuals.collect_context_links(thisview)
+        links = collect_context_links(view, rows)
         for linktitle, uri, icon, buttonid in links:
             html.context_button(linktitle,
                                 url=uri,
@@ -1918,6 +1920,101 @@ def update_context_links(enable_command_toggle, enable_checkbox_toggle):
                     (enable_command_toggle and 1 or 0))
     html.javascript("cmk.views.update_togglebutton('checkbox', %d);" %
                     (enable_command_toggle and enable_checkbox_toggle and 1 or 0,))
+
+
+def collect_context_links(view, rows, mobile=False, only_types=None):
+    """Collect all visuals that share a context with visual. For example
+    if a visual has a host context, get all relevant visuals."""
+    if only_types is None:
+        only_types = []
+
+    # compute list of html variables needed for this visual
+    active_filter_vars = set([])
+    for var in visuals.get_singlecontext_html_vars(view.spec["context"], view.spec["single_infos"]):
+        if html.request.has_var(var):
+            active_filter_vars.add(var)
+
+    context_links = []
+    for what in visual_type_registry.keys():
+        if not only_types or what in only_types:
+            context_links += _collect_context_links_of(what, view, rows, active_filter_vars, mobile)
+    return context_links
+
+
+def _collect_context_links_of(visual_type_name, view, rows, active_filter_vars, mobile):
+    context_links = []
+
+    visual_type = visual_type_registry[visual_type_name]()
+    visual_type.load_handler()
+    available_visuals = visual_type.permitted_visuals
+
+    for visual in sorted(available_visuals.values(), key=lambda x: x.get('icon')):
+        name = visual["name"]
+        linktitle = visual.get("linktitle")
+        if not linktitle:
+            linktitle = visual["title"]
+        if visual == view.spec:
+            continue
+        if visual.get("hidebutton", False):
+            continue  # this visual does not want a button to be displayed
+
+        if not mobile and visual.get('mobile') \
+           or mobile and not visual.get('mobile'):
+            continue
+
+        # For dashboards and views we currently only show a link button,
+        # if the target dashboard/view shares a single info with the
+        # current visual.
+        if not visual['single_infos'] and not visual_type.multicontext_links:
+            continue  # skip non single visuals for dashboard, views
+
+        # We can show a button only if all single contexts of the
+        # target visual are known currently
+        needed_vars = visuals.get_singlecontext_html_vars(visual["context"],
+                                                          visual["single_infos"]).items()
+        skip = False
+        vars_values = []
+        for var, val in needed_vars:
+            if var not in active_filter_vars:
+                skip = True  # At least one single context missing
+                break
+            vars_values.append((var, val))
+
+        add_site_hint = visuals.may_add_site_hint(name,
+                                                  info_keys=visual_info_registry.keys(),
+                                                  single_info_keys=visual["single_infos"],
+                                                  filter_names=dict(vars_values).keys())
+
+        if add_site_hint and html.request.var('site'):
+            vars_values.append(('site', html.request.var('site')))
+
+        # Optional feature of visuals: Make them dynamically available as links or not.
+        # This has been implemented for HW/SW inventory views which are often useless when a host
+        # has no such information available. For example the "Oracle Tablespaces" inventory view
+        # is useless on hosts that don't host Oracle databases.
+        if not skip:
+            skip = not visual_type.is_enabled_for(view, rows, visual, vars_values)
+
+        if not skip:
+            filename = visual_type.show_url
+            if mobile and visual_type.show_url == 'view.py':
+                filename = 'mobile_' + visual_type.show_url
+
+            # add context link to this visual. For reports we put in
+            # the *complete* context, even the non-single one.
+            if visual_type.multicontext_links:
+                uri = html.makeuri([(visual_type.ident_attr, name)], filename=filename)
+
+            # For views and dashboards currently the current filter
+            # settings
+            else:
+                uri = html.makeuri_contextless(vars_values + [(visual_type.ident_attr, name)],
+                                               filename=filename)
+            icon = visual.get("icon")
+            buttonid = "cb_" + name
+            context_links.append((_u(linktitle), uri, icon, buttonid))
+
+    return context_links
 
 
 @cmk.gui.pages.register("count_context_button")

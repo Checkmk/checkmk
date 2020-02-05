@@ -942,7 +942,7 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
 
 
 def _create_view_enabled_check_func(invpath, is_history=False):
-    def _check_view_enabled(linking_view, view, context_vars):
+    def _check_view_enabled(linking_view, rows, view, context_vars):
         context = dict(context_vars)
         hostname = context.get("host")
         if hostname is None:

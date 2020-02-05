@@ -12097,3 +12097,12 @@ graph_info["number_of_tasks"] = {
         ("jenkins_pending_tasks", "area"),
     ],
 }
+
+graph_info["temperature"] = {
+    "title": _("Temperature"),
+    "metrics": [("temp", "area"),],
+    "scalars": [
+        "temp:warn",
+        "temp:crit",
+    ]
+}

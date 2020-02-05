@@ -49,36 +49,25 @@ PYTHON3_MODULES_LIST += urllib3-1.25.7.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += pyOpenSSL-19.1.0.tar.gz # needed by requests with extras = ["security"]
 PYTHON3_MODULES_LIST += pyghmi-1.5.3.tar.gz # needed by base for IPMI
 PYTHON3_MODULES_LIST += requests-2.22.0.tar.gz # needed by DCD, connexion
-# Added for check_bi_aggr with kerberos support
-PYTHON3_MODULES_LIST += pykerberos-1.2.1.tar.gz
-PYTHON3_MODULES_LIST += requests-kerberos-0.12.0.tar.gz
-# required by Jinja2
-PYTHON3_MODULES_LIST += MarkupSafe-1.1.1.tar.gz
-# required by Flask
-PYTHON3_MODULES_LIST += itsdangerous-1.1.0.tar.gz
-PYTHON3_MODULES_LIST += Jinja2-2.10.3.tar.gz
-# required by zipp
-PYTHON3_MODULES_LIST += more-itertools-8.0.2.tar.gz
-# required by importlib_metadata
-PYTHON3_MODULES_LIST += zipp-0.6.0.tar.gz
-# required by jsonschema
-PYTHON3_MODULES_LIST += attrs-19.3.0.tar.gz
-PYTHON3_MODULES_LIST += importlib_metadata-1.2.0.tar.gz
-PYTHON3_MODULES_LIST += pyrsistent-0.15.6.tar.gz
-# required by clickclick
-PYTHON3_MODULES_LIST += Click-7.0.tar.gz
-# Needed by Flask
-PYTHON3_MODULES_LIST += Werkzeug-0.16.0.tar.gz
-# required by connexion, openapi-spec-validator
-PYTHON3_MODULES_LIST += jsonschema-3.2.0.tar.gz
-# required by connexion
-PYTHON3_MODULES_LIST += clickclick-1.2.2.tar.gz
-PYTHON3_MODULES_LIST += Flask-1.1.1.tar.gz
-PYTHON3_MODULES_LIST += inflection-0.3.1.tar.gz
-PYTHON3_MODULES_LIST += openapi-spec-validator-0.2.8.tar.gz
-# direct dependency
-PYTHON3_MODULES_LIST += swagger_ui_bundle-0.0.6.tar.gz
-PYTHON3_MODULES_LIST += connexion-2.4.0.tar.gz
+PYTHON3_MODULES_LIST += pykerberos-1.2.1.tar.gz # needed by check_bi_aggr
+PYTHON3_MODULES_LIST += requests-kerberos-0.12.0.tar.gz # needed by check_bi_aggr
+PYTHON3_MODULES_LIST += MarkupSafe-1.1.1.tar.gz # needed by Jinja2
+PYTHON3_MODULES_LIST += itsdangerous-1.1.0.tar.gz # needed by Flask
+PYTHON3_MODULES_LIST += Jinja2-2.10.3.tar.gz # needed by Flask
+PYTHON3_MODULES_LIST += more-itertools-8.0.2.tar.gz # needed by zipp
+PYTHON3_MODULES_LIST += zipp-0.6.0.tar.gz # needed by importlib_metadata
+PYTHON3_MODULES_LIST += attrs-19.3.0.tar.gz # needed by jsonschema
+PYTHON3_MODULES_LIST += importlib_metadata-1.2.0.tar.gz # needed by jsonschema
+PYTHON3_MODULES_LIST += pyrsistent-0.15.6.tar.gz # needed by jsonschema
+PYTHON3_MODULES_LIST += Click-7.0.tar.gz # needed by clickclick
+PYTHON3_MODULES_LIST += Werkzeug-0.16.0.tar.gz # Needed by Flask
+PYTHON3_MODULES_LIST += jsonschema-3.2.0.tar.gz # needed by connexion, openapi-spec-validator
+PYTHON3_MODULES_LIST += clickclick-1.2.2.tar.gz # needed by connexion
+PYTHON3_MODULES_LIST += Flask-1.1.1.tar.gz # needed by connexion
+PYTHON3_MODULES_LIST += inflection-0.3.1.tar.gz # needed by connexion
+PYTHON3_MODULES_LIST += openapi-spec-validator-0.2.8.tar.gz # needed by connexion
+PYTHON3_MODULES_LIST += swagger_ui_bundle-0.0.6.tar.gz # direct dependency
+PYTHON3_MODULES_LIST += connexion-2.4.0.tar.gz # direct dependency
 
 PYTHON3_MODULES_LIST += psutil-5.6.7.tar.gz # needed for omdlib
 PYTHON3_MODULES_LIST += passlib-1.7.2.tar.gz # needed for omdlib
@@ -97,6 +86,7 @@ PYTHON3_MODULES_LIST += dicttoxml-1.7.4.tar.gz # needed by GUI (API XML format)
 PYTHON3_MODULES_LIST += numpy-1.15.4.tar.gz # needed by GUI (forecast graphs)
 PYTHON3_MODULES_LIST += reportlab-3.5.34.tar.gz # needed by GUI (reporting)
 PYTHON3_MODULES_LIST += PyPDF2-1.26.0.tar.gz # needed by GUI (reporting)
+PYTHON3_MODULES_LIST += roman-3.2.tar.gz # needed by reporting frontmatter
 
 # TODO: Can we clean this up and use the intermediate install step results? Would be possible
 # in the moment we merge the build and intermediate install in a single target
@@ -183,9 +173,9 @@ python3-modules-dump-Pipfile:
 	@echo 'pytest = "*"  # used by various test/Makefile targets'
 	@echo 'pytest-cov = "*"  # used (indirectly) by test/Makefile'"'"'s test-unit-coverage-html target, see comment there'
 	@echo 'pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker fixture'
-	@echo 'webtest = "*"  # used for WSGI tests'
 	@echo 'yapf = "*"  # used for editor integration and the format-python Makefile target'
 	@echo 'polib = "*"  # used by locale/add-authors for working with .po files'
+	@echo 'webtest = "*"  # used by WSGI based tests'
 	@echo 'pre-commit = "*"  # used to fix / find issues before commiting changes'
 	@echo 'pyfakefs = "*" # used for unit tests'
 	@echo ''

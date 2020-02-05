@@ -28,12 +28,6 @@ REQUIRED_ARGUMENTS = {
 }
 
 
-def test_all_agents_tested():
-    for agent_file in glob("%s/cmk/special_agents/agent_*.py" % cmk_path()):
-        name = os.path.basename(os.path.splitext(agent_file)[0])
-        assert name in REQUIRED_ARGUMENTS, "Please add a test case for special agent: %r" % name
-
-
 @pytest.mark.parametrize("agent_name, required_args", REQUIRED_ARGUMENTS.items())
 def test_parse_arguments(agent_name, required_args):
     agent = import_module("cmk.special_agents.%s" % agent_name)

@@ -27,7 +27,7 @@
 
 import sys
 import abc
-from typing import Any, Dict, Text, List  # pylint: disable=unused-import
+from typing import Callable, List, Dict, Text  # pylint: disable=unused-import
 import six
 
 # Explicitly check for Python 3 (which is understood by mypy)
@@ -47,13 +47,13 @@ from cmk.utils.type_defs import (  # pylint: disable=unused-import
 class LabelManager(object):
     """Helper class to manage access to the host and service labels"""
     def __init__(self, explicit_host_labels, host_label_rules, service_label_rules,
-                 autochecks_manager):
-        # type: (Dict, List, List, Any) -> None
+                 discovered_labels_of_service):
+        # type: (Dict, List, List, Callable[[HostName, ServiceName], Labels]) -> None
         super(LabelManager, self).__init__()
         self._explicit_host_labels = explicit_host_labels
         self._host_label_rules = host_label_rules
         self._service_label_rules = service_label_rules
-        self._autochecks_manager = autochecks_manager
+        self._discovered_labels_of_service = discovered_labels_of_service
 
     def labels_of_host(self, ruleset_matcher, hostname):
         # type: (RulesetMatcher, HostName) -> Labels
@@ -130,10 +130,6 @@ class LabelManager(object):
         match_object = RulesetMatchObject(hostname, service_description=service_desc)
         return ruleset_matcher.get_service_ruleset_merged_dict(match_object,
                                                                self._service_label_rules)
-
-    def _discovered_labels_of_service(self, hostname, service_desc):
-        # type: (HostName, ServiceName) -> Labels
-        return self._autochecks_manager.discovered_labels_of(hostname, service_desc).to_dict()
 
 
 class ABCDiscoveredLabelsStore(six.with_metaclass(abc.ABCMeta, object)):

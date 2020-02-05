@@ -3051,7 +3051,7 @@ class ConfigCache(object):
         self._collect_hosttags(tag_to_group_map)
 
         self.labels = LabelManager(host_labels, host_label_rules, service_label_rules,
-                                   self._autochecks_manager)
+                                   self._discovered_labels_of_service)
 
         self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
             tag_to_group_map=tag_to_group_map,
@@ -3110,6 +3110,10 @@ class ConfigCache(object):
 
         # Keep HostConfig instances created with the current configuration cache
         self._host_configs = {}  # type: Dict[HostName, HostConfig]
+
+    def _discovered_labels_of_service(self, hostname, service_desc):
+        # type: (HostName, ServiceName) -> Labels
+        return self._autochecks_manager.discovered_labels_of(hostname, service_desc).to_dict()
 
     def get_tag_to_group_map(self):
         # type: () -> TagGroups

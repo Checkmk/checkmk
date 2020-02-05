@@ -96,6 +96,15 @@ class CAdvisorExporter:
         }
         return self._retrieve_cadvisor_info(cpu_info, group_element)
 
+    def df_summary(self, group_element: str) -> List[Dict[str, Dict[str, Any]]]:
+        df_info = {
+            "df_size": 'sum by ({group_element})(container_fs_limit_bytes)',
+            "df_used": 'sum by ({group_element})(container_fs_usage_bytes)',
+            "inodes_total": 'sum by (container)(container_fs_inodes_total)',
+            "inodes_free": 'sum by ({group_element})(container_fs_inodes_free)',
+        }
+        return self._retrieve_cadvisor_info(df_info, group_element)
+
     def _retrieve_cadvisor_info(self, entity_info: Dict[str, str],
                                 group_element: str) -> List[Dict[str, Dict[str, Any]]]:
         result = []
@@ -574,7 +583,9 @@ class ApiData:
         cadvisor_summaries = {
             "diskio": self.cadvisor_exporter.diskstat_summary,
             "cpu": self.cadvisor_exporter.cpu_summary,
+            "df": self.cadvisor_exporter.df_summary,
         }
+
         if "diskio" in cadvisor_options:
             yield from self._output_cadvisor_summary("cadvisor_diskstat",
                                                      cadvisor_summaries["diskio"],
@@ -583,6 +594,9 @@ class ApiData:
         if "cpu" in cadvisor_options:
             yield from self._output_cadvisor_summary("cadvisor_cpu", cadvisor_summaries["cpu"],
                                                      cadvisor_options["cpu"])
+        if "df" in cadvisor_options:
+            yield from self._output_cadvisor_summary("cadvisor_df", cadvisor_summaries["df"],
+                                                     cadvisor_options["df"])
 
     @staticmethod
     def _output_cadvisor_summary(cadvisor_service_name: str, retrieve_cadvisor_summary: Callable,

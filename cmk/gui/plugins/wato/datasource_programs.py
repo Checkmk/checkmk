@@ -253,6 +253,17 @@ def _valuespec_generic_metrics_prometheus():
                                              "aggregated. It is possible to select multiple "
                                              "options here."),
                                   )),
+                                 ("df",
+                                  ListChoice(
+                                      choices=[("container", _("Group by Container")),
+                                               ("pod", _("Group by Pod"))],
+                                      title=_("Filesystem"),
+                                      allow_empty=False,
+                                      help=_("You must specify by which entity level you "
+                                             "would like the Filesystem information to be "
+                                             "aggregated. It is possible to select multiple "
+                                             "options here."),
+                                  )),
                              ],
                              title=_("CAdvisor"),
                              validate=_check_not_empty_exporter_dict,

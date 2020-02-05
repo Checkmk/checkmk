@@ -89,6 +89,10 @@ class SingleMetricDashlet(Dashlet):
         return ["host", "service"]
 
     @classmethod
+    def has_context(cls):
+        return True
+
+    @classmethod
     def default_settings(cls):
         return {"show_title": False}
 
@@ -354,7 +358,14 @@ class SingleMetricDashlet(Dashlet):
         return self._adjust_font_size_js()
 
     def show(self):
-        host, service = self._dashlet_spec["context"].values()
+        host = self._dashlet_spec['context'].get("host", html.request.var("host"))
+        if not host:
+            raise MKUserError('host', _('Missing needed host parameter.'))
+
+        service = self._dashlet_spec['context'].get("service")
+        if not service:
+            service = "_HOST_"
+
         metric = self._dashlet_spec["metric"] if "metric" in self._dashlet_spec else ""
         site = self._get_site_by_host_name(host)
         metric_spec = {"site": site, "host": host, "service": service, "metric": metric}

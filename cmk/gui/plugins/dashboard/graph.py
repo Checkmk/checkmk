@@ -79,6 +79,10 @@ class GraphDashlet(Dashlet):
         return ["host", "service"]
 
     @classmethod
+    def has_context(cls):
+        return True
+
+    @classmethod
     def vs_parameters(cls):
         return Dictionary(
             title=_('Properties'),

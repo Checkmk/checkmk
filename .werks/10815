@@ -1,0 +1,11 @@
+Title: isc_dhcpd: Use alternative for pidof on Debian Buster
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p9
+Date: 1580914908
+Class: fix
+
+Due to a bug in sysvinit-utils the output of the command "pidof" is unreliable
+on Debian Buster. This has been fixed.

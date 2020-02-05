@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -27,14 +27,9 @@
 Special agent for monitoring Kubernetes clusters.
 """
 
-from __future__ import (
-    absolute_import,
-    division,
-    print_function,
-)
-
 import argparse
-from collections import OrderedDict, MutableSequence, defaultdict
+from collections import OrderedDict, defaultdict
+from collections.abc import MutableSequence
 import contextlib
 import functools
 import itertools
@@ -51,8 +46,8 @@ import urllib3  # type: ignore
 
 from dateutil.parser import parse as parse_time
 # We currently have no typeshed for kubernetes
-from kubernetes import client  # type: ignore
-from kubernetes.client.rest import ApiException  # type: ignore
+from kubernetes import client  # type: ignore # pylint: disable=import-error
+from kubernetes.client.rest import ApiException  # type: ignore # pylint: disable=import-error
 
 import cmk.utils.profile
 import cmk.utils.password_store
@@ -177,7 +172,7 @@ def left_join_dicts(initial, new, operation):
     return d
 
 
-class Metadata(object):
+class Metadata:
     def __init__(self, metadata):
         # type: (Optional[client.V1ObjectMeta]) -> None
         if metadata:
@@ -831,7 +826,7 @@ class Role(Metadata):
 ListElem = TypeVar('ListElem', bound=Metadata)
 
 
-class K8sList(Generic[ListElem], MutableSequence):
+class K8sList(Generic[ListElem], MutableSequence):  # pylint: disable=too-many-ancestors
     def __init__(self, elements):
         # type: (List[ListElem]) -> None
         super(K8sList, self).__init__()
@@ -865,7 +860,7 @@ class K8sList(Generic[ListElem], MutableSequence):
         return grouped
 
 
-class NodeList(K8sList[Node]):
+class NodeList(K8sList[Node]):  # pylint: disable=too-many-ancestors
     def list_nodes(self):
         # type: () -> Dict[str, List[str]]
         return {'nodes': [node.name for node in self if node.name]}
@@ -895,13 +890,13 @@ class NodeList(K8sList[Node]):
         return result
 
 
-class ComponentStatusList(K8sList[ComponentStatus]):
+class ComponentStatusList(K8sList[ComponentStatus]):  # pylint: disable=too-many-ancestors
     def list_statuses(self):
         # type: () -> Dict[str, List[Dict[str, str]]]
         return {status.name: status.conditions for status in self if status.name}
 
 
-class ServiceList(K8sList[Service]):
+class ServiceList(K8sList[Service]):  # pylint: disable=too-many-ancestors
     def infos(self):
         return {service.name: service.info for service in self}
 
@@ -912,17 +907,17 @@ class ServiceList(K8sList[Service]):
         return {service.name: service.ports for service in self}
 
 
-class DeploymentList(K8sList[Deployment]):
+class DeploymentList(K8sList[Deployment]):  # pylint: disable=too-many-ancestors
     def replicas(self):
         return {deployment.name: deployment.replicas for deployment in self}
 
 
-class IngressList(K8sList[Ingress]):
+class IngressList(K8sList[Ingress]):  # pylint: disable=too-many-ancestors
     def infos(self):
         return {ingress.name: ingress.info for ingress in self}
 
 
-class DaemonSetList(K8sList[DaemonSet]):
+class DaemonSetList(K8sList[DaemonSet]):  # pylint: disable=too-many-ancestors
     def info(self):
         return {daemon_set.name: daemon_set.info for daemon_set in self}
 
@@ -930,12 +925,12 @@ class DaemonSetList(K8sList[DaemonSet]):
         return {daemon_set.name: daemon_set.containers for daemon_set in self}
 
 
-class StatefulSetList(K8sList[StatefulSet]):
+class StatefulSetList(K8sList[StatefulSet]):  # pylint: disable=too-many-ancestors
     def replicas(self):
         return {stateful_set.name: stateful_set.replicas for stateful_set in self}
 
 
-class PodList(K8sList[Pod]):
+class PodList(K8sList[Pod]):  # pylint: disable=too-many-ancestors
     def pods_per_node(self):
         # type: () -> Dict[str, Dict[str, Dict[str, int]]]
         pods_sorted = sorted(self, key=lambda pod: pod.node)
@@ -989,12 +984,12 @@ class PodList(K8sList[Pod]):
         return functools.reduce(merge, [p.resources for p in self], Pod.zero_resources())
 
 
-class EndpointList(K8sList[Endpoint]):
+class EndpointList(K8sList[Endpoint]):  # pylint: disable=too-many-ancestors
     def info(self):
         return {endpoint.name: endpoint.infos for endpoint in self}
 
 
-class JobList(K8sList[Job]):
+class JobList(K8sList[Job]):  # pylint: disable=too-many-ancestors
     def info(self):
         return {job.name: job.infos for job in self}
 
@@ -1005,7 +1000,7 @@ class JobList(K8sList[Job]):
         return {job.name: job.containers for job in self}
 
 
-class NamespaceList(K8sList[Namespace]):
+class NamespaceList(K8sList[Namespace]):  # pylint: disable=too-many-ancestors
     def list_namespaces(self):
         # type: () -> Dict[str, Dict[str, Dict[str, Optional[str]]]]
         return {
@@ -1017,7 +1012,7 @@ class NamespaceList(K8sList[Namespace]):
         }
 
 
-class PersistentVolumeList(K8sList[PersistentVolume]):
+class PersistentVolumeList(K8sList[PersistentVolume]):  # pylint: disable=too-many-ancestors
     def list_volumes(self):
         # type: () -> Dict[str, Dict[str, Union[Optional[List[str]], Optional[float], Dict[str, Optional[str]]]]]
         # TODO: Output details of the different types of volumes
@@ -1032,7 +1027,7 @@ class PersistentVolumeList(K8sList[PersistentVolume]):
         }
 
 
-class PersistentVolumeClaimList(K8sList[PersistentVolumeClaim]):
+class PersistentVolumeClaimList(K8sList[PersistentVolumeClaim]):  # pylint: disable=too-many-ancestors
     def list_volume_claims(self):
         # type: () -> Dict[str, Dict[str, Any]]
         # TODO: Fix "Any"
@@ -1045,7 +1040,7 @@ class PersistentVolumeClaimList(K8sList[PersistentVolumeClaim]):
         }
 
 
-class StorageClassList(K8sList[StorageClass]):
+class StorageClassList(K8sList[StorageClass]):  # pylint: disable=too-many-ancestors
     def list_storage_classes(self):
         # type: () -> Dict[Any, Dict[str, Any]]
         # TODO: should be Dict[str, Dict[str, Optional[str]]]
@@ -1057,7 +1052,7 @@ class StorageClassList(K8sList[StorageClass]):
         }
 
 
-class RoleList(K8sList[Role]):
+class RoleList(K8sList[Role]):  # pylint: disable=too-many-ancestors
     def list_roles(self):
         return [{
             'name': role.name,
@@ -1087,7 +1082,7 @@ class Metric(Metadata):
         return str(self.__dict__)
 
 
-class MetricList(K8sList[Metric]):
+class MetricList(K8sList[Metric]):  # pylint: disable=too-many-ancestors
     def __add__(self, other):
         return MetricList([a + b for a, b in zip(self, other)])
 
@@ -1095,7 +1090,7 @@ class MetricList(K8sList[Metric]):
         return [item.__dict__ for item in self]
 
 
-class PiggybackGroup(object):
+class PiggybackGroup:
     """
     A group of elements where an element is e.g. a piggyback host.
     """
@@ -1134,7 +1129,7 @@ class PiggybackGroup(object):
         return data
 
 
-class PiggybackHost(object):
+class PiggybackHost:
     """
     An element that bundles a collection of sections.
     """
@@ -1158,7 +1153,7 @@ class PiggybackHost(object):
         return data
 
 
-class Section(object):
+class Section:
     """
     An agent section.
     """
@@ -1183,7 +1178,7 @@ class Section(object):
         return json.dumps(self._content)
 
 
-class ApiData(object):
+class ApiData:
     """
     Contains the collected API data.
     """
@@ -1232,24 +1227,24 @@ class ApiData(object):
         stateful_sets = apps_api.list_stateful_set_for_all_namespaces()
 
         logging.debug('Assigning collected data')
-        self.storage_classes = StorageClassList(map(StorageClass, storage_classes.items))
-        self.namespaces = NamespaceList(map(Namespace, namespaces.items))
-        self.roles = RoleList(map(Role, roles.items))
-        self.cluster_roles = RoleList(map(Role, cluster_roles.items))
-        self.component_statuses = ComponentStatusList(map(ComponentStatus,
-                                                          component_statuses.items))
-        self.nodes = NodeList(map(Node, nodes.items, nodes_stats))
-        self.persistent_volumes = PersistentVolumeList(map(PersistentVolume, pvs.items))
+        self.storage_classes = StorageClassList(list(map(StorageClass, storage_classes.items)))
+        self.namespaces = NamespaceList(list(map(Namespace, namespaces.items)))
+        self.roles = RoleList(list(map(Role, roles.items)))
+        self.cluster_roles = RoleList(list(map(Role, cluster_roles.items)))
+        self.component_statuses = ComponentStatusList(
+            list(map(ComponentStatus, component_statuses.items)))
+        self.nodes = NodeList(list(map(Node, nodes.items, nodes_stats)))
+        self.persistent_volumes = PersistentVolumeList(list(map(PersistentVolume, pvs.items)))
         self.persistent_volume_claims = PersistentVolumeClaimList(
-            map(PersistentVolumeClaim, pvcs.items))
-        self.pods = PodList(map(Pod, pods.items))
-        self.endpoints = EndpointList(map(Endpoint, endpoints.items))
-        self.jobs = JobList(map(Job, jobs.items))
-        self.services = ServiceList(map(Service, services.items))
-        self.deployments = DeploymentList(map(Deployment, deployments.items))
-        self.ingresses = IngressList(map(Ingress, ingresses.items))
-        self.daemon_sets = DaemonSetList(map(DaemonSet, daemon_sets.items))
-        self.stateful_sets = StatefulSetList(map(StatefulSet, stateful_sets.items))
+            list(map(PersistentVolumeClaim, pvcs.items)))
+        self.pods = PodList(list(map(Pod, pods.items)))
+        self.endpoints = EndpointList(list(map(Endpoint, endpoints.items)))
+        self.jobs = JobList(list(map(Job, jobs.items)))
+        self.services = ServiceList(list(map(Service, services.items)))
+        self.deployments = DeploymentList(list(map(Deployment, deployments.items)))
+        self.ingresses = IngressList(list(map(Ingress, ingresses.items)))
+        self.daemon_sets = DaemonSetList(list(map(DaemonSet, daemon_sets.items)))
+        self.stateful_sets = StatefulSetList(list(map(StatefulSet, stateful_sets.items)))
 
         pods_custom_metrics = {
             "memory": ['memory_rss', 'memory_swap', 'memory_usage_bytes', 'memory_max_usage_bytes'],
@@ -1283,15 +1278,16 @@ class ApiData(object):
         custom_metric = {}
         for namespace in self.namespaces:
             try:
-                data = map(
-                    Metric,
-                    self.custom_api.get_namespaced_custom_object(
-                        'custom.metrics.k8s.io',
-                        'v1beta1',
-                        namespace.name,
-                        'pods/*',
-                        metric,
-                    )['items'])
+                data = list(
+                    map(
+                        Metric,
+                        self.custom_api.get_namespaced_custom_object(
+                            'custom.metrics.k8s.io',
+                            'v1beta1',
+                            namespace.name,
+                            'pods/*',
+                            metric,
+                        )['items']))
                 custom_metric[namespace.name] = MetricList(data)
             except ApiException as err:
                 if err.status == 404:

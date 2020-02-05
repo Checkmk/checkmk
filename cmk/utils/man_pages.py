@@ -97,6 +97,7 @@ catalog_titles = {
             "adva"        : "ADVA Optical Networking",
             "alcatel"     : "Alcatel",
             "arbor"       : "Arbor",
+            "arista"      : "Arista Networks",
             "arris"       : "ARRIS",
             "aruba"       : "Aruba Networks",
             "avaya"       : "Avaya",

@@ -3,6 +3,9 @@
 # This extracts all the files of the current commit and passes it to `pre-commit` so the
 # hooks can test the commit for validity.
 #
+# Optionally you can pass "diff" as the first parameter, then it will check the diff between
+# the local HEAD and the HEAD of origin/master.
+#
 # You can use this script to lint your tree in a rebase like so:
 #
 #      git rebase --exec scripts/check-current-commit
@@ -13,6 +16,12 @@
 #
 REPO_PATH="$(git rev-parse --show-toplevel)"
 PIPENV=$REPO_PATH/scripts/run-pipenv
+
+if [ "$1" == "diff" ]; then
+    HEAD=origin/master..HEAD
+else
+    HEAD=HEAD
+fi
 
 run_pipenv() {
     local pyver=$1
@@ -45,4 +54,4 @@ run_pipenv() {
 run_pipenv 2 run true
 run_pipenv 3 run true
 
-pre-commit run --files $(git diff-tree --no-commit-id --name-only -r HEAD)
+pre-commit run --files $(git diff-tree --no-commit-id --name-only -r $HEAD)

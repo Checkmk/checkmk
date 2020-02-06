@@ -20,8 +20,6 @@ from testlib import on_time
 def test_filters_filter_with_empty_request(register_builtin_html, filter_ident):
     if filter_ident == "hostgroupvisibility":
         expected_filter = "Filter: hostgroup_num_hosts > 0\n"
-    elif filter_ident == "log_state":
-        expected_filter = "Limit: 0\n"
     else:
         expected_filter = ""
 

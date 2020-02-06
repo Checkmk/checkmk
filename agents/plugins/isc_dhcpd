@@ -41,7 +41,7 @@ def get_pid():
                 cmd = "ps aux | grep -w dhcpd | grep -v grep | awk {'printf (\"%s \", $2)'}"
                 break
 
-    return os.popen(cmd).read().strip()
+    return os.popen(cmd).read().strip()  # nosec
 
 
 pidof_dhcpd = get_pid()

@@ -49,8 +49,8 @@ from typing import (  # pylint: disable=unused-import
 import urllib3  # type: ignore
 
 from dateutil.parser import parse as parse_time
-from kubernetes import client
-from kubernetes.client.rest import ApiException
+from kubernetes import client  # type: ignore[import]
+from kubernetes.client.rest import ApiException  # type: ignore[import]
 
 import cmk.utils.profile
 import cmk.utils.password_store

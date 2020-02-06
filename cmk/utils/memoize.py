@@ -61,6 +61,7 @@ def _make_key(args, kwds, kwd_mark=(object(),), fasttypes={int, str}, type=type,
     return _HashedSeq(key)
 
 
+# ATTENTION: This class is nonsense, mutable objects like lists can't be hashable!
 class _HashedSeq(list):
     """ This class guarantees that hash() will be called no more than once
         per element.  This is important because the lru_cache() will hash
@@ -75,7 +76,6 @@ class _HashedSeq(list):
         self.hashvalue = hash(tup)
 
     def __hash__(self):
-        # type: () -> int
         return self.hashvalue
 
 

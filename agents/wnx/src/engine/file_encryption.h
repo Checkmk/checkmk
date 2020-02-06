@@ -33,6 +33,9 @@ public:
                        const std::filesystem::path& name,
                        const std::filesystem::path& name_out, SourceType type);
 
+    static int DecodeAll(const std::filesystem::path& dir,
+                         std::wstring_view mask, SourceType type);
+
 private:
     static std::vector<char> ReadFullFile(const std::filesystem::path& name);
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)

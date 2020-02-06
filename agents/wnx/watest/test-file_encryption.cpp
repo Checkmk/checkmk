@@ -36,7 +36,7 @@ protected:
 
     void TearDown() override {
         //
-        tst::SafeCleanTempDir();
+        // tst::SafeCleanTempDir();
     }
 
     static std::filesystem::path createWorkFile(
@@ -137,10 +137,25 @@ TEST_F(FileEncryptionTest, All) {
     EXPECT_TRUE(isFileSame(in_ / name_in, decoded_file));
 
     ASSERT_TRUE(OnFile::Encode(pwd, in_ / name_in));
-    EXPECT_TRUE(isFileSame(in_ / name_in, decoded_file));
+    EXPECT_TRUE(isFileSame(in_ / name_in, encoded_file));
 
     ASSERT_TRUE(OnFile::Decode(pwd, in_ / name_in, SourceType::cpp));
     EXPECT_TRUE(isFileSame(in_ / name_in, decoded_file));
+}
+
+TEST_F(FileEncryptionTest, DecodeTree) {
+    // bad data failure
+    // valid encryption
+    auto encoded_file = out_ / "1.exe";
+    ASSERT_TRUE(OnFile::Encode(pwd, in_ / name_in, encoded_file));
+    encoded_file = out_ / "2.exe";
+    ASSERT_TRUE(OnFile::Encode(pwd, in_ / name_in, encoded_file));
+
+    std::filesystem::copy_file(in_ / name_in, out_ / "3.exe");
+
+    EXPECT_EQ(0, OnFile::DecodeAll(out_, L"*.com", SourceType::cpp));
+    EXPECT_EQ(2, OnFile::DecodeAll(out_, L"*.exe", SourceType::cpp));
+    EXPECT_EQ(0, OnFile::DecodeAll(in_, L"*.in", SourceType::cpp));
 }
 
 }  // namespace cma::encrypt

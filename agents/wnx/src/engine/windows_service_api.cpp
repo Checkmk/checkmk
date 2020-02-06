@@ -17,6 +17,7 @@
 #include "common/wtools.h"
 #include "cvt.h"
 #include "external_port.h"  // windows api abstracted
+#include "file_encryption.h"
 #include "firewall.h"
 #include "install_api.h"  // install
 #include "realtime.h"
@@ -961,6 +962,10 @@ int ServiceAsService(
     SelfConfigure();
 
     ProcessFirewallConfiguration(app_name);
+
+    std::filesystem::path plugins = cma::cfg::GetUserPluginsDir();
+    cma::encrypt::OnFile::DecodeAll(plugins, L"*.exe",
+                                    cma::encrypt::SourceType::python);
 
     // infinite loop to protect from exception
     while (1) {

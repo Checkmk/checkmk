@@ -25,6 +25,12 @@ powershell Write-Host "[+] file 2 is `'%file_2%`'" -foreground Green
 if not exist %agent% powershell Write-Host "[-] You have to have %agent%" -foreground Red && exit /b 5 
 powershell Write-Host "[+] agent is `'%agent%`'" -foreground Green
 
+rem Checking that we have windows agent with working command line
+powershell Write-Host "....checking command line..." -foreground cyan
+call %agent% help | c:\windows\system32\find "Normal Usage:" > nul
+if not %errorlevel% == 0 powershell Write-Host "[-] `'%agent%`' is not valid agent" -foreground Red && exit /b 13
+powershell Write-Host "[+] `'%agent%`' is valid agent" -foreground Green
+
 
 rem Clean output
 powershell Write-Host "    cleaning..." -foreground cyan

@@ -27,6 +27,7 @@
 #
 # This module is 1.6 only, so not unit-tested
 # Module verification had been done using check_obfuscation_integration.cmd
+# Can be used from the shell
 #
 from __future__ import print_function
 from typing import AnyStr, Tuple, List  # pylint: disable=unused-import
@@ -49,6 +50,7 @@ else:
 # body: bytes, encrypted exe
 # mark: CMKE, nothing
 # body-length: 8-symbol string with 0-leading integer,count of bytes
+#
 OBFUSCATE_WORD = "HideAll"
 OBFUSCATE_MARK = "CMKE"
 OBFUSCATE_MARK_OFFSET = -12
@@ -161,7 +163,7 @@ if __name__ == '__main__':
     if mode == "decrypt":
         exit(decrypt_file(f_name, f_name_out))
 
-    print("Invalid mode '{}', allowed encrypt and decrypt".format(mode))
+    print("Invalid mode '{}', allowed modes are encrypt or decrypt".format(mode))
     print("Example: obfuscation.py encrypt 1.exe 1.exe.enc")
     print("Example: obfuscation.py decrypt 1.exe.enc 1.exe.dec")
     print("Example: obfuscation.py encrypt 1.exe")

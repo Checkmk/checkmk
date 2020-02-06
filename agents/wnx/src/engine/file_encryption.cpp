@@ -8,6 +8,8 @@
 #include <string>
 #include <string_view>
 
+#include "cma_core.h"
+#include "glob_match.h"
 #include "logger.h"
 
 namespace cma::encrypt {
@@ -132,6 +134,56 @@ bool OnFile::Decode(const std::string_view password,
                   name.u8string());
         return false;
     }
+}
+
+static PathVector GatherMatchingFiles(
+    const std::filesystem::path& search_dir,
+    std::wstring_view fname_pattern) noexcept {
+    namespace fs = std::filesystem;
+    PathVector paths;
+
+    std::wstring pattern(fname_pattern);
+    try {
+        for (const auto& entry : fs::recursive_directory_iterator(
+                 search_dir, fs::directory_options::skip_permission_denied)) {
+            // Found files must match the entire path pattern.
+            std::error_code ec;
+            auto status = entry.status(ec);
+            auto entry_name = entry.path();
+            if (ec) {
+                XLOG::t("Access to {} is not possible, status {}",
+                        entry_name.u8string(), ec.value());
+                continue;
+            }
+
+            if (!fs::is_regular_file(status)) continue;
+
+            // normal file
+            if (cma::tools::GlobMatch(pattern, entry_name.wstring())) {
+                paths.push_back(entry);
+            }
+        }
+        return paths;
+    } catch (std::exception& e) {
+        XLOG::l("Exception recursive {}", e.what());
+    } catch (...) {
+        XLOG::l("Exception recursive");
+    }
+
+    return {};
+}
+
+int OnFile::DecodeAll(const std::filesystem::path& dir, std::wstring_view mask,
+                      SourceType type) {
+    auto paths = GatherMatchingFiles(dir, mask);
+    if (paths.empty()) return 0;
+    int count = 0;
+    for (auto& p : paths) {
+        auto ret = Decode(kObfuscateWord, p, type);
+        if (ret) ++count;
+    }
+
+    return count;
 }
 
 std::vector<char> OnFile::ReadFullFile(const std::filesystem::path& name) {

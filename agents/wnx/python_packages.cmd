@@ -46,6 +46,13 @@ powershell Write-Host "pipenv installed" -Foreground Green
   powershell Write-Host "pipenv install Failed"  -Foreground Red
 )
 
+@!ppath!\pip install pycryptodomex> nul 2>&1 
+if "%errorlevel%" == "0" (
+powershell Write-Host "pipenv installed" -Foreground Green 
+) else (
+  powershell Write-Host "pipenv install Failed"  -Foreground Red
+)
+
 call python_package_install !ppath! pyyaml
 call python_package_install !ppath! pypiwin32
 call python_package_install !ppath! requests

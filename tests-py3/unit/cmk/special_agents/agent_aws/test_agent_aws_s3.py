@@ -1,6 +1,8 @@
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # pylint: disable=redefined-outer-name
 
-import pytest, json
+import pytest  # type: ignore
+
 from agent_aws_fake_clients import (
     FakeCloudwatchClient,
     S3ListBucketsIB,
@@ -17,7 +19,7 @@ from cmk.special_agents.agent_aws import (
 )
 
 
-class FakeS3Client(object):
+class FakeS3Client:
     def list_buckets(self):
         return {
             'Buckets': S3ListBucketsIB.create_instances(amount=4),
@@ -39,7 +41,7 @@ class FakeS3Client(object):
             return {
                 'TagSet': S3BucketTaggingIB.create_instances(amount=1),
             }
-        elif Bucket == 'Name-1':
+        if Bucket == 'Name-1':
             return {
                 'TagSet': S3BucketTaggingIB.create_instances(amount=2),
             }

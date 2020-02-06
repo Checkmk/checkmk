@@ -1,6 +1,8 @@
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # pylint: disable=redefined-outer-name
 
-import pytest
+import pytest  # type: ignore
+
 from agent_aws_fake_clients import (
     FakeCloudwatchClient,
     FakeServiceQuotasClient,
@@ -25,7 +27,7 @@ from cmk.special_agents.agent_aws import (
 )
 
 
-class FakeEC2Client(object):
+class FakeEC2Client:
     def describe_instances(self, InstanceIds=None, Filters=None):
         return {
             'Reservations': [{

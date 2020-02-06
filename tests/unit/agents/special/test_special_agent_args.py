@@ -10,10 +10,6 @@ from importlib import import_module
 from testlib import cmk_path
 
 REQUIRED_ARGUMENTS = {
-    'agent_aws': [
-        '--access-key-id', 'ACCESS_KEY_ID', '--secret-access-key', 'SECRET_ACCESS_KEY',
-        '--hostname', 'HOSTNAME'
-    ],
     'agent_azure': [
         '--subscription', 'SUBSCRIPTION', '--client', 'CLIENT', '--tenant', 'TENANT', '--secret',
         'SECRET'

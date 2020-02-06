@@ -1,6 +1,7 @@
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # pylint: disable=redefined-outer-name
 
-import pytest
+import pytest  # type: ignore
 from agent_aws_fake_clients import (
     FakeCloudwatchClient,)
 
@@ -33,7 +34,7 @@ def get_cloudwatch_alarms_sections():
     return _create_cloudwatch_alarms_sections
 
 
-cloudwatch_params = [
+cloudwatch_params = [  # type: ignore
     (None, 2),
     ([], 2),
     (['AlarmName-0'], 1),

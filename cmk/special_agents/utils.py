@@ -37,9 +37,13 @@ import logging
 import pprint
 import sys
 import time
-
 import requests
-from pathlib2 import Path
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+
 import six
 
 import cmk.utils.store as store
@@ -126,21 +130,21 @@ class DataCache(six.with_metaclass(abc.ABCMeta, object)):
         """
         Return the time for how long cached data is valid
         """
-        pass
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def get_validity_from_args(self, *args):
         """
         Decide whether we need to update the cache due to new arguments
         """
-        pass
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def get_live_data(self, *args):
         """
         This is the function that will be called if no cached data can be found.
         """
-        pass
+        raise NotImplementedError()
 
     @property
     def cache_timestamp(self):

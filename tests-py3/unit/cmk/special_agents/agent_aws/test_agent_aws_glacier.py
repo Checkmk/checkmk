@@ -1,14 +1,24 @@
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # pylint: disable=redefined-outer-name
 
-import pytest
-from agent_aws_fake_clients import (FakeCloudwatchClient, GlacierListVaultsIB,
-                                    GlacierVaultTaggingIB)
+import pytest  # type: ignore
 
-from cmk.special_agents.agent_aws import (AWSConfig, ResultDistributor, GlacierLimits,
-                                          GlacierSummary, Glacier)
+from agent_aws_fake_clients import (
+    FakeCloudwatchClient,
+    GlacierListVaultsIB,
+    GlacierVaultTaggingIB,
+)
+
+from cmk.special_agents.agent_aws import (
+    AWSConfig,
+    ResultDistributor,
+    GlacierLimits,
+    GlacierSummary,
+    Glacier,
+)
 
 
-class FakeGlacierClient(object):
+class FakeGlacierClient:
     def list_vaults(self):
         return {'VaultList': GlacierListVaultsIB.create_instances(amount=4), 'Marker': 'string'}
 
@@ -17,7 +27,7 @@ class FakeGlacierClient(object):
             return {
                 'Tags': GlacierVaultTaggingIB.create_instances(amount=1),
             }
-        elif vaultName == 'VaultName-1':
+        if vaultName == 'VaultName-1':
             return {
                 'Tags': GlacierVaultTaggingIB.create_instances(amount=2),
             }
@@ -119,9 +129,9 @@ def test_agent_aws_glacier_summary_without_limits(get_glacier_sections, names, t
 
 
 @pytest.mark.parametrize("names,tags,amount_vaults", glacier_params)
-def test_agent_aws_glacier_summary_without_limits(get_glacier_sections, names, tags, amount_vaults):
+def test_agent_aws_glacier_summary_without_limits2(get_glacier_sections, names, tags,
+                                                   amount_vaults):
     _glacier_limits, glacier_summary, glacier = get_glacier_sections(names, tags)
-    glacier_summary_results = glacier_summary.run().results
     _glacier_summary_results = glacier_summary.run().results
     glacier_results = glacier.run().results
 

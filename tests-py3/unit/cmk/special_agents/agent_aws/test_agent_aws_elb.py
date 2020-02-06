@@ -1,6 +1,8 @@
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # pylint: disable=redefined-outer-name
 
-import pytest
+import pytest  # type: ignore
+
 from agent_aws_fake_clients import (
     FakeCloudwatchClient,
     ELBDescribeLoadBalancersIB,
@@ -20,7 +22,7 @@ from cmk.special_agents.agent_aws import (
 )
 
 
-class FakeELBClient(object):
+class FakeELBClient:
     def describe_load_balancers(self, LoadBalancerNames=None):
         return {
             'LoadBalancerDescriptions': ELBDescribeLoadBalancersIB.create_instances(amount=3),

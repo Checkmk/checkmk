@@ -10,10 +10,10 @@ from testlib import cmk_path
 
 REQUIRED_ARGUMENTS = {
     # TODO: add these as we migrate to py3
-    # 'agent_aws': [
-    #     '--access-key-id', 'ACCESS_KEY_ID', '--secret-access-key', 'SECRET_ACCESS_KEY',
-    #     '--hostname', 'HOSTNAME'
-    # ],
+    'agent_aws': [
+        '--access-key-id', 'ACCESS_KEY_ID', '--secret-access-key', 'SECRET_ACCESS_KEY',
+        '--hostname', 'HOSTNAME'
+    ],
     # 'agent_azure': [
     #     '--subscription', 'SUBSCRIPTION', '--client', 'CLIENT', '--tenant', 'TENANT', '--secret',
     #     'SECRET'

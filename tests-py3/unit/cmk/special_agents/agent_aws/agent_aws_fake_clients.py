@@ -1,8 +1,7 @@
-#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
 
 import abc
 import random
-import six
 
 from cmk.utils.aws_constants import AWSEC2InstTypes
 
@@ -18,7 +17,7 @@ from cmk.utils.aws_constants import AWSEC2InstTypes
 #   ---abc------------------------------------------------------------------
 
 
-class Entity(six.with_metaclass(abc.ABCMeta, object)):
+class Entity(metaclass=abc.ABCMeta):
     def __init__(self, key):
         self.key = key
 
@@ -44,7 +43,7 @@ class List(Entity):
                 elem.update({e.key: e.create(choice, amount) for e in self._elements})
                 list_.append(elem)
             return list_
-        return [{e.key: e.create(x, amount) for e in self._elements} for x in xrange(amount)]
+        return [{e.key: e.create(x, amount) for e in self._elements} for x in range(amount)]
 
 
 class Dict(Entity):
@@ -56,7 +55,7 @@ class Dict(Entity):
     def create(self, idx, amount):
         dict_ = {}
         if self._enumerate_keys:
-            for x in xrange(amount):
+            for x in range(amount):
                 this_idx = "%s-%s" % (self._enumerate_keys.key, x)
                 dict_.update({this_idx: self._enumerate_keys.create(this_idx, amount)})
         dict_.update({v.key: v.create(idx, amount) for v in self._values})
@@ -73,25 +72,25 @@ class Str(Entity):
 
 class Int(Entity):
     def create(self, idx, amount):
-        return random.choice(xrange(100))
+        return random.choice(range(100))
 
 
 class Float(Entity):
     def create(self, idx, amount):
-        return 1.0 * random.choice(xrange(100))
+        return 1.0 * random.choice(range(100))
 
 
 class Timestamp(Entity):
     def create(self, idx, amount):
         return "2019-%02d-%02d" % (
-            random.choice(xrange(1, 13)),
-            random.choice(xrange(1, 29)),
+            random.choice(range(1, 13)),
+            random.choice(range(1, 29)),
         )
 
 
 class Enum(Entity):
     def create(self, idx, amount):
-        return ['%s-%s-%s' % (self.key, idx, x) for x in xrange(amount)]
+        return ['%s-%s-%s' % (self.key, idx, x) for x in range(amount)]
 
 
 class Choice(Entity):
@@ -121,7 +120,7 @@ class BoolChoice(Choice):
 #   .--abc------------------------------------------------------------------
 
 
-class InstanceBuilder(six.with_metaclass(abc.ABCMeta, object)):
+class InstanceBuilder(metaclass=abc.ABCMeta):
     def __init__(self, idx, amount):
         self._idx = idx
         self._amount = amount
@@ -137,7 +136,7 @@ class InstanceBuilder(six.with_metaclass(abc.ABCMeta, object)):
 
     @classmethod
     def create_instances(cls, amount):
-        return [cls(idx, amount).create_instance() for idx in xrange(amount)]
+        return [cls(idx, amount).create_instance() for idx in range(amount)]
 
 
 #.
@@ -1821,7 +1820,7 @@ class EC2DescribeTagsIB(InstanceBuilder):
 #   '----------------------------------------------------------------------'
 
 
-class FakeCloudwatchClient(object):
+class FakeCloudwatchClient:
     def describe_alarms(self, AlarmNames=None):
         alarms = CloudwatchDescribeAlarmsIB.create_instances(amount=2)
         if AlarmNames:
@@ -1852,7 +1851,7 @@ class FakeCloudwatchClient(object):
         }
 
 
-class FakeServiceQuotasClient(object):
+class FakeServiceQuotasClient:
     def list_service_quotas(self, ServiceCode):
         q_val = Float('Value')
         return {

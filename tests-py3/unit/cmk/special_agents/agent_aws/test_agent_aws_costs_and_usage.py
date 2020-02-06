@@ -1,4 +1,4 @@
-# encoding: utf-8
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
 
 from agent_aws_fake_clients import (
     CEGetCostsAndUsageIB,)
@@ -9,7 +9,7 @@ from cmk.special_agents.agent_aws import (
 )
 
 
-class FakeCEClient(object):
+class FakeCEClient:
     def get_cost_and_usage(self, TimePeriod, Granularity, Metrics, GroupBy):
         return {
             'NextPageToken': 'string',

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -37,10 +37,9 @@ import errno
 from typing import (  # pylint: disable=unused-import
     Union, NamedTuple, Any, List,
 )
-from pathlib2 import Path
+from pathlib import Path
 import boto3  # type: ignore
 import botocore  # type: ignore
-import six
 
 import cmk.utils.store as store
 from cmk.utils.paths import tmp_dir
@@ -58,7 +57,7 @@ from cmk.utils.aws_constants import (
     AWSEC2LimitsSpecial,
 )
 
-AWSStrings = Union[bytes, unicode]
+AWSStrings = Union[bytes, str]
 
 # TODO
 # Rewrite API calls from low-level client to high-level resource:
@@ -154,7 +153,7 @@ AWSStrings = Union[bytes, unicode]
 
 
 def _chunks(list_, length=100):
-    return [list_[i:i + length] for i in xrange(0, len(list_), length)]
+    return [list_[i:i + length] for i in range(0, len(list_), length)]
 
 
 def _get_ec2_piggyback_hostname(inst, region):
@@ -184,7 +183,7 @@ def _get_ec2_piggyback_hostname(inst, region):
 #   ---result distributor---------------------------------------------------
 
 
-class ResultDistributor(object):
+class ResultDistributor:
     """
     Mediator which distributes results from sections
     in order to reduce queries to AWS account.
@@ -245,7 +244,7 @@ AWSComputedContent = NamedTuple("AWSComputedContent", [
 AWSCacheFilePath = Path(tmp_dir) / "agents" / "agent_aws"
 
 
-class AWSSection(six.with_metaclass(abc.ABCMeta, DataCache)):
+class AWSSection(DataCache):
     def __init__(self, client, region, config, distributor=None):
         cache_dir = AWSCacheFilePath / region / config.hostname
         super(AWSSection, self).__init__(cache_dir, self.name)
@@ -266,7 +265,6 @@ class AWSSection(six.with_metaclass(abc.ABCMeta, DataCache)):
         The default resolution of AWS S3 metrics is 1 day (86400 sec)
         We use interval property for cached section.
         """
-        pass
 
     @property
     def region(self):
@@ -324,8 +322,7 @@ class AWSSection(six.with_metaclass(abc.ABCMeta, DataCache)):
 
             assert isinstance(
                 result.piggyback_hostname,
-                (unicode,
-                 str)), "%s: Piggyback hostname of created result must be of type 'str'" % self.name
+                str), "%s: Piggyback hostname of created result must be of type 'str'" % self.name
 
             # In the related check plugin aws.include we parse these results and
             # extend list of json-loaded results, except for labels sections.
@@ -354,7 +351,6 @@ class AWSSection(six.with_metaclass(abc.ABCMeta, DataCache)):
         Use max. cache_timestamp of all received results for
         AWSColleagueContents.cache_timestamp
         """
-        pass
 
     @abc.abstractmethod
     def get_live_data(self, colleague_contents):  # pylint: disable=arguments-differ
@@ -366,7 +362,6 @@ class AWSSection(six.with_metaclass(abc.ABCMeta, DataCache)):
         - '<KEY>'
         Return raw_result['<KEY>'].
         """
-        pass
 
     @abc.abstractmethod
     def _compute_content(self, raw_content, colleague_contents):
@@ -376,7 +371,6 @@ class AWSSection(six.with_metaclass(abc.ABCMeta, DataCache)):
         this section and the content received from the optional colleague
         sections.
         """
-        pass
 
     @abc.abstractmethod
     def _create_results(self, computed_content):
@@ -389,7 +383,7 @@ class AWSSection(six.with_metaclass(abc.ABCMeta, DataCache)):
         try:
             return response[key]
         except KeyError:
-            logging.info("%s: KeyError; Available keys are %s", self.name, response.keys())
+            logging.info("%s: KeyError; Available keys are %s", self.name, response)
             return dflt
 
     def _validate_result_content(self, content):
@@ -442,7 +436,7 @@ class AWSSectionLabels(AWSSection):
         assert isinstance(
             computed_content.content,
             dict), "%s: Computed result of Labels section must be of type 'dict'" % self.name
-        for pb in computed_content.content.keys():
+        for pb in computed_content.content:
             assert bool(pb), "%s: Piggyback hostname is not allowed to be empty" % self.name
         return [
             AWSSectionResult(piggyback_hostname, rows)
@@ -707,8 +701,7 @@ class EC2Limits(AWSSectionLimits):
                 inst_az, {})[inst_type] = inst_limits.get(inst_az, {}).get(inst_type, 0) + 1
 
             vcount = inst['CpuOptions']['CoreCount'] * inst['CpuOptions']['ThreadsPerCore']
-            vcpu_family = '%s_vcpu' % (inst_type[0]
-                                       if inst_type[0] in AWSEC2InstFamilies.keys() else "_")
+            vcpu_family = '%s_vcpu' % (inst_type[0] if inst_type[0] in AWSEC2InstFamilies else "_")
             inst_limits[inst_az][vcpu_family] = inst_limits[inst_az].get(vcpu_family, 0) + vcount
         return inst_limits
 
@@ -933,7 +926,7 @@ class EC2Summary(AWSSectionGeneric):
         return formatted_instances
 
     def _create_results(self, computed_content):
-        return [AWSSectionResult("", computed_content.content.values())]
+        return [AWSSectionResult("", list(computed_content.content.values()))]
 
 
 class EC2Labels(AWSSectionLabels):
@@ -1010,7 +1003,7 @@ class EC2SecurityGroups(AWSSectionGeneric):
             response = self._client.describe_security_groups(InstanceIds=self._names)
             return self._get_response_content(response, 'SecurityGroups')
 
-        elif self._tags is not None:
+        if self._tags is not None:
             sec_groups = []
             for chunk in _chunks(self._tags, length=200):
                 # EC2 FilterLimitExceeded: The maximum number of filter values
@@ -1403,7 +1396,7 @@ class EBS(AWSSectionCloudwatch):
 #   '----------------------------------------------------------------------'
 
 
-class S3BucketHelper(object):
+class S3BucketHelper:
     """
     Helper Class for S3
     """
@@ -1546,7 +1539,7 @@ class S3(AWSSectionCloudwatch):
 
     def _get_metrics(self, colleague_contents):
         metrics = []
-        for idx, bucket_name in enumerate(colleague_contents.content.keys()):
+        for idx, bucket_name in enumerate(colleague_contents.content):
             for metric_name, unit, storage_classes in [
                 ("BucketSizeBytes", "Bytes", [
                     "StandardStorage",
@@ -1607,7 +1600,7 @@ class S3Requests(AWSSectionCloudwatch):
 
     def _get_metrics(self, colleague_contents):
         metrics = []
-        for idx, bucket_name in enumerate(colleague_contents.content.keys()):
+        for idx, bucket_name in enumerate(colleague_contents.content):
             for metric_name, unit in [
                 ("AllRequests", "Count"),
                 ("GetRequests", "Count"),
@@ -1916,7 +1909,7 @@ class ELBSummaryGeneric(AWSSectionGeneric):
             if self._resource == "elb":
                 return self._client.describe_tags(
                     LoadBalancerNames=[load_balancer['LoadBalancerName']])
-            elif self._resource == "elbv2":
+            if self._resource == "elbv2":
                 return self._client.describe_tags(ResourceArns=[load_balancer['LoadBalancerArn']])
             return {}
         except botocore.exceptions.ClientError as e:
@@ -1964,7 +1957,7 @@ class ELBSummaryGeneric(AWSSectionGeneric):
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
-        return [AWSSectionResult("", computed_content.content.values())]
+        return [AWSSectionResult("", list(computed_content.content.values()))]
 
 
 class ELBLabelsGeneric(AWSSectionLabels):
@@ -2565,8 +2558,7 @@ class RDSSummary(AWSSectionGeneric):
                 self._client.describe_db_instances(DBInstanceIdentifier=name)
                 for name in self._names
             ]
-        elif self._tags is not None:
-
+        if self._tags is not None:
             return [self._client.describe_db_instances(Filters=self._tags) for name in self._names]
         return self._client.describe_db_instances()
 
@@ -2576,7 +2568,7 @@ class RDSSummary(AWSSectionGeneric):
             raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
-        return [AWSSectionResult("", computed_content.content.values())]
+        return [AWSSectionResult("", list(computed_content.content.values()))]
 
 
 class RDS(AWSSectionCloudwatch):
@@ -2596,7 +2588,7 @@ class RDS(AWSSectionCloudwatch):
 
     def _get_metrics(self, colleague_contents):
         metrics = []
-        for idx, instance_id in enumerate(colleague_contents.content.keys()):
+        for idx, instance_id in enumerate(colleague_contents.content):
             for metric_name, unit in [
                 ("BinLogDiskUsage", "Bytes"),
                 ("BurstBalance", "Percent"),
@@ -2744,7 +2736,7 @@ class CloudwatchAlarms(AWSSectionGeneric):
 #   '----------------------------------------------------------------------'
 
 
-class AWSSections(six.with_metaclass(abc.ABCMeta, object)):
+class AWSSections(metaclass=abc.ABCMeta):
     def __init__(self, hostname, session, debug=False):
         self._hostname = hostname
         self._session = session
@@ -3256,7 +3248,7 @@ def sts_assume_role(access_key_id, secret_access_key, role_arn, external_id, reg
         raise AwsAccessError(e)
 
 
-class AWSConfig(object):
+class AWSConfig:
     def __init__(self, hostname, sys_argv, overall_tags):
         self.hostname = hostname
         self._overall_tags = self._prepare_tags(overall_tags)

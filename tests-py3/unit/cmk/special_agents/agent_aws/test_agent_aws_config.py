@@ -1,6 +1,7 @@
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # pylint: disable=redefined-outer-name
 
-import pytest
+import pytest  # type: ignore
 
 from cmk.special_agents.agent_aws import (
     AWSConfig,)

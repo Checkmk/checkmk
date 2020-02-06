@@ -427,6 +427,25 @@ div.dashlet.edit {
     }
   }
 
+  /* dashlet clone button */
+  .clone {
+    position: absolute;
+    top: 4px;
+    right: 34px;
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    /* background-color: rgba(0, 0, 0, 0.7); */
+    background-image: url(images/dashlet_clone_lo.png);
+    border-radius: 5px;
+    /* IE < 9 */
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
+
+    &:hover {
+      background-image: url(images/dashlet_clone_hi.png);
+    }
+  }
+
   /* dashlet delete button */
   .del {
     position: absolute;

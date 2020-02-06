@@ -70,6 +70,7 @@ def test_registered_pages():
         'edit_dashboard',
         'edit_dashboards',
         'edit_dashlet',
+        'clone_dashlet',
         'edit_view',
         'edit_views',
         'export_views',

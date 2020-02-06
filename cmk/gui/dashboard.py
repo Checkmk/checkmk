@@ -1393,6 +1393,41 @@ def page_edit_dashlet():
     html.footer()
 
 
+@cmk.gui.pages.register("clone_dashlet")
+def page_clone_dashlet():
+    # type: () -> None
+    if not config.user.may("general.edit_dashboards"):
+        raise MKAuthException(_("You are not allowed to edit dashboards."))
+
+    board = html.request.var('name')
+    if not board:
+        raise MKUserError("name", _('The name of the dashboard is missing.'))
+
+    ident = html.get_integer_input("id")
+
+    try:
+        dashboard = get_permitted_dashboards()[board]
+    except KeyError:
+        raise MKUserError("name", _('The requested dashboard does not exist.'))
+
+    try:
+        dashlet_spec = dashboard['dashlets'][ident]
+    except IndexError:
+        raise MKUserError("id", _('The dashlet does not exist.'))
+
+    new_dashlet_spec = dashlet_spec.copy()
+    dashlet_type = get_dashlet_type(new_dashlet_spec)
+    new_dashlet_spec["position"] = dashlet_type.initial_position()
+
+    dashboard['dashlets'].append(new_dashlet_spec)
+    dashboard['mtime'] = int(time.time())
+    save_all_dashboards()
+
+    back_url = html.get_url_input(
+        'back', html.makeuri_contextless([("name", board), ("edit", "1")], filename="dashboard.py"))
+    raise HTTPRedirect(back_url)
+
+
 @cmk.gui.pages.register("delete_dashlet")
 def page_delete_dashlet():
     # type: () -> None

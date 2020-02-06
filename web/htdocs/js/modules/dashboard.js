@@ -633,6 +633,17 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
         }(nr, dashboard_properties.dashboard_name);
         controls.appendChild(edit_button);
 
+        // Add clone dashlet button
+        var clone = document.createElement("a");
+        clone.className = "clone";
+        clone.title = "Clone this dashlet";
+        clone.onclick = function(dashlet_id, board_name) {
+            return function() {
+                location.href = "clone_dashlet.py?name=" + board_name + "&id=" + dashlet_id;
+            };
+        }(nr, dashboard_properties.dashboard_name);
+        controls.appendChild(clone);
+
         // Add delete dashlet button
         var del = document.createElement("a");
         del.className = "del";

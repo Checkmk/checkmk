@@ -162,10 +162,10 @@ node {
         stage("Cppcheck") {
             if (CHANGED_CORE_FILES != "") {
                 dir("livestatus/src") {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck-xml ${GERRIT_PATCHSET_REVISION}"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck-xml ${GERRIT_PATCHSET_REVISION} &> ${RESULTS}/livestatus-cppcheck.txt"
                 }
                 dir("enterprise/core/src") {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck-xml ${GERRIT_PATCHSET_REVISION}"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck-xml ${GERRIT_PATCHSET_REVISION} &> ${RESULTS}/core-cppcheck.txt"
                 }
             } else {
                 println "No core files changed. Skipping."
@@ -217,7 +217,7 @@ node {
     } finally {
         stage("Analyse Issues") {
             def CLANG = scanForIssues tool: clang(pattern: "results/*-tidy.txt")
-            def GCC = scanForIssues tool: gcc(pattern: "results/*.iwyu.txt,results/*neb-cmc.txt,results/*yapf.txt")
+            def GCC = scanForIssues tool: gcc(pattern: "results/*.iwyu.txt,results/*cppcheck.txt,results/*neb-cmc.txt,results/*yapf.txt")
             def PYLINT = scanForIssues tool: pyLint(pattern: "results/pylint*.txt")
             def MYPY = scanForIssues tool: myPy(pattern: "results/mypy*.xml")
             def CPPCHECK = scanForIssues tool: cppCheck(pattern: '**/cppcheck-result.xml')

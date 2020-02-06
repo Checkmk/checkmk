@@ -123,6 +123,8 @@ bool OnFile::Decode(const std::string_view password,
             return false;
         }
 
+        if (type == SourceType::python) sz = length;
+
         result.resize(sz);
         return WriteDataToFile(name_out, result);
     } catch (const std::exception& e) {

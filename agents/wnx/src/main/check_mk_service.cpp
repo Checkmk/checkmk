@@ -18,6 +18,7 @@
 
 // Personal
 #include "cfg.h"
+#include "check_mk_cmdline.h"
 #include "check_mk_service.h"
 #include "cma_core.h"
 #include "logger.h"
@@ -433,6 +434,10 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
     }
 
     using namespace cma::cmdline;
+
+    auto [hidden, code] = HiddenCommandProcessor(argc, Argv);
+    if (hidden) return code;
+
     cma::OnStartApp();  // path from EXE
 
     if (param == wtools::ConvertToUTF16(kInstallParam)) {

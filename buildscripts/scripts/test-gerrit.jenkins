@@ -114,7 +114,7 @@ node {
         stage("Python unit tests") {
             if (CHANGED_PYTHON_FILES != "") {
                 dir('tests') {
-                    withEnv(["PYTEST_ADDOPTS=\"--junitxml='$RESULTS/python-unit-junit.xml'\""]) {
+                    withEnv(["PYTEST_ADDOPTS=\"--junitxml=$RESULTS/python-unit-junit.xml\""]) {
                         sh ". /bauwelt/bin/bw-setup-jenkins-env ; make test-unit"
                     }
                 }
@@ -126,7 +126,7 @@ node {
         stage("Python3 unit tests") {
             if (CHANGED_PYTHON_FILES != "" || CHANGED_PYTHON3_FILES != "") {
                 dir('tests-py3') {
-                    withEnv(["PYTEST_ADDOPTS=\"--junitxml='$RESULTS/python3-unit-junit.xml'\""]) {
+                    withEnv(["PYTEST_ADDOPTS=\"--junitxml=$RESULTS/python3-unit-junit.xml\""]) {
                         sh ". /bauwelt/bin/bw-setup-jenkins-env ; make test-unit"
                     }
                 }
@@ -150,7 +150,7 @@ node {
         stage("Agent integration tests") {
             if (CHANGED_AGENT_PLUGINS != "") {
                 dir('tests') {
-                    withEnv(["PYTEST_ADDOPTS=\"--junitxml='$RESULTS/agent-integration-junit.xml'\""]) {
+                    withEnv(["PYTEST_ADDOPTS=\"--junitxml=$RESULTS/agent-integration-junit.xml\""]) {
                         sh ". /bauwelt/bin/bw-setup-jenkins-env ; make test-agent-integration"
                     }
                 }

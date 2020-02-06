@@ -215,31 +215,18 @@ void *main_thread(void *data) {
             update_status();
             last_update_status = now;
         }
-
         if (!Poller{}.wait(2500ms, g_unix_socket, PollEvents::in, logger)) {
             if (errno == ETIMEDOUT) {
                 continue;
             }
             break;
         }
-
-#if HAVE_ACCEPT4
         int cc = accept4(g_unix_socket, nullptr, nullptr, SOCK_CLOEXEC);
-#else
-        int cc = accept(g_unix_socket, nullptr, nullptr);
-#endif
         if (cc == -1) {
             generic_error ge("cannot accept client connection");
             Warning(logger) << ge;
             continue;
         }
-#if !HAVE_ACCEPT4
-        if (fcntl(cc, F_SETFD, FD_CLOEXEC) == -1) {
-            generic_error ge("cannot set close-on-exec bit on client socket");
-            Alert(logger) << ge;
-            break;
-        }
-#endif
         if (cc > g_max_fd_ever) {
             g_max_fd_ever = cc;
         }

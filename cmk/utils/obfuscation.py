@@ -26,6 +26,7 @@
 
 #
 # This module is 1.6 only, so not unit-tested
+# Module verification had been done using check_obfuscation_integration.cmd
 #
 from __future__ import print_function
 from typing import AnyStr, Tuple, List  # pylint: disable=unused-import
@@ -41,8 +42,19 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path
 
+#
+# Format of the obfuscated file
+#
+# <--...body...--><mark><body-length>
+# body: bytes, encrypted exe
+# mark: CMKE, nothing
+# body-length: 8-symbol string with 0-leading integer,count of bytes
 OBFUSCATE_WORD = "HideAll"
 OBFUSCATE_MARK = "CMKE"
+OBFUSCATE_MARK_OFFSET = -12
+OBFUSCATE_MARK_SIZE = 4
+OBFUSCATE_LENGTH_OFFSET = -8
+OBFUSCATE_LENGTH_SIZE = 8
 
 
 # Adapt OpenSSL handling of key and iv
@@ -123,13 +135,13 @@ def decrypt_file(file_in, file_out):
         print("Too short file")
         return 9
 
-    if data_in[-12:-8] != OBFUSCATE_MARK:
+    if data_in[OBFUSCATE_MARK_OFFSET:OBFUSCATE_MARK_OFFSET + OBFUSCATE_MARK_SIZE] != OBFUSCATE_MARK:
         print("No mark")
         return 7
 
-    length = int(data_in[-8:])
+    length = int(data_in[OBFUSCATE_LENGTH_OFFSET:])
 
-    decrypted_data = decrypt_package(data_in[:-12])  # type: bytes
+    decrypted_data = decrypt_package(data_in[:OBFUSCATE_MARK_OFFSET])  # type: bytes
     if len(decrypted_data) > 0:
         out_file = Path(file_out)
         with out_file.open("wb") as f:
@@ -149,5 +161,8 @@ if __name__ == '__main__':
     if mode == "decrypt":
         exit(decrypt_file(f_name, f_name_out))
 
-    print("Invalid mode '{}'".format(mode))
+    print("Invalid mode '{}', allowed encrypt and decrypt".format(mode))
+    print("Example: obfuscation.py encrypt 1.exe 1.exe.enc")
+    print("Example: obfuscation.py decrypt 1.exe.enc 1.exe.dec")
+    print("Example: obfuscation.py encrypt 1.exe")
     exit(1)

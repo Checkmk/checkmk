@@ -21,7 +21,7 @@ def _check_generic_crash_info(crash):
             "crash_type": str,
             "time": float,
             "os": str,
-            "version": six.text_type,
+            "version": str,
             "python_version": str,
             "python_paths": list,
             "exc_type": str,

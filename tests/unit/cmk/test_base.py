@@ -1,9 +1,8 @@
-import six
 import cmk
 
 
 def test_version():
-    assert isinstance(cmk.__version__, six.text_type)
+    assert isinstance(cmk.__version__, str)
 
 
 def test_is_enterprise_edition(monkeypatch):

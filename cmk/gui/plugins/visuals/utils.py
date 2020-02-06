@@ -29,7 +29,7 @@
 
 import abc
 import time
-from typing import Union, Dict, List, Tuple, Text, Optional  # pylint: disable=unused-import
+from typing import Dict, List, Tuple, Text, Optional  # pylint: disable=unused-import
 import six
 
 from cmk.gui.exceptions import MKGeneralException
@@ -42,9 +42,6 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.view_utils import get_labels
-from cmk.gui.type_defs import VisualContext  # pylint: disable=unused-import
-
-SingleInfos = List[str]
 
 
 class VisualInfo(six.with_metaclass(abc.ABCMeta, object)):

@@ -30,12 +30,13 @@ import json
 import copy
 import urllib
 from typing import (  # pylint: disable=unused-import
-    Optional, Any, Dict, Union, Tuple, Text, List, Callable)
+    Optional, Any, Dict, Union, Tuple, Text, List, Callable, cast)
 
 import six
 
 import cmk.utils.plugin_registry
 from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
+from cmk.gui.type_defs import VisualContext  # pylint: disable=unused-import
 
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
@@ -44,11 +45,11 @@ import cmk.gui.config as config
 import cmk.gui.visuals as visuals
 from cmk.gui.globals import g, html
 from cmk.gui.valuespec import ValueSpec, ValueSpecValidateFunc, DictionaryEntry  # pylint: disable=unused-import
-from cmk.gui.plugins.visuals.utils import VisualContext  # pylint: disable=unused-import
 from cmk.gui.plugins.views.utils import (
     get_permitted_views,
     get_all_views,
 )
+from cmk.gui.utils.url_encoder import HTTPVariables  # pylint: disable=unused-import
 
 DashboardName = str
 DashboardConfig = Dict[str, Any]
@@ -654,10 +655,15 @@ def copy_view_into_dashlet(dashlet, nr, view_name, add_context=None, load_from_a
     # Overwrite the views default title with the context specific title
     dashlet['title'] = visuals.visual_title('view', view)
     # TODO: Shouldn't we use the self._dashlet_context_vars() here?
-    dashlet['title_url'] = html.makeuri_contextless(
-        [('view_name', view_name)] +
-        visuals.get_singlecontext_vars(view["context"], view["single_infos"]).items(),
-        filename='view.py')
+    name_part = [('view_name', view_name)]  # type: HTTPVariables
+    singlecontext_vars = cast(
+        HTTPVariables,
+        visuals.get_singlecontext_vars(
+            view["context"],
+            view["single_infos"],
+        ).items())
+    dashlet['title_url'] = html.makeuri_contextless(name_part + singlecontext_vars,
+                                                    filename='view.py')
 
     dashlet['type'] = 'view'
     dashlet['name'] = 'dashlet_%d' % nr

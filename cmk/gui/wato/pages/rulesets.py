@@ -30,9 +30,12 @@ import itertools
 import pprint
 import re
 import json
-from typing import Dict, Generator, Text, NamedTuple, List, Optional  # pylint: disable=unused-import
+from typing import Dict, Generator, Text, List, Optional, Union  # pylint: disable=unused-import
+
+import six
 
 import cmk.gui.escaping as escaping
+from cmk import ensure_unicode
 from cmk.utils.regex import escape_regex_chars
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 
@@ -83,6 +86,14 @@ from cmk.gui.plugins.wato import (
     HostTagCondition,
     DictHostTagCondition,
 )
+
+
+def render_html(text):
+    # type: (Union[HTML, str, Text]) -> Union[str, Text]
+    if isinstance(text, HTML):
+        return text.__html__()
+
+    return text
 
 
 @mode_registry.register
@@ -1906,6 +1917,7 @@ class RuleConditionRenderer(object):
         if not rulespec.item_type or conditions.service_description is None:
             return
 
+        condition = six.text_type()
         if rulespec.item_type == "service":
             condition = _("Service name")
         elif rulespec.item_type == "item":
@@ -1947,10 +1959,10 @@ class RuleConditionRenderer(object):
                 text_list.append("%s%s" % (expression, html.render_b(item_spec.rstrip("$"))))
 
         if len(text_list) == 1:
-            condition += text_list[0]
+            condition += ensure_unicode(render_html(text_list[0]))
         else:
             condition += ", ".join(["%s" % s for s in text_list[:-1]])
-            condition += _(" or ") + text_list[-1]
+            condition += ensure_unicode(render_html(_(" or ") + text_list[-1]))
 
         if condition:
             yield condition

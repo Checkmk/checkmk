@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from typing import Dict, Union
+from typing import Dict, Union, List
 
 VisualContext = Dict[str, Union[str, Dict[str, str]]]
+SingleInfos = List[str]

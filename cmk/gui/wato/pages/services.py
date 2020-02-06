@@ -35,7 +35,7 @@ import pprint
 import sys
 import re
 from hashlib import sha256
-from typing import Dict, NamedTuple, Text, List, Optional  # pylint: disable=unused-import
+from typing import Dict, NamedTuple, Text, List, Optional, Union  # pylint: disable=unused-import
 
 import cmk
 from cmk.utils.defines import short_service_state_name
@@ -388,7 +388,11 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
                   "for further information.") % (host_name, config.omd_site()))
         host.need_permission("read")
 
-        options = json.loads(html.get_ascii_input("options"))
+        ascii_input = html.get_ascii_input("options")
+        if ascii_input is not None:
+            options = json.loads(ascii_input)
+        else:
+            options = {}
         return StartDiscoveryRequest(host=host,
                                      folder=host.folder(),
                                      options=DiscoveryOptions(**options))
@@ -980,7 +984,7 @@ class DiscoveryPageRenderer(object):
         self._options = options
 
     def render(self, discovery_result, request):
-        # type: (DiscoveryResult, dict) -> None
+        # type: (DiscoveryResult, dict) -> Text
         with html.plugged():
             self._show_action_buttons(discovery_result)
             self._show_discovered_host_labels(discovery_result)

@@ -30,7 +30,8 @@ import sys
 import traceback
 import json
 from contextlib import contextmanager
-from typing import Tuple, Optional, cast, Iterable, Dict, List, Type, Callable  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Tuple, Optional, cast, Iterable, Dict, List, Type, Callable, Union)
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -38,6 +39,8 @@ from cmk.gui.log import logger
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKAuthException, MKUserError
 from cmk.gui.permissions import declare_permission
 from cmk.gui.pages import page_registry
+from cmk.gui.type_defs import (  # pylint: disable=unused-import
+    SingleInfos, VisualContext)
 from cmk.gui.valuespec import (
     Dictionary,
     DualListChoice,
@@ -66,10 +69,6 @@ from cmk.gui.plugins.visuals.utils import (
     visual_info_registry,
     visual_type_registry,
     filter_registry,
-)
-
-from cmk.gui.plugins.visuals.utils import (  # pylint: disable=unused-import
-    SingleInfos, VisualContext,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -1525,8 +1524,8 @@ def get_single_info_keys(single_infos):
 
 
 def get_singlecontext_vars(context, single_infos):
-    # type: (VisualContext, SingleInfos) -> Dict[str, str]
-    vars_ = {}  # type: Dict[str, str]
+    # type: (VisualContext, SingleInfos) -> Dict[str, Union[str, unicode]]
+    vars_ = {}  # type: Dict[str, Union[str, unicode]]
     for key in get_single_info_keys(single_infos):
         val = cast(Optional[str], context.get(key))
         if val is not None:
@@ -1535,7 +1534,7 @@ def get_singlecontext_vars(context, single_infos):
 
 
 def get_singlecontext_html_vars(context, single_infos):
-    # type: (VisualContext, SingleInfos) -> Dict[str, str]
+    # type: (VisualContext, SingleInfos) -> Dict[str, Union[str, unicode]]
     vars_ = get_singlecontext_vars(context, single_infos)
     for key in get_single_info_keys(single_infos):
         val = html.get_unicode_input(key)

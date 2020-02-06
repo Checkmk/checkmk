@@ -41,10 +41,7 @@ from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.pages import page_registry, Page
 from cmk.gui.escaping import escape_attribute
-from cmk.gui.exceptions import (
-    MKGeneralException,
-    HTTPRedirect,
-)
+from cmk.gui.exceptions import (MKGeneralException, HTTPRedirect, MKUserError)
 from cmk.gui.watolib import (
     automation_command_registry,
     AutomationCommand,
@@ -207,8 +204,10 @@ class ABCAutomationFetchAgentOutput(six.with_metaclass(abc.ABCMeta, AutomationCo
         # type: () -> FetchAgentOutputRequest
         config.user.need_permission("wato.download_agent_output")
 
-        return FetchAgentOutputRequest.deserialize(ast.literal_eval(
-            html.get_ascii_input("request")))
+        ascii_input = html.get_ascii_input("request")
+        if ascii_input is None:
+            raise MKUserError("request", _("The parameter \"%s\" is missing.") % "request")
+        return FetchAgentOutputRequest.deserialize(ast.literal_eval(ascii_input))
 
 
 @automation_command_registry.register

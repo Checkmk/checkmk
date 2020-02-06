@@ -32,6 +32,7 @@ from typing import (  # pylint: disable=unused-import
 )
 import six
 
+from cmk.gui.utils.html import HTML
 from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
 from cmk.utils.exceptions import MKException
 
@@ -72,7 +73,6 @@ from cmk.gui.plugins.visuals.utils import (
     visual_type_registry,
     VisualType,
 )
-from cmk.gui.plugins.visuals.utils import VisualContext  # pylint: disable=unused-import
 
 import cmk.gui.plugins.dashboard
 
@@ -603,7 +603,7 @@ def render_dashlet_title_html(dashlet_instance):
     if title is not None and dashlet_instance.show_title():
         url = dashlet_instance.title_url()
         if url:
-            title = html.render_a(_u(title), url)
+            title = u"%s" % html.render_a(_u(title), url)
         else:
             title = _u(title)
     return title
@@ -892,7 +892,7 @@ def draw_dashlet(dashlet_instance, dashlet_content_html, dashlet_title_html):
         css.append("background")
 
     html.open_div(id_="dashlet_inner_%d" % dashlet_instance.dashlet_id, class_=css)
-    html.write_html(dashlet_content_html)
+    html.write_html(HTML(dashlet_content_html))
     html.close_div()
 
 
@@ -953,7 +953,7 @@ def ajax_dashlet():
             dashlet_instance = _fallback_dashlet_instance(name, board, the_dashlet, ident)
         dashlet_content_html = render_dashlet_exception_content(the_dashlet, ident, e)
 
-    html.write_html(dashlet_content_html)
+    html.write_html(HTML(dashlet_content_html))
 
 
 def _add_context_to_dashboard(board):

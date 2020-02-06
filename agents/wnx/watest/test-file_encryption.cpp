@@ -24,7 +24,7 @@ public:
     static constexpr std::string_view content_ = "123456789\n123456789";
     static constexpr std::string_view name_in = "base.in";
     static constexpr std::string_view name_out = "base.out";
-    static constexpr std::string_view pwd = "ABCD";
+    static constexpr std::string_view pwd = kObfuscateWord;
 
 protected:
     void SetUp() override {
@@ -40,10 +40,10 @@ protected:
     }
 
     static std::filesystem::path createWorkFile(
-        const std::filesystem::path& Name, const std::string& Text) {
+        const std::filesystem::path& name, const std::string& content) {
         namespace fs = std::filesystem;
 
-        auto path = Name;
+        auto path = name;
 
         std::ofstream ofs(path.u8string(), std::ios::binary);
 
@@ -53,10 +53,52 @@ protected:
             return {};
         }
 
-        ofs << Text;
+        ofs << content;
         return path;
     }
+
+    static bool isFileSame(const std::filesystem::path& name_1,
+                           const std::filesystem::path& name_2) {
+        namespace fs = std::filesystem;
+        auto file_1 = OnFile::ReadFullFile(name_1);
+        auto file_2 = OnFile::ReadFullFile(name_2);
+        return file_1 == file_2;
+    }
 };
+
+TEST_F(FileEncryptionTest, LiveData) {
+    namespace fs = std::filesystem;
+
+    fs::path expected[] = {R"(c:\dev\shared\test_file.txt)",
+                           R"(c:\dev\shared\test_file.txt.enc)",
+                           R"(c:\dev\shared\test_file.txt.dec)"};
+
+    for (auto& e : expected)
+        if (!fs::exists(e)) {
+            XLOG::l.t("Test is skipped, there is no data");
+            return;
+        }
+
+    ASSERT_TRUE(OnFile::Decode(kObfuscateWord, expected[1],
+                               R"(c:\dev\shared\zzz.zzz)", SourceType::python));
+}
+
+TEST_F(FileEncryptionTest, LiveData2) {
+    namespace fs = std::filesystem;
+
+    fs::path expected[] = {R"(c:\dev\shared\cmk-update-agent.exe)",
+                           R"(c:\dev\shared\cmk-update-agent.exe.enc)"};
+
+    for (auto& e : expected)
+        if (!fs::exists(e)) {
+            XLOG::l.t("Test is skipped, there is no data");
+            return;
+        }
+
+    ASSERT_TRUE(OnFile::Decode(kObfuscateWord, expected[1],
+                               R"(c:\dev\shared\cmk-update-agent.exe.dec)",
+                               SourceType::python));
+}
 
 TEST_F(FileEncryptionTest, ReadFile) {
     auto checks = std::move(OnFile::ReadFullFile(in_ / name_in));
@@ -74,17 +116,31 @@ TEST_F(FileEncryptionTest, All) {
     EXPECT_FALSE(OnFile::Encode(pwd, in_, out_ / name_out));
     EXPECT_FALSE(OnFile::Encode("", in_ / name_in, out_ / name_out));
 
-    ASSERT_TRUE(OnFile::Encode(pwd, in_ / name_in, out_ / name_out));
-    EXPECT_FALSE(OnFile::Decode("", out_ / name_out, out_ / name_in));
-    EXPECT_FALSE(OnFile::Decode("abcd", out_ / name_out, out_ / name_in));
-    EXPECT_FALSE(OnFile::Decode(pwd, out_ / name_out, out_));
-    EXPECT_FALSE(OnFile::Decode(pwd, out_, out_ / name_in));
-    EXPECT_FALSE(OnFile::Decode(pwd, out_ / "not exists", out_ / name_in));
+    EXPECT_FALSE(
+        OnFile::Decode("", out_ / name_out, out_ / name_in, SourceType::cpp));
+    EXPECT_FALSE(OnFile::Decode("abcd", out_ / name_out, out_ / name_in,
+                                SourceType::cpp));
+    EXPECT_FALSE(OnFile::Decode(pwd, out_ / name_out, out_, SourceType::cpp));
+    EXPECT_FALSE(OnFile::Decode(pwd, out_, out_ / name_in, SourceType::cpp));
+    EXPECT_FALSE(OnFile::Decode(pwd, out_ / "not exists", out_ / name_in,
+                                SourceType::cpp));
 
-    ASSERT_TRUE(OnFile::Decode(pwd, out_ / name_out, out_ / name_in));
-    auto decoded = OnFile::ReadFullFile(out_ / name_in);
-    auto base = OnFile::ReadFullFile(out_ / name_in);
-    ASSERT_EQ(decoded, base);
+    // valid encryption
+    auto encoded_file = out_ / name_out;
+    ASSERT_TRUE(OnFile::Encode(pwd, in_ / name_in, encoded_file));
+
+    // valid decryption
+    auto decoded_file = out_ / name_in;
+    ASSERT_TRUE(
+        OnFile::Decode(pwd, out_ / name_out, decoded_file, SourceType::cpp));
+
+    EXPECT_TRUE(isFileSame(in_ / name_in, decoded_file));
+
+    ASSERT_TRUE(OnFile::Encode(pwd, in_ / name_in));
+    EXPECT_TRUE(isFileSame(in_ / name_in, decoded_file));
+
+    ASSERT_TRUE(OnFile::Decode(pwd, in_ / name_in, SourceType::cpp));
+    EXPECT_TRUE(isFileSame(in_ / name_in, decoded_file));
 }
 
 }  // namespace cma::encrypt

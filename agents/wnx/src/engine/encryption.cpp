@@ -82,7 +82,7 @@ std::tuple<bool, size_t> Commander::decode(void *InOut, size_t InputSize,
         // special case, when error is recoverable
         if (GetLastError() == ERROR_MORE_DATA) return {false, input_size};
 
-        XLOG::l.crit("Cannot decode buffer [{}]", GetLastError());
+        XLOG::l.crit("Cannot decode buffer [{:d}]", GetLastError());
         return {false, 0};
     }
 

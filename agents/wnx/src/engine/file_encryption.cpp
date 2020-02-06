@@ -3,6 +3,8 @@
 
 #include "file_encryption.h"
 
+#include <fmt/format.h>
+
 #include <string>
 #include <string_view>
 
@@ -13,9 +15,10 @@ static std::unique_ptr<Commander> MakeInternalCrypt(const std::string& p) {
     return std::make_unique<Commander>(p);
 }
 
-static bool WriteDataTiFile(const std::filesystem::path& name,
+static bool WriteDataToFile(const std::filesystem::path& name,
                             const std::vector<char>& buffer) {
     std::ofstream ofd(name, std::ios::binary | std ::ios::trunc);
+    auto marker = fmt::format("{}{:04}", kObfuscateMark, buffer.size());
     if (ofd.good() && ofd.write(buffer.data(), buffer.size()).good()) {
         XLOG::l.t("Data saved in '{}'", name.u8string());
         return true;
@@ -32,8 +35,8 @@ bool OnFile::Encode(std::string_view password,
 }
 
 bool OnFile::Decode(std::string_view password,
-                    const std::filesystem::path& name) {
-    return Decode(password, name, name);
+                    const std::filesystem::path& name, SourceType type) {
+    return Decode(password, name, name, type);
 }
 
 bool OnFile::Encode(std::string_view password,
@@ -55,8 +58,10 @@ bool OnFile::Encode(std::string_view password,
     auto data_size = result.size();
     if (block_size.has_value()) {
         auto sz = result.size();
-        sz = ((sz / *block_size) + 1) * *block_size;
+        auto b_size = *block_size / 8;
+        sz = ((sz / b_size) + 1) * b_size;
         result.resize(sz);
+        memset(&result[data_size], ' ', sz - data_size);
     }
 
     auto [success, write_size] =
@@ -68,12 +73,18 @@ bool OnFile::Encode(std::string_view password,
     }
 
     result.resize(write_size);
-    return WriteDataTiFile(name_out, result);
+    result.insert(result.end(), kObfuscateMark.data(),
+                  kObfuscateMark.data() + 4);
+    auto count = fmt::format("{:08}", data_size);
+    result.insert(result.end(), count.data(), count.data() + 8);
+    return WriteDataToFile(name_out, result);
 }
 
 bool OnFile::Decode(const std::string_view password,
                     const std::filesystem::path& name,
-                    const std::filesystem::path& name_out) {
+                    const std::filesystem::path& name_out, SourceType type
+
+) {
     if (password.empty()) {
         XLOG::l.w("Password is empty, encryption is impossible");
         return false;
@@ -86,16 +97,39 @@ bool OnFile::Decode(const std::string_view password,
         return false;
     }
     auto data_size = result.size();
-
-    auto c = MakeInternalCrypt(std::string(password));
-    auto [success, sz] = c->decode(result.data(), data_size, true);
-
-    if (!success) {
-        XLOG::l.w("Can't decrypt '{}'", name.u8string());
+    if (data_size < kObfuscatedSuffixSize) {
+        XLOG::l.w("File '{}' is too short", name.u8string());
         return false;
     }
-    result.resize(sz);
-    return WriteDataTiFile(name_out, result);
+
+    auto marker = std::string_view(&result[data_size - kObfuscatedSuffixSize],
+                                   kObfuscatedWordSize);
+    if (marker != kObfuscateMark) {
+        XLOG::l.w("File '{}' has invalid marker {}", name.u8string(), marker);
+        return false;
+    }
+    auto length_sv = std::string_view(
+        &result[data_size - kObfuscatedLengthSize], kObfuscatedLengthSize);
+    try {
+        auto length = std::stoi(std::string(length_sv));
+
+        auto c = MakeInternalCrypt(std::string(password));
+        auto [success, sz] = c->decode(
+            result.data(), data_size - kObfuscatedSuffixSize,
+            type == SourceType::cpp);  // false: python doesn't close the block
+
+        if (!success) {
+            XLOG::l.w("Can't decrypt '{}'", name.u8string());
+            return false;
+        }
+
+        result.resize(sz);
+        return WriteDataToFile(name_out, result);
+    } catch (const std::exception& e) {
+        XLOG::l.w("Exception '{}' during decrypt '{}'", e.what(),
+                  name.u8string());
+        return false;
+    }
 }
 
 std::vector<char> OnFile::ReadFullFile(const std::filesystem::path& name) {

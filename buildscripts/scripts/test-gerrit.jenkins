@@ -217,7 +217,7 @@ node {
     } finally {
         stage("Analyse Issues") {
             def CLANG = scanForIssues tool: clang(pattern: "results/*-tidy.txt")
-            def GCC = scanForIssues tool: gcc(pattern: "results/*.iwyu.txt,results/*cppcheck.txt,results/*neb-cmc.txt,results/*yapf.txt")
+            def GCC = scanForIssues tool: gcc(pattern: "results/*iwyu.txt,results/*cppcheck.txt,results/*neb-cmc.txt,results/*yapf.txt")
             def PYLINT = scanForIssues tool: pyLint(pattern: "results/pylint*.txt")
             def MYPY = scanForIssues tool: myPy(pattern: "results/mypy*.xml")
             def CPPCHECK = scanForIssues tool: cppCheck(pattern: '**/cppcheck-result.xml')

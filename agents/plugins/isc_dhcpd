@@ -38,7 +38,7 @@ def get_pid():
     if os.path.exists(lsb_path):
         for line in open(lsb_path):
             if "buster" in line:
-                cmd = "ps aux | grep -w dhcpd | grep -v grep | awk {'printf (\"%s \", $2)'}"
+                cmd = "ps aux | grep -w [d]hcpd | awk {'printf (\"%s \", $2)'}"
                 break
 
     return os.popen(cmd).read().strip()  # nosec

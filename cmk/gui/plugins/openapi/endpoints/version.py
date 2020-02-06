@@ -11,6 +11,8 @@ from cmk.gui.globals import request
 
 
 def search(user=None, token_info=None):
+    if request.args.get('fail'):
+        raise Exception("This is an intentional failure.")
     return {
         "site": cmk.omd_site(),
         "group": request.environ.get('mod_wsgi.application_group', 'unknown'),

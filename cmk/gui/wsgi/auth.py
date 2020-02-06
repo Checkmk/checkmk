@@ -15,11 +15,9 @@ from connexion import problem  # type: ignore[import]
 from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
 from cmk.utils.encoding import ensure_unicode
 
-from cmk.gui import crash_reporting
-from cmk.gui.config import clear_user_login
+from cmk.gui.config import clear_user_login, set_user_by_id
 from cmk.gui.exceptions import MKException, MKAuthException, MKUserError
-from cmk.gui.log import logger
-from cmk.gui.login import verify_automation_secret, set_auth_type, login
+from cmk.gui.login import verify_automation_secret, set_auth_type
 
 from cmk.gui.wsgi.types import RFC7662  # pylint: disable=unused-import
 
@@ -61,7 +59,7 @@ def _subject(user_id):
 @contextlib.contextmanager
 def verify_user(user_id, token_info):
     if user_id and token_info and user_id == token_info.get('sub'):
-        login(user_id)
+        set_user_by_id(user_id)
         set_auth_type("automation")
         yield
         clear_user_login()
@@ -77,13 +75,7 @@ def with_user(func):
 
         try:
             with verify_user(user_id, token_info):
-                try:
-                    return func(*args, **kw)
-                except MKException:
-                    crash = crash_reporting.GUICrashReport.from_exception()
-                    crash_reporting.CrashReportStore().save(crash)
-                    logger.exception("Unhandled exception (Crash-ID: %s)", crash.ident_to_text())
-                    raise
+                return func(*args, **kw)
         except MKException as exc:
             return problem(
                 status=MK_STATUS.get(type(exc), 500),

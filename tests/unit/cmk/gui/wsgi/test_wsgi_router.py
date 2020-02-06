@@ -102,6 +102,18 @@ def test_openapi_app(
     wsgi_app.get("/NO_SITE/check_mk/api/v0/version", status=200)
 
 
+def test_openapi_app_exception(
+    wsgi_app,  # type: WebTestAppForCMK
+    with_automation_user,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    resp = wsgi_app.get("/NO_SITE/check_mk/api/v0/version?fail=1", status=500)
+    assert 'detail' in resp.json
+    assert 'title' in resp.json
+    # TODO: Check CrashReport storage
+
+
 @pytest.mark.skip
 def test_legacy_webapi(
     wsgi_app,  # type: WebTestAppForCMK

@@ -97,6 +97,11 @@ google-auth = "==1.11.0" # needed by kubernetes
 rsa = "==4.0" # needed by kubernetes
 websocket_client = "==0.57.0" # needed by kubernetes
 kubernetes = "==10.0.1" # needed by kubernetes
+docutils = "==0.15.2" # needed by boto3 (aws)
+jmespath = "==0.9.4" # needed by boto3 (aws)
+botocore = "==1.14.11" # needed by boto3 (aws)
+s3transfer = "==0.3.2" # needed by boto3 (aws)
+boto3 = "==1.11.11" # needed by boto3 (aws)
 
 [requires]
 python_version = "3.7"

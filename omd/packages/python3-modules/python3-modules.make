@@ -95,6 +95,11 @@ PYTHON3_MODULES_LIST += rsa-4.0.tar.gz # needed by kubernetes
 PYTHON3_MODULES_LIST += websocket_client-0.57.0.tar.gz # needed by kubernetes
 PYTHON3_MODULES_LIST += kubernetes-10.0.1.tar.gz # needed by kubernetes
 
+PYTHON3_MODULES_LIST += docutils-0.15.2.tar.gz # needed by boto3 (aws)
+PYTHON3_MODULES_LIST += jmespath-0.9.4.tar.gz # needed by boto3 (aws)
+PYTHON3_MODULES_LIST += botocore-1.14.11.tar.gz # needed by boto3 (aws)
+PYTHON3_MODULES_LIST += s3transfer-0.3.2.tar.gz # needed by boto3 (aws)
+PYTHON3_MODULES_LIST += boto3-1.11.11.tar.gz # needed by boto3 (aws)
 
 # TODO: Can we clean this up and use the intermediate install step results? Would be possible
 # in the moment we merge the build and intermediate install in a single target

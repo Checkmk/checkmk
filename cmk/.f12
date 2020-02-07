@@ -21,6 +21,7 @@ PYTHON2_PATHS=(
     special_agents/agent_3par.py
     special_agents/agent_activemq.py
     special_agents/agent_allnet_ip_sensoric.py
+    special_agents/agent_appdynamics.py
     special_agents/agent_azure.py
     special_agents/agent_couchbase.py
     special_agents/agent_emcvnx.py

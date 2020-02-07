@@ -96,6 +96,7 @@ _default.default = json.JSONEncoder().default  # type: ignore
 json.JSONEncoder.default = _default  # type: ignore
 
 import cmk.utils.paths
+from cmk.utils.encoding import ensure_unicode
 from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui.exceptions import MKUserError
@@ -378,13 +379,13 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self.render_label(content, for_, **attrs))
 
     def render_input(self, name, type_, **attrs):
-        # type: (str, str, **HTMLTagAttributeValue) -> HTML
+        # type: (Optional[str], str, **HTMLTagAttributeValue) -> HTML
         attrs['type_'] = type_
         attrs['name'] = name
         return self._render_opening_tag('input', close_tag=True, **attrs)
 
     def input(self, name, type_, **attrs):
-        # type: (str, str, **HTMLTagAttributeValue) -> None
+        # type: (Optional[str], str, **HTMLTagAttributeValue) -> None
         self.write_html(self.render_input(name, type_, **attrs))
 
     #
@@ -1858,6 +1859,7 @@ class html(ABCHTMLGenerator):
     # b) in OMD environments, add the Check_MK version to the version (prevents update problems)
     # c) load the minified javascript when not in debug mode
     def javascript_filename_for_browser(self, jsname):
+        # type: (str) -> Optional[str]
         filename_for_browser = None
         rel_path = "/share/check_mk/web/htdocs/js"
         if self.enable_debug:
@@ -1874,30 +1876,33 @@ class html(ABCHTMLGenerator):
         return filename_for_browser
 
     def _css_filename_for_browser(self, css):
+        # type: (str) -> Optional[str]
         rel_path = "/share/check_mk/web/htdocs/" + css + ".css"
         if os.path.exists(cmk.utils.paths.omd_root + rel_path) or \
             os.path.exists(cmk.utils.paths.omd_root + "/local" + rel_path):
             return '%s-%s.css' % (css, cmk.__version__)
+        return None
 
     def html_head(self, title, javascripts=None, force=False):
-
+        # type: (Text, Optional[List[str]], bool) -> None
         force_new_document = force  # for backward stability and better readability
 
         if force_new_document:
             self._header_sent = False
 
         if not self._header_sent:
-            self.write_html('<!DOCTYPE HTML>\n')
+            self.write_html(HTML('<!DOCTYPE HTML>\n'))
             self.open_html()
             self._head(title, javascripts)
             self._header_sent = True
 
     def header(self,
-               title='',
+               title=u'',
                javascripts=None,
                force=False,
                show_body_start=True,
                show_top_heading=True):
+        # type: (Text, Optional[List[str]], bool, bool, bool) -> None
         if self.output_format == "html":
             if not self._header_sent:
                 if show_body_start:
@@ -1908,19 +1913,23 @@ class html(ABCHTMLGenerator):
                 if self.render_headfoot and show_top_heading:
                     self.top_heading(title)
 
-    def body_start(self, title='', javascripts=None, force=False):
+    def body_start(self, title=u'', javascripts=None, force=False):
+        # type: (Text, Optional[List[str]], bool) -> None
         self.html_head(title, javascripts, force)
         self.open_body(class_=self._get_body_css_classes())
 
     def _get_body_css_classes(self):
+        # type: () -> List[str]
         if self.screenshotmode:
             return self._body_classes + ["screenshotmode"]
         return self._body_classes
 
     def html_foot(self):
+        # type: () -> None
         self.close_html()
 
     def top_heading(self, title):
+        # type: (Text) -> None
         if not isinstance(config.user, config.LoggedInNobody):
             login_text = "<b>%s</b> (%s" % (config.user.id, "+".join(config.user.role_ids))
             if self.enable_debug:
@@ -1939,20 +1948,22 @@ class html(ABCHTMLGenerator):
         self.top_heading_right()
 
     def top_heading_left(self, title):
+        # type: (Text) -> None
         self.open_table(class_="header")
         self.open_tr()
         self.open_td(width="*", class_="heading")
         # HTML() is needed here to prevent a double escape when we do  self._escape_attribute
         # here and self.a() escapes the content (with permissive escaping) again. We don't want
         # to handle "title" permissive.
-        title = HTML(escaping.escape_attribute(title))
-        self.a(title,
+        html_title = HTML(escaping.escape_attribute(title))
+        self.a(html_title,
                href="#",
                onfocus="if (this.blur) this.blur();",
                onclick="this.innerHTML=\'%s\'; document.location.reload();" % _("Reloading..."))
         self.close_td()
 
     def top_heading_right(self):
+        # type: () -> None
         cssclass = "active" if config.user.show_help else "passive"
 
         self.icon_button(None,
@@ -1974,6 +1985,7 @@ class html(ABCHTMLGenerator):
             self._dump_get_vars()
 
     def footer(self, show_footer=True, show_body_end=True):
+        # type: (bool, bool) -> None
         if self.output_format == "html":
             if show_footer:
                 self.bottom_footer()
@@ -1982,6 +1994,7 @@ class html(ABCHTMLGenerator):
                 self.body_end()
 
     def bottom_footer(self):
+        # type: () -> None
         if self._header_sent:
             self.bottom_focuscode()
             if self.render_headfoot:
@@ -1995,7 +2008,7 @@ class html(ABCHTMLGenerator):
                 self.td('', class_="middle")
 
                 self.open_td(class_="right")
-                content = _("refresh: %s secs") % self.render_div(self.browser_reload,
+                content = _("refresh: %s secs") % self.render_div("%0.2f" % self.browser_reload,
                                                                   id_="foot_refresh_time")
                 style = "display:inline-block;" if self.browser_reload else "display:none;"
                 self.div(HTML(content), id_="foot_refresh", style=style)
@@ -2005,9 +2018,11 @@ class html(ABCHTMLGenerator):
                 self.close_table()
 
     def bottom_focuscode(self):
+        # type: () -> None
         if self.focus_object:
             if isinstance(self.focus_object, tuple):
                 formname, varname = self.focus_object
+                assert formname is not None
                 obj_ident = formname + "." + varname
             else:
                 obj_ident = "getElementById(\"%s\")" % self.focus_object
@@ -2023,10 +2038,12 @@ class html(ABCHTMLGenerator):
             self.javascript(js_code)
 
     def focus_here(self):
+        # type: () -> None
         self.a("", href="#focus_me", id_="focus_me")
         self.set_focus_by_id("focus_me")
 
     def body_end(self):
+        # type: () -> None
         if self.have_help:
             self.javascript("cmk.help.enable();")
         if self.final_javascript_code:
@@ -2040,8 +2057,10 @@ class html(ABCHTMLGenerator):
     #
 
     def begin_form(self, name, action=None, method="GET", onsubmit=None, add_transid=True):
+        # type: (str, str, str, Optional[str], bool) -> None
         self.form_vars = []
         if action is None:
+            assert self.myfile is not None
             action = self.myfile + ".py"
         self.current_form = name
         self.open_form(id_="form_%s" % name,
@@ -2057,13 +2076,16 @@ class html(ABCHTMLGenerator):
         self.form_name = name
 
     def end_form(self):
+        # type: () -> None
         self.close_form()
         self.form_name = None
 
     def in_form(self):
+        # type: () -> bool
         return self.form_name is not None
 
     def prevent_password_auto_completion(self):
+        # type: () -> None
         # These fields are not really used by the form. They are used to prevent the browsers
         # from filling the default password and previous input fields in the form
         # with password which are eventually saved in the browsers password store.
@@ -2073,6 +2095,7 @@ class html(ABCHTMLGenerator):
     # Needed if input elements are put into forms without the helper
     # functions of us. TODO: Should really be removed and cleaned up!
     def add_form_var(self, varname):
+        # type: (str) -> None
         self.form_vars.append(varname)
 
     # Beware: call this method just before end_form(). It will
@@ -2080,8 +2103,8 @@ class html(ABCHTMLGenerator):
     # field to the form - *if* they are not used in any input
     # field. (this is the reason why you must not add any further
     # input fields after this method has been called).
-    def hidden_fields(self, varlist=None, **args):
-        add_action_vars = args.get("add_action_vars", False)
+    def hidden_fields(self, varlist=None, add_action_vars=False):
+        # type: (List[str], bool) -> None
         if varlist is not None:
             for var in varlist:
                 self.hidden_field(var, self.request.var(var, ""))
@@ -2114,12 +2137,14 @@ class html(ABCHTMLGenerator):
     #
 
     def do_actions(self):
+        # type: () -> bool
         return self.request.var("_do_actions") not in ["", None, _("No")]
 
     # Check if the given form is currently filled in (i.e. we display
     # the form a second time while showing value typed in at the first
     # time and complaining about invalid user input)
     def form_submitted(self, form_name=None):
+        # type: (Optional[str]) -> bool
         if form_name is None:
             return self.request.has_var("filled_in")
         return self.request.var("filled_in") == form_name
@@ -2129,6 +2154,7 @@ class html(ABCHTMLGenerator):
     # between False and None. The browser does not set the variables for
     # Checkboxes that are not checked :-(
     def get_checkbox(self, varname):
+        # type: (str) -> Optional[bool]
         if self.request.has_var(varname):
             return bool(self.request.var(varname))
         if self.form_submitted(self.form_name):
@@ -2224,9 +2250,11 @@ class html(ABCHTMLGenerator):
         self.close_div()
 
     def empty_icon_button(self):
+        # type: () -> None
         self.write(self.render_icon("trans", cssclass="iconbutton trans"))
 
     def disabled_icon_button(self, icon):
+        # type: (str) -> None
         self.write(self.render_icon(icon, cssclass="iconbutton"))
 
     # TODO: Cleanup to use standard attributes etc.
@@ -2268,6 +2296,7 @@ class html(ABCHTMLGenerator):
     #
 
     def user_error(self, e):
+        # type: (MKUserError) -> None
         assert isinstance(e, MKUserError), "ERROR: This exception is not a user error!"
         self.open_div(class_="error")
         self.write("%s" % e.message)
@@ -2276,11 +2305,13 @@ class html(ABCHTMLGenerator):
 
     # user errors are used by input elements to show invalid input
     def add_user_error(self, varname, msg_or_exc):
+        # type: (Optional[str], Union[Text, str, Exception]) -> None
         if isinstance(msg_or_exc, Exception):
-            message = "%s" % msg_or_exc
+            message = u"%s" % msg_or_exc  # type: Text
         else:
-            message = msg_or_exc
+            message = ensure_unicode(msg_or_exc)
 
+        # TODO: Find the multiple varname call sites and clean this up
         if isinstance(varname, list):
             for v in varname:
                 self.add_user_error(v, message)
@@ -2288,9 +2319,11 @@ class html(ABCHTMLGenerator):
             self.user_errors[varname] = message
 
     def has_user_errors(self):
+        # type: () -> bool
         return len(self.user_errors) > 0
 
     def show_user_errors(self):
+        # type: () -> None
         if self.has_user_errors():
             self.open_div(class_="error")
             self.write('<br>'.join(self.user_errors.values()))
@@ -2516,6 +2549,7 @@ class html(ABCHTMLGenerator):
         self.dropdown(varname, choices, deflt=deflt, ordered=ordered, **attrs)
 
     def upload_file(self, varname):
+        # type: (str) -> None
         error = self.user_errors.get(varname)
         if error:
             self.open_x(class_="inputerror")
@@ -2566,11 +2600,13 @@ class html(ABCHTMLGenerator):
     #
 
     def begin_radio_group(self, horizontal=False):
+        # type: (bool) -> None
         if self.mobile:
             attrs = {'data-type': "horizontal" if horizontal else None, 'data-role': "controlgroup"}
-            self.write(self._render_opening_tag("fieldset", **attrs))
+            self.write(self._render_opening_tag("fieldset", close_tag=False, **attrs))
 
     def end_radio_group(self):
+        # type: () -> None
         if self.mobile:
             self.write(self._render_closing_tag("fieldset"))
 
@@ -2599,9 +2635,11 @@ class html(ABCHTMLGenerator):
     #
 
     def begin_checkbox_group(self, horizonal=False):
+        # type: (bool) -> None
         self.begin_radio_group(horizonal)
 
     def end_checkbox_group(self):
+        # type: () -> None
         self.end_radio_group()
 
     def checkbox(self, *args, **kwargs):
@@ -2721,11 +2759,13 @@ class html(ABCHTMLGenerator):
         return isopen
 
     def end_foldable_container(self):
+        # type: () -> None
         if self.folding_indent != "nform":
             self.close_ul()
             self.close_div()
 
     def foldable_container_is_open(self, treename, id_, isopen):
+        # type: (str, str, bool) -> bool
         # try to get persisted state of tree
         tree_state = config.user.get_tree_states(treename)
 
@@ -2738,12 +2778,14 @@ class html(ABCHTMLGenerator):
     #
 
     def begin_context_buttons(self):
+        # type: () -> None
         if not self._context_buttons_open:
             self.context_button_hidden = False
             self.open_div(class_="contextlinks")
             self._context_buttons_open = True
 
     def end_context_buttons(self):
+        # type: () -> None
         if self._context_buttons_open:
             if self.context_button_hidden:
                 self.open_div(title=_("Show all buttons"),
@@ -2825,6 +2867,7 @@ class html(ABCHTMLGenerator):
     #
 
     def begin_floating_options(self, div_id, is_open):
+        # type: (str, bool) -> None
         self.open_div(id_=div_id,
                       class_=["view_form"],
                       style="display: none" if not is_open else None)
@@ -2833,6 +2876,7 @@ class html(ABCHTMLGenerator):
         self.open_td()
 
     def end_floating_options(self, reset_url=None):
+        # type: (str) -> None
         self.close_td()
         self.close_tr()
         self.open_tr()
@@ -2866,6 +2910,7 @@ class html(ABCHTMLGenerator):
         self.write_html(self.render_icon(icon_name=icon_name, title=title, **kwargs))
 
     def empty_icon(self):
+        # type: () -> None
         self.write_html(self.render_icon("trans"))
 
     def render_icon(self, icon_name, title=None, middle=True, id_=None, cssclass=None, class_=None):
@@ -3008,6 +3053,7 @@ class html(ABCHTMLGenerator):
     #
 
     def _dump_get_vars(self):
+        # type: () -> None
         self.begin_foldable_container("html", "debug_vars", True,
                                       _("GET/POST variables of this page"))
         self.debug_vars(hide_with_mouse=False)
@@ -3028,6 +3074,7 @@ class html(ABCHTMLGenerator):
     # TODO: Rename the status_icons because they are not only showing states. There are also actions.
     # Something like footer icons or similar seems to be better
     def _write_status_icons(self):
+        # type: () -> None
         self.icon_button(self.makeuri([]),
                          _("URL to this frame"),
                          "frameurl",

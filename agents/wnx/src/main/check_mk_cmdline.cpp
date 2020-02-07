@@ -18,37 +18,37 @@
 namespace cma::cmdline {
 
 static std::pair<std::filesystem::path, std::filesystem::path>
-GetFilenamesFromArg(int argc, const wchar_t **argv) {
+GetFilenamesFromArg(int argc, const wchar_t** argv) {
     if (argc == 3) return {argv[2], argv[2]};
     if (argc > 3) return {argv[2], argv[3]};
     return {};
 }
 
-using FileProcessorFunc = std::function<bool(const std::filesystem::path &,
-                                             const std::filesystem::path &)>;
+using FileProcessorFunc = std::function<bool(const std::filesystem::path&,
+                                             const std::filesystem::path&)>;
 
-static auto encode_l = [](const std::filesystem::path file_in,
-                          const std::filesystem::path file_out) -> bool {
+static auto encode_l = [](const std::filesystem::path& file_in,
+                          const std::filesystem::path& file_out) -> bool {
     using namespace cma;
     return encrypt::OnFile::Encode(encrypt::kObfuscateWord, file_in, file_out);
 };
 
-auto decode_cpp_l = [](const std::filesystem::path file_in,
-                       const std::filesystem::path file_out) -> bool {
+auto decode_cpp_l = [](const std::filesystem::path& file_in,
+                       const std::filesystem::path& file_out) -> bool {
     using namespace cma;
     return encrypt::OnFile::Decode(encrypt::kObfuscateWord, file_in, file_out,
                                    encrypt::SourceType::cpp);
 };
 
-auto decode_python_l = [](const std::filesystem::path file_in,
-                          const std::filesystem::path file_out) -> bool {
+auto decode_python_l = [](const std::filesystem::path& file_in,
+                          const std::filesystem::path& file_out) -> bool {
     using namespace cma;
     return encrypt::OnFile::Decode(encrypt::kObfuscateWord, file_in, file_out,
                                    encrypt::SourceType::python);
 };
 
 std::tuple<FileProcessorFunc, std::string> SelectFuncAndDescription(
-    const std::wstring &cmd) {
+    const std::wstring& cmd) {
     if (cmd == kHiddenCommandEncrypt) return {encode_l, "encrypting"};
     if (cmd == kHiddenCommandDecryptCpp)
         return {decode_cpp_l, "decrypting[c++]"};
@@ -58,7 +58,7 @@ std::tuple<FileProcessorFunc, std::string> SelectFuncAndDescription(
     return {};
 }
 
-std::tuple<bool, int> HiddenCommandProcessor(int argc, const wchar_t **argv) {
+std::tuple<bool, int> HiddenCommandProcessor(int argc, const wchar_t** argv) {
     if (argc <= 1) return {false, 0};
 
     std::wstring cmd = argv[1];

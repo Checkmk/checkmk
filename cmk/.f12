@@ -41,6 +41,7 @@ PYTHON2_PATHS=(
     special_agents/agent_storeonce.py
     special_agents/agent_tinkerforge.py
     special_agents/agent_ucs_bladecenter.py
+    special_agents/agent_vnx_quotas.py
     special_agents/agent_zerto.py
     special_agents/__init__.py
     special_agents/utils.py

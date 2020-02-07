@@ -1,0 +1,97 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Testing script, that can be used as a datasource program
+# and creates a number of random services with random states.
+# Call it with the hostname as the first argument.
+
+from __future__ import print_function
+import os
+import sys
+import time
+import ast
+import random
+
+
+def main(sys_argv=None):
+    if sys_argv is None:
+        sys_argv = sys.argv[1:]
+
+    try:
+        hostname = sys_argv[1]
+    except IndexError:
+        hostname = "unknown"
+
+    state_dir = os.getenv("OMD_ROOT", "") + "/tmp/check_mk/ds_random/"
+    if not os.path.exists(state_dir):
+        os.makedirs(state_dir)
+    state_file = state_dir + hostname
+    try:
+        history = ast.literal_eval(open(state_file).read())
+    except (OSError, SyntaxError, IOError):
+        history = {}
+
+    services = [
+        "Gnarz Usage",
+        "Fnorz Utilization",
+        "Average Grumblage",
+        "Snarks 011",
+        "Snarks 012",
+        "Snarks 022",
+        "Gnogomatic Turbler",
+        "Gnogomatic Murbler",
+        "Gnogomatic Garglebox",
+    ]
+
+    print('<<<local:sep(0)>>>')
+    state_names = ["OK", "WARN", "CRIT", "UNKNOWN"]
+    state_texts = [
+        "Everying is OK now",
+        "The freibl might go slisk",
+        "Bad luck, everything is broken",
+        "Something really weird happened",
+    ]
+
+    now = time.time()
+    for service in services:
+        last_change, last_state = history.get(service, (now - 600, 0))
+        p_state_change = ((now - last_change) / 60.0) + 1
+        if last_state == 0:
+            p_state_change += 10
+        if int(random.random() * p_state_change) == 0:
+            if last_state != 0 and random.random() < 0.7:
+                new_state = 0
+            else:
+                new_state = 1 + int(random.random() * 3)
+            if new_state != last_state:
+                history[service] = (now, new_state)
+        else:
+            new_state = last_state
+        print(
+            "%d %s - %s - %s" %
+            (new_state, service.replace(" ", "_"), state_names[new_state], state_texts[new_state]))
+
+    open(state_file, "w").write("%r\n" % history)

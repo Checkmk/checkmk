@@ -29,6 +29,7 @@ PYTHON2_PATHS=(
     special_agents/agent_fritzbox.py
     special_agents/agent_hivemanager.py
     special_agents/agent_hivemanager_ng.py
+    special_agents/agent_hp_msa.py
     special_agents/agent_ibmsvc.py
     special_agents/agent_innovaphone.py
     special_agents/agent_ipmi_sensors.py

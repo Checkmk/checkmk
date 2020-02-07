@@ -114,10 +114,11 @@ from cmk.gui.http import Request, Response  # pylint: disable=unused-import
 from cmk.gui.type_defs import VisualContext  # pylint: disable=unused-import
 
 # TODO: Cleanup this mess.
-CSSSpec = Union[None, List[str], str]
+CSSSpec = Union[None, str, List[str], List[Union[str, None]], str]
 HTMLTagName = str
+HTMLTagValue = Union[None, str, Text]
 HTMLTagContent = Optional[Union[str, Text, HTML]]
-HTMLTagAttributeValue = Union[None, CSSSpec, str, Text, List[Union[str, Text]]]
+HTMLTagAttributeValue = Union[None, CSSSpec, HTMLTagValue, List[Union[str, Text]]]
 HTMLTagAttributes = Dict[str, HTMLTagAttributeValue]
 HTMLMessageInput = Union[HTML, Text]
 
@@ -235,7 +236,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
             if k in attrs:
                 cls_spec = cast(CSSSpec, attrs.pop(k))
                 if isinstance(cls_spec, list):
-                    css.extend(cls_spec)
+                    css.extend([c for c in cls_spec if c is not None])
                 elif cls_spec is not None:
                     css.append(cls_spec)
         return css
@@ -2115,12 +2116,14 @@ class html(ABCHTMLGenerator):
                     self.hidden_field(var, self.get_unicode_input(var))
 
     def hidden_field(self, var, value, id_=None, add_var=False, class_=None):
+        # type: (str, HTMLTagValue, str, bool, CSSSpec) -> None
         self.write_html(
             self.render_hidden_field(var=var, value=value, id_=id_, add_var=add_var, class_=class_))
 
     def render_hidden_field(self, var, value, id_=None, add_var=False, class_=None):
+        # type: (str, HTMLTagValue, str, bool, CSSSpec) -> HTML
         if value is None:
-            return ""
+            return HTML("")
         if add_var:
             self.add_form_var(var)
         return self.render_input(
@@ -2166,9 +2169,11 @@ class html(ABCHTMLGenerator):
     #
 
     def button(self, varname, title, cssclass=None, style=None, help_=None):
+        # type: (str, Text, Optional[str], Optional[str], Optional[Text]) -> None
         self.write_html(self.render_button(varname, title, cssclass, style, help_=help_))
 
     def render_button(self, varname, title, cssclass=None, style=None, help_=None):
+        # type: (str, Text, Optional[str], Optional[str], Optional[Text]) -> HTML
         self.add_form_var(varname)
         return self.render_input(name=varname,
                                  type_="submit",
@@ -2187,6 +2192,7 @@ class html(ABCHTMLGenerator):
                    title=None,
                    disabled=None,
                    class_=None):
+        # type: (str, Text, bool, Optional[str], Optional[str], Optional[Text], Optional[str], CSSSpec) -> None
         if add_transid:
             href += "&_transid=%s" % self.transaction_manager.get()
 
@@ -2194,7 +2200,7 @@ class html(ABCHTMLGenerator):
             obj_id = utils.gen_id()
 
         # Same API as other elements: class_ can be a list or string/None
-        css_classes = ["button", "buttonlink"]
+        css_classes = ["button", "buttonlink"]  # type: List[Union[str, None]]
         if class_:
             if not isinstance(class_, list):
                 css_classes.append(class_)
@@ -2221,6 +2227,7 @@ class html(ABCHTMLGenerator):
                       disabled=False,
                       onclick=None,
                       is_context_button=True):
+        # type: (str, bool, str, Text, bool, bool, Optional[str], bool) -> None
         if is_context_button:
             self.begin_context_buttons()  # TODO: Check all calls. If done before, remove this!
 
@@ -2263,31 +2270,32 @@ class html(ABCHTMLGenerator):
                  text,
                  onclick,
                  style='',
-                 cssclass="",
+                 cssclass=None,
                  title="",
                  disabled=False,
                  class_=None):
-        # Same API as other elements: class_ can be a list or string/None
-        classes = []
-        if class_:
-            classes = class_ if isinstance(class_, list) else [class_]
+        # type: (str, Text, str, str, Optional[str], Text, bool, CSSSpec) -> None
+        if not isinstance(class_, list):
+            class_ = [class_]
+        # TODO: Investigate why mypy complains about the latest argument
+        classes = ["button", cssclass] + cast(List[Optional[str]], class_)
 
         if disabled:
-            classes.append("disabled")
-            disabled = ""
+            class_.append("disabled")
+            disabled_arg = ""  # type: Optional[str]
         else:
-            disabled = None
+            disabled_arg = None
 
         # autocomplete="off": Is needed for firefox not to set "disabled="disabled" during page reload
         # when it has been set on a page via javascript before. Needed for WATO activate changes page.
         self.input(name=varname,
                    type_="button",
                    id_=varname,
-                   class_=["button", cssclass] + classes,
+                   class_=classes,
                    autocomplete="off",
                    onclick=onclick,
                    style=style,
-                   disabled=disabled,
+                   disabled=disabled_arg,
                    value=text,
                    title=title)
 

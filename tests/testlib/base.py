@@ -110,12 +110,14 @@ class Scenario(object):  # pylint: disable=useless-object-inheritance
         self.config_cache.initialize()
 
         if self._autochecks:
+            # TODO: This monkeypatching is horrible, it totally breaks any abstraction!
             monkeypatch.setattr(self.config_cache._autochecks_manager,
                                 "_raw_autochecks",
                                 dict(self._autochecks.items()),
                                 raising=False)
 
-            monkeypatch.setattr(autochecks.AutochecksManager, "_read_raw_autochecks_uncached",
-                                lambda self, hostname: self._raw_autochecks.get(hostname, []))
+            monkeypatch.setattr(
+                autochecks.AutochecksManager, "_read_raw_autochecks_uncached",
+                lambda self, hostname, service_description: self._raw_autochecks.get(hostname, []))
 
         return self.config_cache

@@ -2995,9 +2995,10 @@ class HostConfig(object):
         if self.is_cluster:
             if self.nodes:
                 set_autochecks_of_cluster(self.nodes, self.hostname, new_items,
-                                          self._config_cache.host_of_clustered_service)
+                                          self._config_cache.host_of_clustered_service,
+                                          service_description)
         else:
-            set_autochecks_of_real_hosts(self.hostname, new_items)
+            set_autochecks_of_real_hosts(self.hostname, new_items, service_description)
 
     def remove_autochecks(self):
         # type: () -> int
@@ -3009,7 +3010,8 @@ class HostConfig(object):
         from cmk.base.autochecks import remove_autochecks_of_host
         hostnames = self.nodes if self.nodes else [self.hostname]
         return sum(
-            remove_autochecks_of_host(hostname, self._config_cache.host_of_clustered_service)
+            remove_autochecks_of_host(hostname, self._config_cache.host_of_clustered_service,
+                                      service_description)  #
             for hostname in hostnames)
 
 
@@ -3113,7 +3115,8 @@ class ConfigCache(object):
 
     def _discovered_labels_of_service(self, hostname, service_desc):
         # type: (HostName, ServiceName) -> Labels
-        return self._autochecks_manager.discovered_labels_of(hostname, service_desc).to_dict()
+        return self._autochecks_manager.discovered_labels_of(hostname, service_desc,
+                                                             service_description).to_dict()
 
     def get_tag_to_group_map(self):
         # type: () -> TagGroups
@@ -3435,7 +3438,8 @@ class ConfigCache(object):
 
     def get_autochecks_of(self, hostname):
         # type: (HostName) -> List[cmk.base.check_utils.Service]
-        return self._autochecks_manager.get_autochecks_of(hostname, compute_check_parameters)
+        return self._autochecks_manager.get_autochecks_of(hostname, compute_check_parameters,
+                                                          service_description)
 
     def section_name_of(self, section):
         # type: (CheckPluginName) -> SectionName

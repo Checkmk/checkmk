@@ -6,15 +6,16 @@ Most contributions to Checkmk are small bug-fixes, enhancements of existing
 features, or completely new plugins. The guidelines below address these types
 of contributions.
 
-If you would like to make a major change to Checkmk, please contact us first.
-Let's talk about what you want to do. Somebody else may already be working on
+If you would like to make a major change to Checkmk, please create a new topic under the [Product Ideas category](https://forum.checkmk.com/c/product-ideas/19) in the Checkmk Forum so we can talk about what you want to do. Somebody else may already be working on
 it, or there are certain topics you should know before implementing the change.
 
 We love to work with community contributors and want to make sure contributions
 and time investments are as effective as possible. That's why it is important
 to us to discuss major changes you might be planning in order to jointly agree
 on the best solution approach to the problem at hand. This preempts potential
-issues during the code reviews of pull requests.
+issues during the code reviews of pull requests. Code reviews can take time and we're trying our best to address your PRs as soon as we can.
+
+Unfortunately, it can also happen that we cannot accommodate what you want to work on due to the set priorities. For example, currently we might be unable to review changes and suggestions that will affect the core functionalities of Checkmk due to other major changes in the codebase.
 
 ## Contributing code
 
@@ -634,7 +635,7 @@ localization of Checkmk for all users. We are open to support other languages
 when the localization is in a good state and nearly complete.
 
 If you are interested: We can use [POEditor.com](https://poeditor.com) for
-upstream localizations. Please contact us if you are interested.
+upstream localizations. Please contact us at info@checkmk.com if you are interested.
 
 ### Translation of technical terms
 

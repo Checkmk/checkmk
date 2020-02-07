@@ -142,6 +142,8 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise agents/plugins/cmk-update-agent
 	$(MAKE) -C enterprise agents/plugins/cmk-update-agent-32
 	$(MAKE) -C enterprise agents/windows/plugins/cmk-update-agent.exe
+	# we obfuscate windows python executable to prevent false postives from antivirus
+	$(PIPENV) run python cmk/utils/obfuscation.py encrypt agents/windows/plugins/cmk-update-agent.exe
 endif
 	set -e -o pipefail ; EXCLUDES= ; \
 	if [ -d .git ]; then \

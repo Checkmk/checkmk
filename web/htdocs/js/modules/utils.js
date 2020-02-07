@@ -224,11 +224,11 @@ export function get_url_param(name, url) {
  * - Can add/overwrite parameters
  * - Removes _* parameters
  */
-export function makeuri(addvars, url) {
+export function makeuri(addvars, url, filename) {
     url = (typeof(url) === "undefined") ? window.location.href : url;
 
     var tmp = url.split("?");
-    var base = tmp[0];
+    var base = (typeof(filename) === "undefined") ? tmp[0] : filename;
     if(tmp.length > 1) {
         // Remove maybe existing anchors
         tmp = tmp[1].split("#");
@@ -258,6 +258,17 @@ export function makeuri(addvars, url) {
     }
 
     return base + "?" + params.join("&");
+}
+
+export function makeuri_contextless(vars, filename)
+{
+    var params = [];
+    // Add new params
+    for (var key in vars) {
+        params.push(encodeURIComponent(key) + "=" + encodeURIComponent(vars[key]));
+    }
+
+    return filename + "?" + params.join("&");
 }
 
 // Returns timestamp in seconds incl. subseconds as decimal

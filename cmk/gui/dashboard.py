@@ -1257,7 +1257,7 @@ def page_edit_dashlet():
     html.header(title)
 
     html.begin_context_buttons()
-    back_url = html.get_url_input('back', 'dashboard.py?name=%s&edit=1' % board)
+    back_url = html.get_url_input('back')
     next_url = html.get_url_input('next', back_url)
     html.context_button(_('Back'), back_url, 'back')
     html.context_button(_('All Dashboards'), 'edit_dashboards.py', 'dashboard')
@@ -1423,9 +1423,7 @@ def page_clone_dashlet():
     dashboard['mtime'] = int(time.time())
     save_all_dashboards()
 
-    back_url = html.get_url_input(
-        'back', html.makeuri_contextless([("name", board), ("edit", "1")], filename="dashboard.py"))
-    raise HTTPRedirect(back_url)
+    raise HTTPRedirect(html.get_url_input('back'))
 
 
 @cmk.gui.pages.register("delete_dashlet")
@@ -1453,7 +1451,7 @@ def page_delete_dashlet():
     html.header(_('Confirm Dashlet Deletion'))
 
     html.begin_context_buttons()
-    back_url = html.get_url_input('back', 'dashboard.py?name=%s&edit=1' % board)
+    back_url = html.get_url_input('back')
     html.context_button(_('Back'), back_url, 'back')
     html.end_context_buttons()
 

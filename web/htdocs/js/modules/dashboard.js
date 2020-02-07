@@ -628,7 +628,12 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
         edit_button.title = "Edit properties of this dashlet";
         edit_button.onclick = function(dashlet_id, board_name) {
             return function() {
-                location.href = "edit_dashlet.py?name=" + board_name + "&id=" + dashlet_id;
+                var back_url = utils.makeuri({}, window.location.href, "dashboard.py");
+                location.href = utils.makeuri_contextless({
+                    "name": board_name,
+                    "id": dashlet_id,
+                    "back": back_url
+                }, "edit_dashlet.py");
             };
         }(nr, dashboard_properties.dashboard_name);
         controls.appendChild(edit_button);
@@ -639,7 +644,12 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
         clone.title = "Clone this dashlet";
         clone.onclick = function(dashlet_id, board_name) {
             return function() {
-                location.href = "clone_dashlet.py?name=" + board_name + "&id=" + dashlet_id;
+                var back_url = utils.makeuri({}, window.location.href, "dashboard.py");
+                location.href = utils.makeuri_contextless({
+                    "id": dashlet_id,
+                    "name": board_name,
+                    "back": back_url
+                }, "clone_dashlet.py");
             };
         }(nr, dashboard_properties.dashboard_name);
         controls.appendChild(clone);
@@ -650,7 +660,12 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
         del.title = "Delete this dashlet";
         del.onclick = function(dashlet_id, board_name) {
             return function() {
-                location.href = "delete_dashlet.py?name=" + board_name + "&id=" + dashlet_id;
+                var back_url = utils.makeuri({}, window.location.href, "dashboard.py");
+                location.href = utils.makeuri_contextless({
+                    "name": board_name,
+                    "id": dashlet_id,
+                    "back": back_url
+                }, "delete_dashlet.py");
             };
         }(nr, dashboard_properties.dashboard_name);
         controls.appendChild(del);

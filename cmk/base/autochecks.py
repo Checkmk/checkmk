@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -55,7 +55,7 @@ GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
 HostOfClusteredService = Callable[[HostName, Text], str]
 
 
-class AutochecksManager(object):
+class AutochecksManager(object):  # pylint: disable=useless-object-inheritance
     """Read autochecks from the configuration
 
     Autochecks of a host are once read and cached for the whole lifetime of the
@@ -129,9 +129,9 @@ class AutochecksManager(object):
         check_variables = get_check_variables()
         try:
             cmk.base.console.vverbose("Loading autochecks from %s\n", path)
-            autochecks_raw = eval(
-                open(str(path)).read().decode("utf-8"), check_variables,
-                check_variables)  # type: List[Dict]
+            with path.open(encoding="utf-8") as f:
+                autochecks_raw = eval(f.read(), check_variables,
+                                      check_variables)  # type: List[Dict]
         except SyntaxError as e:
             cmk.base.console.verbose("Syntax error in file %s: %s\n", path, e, stream=sys.stderr)
             if cmk.utils.debug.enabled():
@@ -246,7 +246,8 @@ def _parse_autocheck_entry(hostname, entry, service_description):
     item = None  # type: Item
     if isinstance(ast_item, ast.Str):
         item = ast_item.s
-    elif isinstance(ast_item, ast.Num):
+    elif isinstance(ast_item, ast.Num) and isinstance(ast_item.n, (int, float)):
+        # NOTE: We exclude complex here. :-)
         item = "%s" % int(ast_item.n)
     elif isinstance(ast_item, ast.Name) and ast_item.id == "None":
         item = None

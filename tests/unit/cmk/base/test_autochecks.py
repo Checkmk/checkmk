@@ -4,7 +4,8 @@ from pathlib2 import Path
 import six
 
 from testlib import CheckManager
-from testlib.base import Scenario
+# TODO: Why is the suppression necessary?
+from testlib.base import Scenario  # type: ignore[import]
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
@@ -108,10 +109,10 @@ def test_manager_get_autochecks_of(test_config, autochecks_content, expected_res
 
     if expected_result is MKGeneralException:
         with pytest.raises(MKGeneralException):
-            manager.get_autochecks_of("host")
+            manager.get_autochecks_of("host", config.compute_check_parameters)
         return
 
-    result = manager.get_autochecks_of("host")
+    result = manager.get_autochecks_of("host", config.compute_check_parameters)
     assert result == expected_result
 
     # Check that the ConfigCache method also returns the correct data

@@ -68,22 +68,23 @@ class AutochecksManager(object):
         self._discovered_labels_of = {}  # type: Dict[HostName, Dict[Text, DiscoveredServiceLabels]]
         self._raw_autochecks_cache = {}  # type: Dict[HostName, List[Service]]
 
-    def get_autochecks_of(self, hostname):
-        # type: (str) -> List[Service]
+    def get_autochecks_of(self, hostname, compute_check_parameters):
+        # type: (str, Callable[[HostName, CheckPluginName, Item, CheckParameters], Optional[CheckParameters]]) -> List[Service]
         if hostname not in self._autochecks:
-            self._autochecks[hostname] = self._get_autochecks_of_uncached(hostname)
+            self._autochecks[hostname] = self._get_autochecks_of_uncached(
+                hostname, compute_check_parameters)
         return self._autochecks[hostname]
 
-    def _get_autochecks_of_uncached(self, hostname):
-        # type: (HostName) -> List[Service]
+    def _get_autochecks_of_uncached(self, hostname, compute_check_parameters):
+        # type: (HostName, Callable[[HostName, CheckPluginName, Item, CheckParameters], Optional[CheckParameters]]) -> List[Service]
         """Read automatically discovered checks of one host"""
         return [
             Service(
                 check_plugin_name=service.check_plugin_name,
                 item=service.item,
                 description=service.description,
-                parameters=config.compute_check_parameters(hostname, service.check_plugin_name,
-                                                           service.item, service.parameters),
+                parameters=compute_check_parameters(hostname, service.check_plugin_name,
+                                                    service.item, service.parameters),
                 service_labels=service.service_labels,
             ) for service in self._read_raw_autochecks(hostname)
         ]

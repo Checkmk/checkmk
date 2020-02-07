@@ -3435,7 +3435,7 @@ class ConfigCache(object):
 
     def get_autochecks_of(self, hostname):
         # type: (HostName) -> List[cmk.base.check_utils.Service]
-        return self._autochecks_manager.get_autochecks_of(hostname)
+        return self._autochecks_manager.get_autochecks_of(hostname, compute_check_parameters)
 
     def section_name_of(self, section):
         # type: (CheckPluginName) -> SectionName

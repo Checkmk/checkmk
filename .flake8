@@ -1,0 +1,33 @@
+[flake8]
+# In .style.yapf and .pylintrc we use 100, but in some cases this isn't enforced.
+max-line-length=200
+ignore=
+    # Incompatible with YAPF:
+    # closing bracket does not match visual indentation
+    E124,
+    # continuation line with same indent as next logical line
+    E125,
+    # Too many manual line breaks via \ currently to be usable:
+    # continuation line over-indented for hanging indent
+    E126,
+    # Too many manual line breaks via \ currently to be usable:
+    # continuation line over-indented for visual indent
+    E127,
+    # Incompatible with the vim folding markers:
+    # block comment should start with '# '
+    E265,
+    # Incompatible with our re-exports:
+    # 'FOO.*' imported but unused
+    F401,
+    # Incompatible with our conditional imports:
+    # module level import not at top of file
+    E402,
+    # Incompatible with our re-exports:
+    # 'from FOO import *' used; unable to detect undefined names
+    F403,
+    # Incompatible with our exec/eval magic:
+    # 'FOO' may be undefined, or defined from star imports
+    F405,
+    # Incompatible with YAPF:
+    # line break after binary operator
+    W504,

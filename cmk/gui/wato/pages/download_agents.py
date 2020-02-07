@@ -79,6 +79,7 @@ class ModeDownloadAgents(WatoMode):
             '/cfg_examples/systemd': _('Linux Agent - Example configuration using with systemd'),
             '/windows': _('Windows Agent'),
             '/windows/plugins': _('Windows Agent - Plugins'),
+            '/windows/plugins/decoded': _('Windows Agent - Plugins'),
             '/windows/mrpe': _('Windows Agent - MRPE Scripts'),
             '/windows/cfg_examples': _('Windows Agent - Example Configurations'),
             '/windows/ohm': _('Windows Agent - OpenHardwareMonitor (headless)'),
@@ -106,8 +107,13 @@ class ModeDownloadAgents(WatoMode):
                         file_titles.update(self._read_agent_contents_file(root))
 
                     path = root + '/' + filename
-                    if path not in packed and 'deprecated' not in path:
-                        file_paths.append(path)
+                    if path not in packed and 'deprecated' not in path and 'decoded' not in path:
+                        # check that we have decoded file instead of the encoded in the root
+                        decoded_candidate_path = root + '/decoded/' + filename
+                        if os.path.exists(decoded_candidate_path):
+                            file_paths.append(decoded_candidate_path)
+                        else:
+                            file_paths.append(path)
 
                 other_sections.append((title, file_paths))
 

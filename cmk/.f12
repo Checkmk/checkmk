@@ -29,6 +29,7 @@ PYTHON2_PATHS=(
     special_agents/agent_ibmsvc.py
     special_agents/agent_innovaphone.py
     special_agents/agent_ipmi_sensors.py
+    special_agents/agent_jolokia.py
     special_agents/agent_netapp.py
     special_agents/agent_random.py
     special_agents/agent_ruckus_spot.py

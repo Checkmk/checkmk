@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -24,9 +24,52 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import print_function
 import sys
+import json
+import base64
+import requests
 
-from cmk.special_agents.agent_hivemanager import main
 
-if __name__ == '__main__':
-    sys.exit(main())
+def main(sys_argv=None):
+    if sys_argv is None:
+        sys_argv = sys.argv[1:]
+
+    try:
+        ip = sys_argv[0]
+        user = sys_argv[1]
+        password = sys_argv[2]
+    except IndexError:
+        sys.stderr.write("Usage: agent_hivemanager <IP> <USERNAME> <PASSWORD>\n")
+        return 2
+
+    base64string = base64.encodestring('%s:%s' % (user, password)).replace('\n', '')
+    headers = {"Authorization": "Basic %s" % base64string, "Content-Type": "application/json"}
+    try:
+        data = requests.get("https://%s/hm/api/v1/devices" % ip, headers=headers).text
+    except Exception as e:
+        sys.stderr.write("Connection error: %s" % e)
+        return 2
+
+    informations = [
+        'hostName',
+        'clients',
+        'alarm',
+        'connection',
+        'upTime',
+        'eth0LLDPPort',
+        'eth0LLDPSysName',
+        'hive',
+        'hiveOS',
+        'hwmodel'
+        'serialNumber',
+        'nodeId',
+        'location',
+        'networkPolicy',
+    ]
+
+    print("<<<hivemanager_devices:sep(124)>>>")
+    for line in json.loads(data):
+        if line['upTime'] == '':
+            line['upTime'] = "down"
+        print("|".join(map(str, ["%s::%s" % (x, y) for x, y in line.items() if x in informations])))

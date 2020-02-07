@@ -70,7 +70,7 @@ case "$1" in
         elif [ "$PROGRAM" = "lib/cmc/icmpreceiver" ]; then
             CAP="cap_net_raw+ep"
         elif [ "$PROGRAM" = "bin/mkeventd_open514" ]; then
-	    CAP="cap_net_bind_service+ep"
+        CAP="cap_net_bind_service+ep"
         fi
 
         # On some platforms the linux capabilities don't work as expected for different reasons.
@@ -113,6 +113,36 @@ case "$1" in
     update-alternatives --set omd /omd/versions/###OMD_VERSION###
 
     DEFAULT=/etc/default/omd
+
+    # Decoding files using omd python and omd script
+    # We have obfuscated pyinstaller binaries to avoid false positives
+    # from anti-virus software. On this stage we de-obfuscate those binaries.
+
+    # names
+    CMK_DECODED_DIR_NAME=decoded
+    CMK_UPDATE_EXE_NAME=cmk-update-agent.exe
+    DECODING_SCRIPT_NAME=obfuscation.py
+
+    # folder
+    OMD_UTILS_DIR=$BASE_PATH/lib/python/cmk/utils
+    CMK_PLUGINS_DIR=$BASE_PATH/share/check_mk/agents/windows/plugins
+    CMK_DECODED_DIR=$CMK_PLUGINS_DIR/$CMK_DECODED_DIR_NAME
+
+    # files
+    DECODING_SCRIPT_PATH=$OMD_UTILS_DIR/$DECODING_SCRIPT_NAME
+    CMK_ENCODED_EXE_PATH=$CMK_PLUGINS_DIR/$CMK_UPDATE_EXE_NAME
+    CMK_DECODED_EXE_PATH=$CMK_DECODED_DIR/$CMK_UPDATE_EXE_NAME
+
+    # python executable
+    CMK_PYTHON=$BASE_PATH/bin/python
+
+    # cmk-update-agent.exe:
+    if test -f CMK_ENCODED_EXE_PATH & test -f $DECODING_SCRIPT_PATH ; then
+        echo "Decoding '$CMK_ENCODED_EXE_PATH' using '$DECODING_SCRIPT_PATH' to '$CMK_DECODED_EXE_PATH'"
+        mkdir -p $CMK_DECODED_DIR
+        echo "Calling internal python '$CMK_PYTHON'"
+        $CMK_PYTHON $DECODING_SCRIPT_PATH decrypt $CMK_ENCODED_EXE_PATH $CMK_DECODED_EXE_PATH
+    fi
 
     # Detect whether or not manage startup through systemd or SysV
     if test -d /usr/lib/systemd && dpkg -S /sbin/init 2>/dev/null | grep ^systemd >/dev/null; then

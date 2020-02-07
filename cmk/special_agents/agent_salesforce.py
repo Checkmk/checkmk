@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -25,8 +25,14 @@
 # Boston, MA 02110-1301 USA.
 
 import sys
+import cmk.special_agents.utils as utils
 
-from cmk.special_agents.agent_salesforce import main
 
-if __name__ == '__main__':
-    sys.exit(main())
+def main():
+    agent = utils.AgentJSON("salesforce", "Salesforce")
+    content = agent.get_content()
+    for section, section_content in content.iteritems():
+        sys.stdout.write("<<<%s>>>\n" % section)
+        for entry in section_content:
+            sys.stdout.write("%s\n" % "".join(entry))
+    sys.stdout.write("\n")

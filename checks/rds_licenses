@@ -38,6 +38,7 @@
 # Insert any new keys here
 # https://msdn.microsoft.com/en-us/library/aa383803%28v=vs.85%29.aspx#properties
 rds_licenses_product_versionid_map = {
+    "6": "Windows Server 2019",
     "5": "Windows Server 2016",
     "4": "Windows Server 2012",
     "3": "Windows Server 2008 R2",
@@ -63,19 +64,11 @@ def parse_rds_licenses(info):
     return parsed
 
 
-def inventory_rds_licenses(parsed):
-    for key in parsed:
-        yield key, None
-
-
-def check_rds_licenses(item, params, parsed):
-    license_pack = parsed.get(item)
-    if not license_pack:
-        return
-
+@get_parsed_item_data
+def check_rds_licenses(item, params, data):
     total = 0
     used = 0
-    for pack in license_pack:
+    for pack in data:
         pack_total = int(pack.get("TotalLicenses"))
         pack_avail = int(pack.get("AvailableLicenses"))
         total += pack_total
@@ -86,7 +79,7 @@ def check_rds_licenses(item, params, parsed):
 
 check_info['rds_licenses'] = {
     'parse_function': parse_rds_licenses,
-    'inventory_function': inventory_rds_licenses,
+    'inventory_function': discover(),
     'check_function': check_rds_licenses,
     'service_description': "RDS Licenses %s",
     'group': "rds_licenses",

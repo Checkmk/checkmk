@@ -1397,8 +1397,8 @@ class TextAreaUnicode(TextUnicode):
                        value,
                        rows=rows,
                        cols=self._cols,
-                       attrs=attrs,
-                       try_max_width=self._try_max_width)
+                       try_max_width=self._try_max_width,
+                       **attrs)
 
     # Overridded because we do not want to strip() here and remove '\r'
     def from_html_vars(self, varprefix):
@@ -2970,19 +2970,18 @@ class DualListChoice(ListChoice):
                 onchange_func = 'cmk.valuespecs.duallist_enlarge(%s, %s);' % (json.dumps(suffix),
                                                                               json.dumps(varprefix))
 
-            attrs = {
-                'multiple': 'multiple',
-                'style': 'height:auto' if self._autoheight else "height: %dpx" % (self._rows * 16),
-                'ondblclick': select_func if not self._instant_add else '',
-            }
-
             html.open_td()
-            attrs["onchange"] = onchange_func
-            html.multi_select("%s_%s" % (varprefix, suffix),
-                              choices,
-                              deflt='',
-                              ordered=self._custom_order,
-                              **attrs)
+            html.dropdown(
+                "%s_%s" % (varprefix, suffix),
+                choices,
+                deflt='',
+                ordered=self._custom_order,
+                multiple="multiple",
+                style='height:auto' if self._autoheight else "height: %dpx" % (self._rows * 16),
+                ondblclick=select_func if not self._instant_add else '',
+                onchange=onchange_func,
+            )
+
             html.close_td()
         html.close_tr()
 

@@ -55,6 +55,8 @@
 # - Split HTML handling (page generating) code and generic request
 #   handling (vars, cookies, ...) up into separate classes to make
 #   the different tasks clearer. For ABCHTMLGenerator() or similar.
+#
+# - Unify CSS classes attribute to "class_"
 
 import sys
 import time
@@ -69,6 +71,7 @@ from contextlib import contextmanager
 # suppress missing import error from mypy
 from typing import (  # pylint: disable=unused-import
     Union, Text, Optional, List, Dict, Tuple, Any, Iterable, Iterator, cast, Mapping, Set,
+    TYPE_CHECKING,
 )
 
 import six
@@ -113,6 +116,9 @@ from cmk.gui.i18n import _
 from cmk.gui.http import Request, Response  # pylint: disable=unused-import
 from cmk.gui.type_defs import VisualContext  # pylint: disable=unused-import
 
+if TYPE_CHECKING:
+    from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
+
 # TODO: Cleanup this mess.
 CSSSpec = Union[None, str, List[str], List[Union[str, None]], str]
 HTMLTagName = str
@@ -121,6 +127,8 @@ HTMLTagContent = Optional[Union[str, Text, HTML]]
 HTMLTagAttributeValue = Union[None, CSSSpec, HTMLTagValue, List[Union[str, Text]]]
 HTMLTagAttributes = Dict[str, HTMLTagAttributeValue]
 HTMLMessageInput = Union[HTML, Text]
+Choices = List[Tuple[Union[None, str, Text], Text]]
+DefaultChoice = Union[str, Text]
 
 #.
 #   .--HTML Generator------------------------------------------------------.
@@ -274,7 +282,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         return HTML(escaping.escape_text(text))
 
     def write_text(self, text):
-        # type: (Text) -> None
+        # type: (Union[Text, HTML]) -> None
         """ Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped. """
         self.write(self.render_text(text))
 
@@ -2341,11 +2349,12 @@ class html(ABCHTMLGenerator):
                    varname,
                    default_value="",
                    cssclass="text",
+                   size=None,
                    label=None,
                    id_=None,
                    submit=None,
                    **args):
-        # type: (str, Text, str, Optional[Text], str, Optional[str], **HTMLTagAttributeValue) -> None
+        # type: (str, Text, str, Optional[Union[str, int]], Optional[Text], str, Optional[str], **HTMLTagAttributeValue) -> None
 
         # Model
         error = self.user_errors.get(varname)
@@ -2358,26 +2367,29 @@ class html(ABCHTMLGenerator):
 
         # View
         style_size = None  # type: Optional[str]
-        size = None  # type: Optional[str]
-        size_arg = args.get("size")
+        field_size = None  # type: Optional[str]
         if args.get("try_max_width"):
             style_size = "width: calc(100% - 10px); "
-            if size_arg is not None:
-                assert isinstance(size_arg, int)
-                cols = size_arg
+            if size is not None:
+                assert isinstance(size, int)
+                cols = size
             else:
                 cols = 16
             style_size += "min-width: %d.8ex; " % cols
 
-        elif size_arg is not None:
-            if size_arg == "max":
+        elif size is not None:
+            if size == "max":
                 style_size = "width: 100%;"
             else:
-                assert isinstance(size_arg, int)
-                size = "%d" % (args["size"] + 1)
-                if not args.get('omit_css_width', False) and "width:" not in args.get(
-                        "style", "") and not self.mobile:
-                    style_size = "width: %d.8ex;" % args["size"]
+                assert isinstance(size, int)
+                field_size = "%d" % (size + 1)
+
+                style_arg = args.get("style", "")
+                assert isinstance(style_arg, str)
+
+                if not args.get('omit_css_width', False) \
+                   and "width:" not in style_arg and not self.mobile:
+                    style_size = "width: %d.8ex;" % size
 
         style_arg = args.get("style")
         if style_arg:
@@ -2396,7 +2408,7 @@ class html(ABCHTMLGenerator):
             "class": cssclass,
             "id": id_,
             "style": style,
-            "size": size,
+            "size": field_size,
             "autocomplete": args.get("autocomplete"),
             "readonly": "true" if args.get("read_only") else None,
             "value": value,
@@ -2452,14 +2464,29 @@ class html(ABCHTMLGenerator):
         )
         self.close_div()
 
-    def password_input(self, varname, default_value="", size=12, **args):
-        self.text_input(varname, default_value, type_="password", size=size, **args)
+    def password_input(self,
+                       varname,
+                       default_value="",
+                       cssclass="text",
+                       size=None,
+                       label=None,
+                       id_=None,
+                       submit=None,
+                       **attrs):
+        # type: (str, Text, str, Optional[Union[str, int]], Optional[Text], str, Optional[str], **HTMLTagAttributeValue) -> None
+        self.text_input(varname,
+                        default_value,
+                        cssclass=cssclass,
+                        size=size,
+                        label=label,
+                        id_=id_,
+                        submit=submit,
+                        type_="password",
+                        **attrs)
 
-    def text_area(self, varname, deflt="", rows=4, cols=30, attrs=None, try_max_width=False):
-        if attrs is None:
-            attrs = {}
+    def text_area(self, varname, deflt="", rows=4, cols=30, try_max_width=False, **attrs):
+        # type: (str, Union[Text, str], int, int, bool, **HTMLTagAttributeValue) -> None
 
-        # Model
         value = self.get_unicode_input(varname, deflt)
         error = self.user_errors.get(varname)
 
@@ -2467,13 +2494,12 @@ class html(ABCHTMLGenerator):
         if error:
             self.set_focus(varname)
 
-        # View
         style = "width: %d.8ex;" % cols
         if try_max_width:
             style += "width: calc(100%% - 10px); min-width: %d.8ex;" % cols
         attrs["style"] = style
-        attrs["rows"] = rows
-        attrs["cols"] = cols
+        attrs["rows"] = str(rows)
+        attrs["cols"] = str(cols)
         attrs["name"] = varname
 
         # Fix handling of leading newlines (https://www.w3.org/TR/html5/syntax.html#element-restrictions)
@@ -2497,12 +2523,20 @@ class html(ABCHTMLGenerator):
 
     # Choices is a list pairs of (key, title). They keys of the choices
     # and the default value must be of type None, str or unicode.
-    def dropdown(self, varname, choices, deflt='', ordered=False, **attrs):
+    def dropdown(self,
+                 varname,
+                 choices,
+                 deflt='',
+                 ordered=False,
+                 label=None,
+                 class_=None,
+                 size=1,
+                 **attrs):
+        # type: (str, Choices, DefaultChoice, bool, Optional[Text], CSSSpec, int, **HTMLTagAttributeValue) -> None
         current = self.get_unicode_input(varname, deflt)
         error = self.user_errors.get(varname)
         if varname:
             self.form_vars.append(varname)
-        attrs.setdefault('size', 1)
 
         chs = choices[:]
         if ordered:
@@ -2516,21 +2550,27 @@ class html(ABCHTMLGenerator):
             attrs["disabled"] = "disabled"
             self.hidden_field(varname, current, add_var=False)
 
-        if attrs.get("label"):
-            self.label(attrs["label"], for_=varname)
+        if label:
+            self.label(label, for_=varname)
 
         # Do not enable select2 for select fields that allow multiple
         # selections like the dual list choice valuespec
         if "multiple" not in attrs:
-            if "class_" in attrs:
-                if isinstance(attrs["class_"], list):
-                    attrs["class_"].insert(0, "select2-enable")
-                else:
-                    attrs["class_"] = ["select2-enable", attrs["class_"]]
-            else:
-                attrs["class_"] = ["select2-enable"]
+            css_classes = ["select2-enable"]  # type: List[Optional[str]]
+        else:
+            css_classes = []
 
-        self.open_select(name=varname, id_=varname, **attrs)
+        if isinstance(class_, list):
+            css_classes.extend(class_)
+        else:
+            css_classes.append(class_)
+
+        self.open_select(name=varname,
+                         id_=varname,
+                         label=label,
+                         class_=css_classes,
+                         size=str(size),
+                         **attrs)
         for value, text in chs:
             # if both the default in choices and current was '' then selected depended on the order in choices
             selected = (value == current) or (not value and not current)
@@ -2540,6 +2580,7 @@ class html(ABCHTMLGenerator):
             self.close_x()
 
     def icon_dropdown(self, varname, choices, deflt=""):
+        # type: (str, List[Tuple[str, Text, str]], str) -> None
         current = self.request.var(varname, deflt)
         if varname:
             self.form_vars.append(varname)
@@ -2554,11 +2595,6 @@ class html(ABCHTMLGenerator):
                         style="background-image:url(themes/%s/images/icon_%s.png);" %
                         (self._theme, icon))
         self.close_select()
-
-    # Wrapper for DualListChoice
-    def multi_select(self, varname, choices, deflt='', ordered='', **attrs):
-        attrs["multiple"] = "multiple"
-        self.dropdown(varname, choices, deflt=deflt, ordered=ordered, **attrs)
 
     def upload_file(self, varname):
         # type: (str) -> None
@@ -2577,14 +2613,15 @@ class html(ABCHTMLGenerator):
     # such cases, the transid must be added by the confirm dialog.
     # add_header: A title can be given to make the confirm method render the HTML
     #             header when showing the confirm message.
-    def confirm(self, msg, method="POST", action=None, add_transid=False, add_header=False):
+    def confirm(self, msg, method="POST", action=None, add_transid=False, add_header=None):
+        # type: (Union[Text, HTML], str, Optional[str], bool, Optional[str]) -> Optional[bool]
         if self.request.var("_do_actions") == _("No"):
             # User has pressed "No", now invalidate the unused transid
             self.check_transaction()
-            return  # None --> "No"
+            return None  # None --> "No"
 
         if not self.request.has_var("_do_confirm"):
-            if add_header != False:
+            if add_header:
                 self.header(add_header)
 
             if self.mobile:
@@ -2623,14 +2660,12 @@ class html(ABCHTMLGenerator):
             self.write(self._render_closing_tag("fieldset"))
 
     def radiobutton(self, varname, value, checked, label):
-        # Model
+        # type: (str, str, bool, Optional[str]) -> None
         self.form_vars.append(varname)
 
-        # Controller
         if self.request.has_var(varname):
             checked = self.request.var(varname) == value
 
-        # View
         id_ = "rb_%s_%s" % (varname, value) if label else None
         self.open_span(class_="radiobutton_group")
         self.input(name=varname,
@@ -2638,7 +2673,7 @@ class html(ABCHTMLGenerator):
                    value=value,
                    checked='' if checked else None,
                    id_=id_)
-        if label:
+        if label and id_:
             self.label(label, for_=id_)
         self.close_span()
 
@@ -2654,11 +2689,12 @@ class html(ABCHTMLGenerator):
         # type: () -> None
         self.end_radio_group()
 
-    def checkbox(self, *args, **kwargs):
-        self.write(self.render_checkbox(*args, **kwargs))
+    def checkbox(self, varname, deflt=False, label='', id_=None, **add_attr):
+        # type: (str, bool, HTMLTagContent, Optional[str], **HTMLTagAttributeValue) -> None
+        self.write(self.render_checkbox(varname, deflt, label, id_, **add_attr))
 
     def render_checkbox(self, varname, deflt=False, label='', id_=None, **add_attr):
-
+        # type: (str, bool, HTMLTagContent, Optional[str], **HTMLTagAttributeValue) -> HTML
         # Problem with checkboxes: The browser will add the variable
         # only to the URL if the box is checked. So in order to detect
         # whether we should add the default value, we need to detect
@@ -2700,6 +2736,7 @@ class html(ABCHTMLGenerator):
                                  fetch_url=None,
                                  title_url=None,
                                  title_target=None):
+        # type: (str, str, bool, Text, bool, bool, Optional[str], Optional[str], Optional[str], Optional[str]) -> bool
         self.folding_indent = indent
 
         isopen = self.foldable_container_is_open(treename, id_, isopen)
@@ -2818,6 +2855,7 @@ class html(ABCHTMLGenerator):
                        bestof=None,
                        hover_title=None,
                        class_=None):
+        # type: (Text, str, Optional[str], bool, Optional[str], Optional[int], Optional[Text], CSSSpec) -> None
         self._context_button(title,
                              url,
                              icon=icon,
@@ -2836,6 +2874,7 @@ class html(ABCHTMLGenerator):
                         bestof=None,
                         hover_title=None,
                         class_=None):
+        # type: (Text, str, Optional[str], bool, Optional[str], Optional[int], Optional[Text], CSSSpec) -> None
         title = escaping.escape_attribute(title)
         display = "block"
         if bestof:
@@ -2850,14 +2889,14 @@ class html(ABCHTMLGenerator):
         if not self._context_buttons_open:
             self.begin_context_buttons()
 
-        css_classes = ["contextlink"]
+        css_classes = ["contextlink"]  # type: List[Optional[str]]
         if hot:
             css_classes.append("hot")
         if class_:
             if isinstance(class_, list):
-                css_classes += class_
+                css_classes.extend(class_)
             else:
-                css_classes += class_.split(" ")
+                css_classes.append(class_)
 
         self.open_div(class_=css_classes, id_=id_, style="display:%s;" % display)
 
@@ -2888,7 +2927,7 @@ class html(ABCHTMLGenerator):
         self.open_td()
 
     def end_floating_options(self, reset_url=None):
-        # type: (str) -> None
+        # type: (Optional[str]) -> None
         self.close_td()
         self.close_tr()
         self.open_tr()
@@ -2903,6 +2942,7 @@ class html(ABCHTMLGenerator):
         self.close_div()
 
     def render_floating_option(self, name, height, varprefix, valuespec, value):
+        # type: (str, str, str, ValueSpec, Any) -> None
         self.open_div(class_=["floatfilter", height, name])
         self.div(valuespec.title(), class_=["legend"])
         self.open_div(class_=["content"])
@@ -2979,7 +3019,7 @@ class html(ABCHTMLGenerator):
                            target=None,
                            cssclass=None,
                            class_=None):
-        # type: (str, Text, str, Optional[str], Optional[str], Optional[str], Optional[str], Optional[str], CSSSpec) -> HTML
+        # type: (Optional[str], Text, str, Optional[str], Optional[str], Optional[str], Optional[str], Optional[str], CSSSpec) -> HTML
 
         # Same API as other elements: class_ can be a list or string/None
         classes = [cssclass]
@@ -2988,9 +3028,12 @@ class html(ABCHTMLGenerator):
         else:
             classes.append(class_)
 
+        href = url if not onclick else "javascript:void(0)"
+        assert href is not None
+
         return self.render_a(
             content=HTML(self.render_icon(icon, cssclass="iconbutton")),
-            href=url if not onclick else "javascript:void(0)",
+            href=href,
             title=title,
             id_=id_,
             class_=classes,
@@ -3000,11 +3043,37 @@ class html(ABCHTMLGenerator):
             onclick=onclick,
         )
 
-    def icon_button(self, *args, **kwargs):
-        self.write_html(self.render_icon_button(*args, **kwargs))
+    def icon_button(self,
+                    url,
+                    title,
+                    icon,
+                    id_=None,
+                    onclick=None,
+                    style=None,
+                    target=None,
+                    cssclass=None,
+                    class_=None):
+        # type: (Optional[str], Text, str, Optional[str], Optional[str], Optional[str], Optional[str], Optional[str], CSSSpec) -> None
+        self.write_html(
+            self.render_icon_button(url, title, icon, id_, onclick, style, target, cssclass,
+                                    class_))
 
-    def popup_trigger(self, *args, **kwargs):
-        self.write_html(self.render_popup_trigger(*args, **kwargs))
+    def popup_trigger(self,
+                      content,
+                      ident,
+                      what=None,
+                      data=None,
+                      url_vars=None,
+                      style=None,
+                      menu_content=None,
+                      cssclass=None,
+                      onclose=None,
+                      resizable=False,
+                      content_body=None):
+        # type: (HTML, str, Optional[str], Any, Optional[HTTPVariables], Optional[str], Optional[str], Optional[str], Optional[str], bool, Optional[str]) -> None
+        self.write_html(
+            self.render_popup_trigger(content, ident, what, data, url_vars, style, menu_content,
+                                      cssclass, onclose, resizable, content_body))
 
     def render_popup_trigger(self,
                              content,
@@ -3018,6 +3087,7 @@ class html(ABCHTMLGenerator):
                              onclose=None,
                              resizable=False,
                              content_body=None):
+        # type: (HTML, str, Optional[str], Any, Optional[HTTPVariables], Optional[str], Optional[str], Optional[str], Optional[str], bool, Optional[str]) -> HTML
         onclick = 'cmk.popup_menu.toggle_popup(event, this, %s, %s, %s, %s, %s, %s, %s, %s);' % \
                     (json.dumps(ident),
                      json.dumps(what if what else None),
@@ -3028,9 +3098,8 @@ class html(ABCHTMLGenerator):
                      json.dumps(resizable),
                      content_body if content_body else json.dumps(None))
 
-        #TODO: Check if HTML'ing content is correct and necessary!
         atag = self.render_a(
-            HTML(content),
+            content,
             class_="popup_trigger",
             href="javascript:void(0);",
             # Needed to prevent wrong linking when views are parts of dashlets

@@ -1,0 +1,120 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+import sys
+import getopt
+import socket
+
+import requests
+
+
+def usage():
+    sys.stderr.write("""Check_MK Ruckus Spot Agent
+
+USAGE: agent_ruckus_spot [OPTIONS] HOST
+
+OPTIONS:
+  -h, --help                    Show this help message and exit
+  --address                     Address {hostname:port}
+  --venueid                     Venue ID
+  --apikey                      API key
+""")
+    sys.exit(1)
+
+
+# TODO: put into special_agent lib
+def get_agent_info_tcp(host):
+    ipaddress = socket.gethostbyname(host)
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(10)
+    s.connect((ipaddress, 6556))
+
+    try:
+        s.setblocking(1)
+    except Exception:
+        pass
+
+    resp = ""
+    while True:
+        out = s.recv(4096, socket.MSG_WAITALL)
+        if out and len(out) > 0:
+            resp += out
+        else:
+            break
+    s.close()
+    return resp
+
+
+def main(sys_argv=None):
+    if sys_argv is None:
+        sys_argv = sys.argv[1:]
+
+    short_options = 'h:'
+    long_options = ['help', 'address=', 'venueid=', 'apikey=', 'agent_port=']
+
+    address = None
+    venueid = None
+    api_key = None
+    agent_port = None
+
+    try:
+        opts, args = getopt.getopt(sys_argv, short_options, long_options)
+    except getopt.GetoptError as err:
+        sys.stderr.write("%s\n" % err)
+        return 1
+
+    for o, a in opts:
+        if o in ['--address']:
+            address = a
+        elif o in ['--venueid']:
+            venueid = a
+        elif o in ['--apikey']:
+            api_key = a
+        elif o in ['--agent_port']:
+            agent_port = a
+        elif o in ['-h', '--help']:
+            usage()
+
+    if len(args) > 0 or not api_key or not venueid or not address:
+        usage()
+
+    try:
+        for url_end, section_type in [("access_points/statuses.json", "ap"),
+                                      ("locations/last_known.json", "locations")]:
+            url = "http://%(address)s/api/v1/venues/%(venueid)s/%(url_end)s" % \
+                  {"address": address, "venueid": venueid, "url_end": url_end}
+            response = requests.get(url, auth=(api_key, "X"))
+
+            sys.stdout.write("<<<ruckus_spot_%s:sep(0)>>>\n" % section_type)
+            sys.stdout.write(response.text + "\n")
+
+        if agent_port is not None:
+            hostname = address.split(":")[0]
+            sys.stdout.write(get_agent_info_tcp(hostname))
+
+    except Exception as e:
+        sys.stderr.write("Connection error %s" % e)
+        return 1

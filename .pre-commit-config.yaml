@@ -43,6 +43,12 @@ repos:
             language: script
             files: omd/packages/python3?-modules
             types: [file]
+          - id: flake8
+            name: Check flake8
+            entry: scripts/check-flake8
+            language: script
+            types: [file, python]
+            verbose: true
           - id: pylint
             name: Check pylint
             entry: scripts/check-pylint

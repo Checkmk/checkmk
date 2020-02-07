@@ -66,8 +66,7 @@ import cmk.utils.piggyback as piggyback
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, ServiceName, Item, HostAddress, CheckPluginName, ActiveCheckPluginName,
     TimeperiodName, ServicegroupName, Labels, RulesetName, ContactgroupName, HostgroupName,
-    LabelSources, TagID, TagValue, TaggroupID, Tags, TagList, TagGroups, Ruleset,
-)
+    LabelSources, TagID, TagValue, TaggroupID, Tags, TagList, TagGroups, Ruleset, CheckVariables)
 
 import cmk.base
 import cmk.base.console as console
@@ -118,7 +117,6 @@ PingLevels = Dict[str, Union[int, Tuple[float, float]]]
 ObjectAttributes = Dict  # TODO: Improve this. Have seen Dict[str, Union[str, unicode, int]]
 GroupDefinitions = Dict[str, Text]
 RecurringDowntime = Dict[str, Union[int, str]]
-CheckVariables = Dict[str, Any]
 CheckInfo = Dict  # TODO: improve this type
 IPMICredentials = Dict[str, str]
 ManagementCredentials = Union[SNMPCredentials, IPMICredentials]
@@ -3116,7 +3114,8 @@ class ConfigCache(object):
     def _discovered_labels_of_service(self, hostname, service_desc):
         # type: (HostName, ServiceName) -> Labels
         return self._autochecks_manager.discovered_labels_of(hostname, service_desc,
-                                                             service_description).to_dict()
+                                                             service_description,
+                                                             get_check_variables).to_dict()
 
     def get_tag_to_group_map(self):
         # type: () -> TagGroups
@@ -3439,7 +3438,7 @@ class ConfigCache(object):
     def get_autochecks_of(self, hostname):
         # type: (HostName) -> List[cmk.base.check_utils.Service]
         return self._autochecks_manager.get_autochecks_of(hostname, compute_check_parameters,
-                                                          service_description)
+                                                          service_description, get_check_variables)
 
     def section_name_of(self, section):
         # type: (CheckPluginName) -> SectionName

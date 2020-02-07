@@ -118,6 +118,7 @@ class Scenario(object):  # pylint: disable=useless-object-inheritance
 
             monkeypatch.setattr(
                 autochecks.AutochecksManager, "_read_raw_autochecks_uncached",
-                lambda self, hostname, service_description: self._raw_autochecks.get(hostname, []))
+                lambda self, hostname, service_description, get_check_variables: self.
+                _raw_autochecks.get(hostname, []))
 
         return self.config_cache

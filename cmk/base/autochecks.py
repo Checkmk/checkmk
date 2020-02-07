@@ -41,8 +41,8 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.encoding import convert_to_unicode
+from cmk.utils.type_defs import CheckVariables  # pylint: disable=unused-import
 
-import cmk.base.config as config
 import cmk.base.console
 from cmk.base.discovered_labels import (
     DiscoveredServiceLabels,
@@ -68,15 +68,17 @@ class AutochecksManager(object):
         self._discovered_labels_of = {}  # type: Dict[HostName, Dict[Text, DiscoveredServiceLabels]]
         self._raw_autochecks_cache = {}  # type: Dict[HostName, List[Service]]
 
-    def get_autochecks_of(self, hostname, compute_check_parameters, service_description):
-        # type: (str, Callable[[HostName, CheckPluginName, Item, CheckParameters], Optional[CheckParameters]], Callable[[HostName, CheckPluginName, Item], ServiceName]) -> List[Service]
+    def get_autochecks_of(self, hostname, compute_check_parameters, service_description,
+                          get_check_variables):
+        # type: (str, Callable[[HostName, CheckPluginName, Item, CheckParameters], Optional[CheckParameters]], Callable[[HostName, CheckPluginName, Item], ServiceName], Callable[[], CheckVariables]) -> List[Service]
         if hostname not in self._autochecks:
             self._autochecks[hostname] = self._get_autochecks_of_uncached(
-                hostname, compute_check_parameters, service_description)
+                hostname, compute_check_parameters, service_description, get_check_variables)
         return self._autochecks[hostname]
 
-    def _get_autochecks_of_uncached(self, hostname, compute_check_parameters, service_description):
-        # type: (HostName, Callable[[HostName, CheckPluginName, Item, CheckParameters], Optional[CheckParameters]], Callable[[HostName, CheckPluginName, Item], ServiceName]) -> List[Service]
+    def _get_autochecks_of_uncached(self, hostname, compute_check_parameters, service_description,
+                                    get_check_variables):
+        # type: (HostName, Callable[[HostName, CheckPluginName, Item, CheckParameters], Optional[CheckParameters]], Callable[[HostName, CheckPluginName, Item], ServiceName], Callable[[], CheckVariables]) -> List[Service]
         """Read automatically discovered checks of one host"""
         return [
             Service(
@@ -86,25 +88,27 @@ class AutochecksManager(object):
                 parameters=compute_check_parameters(hostname, service.check_plugin_name,
                                                     service.item, service.parameters),
                 service_labels=service.service_labels,
-            ) for service in self._read_raw_autochecks(hostname, service_description)
+            ) for service in self._read_raw_autochecks(hostname, service_description,
+                                                       get_check_variables)
         ]
 
-    def discovered_labels_of(self, hostname, service_desc, service_description):
-        # type: (HostName, ServiceName, Callable[[HostName, CheckPluginName, Item], ServiceName]) -> DiscoveredServiceLabels
+    def discovered_labels_of(self, hostname, service_desc, service_description,
+                             get_check_variables):
+        # type: (HostName, ServiceName, Callable[[HostName, CheckPluginName, Item], ServiceName], Callable[[], CheckVariables]) -> DiscoveredServiceLabels
         if hostname not in self._discovered_labels_of:
             # Only read the raw autochecks here, do not compute the effective
             # check parameters. The latter would involve ruleset matching which
             # in turn would require already computed labels.
-            self._read_raw_autochecks(hostname, service_description)
+            self._read_raw_autochecks(hostname, service_description, get_check_variables)
         if service_desc not in self._discovered_labels_of[hostname]:
             self._discovered_labels_of[hostname][service_desc] = DiscoveredServiceLabels()
         return self._discovered_labels_of[hostname][service_desc]
 
-    def _read_raw_autochecks(self, hostname, service_description):
-        # type: (HostName, Callable[[HostName, CheckPluginName, Item], ServiceName]) -> List[Service]
+    def _read_raw_autochecks(self, hostname, service_description, get_check_variables):
+        # type: (HostName, Callable[[HostName, CheckPluginName, Item], ServiceName], Callable[[], CheckVariables]) -> List[Service]
         if hostname not in self._raw_autochecks_cache:
             self._raw_autochecks_cache[hostname] = self._read_raw_autochecks_uncached(
-                hostname, service_description)
+                hostname, service_description, get_check_variables)
             # create cache from autocheck labels
             self._discovered_labels_of.setdefault(hostname, {})
             for service in self._raw_autochecks_cache[hostname]:
@@ -113,20 +117,20 @@ class AutochecksManager(object):
 
     # TODO: use store.load_object_from_file()
     # TODO: Common code with parse_autochecks_file? Cleanup.
-    def _read_raw_autochecks_uncached(self, hostname, service_description):
-        # type: (HostName, Callable[[HostName, CheckPluginName, Item], ServiceName]) -> List[Service]
+    def _read_raw_autochecks_uncached(self, hostname, service_description, get_check_variables):
+        # type: (HostName, Callable[[HostName, CheckPluginName, Item], ServiceName], Callable[[], CheckVariables]) -> List[Service]
         """Read automatically discovered checks of one host"""
         result = []  # type: List[Service]
         path = _autochecks_path_for(hostname)
         if not path.exists():
             return result
 
-        check_config = config.get_check_variables()
+        check_variables = get_check_variables()
         try:
             cmk.base.console.vverbose("Loading autochecks from %s\n", path)
             autochecks_raw = eval(
-                open(str(path)).read().decode("utf-8"), check_config,
-                check_config)  # type: List[Dict]
+                open(str(path)).read().decode("utf-8"), check_variables,
+                check_variables)  # type: List[Dict]
         except SyntaxError as e:
             cmk.base.console.verbose("Syntax error in file %s: %s\n", path, e, stream=sys.stderr)
             if cmk.utils.debug.enabled():

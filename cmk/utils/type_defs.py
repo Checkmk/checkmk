@@ -50,5 +50,6 @@ TaggroupID = str
 Tags = Dict[TagID, TagValue]
 TagList = Set[TagValue]
 TagGroups = Dict[TagID, TaggroupID]
+CheckVariables = Dict[str, Any]
 
 UserId = NewType("UserId", Text)

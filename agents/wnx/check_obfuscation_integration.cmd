@@ -58,6 +58,26 @@ powershell Write-Host "....decrypting is `'%file_2%`'..." -foreground Cyan
 if not exist %file_1%.dec powershell Write-Host "[-] Can`'t create %file_1%.dec" -foreground Red && exit /b 10 
 if not exist %file_2%.dec powershell Write-Host "[-] Can`'t create %file_2%.dec" -foreground Red && exit /b 11
 
+%python% %script% encrypt %file_2%.enc | c:\windows\system32\find "Already encrypted" > nul
+if not %errorlevel% == 0 powershell Write-Host "[-] secondary encryption should be forbidden 1" -foreground Red && exit /b 12
+powershell Write-Host "[+] Already encrypted in place" -foreground Green
+
+
+%python% %script% decrypt %file_1% | c:\windows\system32\find "Not encrypted" > nul
+if not %errorlevel% == 0 powershell Write-Host "[-] should not work with not encrypted file" -foreground Red && exit /b 12
+powershell Write-Host "[+] Not encrypted skipped from decrypt" -foreground Green
+
+
+if exist %file_1%.enc.enc del %file_1%.enc.enc > nul
+%python% %script% encrypt %file_2%.enc %file_2%.enc.enc | c:\windows\system32\find "Copy" > nul
+if not %errorlevel% == 0 powershell Write-Host "[-] secondary encryption should be forbidden 2" -foreground Red && exit /b 12
+powershell Write-Host "[+] in place secondary encryption is forbidden" -foreground Green
+
+fc /b %file_2%.enc %file_2%.enc.enc > nul
+if not %errorlevel% == 0 powershell Write-Host "[-] copy should be identic" -foreground Red && exit /b 12
+powershell Write-Host "[+] Copy of already encrypted works" -foreground Green
+
+
 fc /b %file_1% %file_1%.dec > nul
 if not %errorlevel% == 0 powershell Write-Host "[-] decryption is failed by python `'%file_1%`'" -foreground Red && exit /b 12
 powershell Write-Host "[+] correct `'%file_1%`'" -foreground Green

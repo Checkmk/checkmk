@@ -33,6 +33,7 @@ from __future__ import print_function
 from typing import AnyStr, Tuple, List  # pylint: disable=unused-import
 
 import sys
+from shutil import copyfile
 
 from hashlib import md5
 from Cryptodome.Cipher import AES
@@ -105,6 +106,12 @@ def parse_command_line(argv):
     return command, argv[2], argv[2] if len(argv) <= 3 else argv[3]
 
 
+def is_data_encrypted(pkg):
+    # type: (bytes) -> bool
+    return len(pkg) > 12 and pkg[OBFUSCATE_MARK_OFFSET:OBFUSCATE_MARK_OFFSET +
+                                 OBFUSCATE_MARK_SIZE] == OBFUSCATE_MARK
+
+
 def encrypt_file(file_in, file_out):
     # type: (str, str) -> int
     p = Path(file_in)
@@ -112,6 +119,13 @@ def encrypt_file(file_in, file_out):
         return 1
 
     data = p.read_bytes()  # type: ignore # [attr-defined]
+    if is_data_encrypted(data):
+        print("Already encrypted, no encryption")
+        if file_in != file_out:
+            print("Copy...")
+            copyfile(file_in, file_out)
+        return 0
+
     encrypted_data = encrypt_package(data)  # type: bytes
     if len(encrypted_data) > 0:
         out = Path(file_out)
@@ -133,13 +147,9 @@ def decrypt_file(file_in, file_out):
         return 1
 
     data_in = p.read_bytes()  # type: ignore # [attr-defined]
-    if len(data_in) < 12:
-        print("Too short file")
-        return 9
-
-    if data_in[OBFUSCATE_MARK_OFFSET:OBFUSCATE_MARK_OFFSET + OBFUSCATE_MARK_SIZE] != OBFUSCATE_MARK:
-        print("No mark")
-        return 7
+    if not is_data_encrypted(data_in):
+        print("Not encrypted")
+        return 3
 
     length = int(data_in[OBFUSCATE_LENGTH_OFFSET:])
 

@@ -1448,33 +1448,11 @@ def page_delete_dashlet():
     except IndexError:
         raise MKUserError("id", _('The dashlet does not exist.'))
 
-    html.header(_('Confirm Dashlet Deletion'))
+    dashboard['dashlets'].pop(ident)
+    dashboard['mtime'] = int(time.time())
+    save_all_dashboards()
 
-    html.begin_context_buttons()
-    back_url = html.get_url_input('back')
-    html.context_button(_('Back'), back_url, 'back')
-    html.end_context_buttons()
-
-    result = html.confirm(_('Do you really want to delete this dashlet?'),
-                          method='GET',
-                          add_transid=True)
-    if result is False:
-        html.footer()
-        return  # confirm dialog shown
-    elif result is True:  # do it!
-        try:
-            dashboard['dashlets'].pop(ident)
-            dashboard['mtime'] = int(time.time())
-            save_all_dashboards()
-
-            html.show_message(_('The dashlet has been deleted.'))
-        except MKUserError as e:
-            html.div(e.message, class_="error")
-            return
-
-    html.immediate_browser_redirect(1, back_url)
-    html.reload_sidebar()
-    html.footer()
+    raise HTTPRedirect(html.get_url_input('back'))
 
 
 #.

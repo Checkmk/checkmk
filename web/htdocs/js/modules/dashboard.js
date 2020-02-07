@@ -24,6 +24,7 @@
 
 import * as utils from "utils";
 import * as ajax from "ajax";
+import * as forms from "forms";
 
 var reload_on_resize = {};
 export var dashboard_properties = {};
@@ -660,12 +661,14 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
         del.title = "Delete this dashlet";
         del.onclick = function(dashlet_id, board_name) {
             return function() {
-                var back_url = utils.makeuri({}, window.location.href, "dashboard.py");
-                location.href = utils.makeuri_contextless({
-                    "name": board_name,
-                    "id": dashlet_id,
-                    "back": back_url
-                }, "delete_dashlet.py");
+                forms.confirm_dialog("Do you really want to delete this dashlet?", function() {
+                    var back_url = utils.makeuri({}, window.location.href, "dashboard.py");
+                    location.href = utils.makeuri_contextless({
+                        "name": board_name,
+                        "id": dashlet_id,
+                        "back": back_url
+                    }, "delete_dashlet.py");
+                });
             };
         }(nr, dashboard_properties.dashboard_name);
         controls.appendChild(del);

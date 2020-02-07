@@ -26,6 +26,7 @@ import $ from "jquery";
 import "select2";
 import Tagify from "@yaireo/tagify";
 import "element-closest-polyfill";
+import Swal from "sweetalert2";
 
 import * as utils from "utils";
 import * as ajax from "ajax";
@@ -149,3 +150,20 @@ export function textinput_enter_submit(e, submit) {
     }
 }
 
+// Helper function to display nice popup confirm dialogs
+// TODO: This needs to be styled to match the current user theme
+export function confirm_dialog(text, confirm_handler) {
+    Swal.fire({
+        text: text,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#444",
+        cancelButtonColor: "#444",
+        confirmButtonText: "Yes",
+        cancelButtonText: "No"
+    }).then((result) => {
+        if (result.value) {
+            confirm_handler();
+        }
+    });
+}

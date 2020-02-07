@@ -37,8 +37,7 @@ import sys
 import itertools
 import contextlib
 from typing import (  # pylint: disable=unused-import
-    TYPE_CHECKING, Pattern, Iterator, Iterable, Set, Text, Any, Callable, Dict, List, Tuple, Union,
-    Optional, cast,
+    Iterator, Iterable, Set, Text, Any, Callable, Dict, List, Tuple, Union, Optional, cast,
 )
 
 if sys.version_info[0] >= 3:
@@ -66,9 +65,10 @@ import cmk.utils.piggyback as piggyback
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, ServiceName, Item, HostAddress, CheckPluginName, ActiveCheckPluginName,
     TimeperiodName, ServicegroupName, Labels, RulesetName, ContactgroupName, HostgroupName,
-    LabelSources, TagID, TagValue, TaggroupID, Tags, TagList, TagGroups, Ruleset, CheckVariables)
+    LabelSources, TagValue, Tags, TagList, TagGroups, Ruleset, CheckVariables)
 
 import cmk.base
+import cmk.base.autochecks as autochecks
 import cmk.base.console as console
 import cmk.base.default_config as default_config
 import cmk.base.check_utils
@@ -76,16 +76,12 @@ import cmk.base.utils
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.cleanup
 import cmk.base.snmp_utils
-from cmk.base.discovered_labels import DiscoveredServiceLabels  # pylint: disable=unused-import
 from cmk.base.snmp_utils import (  # pylint: disable=unused-import
     ScanFunction, SNMPCredentials,
 )
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     SectionName, CheckParameters, DiscoveredService,
 )
-
-if TYPE_CHECKING:
-    import cmk.base.autochecks as autochecks  # pylint: disable=unused-import
 
 # TODO: Prefix helper functions with "_".
 
@@ -988,9 +984,10 @@ def service_description(hostname, check_plugin_name, item):
         descr = descr_format
 
     if "%s" in descr:
-        raise MKGeneralException("Found '%%s' in service description (Host: %s, Check type: %s, Item: %s). "
-                                 "Please try to rediscover the service to fix this issue." % \
-                                 (hostname, check_plugin_name, item))
+        raise MKGeneralException(
+            "Found '%%s' in service description (Host: %s, Check type: %s, Item: %s). "
+            "Please try to rediscover the service to fix this issue." %
+            (hostname, check_plugin_name, item))
 
     return get_final_service_description(hostname, descr)
 
@@ -3099,10 +3096,7 @@ class ConfigCache(object):
         self._hosttags = {}  # type: Dict[HostName, TagList]
 
         # Autochecks cache
-        # TODO: Cleanup this local import
-        import cmk.base.autochecks as autochecks  # pylint: disable=redefined-outer-name
-        self._autochecks_manager = autochecks.AutochecksManager(
-        )  # type: autochecks.AutochecksManager
+        self._autochecks_manager = autochecks.AutochecksManager()
 
         # Caches for nodes and clusters
         self._clusters_of_cache = {}  # type: Dict[HostName, List[HostName]]
@@ -3214,7 +3208,7 @@ class ConfigCache(object):
             'snmp_ds': 'no-snmp',
             'site': cmk.omd_site(),
             'address_family': 'ip-v4-only',
-        }  #  type: Tags
+        }  # type: Tags
 
         for tag_id in tag_list:
             # Assume it's an aux tag in case there is a tag configured without known group

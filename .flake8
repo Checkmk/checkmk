@@ -16,9 +16,6 @@ ignore=
     # Incompatible with the vim folding markers:
     # block comment should start with '# '
     E265,
-    # Incompatible with our re-exports:
-    # 'FOO.*' imported but unused
-    F401,
     # Incompatible with our conditional imports:
     # module level import not at top of file
     E402,

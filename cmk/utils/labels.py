@@ -27,7 +27,7 @@
 
 import sys
 import abc
-from typing import Callable, List, Dict, Text  # pylint: disable=unused-import
+from typing import Callable, List, Dict  # pylint: disable=unused-import
 import six
 
 # Explicitly check for Python 3 (which is understood by mypy)

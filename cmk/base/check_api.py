@@ -487,10 +487,9 @@ def check_levels(value,
             return None
         return v * factor * scale
 
+    infotext = "%s%s" % (human_readable_func(value), unit_info)
     if infoname:
-        infotext = "%s: %s%s" % (infoname, human_readable_func(value), unit_info)
-    else:
-        infotext = "%s%s" % (human_readable_func(value), unit_info)
+        infotext = "%s: %s" % (infoname, infotext)
 
     # {}, (), None, (None, None), (None, None, None, None) -> do not check any levels
     if not params or set(params) <= {None}:

@@ -180,13 +180,13 @@ def parse_local(info):
 # Compute state according to warn/crit levels contained in the
 # performance data.
 def local_compute_state(perfdata):
-    texts = []
-    worst = 0
-    for entry in perfdata:
-        state, text = check_levels(entry.value, None, entry.levels, infoname=entry.name)[:2]
-        worst = max(worst, state)
-        texts.append(text)
-    return worst, texts
+    return [
+        check_levels(entry.value,
+                     entry.name,
+                     entry.levels,
+                     infoname=entry.name,
+                     boundaries=entry.tuple[-2:]) for entry in perfdata
+    ]
 
 
 def inventory_local(parsed):
@@ -201,35 +201,29 @@ def inventory_local(parsed):
 def _parse_local_line(result):
 
     if result.state != 'P':
-        return result.state, result.text, [p.tuple for p in result.perfdata]
+        return [(result.state, result.text, [p.tuple for p in result.perfdata])]
 
-    state, texts = local_compute_state(result.perfdata)
-    if result.text:
-        texts.insert(0, result.text)
-    text = ", ".join(texts)
-    return state, text, [p.tuple for p in result.perfdata]
+    local_results = [(0, result.text, [])] if result.text else []
+
+    return local_results + local_compute_state(result.perfdata)
 
 
 def _calculate_local_best_state(collected_stats):
-    states = []
-    infotexts = []
-    perfdatas = []
-    for nodename, attrs in collected_stats.items():
-        for state, output, perfdata in attrs.values():
-            if nodename is not None:
-                output = "On node %s: %s" % (nodename, output)
-            states.append(state)
-            infotexts.append(output)
-            perfdatas += perfdata
-    return min(states), ", ".join(infotexts), perfdatas
+    states, infotexts, perfdata = zip(*_iterate_all_check_results(collected_stats))
+
+    # First element might be dummy info, need to drop when calculating best state
+    best_state = min(states[1:]) if len(states) > 1 and not perfdata[0] else states[0]
+
+    return best_state, ", ".join(infotexts), sum(perfdata, [])
 
 
-def _calculate_local_worst_state(collected_stats):
+def _iterate_all_check_results(collected_stats):
     for nodename, attrs in collected_stats.items():
-        for state, output, perfdata in attrs.values():
-            if nodename is not None:
-                output = "On node %s: %s" % (nodename, output)
-            yield state, output, perfdata
+        for entry in attrs.values():
+            for ent, (state, output, perfdata) in enumerate(entry):
+                if ent == 0 and nodename is not None:
+                    output = "On node %s: %s" % (nodename, output)
+                yield state, output, perfdata
 
 
 @get_parsed_item_data
@@ -249,7 +243,7 @@ def check_local(_no_item, params, data):
         yield _calculate_local_best_state(collected_stats)
         return
     else:
-        for res in _calculate_local_worst_state(collected_stats):
+        for res in _iterate_all_check_results(collected_stats):
             yield res
 
 

@@ -149,7 +149,10 @@ def decrypt_file(file_in, file_out):
     data_in = p.read_bytes()  # type: ignore # [attr-defined]
     if not is_data_encrypted(data_in):
         print("Not encrypted")
-        return 3
+        if file_in != file_out:
+            print("Copy...")
+            copyfile(file_in, file_out)
+        return 0
 
     length = int(data_in[OBFUSCATE_LENGTH_OFFSET:])
 

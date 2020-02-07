@@ -934,17 +934,17 @@ class Rule(object):
         # (that is not useful in this situation)
         matcher.ruleset_optimizer.clear_host_ruleset_cache()
 
+        ruleset = [rule_dict]
+
         if match_service_conditions:
             if list(
                     matcher.get_service_ruleset_values(
-                        match_object, [rule_dict],
-                        is_binary=self.ruleset.rulespec.is_binary_ruleset)):
+                        match_object, ruleset, is_binary=self.ruleset.rulespec.is_binary_ruleset)):
                 return
         else:
             if list(
                     matcher.get_host_ruleset_values(
-                        match_object, [rule_dict],
-                        is_binary=self.ruleset.rulespec.is_binary_ruleset)):
+                        match_object, ruleset, is_binary=self.ruleset.rulespec.is_binary_ruleset)):
                 return
 
         yield _("The rule does not match")

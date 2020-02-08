@@ -116,6 +116,7 @@ def encrypt_file(file_in, file_out):
     # type: (str, str) -> int
     p = Path(file_in)
     if not p.exists():
+        print("%s does not exist" % file_in)
         return 1
 
     data = p.read_bytes()  # type: ignore # [attr-defined]

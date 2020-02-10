@@ -362,7 +362,7 @@ class LDAPUserConnector(UserConnector):
             self._logger.info('Using cached DC %s' % cached_server)
             return cached_server
 
-        import ad  # type: ignore  # pylint: disable=import-error
+        import ad  # type: ignore[import] # pylint: disable=import-error
         locator = ad.Locator()
         locator.m_logger = self._logger
         try:
@@ -2001,26 +2001,33 @@ def register_user_attribute_sync_plugins():
             del ldap_attribute_plugin_registry[ident]
 
     for name, attr in get_user_attributes():
-        plugin_class = type("LDAPUserAttributePlugin%s" % name.title(), (LDAPUserAttributePlugin,), {
-            "ident": name,
-            "title": attr.valuespec().title(),
-            "help": attr.valuespec().help(),
-            'needed_attributes': lambda self, connection, params: [params.get("attr", connection.ldap_attr(self.ident)).lower()],
-            'lock_attributes': lambda self, params: [ self.ident ],
-            'parameters': lambda self, connection: Dictionary(
-                title=self.title,
-                help=self.help,
-                elements = [
-                    ('attr', TextAscii(
-                        title = _("LDAP attribute to sync"),
-                        help  = _("The LDAP attribute whose contents shall be synced into this custom attribute."),
-                        default_value = lambda: ldap_attr_of_connection(connection.id(), self.ident),
-                    )),
-                ],
-            ),
-            'sync_func': lambda self, connection, plugin, params, user_id, ldap_user, user: \
-                        ldap_sync_simple(user_id, ldap_user, user, plugin, self.needed_attributes(connection, params)[0]),
-        })
+        plugin_class = type(
+            "LDAPUserAttributePlugin%s" % name.title(), (LDAPUserAttributePlugin,), {
+                "ident": name,
+                "title": attr.valuespec().title(),
+                "help": attr.valuespec().help(),
+                'needed_attributes': lambda self, connection, params:
+                                     [params.get("attr", connection.ldap_attr(self.ident)).lower()],
+                'lock_attributes': lambda self, params: [self.ident],
+                'parameters': lambda self, connection: Dictionary(
+                    title=self.title,
+                    help=self.help,
+                    elements=[
+                        ('attr',
+                         TextAscii(
+                             title=_("LDAP attribute to sync"),
+                             help=
+                             _("The LDAP attribute whose contents shall be synced into this custom attribute."
+                              ),
+                             default_value=lambda: ldap_attr_of_connection(
+                                 connection.id(), self.ident),
+                         )),
+                    ],
+                ),
+                'sync_func': lambda self, connection, plugin, params, user_id, ldap_user, user:
+                             ldap_sync_simple(user_id, ldap_user, user, plugin,
+                                              self.needed_attributes(connection, params)[0]),
+            })
         ldap_attribute_plugin_registry.register(plugin_class)
 
 
@@ -2297,7 +2304,7 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
                 }
 
         changed_attr = params.get('attr', connection.ldap_attr('pw_changed')).lower()
-        if not changed_attr in ldap_user:
+        if changed_attr not in ldap_user:
             raise MKLDAPException(
                 _('The "Authentication Expiration" attribute (%s) could not be fetched '
                   'from the LDAP server for user %s.') % (changed_attr, ldap_user))
@@ -2836,7 +2843,7 @@ def _sychronize_profile_worker(states, site_id, site, profiles_to_synchronize):
     try:
         result = user_profile.push_user_profiles_to_site_transitional_wrapper(
             site, profiles_to_synchronize)
-        if result != True:
+        if result is not True:
             return SynchronizationResult(site_id, error_text=result, failed=True)
         return SynchronizationResult(site_id, succeeded=True)
     except RequestTimeout:

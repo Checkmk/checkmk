@@ -40,7 +40,7 @@ import abc
 import base64
 from enum import Enum
 import hashlib
-import ipaddress  # type: ignore
+import ipaddress
 import json
 import logging
 import math
@@ -56,7 +56,7 @@ from typing import (  # pylint: disable=unused-import
     Dict, Pattern, Type, Union, Callable, Text, Any, List, Optional as TypingOptional, Tuple as
     TypingTuple,
 )
-from PIL import Image  # type: ignore
+from PIL import Image  # type: ignore[import]
 
 try:
     # Python has a totally braindead history of changes in this area:
@@ -67,7 +67,7 @@ try:
     #   * Python 3.0: UserDict is gone...
     #   * Python 3.3: Let's just move the ABCs from collections to collections.abc, keeping the old stuff for now.
     #   * Python 3.8: To *really* annoy people, let's nuke the ABCs from collection! >:-)
-    from collections.abc import MutableMapping  # type: ignore
+    from collections.abc import MutableMapping  # type: ignore[import]
 except ImportError:
     from collections import MutableMapping
 
@@ -430,7 +430,7 @@ class Integer(ValueSpec):
     def from_html_vars(self, varprefix):
         try:
             return int(html.request.var(varprefix))
-        except:
+        except Exception:
             raise MKUserError(
                 varprefix,
                 _("The text <b><tt>%s</tt></b> is not a valid integer number.") %
@@ -494,7 +494,7 @@ class Filesize(Integer):
         try:
             return int(html.request.var(varprefix + '_size')) * (1024**int(
                 html.request.var(varprefix + '_unit')))
-        except:
+        except Exception:
             raise MKUserError(varprefix + '_size', _("Please enter a valid integer number"))
 
     def value_to_text(self, value):
@@ -2025,8 +2025,8 @@ class ListOfMultiple(ValueSpec):
         for ident, val in value:
             vs = self._choice_dict[ident]
             # TODO: This is a workaround for a bug. This function needs to return str objects right now.
-            table_content += html.render_tr(html.render_td(vs.title())\
-                                          + html.render_td(    HTML(vs.value_to_text(val))    ))
+            table_content += html.render_tr(
+                html.render_td(vs.title()) + html.render_td(HTML(vs.value_to_text(val))))
         return "%s" % html.render_table(table_content)
 
     def from_html_vars(self, varprefix):
@@ -2112,7 +2112,7 @@ class Float(Integer):
     def from_html_vars(self, varprefix):
         try:
             return float(html.request.var(varprefix))
-        except:
+        except Exception:
             raise MKUserError(
                 varprefix,
                 _("The text <b><tt>%s</tt></b> is not a valid floating point number.") %
@@ -2488,14 +2488,14 @@ class CascadingDropdown(ValueSpec):
         self._render = render if render is not None else CascadingDropdown.Render.normal
         self._encoding_type = list if encoding == "list" else tuple
 
-        self._no_elements_text = no_elements_text if not no_elements_text is not None else \
-            _("There are no elements defined for this selection")
+        self._no_elements_text = no_elements_text if no_elements_text is not None else _(
+            "There are no elements defined for this selection")
 
         self._no_preselect = no_preselect
         self._no_preselect_value = no_preselect_value
         self._no_preselect_title = no_preselect_title  # if not preselected
-        self._no_preselect_error = no_preselect_error if no_preselect_error is not None else \
-            _("Please make a selection")
+        self._no_preselect_error = no_preselect_error if no_preselect_error is not None else _(
+            "Please make a selection")
 
         # When given, this ajax page is called to render the input fields of a cascaded valuespec
         # once the user selected this choice in case it was initially hidden.
@@ -3425,7 +3425,7 @@ class Timeofday(ValueSpec):
         try:
             b = int(text)
             return (b, 0)
-        except:
+        except Exception:
             raise MKUserError(
                 varprefix,
                 _("Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format.") % text)
@@ -5164,9 +5164,10 @@ class PageAutocompleteLabels(AjaxPage):
     # do without extending livestatus is to use the Cache header for liveproxyd
     def _get_labels_from_core(self, search_label):
         import cmk.gui.sites as sites
-        query = ("GET services\n" \
-                "Cache: reload\n" \
-                "Columns: host_labels labels\n")
+        query = (
+            "GET services\n"  #
+            "Cache: reload\n"  #
+            "Columns: host_labels labels\n")
 
         labels = set()
         for row in sites.live().query(query):

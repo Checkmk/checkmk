@@ -313,22 +313,13 @@ def _config_plugin_modules():
 
 def reporting_available():
     # type: () -> bool
-    try:
-        # Check the existance of one arbitrary config variable from the
-        # reporting module
-        _dummy = reporting_filename  # type: ignore # pylint: disable=undefined-variable
-        return True
-    except NameError:
-        return False
+    # Check the existance of one arbitrary config variable from the reporting module
+    return 'reporting_filename' in globals()
 
 
 def combined_graphs_available():
     # type: () -> bool
-    try:
-        _dummy = have_combined_graphs  # type: ignore # pylint: disable=undefined-variable
-        return True
-    except NameError:
-        return False
+    return 'have_combined_graphs' in globals()
 
 
 def hide_language(lang):
@@ -394,7 +385,7 @@ def get_role_permissions():
     for perm_class in permissions.permission_registry.values():
         perm = perm_class()
         for role_id in roleids:
-            if not role_id in role_permissions:
+            if role_id not in role_permissions:
                 role_permissions[role_id] = []
 
             if _may_with_roles([role_id], perm.name):

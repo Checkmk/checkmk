@@ -92,11 +92,11 @@ from cmk.special_agents.utils import vcrtrace
 
 if "--legacy" in sys.argv:
     try:
-        from NaElement import NaElement  # type: ignore # pylint: disable=import-error
-        from NaServer import NaServer  # type: ignore # pylint: disable=import-error
+        from NaElement import NaElement  # type: ignore[import] # pylint: disable=import-error
+        from NaServer import NaServer  # type: ignore[import] # pylint: disable=import-error
     except Exception as e:
-        sys.stderr.write("Unable to import the files NaServer.py/NaElement.py.\nThese files are "\
-                         "provided by the NetApp Managability SDK and must be put into "\
+        sys.stderr.write("Unable to import the files NaServer.py/NaElement.py.\nThese files are "
+                         "provided by the NetApp Managability SDK and must be put into "
                          "the sites folder ~/local/lib/python.\nDetailed error: %s\n" % e)
         sys.exit(1)
 
@@ -981,33 +981,36 @@ def process_clustermode(args, server, netapp_mode, licenses):
         volume_counters = query_counters(args, server, netapp_mode, "volume")
     if volumes:
         print("<<<netapp_api_volumes:sep(9)>>>")
-        print(format_config(volumes, "volume", "volume-id-attributes.instance-uuid",
-                                    config_report = [ "volume-space-attributes.size-available",
-                                                      "volume-space-attributes.size-total",
-                                                      "volume-state-attributes.state",
-                                                      "volume-id-attributes.owning-vserver-name",
-                                                      "volume-id-attributes.name",
-                                                      "volume-id-attributes.node",
-                                                      "volume-id-attributes.msid",
-                                                      "volume-inode-attributes.files-total",
-                                                      "volume-inode-attributes.files-used" ],
-                                    config_rename = { "volume-space-attributes.size-available"   : "size-available",
-                                                      "volume-space-attributes.size-total"       : "size-total",
-                                                      "volume-state-attributes.state"            : "state",
-                                                      "volume-id-attributes.owning-vserver-name" : "vserver_name",
-                                                      "volume-id-attributes.name"                : "name",
-                                                      "volume-id-attributes.msid"                : "msid",
-                                                      "volume-id-attributes.node"                : "node",
-                                                      "volume-inode-attributes.files-total"      : "files-total",
-                                                      "volume-inode-attributes.files-used"       : "files-used" },
-                                    extra_info = create_dict(volume_counters, custom_key = [ "instance_uuid" ]),
-                                    extra_info_report = [z + y + x
-                                                         for x in ["data", "latency", "ops"]
-                                                         for y in ["read_", "write_"]
-                                                         for z in ["", "nfs_", "cifs_", "san_", "fcp_", "iscsi_"]] + \
-                                                        [ "instance_name" ],
-                                    skip_missing_config_key = True
-        ))
+        print(format_config(
+            volumes,
+            "volume",
+            "volume-id-attributes.instance-uuid",
+            config_report=[
+                "volume-space-attributes.size-available", "volume-space-attributes.size-total",
+                "volume-state-attributes.state", "volume-id-attributes.owning-vserver-name",
+                "volume-id-attributes.name", "volume-id-attributes.node",
+                "volume-id-attributes.msid", "volume-inode-attributes.files-total",
+                "volume-inode-attributes.files-used"
+            ],
+            config_rename={
+                "volume-space-attributes.size-available": "size-available",
+                "volume-space-attributes.size-total": "size-total",
+                "volume-state-attributes.state": "state",
+                "volume-id-attributes.owning-vserver-name": "vserver_name",
+                "volume-id-attributes.name": "name",
+                "volume-id-attributes.msid": "msid",
+                "volume-id-attributes.node": "node",
+                "volume-inode-attributes.files-total": "files-total",
+                "volume-inode-attributes.files-used": "files-used"
+            },
+            extra_info=create_dict(volume_counters, custom_key=["instance_uuid"]),
+            extra_info_report=[
+                z + y + x  #
+                for x in ["data", "latency", "ops"]  #
+                for y in ["read_", "write_"]
+                for z in ["", "nfs_", "cifs_", "san_", "fcp_", "iscsi_"]
+            ] + ["instance_name"],
+            skip_missing_config_key=True))
 
     # Aggregations
     aggregations = query(args, server, "aggr-get-iter")
@@ -1301,15 +1304,21 @@ def process_7mode(args, server, netapp_mode, licenses):
         volume_counters = query_counters(args, server, netapp_mode, "volume")
     if volumes:
         print("<<<netapp_api_volumes:sep(9)>>>")
-        print(format_config(volumes, "volume", "name",
-                            config_report = ["name", "volume-info", "size-total", "size-available",
-                                             "volumes", "files-total", "files-used", "state"],
-                            extra_info = create_dict(volume_counters),
-                            extra_info_report = [z + y + x
-                                                 for x in ["data", "latency", "ops"]
-                                                 for y in ["read_", "write_"]
-                                                 for z in ["", "nfs_", "cifs_", "san_", "fcp_", "iscsi_"]] + \
-                                                [ "instance_name" ]))
+        print(format_config(
+            volumes,
+            "volume",
+            "name",
+            config_report=[
+                "name", "volume-info", "size-total", "size-available", "volumes", "files-total",
+                "files-used", "state"
+            ],
+            extra_info=create_dict(volume_counters),
+            extra_info_report=[
+                z + y + x  #
+                for x in ["data", "latency", "ops"]  #
+                for y in ["read_", "write_"]
+                for z in ["", "nfs_", "cifs_", "san_", "fcp_", "iscsi_"]
+            ] + ["instance_name"]))
 
     # Aggregation
     aggregations = query(args, server, "aggr-list-info")
@@ -1523,8 +1532,8 @@ def connect(args):
     except Exception:
         if args.debug:
             raise
-        sys.stderr.write("Cannot connect to NetApp Server. Maybe you provided wrong " \
-                         "credentials. Please check your connection settings and try " \
+        sys.stderr.write("Cannot connect to NetApp Server. Maybe you provided wrong "
+                         "credentials. Please check your connection settings and try "
                          "again.")
         sys.exit(1)
 

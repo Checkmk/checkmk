@@ -3,6 +3,9 @@
 max-line-length=200
 ignore=
     # Incompatible with YAPF:
+    # continuation line under-indented for hanging indent
+    E121,
+    # Incompatible with YAPF:
     # closing bracket does not match visual indentation
     E124,
     # continuation line with same indent as next logical line
@@ -13,6 +16,9 @@ ignore=
     # Too many manual line breaks via \ currently to be usable:
     # continuation line over-indented for visual indent
     E127,
+    # Incompatible with YAPF:
+    # continuation line unaligned for hanging indent
+    E131,
     # Incompatible with the vim folding markers:
     # block comment should start with '# '
     E265,
@@ -28,3 +34,12 @@ ignore=
     # Incompatible with YAPF:
     # line break after binary operator
     W504,
+    # Incompatible with YAPF:
+    # unexpected spaces around keyword / parameter equals
+    E251,
+    # Bug in pyflakes
+    # syntax error in type comment 'FOO'
+    F723,
+    # Bug in pyflakes, already fixed in https://github.com/PyCQA/pyflakes/pull/455, but no release in sight after ages... :-P
+    # undefined name 'FOO'
+    F821,

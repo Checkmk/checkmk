@@ -213,11 +213,11 @@ def parse_autochecks_file(hostname, service_description):
 
     for child in ast.iter_child_nodes(tree):
         # Mypy is wrong about this: [mypy:] "AST" has no attribute "value"
-        if not isinstance(child, ast.Expr) and isinstance(child.value, ast.List):  # type: ignore
+        if not isinstance(child, ast.Expr) and isinstance(child.value, ast.List):  # type: ignore[attr-defined]
             continue  # We only care about top level list
 
         # Mypy is wrong about this: [mypy:] "AST" has no attribute "value"
-        for entry in child.value.elts:  # type: ignore
+        for entry in child.value.elts:  # type: ignore[attr-defined]
             if not isinstance(entry, (ast.Tuple, ast.Dict)):
                 continue
 

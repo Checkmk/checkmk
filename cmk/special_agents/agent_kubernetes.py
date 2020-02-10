@@ -42,12 +42,12 @@ import time
 from typing import (  # pylint: disable=unused-import
     Any, Dict, Generic, List, Mapping, Optional, TypeVar, Union,
 )
-import urllib3  # type: ignore
+import urllib3  # type: ignore[import]
 
 from dateutil.parser import parse as parse_time
 # We currently have no typeshed for kubernetes
-from kubernetes import client  # type: ignore # pylint: disable=import-error
-from kubernetes.client.rest import ApiException  # type: ignore # pylint: disable=import-error
+from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
+from kubernetes.client.rest import ApiException  # type: ignore[import] # pylint: disable=import-error
 
 import cmk.utils.profile
 import cmk.utils.password_store

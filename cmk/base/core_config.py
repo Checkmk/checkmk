@@ -29,7 +29,7 @@ import numbers
 import os
 import sys
 from typing import (  # pylint: disable=unused-import
-    Callable, Text, Optional, Any, Tuple, Union, List, Dict, NewType, AnyStr,
+    Callable, Text, Optional, Union, List, Dict, AnyStr,
 )
 import six
 
@@ -103,8 +103,8 @@ def get_configuration_warnings():
     num_warnings = len(g_configuration_warnings)
 
     if num_warnings > 10:
-        warnings = g_configuration_warnings[:10] + \
-                                  [ "%d further warnings have been omitted" % (num_warnings - 10) ]
+        warnings = (g_configuration_warnings[:10] +
+                    ["%d further warnings have been omitted" % (num_warnings - 10)])
     else:
         warnings = g_configuration_warnings
 
@@ -492,7 +492,7 @@ def get_host_attributes(hostname, config_cache):
         attrs["_ACTIONS"] = ",".join(actions)
 
     if cmk.is_managed_edition():
-        attrs["_CUSTOMER"] = config.current_customer  # type: ignore # pylint: disable=no-member
+        attrs["_CUSTOMER"] = config.current_customer  # pylint: disable=no-member
 
     return attrs
 

@@ -40,8 +40,7 @@ from typing import (  # pylint: disable=unused-import
 
 import six
 
-# suppress "Cannot find module" error from mypy
-import livestatus  # type: ignore
+import livestatus
 import cmk
 from cmk.utils.regex import regex
 import cmk.utils.debug
@@ -532,8 +531,8 @@ def _event_match_servicegroups(rule, context, is_regex):
     if required_groups is not None:
         sgn = context.get("SERVICEGROUPNAMES")
         if sgn is None:
-            return "No information about service groups is in the context, but service " \
-                   "must be in group %s" % ( " or ".join(required_groups))
+            return ("No information about service groups is in the context, but service "
+                    "must be in group %s" % (" or ".join(required_groups)))
         if sgn:
             servicegroups = sgn.split(",")
         else:
@@ -668,8 +667,8 @@ def event_match_hostgroups(rule, context):
     if required_groups is not None:
         hgn = context.get("HOSTGROUPNAMES")
         if hgn is None:
-            return "No information about host groups is in the context, but host " \
-                   "must be in group %s" % ( " or ".join(required_groups))
+            return ("No information about host groups is in the context, but host "
+                    "must be in group %s" % (" or ".join(required_groups)))
         if hgn:
             hostgroups = hgn.split(",")
         else:
@@ -721,8 +720,8 @@ def event_match_exclude_services(rule, context):
     excludelist = rule.get("match_exclude_services", [])
     service = context["SERVICEDESC"]
     if config.in_extraconf_servicelist(excludelist, service):
-        return "The service's description '%s' matches the list of excluded services" \
-          % context["SERVICEDESC"]
+        return ("The service's description '%s' matches the list of excluded services" %
+                context["SERVICEDESC"])
     return None
 
 
@@ -752,8 +751,8 @@ def event_match_checktype(rule, context):
         plugin = command[9:]
         allowed = rule["match_checktype"]
         if plugin not in allowed:
-            return "The Check_MK plugin '%s' is not on the list of allowed plugins (%s)" % \
-              (plugin, ", ".join(allowed))
+            return ("The Check_MK plugin '%s' is not on the list of allowed plugins (%s)" %
+                    (plugin, ", ".join(allowed)))
     return None
 
 

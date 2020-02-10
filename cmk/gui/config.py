@@ -29,6 +29,7 @@ import errno
 import os
 import copy
 import json
+from types import ModuleType  # pylint: disable=unused-import
 from typing import (  # pylint: disable=unused-import
     TYPE_CHECKING, Set, Any, AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union,
 )
@@ -276,7 +277,7 @@ def _apply_default_config():
 
 
 def _load_default_config(vars_before_plugins, vars_after_plugins):
-    # type: (Set, Set) -> None
+    # type: (Set[str], Set[str]) -> None
     default_config.clear()
     _load_default_config_from_module_plugins()
     _load_default_config_from_legacy_plugins(vars_before_plugins, vars_after_plugins)
@@ -301,13 +302,13 @@ def _load_default_config_from_module_plugins():
 
 
 def _load_default_config_from_legacy_plugins(vars_before_plugins, vars_after_plugins):
-    # type: (Set, Set) -> None
+    # type: (Set[str], Set[str]) -> None
     new_vars = vars_after_plugins.difference(vars_before_plugins)
     default_config.update(dict([(k, copy.deepcopy(globals()[k])) for k in new_vars]))
 
 
 def _config_plugin_modules():
-    # type: () -> List
+    # type: () -> List[ModuleType]
     return [
         module for name, module in sys.modules.items()
         if (name.startswith("cmk.gui.plugins.config.") or name.startswith(
@@ -333,7 +334,7 @@ def hide_language(lang):
 
 
 def all_nonfunction_vars(var_dict):
-    # type: (Dict) -> Set
+    # type: (Dict[str, Any]) -> Set[str]
     return {
         name for name, value in var_dict.items()
         if name[0] != '_' and not hasattr(value, '__call__')
@@ -341,6 +342,7 @@ def all_nonfunction_vars(var_dict):
 
 
 def get_language():
+    # type: () -> Optional[str]
     return default_language
 
 
@@ -1071,9 +1073,6 @@ def url_prefix():
     return "/%s/" % cmk.omd_site()
 
 
-use_siteicons = False
-
-
 def default_single_site_configuration():
     # type: () -> SiteConfigurations
     return SiteConfigurations({
@@ -1099,7 +1098,7 @@ sites = SiteConfigurations({})
 
 
 def sitenames():
-    # () -> List[SiteId]
+    # type: () -> List[SiteId]
     return sites.keys()
 
 
@@ -1229,13 +1228,13 @@ def site_attribute_default_value():
 
 
 def site_attribute_choices():
-    # () -> List[Tuple[SiteId, str]]
+    # type: () -> List[Tuple[SiteId, str]]
     authorized_site_ids = user.authorized_sites(unfiltered_sites=configured_sites()).keys()
     return site_choices(filter_func=lambda site_id, site: site_id in authorized_site_ids)
 
 
 def site_choices(filter_func=None):
-    # (Optional[Callable[[SiteId, SiteConfiguration], bool]]) -> List[Tuple[SiteId, str]]
+    # type: (Optional[Callable[[SiteId, SiteConfiguration], bool]]) -> List[Tuple[SiteId, str]]
     choices = []
     for site_id, site_spec in sites.items():
         if filter_func and not filter_func(site_id, site_spec):
@@ -1251,9 +1250,9 @@ def site_choices(filter_func=None):
 
 
 def get_event_console_site_choices():
-    # () -> List[Tuple[SiteId, str]]
+    # type: () -> List[Tuple[SiteId, str]]
     return site_choices(
-        filter_func=lambda site_id, site: site_is_local(site_id) or site.get("replicate_ec"))
+        filter_func=lambda site_id, site: site_is_local(site_id) or site.get("replicate_ec", False))
 
 
 #.

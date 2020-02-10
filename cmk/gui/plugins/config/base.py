@@ -281,6 +281,8 @@ bulk_discovery_default_settings = {
     "error_handling": True,
 }
 
+use_siteicons = False
+
 #     _   _               ____  ____
 #    | | | |___  ___ _ __|  _ \| __ )
 #    | | | / __|/ _ \ '__| | | |  _ \

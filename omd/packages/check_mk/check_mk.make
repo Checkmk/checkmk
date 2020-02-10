@@ -91,7 +91,7 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS)
 	    cmk/utils \
 	    cmk/ec \
 	    cmk/special_agents/__init__.py \
-	    cmk/special_agents/agent_aws.py
+	    cmk/special_agents/agent_aws.py \
 	    cmk/special_agents/agent_jira.py \
 	    cmk/special_agents/agent_kubernetes.py
 	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" ; \

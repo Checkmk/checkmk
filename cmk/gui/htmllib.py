@@ -127,6 +127,7 @@ HTMLTagAttributes = Dict[str, HTMLTagAttributeValue]
 HTMLMessageInput = Union[HTML, Text]
 Choices = List[Tuple[Union[None, str, Text], Text]]
 DefaultChoice = Union[str, Text]
+FoldingIndent = Union[str, None, bool]
 
 #.
 #   .--HTML Generator------------------------------------------------------.
@@ -1130,6 +1131,8 @@ class html(ABCHTMLGenerator):
         self.enable_debug = False
         self.screenshotmode = False
         self.have_help = False
+        # TODO: Clean this foldable specific state member up
+        self.folding_indent = None  # type: FoldingIndent
 
         # browser options
         self.output_format = "html"
@@ -2736,7 +2739,7 @@ class html(ABCHTMLGenerator):
                                  fetch_url=None,
                                  title_url=None,
                                  title_target=None):
-        # type: (str, str, bool, Text, bool, bool, Optional[str], Optional[str], Optional[str], Optional[str]) -> bool
+        # type: (str, str, bool, Text, FoldingIndent, bool, Optional[str], Optional[str], Optional[str], Optional[str]) -> bool
         self.folding_indent = indent
 
         isopen = self.foldable_container_is_open(treename, id_, isopen)

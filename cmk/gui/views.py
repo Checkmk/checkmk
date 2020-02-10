@@ -2036,7 +2036,7 @@ def _collect_context_links_of(visual_type_name, view, rows, singlecontext_reques
     visual_type.load_handler()
     available_visuals = visual_type.permitted_visuals
 
-    for visual in sorted(available_visuals.values(), key=lambda x: x.get('icon', "")):
+    for visual in sorted(available_visuals.values(), key=lambda x: x.get('icon') or ""):
         name = visual["name"]
         linktitle = visual.get("linktitle")
         if not linktitle:

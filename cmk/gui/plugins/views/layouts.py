@@ -158,7 +158,7 @@ class GroupedBoxesLayout(Layout):
 
         # Create empty columns
         columns = []
-        for _x in xrange(num_columns):
+        for _x in range(num_columns):
             columns.append([])
 
         # First put everything into the first column
@@ -612,7 +612,7 @@ class LayoutTable(Layout):
                 this_group = group_value(row, group_cells)
                 if this_group != last_group:
                     if column != 1:  # not a the beginning of a new line
-                        for _i in xrange(column - 1, num_columns):
+                        for _i in range(column - 1, num_columns):
                             html.td('', class_="gap")
                             html.td('', class_="fillup", colspan=num_cells)
                         html.close_tr()
@@ -721,7 +721,7 @@ class LayoutTable(Layout):
             column += 1
 
         if group_open:
-            for _i in xrange(column - 1, num_columns):
+            for _i in range(column - 1, num_columns):
                 html.td('', class_="gap")
                 html.td('', class_="fillup", colspan=num_cells)
             html.close_tr()

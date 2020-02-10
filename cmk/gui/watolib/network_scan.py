@@ -139,7 +139,7 @@ def _ip_int_from_string(ip_str):
 
 def _string_from_ip_int(ip_int):
     octets = []
-    for _ in xrange(4):
+    for _ in range(4):
         octets.insert(0, str(ip_int & 0xFF))
         ip_int >>= 8
     return ".".join(octets)

@@ -103,7 +103,7 @@ class DashletStats(six.with_metaclass(abc.ABCMeta, Dashlet)):
             except MKLivestatusNotFoundError:
                 result = []
 
-        pies = zip(table, result)
+        pies = list(zip(table, result))
         total = sum([x[1] for x in pies])
 
         html.open_div(class_="stats")

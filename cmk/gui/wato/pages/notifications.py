@@ -304,7 +304,7 @@ class NotificationsMode(EventsMode):
                         html.icon_button(delete_url, _("Delete this notification rule"), "delete")
                     else:
                         table.cell("", css="buttons")
-                        for _x in xrange(4):
+                        for _x in range(4):
                             html.empty_icon_button()
 
                     table.cell("", css="narrow")

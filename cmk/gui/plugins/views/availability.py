@@ -513,7 +513,7 @@ def render_availability_table(group_title, availability_table, what, avoptions):
             if show_urls:
                 table.cell("", "")  # Empty cell in URLs column
             table.cell("", _("Summary"), css="heading")
-            for _x in xrange(1, len(av_table["object_titles"])):
+            for _x in range(1, len(av_table["object_titles"])):
                 table.cell("", "")  # empty cells, of more object titles than one
             if show_timeline:
                 table.cell("", "")

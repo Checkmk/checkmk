@@ -475,7 +475,7 @@ class Filesize(Integer):
     _names = ['Byte', 'KByte', 'MByte', 'GByte', 'TByte']
 
     def get_exponent(self, value):
-        for exp, count in ((exp, 1024**exp) for exp in reversed(xrange(len(self._names)))):
+        for exp, count in ((exp, 1024**exp) for exp in reversed(range(len(self._names)))):
             if value == 0:
                 return 0, 0
             if value % count == 0:

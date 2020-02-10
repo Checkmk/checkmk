@@ -1738,7 +1738,7 @@ class LabelCondition(Transform):
         label_conditions = {}
         for operator, label in valuespec_value:
             if label:
-                label_id, label_value = label.items()[0]
+                label_id, label_value = list(label.items())[0]
                 label_conditions[label_id] = self._single_label_from_valuespec(
                     operator, label_value)
         return label_conditions

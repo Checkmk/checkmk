@@ -839,7 +839,7 @@ class LDAPUserConnector(UserConnector):
                   'Please check <a href="%s">your configuration</a>.') %
                 'wato.py?mode=ldap_config&varname=ldap_userspec')
 
-        return [m.lower() for m in group[0][1].values()[0]]
+        return [m.lower() for m in list(group[0][1].values())[0]]
 
     def get_group_memberships(self, filters, filt_attr='cn', nested=False):
         cache_key = (tuple(filters), nested, filt_attr)

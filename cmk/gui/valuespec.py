@@ -4595,7 +4595,7 @@ class ElementSelection(ValueSpec):
     def canonical_value(self):
         self.load_elements()
         if len(self._elements) > 0:
-            return self._elements.keys()[0]
+            return list(self._elements.keys())[0]
 
     def render_input(self, varprefix, value):
         self.load_elements()

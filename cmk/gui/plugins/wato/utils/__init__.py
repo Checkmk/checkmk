@@ -1493,7 +1493,7 @@ def configure_attributes(new,
 
             if for_what in ["host", "cluster", "folder"]:
                 if hosts:
-                    host = hosts.values()[0]
+                    host = list(hosts.values())[0]
                 else:
                     host = None
 

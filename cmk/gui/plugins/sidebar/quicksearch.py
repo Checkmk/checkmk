@@ -166,7 +166,7 @@ class LivestatusSearchConductor(LivestatusSearchBase):
     def get_match_topic(self):
         if len(self._used_filters.keys()) > 1:
             return "Multi-Filter"
-        shortname = self._used_filters.keys()[0]
+        shortname = list(self._used_filters.keys())[0]
         return self._get_plugin_with_shortname(shortname).get_match_topic()
 
     def _get_plugin_with_shortname(self, shortname):

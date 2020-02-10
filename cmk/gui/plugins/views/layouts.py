@@ -801,7 +801,7 @@ class LayoutMatrix(Layout):
                         continue
 
                 table.row()
-                _tdclass, content = cells[0].render(matrix_cells[rid].values()[0])
+                _tdclass, content = cells[0].render(list(matrix_cells[rid].values())[0])
                 table.cell("", content)
 
                 for group_id, group_row in groups:
@@ -857,7 +857,7 @@ class LayoutMatrix(Layout):
 
                 odd = "even" if odd == "odd" else "odd"
                 html.open_tr(class_="data %s0" % odd)
-                tdclass, content = cells[0].render(matrix_cells[rid].values()[0])
+                tdclass, content = cells[0].render(list(matrix_cells[rid].values())[0])
                 html.open_td(class_=["left", tdclass])
                 html.write(content)
                 html.close_td()

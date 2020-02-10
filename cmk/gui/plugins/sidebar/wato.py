@@ -188,7 +188,7 @@ def compute_foldertree():
     def reduce_tree(folders):
         for folder_path, folder in folders.items():
             if len(folder['.folders']) == 1 and folder['.num_hosts'] == 0:
-                child_path, child_folder = folder['.folders'].items()[0]
+                child_path, child_folder = list(folder['.folders'].items())[0]
                 folders[child_path] = child_folder
                 del folders[folder_path]
 
@@ -305,7 +305,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         # Now render the whole tree
         if user_folders:
             render_tree_folder("wato-hosts",
-                               user_folders.values()[0], 'cmk.sidebar.wato_tree_click')
+                               list(user_folders.values())[0], 'cmk.sidebar.wato_tree_click')
 
 
 @snapin_registry.register
@@ -329,4 +329,4 @@ class SidebarSnapinWATOFolders(SidebarSnapin):
         user_folders = compute_foldertree()
         if user_folders:
             render_tree_folder("wato-folders",
-                               user_folders.values()[0], 'cmk.sidebar.wato_folders_clicked')
+                               list(user_folders.values())[0], 'cmk.sidebar.wato_folders_clicked')

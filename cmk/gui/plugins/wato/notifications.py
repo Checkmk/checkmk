@@ -78,7 +78,7 @@ def transform_forth_html_mail_url_prefix(p):
     if not isinstance(p, dict):
         return ("manual", p)
 
-    k, v = p.items()[0]
+    k, v = list(p.items())[0]
     if k == "automatic":
         return "%s_%s" % (k, v)
 

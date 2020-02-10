@@ -77,7 +77,7 @@ def multiline_curves(metric_definition, rrd_data):
 
 def evaluate_time_series_expression(expression, rrd_data):
     if rrd_data:
-        num_points = len(rrd_data.values()[0])
+        num_points = len(list(rrd_data.values())[0])
     else:
         num_points = 1
 

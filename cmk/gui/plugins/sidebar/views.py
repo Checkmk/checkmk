@@ -98,8 +98,9 @@ class Views(SidebarSnapin):
                 for t, title, url in page_type.sidebar_links():
                     page_type_topics.setdefault(t, []).append((t, title, url, False))
 
-        visuals_topics_with_entries = visuals_by_topic(views.get_permitted_views().items() +
-                                                       dashboard.get_permitted_dashboards().items())
+        visuals_topics_with_entries = visuals_by_topic(
+            list(views.get_permitted_views().items()) +
+            list(dashboard.get_permitted_dashboards().items()))
         all_topics_with_entries = []
         for topic, entries in visuals_topics_with_entries:
             if topic in page_type_topics:

@@ -479,7 +479,7 @@ def _confdir_for_user_id(user_id):
     if user_id is None:
         return None
 
-    confdir = config_dir + "/" + user_id.encode("utf-8")
+    confdir = config_dir + "/" + six.ensure_str(user_id)
     store.mkdir(confdir)
     return confdir
 
@@ -923,7 +923,7 @@ def roles_of_user(user_id):
         return ["guest"]
     elif users is not None and user_id in users:
         return ["user"]
-    elif user_id is not None and os.path.exists(config_dir + "/" + user_id.encode("utf-8") +
+    elif user_id is not None and os.path.exists(config_dir + "/" + six.ensure_str(user_id) +
                                                 "/automation.secret"):
         return ["guest"]  # unknown user with automation account
     elif 'roles' in default_user_profile:
@@ -951,7 +951,7 @@ def save_user_file(name, data, user_id):
     if user_id is None:
         raise TypeError("The profiles of LoggedInSuperUser and LoggedInNobody cannot be saved")
 
-    path = config_dir + "/" + user_id.encode("utf-8") + "/" + name + ".mk"
+    path = config_dir + "/" + six.ensure_str(user_id) + "/" + name + ".mk"
     store.mkdir(os.path.dirname(path))
     store.save_object_to_file(path, data)
 
@@ -1214,7 +1214,7 @@ def is_single_local_site():
         return True
 
     # Also use Multisite mode if the one and only site is not local
-    sitename = sites.keys()[0]
+    sitename = list(sites.keys())[0]
     return site_is_local(sitename)
 
 

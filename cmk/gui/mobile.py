@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import six
-
 import cmk.gui.views as views
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
@@ -467,8 +465,6 @@ def do_commands(view, what, rows):
         nagios_commands, title, executor = views.core_command(what, row, nr, len(rows))
         for command in nagios_commands:
             if command not in already_executed:
-                if isinstance(command, six.text_type):
-                    command = command.encode("utf-8")
                 executor(command, row["site"])
                 already_executed.add(command)
                 count += 1

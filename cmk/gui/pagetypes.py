@@ -40,8 +40,10 @@
 import os
 import json
 from typing import Dict  # pylint: disable=unused-import
+import six
 
 import cmk.utils.store as store
+from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.pages
 import cmk.gui.sites as sites
@@ -273,9 +275,7 @@ class Base(object):
     # is sorted by the title of the instance
     @classmethod
     def instances_sorted(cls):
-        instances = cls.__instances.values()
-        instances.sort(key=lambda x: x.title())
-        return instances
+        return sorted(cls.__instances.values(), key=lambda x: x.title())
 
     # Stub function for the list of all pages. In case of Overridable
     # several instances might exist that overlay each other. This
@@ -781,9 +781,9 @@ class Overridable(Base):
 
         # Now scan users subdirs for files "user_$type_name.mk"
         for user in os.listdir(config.config_dir):
-            user = user.decode("utf-8")
+            user = ensure_unicode(user)
             try:
-                path = "%s/%s/user_%ss.mk" % (config.config_dir, user.encode("utf-8"),
+                path = "%s/%s/user_%ss.mk" % (config.config_dir, six.ensure_str(user),
                                               cls.type_name())
                 if not os.path.exists(path):
                     continue

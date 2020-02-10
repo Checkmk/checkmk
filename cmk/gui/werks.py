@@ -31,6 +31,7 @@ import itertools
 import os
 import re
 import time
+import six
 
 import cmk.utils.store as store
 import cmk.utils.paths
@@ -314,7 +315,7 @@ _SORT_AND_GROUP = {
     ),
     "week": (
         cmk.utils.werks.sort_by_date,
-        lambda werk: time.strftime("%s %%U - %%Y" % _("Week").encode("utf-8"),
+        lambda werk: time.strftime("%s %%U - %%Y" % six.ensure_str(_("Week")),
                                    time.localtime(werk["date"]))  #
     ),
     None: (

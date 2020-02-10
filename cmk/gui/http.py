@@ -50,20 +50,16 @@ class LegacyVarsMixin(object):
         if not isinstance(value, six.string_types):
             raise TypeError(_("Only str and unicode values are allowed, got %s") % type(value))
 
-        # All items in self._vars are encoded at the moment. This should be changed one day,
-        # but for the moment we treat vars set with set_var() equal to the vars received from
-        # the HTTP request.
-        if isinstance(varname, six.text_type):
-            varname = varname.encode("utf-8")
-
-        if isinstance(value, six.text_type):
-            value = value.encode("utf-8")
+        # Py2: All items in self._vars are encoded at the moment. This should be changed one day,
+        # but for the moment we treat vars set with set_var() equal to the vars received from the
+        # HTTP request.
+        varname = six.ensure_str(varname)
+        value = six.ensure_str(value)
 
         self.legacy_vars[varname] = value
 
     def del_var(self, varname):
-        if isinstance(varname, six.text_type):
-            varname = varname.encode("utf-8")
+        varname = six.ensure_str(varname)
         self.legacy_vars[varname] = self.DELETED
 
     def del_vars(self, prefix=""):
@@ -87,8 +83,7 @@ class LegacyVarsMixin(object):
             yield name, value
 
     def has_var(self, varname):
-        if isinstance(varname, six.text_type):
-            varname = varname.encode("utf-8")
+        varname = six.ensure_str(varname)
         if varname in self.legacy_vars:
             return self.legacy_vars[varname] is not self.DELETED
 
@@ -96,9 +91,7 @@ class LegacyVarsMixin(object):
         return super(LegacyVarsMixin, self).has_var(varname)
 
     def var(self, varname, default=None):
-        if isinstance(varname, six.text_type):
-            varname = varname.encode("utf-8")
-
+        varname = six.ensure_str(varname)
         legacy_var = self.legacy_vars.get(varname, None)
         if legacy_var is not None:
             if legacy_var is not self.DELETED:
@@ -134,7 +127,7 @@ class LegacyDeprecatedMixin(object):
         for name, values in self.values.lists():
             if name.startswith(prefix):
                 # Preserve previous behaviour
-                yield name, values[-1].encode("utf-8") if values else None
+                yield name, six.ensure_str(values[-1]) if values else None
 
     def var(self, name, default=None):
         # TODO: Deprecated
@@ -143,7 +136,7 @@ class LegacyDeprecatedMixin(object):
             return default
 
         # Preserve previous behaviour
-        return values[-1].encode("utf-8")
+        return six.ensure_str(values[-1])
 
     def has_var(self, varname):
         # TODO: Deprecated
@@ -163,7 +156,7 @@ class LegacyDeprecatedMixin(object):
         value = self.cookies.get(varname, default)
         if value is not None:
             # Why would we want to do that? test_http.py requires it though.
-            return value.encode('utf-8')
+            return six.ensure_str(value)
 
     def get_request_header(self, key, default=None):
         # TODO: Deprecated

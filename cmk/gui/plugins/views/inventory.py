@@ -1676,7 +1676,7 @@ class NodeRenderer(object):
         if "paint_function" in hint:
             _tdclass, code = hint["paint_function"](value)
             html.write(code)
-        elif isinstance(value, str):
+        elif isinstance(value, bytes):
             try:
                 text = value.decode("utf-8")
             except UnicodeDecodeError:

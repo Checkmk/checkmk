@@ -31,7 +31,6 @@ import errno
 import os
 import time
 from typing import Dict, List  # pylint: disable=unused-import
-import six
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -40,6 +39,7 @@ else:
 
 import cmk.utils
 import cmk.utils.store as store
+from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.utils
 from cmk.gui import config, escaping
@@ -75,8 +75,7 @@ def log_entry(linkinfo, action, message, user_id=None):
         message.replace("\n", "\\n"),
     )
 
-    # TODO: once we know all of these are unicode, remove this line
-    write_tokens = (t if isinstance(t, six.text_type) else t.encode("utf-8") for t in write_tokens)
+    write_tokens = (ensure_unicode(t) for t in write_tokens)
 
     store.makedirs(audit_log_path.parent)
     with audit_log_path.open(mode="a", encoding='utf-8') as f:

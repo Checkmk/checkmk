@@ -27,6 +27,7 @@
 import os
 import sys
 from typing import Dict, Text  # pylint: disable=unused-import
+import six
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error,unused-import
@@ -85,7 +86,7 @@ class Htpasswd(object):
         # type: (Dict[Text, Text]) -> None
         """Save the dictionary entries (unicode username and hash) to the htpasswd file"""
         output = "\n".join("%s:%s" % entry for entry in sorted(entries.items())) + "\n"
-        store.save_file("%s" % self._path, output.encode("utf-8"))
+        store.save_text_to_file("%s" % self._path, output)
 
 
 # Check_MK supports different authentication frontends for verifying the
@@ -144,7 +145,7 @@ class HtpasswdUserConnector(UserConnector):
         return False
 
     def _is_automation_user(self, user_id):
-        return os.path.isfile(cmk.utils.paths.var_dir + "/web/" + user_id.encode("utf-8") +
+        return os.path.isfile(cmk.utils.paths.var_dir + "/web/" + six.ensure_str(user_id) +
                               "/automation.secret")
 
     # Validate hashes taken from the htpasswd file. For the moment this function

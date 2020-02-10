@@ -245,12 +245,11 @@ def header(title, isopen=True, table_id="", narrow=False, css=None):
     html.open_table(id_=table_id if table_id else None,
                     class_=["nform", "narrow" if narrow else None, css if css else None])
 
-    html.begin_foldable_container(
-        treename=html.form_name if html.form_name else "nform",
-        id_=base64.b64encode(title.encode("utf-8") if isinstance(title, six.text_type) else title),
-        isopen=isopen,
-        title=title,
-        indent="nform")
+    html.begin_foldable_container(treename=html.form_name if html.form_name else "nform",
+                                  id_=base64.b64encode(six.ensure_binary(title)),
+                                  isopen=isopen,
+                                  title=title,
+                                  indent="nform")
     html.tr(html.render_td('', colspan=2))
     g_header_open = True
     g_section_open = False

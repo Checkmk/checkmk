@@ -166,7 +166,7 @@ def declare_permission_section(name, title, prio=50, do_sort=False):
 # Some dynamically registered permissions still use this
 def declare_permission(name, title, description, defaults):
     if not isinstance(name, str):
-        name = name.encode("utf-8")
+        name = six.ensure_str(name, encoding="ascii")
 
     section_name, permission_name = name.split(".", 1)
 

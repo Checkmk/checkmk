@@ -32,6 +32,9 @@ from hashlib import md5
 import six
 from werkzeug.local import LocalProxy
 
+import cmk.utils.paths
+from cmk.utils.encoding import ensure_unicode
+
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
@@ -42,8 +45,6 @@ from cmk.gui.pages import page_registry, Page
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, local
 from cmk.gui.htmllib import HTML
-
-import cmk.utils.paths
 
 from cmk.gui.exceptions import HTTPRedirect, MKInternalError, MKAuthException, MKUserError, FinalizeRequest
 
@@ -126,14 +127,14 @@ def load_serial(username):
 
 
 def generate_auth_hash(username, now):
-    return generate_hash(username, username.encode("utf-8") + str(now))
+    return _generate_hash(username, username + str(now))
 
 
 # Generates a hash to be added into the cookie value
-def generate_hash(username, value):
+def _generate_hash(username, value):
     secret = load_secret()
     serial = load_serial(username)
-    return md5(value + str(serial) + secret).hexdigest()
+    return md5((value + str(serial) + secret).encode("utf-8")).hexdigest()
 
 
 def del_auth_cookie():
@@ -188,16 +189,16 @@ def session_cookie_name():
 
 
 def session_cookie_value(username, session_id):
-    value = username.encode("utf-8") + ":" + session_id
-    return value + ":" + generate_hash(username, value)
+    value = username + ":" + session_id
+    return value + ":" + _generate_hash(username, value)
 
 
 def get_session_id_from_cookie(username):
     raw_value = html.request.cookie(session_cookie_name(), "::")
     cookie_username, session_id, cookie_hash = raw_value.split(':', 2)
 
-    if cookie_username.decode("utf-8") != username \
-       or cookie_hash != generate_hash(username, username.encode("utf-8") + ":" + session_id):
+    if ensure_unicode(cookie_username) != username \
+       or cookie_hash != _generate_hash(username, username + ":" + session_id):
         auth_logger.error("Invalid session: %s, Cookie: %r" % (username, raw_value))
         return ""
 
@@ -247,9 +248,9 @@ def check_auth_cookie(cookie_name):
 
 
 def parse_auth_cookie(cookie_name):
-    raw_value = html.request.cookie(cookie_name, "::")
+    raw_value = ensure_unicode(html.request.cookie(cookie_name, b"::"))
     username, issue_time, cookie_hash = raw_value.split(':', 2)
-    return username.decode("utf-8"), float(issue_time) if issue_time else 0.0, cookie_hash
+    return username, float(issue_time) if issue_time else 0.0, cookie_hash
 
 
 def check_parsed_auth_cookie(username, issue_time, cookie_hash):
@@ -304,7 +305,7 @@ def check_auth(request):
 
 def verify_automation_secret(user_id, secret):
     if secret and user_id and "/" not in user_id:
-        path = cmk.utils.paths.var_dir + "/web/" + user_id.encode("utf-8") + "/automation.secret"
+        path = cmk.utils.paths.var_dir + "/web/" + six.ensure_str(user_id) + "/automation.secret"
         if not os.path.isfile(path):
             return False
 
@@ -334,7 +335,7 @@ def check_auth_http_header():
     if not user_id:
         return None
 
-    user_id = user_id.decode("utf-8")
+    user_id = ensure_unicode(user_id)
     set_auth_type("http_header")
     renew_cookie(auth_cookie_name(), user_id)
     return user_id
@@ -347,7 +348,7 @@ def check_auth_web_server(request):
     user = request.remote_user
     if user is not None:
         set_auth_type("web_server")
-        return user.decode("utf-8")
+        return ensure_unicode(user)
 
 
 def check_auth_by_cookie():

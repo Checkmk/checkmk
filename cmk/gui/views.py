@@ -2408,9 +2408,6 @@ def do_actions(view, what, action_rows, backurl):
                 else:
                     command = command_entry
 
-                if isinstance(command, six.text_type):
-                    command = command.encode("utf-8")
-
                 executor(command, site)
                 already_executed.add((site, command_entry))
                 count += 1
@@ -2652,7 +2649,7 @@ def do_reschedule():
     if service:
         cmd = "SVC"
         what = "service"
-        spec = "%s;%s" % (host, service.encode("utf-8"))
+        spec = "%s;%s" % (host, service)
 
         if wait_svc:
             wait_spec = u'%s;%s' % (host, wait_svc)
@@ -2694,7 +2691,7 @@ def do_reschedule():
                 # to increase the chance for the passive services already
                 # updated also when we return.
                 time.sleep(0.7)
-            html.write("['OK', %d, %d, %r]\n" % (row[0], row[1], row[2].encode("utf-8")))
+            html.write("['OK', %d, %d, %r]\n" % (row[0], row[1], row[2]))
 
     except Exception as e:
         sites.live().set_only_sites()

@@ -257,7 +257,7 @@ class SingleMetricDashlet(Dashlet):
             }
 
     def _get_translated_metrics_from_perf_data(self, row):
-        perf_data_string = row["service_perf_data"].decode("utf-8").strip()
+        perf_data_string = row["service_perf_data"].strip()
         if not perf_data_string:
             return
         self._perf_data, self._check_command = parse_perf_data(perf_data_string,

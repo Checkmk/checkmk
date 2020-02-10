@@ -77,6 +77,7 @@ from Cryptodome.PublicKey import RSA
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.defines as defines
+from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.forms as forms
 import cmk.gui.utils as utils
@@ -888,7 +889,7 @@ def IPNetwork(ip_class=None, **kwargs):
 
     def _validate_value(value, varprefix):
         try:
-            ip_class(value.decode("utf-8"))
+            ip_class(ensure_unicode(value))
         except ValueError as e:
             raise MKUserError(varprefix, _("Invalid address: %s") % e)
 
@@ -5125,7 +5126,7 @@ class Labels(ValueSpec):
         # see: https://github.com/yairEO/tagify/pull/275
         labels = _encode_labels_for_tagify(value.items())
         html.text_input(varprefix,
-                        default_value=json.dumps(labels).decode("utf-8") if labels else "",
+                        default_value=ensure_unicode(json.dumps(labels)) if labels else "",
                         cssclass="labels",
                         attrs={
                             "placeholder": _("Add some label"),

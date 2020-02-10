@@ -53,7 +53,7 @@ def get_context_url_variables(context):
     add_vars = {}
     for filter_vars in context.values():
         add_vars.update(filter_vars)
-    return add_vars.items()
+    return list(add_vars.items())
 
 
 @snapin_registry.register

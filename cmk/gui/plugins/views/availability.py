@@ -1073,6 +1073,5 @@ def av_output_set_content_disposition(title):
         title,
         time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())),
     )
-    if isinstance(filename, six.text_type):
-        filename = filename.encode("utf-8")
-    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % filename
+    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % six.ensure_str(
+        filename)

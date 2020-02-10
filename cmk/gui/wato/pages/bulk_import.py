@@ -34,6 +34,7 @@ from difflib import SequenceMatcher
 import six
 
 import cmk.utils.store as store
+from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.pages
 import cmk.gui.weblib as weblib
@@ -115,7 +116,7 @@ class ModeBulkImport(WatoMode):
 
         file_id = "%s-%d" % (config.user.id, int(time.time()))
 
-        store.save_file(self._file_path(), content.encode("utf-8"))
+        store.save_text_to_file(self._file_path(), ensure_unicode(content))
 
         # make selections available to next page
         html.request.set_var("file_id", file_id)

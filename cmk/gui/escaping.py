@@ -23,11 +23,15 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+import sys
 import re
 from typing import Text, Union  # pylint: disable=unused-import
 import six
 
-from future.moves.html import escape as html_escape  # type: ignore
+if sys.version_info[0] >= 3:
+    from html import escape as html_escape
+else:
+    from future.moves.html import escape as html_escape  # type: ignore
 
 from cmk.utils.encoding import ensure_unicode
 from cmk.gui.utils.html import HTML

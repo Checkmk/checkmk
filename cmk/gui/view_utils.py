@@ -28,6 +28,8 @@ import re
 import json
 import six
 
+from cmk.utils.encoding import ensure_unicode
+
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -172,9 +174,10 @@ def _render_tag_group(tg_id, tag, object_type, with_link, label_type, label_sour
         ]
     elif label_type == "label":
         type_filter_vars = [
-            ("%s_label" % object_type, json.dumps([{
-                "value": "%s:%s" % (tg_id, tag)
-            }]).decode("utf-8")),
+            ("%s_label" % object_type,
+             ensure_unicode(json.dumps([{
+                 "value": "%s:%s" % (tg_id, tag)
+             }]))),
         ]
 
     else:

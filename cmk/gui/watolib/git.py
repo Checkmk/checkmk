@@ -28,6 +28,7 @@ import errno
 import glob
 import os
 import subprocess
+import six
 
 import cmk.utils
 
@@ -92,7 +93,7 @@ def _git_add_files():
 
 
 def _git_command(args):
-    command = ["git"] + [a.encode("utf-8") for a in args]
+    command = ["git"] + [six.ensure_str(a) for a in args]
     logger.debug("GIT: Execute in %s: %s", cmk.utils.paths.default_config_dir,
                  subprocess.list2cmdline(command))
     try:

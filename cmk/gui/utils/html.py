@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import sys
 from typing import Union, Any, Iterable, Text  # pylint: disable=unused-import
 import six
 
@@ -62,10 +61,6 @@ class HTML(object):
         # type: () -> Text
         return "%s" % self
 
-    def __bytebatzen__(self):
-        # type: () -> bytes
-        return self.value.encode("utf-8")
-
     # TODO: Cleanup once we are using Python 3
     def __str__(self):  # type: ignore
         # type: () -> Text
@@ -90,10 +85,7 @@ class HTML(object):
     def __repr__(self):
         # type: () -> str
         repr_val = "HTML(\"%s\")" % self.value
-
-        if sys.version_info[0] >= 3:
-            return repr_val
-        return repr_val.encode("utf-8")
+        return six.ensure_str(repr_val)
 
     def to_json(self):
         # type: () -> Text

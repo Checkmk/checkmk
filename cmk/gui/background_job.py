@@ -42,6 +42,8 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
+import six
+
 from cmk.gui.i18n import _
 import cmk
 import cmk.utils.log
@@ -90,12 +92,12 @@ class BackgroundProcessInterface(object):
 
     def send_progress_update(self, info):
         """ The progress update is written to stdout and will be catched by the threads counterpart """
-        sys.stdout.write(info.encode("utf-8") + "\n")
+        sys.stdout.write(six.ensure_str(info) + "\n")
 
     def send_result_message(self, info):
         """ The result message is written to stdout because of log output clarity
         as well as into a distinct file, to separate this info from the rest of the context information"""
-        encoded_info = "%s\n" % info.encode("utf-8")
+        encoded_info = "%s\n" % six.ensure_str(info)
         sys.stdout.write(encoded_info)
 
         result_message_path = Path(
@@ -107,7 +109,7 @@ class BackgroundProcessInterface(object):
         """ Exceptions are written to stdout because of log output clarity
         as well as into a distinct file, to separate this info from the rest of the context information"""
         # Exceptions also get an extra newline, since some error messages tend not output a \n at the end..
-        encoded_info = "%s\n" % info.encode("utf-8")
+        encoded_info = "%s\n" % six.ensure_str(info)
         sys.stdout.write(encoded_info)
         with (Path(self.get_work_dir()) / BackgroundJobDefines.exceptions_filename).open("ab") as f:  # pylint: disable=no-member
             f.write(encoded_info)

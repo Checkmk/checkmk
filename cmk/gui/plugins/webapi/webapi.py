@@ -29,6 +29,7 @@
 import copy
 from functools import partial
 import os
+import six
 
 import cmk
 
@@ -683,17 +684,16 @@ class APICallRules(APICallCollection):
         return ruleset_dict
 
     def _get(self, request):
-        ruleset_name = request["ruleset_name"].encode("utf-8")
+        ruleset_name = six.ensure_str(request["ruleset_name"])
         ruleset_dict = self._get_ruleset_configuration(ruleset_name)
         response = {"ruleset": ruleset_dict}
         add_configuration_hash(response, ruleset_dict)
         return response
 
     def _set(self, request):
-        # NOTE: This encoding here should be kept
-        # Otherwise and unicode encoded text will be written into the
-        # configuration file with unknown side effects
-        ruleset_name = request["ruleset_name"].encode("utf-8")
+        # Py2: This encoding here should be kept Otherwise and unicode encoded text will be written
+        # into the configuration file with unknown side effects
+        ruleset_name = six.ensure_str(request["ruleset_name"])
 
         # Future validation, currently the rule API actions are admin only, so the check is pointless
         # may_edit_ruleset(ruleset_name)

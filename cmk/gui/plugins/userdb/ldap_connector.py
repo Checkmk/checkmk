@@ -69,6 +69,7 @@ import six
 import cmk
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.config as config
 import cmk.gui.log as log
@@ -435,7 +436,7 @@ class LDAPUserConnector(UserConnector):
             conn = self._ldap_obj
         self._logger.info('LDAP_BIND %s' % user_dn)
         try:
-            conn.simple_bind_s(user_dn.encode("utf-8"), password)
+            conn.simple_bind_s(six.ensure_str(user_dn), password)
             self._logger.info('  SUCCESS')
         except ldap.LDAPError as e:
             self._logger.info('  FAILED (%s: %s)' % (e.__class__.__name__, e))
@@ -544,11 +545,8 @@ class LDAPUserConnector(UserConnector):
 
         lc = SimplePagedResultsControl(size=page_size, cookie='')
 
-        if isinstance(base, six.text_type):
-            base = base.encode("utf-8")
-
-        if isinstance(filt, six.text_type):
-            filt = filt.encode("utf-8")
+        base = six.ensure_str(base)
+        filt = six.ensure_str(filt)
 
         results = []
         while True:
@@ -607,8 +605,8 @@ class LDAPUserConnector(UserConnector):
                         new_obj = {}
                         for key, val in obj.items():
                             # Convert all keys to lower case!
-                            new_obj[key.decode('utf-8').lower()] = [i.decode('utf-8') for i in val]
-                        result.append((dn.decode('utf-8').lower(), new_obj))
+                            new_obj[ensure_unicode(key).lower()] = [ensure_unicode(i) for i in val]
+                        result.append((ensure_unicode(dn).lower(), new_obj))
                     success = True
                 except ldap.NO_SUCH_OBJECT as e:
                     raise MKLDAPException(

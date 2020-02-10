@@ -35,6 +35,7 @@ import six
 from cmk.gui.utils.html import HTML
 from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
 from cmk.utils.exceptions import MKException
+from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.pages
 import cmk.gui.notify as notify
@@ -656,7 +657,7 @@ def render_dashlet_exception_content(dashlet_spec, dashlet_id, e):
             try:
                 exc_txt = six.text_type(e)
             except UnicodeDecodeError:
-                exc_txt = str(e).decode("utf-8")
+                exc_txt = ensure_unicode(str(e))
 
             html.show_error(_("Problem while rendering dashlet %d of type %s: %s. Have a look at "
                               "<tt>var/log/web.log</tt> for further information.") % \

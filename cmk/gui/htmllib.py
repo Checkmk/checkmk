@@ -1362,7 +1362,9 @@ class html(ABCHTMLGenerator):
         # type: (str, Optional[Text]) -> Optional[Text]
         try:
             val = self.request.var(varname, deflt)
-            return val.decode("utf-8") if isinstance(val, str) else val
+            if val is None:
+                return None
+            return ensure_unicode(val)
         except UnicodeDecodeError:
             raise MKUserError(
                 varname,
@@ -1450,7 +1452,7 @@ class html(ABCHTMLGenerator):
         for key, val in self.request.itervars():
             if key not in ["request", "output_format"] + exclude_vars:
                 if isinstance(val, bytes):
-                    val = val.decode("utf-8")
+                    val = ensure_unicode(val)
                 request[key] = val
 
         return request

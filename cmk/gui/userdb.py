@@ -43,8 +43,8 @@ from livestatus import SiteId  # pylint: disable=unused-import
 
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.encoding import make_utf8
 from cmk.utils.type_defs import UserId, ContactgroupName  # pylint: disable=unused-import
+from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -289,7 +289,7 @@ def user_exists(username):
 
 def _user_exists_according_to_profile(username):
     # type: (UserId) -> bool
-    base_path = config.config_dir + "/" + username.encode("utf-8") + "/"
+    base_path = config.config_dir + "/" + six.ensure_str(username) + "/"
     return os.path.exists(base_path + "transids.mk") \
             or os.path.exists(base_path + "serial.mk")
 
@@ -707,24 +707,22 @@ def load_users(lock=False):
     result = {}
     for uid, user in users.items():
         # Transform user IDs which were stored with a wrong type
-        if isinstance(uid, str):
-            uid = uid.decode("utf-8")
+        uid = ensure_unicode(uid)
 
         profile = contacts.get(uid, {})
         profile.update(user)
         result[uid] = profile
 
         # Convert non unicode mail addresses
-        if isinstance(profile.get("email"), str):
-            profile["email"] = profile["email"].decode("utf-8")
+        if "email" in profile:
+            profile["email"] = ensure_unicode(profile["email"])
 
     # This loop is only neccessary if someone has edited
     # contacts.mk manually. But we want to support that as
     # far as possible.
     for uid, contact in contacts.items():
         # Transform user IDs which were stored with a wrong type
-        if isinstance(uid, str):
-            uid = uid.decode("utf-8")
+        uid = ensure_unicode(uid)
 
         if uid not in result:
             result[uid] = contact
@@ -751,7 +749,7 @@ def load_users(lock=False):
         line = line.strip()
         if ':' in line:
             uid, password = line.strip().split(":")[:2]
-            uid = uid.decode("utf-8")
+            uid = ensure_unicode(uid)
             if password.startswith("!"):
                 locked = True
                 password = password[1:]
@@ -778,7 +776,7 @@ def load_users(lock=False):
         line = line.strip()
         if ':' in line:
             user_id, serial = line.split(':')[:2]
-            user_id = user_id.decode("utf-8")
+            user_id = ensure_unicode(user_id)
             if user_id in result:
                 result[user_id]['serial'] = utils.saveint(serial)
 
@@ -786,7 +784,7 @@ def load_users(lock=False):
     directory = cmk.utils.paths.var_dir + "/web/"
     for d in os.listdir(directory):
         if d[0] != '.':
-            uid = d.decode("utf-8")
+            uid = ensure_unicode(d)
 
             # read special values from own files
             if uid in result:
@@ -827,7 +825,7 @@ def load_users(lock=False):
 
 def custom_attr_path(userid, key):
     # type: (UserId, str) -> str
-    return cmk.utils.paths.var_dir + "/web/" + make_utf8(userid) + "/" + key + ".mk"
+    return cmk.utils.paths.var_dir + "/web/" + six.ensure_str(userid) + "/" + key + ".mk"
 
 
 def load_custom_attr(userid, key, conv_func, default=None):
@@ -924,7 +922,7 @@ def _save_user_profiles(updated_profiles):
     multisite_keys = _multisite_keys()
 
     for user_id, user in updated_profiles.items():
-        user_dir = cmk.utils.paths.var_dir + "/web/" + user_id.encode("utf-8")
+        user_dir = cmk.utils.paths.var_dir + "/web/" + six.ensure_str(user_id)
         store.mkdir(user_dir)
 
         # authentication secret for local processes
@@ -971,7 +969,7 @@ def _cleanup_old_user_profiles(updated_profiles):
     ]
     directory = cmk.utils.paths.var_dir + "/web"
     for user_dir in os.listdir(cmk.utils.paths.var_dir + "/web"):
-        if user_dir not in ['.', '..'] and user_dir.decode("utf-8") not in updated_profiles:
+        if user_dir not in ['.', '..'] and ensure_unicode(user_dir) not in updated_profiles:
             entry = directory + "/" + user_dir
             if not os.path.isdir(entry):
                 continue
@@ -1079,9 +1077,10 @@ def _get_multisite_custom_variable_names():
 def _save_auth_serials(updated_profiles):
     # type: (Users) -> None
     """Write out the users serials"""
-    serials = ""
+    # Write out the users serials
+    serials = u""
     for user_id, user in updated_profiles.items():
-        serials += '%s:%d\n' % (make_utf8(user_id), user.get('serial', 0))
+        serials += u'%s:%d\n' % (user_id, user.get('serial', 0))
     store.save_file('%s/auth.serials' % os.path.dirname(cmk.utils.paths.htpasswd_file), serials)
 
 

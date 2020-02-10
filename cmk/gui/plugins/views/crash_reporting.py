@@ -26,6 +26,8 @@
 
 import json
 from typing import Dict, Text, Optional, List  # pylint: disable=unused-import
+import six
+
 import livestatus
 
 import cmk.gui.config as config
@@ -134,7 +136,7 @@ class CrashReportsRowTable(RowTable):
 
             try:
                 sites.live().set_prepend_site(False)
-                sites.live().set_only_sites([config.SiteId(bytes(crash_info["site"]))])
+                sites.live().set_only_sites([config.SiteId(six.ensure_str(crash_info["site"]))])
 
                 raw_row = sites.live().query_row(
                     "GET crashreports\n"

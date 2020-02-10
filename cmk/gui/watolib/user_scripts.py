@@ -39,6 +39,12 @@
 
 import os
 import re
+import sys
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import cmk.utils.paths
 from cmk.utils.encoding import ensure_unicode
@@ -75,21 +81,21 @@ def _load_user_scripts_from(adir):
             if os.path.isfile(path) and os.access(path, os.X_OK):
                 info = {"title": entry, "bulk": False}
                 try:
-                    lines = open(path)
-                    next(lines)
-                    line = next(lines).decode("utf-8").strip()
-                    if line.startswith("#") and re.search(r'coding[=:]\s*([-\w.]+)', line):
+                    with Path(path).open(encoding="utf-8") as lines:
+                        next(lines)
                         line = next(lines).strip()
-                    if line.startswith("#"):
-                        info["title"] = line.lstrip("#").strip().split("#", 1)[0]
-                    while True:
-                        line = next(lines).strip()
-                        if not line.startswith("#") or ":" not in line:
-                            break
-                        key, value = line[1:].strip().split(":", 1)
-                        value = value.strip()
-                        if key.lower() == "bulk":
-                            info["bulk"] = (value == "yes")
+                        if line.startswith("#") and re.search(r'coding[=:]\s*([-\w.]+)', line):
+                            line = next(lines).strip()
+                        if line.startswith("#"):
+                            info["title"] = line.lstrip("#").strip().split("#", 1)[0]
+                        while True:
+                            line = next(lines).strip()
+                            if not line.startswith("#") or ":" not in line:
+                                break
+                            key, value = line[1:].strip().split(":", 1)
+                            value = value.strip()
+                            if key.lower() == "bulk":
+                                info["bulk"] = (value == "yes")
 
                 except Exception:
                     pass

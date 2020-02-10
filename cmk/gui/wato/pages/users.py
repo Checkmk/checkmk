@@ -151,7 +151,8 @@ class ModeUsers(WatoMode):
         users = userdb.load_users()
         for varname, _value in html.request.itervars(prefix="_c_user_"):
             if html.get_checkbox(varname):
-                user = base64.b64decode(varname.split("_c_user_")[-1]).decode("utf-8")
+                user = base64.b64decode(
+                    varname.split("_c_user_")[-1].encode("utf-8")).decode("utf-8")
                 if user in users:
                     selected_users.append(user)
 

@@ -165,29 +165,17 @@ def parse_diskstat(info):
         # to that project!
 
         # There are 1000 ticks per second
-        # Note: we use onwrap=0.0 here because the parse function is being used also during
-        # service discovery. If we raise a counter wrap exception here, then nothing will
-        # be inventorized.
-        read_ticks_rate = get_rate(counter_base + "read_ticks",
-                                   timestamp,
-                                   int(read_ticks),
-                                   onwrap=0.0)
-        write_ticks_rate = get_rate(counter_base + "write_ticks",
-                                    timestamp,
-                                    int(write_ticks),
-                                    onwrap=0.0)
-        total_ticks_rate = get_rate(counter_base + "total_ticks",
-                                    timestamp,
-                                    int(total_ticks),
-                                    onwrap=0.0)
-        read_ios_rate = get_rate(counter_base + "read_ios", timestamp, int(read_ios), onwrap=0.0)
-        write_ios_rate = get_rate(counter_base + "write_ios", timestamp, int(write_ios), onwrap=0.0)
+        read_ticks_rate = get_rate(counter_base + "read_ticks", timestamp, int(read_ticks))
+        write_ticks_rate = get_rate(counter_base + "write_ticks", timestamp, int(write_ticks))
+        total_ticks_rate = get_rate(counter_base + "total_ticks", timestamp, int(total_ticks))
+        read_ios_rate = get_rate(counter_base + "read_ios", timestamp, int(read_ios))
+        write_ios_rate = get_rate(counter_base + "write_ios", timestamp, int(write_ios))
         total_ios_rate = read_ios_rate + write_ios_rate
         utilization = total_ticks_rate / 1000.0  # not percent, but 0...1
-        read_bytes_rate = get_rate(
-            counter_base + "read_sectors", timestamp, int(read_sectors), onwrap=0.0) * 512
-        write_bytes_rate = get_rate(
-            counter_base + "write_sectors", timestamp, int(write_sectors), onwrap=0.0) * 512
+        read_bytes_rate = get_rate(counter_base + "read_sectors", timestamp,
+                                   int(read_sectors)) * 512
+        write_bytes_rate = get_rate(counter_base + "write_sectors", timestamp,
+                                    int(write_sectors)) * 512
         total_bytes_rate = read_bytes_rate + write_bytes_rate
 
         # The service time is computed from the utilization. If we work

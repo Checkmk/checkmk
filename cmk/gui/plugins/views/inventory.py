@@ -751,8 +751,7 @@ def inv_find_subtable_columns(invpath):
         if key not in columns:
             columns.append(key)
 
-    columns.sort(key=lambda x: (order.get(x, 999), x))
-    return columns
+    return sorted(columns, key=lambda x: (order.get(x, 999), x))
 
 
 def declare_invtable_columns(infoname, invpath, topic):
@@ -1566,8 +1565,7 @@ class NodeRenderer(object):
             if key not in keyorder:
                 _icon, title = inv_titleinfo("%s0.%s" % (invpath, key), None)
                 extratitles.append((title, key))
-        extratitles.sort()
-        titles += extratitles
+        titles += sorted(extratitles)
 
         # Link to Multisite view with exactly this table
         if "view" in hint:

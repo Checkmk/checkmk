@@ -781,10 +781,8 @@ class ModeEditUser(WatoMode):
 
         # Roles
         forms.section(_("Roles"))
-        entries = self._roles.items()
-        entries.sort(key=lambda x: (x[1]["alias"], x[0]))
         is_member_of_at_least_one = False
-        for role_id, role in entries:
+        for role_id, role in sorted(self._roles.items(), key=lambda x: (x[1]["alias"], x[0])):
             if not self._is_locked("roles"):
                 html.checkbox("role_" + role_id, role_id in self._user.get("roles", []))
                 url = watolib.folder_preserving_link([("mode", "edit_role"), ("edit", role_id)])

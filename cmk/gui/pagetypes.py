@@ -167,16 +167,13 @@ class Base(object):
             el = topics.setdefault(topic, [])
             el += elements
 
-        # Sort topics and elements in the topics
+        # Sort elements of each topic
         for topic in topics.values():
             topic.sort()
 
-        sorted_topics = topics.items()
-        sorted_topics.sort(key=lambda x: x[1][0])
-
         # Now remove order numbers and produce the structures for the Dictionary VS
         parameters, keys_by_topic = [], []
-        for topic, elements in sorted_topics:
+        for topic, elements in sorted(topics.items(), key=lambda x: x[1][0]):
             topic_keys = []
 
             for _unused_order, key, vs in elements:

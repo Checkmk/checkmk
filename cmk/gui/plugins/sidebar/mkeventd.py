@@ -121,5 +121,4 @@ class SidebarSnapinCustomers(SidebarSnapin):
             100.0, status["status_average_processing_time"] *
             status["status_average_message_rate"] * 100.0))))
 
-        entries.sort()
-        return entries
+        return sorted(entries)

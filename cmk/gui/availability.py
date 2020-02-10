@@ -919,11 +919,9 @@ def compute_availability(what, av_rawdata, avoptions):
 
             availability_table.append(availability_entry)
 
-    availability_table.sort(key=key_av_entry)
-
     # Apply filters
     filtered_table = []
-    for row in availability_table:
+    for row in sorted(availability_table, key=key_av_entry):
         if pass_availability_filter(row, avoptions):
             filtered_table.append(row)
     return filtered_table
@@ -1062,10 +1060,9 @@ def compute_availability_groups(what, av_data, avoptions):
                 else:
                     title = group_titles.get(group_id, group_id)
                 titled_groups.append((title, group_id))  ## ACHTUNG
-        titled_groups.sort(key=lambda x: x[1])
 
         # 3. Loop over all groups and render them
-        for title, group_id in titled_groups:
+        for title, group_id in sorted(titled_groups, key=lambda x: x[1]):
             group_table = []
             for entry in av_data:
                 group_ids = entry["groups"]

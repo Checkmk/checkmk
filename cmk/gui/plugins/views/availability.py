@@ -797,8 +797,7 @@ def get_relevant_annotations(annotations, by_host, what, avoptions):
                             annos_to_render.append((site_host_svc, annotation))
                             annos_rendered.add(id(annotation))
 
-    annos_to_render.sort(key=lambda x: (x[0], x[1]["from"]))
-    return annos_to_render
+    return sorted(annos_to_render, key=lambda x: (x[0], x[1]["from"]))
 
 
 def get_annotation_date_render_function(annotations, avoptions):

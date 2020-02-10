@@ -111,9 +111,7 @@ class ModeDownloadAgents(WatoMode):
 
                 other_sections.append((title, file_paths))
 
-        other_sections.sort()
-
-        for title, file_paths in other_sections:
+        for title, file_paths in sorted(other_sections):
             useful_file_paths = [
                 p for p in file_paths
                 if file_titles.get(p, "") is not None \

@@ -505,13 +505,11 @@ class LivestatusQuicksearch(LivestatusSearchBase):
         for search_object in self._search_objects:
             if not search_object.num_rows():
                 continue
-            elements = search_object.get_elements()
-            elements.sort(key=lambda x: x["display_text"])
             if show_match_topics:
                 match_topic = search_object.get_match_topic()
                 html.div(_("Results for %s") % match_topic, class_="topic")
 
-            for entry in elements:
+            for entry in sorted(search_object.get_elements(), key=lambda x: x["display_text"]):
                 html.a(entry["display_text"],
                        id="result_%s" % self._query,
                        href=entry["url"],

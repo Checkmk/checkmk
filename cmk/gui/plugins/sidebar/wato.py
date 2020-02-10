@@ -133,7 +133,6 @@ def compute_foldertree():
             "Columns: filename"
     hosts = sites.live().query(query)
     sites.live().set_prepend_site(False)
-    hosts.sort()
 
     def get_folder(path, num=0):
         folder = watolib.Folder.folder(path)
@@ -150,7 +149,7 @@ def compute_foldertree():
     # Now get number of hosts by folder
     # Count all childs for each folder
     user_folders = {}
-    for _site, filename, num in hosts:
+    for _site, filename, num in sorted(hosts):
         # Remove leading /wato/
         wato_folder_path = filename[6:]
 
@@ -204,8 +203,6 @@ def compute_foldertree():
 # We fetch the information via livestatus - not from WATO.
 def render_tree_folder(tree_id, folder, js_func):
     subfolders = folder.get(".folders", {}).values()
-    subfolders.sort(key=lambda x: x["title"].lower())
-
     is_leaf = len(subfolders) == 0
 
     # Suppress indentation for non-emtpy root folder
@@ -221,7 +218,7 @@ def render_tree_folder(tree_id, folder, js_func):
 
     if not is_leaf:
         html.begin_foldable_container(tree_id, "/" + folder[".path"], False, HTML(title))
-        for subfolder in subfolders:
+        for subfolder in sorted(subfolders, key=lambda x: x["title"].lower()):
             render_tree_folder(tree_id, subfolder, js_func)
         html.end_foldable_container()
     else:

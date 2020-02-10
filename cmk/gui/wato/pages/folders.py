@@ -405,8 +405,7 @@ class ModeFolder(WatoMode):
 
         show_checkboxes = html.request.var('show_checkboxes', '0') == '1'
 
-        hostnames = self._folder.hosts().keys()
-        hostnames.sort(key=utils.key_num_split)
+        hostnames = sorted(self._folder.hosts().keys(), key=utils.key_num_split)
         search_text = html.request.var("search")
 
         # Helper function for showing bulk actions. This is needed at the bottom

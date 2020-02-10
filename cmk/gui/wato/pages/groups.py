@@ -137,13 +137,10 @@ class ModeGroups(six.with_metaclass(abc.ABCMeta, WatoMode)):
             self._page_no_groups()
             return
 
-        sorted_groups = self._groups.items()
-        sorted_groups.sort(key=lambda x: x[1]['alias'])
-
         self._collect_additional_data()
 
         with table_element(self.type_name + "groups") as table:
-            for name, group in sorted_groups:
+            for name, group in sorted(self._groups.items(), key=lambda x: x[1]['alias']):
                 table.row()
                 self._show_row_cells(table, name, group)
 

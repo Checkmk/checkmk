@@ -31,6 +31,7 @@ import os
 import pprint
 import traceback
 import json
+import functools
 from typing import Any, Dict, List, Optional, Sequence, Set  # pylint: disable=unused-import
 import six
 
@@ -2035,7 +2036,7 @@ def _collect_context_links_of(visual_type_name, view, rows, singlecontext_reques
     visual_type.load_handler()
     available_visuals = visual_type.permitted_visuals
 
-    for visual in sorted(available_visuals.values(), key=lambda x: x.get('icon')):
+    for visual in sorted(available_visuals.values(), key=lambda x: x.get('icon', "")):
         name = visual["name"]
         linktitle = visual.get("linktitle")
         if not linktitle:
@@ -2146,7 +2147,7 @@ def sort_data(data, sorters):
                 return c
         return 0  # equal
 
-    data.sort(multisort)
+    data.sort(key=functools.cmp_to_key(multisort))
 
 
 def sorters_of_datasource(ds_name):

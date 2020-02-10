@@ -270,6 +270,21 @@ def _valuespec_generic_metrics_prometheus():
                                       title=_("Network"),
                                       allow_empty=False,
                                   )),
+                                 ("memory",
+                                  ListChoice(
+                                      choices=[("container", _("Group by Container")),
+                                               ("pod", _("Group by Pod"))],
+                                      title=_("Filesystem"),
+                                      allow_empty=False,
+                                      help=_("You must specify by which entity level you "
+                                             "would like the memory information to be "
+                                             "aggregated. It is possible to select multiple "
+                                             "options here. The container's used memory will be "
+                                             "displayed relative to its respective pod. The pod's "
+                                             "used memory will be shown in reference to its "
+                                             "specified limit or the machine memory if a limit is "
+                                             "not applicable."),
+                                  )),
                              ],
                              title=_("CAdvisor"),
                              validate=_check_not_empty_exporter_dict,

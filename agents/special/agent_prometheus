@@ -77,6 +77,16 @@ def setup_logging(verbosity):
 class CAdvisorExporter:
     def __init__(self, api_client):
         self.api_client = api_client
+        self.pod_containers = {}
+
+    def update_pod_containers(self):
+        result = {}
+        temp_result = self.api_client.perform_multi_result_promql(
+            'container_last_seen{container!="", pod!=""}').promql_metrics
+        for container_details_dict in temp_result:
+            labels = container_details_dict["labels"]
+            result.setdefault(labels["pod"], []).append(labels["name"])
+        self.pod_containers.update(result)
 
     def diskstat_summary(self, group_element: str) -> List[Dict[str, Dict[str, Any]]]:
         disk_info = {
@@ -116,11 +126,52 @@ class CAdvisorExporter:
         }
         return self._retrieve_cadvisor_info(if_info, group_element)
 
+    def memory_pod_summary(self, group_element):
+        memory_info = {
+            "memory_usage_pod": 'sum by (pod)(container_memory_usage_bytes{container!=""})',
+            "memory_limit": 'sum by(pod)(container_spec_memory_limit_bytes{container!=""})',
+            "memory_rss": 'sum by(pod)(container_memory_rss{container!=""})',
+            "memory_swap": 'sum by(pod)(container_memory_swap{container!=""})',
+            "memory_cache": 'sum by(pod)(container_memory_cache{container!=""})'
+        }
+        result_temp = self._retrieve_cadvisor_info(memory_info, group_element)
+        extra_info = self.api_client.perform_multi_result_promql('machine_memory_bytes').promql_metrics
+        result_temp.append({
+            piggyback_pod_host: {
+                "memory_machine": extra_info
+            } for piggyback_pod_host in result_temp[0].keys()
+        }
+        )
+        return result_temp
+
+    def memory_container_summary(self, _group_element):
+        memory_info = {
+            "memory_usage_container": 'sum by (pod, container, name)(container_memory_usage_bytes{container!=""})',
+            "memory_rss_container": 'container_memory_rss{container!=""}',
+            "memory_swap_container": 'container_memory_swap{container!=""}',
+            "memory_cache_container": 'container_memory_cache{container!=""}',
+        }
+        result_temp = self._retrieve_cadvisor_info(memory_info, group_element="name")
+        pods_memory_result = self.api_client.perform_multi_result_promql(
+            'sum by (pod)(container_memory_usage_bytes{pod!="", container=""})').promql_metrics
+        extra_result = {}
+        for pod_memory_dict in pods_memory_result:
+            pod_name = pod_memory_dict["labels"]["pod"]
+            for container_name in self.pod_containers[pod_name]:
+                extra_result[container_name] = {
+                    "memory_usage_pod": [pod_memory_dict]
+                }
+        result_temp.append(extra_result)
+        return result_temp
+
     def _retrieve_cadvisor_info(self, entity_info: Dict[str, str],
                                 group_element: str) -> List[Dict[str, Dict[str, Any]]]:
         result = []
         for entity_name, entity_promql in entity_info.items():
-            promql_query = entity_promql.format(group_element=group_element)
+            if "{group_element}" in entity_promql:
+                promql_query = entity_promql.format(group_element=group_element)
+            else:
+                promql_query = entity_promql
             promql_result = self.api_client.perform_multi_result_promql(
                 promql_query).get_piggybacked_services(metric_description=entity_name,
                                                        promql_label_for_piggyback=group_element)
@@ -177,15 +228,16 @@ class PromQLResponse:
 class PromQLMultiResponse(PromQLResponse):
     """PromQL Response where one or more metric results are expected
     """
+
     def __init__(self, promql_response: List[Dict[str, Any]]) -> None:
         super(PromQLMultiResponse, self).__init__(promql_response)
         self.labels_overall_frequencies: Dict[str, Dict[str, float]] = {}
         self.promql_metrics = self._process_multi_result()
 
     def get_piggybacked_services(
-            self,
-            metric_description: str,
-            promql_label_for_piggyback: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
+        self,
+        metric_description: str,
+        promql_label_for_piggyback: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
         """Process PromQL response to get "piggybacked" services
 
         Args:
@@ -302,7 +354,7 @@ class PromQLMultiResponse(PromQLResponse):
         return promql_labels_by_relevance
 
     def _determine_unique_least_labels_combination(
-            self, promql_labels_by_relevance: List[str]) -> List[str]:
+        self, promql_labels_by_relevance: List[str]) -> List[str]:
         """Determines the smallest, valid subset of PromQL labels which allows to uniquely identify
         each PromQL metric from the PromQL query result set. It should be noted that this approach does not
         find the exact solution to the underlying problem as the problem cannot be solved in polynomial time (NP-Hard)
@@ -337,6 +389,7 @@ class PrometheusServer:
     Query and process general information from the Prometheus Server including
     its own status and the connected scrape targets
     """
+
     def __init__(self, api_client: 'PrometheusAPI') -> None:
         self.api_client = api_client
 
@@ -377,7 +430,7 @@ class PrometheusAPI:
             yield scrape_target_name, info["attributes"]
 
     def perform_specified_promql_queries(
-            self, custom_services: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+        self, custom_services: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
         """Prepare Host & Piggyback data from custom defined PromQL expressions
 
         For custom Prometheus services, only allow PromQL expressions which
@@ -591,11 +644,15 @@ class ApiData:
         return '\n'.join(e.output())
 
     def cadvisor_section(self, cadvisor_options: Dict[str, List[str]]) -> Iterator[str]:
+        self.cadvisor_exporter.update_pod_containers()
+
         cadvisor_summaries = {
             "diskio": self.cadvisor_exporter.diskstat_summary,
             "cpu": self.cadvisor_exporter.cpu_summary,
             "df": self.cadvisor_exporter.df_summary,
             "if": self.cadvisor_exporter.if_summary,
+            "memory_pod": self.cadvisor_exporter.memory_pod_summary,
+            "memory_container": self.cadvisor_exporter.memory_container_summary,
         }
 
         if "diskio" in cadvisor_options:
@@ -612,6 +669,17 @@ class ApiData:
         if "if" in cadvisor_options:
             yield from self._output_cadvisor_summary("cadvisor_if", cadvisor_summaries["if"],
                                                      cadvisor_options["if"])
+
+        if "memory" in cadvisor_options:
+            if "pod" in cadvisor_options["memory"]:
+                yield from self._output_cadvisor_summary("cadvisor_memory",
+                                                         cadvisor_summaries["memory_pod"],
+                                                         ["pod"])
+
+            if "container" in cadvisor_options["memory"]:
+                yield from self._output_cadvisor_summary("cadvisor_memory",
+                                                         cadvisor_summaries["memory_container"],
+                                                         ["container"])
 
     @staticmethod
     def _output_cadvisor_summary(cadvisor_service_name: str, retrieve_cadvisor_summary: Callable,

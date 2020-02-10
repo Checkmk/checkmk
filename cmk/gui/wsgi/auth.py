@@ -31,6 +31,9 @@ from typing import Optional  # pylint: disable=unused-import
 
 from connexion import problem  # type: ignore[import]
 
+from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
+from cmk.utils.encoding import ensure_unicode
+
 from cmk.gui import crash_reporting
 from cmk.gui.config import clear_user_login
 from cmk.gui.exceptions import MKException, MKAuthException, MKUserError
@@ -61,7 +64,7 @@ def bearer_auth(token):
     if "/" in user_id:
         return None
 
-    if verify_automation_secret(user_id, secret):
+    if verify_automation_secret(UserId(ensure_unicode(user_id)), secret):
         # Auth with automation secret succeeded - mark transid as unneeded in this case
         return _subject(user_id)
 

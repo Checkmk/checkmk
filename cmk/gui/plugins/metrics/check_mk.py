@@ -3159,7 +3159,7 @@ metric_info["pages_bw_a3"] = {
 
 metric_info["pages"] = {
     "title": _("Remaining supply"),
-    "unit": "%",
+    "unit": "count",
     "color": "34/a",
 }
 

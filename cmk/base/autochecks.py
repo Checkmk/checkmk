@@ -204,7 +204,8 @@ def parse_autochecks_file(hostname, service_description):
         return services
 
     try:
-        tree = ast.parse(open(str(path)).read())
+        with path.open(encoding="utf-8") as f:
+            tree = ast.parse(f.read())
     except SyntaxError as e:
         if cmk.utils.debug.enabled():
             raise

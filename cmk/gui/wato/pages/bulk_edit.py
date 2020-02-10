@@ -28,6 +28,7 @@ cleanup is implemented here: the bulk removal of explicit attribute
 values."""
 
 from hashlib import sha256
+import six
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -85,7 +86,7 @@ class ModeBulkEdit(WatoMode):
         hosts = dict([
             (host_name, watolib.Folder.current().host(host_name)) for host_name in host_names
         ])
-        current_host_hash = sha256(repr(hosts))
+        current_host_hash = sha256(six.ensure_binary(repr(hosts)))
 
         # When bulk edit has been made with some hosts, then other hosts have been selected
         # and then another bulk edit has made, the attributes need to be reset before

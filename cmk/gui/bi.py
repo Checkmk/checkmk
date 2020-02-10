@@ -468,7 +468,7 @@ class JobWorker(multiprocessing.Process):
 
         # Generates a unique id for the given entry
         def get_hash(entry):
-            return hashlib.md5(repr(entry)).hexdigest()
+            return hashlib.md5(six.ensure_binary(repr(entry))).hexdigest()
 
         for group in {g for g in groups}:  # Flattened groups
             new_entries_hash = list(map(get_hash, new_entries))

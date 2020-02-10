@@ -2390,7 +2390,7 @@ class DropdownChoice(ValueSpec):
 
     @staticmethod
     def option_id(val):
-        return "%s" % hashlib.sha256(repr(val)).hexdigest()
+        return "%s" % hashlib.sha256(six.ensure_binary(repr(val))).hexdigest()
 
     def _validate_value(self, value, varprefix):
         if self._no_preselect and value == self._no_preselect_value:
@@ -2655,11 +2655,12 @@ class CascadingDropdown(ValueSpec):
 
                 if self._render == CascadingDropdown.Render.foldable:
                     with html.plugged():
-                        html.begin_foldable_container("foldable_cascading_dropdown",
-                                                      id_=hashlib.sha256(repr(value)).hexdigest(),
-                                                      isopen=False,
-                                                      title=title,
-                                                      indent=False)
+                        html.begin_foldable_container(
+                            "foldable_cascading_dropdown",
+                            id_=hashlib.sha256(six.ensure_binary(repr(value))).hexdigest(),
+                            isopen=False,
+                            title=title,
+                            indent=False)
                         html.write(vs.value_to_text(value[1]))
                         html.end_foldable_container()
                     return html.drain()

@@ -4912,7 +4912,9 @@ class ImageUpload(FileUpload):
             html.open_table()
             html.open_tr()
             html.td(_("Current image:"))
-            html.td(html.render_img("data:image/png;base64,%s" % base64.b64encode(value)))
+            html.td(
+                html.render_img("data:image/png;base64,%s" %
+                                base64.b64encode(six.ensure_binary(value))))
             html.close_tr()
             html.open_tr()
             html.td(_("Upload new:"))

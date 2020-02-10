@@ -29,6 +29,7 @@ import re
 import pprint
 import base64
 import pickle
+import six
 
 import cmk
 import cmk.utils.paths
@@ -125,7 +126,7 @@ def format_config_value(value):
 
 def mk_repr(s):
     if not config.wato_legacy_eval:
-        return base64.b64encode(repr(s))
+        return base64.b64encode(six.ensure_binary(repr(s)))
     return base64.b64encode(pickle.dumps(s))
 
 

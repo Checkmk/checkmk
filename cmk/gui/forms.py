@@ -27,6 +27,8 @@
 import base64
 import six
 
+from cmk.utils.encoding import ensure_unicode
+
 import cmk.gui.escaping as escaping
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -246,7 +248,7 @@ def header(title, isopen=True, table_id="", narrow=False, css=None):
                     class_=["nform", "narrow" if narrow else None, css if css else None])
 
     html.begin_foldable_container(treename=html.form_name if html.form_name else "nform",
-                                  id_=base64.b64encode(six.ensure_binary(title)),
+                                  id_=ensure_unicode(base64.b64encode(six.ensure_binary(title))),
                                   isopen=isopen,
                                   title=title,
                                   indent="nform")

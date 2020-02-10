@@ -496,6 +496,8 @@ def test_registered_permissions():
         'view.cmk_sites_of_host',
         'dashboard.cmk_overview',
         'dashboard.cmk_host',
+        'view.host_graphs',
+        'view.service_graphs',
     ]
 
     if not cmk.is_raw_edition():
@@ -514,8 +516,6 @@ def test_registered_permissions():
             'sidesnap.cmc_stats',
             'sidesnap.reports',
             'view.allhosts_deploy',
-            'view.host_graphs',
-            'view.service_graphs',
             'wato.agent_deploy_custom_files',
             'wato.agent_deployment',
             'wato.agents',

@@ -96,7 +96,8 @@ def evaluate_time_series_expression(expression, rrd_data):
                 raise MKGeneralException(
                     _("Forecast calculations are only available with the "
                       "Checkmk Enterprise Editions"))
-            from cmk.gui.cee.plugins.metrics.forecasts import time_series_transform_forecast
+            # Suppression is needed to silence pylint in CRE environment
+            from cmk.gui.cee.plugins.metrics.forecasts import time_series_transform_forecast  # pylint: disable=no-name-in-module
             return time_series_transform_forecast(operands_evaluated, conf)
 
     if expression[0] == "rrd":

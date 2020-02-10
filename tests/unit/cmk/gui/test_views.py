@@ -31,13 +31,8 @@ def test_registered_painter_options():
         'show_internal_tree_paths',
         'ts_date',
         'ts_format',
-    ]
-
-    if not cmk.is_raw_edition():
-        expected += [
-
         'graph_render_options',
-        ]
+    ]
 
     names = cmk.gui.plugins.views.painter_option_registry.keys()
     assert sorted(expected) == sorted(names)

@@ -117,16 +117,16 @@ def test_registered_pages():
         'wato_ajax_profile_repl',
         'webapi',
         'werk',
+        'ajax_graph',
+        'ajax_graph_hover',
+        'ajax_render_graph_content',
     ]
 
     if not cmk.is_raw_edition():
         expected_pages += [
-            'ajax_graph',
-            'ajax_graph_hover',
             'ajax_metric_choice',
             'ajax_pagetype_add_element',
             'ajax_popup_add_metric_to_graph',
-            'ajax_render_graph_content',
             'ajax_scalar_choice',
             'combined_graphs',
             'create_report',

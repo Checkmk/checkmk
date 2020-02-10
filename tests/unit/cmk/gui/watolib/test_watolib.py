@@ -185,6 +185,7 @@ def test_registered_configvars():
         'wato_pprint_config',
         'wato_upload_insecure_snapshots',
         'wato_use_git',
+        'graph_timeranges',
     ]
 
     if not cmk.is_raw_edition():
@@ -228,7 +229,6 @@ def test_registered_configvars():
             'config',
             'dcd_log_levels',
             'dcd_web_api_connection',
-            'graph_timeranges',
             'liveproxyd_default_connection_params',
             'liveproxyd_log_levels',
             'mknotifyd_insecure_message_format',

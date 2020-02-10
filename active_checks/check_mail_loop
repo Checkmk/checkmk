@@ -36,6 +36,7 @@ import random
 import re
 import smtplib
 import socket
+import ssl
 import sys
 import time
 
@@ -156,7 +157,6 @@ def save_expected_mails(expected_mails, status_path):
 
 
 def add_starttls_support(self, conn_timeout):
-    import ssl  # pylint: disable=import-outside-toplevel
     name = "STARTTLS"
     typ, dat = self._simple_command(name)
     if typ != 'OK':
@@ -168,7 +168,7 @@ def add_starttls_support(self, conn_timeout):
 
     cap = 'CAPABILITY'
     self._simple_command(cap)
-    if not cap in self.untagged_responses:
+    if cap not in self.untagged_responses:
         raise self.error('no CAPABILITY response from server')
     self.capabilities = tuple(self.untagged_responses[cap][-1].upper().split())
 
@@ -353,7 +353,8 @@ def cleanup_mailbox(obsolete_mails, fetched_mails):
     try:
         # Do not delete all messages in the inbox. Only the ones which were
         # processed before! In the meantime there might be occured new ones.
-        for mail_index, _unused_recv_ts in list(fetched_mails.values()) + list(obsolete_mails.values()):
+        for mail_index, _unused_recv_ts in list(fetched_mails.values()) + list(
+                obsolete_mails.values()):
             if fetch_proto == 'POP3':
                 response = g_M.dele(mail_index + 1)
                 if not response.startswith("+OK"):

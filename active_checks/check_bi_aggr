@@ -35,7 +35,8 @@ import subprocess
 from pathlib import Path
 
 import requests
-import urllib3  # type: ignore
+from requests_kerberos import HTTPKerberosAuth  # type: ignore[import]
+import urllib3  # type: ignore[import]
 
 import cmk.utils.password_store
 
@@ -169,8 +170,6 @@ def init_auth():
     auth_obj = None
     if username and password:
         if auth_mode == 'kerberos':
-            from requests_kerberos import HTTPKerberosAuth  # type: ignore # pylint: disable=import-outside-toplevel
-
             kinit = subprocess.Popen(
                 ["kinit", username],
                 stdin=subprocess.PIPE,
@@ -192,6 +191,7 @@ def init_auth():
         else:
             auth_obj = requests.auth.HTTPBasicAuth(username, password)
     return auth_obj
+
 
 url = "%s/check_mk/view.py" \
       "?view_name=aggr_single_api" \

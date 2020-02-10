@@ -28,5 +28,6 @@ MYPYPATH="$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/om
     exec "$REPO_PATH/scripts/run-pipenv" 3 run mypy \
     --python-version $("$REPO_PATH/scripts/detect-python-version" "$@") \
     --scripts-are-modules \
+    --show-error-codes \
     ${JUNIT_XML} \
     "$@"

@@ -1,6 +1,6 @@
 [flake8]
 # In .style.yapf and .pylintrc we use 100, but in some cases this isn't enforced.
-max-line-length=200
+max-line-length=220
 ignore=
     # Incompatible with YAPF:
     # continuation line under-indented for hanging indent
@@ -31,6 +31,9 @@ ignore=
     # Incompatible with our exec/eval magic:
     # 'FOO' may be undefined, or defined from star imports
     F405,
+    # Incompatible with YAPF:
+    # line break before binary operator
+    W503,
     # Incompatible with YAPF:
     # line break after binary operator
     W504,

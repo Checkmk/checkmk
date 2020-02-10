@@ -36,7 +36,7 @@ import cmk.gui.escaping as escaping
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 else:
-    managed = None  # type: ignore
+    managed = None  # type: ignore[assignment]
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -944,9 +944,9 @@ class ModeBI(WatoMode, BIManagement):
                 # Check if lower rules use it
                 else:
                     subrule = self.find_rule_by_id(ru_id)
-                    l = self.rule_uses_rule(subrule, ruleid, level + 1)
-                    if l:
-                        return l
+                    lv = self.rule_uses_rule(subrule, ruleid, level + 1)
+                    if lv:
+                        return lv
         return False
 
     def count_rule_references(self, ruleid):
@@ -961,9 +961,9 @@ class ModeBI(WatoMode, BIManagement):
         rule_refs = 0
         for pack in self._packs.values():
             for rule in pack["rules"].values():
-                l = self.rule_uses_rule(rule, ruleid)
-                level = max(l, level)
-                if l == 1:
+                lv = self.rule_uses_rule(rule, ruleid)
+                level = max(lv, level)
+                if lv == 1:
                     rule_refs += 1
 
         return aggr_refs, rule_refs, level
@@ -1005,9 +1005,11 @@ class ModeBI(WatoMode, BIManagement):
 
     def _get_selection(self, _type):
         checkbox_name = "_c_%s_" % _type
-        return [varname.split(checkbox_name)[-1] \
-                for varname, _value in html.request.itervars(prefix=checkbox_name)
-                if html.get_checkbox(varname)]
+        return [
+            varname.split(checkbox_name)[-1]  #
+            for varname, _value in html.request.itervars(prefix=checkbox_name)
+            if html.get_checkbox(varname)
+        ]
 
 
 #.
@@ -1262,10 +1264,9 @@ class ModeBIAggregations(ModeBI):
     def _bulk_delete_after_confirm(self):
         selection = sorted(map(int, self._get_selection("aggregation")))
         if selection:
-            c = wato_confirm(_("Confirm deletion of %d aggregations") % \
-                               len(selection),
-                             _("Do you really want to delete %d aggregations?") % \
-                               len(selection))
+            c = wato_confirm(
+                _("Confirm deletion of %d aggregations") % len(selection),
+                _("Do you really want to delete %d aggregations?") % len(selection))
             if c:
                 for aggregation_id in selection[::-1]:
                     del self._pack["aggregations"][aggregation_id]
@@ -1289,18 +1290,20 @@ class ModeBIAggregations(ModeBI):
 
         selection = list(map(int, self._get_selection("aggregation")))
         if selection and target_pack is not None:
-            c = wato_confirm(_("Confirm moving of %d aggregations to %s") % \
-                              (len(selection), target_pack['title']),
-                             _("Do you really want to move %d aggregations to %s?") % \
-                              (len(selection), target_pack['title']))
+            c = wato_confirm(
+                _("Confirm moving of %d aggregations to %s") %
+                (len(selection), target_pack['title']),
+                _("Do you really want to move %d aggregations to %s?") %
+                (len(selection), target_pack['title']))
             if c:
                 for aggregation_id in selection[::-1]:
                     aggregation = self._pack["aggregations"][aggregation_id]
                     target_pack["aggregations"].append(aggregation)
                     del self._pack["aggregations"][aggregation_id]
-                    self._add_change("bi-move-aggregation",
-                                   _("Moved BI aggregation with ID %s to BI pack %s") % \
-                                    (aggregation_id+1, target))
+                    self._add_change(
+                        "bi-move-aggregation",
+                        _("Moved BI aggregation with ID %s to BI pack %s") %
+                        (aggregation_id + 1, target))
                 self.save_config()
             elif c is False:
                 return ""
@@ -1488,10 +1491,9 @@ class ModeBIRules(ModeBI):
             self._check_delete_rule_id_permission(rule_id)
 
         if selection:
-            c = wato_confirm(_("Confirm deletion of %d rules") % \
-                               len(selection),
-                             _("Do you really want to delete %d rules?") % \
-                               len(selection))
+            c = wato_confirm(
+                _("Confirm deletion of %d rules") % len(selection),
+                _("Do you really want to delete %d rules?") % len(selection))
             if c:
                 for rule_id in selection:
                     del self._pack["rules"][rule_id]
@@ -1522,10 +1524,10 @@ class ModeBIRules(ModeBI):
 
         selection = self._get_selection("rule")
         if selection and target_pack is not None:
-            c = wato_confirm(_("Confirm moving of %d rules to %s") % \
-                              (len(selection), target_pack['title']),
-                             _("Do you really want to move %d rules to %s?") % \
-                              (len(selection), target_pack['title']))
+            c = wato_confirm(
+                _("Confirm moving of %d rules to %s") % (len(selection), target_pack['title']),
+                _("Do you really want to move %d rules to %s?") %
+                (len(selection), target_pack['title']))
             if c:
                 for rule_id in selection:
                     rule_attrs = self._pack["rules"][rule_id]
@@ -1861,9 +1863,10 @@ class ModeBIEditRule(ModeBI):
                       "which uses rule <b>%s</b>.") % (", ".join(forbidden_packs), self._ruleid))
 
             new_ruleid = new_rule["id"]
-            c = wato_confirm(_("Confirm renaming existing BI rule"),
-                             _("Do you really want to rename the existing BI rule <b>%s</b> to <b>%s</b>?") % \
-                              (self._ruleid, new_ruleid))
+            c = wato_confirm(
+                _("Confirm renaming existing BI rule"),
+                _("Do you really want to rename the existing BI rule <b>%s</b> to <b>%s</b>?") %
+                (self._ruleid, new_ruleid))
 
             if c:
                 self._rename_ruleid_after_confirm(new_ruleid)
@@ -1928,9 +1931,9 @@ class ModeBIEditRule(ModeBI):
                 node = aggregation.get('node')
                 if node is None:
                     continue
-                if (node[0] == 'call' and self._ruleid == node[1][0]) or \
-                   (node[0] in ["foreach_host", "foreach_service"] and node[-1][-1][0] == 'call' and \
-                    self._ruleid == node[-1][-1][1][0]):
+                if ((node[0] == 'call' and self._ruleid == node[1][0]) or
+                    (node[0] in ["foreach_host", "foreach_service"] and
+                     node[-1][-1][0] == 'call' and self._ruleid == node[-1][-1][1][0])):
                     uses_rule = True
                     break
             if uses_rule and not self.is_contact_for_pack(pack=packinfo):
@@ -2035,9 +2038,12 @@ class ModeBIEditRule(ModeBI):
                 rules_without_permissions[packid].append(node_ruleid)
 
         if rules_without_permissions:
-            message = ", ".join([_("BI rules %s from BI pack '%s'") % \
-                                 (", ".join([ "'%s'" % ruleid for ruleid in ruleids]), title)
-                                 for (_nodeid, title), ruleids in rules_without_permissions.items()])
+            message = ", ".join([
+                _("BI rules %s from BI pack '%s'") %
+                (", ".join(["'%s'" % ruleid
+                            for ruleid in ruleids]), title)
+                for (_nodeid, title), ruleids in rules_without_permissions.items()
+            ])
             raise MKAuthException(
                 _("You have no permission for changes in this rule using %s.") % message)
 

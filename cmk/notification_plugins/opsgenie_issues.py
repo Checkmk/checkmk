@@ -25,13 +25,13 @@
 # Boston, MA 02110-1301 USA.
 
 import sys
-from opsgenie.swagger_client import AlertApi  # type: ignore
-from opsgenie.swagger_client import configuration  # type: ignore
-from opsgenie.swagger_client.models import AcknowledgeAlertRequest  # type: ignore
-from opsgenie.swagger_client.rest import ApiException  # type: ignore
-from opsgenie.swagger_client.models import CloseAlertRequest  # type: ignore
-from opsgenie.swagger_client.models import CreateAlertRequest  # type: ignore
-from opsgenie.swagger_client.models import TeamRecipient  # type: ignore
+from opsgenie.swagger_client import AlertApi  # type: ignore[import]
+from opsgenie.swagger_client import configuration
+from opsgenie.swagger_client.models import AcknowledgeAlertRequest  # type: ignore[import]
+from opsgenie.swagger_client.rest import ApiException  # type: ignore[import]
+from opsgenie.swagger_client.models import CloseAlertRequest
+from opsgenie.swagger_client.models import CreateAlertRequest
+from opsgenie.swagger_client.models import TeamRecipient
 from cmk.notification_plugins import utils
 from cmk.notification_plugins.utils import retrieve_from_passwordstore
 
@@ -146,7 +146,7 @@ def handle_alert_creation(
 ):
     configure_authorization(key, host_url)
 
-    body = CreateAlertRequest(  # type: ignore
+    body = CreateAlertRequest(
         note=note_created,
         actions=action_list,
         description=desc,
@@ -192,7 +192,7 @@ def handle_alert_deletion(key, owner, alias, alert_source, note_closed, host_url
 def handle_alert_ack(key, ack_author, ack_comment, alias, alert_source, host_url):
     configure_authorization(key, host_url)
 
-    body = AcknowledgeAlertRequest(  # type: ignore
+    body = AcknowledgeAlertRequest(
         source=alert_source,
         user=ack_author,
         note=ack_comment,

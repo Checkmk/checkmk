@@ -28,7 +28,7 @@ import abc
 import subprocess
 
 import requests
-import urllib3  # type: ignore
+import urllib3  # type: ignore[import]
 import six
 
 from livestatus import LocalConnection
@@ -870,7 +870,7 @@ class ACTestRulebasedNotifications(ACTest):
 
     def execute(self):
         settings = watolib.load_configuration_settings()
-        if settings['enable_rulebased_notifications'] != True:
+        if settings['enable_rulebased_notifications'] is not True:
             yield ACResultCRIT('Rulebased notifications are deactivated in the global settings')
         else:
             yield ACResultOK(_("Rulebased notifications are activated"))

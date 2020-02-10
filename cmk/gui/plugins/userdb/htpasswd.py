@@ -35,8 +35,8 @@ else:
 
 # TODO: Import errors from passlib are suppressed right now since now
 # stub files for mypy are not available.
-from passlib.context import CryptContext  # type: ignore
-from passlib.hash import sha256_crypt  # type: ignore
+from passlib.context import CryptContext  # type: ignore[import]
+from passlib.hash import sha256_crypt  # type: ignore[import]
 
 import cmk.utils.paths
 import cmk.utils.store as store

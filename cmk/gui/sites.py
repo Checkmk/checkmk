@@ -24,22 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# pylint: disable=unused-import
-from typing import (
-    Any,
-    cast,
-    Dict,
-    Iterator,
-    List,
-    NewType,
-    Optional,
-    Text,
-    Tuple,
-    TYPE_CHECKING,
-    Union,
-)
-# pylint: enable=unused-import
 from contextlib import contextmanager
+from typing import (  # pylint: disable=unused-import
+    TYPE_CHECKING, Any, cast, Dict, Iterator, List, NewType, Optional, Text, Tuple, Union,
+)
 
 from livestatus import (
     MultiSiteConnection,
@@ -48,15 +36,15 @@ from livestatus import (
     SiteConfiguration,
     SiteConfigurations,
 )
+
 from cmk import is_managed_edition
+
 from cmk.utils.paths import livestatus_unix_socket
+from cmk.utils.type_defs import UserId  # pylint: disable=unused-import,ungrouped-imports
+
 import cmk.gui.config as config
 from cmk.gui.globals import g, html
-
-if TYPE_CHECKING:
-    from werkzeug.local import LocalProxy
-    from cmk.utils.type_defs import UserId  # pylint: disable=unused-import,ungrouped-imports
-    UserType = LocalProxy
+from cmk.gui.config import UserType  # pylint: disable=unused-import
 
 #   .--API-----------------------------------------------------------------.
 #   |                             _    ____ ___                            |

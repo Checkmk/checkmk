@@ -67,13 +67,14 @@ from cmk.utils.exceptions import (
     MKGeneralException,
 )
 import cmk.utils.cmk_subprocess as subprocess
+from cmk.utils.type_defs import EventRule  # pylint: disable=unused-import
 
 import cmk.base.utils
 import cmk.base.config as config
 import cmk.base.console as console
 import cmk.base.core
 import cmk.base.events as events
-from cmk.base.events import EventRule, EventContext  # pylint: disable=unused-import
+from cmk.base.events import EventContext  # pylint: disable=unused-import
 
 try:
     import cmk.base.cee.keepalive as keepalive

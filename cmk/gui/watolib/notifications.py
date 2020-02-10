@@ -27,6 +27,7 @@
 
 from typing import Dict, List, Text  # pylint: disable=unused-import
 import cmk.utils.store as store
+from cmk.utils.type_defs import UserId, EventRule  # pylint: disable=unused-import
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -59,7 +60,7 @@ def save_notification_rules(rules):
 
 
 def load_user_notification_rules():
-    # type: () -> Dict[Text, List]
+    # type: () -> Dict[UserId, List[EventRule]]
     rules = {}
     for user_id, user in userdb.load_users().items():
         user_rules = user.get("notification_rules")

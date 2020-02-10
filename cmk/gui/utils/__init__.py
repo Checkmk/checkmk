@@ -136,6 +136,7 @@ def saveint(x):
 # Furthermore we filter out non-printable characters. The byte
 # 0x00 for example does not make it through HTTP and the URL.
 def get_random_string(size, from_ascii=48, to_ascii=90):
+    # type: (int, int, int) -> str
     """Generate a random string (no cryptographic safety)"""
     secret = ""
     urandom = open("/dev/urandom")
@@ -147,6 +148,7 @@ def get_random_string(size, from_ascii=48, to_ascii=90):
 
 
 def gen_id():
+    # type: () -> str
     """Generates a unique id"""
     try:
         return open('/proc/sys/kernel/random/uuid').read().strip()

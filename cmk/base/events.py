@@ -46,6 +46,7 @@ from cmk.utils.regex import regex
 import cmk.utils.debug
 import cmk.utils.daemon
 from cmk.utils.encoding import convert_to_unicode
+from cmk.utils.type_defs import EventRule
 
 import cmk.base.config as config
 import cmk.base.core
@@ -55,7 +56,6 @@ from cmk.utils.type_defs import (  # pylint: disable=unused-import
 )
 
 ContactList = List  # TODO Improve this
-EventRule = Dict[str, Any]  # TODO Improve this
 EventContext = Dict[str, Any]  # TODO Improve this
 # We actually want to use Matcher for all our matchers, but mypy is too dumb to
 # use that for function types, see https://github.com/python/mypy/issues/1641.

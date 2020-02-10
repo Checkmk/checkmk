@@ -29,7 +29,9 @@ import errno
 import os
 import copy
 import json
-from typing import Set, Any, AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    TYPE_CHECKING, Set, Any, AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union,
+)
 import time
 import six
 
@@ -47,6 +49,7 @@ import cmk.utils.tags
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.type_defs import UserId
+
 from cmk.gui.globals import local
 import cmk.gui.utils as utils
 import cmk.gui.i18n
@@ -67,6 +70,8 @@ if not cmk.is_raw_edition():
 
 if cmk.is_managed_edition():
     from cmk.gui.cme.plugins.config.cme import *  # pylint: disable=wildcard-import,unused-wildcard-import,no-name-in-module
+
+UserType = Union["LoggedInUser", LocalProxy]
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -885,7 +890,7 @@ def _set_user(_user):
 
 
 # This holds the currently logged in user object
-user = LocalProxy(lambda: local.user)
+user = LocalProxy(lambda: local.user)  # type: UserType
 
 #.
 #   .--User Handling-------------------------------------------------------.

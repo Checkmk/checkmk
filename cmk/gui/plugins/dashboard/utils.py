@@ -490,7 +490,7 @@ def save_all_dashboards():
 
 
 def get_all_dashboards():
-    # type: () -> Dict[Tuple[UserId, DashboardName], DashboardConfig]
+    # type: () -> Dict[Tuple[Optional[UserId], DashboardName], DashboardConfig]
     return DashboardStore.get_instance().all
 
 

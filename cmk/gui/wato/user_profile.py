@@ -200,7 +200,7 @@ def _show_page_user_profile(change_pw):
                                           _("The new password must differ from your current one."))
 
                 if cur_password and password:
-                    if userdb.hook_login(config.user.id, cur_password) in [None, False]:
+                    if userdb.hook_login(config.user.id, cur_password) is False:
                         raise MKUserError("cur_password", _("Your old password is wrong."))
                     if password2 and password != password2:
                         raise MKUserError("password2", _("The both new passwords do not match."))

@@ -393,7 +393,6 @@ def do_login():
             if "logout.py" in origtarget or 'side.py' in origtarget:
                 origtarget = default_origtarget
 
-            # None        -> User unknown, means continue with other connectors
             # '<user_id>' -> success
             # False       -> failed
             result = userdb.hook_login(username, password)

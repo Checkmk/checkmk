@@ -53,3 +53,4 @@ TagGroups = Dict[TagID, TaggroupID]
 CheckVariables = Dict[str, Any]
 
 UserId = NewType("UserId", Text)
+EventRule = Dict[str, Any]  # TODO Improve this

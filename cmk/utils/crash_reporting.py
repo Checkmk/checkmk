@@ -54,6 +54,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.plugin_registry
 import cmk.utils.cmk_subprocess as subprocess
+from cmk.utils.encoding import ensure_unicode
 
 
 @contextlib.contextmanager
@@ -290,7 +291,8 @@ def _get_generic_crash_info(type_name, details):
         "python_paths": sys.path,
         "exc_type": exc_type.__name__ if exc_type else None,
         "exc_value": exc_txt,
-        "exc_traceback": tb_list,
+        # Py3: Make traceback.FrameSummary serializable
+        "exc_traceback": [tuple(e) for e in tb_list],
         "local_vars": _get_local_vars_of_last_exception(),
         "details": details,
     }
@@ -355,7 +357,7 @@ def _get_local_vars_of_last_exception():
 
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
-    return six.text_type(
+    return ensure_unicode(
         base64.b64encode(
             _format_var_for_export(pprint.pformat(local_vars).encode("utf-8"),
                                    maxsize=5 * 1024 * 1024)))

@@ -28,7 +28,6 @@
 import abc
 import json
 import copy
-import urllib
 from typing import (  # pylint: disable=unused-import
     Optional, Any, Dict, Union, Tuple, Text, List, Callable, cast)
 
@@ -303,7 +302,7 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
         url_vars = dict(six.moves.urllib.parse.parse_qsl(parts.query, keep_blank_values=True))
         url_vars.update(context_vars)
 
-        new_qs = urllib.urlencode(url_vars)
+        new_qs = six.moves.urllib.parse.urlencode(url_vars)
         return six.moves.urllib.parse.urlunparse(tuple(parts[:4] + (new_qs,) + parts[5:]))
 
     def _dashlet_context_vars(self):

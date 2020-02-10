@@ -18,6 +18,7 @@ PYTHON2_PATHS=(
     gui
     __init__.py
     notification_plugins
+    special_agents/agent_3par.py
     special_agents/agent_activemq.py
     special_agents/agent_allnet_ip_sensoric.py
     special_agents/agent_azure.py

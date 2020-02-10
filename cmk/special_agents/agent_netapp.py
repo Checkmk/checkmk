@@ -83,7 +83,7 @@ import warnings
 from typing import List
 
 import requests
-import urllib3  # type: ignore
+import urllib3  # type: ignore[import]
 
 from cmk.special_agents.utils import vcrtrace
 
@@ -104,9 +104,9 @@ try:
     # lxml was quite promising in our test environment: Uses 2 times less CPU resources
     # Unfortunaly, it is not a builtin module and need to be installed manually with
     # pip install lxml
-    import lxml.etree as ET  # type: ignore
+    import lxml.etree as ET  # type: ignore[import]
 except ImportError:
-    import xml.etree.ElementTree as ET  # type: ignore
+    import xml.etree.ElementTree as ET  # type: ignore[no-redef]
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 urllib3.util.ssl_.DEFAULT_CIPHERS += ":" + ":".join([
@@ -219,7 +219,7 @@ def parse_arguments(argv):
 
 
 def prettify(elem):
-    from xml.dom import minidom  # type: ignore
+    from xml.dom import minidom  # type: ignore[import]
     rough_string = ET.tostring(elem)
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml(indent="\t")

@@ -36,7 +36,7 @@ import argparse
 import logging
 from multiprocessing import Process, Lock, Queue
 from Queue import Empty as QueueEmpty
-import adal  # type: ignore
+import adal  # type: ignore[import]
 import requests
 
 from pathlib2 import Path
@@ -836,7 +836,7 @@ def get_mapper(debug, sequential, timeout):
         def produce(id_, args):
             try:
                 queue.put((id_, True, func(args)))
-            except Exception as _e:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except
                 queue.put((id_, False, None))
                 if debug:
                     raise

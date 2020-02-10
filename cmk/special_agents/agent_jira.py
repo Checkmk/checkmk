@@ -29,7 +29,7 @@ import json
 import logging
 import sys
 from requests.exceptions import ConnectionError as RequestsConnectionError
-import urllib3  # type: ignore
+import urllib3  # type: ignore[import]
 from jira import JIRA  # type: ignore[import]
 from jira.exceptions import JIRAError  # type: ignore[import]
 

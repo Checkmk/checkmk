@@ -19,6 +19,9 @@ ignore=
     # Incompatible with YAPF:
     # continuation line unaligned for hanging indent
     E131,
+    # Incompatible with YAPF:
+    # missing whitespace after ','
+    E231,
     # Incompatible with the vim folding markers:
     # block comment should start with '# '
     E265,

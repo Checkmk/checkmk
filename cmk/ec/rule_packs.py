@@ -35,7 +35,7 @@ import logging
 import os
 import pprint
 import sys
-from typing import Any, Dict, Iterable, List, Optional, Tuple  # pylint: disable=unused-import
+from typing import Any, Dict, Iterable, List, Optional  # pylint: disable=unused-import
 try:
     # Python has a totally braindead history of changes in this area:
     #   * In the dark ages: Hmmm, one can't subclass dict, so we have to provide UserDict.
@@ -45,7 +45,7 @@ try:
     #   * Python 3.0: UserDict is gone...
     #   * Python 3.3: Let's just move the ABCs from collections to collections.abc, keeping the old stuff for now.
     #   * Python 3.8: To *really* annoy people, let's nuke the ABCs from collection! >:-)
-    from collections.abc import MutableMapping  # type: ignore
+    from collections.abc import MutableMapping  # type: ignore[import]
 except ImportError:
     from collections import MutableMapping
 

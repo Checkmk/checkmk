@@ -30,7 +30,7 @@ import getopt
 import xml.etree.ElementTree as ET
 
 import requests
-import urllib3  # type: ignore
+import urllib3  # type: ignore[import]
 
 
 def usage():
@@ -58,8 +58,7 @@ OPTIONS:
 #   '----------------------------------------------------------------------'
 
 #https://zdeoko04sbac03.deoko.zeiss.org/storeonceservices/cluster/
-cluster_xml = \
-"""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+cluster_xml = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <title>Information about D2D Clusters</title>
@@ -194,8 +193,7 @@ cluster_xml = \
 </html>"""
 
 # https://zdeoko04sbac03.deoko.zeiss.org/storeonceservices/cluster/servicesets/
-servicesets_xml = \
-"""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+servicesets_xml = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <title>List of D2D Service Sets</title>
@@ -385,8 +383,7 @@ servicesets_xml = \
 </html>"""
 
 # https://zdeoko04sbac03.deoko.zeiss.org/storeonceservices/cluster/servicesets/1/services/cat/stores/
-stores_xml = \
-"""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+stores_xml = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <title>List of CAT Stores</title>

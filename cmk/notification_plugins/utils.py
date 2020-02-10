@@ -29,9 +29,8 @@ from quopri import encodestring
 import re
 import socket
 import sys
-from html import escape as html_escape  # type: ignore
-from typing import (  # pylint: disable=unused-import
-    AnyStr, Dict, List, Optional, Text, Tuple)
+from html import escape as html_escape  # type: ignore[import]
+from typing import AnyStr, Dict, List, Text, Tuple  # pylint: disable=unused-import
 
 import requests
 

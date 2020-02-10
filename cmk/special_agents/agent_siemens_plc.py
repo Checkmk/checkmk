@@ -29,8 +29,8 @@ import getopt
 import socket
 import traceback
 
-import snap7  # type: ignore
-from snap7.snap7types import S7AreaCT, S7AreaDB, S7AreaMK, S7AreaPA, S7AreaPE, S7AreaTM  # type: ignore
+import snap7  # type: ignore[import]
+from snap7.snap7types import S7AreaCT, S7AreaDB, S7AreaMK, S7AreaPA, S7AreaPE, S7AreaTM  # type: ignore[import]
 
 
 def usage():

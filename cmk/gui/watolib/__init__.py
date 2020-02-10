@@ -29,6 +29,10 @@ This component contains classes, functions and globals that are being used by
 WATO. It does not contain any acutal page handlers or WATO modes. Nor complex
 HTML creation. This is all contained in cmk.gui.wato."""
 
+# NOTE: flake8 has no way to ignore just e.g. F401 for the whole file! :-P
+# flake8: noqa
+# pylint: disable=unused-import
+
 import sys
 import abc
 import ast
@@ -53,7 +57,7 @@ import traceback
 from typing import NamedTuple, List  # pylint: disable=unused-import
 
 import requests
-import urllib3  # type: ignore
+import urllib3  # type: ignore[import]
 import six
 
 if sys.version_info[0] >= 3:

@@ -233,7 +233,7 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
         """Returns the path to the crash directory of the current or given crash report"""
         if ident_text is None:
             ident_text = self.ident_to_text()
-        return cmk.utils.paths.crash_dir / self.type() / ident_text  # type: ignore
+        return cmk.utils.paths.crash_dir / six.ensure_str(self.type()) / six.ensure_str(ident_text)
 
     def local_crash_report_url(self):
         # type: () -> Text
@@ -261,7 +261,7 @@ def _get_generic_crash_info(type_name, details):
     # exception.
     # Re-raising exceptions will be much easier with Python 3.x.
     if exc_type and exc_value and exc_type.__name__ == "MKParseFunctionError":
-        tb_list += traceback.extract_tb(exc_value.exc_info()[2])  # type: ignore
+        tb_list += traceback.extract_tb(exc_value.exc_info()[2])  # type: ignore[attr-defined]
 
     # Unify different string types from exception messages to a unicode string
     # HACK: copy-n-paste from cmk.utils.exception.MKException.__str__ below.

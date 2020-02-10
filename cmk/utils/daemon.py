@@ -152,7 +152,7 @@ def set_cmdline(cmdline):
     argc = ctypes.c_int()
     ctypes.pythonapi.Py_GetArgcArgv(ctypes.byref(argc), ctypes.byref(argv))
     # mypy: The type is not detected correctly
-    cmdlen = sum([len(argv[i]) for i in range(argc.value)]) + argc.value  # type: ignore
+    cmdlen = sum([len(argv[i]) for i in range(argc.value)]) + argc.value  # type: ignore[arg-type]
     # TODO: This can probably be simplified...
     _new_cmdline = ctypes.c_char_p(cmdline.ljust(cmdlen, b'\0'))
 

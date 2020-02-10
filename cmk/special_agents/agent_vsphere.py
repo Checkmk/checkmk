@@ -35,11 +35,10 @@ import re
 import socket
 import sys
 import time
-from typing import Optional, Text  # pylint: disable=unused-import
-from xml.dom import minidom  # type: ignore
+from xml.dom import minidom  # type: ignore[import]
 from pathlib import Path
 import requests
-import urllib3  # type: ignore
+import urllib3  # type: ignore[import]
 from dateutil import tz
 
 import cmk.utils.password_store
@@ -1240,8 +1239,9 @@ def fetch_counters_syntax(connection, counter_ids):
 
     response_text = connection.query_server('perfcountersyntax', counters="".join(counters_list))
 
-    elements = get_pattern('<returnval><key>(.*?)</key>.*?<key>(.*?)</key>.*?'\
-                           '<key>(.*?)</key>.*?<key>(.*?)</key>.*?', response_text)
+    elements = get_pattern(
+        '<returnval><key>(.*?)</key>.*?<key>(.*?)</key>.*?'
+        '<key>(.*?)</key>.*?<key>(.*?)</key>.*?', response_text)
 
     return {
         id_: {

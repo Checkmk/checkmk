@@ -38,8 +38,8 @@ from typing import (  # pylint: disable=unused-import
     Union, NamedTuple, Any, List,
 )
 from pathlib import Path
-import boto3  # type: ignore
-import botocore  # type: ignore
+import boto3  # type: ignore[import]
+import botocore  # type: ignore[import]
 
 import cmk.utils.store as store
 from cmk.utils.paths import tmp_dir
@@ -1632,7 +1632,7 @@ class S3Requests(AWSSectionCloudwatch):
                             }]
                         },
                         'Period': self.period,
-                        'Stat': 'Sum',  #reports per period
+                        'Stat': 'Sum',  # reports per period
                         'Unit': unit,
                     },
                 })

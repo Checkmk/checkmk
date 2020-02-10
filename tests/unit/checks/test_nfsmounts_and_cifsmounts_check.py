@@ -21,14 +21,14 @@ size1 = Size(
     [u'491520', u'460182', u'460182', u'65536'],
     491520 * 65536,
     491520 * 65536 - 460182 * 65536,
-    "6.38% used (1.91 of 30.00 GB), trend: 0.00 B / 24 hours",
+    "6.38% used (1.91 of 30.00 GB)",
 )
 
 size2 = Size(
     [u'201326592', u'170803720', u'170803720', u'32768'],
     None,  # not in use
     None,  # not in use
-    "15.16% used (931.48 GB of 6.00 TB), trend: 0.00 B / 24 hours",
+    "15.16% used (931.48 GB of 6.00 TB)",
 )
 
 
@@ -61,8 +61,6 @@ size2 = Size(
                      PerfValue('fs_used', size1.used, 0.8 * size1.total, 0.9 * size1.total, 0,
                                size1.total),
                      PerfValue('fs_size', size1.total),
-                     PerfValue('fs_growth', 0),
-                     PerfValue('fs_trend', 0, None, None, 0, 15534.459259259258),
                  ]))
             ]),
         (  # state == 'hanging'

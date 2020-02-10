@@ -82,15 +82,11 @@ checks = {
                 'trend_perfdata': True
             }, [
                 (
-                    0,
-                    '3.57% used (3.00 of 84.00 TB), trend: 0.00 B / 24 hours',
-                    [
+                    0, '3.57% used (3.00 of 84.00 TB)', [
                         (
                             'SUMMARY', 3145728.0, 70464307.2, 79272345.6, 0,
                             88080384.0
-                        ), ('fs_size', 88080384.0, None, None, None, None),
-                        ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 3670016.0)
+                        ), ('fs_size', 88080384.0, None, None, None, None)
                     ]
                 )
             ]
@@ -108,15 +104,11 @@ checks = {
                 'trend_perfdata': True
             }, [
                 (
-                    0,
-                    '0.000001% used (288.00 kB of 25.00 TB), trend: 0.00 B / 24 hours',
-                    [
+                    0, '0.000001% used (288.00 kB of 25.00 TB)', [
                         (
                             u'.rgw.root', 0.28125, 20971520.225,
                             23592960.253125, 0, 26214400.28125
-                        ), ('fs_size', 26214400.28125, None, None, None, None),
-                        ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 1092266.6783854167)
+                        ), ('fs_size', 26214400.28125, None, None, None, None)
                     ]
                 )
             ]
@@ -134,14 +126,11 @@ checks = {
                 'trend_perfdata': True
             }, [
                 (
-                    0,
-                    '0% used (0.00 B of 25.00 TB), trend: 0.00 B / 24 hours', [
+                    0, '0% used (0.00 B of 25.00 TB)', [
                         (
                             u'cephfs_data', 0.0, 20971520.0, 23592960.0, 0,
                             26214400.0
-                        ), ('fs_size', 26214400.0, None, None, None, None),
-                        ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 1092266.6666666667)
+                        ), ('fs_size', 26214400.0, None, None, None, None)
                     ]
                 )
             ]
@@ -159,9 +148,7 @@ checks = {
                 'trend_perfdata': True
             }, [
                 (
-                    0,
-                    '0.000004% used (969.00 kB of 25.00 TB), trend: 0.00 B / 24 hours',
-                    [
+                    0, '0.000004% used (969.00 kB of 25.00 TB)', [
                         (
                             u'cephfs_metadata', 0.9462890625,
                             20971520.75703125, 23592960.851660155, 0,
@@ -170,8 +157,7 @@ checks = {
                         (
                             'fs_size', 26214400.946289062, None, None, None,
                             None
-                        ), ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 1092266.7060953777)
+                        )
                     ]
                 )
             ]
@@ -189,15 +175,11 @@ checks = {
                 'trend_perfdata': True
             }, [
                 (
-                    0,
-                    '6.72% used (1.80 of 26.80 TB), trend: 0.00 B / 24 hours',
-                    [
+                    0, '6.72% used (1.80 of 26.80 TB)', [
                         (
                             u'cinder-volumes', 1887436.8000000007, 22481469.44,
                             25291653.12, 0, 28101836.8
-                        ), ('fs_size', 28101836.8, None, None, None, None),
-                        ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 1170909.8666666667)
+                        ), ('fs_size', 28101836.8, None, None, None, None)
                     ]
                 )
             ]
@@ -215,14 +197,11 @@ checks = {
                 'trend_perfdata': True
             }, [
                 (
-                    0,
-                    '0% used (0.00 B of 25.00 TB), trend: 0.00 B / 24 hours', [
+                    0, '0% used (0.00 B of 25.00 TB)', [
                         (
                             u'default.rgw.control', 0.0, 20971520.0,
                             23592960.0, 0, 26214400.0
-                        ), ('fs_size', 26214400.0, None, None, None, None),
-                        ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 1092266.6666666667)
+                        ), ('fs_size', 26214400.0, None, None, None, None)
                     ]
                 )
             ]
@@ -240,14 +219,11 @@ checks = {
                 'trend_perfdata': True
             }, [
                 (
-                    0,
-                    '0% used (0.00 B of 25.00 TB), trend: 0.00 B / 24 hours', [
+                    0, '0% used (0.00 B of 25.00 TB)', [
                         (
                             u'default.rgw.log', 0.0, 20971520.0, 23592960.0, 0,
                             26214400.0
-                        ), ('fs_size', 26214400.0, None, None, None, None),
-                        ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 1092266.6666666667)
+                        ), ('fs_size', 26214400.0, None, None, None, None)
                     ]
                 )
             ]
@@ -265,14 +241,11 @@ checks = {
                 'trend_perfdata': True
             }, [
                 (
-                    0,
-                    '0% used (0.00 B of 25.00 TB), trend: 0.00 B / 24 hours', [
+                    0, '0% used (0.00 B of 25.00 TB)', [
                         (
                             u'default.rgw.meta', 0.0, 20971520.0, 23592960.0,
                             0, 26214400.0
-                        ), ('fs_size', 26214400.0, None, None, None, None),
-                        ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 1092266.6666666667)
+                        ), ('fs_size', 26214400.0, None, None, None, None)
                     ]
                 )
             ]
@@ -290,15 +263,11 @@ checks = {
                 'trend_perfdata': True
             }, [
                 (
-                    0,
-                    '0.29% used (75.00 GB of 25.07 TB), trend: 0.00 B / 24 hours',
-                    [
+                    0, '0.29% used (75.00 GB of 25.07 TB)', [
                         (
                             u'glance-images', 76800.0, 21032960.0, 23662080.0,
                             0, 26291200.0
-                        ), ('fs_size', 26291200.0, None, None, None, None),
-                        ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 1095466.6666666667)
+                        ), ('fs_size', 26291200.0, None, None, None, None)
                     ]
                 )
             ]
@@ -316,15 +285,11 @@ checks = {
                 'trend_perfdata': True
             }, [
                 (
-                    0,
-                    '3.85% used (1.00 of 26.00 TB), trend: 0.00 B / 24 hours',
-                    [
+                    0, '3.85% used (1.00 of 26.00 TB)', [
                         (
                             u'nova-vms', 1048576.0, 21810380.8, 24536678.4, 0,
                             27262976.0
-                        ), ('fs_size', 27262976.0, None, None, None, None),
-                        ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 1135957.3333333333)
+                        ), ('fs_size', 27262976.0, None, None, None, None)
                     ]
                 )
             ]

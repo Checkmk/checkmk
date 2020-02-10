@@ -40,16 +40,12 @@ checks = {
         (
             u'1', {}, [
                 (
-                    0,
-                    '29.14% used (10.07 of 34.54 PB), trend: 0.00 B / 24 hours',
-                    [
+                    0, '29.14% used (10.07 of 34.54 PB)', [
                         (
                             u'1', 10807365276.0, 29669065864.704296,
                             33377699097.792336, 0, 37086332330.88037
                         ),
-                        ('fs_size', 37086332330.88037, None, None, None, None),
-                        ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 1545263847.1200154)
+                        ('fs_size', 37086332330.88037, None, None, None, None)
                     ]
                 ), (0, 'Dedup ratio: 15.95', [])
             ]

@@ -76,7 +76,7 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
                         timestamp,
                         used_mb,
                         allow_negative=True,
-                        onwrap=ZERO)
+                        onwrap=RAISE)
     except MKCounterWrapped:
         # need more data for computing a trend
         return 0, '', []

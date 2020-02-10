@@ -86,7 +86,6 @@ def test_registered_pages():
         'mobile',
         'mobile_view',
         'noauth:automation',
-        'noauth:pnp_template',
         'noauth:run_cron',
         'notify',
         'prediction_graph',

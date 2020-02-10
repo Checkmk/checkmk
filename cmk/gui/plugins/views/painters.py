@@ -62,16 +62,13 @@ from cmk.gui.plugins.views import (
     Painter,
     painter_option_registry,
     PainterOption,
-    PainterOptions,
     transform_action_url,
     is_stale,
     paint_stalified,
     paint_host_list,
     format_plugin_output,
-    display_options,
     link_to_view,
     get_perfdata_nth_value,
-    get_graph_timerange_from_painter_options,
     paint_age,
     paint_nagiosflag,
     replace_action_url_macros,
@@ -81,6 +78,11 @@ from cmk.gui.plugins.views import (
     render_labels,
     get_labels,
     get_label_sources,
+)
+
+from cmk.gui.plugins.views.graphs import (
+    paint_time_graph_cmk,
+    cmk_time_graph_params,
 )
 
 #   .--Painter Options-----------------------------------------------------.
@@ -1403,56 +1405,6 @@ class PainterSvcGroupMemberlist(Painter):
         return "", HTML(", ").join(links)
 
 
-def paint_time_graph(row, cell):
-    if metrics.cmk_graphs_possible(row["site"]):
-        import cmk.gui.cee.plugins.views.graphs  # pylint: disable=redefined-outer-name,import-error,no-name-in-module
-        return cmk.gui.cee.plugins.views.graphs.paint_time_graph_cmk(row, cell)  # pylint: disable=no-member
-    return paint_time_graph_pnp(row)
-
-
-def paint_time_graph_pnp(row):
-    sitename = row["site"]
-    host = row["host_name"]
-    service = row.get("service_description", "_HOST_")
-
-    container_id = "%s_%s_%s_graph" % (sitename, host, service)
-    url_prefix = config.site(sitename)["url_prefix"]
-    pnp_url = url_prefix + "pnp4nagios/"
-    if display_options.enabled(display_options.X):
-        with_link = 'true'
-    else:
-        with_link = 'false'
-
-    painter_options = PainterOptions.get_instance()
-    pnp_timerange = painter_options.get("pnp_timerange")
-
-    pnpview = '1'
-    from_ts, to_ts = 'null', 'null'
-    if pnp_timerange is not None:
-        if pnp_timerange[0] != 'pnp_view':
-            from_ts, to_ts = get_graph_timerange_from_painter_options()
-        else:
-            pnpview = pnp_timerange[1]
-
-    pnp_theme = html.get_theme()
-    if pnp_theme == "classic":
-        pnp_theme = "multisite"
-
-    return (
-        "pnpgraph", "<div id=\"%s\"></div>"
-        "<script>cmk.graph_integration.render_graphs('%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, '%s', %s, %s, '%s')</script>"
-        % (container_id, container_id, sitename, host, service, pnpview, config.url_prefix() +
-           "check_mk/", pnp_url, with_link, _('Add this graph to...'), from_ts, to_ts, pnp_theme))
-
-
-def time_graph_params():
-    if not metrics.cmk_graphs_possible():
-        return  # The method is only available in CEE
-
-    import cmk.gui.cee.plugins.views.graphs  # pylint: disable=redefined-outer-name,import-error,no-name-in-module
-    return cmk.gui.cee.plugins.views.graphs.cmk_time_graph_params()  # pylint: disable=no-member
-
-
 @painter_registry.register
 class PainterSvcPnpgraph(Painter):
     @property
@@ -1483,10 +1435,10 @@ class PainterSvcPnpgraph(Painter):
 
     @property
     def parameters(self):
-        return time_graph_params()
+        return cmk_time_graph_params()
 
     def render(self, row, cell):
-        return paint_time_graph(row, cell)
+        return paint_time_graph_cmk(row, cell)
 
 
 @painter_registry.register
@@ -2483,10 +2435,10 @@ class PainterHostPnpgraph(Painter):
 
     @property
     def parameters(self):
-        return time_graph_params()
+        return cmk_time_graph_params()
 
     def render(self, row, cell):
-        return paint_time_graph(row, cell)
+        return paint_time_graph_cmk(row, cell)
 
 
 @painter_registry.register

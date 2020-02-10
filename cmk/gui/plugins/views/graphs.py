@@ -1,0 +1,334 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# .------------------------------------------------------------------------.
+# |                ____ _               _        __  __ _  __              |
+# |               / ___| |__   ___  ___| | __   |  \/  | |/ /              |
+# |              | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /               |
+# |              | |___| | | |  __/ (__|   <    | |  | | . \               |
+# |               \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\              |
+# |                                        |_____|                         |
+# |             _____       _                       _                      |
+# |            | ____|_ __ | |_ ___ _ __ _ __  _ __(_)___  ___             |
+# |            |  _| | '_ \| __/ _ \ '__| '_ \| '__| / __|/ _ \            |
+# |            | |___| | | | ||  __/ |  | |_) | |  | \__ \  __/            |
+# |            |_____|_| |_|\__\___|_|  | .__/|_|  |_|___/\___|            |
+# |                                     |_|                                |
+# |                     _____    _ _ _   _                                 |
+# |                    | ____|__| (_) |_(_) ___  _ __                      |
+# |                    |  _| / _` | | __| |/ _ \| '_ \                     |
+# |                    | |__| (_| | | |_| | (_) | | | |                    |
+# |                    |_____\__,_|_|\__|_|\___/|_| |_|                    |
+# |                                                                        |
+# | mathias-kettner.com                                 mathias-kettner.de |
+# '------------------------------------------------------------------------'
+#  This file is part of the Check_MK Enterprise Edition (CEE).
+#  Copyright by Mathias Kettner and Mathias Kettner GmbH.  All rights reserved.
+#
+#  Distributed under the Check_MK Enterprise License.
+#
+#  You should have  received  a copy of the Check_MK Enterprise License
+#  along with Check_MK. If not, email to mk@mathias-kettner.de
+#  or write to the postal address provided at www.mathias-kettner.de
+
+import time
+import copy
+
+import cmk.gui.config as config
+from cmk.gui.i18n import _
+from cmk.gui.globals import html
+from cmk.gui.valuespec import (
+    DropdownChoice,
+    Transform,
+    Dictionary,
+)
+
+from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
+from cmk.gui.plugins.metrics import html_render
+
+from cmk.gui.plugins.views import (
+    painter_registry,
+    Painter,
+    painter_option_registry,
+    PainterOption,
+    PainterOptions,
+    multisite_builtin_views,
+    get_graph_timerange_from_painter_options,
+)
+
+multisite_builtin_views.update({
+    'service_graphs': {
+        'browser_reload': 30,
+        'column_headers': 'off',
+        'datasource': 'services',
+        'description': _('Shows all graphs including timerange selections '
+                         'of a collection of services.'),
+        'group_painters': [
+            ('sitealias', 'sitehosts'),
+            ('host_with_state', 'host'),
+            ('service_description', 'service'),
+        ],
+        'hard_filters': [],
+        'hard_filtervars': [],
+        'hidden': True,
+        'hide_filters': ['siteopt', 'service', 'host'],
+        'layout': 'boxed_graph',
+        'mustsearch': False,
+        'name': 'service_graphs',
+        'num_columns': 1,
+        'owner': '',
+        'painters': [('service_graphs', None),],
+        'public': True,
+        'show_filters': [],
+        'sorters': [],
+        'linktitle': _('Graphs'),
+        'icon': 'pnp',
+        'title': _('Service Graphs'),
+    },
+    'host_graphs': {
+        'browser_reload': 30,
+        'column_headers': 'off',
+        'datasource': 'hosts',
+        'description': _('Shows host graphs including timerange selections '
+                         'of a collection of hosts.'),
+        'group_painters': [
+            ('sitealias', 'sitehosts'),
+            ('host_with_state', 'host'),
+        ],
+        'hard_filters': [],
+        'hard_filtervars': [],
+        'hidden': True,
+        'hide_filters': ['siteopt', 'host'],
+        'layout': 'boxed_graph',
+        'mustsearch': False,
+        'name': 'host_graphs',
+        'num_columns': 1,
+        'owner': '',
+        'painters': [('host_graphs', None),],
+        'public': True,
+        'show_filters': [],
+        'sorters': [],
+        'linktitle': _('Graphs'),
+        'icon': 'pnp',
+        'title': _('Host Graphs'),
+    },
+})
+
+service_graph_overview_settings = {
+    "painters": [("service_graphs", None),],
+    "num_columns": 1,
+    "layout": "boxed_graph",
+}
+
+host_graph_overview_settings = {
+    "painters": [("host_graphs", None),],
+    "num_columns": 1,
+    "layout": "boxed_graph",
+}
+
+# Change the hosts graph view to use the normal time graphs
+multisite_builtin_views["hostpnp"].update(host_graph_overview_settings)
+# Change the "graphs of all services with this description" view
+multisite_builtin_views["servicedescpnp"].update(service_graph_overview_settings)
+# Change the "graph search" view
+multisite_builtin_views["searchpnp"].update(service_graph_overview_settings)
+
+
+def paint_time_graph_cmk(row, cell, override_graph_render_options=None):
+    graph_identification = ("template", {
+        "site": row["site"],
+        "host_name": row["host_name"],
+        "service_description": row.get("service_description", "_HOST_"),
+    })
+
+    # Load the graph render options from
+    # a) the painter parameters configured in the view
+    # b) the painter options set per user and view
+
+    painter_params = cell.painter_parameters()
+    painter_params = _transform_old_graph_render_options(painter_params)
+
+    graph_render_options = painter_params["graph_render_options"]
+
+    if override_graph_render_options is not None:
+        graph_render_options.update(override_graph_render_options)
+
+    painter_options = PainterOptions.get_instance()
+    options = painter_options.get_without_default("graph_render_options")
+    if options is not None:
+        graph_render_options.update(options)
+
+    graph_data_range = {}
+
+    now = time.time()
+    if "set_default_time_range" in painter_params:
+        duration = painter_params["set_default_time_range"]
+        graph_data_range["time_range"] = now - duration, now
+    else:
+        graph_data_range["time_range"] = now - 3600 * 4, now
+
+    # Load timerange from painter option (overrides the defaults, if set by the user)
+    painter_option_pnp_timerange = painter_options.get_without_default("pnp_timerange")
+    if painter_option_pnp_timerange is not None:
+        graph_data_range["time_range"] = get_graph_timerange_from_painter_options()
+
+    if html.is_mobile():
+        graph_render_options.update({
+            "interaction": False,
+            "show_controls": False,
+            "show_pin": False,
+            "show_graph_time": False,
+            "show_time_range_previews": False,
+            "show_legend": False,
+            # Would be much better to autodetect the possible size (like on dashboard)
+            "size": (27, 18),  # ex
+        })
+
+    if "host_metrics" in row:
+        available_metrics = row["host_metrics"]
+        perf_data = row["host_perf_data"]
+    else:
+        available_metrics = row["service_metrics"]
+        perf_data = row["service_perf_data"]
+
+    if not available_metrics and perf_data:
+        return "", _("No historic metrics recorded but performance data is available. "
+                     "Maybe performance data processing is disabled.")
+
+    return "", html_render.render_graphs_from_specification_html(graph_identification,
+                                                                 graph_data_range,
+                                                                 graph_render_options)
+
+
+def paint_cmk_graphs_with_timeranges(row, cell):
+    return paint_time_graph_cmk(row,
+                                cell,
+                                override_graph_render_options={"show_time_range_previews": True})
+
+
+def cmk_time_graph_params():
+    elements = [
+        ("set_default_time_range",
+         DropdownChoice(
+             title=_("Set default time range"),
+             choices=[(entry["duration"], entry["title"]) for entry in config.graph_timeranges],
+         )), ("graph_render_options", vs_graph_render_options())
+    ]
+
+    return Transform(
+        Dictionary(
+            elements=elements,
+            optional_keys=[],
+        ),
+        forth=_transform_old_graph_render_options,
+    )
+
+
+def _transform_old_graph_render_options(value):
+    if value is None:
+        value = {}
+
+    # Be compatible to pre 1.5.0i2 format
+    if "graph_render_options" not in value:
+        value = copy.deepcopy(value)
+        value["graph_render_options"] = {
+            "show_legend": value.pop("show_legend", True),
+            "show_controls": value.pop("show_controls", True),
+            "show_time_range_previews": value.pop("show_time_range_previews", True),
+        }
+    return value
+
+
+@painter_registry.register
+class PainterServiceGraphs(Painter):
+    @property
+    def ident(self):
+        return "service_graphs"
+
+    @property
+    def title(self):
+        return _("Service Graphs with Timerange Previews")
+
+    @property
+    def columns(self):
+        return [
+            'host_name',
+            'service_description',
+            'service_perf_data',
+            'service_metrics',
+            'service_check_command',
+        ]
+
+    @property
+    def printable(self):
+        return 'time_graph'
+
+    @property
+    def painter_options(self):
+        return ['pnp_timerange', 'graph_render_options']
+
+    @property
+    def parameters(self):
+        return cmk_time_graph_params()
+
+    def render(self, row, cell):
+        return paint_cmk_graphs_with_timeranges(row, cell)
+
+
+@painter_registry.register
+class PainterHostGraphs(Painter):
+    @property
+    def ident(self):
+        return "host_graphs"
+
+    @property
+    def title(self):
+        return _("Host Graphs with Timerange Previews")
+
+    @property
+    def columns(self):
+        return ['host_name', 'host_perf_data', 'host_metrics', 'host_check_command']
+
+    @property
+    def printable(self):
+        return 'time_graph'
+
+    @property
+    def painter_options(self):
+        return ['pnp_timerange', 'graph_render_options']
+
+    @property
+    def parameters(self):
+        return cmk_time_graph_params()
+
+    def render(self, row, cell):
+        return paint_cmk_graphs_with_timeranges(row, cell)
+
+
+@painter_option_registry.register
+class PainterOptionGraphRenderOptions(PainterOption):
+    @property
+    def ident(self):
+        return "graph_render_options"
+
+    @property
+    def valuespec(self):
+        return vs_graph_render_options()
+
+
+def cmk_graph_url(row, what):
+    site_id = row["site"]
+
+    urivars = [
+        ("siteopt", site_id),
+        ("host", row["host_name"]),
+    ]
+
+    if what == "service":
+        urivars += [
+            ("service", row["service_description"]),
+            ("view_name", "service_graphs"),
+        ]
+    else:
+        urivars.append(("view_name", "host_graphs"))
+
+    return html.makeuri_contextless(urivars, filename="view.py")

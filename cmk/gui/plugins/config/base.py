@@ -162,7 +162,6 @@ custom_links['guest'] = [
 custom_links['user'] = custom_links['guest'] + [("Open Source Components", False, [
     ("CheckMK", "https://checkmk.com", None, "_blank"),
     ("Nagios", "https://www.nagios.org/", None, "_blank"),
-    ("PNP4Nagios", "https://pnp4nagios.org/", None, "_blank"),
     ("NagVis", "https://nagvis.org/", None, "_blank"),
     ("RRDTool", "https://oss.oetiker.ch/rrdtool/", None, "_blank"),
 ])]
@@ -262,9 +261,6 @@ escape_plugin_output = True
 # Virtual host trees for the "Virtual Host Trees" snapin
 virtual_host_trees = []  # type: _List
 
-# Fall back to PNP4Nagios as graphing GUI even on CEE
-force_pnp_graphing = False
-
 # Target URL for sending crash reports to
 crash_report_url = "https://crash.checkmk.com"
 # Target email address for "Crashed Check" page
@@ -282,6 +278,29 @@ bulk_discovery_default_settings = {
 }
 
 use_siteicons = False
+
+graph_timeranges = [
+    {
+        'title': "The last 4 hours",
+        "duration": 4 * 60 * 60
+    },
+    {
+        'title': "The last 25 hours",
+        "duration": 25 * 60 * 60
+    },
+    {
+        'title': "The last 8 days",
+        "duration": 8 * 24 * 60 * 60
+    },
+    {
+        'title': "The last 35 days",
+        "duration": 35 * 24 * 60 * 60
+    },
+    {
+        'title': "The last 400 days",
+        "duration": 400 * 24 * 60 * 60
+    },
+]
 
 #     _   _               ____  ____
 #    | | | |___  ___ _ __|  _ \| __ )

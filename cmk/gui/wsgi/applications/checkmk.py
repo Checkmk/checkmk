@@ -86,7 +86,6 @@ def _noauth(func):
     #
     # Currently these are:
     #  * noauth:run_cron
-    #  * noauth:pnp_template
     #  * noauth:deploy_agent
     #  * noauth:ajax_graph_images
     #  * noauth:automation

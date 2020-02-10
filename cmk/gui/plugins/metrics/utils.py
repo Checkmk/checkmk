@@ -33,13 +33,14 @@ import shlex
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union  # pylint: disable=unused-import
 
 import cmk.utils.regex
+from cmk.utils.memoize import MemoizeCache
 
 import cmk.gui.config as config
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
-from cmk.gui.exceptions import MKGeneralException
-from cmk.utils.memoize import MemoizeCache
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.valuespec import DropdownChoice
 
 
 class AutomaticDict(OrderedDict):
@@ -929,3 +930,19 @@ def reverse_translate_metric_name(canonical_name):
         metric for trans in check_metrics.values()
         for metric, options in trans.items() if options.get('name', '') == canonical_name
     ] + [canonical_name])
+
+
+def MetricName():
+    """Factory of a Dropdown menu from all known metric names"""
+    def _require_metric(value, varprefix):
+        if value is None:
+            raise MKUserError(varprefix, _("You need to select a metric"))
+
+    return DropdownChoice(
+        title=_("Metric"),
+        sorted=True,
+        default_value=None,
+        validate=_require_metric,
+        choices=[(None, "")] +
+        [(metric_id, metric_detail['title']) for metric_id, metric_detail in metric_info.items()],
+    )

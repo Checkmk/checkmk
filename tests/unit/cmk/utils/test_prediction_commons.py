@@ -3,6 +3,37 @@ import pytest  # type: ignore
 import cmk.utils.prediction as prediction
 
 
+@pytest.mark.parametrize("filter_condition, values, join, result", [
+    (u"Filter: metrics =", [], u"And", u""),
+    (u"Filter: description =", [u"CPU load"], u"And", u"Filter: description = CPU load\n"),
+    (u"Filter: host_name =", [u'heute', u'beta'], u"Or",
+     u"Filter: host_name = heute\nFilter: host_name = beta\nOr: 2\n"),
+])
+def test_lq_logic(filter_condition, values, join, result):
+    assert prediction.lq_logic(filter_condition, values, join) == result
+
+
+@pytest.mark.parametrize("args, result",
+                         [((['heute'], ['util', 'user'], 'CPU'), """GET services
+Columns: util user
+Filter: host_name = heute
+Filter: service_description = CPU\n"""),
+                          ((['gestern'], ['check_command'], None), """GET hosts
+Columns: check_command
+Filter: host_name = gestern\n"""),
+                          ((['fire', 'water'], ['description', 'metrics'], 'cpu'), """GET services
+Columns: description metrics
+Filter: host_name = fire
+Filter: host_name = water
+Or: 2
+Filter: service_description = cpu\n"""),
+                          (([], ['test'], 'invent'), """GET services
+Columns: test
+Filter: service_description = invent\n""")])
+def test_livestatus_lql(args, result):
+    assert prediction.livestatus_lql(*args) == result
+
+
 @pytest.mark.parametrize("twindow, result", [((0, 0, 0), []),
                                              ((100, 200, 25), [125, 150, 175, 200])])
 def test_rrdtimestamps(twindow, result):

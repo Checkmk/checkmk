@@ -88,7 +88,6 @@ from cmk.gui.plugins.views.utils import (
     paint_host_list,
     paint_nagiosflag,
     paint_stalified,
-    pnp_url,
     render_cache_info,
     replace_action_url_macros,
     row_id,

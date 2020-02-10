@@ -336,13 +336,13 @@ class ModeEditSite(WatoMode):
                  title=_("URL prefix"),
                  size=60,
                  help=
-                 _("The URL prefix will be prepended to links of addons like PNP4Nagios "
-                   "or the classical Nagios GUI when a link to such applications points to a host or "
+                 _("The URL prefix will be prepended to links of addons like NagVis "
+                   "when a link to such applications points to a host or "
                    "service on that site. You can either use an absolute URL prefix like <tt>http://some.host/mysite/</tt> "
                    "or a relative URL like <tt>/mysite/</tt>. When using relative prefixes you needed a mod_proxy "
                    "configuration in your local system apache that proxies such URLs to the according remote site. "
                    "Please refer to the <a target=_blank href='%s'>online documentation</a> for details. "
-                   "The prefix should end with a slash. Omit the <tt>/pnp4nagios/</tt> from the prefix."
+                   "The prefix should end with a slash. Omit the <tt>/nagvis/</tt> from the prefix."
                   ) % proxy_docu_url,
                  allow_empty=True,
              )),

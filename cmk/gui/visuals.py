@@ -33,6 +33,7 @@ from contextlib import contextmanager
 from typing import (  # pylint: disable=unused-import
     Tuple, Optional, cast, Iterable, Dict, List, Type, Callable, Union)
 
+import cmk
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.log import logger
@@ -60,7 +61,6 @@ from cmk.gui.table import table_element
 import cmk.gui.userdb as userdb
 import cmk.gui.pagetypes as pagetypes
 import cmk.utils.store as store
-import cmk.gui.metrics as metrics
 import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
@@ -1609,7 +1609,7 @@ def ajax_popup_add():
             html.close_li()
 
     # TODO: Find a good place for this special case. This needs to be modularized.
-    if add_type == "pnpgraph" and metrics.cmk_graphs_possible():
+    if add_type == "pnpgraph" and not cmk.is_enterprise_edition():
         html.open_li()
         html.open_span()
         html.write("%s:" % _("Export"))

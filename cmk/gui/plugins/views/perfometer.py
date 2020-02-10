@@ -46,8 +46,9 @@ from cmk.gui.plugins.views import (
     Sorter,
     is_stale,
     display_options,
-    pnp_url,
 )
+
+from cmk.gui.plugins.views.graphs import cmk_graph_url
 
 
 class Perfometer(object):
@@ -263,11 +264,7 @@ class PainterPerfometer(Painter):
         # pnpgraph_present: -1 means unknown (path not configured), 0: no, 1: yes
         if display_options.enabled(display_options.X) \
            and row["service_pnpgraph_present"] != 0:
-            if metrics.cmk_graphs_possible():
-                import cmk.gui.cee.plugins.views.graphs as graphs  # pylint: disable=no-name-in-module
-                url = graphs.cmk_graph_url(row, "service")
-            else:
-                url = pnp_url(row, "service")
+            url = cmk_graph_url(row, "service")
             disabled = False
         else:
             url = "javascript:void(0)"

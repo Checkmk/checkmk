@@ -62,7 +62,6 @@ import re
 
 import cmk.gui.bi as bi
 import cmk.gui.config as config
-import cmk.gui.metrics as metrics
 import cmk.utils
 import cmk.utils.render
 from cmk.gui.globals import g, html
@@ -71,11 +70,11 @@ from cmk.gui.plugins.views import (
     display_options,
     is_stale,
     paint_age,
-    pnp_url,
     render_cache_info,
     url_to_view,
 )
 from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
+from cmk.gui.plugins.views.graphs import cmk_graph_url
 
 #   .--Action Menu---------------------------------------------------------.
 #   |          _        _   _               __  __                         |
@@ -380,45 +379,28 @@ class PerfgraphIcon(Icon):
             return self._pnp_icon(row, what)
 
     def _pnp_icon(self, row, what):
-        url = self._pnp_graph_icon_link(row, what)
+        url = self._graph_icon_link(row, what)
 
-        if not metrics.cmk_graphs_possible(row["site"]):
-            # Directly ask PNP for all data, don't try to use the new graph fetching mechanism
-            # to keep the number of single requests low
-            force_pnp_graphing = True
-        else:
-            # Don't show the icon with Check_MK graphing. The hover makes no sense and there is no
-            # mobile view for graphs, so the graphs on the bottom of the host/service view are enough
-            # for the moment.
-            if html.is_mobile():
-                return
-
-            force_pnp_graphing = False
+        # Don't show the icon with Check_MK graphing. The hover makes no sense and there is no
+        # mobile view for graphs, so the graphs on the bottom of the host/service view are enough
+        # for the moment.
+        if html.is_mobile():
+            return
 
         return html.render_a(
             content=html.render_icon('pnp', ''),
             href=url,
             onmouseout="cmk.hover.hide()",
-            onmouseover="cmk.graph_integration.show_hover_graphs(event, %s, %s, %s, %s, %s);" % (
+            onmouseover="cmk.graph_integration.show_hover_graphs(event, %s, %s, %s);" % (
                 json.dumps(row['site']),
                 json.dumps(row["host_name"]),
                 json.dumps(row.get('service_description', '_HOST_')),
-                json.dumps(self._pnp_popup_url(row, what)),
-                json.dumps(force_pnp_graphing),
             ))
 
-    def _pnp_popup_url(self, row, what):
-        return pnp_url(row, what, 'popup')
-
-    def _pnp_graph_icon_link(self, row, what):
+    def _graph_icon_link(self, row, what):
         if display_options.disabled(display_options.X):
             return ""
-
-        if not metrics.cmk_graphs_possible(row["site"]):
-            return pnp_url(row, what)
-
-        import cmk.gui.cee.plugins.views.graphs  # pylint: disable=redefined-outer-name,import-error,no-name-in-module
-        return cmk.gui.cee.plugins.views.graphs.cmk_graph_url(row, what)  # pylint: disable=no-member
+        return cmk_graph_url(row, what)
 
 
 #.

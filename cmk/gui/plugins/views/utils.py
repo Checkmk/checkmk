@@ -1365,31 +1365,6 @@ def replace_action_url_macros(url, what, row):
     return url
 
 
-# Intelligent Links to PNP4Nagios 0.6.X
-def pnp_url(row, what, how='graph'):
-    sitename = row["site"]
-    host = cmk.utils.pnp_cleanup(row["host_name"])
-    if what == "host":
-        svc = "_HOST_"
-    else:
-        svc = cmk.utils.pnp_cleanup(row["service_description"])
-    url_prefix = config.site(sitename)["url_prefix"]
-    if html.mobile:
-        url = url_prefix + ("pnp4nagios/index.php?kohana_uri=/mobile/%s/%s/%s" %
-                            (how, html.urlencode(host), html.urlencode(svc)))
-    else:
-        url = url_prefix + ("pnp4nagios/index.php/%s?host=%s&srv=%s" %
-                            (how, html.urlencode(host), html.urlencode(svc)))
-
-    pnp_theme = html.get_theme()
-    if pnp_theme == "classic":
-        pnp_theme = "multisite"
-
-    if how == 'graph':
-        url += "&theme=%s&baseurl=%scheck_mk/" % (pnp_theme, html.urlencode(url_prefix))
-    return url
-
-
 def render_cache_info(what, row):
     cached_at = row["service_cached_at"]
     cache_interval = row["service_cache_interval"]

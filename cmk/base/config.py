@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -44,6 +44,11 @@ if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
 else:
     from pathlib2 import Path  # pylint: disable=import-error
+
+if sys.version_info[0] >= 3:
+    from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER  # pylint: disable=no-name-in-module,import-error
+else:
+    from py_compile import MAGIC as _MAGIC_NUMBER  # type: ignore[attr-defined] # pylint: disable=no-name-in-module,ungrouped-imports
 
 import six
 
@@ -260,7 +265,7 @@ def _perform_post_config_loading_actions():
         set_check_variables_for_checks()
 
 
-class SetFolderPathAbstract(object):
+class SetFolderPathAbstract(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, the_object):
         # type: (Iterable) -> None
         # TODO: Cleanup this somehow to work nicer with mypy
@@ -506,7 +511,7 @@ def all_nonfunction_vars():
     }
 
 
-class PackedConfig(object):
+class PackedConfig(object):  # pylint: disable=useless-object-inheritance
     """The precompiled host checks and the CMC Check_MK helpers use a
     "precompiled" part of the Check_MK configuration during runtime.
 
@@ -969,8 +974,7 @@ def service_description(hostname, check_plugin_name, item):
         else:
             descr_format = check_info[check_plugin_name]["service_description"]
 
-    if isinstance(descr_format, str):
-        descr_format = descr_format.decode("utf-8")
+    descr_format = six.ensure_text(descr_format)
 
     # Note: we strip the service description (remove spaces).
     # One check defines "Pages %s" as a description, but the item
@@ -1132,10 +1136,8 @@ def translate_piggyback_host(sourcehost, backedhost):
     # We assume the incoming name is correctly encoded in UTF-8
     decoded_backedhost = convert_to_unicode(backedhost,
                                             fallback_encoding=fallback_agent_output_encoding)
-
-    translated = cmk.utils.translations.translate_hostname(translation, decoded_backedhost)
-
-    return translated.encode('utf-8')  # change back to UTF-8 encoded string
+    return six.ensure_str(cmk.utils.translations.translate_hostname(translation,
+                                                                    decoded_backedhost))
 
 
 def _get_piggyback_translations(hostname):
@@ -1681,6 +1683,7 @@ def _plugin_pathnames_in_directory(path):
     return []
 
 
+# TODO: Check if this totally non-portable Kung Fu still works with Python 3!
 def load_precompiled_plugin(path, check_context):
     # type: (str, CheckContext) -> None
     """Loads the given check or check include plugin into the given
@@ -1710,8 +1713,7 @@ def _is_plugin_precompiled(path, precompiled_path):
     f = open(precompiled_path, "rb")
 
     file_magic = f.read(4)
-    # TODO: Python3 importlib.util.MAGIC_NUMBER
-    if file_magic != py_compile.MAGIC:  # type: ignore
+    if file_magic != _MAGIC_NUMBER:
         return False
 
     try:
@@ -1719,7 +1721,7 @@ def _is_plugin_precompiled(path, precompiled_path):
     except struct.error:
         return False
 
-    if long(os.stat(path).st_mtime) != origin_file_mtime:
+    if int(os.stat(path).st_mtime) != origin_file_mtime:
         return False
 
     return True
@@ -2163,7 +2165,7 @@ def filter_by_management_board(hostname,
 def _get_categorized_check_plugins(check_plugin_names, for_inventory=False):
     # type: (Set[CheckPluginName], bool) -> Tuple[Set[CheckPluginName], Set[CheckPluginName], Set[CheckPluginName], Set[CheckPluginName], Set[CheckPluginName]]
     # Local import needed to prevent import cycle. Sorry for this hack :-/
-    import cmk.base.inventory_plugins  # pylint: disable=redefined-outer-name
+    import cmk.base.inventory_plugins  # pylint: disable=redefined-outer-name,import-outside-toplevel
 
     if for_inventory:
         is_snmp_check_f = cmk.base.inventory_plugins.is_snmp_plugin
@@ -2234,7 +2236,7 @@ cmk.base.cleanup.register_cleanup(check_api_utils.reset_hostname)
 #   +----------------------------------------------------------------------+
 
 
-class HostConfig(object):
+class HostConfig(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, config_cache, hostname):
         # type: (ConfigCache, str) -> None
         super(HostConfig, self).__init__()
@@ -2986,14 +2988,13 @@ class HostConfig(object):
     def set_autochecks(self, new_items):
         # type: (List[DiscoveredService]) -> None
         """Merge existing autochecks with the given autochecks for a host and save it"""
-        from cmk.base.autochecks import set_autochecks_of_cluster, set_autochecks_of_real_hosts
         if self.is_cluster:
             if self.nodes:
-                set_autochecks_of_cluster(self.nodes, self.hostname, new_items,
-                                          self._config_cache.host_of_clustered_service,
-                                          service_description)
+                autochecks.set_autochecks_of_cluster(self.nodes, self.hostname, new_items,
+                                                     self._config_cache.host_of_clustered_service,
+                                                     service_description)
         else:
-            set_autochecks_of_real_hosts(self.hostname, new_items, service_description)
+            autochecks.set_autochecks_of_real_hosts(self.hostname, new_items, service_description)
 
     def remove_autochecks(self):
         # type: () -> int
@@ -3002,11 +3003,10 @@ class HostConfig(object):
         Cluster aware means that the autocheck files of the nodes are handled. Instead
         of removing the whole file the file is loaded and only the services associated
         with the given cluster are removed."""
-        from cmk.base.autochecks import remove_autochecks_of_host
         hostnames = self.nodes if self.nodes else [self.hostname]
         return sum(
-            remove_autochecks_of_host(hostname, self._config_cache.host_of_clustered_service,
-                                      service_description)  #
+            autochecks.remove_autochecks_of_host(
+                hostname, self._config_cache.host_of_clustered_service, service_description)  #
             for hostname in hostnames)
 
 
@@ -3029,7 +3029,7 @@ class HostConfig(object):
 
 # TODO: Shouldn't we find a better place for the *_of_service() methods?
 # Wouldn't it be better to make them part of HostConfig?
-class ConfigCache(object):
+class ConfigCache(object):  # pylint: disable=useless-object-inheritance
     def __init__(self):
         # type: () -> None
         super(ConfigCache, self).__init__()

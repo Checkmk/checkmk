@@ -34,8 +34,8 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
-from connexion import FlaskApi, AbstractApp, RestyResolver, problem  # type: ignore
-from connexion.apps.flask_app import FlaskJSONEncoder  # type: ignore
+from connexion import FlaskApi, AbstractApp, RestyResolver, problem  # type: ignore[import]
+from connexion.apps.flask_app import FlaskJSONEncoder  # type: ignore[import]
 
 from cmk.gui.wsgi.auth import with_user
 from cmk.utils import paths

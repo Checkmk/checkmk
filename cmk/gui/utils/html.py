@@ -61,8 +61,9 @@ class HTML(object):
         # type: () -> Text
         return "%s" % self
 
-    # TODO: Cleanup once we are using Python 3
-    def __str__(self):  # type: ignore
+    # TODO: This is broken! Cleanup once we are using Python 3.
+    # NOTE: Return type "unicode" of "__str__" incompatible with return type "str" in supertype "object"
+    def __str__(self):  # type: ignore[override]
         # type: () -> Text
         # Against the sense of the __str__() method, we need to return the value
         # as unicode here. Why? There are many cases where something like

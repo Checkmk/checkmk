@@ -333,15 +333,12 @@ def _parse_unresolved_parameters_from_ast(ast_parameters_unresolved):
 def _parse_discovered_service_label_from_ast(ast_service_labels):
     # type: (ast.Dict) -> DiscoveredServiceLabels
     labels = DiscoveredServiceLabels()
-
-    # mypy does not get the types of the ast objects here
-    if not hasattr(ast_service_labels, "keys"):  # # type: ignore
+    if not hasattr(ast_service_labels, "keys"):
         return labels
-
     for key, value in zip(ast_service_labels.keys, ast_service_labels.values):
-        # mypy does not get the types of the ast objects here
-        labels.add_label(ServiceLabel(key.s, value.s))  # type: ignore
-
+        if key is not None:
+            # mypy does not get the types of the ast objects here
+            labels.add_label(ServiceLabel(key.s, value.s))  # type: ignore[attr-defined]
     return labels
 
 

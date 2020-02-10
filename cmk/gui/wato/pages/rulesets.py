@@ -608,7 +608,7 @@ class ModeEditRuleset(WatoMode):
         if watolib.has_agent_bakery():
             import cmk.gui.cee.plugins.wato.agent_bakery as agent_bakery  # pylint: disable=import-error,no-name-in-module
         else:
-            agent_bakery = None  # type: ignore
+            agent_bakery = None
         if agent_bakery:
             agent_bakery.agent_bakery_context_button(self._name)
 
@@ -700,9 +700,10 @@ class ModeEditRuleset(WatoMode):
         match_state = {"matched": False, "keys": set()}
         search_options = ModeRuleSearch().search_options
         cur = watolib.Folder.current()
-        groups = ((folder, folder_rules) \
-                  for folder, folder_rules in itertools.groupby(rules, key=lambda rule: rule[0]) \
-                  if folder.is_transitive_parent_of(cur) or cur.is_transitive_parent_of(folder))
+        groups = (
+            (folder, folder_rules)  #
+            for folder, folder_rules in itertools.groupby(rules, key=lambda rule: rule[0])
+            if folder.is_transitive_parent_of(cur) or cur.is_transitive_parent_of(folder))
 
         num_rows = 0
         for folder, folder_rules in groups:
@@ -1782,8 +1783,7 @@ class RuleConditionRenderer(object):
                 raise NotImplementedError()
 
         if negate:
-            # mypy had some problem with this. Need to check type annotation
-            tag_id = tag_spec["$ne"]  # type: ignore
+            tag_id = tag_spec["$ne"]
         else:
             tag_id = tag_spec
 
@@ -1828,7 +1828,7 @@ class RuleConditionRenderer(object):
         if isinstance(label_spec, dict):
             if "$ne" in label_spec:
                 negate = True
-                label_value = label_spec["$ne"]  # type: ignore
+                label_value = label_spec["$ne"]
             else:
                 raise NotImplementedError()
 
@@ -2079,4 +2079,4 @@ class ModeNewRule(EditRuleMode):
     def _success_message(self):
         return _("Created new rule in ruleset \"%s\" in folder \"%s\"") % \
                  (self._ruleset.title(),
-                  self._folder.alias_path()) # pylint: disable=no-member
+                  self._folder.alias_path())  # pylint: disable=no-member

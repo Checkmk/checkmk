@@ -31,7 +31,7 @@ import six
 if sys.version_info[0] >= 3:
     from html import escape as html_escape
 else:
-    from future.moves.html import escape as html_escape  # type: ignore
+    from future.moves.html import escape as html_escape  # type: ignore[import]
 
 from cmk.utils.encoding import ensure_unicode
 from cmk.gui.utils.html import HTML
@@ -93,10 +93,11 @@ def escape_attribute(value):
 def unescape_attributes(value):
     # type: (str) -> Text
     # In python3 use html.unescape
-    return ensure_unicode(value.replace("&amp;", "&")\
-                .replace("&quot;", "\"")\
-                .replace("&lt;", "<")\
-                .replace("&gt;", ">"))
+    return ensure_unicode(value  #
+                          .replace("&amp;", "&")  #
+                          .replace("&quot;", "\"")  #
+                          .replace("&lt;", "<")  #
+                          .replace("&gt;", ">"))
 
 
 def escape_text(text):

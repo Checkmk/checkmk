@@ -95,8 +95,8 @@ from cmk.base.check_utils import (  # pylint: disable=unused-import
 # are loaded later with load_default_config() again.
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-service_service_levels = []  # type: ignore
-host_service_levels = []  # type: ignore
+service_service_levels = []
+host_service_levels = []
 
 AllHosts = List[str]
 ShadowHosts = Dict[str, Dict]
@@ -269,7 +269,7 @@ class SetFolderPathAbstract(object):  # pylint: disable=useless-object-inheritan
     def __init__(self, the_object):
         # type: (Iterable) -> None
         # TODO: Cleanup this somehow to work nicer with mypy
-        super(SetFolderPathAbstract, self).__init__(the_object)  # type: ignore
+        super(SetFolderPathAbstract, self).__init__(the_object)  # type: ignore[call-arg]
         self._current_path = None  # type: Optional[str]
 
     def set_current_path(self, current_path):
@@ -307,7 +307,7 @@ class SetFolderPathList(SetFolderPathAbstract, list):
 
 class SetFolderPathDict(SetFolderPathAbstract, dict):
     # TODO: How to annotate this?
-    def update(self, new_hosts):  # type: ignore
+    def update(self, new_hosts):
         # not-yet-a-type
         self._set_folder_paths(new_hosts)
         return super(SetFolderPathDict, self).update(new_hosts)

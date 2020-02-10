@@ -61,9 +61,9 @@ import time
 from typing import Union, Dict, List, Set, Text  # pylint: disable=unused-import
 
 # docs: http://www.python-ldap.org/doc/html/index.html
-import ldap  # type: ignore
-import ldap.filter  # type: ignore
-from ldap.controls import SimplePagedResultsControl  # type: ignore
+import ldap  # type: ignore[import]
+import ldap.filter  # type: ignore[import]
+from ldap.controls import SimplePagedResultsControl  # type: ignore[import]
 import six
 
 import cmk
@@ -105,7 +105,7 @@ import cmk.gui.sites as sites
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 else:
-    managed = None  # type: ignore
+    managed = None  # type: ignore[assignment]
 
 # LDAP attributes are case insensitive, we only use lower case!
 # Please note: This are only default values. The user might override this

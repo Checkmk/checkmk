@@ -51,7 +51,7 @@ from cmk.gui.plugins.wato import (
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 else:
-    managed = None  # type: ignore
+    managed = None  # type: ignore[assignment]
 
 
 class LDAPMode(WatoMode):

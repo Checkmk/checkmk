@@ -29,7 +29,7 @@ import time
 
 from typing import Optional  # pylint: disable=unused-import
 
-from connexion import problem  # type: ignore
+from connexion import problem  # type: ignore[import]
 
 from cmk.gui import crash_reporting
 from cmk.gui.config import clear_user_login

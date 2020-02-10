@@ -35,7 +35,7 @@ import sys
 import time
 import traceback
 
-import psutil  # type: ignore
+import psutil  # type: ignore[import]
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error

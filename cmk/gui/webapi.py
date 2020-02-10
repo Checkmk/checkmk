@@ -27,9 +27,9 @@
 import traceback
 import json
 import pprint
-import xml.dom.minidom  # type: ignore
+import xml.dom.minidom  # type: ignore[import]
 
-import dicttoxml  # type: ignore
+import dicttoxml  # type: ignore[import]
 
 import cmk
 
@@ -62,7 +62,7 @@ if not cmk.is_raw_edition():
     import cmk.gui.cee.plugins.webapi  # pylint: disable=import-error,no-name-in-module
 
 # TODO: Kept for compatibility reasons with legacy plugins
-from cmk.gui.plugins.webapi.utils import (  # pylint: disable=unused-import
+from cmk.gui.plugins.webapi.utils import (  # noqa: F401 # pylint: disable=unused-import
     add_configuration_hash, api_call_collection_registry, check_hostname, validate_config_hash,
     validate_host_attributes,
 )

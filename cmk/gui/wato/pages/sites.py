@@ -39,10 +39,10 @@ import six
 from OpenSSL import crypto
 from OpenSSL import SSL  # type: ignore[attr-defined]
 # mypy can't find x509 for some reason (is a c extension involved?)
-from cryptography.x509.oid import ExtensionOID, NameOID  # type: ignore
-from cryptography import x509  # type: ignore
-from cryptography.hazmat.backends import default_backend  # type: ignore
-from cryptography.hazmat.primitives import hashes  # type: ignore
+from cryptography.x509.oid import ExtensionOID, NameOID  # type: ignore[import]
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
 
 import cmk
 import cmk.gui.config as config
@@ -529,9 +529,10 @@ class ModeDistributedMonitoring(WatoMode):
                   "assigned to it. You can use the <a href=\"%s\">host "
                   "search</a> to get a list of the hosts.") % search_url)
 
-        c = wato_confirm(_("Confirm deletion of site %s") % html.render_tt(delete_id),
-                         _("Do you really want to delete the connection to the site %s?") % \
-                         html.render_tt(delete_id))
+        c = wato_confirm(
+            _("Confirm deletion of site %s") % html.render_tt(delete_id),
+            _("Do you really want to delete the connection to the site %s?") %
+            html.render_tt(delete_id))
         if c:
             self._site_mgmt.delete_site(delete_id)
             return None
@@ -544,9 +545,9 @@ class ModeDistributedMonitoring(WatoMode):
     def _action_logout(self, logout_id):
         configured_sites = self._site_mgmt.load_sites()
         site = configured_sites[logout_id]
-        c = wato_confirm(_("Confirm logout"),
-                         _("Do you really want to log out of '%s'?") % \
-                         html.render_tt(site["alias"]))
+        c = wato_confirm(
+            _("Confirm logout"),
+            _("Do you really want to log out of '%s'?") % html.render_tt(site["alias"]))
         if c:
             if "secret" in site:
                 del site["secret"]

@@ -38,10 +38,9 @@ import cmk.base.item_state as item_state
 import cmk.base.check_utils
 from cmk.base.utils import HostName, HostAddress, ServiceName  # pylint: disable=unused-import
 from cmk.base.check_utils import (  # pylint: disable=unused-import
-    CheckPluginName, SectionCacheInfo, AbstractSections, PiggybackRawData,
-    AbstractPersistedSections, AbstractSectionContent, SectionName, ParsedSectionContent,
-    BoundedAbstractRawData, BoundedAbstractSections, BoundedAbstractPersistedSections,
-    BoundedAbstractSectionContent, RawAgentData, FinalSectionContent,
+    CheckPluginName, SectionCacheInfo, PiggybackRawData, AbstractSectionContent, SectionName,
+    ParsedSectionContent, BoundedAbstractRawData, BoundedAbstractSections,
+    BoundedAbstractPersistedSections, BoundedAbstractSectionContent, FinalSectionContent,
 )
 
 from cmk.base.exceptions import MKParseFunctionError
@@ -101,7 +100,7 @@ class AbstractHostSections(
         # type: (SectionName, BoundedAbstractSectionContent , int, int) -> None
         self.cache_info[section_name] = (persisted_from, persisted_until - persisted_from)
         # TODO: Find out why mypy complains about this
-        self.sections[section_name] = section  # type: ignore
+        self.sections[section_name] = section  # type: ignore[assignment]
 
 
 class MultiHostSections(object):
@@ -276,11 +275,11 @@ class MultiHostSections(object):
             if len(line) > 0 and isinstance(line[0], list):
                 new_entry = []
                 for entry in line:
-                    new_entry.append([node_text] + entry)  # type: ignore
+                    new_entry.append([node_text] + entry)  # type: ignore[operator]
                 new_section_content.append(new_entry)
             else:
-                new_section_content.append([node_text] + line)  # type: ignore
-        return new_section_content  # type: ignore
+                new_section_content.append([node_text] + line)  # type: ignore[arg-type,operator]
+        return new_section_content  # type: ignore[return-value]
 
     def _update_with_extra_sections(self, section_content, hostname, ipaddress, section_name,
                                     for_discovery):

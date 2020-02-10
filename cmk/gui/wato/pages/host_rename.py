@@ -72,7 +72,7 @@ from cmk.gui.plugins.wato import (
 try:
     import cmk.gui.cee.plugins.wato.alert_handling as alert_handling
 except ImportError:
-    alert_handling = None  # type: ignore
+    alert_handling = None  # type: ignore[assignment]
 
 
 @gui_background_job.job_registry.register

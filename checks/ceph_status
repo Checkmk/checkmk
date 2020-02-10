@@ -40,7 +40,7 @@ def parse_ceph_status(info):
 
 def ceph_check_epoch(_id, epoch, params):
     warn, crit, avg_interval_min = params.get("epoch", (None, None, 1))
-    epoch_rate = get_rate("%s.epoch.rate" % _id, time.time(), epoch, avg_interval_min)
+    epoch_rate = get_rate("%s.epoch.rate" % _id, time.time(), epoch, allow_negative=True)
     epoch_avg = get_average("%s.epoch.avg" % _id, time.time(), epoch_rate, avg_interval_min)
     state = 0
     infotext = 'Epoch: %s/%s' % (epoch_avg, get_age_human_readable(avg_interval_min * 60))

@@ -13,7 +13,11 @@ header ()
 headrify ()
 {
   if [ ! -f "$file" ] ; then
-      echo "Skipping $file. It's not a file."
+      if [[ -d "$file" && ! -L "$file" ]] ; then
+          echo "Skipping the directory $file/"
+      else
+          echo "Skipping $file. It's not a file."
+      fi
       return
   fi
 

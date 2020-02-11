@@ -291,7 +291,7 @@ $(GOOGLETEST_VERSION)/CMakeLists.txt: $(PACKAGE_GOOGLETEST)/$(GOOGLETEST_VERSION
 livestatus.o: $(liblivestatus_a_OBJECTS)
 # Note: libstdc++fs is only available as a static library, so we are lucky. For
 # RE2 we make sure that this is the case, too.
-	$(CXXLINK) -shared $^ -lstdc++fs -lpthread $(AM_LDFLAGS) @RE2_LIBS@
+	$(CXXLINK) -shared $^ -lstdc++fs -lpthread $(AM_LDFLAGS) @RE2_LIBS@ $(RRDTOOL_LD_FLAGS)
 # To make sure we can dlopen() our NEB later
 	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) -c NagiosMockup.cc -o NagiosMockup.o
 	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup $(liblivestatus_a_LD_FLAGS)

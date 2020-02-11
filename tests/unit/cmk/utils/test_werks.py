@@ -103,7 +103,7 @@ def _tags_containing_werk(werk_id):
     return _werk_to_git_tag[werk_id]
 
 
-_werk_to_git_tag = defaultdict(list)  # type: ignore
+_werk_to_git_tag = defaultdict(list)  # type: ignore[var-annotated]
 
 
 @cmk.utils.memoize.MemoizeCache

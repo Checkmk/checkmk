@@ -2,7 +2,7 @@
 # pylint: disable=protected-access,redefined-outer-name
 
 import os
-from bson.json_util import loads  # type: ignore
+from bson.json_util import loads  # type: ignore[import]
 import pytest  # type: ignore[import]
 from testlib import import_module, cmk_path
 

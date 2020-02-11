@@ -1,7 +1,7 @@
 # pylint: disable=redefined-outer-name
 
 import pytest  # type: ignore[import]
-import docker  # type: ignore
+import docker  # type: ignore[import]
 
 import testlib
 import testlib.pylint_cmk

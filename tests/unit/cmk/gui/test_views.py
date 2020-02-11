@@ -1,7 +1,7 @@
 # yapf: disable
 # pylint: disable=redefined-outer-name
 import copy
-import pytest # type: ignore
+import pytest  # type: ignore[import]
 import six
 import cmk.gui.config as config
 

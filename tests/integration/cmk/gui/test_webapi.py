@@ -13,7 +13,7 @@ import time
 import six
 
 import pytest  # type: ignore[import]
-from PIL import Image  # type: ignore
+from PIL import Image  # type: ignore[import]
 
 import cmk
 from testlib import web, APIError, wait_until, repo_path  # pylint: disable=unused-import

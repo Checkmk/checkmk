@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import re
-from bs4 import BeautifulSoup as bs  # type: ignore
+from bs4 import BeautifulSoup as bs  # type: ignore[import]
 from bs4 import NavigableString
 
 
@@ -28,7 +28,7 @@ def undo_encode_attribute(value):
     return value.replace("&quot;", '"')\
                 .replace("&lt;", '<')\
                 .replace("&gt;", '>')\
-                .replace("&amp;", '&')\
+                .replace("&amp;", '&')
 
 
 def subber(value):

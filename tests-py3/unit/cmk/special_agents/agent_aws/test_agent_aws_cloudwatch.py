@@ -34,7 +34,7 @@ def get_cloudwatch_alarms_sections():
     return _create_cloudwatch_alarms_sections
 
 
-cloudwatch_params = [  # type: ignore
+cloudwatch_params = [  # type: ignore[var-annotated]
     (None, 2),
     ([], 2),
     (['AlarmName-0'], 1),

@@ -6,7 +6,7 @@ import sys
 import six
 import pytest  # type: ignore[import]
 
-import testlib  # type: ignore
+import testlib
 
 import cmk
 import cmk.utils.paths

@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 # https://github.com/pytest-dev/pytest/issues/363
 @pytest.fixture(scope="module")
 def monkeymodule(request):
-    from _pytest.monkeypatch import MonkeyPatch  # type: ignore
+    from _pytest.monkeypatch import MonkeyPatch  # type: ignore[import]
     mpatch = MonkeyPatch()
     yield mpatch
     mpatch.undo()

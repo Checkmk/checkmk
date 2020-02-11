@@ -1,8 +1,8 @@
 # yapf: disable
 from collections import namedtuple
-from six.moves import zip_longest
-import pytest # type: ignore
 import datetime
+from six.moves import zip_longest
+import pytest  # type: ignore[import]
 from cmk.base.check_api import MKGeneralException
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 from checktestlib import CheckResult, assertCheckResultsEqual
@@ -191,7 +191,7 @@ def test_parse_ps(check_manager, capture, result):
         assert out[2:] == ref[2:]
 
 
-PS_DISCOVERY_WATO_RULES = [
+PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
     ({
         "default_params": {},
         "descr": "smss",

@@ -39,6 +39,6 @@ DEBUG = False
 GUI_APP = make_app()
 
 if DEBUG:
-    Application = DebuggedApplication(GUI_APP, evalex=True, pin_security=False)  # type: ignore
+    Application = DebuggedApplication(GUI_APP, evalex=True, pin_security=False)
 else:
     Application = GUI_APP

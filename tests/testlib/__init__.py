@@ -24,8 +24,8 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
-import urllib3  # type: ignore
-import freezegun  # type: ignore
+import urllib3  # type: ignore[import]
+import freezegun  # type: ignore[import]
 
 from testlib.utils import (
     InterProcessLock,

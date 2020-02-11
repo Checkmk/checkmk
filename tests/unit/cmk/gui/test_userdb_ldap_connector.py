@@ -4,7 +4,7 @@
 
 from pathlib2 import Path
 import pytest  # type: ignore[import]
-from mockldap import MockLdap, LDAPObject  # type: ignore
+from mockldap import MockLdap, LDAPObject  # type: ignore[import]
 import six
 
 # userdb is needed to make the module register the post-config-load-hooks

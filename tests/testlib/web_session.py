@@ -5,7 +5,7 @@ import ast
 import re
 import six
 from six.moves.urllib.parse import urlparse
-from bs4 import BeautifulSoup  # type: ignore
+from bs4 import BeautifulSoup  # type: ignore[import]
 
 import requests
 

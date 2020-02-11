@@ -104,7 +104,7 @@ def test_parse_function(check_manager, info, result_parsed):
                                                      ('util_average', 0, 80.0, 90.0, 0, 100)]),
         (0, 'Total CPU (2min average): 0.42%, 2 CPUs', [
             ('util', 0.8333333333333334, 80.0, 90.0, 0, 2),
-            ('util_average', 0.4166666666666666, 80.0, 90.0, 0, 100)
+            ('util_average', 0.4166666666666667, 80.0, 90.0, 0, 100)
         ]),
     ),
 ])

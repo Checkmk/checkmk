@@ -257,11 +257,11 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
     #
 
     def render_text(self, text):
-        # type: (Union[Text, HTML]) -> HTML
+        # type: (Union[None, str, Text, HTML]) -> HTML
         return HTML(escaping.escape_text(text))
 
     def write_text(self, text):
-        # type: (Union[Text, HTML]) -> None
+        # type: (Union[None, str, Text, HTML]) -> None
         """ Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped. """
         self.write(self.render_text(text))
 
@@ -477,9 +477,13 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
         self.write_html(self._render_content_tag("th", content, **kwargs))
 
-    def td(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
-        self.write_html(self._render_content_tag("td", content, **kwargs))
+    def td(self, content, colspan=None, **kwargs):
+        # type: (HTMLTagContent, Optional[int], **HTMLTagAttributeValue) -> None
+        self.write_html(
+            self._render_content_tag("td",
+                                     content,
+                                     colspan=str(colspan) if colspan is not None else None,
+                                     **kwargs))
 
     def option(self, content, **kwargs):
         # type: (HTMLTagContent, **HTMLTagAttributeValue) -> None
@@ -785,17 +789,24 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         # type: () -> None
         self.write_html(self._render_closing_tag("input"))
 
-    def open_td(self, **kwargs):
-        # type: (**HTMLTagAttributeValue) -> None
-        self.write_html(self._render_opening_tag("td", close_tag=False, **kwargs))
+    def open_td(self, colspan=None, **kwargs):
+        # type: (Optional[int], **HTMLTagAttributeValue) -> None
+        self.write_html(
+            self._render_opening_tag("td",
+                                     close_tag=False,
+                                     colspan=str(colspan) if colspan is not None else None,
+                                     **kwargs))
 
     def close_td(self):
         # type: () -> None
         self.write_html(self._render_closing_tag("td"))
 
-    def render_td(self, content, **kwargs):
-        # type: (HTMLTagContent, **HTMLTagAttributeValue) -> HTML
-        return self._render_content_tag("td", content, **kwargs)
+    def render_td(self, content, colspan=None, **kwargs):
+        # type: (HTMLTagContent, Optional[int], **HTMLTagAttributeValue) -> HTML
+        return self._render_content_tag("td",
+                                        content,
+                                        colspan=str(colspan) if colspan is not None else None,
+                                        **kwargs)
 
     def open_thead(self, **kwargs):
         # type: (**HTMLTagAttributeValue) -> None
@@ -2719,7 +2730,7 @@ class html(ABCHTMLGenerator):
                                  fetch_url=None,
                                  title_url=None,
                                  title_target=None):
-        # type: (str, str, bool, Text, FoldingIndent, bool, Optional[str], Optional[str], Optional[str], Optional[str]) -> bool
+        # type: (str, str, bool, HTMLTagContent, FoldingIndent, bool, Optional[str], Optional[str], Optional[str], Optional[str]) -> bool
         self.folding_indent = indent
 
         isopen = self.foldable_container_is_open(treename, id_, isopen)
@@ -2733,7 +2744,7 @@ class html(ABCHTMLGenerator):
         if indent == "nform":
             self.open_thead()
             self.open_tr(class_="heading")
-            self.open_td(id_="nform.%s.%s" % (treename, id_), onclick=onclick, colspan="2")
+            self.open_td(id_="nform.%s.%s" % (treename, id_), onclick=onclick, colspan=2)
             if icon:
                 self.img(id_=img_id,
                          class_=["treeangle", "title"],

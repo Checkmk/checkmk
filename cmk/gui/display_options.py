@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | copyright mathias kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# this file is part of check_mk.
-# the official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  gnu general public license  as published by
-# the free software foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but without any warranty;  with-
-# out even the implied warranty of  merchantability  or  fitness for a
-# particular purpose. see the  gnu general public license for more de-
-# tails. you should have  received  a copy of the  gnu  general public
-# license along with gnu make; see the file  copying.  if  not,  write
-# to the free software foundation, inc., 51 franklin st,  fifth floor,
-# boston, ma 02110-1301 usa.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.globals import html
 

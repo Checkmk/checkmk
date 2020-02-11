@@ -6,6 +6,7 @@
 
 import os
 import time
+from typing import Optional  # pylint: disable=unused-import
 
 import cmk
 import cmk.utils.paths
@@ -27,13 +28,14 @@ from cmk.gui.plugins.cron import (  # pylint: disable=unused-import
 if not cmk.is_raw_edition():
     import cmk.gui.cee.plugins.cron  # pylint: disable=no-name-in-module
 
-loaded_with_language = False
+loaded_with_language = None  # type: Optional[str]
 
 lock_file = cmk.utils.paths.tmp_dir + "/cron.lastrun"
 
 
 # Load all view plugins
 def load_plugins(force):
+    # type: (bool) -> None
     global loaded_with_language
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
@@ -51,6 +53,7 @@ def load_plugins(force):
 # are written to the web log.
 @cmk.gui.pages.register("noauth:run_cron")
 def page_run_cron():
+    # type: () -> None
     # Prevent cron jobs from being run too often, also we need
     # locking in order to prevent overlapping runs
     if os.path.exists(lock_file):

@@ -13,6 +13,7 @@ from cmk.gui.globals import html
 
 @cmk.gui.pages.register("index")
 def page_index():
+    # type: () -> None
     html.write(
         '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">\n'
         '<html><head>\n')
@@ -29,6 +30,7 @@ def page_index():
 
 
 def _get_start_url():
+    # type: () -> str
     default_start_url = config.user.get_attribute("start_url", config.start_url) or config.start_url
     if not utils.is_allowed_url(default_start_url):
         default_start_url = "dashboard.py"

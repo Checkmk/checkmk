@@ -41,7 +41,7 @@ from cmk.base.utils import HostName, ServiceName  # pylint: disable=unused-impor
 if not cmk.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
 else:
-    keepalive = None  # type: ignore
+    keepalive = None  # type: ignore[assignment]
 
 
 def handle_check_mk_check_result(check_plugin_name, description):

@@ -1,6 +1,6 @@
 # pylint: disable=redefined-outer-name
 import logging
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from testlib import on_time
 import cmk.ec.export as ec
 import cmk.ec.main

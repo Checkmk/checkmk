@@ -169,8 +169,8 @@ def check_temperature_trend(temp, params, output_unit, crit, crit_lower, unique_
         # rate_avg is growth in C/s, trend is in C per trend range minutes
         trend = float(rate_avg * trend_range_min * 60.0)
         sign = "+" if trend > 0 else ""
-        combiner(0, "rate: %s%s/%g min" %\
-                    (sign, render_temp(trend, output_unit, True), trend_range_min))
+        combiner(
+            0, "rate: %s%s/%g min" % (sign, render_temp(trend, output_unit, True), trend_range_min))
 
         if "trend_levels" in params:
             warn_upper_trend, crit_upper_trend = params["trend_levels"]
@@ -186,17 +186,21 @@ def check_temperature_trend(temp, params, output_unit, crit, crit_lower, unique_
             warn_lower_trend = crit_lower_trend = None
 
         if crit_upper_trend is not None and trend > crit_upper_trend:
-            combiner(2, u"rising faster than %s/%g min(!!)" %\
-                        (render_temp(crit_upper_trend, output_unit, True), trend_range_min))
+            combiner(
+                2, u"rising faster than %s/%g min(!!)" %
+                (render_temp(crit_upper_trend, output_unit, True), trend_range_min))
         elif warn_upper_trend is not None and trend > warn_upper_trend:
-            combiner(1, u"rising faster than %s/%g min(!)" %\
-                        (render_temp(warn_upper_trend, output_unit, True), trend_range_min))
+            combiner(
+                1, u"rising faster than %s/%g min(!)" %
+                (render_temp(warn_upper_trend, output_unit, True), trend_range_min))
         elif crit_lower_trend is not None and trend < crit_lower_trend:
-            combiner(2, u"falling faster than %s/%g min(!!)" %\
-                        (render_temp(crit_lower_trend, output_unit, True), trend_range_min))
+            combiner(
+                2, u"falling faster than %s/%g min(!!)" %
+                (render_temp(crit_lower_trend, output_unit, True), trend_range_min))
         elif warn_lower_trend is not None and trend < warn_lower_trend:
-            combiner(1, u"falling faster than %s/%g min(!)" %\
-                        (render_temp(warn_lower_trend, output_unit, True), trend_range_min))
+            combiner(
+                1, u"falling faster than %s/%g min(!)" %
+                (render_temp(warn_lower_trend, output_unit, True), trend_range_min))
 
         if "trend_timeleft" in params:
             # compute time until temperature limit is reached
@@ -399,7 +403,7 @@ def check_temperature(
         dev_status = None
 
     # infotext does some device/user specifics
-    status, _, perfdata = check_levels(  # type: ignore
+    status, _, perfdata = check_levels(  # type: ignore[name-defined]
         temp,
         "temp",
         effective_levels,
@@ -519,7 +523,10 @@ def _migrate_params(params):
     if isinstance(params, tuple):
         if len(params) == 4:
             # mypy doesn't handle this tuple slicing very well.
-            params = {'levels': params[:2], 'levels_lower': params[2:]}  # type: ignore
+            params = {
+                'levels': params[:2],
+                'levels_lower': params[2:],  # type: ignore[typeddict-item]
+            }
         else:
             params = {'levels': params[:2]}
     elif params is None:
@@ -597,7 +604,6 @@ def check_temperature_list(sensorlist, params, unique_name):
                                                usr_warn_lower, usr_crit_lower,
                                                None, None,
                                                None, None)
-
 
         trend_status, trend_infotext =\
             check_temperature_trend(tempavg, params["trend_compute"], output_unit,

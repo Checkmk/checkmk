@@ -1,5 +1,5 @@
 # encoding: utf-8
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 import six
 from testlib import CheckManager
 from testlib.base import Scenario

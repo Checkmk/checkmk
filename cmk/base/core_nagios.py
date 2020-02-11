@@ -334,7 +334,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
             cn, it = used_descriptions[service.description]
             # TODO: Remove "type: ignore" once we are on python3
             core_config.warning(
-                "ERROR: Duplicate service description '%s' for host '%s'!\n"  # type: ignore
+                "ERROR: Duplicate service description '%s' for host '%s'!\n"  # type: ignore[arg-type]
                 " - 1st occurrance: checktype = %s, item = %r\n"
                 " - 2nd occurrance: checktype = %s, item = %r\n" %
                 (service.description, hostname, cn, it, service.check_plugin_name, service.item))
@@ -413,7 +413,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
 
                 # TODO: Remove "type: ignore" once we are on python3
                 core_config.warning(
-                    "ERROR: Duplicate service description (active check) '%s' for host '%s'!\n"  # type: ignore
+                    "ERROR: Duplicate service description (active check) '%s' for host '%s'!\n"  # type: ignore[arg-type]
                     " - 1st occurrance: checktype = %s, item = %r\n"
                     " - 2nd occurrance: checktype = active(%s), item = None\n" %
                     (description, hostname, cn, it, acttype))
@@ -492,7 +492,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
                     continue
                 # TODO: Remove "type: ignore" once we are on python3
                 core_config.warning(
-                    "ERROR: Duplicate service description (custom check) '%s' for host '%s'!\n"  # type: ignore
+                    "ERROR: Duplicate service description (custom check) '%s' for host '%s'!\n"  # type: ignore[arg-type]
                     " - 1st occurrance: checktype = %s, item = %r\n"
                     " - 2nd occurrance: checktype = custom(%s), item = %r\n" %
                     (description, hostname, cn, it, command_name, description))
@@ -1176,7 +1176,7 @@ def _get_needed_check_file_names(needed_check_plugin_names):
         # Now add check file(s) itself
         paths = _find_check_plugins(check_plugin_name)
         if not paths:
-            raise MKGeneralException("Cannot find check file %s needed for check type %s" % \
+            raise MKGeneralException("Cannot find check file %s needed for check type %s" %
                                      (section_name, check_plugin_name))
 
         for path in paths:

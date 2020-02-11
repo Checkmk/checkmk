@@ -1,7 +1,7 @@
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # pylint: disable=redefined-outer-name
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 from agent_aws_fake_clients import (
     FakeCloudwatchClient,

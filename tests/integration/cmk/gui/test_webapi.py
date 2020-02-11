@@ -12,7 +12,7 @@ import sys
 import time
 import six
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from PIL import Image  # type: ignore
 
 import cmk

@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 from pathlib2 import Path
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 from testlib import cmk_path
 

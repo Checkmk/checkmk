@@ -30,7 +30,7 @@ import sys
 
 from pathlib2 import Path
 import requests
-import urllib3  # type: ignore
+import urllib3  # type: ignore[import]
 
 import cmk
 import cmk.utils.site

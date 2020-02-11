@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import six
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from cmk.utils.exceptions import MKException
 
 

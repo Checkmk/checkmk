@@ -28,7 +28,7 @@
 import os
 import sys
 import traceback
-from typing import (Dict, Optional, Text, Tuple)  # pylint: disable=unused-import
+from typing import Dict, Optional, Text  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -175,7 +175,7 @@ def _read_agent_output(hostname):
     try:
         import cmk.base.cee.real_time_checks as real_time_checks
     except ImportError:
-        real_time_checks = None  # type: ignore
+        real_time_checks = None  # type: ignore[assignment]
 
     if real_time_checks and real_time_checks.is_real_time_check_helper():
         return real_time_checks.get_rtc_package()

@@ -1,4 +1,4 @@
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 from cmk.base.check_api import MKGeneralException
 

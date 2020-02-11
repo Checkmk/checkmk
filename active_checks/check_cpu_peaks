@@ -26,7 +26,7 @@
 
 # TODO: Totally ignore type issues for this file. The check is totally broken, because it has not
 # been updated since the TimeSeries refactoring. This will be cleaned up with CMK-3556
-# type: ignore
+# type: ignore[arg-type,assignment,call-overload,var-annotated]
 
 import sys
 import time
@@ -140,13 +140,17 @@ try:
             sys.stdout.write("%s\n" % int(datasets[2][idx] or -1))
 
     if is_windows:
-        info = [ "CPU utilization from %s until %s" %\
+        info = [
+            "CPU utilization from %s until %s" %
             (time.strftime("%b %d %H:%M:%S", time.localtime(fromtime)),
-             time.strftime("%b %d %H:%M:%S", time.localtime(untiltime))) ]
+             time.strftime("%b %d %H:%M:%S", time.localtime(untiltime)))
+        ]
     else:
-        info = [ "CPU utilization (user, system, wait) from %s until %s" %\
+        info = [
+            "CPU utilization (user, system, wait) from %s until %s" %
             (time.strftime("%b %d %H:%M:%S", time.localtime(fromtime)),
-             time.strftime("%b %d %H:%M:%S", time.localtime(untiltime))) ]
+             time.strftime("%b %d %H:%M:%S", time.localtime(untiltime)))
+        ]
 
     if cpu_peak:
         info.append("Highest Peak of %d%% at %s" %

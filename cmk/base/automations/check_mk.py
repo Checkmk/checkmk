@@ -33,7 +33,7 @@ import time
 import shutil
 import io
 import contextlib
-from typing import IO, Iterator, Tuple, Optional, Dict, Any, Text, List, Union  # pylint: disable=unused-import
+from typing import Iterator, Tuple, Optional, Dict, Any, Text, List  # pylint: disable=unused-import
 
 import cmk.utils.paths
 import cmk.utils.debug
@@ -44,7 +44,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.encoding import convert_to_unicode
 import cmk.utils.cmk_subprocess as subprocess
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-from cmk.utils.type_defs import HostName, ServiceName, Item, CheckPluginName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, ServiceName, CheckPluginName  # pylint: disable=unused-import
 
 import cmk.base.utils
 import cmk.base.config as config
@@ -165,11 +165,16 @@ class AutomationDiscovery(DiscoveryAutomation):
 
 automations.register(AutomationDiscovery())
 
+if sys.version_info[0] >= 3:
+    StrIO = io.StringIO
+else:
+    StrIO = io.BytesIO
+
 
 # Python 3? use contextlib.redirect_stdout
 @contextlib.contextmanager
 def redirect_output(where):
-    # type: (IO[str]) -> Iterator[IO[str]]
+    # type: (StrIO) -> Iterator[StrIO]
     """Redirects stdout/stderr to the given file like object"""
     prev_stdout, prev_stderr = sys.stdout, sys.stderr
     prev_stdout.flush()
@@ -189,17 +194,12 @@ class AutomationTryDiscovery(Automation):
 
     def execute(self, args):
         # type: (List[str]) -> Dict[str, Any]
-        if sys.version_info[0] >= 3:
-            fileobj = io.StringIO()
-        else:
-            fileobj = io.BytesIO()
-        with redirect_output(fileobj) as buf:
+        with redirect_output(StrIO()) as buf:
             log.setup_console_logging()
             log.logger.setLevel(log.VERBOSE)
             check_preview_table, host_labels = self._execute_discovery(args)
             return {
-                # TODO: How to make mypy accept this?
-                "output": buf.getvalue(),  # type: ignore
+                "output": buf.getvalue(),
                 "check_table": check_preview_table,
                 "host_labels": host_labels.to_dict(),
             }
@@ -479,12 +479,15 @@ class AutomationRenameHosts(Automation):
                 actions.append("rrdcached")
 
             # Spoolfiles of NPCD
-            if self.rename_host_in_files("%s/var/pnp4nagios/perfdata.dump" % cmk.utils.paths.omd_root,
-                                 "HOSTNAME::%s    " % oldregex,
-                                 "HOSTNAME::%s    " % newname) or \
-               self.rename_host_in_files("%s/var/pnp4nagios/spool/perfdata.*" % cmk.utils.paths.omd_root,
-                                 "HOSTNAME::%s    " % oldregex,
-                                 "HOSTNAME::%s    " % newname):
+            if (  #
+                    self.rename_host_in_files(
+                        "%s/var/pnp4nagios/perfdata.dump" % cmk.utils.paths.omd_root,
+                        "HOSTNAME::%s    " % oldregex,  #
+                        "HOSTNAME::%s    " % newname) or  #
+                    self.rename_host_in_files(
+                        "%s/var/pnp4nagios/spool/perfdata.*" % cmk.utils.paths.omd_root,
+                        "HOSTNAME::%s    " % oldregex,  #
+                        "HOSTNAME::%s    " % newname)):
                 actions.append("pnpspool")
         finally:
             if rrdcache_running:
@@ -1203,7 +1206,7 @@ class AutomationDiagHost(Automation):
         if not ipaddress:
             try:
                 resolved_address = ip_lookup.lookup_ip_address(hostname)
-            except:
+            except Exception:
                 raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
 
             if resolved_address is None:
@@ -1352,7 +1355,7 @@ class AutomationDiagHost(Automation):
                 data = snmp.get_snmp_table(
                     snmp_config,
                     "",
-                    ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']),  # type: ignore
+                    ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']),  # type: ignore[arg-type]
                     use_snmpwalk_cache=True)
 
                 if data:

@@ -39,10 +39,10 @@ from omdlib.contexts import SiteContext
 def backup_site_to_tarfile(site, fh, mode, options, verbose):
     # type: (SiteContext, BinaryIO, str, CommandOptions, bool) -> None
 
-    # Mypy does not understand this: Unexpected keyword argument "verbose" for "open" of "TarFile"
+    # Mypy does not understand this: Unexpected keyword argument "verbose" for "open" of "TarFile", same for "site".
     tar = cast(
         BackupTarFile,
-        BackupTarFile.open(  # type: ignore
+        BackupTarFile.open(  # type: ignore[call-arg]
             fileobj=fh, mode=mode, site=site, verbose=verbose))
 
     # Add the version symlink as first file to be able to
@@ -149,9 +149,8 @@ class BackupTarFile(tarfile.TarFile):
 
         site_rel_path = tarinfo.name[len(self._site.name) + 1:]
 
-        is_rrd = (site_rel_path.startswith("var/pnp4nagios/perfdata") \
-                  or site_rel_path.startswith("var/check_mk/rrd")) \
-                 and site_rel_path.endswith(".rrd")
+        is_rrd = ((site_rel_path.startswith("var/pnp4nagios/perfdata") or
+                   site_rel_path.startswith("var/check_mk/rrd")) and site_rel_path.endswith(".rrd"))
 
         # rrdcached works realpath
         rrd_file_path = os.path.join(self._sites_path, tarinfo.name)

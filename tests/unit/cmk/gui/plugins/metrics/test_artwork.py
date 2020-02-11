@@ -1,4 +1,4 @@
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 from testlib import on_time
 from cmk.gui.plugins.metrics import artwork

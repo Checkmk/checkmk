@@ -1,5 +1,5 @@
 # pylint: disable=redefined-outer-name
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from testlib.base import Scenario
 
 import cmk.base.config as config

@@ -69,8 +69,8 @@ if not cmk.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
     import cmk.base.cee.inline_snmp as inline_snmp  # pylint: disable=no-name-in-module
 else:
-    keepalive = None  # type: ignore
-    inline_snmp = None  # type: ignore
+    keepalive = None  # type: ignore[assignment]
+    inline_snmp = None  # type: ignore[assignment]
 
 # global variables used to cache temporary values that do not need
 # to be reset after a configuration change.
@@ -325,7 +325,7 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
             # exception which need to lead to a skipped check instead of a crash
             # TODO CMK-3729, PEP-3109
             new_exception = x[0](x[1])
-            new_exception.__traceback__ = x[2]  # type: ignore
+            new_exception.__traceback__ = x[2]  # type: ignore[attr-defined]
             raise new_exception
 
         # TODO: Move this to a helper function

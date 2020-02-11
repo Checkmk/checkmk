@@ -1,4 +1,4 @@
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 

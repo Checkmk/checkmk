@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 import cmk.gui.htmllib as htmllib
 from cmk.gui import escaping

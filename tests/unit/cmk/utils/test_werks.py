@@ -4,7 +4,7 @@ import os
 import subprocess
 from collections import defaultdict
 from pathlib2 import Path
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 import testlib
 import cmk.utils.werks

@@ -1,6 +1,6 @@
 # encoding: utf-8
 # yapf: disable
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 import cmk
 from cmk.gui.exceptions import MKGeneralException

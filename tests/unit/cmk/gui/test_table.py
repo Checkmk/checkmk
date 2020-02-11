@@ -3,7 +3,7 @@
 import re
 
 from bs4 import BeautifulSoup as bs  # type: ignore
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 import six
 
 from cmk.gui.i18n import _

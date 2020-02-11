@@ -4,7 +4,7 @@ import itertools
 import shutil
 import struct
 import uuid
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 import cmk.utils.paths
 from cmk.utils.crash_reporting import ABCCrashReport, _format_var_for_export, CrashReportStore

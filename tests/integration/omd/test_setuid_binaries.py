@@ -4,7 +4,7 @@
 import os
 import stat
 import subprocess
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 
 @pytest.mark.parametrize("rel_path,expected_capability", [

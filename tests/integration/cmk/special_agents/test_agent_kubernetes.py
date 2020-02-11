@@ -1,4 +1,4 @@
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 from kubernetes.client.models import V1ClusterRole
 

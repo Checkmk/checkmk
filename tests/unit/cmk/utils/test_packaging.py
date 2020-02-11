@@ -5,7 +5,7 @@ import tarfile
 import ast
 import json
 from io import BytesIO
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from pathlib2 import Path
 
 import cmk.utils.paths

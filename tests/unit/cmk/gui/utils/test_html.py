@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import json
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 import six
 
 from cmk.gui.utils.html import HTML

@@ -2,7 +2,7 @@ import os
 import types
 import copy
 import mock
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 import six
 from cmk.base.item_state import MKCounterWrapped
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel, DiscoveredServiceLabels

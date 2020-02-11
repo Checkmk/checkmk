@@ -30,7 +30,7 @@ import json
 import sys
 
 import requests
-import urllib3  # type: ignore
+import urllib3  # type: ignore[import]
 
 import cmk.utils.password_store
 
@@ -154,7 +154,7 @@ def main(sys_argv=None):
             # key in our header for all further requests on the api.
             data = json.loads(req.text)
             headers["X-HP3PAR-WSAPI-SessionKey"] = data["key"]
-        except:
+        except Exception:
             raise Exception("No session key received")
 
     # Get the requested data. We put every needed value into an extra section

@@ -35,7 +35,7 @@ from HTMLParser import HTMLParser
 from urlparse import urljoin
 
 import requests
-import urllib3  # type: ignore
+import urllib3  # type: ignore[import]
 
 LOGGER = logging.getLogger(__name__)
 

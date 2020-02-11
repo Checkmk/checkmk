@@ -2,7 +2,7 @@
 # pylint: disable=redefined-outer-name
 
 import collections
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException

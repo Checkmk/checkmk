@@ -3,7 +3,7 @@
 
 import subprocess
 import gettext
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 import six
 from pathlib2 import Path
 from testlib import cmk_path

@@ -1,5 +1,5 @@
 # pylint: disable=redefined-outer-name
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 import shutil
 import yaml

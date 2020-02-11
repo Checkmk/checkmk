@@ -3,7 +3,7 @@
 
 import json
 import six
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 import cmk
 import cmk.utils.paths

@@ -1,6 +1,6 @@
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from kubernetes.client.models import V1ObjectMeta, V1Node  # type: ignore # pylint: disable=import-error
 
 from testlib import on_time

@@ -1,7 +1,7 @@
 from __future__ import print_function
 # pylint: disable=redefined-outer-name
 import subprocess
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 from testlib import web  # pylint: disable=unused-import
 import cmk.base.config as config

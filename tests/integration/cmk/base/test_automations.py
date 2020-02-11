@@ -4,7 +4,7 @@ import re
 import os
 import ast
 import subprocess
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 import six
 
 from testlib import web, repo_path  # pylint: disable=unused-import

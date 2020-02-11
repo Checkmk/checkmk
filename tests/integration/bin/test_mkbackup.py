@@ -6,7 +6,7 @@ import re
 import os
 import tarfile
 import fnmatch
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 from testlib import web, InterProcessLock  # pylint: disable=unused-import
 

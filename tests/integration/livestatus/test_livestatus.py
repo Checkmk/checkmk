@@ -8,7 +8,7 @@ import uuid as _uuid
 import json as _json
 import time as _time
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 import six
 
 from testlib import web, create_linux_test_host  # pylint: disable=unused-import

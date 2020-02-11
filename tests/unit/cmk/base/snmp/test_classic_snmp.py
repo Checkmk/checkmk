@@ -1,5 +1,5 @@
 import collections
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 import cmk.base.classic_snmp as classic_snmp
 import cmk.base.snmp_utils as snmp_utils
 

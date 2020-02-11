@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import time
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 from cmk.gui.utils.timeout_manager import TimeoutManager
 from cmk.gui.globals import html

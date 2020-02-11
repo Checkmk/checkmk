@@ -1,7 +1,7 @@
 # pylint: disable=redefined-outer-name
 import shutil
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 from pathlib2 import Path
 

@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from testlib.base import Scenario
 
 import cmk.base.config as config

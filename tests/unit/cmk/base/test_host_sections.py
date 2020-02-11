@@ -1,4 +1,4 @@
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from testlib.base import Scenario
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.data_sources.host_sections import MultiHostSections

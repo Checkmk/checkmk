@@ -26,9 +26,7 @@
 
 import os
 import subprocess
-from typing import (  # pylint: disable=unused-import
-    cast, Iterable, Set, Text, Tuple, Optional, Any, Dict, List,
-)
+from typing import cast, Iterable, Set, Tuple, Optional, Dict, List  # pylint: disable=unused-import
 
 import cmk.utils.debug
 import cmk.utils.tty as tty
@@ -51,7 +49,7 @@ from cmk.base.utils import (  # pylint: disable=unused-import
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     CheckPluginName,)
 from cmk.base.snmp_utils import (  # pylint: disable=unused-import
-    OIDInfo, OIDWithColumns, OIDWithSubOIDsAndColumns, OID, Columns, Column, SNMPValueEncoding,
+    OIDInfo, OIDWithColumns, OIDWithSubOIDsAndColumns, OID, Column, SNMPValueEncoding,
     SNMPHostConfig, SNMPRowInfo, SNMPTable, ResultColumnsUnsanitized, ResultColumnsSanitized,
     ResultColumnsDecoded, RawValue, ContextName, DecodedBinary, SNMPContext,
 )
@@ -59,7 +57,7 @@ from cmk.base.snmp_utils import (  # pylint: disable=unused-import
 try:
     import cmk.base.cee.inline_snmp as inline_snmp
 except ImportError:
-    inline_snmp = None  # type: ignore
+    inline_snmp = None  # type: ignore[assignment]
 
 _enforce_stored_walks = False
 
@@ -89,9 +87,8 @@ def initialize_single_oid_cache(snmp_config, from_disk=False):
     # type: (SNMPHostConfig, bool) -> None
     global _g_single_oid_cache, _g_single_oid_ipaddress, _g_single_oid_hostname
 
-    if not (_g_single_oid_hostname == snmp_config.hostname \
-       and _g_single_oid_ipaddress == snmp_config.ipaddress) \
-       or _g_single_oid_cache is None:
+    if (not (_g_single_oid_hostname == snmp_config.hostname and
+             _g_single_oid_ipaddress == snmp_config.ipaddress) or _g_single_oid_cache is None):
         _g_single_oid_hostname = snmp_config.hostname
         _g_single_oid_ipaddress = snmp_config.ipaddress
         if from_disk:
@@ -432,7 +429,7 @@ class StoredWalkSNMPBackend(snmp_utils.ABCSNMPBackend):
         # type: (OID) -> Tuple[int, ...]
         try:
             return tuple(map(int, oid.strip(".").split(".")))
-        except:
+        except Exception:
             raise MKGeneralException("Invalid OID %s" % oid)
 
     def _collect_until(self, oid, oid_prefix, lines, index, direction):
@@ -640,7 +637,9 @@ def _compute_fetch_oid(oid, suboid, column):
 def _sanitize_snmp_encoding(snmp_config, columns):
     # type: (SNMPHostConfig, ResultColumnsSanitized) -> ResultColumnsDecoded
     snmp_encoding = snmp_config.character_encoding
-    decode_string_func = lambda s: convert_to_unicode(s, encoding=snmp_encoding)
+
+    def decode_string_func(s):
+        return convert_to_unicode(s, encoding=snmp_encoding)
 
     new_columns = []  # type: ResultColumnsDecoded
     for column, value_encoding in columns:

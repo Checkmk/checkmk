@@ -1,7 +1,7 @@
 # encoding: utf-8
 # yapf: disable
 from collections import namedtuple
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 import cmk
 import cmk.utils.tags

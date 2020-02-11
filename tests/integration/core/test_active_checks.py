@@ -5,7 +5,7 @@
 from __future__ import print_function
 import logging
 import collections
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 from testlib import web  # pylint: disable=unused-import
 

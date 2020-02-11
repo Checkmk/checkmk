@@ -1,5 +1,5 @@
 import socket
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from pathlib2 import Path
 
 from testlib.base import Scenario

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # pylint: disable=redefined-outer-name
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 from cmk.gui.htmllib import OutputFunnel
 from cmk.gui.http import Response

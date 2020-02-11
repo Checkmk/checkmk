@@ -3,7 +3,7 @@
 import subprocess
 import logging
 import os
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from pathlib2 import Path
 import six
 from testlib import wait_until

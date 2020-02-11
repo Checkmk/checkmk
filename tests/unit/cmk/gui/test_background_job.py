@@ -4,7 +4,7 @@ import multiprocessing
 import sys
 
 import six
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 import testlib  # type: ignore
 

@@ -43,7 +43,7 @@ import signal
 import sys
 import time
 from typing import (  # pylint: disable=unused-import
-    Dict, Tuple, List, Text, Any, Optional, FrozenSet, Set, Union, cast, IO,
+    Dict, Tuple, List, Text, Any, Optional, FrozenSet, Set, Union, cast,
 )
 
 import six
@@ -79,7 +79,7 @@ from cmk.base.events import EventContext  # pylint: disable=unused-import
 try:
     import cmk.base.cee.keepalive as keepalive
 except ImportError:
-    keepalive = None  # type: ignore
+    keepalive = None  # type: ignore[assignment]
 
 from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
 
@@ -725,7 +725,7 @@ def user_notification_rules():
             # WATO-only feature anyway...
             user_rules.append(rule)
 
-            if "authorized_sites" in config.contacts[contactname] and not "match_site" in rule:
+            if "authorized_sites" in config.contacts[contactname] and "match_site" not in rule:
                 rule["match_site"] = config.contacts[contactname]["authorized_sites"]
 
     logger.debug("Found %d user specific rules", len(user_rules))
@@ -1379,8 +1379,8 @@ def notify_via_email(plugin_context):
     # and use that.
     old_lang = os.getenv("LANG", "")
     for encoding in os.popen("locale -a 2>/dev/null"):
-        l = encoding.lower()
-        if "utf8" in l or "utf-8" in l or "utf.8" in l:
+        el = encoding.lower()
+        if "utf8" in el or "utf-8" in el or "utf.8" in el:
             encoding = encoding.strip()
             os.putenv("LANG", encoding)
             logger.debug("Setting locale for mail to %s.", encoding)

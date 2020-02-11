@@ -3,7 +3,7 @@
 
 import os
 from bson.json_util import loads  # type: ignore
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from testlib import import_module, cmk_path
 
 

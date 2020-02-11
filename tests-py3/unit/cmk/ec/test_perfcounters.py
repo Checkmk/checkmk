@@ -1,5 +1,5 @@
 import logging
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 from cmk.ec.main import Perfcounters
 

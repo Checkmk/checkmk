@@ -3,7 +3,7 @@ import contextlib
 import os
 
 import pathlib2
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from werkzeug.test import create_environ
 
 import cmk.utils.log

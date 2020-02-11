@@ -3,7 +3,7 @@
 # pylint: disable=redefined-outer-name
 
 from pathlib2 import Path
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from mockldap import MockLdap, LDAPObject  # type: ignore
 import six
 

@@ -1,6 +1,6 @@
 from collections import namedtuple
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 from cmk.base.data_sources.ipmi import IPMIManagementBoardDataSource
 

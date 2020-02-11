@@ -1,5 +1,5 @@
 # yapf: disable
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.gui.wato  # pylint: disable=unused-import

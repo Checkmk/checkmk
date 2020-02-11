@@ -1,7 +1,7 @@
 # encoding: utf-8
 # pylint: disable=redefined-outer-name
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from pathlib2 import Path
 
 import cmk.gui.watolib.utils

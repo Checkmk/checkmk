@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import ast
 import math
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from testlib.base import Scenario
 
 from cmk.base import check_api

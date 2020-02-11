@@ -6,7 +6,7 @@ import re
 import sys
 import locale
 import six
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from testlib import import_module
 
 

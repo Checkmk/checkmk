@@ -1,7 +1,7 @@
 # encoding: utf-8
 # pylint: disable=redefined-outer-name
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 import cmk.base.discovery as discovery
 from cmk.base.check_api_utils import Service

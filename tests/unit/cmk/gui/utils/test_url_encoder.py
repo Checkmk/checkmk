@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 from cmk.gui.globals import html
 from cmk.gui.utils.url_encoder import URLEncoder

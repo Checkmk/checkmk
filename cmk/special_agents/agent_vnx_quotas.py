@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-ofquotaset: 4 -*-
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -43,7 +43,7 @@ def parse_arguments(argv):
 
 def get_client_connection(args):
     try:
-        import paramiko  # type: ignore
+        import paramiko  # type: ignore[import]
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         client.connect(args.hostname, username=args.username, password=args.password, timeout=5)

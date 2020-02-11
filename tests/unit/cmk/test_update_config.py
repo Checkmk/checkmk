@@ -3,7 +3,7 @@ import argparse
 import sys
 import StringIO
 from pathlib2 import Path
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 import cmk.utils.log
 import cmk.update_config as update_config

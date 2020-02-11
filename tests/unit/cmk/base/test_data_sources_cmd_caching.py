@@ -7,7 +7,7 @@
 
 from __future__ import print_function
 from pathlib2 import Path
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 from testlib import repo_path
 from testlib.base import Scenario

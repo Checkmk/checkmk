@@ -3,7 +3,7 @@
 import itertools
 from StringIO import StringIO
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from testlib.base import Scenario
 import six
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from cmk.utils.encoding import (
     ensure_unicode,
     ensure_bytestr,

@@ -6,7 +6,7 @@ import os
 import sys
 import tempfile
 import shutil
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 from testlib import repo_path, is_enterprise_repo
 import testlib.pylint_cmk as pylint_cmk

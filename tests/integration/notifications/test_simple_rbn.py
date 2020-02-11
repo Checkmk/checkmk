@@ -2,7 +2,7 @@
 
 import time
 import os
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 from testlib import web, WatchLog  # pylint: disable=unused-import
 

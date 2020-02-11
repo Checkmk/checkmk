@@ -7,7 +7,7 @@ import ssl
 from contextlib import closing
 
 import six
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 import omdlib.certs as certs
 import livestatus

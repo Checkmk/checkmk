@@ -13,7 +13,7 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from testlib import import_module
 
 import cmk.utils.store as store

@@ -2,7 +2,7 @@ import os
 import subprocess
 import re
 import logging
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 LOGGER = logging.getLogger()
 

@@ -30,8 +30,8 @@ import time
 import signal
 from types import FrameType  # pylint: disable=unused-import
 from typing import (  # pylint: disable=unused-import
-    Pattern, AnyStr, cast, Union, Iterator, Callable, List, Text, Optional, Dict, Tuple, Set,
-    NoReturn, Any,
+    Pattern, AnyStr, Union, Iterator, Callable, List, Text, Optional, Dict, Tuple, Set, NoReturn,
+    Any,
 )
 
 from cmk.utils.regex import regex
@@ -64,8 +64,8 @@ from cmk.base.exceptions import MKParseFunctionError
 from cmk.base.utils import HostName, HostAddress  # pylint: disable=unused-import
 from cmk.base.core_config import MonitoringCore  # pylint: disable=unused-import
 from cmk.base.check_utils import (  # pylint: disable=unused-import
-    CheckPluginName, CheckParameters, DiscoveredService, Item, Service, ServiceState, Metric,
-    RulesetName, HostState, FinalSectionContent,
+    CheckPluginName, CheckParameters, DiscoveredService, Item, ServiceState, Metric, RulesetName,
+    HostState, FinalSectionContent,
 )
 from cmk.base.discovered_labels import (
     DiscoveredServiceLabels,
@@ -305,7 +305,7 @@ def discover_on_host(config_cache,
         return counts, ""
 
     if service_filter is None:
-        service_filter = lambda hostname, check_plugin_name, item: True
+        service_filter = _accept_all_services
 
     err = None
     discovered_host_labels = DiscoveredHostLabels()
@@ -395,6 +395,10 @@ def discover_on_host(config_cache,
     return counts, err
 
 
+def _accept_all_services(_hostname, _check_plugin_name, _item):
+    return True
+
+
 #.
 #   .--Discovery Check-----------------------------------------------------.
 #   |           ____  _                   _               _                |
@@ -479,9 +483,8 @@ def check_discovery(hostname, ipaddress):
 
             if params.get("inventory_rediscovery", False):
                 mode = params["inventory_rediscovery"]["mode"]
-                if unfiltered and\
-                        ((check_state == "new"      and mode in ( 0, 2, 3 )) or
-                         (check_state == "vanished" and mode in ( 1, 2, 3 ))):
+                if (unfiltered and ((check_state == "new" and mode in (0, 2, 3)) or
+                                    (check_state == "vanished" and mode in (1, 2, 3)))):
                     need_rediscovery = True
         else:
             infotexts.append(u"no %s services found" % title)
@@ -633,14 +636,13 @@ def discover_marked_hosts(core):
 
 def _fetch_host_states():
     # type: () -> Dict[HostName, HostState]
-    host_states = {}  # type: Dict[HostName, HostState]
     try:
         import livestatus
         query = "GET hosts\nColumns: name state"
-        host_states.update(dict(livestatus.LocalConnection().query(query)))  # type: ignore
+        return {n: s for n, s in livestatus.LocalConnection().query(query)}
     except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
         pass
-    return host_states
+    return {}
 
 
 def _discover_marked_host_exists(config_cache, hostname):
@@ -701,10 +703,12 @@ def _discover_marked_host(config_cache, host_config, now_ts, oldest_queued):
                result["self_new_host_labels"] == 0:
                 console.verbose("  nothing changed.\n")
             else:
-                console.verbose("  %(self_new)s new, %(self_removed)s removed, "\
-                                "%(self_kept)s kept, %(self_total)s total services "
-                                "and %(self_new_host_labels)s new host labels. "\
-                                "clustered new %(clustered_new)s, clustered vanished %(clustered_vanished)s" % result)
+                console.verbose(
+                    "  %(self_new)s new, %(self_removed)s removed, "
+                    "%(self_kept)s kept, %(self_total)s total services "
+                    "and %(self_new_host_labels)s new host labels. "
+                    "clustered new %(clustered_new)s, clustered vanished %(clustered_vanished)s" %
+                    result)
 
                 # Note: Even if the actual mark-for-discovery flag may have been created by a cluster host,
                 #       the activation decision is based on the discovery configuration of the node
@@ -952,7 +956,7 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
                 # exception which need to lead to a skipped check instead of a crash
                 # TODO CMK-3729, PEP-3109
                 new_exception = x[0](x[1])
-                new_exception.__traceback__ = x[2]  # type: ignore
+                new_exception.__traceback__ = x[2]  # type: ignore[attr-defined]
                 raise new_exception
 
             elif on_error == "warn":
@@ -1014,6 +1018,10 @@ def _no_discovery_possible(check_plugin_name):
     return []
 
 
+# FIXME: The whole typing here is fundamentally broken and actually a lie: We
+# don't have any static guarantees about the discovery function, so the type
+# below is just wishful thinking. We only know something *after* validation,
+# but that is a dynamic thing...
 def _execute_discovery_function(discovery_function, section_content):
     # type: (DiscoveryFunction, FinalSectionContent) -> DiscoveryResult
     discovered_items = discovery_function(section_content)
@@ -1029,6 +1037,7 @@ def _execute_discovery_function(discovery_function, section_content):
     return discovered_items
 
 
+# FIXME: Broken typing, see comment for _execute_discovery_function.
 def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
     # type: (str, CheckPluginName, DiscoveryResult) -> Iterator[Union[DiscoveredService, DiscoveredHostLabels, HostLabel]]
     for entry in discovered_items:
@@ -1047,7 +1056,8 @@ def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
             if len(entry) == 2:  # comment is now obsolete
                 item, parameters_unresolved = entry
             elif len(entry) == 3:  # allow old school
-                item, __, parameters_unresolved = entry  # type: ignore
+                # FIXME: Broken typing, see comment for _execute_discovery_function.
+                item, __, parameters_unresolved = entry  # type: ignore[misc]
             else:
                 # we really don't want longer tuples (or 1-tuples).
                 console.error(
@@ -1326,7 +1336,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                         # exception which need to lead to a skipped check instead of a crash
                         # TODO CMK-3729, PEP-3109
                         new_exception = x[0](x[1])
-                        new_exception.__traceback__ = x[2]  # type: ignore
+                        new_exception.__traceback__ = x[2]  # type: ignore[attr-defined]
                         raise new_exception
                     else:
                         raise

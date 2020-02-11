@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 import cmk.notification_plugins.mail as mail
 

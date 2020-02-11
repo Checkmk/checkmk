@@ -2,7 +2,7 @@
 
 import sys
 import logging
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 import cmk.utils.log as log
 
 from testlib import on_time

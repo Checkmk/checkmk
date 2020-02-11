@@ -1,4 +1,4 @@
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from testlib import CheckManager
 from testlib.base import Scenario
 import cmk.base.check_table as check_table

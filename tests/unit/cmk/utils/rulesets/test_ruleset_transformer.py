@@ -2,7 +2,7 @@
 # pylint: disable=redefined-outer-name
 
 from typing import NamedTuple
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 import cmk.utils.paths
 import cmk.utils.tags
 import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets

@@ -29,6 +29,7 @@ import cmk
 import cmk.utils.tags
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.encoding import ensure_unicode
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.globals import local
@@ -89,39 +90,39 @@ HOST_STATE = ('__HOST_STATE__',)
 HIDDEN = ('__HIDDEN__',)
 
 
-class FOREACH_HOST(object):
+class FOREACH_HOST(object):  # pylint: disable=useless-object-inheritance
     pass
 
 
-class FOREACH_CHILD(object):
+class FOREACH_CHILD(object):  # pylint: disable=useless-object-inheritance
     pass
 
 
-class FOREACH_CHILD_WITH(object):
+class FOREACH_CHILD_WITH(object):  # pylint: disable=useless-object-inheritance
     pass
 
 
-class FOREACH_PARENT(object):
+class FOREACH_PARENT(object):  # pylint: disable=useless-object-inheritance
     pass
 
 
-class FOREACH_SERVICE(object):
+class FOREACH_SERVICE(object):  # pylint: disable=useless-object-inheritance
     pass
 
 
-class REMAINING(object):
+class REMAINING(object):  # pylint: disable=useless-object-inheritance
     pass
 
 
-class DISABLED(object):
+class DISABLED(object):  # pylint: disable=useless-object-inheritance
     pass
 
 
-class HARD_STATES(object):
+class HARD_STATES(object):  # pylint: disable=useless-object-inheritance
     pass
 
 
-class DT_AGGR_WARN(object):
+class DT_AGGR_WARN(object):  # pylint: disable=useless-object-inheritance
     pass
 
 
@@ -284,7 +285,7 @@ def _load_default_config_from_module_plugins():
 def _load_default_config_from_legacy_plugins(vars_before_plugins, vars_after_plugins):
     # type: (Set[str], Set[str]) -> None
     new_vars = vars_after_plugins.difference(vars_before_plugins)
-    default_config.update(dict([(k, copy.deepcopy(globals()[k])) for k in new_vars]))
+    default_config.update({k: copy.deepcopy(globals()[k]) for k in new_vars})
 
 
 def _config_plugin_modules():
@@ -467,7 +468,7 @@ def _confdir_for_user_id(user_id):
 # This objects intention is currently only to handle the currently logged in user after authentication.
 # But maybe this can be used for managing all user objects in future.
 # TODO: Cleanup accesses to module global vars and functions
-class LoggedInUser(object):
+class LoggedInUser(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, user_id):
         # type: (Optional[Text]) -> None
         self.id = UserId(user_id) if user_id else None
@@ -497,12 +498,9 @@ class LoggedInUser(object):
         # type: (Optional[UserId], List[str]) -> Any
         attributes = self.load_file("cached_profile", None)
         if attributes is None:
-            if user_id in multisite_users:
-                attributes = multisite_users[user_id]
-            else:
-                attributes = {
-                    "roles": role_ids,
-                }
+            attributes = multisite_users.get(user_id, {
+                "roles": role_ids,
+            })
         return attributes
 
     def get_attribute(self, key, deflt=None):
@@ -816,8 +814,7 @@ class LoggedInUser(object):
         except OSError as e:
             if e.errno == errno.ENOENT:
                 return 0
-            else:
-                raise
+            raise
 
 
 # Login a user that has all permissions. This is needed for making
@@ -897,18 +894,18 @@ def roles_of_user(user_id):
 
     if user_id in multisite_users:
         return existing_role_ids(multisite_users[user_id]["roles"])
-    elif user_id in admin_users:
+    if user_id in admin_users:
         return ["admin"]
-    elif user_id in guest_users:
+    if user_id in guest_users:
         return ["guest"]
-    elif users is not None and user_id in users:
+    if users is not None and user_id in users:
         return ["user"]
-    elif user_id is not None and os.path.exists(config_dir + "/" + six.ensure_str(user_id) +
-                                                "/automation.secret"):
+    if user_id is not None and os.path.exists(config_dir + "/" + six.ensure_str(user_id) +
+                                              "/automation.secret"):
         return ["guest"]  # unknown user with automation account
-    elif 'roles' in default_user_profile:
+    if 'roles' in default_user_profile:
         return existing_role_ids(default_user_profile['roles'])
-    elif default_user_role:
+    if default_user_role:
         return existing_role_ids([default_user_role])
     return []
 
@@ -1190,7 +1187,7 @@ def is_single_local_site():
     # type: () -> bool
     if len(sites) > 1:
         return False
-    elif len(sites) == 0:
+    if len(sites) == 0:
         return True
 
     # Also use Multisite mode if the one and only site is not local
@@ -1289,7 +1286,7 @@ def theme_choices():
 
 
 def get_page_heading():
-    # type: () -> AnyStr
+    # type: () -> Text
     if "%s" in page_heading:
-        return page_heading % (site(omd_site()).get('alias', _("GUI")))
-    return page_heading
+        return ensure_unicode(page_heading % (site(omd_site()).get('alias', _("GUI"))))
+    return ensure_unicode(page_heading)

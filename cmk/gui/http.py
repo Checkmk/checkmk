@@ -1,9 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """Wrapper layer between WSGI and GUI application code"""
 import six
 import werkzeug.wrappers
@@ -13,7 +12,7 @@ from werkzeug.utils import get_content_type
 from cmk.gui.i18n import _
 
 
-class LegacyVarsMixin(object):
+class LegacyVarsMixin(object):  # pylint: disable=useless-object-inheritance
     """Holds a dict of vars.
 
     These vars are being set throughout the codebase. Using this Mixin the vars will
@@ -82,7 +81,7 @@ class LegacyVarsMixin(object):
         return super(LegacyVarsMixin, self).var(varname, default)
 
 
-class LegacyUploadMixin(object):
+class LegacyUploadMixin(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, *args, **kw):
         super(LegacyUploadMixin, self).__init__(*args, **kw)
         self.upload_cache = {}
@@ -97,7 +96,7 @@ class LegacyUploadMixin(object):
         return self.upload_cache[name]
 
 
-class LegacyDeprecatedMixin(object):
+class LegacyDeprecatedMixin(object):  # pylint: disable=useless-object-inheritance
     """Some wrappers which are still used while their use is considered deprecated.
 
     They are to be removed as they provide no additional value over the already available

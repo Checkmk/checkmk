@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -166,7 +166,7 @@ def create_client_socket(family, tls, verify, ca_file_path):
 #   '----------------------------------------------------------------------'
 
 
-class Helpers(object):
+class Helpers(object):  # pylint: disable=useless-object-inheritance
     def query(self, query, add_headers=u""):
         # type: (QueryTypes, Union[Text, bytes]) -> LivestatusResponse
         raise NotImplementedError()
@@ -271,7 +271,7 @@ class Helpers(object):
 # value after the query. But nearly all of these usages does not care
 # about resetting the option in case of an exception. This could be
 # handled better using the query class
-class Query(object):
+class Query(object):  # pylint: disable=useless-object-inheritance
     """This object can be passed to all livestatus methods accepting a livestatus
     query. The object can be used to hand over the handling code some flags, for
     example to influence the error handling during query processing."""

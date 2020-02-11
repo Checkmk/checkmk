@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -173,7 +173,7 @@ def load_web_plugins(forwhat, globalvars):
         for file_path in sorted(plugins_path.iterdir()):
             try:
                 if file_path.suffix == ".py" and not file_path.with_suffix(".pyc").exists():
-                    exec(_drop_comments(file_path.open().read()), globalvars)
+                    exec (_drop_comments(file_path.open().read()), globalvars)
 
                 elif file_path.suffix == ".pyc":
                     code_bytes = file_path.open("rb").read()[8:]

@@ -110,7 +110,7 @@ test-unit-one-by-one:
 # pytest-cov plugin package adds to pyttest.
 test-unit-coverage-html:
 	$(COVERAGE) run --rcfile=.coveragerc_unit -m pytest -T unit unit
-	$(COVERAGE) html
+	$(COVERAGE) html --rcfile=.coveragerc_unit
 
 test-unit-sh:
 	./sh_test_runner.sh

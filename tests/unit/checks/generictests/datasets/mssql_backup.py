@@ -19,6 +19,30 @@ info = [['MSSQL_SQL0x4', 'master', '2016-07-08 20:20:27', 'D'],
         ['MSSQL_SQL0x4', 'bar', '12345678', None, None, None],
         ['MSSQL_Parrot', 'Polly', '-', '-', '-', 'ERROR: Polly has no crackers']]
 
+extra_sections = {
+    '': [{u'SQL0x4 master': {'DBname': u'master',
+                             'Instance': u'MSSQLSERVER',
+                             'Recovery': u'SIMPLE',
+                             'Status': u'ONLINE',
+                             'auto_close': u'0',
+                             'auto_shrink': u'0'},
+          u'SQL0x4 model': {'DBname': u'model',
+                            'Instance': u'MSSQLSERVER',
+                            'Recovery': u'FULL',
+                            'Status': u'ONLINE',
+                            'auto_close': u'0',
+                            'auto_shrink': u'0'},
+          u'SQL0x4 msdb': {'DBname': u'msdb',
+                           'Instance': u'MSSQLSERVER',
+                           'Recovery': u'SIMPLE',
+                           'Status': u'ONLINE',
+                           'auto_close': u'0',
+                           'auto_shrink': u'0'},
+          u'SQL0x4 foo': {},
+          u'SQL0x4 bar': None,
+          u'Parrot Polly': {'DBname': u'Polly' },
+        }]
+}
 
 discovery = {'': [('MSSQL_Parrot Polly', {}),
                   ('MSSQL_SQL0x4 bar', {}),

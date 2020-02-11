@@ -133,6 +133,7 @@ openapi-spec-validator = "==0.2.8"
 swagger_ui_bundle = "==0.0.6"
 connexion = "==2.4.0"
 numpy = "==1.15.4"  # Downgraded to 1.15.4 due to https://github.com/numpy/numpy/issues/14384
+mypy_extensions = "==0.4.3"  # direct dependency
 
 [requires]
 python_version = "2.7"

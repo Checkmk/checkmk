@@ -28,6 +28,7 @@ polib = "*"  # used by locale/add-authors for working with .po files
 webtest = "*"  # used by WSGI based tests
 pre-commit = "*"  # used to fix / find issues before commiting changes
 pyfakefs = "*" # used for unit tests
+flake8 = "*"
 
 [packages]
 setuptools_scm = "==3.3.3"  # needed by various setup.py
@@ -103,7 +104,7 @@ jmespath = "==0.9.4" # needed by boto3 (aws)
 botocore = "==1.14.11" # needed by boto3 (aws)
 s3transfer = "==0.3.2" # needed by boto3 (aws)
 boto3 = "==1.11.11" # needed by boto3 (aws)
-flake8 = "*"
+mypy_extensions = "==0.4.3"  # direct dependency
 
 [requires]
 python_version = "3.7"

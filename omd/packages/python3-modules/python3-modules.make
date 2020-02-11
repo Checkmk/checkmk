@@ -101,6 +101,8 @@ PYTHON3_MODULES_LIST += botocore-1.14.11.tar.gz # needed by boto3 (aws)
 PYTHON3_MODULES_LIST += s3transfer-0.3.2.tar.gz # needed by boto3 (aws)
 PYTHON3_MODULES_LIST += boto3-1.11.11.tar.gz # needed by boto3 (aws)
 
+PYTHON3_MODULES_LIST += mypy_extensions-0.4.3.tar.gz  # direct dependency
+
 # TODO: Can we clean this up and use the intermediate install step results? Would be possible
 # in the moment we merge the build and intermediate install in a single target
 $(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_INSTALL) $(FREETDS_INTERMEDIATE_INSTALL) $(PYTHON3_MODULES_PATCHING)
@@ -191,6 +193,7 @@ python3-modules-dump-Pipfile:
 	@echo 'webtest = "*"  # used by WSGI based tests'
 	@echo 'pre-commit = "*"  # used to fix / find issues before commiting changes'
 	@echo 'pyfakefs = "*" # used for unit tests'
+	@echo 'flake8 = "*"'
 	@echo ''
 	@echo '[packages]'
 	@echo $(patsubst %.zip,%,$(patsubst %.tar.gz,%,$(PYTHON3_MODULES_LIST))) | tr ' ' '\n' | sed 's/-\([0-9.]*\)$$/ = "==\1"/'

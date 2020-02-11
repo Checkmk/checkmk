@@ -227,6 +227,7 @@ PYTHON_MODULES_LIST += connexion-2018.0.dev1.tar.gz
 # For forecasting graphs
 PYTHON_MODULES_LIST += numpy-1.15.4.tar.gz  # Downgraded to 1.15.4 due to https://github.com/numpy/numpy/issues/14384
 
+PYTHON_MODULES_LIST += mypy_extensions-0.4.3.tar.gz  # direct dependency
 
 # NOTE: Setting SODIUM_INSTALL variable below is an extremely cruel hack to
 # avoid installing libsodium headers and libraries. The need for this hack
@@ -334,6 +335,7 @@ python-modules-dump-Pipfile:
 	@echo 'webtest = "*"  # used by WSGI based tests'
 	@echo 'yapf = "*"  # used for editor integration and the format-python Makefile target'
 	@echo 'pre-commit = "*"  # used to fix / find issues before commiting changes'
+	@echo 'flake8 = "*"'
 	@echo ''
 	@echo '[packages]'
 	@echo $(patsubst %.zip,%,$(patsubst %.tar.gz,%,$(PYTHON_MODULES_LIST))) | tr ' ' '\n' | sed 's/-\([0-9.]*\)$$/ = "==\1"/'

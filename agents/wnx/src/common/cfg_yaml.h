@@ -40,18 +40,19 @@ const char* const kTimeout = "timeout";  // int
 
 // group "global"
 // root
-const char* const kInstall = "install";               // bool
-const char* const kName = "name";                     // string
-const char* const kPort = "port";                     // int
-const char* const kOnlyFrom = "only_from";            // seq
-const char* const kIpv6 = "ipv6";                     // bool
-const char* const kExecute = "execute";               // seq
-const char* const kHost = "host";                     // seq
-const char* const kAsync = "async";                   // bool
-const char* const kSectionFlush = "section_flush";    // bool
-const char* const kGlobalEncrypt = "encrypted";       // bool
-const char* const kGlobalPassword = "passphrase";     // string
-const char* const kGlobalWmiTimeout = "wmi_timeout";  // int
+const char* const kInstall = "install";                               // bool
+const char* const kName = "name";                                     // string
+const char* const kPort = "port";                                     // int
+const char* const kOnlyFrom = "only_from";                            // seq
+const char* const kIpv6 = "ipv6";                                     // bool
+const char* const kExecute = "execute";                               // seq
+const char* const kHost = "host";                                     // seq
+const char* const kAsync = "async";                                   // bool
+const char* const kTryKillPluginProcess = "try_kill_plugin_process";  // string
+const char* const kSectionFlush = "section_flush";                    // bool
+const char* const kGlobalEncrypt = "encrypted";                       // bool
+const char* const kGlobalPassword = "passphrase";                     // string
+const char* const kGlobalWmiTimeout = "wmi_timeout";                  // int
 
 const char* const kGlobalRemoveLegacy = "remove_legacy";  // bool
 
@@ -208,6 +209,11 @@ constexpr const char* const kStartModeDisabled = "disabled";  // start disabled
 constexpr const char* const kErrorModeIgnore = "ignore";  // do nothing
 constexpr const char* const kErrorModeLog = "log";        // log situation
 
+// global.try_kill_plugin_process
+constexpr const char* const kTryKillSafe = "safe";  // only well known processes
+constexpr const char* const kTryKillAll = "all";    // all plugins
+constexpr const char* const kTryKillNo = "no";      //
+
 }  // namespace values
 
 namespace defaults {
@@ -215,6 +221,8 @@ constexpr const char* const kStartMode = values::kStartModeAuto;
 constexpr const char* const kErrorMode = values::kErrorModeLog;
 constexpr bool kRestartOnCrash = true;
 constexpr uint32_t kMrpeTimeout = 10;
+
+constexpr const char* const kTryKillPluginProcess = values::kTryKillSafe;
 
 }  // namespace defaults
 

@@ -77,6 +77,7 @@ TEST(AgentConfig, Folders) {
 }
 
 TEST(AgentConfig, MainYaml) {
+    if (!cma::ConfigLoaded()) cma::OnStartTest();
     auto root_dir = GetCfg().getRootDir();
     root_dir /= files::kDefaultMainConfig;
     auto load = YAML::LoadFile(root_dir.u8string());
@@ -506,8 +507,9 @@ TEST(AgentConfig, Aggregate) {
 TEST(AgentConfig, ReloadWithTimestamp) {
     namespace fs = std::filesystem;
     using namespace std::chrono;
-    cma::OnStart(cma::AppType::test);
-    ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test));
+    cma::OnStartTest();
+
+    ON_OUT_OF_SCOPE(cma::OnStartTest());
     {
         // prepare file
         auto path = CreateYamlnInTemp("test.yml", "global:\n    ena: yes\n");
@@ -620,6 +622,7 @@ namespace cma::cfg {  // to become friendly for cma::cfg classes
 TEST(AgentConfig, LogFile) {
     auto fname = cma::cfg::GetCurrentLogFileName();
     EXPECT_TRUE(fname.size() != 0);
+    // #TODO: better testing need
 }
 
 TEST(AgentConfig, YamlRead) {
@@ -735,6 +738,10 @@ TEST(AgentConfig, WorkScenario) {
 
     auto encrypt = GetVal(groups::kGlobal, vars::kGlobalEncrypt, true);
     EXPECT_TRUE(!encrypt);
+
+    auto try_kill_mode = GetVal(groups::kGlobal, vars::kTryKillPluginProcess,
+                                std::string("invalid"));
+    EXPECT_EQ(try_kill_mode, defaults::kTryKillPluginProcess);
 
     auto password =
         GetVal(groups::kGlobal, vars::kGlobalPassword, std::string("ppp"));

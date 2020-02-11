@@ -207,69 +207,89 @@ def _valuespec_generic_metrics_prometheus():
             (
                 "exporter",
                 Dictionary(
-                    elements=[
-                        ("cadvisor",
-                         Dictionary(
-                             elements=[
-                                 ("diskio",
-                                  ListChoice(
-                                      choices=[("container", _("Group by Container")),
-                                               ("pod", _("Group by Pod"))],
-                                      title=_("Disk IO"),
-                                      allow_empty=False,
-                                      help=_("You must specify by which entity level you "
-                                             "would like the Disk IO information to be "
-                                             "aggregated. It is possible to select multiple "
-                                             "options here."),
-                                  )),
-                                 ("cpu",
-                                  ListChoice(
-                                      choices=[("container", _("Group by Container")),
-                                               ("pod", _("Group by Pod"))],
-                                      title=_("CPU Utilisation"),
-                                      allow_empty=False,
-                                      help=_("You must specify by which entity level you "
-                                             "would like the CPU information to be "
-                                             "aggregated. It is possible to select multiple "
-                                             "options here."),
-                                  )),
-                                 ("df",
-                                  ListChoice(
-                                      choices=[("container", _("Group by Container")),
-                                               ("pod", _("Group by Pod"))],
-                                      title=_("Filesystem"),
-                                      allow_empty=False,
-                                      help=_("You must specify by which entity level you "
-                                             "would like the Filesystem information to be "
-                                             "aggregated. It is possible to select multiple "
-                                             "options here."),
-                                  )),
-                                 ("if",
-                                  ListChoice(
-                                      choices=[("pod", _("Group by Pod"))],
-                                      title=_("Network"),
-                                      allow_empty=False,
-                                  )),
-                                 ("memory",
-                                  ListChoice(
-                                      choices=[("container", _("Group by Container")),
-                                               ("pod", _("Group by Pod"))],
-                                      title=_("Filesystem"),
-                                      allow_empty=False,
-                                      help=_("You must specify by which entity level you "
-                                             "would like the memory information to be "
-                                             "aggregated. It is possible to select multiple "
-                                             "options here. The container's used memory will be "
-                                             "displayed relative to its respective pod. The pod's "
-                                             "used memory will be shown in reference to its "
-                                             "specified limit or the machine memory if a limit is "
-                                             "not applicable."),
-                                  )),
-                             ],
-                             title=_("CAdvisor"),
-                             validate=_check_not_empty_exporter_dict,
-                         ))
-                    ],
+                    elements=[(
+                        "cadvisor",
+                        Dictionary(
+                            elements=[
+                                ("diskio",
+                                 ListChoice(
+                                     choices=[("container", _("Group by Container")),
+                                              ("pod", _("Group by Pod"))],
+                                     title=_("Disk IO"),
+                                     allow_empty=False,
+                                     help=_("You must specify by which entity level you "
+                                            "would like the Disk IO information to be "
+                                            "aggregated. It is possible to select multiple "
+                                            "options here."),
+                                 )),
+                                ("cpu",
+                                 ListChoice(
+                                     choices=[("container", _("Group by Container")),
+                                              ("pod", _("Group by Pod"))
+                                             ],
+                                     title=_("CPU Utilisation"),
+                                     allow_empty=False,
+                                     help=_("You must specify by which entity level you "
+                                            "would like the CPU information to be "
+                                            "aggregated. It is possible to select multiple "
+                                            "options here."),
+                                 )),
+                                ("df",
+                                 ListChoice(
+                                     choices=[("container", _("Group by Container")),
+                                              ("pod", _("Group by Pod"))
+                                             ],
+                                     title=_("Filesystem"),
+                                     allow_empty=False,
+                                     help=_("You must specify by which entity level you "
+                                            "would like the Filesystem information to be "
+                                            "aggregated. It is possible to select multiple "
+                                            "options here."),
+                                 )),
+                                ("if",
+                                 ListChoice(
+                                     choices=[("pod", _("Group by Pod"))
+                                             ],
+                                     title=_("Network"),
+                                     allow_empty=False,
+                                 )),
+                                ("memory",
+                                 ListChoice(
+                                     choices=[("container", _("Group by Container")),
+                                              ("pod", _("Group by Pod"))
+                                             ],
+                                     title=_("Filesystem"),
+                                     allow_empty=False,
+                                     help=_("You must specify by which entity level you "
+                                            "would like the memory information to be "
+                                            "aggregated. It is possible to select multiple "
+                                            "options here. The container's used memory will be "
+                                            "displayed relative to its respective pod. The pod's "
+                                            "used memory will be shown in reference to its "
+                                            "specified limit or the machine memory if a limit is "
+                                            "not applicable."),
+                                 )),
+                                ("container_id",
+                                 DropdownChoice(
+                                     title=_("Host name used for containers"),
+                                     help=_(
+                                         "Choose which identifier is used for the monitored containers."
+                                         " This will affect the name used for the piggyback host"
+                                         " corresponding to the container, as well as items for"
+                                         " services created on the node for each container."),
+                                     choices=[
+                                         ("short",
+                                          _("Short - Use the first 12 characters of the docker container ID"
+                                           )),
+                                         ("long", _("Long - Use the full docker container ID")),
+                                         ("name", _("Name - Use the containers' name")),
+                                     ],
+                                 )),
+                            ],
+                            title=_("CAdvisor"),
+                            validate=_check_not_empty_exporter_dict,
+                            optional_keys=["diskio", "cpu", "df", "if", "memory"],
+                        ))],
                     title=_("Exporters"),
                     validate=_check_not_empty_exporter_dict,
                     help=_("You can specify which Source Targets including Exporters "

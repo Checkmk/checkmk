@@ -236,7 +236,7 @@ def _list_all_hosts(hostgroups, options):
 
     if options.get("all-sites"):
         hostnames.update(config_cache.all_configured_hosts())  # Return all hosts, including offline
-        if not "include-offline" in options:
+        if "include-offline" not in options:
             hostnames -= config.all_configured_offline_hosts()
     else:
         hostnames.update(config_cache.all_active_hosts())
@@ -364,10 +364,9 @@ def mode_list_checks():
             else:
                 title = "(no man page present)"
 
-            console.output((tty.bold + "%-44s" + tty.normal
-                   + ty_color + " %-6s " + tty.normal
-                   + "%s\n") % \
-                  (check_plugin_name, what, title))
+            console.output(
+                (tty.bold + "%-44s" + tty.normal + ty_color + " %-6s " + tty.normal + "%s\n") %
+                (check_plugin_name, what, title))
         except Exception as e:
             console.error("ERROR in check %r: %s\n" % (check_plugin_name, e))
 
@@ -828,19 +827,20 @@ def mode_snmptranslate(walk_filename):
     snmp.do_snmptranslate(walk_filename)
 
 
-modes.register(Mode(
-    long_option="snmptranslate",
-    handler_function=mode_snmptranslate,
-    needs_config=False,
-    argument=True,
-    argument_descr="HOST",
-    short_help="Do snmptranslate on walk",
-    long_help=[
-        "Does not contact the host again, but reuses the hosts walk from the "
-        "directory %s. You can add further MIBs to the directory %s." % \
-         (cmk.utils.paths.snmpwalks_dir, cmk.utils.paths.local_mib_dir)
-    ],
-))
+modes.register(
+    Mode(
+        long_option="snmptranslate",
+        handler_function=mode_snmptranslate,
+        needs_config=False,
+        argument=True,
+        argument_descr="HOST",
+        short_help="Do snmptranslate on walk",
+        long_help=[
+            "Does not contact the host again, but reuses the hosts walk from the "
+            "directory %s. You can add further MIBs to the directory %s." %
+            (cmk.utils.paths.snmpwalks_dir, cmk.utils.paths.local_mib_dir)
+        ],
+    ))
 
 #.
 #   .--snmpwalk------------------------------------------------------------.
@@ -1601,7 +1601,7 @@ def mode_check(options, args):
     try:
         import cmk.base.cee.keepalive as keepalive
     except ImportError:
-        keepalive = None  # type: ignore
+        keepalive = None  # type: ignore[assignment]
 
     if keepalive and "keepalive" in options:
         # handle CMC check helper

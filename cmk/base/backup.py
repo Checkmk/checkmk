@@ -80,8 +80,7 @@ def do_backup(tarname):
                 subdata = open(absdir, mode="rb").read()
 
             info = tarfile.TarInfo(subtarname)
-            # mypy complains about mtime being int, but float is totally fine
-            info.mtime = time.time()  # type: ignore
+            info.mtime = int(time.time())
             info.uid = 0
             info.gid = 0
             info.size = len(subdata)

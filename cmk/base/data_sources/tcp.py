@@ -167,12 +167,8 @@ class TCPDataSource(CheckMKAgentDataSource):
     def _decrypt_package(self, encrypted_pkg, encryption_key, protocol):
         # type: (bytes, str, int) -> RawAgentData
         from Cryptodome.Cipher import AES
-        if protocol == 2:
-            from hashlib import sha256 as encrypt_digest
-        else:
-            from hashlib import md5 as encrypt_digest  # type: ignore
-
-        unpad = lambda s: s[0:-ord(s[-1])]
+        from hashlib import sha256, md5
+        encrypt_digest = sha256 if protocol == 2 else md5
 
         # Adapt OpenSSL handling of key and iv
         def derive_key_and_iv(password, key_length, iv_length):
@@ -187,7 +183,7 @@ class TCPDataSource(CheckMKAgentDataSource):
         decryption_suite = AES.new(key, AES.MODE_CBC, iv)
         decrypted_pkg = decryption_suite.decrypt(encrypted_pkg)
         # Strip of fill bytes of openssl
-        return unpad(decrypted_pkg)
+        return decrypted_pkg[0:-ord(decrypted_pkg[-1])]
 
     def describe(self):
         # type: () -> str

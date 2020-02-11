@@ -379,15 +379,12 @@ def get_service_attributes(hostname, description, config_cache, checkname=None, 
     attrs.update(_get_tag_attributes(config_cache.tags_of_service(hostname, description), "TAG"))
 
     # TODO: Remove ignore once we are on Python 3
-    attrs.update(
-        _get_tag_attributes(
-            config_cache.labels_of_service(hostname, description),  # type: ignore
-            "LABEL"))  # type: ignore
+    attrs.update(_get_tag_attributes(config_cache.labels_of_service(hostname, description),
+                                     "LABEL"))
     # TODO: Remove ignore once we are on Python 3
     attrs.update(
-        _get_tag_attributes(
-            config_cache.label_sources_of_service(hostname, description),  # type: ignore
-            "LABELSOURCE"))  # type: ignore
+        _get_tag_attributes(config_cache.label_sources_of_service(hostname, description),
+                            "LABELSOURCE"))
     return attrs
 
 
@@ -646,7 +643,7 @@ def replace_macros(s, macros):
             s = s.replace(key, value)
         except Exception:  # Might have failed due to binary UTF-8 encoding in value
             try:
-                s = s.replace(key, value.decode("utf-8"))  # type: ignore
+                s = s.replace(key, value.decode("utf-8"))
             except Exception:
                 # If this does not help, do not replace
                 if cmk.utils.debug.enabled():

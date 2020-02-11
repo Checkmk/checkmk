@@ -37,9 +37,7 @@ from cmk.utils.exceptions import MKGeneralException, MKTimeout
 import cmk.base.console as console
 import cmk.base.snmp_utils as snmp_utils
 from cmk.base.exceptions import MKSNMPError
-from cmk.base.snmp_utils import (  # pylint: disable=unused-import
-    SNMPHostConfig, ContextName, RawValue, SNMPCommunity, OID,
-)
+from cmk.base.snmp_utils import SNMPHostConfig, ContextName, RawValue, OID
 
 
 class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
@@ -57,10 +55,10 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
         if snmp_config.is_ipv6_primary:
             ipaddress = "[" + ipaddress + "]"
         portspec = self._snmp_port_spec(snmp_config)
-        command = self._snmp_base_command(commandtype, snmp_config, context_name) + \
-                   [ "-On", "-OQ", "-Oe", "-Ot",
-                     "%s%s%s" % (protospec, ipaddress, portspec),
-                     oid_prefix ]
+        command = (
+            self._snmp_base_command(commandtype, snmp_config, context_name) +
+            ["-On", "-OQ", "-Oe", "-Ot",
+             "%s%s%s" % (protospec, ipaddress, portspec), oid_prefix])
 
         console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
@@ -118,9 +116,7 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
         portspec = self._snmp_port_spec(snmp_config)
         command = self._snmp_walk_command(snmp_config, context_name)
         command += ["-OQ", "-OU", "-On", "-Ot", "%s%s%s" % (protospec, ipaddress, portspec), oid]
-
-        # list2cmdline exists, but mypy complains
-        console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))  # type: ignore
+        console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
         snmp_process = None
         exitstatus = None

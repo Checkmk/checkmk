@@ -27,8 +27,10 @@
 import abc
 import ast
 import time
-from typing import Callable, Tuple, cast, Set, Optional, Dict, List, Union  # pylint: disable=unused-import
+from typing import Callable, Tuple, cast, Set, Optional, Dict, List  # pylint: disable=unused-import
+
 import six
+from mypy_extensions import NamedArg
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -49,8 +51,12 @@ from cmk.base.snmp_utils import (  # pylint: disable=unused-import
 from .abstract import DataSource, ManagementBoardDataSource  # pylint: disable=unused-import
 from .host_sections import AbstractHostSections
 
-PluginNameFilterFunction = Callable[[snmp_utils.SNMPHostConfig, str, bool, bool],
-                                    Set[CheckPluginName]]
+PluginNameFilterFunction = Callable[[
+    snmp_utils.SNMPHostConfig,
+    NamedArg(str, 'on_error'),
+    NamedArg(bool, 'do_snmp_scan'),
+    NamedArg(bool, 'for_mgmt_board')
+], Set[CheckPluginName]]
 
 #.
 #   .--SNMP----------------------------------------------------------------.
@@ -227,8 +233,7 @@ class SNMPDataSource(ABCSNMPDataSource):
         try:
             return self._check_plugin_names[(self._hostname, self._ipaddress)]
         except KeyError:
-            # mypy complains: Unexpected keyword argument "for_mgmt_board"
-            check_plugin_names = self._check_plugin_name_filter_func(  # type: ignore
+            check_plugin_names = self._check_plugin_name_filter_func(
                 self._snmp_config,
                 on_error=self._on_error,
                 do_snmp_scan=self._do_snmp_scan,
@@ -254,7 +259,7 @@ class SNMPDataSource(ABCSNMPDataSource):
             has_snmp_info = False
             section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
             if section_name in config.snmp_info:
-                oid_info = config.snmp_info[section_name]  # type: ignore
+                oid_info = config.snmp_info[section_name]  # type: ignore[assignment]
             elif section_name in cmk.base.inventory_plugins.inv_info:
                 oid_info = cmk.base.inventory_plugins.inv_info[section_name].get("snmp_info")
                 if oid_info:
@@ -328,7 +333,7 @@ class SNMPDataSource(ABCSNMPDataSource):
         the raw data, calculate the times and store the persisted info for
         later use.
         """
-        persisted_sections = {}  #  type: PersistedSNMPSections
+        persisted_sections = {}  # type: PersistedSNMPSections
 
         for section_name, section_content in raw_data.items():
             check_interval = self._host_config.snmp_check_interval(section_name)

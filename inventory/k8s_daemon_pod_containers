@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inv_k8s_daemon_pod_containers(info, inventory_tree, _status_data_tree):
+def inv_k8s_daemon_pod_containers(info, inventory_tree):
     parsed = parse_k8s(info)
 
     path = "software.applications.kubernetes.daemon_pod_containers:"

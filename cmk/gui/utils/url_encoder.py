@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -11,7 +11,7 @@ HTTPVariables = List[Tuple[str, Optional[Union[int, str, Text]]]]
 
 
 # TODO: Change methods to simple helper functions. The URLEncoder class is not really needed
-class URLEncoder(object):
+class URLEncoder(object):  # pylint: disable=useless-object-inheritance
     def urlencode_vars(self, vars_):
         # type: (HTTPVariables) -> str
         """Convert a mapping object or a sequence of two-element tuples to a “percent-encoded” string

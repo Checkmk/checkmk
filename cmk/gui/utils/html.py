@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -12,7 +12,7 @@ from cmk.utils.encoding import ensure_unicode
 HTMLInput = Union["HTML", int, float, None, str, Text]
 
 
-class HTML(object):
+class HTML(object):  # pylint: disable=useless-object-inheritance
     """This is a simple class which wraps a unicode string provided by
     the caller to make escaping.escape_attribute() know that this string should
     not be escaped.

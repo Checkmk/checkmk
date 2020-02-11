@@ -11,7 +11,7 @@ import traceback
 import json
 from contextlib import contextmanager
 from typing import (  # pylint: disable=unused-import
-    Tuple, Optional, cast, Iterable, Dict, List, Type, Callable, Union)
+    Text, Tuple, Optional, cast, Iterable, Dict, List, Type, Callable, Union)
 
 import cmk
 import cmk.gui.pages
@@ -1504,8 +1504,8 @@ def get_single_info_keys(single_infos):
 
 
 def get_singlecontext_vars(context, single_infos):
-    # type: (VisualContext, SingleInfos) -> Dict[str, Union[str, unicode]]
-    vars_ = {}  # type: Dict[str, Union[str, unicode]]
+    # type: (VisualContext, SingleInfos) -> Dict[str, Union[str, Text]]
+    vars_ = {}  # type: Dict[str, Union[str, Text]]
     for key in get_single_info_keys(single_infos):
         val = cast(Optional[str], context.get(key))
         if val is not None:
@@ -1514,7 +1514,7 @@ def get_singlecontext_vars(context, single_infos):
 
 
 def get_singlecontext_html_vars(context, single_infos):
-    # type: (VisualContext, SingleInfos) -> Dict[str, Union[str, unicode]]
+    # type: (VisualContext, SingleInfos) -> Dict[str, Union[str, Text]]
     vars_ = get_singlecontext_vars(context, single_infos)
     for key in get_single_info_keys(single_infos):
         val = html.get_unicode_input(key)

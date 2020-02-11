@@ -48,12 +48,7 @@ class OutputFunnel(object):
         if self._is_plugged():
             self.plug_text[-1].append(text)
         else:
-            # encode when really writing out the data. Not when writing plugged,
-            # because the plugged code will be handled somehow by our code. We
-            # only encode when leaving the pythonic world.
-            if isinstance(text, six.text_type):
-                text = text.encode("utf-8")
-            self._lowlevel_write(text)
+            self._lowlevel_write(six.ensure_binary(text))
 
     def _lowlevel_write(self, text):
         # type: (bytes) -> None

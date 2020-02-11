@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -43,6 +43,8 @@ _translation = None  # type: Optional[Translation]
 def _(message):
     # type: (str) -> Text
     if _translation:
+        if sys.version_info[0] >= 3:
+            return _translation.translation.gettext(message)
         return _translation.translation.ugettext(message)
     return six.text_type(message)
 
@@ -50,6 +52,8 @@ def _(message):
 def ungettext(singular, plural, n):
     # type: (str, str, int) -> Text
     if _translation:
+        if sys.version_info[0] >= 3:
+            return _translation.translation.ngettext(singular, plural, n)
         return _translation.translation.ungettext(singular, plural, n)
     if n == 1:
         return six.text_type(singular)

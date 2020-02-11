@@ -125,12 +125,12 @@ class UserAttribute(six.with_metaclass(abc.ABCMeta, object)):
     @classmethod
     @abc.abstractmethod
     def name(cls):
-        # type: () -> bytes
+        # type: () -> str
         raise NotImplementedError()
 
     @abc.abstractmethod
     def topic(self):
-        # type: () -> bytes
+        # type: () -> str
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -146,7 +146,7 @@ class UserAttribute(six.with_metaclass(abc.ABCMeta, object)):
         return True
 
     def permission(self):
-        # type: () -> Optional[bytes]
+        # type: () -> Optional[str]
         return None
 
     def show_in_table(self):
@@ -158,7 +158,7 @@ class UserAttribute(six.with_metaclass(abc.ABCMeta, object)):
         return False
 
     def domain(self):
-        # type: () -> bytes
+        # type: () -> str
         return "multisite"
 
 

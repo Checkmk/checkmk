@@ -1,0 +1,14 @@
+Title: check_dns: Fixed query if multiple expected addresses are configured
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p9
+Date: 1581338372
+
+The active check {{check_dns}} returned the error message
+{{DNS CRITICAL - expected 'A; B; ...' but got 'A,B,...'}}
+if multiple expected addresses are configured. Fixed that.

@@ -82,34 +82,41 @@ bool OnFile::Encode(std::string_view password,
     return WriteDataToFile(name_out, result);
 }
 
-bool OnFile::Decode(const std::string_view password,
-                    const std::filesystem::path& name,
-                    const std::filesystem::path& name_out, SourceType type
-
-) {
-    if (password.empty()) {
-        XLOG::l.w("Password is empty, encryption is impossible");
-        return false;
-    }
-
-    auto result = std::move(ReadFullFile(name));
+bool OnFile::IsEncodedBuffer(const std::vector<char>& result,
+                             std::string_view name) {
     if (result.empty()) {
-        XLOG::l.w("File '{}' is empty, decryption is impossible",
-                  name.u8string());
+        XLOG::d.i("File '{}' is empty, decryption is impossible", name);
         return false;
     }
     auto data_size = result.size();
     if (data_size < kObfuscatedSuffixSize) {
-        XLOG::l.w("File '{}' is too short", name.u8string());
+        XLOG::d.i("File '{}' is too short", name);
         return false;
     }
 
     auto marker = std::string_view(&result[data_size - kObfuscatedSuffixSize],
                                    kObfuscatedWordSize);
     if (marker != kObfuscateMark) {
-        XLOG::l.w("File '{}' has invalid marker {}", name.u8string(), marker);
+        XLOG::d.i("File '{}' is not encrypted", name, marker);
         return false;
     }
+
+    return true;
+}
+
+bool OnFile::DecodeBuffer(std::string_view password, std::vector<char>& result,
+                          SourceType type, std::string_view name) {
+    if (!IsEncodedBuffer(result, name)) {
+        XLOG::d.w("File '{}' is not encoded", name);
+        return false;
+    }
+
+    auto data_size = result.size();
+    if (data_size < kObfuscatedSuffixSize) {
+        XLOG::l("File '{}' is too short", name);
+        return false;
+    }
+
     auto length_sv = std::string_view(
         &result[data_size - kObfuscatedLengthSize], kObfuscatedLengthSize);
     try {
@@ -121,19 +128,35 @@ bool OnFile::Decode(const std::string_view password,
             type == SourceType::cpp);  // false: python doesn't close the block
 
         if (!success) {
-            XLOG::l.w("Can't decrypt '{}'", name.u8string());
+            XLOG::l.w("Can't decrypt '{}'", name);
             return false;
         }
 
         if (type == SourceType::python) sz = length;
 
         result.resize(sz);
-        return WriteDataToFile(name_out, result);
     } catch (const std::exception& e) {
-        XLOG::l.w("Exception '{}' during decrypt '{}'", e.what(),
-                  name.u8string());
+        XLOG::l.w("Exception '{}' during decrypt '{}'", e.what(), name);
         return false;
     }
+
+    return true;
+}
+
+bool OnFile::Decode(const std::string_view password,
+                    const std::filesystem::path& name,
+                    const std::filesystem::path& name_out, SourceType type
+
+) {
+    if (password.empty()) {
+        XLOG::l.w("Password is empty, encryption is impossible");
+        return false;
+    }
+
+    auto result = std::move(ReadFullFile(name));
+    if (!DecodeBuffer(password, result, type, name.u8string())) return false;
+
+    return WriteDataToFile(name_out, result);
 }
 
 static PathVector GatherMatchingFiles(

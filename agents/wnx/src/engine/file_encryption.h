@@ -22,25 +22,34 @@ constexpr int kObfuscatedSuffixSize =
 class OnFile {
 public:
     static constexpr int kAlignment = 1024;  // 1024 bytes blocks
-    static bool Encode(std::string_view password,
-                       const std::filesystem::path& name);
-    static bool Decode(std::string_view password,
-                       const std::filesystem::path& name, SourceType type);
-    static bool Encode(std::string_view password,
-                       const std::filesystem::path& name,
-                       const std::filesystem::path& name_out);
-    static bool Decode(std::string_view password,
-                       const std::filesystem::path& name,
-                       const std::filesystem::path& name_out, SourceType type);
+    [[nodiscard]] static bool Encode(std::string_view password,
+                                     const std::filesystem::path& name);
+    [[nodiscard]] static bool Decode(std::string_view password,
+                                     const std::filesystem::path& name,
+                                     SourceType type);
+    [[nodiscard]] static bool Encode(std::string_view password,
+                                     const std::filesystem::path& name,
+                                     const std::filesystem::path& name_out);
+    [[nodiscard]] static bool Decode(std::string_view password,
+                                     const std::filesystem::path& name,
+                                     const std::filesystem::path& name_out,
+                                     SourceType type);
 
-    static int DecodeAll(const std::filesystem::path& dir,
-                         std::wstring_view mask, SourceType type);
+    [[nodiscard]] static int DecodeAll(const std::filesystem::path& dir,
+                                       std::wstring_view mask, SourceType type);
+    [[nodiscard]] static bool DecodeBuffer(std::string_view password,
+                                           std::vector<char>& result,
+                                           SourceType type,
+                                           std::string_view name);
+    [[nodiscard]] static bool IsEncodedBuffer(const std::vector<char>& result,
+                                              std::string_view name);
 
 private:
     static std::vector<char> ReadFullFile(const std::filesystem::path& name);
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class FileEncryptionTest;
     FRIEND_TEST(FileEncryptionTest, ReadFile);
+    FRIEND_TEST(FileEncryptionTest, DecodeBuffer);
     FRIEND_TEST(FileEncryptionTest, All);
 #endif
 };

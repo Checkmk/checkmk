@@ -109,6 +109,26 @@ TEST_F(FileEncryptionTest, ReadFile) {
         memcmp(checks_view.data(), content_.data(), content_.length()) == 0);
 }
 
+TEST_F(FileEncryptionTest, DecodeBuffer) {
+    namespace fs = std::filesystem;
+
+    fs::path expected[] = {R"(c:\dev\shared\cmk-update-agent.exe)",
+                           R"(c:\dev\shared\cmk-update-agent.exe.enc)"};
+
+    for (auto& e : expected)
+        if (!fs::exists(e)) {
+            XLOG::l.t("Test is skipped, there is no data");
+            return;
+        }
+
+    auto buf_a = std::move(OnFile::ReadFullFile(expected[0]));
+    EXPECT_FALSE(OnFile::IsEncodedBuffer(buf_a, expected[0].u8string()));
+    auto buf_b = std::move(OnFile::ReadFullFile(expected[1]));
+    EXPECT_TRUE(OnFile::IsEncodedBuffer(buf_b, expected[1].u8string()));
+    EXPECT_TRUE(OnFile::DecodeBuffer(kObfuscateWord, buf_b, SourceType::python,
+                                     expected[1].u8string()));
+}
+
 TEST_F(FileEncryptionTest, All) {
     // bad data failure
     EXPECT_FALSE(OnFile::Encode(pwd, in_ / "not exists", out_ / name_out));

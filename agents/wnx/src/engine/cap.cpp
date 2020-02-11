@@ -13,6 +13,7 @@
 #include "cfg.h"
 #include "cma_core.h"
 #include "cvt.h"
+#include "file_encryption.h"
 #include "logger.h"
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
@@ -134,27 +135,47 @@ FileInfo ExtractFile(std::ifstream &cap_file) {
 bool StoreFile(const std::wstring &Name, const std::vector<char> &Data) {
     namespace fs = std::filesystem;
     fs::path fpath = Name;
-    std::error_code ec;
-    if (!fs::create_directories(fpath.parent_path(), ec) && ec.value() != 0) {
-        XLOG::l.crit("Cannot create path to '{}', status = {}",
-                     fpath.parent_path().u8string(), ec.value());
-        return false;
-    }
-
+    auto fname = fpath.u8string();
     // Write plugin
     try {
-        std::ofstream ofs(Name, std::ios::binary | std::ios::trunc);
-        if (ofs.good()) {
-            ofs.write(Data.data(), Data.size());
-            return true;
+        // create the folder
+        std::error_code ec;
+        if (!fs::create_directories(fpath.parent_path(), ec) &&
+            ec.value() != 0) {  // the dir is really absent
+            XLOG::l.crit("Cannot create path to '{}', status = {}",
+                         fpath.parent_path().u8string(), ec.value());
+            return false;
         }
 
+        using namespace cma::encrypt;
+
+        // create the file
+        std::ofstream ofs(Name, std::ios::binary | std::ios::trunc);
+        if (!ofs.good()) {
+            XLOG::l.crit("Can't create file '{}', status = {}", fname,
+                         GetLastError());
+            return false;
+        }
+
+        // write data with optional decryption
+        if (OnFile::IsEncodedBuffer(Data, fname)) {
+            auto work_data = Data;
+            XLOG::l.i("The file '{}' should be decoded", fname);
+            if (OnFile::DecodeBuffer(kObfuscateWord, work_data,
+                                     SourceType::python, fname)) {
+                XLOG::d.i("'{}' decoding is successful", fname);
+                ofs.write(work_data.data(), work_data.size());
+                return true;
+            }
+            XLOG::l("'{}' is failed to be decoded", fname);
+        }
+
+        ofs.write(Data.data(), Data.size());
+        return true;
+
     } catch (const std::exception &e) {
-        XLOG::l("Exception on create/write file '{}',  '{}'", fpath.u8string(),
-                e.what());
+        XLOG::l("Exception on create/write file '{}',  '{}'", fname, e.what());
     }
-    XLOG::l.crit("Cannot create file to '{}', status = {}", fpath.u8string(),
-                 GetLastError());
     return false;
 }
 

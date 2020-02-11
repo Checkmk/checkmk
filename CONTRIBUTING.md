@@ -6,15 +6,23 @@ Most contributions to Checkmk are small bug-fixes, enhancements of existing
 features, or completely new plugins. The guidelines below address these types
 of contributions.
 
-If you would like to make a major change to Checkmk, please contact us first.
-Let's talk about what you want to do. Somebody else may already be working on
-it, or there are certain topics you should know before implementing the change.
+If you would like to make a major change to Checkmk, please create a new topic
+under the [Product Ideas category](https://forum.checkmk.com/c/product-ideas/19)
+in the Checkmk Forum so we can talk about what you want to do. Somebody else may
+already be working on it, or there are certain topics you should know before
+implementing the change.
 
 We love to work with community contributors and want to make sure contributions
 and time investments are as effective as possible. That's why it is important
 to us to discuss major changes you might be planning in order to jointly agree
 on the best solution approach to the problem at hand. This preempts potential
-issues during the code reviews of pull requests.
+issues during the code reviews of pull requests. Code reviews can take time and
+we're trying our best to address your PRs as soon as we can.
+
+Unfortunately, it can also happen that we cannot accommodate what you want to
+work on due to the set priorities. For example, currently we might be unable to
+review changes and suggestions that will affect the core functionalities of
+Checkmk due to other major changes in the codebase.
 
 ## Contributing code
 
@@ -82,6 +90,44 @@ To set up the development environment do the following:
   Checkmk.
   If you like to do this, please have a look at the [How to execute tests?](#how-to-execute-tests)
   chapter.
+
+- Install pre-commit checks
+
+  In order to keep your commits to our standard we provide a [pre-commit](https://pre-commit.com/)
+  configuration and some custom made checking scripts. You can install it like this:
+
+  > Warning: Python3 is required for pre-commit! Installing it with Python 2 will break
+  > your environment and leave you unable to use pip due to a backports module clash!
+
+  ```
+  pip3 install pre-commit
+  ```
+
+  After successful installation, hook it up to your git-repository by issuing
+  the following command inside your git repository:
+
+  ```
+  pre-commit install --allow-missing-config
+  ```
+  The `--allow-missing-config` parameter is needed so that branches of older versions of Checkmk which don't
+  support this feature and are missing the configuration file won't throw errors.
+
+  Afterwards your commits will automatically be checked for conformity by `pre-commit`. If you know a
+  check (like mypy for example) got something wrong and you don't want to fix it right away you can skip
+  execution of the checkers with `git commit -n`. Please don't push unchecked changes as this will
+  introduce delays and additional work.
+
+  Additional helpers can be found in `scripts/`. One noteable one is `scripts/check-current-commit`
+  which checks your commit *after* it has been made. You can then fix errors and amend or squash
+  your commit. You can also use this script in a rebase like such:
+
+  ```
+  git rebase --exec scripts/check-current-commit
+  ```
+
+  This will rebase your current changes and check each commit for errors. After fixing them you can
+  then continue rebasing.
+
 
 Once done, you are ready for the next chapter.
 
@@ -279,9 +325,9 @@ names are really available and needed in the current namespace.
             sys.exit(1)
         return open(file).readline()
     ```
-    
+
     vs.
-    
+
     ```
     def get_status(file):
         try:
@@ -424,9 +470,9 @@ names are really available and needed in the current namespace.
         mercedes, \
         audi
     ```
-    
+
     vs.
-    
+
     ```
     from germany import (
         bmw,
@@ -547,7 +593,7 @@ about the error diagnosis below, if it doesn't work.
   ```
 
 - An example value of the `safe-local-variables` variable is e.g.:
-    
+
   ```
   ((eval setq flycheck-python-mypy-executable
          (concat
@@ -565,6 +611,7 @@ portability and transparency. In case you want to change something respect the
 following things:
 
 - Bash scripts are written for Bash version 3.1 or newer
+- Set `set -e -o pipefail` at the top of your script
 - Use [shellcheck](https://www.shellcheck.net/) for your changes before
   submitting patches.
 
@@ -596,7 +643,7 @@ localization of Checkmk for all users. We are open to support other languages
 when the localization is in a good state and nearly complete.
 
 If you are interested: We can use [POEditor.com](https://poeditor.com) for
-upstream localizations. Please contact us if you are interested.
+upstream localizations. Please contact us at info@checkmk.com if you are interested.
 
 ### Translation of technical terms
 

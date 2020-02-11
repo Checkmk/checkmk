@@ -114,8 +114,14 @@ For Each instance In instances.Keys
     cmd = Replace(cmd, "mysqld""", "mysql""")
     cmd = Replace(cmd, "mysqld-nt""", "mysql""")
     cmd = Replace(cmd, "mysql""", "mysql.exe""")
-    cmd = Replace(cmd, "mysqld.exe""", "mysql.exe""")
-    cmd = Left(cmd, InStr(cmd, "mysql.exe""")+9)
+    cmd = Replace(cmd, "mysqld.exe""", "mysql.exe""")    
+    If InStr(cmd, "mysql.exe""") = 0 Then
+        ' replace failed, probably we have no double quotes in the string
+        cmd = Replace(cmd, "mysqld.exe", "mysql.exe")
+        cmd = Left(cmd, InStr(cmd, "mysql.exe")+8)
+    else
+        cmd = Left(cmd, InStr(cmd, "mysql.exe""")+9)
+    End If
     If cfg_file <> "" Then
         cmd = cmd & " --defaults-extra-file=""" & cfg_file & """"
     End If

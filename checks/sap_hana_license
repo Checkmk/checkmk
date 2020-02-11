@@ -33,7 +33,7 @@ SAP_HANA_MAYBE = collections.namedtuple("SAP_HANA_MAYBE", ["bool", "value"])
 
 def parse_sap_hana_license(info):
     parsed = {}
-    for (sid_instance, node), lines in parse_sap_hana_cluster_aware(info).iteritems():
+    for (sid_instance, node), lines in parse_sap_hana_cluster_aware(info).items():
         for line in lines:
             if len(line) < 7:
                 continue
@@ -69,17 +69,17 @@ def _parse_maybe_bool(value):
 
 
 def inventory_sap_hana_license(parsed):
-    for item in parsed.iterkeys():
+    for item in parsed:
         yield item, {}
 
 
 @get_parsed_item_data
 def check_sap_hana_license(item, params, node_data):
-    nodes = [n for n in node_data.keys() if n]
+    nodes = [n for n in node_data if n]
     if nodes:
         yield 0, 'Nodes: %s' % ", ".join(nodes)
 
-    for data in node_data.itervalues():
+    for data in node_data.values():
         enforced = data['enforced']
         if enforced.bool:
             yield _check_product_usage(data['size'], data['limit'], params)

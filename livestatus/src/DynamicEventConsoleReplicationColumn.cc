@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DynamicEventConsoleReplicationColumn.h"
+#include <filesystem>
 #include <iosfwd>
 #include <memory>
 #include <stdexcept>
@@ -55,11 +56,8 @@ private:
 class ReplicationColumn : public BlobColumn {
 public:
     ReplicationColumn(const std::string &name, const std::string &description,
-                      std::string blob, int indirect_offset, int extra_offset,
-                      int extra_extra_offset, int offset)
-        : BlobColumn(name, description, indirect_offset, extra_offset,
-                     extra_extra_offset, offset)
-        , blob_(std::move(blob)) {}
+                      std::string blob, const Column::Offsets &offsets)
+        : BlobColumn(name, description, offsets), blob_(std::move(blob)) {}
 
     [[nodiscard]] std::unique_ptr<std::vector<char>> getValue(
         Row /* unused */) const override {
@@ -73,10 +71,8 @@ private:
 
 DynamicEventConsoleReplicationColumn::DynamicEventConsoleReplicationColumn(
     const std::string &name, const std::string &description, MonitoringCore *mc,
-    int indirect_offset, int extra_offset, int extra_extra_offset)
-    : DynamicColumn(name, description, indirect_offset, extra_offset,
-                    extra_extra_offset)
-    , _mc(mc) {}
+    const Column::Offsets &offsets)
+    : DynamicColumn(name, description, offsets), _mc(mc) {}
 
 std::unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
     const std::string &name, const std::string &arguments) {
@@ -91,5 +87,5 @@ std::unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
         }
     }
     return std::make_unique<ReplicationColumn>(name, "replication value",
-                                               result, -1, -1, -1, 0);
+                                               result, _offsets);
 }

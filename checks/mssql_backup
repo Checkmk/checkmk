@@ -143,7 +143,11 @@ def check_mssql_backup(item, params, parsed):
             # ignore backups for SIMPLE databases
             continue
         if backup.state == "no backup found":
-            yield params.get("not_found", 1), "No backup found"
+            state = 1
+            # tempdb has no backup by default, so don't treat this as warning
+            if item.split(" ", 1)[1] == "tempdb":
+                state = 0
+            yield params.get("not_found", state), "No backup found"
             continue
         if backup.state.startswith("ERROR: "):
             yield 2, backup.state[7:]
@@ -212,7 +216,7 @@ def inventory_mssql_backup_per_type(parsed):
     discovery_mode = _mssql_backup_discovery_mode()
     if discovery_mode != "per_type":
         return
-    for db_name, attrs in parsed[0].iteritems():
+    for db_name, attrs in parsed[0].items():
         try:
             # remove MSSQL_ at start of item
             dbinfo = parsed[1].get(db_name[6:], {})
@@ -226,7 +230,7 @@ def inventory_mssql_backup_per_type(parsed):
 
 
 def check_mssql_backup_per_type(item, params, parsed):
-    for db_name, attrs in parsed[0].iteritems():
+    for db_name, attrs in parsed[0].items():
         for backup in attrs:
             if item == _mssql_backup_per_type_item(db_name, backup):
                 if backup.state == "no backup found":

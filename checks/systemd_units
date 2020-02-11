@@ -240,7 +240,7 @@ def _check_non_ok_services(systemd_services, params, output_string):
     for service in systemd_services:
         servicenames_by_status.setdefault(service.active, []).append(service.name)
 
-    for status, service_names in sorted(servicenames_by_status.iteritems()):
+    for status, service_names in sorted(servicenames_by_status.items()):
         state = params["states"].get(status, params["states_default"])
         if state == 0:
             continue

@@ -3,15 +3,12 @@
 
 #include <wincrypt.h>
 
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
 
-#include "common/wtools.h"
 #include "tools/_misc.h"
-
-#include "cfg.h"
-#include "logger.h"
 
 namespace cma::encrypt {
 // algorithm can't currently be changed
@@ -35,28 +32,28 @@ class Commander {
 public:
     explicit Commander();
 
-    Commander(const std::string &Password, Length KeyLength = Length::kDefault);
+    Commander(const std::string &key, Length length = Length::kDefault);
 
-    Commander(const BYTE *Key, DWORD KeyLength);
+    Commander(const BYTE *key, DWORD length);
 
     ~Commander();
 
     // in-place encrypt buffer
-    std::tuple<bool, size_t> encode(void *InOut, size_t InputSize,
-                                    size_t BufferSize,
-                                    bool LastBlock = true) const;
-    std::tuple<bool, size_t> decode(void *InOut, size_t input_size,
-                                    bool LastBlock = true);
+    std::tuple<bool, size_t> encode(void *in_out, size_t size,
+                                    size_t buffer_size,
+                                    bool last_block = true) const;
+    std::tuple<bool, size_t> decode(void *in_out, size_t size,
+                                    bool last_block = true);
 
     std::optional<cma::ByteVector> getKey() const;
 
-    bool randomizeBuffer(void *Buffer, size_t BufferSize) const;
+    bool randomizeBuffer(void *buffer, size_t buffer_size) const;
 
     const bool available() const { return key_ != 0; }
 
     std::optional<uint32_t> blockSize() const;
 
-    std::optional<size_t> CalcBufferOverhead(size_t DataSize) const noexcept;
+    std::optional<size_t> CalcBufferOverhead(size_t data_size) const noexcept;
 
 private:
     void cleanup();
@@ -67,11 +64,11 @@ private:
 
     static size_t keySize(ALG_ID algorithm);
 
-    HCRYPTKEY generateKey(Length KeyLength) const;
+    HCRYPTKEY generateKey(Length key_length) const;
     HCRYPTKEY importKey(const BYTE *key, DWORD key_size) const;
     // derive key and iv from the password in the same manner as openssl does
-    HCRYPTKEY deriveOpenSSLKey(const std::string &Password, Length KeyLength,
-                               int Iterations);
+    HCRYPTKEY deriveOpenSSLKey(const std::string &password, Length key_length,
+                               int iterations);
     void releaseKey();
 
     HCRYPTPROV crypt_provider_;
@@ -81,6 +78,6 @@ private:
 
 std::unique_ptr<Commander> MakeCrypt();
 
-std::tuple<HCRYPTHASH, size_t> GetHash(HCRYPTPROV Provider);
+std::tuple<HCRYPTHASH, size_t> GetHash(HCRYPTPROV crypt_provider);
 }  // namespace cma::encrypt
 #endif  // encryption_h__

@@ -40,7 +40,7 @@ def parse_docker_network(info):
 def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
     parsed = parse_docker_network(info)
 
-    for network_id, network in parsed.iteritems():
+    for network_id, network in parsed.items():
 
         sorted_container_items = sorted(network["Containers"].items())
 

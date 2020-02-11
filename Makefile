@@ -41,8 +41,8 @@ CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
 SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export CPPCHECK    := cppcheck
 export DOXYGEN     := doxygen
-export IWYU_TOOL   := iwyu_tool
-ARTIFACT_STORAGE   := http://nexus:8081
+export IWYU_TOOL   := $(realpath scripts/iwyu_tool)
+ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
 PIPENV2            := scripts/run-pipenv 2
 PIPENV3            := scripts/run-pipenv 3
 
@@ -180,7 +180,7 @@ endif
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
 # This tar file is only used by "omd/packages/check_mk/Makefile"
-$(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI) $(THEME_RESOURCES) ChangeLog
+$(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI) $(THEME_RESOURCES) ChangeLog agents/windows/plugins/mk_logwatch.exe agents/windows/plugins/mk_jolokia.exe
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
@@ -197,15 +197,6 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	    --exclude "cme.py*" \
 	    cmk/* ; \
 	  rm cmk/*.pyc
-	$(PIPENV2) run python -m compileall cmk_base ; \
-	  tar czf $(DISTNAME)/base.tar.gz \
-	    $(TAROPTS) \
-	    --exclude "cee" \
-	    --exclude "cee.py*" \
-	    --exclude "cme" \
-	    --exclude "cme.py*" \
-	    cmk_base/* ; \
-	  rm cmk_base/*.pyc
 	tar czf $(DISTNAME)/werks.tar.gz $(TAROPTS) -C .werks werks
 	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)
 	tar czf $(DISTNAME)/active_checks.tar.gz $(TAROPTS) -C active_checks $$(cd active_checks ; ls)
@@ -214,6 +205,7 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	tar czf $(DISTNAME)/checkman.tar.gz $(TAROPTS) -C checkman $$(cd checkman ; ls)
 	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web \
       app \
+      htdocs/openapi \
       htdocs/css \
       htdocs/images \
       htdocs/jquery \
@@ -248,7 +240,12 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		mk-job* \
 		waitmax \
 		windows/cfg_examples \
-		windows/check_mk_agent*.{exe,msi} \
+		windows/check_mk_agent-64.exe \
+		windows/check_mk_agent.exe \
+		windows/check_mk_agent.msi \
+		windows/check_mk_agent_legacy-64.exe \
+		windows/check_mk_agent_legacy.exe \
+		windows/check_mk_agent_legacy.msi \
 		windows/check_mk.example.ini \
 		windows/check_mk.user.yml \
 		windows/CONTENTS \
@@ -264,6 +261,12 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	@echo "=============================================================================="
 	@echo "   FINISHED. "
 	@echo "=============================================================================="
+
+agents/windows/plugins/%.exe:
+	@echo "ERROR: The build artifact $@ is missing. Needs to be created by CI system first."
+	@echo "In case you want to proceed without these files, you may simply execute \"touch $@\""
+	@echo "to create a package without that file."
+	exit 1
 
 omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe:
 	$(MAKE) -C omd openhardwaremonitor-dist
@@ -286,7 +289,10 @@ omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz:
 	mkdir -p mk-livestatus-$(VERSION)
 	tar cf -  $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) ) | tar xf - -C mk-livestatus-$(VERSION)
 	cp -a configure.ac m4 mk-livestatus-$(VERSION)
-	cd mk-livestatus-$(VERSION) && autoreconf --install --include=m4 && rm -rf autom4te.cache
+	cd mk-livestatus-$(VERSION) && \
+	    autoreconf --install --include=m4 && \
+	    rm -rf autom4te.cache && \
+	    touch ar-lib compile config.guess config.sub install-sh missing depcomp
 	tar czf omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz $(TAROPTS) mk-livestatus-$(VERSION)
 	rm -rf mk-livestatus-$(VERSION)
 
@@ -344,13 +350,19 @@ web/htdocs/js/%_min.js: node_modules webpack.config.js $(JAVASCRIPT_SOURCES)
 web/htdocs/themes/%/theme.css: node_modules webpack.config.js postcss.config.js web/htdocs/themes/%/theme.scss web/htdocs/themes/%/scss/*.scss
 	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
 
+# This target is used to generate a css file for the virtual appliance. It is
+# called from the cma git's Makefile and the built css file is moved to
+# ~/git/cma/skel/usr/share/cma/webconf/htdocs/
+web/htdocs/themes/facelift/cma_facelift.css: node_modules webpack.config.js postcss.config.js web/htdocs/themes/facelift/cma_facelift.scss web/htdocs/themes/facelift/scss/*.scss
+	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
+
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff
 # which is needed to run configure, this should live in a separate target. In
 # fact, we should really clean up all this cleaning-chaos and finally follow the
 # GNU standards here (see "Standard Targets for Users",
 # https://www.gnu.org/prep/standards/html_node/Standard-Targets.html).
 clean:
-	make -C omd clean
+	$(MAKE) -C omd clean
 	rm -rf clang-analyzer dist.tmp rpm.topdir *.rpm *.deb *.exe \
 	       omd/packages/mk-livestatus/mk-livestatus-*.tar.gz \
 	       $(NAME)-*.tar.gz *~ counters autochecks \
@@ -368,10 +380,13 @@ mrclean:
 	git clean -d --force -x \
 	    --exclude='\.werks/.last' \
 	    --exclude='\.werks/.my_ids' \
+	    --exclude="Pipfile" \
+	    --exclude="Pipfile.lock" \
 	    --exclude=".venv*" \
 	    --exclude="virtual-envs/*/.venv/"
 
 setup:
+# librrd-dev is still needed by the python rrd package we build in our virtual environment
 	sudo apt-get install \
 	    aptitude \
 	    autoconf \
@@ -386,6 +401,8 @@ setup:
 	    libclang-7-dev \
 	    libpcap-dev \
 	    librrd-dev \
+	    libxml2-dev \
+	    libpango1.0-dev \
 	    llvm-7-dev \
 	    libsasl2-dev \
 	    libldap2-dev \
@@ -476,7 +493,7 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src tidy
 endif
 
-iwyu: config.h
+iwyu: config.status
 	$(MAKE) -C livestatus/src iwyu
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src iwyu
@@ -520,7 +537,7 @@ format-python:
 #
 # Saw some mixed up lines on stdout after adding the --parallel option. Leaving it on
 # for the moment to get the performance boost this option brings.
-	PYTHON_FILES=$${PYTHON_FILES-$$(tests/find-python-files)} ; \
+	PYTHON_FILES=$${PYTHON_FILES-$$(scripts/find-python-files 2)} ; \
 	$(PIPENV2) run yapf --parallel --style .style.yapf --verbose -i $$PYTHON_FILES
 
 format-shell:
@@ -535,14 +552,14 @@ ifeq ($(ENTERPRISE),yes)
 endif
 
 .venv-2.7:
-	make -C virtual-envs/2.7 .venv
-	make -C virtual-envs/3.7 .venv
+	$(MAKE) -C virtual-envs/2.7 .venv
+	$(MAKE) -C virtual-envs/3.7 .venv
 	rm -rf {Pipfile,Pipfile.lock,.venv*}
 	ln -s virtual-envs/2.7/{Pipfile,Pipfile.lock,.venv} .
 
 .venv-3.7:
-	make -C virtual-envs/2.7 .venv
-	make -C virtual-envs/3.7 .venv
+	$(MAKE) -C virtual-envs/2.7 .venv
+	$(MAKE) -C virtual-envs/3.7 .venv
 	rm -rf {Pipfile,Pipfile.lock,.venv*}
 	ln -s virtual-envs/3.7/{Pipfile,Pipfile.lock,.venv} .
 

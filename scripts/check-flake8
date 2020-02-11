@@ -1,0 +1,31 @@
+#!/bin/bash
+#
+# This file is for execution by the pre-commit framework.
+#
+# For now this script is optional, yet emits it's errors.
+# set -e -o pipefail
+
+source "$(dirname $0)/lib-precommit"
+
+REPO_PATH="$(git rev-parse --show-toplevel)"
+PIPENV="$REPO_PATH/scripts/run-pipenv"
+
+printf -v files " %s" "$@"
+PYTHON2_FILES=$(python_files 2 "$files")
+PYTHON3_FILES=$(python_files 3 "$files")
+
+# E - "errors" reported by pycodestyle
+# W - "warnigns" reported by pycodestyle
+# F401 - imported but unused
+# F841 - is assigned to but never used
+IGNORE="--ignore E,W,F401,F841"
+
+if [ ! -z "$PYTHON3_FILES" ]; then
+    $PIPENV 3 run flake8 $IGNORE $PYTHON3_FILES
+fi
+
+if [ ! -z "$PYTHON2_FILES" ]; then
+    $PIPENV 2 run flake8 $IGNORE $PYTHON2_FILES
+fi
+
+exit 0

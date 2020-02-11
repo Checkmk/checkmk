@@ -1,28 +1,9 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """Common code for reading and offering notification scripts and alert handlers.
 
 # Example header of a notification script:
@@ -39,8 +20,15 @@
 
 import os
 import re
+import sys
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import cmk.utils.paths
+from cmk.utils.encoding import ensure_unicode
 
 from cmk.gui.i18n import _u
 
@@ -69,26 +57,26 @@ def _load_user_scripts_from(adir):
     scripts = {}
     if os.path.exists(adir):
         for entry in os.listdir(adir):
-            entry = entry.decode("utf-8")
+            entry = ensure_unicode(entry)
             path = adir + "/" + entry
             if os.path.isfile(path) and os.access(path, os.X_OK):
                 info = {"title": entry, "bulk": False}
                 try:
-                    lines = open(path)
-                    next(lines)
-                    line = next(lines).decode("utf-8").strip()
-                    if line.startswith("#") and re.search(r'coding[=:]\s*([-\w.]+)', line):
+                    with Path(path).open(encoding="utf-8") as lines:
+                        next(lines)
                         line = next(lines).strip()
-                    if line.startswith("#"):
-                        info["title"] = line.lstrip("#").strip().split("#", 1)[0]
-                    while True:
-                        line = next(lines).strip()
-                        if not line.startswith("#") or ":" not in line:
-                            break
-                        key, value = line[1:].strip().split(":", 1)
-                        value = value.strip()
-                        if key.lower() == "bulk":
-                            info["bulk"] = (value == "yes")
+                        if line.startswith("#") and re.search(r'coding[=:]\s*([-\w.]+)', line):
+                            line = next(lines).strip()
+                        if line.startswith("#"):
+                            info["title"] = line.lstrip("#").strip().split("#", 1)[0]
+                        while True:
+                            line = next(lines).strip()
+                            if not line.startswith("#") or ":" not in line:
+                                break
+                            key, value = line[1:].strip().split(":", 1)
+                            value = value.strip()
+                            if key.lower() == "bulk":
+                                info["bulk"] = (value == "yes")
 
                 except Exception:
                     pass

@@ -42,7 +42,7 @@ K8S_OK_CONDITIONS = {
 
 @discover
 def inventory_k8s_conditions(condition, _value):
-    return condition in K8S_OK_CONDITIONS.keys()
+    return condition in K8S_OK_CONDITIONS
 
 
 @get_parsed_item_data

@@ -1,29 +1,7 @@
-/*
-+------------------------------------------------------------------+
-|             ____ _               _        __  __ _  __           |
-|            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-|           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-|           | |___| | | |  __/ (__|   <    | |  | | . \            |
-|            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-|                                                                  |
-| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
-+------------------------------------------------------------------+
-
-This file is part of Check_MK.
-The official homepage is at http://mathias-kettner.de/check_mk.
-
-check_mk is free software;  you can redistribute it and/or modify it
-under the  terms of the  GNU General Public License  as published by
-the Free Software Foundation in version 2.  check_mk is  distributed
-in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-tails.  You should have received  a copy of the  GNU  General Public
-License along with GNU Make; see the file  COPYING.  If  not,  write
-to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-Boston, MA 02110-1301 USA.
-
-*/
+@charset "UTF-8";
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 /* Styles used for marking up Monitoring data, such as host and
    service states, Perf-O-Meters und the like */
@@ -68,7 +46,6 @@ table.data tr.data td.stale.hstate1 {
 
 
 /* OK/UP */
-/* TODO: Replace class "odd0" with "odd state0" */
 .state0,
 .hstate0,
 .state0 a,
@@ -79,12 +56,9 @@ body.main .popup_menu .state0 span,
 body.main .popup_menu .hstate0 span {
   background-color: $color-state-success-background !important;
   border-color: $color-state-success-border !important;
-
-  * {
-    color: $color-text !important;
-  }
 }
 
+/* TODO: Replace class "odd0" with "odd state0" */
 .odd0, .even0 {
   .state0, .hstate0, .state0 a, .state0 body.main .popup_menu span,
   body.main .popup_menu & .state0 span, .hstate0 a,
@@ -448,10 +422,6 @@ table.data {
 
   .state2 *, .state3 * {
     color: rgb(255, 255, 255);
-  }
-
-  .state0 * {
-    color: $color-text;
   }
 
   td.state {

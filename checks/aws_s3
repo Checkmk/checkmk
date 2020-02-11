@@ -60,7 +60,7 @@ def parse_aws_s3(info):  # pylint: disable=function-redefined
 def check_aws_s3_objects(item, params, metrics):
     bucket_sizes = metrics['BucketSizeBytes']
     storage_infos = []
-    for storage_type, value in bucket_sizes.iteritems():
+    for storage_type, value in bucket_sizes.items():
         storage_infos.append("%s: %s" % (storage_type, get_bytes_human_readable(value)))
     sum_size = sum(bucket_sizes.values())
     yield check_levels(sum_size,
@@ -111,7 +111,7 @@ def check_aws_s3_summary(item, params, parsed):
     sum_size = 0
     largest_bucket = None
     largest_bucket_size = 0
-    for bucket_name, bucket in parsed.iteritems():
+    for bucket_name, bucket in parsed.items():
         bucket_size = sum(bucket['BucketSizeBytes'].values())
         sum_size += bucket_size
         if bucket_size >= largest_bucket_size:

@@ -1,0 +1,20 @@
+#!/usr/bin/env python
+# pylint: disable=redefined-outer-name
+
+import pytest  # type: ignore[import]
+from testlib import import_module
+
+
+@pytest.fixture(scope="module")
+def check_sql():
+    return import_module("active_checks/check_sql")
+
+
+@pytest.mark.parametrize("result, warn, crit, reference", [
+    ([[3, 'count']], (3, 5), (float('-inf'), 5), (0, 'count: 3.0')),
+    ([[2, 'count']], (3, 5), (float('-inf'), 5), (1, 'count: 2.0')),
+    ([[5, 'count']], (3, 5), (float('-inf'), 5), (2, 'count: 5.0')),
+    ([[5, 'count']], (3, 5), (float('-inf'), 8), (1, 'count: 5.0')),
+])
+def test_process_result(check_sql, result, warn, crit, reference):
+    assert check_sql.process_result(result, warn, crit) == reference

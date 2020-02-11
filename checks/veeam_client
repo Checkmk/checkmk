@@ -50,7 +50,7 @@ def parse_veeam_client(info):
 
 
 def inventory_veeam_client(parsed):
-    for job in parsed.keys():
+    for job in parsed:
         yield job, {}
 
 
@@ -58,7 +58,7 @@ def check_veeam_client(item, params, parsed):
     # Fallback for old None item version
     #FIXME Can be remvoed in CMK 2.0
     if item is None and len(parsed) > 0:
-        item = parsed.keys()[0]
+        item = list(parsed)[0]
 
     try:
         data = parsed[item]

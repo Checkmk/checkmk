@@ -129,7 +129,7 @@ private:
 // this is proposed API
 std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
     const std::wstring& NameSpace, const std::wstring& Object,
-    const std::vector<std::wstring> Columns, std::wstring_view separator);
+    const std::vector<std::wstring>& Columns, std::wstring_view separator);
 
 std::string WmiCachedDataHelper(std::string& cache_data,
                                 const std::string& wmi_data, char separator);

@@ -26,6 +26,18 @@
 
 # TODO postgres_connections output format
 
+function print_sections() {
+    echo "<<<postgres_instances>>>"
+    echo "<<<postgres_sessions>>>"
+    echo "<<<postgres_stat_database>>>"
+    echo "<<<postgres_locks>>>"
+    echo "<<<postgres_query_duration>>>"
+    echo "<<<postgres_connections>>>"
+    echo "<<<postgres_stats>>>"
+    echo "<<<postgres_version>>>"
+    echo "<<<postgres_conn_time>>>"
+    echo "<<<postgres_bloat>>>"
+}
 
 #   .--common funcs--------------------------------------------------------.
 #   |                                             __                       |
@@ -445,7 +457,7 @@ function postgres_set_condition_vars() {
     fi
 }
 
-
+print_sections
 MK_CONFFILE=$MK_CONFDIR/postgres.cfg
 if [ -e "$MK_CONFFILE" ]; then
 

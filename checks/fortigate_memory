@@ -27,42 +27,54 @@
 fortigate_memory_default_levels = (70, 80)
 
 
-def inventory_fortigate_memory(info):
-    if info:
+def parse_fortigate_memory(info):
+    try:
+        return int(info[0][0])
+    except ValueError:
+        return None
+
+
+def inventory_fortigate_memory(parsed):
+    if parsed is not None:
         return [(None, "fortigate_memory_default_levels")]
 
 
-def check_fortigate_memory(item, params, info):
+def check_fortigate_memory(item, params, current_reading):
+    if current_reading is None:
+        return
+
     # This check does not yet support averaging. We need to
     # convert it to mem.include
     if isinstance(params, dict):
-        params = params["levels"]
+        warn, crit = params["levels"]
+    else:
+        warn, crit = params
 
-    warn, crit = params
-
-    # This check is only able to check the used space
+    # This check is only able to check the used space in percent.
+    # Unfortunately, it is not straight forward to detect the configured absolute levels,
+    # since the default levels here are integers...
+    if isinstance(warn, int) and isinstance(params, dict):
+        yield 3, "Absolute levels are not supported"
+        warn, crit = None, None
     # The checkgroup "memory" might set negative values which act as levels for free space
     # These levels are converted to used space, too..
-    warn = abs(warn)
-    crit = abs(crit)
+    if warn is not None and warn < 0:
+        warn = 100 + warn
+        crit = 100 + crit
 
-    current = saveint(info[0][0])
-    state = 0
-    icon = ''
-    if current >= warn:
-        state = 1
-        icon = "(!)"
-    if current >= crit:
-        state = 2
-        icon = "(!!)"
-
-    perf = [("mem_usage", current, warn, crit)]
-    return (state, "%d%%%s (warn/crit at %d%%/%d%%)" % (current, icon, warn, crit), perf)
+    yield check_levels(
+        current_reading,
+        "mem_usage",
+        (warn, crit),
+        infoname="Usage",
+        human_readable_func=get_percent_human_readable,
+    )
 
 check_info["fortigate_memory"] = {
+    "parse_function"        : parse_fortigate_memory,
     "check_function"        : check_fortigate_memory,
     "inventory_function"    : inventory_fortigate_memory,
-    "service_description"   : "Memory usage",
+    "service_description"   : "Memory",
     "has_perfdata"          : True,
     "group"                 : "memory",
     "snmp_scan_function"    : lambda oid: "fortigate" in oid(".1.3.6.1.2.1.1.1.0").lower() \

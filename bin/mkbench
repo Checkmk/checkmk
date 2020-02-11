@@ -69,17 +69,21 @@ import logging
 import tempfile
 import threading
 import traceback
-import subprocess
 import collections
 import multiprocessing
 import six
 
-import psutil
-import npyscreen
+import psutil  # type: ignore[import]
+import npyscreen  # type: ignore[import]
 
 import livestatus
 
 from cmk.utils.render import fmt_bytes
+from cmk.utils.exceptions import (
+    MKGeneralException,
+    MKTerminate,
+)
+import cmk.utils.cmk_subprocess as subprocess
 
 #.
 #   .--Helpers-------------------------------------------------------------.
@@ -132,14 +136,6 @@ def fmt_timespan(seconds):
 
 def fmt_datetime(seconds):
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(seconds))
-
-
-class MKGeneralException(Exception):
-    pass
-
-
-class MKTerminate(MKGeneralException):
-    pass
 
 
 class MKSkipTestCase(MKGeneralException):
@@ -521,11 +517,14 @@ class TestRunner(threading.Thread):
         with open("%s/etc/rrdcached.conf" % omd_root(), "w") as f:
             f.write("TIMEOUT=300\n" "RANDOM_DELAY=10\n" "FLUSH_TIMEOUT=7200\n" "WRITE_THREADS=4\n")
 
-        p = subprocess.Popen(["omd", "restart", "rrdcached"],
-                             close_fds=True,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT)
-        stdout = p.communicate()[0]
+        p = subprocess.Popen(
+            ["omd", "restart", "rrdcached"],
+            close_fds=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+        )
+        stdout, _stderr = p.communicate()
         if p.returncode != 0:
             raise MKGeneralException("Failed to restart rrdcached: %s" % stdout)
 
@@ -1009,8 +1008,8 @@ class Measurement(object):
     def set_value(self, k, val):
         """Set an attribute of the measurement. Cares about converting tuples
         to the correct namedtuples."""
-        from psutil._common import sdiskusage
-        from psutil._pslinux import svmem, sdiskio
+        from psutil._common import sdiskusage  # type: ignore[import]
+        from psutil._pslinux import svmem, sdiskio  # type: ignore[import]
 
         if k == "memory":
             val = svmem(*val)
@@ -1131,10 +1130,9 @@ class AgentListener(multiprocessing.Process):
                 try:
                     readable = select.select(self._sockets, [], [], 0.2)[0]
                 except select.error as e:
-                    if e[0] == 4:
-                        continue
-                    else:
+                    if e.args[0] != errno.EINTR:
                         raise
+                    continue
 
                 for s in readable:
                     time.sleep(0.5)
@@ -2697,14 +2695,17 @@ class TestAgentBasedStandardHosts(TestCase):
             shutil.copy(src_file, "%s/%s.mk" % (autochecks_dir, host_name))
 
     def _discover_services_of_host(self, host_name):
-        p = subprocess.Popen(["cmk", "-II", host_name],
-                             stdin=open(os.devnull),
-                             close_fds=True,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT)
+        p = subprocess.Popen(
+            ["cmk", "-II", host_name],
+            stdin=open(os.devnull),
+            close_fds=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+        )
 
         try:
-            stdout = p.communicate()[0]
+            stdout, _stderr = p.communicate()
         except KeyboardInterrupt:
             try:
                 p.terminate()
@@ -2789,14 +2790,17 @@ class TestAgentBasedStandardHosts(TestCase):
     def _create_rrds_of_host(self, host_name):
         # Do 2 iterations to initialize the rrds that base on counter values
         for _i in xrange(2):
-            p = subprocess.Popen(["cmk", "-v", host_name],
-                                 stdin=open(os.devnull),
-                                 close_fds=True,
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT)
+            p = subprocess.Popen(
+                ["cmk", "-v", host_name],
+                stdin=open(os.devnull),
+                close_fds=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                encoding="utf-8",
+            )
 
             try:
-                stdout = p.communicate()[0]
+                stdout, _stderr = p.communicate()
             except KeyboardInterrupt:
                 try:
                     p.terminate()
@@ -2828,13 +2832,16 @@ class TestAgentBasedStandardHosts(TestCase):
     def _activate_changes(self):
         if self._test:
             self._test.info("  Activating changes")
-        p = subprocess.Popen(["cmk", "-R"],
-                             close_fds=True,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT)
+        p = subprocess.Popen(
+            ["cmk", "-R"],
+            close_fds=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+        )
 
         try:
-            stdout = p.communicate()[0]
+            stdout, _stderr = p.communicate()
         except KeyboardInterrupt:
             try:
                 p.terminate()

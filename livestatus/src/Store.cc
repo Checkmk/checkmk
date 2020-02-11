@@ -24,12 +24,14 @@
 
 #include "Store.h"
 #include <ctime>
+#include <filesystem>
 #include <memory>
 #include <mutex>
 #include <sstream>
 #include <stdexcept>
 #include <utility>
 #include <vector>
+#include "CrashReport.h"
 #include "EventConsoleConnection.h"
 #include "InputBuffer.h"
 #include "Logger.h"
@@ -239,6 +241,10 @@ void Store::answerCommandRequest(const ExternalCommand &command) {
         answerCommandMkLogwatchAcknowledge(command);
         return;
     }
+    if (command.name() == "DEL_CRASH_REPORT") {
+        answerCommandDelCrashReport(command);
+        return;
+    }
     if (mk::starts_with(command.name(), "EC_")) {
         answerCommandEventConsole(command);
         return;
@@ -257,6 +263,15 @@ void Store::answerCommandMkLogwatchAcknowledge(const ExternalCommand &command) {
         return;
     }
     mk_logwatch_acknowledge(logger(), _mc->mkLogwatchPath(), args[0], args[1]);
+}
+
+void Store::answerCommandDelCrashReport(const ExternalCommand &command) {
+    auto args = command.args();
+    if (args.size() != 1) {
+        Warning(logger()) << "DEL_CRASH_REPORT expects 1 argument";
+        return;
+    }
+    mk::crash_report::delete_id(_mc->crashReportPath(), args[0], logger());
 }
 
 namespace {

@@ -49,7 +49,7 @@ def parse_ibm_svc_enclosurestats(info):
         'stat_peak_time',
     ]
     parsed = {}
-    for id_, rows in parse_ibm_svc_with_header(info, dflt_header).iteritems():
+    for id_, rows in parse_ibm_svc_with_header(info, dflt_header).items():
         for data in rows:
             try:
                 stat_current = int(data['stat_current'])
@@ -72,7 +72,7 @@ factory_settings["ibm_svc_enclosurestats_temperature_default_levels"] = {"levels
 
 
 def inventory_ibm_svc_enclosurestats_temp(info):
-    for enclosure_id, data in parse_ibm_svc_enclosurestats(info).iteritems():
+    for enclosure_id, data in parse_ibm_svc_enclosurestats(info).items():
         if "temp_c" in data:
             yield enclosure_id, {}
 
@@ -107,7 +107,7 @@ check_info["ibm_svc_enclosurestats.temp"] = {
 
 
 def inventory_ibm_svc_enclosurestats_power(info):
-    for enclosure_id, data in parse_ibm_svc_enclosurestats(info).iteritems():
+    for enclosure_id, data in parse_ibm_svc_enclosurestats(info).items():
         if "power_w" in data:
             yield enclosure_id, {}
 

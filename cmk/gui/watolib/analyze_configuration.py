@@ -1,42 +1,24 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """Provides the user with hints about his setup. Performs different
 checks and tells the user what could be improved."""
 
 import traceback
+from typing import Optional  # pylint: disable=unused-import
 
 from livestatus import LocalConnection
 import cmk.utils.defines
 
 import cmk.gui.sites
 import cmk.gui.config as config
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import html
 
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.sites import SiteManagementFactory
@@ -48,7 +30,7 @@ from cmk.gui.watolib.automation_commands import (
 
 
 class ACResult(object):
-    status = None
+    status = None  # type: Optional[int]
 
     def __init__(self, text):
         super(ACResult, self).__init__()
@@ -194,7 +176,7 @@ class ACTest(object):
             logger.exception("error executing configuration test %s", self.__class__.__name__)
             result = ACResultCRIT(
                 "<pre>%s</pre>" % _("Failed to execute the test %s: %s") %
-                (html.attrencode(self.__class__.__name__), traceback.format_exc()))
+                (escaping.escape_attribute(self.__class__.__name__), traceback.format_exc()))
             result.from_test(self)
             yield result
 

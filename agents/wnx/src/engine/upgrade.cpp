@@ -3,6 +3,8 @@
 
 #include "upgrade.h"
 
+#include <yaml-cpp/yaml.h>
+
 #include <cstdint>
 #include <filesystem>
 #include <string>
@@ -16,7 +18,6 @@
 #include "tools/_misc.h"
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
-#include "yaml-cpp/yaml.h"
 
 namespace cma::cfg::upgrade {
 
@@ -32,7 +33,7 @@ enum class ServiceStartType {
     const std::filesystem::path& tgt) noexcept {
     namespace fs = std::filesystem;
     std::error_code ec;
-    if (cma::tools::IsValidRegularFile(tgt)) cma::ntfs::Remove(tgt, ec);
+    if (cma::tools::IsValidRegularFile(tgt)) fs::remove(tgt, ec);
     if (fs::exists(tgt, ec)) return true;
 
     auto ret = fs::create_directories(tgt, ec);
@@ -814,7 +815,7 @@ bool UpdateProtocolFile(std::wstring_view new_location,
 
     std::error_code ec;
     if (new_protocol_file_exists && old_protocol_file_exists) {
-        cma::ntfs::Remove(ConstructProtocolFileName(old_location), ec);
+        fs::remove(ConstructProtocolFileName(old_location), ec);
         XLOG::d("Manipulation with old protocol file:remove");
         return true;
     }

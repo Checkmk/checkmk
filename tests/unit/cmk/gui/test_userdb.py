@@ -1,4 +1,4 @@
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 from cmk.gui.valuespec import Dictionary
 import cmk.gui.config as config

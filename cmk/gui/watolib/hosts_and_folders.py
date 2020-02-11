@@ -1,35 +1,15 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import os
 import time
 import re
 import shutil
-import cStringIO
 from typing import Type, Union, List, Text, Dict  # pylint: disable=unused-import
+import six
 
 import cmk
 import cmk.utils.store as store
@@ -37,6 +17,7 @@ import cmk.utils.store as store
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.hooks as hooks
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import (
     MKGeneralException,
@@ -223,7 +204,7 @@ class BaseFolder(WithPermissionsAndAttributes):
         def render_component(folder):
             return '<a href="%s">%s</a>' % \
                 (uri_func([ ("folder", folder.path())] + keepvars),
-                 html.attrencode(folder.title()))
+                 escaping.escape_attribute(folder.title()))
 
         def breadcrump_element_start(end='', z_index=0):
             html.open_li(style="z-index:%d;" % z_index)
@@ -241,7 +222,7 @@ class BaseFolder(WithPermissionsAndAttributes):
         if link_to_folder:
             parts.append(render_component(self))
         else:
-            parts.append(html.attrencode(self.title()))
+            parts.append(escaping.escape_attribute(self.title()))
 
         # Render the folder path
         html.open_div(class_=["folderpath"])
@@ -336,11 +317,16 @@ class CREFolder(BaseFolder):
 
     @staticmethod
     def folder_choices():
-        return Folder.root_folder().recursive_subfolder_choices()
+        if 'folder_choices' not in g:
+            g.folder_choices = Folder.root_folder().recursive_subfolder_choices()
+        return g.folder_choices
 
     @staticmethod
     def folder_choices_fulltitle():
-        return Folder.root_folder().recursive_subfolder_choices(current_depth=0, pretty=False)
+        if 'folder_choices_full_title' not in g:
+            g.folder_choices_full_title = Folder.root_folder().recursive_subfolder_choices(
+                current_depth=0, pretty=False)
+        return g.folder_choices_full_title
 
     @staticmethod
     def folder(folder_path):
@@ -375,6 +361,8 @@ class CREFolder(BaseFolder):
     @staticmethod
     def invalidate_caches():
         g.pop('wato_folders', {})
+        for cache_id in ["folder_choices", "folder_choices_full_title"]:
+            g.pop(cache_id, None)
         Folder.root_folder().drop_caches()
 
     # Find folder that is specified by the current URL. This is either by a folder
@@ -541,6 +529,13 @@ class CREFolder(BaseFolder):
         attributes = self._transform_none_value_site_attribute(attributes)
         attributes = self._add_missing_meta_data(attributes)
         attributes = self._transform_tag_snmp_ds(attributes)
+        attributes = self._transform_cgconf_attributes(attributes)
+        return attributes
+
+    def _transform_cgconf_attributes(self, attributes):
+        cgconf = attributes.get("contactgroups")
+        if cgconf:
+            attributes["contactgroups"] = convert_cgroups_from_tuple(cgconf)
         return attributes
 
     # In versions previous to 1.6 Checkmk had a tag group named "snmp" and an
@@ -577,6 +572,9 @@ class CREFolder(BaseFolder):
 
         if "tag_snmp" in attributes:
             return attributes  # Already in new format, no transformation necessary
+
+        if "meta_data" in attributes:
+            return attributes  # These attributes were already saved with version 1.6+
 
         value = attributes["tag_agent"]
 
@@ -640,13 +638,13 @@ class CREFolder(BaseFolder):
         self.need_unlocked_hosts()
         self.need_permission("write")
         if self._hosts is not None:
-            self._save_hosts_file()
-
             # Clean up caches of all hosts in this folder, just to be sure. We could also
             # check out all call sites of save_hosts() and partially drop the caches of
             # individual hosts to optimize this.
             for host in self._hosts.values():
                 host.drop_caches()
+
+            self._save_hosts_file()
 
         call_hook_hosts_changed(self)
 
@@ -657,7 +655,7 @@ class CREFolder(BaseFolder):
                 os.remove(self.hosts_file_path())
             return
 
-        out = cStringIO.StringIO()
+        out = six.StringIO()
         out.write(wato_fileheader())
 
         all_hosts = []  # type: List[str]
@@ -672,7 +670,7 @@ class CREFolder(BaseFolder):
         host_labels = {}
 
         attribute_mappings = [
-            # host attr, cmk_base variable name, value, title
+            # host attr, cmk.base variable name, value, title
             ("ipaddress", "ipaddresses", {}, "Explicit IPv4 addresses"),
             ("ipv6address", "ipv6addresses", {}, "Explicit IPv6 addresses"),
             ("snmp_community", "explicit_snmp_communities", {}, "Explicit SNMP communities"),
@@ -840,7 +838,7 @@ class CREFolder(BaseFolder):
             self._save_wato_info()
 
     def _load_wato_info(self):
-        return store.load_data_from_file(self.wato_info_path(), {})
+        return store.load_object_from_file(self.wato_info_path(), default={})
 
     def save(self):
         self._save_wato_info()
@@ -848,7 +846,7 @@ class CREFolder(BaseFolder):
 
     def _save_wato_info(self):
         self._ensure_folder_directory()
-        store.save_data_to_file(self.wato_info_path(), self.get_wato_info())
+        store.save_object_to_file(self.wato_info_path(), self.get_wato_info())
 
     def get_wato_info(self):
         return {
@@ -995,9 +993,9 @@ class CREFolder(BaseFolder):
                 title_prefix = (u"\u00a0" * 6 * current_depth) + u"\u2514\u2500 "
             else:
                 title_prefix = ""
-            title = HTML(title_prefix + html.attrencode(self.title()))
+            title = HTML(title_prefix + escaping.escape_attribute(self.title()))
         else:
-            title = HTML(html.attrencode("/".join(self.title_path_without_root())))
+            title = HTML(escaping.escape_attribute("/".join(self.title_path_without_root())))
 
         sel = [(self.path(), title)]
 
@@ -1656,7 +1654,7 @@ class CREFolder(BaseFolder):
             else:
                 li_elements = "".join(["<li>%s</li>" % m for m in lock_messages])
                 lock_message = "<ul>" + li_elements + "</ul>"
-            html.show_info(lock_message)
+            html.show_message(lock_message)
 
 
 def validate_host_uniqueness(varname, host_name):

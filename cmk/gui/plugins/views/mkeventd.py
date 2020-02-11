@@ -1,32 +1,14 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import six
+
 from cmk.utils.defines import short_service_state_name
 
+import cmk.gui.escaping as escaping
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 
@@ -112,7 +94,7 @@ def _ec_filter_host_information_of_not_permitted_hosts(rows):
     if config.user.may("mkeventd.seeall"):
         return  # Don't remove anything. The user may see everything
 
-    user_groups = set(config.user.contact_groups())
+    user_groups = set(config.user.contact_groups)
 
     def is_contact(row):
         return bool(user_groups.intersection(row["host_contact_groups"]))
@@ -362,7 +344,7 @@ class PainterEventText(Painter):
         return ['event_text']
 
     def render(self, row, cell):
-        return ("", html.attrencode(row["event_text"]).replace("\x01", "<br>"))
+        return "", escaping.escape_attribute(row["event_text"]).replace("\x01", "<br>")
 
 
 @painter_registry.register
@@ -801,17 +783,15 @@ def render_delete_event_icons(row):
             ident = int(html.request.var("id"))
 
             import cmk.gui.dashboard as dashboard
-            dashboard.load_dashboards()
             view = dashboard.get_dashlet(html.request.var("name"), ident)
 
             # These actions are not performed within the dashlet. Assume the title url still
             # links to the source view where the action can be performed.
             title_url = view.get("title_url")
             if title_url:
-                from urlparse import urlparse, parse_qsl
-                url = urlparse(title_url)
+                url = six.moves.urllib.parse.urlparse(title_url)
                 filename = url.path
-                urlvars += parse_qsl(url.query)
+                urlvars += six.moves.urllib.parse.parse_qsl(url.query)
         else:
             # Regular view
             view = get_permitted_views()[(html.request.var("view_name"))]
@@ -2019,7 +1999,7 @@ multisite_builtin_views['ec_events_mobile'] = {
     'painters': [
         ('event_id', 'ec_event_mobile', None),
         ('event_state', None, None),
-        ('event_host', 'ec_events_of_host', None),
+        ('event_host', None, None),
         ('event_application', None, None),
         ('event_text', None, None),
         ('event_last', None, None),

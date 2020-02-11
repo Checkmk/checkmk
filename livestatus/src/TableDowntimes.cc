@@ -45,42 +45,47 @@
 
 TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<OffsetSStringColumn>(
-        "author", "The contact that scheduled the downtime", -1, -1, -1,
-        DANGEROUS_OFFSETOF(Downtime, _author_name)));
+        "author", "The contact that scheduled the downtime",
+        Column::Offsets{-1, -1, -1,
+                        DANGEROUS_OFFSETOF(Downtime, _author_name)}));
     addColumn(std::make_unique<OffsetSStringColumn>(
-        "comment", "A comment text", -1, -1, -1,
-        DANGEROUS_OFFSETOF(Downtime, _comment)));
+        "comment", "A comment text",
+        Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Downtime, _comment)}));
     addColumn(std::make_unique<OffsetIntColumn>(
-        "id", "The id of the downtime", -1, -1, -1,
-        DANGEROUS_OFFSETOF(Downtime, _id)));
+        "id", "The id of the downtime",
+        Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Downtime, _id)}));
     addColumn(std::make_unique<OffsetTimeColumn>(
-        "entry_time", "The time the entry was made as UNIX timestamp", -1, -1,
-        -1, DANGEROUS_OFFSETOF(Downtime, _entry_time)));
+        "entry_time", "The time the entry was made as UNIX timestamp",
+        Column::Offsets{-1, -1, -1,
+                        DANGEROUS_OFFSETOF(Downtime, _entry_time)}));
     addColumn(std::make_unique<OffsetIntColumn>(
         "type",
-        "The type of the downtime: 0 if it is active, 1 if it is pending", -1,
-        -1, -1, DANGEROUS_OFFSETOF(Downtime, _type)));
+        "The type of the downtime: 0 if it is active, 1 if it is pending",
+        Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Downtime, _type)}));
     addColumn(std::make_unique<OffsetBoolColumn>(
         "is_service",
-        "0, if this entry is for a host, 1 if it is for a service", -1, -1, -1,
-        DANGEROUS_OFFSETOF(Downtime, _is_service)));
+        "0, if this entry is for a host, 1 if it is for a service",
+        Column::Offsets{-1, -1, -1,
+                        DANGEROUS_OFFSETOF(Downtime, _is_service)}));
 
     addColumn(std::make_unique<OffsetTimeColumn>(
-        "start_time", "The start time of the downtime as UNIX timestamp", -1,
-        -1, -1, DANGEROUS_OFFSETOF(Downtime, _start_time)));
+        "start_time", "The start time of the downtime as UNIX timestamp",
+        Column::Offsets{-1, -1, -1,
+                        DANGEROUS_OFFSETOF(Downtime, _start_time)}));
     addColumn(std::make_unique<OffsetTimeColumn>(
-        "end_time", "The end time of the downtime as UNIX timestamp", -1, -1,
-        -1, DANGEROUS_OFFSETOF(Downtime, _end_time)));
+        "end_time", "The end time of the downtime as UNIX timestamp",
+        Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Downtime, _end_time)}));
     addColumn(std::make_unique<OffsetIntColumn>(
-        "fixed", "A 1 if the downtime is fixed, a 0 if it is flexible", -1, -1,
-        -1, DANGEROUS_OFFSETOF(Downtime, _fixed)));
+        "fixed", "A 1 if the downtime is fixed, a 0 if it is flexible",
+        Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Downtime, _fixed)}));
     addColumn(std::make_unique<OffsetIntColumn>(
-        "duration", "The duration of the downtime in seconds", -1, -1, -1,
-        DANGEROUS_OFFSETOF(Downtime, _duration)));
+        "duration", "The duration of the downtime in seconds",
+        Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(Downtime, _duration)}));
     addColumn(std::make_unique<OffsetIntColumn>(
         "triggered_by",
         "The id of the downtime this downtime was triggered by or 0 if it was not triggered by another downtime",
-        -1, -1, -1, DANGEROUS_OFFSETOF(Downtime, _triggered_by)));
+        Column::Offsets{-1, -1, -1,
+                        DANGEROUS_OFFSETOF(Downtime, _triggered_by)}));
 
     TableHosts::addColumns(this, "host_", DANGEROUS_OFFSETOF(Downtime, _host),
                            -1);

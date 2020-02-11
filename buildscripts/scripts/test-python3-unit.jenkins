@@ -1,12 +1,13 @@
 import java.text.SimpleDateFormat
+properties([
+  buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
+])
 
 node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        println(DOCKER_REGISTRY)
-        IMAGE = 'ubuntu-18.04-common'
-        println(IMAGE)
-        docker.image(IMAGE).pull()
-        docker.image(IMAGE).inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN --network ci_local-infra') {
+        def COMMON_IMAGE = docker.image('ubuntu-18.04-common')
+        COMMON_IMAGE.pull()
+        COMMON_IMAGE.inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN') {
             stage('checkout sources') {
                 checkout(scm)
             }
@@ -16,8 +17,9 @@ node {
 
 node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker.image('ubuntu-19.04-os-image').pull()
-        docker.image('ubuntu-19.04-os-image').inside("-u 0:0 --ulimit nofile=1024:1024 --init --privileged") {
+        def TEST_IMAGE = docker.image('ubuntu-19.04-os-image')
+        TEST_IMAGE.pull()
+        TEST_IMAGE.inside("-u 0:0 --ulimit nofile=1024:1024 --init --privileged") {
            stage('test python3 unit') {
                dir ('tests-py3') {
                    sh "make test-unit"

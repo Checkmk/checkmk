@@ -26,24 +26,8 @@
 #define MetricsColumn_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <chrono>
-#include <string>
-#include <vector>
 #include "ListColumn.h"
-#include "contact_fwd.h"
-class Row;
 
-class MetricsColumn : public ListColumn {
-public:
-    MetricsColumn(const std::string &name, const std::string &description,
-                  int indirect_offset, int extra_offset, int extra_extra_offset,
-                  int offset)
-        : ListColumn(name, description, indirect_offset, extra_offset,
-                     extra_extra_offset, offset) {}
-
-    std::vector<std::string> getValue(
-        Row row, const contact *auth_user,
-        std::chrono::seconds timezone_offset) const override;
-};
+using MetricsColumn = ListColumn;
 
 #endif  // MetricsColumn_h

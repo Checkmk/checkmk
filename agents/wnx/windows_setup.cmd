@@ -3,9 +3,9 @@
 @rem To get required software installed 
 @rem may be called directly by user or indirectly by make
 @rem
-@rem "python2.7.16", "upx", "make"
-
+@rem "python2.7.16", "upx", "make", "rsync"
 @echo off
+SETLOCAL EnableDelayedExpansion
 set error=0
 
 rem python, version is required
@@ -23,9 +23,30 @@ set pkg=upx
 set version=
 call :process
 
+rem rsync, version is latest
+set pkg=rsync
+set version=
+call :process
+
+rem grep, version is latest
+set pkg=grep
+set version=
+call :process
+
+rem diff, version is latest
+set pkg=diffutils
+set version=
+call :process
+
+rem 7zip, version is latest
+set pkg=7zip
+set version=
+call :process
+
 goto eof
 :process
-@choco install %pkg% %version% -y -r > nul 2>&1
+@echo @choco install %pkg% !version! -y -r > nul 2>&1
+@choco install %pkg% !version! -y -r >nul
 if "%errorlevel%" == "0" (
 powershell Write-Host "'%pkg% '" -Foreground White  -nonewline
 powershell Write-Host " is installed" -Foreground Green

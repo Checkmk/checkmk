@@ -5,11 +5,11 @@
 #include "pch.h"
 // system C
 // system C++
+#include <yaml-cpp/yaml.h>
+
 #include <filesystem>
 #include <iostream>
 #include <string>
-
-#include "yaml-cpp/yaml.h"
 
 // Project
 #include "common/cmdline_info.h"
@@ -180,6 +180,18 @@ void PrintLwaActivate() {
     });
 }
 
+void PrintFirewall() {
+    using namespace xlog::internal;
+
+    PrintBlock("Configure Firewall Rule:\n", Colors::pink, []() {
+        return fmt::format(
+            "\t{1} [{2}|{3}]\n"
+            "\t{2:{0}} - configure firewall\n"
+            "\t{3:{0}} - clear firewall configuration\n",
+            kParamShift, kFwParam, kFwConfigureParam, kFwClearParam);
+    });
+}
+
 void PrintUpgrade() {
     using namespace xlog::internal;
     PrintBlock("Upgrade Legacy Agent(migration):\n", Colors::pink, []() {
@@ -247,6 +259,7 @@ static void ServiceUsage(std::wstring_view comment) {
         PrintShowConfig();
         PrintCvt();
         PrintLwaActivate();
+        PrintFirewall();
         PrintUpgrade();
         PrintCap();
         PrintSectionTesting();
@@ -323,11 +336,42 @@ int CheckMainService(const std::wstring &What, int Interval) {
             cma::cmdline::kCheckParamSelf);
 
     return 0;
-}  // namespace srv
+}
 
-// Command Lines
-// -cvt watest/checkmk/agent/check_mk.test.ini
-//
+namespace srv {
+int RunService(std::wstring_view app_name) {
+    // entry from the service engine
+
+    using namespace cma::install;
+    using namespace std::chrono;
+    using namespace cma::cfg;
+
+    cma::details::G_Service = true;  // we know that we are service
+
+    auto ret = cma::srv::ServiceAsService(app_name, 1000ms, [](const void *) {
+        // optional commands listed here
+        // ********
+        // 1. Auto Update when  MSI file is located by specified address
+        // this part of code have to be tested manually
+        // scripting is possible but complicated
+        auto ret = CheckForUpdateFile(
+            kDefaultMsiFileName,     // file we are looking for
+            GetUpdateDir(),          // dir where file we're searching
+            UpdateType::exec_quiet,  // quiet for production
+            UpdateProcess::execute,  // start update when file found
+            GetUserInstallDir());    // dir where file to backup
+
+        if (ret)
+            XLOG::l.i("Install process was initiated - waiting for restart");
+
+        return true;
+    });
+
+    if (ret == 0) ServiceUsage(L"");
+
+    return ret == 0 ? 0 : 1;
+}
+}  // namespace srv
 
 // #TODO Function is over complicated
 // we want to test main function too.
@@ -341,36 +385,7 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
     });
 
     if (argc == 1) {
-        // entry from the service engine
-
-        using namespace cma::install;
-        using namespace std::chrono;
-        using namespace cma::cfg;
-
-        cma::details::G_Service = true;  // we know that we are service
-
-        auto ret = cma::srv::ServiceAsService(1000ms, [](const void *) {
-            // optional commands listed here
-            // ********
-            // 1. Auto Update when  MSI file is located by specified address
-            // this part of code have to be tested manually
-            // scripting is possible but complicated
-            auto ret = CheckForUpdateFile(
-                kDefaultMsiFileName,     // file we are looking for
-                GetUpdateDir(),          // dir where file we're searching
-                UpdateType::exec_quiet,  // quiet for production
-                UpdateProcess::execute,  // start update when file found
-                GetUserInstallDir());    // dir where file to backup
-
-            if (ret)
-                XLOG::l.i(
-                    "Install process was initiated - waiting for restart");
-
-            return true;
-        });
-        if (ret == 0) ServiceUsage(L"");
-
-        return ret == 0 ? 0 : 1;
+        return cma::srv::RunService(Argv[0]);
     }
 
     std::wstring param(Argv[1]);
@@ -418,6 +433,7 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
     }
 
     using namespace cma::cmdline;
+
     cma::OnStartApp();  // path from EXE
 
     if (param == wtools::ConvertToUTF16(kInstallParam)) {
@@ -516,6 +532,24 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
             return 2;
         }
     }
+
+    if (param == wtools::ConvertToUTF16(kFwParam)) {
+        using namespace cma::srv;
+        using namespace cma::tools;
+        if (argc <= 2) return ExecFirewall(FwMode::show, Argv[0], {});
+
+        if (CheckArgvForValue(argc, Argv, 2, kFwConfigureParam))
+            return ExecFirewall(FwMode::configure, Argv[0],
+                                kAppFirewallRuleName);
+
+        if (CheckArgvForValue(argc, Argv, 2, kFwClearParam))
+            return ExecFirewall(FwMode::clear, Argv[0], kAppFirewallRuleName);
+
+        ServiceUsage(std::wstring(L"Invalid parameter for ") +
+                     wtools::ConvertToUTF16(kFwParam) + L"\n");
+        return 2;
+    }
+
     if (param == wtools::ConvertToUTF16(kSectionParam) && argc > 2) {
         std::wstring section = Argv[2];
         int delay = argc > 3 ? ToInt(Argv[3]) : 0;
@@ -526,8 +560,20 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
         return cma::srv::ExecSection(section, delay, diag);
     }
 
+    if (param == wtools::ConvertToUTF16(kCapExtractParam) && argc > 3) {
+        std::wstring file = Argv[2];
+        std::wstring to = Argv[3];
+        return cma::srv::ExecExtractCap(file, to);
+    }
+
     if (param == wtools::ConvertToUTF16(kReloadConfigParam)) {
         cma::srv::ExecReloadConfig();
+        return 0;
+    }
+
+    if (param == wtools::ConvertToUTF16(kUninstallAlert)) {
+        XLOG::l.i("UNINSTALL ALERT");
+        cma::srv::ExecUninstallAlert();
         return 0;
     }
 
@@ -545,7 +591,7 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
         std::wstring(L"Provided Parameter \"") + param + L"\" is not allowed\n";
 
     ServiceUsage(text);
-    return 2;
+    return 13;
 }
 }  // namespace cma
 

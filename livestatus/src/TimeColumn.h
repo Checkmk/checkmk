@@ -39,29 +39,25 @@ class RowRenderer;
 
 class TimeColumn : public Column {
 public:
-    TimeColumn(const std::string &name, const std::string &description,
-               int indirect_offset, int extra_offset, int extra_extra_offset,
-               int offset)
-        : Column(name, description, indirect_offset, extra_offset,
-                 extra_extra_offset, offset) {}
+    using Column::Column;
 
-    ColumnType type() const override { return ColumnType::time; }
+    [[nodiscard]] ColumnType type() const override { return ColumnType::time; }
 
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;
 
-    std::unique_ptr<Filter> createFilter(
+    [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
         const std::string &value) const override;
 
-    std::unique_ptr<Aggregator> createAggregator(
+    [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const override;
 
-    std::chrono::system_clock::time_point getValue(
+    [[nodiscard]] std::chrono::system_clock::time_point getValue(
         Row row, std::chrono::seconds timezone_offset) const;
 
 private:
-    virtual std::chrono::system_clock::time_point getRawValue(
+    [[nodiscard]] virtual std::chrono::system_clock::time_point getRawValue(
         Row row) const = 0;
 };
 

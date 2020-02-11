@@ -1,4 +1,4 @@
-title: MySQL Deamon: Staus
+title: MySQL Deamon: Status
 agents: linux
 catalog: app/mysql
 license: GPL

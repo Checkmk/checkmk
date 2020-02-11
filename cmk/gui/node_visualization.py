@@ -1,32 +1,17 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
 import json
 import time
-from pathlib2 import Path
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import livestatus
 import cmk
@@ -174,7 +159,7 @@ class ParentChildTopologyPage(Page):
     def _get_topology_view_and_filters(self):
         view_spec = get_permitted_views()["topology_filters"]
         view_name = "topology_filters"
-        view = View(view_name, view_spec)
+        view = View(view_name, view_spec, view_spec.get("context", {}))
         filters = cmk.gui.visuals.filters_of_visual(view.spec,
                                                     view.datasource.infos,
                                                     link_filters=view.datasource.link_filters)
@@ -516,7 +501,8 @@ class Topology(object):
 
     def get_info_for_host(self, hostname, mesh):
         return {
-            "name": hostname,  # Used as text in GUI
+            "name": hostname,  # Used as node text in GUI
+            "hostname": hostname,
             "has_no_parents": self.is_root_node(hostname),
             "growth_root": self.is_growth_root(hostname),
             "growth_possible": self.may_grow(hostname, mesh),
@@ -595,7 +581,8 @@ class Topology(object):
             raise MKGrowthExceeded(
                 _("Maximum number of nodes exceeded %d/%d") % (total_nodes, self.max_nodes))
         if total_nodes > self.growth_auto_max_nodes:
-            raise MKGrowthInterruption(_("Growth interrupted") % (total_nodes, self.max_nodes))
+            raise MKGrowthInterruption(
+                _("Growth interrupted %d/%d") % (total_nodes, self.growth_auto_max_nodes))
 
     @property
     def max_nodes(self):
@@ -714,7 +701,7 @@ class Topology(object):
                 self._border_hosts.remove(hostname)
 
         meshes = []
-        for hostname in self._known_hosts.iterkeys():
+        for hostname in self._known_hosts:
             meshes.append(set([hostname] + incoming_nodes[hostname] + outgoing_nodes[hostname]))
         self._combine_meshes_inplace(meshes)
 
@@ -827,7 +814,7 @@ class ParentChildNetworkTopology(Topology):
         self._known_hosts[central_node["name"]] = central_node
 
         combinator_mesh = {central_node["name"]}
-        for node_name, settings in site_nodes.iteritems():
+        for node_name, settings in site_nodes.items():
             self._known_hosts[node_name] = settings
             combinator_mesh.add(node_name)
             combinator_mesh.update(set(settings["incoming"]))

@@ -45,6 +45,8 @@ def _format_item_mssql_datafiles(inst, database, file_name):
 def _mssql_datafiles_process_sizes(params, used_size, allocated_size, max_size, unlimited):
     def calculate_levels(levels, reference_value):
         if isinstance(levels[0], float):
+            if reference_value == 0:
+                return None, None
             if reference_value != -1:
                 return [(x * reference_value) / 100.0 for x in levels]
         elif levels[0] is not None:
@@ -164,7 +166,7 @@ def inventory_mssql_datafiles(mode, parsed_extra):
 
     settings = host_extra_conf(host_name(), mssql_transactionlogs_discovery)
     summarize = settings and settings[0].get("summarize_%s" % mode, False)
-    for inst, database, file_name in parsed.iterkeys():
+    for inst, database, file_name in parsed:
         if mode == 'transactionlogs':
             dbinst = "%s %s" % (inst, database)
             if parsed_databases.get(dbinst, {}).get('Recovery', u'') == u'SIMPLE':
@@ -184,7 +186,7 @@ def check_mssql_datafiles(item, params, parsed_extra):
     unlimited_sum = False
 
     found = False
-    for (inst, database, file_name), values in parsed.iteritems():
+    for (inst, database, file_name), values in parsed.items():
         if _format_item_mssql_datafiles(inst, database, file_name) == item or \
                 _format_item_mssql_datafiles(inst, database, None) == item:
             found = True

@@ -40,7 +40,7 @@ def parse_f5_bigip_snat(info):
 
 
 def inventory_f5_bigip_snat(parsed):
-    for name in parsed.iterkeys():
+    for name in parsed:
         yield name, {}
 
 
@@ -67,10 +67,12 @@ def check_f5_bigip_snat(item, params, parsed):
         for what, function in [("connections", sum)]:
             summed_values[what] = function(snat[what])
 
-        perfdata = summed_values.items()
-
         # Current number of connections
-        yield 0, "Client connections: %d" % summed_values["connections"], perfdata
+        yield (
+            0,
+            "Client connections: %d" % summed_values["connections"],
+            list(summed_values.items()),
+        )
 
         # New connections per time
         yield 0, "Rate: %.2f/sec" % summed_values["connections_rate"]

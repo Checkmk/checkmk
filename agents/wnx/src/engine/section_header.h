@@ -50,8 +50,9 @@ constexpr std::string_view kSystemTime{"systemtime"};
 constexpr std::string_view kServices{"services"};
 constexpr std::string_view kCheckMk{"check_mk"};
 
-constexpr std::string_view kPlugins{"plugins"};  // not used in makeHeader
-constexpr std::string_view kLocal{"local"};      // not used in makeHeader
+constexpr std::string_view kPlugins{"plugins"};  // NOT used in makeHeader
+constexpr std::string_view kLocal{"local"};      // NOT used in makeHeader
+constexpr std::string_view kLocalHeader{"local:sep(0)"};  // Used in makeHeader
 
 constexpr std::string_view kMrpe{"mrpe"};                // used in makeHeader
 constexpr std::string_view kOhm{"openhardwaremonitor"};  // used in makeHeader
@@ -140,7 +141,7 @@ inline std::string MakeLocalHeader() {
     s.reserve(32);  // reasonable
 
     s = kLeftBracket;
-    s += kLocal;
+    s += kLocalHeader;
     s += kRightBracket;
     s += '\n';
 

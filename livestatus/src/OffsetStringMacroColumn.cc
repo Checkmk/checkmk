@@ -32,6 +32,7 @@
 #include "Row.h"
 #include "StringUtils.h"
 
+// static
 std::optional<std::string> MacroExpander::from_ptr(const char *str) {
     return str == nullptr ? std::nullopt : std::make_optional(str);
 }

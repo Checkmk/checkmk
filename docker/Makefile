@@ -58,30 +58,35 @@ check-mk-$(EDITION)-docker-$(VERSION).tar.gz: image
 	docker save $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) | gzip > check-mk-$(EDITION)-docker-$(VERSION).tar.gz
 
 image: needed-packages
+	SECRET_CONTAINER_ID=$$(docker run -d --rm --volume $(CREDENTIALS_FILE):/files/secret \
+	    busybox timeout 180 httpd -f -p 8000 -h /files) ; \
 	docker build \
+	    --network=container:$$SECRET_CONTAINER_ID \
 	    --build-arg CMK_VERSION="$(VERSION)" \
 	    --build-arg CMK_EDITION="$(EDITION)" \
-	    --build-arg CMK_DL_CREDENTIALS="$$(cat "$(CREDENTIALS_FILE)")" \
 	    -t $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) \
-	    .
+	    . ; \
+	docker stop $$SECRET_CONTAINER_ID
 
 image-daily: needed-packages
+	SECRET_CONTAINER_ID=$$(docker run -d --rm --volume $(CREDENTIALS_FILE):/files/secret \
+	    busybox timeout 180 httpd -f -p 8000 -h /files) ; \
 	BRANCH_PREFIX="$$(git rev-parse --abbrev-ref HEAD)" ; \
 	if [[ "$$BRANCH_PREFIX" == "master" || "$$BRANCH_PREFIX" =~ "/" ]]; then \
 	    BRANCH_PREFIX="" ; \
 	else \
 	    BRANCH_PREFIX="$${BRANCH_PREFIX}-" ; \
 	fi ; \
-	VERSION="$$(date +%F)" ; \
+	VERSION="$${VERSION:-$$(date +%F)}" ; \
 	VERSION="$${BRANCH_PREFIX}$${VERSION//-/.}" ; \
-	CREDENTIALS="$$(cat "$(CREDENTIALS_FILE)")" ; \
 	docker build \
+	    --network=container:$$SECRET_CONTAINER_ID \
 	    --build-arg CMK_VERSION="$${VERSION}" \
 	    --build-arg CMK_EDITION=$(EDITION) \
-	    --build-arg CMK_DL_CREDENTIALS="$$CREDENTIALS" \
 	    -t $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$${VERSION} \
 	    -t $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$${BRANCH_PREFIX}daily \
-	    .
+	    . ; \
+	docker stop $$SECRET_CONTAINER_ID
 
 test-lint-dockerfile:
 	sudo docker run --rm -i hadolint/hadolint < Dockerfile

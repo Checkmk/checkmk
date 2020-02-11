@@ -38,8 +38,8 @@ def check_fireeye_temp(item, params, info):
     reading_str, status, health = info[0]
     dev_status = 0
     dev_status_name = ""
-    for text, (state, state_readable) in \
-        check_fireeye_states([(status, 'Status'), (health, 'Health')]).items():
+    for text, (state, state_readable) in check_fireeye_states([(status, 'Status'),
+                                                               (health, 'Health')]).items():
         dev_status = max(dev_status, state)
         dev_status_name += "%s: %s" % (text, state_readable)
 

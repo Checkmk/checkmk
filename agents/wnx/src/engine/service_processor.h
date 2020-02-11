@@ -5,6 +5,8 @@
 #ifndef service_processor_h__
 #define service_processor_h__
 
+#include <fmt/format.h>
+
 #include <chrono>      // timestamps
 #include <cstdint>     // wchar_t when compiler options set weird
 #include <functional>  // callback in the main function
@@ -20,7 +22,6 @@
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
 #include "external_port.h"
-#include "fmt/format.h"
 #include "logger.h"
 #include "providers/check_mk.h"
 #include "providers/df.h"
@@ -251,8 +252,8 @@ private:
     // on this phase we are starting our async plugins
     void preContextCall() {}
 
-    void informDevice(cma::rt::Device& Device, std::string_view Ip) const
-        noexcept;
+    void informDevice(cma::rt::Device& Device,
+                      std::string_view Ip) const noexcept;
 
     // used to start OpenHardwareMonitor if conditions are ok
     bool stopRunningOhmProcess() noexcept;

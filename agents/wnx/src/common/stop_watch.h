@@ -20,14 +20,12 @@ class StopWatch {
 public:
     StopWatch() = default;
     StopWatch(const StopWatch& sw) {
-        std::lock_guard lk(lock_);
         auto [c, t] = sw.get();
         counter_ = c;
         time_ = t;
         started_ = false;
     }
     StopWatch(StopWatch&& sw) {
-        std::lock_guard lk(lock_);
         auto [c, t] = sw.getAndReset();
         counter_ = c;
         time_ = t;

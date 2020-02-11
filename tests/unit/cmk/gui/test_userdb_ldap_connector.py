@@ -3,8 +3,8 @@
 # pylint: disable=redefined-outer-name
 
 from pathlib2 import Path
-import pytest  # type: ignore
-from mockldap import MockLdap, LDAPObject  # type: ignore
+import pytest  # type: ignore[import]
+from mockldap import MockLdap, LDAPObject  # type: ignore[import]
 import six
 
 # userdb is needed to make the module register the post-config-load-hooks
@@ -223,7 +223,7 @@ def encode_to_byte_strings(inp):
 def user_files():
     profile_dir = Path(cmk.utils.paths.var_dir, "web", "admin")
     profile_dir.mkdir(parents=True, exist_ok=True)
-    with profile_dir.joinpath("cached_profile.mk").open("w", encoding="utf-8") as f:  # pylint: disable=no-member
+    with (profile_dir / "cached_profile.mk").open("w", encoding="utf-8") as f:  # pylint: disable=no-member
         f.write(u"%r" % {
             "alias": u"admin",
             "connector": "default",
@@ -310,7 +310,7 @@ def _check_restored_bind_user(mocked_ldap):
     assert mocked_ldap._ldap_obj.whoami_s() == "dn:cn=sync-user,ou=users,dc=check-mk,dc=org"
 
 
-def test_check_credentials_success(mocked_ldap):
+def test_check_credentials_success(register_builtin_html, mocked_ldap):
     result = mocked_ldap.check_credentials("admin", "ldap-test")
     assert isinstance(result, six.text_type)
     assert result == "admin"
@@ -321,7 +321,7 @@ def test_check_credentials_success(mocked_ldap):
     _check_restored_bind_user(mocked_ldap)
 
 
-def test_check_credentials_invalid(mocked_ldap):
+def test_check_credentials_invalid(register_builtin_html, mocked_ldap):
     assert mocked_ldap.check_credentials("admin", "WRONG") is False
     _check_restored_bind_user(mocked_ldap)
 
@@ -331,7 +331,7 @@ def test_check_credentials_not_existing(mocked_ldap):
     _check_restored_bind_user(mocked_ldap)
 
 
-def test_check_credentials_enforce_conn_success(mocked_ldap):
+def test_check_credentials_enforce_conn_success(register_builtin_html, mocked_ldap):
     result = mocked_ldap.check_credentials("admin@testldap", "ldap-test")
     assert isinstance(result, six.text_type)
     assert result == "admin"

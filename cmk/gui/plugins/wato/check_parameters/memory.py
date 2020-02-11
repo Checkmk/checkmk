@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
@@ -56,7 +36,7 @@ def _parameter_valuespec_memory():
                         match=match_dual_level_type,
                         help=
                         _("The used and free levels for the memory on UNIX systems take into account the "
-                          "currently used memory (RAM or SWAP) by all processes and sets this in relation "
+                          "currently used memory (RAM or Swap) by all processes and sets this in relation "
                           "to the total RAM of the system. This means that the memory usage can exceed 100%. "
                           "A usage of 200% means that the total size of all processes is twice as large as "
                           "the main memory, so <b>at least</b> half of it is currently swapped out. For systems "
@@ -112,7 +92,7 @@ def _parameter_valuespec_memory():
                                 ),
                                 title=_("Levels for free memory"),
                                 help=
-                                _("Keep in mind that if you have 1GB RAM and 1GB SWAP you need to "
+                                _("Keep in mind that if you have 1GB RAM and 1GB Swap you need to "
                                   "specify 120% or 1200MB to get an alert if there is only 20% free RAM available. "
                                   "The free memory levels do not work with the fortigate check, because it does "
                                   "not provide total memory data."),

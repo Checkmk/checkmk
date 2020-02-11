@@ -1,0 +1,11 @@
+Title: Change description title of graph axis
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1578397259
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+Changed label text for the y axis of time trend graph from 'Hours' to 'Time'.

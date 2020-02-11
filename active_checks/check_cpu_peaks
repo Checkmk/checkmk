@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -24,9 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# TODO: Totally ignore type issues for this file. The check is totally broken, because it has not
+# been updated since the TimeSeries refactoring. This will be cleaned up with CMK-3556
+# type: ignore[arg-type,assignment,call-overload,var-annotated]
+
 import sys
 import time
 import getopt
+from typing import Optional  # pylint: disable=unused-import
 
 import cmk.utils.prediction as prediction
 from cmk.utils.exceptions import MKGeneralException
@@ -67,8 +72,8 @@ opt_debug = False
 host = None
 warn_level = None
 crit_level = None
-fromtime = None
-untiltime = None
+fromtime = None  # type: Optional[float]
+untiltime = None  # type: Optional[float]
 
 for o, a in opts:
     if o in ['-v']:
@@ -105,7 +110,7 @@ try:
         datasets.append(data[1])
         step_secs = data[0]
         #util_total = [ x for x in datasets[0] if x is not None ]
-        util_total = [x for x in datasets[0]]
+        util_total = datasets[0]
     except Exception as e:
         if opt_debug:
             raise
@@ -119,10 +124,10 @@ try:
         def sumsum(_a):
             if None in _a:
                 return None
-            return int(sum([y for y in _a]))
+            return int(sum(y for y in _a))
 
         #util_total = map(lambda x: int(sum([y for y in x if y is not None])),
-        util_total = map(sumsum, zip(datasets[0], datasets[1], datasets[2]))
+        util_total = list(map(sumsum, zip(datasets[0], datasets[1], datasets[2])))
 
     cpu_peak = max(util_total)
     peak_time = time.localtime(fromtime + step_secs * util_total.index(cpu_peak))
@@ -135,13 +140,17 @@ try:
             sys.stdout.write("%s\n" % int(datasets[2][idx] or -1))
 
     if is_windows:
-        info = [ "CPU utilization from %s until %s" %\
+        info = [
+            "CPU utilization from %s until %s" %
             (time.strftime("%b %d %H:%M:%S", time.localtime(fromtime)),
-             time.strftime("%b %d %H:%M:%S", time.localtime(untiltime))) ]
+             time.strftime("%b %d %H:%M:%S", time.localtime(untiltime)))
+        ]
     else:
-        info = [ "CPU utilization (user, system, wait) from %s until %s" %\
+        info = [
+            "CPU utilization (user, system, wait) from %s until %s" %
             (time.strftime("%b %d %H:%M:%S", time.localtime(fromtime)),
-             time.strftime("%b %d %H:%M:%S", time.localtime(untiltime))) ]
+             time.strftime("%b %d %H:%M:%S", time.localtime(untiltime)))
+        ]
 
     if cpu_peak:
         info.append("Highest Peak of %d%% at %s" %

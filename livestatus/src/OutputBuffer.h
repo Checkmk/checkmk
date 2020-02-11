@@ -50,10 +50,12 @@ public:
     bool shouldTerminate() const { return _termination_flag; }
 
     std::ostream &os() { return _os; }
+    std::string str() const { return _os.str(); }
 
     void setResponseHeader(ResponseHeader r) { _response_header = r; }
 
     void setError(ResponseCode code, const std::string &message);
+    std::string getError() const;
 
     Logger *getLogger() const { return _logger; }
 

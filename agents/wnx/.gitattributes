@@ -1,2 +1,11 @@
+# Set the default behavior, in case people don't have core.autocrlf set.
+* text=auto
+
+# For the case we have inside our source files UTF-16 symbols
 *.cpp diff
 *.h diff
+*.cc diff
+*.hpp diff
+
+# Declare files that will always have CRLF line endings on checkout.
+*.sln text eol=crlf

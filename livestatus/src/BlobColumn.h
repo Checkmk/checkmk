@@ -40,25 +40,21 @@ class RowRenderer;
 
 class BlobColumn : public Column {
 public:
-    BlobColumn(const std::string &name, const std::string &description,
-               int indirect_offset, int extra_offset, int extra_extra_offset,
-               int offset)
-        : Column(name, description, indirect_offset, extra_offset,
-                 extra_extra_offset, offset) {}
-
-    ColumnType type() const override { return ColumnType::blob; }
+    using Column::Column;
+    [[nodiscard]] ColumnType type() const override { return ColumnType::blob; }
 
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;
 
-    std::unique_ptr<Filter> createFilter(
+    [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
         const std::string &value) const override;
 
-    std::unique_ptr<Aggregator> createAggregator(
+    [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const override;
 
-    virtual std::unique_ptr<std::vector<char>> getValue(Row row) const = 0;
+    [[nodiscard]] virtual std::unique_ptr<std::vector<char>> getValue(
+        Row row) const = 0;
 };
 
 #endif  // BlobColumn_h

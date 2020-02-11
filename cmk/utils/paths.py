@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -29,6 +29,8 @@ to all components of Check_MK."""
 import sys
 import os
 
+from typing import Union  # pylint: disable=unused-import
+
 # Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -38,14 +40,17 @@ else:
 
 # One bright day, when every path is really a Path, this can die... :-)
 def _path(*args):
+    # type: (*Union[str, Path]) -> str
     return str(Path(*args))
 
 
 def _omd_path(path):
+    # type: (str) -> str
     return _path(omd_root, path)
 
 
 def _local_path(global_path):
+    # type: (Union[str, Path]) -> str
     return _path(omd_root, "local", Path(global_path).relative_to(omd_root))
 
 
@@ -95,6 +100,7 @@ base_discovered_host_labels_dir = Path(_omd_path("var/check_mk/discovered_host_l
 discovered_host_labels_dir = base_discovered_host_labels_dir
 piggyback_dir = Path(tmp_dir, "piggyback")
 piggyback_source_dir = Path(tmp_dir, "piggyback_sources")
+crash_dir = Path(var_dir, "crashes")
 
 share_dir = _omd_path("share/check_mk")
 checks_dir = _omd_path("share/check_mk/checks")
@@ -109,6 +115,7 @@ locale_dir = Path(_omd_path("share/check_mk/locale"))
 bin_dir = _omd_path("bin")
 lib_dir = _omd_path("lib")
 mib_dir = Path(_omd_path("share/snmp/mibs"))
+optional_packages_dir = Path(_omd_path("share/check_mk/optional_packages"))
 
 local_share_dir = Path(_local_path(share_dir))
 local_checks_dir = Path(_local_path(checks_dir))

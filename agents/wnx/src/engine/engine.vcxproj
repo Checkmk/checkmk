@@ -23,20 +23,20 @@
     <ProjectGuid>{343045B4-F20A-4E48-AB2F-83E1C22C9710}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>engine</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <SpectreMitigation>false</SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <SpectreMitigation>false</SpectreMitigation>
@@ -44,14 +44,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <SpectreMitigation>false</SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <SpectreMitigation>false</SpectreMitigation>
@@ -80,6 +80,12 @@
     <IntDir>../../build/engine\$(Platform)\$(Configuration)\obj\</IntDir>
     <TargetName>engine</TargetName>
     <CustomBuildBeforeTargets>Run</CustomBuildBeforeTargets>
+    <CodeAnalysisRuleSet>cpp-all.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
+    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
+    <ClangTidyChecks>
+    </ClangTidyChecks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -87,6 +93,12 @@
     <IntDir>../../build/engine\$(Platform)\$(Configuration)\obj\</IntDir>
     <TargetName>engine</TargetName>
     <CustomBuildBeforeTargets>Run</CustomBuildBeforeTargets>
+    <CodeAnalysisRuleSet>cpp-all.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
+    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
+    <ClangTidyChecks>
+    </ClangTidyChecks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -94,6 +106,12 @@
     <IntDir>../../build/engine\$(Platform)\$(Configuration)\obj\</IntDir>
     <TargetName>engine</TargetName>
     <CustomBuildBeforeTargets>Run</CustomBuildBeforeTargets>
+    <CodeAnalysisRuleSet>cpp-all.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
+    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
+    <ClangTidyChecks>
+    </ClangTidyChecks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -101,6 +119,12 @@
     <IntDir>../../build/engine\$(Platform)\$(Configuration)\obj\</IntDir>
     <TargetName>engine</TargetName>
     <CustomBuildBeforeTargets>Run</CustomBuildBeforeTargets>
+    <CodeAnalysisRuleSet>cpp-all.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
+    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
+    <ClangTidyChecks>
+    </ClangTidyChecks>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -118,6 +142,7 @@
       </ShowIncludes>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>26444</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -147,6 +172,7 @@
       </ShowIncludes>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>26444</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -177,6 +203,7 @@
       <ShowIncludes>
       </ShowIncludes>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>26444</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -185,7 +212,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
-      <Command>unpack_packs.cmd watest</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -209,6 +237,7 @@
       <ShowIncludes>
       </ShowIncludes>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>26444</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -217,7 +246,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
-      <Command>unpack_packs.cmd watest</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -241,6 +271,7 @@
     <ClInclude Include="..\common\version.h" />
     <ClInclude Include="..\common\wnx_version.h" />
     <ClInclude Include="..\common\wtools.h" />
+    <ClInclude Include="..\common\wtools_user_control.h" />
     <ClInclude Include="..\lwa\Configurable.h" />
     <ClInclude Include="..\lwa\Configuration.h" />
     <ClInclude Include="..\lwa\SettingsCollector.h" />
@@ -259,6 +290,7 @@
     <ClInclude Include="eventlog\eventlogbase.h" />
     <ClInclude Include="eventlog\eventlogstd.h" />
     <ClInclude Include="eventlog\eventlogvista.h" />
+    <ClInclude Include="firewall.h" />
     <ClInclude Include="install_api.h" />
     <ClInclude Include="logger.h" />
     <ClInclude Include="onlyfrom.h" />
@@ -464,6 +496,9 @@
     <ClCompile Include="..\common\cma_yml.cpp" />
     <ClCompile Include="..\common\object_repo.cpp" />
     <ClCompile Include="..\common\wtools.cpp" />
+    <ClCompile Include="..\common\wtools_service.cpp" />
+    <ClCompile Include="..\common\wtools_user_control.cpp" />
+    <ClCompile Include="..\common\wtools_runas.cpp" />
     <ClCompile Include="..\lwa\Configuration.cpp" />
     <ClCompile Include="..\lwa\stringutil.cpp" />
     <ClCompile Include="..\lwa\types.cc" />
@@ -480,6 +515,7 @@
     <ClCompile Include="eventlog\eventlogstd.cpp" />
     <ClCompile Include="eventlog\eventlogvista.cpp" />
     <ClCompile Include="external_port.cpp" />
+    <ClCompile Include="firewall.cpp" />
     <ClCompile Include="groups.cpp" />
     <ClCompile Include="install_api.cpp" />
     <ClCompile Include="logger.cpp" />
@@ -527,9 +563,13 @@
     <None Include="..\..\test_files\config\check_mk_dev_default.yml" />
     <None Include="..\..\test_files\config\check_mk_dev_minimum.yml" />
     <None Include="..\..\test_files\config\check_mk_dev_unit_testing.yml" />
+    <None Include=".clang-tidy" />
     <None Include="unpack_packs.cmd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <PropertyGroup Condition="'$(Language)'=='C++'">
+    <CAExcludePath>..\..\extlibs;$(CAExcludePath)</CAExcludePath>
+  </PropertyGroup>
 </Project>

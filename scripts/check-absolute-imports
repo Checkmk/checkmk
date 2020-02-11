@@ -1,0 +1,25 @@
+#!/bin/bash
+#
+# This file is for execution by the pre-commit framework.
+#
+set -e -o pipefail
+
+declare -a fails
+
+for param in "$@"; do
+    if grep -c -E "^(from|import) \." $param > /dev/null; then
+        fails+=($param)
+    fi
+done
+
+log() {
+    echo "$@" >&2
+}
+
+if [ ${#fails[*]} -ne 0 ]; then
+    log "These files are using relative imports:"
+    log ${fails[@]}
+    log
+    log "We currently mandate absolute imports. Please use them."
+    exit 1
+fi

@@ -1,0 +1,35 @@
+Title: mk_oracle: Support for Custom SQL with Remote Monitoring
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1578486626
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+The new feauture Custom SQL could be used with Remote Monitoring as well.
+Be aware that the configuration of Custom SQL and Remote Monitoring is not
+easy...
+
+The SQLS_ITEM_SID is mandatory in this configuration. Otherwise the value
+from SQLS_SIDS is used in the service name during Discovery.
+
+The following example shows only the needed parameter for a configuration.
+This is not complete for a whole mk_oracle.cfg!
+
+Example mk_oracle.cfg:
+
+C+:
+REMOTE_INSTANCE_1_db1=c##cmk:cmkpass::dbhost:1524:piggybackhost:db191:19
+
+SQLS_SECTIONS="invalid_objects"
+SQLS_DIR=/etc/check_mk
+SQLS_MAX_CACHE_AGE=10
+
+invalid_objects () {
+    SQLS_SIDS=REMOTE_INSTANCE_1_db1
+    SQLS_ITEM_SID=db191
+    SQLS_SQL=invalid_objects.sql
+}
+C-:

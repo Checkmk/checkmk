@@ -27,7 +27,7 @@
 
 def parse_couchbase_buckets_operations(info):
     parsed = parse_couchbase_lines(info)
-    counters = (collections.Counter(data) for data in parsed.itervalues())
+    counters = (collections.Counter(data) for data in parsed.values())
     try:
         parsed[None] = sum(counters, collections.Counter())
     except TypeError:

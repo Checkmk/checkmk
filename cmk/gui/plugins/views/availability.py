@@ -1,28 +1,9 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import time
 import itertools
 import six
@@ -168,7 +149,7 @@ def render_availability_options(what):
 # Render the page showing availability table or timelines. It
 # is (currently) called by views.py, when showing a view but
 # availability mode is activated.
-def render_availability_page(view, context, filterheaders):
+def render_availability_page(view, filterheaders):
     config.user.need_permission("general.see_availability")
 
     if handle_edit_annotations():
@@ -226,7 +207,7 @@ def render_availability_page(view, context, filterheaders):
                 and "timeline_long_output" in avoptions["labelling"]
         av_rawdata, has_reached_logrow_limit = availability.get_availability_rawdata(
             what,
-            context,
+            view.context,
             filterheaders,
             view.only_sites,
             av_object=av_object,
@@ -344,7 +325,7 @@ def do_render_availability(what, av_rawdata, av_data, av_mode, av_object, avopti
 
 def render_availability_tables(availability_tables, what, avoptions):
     if not availability_tables:
-        html.message(_("No matching hosts/services."))
+        html.show_message(_("No matching hosts/services."))
         return
 
     for group_title, availability_table in availability_tables:
@@ -513,7 +494,7 @@ def render_availability_table(group_title, availability_table, what, avoptions):
             if show_urls:
                 table.cell("", "")  # Empty cell in URLs column
             table.cell("", _("Summary"), css="heading")
-            for _x in xrange(1, len(av_table["object_titles"])):
+            for _x in range(1, len(av_table["object_titles"])):
                 table.cell("", "")  # empty cells, of more object titles than one
             if show_timeline:
                 table.cell("", "")
@@ -673,11 +654,12 @@ def render_bi_availability(title, aggr_rows):
                     "aggr_group": html.request.var("aggr_group"),
                 }
 
-                renderer = bi.FoldableTreeRendererTree(row,
-                                                       omit_root=False,
-                                                       expansion_level=bi.load_ex_level(),
-                                                       only_problems=False,
-                                                       lazy=False)
+                renderer = bi.FoldableTreeRendererTree(
+                    row,
+                    omit_root=False,
+                    expansion_level=config.user.bi_expansion_level,
+                    only_problems=False,
+                    lazy=False)
                 tdclass, htmlcode = renderer.css_class(), renderer.render()
 
                 with html.plugged():
@@ -778,7 +760,7 @@ def get_relevant_annotations(annotations, by_host, what, avoptions):
     annos_to_render = []
     annos_rendered = set()
 
-    for site_host, avail_entries in by_host.iteritems():
+    for site_host, avail_entries in by_host.items():
         for service in avail_entries.keys():
             for search_what in ["host", "service"]:
                 if what == "host" and search_what == "service":
@@ -796,8 +778,7 @@ def get_relevant_annotations(annotations, by_host, what, avoptions):
                             annos_to_render.append((site_host_svc, annotation))
                             annos_rendered.add(id(annotation))
 
-    annos_to_render.sort(key=lambda x: (x[0], x[1]["from"]))
-    return annos_to_render
+    return sorted(annos_to_render, key=lambda x: (x[0], x[1]["from"]))
 
 
 def get_annotation_date_render_function(annotations, avoptions):
@@ -1072,6 +1053,5 @@ def av_output_set_content_disposition(title):
         title,
         time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())),
     )
-    if isinstance(filename, six.text_type):
-        filename = filename.encode("utf-8")
-    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % filename
+    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % six.ensure_str(
+        filename)

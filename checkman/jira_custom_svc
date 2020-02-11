@@ -1,0 +1,18 @@
+title: Jira: Custom service
+agents: jira
+catalog: app/jira
+license: GPL
+distribution: check_mk
+description:
+ With this check you can monitor custom Jira queries. It outputs the number of
+ search results in the defined way (count, sum, average) of the related
+ datasource.
+
+ Needs the datasource "Check statistics of Jira" to be configured.
+
+item:
+ The item is the name of custom service defined in the datasource rule.
+
+inventory:
+ One service for each custom service configured within the datasource rule
+ will be created. E.g. {"Jira My_custom_service_name"}.

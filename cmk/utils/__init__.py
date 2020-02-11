@@ -27,8 +27,8 @@
 # TODO: Kept for compatibility. Clean up call sites.
 # Or even better: move the functions from misc to a better place
 from cmk.utils.misc import (
-    make_utf8,
     quote_shell_string,
     pnp_cleanup,
     key_config_paths,
+    cachefile_age,
 )

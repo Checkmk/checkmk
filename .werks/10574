@@ -1,0 +1,26 @@
+Title: mk_redis: Agent plugin for Redis databases
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1574850756
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+This plugin gathers the output of the "info" command of redis-cli. You can
+define the Redis instances to query via an optional config file. The instances
+names configured within REDIS_INSTANCES define the service description of the
+resulting checks. If no config file is given, the plugin detects the running
+Redis instances and HOST:PORT is used for the service description.
+
+F+:/etc/check_mk/mk_redis.cfg
+REDIS_INSTANCES=(My_First_Redis My_Second_Redis)
+
+REDIS_HOST_My_First_Redis="127.0.0.1"
+REDIS_PORT_My_First_Redis="6380"
+REDIS_PASSWORD_My_First_Redis='MYPASSWORD'
+
+REDIS_HOST_My_Second_Redis="127.0.0.1"
+REDIS_PORT_My_Second_Redis="6379"
+F-:

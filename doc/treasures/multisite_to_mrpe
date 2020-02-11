@@ -33,7 +33,8 @@
 #
 
 from __future__ import print_function
-import os, sys, getopt, time, urllib, subprocess
+import os, sys, getopt, time, urllib
+import cmk.utils.cmk_subprocess as subprocess
 
 omd_site = os.getenv("OMD_SITE")
 omd_root = os.getenv("OMD_ROOT")
@@ -45,7 +46,7 @@ def convert_from_multisite(response):
 
 
 def bail_out(reason):
-    sys.stderr.write(reason + "\n")
+    sys.stderr.write((reason + "\n").encode("utf-8"))
     sys.exit(1)
 
 
@@ -173,8 +174,13 @@ try:
     arguments.append(url)
     verbose("Calling:          " + " ".join(arguments))
 
-    process = subprocess.Popen(arguments, executable='curl', stdout=subprocess.PIPE)
-    answer, stderrdata = process.communicate()
+    process = subprocess.Popen(
+        arguments,
+        executable='curl',
+        stdout=subprocess.PIPE,
+        encoding="utf-8",
+    )
+    answer, _stderr = process.communicate()
     result = process.wait()
     print(result)
     if answer.startswith("ERROR:"):
@@ -195,7 +201,11 @@ sys.stdout.write('<<<mrpe>>>\n')
 for service in services:
     state = {"OK": 0, "WARN": 1, "CRIT": 2, "UNKNOWN": 3}.get(service['service_state'])
     if state is not None:  # skip pending services
-        sys.stdout.write(
-            "(%s) %s %d %s|%s\n" %
-            (service["svc_check_command"].replace(" ", "_"), service["service_description"].replace(
-                " ", "_"), state, service["svc_plugin_output"], service["svc_perf_data"]))
+        msg = "(%s) %s %d %s|%s\n" % (
+            service["svc_check_command"].replace(" ", "_"),
+            service["service_description"].replace(" ", "_"),
+            state,
+            service["svc_plugin_output"],
+            service["svc_perf_data"],
+        )
+        sys.stdout.write(msg.encode("utf-8"))

@@ -1,0 +1,39 @@
+#!/bin/bash
+
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+netstat(){
+    echo '
+Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State
+tcp        0      0 127.0.0.1:5001          0.0.0.0:*               LISTEN
+tcp        0      0 10.1.1.2:59482          52.41.171.126:443       ESTABLISHED
+tcp        0      0 127.0.0.1:6556          127.0.0.1:60472         TIME_WAIT
+tcp        0      0 127.0.0.1:57170         127.0.0.1:8086          ESTABLISHED
+tcp        1      0 10.1.1.2:46376          10.3.1.99:631           CLOSE_WAIT
+tcp6       0      0 :::6556                 :::*                    LISTEN
+udp        0      0 127.0.0.53:53           0.0.0.0:*
+udp        0      0 127.0.0.1:49341         127.0.0.1:49341         ESTABLISHED
+udp6       0      0 :::5353                 :::*'
+}
+
+
+
+test_netstat_plugin(){
+#    alias netstat='_sample_netstat'
+    response=$(. "${DIR}"/../../../../agents/plugins/netstat.linux)
+    assertEquals "convert LISTEN to LISTENING" "<<<netstat>>>
+tcp        0      0 127.0.0.1:5001          0.0.0.0:*               LISTENING
+tcp        0      0 10.1.1.2:59482          52.41.171.126:443       ESTABLISHED
+tcp        0      0 127.0.0.1:6556          127.0.0.1:60472         TIME_WAIT
+tcp        0      0 127.0.0.1:57170         127.0.0.1:8086          ESTABLISHED
+tcp        1      0 10.1.1.2:46376          10.3.1.99:631           CLOSE_WAIT
+tcp6       0      0 :::6556                 :::*                    LISTENING
+udp        0      0 127.0.0.53:53           0.0.0.0:*
+udp        0      0 127.0.0.1:49341         127.0.0.1:49341         ESTABLISHED
+udp6       0      0 :::5353                 :::*" "$response"
+
+}
+
+. "${DIR}"/../../../shunit2

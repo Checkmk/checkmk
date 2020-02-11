@@ -3,39 +3,36 @@ CHECK_MK_DIR := $(CHECK_MK)-$(CMK_VERSION)
 
 CHECK_MK_BUILD := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-build
 CHECK_MK_INSTALL := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-install
-CHECK_MK_SKEL := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-skel
 CHECK_MK_PATCHING := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-patching
 
-.PHONY: $(CHECK_MK) $(CHECK_MK)-install $(CHECK_MK)-skel $(CHECK_MK)-clean
-
-$(CHECK_MK): $(CHECK_MK_BUILD)
-
-$(CHECK_MK)-install: $(CHECK_MK_INSTALL)
-$(CHECK_MK)-skel: $(CHECK_MK_SKEL)
+#CHECK_MK_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(CHECK_MK_DIR)
+CHECK_MK_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(CHECK_MK_DIR)
+#CHECK_MK_WORK_DIR := $(PACKAGE_WORK_DIR)/$(CHECK_MK_DIR)
 
 # This step creates a tar archive containing the sources
 # which are need for the build step
 $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz:
-	    $(MAKE) -C $(REPO_PATH) $(CHECK_MK_DIR).tar.gz ; \
+	$(MAKE) -C $(REPO_PATH) $(CHECK_MK_DIR).tar.gz
 
 # The build step just extracts the archive
 # which was created in the step before
 $(CHECK_MK_BUILD): $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz
 	$(MAKE) -C $(REPO_PATH)/locale all
-	$(TAR_GZ) $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz
-	cd $(CHECK_MK_DIR) ; \
+	$(TAR_GZ) $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz -C $(PACKAGE_BUILD_DIR)
+	cd $(CHECK_MK_BUILD_DIR) ; \
 	  $(MKDIR) bin ; \
 	  cd bin ; \
 	  $(TAR_GZ) ../bin.tar.gz ; \
 	  $(MAKE)
-	cd $(CHECK_MK_DIR) ; \
+	cd $(CHECK_MK_BUILD_DIR) ; \
 	  $(MKDIR) active_checks ; \
 	  cd active_checks ; \
 	  $(TAR_GZ) ../active_checks.tar.gz ; \
 	  $(MAKE)
 	$(TOUCH) $@
 
-$(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
+# TODO: Replace the ancient setup.py with explicit installation directly in makefile
+$(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS)
 	export bindir='$(OMD_ROOT)/bin' ; \
 	export sharedir='$(OMD_ROOT)/share/check_mk' ; \
 	export checksdir='$(OMD_ROOT)/share/check_mk/checks' ; \
@@ -74,21 +71,44 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
 	export nagios_auth_name='Nagios Access' ; \
 	export nagiosuser='nagios' ; \
 	export wwwgroup='nagios' ; \
-	cd $(CHECK_MK_DIR) ; DESTDIR=$(DESTDIR) ./setup.sh --yes
+	cd $(CHECK_MK_BUILD_DIR) ; DESTDIR=$(DESTDIR) ./setup.sh --yes
 
 	# Delete files we do not want to package
 	$(RM) -r $(DESTDIR)/REMOVE
 	$(RM) $(DESTDIR)$(OMD_ROOT)/skel/etc/check_mk/*-*.mk
 
 	# Binaries
-	install -m 755 $(CHECK_MK_DIR)/bin/* $(DESTDIR)$(OMD_ROOT)/bin
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(CHECK_MK_BUILD_DIR)/bin/* $(DESTDIR)$(OMD_ROOT)/bin
 	$(RM) $(DESTDIR)$(OMD_ROOT)/bin/Makefile $(DESTDIR)$(OMD_ROOT)/bin/*.cc
 
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/utils
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/ec
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/special_agents
+	tar -xz -C $(DESTDIR)$(OMD_ROOT)/lib/python3 -f $(CHECK_MK_BUILD_DIR)/lib.tar.gz
+	tar -xz -C $(DESTDIR)$(OMD_ROOT)/lib/python3 -f $(CHECK_MK_BUILD_DIR)/lib.tar.gz \
+	    cmk/__init__.py \
+	    cmk/utils \
+	    cmk/ec \
+	    cmk/special_agents/__init__.py \
+	    cmk/special_agents/agent_aws.py \
+	    cmk/special_agents/agent_jira.py \
+	    cmk/special_agents/agent_kubernetes.py \
+	    cmk/special_agents/agent_elasticsearch.py \
+	    cmk/special_agents/agent_graylog.py \
+	    cmk/special_agents/agent_jenkins.py \
+	    cmk/special_agents/agent_splunk.py \
+	    cmk/special_agents/agent_vsphere.py
+	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" ; \
+	    $(PACKAGE_PYTHON3_EXECUTABLE) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk
+
 	# Install the diskspace cleanup plugin
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/diskspace
 	install -m 644 $(PACKAGE_DIR)/$(CHECK_MK)/diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/check_mk
 
 	# Install active checks
-	install -m 755 $(CHECK_MK_DIR)/active_checks/* \
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/nagios
+	install -m 755 $(CHECK_MK_BUILD_DIR)/active_checks/* \
 	    $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/Makefile
 	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/*.cc
@@ -102,6 +122,7 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
 	install -m 644 $(REPO_PATH)/locale/ro/alias $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/ro
 
 	# Install hooks
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SNMPTRAP $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SYSLOG $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
@@ -112,16 +133,6 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/cmk.update-pre-hooks $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks
 
-	# GUI-Test (in doc/helpers)
-	#$(TAR_GZ) $(CHECK_MK_DIR)/doc.tar.gz -C $(DESTDIR)$(OMD_ROOT)/bin \
-	#    --strip-components 1 helpers/guitest
-	#chmod +x $(DESTDIR)$(OMD_ROOT)/bin/*
-	$(TOUCH) $@
-
-$(CHECK_MK_SKEL): $(CHECK_MK_INSTALL)
 	$(RM) $(SKEL)/etc/check_mk/main.mk-*
 	$(RM) $(SKEL)/etc/check_mk/multisite.mk-*
 	$(TOUCH) $@
-
-$(CHECK_MK)-clean:
-	$(RM) -r check_mk-*.*.*[0-9] werks ChangeLog $(BUILD_HELPER_DIR)/$(CHECK_MK)*

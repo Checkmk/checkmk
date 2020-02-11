@@ -26,17 +26,20 @@
 #define NagiosCore_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <cstddef>
 #include <filesystem>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "Metric.h"
 #include "MonitoringCore.h"
+#include "RRDColumn.h"
 #include "Store.h"
 #include "Triggers.h"
 #include "auth.h"
-#include "contact_fwd.h"
 #include "data_encoding.h"
 #include "nagios.h"
 class InputBuffer;
@@ -100,15 +103,20 @@ public:
 
     bool mkeventdEnabled() override;
 
-    std::string mkeventdSocketPath() override;
-    std::string mkLogwatchPath() override;
-    std::string mkInventoryPath() override;
-    std::string structuredStatusPath() override;
-    std::filesystem::path crashReportPath() override;
-    std::string pnpPath() override;
-    std::string historyFilePath() override;
-    std::string logArchivePath() override;
-    std::string rrdcachedSocketPath() override;
+    std::filesystem::path mkeventdSocketPath() const override;
+    std::filesystem::path mkLogwatchPath() const override;
+    std::filesystem::path mkInventoryPath() const override;
+    std::filesystem::path structuredStatusPath() const override;
+    std::filesystem::path crashReportPath() const override;
+    std::filesystem::path pnpPath() const override;
+    std::filesystem::path rrdPath() const;
+    std::filesystem::path historyFilePath() const override;
+    std::filesystem::path logArchivePath() const override;
+    std::filesystem::path rrdcachedSocketPath() const override;
+
+    MetricLocation metricLocation(const void *object,
+                                  const Metric::MangledName &name,
+                                  const RRDColumn::Table &table) const override;
 
     Encoding dataEncoding() override;
     size_t maxResponseSize() override;

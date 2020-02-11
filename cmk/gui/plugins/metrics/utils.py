@@ -1,28 +1,9 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """Module to hold shared code for main module internals and the plugins"""
 from __future__ import division
 
@@ -30,15 +11,17 @@ from collections import OrderedDict
 import colorsys
 import random
 import shlex
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union  # pylint: disable=unused-import
 
 import cmk.utils.regex
+from cmk.utils.memoize import MemoizeCache
 
 import cmk.gui.config as config
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
-from cmk.gui.exceptions import MKGeneralException
-from cmk.utils.memoize import MemoizeCache
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.valuespec import DropdownChoice
 
 
 class AutomaticDict(OrderedDict):
@@ -55,10 +38,10 @@ class AutomaticDict(OrderedDict):
 
 
 # TODO: Refactor to plugin_registry structures
-unit_info = {}
-metric_info = {}
-check_metrics = {}
-perfometer_info = []
+unit_info = {}  # type: Dict[str, Any]
+metric_info = {}  # type: Dict[str, Dict[str, Any]]
+check_metrics = {}  # type: Dict[str, Dict[str, Any]]
+perfometer_info = []  # type: List[Dict[str, Any]]
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
 graph_info = AutomaticDict("manual_graph_template")
@@ -383,15 +366,15 @@ def translate_metrics(perf_data, check_command):
 
 
 def split_expression(expression):
+    # type: (str) -> Tuple[str, Optional[str], Optional[str]]
+    explicit_color = None
     if "#" in expression:
         expression, explicit_color = expression.rsplit("#", 1)  # drop appended color information
-    else:
-        explicit_color = None
 
+    explicit_unit_name = None
     if "@" in expression:
         expression, explicit_unit_name = expression.rsplit("@", 1)  # appended unit name
-    else:
-        explicit_unit_name = None
+
     return expression, explicit_unit_name, explicit_color
 
 
@@ -463,14 +446,15 @@ rpn_operators = {
 
 # TODO: real unit computation!
 def _unit_mult(u1, u2):
+    # type: (Dict[str, Any], Dict[str, Any]) -> Dict[str, Any]
     if u1 == unit_info[""] or u1 == unit_info["count"]:
         return u2
     return u1
 
 
-_unit_div = _unit_mult
-_unit_add = _unit_mult
-_unit_sub = _unit_mult
+_unit_div = _unit_mult  # type: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]]
+_unit_add = _unit_mult  # type: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]]
+_unit_sub = _unit_mult  # type: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]]
 
 
 def _choose_operator_color(a, b):
@@ -502,6 +486,7 @@ def _operator_minmax(a, b, func):
 
 
 def _evaluate_literal(expression, translated_metrics):
+    # type: (Union[float, str], Dict[str, Any]) -> Tuple[float, Dict[str, Any], Optional[str]]
     if isinstance(expression, int):
         return float(expression), unit_info["count"], None
 
@@ -663,7 +648,12 @@ def _metrics_used_in_definition(metric_definition):
     without_color = metric_definition.split("#")[0]
     parts = without_color.split(",")
     for part in parts:
-        metric_name = part.split(".")[0]  # drop .min, .max, .average
+        # drop .min, .max, .average
+        if any(part.endswith(cf) for cf in ['.max', '.min', '.average']):
+            metric_name = part.rsplit(".", 1)[0]
+        else:
+            metric_name = part
+
         if metric_name in rpn_operators:
             continue
 
@@ -921,3 +911,19 @@ def reverse_translate_metric_name(canonical_name):
         metric for trans in check_metrics.values()
         for metric, options in trans.items() if options.get('name', '') == canonical_name
     ] + [canonical_name])
+
+
+def MetricName():
+    """Factory of a Dropdown menu from all known metric names"""
+    def _require_metric(value, varprefix):
+        if value is None:
+            raise MKUserError(varprefix, _("You need to select a metric"))
+
+    return DropdownChoice(
+        title=_("Metric"),
+        sorted=True,
+        default_value=None,
+        validate=_require_metric,
+        choices=[(None, "")] +
+        [(metric_id, metric_detail['title']) for metric_id, metric_detail in metric_info.items()],
+    )

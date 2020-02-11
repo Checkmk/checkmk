@@ -76,12 +76,12 @@ def _get_item(data):
 
 
 def inventory_storeonce_servicesets(parsed):
-    for values in parsed.itervalues():
+    for values in parsed.values():
         yield _get_item(values), {}
 
 
 def check_storeonce_servicesets(item, params, parsed):
-    for values in parsed.itervalues():
+    for values in parsed.values():
         if not item == values["ServiceSet ID"]:
             continue
 
@@ -114,7 +114,7 @@ check_info['storeonce_servicesets'] = {
 
 
 def check_storeonce_servicesets_capacity(item, params, parsed):
-    for values in parsed.itervalues():
+    for values in parsed.values():
         if _get_item(values) == item:
             return check_storeonce_space(item, params, values)
 

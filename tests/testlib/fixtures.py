@@ -1,5 +1,5 @@
 # pylint: disable=redefined-outer-name
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 from testlib.web_session import CMKWebSession
 from testlib.event_console import CMKEventConsole

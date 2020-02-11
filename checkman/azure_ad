@@ -1,0 +1,10 @@
+title: Microsoft Azure AD Connect
+agents: azure
+catalog: cloud/azure
+license: GPL
+distribution: check_mk
+description:
+ This check reports the state of Microsoft Azure AD Connect. The check shows the number of user accounts.
+
+inventory:
+ One service is created per account

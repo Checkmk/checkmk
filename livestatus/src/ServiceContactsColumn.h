@@ -35,12 +35,7 @@ class Row;
 
 class ServiceContactsColumn : public ListColumn {
 public:
-    ServiceContactsColumn(const std::string& name,
-                          const std::string& description, int indirect_offset,
-                          int extra_offset, int extra_extra_offset, int offset)
-        : ListColumn(name, description, indirect_offset, extra_offset,
-                     extra_extra_offset, offset) {}
-
+    using ListColumn::ListColumn;
     std::vector<std::string> getValue(
         Row row, const contact* auth_user,
         std::chrono::seconds timezone_offset) const override;

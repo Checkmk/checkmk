@@ -45,15 +45,24 @@ def parse_network_fs_mounts(info):
     return parsed
 
 
-def inventory_network_fs_mounts(parsed):
-    for mp in parsed:
-        yield mp, {}
+MEGA = 1048576.0
+
+MB_PER_DAY_TO_B_PER_S = MEGA / 86400.0
 
 
-def check_network_fs_mounts(item, params, parsed):
-    attrs = parsed.get(item)
-    if not attrs:
-        return 3, "%s not mounted" % item
+def _scaled_metric(new_name, metric, factor):
+    metric_def_as_list = [new_name]
+    for value in metric[1:]:
+        try:
+            metric_def_as_list.append(factor * value)
+        except TypeError:
+            metric_def_as_list.append(None)
+    return tuple(metric_def_as_list)
+
+
+@get_parsed_item_data
+def check_network_fs_mounts(item, params, attrs):
+    params = params or {}
 
     state = attrs["state"]
     if state == "Permission denied":
@@ -61,25 +70,35 @@ def check_network_fs_mounts(item, params, parsed):
     elif state == "hanging":
         return 2, "Server not responding"
     elif state != 'ok':
-        return 2, "Unknown state"
+        return 2, "Unknown state: %s" % state
 
     data = attrs["data"]
     if data == ['-', '-', '-', '-']:
         return 0, "Mount seems OK"
     size_blocks, _, free_blocks, blocksize = map(int, data)
 
-    if size_blocks <= 0 or free_blocks < 0 or blocksize > 1024 * 1024:
+    if size_blocks <= 0 or free_blocks < 0 or blocksize > MEGA:
         return 2, "Stale fs handle"
 
-    size_bytes = size_blocks * blocksize
-    free_bytes = free_blocks * blocksize
-    used_bytes = size_bytes - free_bytes
-    used_perc = 100.0 * used_bytes / size_bytes
+    to_mb = blocksize / MEGA
+    size_mb = size_blocks * to_mb
+    free_mb = free_blocks * to_mb
 
-    perfdata = None
-    if params is not None and params.get("has_perfdata"):
-        perfdata = [("fs_size", size_bytes), ("fs_used", used_bytes)]
+    state, text, perf = df_check_filesystem_single(item, size_mb, free_mb, 0, None, None, params)
 
-    infotext = "%.1f%% used (%s of %s)" % (used_perc, get_bytes_human_readable(used_bytes),
-                                           get_bytes_human_readable(size_bytes))
-    return 0, infotext, perfdata
+    if not params.get("has_perfdata"):
+        return state, text
+
+    # fix metrics to new names and scales
+    new_perf = [_scaled_metric("fs_used", perf[0], MEGA)]
+    old_perf_dict = {metric[0]: metric for metric in perf[1:]}
+    for old_name, new_name, factor in (
+        ("fs_size", "fs_size", MEGA),
+        ("growth", "fs_growth", MB_PER_DAY_TO_B_PER_S),
+        ("trend", "fs_trend", MB_PER_DAY_TO_B_PER_S),
+    ):
+        metric = old_perf_dict.get(old_name)
+        if metric is not None:
+            new_perf.append(_scaled_metric(new_name, metric, factor))
+
+    return state, text, new_perf

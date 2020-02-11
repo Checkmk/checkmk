@@ -34,11 +34,11 @@ public:
 
     // ... and here we reconstruct it, hopefully in a correct way. :-/
     template <typename T>
-    const T *rawData() const {
+    [[nodiscard]] const T *rawData() const {
         return static_cast<const T *>(_ptr);
     }
 
-    bool isNull() const { return _ptr == nullptr; }
+    [[nodiscard]] bool isNull() const { return _ptr == nullptr; }
 
 private:
     const void *_ptr;

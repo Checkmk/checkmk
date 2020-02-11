@@ -57,6 +57,7 @@ import urllib.parse
 import urllib.error
 import http.cookiejar
 import html.parser
+from typing import Dict, cast, Tuple
 
 
 def usage():
@@ -331,7 +332,7 @@ def main(args=None):
     port = 80
     ssl = False
     form_name = None
-    params = {}
+    params: Dict[str, str] = {}
     expect_regex = None
     timeout = 10  # seconds
     num_warn = None
@@ -352,7 +353,7 @@ def main(args=None):
         elif o == '-f':
             form_name = a
         elif o == '-q':
-            params = dict(parts.split('=', 1) for parts in a.split('&'))
+            params = dict(cast(Tuple[str, str], parts.split('=', 1)) for parts in a.split('&'))
         elif o == '-e':
             expect_regex = a
         elif o == '-t':

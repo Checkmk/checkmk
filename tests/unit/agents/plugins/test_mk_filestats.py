@@ -2,7 +2,7 @@
 # pylint: disable=protected-access,redefined-outer-name
 import os
 import ast
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from testlib import import_module
 
 

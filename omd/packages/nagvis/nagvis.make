@@ -1,22 +1,20 @@
-NAGVIS = nagvis
-NAGVIS_VERS = 1.9.16
-NAGVIS_DIR = $(NAGVIS)-$(NAGVIS_VERS)
+NAGVIS := nagvis
+NAGVIS_VERS := 1.9.17
+NAGVIS_DIR := $(NAGVIS)-$(NAGVIS_VERS)
 
+NAGVIS_PATCHING := $(BUILD_HELPER_DIR)/$(NAGVIS_DIR)-patching
 NAGVIS_BUILD := $(BUILD_HELPER_DIR)/$(NAGVIS_DIR)-build
 NAGVIS_INSTALL := $(BUILD_HELPER_DIR)/$(NAGVIS_DIR)-install
-NAGVIS_PATCHING := $(BUILD_HELPER_DIR)/$(NAGVIS_DIR)-patching
 
-.PHONY: $(NAGVIS) $(NAGVIS)-install $(NAGVIS)-skel $(NAGVIS)-build
-
-$(NAGVIS): $(NAGVIS_BUILD)
-
-$(NAGVIS)-install: $(NAGVIS_INSTALL)
+#NAGVIS_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(NAGVIS_DIR)
+NAGVIS_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(NAGVIS_DIR)
+#NAGVIS_WORK_DIR := $(PACKAGE_WORK_DIR)/$(NAGVIS_DIR)
 
 $(NAGVIS_BUILD): $(NAGVIS_PATCHING)
 	$(TOUCH) $@
 
 $(NAGVIS_INSTALL): $(NAGVIS_BUILD)
-	cd $(NAGVIS_DIR) ; ./install.sh -q -F -c y -a n \
+	cd $(NAGVIS_BUILD_DIR) ; ./install.sh -q -F -c y -a n \
 	 -u $$(id -un) \
 	 -g $$(id -gn) \
 	 -w $(DESTDIR)$(OMD_ROOT)/etc/apache \
@@ -39,7 +37,7 @@ $(NAGVIS_INSTALL): $(NAGVIS_BUILD)
 	# Take the sample main configuration file from source package and overwrite the one 
 	# installed by the installer.
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis
-	cp $(NAGVIS_DIR)/etc/nagvis.ini.php-sample $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/nagvis.ini.php
+	cp $(NAGVIS_BUILD_DIR)/etc/nagvis.ini.php-sample $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/nagvis.ini.php
 	
 	# Move demo config files
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/conf.d
@@ -53,8 +51,3 @@ $(NAGVIS_INSTALL): $(NAGVIS_BUILD)
 	$(RM) -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/var
 	$(RM) -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc
 	$(TOUCH) $@
-
-$(NAGVIS)-skel:
-
-$(NAGVIS)-clean:
-	$(RM) -r $(NAGVIS)-*.*.*[0-9] $(NAGVIS)-*.*-nightly $(BUILD_HELPER_DIR)/$(NAGVIS)*

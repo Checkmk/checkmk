@@ -46,10 +46,17 @@ def inventory_arris_cmts_mem(parsed):
         yield k, {}
 
 
-def check_arris_cmts_mem(item, params, parsed):
-    if item not in parsed:
-        return 3, '%s not found in agent output' % item
-    return check_memory_multiitem(params, parsed[item])
+@get_parsed_item_data
+def check_arris_cmts_mem(item, params, data):
+    warn, crit = params.get("levels", (None, None))
+    mode = "abs_used" if isinstance(warn, int) else "perc_used"
+    return check_memory_element(
+        "Usage",
+        data["mem_used"],
+        data["mem_total"],
+        (mode, (warn, crit)),
+        metric_name="memused",
+    )
 
 
 check_info["arris_cmts_mem"] = {
@@ -67,6 +74,6 @@ check_info["arris_cmts_mem"] = {
             3,  # cadMeHeapRemaining
         ]),
     "group": "memory_multiitem",
-    "includes": ["arris_cmts.include", "memory.include"],
+    "includes": ["arris_cmts.include", "mem.include"],
     "default_levels_variable": "arris_cmts_mem",
 }

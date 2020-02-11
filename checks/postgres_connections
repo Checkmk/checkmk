@@ -50,7 +50,7 @@ factory_settings["postgres_connections_default_levels"] = {
 
 
 def inventory_postgres_connections(parsed):
-    return [(db, {}) for db in parsed.iterkeys()]
+    return [(db, {}) for db in parsed]
 
 
 def check_postgres_connections(item, params, parsed):

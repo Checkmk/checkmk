@@ -1,4 +1,4 @@
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 import json
 import urllib
 # cmk.gui.wato: needed to load all WATO plugins

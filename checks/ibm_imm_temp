@@ -37,8 +37,11 @@ def check_ibm_imm_temp(item, params, info):
             temp, dev_crit, dev_warn, dev_crit_lower, dev_warn_lower = map(float, line[1:])
             dev_levels = dev_warn, dev_crit
             dev_levels_lower = dev_warn_lower, dev_crit_lower
-            return check_temperature(temp, params, "ibm_imm_temp_%s" % item, \
-                        dev_levels = dev_levels, dev_levels_lower = dev_levels_lower)
+            return check_temperature(temp,
+                                     params,
+                                     "ibm_imm_temp_%s" % item,
+                                     dev_levels=dev_levels,
+                                     dev_levels_lower=dev_levels_lower)
 
 check_info["ibm_imm_temp"] = {
     'check_function'          : check_ibm_imm_temp,

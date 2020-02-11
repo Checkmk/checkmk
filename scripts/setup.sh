@@ -673,37 +673,6 @@ EOF
 }
 
 
-create_sudo_configuration ()
-{
-    # sudo only possible if running as root
-    if [ $UID != 0 ] ; then
-	return
-    fi
-
-    sudolines="Defaults:$wwwuser !requiretty\n$wwwuser ALL = (root) NOPASSWD: $bindir/check_mk --automation *"
-
-    if [ ! -e /etc/sudoers ] ; then
-        echo "You do not have sudo installed. Please install sudo "
-        echo "and add the following line to /etc/sudoers if you want"
-        echo "to use WATO - the Check_MK Web Administration Tool"
-        echo
-        echo -e "$sudolines"
-        echo
-        echo
-        return
-    fi
-
-    if fgrep -q 'check_mk --automation' /etc/sudoers 2>/dev/null
-    then
-        # already present. Do not touch.
-        return
-    fi
-
-    echo >> /etc/sudoers
-    echo "# Needed for  WATO - the Check_MK Web Administration Tool" >> /etc/sudoers
-    echo -e "$sudolines" >> /etc/sudoers
-}
-
 while true
 do
     if [ -z "$DESTDIR" -a -z "$YES" ] ; then
@@ -741,7 +710,6 @@ do
            mkdir -p $DESTDIR$sharedir &&
            mkdir -p $DESTDIR$python_lib_dir &&
            tar xzf $SRCDIR/lib.tar.gz -C $DESTDIR$python_lib_dir &&
-           tar xzf $SRCDIR/base.tar.gz -C $DESTDIR$python_lib_dir &&
            mkdir -p $DESTDIR$sharedir/werks &&
            tar xzf $SRCDIR/werks.tar.gz -C $DESTDIR$sharedir/werks &&
            mkdir -p $DESTDIR$localedir &&
@@ -928,7 +896,6 @@ EOF
            # WATO. Also create an empty and Apache-writable auth.serials
            serials_file=$DESTDIR${htpasswd_file%/*}/auth.serials &&
            touch "$serials_file" &&
-	   create_sudo_configuration &&
            if [ "$enable_mkeventd" = yes ]
            then
 	       if [ -z "$YES" ] ; then echo -n "(Compiling Event Console binaries..." ; fi

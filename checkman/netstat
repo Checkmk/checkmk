@@ -15,4 +15,5 @@ description:
   be installed.
 
 item:
-  A user defined identifier of the connection.
+  This is a manual Checkplugin. One service is created for every rule set up
+  using the WATO ruleset "Monitor specific TCP/UDP connections and listeners".

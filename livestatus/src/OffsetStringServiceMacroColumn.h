@@ -46,16 +46,10 @@ private:
 
 class OffsetStringServiceMacroColumn : public OffsetStringMacroColumn {
 public:
-    OffsetStringServiceMacroColumn(const std::string &name,
-                                   const std::string &description,
-                                   int indirect_offset, int extra_offset,
-                                   int extra_extra_offset,
-                                   const MonitoringCore *mc, int offset)
-        : OffsetStringMacroColumn(name, description, indirect_offset,
-                                  extra_offset, extra_extra_offset, mc,
-                                  offset) {}
+    using OffsetStringMacroColumn::OffsetStringMacroColumn;
 
-    std::unique_ptr<MacroExpander> getMacroExpander(Row row) const override;
+    [[nodiscard]] std::unique_ptr<MacroExpander> getMacroExpander(
+        Row row) const override;
 };
 
 #endif  // OffsetStringServiceMacroColumn_h

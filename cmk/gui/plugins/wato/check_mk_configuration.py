@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import re
 import logging
@@ -42,6 +22,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     TextAscii,
     TextUnicode,
+    HTTPUrl,
     DropdownChoice,
     Tuple,
     ListOf,
@@ -635,6 +616,26 @@ class ConfigVariableEscapePluginOutput(ConfigVariable):
 
 
 @config_variable_registry.register
+class ConfigVariableCrashReportURL(ConfigVariable):
+    def group(self):
+        return ConfigVariableGroupUserInterface
+
+    def domain(self):
+        return ConfigDomainGUI
+
+    def ident(self):
+        return "crash_report_url"
+
+    def valuespec(self):
+        return HTTPUrl(
+            title=_("Crash report HTTP URL"),
+            help=_("By default crash reports will be sent to our crash reporting server."),
+            size=80,
+            show_as_link=False,
+        )
+
+
+@config_variable_registry.register
 class ConfigVariableCrashReportTarget(ConfigVariable):
     def group(self):
         return ConfigVariableGroupUserInterface
@@ -647,7 +648,7 @@ class ConfigVariableCrashReportTarget(ConfigVariable):
 
     def valuespec(self):
         return TextAscii(
-            title=_("Fallback mail address for crash reports"),
+            title=_("Crash report fallback mail address"),
             help=_("By default crash reports will be sent to our crash reporting server. In case "
                    "this fails for some reason, the crash reports can be sent by mail to the "
                    "address configured here."),
@@ -2272,66 +2273,92 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 "existing installations. Here you can switch to the new descriptions for "
                 "selected check types"),
             choices=[
+                ("aix_memory", _("Memory usage for %s hosts") % "AIX"),
+                ("barracuda_mailqueues", _("Barracuda: Mail Queue")),
+                ("brocade_sys.mem", _("Main memory usage for Brocade fibre channel switches")),
+                ("casa_cpu_temp", _("Casa module: CPU temperature")),
+                ("cisco_mem", _("Cisco Memory Usage (%s)") % "cisco_mem"),
+                ("cisco_mem_asa", _("Cisco Memory Usage (%s)") % "cisco_mem_asa"),
+                ("cisco_mem_asa64", _("Cisco Memory Usage (%s)") % "cisco_mem_asa64"),
+                ("cmciii.psm_current", _("Rittal CMC-III Units: Current")),
+                ("cmciii.temp", _("Rittal CMC-III Units: Temperatures")),
+                ("cmciii_lcp_airin", _("Rittal CMC-III LCP: Air In and Temperature")),
+                ("cmciii_lcp_airout", _("Rittal CMC-III LCP: Air Out Temperature")),
+                ("cmciii_lcp_water", _("Rittal CMC-III LCP: Water In/Out Temperature")),
+                ("cmk-inventory", _("Monitor hosts for unchecked services (Check_MK Discovery)")),
+                ("dbd2_mem", _("Memory levels for DB2 memory usage")),
                 ("df", _("Used space in filesystems")),
                 ("df_netapp", _("NetApp Filers: Used Space in Filesystems")),
                 ("df_netapp32", _("NetApp Filers: Used space in Filesystem Using 32-Bit Counters")),
+                ("docker_container_mem", _("Memory usage of Docker containers")),
+                ("enterasys_temp", _("Enterasys Switch: Temperature")),
                 ("esx_vsphere_datastores", _("VMWare ESX host systems: Used space")),
+                ("esx_vsphere_hostsystem.mem_usage", _("Main memory usage of ESX host system")),
+                ("esx_vsphere_hostsystem.mem_usage_cluster", _("Memory Usage of ESX Clusters")),
+                ("etherbox.temp", _("Etherbox / MessPC: Sensor Temperature")),
+                ("fortigate_memory", _("Memory usage of Fortigate devices (fortigate_memory)")),
+                ("fortigate_memory_base",
+                 _("Memory usage of Fortigate devices (fortigate_memory_base)")),
+                ("fortigate_node.memory", _("Fortigate node memory")),
                 ("hr_fs", _("Used space in filesystems via SNMP")),
-                ("vms_diskstat.df", _("Disk space on OpenVMS")),
-                ("zfsget", _("Used space in ZFS pools and filesystems")),
-                ("ps", _("State and Count of Processes")),
-                ("ps.perf", _("State and Count of Processes (with additional performance data)")),
-                ("wmic_process", _("Resource consumption of windows processes")),
-                ("services", _("Windows Services")),
-                ("logwatch", _("Check logfiles for relevant new messages")),
-                ("logwatch.groups", _("Check logfile groups")),
-                ("cmk-inventory", _("Monitor hosts for unchecked services (Check_MK Discovery)")),
+                ("hr_mem", _("HR: Used memory via SNMP")),
+                ("http", _("Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections")),
+                ("huawei_switch_mem", _("Memory percentage used of devices with modules (Huawei)")),
                 ("hyperv_vms", _("Hyper-V Server: State of VMs")),
                 ("ibm_svc_mdiskgrp",
                  _("IBM SVC / Storwize V3700 / V7000: Status and Usage of MDisksGrps")),
                 ("ibm_svc_system", _("IBM SVC / V7000: System Info")),
+                ("ibm_svc_systemstats.cache", _("IBM SVC / V7000: Cache Usage in Total")),
+                ("ibm_svc_systemstats.disk_latency",
+                 _("IBM SVC / V7000: Latency for Drives/MDisks/VDisks in Total")),
                 ("ibm_svc_systemstats.diskio",
                  _("IBM SVC / V7000: Disk Throughput for Drives/MDisks/VDisks in Total")),
                 ("ibm_svc_systemstats.iops",
                  _("IBM SVC / V7000: IO operations/sec for Drives/MDisks/VDisks in Total")),
-                ("ibm_svc_systemstats.disk_latency",
-                 _("IBM SVC / V7000: Latency for Drives/MDisks/VDisks in Total")),
-                ("ibm_svc_systemstats.cache", _("IBM SVC / V7000: Cache Usage in Total")),
-                ("casa_cpu_temp", _("Casa module: CPU temperature")),
-                ("cmciii.temp", _("Rittal CMC-III Units: Temperatures")),
-                ("cmciii.psm_current", _("Rittal CMC-III Units: Current")),
-                ("cmciii_lcp_airin", _("Rittal CMC-III LCP: Air In and Temperature")),
-                ("cmciii_lcp_airout", _("Rittal CMC-III LCP: Air Out Temperature")),
-                ("cmciii_lcp_water", _("Rittal CMC-III LCP: Water In/Out Temperature")),
-                ("etherbox.temp", _("Etherbox / MessPC: Sensor Temperature")),
-                ("liebert_bat_temp", _("Liebert UPS Device: Temperature sensor")),
-                ("nvidia.temp", _("Temperatures of NVIDIA graphics card")),
-                ("ups_bat_temp", _("Generic UPS Device: Temperature sensor")),
+                ("innovaphone_mem", _("Innovaphone Memory Usage")),
                 ("innovaphone_temp", _("Innovaphone Gateway: Current Temperature")),
-                ("enterasys_temp", _("Enterasys Switch: Temperature")),
-                ("raritan_emx", _("Raritan EMX Rack: Temperature")),
-                ("raritan_pdu_inlet", _("Raritan PDU: Input Phases")),
+                ("juniper_mem", _("Juniper Memory Usage (%s)") % "juniper_mem"),
+                ("juniper_screenos_mem", _("Juniper Memory Usage (%s)") % "juniper_screenos_mem"),
+                ("juniper_trpz_mem", _("Juniper Memory Usage (%s)") % "juniper_trpz_mem"),
+                ("liebert_bat_temp", _("Liebert UPS Device: Temperature sensor")),
+                ("logwatch", _("Check logfiles for relevant new messages")),
+                ("logwatch.groups", _("Check logfile groups")),
+                ("mem.used", _("Main memory usage (UNIX / Other Devices)")),
+                ("mem.win", _("Memory usage for %s hosts") % "Windows"),
                 ("mknotifyd", _("Notification Spooler")),
                 ("mknotifyd.connection", _("Notification Spooler Connection")),
-                ("postfix_mailq", _("Postfix: Mail Queue")),
-                ("nullmailer_mailq", _("Nullmailer: Mail Queue")),
-                ("barracuda_mailqueues", _("Barracuda: Mail Queue")),
-                ("qmail_stats", _("Qmail: Mail Queue")),
-                ("http", _("Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections")),
                 ("mssql_backup", _("MSSQL Backup")),
+                ("mssql_blocked_sessions", _("MSSQL Blocked Sessions")),
                 ("mssql_counters.cache_hits", _("MSSQL Cache Hits")),
-                ("mssql_counters.transactions", _("MSSQL Transactions")),
-                ("mssql_counters.locks", _("MSSQL Locks")),
-                ("mssql_counters.sqlstats", _("MSSQL SQL Stats")),
-                ("mssql_counters.pageactivity", _("MSSQL Page Activity")),
-                ("mssql_counters.locks_per_batch", _("MSSQL Locks per Batch")),
                 ("mssql_counters.file_sizes", _("MSSQL File Sizes")),
+                ("mssql_counters.locks", _("MSSQL Locks")),
+                ("mssql_counters.locks_per_batch", _("MSSQL Locks per Batch")),
+                ("mssql_counters.pageactivity", _("MSSQL Page Activity")),
+                ("mssql_counters.sqlstats", _("MSSQL SQL Stats")),
+                ("mssql_counters.transactions", _("MSSQL Transactions")),
                 ("mssql_databases", _("MSSQL Database")),
                 ("mssql_datafiles", _("MSSQL Datafile")),
                 ("mssql_tablespaces", _("MSSQL Tablespace")),
                 ("mssql_transactionlogs", _("MSSQL Transactionlog")),
                 ("mssql_versions", _("MSSQL Version")),
-                ("mssql_blocked_sessions", _("MSSQL Blocked Sessions")),
+                ("netscaler_mem", _("Netscaler Memory Usage")),
+                ("nullmailer_mailq", _("Nullmailer: Mail Queue")),
+                ("nvidia.temp", _("Temperatures of NVIDIA graphics card")),
+                ("postfix_mailq", _("Postfix: Mail Queue")),
+                ("ps", _("State and Count of Processes")),
+                ("ps.perf", _("State and Count of Processes (with additional performance data)")),
+                ("qmail_stats", _("Qmail: Mail Queue")),
+                ("raritan_emx", _("Raritan EMX Rack: Temperature")),
+                ("raritan_pdu_inlet", _("Raritan PDU: Input Phases")),
+                ("services", _("Windows Services")),
+                ("solaris_mem", _("Memory usage for %s hosts") % "Solaris"),
+                ("sophos_memory", _("Sophos Memory utilization")),
+                ("statgrab_mem", _("Statgrab Memory Usage")),
+                ("tplink_mem", _("TP Link: Used memory via SNMP")),
+                ("ups_bat_temp", _("Generic UPS Device: Temperature sensor")),
+                ("vms_diskstat.df", _("Disk space on OpenVMS")),
+                ("wmic_process", _("Resource consumption of windows processes")),
+                ("zfsget", _("Used space in ZFS pools and filesystems")),
             ],
             render_orientation="vertical",
         )
@@ -3704,76 +3731,6 @@ def _vs_periodic_discovery():
                          (False, _("Just rely on existing check files, detect new items only")),
                      ],
                  )),
-                ("inventory_rediscovery",
-                 Dictionary(
-                     title=_("Automatically update service configuration"),
-                     help=_("If active the check will not only notify about un-monitored services, "
-                            "it will also automatically add/remove them as neccessary."),
-                     elements=[
-                         ("mode",
-                          DropdownChoice(
-                              title=_("Mode"),
-                              choices=[
-                                  (0, _("Add unmonitored services, new host labels")),
-                                  (1, _("Remove vanished services")),
-                                  (2,
-                                   _("Add unmonitored & remove vanished services and host labels")),
-                                  (3, _("Refresh all services and host labels (tabula rasa)"))
-                              ],
-                              default_value=0,
-                          )),
-                         ("group_time",
-                          Age(
-                              title=_("Group discovery and activation for up to"),
-                              help=_(
-                                  "A delay can be configured here so that multiple "
-                                  "discoveries can be activated in one go. This avoids frequent core "
-                                  "restarts in situations with frequent services changes."),
-                              default_value=15 * 60,
-                              display=["hours", "minutes"],
-                          )),
-                         ("excluded_time",
-                          ListOfTimeRanges(
-                              title=
-                              _("Never do discovery or activate changes in the following time ranges"
-                               ),
-                              help=_("This avoids automatic changes during these times so "
-                                     "that the automatic system doesn't interfere with "
-                                     "user activity."),
-                          )),
-                         ("activation",
-                          DropdownChoice(
-                              title=_("Automatic activation"),
-                              choices=[
-                                  (True, _("Automatically activate changes")),
-                                  (False, _("Do not activate changes")),
-                              ],
-                              default_value=True,
-                              help=_("Here you can have the changes activated whenever services "
-                                     "have been added or removed."),
-                          )),
-                         ("service_whitelist",
-                          ListOfStrings(
-                              title=_("Activate only services matching"),
-                              allow_empty=False,
-                              help=_(
-                                  "Set service names or regular expression patterns here to "
-                                  "allow only matching services to be activated automatically. "
-                                  "If you set both this and \'Don't activate services matching\', "
-                                  "both rules have to apply for a service to be activated."),
-                          )),
-                         ("service_blacklist",
-                          ListOfStrings(
-                              title=_("Don't activate services matching"),
-                              allow_empty=False,
-                              help=_(
-                                  "Set service names or regular expression patterns here to "
-                                  "prevent matching services from being activated automatically. "
-                                  "If you set both this and \'Activate only services matching\', "
-                                  "both rules have to apply for a service to be activated."),
-                          )),
-                     ],
-                 )),
                 ("inventory_rediscovery", _valuespec_automatic_rediscover_parameters()),
             ],
             optional_keys=["inventory_rediscovery"],
@@ -3944,114 +3901,6 @@ rulespec_registry.register(
         item_type="service",
         name="extra_service_conf:service_period",
         valuespec=_valuespec_extra_service_conf_service_period,
-    ))
-
-
-def _validate_max_cache_ages_and_validity_periods(params, varprefix):
-    global_max_cache_age = params.get("global_max_cache_age")
-    global_period = params.get("global_validity", {}).get('period')
-    _validate_max_cache_age_and_validity_period(global_max_cache_age, global_period, varprefix)
-
-    for exception in params.get("per_piggybacked_host", []):
-        max_cache_age = exception.get("max_cache_age")
-        period = exception.get("validity", {}).get('period', global_period)
-        if max_cache_age == "global":
-            _validate_max_cache_age_and_validity_period(global_max_cache_age, period, varprefix)
-        else:
-            _validate_max_cache_age_and_validity_period(max_cache_age, period, varprefix)
-
-
-def _validate_max_cache_age_and_validity_period(max_cache_age, period, varprefix):
-    if isinstance(max_cache_age, int) and isinstance(period, int)\
-       and max_cache_age < period:
-        raise MKUserError(varprefix, _("Maximum cache age must be greater than period."))
-
-
-def _valuespec_piggybacked_host_files():
-    global_max_cache_age_uri = html.makeuri_contextless(
-        [('mode', 'edit_configvar'), ('varname', 'piggyback_max_cachefile_age')],
-        filename="wato.py")
-
-    global_max_cache_age_title = _("Use maximum age from <a href=\"%s\">global settings</a>" %
-                                   global_max_cache_age_uri)
-    max_cache_age_title = _("Use maximum age from <a href=\"%s\">global settings</a> or above" %
-                            global_max_cache_age_uri)
-
-    return Dictionary(
-        title=_("Piggybacked Host Files"),
-        optional_keys=[],
-        elements=[
-            ("global_max_cache_age", _vs_max_cache_age(global_max_cache_age_title)),
-            ("global_validity", _vs_validity()),
-            ("per_piggybacked_host",
-             ListOf(
-                 Dictionary(
-                     optional_keys=[],
-                     elements=[
-                         ("piggybacked_hostname",
-                          TextUnicode(
-                              title=_("Piggybacked host name"),
-                              allow_empty=False,
-                          )),
-                         ("max_cache_age", _vs_max_cache_age(max_cache_age_title)),
-                         ("validity", _vs_validity()),
-                     ],
-                 ),
-                 title=_("Exceptions for piggybacked hosts"),
-                 add_label=_("Add exception"),
-             )),
-        ],
-        help=_(
-            "We assume that a source host is sending piggyback data every check interval "
-            "by default. If this is not the case for some source hosts then the <b>Check_MK</b> "
-            "and <b>Check_MK Disovery</b> services of the piggybacked hosts report "
-            "<b>Got no information from host</b> resp. <b>vanished services</b> if the piggybacked "
-            "data is missing within a check interval. "
-            "This rule helps you to get more control over the piggybacked host data handling. "
-            "The source host names have to be set in the condition field <i>Explicit hosts</i>."),
-        validate=_validate_max_cache_ages_and_validity_periods,
-    )
-
-
-def _vs_max_cache_age(max_cache_age_title):
-    return Alternative(
-        title=_("Set maximum age how long piggyback files are kept"),
-        elements=[
-            FixedValue(
-                "global",
-                title=max_cache_age_title,
-                totext="",
-            ),
-            Age(
-                title=_("Set maximum age"),
-                default_value=3600,
-            ),
-        ],
-    )
-
-
-def _vs_validity():
-    return Dictionary(
-        title=_("Set period how long piggyback files are treated as valid"),
-        elements=[
-            ("period", Age(
-                title=_("Period"),
-                default_value=60,
-            )),
-            ("check_mk_state",
-             MonitoringState(
-                 title=_("Check MK status within this period"),
-                 default_value=0,
-             )),
-        ],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringConfigurationHostChecks,
-        name="piggybacked_host_files",
-        valuespec=_valuespec_piggybacked_host_files,
     ))
 
 #.
@@ -4987,4 +4836,136 @@ rulespec_registry.register(
         group=RulespecGroupAgentSNMP,
         name="snmpv3_contexts",
         valuespec=_valuespec_snmpv3_contexts,
+    ))
+
+
+def _validate_max_cache_ages_and_validity_periods(params, varprefix):
+    global_max_cache_age = params.get("global_max_cache_age")
+    global_period = params.get("global_validity", {}).get('period')
+    _validate_max_cache_age_and_validity_period(global_max_cache_age, global_period, varprefix)
+
+    for exception in params.get("per_piggybacked_host", []):
+        max_cache_age = exception.get("max_cache_age")
+        period = exception.get("validity", {}).get('period', global_period)
+        if max_cache_age == "global":
+            _validate_max_cache_age_and_validity_period(global_max_cache_age, period, varprefix)
+        else:
+            _validate_max_cache_age_and_validity_period(max_cache_age, period, varprefix)
+
+
+def _validate_max_cache_age_and_validity_period(max_cache_age, period, varprefix):
+    if isinstance(max_cache_age, int) and isinstance(period, int)\
+       and max_cache_age < period:
+        raise MKUserError(varprefix, _("Maximum cache age must be greater than period."))
+
+
+def _transform_piggybacked_exception(p):
+    if "piggybacked_hostname" in p:
+        piggybacked_hostname = p["piggybacked_hostname"]
+        del p["piggybacked_hostname"]
+        p["piggybacked_hostname_expressions"] = [piggybacked_hostname]
+    return p
+
+
+def _valuespec_piggybacked_host_files():
+    global_max_cache_age_uri = html.makeuri_contextless(
+        [('mode', 'edit_configvar'), ('varname', 'piggyback_max_cachefile_age')],
+        filename="wato.py")
+
+    global_max_cache_age_title = _("Use maximum age from <a href=\"%s\">global settings</a>" %
+                                   global_max_cache_age_uri)
+    max_cache_age_title = _("Use maximum age from <a href=\"%s\">global settings</a> or above" %
+                            global_max_cache_age_uri)
+
+    return Dictionary(
+        title=_("Processing of Piggybacked Host Data"),
+        optional_keys=[],
+        elements=[
+            ("global_max_cache_age", _vs_max_cache_age(global_max_cache_age_title)),
+            ("global_validity", _vs_validity()),
+            ("per_piggybacked_host",
+             ListOf(
+                 Transform(
+                     Dictionary(
+                         optional_keys=[],
+                         elements=[
+                             ("piggybacked_hostname_expressions",
+                              ListOfStrings(
+                                  title=_("Piggybacked host name expressions"),
+                                  orientation="horizontal",
+                                  valuespec=RegExpUnicode(
+                                      size=30,
+                                      mode=RegExpUnicode.prefix,
+                                  ),
+                                  allow_empty=False,
+                                  help=_(
+                                      'Here you can specify explicit piggybacked host names or '
+                                      'regex patterns to match specific piggybacked host names.'),
+                              )),
+                             ("max_cache_age", _vs_max_cache_age(max_cache_age_title)),
+                             ("validity", _vs_validity()),
+                         ],
+                     ),
+                     forth=_transform_piggybacked_exception,
+                 ),
+                 title=_("Exceptions for piggybacked hosts (VMs, ...)"),
+                 add_label=_("Add exception"),
+             )),
+        ],
+        help=_(
+            "We assume that a source host is sending piggyback data every check interval "
+            "by default. If this is not the case for some source hosts then the <b>Check_MK</b> "
+            "and <b>Check_MK Disovery</b> services of the piggybacked hosts report "
+            "<b>Got no information from host</b> resp. <b>vanished services</b> if the piggybacked "
+            "data is missing within a check interval. "
+            "This rule helps you to get more control over the piggybacked host data handling. "
+            "The source host names have to be set in the condition field <i>Explicit hosts</i>."),
+        validate=_validate_max_cache_ages_and_validity_periods,
+    )
+
+
+def _vs_max_cache_age(max_cache_age_title):
+    return Alternative(
+        title=_("Set maximum age how long piggyback files are kept"),
+        elements=[
+            FixedValue(
+                "global",
+                title=max_cache_age_title,
+                totext="",
+            ),
+            Age(
+                title=_("Set maximum age"),
+                default_value=3600,
+            ),
+        ],
+    )
+
+
+def _vs_validity():
+    return Dictionary(
+        title=_("Set period how long outdated piggyback data is treated as valid"),
+        elements=[
+            ("period", Age(
+                title=_("Period for outdated piggybacked host data"),
+                default_value=60,
+            )),
+            ("check_mk_state",
+             MonitoringState(
+                 title=_("Check MK status of piggybacked host within this period"),
+                 default_value=0,
+             )),
+        ],
+        help=_("If a source host does not send data for its piggybacked hosts at all "
+               "or for single piggybacked hosts then a period can be set in order to "
+               "treat outdated piggybacked host files/data as valid within this period. "
+               "Moreover the status of the <b>Check_MK</b> service of these piggybacked "
+               "hosts can be specified for this period."),
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupAgentGeneralSettings,
+        name="piggybacked_host_files",
+        valuespec=_valuespec_piggybacked_host_files,
     ))

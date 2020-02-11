@@ -32,7 +32,7 @@
 
 
 def inventory_netapp_api_aggr(parsed):
-    for name, aggr in parsed.iteritems():
+    for name, aggr in parsed.items():
         if "size-total" in aggr and "size-available" in aggr:
             yield name, {}
 

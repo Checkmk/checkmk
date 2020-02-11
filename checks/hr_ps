@@ -74,7 +74,7 @@ def discovery_hr_ps(parsed):
                     'match_status': match_status,
                     'match_groups': match_groups,
                 })
-    return discovered_items.items()
+    return list(discovered_items.items())
 
 
 def check_hr_ps(item, params, parsed):
@@ -97,7 +97,7 @@ def check_hr_ps(item, params, parsed):
                        human_readable_func=int)
 
     process_state_map = dict(params.get('status', []))
-    for (state_key, state_short, state_long), processes in processes_by_state.iteritems():
+    for (state_key, state_short, state_long), processes in processes_by_state.items():
         state = process_state_map.get(state_key, 0)
         if state_long:
             state_info = "%s (%s)" % (state_short, state_long)

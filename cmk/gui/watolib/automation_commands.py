@@ -1,3 +1,9 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """Managing the available automation calls"""
 
 import abc
@@ -21,7 +27,6 @@ class AutomationCommand(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def get_request(self):
-        # type: () -> ...
         """Get request variables from environment
 
         In case an automation command needs to read variables from the HTTP request this has to be done
@@ -30,7 +35,6 @@ class AutomationCommand(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def execute(self, request):
-        # type: (...) -> ...
         raise NotImplementedError()
 
     def _verify_slave_site_config(self, site_id):

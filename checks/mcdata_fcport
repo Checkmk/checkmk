@@ -33,7 +33,7 @@ def mcdata_bin_to_64(bin_):
 
 
 def mcdata_fcport_convert_to_if64(info):
-    return map(mcdata_fcport_convert_line_to_if64, info)
+    return list(map(mcdata_fcport_convert_line_to_if64, info))
 
 
 def mcdata_fcport_convert_line_to_if64(line):

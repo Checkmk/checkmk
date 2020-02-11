@@ -35,14 +35,14 @@ def check_dotnet_clrmemory(item, params, parsed):
     yield wmi_yield_raw_fraction(parsed[""],
                                  item,
                                  "PercentTimeinGC",
-                                 label="% time in GC",
+                                 infoname="Time in GC",
                                  perfvar="percent",
                                  levels=params)
 
 
 check_info['dotnet_clrmemory'] = {
     'parse_function': parse_wmi_table,
-    'inventory_function': lambda parsed: inventory_wmi_table(
+    'inventory_function': lambda parsed: inventory_wmi_table_instances(
         parsed, filt=wmi_filter_global_only, levels="dotnet_clrmemory_defaultlevels"),
     'check_function': check_dotnet_clrmemory,
     'has_perfdata': True,

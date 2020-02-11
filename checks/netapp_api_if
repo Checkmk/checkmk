@@ -28,6 +28,13 @@
 # interface clu1-01_clus1 use-failover-group unused       address 222.254.110.11  dns-domain-name none    is-auto-revert true     lif-uuid 3d682f64-4bd1-11e5-a02c-0050569628b6   vserver Cluster role cluster    netmask-length 24       data-protocols.data-protocol none       operational-status up   netmask 255.255.255.0   failover-policy local_only      home-node clu1-01       address-family ipv4     current-port e0a        current-node clu1-01    routing-group-name c222.254.110.0/24    listen-for-dns-query false      administrative-status up        failover-group Cluster  home-port e0a   is-home true    send_data 4265424  send_errors 0   recv_errors 0   instance_name clu1-01_clus1     recv_data 5988948
 # interface clu1-01_clus2 use-failover-group unused       address 222.254.110.12  dns-domain-name none    is-auto-revert true     lif-uuid 3d6817c9-4bd1-11e5-a02c-0050569628b6   vserver Cluster role cluster    netmask-length 24       data-protocols.data-protocol none       operational-status up   netmask 255.255.255.0   failover-policy local_only      home-node clu1-01       address-family ipv4     current-port e0b        current-node clu1-01    routing-group-name c222.254.110.0/24    listen-for-dns-query false      administrative-status up        failover-group Cluster  home-port e0b   is-home true    send_data 4389886  send_errors 0   recv_errors 0   instance_name clu1-01_clus2     recv_data 6113182
 
+STATUS_MAP = {
+    "check_and_crit": 2,
+    "check_and_warn": 1,
+    "check_and_display": 0,
+}
+INFO_INCLUDED_MAP = {"dont_show_and_check": False}
+
 
 def netapp_convert_to_if64(info):
     interfaces = netapp_api_parse_lines(info)
@@ -177,10 +184,25 @@ def check_netapp_api_if(item, params, parsed):
         first_member = True
         if if_item_matches(item, ifIndex, ifAlias_cln, ifDescr_cln):
             vif = extra_info.get(ifDescr)
+
             if vif is not None:
-                if "home-port" in vif:
-                    home_attribute = "is %shome" % ("" if vif["is-home"] is True else "not ")
-                    yield 0, "Home Port: %s (%s)" % (vif["home-port"], home_attribute)
+                speed_state, speed_info_included = 1, True
+                home_state, home_info_included = 0, True
+                if params is not None:
+                    speed_behaviour = params.get("match_same_speed")
+                    speed_info_included = INFO_INCLUDED_MAP.get(speed_behaviour,
+                                                                speed_info_included)
+                    speed_state = STATUS_MAP.get(speed_behaviour, speed_state)
+
+                    home_behaviour = params.get("home_port")
+                    home_info_included = INFO_INCLUDED_MAP.get(home_behaviour, home_info_included)
+                    home_state = STATUS_MAP.get(home_behaviour, home_state)
+
+                if "home-port" in vif and home_info_included:
+                    is_home_port = vif["is-home"]
+                    state = 0 if is_home_port else home_state
+                    home_attribute = "is %shome port" % ("" if is_home_port else "not ")
+                    yield state, "Current Port: %s (%s)" % (vif["home-port"], home_attribute)
 
                 if "grouped_if" in vif:
                     for member_name, member_state in sorted(vif.get("grouped_if")):
@@ -199,18 +221,8 @@ def check_netapp_api_if(item, params, parsed):
                         else:
                             yield state, "%s(%s)" % (member_name, if_statename(member_state))
 
-                speed_status, show_speed_differs = 1, True
-                if params and params.get('match_same_speed'):
-                    behaviour = params.get('match_same_speed')
-                    if behaviour == "check_and_crit":
-                        speed_status = 2
-                    elif behaviour == "check_and_display":
-                        speed_status = 0
-                    elif behaviour == "dont_show_and_check":
-                        show_speed_differs = False
-
-                if "speed_differs" in vif and show_speed_differs:
-                    yield speed_status, "Interfaces do not have the same speed"
+                if "speed_differs" in vif and speed_info_included:
+                    yield speed_state, "Interfaces do not have the same speed"
 
 
 check_info["netapp_api_if"] = {

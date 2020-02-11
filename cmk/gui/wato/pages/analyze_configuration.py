@@ -1,28 +1,9 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """
 Provides the user with hints about his setup. Performs different
 checks and tells the user what could be improved.
@@ -30,15 +11,16 @@ checks and tells the user what could be improved.
 
 import time
 import multiprocessing
-import Queue
 import traceback
 import ast
+import six
 
 import cmk.utils.paths
 import cmk.utils.store as store
 
 import cmk.gui.watolib as watolib
 import cmk.gui.config as config
+import cmk.gui.escaping as escaping
 from cmk.gui.table import table_element
 import cmk.gui.log as log
 from cmk.gui.exceptions import MKUserError, MKGeneralException
@@ -119,7 +101,7 @@ class ModeAnalyzeConfig(WatoMode):
 
     def page(self):
         if not self._analyze_sites():
-            html.show_info(
+            html.show_message(
                 _("Analyze configuration can only be used with the local site and "
                   "distributed WATO slave sites. You currently have no such site configured."))
             return
@@ -243,7 +225,7 @@ class ModeAnalyzeConfig(WatoMode):
                     continue
 
                 html.open_tr()
-                html.td(html.attrencode(site_id))
+                html.td(escaping.escape_attribute(site_id))
                 html.td("%s: %s" % (result.status_name(), result.text))
                 html.close_tr()
             html.close_table()
@@ -288,7 +270,7 @@ class ModeAnalyzeConfig(WatoMode):
                 else:
                     raise NotImplementedError()
 
-            except Queue.Empty:
+            except six.moves.queue.Empty:
                 time.sleep(0.5)  # wait some time to prevent CPU hogs
 
             except Exception as e:
@@ -395,7 +377,7 @@ class ModeAnalyzeConfig(WatoMode):
         self._enable_test(test_id, False)
 
     def _save_acknowledgements(self, acknowledged_werks):
-        store.save_data_to_file(self._ack_path, acknowledged_werks)
+        store.save_object_to_file(self._ack_path, acknowledged_werks)
 
     def _load_acknowledgements(self, lock=False):
-        return store.load_data_from_file(self._ack_path, {}, lock=lock)
+        return store.load_object_from_file(self._ack_path, default={}, lock=lock)

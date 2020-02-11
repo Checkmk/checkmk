@@ -27,7 +27,7 @@
 
 def parse_sap_hana_ess(info):
     parsed = {}
-    for sid_instance, lines in parse_sap_hana(info).iteritems():
+    for sid_instance, lines in parse_sap_hana(info).items():
         inst_data = {}
         for line in lines:
             if len(line) < 2:
@@ -47,7 +47,7 @@ def parse_sap_hana_ess(info):
 
 
 def inventory_sap_hana_ess(parsed):
-    for item in parsed.iterkeys():
+    for item in parsed:
         yield item, {}
 
 

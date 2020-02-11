@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # TODO FIXME: Change attribute sync plugins to classes. The current dict
 # based approach is not very readable. Classes/objects make it a lot
@@ -61,16 +41,19 @@ import time
 from typing import Union, Dict, List, Set, Text  # pylint: disable=unused-import
 
 # docs: http://www.python-ldap.org/doc/html/index.html
-import ldap  # type: ignore
-import ldap.filter  # type: ignore
-from ldap.controls import SimplePagedResultsControl  # type: ignore
+import ldap  # type: ignore[import]
+import ldap.filter  # type: ignore[import]
+from ldap.controls import SimplePagedResultsControl  # type: ignore[import]
 import six
 
 import cmk
 import cmk.utils.paths
+import cmk.utils.store as store
+from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.config as config
 import cmk.gui.log as log
+import cmk.gui.escaping as escaping
 from cmk.gui.valuespec import (
     FixedValue,
     Dictionary,
@@ -90,7 +73,6 @@ from cmk.gui.valuespec import (
     Password,
 )
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKUserError, RequestTimeout
 from cmk.gui.plugins.userdb.utils import (
     UserConnector,
@@ -103,7 +85,7 @@ import cmk.gui.sites as sites
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 else:
-    managed = None  # type: ignore
+    managed = None  # type: ignore[assignment]
 
 # LDAP attributes are case insensitive, we only use lower case!
 # Please note: This are only default values. The user might override this
@@ -361,7 +343,7 @@ class LDAPUserConnector(UserConnector):
             self._logger.info('Using cached DC %s' % cached_server)
             return cached_server
 
-        import ad  # type: ignore  # pylint: disable=import-error
+        import ad  # type: ignore[import] # pylint: disable=import-error
         locator = ad.Locator()
         locator.m_logger = self._logger
         try:
@@ -383,7 +365,7 @@ class LDAPUserConnector(UserConnector):
 
     def _cache_nearest_dc(self, server):
         self._logger.debug('Caching nearest DC %s' % server)
-        cmk.utils.store.save_file(self._nearest_dc_cache_filepath(), server)
+        store.save_file(self._nearest_dc_cache_filepath(), server)
 
     def clear_nearest_dc_cache(self):
         if not self._uses_discover_nearest_server():
@@ -434,7 +416,7 @@ class LDAPUserConnector(UserConnector):
             conn = self._ldap_obj
         self._logger.info('LDAP_BIND %s' % user_dn)
         try:
-            conn.simple_bind_s(user_dn.encode("utf-8"), password)
+            conn.simple_bind_s(six.ensure_str(user_dn), password)
             self._logger.info('  SUCCESS')
         except ldap.LDAPError as e:
             self._logger.info('  FAILED (%s: %s)' % (e.__class__.__name__, e))
@@ -543,11 +525,8 @@ class LDAPUserConnector(UserConnector):
 
         lc = SimplePagedResultsControl(size=page_size, cookie='')
 
-        if isinstance(base, six.text_type):
-            base = base.encode("utf-8")
-
-        if isinstance(filt, six.text_type):
-            filt = filt.encode("utf-8")
+        base = six.ensure_str(base)
+        filt = six.ensure_str(filt)
 
         results = []
         while True:
@@ -604,10 +583,10 @@ class LDAPUserConnector(UserConnector):
                         if dn is None:
                             continue  # skip unwanted answers
                         new_obj = {}
-                        for key, val in obj.iteritems():
+                        for key, val in obj.items():
                             # Convert all keys to lower case!
-                            new_obj[key.decode('utf-8').lower()] = [i.decode('utf-8') for i in val]
-                        result.append((dn.decode('utf-8').lower(), new_obj))
+                            new_obj[ensure_unicode(key).lower()] = [ensure_unicode(i) for i in val]
+                        result.append((ensure_unicode(dn).lower(), new_obj))
                     success = True
                 except ldap.NO_SUCH_OBJECT as e:
                     raise MKLDAPException(
@@ -643,8 +622,9 @@ class LDAPUserConnector(UserConnector):
                 raise MKLDAPException(
                     _('Unable to successfully perform the LDAP search '
                       '(Base: %s, Scope: %s, Filter: %s, Columns: %s): %s') %
-                    (html.attrencode(base), html.attrencode(scope), html.attrencode(filt),
-                     html.attrencode(','.join(columns)), last_exc))
+                    (escaping.escape_attribute(base), escaping.escape_attribute(scope),
+                     escaping.escape_attribute(filt), escaping.escape_attribute(
+                         ','.join(columns)), last_exc))
             else:
                 raise MKLDAPException(
                     _('Unable to successfully perform the LDAP search (%s)') % last_exc)
@@ -839,7 +819,7 @@ class LDAPUserConnector(UserConnector):
                   'Please check <a href="%s">your configuration</a>.') %
                 'wato.py?mode=ldap_config&varname=ldap_userspec')
 
-        return [m.lower() for m in group[0][1].values()[0]]
+        return [m.lower() for m in list(group[0][1].values())[0]]
 
     def get_group_memberships(self, filters, filt_attr='cn', nested=False):
         cache_key = (tuple(filters), nested, filt_attr)
@@ -1999,26 +1979,33 @@ def register_user_attribute_sync_plugins():
             del ldap_attribute_plugin_registry[ident]
 
     for name, attr in get_user_attributes():
-        plugin_class = type("LDAPUserAttributePlugin%s" % name.title(), (LDAPUserAttributePlugin,), {
-            "ident": name,
-            "title": attr.valuespec().title(),
-            "help": attr.valuespec().help(),
-            'needed_attributes': lambda self, connection, params: [params.get("attr", connection.ldap_attr(self.ident)).lower()],
-            'lock_attributes': lambda self, params: [ self.ident ],
-            'parameters': lambda self, connection: Dictionary(
-                title=self.title,
-                help=self.help,
-                elements = [
-                    ('attr', TextAscii(
-                        title = _("LDAP attribute to sync"),
-                        help  = _("The LDAP attribute whose contents shall be synced into this custom attribute."),
-                        default_value = lambda: ldap_attr_of_connection(connection.id(), self.ident),
-                    )),
-                ],
-            ),
-            'sync_func': lambda self, connection, plugin, params, user_id, ldap_user, user: \
-                        ldap_sync_simple(user_id, ldap_user, user, plugin, self.needed_attributes(connection, params)[0]),
-        })
+        plugin_class = type(
+            "LDAPUserAttributePlugin%s" % name.title(), (LDAPUserAttributePlugin,), {
+                "ident": name,
+                "title": attr.valuespec().title(),
+                "help": attr.valuespec().help(),
+                'needed_attributes': lambda self, connection, params:
+                                     [params.get("attr", connection.ldap_attr(self.ident)).lower()],
+                'lock_attributes': lambda self, params: [self.ident],
+                'parameters': lambda self, connection: Dictionary(
+                    title=self.title,
+                    help=self.help,
+                    elements=[
+                        ('attr',
+                         TextAscii(
+                             title=_("LDAP attribute to sync"),
+                             help=
+                             _("The LDAP attribute whose contents shall be synced into this custom attribute."
+                              ),
+                             default_value=lambda: ldap_attr_of_connection(
+                                 connection.id(), self.ident),
+                         )),
+                    ],
+                ),
+                'sync_func': lambda self, connection, plugin, params, user_id, ldap_user, user:
+                             ldap_sync_simple(user_id, ldap_user, user, plugin,
+                                              self.needed_attributes(connection, params)[0]),
+            })
         ldap_attribute_plugin_registry.register(plugin_class)
 
 
@@ -2095,7 +2082,7 @@ def get_groups_of_user(connection, user_id, ldap_user, cg_names, nested, other_c
 
     # Now add the groups the user is a member off
     group_cns = []
-    for group in ldap_groups.itervalues():
+    for group in ldap_groups.values():
         if user_cmp_val in group['members']:
             group_cns.append(group['cn'])
 
@@ -2295,7 +2282,7 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
                 }
 
         changed_attr = params.get('attr', connection.ldap_attr('pw_changed')).lower()
-        if not changed_attr in ldap_user:
+        if changed_attr not in ldap_user:
             raise MKLDAPException(
                 _('The "Authentication Expiration" attribute (%s) could not be fetched '
                   'from the LDAP server for user %s.') % (changed_attr, ldap_user))
@@ -2640,7 +2627,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
 
     def _get_groups_to_fetch(self, connection, params):
         groups_to_fetch = {}
-        for group_specs in params.itervalues():
+        for group_specs in params.values():
             if isinstance(group_specs, list):
                 for group_spec in group_specs:
                     if isinstance(group_spec, tuple):
@@ -2834,7 +2821,7 @@ def _sychronize_profile_worker(states, site_id, site, profiles_to_synchronize):
     try:
         result = user_profile.push_user_profiles_to_site_transitional_wrapper(
             site, profiles_to_synchronize)
-        if result != True:
+        if result is not True:
             return SynchronizationResult(site_id, error_text=result, failed=True)
         return SynchronizationResult(site_id, succeeded=True)
     except RequestTimeout:

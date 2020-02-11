@@ -1,6 +1,15 @@
 #!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
 
-import sys, os, time, termios, tty, subprocess
+import fcntl
+import os
+import struct
+import subprocess
+import sys
+import termios
+import time
+import tty
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple  # pylint: disable=unused-import
 
 # colored output, if stdout is a tty
 if sys.stdout.isatty():
@@ -43,7 +52,7 @@ else:
     tty_normal = ''
     tty_ok = 'OK'
 
-    def tty_colors(c):
+    def tty_colors(codes):
         return ""
 
 
@@ -55,14 +64,13 @@ grep_colors = [
 
 
 def get_tty_size():
-    import termios, struct, fcntl
     try:
         ws = struct.pack("HHHH", 0, 0, 0, 0)
         ws = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, ws)
-        lines, columns, x, y = struct.unpack("HHHH", ws)
+        lines, columns, _x, _y = struct.unpack("HHHH", ws)
         if lines > 0 and columns > 0:
             return lines, columns
-    except:
+    except Exception:
         pass
     return (24, 99999)
 
@@ -70,6 +78,9 @@ def get_tty_size():
 def bail_out(text):
     sys.stderr.write(text + "\n")
     sys.exit(1)
+
+
+g_base_dir = ""
 
 
 def goto_werksdir():
@@ -80,9 +91,12 @@ def goto_werksdir():
 
     try:
         os.chdir(".werks")
-    except:
+    except Exception:
         sys.stderr.write("Cannot find directory .werks\n")
         sys.exit(1)
+
+
+g_last_werk = None  # type: Optional[int]
 
 
 def load_config():
@@ -90,8 +104,11 @@ def load_config():
     exec (open("config").read(), globals(), globals())
     try:
         g_last_werk = int(open(".last").read())
-    except:
+    except Exception:
         g_last_werk = None
+
+
+g_werks = {}  # type: Dict[int, Dict[str, Any]]
 
 
 def load_werks():
@@ -103,16 +120,16 @@ def load_werks():
             werkid = int(entry)
             try:
                 g_werks[werkid] = load_werk(werkid)
-            except:
+            except Exception:
                 sys.stderr.write("SKIPPING INVALID werk %d\n" % werkid)
-        except:
+        except Exception:
             continue
 
 
-def save_last_werkid(id):
+def save_last_werkid(wid):
     try:
-        open(".last", "w").write("%d\n" % int(id))
-    except:
+        open(".last", "w").write("%d\n" % int(wid))
+    except Exception:
         pass
 
 
@@ -125,15 +142,18 @@ def load_current_version():
     bail_out("Failed to read VERSION from defines.make")
 
 
+g_modified = set()  # type: Set[int]
+
+
 def check_modified():
     global g_modified
     g_modified = set([])
     for line in os.popen("git status --porcelain"):
         if line[0] in "AM" and ".werks/" in line:
             try:
-                id = line.rsplit("/", 1)[-1].strip()
-                g_modified.add(int(id))
-            except:
+                wid = line.rsplit("/", 1)[-1].strip()
+                g_modified.add(int(wid))
+            except Exception:
                 pass
 
 
@@ -199,7 +219,7 @@ def git_add(werk):
 
 def git_commit(werk, custom_files):
     title = werk["title"]
-    for classid, classname, prefix in classes:
+    for classid, _classname, prefix in classes:
         if werk["class"] == classid:
             if prefix:
                 title = "%s %s" % (prefix, title)
@@ -231,8 +251,7 @@ def git_commit(werk, custom_files):
 
 def git_top_level():
     info = subprocess.Popen(["git", "rev-parse", "--show-toplevel"], stdout=subprocess.PIPE)
-    git_top_level = info.communicate()[0].split()[0]
-    return git_top_level
+    return info.communicate()[0].split()[0]
 
 
 def something_in_git_index():
@@ -271,7 +290,6 @@ where COMMAND is one of:
   list [-r] [STATE]      - list werks (-r: reverse)
   new                    - create a new werk
   show [# #..]           - show several werks, or 'all' for all, of leave out for last
-  resolve ID             - change a werks state
   delete #..             - delete werk(s)
   grep [-v] KW1 KW2...   - show werks containing all of the given keywords (-v: verbose)
   edit [#]               - open werk # in editor (or newest werk)
@@ -298,7 +316,7 @@ def list_werk(werk):
         bold = tty_bold + tty_cyan + "(*) "
     else:
         bold = ""
-    lines, cols = get_tty_size()
+    _lines, cols = get_tty_size()
     title = werk["title"][:cols - 45]
     sys.stdout.write(
         "%s %-9s %s %s %3s %-13s %-6s %s%s%s %-8s %s%s%s\n" %
@@ -324,8 +342,7 @@ def format_knw_state(knw_state):
 def colored_class(classname, digits):
     if classname == "fix":
         return tty_bold + tty_red + ("%-" + str(digits) + "s") % classname + tty_normal
-    else:
-        return ("%-" + str(digits) + "s") % classname
+    return ("%-" + str(digits) + "s") % classname
 
 
 def show_werk(werk):
@@ -333,7 +350,7 @@ def show_werk(werk):
     sys.stdout.write("\n%s\n" % werk["description"])
 
 
-def main_list(args, format):
+def main_list(args, fmt):
     werks = g_werks.values()
 
     # arguments are tags from state, component and class. Multiple values
@@ -383,14 +400,12 @@ def main_list(args, format):
             newwerks.append(werk)
     werks = newwerks
 
-    # Sort
-    if sort:
-        newwerks.sort(sort)
+    newwerks.sort(sort)
     if reverse:
         newwerks.reverse()
 
     # Output
-    if format == "console":
+    if fmt == "console":
         for werk in werks:
             list_werk(werk)
     else:
@@ -447,16 +462,16 @@ def main_show(args):
             bail_out("No last werk known. Please specify id.")
         ids = [g_last_werk]
     elif ids[0] == 'all':
-        ids = [id for (id, werk) in g_werks.items()]
+        ids = [wid for (wid, _werk) in g_werks.items()]
 
-    for id in ids:
-        if id != ids[0]:
+    for wid in ids:
+        if wid != ids[0]:
             sys.stdout.write(
                 "-------------------------------------------------------------------------------\n")
         try:
-            show_werk(g_werks[int(id)])
-        except 1:
-            sys.stderr.write("Skipping invalid werk id '%s'\n" % id)
+            show_werk(g_werks[int(wid)])
+        except Exception:
+            sys.stderr.write("Skipping invalid werk id '%s'\n" % wid)
     save_last_werkid(ids[-1])
 
 
@@ -466,8 +481,7 @@ def get_input(what, default=""):
     value = sys.stdin.readline().strip()
     if value == "":
         return default
-    else:
-        return value
+    return value
 
 
 def get_long_input(what):
@@ -540,7 +554,23 @@ def all_components():
     return components
 
 
+werk_notes = """
+    .---Werk----------------------------------------------------------------------.
+    |                                                                             |
+    |             Das Werk ist für den User/Admin gedacht!!                       |
+    |                                                                             |
+    |  Anhand des Titels soll der User sofort erkennen, ob er/sie betroffen ist.  |
+    |  In den Details soll beschrieben werden, was er/sie ggfs. tun muss.         |
+    |  Es dürfen auch gerne technische Details erläutert werden.                  |
+    |                                                                             |
+    '-----------------------------------------------------------------------------'
+
+"""
+
+
 def main_new(args):
+    sys.stdout.write(tty_green + werk_notes + tty_normal)
+
     werk = {}
     werk["id"] = next_werk_id()
     werk["date"] = int(time.time())
@@ -572,50 +602,27 @@ def get_werk_arg(args):
     if len(args) == 0:
         if g_last_werk is None:
             bail_out("No last werk, please specify id.")
-        id = g_last_werk
+        wid = g_last_werk
     else:
         if len(args) != 1:
             usage()
-        id = int(args[0])
+        wid = int(args[0])
 
-    werk = g_werks.get(id)
+    werk = g_werks.get(wid)
     if not werk:
         bail_out("No such werk.\n")
-    save_last_werkid(id)
-    return id
+    save_last_werkid(wid)
+    return wid
 
 
 def main_blame(args):
-    id = get_werk_arg(args)
-    os.system("git blame %d" % id)  # nosec
+    wid = get_werk_arg(args)
+    os.system("git blame %d" % wid)  # nosec
 
 
 def main_url(args):
-    id = get_werk_arg(args)
-    sys.stdout.write(online_url % id + "\n")
-
-
-def main_resolve(args):
-    if len(args) == 0:
-        if g_last_werk is None:
-            bail_out("No last werk, please specify id.")
-        id = g_last_werk
-    else:
-        if len(args) != 1:
-            usage()
-        id = int(args[0])
-
-    werk = g_werks.get(id)
-    if not werk:
-        bail_out("No such werk.\n")
-
-    show_werk(werk)
-    state = input_choice("State", states.keys())
-
-    comment = get_long_input("comment")
-    add_comment(werk, "changed state %s -> %s" % (werk["state"], state), comment)
-    werk["state"] = state
-    save_werk(werk)
+    wid = get_werk_arg(args)
+    sys.stdout.write(online_url % wid + "\n")
 
 
 def main_delete(args):
@@ -627,7 +634,7 @@ def main_delete(args):
         if not werk_exists(werk_id):
             bail_out("There is no werk %s." % format_werk_id(werk_id))
 
-        if 0 == os.system("git rm -f %s" % werk_id):  # nosec
+        if os.system("git rm -f %s" % werk_id) == 0:  # nosec
             sys.stdout.write("Deleted werk %s (%s).\n" %
                              (format_werk_id(werk_id), g_werks[int(werk_id)]["title"]))
             my_ids = get_werk_ids()
@@ -642,9 +649,8 @@ def grep(line, kw, n):
     i = line.lower().find(lc)
     if i == -1:
         return None
-    else:
-        col = grep_colors[n % len(grep_colors)]
-        return line[0:i] + col + line[i:i + len(kw)] + tty_normal + line[i + len(kw):]
+    col = grep_colors[n % len(grep_colors)]
+    return line[0:i] + col + line[i:i + len(kw)] + tty_normal + line[i + len(kw):]
 
 
 def main_grep(args):
@@ -723,7 +729,7 @@ def main_edit(args):
         try:
             werkid = int(args[0])
             args = args[1:]
-        except:
+        except Exception:
             werkid = int(g_last_werk)
             if werkid is None:
                 bail_out("No last werk. Please specify id.")
@@ -732,7 +738,9 @@ def main_edit(args):
     save_last_werkid(werkid)
 
 
-def edit_werk(werkid, custom_files=[], commit=True):
+def edit_werk(werkid, custom_files=None, commit=True):
+    if custom_files is None:
+        custom_files = []
     if not os.path.exists(str(werkid)):
         bail_out("No werk with this id.")
     editor = os.getenv("EDITOR")
@@ -744,7 +752,7 @@ def edit_werk(werkid, custom_files=[], commit=True):
     if not editor:
         bail_out("No editor available (please set EDITOR).\n")
 
-    if 0 == os.system("bash -c '%s +11 %s'" % (editor, werkid)):  # nosec
+    if os.system("bash -c '%s +11 %s'" % (editor, werkid)) == 0:  # nosec
         load_werks()
         werk = g_werks[werkid]
         git_add(g_werks[werkid])
@@ -757,11 +765,11 @@ def main_commit(args):
         bail_out("No new or modified werk.")
     else:
         sys.stdout.write("Commiting:\n")
-        for id in g_modified:
-            list_werk(g_werks[id])
+        for wid in g_modified:
+            list_werk(g_werks[wid])
         cmd = "git commit -m 'Updated werk entries %s' ." % (", ".join(
-            ["#%05d" % id for id in g_modified]))
-        if 0 == os.system(cmd):  # nosec
+            ["#%05d" % wid for wid in g_modified]))
+        if os.system(cmd) == 0:  # nosec
             sys.stdout.write("--> Successfully committed %d werks.\n" % len(g_modified))
         else:
             bail_out("Cannot commit.")
@@ -790,7 +798,7 @@ def werk_cherry_pick(commit_id, no_commit):
     for line in os.popen("git status --porcelain"):  # nosec
         # M  .werks/103
         #  M werk
-        status, filename = line.strip().split(None, 1)
+        _status, filename = line.strip().split(None, 1)
         if filename.startswith(".werks/") and filename[7].isdigit():
             werk_id = int(filename[7:])
             change_werk_version(werk_id, g_current_version)
@@ -810,13 +818,13 @@ def werk_cherry_pick(commit_id, no_commit):
 def get_werk_ids():
     try:
         return eval(open('.my_ids', 'r').read())
-    except:
+    except Exception:
         return []
 
 
-def invalidate_my_werkid(id):
+def invalidate_my_werkid(wid):
     ids = get_werk_ids()
-    ids.remove(id)
+    ids.remove(wid)
     store_werk_ids(ids)
 
 
@@ -875,7 +883,7 @@ def main_fetch_ids(args):
     sys.stdout.write('Reserved %d additional IDs now. You have %d reserved IDs now.\n' %
                      (num, len(my_ids)))
 
-    if 0 == os.system("git commit -m 'Reserved %d Werk IDS' ." % num):  # nosec
+    if os.system("git commit -m 'Reserved %d Werk IDS' ." % num) == 0:  # nosec
         sys.stdout.write("--> Successfully committed reserved werk IDS. Please push it soon!\n")
     else:
         bail_out("Cannot commit.")
@@ -889,16 +897,16 @@ def main_fetch_ids(args):
 #
 
 # default config
-editions = []
-components = []
-edition_components = {}
-classes = []
-levels = []
-compatible = []
-knowledge = []
-online_url = None
+editions = []  # type: List[Tuple[str,str]]
+components = []  # type: List[Tuple[str,str]]
+edition_components = {}  # type: Dict[str, List[Tuple[str,str]]]
+classes = []  # type: List[Tuple[str,str]]
+levels = []  # type: List[Tuple[str,str]]
+compatible = []  # type: List[Tuple[str,str]]
+knowledge = []  # type: List[Tuple[str,str]]
+online_url = ""
 
-versions = set([])
+versions = set([])  # type: Set[str]
 goto_werksdir()
 load_config()
 load_werks()
@@ -907,7 +915,7 @@ g_current_version = load_current_version()
 if len(sys.argv) < 2:
     usage()
 
-cmd = sys.argv[1]
+cmd_arg = sys.argv[1]
 commands = {
     "list": lambda args: main_list(args, "console"),
     "export": lambda args: main_list(args, "csv"),
@@ -925,20 +933,20 @@ commands = {
     "url": main_url,
 }
 
-hits = []
-for name, func in commands.items():
-    if name == cmd:
-        hits = [(name, func)]
+hits = []  # type: List[Tuple[str,Callable[[List[str]], None]]]
+for cmd_name, func in commands.items():
+    if cmd_name == cmd_arg:
+        hits = [(cmd_name, func)]
         break
-    elif name.startswith(cmd):
-        hits.append((name, func))
+    elif cmd_name.startswith(cmd_arg):
+        hits.append((cmd_name, func))
 
 if len(hits) < 1:
     usage()
 
 elif len(hits) > 1:
     sys.stderr.write("Command '%s' is ambigous. Possible are: %s\n" % \
-            (cmd, ", ".join([ n for (n,f) in hits])))
+            (cmd_arg, ", ".join([ candidate for (candidate,_f) in hits])))
 
 else:
     hits[0][1](sys.argv[2:])

@@ -133,7 +133,7 @@ def parse_rstcli(info):
 
 
 def inventory_rstcli(parsed):
-    return [(name, None) for name in parsed.keys()]
+    return [(name, None) for name in parsed]
 
 
 # Help! There is no documentation, what are the possible values?
@@ -142,12 +142,11 @@ rstcli_states = {
 }
 
 
-def check_rstcli(item, params, parsed):
-    if item in parsed:
-        volume = parsed[item]
-        return rstcli_states.get(volume['State']), "RAID %s, %d disks (%s), state %s" % \
-            (volume['Raid Level'], int(volume['Num Disks']),
-             volume['Size'], volume['State'])
+@get_parsed_item_data
+def check_rstcli(_item, _no_params, volume):
+    return rstcli_states.get(volume['State'], 3), "RAID %s, %d disks (%s), state %s" % \
+        (volume['Raid Level'], int(volume['Num Disks']),
+         volume['Size'], volume['State'])
 
 
 check_info["rstcli"] = {
@@ -159,18 +158,13 @@ check_info["rstcli"] = {
 
 
 def inventory_rstcli_pdisks(parsed):
-    for key, volume in parsed.iteritems():
+    for key, volume in parsed.items():
         for disk in volume['Disks']:
             yield "%s/%s" % (key, disk['ID']), None
 
 
-def check_rstcli_pdisks(item, params, parsed):
-    reg = regex(r"(.*)/([0-9\-]*)")
-    match = reg.match(item)
-    if not match:
-        return 3, "unsupported item name"
-
-    volume, disk_id = match.group(1), match.group(2)
+def check_rstcli_pdisks(item, _no_params, parsed):
+    volume, disk_id = item.rsplit('/', 1)
 
     disks = parsed.get(volume, {}).get('Disks', [])
     for disk in disks:

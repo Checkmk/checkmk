@@ -45,7 +45,7 @@ def parse_ibm_svc_license(info):
     for line in info:
         if line[0].startswith("license_"):
             license_ = line[0].replace("license_", "")
-            if not license_ in licenses.keys():
+            if not license_ in licenses:
                 licenses[license_] = [0.0, 0.0]
             if line[1] == "off":
                 licenses[license_][0] = 0.0
@@ -53,7 +53,7 @@ def parse_ibm_svc_license(info):
                 licenses[license_][0] = float(line[1])
         if line[0].startswith("used_"):
             license_ = line[0].replace("used_", "")
-            if not license_ in licenses.keys():
+            if not license_ in licenses:
                 licenses[license_] = [0.0, 0.0]
             licenses[license_][1] = float(line[1])
     return licenses

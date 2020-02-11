@@ -31,11 +31,11 @@ _flatten = itertools.chain.from_iterable
 
 def _has_tls(path, hosts):
     """Return True if path is available over TLS, otherwise return False."""
-    return path.split("/", 1)[0] in _flatten(hosts.itervalues())
+    return path.split("/", 1)[0] in _flatten(iter(hosts.values()))
 
 
 def _iter_backends(parsed):
-    for data in sorted(parsed.itervalues()):
+    for data in sorted(parsed.values()):
         for backend in data['backends']:
             yield backend, data
 

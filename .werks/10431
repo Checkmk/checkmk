@@ -1,0 +1,30 @@
+Title: New agent rule for Checkmk agent service on Linux
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1574780567
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+It is now possible to choose which, if any, network service should
+be shipped and installed with a baked Linux Checkmk agent package.
+
+This can be configured with the new agent ruleset "Checkmk agent network service (Linux)"
+
+It is possible to choose between the following services/super servers setups:
+<li>Ship service files for xinetd and systemd, prefer to activate xinetd service,
+fallback to systemd if xinetd is not available</li>
+<li>Ship and activate xinetd service</li>
+<li>Ship and activate systemd service</li>
+<li>Don't ship any service files</li>
+
+If no rule is configured, the behavior will be identical to the first of the mentioned
+choices (prefer xinetd, fallback to systemd).
+
+If the super server(s) of your choice is/are not available at the target system, you
+will be noticed about this on agent installation.
+
+The last option (no service) is a reasonable choice if you want to monitor the hosts
+without the use of a super server, e.g. via SSH.

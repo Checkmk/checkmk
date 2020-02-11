@@ -49,7 +49,13 @@ def check_ucd_mem(item, params, info):
     mem_total_bytes, mem_avail_bytes = \
         [int(x.replace("kB", "").strip()) * 1024 for x in info[0]]
     mem_used_bytes = mem_total_bytes - mem_avail_bytes
-    return check_memory_simple(mem_used_bytes, mem_total_bytes, params)
+    return check_memory_element(
+        "Usage",
+        mem_used_bytes,
+        mem_total_bytes,
+        params.get("levels"),
+        metric_name="memory_used",
+    )
 
 
 check_info['ucd_mem'] = {
@@ -69,5 +75,5 @@ check_info['ucd_mem'] = {
     'snmp_scan_function': is_ucd_mem,
     'default_levels_variable': 'ucd_mem_default_levels',
     'group': 'memory_simple',
-    'includes': ["ucd_hr.include", "memory.include"],
+    'includes': ["ucd_hr.include", "mem.include"],
 }

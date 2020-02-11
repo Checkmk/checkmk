@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -28,35 +28,61 @@ from collections import namedtuple
 import argparse
 import sys
 import requests
-import urllib3  # type: ignore
+import urllib3  # type: ignore[import]
+import cmk.utils.password_store
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+cmk.utils.password_store.replace_passwords()
 
 Section = namedtuple('Section', ['name', 'uri', 'handler'])
 
 
-def main():
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
     # Sections to query
     # https://docs.splunk.com/Documentation/Splunk/7.2.6/RESTREF/RESTlicense#licenser.2Fpools
     sections = [
-        Section(name="license_state",
-                uri="/services/licenser/licenses",
-                handler=handle_license_state),
-        Section(name="license_usage", uri="/services/licenser/usage", handler=handle_license_usage),
-        Section(name="system_msg", uri="/services/messages", handler=handle_system_msg),
-        Section(name="jobs", uri="/services/search/jobs", handler=handle_jobs),
-        Section(name="health", uri="/services/server/health/splunkd/details",
-                handler=handle_health),
-        Section(name="alerts", uri="/services/alerts/fired_alerts", handler=handle_alerts),
+        Section(
+            name="license_state",
+            uri="/services/licenser/licenses",
+            handler=handle_license_state,
+        ),
+        Section(
+            name="license_usage",
+            uri="/services/licenser/usage",
+            handler=handle_license_usage,
+        ),
+        Section(
+            name="system_msg",
+            uri="/services/messages",
+            handler=handle_system_msg,
+        ),
+        Section(
+            name="jobs",
+            uri="/services/search/jobs",
+            handler=handle_jobs,
+        ),
+        Section(
+            name="health",
+            uri="/services/server/health/splunkd/details",
+            handler=handle_health,
+        ),
+        Section(
+            name="alerts",
+            uri="/services/alerts/fired_alerts",
+            handler=handle_alerts,
+        ),
     ]
 
-    args = parse_arguments()
+    args = parse_arguments(argv)
 
     sys.stdout.write("<<<check_mk>>>\n")
 
     try:
         handle_request(args, sections)
-    except Exception:
+    except Exception as e:
+        sys.stderr.write("Unhandled exception: %s\n" % e)
         if args.debug:
             return 1
 
@@ -65,27 +91,33 @@ def handle_request(args, sections):
     url_base = "%s://%s:%d" % (args.proto, args.hostname, args.port)
 
     for section in sections:
-        try:
-            url = url_base + section.uri
-            response = requests.get(url,
-                                    auth=(args.user, args.password),
-                                    data={"output_mode": "json"})
-
-        except requests.exceptions.RequestException as e:
-            sys.stderr.write("Error: %s\n" % e)
-            if args.debug:
-                raise
-        else:
-            sys.stdout.write("<<<splunk_%s>>>\n" % section.name)
-
         if section.name in args.modules:
-            value = response.json()['entry']
+            try:
+                url = url_base + section.uri
+
+                response = requests.get(
+                    url,
+                    auth=(args.user, args.password),
+                    data={"output_mode": "json"},
+                )
+
+                response.raise_for_status()
+
+            except requests.exceptions.RequestException as e:
+                sys.stderr.write("Error: %s\n" % e)
+                if args.debug:
+                    raise
+                return 1
+
+            value = response.json().get('entry')
+            if value is None:
+                continue
+
+            sys.stdout.write("<<<splunk_%s>>>\n" % section.name)
             section.handler(value)
 
 
-def parse_arguments(argv=None):
-    if argv is None:
-        argv = sys.argv[1:]
+def parse_arguments(argv):
 
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawTextHelpFormatter)
@@ -112,12 +144,11 @@ def parse_arguments(argv=None):
     parser.add_argument("--debug",
                         action="store_true",
                         help="Debug mode: let Python exceptions come through")
-
     parser.add_argument("hostname",
                         metavar="HOSTNAME",
                         help="Name of the splunk instance to query.")
 
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def handle_license_state(value):
@@ -170,11 +201,11 @@ def handle_jobs(value):
 def handle_health(value):
     sys.stdout.write("Overall_state %s\n" % value[0].get("content", {}).get("health"))
 
-    for func, state in value[0]["content"]["features"].iteritems():
+    for func, state in value[0]["content"]["features"].items():
         func_name = "%s%s" % (func[0].upper(), func[1:].lower())
         sys.stdout.write("%s %s\n" % (func_name.replace(" ", "_"), state.get("health", {})))
 
-        for feature, status in state["features"].iteritems():
+        for feature, status in state["features"].items():
             feature_name = "%s%s" % (feature[0].upper(), feature[1:].lower())
             sys.stdout.write(
                 "%s %s %s\n" %

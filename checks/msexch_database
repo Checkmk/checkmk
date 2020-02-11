@@ -97,7 +97,7 @@ def parse_msexch_database(info):
 
 
 def inventory_msexch_database(parsed):
-    for instance, data in parsed.iteritems():
+    for instance, data in parsed.items():
         if any(entry[0] in data for entry in _CHECKED_COUNTERS):
             yield instance, None
 

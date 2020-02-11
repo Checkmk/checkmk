@@ -29,6 +29,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include "Column.h"
 #include "StringColumn.h"
 #include "nagios.h"
 class MonitoringCore;
@@ -38,7 +39,7 @@ class MacroExpander {
 public:
     virtual ~MacroExpander() = default;
     virtual std::optional<std::string> expand(const std::string &str) = 0;
-    std::optional<std::string> from_ptr(const char *str);
+    static std::optional<std::string> from_ptr(const char *str);
 };
 
 // poor man's monad...
@@ -74,18 +75,19 @@ private:
 
 class OffsetStringMacroColumn : public StringColumn {
 public:
+    // TODO(ml): 5 offsets!
     OffsetStringMacroColumn(const std::string &name,
-                            const std::string &description, int indirect_offset,
-                            int extra_offset, int extra_extra_offset,
+                            const std::string &description,
+                            const Column::Offsets &offsets,
                             const MonitoringCore *mc, int offset)
-        : StringColumn(name, description, indirect_offset, extra_offset,
-                       extra_extra_offset, 0)
+        : StringColumn(name, description, offsets)
         , _mc(mc)
         , _string_offset(offset) {}
 
-    std::string getValue(Row row) const override;
+    [[nodiscard]] std::string getValue(Row row) const override;
 
-    virtual std::unique_ptr<MacroExpander> getMacroExpander(Row row) const = 0;
+    [[nodiscard]] virtual std::unique_ptr<MacroExpander> getMacroExpander(
+        Row row) const = 0;
 
 protected:
     const MonitoringCore *const _mc;

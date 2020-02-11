@@ -78,19 +78,19 @@ def ibm_svc_systemstats_parse(info):
     for stat_name, stat_current, _stat_peak, _stat_peak_time in info:
         if stat_name in ("vdisk_r_mb", "vdisk_w_mb", "vdisk_r_io", "vdisk_w_io", "vdisk_r_ms",
                          "vdisk_w_ms"):
-            if "VDisks" not in parsed.keys():
+            if "VDisks" not in parsed:
                 parsed["VDisks"] = {}
             stat_name = stat_name.replace("vdisk_", "")
             parsed["VDisks"][stat_name] = int(stat_current)
         if stat_name in ("mdisk_r_mb", "mdisk_w_mb", "mdisk_r_io", "mdisk_w_io", "mdisk_r_ms",
                          "mdisk_w_ms"):
-            if "MDisks" not in parsed.keys():
+            if "MDisks" not in parsed:
                 parsed["MDisks"] = {}
             stat_name = stat_name.replace("mdisk_", "")
             parsed["MDisks"][stat_name] = int(stat_current)
         if stat_name in ("drive_r_mb", "drive_w_mb", "drive_r_io", "drive_w_io", "drive_r_ms",
                          "drive_w_ms"):
-            if "Drives" not in parsed.keys():
+            if "Drives" not in parsed:
                 parsed["Drives"] = {}
             stat_name = stat_name.replace("drive_", "")
             parsed["Drives"][stat_name] = int(stat_current)
@@ -114,7 +114,7 @@ def inventory_ibm_svc_systemstats_diskio(info):
 def check_ibm_svc_systemstats_diskio(item, _no_params, info):
     parsed = ibm_svc_systemstats_parse(info)
 
-    if item not in parsed.keys():
+    if item not in parsed:
         return 3, "%s not found in agent output" % item
 
     read_bytes = parsed[item]['r_mb'] * 1024 * 1024
@@ -151,7 +151,7 @@ def inventory_ibm_svc_systemstats_iops(info):
 def check_ibm_svc_systemstats_iops(item, _no_params, info):
     parsed = ibm_svc_systemstats_parse(info)
 
-    if item not in parsed.keys():
+    if item not in parsed:
         return 3, "%s not found in agent output" % item
 
     read_iops = parsed[item]['r_io']
@@ -186,7 +186,7 @@ def inventory_ibm_svc_systemstats_disk_latency(info):
 def check_ibm_svc_systemstats_disk_latency(item, params, info):
     parsed = ibm_svc_systemstats_parse(info)
 
-    if item not in parsed.keys():
+    if item not in parsed:
         yield 3, "%s not found in agent output" % item
         return
 

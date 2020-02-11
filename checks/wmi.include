@@ -81,8 +81,7 @@ class WMITable(object):
             try:
                 self.__key_index = self.__headers[self._normalize_key(key_field)]
             except KeyError as e:
-                raise KeyError(e.message + " missing, valid keys: " +
-                               ", ".join(self.__headers.keys()))
+                raise KeyError(e.message + " missing, valid keys: " + ", ".join(self.__headers))
 
         self.__row_lookup = {}
         self.__rows = []
@@ -99,7 +98,7 @@ class WMITable(object):
                     key_field = header
 
         headers = [
-            name for name, index in sorted(self.__headers.iteritems(), lambda x, y: x[1] - y[1])
+            name for name, index in sorted(iter(self.__headers.items()), lambda x, y: x[1] - y[1])
         ]
 
         return "%s(%r, %r, %r, %r, %r, %r)" % (self.__class__.__name__, self.__name, headers,
@@ -164,12 +163,11 @@ class WMITable(object):
             try:
                 col_index = self.__headers[self._normalize_key(column)]
             except KeyError as e:
-                raise KeyError(e.message + " missing, valid keys: " +
-                               ", ".join(self.__headers.keys()))
+                raise KeyError(e.message + " missing, valid keys: " + ", ".join(self.__headers))
         return self.__rows[row_index][col_index]
 
     def row_labels(self):
-        return self.__row_lookup.keys()
+        return list(self.__row_lookup)
 
     def row_count(self):
         return len(self.__rows)
@@ -314,12 +312,12 @@ def wmi_filter_global_only(tables, row):
 
 
 def _required_tables_missing(tables, required_tables):
-    return not set(required_tables).issubset(set(tables.keys()))
+    return not set(required_tables).issubset(set(tables))
 
 
 def inventory_wmi_table_instances(tables, required_tables=None, filt=None, levels=None):
     if required_tables is None:
-        required_tables = tables.keys()
+        required_tables = tables
 
     if _required_tables_missing(tables, required_tables):
         return []
@@ -341,7 +339,7 @@ def inventory_wmi_table_instances(tables, required_tables=None, filt=None, level
 
 def inventory_wmi_table_total(tables, required_tables=None, filt=None, levels=None):
     if required_tables is None:
-        required_tables = tables.keys()
+        required_tables = tables
 
     if not tables or _required_tables_missing(tables, required_tables):
         return []
@@ -355,23 +353,6 @@ def inventory_wmi_table_total(tables, required_tables=None, filt=None, levels=No
     if not total_present:
         return []
     return [(None, levels)]
-
-
-def inventory_wmi_table(tables, required_tables=None, filt=None, levels=None):
-    '''DO NOT USE
-
-    Please use either inventory_wmi_table_instances or inventory_wmi_table_total
-    directly. This function sometimes returns strings and sometimes None as an item.
-    '''
-    instances = inventory_wmi_table_instances(tables, required_tables, filt, levels)
-    if instances:
-        return instances
-
-    total = inventory_wmi_table_total(tables, required_tables, filt, levels)
-    if total:
-        return total
-
-    return []
 
 
 #.
@@ -394,52 +375,19 @@ def get_wmi_time(table, row):
     return float(timestamp) / float(frequency)
 
 
-def wmi_make_perfvar(varname, value, perfscale, levels, min_value=None, max_value=None):
-    value = value * perfscale
-    if levels is not None:
-        upper_levels = levels.get('upper', (None, None))
-    else:
-        upper_levels = (None, None)
-    return (varname, value, upper_levels[0], upper_levels[1], min_value, max_value)
-
-
-def wmi_determine_status(value, levels):
-    status, levels_text = 0, ""
-    if levels:
-        if 'upper' in levels:
-            upper_status = 0
-            if value >= levels['upper'][1]:
-                upper_status = 2
-            elif value >= levels['upper'][0]:
-                upper_status = 1
-
-            if upper_status:
-                status = max(status, upper_status)
-                levels_text += " (warn/crit at %s/%s)" % levels['upper']
-
-        if 'lower' in levels:
-            lower_status = 0
-            if value < levels['lower'][1]:
-                lower_status = 2
-            elif value < levels['lower'][0]:
-                lower_status = 1
-
-            if lower_status:
-                status = max(status, lower_status)
-                levels_text += " (warn/crit below %s/%s)" % levels['lower']
-
-    return status, levels_text
-
-
 # to make wato rules simpler, levels are allowed to be passed as tuples if the level
 # specifies the upper limit
-def wmi_fix_levels(levels):
-    if isinstance(levels, tuple):
-        return {'upper': levels}
-    return levels
+def _get_levels_quadruple(params):
+    if params is None:
+        return (None, None, None, None)
+    if isinstance(params, tuple):
+        return (params[0], params[1], None, None)
+    upper = params.get('upper') or (None, None)
+    lower = params.get('lower') or (None, None)
+    return upper + lower
 
 
-def wmi_yield_raw_persec(table, row, column, label, perfvar, levels=None, perfscale=1.0):
+def wmi_yield_raw_persec(table, row, column, infoname, perfvar, levels=None):
     if table is None:
         # This case may be when a check was discovered with a table which subsequently
         # disappeared again. We expect to get None in this case and return some "nothing happened"
@@ -448,36 +396,38 @@ def wmi_yield_raw_persec(table, row, column, label, perfvar, levels=None, perfsc
     if row == "":
         row = 0
 
-    levels = wmi_fix_levels(levels)
-
     try:
         value = int(table.get(row, column))
     except KeyError:
-        return 3, "item not present anymore", []
+        return 3, "Item not present anymore", []
 
     value_per_sec = get_rate("%s_%s" % (column, table.name()), get_wmi_time(table, row), value)
 
-    status, levels_text = wmi_determine_status(value_per_sec, levels)
+    return check_levels(
+        value_per_sec,
+        perfvar,
+        _get_levels_quadruple(levels),
+        infoname=infoname,
+    )
 
-    return (status, "%.2f%s%s" % (value_per_sec, label, levels_text),
-            [wmi_make_perfvar(perfvar, value_per_sec, perfscale, levels)])
 
-
-def wmi_yield_raw_counter(table, row, column, label, perfvar, levels=None, perfscale=1.0):
+def wmi_yield_raw_counter(table, row, column, infoname, perfvar, levels=None, unit=""):
     if row == "":
         row = 0
-
-    levels = wmi_fix_levels(levels)
 
     try:
         value = int(table.get(row, column))
     except KeyError:
         return 3, "counter %r not present anymore" % ((row, column),), []
 
-    status, levels_text = wmi_determine_status(value, levels)
-
-    return (status, "%s%s%s" % (value, label, levels_text),
-            [wmi_make_perfvar(perfvar, value, perfscale, levels)])
+    return check_levels(
+        value,
+        perfvar,
+        _get_levels_quadruple(levels),
+        infoname=infoname,
+        unit=unit,
+        human_readable_func=str,
+    )
 
 
 def wmi_calculate_raw_average(table, row, column, factor):
@@ -507,62 +457,63 @@ def wmi_calculate_raw_average(table, row, column, factor):
 
 
 def wmi_calculate_raw_average_time(table, row, column):
-    if row == "":
-        row = 0
-
-    value = int(table.get(row, column))
+    measure = int(table.get(row, column))
     base = int(table.get(row, column + "_Base"))
 
     sample_time = get_wmi_time(table, row)
 
-    value_per_sec = get_rate("%s_%s" % (column, table.name()), sample_time, value)
+    measure_per_sec = get_rate("%s_%s" % (column, table.name()), sample_time, measure)
     base_per_sec = get_rate("%s_%s_Base" % (column, table.name()), sample_time, base)
 
     if base_per_sec == 0:
         return 0
-    return value_per_sec / base_per_sec  # fixed: true-division
+    return measure_per_sec / base_per_sec  # fixed: true-division
 
 
-def wmi_yield_raw_average(table, row, column, label, perfvar, levels=None, perfscale=1.0):
-    levels = wmi_fix_levels(levels)
-
+def wmi_yield_raw_average(table, row, column, infoname, perfvar, levels=None, perfscale=1.0):
     try:
-        average = wmi_calculate_raw_average(table, row, column, 1)
+        average = wmi_calculate_raw_average(table, row, column, 1) * perfscale
     except KeyError:
         return 3, "item not present anymore", []
 
-    status, levels_text = wmi_determine_status(average, levels)
+    return check_levels(
+        average,
+        perfvar,
+        _get_levels_quadruple(levels),
+        infoname=infoname,
+        human_readable_func=get_age_human_readable,
+    )
 
-    return (status, "%.2f%s%s" % (average, label, levels_text),
-            [wmi_make_perfvar(perfvar, average, perfscale, levels)])
 
-
-def wmi_yield_raw_average_timer(table, row, column, label, perfvar, levels=None, perfscale=1.0):
-    levels = wmi_fix_levels(levels)
-
+def wmi_yield_raw_average_timer(table, row, column, infoname, perfvar, levels=None):
     try:
         average = wmi_calculate_raw_average_time(table, row,
                                                  column) / table.frequency()  # fixed: true-division
     except KeyError:
         return 3, "item not present anymore", []
-    status, levels_text = wmi_determine_status(average, levels)
 
-    return (status, "%.2f%s%s" % (average, label, levels_text),
-            [wmi_make_perfvar(perfvar, average, perfscale, levels)])
+    return check_levels(
+        average,
+        perfvar,
+        _get_levels_quadruple(levels),
+        infoname=infoname,
+    )
 
 
-def wmi_yield_raw_fraction(table, row, column, label, perfvar, levels=None):
-    levels = wmi_fix_levels(levels)
-
+def wmi_yield_raw_fraction(table, row, column, infoname, perfvar, levels=None):
     try:
         average = wmi_calculate_raw_average(table, row, column, 100)
     except KeyError:
         return 3, "item not present anymore", []
 
-    status, levels_text = wmi_determine_status(average, levels)
-
-    return (status, "%.2f%s%s" % (average, label, levels_text),
-            [wmi_make_perfvar(perfvar, average, 1.0, levels, 0, 100)])
+    return check_levels(
+        average,
+        perfvar,
+        _get_levels_quadruple(levels),
+        infoname=infoname,
+        human_readable_func=get_percent_human_readable,
+        boundaries=(0, 100),
+    )
 
 
 #.

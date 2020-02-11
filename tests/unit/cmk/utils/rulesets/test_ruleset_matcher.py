@@ -1,9 +1,9 @@
 # encoding: utf-8
 # pylint: disable=redefined-outer-name
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from testlib.base import Scenario
-from cmk_base.check_utils import Service
-from cmk_base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
+from cmk.base.check_utils import Service
+from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 
 

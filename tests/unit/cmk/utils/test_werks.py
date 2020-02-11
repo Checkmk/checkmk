@@ -4,7 +4,7 @@ import os
 import subprocess
 from collections import defaultdict
 from pathlib2 import Path
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 import testlib
 import cmk.utils.werks
@@ -57,6 +57,7 @@ def test_werk_versions(precompiled_werks):
 
 
 def test_werk_versions_after_tagged(precompiled_werks):
+    list_of_offenders = []
     for werk_id, werk in cmk.utils.werks.load().items():
         if werk_id < 8800:
             continue  # Do not care about older versions for the moment
@@ -74,11 +75,14 @@ def test_werk_versions_after_tagged(precompiled_werks):
         if not _werk_exists_in_git_tag(tag_name, ".werks/%d" % werk_id):
             werk_tags = sorted(_tags_containing_werk(werk_id),
                                key=lambda t: cmk.utils.werks.parse_check_mk_version(t[1:]))
+            list_of_offenders.append(
+                (werk_id, werk["version"], tag_name, werk_tags[0] if werk_tags else "-"))
 
-            raise Exception(
-                "Werk #%d has version %s, but is not found in git tag %s. "
-                "Looks like the wrong version was declared in this werk. Earliest tag with this werk: %s"
-                % (werk_id, werk["version"], tag_name, werk_tags[0] if werk_tags else "-"))
+    assert not list_of_offenders, (
+        "The following Werks are not found in the git tag corresponding to their Version. "
+        "Looks like the wrong version was declared in these werks:\n" +
+        "\n".join("Werk #%d has version %s, not found in git tag %s, first found in %s" % entry
+                  for entry in list_of_offenders))
 
 
 @cmk.utils.memoize.MemoizeCache
@@ -99,7 +103,7 @@ def _tags_containing_werk(werk_id):
     return _werk_to_git_tag[werk_id]
 
 
-_werk_to_git_tag = defaultdict(list)  # type: ignore
+_werk_to_git_tag = defaultdict(list)  # type: ignore[var-annotated]
 
 
 @cmk.utils.memoize.MemoizeCache

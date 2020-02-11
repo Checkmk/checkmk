@@ -33,10 +33,10 @@ def inventory_k8s_pod_container(parsed):
 
 def check_k8s_pod_container(_no_item, params, parsed):
     total = len(parsed)
-    ready = sum(container['ready'] for container in parsed.itervalues())
+    ready = sum(container['ready'] for container in parsed.values())
     state = collections.defaultdict(int)
     exit_code = 0
-    for container in parsed.itervalues():
+    for container in parsed.values():
         state[container["state"]] += 1
         exit_code = max(exit_code, 0 if int(container["state_exit_code"]) == 0 else 2)
     perfdata = [

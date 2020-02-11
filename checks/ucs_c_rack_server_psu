@@ -55,7 +55,7 @@ def inventory_ucs_c_rack_server_psu(parsed):
     """
     Yields indexed PSUs as items (e.g. Rack Unit 1 PSU 1).
     """
-    for key in parsed.keys():
+    for key in parsed:
         yield key, {}
 
 

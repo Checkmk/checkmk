@@ -1,6 +1,37 @@
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 import cmk.utils.prediction as prediction
+
+
+@pytest.mark.parametrize("filter_condition, values, join, result", [
+    (u"Filter: metrics =", [], u"And", u""),
+    (u"Filter: description =", [u"CPU load"], u"And", u"Filter: description = CPU load\n"),
+    (u"Filter: host_name =", [u'heute', u'beta'], u"Or",
+     u"Filter: host_name = heute\nFilter: host_name = beta\nOr: 2\n"),
+])
+def test_lq_logic(filter_condition, values, join, result):
+    assert prediction.lq_logic(filter_condition, values, join) == result
+
+
+@pytest.mark.parametrize("args, result",
+                         [((['heute'], ['util', 'user'], 'CPU'), """GET services
+Columns: util user
+Filter: host_name = heute
+Filter: service_description = CPU\n"""),
+                          ((['gestern'], ['check_command'], None), """GET hosts
+Columns: check_command
+Filter: host_name = gestern\n"""),
+                          ((['fire', 'water'], ['description', 'metrics'], 'cpu'), """GET services
+Columns: description metrics
+Filter: host_name = fire
+Filter: host_name = water
+Or: 2
+Filter: service_description = cpu\n"""),
+                          (([], ['test'], 'invent'), """GET services
+Columns: test
+Filter: service_description = invent\n""")])
+def test_livestatus_lql(args, result):
+    assert prediction.livestatus_lql(*args) == result
 
 
 @pytest.mark.parametrize("twindow, result", [((0, 0, 0), []),
@@ -58,7 +89,7 @@ def test_estimate_level_bounds(ref_value, stdev, sig, params, levels_factor, res
             'levels_lower': ('absolute', (2, 4))
         },
         1,
-        (5, [None, None, 3, 1]),
+        (5, (None, None, 3, 1)),
     ),
     (
         {
@@ -70,7 +101,7 @@ def test_estimate_level_bounds(ref_value, stdev, sig, params, levels_factor, res
             'levels_lower': ('stddev', (3, 5)),
         },
         1,
-        (15, [19, 23, 9, 5]),
+        (15, (19, 23, 9, 5)),
     ),
     (
         {
@@ -82,7 +113,7 @@ def test_estimate_level_bounds(ref_value, stdev, sig, params, levels_factor, res
             'levels_upper_min': (2, 4),
         },
         1,
-        (2, [2.4, 4, None, None]),
+        (2, (2.4, 4, None, None)),
     ),
     (
         {
@@ -90,7 +121,7 @@ def test_estimate_level_bounds(ref_value, stdev, sig, params, levels_factor, res
         },
         {},
         1,
-        (None, [None, None, None, None]),
+        (None, (None, None, None, None)),
     ),
 ])
 def test_estimate_levels(reference, params, levels_factor, result):

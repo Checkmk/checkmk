@@ -1,29 +1,10 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails.  You should have received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 import * as utils from "utils";
 import * as ajax from "ajax";
+import * as forms from "forms";
 
 var reload_on_resize = {};
 export var dashboard_properties = {};
@@ -102,10 +83,17 @@ function size_dashlets() {
 
             oDashInner.style.left   = dashboard_properties.dashlet_padding[3] + "px";
             oDashInner.style.top    = top_padding + "px";
+            if (!has_title) {
+                oDashInner.style.top = top_padding + 8 + "px";
+            }
             if (netto_width > 0)
                 oDashInner.style.width  = netto_width + "px";
-            if (netto_height > 0)
+            if (netto_height > 0) {
                 oDashInner.style.height = netto_height + "px";
+                if (!has_title) {
+                    oDashInner.style.height = netto_height - 8 + "px";
+                }
+            }
 
             if (old_width != oDashInner.clientWidth || old_height != oDashInner.clientHeight) {
                 if (!g_resizing || parseInt(g_resizing.parentNode.parentNode.id.replace("dashlet_", "")) != d_number) {
@@ -120,6 +108,18 @@ function size_dashlets() {
             set_control_size(oDashControls, d_width, d_height);
         }
     }
+}
+
+export function adjust_single_metric_font_size(oTdMetricValue) {
+    var originalFontSize = parseFloat(oTdMetricValue.style.fontSize);
+    var oAMetricValue = oTdMetricValue.childNodes[0];
+    if (oAMetricValue.scrollWidth > oTdMetricValue.clientWidth * 9/10)
+        oTdMetricValue.style.fontSize = originalFontSize * 9/10 + "px";
+    else
+        oTdMetricValue.style.fontSize = oTdMetricValue.clientHeight * 4/5 + "px";
+
+    if (oAMetricValue.scrollWidth > oTdMetricValue.clientWidth * 9/10)
+        adjust_single_metric_font_size(oTdMetricValue);
 }
 
 function set_control_size(dash_controls, width, height)
@@ -609,10 +609,31 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
         edit_button.title = "Edit properties of this dashlet";
         edit_button.onclick = function(dashlet_id, board_name) {
             return function() {
-                location.href = "edit_dashlet.py?name=" + board_name + "&id=" + dashlet_id;
+                var back_url = utils.makeuri({}, window.location.href, "dashboard.py");
+                location.href = utils.makeuri_contextless({
+                    "name": board_name,
+                    "id": dashlet_id,
+                    "back": back_url
+                }, "edit_dashlet.py");
             };
         }(nr, dashboard_properties.dashboard_name);
         controls.appendChild(edit_button);
+
+        // Add clone dashlet button
+        var clone = document.createElement("a");
+        clone.className = "clone";
+        clone.title = "Clone this dashlet";
+        clone.onclick = function(dashlet_id, board_name) {
+            return function() {
+                var back_url = utils.makeuri({}, window.location.href, "dashboard.py");
+                location.href = utils.makeuri_contextless({
+                    "id": dashlet_id,
+                    "name": board_name,
+                    "back": back_url
+                }, "clone_dashlet.py");
+            };
+        }(nr, dashboard_properties.dashboard_name);
+        controls.appendChild(clone);
 
         // Add delete dashlet button
         var del = document.createElement("a");
@@ -620,7 +641,14 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
         del.title = "Delete this dashlet";
         del.onclick = function(dashlet_id, board_name) {
             return function() {
-                location.href = "delete_dashlet.py?name=" + board_name + "&id=" + dashlet_id;
+                forms.confirm_dialog("Do you really want to delete this dashlet?", function() {
+                    var back_url = utils.makeuri({}, window.location.href, "dashboard.py");
+                    location.href = utils.makeuri_contextless({
+                        "name": board_name,
+                        "id": dashlet_id,
+                        "back": back_url
+                    }, "delete_dashlet.py");
+                });
             };
         }(nr, dashboard_properties.dashboard_name);
         controls.appendChild(del);

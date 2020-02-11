@@ -1,0 +1,94 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# {'jql': [{'service_description': 'My summed up field', 'result': ('sum',
+# ('customfield_1000', 1000)), 'query': 'project = my_project and status =
+# closed'}, {'service_description': 'My counted field', 'result': 'count',
+# 'query': 'project = my_project and status = "waiting for something"'},
+# {'service_description': 'My averaged field', 'result': ('average',
+# ('customfield_1001', 1000)), 'query': 'project = my_project and status =
+# open'}], 'password': ('password', 'my_password'), 'protocol': 'https',
+# 'user': 'my_user', 'project_workflows': [('my_project', ['in progress'])]}
+
+
+def _get_project_workflow(project_values, prefix):
+    options = []
+    for key, values in project_values:
+        options.append('--%s-key' % prefix)
+        options.append(key)
+        options.append('--%s-values' % prefix)
+        options += values
+    return options
+
+
+def _get_custom_query(jql_values, prefix):
+    options = []
+    for values in jql_values:
+        options.append('--%s-desc' % prefix)
+        options.append(values["service_description"])
+        options.append('--%s-query' % prefix)
+        options.append(values["query"])
+        options.append('--%s-result' % prefix)
+        if isinstance(values["result"], tuple):
+            options.append(values["result"][0])
+            options.append('--%s-field' % prefix)
+            options.append(values["result"][1][0])
+            options.append('--%s-limit' % prefix)
+            options.append(values["result"][1][1])
+        else:
+            options.append(values["result"])
+            options.append('--%s-field' % prefix)
+            options.append('None')
+            options.append('--%s-limit' % prefix)
+            options.append(0)
+    return options
+
+
+def agent_jira_arguments(params, hostname, ipaddress):
+    args = [
+        "-P",
+        params["protocol"],
+        "-u",
+        params["user"],
+        "-s",
+        passwordstore_get_cmdline("%s", params["password"]),
+    ]
+
+    args += _get_custom_query(params.get("jql", []), "jql")
+    args += _get_project_workflow(params.get("project_workflows", []), "project-workflows")
+
+    if "instance" in params:
+        hostname = params["instance"]
+
+    args += [
+        "--hostname",
+        hostname,
+    ]
+
+    return args
+
+
+special_agent_info['jira'] = agent_jira_arguments

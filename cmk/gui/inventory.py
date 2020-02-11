@@ -1,43 +1,33 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
 import ast
 import json
 import os
 import shutil
 import time
-import xml.dom.minidom
+import xml.dom.minidom  # type: ignore[import]
 
-import dicttoxml
-from pathlib2 import Path
+import dicttoxml  # type: ignore[import]
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import livestatus
 
 import cmk.utils.paths
 from cmk.utils.structured_data import StructuredDataTree, Container, Numeration, Attributes
+from cmk.utils.exceptions import (
+    MKException,
+    MKGeneralException,
+)
+import cmk.utils.store as store
 
 import cmk.gui.pages
 import cmk.gui.config as config
@@ -45,7 +35,11 @@ import cmk.gui.userdb as userdb
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
-from cmk.gui.exceptions import MKException, MKGeneralException, MKAuthException, MKUserError, RequestTimeout
+from cmk.gui.exceptions import (
+    MKAuthException,
+    MKUserError,
+    RequestTimeout,
+)
 
 
 def get_inventory_data(inventory_tree, tree_path):
@@ -148,26 +142,27 @@ def load_delta_tree(hostname, timestamp):
     # Timestamp is timestamp of the younger of both trees. For the oldest
     # tree we will just return the complete tree - without any delta
     # computation.
-    delta_history = get_history_deltas(hostname, search_timestamp=str(timestamp))
+    delta_history, corrupted_history_files = \
+        get_history_deltas(hostname, search_timestamp=str(timestamp))
     if not delta_history:
-        return
-    return delta_history[0][1][3]
+        return None, []
+    return delta_history[0][1][3], corrupted_history_files
 
 
 def get_history_deltas(hostname, search_timestamp=None):
     if '/' in hostname:
-        return None  # just for security reasons
+        return None, []  # just for security reasons
 
     inventory_path = "%s/inventory/%s" % (cmk.utils.paths.var_dir, hostname)
     if not os.path.exists(inventory_path):
-        return []
+        return [], []
 
     latest_timestamp = str(int(os.stat(inventory_path).st_mtime))
     inventory_archive_dir = "%s/inventory_archive/%s" % (cmk.utils.paths.var_dir, hostname)
     try:
         archived_timestamps = sorted(os.listdir(inventory_archive_dir))
     except OSError:
-        return []
+        return [], []
 
     all_timestamps = archived_timestamps + [latest_timestamp]
     previous_timestamp = None
@@ -202,6 +197,7 @@ def get_history_deltas(hostname, search_timestamp=None):
                 StructuredDataTree().load_from(inventory_archive_path))
         return tree_lookup[timestamp]
 
+    corrupted_history_files = []
     delta_history = []
     for _idx, timestamp in enumerate(required_timestamps):
         cached_delta_path = os.path.join(cmk.utils.paths.var_dir, "inventory_delta_cache", hostname,
@@ -209,7 +205,7 @@ def get_history_deltas(hostname, search_timestamp=None):
 
         cached_data = None
         try:
-            cached_data = cmk.utils.store.load_data_from_file(cached_delta_path)
+            cached_data = store.load_object_from_file(cached_delta_path)
         except MKGeneralException:
             pass
 
@@ -227,17 +223,30 @@ def get_history_deltas(hostname, search_timestamp=None):
             delta_data = current_tree.compare_with(previous_tree)
             new, changed, removed, delta_tree = delta_data
             if new or changed or removed:
-                cmk.utils.store.save_file(cached_delta_path,
-                                          repr((new, changed, removed, delta_tree.get_raw_tree())))
+                store.save_file(
+                    cached_delta_path,
+                    repr((new, changed, removed, delta_tree.get_raw_tree())),
+                )
                 delta_history.append((timestamp, delta_data))
         except RequestTimeout:
             raise
-        except Exception:
-            return []  # No inventory for this host
+        except LoadStructuredDataError:
+            corrupted_history_files.append(
+                str(get_short_inventory_history_filepath(hostname, timestamp)))
 
         previous_timestamp = timestamp
 
-    return delta_history
+    return delta_history, corrupted_history_files
+
+
+def get_short_inventory_filepath(hostname):
+    return Path(cmk.utils.paths.inventory_output_dir).joinpath(hostname).relative_to(
+        cmk.utils.paths.omd_root)
+
+
+def get_short_inventory_history_filepath(hostname, timestamp):
+    return Path(cmk.utils.paths.inventory_archive_dir).joinpath(
+        "%s/%s" % (hostname, timestamp)).relative_to(cmk.utils.paths.omd_root)
 
 
 def parent_path(invpath):
@@ -263,6 +272,10 @@ def parent_path(invpath):
 #   '----------------------------------------------------------------------'
 
 
+class LoadStructuredDataError(MKException):
+    pass
+
+
 def _load_inventory_tree(hostname):
     # Load data of a host, cache it in the current HTTP request
     if not hostname:
@@ -276,7 +289,12 @@ def _load_inventory_tree(hostname):
             # just for security reasons
             return
         cache_path = "%s/inventory/%s" % (cmk.utils.paths.var_dir, hostname)
-        inventory_tree = StructuredDataTree().load_from(cache_path)
+        try:
+            inventory_tree = StructuredDataTree().load_from(cache_path)
+        except Exception as e:
+            if config.debug:
+                html.show_warning(e)
+            raise LoadStructuredDataError()
         inventory_tree_cache[hostname] = inventory_tree
     return inventory_tree
 

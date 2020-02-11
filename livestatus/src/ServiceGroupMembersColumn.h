@@ -31,6 +31,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "Column.h"
 #include "Filter.h"
 #include "ListColumn.h"
 #include "opids.h"
@@ -49,18 +50,16 @@ class ServiceGroupMembersColumn : public ListColumn {
 public:
     ServiceGroupMembersColumn(const std::string &name,
                               const std::string &description,
-                              int indirect_offset, int extra_offset,
-                              int extra_extra_offset, int offset,
+                              const Column::Offsets &offsets,
                               MonitoringCore *mc, bool show_state)
-        : ListColumn(name, description, indirect_offset, extra_offset,
-                     extra_extra_offset, offset)
+        : ListColumn(name, description, offsets)
         , _mc(mc)
         , _show_state(show_state) {}
 
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;
 
-    std::unique_ptr<Filter> createFilter(
+    [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
         const std::string &value) const override;
 

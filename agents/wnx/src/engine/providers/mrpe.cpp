@@ -4,6 +4,8 @@
 
 #include "providers/mrpe.h"
 
+#include <fmt/format.h>
+
 #include <execution>
 #include <filesystem>
 #include <regex>
@@ -14,7 +16,6 @@
 #include "cfg.h"
 #include "cma_core.h"
 #include "common/wtools.h"
-#include "fmt/format.h"
 #include "glob_match.h"
 #include "logger.h"
 #include "tools/_raii.h"
@@ -47,7 +48,7 @@ void MrpeEntry::loadFromString(const std::string &value) {
     for (size_t i = 2; i < tokens.size(); i++) argv += tokens[i] + " ";
 
     // remove last space
-    if (argv.size()) argv.pop_back();
+    if (!argv.empty()) argv.pop_back();
     auto p = cma::cfg::ReplacePredefinedMarkers(tokens[1]);
     p = cma::tools::RemoveQuotes(p);
     fs::path exe_full_path = p;
@@ -73,9 +74,9 @@ void MrpeProvider::addParsedConfig() {
 
     if constexpr (kMrpeRemoveAbsentFiles) {
         auto end = std::remove_if(
-            entries_.begin(),      // from
-            entries_.end(),        // to
-            [](MrpeEntry entry) {  // lambda to delete
+            entries_.begin(),             // from
+            entries_.end(),               // to
+            [](const MrpeEntry &entry) {  // lambda to delete
                 auto ok = cma::tools::IsValidRegularFile(entry.full_path_name_);
                 if (!ok) {
                     XLOG::d("The file '{}' is no valid", entry.full_path_name_);
@@ -159,7 +160,6 @@ void AddCfgFileToEntries(const std::string &user, std::filesystem::path &path,
 
 void MrpeProvider::addParsedIncludes() {
     using namespace cma::tools;
-    namespace fs = std::filesystem;
 
     for (const auto &entry : includes_) {
         auto [user, path] = ParseIncludeEntry(entry);
@@ -177,10 +177,9 @@ void MrpeProvider::addParsedIncludes() {
 }
 
 bool MrpeProvider::parseAndLoadEntry(const std::string &entry) {
-    auto str = entry;
-    auto table = cma::tools::SplitString(str, "=");
+    auto table = cma::tools::SplitString(entry, "=");
     if (table.size() != 2) {
-        XLOG::t("Strange entry {} in {}", str,
+        XLOG::t("Strange entry {} in {}", entry,
                 cma::cfg::GetPathOfLoadedConfigAsString());
         return false;
     }
@@ -196,14 +195,14 @@ bool MrpeProvider::parseAndLoadEntry(const std::string &entry) {
     if (pos != std::string::npos &&              // found
         (type[len] == 0 || type[len] == ' ')) {  // include has end
 
-        auto value = str.substr(len + pos, std::string::npos);
+        auto value = entry.substr(len + pos, std::string::npos);
         cma::tools::AllTrim(value);
         if (!value.empty()) {
             includes_.emplace_back(value);
             return true;
         }
 
-        XLOG::d("Strange include entry type '{}' '{}' ", type, str);
+        XLOG::d("Strange include entry type '{}' '{}' ", type, entry);
         return false;
     }
 
@@ -219,7 +218,7 @@ bool MrpeProvider::parseAndLoadEntry(const std::string &entry) {
         return true;
     }
 
-    XLOG::d("Strange check entry type '{}' '{}'", type, str);
+    XLOG::d("Strange check entry type '{}' '{}'", type, entry);
     return false;
 }
 
@@ -230,7 +229,7 @@ void MrpeProvider::parseConfig() {
     checks_.clear();
     includes_.clear();
 
-    timeout_ = GetVal(groups::kMrpe, vars::kTimeout, 10);
+    timeout_ = GetVal(groups::kMrpe, vars::kTimeout, defaults::kMrpeTimeout);
     if (timeout_ < 1) timeout_ = 1;
 
     auto strings = GetArray<std::string>(groups::kMrpe, vars::kMrpeConfig);
@@ -275,7 +274,6 @@ std::string ExecMrpeEntry(const MrpeEntry &entry,
         return hdr + "3 Unable to execute - plugin may be missing.\n";
     }
 
-    auto proc_id = minibox.getProcessId();
     auto success = minibox.waitForEnd(timeout);
     ON_OUT_OF_SCOPE(minibox.clean());
     if (!success) {
@@ -285,7 +283,7 @@ std::string ExecMrpeEntry(const MrpeEntry &entry,
     }
 
     std::string accu;
-    minibox.processResults([&](const std::wstring CmdLine, uint32_t Pid,
+    minibox.processResults([&](const std::wstring &CmdLine, uint32_t Pid,
                                uint32_t Code, const std::vector<char> &Data) {
         auto data = wtools::ConditionallyConvertFromUTF16(Data);
         cma::tools::AllTrim(data);

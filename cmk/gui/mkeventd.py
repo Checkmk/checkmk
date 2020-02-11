@@ -1,45 +1,28 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import division
+import sys
 import ast
 import re
 import socket
 import time
 from typing import List, Tuple, Text  # pylint: disable=unused-import
 
-from pathlib2 import Path
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+
 import livestatus
 
 import cmk.utils.paths
 # It's OK to import centralized config load logic
-import cmk.ec.settings  # pylint: disable=cmk-module-layer-violation
-import cmk.ec.export  # pylint: disable=cmk-module-layer-violation
-import cmk.utils.store
-import cmk.utils
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.encoding import make_utf8
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -175,9 +158,9 @@ def eventd_configuration():
     if cached_config and cached_config[0] is html:
         return cached_config[1]
 
-    settings = cmk.ec.settings.settings('', Path(cmk.utils.paths.omd_root),
-                                        Path(cmk.utils.paths.default_config_dir), [''])
-    cfg = cmk.ec.export.load_config(settings)
+    settings = ec.settings('', Path(cmk.utils.paths.omd_root),
+                           Path(cmk.utils.paths.default_config_dir), [''])
+    cfg = ec.load_config(settings)
     cached_config = (html, cfg)
     return cfg
 
@@ -200,7 +183,7 @@ def send_event(event):
         (event["sl"], event["host"], event["ipaddress"], event["application"], event["text"]),
     ]
 
-    execute_command("CREATE", map(cmk.utils.make_utf8, rfc), site=event["site"])
+    execute_command("CREATE", list(map(make_utf8, rfc)), site=event["site"])
 
     return ";".join(rfc)
 
@@ -464,7 +447,7 @@ def match_ipv4_network(pattern, ipaddress_text):
 
 
 def parse_ipv4_address(text):
-    parts = map(int, text.split("."))
+    parts = tuple(map(int, text.split(".")))
     return (parts[0] << 24) + (parts[1] << 16) + (parts[2] << 8) + parts[3]
 
 

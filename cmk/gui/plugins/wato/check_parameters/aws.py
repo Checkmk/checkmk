@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Text, Type, Optional  # pylint: disable=unused-import
 from cmk.gui.i18n import _
@@ -48,6 +28,7 @@ from cmk.gui.plugins.wato import (
 )
 from cmk.utils.aws_constants import (
     AWSEC2InstTypes,
+    AWSEC2InstFamilies,
     AWSEC2LimitsDefault,
     AWSEC2LimitsSpecial,
 )
@@ -160,7 +141,7 @@ def _vs_latency():
 
 
 def _vs_limits(resource, default_limit, vs_limit_cls=None):
-    # type: (Text, int, Optional[Type[Filesize]]) -> Alternative
+    # type: (str, int, Optional[Type[Filesize]]) -> Alternative
     if vs_limit_cls is None:
         vs_limit = Integer(
             unit=_("%s" % resource),
@@ -484,6 +465,19 @@ def _vs_limits_inst_types():
     )
 
 
+def _vs_limits_vcpu_families():
+    return ListOf(
+        CascadingDropdown(orientation="horizontal",
+                          choices=[("%s_vcpu" % inst_fam, fam_name,
+                                    _vs_limits(
+                                        fam_name,
+                                        AWSEC2LimitsSpecial.get("%s_vcpu" % inst_fam,
+                                                                AWSEC2LimitsDefault)[0]))
+                                   for inst_fam, fam_name in AWSEC2InstFamilies.items()]),
+        title=_("Set limits and levels for running on-demand vCPUs on instance Families"),
+    )
+
+
 def _parameter_valuespec_aws_ec2_limits():
     return Dictionary(elements=[
         ('vpc_elastic_ip_addresses', _vs_limits("VPC Elastic IP Addresses", 5)),
@@ -495,7 +489,9 @@ def _parameter_valuespec_aws_ec2_limits():
         ('active_spot_fleet_requests', _vs_limits("Active Spot Fleet Requests", 1000)),
         ('spot_fleet_total_target_capacity',
          _vs_limits("Spot Fleet Requests Total Target Capacity", 5000)),
-        ('running_ondemand_instances_total', _vs_limits("Total Running On-Demand Instances", 20)),
+        ('running_ondemand_instances_total',
+         _vs_limits("Total Running On-Demand Instances(Deprecated by AWS)", 20)),
+        ('running_ondemand_instances_vcpus', _vs_limits_vcpu_families()),
         ('running_ondemand_instances', _vs_limits_inst_types()),
     ])
 

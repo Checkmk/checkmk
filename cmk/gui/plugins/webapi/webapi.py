@@ -1,46 +1,34 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # TODO CLEANUP: Replace MKUserError by MKAPIError or something like that
 
 import copy
 from functools import partial
 import os
+import six
 
 import cmk
 
 import cmk.utils.tags
+import cmk.gui.escaping as escaping
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+from cmk.utils.exceptions import (
+    MKException,
+    MKGeneralException,
+)
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.exceptions import MKUserError, MKAuthException, MKException
+from cmk.gui.exceptions import (
+    MKUserError,
+    MKAuthException,
+)
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 import cmk.gui.watolib.users
 from cmk.gui.watolib.tags import (
@@ -279,7 +267,7 @@ class APICallHosts(APICallCollection):
 
         # Add host
         if cluster_nodes:
-            cluster_nodes = map(str, cluster_nodes)
+            cluster_nodes = list(map(str, cluster_nodes))
         watolib.Folder.folder(folder_path).create_hosts([(hostname, attributes, cluster_nodes)])
 
     def _add_hosts(self, request):
@@ -333,7 +321,7 @@ class APICallHosts(APICallCollection):
             cluster_nodes = host.cluster_nodes()
 
         if cluster_nodes:
-            cluster_nodes = map(str, cluster_nodes)
+            cluster_nodes = list(map(str, cluster_nodes))
 
         host.edit(current_attributes, cluster_nodes)
 
@@ -399,7 +387,7 @@ class APICallHosts(APICallCollection):
         for hostname in delete_hostnames:
             grouped_by_folders.setdefault(all_hosts[hostname].folder(), []).append(hostname)
 
-        for folder, hostnames in grouped_by_folders.iteritems():
+        for folder, hostnames in grouped_by_folders.items():
             folder.delete_hosts(hostnames)
 
 
@@ -676,17 +664,16 @@ class APICallRules(APICallCollection):
         return ruleset_dict
 
     def _get(self, request):
-        ruleset_name = request["ruleset_name"].encode("utf-8")
+        ruleset_name = six.ensure_str(request["ruleset_name"])
         ruleset_dict = self._get_ruleset_configuration(ruleset_name)
         response = {"ruleset": ruleset_dict}
         add_configuration_hash(response, ruleset_dict)
         return response
 
     def _set(self, request):
-        # NOTE: This encoding here should be kept
-        # Otherwise and unicode encoded text will be written into the
-        # configuration file with unknown side effects
-        ruleset_name = request["ruleset_name"].encode("utf-8")
+        # Py2: This encoding here should be kept Otherwise and unicode encoded text will be written
+        # into the configuration file with unknown side effects
+        ruleset_name = six.ensure_str(request["ruleset_name"])
 
         # Future validation, currently the rule API actions are admin only, so the check is pointless
         # may_edit_ruleset(ruleset_name)
@@ -721,9 +708,7 @@ class APICallRules(APICallCollection):
                     rule_vs.validate_datatype(value, "test_value")
                     rule_vs.validate_value(value, "test_value")
                 except MKException as e:
-                    # TODO: The abstract MKException should never be instanciated directly
-                    # Change this call site and make MKException an abstract base class
-                    raise MKException("ERROR: %s. Affected Rule %r" % (str(e), rule))
+                    raise MKGeneralException("ERROR: %s. Affected Rule %r" % (str(e), rule))
 
         # Add new rulesets
         for folder_path, rules in new_ruleset.items():
@@ -881,7 +866,7 @@ class APICallHosttags(APICallCollection):
 
         all_rulesets = watolib.AllRulesets()
         all_rulesets.load()
-        for ruleset in all_rulesets.get_rulesets().itervalues():
+        for ruleset in all_rulesets.get_rulesets().values():
             for _folder, _rulenr, rule in ruleset.get_rules():
                 for tag_group_id, tag_spec in rule.conditions.host_tags.items():
                     if isinstance(tag_spec, dict):
@@ -1001,7 +986,7 @@ class APICallSites(APICallCollection):
         if "configuration_hash" in request:
             validate_config_hash(request["configuration_hash"], all_sites)
 
-        for site_id, site_config in request["sites"].iteritems():
+        for site_id, site_config in request["sites"].items():
             site_mgmt.validate_configuration(site_id, site_config, request["sites"])
 
         site_mgmt.save_sites(config.migrate_old_site_config(request["sites"]))
@@ -1166,7 +1151,7 @@ class APICallOther(APICallCollection):
         if mode == "specific":
             for site in sites:
                 if site not in config.allsites().keys():
-                    raise MKUserError(None, _("Unknown site %s") % html.attrencode(site))
+                    raise MKUserError(None, _("Unknown site %s") % escaping.escape_attribute(site))
 
         manager = watolib.ActivateChangesManager()
         manager.load()

@@ -1,30 +1,10 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-import urlparse
+import six
 
 import cmk.utils.store as store
 
@@ -175,7 +155,7 @@ class BookmarkList(pagetypes.Overridable):
 
     @classmethod
     def validate_url(cls, value, varprefix):
-        parsed = urlparse.urlparse(value)
+        parsed = six.moves.urllib.parse.urlparse(value)
 
         # Absolute URLs are allowed, but limit it to http/https
         if parsed.scheme != "" and parsed.scheme not in ["http", "https"]:
@@ -219,7 +199,7 @@ class BookmarkList(pagetypes.Overridable):
     @classmethod
     def _do_load_legacy_bookmarks(cls):
         path = config.user.confdir + "/bookmarks.mk"
-        return store.load_data_from_file(path, [])
+        return store.load_object_from_file(path, default=[])
 
     @classmethod
     def new_bookmark(cls, title, url):
@@ -326,8 +306,8 @@ function add_bookmark() {
     def _try_shorten_url(self, url):
         referer = html.request.referer
         if referer:
-            ref_p = urlparse.urlsplit(referer)
-            url_p = urlparse.urlsplit(url)
+            ref_p = six.moves.urllib.parse.urlsplit(referer)
+            url_p = six.moves.urllib.parse.urlsplit(url)
 
             # If http/https or user, pw, host, port differ, don't try to shorten
             # the URL to be linked. Simply use the full URI

@@ -1,0 +1,14 @@
+title: Graylog: Streams
+agents: graylog
+catalog: app/graylog
+license: GPL
+distribution: check_mk
+description:
+ With this check you can monitor Graylog streams. It outputs the total number
+ of streams and the default stream. The longoutput shows details about each
+ stream, like the stream is disabled or not and if the stream is default.
+
+ Needs the datasource "Check state of Graylog" to be configured.
+
+inventory:
+ One service {"Graylog Streams"} will be created.

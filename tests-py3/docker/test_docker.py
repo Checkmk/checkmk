@@ -29,11 +29,12 @@
 import sys
 import os
 import subprocess
-import pytest
-import docker
-from requests.exceptions import ConnectionError
+import pytest  # type: ignore[import]
+import requests.exceptions
+import docker  # type: ignore[import]
 
 import testlib
+import testlib.utils
 
 build_path = os.path.join(testlib.repo_path(), "docker")
 image_prefix = "docker-tests"
@@ -41,9 +42,11 @@ branch_name = os.environ.get("BRANCH", "master")
 
 
 def build_version():
-    return testlib.CMKVersion(version=testlib.CMKVersion.DAILY,
-                              edition=testlib.CMKVersion.CEE,
-                              branch=branch_name)
+    return testlib.CMKVersion(
+        version=testlib.CMKVersion.DAILY,
+        edition=testlib.CMKVersion.CEE,
+        branch=branch_name,
+    )
 
 
 @pytest.fixture(scope="session")
@@ -67,16 +70,33 @@ def _prepare_build():
 def _build(request, client, version, add_args=None):
     _prepare_build()
 
+    print("Starting helper container for build secrets")
+    secret_container = client.containers.run(
+        image="busybox",
+        command=["timeout", "180", "httpd", "-f", "-p", "8000", "-h", "/files"],
+        detach=True,
+        remove=True,
+        volumes={
+            testlib.utils.get_cmk_download_credentials_file(): {
+                "bind": "/files/secret",
+                "mode": "ro"
+            }
+        },
+    )
+    request.addfinalizer(lambda: secret_container.remove(force=True))
+
     print("Building docker image: %s" % _image_name(version))
     try:
-        image, build_logs = client.images.build(path=build_path,
-                                                tag=_image_name(version),
-                                                buildargs={
-                                                    "CMK_VERSION": version.version,
-                                                    "CMK_EDITION": version.edition(),
-                                                    "CMK_DL_CREDENTIALS": ":".join(
-                                                        testlib.get_cmk_download_credentials()),
-                                                })
+        image, build_logs = client.images.build(
+            path=build_path,
+            tag=_image_name(version),
+            network_mode="container:%s" % secret_container.id,
+            buildargs={
+                "CMK_VERSION": version.version,
+                "CMK_EDITION": version.edition(),
+                "CMK_DL_CREDENTIALS": ":".join(testlib.utils.get_cmk_download_credentials()),
+            },
+        )
     except docker.errors.BuildError as e:
         sys.stdout.write("= Build log ==================\n")
         for entry in e.build_log:
@@ -127,8 +147,9 @@ def _build(request, client, version, add_args=None):
     # 2019-04-10: 940 -> 950
     # 2019-07-12: 950 -> 1040 (python3)
     # 2019-07-27: 1040 -> 1054 (numpy)
-    assert attrs["Size"] < 1110955410.0, \
-        "Docker image size increased: Please verify that this is intended"
+    # 2019-11-15: Temporarily disabled because of Python2 => Python3 transition
+    #    assert attrs["Size"] < 1110955410.0, \
+    #        "Docker image size increased: Please verify that this is intended"
 
     assert len(attrs["RootFS"]["Layers"]) == 6
 
@@ -154,7 +175,7 @@ def _start(request, client, version=None, is_update=False, **kwargs):
             # In case the given version is not the current branch version, don't
             # try to build it. Download it instead!
             _image = _pull(client, version)
-    except ConnectionError as e:
+    except requests.exceptions.ConnectionError as e:
         raise Exception(
             "Failed to access docker socket (Permission denied). You need to be member of the "
             "docker group to get access to the socket (e.g. use \"make -C docker setup\") to "

@@ -44,26 +44,25 @@ def parse_brocade_mlx_power(info):
 def inventory_brocade_mlx_power(parsed):
     inventory = []
 
-    for powersupply_id in parsed.keys():
+    for powersupply_id in parsed:
         inventory.append((powersupply_id, None))
     return inventory
 
 
 def check_brocade_mlx_power(item, _no_params, parsed):
-    if item not in parsed.keys():
+    if item not in parsed:
         yield 3, "Power supply not found"
 
-    for powersupply_id in parsed.keys():
+    for powersupply_id, powersupply_data in parsed.items():
         if powersupply_id == item:
-            if parsed[powersupply_id]['state'] == "2":
+            if powersupply_data['state'] == "2":
                 yield 0, "Power supply reports state: normal"
-            elif parsed[powersupply_id]['state'] == "3":
+            elif powersupply_data['state'] == "3":
                 yield 2, "Power supply reports state: failure"
-            elif parsed[powersupply_id]['state'] == "1":
+            elif powersupply_data['state'] == "1":
                 yield 3, "Power supply reports state: other"
             else:
-                yield 3, "Power supply reports an unhandled state (%s)" % parsed[powersupply_id][
-                    'state']
+                yield 3, "Power supply reports an unhandled state (%s)" % powersupply_data['state']
 
 
 check_info["brocade_mlx_power"] = {

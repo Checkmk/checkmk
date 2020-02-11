@@ -42,6 +42,24 @@ ewon_discovery_rules = []
 #    "*" - add the flag to the infotext but don't derive a state from it
 #    "+" - add the flag to the infotext if it is set but don't derive a state from it
 # Also, we provide the names of flags for proper info texts.
+
+_O2_MINIMUM = {
+    "name": "O2 minimum",
+    "levels": (16, 17, 14, 13),
+    "scale": 0.01,
+    "unit": "%",
+    "perfvar": "o2_percentage",
+    "condition_flag": (1, 15)
+}
+
+_FLAGS_7_9 = {
+    "flags": "?????000??00000*",
+    "flag_names": [
+        "", "", "", "", "", "luminous field", "optical alarm", "acoustic alarm", "", "", "warnings",
+        "operation report", "shutdown", "incidents", "alarm", "O2 Sensor"
+    ],
+}
+
 oxyreduct_tag_map = {
     1: {
         "name": "alarms",
@@ -84,27 +102,10 @@ oxyreduct_tag_map = {
             "N2-supply locked", "N2-supply open"
         ]
     },
-    6: {
-        "name": "O2 minimum",
-        "levels": (16, 17, 14, 13),
-        "scale": 0.01,
-        "unit": "%",
-        "perfvar": "o2_percentage",
-        "condition_flag": (1, 15)
-    },
-    7: {
-        "flags": "?????000??00000*",
-        "flag_names": [
-            "", "", "", "", "", "luminous field", "optical alarm", "acoustic alarm", "", "",
-            "warnings", "operation report", "shutdown", "incidents", "alarm", "O2 Sensor"
-        ]
-    },
-    8: {
-        "same_as": 6
-    },
-    9: {
-        "same_as": 7
-    },
+    6: _O2_MINIMUM,
+    7: _FLAGS_7_9,
+    8: _O2_MINIMUM,
+    9: _FLAGS_7_9,
     10: {
         "name": "O2 average",
         "levels_name": "o2_levels",
@@ -199,6 +200,60 @@ oxyreduct_tag_map = {
 }
 
 
+def _inventory_oxyreduct_names(parsed):
+    for name, area_info in parsed.iteritems():
+        tagids = area_info
+        if min(tagids) < 10:
+            yield name
+        else:
+            # for the "optional" rooms the lsb of the last bitmask says whether the room is used
+            flags = int(area_info[max(tagids)])
+            if flags % 2 == 1:
+                yield name
+
+
+def _check_oxyreduct(params, data):
+    def to_binary(number):
+        return ''.join(str(1 & int(number) >> i) for i in range(16)[::-1])
+
+    for tagid, value in data.iteritems():
+        ref_tagid = tagid
+        if ref_tagid > 17:
+            ref_tagid = ((ref_tagid - 18) % 8) + 10
+
+        tag_params = oxyreduct_tag_map.get(ref_tagid)
+
+        # if it's a measure, check levels
+        if "name" in tag_params:
+            if "condition_flag" in tag_params:
+                condition_tagid = tagid + tag_params["condition_flag"][0]
+                if not int(data[condition_tagid]) & tag_params["condition_flag"][1]:
+                    continue
+
+            value = int(value) * float(tag_params.get("scale", 1.0))
+            levels_name = tag_params.get("levels_name")
+            levels = params[levels_name] if levels_name in params else tag_params.get("levels")
+            yield check_levels(
+                value,
+                tag_params.get("perfvar"),
+                levels,
+                unit=tag_params.get("unit", ""),
+                infoname=tag_params["name"],
+            )
+
+        # if it's a bitmask, try to determine if they are good flags
+        flags = tag_params.get("flags", [])
+        for name, flag, value_bin in zip(tag_params.get("flag_names", []), flags, to_binary(value)):
+            state = "active" if value_bin == "1" else "inactive"
+
+            if flag in ("1", "0") and flag != value_bin:
+                yield 2, "%s %s" % (name, state)
+            elif flag == "*":
+                yield 0, "%s %s" % (name, state)
+            elif flag == "+" and value_bin == "1":
+                yield 0, "%s" % name
+
+
 def parse_ewon(info):
     result = {}
     for tagid, value, name in info:
@@ -208,28 +263,36 @@ def parse_ewon(info):
 
 def inventory_ewon(parsed):
     settings = host_extra_conf(host_name(), ewon_discovery_rules)
-    deviceName = None
-    if settings:
-        deviceName = settings[0]
+    device_name = settings[0] if settings else None
+    discovery_params = {"device": device_name}
 
-    yield "eWON Status", {"device": deviceName}
+    yield "eWON Status", discovery_params.copy()
 
-    if deviceName in {"oxyreduct"}:
-        for res in globals()["inventory_%s" % deviceName](parsed):
-            item, params = res
-            params["device"] = deviceName
-            yield item, params
+    if device_name == "oxyreduct":
+        for item in _inventory_oxyreduct_names(parsed):
+            yield item, discovery_params.copy()
 
 
 def check_ewon(item, params, parsed):
     if item == "eWON Status":
         if params["device"] is None:
-            return 1, "This device requires configuration. Plese pick the device type."
-        return 0, "Configured for %s" % params["device"]
+            yield 1, "This device requires configuration. Please pick the device type."
+        else:
+            yield 0, "Configured for %s" % params["device"]
+        return
 
-    deviceName = params["device"]
-    if deviceName in {"oxyreduct"}:
-        return globals()["check_%s" % deviceName](item, params.get(deviceName, {}), parsed)
+    device_name = params["device"]
+    if device_name != "oxyreduct":
+        return
+
+    data = parsed.get(item)
+    dev_results = list(_check_oxyreduct(params.get(device_name, {}), data)) if data else []
+    if not dev_results:
+        yield 0, "no messages"
+        return
+
+    for dev_result in dev_results:
+        yield dev_result
 
 
 check_info["ewon"] = {

@@ -38,7 +38,7 @@ def inv_docker_container_network_networks(parsed, inventory_tree):
 
     networks = inventory_tree.get_list("software.applications.docker.container.networks:")
 
-    for network_name, network in network_data.iteritems():
+    for network_name, network in network_data.items():
         networks.append({
             "name": network_name,
             "network_id": network["NetworkID"],
@@ -54,7 +54,7 @@ def inv_docker_container_network_ports(parsed, inventory_tree):
 
     ports = inventory_tree.get_list("software.applications.docker.container.ports:")
 
-    for container_port_spec, host_ports in port_data.iteritems():
+    for container_port_spec, host_ports in port_data.items():
         port, proto = container_port_spec.split("/", 1)
 
         if host_ports:

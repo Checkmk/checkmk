@@ -1,0 +1,12 @@
+Title: oracle_instance: Fixed evaluating amount of logins if Oracle DB is a PDB
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1578566115
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+In case of a PDB and PRESTRICTED is NO the amount of logins may not be
+evaluated correctly.

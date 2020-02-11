@@ -122,7 +122,7 @@ def check_mssql_tablespaces(item, params, parsed):
             value = value_bytes
             readable_f = get_bytes_human_readable
         else:
-            yield 0, infotext
+            yield 0, infotext, [(key, value_bytes)]
             continue
 
         state = 0
@@ -133,7 +133,7 @@ def check_mssql_tablespaces(item, params, parsed):
         if state:
             infotext += " (warn/crit %s %s/%s)" % (
                 ('below', 'at')[is_upper], readable_f(warn), readable_f(crit))
-        yield state, infotext
+        yield state, infotext, [(key, value_bytes)]
 
 
 check_info['mssql_tablespaces'] = {

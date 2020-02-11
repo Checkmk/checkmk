@@ -23,18 +23,21 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from email.utils import formataddr
 import os
+from quopri import encodestring
 import re
-import subprocess
+import socket
 import sys
-from html import escape as html_escape  # type: ignore
-from typing import (  # pylint: disable=unused-import
-    AnyStr, Dict, List, Optional, Text, Tuple)
+from html import escape as html_escape  # type: ignore[import]
+from typing import AnyStr, Dict, List, Text, Tuple  # pylint: disable=unused-import
 
 import requests
 
 from cmk.utils.notify import find_wato_folder
+import cmk.utils.paths
 import cmk.utils.password_store
+import cmk.utils.cmk_subprocess as subprocess
 
 
 def collect_context():
@@ -49,6 +52,32 @@ def collect_context():
 def format_link(template, url, text):
     # type: (AnyStr, AnyStr, AnyStr) -> AnyStr
     return template % (url, text) if url else text
+
+
+def format_address(display_name, email_address):
+    # type: (Text, Text) -> Text
+    """
+    Returns an email address with an optional display name suitable for an email header like From or Reply-To.
+    The function handles the following cases:
+
+      * If an empty display name is given, only the email address is returned.
+      * If a display name is given a, string of the form "display_name <email_address>" is returned.
+      * If the display name contains non ASCII characters, it is converted to an encoded word (see RFC2231).
+      * If the display_name contains special characters like e.g. '.' the display string is enclosed in quotes.
+      * If the display_name contains backslashes or quotes, a backslash is prepended before these characters.
+    """
+    if not email_address:
+        return ''
+
+    try:
+        display_name.encode('ascii')
+    except UnicodeEncodeError:
+        display_name = u'=?utf-8?q?%s?=' % encodestring(display_name.encode('utf-8')).decode('ascii')
+    return formataddr((display_name, email_address))
+
+
+def default_from_address():
+    return os.environ.get("OMD_SITE", "checkmk") + "@" + socket.getfqdn()
 
 
 def _base_url(context):
@@ -103,9 +132,11 @@ def html_escape_context(context):
         'PARAMETER_HOST_SUBJECT',
         'PARAMETER_SERVICE_SUBJECT',
         'PARAMETER_FROM',
+        'PARAMETER_FROM_DISPLAY_NAME',
         'PARAMETER_REPLY_TO',
+        'PARAMETER_REPLY_TO_DISPLAY_NAME',
     }
-    for variable, value in context.iteritems():
+    for variable, value in context.items():
         if variable not in unescaped_variables:
             context[variable] = html_escape(value)
 
@@ -162,22 +193,39 @@ def set_mail_headers(target, subject, from_address, reply_to, mail):
 
 
 def send_mail_sendmail(m, target, from_address):
-    cmd = ["/usr/sbin/sendmail"]
+    cmd = [_sendmail_path()]
     if from_address:
         cmd += ['-F', from_address, "-f", from_address]
     cmd += ["-i", target.encode("utf-8")]
 
     try:
-        p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+        p = subprocess.Popen(
+            cmd,
+            stdin=subprocess.PIPE,
+        )
     except OSError:
         raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
 
-    p.communicate(m.as_string())
+    p.communicate(input=m.as_string())
     if p.returncode != 0:
         raise Exception("sendmail returned with exit code: %d" % p.returncode)
 
     sys.stdout.write("Spooled mail to local mail transmission agent\n")
     return 0
+
+
+def _sendmail_path():
+    # type: () -> str
+    # We normally don't deliver the sendmail command, but our notification integration tests
+    # put some fake sendmail command into the site to prevent actual sending of mails.
+    for path in [
+            "%s/local/bin/sendmail" % cmk.utils.paths.omd_root,
+            "/usr/sbin/sendmail",
+    ]:
+        if os.path.exists(path):
+            return path
+
+    raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
 
 
 def read_bulk_contexts():

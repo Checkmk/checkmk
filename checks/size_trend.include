@@ -76,7 +76,7 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
                         timestamp,
                         used_mb,
                         allow_negative=True,
-                        onwrap=ZERO)
+                        onwrap=RAISE)
     except MKCounterWrapped:
         # need more data for computing a trend
         return 0, '', []
@@ -84,8 +84,8 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
     if levels.get("trend_perfdata"):
         perfdata.append(("growth", rate * H24))
 
-    # average trend in MB/s, initialized with zero
-    rate_avg = get_average("%s.%s.trend" % (check, item), timestamp, rate, range_sec / 60.0, True)
+    # average trend in MB/s, initialized with zero (by default)
+    rate_avg = get_average("%s.%s.trend" % (check, item), timestamp, rate, range_sec / 60.0)
 
     trend = rate_avg * range_sec
     sign = '+' if trend > 0 else ""

@@ -39,7 +39,7 @@ def _get_sap_hana_backup_timestamp(backup_time_readable):
 
 def parse_sap_hana_backup(info):
     parsed = {}
-    for (sid_instance, node), lines in parse_sap_hana_cluster_aware(info).iteritems():
+    for (sid_instance, node), lines in parse_sap_hana_cluster_aware(info).items():
         for line in lines:
             if len(line) < 5:
                 continue
@@ -58,7 +58,7 @@ def parse_sap_hana_backup(info):
 
 
 def inventory_sap_hana_backup(parsed):
-    for sid in parsed.iterkeys():
+    for sid in parsed:
         yield sid, {}
 
 
@@ -66,11 +66,11 @@ def inventory_sap_hana_backup(parsed):
 def check_sap_hana_backup(item, params, node_data):
     now = time.time()
 
-    nodes = [n for n in node_data.keys() if n]
+    nodes = [n for n in node_data if n]
     if nodes:
         yield 0, 'Nodes: %s' % ", ".join(nodes)
 
-    for data in node_data.itervalues():
+    for data in node_data.values():
         state_name = data['state_name']
         if state_name == 'failed':
             state = 2

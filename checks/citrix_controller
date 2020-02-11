@@ -91,7 +91,7 @@ def inventory_citrix_controller_registered(info):
             return [(None, None)]
 
 
-def check_citrix_controller_registered(_no_item, _no_params, info):
+def check_citrix_controller_registered(_no_item, params, info):
     for line in info:
         if line[0] == "DesktopsRegistered":
             try:
@@ -99,7 +99,13 @@ def check_citrix_controller_registered(_no_item, _no_params, info):
             except (IndexError, ValueError):
                 # Is UNKNOWN right behaviour?
                 return 3, 'No desktops registered'
-            return 0, "%d" % count_desktops, [("registered_desktops", count_desktops)]
+
+            levels = params.get("levels", (None, None)) + params.get("levels_lower", (None, None))
+
+            return check_levels(count_desktops,
+                                "registered_desktops",
+                                levels,
+                                human_readable_func=int)
 
 
 check_info["citrix_controller.registered"] = {
@@ -107,6 +113,7 @@ check_info["citrix_controller.registered"] = {
     "check_function": check_citrix_controller_registered,
     "service_description": "Citrix Desktops Registered",
     "has_perfdata": True,
+    "group": "citrix_desktops_registered",
 }
 
 #.

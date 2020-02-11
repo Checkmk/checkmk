@@ -1,38 +1,23 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """WATO LIBRARY
 
 This component contains classes, functions and globals that are being used by
 WATO. It does not contain any acutal page handlers or WATO modes. Nor complex
 HTML creation. This is all contained in cmk.gui.wato."""
 
+# NOTE: flake8 has no way to ignore just e.g. F401 for the whole file! :-P
+# flake8: noqa
+# pylint: disable=unused-import
+
+import sys
 import abc
 import ast
 import base64
-import cStringIO
 import copy
 import glob
 from hashlib import sha256
@@ -53,9 +38,13 @@ import traceback
 from typing import NamedTuple, List  # pylint: disable=unused-import
 
 import requests
-import urllib3  # type: ignore
-from pathlib2 import Path
+import urllib3  # type: ignore[import]
 import six
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import cmk
 import cmk.utils.daemon as daemon
@@ -64,9 +53,6 @@ import cmk.utils.defines
 import cmk.utils
 import cmk.utils.store as store
 import cmk.utils.render as render
-# It's OK to import centralized config load logic
-import cmk.ec.defaults  # pylint: disable=cmk-module-layer-violation
-import cmk.ec.export  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.regex
 import cmk.utils.plugin_registry
 
@@ -84,7 +70,7 @@ import cmk.gui.background_job as background_job
 import cmk.gui.weblib as weblib
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML, Encoder
+from cmk.gui.htmllib import HTML
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError, RequestTimeout
 from cmk.gui.valuespec import (
@@ -214,7 +200,9 @@ from cmk.gui.watolib.rulesets import (
 )
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.hosts_and_folders import (
+    CREFolder,
     Folder,
+    CREHost,
     Host,
     validate_all_hosts,
     call_hook_hosts_changed,
@@ -455,19 +443,31 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 },
             },],
 
-            # Enable HW/SW inventory + status data inventory for docker containers by default to
-            # simplify the setup procedure of docker monitoring
+            # Enable HW/SW inventory + status data inventory for docker containers and Check-MK servers by default to
+            # simplify the setup procedure for them
             'active_checks': {
-                'cmk_inv': [{
-                    'condition': {
-                        'host_labels': {
-                            u'cmk/docker_object': u'node'
-                        }
+                'cmk_inv': [
+                    {
+                        'condition': {
+                            'host_labels': {
+                                u'cmk/docker_object': u'node',
+                            }
+                        },
+                        'value': {
+                            'status_data_inventory': True
+                        },
                     },
-                    'value': {
-                        'status_data_inventory': True
+                    {
+                        'condition': {
+                            'host_labels': {
+                                u'cmk/check_mk_server': u'yes',
+                            }
+                        },
+                        'value': {
+                            'status_data_inventory': True
+                        },
                     },
-                },]
+                ]
             },
 
             # Interval for HW/SW-Inventory check
@@ -529,61 +529,86 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
     def _initial_global_settings(self):
         settings = {
             "use_new_descriptions_for": [
-                "df",
-                "df_netapp",
-                "df_netapp32",
-                "esx_vsphere_datastores",
-                "hr_fs",
-                "vms_diskstat.df",
-                "zfsget",
-                "ps",
-                "ps.perf",
-                "wmic_process",
-                "services",
-                "logwatch",
-                "logwatch.groups",
-                "cmk-inventory",
-                "hyperv_vms",
-                "ibm_svc_mdiskgrp",
-                "ibm_svc_system",
-                "ibm_svc_systemstats.diskio",
-                "ibm_svc_systemstats.iops",
-                "ibm_svc_systemstats.disk_latency",
-                "ibm_svc_systemstats.cache",
+                "aix_memory",
+                "barracuda_mailqueues",
+                "brocade_sys.mem",
                 "casa_cpu_temp",
-                "cmciii.temp",
+                "cisco_mem",
+                "cisco_mem_asa",
+                "cisco_mem_asa64",
                 "cmciii.psm_current",
+                "cmciii.temp",
                 "cmciii_lcp_airin",
                 "cmciii_lcp_airout",
                 "cmciii_lcp_water",
-                "etherbox.temp",
-                "liebert_bat_temp",
-                "nvidia.temp",
-                "ups_bat_temp",
-                "innovaphone_temp",
+                "cmk-inventory",
+                "db2_mem",
+                "df",
+                "df_netapp",
+                "df_netapp32",
+                "docker_container_mem",
                 "enterasys_temp",
-                "raritan_emx",
-                "raritan_pdu_inlet",
+                "esx_vsphere_datastores",
+                "esx_vsphere_hostsystem.mem_usage",
+                "esx_vsphere_hostsystem.mem_usage_cluster",
+                "etherbox.temp",
+                "fortigate_memory",
+                "fortigate_memory_base",
+                "fortigate_node.memory",
+                "hr_fs",
+                "hr_mem",
+                "http",
+                "huawei_switch_mem",
+                "hyperv_vms",
+                "ibm_svc_mdiskgrp",
+                "ibm_svc_system",
+                "ibm_svc_systemstats.cache",
+                "ibm_svc_systemstats.disk_latency",
+                "ibm_svc_systemstats.diskio",
+                "ibm_svc_systemstats.iops",
+                "innovaphone_mem",
+                "innovaphone_temp",
+                "juniper_mem",
+                "juniper_screenos_mem",
+                "juniper_trpz_mem",
+                "liebert_bat_temp",
+                "logwatch",
+                "logwatch.groups",
+                "mem.used",
+                "mem.win",
                 "mknotifyd",
                 "mknotifyd.connection",
-                "postfix_mailq",
-                "nullmailer_mailq",
-                "barracuda_mailqueues",
-                "qmail_stats",
-                "http",
                 "mssql_backup",
                 "mssql_counters.cache_hits",
-                "mssql_counters.transactions",
-                "mssql_counters.locks",
-                "mssql_counters.sqlstats",
-                "mssql_counters.pageactivity",
-                "mssql_counters.locks_per_batch",
                 "mssql_counters.file_sizes",
+                "mssql_counters.locks",
+                "mssql_counters.locks_per_batch",
+                "mssql_counters.pageactivity",
+                "mssql_counters.sqlstats",
+                "mssql_counters.transactions",
                 "mssql_databases",
                 "mssql_datafiles",
                 "mssql_tablespaces",
                 "mssql_transactionlogs",
                 "mssql_versions",
+                "netscaler_mem",
+                "nullmailer_mailq",
+                "nvidia.temp",
+                "postfix_mailq",
+                "ps",
+                "ps.perf",
+                "qmail_stats",
+                "raritan_emx",
+                "raritan_pdu_inlet",
+                "services",
+                "solaris_mem",
+                "sophos_memory",
+                "statgrab_mem",
+                "tplink_mem",
+                "ups_bat_temp",
+                "vms_diskstat.df",
+                "wmic_process",
+                "zfsget",
             ],
             "enable_rulebased_notifications": True,
             "ui_theme": "facelift",

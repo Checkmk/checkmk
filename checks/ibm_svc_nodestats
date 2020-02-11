@@ -85,7 +85,7 @@ def parse_ibm_svc_nodestats(info):
         'stat_peak_time',
     ]
     parsed = {}
-    for rows in parse_ibm_svc_with_header(info, dflt_header).itervalues():
+    for rows in parse_ibm_svc_with_header(info, dflt_header).values():
         for data in rows:
             node_name = data['node_name']
             stat_name = data['stat_name']
@@ -125,7 +125,7 @@ def parse_ibm_svc_nodestats(info):
 
 def inventory_ibm_svc_nodestats_diskio(info):
     return [(node_name, None)
-            for node_name, data in parse_ibm_svc_nodestats(info).iteritems()
+            for node_name, data in parse_ibm_svc_nodestats(info).items()
             if 'r_mb' in data and 'w_mb' in data]
 
 
@@ -164,7 +164,7 @@ check_info["ibm_svc_nodestats.diskio"] = {
 
 def inventory_ibm_svc_nodestats_iops(info):
     return [(node_name, None)
-            for node_name, data in parse_ibm_svc_nodestats(info).iteritems()
+            for node_name, data in parse_ibm_svc_nodestats(info).items()
             if 'r_io' in data and 'w_io' in data]
 
 
@@ -200,7 +200,7 @@ check_info["ibm_svc_nodestats.iops"] = {
 
 def inventory_ibm_svc_nodestats_disk_latency(info):
     return [(node_name, None)
-            for node_name, data in parse_ibm_svc_nodestats(info).iteritems()
+            for node_name, data in parse_ibm_svc_nodestats(info).items()
             if 'r_ms' in data and 'w_ms' in data]
 
 
@@ -239,7 +239,7 @@ ibm_svc_cpu_default_levels = (90.0, 95.0)
 
 def inventory_ibm_svc_nodestats_cpu(info):
     return [(node_name, "ibm_svc_cpu_default_levels")
-            for node_name, data in parse_ibm_svc_nodestats(info).iteritems()
+            for node_name, data in parse_ibm_svc_nodestats(info).items()
             if 'cpu_pc' in data]
 
 
@@ -272,7 +272,7 @@ check_info["ibm_svc_nodestats.cpu_util"] = {
 
 def inventory_ibm_svc_nodestats_cache(info):
     return [(node_name, None)
-            for node_name, data in parse_ibm_svc_nodestats(info).iteritems()
+            for node_name, data in parse_ibm_svc_nodestats(info).items()
             if 'write_cache_pc' in data and 'total_cache_pc' in data]
 
 

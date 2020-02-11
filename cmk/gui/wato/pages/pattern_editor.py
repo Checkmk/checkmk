@@ -1,31 +1,14 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """Mode for trying out the logwatch patterns"""
 
 import re
+
+from cmk.utils.type_defs import CheckPluginName, HostName, ServiceName, Item  # pylint: disable=unused-import
 
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
@@ -44,7 +27,7 @@ from cmk.gui.plugins.wato import (
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
-import cmk_base.export  # pylint: disable=cmk-module-layer-violation
+#import cmk.base.export  # pylint: disable=cmk-module-layer-violation
 
 
 @mode_registry.register
@@ -156,8 +139,7 @@ class ModePatternEditor(WatoMode):
         for folder, rulenr, rule in ruleset.get_rules():
             # Check if this rule applies to the given host/service
             if self._hostname:
-                service_desc = cmk_base.export.service_description(self._hostname, "logwatch",
-                                                                   self._item)
+                service_desc = self._get_service_description(self._hostname, "logwatch", self._item)
 
                 # If hostname (and maybe filename) try match it
                 rule_matches = rule.matches_host_and_item(watolib.Folder.current(), self._hostname,
@@ -246,3 +228,10 @@ class ModePatternEditor(WatoMode):
                 html.icon_button(edit_url, _("Edit this rule"), "edit")
 
             html.end_foldable_container()
+
+    def _get_service_description(self, hostname, check_plugin_name, item):
+        # type: (HostName, CheckPluginName, Item) -> ServiceName
+        # TODO: re-enable once the GUI is using Python3
+        #return cmk.base.export.service_description(hostname, check_plugin_name, item)
+        return watolib.check_mk_local_automation("get-service-name",
+                                                 [hostname, check_plugin_name, item])

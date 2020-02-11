@@ -34,7 +34,7 @@ def check_firewall_if(item, params, data):
 
     this_time = time.time()
 
-    for what, counter in data.iteritems():
+    for what, counter in data.items():
         rate = get_rate("firewall_if-%s.%s" % (what, item), this_time, counter, onwrap=RAISE)
 
         if params.get("averaging"):

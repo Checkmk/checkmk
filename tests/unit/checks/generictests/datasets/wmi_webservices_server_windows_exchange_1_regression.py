@@ -77,12 +77,12 @@ checks = {
         (
             u'Default Web Site',
             {},
-            [(0, '0.00 connections', [('connections', 0.0, None, None, None, None)])],
+            [(0, 'Connections: 0.00', [('connections', 0.0, None, None, None, None)])],
         ),
         (
             u'Exchange Back End',
             {},
-            [(0, '0.00 connections', [('connections', 0.0, None, None, None, None)])],
+            [(0, 'Connections: 0.00', [('connections', 0.0, None, None, None, None)])],
         ),
     ]
 }

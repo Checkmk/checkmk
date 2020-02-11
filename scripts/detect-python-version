@@ -1,0 +1,15 @@
+#!/bin/bash
+# Try to detect the Python version of the last file argument in a very naive
+# way, defaulting to Python 2.7 for now.
+set -e
+
+PYTHON_VERSION=2.7
+if [ $# -gt 0 ]; then
+    FILE_ARG="${@: -1}"
+    if [[ "$FILE_ARG" =~ "/tests-py3/" ]] && [[ "$FILE_ARG" == *.py ]]; then
+        PYTHON_VERSION=3.7
+    elif test -f "$FILE_ARG" && head -n 1 "$FILE_ARG" | grep -q '^#!.*python3$' >/dev/null 2>&1; then
+        PYTHON_VERSION=3.7
+    fi
+fi
+echo $PYTHON_VERSION

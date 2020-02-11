@@ -45,7 +45,7 @@ def check_liebert_pump(item, _no_params, parsed):
         return
 
     # TODO: this should be done in the parse function, per OID end.
-    for key, (value, _unit) in parsed.iteritems():
+    for key, (value, _unit) in parsed.items():
         if "Threshold" in key and key.replace(" Threshold", "") == item:
             crit = value
 

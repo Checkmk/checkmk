@@ -1,4 +1,4 @@
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
                          BasicCheckResult, CheckResult, assertCheckResultsEqual
 

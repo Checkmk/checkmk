@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
 
@@ -78,7 +58,7 @@ def transform_forth_html_mail_url_prefix(p):
     if not isinstance(p, dict):
         return ("manual", p)
 
-    k, v = p.items()[0]
+    k, v = list(p.items())[0]
     if k == "automatic":
         return "%s_%s" % (k, v)
 
@@ -87,6 +67,102 @@ def transform_forth_html_mail_url_prefix(p):
 
 def local_site_url():
     return "http://" + socket.gethostname() + "/" + config.omd_site() + "check_mk/",
+
+
+def _vs_add_common_mail_elements(elements):
+    header = [
+        ("from",
+         Transform(
+             Dictionary(
+                 title="From",
+                 elements=[
+                     ("address", EmailAddress(
+                         title=_("Email address"),
+                         size=40,
+                         allow_empty=False,
+                     )),
+                     ("display_name",
+                      TextUnicode(
+                          title=_("Display name"),
+                          size=40,
+                          allow_empty=False,
+                      )),
+                 ],
+                 help=_("The email address and visible name used in the From header "
+                        "of notifications messages. If no email address is specified "
+                        "the default address is <tt>OMD_SITE@FQDN</tt> is used. If the "
+                        "environment variable <tt>OMD_SITE</tt> is not set it defaults "
+                        "to <tt>checkmk</tt>."),
+             ),
+             forth=lambda x: x if isinstance(x, dict) else {'address': x},
+         )),
+        ("reply_to",
+         Transform(
+             Dictionary(
+                 title="Reply to",
+                 elements=[
+                     ("address", EmailAddress(
+                         title=_("Email address"),
+                         size=40,
+                         allow_empty=False,
+                     )),
+                     ("display_name",
+                      TextUnicode(
+                          title=_("Display name"),
+                          size=40,
+                          allow_empty=False,
+                      )),
+                 ],
+                 required_keys=["address"],
+                 help=_("The email address and visible name used in the Reply-To header "
+                        "of notifications messages."),
+             ),
+             forth=lambda x: x if isinstance(x, dict) else {'address': x},
+         )),
+        ("host_subject",
+         TextUnicode(
+             title=_("Subject for host notifications"),
+             help=_("Here you are allowed to use all macros that are defined in the "
+                    "notification context."),
+             default_value="Check_MK: $HOSTNAME$ - $EVENT_TXT$",
+             size=64,
+         )),
+        ("service_subject",
+         TextUnicode(
+             title=_("Subject for service notifications"),
+             help=_("Here you are allowed to use all macros that are defined in the "
+                    "notification context."),
+             default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
+             size=64,
+         )),
+    ]
+
+    footer = [
+        ('bulk_sort_order',
+         DropdownChoice(
+             choices=[
+                 ('oldest_first', _('Oldest first')),
+                 ('newest_first', _('Newest first')),
+             ],
+             help=_(
+                 "With this option you can specify, whether the oldest (default) or "
+                 "the newest notification should get shown at the top of the notification mail."),
+             title=_("Notification sort order for bulk notifications"),
+             default_value="oldest_first",
+         )),
+        ("disable_multiplexing",
+         FixedValue(
+             True,
+             title=_("Send seperate notifications to every recipient"),
+             totext=_("A seperate notification is send to every recipient. Recipients "
+                      "cannot see which other recipients were notified."),
+             help=_("Per default only one notification is generated for all recipients. "
+                    "Therefore, all recipients can see who was notified and reply to "
+                    "all other recipients."),
+         )),
+    ]
+
+    return header + elements + footer
 
 
 @notification_parameter_registry.register
@@ -102,33 +178,7 @@ class NotificationParameterMail(NotificationParameter):
             elements=self._parameter_elements,)
 
     def _parameter_elements(self):
-        elements = [
-            ("from", EmailAddress(
-                title=_("From: Address"),
-                size=40,
-                allow_empty=False,
-            )),
-            ("reply_to", EmailAddress(
-                title=_("Reply-To: Address"),
-                size=40,
-                allow_empty=False,
-            )),
-            ("host_subject",
-             TextUnicode(
-                 title=_("Subject for host notifications"),
-                 help=_("Here you are allowed to use all macros that are defined in the "
-                        "notification context."),
-                 default_value="Check_MK: $HOSTNAME$ - $EVENT_TXT$",
-                 size=64,
-             )),
-            ("service_subject",
-             TextUnicode(
-                 title=_("Subject for service notifications"),
-                 help=_("Here you are allowed to use all macros that are defined in the "
-                        "notification context."),
-                 default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
-                 size=64,
-             )),
+        elements = _vs_add_common_mail_elements([
             ("elements",
              ListChoice(
                  title=_("Information to be displayed in the email body"),
@@ -193,30 +243,7 @@ class NotificationParameterMail(NotificationParameter):
                         "nearby. You can enable this option to show the graphs among each "
                         "other."),
              )),
-            ('bulk_sort_order',
-             DropdownChoice(
-                 choices=[
-                     ('oldest_first', _('Oldest first')),
-                     ('newest_first', _('Newest first')),
-                 ],
-                 help=_(
-                     "With this option you can specify, whether the oldest (default) or "
-                     "the newest notification should get shown at the top of the notification mail."
-                 ),
-                 title=_("Notification sort order for bulk notifications"),
-                 default_value="oldest_first",
-             )),
-            ("disable_multiplexing",
-             FixedValue(
-                 True,
-                 title=_("Send seperate notifications to every recipient"),
-                 totext=_("A seperate notification is send to every recipient. Recipients "
-                          "cannot see which other recipients were notified."),
-                 help=_("Per default only one notification is generated for all recipients. "
-                        "Therefore, all recipients can see who was notified and reply to "
-                        "all other recipients."),
-             )),
-        ]
+        ])
 
         if not cmk.is_raw_edition():
             elements += cmk.gui.cee.plugins.wato.syncsmtp.cee_html_mail_smtp_sync_option  # pylint: disable=no-member
@@ -410,33 +437,7 @@ class NotificationParameterASCIIMail(NotificationParameter):
 
     @property
     def spec(self):
-        return Dictionary(elements=[
-            ("from", EmailAddress(
-                title=_("From: Address"),
-                size=40,
-                allow_empty=False,
-            )),
-            ("reply_to", EmailAddress(
-                title=_("Reply-To: Address"),
-                size=40,
-                allow_empty=False,
-            )),
-            ("host_subject",
-             TextUnicode(
-                 title=_("Subject for host notifications"),
-                 help=_("Here you are allowed to use all macros that are defined in the "
-                        "notification context."),
-                 default_value="Check_MK: $HOSTNAME$ - $EVENT_TXT$",
-                 size=64,
-             )),
-            ("service_subject",
-             TextUnicode(
-                 title=_("Subject for service notifications"),
-                 help=_("Here you are allowed to use all macros that are defined in the "
-                        "notification context."),
-                 default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
-                 size=64,
-             )),
+        elements = _vs_add_common_mail_elements([
             ("common_body",
              TextAreaUnicode(
                  title=_("Body head for both host and service notifications"),
@@ -473,30 +474,8 @@ Perfdata: $SERVICEPERFDATA$
 $LONGSERVICEOUTPUT$
 """,
              )),
-            ('bulk_sort_order',
-             DropdownChoice(
-                 choices=[
-                     ('oldest_first', _('Oldest first')),
-                     ('newest_first', _('Newest first')),
-                 ],
-                 help=_(
-                     "With this option you can specify, whether the oldest (default) or "
-                     "the newest notification should get shown at the top of the notification mail."
-                 ),
-                 title=_("Notification sort order for bulk notifications"),
-                 default_value="oldest_first",
-             )),
-            ("disable_multiplexing",
-             FixedValue(
-                 True,
-                 title=_("Send seperate notifications to every recipient"),
-                 totext=_("A seperate notification is send to every recipient. Recipients "
-                          "cannot see which other recipients were notified."),
-                 help=_("Per default only one notification is generated for all recipients. "
-                        "Therefore, all recipients can see who was notified and reply to "
-                        "all other recipients."),
-             )),
-        ],)
+        ])
+        return Dictionary(elements=elements)
 
 
 @notification_parameter_registry.register
@@ -610,7 +589,7 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
                  )),
                 ("resolution",
                  TextAscii(
-                     title=_("Activate resolution with following resolution transistion ID"),
+                     title=_("Activate resolution with following resolution transition ID"),
                      help=_("The numerical JIRA resolution transition ID. "
                             "11 - 'To Do', 21 - 'In Progress', 31 - 'Done'"),
                      size=3,
@@ -821,6 +800,16 @@ class NotificationParameterOpsgenie(NotificationParameter):
                              "subscription you can use global or team integration api "
                              "keys."),
                      allow_empty=False,
+                 )),
+                ("url",
+                 TextAscii(
+                     title=_("Domain (only used for european accounts)"),
+                     help=_("If you have an european account, please set the "
+                            "domain of your opsgenie. Specify an absolute URL like "
+                            "https://my.app.eu.opsgenie.com "),
+                     regex="^https://.*",
+                     regex_error=_("The URL must begin with <tt>https</tt>."),
+                     size=64,
                  )),
                 ("owner",
                  TextUnicode(

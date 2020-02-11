@@ -46,7 +46,7 @@ def _get_python_stdlib():
 
         for nm in files:
             if nm != '__init__.py' and nm[-3:] == '.py':
-                yield os.path.join(top, nm)[len(std_lib) + 1:-3].replace('/', '.')
+                yield os.path.join(top, nm)[len(std_lib) + 1:-3].replace(b'/', b'.')
 
 
 # We pull a list of Python's stdlib so we can color it differently.
@@ -360,7 +360,7 @@ def _importer(name, _globals=None, _locals=None, fromlist=None, level=-1):
     without_us = [frame for frame in _stack if frame[1] != __file__]
 
     current = inspect.currentframe()
-    parent = current.f_back.f_back.f_back.f_globals.get('__name__')
+    parent = current.f_back.f_back.f_back.f_globals.get(b'__name__')
 
     if _globals is None or _locals is None:
         # Someone did call __import__('foo') without specifying
@@ -403,7 +403,7 @@ def _importer(name, _globals=None, _locals=None, fromlist=None, level=-1):
                 ret = candidate
             return ret
 
-    module_name = _globals.get('__name__')
+    module_name = _globals.get(b'__name__')
 
     # c-libraries sometimes don't have a name, or have no _globals and thus somehow fall through
     # to the base globals() so we figure out how they were called when they were imported and
@@ -488,7 +488,7 @@ def remove_zeros(param):
 def remove_importlib(val):
     # type: (Union[dict, list, str]) -> Union[dict, list, str]
     if isinstance(val, list):
-        ret = []
+        ret = []  # type: list
         for entry in val:
             if entry['name'] == 'importlib':
                 ret.extend(entry.get('children', []))

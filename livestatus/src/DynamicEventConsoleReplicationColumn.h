@@ -28,8 +28,8 @@
 #include "config.h"  // IWYU pragma: keep
 #include <memory>
 #include <string>
+#include "Column.h"
 #include "DynamicColumn.h"
-class Column;
 class MonitoringCore;
 
 class DynamicEventConsoleReplicationColumn : public DynamicColumn {
@@ -37,8 +37,7 @@ public:
     DynamicEventConsoleReplicationColumn(const std::string &name,
                                          const std::string &description,
                                          MonitoringCore *mc,
-                                         int indirect_offset, int extra_offset,
-                                         int extra_extra_offset);
+                                         const Column::Offsets &);
 
     std::unique_ptr<Column> createColumn(const std::string &name,
                                          const std::string &arguments) override;

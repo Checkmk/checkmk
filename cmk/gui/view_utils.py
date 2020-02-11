@@ -1,33 +1,16 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import re
 import json
 import six
 
+from cmk.utils.encoding import ensure_unicode
+
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -51,7 +34,7 @@ def format_plugin_output(output, row=None, shall_escape=True):
             shall_escape = custom_vars["ESCAPE_PLUGIN_OUTPUT"] == "1"
 
     if shall_escape:
-        output = html.attrencode(output)
+        output = escaping.escape_attribute(output)
 
     output = output.replace("(!)", warn_marker) \
               .replace("(!!)", crit_marker) \
@@ -123,6 +106,12 @@ def query_limit_exceeded_warn(limit, user_config):
     html.show_warning(text)
 
 
+def get_labels(row, what):
+    # Sites with old versions that don't have the labels column return
+    # None for this field. Convert this to the default value
+    return row.get("%s_labels" % what, {}) or {}
+
+
 def render_labels(labels, object_type, with_links, label_sources):
     return _render_tag_groups_or_labels(labels,
                                         object_type,
@@ -165,9 +154,10 @@ def _render_tag_group(tg_id, tag, object_type, with_link, label_type, label_sour
         ]
     elif label_type == "label":
         type_filter_vars = [
-            ("%s_label" % object_type, json.dumps([{
-                "value": "%s:%s" % (tg_id, tag)
-            }]).decode("utf-8")),
+            ("%s_label" % object_type,
+             ensure_unicode(json.dumps([{
+                 "value": "%s:%s" % (tg_id, tag)
+             }]))),
         ]
 
     else:

@@ -44,13 +44,13 @@ def _item_from_key(key):
 
 def discover_liebert_humidity_air(parsed):
     parsed, _extra_section = parsed
-    for key, (value, _unit) in parsed.iteritems():
+    for key, (value, _unit) in parsed.items():
         if "Unavailable" not in value:
             yield _item_from_key(key), {}
 
 
 def _get_item_data(item, parsed):
-    for key, data in parsed.iteritems():
+    for key, data in parsed.items():
         if _item_from_key(key) == item:
             return data
     return (None, None)

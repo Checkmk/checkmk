@@ -30,23 +30,35 @@ Please try to find a better place for the things you want to put here."""
 
 import itertools
 import sys
-import six
+import time
+from typing import Any, AnyStr, Callable, Dict, List, Optional, Set, Tuple, Union  # pylint: disable=unused-import
 
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
-def make_utf8(x):
-    if isinstance(x, six.text_type):
-        return x.encode('utf-8')
-    return x
+if sys.version_info[0] >= 3:
+    from inspect import getfullargspec as _getargspec  # pylint: disable=no-name-in-module
+else:
+    from inspect import getargspec as _getargspec  # pylint: disable=no-name-in-module
+
+from cmk.utils.exceptions import MKGeneralException
 
 
 def quote_shell_string(s):
+    # type: (str) -> str
     """Quote string for use as arguments on the shell"""
     return "'" + s.replace("'", "'\"'\"'") + "'"
 
 
 # TODO: Change to better name like: quote_pnp_string()
 def pnp_cleanup(s):
-    """Quote a string (host name or service description) in PNP4Nagios format"""
+    # type: (str) -> str
+    """Quote a string (host name or service description) in PNP4Nagios format
+
+    Because it is used as path element, this needs to be handled as "str" in Python 2 and 3
+    """
     return s \
         .replace(' ', '_') \
         .replace(':', '_') \
@@ -55,6 +67,7 @@ def pnp_cleanup(s):
 
 
 def key_config_paths(a):
+    # type: (Path) -> Tuple[Tuple[str, ...], int, Tuple[str, ...]]
     """Key function for Check_MK configuration file paths
 
     Helper functions that determines the sort order of the
@@ -72,6 +85,7 @@ def key_config_paths(a):
 
 
 def total_size(o, handlers=None):
+    #type: (Any, Optional[Dict]) -> int
     """ Returns the approximate memory footprint an object and all of its contents.
 
     Automatically finds the contents of the following builtin containers and
@@ -94,10 +108,11 @@ def total_size(o, handlers=None):
         frozenset: iter,
     }
     all_handlers.update(handlers)  # user handlers take precedence
-    seen = set()  # track which object id's have already been seen
+    seen = set()  # type: Set[int]
     default_size = sys.getsizeof(0)  # estimate sizeof object without __sizeof__
 
     def sizeof(o):
+        # type: (Any) -> int
         if id(o) in seen:  # do not double count the same object
             return 0
         seen.add(id(o))
@@ -110,3 +125,44 @@ def total_size(o, handlers=None):
         return s
 
     return sizeof(o)
+
+
+# Works with Check_MK version (without tailing .cee and/or .demo)
+def is_daily_build_version(v):
+    # type: (str) -> bool
+    return len(v) == 10 or '-' in v
+
+
+# Works with Check_MK version (without tailing .cee and/or .demo)
+def branch_of_daily_build(v):
+    # type: (str) -> str
+    if len(v) == 10:
+        return "master"
+    return v.split('-')[0]
+
+
+def cachefile_age(path):
+    # type: (Union[Path, str]) -> float
+    if not isinstance(path, Path):
+        path = Path(path)
+
+    try:
+        return time.time() - path.stat().st_mtime
+    except Exception as e:
+        raise MKGeneralException("Cannot determine age of cache file %s: %s" % (path, e))
+
+
+def getfuncargs(func):
+    # type: (Callable) -> List[str]
+    # pylint is too dumb to see that we do NOT use the deprecated variant. :-P
+    return _getargspec(func).args  # pylint: disable=deprecated-method
+
+
+def make_kwargs_for(function, **kwargs):
+    # type: (Callable, **Any) -> Dict[str, Any]
+    return {
+        arg_indicator: arg  #
+        for arg_name in getfuncargs(function)
+        for arg_indicator, arg in kwargs.items()
+        if arg_name == arg_indicator
+    }

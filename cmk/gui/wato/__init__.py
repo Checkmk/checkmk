@@ -1,28 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # WATO
 #
@@ -83,7 +63,6 @@ import json
 import math
 import multiprocessing
 import pprint
-import Queue
 import random
 import re
 import tarfile
@@ -96,6 +75,8 @@ import traceback
 import copy
 import inspect
 from hashlib import sha256
+from typing import Any, Dict  # pylint: disable=unused-import
+import six
 
 import cmk
 import cmk.utils.paths
@@ -271,7 +252,7 @@ if cmk.is_managed_edition():
     import cmk.gui.cme.plugins.wato  # pylint: disable=no-name-in-module
     import cmk.gui.cme.plugins.wato.managed  # pylint: disable=no-name-in-module
 else:
-    managed = None
+    managed = None  # type: ignore[assignment]
 
 wato_root_dir = watolib.wato_root_dir
 multisite_dir = watolib.multisite_dir
@@ -355,7 +336,7 @@ from cmk.gui.plugins.watolib.utils import (
     configvar_order,
 )
 
-modes = {}
+modes = {}  # type: Dict[Any, Any]
 
 from cmk.gui.plugins.wato.utils.html_elements import (
     wato_confirm,
@@ -488,7 +469,7 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
             elif newmode is not None:
                 if newmode == "":  # no further information: configuration dialog, etc.
                     if action_message:
-                        html.message(action_message)
+                        html.show_message(action_message)
                         wato_html_footer()
                     return
                 mode_permissions, mode_class = get_mode_permission_and_class(newmode)
@@ -508,8 +489,9 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
             html.add_user_error(e.varname, action_message)
 
         except MKAuthException as e:
-            action_message = e.reason
-            html.add_user_error(None, e.reason)
+            reason = e.args[0]
+            action_message = reason
+            html.add_user_error(None, reason)
 
     wato_html_head(mode.title(),
                    show_body_start=display_options.enabled(display_options.H),
@@ -529,7 +511,7 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
     if html.has_user_errors():
         html.show_error(action_message)
     elif action_message:
-        html.message(action_message)
+        html.show_message(action_message)
 
     # Show content
     mode.handle_page()
@@ -659,7 +641,7 @@ def execute_network_scan_job():
 # folder object.
 def find_folder_to_scan():
     folder_to_scan = None
-    for folder in watolib.Folder.all_folders().itervalues():
+    for folder in watolib.Folder.all_folders().values():
         scheduled_time = folder.next_network_scan_at()
         if scheduled_time is not None and scheduled_time < time.time():
             if folder_to_scan is None:

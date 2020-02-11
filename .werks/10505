@@ -1,0 +1,13 @@
+Title: mk_oracle_asm: Remove deprecated agent plugin
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1575305390
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+The content of the agent plugin {{mk_oracle_asm}} is completely included in the
+agent plugin {{mk_oracle}}, ie. the section {{oracle_asm_diskgroup}}.  Please
+use latter one.

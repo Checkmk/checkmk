@@ -41,7 +41,7 @@ def parse_cisco_asa_conn(info):
 
 
 def inventory_cisco_asa_conn(parsed):
-    for key, values in parsed.iteritems():
+    for key, values in parsed.items():
         if values[1] == "1" and len(values) == 4:
             yield (key, None)
 
@@ -57,7 +57,7 @@ def check_cisco_asa_conn(item, _no_params, parsed):
         "7": (2, "lower layer down"),
     }
 
-    for key, values in parsed.iteritems():
+    for key, values in parsed.items():
         if item == key:
             yield 0, "Name: %s" % values[0]
 

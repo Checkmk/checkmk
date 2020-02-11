@@ -32,6 +32,11 @@
 #    UCD-SNMP-MIB::ssCpuRawKernel.0 = Counter32: 96265777
 #    UCD-SNMP-MIB::ssCpuRawInterrupt.0 = Counter32: 1940759
 
+# Although this variable is no longer used we keep it for backwards
+# compatibility so that old configs in automation calls autocheck do not
+# crash.
+kernel_util_default_levels = None
+
 
 def inventory_ucd_cpu_util(info):
     if info:

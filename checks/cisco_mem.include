@@ -77,27 +77,25 @@ def check_cisco_mem_sub(item, params, mem_used, mem_total):
     if not mem_total:
         return 3, "Cannot calculate memory usage: Device reports total memory 0"
 
-    perc_used = 100.0 * (float(mem_used) / float(mem_total))
-
     warn, crit = params.get("levels", (None, None))
+    mode = get_levels_mode_from_value(warn)
+    if isinstance(warn, (int, long)):
+        warn *= 1048576  # convert from megabyte to byte
+        crit *= 1048576
+    if warn is not None:
+        warn = abs(warn)
+        crit = abs(crit)
 
-    if isinstance(warn, (int, long)):  # must convert absolute to percentage
-        warn *= 1048576.0
-        crit *= 1048576.0
+    status, infotext, perfdata = check_memory_element(
+        "Usage",
+        mem_used,
+        mem_total,
+        (mode, (warn, crit)),
+        create_percent_metric=True,
+    )
 
-        warn, crit = _convert_absolute_levels(warn, crit, mem_total)
-
-    if warn is not None and warn < 0:  # must convert free memory to used memory
-        warn, crit = _convert_free_perc_levels(-warn, -crit)
-
-    description = "Used (%s of %s)" % (get_bytes_human_readable(mem_used),
-                                       get_bytes_human_readable(mem_total))
-
-    status, infotext, perfdata = check_levels(perc_used,
-                                              "mem_used", (warn, crit),
-                                              human_readable_func=get_percent_human_readable,
-                                              boundaries=(0, 100),
-                                              infoname=description)
+    # revert to wrong name for compatibility
+    perfdata = [(("mem_used",) + perfdata[-1][1:])]
 
     if params.get("trend_range"):
         mem_used_mb, mem_total_mb = mem_used / 1048576.0, mem_total / 1048576.0

@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Functions for parsing Werks and showing the users a browsable change
 # log
@@ -31,6 +11,7 @@ import itertools
 import os
 import re
 import time
+import six
 
 import cmk.utils.store as store
 import cmk.utils.paths
@@ -77,7 +58,7 @@ def handle_acknowledgement():
 
         if werk["compatible"] == "incomp_unack":
             acknowledge_werk(werk)
-            html.message(
+            html.show_message(
                 _("Werk %s - %s has been acknowledged.") %
                 (render_werk_id(werk, with_link=True), render_werk_title(werk)))
             html.reload_sidebar()
@@ -88,7 +69,7 @@ def handle_acknowledgement():
                         method="GET"):
             num = len(unacknowledged_incompatible_werks())
             acknowledge_all_werks()
-            html.message(_("%d incompatible Werks have been acknowledged.") % num)
+            html.show_message(_("%d incompatible Werks have been acknowledged.") % num)
             html.reload_sidebar()
             load_werks()  # reload ack states after modification
 
@@ -178,7 +159,7 @@ def acknowledge_werks(werks, check_permission=True):
 
 
 def save_acknowledgements(acknowledged_werks):
-    store.save_data_to_file(acknowledgement_path, acknowledged_werks)
+    store.save_object_to_file(acknowledgement_path, acknowledged_werks)
 
 
 def acknowledge_all_werks(check_permission=True):
@@ -192,7 +173,7 @@ def werk_is_pre_127(werk):
 
 
 def load_acknowledgements():
-    return store.load_data_from_file(acknowledgement_path, [])
+    return store.load_object_from_file(acknowledgement_path, default=[])
 
 
 def unacknowledged_incompatible_werks():
@@ -314,7 +295,8 @@ _SORT_AND_GROUP = {
     ),
     "week": (
         cmk.utils.werks.sort_by_date,
-        lambda werk: time.strftime("%s %%U - %%Y" % _("Week"), time.localtime(werk["date"]))  #
+        lambda werk: time.strftime("%s %%U - %%Y" % six.ensure_str(_("Week")),
+                                   time.localtime(werk["date"]))  #
     ),
     None: (
         cmk.utils.werks.sort_by_date,

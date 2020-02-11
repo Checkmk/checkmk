@@ -62,14 +62,15 @@ def inventory_statgrab_mem(parsed):
 
 
 def check_statgrab_mem(_no_item, params, parsed):
-    return check_memory(params, parsed)
+    for subresult in check_memory(params, parsed):
+        yield subresult
 
 
 check_info["statgrab_mem"] = {
     'parse_function': parse_statgrab_mem,
     'inventory_function': inventory_statgrab_mem,
-    'check_function': check_statgrab_mem,
-    'service_description': 'Memory used',
+    "check_function": check_statgrab_mem,
+    'service_description': 'Memory',
     'has_perfdata': True,
     'group': "memory",
     'includes': ["mem.include"],

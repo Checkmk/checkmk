@@ -127,7 +127,10 @@ def inv_lnx_parse_redhat(node, line):
     else:
         parts = entry.split("(")
         left = parts[0].strip()
-        node["code_name"] = parts[1].rstrip(")")
+        # if codename "(CODENAME)" is present, list looks like
+        # ['Red Hat Enterprise Linux Server release 6.7 ', 'Santiago)']
+        if len(parts) == 2:
+            node["code_name"] = parts[1].rstrip(")")
         name, _release, version = left.rsplit(None, 2)
         if name.startswith("Red Hat"):
             node["vendor"] = "Red Hat"

@@ -2,10 +2,11 @@
 # Example program for accessing status of event console
 
 from __future__ import print_function
-import socket, os
+import socket
+import os
 
 # Create Unix socket and connect to status socket
-path = os.getenv("OMD_ROOT") + "/tmp/run/mkeventd/status"
+path = os.getenv("OMD_ROOT", "") + "/tmp/run/mkeventd/status"
 sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 sock.connect(path)
 

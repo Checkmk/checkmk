@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
 import ast
@@ -31,12 +11,14 @@ import os
 import pprint
 import traceback
 import json
-from typing import Dict, Optional, List  # pylint: disable=unused-import
+import functools
+from typing import Any, Dict, List, Optional, Sequence, Set  # pylint: disable=unused-import
 import six
 
 import livestatus
 
 import cmk.utils.paths
+from cmk.utils.structured_data import StructuredDataTree
 
 import cmk.gui.utils as utils
 import cmk.gui.config as config
@@ -50,6 +32,7 @@ import cmk.gui.pages
 import cmk.gui.view_utils
 from cmk.gui.display_options import display_options
 from cmk.gui.valuespec import (
+    Hostname,
     DropdownChoice,
     Integer,
     ListChoice,
@@ -64,7 +47,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, g
 from cmk.gui.exceptions import (
     HTTPRedirect,
     MKGeneralException,
@@ -133,12 +116,12 @@ loaded_with_language = False
 
 # TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
 # will be displayed.
-multisite_painter_options = {}
-multisite_layouts = {}
-multisite_commands = []
-multisite_datasources = {}
-multisite_painters = {}
-multisite_sorters = {}
+multisite_painter_options = {}  # type: Dict[str, Any]
+multisite_layouts = {}  # type: Dict[str, Any]
+multisite_commands = []  # type: List[Dict[str, Any]]
+multisite_datasources = {}  # type: Dict[str, Any]
+multisite_painters = {}  # type: Dict[str, Dict[str, Any]]
+multisite_sorters = {}  # type: Dict[str, Any]
 
 
 @visual_type_registry.register
@@ -181,11 +164,88 @@ class VisualTypeViews(VisualType):
     def permitted_visuals(self):
         return get_permitted_views()
 
-    def is_enabled_for(self, this_visual, visual, context_vars):
-        if visual["name"] not in view_is_enabled:
-            return True  # Not registered are always visible!
+    def link_from(self, linking_view, linking_view_rows, visual, context_vars):
+        """This has been implemented for HW/SW inventory views which are often useless when a host
+        has no such information available. For example the "Oracle Tablespaces" inventory view is
+        useless on hosts that don't host Oracle databases."""
+        result = super(VisualTypeViews, self).link_from(linking_view, linking_view_rows, visual,
+                                                        context_vars)
+        if result is False:
+            return False
 
-        return view_is_enabled[visual["name"]](this_visual, visual, context_vars)
+        link_from = visual["link_from"]
+        if not link_from:
+            return True  # No link from filtering: Always display this.
+
+        inventory_tree_condition = link_from.get("has_inventory_tree")
+        if inventory_tree_condition and not _has_inventory_tree(
+                linking_view, linking_view_rows, visual, context_vars, inventory_tree_condition):
+            return False
+
+        inventory_tree_history_condition = link_from.get("has_inventory_tree_history")
+        if inventory_tree_history_condition and not _has_inventory_tree(
+                linking_view,
+                linking_view_rows,
+                visual,
+                context_vars,
+                inventory_tree_history_condition,
+                is_history=True):
+            return False
+
+        return True
+
+
+def _has_inventory_tree(linking_view, rows, view, context_vars, invpath, is_history=False):
+    context = dict(context_vars)
+    hostname = context.get("host")
+    if hostname is None:
+        return True  # No host data? Keep old behaviour
+    elif hostname == "":
+        return False
+
+    # TODO: host is not correctly validated by visuals. Do it here for the moment.
+    try:
+        Hostname().validate_value(hostname, None)
+    except MKUserError:
+        return False
+
+    # FIXME In order to decide whether this view is enabled
+    # do we really need to load the whole tree?
+    try:
+        struct_tree = _get_struct_tree(is_history, hostname, context.get("site"))
+    except inventory.LoadStructuredDataError:
+        return False
+
+    if not struct_tree:
+        return False
+
+    if struct_tree.is_empty():
+        return False
+
+    parsed_path, _attribute_keys = inventory.parse_tree_path(invpath)
+    if parsed_path:
+        children = struct_tree.get_sub_children(parsed_path)
+    else:
+        children = [struct_tree.get_root_container()]
+    if children is None:
+        return False
+    return True
+
+
+def _get_struct_tree(is_history, hostname, site_id):
+    struct_tree_cache = g.setdefault("struct_tree_cache", {})
+    cache_id = (is_history, hostname, site_id)
+    if cache_id in struct_tree_cache:
+        return struct_tree_cache[cache_id]
+
+    if is_history:
+        struct_tree = inventory.load_filtered_inventory_tree(hostname)
+    else:
+        row = inventory.get_status_data_via_livestatus(site_id, hostname)
+        struct_tree = inventory.load_filtered_and_merged_tree(row)
+
+    struct_tree_cache[cache_id] = struct_tree
+    return struct_tree
 
 
 @permission_section_registry.register
@@ -205,11 +265,12 @@ class PermissionSectionViews(PermissionSection):
 
 class View(object):
     """Manages processing of a single view, e.g. during rendering"""
-    def __init__(self, view_name, view_spec):
-        # type: (str, Dict) -> None
+    def __init__(self, view_name, view_spec, context):
+        # type: (str, Dict, Dict) -> None
         super(View, self).__init__()
         self.name = view_name
         self.spec = view_spec
+        self.context = context
         self._row_limit = None  # type: Optional[int]
         self._only_sites = None  # type: Optional[List[str]]
         self._user_sorters = None  # type: Optional[Tuple]
@@ -232,9 +293,9 @@ class View(object):
 
     @property
     def row_cells(self):
-        # type: () -> List[Cell]
+        # type: () -> Sequence[Cell]
         """Regular cells are displaying information about the rows of the type the view is about"""
-        cells = []
+        cells = []  # type: List[Cell]
         for e in self.spec["painters"]:
             if not painter_exists(e):
                 continue
@@ -368,6 +429,7 @@ class GUIViewRenderer(ViewRenderer):
         if self._show_buttons:
             _show_context_links(
                 self.view,
+                rows,
                 show_filters,
                 # Take into account: permissions, display_options
                 row_count > 0 and command_form,
@@ -393,8 +455,10 @@ class GUIViewRenderer(ViewRenderer):
             # If we are currently within an action (confirming or executing), then
             # we display only the selected rows (if checkbox mode is active)
             elif show_checkboxes and html.do_actions():
-                rows = filter_selected_rows(view_spec, rows,
-                                            weblib.get_rowselection('view-' + view_spec['name']))
+                rows = filter_selected_rows(
+                    view_spec, rows,
+                    config.user.get_rowselection(weblib.selection_id(),
+                                                 'view-' + view_spec['name']))
 
             if html.do_actions() and html.transaction_valid():  # submit button pressed, no reload
                 try:
@@ -445,7 +509,9 @@ class GUIViewRenderer(ViewRenderer):
             headinfo = "%d %s" % (row_count, _("row") if row_count == 1 else _("rows"))
             if show_checkboxes:
                 selected = filter_selected_rows(
-                    view_spec, rows, weblib.get_rowselection('view-' + view_spec['name']))
+                    view_spec, rows,
+                    config.user.get_rowselection(weblib.selection_id(),
+                                                 'view-' + view_spec['name']))
                 headinfo = "%d/%s" % (len(selected), headinfo)
 
             if html.output_format == "html":
@@ -473,7 +539,7 @@ class GUIViewRenderer(ViewRenderer):
         if config.show_livestatus_errors \
            and display_options.enabled(display_options.W) \
            and html.output_format == "html":
-            for info in sites.live().dead_sites().itervalues():
+            for info in sites.live().dead_sites().values():
                 html.show_error("<b>%s - %s</b><br>%s" %
                                 (info["site"]["alias"], _('Livestatus error'), info["exception"]))
 
@@ -1238,15 +1304,19 @@ def show_filter_form(is_open, filters):
 def page_view():
     view_spec, view_name = html.get_item_input("view_name", get_permitted_views())
 
-    view = View(view_name, view_spec)
+    datasource = data_source_registry[view_spec["datasource"]]()
+    context = visuals.get_merged_context(
+        visuals.get_context_from_uri_vars(datasource.infos),
+        view_spec["context"],
+    )
+
+    view = View(view_name, view_spec, context)
     view.row_limit = get_limit()
     view.only_sites = get_only_sites()
     view.user_sorters = get_user_sorters()
 
     # Gather the page context which is needed for the "add to visual" popup menu
     # to add e.g. views to dashboards or reports
-    context = visuals.get_context_from_uri_vars(view.datasource.infos)
-    context.update(visuals.get_singlecontext_html_vars(view.spec))
     html.set_page_context(context)
 
     painter_options = PainterOptions.get_instance()
@@ -1300,7 +1370,8 @@ def show_view(view, view_renderer, only_count=False):
     # with the current mode.
     if _is_ec_unrelated_host_view(view):
         # Set the value for the event host filter
-        if not html.request.has_var("event_host"):
+        if not html.request.has_var("event_host") and (html.request.has_var("event_host") or
+                                                       html.request.has_var("host")):
             html.request.set_var("event_host", html.request.var("host"))
 
     # Now populate the HTML vars with context vars from the view definition. Hard
@@ -1308,10 +1379,10 @@ def show_view(view, view_renderer, only_count=False):
     #
     # a) single context vars of the view are enforced
     # b) multi context vars can be overwritten by existing HTML vars
-    visuals.add_context_to_uri_vars(view.spec, only_count)
+    visuals.add_context_to_uri_vars(view.spec["context"], view.spec["single_infos"], only_count)
 
     # Check that all needed information for configured single contexts are available
-    visuals.verify_single_contexts('views', view.spec, view.datasource.link_filters)
+    visuals.verify_single_infos(view.spec, view.context)
 
     all_active_filters = _get_all_active_filters(view)
     filterheaders = get_livestatus_filter_headers(view, all_active_filters)
@@ -1320,12 +1391,7 @@ def show_view(view, view_renderer, only_count=False):
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see later)
     if html.request.var("mode") == "availability" and ("aggr" not in view.datasource.infos or
                                                        html.request.var("timeline_aggr")):
-
-        context = visuals.get_context_from_uri_vars(view.datasource.infos)
-        context.update(visuals.get_singlecontext_html_vars(view.spec))
-
-        return cmk.gui.plugins.views.availability.render_availability_page(
-            view, context, filterheaders)
+        return cmk.gui.plugins.views.availability.render_availability_page(view, filterheaders)
 
     headers = filterheaders + view.spec.get("add_headers", "")
 
@@ -1360,9 +1426,25 @@ def show_view(view, view_renderer, only_count=False):
         # If any painter, sorter or filter needs the information about the host's
         # inventory, then we load it and attach it as column "host_inventory"
         if is_inventory_data_needed(group_cells, cells, sorters, all_active_filters):
+            corrupted_inventory_files = []
             for row in rows:
-                if "host_name" in row:
+                if "host_name" not in row:
+                    continue
+                try:
                     row["host_inventory"] = inventory.load_filtered_and_merged_tree(row)
+                except inventory.LoadStructuredDataError:
+                    # The inventory row may be joined with other rows (perf-o-meter, ...).
+                    # Therefore we initialize the corrupt inventory tree with an empty tree
+                    # in order to display all other rows.
+                    row["host_inventory"] = StructuredDataTree()
+                    corrupted_inventory_files.append(
+                        str(inventory.get_short_inventory_filepath(row["host_name"])))
+
+            if corrupted_inventory_files:
+                html.add_user_error(
+                    "load_structured_data_tree",
+                    _("Cannot load HW/SW inventory trees %s. Please remove the corrupted files.") %
+                    ", ".join(sorted(corrupted_inventory_files)))
 
         if not cmk.is_raw_edition():
             import cmk.gui.cee.sla as sla  # pylint: disable=no-name-in-module
@@ -1391,8 +1473,8 @@ def show_view(view, view_renderer, only_count=False):
 
     # TODO: Use livestatus Stats: instead of fetching rows!
     if only_count:
-        for filter_vars in view.spec["context"].itervalues():
-            for varname in filter_vars.iterkeys():
+        for filter_vars in view.spec["context"].values():
+            for varname in filter_vars:
                 html.request.del_var(varname)
         return len(rows)
 
@@ -1422,7 +1504,7 @@ def show_view(view, view_renderer, only_count=False):
         layout = layout_class()
 
     # Set browser reload
-    if browser_reload and display_options.enabled(display_options.R) and not only_count:
+    if browser_reload and display_options.enabled(display_options.R):
         html.set_browser_reload(browser_reload)
 
     if config.enable_sounds and config.sounds and html.output_format == "html":
@@ -1483,6 +1565,16 @@ def _get_needed_regular_columns(cells, sorters, datasource):
         columns.remove("site")
     except KeyError:
         pass
+
+    # In the moment the context buttons are shown, the link_from mechanism is used
+    # to decide to which other views/dashboards the context buttons should link to.
+    # This decision is partially made on attributes of the object currently shown.
+    # E.g. on a "single host" page the host labels are needed for the decision.
+    # This is currently realized explicitly until we need a more flexible mechanism.
+    if display_options.enabled(display_options.B) \
+        and html.output_format == "html" \
+        and "host" in datasource.infos:
+        columns.add("host_labels")
 
     return list(columns)
 
@@ -1591,7 +1683,7 @@ def _do_table_join(view, master_rows, master_filters, sorters):
         row["JOIN"] = joininfo
 
 
-g_alarm_sound_states = set([])
+g_alarm_sound_states = set([])  # type: Set[str]
 
 
 def clear_alarm_sound_states():
@@ -1707,7 +1799,8 @@ def ajax_set_viewoption():
     painter_options.save_to_config(view_name)
 
 
-def _show_context_links(view, show_filters, enable_commands, enable_checkboxes, show_checkboxes):
+def _show_context_links(view, rows, show_filters, enable_commands, enable_checkboxes,
+                        show_checkboxes):
     if html.output_format != "html":
         return
 
@@ -1813,7 +1906,7 @@ def _show_context_links(view, show_filters, enable_commands, enable_checkboxes, 
                                 class_="context_pdf_export")
 
         # Buttons to other views, dashboards, etc.
-        links = visuals.collect_context_links(thisview)
+        links = collect_context_links(view, rows)
         for linktitle, uri, icon, buttonid in links:
             html.context_button(linktitle,
                                 url=uri,
@@ -1898,15 +1991,107 @@ def update_context_links(enable_command_toggle, enable_checkbox_toggle):
                     (enable_command_toggle and enable_checkbox_toggle and 1 or 0,))
 
 
+def collect_context_links(view, rows, mobile=False, only_types=None):
+    """Collect all visuals that share a context with visual. For example
+    if a visual has a host context, get all relevant visuals."""
+    if only_types is None:
+        only_types = []
+
+    # compute collections of set single context related request variables needed for this visual
+    singlecontext_request_vars = visuals.get_singlecontext_html_vars(view.spec["context"],
+                                                                     view.spec["single_infos"])
+
+    context_links = []
+    for what in visual_type_registry.keys():
+        if not only_types or what in only_types:
+            context_links += _collect_context_links_of(what, view, rows, singlecontext_request_vars,
+                                                       mobile)
+    return context_links
+
+
+def _collect_context_links_of(visual_type_name, view, rows, singlecontext_request_vars, mobile):
+    context_links = []
+
+    visual_type = visual_type_registry[visual_type_name]()
+    visual_type.load_handler()
+    available_visuals = visual_type.permitted_visuals
+
+    for visual in sorted(available_visuals.values(), key=lambda x: x.get('icon') or ""):
+        name = visual["name"]
+        linktitle = visual.get("linktitle")
+        if not linktitle:
+            linktitle = visual["title"]
+        if visual == view.spec:
+            continue
+        if visual.get("hidebutton", False):
+            continue  # this visual does not want a button to be displayed
+
+        if not mobile and visual.get('mobile') \
+           or mobile and not visual.get('mobile'):
+            continue
+
+        # For dashboards and views we currently only show a link button,
+        # if the target dashboard/view shares a single info with the
+        # current visual.
+        if not visual['single_infos'] and not visual_type.multicontext_links:
+            continue  # skip non single visuals for dashboard, views
+
+        # We can show a button only if all single contexts of the
+        # target visual are known currently
+        skip = False
+        vars_values = []
+        for var in visuals.get_single_info_keys(visual["single_infos"]):
+            if var not in singlecontext_request_vars:
+                skip = True  # At least one single context missing
+                break
+            vars_values.append((var, singlecontext_request_vars[var]))
+
+        add_site_hint = visuals.may_add_site_hint(name,
+                                                  info_keys=visual_info_registry.keys(),
+                                                  single_info_keys=visual["single_infos"],
+                                                  filter_names=dict(vars_values).keys())
+
+        if add_site_hint and html.request.var('site'):
+            vars_values.append(('site', html.request.var('site')))
+
+        # Optional feature of visuals: Make them dynamically available as links or not.
+        # This has been implemented for HW/SW inventory views which are often useless when a host
+        # has no such information available. For example the "Oracle Tablespaces" inventory view
+        # is useless on hosts that don't host Oracle databases.
+        if not skip:
+            skip = not visual_type.link_from(view, rows, visual, vars_values)
+
+        if not skip:
+            filename = visual_type.show_url
+            if mobile and visual_type.show_url == 'view.py':
+                filename = 'mobile_' + visual_type.show_url
+
+            # add context link to this visual. For reports we put in
+            # the *complete* context, even the non-single one.
+            if visual_type.multicontext_links:
+                uri = html.makeuri([(visual_type.ident_attr, name)], filename=filename)
+
+            # For views and dashboards currently the current filter
+            # settings
+            else:
+                uri = html.makeuri_contextless(vars_values + [(visual_type.ident_attr, name)],
+                                               filename=filename)
+            icon = visual.get("icon")
+            buttonid = "cb_" + name
+            context_links.append((_u(linktitle), uri, icon, buttonid))
+
+    return context_links
+
+
 @cmk.gui.pages.register("count_context_button")
 def ajax_count_button():
     id_ = html.request.var("id")
-    counts = config.user.load_file("buttoncounts", {})
+    counts = config.user.button_counts
     for i in counts:
         counts[i] *= 0.95
     counts.setdefault(id_, 0)
     counts[id_] += 1
-    config.user.save_file("buttoncounts", counts)
+    config.user.save_button_counts()
 
 
 # Sort data according to list of sorters. The tablename
@@ -1942,7 +2127,7 @@ def sort_data(data, sorters):
                 return c
         return 0  # equal
 
-    data.sort(multisort)
+    data.sort(key=functools.cmp_to_key(multisort))
 
 
 def sorters_of_datasource(ds_name):
@@ -2204,9 +2389,6 @@ def do_actions(view, what, action_rows, backurl):
                 else:
                     command = command_entry
 
-                if isinstance(command, six.text_type):
-                    command = command.encode("utf-8")
-
                 executor(command, site)
                 already_executed.add((site, command_entry))
                 count += 1
@@ -2231,7 +2413,7 @@ def do_actions(view, what, action_rows, backurl):
                                                         _('Back to view with checkboxes reset'))
             if html.request.var("_show_result") == "0":
                 html.immediate_browser_redirect(0.5, backurl)
-        html.message(message)
+        html.show_message(message)
 
     return True
 
@@ -2261,7 +2443,7 @@ def get_context_link(user, viewname):
 
 @cmk.gui.pages.register("export_views")
 def ajax_export():
-    for view in get_permitted_views().itervalues():
+    for view in get_permitted_views().values():
         view["owner"] = ''
         view["public"] = True
     html.write(pprint.pformat(get_permitted_views()))
@@ -2448,7 +2630,7 @@ def do_reschedule():
     if service:
         cmd = "SVC"
         what = "service"
-        spec = "%s;%s" % (host, service.encode("utf-8"))
+        spec = "%s;%s" % (host, service)
 
         if wait_svc:
             wait_spec = u'%s;%s' % (host, wait_svc)
@@ -2490,7 +2672,7 @@ def do_reschedule():
                 # to increase the chance for the passive services already
                 # updated also when we return.
                 time.sleep(0.7)
-            html.write("['OK', %d, %d, %r]\n" % (row[0], row[1], row[2].encode("utf-8")))
+            html.write("['OK', %d, %d, %r]\n" % (row[0], row[1], row[2]))
 
     except Exception as e:
         sites.live().set_only_sites()

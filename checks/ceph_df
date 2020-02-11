@@ -118,7 +118,7 @@ def parse_ceph_df(info):
         return float(value_str) / (1024**2)
 
     mps = []
-    for mp, data in parsed.iteritems():
+    for mp, data in parsed.items():
         # http://docs.ceph.com/docs/master/rados/operations/monitoring/
         # GLOBAL section:
         #   SIZE: The overall storage capacity of the cluster.

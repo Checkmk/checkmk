@@ -122,7 +122,7 @@ public:
 
     // NOTE: line gets modified!
     LogEntry(size_t lineno, std::string line);
-    std::string state_info() const;
+    [[nodiscard]] std::string state_info() const;
     static ServiceState parseServiceState(const std::string &str);
     static HostState parseHostState(const std::string &str);
 

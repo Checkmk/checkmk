@@ -85,7 +85,7 @@ def parse_nfsiostat(info):
 
 
 def inventory_nfsiostat(parsed):
-    for mountname in parsed.keys():
+    for mountname in parsed:
         yield mountname, {}
 
 

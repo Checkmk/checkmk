@@ -1,4 +1,4 @@
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.gui.wato  # pylint: disable=unused-import
@@ -80,6 +80,7 @@ def test_registered_configvars():
         'cluster_max_cachefile_age',
         'context_buttons_to_show',
         'crash_report_target',
+        'crash_report_url',
         'custom_service_attributes',
         'debug',
         'debug_livestatus_queries',
@@ -184,6 +185,7 @@ def test_registered_configvars():
         'wato_pprint_config',
         'wato_upload_insecure_snapshots',
         'wato_use_git',
+        'graph_timeranges',
     ]
 
     if not cmk.is_raw_edition():
@@ -227,7 +229,6 @@ def test_registered_configvars():
             'config',
             'dcd_log_levels',
             'dcd_web_api_connection',
-            'graph_timeranges',
             'liveproxyd_default_connection_params',
             'liveproxyd_log_levels',
             'mknotifyd_insecure_message_format',

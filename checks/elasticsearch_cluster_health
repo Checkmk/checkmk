@@ -78,11 +78,11 @@ def parse_elasticsearch_cluster_health(info):
                 inst = parsed.setdefault(("Shards"), {line[0]: [line[1], shards_info[line[0]]]})
             if any(s in line for s in tasks_info):
                 inst = parsed.setdefault(("Tasks"), {line[0]: [line[1], tasks_info[line[0]]]})
-            if any(s in inst.keys() for s in cluster_info) and "status" not in line:
+            if any(s in inst for s in cluster_info) and "status" not in line:
                 inst[line[0]] = line[1], cluster_info[line[0]]
-            elif any(s in inst.keys() for s in shards_info):
+            elif any(s in inst for s in shards_info):
                 inst[line[0]] = line[1], shards_info[line[0]]
-            elif any(s in inst.keys() for s in tasks_info):
+            elif any(s in inst for s in tasks_info):
                 inst[line[0]] = line[1], tasks_info[line[0]]
 
         except (IndexError, ValueError):
@@ -96,7 +96,7 @@ def inventory_elasticsearch_cluster_health(parsed):
 
 
 def check_elasticsearch_cluster_health(no_item, params, parsed):
-    for info, values in sorted(parsed['Info'].iteritems()):
+    for info, values in sorted(parsed['Info'].items()):
         value = values[0]
         infotext = values[1]
 
@@ -143,7 +143,7 @@ factory_settings["elasticsearch_cluster_shards"] = {
 
 
 def check_elasticsearch_cluster_health_shards(no_item, params, parsed):
-    for shard, values in sorted(parsed['Shards'].iteritems()):
+    for shard, values in sorted(parsed['Shards'].items()):
         value = values[0]
         infotext = values[1]
         warn, crit = params.get(shard) or (None, None)
@@ -177,7 +177,7 @@ check_info["elasticsearch_cluster_health.shards"] = {
 
 
 def check_elasticsearch_cluster_health_tasks(no_item, params, parsed):
-    for task, values in sorted(parsed['Tasks'].iteritems()):
+    for task, values in sorted(parsed['Tasks'].items()):
         value = values[0]
         infotext = values[1]
 

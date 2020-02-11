@@ -29,6 +29,7 @@
 # as well as the ibm_db2 Python DBI driver for DB2:
 #  https://pypi.python.org/pypi/ibm_db
 """Check_MK SQL Test"""
+from typing import Tuple  # pylint: disable=unused-import
 import argparse
 import logging
 import os
@@ -47,16 +48,16 @@ DEFAULT_PORTS = {
     "db2": 50000,
 }
 
-MP_INF = (float('-inf'), float('+inf'))
+MP_INF = (float('-inf'), float('+inf'))  # type: Tuple[float, float]
 
 #   . parse commandline argumens
 
 
-def levels(values):
+def levels(values):  # type: (str) -> Tuple[float, float]
     lower, upper = values.split(':')
-    lower = float(lower) if lower else MP_INF[0]
-    upper = float(upper) if upper else MP_INF[1]
-    return (lower, upper)
+    _lower = float(lower) if lower else MP_INF[0]
+    _upper = float(upper) if upper else MP_INF[1]
+    return (_lower, _upper)
 
 
 def sql_cmd_piece(values):
@@ -416,9 +417,9 @@ def process_result(result, warn, crit, metrics=False, debug=False):
 
     state = 0
     if warn != MP_INF or crit != MP_INF:
-        if not warn[0] < number < warn[1]:
+        if not warn[0] <= number < warn[1]:
             state = 1
-        if not crit[0] < number < crit[1]:
+        if not crit[0] <= number < crit[1]:
             state = 2
         text += ": %s" % number
     else:  # no levels were given

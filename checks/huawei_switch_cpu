@@ -1,0 +1,59 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+factory_settings['huawei_switch_cpu_default_levels'] = {
+    'levels': (80.0, 90.0),
+}
+
+
+def parse_huawei_switch_cpu(info):
+    return parse_huawei_physical_entity_values(info)
+
+
+@get_parsed_item_data
+def check_huawei_switch_cpu(item, params, item_data):
+    try:
+        util = float(item_data.value)
+    except TypeError:
+        return
+    return check_cpu_util(util, params, cores=[('core1', util)])
+
+
+check_info['huawei_switch_cpu'] = {
+    'parse_function': parse_huawei_switch_cpu,
+    'inventory_function': discover(),
+    'check_function': check_huawei_switch_cpu,
+    'service_description': 'CPU utilization %s',
+    'snmp_info': huawei_entity_specific_snmp_info((
+        '.1.3.6.1.4.1.2011.5.25.31.1.1.1.1',
+        [OID_END, "5"],
+    )),
+    'snmp_scan_function': huawei_switch_scan_function,
+    'has_perfdata': True,
+    'includes': ['cpu_util.include', 'huawei_switch.include'],
+    'group': "cpu_utilization_multiitem",
+    'default_levels_variable': 'huawei_switch_cpu_default_levels',
+}

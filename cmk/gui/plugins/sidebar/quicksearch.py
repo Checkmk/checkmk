@@ -1,28 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
 import re
@@ -32,13 +12,17 @@ import six
 import livestatus
 
 import cmk.utils.plugin_registry
+from cmk.utils.exceptions import (
+    MKException,
+    MKGeneralException,
+)
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKException
+from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry
 
 
@@ -162,7 +146,7 @@ class LivestatusSearchConductor(LivestatusSearchBase):
     def get_match_topic(self):
         if len(self._used_filters.keys()) > 1:
             return "Multi-Filter"
-        shortname = self._used_filters.keys()[0]
+        shortname = list(self._used_filters.keys())[0]
         return self._get_plugin_with_shortname(shortname).get_match_topic()
 
     def _get_plugin_with_shortname(self, shortname):
@@ -501,13 +485,11 @@ class LivestatusQuicksearch(LivestatusSearchBase):
         for search_object in self._search_objects:
             if not search_object.num_rows():
                 continue
-            elements = search_object.get_elements()
-            elements.sort(key=lambda x: x["display_text"])
             if show_match_topics:
                 match_topic = search_object.get_match_topic()
                 html.div(_("Results for %s") % match_topic, class_="topic")
 
-            for entry in elements:
+            for entry in sorted(search_object.get_elements(), key=lambda x: x["display_text"]):
                 html.a(entry["display_text"],
                        id="result_%s" % self._query,
                        href=entry["url"],
@@ -815,6 +797,12 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
                 lookup_dict[grouped_tag.id] = tag_group.id
         return lookup_dict
 
+    def _get_auxtag_dict(self):
+        lookup_dict = {}
+        for tag_id in config.tags.aux_tag_list.get_tag_ids():
+            lookup_dict[tag_id] = tag_id
+        return lookup_dict
+
     def get_match_topic(self):
         return _("Hosttag")
 
@@ -856,18 +844,30 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
 
         url_infos = []
         hosttag_to_group_dict = self._get_hosttag_dict()
+        auxtag_to_group_dict = self._get_auxtag_dict()
 
         for idx, entry in enumerate(used_filters.get(self.get_filter_shortname())):
-            if ":" not in entry and entry in hosttag_to_group_dict:
+            if ":" not in entry:
                 # Be compatible to pre 1.6 filtering for some time (no
                 # tag-group:tag-value, but tag-value only)
-                tag_key, tag_value = hosttag_to_group_dict[entry], entry
+                if entry in hosttag_to_group_dict:
+                    tag_key, tag_value = hosttag_to_group_dict[entry], entry
+                elif entry in auxtag_to_group_dict:
+                    tag_key, tag_value = auxtag_to_group_dict[entry], entry
+                else:
+                    continue
             else:
                 tag_key, tag_value = entry.split(":", 1)
 
-            url_infos.append(("host_tag_%d_grp" % idx, tag_key))
-            url_infos.append(("host_tag_%d_op" % idx, "is"))
-            url_infos.append(("host_tag_%d_val" % idx, tag_value))
+            # here we check which *_to_group_dict containes the tag_key
+            # we do not care about the actual data
+            # its purpose is to decide which 'url info' to use
+            if tag_key in hosttag_to_group_dict:
+                url_infos.append(("host_tag_%d_grp" % idx, tag_key))
+                url_infos.append(("host_tag_%d_op" % idx, "is"))
+                url_infos.append(("host_tag_%d_val" % idx, tag_value))
+            elif tag_key in auxtag_to_group_dict:
+                url_infos.append(("host_auxtags_%d" % idx, tag_key))
 
         return "", url_infos
 

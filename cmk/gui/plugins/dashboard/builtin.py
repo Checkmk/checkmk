@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
 
@@ -209,6 +189,7 @@ builtin_dashboards["topology"] = {
                      "hierarchical map."),
     "dashlets": [{
         'add_context_to_title': True,
+        'link_from': {},
         'background': True,
         'context': {},
         'position': (1, 1),
@@ -327,4 +308,304 @@ builtin_dashboards["simple_problems"] = {
             'sorters': [('svcstate', True), ('stateage', False), ('svcdescr', False)],
         },
     ]
+}
+
+builtin_dashboards["cmk_overview"] = {
+    'topic': u'Overview',
+    'name': 'cmk_overview',
+    'hidebutton': False,
+    'title': u'Checkmk overview',
+    'description': u'Displays an overview of all Checkmk servers and instances\n',
+    'add_context_to_title': False,
+    'link_from': {},
+    'context': {},
+    'hidden': False,
+    "mtime": 0,
+    'linktitle': u'Checkmk',
+    'show_title': True,
+    'dashlets': [{
+        'background': True,
+        'type': 'linked_view',
+        'name': 'cmk_servers',
+        'add_context_to_title': True,
+        'link_from': {},
+        'context': {},
+        'position': (1, 1),
+        'show_title': True,
+        'single_infos': [],
+        'size': (0, 0)
+    }, {
+        'name': 'cmk_sites',
+        'title': u'Site overview',
+        'show_title': True,
+        'background': True,
+        'add_context_to_title': True,
+        'link_from': {},
+        'context': {},
+        'position': (1, 47),
+        'type': 'linked_view',
+        'single_infos': [],
+        'size': (0, 0)
+    }],
+    'single_infos': [],
+    'icon': 'checkmk'
+}
+
+builtin_dashboards['cmk_host'] = {
+    'add_context_to_title': True,
+    'description': u'Display information relevant for the Checkmk performance\n',
+    'link_from': {
+        'single_infos': ['host'],
+        'host_labels': {
+            'cmk/check_mk_server': 'yes'
+        }
+    },
+    'title': u'Checkmk server',
+    'hidebutton': False,
+    'dashlets': [{
+        'show_title': True,
+        'link_from': {},
+        'background': True,
+        'add_context_to_title': True,
+        'context': {},
+        'position': (-1, 29),
+        'size': (0, 0),
+        'type': 'linked_view',
+        'single_infos': [],
+        'name': 'cmk_sites_of_host'
+    }, {
+        'context': {
+            'service': u'CPU load'
+        },
+        'link_from': {},
+        'type': 'single_metric',
+        'metric': u'load5',
+        'add_context_to_title': True,
+        'metric_render_options': {
+            'show_site': 'false',
+            'font_size': 'dynamic',
+            'show_state_color': 'background',
+            'show_metric': 'tooltip',
+            'show_unit': 'true',
+            'link_to_svc_detail': 'true',
+            'show_host': 'false',
+            'show_service': ('above', 12.0)
+        },
+        'background': True,
+        'position': (1, 1),
+        'show_title': False,
+        'single_infos': ['service', 'host'],
+        'size': (26, 14)
+    }, {
+        'add_context_to_title': True,
+        'context': {
+            'service': u'Disk IO SUMMARY'
+        },
+        'background': True,
+        'link_from': {},
+        'timerange': '1',
+        'graph_render_options': {
+            'font_size': 8.0,
+            'show_graph_time': True,
+            'show_time_axis': True,
+            'foreground_color': 'default',
+            'title_format': 'plain',
+            'canvas_color': 'default',
+            'show_legend': False,
+            'show_title': True,
+            'show_margin': True,
+            'vertical_axis_width': 'fixed',
+            'show_controls': False,
+            'show_pin': True,
+            'background_color': 'default',
+            'show_vertical_axis': True
+        },
+        'source': 8,
+        'show_title': False,
+        'position': (-36, 15),
+        'type': 'pnpgraph',
+        'single_infos': ['service', 'host'],
+        'size': (0, 14)
+    }, {
+        'add_context_to_title': True,
+        'context': {
+            'service': u'Kernel Performance'
+        },
+        'background': True,
+        'link_from': {},
+        'timerange': '1',
+        'graph_render_options': {
+            'font_size': 8.0,
+            'show_graph_time': True,
+            'show_time_axis': True,
+            'foreground_color': 'default',
+            'title_format': 'plain',
+            'canvas_color': 'default',
+            'show_legend': False,
+            'show_title': True,
+            'show_margin': True,
+            'vertical_axis_width': 'fixed',
+            'show_controls': False,
+            'show_pin': True,
+            'background_color': 'default',
+            'show_vertical_axis': True
+        },
+        'source': 2,
+        'show_title': False,
+        'position': (27, 15),
+        'type': 'pnpgraph',
+        'single_infos': ['service', 'host'],
+        'size': (0, 14)
+    }, {
+        'add_context_to_title': True,
+        'context': {
+            'service': u'Memory'
+        },
+        'link_from': {},
+        'type': 'pnpgraph',
+        'timerange': '1',
+        'graph_render_options': {
+            'font_size': 8.0,
+            'show_graph_time': True,
+            'show_time_axis': True,
+            'foreground_color': 'default',
+            'title_format': 'plain',
+            'vertical_axis_width': 'fixed',
+            'show_legend': False,
+            'show_title': True,
+            'show_margin': True,
+            'canvas_color': 'default',
+            'show_controls': False,
+            'show_pin': True,
+            'background_color': 'default',
+            'show_vertical_axis': True
+        },
+        'source': 1,
+        'background': True,
+        'position': (27, 1),
+        'show_title': False,
+        'single_infos': ['service', 'host'],
+        'size': (0, 14)
+    }, {
+        'add_context_to_title': True,
+        'context': {
+            'host': u'heute',
+            'service': u'Disk IO SUMMARY'
+        },
+        'background': True,
+        'link_from': {},
+        'timerange': '1',
+        'graph_render_options': {
+            'font_size': 8.0,
+            'show_graph_time': True,
+            'show_time_axis': True,
+            'foreground_color': 'default',
+            'title_format': 'plain',
+            'vertical_axis_width': 'fixed',
+            'show_legend': False,
+            'show_title': True,
+            'show_margin': True,
+            'canvas_color': 'default',
+            'show_controls': False,
+            'show_pin': True,
+            'background_color': 'default',
+            'show_vertical_axis': True
+        },
+        'source': 2,
+        'show_title': False,
+        'position': (-36, 1),
+        'type': 'pnpgraph',
+        'single_infos': ['service', 'host'],
+        'size': (0, 14)
+    }, {
+        'context': {
+            'service': u'Filesystem /'
+        },
+        'link_from': {},
+        'type': 'single_metric',
+        'metric': u'fs_used',
+        'add_context_to_title': True,
+        'metric_render_options': {
+            'show_site': 'false',
+            'font_size': 'dynamic',
+            'show_state_color': 'background',
+            'show_metric': 'tooltip',
+            'show_service': ('above', 12.0),
+            'link_to_svc_detail': 'true',
+            'show_host': 'false',
+            'show_unit': 'true'
+        },
+        'background': True,
+        'position': (1, 15),
+        'show_title': False,
+        'single_infos': ['host', 'service'],
+        'size': (26, 14)
+    }, {
+        'force_checkboxes': False,
+        'background': True,
+        'play_sounds': False,
+        'num_columns': 1,
+        'size': (35, 28),
+        'group_painters': [],
+        'layout': 'table',
+        'title': u'Network',
+        'painters': [
+            ('service_state', None, None),
+            ('service_description', None, None),
+            ('perfometer', None, None),
+        ],
+        'column_headers': 'off',
+        'type': 'view',
+        'columns': {
+            'columns': [
+                ('service_state', None, None),
+                ('service_description', None, None),
+                ('perfometer', None, None),
+            ]
+        },
+        'link_from': {},
+        'visibility': {},
+        'add_context_to_title': True,
+        'user_sortable': False,
+        'show_title': True,
+        'grouping': {
+            'grouping': []
+        },
+        'sorting': {
+            'sorters': [('svcdescr', False)]
+        },
+        'name': 'dashlet_7',
+        'mobile': False,
+        'browser_reload': 0,
+        'sorters': [('svcdescr', False)],
+        'datasource': 'services',
+        'context': {
+            'serviceregex': {
+                'service_regex': 'Interface',
+                'neg_service_regex': ''
+            }
+        },
+        'position': (-1, 1),
+        'view': {
+            'layout': 'table',
+            'browser_reload': 0,
+            'datasource': 'services',
+            'num_columns': 1,
+            'column_headers': 'pergroup',
+            'options': []
+        },
+        'single_infos': ['host'],
+        'mustsearch': False
+    }],
+    'name': 'cmk_host',
+    'topic': u'Applications',
+    'context': {},
+    'mtime': 0,
+    'owner': '',
+    'hidden': True,
+    'linktitle': u'Checkmk',
+    'show_title': True,
+    'public': False,
+    'single_infos': ['host'],
+    'icon': 'checkmk'
 }

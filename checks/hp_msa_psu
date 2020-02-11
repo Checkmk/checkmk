@@ -105,7 +105,7 @@ def inventory_hp_msa_psu(parsed):
     that means data is not valid
     """
     indicators = ('dc12v', 'dc5v', 'dc33v', 'dc12i', 'dc5i', 'dctemp')
-    for item, data in parsed.iteritems():
+    for item, data in parsed.items():
         if any(data.get(i) != '0' for i in indicators):
             yield item, {}
 

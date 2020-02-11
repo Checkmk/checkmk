@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.config as config
 import cmk.gui.wato as wato
@@ -133,7 +113,6 @@ def compute_foldertree():
             "Columns: filename"
     hosts = sites.live().query(query)
     sites.live().set_prepend_site(False)
-    hosts.sort()
 
     def get_folder(path, num=0):
         folder = watolib.Folder.folder(path)
@@ -150,7 +129,7 @@ def compute_foldertree():
     # Now get number of hosts by folder
     # Count all childs for each folder
     user_folders = {}
-    for _site, filename, num in hosts:
+    for _site, filename, num in sorted(hosts):
         # Remove leading /wato/
         wato_folder_path = filename[6:]
 
@@ -189,7 +168,7 @@ def compute_foldertree():
     def reduce_tree(folders):
         for folder_path, folder in folders.items():
             if len(folder['.folders']) == 1 and folder['.num_hosts'] == 0:
-                child_path, child_folder = folder['.folders'].items()[0]
+                child_path, child_folder = list(folder['.folders'].items())[0]
                 folders[child_path] = child_folder
                 del folders[folder_path]
 
@@ -204,8 +183,6 @@ def compute_foldertree():
 # We fetch the information via livestatus - not from WATO.
 def render_tree_folder(tree_id, folder, js_func):
     subfolders = folder.get(".folders", {}).values()
-    subfolders.sort(key=lambda x: x["title"].lower())
-
     is_leaf = len(subfolders) == 0
 
     # Suppress indentation for non-emtpy root folder
@@ -221,7 +198,7 @@ def render_tree_folder(tree_id, folder, js_func):
 
     if not is_leaf:
         html.begin_foldable_container(tree_id, "/" + folder[".path"], False, HTML(title))
-        for subfolder in subfolders:
+        for subfolder in sorted(subfolders, key=lambda x: x["title"].lower()):
             render_tree_folder(tree_id, subfolder, js_func)
         html.end_foldable_container()
     else:
@@ -260,9 +237,8 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         selected_topic, selected_target = config.user.load_file("foldertree",
                                                                 (_('Hosts'), 'allhosts'))
 
-        dashboard.load_dashboards()
         topic_views = visuals_by_topic(views.get_permitted_views().items() +
-                                       dashboard.permitted_dashboards().items())
+                                       dashboard.get_permitted_dashboards().items())
         topics = [(t, t) for t, _s in topic_views]
 
         html.open_table()
@@ -309,7 +285,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         # Now render the whole tree
         if user_folders:
             render_tree_folder("wato-hosts",
-                               user_folders.values()[0], 'cmk.sidebar.wato_tree_click')
+                               list(user_folders.values())[0], 'cmk.sidebar.wato_tree_click')
 
 
 @snapin_registry.register
@@ -333,4 +309,4 @@ class SidebarSnapinWATOFolders(SidebarSnapin):
         user_folders = compute_foldertree()
         if user_folders:
             render_tree_folder("wato-folders",
-                               user_folders.values()[0], 'cmk.sidebar.wato_folders_clicked')
+                               list(user_folders.values())[0], 'cmk.sidebar.wato_folders_clicked')

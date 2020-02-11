@@ -1,28 +1,9 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """Mode for automatic scan of parents (similar to cmk --scan-parents)"""
 
 import collections
@@ -59,13 +40,12 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
         return _("Parent scan")
 
     def __init__(self):
-        kwargs = {}
-        kwargs["title"] = _("Parent scan")
-        kwargs["lock_wato"] = False
-        kwargs["deletable"] = False
-        kwargs["stoppable"] = False
-
-        super(ParentScanBackgroundJob, self).__init__(self.job_prefix, **kwargs)
+        super(ParentScanBackgroundJob, self).__init__(
+            self.job_prefix,
+            title=_("Parent scan"),
+            lock_wato=False,
+            stoppable=False,
+        )
 
     def _back_url(self):
         return watolib.Folder.current().url()
@@ -119,12 +99,13 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
                 self._logger.exception(msg)
 
     def _execute_parent_scan(self, task, settings):
-        params = map(str, [
-            settings["timeout"],
-            settings["probes"],
-            settings["max_ttl"],
-            settings["ping_probes"],
-        ])
+        params = list(
+            map(str, [
+                settings["timeout"],
+                settings["probes"],
+                settings["max_ttl"],
+                settings["ping_probes"],
+            ]))
         return watolib.check_mk_automation(task.site_id, "scan-parents", params + [task.host_name])
 
     def _process_parent_scan_results(self, task, settings, gateways):
@@ -346,7 +327,7 @@ class ModeParentScan(WatoMode):
     def page(self):
         job_status_snapshot = self._job.get_status_snapshot()
         if job_status_snapshot.is_active():
-            html.message(
+            html.show_message(
                 _("Parent scan currently running in <a href=\"%s\">background</a>.") %
                 self._job.detail_url())
             return
@@ -408,7 +389,7 @@ class ModeParentScan(WatoMode):
         html.write_text(_("Timeout for responses") + ":")
         html.close_td()
         html.open_td()
-        html.number_input("timeout", self._settings["timeout"], size=2)
+        html.text_input("timeout", str(self._settings["timeout"]), size=2, cssclass="number")
         html.write_text(_("sec"))
         html.close_td()
         html.close_tr()
@@ -418,7 +399,7 @@ class ModeParentScan(WatoMode):
         html.write_text(_("Number of probes per hop") + ":")
         html.close_td()
         html.open_td()
-        html.number_input("probes", self._settings["probes"], size=2)
+        html.text_input("probes", str(self._settings["probes"]), size=2, cssclass="number")
         html.close_td()
         html.close_tr()
 
@@ -427,7 +408,7 @@ class ModeParentScan(WatoMode):
         html.write_text(_("Maximum distance (TTL) to gateway") + ":")
         html.close_td()
         html.open_td()
-        html.number_input("max_ttl", self._settings["max_ttl"], size=2)
+        html.text_input("max_ttl", str(self._settings["max_ttl"]), size=2, cssclass="number")
         html.close_td()
         html.close_tr()
 
@@ -441,7 +422,10 @@ class ModeParentScan(WatoMode):
               "the number of PING probes to 0."))
         html.close_td()
         html.open_td()
-        html.number_input("ping_probes", self._settings.get("ping_probes", 5), size=2)
+        html.text_input("ping_probes",
+                        str(self._settings.get("ping_probes", 5)),
+                        size=2,
+                        cssclass="number")
         html.close_td()
         html.close_tr()
         html.close_table()

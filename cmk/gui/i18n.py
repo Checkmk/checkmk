@@ -1,35 +1,20 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
 import gettext as gettext_module
 from typing import (  # pylint: disable=unused-import
     Dict, NamedTuple, Optional, List, Tuple, Text,
 )
-from pathlib2 import Path  # pylint: disable=unused-import
 import six
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
 import cmk.utils.paths
 
@@ -57,9 +42,22 @@ _translation = None  # type: Optional[Translation]
 
 def _(message):
     # type: (str) -> Text
-    if not _translation:
-        return six.text_type(message)
-    return _translation.translation.ugettext(message)
+    if _translation:
+        if sys.version_info[0] >= 3:
+            return _translation.translation.gettext(message)
+        return _translation.translation.ugettext(message)
+    return six.text_type(message)
+
+
+def ungettext(singular, plural, n):
+    # type: (str, str, int) -> Text
+    if _translation:
+        if sys.version_info[0] >= 3:
+            return _translation.translation.ngettext(singular, plural, n)
+        return _translation.translation.ungettext(singular, plural, n)
+    if n == 1:
+        return six.text_type(singular)
+    return six.text_type(plural)
 
 
 def get_current_language():
@@ -87,10 +85,10 @@ def _get_package_language_dirs():
     which are meant for localizing extension specific texts. These localizations
     are then used in addition to the builtin and local localization files.
     """
-    package_locale_dir = cmk.utils.paths.local_locale_dir.joinpath("packages")
-    if not package_locale_dir.exists():
+    package_locale_dir = cmk.utils.paths.local_locale_dir / "packages"
+    if not package_locale_dir.exists():  # pylint: disable=no-member
         return []
-    return list(package_locale_dir.iterdir())
+    return list(package_locale_dir.iterdir())  # pylint: disable=no-member
 
 
 def get_language_alias(lang):
@@ -101,7 +99,7 @@ def get_language_alias(lang):
     alias = lang
     for lang_dir in _get_base_language_dirs():
         try:
-            with lang_dir.joinpath(lang, "alias").open(encoding="utf-8") as f:
+            with (lang_dir / lang / "alias").open(encoding="utf-8") as f:
                 alias = f.read().strip()
         except (OSError, IOError):
             pass
@@ -135,7 +133,7 @@ def unlocalize():
 
 
 def localize(lang):
-    # type: (str) -> None
+    # type: (Optional[str]) -> None
     global _translation
     if lang is None:
         unlocalize()

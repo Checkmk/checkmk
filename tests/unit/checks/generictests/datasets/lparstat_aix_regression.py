@@ -32,18 +32,16 @@ checks = {
             (0, 'System: 1.2%', [('system', 1.2)]),
             (0, 'Wait: 0.2%', [('wait', 0.2)]),
             (0, 'Total CPU: 1.6%', [('util', 1.5999999999999999, None, None, 0, None)]),
-            (0, '100% corresponding to entitled processing capacity: 1.00 CPUs',
-             [('cpu_entitlement', 1.0)]),
-            (0, "", [('cpu_entitlement_util', 0.016)]),
+            (0, "Physical CPU consumption: 0.02 CPUs", [('cpu_entitlement_util', 0.02)]),
+            (0, 'Entitlement: 1.00 CPUs', [('cpu_entitlement', 1.0)]),
         ]),
         (None, (0.1, 0.3), [
             (0, 'User: 0.2%', [('user', 0.2)]),
             (0, 'System: 1.2%', [('system', 1.2)]),
             (1, 'Wait: 0.2% (warn/crit at 0.1%/0.3%)', [('wait', 0.2, 0.1, 0.3)]),
             (0, 'Total CPU: 1.6%', [('util', 1.5999999999999999, None, None, 0, None)]),
-            (0, '100% corresponding to entitled processing capacity: 1.00 CPUs',
-             [('cpu_entitlement', 1.0)]),
-            (0, "", [('cpu_entitlement_util', 0.016)]),
+            (0, "Physical CPU consumption: 0.02 CPUs", [('cpu_entitlement_util', 0.02)]),
+            (0, 'Entitlement: 1.00 CPUs', [('cpu_entitlement', 1.0)]),
         ]),
         (None, {
             'util': (0.5, 1.3)
@@ -53,9 +51,8 @@ checks = {
             (0, 'Wait: 0.2%', [('wait', 0.2)]),
             (2, 'Total CPU: 1.6% (warn/crit at 0.5%/1.3%)', [('util', 1.5999999999999999, 0.5, 1.3,
                                                               0, None)]),
-            (0, '100% corresponding to entitled processing capacity: 1.00 CPUs',
-             [('cpu_entitlement', 1.0)]),
-            (0, "", [('cpu_entitlement_util', 0.016)]),
+            (0, "Physical CPU consumption: 0.02 CPUs", [('cpu_entitlement_util', 0.02)]),
+            (0, 'Entitlement: 1.00 CPUs', [('cpu_entitlement', 1.0)]),
         ]),
     ]
 }

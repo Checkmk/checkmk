@@ -37,12 +37,16 @@ import logging
 import pprint
 import sys
 import time
-
 import requests
-from pathlib2 import Path
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+
 import six
 
-import cmk.utils.store
+import cmk.utils.store as store
 
 
 class AgentJSON(object):
@@ -126,21 +130,21 @@ class DataCache(six.with_metaclass(abc.ABCMeta, object)):
         """
         Return the time for how long cached data is valid
         """
-        pass
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def get_validity_from_args(self, *args):
         """
         Decide whether we need to update the cache due to new arguments
         """
-        pass
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def get_live_data(self, *args):
         """
         This is the function that will be called if no cached data can be found.
         """
-        pass
+        raise NotImplementedError()
 
     @property
     def cache_timestamp(self):
@@ -212,7 +216,7 @@ class DataCache(six.with_metaclass(abc.ABCMeta, object)):
         self._cache_file_dir.mkdir(parents=True, exist_ok=True)
 
         json_dump = json.dumps(raw_content, default=datetime_serializer)
-        cmk.utils.store.save_file(str(self._cache_file), json_dump)
+        store.save_file(str(self._cache_file), json_dump)
 
 
 class _NullContext(object):
@@ -225,6 +229,12 @@ class _NullContext(object):
 
     def __exit__(self, *_args):
         pass
+
+    def __bool__(self):
+        return False
+
+    # python2 uses __nonzero__ instead of __bool__:
+    __nonzero__ = __bool__
 
 
 def vcrtrace(**vcr_init_kwargs):
@@ -261,7 +271,7 @@ def vcrtrace(**vcr_init_kwargs):
                 setattr(namespace, self.dest, _NullContext())
                 return
 
-            import vcr  # type: ignore
+            import vcr  # type: ignore[import]
             use_cassette = vcr.VCR(**vcr_init_kwargs).use_cassette
             setattr(namespace, self.dest, lambda **kwargs: use_cassette(filename, **kwargs))
             global_context = use_cassette(filename)

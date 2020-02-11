@@ -179,27 +179,13 @@ inline bool IsElevated() {
     return false;
 }
 
-inline std::wstring GetSomeSystemFolder(const KNOWNFOLDERID& rfid) {
+inline std::wstring GetSomeSystemFolder(const KNOWNFOLDERID& rfid) noexcept {
     wchar_t* str = nullptr;
     if (SHGetKnownFolderPath(rfid, KF_FLAG_DEFAULT, NULL, &str) != S_OK ||
         !str)  // probably impossible case when executed ok, but str is nullptr
         return {};
 
     std::wstring path = str;
-    if (str) CoTaskMemFree(str);  // win32
-    return path;
-}
-
-// ASCIIZ Version
-inline std::string GetSomeSystemFolderA(const KNOWNFOLDERID& rfid) {
-    wchar_t* str = nullptr;
-    if (SHGetKnownFolderPath(rfid, KF_FLAG_DEFAULT, NULL, &str) != S_OK ||
-        !str)  // probably impossible case when executed ok, but str is nullptr
-        return {};
-
-    std::string path;
-    auto end = str + wcslen(str);
-    path.assign(str, end);
     if (str) CoTaskMemFree(str);  // win32
     return path;
 }

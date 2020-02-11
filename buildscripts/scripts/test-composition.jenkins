@@ -1,10 +1,33 @@
+// The following code adds libraries to the Pipeline script
+// Functions from libraries can be run by calling file-basename.functionaname()
+// If you need to adjust the loading of the library, please code your changes in
+// buildscripts/scripts/ on file jenkins-lib-loader/jenkins-template.groovy and run
+// jenkins-lib-loader/update-jenkins-lib-loading.sh
+// check the results and commit
+node {
+   stage('Load Jenkins Libs') {
+       def LIB = [
+           $class: 'GitSCM',
+           branches: scm.branches,
+           doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
+           extensions: [[$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'vars'],
+                       [path: 'buildscripts/scripts/vars']]],
+                       [$class: 'CloneOption', depth: 0, noTags: true, reference: '', shallow: true]],
+           userRemoteConfigs: scm.userRemoteConfigs
+       ]
+       library identifier: 'jenkins-libs@version', retriever: legacySCM(LIB)
+    }
+}
+// jenkins-libs loaded
 import java.text.SimpleDateFormat
 
 properties([
+  buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
   parameters([
     string(name: 'DISTROS', defaultValue: DISTRO_LIST_MASTER, description: 'List of targeted distros' ),
     string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' ),
-    string(name: 'VERSION', defaultValue: 'daily', description: 'Version: daily builds current git state of the branch. You also can specify a resently built version here.' )
+    string(name: 'VERSION', defaultValue: 'daily', description: 'Version: daily builds current git state of the branch. You also can specify a git tag here.' ),
+    string(name: 'DOCKER_TAG_BUILD', defaultValue: '', description: 'DOCKER_TAG_BUILD: Custom Docker Tag to use for this build. Leave empty for default' )
   ])
 ])
 
@@ -24,29 +47,24 @@ def dateFormat = new SimpleDateFormat("yyyy.MM.dd")
 def date = new Date()
 
 def BRANCH = scm.branches[0].name.replaceAll("/","-")
-def CMK_VERSION
-if(BRANCH == 'master') {
-    CMK_VERSION = dateFormat.format(date)
-} else if (VERSION == 'daily') {
-    CMK_VERSION = BRANCH + '-' + dateFormat.format(date)
-} else {
-    CMK_VERSION = VERSION
-}
+def CMK_VERSION = get_cmk_version(BRANCH, VERSION)
 
 def TEST_DATA = '/var/jenkins_home/composition-test-data/' + CMK_VERSION
 def OMD_SITE = 'int_' + BRANCH.replaceAll("\\.","")
 
 node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        println(DOCKER_REGISTRY)
-        IMAGE = 'ubuntu-18.04-common'
-        println(IMAGE)
-        docker.image(IMAGE).pull()
-        docker.image(IMAGE).inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN --network ci_local-infra') {
+        def COMMON_IMAGE = docker.image('ubuntu-18.04-common')
+        COMMON_IMAGE.pull()
+        COMMON_IMAGE.inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN') {
             stage('checkout sources') {
-                cleanWs()
                 dir(TEST_DATA + '/git') {
                     checkout(scm)
+                    // Load libraries
+                    versioning = load 'buildscripts/scripts/lib/versioning.groovy'
+                    withFolderProperties{
+                        DOCKER_TAG = versioning.select_docker_tag(BRANCH, DOCKER_TAG_BUILD, env.DOCKER_OS_IMAGE_TAG_FOLDER)
+                    }
                 }
             }
         }
@@ -57,9 +75,13 @@ try {
     DISTRO_LIST.each { DISTRO ->
         DOCKER_BUILDS[DISTRO] = {
             node {
+                def JENKINS_USER = id.getUser('jenkins')
+                def JENKINS_GROUP = id.getGroup('jenkins')
                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                    docker.image(DISTRO + '-os-image').pull()
-                    docker.image(DISTRO + '-os-image').inside("-u 0:0 --ulimit nofile=1024:1024  -v /bauwelt/download/$CMK_VERSION:/bauwelt/download/$CMK_VERSION:ro -v $TEST_DATA:$TEST_DATA --init --privileged --network ci_local-infra --hostname ${DISTRO}") {
+                    def TEST_IMAGE = docker.image(DISTRO + '-os-image:' + DOCKER_TAG);
+                    TEST_IMAGE.pull()
+                    TEST_IMAGE.inside("-u 0:0 --ulimit nofile=1024:1024  -v /bauwelt/download/$CMK_VERSION:/bauwelt/download/$CMK_VERSION:ro -v $TEST_DATA:$TEST_DATA --init --privileged --hostname ${DISTRO}") {
+                        versioning.print_image_tag()
                         stage('install ' + DISTRO + ' omd') {
                             DISTRO_CODE = sh ( script: """
                                 case $DISTRO in
@@ -92,6 +114,9 @@ try {
                                         ;;
                                     'ubuntu-19.04')
                                         DISTRO_CODE='_0.disco_amd64.deb'
+                                        ;;
+                                    'ubuntu-19.10')
+                                        DISTRO_CODE='_0.eoan_amd64.deb'
                                         ;;
                                     'centos-6')
                                         DISTRO_CODE='-el6-38.x86_64.rpm'
@@ -152,8 +177,8 @@ try {
                                 rm -rf $DISTRO
                                 mkdir -p $DISTRO
                                 cp /omd/sites/${OMD_SITE}/junit.xml $DISTRO/
-                                chown -R 112:120 $DISTRO
                             """
+                            id.setOwner(JENKINS_USER, JENKINS_GROUP, DISTRO)
                             stash name: "$DISTRO-results", includes: "$DISTRO/**/*"
                             // Unmount is clean solution, unfortunately it often fails
                             // The mount dies when the container is stopped anyway
@@ -170,9 +195,9 @@ try {
 } finally {
     node {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            println(DOCKER_REGISTRY)
-            IMAGE = 'ubuntu-18.04-common'
-            docker.image(IMAGE).inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN --network ci_local-infra') {
+            def COMMON_IMAGE = docker.image('ubuntu-18.04-common')
+            COMMON_IMAGE.pull()
+            COMMON_IMAGE.inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN') {
                 stage('checkout sources') {
                     sh 'rm -rf results'
                     dir('results') {
@@ -185,5 +210,19 @@ try {
                 }
             }
         }
+    }
+}
+
+// Duplicate code with nightly-cmk-container.jenkins, integration-daily-master.jenkins, nightly-build.jenkins
+def get_cmk_version(BRANCH, VERSION) {
+    def DATE_FORMAT = new SimpleDateFormat("yyyy.MM.dd")
+    def DATE = new Date()
+
+    if(BRANCH == 'master' && VERSION == 'daily') {
+        return DATE_FORMAT.format(DATE)
+    } else if (VERSION == 'daily') {
+        return BRANCH + '-' + DATE_FORMAT.format(DATE)
+    } else {
+        return VERSION
     }
 }

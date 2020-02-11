@@ -35,7 +35,7 @@ def parse_aws_exceptions(info):
 
 
 def check_aws_exceptions(item, params, parsed):
-    for title, messages in parsed.iteritems():
+    for title, messages in parsed.items():
         errors = [message for message in messages if message != AWSNoExceptionsText]
         if errors:
             yield 2, "%s %s" % (title, ", ".join(errors))

@@ -36,8 +36,8 @@ class Row;
 class TableHostsByGroup : public Table {
 public:
     explicit TableHostsByGroup(MonitoringCore *mc);
-    std::string name() const override;
-    std::string namePrefix() const override;
+    [[nodiscard]] std::string name() const override;
+    [[nodiscard]] std::string namePrefix() const override;
     void answerQuery(Query *query) override;
     bool isAuthorized(Row row, const contact *ctc) const override;
     // NOTE: We do *not* implement findObject() here, because we don't know

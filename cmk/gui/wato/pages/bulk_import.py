@@ -1,28 +1,9 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """The bulk import for hosts can be used to import multiple new hosts into a
 single WATO folder. The hosts can either be provided by uploading a CSV file or
 by pasting the contents of a CSV file into a textbox."""
@@ -34,6 +15,7 @@ from difflib import SequenceMatcher
 import six
 
 import cmk.utils.store as store
+from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.pages
 import cmk.gui.weblib as weblib
@@ -115,7 +97,7 @@ class ModeBulkImport(WatoMode):
 
         file_id = "%s-%d" % (config.user.id, int(time.time()))
 
-        store.save_file(self._file_path(), content.encode("utf-8"))
+        store.save_text_to_file(self._file_path(), ensure_unicode(content))
 
         # make selections available to next page
         html.request.set_var("file_id", file_id)
@@ -203,8 +185,9 @@ class ModeBulkImport(WatoMode):
 
         if num_succeeded > 0 and html.request.var("do_service_detection") == "1":
             # Create a new selection for performing the bulk discovery
-            weblib.set_rowselection('wato-folder-/' + watolib.Folder.current().path(), selected,
-                                    'set')
+            config.user.set_rowselection(weblib.selection_id(),
+                                         'wato-folder-/' + watolib.Folder.current().path(),
+                                         selected, 'set')
             html.request.set_var('mode', 'bulkinventory')
             html.request.set_var('_bulk_inventory', '1')
             html.request.set_var('show_checkboxes', '1')

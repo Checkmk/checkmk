@@ -54,35 +54,32 @@ def parse_docker_container_mem(info):
     else:
         parsed = _parse_docker_container_mem_plugin(info)
 
-    # Populate a dictionary in the format check_memory() form mem.include expects.
-    # The values are scaled to kB
-    mem = {
-        "SwapTotal": 0,
-        "SwapFree": 0,
-    }
-
     # Calculate used memory like docker does (https://github.com/moby/moby/issues/10824)
     usage_kb = (parsed["usage_in_bytes"] - parsed["cache"]) / 1024.0
 
+    # Populate a dictionary in the format check_memory() form mem.include expects.
+    # The values are scaled to kB
+    mem = {}
     # Extract the real memory limit for the container. There is either the
     # maximum amount of memory available or a configured limit for the
     # container (cgroup).
     mem["MemTotal"] = min(parsed["MemTotal"], parsed["limit_in_bytes"]) / 1024.0
     mem["MemFree"] = mem["MemTotal"] - usage_kb
-    mem["Caches"] = parsed["cache"] / 1024.0
+    mem["Cached"] = parsed["cache"] / 1024.0
 
     return mem
 
 
 def check_docker_container_mem(_no_item, params, parsed):
-    return check_memory(params, parsed)
+    for subresult in check_memory(params, parsed):
+        yield subresult
 
 
 check_info["docker_container_mem"] = {
     "parse_function": parse_docker_container_mem,
     "inventory_function": discover_single,
     "check_function": check_docker_container_mem,
-    "service_description": "Memory used",
+    "service_description": "Memory",
     "has_perfdata": True,
     "group": "memory",
     "default_levels_variable": "memory_default_levels",

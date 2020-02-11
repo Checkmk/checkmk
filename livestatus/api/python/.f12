@@ -1,13 +1,18 @@
 #!/bin/bash
 set -e
 
-SITE=${SITE:-$(cat ../../../.site 2>/dev/null || true)}
+SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then cat .site; break; else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
 sudo rsync livestatus.py $ROOT/lib/python/
+sudo pycompile -q $ROOT/lib/python/livestatus.py
+
+sudo rsync livestatus.py $ROOT/lib/python3/
+sudo py3compile -q $ROOT/lib/python3/livestatus.py
+
 if [ -z $ONLY_COPY ]; then
-    if [ "$SITE" != - ] ; then
+    if [ "$SITE" != - ]; then
         sudo omd restart $SITE apache
     fi
 fi

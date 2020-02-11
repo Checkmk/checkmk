@@ -1,44 +1,25 @@
 throttle(['Gerrit']){
+properties([
+  buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '200')),
+])
 node {
     def WORKSPACE = pwd()
-    
+    def RESULTS = WORKSPACE + "/results"
+
     try {
         stage("Auschecken: Checkmk") {
-            checkout([$class: 'GitSCM',
-                branches: [
-                    [name: '${GERRIT_PATCHSET_REVISION}']
-                ],
-                browser: [
-                    $class: 'GitWeb',
-                    repoUrl: 'https://review.lan.mathias-kettner.de/git/?p=check_mk.git'
-                ],
-                doGenerateSubmoduleConfigurations: false,
-                extensions: [[
-                    $class: 'CloneOption',
-                    //honorRefspec: true,
-                    //reference: '/home/gerrit/gerrit_data/git/check_mk.git',
-                    noTags: true,
-                    shallow: false
-                ]],
-                submoduleCfg: [],
-                userRemoteConfigs: [
-                    [
-                        credentialsId: '058f09c4-21c9-49ae-b72b-0b9d2f465da6',
-                        url: 'ssh://jenkins@review.lan.mathias-kettner.de:29418/check_mk',
-                        refspec: "${GERRIT_REFSPEC}"
-                    ]
-                ]
-            ])
+            checkout(scm)
+            sh "rm -rf ${RESULTS}; mkdir ${RESULTS}"
         }
-        
+
         // Creates a \n separated list of changed files
         def CHANGED_FILES_REL = sh(script: "git diff-tree --no-commit-id --name-only -r ${GERRIT_PATCHSET_REVISION}", returnStdout: true).toString().trim()
         def CHANGED_FILES_ABS = sh(script: "echo '${CHANGED_FILES_REL}' | sed 's|^|${WORKSPACE}/|g'", returnStdout: true).toString().trim()
 
         // Gather the list of changed python files
         def GREP_PATTERNS = sh(script: "echo '${CHANGED_FILES_ABS}' | sed 's/^/-e /g'", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
-        def CHANGED_PYTHON_FILES = sh(script: "tests/find-python-files | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
-        def CHANGED_PYTHON3_FILES = sh(script: "tests-py3/find-python-files | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
+        def CHANGED_PYTHON_FILES = sh(script: "scripts/find-python-files 2 | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
+        def CHANGED_PYTHON3_FILES = sh(script: "scripts/find-python-files 3 | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
         def CHANGED_PYLINT_RC_FILE = sh(script: "echo '$CHANGED_FILES_ABS' | grep -h '${WORKSPACE}/.pylintrc' - || true", returnStdout: true).toString().trim()
 
         // Gather the list of changed agent plugins
@@ -55,24 +36,38 @@ node {
         stage("Python typing") {
             if (CHANGED_PYTHON_FILES != "") {
                 dir("tests-py3") {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; make --quiet test-mypy"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; JUNIT_XML='--junit-xml ${RESULTS}/mypy.xml' make --quiet test-mypy"
                 }
             } else {
-                println "No python files changed. Skipping."
+                println "No Python 2 files changed. Skipping."
             }
         }
-        
-        
+
+
+        stage("Python3 typing") {
+            if (CHANGED_PYTHON_FILES != "" || CHANGED_PYTHON3_FILES != "") {
+                dir("tests-py3") {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; JUNIT_XML='--junit-xml ${RESULTS}/mypy3.xml' make --quiet test-mypy3"
+                }
+            } else {
+                println "No Python 2/3 files changed. Skipping."
+            }
+        }
+
         stage("Python format") {
             if (CHANGED_PYTHON_FILES != "") {
                 dir('tests') {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; PYTHON_FILES='${CHANGED_PYTHON_FILES}' make --quiet test-format-python"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; PYTHON_FILES='${CHANGED_PYTHON_FILES}' make --quiet test-format-python &> ${RESULTS}/python-yapf.txt"
+                }
+            } else if (CHANGED_PYTHON3_FILES != "") {
+                dir('tests') {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; PYTHON_FILES='${CHANGED_PYTHON3_FILES}' make --quiet test-format-python &> ${RESULTS}/python3-yapf.txt"
                 }
             } else {
-                println "No python files changed. Skipping."
+                println "No Python 2/3 files changed. Skipping."
             }
         }
-        
+
         stage("Python futurize") {
             CHANGED_TEST_FUTURIZE_FILE = sh(script: "echo '$CHANGED_FILES_ABS' | grep -h '${WORKSPACE}/tests/test-futurize' - || true", returnStdout: true).toString().trim()
             if (CHANGED_TEST_FUTURIZE_FILE != "") {
@@ -86,70 +81,76 @@ node {
                         sh ". /bauwelt/bin/bw-setup-jenkins-env ; PYTHON_FILES='${CHANGED_PYTHON_FILES}' make --quiet test-python-futurize"
                     }
                 } else {
-                    println "No python files changed. Skipping."
+                    println "No Python 2 files changed. Skipping."
                 }
             }
         }
-        
+
         stage("Python linting") {
-            if (CHANGED_PYLINT_RC_FILE == "" && CHANGED_PYTHON_FILES == "") {
-                println "Neither .pylintrc nor python files changed. Skipping."
-            } else {
+            if (CHANGED_PYLINT_RC_FILE != "" || CHANGED_PYTHON_FILES != "") {
                 dir('tests') {
                     withEnv(["WORKDIR=${WORKSPACE}/tmp",
-                         'PYLINT_ARGS=--output-format=cmk_parseable']) {
+                             'PYLINT_ARGS=--output-format=cmk_parseable']) {
                         sh 'if [ -d "${WORKDIR}" ]; then rm -rf "${WORKDIR}"; fi'
                         sh 'mkdir "${WORKDIR}"'
-                        sh ". /bauwelt/bin/bw-setup-jenkins-env && make -C .. --what-if Pipfile.lock .venv && make test-pylint"
+                        sh ". /bauwelt/bin/bw-setup-jenkins-env && make -C .. --what-if Pipfile.lock .venv && make test-pylint &> ${RESULTS}/pylint.txt"
                     }
                 }
+            } else {
+                println "Neither .pylintrc nor Python 2 files changed. Skipping."
             }
         }
-        
+
         stage("Python3 linting") {
-            if (CHANGED_PYLINT_RC_FILE == "" && CHANGED_PYTHON3_FILES == "") {
-                println "Neither .pylintrc nor python3 files changed. Skipping."
-            } else {
+            if (CHANGED_PYLINT_RC_FILE != "" || CHANGED_PYTHON3_FILES != "") {
                 dir('tests-py3') {
-                    sh 'make test-pylint'
+                    sh "make test-pylint &> ${RESULTS}/pylint3.xml"
                 }
+            } else {
+                println "Neither .pylintrc nor Python 3 files changed. Skipping."
             }
         }
 
         stage("Python unit tests") {
             if (CHANGED_PYTHON_FILES != "") {
                 dir('tests') {
-                    withEnv(["PYTEST_ADDOPTS=\"--junitxml='$WORKSPACE/junit.xml'\""]) {
+                    withEnv(["PYTEST_ADDOPTS=\"--junitxml=$RESULTS/python-unit-junit.xml\""]) {
                         sh ". /bauwelt/bin/bw-setup-jenkins-env ; make test-unit"
                     }
                 }
             } else {
-                println "No python files changed. Skipping."
+                println "No Python 2 files changed. Skipping."
             }
         }
 
         stage("Python3 unit tests") {
-            if (CHANGED_PYTHON3_FILES != "") {
+            if (CHANGED_PYTHON_FILES != "" || CHANGED_PYTHON3_FILES != "") {
                 dir('tests-py3') {
-                    withEnv(["PYTEST_ADDOPTS=\"--junitxml='$WORKSPACE/junit.xml'\""]) {
+                    withEnv(["PYTEST_ADDOPTS=\"--junitxml=$RESULTS/python3-unit-junit.xml\""]) {
                         sh ". /bauwelt/bin/bw-setup-jenkins-env ; make test-unit"
                     }
                 }
             } else {
-                println "No python3 files changed. Skipping."
+                println "No Python 2/3 files changed. Skipping."
             }
         }
 
         stage("Shell format") {
             dir('tests') {
-                sh ". /bauwelt/bin/bw-setup-jenkins-env ; make --quiet test-format-shell"
+                sh ". /bauwelt/bin/bw-setup-jenkins-env ; make --quiet test-format-shell &> ${RESULTS}/shell-format.txt"
             }
         }
-        
+
+        stage("Shell Unit Tests") {
+            dir('tests') {
+                sh ". /bauwelt/bin/bw-setup-jenkins-env ; make test-unit-sh &> ${RESULTS}/shell-unit.txt"
+            }
+        }
+
         stage("Agent integration tests") {
             if (CHANGED_AGENT_PLUGINS != "") {
                 dir('tests') {
-                    withEnv(["PYTEST_ADDOPTS=\"--junitxml='$WORKSPACE/junit-agent-integration.xml'\""]) {
+                    withEnv(["PYTEST_ADDOPTS=\"--junitxml=$RESULTS/agent-integration-junit.xml\""]) {
                         sh ". /bauwelt/bin/bw-setup-jenkins-env ; make test-agent-integration"
                     }
                 }
@@ -161,10 +162,10 @@ node {
         stage("Cppcheck") {
             if (CHANGED_CORE_FILES != "") {
                 dir("livestatus/src") {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck ${GERRIT_PATCHSET_REVISION}"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck-xml ${GERRIT_PATCHSET_REVISION} &> ${RESULTS}/livestatus-cppcheck.txt"
                 }
                 dir("enterprise/core/src") {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck ${GERRIT_PATCHSET_REVISION}"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck-xml ${GERRIT_PATCHSET_REVISION} &> ${RESULTS}/core-cppcheck.txt"
                 }
             } else {
                 println "No core files changed. Skipping."
@@ -174,10 +175,10 @@ node {
         stage("Clang-Tidy") {
             if (CHANGED_CORE_FILES != "") {
                 dir("livestatus/src") {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter tidy ${GERRIT_PATCHSET_REVISION}"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter tidy ${GERRIT_PATCHSET_REVISION} &> ${RESULTS}/livestatus-tidy.txt"
                 }
                 dir("enterprise/core/src") {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter tidy ${GERRIT_PATCHSET_REVISION}"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter tidy ${GERRIT_PATCHSET_REVISION} &> ${RESULTS}/core-tidy.txt"
                 }
             } else {
                 println "No core files changed. Skipping."
@@ -187,10 +188,10 @@ node {
         stage("IWYU") {
             if (CHANGED_CORE_FILES != "") {
                 dir("livestatus/src") {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter iwyu ${GERRIT_PATCHSET_REVISION}"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter iwyu ${GERRIT_PATCHSET_REVISION} &> ${RESULTS}/livestatus-iwyu.txt"
                 }
                 dir("enterprise/core/src") {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter iwyu ${GERRIT_PATCHSET_REVISION}"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter iwyu ${GERRIT_PATCHSET_REVISION} &> ${RESULTS}/core-iwyu.txt"
                 }
             } else {
                 println "No core files changed. Skipping."
@@ -200,10 +201,10 @@ node {
         stage("NEB/CMC Unit Tests") {
             if (CHANGED_CORE_FILES != "") {
                 dir("livestatus/src/test") {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ./.f12"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ./.f12 &> ${RESULTS}/livestatus-neb-cmc.txt"
                 }
                 dir("enterprise/core/src/test") {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ./.f12"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ./.f12 &> ${RESULTS}/core-neb-cmc.txt"
                 }
             } else {
                 println "No core files changed. Skipping."
@@ -214,22 +215,18 @@ node {
         currentBuild.result = "FAILED"
         throw e
     } finally {
-        step([
-            $class: 'WarningsPublisher',
-            canComputeNew: false,
-            canResolveRelativePaths: false,
-            canRunOnFailed: true,
-            defaultEncoding: '',
-            excludePattern: '',
-            healthy: '',
-            includePattern: '',
-            messagesPattern: '',
-            consoleParsers: [[parserName: 'GNU Make + GNU C Compiler (gcc)'], [parserName: 'Clang (LLVM based)'], [parserName: 'PyLint']],
-            unHealthy: '',
-            defaultEncoding: 'UTF-8',
-            failedTotalAll: '0',
-            unstableTotalAll: '0'
-        ])
+        stage("Analyse Issues") {
+            def CLANG = scanForIssues tool: clang(pattern: "results/*-tidy.txt")
+            def GCC = scanForIssues tool: gcc(pattern: "results/*iwyu.txt,results/*cppcheck.txt,results/*neb-cmc.txt,results/*yapf.txt")
+            def PYLINT = scanForIssues tool: pyLint(pattern: "results/pylint*.txt")
+            def MYPY = scanForIssues tool: myPy(pattern: "results/mypy*.xml")
+            def CPPCHECK = scanForIssues tool: cppCheck(pattern: '**/cppcheck-result.xml')
+
+            publishIssues issues:[CLANG,GCC,PYLINT,MYPY,CPPCHECK], trendChartType: 'TOOLS_ONLY'
+            xunit([Custom(customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl", deleteOutputFiles: false, failIfNotNew: true, pattern: "results/*junit.xml", skipNoTestFiles: true, stopProcessingIfError: true)])
+            
+            archiveArtifacts 'results/*'
+        }
     }
 }
 }

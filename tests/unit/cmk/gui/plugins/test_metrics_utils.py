@@ -113,6 +113,7 @@ def test_reverse_translation_metric_name(canonical_name, perf_data_names):
         ([u'util', u'util_average'], None, ['util_average_1']),
         ([u'user', u'util_numcpu_as_max'], None, ['cpu_utilization_numcpus']),
         ([u'user', u'util'], None, ['util_fallback', 'METRIC_user']),  # METRIC_user has no recipe
+        ([u'util'], 'check_mk-netapp_api_cpu.utilization', ['cpu_utilization_numcpus']),
         ([u'user', u'util'], 'check_mk-winperf_processor.util', ['cpu_utilization_numcpus']),
         ([u'user', u'system', u'idle', u'nice'], None, ['cpu_utilization_3']),
         ([u'user', u'system', u'idle', u'io_wait'], None, ['cpu_utilization_4']),
@@ -122,7 +123,12 @@ def test_reverse_translation_metric_name(canonical_name, perf_data_names):
         ([u'user', u'system', u'interrupt'], None, ['cpu_utilization_8']),
         ([u'user', u'system', u'wait', u'util', u'cpu_entitlement', u'cpu_entitlement_util'
          ], 'check_mk-lparstat_aix.cpu_util', ['cpu_utilization_5_util', 'cpu_entitlement']),
-        ([u'ramused', u'swapused', u'memused'], 'check_mk-statgrab_mem', ['ram_swap_used'])
+        ([u'ramused', u'swapused', u'memused'], 'check_mk-statgrab_mem', ['ram_swap_used']),
+        ([
+            u'aws_ec2_running_ondemand_instances_total',
+            u'aws_ec2_running_ondemand_instances_t2.micro',
+            u'aws_ec2_running_ondemand_instances_t2.nano'
+        ], 'check_mk-aws_ec2_limits', ['aws_ec2_running_ondemand_instances'])
     ])
 def test_get_graph_templates(load_plugins, metric_names, check_command, graph_ids):
     perfdata = [(n, 0, u'', None, None, None, None) for n in metric_names]

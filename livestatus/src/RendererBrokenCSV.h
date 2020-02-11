@@ -43,10 +43,10 @@ public:
         , _list(std::move(list))
         , _host_service(std::move(host_service)) {}
 
-    std::string dataset() const { return _dataset; }
-    std::string field() const { return _field; }
-    std::string list() const { return _list; }
-    std::string hostService() const { return _host_service; }
+    [[nodiscard]] std::string dataset() const { return _dataset; }
+    [[nodiscard]] std::string field() const { return _field; }
+    [[nodiscard]] std::string list() const { return _list; }
+    [[nodiscard]] std::string hostService() const { return _host_service; }
 
 private:
     std::string _dataset;

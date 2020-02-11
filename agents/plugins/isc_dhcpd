@@ -28,7 +28,23 @@ for path in [
 if not conf_file or not leases_file:
     sys.exit(0)
 
-pidof_dhcpd = os.popen("pidof dhcpd").read().strip()
+
+def get_pid():
+    cmd = "pidof dhcpd"
+
+    # workaround for bug in sysvinit-utils in debian buster
+    # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=926896
+    lsb_path = "/etc/lsb-release"
+    if os.path.exists(lsb_path):
+        for line in open(lsb_path):
+            if "buster" in line:
+                cmd = "ps aux | grep -w [d]hcpd | awk {'printf (\"%s \", $2)'}"
+                break
+
+    return os.popen(cmd).read().strip()  # nosec
+
+
+pidof_dhcpd = get_pid()
 sys.stdout.write('<<<isc_dhcpd>>>\n[general]\nPID: %s\n' % pidof_dhcpd)
 
 sys.stdout.write('[pools]\n')

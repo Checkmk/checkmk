@@ -84,7 +84,7 @@ def parse_fortinet_controller_aps(info):
 
 
 def inventory_fortinet_controller_aps(parsed):
-    for key, values in parsed.iteritems():
+    for key, values in parsed.items():
         if values["availability"] != "not installed":
             yield key, {}
 

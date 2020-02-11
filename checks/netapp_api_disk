@@ -54,7 +54,7 @@ def check_netapp_api_disk_summary(_no_item, params, info):
         [disk for disk in disks.items() if not disk[1].get("raid-state") in ["remote", "partner"]])
 
     disks_converted = []
-    for disk in my_disks.itervalues():
+    for disk in my_disks.values():
         # Collection the disk identity
         disk_info = "Serial: %s" % disk.get("serial-number")
         if "physical-space" in disk:

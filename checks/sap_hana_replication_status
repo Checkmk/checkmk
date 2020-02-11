@@ -27,7 +27,7 @@
 
 def parse_sap_hana_replication_status(info):
     parsed = {}
-    for sid_instance, lines in parse_sap_hana(info).iteritems():
+    for sid_instance, lines in parse_sap_hana(info).items():
         inst = {}
         for line in lines:
             if line[0] == "mode:":
@@ -51,7 +51,7 @@ SAP_HANA_REPL_STATUS_MAP = {
 
 
 def inventory_sap_hana_replication_status(parsed):
-    for sid_instance, data in parsed.iteritems():
+    for sid_instance, data in parsed.items():
         if data["sys_repl_status"] != "10" and data.get("mode", "").lower() == "primary":
             yield sid_instance, {}
 

@@ -1,28 +1,9 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """Mode for activating pending changes. Does also replication with
 remote sites in distributed WATO."""
 
@@ -146,7 +127,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         home_button()
         html.end_context_buttons()
 
-        html.message(_("Successfully discarded all pending changes."))
+        html.show_message(_("Successfully discarded all pending changes."))
         html.javascript("hide_changes_buttons();")
         html.footer()
 
@@ -196,7 +177,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
     def _activation_msg(self):
         html.open_div(id_="async_progress_msg", style="display:none")
-        html.show_info("")
+        html.show_message("")
         html.close_div()
 
     def _activation_form(self):
@@ -205,7 +186,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             return
 
         if not self._changes:
-            html.show_info(_("Currently there are no changes to activate."))
+            html.show_message(_("Currently there are no changes to activate."))
             return
 
         if not config.user.may("wato.activateforeign") \
@@ -302,13 +283,13 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 if self._is_foreign(change):
                     html.icon(_("This change has been made by another user"), "foreign_changes")
 
-                table.cell(_("Affected sites"), css="narrow nobr")
+                table.cell(_("Change"), change["text"])
+
+                table.cell(_("Affected sites"), css="affected_sites")
                 if self._affects_all_sites(change):
                     html.write_text("<i>%s</i>" % _("All sites"))
                 else:
                     html.write_text(", ".join(sorted(change["affected_sites"])))
-
-                table.cell(_("Change"), change["text"])
 
     def _render_change_object(self, obj):
         if not obj:

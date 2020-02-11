@@ -1,29 +1,11 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Default configuration settings for the Check_MK GUI"""
+
+from typing import Dict as _Dict, List as _List, Tuple as _Tuple  # pylint: disable=unused-import
 
 #.
 #   .--Generic-------------------------------------------------------------.
@@ -35,15 +17,16 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-roles = {}  # User supplied roles
+# User supplied roles
+roles = {}  # type: _Dict
 
 # define default values for all settings
 debug = False
 screenshotmode = False
 profile = False
-users = []
+users = []  # type: _List
 admin_users = ["omdadmin", "cmkadmin"]
-guest_users = []
+guest_users = []  # type: _List
 default_user_role = "user"
 save_user_access_times = False
 user_online_maxage = 30  # seconds
@@ -56,10 +39,10 @@ log_levels = {
     "cmk.web.automations": 30,
 }
 
-multisite_users = {}
-multisite_hostgroups = {}
-multisite_servicegroups = {}
-multisite_contactgroups = {}
+multisite_users = {}  # type: _Dict
+multisite_hostgroups = {}  # type: _Dict
+multisite_servicegroups = {}  # type: _Dict
+multisite_contactgroups = {}  # type: _Dict
 
 #    ____  _     _      _
 #   / ___|(_) __| | ___| |__   __ _ _ __
@@ -144,7 +127,8 @@ view_action_defaults = {
 #  \____\__,_|___/\__\___/|_| |_| |_| |_____|_|_| |_|_|\_\___/
 #
 
-custom_links = {}
+# TODO: Improve type below, see cmk.gui.plugins.sidebar.custom_links
+custom_links = {}  # type: _Dict[str, _List[_Tuple]]
 
 # Links for everyone
 custom_links['guest'] = [
@@ -158,7 +142,6 @@ custom_links['guest'] = [
 custom_links['user'] = custom_links['guest'] + [("Open Source Components", False, [
     ("CheckMK", "https://checkmk.com", None, "_blank"),
     ("Nagios", "https://www.nagios.org/", None, "_blank"),
-    ("PNP4Nagios", "https://pnp4nagios.org/", None, "_blank"),
     ("NagVis", "https://nagvis.org/", None, "_blank"),
     ("RRDTool", "https://oss.oetiker.ch/rrdtool/", None, "_blank"),
 ])]
@@ -194,7 +177,7 @@ visible_views = None
 hidden_views = None
 
 # Patterns to group services in table views together
-service_view_grouping = []
+service_view_grouping = []  # type: _List
 
 # Custom user stylesheet to load (resides in htdocs/)
 custom_style_sheet = None
@@ -208,7 +191,7 @@ start_url = "dashboard.py"
 # Page heading for main frame set
 page_heading = "Checkmk %s"
 
-login_screen = {}
+login_screen = {}  # type: _Dict
 
 # Timeout for rescheduling of host- and servicechecks
 reschedule_timeout = 10.0
@@ -220,7 +203,7 @@ filter_columns = 2
 default_language = None
 
 # Hide these languages from user selection
-hide_languages = []
+hide_languages = []  # type: _List
 
 # Default timestamp format to be used in multisite
 default_ts_format = 'mixed'
@@ -243,7 +226,7 @@ table_row_limit = 100
 multisite_draw_ruleicon = True
 
 # Default downtime configuration
-adhoc_downtime = {}
+adhoc_downtime = {}  # type: _Dict
 
 # Display dashboard date
 pagetitle_date_format = None
@@ -256,11 +239,10 @@ staleness_threshold = 1.5
 escape_plugin_output = True
 
 # Virtual host trees for the "Virtual Host Trees" snapin
-virtual_host_trees = []
+virtual_host_trees = []  # type: _List
 
-# Fall back to PNP4Nagios as graphing GUI even on CEE
-force_pnp_graphing = False
-
+# Target URL for sending crash reports to
+crash_report_url = "https://crash.checkmk.com"
 # Target email address for "Crashed Check" page
 crash_report_target = "feedback@checkmk.com"
 
@@ -275,6 +257,31 @@ bulk_discovery_default_settings = {
     "error_handling": True,
 }
 
+use_siteicons = False
+
+graph_timeranges = [
+    {
+        'title': "The last 4 hours",
+        "duration": 4 * 60 * 60
+    },
+    {
+        'title': "The last 25 hours",
+        "duration": 25 * 60 * 60
+    },
+    {
+        'title': "The last 8 days",
+        "duration": 8 * 24 * 60 * 60
+    },
+    {
+        'title': "The last 35 days",
+        "duration": 35 * 24 * 60 * 60
+    },
+    {
+        'title': "The last 400 days",
+        "duration": 400 * 24 * 60 * 60
+    },
+]
+
 #     _   _               ____  ____
 #    | | | |___  ___ _ __|  _ \| __ )
 #    | | | / __|/ _ \ '__| | | |  _ \
@@ -288,7 +295,7 @@ bulk_discovery_default_settings = {
 userdb_automatic_sync = "master"
 
 # Holds dicts defining user connector instances and their properties
-user_connections = []
+user_connections = []  # type: _List
 
 default_user_profile = {
     'contactgroups': [],
@@ -298,7 +305,7 @@ default_user_profile = {
 lock_on_logon_failures = False
 user_idle_timeout = None
 single_user_session = None
-password_policy = {}
+password_policy = {}  # type: _Dict
 
 user_localizations = {
     u'Agent type': {
@@ -355,10 +362,10 @@ user_localizations = {
 }
 
 # Contains user specified icons and actions for hosts and services
-user_icons_and_actions = {}
+user_icons_and_actions = {}  # type: _Dict
 
 # Defintions of custom attributes to be used for services
-custom_service_attributes = {}
+custom_service_attributes = {}  # type: _Dict
 
 user_downtime_timeranges = [
     {
@@ -384,7 +391,7 @@ user_downtime_timeranges = [
 ]
 
 # Override toplevel and sort_index settings of builtin icons
-builtin_icon_visibility = {}
+builtin_icon_visibility = {}  # type: _Dict
 
 # Name of the hostgroup to filter the network topology view by default
 topology_default_filter_group = None
@@ -432,13 +439,13 @@ mkeventd_service_levels = [
 #   '----------------------------------------------------------------------'
 
 # Pre 1.6 tag configuration variables
-wato_host_tags = []
-wato_aux_tags = []
+wato_host_tags = []  # type: _List
+wato_aux_tags = []  # type: _List
 # Tag configuration variable since 1.6
 wato_tags = {
     "tag_groups": [],
     "aux_tags": [],
-}
+}  # type: _Dict[str, _List]
 
 wato_enabled = True
 wato_hide_filenames = True
@@ -452,11 +459,11 @@ wato_num_itemspecs = 15
 wato_activation_method = 'restart'
 wato_write_nagvis_auth = False
 wato_use_git = False
-wato_hidden_users = []
-wato_user_attrs = []
-wato_host_attrs = []
+wato_hidden_users = []  # type: _List
+wato_user_attrs = []  # type: _List
+wato_host_attrs = []  # type: _List
 wato_legacy_eval = False
-wato_read_only = {}
+wato_read_only = {}  # type: _Dict
 wato_hide_folders_without_read_permissions = False
 wato_pprint_config = False
 wato_icon_categories = [
@@ -475,15 +482,15 @@ wato_icon_categories = [
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-aggregation_rules = {}
-aggregations = []
-host_aggregations = []
-bi_packs = {}
+aggregation_rules = {}  # type: _Dict
+aggregations = []  # type: _List
+host_aggregations = []  # type: _List
+bi_packs = {}  # type: _Dict
 bi_precompile_on_demand = True
 bi_use_legacy_compilation = False
 
 default_bi_layout = {"node_style": "builtin_hierarchy", "line_style": "straight"}
-bi_layouts = {"templates": {}, "aggregations": {}}
+bi_layouts = {"templates": {}, "aggregations": {}}  # type: _Dict[str, _Dict]
 
 # Deprecated. Kept for compatibility.
 bi_compile_log = None

@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <cstdint>
 #include <string>
+#include "Column.h"
 #include "IntColumn.h"
 #include "contact_fwd.h"
 class MonitoringCore;
@@ -38,13 +39,10 @@ public:
     enum class Type { real_hard_state, pnp_graph_present };
 
     ServiceSpecialIntColumn(const std::string &name,
-                            const std::string &description, int indirect_offset,
-                            int extra_offset, int extra_extra_offset,
-                            int offset, MonitoringCore *mc, Type ssic_type)
-        : IntColumn(name, description, indirect_offset, extra_offset,
-                    extra_extra_offset, offset)
-        , _mc(mc)
-        , _type(ssic_type) {}
+                            const std::string &description,
+                            const Column::Offsets &offsets, MonitoringCore *mc,
+                            Type ssic_type)
+        : IntColumn(name, description, offsets), _mc(mc), _type(ssic_type) {}
 
     int32_t getValue(Row row, const contact *auth_user) const override;
 

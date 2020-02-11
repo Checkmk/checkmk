@@ -38,40 +38,85 @@
 #msonline:PROJECTPROFESSIONAL 10 0 10
 #msonline:ATP_ENTERPRISE 1040 0 988
 
+
+def parse_msoffice_licenses(info):
+    parsed = {}
+
+    for line in info:
+        if len(line) != 4:
+            continue
+
+        try:
+            parsed.setdefault(line[0], {
+                "active": int(line[1]),
+                "warning_units": int(line[2]),
+                "consumed": int(line[3])
+            })
+        except ValueError:
+            pass
+
+    return parsed
+
+
 factory_settings["msoffice_licenses_levels"] = {
-    "usage": (80, 90),
+    "usage": (80.0, 90.0),
 }
 
 
-def inventory_msoffice_licenses(info):
-    for name, _active, _warning_units, _consumed in info:
-        yield name, {}
+@get_parsed_item_data
+def check_msoffice_licenses(item, params, item_data):
+    lcs_active = item_data["active"]
+    lcs_consumed = item_data["consumed"]
 
+    if lcs_active:
 
-def check_msoffice_licenses(item, params, info):
-    for name, active, warning_units, consumed in info:
-        if name == item:
-            warn, crit = params.get("usage")
-            usage = int(consumed) * 100.0 / (int(active))
-            state = 0
-            infotext = "Consumed: %s of %s (%.2f%%)" % (consumed, active, usage)
-            if usage >= crit:
-                state = 2
-            elif usage >= warn:
-                state = 1
-            if state:
-                infotext += " (warn/crit at %s%%/%s%%)" % (warn, crit)
-            yield (state, infotext, [
-                ("licenses", int(consumed)),
-                ("licenses_total", int(active)),
-                ("license_percentage", usage, warn, crit, 0, 100),
-            ])
-            if int(warning_units):
-                yield 0, " Warning units: %s" % warning_units
+        warn, crit = params["usage"]
+        warn_abs, crit_abs = None, None
+        warn_perc, crit_perc = None, None
+        if isinstance(warn, float):
+            warn_perc, crit_perc = warn, crit
+        else:
+            warn_abs, crit_abs = warn, crit
+
+        # the agent plugin also gathers the last 3 unused licenses with no
+        # active licenses. To handle this, we only output consumed licenses for
+        # licenses with active ones
+        yield check_levels(
+            lcs_consumed,
+            "licenses",
+            (warn_abs, crit_abs),
+            human_readable_func=int,
+            infoname="Consumed licenses",
+        )
+
+        yield (
+            0,
+            "Active licenses: %s" % lcs_active,
+            [("licenses_total", lcs_active)],
+        )
+
+        usage = lcs_consumed * 100.0 / (lcs_active)
+        yield check_levels(
+            usage,
+            "license_percentage",
+            (warn_perc, crit_perc),
+            human_readable_func=get_percent_human_readable,
+            infoname="Usage",
+            boundaries=(0, 100),
+        )
+
+    else:
+        yield 0, "No active licenses"
+        return
+
+    lcs_warning_units = item_data["warning_units"]
+    if lcs_warning_units:
+        yield 0, " Warning units: %s" % lcs_warning_units
 
 
 check_info["msoffice_licenses"] = {
-    "inventory_function": inventory_msoffice_licenses,
+    "parse_function": parse_msoffice_licenses,
+    "inventory_function": discover(),
     "check_function": check_msoffice_licenses,
     "service_description": "MS Office Licenses %s",
     "has_perfdata": True,

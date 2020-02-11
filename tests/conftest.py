@@ -3,7 +3,7 @@
 
 from __future__ import print_function
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 pytest.register_assert_rewrite(
     "testlib",  #

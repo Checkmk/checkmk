@@ -24,14 +24,20 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from typing import Dict, Text  # pylint: disable=unused-import
 from cmk.utils.regex import regex
+from cmk.utils.type_defs import HostName, ServiceName  # pylint: disable=unused-import
+
+TranslationOptions = Dict  # TODO: Improve this type
 
 
 def translate_hostname(translation, hostname):
+    # type: (TranslationOptions, Text) -> Text
     return _translate(translation, hostname)
 
 
 def translate_service_description(translation, service_description):
+    # type: (TranslationOptions, ServiceName) -> ServiceName
     if service_description.strip() in \
         ["Check_MK", "Check_MK Agent",
          "Check_MK Discovery", "Check_MK inventory",
@@ -41,6 +47,7 @@ def translate_service_description(translation, service_description):
 
 
 def _translate(translation, name):
+    # type: (TranslationOptions, Text) -> Text
     # 1. Case conversion
     caseconf = translation.get("case")
     if caseconf == "upper":
@@ -54,7 +61,7 @@ def _translate(translation, name):
 
     # 3. Multiple regular expression conversion
     if isinstance(translation.get("regex"), tuple):
-        translations = [translation.get("regex")]
+        translations = [translation["regex"]]
     else:
         translations = translation.get("regex", [])
 

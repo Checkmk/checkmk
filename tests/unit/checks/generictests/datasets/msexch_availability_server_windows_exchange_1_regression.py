@@ -47,6 +47,6 @@ info = [[
 discovery = {'': [(None, None)]}
 
 checks = {
-    '': [(None, {}, [(0, '0.00 requests/sec', [('requests_per_sec', 0.0, None, None, None,
+    '': [(None, {}, [(0, 'Requests/sec: 0.00', [('requests_per_sec', 0.0, None, None, None,
                                                 None)])])]
 }

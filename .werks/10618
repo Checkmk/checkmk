@@ -1,0 +1,24 @@
+Title: New versioning of CMC configs
+Class: feature
+Compatible: incomp
+Component: core
+Date: 1578489058
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+The config files to CMC are now versioned.
+
+When the core detects an incompatible version, it
+provides instructions to the user to generate a
+new configuration instead of crashing with a
+segmentation fault.
+
+The new versioning scheme is consistent with the
+versioning of the state files.
+
+<b>Note:</b>
+
+This patch <b>requires</b> that the configuration be
+generated once more with <tt>cmk -U</tt>.

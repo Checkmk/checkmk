@@ -94,7 +94,7 @@ def parse_nimble_read_latency(info):
 
 
 def inventory_nimble_latency(parsed, ty):
-    for vol_name, vol_attrs in parsed.iteritems():
+    for vol_name, vol_attrs in parsed.items():
         if ty in vol_attrs:
             yield vol_name, {}
 
@@ -105,7 +105,7 @@ def _check_nimble_latency(item, params, data, ty):
         return
 
     timestamp = time.time()
-    for (key, title), value in ty_data.iteritems():
+    for (key, title), value in ty_data.items():
         rate = get_rate("nimble_%s_latency.%s.%s" % (ty, item, key), timestamp, value)
 
         yield 0, None, [("nimble_%s_latency_%s" % (ty, key.replace(".", "")), rate)]

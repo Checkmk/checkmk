@@ -23,6 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableEventConsole.h"
+
+#include <filesystem>
 #include <iosfwd>
 #include <iostream>
 #include <memory>
@@ -30,6 +32,7 @@
 #include <stdexcept>
 #include <unordered_set>
 #include <utility>
+
 #include "Column.h"
 #include "EventConsoleConnection.h"
 #include "Logger.h"
@@ -72,7 +75,7 @@ private:
         os << "GET " << table_.name().substr(12);
     }
 
-    void emitOutputFormat(std::ostream &os) const {
+    static void emitOutputFormat(std::ostream &os) {
         os << "\nOutputFormat: plain";
     }
 

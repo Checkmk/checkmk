@@ -1,0 +1,16 @@
+Title: mcafee_av_client: Revised detection of McAfee plugin on 64 and 32 bit systems
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1574930286
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+The old plugin was first executing the 64 bit check. If there is no output it
+executes the 32 bit check. If no registry entries are found, it prints an error
+message.
+
+The check is now executed matching the architecture of the operating system and
+avoids unnecessary error message in plugin output.

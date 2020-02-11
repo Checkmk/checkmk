@@ -4,6 +4,11 @@ import pytest
 
 import cmk.utils.paths
 import cmk.gui.watolib.groups as groups
+import cmk.gui.htmllib as htmllib
+from cmk.gui.http import Request, Response
+from cmk.gui.globals import AppContext, RequestContext
+from werkzeug.test import create_environ
+from testlib.utils import DummyApplication
 
 
 @pytest.fixture(autouse=True)
@@ -18,9 +23,12 @@ def patch_config_paths(monkeypatch, tmp_path):
 
 
 def test_load_group_information_empty(tmp_path):
-    assert groups.load_contact_group_information() == {}
-    assert groups.load_host_group_information() == {}
-    assert groups.load_service_group_information() == {}
+    environ = dict(create_environ(), REQUEST_URI='')
+    with AppContext(DummyApplication(environ, None)), \
+         RequestContext(htmllib.html(Request(environ), Response(is_secure=False))):
+        assert groups.load_contact_group_information() == {}
+        assert groups.load_host_group_information() == {}
+        assert groups.load_service_group_information() == {}
 
 
 def test_load_group_information(tmp_path):
@@ -62,44 +70,47 @@ multisite_contactgroups = {
 }
 """)
 
-    assert groups._load_group_information() == {
-        'contact': {
+    environ = dict(create_environ(), REQUEST_URI='')
+    with AppContext(DummyApplication(environ, None)), \
+         RequestContext(htmllib.html(Request(environ), Response(is_secure=False))):
+        assert groups._load_group_information() == {
+            'contact': {
+                'all': {
+                    'alias': u'Everything',
+                    "d!ng": "dong",
+                }
+            },
+            'host': {
+                'all_hosts': {
+                    'alias': u'All hosts :-)',
+                    "ding": "dong",
+                }
+            },
+            'service': {
+                'all_services': {
+                    'alias': u'All s\xe4rvices',
+                    "d1ng": "dong",
+                }
+            },
+        }
+
+        assert groups.load_contact_group_information() == {
             'all': {
                 'alias': u'Everything',
                 "d!ng": "dong",
             }
-        },
-        'host': {
+        }
+
+        assert groups.load_host_group_information() == {
             'all_hosts': {
                 'alias': u'All hosts :-)',
                 "ding": "dong",
             }
-        },
-        'service': {
+        }
+
+        assert groups.load_service_group_information() == {
             'all_services': {
                 'alias': u'All s\xe4rvices',
                 "d1ng": "dong",
             }
-        },
-    }
-
-    assert groups.load_contact_group_information() == {
-        'all': {
-            'alias': u'Everything',
-            "d!ng": "dong",
         }
-    }
-
-    assert groups.load_host_group_information() == {
-        'all_hosts': {
-            'alias': u'All hosts :-)',
-            "ding": "dong",
-        }
-    }
-
-    assert groups.load_service_group_information() == {
-        'all_services': {
-            'alias': u'All s\xe4rvices',
-            "d1ng": "dong",
-        }
-    }

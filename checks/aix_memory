@@ -58,9 +58,6 @@
 # output from /proc/meminfo. AIX speaks of 4k pages while Linux of kilobytes.
 def parse_aix_memory(info):
     parsed = {}
-    # In case that the system dont have swap configured
-    parsed["SwapTotal"] = 0
-    parsed["SwapFree"] = 0
     for line in info:
         if line[0] == "allocated":  # Swap space
             parsed["SwapTotal"] = int(line[2]) * 4
@@ -76,21 +73,21 @@ def parse_aix_memory(info):
     return parsed
 
 
-def check_aix_memory(_no_item, params, info):
-    meminfo = parse_aix_memory(info)
-    return check_memory(params, meminfo)
+def inventory_aix_memory(parsed):
+    if "MemFree" in parsed:
+        yield None, {}
 
 
-def inventory_aix_memory(info):
-    meminfo = parse_aix_memory(info)
-    if "MemFree" in meminfo:
-        return [(None, {})]
+def check_aix_memory(_no_item, params, parsed):
+    for subresult in check_memory(params, parsed):
+        yield subresult
 
 
 check_info['aix_memory'] = {
-    "check_function": check_aix_memory,
+    "parse_function": parse_aix_memory,
     "inventory_function": inventory_aix_memory,
-    "service_description": "Memory used",
+    "check_function": check_aix_memory,
+    "service_description": "Memory",
     "has_perfdata": True,
     "group": "memory",
     "default_levels_variable": "memory_default_levels",

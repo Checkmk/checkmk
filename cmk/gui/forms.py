@@ -1,32 +1,15 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import base64
 import six
 
+from cmk.utils.encoding import ensure_unicode
+
+import cmk.gui.escaping as escaping
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -244,12 +227,11 @@ def header(title, isopen=True, table_id="", narrow=False, css=None):
     html.open_table(id_=table_id if table_id else None,
                     class_=["nform", "narrow" if narrow else None, css if css else None])
 
-    html.begin_foldable_container(
-        treename=html.form_name if html.form_name else "nform",
-        id_=base64.b64encode(title.encode("utf-8") if isinstance(title, six.text_type) else title),
-        isopen=isopen,
-        title=title,
-        indent="nform")
+    html.begin_foldable_container(treename=html.form_name if html.form_name else "nform",
+                                  id_=ensure_unicode(base64.b64encode(six.ensure_binary(title))),
+                                  isopen=isopen,
+                                  title=title,
+                                  indent="nform")
     html.tr(html.render_td('', colspan=2))
     g_header_open = True
     g_section_open = False
@@ -287,8 +269,8 @@ def section(title=None,
         html.open_td(class_=["legend", "simple" if simple else None])
         if title:
             html.open_div(class_=["title", "withcheckbox" if checkbox else None],
-                          title=html.strip_tags(title))
-            html.write(html.permissive_attrencode(title))
+                          title=escaping.strip_tags(title))
+            html.write(escaping.escape_text(title))
             html.span('.' * 200, class_="dots")
             html.close_div()
         if checkbox:

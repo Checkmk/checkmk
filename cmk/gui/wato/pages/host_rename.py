@@ -1,28 +1,9 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """Modes for renaming one or multiple existing hosts"""
 
 import os
@@ -72,7 +53,7 @@ from cmk.gui.plugins.wato import (
 try:
     import cmk.gui.cee.plugins.wato.alert_handling as alert_handling
 except ImportError:
-    alert_handling = None  # type: ignore
+    alert_handling = None  # type: ignore[assignment]
 
 
 @gui_background_job.job_registry.register
@@ -84,18 +65,14 @@ class RenameHostsBackgroundJob(watolib.WatoBackgroundJob):
         return _("Host renaming")
 
     def __init__(self, title=None):
-        if not title:
-            title = _("Host renaming")
-
-        kwargs = {}
-        kwargs["title"] = title
-        kwargs["lock_wato"] = True
-        kwargs["stoppable"] = False
         last_job_status = watolib.WatoBackgroundJob(self.job_prefix).get_status()
-        if "duration" in last_job_status:
-            kwargs["estimated_duration"] = last_job_status["duration"]
-
-        super(RenameHostsBackgroundJob, self).__init__(self.job_prefix, **kwargs)
+        super(RenameHostsBackgroundJob, self).__init__(
+            self.job_prefix,
+            title=title or self.gui_title(),
+            lock_wato=True,
+            stoppable=False,
+            estimated_duration=last_job_status.get("duration"),
+        )
 
         if self.is_active():
             raise MKGeneralException(_("Another renaming operation is currently in progress"))
@@ -539,7 +516,7 @@ def rename_host_in_event_rules(oldname, newname):
 
     users = userdb.load_users(lock=True)
     some_user_changed = False
-    for user in users.itervalues():
+    for user in users.values():
         if user.get("notification_rules"):
             rules = user["notification_rules"]
             num_changed = rename_in_event_rules(rules)
@@ -562,7 +539,7 @@ def rename_host_in_event_rules(oldname, newname):
                 alert_handling.save_alert_handler_rules(rules)
 
     # Notification channels of flexible notifications also can have host conditions
-    for user in users.itervalues():
+    for user in users.values():
         method = user.get("notification_method")
         if method and isinstance(method, tuple) and method[0] == "flexible":
             channels_changed = 0
@@ -598,7 +575,7 @@ def rename_host_in_multisite(oldname, newname):
 
         favpath = config.config_dir + "/" + userid + "/favorites.mk"
         num_changed = 0
-        favorites = store.load_data_from_file(favpath, [], lock=True)
+        favorites = store.load_object_from_file(favpath, default=[], lock=True)
         for nr, entry in enumerate(favorites):
             if entry == oldname:
                 favorites[nr] = newname
@@ -608,7 +585,7 @@ def rename_host_in_multisite(oldname, newname):
                 num_changed += 1
 
         if num_changed:
-            store.save_data_to_file(favpath, favorites)
+            store.save_object_to_file(favpath, favorites)
             users_changed += 1
             total_changed += num_changed
         store.release_lock(favpath)

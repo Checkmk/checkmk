@@ -1,4 +1,7 @@
+// builds windows agent
+
 properties([
+    buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
     pipelineTriggers([pollSCM('H/2 * * * *')])
 ])
 
@@ -6,7 +9,7 @@ node ('windows') {
     stage('git checkout') {
         checkout(scm)
     }
-    stage('windows agent build') {
+    stage('Windows agent build') {
         bat 'cd agents\\wnx && call build_release.cmd'
         dir('artefacts') {
             archiveArtifacts "*"

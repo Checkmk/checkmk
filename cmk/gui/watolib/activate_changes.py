@@ -1,40 +1,23 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import errno
 import ast
 import os
 import shutil
 import time
+from typing import List, Tuple, Union  # pylint: disable=unused-import
 import multiprocessing
 
 import cmk.utils
 import cmk.utils.daemon as daemon
 import cmk.utils.store as store
 import cmk.utils.render as render
+
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.utils
 import cmk.gui.hooks as hooks
@@ -43,6 +26,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.config as config
 import cmk.gui.multitar as multitar
 import cmk.gui.log as log
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
 from cmk.gui.log import logger
@@ -88,7 +72,7 @@ ACTIVATION_TIME_PROFILE_SYNC = "profile-sync"
 var_dir = cmk.utils.paths.var_dir + "/wato/"
 
 # Directories and files to synchronize during replication
-_replication_paths = []
+_replication_paths = []  # type: List[Union[Tuple[str, str, str], Tuple[str, str, str, List[str]]]]
 
 
 def add_replication_paths(paths):
@@ -106,7 +90,7 @@ def get_replication_paths():
         # Also replicate the user-settings of Multisite? While the replication
         # as such works pretty well, the count of pending changes will not
         # know.
-        ("dir", "usersettings", cmk.utils.paths.var_dir + "/web"),
+        ("dir", "usersettings", cmk.utils.paths.var_dir + "/web", ["*/report-thumbnails"]),
         ("dir", "mkps", cmk.utils.paths.var_dir + "/packages"),
         ("dir", "local", cmk.utils.paths.omd_root + "/local"),
     ]
@@ -121,21 +105,25 @@ def get_replication_paths():
     # Include rule configuration into backup/restore/replication. Current
     # status is not backed up.
     if config.mkeventd_enabled:
-        _rule_pack_dir = str(cmk.ec.export.rule_pack_dir())
+        _rule_pack_dir = str(ec.rule_pack_dir())
         paths.append(("dir", "mkeventd", _rule_pack_dir, ["sitespecific.mk"]))
 
-        _mkp_rule_pack_dir = str(cmk.ec.export.mkp_rule_pack_dir())
+        _mkp_rule_pack_dir = str(ec.mkp_rule_pack_dir())
         paths.append(("dir", "mkeventd_mkp", _mkp_rule_pack_dir))
 
     return paths + _replication_paths
 
 
 def _load_site_replication_status(site_id, lock=False):
-    return store.load_data_from_file(_site_replication_status_path(site_id), {}, lock)
+    return store.load_object_from_file(
+        _site_replication_status_path(site_id),
+        default={},
+        lock=lock,
+    )
 
 
 def _save_site_replication_status(site_id, repl_status):
-    store.save_data_to_file(_site_replication_status_path(site_id), repl_status, pretty=False)
+    store.save_object_to_file(_site_replication_status_path(site_id), repl_status, pretty=False)
     _cleanup_legacy_replication_status()
 
 
@@ -291,7 +279,7 @@ class ActivateChanges(object):
     # affected sites.
     def dirty_and_active_activation_sites(self):
         dirty = []
-        for site_id, site in activation_sites().iteritems():
+        for site_id, site in activation_sites().items():
             status = self._get_site_status(site_id, site)[1]
             is_online = self._site_is_online(status)
             is_logged_in = self._site_is_logged_in(site_id, site)
@@ -334,7 +322,7 @@ class ActivateChanges(object):
         manager = ActivateChangesManager()
         site_state_path = os.path.join(manager.activation_persisted_dir,
                                        manager.site_filename(site_id))
-        return store.load_data_from_file(site_state_path, {})
+        return store.load_object_from_file(site_state_path, {})
 
     def _get_last_change_id(self):
         return self._changes[-1][1]["id"]
@@ -517,7 +505,7 @@ class ActivateChangesManager(ActivateChanges):
                                               site_id)
 
     def _load_activation(self):
-        self.__dict__.update(store.load_data_from_file(self._info_path(), {}))
+        self.__dict__.update(store.load_object_from_file(self._info_path(), {}))
 
     def _save_activation(self):
         try:
@@ -528,7 +516,7 @@ class ActivateChangesManager(ActivateChanges):
             else:
                 raise
 
-        return store.save_data_to_file(
+        return store.save_object_to_file(
             self._info_path(), {
                 "_sites": self._sites,
                 "_activate_until": self._activate_until,
@@ -701,7 +689,7 @@ class ActivateChangesManager(ActivateChanges):
                                               userdb.user_sync_default_config(site_id)),
         })
 
-        store.save_data_to_file(tmp_dir + "/sitespecific.mk", site_globals)
+        store.save_object_to_file(tmp_dir + "/sitespecific.mk", site_globals)
 
     def _start_activation(self):
         self._log_activation()
@@ -752,7 +740,7 @@ class ActivateChangesManager(ActivateChanges):
         return self._load_site_state(site_id)
 
     def _load_site_state(self, site_id):
-        return store.load_data_from_file(self.site_state_path(site_id), {})
+        return store.load_object_from_file(self.site_state_path(site_id), {})
 
     def site_state_path(self, site_id):
         return os.path.join(self.activation_tmp_base_dir, self._activation_id,
@@ -913,7 +901,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         manager.activate_until()
 
     def _set_done_result(self, configuration_warnings):
-        if any(configuration_warnings.itervalues()):
+        if any(configuration_warnings.values()):
             self._warnings = configuration_warnings
             details = self._render_warnings(configuration_warnings)
             self._set_result(PHASE_DONE, _("Activated"), details, state=STATE_WARNING)
@@ -927,7 +915,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         for domain, warnings in sorted(configuration_warnings.items()):
             for warning in warnings:
                 html_code += "<li>%s: %s</li>" % \
-                    (html.attrencode(domain), html.attrencode(warning))
+                    (escaping.escape_attribute(domain), escaping.escape_attribute(warning))
         html_code += "</ul>"
         html_code += "</div>"
         return html_code
@@ -1023,7 +1011,8 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             return ast.literal_eval(response_text)
         except SyntaxError:
             raise cmk.gui.watolib.automations.MKAutomationException(
-                _("Garbled automation response: <pre>%s</pre>") % (html.attrencode(response_text)))
+                _("Garbled automation response: <pre>%s</pre>") %
+                (escaping.escape_attribute(response_text)))
 
     def _upload_file(self, url, insecure):
         return cmk.gui.watolib.automations.get_url(
@@ -1131,7 +1120,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                                   self._activation_id,
                                   ActivateChangesManager.site_filename(self._site_id))
 
-        return store.save_data_to_file(
+        return store.save_object_to_file(
             state_path, {
                 "_site_id": self._site_id,
                 "_phase": self._phase,

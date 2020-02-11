@@ -156,7 +156,7 @@ def inventory_brocade_optical(parsed):
     match_desc = settings.get('match_desc')
 
     if parsed:
-        pad_width = max([int(len(key)) for key in parsed.keys()])
+        pad_width = max(map(len, parsed))
     else:
         pad_width = 0
 
@@ -168,7 +168,7 @@ def inventory_brocade_optical(parsed):
                 return True
         return False
 
-    for key, entry in parsed.iteritems():
+    for key, entry in parsed.items():
         if (entry['port_type'] in porttypes and entry['operational_status'] in portstates and
                 port_match(entry['description'], match_desc)):
             # if pad_width == 0 then "0" * -X == ""
@@ -214,11 +214,17 @@ def check_brocade_optical(item, params, parsed):
         else:
             yield 0, 'Operational %s' % oper_status_readable
 
-        if 'temp' in iface and iface['temp'][0] is not None:
-            yield check_temperature(iface['temp'][0],
-                                    params,
-                                    "brocade_optical_%s" % item,
-                                    dev_status=nagios_state(iface, 'temp'))
+        try:
+            temp = iface['temp'][0]
+        except KeyError:
+            temp = None
+        if temp is not None:
+            yield check_temperature(
+                temp,
+                params,
+                "brocade_optical_%s" % item,
+                dev_status=nagios_state(iface, 'temp'),
+            )
 
         if 'tx_light' in iface and iface['tx_light'][0] is not None:
             yield nagios_state(iface, 'tx_light'), infotext(iface['tx_light'], "TX Light", "dBm"),\
@@ -229,7 +235,7 @@ def check_brocade_optical(item, params, parsed):
                 [("rx_light", iface['rx_light'][0])]
 
         if 'lanes' in iface and params.get('lanes', False):
-            for num, lane in iface['lanes'].iteritems():
+            for num, lane in iface['lanes'].items():
                 state, text, perf = check_temperature(lane['temp'][0],
                                                       params,
                                                       "brocade_optical_lane%d_%s" % (num, item),

@@ -122,7 +122,7 @@ def check_oracle_sql(item, params, parsed):
         return
 
     data = parsed[item]
-    for (error_key, error_title, error_state), error_lines in data["parsing_error"].iteritems():
+    for (error_key, error_title, error_state), error_lines in data["parsing_error"].items():
         error_state = params.get("%s_error_state" % error_key, error_state)
         yield error_state, "%s: %s" % (error_title, " ".join(error_lines))
 

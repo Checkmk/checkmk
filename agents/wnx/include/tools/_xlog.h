@@ -413,6 +413,10 @@ namespace xlog {
 
         return (int)strlen(Output);
     }
+    void internal_Print2Buffer(const wchar_t *Prefix, wchar_t *Buf, int Len,
+                               const wchar_t *Format, ...);
+    void internal_Print2Buffer(const wchar_t *Prefix, char *Buf, int Len,
+                               const char *Format, ...);
 
     // Windows Event Log VERY BASIC support
     enum LogEvents {
@@ -554,7 +558,7 @@ using WorkString = std::basic_string<T>;
 
     auto file_ptr = std::fopen(FileName, "a");
     if (!file_ptr) {
-#if defined(_WIN32)
+#if defined(_WIN32) && _MSC_VER < 1920
         auto error = GetLastError();
         xlog::l("You have error %d opening file %s", error, FileName);
 #else
@@ -688,12 +692,12 @@ inline void internal_PrintStringStdio(const char *Txt) { printf("%s", Txt); };
         }
 
         // MOVE CREATE
-        TextInfo(TextInfo &&Rhs) {
+        TextInfo(TextInfo &&Rhs) noexcept {
             text_ = Rhs.text_;
             Rhs.text_ = nullptr;
         }
 
-        TextInfo &operator=(TextInfo &&Rhs) {
+        TextInfo &operator=(TextInfo &&Rhs) noexcept {
             delete[] text_;
             text_ = Rhs.text_;
             Rhs.text_ = nullptr;
@@ -877,9 +881,6 @@ inline void internal_PrintStringStdio(const char *Txt) { printf("%s", Txt); };
         }
     };
 
-    void internal_Print2Buffer(const wchar_t *Prefix, wchar_t *Buf, int Len,
-                               const wchar_t *Format, ...);
-
     inline void internal_Print2Buffer(const wchar_t *Prefix, char *Buf, int Len,
                                       const char *Format, ...) {
         va_list args;
@@ -951,9 +952,11 @@ inline void internal_PrintStringStdio(const char *Txt) { printf("%s", Txt); };
         Buf[len + 1] = 0;
     }
 
+#pragma warning(push)
+#pragma warning(disable : 26444)
     template <typename T, typename... Args>
-    inline TextInfo<T> internal_dout(const LogParam &Param, const T *Format,
-                                     Args &&... args) {
+    [[maybe_unused]] inline TextInfo<T> internal_dout(
+        const LogParam &Param, const T *Format, Args &&... args) {
         T buf[kInternalMaxOut];
 
         internal_Print2Buffer(
@@ -981,6 +984,7 @@ inline void internal_PrintStringStdio(const char *Txt) { printf("%s", Txt); };
 
         return TextInfo<T>(buf + offset);
     }
+#pragma warning(pop)
 
     // Common API
     template <typename T, typename... Args>
@@ -991,7 +995,7 @@ inline void internal_PrintStringStdio(const char *Txt) { printf("%s", Txt); };
 #endif
 #if defined(XLOG_DEBUG)
         LogParam log_param;
-        internal_dout(log_param, Format, std::forward<Args>(args)...);
+        auto _ = internal_dout(log_param, Format, std::forward<Args>(args)...);
 #else
     // return TextInfo<T>((const T*)nullptr);
 #endif
@@ -1026,9 +1030,10 @@ inline void internal_PrintStringStdio(const char *Txt) { printf("%s", Txt); };
     // TextInfo<T>((const T*)nullptr);
 #endif
     }
-
+#pragma warning(push)
+#pragma warning(disable : 26444)
     template <typename T, typename... Args>
-    inline TextInfo<T> l(const T *Format, Args &&... args) {
+    [[maybe_unused]] inline TextInfo<T> l(const T *Format, Args &&... args) {
 #if defined(XLOG_LIMITED_BUILD)
         static_assert(sizeof(T) == 1,
                       "Wide Char output for the target is not possible");
@@ -1044,7 +1049,8 @@ inline void internal_PrintStringStdio(const char *Txt) { printf("%s", Txt); };
     }
 
     template <typename T, typename... Args>
-    inline TextInfo<T> l(bool Enable, const T *Format, Args &&... args) {
+    [[maybe_unused]] inline TextInfo<T> l(bool Enable, const T *Format,
+                                          Args &&... args) {
 #if defined(XLOG_LIMITED_BUILD)
         static_assert(sizeof(T) == 1,
                       "Wide Char output for the target is not possible");
@@ -1060,6 +1066,8 @@ inline void internal_PrintStringStdio(const char *Txt) { printf("%s", Txt); };
     return k;
 #endif
     }
+
+#pragma warning(pop)
 
     // rare API
     inline void dumpBinData(const char *Marker, const void *Data,

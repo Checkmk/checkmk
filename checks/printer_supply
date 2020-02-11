@@ -62,11 +62,30 @@ check_config_variables.append("printer_supply_some_remaining_status")
 # Fix name for toners in DELL devices that have serial
 # numbers in item name
 
+# Additional unit info; scale to canonical values?
+map_unit = {
+    "1": "other",
+    "2": "unknown",
+    "3": "ten thousandths of inches",
+    "4": "micrometers",
+    "7": "impressions",
+    "8": "sheets",
+    "11": "hours",
+    "12": "thousandths of ounces",
+    "13": "tenths of grams",
+    "14": "hundreths of fluid ounces",
+    "15": "tenths of milliliters",
+    "16": "feet",
+    "17": "meters",
+    "18": "items",
+    "19": "%",
+}
+
 
 def printer_supply_fix_infos(info):
     colors = []
     new_info = []
-    for index, (description, max_capacity, level, class_, color) in enumerate(info):
+    for index, (description, unit_info, max_capacity, level, class_, color) in enumerate(info):
         # give chance for latin1->utf8 decoding
         line_0 = description
 
@@ -85,7 +104,7 @@ def printer_supply_fix_infos(info):
         if " S/N:" in line_0:
             line_0 = line_0[:line_0.find(" S/N:")]
 
-        new_info.append([line_0, max_capacity, level, class_, color])
+        new_info.append([line_0, unit_info, max_capacity, level, class_, color])
     return new_info
 
 
@@ -94,7 +113,8 @@ def inventory_printer_supply(info):
     # Also fix trailing zero bytes (seen on HP Jetdirect 143)
     return [
         (description.rstrip('\0'), {})
-        for description, max_capacity, level, _class, _color in printer_supply_fix_infos(info)
+        for description, _unit_info, max_capacity, level, _class, _color in
+        printer_supply_fix_infos(info)
         # ignore useless devices
         if not (max_capacity == '-2' and level == '-2') and level and len(max_capacity) > 0
     ]
@@ -110,7 +130,8 @@ def check_printer_supply(item, params, info):
                 "upturn_toner": params[2],
             }
 
-    for description, max_capacity, level, class_, color in printer_supply_fix_infos(info):
+    for description, unit_info, max_capacity, level, class_, color in printer_supply_fix_infos(
+            info):
         if description.rstrip('\0') == item:
             max_capacity = int(max_capacity)
             level = saveint(level)
@@ -125,8 +146,10 @@ def check_printer_supply(item, params, info):
                 max_capacity = 100
 
             warn, crit = params["levels"]
-            perfdata = [("pages", level, warn / 100.0 * max_capacity, crit / 100.0 * max_capacity,
-                         0, max_capacity)]
+            # Levels are in percent, SuppliesMaxCapacity and SuppliesLevel have different units:
+            # see Printer-MIB::prtMarkerSuppliesSupplyUnit::PrtMarkerSuppliesSupplyUnitTC
+            perfdata = [("pages", level, 0.01 * warn * max_capacity, 0.01 * crit * max_capacity, 0,
+                         max_capacity)]
 
             # handle cases with partial data
             if max_capacity == -2 or level in [-3, -2, -1]:  # no percentage possible
@@ -166,6 +189,16 @@ def check_printer_supply(item, params, info):
                 state = 1
             if state:
                 infotext += " (warn/crit at %.0f%%/%.0f%%)" % (warn, crit)
+
+            unit = map_unit.get(unit_info)
+            if unit in (None, "other", "unknown"):
+                unit = ""
+            elif unit == "%":
+                # No space in between
+                pass
+            else:
+                unit = " %s" % unit
+            infotext += ", Supply: %s of max. %s%s" % (level, max_capacity, unit)
             return state, infotext, perfdata
 
 
@@ -177,6 +210,7 @@ check_info["printer_supply"] = {
         '.1.3.6.1.2.1.43',
         [
             '11.1.1.6',  # Printer-MIB::prtMarkerSuppliesDescription
+            '11.1.1.7',  # Printer-MIB::prtMarkerSuppliesUnit
             '11.1.1.8',  # Printer-MIB::prtMarkerSuppliesMaxCapacity
             '11.1.1.9',  # Printer-MIB::prtMarkerSuppliesLevel
             '11.1.1.4',  # Printer-MIB::prtMarkerSuppliesClass

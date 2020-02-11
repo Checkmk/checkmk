@@ -1,45 +1,29 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """Mode for managing sites"""
 
 import traceback
 import time
 import multiprocessing
-import Queue
 import socket
 import contextlib
 import binascii
+
 import typing  # pylint: disable=unused-import
-from typing import Text, TypeVar, List, Dict, NamedTuple  # pylint: disable=unused-import
-from OpenSSL import crypto, SSL
+from typing import Dict, List, NamedTuple, Text, Union  # pylint: disable=unused-import
+
+import six
+from OpenSSL import crypto
+from OpenSSL import SSL  # type: ignore[attr-defined]
 # mypy can't find x509 for some reason (is a c extension involved?)
-from cryptography.x509.oid import ExtensionOID, NameOID  # type: ignore
-from cryptography import x509  # type: ignore
-from cryptography.hazmat.backends import default_backend  # type: ignore
-from cryptography.hazmat.primitives import hashes  # type: ignore
+from cryptography.x509.oid import ExtensionOID, NameOID  # type: ignore[import]
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
 
 import cmk
 import cmk.gui.config as config
@@ -333,13 +317,13 @@ class ModeEditSite(WatoMode):
                  title=_("URL prefix"),
                  size=60,
                  help=
-                 _("The URL prefix will be prepended to links of addons like PNP4Nagios "
-                   "or the classical Nagios GUI when a link to such applications points to a host or "
+                 _("The URL prefix will be prepended to links of addons like NagVis "
+                   "when a link to such applications points to a host or "
                    "service on that site. You can either use an absolute URL prefix like <tt>http://some.host/mysite/</tt> "
                    "or a relative URL like <tt>/mysite/</tt>. When using relative prefixes you needed a mod_proxy "
                    "configuration in your local system apache that proxies such URLs to the according remote site. "
                    "Please refer to the <a target=_blank href='%s'>online documentation</a> for details. "
-                   "The prefix should end with a slash. Omit the <tt>/pnp4nagios/</tt> from the prefix."
+                   "The prefix should end with a slash. Omit the <tt>/nagvis/</tt> from the prefix."
                   ) % proxy_docu_url,
                  allow_empty=True,
              )),
@@ -526,10 +510,10 @@ class ModeDistributedMonitoring(WatoMode):
                   "assigned to it. You can use the <a href=\"%s\">host "
                   "search</a> to get a list of the hosts.") % search_url)
 
-
-        c = wato_confirm(_("Confirm deletion of site %s") % html.render_tt(delete_id),
-                         _("Do you really want to delete the connection to the site %s?") % \
-                         html.render_tt(delete_id))
+        c = wato_confirm(
+            _("Confirm deletion of site %s") % html.render_tt(delete_id),
+            _("Do you really want to delete the connection to the site %s?") %
+            html.render_tt(delete_id))
         if c:
             self._site_mgmt.delete_site(delete_id)
             return None
@@ -542,9 +526,9 @@ class ModeDistributedMonitoring(WatoMode):
     def _action_logout(self, logout_id):
         configured_sites = self._site_mgmt.load_sites()
         site = configured_sites[logout_id]
-        c = wato_confirm(_("Confirm logout"),
-                         _("Do you really want to log out of '%s'?") % \
-                         html.render_tt(site["alias"]))
+        c = wato_confirm(
+            _("Confirm logout"),
+            _("Do you really want to log out of '%s'?") % html.render_tt(site["alias"]))
         if c:
             if "secret" in site:
                 del site["secret"]
@@ -642,7 +626,7 @@ class ModeDistributedMonitoring(WatoMode):
         sites = sort_sites(self._site_mgmt.load_sites())
 
         if cmk.is_demo():
-            html.show_info(_get_demo_message())
+            html.show_message(_get_demo_message())
 
         html.div("", id_="message_container")
         with table_element(
@@ -824,7 +808,7 @@ PingResult = NamedTuple("PingResult", [
 ReplicationStatus = NamedTuple("ReplicationStatus", [
     ("site_id", str),
     ("success", bool),
-    ("response", TypeVar("ReplicationResponse", PingResult, Exception)),
+    ("response", Union[PingResult, Exception]),
 ])
 
 
@@ -855,7 +839,7 @@ class ReplicationStatusFetcher(object):
                 result = result_queue.get_nowait()
                 result_queue.task_done()
                 results_by_site[result.site_id] = result
-            except Queue.Empty:
+            except six.moves.queue.Empty:
                 time.sleep(0.5)  # wait some time to prevent CPU hogs
 
             except Exception as e:
@@ -1127,7 +1111,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
     def page(self):
         if not is_livestatus_encrypted(self._site):
-            html.show_info(
+            html.show_message(
                 _("The livestatus connection to this site configured not to be encrypted."))
             return
 
@@ -1213,8 +1197,8 @@ class ModeSiteLivestatusEncryption(WatoMode):
                 CertificateDetails(
                     issued_to=get_name(crypto_cert.subject),
                     issued_by=get_name(crypto_cert.issuer),
-                    valid_from=crypto_cert.not_valid_before,
-                    valid_till=crypto_cert.not_valid_after,
+                    valid_from=six.text_type(crypto_cert.not_valid_before),
+                    valid_till=six.text_type(crypto_cert.not_valid_after),
                     signature_algorithm=crypto_cert.signature_hash_algorithm.name,
                     digest_sha256=binascii.hexlify(crypto_cert.fingerprint(hashes.SHA256())),
                     serial_number=crypto_cert.serial_number,

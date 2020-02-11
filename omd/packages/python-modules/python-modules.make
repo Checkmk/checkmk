@@ -2,19 +2,20 @@ PYTHON_MODULES := python-modules
 PYTHON_MODULES_VERS := $(OMD_VERSION)
 PYTHON_MODULES_DIR := $(PYTHON_MODULES)-$(PYTHON_MODULES_VERS)
 
-PYTHON_MODULES_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON_MODULES_DIR)-build
-PYTHON_MODULES_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON_MODULES_DIR)-install
 PYTHON_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON_MODULES_DIR)-unpack
 # The custom patching rule for python-modules needs to be called
 PYTHON_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON_MODULES_DIR)-patching-c
+PYTHON_MODULES_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON_MODULES_DIR)-build
+PYTHON_MODULES_INTERMEDIATE_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON_MODULES_DIR)-install-intermediate
+PYTHON_MODULES_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON_MODULES_DIR)-install
 
-.PHONY: $(PYTHON_MODULES) $(PYTHON_MODULES)-install $(PYTHON_MODULES)-clean
+PYTHON_MODULES_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(PYTHON_MODULES_DIR)
+PYTHON_MODULES_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(PYTHON_MODULES_DIR)
+PYTHON_MODULES_WORK_DIR := $(PACKAGE_WORK_DIR)/$(PYTHON_MODULES_DIR)
 
-$(PYTHON_MODULES): $(PYTHON_MODULES_BUILD)
-
-$(PYTHON_MODULES)-install: $(PYTHON_MODULES_INSTALL)
-
-$(PYTHON_MODULES)-patching: $(PYTHON_MODULES_PATCHING)
+# Used by other OMD packages
+PACKAGE_PYTHON_MODULES_DESTDIR    := $(PYTHON_MODULES_INSTALL_DIR)
+PACKAGE_PYTHON_MODULES_PYTHONPATH := $(PACKAGE_PYTHON_MODULES_DESTDIR)/lib/python
 
 PYTHON_MODULES_PATCHES  := $(wildcard $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/*.dif)
 
@@ -22,10 +23,10 @@ PYTHON_MODULES_LIST :=
 
 PYTHON_MODULES_LIST += setuptools_scm-3.1.0.tar.gz # needed by various setup.py
 PYTHON_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
-PYTHON_MODULES_LIST += typing-3.7.4.tar.gz # direct dependency
-PYTHON_MODULES_LIST += six-1.12.0.tar.gz # direct dependency, indirect via python-dateutil
+PYTHON_MODULES_LIST += typing-3.7.4.1.tar.gz # direct dependency
+PYTHON_MODULES_LIST += six-1.13.0.tar.gz # direct dependency, indirect via python-dateutil
 PYTHON_MODULES_LIST += python-dateutil-2.8.0.tar.gz # direct dependency
-PYTHON_MODULES_LIST += Werkzeug-0.15.5.tar.gz # direct dependency
+PYTHON_MODULES_LIST += Werkzeug-0.16.0.tar.gz # direct dependency, indirect via connexion
 
 # Modules really needed on all platforms
 PYTHON_MODULES_LIST += pysphere-0.1.7.zip
@@ -64,6 +65,7 @@ PYTHON_MODULES_LIST += cffi-1.11.5.tar.gz # needed by e.g. Pillow
 PYTHON_MODULES_LIST += Pillow-5.3.0.tar.gz # needed by reportlab (pillow>=2.4.0)
 PYTHON_MODULES_LIST += reportlab-3.5.9.tar.gz # needed by reporting
 PYTHON_MODULES_LIST += PyPDF2-1.26.0.tar.gz # needed by reporting
+PYTHON_MODULES_LIST += roman-3.2.tar.gz # needed by reporting frontmatter
 
 PYTHON_MODULES_LIST += npyscreen-4.10.5.tar.gz # needed for mkbench
 PYTHON_MODULES_LIST += psutil-5.4.7.tar.gz # needed for mkbench
@@ -147,8 +149,9 @@ PYTHON_MODULES_LIST += tinkerforge-2.1.19.tar.gz
 PYTHON_MODULES_LIST += bcrypt-3.1.4.tar.gz
 PYTHON_MODULES_LIST += PyNaCl-1.3.0.tar.gz
 
-PYTHON_MODULES_LIST += scandir-1.9.0.tar.gz
-PYTHON_MODULES_LIST += pathlib2-2.3.2.tar.gz
+PYTHON_MODULES_LIST += scandir-1.10.0.tar.gz
+# required by importlib-metadata
+PYTHON_MODULES_LIST += pathlib2-2.3.5.tar.gz
 # Added for scheduling (cmk/schedule.py)
 PYTHON_MODULES_LIST += python-snap7-0.10.tar.gz
 # Added for azure special agent
@@ -156,16 +159,16 @@ PYTHON_MODULES_LIST += PyJWT-1.6.4.tar.gz
 PYTHON_MODULES_LIST += adal-1.2.0.tar.gz
 PYTHON_MODULES_LIST += oauthlib-2.1.0.tar.gz
 PYTHON_MODULES_LIST += requests-oauthlib-1.0.0.tar.gz
-PYTHON_MODULES_LIST += configparser-3.5.1.tar.gz
+PYTHON_MODULES_LIST += configparser-4.0.2.tar.gz
 # Added for the GUI
 PYTHON_MODULES_LIST += passlib-1.7.1.tar.gz
 # Added for AWS special agent
 PYTHON_MODULES_LIST += docutils-0.14.tar.gz
 PYTHON_MODULES_LIST += futures-3.2.0.tar.gz
 PYTHON_MODULES_LIST += jmespath-0.9.3.tar.gz
-PYTHON_MODULES_LIST += botocore-1.12.43.tar.gz
-PYTHON_MODULES_LIST += s3transfer-0.1.13.tar.gz
-PYTHON_MODULES_LIST += boto3-1.9.42.tar.gz
+PYTHON_MODULES_LIST += botocore-1.13.41.tar.gz
+PYTHON_MODULES_LIST += s3transfer-0.2.1.tar.gz
+PYTHON_MODULES_LIST += boto3-1.10.41.tar.gz
 # Added for kubernetes monitoring
 PYTHON_MODULES_LIST += cachetools-3.0.0.tar.gz
 PYTHON_MODULES_LIST += rsa-4.0.tar.gz
@@ -188,39 +191,72 @@ PYTHON_MODULES_LIST += PySnooper-0.0.31.tar.gz
 # Added to support Python 3 transition
 PYTHON_MODULES_LIST += future-0.17.1.tar.gz
 # Added VCR + Dependencies for testing special agents (CMK-2414)
-PYTHON_MODULES_LIST += contextlib2-0.5.5.tar.gz
+PYTHON_MODULES_LIST += contextlib2-0.6.0.post1.tar.gz
 PYTHON_MODULES_LIST += funcsigs-1.0.2.tar.gz
 PYTHON_MODULES_LIST += mock-3.0.5.tar.gz
 PYTHON_MODULES_LIST += wrapt-1.11.2.tar.gz
 PYTHON_MODULES_LIST += vcrpy-2.1.0.tar.gz
+# required by Jinja2
+PYTHON_MODULES_LIST += MarkupSafe-1.1.1.tar.gz
+# required by Flask
+PYTHON_MODULES_LIST += itsdangerous-1.1.0.tar.gz
+PYTHON_MODULES_LIST += Jinja2-2.10.3.tar.gz
+# required by zipp
+PYTHON_MODULES_LIST += more-itertools-5.0.0.tar.gz
+# required by importlib_metadata
+PYTHON_MODULES_LIST += zipp-0.6.0.tar.gz
+# required by jsonschema
+PYTHON_MODULES_LIST += attrs-19.3.0.tar.gz
+PYTHON_MODULES_LIST += functools32-3.2.3-2.tar.gz
+PYTHON_MODULES_LIST += importlib_metadata-1.2.0.tar.gz
+PYTHON_MODULES_LIST += pyrsistent-0.15.6.tar.gz
+# required by connexion, openapi-spec-validator
+PYTHON_MODULES_LIST += jsonschema-3.2.0.tar.gz
+# required by clickclick
+PYTHON_MODULES_LIST += Click-7.0.tar.gz
+# required by connexion
+PYTHON_MODULES_LIST += clickclick-1.2.2.tar.gz
+PYTHON_MODULES_LIST += Flask-1.1.1.tar.gz
+PYTHON_MODULES_LIST += inflection-0.3.1.tar.gz
+PYTHON_MODULES_LIST += openapi-spec-validator-0.2.8.tar.gz
+# direct dependency
+PYTHON_MODULES_LIST += swagger_ui_bundle-0.0.6.tar.gz
+# patched version without dependency on pathlib
+# PYTHON_MODULES_LIST += connexion-2.4.0.tar.gz
+PYTHON_MODULES_LIST += connexion-2018.0.dev1.tar.gz
+# For forecasting graphs
+PYTHON_MODULES_LIST += numpy-1.15.4.tar.gz  # Downgraded to 1.15.4 due to https://github.com/numpy/numpy/issues/14384
 
-# NOTE: Cruel hack below! We need to have a recent GCC visible in the PATH
-# because the SSSE3 detection in pycryptodomex is slightly broken. :-/
-$(PYTHON_MODULES_BUILD): $(PYTHON_BUILD) $(FREETDS_BUILD) $(PYTHON_MODULES_PATCHING)
-	set -e ; cd $(PYTHON_MODULES_DIR) ; \
+PYTHON_MODULES_LIST += mypy_extensions-0.4.3.tar.gz  # direct dependency
+
+# NOTE: Setting SODIUM_INSTALL variable below is an extremely cruel hack to
+# avoid installing libsodium headers and libraries. The need for this hack
+# arises because of our "interesting" flag use for "setup.py install" and our
+# double installation. We should really switch to e.g. pipenv here.
+#	    export SODIUM_INSTALL="system"
+$(PYTHON_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(FREETDS_INTERMEDIATE_INSTALL) $(PYTHON_MODULES_PATCHING)
+	set -e ; cd $(PYTHON_MODULES_BUILD_DIR) ; \
+	    unset DESTDIR MAKEFLAGS ; \
 	    $(MKDIR) $(PACKAGE_PYTHON_MODULES_PYTHONPATH) ; \
 	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_MODULES_PYTHONPATH)" ; \
 	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH)" ; \
 	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include" ; \
 	    export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS)" ; \
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
-	    PATH="$(abspath ./bin):$$PATH" ; \
+	    export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
 	    for M in $(PYTHON_MODULES_LIST); do \
-		echo "Building $$M..." ; \
+		echo "=== Building $$M..." ; \
 		PKG=$${M//.tar.gz/} ; \
 		PKG=$${PKG//.zip/} ; \
-		if [ $$PKG = pysnmp-git ]; then \
-		    PKG=pysnmp-master ; \
-		fi ; \
-	    	echo $$PWD ;\
 		cd $$PKG ; \
 		$(PACKAGE_PYTHON_EXECUTABLE) setup.py build ; \
+		echo "=== Installing $$M..." ; \
 		$(PACKAGE_PYTHON_EXECUTABLE) setup.py install \
-		    --root=$(PACKAGE_PYTHON_MODULES_DESTDIR) \
+		    --root=$(PYTHON_MODULES_INSTALL_DIR) \
 		    --prefix='' \
 		    --install-data=/share \
-		    --install-platlib=/lib \
-		    --install-purelib=/lib ; \
+		    --install-platlib=/lib/python \
+		    --install-purelib=/lib/python ; \
 		cd .. ; \
 	    done
 	$(TOUCH) $@
@@ -229,14 +265,14 @@ $(PYTHON_MODULES_PATCHING): $(PYTHON_MODULES_UNPACK)
 	echo $(PYTHON_MODULES_PATCHES)
 	set -e ; for p in $$(echo $(PYTHON_MODULES_PATCHES) | tr " " "\n" | sort); do \
 	    echo "applying $$p..." ; \
-	    patch -p1 -b -d $(PYTHON_MODULES_DIR) < $$p ; \
+	    patch -p1 -b -d $(PYTHON_MODULES_BUILD_DIR) < $$p ; \
 	done
 	$(TOUCH) $@
 
 $(PYTHON_MODULES_UNPACK): $(addprefix $(PACKAGE_DIR)/$(PYTHON_MODULES)/src/,$(PYTHON_MODULES_LIST)) $(PYTHON_MODULES_PATCHES) $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches
-	$(RM) -r $(PYTHON_MODULES_DIR)
-	$(MKDIR) $(PYTHON_MODULES_DIR)
-	cd $(PYTHON_MODULES_DIR) && \
+	$(RM) -r $(PYTHON_MODULES_BUILD_DIR)
+	$(MKDIR) $(PYTHON_MODULES_BUILD_DIR)
+	cd $(PYTHON_MODULES_BUILD_DIR) && \
 	    for M in $(PYTHON_MODULES_LIST); do \
 		echo "Unpacking $$M..." ; \
 		if echo $$M | grep .tar.gz; then \
@@ -248,34 +284,28 @@ $(PYTHON_MODULES_UNPACK): $(addprefix $(PACKAGE_DIR)/$(PYTHON_MODULES)/src/,$(PY
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 
-# NOTE: Setting SODIUM_INSTALL variable below is an extremely cruel hack to
-# avoid installing libsodium headers and libraries. The need for this hack
-# arises because of our "interesting" flag use for "setup.py install" and our
-# double installation. We should really switch to e.g. pipenv here.
-$(PYTHON_MODULES_INSTALL): $(PYTHON_MODULES_BUILD)
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python
-	set -e ; cd $(PYTHON_MODULES_DIR) ; \
-	    export SODIUM_INSTALL="system" ; \
-	    export PYTHONPATH=$$PYTHONPATH:"$(PACKAGE_PYTHON_MODULES_PYTHONPATH)" ; \
-	    export PYTHONPATH=$$PYTHONPATH:"$(PACKAGE_PYTHON_PYTHONPATH)" ; \
-	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include" ; \
-	    export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS)" ; \
-	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
-	    for M in $$(ls); do \
-		echo "Installing $$M..." ; \
-		cd $$M ; \
-		$(PACKAGE_PYTHON_EXECUTABLE) setup.py install \
-		    --root=$(DESTDIR)$(OMD_ROOT) \
-		    --prefix='' \
-		    --install-data=/share \
-		    --install-platlib=/lib/python \
-		    --install-purelib=/lib/python ; \
-		cd .. ; \
-	    done
+$(PYTHON_MODULES_INTERMEDIATE_INSTALL): $(PYTHON_MODULES_BUILD)
 # Cleanup some unwanted files (example scripts)
-	find $(DESTDIR)$(OMD_ROOT)/bin -name \*.py ! -name snmpsimd.py -exec rm {} \;
+	find $(PYTHON_MODULES_INSTALL_DIR)/bin -name \*.py ! -name snmpsimd.py -exec rm {} \;
+# These files break the integration tests on the CI server. Don't know exactly
+# why this happens only there, but should be a working fix.
+	$(RM) -r $(PYTHON_MODULES_INSTALL_DIR)/share/snmpsim/data
 # Fix python interpreter for kept scripts
-	$(SED) -i '1s|^#!.*/python$$|#!/usr/bin/env python2|' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,chardetect fakebmc futurize jirashell pasteurize pbr pyghmicons pyghmiutil pyjwt pyrsa-decrypt pyrsa-encrypt pyrsa-keygen pyrsa-priv2pub pyrsa-sign pyrsa-verify virshbmc snmpsimd.py)
+	$(SED) -i '1s|^#!.*/python$$|#!/usr/bin/env python2|' $(addprefix $(PYTHON_MODULES_INSTALL_DIR)/bin/,chardetect fakebmc futurize jirashell pasteurize pbr pyghmicons pyghmiutil pyjwt pyrsa-decrypt pyrsa-encrypt pyrsa-keygen pyrsa-priv2pub pyrsa-sign pyrsa-verify virshbmc snmpsimd.py)
+# Ensure all native modules have the correct rpath set
+	set -e ; for F in $$(find $(PACKAGE_PYTHON_MODULES_PYTHONPATH) -name \*.so); do \
+	    echo -n "Test rpath of $$F..." ; \
+		if chrpath "$$F" | grep "=$(OMD_ROOT)/lib" >/dev/null 2>&1; then \
+		    echo OK ; \
+		else \
+		    echo "ERROR ($$(chrpath $$F))"; \
+		    exit 1 ; \
+		fi \
+	done
+	$(TOUCH) $@
+
+$(PYTHON_MODULES_INSTALL): $(PYTHON_MODULES_INTERMEDIATE_INSTALL)
+	$(RSYNC) $(PYTHON_MODULES_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
 	$(TOUCH) $@
 
 python-modules-dump-Pipfile:
@@ -291,7 +321,7 @@ python-modules-dump-Pipfile:
 	@echo '"beautifulsoup4" = "*"  # used by the GUI crawler and various tests'
 	@echo 'compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json'
 	@echo 'docker = "*"  # used by test_docker test and mk_docker agent plugin'
-	@echo 'freezegun = "*"  # used by various unit tests'
+	@echo 'freezegun = "!=0.3.13"  # used by various unit tests'
 	@echo 'isort = "*"  # used as a plugin for editors'
 	@echo 'lxml = "*"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent'
 	@echo 'mock = "*"  # used in checktestlib in unit tests'
@@ -301,13 +331,14 @@ python-modules-dump-Pipfile:
 	@echo 'pytest = "*"  # used by various test/Makefile targets'
 	@echo 'pytest-cov = "*"  # used (indirectly) by test/Makefile'"'"'s test-unit-coverage-html target, see comment there'
 	@echo 'pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker fixture'
+	@echo 'pyfakefs = "*" # used for unit tests'
+	@echo 'webtest = "*"  # used by WSGI based tests'
 	@echo 'yapf = "*"  # used for editor integration and the format-python Makefile target'
+	@echo 'pre-commit = "*"  # used to fix / find issues before commiting changes'
+	@echo 'flake8 = "*"'
 	@echo ''
 	@echo '[packages]'
 	@echo $(patsubst %.zip,%,$(patsubst %.tar.gz,%,$(PYTHON_MODULES_LIST))) | tr ' ' '\n' | sed 's/-\([0-9.]*\)$$/ = "==\1"/'
 	@echo ''
 	@echo '[requires]'
 	@echo 'python_version = "2.7"'
-
-$(PYTHON_MODULES)-clean:
-	rm -rf $(PYTHON_MODULES_DIR) $(BUILD_HELPER_DIR)/$(PYTHON_MODULES)*

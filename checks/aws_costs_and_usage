@@ -35,7 +35,7 @@ def parse_aws_costs_and_usage(info):
         timeperiod = row['TimePeriod']['Start']
         for group in row.get('Groups', []):
             service_name = " ".join(group['Keys'])
-            for metric_name, metrics in group['Metrics'].iteritems():
+            for metric_name, metrics in group['Metrics'].items():
                 try:
                     costs = float(metrics['Amount'])
                     unit = metrics['Unit']
@@ -64,12 +64,12 @@ def inventory_aws_costs_and_usage_summary(parsed):
 
 def check_aws_costs_and_usage_summary(item, params, parsed):
     amounts_by_metrics = collections.defaultdict(float)
-    for (timeperiod, _service_name), metrics in parsed.iteritems():
+    for (timeperiod, _service_name), metrics in parsed.items():
         for title, metric_name, key, in AWSCostAndUageMetrics:
             costs, unit = metrics[metric_name]
             amounts_by_metrics[(timeperiod, title, unit, key)] += costs
 
-    for (timeperiod, title, unit, key), costs in amounts_by_metrics.iteritems():
+    for (timeperiod, title, unit, key), costs in amounts_by_metrics.items():
         yield check_levels(costs,
                            "aws_costs_%s" % key,
                            params.get('levels_%s' % key, (None, None)),
@@ -98,14 +98,14 @@ check_info['aws_costs_and_usage'] = {
 
 
 def inventory_aws_costs_and_usage_per_service(parsed):
-    for (_timeperiod, service_name) in parsed.iterkeys():
+    for (_timeperiod, service_name) in parsed:
         yield service_name, {}
 
 
 def check_aws_costs_and_usage_per_service(item, params, parsed):
     data = None
     timeperiod = None
-    for (timeperiod, service_name), metrics in parsed.iteritems():
+    for (timeperiod, service_name), metrics in parsed.items():
         if item == service_name:
             data = metrics
             break

@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <fmt/format.h>
 #include <time.h>
 
 #include <chrono>
@@ -15,12 +16,56 @@
 #include "cfg.h"
 #include "common/stop_watch.h"
 #include "common/wtools.h"
-#include "fmt/format.h"
 #include "logger.h"
 #include "tools/_misc.h"
 
 namespace cma {
+wtools::InternalUser ObtainInternalUser(std::wstring_view group);
+void KillAllInternalUsers();
+}  // namespace cma
+
+namespace cma {
 namespace tools {
+
+// add content of file to the Buf
+template <typename T>
+bool AppendFileContent(T& Buf, HANDLE h, size_t Count) noexcept {
+    // check what we have already inside
+    auto buf_size = Buf.size();
+    try {
+        Buf.resize(buf_size + Count);
+    } catch (const std::exception& e) {
+        XLOG::l(XLOG_FLINE + " exception: '{}'", e.what());
+        return false;
+    }
+
+    // add new data
+    auto read_buffer = Buf.data() + buf_size;
+    DWORD read_in_fact = 0;
+    auto count = static_cast<DWORD>(Count);
+    auto result = ::ReadFile(h, read_buffer, count, &read_in_fact, nullptr);
+    if (!result) false;
+
+    if (buf_size + read_in_fact != Buf.size()) {
+        Buf.resize(buf_size + read_in_fact);
+    }
+
+    return true;
+}
+
+template <typename T>
+T ReadFromHandle(HANDLE Handle) {
+    T buf;
+    for (;;) {
+        auto read_count = wtools::DataCountOnHandle(Handle);
+
+        // now reading to the end
+        if (read_count == 0) break;  // no data
+        if (!cma::tools::AppendFileContent<T>(buf, Handle, read_count))
+            break;  // io fail
+    }
+    return buf;
+}
 
 // primitive command line checker
 bool CheckArgvForValue(int argc, const wchar_t* argv[], int pos,
@@ -74,15 +119,17 @@ inline std::wstring FindPowershellExe() noexcept {
     // file not found on path
     auto powershell_path =
         cma::tools::win::GetSomeSystemFolder(FOLDERID_System);
-    fs::path ps(powershell_path);
-    ps /= L"WindowsPowerShell";
-    ps /= L"v1.0";
-    ps /= powershell_name;
+
     try {
+        fs::path ps(powershell_path);
+        ps /= L"WindowsPowerShell";
+        ps /= L"v1.0";
+        ps /= powershell_name;
         if (fs::exists(ps)) return ps;
         XLOG::l("Not found powershell");
     } catch (const std::exception& e) {
-        XLOG::l("malformed name {} e:{}", ps.u8string(), e.what());
+        XLOG::l("malformed name {} e:{}",
+                wtools::ConvertToUTF8(powershell_path), e.what());
     }
     return {};
 }
@@ -192,51 +239,16 @@ public:
         return false;
     }
     enum class StartMode { job, updater };
+    bool startEx(std::wstring_view Id, std::filesystem::path ExeFile,
+                 StartMode start_mode, wtools::InternalUser internal_user);
     bool start(std::wstring_view Id, std::filesystem::path ExeFile,
+
                StartMode start_mode) {
-        int count = 0;
-        std::lock_guard lk(lock_);
-        if (process_) return false;
-        sw_.start();
-        id_ = Id;
-        exec_ = ExeFile.wstring();
-
-        // send exec array entries to internal
-        try {
-            // now exec
-            auto ar = new wtools::AppRunner;
-            auto exec = cma::ConstructCommandToExec(exec_);
-            XLOG::d.t("Exec app '{}', mode [{}]", wtools::ConvertToUTF8(exec),
-                      static_cast<int>(start_mode));
-
-            switch (start_mode) {
-                case StartMode::job:
-                    proc_id_ = ar->goExecAsJob(exec);
-                    break;
-                case StartMode::updater:
-                    proc_id_ = ar->goExecAsUpdater(exec);
-                    break;
-            }
-
-            if (proc_id_) {
-                process_ = ar;
-                return true;
-            }
-
-            delete ar;  // start failed
-        } catch (const std::exception& e) {
-            XLOG::l(XLOG_FLINE + " exception {}", e.what());
-        }
-        sw_.stop();
-        // cleaning up
-        id_.clear();
-        exec_.clear();
-
-        return false;
+        return startEx(Id, ExeFile, start_mode, {});
     }
 
     // strange?
-    uint32_t getProcessId() {
+    [[nodiscard]] uint32_t getProcessId() {
         uint32_t proc_id;
         std::unique_lock lk(lock_);
         proc_id = process_->processId();
@@ -245,7 +257,7 @@ public:
     }
 
     // really obtained proc id. Safe function
-    uint32_t startedProcId() const { return proc_id_; }
+    [[nodiscard]] uint32_t startedProcId() const { return proc_id_; }
 
     bool appendResult(HANDLE Handle, std::vector<char>& Buf) {
         if (Buf.size() == 0) return true;
@@ -267,33 +279,7 @@ public:
         return false;
     }
 
-    bool const failed() const noexcept { return failed_; }
-
-    // add content of file to the Buf
-    template <typename T>
-    bool appendFileContent(T& Buf, HANDLE h, size_t Count) const noexcept {
-        // check what we have already inside
-        auto buf_size = Buf.size();
-        try {
-            Buf.resize(buf_size + Count);
-        } catch (const std::exception& e) {
-            XLOG::l(XLOG_FLINE + " exception: '{}'", e.what());
-            return false;
-        }
-
-        // add new data
-        auto read_buffer = Buf.data() + buf_size;
-        DWORD read_in_fact = 0;
-        auto count = static_cast<DWORD>(Count);
-        auto result = ::ReadFile(h, read_buffer, count, &read_in_fact, nullptr);
-        if (!result) false;
-
-        if (buf_size + read_in_fact != Buf.size()) {
-            Buf.resize(buf_size + read_in_fact);
-        }
-
-        return true;
-    }
+    [[nodiscard]] bool const failed() const noexcept { return failed_; }
 
     // very special, only used for cmk-updater
     bool waitForUpdater(std::chrono::milliseconds Timeout);
@@ -357,24 +343,12 @@ private:
     void readWhatLeft() {
         using namespace std;
         auto read_handle = getReadHandle();
-        auto buf = readFromHandle<vector<char>>(read_handle);
+        auto buf = cma::tools::ReadFromHandle<vector<char>>(read_handle);
         if (buf.size()) appendResult(read_handle, buf);
     }
 
-    template <typename T>
-    T readFromHandle(HANDLE Handle) {
-        T buf;
-        for (;;) {
-            auto read_count = wtools::DataCountOnHandle(Handle);
-
-            // now reading to the end
-            if (read_count == 0) break;                              // no data
-            if (!appendFileContent(buf, Handle, read_count)) break;  // io fail
-        }
-        return buf;
-    }
-
-    static std::string formatProcessInLog(uint32_t pid, std::wstring name) {
+    static std::string formatProcessInLog(uint32_t pid,
+                                          const std::wstring_view name) {
         return fmt::format("Process '{}' pid [{}]", wtools::ConvertToUTF8(name),
                            pid);
     }
@@ -383,35 +357,28 @@ private:
     // updates object with exit code
     // returns true if process  exists or not accessible
     bool checkProcessExit(const uint32_t pid) {
+        auto [code, error] = wtools::GetProcessExitCode(pid);
+
         auto proc_string = formatProcessInLog(pid, exec_);
+        // check for error
+        if (error == 0) {
+            if (code == STILL_ACTIVE) return false;
 
-        auto h = ::OpenProcess(
-            PROCESS_QUERY_LIMITED_INFORMATION,  // not supported on XP
-            FALSE, pid);
-        if (!h) {
-            storeExitCode(pid, 0);  // process died
-            XLOG::d("{} is failed to open, error is [{}]", proc_string,
-                    ::GetLastError());
-            return true;
-        }
-        ON_OUT_OF_SCOPE(::CloseHandle(h));
-        DWORD exit_code = 0;
-        auto success = ::GetExitCodeProcess(h, &exit_code);
-        if (!success) {
-            XLOG::l("Error  [{}] accessing {}", ::GetLastError(), proc_string);
+            // success and valid exit code store exit code
+            XLOG::t("{} exits, code is [{}]", proc_string, code);
+            storeExitCode(pid, code);
             return true;
         }
 
-        // no logging for the case due to high noise
-        if (exit_code == STILL_ACTIVE) return false;
-
-        // success and valid exit code store exit code
-        XLOG::t("{} exits, code is [{}]", proc_string, exit_code);
-        storeExitCode(pid, exit_code);
+        if (code == 0) {
+            storeExitCode(pid, 0);  // process rather died
+            XLOG::d("{} is failed to open, error is [{}]", proc_string, error);
+        } else
+            XLOG::l("Error  [{}] accessing {}", error, proc_string);
         return true;
     }
 
-    bool isExecValid(const std::filesystem::path& FileExec) const {
+    static inline bool isExecValid(const std::filesystem::path& FileExec) {
         if (!IsValidFile(FileExec)) return false;  // sanity
 
         auto execute_string = ConstructCommandToExec(FileExec);
@@ -446,7 +413,6 @@ private:
 }  // namespace cma
 
 namespace cma {
-
 enum class HackDataMode { header, line };
 
 // build correct string for patching
@@ -567,6 +533,8 @@ public:
         retry_ = Unit.retry();
         cache_age_ = Unit.cacheAge();
         timeout_ = Unit.timeout();
+        group_ = Unit.group();
+        user_ = Unit.user();
         bool planned_async = Unit.async() || Unit.cacheAge() > 0;
 
         if (defined() && async() != planned_async) {
@@ -583,12 +551,16 @@ public:
             }
         }
         async_ = planned_async;
-        if (async()) {
-            if (cacheAge() && cacheAge() < cma::cfg::kMinimumCacheAge)
-                cache_age_ = cma::cfg::kMinimumCacheAge;
-        } else {
+
+        if (async() &&
+            cacheAge()) {  // for async we have cache_age either 0 or > 120
+            cache_age_ = std::max(cacheAge(), cma::cfg::kMinimumCacheAge);
+        } else {  // for sync cache_age is 0 always
             cache_age_ = 0;
         }
+
+        fillInternalUser();
+
         local_ = Local;
         defined_ = true;
     }
@@ -619,6 +591,7 @@ public:
     static int threadCount() noexcept { return thread_count_.load(); }
 
 protected:
+    void fillInternalUser();
     void resetData() {
         std::lock_guard lk(data_lock_);
         return data_.clear();
@@ -647,6 +620,8 @@ protected:
     // as a rule only after timeout
     void unregisterProcess();
 
+private:
+    wtools::InternalUser iu_;
     cma::TheMiniBox minibox_;
 
     std::filesystem::path path_;  // actual path to execute
@@ -662,7 +637,7 @@ protected:
 
     std::vector<char> data_;                           // cache
     std::chrono::steady_clock::time_point data_time_;  // when
-    time_t legacy_time_;                               // I'm nice guy
+    time_t legacy_time_ = 0;                           // I'm nice guy
 
     mutable std::mutex lock_;  // thread control
     std::unique_ptr<std::thread> main_thread_;
@@ -681,6 +656,7 @@ protected:
     FRIEND_TEST(PluginTest, SyncLocal);
 #endif
 };
+wtools::InternalUser PluginsExecutionUser2Iu(std::string_view user);
 
 TheMiniBox::StartMode GetStartMode(const std::filesystem::path& filepath);
 
@@ -740,7 +716,8 @@ using StringSet = std::set<std::string>;
 bool AddUniqStringToSetIgnoreCase(StringSet& cache,
                                   const std::string& value) noexcept;
 // returns true if string added
-bool AddUniqStringToSetAsIs(StringSet& cache, const std::string value) noexcept;
+bool AddUniqStringToSetAsIs(StringSet& cache,
+                            const std::string& value) noexcept;
 }  // namespace tools
 
 // finds piggyback template <<<<name>>>>, if found returns 'name'
@@ -748,13 +725,4 @@ std::optional<std::string> GetPiggyBackName(const std::string& in_string);
 
 bool TryToHackStringWithCachedInfo(std::string& in_string,
                                    const std::string& value_to_insert);
-
-namespace ntfs {
-#if _MSC_VER >= 1923
-[[deprecated("Should not be used with VS 19")]]  // VS 19 has good remove
-#endif 
-bool Remove(const std::filesystem::path& Target,
-                    std::error_code& Ec) noexcept;
-}  // namespace ntfs
-
 }  // namespace cma

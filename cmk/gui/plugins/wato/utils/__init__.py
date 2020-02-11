@@ -1,28 +1,9 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """Module to hold shared code for WATO internals and the WATO plugins"""
 
 # TODO: More feature related splitting up would be better
@@ -40,7 +21,6 @@ from typing import Optional as TypingOptional, List, Callable, Text, Union  # py
 import six
 
 import cmk.utils.plugin_registry
-import cmk.utils.store
 
 from cmk.gui.globals import g
 import cmk.gui.mkeventd
@@ -59,7 +39,6 @@ from cmk.gui.valuespec import (
     TextAscii,
     TextAsciiAutocomplete,
     Dictionary,
-    RadioChoice,
     Tuple,
     Checkbox,
     Integer,
@@ -281,11 +260,11 @@ def _list_user_icons_and_actions():
 
 
 def SNMPCredentials(  # pylint: disable=redefined-builtin
-        title=None,  # type: TypingOptional[Text]
-        help=None,  # type: TypingOptional[Text]
-        only_v3=False,  # type: bool
-        default_value="public",  # type: Text
-        allow_none=False  # type: bool
+    title=None,  # type: TypingOptional[Text]
+    help=None,  # type: TypingOptional[Text]
+    only_v3=False,  # type: bool
+    default_value="public",  # type: Text
+    allow_none=False  # type: bool
 ):  # type: (...) -> Alternative
     def alternative_match(x):
         if only_v3:
@@ -609,16 +588,16 @@ def _group_choices(group_information):
 
 
 def passwordstore_choices():
-    store = PasswordStore()
+    pw_store = PasswordStore()
     return [(ident, pw["title"])
-            for ident, pw in store.filter_usable_entries(store.load_for_reading()).items()]
+            for ident, pw in pw_store.filter_usable_entries(pw_store.load_for_reading()).items()]
 
 
 def PasswordFromStore(  # pylint: disable=redefined-builtin
-        title=None,  # type: TypingOptional[Text]
-        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-        allow_empty=True,  # type: bool
-        size=25,  # type: int
+    title=None,  # type: TypingOptional[Text]
+    help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+    allow_empty=True,  # type: bool
+    size=25,  # type: int
 ):  # -> CascadingDropdown
     return CascadingDropdown(
         title=title,
@@ -643,10 +622,10 @@ def PasswordFromStore(  # pylint: disable=redefined-builtin
 
 
 def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
-        title=None,  # type: TypingOptional[Text]
-        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
-        allow_empty=True,  # type: bool
-        size=25,  # type: int
+    title=None,  # type: TypingOptional[Text]
+    help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+    allow_empty=True,  # type: bool
+    size=25,  # type: int
 ):
     return Transform(
         PasswordFromStore(
@@ -1377,7 +1356,7 @@ class EventsMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
 def sort_sites(sites):
     # type: (SiteConfigurations) -> typing.List[typing.Tuple[SiteId, SiteConfiguration]]
     """Sort given sites argument by local, followed by remote sites"""
-    return sorted(sites.iteritems(),
+    return sorted(sites.items(),
                   key=lambda sid_s: (sid_s[1].get("replication"), sid_s[1].get("alias"), sid_s[0]))
 
 
@@ -1474,7 +1453,7 @@ def configure_attributes(new,
             values = []
             num_have_locked_it = 0
             num_haveit = 0
-            for host in hosts.itervalues():
+            for host in hosts.values():
                 if not host:
                     continue
 
@@ -1495,7 +1474,7 @@ def configure_attributes(new,
 
             if for_what in ["host", "cluster", "folder"]:
                 if hosts:
-                    host = hosts.values()[0]
+                    host = list(hosts.values())[0]
                 else:
                     host = None
 
@@ -1821,7 +1800,7 @@ class DictHostTagCondition(Transform):
 
     def _to_valuespec(self, host_tag_conditions):
         valuespec_value = {}
-        for tag_group_id, tag_condition in host_tag_conditions.iteritems():
+        for tag_group_id, tag_condition in host_tag_conditions.items():
             if isinstance(tag_condition, dict) and "$or" in tag_condition:
                 value = self._ored_tags_to_valuespec(tag_condition["$or"])
             elif isinstance(tag_condition, dict) and "$nor" in tag_condition:
@@ -1848,7 +1827,7 @@ class DictHostTagCondition(Transform):
 
     def _from_valuespec(self, valuespec_value):
         tag_conditions = {}
-        for tag_group_id, (operator, operand) in valuespec_value.iteritems():
+        for tag_group_id, (operator, operand) in valuespec_value.items():
             if operator in ["is", "is_not"]:
                 tag_group_value = self._single_tag_from_valuespec(operator, operand)
             elif operator in ["or", "nor"]:
@@ -2218,7 +2197,8 @@ def get_hostnames_from_checkboxes(filterfunc=None):
     This is needed for bulk operations."""
     show_checkboxes = html.request.var("show_checkboxes") == "1"
     if show_checkboxes:
-        selected = weblib.get_rowselection('wato-folder-/' + watolib.Folder.current().path())
+        selected = config.user.get_rowselection(weblib.selection_id(),
+                                                'wato-folder-/' + watolib.Folder.current().path())
     search_text = html.request.var("search")
 
     selected_host_names = []

@@ -59,8 +59,8 @@ def parse_fireeye_raid(info):
 
 def check_fireeye_raid(_no_item, _no_params, parsed):
     status, health = parsed["raid"]
-    for text, (state, state_readable) in \
-        check_fireeye_states([(status, 'Status'), (health, 'Health')]).items():
+    for text, (state, state_readable) in check_fireeye_states([(status, 'Status'),
+                                                               (health, 'Health')]).items():
         yield state, "%s: %s" % (text, state_readable)
 
 
@@ -97,8 +97,9 @@ check_info["fireeye_raid"] = {
 def check_fireeye_raid_disks(item, _no_params, parsed):
     for diskname, diskstatus, diskhealth in parsed["disks"]:
         if diskname == item:
-            for text, (state, state_readable) in \
-                check_fireeye_states([(diskstatus, 'Disk status'), (diskhealth, 'Health')]).items():
+            for text, (state, state_readable) in check_fireeye_states([(diskstatus, 'Disk status'),
+                                                                       (diskhealth, 'Health')
+                                                                      ]).items():
                 yield state, "%s: %s" % (text, state_readable)
 
 

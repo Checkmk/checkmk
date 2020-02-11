@@ -123,6 +123,7 @@ class Worker(threading.Thread):
                 "application/x-tgz",
                 "application/x-redhat-package-manager",
                 "application/x-pkg",
+                "application/x-tar",
                 "text/x-chdr",
                 "text/x-c++src",
                 "text/x-sh",
@@ -168,6 +169,10 @@ class Worker(threading.Thread):
     def check_content(self, url, response, soup):
         ignore_texts = [
             "This view can only be used in mobile mode.",
+            # Some single context views are accessed without their context information, which
+            # results in a helpful error message since 1.7. These are not failures that this test
+            # should report.
+            "Missing context information",
         ]
 
         for element in soup.select("div.error"):

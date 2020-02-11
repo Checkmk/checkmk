@@ -1,32 +1,14 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """Module to hold shared code for internals and the plugins"""
 
 # TODO: More feature related splitting up would be better
 
+import sys
 import abc
 from collections import namedtuple
 import time
@@ -35,7 +17,11 @@ import hashlib
 import traceback
 from typing import Tuple, List, Optional, Union, Text, Dict, Callable, Type  # pylint: disable=unused-import
 import six
-from pathlib2 import Path
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import livestatus
 
@@ -44,6 +30,7 @@ import cmk.utils.render
 import cmk.utils.regex
 
 import cmk.gui.config as config
+import cmk.gui.escaping as escaping
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 import cmk.gui.forms as forms
@@ -58,7 +45,7 @@ from cmk.gui.globals import g, html
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.display_options import display_options
 from cmk.gui.permissions import permission_registry
-from cmk.gui.view_utils import render_tag_groups, render_labels  # pylint: disable=unused-import
+from cmk.gui.view_utils import render_tag_groups, render_labels, get_labels  # pylint: disable=unused-import
 
 
 # TODO: Better name it PainterOptions or DisplayOptions? There are options which only affect
@@ -460,7 +447,7 @@ class Command(six.with_metaclass(abc.ABCMeta, object)):
     def executor(self, command, site):
         # type: (str, str) -> None
         """Function that is called to execute this action"""
-        sites.live().command("[%d] %s" % (int(time.time()), command), site)
+        sites.live().command("[%d] %s" % (int(time.time()), command), livestatus.SiteId(site))
 
 
 class CommandRegistry(cmk.utils.plugin_registry.ClassRegistry):
@@ -678,7 +665,9 @@ class RowTableLivestatus(RowTable):
         datasource = view.datasource
         merge_column = datasource.merge_by
         if merge_column:
-            columns = [merge_column] + columns
+            # Prevent merge column from being duplicated in the query. It needs
+            # to be at first position, see _merge_data()
+            columns = [merge_column] + [c for c in columns if c != merge_column]
 
         # Most layouts need current state of object in order to
         # choose background color - even if no painter for state
@@ -723,6 +712,7 @@ class RowTableLivestatus(RowTable):
 
         if datasource.merge_by:
             data = _merge_data(data, columns)
+
         # convert lists-rows into dictionaries.
         # performance, but makes live much easier later.
         columns = ["site"] + columns + datasource.add_columns
@@ -1113,12 +1103,6 @@ def get_tag_groups(row, what):
     return row.get("%s_tags" % what, {}) or {}
 
 
-def get_labels(row, what):
-    # Sites with old versions that don't have the labels column return
-    # None for this field. Convert this to the default value
-    return row.get("%s_labels" % what, {}) or {}
-
-
 def get_label_sources(row, what):
     # Sites with old versions that don't have the label_sources column return
     # None for this field. Convert this to the default value
@@ -1129,7 +1113,7 @@ def get_graph_timerange_from_painter_options():
     painter_options = PainterOptions.get_instance()
     value = painter_options.get("pnp_timerange")
     vs = painter_options.get_valuespec_of("pnp_timerange")
-    return map(int, vs.compute_range(value)[0])
+    return tuple(map(int, vs.compute_range(value)[0]))
 
 
 def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what='past'):
@@ -1362,31 +1346,6 @@ def replace_action_url_macros(url, what, row):
     return url
 
 
-# Intelligent Links to PNP4Nagios 0.6.X
-def pnp_url(row, what, how='graph'):
-    sitename = row["site"]
-    host = cmk.utils.pnp_cleanup(row["host_name"])
-    if what == "host":
-        svc = "_HOST_"
-    else:
-        svc = cmk.utils.pnp_cleanup(row["service_description"])
-    url_prefix = config.site(sitename)["url_prefix"]
-    if html.mobile:
-        url = url_prefix + ("pnp4nagios/index.php?kohana_uri=/mobile/%s/%s/%s" %
-                            (how, html.urlencode(host), html.urlencode(svc)))
-    else:
-        url = url_prefix + ("pnp4nagios/index.php/%s?host=%s&srv=%s" %
-                            (how, html.urlencode(host), html.urlencode(svc)))
-
-    pnp_theme = html.get_theme()
-    if pnp_theme == "classic":
-        pnp_theme = "multisite"
-
-    if how == 'graph':
-        url += "&theme=%s&baseurl=%scheck_mk/" % (pnp_theme, html.urlencode(url_prefix))
-    return url
-
-
 def render_cache_info(what, row):
     cached_at = row["service_cached_at"]
     cache_interval = row["service_cache_interval"]
@@ -1498,7 +1457,7 @@ def _transform_old_views(all_views):
             view[
                 'show_filters'] = view['hide_filters'] + view['hard_filters'] + view['show_filters']
 
-            single_keys = visuals.get_single_info_keys(view)
+            single_keys = visuals.get_single_info_keys(view["single_infos"])
 
             # First get vars for the classic filters
             context = {}
@@ -1682,7 +1641,8 @@ class Cell(object):
                 if link_view:
                     # TODO: Clean this up here
                     for filt in [
-                            visuals.get_filter(fn) for fn in visuals.get_single_info_keys(link_view)
+                            visuals.get_filter(fn)
+                            for fn in visuals.get_single_info_keys(link_view["single_infos"])
                     ]:
                         columns.update(filt.link_columns)
 
@@ -1818,7 +1778,7 @@ class Cell(object):
         # - Add in the front of the user sorters when not set
         painter_name = self.painter_name()
         sorter_name = _get_sorter_name_of_painter(painter_name)
-        if painter_name == 'svc_metrics_hist':
+        if painter_name in ['svc_metrics_hist', 'svc_metrics_forecast']:
             hash_id = ':%s' % hash(str(self.painter_parameters()))
             sorter_name += hash_id
 
@@ -1871,7 +1831,7 @@ class Cell(object):
         if content and self.has_tooltip():
             tooltip_cell = Cell(self._view, (self.tooltip_painter_name(), None))
             _tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row)
-            tooltip_text = html.strip_tags(tooltip_content)
+            tooltip_text = escaping.strip_tags(tooltip_content)
             if tooltip_text:
                 content = '<span title="%s">%s</span>' % (tooltip_text, content)
 
@@ -1883,7 +1843,7 @@ class Cell(object):
         # TODO: Move this somewhere else!
         def find_htdocs_image_path(filename):
             for file_path in [
-                    cmk.utils.paths.local_web_dir.joinpath("htdocs", filename),
+                    cmk.utils.paths.local_web_dir / "htdocs" / filename,
                     Path(cmk.utils.paths.web_dir, "htdocs", filename),
             ]:
                 if file_path.exists():
@@ -1908,11 +1868,11 @@ class Cell(object):
                     txt = img_filename
 
             if isinstance(txt, HTML):
-                txt = html.strip_tags("%s" % txt)
+                txt = escaping.strip_tags("%s" % txt)
 
             elif not isinstance(txt, tuple):
-                txt = html.escaper.unescape_attributes(txt)
-                txt = html.strip_tags(txt)
+                txt = escaping.unescape_attributes(txt)
+                txt = escaping.strip_tags(txt)
 
             return css_classes, txt
         except Exception:
@@ -1952,7 +1912,8 @@ class Cell(object):
 
 
 SorterEntry = namedtuple("SorterEntry", ["sorter", "negate", "join_key"])
-SorterEntry.__new__.__defaults__ = (None,) * len(SorterEntry._fields)
+# TODO: WTF?
+SorterEntry.__new__.__defaults__ = (None,) * len(SorterEntry._fields)  # type: ignore[attr-defined]
 
 
 def _encode_sorter_url(sorters):
@@ -2027,9 +1988,8 @@ class EmptyCell(Cell):
 def output_csv_headers(view):
     filename = '%s-%s.csv' % (view['name'],
                               time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
-    if isinstance(filename, six.text_type):
-        filename = filename.encode("utf-8")
-    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % filename
+    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % six.ensure_str(
+        filename)
 
 
 def _get_sorter_name_of_painter(painter_name_or_spec):

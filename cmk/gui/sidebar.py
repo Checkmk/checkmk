@@ -1,40 +1,22 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
 import traceback
 import json
 import time
 from enum import Enum
-from typing import Any, Dict, List, Optional, Type, Union  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Tuple, Type, Union  # pylint: disable=unused-import
+from werkzeug.local import LocalProxy  # pylint: disable=unused-import
 
 import cmk
 import cmk.utils.paths
 
 import cmk.gui.i18n
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 import cmk.gui.utils as utils
@@ -50,6 +32,7 @@ import cmk.gui.plugins.sidebar.quicksearch
 from cmk.gui.valuespec import CascadingDropdown, Dictionary
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.log import logger
+from cmk.gui.config import UserType  # pylint: disable=unused-import
 
 if not cmk.is_raw_edition():
     import cmk.gui.cee.plugins.sidebar  # pylint: disable=no-name-in-module
@@ -68,7 +51,7 @@ from cmk.gui.plugins.sidebar.utils import (  # pylint: disable=unused-import
 
 from cmk.gui.plugins.sidebar.quicksearch import QuicksearchMatchPlugin  # pylint: disable=unused-import
 
-quicksearch_match_plugins = []  # type: List[QuicksearchMatchPlugin]
+quicksearch_match_plugins = []  # type: List[Type[QuicksearchMatchPlugin]]
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
@@ -164,6 +147,7 @@ def transform_old_quicksearch_match_plugins():
 class UserSidebarConfig(object):
     """Manages the configuration of the users sidebar"""
     def __init__(self, user, default_config):
+        # type: (UserType, List[Tuple[str, str]]) -> None
         super(UserSidebarConfig, self).__init__()
         self._user = user
         self._default_config = copy.deepcopy(default_config)
@@ -171,6 +155,7 @@ class UserSidebarConfig(object):
 
     @property
     def folded(self):
+        # type: () -> bool
         return self._config["fold"]
 
     @folded.setter
@@ -220,9 +205,11 @@ class UserSidebarConfig(object):
         }
 
     def _user_config(self):
-        return self._user.load_file("sidebar", deflt=self._initial_config())
+        # type: () -> Dict[str, Any]
+        return self._user.get_sidebar_configuration(self._initial_config())
 
     def _load(self):
+        # type: () -> Dict[str, Any]
         """Load current state of user's sidebar
 
         Convert from old format (just a snapin list) to the new format
@@ -248,6 +235,7 @@ class UserSidebarConfig(object):
         return user_config
 
     def _transform_legacy_list_config(self, user_config):
+        # type: (Any) -> Dict[str, Any]
         if not isinstance(user_config, list):
             return user_config
 
@@ -257,6 +245,7 @@ class UserSidebarConfig(object):
         }
 
     def _transform_legacy_off_state(self, snapins):
+        # type: (List[Dict[str, str]]) -> List[Dict[str, str]]
         return [e for e in snapins if e["visibility"] != "off"]
 
     def _transform_legacy_tuples(self, snapins):
@@ -269,9 +258,10 @@ class UserSidebarConfig(object):
     def save(self):
         # type: () -> None
         if self._user.may("general.configure_sidebar"):
-            self._user.save_file("sidebar", self._to_config())
+            self._user.set_sidebar_configuration(self._to_config())
 
     def _from_config(self, cfg):
+        # type: (Dict[str, Any]) -> Dict[str, Any]
         return {
             "fold": cfg["fold"],
             "snapins": [UserSidebarSnapin.from_config(e) for e in cfg["snapins"]]
@@ -294,7 +284,7 @@ class UserSidebarSnapin(object):
     """An instance of a snapin that is configured in the users sidebar"""
     @staticmethod
     def from_config(cfg):
-        # type: (Dict[str, Type[cmk.gui.plugins.sidebar.SidebarSnapin]]) -> UserSidebarSnapin
+        # type: (Dict[str, Any]) -> UserSidebarSnapin
         """ Construct a UserSidebarSnapin object from the persisted data structure"""
         snapin_class = snapin_registry[cfg["snapin_type_id"]]
         return UserSidebarSnapin(snapin_class, SnapinVisibility(cfg["visibility"]))
@@ -565,8 +555,9 @@ class SidebarRenderer(object):
                 html.write_text(msg['text'].replace('\n', '<br>\n'))
                 html.close_div()
             if 'gui_popup' in msg['methods']:
-                html.javascript('alert(\'%s\'); cmk.sidebar.mark_message_read("%s")' %
-                                (html.attrencode(msg['text']).replace('\n', '\\n'), msg['id']))
+                html.javascript(
+                    'alert(\'%s\'); cmk.sidebar.mark_message_read("%s")' %
+                    (escaping.escape_attribute(msg['text']).replace('\n', '\\n'), msg['id']))
 
 
 @cmk.gui.pages.register("side")
@@ -856,4 +847,4 @@ def ajax_set_snapin_site():
 
     snapin_sites = config.user.load_file("sidebar_sites", {}, lock=True)
     snapin_sites[ident] = site
-    config.user.save_file("sidebar_sites", snapin_sites, unlock=True)
+    config.user.save_file("sidebar_sites", snapin_sites)

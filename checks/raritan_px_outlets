@@ -73,8 +73,7 @@ def parse_raritan_px_outlets(info):
 
 
 def inventory_raritan_px_outlets(parsed):
-    return [ (index, {}) for index, values in parsed.items() \
-              if values["state"][1] == "on" ]
+    return [(index, {}) for index, values in parsed.items() if values["state"][1] == "on"]
 
 
 def check_raritan_px_outlets(item, params, parsed):

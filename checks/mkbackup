@@ -122,7 +122,7 @@ def check_mkbackup(job_state):
 
 
 def inventory_mkbackup_system(parsed):
-    for job_id in parsed.get("system", {}).keys():
+    for job_id in parsed.get("system", {}):
         yield job_id, {}
 
 
@@ -145,7 +145,7 @@ check_info["mkbackup"] = {
 
 def inventory_mkbackup_site(parsed):
     for site_id, jobs in parsed.get("site", {}).items():
-        for job_id in jobs.keys():
+        for job_id in jobs:
             yield "%s backup %s" % (site_id, job_id), {}
 
 

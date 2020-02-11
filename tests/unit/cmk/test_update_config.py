@@ -3,7 +3,7 @@ import argparse
 import sys
 import StringIO
 from pathlib2 import Path
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 import cmk.utils.log
 import cmk.update_config as update_config
@@ -58,7 +58,7 @@ def test_cleanup_version_specific_caches(uc):
     ]
     for base_dir in paths:
         base_dir.mkdir(parents=True, exist_ok=True)
-        cached_file = base_dir.joinpath("if")
+        cached_file = base_dir / "if"
         with cached_file.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
             f.write(u"\n")
         uc._cleanup_version_specific_caches()

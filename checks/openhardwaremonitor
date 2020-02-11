@@ -144,7 +144,7 @@ def parse_openhardwaremonitor(info):
 
 def _create_openhardwaremonitor_full_name(parent, name):
     def dict_replace(input_, replacements):
-        pattern = regex(r'\b(' + '|'.join(replacements.keys()) + r')\b')
+        pattern = regex(r'\b(' + '|'.join(replacements) + r')\b')
         return pattern.sub(lambda x: replacements[x.group()], input_)
 
     parent = dict_replace(parent, {"intelcpu": "cpu", "amdcpu": "cpu", "genericcpu": "cpu"})
@@ -164,7 +164,7 @@ def _openhardwaremonitor_expect_order(*args):
 
 
 def inventory_openhardwaremonitor(sensor_type, parsed):
-    return [(key, {}) for key in parsed.get(sensor_type, {}).keys()]
+    return [(key, {}) for key in parsed.get(sensor_type, {})]
 
 
 def check_openhardwaremonitor(sensor_type, item, params, parsed):
@@ -227,7 +227,7 @@ check_info['openhardwaremonitor'] = {
 def check_openhardwaremonitor_temperature(item, params, parsed):
     if not 'levels' in params:
         found = False
-        for key in params.iterkeys():
+        for key in params:
             if key in item:
                 params = params[key]
                 found = True
@@ -336,7 +336,7 @@ def inventory_openhardwaremonitor_smart(parsed):
 
 
 def check_openhardwaremonitor_smart(item, params, parsed):
-    for sensor_type, readings in openhardwaremonitor_smart_readings.iteritems():
+    for sensor_type, readings in openhardwaremonitor_smart_readings.items():
         for reading in readings:
             reading_name = "%s %s" % (item, reading['name'])
 

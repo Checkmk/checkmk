@@ -1,0 +1,16 @@
+Title: Fixed incorrect processing of SNMP datasource configuration
+Level: 2
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1574937758
+
+Due to an incorrect old configuration conversion routine the snmp datasource setting for a host was incorrectly set/reset to <tt>No SNMP<tt>.
+This could be observed on the edit host page, for example. It only applied to hosts where the agent tag group was explicitly set.
+
+This incorrectly transformed snmp setting was written back to disk, when the host itself was saved or when there were any changes made in the host tags configuration.
+Changes in the host tag configuration had a greater impact because they forced a complete rewrite of all host configurations.
+

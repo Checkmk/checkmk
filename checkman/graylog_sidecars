@@ -4,7 +4,7 @@ catalog: app/graylog
 license: GPL
 distribution: check_mk
 description:
- With this check you can monitor sidecars of a graylog instance. It outputs the
+ With this check you can monitor sidecars of a Graylog instance. It outputs the
  state of the sidecar, when the sidecar was last seen and the state of the
  collectors of the sidecar. Collector details can be found in the long output of
  the service. You can choose if the service is shown on the queried graylog
@@ -13,7 +13,7 @@ description:
  Needs the datasource "Check state of Graylog" to be configured.
 
 item:
- The item is the name of the siedecar.
+ The item is the name of the sidecar.
 
 inventory:
  One service for each node {"Graylog Sidecar my_sidecar"} will be created.

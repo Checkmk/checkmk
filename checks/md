@@ -159,7 +159,7 @@ def parse_md(info):
 
 
 def inventory_md(parsed):
-    for device, attrs in parsed.iteritems():
+    for device, attrs in parsed.items():
         if attrs["raid_name"] != "raid0":
             yield device, None
 

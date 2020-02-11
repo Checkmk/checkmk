@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # TODO:
 # - The classes here mix two things:
@@ -39,8 +19,11 @@
 
 import os
 import json
+from typing import Dict  # pylint: disable=unused-import
+import six
 
 import cmk.utils.store as store
+from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.pages
 import cmk.gui.sites as sites
@@ -164,16 +147,13 @@ class Base(object):
             el = topics.setdefault(topic, [])
             el += elements
 
-        # Sort topics and elements in the topics
+        # Sort elements of each topic
         for topic in topics.values():
             topic.sort()
 
-        sorted_topics = topics.items()
-        sorted_topics.sort(key=lambda x: x[1][0])
-
         # Now remove order numbers and produce the structures for the Dictionary VS
         parameters, keys_by_topic = [], []
-        for topic, elements in sorted_topics:
+        for topic, elements in sorted(topics.items(), key=lambda x: x[1][0]):
             topic_keys = []
 
             for _unused_order, key, vs in elements:
@@ -236,7 +216,7 @@ class Base(object):
     # Store for all instances of this page type. The key into
     # this dictionary????
     # TODO: Brauchen wir hier überhaupt ein dict??
-    __instances = {}
+    __instances = {}  # type: Dict[str, Base]
 
     @classmethod
     def clear_instances(cls):
@@ -272,9 +252,7 @@ class Base(object):
     # is sorted by the title of the instance
     @classmethod
     def instances_sorted(cls):
-        instances = cls.__instances.values()
-        instances.sort(key=lambda x: x.title())
-        return instances
+        return sorted(cls.__instances.values(), key=lambda x: x.title())
 
     # Stub function for the list of all pages. In case of Overridable
     # several instances might exist that overlay each other. This
@@ -494,7 +472,7 @@ class Overridable(Base):
             return True
 
         if isinstance(self._["public"], tuple) and self._["public"][0] == "contact_groups":
-            if set(config.user.contact_groups()).intersection(self._["public"][1]):
+            if set(config.user.contact_groups).intersection(self._["public"][1]):
                 return True
 
         return False
@@ -780,9 +758,9 @@ class Overridable(Base):
 
         # Now scan users subdirs for files "user_$type_name.mk"
         for user in os.listdir(config.config_dir):
-            user = user.decode("utf-8")
+            user = ensure_unicode(user)
             try:
-                path = "%s/%s/user_%ss.mk" % (config.config_dir, user.encode("utf-8"),
+                path = "%s/%s/user_%ss.mk" % (config.config_dir, six.ensure_str(user),
                                               cls.type_name())
                 if not os.path.exists(path):
                     continue
@@ -790,7 +768,7 @@ class Overridable(Base):
                 if not userdb.user_exists(user):
                     continue
 
-                user_pages = store.load_data_from_file(path, {})
+                user_pages = store.load_object_from_file(path, default={})
                 for name, page_dict in user_pages.items():
                     page_dict["owner"] = user
                     page_dict["name"] = name
@@ -964,9 +942,13 @@ class Overridable(Base):
                     # Actions
                     table.cell(_('Actions'), css='buttons visuals')
 
+                    # View
+                    if isinstance(instance, PageRenderer):
+                        html.icon_button(instance.page_url(), _("View"), "new_" + cls.type_name())
+
                     # Clone / Customize
-                    buttontext = _("Create a customized copy of this")
-                    html.icon_button(instance.clone_url(), buttontext, "new_" + cls.type_name())
+                    html.icon_button(instance.clone_url(), _("Create a customized copy of this"),
+                                     "clone")
 
                     # Delete
                     if instance.may_delete():
@@ -1161,7 +1143,7 @@ class Overridable(Base):
                 redirect_url = back_url
 
             html.immediate_browser_redirect(0.5, redirect_url)
-            html.message(_('Your changes haven been saved.'))
+            html.show_message(_('Your changes haven been saved.'))
             # Reload sidebar.TODO: This code logically belongs to PageRenderer. How
             # can we simply move it there?
             # TODO: This is not true for all cases. e.g. the BookmarkList is not
@@ -1205,7 +1187,7 @@ class ContactGroupChoice(DualListChoice):
         contact_group_choices = sites.all_groups("contact")
         return [(group_id, alias)
                 for (group_id, alias) in contact_group_choices
-                if self._with_foreign_groups or group_id in config.user.contact_groups()]
+                if self._with_foreign_groups or group_id in config.user.contact_groups]
 
 
 #.

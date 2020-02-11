@@ -32,12 +32,8 @@ class Row;
 
 class LogEntryStringColumn : public StringColumn {
 public:
-    LogEntryStringColumn(const std::string& name,
-                         const std::string& description, int indirect_offset,
-                         int extra_offset, int extra_extra_offset, int offset)
-        : StringColumn(name, description, indirect_offset, extra_offset,
-                       extra_extra_offset, offset) {}
-    std::string getValue(Row row) const override;
+    using StringColumn::StringColumn;
+    [[nodiscard]] std::string getValue(Row row) const override;
 };
 
 #endif  // LogEntryStringColumn_h

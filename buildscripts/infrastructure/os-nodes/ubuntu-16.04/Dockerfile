@@ -28,7 +28,7 @@ RUN apt-get update \
     strace \
     vim \
     && pip3 install --upgrade setuptools \
-    && pip3 install git+https://github.com/svenpanne/pipenv.git@41f30d7ac848fdfe3eb548ddd19b731bfa8c331a \
+    && pip3 install git+https://github.com/pypa/pipenv.git@2549656dc09e132d8ba2fa6327c939f5f9a951b7 \
     && curl -sL https://deb.nodesource.com/setup_12.x | bash - \
     && apt-get install -y nodejs \
     && apt-get install -y \
@@ -37,3 +37,14 @@ RUN apt-get update \
 
 RUN rm -rf /bin/systemctl \
     && ln -s /bin/true /bin/systemctl
+
+# New packages that are not needed for the build toolchain above should be added here.
+# We avoid rebuild of the whole previous steps this way
+RUN apt-get update \
+    && apt-get install -y \
+    joe \
+    vim \
+    && rm -rf /var/lib/apt/lists/*
+
+ARG VERS_TAG
+RUN echo $VERS_TAG > /version.txt

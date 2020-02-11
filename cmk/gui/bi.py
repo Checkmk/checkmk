@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
 import errno
@@ -36,6 +16,7 @@ import fcntl
 import multiprocessing
 from contextlib import contextmanager
 import traceback
+from typing import Any, Dict, List, Set, Tuple  # pylint: disable=unused-import
 
 import six
 
@@ -49,6 +30,7 @@ import cmk.gui.pages
 import cmk.gui.i18n
 import cmk.gui.utils
 import cmk.gui.view_utils
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
 from cmk.gui.htmllib import HTML
@@ -171,26 +153,24 @@ NT_REMAINING = 3
 NT_PLACEHOLDER = 4  # temporary dummy entry needed for REMAINING
 
 # Global variables
-g_cache = {}
 g_bi_cache_manager = None
 g_bi_sitedata_manager = None
 g_bi_job_manager = None
 g_services_items = None
-g_services = {}
-g_services_by_hostname = {}
-g_assumptions = {}
-g_remaining_refs = []
+g_services = {}  # type: Dict[Tuple[Any, Any], Tuple[Any, Any, Any, Any, Any]]
+g_services_by_hostname = {}  # type: Dict[str, List[Tuple[Any, Tuple[Any, Any, Any, Any, Any]]]]
+g_remaining_refs = []  # type: List[Tuple[Any, Any, Any]]
 # dictionary with hosts and its compiled services
-g_compiled_services_leafes = {}
+g_compiled_services_leafes = {}  # type: Dict[Any, Set[Any]]
 
-g_tree_cache = {}
+g_tree_cache = {}  # type: Dict[str, Any]
 g_config_information = None  # for invalidating cache after config change
 did_compilation = False  # Is set to true if anything has been compiled
 
-regex_host_hit_cache = set()
-regex_host_miss_cache = set()
-regex_svc_hit_cache = set()
-regex_svc_miss_cache = set()
+regex_host_hit_cache = set()  # type: Set[Tuple[Any, Any]]
+regex_host_miss_cache = set()  # type: Set[Tuple[Any, Any]]
+regex_svc_hit_cache = set()  # type: Set[Tuple[Any, Any]]
+regex_svc_miss_cache = set()  # type: Set[Tuple[Any, Any]]
 
 
 # Load the static configuration of all services and hosts (including tags)
@@ -271,7 +251,7 @@ def get_current_sitestats():
     program_start_times = dict(result)
     sites.live().set_prepend_site(False)
 
-    for site, values in sites.states().iteritems():
+    for site, values in sites.states().items():
         current_world["known_sites"].add((site, program_start_times.get(site, 0)))
         if values.get("state") == "online":
             current_world["online_sites"].add((site, program_start_times.get(site, 0)))
@@ -285,16 +265,16 @@ def get_aggregation_group_trees():
     # - "GROUP"
     # - ["GROUP_1", "GROUP2", ..]
     migrate_bi_configuration()  # convert bi_packs into legacy variables
-    groups = []
+    groups = set()
     for aggr_def in config.aggregations + config.host_aggregations:
         if aggr_def[0].get("disabled"):
             continue
         legacy_group = aggr_def[1]
         if isinstance(legacy_group, list):
-            groups.extend(legacy_group)
+            groups.update(legacy_group)
         else:
-            groups.append(legacy_group)
-    return groups
+            groups.add(legacy_group)
+    return sorted(groups)
 
 
 def aggregation_group_choices():
@@ -409,12 +389,12 @@ class JobWorker(multiprocessing.Process):
             g_services_by_hostname = {}
 
             required_hosts = job_info["queued_hosts"]
-            for key, values in self._site_data["services"].iteritems():
+            for key, values in self._site_data["services"].items():
                 if key in required_hosts:
                     g_services[key] = values
 
             hostnames = [x[1] for x in required_hosts]
-            for key, values in self._site_data["services_by_hostname"].iteritems():
+            for key, values in self._site_data["services_by_hostname"].items():
                 if key in hostnames:
                     g_services_by_hostname[key] = values
 
@@ -468,10 +448,10 @@ class JobWorker(multiprocessing.Process):
 
         # Generates a unique id for the given entry
         def get_hash(entry):
-            return hashlib.md5(repr(entry)).hexdigest()
+            return hashlib.md5(six.ensure_binary(repr(entry))).hexdigest()
 
         for group in {g for g in groups}:  # Flattened groups
-            new_entries_hash = map(get_hash, new_entries)
+            new_entries_hash = list(map(get_hash, new_entries))
             if group not in new_data['forest']:
                 new_data['forest_ref'][group] = new_entries_hash
             else:
@@ -783,7 +763,7 @@ class BISitedataManager(object):
         return online_sites - site_data_on_disk
 
     def _absorb_sitedata(self, siteinfo, new_data):
-        for key, values in new_data.iteritems():
+        for key, values in new_data.items():
             self._data.setdefault(key, {})
             self._data[key].update(values)
         self._have_sites.add(siteinfo)
@@ -806,7 +786,7 @@ class BISitedataManager(object):
                 for site in sites_with_no_data:
                     new_data[site] = {}
 
-                for site, sitedata in new_data.iteritems():
+                for site, sitedata in new_data.items():
                     # Write data to disk
                     siteinfo = (site, dict(missing_sites).get(site))
                     sitedata_filepath = self._get_sitedata_filepath(siteinfo)
@@ -1173,7 +1153,7 @@ class BICacheManager(object):
                     "affected_services",
             ]:
                 self._compiled_trees[what] = {}
-                for key, values in self._compiled_trees["%s_ref" % what].iteritems():
+                for key, values in self._compiled_trees["%s_ref" % what].items():
                     self._compiled_trees[what].setdefault(key, [])
                     for value in values:
                         new_value = value
@@ -1181,7 +1161,7 @@ class BICacheManager(object):
                             new_value = self._compiled_trees["aggr_ref"][value[1]]
                         self._compiled_trees[what][key].append((value[0], new_value))
 
-            for key, values in self._compiled_trees["forest_ref"].iteritems():
+            for key, values in self._compiled_trees["forest_ref"].items():
                 self._compiled_trees["forest"][key] = []
                 for aggr in values:
                     new_value = aggr
@@ -1265,7 +1245,7 @@ class BICacheManager(object):
                 "host_aggregations",
                 "affected_services",
         ]:
-            for key, ref_values in new_data.get("%s_ref" % what, {}).iteritems():
+            for key, ref_values in new_data.get("%s_ref" % what, {}).items():
                 self._compiled_trees["%s_ref" % what].setdefault(key, []).extend(ref_values)
 
                 self._compiled_trees[what].setdefault(key, [])
@@ -1274,7 +1254,7 @@ class BICacheManager(object):
                     linked_aggr = new_data["aggr_ref"][ref_value]
                     self._compiled_trees[what][key].append((ident, linked_aggr))
 
-        for key, ref_values in new_data.get("forest_ref", {}).iteritems():
+        for key, ref_values in new_data.get("forest_ref", {}).items():
             self._compiled_trees["forest_ref"].setdefault(key, []).extend(ref_values)
 
             for ref_value in ref_values:
@@ -1368,7 +1348,6 @@ def setup_bi_instances():
 def api_get_aggregation_state(filter_names=None, filter_groups=None):
     """ returns the computed aggregation states """
     compile_forest()
-    load_assumptions()  # user specific, always loaded
 
     rows = []
     missing_sites = set()
@@ -1392,7 +1371,7 @@ def api_get_aggregation_state(filter_names=None, filter_groups=None):
     required_trees = set()
     tree_lookup = {}
 
-    for group, trees in g_tree_cache["forest"].iteritems():
+    for group, trees in g_tree_cache["forest"].items():
         if filter_groups and group not in filter_groups:
             continue
 
@@ -1501,7 +1480,7 @@ def check_title_uniqueness(forest):
     # Legacy, will be removed any decade from now
     # One aggregation cannot be in mutliple groups.
     known_titles = set()
-    for aggrs in forest.itervalues():
+    for aggrs in forest.values():
         for aggr in aggrs:
             title = aggr["title"]
             if title in known_titles:
@@ -1509,7 +1488,8 @@ def check_title_uniqueness(forest):
                     _("Duplicate BI aggregation with the title \"<b>%s</b>\". "
                       "Please check your BI configuration and make sure that within each group no aggregation has "
                       "the same title as any other. Note: you can use arguments in the top level "
-                      "aggregation rule, like <tt>Host $HOST$</tt>.") % (html.attrencode(title)))
+                      "aggregation rule, like <tt>Host $HOST$</tt>.") %
+                    (escaping.escape_attribute(title)))
             else:
                 known_titles.add(title)
 
@@ -1523,7 +1503,7 @@ def check_aggregation_title_uniqueness(aggregations):
                      "Please check your BI configuration and make sure that within each group no aggregation has "
                      "the same title as any other. Note: you can use arguments in the top level "
                      "aggregation rule, like <tt>Host $HOST$</tt>.") % \
-                     (html.attrencode(title)))
+                     (escaping.escape_attribute(title)))
         else:
             known_titles.add(title)
 
@@ -1699,7 +1679,7 @@ def do_match(reg, text):
 
 # Debugging function
 def render_forest():
-    for group, trees in g_tree_cache["forest"].iteritems():
+    for group, trees in g_tree_cache["forest"].items():
         html.write("<h2>%s</h2>" % group)
         for tree in trees:
             ascii = render_tree(tree)
@@ -1982,7 +1962,7 @@ def subst_vars(pattern, arginfo):
     elif isinstance(pattern, tuple):
         return tuple([subst_vars(x, arginfo) for x in pattern])
 
-    for name, value in arginfo.iteritems():
+    for name, value in arginfo.items():
         if isinstance(pattern, six.string_types):
             pattern = pattern.replace('$' + name + '$', value)
     return pattern
@@ -2175,7 +2155,6 @@ def execute_node(node, status_info, aggregation_options):
 
 
 def execute_leaf_node(node, status_info, aggregation_options):
-
     site, host = node["host"]
     service = node.get("service")
 
@@ -2196,7 +2175,7 @@ def execute_leaf_node(node, status_info, aggregation_options):
         key = (site, host, service)
     else:
         key = (site, host)
-    state_assumption = g_assumptions.get(key)
+    state_assumption = config.user.bi_assumptions.get(key)
 
     # assemble state
     if service:
@@ -2613,8 +2592,7 @@ def page_debug():
 def page_all():
     html.header("All")
     compile_forest()
-    load_assumptions()
-    for group, trees in g_tree_cache["forest"].iteritems():
+    for group, trees in g_tree_cache["forest"].items():
         html.write("<h2>%s</h2>" % group)
         for _inst_args, tree in trees:
             state = execute_tree(tree)
@@ -2632,12 +2610,11 @@ def ajax_set_assumption():
     else:
         key = (site, host)
     state = html.request.var("state")
-    load_assumptions()
     if state == 'none':
-        del g_assumptions[key]
+        del config.user.bi_assumptions[key]
     else:
-        g_assumptions[key] = int(state)
-    save_assumptions()
+        config.user.bi_assumptions[key] = int(state)
+    config.user.save_bi_assumptions()
 
 
 @cmk.gui.pages.register("bi_save_treestate")
@@ -2646,14 +2623,12 @@ def ajax_save_treestate():
     current_ex_level, path = path_id.split(":", 1)
     current_ex_level = int(current_ex_level)
 
-    saved_ex_level = load_ex_level()
+    if config.user.bi_expansion_level != current_ex_level:
+        config.user.set_tree_states('bi', {})
+    config.user.set_tree_state('bi', path, html.request.var("state") == "open")
+    config.user.save_tree_states()
 
-    if saved_ex_level != current_ex_level:
-        html.set_tree_states('bi', {})
-    html.set_tree_state('bi', path, html.request.var("state") == "open")
-    html.save_tree_states()
-
-    save_ex_level(current_ex_level)
+    config.user.bi_expansion_level = current_ex_level
 
 
 @cmk.gui.pages.register("bi_render_tree")
@@ -2683,9 +2658,6 @@ def ajax_render_tree():
     else:
         compile_forest()
 
-    # Load current assumptions
-    load_assumptions()
-
     # Now look for our aggregation
     if aggr_group not in g_tree_cache["forest"]:
         raise MKGeneralException(
@@ -2700,10 +2672,10 @@ def ajax_render_tree():
                 continue  # Not yet monitored, aggregation is not displayed
             row["aggr_group"] = aggr_group
 
-            # ZUTUN: omit_root, boxes, only_problems has HTML-Variablen
+            # TODO: omit_root, boxes, only_problems has HTML-Variablen
             renderer = renderer_cls(row,
                                     omit_root=omit_root,
-                                    expansion_level=load_ex_level(),
+                                    expansion_level=config.user.bi_expansion_level,
                                     only_problems=only_problems,
                                     lazy=False)
             html.write(renderer.render())
@@ -2719,19 +2691,18 @@ def compute_output_message(effective_state, rule):
 
     str_state = str(effective_state["state"])
     if str_state in rule.get("state_messages", {}):
-        output.append(html.attrencode(rule["state_messages"][str_state]))
+        output.append(escaping.escape_attribute(rule["state_messages"][str_state]))
     return ", ".join(output)
 
 
 def render_tree_json(row):
     expansion_level = int(html.request.var("expansion_level", 999))
 
-    saved_expansion_level = load_ex_level()
-    treestate = html.get_tree_states('bi')
-    if expansion_level != saved_expansion_level:
+    treestate = config.user.get_tree_states('bi')
+    if expansion_level != config.user.bi_expansion_level:
         treestate = {}
-        html.set_tree_states('bi', treestate)
-        html.save_tree_states()
+        config.user.set_tree_states('bi', treestate)
+        config.user.save_tree_states()
 
     def render_node_json(tree, show_host):
         is_leaf = len(tree) == 3
@@ -2802,12 +2773,11 @@ class ABCFoldableTreeRenderer(six.with_metaclass(abc.ABCMeta, object)):
         self._load_tree_state()
 
     def _load_tree_state(self):
-        saved_expansion_level = load_ex_level()
-        self._treestate = html.get_tree_states('bi')
-        if self._expansion_level != saved_expansion_level:
+        self._treestate = config.user.get_tree_states('bi')
+        if self._expansion_level != config.user.bi_expansion_level:
             self._treestate = {}
-            html.set_tree_states('bi', self._treestate)
-            html.save_tree_states()
+            config.user.set_tree_states('bi', self._treestate)
+            config.user.save_tree_states()
 
     @abc.abstractmethod
     def css_class(self):
@@ -2930,7 +2900,7 @@ class ABCFoldableTreeRenderer(six.with_metaclass(abc.ABCMeta, object)):
             key = (site, host, service)
         else:
             key = (site, host)
-        ass = g_assumptions.get(key)
+        ass = config.user.bi_assumptions.get(key)
         current_state = str(ass).lower()
 
         html.icon_button(
@@ -3026,7 +2996,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
 
         if mousecode:
             if img_class:
-                html.img(src=html.theme_url("images/tree_black_closed.png"),
+                html.img(src=html.theme_url("images/tree_closed.png"),
                          class_=["treeangle", img_class],
                          onclick=mousecode)
 
@@ -3246,7 +3216,6 @@ def create_aggregation_row(tree, status_info=None):
 
 
 def table(view, columns, query, only_sites, limit, all_active_filters):
-    load_assumptions()  # user specific, always loaded
     # Hier müsste man jetzt die Filter kennen, damit man nicht sinnlos
     # alle Aggregationen berechnet.
     rows = []
@@ -3307,14 +3276,14 @@ def table(view, columns, query, only_sites, limit, all_active_filters):
         return True
 
     required_hosts = set()
-    for group, trees in items.iteritems():
+    for group, trees in items.items():
         for tree in trees:
             if not is_tree_required(tree):
                 continue
             required_hosts.update(tree.get("reqhosts"))
     status_info = get_status_info(required_hosts)
 
-    for group, trees in items.iteritems():
+    for group, trees in items.items():
         if only_group not in [None, group]:
             continue
 
@@ -3376,7 +3345,6 @@ def singlehost_table(view, columns, query, only_sites, limit, all_active_filters
                      bygroup):
     log("--------------------------------------------------------------------")
     log("* Starting to compute singlehost_table (joinbyname = %s)" % joinbyname)
-    load_assumptions()  # user specific, always loaded
     log("* Assumptions are loaded.")
 
     # Create livestatus filter for filtering out hosts. We can
@@ -3525,23 +3493,6 @@ def debug(x):
     html.write("<pre>%s</pre>\n" % p)
 
 
-def load_assumptions():
-    global g_assumptions
-    g_assumptions = config.user.load_file("bi_assumptions", {})
-
-
-def save_assumptions():
-    config.user.save_file("bi_assumptions", g_assumptions)
-
-
-def load_ex_level():
-    return config.user.load_file("bi_treestate", (None,))[0]
-
-
-def save_ex_level(current_ex_level):
-    config.user.save_file("bi_treestate", (current_ex_level,))
-
-
 def status_tree_depth(tree):
     if len(tree) == 3:
         return 1
@@ -3569,7 +3520,7 @@ def get_state_name(node):
     return _service_state_names()[node[0]['state']]
 
 
-_rule_to_pack_lookup = {}
+_rule_to_pack_lookup = {}  # type: Dict[str, str]
 
 
 def migrate_bi_configuration():
@@ -3579,19 +3530,20 @@ def migrate_bi_configuration():
     if config.bi_packs:
         global _rule_to_pack_lookup
         _rule_to_pack_lookup = {}
-        for packname, pack in config.bi_packs.iteritems():
+        for packname, pack in config.bi_packs.items():
             for rule_id in pack["rules"]:
                 _rule_to_pack_lookup[rule_id] = packname
-            converted_host_aggregations += map(_convert_aggregation, pack["host_aggregations"])
-            converted_aggregations += map(_convert_aggregation, pack["aggregations"])
+            converted_host_aggregations += list(map(_convert_aggregation,
+                                                    pack["host_aggregations"]))
+            converted_aggregations += list(map(_convert_aggregation, pack["aggregations"]))
             converted_aggregation_rules.update(pack["rules"])
         config.bi_packs = {}
 
-    converted_host_aggregations += map(_convert_aggregation, config.host_aggregations)
-    converted_aggregations += map(_convert_aggregation, config.aggregations)
+    converted_host_aggregations += list(map(_convert_aggregation, config.host_aggregations))
+    converted_aggregations += list(map(_convert_aggregation, config.aggregations))
     converted_aggregation_rules.update({
         rule_id: _convert_legacy_aggregation_rule(rule)
-        for rule_id, rule in config.aggregation_rules.iteritems()
+        for rule_id, rule in config.aggregation_rules.items()
     })
 
     config.host_aggregations = converted_host_aggregations

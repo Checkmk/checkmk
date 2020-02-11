@@ -1,0 +1,19 @@
+Title: mem.used, statgrab_mem, aix_memory, docker_container_mem, solaris_mem, emc_ecs_mem, hr_mem: Unify service output
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1579077833
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+The output of these check plugins is now formatted in a clearer way, in line with other memory checks.
+For instance: Output previously formatted as
+
+54.70 GB used (46.70 GB RAM + 8.00 GB SWAP, this is 89.2% of 61.33 GB RAM + 8.00 GB SWAP)
+
+will now read
+
+Total (RAM + Swap): 89.19% - 54.70 GB of 61.33 GB RAM, RAM: 76.14% - 46.70 GB of 61.33 GB, Swap: 100% - 8.00 GB of 8.00 GB
+

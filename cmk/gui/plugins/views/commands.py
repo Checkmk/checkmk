@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import time
 import livestatus
@@ -31,10 +11,11 @@ import cmk.gui.config as config
 import cmk.gui.utils as utils
 import cmk.gui.bi as bi
 import cmk.gui.sites as sites
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.valuespec import Age
+from cmk.gui.valuespec import Age, AbsoluteDate
 
 from cmk.gui.permissions import (
     permission_section_registry,
@@ -135,7 +116,7 @@ class CommandReschedule(Command):
     def render(self, what):
         html.button("_resched_checks", _("Reschedule"))
         html.write_text(" " + _("and spread over") + " ")
-        html.number_input("_resched_spread", 0, size=3)
+        html.text_input("_resched_spread", default_value="0", size=3, cssclass="number")
         html.write_text(" " + _("minutes") + " ")
 
     def action(self, cmdtag, spec, row, row_index, num_rows):
@@ -528,8 +509,8 @@ class CommandFakeCheckResult(Command):
             if statename:
                 pluginoutput = html.get_unicode_input("_fake_output").strip()
                 if not pluginoutput:
-                    pluginoutput = _("Manually set to %s by %s") % (html.attrencode(statename),
-                                                                    config.user.id)
+                    pluginoutput = _("Manually set to %s by %s") % (
+                        escaping.escape_attribute(statename), config.user.id)
                 perfdata = html.request.var("_fake_perfdata")
                 if perfdata:
                     pluginoutput += "|" + perfdata
@@ -537,8 +518,8 @@ class CommandFakeCheckResult(Command):
                     cmdtag = "SERVICE"
                 command = "PROCESS_%s_CHECK_RESULT;%s;%s;%s" % (cmdtag, spec, s,
                                                                 livestatus.lqencode(pluginoutput))
-                title = _("<b>manually set check results to %s</b> for") % html.attrencode(
-                    statename)
+                title = _("<b>manually set check results to %s</b> for"
+                         ) % escaping.escape_attribute(statename)
                 return command, title
 
 
@@ -951,7 +932,11 @@ class CommandScheduleDowntimes(Command):
         html.hr()
         html.button("_down_from_now", _("From now for"))
         html.nbsp()
-        html.number_input("_down_minutes", 60, size=4, submit="_down_from_now")
+        html.text_input("_down_minutes",
+                        default_value="60",
+                        size=4,
+                        submit="_down_from_now",
+                        cssclass="number")
         html.write_text("&nbsp; " + _("minutes"))
         html.hr()
         for time_range in config.user_downtime_timeranges:
@@ -970,13 +955,12 @@ class CommandScheduleDowntimes(Command):
             html.hr()
 
         html.button("_down_custom", _("Custom time range"))
-        html.datetime_input("_down_from", time.time(), submit="_down_custom")
+        self._vs_down_from().render_input("_down_from", time.time())
         html.write_text("&nbsp; " + _('to') + " &nbsp;")
-        html.datetime_input("_down_to", time.time() + 7200, submit="_down_custom")
+        self._vs_down_to().render_input("_down_to", time.time() + 7200)
         html.hr()
         html.checkbox("_down_flexible", False, label="%s " % _('flexible with max. duration'))
-        html.time_input("_down_duration", 2, 0)
-        html.write_text(" " + _('(HH:MM)'))
+        self._vs_duration().render_input("_down_duration", 7200)
         if what == "host":
             html.hr()
             html.checkbox("_include_childs", False, label=_('Also set downtime on child hosts'))
@@ -1076,8 +1060,12 @@ class CommandScheduleDowntimes(Command):
             title = _("<b>%s for the next %d minutes</b> on") % (title_start, minutes)
 
         elif html.request.var("_down_custom"):
-            down_from = html.get_datetime_input("_down_from")
-            down_to = html.get_datetime_input("_down_to")
+            down_from = self._vs_down_from().from_html_vars("_down_from")
+            self._vs_down_from().validate_value(down_from, "_down_from")
+
+            down_to = self._vs_down_to().from_html_vars("_down_to")
+            self._vs_down_to().validate_value(down_to, "_down_to")
+
             if down_to < time.time():
                 raise MKUserError(
                     "_down_to",
@@ -1122,7 +1110,8 @@ class CommandScheduleDowntimes(Command):
                                   _("You need to supply a comment for your downtime."))
             if html.request.var("_down_flexible"):
                 fixed = 0
-                duration = html.get_time_input("_down_duration", _("the duration"))
+                duration = self._vs_duration().from_html_vars("_down_duration")
+                self._vs_duration().validate_value(duration, "_down_duration")
             else:
                 fixed = 1
                 duration = 0
@@ -1166,6 +1155,27 @@ class CommandScheduleDowntimes(Command):
                 commands = [make_command(spec, cmdtag) for spec in specs]
 
             return commands, title
+
+    def _vs_down_from(self):
+        return AbsoluteDate(
+            title=_("From"),
+            include_time=True,
+            submit_form_name="_down_custom",
+        )
+
+    def _vs_down_to(self):
+        return AbsoluteDate(
+            title=_("Until"),
+            include_time=True,
+            submit_form_name="_down_custom",
+        )
+
+    def _vs_duration(self):
+        return Age(
+            display=["hours", "minutes"],
+            title=_("Duration"),
+            cssclass="inline",
+        )
 
     def _get_duration_human_readable(self, secs):
         days, rest = divmod(secs, 86400)
@@ -1338,9 +1348,9 @@ class CommandFavorites(Command):
 
     def executor(self, command, site):
         _unused, star, spec = command.split(";", 2)
-        stars = config.user.load_stars()
+        stars = config.user.stars
         if star == "0" and spec in stars:
             stars.remove(spec)
         elif star == "1":
             stars.add(spec)
-        config.user.save_stars(stars)
+        config.user.save_stars()

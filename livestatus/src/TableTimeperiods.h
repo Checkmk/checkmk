@@ -28,15 +28,31 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Table.h"
+#ifdef CMC
+class Timeperiod;
+#else
+#include "nagios.h"
+extern timeperiod *timeperiod_list;
+#endif
+
 class MonitoringCore;
 class Query;
 
 class TableTimeperiods : public Table {
 public:
+    class IRow {
+    public:
+        virtual ~IRow() = default;
+#ifdef CMC
+        virtual const Timeperiod *getTimePeriod() const = 0;
+#else
+        virtual const timeperiod *getTimePeriod() const = 0;
+#endif
+    };
     explicit TableTimeperiods(MonitoringCore *mc);
 
-    std::string name() const override;
-    std::string namePrefix() const override;
+    [[nodiscard]] std::string name() const override;
+    [[nodiscard]] std::string namePrefix() const override;
     void answerQuery(Query *query) override;
 };
 

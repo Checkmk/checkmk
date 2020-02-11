@@ -1,7 +1,7 @@
 import copy
 
-import cmk_base.config as config
-import cmk_base.check_api as check_api
+import cmk.base.config as config
+import cmk.base.check_api as check_api
 
 
 class CheckHandler(object):

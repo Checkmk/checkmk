@@ -28,8 +28,12 @@ import errno
 import os
 import collections
 import io
+import sys
 
-import pathlib2
+if sys.version_info[0] >= 3:
+    import pathlib as pathlib_  # pylint: disable=import-error
+else:
+    import pathlib2 as pathlib_  # pylint: disable=import-error
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -41,7 +45,7 @@ logwatch_max_filesize = 500000  # do not save more than 500k of message (configu
 logwatch_service_output = "default"
 logwatch_groups = []
 
-# Deprecated option since 1.6. cmk_base creates a config warning when finding rules
+# Deprecated option since 1.6. cmk.base creates a config warning when finding rules
 # for this ruleset. Can be dropped with 1.7.
 logwatch_patterns = {}
 
@@ -157,8 +161,8 @@ def logwatch_ec_forwarding_enabled(params, item):
 
 def _logwatch_discoverable_items(parsed):
     '''only consider files which are 'ok' on at least one node'''
-    return sorted(item for item, item_data in parsed['logfiles'].iteritems()
-                  if any(node_data['attr'] == 'ok' for node_data in item_data.itervalues()))
+    return sorted(item for item, item_data in parsed['logfiles'].items()
+                  if any(node_data['attr'] == 'ok' for node_data in item_data.values()))
 
 
 # Splits the number of existing logfiles into
@@ -269,10 +273,10 @@ def inventory_logwatch_groups(parsed):
     for logfile in not_forwarded_logs:
         for group_patterns in inventory_groups:
             newly_found = logwatch_groups_of_logfile(group_patterns, logfile)
-            for group_name, pattern_set in newly_found.iteritems():
+            for group_name, pattern_set in newly_found.items():
                 inventory.setdefault(group_name, set()).update(pattern_set)
 
-    for group_name, patterns in inventory.iteritems():
+    for group_name, patterns in inventory.items():
         # Convert pattern containers to lists (sets are not possible in autochecks)
         yield group_name, {"group_patterns": sorted(patterns)}
 
@@ -305,7 +309,7 @@ def check_logwatch(item, params, parsed):
     item_data = parsed['logfiles'].get(item, {})
 
     loglines = []
-    for node, node_data in item_data.iteritems():
+    for node, node_data in item_data.items():
         if _logwatch_is_cache_new(last_run, node):
             loglines.extend(node_data['lines'])
 
@@ -426,11 +430,11 @@ def check_logwatch_groups(item, params, parsed):
         group_patterns.add(entry)
 
     loglines = []
-    for logfile_name, item_data in parsed['logfiles'].iteritems():
+    for logfile_name, item_data in parsed['logfiles'].items():
         for inclusion, exclusion in group_patterns:
             if _logwatch_match_group_patterns(logfile_name, inclusion, exclusion):
                 # node info ignored (only used in regular logwatch check)
-                for node_data in item_data.itervalues():
+                for node_data in item_data.values():
                     loglines.extend(node_data['lines'])
                 break
 
@@ -547,13 +551,13 @@ class LogwatchBlockCollector(object):
     def get_count_info(self):
         expanded_levels = {"O": "OK", "W": "WARN", "u": "WARN", "C": "CRIT"}
         count_txt = ("%d %s" % (count, expanded_levels.get(level, "IGN"))
-                     for level, count in self._states_counter.iteritems())
+                     for level, count in self._states_counter.items())
         return "%s messages" % ', '.join(count_txt)
 
 
 def check_logwatch_generic(item, params, loglines, found):
     import hashlib
-    logmsg_dir = pathlib2.Path(logwatch_dir, host_name())
+    logmsg_dir = pathlib_.Path(logwatch_dir, host_name())
 
     logmsg_dir.mkdir(parents=True, exist_ok=True)
 
@@ -754,7 +758,7 @@ def inventory_logwatch_ec(parsed, use_mode):
 
 def _logwatch_filter_accumulated_lines(item_data):
     # node info ignored (only used in regular logwatch check)
-    for node_data in item_data.itervalues():
+    for node_data in item_data.values():
         for line in node_data['lines']:
             # skip context lines and ignore lines
             if line[0] not in ('.', 'I'):
@@ -850,7 +854,7 @@ def check_logwatch_ec(item, params, parsed):
 
     try:
         if forwarded_logfiles:
-            logfile_info = " from " + ",".join(list(forwarded_logfiles))
+            logfile_info = " from " + ",".join(forwarded_logfiles)
         else:
             logfile_info = ""
 

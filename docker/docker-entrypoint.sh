@@ -17,6 +17,20 @@ function exec_hook() {
     fi
 }
 
+function create_system_apache_config() {
+    # We have the special situation that the site apache is directly accessed from
+    # external without a system apache reverse proxy. We need to disable the canonical
+    # name redirect here to make redirects work as expected.
+    #
+    # In a reverse proxy setup the proxy would rewrite the host to the host requested by the user.
+    # See omd/packages/apache-omd/skel/etc/apache/apache.conf for further information.
+    APACHE_DOCKER_CFG="/omd/sites/$CMK_SITE_ID/etc/apache/conf.d/cmk_docker.conf"
+    echo -e "# Created for Checkmk docker container\\n\\nUseCanonicalName Off\\n" >"$APACHE_DOCKER_CFG"
+    chown "$CMK_SITE_ID:$CMK_SITE_ID" "$APACHE_DOCKER_CFG"
+    # Redirect top level requests to the sites base url
+    echo -e "# Redirect top level requests to the sites base url\\nRedirectMatch 302 ^/$ /$CMK_SITE_ID/\\n" >>"$APACHE_DOCKER_CFG"
+}
+
 if [ -z "$CMK_SITE_ID" ]; then
     echo "ERROR: No site ID given"
     exit 1
@@ -55,17 +69,7 @@ if [ ! -d "/opt/omd/sites/$CMK_SITE_ID/etc" ]; then
     omd config "$CMK_SITE_ID" set APACHE_TCP_ADDR 0.0.0.0
     omd config "$CMK_SITE_ID" set APACHE_TCP_PORT 5000
 
-    # We have the special situation that the site apache is directly accessed from
-    # external without a system apache reverse proxy. We need to disable the canonical
-    # name redirect here to make redirects work as expected.
-    #
-    # In a reverse proxy setup the proxy would rewrite the host to the host requested by the user.
-    # See omd/packages/apache-omd/skel/etc/apache/apache.conf for further information.
-    APACHE_DOCKER_CFG="/omd/sites/$CMK_SITE_ID/etc/apache/conf.d/cmk_docker.conf"
-    echo -e "# Created for Checkmk docker container\\n\\nUseCanonicalName Off\\n" >"$APACHE_DOCKER_CFG"
-    chown "$CMK_SITE_ID:$CMK_SITE_ID" "$APACHE_DOCKER_CFG"
-    # Redirect top level requests to the sites base url
-    echo -e "# Redirect top level requests to the sites base url\\nRedirectMatch 302 ^/$ /$CMK_SITE_ID/\\n" >>"$APACHE_DOCKER_CFG"
+    create_system_apache_config
 
     if [ "$CMK_LIVESTATUS_TCP" = "on" ]; then
         omd config "$CMK_SITE_ID" set LIVESTATUS_TCP on
@@ -95,6 +99,7 @@ fi
 if [ ! -e "/omd/sites/$CMK_SITE_ID/version" ]; then
     echo "### UPDATING SITE"
     exec_hook pre-update
+    create_system_apache_config
     omd -f update --conflict=install "$CMK_SITE_ID"
     exec_hook post-update
 fi

@@ -90,12 +90,16 @@ def current_base_branch_name():
     return branch_name
 
 
+def get_cmk_download_credentials_file():
+    return "%s/.cmk-credentials" % os.environ["HOME"]
+
+
 def get_cmk_download_credentials():
-    cred = "%s/.cmk-credentials" % os.environ["HOME"]
+    credentials_file = get_cmk_download_credentials_file()
     try:
-        return tuple(open(cred).read().strip().split(":"))
+        return tuple(open(credentials_file).read().strip().split(":"))
     except IOError:
-        raise Exception("Missing %s file (Create with content: USER:PASSWORD)" % cred)
+        raise Exception("Missing %s file (Create with content: USER:PASSWORD)" % credentials_file)
 
 
 def site_id():
@@ -178,7 +182,7 @@ def InterProcessLock(filename):
             os.close(fd)
 
 
-class DummyApplication(object):
+class DummyApplication(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, environ, start_response):
         self._environ = environ
         self._start_response = start_response

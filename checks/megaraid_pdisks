@@ -59,6 +59,7 @@ def megaraid_pdisks_parse(info):
     return_var = []
     adapter = 0
     enclosure_devid = -181
+    predictive_failure_count = None
     for line in info:
         if line[0] == 'adapter':
             current_adapter = {}
@@ -86,6 +87,8 @@ def megaraid_pdisks_parse(info):
 
         elif line[0] == "Slot":
             slot = int(line[-1])
+        elif line[0] == "Predictive" and line[1] == "Failure" and line[2] == "Count:":
+            predictive_failure_count = int(line[3])
         elif line[0] == "Firmware" and line[1] == "state:":
             state = line[2].rstrip(',')
         elif line[0] == "Inquiry" and line[1] == "Data:":
@@ -93,7 +96,9 @@ def megaraid_pdisks_parse(info):
             #Adapter, Enclosure, Encolsure Device ID, Slot, State, Name
             return_var.append(
                 (megaraid_pdisks_adapterstr[adapter], adapters[adapter][enclosure_devid],
-                 enclosure_devid, slot, state, name))
+                 enclosure_devid, slot, state, name, predictive_failure_count))
+
+            predictive_failure_count = None
 
     return return_var
 
@@ -101,7 +106,7 @@ def megaraid_pdisks_parse(info):
 def inventory_megaraid_pdisks(info):
     info = megaraid_pdisks_parse(info)
     inventory = []
-    for adapter, enclosure, _enc_dev_id, slot, _state, _name in info:
+    for adapter, enclosure, _enc_dev_id, slot, _state, _name, _predictive_failure_count in info:
         inventory.append(("%s%s/%s" % (adapter, enclosure, slot), None))
     return inventory
 
@@ -120,9 +125,19 @@ megaraid_pdisks_states = {
 
 def check_megaraid_pdisks(item, _no_params, info):
     info = megaraid_pdisks_parse(info)
-    for adapter, enclosure, _enc_dev_id, slot, state, name in info:
+    for adapter, enclosure, _enc_dev_id, slot, state, name, predictive_failure_count in info:
         if "%s%s/%s" % (adapter, enclosure, slot) == item:
-            return megaraid_pdisks_states.get(state, 3), "%s (%s)" % (state, name)
+            infotext = "%s (%s)" % (state, name)
+
+            retval = megaraid_pdisks_states.get(state, 3)
+
+            if predictive_failure_count is not None:
+                infotext += " (predictive fail count: %s)" % predictive_failure_count
+                # force warning if predictive failure
+                if retval == 0 and predictive_failure_count > 0:
+                    retval = 1
+
+            return retval, infotext
     return 3, "No disk in encl/slot %s found" % item
 
 

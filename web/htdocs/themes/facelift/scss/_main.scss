@@ -1,29 +1,7 @@
-/*
-+------------------------------------------------------------------+
-|             ____ _               _        __  __ _  __           |
-|            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-|           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-|           | |___| | | |  __/ (__|   <    | |  | | . \            |
-|            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-|                                                                  |
-| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
-+------------------------------------------------------------------+
-
-This file is part of Check_MK.
-The official homepage is at http://mathias-kettner.de/check_mk.
-
-check_mk is free software;  you can redistribute it and/or modify it
-under the  terms of the  GNU General Public License  as published by
-the Free Software Foundation in version 2.  check_mk is  distributed
-in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-tails.  You should have received  a copy of the  GNU  General Public
-License along with GNU Make; see the file  COPYING.  If  not,  write
-to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-Boston, MA 02110-1301 USA.
-
-*/
+@charset "UTF-8";
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 /* Global style used by all HTML pages, even by sidebar and
    mobile interface */
@@ -82,7 +60,6 @@ input, select, textarea {
 
 /* consistent dropdown field styling for all browsers */
 select:not([multiple]) {
-  padding: 8px 16px;
   padding-right: 2.5em;
   background: $bg-color-default url("images/select_arrow.png") right 50% / 20px 11px no-repeat;
   -webkit-appearance: none;  /* Removes default chrome and safari style */
@@ -370,7 +347,7 @@ img.treeangle {
   margin-right: 3px;
   vertical-align: middle;
   cursor: pointer;
-  filter: invert(20%);
+  filter: $treeangle-img-filter;
   transition: transform .2s ease-in-out;
   -webkit-transition: -webkit-transform .2s ease-in-out;
   -moz-transition: -moz-transform .2s ease-in-out;
@@ -390,6 +367,7 @@ img.treeangle {
     height: 16px;
     margin-right: 5px;
     vertical-align: middle;
+    filter: none;
   }
 }
 
@@ -466,7 +444,7 @@ div.error {
   background-color: $color-state-2-background;
   border-color: rgb(238, 68, 0);
 
-  a {
+  a, a:link {
     color: rgb(255, 255, 255);
   }
 
@@ -736,36 +714,6 @@ table.vs_duallist {
 
     &.del {
       float: left;
-    }
-  }
-}
-
-div.vs_autocomplete {
-  position: absolute;
-  z-index: 20;
-  display: block;
-  width: 160px;
-  color: rgb(0, 0, 0);
-  background-color: rgb(223, 223, 223);
-  border: 1px solid;
-  border-color: rgb(255, 255, 255) rgb(0, 0, 0) rgb(0, 0, 0) rgb(255, 255, 255);
-  box-shadow: 0 0 1.5px rgb(0, 0, 0);
-
-  ul {
-    max-height: 80px;
-    padding-left:0;
-    margin: 0;
-    overflow-y: scroll;
-    list-style-type:none;
-  }
-
-  li {
-    padding: 1px 3px;
-
-    &:hover {
-      color: rgb(255, 255, 255);
-      cursor: default;
-      background-color: rgb(44, 87, 102);
     }
   }
 }
@@ -1176,6 +1124,53 @@ table.modifydowntimes > tbody > tr {
   }
 }
 
+div.vs_autocomplete {
+    height: 22px;
+}
+
+div.vs_autocomplete .error{
+  padding: 0.5em 2em;
+  margin: 0;
+}
+
+span.vs_autocomplete .select2-dropdown {
+    border: 0px;
+    position: inherit;
+}
+
+span.vs_autocomplete .select2-dropdown--below {
+    top: -8px;
+}
+
+span.vs_autocomplete .select2-search--dropdown {
+    padding: 0px;
+    margin: 0px;
+}
+
+span.vs_autocomplete .select2-search__field {
+    height: 22px;
+    padding-left: 6px;
+    border-radius: 4px;
+}
+
+span.vs_autocomplete .select2-results__options {
+    border: 1px solid #aaa;
+    border-top: 0px;
+    border-radius: 4px;
+}
+
+div.metricchoice div.vs_autocomplete .select2-dropdown--below {
+    top: -11px;
+}
+
+div.vs_autocomplete > .select2-container--below > .selection > span {
+    display: none;
+}
+
+div.vs_age.inline {
+  display: inline-block;
+}
+
 /* TODO: Go through these following styles and move them to specific scss
  *       where needed
  */
@@ -1260,10 +1255,6 @@ div.content {
   box-sizing: border-box;
 }
 
-body.main img.treeangle {
-  filter: invert($filter-inversion-percentage);
-}
-
 /* TODO: Reproduce this element then get rid of important styles */
 .op {
   width: 60px !important;
@@ -1272,11 +1263,8 @@ body.main img.treeangle {
 .bi_rule_tree img.treeangle, .invtree img.treeangle,
 .grouped_row_header img.treeangle.nform, .aggrtree img.treeangle {
   &, body.main & {
-    filter: invert(0%);
-
     &.open, &.closed {
       margin: 1px 4px 0;
-      filter: $tree-collapse-img-filter;
     }
   }
 }

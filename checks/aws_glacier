@@ -68,7 +68,7 @@ def check_aws_glacier_archives(item, params, parsed):
                                                              num_archives)]
 
     tag_infos = []
-    for key, value in parsed.get('Tagging', {}).items():
+    for key, value in list(parsed.get('Tagging', {}).items()):
         tag_infos.append("%s: %s" % (key, value))
     if tag_infos:
         yield 0, '[Tags]: %s' % ", ".join(tag_infos)

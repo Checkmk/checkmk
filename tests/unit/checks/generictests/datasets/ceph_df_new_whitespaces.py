@@ -1,6 +1,5 @@
 # -*- encoding: utf-8
 # yapf: disable
-
 checkname = 'ceph_df'
 
 info = [
@@ -42,13 +41,9 @@ checks = {
                 'trend_perfdata': True
             }, [
                 (
-                    0,
-                    '3.16% used (8.00 of 253.00 GB), trend: 0.00 B / 24 hours',
-                    [
+                    0, '3.16% used (8.00 of 253.00 GB)', [
                         ('SUMMARY', 8192.0, 207257.6, 233164.8, 0, 259072.0),
-                        ('fs_size', 259072.0, None, None, None, None),
-                        ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 10794.666666666666)
+                        ('fs_size', 259072.0, None, None, None, None)
                     ]
                 )
             ]
@@ -66,15 +61,11 @@ checks = {
                 'trend_perfdata': True
             }, [
                 (
-                    0,
-                    '2.04% used (1.60 of 78.60 GB), trend: 0.00 B / 24 hours',
-                    [
+                    0, '2.04% used (1.60 of 78.60 GB)', [
                         (
                             u'cephfs_data', 1638.3999999999942, 64389.12,
                             72437.76, 0, 80486.4
-                        ), ('fs_size', 80486.4, None, None, None, None),
-                        ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 3353.6)
+                        ), ('fs_size', 80486.4, None, None, None, None)
                     ]
                 )
             ]
@@ -92,15 +83,11 @@ checks = {
                 'trend_perfdata': True
             }, [
                 (
-                    0,
-                    '0.04% used (32.00 MB of 77.03 GB), trend: 0.00 B / 24 hours',
-                    [
+                    0, '0.04% used (32.00 MB of 77.03 GB)', [
                         (
                             u'cephfs_metadata', 32.0, 63104.0, 70992.0, 0,
                             78880.0
-                        ), ('fs_size', 78880.0, None, None, None, None),
-                        ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 3286.6666666666665)
+                        ), ('fs_size', 78880.0, None, None, None, None)
                     ]
                 )
             ]

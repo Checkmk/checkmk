@@ -1,5 +1,5 @@
 # yapf: disable
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.gui.wato  # pylint: disable=unused-import
@@ -164,6 +164,8 @@ def test_grouped_rulespecs():
         ],
         'agents/windows_agent': [
             'agent_config:logging',
+            'agent_config:firewall',
+            'agent_config:win_clean_uninstall',
             'agent_config:win_exe_suffixes',
             'agent_config:win_agent_sections',
             'agent_config:win_agent_disabled_sections',

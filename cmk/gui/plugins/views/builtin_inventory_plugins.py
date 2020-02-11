@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # YAPF is disabled in the next section to get simpler overview of the keys
 # present in the dictionary as they are packed together much more
@@ -409,7 +389,48 @@ inventory_displayhints.update({
     ".software.packages:*.path": {"title": _("Path")},
     ".software.applications.": {"title": _("Applications")},
     ".software.applications.check_mk.": {"title": _("Checkmk")},
+    ".software.applications.check_mk.num_hosts": {"title": _("# Hosts"), "short": _("Hosts"),},
+    ".software.applications.check_mk.num_services": {"title": _("# Services"), "short": _("Services"),},
     ".software.applications.check_mk.agent_version": {"title": _("Checkmk Agent Version")},
+    ".software.applications.check_mk.versions:": {
+        "title": _("Versions"),
+        "keyorder": ["version", "number", "edition", "demo", "num_sites"],
+        "view": "invcmkversions_of_host",
+    },
+    ".software.applications.check_mk.versions:*.demo": {"paint": "bool"},
+    ".software.applications.check_mk.sites:": {
+        "title": _("Sites"),
+        "keyorder": [
+            "site",
+            "used_version",
+            "num_hosts",
+            "num_services",
+            "check_mk_helper_usage",
+            "livestatus_usage",
+            "check_helper_usage",
+            "autostart",
+        ],
+        "view": "invcmksites_of_host",
+    },
+    ".software.applications.check_mk.sites:*.used_version": {"short": _("Version")},
+    ".software.applications.check_mk.sites:*.num_hosts": {"short": _("Hosts")},
+    ".software.applications.check_mk.sites:*.num_services": {"short": _("Services")},
+    ".software.applications.check_mk.sites:*.check_mk_helper_usage": {"short": _("CMK helper")},
+    ".software.applications.check_mk.sites:*.livestatus_usage": {"short": _("Live helper")},
+    ".software.applications.check_mk.sites:*.check_helper_usage": {"short": _("Act. helper")},
+    ".software.applications.check_mk.sites:*.autostart": {"paint": "bool"},
+    ".software.applications.check_mk.sites:*.apache": {"paint": "service_status"},
+    ".software.applications.check_mk.sites:*.cmc": {"paint": "service_status"},
+    ".software.applications.check_mk.sites:*.crontab": {"paint": "service_status"},
+    ".software.applications.check_mk.sites:*.dcd": {"paint": "service_status"},
+    ".software.applications.check_mk.sites:*.liveproxyd": {"paint": "service_status"},
+    ".software.applications.check_mk.sites:*.mkeventd": {"paint": "service_status"},
+    ".software.applications.check_mk.sites:*.mknotifyd": {"paint": "service_status"},
+    ".software.applications.check_mk.sites:*.rrdcached": {"paint": "service_status"},
+    ".software.applications.check_mk.sites:*.stunnel": {"paint": "service_status"},
+    ".software.applications.check_mk.sites:*.xinetd": {"paint": "service_status"},
+    ".software.applications.check_mk.sites:*.nagios": {"paint": "service_status"},
+    ".software.applications.check_mk.sites:*.npcd": {"paint": "service_status"},
     ".software.applications.check_mk.cluster.is_cluster": {
         "title": _("Cluster host"), "short": _("Cluster"), "paint": "bool"
     },
@@ -591,7 +612,7 @@ inventory_displayhints.update({
     ".software.applications.oracle.instance:*.logins": {"title": _("Logins")},
     ".software.applications.oracle.instance:*.db_uptime": {"title": _("Uptime"), "paint": "age"},
     ".software.applications.oracle.instance:*.db_creation_time": {
-        "title": _("Creation time"), "paint": "date_and_time"
+        "title": _("Creation time"),
     },
     ".software.applications.oracle.dataguard_stats:": {
         "title": _("Dataguard statistics"),

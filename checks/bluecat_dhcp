@@ -85,7 +85,7 @@ def check_bluecat_dhcp(item, params, info):
             ]
         else:
             # None of the nodes is ok:
-            for node, data in states.items():
+            for node, data in list(states.items()):
                 yield data['state'], "%s on %s" % (data['oper_state'], node)
         return
 

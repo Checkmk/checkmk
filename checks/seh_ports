@@ -37,7 +37,7 @@ def parse_seh_ports(info):
 
 
 def inventory_seh_ports(parsed):
-    for key, port in parsed.iteritems():
+    for key, port in parsed.items():
         yield key, {"status_at_discovery": port.get("status")}
 
 

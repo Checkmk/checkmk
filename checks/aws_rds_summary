@@ -44,12 +44,12 @@ def parse_aws_rds_summary(info):
 
 def check_aws_rds_summary(item, params, parsed):
     instances_by_classes = {}
-    for instance in parsed.itervalues():
+    for instance in parsed.values():
         instance_class = instance['DBInstanceClass']
         instances_by_classes.setdefault(instance_class, []).append(instance)
 
     class_infos = []
-    for instance_class, instances in instances_by_classes.iteritems():
+    for instance_class, instances in instances_by_classes.items():
         class_infos.append("%s: %s" % (instance_class, len(instances)))
     yield 0, ", ".join(class_infos)
 

@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <yaml-cpp/yaml.h>
+
 #include <functional>
 #include <string>
 #include <string_view>
@@ -11,7 +13,6 @@
 #include "on_start.h"
 #include "onlyfrom.h"
 #include "tools/_misc.h"
-#include "yaml-cpp/yaml.h"
 
 namespace cma::cfg {
 constexpr std::string_view kBuildHashValue = "DEFADEFADEFA";
@@ -229,24 +230,24 @@ inline std::optional<YAML::Node> GetGroupLoaded(const std::string& Section) {
 
 // safe method yo extract value from the yaml
 template <typename T>
-T GetVal(const YAML::Node& Yaml, std::string Name, T Default,
+T GetVal(const YAML::Node& yaml, const std::string& name, T dflt,
          int* ErrorOut = nullptr) noexcept {
-    if (Yaml.size() == 0) {
+    if (yaml.size() == 0) {
         if (ErrorOut) *ErrorOut = Error::kEmpty;
-        return Default;
+        return dflt;
     }
     try {
-        auto val = Yaml[Name];
-        if (!val.IsDefined()) return Default;
+        auto val = yaml[name];
+        if (!val.IsDefined()) return dflt;
 
         if (val.IsScalar()) return val.as<T>();
         if (val.IsNull()) return {};
-        return Default;
+        return dflt;
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {} code:{}",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Name, e.what());
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), name, e.what());
     }
-    return Default;
+    return dflt;
 }
 
 inline YAML::Node GetNode(const YAML::Node& Yaml, std::string Name,
@@ -889,6 +890,14 @@ public:
     int retry() const noexcept { return retry_; }
     bool defined() const noexcept { return defined_; }
 
+    void extend(std::string_view group, std::string_view user) noexcept {
+        group_ = group;
+        user_ = user;
+    }
+
+    std::string user() const noexcept { return user_; }
+    std::string group() const noexcept { return group_; }
+
 protected:
     // used only during testing
     void debugInit(bool async_value, int timeout_value, int cache_age,
@@ -901,13 +910,19 @@ protected:
     }
 
     bool defined_ = false;
-    bool async_ = false;
 
-    int timeout_ =
-        kDefaultPluginTimeout;  // from the config file, #TODO use chrono
-    int cache_age_ = 0;         // from the config file, #TODO use chrono
+    bool async_ = false;                   // from the config
+    int timeout_ = kDefaultPluginTimeout;  // from the config, #TODO chrono
+    int cache_age_ = 0;                    // from the config, #TODO chrono
+    int retry_ = 0;                        // from the config
 
-    int retry_ = 0;
+    std::string user_;   // from the config
+    std::string group_;  // from the config
+
+#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+    friend class PluginTest;
+    FRIEND_TEST(PluginTest, PluginInfoCheck);
+#endif
 };
 
 template <typename T>
@@ -973,8 +988,12 @@ public:
         }
 
         auto pattern() const noexcept { return pattern_; }
+        auto group() const noexcept { return group_; }
+        auto user() const noexcept { return user_; }
         auto run() const noexcept { return run_; }
         void assign(const YAML::Node& node) noexcept;
+        void assignGroup(std::string_view group) noexcept;
+        void assignUser(std::string_view user) noexcept;
         void apply(std::string_view filename, const YAML::Node& node) noexcept;
         const YAML::Node source() const noexcept { return source_; }
         const std::string sourceText() const noexcept { return source_text_; }
@@ -985,6 +1004,8 @@ public:
             cache_age_ = 0;
             retry_ = 0;
             run_ = true;
+            group_.clear();
+            user_.clear();
         }
 
     private:
@@ -1002,6 +1023,8 @@ public:
 
         std::string pattern_;
         std::string source_text_;
+        std::string group_;
+        std::string user_;
         bool run_ = true;
         YAML::Node source_;
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
@@ -1110,17 +1133,17 @@ enum class InstallationType { packaged, wato, unknown };
 InstallationType DetermineInstallationType() noexcept;
 void SetTestInstallationType(cma::cfg::InstallationType installation_type);
 std::filesystem::path ConstructInstallFileName(
-    const std::filesystem::path& dir) noexcept;
+    const std::filesystem::path& dir);
 std::string ConstructTimeString();
 
 namespace products {
 constexpr std::string_view kLegacyAgent = "Check_mk Agent";
 }
 
-std::string CreateWmicCommand(std::string_view product_name) noexcept;
+std::string CreateWmicCommand(std::string_view product_name);
 bool UninstallProduct(std::string_view name);
 std::filesystem::path CreateWmicUninstallFile(
-    std::filesystem::path temp_dir, std::string_view product_name) noexcept;
+    const std::filesystem::path& temp_dir, std::string_view product_name);
 }  // namespace cma::cfg
 
 #include "cfg_details.h"

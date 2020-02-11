@@ -55,13 +55,13 @@ def parse_ruckus_spot_ap(info):
 
 
 def inventory_ruckus_spot_ap(parsed):
-    for band in parsed.keys():
+    for band in parsed:
         if band in ruckus_spot_ap_bands:
             yield ruckus_spot_ap_bands[band], "ruckus_spot_ap_default_levels"
 
 
 def check_ruckus_spot_ap(item, params, parsed):
-    inverse_map = dict((v, k) for k, v in ruckus_spot_ap_bands.items())
+    inverse_map = {v: k for k, v in ruckus_spot_ap_bands.items()}
     band = parsed.get(inverse_map.get(item))
     if not band:
         return

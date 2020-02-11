@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <cstdint>
 #include <string>
+#include "Column.h"
 #include "IntColumn.h"
 class MonitoringCore;
 class Row;
@@ -58,11 +59,10 @@ public:
     };
 
     ServiceListStateColumn(const std::string &name,
-                           const std::string &description, int indirect_offset,
-                           int extra_offset, int extra_extra_offset, int offset,
-                           MonitoringCore *mc, Type logictype)
-        : IntColumn(name, description, indirect_offset, extra_offset,
-                    extra_extra_offset, offset)
+                           const std::string &description,
+                           const Column::Offsets &offsets, MonitoringCore *mc,
+                           Type logictype)
+        : IntColumn(name, description, offsets)
         , _mc(mc)
         , _logictype(logictype) {}
 

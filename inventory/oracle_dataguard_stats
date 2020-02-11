@@ -27,7 +27,7 @@
 
 def inv_oracle_dataguard_stats(parsed):
     node = inv_tree_list("software.applications.oracle.dataguard_stats:")
-    for inst, data in sorted(parsed.iteritems()):
+    for inst, data in sorted(parsed.items()):
         try:
             db_name, db_unique_name = inst.split(".", 1)
         except ValueError:

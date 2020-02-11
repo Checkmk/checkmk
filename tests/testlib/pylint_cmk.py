@@ -7,10 +7,11 @@ import os
 import sys
 import getpass
 import glob
+import time
 import multiprocessing
 import subprocess
 
-from pylint.reporters.text import ColorizedTextReporter, ParseableTextReporter
+from pylint.reporters.text import ColorizedTextReporter, ParseableTextReporter  # type: ignore[import]
 
 from testlib import repo_path, cmk_path, is_enterprise_repo
 
@@ -35,7 +36,7 @@ def add_file(f, path):
     f.write(open(path).read())
 
 
-def run_pylint(base_path, check_files=None):
+def run_pylint(base_path, check_files):
     args = os.environ.get("PYLINT_ARGS", "")
     if args:
         pylint_args = args.split(" ")
@@ -43,12 +44,6 @@ def run_pylint(base_path, check_files=None):
         pylint_args = []
 
     pylint_cfg = repo_path() + "/.pylintrc"
-
-    if not check_files:
-        check_files = get_pylint_files(base_path, "*")
-        if not check_files:
-            print("Nothing to do...")
-            return 0  # nothing to do
 
     cmd = [
         "python",
@@ -101,11 +96,6 @@ def is_python_file(path):
     if not os.path.isfile(path) or os.path.islink(path):
         return False
 
-    # We can not be sure which Python version this file needs by it's extension.
-    # For the moment we treat all .py to be python2
-    if sys.version_info[0] == 2 and path.endswith(".py"):
-        return True
-
     check_name = "python3" if sys.version_info[0] >= 3 else "python"
 
     # Only add python files
@@ -123,7 +113,7 @@ def is_python_file(path):
 # python sources
 # TODO: This can be dropped once we have refactored checks/inventory/bakery plugins
 # to real modules
-class CMKFixFileMixin(object):
+class CMKFixFileMixin(object):  # pylint: disable=useless-object-inheritance
     def handle_message(self, msg):
         new_path, new_line = self._orig_location_from_compiled_file(msg)
 
@@ -158,6 +148,28 @@ class CMKFixFileMixin(object):
         return orig_file, went_back
 
 
+class CMKOutputScanTimesMixin(object):  # pylint: disable=useless-object-inheritance
+    """Prints out the files being checked and the time needed
+
+    Can be useful to track down pylint performance issues. Simply make the
+    reporter class inherit from this class to use it."""
+    def on_set_current_module(self, modname, filepath):
+        super(CMKOutputScanTimesMixin, self).on_set_current_module(modname, filepath)
+        if hasattr(self, "_current_start_time"):
+            print("% 8.3fs %s" % (time.time() - self._current_start_time, self._current_filepath))
+
+        print("          %s..." % filepath)
+        self._current_name = modname
+        self._current_name = modname
+        self._current_filepath = filepath
+        self._current_start_time = time.time()
+
+    def on_close(self, stats, previous_stats):
+        super(CMKOutputScanTimesMixin, self).on_close(stats, previous_stats)
+        if hasattr(self, "_current_start_time"):
+            print("% 8.3fs %s" % (time.time() - self._current_start_time, self._current_filepath))
+
+
 class CMKColorizedTextReporter(CMKFixFileMixin, ColorizedTextReporter):
     name = "cmk_colorized"
 
@@ -167,7 +179,7 @@ class CMKParseableTextReporter(CMKFixFileMixin, ParseableTextReporter):
 
 
 def verify_pylint_version():
-    import pylint
+    import pylint  # type: ignore[import] # pylint: disable=import-outside-toplevel
     if tuple(map(int, pylint.__version__.split("."))) < (1, 5, 5):
         raise Exception("You need to use at least pylint 1.5.5. Run \"make setup\" in "
                         "pylint directory to get the current version.")
@@ -182,10 +194,10 @@ def register(linter):
         # Is used to disable import-error. Would be nice if no-name-in-module could be
         # disabled using this, but this does not seem to be possible :(
         linter.global_set_option("ignored-modules",
-                                 "cmk_base.cee,cmk.gui.cee,cmk.gui.cme,cmk.gui.cme.managed")
+                                 "cmk.base.cee,cmk.gui.cee,cmk.gui.cme,cmk.gui.cme.managed")
         # This disables no-member errors
         linter.global_set_option("generated-members",
-                                 r"(cmk_base\.cee|cmk\.gui\.cee|cmk\.gui\.cme)(\..*)?")
+                                 r"(cmk\.base\.cee|cmk\.gui\.cee|cmk\.gui\.cme)(\..*)?")
 
     linter.register_reporter(CMKColorizedTextReporter)
     linter.register_reporter(CMKParseableTextReporter)

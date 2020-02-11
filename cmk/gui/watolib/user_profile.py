@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
 from typing import NamedTuple
@@ -53,7 +33,7 @@ def push_user_profiles_to_site_transitional_wrapper(site, user_profiles):
     except MKAutomationException as e:
         if "Invalid automation command: push-profiles" in "%s" % e:
             failed_info = []
-            for user_id, user in user_profiles.iteritems():
+            for user_id, user in user_profiles.items():
                 result = _legacy_push_user_profile_to_site(site, user_id, user)
                 if result != True:
                     failed_info.append(result)
@@ -116,7 +96,7 @@ class PushUserProfilesToSite(AutomationCommand):
             raise MKGeneralException(_('Invalid call: No profiles set.'))
 
         users = userdb.load_users(lock=True)
-        for user_id, profile in user_profiles.iteritems():
+        for user_id, profile in user_profiles.items():
             users[user_id] = profile
         userdb.save_users(users)
         return True

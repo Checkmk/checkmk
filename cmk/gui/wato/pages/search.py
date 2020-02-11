@@ -1,28 +1,9 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """Mode for searching hosts"""
 
 import cmk.gui.watolib as watolib
@@ -79,13 +60,19 @@ class ModeSearch(WatoMode):
             if html.get_checkbox(varname) is False:
                 continue
 
-            attr_prefix = "host_search_attr_%s" % varname.split("host_search_change_", 1)[1]
-
             keep_vars[varname] = value
+
+            attr_ident = varname.split("host_search_change_", 1)[1]
+
+            # The URL variable naming scheme is not clear. Try to match with "attr_" prefix
+            # and without. We should investigate and clean this up.
+            attr_prefix = "host_search_attr_%s" % attr_ident
+            keep_vars.update(html.request.itervars(prefix=attr_prefix))
+            attr_prefix = "host_search_%s" % attr_ident
             keep_vars.update(html.request.itervars(prefix=attr_prefix))
 
         html.request.del_vars("host_search_")
-        for varname, value in keep_vars.iteritems():
+        for varname, value in keep_vars.items():
             html.request.set_var(varname, value)
 
     def page(self):

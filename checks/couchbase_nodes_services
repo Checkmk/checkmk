@@ -26,7 +26,7 @@
 
 
 def discover_couchbase_nodes_services(parsed):
-    for key, data in parsed.iteritems():
+    for key, data in parsed.items():
         yield key, {'discovered_services': data.get('services', [])}
 
 

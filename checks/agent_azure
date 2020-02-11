@@ -29,9 +29,8 @@ def agent_azure_arguments(params, _no_hostname, _no_ipaddress):
     args = []
 
     keys = ("subscription", "tenant", "client", "secret", "piggyback_vms", "sequential")
-    present_keys = (k for k in keys if k in params.keys())
 
-    for key in present_keys:
+    for key in (k for k in keys if k in params):
         option = "--%s" % key
         value = params[key]
         if isinstance(value, bool):

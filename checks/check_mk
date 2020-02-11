@@ -72,13 +72,21 @@ check_info["check_mk.only_from"] = {
 # AgentUpdate: last_check 1447777834.22 last_update 1447776761.52 aghash e33d0cebcf7404d9 error None
 
 
+def _get_error_deployment_globally_disabled_state(params, error_text):
+    default_state = 1
+    if error_text == "Agent Bakery: Agent deployment is currently globally disabled on the " \
+                     "deployment server.":
+        return params.get("error_deployment_globally_disabled", default_state)
+    return default_state
+
+
 def inventory_cmk_agent_update(info):
     for line in info:
         if line[0] == "AgentUpdate:":
             return [(None, {})]
 
 
-def check_cmk_agent_update(_no_item, _no_params, info):
+def check_cmk_agent_update(_no_item, params, info):
     for line in info:
         if line[0] == "AgentUpdate:":
             parsed = {}
@@ -98,7 +106,8 @@ def check_cmk_agent_update(_no_item, _no_params, info):
             now = time.time()
 
             if parsed["error"] != "None":
-                yield 1, "Error: %s" % parsed["error"]
+                error_state = _get_error_deployment_globally_disabled_state(params, parsed["error"])
+                yield error_state, "Error: %s" % parsed["error"]
             else:
                 yield 0, "No errors"
 
@@ -140,5 +149,6 @@ def check_cmk_agent_update(_no_item, _no_params, info):
 check_info["check_mk.agent_update"] = {
     'check_function': check_cmk_agent_update,
     'inventory_function': inventory_cmk_agent_update,
-    'service_description': 'Check_MK Agent'
+    'service_description': 'Check_MK Agent',
+    'group': 'agent_update',
 }

@@ -27,7 +27,7 @@
 
 def parse_sap_hana_proc(info):
     parsed = {}
-    for sid_instance, lines in parse_sap_hana(info).iteritems():
+    for sid_instance, lines in parse_sap_hana(info).items():
         for line in lines:
             if len(line) < 2:
                 continue
@@ -48,7 +48,7 @@ def parse_sap_hana_proc(info):
 
 
 def inventory_sap_hana_proc(parsed):
-    for sid_instance, data in parsed.iteritems():
+    for sid_instance, data in parsed.items():
         yield sid_instance, {'coordin': data['coordin']}
 
 

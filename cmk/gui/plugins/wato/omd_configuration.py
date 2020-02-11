@@ -1,37 +1,22 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
 import os
 import glob
-import subprocess
 import traceback
-from pathlib2 import Path
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import cmk.utils.paths
 import cmk.utils.store as store
+import cmk.utils.cmk_subprocess as subprocess
 
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
@@ -291,7 +276,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         for k, v in sorted(config.items()):
             output += '%s = %r\n' % (k, v)
 
-        cmk.utils.store.save_file(self.diskspace_config, output)
+        store.save_file(self.diskspace_config, output)
 
     def save_site_globals(self, settings):
         pass
@@ -422,14 +407,16 @@ class ConfigDomainApache(ABCConfigDomain):
         try:
             self._write_config_file()
 
-            p = subprocess.Popen(["omd", "reload", "apache"],
-                                 shell=False,
-                                 stdin=open(os.devnull),
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT,
-                                 close_fds=True)
+            p = subprocess.Popen(
+                ["omd", "reload", "apache"],
+                stdin=open(os.devnull),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                close_fds=True,
+                encoding="utf-8",
+            )
 
-            stdout = p.communicate()[0]
+            stdout, _stderr = p.communicate()
             if p.returncode != 0:
                 raise Exception(stdout)
 
@@ -539,14 +526,16 @@ class ConfigDomainRRDCached(ABCConfigDomain):
         try:
             self._write_config_file()
 
-            p = subprocess.Popen(["omd", "restart", "rrdcached"],
-                                 shell=False,
-                                 stdin=open(os.devnull),
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT,
-                                 close_fds=True)
+            p = subprocess.Popen(
+                ["omd", "restart", "rrdcached"],
+                stdin=open(os.devnull),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                close_fds=True,
+                encoding="utf-8",
+            )
 
-            stdout = p.communicate()[0]
+            stdout, _stderr = p.communicate()
             if p.returncode != 0:
                 raise Exception(stdout)
 

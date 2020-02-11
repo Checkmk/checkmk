@@ -1,7 +1,10 @@
 #!/bin/bash
 set -e
 
-SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
+SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
+    cat .site
+    break
+else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
@@ -10,24 +13,107 @@ CMK_VERSION=${CMK_VERSION%.*}
 
 echo "Update site $SITE..."
 
+PYTHON2_PATHS=(
+    cee
+    gui
+    __init__.py
+    notification_plugins
+    special_agents/agent_3par.py
+    special_agents/agent_activemq.py
+    special_agents/agent_allnet_ip_sensoric.py
+    special_agents/agent_appdynamics.py
+    special_agents/agent_azure.py
+    special_agents/agent_bi.py
+    special_agents/agent_couchbase.py
+    special_agents/agent_ddn_s2a.py
+    special_agents/agent_emcvnx.py
+    special_agents/agent_fritzbox.py
+    special_agents/agent_hivemanager.py
+    special_agents/agent_hivemanager_ng.py
+    special_agents/agent_hp_msa.py
+    special_agents/agent_ibmsvc.py
+    special_agents/agent_innovaphone.py
+    special_agents/agent_ipmi_sensors.py
+    special_agents/agent_jolokia.py
+    special_agents/agent_netapp.py
+    special_agents/agent_prism.py
+    special_agents/agent_random.py
+    special_agents/agent_ruckus_spot.py
+    special_agents/agent_salesforce.py
+    special_agents/agent_siemens_plc.py
+    special_agents/agent_storeonce.py
+    special_agents/agent_tinkerforge.py
+    special_agents/agent_ucs_bladecenter.py
+    special_agents/agent_vnx_quotas.py
+    special_agents/agent_zerto.py
+    special_agents/__init__.py
+    special_agents/utils.py
+    update_config.py
+    utils
+    ec/__init__.py
+    ec/export.py
+    ec/settings.py
+    ec/defaults.py
+)
+
+PYTHON3_PATHS=(
+    __init__.py
+    gui
+    utils
+    ec
+    special_agents/agent_aws.py
+    special_agents/agent_elasticsearch.py
+    special_agents/agent_graylog.py
+    special_agents/agent_jenkins.py
+    special_agents/agent_jira.py
+    special_agents/agent_kubernetes.py
+    special_agents/agent_splunk.py
+    special_agents/agent_vsphere.py
+    special_agents/__init__.py
+    special_agents/utils.py
+)
+
 echo "Copy CRE files..."
 sudo rsync \
     --exclude=cee \
     --exclude=cee.py \
     --exclude=cme \
     --exclude=cme.py \
-    -a * $ROOT/lib/python/cmk/
+    -aR \
+    "${PYTHON2_PATHS[@]}" \
+    $ROOT/lib/python/cmk/
+
+# TODO: Enable python3 compatible parts step by step
+sudo rsync \
+    --exclude=cee \
+    --exclude=cee.py \
+    --exclude=cme \
+    --exclude=cme.py \
+    -aR \
+    "${PYTHON3_PATHS[@]}" \
+    $ROOT/lib/python3/cmk/
 
 # Restore site version after .f12
 sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" $ROOT/lib/python/cmk/__init__.py
+sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" $ROOT/lib/python3/cmk/__init__.py
 
-sudo pycompile -q $ROOT/lib/python/cmk/
+(
+    cd $ROOT/lib/python/cmk
+    sudo pycompile -q "${PYTHON2_PATHS[@]}"
+)
+(
+    cd $ROOT/lib/python/cmk
+    sudo py3compile -q "${PYTHON2_PATHS[@]}"
+)
 
 # Also deploy all other directories of same type
 if [ ${ALL_EDITIONS:-1} != 0 ]; then
     for WHAT in enterprise managed; do
         if [ -e ../$WHAT/cmk/.f12 ]; then
-            (cd ../$WHAT/cmk; ONLY_COPY=1 ALL_EDITIONS=0 bash .f12)
+            (
+                cd ../$WHAT/cmk
+                ONLY_COPY=1 ALL_EDITIONS=0 bash .f12
+            )
         fi
     done
 fi

@@ -42,7 +42,7 @@ def _get_services_config(services):
     #   'ebs': {'selection': ('names', ['ebs1', 'ebs2'])},
     # }
     service_args = []
-    for service_name, service_config in services.iteritems():
+    for service_name, service_config in services.items():
         if service_config is None:
             continue
 
@@ -51,7 +51,10 @@ def _get_services_config(services):
 
         selection = service_config.get('selection')
         if not isinstance(selection, tuple):
-            # 'all' is handled by services.keys()
+            # Here: value of selection is 'all' which means there's no
+            # restriction (names or tags) to the instances of a specific
+            # AWS service. The commandline option already includes this
+            # service '--services SERVICE1 SERVICE2 ...' (see below).
             continue
 
         selection_type, selection_values = selection
@@ -94,14 +97,14 @@ def agent_aws_arguments(params, hostname, ipaddress):
         args.append("--global-services")
         # We need to sort the inner services-as-a-dict-params
         # in order to create reliable tests
-        args += sorted(global_services.keys())
+        args += sorted(global_services)
 
     services = params.get("services", {})
     if services:
         args.append("--services")
         # We need to sort the inner services-as-a-dict-params
         # in order to create reliable tests
-        args += sorted(services.keys())
+        args += sorted(services)
         args += _get_services_config(services)
 
     if 'requests' in services.get('s3', {}):

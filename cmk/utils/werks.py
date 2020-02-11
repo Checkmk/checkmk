@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -30,6 +30,7 @@ import sys
 import itertools
 import json
 import re
+from typing import Any, Dict  # pylint: disable=unused-import
 
 # Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:
@@ -96,26 +97,26 @@ class WerkTranslator(object):
         }
 
     def classes(self):
-        return self._classes.iteritems()
+        return self._classes.items()
 
     def class_of(self, werk):
         return self._classes[werk["class"]]
 
     def components(self):
-        return self._components.iteritems()
+        return self._components.items()
 
     def component_of(self, werk):
         c = werk["component"]
         return self._components.get(c, c)
 
     def levels(self):
-        return self._levels.iteritems()
+        return self._levels.items()
 
     def level_of(self, werk):
         return self._levels[werk["level"]]
 
     def compatibilities(self):
-        return self._compatibilities.iteritems()
+        return self._compatibilities.items()
 
     def compatibility_of(self, werk):
         return self._compatibilities[werk["compatible"]]
@@ -126,7 +127,7 @@ def _compiled_werks_dir():
 
 
 def load():
-    werks = {}
+    werks = {}  # type: Dict[int, Dict[str, Any]]
     # The suppressions are needed because of https://github.com/PyCQA/pylint/issues/1660
     for file_name in itertools.chain(
             _compiled_werks_dir().glob("werks"),  # pylint: disable=no-member
@@ -137,7 +138,7 @@ def load():
 
 def load_precompiled_werks_file(path):
     with path.open() as fp:
-        return {int(werk_id): werk for werk_id, werk in json.load(fp).iteritems()}
+        return {int(werk_id): werk for werk_id, werk in json.load(fp).items()}
 
 
 def load_raw_files(werks_dir):
@@ -181,7 +182,7 @@ def _load_werk(path):
         "body": [],
         "compatible": "compat",
         "edition": "cre",
-    }
+    }  # type: Dict[str, Any]
     in_header = True
     with path.open(encoding="utf-8") as fp:
         for line in fp:

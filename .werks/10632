@@ -1,0 +1,19 @@
+Title: livestatus_status: Fix crash on invalid certification age
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1578469962
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+The livestatus check crashed when there was no value for the expiration date of a certificate.
+If the expiration date can not be acquired the information of 'Site certificate validity' will not be shown in the status details.
+
+This value is collected via the linux special agent with the command 'date'.
+On 32bit systems for expiration dates after the 19th Jan 2038, the 'date'-command will return an error
+'invalid date' and thus the agent returns no value. This is due to the limitation of 32bit systems.
+
+The problems occur for example on Raspberry Pi setups that are 32bit.
+Checkmk officially only supportes 64bit systems.

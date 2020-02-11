@@ -220,7 +220,7 @@ TEST(LogTest, All) {
 
     // DEFAULT
     auto prefix = GetDefaultPrefixName();
-    std::string prefix_ascii(prefix.begin(), prefix.end());
+    auto prefix_ascii = wtools::ConvertToUTF8(prefix);
     auto& lp = l.log_param_;
 
     EXPECT_TRUE(lp.directions_ & xlog::Directions::kDebuggerPrint);
@@ -461,6 +461,21 @@ TEST(LogTest, Yaml) {
     }
     fs::remove(logf);
 }
+
+namespace details {
+TEST(LogTest, Level2Type) {
+    EXPECT_EQ(LoggerEventLevelToWindowsEventType(EventLevel::critical),
+              EVENTLOG_ERROR_TYPE);
+    EXPECT_EQ(LoggerEventLevelToWindowsEventType(EventLevel::error),
+              EVENTLOG_ERROR_TYPE);
+    EXPECT_EQ(LoggerEventLevelToWindowsEventType(EventLevel::information),
+              EVENTLOG_INFORMATION_TYPE);
+    EXPECT_EQ(LoggerEventLevelToWindowsEventType(EventLevel::success),
+              EVENTLOG_SUCCESS);
+    EXPECT_EQ(LoggerEventLevelToWindowsEventType(EventLevel::warning),
+              EVENTLOG_WARNING_TYPE);
+}
+}  // namespace details
 
 }  // namespace XLOG
 

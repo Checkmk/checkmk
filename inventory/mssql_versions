@@ -37,7 +37,7 @@ def inv_mssql_versions(info):
     node = inv_tree_list("software.applications.mssql.instances:")
 
     def product(v):
-        parts = map(int, v.split("."))
+        parts = list(map(int, v.split(".")))
         if parts[0] == 12:
             return "SQL Server 2014"
         elif parts[0] == 11:

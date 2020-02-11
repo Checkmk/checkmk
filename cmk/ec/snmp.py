@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -25,34 +25,40 @@
 # Boston, MA 02110-1301 USA.
 
 import traceback
+from logging import Logger  # pylint: disable=unused-import
+from pathlib import Path  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, Optional, Tuple  # pylint: disable=unused-import
 
 # Needed for receiving traps
-import pysnmp.debug
-import pysnmp.entity.config
-import pysnmp.entity.engine
-import pysnmp.entity.rfc3413.ntfrcv
-import pysnmp.proto.api
-import pysnmp.proto.errind
+import pysnmp.debug  # type: ignore[import]
+import pysnmp.entity.config  # type: ignore[import]
+import pysnmp.entity.engine  # type: ignore[import]
+import pysnmp.entity.rfc3413.ntfrcv  # type: ignore[import]
+import pysnmp.proto.api  # type: ignore[import]
+import pysnmp.proto.errind  # type: ignore[import]
 
 # Needed for trap translation
-import pysnmp.smi.builder
-import pysnmp.smi.view
-import pysnmp.smi.rfc1902
-import pysnmp.smi.error
-import pyasn1.error
+import pysnmp.smi.builder  # type: ignore[import]
+import pysnmp.smi.view  # type: ignore[import]
+import pysnmp.smi.rfc1902  # type: ignore[import]
+import pysnmp.smi.error  # type: ignore[import]
+import pyasn1.error  # type: ignore[import]
 
 from cmk.utils.log import VERBOSE
 import cmk.utils.render
 
+from .settings import Settings  # pylint: disable=unused-import
 
-class SNMPTrapEngine(object):
+
+class SNMPTrapEngine:
 
     # Disable receiving of SNMPv3 INFORM messages. We do not support them (yet)
     class ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):
         pduTypes = (pysnmp.proto.api.v1.TrapPDU.tagSet, pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet)
 
     def __init__(self, settings, config, logger, callback):
-        super(SNMPTrapEngine, self).__init__()
+        # type: (Settings, Dict[str, Any], Logger, Callable) -> None
+        super().__init__()
         self._logger = logger
         if settings.options.snmptrap_udp is None:
             return
@@ -72,6 +78,7 @@ class SNMPTrapEngine(object):
 
     @staticmethod
     def _auth_proto_for(proto_name):
+        # type: (str) -> Tuple[int, ...]
         if proto_name == "md5":
             return pysnmp.entity.config.usmHMACMD5AuthProtocol
         if proto_name == "sha":
@@ -80,6 +87,7 @@ class SNMPTrapEngine(object):
 
     @staticmethod
     def _priv_proto_for(proto_name):
+        # type: (str) -> Tuple[int, ...]
         if proto_name == "DES":
             return pysnmp.entity.config.usmDESPrivProtocol
         if proto_name == "AES":
@@ -87,6 +95,7 @@ class SNMPTrapEngine(object):
         raise Exception("Invalid SNMP priv protocol: %s" % proto_name)
 
     def _initialize_snmp_credentials(self, config):
+        # type: (Dict[str, Any]) -> None
         user_num = 0
         for spec in config["snmp_credentials"]:
             credentials = spec["credentials"]
@@ -137,6 +146,7 @@ class SNMPTrapEngine(object):
                     securityEngineId=pysnmp.proto.api.v2c.OctetString(hexValue=engine_id))
 
     def process_snmptrap(self, message, sender_address):
+        # type: (bytes, Any) -> None
         """Receives an incoming SNMP trap from the socket and hands it over to PySNMP for parsing
         and processing. PySNMP is calling the registered call back (self._handle_snmptrap) back."""
         self._logger.log(VERBOSE, "Trap received from %s:%d. Checking for acceptance now.",
@@ -178,9 +188,10 @@ class SNMPTrapEngine(object):
                          variables["transportAddress"][0], msg)
 
 
-class SNMPTrapTranslator(object):
+class SNMPTrapTranslator:
     def __init__(self, settings, config, logger):
-        super(SNMPTrapTranslator, self).__init__()
+        # type: (Settings, Dict[str, Any], Logger) -> None
+        super().__init__()
         self._logger = logger
         translation_config = config["translate_snmptraps"]
         if translation_config is False:
@@ -200,6 +211,7 @@ class SNMPTrapTranslator(object):
 
     @staticmethod
     def _construct_resolver(logger, mibs_dir, load_texts):
+        # type: (Logger, Path, bool) -> Optional[pysnmp.smi.view.MibViewController]
         try:
             builder = pysnmp.smi.builder.MibBuilder()  # manages python MIB modules
 

@@ -1,7 +1,7 @@
 # *--encoding: UTF-8--*
 # yapf: disable
 import pytest
-from cmk_base.check_api import MKCounterWrapped
+from cmk.base.check_api import MKCounterWrapped
 from checktestlib import (
     DiscoveryResult,
     CheckResult,

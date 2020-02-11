@@ -117,7 +117,7 @@ def parse_aix_if(info):
                 "ifPhysAddress"
         ]:
             nic_list.append(nic_info[nic].get(attr, 0))
-        if_table.append(map(str, nic_list))
+        if_table.append(list(map(str, nic_list)))
     return if_table
 
 

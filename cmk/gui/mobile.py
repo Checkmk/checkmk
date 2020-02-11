@@ -1,42 +1,20 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
-
-import six
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.views as views
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
-import cmk.gui.metrics as metrics
 import cmk.gui.utils
 import cmk.gui.view_utils
 from cmk.gui.plugins.views.utils import (
     PainterOptions,
     command_registry,
+    data_source_registry,
 )
-
+import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -44,19 +22,19 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger
 
 
-def mobile_html_head(title, ready_code=""):
+def mobile_html_head(title):
     html.mobile = True
     html.write(
         """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">"""
     )
     html.open_html()
     html.open_head()
-    html.meta(content="text/html;", charset="utf-8", **{"http-equiv": "Content-Type"})
+    html.default_html_headers()
     html.meta(name="viewport", content="initial-scale=1.0")
     html.meta(name="apple-mobile-web-app-capable", content="yes")
     html.meta(name="apple-mobile-web-app-title", content="Check_MK")
     html.title(title)
-    html.stylesheet(href="jquery/jquery.mobile-1.0.css")
+    html.stylesheet(href="jquery/jquery.mobile-1.2.1.css")
     html.stylesheet(href="themes/classic/theme.css")
 
     html.write(
@@ -66,21 +44,17 @@ def mobile_html_head(title, ready_code=""):
                                  close_tag=True))
     html.javascript_file(src='js/mobile_min.js')
 
-    if metrics.cmk_graphs_possible():
-        html.javascript_file(src='js/graphs.js')
-
     # Never allow the mobile page to be opened in a frameset. Redirect top page to the current content page.
     # This will result in a full screen mobile interface page.
     html.javascript('''if(top != self) { window.top.location.href = location; }''')
 
     html.javascript("""
-      $(document).ready(function() { %s });
       $(document).ready(function() {
           $("a").click(function (event) {
             event.preventDefault();
             window.location = $(this).attr("href");
           });
-      });""" % ready_code)
+      });""")
 
     html.close_head()
     html.open_body(class_="mobile")
@@ -105,7 +79,13 @@ def jqm_header_button(pos, url, title, icon=""):
 
 def jqm_page_header(title, id_=None, left_button=None, right_button=None):
     html.open_div(id_=id_ if id_ else None, **{"data-role": "page"})
-    html.open_div(**{"data-role": "header", "data-position": "fixed"})
+    html.open_div(
+        **{
+            "data-role": "header",
+            "data-position": "fixed",
+            "data-tap-toggle": "false",
+            "data-hide-during-focus": "",
+        })
     if left_button:
         jqm_header_button("left", *left_button)
     html.h1(title)
@@ -115,20 +95,15 @@ def jqm_page_header(title, id_=None, left_button=None, right_button=None):
     html.open_div(**{"data-role": "content"})
 
 
-def jqm_page_footer(content=""):
-    html.close_div()  # close content-div
-    html.close_div()
-    html.open_div(**{"data-role": "footer"})
-    html.open_h4()
-    html.write(content)
-    html.close_h4()
-    html.close_div()
-    html.close_div()  # close page-div
-
-
 def jqm_page_navfooter(items, current, page_id):
     html.close_div()  # close content
-    html.open_div(**{"data-role": "footer", "data-position": "fixed"})
+    html.open_div(
+        **{
+            "data-role": "footer",
+            "data-position": "fixed",
+            "data-tap-toggle": "false",
+            "data-hide-during-focus": "",
+        })
     html.open_div(**{"data-role": "navbar"})
     html.open_ul()
 
@@ -145,7 +120,7 @@ def jqm_page_navfooter(items, current, page_id):
                         **{
                             "data-transition": "slide",
                             "data-icon": icon,
-                            "data-iconpos": "bottom"
+                            "data-iconpos": "bottom",
                         })
             html.write(title)
             html.close_a()
@@ -188,12 +163,6 @@ def jqm_page_index_topic_renderer(topic, items):
     html.close_ul()
 
 
-def jqm_page(title, content, foot, id_=None):
-    jqm_page_header(title, id_)
-    html.write(content)
-    jqm_page_footer(foot)
-
-
 def page_login():
     title = _("Check_MK Mobile")
     mobile_html_head(title)
@@ -202,13 +171,15 @@ def page_login():
 
     html.begin_form("login", method='POST', add_transid=False)
     # Keep information about original target URL
-    origtarget = html.request.var('_origtarget', '')
-    if not origtarget and not html.myfile == 'login':
-        origtarget = html.request.requested_url
-    html.hidden_field('_origtarget', html.attrencode(origtarget))
+    default_origtarget = "index.py" if html.myfile in ["login", "logout"] else html.makeuri([])
+    origtarget = html.get_url_input("_origtarget", default_origtarget)
+    html.hidden_field('_origtarget', escaping.escape_attribute(origtarget))
 
-    html.text_input("_username", label=_("Username:"))
-    html.password_input("_password", size=None, label=_("Password:"))
+    html.text_input("_username", label=_("Username:"), autocomplete="username")
+    html.password_input("_password",
+                        size=None,
+                        label=_("Password:"),
+                        autocomplete="current-password")
     html.br()
     html.button("_login", _('Login'))
     html.set_focus("_username")
@@ -217,7 +188,9 @@ def page_login():
     html.img("themes/classic/images/logo_cmk_small.png", class_="logomk")
     html.div(HTML(_("&copy; <a target=\"_blank\" href=\"https://checkmk.com\">tribe29 GmbH</a>")),
              class_="copyright")
-    jqm_page_footer()
+    html.close_div()  # close content-div
+    html.close_div()
+    html.close_div()  # close page-div
     mobile_html_foot()
 
 
@@ -231,7 +204,14 @@ def page_index():
     items = []
     for view_name, view_spec in views.get_permitted_views().items():
         if view_spec.get("mobile") and not view_spec.get("hidden"):
-            view = views.View(view_name, view_spec)
+
+            datasource = data_source_registry[view_spec["datasource"]]()
+            context = visuals.get_merged_context(
+                visuals.get_context_from_uri_vars(datasource.infos),
+                view_spec["context"],
+            )
+
+            view = views.View(view_name, view_spec, context)
             view.row_limit = views.get_limit()
             view.only_sites = views.get_only_sites()
             view.user_sorters = views.get_user_sorters()
@@ -279,7 +259,13 @@ def page_view():
     if not view_spec:
         raise MKUserError("view_name", "No view defined with the name '%s'." % view_name)
 
-    view = views.View(view_name, view_spec)
+    datasource = data_source_registry[view_spec["datasource"]]()
+    context = visuals.get_merged_context(
+        visuals.get_context_from_uri_vars(datasource.infos),
+        view_spec["context"],
+    )
+
+    view = views.View(view_name, view_spec, context)
     view.row_limit = views.get_limit()
     view.only_sites = views.get_only_sites()
     view.user_sorters = views.get_user_sorters()
@@ -297,7 +283,7 @@ def page_view():
         logger.exception("error showing mobile view")
         if config.debug:
             raise
-        html.write("ERROR showing view: %s" % html.attrencode(e))
+        html.write("ERROR showing view: %s" % escaping.escape_attribute(e))
 
     mobile_html_foot()
 
@@ -322,7 +308,10 @@ class MobileViewRenderer(views.ViewRenderer):
             navbar.append(("commands", _("Commands"), "gear", False))
 
         # Should we show a page with context links?
-        context_links = visuals.collect_context_links(view_spec, mobile=True, only_types=['views'])
+        context_links = views.collect_context_links(self.view,
+                                                    rows,
+                                                    mobile=True,
+                                                    only_types=['views'])
 
         if context_links:
             navbar.append(("context", _("Context"), "arrow-r", False))
@@ -423,11 +412,11 @@ def show_command_form(view, datasource, rows):
     html.open_div(**{"data-role": "collapsible-set"})
     for command_class in command_registry.values():
         command = command_class()
-        if what in command.tables and config.user.may(command.permission.name):
+        if what in command.tables and config.user.may(command.permission().name):
             html.open_div(class_=["command_group"], **{"data-role": "collapsible"})
             html.h3(command.title)
             html.open_p()
-            command.render()
+            command.render(what)
             html.close_p()
             html.close_div()
             one_shown = True
@@ -456,14 +445,12 @@ def do_commands(view, what, rows):
         nagios_commands, title, executor = views.core_command(what, row, nr, len(rows))
         for command in nagios_commands:
             if command not in already_executed:
-                if isinstance(command, six.text_type):
-                    command = command.encode("utf-8")
                 executor(command, row["site"])
                 already_executed.add(command)
                 count += 1
 
     if count > 0:
-        html.message(_("Successfully sent %d commands.") % count)
+        html.show_message(_("Successfully sent %d commands.") % count)
     return True  # Show commands again
 
 

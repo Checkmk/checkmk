@@ -1,28 +1,9 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """WATO's awesome rule editor: Lets the user edit rule based parameters"""
 
 import abc
@@ -30,8 +11,12 @@ import itertools
 import pprint
 import re
 import json
-from typing import Dict, Generator, Text, NamedTuple, List, Optional  # pylint: disable=unused-import
+from typing import Dict, Generator, Text, List, Optional, Union  # pylint: disable=unused-import
 
+import six
+
+import cmk.gui.escaping as escaping
+from cmk import ensure_unicode
 from cmk.utils.regex import escape_regex_chars
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 
@@ -83,10 +68,13 @@ from cmk.gui.plugins.wato import (
     DictHostTagCondition,
 )
 
-if watolib.has_agent_bakery():
-    import cmk.gui.cee.plugins.wato.agent_bakery as agent_bakery  # pylint: disable=import-error,no-name-in-module
-else:
-    agent_bakery = None  # type: ignore
+
+def render_html(text):
+    # type: (Union[HTML, str, Text]) -> Union[str, Text]
+    if isinstance(text, HTML):
+        return text.__html__()
+
+    return text
 
 
 @mode_registry.register
@@ -303,9 +291,9 @@ class RulesetMode(WatoMode):
                 for ruleset in group_rulesets:
                     float_cls = None
                     if not config.wato_hide_help_in_lists:
-                        float_cls = "nofloat" if html.help_visible else "float"
+                        float_cls = "nofloat" if config.user.show_help else "float"
                     html.open_div(class_=["ruleset", float_cls],
-                                  title=html.strip_tags(ruleset.help() or ''))
+                                  title=escaping.strip_tags(ruleset.help() or ''))
                     html.open_div(class_="text")
 
                     url_vars = [
@@ -483,7 +471,7 @@ class ModeEditRuleset(WatoMode):
 
         # TODO: Clean this up. In which case is it used?
         # - The calculation for the service_description is not even correct, because it does not
-        # take translations into account (see cmk_base.config.service_description()).
+        # take translations into account (see cmk.base.config.service_description()).
         check_command = html.get_ascii_input("check_command")
         if check_command:
             checks = watolib.check_mk_local_automation("get-check-information")
@@ -598,6 +586,10 @@ class ModeEditRuleset(WatoMode):
                                                     ("service", self._service or self._item)]),
                     "rulesets")
 
+        if watolib.has_agent_bakery():
+            import cmk.gui.cee.plugins.wato.agent_bakery as agent_bakery  # pylint: disable=import-error,no-name-in-module
+        else:
+            agent_bakery = None
         if agent_bakery:
             agent_bakery.agent_bakery_context_button(self._name)
 
@@ -689,9 +681,10 @@ class ModeEditRuleset(WatoMode):
         match_state = {"matched": False, "keys": set()}
         search_options = ModeRuleSearch().search_options
         cur = watolib.Folder.current()
-        groups = ((folder, folder_rules) \
-                  for folder, folder_rules in itertools.groupby(rules, key=lambda rule: rule[0]) \
-                  if folder.is_transitive_parent_of(cur) or cur.is_transitive_parent_of(folder))
+        groups = (
+            (folder, folder_rules)  #
+            for folder, folder_rules in itertools.groupby(rules, key=lambda rule: rule[0])
+            if folder.is_transitive_parent_of(cur) or cur.is_transitive_parent_of(folder))
 
         num_rows = 0
         for folder, folder_rules in groups:
@@ -778,7 +771,7 @@ class ModeEditRuleset(WatoMode):
             return _("This rule does not match: %s") % " ".join(reasons), 'nmatch'
         ruleset = rule.ruleset
         if ruleset.match_type() == "dict":
-            new_keys = set(rule.value.iterkeys())
+            new_keys = set(rule.value.keys())
             already_existing = match_state["keys"] & new_keys
             match_state["keys"] |= new_keys
             if not new_keys:
@@ -1711,7 +1704,7 @@ class LabelCondition(Transform):
 
     def _to_valuespec(self, label_conditions):
         valuespec_value = []
-        for label_id, label_value in label_conditions.iteritems():
+        for label_id, label_value in label_conditions.items():
             valuespec_value.append(self._single_label_to_valuespec(label_id, label_value))
         return valuespec_value
 
@@ -1726,7 +1719,7 @@ class LabelCondition(Transform):
         label_conditions = {}
         for operator, label in valuespec_value:
             if label:
-                label_id, label_value = label.items()[0]
+                label_id, label_value = list(label.items())[0]
                 label_conditions[label_id] = self._single_label_from_valuespec(
                     operator, label_value)
         return label_conditions
@@ -1752,7 +1745,7 @@ class RuleConditionRenderer(object):
 
     def _tag_conditions(self, conditions):
         # type: (RuleConditions) -> Generator
-        for tag_spec in conditions.host_tags.itervalues():
+        for tag_spec in conditions.host_tags.values():
             if isinstance(tag_spec, dict) and "$or" in tag_spec:
                 yield HTML(" <i>or</i> ").join(
                     [self._single_tag_condition(sub_spec) for sub_spec in tag_spec["$or"]])
@@ -1771,8 +1764,7 @@ class RuleConditionRenderer(object):
                 raise NotImplementedError()
 
         if negate:
-            # mypy had some problem with this. Need to check type annotation
-            tag_id = tag_spec["$ne"]  # type: ignore
+            tag_id = tag_spec["$ne"]
         else:
             tag_id = tag_spec
 
@@ -1806,7 +1798,7 @@ class RuleConditionRenderer(object):
             return
 
         labels_html = (self._single_label_condition(object_type, label_id, label_spec)
-                       for label_id, label_spec in label_conditions.iteritems())
+                       for label_id, label_spec in label_conditions.items())
         yield HTML(
             _("%s matching labels: %s") %
             (object_title, html.render_i(_("and"), class_="label_operator").join(labels_html)))
@@ -1817,7 +1809,7 @@ class RuleConditionRenderer(object):
         if isinstance(label_spec, dict):
             if "$ne" in label_spec:
                 negate = True
-                label_value = label_spec["$ne"]  # type: ignore
+                label_value = label_spec["$ne"]
             else:
                 raise NotImplementedError()
 
@@ -1906,6 +1898,7 @@ class RuleConditionRenderer(object):
         if not rulespec.item_type or conditions.service_description is None:
             return
 
+        condition = six.text_type()
         if rulespec.item_type == "service":
             condition = _("Service name")
         elif rulespec.item_type == "item":
@@ -1947,10 +1940,10 @@ class RuleConditionRenderer(object):
                 text_list.append("%s%s" % (expression, html.render_b(item_spec.rstrip("$"))))
 
         if len(text_list) == 1:
-            condition += text_list[0]
+            condition += ensure_unicode(render_html(text_list[0]))
         else:
             condition += ", ".join(["%s" % s for s in text_list[:-1]])
-            condition += _(" or ") + text_list[-1]
+            condition += ensure_unicode(render_html(_(" or ") + text_list[-1]))
 
         if condition:
             yield condition
@@ -2067,4 +2060,4 @@ class ModeNewRule(EditRuleMode):
     def _success_message(self):
         return _("Created new rule in ruleset \"%s\" in folder \"%s\"") % \
                  (self._ruleset.title(),
-                  self._folder.alias_path()) # pylint: disable=no-member
+                  self._folder.alias_path())  # pylint: disable=no-member

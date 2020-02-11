@@ -1,28 +1,9 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """Modes for managing notification configuration"""
 
 import abc
@@ -30,6 +11,7 @@ import time
 
 import cmk
 import cmk.utils.store as store
+from cmk.utils.encoding import convert_to_unicode
 
 import cmk.gui.view_utils
 import cmk.gui.wato.user_profile
@@ -77,6 +59,7 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.watolib.notifications import (
     save_notification_rules,
     load_notification_rules,
+    load_user_notification_rules,
 )
 
 
@@ -223,7 +206,7 @@ class NotificationsMode(EventsMode):
                                    start_nr=0,
                                    profilemode=False):
         if not rules:
-            html.message(_("You have not created any rules yet."))
+            html.show_message(_("You have not created any rules yet."))
             return
 
         vs_match_conditions = Dictionary(elements=self._rule_match_conditions())
@@ -302,7 +285,7 @@ class NotificationsMode(EventsMode):
                         html.icon_button(delete_url, _("Delete this notification rule"), "delete")
                     else:
                         table.cell("", css="buttons")
-                        for _x in xrange(4):
+                        for _x in range(4):
                             html.empty_icon_button()
 
                     table.cell("", css="narrow")
@@ -372,7 +355,6 @@ class NotificationsMode(EventsMode):
                             isopen=False,
                             title=title,
                             indent=False,
-                            tree_img="tree_black",
                         )
                         html.write(vs_match_conditions.value_to_text(rule))
                         html.end_foldable_container()
@@ -517,7 +499,7 @@ class ModeNotifications(NotificationsMode):
         if current_settings.get("notification_fallback_email"):
             return True
 
-        for user in userdb.load_users(lock=False).itervalues():
+        for user in userdb.load_users(lock=False).values():
             if user.get("fallback_contact", False):
                 return True
 
@@ -527,7 +509,7 @@ class ModeNotifications(NotificationsMode):
         if self._show_bulks:
             # Warn if there are unsent bulk notifications
             if not self._render_bulks(only_ripe=False):
-                html.message(_("Currently there are no unsent notification bulks pending."))
+                html.show_message(_("Currently there are no unsent notification bulks pending."))
         else:
             # Warn if there are unsent bulk notifications
             self._render_bulks(only_ripe=True)
@@ -566,7 +548,10 @@ class ModeNotifications(NotificationsMode):
         if not self._show_backlog:
             return
 
-        backlog = store.load_data_from_file(cmk.utils.paths.var_dir + "/notify/backlog.mk", [])
+        backlog = store.load_object_from_file(
+            cmk.utils.paths.var_dir + "/notify/backlog.mk",
+            default=[],
+        )
         if not backlog:
             return
 
@@ -659,16 +644,9 @@ class ModeNotifications(NotificationsMode):
 
     def _convert_context_to_unicode(self, context):
         # Convert all values to unicode
-        for key, value in context.iteritems():
+        for key, value in context.items():
             if isinstance(value, str):
-                try:
-                    value_unicode = value.decode("utf-8")
-                except UnicodeDecodeError:
-                    try:
-                        value_unicode = value.decode("latin-1")
-                    except UnicodeDecodeError:
-                        value_unicode = u"(Invalid byte sequence)"
-                context[key] = value_unicode
+                context[key] = convert_to_unicode(value, on_error=u"(Invalid byte sequence)")
 
     # TODO: Refactor this
     def _show_rules(self):
@@ -685,19 +663,17 @@ class ModeNotifications(NotificationsMode):
         start_nr += len(rules)
 
         if self._show_user_rules:
-            users = userdb.load_users()
-            userids = sorted(users.keys())
-            for userid in userids:
-                user = users[userid]
-                user_rules = user.get("notification_rules", [])
-                if user_rules:
-                    self._render_notification_rules(user_rules,
-                                                    userid,
-                                                    show_title=True,
-                                                    show_buttons=False,
-                                                    analyse=analyse,
-                                                    start_nr=start_nr)
-                    start_nr += len(user_rules)
+            for user_id, user_rules in sorted(load_user_notification_rules().items(),
+                                              key=lambda u: u[0]):
+                self._render_notification_rules(
+                    user_rules,
+                    user_id,
+                    show_title=True,
+                    show_buttons=False,
+                    analyse=analyse,
+                    start_nr=start_nr,
+                )
+                start_nr += len(user_rules)
 
         if analyse:
             with table_element(table_id="plugins", title=_("Resulting notifications")) as table:

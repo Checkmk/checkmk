@@ -25099,7 +25099,7 @@ msgstr ""
 #, python-format
 msgid ""
 "We are sorry, but you lack the permission for this operation. If you do not "
-"like this then please ask you administrator to provide you with the "
+"like this then please ask your administrator to provide you with the "
 "following permission: '<b>%s</b>'."
 msgstr ""
 

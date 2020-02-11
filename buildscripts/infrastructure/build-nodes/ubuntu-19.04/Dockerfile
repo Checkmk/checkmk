@@ -15,6 +15,7 @@ RUN apt-get update \
     flex \
     gettext \
     git-buildpackage \
+    curl \
     libcurl4-openssl-dev \
     libevent-dev \
     libffi-dev \
@@ -34,7 +35,6 @@ RUN apt-get update \
     libperl-dev \
     libpq-dev \
     libreadline-dev \
-    librrd-dev \
     libsqlite3-dev \
     libssl-dev \
     libtool \
@@ -49,9 +49,22 @@ RUN apt-get update \
     uuid-dev \
     && rm -rf /var/lib/apt/lists/*
 
+ARG ARTIFACT_STORAGE
 COPY bw-build-gnu-toolchain.sh /usr/sbin
-RUN bw-build-gnu-toolchain.sh -b
+RUN bw-build-gnu-toolchain.sh -r $ARTIFACT_STORAGE -b
 RUN cd /opt \
-    && wget https://github.com/Kitware/CMake/releases/download/v3.15.4/cmake-3.15.4-Linux-x86_64.tar.gz \
-    && tar xf cmake-3.15.4-Linux-x86_64.tar.gz \
-    && ln -s /opt/cmake-3.15.4-Linux-x86_64/bin/* /usr/bin/
+    && wget https://github.com/Kitware/CMake/releases/download/v3.16.2/cmake-3.16.2-Linux-x86_64.tar.gz \
+    && tar xf cmake-3.16.2-Linux-x86_64.tar.gz \
+    && ln -s /opt/cmake-3.16.2-Linux-x86_64/bin/* /usr/bin/
+
+# New packages that are not needed for the build toolchain above should be added here.
+# We avoid rebuild of the whole previous steps this way
+RUN apt-get update \
+    && apt-get install -y \
+    chrpath \
+    joe \
+    vim \
+    && rm -rf /var/lib/apt/lists/*
+
+ARG VERS_TAG
+RUN echo $VERS_TAG > /version.txt

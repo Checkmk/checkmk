@@ -33,7 +33,14 @@ def snmp_scan_function_if64_tplink(oid):
 def parse_if64_tplink(info):
     parsed = []
     for line in info:
+        # if we have no special alias info we use the standard ifAlias info
+        if not line[18]:
+            line[18] = line[20]
+        # cut away the last column with the optional ifAlias info
+        line = line[:20]
+
         parsed.append(line[:3] + [str(int(line[3]) * 1000000)] + line[4:])
+
     return parsed
 
 
@@ -71,6 +78,10 @@ check_info["if64_tplink"] = {
             "2.1.2.2.1.21",  # ifOutQLen                17
             "4.1.11863.1.1.3.2.1.1.1.1.2",  # special for TP Link
             BINARY("2.1.2.2.1.6"),  # ifPhysAddress            19
+            # Additionally fetch the standard OIDs for aliases.
+            # Current tplink devices seem to support this OID and no longer the
+            # ones under 4.1.11863.
+            "2.1.31.1.1.1.18",  # ifAlias
         ]),
     'snmp_scan_function': snmp_scan_function_if64_tplink,
     'group': 'if',

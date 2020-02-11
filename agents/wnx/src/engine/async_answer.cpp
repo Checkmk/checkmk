@@ -13,16 +13,17 @@
 
 #include "common/cfg_info.h"
 #include "logger.h"
+#include "section_header.h"       // names
 #include "windows_service_api.h"  // global situation
 
 namespace cma::srv {
 
-bool AsyncAnswer::isAnswerOlder(std::chrono::milliseconds Milli) const {
+bool AsyncAnswer::isAnswerOlder(std::chrono::milliseconds period) const {
     using namespace std::chrono;
     auto tp = steady_clock::now();
 
     std::lock_guard lk(lock_);
-    return duration_cast<milliseconds>(tp - tp_id_) > Milli;
+    return duration_cast<milliseconds>(tp - tp_id_) > period;
 }
 
 void AsyncAnswer::dropAnswer() {
@@ -33,13 +34,13 @@ void AsyncAnswer::dropAnswer() {
 }
 
 // returns true when answer is ready, false when timeout expires but not ready
-bool AsyncAnswer::waitAnswer(std::chrono::milliseconds WaitInterval) {
+bool AsyncAnswer::waitAnswer(std::chrono::milliseconds to_wait) {
     using namespace std::chrono;
 
     std::unique_lock lk(lock_);
     ON_OUT_OF_SCOPE(sw_.stop());
     return cv_ready_.wait_until(
-        lk, steady_clock::now() + WaitInterval, [this]() -> bool {
+        lk, steady_clock::now() + to_wait, [this]() -> bool {
             // check for global exit
             if (cma::srv::IsGlobalStopSignaled()) {
                 XLOG::l.i("Breaking Answer on stop");
@@ -53,9 +54,10 @@ bool AsyncAnswer::waitAnswer(std::chrono::milliseconds WaitInterval) {
 // in case of exception returns false
 // Caller MUST Fix section size!
 static bool AddVectorGracefully(std::vector<uint8_t>& Out,
-                                const std::vector<uint8_t>& In) noexcept {
+                                const std::vector<uint8_t>& In) {
     auto old_size = Out.size();
     // we have theoretical possibility of exception here
+
     try {
         // a bit of optimization
         Out.reserve(Out.size() + In.size());
@@ -63,13 +65,14 @@ static bool AddVectorGracefully(std::vector<uint8_t>& Out,
 
         // divider after every section with data
         Out.push_back(static_cast<uint8_t>('\n'));
+        return true;
     } catch (const std::exception& e) {
         // return to invariant...
         XLOG::l(XLOG_FLINE + "- disaster '{}'", e.what());
         Out.resize(old_size);
-        return false;
     }
-    return true;
+
+    return false;
 }
 
 // kills data in any case
@@ -94,7 +97,7 @@ AsyncAnswer::DataBlock AsyncAnswer::getDataAndClear() {
     }
 }
 
-bool AsyncAnswer::prepareAnswer(std::string_view Ip) noexcept {
+bool AsyncAnswer::prepareAnswer(std::string_view Ip) {
     std::lock_guard lk(lock_);
 
     if (!external_ip_.empty() || awaited_segments_ != 0 ||
@@ -124,33 +127,36 @@ std::vector<std::string> AsyncAnswer::segmentNameList() {
 // Reporting Function, which called by the section plugins and providers
 // Thread safe!
 bool AsyncAnswer::addSegment(
-    const std::string SectionName,   // name
-    const AnswerId Id,               // "password"
-    const std::vector<uint8_t> Data  // data for section
+    const std::string& section_name,  // name
+    const AnswerId answer_id,         // "password"
+    const std::vector<uint8_t>& data  // data for section
 ) {
     std::lock_guard lk(lock_);
-    if (Id != tp_id_) {
-        XLOG::d("Invalid attempt to add data '{}'", SectionName);
+    if (answer_id != tp_id_) {
+        XLOG::d("Invalid attempt to add data '{}'", section_name);
         return false;
     }
 
     for (const auto& s : segments_) {
-        if (s.name_ == SectionName) {
-            XLOG::l("Section '{}' tries to store data twice. F-f", SectionName);
+        if (s.name_ == section_name) {
+            XLOG::l("Section '{}' tries to store data twice. F-f",
+                    section_name);
             return false;  // duplicated section run
         }
     }
 
     try {
-        segments_.push_back({SectionName, Data.size()});
+        segments_.push_back({section_name, data.size()});
 
         // reserve + array math
-        if (order_ == Order::plugins_last && SectionName == "plugins") {
-            plugins_ = Data;
-        } else if (order_ == Order::plugins_last && SectionName == "local") {
-            local_ = Data;
-        } else if (!Data.empty()) {
-            if (!AddVectorGracefully(data_, Data)) segments_.back().length_ = 0;
+        if (order_ == Order::plugins_last &&
+            section_name == cma::section::kPlugins) {
+            plugins_ = data;
+        } else if (order_ == Order::plugins_last &&
+                   section_name == cma::section::kLocal) {
+            local_ = data;
+        } else if (!data.empty()) {
+            if (!AddVectorGracefully(data_, data)) segments_.back().length_ = 0;
         }
     } catch (const std::exception& e) {
         // not possible, but we have to check

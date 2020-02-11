@@ -1,29 +1,12 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """LDAP configuration and diagnose page"""
+
+import six
 
 import cmk.gui.pages
 import cmk.gui.config as config
@@ -49,7 +32,7 @@ from cmk.gui.plugins.wato import (
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 else:
-    managed = None  # type: ignore
+    managed = None  # type: ignore[assignment]
 
 
 class LDAPMode(WatoMode):
@@ -250,7 +233,7 @@ class ModeEditLDAPConnection(LDAPMode):
         html.open_td(style="padding-left:10px;vertical-align:top")
         html.h2(_('Diagnostics'))
         if not html.request.var('_test') or not self._connection_id:
-            html.message(
+            html.show_message(
                 HTML(
                     '<p>%s</p><p>%s</p>' %
                     (_('You can verify the single parts of your ldap configuration using this '
@@ -383,11 +366,18 @@ class ModeEditLDAPConnection(LDAPMode):
         ldap_groups = plugin.fetch_needed_groups_for_groups_to_roles(connection, params)
 
         num_groups = 0
-        for role_id, group_distinguished_names in active_plugins['groups_to_roles'].items():
-            if not isinstance(group_distinguished_names, list):
-                group_distinguished_names = [group_distinguished_names]
+        for role_id, group_specs in active_plugins['groups_to_roles'].items():
+            if not isinstance(group_specs, list):
+                group_specs = [group_specs]
 
-            for dn, _search_connection_id in group_distinguished_names:
+            for group_spec in group_specs:
+                if isinstance(group_spec, six.string_types):
+                    dn = group_spec  # be compatible to old config without connection spec
+                elif not isinstance(group_spec, tuple):
+                    continue  # skip non configured ones (old valuespecs allowed None)
+                else:
+                    dn = group_spec[0]
+
                 if dn.lower() not in ldap_groups:
                     return False, _('Could not find the group specified for role %s') % role_id
 

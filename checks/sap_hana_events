@@ -27,7 +27,7 @@
 
 def parse_sap_hana_events(info):
     parsed = {}
-    for sid_instance, lines in parse_sap_hana(info).iteritems():
+    for sid_instance, lines in parse_sap_hana(info).items():
         inst_data = {}
         for line in lines:
             if len(line) < 2:
@@ -50,13 +50,13 @@ SAP_HANA_EVENTS_MAP = {
 
 
 def inventory_sap_hana_events(parsed):
-    for item in parsed.iterkeys():
+    for item in parsed:
         yield item, {}
 
 
 @get_parsed_item_data
 def check_sap_hana_events(item, params, data):
-    for event_key, event_count in data.iteritems():
+    for event_key, event_count in data.items():
         event_state, event_state_readable = SAP_HANA_EVENTS_MAP.get(event_key,
                                                                     (3, "unknown[%s]" % event_key))
         state = 0

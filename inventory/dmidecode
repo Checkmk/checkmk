@@ -205,7 +205,7 @@ def inv_dmidecode_parse_physical_mem_array(lines):
 
     # If we have a dummy entry from previous Memory Devices (see below)
     # then we fill that entry rather than creating a new one
-    if len(node) == 1 and node[0].keys() == ["devices"]:
+    if len(node) == 1 and list(node[0]) == ["devices"]:
         array = node[0]
     else:
         array = {"devices": []}

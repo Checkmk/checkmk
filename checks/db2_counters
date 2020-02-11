@@ -76,7 +76,7 @@ def parse_db2_counters(info):
             node_infos.append(" ".join(line[2:]))
         # Some databases run in DPF mode. Means that the database is split over several nodes
         # The counter information also differs for each node. We create one service per DPF node
-        elif line[1] in db2_counters_map.keys():
+        elif line[1] in db2_counters_map:
             if node_infos:
                 element_offset.setdefault(line[1], 0)
                 offset = element_offset[line[1]]

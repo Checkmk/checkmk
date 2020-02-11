@@ -123,7 +123,7 @@
 
 def parse_hp_msa_if(info):
     parsed = []
-    for idx, (_key, values) in enumerate(sorted(parse_hp_msa(info).iteritems())):
+    for idx, (_key, values) in enumerate(sorted(parse_hp_msa(info).items())):
         try:
             speed = int(values['actual-speed'].replace('Gb', '')) * 10**9
         except ValueError:

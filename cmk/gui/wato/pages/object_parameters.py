@@ -1,31 +1,14 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """Mode for displaying and modifying the rule based host and service
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
+
+from typing import List, Tuple, Optional, Text  # pylint: disable=unused-import
 
 import cmk
 
@@ -36,6 +19,8 @@ import cmk.gui.view_utils
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.watolib.rulesets import (Ruleset, Rule)  # pylint: disable=unused-import
+from cmk.gui.watolib.hosts_and_folders import CREFolder  # pylint: disable=unused-import
 from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
     rulespec_registry,
@@ -54,8 +39,8 @@ from cmk.gui.plugins.wato.utils.context_buttons import (
 
 @mode_registry.register
 class ModeObjectParameters(WatoMode):
-    _PARAMETERS_UNKNOWN = []
-    _PARAMETERS_OMIT = []
+    _PARAMETERS_UNKNOWN = []  # type: List
+    _PARAMETERS_OMIT = []  # type: List
 
     @classmethod
     def name(cls):
@@ -255,9 +240,15 @@ class ModeObjectParameters(WatoMode):
                                           known_settings=serviceinfo["parameters"])
 
         elif origin == "classic":
-            rule_nr = serviceinfo["rule_nr"]
-            rules = all_rulesets.get("custom_checks").get_rules()
-            rule_folder, rule_index, _rule = rules[rule_nr]
+            ruleset = all_rulesets.get("custom_checks")
+            origin_rule_result = self._get_custom_check_origin_rule(ruleset, self._hostname,
+                                                                    self._service)
+            if origin_rule_result is None:
+                raise MKUserError(
+                    None,
+                    _("Failed to determine origin rule of %s / %s") %
+                    (self._hostname, self._service))
+            rule_folder, rule_index, _rule = origin_rule_result
 
             url = watolib.folder_preserving_link([('mode', 'edit_ruleset'),
                                                   ('varname', "custom_checks"),
@@ -287,6 +278,24 @@ class ModeObjectParameters(WatoMode):
 
         self._show_labels(serviceinfo.get("labels", {}), "service",
                           serviceinfo.get("label_sources", {}))
+
+    def _get_custom_check_origin_rule(self, ruleset, hostname, svc_desc):
+        # type: (Ruleset, str, Text) -> Optional[Tuple[CREFolder, int, Rule]]
+        # We could use the outcome of _setting instead of the outcome of
+        # the automation call in the future
+        _setting, rules = ruleset.analyse_ruleset(self._hostname,
+                                                  svc_desc_or_item=None,
+                                                  svc_desc=None)
+
+        for rule_folder, rule_index, rule in rules:
+            if rule.is_disabled():
+                continue
+            if rule.value["service_description"] != self._service:
+                continue
+
+            return rule_folder, rule_index, rule
+
+        return None
 
     def _show_labels(self, labels, object_type, label_sources):
         forms.section(_("Effective labels"))

@@ -1,0 +1,28 @@
+Title: local: Service names can contain blank characters
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1573565501
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+If you quote the service description in local checks, you can use blank
+characters now.
+
+As an example, the old format (still supported) and the new
+format without and with blank:
+
+F+:mylocalcheck_old_format
+echo "0 myservice - OK: This is my custom output"
+F-:
+
+F+:mylocalcheck_new_format
+echo "0 \"myservice\" - OK: This is my custom output"
+F-:
+
+F+:mylocalcheck_new_format_with_blank
+echo "0 \"my service\" - OK: This is my custom output"
+F-:
+

@@ -1,7 +1,7 @@
 # pylint: disable=redefined-outer-name
 
 import socket
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 import cmk
 
 

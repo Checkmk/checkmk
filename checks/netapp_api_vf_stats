@@ -32,7 +32,7 @@ netapp_api_vf_stats_cpu_util_default_levels = (90.0, 95.0)
 
 def inventory_netapp_api_vf_stats(parsed):
     stats, _cpu = parsed
-    for key in stats.keys():
+    for key in stats:
         yield key, 'netapp_api_vf_stats_cpu_util_default_levels'
 
 
@@ -89,7 +89,7 @@ check_info["netapp_api_vf_stats"] = {
 
 def inventory_netapp_api_vf_stats_traffic(parsed):
     stats, _ = parsed
-    for key in stats.keys():
+    for key in stats:
         yield key, None
 
 

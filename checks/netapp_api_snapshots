@@ -33,7 +33,7 @@ factory_settings["netapp_api_snapshots_default_levels"] = {"levels": (85.0, 90.0
 
 
 def inventory_netapp_api_snapshots(parsed):
-    for key in parsed.keys():
+    for key in parsed:
         yield key, {}
 
 

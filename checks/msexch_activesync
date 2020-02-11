@@ -25,16 +25,20 @@
 # Boston, MA 02110-1301 USA.
 
 
-def check_msexch_activesync(item, params, parsed):
+def discover_msexch_activesync(parsed):
+    return inventory_wmi_table_total(parsed)
+
+
+def check_msexch_activesync(_no_item, _no_params, parsed):
     yield wmi_yield_raw_persec(parsed[""],
-                               item,
+                               None,
                                "RequestsPersec",
-                               label=" requests/sec",
+                               infoname="Requests/sec",
                                perfvar="requests_per_sec")
 
 
 check_info['msexch_activesync'] = {
-    'inventory_function': lambda p: inventory_wmi_table(p),  # pylint: disable=unnecessary-lambda
+    'inventory_function': discover_msexch_activesync,
     'check_function': check_msexch_activesync,
     'parse_function': parse_wmi_table,
     'has_perfdata': True,

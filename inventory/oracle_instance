@@ -29,38 +29,49 @@
 # last entry: db creation time 'ddmmyyyyhh24mi'
 
 
+def _parse_raw_db_creation_time(raw_db_creation_time):
+    if raw_db_creation_time is None:
+        return None
+
+    # We just translate the format to another
+    # "%d%m%Y%H%M%S" => "%Y-%m-%d %H:%M"
+    # we cannot use time because we have no information about the timezone here.
+    try:
+        year = int(raw_db_creation_time[4:8])
+        month = int(raw_db_creation_time[2:4])
+        day = int(raw_db_creation_time[:2])
+        hours = int(raw_db_creation_time[8:10])
+        minutes = int(raw_db_creation_time[10:])
+    except (IndexError, ValueError):
+        return None
+    return "%s-%02d-%02d %02d:%02d" % (year, month, day, hours, minutes)
+
+
 def inv_oracle_instance(info, inventory_tree, status_data_tree):
     path = "software.applications.oracle.instance:"
     inv_node = inventory_tree.get_list(path)
     status_node = status_data_tree.get_list(path)
-    for line in info:
-        db_creation_time = None
-        if len(line) == 6:
-            sid, version, openmode, logins, _unused, _unused2 = line
-            logmode = None
-            up_seconds = None
 
-        elif len(line) >= 11:
-            sid, version, openmode, logins, _archiver, up_seconds_str, _dbid, \
-                logmode, _database_role, _force_logging, _name = line[:11]
-            up_seconds = int(up_seconds_str)
-            if len(line) > 11:
-                db_creation_time = time.mktime(time.strptime(line[11], "%d%m%Y%H%M%S"))
-
-        else:
+    for item_data in info.values():
+        if item_data['invalid_data']:
             continue
 
         inv_node.append({
-            "sid": sid,
-            "version": version,
-            "openmode": openmode,
-            "logmode": logmode,
-            "logins": logins,
-            "db_creation_time": db_creation_time,
+            "sid": item_data['sid'],
+            "version": item_data['version'],
+            "openmode": item_data['openmode'],
+            "logmode": item_data['log_mode'],
+            "logins": item_data['logins'],
+            "db_creation_time": _parse_raw_db_creation_time(item_data['db_creation_time']),
         })
 
+        try:
+            up_seconds = int(item_data['up_seconds'])
+        except (TypeError, ValueError):
+            up_seconds = None
+
         status_node.append({
-            "sid": sid,
+            "sid": item_data['sid'],
             "db_uptime": up_seconds,
         })
 

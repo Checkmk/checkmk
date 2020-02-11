@@ -64,7 +64,7 @@ def parse_postgres_stat_database(info):
 # Create a check for all databases that have seen at least
 # one commit in their live.
 def inventory_postgres_stat_database(parsed):
-    return [(k, {}) for k in parsed.keys() if parsed[k]["xact_commit"] > 0]
+    return [(k, {}) for k in parsed if parsed[k]["xact_commit"] > 0]
 
 
 def check_postgres_stat_database(item, params, parsed):

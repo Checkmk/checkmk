@@ -53,8 +53,8 @@ def check_cisco_cpu_memory_multiitem(_item, params, data):
     mem_used = data["mem_used"]
     mem_free = data["mem_free"]
     mem_reserved = data["mem_reserved"]
-    mem_occupied = mem_used + mem_reserved
-    mem_total = mem_used + mem_free
+    mem_occupied = (mem_used + mem_reserved) * 1024  # convert from kilobyte to byte
+    mem_total = (mem_used + mem_free) * 1024
     yield check_cisco_mem_sub(None, params, mem_occupied, mem_total)
 
 
@@ -82,5 +82,5 @@ check_info["cisco_cpu_memory"] = {
             ])
     ],
     'snmp_scan_function': snmp_scan_cisco_cpu_multiitem,
-    'includes': ["cisco_cpu_scan_functions.include", "cisco_mem.include"]
+    'includes': ["mem.include", "cisco_cpu_scan_functions.include", "cisco_mem.include"]
 }

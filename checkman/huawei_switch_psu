@@ -1,0 +1,19 @@
+title: Huawei Switches: PSU operation status
+agents: snmp
+catalog: hw/network/huawei
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the operational status of the PSUs in Huawei switches.
+ The check will report OK as long as the operational status is "enabled".
+ Otherwise the check will report CRITICAL status.
+
+ It supports the stacking function in which multiple devices are connected
+ together to logically function as one device.
+
+item:
+ The stack member number, followed by slash (/), followed by a consecutive number for each
+ PSU of this member.
+
+inventory:
+ One service for each PSU of each stack member is created

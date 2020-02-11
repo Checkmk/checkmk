@@ -31,7 +31,7 @@
 # datasources can be defined in Check_MK natively. Therefore we shift
 # the detection of the duplicate services directly to this check.
 # When it is possible to handle duplicate services for different
-# datasources correctly at the cmk_base level this code can be removed.
+# datasources correctly at the cmk.base level this code can be removed.
 # NOTE: By design the extra_sections are passed to EVERY subcheck and
 # therefore have to be removed in every subcheck!
 # Change-Id: I3b6a56efcff4c75bbd05a051242e18deaa499d9e
@@ -68,7 +68,7 @@ esx_host_cpu_default_levels = {}
 
 def inventory_esx_vsphere_hostsystem_cpu(info):
     hostsystem_info, winperf_info = info
-    data = esx_vsphere_hostsystem_convert(hostsystem_info).keys()
+    data = esx_vsphere_hostsystem_convert(hostsystem_info)
     if all([
             not winperf_info,
             'summary.quickStats.overallCpuUsage' in data,
@@ -135,36 +135,26 @@ def check_esx_vsphere_hostsystem_mem_cluster(item, params, info):
         savefloat(x) * 1024 * 1024 for x in data['summary.quickStats.overallMemoryUsage'])
     total_memory_size = sum(savefloat(x) for x in data['hardware.memorySize'])
 
-    level = total_memory_usage / total_memory_size * 100
-    label = ""
-    state = 0
-    warn_perf, crit_perf = None, None
-    for count, levels in sorted_params:
+    for count, (warn, crit) in sorted_params:
         if nodes_count >= count:
-            warn, crit = levels
-            warn_perf = warn * total_memory_size / 100
-            crit_perf = crit * total_memory_size / 100
+            state, text, perf = check_memory_element(
+                "Usage",
+                total_memory_usage,
+                total_memory_size,
+                ('perc_used', (warn, crit)),
+                metric_name="usage",
+            )
+            perf.append(("mem_total", total_memory_size))
 
-            if level > crit:
-                state = 2
-                label = " (Levels at %d%%/%d%%)" % (warn, crit)
-            elif level > warn:
-                state = 1
-                label = " (Levels at %d%%/%d%%)" % (warn, crit)
-            break
-
-    perf = [("usage", total_memory_usage, warn_perf, crit_perf, 0, total_memory_size),
-            ("mem_total", total_memory_size)]
-    yield state, "%d%%%s used - %s/%s" % \
-            (level, label, get_bytes_human_readable(total_memory_usage),
-             get_bytes_human_readable(total_memory_size)), perf
+            return state, text, perf
 
 
 check_info['esx_vsphere_hostsystem.mem_usage_cluster'] = {
     "check_function": check_esx_vsphere_hostsystem_mem_cluster,
-    "service_description": "Memory used",
+    "service_description": "Memory",
     "group": "mem_cluster",
     "has_perfdata": True,
+    "includes": ["mem.include"],
 }
 
 #.
@@ -254,7 +244,7 @@ esx_host_mem_default_levels = (80.0, 90.0)
 
 def inventory_esx_vsphere_hostsystem_mem(info):
     info, _ = info
-    data = esx_vsphere_hostsystem_convert(info).keys()
+    data = esx_vsphere_hostsystem_convert(info)
     if 'summary.quickStats.overallMemoryUsage' in data and 'hardware.memorySize' in data:
         return [(None, 'esx_host_mem_default_levels')]
 
@@ -268,31 +258,22 @@ def check_esx_vsphere_hostsystem_mem(item, params, info):
 
     memory_usage = savefloat(data['summary.quickStats.overallMemoryUsage'][0]) * 1024 * 1024
     memory_size = savefloat(data['hardware.memorySize'][0])
-    level = memory_usage / memory_size * 100
 
-    warn, crit = params
-    state = 0
-    label = ''
-    if level > crit:
-        state = 2
-        label = " (Levels at %d%%/%d%%)" % (warn, crit)
-    elif level > warn:
-        state = 1
-        label = " (Levels at %d%%/%d%%)" % (warn, crit)
-
-    message = "%d%%%s used - %s/%s" % \
-    (level, label, get_bytes_human_readable(memory_usage), get_bytes_human_readable(memory_size))
-    perf = [
-        ("usage", memory_usage, warn * memory_size / 100, crit * memory_size / 100, 0, memory_size),
-        ("mem_total", memory_size),
-    ]
-    return (state, message, perf)
+    state, text, perf = check_memory_element(
+        "Usage",
+        memory_usage,
+        memory_size,
+        ('perc_used', params),
+        metric_name="usage",
+    )
+    perf.append(("mem_total", memory_size))
+    return state, text, perf
 
 
 check_info['esx_vsphere_hostsystem.mem_usage'] = {
     "inventory_function": inventory_esx_vsphere_hostsystem_mem,
     "check_function": check_esx_vsphere_hostsystem_mem,
-    "service_description": "Memory used",
+    "service_description": "Memory",
     "group": "esx_host_memory",
     "has_perfdata": True
 }
@@ -310,7 +291,7 @@ check_info['esx_vsphere_hostsystem.mem_usage'] = {
 
 def inventory_esx_vsphere_hostsystem_state(info):
     info, _ = info
-    data = esx_vsphere_hostsystem_convert(info).keys()
+    data = esx_vsphere_hostsystem_convert(info)
     if 'runtime.inMaintenanceMode' in data:
         return [(None, None)]
 
@@ -444,7 +425,7 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
     message = ""
     path_names = []
 
-    for path, states in esx_vsphere_multipath_convert(info).iteritems():
+    for path, states in esx_vsphere_multipath_convert(info).items():
         if path == item:
             # Collect states
             for path_state, path_name in states:

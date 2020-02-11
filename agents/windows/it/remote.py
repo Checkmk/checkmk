@@ -11,11 +11,12 @@ import sys
 import telnetlib  # nosec
 
 # To use another host for running the tests, replace this IP address.
-remote_ip = '10.1.2.30'
+remote_ip = os.environ.get('LEGACY_WINDOWS_AGENT_TEST_HOST_ADDRESS')
+
 # To use another user account for running the tests, replace this username.
-remoteuser = 'NetworkAdministrator'
+remoteuser = 'Testuser'
 remotedir = os.path.join(os.sep, 'Users', remoteuser, 'Tests')
-sshopts = '-o StrictHostKeyChecking=no'
+sshopts = ['-oPort=9922', '-oStrictHostKeyChecking=no']
 host = 'localhost'
 port = 9999
 agent_exe = os.path.join(remotedir, 'check_mk_agent-64.exe')
@@ -145,8 +146,15 @@ class IniWriter(ConfigParser.RawConfigParser):
 def remotetest(expected_output, actual_output, testfile, testname=None, testclass=None):
     # Not on Windows: call given test remotely over ssh
     if platform.system() != 'Windows':
+        if remote_ip is None:
+            sys.stderr.write(
+                "You need to set the environment variable LEGACY_WINDOWS_AGENT_TEST_HOST_ADDRESS=[ADDRESS]\n"
+            )
+            sys.exit(1)
+
         cmd = [
-            'ssh', sshopts,
+            'ssh',
+        ] + sshopts + [
             '%s@%s' % (remoteuser, remote_ip),
             'py.test %s%s%s' % (os.path.join(remotedir, testfile),
                                 ('::%s' % testclass) if testclass else '',

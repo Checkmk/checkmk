@@ -33,19 +33,20 @@ def parse_sophos_memory(info):
 
 
 def check_sophos_memory(item, params, parsed):
-    return check_levels(parsed,
-                        "memory percentage usage",
-                        params.get("memory_levels", (None, None)),
-                        unit="%",
-                        infoname="Memory percentage usage",
-                        human_readable_func=lambda x: "%d" % x)
+    return check_levels(
+        parsed,
+        "memory percentage usage",  # FIXME: CMK-3584
+        params.get("memory_levels", (None, None)),
+        infoname="Usage",
+        human_readable_func=get_percent_human_readable,
+    )
 
 
 check_info['sophos_memory'] = {
     "parse_function": parse_sophos_memory,
     "inventory_function": lambda parsed: [(None, {})] if parsed is not None else None,
     "check_function": check_sophos_memory,
-    "service_description": "Memory usage",
+    "service_description": "Memory",
     "group": "sophos_memory",
     "snmp_info": (".1.3.6.1.4.1.21067.2.1.2.4", [2]),
     "snmp_scan_function": lambda oid: '.1.3.6.1.4.1.21067.2' in oid(".1.3.6.1.2.1.1.2.0"),

@@ -1,12 +1,12 @@
 # encoding: utf-8
 # pylint: disable=redefined-outer-name
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 import cmk.utils.paths
 from cmk.utils.labels import DiscoveredHostLabelsStore
 
 # Manager is currently not tested explicitly. Indirect tests can be found
-# at tests/unit/cmk_base/test_config.py::test_host_config_labels*
+# at tests/unit/cmk/base/test_config.py::test_host_config_labels*
 
 
 @pytest.fixture()

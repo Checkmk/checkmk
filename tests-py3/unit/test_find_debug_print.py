@@ -2,16 +2,20 @@
 
 import os
 import re
-import pytest
+import logging
+import pytest  # type: ignore[import]
 from testlib import cmk_path, cmc_path, cme_path
+
+LOGGER = logging.getLogger()
 
 check_paths = [
     "bin",
-    "cmk_base",
-    "cmk_base/cee",
-    "cmk_base/cme",
-    "cmk_base/modes",
-    "cmk_base/default_config",
+    # TODO: Why don't we check the whole cmk module?
+    "cmk/base",
+    "cmk/base/cee",
+    "cmk/base/cme",
+    "cmk/base/modes",
+    "cmk/base/default_config",
     "lib",
     "checks",
     "inventory",
@@ -24,6 +28,7 @@ check_paths = [
 ]
 
 exclude_folders = ["plugins/build", "plugins/build_32", "chroot"]
+exclude_files = ["bin/mkeventd_open514", "bin/mkevent"]
 
 
 def find_debugs(line):
@@ -63,6 +68,10 @@ def test_find_debug_code(path):
             if file_path.endswith((".pyc", ".whl", ".tar.gz")):
                 continue
 
+            if os.path.relpath(file_path, cmk_path()) in exclude_files:
+                continue
+
+            LOGGER.info("Checking file %s", file_path)
             for nr, line in enumerate(open(file_path)):
                 if nr == 0 and ("bash" in line or "php" in line):
                     break  # skip non python files

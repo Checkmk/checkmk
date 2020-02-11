@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
 import six
@@ -47,7 +27,6 @@ from cmk.gui.valuespec import (
     EmailAddress,
     ListOf,
     Checkbox,
-    RadioChoice,
     Password,
     Percentage,
     CascadingDropdown,
@@ -653,15 +632,13 @@ def _valuespec_active_checks_sql():
                     ]),
             ),
             ("levels",
-             Tuple(
-                 title=_("Upper levels for first output item"),
-                 elements=[Float(title=_("Warning if above")),
-                           Float(title=_("Critical if above"))])),
+             Tuple(title=_("Upper levels for first output item"),
+                   elements=[Float(title=_("Warning at")),
+                             Float(title=_("Critical at"))])),
             ("levels_low",
-             Tuple(
-                 title=_("Lower levels for first output item"),
-                 elements=[Float(title=_("Warning if below")),
-                           Float(title=_("Critical if below"))])),
+             Tuple(title=_("Lower levels for first output item"),
+                   elements=[Float(title=_("Warning below")),
+                             Float(title=_("Critical below"))])),
             ("perfdata",
              FixedValue(
                  title=_("Performance Data"),
@@ -896,12 +873,13 @@ def _active_checks_http_hostspec():
     return Dictionary(
         title=_("Host settings"),
         help=_("Usually Check_MK will nail this check to the primary IP address of the host"
-               " it is attached to. It will use corresponding IP version (IPv4/IPv6) and"
-               " the default port (80/443). With this option you can override either of these"
-               " parameters. By default the host name / IP address will be used as virtual"
-               " host as well. In some setups however, you may want to distiguish the contacted"
-               " servers address from your virtual host name (e.g. if the virtual host name is"
-               " not resolvable by DNS)."),
+               " it is attached to. It will use the corresponding IP version (IPv4/IPv6) and"
+               " default port (80/443). With this option you can override either of these"
+               " parameters. By default no virtual host is set and HTTP/1.0 will be used."
+               " In some setups however, you may want to distiguish the contacted server"
+               " address from your virtual host name (e.g. if the virtual host name is"
+               " not resolvable by DNS). In this case the HTTP Host header will be set and "
+               "HTTP/1.1 is used."),
         elements=[
             ("address", TextAscii(title=_("Hosts name / IP address"), allow_empty=False)),
             ("port", _active_checks_http_portspec(443)),
@@ -1570,7 +1548,7 @@ rulespec_registry.register(
 def _valuespec_custom_checks():
     return Dictionary(
         title=_("Classical active and passive Monitoring checks"),
-        help=_("With this ruleset you can configure &quot;classical Monitoring checks&quot; "
+        help=_("With this ruleset you can configure \"classical Monitoring checks\" "
                "to be executed directly on your monitoring server. These checks "
                "will not use Check_MK. It is also possible to configure passive "
                "checks that are fed with data from external sources via the "
@@ -1738,21 +1716,19 @@ def _valuespec_active_checks_bi_aggr():
                           default_value=60,
                       )),
                      ("in_downtime",
-                      RadioChoice(title=_("State, if BI aggregate is in scheduled downtime"),
-                                  orientation="vertical",
-                                  choices=[
-                                      (None, _("Use normal state, ignore downtime")),
-                                      ("ok", _("Force to be OK")),
-                                      ("warn", _("Force to be WARN, if aggregate is not OK")),
-                                  ])),
+                      DropdownChoice(title=_("State, if BI aggregate is in scheduled downtime"),
+                                     choices=[
+                                         (None, _("Use normal state, ignore downtime")),
+                                         ("ok", _("Force to be OK")),
+                                         ("warn", _("Force to be WARN, if aggregate is not OK")),
+                                     ])),
                      ("acknowledged",
-                      RadioChoice(title=_("State, if BI aggregate is acknowledged"),
-                                  orientation="vertical",
-                                  choices=[
-                                      (None, _("Use normal state, ignore acknowledgement")),
-                                      ("ok", _("Force to be OK")),
-                                      ("warn", _("Force to be WARN, if aggregate is not OK")),
-                                  ])),
+                      DropdownChoice(title=_("State, if BI aggregate is acknowledged"),
+                                     choices=[
+                                         (None, _("Use normal state, ignore acknowledgement")),
+                                         ("ok", _("Force to be OK")),
+                                         ("warn", _("Force to be WARN, if aggregate is not OK")),
+                                     ])),
                      ("track_downtimes",
                       Checkbox(
                           title=_("Track downtimes"),

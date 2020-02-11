@@ -35,6 +35,31 @@
 namespace wtools {
 constexpr const wchar_t* kWToolsLogName = L"check_mk_wtools.log";
 
+inline bool IsHandleValid(HANDLE h) noexcept {
+    return h != nullptr && h != INVALID_HANDLE_VALUE;
+}
+
+// this is functor to kill any pointer allocated with ::LocalAlloc
+// usually this pointer comes from Windows API
+template <typename T>
+struct LocalAllocDeleter {
+    void operator()(T* r) noexcept {
+        if (r) ::LocalFree(reinterpret_cast<HLOCAL>(r));
+    }
+};
+
+// usage
+#if (0)
+LocalResource<SERVICE_FAILURE_ACTIONS> actions(
+    ::WindowsApiToGetActions(handle_to_service));
+#endif
+//
+template <typename T>
+using LocalResource = std::unique_ptr<T, LocalAllocDeleter<T>>;
+
+// returns <exit_code, 0>, <0, error> or <-1, error>
+std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid);
+
 uint32_t GetParentPid(uint32_t pid);
 
 //
@@ -205,7 +230,7 @@ private:
     HANDLE read_;
     HANDLE write_;
     bool sa_initialized_;
-    SECURITY_DESCRIPTOR sd_;
+    SECURITY_DESCRIPTOR sd_ = {0};
     SECURITY_ATTRIBUTES sa_;
 };
 
@@ -259,6 +284,10 @@ public:
     // returns process id
     uint32_t goExecAsJob(std::wstring_view CommandLine) noexcept;
 
+    // returns process id
+    uint32_t goExecAsJobAndUser(std::wstring_view user,
+                                std::wstring_view password,
+                                std::wstring_view CommandLine) noexcept;
     // returns process id
     uint32_t goExecAsUpdater(std::wstring_view CommandLine) noexcept;
 
@@ -525,12 +554,16 @@ inline std::string ConvertToUTF8(const std::wstring_view Src) noexcept {
 #else
     // standard but deprecated
     try {
-        return wstring_convert<codecvt_utf8<wchar_t> >().to_bytes(Src);
+        return wstring_convert<codecvt_utf8<wchar_t>>().to_bytes(Src);
     } catch (const exception& e) {
         xlog::l("Failed to convert %ls", Src.c_str());
         return "";
     }
 #endif  // endif
+}
+
+inline std::string ConvertToUTF8(const std::string_view src) noexcept {
+    return std::string(src);
 }
 
 // standard Windows converter from Microsoft
@@ -956,20 +989,24 @@ HMODULE LoadWindowsLibrary(const std::wstring& DllPath);
 std::vector<std::string> EnumerateAllRegistryKeys(const char* RegPath);
 
 // returns data from the root machine registry
-uint32_t GetRegistryValue(const std::wstring& Key, const std::wstring& Value,
-                          uint32_t Default) noexcept;
+uint32_t GetRegistryValue(std::wstring_view path, std::wstring_view value_name,
+                          uint32_t dflt) noexcept;
+
+// deletes registry value by path
+bool DeleteRegistryValue(std::wstring_view path,
+                         std::wstring_view value_name) noexcept;
 
 // returns true on success
-bool SetRegistryValue(std::wstring_view path, std::wstring_view key,
+bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
                       std::wstring_view value);
 
 // returns true on success
-bool SetRegistryValue(const std::wstring& Key, const std::wstring& Value,
-                      uint32_t Data) noexcept;
+bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
+                      uint32_t value) noexcept;
 
-std::wstring GetRegistryValue(const std::wstring& Key,
-                              const std::wstring& Value,
-                              const std::wstring& Default) noexcept;
+std::wstring GetRegistryValue(std::wstring_view path,
+                              std::wstring_view value_name,
+                              std::wstring_view dflt) noexcept;
 std::wstring GetArgv(uint32_t index) noexcept;
 
 size_t GetOwnVirtualSize() noexcept;
@@ -1011,6 +1048,17 @@ private:
     _bstr_t path_;       // path
     AceList* ace_list_;  // list of Access Control Entries
 };
+
+std::string ReadWholeFile(const std::filesystem::path& fname) noexcept;
+
+bool PatchFileLineEnding(const std::filesystem::path& fname) noexcept;
+
+using InternalUser = std::pair<std::wstring, std::wstring>;  // name,pwd
+
+InternalUser CreateCmaUserInGroup(const std::wstring& group_name) noexcept;
+bool RemoveCmaUser(const std::wstring& user_name) noexcept;
+std::wstring GenerateRandomString(size_t max_length) noexcept;
+std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept;
 
 }  // namespace wtools
 

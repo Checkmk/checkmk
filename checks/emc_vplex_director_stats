@@ -53,7 +53,7 @@ def parse_emc_director_stats(info):
 
 
 def inventory_emc_director_stats(parsed):
-    return inventory_diskstat_generic([(None, x) for x in parsed.keys()])
+    return inventory_diskstat_generic([(None, x) for x in parsed])
 
 
 def check_emc_director_stats(item, params, parsed):

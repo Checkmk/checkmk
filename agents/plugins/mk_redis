@@ -1,0 +1,105 @@
+#!/bin/bash
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# sample output of pgrep command
+# 1051 /usr/bin/redis-server 127.0.0.1:6380
+# 1324 /usr/bin/redis-server 127.0.0.1:6379
+
+# example cfg file /etc/check_mk/mk_redis.cfg
+#
+# REDIS_INSTANCES=(My_First_Redis My_Second_Redis)
+#
+# REDIS_HOST_My_First_Redis="127.0.0.1"
+# REDIS_PORT_My_First_Redis="6380"
+# REDIS_PASSWORD_My_First_Redis='MYPASSWORD'
+#
+# REDIS_HOST_My_Second_Redis="127.0.0.1"
+# REDIS_PORT_My_Second_Redis="6379"
+
+set -e -o pipefail
+
+REDIS_INSTANCES=()
+IS_DETECTED=false
+
+# source optional configuration file
+if [ -e "$MK_CONFDIR/mk_redis.cfg" ]; then
+    # shellcheck disable=SC1090
+    . "$MK_CONFDIR/mk_redis.cfg"
+fi
+
+# if no servers in config file, try to detect
+if [ ${#REDIS_INSTANCES[@]} -eq 0 ]; then
+    IS_DETECTED=true
+    # find instances and remove entries like "*:6879", possible with docker container
+    DETECTED=$(pgrep -xa "redis-server" 2>/dev/null | awk '/:[0-9]+/ && !/\*/ { print $3 }')
+
+    # add found redis instances
+    for REDIS_INSTANCE in $DETECTED; do
+        for inst in $REDIS_INSTANCE; do
+            IFS=":" read -ra parts <<<"$inst"
+
+            # dot of IP can not be used in variable names
+            REDIS_NAME=$(echo "$inst" | tr :. _)
+
+            # create dynamic variables
+            declare "REDIS_HOST_$REDIS_NAME=${parts[0]}"
+            declare "REDIS_PORT_$REDIS_NAME=${parts[1]}"
+
+            # append instance to array
+            REDIS_INSTANCES+=($REDIS_NAME)
+        done
+    done
+fi
+
+# print redis section, if servers are found
+if [ "${REDIS_INSTANCES[*]}" ]; then
+    echo -e "<<<redis_info:sep(58)>>>"
+else
+    exit 0
+fi
+
+for INSTANCE in ${REDIS_INSTANCES[*]}; do
+    HOST="REDIS_HOST_$INSTANCE"
+    PORT="REDIS_PORT_$INSTANCE"
+    PASSWORD="REDIS_PASSWORD_$INSTANCE"
+
+    if [[ "${!PASSWORD}" ]] && [[ "${!PASSWORD}" != "None" ]]; then
+        REDIS_CMD="waitmax 3 redis-cli -h ${!HOST} -p ${!PORT} -a ${!PASSWORD} info"
+    else
+        REDIS_CMD="waitmax 3 redis-cli -h ${!HOST} -p ${!PORT} info"
+    fi
+
+    # if autodetection is used, rewrite instance name for section output
+    if [[ "$IS_DETECTED" == true ]]; then
+        INSTANCE="${!HOST};${!PORT}"
+    fi
+
+    # print server section
+    echo "[[[$INSTANCE|${!HOST}|${!PORT}]]]"
+
+    # execute command
+    $REDIS_CMD
+    echo
+done

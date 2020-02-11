@@ -1,0 +1,35 @@
+[
+  {
+    "CompileFlags": "-Wall;-fms-compatibility-version=19.10;-Wmicrosoft;-Wno-invalid-token-paste;-Wno-unknown-pragmas;-Wno-unused-value",
+    "FilesToIgnore": "asio/",
+    "ProjectsToIgnore": "asio/",
+    "AdditionalIncludes": "IncludeDirectories",
+    "WarningsAsErrors": false,
+    "ContinueOnError": false,
+    "ClangAfterMSVC": false,
+    "VerboseMode": true,
+    "LlvmVersion": "9.0.0",
+    "ShowErrorList": false
+  },
+  {
+    "FileExtensions": ".c;.cpp;.cxx;.cc;.tli;.tlh;.h;.hh;.hpp;.hxx;.hh",
+    "FilesToIgnore": "resource.h",
+    "AssumeFilename": null,
+    "CustomExecutable": "",
+    "Style": "file",
+    "FallbackStyle": "none",
+    "FormatOnSave": true
+  },
+  {
+    "HeaderFilter": "./*.h",
+    "PredefinedChecks": "abseil*;bugprone*;clang-analyzer*;modernize*;performance*;readability*;security*;-readability-braces-around-statements",
+    "CustomChecks": "",
+    "UseChecksFrom": "PredefinedChecks",
+    "CustomExecutable": "",
+    "FormatAfterTidy": false,
+    "TidyOnSave": false
+  },
+  {
+    "Version": "5.5.0"
+  }
+]

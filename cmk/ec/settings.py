@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -25,8 +25,6 @@
 # Boston, MA 02110-1301 USA.
 """Settings handling for the Check_MK event console."""
 
-from __future__ import print_function
-
 # For some background about various design decisions below, see the concise
 # but excellent article "Parsing Command Line Arguments" in the FPComplete blog
 # at https://www.fpcomplete.com/blog/2017/12/parsing-command-line-arguments.
@@ -37,9 +35,13 @@ from __future__ import print_function
 # https://github.com/PyCQA/pylint/issues/1290 for invalid-name.
 
 from argparse import ArgumentParser, ArgumentTypeError, RawDescriptionHelpFormatter
+import sys
 from typing import List, NamedTuple, Optional, Union  # pylint: disable=unused-import
 
-from pathlib2 import Path
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
 # a filesystem path with a user-presentable description
 AnnotatedPath = NamedTuple('AnnotatedPath', [('description', str), ('value', Path)])
@@ -249,8 +251,7 @@ def settings(version, omd_root, default_config_dir, argv):
 
 
 if __name__ == "__main__":
-    import sys
     import cmk
     import cmk.utils.paths
-    print(settings(cmk.__version__, Path(cmk.utils.paths.omd_root),
+    print(settings(str(cmk.__version__), Path(cmk.utils.paths.omd_root),
                    Path(cmk.utils.paths.default_config_dir), sys.argv))

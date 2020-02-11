@@ -1,50 +1,26 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import division
 import time
 import six
+
 from cmk.utils.regex import regex
-
 import cmk.utils.defines as defines
-
 import cmk.utils.render
 
 import cmk.gui.pages
-
 import cmk.gui.config as config
-
 import cmk.gui.sites as sites
 import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _
-from cmk.gui.globals import g, html
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
-from cmk.gui.valuespec import Dictionary, Checkbox, Hostname
-
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.valuespec import Dictionary, Checkbox
+from cmk.gui.escaping import escape_text
 from cmk.gui.plugins.visuals import (
     filter_registry,
     VisualInfo,
@@ -73,7 +49,6 @@ from cmk.gui.plugins.views import (
     PainterOptions,
     inventory_displayhints,
     multisite_builtin_views,
-    view_is_enabled,
     paint_age,
     declare_1to1_sorter,
     cmp_simple_number,
@@ -319,7 +294,7 @@ def inv_paint_generic(v):
         return "number", "%.2f" % v
     elif isinstance(v, int):
         return "number", "%d" % v
-    return "", html.escaper.escape_text("%s" % v)
+    return "", escape_text("%s" % v)
 
 
 @decorate_inv_paint
@@ -516,6 +491,18 @@ def inv_paint_container_ready(ready):
     return "if_state " + css_class, ready
 
 
+@decorate_inv_paint
+def inv_paint_service_status(status):
+    if status == 'running':
+        css_class = "if_state_up"
+    elif status == 'stopped':
+        css_class = "if_state_down"
+    else:
+        css_class = "if_not_available"
+
+    return "if_state " + css_class, status
+
+
 #.
 #   .--display hints-------------------------------------------------------.
 #   |           _ _           _               _     _       _              |
@@ -651,7 +638,15 @@ def declare_inventory_columns():
 
 
 def _create_inv_rows(hostrow, invpath, infoname):
-    merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
+    try:
+        merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
+    except inventory.LoadStructuredDataError:
+        html.add_user_error(
+            "load_inventory_tree",
+            _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.") %
+            inventory.get_short_inventory_filepath(hostrow.get("host_name", "")))
+        return []
+
     if merged_tree is None:
         return []
     invdata = inventory.get_inventory_data(merged_tree, invpath)
@@ -727,7 +722,7 @@ def inv_find_subtable_columns(invpath):
     order = dict(swapped)
 
     columns = []
-    for path in inventory_displayhints.iterkeys():
+    for path in inventory_displayhints:
         if path.startswith(invpath + "*."):
             # ".networking.interfaces:*.port_type" -> "port_type"
             columns.append(path.split(".")[-1])
@@ -736,8 +731,7 @@ def inv_find_subtable_columns(invpath):
         if key not in columns:
             columns.append(key)
 
-    columns.sort(key=lambda x: order.get(x, 999) or x)
-    return columns
+    return sorted(columns, key=lambda x: (order.get(x, 999), x))
 
 
 def declare_invtable_columns(infoname, invpath, topic):
@@ -745,7 +739,8 @@ def declare_invtable_columns(infoname, invpath, topic):
         sub_invpath = invpath + "*." + name
         hint = inventory_displayhints.get(sub_invpath, {})
 
-        sortfunc = hint.get("sort", cmp)
+        cmp_func = lambda a, b: (a > b) - (a < b)
+        sortfunc = hint.get("sort", cmp_func)
         if "paint" in hint:
             paint_name = hint["paint"]
             paint_function = globals()["inv_paint_" + paint_name]
@@ -781,6 +776,7 @@ def declare_invtable_columns(infoname, invpath, topic):
 def declare_invtable_column(infoname, name, topic, title, short_title, sortfunc, paint_function,
                             filter_class):
     column = infoname + "_" + name
+
     register_painter(
         column, {
             "title": topic + ": " + title,
@@ -906,6 +902,10 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
         'description': _('A view for the %s of one host') % title_plural,
         'hidden': True,
         'mustsearch': False,
+        'link_from': {
+            'single_infos': ['host'],
+            'has_inventory_tree': invpath,
+        },
 
         # Columns
         'painters': painters,
@@ -917,62 +917,6 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
         'hide_filters': ["host"],
     }
     multisite_builtin_views[infoname + "_of_host"].update(view_spec)
-
-    # View enabled checker for the _of_host view
-    view_is_enabled[infoname + "_of_host"] = _create_view_enabled_check_func(invpath)
-
-
-def _create_view_enabled_check_func(invpath, is_history=False):
-    def _check_view_enabled(linking_view, view, context_vars):
-        context = dict(context_vars)
-        hostname = context.get("host")
-        if hostname is None:
-            return True  # No host data? Keep old behaviour
-        elif hostname == "":
-            return False
-
-        # TODO: host is not correctly validated by visuals. Do it here for the moment.
-        try:
-            Hostname().validate_value(hostname, None)
-        except MKUserError:
-            return False
-
-        # FIXME In order to decide whether this view is enabled
-        # do we really need to load the whole tree?
-        struct_tree = _get_struct_tree(is_history, hostname, context.get("site"))
-
-        if not struct_tree:
-            return False
-
-        if struct_tree.is_empty():
-            return False
-
-        parsed_path, _attribute_keys = inventory.parse_tree_path(invpath)
-        if parsed_path:
-            children = struct_tree.get_sub_children(parsed_path)
-        else:
-            children = [struct_tree.get_root_container()]
-        if children is None:
-            return False
-        return True
-
-    return _check_view_enabled
-
-
-def _get_struct_tree(is_history, hostname, site_id):
-    struct_tree_cache = g.setdefault("struct_tree_cache", {})
-    cache_id = (is_history, hostname, site_id)
-    if cache_id in struct_tree_cache:
-        return struct_tree_cache[cache_id]
-
-    if is_history:
-        struct_tree = inventory.load_filtered_inventory_tree(hostname)
-    else:
-        row = inventory.get_status_data_via_livestatus(site_id, hostname)
-        struct_tree = inventory.load_filtered_and_merged_tree(row)
-
-    struct_tree_cache[cache_id] = struct_tree
-    return struct_tree
 
 
 # Now declare Multisite views for a couple of embedded tables
@@ -1025,6 +969,18 @@ declare_invtable_view(
     ".hardware.components.backplanes:",
     _("Backplane"),
     _("Backplanes"),
+)
+declare_invtable_view(
+    "invcmksites",
+    ".software.applications.check_mk.sites:",
+    _("Checkmk site"),
+    _("Checkmk sites"),
+)
+declare_invtable_view(
+    "invcmkversions",
+    ".software.applications.check_mk.versions:",
+    _("Checkmk version"),
+    _("Checkmk versions"),
 )
 declare_invtable_view(
     "invcontainer",
@@ -1123,6 +1079,10 @@ multisite_builtin_views["inv_host"] = {
     'hidebutton': False,
     'public': True,
     'hidden': True,
+    'link_from': {
+        'single_infos': ['host'],
+        'has_inventory_tree': '.',
+    },
 
     # Layout options
     'layout': 'dataset',
@@ -1149,8 +1109,6 @@ multisite_builtin_views["inv_host"] = {
     'show_filters': [],
     'sorters': [],
 }
-
-view_is_enabled["inv_host"] = _create_view_enabled_check_func(".")
 
 generic_host_filters = multisite_builtin_views["allhosts"]["show_filters"]
 
@@ -1261,7 +1219,14 @@ class RowTableInventoryHistory(RowTable):
 
 
 def _create_hist_rows(hostname, columns):
-    for timestamp, delta_info in inventory.get_history_deltas(hostname):
+    history_deltas, corrupted_history_files = inventory.get_history_deltas(hostname)
+    if corrupted_history_files:
+        html.add_user_error(
+            "load_inventory_delta_tree",
+            _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files." %
+              ", ".join(sorted(corrupted_history_files))))
+
+    for timestamp, delta_info in history_deltas:
         new, changed, removed, delta_tree = delta_info
         newrow = {
             "invhist_time": int(timestamp),
@@ -1436,6 +1401,10 @@ multisite_builtin_views["inv_host_history"] = {
     'hidebutton': False,
     'public': True,
     'hidden': True,
+    'link_from': {
+        'single_infos': ['host'],
+        'has_inventory_tree_history': '.',
+    },
 
     # Layout options
     'layout': 'table',
@@ -1465,8 +1434,6 @@ multisite_builtin_views["inv_host_history"] = {
     'show_filters': [],
     'sorters': [('invhist_time', False)],
 }
-
-view_is_enabled["inv_host_history"] = _create_view_enabled_check_func(".", is_history=True)
 
 #.
 #   .--Node Renderer-------------------------------------------------------.
@@ -1527,8 +1494,7 @@ class NodeRenderer(object):
                                              False,
                                              header,
                                              icon=icon,
-                                             fetch_url=fetch_url,
-                                             tree_img="tree_black"):
+                                             fetch_url=fetch_url):
                 # Render only if it is open. We'll get the stuff via ajax later if it's closed
                 for child in inventory.sort_children(node.get_node_children()):
                     child.show(self, path=raw_invpath)
@@ -1579,8 +1545,7 @@ class NodeRenderer(object):
             if key not in keyorder:
                 _icon, title = inv_titleinfo("%s0.%s" % (invpath, key), None)
                 extratitles.append((title, key))
-        extratitles.sort()
-        titles += extratitles
+        titles += sorted(extratitles)
 
         # Link to Multisite view with exactly this table
         if "view" in hint:
@@ -1654,7 +1619,7 @@ class NodeRenderer(object):
                 return len(keyorder) + 1, key
 
         html.open_table()
-        for key, value in sorted(attributes.get_child_data().iteritems(), key=_sort_attributes):
+        for key, value in sorted(attributes.get_child_data().items(), key=_sort_attributes):
             sub_invpath = "%s.%s" % (invpath, key)
             _icon, title = inv_titleinfo(sub_invpath, key)
             hint = _inv_display_hint(sub_invpath)
@@ -1689,7 +1654,7 @@ class NodeRenderer(object):
         if "paint_function" in hint:
             _tdclass, code = hint["paint_function"](value)
             html.write(code)
-        elif isinstance(value, str):
+        elif isinstance(value, bytes):
             try:
                 text = value.decode("utf-8")
             except UnicodeDecodeError:
@@ -1749,12 +1714,28 @@ def ajax_inv_render_tree():
     invpath = html.request.var("path")
     tree_id = html.request.var("treeid", "")
     show_internal_tree_paths = bool(html.request.var("show_internal_tree_paths"))
+
     if tree_id:
-        struct_tree = inventory.load_delta_tree(hostname, int(tree_id[1:]))
+        struct_tree, corrupted_history_files = \
+            inventory.load_delta_tree(hostname, int(tree_id[1:]))
+        if corrupted_history_files:
+            html.add_user_error(
+                "load_inventory_delta_tree",
+                _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files.") \
+                % ", ".join(corrupted_history_files))
+            return
         tree_renderer = DeltaNodeRenderer(site_id, hostname, tree_id, invpath)
+
     else:
         row = inventory.get_status_data_via_livestatus(site_id, hostname)
-        struct_tree = inventory.load_filtered_and_merged_tree(row)
+        try:
+            struct_tree = inventory.load_filtered_and_merged_tree(row)
+        except inventory.LoadStructuredDataError:
+            html.add_user_error(
+                "load_inventory_tree",
+                _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.") %
+                inventory.get_short_inventory_filepath(hostname))
+            return
         tree_renderer = AttributeRenderer(site_id,
                                           hostname,
                                           "",
@@ -1763,6 +1744,7 @@ def ajax_inv_render_tree():
 
     if struct_tree is None:
         html.show_error(_("No such inventory tree."))
+        return
 
     parsed_path, _attribute_keys = inventory.parse_tree_path(invpath)
     if parsed_path:

@@ -1,0 +1,51 @@
+Title: Memory check plugins: Unify service descriptions
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1578665470
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 1.7.0i1
+
+Several Memory check plugins have been unified with respect to their service
+description, which is now simply "Memory" or "Memory $ITEM$".
+
+In order to use these new service descriptions you have to enable them below
+{Global settings}, {Use new service descriptions}. Renaming of existing services
+has many implications - including existing rules, performance data and availability
+history - these renamings are disabled per default for existing installations.
+Here you can switch to the new descriptions for selected check types.
+
+Renaming the services will mean you loose all historic data. If you want to rename
+the services but keep the recorded metrics, you have to rename the RRD files in
+<tt>~/var/pnp4nagios/perfdata/$HOST$</tt> or <tt>~/var/check_mk/rrd/$HOST$</tt>
+according to the service name change.
+
+Affected check plugins are:
+
+LI:aix_memory
+LI:brocade_sys.mem
+LI:cisco_mem
+LI:cisco_mem_asa
+LI:cisco_mem_asa64
+LI:db2_mem
+LI:docker_container_mem
+LI:esx_vsphere_hostsystem.mem_usage
+LI:esx_vsphere_hostsystem.mem_usage_cluster
+LI:fortigate_memory
+LI:fortigate_memory_base
+LI:fortigate_node.memory
+LI:hr_mem
+LI:huawei_switch_mem
+LI:innovaphone_mem
+LI:juniper_mem
+LI:juniper_screenos_mem
+LI:juniper_trpz_mem
+LI:mem.used
+LI:mem.win
+LI:netscaler_mem
+LI:solaris_mem
+LI:sophos_memory
+LI:statgrab_mem
+LI:tplink_mem

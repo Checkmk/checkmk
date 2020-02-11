@@ -1,0 +1,12 @@
+title: Virtual Machine under ESX: CPU ready time on the host system
+agents: vsphere
+catalog: os/kernel
+license: GPL
+distribution: check_mk
+description:
+ Monitor both CPU ready time and Co-Stop for a multiple vCPU setup on a ESX host system.
+ The values are the percentage of the CPUs in ready time for the default VMWare check interval of 20 seconds.
+ The default levels, as recommended from the VMware, are 5% for warning and 10% for critical.
+
+inventory:
+ One check for an ESX host system is created.

@@ -1,6 +1,5 @@
 # encoding: utf-8
 
-import os
 import time
 import six
 
@@ -8,7 +7,7 @@ import cmk.gui.config as config
 import cmk.gui.key_mgmt as key_mgmt
 
 
-def test_key_mgmt_create_key(monkeypatch):
+def test_key_mgmt_create_key(module_wide_request_context, monkeypatch):
     monkeypatch.setattr(config.user, "id", u"dingdöng")
     monkeypatch.setattr(time, "time", lambda: 123)
 

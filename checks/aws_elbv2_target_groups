@@ -75,7 +75,7 @@ def check_aws_elbv2_target_groups(item, params, target_groups):
                 target_health.get('TargetHealth', {}).get('State', 'unknown'),
                 []).append(target_group)
 
-    for state_readable, groups in target_groups_by_state.iteritems():
+    for state_readable, groups in target_groups_by_state.items():
         if state_readable in ['initial', 'healthy', 'unused', 'draining', 'unavailable']:
             state = 0
         elif state_readable in ['unhealthy']:

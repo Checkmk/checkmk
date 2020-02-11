@@ -10,6 +10,8 @@
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
 
+#include "common/wtools.h"
+
 namespace cma {
 
 namespace provider {
@@ -115,7 +117,7 @@ std::string ProduceMountPointsOutput(const std::string& VolumeId) {
     auto handle =
         ::FindFirstVolumeMountPointA(VolumeId.c_str(), storage.get(), sz);
 
-    if (!handle || handle == INVALID_HANDLE_VALUE) return {};
+    if (!wtools::IsHandleValid(handle)) return {};
     ON_OUT_OF_SCOPE(FindVolumeMountPointClose(handle));
 
     std::string out;
@@ -126,7 +128,7 @@ std::string ProduceMountPointsOutput(const std::string& VolumeId) {
         out += ProduceMountPointsOutput(combined_path);
 
         auto success = ::FindNextVolumeMountPointA(handle, storage.get(), sz);
-        if (!success) {
+        if (FALSE == success) {
             auto error = ::GetLastError();
             if (error != ERROR_NO_MORE_FILES)
                 XLOG::l("df: Error  [{}] looking for volume '{}'", error,

@@ -1,28 +1,9 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """This code section deals with the interaction of Check_MK base code. It is
 used for doing inventory, showing the services of a host, deletion of a host
 and similar things."""
@@ -32,16 +13,17 @@ import re
 import subprocess
 import time
 import requests
-import urllib3  # type: ignore
+import urllib3  # type: ignore[import]
 
 import cmk.utils
+from cmk.utils.encoding import make_utf8
 
 import cmk.gui.config as config
 import cmk.gui.hooks as hooks
-from cmk.gui.htmllib import Encoder
+from cmk.gui.utils.url_encoder import URLEncoder
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.globals import html
+import cmk.gui.escaping as escaping
 from cmk.gui.watolib.sites import SiteManagementFactory
 from cmk.gui.watolib.utils import mk_repr
 from cmk.gui.exceptions import (
@@ -86,7 +68,7 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
     if command in ['restart', 'reload']:
         call_hook_pre_activate_changes()
 
-    cmd = [cmk.utils.make_utf8(a) for a in cmd]
+    cmd = [make_utf8(a) for a in cmd]
     try:
         # This debug output makes problems when doing bulk inventory, because
         # it garbles the non-HTML response output
@@ -251,12 +233,9 @@ def do_remote_automation(site, command, vars_, timeout=None):
     if not secret:
         raise MKAutomationException(_("You are not logged into the remote site."))
 
-    url = base_url + "automation.py?" + \
-        Encoder().urlencode_vars([
-               ("command", command),
-               ("secret",  secret),
-               ("debug",   config.debug and '1' or '')
-        ])
+    url = (base_url + "automation.py?" +
+           URLEncoder().urlencode_vars([("command", command), ("secret", secret),
+                                        ("debug", config.debug and '1' or '')]))
 
     response = get_url(url, site.get('insecure', False), data=dict(vars_), timeout=timeout)
 
@@ -328,7 +307,7 @@ def do_site_login(site_id, name, password):
                        data=post_data).strip()
     if '<html>' in response.lower():
         message = _("Authentication to web service failed.<br>Message:<br>%s") % \
-            html.strip_tags(html.strip_scripts(response))
+                  escaping.strip_tags(escaping.strip_scripts(response))
         if config.debug:
             message += "<br>" + _("Automation URL:") + " <tt>%s</tt><br>" % url
         raise MKAutomationException(message)

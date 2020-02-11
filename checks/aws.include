@@ -75,7 +75,7 @@ def _extract_aws_metrics_by_labels(expected_metric_names, parsed, extra_keys=Non
 
 
 def inventory_aws_generic(parsed, required_metrics):
-    for instance_name, instance in parsed.iteritems():
+    for instance_name, instance in parsed.items():
         if all(required_metric in instance for required_metric in required_metrics):
             yield instance_name, {}
 
@@ -110,7 +110,7 @@ def check_aws_elb_summary_generic(item, params, load_balancers):
         long_output.append("Balancer: %s, Availability zones: %s"\
                            % (balancer_name, ", ".join(avail_zones_txt)))
 
-    for avail_zone, balancers in sorted(balancers_by_avail_zone.iteritems()):
+    for avail_zone, balancers in sorted(balancers_by_avail_zone.items()):
         yield 0, "%s: %s" % (avail_zone, len(balancers))
 
     if long_output:
@@ -190,7 +190,7 @@ def check_aws_limits(aws_service, params, parsed):
         long_output.append(infotext)
 
     if levels_reached:
-        yield max_state, 'Levels reached: %s' % ", ".join(levels_reached), perfdata
+        yield max_state, 'Levels reached: %s' % ", ".join(sorted(levels_reached)), perfdata
     else:
         yield 0, 'No levels reached', perfdata
 

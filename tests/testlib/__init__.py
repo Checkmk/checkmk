@@ -14,6 +14,7 @@ import ast
 import abc
 import tempfile
 import datetime
+import inspect
 from contextlib import contextmanager
 import six
 
@@ -23,8 +24,8 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
-import urllib3  # type: ignore
-import freezegun  # type: ignore
+import urllib3  # type: ignore[import]
+import freezegun  # type: ignore[import]
 
 from testlib.utils import (
     InterProcessLock,
@@ -52,7 +53,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def skip_unwanted_test_types(item):
-    import pytest
+    import pytest  # type: ignore[import] # pylint: disable=import-outside-toplevel
     test_type = item.get_closest_marker("type")
     if test_type is None:
         raise Exception("Test is not TYPE marked: %s" % item)
@@ -66,18 +67,18 @@ def skip_unwanted_test_types(item):
 
 
 # Some cmk.* code is calling things like cmk. is_raw_edition() at import time
-# (e.g. cmk_base/default_config/notify.py) for edition specific variable
+# (e.g. cmk/base/default_config/notify.py) for edition specific variable
 # defaults. In integration tests we want to use the exact version of the
 # site. For unit tests we assume we are in Enterprise Edition context.
 def fake_version_and_paths():
     if is_running_as_site_user():
         return
 
-    import _pytest.monkeypatch  # type: ignore
+    import _pytest.monkeypatch  # type: ignore # pylint: disable=import-outside-toplevel
     monkeypatch = _pytest.monkeypatch.MonkeyPatch()
     tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
 
-    import cmk
+    import cmk  # pylint: disable=import-outside-toplevel
 
     # TODO: handle CME case
     #if is_managed_repo():
@@ -92,13 +93,26 @@ def fake_version_and_paths():
     monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.notifications_dir", Path(cmk_path()) / "notifications")
     monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % cmk_path())
+    monkeypatch.setattr("cmk.utils.paths.inventory_output_dir",
+                        os.path.join(tmp_dir, "var/check_mk/inventory"))
+    monkeypatch.setattr("cmk.utils.paths.inventory_archive_dir",
+                        os.path.join(tmp_dir, "var/check_mk/inventory_archive"))
     monkeypatch.setattr("cmk.utils.paths.check_manpages_dir", "%s/checkman" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.omd_root", tmp_dir)
     monkeypatch.setattr("cmk.utils.paths.tmp_dir", os.path.join(tmp_dir, "tmp/check_mk"))
+    monkeypatch.setattr("cmk.utils.paths.counters_dir",
+                        os.path.join(tmp_dir, "tmp/check_mk/counters"))
+    monkeypatch.setattr("cmk.utils.paths.tcp_cache_dir", os.path.join(tmp_dir,
+                                                                      "tmp/check_mk/cache"))
+    monkeypatch.setattr("cmk.utils.paths.data_source_cache_dir",
+                        os.path.join(tmp_dir, "tmp/check_mk/data_source_cache"))
     monkeypatch.setattr("cmk.utils.paths.var_dir", os.path.join(tmp_dir, "var/check_mk"))
+    monkeypatch.setattr("cmk.utils.paths.autochecks_dir",
+                        os.path.join(tmp_dir, "var/check_mk/autochecks"))
     monkeypatch.setattr("cmk.utils.paths.precompiled_checks_dir",
                         os.path.join(tmp_dir, "var/check_mk/precompiled_checks"))
+    monkeypatch.setattr("cmk.utils.paths.crash_dir", Path(cmk.utils.paths.var_dir) / "crashes")
     monkeypatch.setattr("cmk.utils.paths.include_cache_dir",
                         os.path.join(tmp_dir, "tmp/check_mk/check_includes"))
     monkeypatch.setattr("cmk.utils.paths.check_mk_config_dir",
@@ -129,10 +143,10 @@ def import_module(pathname):
     modpath = os.path.join(cmk_path(), pathname)
 
     if sys.version_info[0] >= 3:
-        import importlib
+        import importlib  # pylint: disable=import-outside-toplevel
         return importlib.machinery.SourceFileLoader(modname, modpath).load_module()  # pylint: disable=no-value-for-parameter,deprecated-method
 
-    import imp
+    import imp  # pylint: disable=import-outside-toplevel
     try:
         return imp.load_source(modname, modpath)
     finally:
@@ -209,8 +223,17 @@ def create_linux_test_host(request, web, site, hostname):
     def finalizer():
         web.delete_host(hostname)
         web.activate_changes()
-        site.delete_file("var/check_mk/agent_output/%s" % hostname)
-        site.delete_file("etc/check_mk/conf.d/linux_test_host_%s.mk" % hostname)
+
+        for path in [
+                "var/check_mk/agent_output/%s" % hostname,
+                "etc/check_mk/conf.d/linux_test_host_%s.mk" % hostname,
+                "tmp/check_mk/status_data/%s" % hostname,
+                "tmp/check_mk/status_data/%s.gz" % hostname,
+                "var/check_mk/inventory/%s" % hostname,
+                "var/check_mk/inventory/%s.gz" % hostname,
+        ]:
+            if os.path.exists(path):
+                site.delete_file(path)
 
     request.addfinalizer(finalizer)
 
@@ -224,7 +247,7 @@ def create_linux_test_host(request, web, site, hostname):
     site.makedirs("var/check_mk/agent_output/")
     site.write_file(
         "var/check_mk/agent_output/%s" % hostname,
-        open("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+        open("%s/tests/integration/cmk/base/test-files/linux-agent-output" % repo_path()).read())
 
 
 #.
@@ -243,9 +266,11 @@ def create_linux_test_host(request, web, site, hostname):
 class CheckManager(object):  # pylint: disable=useless-object-inheritance
     def load(self, file_names=None):
         """Load either all check plugins or the given file_names"""
-        import cmk_base.config as config
-        import cmk_base.check_api as check_api
-        import cmk.utils.paths
+        if sys.version_info[0] < 3:
+            # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
+            import cmk.base.config as config  # pylint: disable=import-outside-toplevel
+            import cmk.base.check_api as check_api  # pylint: disable=import-outside-toplevel
+            import cmk.utils.paths  # pylint: disable=import-outside-toplevel
 
         if file_names is None:
             config.load_all_checks(check_api.get_check_api_context)  # loads all checks
@@ -277,9 +302,11 @@ class MissingCheckInfoError(KeyError):
 class BaseCheck(six.with_metaclass(abc.ABCMeta, object)):
     """Abstract base class for Check and ActiveCheck"""
     def __init__(self, name):
-        import cmk_base.check_api_utils
-        self.set_hostname = cmk_base.check_api_utils.set_hostname
-        self.set_service = cmk_base.check_api_utils.set_service
+        if sys.version_info[0] < 3:
+            # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
+            import cmk.base.check_api_utils  # pylint: disable=import-outside-toplevel
+        self.set_hostname = cmk.base.check_api_utils.set_hostname
+        self.set_service = cmk.base.check_api_utils.set_service
         self.name = name
         self.info = {}
 
@@ -299,7 +326,9 @@ class BaseCheck(six.with_metaclass(abc.ABCMeta, object)):
 
 class Check(BaseCheck):
     def __init__(self, name):
-        import cmk_base.config as config
+        if sys.version_info[0] < 3:
+            # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
+            import cmk.base.config as config  # pylint: disable=import-outside-toplevel
         super(Check, self).__init__(name)
         if self.name not in config.check_info:
             raise MissingCheckInfoError(self.name)
@@ -307,7 +336,9 @@ class Check(BaseCheck):
         self.context = config._check_contexts[self.name]
 
     def default_parameters(self):
-        import cmk_base.config as config
+        if sys.version_info[0] < 3:
+            # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
+            import cmk.base.config as config  # pylint: disable=import-outside-toplevel
         params = {}
         return config._update_with_default_check_parameters(self.name, params)
 
@@ -358,7 +389,9 @@ class Check(BaseCheck):
 
 class ActiveCheck(BaseCheck):
     def __init__(self, name):
-        import cmk_base.config as config
+        if sys.version_info[0] < 3:
+            # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
+            import cmk.base.config as config  # pylint: disable=import-outside-toplevel
         super(ActiveCheck, self).__init__(name)
         assert self.name.startswith(
             'check_'), 'Specify the full name of the active check, e.g. check_http'
@@ -374,7 +407,9 @@ class ActiveCheck(BaseCheck):
 
 class SpecialAgent(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, name):
-        import cmk_base.config as config
+        if sys.version_info[0] < 3:
+            # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
+            import cmk.base.config as config  # pylint: disable=import-outside-toplevel
         super(SpecialAgent, self).__init__()
         self.name = name
         assert self.name.startswith(
@@ -394,3 +429,91 @@ def on_time(utctime, timezone):
         yield
     os.environ.pop('TZ')
     time.tzset()
+
+
+#.
+#   .--Inventory plugins---------------------------------------------------.
+#   |            ___                      _                                |
+#   |           |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _              |
+#   |            | || '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |             |
+#   |            | || | | \ V /  __/ | | | || (_) | |  | |_| |             |
+#   |           |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |             |
+#   |                                                   |___/              |
+#   |                         _             _                              |
+#   |                   _ __ | |_   _  __ _(_)_ __  ___                    |
+#   |                  | '_ \| | | | |/ _` | | '_ \/ __|                   |
+#   |                  | |_) | | |_| | (_| | | | | \__ \                   |
+#   |                  | .__/|_|\__,_|\__, |_|_| |_|___/                   |
+#   |                  |_|            |___/                                |
+#   '----------------------------------------------------------------------'
+
+
+class MockStructuredDataTree(object):  # pylint: disable=useless-object-inheritance
+    def __init__(self):
+        self.data = {}
+
+    def get_dict(self, path):
+        return self.data.setdefault(path, dict())
+
+    def get_list(self, path):
+        return self.data.setdefault(path, list())
+
+
+class InventoryPluginManager(object):  # pylint: disable=useless-object-inheritance
+    def load(self):
+        if sys.version_info[0] < 3:
+            # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
+            import cmk.base.inventory_plugins as inv_plugins  # pylint: disable=import-outside-toplevel
+            import cmk.base.check_api as check_api  # pylint: disable=import-outside-toplevel
+        g_inv_tree = MockStructuredDataTree()
+        g_status_tree = MockStructuredDataTree()
+
+        def get_inventory_context():
+            return {
+                "inv_tree_list": g_inv_tree.get_list,
+                "inv_tree": g_inv_tree.get_dict,
+            }
+
+        inv_plugins.load_plugins(check_api.get_check_api_context, get_inventory_context)
+        return g_inv_tree, g_status_tree
+
+    def get_inventory_plugin(self, name):
+        g_inv_tree, g_status_tree = self.load()
+        return InventoryPlugin(name, g_inv_tree, g_status_tree)
+
+
+class MissingInvInfoError(KeyError):
+    pass
+
+
+class InventoryPlugin(object):  # pylint: disable=useless-object-inheritance
+    def __init__(self, name, g_inv_tree, g_status_tree):
+        if sys.version_info[0] < 3:
+            # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
+            import cmk.base.inventory_plugins as inv_plugins  # pylint: disable=import-outside-toplevel
+        super(InventoryPlugin, self).__init__()
+        self.name = name
+        if self.name not in inv_plugins.inv_info:
+            raise MissingInvInfoError(self.name)
+        self.info = inv_plugins.inv_info[self.name]
+        self.g_inv_tree = g_inv_tree
+        self.g_status_tree = g_status_tree
+
+    def run_inventory(self, *args):
+        # args contain info/parsed and/or params
+        inv_function = self.info.get("inv_function")
+        if not inv_function:
+            raise MissingInvInfoError("Inventory plugin '%s' " % self.name +
+                                      "has no inv function defined.")
+
+        # As in inventory._do_inv_for_realhost
+        inventory_tree = MockStructuredDataTree()
+        status_data_tree = MockStructuredDataTree()
+        from cmk.utils.misc import make_kwargs_for  # pylint: disable=import-outside-toplevel
+        kwargs = make_kwargs_for(inv_function,
+                                 inventory_tree=inventory_tree,
+                                 status_data_tree=status_data_tree)
+        inv_function(*args, **kwargs)
+        if kwargs:
+            return inventory_tree.data, status_data_tree.data
+        return self.g_inv_tree.data, self.g_status_tree.data

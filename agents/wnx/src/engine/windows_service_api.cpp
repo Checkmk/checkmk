@@ -15,9 +15,11 @@
 #include "commander.h"
 #include "common/version.h"
 #include "common/wtools.h"
+#include "common/wtools_service.h"
 #include "cvt.h"
 #include "external_port.h"  // windows api abstracted
-#include "install_api.h"    // install
+#include "firewall.h"
+#include "install_api.h"  // install
 #include "realtime.h"
 #include "service_processor.h"  // cmk service implementation class
 #include "tools/_kbd.h"
@@ -79,8 +81,7 @@ static bool execMsi() {
         return false;
     std::wstring exe = str;
     exe += L"\\msiexec.exe";
-    std::string command;
-    command.assign(exe.begin(), exe.end());
+    auto command = wtools::ConvertToUTF8(exe);
     std::wstring options =
         L" /i \"C:\\z\\m\\check_mk\\agents\\wnx\\build\\install\\Release\\check_mk_service.msi\" "
         L"REINSTALL=ALL REINSTALLMODE=amus "
@@ -324,62 +325,149 @@ int TestLegacy() {
         sp.startServiceAsLegacyTest();
         sp.stopService();
     } catch (const std::exception& e) {
-        xlog::l("Exception is not allowed here %s", e.what());
+        XLOG::l(XLOG_FUNC + "Exception is not allowed here {}", e.what());
     }
     return 0;
 }
 
 int RestoreWATOConfig() {
-    using namespace std::chrono;
-
     try {
-        // test for main thread. will be disabled in production
-        // to find file, read and start update POC.
         XLOG::setup::ColoredOutputOnStdio(true);
         XLOG::setup::DuplicateOnStdio(true);
         cma::cfg::cap::ReInstall();
     } catch (const std::exception& e) {
-        xlog::l("Exception is not allowed here %s", e.what());
+        XLOG::l(XLOG_FUNC + "Exception is not allowed here {}", e.what());
     }
     return 0;
+}
+
+static void LogFirewallCreate(bool success) {
+    if (success)
+        XLOG::SendStringToStdio("The firewall has been successfully configured",
+                                XLOG::Colors::green);
+    else
+        XLOG::SendStringToStdio("Failed to configure firewall",
+                                XLOG::Colors::red);
+}
+
+static void LogFirewallRemove(bool success) {
+    if (success)
+        XLOG::SendStringToStdio("The firewall configuration have been cleared",
+                                XLOG::Colors::green);
+    else
+        XLOG::SendStringToStdio("Failed to clear firewall configuration",
+                                XLOG::Colors::red);
+}
+
+static void LogFirewallFindApp(int count) {
+    if (count)
+        XLOG::SendStringToStdio(
+            fmt::format("The firewall has been configured for this exe\n"),
+            XLOG::Colors::green);
+    else
+        XLOG::SendStringToStdio(
+            fmt::format("The firewall has NOT been configured for this exe\n"),
+            XLOG::Colors::yellow);
+}
+
+static void LogFirewallFindService(int count) {
+    if (count)
+        XLOG::SendStringToStdio(
+            "The firewall has been configured for the service\n",
+            XLOG::Colors::green);
+    else
+        XLOG::SendStringToStdio(
+            "The firewall has NOT been configured for  the service\n",
+            XLOG::Colors::yellow);
+}
+
+int ExecFirewall(srv::FwMode fw_mode, std::wstring_view app_name,
+                 std::wstring_view name) {
+    using namespace cma::fw;
+    try {
+        XLOG::setup::ColoredOutputOnStdio(true);
+        XLOG::setup::DuplicateOnStdio(true);
+        switch (fw_mode) {
+            case FwMode::configure: {
+                // remove all rules with the same name
+                while (RemoveRule(name, app_name))
+                    ;
+                auto success = CreateInboundRule(name, app_name, -1);
+                LogFirewallCreate(success);
+                return 0;
+            }
+            case FwMode::clear:
+                if (FindRule(name)) {
+                    auto success = RemoveRule(name, app_name);
+                    // remove all rules with the same name
+                    while (RemoveRule(name, app_name))
+                        ;
+                    LogFirewallRemove(success);
+                    return 0;
+                }
+
+                XLOG::SendStringToStdio(
+                    "The firewall doesn't exists, nothing to remove",
+                    XLOG::Colors::yellow);
+                return 0;
+            case FwMode::show: {
+                auto count = CountRules(kAppFirewallRuleName, app_name);
+                LogFirewallFindApp(count);
+
+                count = CountRules(kSrvFirewallRuleName, L"");
+                LogFirewallFindService(count);
+                return 0;
+            }
+        }
+    } catch (const std::exception& e) {
+        XLOG::l(XLOG_FUNC + "Exception is not allowed here {}", e.what());
+    }
+    return 0;
+}
+
+int ExecExtractCap(std::wstring_view cap_file, std::wstring_view to) {
+    XLOG::setup::ColoredOutputOnStdio(true);
+    XLOG::setup::DuplicateOnStdio(true);
+    return cma::cfg::cap::ExtractAll(wtools::ConvertToUTF8(cap_file), to);
 }
 
 // on -cvt
 // may be used as internal API function to convert ini to yaml
 // GTESTED internally
-int ExecCvtIniYaml(std::filesystem::path IniFile,
-                   std::filesystem::path YamlFile, StdioLog stdio_log) {
+int ExecCvtIniYaml(std::filesystem::path ini_file_name,
+                   std::filesystem::path yaml_file_name, StdioLog stdio_log) {
     //
     auto flag = stdio_log == StdioLog::no ? 0 : XLOG::kStdio;
     if (stdio_log != StdioLog::no) {
         XLOG::setup::ColoredOutputOnStdio(true);
     }
     namespace fs = std::filesystem;
-    fs::path file = IniFile;
+    fs::path file = ini_file_name;
     std::error_code ec;
     if (!fs::exists(file, ec)) {
-        XLOG::l(flag)("File not found '{}'", IniFile.u8string());
+        XLOG::l(flag)("File not found '{}'", ini_file_name.u8string());
         return 3;
     }
     cma::cfg::cvt::Parser parser_converter;
     parser_converter.prepare();
     if (!parser_converter.readIni(file, false)) {
-        XLOG::l(flag)("Failed Load '{}'", fs::absolute(IniFile).u8string());
+        XLOG::l(flag)("Failed Load '{}'",
+                      fs::absolute(ini_file_name).u8string());
         return 2;
     }
     auto yaml = parser_converter.emitYaml();
 
     try {
-        if (YamlFile.empty()) {
+        if (yaml_file_name.empty()) {
             std::cout << yaml;
         } else {
-            auto file = YamlFile;
+            auto file = yaml_file_name;
             std::ofstream ofs(file.u8string());
             ofs << yaml;
             ofs.close();
             XLOG::l.i(flag, "Successfully Converted {} -> {}",
-                      fs::absolute(IniFile).u8string(),
-                      fs::absolute(YamlFile).u8string());
+                      fs::absolute(ini_file_name).u8string(),
+                      fs::absolute(yaml_file_name).u8string());
         }
     } catch (const std::exception& e) {
         XLOG::l(flag) << "Exception: '" << e.what() << "' in ExecCvtIniYaml"
@@ -508,17 +596,6 @@ int ExecPatchHash() {
     return 0;
 }
 
-static void InformPort(std::string_view mail_slot) {
-    cma::carrier::CoreCarrier cc;
-
-    using namespace cma::carrier;
-    auto internal_port = BuildPortName(kCarrierMailslotName, mail_slot.data());
-    auto ret = cc.establishCommunication(internal_port);
-    cc.sendCommand(cma::commander::kMainPeer, cma::commander::kReload);
-
-    cc.shutdownCommunication();
-}
-
 int ExecReloadConfig() {
     XLOG::setup::ColoredOutputOnStdio(true);
     XLOG::setup::DuplicateOnStdio(true);
@@ -529,13 +606,45 @@ int ExecReloadConfig() {
     using namespace cma::carrier;
 
     XLOG::l.i("Asking for reload service");
-    InformPort(mailbox_service.GetName());
+    cma::carrier::InformByMailSlot(mailbox_service.GetName(),
+                                   cma::commander::kReload);
 
     XLOG::l.i("Asking for reload executable");
-    InformPort(mailbox_test.GetName());
+    cma::carrier::InformByMailSlot(mailbox_test.GetName(),
+                                   cma::commander::kReload);
 
     XLOG::SendStringToStdio("Done.", XLOG::Colors::white);
     return 0;
+}
+
+int ExecUninstallAlert() {
+    cma::MailSlot mailbox_service(cma::cfg::kServiceMailSlot, 0);
+
+    cma::carrier::InformByMailSlot(mailbox_service.GetName(),
+                                   cma::commander::kUninstallAlert);
+    return 0;
+}
+
+// only as testing
+static bool CreateTheFile(const std::filesystem::path& dir,
+                          std::string_view content) {
+    try {
+        auto protocol_file = dir / "check_mk_agent.log.tmp";
+        std::ofstream ofs(protocol_file, std::ios::binary);
+
+        if (ofs) {
+            ofs << "Info Log from check mk agent:\n";
+            ofs << "  time: '" << cma::cfg::ConstructTimeString() << "'\n";
+            if (!content.empty()) {
+                ofs << content;
+                ofs << "\n";
+            }
+        }
+    } catch (const std::exception& e) {
+        XLOG::l.crit("Exception during creatin protocol file {}", e.what());
+        return false;
+    }
+    return true;
 }
 
 // returns codes for main
@@ -827,13 +936,145 @@ int ExecRealtimeTest(bool Print) {
     return 0;
 }
 
+static YAML::Node GetNodeFromSystem(std::string_view node) {
+    using namespace cma::cfg;
+
+    auto cfg = GetLoadedConfig();
+    auto os = GetNode(cfg, groups::kSystem);
+    return GetNode(os, std::string(node));
+}
+
+void ProcessFirewallConfiguration(std::wstring_view app_name) {
+    using namespace cma::cfg;
+    auto firewall = GetNodeFromSystem(vars::kFirewall);
+
+    auto firewall_mode =
+        GetVal(firewall, vars::kFirewallMode, std::string(values::kModeNone));
+    auto port_mode = GetVal(firewall, vars::kFirewallPort,
+                            std::string(values::kFirewallPortAuto));
+
+    if (cma::tools::IsEqual(firewall_mode, values::kModeConfigure)) {
+        XLOG::l.i("Firewall mode is set to configure, adding rule...");
+        // remove all rules with the same name
+        while (cma::fw::RemoveRule(kSrvFirewallRuleName, app_name))
+            ;
+
+        int port = -1;  // all ports
+        if (port_mode == values::kFirewallPortAuto)
+            port = GetVal(groups::kGlobal, vars::kPort, cma::cfg::kMainPort);
+
+        auto success =
+            cma::fw::CreateInboundRule(kSrvFirewallRuleName, app_name, port);
+
+        if (success)
+            XLOG::l.i(
+                "Firewall rule '[]' had been added successfully for ports [{}]",
+                wtools::ConvertToUTF8(kSrvFirewallRuleName), port);
+        return;
+    }
+
+    if (cma::tools::IsEqual(firewall_mode, values::kModeRemove)) {
+        XLOG::l.i("Firewall mode is set to clear, removing rule...");
+        // remove all rules with the same name
+        int count = 0;
+        while (cma::fw::RemoveRule(kSrvFirewallRuleName, app_name)) ++count;
+        if (count)
+            XLOG::l.i(
+                "Firewall rule '{}' had been added successfully [{}] times",
+                wtools::ConvertToUTF8(kSrvFirewallRuleName), count);
+        else
+            XLOG::l.i("Firewall rule '{}' is absent",
+                      wtools::ConvertToUTF8(kSrvFirewallRuleName));
+        return;
+    }
+}
+
+wtools::WinService::StartMode GetServiceStartModeFromCfg(
+    std::string_view text) {
+    using namespace cma::tools;
+    using namespace cma::cfg;
+    using namespace wtools;
+
+    if (IsEqual(text, values::kStartModeDemand))
+        return WinService::StartMode::stopped;
+
+    if (IsEqual(text, values::kStartModeDisabled))
+        return WinService::StartMode::disabled;
+
+    if (IsEqual(text, values::kStartModeAuto))
+        return WinService::StartMode::started;
+
+    return WinService::StartMode::started;
+}
+
+wtools::WinService::ErrorMode GetServiceErrorModeFromCfg(
+    std::string_view mode) {
+
+    using namespace cma::tools;
+    using namespace cma::cfg;
+    using namespace wtools;
+
+    if (IsEqual(mode, values::kErrorModeIgnore))
+        return WinService::ErrorMode::ignore;
+
+    if (IsEqual(mode, values::kErrorModeLog)) return WinService::ErrorMode::log;
+
+    return WinService::ErrorMode::log;
+}
+
+// called once on start of the service
+// also on reload of the config
+bool ProcessServiceConfiguration(std::wstring_view service_name) {
+    using namespace cma::cfg;
+
+    wtools::WinService ws(service_name);
+
+    if (!ws.isOpened()) {
+        XLOG::l("Cannot open own configuration");
+        return false;
+    }
+
+    auto service = GetNodeFromSystem(vars::kService);
+
+    auto start_mode =
+        GetVal(service, vars::kStartMode, std::string(defaults::kStartMode));
+    auto restart_on_crash =
+        GetVal(service, vars::kRestartOnCrash, defaults::kRestartOnCrash);
+    auto error_mode =
+        GetVal(service, vars::kErrorMode, std::string(defaults::kErrorMode));
+
+    XLOG::l.i("Applying config {} restart_on_crash:{} error_mode: {}",
+              start_mode, restart_on_crash, error_mode);
+
+    ws.configureError(GetServiceErrorModeFromCfg(error_mode));
+    ws.configureRestart(restart_on_crash);
+    ws.configureStart(GetServiceStartModeFromCfg(start_mode));
+
+    return true;
+}
+
+static void TryCleanOnExit() {
+    using namespace cma::cfg;
+    if (!cma::G_UninstallALert.isSet()) {
+        XLOG::l.i("Clean on exit was not requested");
+
+        return;
+    }
+
+    auto mode = details::GetCleanDataFolderMode();  // read config
+    XLOG::l.i(
+        "Clean on exit was requested, trying to remove what we have mode is [{}]",
+        static_cast<int>(mode));
+    details::CleanDataFolder(mode);  // normal
+}
+
 // entry point in service mode
 // normally this is "BLOCKING FOR EVER"
 // called by Windows Service Manager
 // exception free
 // returns -1 on failure
 int ServiceAsService(
-    std::chrono::milliseconds Delay,
+    std::wstring_view app_name, std::chrono::milliseconds Delay,
     std::function<bool(const void* Processor)> InternalCallback) noexcept {
     XLOG::l.i("service to run");
 
@@ -842,9 +1083,15 @@ int ServiceAsService(
 
     SelfConfigure();
 
-    // infinite loop to protect from exception
+    ProcessFirewallConfiguration(app_name);
+
+    // infinite loop to protect from exception in future SEH too
     while (1) {
+        using namespace wtools;
+        // we can exit from the service if service set to disabled
         try {
+            using namespace cma::cfg;
+
             std::unique_ptr<wtools::BaseServiceProcessor> processor =
                 std::make_unique<ServiceProcessor>(Delay, InternalCallback);
 
@@ -856,10 +1103,11 @@ int ServiceAsService(
             switch (ret) {
                 case wtools::ServiceController::StopType::normal:
                     XLOG::l.i("Service is stopped normally");
+                    TryCleanOnExit();
                     return 0;
-
                 case wtools::ServiceController::StopType::fail:
                     XLOG::l.i("Service is stopped due to abnormal situation");
+                    TryCleanOnExit();
                     return -1;
                 case wtools::ServiceController::StopType::no_connect:
                     // may happen when we try to call usual exe
@@ -869,6 +1117,17 @@ int ServiceAsService(
             XLOG::l.crit("Exception hit {} in ServiceAsService", e.what());
         } catch (...) {
             XLOG::l.crit("Unknown Exception in ServiceAsService");
+        }
+
+        // here only on internal crash, i.e post processing
+        using namespace cma::cfg;
+        auto service = GetNodeFromSystem(vars::kService);
+        auto restart_on_crash =
+            GetVal(service, vars::kRestartOnCrash, defaults::kRestartOnCrash);
+
+        if (!restart_on_crash) {
+            XLOG::l("Leaving Loop while restart on crash is false");
+            return -1;
         }
     }
     // reachable only on service stop

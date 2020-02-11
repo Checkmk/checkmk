@@ -29,30 +29,31 @@ def hitachi_hnas_fc_if_convert_info(info):
     converted = []
     for line in info:
         converted.append(
-            map(
-                str,
-                [
-                    "%d%03d" % (int(line[0]), int(line[1])),  # ifIndex
-                    line[0] + "." + line[1],  # ifDescr (use ClusterNode.InterfaceIndex)
-                    "",  # ifType: do not set port type
-                    int(line[3]) * 1000000000,  # ifHighSpeed
-                    line[2] == "1" and 1 or 2,  # ifOperStatus (map other states to down)
-                    line[4],  # ifHCInOctets
-                    0,  # ifHCInUcastPkts
-                    0,  # ifHCInMulticastPkts
-                    0,  # ifHCInBroadcastPkts
-                    line[13],  # ifInDiscards
-                    sum(map(int, line[6:13])),  # ifInErrors
-                    line[5],  # ifHCOutOctets
-                    0,  # ifHCOutUcastPkts
-                    0,  # ifHCOutMulticastPkts
-                    0,  # ifHCOutBroadcastPkts
-                    0,  # ifOutDiscards
-                    0,  # ifOutErrors
-                    0,  # ifOutQLen
-                    line[0] + "." + line[1],  # ifAlias, same as description
-                    "",  # ifPhysAddress
-                ]))
+            list(
+                map(
+                    str,
+                    [
+                        "%d%03d" % (int(line[0]), int(line[1])),  # ifIndex
+                        line[0] + "." + line[1],  # ifDescr (use ClusterNode.InterfaceIndex)
+                        "",  # ifType: do not set port type
+                        int(line[3]) * 1000000000,  # ifHighSpeed
+                        line[2] == "1" and 1 or 2,  # ifOperStatus (map other states to down)
+                        line[4],  # ifHCInOctets
+                        0,  # ifHCInUcastPkts
+                        0,  # ifHCInMulticastPkts
+                        0,  # ifHCInBroadcastPkts
+                        line[13],  # ifInDiscards
+                        sum(map(int, line[6:13])),  # ifInErrors
+                        line[5],  # ifHCOutOctets
+                        0,  # ifHCOutUcastPkts
+                        0,  # ifHCOutMulticastPkts
+                        0,  # ifHCOutBroadcastPkts
+                        0,  # ifOutDiscards
+                        0,  # ifOutErrors
+                        0,  # ifOutQLen
+                        line[0] + "." + line[1],  # ifAlias, same as description
+                        "",  # ifPhysAddress
+                    ])))
     return converted
 
 

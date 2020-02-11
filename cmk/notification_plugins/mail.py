@@ -34,7 +34,6 @@ import base64
 import os
 import socket
 import sys
-import subprocess
 import urllib
 import urllib2
 import json
@@ -45,6 +44,7 @@ from email.mime.text import MIMEText
 
 from cmk.notification_plugins import utils
 import cmk.utils.site as site
+from cmk.utils.exceptions import MKException
 
 
 def tmpl_head_html(html_section):
@@ -481,7 +481,7 @@ opt_debug = '-d' in sys.argv
 bulk_mode = '--bulk' in sys.argv
 
 
-class GraphException(Exception):
+class GraphException(MKException):
     pass
 
 
@@ -575,10 +575,6 @@ def send_mail_smtp(message, target, from_address, context):
     return 2
 
 
-def default_from_address():
-    return os.environ.get("OMD_SITE", "checkmk") + "@" + socket.getfqdn()
-
-
 def send_mail_smtp_impl(message, target, smarthost, from_address, context):
     import smtplib
     import types
@@ -626,77 +622,6 @@ def send_mail(message, target, from_address, context):
     return utils.send_mail_sendmail(message, target, from_address)
 
 
-def fetch_pnp_data(context, params):
-    path = "%s/share/pnp4nagios/htdocs/index.php" % context['OMD_ROOT'].encode('utf-8')
-    php_save_path = "-d session.save_path=%s/tmp/php/session" % context['OMD_ROOT'].encode('utf-8')
-    env = {
-        'REMOTE_USER': "check-mk",
-        "SKIP_AUTHORIZATION": "1",
-    }
-
-    if not os.path.exists(path):
-        raise GraphException('Unable to locate pnp4nagios index.php (%s)' % path)
-
-    return subprocess.check_output(["php", php_save_path, path, params], env=env)
-
-
-def fetch_num_sources(context):
-    svc_desc = '_HOST_' if context['WHAT'] == 'HOST' else context['SERVICEDESC']
-    infos = fetch_pnp_data(
-        context, '/json?host=%s&srv=%s&view=0' %
-        (context['HOSTNAME'].encode('utf-8'), svc_desc.encode('utf-8')))
-    if not infos.startswith('[{'):
-        raise GraphException('Unable to fetch graph infos: %s' % extract_graph_error(infos))
-
-    return infos.count('source=')
-
-
-def fetch_graph(context, source, view=1):
-    svc_desc = '_HOST_' if context['WHAT'] == 'HOST' else context['SERVICEDESC']
-    graph = fetch_pnp_data(
-        context, '/image?host=%s&srv=%s&view=%d&source=%d' %
-        (context['HOSTNAME'], svc_desc.encode('utf-8'), view, source))
-
-    if graph[:8] != '\x89PNG\r\n\x1a\n':
-        raise GraphException('Unable to fetch the graph: %s' % extract_graph_error(graph))
-
-    return graph
-
-
-def extract_graph_error(output):
-    lines = output.splitlines()
-    for nr, line in enumerate(lines):
-        if "Please check the documentation for information about the following error" in line:
-            return lines[nr + 1]
-    return output
-
-
-# Fetch graphs for this object. It first tries to detect how many sources
-# are available for this object. Then it loops through all sources and
-# fetches retrieves the images. If a problem occurs, it is printed to
-# stderr (-> notify.log) and the graph is not added to the mail.
-def render_pnp_graphs(context):
-    try:
-        num_sources = fetch_num_sources(context)
-    except GraphException as e:
-        graph_error = extract_graph_error(str(e))
-        if '.xml" not found.' not in graph_error:
-            sys.stderr.write('Unable to fetch number of graphs: %s\n' % graph_error)
-        num_sources = 0
-
-    graph_list = []
-    for source in range(0, num_sources):
-        try:
-            content = fetch_graph(context, source)
-        except GraphException as e:
-            sys.stderr.write('Unable to fetch graph: %s\n' % e)
-            continue
-
-        graph_list.append(content)
-
-    return graph_list
-
-
 def render_cmk_graphs(context):
     if context["WHAT"] == "HOST":
         svc_desc = "_HOST_"
@@ -727,15 +652,8 @@ def render_cmk_graphs(context):
     return map(base64.b64decode, base64_strings)
 
 
-def use_cmk_graphs():
-    return site.get_omd_config("CONFIG_CORE") == "cmc"
-
-
 def render_performance_graphs(context):
-    if use_cmk_graphs():
-        graphs = render_cmk_graphs(context)
-    else:
-        graphs = render_pnp_graphs(context)
+    graphs = render_cmk_graphs(context)
 
     attachments, graph_code = [], ''
     for source, graph_png in enumerate(graphs):
@@ -785,7 +703,7 @@ def construct_content(context):
 
     attachments = []
     if "graph" in elements and not "ALERTHANDLEROUTPUT" in context:
-        # Add PNP or Check_MK graph
+        # Add Checkmk graphs
         try:
             attachments, graph_code = render_performance_graphs(context)
             content_html += graph_code
@@ -916,8 +834,12 @@ class BulkEmailContent(object):
 
         # TODO: cleanup duplicate code with SingleEmailContent
         # TODO: the context is only needed because of SMPT settings used in send_mail
-        self.from_address = last_context.get("PARAMETER_FROM") or default_from_address()
-        self.reply_to = last_context.get("PARAMETER_REPLY_TO")
+        self.from_address = utils.format_address(
+            last_context.get("PARAMETER_FROM_DISPLAY_NAME", u""),
+            last_context.get("PARAMETER_FROM", utils.default_from_address()))
+        self.reply_to = utils.format_address(
+            last_context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", u""),
+            last_context.get("PARAMETER_REPLY_TO", u""))
         self.context = last_context
 
 
@@ -938,8 +860,11 @@ class SingleEmailContent(object):
 
         # TODO: cleanup duplicate code with BulkEmailContent
         # TODO: the context is only needed because of SMPT settings used in send_mail
-        self.from_address = context.get("PARAMETER_FROM") or default_from_address()
-        self.reply_to = context.get("PARAMETER_REPLY_TO")
+        self.from_address = utils.format_address(
+            context.get("PARAMETER_FROM_DISPLAY_NAME", u""),
+            context.get("PARAMETER_FROM_ADDRESS", utils.default_from_address()))
+        self.reply_to = utils.format_address(context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", u""),
+                                             context.get("PARAMETER_REPLY_TO_ADDRESS", u""))
         self.context = context
 
 

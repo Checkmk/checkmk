@@ -5,6 +5,7 @@ SHELL ["/bin/bash", "-c"]
 RUN yum -y makecache \
     && yum -y --enablerepo=PowerTools install \
     bind-utils \
+    curl \
     curl-devel \
     expat-devel \
     flex \
@@ -50,8 +51,6 @@ RUN yum -y makecache \
     readline-devel \
     rpcbind \
     rpm-build \
-    rrdtool-devel \
-    rrdtool-devel \
     rsync \
     samba-client \
     sqlite-devel \
@@ -60,19 +59,39 @@ RUN yum -y makecache \
     wget \
     which \
     && yum clean all
+# --nogpgcheck: Workaround for failing installation, not locally reproducable
 RUN yum -y makecache \
     && yum -y --enablerepo=PowerTools reinstall \
     kernel-headers \
+    --nogpgcheck \
     && yum clean all
 
-#COPY bw-build-gnu-toolchain.sh /usr/sbin
-#RUN bw-build-gnu-toolchain.sh -b
-#
-#RUN mv /usr/bin/gcc /usr/bin/gcc-old || true \
-#    && mv /usr/bin/cc /usr/bin/cc-old || true \
-#    && ln -s /usr/bin/gcc-8 /usr/bin/gcc \
-#    && ln -s /usr/bin/gcc-8 /usr/bin/cc
+ARG ARTIFACT_STORAGE
+COPY bw-build-gnu-toolchain.sh /usr/sbin
+RUN bw-build-gnu-toolchain.sh -r $ARTIFACT_STORAGE -b
 RUN cd /opt \
-    && wget https://github.com/Kitware/CMake/releases/download/v3.15.4/cmake-3.15.4-Linux-x86_64.tar.gz \
-    && tar xf cmake-3.15.4-Linux-x86_64.tar.gz \
-    && ln -s /opt/cmake-3.15.4-Linux-x86_64/bin/* /usr/bin/
+    && wget https://github.com/Kitware/CMake/releases/download/v3.16.2/cmake-3.16.2-Linux-x86_64.tar.gz \
+    && tar xf cmake-3.16.2-Linux-x86_64.tar.gz \
+    && ln -s /opt/cmake-3.16.2-Linux-x86_64/bin/* /usr/bin/
+
+# epel release is needed for joe
+# --nogpgcheck: Workaround for failing installation, not locally reproducable
+RUN yum -y makecache \
+    && yum -y install \
+    epel-release \
+    --nogpgcheck \
+    && yum clean all
+
+# New packages that are not needed for the build toolchain above should be added here.
+# We avoid rebuild of the whole previous steps this way
+# --nogpgcheck: Workaround for failing installation, not locally reproducable
+RUN yum -y makecache \
+    && yum -y --enablerepo=PowerTools install \
+    chrpath \
+    joe \
+    vim \
+    --nogpgcheck \
+    && yum clean all
+
+ARG VERS_TAG
+RUN echo $VERS_TAG > /version.txt

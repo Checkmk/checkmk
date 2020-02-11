@@ -1,0 +1,32 @@
+#!/bin/bash
+#
+# This script checks that the Python modules and the corresponding
+# makefiles are in sync.
+#
+# It will fail when:
+#   - a module exists which is not referenced
+#   - a module is referenced in the makefile which does not exist
+#
+# This is done for both Python2 and Python3 modules.
+#
+# The Pipfiles are not checked.
+#
+
+REPO_PATH="$(git rev-parse --show-toplevel)"
+
+PYTHON_MODULES=$REPO_PATH/omd/packages/python-modules
+PYTHON3_MODULES=$REPO_PATH/omd/packages/python3-modules
+
+STATUS=0
+
+pushd $PYTHON_MODULES > /dev/null
+awk '/^ *PYTHON_MODULES_LIST *\+=/ { if (system("test -f src/" $3)) { missing = 1; print $3 " missing in python-modules/src directory" } } END { if (missing) { exit 1 }}' python-modules.make || STATUS=$?
+ls -1 src | grep -E -v "download|README" | xargs -n 1 -i{} awk '/^ *PYTHON_MODULES_LIST *\+= *{}/ { found = 1 } END { if (!found) { print "{} not in python-modules.make"; exit 1 } }' python-modules.make || STATUS=$?
+popd > /dev/null
+
+pushd $PYTHON3_MODULES > /dev/null
+awk '/^ *PYTHON3_MODULES_LIST *\+=/ { if (system("test -f src/" $3)) { missing = 1; print $3 " missing in python3-modules/src directory" } } END { if (missing) { exit 1 }}' python3-modules.make || STATUS=$?
+ls -1 src | grep -E -v "download|README" | xargs -n 1 -i{} awk '/^ *PYTHON3_MODULES_LIST *\+= *{}/ { found = 1 } END { if (!found) { print "{} not in python3-modules.make"; exit 1 } }' python3-modules.make || STATUS=$?
+popd > /dev/null
+
+exit $STATUS

@@ -1,37 +1,20 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import re
 import copy
+from typing import Tuple, Dict, List, Text  # pylint: disable=unused-import
+
 import cmk
 import cmk.utils.store as store
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.hooks as hooks
-from cmk.gui.globals import html
+from cmk.gui.globals import html, g
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 
@@ -51,6 +34,10 @@ from cmk.gui.plugins.watolib.utils import (
     config_variable_registry,
     wato_fileheader,
 )
+from cmk.gui.watolib.notifications import (
+    load_notification_rules,
+    load_user_notification_rules,
+)
 from cmk.gui.valuespec import DualListChoice
 
 if cmk.is_managed_edition():
@@ -69,7 +56,14 @@ def load_contact_group_information():
     return _load_group_information()["contact"]
 
 
+def _clear_group_information_request_cache():
+    g.pop("group_information", None)
+
+
 def _load_group_information():
+    if "group_information" in g:
+        return g.group_information
+
     cmk_base_groups = _load_cmk_base_groups()
     gui_groups = _load_gui_groups()
 
@@ -83,6 +77,7 @@ def _load_group_information():
             if gid in gui_groups['multisite_%sgroups' % what]:
                 groups[what][gid].update(gui_groups['multisite_%sgroups' % what][gid])
 
+    g.group_information = groups
     return groups
 
 
@@ -258,7 +253,7 @@ def save_group_information(all_groups, custom_default_config_dir=None):
             output += "if type(define_%sgroups) != dict:\n    define_%sgroups = {}\n" % (what, what)
             output += "define_%sgroups.update(%s)\n\n" % (
                 what, format_config_value(check_mk_groups[what]))
-    cmk.utils.store.save_file("%s/groups.mk" % check_mk_config_dir, output)
+    store.save_file("%s/groups.mk" % check_mk_config_dir, output)
 
     # Users with passwords for Multisite
     store.makedirs(multisite_config_dir)
@@ -267,7 +262,9 @@ def save_group_information(all_groups, custom_default_config_dir=None):
         if multisite_groups.get(what):
             output += "multisite_%sgroups = \\\n%s\n\n" % (
                 what, format_config_value(multisite_groups[what]))
-    cmk.utils.store.save_file("%s/groups.mk" % multisite_config_dir, output)
+    store.save_file("%s/groups.mk" % multisite_config_dir, output)
+
+    _clear_group_information_request_cache()
 
 
 def find_usages_of_group(name, group_type):
@@ -292,6 +289,7 @@ def find_usages_of_contact_group(name):
     used_in += _find_usages_of_contact_group_in_default_user_profile(name, global_config)
     used_in += _find_usages_of_contact_group_in_mkeventd_notify_contactgroup(name, global_config)
     used_in += _find_usages_of_contact_group_in_hosts_and_folders(name, Folder.root_folder())
+    used_in += _find_usages_of_contact_group_in_notification_rules(name)
 
     return used_in
 
@@ -349,12 +347,35 @@ def _find_usages_of_contact_group_in_hosts_and_folders(name, folder):
     if name in attributes.get("contactgroups", {}).get("groups", []):
         used_in.append((_("Folder: %s") % folder.alias_path(), folder.edit_url()))
 
-    for host in folder.hosts().itervalues():
+    for host in folder.hosts().values():
         attributes = host.attributes()
         if name in attributes.get("contactgroups", {}).get("groups", []):
             used_in.append((_("Host: %s") % host.name(), host.edit_url()))
 
     return used_in
+
+
+def _find_usages_of_contact_group_in_notification_rules(name):
+    # type: (Text) -> List[Tuple[Text, Text]]
+    used_in = []  # type: List[Tuple[Text, Text]]
+    for rule in load_notification_rules():
+        if _used_in_notification_rule(name, rule):
+            title = "%s: %s" % (_("Notification rule"), rule.get("description", ""))
+            used_in.append((title, "wato.py?mode=notifications"))
+
+    for user_id, user_rules in load_user_notification_rules().items():
+        for rule in user_rules:
+            if _used_in_notification_rule(name, rule):
+                title = "%s: %s" % (_("Notification rules of user %s") % user_id,
+                                    rule.get("description", ""))
+                used_in.append((title, "wato.py?mode=user_notifications&user=%s" % user_id))
+
+    return used_in
+
+
+def _used_in_notification_rule(name, rule):
+    # type: (Text, Dict) -> bool
+    return name in rule.get('contact_groups', []) or name in rule.get("match_contactgroups", [])
 
 
 def find_usages_of_host_group(name):
@@ -536,3 +557,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
                              for cg_id, cg_attrs in self._contactgroups.items()],
                             key=lambda x: x[1])
         return DualListChoice(choices=cg_choices, rows=20, size=100)
+
+    def validate_input(self, value, varprefix):
+        self.load_data()
+        self._vs_contactgroups().validate_value(value.get("groups", []), varprefix)

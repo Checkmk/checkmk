@@ -30,8 +30,8 @@
 
 def check_fireeye_powersupplies(_no_item, _no_params, info):
     status, health = info[0]
-    for text, (state, state_readable) in \
-        check_fireeye_states([(status, 'Status'), (health, 'Health')]).items():
+    for text, (state, state_readable) in check_fireeye_states([(status, 'Status'),
+                                                               (health, 'Health')]).items():
         yield state, "%s: %s" % (text, state_readable)
 
 

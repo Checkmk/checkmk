@@ -1,4 +1,4 @@
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from checktestlib import (
     DiscoveryResult,
     CheckResult,
@@ -250,91 +250,87 @@ df_params = {
 }
 
 
-@pytest.mark.parametrize("item,params,info,expected_result", [
-    (
-        u"/",
-        df_params,
-        info_df_lnx,
-        [(
-            0,
-            '75.79% used (103.92 of 137.13 GB), trend: 0.00 B / 24 hours',
-            [
-                (u'/', 106418.50390625, 112333.35625, 126375.02578125, 0, 140416.6953125),
-                ('fs_size', 140416.6953125),
-                ('growth', 0.0),
-                ('trend', 0, None, None, 0, 5850.695638020833),
-                ('inodes_used', 1654272, 8228044.8, 8685158.4, 0, 9142272),
-            ],
-        )],
-    ),
-    (
-        u'/dev/sda4 /',
-        df_params,
-        info_df_lnx,
-        [(
-            0,
-            '75.79% used (103.92 of 137.13 GB), trend: 0.00 B / 24 hours',
-            [
-                (u'/', 106418.50390625, 112333.35625, 126375.02578125, 0, 140416.6953125),
-                ('fs_size', 140416.6953125),
-                ('growth', 0.0),
-                ('trend', 0.0, None, None, 0, 5850.695638020833),
-                ('inodes_used', 1654272, 8228044.8, 8685158.4, 0, 9142272),
-            ],
-        )],
-    ),
-    (
-        u'E:/',
-        df_params,
-        info_df_win,
-        [(
-            0,
-            '1.82% used (181.89 MB of 9.77 GB), trend: 0.00 B / 24 hours',
-            [
-                (u'E:/', 181.890625, 8000.621875, 9000.699609375, 0, 10000.77734375),
-                ('fs_size', 10000.77734375),
-                ('growth', 0.0),
-                ('trend', 0, None, None, 0, 416.6990559895833),
-            ],
-        )],
-    ),
-    (
-        u'New_Volume E:/',
-        df_params,
-        info_df_win,
-        [(
-            0,
-            '1.82% used (181.89 MB of 9.77 GB), trend: 0.00 B / 24 hours',
-            [
-                (u'E:/', 181.890625, 8000.621875, 9000.699609375, 0, 10000.77734375),
-                ('fs_size', 10000.77734375, None, None, None, None),
-                ('growth', 0.0, None, None, None, None),
-                ('trend', 0.0, None, None, 0, 416.6990559895833),
-            ],
-        )],
-    ),
-    (
-        u'btrfs /dev/sda1',
-        df_params,
-        info_df_btrfs,
-        [(
-            0,
-            '21.13% used (4.23 of 20.00 GB), trend: 0.00 B / 24 hours',
-            [
-                (u'btrfs_/dev/sda1', 4327.29296875, 16383.2, 18431.1, 0, 20479.0),
-                ('fs_size', 20479.0, None, None, None, None),
-                ('growth', 0.0, None, None, None, None),
-                ('trend', 0, None, None, 0, 853.2916666666666),
-            ],
-        )],
-    ),
-    (
-        u"/home",
-        df_params,
-        info_df_lnx,
-        [],
-    ),
-])
+@pytest.mark.parametrize(
+    "item,params,info,expected_result",
+    [
+        (
+            u"/",
+            df_params,
+            info_df_lnx,
+            [(
+                0,
+                '75.79% used (103.92 of 137.13 GB)',
+                [
+                    (u'/', 106418.50390625, 112333.35625, 126375.02578125, 0, 140416.6953125),
+                    ('fs_size', 140416.6953125),
+                    ('inodes_used', 1654272, 8228044.8, 8685158.4, 0, 9142272),
+                ],
+            )],
+        ),
+        (  # second test case: this time the item state is present
+            u'/dev/sda4 /',
+            df_params,
+            info_df_lnx,
+            [(
+                0,
+                '75.79% used (103.92 of 137.13 GB), trend: 0.00 B / 24 hours',
+                [
+                    (u'/', 106418.50390625, 112333.35625, 126375.02578125, 0, 140416.6953125),
+                    ('fs_size', 140416.6953125),
+                    ('growth', 0.0),
+                    ('trend', 0.0, None, None, 0, 5850.695638020833),
+                    ('inodes_used', 1654272, 8228044.8, 8685158.4, 0, 9142272),
+                ],
+            )],
+        ),
+        (
+            u'E:/',
+            df_params,
+            info_df_win,
+            [(
+                0,
+                '1.82% used (181.89 MB of 9.77 GB)',
+                [
+                    (u'E:/', 181.890625, 8000.621875, 9000.699609375, 0, 10000.77734375),
+                    ('fs_size', 10000.77734375),
+                ],
+            )],
+        ),
+        (
+            u'New_Volume E:/',
+            df_params,
+            info_df_win,
+            [(
+                0,
+                '1.82% used (181.89 MB of 9.77 GB), trend: 0.00 B / 24 hours',
+                [
+                    (u'E:/', 181.890625, 8000.621875, 9000.699609375, 0, 10000.77734375),
+                    ('fs_size', 10000.77734375, None, None, None, None),
+                    ('growth', 0.0, None, None, None, None),
+                    ('trend', 0.0, None, None, 0, 416.6990559895833),
+                ],
+            )],
+        ),
+        (
+            u'btrfs /dev/sda1',
+            df_params,
+            info_df_btrfs,
+            [(
+                0,
+                '21.13% used (4.23 of 20.00 GB)',
+                [
+                    (u'btrfs_/dev/sda1', 4327.29296875, 16383.2, 18431.1, 0, 20479.0),
+                    ('fs_size', 20479.0, None, None, None, None),
+                ],
+            )],
+        ),
+        (
+            u"/home",
+            df_params,
+            info_df_lnx,
+            [],
+        ),
+    ])
 def test_df_check_with_parse(check_manager, item, params, info, expected_result):
     check = check_manager.get_check("df")
 

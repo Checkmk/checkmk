@@ -131,9 +131,8 @@ def check_fc_port(item, params, info):
     admstate = int(portinfo[0][2])
     opstate = int(portinfo[0][3])
     phystate = int(portinfo[0][6])
-    counter_list = map(fc_parse_counter, portinfo[0][7:])
     txobjects, rxobjects, txelements, rxelements, notxcredits, c3discards, \
-                rxcrcs, rxencoutframes = counter_list
+        rxcrcs, rxencoutframes = map(fc_parse_counter, portinfo[0][7:])
 
     summarystate = 0
     output = []

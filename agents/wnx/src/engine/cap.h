@@ -32,8 +32,8 @@ bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
 bool NeedReinstall(const std::filesystem::path &Target,
                    const std::filesystem::path &Src);
 
-bool IsFilesTheSame(const std::filesystem::path &Target,
-                    const std::filesystem::path &Src);
+bool AreFilesSame(const std::filesystem::path &Target,
+                  const std::filesystem::path &Src);
 
 using ProcFunc = bool (*)(const std::filesystem::path &TargetCap,
                           const std::filesystem::path &SrcCap);
@@ -44,9 +44,9 @@ bool ReinstallCaps(const std::filesystem::path &target_cap,
 bool ReinstallIni(const std::filesystem::path &target_ini,
                   const std::filesystem::path &source_ini);
 
-bool ReinstallYaml(const std::filesystem::path &bakery_yml,
-                   const std::filesystem::path &target_yml,
-                   const std::filesystem::path &source_yml);
+bool ReinstallYaml(const std::filesystem::path &bakery_yaml,
+                   const std::filesystem::path &target_yaml,
+                   const std::filesystem::path &source_yaml);
 
 namespace details {
 void UninstallYaml(const std::filesystem::path &bakery_yaml,
@@ -65,8 +65,11 @@ enum class ProcMode { install, remove, list };
 using FileInfo = std::tuple<std::string, std::vector<char>, bool>;
 
 // Main API to install and uninstall plugins cap
-bool Process(const std::string CapFileName, ProcMode Mode,
+bool Process(const std::string &cap_name, ProcMode Mode,
              std::vector<std::wstring> &FilesLeftOnDisk);
+
+// Secondary API to decompress plugins cap
+bool ExtractAll(const std::string &cap_name, const std::filesystem::path &to);
 
 // converts name in cap to name in actual environment
 std::wstring ProcessPluginPath(const std::string &File);
@@ -76,16 +79,18 @@ std::wstring ProcessPluginPath(const std::string &File);
 // #TODO think over API
 uint32_t ReadFileNameLength(std::ifstream &CapFile);
 std::string ReadFileName(std::ifstream &CapFile, uint32_t Length);
-std::vector<char> ReadFileData(std::ifstream &CapFile);
-FileInfo ExtractFile(std::ifstream &CapFile);
+std::optional<std::vector<char>> ReadFileData(std::ifstream &CapFile);
+FileInfo ExtractFile(std::ifstream &cap_file);
 bool StoreFile(const std::wstring &Name, const std::vector<char> &Data);
 
 // idiotic API form thje past. Do not for what hell, but let it stay
 bool CheckAllFilesWritable(const std::string &Directory);
 
 // tgt,src
-std::pair<std::filesystem::path, std::filesystem::path> GetExampleYmlNames();
+using PairOfPath = std::pair<std::filesystem::path, std::filesystem::path>;
+PairOfPath GetExampleYmlNames();
 
+PairOfPath GetInstallPair(std::wstring_view name);
 }  // namespace cma::cfg::cap
 
 #endif  // cap_h__

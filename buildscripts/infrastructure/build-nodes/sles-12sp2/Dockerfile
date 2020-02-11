@@ -1,8 +1,11 @@
-FROM nexus.lan.tribe29.com:4000/sles-12sp2-base
+ARG DOCKER_REGISTRY
+FROM ${DOCKER_REGISTRY}/sles-12sp2-base
 
 SHELL ["/bin/bash", "-c"]
 
-RUN zypper addrepo -G http://nexus:8081/repository/sles12sp2 sles12sp2 \
+ARG ARTIFACT_STORAGE
+
+RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp2 sles12sp2 \
     && zypper ref -s \
     && zypper -n in -y --force-resolution \
     apache2-devel \
@@ -48,7 +51,6 @@ RUN zypper addrepo -G http://nexus:8081/repository/sles12sp2 sles12sp2 \
     rpcbind \
     rpm-build \
     rpm-devel \
-    rrdtool-devel \
     samba-client \
     sqlite3-devel \
     tar \
@@ -59,9 +61,22 @@ RUN zypper addrepo -G http://nexus:8081/repository/sles12sp2 sles12sp2 \
     which \
     && zypper clean -a
 
+ARG ARTIFACT_STORAGE
 COPY bw-build-gnu-toolchain.sh /usr/sbin
-RUN bw-build-gnu-toolchain.sh -b
+RUN bw-build-gnu-toolchain.sh -r $ARTIFACT_STORAGE -b
 RUN cd /opt \
-    && wget https://github.com/Kitware/CMake/releases/download/v3.15.4/cmake-3.15.4-Linux-x86_64.tar.gz \
-    && tar xf cmake-3.15.4-Linux-x86_64.tar.gz \
-    && ln -s /opt/cmake-3.15.4-Linux-x86_64/bin/* /usr/bin/
+    && wget https://github.com/Kitware/CMake/releases/download/v3.16.2/cmake-3.16.2-Linux-x86_64.tar.gz \
+    && tar xf cmake-3.16.2-Linux-x86_64.tar.gz \
+    && ln -s /opt/cmake-3.16.2-Linux-x86_64/bin/* /usr/bin/
+
+# New packages that are not needed for the build toolchain above should be added here.
+# We avoid rebuild of the whole previous steps this way
+RUN zypper ref \
+    && zypper -n in -y --force-resolution \
+    chrpath \
+    joe \
+    vim \
+    && zypper clean -a
+
+ARG VERS_TAG
+RUN echo $VERS_TAG > /version.txt

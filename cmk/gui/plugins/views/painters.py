@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
 import os
@@ -35,6 +15,7 @@ import cmk.utils.render
 import cmk.utils.man_pages as man_pages
 from cmk.utils.defines import short_service_state_name, short_host_state_name
 
+import cmk.gui.escaping as escaping
 import cmk.gui.config as config
 import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
@@ -61,16 +42,13 @@ from cmk.gui.plugins.views import (
     Painter,
     painter_option_registry,
     PainterOption,
-    PainterOptions,
     transform_action_url,
     is_stale,
     paint_stalified,
     paint_host_list,
     format_plugin_output,
-    display_options,
     link_to_view,
     get_perfdata_nth_value,
-    get_graph_timerange_from_painter_options,
     paint_age,
     paint_nagiosflag,
     replace_action_url_macros,
@@ -80,6 +58,11 @@ from cmk.gui.plugins.views import (
     render_labels,
     get_labels,
     get_label_sources,
+)
+
+from cmk.gui.plugins.views.graphs import (
+    paint_time_graph_cmk,
+    cmk_time_graph_params,
 )
 
 #   .--Painter Options-----------------------------------------------------.
@@ -190,7 +173,7 @@ def paint_custom_var(what, key, row, choices=None):
         custom_val = custom_vars[key]
         if choices:
             custom_val = dict(choices).get(int(custom_val), custom_val)
-        return key, html.attrencode(custom_val)
+        return key, escaping.escape_attribute(custom_val)
 
     return key, ""
 
@@ -391,7 +374,7 @@ class PainterSitealias(Painter):
         return ['site']
 
     def render(self, row, cell):
-        return (None, html.attrencode(config.site(row["site"])["alias"]))
+        return (None, escaping.escape_attribute(config.site(row["site"])["alias"]))
 
 
 #.
@@ -684,7 +667,7 @@ class PainterSvcCheckCommand(Painter):
         return ['service_check_command']
 
     def render(self, row, cell):
-        return (None, html.attrencode(row["service_check_command"]))
+        return (None, escaping.escape_attribute(row["service_check_command"]))
 
 
 @painter_registry.register
@@ -706,7 +689,7 @@ class PainterSvcCheckCommandExpanded(Painter):
         return ['service_check_command_expanded']
 
     def render(self, row, cell):
-        return (None, html.attrencode(row["service_check_command_expanded"]))
+        return (None, escaping.escape_attribute(row["service_check_command_expanded"]))
 
 
 @painter_registry.register
@@ -1402,56 +1385,6 @@ class PainterSvcGroupMemberlist(Painter):
         return "", HTML(", ").join(links)
 
 
-def paint_time_graph(row, cell):
-    if metrics.cmk_graphs_possible(row["site"]):
-        import cmk.gui.cee.plugins.views.graphs  # pylint: disable=redefined-outer-name,import-error,no-name-in-module
-        return cmk.gui.cee.plugins.views.graphs.paint_time_graph_cmk(row, cell)  # pylint: disable=no-member
-    return paint_time_graph_pnp(row)
-
-
-def paint_time_graph_pnp(row):
-    sitename = row["site"]
-    host = row["host_name"]
-    service = row.get("service_description", "_HOST_")
-
-    container_id = "%s_%s_%s_graph" % (sitename, host, service)
-    url_prefix = config.site(sitename)["url_prefix"]
-    pnp_url = url_prefix + "pnp4nagios/"
-    if display_options.enabled(display_options.X):
-        with_link = 'true'
-    else:
-        with_link = 'false'
-
-    painter_options = PainterOptions.get_instance()
-    pnp_timerange = painter_options.get("pnp_timerange")
-
-    pnpview = '1'
-    from_ts, to_ts = 'null', 'null'
-    if pnp_timerange is not None:
-        if pnp_timerange[0] != 'pnp_view':
-            from_ts, to_ts = get_graph_timerange_from_painter_options()
-        else:
-            pnpview = pnp_timerange[1]
-
-    pnp_theme = html.get_theme()
-    if pnp_theme == "classic":
-        pnp_theme = "multisite"
-
-    return (
-        "pnpgraph", "<div id=\"%s\"></div>"
-        "<script>cmk.graph_integration.render_graphs('%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, '%s', %s, %s, '%s')</script>"
-        % (container_id, container_id, sitename, host, service, pnpview, config.url_prefix() +
-           "check_mk/", pnp_url, with_link, _('Add this graph to...'), from_ts, to_ts, pnp_theme))
-
-
-def time_graph_params():
-    if not metrics.cmk_graphs_possible():
-        return  # The method is only available in CEE
-
-    import cmk.gui.cee.plugins.views.graphs  # pylint: disable=redefined-outer-name,import-error,no-name-in-module
-    return cmk.gui.cee.plugins.views.graphs.cmk_time_graph_params()  # pylint: disable=no-member
-
-
 @painter_registry.register
 class PainterSvcPnpgraph(Painter):
     @property
@@ -1482,10 +1415,10 @@ class PainterSvcPnpgraph(Painter):
 
     @property
     def parameters(self):
-        return time_graph_params()
+        return cmk_time_graph_params()
 
     def render(self, row, cell):
-        return paint_time_graph(row, cell)
+        return paint_time_graph_cmk(row, cell)
 
 
 @painter_registry.register
@@ -1536,7 +1469,8 @@ class PainterCheckManpage(Painter):
 
 def paint_comments(prefix, row):
     comments = row[prefix + "comments_with_info"]
-    text = ", ".join(["<i>%s</i>: %s" % (a, html.attrencode(c)) for _id, a, c in comments])
+    text = ", ".join(
+        ["<i>%s</i>: %s" % (a, escaping.escape_attribute(c)) for _id, a, c in comments])
     return "", text
 
 
@@ -2481,10 +2415,10 @@ class PainterHostPnpgraph(Painter):
 
     @property
     def parameters(self):
-        return time_graph_params()
+        return cmk_time_graph_params()
 
     def render(self, row, cell):
-        return paint_time_graph(row, cell)
+        return paint_time_graph_cmk(row, cell)
 
 
 @painter_registry.register
@@ -2636,7 +2570,7 @@ class PainterAlias(Painter):
         return ['host_alias']
 
     def render(self, row, cell):
-        return ("", html.attrencode(row["host_alias"]))
+        return ("", escaping.escape_attribute(row["host_alias"]))
 
 
 @painter_registry.register
@@ -3152,7 +3086,8 @@ class PainterHostGroupMemberlist(Painter):
         for group in row["host_groups"]:
             link = "view.py?view_name=hostgroup&hostgroup=" + group
             if html.request.var("display_options"):
-                link += "&display_options=%s" % html.attrencode(html.request.var("display_options"))
+                link += "&display_options=%s" % escaping.escape_attribute(
+                    html.request.var("display_options"))
             links.append(html.render_a(group, link))
         return "", HTML(", ").join(links)
 
@@ -3780,7 +3715,7 @@ class PainterHgAlias(Painter):
         return ['hostgroup_alias']
 
     def render(self, row, cell):
-        return (None, html.attrencode(row["hostgroup_alias"]))
+        return (None, escaping.escape_attribute(row["hostgroup_alias"]))
 
 
 #    ____                  _
@@ -3986,7 +3921,7 @@ class PainterSgAlias(Painter):
         return ['servicegroup_alias']
 
     def render(self, row, cell):
-        return (None, html.attrencode(row["servicegroup_alias"]))
+        return (None, escaping.escape_attribute(row["servicegroup_alias"]))
 
 
 #     ____                                     _
@@ -4503,7 +4438,7 @@ class PainterLogMessage(Painter):
         return ['log_message']
 
     def render(self, row, cell):
-        return ("", html.attrencode(row["log_message"]))
+        return ("", escaping.escape_attribute(row["log_message"]))
 
 
 @painter_registry.register
@@ -4522,9 +4457,7 @@ class PainterLogPluginOutput(Painter):
 
     @property
     def columns(self):
-        return [
-            'log_plugin_output', 'log_type', 'log_state_type', 'log_comment', 'custom_variables'
-        ]
+        return ['log_plugin_output', 'log_type', 'log_state_type', 'log_comment']
 
     def render(self, row, cell):
         output = row["log_plugin_output"]
@@ -4534,7 +4467,7 @@ class PainterLogPluginOutput(Painter):
             return "", format_plugin_output(output, row)
 
         elif comment:
-            return "", html.attrencode(comment)
+            return "", escaping.escape_attribute(comment)
 
         else:
             log_type = row["log_type"]
@@ -4611,7 +4544,7 @@ class PainterLogStateType(Painter):
 
     @property
     def title(self):
-        return _("Log: type of state (hard/soft/stopped/started)")
+        return _("Log: state type (DEPRECATED: Use \"state information\")")
 
     @property
     def short_title(self):
@@ -4623,6 +4556,34 @@ class PainterLogStateType(Painter):
 
     def render(self, row, cell):
         return ("", row["log_state_type"])
+
+
+@painter_registry.register
+class PainterLogStateInfo(Painter):
+    @property
+    def ident(self):
+        return "log_state_info"
+
+    @property
+    def title(self):
+        return _("Log: State information")
+
+    @property
+    def short_title(self):
+        return _("State info")
+
+    @property
+    def columns(self):
+        return ['log_state_info', 'log_state_type']
+
+    def render(self, row, cell):
+        info = row["log_state_info"]
+
+        # be compatible to <1.7 remote sites and show log_state_type content as fallback
+        if not info:
+            info = row["log_state_type"]
+
+        return ("", escaping.escape_attribute(info))
 
 
 @painter_registry.register
@@ -4814,7 +4775,7 @@ class PainterLogOptions(Painter):
         return ['log_options']
 
     def render(self, row, cell):
-        return ("", html.attrencode(row["log_options"]))
+        return ("", escaping.escape_attribute(row["log_options"]))
 
 
 @painter_registry.register
@@ -4840,7 +4801,7 @@ class PainterLogComment(Painter):
         if ';' in msg:
             parts = msg.split(';')
             if len(parts) > 6:
-                return ("", html.attrencode(parts[-1]))
+                return ("", escaping.escape_attribute(parts[-1]))
         return ("", "")
 
 
@@ -5279,9 +5240,7 @@ class PainterHostDockerNode(Painter):
 
     def render(self, row, cell):
         source_hosts = [
-            k[21:]
-            for k in get_labels(row, "host").iterkeys()
-            if k.startswith("cmk/piggyback_source_")
+            k[21:] for k in get_labels(row, "host") if k.startswith("cmk/piggyback_source_")
         ]
 
         if not source_hosts:
@@ -5358,7 +5317,7 @@ class AbstractPainterSpecificMetric(Painter):
             choices = g.painter_specific_metric_choices
         else:
             choices = []
-            for key, value in metrics.metric_info.iteritems():
+            for key, value in metrics.metric_info.items():
                 choices.append((key, value.get("title")))
             choices.sort(key=lambda x: x[1])
             g.painter_specific_metric_choices = choices

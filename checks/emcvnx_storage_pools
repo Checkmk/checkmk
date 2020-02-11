@@ -184,7 +184,7 @@ def parse_emcvnx_time_to_complete(time_to_complete):
 
 
 def inventory_emcvnx_storage_pools_tiering(parsed):
-    for pool_name in parsed.iterkeys():
+    for pool_name in parsed:
         yield pool_name, {}
 
 
@@ -321,7 +321,10 @@ check_info['emcvnx_storage_pools.tieringtypes'] = {
 #   '----------------------------------------------------------------------'
 
 
-def _emcvnx_get_text_perf(data, key, perfname, format_func=get_bytes_human_readable,
+def _emcvnx_get_text_perf(data,
+                          key,
+                          perfname,
+                          format_func=get_bytes_human_readable,
                           factor=1024**3):
     field = data.get(key, "unknown")
     try:

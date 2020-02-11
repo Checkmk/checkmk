@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -24,42 +24,23 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from __future__ import division
 import argparse
 import sys
 import requests
-import urllib3  # type: ignore
+import urllib3  # type: ignore[import]
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-def main():
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
 
-    args = parse_arguments()
-
-    try:
-        user = args.user
-    except TypeError:
-        user = None
-    try:
-        pwd = args.password
-    except TypeError:
-        pwd = None
-
-    opt_port = args.port
-    query_objects = args.modules
-    opt_proto = args.proto
-    opt_debug = args.debug
-    elastic_host = args.HOSTNAME
+    args = parse_arguments(argv)
 
     sys.stdout.write('<<<check_mk>>>\n')
-    handle_request(user, pwd, opt_port, query_objects, opt_proto, opt_debug, elastic_host)
-
-
-def handle_request(user, pwd, opt_port, query_objects, opt_proto, opt_debug, elastic_host):
-
-    for host in elastic_host:
-        url_base = "%s://%s:%d" % (opt_proto, host, int(opt_port))
+    for host in args.hosts:
+        url_base = "%s://%s:%d" % (args.proto, host, args.port)
 
         # Sections to query
         # Cluster health: https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-health.html
@@ -72,37 +53,33 @@ def handle_request(user, pwd, opt_port, query_objects, opt_proto, opt_debug, ela
         }
 
         try:
-            for section in query_objects:
+            for section in args.modules:
                 url = url_base + sections[section]
 
+                auth = (args.user, args.password) if args.user and args.password else None
                 try:
-                    if user and pwd:
-                        response = requests.get(url, auth=(user, pwd))
-                    else:
-                        response = requests.get(url)
+                    response = requests.get(url, auth=auth)
                 except requests.exceptions.RequestException as e:
                     sys.stderr.write("Error: %s\n" % e)
-                    if opt_debug:
+                    if args.debug:
                         raise
                 else:
                     sys.stdout.write("<<<elasticsearch_%s>>>\n" % section)
 
                 json_response = response.json()
-                if section == 'cluster_health' and 'cluster_health' in query_objects:
+                if section == 'cluster_health':
                     handle_cluster_health(json_response)
-                elif section == 'nodes' and 'nodes' in query_objects:
+                elif section == 'nodes':
                     handle_nodes(json_response)
-                elif section == 'stats' and 'stats' in query_objects:
+                elif section == 'stats':
                     handle_stats(json_response)
             sys.exit(0)
         except Exception:
-            if opt_debug:
+            if args.debug:
                 raise
 
 
-def parse_arguments(argv=None):
-    if argv is None:
-        argv = sys.argv[1:]
+def parse_arguments(argv):
 
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawTextHelpFormatter)
@@ -114,7 +91,11 @@ def parse_arguments(argv=None):
         "--proto",
         default="https",
         help="Use 'http' or 'https' for connection to elasticsearch (default=https)")
-    parser.add_argument("-p", "--port", default=9200, help="Use alternative port (default: 9200)")
+    parser.add_argument("-p",
+                        "--port",
+                        default=9200,
+                        type=int,
+                        help="Use alternative port (default: 9200)")
     parser.add_argument(
         "-m",
         "--modules",
@@ -128,17 +109,18 @@ def parse_arguments(argv=None):
                         help="Debug mode: let Python exceptions come through")
 
     parser.add_argument(
-        "HOSTNAME",
-        nargs="*",
+        "hosts",
+        metavar="HOSTNAME",
+        nargs="+",
         help=
         "You can define one or more elasticsearch instances to query. First instance where data is queried wins."
     )
 
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def handle_cluster_health(response):
-    for item, value in response.iteritems():
+    for item, value in response.items():
         sys.stdout.write("%s %s\n" % (item, value))
 
 

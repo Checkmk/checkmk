@@ -84,8 +84,8 @@ discovery = {'': [('1', "{'state': ['1'], 'speed': 1000000000}"),
 checks = {'': [('1',
                 {'errors': (0.01, 0.1), 'speed': 1000000000, 'state': ['1']},
                 [(0, u'[GTB1020-2-CL_mgmt] (up) 1 Gbit/s', []),
-                 (0, u'Home Port: e0f-112 (is home)', [])]),
+                 (0, u'Current Port: e0f-112 (is home port)', [])]),
                ('2',
                 {'errors': (0.01, 0.1), 'speed': 1000000000, 'state': ['1']},
                 [(0, u'[GTB1020-2_ic1] (up) 1 Gbit/s', []),
-                 (0, u'Home Port: e0f-2231 (is home)', [])])]}
+                 (0, u'Current Port: e0f-2231 (is home port)', [])])]}

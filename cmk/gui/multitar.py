@@ -1,28 +1,9 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """This module contains some helper functions dealing with the creation
 of multi-tier tar files (tar files containing tar files)"""
 
@@ -32,15 +13,15 @@ import os
 import tarfile
 import time
 import shutil
-import cStringIO
+import io
 import glob
 import fnmatch
-import subprocess
 import traceback
 import itertools
 import multiprocessing
 
 import cmk.utils.paths
+import cmk.utils.cmk_subprocess as subprocess
 
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
@@ -222,12 +203,14 @@ class SnapshotCreationBase(object):
             if debug:
                 self._logger.debug(" ".join(command))
             try:
-                p = subprocess.Popen(command,
-                                     stdin=subprocess.PIPE,
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE,
-                                     shell=False,
-                                     close_fds=True)
+                p = subprocess.Popen(
+                    command,
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    close_fds=True,
+                    encoding="utf-8",
+                )
                 stdout, stderr = p.communicate()
                 if p.returncode != 0:
                     raise MKGeneralException(_("Activate changes error. Unable to prepare site snapshots. Failed command: %r; StdOut: %r; StdErr: %s") %\
@@ -278,8 +261,8 @@ class SnapshotCreationBase(object):
                       "Unsupported custom snapshot component: %s.") % str(component))
 
         # Simply compute the checksum of the sitespecific.mk
-        return hashlib.md5(open(
-            parsed_custom_components.components[0].configured_path).read()).hexdigest()
+        return hashlib.md5(
+            open(parsed_custom_components.components[0].configured_path, "rb").read()).hexdigest()
 
 
 class SnapshotWorkerSubprocess(SnapshotCreationBase, multiprocessing.Process):
@@ -372,7 +355,7 @@ def create(tar_filename, components):
                 basedir = os.path.dirname(abspath)
                 filename = os.path.basename(abspath)
 
-            subtar_buffer = cStringIO.StringIO()
+            subtar_buffer = io.BytesIO()
             with tarfile.TarFile(fileobj=subtar_buffer, mode="w") as subtar_obj:
 
                 def exclude_filter(x, excludes=excludes):
@@ -411,7 +394,7 @@ def filter_subtar_files(tarinfo, excludes):
 
 
 def extract_from_buffer(buffer_, elements):
-    stream = cStringIO.StringIO()
+    stream = io.BytesIO()
     stream.write(buffer_)
     stream.seek(0)
     if isinstance(elements, list):
@@ -480,9 +463,12 @@ def extract_domains(tar, domains):
 
         # Older versions of python tarfile handle empty subtar archives :(
         # This won't work: subtar = tarfile.open("%s/%s" % (restore_dir, tar_member.name))
-        p = subprocess.Popen(["tar", "tzf", "%s/%s" % (restore_dir, tar_member.name)],
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
+        p = subprocess.Popen(
+            ["tar", "tzf", "%s/%s" % (restore_dir, tar_member.name)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding="utf-8",
+        )
         stdout, stderr = p.communicate()
         if stderr:
             errors.append(_("Contains corrupt file %s") % tar_member.name)
@@ -535,7 +521,12 @@ def extract_domains(tar, domains):
             tar.extract(tar_member, restore_dir)
 
             command = ["tar", "xzf", "%s/%s" % (restore_dir, tar_member.name), "-C", target_dir]
-            p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            p = subprocess.Popen(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                encoding="utf-8",
+            )
             _stdout, stderr = p.communicate()
             exit_code = p.wait()
             if exit_code:

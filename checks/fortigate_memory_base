@@ -27,39 +27,40 @@
 fortigate_memory_base_default_levels = (70, 80)  # taken from fortigate_memory
 
 
-def inventory_fortigate_memory_base(info):
-    if info:
+def parse_fortigate_memory_base(info):
+    try:
+        total = int(info[0][1]) * 1024  # value from device is in kb, we need bytes
+        used = float(info[0][0]) / 100. * total
+    except (IndexError, ValueError):
+        return ()
+    return used, total
+
+
+def inventory_fortigate_memory_base(parsed):
+    if parsed:
         return [(None, "fortigate_memory_base_default_levels")]
 
 
-def check_fortigate_memory_base(item, params, info):
-    if isinstance(params, dict):
-        # accept values from "memory" wato rule
-        params = params["levels"]
+def check_fortigate_memory_base(_item, params, parsed):
 
-    warn, crit = map(abs, params)
-
-    percent = int(info[0][0])
-
-    if percent >= crit:
-        state = 2
-    elif percent >= warn:
-        state = 1
+    if isinstance(params, tuple):
+        levels = ("perc_used", params)
     else:
-        state = 0
+        warn, crit = params.get("levels", (None, None))
+        levels = (get_levels_mode_from_value(warn), (abs(warn), abs(crit)))
 
-    capacity = int(info[0][1]) * 1024  # value from device is in kb, we need bytes
-    used = int((percent * capacity) / 100)
+    if not parsed:
+        return
+    used, total = parsed
 
-    perf = [("mem_used", used, int((warn * capacity) / 100.0), int(
-        (crit * capacity) / 100.0), 0, capacity)]
-    return state, "%d%% (warn/crit at %d%%/%d%%)" % (percent, warn, crit), perf
+    return check_memory_element("Used", used, total, levels, metric_name="mem_used")
 
 
 check_info["fortigate_memory_base"] = {
+    "parse_function": parse_fortigate_memory_base,
     "check_function": check_fortigate_memory_base,
     "inventory_function": inventory_fortigate_memory_base,
-    "service_description": "Memory usage",
+    "service_description": "Memory",
     "has_perfdata": True,
     "group": "memory",
     "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.12356.101.1" in oid(".1.3.6.1.2.1.1.2.0"),
@@ -69,4 +70,5 @@ check_info["fortigate_memory_base"] = {
             4,  # fgSysMemUsage
             5  # fgSysMemCapacity
         ]),
+    "includes": ['mem.include'],
 }

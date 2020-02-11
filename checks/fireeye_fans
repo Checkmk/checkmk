@@ -61,8 +61,8 @@
 def check_fireeye_fans(item, params, info):
     for index, status, health, speed_str in info:
         if index == item:
-            for text, (state, state_readable) in \
-                check_fireeye_states([(status, 'Status'), (health, 'Health')]).items():
+            for text, (state, state_readable) in check_fireeye_states([(status, 'Status'),
+                                                                       (health, 'Health')]).items():
                 yield state, "%s: %s" % (text, state_readable)
 
             yield 0, "Speed: %s RPM" % speed_str

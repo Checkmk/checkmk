@@ -1,0 +1,91 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2020             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+import json
+
+
+def parse_cadvisor_memory(info):
+    memory_info = json.loads(info[0][0])
+    parsed = {}
+    for memory_name, memory_entries in memory_info.iteritems():
+        if len(memory_entries) != 1:
+            continue
+        try:
+            parsed[memory_name] = float(memory_entries[0]["value"])
+        except KeyError:
+            continue
+    return parsed
+
+
+def _output_single_memory_stat(memory_value, output_text, metric_name=None):
+    infotext = output_text % (memory_value / 1024)
+    if metric_name:
+        perfdata = [(metric_name, memory_value, None, None)]
+    else:
+        perfdata = []
+    return 0, infotext, perfdata
+
+
+def check_cadvisor_memory(_item, _params, parsed):
+    render_base = 1024
+    # Checking for Container
+    if "memory_usage_container" in parsed:
+        memory_used = parsed["memory_usage_container"]
+        memory_total = parsed["memory_usage_pod"]
+        infotext_extra = " (Parent pod memory usage)"
+
+    # Checking for Pod
+    else:
+        memory_used = parsed["memory_usage_pod"]
+        if parsed.get("memory_limit", 0):
+            memory_total = parsed["memory_limit"]
+            infotext_extra = ""
+        else:
+            memory_total = parsed["memory_machine"]
+            infotext_extra = " (Available Machine Memory)"
+    status, infotext, perfdata = check_memory_element("Usage",
+                                                      memory_used,
+                                                      memory_total, (None, None),
+                                                      metric_name="mem_used",
+                                                      render_base=render_base)
+    infotext += infotext_extra
+    yield status, infotext, perfdata
+
+    # the cAdvisor does not provide available (total) memory of the following
+    yield _output_single_memory_stat(parsed["memory_rss"], "Resident size: %s kB")
+
+    yield _output_single_memory_stat(parsed["memory_cache"], "Cache: %s kB", 'mem_linux_cached')
+
+    yield _output_single_memory_stat(parsed["memory_swap"], "Swap: %s kB", 'swap_used')
+
+
+check_info["cadvisor_memory"] = {
+    'parse_function': parse_cadvisor_memory,
+    'inventory_function': discover_single,
+    'check_function': check_cadvisor_memory,
+    'service_description': 'Memory',
+    'has_perfdata': True,
+    'includes': ["mem.include"],
+}

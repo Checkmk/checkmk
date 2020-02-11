@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -27,7 +27,7 @@
 
 import re
 import abc
-from typing import Dict  # pylint: disable=unused-import
+from typing import Any, Dict, List, Set  # pylint: disable=unused-import
 import six
 
 from cmk.utils.i18n import _
@@ -98,6 +98,12 @@ class ABCTag(six.with_metaclass(abc.ABCMeta, object)):
     def _parse_legacy_format(self, tag_info):
         self.id, self.title = tag_info[:2]
 
+    @property
+    def choice_title(self):
+        if self.topic:
+            return "%s / %s" % (self.topic, self.title)
+        return self.title
+
 
 class AuxTag(ABCTag):
     is_aux_tag = True
@@ -121,12 +127,6 @@ class AuxTag(ABCTag):
         if self.topic:
             response["topic"] = self.topic
         return response
-
-    @property
-    def choice_title(self):
-        if self.topic:
-            return "%s / %s" % (self.topic, self.title)
-        return self.title
 
 
 class AuxTagList(object):
@@ -165,7 +165,7 @@ class AuxTagList(object):
                 return
 
     def validate(self):
-        seen = set()
+        seen = set()  # type: Set[str]
         for aux_tag in self._tags:
             aux_tag.validate()
 
@@ -245,6 +245,7 @@ class TagGroup(object):
         self.id = None
         self.title = None
         self.topic = None
+        self.help = None
         self.tags = []
 
     def _parse_from_dict(self, group_info):
@@ -252,6 +253,7 @@ class TagGroup(object):
         self.id = group_info["id"]
         self.title = group_info["title"]
         self.topic = group_info.get("topic")
+        self.help = group_info.get("help")
         self.tags = [GroupedTag(self, tag) for tag in group_info["tags"]]
 
     def _parse_legacy_format(self, group_info):
@@ -288,9 +290,12 @@ class TagGroup(object):
         return {tag.id for tag in self.tags}
 
     def get_dict_format(self):
-        response = {"id": self.id, "title": self.title, "tags": []}
+        response = {"id": self.id, "title": self.title, "tags": []}  # type: Dict[str, Any]
         if self.topic:
             response["topic"] = self.topic
+
+        if self.help:
+            response["help"] = self.help
 
         for tag in self.tags:
             response["tags"].append(tag.get_dict_format())
@@ -353,7 +358,7 @@ class TagConfig(object):
         return sorted(list(names), key=lambda x: x[1])
 
     def get_tag_groups_by_topic(self):
-        by_topic = {}
+        by_topic = {}  # type: Dict[six.text_type, List[six.text_type]]
         for tag_group in self.tag_groups:
             topic = tag_group.topic or _('Tags')
             by_topic.setdefault(topic, []).append(tag_group)
@@ -388,7 +393,7 @@ class TagConfig(object):
         return aux_tag_map
 
     def get_aux_tags_by_topic(self):
-        by_topic = {}
+        by_topic = {}  # type: Dict[six.text_type, List[six.text_type]]
         for aux_tag in self.aux_tag_list.get_tags():
             topic = aux_tag.topic or _('Tags')
             by_topic.setdefault(topic, []).append(aux_tag)
@@ -396,7 +401,7 @@ class TagConfig(object):
 
     def get_tag_ids(self):
         """Returns the raw ids of the grouped tags and the aux tags"""
-        response = set()
+        response = set()  # type: Set[six.text_type]
         for tag_group in self.tag_groups:
             response.update(tag_group.get_tag_ids())
 
@@ -469,7 +474,7 @@ class TagConfig(object):
 
     def _validate_ids(self):
         """Make sure that no tag key is used twice as aux_tag ID or tag group id"""
-        seen_ids = set()
+        seen_ids = set()  # type: Set[six.text_type]
         for tag_group in self.tag_groups:
             if tag_group.id in seen_ids:
                 raise MKGeneralException(_("The tag group ID \"%s\" is used twice.") % tag_group.id)
@@ -533,7 +538,7 @@ class TagConfig(object):
             raise MKGeneralException(_("Tag groups with only one choice must have a tag ID."))
 
     def get_dict_format(self):
-        result = {"tag_groups": [], "aux_tags": []}
+        result = {"tag_groups": [], "aux_tags": []}  # type: Dict[str, Any]
         for tag_group in self.tag_groups:
             result["tag_groups"].append(tag_group.get_dict_format())
 
@@ -592,6 +597,17 @@ class BuiltinTagConfig(TagConfig):
                 'id': 'piggyback',
                 'title': _("Piggyback"),
                 'topic': _('Data sources'),
+                'help': _(
+                    "By default every host has the piggyback data source "
+                    "<b>Use piggyback data from other hosts if present</b>. "
+                    "In this case the <tt>Check_MK</tt> service of this host processes the piggyback data "
+                    "but does not warn if no piggyback data is available. The related discovered services "
+                    "would become stale. "
+                    "If a host has configured <b>Always use and expect piggyback data</b> for the piggyback "
+                    "data source then this host expects piggyback data and the <tt>Check_MK</tt> service of "
+                    "this host warns if no piggyback data is available. "
+                    "In the last case, ie. <b>Never use piggyback data</b>, the <tt>Check_MK</tt> service "
+                    "does not process piggyback data at all and ignores it if available."),
                 'tags': [
                     {
                         "id": "auto-piggyback",
@@ -663,6 +679,7 @@ class BuiltinTagConfig(TagConfig):
                 'id': 'ip-v4',
                 'topic': _('Address'),
                 'title': _('IPv4'),
+                'help': _("Bar"),
             },
             {
                 'id': 'ip-v6',

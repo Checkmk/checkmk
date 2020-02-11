@@ -52,12 +52,20 @@ display_usage () {
     echo "  -d                      Enable full bash debugging"
     echo "  -t                      Just check the connection"
     echo "  -l, --log               Logs certain steps while execution"
-    echo "                          ('flock' needs to be installed)"
+    echo "                          Note: ALL sections are executed as synchronous sections"
     echo "  -s, --sections S1,S2,.. Only execute stated sections"
     echo "                          Note: asynchronous sections are execute"
     echo "                          as synchronous sections"
+    echo "  --oratestversion        set a custom Oracleversion during execution. Example: 12.1"
+    echo "                          This parameter is only for development"
     echo ""
 }
+
+
+MK_ORA_DEBUG=false
+MK_ORA_DEBUG_CONNECT=false
+MK_ORA_LOGGING=false
+export MK_ORA_LOGGING
 
 
 while test -n "$1"; do
@@ -69,31 +77,28 @@ while test -n "$1"; do
 
         -d)
             set -xv
-            MK_ORA_DEBUG=1
+            MK_ORA_DEBUG=true
             shift
             ;;
 
         -t)
-            MK_ORA_DEBUG_CONNECT=1
+            MK_ORA_DEBUG_CONNECT=true
             shift
             ;;
 
         -l|--log)
-            if type flock > /dev/null 2>&1; then
-                MK_ORA_LOGGING=1
-                export MK_ORA_LOGGING
-            else
-                echo "You cannot use the option '--log': flock needs to be installed."
-                echo "Please run mk_oracle without '--log'."
-                display_usage >&2
-                exit 2
-            fi
+            MK_ORA_LOGGING=true
             shift
             ;;
 
         -s|--sections)
             shift
             MK_ORA_SECTIONS=($(echo "$1" | tr ',' '\n'))
+            shift
+            ;;
+        --oratestversion)
+            shift
+            MK_ORA_TESTVERSION="$1"
             shift
             ;;
 
@@ -218,7 +223,7 @@ SYNC_SECTIONS="instance sessions logswitches undostat recovery_area processes re
 # Sections that are run in the background and at a larger interval.
 # Note: sections not listed in SYNC_SECTIONS or ASYNC_SECTIONS will not be
 # executed at all!
-ASYNC_SECTIONS="tablespaces rman jobs ts_quotas resumable"
+ASYNC_SECTIONS="tablespaces rman jobs resumable"
 
 # Sections that are run in the background and at a larger interval.
 # Note: _ASM_ sections are only executed when SID starts with '+'
@@ -338,73 +343,68 @@ fi
 
 
 logging () {
-    if [ "$MK_ORA_LOGGING" == "1" ]; then
-        (
-            flock 200
+    if $MK_ORA_LOGGING; then
+        local log_file="$MK_VARDIR/log/mk_oracle.log"
+        local criticality=
+        local args=
+        local header=
+        local to_stderr=false
 
-            local log_file="$MK_VARDIR/log/mk_oracle.log"
-            local criticality=
-            local args=
-            local header=
-            local to_stderr=false
+        let i=0
+        while test -n "$1"; do
+            case "$1" in
+                -o)
+                    criticality="0" # OK, default
+                    shift
+                    ;;
 
-            let i=0
-            while test -n "$1"; do
-                case "$1" in
-                    -o)
-                        criticality="0" # OK, default
-                        shift
-                        ;;
+                -w)
+                    criticality="1" # WARNING
+                    shift
+                    ;;
 
-                    -w)
-                        criticality="1" # WARNING
-                        shift
-                        ;;
+                -c)
+                    criticality="2" # CRITICAL
+                    shift
+                    ;;
 
-                    -c)
-                        criticality="2" # CRITICAL
-                        shift
-                        ;;
+                -u)
+                    criticality="3" # UNKNOWN
+                    shift
+                    ;;
 
-                    -u)
-                        criticality="3" # UNKNOWN
-                        shift
-                        ;;
+                -e)
+                    to_stderr=true
+                    shift
+                    ;;
 
-                    -e)
-                        to_stderr=true
-                        shift
-                        ;;
+                *)
+                    args[$i]="$1"
+                    i=$((i+1))
+                    shift
+                    ;;
+            esac
+        done
 
-                    *)
-                        args[$i]="$1"
-                        i=$((i+1))
-                        shift
-                        ;;
-                esac
-            done
+        if [ -z "${criticality}" ]; then
+            criticality="0"
+        fi
 
-            if [ -z "${criticality}" ]; then
-                criticality="0"
+        header="$(perl -MPOSIX -le 'print strftime "%F %T", localtime $^T') [${criticality}] ${args[0]}"
+
+        if [ "${#args[@]}" -le 1 ]; then
+            echo "$header" >> "$log_file"
+            if [ $to_stderr = true ]; then
+                echo "$header" >&2
             fi
-
-            header="$(perl -MPOSIX -le 'print strftime "%F %T", localtime $^T') [${criticality}] ${args[0]}"
-
-            if [ "${#args[@]}" -le 1 ]; then
-                echo "$header" >> "$log_file"
+        else
+            for arg in "${args[@]:1}"; do
+                echo "${header} $arg" >> "$log_file"
                 if [ $to_stderr = true ]; then
-                    echo "$header" >&2
+                    echo "${header} $arg" >&2
                 fi
-            else
-                for arg in "${args[@]:1}"; do
-                    echo "${header} $arg" >> "$log_file"
-                    if [ $to_stderr = true ]; then
-                        echo "${header} $arg" >&2
-                    fi
-                done
-            fi
-
-        ) 200>|/tmp/mk_oracle.lock
+            done
+        fi
     fi
 }
 
@@ -483,7 +483,13 @@ set_ora_env () {
 
 
 set_ora_version () {
-    ORACLE_VERSION="$1"
+    if [ "$MK_ORA_TESTVERSION" ] ; then
+        ORACLE_VERSION="$MK_ORA_TESTVERSION"
+        logging -o -e "[${sid}] [set_ora_version]" "Custom ORACLE_VERSION: ${ORACLE_VERSION}"
+    else
+        ORACLE_VERSION="$1"
+    fi
+
     NUMERIC_ORACLE_VERSION=${ORACLE_VERSION//./}
     export NUMERIC_ORACLE_VERSION
 
@@ -597,7 +603,7 @@ sql_performance () {
 sql_tablespaces () {
 
     echo "PROMPT <<<oracle_tablespaces:sep(124)>>>"
-    if [ "$NUMERIC_ORACLE_VERSION" -ge 141 ]; then
+    if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
 
         echo "SET SERVEROUTPUT ON feedback off
               DECLARE
@@ -1338,7 +1344,7 @@ sql_jobs () {
                               AND jd.LOG_ID = jm.LOG_ID
               WHERE vd.database_role = ''PRIMARY''
                 AND vd.open_mode = ''READ WRITE''
-                AND not (j.auto_drop = '''TRUE'' and REPEAT_INTERVAL is null)'
+                AND not (j.auto_drop = ''TRUE'' and REPEAT_INTERVAL is null)'
                       bulk collect into xx;
                       if xx.count >= 1 then
                           for i in 1 .. xx.count loop
@@ -1796,7 +1802,7 @@ sql_asm_diskgroup () {
 #     SQLS_SECTION_NAME=sec_name            (optional; if not stated, 'oracle_sql' is used)
 #     SQLS_SECTION_SEP=separator            (optional; only useful if SQLS_SECTION_NAME is stated;
 #                                            ASCII code, eg. '58' means ':')
-#     SQLS_SID=sid1,sid2,...                (comma separated)
+#     SQLS_SIDS=sid1,sid2,...               (comma separated)
 #     SQLS_DIR=/path/to/dir                 (no trailing '/')
 #     SQLS_SQL=name.sql                     ()
 #     SQLS_PARAMETERS=params                (parameters as string, double quotes are removed)
@@ -1807,7 +1813,7 @@ sql_asm_diskgroup () {
 #
 #   A section is a function which may contain some of above parameters, eg:
 #   my_sec () {
-#       SQLS_SID=sid1,sid2
+#       SQLS_SIDS=sid1,sid2
 #       SQLS_SQL=name.sql
 #   }
 #   and is configure in mk_oracle.cfg
@@ -1836,7 +1842,7 @@ sql_asm_diskgroup () {
 
 unset_custom_sqls_vars () {
     unset SQLS_SECTION_NAME SQLS_SECTION_SEP SQLS_SIDS SQLS_DIR SQLS_SQL SQLS_PARAMETERS SQLS_MAX_CACHE_AGE SQLS_ITEM_NAME MK_CUSTOM_SQLS_SECTION MK_CUSTOM_SQLS_SECTION_HEADER MK_CUSTOM_SQLS_ITEM MK_CUSTOM_SQLS_SECTION_QUERY
-    unset SQLS_DBUSER SQLS_DBPASSWORD SQLS_DBSYSCONNECT SQLS_TNSALIAS
+    unset SQLS_DBUSER SQLS_DBPASSWORD SQLS_DBSYSCONNECT SQLS_TNSALIAS SQLS_ITEM_SID
 }
 
 
@@ -1909,10 +1915,25 @@ do_custom_sqls () {
         fi
 
         if [ "$section_name" = "oracle_sql" ]; then
-            if [ -n "$SQLS_ITEM_NAME" ]; then
-                local item="${MK_SID}|${SQLS_ITEM_NAME}"
+            if [[ "$MK_SID" =~ ^REMOTE_INSTANCE_.* ]]; then
+                if [ -z "$SQLS_ITEM_SID" ]; then
+                    # we can not extract MK_SID from REMOTE_INSTANCE_ variable name
+                    # get MK_SID from mk_oracle.cfg when SQLS_ITEM_SID is not defined
+                    # => needed when tnsnames.ora is used without SID in CFGLINE...
+                    local SQLS_ITEM_SID
+                    SQLS_ITEM_SID=$(eval "echo \${$MK_SID}" | cut -d":" -f7)
+                fi
             else
-                local item="${MK_SID}|${sql}"
+                # local connection mode
+                local SQLS_ITEM_SID="$MK_SID"
+            fi
+            logging "[${MK_SID}] [${section}] [custom_sql] "\
+                    "SQLS_ITEM_SID: $SQLS_ITEM_SID"
+
+            if [ -n "$SQLS_ITEM_NAME" ]; then
+                local item="${SQLS_ITEM_SID}|${SQLS_ITEM_NAME}"
+            else
+                local item="${SQLS_ITEM_SID}|${sql}"
             fi
         else
             local item=
@@ -1929,7 +1950,7 @@ do_custom_sqls () {
         fi
 
         # set custom credentials from section
-        db_connect=$(mk_ora_db_connect "$sid")
+        db_connect=$(mk_ora_db_connect "$MK_SID")
         export MK_DB_CONNECT=$db_connect
 
         unset_custom_sqls_vars
@@ -1945,13 +1966,12 @@ do_custom_sqls () {
                 "Section item: $MK_CUSTOM_SQLS_ITEM" "Custom SQLS query: $MK_CUSTOM_SQLS_SECTION_QUERY"\
                 "Max cache age: $max_cache_age"
 
-        if [ "$MK_ORA_DEBUG_CONNECT" = "1" ]; then
+        if $MK_ORA_DEBUG_CONNECT; then
             do_testmode_custom_sql
         else
-            if [ -z "$max_cache_age" ]; then
+            if $MK_ORA_LOGGING || [ -z "$max_cache_age" ]; then
                 local output=
                 output=$(echo -e "$MK_CUSTOM_SQLS_SECTION_QUERY" | mk_ora_sqlplus "do_custom_sqls" "yes")
-                logging "[${MK_SID}] [${section}] [custom_sql]" "Custom SQLS query output: $output"
                 handle_custom_sql_errors "$output"
             else
                 run_cached "$max_cache_age" do_async_custom_sqls "_custom_sql_${MK_CUSTOM_SQLS_SECTION}"
@@ -2042,7 +2062,7 @@ unset_custom_sqls_vars
 #   '----------------------------------------------------------------------'
 
 do_dummy_sections () {
-    if [ "$MK_ORA_LOGGING" != "1" ]; then
+    if ! $MK_ORA_LOGGING; then
         for section in $SYNC_SECTIONS $ASYNC_SECTIONS $SYNC_ASM_SECTIONS $ASYNC_ASM_SECTIONS; do
             echo "<<<oracle_${section}>>>"
         done
@@ -2154,6 +2174,7 @@ ora_session_environment () {
 #   '----------------------------------------------------------------------'
 
 run_cached () {
+    logging "[${MK_SID}] [run_cached]" "Note: Asynchronous sections are not executed during logging"
     if [ -n "${MK_ORA_SECTIONS[*]}" ]; then
         return
     fi
@@ -2183,9 +2204,10 @@ run_cached () {
         if [ $((now - cf_atime)) -ge $((maxage * 2)) ]; then
             # Kill the process still accessing that file in case
             # it is still running. This avoids overlapping processes!
-            fuser -k -9 "${cache_file}.new" >/dev/null 2>&1
-            rm -f "${cache_file}.new"
-            logging "[${MK_SID}] [run_cached]" "Creation of the cache takes suspiciously long"
+            if ! $MK_ORA_LOGGING; then
+                fuser -k -9 "${cache_file}.new" >/dev/null 2>&1
+                rm -f "${cache_file}.new"
+            fi
             return
         fi
     fi
@@ -2204,8 +2226,12 @@ run_cached () {
 
     # Cache file outdated and new job not yet running? Start it
     if [ -z "$use_cache_file" ] && [ ! -e "${cache_file}.new" ]; then
-        logging "[${MK_SID}] [run_cached]" "Cache file outdated, start it."
-        if [ "$MK_ORA_DEBUG" ]; then
+        if $MK_ORA_LOGGING; then
+            logging "[${MK_SID}] [run_cached]" "Cache file outdated, new cache file would be created if logging disabled. Skip"
+            return
+        fi
+
+        if $MK_ORA_DEBUG; then
             echo "set -o noclobber; exec > \"${cache_file}.new\" || exit 1; ${cmd_name} && mv \"${cache_file}.new\" \"${cache_file}\" || rm -f \"${cache_file}\" \"${cache_file}.new\"" | /bin/bash
         else
             # When the command fails, the output is throws away ignored
@@ -2418,11 +2444,21 @@ mk_ora_sqlplus () {
     if output=$(echo "$(ora_session_environment)${loc_stdin}" | "$SQLPLUS" -L -s "$MK_DB_CONNECT"); then
         echo -e "$output"
 
+        elapsed_time=$(bc <<<"$(perl -MTime::HiRes=time -wle 'print time')-$start_time")
+
+        if [ "$print_elapsed_time" = "yes" ]; then
+            echo "elapsed:$elapsed_time"
+        fi
+
+        logging "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "Elapsed time: $elapsed_time"
+
     else
-        logging -w "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "OUTPUT '$output'"
         output=$(echo -e "$output" | "${GREP}" -v "^ERROR at line" | tr '\n' ' ' |\
                                      sed "s/^/$(echo "$MK_SID" | tr '[:lower:]' '[:upper:]')|FAILURE|/" ; echo)
-        if [ "$MK_ORA_DEBUG_CONNECT" ]; then
+
+        logging -w "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "Found '^ERROR at line'"
+
+        if $MK_ORA_DEBUG_CONNECT; then
             echo "Logindetails: ${DBCONNECT}" >&2
             echo -e "$output"
         else
@@ -2432,17 +2468,9 @@ mk_ora_sqlplus () {
         fi
     fi
 
-    elapsed_time=$(bc <<<"$(perl -MTime::HiRes=time -wle 'print time')-$start_time")
-
-    if [ "$print_elapsed_time" = "yes" ]; then
-        echo "elapsed:$elapsed_time"
-    fi
-
     if [ -n "$MK_PIGGYBACK_HOST" ]; then
         echo "<<<<>>>>"
     fi
-
-    logging "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "Elapsed time: $elapsed_time"
 }
 
 #.
@@ -2533,30 +2561,33 @@ do_checks () {
                     sections=${sections:+"$sections "}"${section}"
                 fi
             done; echo "$sections")
-        logging "[${MK_SID}] [do_checks]" "Do single sections: $sections"
 
         MK_SYNC_SECTIONS_QUERY=$(for section in $sections; do eval "sql_$section" ; done)
         MK_ASYNC_SECTIONS_QUERY=
+
+        logging "[${MK_SID}] [do_checks]" "Execute explicit sections: $sections"
 
     else
         excluded=$(eval "echo \$EXCLUDE_$MK_SID")
         sections=$(remove_excluded_sections "$do_sync_sections" "$excluded")
         asections=$(remove_excluded_sections "$do_async_sections" "$excluded")
-        logging "[${MK_SID}] [do_checks]" "Excluded: $excluded"\
-                "Sections: $sections" "Async sections: $asections"
 
-        MK_SYNC_SECTIONS_QUERY=$(for section in $sections; do eval "sql_$section" ; done)
-        MK_ASYNC_SECTIONS_QUERY=$(for section in $asections; do eval "sql_$section" ; done)
+        if $MK_ORA_LOGGING; then
+            MK_SYNC_SECTIONS_QUERY=$(for section in $sections $asections; do eval "sql_$section" ; done)
+            MK_ASYNC_SECTIONS_QUERY=
+        else
+            MK_SYNC_SECTIONS_QUERY=$(for section in $sections; do eval "sql_$section" ; done)
+            MK_ASYNC_SECTIONS_QUERY=$(for section in $asections; do eval "sql_$section" ; done)
+
+        fi
+
+        logging "[${MK_SID}] [do_checks]" "Note: async sections are executed as sync sections"\
+                "Excluded: $excluded" "Sections: $sections" "Async sections: $asections"
 
     fi
     export MK_ASYNC_SECTIONS_QUERY
 
-    if [ "$MK_ORA_LOGGING" = "1" ]; then
-        logging "[${MK_SID}] [do_checks]" "Testmode: $(echo \
-                "select user || ' on ' || host_name || ' instance ' || instance_name from v\$instance;" | mk_ora_sqlplus "do_checks")"
-    fi
-
-    if [ "$MK_ORA_DEBUG_CONNECT" = "1" ]; then
+    if $MK_ORA_DEBUG_CONNECT; then
         do_testmode "$sections" "$asections" 2>&1
     else
         do_sync_checks
@@ -2587,7 +2618,7 @@ export -f set_ora_env
 #   ---preliminaries--------------------------------------------------------
 
 logging "--------------------------------------------------------------------"
-if [ "$MK_ORA_LOGGING" == "1" ]; then
+if $MK_ORA_LOGGING; then
     echo "Start logging to file: $MK_VARDIR/log/mk_oracle.log" >&2
 fi
 
@@ -2677,9 +2708,9 @@ for sid in $SIDS; do
             "ORACLE_SID: ${ORACLE_SID}" "LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}"\
             "ORACLE_VERSION: ${ORACLE_VERSION} (${NUMERIC_ORACLE_VERSION})"
 
-
-    db_connect=$(mk_ora_db_connect "$sid")
+    # MK_SID is feauture replacement for sid
     export MK_SID=$sid
+    db_connect=$(mk_ora_db_connect "$MK_SID")
     export MK_DB_CONNECT=$db_connect
 
     do_checks
@@ -2706,4 +2737,5 @@ for remote_instance in $REMOTE_INSTANCES; do
     export MK_PIGGYBACK_HOST=$piggyback_host
 
     do_checks
+    do_custom_sqls
 done

@@ -115,7 +115,7 @@ def vnx_quotas_renaming(name, mappings):
 def inventory_vnx_quotas(parsed):
     discovery = []
     settings = host_extra_conf(host_name(), discovery_rules_vnx_quotas)
-    for name in parsed["quotas"].iterkeys():
+    for name in parsed["quotas"]:
         dms, mp = name.split(" ")
         if settings:
             dms = vnx_quotas_renaming(dms, settings[0].get("dms_names"))

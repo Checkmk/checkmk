@@ -75,14 +75,14 @@ def discovery_netapp_api_fan_summary(parsed):
 def _get_fans_with_cooling(fans):
     return {
         key: fan
-        for key, fan in fans.iteritems()
+        for key, fan in fans.items()
         if fan.get("cooling-element-is-not-installed") != "true"
     }
 
 
 def _get_failed_cooling_elements(fans):
     erred_fans = []
-    for key, value in fans.iteritems():
+    for key, value in fans.items():
         if value["cooling-element-is-error"] == "true":
             erred_fans.append(_format_item(key))
     return erred_fans

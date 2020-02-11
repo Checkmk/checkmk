@@ -7,11 +7,13 @@
 #include <shlobj.h>  // known path
 #include <versionhelpers.h>
 #include <windows.h>
+#include <yaml-cpp/yaml.h>
 
 #include <atomic>
 #include <filesystem>
 #include <string>
 
+#include "cap.h"
 #include "cfg.h"
 #include "cfg_details.h"
 #include "cma_core.h"
@@ -26,7 +28,6 @@
 #include "tools/_raii.h"     // on out
 #include "tools/_tgt.h"      // we need IsDebug
 #include "windows_service_api.h"
-#include "yaml-cpp/yaml.h"
 
 namespace cma::cfg {
 using ConfigRepo = MicroRepo<cma::cfg::details::ConfigInfo>;
@@ -46,6 +47,7 @@ namespace cma {
 namespace details {
 
 // internal and hidden global variables
+// #GLOBAL x2
 bool G_Service = false;  // set to true only when we run service
 bool G_Test = false;     // set to true only when we run watest
 
@@ -656,29 +658,146 @@ void Folders::cleanAll() {
     private_logs_.clear();
 }
 
+CleanMode GetCleanDataFolderMode() {
+    auto mode_text = GetVal(groups::kSystem, vars::kCleanupUninstall,
+                            std::string(values::kCleanupSmart));
+    if (cma::tools::IsEqual(mode_text, values::kCleanupNone))
+        return CleanMode::none;
+
+    if (cma::tools::IsEqual(mode_text, values::kCleanupSmart))
+        return CleanMode::smart;
+
+    if (cma::tools::IsEqual(mode_text, values::kCleanupAll))
+        return CleanMode::all;
+
+    return CleanMode::none;
+}
+
+static void RemoveCapGeneratedFile() {
+    namespace fs = std::filesystem;
+    auto [target_cap, ignore_it] = cap::GetInstallPair(files::kCapFile);
+    XLOG::l.i("Removing generated files...");
+
+    std::error_code ec;
+    if (!fs::exists(target_cap, ec)) return;  // nothing to do
+
+    XLOG::l.i("Removing files from the cap '{}' file...",
+              target_cap.u8string());
+
+    std::vector<std::wstring> files_on_disk;
+    cap::Process(target_cap.u8string(), cap::ProcMode::remove, files_on_disk);
+    XLOG::l.i("Removed [{}] files from the cap file.", files_on_disk.size());
+}
+
+static void RemoveOwnGeneratedFile() {
+    namespace fs = std::filesystem;
+
+    auto [target_yml_example, ignore_it_again] = cap::GetExampleYmlNames();
+    std::error_code ec;
+
+    if (!fs::exists(target_yml_example, ec)) return;  // nothing to do
+
+    XLOG::l.i("Removing yml files.");
+    fs::path user_yml = GetUserDir();
+    user_yml /= files::kUserYmlFile;
+    if (cap::AreFilesSame(target_yml_example, user_yml)) {
+        XLOG::l.i("Removing user yml files.");
+        fs::remove(user_yml, ec);
+    }
+    XLOG::l.i("Removing example yml files.");
+    fs::remove(target_yml_example, ec);
+}
+
+static void RemoveDirs(std::filesystem::path path) {
+    namespace fs = std::filesystem;
+    std::error_code ec;
+    auto del_dirs = details::RemovableDirTable();
+    for (auto& d : del_dirs) fs::remove_all(path / d, ec);
+
+    auto std_dirs = details::AllDirTable();
+    for (auto& d : std_dirs) fs::remove(path / d, ec);
+}
+
+// This function should be tested only manually
+bool CleanDataFolder(CleanMode mode) {
+    namespace fs = std::filesystem;
+
+    std::error_code ec;
+    fs::path path = cma::cfg::GetUserDir();
+    if (!fs::exists(path / dirs::kBakery, ec) ||
+        !fs::exists(path / dirs::kUserPlugins, ec)) {
+        XLOG::l.w(
+            "Data Folder '{}' looks as invalid/damaged, processing is stopped",
+            path.u8string());
+        return false;
+    }
+
+    switch (mode) {
+        case CleanMode::none:
+            XLOG::details::LogWindowsEventAlways(XLOG::EventLevel::information,
+                                                 99, "No cleaning");
+            break;
+
+        case CleanMode::smart: {
+            XLOG::details::LogWindowsEventInfo(
+                99, "Removing SMART from the Program Data Folder");
+            RemoveCapGeneratedFile();
+            RemoveOwnGeneratedFile();
+            RemoveDirs(path);
+        } break;
+
+        case CleanMode::all:
+            XLOG::details::LogWindowsEventInfo(
+                99, "Removing All from the Program Data Folder");
+            fs::remove_all(path, ec);
+            break;
+    }
+
+    return true;
+}
+
+std::vector<std::wstring_view> AllDirTable() {
+    return {//
+            // may not contain user content
+            dirs::kBakery,   // config file(s)
+            dirs::kUserBin,  // placeholder for ohm
+            dirs::kBackup,   // backed up files
+            dirs::kTemp,     //
+            dirs::kInstall,  // for installing data
+            dirs::kUpdate,   // for incoming MSI
+
+            // may contain user content
+            dirs::kState,          // state folder
+            dirs::kSpool,          // keine Ahnung
+            dirs::kUserPlugins,    // user plugins
+            dirs::kLocal,          // user local plugins
+            dirs::kMrpe,           // for incoming mrpe tests
+            dirs::kLog,            // logs are located here
+            dirs::kPluginConfig};  //
+}
+
+std::vector<std::wstring_view> RemovableDirTable() {
+    return {
+        dirs::kBakery,   // config file(s)
+        dirs::kUserBin,  // placeholder for ohm
+        dirs::kBackup,   // backed up files
+        dirs::kTemp,     //
+        dirs::kInstall,  // for installing data
+        dirs::kUpdate    // for incoming MSI
+    };                   //
+}
+
 //
 // Not API, but quite important
 // Create project defined Directory Structure in the Data Folder
 // gtest[+] indirectly
 // Returns error code
-static int CreateTree(const std::filesystem::path& base_path) noexcept {
+int CreateTree(const std::filesystem::path& base_path) noexcept {
     namespace fs = std::filesystem;
 
     // directories to be created
     // should be more clear defined in cfg_info
-    auto dir_list = {dirs::kBakery,         // config file(s)
-                     dirs::kUserBin,        // placeholder for ohm
-                     dirs::kBackup,         // backed up files
-                     dirs::kState,          // state folder
-                     dirs::kSpool,          // keine Ahnung
-                     dirs::kUserPlugins,    // user plugins
-                     dirs::kLocal,          // user local plugins
-                     dirs::kTemp,           //
-                     dirs::kInstall,        // for installing data
-                     dirs::kUpdate,         // for incoming MSI
-                     dirs::kMrpe,           // for incoming mrpe tests
-                     dirs::kLog,            // logs are located here
-                     dirs::kPluginConfig};  //
+    auto dir_list = AllDirTable();
 
     for (auto dir : dir_list) {
         std::error_code ec;
@@ -1712,12 +1831,11 @@ LoadCfgStatus ConfigInfo::loadAggregated(const std::wstring& config_filename,
 
 // LOOOONG operation
 // when failed old config retained
-bool ConfigInfo::loadDirect(const std::filesystem::path& FullPath) {
+bool ConfigInfo::loadDirect(const std::filesystem::path& file) {
     namespace fs = std::filesystem;
     int error = 0;
-    auto file = FullPath;
 
-    fs::path fpath = file;
+    const fs::path& fpath = file;
     std::error_code ec;
     if (!fs::exists(fpath, ec)) {
         XLOG::l("File {} not found, code = [{}] '{}'", fpath.u8string(),
@@ -1728,16 +1846,14 @@ bool ConfigInfo::loadDirect(const std::filesystem::path& FullPath) {
 
     // we will load when error happens, or time changed or name changed
     bool load_required =
-        ec.value() || ftime != root_yaml_time_ || file != root_yaml_path_;
+        ec.value() != 0 || ftime != root_yaml_time_ || file != root_yaml_path_;
 
     if (!load_required) {
         return ok_;
     }
 
     auto new_yaml = LoadAndCheckYamlFile(file, FallbackPolicy::kNone, &error);
-    if (!new_yaml.size()) {
-        return false;
-    }
+    if (0 == new_yaml.size()) return false;
 
     std::lock_guard lk(lock_);
     root_yaml_time_ = ftime;
@@ -1746,12 +1862,11 @@ bool ConfigInfo::loadDirect(const std::filesystem::path& FullPath) {
     XLOG::d.t("Loaded Config from  {}", file.u8string());
 
     // setting up paths  to the other files
-    user_yaml_path_ = FullPath;
-    root_yaml_time_ = std::filesystem::last_write_time(FullPath);
+    user_yaml_path_ = file;
+    root_yaml_time_ = std::filesystem::last_write_time(file);
     user_yaml_path_.clear();
     user_yaml_time_ = decltype(user_yaml_time_)::min();
     bakery_yaml_path_.clear();
-    user_yaml_time_ = user_yaml_time_;
     aggregated_ = false;
     ok_ = true;
     uniq_id_++;
@@ -1762,8 +1877,6 @@ bool ConfigInfo::loadDirect(const std::filesystem::path& FullPath) {
 
 namespace cma::cfg {
 bool IsIniFileFromInstaller(const std::filesystem::path& filename) {
-    namespace fs = std::filesystem;
-
     auto data = cma::tools::ReadFileInVector(filename);
     if (!data.has_value()) return false;
 
@@ -1771,16 +1884,17 @@ bool IsIniFileFromInstaller(const std::filesystem::path& filename) {
     if (data->size() < base.length()) return false;
 
     auto content = data->data();
-    return !memcmp(content, base.data(), base.length());
+    return 0 == memcmp(content, base.data(), base.length());
 }
 
 // generates standard agent time string
 std::string ConstructTimeString() {
     using namespace std::chrono;
+    constexpr uint32_t k1000 = 1000;
     auto cur_time = system_clock::now();
     auto in_time_t = system_clock::to_time_t(cur_time);
     std::stringstream sss;
-    auto ms = duration_cast<milliseconds>(cur_time.time_since_epoch()) % 1000;
+    auto ms = duration_cast<milliseconds>(cur_time.time_since_epoch()) % k1000;
     auto loc_time = std::localtime(&in_time_t);
     auto p_time = std::put_time(loc_time, "%Y-%m-%d %T");
     sss << p_time << "." << std::setfill('0') << std::setw(3) << ms.count()
@@ -1792,7 +1906,7 @@ std::string ConstructTimeString() {
 // makes the name of install.protocol file
 // may return empty path
 std::filesystem::path ConstructInstallFileName(
-    const std::filesystem::path& dir) noexcept {
+    const std::filesystem::path& dir) {
     namespace fs = std::filesystem;
     if (dir.empty()) {
         XLOG::d("Attempt to create install protocol in current folder");
@@ -1805,9 +1919,7 @@ std::filesystem::path ConstructInstallFileName(
 
 bool IsNodeNameValid(std::string_view name) {
     if (name.empty()) return true;
-    if (name[0] == '_') return false;
-
-    return true;
+    return name[0] != '_';
 }
 
 int RemoveInvalidNodes(YAML::Node node) {
@@ -1908,12 +2020,13 @@ bool PatchRelativePath(YAML::Node Yaml, const std::string& group_name,
 
 constexpr std::string_view kWmicUninstallCommand =
     "wmic product where name=\"{}\" call uninstall /nointeractive";
-std::string CreateWmicCommand(std::string_view product_name) noexcept {
+
+std::string CreateWmicCommand(std::string_view product_name) {
     return fmt::format(kWmicUninstallCommand, product_name);
 }
 
 std::filesystem::path CreateWmicUninstallFile(
-    std::filesystem::path temp_dir, std::string_view product_name) noexcept {
+    const std::filesystem::path& temp_dir, std::string_view product_name) {
     auto file = temp_dir / "exec_uninstall.cmd";
     try {
         std::ofstream ofs(file.u8string());

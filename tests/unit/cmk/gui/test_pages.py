@@ -1,5 +1,5 @@
 import sys
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 import cmk
 import cmk.gui.pages
@@ -53,11 +53,11 @@ def test_registered_pages():
         'bookmark_lists',
         'clear_failed_notifications',
         'count_context_button',
-        'crashed_check',
         'create_dashboard',
         'create_view',
         'create_view_dashlet',
         'create_view_dashlet_infos',
+        'create_link_view_dashlet',
         'create_view_infos',
         'custom_snapins',
         'dashboard',
@@ -70,12 +70,13 @@ def test_registered_pages():
         'edit_dashboard',
         'edit_dashboards',
         'edit_dashlet',
+        'clone_dashlet',
         'edit_view',
         'edit_views',
         'export_views',
         'fetch_agent_output',
         'graph_dashlet',
-        'gui_crash',
+        'crash',
         'host_inv_api',
         'host_service_graph_popup',
         'index',
@@ -85,7 +86,6 @@ def test_registered_pages():
         'mobile',
         'mobile_view',
         'noauth:automation',
-        'noauth:pnp_template',
         'noauth:run_cron',
         'notify',
         'prediction_graph',
@@ -117,16 +117,16 @@ def test_registered_pages():
         'wato_ajax_profile_repl',
         'webapi',
         'werk',
+        'ajax_graph',
+        'ajax_graph_hover',
+        'ajax_render_graph_content',
     ]
 
     if not cmk.is_raw_edition():
         expected_pages += [
-            'ajax_graph',
-            'ajax_graph_hover',
             'ajax_metric_choice',
             'ajax_pagetype_add_element',
             'ajax_popup_add_metric_to_graph',
-            'ajax_render_graph_content',
             'ajax_scalar_choice',
             'combined_graphs',
             'create_report',

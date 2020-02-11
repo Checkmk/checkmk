@@ -177,7 +177,7 @@ def parse_legacy_docker_node_info(info):  # pylint: disable=too-many-branches
             pass
     # reconstruct labels (they where not in "k: v" format)
     parsed["Labels"] = []
-    for k in sorted(parsed.keys()):  # pylint: disable=consider-iterating-dictionary
+    for k in sorted(parsed):  # pylint: disable=consider-iterating-dictionary
         if k.startswith("Labels") and k != "Labels":
             parsed["Labels"].append(k[6:] + parsed.pop(k))
     # reconstruct swarm info:
@@ -361,7 +361,7 @@ def parse_legacy_docker_node_images(subsections):
         subsections.get("image_inspect", []))
     containers = parse_legacy_docker_subsection_containers(subsections.get("containers", []))
 
-    for image_id, pref_info in image_inspect.iteritems():
+    for image_id, pref_info in image_inspect.items():
         image = images.setdefault(image_id, {})
         image["Id"] = image_id
         labels = pref_info.get("Config", {}).get("Labels") or {}
@@ -381,19 +381,19 @@ def parse_legacy_docker_node_images(subsections):
         image["RepoDigests"] = repodigests
 
     images_lookup = {}
-    for image_id, image in images.iteritems():
+    for image_id, image in images.items():
         image["amount_containers"] = 0
         image.setdefault("Labels", {})
         for reta in image.get("RepoTags", []):
             images_lookup[reta] = image
             images_lookup[_legacy_docker_trunk_id(image_id) + ':latest'] = image
 
-    for image_id, labels in image_labels.iteritems():
+    for image_id, labels in image_labels.items():
         image = images.get(_legacy_docker_trunk_id(image_id))
         if image is not None and labels is not None:
             image["Labels"].update(labels)
 
-    for cont in containers.itervalues():
+    for cont in containers.values():
         if 'Image' in cont:
             image_repotag = cont["Image"]
             if ':' not in image_repotag:

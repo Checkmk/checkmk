@@ -295,7 +295,7 @@ def df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes=None):
             block_info[metric] for (mp, block_info) in info.items() if mp in mountpoints_group)
 
     patterns = params["patterns"]
-    matching_mountpoints = mountpoints_in_group(blocks_info.keys(), patterns)
+    matching_mountpoints = mountpoints_in_group(blocks_info, patterns)
     count = len(matching_mountpoints)
     if count == 0:
         return 3, "No filesystem matching the patterns"

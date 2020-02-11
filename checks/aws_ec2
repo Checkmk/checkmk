@@ -44,7 +44,7 @@ def parse_aws_ec2(info):
     # We get exactly one entry: {INST-ID: METRICS}
     # INST-ID is the piggyback host name
     try:
-        inst_metrics = metrics.values()[-1]
+        inst_metrics = list(metrics.values())[-1]
     except IndexError:
         inst_metrics = {}
     return {EC2DefaultItemName: inst_metrics}

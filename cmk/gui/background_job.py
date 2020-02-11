@@ -1,28 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import errno
 import logging
@@ -35,8 +15,14 @@ import sys
 import time
 import traceback
 
-import psutil  # type: ignore
-from pathlib2 import Path
+import psutil  # type: ignore[import]
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+
+import six
 
 from cmk.gui.i18n import _
 import cmk
@@ -86,12 +72,12 @@ class BackgroundProcessInterface(object):
 
     def send_progress_update(self, info):
         """ The progress update is written to stdout and will be catched by the threads counterpart """
-        sys.stdout.write(info.encode("utf-8") + "\n")
+        sys.stdout.write(six.ensure_str(info) + "\n")
 
     def send_result_message(self, info):
         """ The result message is written to stdout because of log output clarity
         as well as into a distinct file, to separate this info from the rest of the context information"""
-        encoded_info = "%s\n" % info.encode("utf-8")
+        encoded_info = "%s\n" % six.ensure_str(info)
         sys.stdout.write(encoded_info)
 
         result_message_path = Path(
@@ -103,7 +89,7 @@ class BackgroundProcessInterface(object):
         """ Exceptions are written to stdout because of log output clarity
         as well as into a distinct file, to separate this info from the rest of the context information"""
         # Exceptions also get an extra newline, since some error messages tend not output a \n at the end..
-        encoded_info = "%s\n" % info.encode("utf-8")
+        encoded_info = "%s\n" % six.ensure_str(info)
         sys.stdout.write(encoded_info)
         with (Path(self.get_work_dir()) / BackgroundJobDefines.exceptions_filename).open("ab") as f:  # pylint: disable=no-member
             f.write(encoded_info)
@@ -437,10 +423,10 @@ class BackgroundJob(object):
 
     def start(self):
         try:
-            cmk.utils.store.aquire_lock(self._job_initializiation_lock)
+            store.aquire_lock(self._job_initializiation_lock)
             self._start()
         finally:
-            cmk.utils.store.release_lock(self._job_initializiation_lock)
+            store.release_lock(self._job_initializiation_lock)
 
     def _start(self):
         if self.is_active():
@@ -527,14 +513,14 @@ class JobStatus(object):
             try:
                 # Read this data with an explicit lock
                 # This prevents a race condition where an empty jobstatus.mk file is read
-                data = store.load_data_from_file(str(self._jobstatus_path), default={}, lock=True)
+                data = store.load_object_from_file(str(self._jobstatus_path), default={}, lock=True)
 
                 # Repair broken/invalid files
                 if "state" not in data:
                     data["state"] = "initialized"
                     data["started"] = time.time()
             finally:
-                cmk.utils.store.release_lock(str(self._jobstatus_path))
+                store.release_lock(str(self._jobstatus_path))
 
         data.setdefault("pid", None)
         data["loginfo"] = {}
@@ -565,7 +551,7 @@ class JobStatus(object):
 
         if params:
             try:
-                status = store.load_data_from_file(str(self._jobstatus_path), {}, lock=True)
+                status = store.load_object_from_file(str(self._jobstatus_path), {}, lock=True)
                 status.update(params)
                 store.save_mk_file(str(self._jobstatus_path), self._format_value(status))
             finally:

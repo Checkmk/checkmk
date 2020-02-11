@@ -177,37 +177,33 @@ def inventory_fortigate_node_mem(parsed):
 
 
 def check_fortigate_node_mem(item, params, parsed):
-    if item in parsed["nodes"]:
-        status = 3
-        current = parsed["nodes"][item]["memory"]
-        # This check is only able to check the used space
-        # The checkgroup "memory" might set negative values which act as levels for free space
-        # These levels are converted to used space, too..
-        if isinstance(params, dict):
-            warn, crit = map(abs, params["levels"])
-        else:
-            warn, crit = map(abs, params)
+    data = parsed.get("nodes", {}).get(item)
+    if data is None:
+        return
 
-        if current >= crit:
-            status = 2
-        elif current >= warn:
-            status = 1
-        else:
-            status = 0
+    current = data["memory"]
+    # This check is only able to check the used space
+    # The checkgroup "memory" might set negative values which act as levels for free space
+    # These levels are converted to used space, too..
+    # But that's not the rule we are using. FIXME: CMK-3581
+    if isinstance(params, dict):
+        warn, crit = map(abs, params["levels"])
+    else:
+        warn, crit = map(abs, params)
 
-        if status > 0:
-            wcsuffix = ", (warn/crit at %d/%d)" % (float(warn), float(crit))
-        else:
-            wcsuffix = ""
-
-        return status, "%s%% used%s" % (current, wcsuffix),\
-            [("mem_usage", current, warn, crit)]
+    yield check_levels(
+        current,
+        "mem_usage",  # FIXME: CMK-3581
+        (warn, crit),
+        infoname="Usage",
+        human_readable_func=get_percent_human_readable,
+    )
 
 
 check_info["fortigate_node.memory"] = {
     "inventory_function": inventory_fortigate_node_mem,
     "check_function": check_fortigate_node_mem,
-    "service_description": "Memory usage %s",
+    "service_description": "Memory %s",
     "has_perfdata": True,
     "default_levels_variable": "fortigate_node_memory_default_levels",
     "group": "fortigate_node_memory",

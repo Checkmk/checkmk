@@ -6,9 +6,27 @@ source =
     ../checkman
     ../checks
     ../cmk
-    ../cmk_base
     ../enterprise/cmk/cee
     ../tests/unit
     ../web
 branch = True
-
+# TEMPORARY HACK: We need to exclude all Python 3 stuff, not only these modules...
+omit =
+    ../agents/special/agent_aws
+    ../agents/special/agent_elasticsearch
+    ../agents/special/agent_graylog
+    ../agents/special/agent_jenkins
+    ../agents/special/agent_jira
+    ../agents/special/agent_kubernetes
+    ../agents/special/agent_prometheus
+    ../agents/special/agent_splunk
+    ../agents/special/agent_vsphere
+    ../cmk/special_agents/agent_aws.py
+    ../cmk/special_agents/agent_elasticsearch.py
+    ../cmk/special_agents/agent_graylog.py
+    ../cmk/special_agents/agent_jenkins.py
+    ../cmk/special_agents/agent_jira.py
+    ../cmk/special_agents/agent_kubernetes.py
+    ../cmk/special_agents/agent_splunk.py
+    ../cmk/special_agents/agent_vsphere.py
+    ../enterprise/cmk/cee/dcd/connectors/utils.py

@@ -36,13 +36,13 @@ class RowRenderer;
 class TimePointerColumn : public TimeColumn {
 public:
     TimePointerColumn(const std::string &name, const std::string &description,
-                      const time_t *number)
-        : TimeColumn(name, description, -1, -1, -1, 0), _number(number) {}
+                      const time_t *number, const Column::Offsets &offsets)
+        : TimeColumn(name, description, offsets), _number(number) {}
 
 private:
     const time_t *const _number;
 
-    std::chrono::system_clock::time_point getRawValue(
+    [[nodiscard]] std::chrono::system_clock::time_point getRawValue(
         Row /* row */) const override {
         return std::chrono::system_clock::from_time_t(*_number);
     }

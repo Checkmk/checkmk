@@ -4,6 +4,8 @@
 //
 #include "pch.h"
 
+#include <yaml-cpp/yaml.h>
+
 #include <filesystem>
 #include <iostream>
 
@@ -16,7 +18,6 @@
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_tgt.h"
-#include "yaml-cpp/yaml.h"
 namespace cma {
 AppType AppDefaultType() { return AppType::test; }
 

@@ -26,6 +26,11 @@ std::wstring FindServiceImagePath(std::wstring_view service_name) noexcept;
 std::filesystem::path ExtractPathFromServiceName(
     std::wstring_view service_name) noexcept;
 
+enum class CleanMode { none, smart, all };
+
+CleanMode GetCleanDataFolderMode();
+bool CleanDataFolder(CleanMode mode);
+
 class Folders {
 public:
     // if ServiceValidName set, then we MUST find path
@@ -108,7 +113,7 @@ public:
 private:
     // make [recursive] folder in windows
     // returns path if folder was created successfully
-    std::filesystem::path makeDefaultDataFolder(
+    static std::filesystem::path makeDefaultDataFolder(
         std::wstring_view AgentDataFolder, CreateMode mode);
     std::filesystem::path root_;          // where is root
     std::filesystem::path data_;          // ProgramData
@@ -124,6 +129,11 @@ private:
     FRIEND_TEST(CmaCfg, LogFileLocation);
 #endif
 };
+
+std::vector<std::wstring_view> AllDirTable();
+std::vector<std::wstring_view> RemovableDirTable();
+
+int CreateTree(const std::filesystem::path& base_path) noexcept;
 
 }  // namespace cma::cfg::details
 
@@ -369,7 +379,7 @@ public:
     static bool smartMerge(YAML::Node Target, YAML::Node Src, Combine combine);
 
     // THIS IS ONLY FOR TESTING
-    bool loadDirect(const std::filesystem::path& FullPath);
+    bool loadDirect(const std::filesystem::path& file);
 
     uint64_t uniqId() const noexcept { return uniq_id_; }
 

@@ -1,28 +1,9 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 """Modes for managing folders"""
 
 import abc
@@ -32,6 +13,7 @@ import six
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.utils as utils
+import cmk.gui.escaping as escaping
 from cmk.gui.table import table_element
 import cmk.gui.weblib as weblib
 import cmk.gui.forms as forms
@@ -234,7 +216,7 @@ class ModeFolder(WatoMode):
         self._folder.show_breadcrump()
 
         if not self._folder.may("read"):
-            html.message(
+            html.show_message(
                 html.render_icon("autherr", cssclass="authicon") + " " +
                 self._folder.reason_why_may_not("read"))
 
@@ -245,7 +227,7 @@ class ModeFolder(WatoMode):
 
         if not self._folder.has_hosts():
             if self._folder.is_search_folder():
-                html.message(_("No matching hosts found."))
+                html.show_message(_("No matching hosts found."))
             elif not self._folder.has_subfolders() and self._folder.may("write"):
                 self._show_empty_folder_menu()
 
@@ -302,7 +284,7 @@ class ModeFolder(WatoMode):
             self._show_subfolder_buttons(subfolder)
             html.close_div()  # hoverarea
         else:
-            html.icon(html.strip_tags(subfolder.reason_why_may_not("read")),
+            html.icon(escaping.strip_tags(subfolder.reason_why_may_not("read")),
                       "autherr",
                       class_=["autherr"])
             html.div('', class_="hoverarea")
@@ -404,8 +386,7 @@ class ModeFolder(WatoMode):
 
         show_checkboxes = html.request.var('show_checkboxes', '0') == '1'
 
-        hostnames = self._folder.hosts().keys()
-        hostnames.sort(key=utils.key_num_split)
+        hostnames = sorted(self._folder.hosts().keys(), key=utils.key_num_split)
         search_text = html.request.var("search")
 
         # Helper function for showing bulk actions. This is needed at the bottom
@@ -474,7 +455,8 @@ class ModeFolder(WatoMode):
         html.hidden_fields()
         html.end_form()
 
-        selected = weblib.get_rowselection('wato-folder-/' + self._folder.path())
+        selected = config.user.get_rowselection(weblib.selection_id(),
+                                                'wato-folder-/' + self._folder.path())
 
         row_count = len(rendered_hosts)
         headinfo = "%d %s" % (row_count, _("host") if row_count == 1 else _("hosts"))
@@ -550,7 +532,7 @@ class ModeFolder(WatoMode):
                 else:
                     tdclass, tdcontent = attr.paint(effective.get(attrname), hostname)
                     tdclass += " inherited"
-                table.cell(attr.title(), html.attrencode(tdcontent), css=tdclass)
+                table.cell(attr.title(), escaping.escape_attribute(tdcontent), css=tdclass)
 
         # Am I authorized?
         reason = host.reason_why_may_not("read")
@@ -559,7 +541,7 @@ class ModeFolder(WatoMode):
             title = _("You have permission to this host.")
         else:
             icon = "autherr"
-            title = html.strip_tags(reason)
+            title = escaping.strip_tags(reason)
 
         table.cell(_('Auth'), html.render_icon(icon, title), css="buttons", sortable=False)
 

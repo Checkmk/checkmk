@@ -1,34 +1,15 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+import io
 import six
 
 import cmk.utils.paths
-import cmk.utils.store
+import cmk.utils.store as store
 
 import cmk.gui.config as config
 from cmk.gui.table import table_element
@@ -125,18 +106,17 @@ class ModeIcons(WatoMode):
 
     def _upload_icon(self, icon_info):
         # Add the icon category to the PNG comment
-        from PIL import Image, PngImagePlugin
-        from StringIO import StringIO
-        im = Image.open(StringIO(icon_info['icon'][2]))
+        from PIL import Image, PngImagePlugin  # type: ignore[import]
+        im = Image.open(io.BytesIO(icon_info['icon'][2]))
         im.info['Comment'] = icon_info['category']
         meta = PngImagePlugin.PngInfo()
-        for k, v in im.info.iteritems():
+        for k, v in im.info.items():
             if isinstance(v, (six.binary_type, six.text_type)):
                 meta.add_text(k, v, 0)
 
         # and finally save the image
         dest_dir = "%s/local/share/check_mk/web/htdocs/images/icons" % cmk.utils.paths.omd_root
-        cmk.utils.store.makedirs(dest_dir)
+        store.makedirs(dest_dir)
         try:
             file_name = os.path.basename(icon_info['icon'][0])
             im.save(dest_dir + '/' + file_name, 'PNG', pnginfo=meta)

@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import division
 import time
@@ -46,7 +26,6 @@ from cmk.gui.valuespec import (
     ListChoice,
     Optional,
     Timerange,
-    RadioChoice,
 )
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -233,7 +212,7 @@ def get_av_display_options(what):
          Tuple(
              title=_("Format time ranges"),
              elements=[
-                 RadioChoice(
+                 DropdownChoice(
                      choices=[
                          ("both", _("Percent and time")),
                          ("perc", _("Only percent")),
@@ -801,8 +780,8 @@ def compute_availability(what, av_rawdata, avoptions):
     grouping = avoptions["grouping"]
 
     # Note: in case of timeline, we have data from exacly one host/service
-    for site_host, site_host_entry in reclassified_rawdata.iteritems():
-        for service, service_entry in site_host_entry.iteritems():
+    for site_host, site_host_entry in reclassified_rawdata.items():
+        for service, service_entry in site_host_entry.items():
 
             if grouping == "host":
                 group_ids = [site_host]
@@ -920,11 +899,9 @@ def compute_availability(what, av_rawdata, avoptions):
 
             availability_table.append(availability_entry)
 
-    availability_table.sort(key=key_av_entry)
-
     # Apply filters
     filtered_table = []
-    for row in availability_table:
+    for row in sorted(availability_table, key=key_av_entry):
         if pass_availability_filter(row, avoptions):
             filtered_table.append(row)
     return filtered_table
@@ -938,10 +915,10 @@ def reclassify_by_annotations(what, av_rawdata):
         return av_rawdata
 
     reclassified_rawdata = {}
-    for (site, host_name), service_entries in av_rawdata.iteritems():
+    for (site, host_name), service_entries in av_rawdata.items():
         new_entries = {}
         reclassified_rawdata[(site, host_name)] = new_entries
-        for service_description, service_history in service_entries.iteritems():
+        for service_description, service_history in service_entries.items():
             cycles = [((site, host_name, service_description or None), "in_downtime")]
             if what == "service":
                 cycles = [((site, host_name, None), "in_host_downtime")] + cycles
@@ -1063,10 +1040,9 @@ def compute_availability_groups(what, av_data, avoptions):
                 else:
                     title = group_titles.get(group_id, group_id)
                 titled_groups.append((title, group_id))  ## ACHTUNG
-        titled_groups.sort(key=lambda x: x[1])
 
         # 3. Loop over all groups and render them
-        for title, group_id in titled_groups:
+        for title, group_id in sorted(titled_groups, key=lambda x: x[1]):
             group_table = []
             for entry in av_data:
                 group_ids = entry["groups"]
@@ -1148,7 +1124,7 @@ def melt_short_intervals(entries, duration, dont_merge):
 
 def save_annotations(annotations):
     path = cmk.utils.paths.var_dir + "/availability_annotations.mk"
-    store.save_data_to_file(path, annotations)
+    store.save_object_to_file(path, annotations)
 
 
 def load_annotations(lock=False):
@@ -1157,7 +1133,7 @@ def load_annotations(lock=False):
         # Support legacy old wrong name-clashing path
         path = cmk.utils.paths.var_dir + "/web/statehist_annotations.mk"
 
-    return store.load_data_from_file(path, {}, lock)
+    return store.load_object_from_file(path, default={}, lock=lock)
 
 
 def update_annotations(site_host_svc, annotation, replace_existing):
@@ -1819,8 +1795,6 @@ def get_bi_leaf_history(aggr_rows, time_range, livestatus_limit):
 
 
 def compute_bi_timelines(timeline_containers, time_range, timewarp, phases_list):
-    bi.load_assumptions()
-
     if not timeline_containers:
         return timeline_containers
 

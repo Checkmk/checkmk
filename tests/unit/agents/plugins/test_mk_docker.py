@@ -1,7 +1,7 @@
 # -*- encoding: utf-8
 # pylint: disable=protected-access,redefined-outer-name
 import hashlib
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from testlib import import_module  # pylint: disable=import-error
 
 

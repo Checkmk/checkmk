@@ -1,33 +1,14 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Age,
     Dictionary,
+    DropdownChoice,
     Integer,
     MonitoringState,
     TextAscii,
@@ -44,12 +25,41 @@ from cmk.gui.plugins.wato import (
 def _parameter_valuespec_jenkins_nodes():
     return Dictionary(elements=[
         ("jenkins_offline", MonitoringState(title=_("Node state: Offline"), default_value=2)),
+        ("jenkins_mode",
+         DropdownChoice(
+             title=_("Expected mode state."),
+             help=_("Choose between Normal (Utilize this node as much "
+                    "as possible) and Exclusive (Only build jobs with label "
+                    "restrictions matching this node). The state will "
+                    "change to warning state, if the mode differs."),
+             choices=[
+                 ("NORMAL", _("Normal")),
+                 ("EXCLUSIVE", _("Exclusive")),
+             ],
+             default_value="NORMAL",
+         )),
         ('jenkins_numexecutors',
          Tuple(
              title=_("Lower level for number of executors of this node"),
              elements=[
                  Integer(title=_("Warning below")),
                  Integer(title=_("Critical below")),
+             ],
+         )),
+        ('jenkins_busyexecutors',
+         Tuple(
+             title=_("Upper level for number of busy executors of this node"),
+             elements=[
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
+             ],
+         )),
+        ('jenkins_idleexecutors',
+         Tuple(
+             title=_("Upper level for number of idle executors of this node"),
+             elements=[
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
              ],
          )),
         ('avg_response_time',

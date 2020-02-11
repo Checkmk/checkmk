@@ -31,7 +31,7 @@ base_rel_dir=agents/windows
 export CHROOT_BUILD_DIR=${CHROOT_BUILD_DIR:-build}
 export CHROOT_NAME=${CHROOT_NAME:-WinAgent}
 
-if [ ! -f "$base/agents/windows/$versionfile" ] ; then
+if [ ! -f "$base/agents/windows/$versionfile" ]; then
     echo "Error: File $base/agents/windows/$versionfile not found."
     echo "Is your Git repository up to date?"
     exit 1
@@ -54,22 +54,25 @@ echo "CHROOT_PATH is $CHROOT_PATH"
 # but the setup must be performed only by a single job.
 (
     echo "[MAKE-CHROOT LOCK] acquire"
-    flock -x -w 1800 200 || (echo "[MAKE-CHROOT LOCK] ERROR: Failed to get lock within 1800 seconds" ; exit 1)
+    flock -x -w 1800 200 || (
+        echo "[MAKE-CHROOT LOCK] ERROR: Failed to get lock within 1800 seconds"
+        exit 1
+    )
     echo "[MAKE-CHROOT LOCK] got it"
 
     # Ensure that chroot exists and is up to date:
     # ensure that versionfile exists...
-    if [ ! -f "$CHROOT_PATH/$versionfile" ] ; then
+    if [ ! -f "$CHROOT_PATH/$versionfile" ]; then
         echo "chroot version not found."
         create=yes
         #  ... and it is up to date.
     elif [ $(cat "$CHROOT_PATH/$versionfile") -ne \
-           $(cat "$base/agents/windows/$versionfile") ] ; then
+        $(cat "$base/agents/windows/$versionfile") ]; then
         echo "chroot is out of date."
         create=yes
     fi
 
-    if [ -z $create ] ; then
+    if [ -z $create ]; then
         echo "chroot is up to date."
     else
         apt-get -y install "${chroot_dependencies[@]}"
@@ -82,12 +85,12 @@ echo "CHROOT_PATH is $CHROOT_PATH"
     #
     # Do this not only during setup, because the setup is only executed once and
     # the build may be started with different SUDO_USER users.
-    if ! grep -q "\<${SUDO_USER}\>" "$CHROOT_PATH/etc/passwd" ; then
+    if ! grep -q "\<${SUDO_USER}\>" "$CHROOT_PATH/etc/passwd"; then
         ./do-chroot "useradd -lmo -u $(id -u $SUDO_USER) -s /bin/bash $SUDO_USER"
     fi
 
     # Copy windows test-specific ssh key pair from ~$SUDO_USER/.ssh to chroot.
-    if [[ "$targets" == *integrationtest* && ! -f "$CHROOT_PATH/home/$SUDO_USER/.ssh/id_rsa" ]] ; then
+    if [[ "$targets" == *integrationtest* && ! -f "$CHROOT_PATH/home/$SUDO_USER/.ssh/id_rsa" ]]; then
         $script_dir/setup-ssh
     fi
 ) 200>/var/lock/cmk-make-agent_${CHROOT_PATH//\//-}.lock
@@ -96,4 +99,4 @@ echo "[MAKE-CHROOT LOCK] released"
 # Build the Windows agent within chroot by calling the 'build-agent' script as
 # $SUDO_USER.
 ./do-chroot \
-        "/bin/su - $SUDO_USER -c bash -c 'CHROOT_NAME=$CHROOT_NAME CHROOT_PATH=$CHROOT_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR NEW_VERSION=$NEW_VERSION WORKSPACE=$WORKSPACE /$CHROOT_BUILD_DIR/agents/windows/build-agent -j${njobs} $targets'"
+    "/bin/su - $SUDO_USER -c bash -c 'CHROOT_NAME=$CHROOT_NAME CHROOT_PATH=$CHROOT_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR NEW_VERSION=$NEW_VERSION WORKSPACE=$WORKSPACE LEGACY_WINDOWS_AGENT_TEST_HOST_ADDRESS=$LEGACY_WINDOWS_AGENT_TEST_HOST_ADDRESS /$CHROOT_BUILD_DIR/agents/windows/build-agent -j${njobs} $targets'"

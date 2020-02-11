@@ -50,7 +50,7 @@ public:
 
     explicit Filter(Kind kind) : _kind(kind) {}
     virtual ~Filter();
-    Kind kind() const { return _kind; }
+    [[nodiscard]] Kind kind() const { return _kind; }
     virtual bool accepts(Row row, const contact *auth_user,
                          std::chrono::seconds timezone_offset) const = 0;
     virtual std::unique_ptr<Filter> partialFilter(
@@ -61,34 +61,34 @@ public:
     // corresponding meet/join operations. Perhaps we can even get rid of the
     // std::optional by making the lattice bounded, i.e. by providing bottom/top
     // values.
-    virtual std::optional<std::string> stringValueRestrictionFor(
+    [[nodiscard]] virtual std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const;
-    virtual std::optional<int32_t> greatestLowerBoundFor(
+    [[nodiscard]] virtual std::optional<int32_t> greatestLowerBoundFor(
         const std::string &column_name,
         std::chrono::seconds timezone_offset) const;
-    virtual std::optional<int32_t> leastUpperBoundFor(
+    [[nodiscard]] virtual std::optional<int32_t> leastUpperBoundFor(
         const std::string &column_name,
         std::chrono::seconds timezone_offset) const;
-    virtual std::optional<std::bitset<32>> valueSetLeastUpperBoundFor(
-        const std::string &column_name,
-        std::chrono::seconds timezone_offset) const;
+    [[nodiscard]] virtual std::optional<std::bitset<32>>
+    valueSetLeastUpperBoundFor(const std::string &column_name,
+                               std::chrono::seconds timezone_offset) const;
 
-    virtual std::unique_ptr<Filter> copy() const = 0;
-    virtual std::unique_ptr<Filter> negate() const = 0;
+    [[nodiscard]] virtual std::unique_ptr<Filter> copy() const = 0;
+    [[nodiscard]] virtual std::unique_ptr<Filter> negate() const = 0;
 
     /// Checks for a *syntactic* tautology.
-    virtual bool is_tautology() const = 0;
+    [[nodiscard]] virtual bool is_tautology() const = 0;
 
     /// Checks for a *syntactic* contradiction.
-    virtual bool is_contradiction() const = 0;
+    [[nodiscard]] virtual bool is_contradiction() const = 0;
 
     /// Combining the returned filters with *or* yields a filter equivalent to
     /// the current one.
-    virtual Filters disjuncts() const = 0;
+    [[nodiscard]] virtual Filters disjuncts() const = 0;
 
     /// Combining the returned filters with *and* yields a filter equivalent to
     /// the current one.
-    virtual Filters conjuncts() const = 0;
+    [[nodiscard]] virtual Filters conjuncts() const = 0;
 
     friend std::ostream &operator<<(std::ostream &os, const Filter &filter) {
         return filter.print(os);

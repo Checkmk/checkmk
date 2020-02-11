@@ -139,12 +139,12 @@ def check_livestatus_status(item, params, sections):
                                infoname=title)
 
     yield check_levels(int(status["num_hosts"]),
-                       item,
+                       "monitored_hosts",
                        params.get("levels_hosts"),
                        unit="Hosts",
                        human_readable_func=int)
     yield check_levels(int(status["num_services"]),
-                       item,
+                       "monitored_services",
                        params.get("levels_services"),
                        unit="Services",
                        human_readable_func=int)
@@ -153,9 +153,14 @@ def check_livestatus_status(item, params, sections):
     yield 0, "Core version: %s" % status["program_version"]
     yield 0, "Livestatus version: %s" % status["livestatus_version"]
 
+    # cert_valid_until should only be empty in one case that we know of so far:
+    # the value is collected via the linux special agent with the command 'date'
+    # for 32bit systems, dates after 19th Jan 2038 (32bit limit)
+    # the 'date'-command will return an error and thus no result
+    # this happens e.g. for hacky raspberry pi setups that are not officially supported
     pem_path = "/omd/sites/%s/etc/ssl/sites/%s.pem" % (item, item)
     cert_valid_until = ssl_certs.get(item, {}).get(pem_path)
-    if cert_valid_until is not None:
+    if cert_valid_until is not None and cert_valid_until != '':
         days_left = (int(cert_valid_until) - time.time()) / 86400.0
         valid_until_formatted = time.strftime("%Y-%m-%d %H:%M:%S",
                                               time.localtime(int(cert_valid_until)))

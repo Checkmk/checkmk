@@ -1,28 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import namedtuple
 
@@ -32,7 +12,7 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 import cmk.gui.notifications as notifications
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.globals import html
 from cmk.gui.valuespec import Checkbox, ListOf, CascadingDropdown, Dictionary, TextUnicode
 # Things imported here are used by pre legacy (pre 1.6) cron plugins)
@@ -53,7 +33,7 @@ def get_context_url_variables(context):
     add_vars = {}
     for filter_vars in context.values():
         add_vars.update(filter_vars)
-    return add_vars.items()
+    return list(add_vars.items())
 
 
 @snapin_registry.register
@@ -115,6 +95,11 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                  title=_("Show failed notifications"),
                  default_value=True,
              )),
+            ("show_sites_not_connected",
+             Checkbox(
+                 title=_("Display a message if sites are not connected"),
+                 default_value=True,
+             )),
         ]
 
     @classmethod
@@ -122,6 +107,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         return {
             "show_stale": True,
             "show_failed_notifications": True,
+            "show_sites_not_connected": True,
             "rows": [{
                 "query": ("hosts", {}),
                 "title": u"Hosts"
@@ -137,6 +123,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
     def show(self):
         self._show_rows()
         self._show_failed_notifications()
+        self._show_site_status()
 
     def _show_rows(self):
         rows = self._get_rows()
@@ -417,6 +404,41 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             )[0]
         except livestatus.MKLivestatusNotFoundError:
             return None
+
+    def _show_site_status(self):
+        if not self.parameters().get("show_sites_not_connected"):
+            return
+
+        sites_not_connected = [
+            site_id for site_id, site_status in sites.states().items()
+            if site_status["state"] != "online"
+        ]
+        if len(sites_not_connected) == 0:
+            return
+
+        html.open_div(class_="spacertop")
+        html.open_div(class_="tacticalalert")
+
+        message_template = ungettext("%d site is not connected", "%d sites are not connected",
+                                     len(sites_not_connected))
+        tooltip_template = ungettext(
+            "Associated hosts, services and events are not included "
+            "in the Tactical Overview. The disconnected site is %s.",
+            "Associated hosts, services and events are not included "
+            "in the Tactical Overview. The disconnected sites are %s.", len(sites_not_connected))
+        message = message_template % len(sites_not_connected)
+        tooltip = tooltip_template % ', '.join(sites_not_connected)
+
+        if config.user.may("wato.sites"):
+            url = html.makeuri_contextless([("mode", "sites")], filename="wato.py")
+            html.icon_button(url, tooltip, "sites", target="main")
+            html.a(message, target="main", href=url)
+        else:
+            html.icon(tooltip, "sites")
+            html.write_text(message)
+
+        html.close_div()
+        html.close_div()
 
     @classmethod
     def allowed_roles(cls):

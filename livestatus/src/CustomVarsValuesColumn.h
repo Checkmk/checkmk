@@ -29,6 +29,7 @@
 #include <chrono>
 #include <string>
 #include <vector>
+#include "Column.h"
 #include "ListColumn.h"
 #include "contact_fwd.h"
 enum class AttributeKind;
@@ -38,13 +39,10 @@ class Row;
 class CustomVarsValuesColumn : public ListColumn {
 public:
     CustomVarsValuesColumn(const std::string &name,
-                           const std::string &description, int indirect_offset,
-                           int extra_offset, int extra_extra_offset, int offset,
+                           const std::string &description,
+                           const Column::Offsets &offsets,
                            const MonitoringCore *mc, AttributeKind kind)
-        : ListColumn(name, description, indirect_offset, extra_offset,
-                     extra_extra_offset, offset)
-        , _mc(mc)
-        , _kind(kind) {}
+        : ListColumn(name, description, offsets), _mc(mc), _kind(kind) {}
 
     std::vector<std::string> getValue(
         Row row, const contact *auth_user,

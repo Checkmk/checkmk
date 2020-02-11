@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -32,14 +32,16 @@ import email.utils
 import re
 import socket
 import traceback
-from optparse import OptionParser
+from getpass import getpass
+from optparse import OptionParser  # pylint: disable=deprecated-module
 
 import cmk.utils.render
 import cmk.utils.password_store
+from cmk.utils.exceptions import MKException
 cmk.utils.password_store.replace_passwords()
 
 
-class Mail(object):
+class Mail:
     def __init__(self, conn, mail_id):
         self.__mail = None
         self.__timestamp = None
@@ -61,9 +63,8 @@ class Mail(object):
         return self.__timestamp
 
 
-class MailList(object):
+class MailList:
     def __init__(self, conn, id_list):
-        super(MailList, self).__init__()
         self.__conn = conn
         self.__id_list = id_list
 
@@ -82,13 +83,12 @@ class MailList(object):
         return not self.__id_list
 
 
-class LoginError(Exception):
+class LoginError(MKException):
     pass
 
 
-class ImapWrapper(object):
+class ImapWrapper:
     def __init__(self, host, user, password, use_ssl):
-        super(ImapWrapper, self).__init__()
         if use_ssl:
             self.__conn = imaplib.IMAP4_SSL(host)
         else:
@@ -100,7 +100,7 @@ class ImapWrapper(object):
     def mailboxes(self):
         mb_list = self.__conn.list()[1]
         pattern = re.compile(r'\((.*?)\) "(.*)" (.*)')
-        return [pattern.search(mb).group(3).strip("\"") for mb in mb_list]
+        return [pattern.search(mb.decode("utf-8")).group(3).strip("\"") for mb in mb_list]
 
     def __format_date(self, timestamp):
         return time.strftime("%d-%b-%Y", time.gmtime(timestamp))
@@ -229,7 +229,6 @@ def parse_args():
 
 def main(options):
     if options.password is None:
-        from getpass import getpass
         options.password = getpass()
 
     socket.setdefaulttimeout(options.timeout)
@@ -273,7 +272,7 @@ def main(options):
                         status = 2
                         status_icon = "(!!) "
                         break
-                    elif float(age) >= options.warn_age:
+                    if float(age) >= options.warn_age:
                         report_age = age
                         status = 1
                         status_icon = "(!) "
@@ -296,7 +295,7 @@ def main(options):
                     if float(age) < options.warn_new:
                         status = 0
                         break
-                    elif float(age) < options.crit_new and float(age) < float(report_age):
+                    if float(age) < options.crit_new and float(age) < float(report_age):
                         report_age = age
                         status = 1
             if status == 2:

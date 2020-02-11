@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 import cmk.notification_plugins.mail as mail
 
@@ -247,8 +247,8 @@ def mock_service_context():
         'SUBJECT': u'Check_MK: heute/CPU utilization OK -> WARN',
         'SVC_SL': u'',
         'WHAT': u'SERVICE',
-        'PARAMETER_FROM': u'check_mk@myinstance.com',
-        'PARAMETER_REPLY_TO': u'reply@myinstance.com',
+        'PARAMETER_FROM_ADDRESS': u'check_mk@myinstance.com',
+        'PARAMETER_REPLY_TO_ADDRESS': u'reply@myinstance.com',
         'PARAMETER_URL_PREFIX_AUTOMATIC': u'http',
     }
 
@@ -269,8 +269,6 @@ Service Metrics:     \n\
 
 # TODO: validate the HTML content
 def test_mail_content_from_service_context(mocker):
-    mocker.patch("cmk.notification_plugins.mail.render_pnp_graphs", lambda context: [])
-
     # The items below are added by the mail plugin
     context = mock_service_context()
     assert "EVENT_TXT" not in context
@@ -394,7 +392,6 @@ Metrics:             \n\
 
 
 def test_mail_content_from_host_context(mocker):
-    mocker.patch("cmk.notification_plugins.mail.render_pnp_graphs", lambda context: [])
     mocker.patch("cmk.notification_plugins.mail.socket.getfqdn", lambda: 'mysite.com')
 
     context = mock_host_context()
@@ -425,6 +422,6 @@ def test_mail_content_from_host_context(mocker):
     assert content.mailto == 'test@abc.de'
     assert content.subject == 'Check_MK: heute - DOWN -> UP'
     assert content.from_address == u'checkmk@mysite.com'
-    assert content.reply_to is None
+    assert content.reply_to == u''
     assert content.content_txt == HOST_CONTENT_TXT
     assert content.attachments == []

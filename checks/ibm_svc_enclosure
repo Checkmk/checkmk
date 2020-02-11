@@ -58,7 +58,7 @@ def parse_ibm_svc_enclosure(info):
         return {}
 
     parsed = {}
-    for id_, rows in parse_ibm_svc_with_header(info, dflt_header).iteritems():
+    for id_, rows in parse_ibm_svc_with_header(info, dflt_header).items():
         try:
             data = rows[0]
         except IndexError:

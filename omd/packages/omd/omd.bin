@@ -1,4 +1,4 @@
-#!/omd/versions/###OMD_VERSION###/bin/python
+#!/omd/versions/###OMD_VERSION###/bin/python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 #
@@ -26,11 +26,6 @@
 """This file is part of OMD - The Open Monitoring Distribution
 
 isort:skip_file"""
-
-# Disable YAPF for the moment. There is a larger commit pending that
-# needs to be merged before YAPFing this file.
-
-# yapf: disable
 
 import os
 import sys

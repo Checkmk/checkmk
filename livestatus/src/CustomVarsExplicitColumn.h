@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
+#include "Column.h"
 #include "StringColumn.h"
 class MonitoringCore;
 class Row;
@@ -35,14 +36,12 @@ class CustomVarsExplicitColumn : public StringColumn {
 public:
     CustomVarsExplicitColumn(const std::string &name,
                              const std::string &description,
-                             int indirect_offset, int extra_offset,
-                             int extra_extra_offset, int offset,
+                             const Column::Offsets &offsets,
                              const MonitoringCore *mc, const char *varname)
-        : StringColumn(name, description, indirect_offset, extra_offset,
-                       extra_extra_offset, offset)
+        : StringColumn(name, description, offsets)
         , _mc(mc)
         , _varname(varname) {}
-    std::string getValue(Row row) const override;
+    [[nodiscard]] std::string getValue(Row row) const override;
 
 private:
     const MonitoringCore *const _mc;

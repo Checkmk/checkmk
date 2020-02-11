@@ -59,7 +59,7 @@ def _azure_vms_get_status(resource, desired_type):
     return "unknown", ""
 
 
-@get_parsed_item_data
+@get_data_or_go_stale
 def check_azure_virtualmachines(_item, params, resource):
 
     map_provisioning_states = params.get("map_provisioning_states", {})
@@ -143,7 +143,7 @@ def check_azure_virtualmachines_summary(_summary, params, parsed):
 
     levels_provisioning = params.get("levels_provisioning", {})
     state, txt = 0, []
-    for prov_state in sorted(set(provisionings + _AZURE_VM_STATES_PROV.keys())):
+    for prov_state in sorted(set(provisionings + list(_AZURE_VM_STATES_PROV))):
         count = provisionings.count(prov_state)
         prov_state_levels = levels_provisioning.get(prov_state, {})
         state_p, msg_p = _azure_vms_check_levels(count, prov_state, prov_state_levels)
@@ -154,7 +154,7 @@ def check_azure_virtualmachines_summary(_summary, params, parsed):
 
     levels_power = params.get("levels_power", {})
     state, txt = 0, []
-    for pow_state in sorted(set(powers + _AZURE_VM_STATES_POWER.keys())):
+    for pow_state in sorted(set(powers + list(_AZURE_VM_STATES_POWER))):
         count = powers.count(pow_state)
         pow_state_levels = levels_power.get(pow_state, {})
         state_p, msg_p = _azure_vms_check_levels(count, pow_state, pow_state_levels)

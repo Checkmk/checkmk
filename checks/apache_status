@@ -199,7 +199,7 @@ def check_apache_status(item, params, info):
                                             data_dict["Total kBytes"] * 1024)
         del data_dict["Total kBytes"]
 
-    data = data_dict.items()
+    data = list(data_dict.items())
 
     worst_state = 0
     output = []
@@ -209,7 +209,7 @@ def check_apache_status(item, params, info):
     data.sort(key=lambda x: _apache_status_fields.get(x[0], (0, None))[0])
 
     for key, value in data:
-        if key not in _apache_status_fields.keys():
+        if key not in _apache_status_fields:
             continue
 
         # Don't process the scoreboard data directly. Print states instead

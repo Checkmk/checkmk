@@ -46,7 +46,7 @@ def live(user=None, force_authuser=None):
     return g.live
 
 
-SiteStatus = NewType('SiteStatus', Dict[bytes, Any])
+SiteStatus = NewType('SiteStatus', Dict[str, Any])
 SiteStates = NewType('SiteStates', Dict[SiteId, SiteStatus])
 
 
@@ -66,7 +66,7 @@ def disconnect():
 
 # TODO: This should live somewhere else, it's just a random helper...
 def all_groups(what):
-    # type: (bytes) -> List[Tuple[Text, Text]]
+    # type: (str) -> List[Tuple[Text, Text]]
     """Returns a list of host/service/contact groups (pairs of name/alias)
 
     Groups are collected via livestatus from all sites. In case no alias is defined
@@ -204,7 +204,7 @@ def _site_config_for_livestatus(site_id, site):
 
 
 def encode_socket_for_livestatus(site_id, site):
-    # type: (SiteId, SiteConfiguration) -> bytes
+    # type: (SiteId, SiteConfiguration) -> str
     socket_spec = site["socket"]
     family_spec, address_spec = socket_spec
 
@@ -236,7 +236,7 @@ def update_site_states_from_dead_sites():
 
 
 def _status_host_state_name(shs):
-    # type: (Optional[int]) -> bytes
+    # type: (Optional[int]) -> str
     return _STATUS_NAMES.get(shs, "unknown")
 
 

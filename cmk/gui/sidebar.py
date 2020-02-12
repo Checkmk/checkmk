@@ -839,8 +839,7 @@ def ajax_set_snapin_site():
         raise MKUserError(None, _("Invalid ident"))
 
     site = html.request.var("site")
-    site_choices = dict([ ("", _("All sites")), ] \
-                 +  config.site_choices())
+    site_choices = dict([("", _("All sites"))] + config.site_choices())
 
     if site not in site_choices:
         raise MKUserError(None, _("Invalid site"))

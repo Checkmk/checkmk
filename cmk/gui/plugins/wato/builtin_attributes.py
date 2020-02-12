@@ -251,13 +251,14 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
 
     def valuespec(self):
         return SNMPCredentials(
-                help =  _("Using this option you can configure the community which should be used when "
-                          "contacting this host via SNMP v1/v2 or v3. It is possible to configure the SNMP community by "
-                          "using the <a href=\"%s\">SNMP Communities</a> ruleset, but when you configure "
-                          "a community here, this will override the community defined by the rules.") % \
-                            "wato.py?mode=edit_ruleset&varname=snmp_communities",
-                default_value = None,
-            )
+            help=
+            _("Using this option you can configure the community which should be used when "
+              "contacting this host via SNMP v1/v2 or v3. It is possible to configure the SNMP community by "
+              "using the <a href=\"%s\">SNMP Communities</a> ruleset, but when you configure "
+              "a community here, this will override the community defined by the rules.") %
+            "wato.py?mode=edit_ruleset&varname=snmp_communities",
+            default_value=None,
+        )
 
 
 @host_attribute_registry.register

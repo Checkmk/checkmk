@@ -67,6 +67,7 @@ RUN yum -y install \
 RUN yum -y makecache \
     && yum -y install \
     joe \
+    ping \
     vim \
     && yum clean all
 

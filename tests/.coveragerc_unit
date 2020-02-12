@@ -27,6 +27,7 @@ omit =
     ../cmk/special_agents/agent_jenkins.py
     ../cmk/special_agents/agent_jira.py
     ../cmk/special_agents/agent_kubernetes.py
+    ../cmk/special_agents/agent_prometheus.py
     ../cmk/special_agents/agent_splunk.py
     ../cmk/special_agents/agent_vsphere.py
     ../enterprise/cmk/cee/dcd/connectors/utils.py

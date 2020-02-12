@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 def percentile(array, q):
     """
     Return the q-th percentile of the data in array. Using midpoint interpolation.

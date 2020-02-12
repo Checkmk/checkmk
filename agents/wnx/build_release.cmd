@@ -61,10 +61,17 @@ if "%1" == "SIMULATE_FAIL" powershell Write-Host "Failed Install build" -Foregro
 call %cur_dir%\clean_artefacts.cmd 
 
 powershell Write-Host "Building MSI..." -Foreground Green
-set msbuild="C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\msbuild.exe"
-if not exist %msbuild% powershell Write-Host "MSBUILD not found, trying Visual Professional" -Foreground Yellow && set msbuild="C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\MSBuild\15.0\Bin\msbuild.exe"
-if not exist %msbuild% powershell Write-Host "Install MSBUILD, please" -Foreground Red && exit /b 99
 
+powershell Write-Host "Looking for MSVC 2017..." -Foreground White
+set msbuild2017="C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\msbuild.exe"
+if exist %msbuild2017% set msbuild=%msbuild2017% && powershell Write-Host "[+] Found MSVC 2017" -Foreground Green goto start_me
+
+powershell Write-Host "Looking for MSVC 2019..." -Foreground White
+set msbuild2019="C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\MSBuild\Current\Bin\msbuild.exe"
+if exist %msbuild2019% set msbuild=%msbuild2019% && powershell Write-Host "[+] Found MSVC 2019" -Foreground Green && goto start_me
+powershell Write-Host "Install MSBUILD or Visual Studio, please" -Foreground Red && exit /b 99
+
+:start_me
 set exec=check_mk_service
 %msbuild% wamain.sln /t:%exec% /p:Configuration=Release,Platform=x86
 if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-32" -Foreground Red && exit /b 1

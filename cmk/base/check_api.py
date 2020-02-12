@@ -230,9 +230,9 @@ class as_float(float):
     def __repr__(self):
         # type: () -> str
         if self > sys.float_info.max:
-            return '1e309'
+            return '1e%d' % (sys.float_info.max_10_exp + 1)
         if self < -1 * sys.float_info.max:
-            return '-1e309'
+            return '-1e%d' % (sys.float_info.max_10_exp + 1)
         return super(as_float, self).__repr__()
 
 

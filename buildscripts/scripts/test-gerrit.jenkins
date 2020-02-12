@@ -37,6 +37,12 @@ node {
         print "Changed core files: ${CHANGED_CORE_FILES}"
         print "Changed futurize files: ${CHANGED_TEST_FUTURIZE_FILE}"
 
+        //Add description to the build
+        gerrit_stages.desc_init()
+        gerrit_stages.desc_add_line(GERRIT_CHANGE_SUBJECT)
+        gerrit_stages.desc_add_table()
+        gerrit_stages.desc_add_row('Stage', 'Status')
+
         gerrit_stages.run(
             NAME: 'Python2 Typing',
             CONDITION: CHANGED_PYTHON_FILES != "",

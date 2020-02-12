@@ -9,7 +9,7 @@ import traceback
 import json
 import time
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Type, Union  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Text, Tuple, Type, Union  # pylint: disable=unused-import
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
@@ -18,6 +18,7 @@ import cmk.gui.i18n
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.htmllib import HTML  # pylint: disable=unused-import
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -319,65 +320,92 @@ class UserSidebarSnapin(object):
 
 
 class SidebarRenderer(object):
-    def show(self):
-        # type: () -> None
-        if not config.user.may("general.see_sidebar"):
-            return None
+    def show(self, title=None, content=None):
+        # type: (Optional[Text], Optional[HTML]) -> None
+        # TODO: Right now the method renders the full HTML page, i.e.
+        # the header, sidebar, and page content. Ideallly we should
+        # split this up. Possible solutions might be:
+        #
+        #     1. If we remove the page side.py the code for the header
+        #        and the page content can be moved to the page index.py.
+        #     2. Alternatively, we could extract a helper function that
+        #        provides the header and body (without content). Then
+        #        helper could then be used by index.py and side.py.
+        #
+        # In both cases this method would only render the sidebar
+        # content afterwards.
         if config.sidebar_notify_interval is not None:
             interval = config.sidebar_notify_interval
         else:
             interval = 'null'
+
         html.clear_default_javascript()
-        html.html_head(_("Check_MK Sidebar"), javascripts=["side"])
-        html.write('<body class="side')
+        if title is None:
+            title = _("Check_MK Sidebar")
+        html.html_head(title, javascripts=["side"])
+
+        body_classes = ['side']
         if config.screenshotmode:
-            html.write(" screenshotmode")
-        html.write(
-            '" onload="cmk.sidebar.initialize_scroll_position(); cmk.sidebar.set_sidebar_size(); cmk.sidebar.init_messages(%s);" '
-            'onunload="cmk.sidebar.store_scroll_position()">\n' % interval)
-        html.open_div(id_="check_mk_sidebar")
+            body_classes.append("screenshotmode")
 
-        self._sidebar_head()
-        user_config = UserSidebarConfig(config.user, config.sidebar)
-        refresh_snapins = []
-        restart_snapins = []
+        if not config.user.may("general.see_sidebar"):
+            html.open_body(class_=body_classes)
+            html.div("", id_="check_mk_sidebar")
+        else:
+            html.open_body(
+                class_=body_classes,
+                onload=
+                'cmk.sidebar.initialize_scroll_position(); cmk.sidebar.set_sidebar_size(); cmk.sidebar.init_messages(%s);'
+                % interval,
+                onunload="cmk.sidebar.store_scroll_position()")
+            html.open_div(id_="check_mk_sidebar")
 
-        html.open_div(class_="scroll" if config.sidebar_show_scrollbar else None,
-                      id_="side_content")
-        for snapin in user_config.snapins:
-            name = snapin.snapin_type.type_name()
+            self._sidebar_head()
+            user_config = UserSidebarConfig(config.user, config.sidebar)
+            refresh_snapins = []
+            restart_snapins = []
 
-            # Performs the initial rendering and might return an optional refresh url,
-            # when the snapin contents are refreshed from an external source
-            refresh_url = self.render_snapin(snapin)
+            html.open_div(class_="scroll" if config.sidebar_show_scrollbar else None,
+                          id_="side_content")
+            for snapin in user_config.snapins:
+                name = snapin.snapin_type.type_name()
 
-            if snapin.snapin_type.refresh_regularly():
-                refresh_snapins.append([name, refresh_url])
+                # Performs the initial rendering and might return an optional refresh url,
+                # when the snapin contents are refreshed from an external source
+                refresh_url = self.render_snapin(snapin)
 
-            elif snapin.snapin_type.refresh_on_restart():
-                refresh_snapins.append([name, refresh_url])
-                restart_snapins.append(name)
+                if snapin.snapin_type.refresh_regularly():
+                    refresh_snapins.append([name, refresh_url])
 
+                elif snapin.snapin_type.refresh_on_restart():
+                    refresh_snapins.append([name, refresh_url])
+                    restart_snapins.append(name)
+
+            html.close_div()
+            self._sidebar_foot(user_config)
+            html.close_div()
+
+            html.write("<script language=\"javascript\">\n")
+            if restart_snapins:
+                html.write("cmk.sidebar.set_sidebar_restart_time(%s);\n" % time.time())
+            html.write("cmk.sidebar.set_sidebar_update_interval(%0.2f);\n" %
+                       config.sidebar_update_interval)
+            html.write("cmk.sidebar.register_edge_listeners();\n")
+            html.write("cmk.sidebar.set_sidebar_size();\n")
+            html.write("cmk.sidebar.set_refresh_snapins(%s);\n" % json.dumps(refresh_snapins))
+            html.write("cmk.sidebar.set_restart_snapins(%s);\n" % json.dumps(restart_snapins))
+            html.write("cmk.sidebar.execute_sidebar_scheduler();\n")
+            html.write("cmk.sidebar.register_event_handlers();\n")
+            html.write("window.onresize = function() { cmk.sidebar.set_sidebar_size(); };\n")
+            html.write(
+                "if (cmk.sidebar.is_content_frame_accessible()) { cmk.sidebar.update_content_location(); };\n"
+            )
+            html.write("</script>\n")
+
+        html.open_div(id_="content_area")
+        if content is not None:
+            html.write(content)
         html.close_div()
-        self._sidebar_foot(user_config)
-        html.close_div()
-
-        html.write("<script language=\"javascript\">\n")
-        if restart_snapins:
-            html.write("cmk.sidebar.set_sidebar_restart_time(%s);\n" % time.time())
-        html.write("cmk.sidebar.set_sidebar_update_interval(%0.2f);\n" %
-                   config.sidebar_update_interval)
-        html.write("cmk.sidebar.register_edge_listeners();\n")
-        html.write("cmk.sidebar.set_sidebar_size();\n")
-        html.write("cmk.sidebar.set_refresh_snapins(%s);\n" % json.dumps(refresh_snapins))
-        html.write("cmk.sidebar.set_restart_snapins(%s);\n" % json.dumps(restart_snapins))
-        html.write("cmk.sidebar.execute_sidebar_scheduler();\n")
-        html.write("cmk.sidebar.register_event_handlers();\n")
-        html.write("window.onresize = function() { cmk.sidebar.set_sidebar_size(); };\n")
-        html.write(
-            "if (cmk.sidebar.is_content_frame_accessible()) { cmk.sidebar.update_content_location(); };\n"
-        )
-        html.write("</script>\n")
 
         html.body_end()
 
@@ -781,65 +809,78 @@ def _register_custom_snapins():
 
 @cmk.gui.pages.register("sidebar_add_snapin")
 def page_add_snapin():
-    PageAddSnapin(config.user, config.sidebar).show()
+    # type: () -> None
+    if not config.user.may("general.configure_sidebar"):
+        raise MKGeneralException(_("You are not allowed to change the sidebar."))
+
+    html.header(_("Available snapins"))
+
+    html.begin_context_buttons()
+    CustomSnapins.context_button_list()
+    html.end_context_buttons()
+
+    used_snapins = _used_snapins()
+
+    html.open_div(class_=["add_snapin"])
+    for name, snapin_class in sorted(snapin_registry.items()):
+        if name in used_snapins:
+            continue
+        if not config.user.may(snapin_class.permission_name()):
+            continue  # not allowed for this user
+
+        html.open_div(class_="snapinadder",
+                      onmouseover="this.style.cursor=\'pointer\';",
+                      onclick="window.top.cmk.sidebar.add_snapin('%s')" % name)
+
+        html.open_div(class_=["snapin_preview"])
+        html.div('', class_=["clickshield"])
+        SidebarRenderer().render_snapin(UserSidebarSnapin.from_snapin_type_id(name))
+        html.close_div()
+        html.div(snapin_class.description(), class_=["description"])
+        html.close_div()
+
+    html.close_div()
+    html.footer()
 
 
-class PageAddSnapin(object):
-    def __init__(self, user, default_config):
-        super(PageAddSnapin, self).__init__()
-        self._user_config = UserSidebarConfig(user, default_config)
+def _used_snapins():
+    # type: () -> List[Any]
+    user_config = UserSidebarConfig(config.user, config.sidebar)
+    return [snapin.snapin_type.type_name() for snapin in user_config.snapins]
 
-    def show(self):
-        # type: () -> None
+
+@cmk.gui.pages.page_registry.register_page("sidebar_ajax_add_snapin")
+class AjaxAddSnapin(cmk.gui.pages.AjaxPage):
+    def page(self):
         if not config.user.may("general.configure_sidebar"):
             raise MKGeneralException(_("You are not allowed to change the sidebar."))
 
-        html.header(_("Available snapins"))
-
-        html.begin_context_buttons()
-        CustomSnapins.context_button_list()
-        html.end_context_buttons()
-
         addname = html.request.var("name")
 
-        if (addname is not None and addname in snapin_registry and
-                addname not in self._used_snapins() and html.check_transaction()):
-            self._user_config.add_snapin(UserSidebarSnapin.from_snapin_type_id(addname))
-            self._user_config.save()
-            html.reload_sidebar()
+        if addname is None or addname not in snapin_registry:
+            raise MKUserError(None, _("Invalid snapin %s") % addname)
 
-        self._show_builtin_snapins()
+        if addname in _used_snapins():
+            raise MKUserError(None, _("Snapin %s is already enabled") % addname)
 
-    def _show_builtin_snapins(self):
-        # type: () -> None
-        used_snapins = self._used_snapins()
+        user_config = UserSidebarConfig(config.user, config.sidebar)
+        snapin = UserSidebarSnapin.from_snapin_type_id(addname)
+        user_config.add_snapin(snapin)
+        user_config.save()
 
-        html.open_div(class_=["add_snapin"])
-        for name, snapin_class in sorted(snapin_registry.items()):
-            if name in used_snapins:
-                continue
-            if not config.user.may(snapin_class.permission_name()):
-                continue  # not allowed for this user
+        with html.plugged():
+            try:
+                url = SidebarRenderer().render_snapin(snapin)
+            finally:
+                snapin_code = html.drain()
 
-            transid = html.transaction_manager.get()
-            url = 'sidebar_add_snapin.py?name=%s&_transid=%s&pos=top' % (name, transid)
-            html.open_div(class_="snapinadder",
-                          onmouseover="this.style.cursor=\'pointer\';",
-                          onmousedown="window.location.href=\'%s\'; return false;" % url)
-
-            html.open_div(class_=["snapin_preview"])
-            html.div('', class_=["clickshield"])
-            SidebarRenderer().render_snapin(UserSidebarSnapin.from_snapin_type_id(name))
-            html.close_div()
-            html.div(snapin_class.description(), class_=["description"])
-            html.close_div()
-
-        html.close_div()
-        html.footer()
-
-    def _used_snapins(self):
-        # type: () -> List[Any]
-        return [snapin.snapin_type.type_name() for snapin in self._user_config.snapins]
+        return {
+            'name': addname,
+            'url': url,
+            'content': snapin_code,
+            'refresh': (snapin.snapin_type.refresh_regularly() or
+                        snapin.snapin_type.refresh_on_restart()),
+        }
 
 
 # TODO: This is snapin specific. Move this handler to the snapin file

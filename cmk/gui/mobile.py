@@ -57,7 +57,7 @@ def mobile_html_head(title):
                                close_tag=True))
     html.javascript_file(src='js/mobile_min.js')
 
-    # Never allow the mobile page to be opened in a frameset. Redirect top page to the current content page.
+    # Never allow the mobile page to be opened in an iframe. Redirect top page to the current content page.
     # This will result in a full screen mobile interface page.
     html.javascript('''if(top != self) { window.top.location.href = location; }''')
 

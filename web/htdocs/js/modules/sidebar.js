@@ -27,7 +27,7 @@ export function register_event_handlers() {
 export function register_edge_listeners(obj) {
     var edges;
     if (!obj)
-        edges = [ parent.frames[1], document.getElementById("side_header"), document.getElementById("side_footer") ];
+        edges = [ parent.frames[0], document.getElementById("side_header"), document.getElementById("side_footer") ];
     else
         edges = [ obj ];
 
@@ -282,7 +282,7 @@ function getSnapinTargetPos() {
 // by the browser since it blocks cross domain access.
 export function is_content_frame_accessible() {
     try {
-        parent.frames[1].document;
+        parent.frames[0].document;
         return true;
     } catch (e) {
         return false;
@@ -290,15 +290,15 @@ export function is_content_frame_accessible() {
 }
 
 export function update_content_location() {
-    // init the original frameset title
+    // initialize the original title
     if (typeof(window.parent.orig_title) == "undefined") {
         window.parent.orig_title = window.parent.document.title;
     }
 
-    var content_frame = window.parent.frames[1];
+    var content_frame = parent.frames[0];
 
-    // Change the title to add the right frame title to reflect the
-    // title of the content URL in the framesets title (window title or tab title)
+    // Change the title to add the frame title to reflect the
+    // title of the content URL title (window title or tab title)
     var page_title;
     if (content_frame.document.title != "") {
         page_title = window.parent.orig_title + " - " + content_frame.document.title;
@@ -316,18 +316,17 @@ export function update_content_location() {
 
     if (window.parent.history.replaceState) {
         if (rel_url && rel_url != "blank") {
-            // Update the URL to be called on reload, e.g. via F5, to make the
-            // frameset switch to exactly this URL
+            // Update the URL to be called on reload, e.g. via F5, to switch to exactly this URL
             window.parent.history.replaceState({}, page_title, index_url);
 
             // only update the internal flag var if the url was not blank and has been updated
             //otherwise try again on next scheduler run
-            g_content_loc = parent.frames[1].document.location.href;
+            g_content_loc = content_frame.document.location.href;
         }
     } else {
         // Only a browser without history.replaceState support reaches this. Sadly
         // we have no F5/reload fix for them...
-        g_content_loc = parent.frames[1].document.location.href;
+        g_content_loc = content_frame.document.location.href;
     }
 }
 
@@ -433,24 +432,13 @@ function dragScroll(event) {
     return utils.prevent_default_events(event);
 }
 
-function sidebar_width()
-{
-    if (g_sidebar_folded)
-        return 10;
-    else
-        return 280;
-}
-
 export function fold_sidebar()
 {
     g_sidebar_folded = true;
-    document.getElementById("check_mk_sidebar").style.position = "relative";
-    document.getElementById("check_mk_sidebar").style.left = "-265px";
-    document.getElementById("side_footer").style.display = "none";
-    var version = document.getElementById("side_version");
-    if (version)
-        version.style.display = "none";
-    parent.document.body.cols = sidebar_width() + ",*";
+    var sidebar = document.getElementById("check_mk_sidebar");
+    sidebar.style.visibility = "hidden";
+    sidebar.style.width = "10px";
+
     ajax.get_url("sidebar_fold.py?fold=yes");
 }
 
@@ -458,13 +446,10 @@ export function fold_sidebar()
 function unfold_sidebar()
 {
     g_sidebar_folded = false;
-    document.getElementById("check_mk_sidebar").style.position = "";
-    document.getElementById("check_mk_sidebar").style.left = "0";
-    document.getElementById("side_footer").style.display = "";
-    var version = document.getElementById("side_version");
-    if (version)
-        version.style.display = "";
-    parent.document.body.cols = sidebar_width() + ",*";
+    var sidebar = document.getElementById("check_mk_sidebar");
+    sidebar.style.removeProperty("visibility");
+    sidebar.style.removeProperty("width");
+
     ajax.get_url("sidebar_fold.py?fold=");
 }
 
@@ -523,6 +508,40 @@ export function set_sidebar_restart_time(t) {
     sidebar_restart_time = t;
 }
 
+export function add_snapin(name) {
+    ajax.call_ajax("sidebar_ajax_add_snapin.py?name=" + name, {
+        response_handler: function(_data, response) {
+            var data = JSON.parse(response);
+            if (data.result_code !== 0) {
+                return;
+            }
+
+            var result = data.result;
+
+            if (result.refresh) {
+                var entry = [result.name, result.url];
+                var index = refresh_snapins.indexOf(entry);
+                if (index === -1) {
+                    refresh_snapins.push(entry);
+                }
+            }
+
+            var sidebar_content = document.getElementById("side_content");
+            if (sidebar_content) {
+                sidebar_content.innerHTML += result.content;
+                utils.execute_javascript_by_object(sidebar_content);
+            }
+
+            var add_snapin_page = window.frames[0] ? window.frames[0].document : document;
+            var preview = add_snapin_page.getElementById("snapin_container_" + name);
+            if (preview) {
+                var container = preview.parentElement.parentElement;
+                container.remove();
+            }
+        }
+    });
+}
+
 // Removes the snapin from the current sidebar and informs the server for persistance
 export function remove_sidebar_snapin(oLink, url)
 {
@@ -556,10 +575,10 @@ function remove_snapin(id)
     }
 
     // reload main frame if it is currently displaying the "add snapin" page
-    if (parent.frames[1]) {
-        var href = encodeURIComponent(parent.frames[1].location);
+    if (parent.frames[0]) {
+        var href = encodeURIComponent(parent.frames[0].location);
         if (href.indexOf("sidebar_add_snapin.py") > -1)
-            parent.frames[1].location.reload();
+            parent.frames[0].location.reload();
     }
 }
 
@@ -596,8 +615,7 @@ export function toggle_sidebar_snapin(oH2, url) {
 }
 
 function reload_main_plus_sidebar() {
-    parent.frames[1].location.reload(); /* reload main frame */
-    parent.frames[0].location.reload(); /* reload side bar */
+    window.top.location.reload();
 }
 
 // TODO move to managed/web/htdocs/js
@@ -630,11 +648,21 @@ function bulk_update_contents(ids, codes)
 
 
 var g_seconds_to_update = null;
+var g_sidebar_scheduler_timer = null;
 
 export function refresh_single_snapin(name) {
     var url = "sidebar_snapin.py?names=" + name;
     var ids = [ "snapin_" + name ];
     ajax.get_url(url, bulk_update_contents, ids);
+}
+
+export function reset_sidebar_scheduler() {
+    if (g_sidebar_scheduler_timer !== null) {
+        clearTimeout(g_sidebar_scheduler_timer);
+        g_sidebar_scheduler_timer = null;
+    }
+    g_seconds_to_update = 1;
+    execute_sidebar_scheduler();
 }
 
 export function execute_sidebar_scheduler() {
@@ -646,7 +674,7 @@ export function execute_sidebar_scheduler() {
     // Stop reload of the snapins in case the browser window / tab is not visible
     // for the user. Retry after short time.
     if (!utils.is_window_active()) {
-        setTimeout(function(){ execute_sidebar_scheduler(); }, 250);
+        g_sidebar_scheduler_timer = setTimeout(function(){ execute_sidebar_scheduler(); }, 250);
         return;
     }
 
@@ -695,15 +723,15 @@ export function execute_sidebar_scheduler() {
 
     // Detect page changes and re-register the mousemove event handler
     // in the content frame. another bad hack ... narf
-    if(is_content_frame_accessible() && g_content_loc != parent.frames[1].document.location.href) {
-        register_edge_listeners(parent.frames[1]);
+    if(is_content_frame_accessible() && g_content_loc != parent.frames[0].document.location.href) {
+        register_edge_listeners(parent.frames[0]);
         update_content_location();
     }
 
     if (g_seconds_to_update <= 0)
         g_seconds_to_update = sidebar_update_interval;
 
-    setTimeout(function(){execute_sidebar_scheduler();}, 1000);
+    g_sidebar_scheduler_timer = setTimeout(function(){execute_sidebar_scheduler();}, 1000);
 }
 
 /************************************************
@@ -778,7 +806,7 @@ function highlight_link(link_obj, container_id) {
 export function wato_folders_clicked(link_obj, folderpath) {
     g_last_folder = folderpath;
     highlight_link(link_obj, "snapin_container_wato_folders");
-    parent.frames[1].location = g_last_view + "&wato_folder=" + encodeURIComponent(g_last_folder);
+    parent.frames[0].location = g_last_view + "&wato_folder=" + encodeURIComponent(g_last_folder);
 }
 
 export function wato_views_clicked(link_obj) {
@@ -789,7 +817,7 @@ export function wato_views_clicked(link_obj) {
 
     if (g_last_folder != "") {
         // Navigate by using javascript, cancel following the default link
-        parent.frames[1].location = g_last_view + "&wato_folder=" + encodeURIComponent(g_last_folder);
+        parent.frames[0].location = g_last_view + "&wato_folder=" + encodeURIComponent(g_last_folder);
         return false;
     } else {
         // Makes use the url stated in href attribute
@@ -816,7 +844,7 @@ export function wato_tree_click(link_obj, folderpath) {
 
     href += "&wato_folder=" + encodeURIComponent(folderpath);
 
-    parent.frames[1].location = href;
+    parent.frames[0].location = href;
 }
 
 export function wato_tree_topic_changed(topic_field) {
@@ -901,8 +929,8 @@ export function fetch_nagvis_snapin_contents() {
  *************************************************/
 
 export function add_bookmark() {
-    var url = parent.frames[1].location;
-    var title = parent.frames[1].document.title;
+    var url = parent.frames[0].location;
+    var title = parent.frames[0].document.title;
     ajax.get_url("add_bookmark.py?title=" + encodeURIComponent(title)
                  + "&url=" + encodeURIComponent(url), utils.update_contents, "snapin_bookmarks");
 }

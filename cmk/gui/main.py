@@ -4,29 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.gui.escaping as escaping
 import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.utils as utils
 from cmk.gui.globals import html
+from cmk.gui.sidebar import SidebarRenderer
 
 
 @cmk.gui.pages.register("index")
 def page_index():
     # type: () -> None
-    html.write(
-        '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">\n'
-        '<html><head>\n')
-    html.default_html_headers()
-    html.write("""<title>%s</title>
-</head>
-<frameset cols="280,*" frameborder="0" framespacing="0" border="0">
-    <frame src="side.py" name="side" noresize scrolling="no">
-    <frame src="%s" name="main" noresize>
-</frameset>
-</html>
-""" % (escaping.escape_attribute(
-        config.get_page_heading()), escaping.escape_attribute(_get_start_url())))
+    title = config.get_page_heading()
+    content = html.render_iframe("", src=_get_start_url(), name="main")
+    SidebarRenderer().show(title, content)
 
 
 def _get_start_url():

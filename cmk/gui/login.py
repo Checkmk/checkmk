@@ -516,7 +516,7 @@ class LoginPage(Page):
         default_origtarget = "index.py" if html.myfile in ["login", "logout"] else html.makeuri([])
         origtarget = html.get_url_input("_origtarget", default_origtarget)
 
-        # Never allow the login page to be opened in a frameset. Redirect top page to login page.
+        # Never allow the login page to be opened in the iframe. Redirect top page to login page.
         # This will result in a full screen login page.
         html.javascript('''if(top != self) {
     window.top.location.href = location;

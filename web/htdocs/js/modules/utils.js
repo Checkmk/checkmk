@@ -65,7 +65,6 @@ export function execute_javascript_by_object(obj)
                 eval(aScripts[i].text);
                 current_script = null;
             } catch(e) {
-                //console.log(e);
                 alert(aScripts[i].text + "\nError:" + e.message);
             }
         }
@@ -256,53 +255,10 @@ export function time() {
     return (new Date()).getTime() / 1000;
 }
 
-var g_sidebar_reload_timer = null;
-
 // reload sidebar, but preserve quicksearch field value and focus
 export function reload_sidebar()
 {
-    if (!parent || !parent.frames[0]) {
-        return;
-    }
-
-    var val = "";
-    var focused = false;
-    var field = parent.frames[0].document.getElementById("mk_side_search_field");
-    if (field) {
-        val = field.value;
-        focused = parent.frames[0].document.activeElement == field;
-    }
-
-    parent.frames[0].document.reloading = 1;
-    parent.frames[0].document.location.reload();
-
-    if (!field) {
-        return;
-    }
-
-    g_sidebar_reload_timer = setInterval(function (value, has_focus) {
-        return function() {
-            if (!parent.frames[0].document.reloading
-                && parent.frames[0].document.readyState === "complete") {
-                var field = parent.frames[0].document.getElementById("mk_side_search_field");
-                if (field) {
-                    field.value = value;
-                    if (has_focus) {
-                        field.focus();
-
-                        // Move caret to end
-                        if (field.setSelectionRange !== undefined)
-                            field.setSelectionRange(value.length, value.length);
-                    }
-                }
-
-                clearInterval(g_sidebar_reload_timer);
-                g_sidebar_reload_timer = null;
-            }
-        };
-    }(val, focused), 50);
-
-    field = null;
+    window.top.cmk.sidebar.reset_sidebar_scheduler();
 }
 
 //#.

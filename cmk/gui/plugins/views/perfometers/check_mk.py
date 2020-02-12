@@ -733,7 +733,7 @@ def perfometer_fileinfo(row, check_command, perf_data):
         h += perfometer_logarithmic(val, base, scale, color)
         texts.append(verbfunc(val))
     h += '</div>'
-    return " / ".join(texts), h  #  perfometer_logarithmic(100, 200, 2, "#883875")
+    return " / ".join(texts), h  # perfometer_logarithmic(100, 200, 2, "#883875")
 
 
 def perfometer_fileinfo_groups(row, check_command, perf_data):
@@ -742,12 +742,12 @@ def perfometer_fileinfo_groups(row, check_command, perf_data):
     for i, color, base, scale, verbfunc in [
         (2, "#aabb50", 10000, 10, lambda v: ("%d Tot") % v),  # count
         (1, "#ccff50", 3600, 10, cmk.utils.render.approx_age)
-    ]:  #age_newest
+    ]:  # age_newest
         val = float(perf_data[i][1])
         h += perfometer_logarithmic(val, base, scale, color)
         texts.append(verbfunc(val))
     h += '</div>'
-    return " / ".join(texts), h  #  perfometer_logarithmic(100, 200, 2, "#883875")
+    return " / ".join(texts), h  # perfometer_logarithmic(100, 200, 2, "#883875")
 
 
 perfometers["check_mk-fileinfo"] = perfometer_fileinfo
@@ -841,7 +841,7 @@ def perfometer_vms_system_ios(row, check_command, perf_data):
     h += perfometer_logarithmic(buffered, 10000, 3, "#38b0cf")
     h += perfometer_logarithmic(direct, 10000, 3, "#38808f")
     h += '</div>'
-    return "%.0f / %.0f" % (direct, buffered), h  #  perfometer_logarithmic(100, 200, 2, "#883875")
+    return "%.0f / %.0f" % (direct, buffered), h  # perfometer_logarithmic(100, 200, 2, "#883875")
 
 
 perfometers["check_mk-vms_system.ios"] = perfometer_vms_system_ios

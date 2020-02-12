@@ -301,7 +301,7 @@ filesystem_elements = fs_levels_elements \
                     + fs_reserved_elements \
                     + fs_inodes_elements \
                     + fs_magic_elements \
-                    + size_trend_elements # type: List[TypingTuple[str, ValueSpec]]
+                    + size_trend_elements  # type: List[TypingTuple[str, ValueSpec]]
 
 
 def vs_filesystem(extra_elements=None):

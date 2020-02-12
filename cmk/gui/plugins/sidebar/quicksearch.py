@@ -635,7 +635,7 @@ class GroupMatchPlugin(QuicksearchMatchPlugin):
 
     def get_matches(self, for_view, row, livestatus_table, used_filters, rows=None):
         supported_views = {
-            ### View name    url fieldname,                  key in row
+            # View name    url fieldname,                  key in row
             # Group domains (hostgroups, servicegroups)
             "hostgroup": ["hostgroup", "name"],
             "hostgroups": ["hostgroup_regex", "name"],

@@ -58,8 +58,8 @@ def main():
         base_oid + ".7": context.get('SERVICEOUTPUT', context.get("HOSTOUTPUT")),
         base_oid + ".8": "HARD",  # Notifications always are in HARDSTATE
         base_oid + ".9": context.get('SERVICEDESC', 'Connectivity'),
-        base_oid + ".10": 3,  #SPECIFIC TRAP (type) NUMBER
-        base_oid + ".11": "Call number 123456",  #CALLOUT STRING
+        base_oid + ".10": 3,  # SPECIFIC TRAP (type) NUMBER
+        base_oid + ".11": "Call number 123456",  # CALLOUT STRING
         base_oid + ".12": complete_url,
         base_oid + ".13": "%s alarm on host %s" %
                           (context.get('SERVICEDESC', 'Connectivity'), context['HOSTNAME']),

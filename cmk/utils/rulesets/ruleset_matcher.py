@@ -304,7 +304,7 @@ class RulesetOptimizer(object):
         # type: (Set[HostName]) -> None
         self._all_processed_hosts = set(all_processed_hosts)
 
-        nodes_and_clusters = set()  #  type: Set[HostName]
+        nodes_and_clusters = set()  # type: Set[HostName]
         for hostname in self._all_processed_hosts:
             nodes_and_clusters.update(self._nodes_of.get(hostname, []))
             nodes_and_clusters.update(self._clusters_of.get(hostname, []))

@@ -1813,7 +1813,7 @@ def _show_context_links(view, rows, show_filters, enable_commands, enable_checkb
     if display_options.enabled(display_options.B):
         execute_hooks('buttons-begin')
 
-    ## Small buttons
+    # Small buttons
     html.open_div(class_="context_buttons_small")
     filter_isopen = html.request.var("filled_in") != "filter" and thisview.get("mustsearch")
     if display_options.enabled(display_options.F):
@@ -1880,7 +1880,7 @@ def _show_context_links(view, rows, show_filters, enable_commands, enable_checkb
             view_optiondial_off("refresh")
     html.close_div()
 
-    ## Large buttons
+    # Large buttons
     if display_options.enabled(display_options.B):
         # WATO: If we have a host context, then show button to WATO, if permissions allow this
         if html.request.has_var("host") \

@@ -121,7 +121,7 @@ class ModeFolder(WatoMode):
         if html.request.var("_search"):  # just commit to search form
             return
 
-        ### Operations on SUBFOLDERS
+        # Operations on SUBFOLDERS
 
         if html.request.var("_delete_folder"):
             if html.transaction_valid():
@@ -135,7 +135,7 @@ class ModeFolder(WatoMode):
                 watolib.Folder.current().move_subfolder_to(what_folder, target_folder)
             return
 
-        ### Operations on HOSTS
+        # Operations on HOSTS
 
         # Deletion of single hosts
         delname = html.request.var("_delete_host")

@@ -35,7 +35,7 @@ from cmk.utils.exceptions import MKException
 
 # Cisco UCS B-Series Blade Servers
 B_SERIES_ENTITIES = [
-    ## FANS
+    # FANS
     ("ucs_bladecenter_fans", [
         ("equipmentFan", ["Dn", "Model", "OperState"]),
         ("equipmentFanModuleStats", ["Dn", "AmbientTemp"]),
@@ -43,7 +43,7 @@ B_SERIES_ENTITIES = [
         ("equipmentRackUnitFanStats", ["Dn", "SpeedAvg"]),
         ("equipmentFanStats", ["Dn", "SpeedAvg"]),
     ]),
-    ### PSU
+    # PSU
     ("ucs_bladecenter_psu", [
         ("equipmentPsuInputStats", ["Dn", "Current", "PowerAvg", "Voltage"]),
         ("equipmentPsuStats", ["Dn", "AmbientTemp", "Output12vAvg", "Output3v3Avg"]),

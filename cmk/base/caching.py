@@ -94,8 +94,8 @@ class DictCache(dict, Cache):
         self.set_not_populated()
 
 
-## Just a small wrapper round a dict to get some caching specific functionality
-## for analysis etc.
+# Just a small wrapper round a dict to get some caching specific functionality
+# for analysis etc.
 #class DictCacheStats(DictCache):
 #    def __init__(self, *args, **kwargs):
 #        super(DictCacheStats, self).__init__(*args, **kwargs)

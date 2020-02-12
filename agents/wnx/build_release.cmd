@@ -15,12 +15,14 @@ SETLOCAL EnableDelayedExpansion
 
 rem CHECK FOR CHOCO
 rem if choco is absent then build is not possible(we can't dynamically control environment)
+powershell Write-Host "Looking for choco..." -Foreground White
 @choco -v > nul
 @if "%errorlevel%" NEQ "0" powershell Write-Host "choco must be installed!" -Foreground Red && exit /b 55
 powershell Write-Host "[+] choco" -Foreground Green
 
 rem CHECK FOR make
 rem if make is absent then we try to install it using choco. Failure meand build fail, make is mandatory
+powershell Write-Host "Looking for make..." -Foreground White
 for /f %%i in ('where make') do set make_exe=%%i
 if "!make_exe!" == "" (
 powershell Write-Host "make not found, try to install" -Foreground Yellow 
@@ -65,11 +67,12 @@ call unpack_packs.cmd watest
 popd
 
 
-powershell Write-Host "Building MSI..." -Foreground Green
+powershell Write-Host "Looking for MSVC 2019..." -Foreground White
 set msbuild="C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\MSBuild\Current\Bin\msbuild.exe"
-if not exist %msbuild% powershell Write-Host "MSBUILD not found, trying Visual Professional" -Foreground Yellow && set msbuild="C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\MSBuild\15.0\Bin\msbuild.exe"
-if not exist %msbuild% powershell Write-Host "Install MSBUILD, please" -Foreground Red && exit /b 99
+if not exist %msbuild% powershell Write-Host "Install Visual Studio 2019, please" -Foreground Red && exit /b 8
 
+powershell Write-Host "[+] Found MSVC 2019" -Foreground Green
+powershell Write-Host "Building MSI..." -Foreground White
 powershell -ExecutionPolicy ByPass -File msb.ps1
 if not %errorlevel% == 0 powershell Write-Host "Failed Build" -Foreground Red && exit /b 7
 

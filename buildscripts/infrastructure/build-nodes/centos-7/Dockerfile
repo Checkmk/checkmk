@@ -69,6 +69,7 @@ RUN yum -y makecache \
     && yum -y install \
         chrpath \
     joe \
+    ping \
     vim \
     && yum clean all
 

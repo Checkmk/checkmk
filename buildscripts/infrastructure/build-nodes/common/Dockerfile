@@ -105,3 +105,9 @@ RUN apt-get update \
     && apt-get install -y \
     docker-ce \
     && rm -rf /var/lib/apt/lists/*
+
+# Addd missing packages
+RUN apt-get update \
+    && apt-get install -y \
+    ping \
+    && rm -rf /var/lib/apt/lists/*

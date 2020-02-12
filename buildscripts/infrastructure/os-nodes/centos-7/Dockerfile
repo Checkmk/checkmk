@@ -68,6 +68,7 @@ RUN touch /etc/fstab
 RUN yum -y makecache \
     && yum -y install \
     joe \
+    ping \
     vim \
     && yum clean all
 

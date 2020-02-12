@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -542,7 +542,7 @@ def utc_mktime(time_struct):
     # type: (time.struct_time) -> int
     """Works like time.mktime() but assumes the time_struct to be in UTC,
     not in local time."""
-    import calendar  # pylint: disable=import-outside-toplevel
+    import calendar
     return calendar.timegm(time_struct)
 
 
@@ -585,7 +585,7 @@ def _agent_cache_file_age(hostname, check_plugin_name):
     if host_config.is_cluster:
         raise MKGeneralException("get_agent_data_time() not valid for cluster")
 
-    import cmk.base.check_utils  # pylint: disable=import-outside-toplevel
+    import cmk.base.check_utils
     if cmk.base.check_utils.is_snmp_check(check_plugin_name):
         cachefile = _paths.tcp_cache_dir + "/" + hostname + "." + check_plugin_name.split(".")[
             0]  # type: Optional[str]

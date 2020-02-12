@@ -1,9 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """All core related things like direct communication with the running core"""
 
 import fcntl
@@ -109,8 +108,8 @@ def do_restart(core, only_reload=False):
         if backup_path:
             try:
                 os.remove(backup_path)
-            except OSError as e:
-                if e.errno != errno.ENOENT:
+            except OSError as oe:
+                if oe.errno != errno.ENOENT:
                     raise
         if cmk.utils.debug.enabled():
             raise
@@ -155,8 +154,8 @@ def do_core_action(action, quiet=False):
         assert p.stdout is not None
         output = p.stdout.read()
         if not quiet:
-            console.output("ERROR: %s\n" % output)
-        raise MKGeneralException("Cannot %s the monitoring core: %s" % (action, output))
+            console.output("ERROR: %r\n" % output)
+        raise MKGeneralException("Cannot %s the monitoring core: %r" % (action, output))
     if not quiet:
         console.output(tty.ok + "\n")
 

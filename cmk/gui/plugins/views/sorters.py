@@ -259,8 +259,9 @@ class SorterServicelevel(Sorter):
 
 
 def cmp_service_name(column, r1, r2):
-    return  (cmp_service_name_equiv(r1[column])> cmp_service_name_equiv(r2[column]))-(cmp_service_name_equiv(r1[column])< cmp_service_name_equiv(r2[column])) or \
-           cmp_num_split(column, r1, r2)
+    return ((cmp_service_name_equiv(r1[column]) > cmp_service_name_equiv(r2[column])) -
+            (cmp_service_name_equiv(r1[column]) < cmp_service_name_equiv(r2[column])) or
+            cmp_num_split(column, r1, r2))
 
 
 #                      name                      title                              column                       sortfunction

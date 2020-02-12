@@ -144,10 +144,8 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
             if reading is not None:
                 sensors.append(self._parse_sensor_reading(number, reading))
 
-        output = "<<<mgmt_ipmi_sensors:sep(124)>>>\n" \
-               + "".join(["|".join(sensor) + "\n"  for sensor in sensors])
-
-        return output
+        return "<<<mgmt_ipmi_sensors:sep(124)>>>\n" + "".join(
+            ["|".join(sensor) + "\n" for sensor in sensors])
 
     @staticmethod
     def _parse_sensor_reading(number, reading):

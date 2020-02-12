@@ -314,8 +314,8 @@ def _find_usages_of_contact_group_in_default_user_profile(name, global_config):
     domain = config_variable.domain()
     configured = global_config.get('default_user_profile', {})
     default_value = domain().default_globals()["default_user_profile"]
-    if (configured and name in configured['contactgroups']) \
-       or name in  default_value['contactgroups']:
+    if ((configured and name in configured['contactgroups']) or
+            name in default_value['contactgroups']):
         used_in.append(('%s' % (_('Default User Profile')),
                         folder_preserving_link([('mode', 'edit_configvar'),
                                                 ('varname', 'default_user_profile')])))

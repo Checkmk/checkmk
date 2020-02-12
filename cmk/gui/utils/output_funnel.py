@@ -16,7 +16,7 @@ from cmk.gui.utils.html import HTML
 OutputFunnelInput = Union[str, Text, "HTML"]
 
 
-class OutputFunnel(object):  # pylint: disable=useless-object-inheritance
+class OutputFunnel(object):
     """
     Provides the write functionality. The method _lowlevel_write needs
     to be overwritten in the specific subclass!

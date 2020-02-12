@@ -90,39 +90,39 @@ HOST_STATE = ('__HOST_STATE__',)
 HIDDEN = ('__HIDDEN__',)
 
 
-class FOREACH_HOST(object):  # pylint: disable=useless-object-inheritance
+class FOREACH_HOST(object):
     pass
 
 
-class FOREACH_CHILD(object):  # pylint: disable=useless-object-inheritance
+class FOREACH_CHILD(object):
     pass
 
 
-class FOREACH_CHILD_WITH(object):  # pylint: disable=useless-object-inheritance
+class FOREACH_CHILD_WITH(object):
     pass
 
 
-class FOREACH_PARENT(object):  # pylint: disable=useless-object-inheritance
+class FOREACH_PARENT(object):
     pass
 
 
-class FOREACH_SERVICE(object):  # pylint: disable=useless-object-inheritance
+class FOREACH_SERVICE(object):
     pass
 
 
-class REMAINING(object):  # pylint: disable=useless-object-inheritance
+class REMAINING(object):
     pass
 
 
-class DISABLED(object):  # pylint: disable=useless-object-inheritance
+class DISABLED(object):
     pass
 
 
-class HARD_STATES(object):  # pylint: disable=useless-object-inheritance
+class HARD_STATES(object):
     pass
 
 
-class DT_AGGR_WARN(object):  # pylint: disable=useless-object-inheritance
+class DT_AGGR_WARN(object):
     pass
 
 
@@ -468,7 +468,7 @@ def _confdir_for_user_id(user_id):
 # This objects intention is currently only to handle the currently logged in user after authentication.
 # But maybe this can be used for managing all user objects in future.
 # TODO: Cleanup accesses to module global vars and functions
-class LoggedInUser(object):  # pylint: disable=useless-object-inheritance
+class LoggedInUser(object):
     def __init__(self, user_id):
         # type: (Optional[Text]) -> None
         self.id = UserId(user_id) if user_id else None

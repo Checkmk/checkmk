@@ -65,7 +65,7 @@ Global variables:
                          function. See get_rate() documentation for details
     ZERO                 Used as value for the "onwrap" argument of the get_rate()
                          function. See get_rate() documentation for details
-"""
+"""  # pylint: disable=pointless-string-statement
 
 # NOTE: The above suppression is necessary because our testing framework blindly
 # concatenates lots of files, including this one.

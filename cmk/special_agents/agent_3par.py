@@ -3,8 +3,11 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""
+Special agent for monitoring 3par devices.
+"""
 
-import getopt
+import argparse
 import json
 import sys
 
@@ -13,96 +16,49 @@ import urllib3  # type: ignore[import]
 
 import cmk.utils.password_store
 
-#   .--Arguments-----------------------------------------------------------.
-#   |           _                                         _                |
-#   |          / \   _ __ __ _ _   _ _ __ ___   ___ _ __ | |_ ___          |
-#   |         / _ \ | '__/ _` | | | | '_ ` _ \ / _ \ '_ \| __/ __|         |
-#   |        / ___ \| | | (_| | |_| | | | | | |  __/ | | | |_\__ \         |
-#   |       /_/   \_\_|  \__, |\__,_|_| |_| |_|\___|_| |_|\__|___/         |
-#   |                    |___/                                             |
-#   '----------------------------------------------------------------------'
+VALID_VALUES = ["system", "cpgs", "volumes", "hosts", "capacity", "ports", "remotecopy"]
 
 
-def usage():
-    sys.stderr.write("""Check_MK 3par Agent
-USAGE: agent_3par [OPTIONS] HOST
-       agent_3par -h
-
-ARGUMENTS:
-  HOST                                      Host name or IP address of 3par system
-
-OPTIONS:
-  -h, --help                                Show this help message and exit
-  -u USER, --user USER                      Username for 3par login
-  -p PASSWORD, --password PASSWORD          Password for 3par login
-  --verify-certs yes/no                     Enable/disable verification of the servers
-                                            ssl certificate. Disabled by default.
-  -v VALUE,VALUE, --values VALUE,VALUE      Values to fetch from 3par system.
-                                            Possible values:    system
-                                                                hosts
-                                                                ports
-                                                                flashcache
-                                                                volumes
-                                                                cpgs
-""")
+def _get_values_list(opt_string):
+    values = opt_string.split(',')
+    invalid_choices = set(values) - set(VALID_VALUES)
+    if invalid_choices:
+        raise ValueError('invalid values: %r' % invalid_choices)
+    return values
 
 
-#.
+def parse_arguments(argv):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('-u', '--user', required=True, help="Username for 3par login")
+    parser.add_argument('-p', '--password', required=True, help="Password for 3par login")
+    parser.add_argument('--no-cert-check',
+                        action='store_true',
+                        help="Disable verification of the servers ssl certificate")
+    parser.add_argument(
+        '-v',
+        '--values',
+        type=_get_values_list,
+        default=VALID_VALUES,
+        help="Comma seperated list of values to fetch from 3par system. Choose from: %r" %
+        VALID_VALUES)
+    parser.add_argument('host', help="Host name or IP address of 3par system")
+    args = parser.parse_args(argv)
+    return args
 
 
-def main(sys_argv=None):
-    if sys_argv is None:
+def main(argv=None):
+    if argv is None:
         cmk.utils.password_store.replace_passwords()
-        sys_argv = sys.argv[1:]
+        argv = sys.argv[1:]
+    args = parse_arguments(argv)
 
-    opt_host = None
-    opt_user = None
-    opt_password = None
-    opt_values = ["system", "cpgs", "volumes", "hosts", "capacity", "ports", "remotecopy"]
-    opt_verify = False
-
-    short_options = "hh:u:p:v:"
-    long_options = ["help", "user=", "password=", "values=", "verify-certs="]
-
-    try:
-        opts, args = getopt.getopt(sys_argv, short_options, long_options)
-    except getopt.GetoptError as err:
-        sys.stderr.write("%s\n" % err)
-        return 1
-
-    for opt, arg in opts:
-        if opt in ['-h', '--help']:
-            usage()
-            sys.exit(0)
-        elif opt in ["-u", "--user"]:
-            opt_user = arg
-        elif opt in ["-p", "--password"]:
-            opt_password = arg
-        elif opt in ["-v", "--values"]:
-            opt_values = arg.split(",")
-        elif opt in ['--verify-certs']:
-            opt_verify = arg == "yes"
-        elif not opt:
-            usage()
-            sys.exit(0)
-
-    if len(args) == 1:
-        opt_host = args[0]
-    elif not args:
-        sys.stderr.write("ERROR: No host given.\n")
-        return 1
-    else:
-        sys.stderr.write("ERROR: Please specify exactly one host.\n")
-        return 1
-    #.-
-
-    url = "https://%s:8080/api/v1" % opt_host
+    url = "https://%s:8080/api/v1" % args.host
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
     }
 
-    if not opt_verify:
+    if args.no_cert_check:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     # Initiate connection and get session Key. The api expects the login data
@@ -111,12 +67,12 @@ def main(sys_argv=None):
     try:
         req = requests.post("%s/credentials" % url,
                             json={
-                                'user': opt_user,
-                                'password': opt_password
+                                'user': args.user,
+                                'password': args.password
                             },
                             headers=headers,
                             timeout=10,
-                            verify=opt_verify)
+                            verify=not args.no_cert_check)
 
     except requests.exceptions.RequestException as e:
         sys.stderr.write("Error: %s\n" % e)
@@ -138,9 +94,12 @@ def main(sys_argv=None):
     # Get the requested data. We put every needed value into an extra section
     # to get better performance in the checkplugin if less data is needed.
 
-    for value in opt_values:
+    for value in args.values:
         print("<<<3par_%s:sep(0)>>>" % value)
-        req = requests.get("%s/%s" % (url, value), headers=headers, timeout=10, verify=opt_verify)
+        req = requests.get("%s/%s" % (url, value),
+                           headers=headers,
+                           timeout=10,
+                           verify=not args.no_cert_check)
         value_data = req.text.replace("\r\n", "").replace("\n", "").replace(" ", "")
         print(value_data)
 
@@ -149,7 +108,7 @@ def main(sys_argv=None):
     req = requests.delete("%s/credentials/%s" % (url, headers["X-HP3PAR-WSAPI-SessionKey"]),
                           headers=headers,
                           timeout=10,
-                          verify=opt_verify)
+                          verify=not args.no_cert_check)
 
     if not req.status_code == requests.codes.OK:
         sys.stderr.write("Wrong status code: %s. Expected: %s \n" %

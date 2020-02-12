@@ -988,7 +988,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         if isinstance(result, list):
             result = True
 
-        if result != True:
+        if result is not True:
             raise MKGeneralException(_("Failed to synchronize with site: %s") % result)
 
     def _push_snapshot_to_site(self):

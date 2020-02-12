@@ -353,7 +353,7 @@ class ModeAjaxProfileReplication(AjaxPage):
         site = config.site(site_id)
         result = self._synchronize_profile(site_id, site, config.user.id)
 
-        if result != True:
+        if result is not True:
             _add_profile_replication_change(site_id, result)
             raise MKGeneralException(result)
 

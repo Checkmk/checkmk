@@ -150,7 +150,7 @@ class ModeTags(ABCTagMode):
                 raise MKUserError(None, "%s" % e)
             self._save_tags_and_update_hosts(self._tag_config.get_dict_format())
             add_change("edit-tags", _("Removed tag group %s (%s)") % (message, del_id))
-            return "tags", message != True and message or None
+            return "tags", message is not True and message or None
 
     def _delete_aux_tag(self):
         del_id = html.get_item_input("_del_aux",
@@ -656,7 +656,7 @@ class ModeEditTagGroup(ABCEditTagMode):
         if message:
             self._save_tags_and_update_hosts(changed_hosttags_config.get_dict_format())
             add_change("edit-hosttags", _("Edited host tag group %s (%s)") % (message, self._id))
-            return "tags", message != True and message or None
+            return "tags", message is not True and message or None
 
         return "tags"
 

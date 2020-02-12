@@ -436,7 +436,7 @@ def do_commands(view, what, rows):
             "count": len(rows),
             "what": title_what,
         })
-    if r != True:
+    if r is not True:
         return r is None  # Show commands on negative answer
 
     count = 0

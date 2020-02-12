@@ -35,7 +35,7 @@ def push_user_profiles_to_site_transitional_wrapper(site, user_profiles):
             failed_info = []
             for user_id, user in user_profiles.items():
                 result = _legacy_push_user_profile_to_site(site, user_id, user)
-                if result != True:
+                if result is not True:
                     failed_info.append(result)
 
             if failed_info:

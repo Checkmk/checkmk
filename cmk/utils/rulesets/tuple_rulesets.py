@@ -86,7 +86,7 @@ def in_extraconf_hostlist(hostlist, hostname):
             if not use_regex and hostname == hostentry:
                 return not negate
             # Handle Regex. Note: hostname == True -> generic unknown host
-            elif use_regex and hostname != True:
+            elif use_regex and hostname is not True:
                 if regex(hostentry).match(hostname) is not None:
                     return not negate
         except MKGeneralException:

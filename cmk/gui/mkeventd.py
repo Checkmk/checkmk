@@ -338,7 +338,7 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
             cp = True
 
         match_groups = match(rule.get("match_ok", ""), event["text"], complete=False)
-        if match_groups != False and cp:
+        if match_groups is not False and cp:
             if match_groups is True:
                 match_groups = ()
             return True, match_groups

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -27,6 +27,8 @@
 import os
 import subprocess
 from typing import cast, Iterable, Set, Tuple, Optional, Dict, List  # pylint: disable=unused-import
+
+import six
 
 import cmk.utils.debug
 import cmk.utils.tty as tty
@@ -331,7 +333,7 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
     return value
 
 
-class SNMPBackendFactory(object):
+class SNMPBackendFactory(object):  # pylint: disable=useless-object-inheritance
     @staticmethod
     def factory(snmp_config, enforce_stored_walks):
         # type: (SNMPHostConfig, bool) -> snmp_utils.ABCSNMPBackend
@@ -448,7 +450,9 @@ class StoredWalkSNMPBackend(snmp_utils.ABCSNMPBackend):
                 o = o[1:]
             if o == oid or o.startswith(oid_prefix + "."):
                 if len(parts) > 1:
-                    value = cmk.base.agent_simulator.process(parts[1])
+                    # FIXME: This encoding ping-pong os horrible...
+                    value = six.ensure_str(
+                        cmk.base.agent_simulator.process(six.ensure_binary(parts[1])))
                 else:
                     value = ""
                 # Fix for missing starting oids
@@ -821,14 +825,15 @@ def do_snmptranslate(walk_filename):
     while i < len(walk_lines):
         console.error("\r%d to go...    " % (len(walk_lines) - i))
         process_lines = walk_lines[i:i + entries_per_cycle]
-        translated = translate(process_lines)
+        # FIXME: This encoding ping-pong os horrible...
+        translated = translate([six.ensure_binary(pl) for pl in process_lines])
         i += len(translated)
         translated_lines += translated
     console.error("\rfinished.                \n")
 
     # Output formatted
     for translation, line in translated_lines:
-        console.output("%s --> %s\n" % (line, translation))
+        console.output("%s --> %s\n" % (six.ensure_str(line), six.ensure_str(translation)))
 
 
 def do_snmpwalk(options, hostnames):

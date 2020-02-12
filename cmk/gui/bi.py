@@ -1655,8 +1655,7 @@ def get_services_filtered_by_host_name(host_re):
             entries = [((e[0], host_re), e[1]) for e in g_services_by_hostname[middle]]
             host_re = "(.*)"
 
-    elif not honor_site and not '*' in host_re and not '$' in host_re \
-         and not '|' in host_re and not '[' in host_re:
+    elif not honor_site and '*' not in host_re and '$' not in host_re and '|' not in host_re and '[' not in host_re:
         # Exact host match
         entries = [((e[0], host_re), e[1]) for e in g_services_by_hostname.get(host_re, [])]
 
@@ -2027,8 +2026,7 @@ def compile_leaf_node(host_re, service_re=config.HOST_STATE):
         return found
 
     honor_site = SITE_SEP in host_re
-    if not honor_site and not '*' in host_re and not '$' in host_re \
-        and not '|' in host_re and '[' not in host_re:
+    if not honor_site and '*' not in host_re and '$' not in host_re and '|' not in host_re and '[' not in host_re:
         # Exact host match
         entries = [((e[0], host_re), e[1]) for e in g_services_by_hostname.get(host_re, [])]
 

@@ -702,7 +702,7 @@ def construct_content(context):
     content_html = utils.substitute_context(template_html, context)
 
     attachments = []
-    if "graph" in elements and not "ALERTHANDLEROUTPUT" in context:
+    if "graph" in elements and "ALERTHANDLEROUTPUT" not in context:
         # Add Checkmk graphs
         try:
             attachments, graph_code = render_performance_graphs(context)

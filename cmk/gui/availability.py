@@ -1277,7 +1277,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
 
         # Iconbuttons with URLs
         urls = []
-        if not "omit_buttons" in labelling:
+        if "omit_buttons" not in labelling:
             if what != "bi":
                 timeline_url = html.makeuri([("av_mode", "timeline"), ("av_site", site),
                                              ("av_host", host), ("av_service", service)])

@@ -53,7 +53,7 @@ def user_profile_async_replication_dialog(sites):
     num_replsites = 0
     for site_id in sites:
         site = config.sites[site_id]
-        if not "secret" in site:
+        if "secret" not in site:
             status_txt = _('Not logged in.')
             start_sync = False
             icon = 'repl_locked'
@@ -361,7 +361,7 @@ class ModeAjaxProfileReplication(AjaxPage):
 
     def _synchronize_profile(self, site_id, site, user_id):
         users = userdb.load_users(lock=False)
-        if not user_id in users:
+        if user_id not in users:
             raise MKUserError(None, _('The requested user does not exist'))
 
         start = time.time()

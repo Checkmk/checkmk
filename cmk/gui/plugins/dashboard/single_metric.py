@@ -250,7 +250,7 @@ class SingleMetricDashlet(Dashlet):
         for data in self._perf_data:
             varname = data[0]
             orig_varname = varname
-            if not varname in t_metrics:
+            if varname not in t_metrics:
                 varname = check_metrics[self._check_command][varname]["name"]
             metric_title = t_metrics[varname]["title"]
             metric_choices.append((varname, "%s (%s)" % (varname, metric_title)))

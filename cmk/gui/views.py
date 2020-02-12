@@ -2467,7 +2467,7 @@ def get_view_by_name(view_name):
 
 
 def register_hook(hook, func):
-    if not hook in view_hooks:
+    if hook not in view_hooks:
         view_hooks[hook] = []
 
     if func not in view_hooks[hook]:

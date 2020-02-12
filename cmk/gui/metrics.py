@@ -313,7 +313,7 @@ class Perfometers(object):
         if not isinstance(value, str):
             return True
 
-        if not ":" in value:
+        if ":" not in value:
             return True
 
         perf_name, perf_param = value.split(":", 1)

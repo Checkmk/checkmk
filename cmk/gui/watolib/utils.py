@@ -116,7 +116,7 @@ def mk_eval(s):
         if not config.wato_legacy_eval:
             return ast.literal_eval(base64.b64decode(s))
         return pickle.loads(base64.b64decode(s))
-    except:
+    except Exception:
         raise MKGeneralException(_('Unable to parse provided data: %s') % html.render_text(repr(s)))
 
 

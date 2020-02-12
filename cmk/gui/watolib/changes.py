@@ -182,7 +182,7 @@ class SiteChanges(object):
                 pass
             else:
                 raise
-        except:
+        except Exception:
             if lock:
                 store.release_lock(path)
             raise

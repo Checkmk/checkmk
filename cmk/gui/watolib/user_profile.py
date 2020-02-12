@@ -66,7 +66,7 @@ def _legacy_push_user_profile_to_site(site, user_id, profile):
 
     try:
         response = mk_eval(response)
-    except:
+    except Exception:
         # The remote site will send non-Python data in case of an error.
         raise MKAutomationException("%s: <pre>%s</pre>" % (_("Got invalid data"), response))
     return response

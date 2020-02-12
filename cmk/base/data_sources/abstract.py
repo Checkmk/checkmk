@@ -1020,6 +1020,6 @@ def _normalize_ip_addresses(ip_addresses):
             prefix, tmp = word.split('{')
             curly, suffix = tmp.split('}')
             expanded.extend(prefix + i + suffix for i in curly.split(','))
-        except:
+        except Exception:
             raise MKGeneralException("could not expand %r" % word)
     return expanded

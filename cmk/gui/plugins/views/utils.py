@@ -1812,7 +1812,7 @@ class Cell(object):
 
         try:
             tdclass, content = self.render_content(row)
-        except:
+        except Exception:
             logger.exception("Failed to render painter '%s' (Row: %r)", self._painter_name, row)
             raise
 

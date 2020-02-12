@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -242,7 +242,7 @@ def do_create_config(core, with_agents):
 
     if with_agents:
         try:
-            import cmk.base.cee.agent_bakery  # pylint: disable=redefined-outer-name
+            import cmk.base.cee.agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
             cmk.base.cee.agent_bakery.bake_on_restart()  # pylint: disable=no-member
         except ImportError:
             pass

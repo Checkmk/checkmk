@@ -1,9 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """Code for computing the table of checks of hosts."""
 
 from typing import (  # pylint: disable=unused-import
@@ -29,7 +28,7 @@ from cmk.base.check_utils import (  # pylint: disable=unused-import
 # TODO: This is just a first cleanup step: Continue cleaning this up.
 # - Check all call sites and cleanup the different
 # - Make this a helper object of HostConfig?
-class HostCheckTable(object):
+class HostCheckTable(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, config_cache, host_config):
         # type: (config.ConfigCache, config.HostConfig) -> None
         super(HostCheckTable, self).__init__()

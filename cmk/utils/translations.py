@@ -26,7 +26,7 @@
 
 from typing import Dict, Text  # pylint: disable=unused-import
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import HostName, ServiceName  # pylint: disable=unused-import
+from cmk.utils.type_defs import ServiceName  # pylint: disable=unused-import
 
 TranslationOptions = Dict  # TODO: Improve this type
 

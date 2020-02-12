@@ -38,7 +38,7 @@ import pprint
 import tempfile
 import time
 from typing import (  # pylint: disable=unused-import
-    Callable, Any, Union, Dict, Iterator, List, Text, Optional, AnyStr, cast,
+    Any, Union, Dict, Iterator, Text, Optional, AnyStr, cast,
 )
 import six
 

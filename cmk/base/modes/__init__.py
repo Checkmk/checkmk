@@ -24,9 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import sys
 import textwrap
-import getopt
 from typing import Union, Tuple, Callable, Optional, Dict, List  # pylint: disable=unused-import
 
 from cmk.utils.plugin_loader import load_plugins

@@ -29,7 +29,7 @@
 # But at the current state of affairs we have no choice, otherwise an
 # incremental cleanup is impossible.
 
-from typing import Optional, Dict, Text  # pylint: disable=unused-import
+from typing import Optional  # pylint: disable=unused-import
 
 from cmk.base.discovered_labels import DiscoveredServiceLabels, DiscoveredHostLabels  # pylint: disable=unused-import
 from cmk.base.check_utils import CheckParameters, CheckPluginName, Item  # pylint: disable=unused-import

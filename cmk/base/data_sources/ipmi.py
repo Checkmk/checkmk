@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from typing import cast, Optional, Set, List, Tuple  # pylint: disable=unused-import
+from typing import cast, Optional, Set, List  # pylint: disable=unused-import
 import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
 import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import]
 import pyghmi.constants as ipmi_const  # type: ignore[import]

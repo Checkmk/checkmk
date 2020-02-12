@@ -29,7 +29,7 @@ import errno
 import os
 import tempfile
 from typing import (  # pylint: disable=unused-import
-    Optional, Dict, Set, Iterator, List, Tuple, NamedTuple, Text,
+    Optional, Dict, Iterator, List, Tuple, NamedTuple, Text,
 )
 import logging
 

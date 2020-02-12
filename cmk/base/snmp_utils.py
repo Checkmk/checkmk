@@ -27,7 +27,7 @@
 import abc
 import functools
 from typing import (  # pylint: disable=unused-import
-    Text, Callable, List, NamedTuple, Union, Tuple, Optional, Dict, TypeVar,
+    Text, Callable, List, NamedTuple, Union, Tuple, Optional, Dict,
 )
 import six
 from cmk.base.utils import HostAddress, HostName  # pylint: disable=unused-import

@@ -28,7 +28,7 @@ of console input / output"""
 
 import logging
 import sys
-from typing import Any, IO, Text  # pylint: disable=unused-import
+from typing import Any, IO  # pylint: disable=unused-import
 
 from cmk.utils.log import VERBOSE
 import cmk.utils.tty as tty

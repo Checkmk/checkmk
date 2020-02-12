@@ -15,7 +15,7 @@ import time
 import re
 import hashlib
 import traceback
-from typing import Tuple, List, Optional, Union, Text, Dict, Callable, Type  # pylint: disable=unused-import
+from typing import Tuple, List, Optional, Union, Text, Dict, Type  # pylint: disable=unused-import
 import six
 
 if sys.version_info[0] >= 3:

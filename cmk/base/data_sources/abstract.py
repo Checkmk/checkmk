@@ -32,7 +32,7 @@ import abc
 import logging
 import sys
 from typing import (  # pylint: disable=unused-import
-    TYPE_CHECKING, TypeVar, AnyStr, Dict, Set, List, cast, Tuple, Union, Optional, Text, Generic,
+    TypeVar, AnyStr, Dict, Set, List, cast, Tuple, Union, Optional, Text, Generic,
 )
 import six
 
@@ -64,9 +64,7 @@ from cmk.base.check_api_utils import state_markers
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     PersistedAgentSections, SectionName, AgentSectionContent, ServiceState, ServiceDetails,
     ServiceCheckResult, Metric, CheckPluginName, AgentSections, PiggybackRawData, SectionCacheInfo,
-    RawAgentData, AbstractRawData, AbstractSections, AbstractPersistedSections,
-    BoundedAbstractRawData, BoundedAbstractSections, BoundedAbstractPersistedSections,
-    BoundedAbstractSectionContent,
+    RawAgentData, BoundedAbstractRawData, BoundedAbstractSections, BoundedAbstractPersistedSections,
 )
 from cmk.base.utils import (  # pylint: disable=unused-import
     HostName, HostAddress,

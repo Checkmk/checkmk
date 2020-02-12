@@ -26,7 +26,7 @@
 
 import abc
 import collections
-from typing import Iterator, Any, Union, Optional, Tuple, Text, List, Dict  # pylint: disable=unused-import
+from typing import Iterator, Any, Union, Optional, Text, List, Dict  # pylint: disable=unused-import
 import six
 
 from cmk.utils.exceptions import MKGeneralException

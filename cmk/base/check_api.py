@@ -94,18 +94,18 @@ Global variables:
 
 # TODO: Move imports directly to checks?
 from __future__ import division  # pylint: disable=misplaced-future
-import collections  # pylint: disable=unused-import
-import enum  # pylint: disable=unused-import
-import fnmatch  # pylint: disable=unused-import
+import collections  # noqa: F401 # pylint: disable=unused-import
+import enum  # noqa: F401 # pylint: disable=unused-import
+import fnmatch  # noqa: F401 # pylint: disable=unused-import
 import functools
-import math  # pylint: disable=unused-import
+import math  # noqa: F401 # pylint: disable=unused-import
 import os
-import re  # pylint: disable=unused-import
-import socket  # pylint: disable=unused-import
+import re  # noqa: F401 # pylint: disable=unused-import
+import socket  # noqa: F401 # pylint: disable=unused-import
 import sys  # pylint: disable=unused-import
 import time
 # NOTE: We do not use pprint in this module, but it is part of the check API.
-import pprint  # pylint: disable=unused-import
+import pprint  # noqa: F401 # pylint: disable=unused-import
 
 from typing import (  # pylint: disable=unused-import
     Set, Any, Callable, Dict, Iterable, List, Optional, Tuple, Union, Text,
@@ -117,7 +117,7 @@ import cmk.utils.debug as _debug
 import cmk.utils.defines as _defines
 import cmk.utils.paths as _paths
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.regex import regex  # pylint: disable=unused-import
+from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
 import cmk.utils.render as render
 import cmk.utils.rulesets.tuple_rulesets as _tuple_rulesets
 
@@ -126,7 +126,7 @@ import cmk.utils.rulesets.tuple_rulesets as _tuple_rulesets
 # check context.
 import cmk.utils as _cmk_utils
 import cmk.base.config as _config
-import cmk.base.console as _console  # pylint: disable=unused-import
+import cmk.base.console as _console  # noqa: F401 # pylint: disable=unused-import
 import cmk.base.snmp_utils as _snmp_utils
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
@@ -187,7 +187,7 @@ host_name = _check_api_utils.host_name
 service_description = _check_api_utils.service_description
 check_type = _check_api_utils.check_type
 
-from cmk.base.discovered_labels import (  # pylint: disable=unused-import
+from cmk.base.discovered_labels import (  # noqa: F401 # pylint: disable=unused-import
     DiscoveredServiceLabels as ServiceLabels, ServiceLabel, DiscoveredHostLabels as HostLabels,
     HostLabel,
 )

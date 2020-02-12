@@ -26,7 +26,7 @@
 
 import sys
 import logging
-from typing import AnyStr, Text, Union, IO, Any  # pylint: disable=unused-import
+from typing import AnyStr, Text, Union, IO  # pylint: disable=unused-import
 
 # Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:

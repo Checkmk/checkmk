@@ -11,7 +11,7 @@ import ast
 import errno
 import os
 import time
-from typing import Dict, List  # pylint: disable=unused-import
+from typing import Dict  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error

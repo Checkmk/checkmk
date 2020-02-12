@@ -31,7 +31,7 @@ Please try to find a better place for the things you want to put here."""
 import itertools
 import sys
 import time
-from typing import Any, AnyStr, Callable, Dict, List, Optional, Set, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error

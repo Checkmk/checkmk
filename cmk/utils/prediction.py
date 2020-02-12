@@ -27,7 +27,7 @@ import json
 import logging
 import os
 import time
-from typing import Dict, AnyStr, Text, Union, Callable, List, Optional, Tuple, cast  # pylint: disable=unused-import
+from typing import Dict, Text, Callable, List, Optional, Tuple  # pylint: disable=unused-import
 
 import six
 

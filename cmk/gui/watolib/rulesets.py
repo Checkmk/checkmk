@@ -7,7 +7,7 @@
 import os
 import re
 import pprint
-from typing import Text, Dict, Union, NamedTuple, List, Optional  # pylint: disable=unused-import
+from typing import Dict, Union, List, Optional  # pylint: disable=unused-import
 
 import cmk.utils.store as store
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher

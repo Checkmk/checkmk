@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import division, absolute_import, print_function
-from typing import Optional  # pylint: disable=unused-import
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (

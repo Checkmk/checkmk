@@ -26,7 +26,7 @@
 """Code for computing the table of checks of hosts."""
 
 from typing import (  # pylint: disable=unused-import
-    Union, TypeVar, Iterable, Text, Optional, Dict, Tuple, Any, List, Set, Callable, cast, Iterator,
+    Text, Optional, Dict, Tuple, List, Set, Callable, cast, Iterator,
 )
 
 from cmk.utils.exceptions import MKGeneralException

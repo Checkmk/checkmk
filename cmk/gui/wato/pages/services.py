@@ -16,7 +16,7 @@ import pprint
 import sys
 import re
 from hashlib import sha256
-from typing import Dict, NamedTuple, Text, List, Optional, Union  # pylint: disable=unused-import
+from typing import Dict, NamedTuple, Text, List, Optional  # pylint: disable=unused-import
 
 import cmk
 from cmk.utils.defines import short_service_state_name

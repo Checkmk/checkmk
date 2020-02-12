@@ -31,7 +31,7 @@
 #  or write to the postal address provided at www.mathias-kettner.de
 
 from typing import (  # pylint: disable=unused-import
-    TYPE_CHECKING, Union, TypeVar, Iterable, Text, Optional, Dict, Tuple, Any, List, NoReturn,
+    TYPE_CHECKING, Union, TypeVar, Text, Optional, Dict, Tuple, Any, List, NoReturn,
 )
 
 from cmk.utils.exceptions import MKGeneralException
@@ -42,7 +42,7 @@ from cmk.base.discovered_labels import DiscoveredServiceLabels
 from cmk.base.utils import HostName
 
 if TYPE_CHECKING:
-    from cmk.base.snmp_utils import (  # pylint: disable=unused-import
+    from cmk.base.snmp_utils import (  # noqa: F401 # pylint: disable=unused-import
         RawSNMPData, SNMPSections, PersistedSNMPSections, SNMPSectionContent,
     )
 

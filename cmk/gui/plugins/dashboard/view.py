@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Optional  # pylint: disable=unused-import
 import cmk.gui.views as views
 import cmk.gui.visuals as visuals
 from cmk.gui.i18n import _

@@ -34,27 +34,17 @@
 #                cache info and piggyback lines that is used to process the
 #                data within Check_MK.
 
-import ast
-import os
-import signal
-import socket
-import subprocess
-import sys
-import time
 from typing import (  # pylint: disable=unused-import
-    cast, Iterable, TYPE_CHECKING, List, Dict, Optional, Set,
+    Iterable, TYPE_CHECKING, List, Dict, Optional, Set,
 )
 
 import cmk.utils.paths
 import cmk.utils.debug
-from cmk.utils.exceptions import MKGeneralException
-import cmk.utils.store as store
 import cmk.utils.piggyback
 
 import cmk.base
 import cmk.base.config as config
 import cmk.base.console as console
-import cmk.base.item_state as item_state
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.check_table as check_table
 from cmk.base.check_utils import (  # pylint: disable=unused-import

@@ -6,7 +6,7 @@
 
 from contextlib import contextmanager
 from typing import (  # pylint: disable=unused-import
-    TYPE_CHECKING, Any, cast, Dict, Iterator, List, NewType, Optional, Text, Tuple, Union,
+    Any, cast, Dict, Iterator, List, NewType, Optional, Text, Tuple, Union,
 )
 
 from livestatus import (

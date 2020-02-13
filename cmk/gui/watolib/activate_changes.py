@@ -898,7 +898,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         manager = ActivateChangesManager()
         manager.load()
         manager.load_activation(self._activation_id)
-        manager.activate_until()
+        return manager.activate_until()
 
     def _set_done_result(self, configuration_warnings):
         if any(configuration_warnings.values()):

@@ -331,7 +331,7 @@ class FilterInvtableVersion(six.with_metaclass(abc.ABCMeta, Filter)):
 
 
 class FilterInvText(six.with_metaclass(abc.ABCMeta, Filter)):
-    @abc.abstractmethod
+    @abc.abstractproperty
     def _invpath(self):
         raise NotImplementedError()
 
@@ -376,15 +376,15 @@ class FilterInvText(six.with_metaclass(abc.ABCMeta, Filter)):
 
 
 class FilterInvFloat(six.with_metaclass(abc.ABCMeta, Filter)):
-    @abc.abstractmethod
+    @abc.abstractproperty
     def _invpath(self):
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abc.abstractproperty
     def _unit(self):
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abc.abstractproperty
     def _scale(self):
         raise NotImplementedError()
 
@@ -437,7 +437,7 @@ class FilterInvFloat(six.with_metaclass(abc.ABCMeta, Filter)):
 
 
 class FilterInvBool(six.with_metaclass(abc.ABCMeta, FilterTristate)):
-    @abc.abstractmethod
+    @abc.abstractproperty
     def _invpath(self):
         raise NotImplementedError()
 

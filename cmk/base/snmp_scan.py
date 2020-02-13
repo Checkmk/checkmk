@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -50,7 +50,7 @@ def _snmp_scan(host_config,
                do_snmp_scan=True,
                for_mgmt_board=False):
     # type: (SNMPHostConfig, str, bool, bool, bool) -> List[CheckPluginName]
-    import cmk.base.inventory_plugins as inventory_plugins
+    import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
 
     # Make hostname globally available for scan functions.
     # This is rarely used, but e.g. the scan for if/if64 needs
@@ -164,5 +164,5 @@ def _output_snmp_check_plugins(title, collection):
         collection_out = " ".join(sorted(collection))
     else:
         collection_out = "-"
-    console.vverbose("   %-35s%s%s%s%s\n" % \
-                    (title, tty.bold, tty.yellow, collection_out, tty.normal))
+    console.vverbose("   %-35s%s%s%s%s\n" %
+                     (title, tty.bold, tty.yellow, collection_out, tty.normal))

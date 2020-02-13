@@ -412,15 +412,15 @@ class FilterInvText(Filter):
 class FilterInvFloat(Filter):
     __metaclass__ = abc.ABCMeta
 
-    @abc.abstractmethod
+    @abc.abstractproperty
     def _invpath(self):
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abc.abstractproperty
     def _unit(self):
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abc.abstractproperty
     def _scale(self):
         raise NotImplementedError()
 

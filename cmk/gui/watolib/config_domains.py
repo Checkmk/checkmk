@@ -310,7 +310,7 @@ class ConfigDomainOMD(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
     ident = "omd"
-    omd_config_dir = "%s/etc/omd" % (cmk.utils.paths.omd_root)
+    omd_config_dir = "%s/etc/omd" % (cmk.utils.paths.omd_root,)
 
     def __init__(self):
         super(ConfigDomainOMD, self).__init__()

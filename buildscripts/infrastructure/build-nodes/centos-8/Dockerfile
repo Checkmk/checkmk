@@ -84,7 +84,7 @@ RUN yum -y makecache \
     && yum -y --enablerepo=PowerTools install \
         chrpath \
     joe \
-    ping \
+    iputils \
     vim \
     && yum clean all
 

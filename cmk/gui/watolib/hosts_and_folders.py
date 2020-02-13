@@ -3,16 +3,17 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import abc
 import os
 import time
 import re
 import shutil
+import uuid
+
 from typing import Type, Union, List, Text, Dict  # pylint: disable=unused-import
 import six
 
 import cmk
-import cmk.utils.store as store
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -43,6 +44,8 @@ from cmk.gui.watolib.sidebar_reload import need_sidebar_reload
 from cmk.gui.watolib.host_attributes import host_attribute_registry
 
 from cmk.gui.plugins.watolib.utils import wato_fileheader
+from cmk.utils import store as store
+from cmk.utils.memoize import MemoizeCache
 
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -79,17 +82,95 @@ class WithPermissions(object):
         raise NotImplementedError()
 
 
-class WithPermissionsAndAttributes(WithPermissions):
-    """Base class containing a couple of generic permission checking functions, used for Host and Folder"""
-    def __init__(self):
-        super(WithPermissionsAndAttributes, self).__init__()
+class WithUniqueIdentifier(object):
+    """Provides methods for giving Hosts and Folders unique identifiers.
+
+    """
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, *args, **kw):
+        self._id = None
+        super(WithUniqueIdentifier, self).__init__(*args, **kw)
+
+    def id(self):
+        """The unique identifier of this particular instance.
+
+        Returns:
+            The id.
+
+        """
+        return self._id
+
+    @classmethod
+    def by_id(cls, identifier):
+        """Return the Folder instance of this particular identifier.
+
+        Args:
+            identifier:
+                The 16 byte uuid.uuid4() key, hex encoded (32 chars, byte-string).
+
+        Returns:
+
+        """
+        return cls._mapped_by_id()[identifier]
+
+    def persist_instance(self):
+        """Save the current state of the instance to a file.
+
+        """
+        if self._id is None:
+            self._id = uuid.uuid4().hex
+
+        data = self._get_instance_data()
+        data['__id'] = self._id
+        store.makedirs(os.path.basename(self._config_file_name()))
+        store.save_object_to_file(self._config_file_name(), self._get_instance_data())
+
+    def load_instance(self):
+        """Load the data of this instance and return it.
+
+        The internal state of the object will not be changed.
+
+        Returns:
+            The loaded data.
+        """
+        data = store.load_object_from_file(self._config_file_name(), default={})
+        unique_id = data.pop('__id', None)
+        if self._id is None:
+            self._id = unique_id
+        return data
+
+    @abc.abstractmethod
+    def _get_instance_data(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _config_file_name(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _clear_id_cache(self):
+        """Clear the cache if applicable."""
+        raise NotImplementedError()
+
+    @classmethod
+    def _mapped_by_id(cls):
+        """Give out a mapping from unique identifiers to class instances."""
+        raise NotImplementedError()
+
+
+class WithAttributes(object):
+    """Base class containing a couple of generic permission checking functions
+
+    Used in the Host and Folder classes."""
+    def __init__(self, *args, **kw):
+        super(WithAttributes, self).__init__(*args, **kw)
         self._attributes = {}
         self._effective_attributes = None
 
     # .--------------------------------------------------------------------.
     # | ATTRIBUTES                                                         |
     # '--------------------------------------------------------------------'
-
     def attributes(self):
         return self._attributes
 
@@ -124,7 +205,7 @@ class WithPermissionsAndAttributes(WithPermissions):
             return self._effective_attributes.copy()
 
 
-class BaseFolder(WithPermissionsAndAttributes):
+class BaseFolder(object):
     """Base class of SearchFolder and Folder. Implements common methods"""
     def hosts(self):
         raise NotImplementedError()
@@ -302,8 +383,9 @@ class BaseFolder(WithPermissionsAndAttributes):
         raise NotImplementedError()
 
 
-class CREFolder(BaseFolder):
+class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolder):
     """This class represents a WATO folder that contains other folders and hosts."""
+
     # .--------------------------------------------------------------------.
     # | STATIC METHODS                                                     |
     # '--------------------------------------------------------------------'
@@ -823,7 +905,7 @@ class CREFolder(BaseFolder):
         return []
 
     def _load(self):
-        wato_info = self._load_wato_info()
+        wato_info = self.load_instance()
         self._title = wato_info.get("title", self._fallback_title())
         self._attributes = self._transform_old_attributes(wato_info.get("attributes", {}))
         # Can either be set to True or a string (which will be used as host lock message)
@@ -835,18 +917,14 @@ class CREFolder(BaseFolder):
             self._num_hosts = wato_info.get("num_hosts", None)
         else:
             self._num_hosts = len(self.hosts())
-            self._save_wato_info()
-
-    def _load_wato_info(self):
-        return store.load_object_from_file(self.wato_info_path(), default={})
+            self.persist_instance()
 
     def save(self):
-        self._save_wato_info()
+        self.persist_instance()
         Folder.invalidate_caches()
 
-    def _save_wato_info(self):
-        self._ensure_folder_directory()
-        store.save_object_to_file(self.wato_info_path(), self.get_wato_info())
+    def _get_instance_data(self):
+        return self.get_wato_info()
 
     def get_wato_info(self):
         return {
@@ -1337,6 +1415,7 @@ class CREFolder(BaseFolder):
                    obj=new_subfolder,
                    sites=[new_subfolder.site_id()])
         hooks.call("folder-created", new_subfolder)
+        self._clear_id_cache()
         need_sidebar_reload()
         return new_subfolder
 
@@ -1356,6 +1435,7 @@ class CREFolder(BaseFolder):
 
         # 3. Actual modification
         hooks.call("folder-deleted", subfolder)
+        self._clear_id_cache()
         add_change("delete-folder",
                    _("Deleted folder %s") % subfolder.alias_path(),
                    obj=self,
@@ -1435,6 +1515,7 @@ class CREFolder(BaseFolder):
                    _("Edited properties of folder %s") % self.title(),
                    obj=self,
                    sites=affected_sites)
+        self._clear_id_cache()
 
     def _get_cgconf_from_attributes(self, attributes):
         v = attributes.get("contactgroups", (False, []))
@@ -1463,7 +1544,7 @@ class CREFolder(BaseFolder):
                        _("Created new host %s.") % host_name,
                        obj=host,
                        sites=[host.site_id()])
-        self._save_wato_info()  # num_hosts has changed
+        self.persist_instance()  # num_hosts has changed
         self.save_hosts()
 
     def delete_hosts(self, host_names):
@@ -1492,7 +1573,7 @@ class CREFolder(BaseFolder):
                        obj=host,
                        sites=[host.site_id()])
 
-        self._save_wato_info()  # num_hosts has changed
+        self.persist_instance()  # num_hosts has changed
         self.save_hosts()
 
     def _get_parents_of_hosts(self, host_names):
@@ -1546,9 +1627,9 @@ class CREFolder(BaseFolder):
                        obj=host,
                        sites=affected_sites)
 
-        self._save_wato_info()  # num_hosts has changed
+        self.persist_instance()  # num_hosts has changed
         self.save_hosts()
-        target_folder._save_wato_info()
+        target_folder.persist_instance()
         target_folder.save_hosts()
 
     def rename_host(self, oldname, newname):
@@ -1655,6 +1736,16 @@ class CREFolder(BaseFolder):
                 li_elements = "".join(["<li>%s</li>" % m for m in lock_messages])
                 lock_message = "<ul>" + li_elements + "</ul>"
             html.show_message(lock_message)
+
+    def _config_file_name(self):
+        return self.wato_info_path()
+
+    def _clear_id_cache(self):
+        folders_by_id.clear_cache()
+
+    @classmethod
+    def _mapped_by_id(cls):
+        return folders_by_id()
 
 
 def validate_host_uniqueness(varname, host_name):
@@ -1804,7 +1895,7 @@ class SearchFolder(BaseFolder):
             by_folder.setdefault(host.folder().path(), []).append(host)
 
         return [
-            (hosts[0].folder(), [host.name() for host in hosts]) for hosts in by_folder.values()
+            (hosts[0].folder(), [_host.name() for _host in hosts]) for hosts in by_folder.values()
         ]
 
     def _search_hosts_recursively(self, in_folder):
@@ -1844,7 +1935,7 @@ class SearchFolder(BaseFolder):
         self._found_hosts = None
 
 
-class CREHost(WithPermissionsAndAttributes):
+class CREHost(WithPermissions, WithAttributes):
     """Class representing one host that is managed via WATO. Hosts are contained in Folders."""
     # .--------------------------------------------------------------------.
     # | STATIC METHODS                                                     |
@@ -2236,6 +2327,7 @@ class CMEFolder(CREFolder):
             self._check_childs_customer_conflicts(site_id)
 
         super(CMEFolder, self).edit(new_title, new_attributes)
+        self._clear_id_cache()
 
     def _check_parent_customer_conflicts(self, site_id):
         new_customer_id = managed.get_customer_of_site(site_id)
@@ -2409,6 +2501,40 @@ if not cmk.is_managed_edition():
 else:
     Folder = CMEFolder
     Host = CMEHost
+
+
+@MemoizeCache
+def folders_by_id():
+    # type: () -> Dict[str, Type[CREFolder]]
+    """Map all reachable folders via their uuid.uuid4() id.
+
+    This will essentially flatten all Folders into one dictionary, yet uniquely identifiable via
+    their respective ids.
+
+    Returns:
+        A dictionary of uuid4 keys (hex encoded, byte-string) to Folder instances. It's
+        hex-encoded because the repr() output of a string is smaller than the repr() output of the
+        same byte-sequence (due to escaping characters).
+    """
+
+    # Rationale:
+    #   This is pretty wasteful but should not have any loop-holes. The problem with these sorts
+    #   of caches is the "identity" of the objects instantiated. Is the representation on disk or
+    #   the instantiated object the source of truth? Of course, it is the file on disk,
+    #   which means that we have to make sure that the state of all instances always reflect
+    #   the state on disk faithfully. In order to do that, we drop the entire cache on every
+    #   modification of any folder. (via folders_by_id.clear_cache(), part of lru_cache)
+    #   Downside is of course a lot of wasted CPU cycles/IO on big installations, but in order to
+    #   be more efficient the Folder classes need more invasive changes.
+    def _update_mapping(_folder, _mapping):
+        _mapping[_folder.id] = _folder
+        for _sub_folder in _folder.all_subfolders():
+            _mapping[_sub_folder.id] = _sub_folder
+            _update_mapping(_sub_folder, _mapping)
+
+    mapping = {}  # type: Dict[str, Type[CREFolder]]
+    _update_mapping(Folder.root_folder(), mapping)
+    return mapping
 
 
 def call_hook_hosts_changed(folder):

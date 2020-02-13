@@ -109,6 +109,41 @@ if [ -d /usr/lib/systemd ] && which systemctl >/dev/null 2>&1; then
     IS_SYSTEMD=1
 fi
 
+# Decoding files using omd python and omd script
+# We have obfuscated pyinstaller binaries to avoid false positives
+# from anti-virus software. On this stage we de-obfuscate those binaries.
+
+# setup "root" path in the same manner as in DEB package
+BASE_PATH =/omd/versions/%{version}
+
+# names
+CMK_DECODED_DIR_NAME=decoded
+CMK_UPDATE_EXE_NAME=cmk-update-agent.exe
+DECODING_SCRIPT_NAME=obfuscation.py
+
+# folder
+OMD_UTILS_DIR=$BASE_PATH/lib/python/cmk/utils
+CMK_PLUGINS_DIR=$BASE_PATH/share/check_mk/agents/windows/plugins
+CMK_DECODED_DIR=$CMK_PLUGINS_DIR/$CMK_DECODED_DIR_NAME
+
+# files
+DECODING_SCRIPT_PATH=$OMD_UTILS_DIR/$DECODING_SCRIPT_NAME
+CMK_ENCODED_EXE_PATH=$CMK_PLUGINS_DIR/$CMK_UPDATE_EXE_NAME
+CMK_DECODED_EXE_PATH=$CMK_DECODED_DIR/$CMK_UPDATE_EXE_NAME
+
+# python executable
+CMK_PYTHON=$BASE_PATH/bin/python
+
+# cmk-update-agent.exe:
+if test -f CMK_ENCODED_EXE_PATH & test -f $DECODING_SCRIPT_PATH ; then
+    echo "Decoding '$CMK_ENCODED_EXE_PATH' using '$DECODING_SCRIPT_PATH' to '$CMK_DECODED_EXE_PATH'"
+    mkdir -p $CMK_DECODED_DIR
+    echo "Calling internal python '$CMK_PYTHON'"
+    $CMK_PYTHON $DECODING_SCRIPT_PATH decrypt $CMK_ENCODED_EXE_PATH $CMK_DECODED_EXE_PATH
+fi
+
+
+
 # Detect whether or not manage startup through systemd or SysV
 if [ $IS_SYSTEMD -eq 1 ]; then
     echo "Installing systemd service: omd.init"

@@ -124,22 +124,22 @@ def check_brocade_sfp(item, params, parsed):
     yield check_levels(port_info["rx_power"],
                        "input_signal_power_dbm",
                        params.get("rx_power"),
-                       infotext="Rx",
+                       infoname="Rx",
                        unit="dBm")
     yield check_levels(port_info["tx_power"],
                        "output_signal_power_dbm",
                        params.get("tx_power"),
-                       infotext="Tx",
+                       infoname="Tx",
                        unit="dBm")
     yield check_levels(port_info["current"],
                        "current",
                        params.get("current"),
-                       infotext="Current",
+                       infoname="Current",
                        unit="A")
     yield check_levels(port_info["voltage"],
                        "voltage",
                        params.get("voltage"),
-                       infotext="Voltage",
+                       infoname="Voltage",
                        unit="V")
 
 

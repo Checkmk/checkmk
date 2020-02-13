@@ -89,3 +89,7 @@ Examples:
 
     def clear(self):
         self._cache.clear()
+
+    def clear_cache(self):
+        # naming compatible with lru_cache
+        return self.clear()

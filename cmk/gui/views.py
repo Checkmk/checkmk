@@ -12,7 +12,7 @@ import pprint
 import traceback
 import json
 import functools
-from typing import Any, Dict, List, Optional, Sequence, Set  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Set  # pylint: disable=unused-import
 import six
 
 import livestatus
@@ -85,8 +85,8 @@ from cmk.gui.plugins.views.utils import (
 )
 
 # Needed for legacy (pre 1.6) plugins
-from cmk.gui.htmllib import HTML  # pylint: disable=unused-import
-from cmk.gui.plugins.views.utils import (  # pylint: disable=unused-import
+from cmk.gui.htmllib import HTML  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused-import
     view_title, multisite_builtin_views, view_hooks, inventory_displayhints, register_command_group,
     transform_action_url, is_stale, paint_stalified, paint_host_list, format_plugin_output,
     link_to_view, url_to_view, row_id, group_value, view_is_enabled, paint_age, declare_1to1_sorter,
@@ -97,7 +97,7 @@ from cmk.gui.plugins.views.utils import (  # pylint: disable=unused-import
 )
 
 # Needed for legacy (pre 1.6) plugins
-from cmk.gui.plugins.views.icons import (  # pylint: disable=unused-import
+from cmk.gui.plugins.views.icons import (  # noqa: F401  # pylint: disable=unused-import
     multisite_icons_and_actions, get_multisite_icons, get_icons, iconpainter_columns,
 )
 
@@ -293,7 +293,7 @@ class View(object):
 
     @property
     def row_cells(self):
-        # type: () -> Sequence[Cell]
+        # type: () -> List[Cell]
         """Regular cells are displaying information about the rows of the type the view is about"""
         cells = []  # type: List[Cell]
         for e in self.spec["painters"]:

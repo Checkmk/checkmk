@@ -14,7 +14,7 @@ import time
 import re
 import hashlib
 import traceback
-from typing import Tuple, List, Optional, Union, Text, Dict, Type  # pylint: disable=unused-import
+from typing import Hashable, TYPE_CHECKING, Any, Set, Tuple, List, Optional, Union, Text, Dict, Type  # pylint: disable=unused-import
 import six
 
 if sys.version_info[0] >= 3:
@@ -23,10 +23,12 @@ else:
     from pathlib2 import Path  # pylint: disable=import-error
 
 import livestatus
+from livestatus import LivestatusRow  # pylint: disable=unused-import
 
 import cmk.utils.plugin_registry
 import cmk.utils.render
 import cmk.utils.regex
+from cmk.utils.encoding import ensure_unicode
 
 import cmk.gui.config as config
 import cmk.gui.escaping as escaping
@@ -44,7 +46,10 @@ from cmk.gui.globals import g, html
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.display_options import display_options
 from cmk.gui.permissions import permission_registry
-from cmk.gui.view_utils import render_tag_groups, render_labels, get_labels  # pylint: disable=unused-import
+from cmk.gui.view_utils import render_tag_groups, render_labels, get_labels  # noqa: F401 # pylint: disable=unused-import
+
+if TYPE_CHECKING:
+    from cmk.gui.views import View  # pylint: disable=unused-import
 
 
 # TODO: Better name it PainterOptions or DisplayOptions? There are options which only affect
@@ -60,37 +65,44 @@ class PainterOptions(object):
     #       but this would be a bigger change involving a lot of view rendering code.
     @classmethod
     def get_instance(cls):
+        # type: () -> PainterOptions
         """Use the request globals to prevent multiple instances during a request"""
         if 'painter_options' not in g:
             g.painter_options = cls()
         return g.painter_options
 
     def __init__(self):
+        # type: () -> None
         super(PainterOptions, self).__init__()
         # The names of the painter options used by the current view
-        self._used_option_names = []
+        self._used_option_names = []  # type: List[str]
         # The effective options for this view
-        self._options = {}
+        self._options = {}  # type: Dict[str, Any]
 
     def load(self, view_name=None):
+        # type: (Optional[str]) -> None
         self._load_from_config(view_name)
 
     # Load the options to be used for this view
     def _load_used_options(self, view):
-        options = set([])
+        # type: (View) -> None
+        options = set()  # type: Set[str]
 
         for cell in view.group_cells + view.row_cells:
             options.update(cell.painter_options())
 
         # Also layouts can register painter options
-        layout_class = layout_registry.get(view.spec.get("layout"))
-        if layout_class:
-            options.update(layout_class().painter_options)
+        layout_name = view.spec.get("layout")
+        if layout_name is not None:
+            layout_class = layout_registry.get(layout_name)
+            if layout_class:
+                options.update(layout_class().painter_options)
 
         # TODO: Improve sorting. Add a sort index?
         self._used_option_names = sorted(options)
 
     def _load_from_config(self, view_name):
+        # type: (Optional[str]) -> None
         if self._is_anonymous_view(view_name):
             return  # never has options
 
@@ -102,14 +114,17 @@ class PainterOptions(object):
         self._options = vo.get(view_name, {})
 
     def _is_anonymous_view(self, view_name):
+        # type: (Optional[str]) -> bool
         return view_name is None
 
     def save_to_config(self, view_name):
+        # type: (str) -> None
         vo = config.user.load_file("viewoptions", {}, lock=True)
         vo[view_name] = self._options
         config.user.save_file("viewoptions", vo)
 
     def update_from_url(self, view):
+        # type: (View) -> None
         self._load_used_options(view)
 
         if not self.painter_option_form_enabled():
@@ -123,6 +138,7 @@ class PainterOptions(object):
             self._set_from_submitted_form(view.name)
 
     def _set_from_submitted_form(self, view_name):
+        # type: (str) -> None
         # TODO: Remove all keys that are in painter_option_registry
         # but not in self._used_option_names
 
@@ -141,6 +157,7 @@ class PainterOptions(object):
             self.save_to_config(view_name)
 
     def _clear_painter_options(self, view_name):
+        # type: (str) -> None
         # TODO: This never removes options that are not existant anymore
         modified = False
         for name in painter_option_registry.keys():
@@ -160,18 +177,22 @@ class PainterOptions(object):
             html.request.del_var(varname)
 
     def get_valuespec_of(self, name):
+        # type: (str) -> ValueSpec
         return painter_option_registry[name]().valuespec
 
     def _is_set(self, name):
+        # type: (str) -> bool
         return name in self._options
 
     # Sets a painter option value (only for this request). Is not persisted!
     def set(self, name, value):
+        # type: (str, Any) -> None
         self._options[name] = value
 
     # Returns either the set value, the provided default value or if none
     # provided, it returns the default value of the valuespec.
     def get(self, name, dflt=None):
+        # type: (str, Any) -> Any
         if dflt is None:
             try:
                 dflt = self.get_valuespec_of(name).default_value()
@@ -187,18 +208,23 @@ class PainterOptions(object):
     # Not falling back to a default value, simply returning None in case
     # the option is not set.
     def get_without_default(self, name):
+        # type: (str) -> Any
         return self._options.get(name)
 
     def get_all(self):
+        # type: () -> Dict[str, Any]
         return self._options
 
     def painter_options_permitted(self):
+        # type: () -> bool
         return config.user.may("general.painter_options")
 
     def painter_option_form_enabled(self):
-        return self._used_option_names and self.painter_options_permitted()
+        # type: () -> bool
+        return bool(self._used_option_names) and self.painter_options_permitted()
 
     def show_form(self, view):
+        # type: (View) -> None
         self._load_used_options(view)
 
         if not display_options.enabled(display_options.D) or not self.painter_option_form_enabled():
@@ -225,18 +251,20 @@ class PainterOptions(object):
         html.close_div()
 
 
-# Calculates a uniq id for each data row which identifies the current
-# row accross different page loadings.
-def row_id(view, row):
+def row_id(view_spec, row):
+    # type: (Dict[str, Any], LivestatusRow) -> Text
+    """Calculates a uniq id for each data row which identifies the current
+    row accross different page loadings."""
     key = u''
-    for col in data_source_registry[view['datasource']]().id_keys:
+    for col in data_source_registry[view_spec['datasource']]().id_keys:
         key += u'~%s' % row[col]
-    return hashlib.sha256(key.encode('utf-8')).hexdigest()
+    return ensure_unicode(hashlib.sha256(key.encode('utf-8')).hexdigest())
 
 
-# The Group-value of a row is used for deciding whether
-# two rows are in the same group or not
 def group_value(row, group_cells):
+    # type: (LivestatusRow, List[Cell]) -> Hashable
+    """The Group-value of a row is used for deciding whether
+    two rows are in the same group or not"""
     group = []
     for cell in group_cells:
         painter = cell.painter()
@@ -254,6 +282,7 @@ def group_value(row, group_cells):
 
 
 def _create_dict_key(value):
+    # type: (Any) -> Hashable
     if isinstance(value, (list, tuple)):
         return tuple(map(_create_dict_key, value))
     elif isinstance(value, dict):
@@ -276,9 +305,11 @@ class PainterOption(six.with_metaclass(abc.ABCMeta, object)):
 
 class ViewPainterOptionRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
+        # type: () -> Type[PainterOption]
         return PainterOption
 
     def plugin_name(self, plugin_class):
+        # type: (Type[PainterOption]) -> str
         return plugin_class().ident
 
 
@@ -336,12 +367,15 @@ class Layout(six.with_metaclass(abc.ABCMeta, object)):
 
 class ViewLayoutRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
+        # type: () -> Type[Layout]
         return Layout
 
     def plugin_name(self, plugin_class):
+        # type: (Type[Layout]) -> str
         return plugin_class().ident
 
     def get_choices(self):
+        # type: () -> List[Tuple[str, Text]]
         choices = []
         for plugin_class in self.values():
             layout = plugin_class()
@@ -376,9 +410,11 @@ class CommandGroup(six.with_metaclass(abc.ABCMeta, object)):
 
 class CommandGroupRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
+        # type: () -> Type[CommandGroup]
         return CommandGroup
 
     def plugin_name(self, plugin_class):
+        # type: (Type[CommandGroup]) -> str
         return plugin_class().ident
 
 
@@ -387,6 +423,7 @@ command_group_registry = CommandGroupRegistry()
 
 # TODO: Kept for pre 1.6 compatibility
 def register_command_group(ident, title, sort_index):
+    # type: (str, Text, int) -> None
     cls = type(
         "LegacyCommandGroup%s" % ident.title(), (CommandGroup,), {
             "_ident": ident,
@@ -451,9 +488,11 @@ class Command(six.with_metaclass(abc.ABCMeta, object)):
 
 class CommandRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
+        # type: () -> Type[Command]
         return Command
 
     def plugin_name(self, plugin_class):
+        # type: (Type[Command]) -> str
         return plugin_class().ident
 
 
@@ -462,6 +501,7 @@ command_registry = CommandRegistry()
 
 # TODO: Kept for pre 1.6 compatibility
 def register_legacy_command(spec):
+    # type: (Dict[str, Any]) -> None
     ident = re.sub("[^a-zA-Z]", "", spec["title"]).lower()
     cls = type(
         "LegacyCommand%s" % str(ident).title(), (Command,), {

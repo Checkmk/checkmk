@@ -32,10 +32,10 @@ def parse_sophos_memory(info):
         return None
 
 
-def check_sophos_memory(item, params, parsed):
+def check_sophos_memory(_item, params, parsed):
     return check_levels(
         parsed,
-        "memory percentage usage",  # FIXME: CMK-3584
+        "memory_util",
         params.get("memory_levels", (None, None)),
         infoname="Usage",
         human_readable_func=get_percent_human_readable,

@@ -1,0 +1,13 @@
+Title: LDAP: Fix broken sync when a group contains itself
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p9
+Date: 1581602582
+Class: fix
+
+The LDAP synchronization was terminating with an exception when it is
+configured to synchronize nested loops and one of the groups to be synchronized
+contains itself as member. Loops spanning over multiple layers of groups were
+already prevented, but not self referencing objects.

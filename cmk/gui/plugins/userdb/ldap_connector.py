@@ -953,6 +953,13 @@ class LDAPUserConnector(UserConnector):
                     'cn': cn,
                 }
 
+                # Register the group construct, collect the members later. This way we can also
+                # catch the case where a group refers to itself, which is prevented by some LDAP
+                # editing tools, like "Active Directory Users & Computers", but can somehow be
+                # configured, e.g. when configuring universal distribution lists using ADSIEdit
+                # it was possible to configure something like this at least in older directories.
+                self._group_cache[True][dn] = groups[dn]
+
                 sub_group_filters = []
                 for obj_dn, obj in self._ldap_search(base_dn, filt, ['dn', 'objectclass'], 'sub'):
                     if "user" in obj['objectclass']:
@@ -969,8 +976,6 @@ class LDAPUserConnector(UserConnector):
                     groups[dn]['members'] += sub_group["members"]
 
                 groups[dn]['members'].sort()
-
-                self._group_cache[True][dn] = groups[dn]
 
         return groups
 

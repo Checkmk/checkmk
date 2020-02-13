@@ -188,6 +188,16 @@ def _ldap_tree():
             "cn": ["out-of-scope"],
             "member": ["cn=admin,ou=users,dc=check-mk,dc=org",],
         },
+        "cn=selfref,ou=groups,dc=check-mk,dc=org": {
+            "objectclass": ["group"],
+            "objectcategory": ["group"],
+            "dn": ["cn=selfref,ou=groups,dc=check-mk,dc=org"],
+            "cn": ["selfref"],
+            "member": [
+                "cn=selfref,ou=users,dc=check-mk,dc=org",
+                "cn=admin,ou=users,dc=check-mk,dc=org",
+            ],
+        },
     }
 
     tree.update(users)
@@ -453,10 +463,10 @@ def test_get_group_memberships_not_existing(mocked_ldap, nested):
 
 
 def test_get_group_memberships_nested(mocked_ldap):
-    memberships = mocked_ldap.get_group_memberships(["empty", "top-level", "level1", "level2"],
-                                                    nested=True)
+    memberships = mocked_ldap.get_group_memberships(
+        ["empty", "top-level", "level1", "level2", "selfref"], nested=True)
 
-    assert len(memberships) == 4
+    assert len(memberships) == 5
 
     needed_groups = [
         (u'cn=empty,ou=groups,dc=check-mk,dc=org', {
@@ -484,6 +494,10 @@ def test_get_group_memberships_nested(mocked_ldap):
                 u"cn=härry,ou=users,dc=check-mk,dc=org",
                 u"cn=sync-user,ou=users,dc=check-mk,dc=org",
             ],
+        }),
+        (u'cn=selfref,ou=groups,dc=check-mk,dc=org', {
+            'cn': u'selfref',
+            'members': [u"cn=admin,ou=users,dc=check-mk,dc=org",],
         }),
     ]
 

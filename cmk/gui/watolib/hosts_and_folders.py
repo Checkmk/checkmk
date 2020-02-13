@@ -82,12 +82,10 @@ class WithPermissions(object):
         raise NotImplementedError()
 
 
-class WithUniqueIdentifier(object):
+class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
     """Provides methods for giving Hosts and Folders unique identifiers.
 
     """
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self, *args, **kw):
         self._id = None
         super(WithUniqueIdentifier, self).__init__(*args, **kw)
@@ -1429,9 +1427,12 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         subfolder = self.subfolder(name)
         hosts_with_children = self._get_parents_of_hosts(subfolder.all_hosts_recursively().keys())
         if hosts_with_children:
-            raise MKUserError("delete_host", _("You cannot delete these hosts: %s") % \
-                              ", ".join([_("%s is parent of %s.") % (parent, ", ".join(children))
-                              for parent, children in sorted(hosts_with_children.items())]))
+            raise MKUserError(
+                "delete_host",
+                _("You cannot delete these hosts: %s") % ", ".join([
+                    _("%s is parent of %s.") % (parent, ", ".join(children))
+                    for parent, children in sorted(hosts_with_children.items())
+                ]))
 
         # 3. Actual modification
         hooks.call("folder-deleted", subfolder)
@@ -1556,9 +1557,12 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         # 2. check if hosts have parents
         hosts_with_children = self._get_parents_of_hosts(host_names)
         if hosts_with_children:
-            raise MKUserError("delete_host", _("You cannot delete these hosts: %s") % \
-                              ", ".join([_("%s is parent of %s.") % (parent, ", ".join(children))
-                              for parent, children in sorted(hosts_with_children.items())]))
+            raise MKUserError(
+                "delete_host",
+                _("You cannot delete these hosts: %s") % ", ".join([
+                    _("%s is parent of %s.") % (parent, ", ".join(children))
+                    for parent, children in sorted(hosts_with_children.items())
+                ]))
 
         # 3. Delete host specific files (caches, tempfiles, ...)
         self._delete_host_files(host_names)
@@ -2346,12 +2350,13 @@ class CMEFolder(CREFolder):
         customer_id = self._get_customer_id()
         if customer_id not in [managed.default_customer_id(), new_customer_id]:
             folder_sites = ", ".join(managed.get_sites_of_customer(customer_id))
-            raise MKUserError(None, _("The configured target site <i>%s</i> for this folder is invalid. The folder <i>%s</i> already belongs "
-                                      "to the customer <i>%s</i>. This violates the CME folder hierarchy. You may choose the "\
-                                      "following sites <i>%s</i>.") % (config.allsites()[site_id]["alias"],
-                                                                       self.title(),
-                                                                       managed.get_customer_name_by_id(customer_id),
-                                                                       folder_sites))
+            raise MKUserError(
+                None,
+                _("The configured target site <i>%s</i> for this folder is invalid. The folder <i>%s</i> already belongs "
+                  "to the customer <i>%s</i>. This violates the CME folder hierarchy. You may choose the "
+                  "following sites <i>%s</i>.") %
+                (config.allsites()[site_id]["alias"], self.title(),
+                 managed.get_customer_name_by_id(customer_id), folder_sites))
 
     def _check_childs_customer_conflicts(self, site_id):
         customer_id = managed.get_customer_of_site(site_id)
@@ -2364,11 +2369,12 @@ class CMEFolder(CREFolder):
             if subfolder_explicit_site:
                 subfolder_customer = subfolder._get_customer_id()
                 if subfolder_customer != customer_id:
-                    raise MKUserError(None, _("The subfolder <i>%s</i> has the explicit site <i>%s</i> set, which belongs to "
-                                              "customer <i>%s</i>. This violates the CME folder hierarchy.") %\
-                                              (subfolder.title(),
-                                               config.allsites()[subfolder_explicit_site]["alias"],
-                                               managed.get_customer_name_by_id(subfolder_customer)))
+                    raise MKUserError(
+                        None,
+                        _("The subfolder <i>%s</i> has the explicit site <i>%s</i> set, which belongs to "
+                          "customer <i>%s</i>. This violates the CME folder hierarchy.") %
+                        (subfolder.title(), config.allsites()[subfolder_explicit_site]["alias"],
+                         managed.get_customer_name_by_id(subfolder_customer)))
 
             subfolder._check_childs_customer_conflicts(site_id)
 
@@ -2379,11 +2385,12 @@ class CMEFolder(CREFolder):
             if host_explicit_site:
                 host_customer = managed.get_customer_of_site(host_explicit_site)
                 if host_customer != customer_id:
-                    raise MKUserError(None, _("The host <i>%s</i> has the explicit site <i>%s</i> set, which belongs to "
-                                              "customer <i>%s</i>. This violates the CME folder hierarchy.") %\
-                                              (host.name(),
-                                               config.allsites()[host_explicit_site]["alias"],
-                                               managed.get_customer_name_by_id(host_customer)))
+                    raise MKUserError(
+                        None,
+                        _("The host <i>%s</i> has the explicit site <i>%s</i> set, which belongs to "
+                          "customer <i>%s</i>. This violates the CME folder hierarchy.") %
+                        (host.name(), config.allsites()[host_explicit_site]["alias"],
+                         managed.get_customer_name_by_id(host_customer)))
 
     def create_subfolder(self, name, title, attributes):
         if "site" in attributes:
@@ -2451,12 +2458,14 @@ class CMEFolder(CREFolder):
                 if not host_site:
                     continue
                 if host_site not in allowed_sites:
-                    raise MKUserError(None, _("Unable to move host <i>%s</i>. Its explicit set site attribute <i>%s</i> "\
-                                              "belongs to customer <i>%s</i>. The target folder however, belongs to customer <i>%s</i>. "\
-                                              "This violates the folder CME folder hierarchy.") % \
-                                              (hostname, config.allsites()[host_site]["alias"],
-                                                managed.get_customer_of_site(host_site),
-                                                managed.get_customer_of_site(target_site_id)))
+                    raise MKUserError(
+                        None,
+                        _("Unable to move host <i>%s</i>. Its explicit set site attribute <i>%s</i> "
+                          "belongs to customer <i>%s</i>. The target folder however, belongs to customer <i>%s</i>. "
+                          "This violates the folder CME folder hierarchy.") %
+                        (hostname, config.allsites()[host_site]["alias"],
+                         managed.get_customer_of_site(host_site),
+                         managed.get_customer_of_site(target_site_id)))
 
         super(CMEFolder, self).move_hosts(host_names, target_folder)
 

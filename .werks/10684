@@ -1,0 +1,20 @@
+Title: Windows agent updater, cmk-update-agent.exe, is obfuscated now
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p9
+Date: 1581598507
+Class: feature
+
+The file <tt>cmk-update-agent.exe</tt> is build using pyinstaller, which might
+cause a false positive from antivirus software.
+
+Now, to prevent such false positives, this file is obfuscated during creation 
+and Windows agent MSI installation file shouldn't cause false positives anymore.
+
+The Windows Agent will automatically remove obfuscation from the file after own 
+installation and/or update.
+
+Also, Checkmk software installer removes obfuscation locally from the file to 
+provide valid Windows executable file for downloading from WATO web page.

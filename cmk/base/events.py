@@ -13,8 +13,12 @@ import sys
 import select
 import socket
 import time
-# No stub file
-import urllib.parse  # type: ignore[import]
+
+if sys.version_info[0] >= 3:
+    # No stub file
+    from urllib.parse import quote  # type: ignore[import]  # pylint: disable=unused-import,no-name-in-module
+else:
+    from urllib import quote  # pylint: disable=unused-import,no-name-in-module
 
 from typing import (  # pylint: disable=unused-import
     Any, Callable, Dict, Iterable, List, Optional, Text, Union)
@@ -300,14 +304,12 @@ def complete_raw_context(raw_context, with_dump):
 
         url_host_view = 'view.py?view_name=hoststatus&host=%s&site=%s' % (raw_context['HOSTNAME'],
                                                                           raw_context['OMD_SITE'])
-        raw_context['HOSTURL'] = '/check_mk/index.py?start_url=%s' % urllib.parse.quote(
-            url_host_view)
+        raw_context['HOSTURL'] = '/check_mk/index.py?start_url=%s' % quote(url_host_view)
 
         if raw_context['WHAT'] == 'SERVICE':
             url_service_view = 'view.py?view_name=service&host=%s&service=%s&site=%s' % (
                 raw_context['HOSTNAME'], raw_context['SERVICEDESC'], raw_context['OMD_SITE'])
-            raw_context['SERVICEURL'] = '/check_mk/index.py?start_url=%s' % urllib.parse.quote(
-                url_service_view)
+            raw_context['SERVICEURL'] = '/check_mk/index.py?start_url=%s' % quote(url_service_view)
 
         # Relative Timestamps for several macros
         for macro in [
@@ -370,8 +372,8 @@ def complete_raw_context(raw_context, with_dump):
                 raw_context[key[:-5] + "SHORTSTATE"] = value[:4]
 
         if raw_context["WHAT"] == "SERVICE":
-            raw_context['SERVICEFORURL'] = urllib.parse.quote(raw_context['SERVICEDESC'])
-        raw_context['HOSTFORURL'] = urllib.parse.quote(raw_context['HOSTNAME'])
+            raw_context['SERVICEFORURL'] = quote(raw_context['SERVICEDESC'])
+        raw_context['HOSTFORURL'] = quote(raw_context['HOSTNAME'])
 
         convert_context_to_unicode(raw_context)
 

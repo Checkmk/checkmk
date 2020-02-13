@@ -6,7 +6,6 @@
 """This module cares about Check_MK's file storage accessing. Most important
 functionality is the locked file opening realized with the File() context
 manager."""
-
 import sys
 import ast
 from contextlib import contextmanager
@@ -262,18 +261,17 @@ def save_object_to_file(path, data, pretty=False):
     # type: (Union[Path, str], Any, bool) -> None
     if pretty:
         try:
-            formated_data = pprint.pformat(data)
+            formatted_data = pprint.pformat(data)
         except UnicodeDecodeError:
             # When writing a dict with unicode keys and normal strings with garbled
             # umlaut encoding pprint.pformat() fails with UnicodeDecodeError().
             # example:
             #   pprint.pformat({'Z\xc3\xa4ug': 'on',  'Z\xe4ug': 'on', u'Z\xc3\xa4ugx': 'on'})
             # Catch the exception and use repr() instead
-            formated_data = repr(data)
+            formatted_data = repr(data)
     else:
-        formated_data = repr(data)
-
-    save_file(path, "%s\n" % formated_data)
+        formatted_data = repr(data)
+    save_file(path, "%s\n" % formatted_data)
 
 
 def save_text_to_file(path, content, mode=0o660):

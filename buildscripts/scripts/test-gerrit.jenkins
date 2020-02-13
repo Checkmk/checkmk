@@ -8,10 +8,14 @@ node {
 
     try {
         stage("Auschecken: Checkmk") {
-            checkout(scm)
-            sh "rm -rf ${RESULTS}; mkdir ${RESULTS}"
-            gerrit_stages = load 'buildscripts/scripts/lib/gerrit_stages.groovy'
-        }
+             print("Git Statusi before checkout")
+             sh("git status || exit 0")
+             print("Git log before checkout")
+             sh("git log --oneline -n10 || exit 0")
+             checkout(scm)
+             sh "rm -rf ${RESULTS}; mkdir ${RESULTS}"
+             gerrit_stages = load 'buildscripts/scripts/lib/gerrit_stages.groovy'
+         }
 
         // Creates a \n separated list of changed files
         def CHANGED_FILES_REL = sh(script: "git diff-tree --no-commit-id --name-only -r ${GERRIT_PATCHSET_REVISION}", returnStdout: true).toString().trim()

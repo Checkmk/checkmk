@@ -89,7 +89,7 @@ RUN yum -y makecache \
     && yum -y --enablerepo=PowerTools install \
     chrpath \
     joe \
-    ping \
+    iputils \
     vim \
     --nogpgcheck \
     && yum clean all

@@ -53,7 +53,7 @@ RUN touch /etc/fstab
 RUN yum -y makecache \
     && yum -y --enablerepo=PowerTools install \
     joe \
-    ping \
+    iputils \
     vim \
     && yum clean all
 

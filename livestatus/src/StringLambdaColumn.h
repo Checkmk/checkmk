@@ -33,28 +33,27 @@ class Row;
 
 class StringLambdaColumn : public StringColumn {
 public:
-    using value_type = std::string;
     struct Constant;
     struct Reference;
     StringLambdaColumn(std::string name, std::string description,
-                       std::function<value_type(Row)> gv)
+                       std::function<std::string(Row)> gv)
         : StringColumn(std::move(name), std::move(description), {})
         , get_value_(gv) {}
     virtual ~StringLambdaColumn() = default;
-    value_type getValue(Row row) const override { return get_value_(row); }
+    std::string getValue(Row row) const override { return get_value_(row); }
 
 private:
-    std::function<value_type(Row)> get_value_;
+    std::function<std::string(Row)> get_value_;
 };
 
 struct StringLambdaColumn::Constant : StringLambdaColumn {
-    Constant(std::string name, std::string description, const value_type& x)
+    Constant(std::string name, std::string description, const std::string& x)
         : StringLambdaColumn(std::move(name), std::move(description),
                              [x](Row /*row*/) { return x; }){};
 };
 
 struct StringLambdaColumn::Reference : StringLambdaColumn {
-    Reference(std::string name, std::string description, const value_type& x)
+    Reference(std::string name, std::string description, const std::string& x)
         : StringLambdaColumn(std::move(name), std::move(description),
                              [&x](Row /*row*/) { return x; }){};
 };

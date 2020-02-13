@@ -32,21 +32,18 @@
 class MonitoringCore;
 class Query;
 
-#ifdef CMC
-#include "Contact.h"
-#else
+#ifndef CMC
 #include "contact_fwd.h"
-namespace {
-using Contact = const contact *;
-}
 #endif
 
 class TableContacts : public Table {
 public:
+#ifndef CMC
     class IRow : virtual public Table::IRow {
     public:
-        virtual Contact getContact() const = 0;
+        virtual const contact *getContact() const = 0;
     };
+#endif
     explicit TableContacts(MonitoringCore *mc);
 
     [[nodiscard]] std::string name() const override;
@@ -54,7 +51,12 @@ public:
     void answerQuery(Query *query) override;
     [[nodiscard]] Row findObject(const std::string &objectspec) const override;
 
+#ifdef CMC
+    static void addColumns(Table *table, const std::string &prefix,
+                           int indirect_offset);
+#else
     static void addColumns(Table *table, const std::string &prefix);
+#endif
 };
 
 #endif  // TableContacts_h

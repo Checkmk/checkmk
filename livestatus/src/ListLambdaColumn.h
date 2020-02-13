@@ -34,35 +34,20 @@ class Row;
 
 class ListLambdaColumn : public ListColumn {
 public:
-    using value_type = std::vector<std::string>;
-    struct Constant;
-    struct Reference;
     ListLambdaColumn(std::string name, std::string description,
-                     std::function<value_type(Row)> f)
+                     std::function<std::vector<std::string>(Row)> f)
         : ListColumn(std::move(name), std::move(description), {})
         , get_value_{f} {}
     virtual ~ListLambdaColumn() = default;
 
-    value_type getValue(
+    std::vector<std::string> getValue(
         Row row, const contact* /*auth_user*/,
         std::chrono::seconds /*timezone_offset*/) const override {
         return get_value_(row);
     }
 
 private:
-    std::function<value_type(Row)> get_value_;
-};
-
-struct ListLambdaColumn::Constant : ListLambdaColumn {
-    Constant(std::string name, std::string description, value_type&& x)
-        : ListLambdaColumn(std::move(name), std::move(description),
-                           [x](Row /*row*/) { return x; }){};
-};
-
-struct ListLambdaColumn::Reference : ListLambdaColumn {
-    Reference(std::string name, std::string description, const value_type& x)
-        : ListLambdaColumn(std::move(name), std::move(description),
-                           [&x](Row /*row*/) { return x; }) {}
+    std::function<std::vector<std::string>(Row)> get_value_;
 };
 
 #endif

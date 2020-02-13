@@ -464,6 +464,12 @@ just to signal that real build script was not called -->
     </Feature>
 
     <Property Id="INSTALLSERVICE" Value="1" />
+
+    <SetProperty Id="ENABLE_CUSTOM_FOLDER"
+                 Before="AppSearch"
+                 Sequence="first"
+                 Value="0">NOT ENABLE_CUSTOM_FOLDER</SetProperty>
+    
     <!-- must be disabled to avoid hitting check box
     <Property Id="WIXUI_REMOVELEGACY" Value="0" />
     -->

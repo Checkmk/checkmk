@@ -24,8 +24,14 @@
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
 
         <Control Id="FolderLabel" Type="Text" X="20" Y="60" Width="290" Height="30" NoPrefix="yes" Text="!(loc.InstallDirDlgFolderLabel)" />
-        <Control Id="Folder" Type="PathEdit" X="20" Y="100" Width="320" Height="18" Property="WIXUI_INSTALLDIR" Indirect="yes" />
-        <Control Id="ChangeFolder" Type="PushButton" X="20" Y="120" Width="56" Height="17" Text="!(loc.InstallDirDlgChange)" />
+        <Control Id="Folder" Type="PathEdit" X="20" Y="100" Width="320" Height="18" Property="WIXUI_INSTALLDIR" Indirect="yes">
+          <Condition Action="enable"><![CDATA[ENABLE_CUSTOM_FOLDER = "1"]]></Condition>
+          <Condition Action="disable"><![CDATA[ENABLE_CUSTOM_FOLDER = "0"]]></Condition>
+        </Control>
+        <Control Id="ChangeFolder" Type="PushButton" X="20" Y="120" Width="56" Height="17" Text="!(loc.InstallDirDlgChange)">
+          <Condition Action="enable"><![CDATA[ENABLE_CUSTOM_FOLDER = "1"]]></Condition>
+          <Condition Action="disable"><![CDATA[ENABLE_CUSTOM_FOLDER = "0"]]></Condition>
+        </Control>
         <Control Id="InstallServiceCheckbox" Type="CheckBox" X="20" Y="160" Width="290" Height="17" Property="INSTALLSERVICE" CheckBoxValue="1" Text="Install and start service." />
         <Control Id="RemoveLegacyAgentCheckbox" Type="CheckBox" X="20" Y="180" Width="290" Height="17" Property="WIXUI_REMOVELEGACY" CheckBoxValue="1" Text="Remove Legacy Agent." />
       </Dialog>

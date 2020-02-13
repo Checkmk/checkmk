@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -29,7 +29,7 @@ class MKAutomationError(MKException):
     pass
 
 
-class Automations(object):
+class Automations(object):  # pylint: disable=useless-object-inheritance
     def __init__(self):
         # type: () -> None
         # TODO: This disable is needed because of a pylint bug. Remove one day.
@@ -61,7 +61,7 @@ class Automations(object):
             result = automation.execute(args)
 
         except (MKAutomationError, MKTimeout) as e:
-            console.error("%s\n" % make_utf8("%s" % e))
+            console.error("%s\n" % e)
             if cmk.utils.debug.enabled():
                 raise
             return 1
@@ -69,7 +69,7 @@ class Automations(object):
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
-            console.error("%s\n" % make_utf8("%s" % e))
+            console.error("%s\n" % e)
             return 2
 
         finally:

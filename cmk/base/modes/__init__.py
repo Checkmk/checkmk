@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -23,7 +23,7 @@ Options = List[Tuple[OptionSpec, Argument]]
 Arguments = List[str]
 
 
-class Modes(object):
+class Modes(object):  # pylint: disable=useless-object-inheritance
     def __init__(self):
         # type: () -> None
         # TODO: This disable is needed because of a pylint bug. Remove one day.
@@ -79,10 +79,9 @@ class Modes(object):
         # type: (str) -> str
         if opt.startswith("--"):
             return opt[2:]
-        elif opt.startswith("-"):
+        if opt.startswith("-"):
             return opt[1:]
-        else:
-            raise NotImplementedError()
+        raise NotImplementedError()
 
     def get(self, name):
         # type: (OptionName) -> Mode
@@ -207,12 +206,12 @@ class Modes(object):
         # type: (str) -> Optional[Option]
         opt_name = self._strip_dashes(opt)
         for option in self._general_options:
-            if opt_name == option.long_option or opt_name == option.short_option:
+            if opt_name in [option.long_option, option.short_option]:
                 return option
         return None
 
 
-class Option(object):
+class Option(object):  # pylint: disable=useless-object-inheritance
     def __init__(self,
                  long_option,
                  short_help,
@@ -416,8 +415,7 @@ class Mode(Option):
                             raise TypeError()
                         options[option.name()] = value + 1
                         continue
-                    else:
-                        val = True
+                    val = True
                 else:
                     if option.argument_conv:
                         try:

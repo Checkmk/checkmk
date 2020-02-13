@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -13,7 +13,8 @@ import sys
 import select
 import socket
 import time
-import urllib
+# No stub file
+import urllib.parse  # type: ignore[import]
 
 from typing import (  # pylint: disable=unused-import
     Any, Callable, Dict, Iterable, List, Optional, Text, Union)
@@ -91,13 +92,13 @@ def event_keepalive(event_function,
 
                     os.execvp("cmk", sys.argv)
 
-                data = ""
-                while not data.endswith("\n\n"):
+                data = b""
+                while not data.endswith(b"\n\n"):
                     try:
-                        new_data = ""
+                        new_data = b""
                         new_data = os.read(0, 32768)
                     except IOError as e:
-                        new_data = ""
+                        new_data = b""
                     except Exception as e:
                         if cmk.utils.debug.enabled():
                             raise
@@ -111,7 +112,7 @@ def event_keepalive(event_function,
                     data += new_data
 
                 try:
-                    context = raw_context_from_string(data.rstrip('\n'))
+                    context = raw_context_from_string(data.rstrip(b'\n'))
                     event_function(context)
                 except Exception:
                     if cmk.utils.debug.enabled():
@@ -141,14 +142,15 @@ def event_keepalive(event_function,
 
 def config_timestamp():
     # type: () -> float
-    mtime = 0
+    mtime = 0.0
     for dirpath, _unused_dirnames, filenames in os.walk(cmk.utils.paths.check_mk_config_dir):
         for f in filenames:
             mtime = max(mtime, os.stat(dirpath + "/" + f).st_mtime)
 
     for path in [
-            cmk.utils.paths.main_config_file, cmk.utils.paths.final_config_file,
-            cmk.utils.paths.local_config_file
+            cmk.utils.paths.main_config_file,
+            cmk.utils.paths.final_config_file,
+            cmk.utils.paths.local_config_file,
     ]:
         try:
             mtime = max(mtime, os.stat(path).st_mtime)
@@ -163,12 +165,12 @@ def event_data_available(loop_interval):
 
 
 def raw_context_from_string(data):
-    # type: (str) -> EventContext
+    # type: (bytes) -> EventContext
     # Context is line-by-line in g_notify_readahead_buffer
     context = {}
     try:
-        for line in data.split('\n'):
-            varname, value = line.strip().split("=", 1)
+        for line in data.split(b'\n'):
+            varname, value = six.ensure_str(line.strip()).split("=", 1)
             context[varname] = expand_backslashes(value)
     except Exception:  # line without '=' ignored or alerted
         if cmk.utils.debug.enabled():
@@ -296,12 +298,16 @@ def complete_raw_context(raw_context, with_dump):
             # from that one, but we try to keep this simple here.
             raw_context["MICROTIME"] = "%d" % (time.time() * 1000000)
 
-        raw_context['HOSTURL'] = '/check_mk/index.py?start_url=%s' % \
-                            urllib.quote('view.py?view_name=hoststatus&host=%s&site=%s' % (raw_context['HOSTNAME'], raw_context['OMD_SITE']))
+        url_host_view = 'view.py?view_name=hoststatus&host=%s&site=%s' % (raw_context['HOSTNAME'],
+                                                                          raw_context['OMD_SITE'])
+        raw_context['HOSTURL'] = '/check_mk/index.py?start_url=%s' % urllib.parse.quote(
+            url_host_view)
+
         if raw_context['WHAT'] == 'SERVICE':
-            raw_context['SERVICEURL'] = '/check_mk/index.py?start_url=%s' % \
-                                        urllib.quote('view.py?view_name=service&host=%s&service=%s&site=%s' %
-                                                     (raw_context['HOSTNAME'], raw_context['SERVICEDESC'], raw_context['OMD_SITE']))
+            url_service_view = 'view.py?view_name=service&host=%s&service=%s&site=%s' % (
+                raw_context['HOSTNAME'], raw_context['SERVICEDESC'], raw_context['OMD_SITE'])
+            raw_context['SERVICEURL'] = '/check_mk/index.py?start_url=%s' % urllib.parse.quote(
+                url_service_view)
 
         # Relative Timestamps for several macros
         for macro in [
@@ -364,8 +370,8 @@ def complete_raw_context(raw_context, with_dump):
                 raw_context[key[:-5] + "SHORTSTATE"] = value[:4]
 
         if raw_context["WHAT"] == "SERVICE":
-            raw_context['SERVICEFORURL'] = urllib.quote(raw_context['SERVICEDESC'])
-        raw_context['HOSTFORURL'] = urllib.quote(raw_context['HOSTNAME'])
+            raw_context['SERVICEFORURL'] = urllib.parse.quote(raw_context['SERVICEDESC'])
+        raw_context['HOSTFORURL'] = urllib.parse.quote(raw_context['HOSTNAME'])
 
         convert_context_to_unicode(raw_context)
 

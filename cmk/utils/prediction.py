@@ -17,12 +17,10 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.debug
 from cmk.utils.log import VERBOSE
 import cmk.utils.paths
-from cmk.utils.type_defs import MetricName, ServiceName, HostName  # pylint: disable=unused-import
+from cmk.utils.type_defs import Timestamp, Seconds, MetricName, ServiceName, HostName  # pylint: disable=unused-import
 
 logger = logging.getLogger("cmk.prediction")
 
-Seconds = int
-Timestamp = int
 TimeWindow = Tuple[Timestamp, Timestamp, Seconds]
 RRDColumnFunction = Callable[[Timestamp, Timestamp], "TimeSeries"]
 TimeSeriesValue = Optional[float]

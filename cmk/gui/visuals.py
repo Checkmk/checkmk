@@ -11,7 +11,7 @@ import traceback
 import json
 from contextlib import contextmanager
 from typing import (  # pylint: disable=unused-import
-    Text, Tuple, Optional, cast, Iterable, Dict, List, Type, Callable, Union)
+    Text, Tuple, Optional, cast, Iterable, Dict, List, Callable, Union)
 
 import cmk
 import cmk.gui.pages
@@ -21,7 +21,8 @@ from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKAuthException
 from cmk.gui.permissions import declare_permission
 from cmk.gui.pages import page_registry
 from cmk.gui.type_defs import (  # pylint: disable=unused-import
-    SingleInfos, VisualContext)
+    SingleInfos, VisualContext, FilterName,
+)
 from cmk.gui.valuespec import (
     Dictionary,
     DualListChoice,
@@ -52,7 +53,7 @@ from cmk.gui.plugins.visuals.utils import (
 )
 
 # Needed for legacy (pre 1.6) plugins
-from cmk.gui.plugins.visuals.utils import (  # pylint: disable=unused-import
+from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import
     Filter, FilterTime, FilterTristate, FilterUnicodeFilter,
 )
 from cmk.gui.permissions import permission_registry
@@ -1025,14 +1026,14 @@ def show_filter(f):
 
 
 def get_filter(name):
-    # type: (str) -> Type[Filter]
+    # type: (str) -> Filter
     """Returns the filter object identified by the given name
     Raises a KeyError in case a not existing filter is requested."""
     return filter_registry[name]()
 
 
 def filters_allowed_for_info(info):
-    # type: (str) -> Dict[str, Type[Filter]]
+    # type: (str) -> Dict[str, Filter]
     """Returns a map of filter names and filter objects that are registered for the given info"""
     allowed = {}
     for fname, filter_class in filter_registry.items():
@@ -1043,7 +1044,7 @@ def filters_allowed_for_info(info):
 
 
 def filters_allowed_for_infos(info_list):
-    # type: (List[str]) -> Dict[str, Type[Filter]]
+    # type: (List[str]) -> Dict[str, Filter]
     """Same as filters_allowed_for_info() but for multiple infos"""
     filters = {}
     for info in info_list:
@@ -1412,11 +1413,13 @@ def is_single_site_info(info_key):
 
 
 def single_infos_spec(single_infos):
-    return ('single_infos', FixedValue(single_infos,
-        title = _('Show information of single'),
-        totext = single_infos and ', '.join(single_infos) \
-                    or _('Not restricted to showing a specific object.'),
-    ))
+    return ('single_infos',
+            FixedValue(
+                single_infos,
+                title=_('Show information of single'),
+                totext=single_infos and ', '.join(single_infos) or
+                _('Not restricted to showing a specific object.'),
+            ))
 
 
 def verify_single_infos(visual, context):
@@ -1488,7 +1491,7 @@ def _add_context_title(visual, title):
 # the variables "event_id" and "history_line" to be set in order
 # to exactly specify one history entry.
 def info_params(info_key):
-    # type: (str) -> Iterable[str]
+    # type: (str) -> Iterable[FilterName]
     single_spec = visual_info_registry[info_key]().single_spec
     if single_spec is None:
         return []
@@ -1496,8 +1499,8 @@ def info_params(info_key):
 
 
 def get_single_info_keys(single_infos):
-    # type: (SingleInfos) -> List[str]
-    keys = []  # type: List[str]
+    # type: (SingleInfos) -> List[FilterName]
+    keys = []  # type: List[FilterName]
     for info_key in single_infos:
         keys.extend(info_params(info_key))
     return list(set(keys))

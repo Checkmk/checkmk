@@ -12,10 +12,13 @@ import pprint
 import traceback
 import json
 import functools
-from typing import Any, Dict, List, Optional, Set  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    TYPE_CHECKING, Union, Sequence, Any, Dict, List, Optional, Set, Text, Tuple as TypingTuple,
+)
 import six
 
 import livestatus
+from livestatus import SiteId, LivestatusRow  # pylint: disable=unused-import
 
 import cmk.utils.paths
 from cmk.utils.structured_data import StructuredDataTree
@@ -93,7 +96,7 @@ from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused
     declare_simple_sorter, cmp_simple_number, cmp_simple_string, cmp_insensitive_string,
     cmp_num_split, cmp_custom_variable, cmp_service_name_equiv, cmp_string_list, cmp_ip_address,
     get_custom_var, get_perfdata_nth_value, join_row, get_view_infos, replace_action_url_macros,
-    Cell, JoinCell, register_legacy_command, register_painter, register_sorter,
+    Cell, JoinCell, register_legacy_command, register_painter, register_sorter, DataSource,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -111,6 +114,11 @@ if not cmk.is_raw_edition():
 if cmk.is_managed_edition():
     import cmk.gui.cme.plugins.views  # pylint: disable=no-name-in-module
 
+if TYPE_CHECKING:
+    from cmk.gui.plugins.views.utils import SorterSpec  # pylint: disable=unused-import
+    from cmk.gui.plugins.visuals.utils import Filter  # pylint: disable=unused-import
+    from cmk.gui.type_defs import Row, ColumnName  # pylint: disable=unused-import
+
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
 
@@ -122,6 +130,8 @@ multisite_commands = []  # type: List[Dict[str, Any]]
 multisite_datasources = {}  # type: Dict[str, Any]
 multisite_painters = {}  # type: Dict[str, Dict[str, Any]]
 multisite_sorters = {}  # type: Dict[str, Any]
+
+FilterHeaders = str
 
 
 @visual_type_registry.register
@@ -272,11 +282,12 @@ class View(object):
         self.spec = view_spec
         self.context = context
         self._row_limit = None  # type: Optional[int]
-        self._only_sites = None  # type: Optional[List[str]]
-        self._user_sorters = None  # type: Optional[Tuple]
+        self._only_sites = None  # type: Optional[List[SiteId]]
+        self._user_sorters = None  # type: Optional[List[SorterSpec]]
 
     @property
     def datasource(self):
+        # type: () -> DataSource
         try:
             return data_source_registry[self.spec["datasource"]]()
         except KeyError:
@@ -315,16 +326,20 @@ class View(object):
 
     @property
     def join_cells(self):
+        # type: () -> List[JoinCell]
         """Join cells are displaying information of a joined source (e.g.service data on host views)"""
         return [x for x in self.row_cells if isinstance(x, JoinCell)]
 
     @property
     def sorters(self):
+        # type: () -> List[SorterEntry]
         """Returns the list of effective sorters to be used to sort the rows of this view"""
         return self._get_sorter_entries(
             self.user_sorters if self.user_sorters else self.spec["sorters"])
 
+    # TODO: Improve argument type
     def _get_sorter_entries(self, sorter_list):
+        # type: (List) -> List[SorterEntry]
         sorters = []
         for entry in sorter_list:
             if not isinstance(entry, SorterEntry):
@@ -349,6 +364,7 @@ class View(object):
 
     @property
     def row_limit(self):
+        # type: () -> Optional[int]
         if self.datasource.ignore_limit:
             return None
 
@@ -356,10 +372,12 @@ class View(object):
 
     @row_limit.setter
     def row_limit(self, row_limit):
+        # type: (Optional[int]) -> None
         self._row_limit = row_limit
 
     @property
     def only_sites(self):
+        # type: () -> Optional[List[SiteId]]
         """Optional list of sites to query instead of all sites
 
         This is a performance feature. It is highly recommended to set the only_sites attribute
@@ -369,10 +387,12 @@ class View(object):
 
     @only_sites.setter
     def only_sites(self, only_sites):
+        # type: (Optional[List[SiteId]]) -> None
         self._only_sites = only_sites
 
     @property
     def user_sorters(self):
+        # type: () -> Optional[List[SorterSpec]]
         """Optional list of sorters to use for rendering the view
 
         The user may click on the headers of tables to change the default view sorting. In the
@@ -382,6 +402,7 @@ class View(object):
 
     @user_sorters.setter
     def user_sorters(self, user_sorters):
+        # type: (Optional[List[SorterSpec]]) -> None
         self._user_sorters = user_sorters
 
 
@@ -1397,7 +1418,7 @@ def show_view(view, view_renderer, only_count=False):
 
     # Sorting - use view sorters and URL supplied sorters
     if only_count:
-        sorters = []
+        sorters = []  # type: List[SorterEntry]
     else:
         sorters = view.sorters
 
@@ -1518,6 +1539,7 @@ def show_view(view, view_renderer, only_count=False):
 
 
 def _get_all_active_filters(view):
+    # type: (View) -> List[Filter]
     # Always allow the users to specify all allowed filters using the URL
     use_filters = visuals.filters_allowed_for_infos(view.datasource.infos).values()
 
@@ -1529,19 +1551,22 @@ def _get_all_active_filters(view):
     use_filters = [f for f in use_filters if f.available()]
 
     for filt in use_filters:
+        # TODO: Clean this up! E.g. make the Filter class implement a default method
         if hasattr(filt, 'derived_columns'):
-            filt.derived_columns(view)
+            filt.derived_columns(view)  # type: ignore[attr-defined]
 
     return use_filters
 
 
 def _is_ec_unrelated_host_view(view):
+    # type: (View) -> bool
     # The "name" is not set in view report elements
     return view.datasource.ident in [ "mkeventd_events", "mkeventd_history" ] \
        and "host" in view.spec["single_infos"] and view.spec.get("name") != "ec_events_of_monhost"
 
 
 def _get_needed_regular_columns(cells, sorters, datasource):
+    # type: (List[Cell], List[SorterEntry], DataSource) -> List[ColumnName]
     # BI availability needs aggr_tree
     # TODO: wtf? a full reset of the list? Move this far away to a special place!
     if html.request.var("mode") == "availability" and "aggr" in datasource.infos:
@@ -1583,11 +1608,13 @@ def _get_needed_regular_columns(cells, sorters, datasource):
 # That way the inventory data will always be loaded. When we convert this to the
 # visuals principle the we need to optimize this.
 def get_livestatus_filter_headers(view, all_active_filters):
+    # type: (View, List[Filter]) -> FilterHeaders
     """Prepare Filter headers for Livestatus"""
     filterheaders = ""
     for filt in all_active_filters:
         try:
-            header = filt.filter(view.datasource.table)
+            # TODO: Argument does not seem to be used anywhere. Remove it
+            header = filt.filter(view.datasource.ident)
         except MKUserError as e:
             html.add_user_error(e.varname, e)
             continue
@@ -1596,6 +1623,7 @@ def get_livestatus_filter_headers(view, all_active_filters):
 
 
 def _get_needed_join_columns(join_cells, sorters):
+    # type: (List[JoinCell], List[SorterEntry]) -> List[ColumnName]
     join_columns = columns_of_cells(join_cells)
 
     # Columns needed for sorters
@@ -1613,10 +1641,12 @@ def _get_needed_join_columns(join_cells, sorters):
 
 
 def is_sla_data_needed(group_cells, cells, sorters, all_active_filters):
+    # type: (List[Cell], List[Cell], List[SorterEntry], List[Filter]) -> bool
     pass
 
 
 def is_inventory_data_needed(group_cells, cells, sorters, all_active_filters):
+    # type: (List[Cell], List[Cell], List[SorterEntry], List[Filter]) -> bool
     for cell in cells:
         if cell.has_tooltip():
             if cell.tooltip_painter_name().startswith("inv_"):
@@ -1638,13 +1668,16 @@ def is_inventory_data_needed(group_cells, cells, sorters, all_active_filters):
 
 
 def columns_of_cells(cells):
-    columns = set([])
+    # type: (Sequence[Cell]) -> Set[ColumnName]
+    columns = set()  # type: Set[ColumnName]
     for cell in cells:
         columns.update(cell.needed_columns())
     return columns
 
 
 def _do_table_join(view, master_rows, master_filters, sorters):
+    # type: (View, List[LivestatusRow], str, List[SorterEntry]) -> None
+    assert view.datasource.join is not None
     join_table, join_master_column = view.datasource.join
     slave_ds = data_source_registry[join_table]()
     join_slave_column = slave_ds.join_key
@@ -1665,15 +1698,20 @@ def _do_table_join(view, master_rows, master_filters, sorters):
                                 only_sites=view.only_sites,
                                 limit=None,
                                 all_active_filters=None)
-    per_master_entry = {}
-    current_key = None
-    current_entry = None
+
+    JoinMasterKey = TypingTuple[SiteId, Union[str, Text]]  # pylint: disable=unused-variable
+    JoinSlaveKey = Union[str, Text]  # pylint: disable=unused-variable
+
+    per_master_entry = {}  # type: Dict[JoinMasterKey, Dict[JoinSlaveKey, LivestatusRow]]
+    current_key = None  # type: Optional[JoinMasterKey]
+    current_entry = None  # type: Optional[Dict[JoinSlaveKey, LivestatusRow]]
     for row in rows:
         master_key = (row["site"], row[join_master_column])
         if master_key != current_key:
             current_key = master_key
             current_entry = {}
             per_master_entry[current_key] = current_entry
+        assert current_entry is not None
         current_entry[row[join_slave_column]] = row
 
     # Add this information into master table in artificial column "JOIN"
@@ -1687,10 +1725,12 @@ g_alarm_sound_states = set([])  # type: Set[str]
 
 
 def clear_alarm_sound_states():
+    # type: () -> None
     g_alarm_sound_states.clear()
 
 
 def save_state_for_playing_alarm_sounds(row):
+    # type: (Row) -> None
     if not config.enable_sounds or not config.sounds:
         return
 
@@ -1713,6 +1753,7 @@ def save_state_for_playing_alarm_sounds(row):
 
 
 def play_alarm_sounds():
+    # type: () -> None
     if not config.enable_sounds or not config.sounds:
         return
 
@@ -1727,12 +1768,13 @@ def play_alarm_sounds():
 
 
 def get_user_sorters():
+    # type: () -> List[SorterSpec]
     """Returns a list of optionally set sort parameters from HTTP request"""
     return _parse_url_sorters(html.request.var("sort"))
 
 
 def get_only_sites():
-    # type: () -> Optional[List[str]]
+    # type: () -> Optional[List[SiteId]]
     """Is the view limited to specific sites by request?"""
     if html.request.var("site"):
         return [html.request.var("site")]
@@ -1740,6 +1782,7 @@ def get_only_sites():
 
 
 def get_limit():
+    # type: () -> Optional[int]
     """How many data rows may the user query?"""
     limitvar = html.request.var("limit", "soft")
     if limitvar == "hard" and config.user.may("general.ignore_soft_limit"):

@@ -4,7 +4,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Union, List
+from typing import Dict, Union, List, Tuple, Text, Any, Optional
 
-VisualContext = Dict[str, Union[str, Dict[str, str]]]
+HTTPVariables = List[Tuple[str, Union[None, int, str, Text]]]
+LivestatusQuery = Union[Text, str]
+
+# View specific
+Row = Dict[str, Any]  # TODO: Improve this type
+Rows = List[Row]
+PainterName = str
+SorterName = str
+ViewName = str
+ColumnName = str
+PainterSpec = Union[  #
+    PainterName,  #
+    Tuple[PainterName, Optional[ViewName], Optional[PainterName], Optional[ColumnName], Text],  #
+    Tuple[PainterName, Optional[ViewName], Optional[PainterName], Optional[ColumnName]],  #
+    Tuple[PainterName, Optional[ViewName], Optional[PainterName]],  #
+    Tuple[PainterName, Optional[ViewName]],  #
+]  #
+ViewSpec = Dict[str, Any]
+
+# Visual specific
+FilterName = str
+VisualContext = Dict[FilterName, Union[str, Dict[str, str]]]
 SingleInfos = List[str]

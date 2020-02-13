@@ -1,7 +1,7 @@
 import pytest
 
 from cmk.gui.plugins.views.utils import (
-    SorterEntry,
+    SorterSpec,
     _parse_url_sorters,
     _encode_sorter_url,
 )
@@ -15,6 +15,6 @@ from cmk.gui.plugins.views.utils import (
                                                    ('site', False)]),
 ])
 def test_url_sorters_parse_encode(url, sorters):
-    sorters = [SorterEntry(*s) for s in sorters]
+    sorters = [SorterSpec(*s) for s in sorters]
     assert _parse_url_sorters(url) == sorters
     assert _encode_sorter_url(sorters) == url

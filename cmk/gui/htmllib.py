@@ -89,10 +89,10 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel, OutputFunnelInput  # pylint: disable=unused-import
 from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.timeout_manager import TimeoutManager
-from cmk.gui.utils.url_encoder import URLEncoder, HTTPVariables  # pylint: disable=unused-import
+from cmk.gui.utils.url_encoder import URLEncoder  # pylint: disable=unused-import
 from cmk.gui.i18n import _
 from cmk.gui.http import Request, Response  # pylint: disable=unused-import
-from cmk.gui.type_defs import VisualContext  # pylint: disable=unused-import
+from cmk.gui.type_defs import VisualContext, HTTPVariables  # pylint: disable=unused-import
 
 if TYPE_CHECKING:
     from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
@@ -301,7 +301,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_opening_tag('a', close_tag=False, **attrs))
 
     def render_a(self, content, href, **attrs):
-        # type: (HTMLTagContent, str, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLTagContent, Union[Text, str], **HTMLTagAttributeValue) -> HTML
         attrs['href'] = href
         return self._render_content_tag('a', content, **attrs)
 
@@ -3013,7 +3013,7 @@ class html(ABCHTMLGenerator):
                            target=None,
                            cssclass=None,
                            class_=None):
-        # type: (Optional[str], Text, str, Optional[str], Optional[str], Optional[str], Optional[str], Optional[str], CSSSpec) -> HTML
+        # type: (Optional[Union[Text, str]], Text, str, Optional[str], Optional[str], Optional[str], Optional[str], Optional[str], CSSSpec) -> HTML
 
         # Same API as other elements: class_ can be a list or string/None
         classes = [cssclass]

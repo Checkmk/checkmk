@@ -22,6 +22,7 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.view_utils import get_labels
+from cmk.gui.type_defs import HTTPVariables  # pylint: disable=unused-import
 
 
 class VisualInfo(six.with_metaclass(abc.ABCMeta, object)):
@@ -303,7 +304,7 @@ class Filter(six.with_metaclass(abc.ABCMeta, object)):
         return rows
 
     def variable_settings(self, row):
-        # type: (dict) -> List[tuple]
+        # type: (dict) -> HTTPVariables
         """return pairs of htmlvar and name according to dataset in row"""
         return []
 

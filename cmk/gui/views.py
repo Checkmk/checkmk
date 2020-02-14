@@ -408,6 +408,7 @@ class View(object):
 
 class ViewRenderer(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, view):
+        # type: (View) -> None
         super(ViewRenderer, self).__init__()
         self.view = view
 
@@ -419,6 +420,7 @@ class ViewRenderer(six.with_metaclass(abc.ABCMeta, object)):
 
 class GUIViewRenderer(ViewRenderer):
     def __init__(self, view, show_buttons):
+        # type: (View, bool) -> None
         super(GUIViewRenderer, self).__init__(view)
         self._show_buttons = show_buttons
 

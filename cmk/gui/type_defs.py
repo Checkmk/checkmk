@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Union, List, Tuple, Text, Any, Optional
+from typing import Dict, Union, List, Tuple, Text, Any, Optional, Callable
+from cmk.utils.type_defs import UserId
 
 HTTPVariables = List[Tuple[str, Union[None, int, str, Text]]]
 LivestatusQuery = Union[Text, str]
@@ -16,16 +17,22 @@ PainterName = str
 SorterName = str
 ViewName = str
 ColumnName = str
+PainterParameters = Dict  # TODO: Improve this type
+PainterNameSpec = Union[PainterName, Tuple[PainterName, PainterParameters]]
 PainterSpec = Union[  #
-    PainterName,  #
-    Tuple[PainterName, Optional[ViewName], Optional[PainterName], Optional[ColumnName], Text],  #
-    Tuple[PainterName, Optional[ViewName], Optional[PainterName], Optional[ColumnName]],  #
-    Tuple[PainterName, Optional[ViewName], Optional[PainterName]],  #
-    Tuple[PainterName, Optional[ViewName]],  #
+    Tuple[PainterNameSpec, Optional[ViewName], Optional[PainterName], Optional[ColumnName],
+          Text],  #
+    Tuple[PainterNameSpec, Optional[ViewName], Optional[PainterName], Optional[ColumnName]],  #
+    Tuple[PainterNameSpec, Optional[ViewName], Optional[PainterName]],  #
+    Tuple[PainterNameSpec, Optional[ViewName]],  #
 ]  #
 ViewSpec = Dict[str, Any]
+AllViewSpecs = Dict[Tuple[UserId, ViewName], ViewSpec]
+PermittedViewSpecs = Dict[ViewName, ViewSpec]
+SorterFunction = Callable[[ColumnName, Row, Row], int]
 
 # Visual specific
 FilterName = str
-VisualContext = Dict[FilterName, Union[str, Dict[str, str]]]
+FilterHTTPVariables = Dict[str, str]
+VisualContext = Dict[FilterName, Union[str, FilterHTTPVariables]]
 SingleInfos = List[str]

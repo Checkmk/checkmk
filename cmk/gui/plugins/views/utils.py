@@ -13,7 +13,10 @@ import time
 import re
 import hashlib
 import traceback
-from typing import NamedTuple, Hashable, TYPE_CHECKING, Any, Set, Tuple, List, Optional, Union, Text, Dict, Type  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Callable, NamedTuple, Hashable, TYPE_CHECKING, Any, Set, Tuple, List, Optional, Union, Text,
+    Dict, Type, cast,
+)
 import six
 
 if sys.version_info[0] >= 3:
@@ -22,14 +25,14 @@ else:
     from pathlib2 import Path  # pylint: disable=import-error
 
 import livestatus
-from livestatus import SiteId, LivestatusRow, OnlySites  # pylint: disable=unused-import
+from livestatus import SiteId, LivestatusColumn, LivestatusRow, OnlySites  # pylint: disable=unused-import
 
 import cmk.utils.plugin_registry
 import cmk.utils.render
 import cmk.utils.regex
 from cmk.utils.encoding import ensure_unicode
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
-    Timestamp, TimeRange, HostName, TagGroups, LabelSources,
+    Timestamp, TimeRange, HostName, TagGroups, LabelSources, ServiceName,
 )
 
 import cmk.gui.config as config
@@ -55,7 +58,8 @@ from cmk.gui.view_utils import (  # noqa: F401 # pylint: disable=unused-import
 
 from cmk.gui.type_defs import (  # pylint: disable=unused-import
     ColumnName, ViewName, LivestatusQuery, SorterName, HTTPVariables, ViewSpec, PainterSpec,
-    PainterName, Row, Rows,
+    PainterName, Row, Rows, SorterFunction, AllViewSpecs, PermittedViewSpecs, VisualContext,
+    PainterParameters,
 )
 
 if TYPE_CHECKING:
@@ -273,7 +277,7 @@ def row_id(view_spec, row):
 
 
 def group_value(row, group_cells):
-    # type: (LivestatusRow, List[Cell]) -> Hashable
+    # type: (Row, List[Cell]) -> Hashable
     """The Group-value of a row is used for deciding whether
     two rows are in the same group or not"""
     group = []
@@ -1248,6 +1252,7 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what
 
 
 def paint_nagiosflag(row, field, bold_if_nonzero):
+    # type: (Row, ColumnName, bool) -> CellSpec
     value = row[field]
     yesno = {True: _("yes"), False: _("no")}[value != 0]
     if (value != 0) == bold_if_nonzero:
@@ -1256,6 +1261,7 @@ def paint_nagiosflag(row, field, bold_if_nonzero):
 
 
 def declare_simple_sorter(name, title, column, func):
+    # type: (str, Text, ColumnName, SorterFunction) -> None
     register_sorter(name, {
         "title": title,
         "columns": [column],
@@ -1264,6 +1270,7 @@ def declare_simple_sorter(name, title, column, func):
 
 
 def declare_1to1_sorter(painter_name, func, col_num=0, reverse=False):
+    # type: (PainterName,  SorterFunction, int, bool) -> PainterName
     painter = painter_registry[painter_name]()
 
     if not reverse:
@@ -1280,19 +1287,25 @@ def declare_1to1_sorter(painter_name, func, col_num=0, reverse=False):
 
 
 def cmp_simple_number(column, r1, r2):
-    return (r1.get(column) > r2.get(column)) - (r1.get(column) < r2.get(column))
+    # type: (ColumnName, Row, Row) -> int
+    v1 = r1[column]
+    v2 = r2[column]
+    return (v1 > v2) - (v1 < v2)
 
 
 def cmp_num_split(column, r1, r2):
+    # type: (ColumnName, Row, Row) -> int
     return cmk.gui.utils.cmp_num_split(r1[column].lower(), r2[column].lower())
 
 
 def cmp_simple_string(column, r1, r2):
+    # type: (ColumnName, Row, Row) -> int
     v1, v2 = r1.get(column, ''), r2.get(column, '')
     return cmp_insensitive_string(v1, v2)
 
 
 def cmp_insensitive_string(v1, v2):
+    # type: (str, str) -> int
     c = (v1.lower() > v2.lower()) - (v1.lower() < v2.lower())
     # force a strict order in case of equal spelling but different
     # case!
@@ -1302,12 +1315,14 @@ def cmp_insensitive_string(v1, v2):
 
 
 def cmp_string_list(column, r1, r2):
+    # type: (ColumnName, Row, Row) -> int
     v1 = ''.join(r1.get(column, []))
     v2 = ''.join(r2.get(column, []))
     return cmp_insensitive_string(v1, v2)
 
 
 def cmp_service_name_equiv(r):
+    # type: (Row) -> int
     if r == "Check_MK":
         return -6
     elif r == "Check_MK Agent":
@@ -1322,11 +1337,13 @@ def cmp_service_name_equiv(r):
 
 
 def cmp_custom_variable(r1, r2, key, cmp_func):
+    # type: (Row, Row, str, SorterFunction) -> int
     return (get_custom_var(r1, key) > get_custom_var(r2, key)) - (get_custom_var(r1, key) <
                                                                   get_custom_var(r2, key))
 
 
 def cmp_ip_address(column, r1, r2):
+    # type: (ColumnName, Row, Row) -> int
     def split_ip(ip):
         try:
             return tuple(int(part) for part in ip.split('.'))
@@ -1338,10 +1355,12 @@ def cmp_ip_address(column, r1, r2):
 
 
 def get_custom_var(row, key):
+    # type: (Row, str) -> Text
     return row["custom_variables"].get(key, "")
 
 
 def get_perfdata_nth_value(row, n, remove_unit=False):
+    # type: (Row, int, bool) -> str
     perfdata = row.get("service_perf_data")
     if not perfdata:
         return ''
@@ -1360,13 +1379,19 @@ def get_perfdata_nth_value(row, n, remove_unit=False):
         return str(e)
 
 
-# Merge all data rows with different sites but the same value
-# in merge_column. We require that all column names are prefixed
-# with the tablename. The column with the merge key is required
-# to be the *second* column (right after the site column)
 def _merge_data(data, columns):
-    merged = {}
-    mergefuncs = [lambda a, b: ""]  # site column is not merged
+    # type: (List[LivestatusRow], List[ColumnName]) -> List[LivestatusRow]
+    """Merge all data rows with different sites but the same value in merge_column
+
+    We require that all column names are prefixed with the tablename. The column with the merge key
+    is required to be the *second* column (right after the site column)"""
+    merged = {}  # type: Dict[ColumnName, LivestatusRow]
+
+    # site column is not merged
+    site_column_merge_func = lambda a, b: ""
+
+    mergefuncs = [site_column_merge_func
+                 ]  # type: List[Callable[[LivestatusColumn, LivestatusColumn], LivestatusColumn]]
 
     def worst_service_state(a, b):
         if a == 2 or b == 2:
@@ -1383,9 +1408,9 @@ def _merge_data(data, columns):
         if col.startswith("num_") or col.startswith("members"):
             mergefunc = lambda a, b: a + b
         elif col.startswith("worst_service"):
-            return worst_service_state
+            mergefunc = worst_service_state
         elif col.startswith("worst_host"):
-            return worst_host_state
+            mergefunc = worst_host_state
         else:
             mergefunc = lambda a, b: a
         mergefuncs.append(mergefunc)
@@ -1393,8 +1418,8 @@ def _merge_data(data, columns):
     for row in data:
         mergekey = row[1]
         if mergekey in merged:
-            oldrow = merged[mergekey]
-            merged[mergekey] = [f(a, b) for f, a, b in zip(mergefuncs, oldrow, row)]
+            merged[mergekey] = cast(LivestatusRow,
+                                    [f(a, b) for f, a, b in zip(mergefuncs, merged[mergekey], row)])
         else:
             merged[mergekey] = row
 
@@ -1404,18 +1429,21 @@ def _merge_data(data, columns):
 
 
 def join_row(row, cell):
+    # type: (Row, Cell) -> Row
     if isinstance(cell, JoinCell):
         return row.get("JOIN", {}).get(cell.join_service())
     return row
 
 
 def get_view_infos(view):
+    # type: (ViewSpec) -> List[str]
     """Return list of available datasources (used to render filters)"""
     ds_name = view.get('datasource', html.request.var('datasource'))
     return data_source_registry[ds_name]().infos
 
 
 def replace_action_url_macros(url, what, row):
+    # type: (str, str, Row) -> str
     macros = {
         "HOSTNAME": row['host_name'],
         "HOSTADDRESS": row['host_address'],
@@ -1434,6 +1462,7 @@ def replace_action_url_macros(url, what, row):
 
 
 def render_cache_info(what, row):
+    # type: (str, Row) -> Text
     cached_at = row["service_cached_at"]
     cache_interval = row["service_cache_interval"]
     cache_age = time.time() - cached_at
@@ -1451,16 +1480,19 @@ def render_cache_info(what, row):
 class ViewStore(object):
     @classmethod
     def get_instance(cls):
+        # type: () -> ViewStore
         """Use the request globals to prevent multiple instances during a request"""
         if 'view_store' not in g:
             g.view_store = cls()
         return g.view_store
 
     def __init__(self):
+        # type: () -> None
         self.all = self._load_all_views()
         self.permitted = self._load_permitted_views(self.all)
 
     def _load_all_views(self):
+        # type: () -> AllViewSpecs
         """Loads all view definitions from disk and returns them"""
         # Skip views which do not belong to known datasources
         return _transform_old_views(
@@ -1469,21 +1501,25 @@ class ViewStore(object):
                          skip_func=lambda v: v['datasource'] not in data_source_registry))
 
     def _load_permitted_views(self, all_views):
+        # type: (AllViewSpecs) -> PermittedViewSpecs
         """Returns all view defitions that a user is allowed to use"""
         return visuals.available('views', all_views)
 
 
 def get_all_views():
+    # type: () -> AllViewSpecs
     return ViewStore.get_instance().all
 
 
 def get_permitted_views():
+    # type: () -> PermittedViewSpecs
     return ViewStore.get_instance().permitted
 
 
 # Convert views that are saved in the pre 1.2.6-style
 # FIXME: Can be removed one day. Mark as incompatible change or similar.
 def _transform_old_views(all_views):
+    # type: (AllViewSpecs) -> AllViewSpecs
     for view in all_views.values():
         ds_name = view['datasource']
         datasource = data_source_registry[ds_name]()
@@ -1502,7 +1538,7 @@ def _transform_old_views(all_views):
             #
             # This code transforms views from views.mk (legacy format) to the current format
             try:
-                hide_filters = view.get('hide_filters')
+                hide_filters = view.get('hide_filters', [])
 
                 if 'service' in hide_filters and 'host' in hide_filters:
                     view['single_infos'] = ['service', 'host']
@@ -1547,14 +1583,16 @@ def _transform_old_views(all_views):
             single_keys = visuals.get_single_info_keys(view["single_infos"])
 
             # First get vars for the classic filters
-            context = {}
+            context = {}  # type: VisualContext
             filtervars = dict(view['hard_filtervars'])
             all_vars = {}
             for filter_name in view['show_filters']:
                 if filter_name in single_keys:
                     continue  # skip conflictings vars / filters
 
-                context.setdefault(filter_name, {})
+                filter_variables = context.setdefault(filter_name, {})
+                assert isinstance(filter_variables, dict)
+
                 try:
                     f = visuals.get_filter(filter_name)
                 except Exception:
@@ -1568,7 +1606,7 @@ def _transform_old_views(all_views):
                     if var in filtervars and f.info in datasource.infos:
                         value = filtervars[var]
                         all_vars[var] = value
-                        context[filter_name][var] = value
+                        filter_variables[var] = value
 
                 # We changed different filters since the visuals-rewrite. This must be treated here, since
                 # we need to transform views which have been created with the old filter var names.
@@ -1618,7 +1656,7 @@ def _transform_old_views(all_views):
                         if old_var in filtervars:
                             value = filtervars[old_var]
                             all_vars[new_var] = value
-                            context[filter_name][new_var] = value
+                            filter_variables[new_var] = value
 
             # Now, when there are single object infos specified, add these keys to the
             # context
@@ -1655,7 +1693,7 @@ def _transform_old_views(all_views):
 
 
 def extract_painter_name(painter_spec):
-    # type: (PainterSpec) -> PainterName
+    # type: (Union[PainterName, PainterSpec]) -> PainterName
     if isinstance(painter_spec[0], tuple):
         return painter_spec[0][0]
     if isinstance(painter_spec, tuple):
@@ -1681,12 +1719,13 @@ class Cell(object):
         return len(painter_spec) >= 4
 
     def __init__(self, view, painter_spec=None):
+        # type: (View, PainterSpec) -> None
         self._view = view
-        self._painter_name = None
-        self._painter_params = None
-        self._link_view_name = None
-        self._tooltip_painter_name = None
-        self._custom_title = None
+        self._painter_name = None  # type: Optional[PainterName]
+        self._painter_params = None  # type: Optional[PainterParameters]
+        self._link_view_name = None  # type: Optional[ViewName]
+        self._tooltip_painter_name = None  # type: Optional[PainterName]
+        self._custom_title = None  # type: Optional[Text]
 
         if painter_spec:
             self._from_view(painter_spec)
@@ -1709,6 +1748,7 @@ class Cell(object):
     # Same as above but instead of the "Painter name" a two element tuple with the painter name as
     # first element and a dictionary of parameters as second element is set.
     def _from_view(self, painter_spec):
+        # type: (PainterSpec) -> None
         self._painter_name = extract_painter_name(painter_spec)
         if isinstance(painter_spec[0], tuple):
             self._painter_params = painter_spec[0][1]
@@ -1717,11 +1757,18 @@ class Cell(object):
         if painter_spec[1] is not None:
             self._link_view_name = painter_spec[1]
 
-        if len(painter_spec) >= 3 and painter_spec[2] in painter_registry:
-            self._tooltip_painter_name = painter_spec[2]
+        if len(painter_spec) >= 3:
+            # mypy does not understand this data structure correctly. Sure, we should cleanup that
+            # structure, but it's not that easy, because it is persisted in custom views.
+            # Ignore: [mypy:] Tuple index out of range  [misc]
+            tooltip_painter_name = painter_spec[2]  # type: ignore[misc]
+            if tooltip_painter_name is not None and tooltip_painter_name in painter_registry:
+                self._tooltip_painter_name = tooltip_painter_name
 
-    # Get a list of columns we need to fetch in order to render this cell
     def needed_columns(self):
+        # type: () -> Set[ColumnName]
+        """Get a list of columns we need to fetch in order to render this cell"""
+
         columns = set(self.painter().columns)
 
         if self._link_view_name:
@@ -1741,39 +1788,52 @@ class Cell(object):
         return columns
 
     def is_joined(self):
+        # type: () -> bool
         return False
 
     def join_service(self):
+        # type: () -> Optional[ServiceName]
         return None
 
     def _has_link(self):
+        # type: () -> bool
         return self._link_view_name is not None
 
     def _link_view(self):
+        # type: () -> Optional[ViewSpec]
+        if self._link_view_name is None:
+            return None
+
         try:
             return get_permitted_views()[self._link_view_name]
         except KeyError:
             return None
 
     def painter(self):
-        return painter_registry[self._painter_name]()
+        # type: () -> Painter
+        return painter_registry[self.painter_name()]()
 
     def painter_name(self):
+        # type: () -> PainterName
+        assert self._painter_name is not None
         return self._painter_name
 
     def export_title(self):
-        return self._painter_name
+        # type: () -> Text
+        return ensure_unicode(self.painter_name())
 
     def painter_options(self):
+        # type: () -> List[str]
         return self.painter().painter_options
 
-    # The parameters configured in the view for this painter. In case the
-    # painter has params, it defaults to the valuespec default value and
-    # in case the painter has no params, it returns None.
     def painter_parameters(self):
+        # type: () -> Any
+        """The parameters configured in the view for this painter. In case the
+        painter has params, it defaults to the valuespec default value and
+        in case the painter has no params, it returns None."""
         vs_painter_params = self.painter().parameters
         if not vs_painter_params:
-            return
+            return None
 
         if self._painter_params is None:
             return vs_painter_params.default_value()
@@ -1781,6 +1841,7 @@ class Cell(object):
         return self._painter_params
 
     def title(self, use_short=True):
+        # type: (bool) -> Text
         if self._custom_title:
             return self._custom_title
 
@@ -1806,9 +1867,11 @@ class Cell(object):
     # False      : Is not printable at all
     # "<string>" : ID of a painter_printer (Reporting module)
     def printable(self):
+        # type: () -> Union[bool, str]
         return self.painter().printable
 
     def has_tooltip(self):
+        # type: () -> bool
         return self._tooltip_painter_name is not None
 
     def tooltip_painter_name(self):
@@ -1848,6 +1911,7 @@ class Cell(object):
         #html.guitest_record_output("view", ("header", title))
 
     def _sort_url(self):
+        # type: () -> Text
         """
         The following sorters need to be handled in this order:
 
@@ -1867,8 +1931,14 @@ class Cell(object):
         # - Add in the front of the user sorters when not set
         painter_name = self.painter_name()
         sorter_name = _get_sorter_name_of_painter(painter_name)
+        if sorter_name is None:
+            # Do not change anything in case there is no sorter for the current column
+            sorters = [SorterSpec(*s) for s in sorter]
+            return _encode_sorter_url(sorters)
+
         if painter_name in ['svc_metrics_hist', 'svc_metrics_forecast']:
             hash_id = ':%s' % hash(str(self.painter_parameters()))
+            assert sorter_name is not None
             sorter_name += hash_id
 
         this_asc_sorter = SorterSpec(sorter_name, False, self.join_service())
@@ -1894,10 +1964,10 @@ class Cell(object):
             sorter = group_sort + [this_asc_sorter] + user_sort + view_sort
 
         sorters = [SorterSpec(*s) for s in sorter]
-
         return _encode_sorter_url(sorters)
 
     def render(self, row):
+        # type: (Row) -> CellSpec
         row = join_row(row, self)
 
         try:
@@ -1913,7 +1983,7 @@ class Cell(object):
             return "", ""
 
         # Add the optional link to another view
-        if content and self._has_link():
+        if content and self._has_link() and self._link_view_name is not None:
             content = link_to_view(content, row, self._link_view_name)
 
         # Add the optional mouseover tooltip
@@ -2003,7 +2073,7 @@ class Cell(object):
 SorterSpec = NamedTuple("SorterSpec", [
     ("sorter", SorterName),
     ("negate", bool),
-    ("join_key", Optional[str]),
+    ("join_key", Optional[Text]),
 ])
 # Is used to add default arguments to the named tuple. Would be nice to have a cleaner solution
 SorterSpec.__new__.__defaults__ = (None,) * len(SorterSpec._fields)  # type: ignore[attr-defined]
@@ -2011,21 +2081,22 @@ SorterSpec.__new__.__defaults__ = (None,) * len(SorterSpec._fields)  # type: ign
 SorterEntry = NamedTuple("SorterEntry", [
     ("sorter", Sorter),
     ("negate", bool),
-    ("join_key", Optional[str]),
+    ("join_key", Optional[Text]),
 ])
 # Is used to add default arguments to the named tuple. Would be nice to have a cleaner solution
 SorterEntry.__new__.__defaults__ = (None,) * len(SorterEntry._fields)  # type: ignore[attr-defined]
 
 
 def _encode_sorter_url(sorters):
+    # type: (List[SorterSpec]) -> Text
     p = []
     for s in sorters:
-        url = ('-' if s.negate else '') + s.sorter
+        url = (u'-' if s.negate else u'') + s.sorter
         if s.join_key:
             url += '~' + s.join_key
         p.append(url)
 
-    return ','.join(p)
+    return ensure_unicode(','.join(p))
 
 
 def _parse_url_sorters(sort):
@@ -2050,32 +2121,46 @@ def _parse_url_sorters(sort):
 
 class JoinCell(Cell):
     def __init__(self, view, painter_spec):
-        self._join_service_descr = None
+        # type: (View, PainterSpec) -> None
+        self._join_service_descr = None  # type: Optional[ServiceName]
         super(JoinCell, self).__init__(view, painter_spec)
 
     def _from_view(self, painter_spec):
+        # type: (PainterSpec) -> None
         super(JoinCell, self)._from_view(painter_spec)
 
         if len(painter_spec) >= 4:
-            self._join_service_descr = painter_spec[3]
+            # mypy does not understand this data structure correctly. Sure, we should cleanup that
+            # structure, but it's not that easy, because it is persisted in custom views.
+            # Ignore: [mypy:] Tuple index out of range  [misc]
+            self._join_service_descr = painter_spec[3]  # type: ignore[misc]
 
         if len(painter_spec) == 5 and self._custom_title is None:
-            self._custom_title = painter_spec[4]
+            # mypy does not understand this data structure correctly. Sure, we should cleanup that
+            # structure, but it's not that easy, because it is persisted in custom views.
+            # Ignore: [mypy:] Tuple index out of range  [misc]
+            self._custom_title = painter_spec[4]  # type: ignore[misc]
 
     def is_joined(self):
+        # type: () -> bool
         return True
 
     def join_service(self):
+        # type: () -> ServiceName
+        assert self._join_service_descr is not None
         return self._join_service_descr
 
     def livestatus_filter(self, join_column_name):
+        # type: (str) -> LivestatusQuery
         return "Filter: %s = %s" % \
-            (livestatus.lqencode(join_column_name), livestatus.lqencode(self._join_service_descr))
+            (livestatus.lqencode(join_column_name), livestatus.lqencode(self.join_service()))
 
     def title(self, use_short=True):
-        return self._custom_title or self._join_service_descr
+        # type: (bool) -> Text
+        return self._custom_title or self.join_service()
 
     def export_title(self):
+        # type: () -> Text
         return "%s.%s" % (self._painter_name, self.join_service())
 
 
@@ -2088,6 +2173,7 @@ class EmptyCell(Cell):
 
 
 def output_csv_headers(view):
+    # type: (ViewSpec) -> None
     filename = '%s-%s.csv' % (view['name'],
                               time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
     html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % six.ensure_str(
@@ -2095,6 +2181,7 @@ def output_csv_headers(view):
 
 
 def _get_sorter_name_of_painter(painter_name_or_spec):
+    # type: (Union[PainterName, PainterSpec]) -> Optional[SorterName]
     painter_name = extract_painter_name(painter_name_or_spec)
     painter = painter_registry[painter_name]()
     if painter.sorter:
@@ -2107,14 +2194,10 @@ def _get_sorter_name_of_painter(painter_name_or_spec):
 
 
 def _get_separated_sorters(view):
-    group_sort = [
-        SorterSpec(_get_sorter_name_of_painter(p), False)
-        for p in view.spec['group_painters']
-        if painter_exists(p) and _get_sorter_name_of_painter(p) is not None
-    ]
+    # type: (View) -> Tuple[List[SorterSpec], List[SorterSpec], List[SorterSpec]]
+    group_sort = _get_group_sorters(view)
     view_sort = [SorterSpec(*s) for s in view.spec['sorters'] if not s[0] in group_sort]
-
-    user_sort = view.user_sorters
+    user_sort = view.user_sorters or []
 
     _substract_sorters(user_sort, group_sort)
     _substract_sorters(view_sort, user_sort)
@@ -2122,9 +2205,26 @@ def _get_separated_sorters(view):
     return group_sort, user_sort, view_sort
 
 
+def _get_group_sorters(view):
+    # type: (View) -> List[SorterSpec]
+    group_sort = []  # type: List[SorterSpec]
+    for p in view.spec['group_painters']:
+        if not painter_exists(p):
+            continue
+        sorter_name = _get_sorter_name_of_painter(p)
+        if sorter_name is None:
+            continue
+
+        group_sort.append(SorterSpec(sorter_name, False, None))
+    return group_sort
+
+
 def _substract_sorters(base, remove):
+    # type: (List[SorterSpec], List[SorterSpec]) -> None
     for s in remove:
+        negated_sorter = SorterSpec(s[0], not s[1], None)
+
         if s in base:
             base.remove(s)
-        elif (s[0], not s[1]) in base:
-            base.remove((s[0], not s[1]))
+        elif negated_sorter in base:
+            base.remove(negated_sorter)

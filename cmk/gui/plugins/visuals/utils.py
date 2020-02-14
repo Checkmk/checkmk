@@ -22,7 +22,7 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.view_utils import get_labels
-from cmk.gui.type_defs import HTTPVariables  # pylint: disable=unused-import
+from cmk.gui.type_defs import ColumnName, HTTPVariables  # pylint: disable=unused-import
 
 
 class VisualInfo(six.with_metaclass(abc.ABCMeta, object)):
@@ -240,6 +240,7 @@ class Filter(six.with_metaclass(abc.ABCMeta, object)):
         raise NotImplementedError()
 
     def __init__(self, info, htmlvars, link_columns):
+        # type: (str, List[str], List[ColumnName]) -> None
         """
         info:          The datasource info this filter needs to work. If this
                        is "service", the filter will also be available in tables

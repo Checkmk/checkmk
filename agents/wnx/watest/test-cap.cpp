@@ -350,8 +350,17 @@ TEST(CapTest, StoreFileAgressive) {
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
 
     fs::path ping(R"(c:\windows\system32\ping.exe)");
-    if (!fs::exists(ping))
+    if (!fs::exists(ping)) {
+#if defined(GTEST_SKIP)
         GTEST_SKIP() << "there is no notepad to test something";
+#else
+        XLOG::SendStringToStdio(
+            "Test is skipped, there is no notepad to test something",
+            XLOG::Colors::yellow);
+        return;
+#endif
+    }
+
     fs::path cmk_test_ping = work / "cmk-update-aGent.exe";
     wtools::KillProcessFully(cmk_test_ping.filename().wstring());
     cma::tools::sleep(200ms);

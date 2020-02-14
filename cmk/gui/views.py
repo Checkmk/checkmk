@@ -115,7 +115,7 @@ if cmk.is_managed_edition():
     import cmk.gui.cme.plugins.views  # pylint: disable=no-name-in-module
 
 if TYPE_CHECKING:
-    from cmk.gui.plugins.views.utils import SorterSpec  # pylint: disable=unused-import
+    from cmk.gui.plugins.views.utils import Sorter, SorterSpec  # pylint: disable=unused-import
     from cmk.gui.plugins.visuals.utils import Filter  # pylint: disable=unused-import
     from cmk.gui.type_defs import Row, ColumnName  # pylint: disable=unused-import
 
@@ -702,10 +702,10 @@ def _register_host_tag_painters():
                 "_spec": spec,
                 "_tag_group_id": tag_group.id,
                 "ident": property(lambda self: self._ident),
-                "title": property(lambda self: self._spec["title"]),
+                "title": lambda self, cell: self._spec["title"],
+                "short_title": lambda self, cell: self._spec["short"],
                 "columns": property(lambda self: self._spec["columns"]),
                 "render": lambda self, row, cell: _paint_host_tag(row, self._tag_group_id),
-                "short_title": property(lambda self: self._spec["short"]),
                 # Use title of the tag value for grouping, not the complete
                 # dictionary of custom variables!
                 "group_by": lambda self, row: _paint_host_tag(row, self._tag_group_id)[1],
@@ -1084,7 +1084,7 @@ def view_editor_specs(ds_name, general_properties=True):
                           elements=[
                               DropdownChoice(
                                   title=_('Column'),
-                                  choices=[(name, get_painter_title_for_choices(p))
+                                  choices=[(name, get_sorter_title_for_choices(p))
                                            for name, p in sorters_of_datasource(ds_name).items()],
                                   sorted=True,
                                   no_preselect=True,
@@ -2239,7 +2239,22 @@ def painter_choices(painters, add_params=False):
     return sorted(choices, key=lambda x: x[1])
 
 
+def get_sorter_title_for_choices(sorter):
+    # type: (Sorter) -> Text
+    info_title = "/".join([
+        visual_info_registry[info_name]().title_plural
+        for info_name in sorted(infos_needed_by_painter(sorter))
+    ])
+
+    # TODO: Cleanup the special case for sites. How? Add an info for it?
+    if sorter.columns == ["site"]:
+        info_title = _("Site")
+
+    return u"%s: %s" % (info_title, sorter.title)
+
+
 def get_painter_title_for_choices(painter):
+    # type: (Painter) -> Text
     info_title = "/".join([
         visual_info_registry[info_name]().title_plural
         for info_name in sorted(infos_needed_by_painter(painter))
@@ -2249,12 +2264,8 @@ def get_painter_title_for_choices(painter):
     if painter.columns == ["site"]:
         info_title = _("Site")
 
-    if hasattr(painter.title, '__call__'):
-        title = painter.title()
-    else:
-        title = painter.title
-
-    return "%s: %s" % (info_title, title)
+    dummy_cell = Cell(View("", {}, {}), (painter.ident, None))
+    return u"%s: %s" % (info_title, painter.title(dummy_cell))
 
 
 def painter_choices_with_params(painters):

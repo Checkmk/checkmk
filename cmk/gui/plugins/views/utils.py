@@ -844,9 +844,9 @@ class Painter(six.with_metaclass(abc.ABCMeta, object)):
         """The identity of a painter. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
-    def title(self):
-        # type: () -> Text
+    @abc.abstractmethod
+    def title(self, cell):
+        # type: (Cell) -> Text
         """Used as display string for the painter in the GUI (e.g. view editor)"""
         raise NotImplementedError()
 
@@ -902,12 +902,11 @@ class Painter(six.with_metaclass(abc.ABCMeta, object)):
         change in future."""
         raise NotImplementedError()
 
-    @property
-    def short_title(self):
-        # type: () -> Text
+    def short_title(self, cell):
+        # type: (Cell) -> Text
         """Used as display string for the painter e.g. as table header
         Falls back to the full title if no short title is given"""
-        return self.title
+        return self.title(cell)
 
     def group_by(self, row):
         # type: (Row) -> Optional[Union[str, Tuple]]
@@ -972,10 +971,10 @@ def register_painter(ident, spec):
             "_ident": ident,
             "_spec": spec,
             "ident": property(lambda s: s._ident),
-            "title": property(lambda s: s._spec["title"]),
+            "title": lambda s, cell: s._spec["title"],
+            "short_title": lambda s, cell: s._spec.get("short", s.title),
             "columns": property(lambda s: s._spec["columns"]),
             "render": lambda self, row, cell: spec["paint"](row),
-            "short_title": property(lambda s: s._spec.get("short", s.title)),
             "group_by": lambda self, row: self._spec.get("groupby"),
             "parameters": property(lambda s: s._spec.get("params")),
             "painter_options": property(lambda s: s._spec.get("options", [])),
@@ -1851,16 +1850,12 @@ class Cell(object):
         return self._get_long_title(painter)
 
     def _get_short_title(self, painter):
-        # TODO: Hack for the SLA painters. Find a better way
-        if hasattr(painter.short_title, '__call__'):
-            return painter.short_title(self.painter_parameters())
-        return painter.short_title
+        # type: (Painter) -> Text
+        return painter.short_title(self)
 
     def _get_long_title(self, painter):
-        # TODO: Hack for the SLA painters. Find a better way
-        if hasattr(painter.title, '__call__'):
-            return painter.title(self.painter_parameters())
-        return painter.title
+        # type: (Painter) -> Text
+        return painter.title(self)
 
     # Can either be:
     # True       : Is printable in PDF

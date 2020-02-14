@@ -218,8 +218,7 @@ class PainterServiceGraphs(Painter):
     def ident(self):
         return "service_graphs"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Service Graphs with Timerange Previews")
 
     @property
@@ -254,8 +253,7 @@ class PainterHostGraphs(Painter):
     def ident(self):
         return "host_graphs"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Host Graphs with Timerange Previews")
 
     @property

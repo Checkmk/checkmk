@@ -24,12 +24,10 @@ class PainterHostFilename(Painter):
     def ident(self):
         return "host_filename"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Check_MK config filename")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Filename")
 
     @property
@@ -83,12 +81,10 @@ class PainterWatoFolderAbs(Painter):
     def ident(self):
         return "wato_folder_abs"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("WATO folder - complete path")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("WATO folder")
 
     @property
@@ -109,12 +105,10 @@ class PainterWatoFolderRel(Painter):
     def ident(self):
         return "wato_folder_rel"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("WATO folder - relative path")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("WATO folder")
 
     @property
@@ -135,12 +129,10 @@ class PainterWatoFolderPlain(Painter):
     def ident(self):
         return "wato_folder_plain"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("WATO folder - just folder name")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("WATO folder")
 
     @property

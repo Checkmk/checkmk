@@ -199,12 +199,10 @@ class PainterPerfometer(Painter):
     def ident(self):
         return "perfometer"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Service Perf-O-Meter")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Perf-O-Meter")
 
     @property

@@ -4030,20 +4030,14 @@ def test_registered_painters():
         painter = painter_class()
         spec = expected[painter.ident]
 
-        if isinstance(spec["title"], tuple) and spec["title"][0] == "func":
-            assert hasattr(painter.title, '__call__')
-        else:
-            assert painter.title == spec["title"]
+        assert painter.title == spec["title"]
 
         if isinstance(spec["columns"], tuple) and spec["columns"][0] == "func":
             assert hasattr(painter.columns, '__call__')
         else:
             assert painter.columns == spec["columns"]
 
-        if isinstance(spec.get("short"), tuple) and spec["short"][0] == "func":
-            assert hasattr(painter.short_title, '__call__')
-        else:
-            assert painter.short_title == spec.get("short", spec["title"])
+        assert painter.short_title == spec.get("short", spec["title"])
 
         assert painter.sorter == spec.get("sorter")
         assert painter.painter_options == spec.get("options", [])
@@ -4071,10 +4065,11 @@ def test_legacy_register_painter(monkeypatch):
         })
 
     painter = cmk.gui.plugins.views.utils.painter_registry["abc"]()
+    dummy_cell = cmk.gui.plugins.views.utils.Cell(cmk.gui.views.View("", {}, {}), (painter.ident, None))
     assert isinstance(painter, cmk.gui.plugins.views.utils.Painter)
     assert painter.ident == "abc"
-    assert painter.title == "A B C"
-    assert painter.short_title == "ABC"
+    assert painter.title(dummy_cell) == "A B C"
+    assert painter.short_title(dummy_cell) == "ABC"
     assert painter.columns == ["x"]
     assert painter.sorter == "aaaa"
     assert painter.painter_options == ["opt1"]

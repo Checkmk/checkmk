@@ -248,8 +248,7 @@ class PainterInventoryTree(Painter):
     def ident(self):
         return "inventory_tree"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Hardware & Software Tree")
 
     @property
@@ -1271,12 +1270,10 @@ class PainterInvhistTime(Painter):
     def ident(self):
         return "invhist_time"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Inventory Date/Time")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Date/Time")
 
     @property
@@ -1297,8 +1294,7 @@ class PainterInvhistDelta(Painter):
     def ident(self):
         return "invhist_delta"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Inventory changes")
 
     @property
@@ -1322,12 +1318,10 @@ class PainterInvhistRemoved(Painter):
     def ident(self):
         return "invhist_removed"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Removed entries")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Removed")
 
     @property
@@ -1344,12 +1338,10 @@ class PainterInvhistNew(Painter):
     def ident(self):
         return "invhist_new"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("new entries")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("new")
 
     @property
@@ -1366,12 +1358,10 @@ class PainterInvhistChanged(Painter):
     def ident(self):
         return "invhist_changed"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("changed entries")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("changed")
 
     @property
@@ -1465,7 +1455,7 @@ class NodeRenderer(object):
     #   ---container------------------------------------------------------------
 
     def show_container(self, container, path=None):
-        for _, node in container.get_edge_nodes():
+        for _x, node in container.get_edge_nodes():
             node_abs_path = node.get_absolute_path()
 
             raw_invpath = self._get_raw_path(".".join(map(str, node_abs_path)))
@@ -1721,8 +1711,8 @@ def ajax_inv_render_tree():
         if corrupted_history_files:
             html.add_user_error(
                 "load_inventory_delta_tree",
-                _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files.") \
-                % ", ".join(corrupted_history_files))
+                _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files."
+                 ) % ", ".join(corrupted_history_files))
             return
         tree_renderer = DeltaNodeRenderer(site_id, hostname, tree_id, invpath)
 

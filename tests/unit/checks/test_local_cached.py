@@ -1,6 +1,6 @@
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from cmk_base.check_api import MKCounterWrapped
-from checktestlib import CheckResult
+from checktestlib import CheckResult, assertCheckResultsEqual
 
 pytestmark = pytest.mark.checks
 
@@ -16,7 +16,11 @@ def test_local_check(check_manager, monkeypatch, item, info):
     check = check_manager.get_check('local')
 
     parsed = check.run_parse(info)
-    assert parsed[item][0].expired == 120.
+    assert parsed[item][0].cached == (420.0, 140.0, 300.0)
 
-    with pytest.raises(MKCounterWrapped):
-        CheckResult(check.run_check(item, {}, parsed))
+    result = CheckResult(check.run_check(item, {}, parsed))
+    expected = CheckResult([
+        (0, "Cache generated 7 m ago, cache interval: 5 m, elapsed cache lifespan: 140%"),
+        (0, "On node node_1: This Check is outdated", [("V", 1.0)]),
+    ])
+    assertCheckResultsEqual(result, expected)

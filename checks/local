@@ -53,13 +53,16 @@ def _try_convert_to_float(value):
 
 
 def _parse_cache(line, now):
+    """add cache info, if found"""
     if not line or not line[0].startswith("cached("):
-        return 0, line
+        return None, line
 
     cache_raw, stripped_line = line[0], line[1:]
-    time, maxage = (float(v) for v in cache_raw[7:-1].split(',', 1))
+    time, interval = (float(v) for v in cache_raw[7:-1].split(',', 1))
+    age = now - time
 
-    return max(now - time - maxage, 0), stripped_line
+    # make sure max(..) will give the oldest/most outdated case
+    return (age, 100.0 * age / interval, interval), stripped_line
 
 
 def _is_valid_line(line):
@@ -140,13 +143,13 @@ def _parse_perftxt(string):
 
 def parse_local(info):
     LocalResult = collections.namedtuple("LocalResult",
-                                         ("node", "expired", "item", "state", "text", "perfdata"))
+                                         ("node", "cached", "item", "state", "text", "perfdata"))
 
     now = time.time()
     parsed = {}
     for line in info:
         node, stripped_line = line[0], line[1:]
-        expired, stripped_line = _parse_cache(stripped_line, now)
+        cached, stripped_line = _parse_cache(stripped_line, now)
         if not _is_valid_line(stripped_line):
             # just pass on the line, to report the offending ouput
             parsed.setdefault(None, []).append(" ".join(stripped_line))
@@ -161,7 +164,7 @@ def parse_local(info):
         if state_msg or perf_msg:
             state = 3
             text = "%s%sOutput is: %s" % (state_msg, perf_msg, text)
-        parsed.setdefault(item, []).append(LocalResult(node, expired, item, state, text, perfdata))
+        parsed.setdefault(item, []).append(LocalResult(node, cached, item, state, text, perfdata))
 
     return parsed
 
@@ -212,16 +215,23 @@ def _iterate_all_check_results(collected_stats):
 
 @get_parsed_item_data
 def check_local(_no_item, params, data):
+    cache_infos = [result.cached for result in data if result.cached is not None]
+    # We try to mimic the behaviour of cached agent sections.
+    # Problem here: We need this info on a per-service basis, so we cannot use the section header.
+    # Solution: Just add an informative message with the same wording as in cmk/gui/plugins/views/utils.py
+    if cache_infos:
+        cache_info = max(cache_infos)
+        infotext = "Cache generated %s ago, cache interval: %s, elapsed cache lifespan: %s" % (
+            get_age_human_readable(cache_info[0]),
+            get_age_human_readable(cache_info[2]),
+            get_percent_human_readable(cache_info[1]),
+        )
+        yield 0, infotext
+
     collected_stats = {}
     for result in data:
-        if result.expired > 0:
-            continue
         node_dict = collected_stats.setdefault(result.node, {})
         node_dict.setdefault(result.item, _parse_local_line(result))
-    if not collected_stats:
-        most_recent_expirery = min(r.expired for r in data)
-        raise MKCounterWrapped("Cached data expired %s ago." %
-                               get_age_human_readable(most_recent_expirery))
 
     if params is not None and params.get("outcome_on_cluster", "worst") == "best":
         yield _calculate_local_best_state(collected_stats)

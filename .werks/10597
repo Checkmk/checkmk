@@ -1,0 +1,16 @@
+Title: local: Local check services no longer get skipped for outdated data
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p9
+Date: 1581418664
+
+Previously services corresponding to local checks based on outdated asynchronous agent data had been skipped.
+Due to timing related uncertanties this could result in services never leaving the PENDING state.
+
+Services based on such data are no longer skipped, but instead the cahing information is
+shown in the service output.

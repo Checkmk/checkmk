@@ -245,13 +245,13 @@ node {
         throw e
     } finally {
         stage("Analyse Issues") {
-            def CLANG = scanForIssues tool: clang(pattern: "results/*-tidy.txt")
+            def CLANG = scanForIssues tool: clang(pattern: "results/*-tidy.txt,results/*futurize.txt")
             def GCC = scanForIssues tool: gcc(pattern: "results/*.iwyu.txt,results/neb-cmc-compile.txt,results/*neb-cmc.txt,results/*yapf.txt")
             def PYLINT = scanForIssues tool: pyLint(pattern: "results/pylint*.txt")
             def MYPY = scanForIssues tool: myPy(pattern: "results/mypy*.xml")
             def CPPCHECK = scanForIssues tool: cppCheck(pattern: '**/cppcheck-result.xml')
 
-            publishIssues issues:[CLANG,GCC,PYLINT,MYPY,CPPCHECK], trendChartType: 'TOOLS_ONLY'
+            publishIssues issues:[CLANG,GCC,PYLINT,MYPY,CPPCHECK], trendChartType: 'TOOLS_ONLY', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]
             xunit([Custom(customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl", deleteOutputFiles: false, failIfNotNew: true, pattern: "results/*junit.xml", skipNoTestFiles: true, stopProcessingIfError: true)])
 
             archiveArtifacts allowEmptyArchive: true, artifacts: 'results/*'

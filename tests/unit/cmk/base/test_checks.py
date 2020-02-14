@@ -21,26 +21,24 @@ def _search_deprecated_api_feature(check_file_path, deprecated_pattern):
         ]
 
 
-@pytest.mark.parametrize(
-    "deprecated_pattern",
-    [
-        r"\bservice_description\(",
-        r"\bOID_BIN\b",
-        # TODO: r"\bOID_STRING\b",
-        r"\bOID_END_BIN\b",
-        r"\bOID_END_OCTET_STRING\b",
-        r"\ball_matching_hosts\b",
-        r"\bbinstring_to_int\b",
-        r"\bcheck_type\b",
-        r"\bcore_state_names\b",
-        r"\bget_http_proxy\b",
-        r"\bhosttags_match_taglist\b",
-        r"\bin_extraconf_hostlist\b",
-        r"\bis_cmc\b",
-        r"\bnagios_illegal_chars\b",
-        r"\bquote_shell_string\b",
-        r"\btags_of_host\b",
-    ])
+@pytest.mark.parametrize("deprecated_pattern", [
+    r"\bservice_description\(",
+    r"\bOID_BIN\b",
+    r"\bOID_STRING\b",
+    r"\bOID_END_BIN\b",
+    r"\bOID_END_OCTET_STRING\b",
+    r"\ball_matching_hosts\b",
+    r"\bbinstring_to_int\b",
+    r"\bcheck_type\b",
+    r"\bcore_state_names\b",
+    r"\bget_http_proxy\b",
+    r"\bhosttags_match_taglist\b",
+    r"\bin_extraconf_hostlist\b",
+    r"\bis_cmc\b",
+    r"\bnagios_illegal_chars\b",
+    r"\bquote_shell_string\b",
+    r"\btags_of_host\b",
+])
 def test_deprecated_api_features(deprecated_pattern):
     check_files = Path(cmk.utils.paths.checks_dir).glob("*")
     with_deprecated_feature = [

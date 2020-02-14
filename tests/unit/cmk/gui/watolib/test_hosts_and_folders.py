@@ -1,5 +1,6 @@
 import contextlib
 import os
+import shutil
 
 import pytest  # type: ignore[import]
 from werkzeug.test import create_environ
@@ -136,4 +137,4 @@ def test_create_nested_folders(register_builtin_html):
         folder2 = watolib.Folder("folder2", parent_folder=folder1)
         folder2.persist_instance()
 
-        os.system("rm -rf %s" % (os.path.abspath(os.path.dirname(folder1.wato_info_path()),)))
+        shutil.rmtree(os.path.dirname(folder1.wato_info_path()))

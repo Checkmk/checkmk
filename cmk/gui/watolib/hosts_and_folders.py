@@ -121,7 +121,7 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
 
         data = self._get_instance_data()
         data['__id'] = self._id
-        store.makedirs(os.path.basename(self._config_file_name()))
+        store.makedirs(os.path.dirname(self._config_file_name()))
         store.save_object_to_file(self._config_file_name(), self._get_instance_data())
 
     def load_instance(self):

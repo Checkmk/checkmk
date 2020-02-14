@@ -109,6 +109,9 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MULTISITE_AUTHORISATION $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MULTISITE_COOKIE_AUTH $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/optional_packages
+	install -m 644 $(PACKAGE_DIR)/$(CHECK_MK)/optional_packages/*.mkp $(DESTDIR)$(OMD_ROOT)/share/check_mk/optional_packages/
+
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/cmk.update-pre-hooks $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks
 

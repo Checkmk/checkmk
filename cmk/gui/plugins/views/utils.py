@@ -1331,9 +1331,9 @@ def _merge_data(data, columns):
         if col.startswith("num_") or col.startswith("members"):
             mergefunc = lambda a, b: a + b
         elif col.startswith("worst_service"):
-            return worst_service_state
+            mergefunc = worst_service_state
         elif col.startswith("worst_host"):
-            return worst_host_state
+            mergefunc = worst_host_state
         else:
             mergefunc = lambda a, b: a
         mergefuncs.append(mergefunc)

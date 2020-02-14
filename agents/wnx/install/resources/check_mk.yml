@@ -43,6 +43,9 @@ global:
     # Run sync scripts in parallel (to each other). Default is "async"
     async: yes
 
+    # Determines behavior of the Agent when plugin file is Access Denied on installation
+    try_kill_plugin_process: safe # allowed safe, all, no # safe is lmited to few exe from the build
+
     # Just output certain sections
     # Output order is random with exception check_mk, always first and systemtime, always last`
     sections: 

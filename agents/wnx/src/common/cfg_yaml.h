@@ -1,5 +1,6 @@
 // Configuration Parameters for YAML and YAML-INI related configs
 #pragma once
+#include <string_view>
 namespace cma::cfg {
 
 namespace yml_var {
@@ -39,17 +40,18 @@ const char* const kTimeout = "timeout";  // int
 
 // group "global"
 // root
-const char* const kName = "name";                     // string
-const char* const kPort = "port";                     // int
-const char* const kOnlyFrom = "only_from";            // seq
-const char* const kIpv6 = "ipv6";                     // bool
-const char* const kExecute = "execute";               // seq
-const char* const kHost = "host";                     // seq
-const char* const kAsync = "async";                   // bool
-const char* const kSectionFlush = "section_flush";    // bool
-const char* const kGlobalEncrypt = "encrypted";       // bool
-const char* const kGlobalPassword = "passphrase";     // string
-const char* const kGlobalWmiTimeout = "wmi_timeout";  // int
+const char* const kName = "name";                                     // string
+const char* const kPort = "port";                                     // int
+const char* const kOnlyFrom = "only_from";                            // seq
+const char* const kIpv6 = "ipv6";                                     // bool
+const char* const kExecute = "execute";                               // seq
+const char* const kHost = "host";                                     // seq
+const char* const kAsync = "async";                                   // bool
+const char* const kTryKillPluginProcess = "try_kill_plugin_process";  // string
+const char* const kSectionFlush = "section_flush";                    // bool
+const char* const kGlobalEncrypt = "encrypted";                       // bool
+const char* const kGlobalPassword = "passphrase";                     // string
+const char* const kGlobalWmiTimeout = "wmi_timeout";                  // int
 
 const char* const kGlobalRemoveLegacy = "remove_legacy";  // bool
 
@@ -164,7 +166,7 @@ const char* const kFileInfoPath = "path";  // sequence
 
 // group "mrpe"
 const char* const kMrpeConfig = "config";      // sequence
-const char* const kMrpeParallel = "parallel";  // boool
+const char* const kMrpeParallel = "parallel";  // bool
 
 // group "system"
 constexpr const char* const kFirewall = "firewall";        // dictionary
@@ -174,4 +176,16 @@ constexpr const char* const kModeNone = "none";            // does noting
 constexpr const char* const kModeClear = "clear";          // remove
 
 }  // namespace vars
+
+namespace values {
+// global.try_kill_plugin_process
+constexpr const char* const kTryKillSafe = "safe";  // only well known processes
+constexpr const char* const kTryKillAll = "all";    // all plugins
+constexpr const char* const kTryKillNo = "no";      //
+}  // namespace values
+
+namespace defaults {
+constexpr const char* const kTryKillPluginProcess = values::kTryKillSafe;
+}
+
 }  // namespace cma::cfg

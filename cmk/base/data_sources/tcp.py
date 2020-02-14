@@ -116,7 +116,7 @@ class TCPDataSource(CheckMKAgentDataSource):
         if len(output) == 0:  # may be caused by xinetd not allowing our address
             raise MKEmptyAgentData("Empty output from agent at TCP port %d" % port)
 
-        elif len(output) < 16:
+        if len(output) < 16:
             raise MKAgentError("Too short output from agent: %r" % output)
 
         output_is_plaintext = output.startswith("<<<")
@@ -135,11 +135,10 @@ class TCPDataSource(CheckMKAgentDataSource):
             except Exception as e:
                 if encryption_settings["use_regular"] == "enforce":
                     raise MKAgentError("Failed to decrypt agent output: %s" % e)
-                else:
-                    # of course the package might indeed have been encrypted but
-                    # in an incorrect format, but how would we find that out?
-                    # In this case processing the output will fail
-                    pass
+
+                # of course the package might indeed have been encrypted but
+                # in an incorrect format, but how would we find that out?
+                # In this case processing the output will fail
 
         return output
 

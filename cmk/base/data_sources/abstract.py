@@ -227,7 +227,7 @@ class DataSource(
             self._logger.log(VERBOSE, "Use cached data")
             return raw_data, True
 
-        elif raw_data is None and config.simulation_mode:
+        if raw_data is None and config.simulation_mode:
             raise MKAgentError("Got no data (Simulation mode enabled and no cachefile present)")
 
         self._logger.log(VERBOSE, "Execute data source")
@@ -873,7 +873,7 @@ class CheckMKAgentDataSource(
             return (status, "unexpected agent version %s (should be %s)%s" %
                     (agent_version, expected, state_markers[status]), [])
 
-        elif config.agent_min_version and cast(int, agent_version) < config.agent_min_version:
+        if config.agent_min_version and cast(int, agent_version) < config.agent_min_version:
             # TODO: This branch seems to be wrong. Or: In which case is agent_version numeric?
             status = cast(int, self._host_config.exit_code_spec().get("wrong_version", 1))
             return (status, "old plugin version %s (should be at least %s)%s" %
@@ -919,7 +919,7 @@ class CheckMKAgentDataSource(
             if isinstance(expected_version, six.string_types) and expected_version != agent_version:
                 return False
 
-            elif isinstance(expected_version, tuple) and expected_version[0] == 'at_least':
+            if isinstance(expected_version, tuple) and expected_version[0] == 'at_least':
                 spec = cast(Dict[str, str], expected_version[1])
                 if cmk.utils.misc.is_daily_build_version(agent_version) and 'daily_build' in spec:
                     expected = int(spec['daily_build'].replace('.', ''))

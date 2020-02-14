@@ -110,8 +110,7 @@ class ProgramDataSource(CheckMKAgentDataSource):
         if exitstatus:
             if exitstatus == 127:
                 raise MKAgentError("Program '%s' not found (exit code 127)" % exepath)
-            else:
-                raise MKAgentError("Agent exited with code %d: %s" % (exitstatus, stderr))
+            raise MKAgentError("Agent exited with code %d: %s" % (exitstatus, stderr))
 
         return stdout
 

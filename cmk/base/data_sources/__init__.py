@@ -145,10 +145,10 @@ class DataSources(object):
         if self._host_config.is_all_agents_host:
             return "Normal Checkmk agent, all configured special agents"
 
-        elif self._host_config.is_all_special_agents_host:
+        if self._host_config.is_all_special_agents_host:
             return "No Checkmk agent, all configured special agents"
 
-        elif self._host_config.is_tcp_host:
+        if self._host_config.is_tcp_host:
             return "Normal Checkmk agent, or special agent if configured"
 
         return "No agent"

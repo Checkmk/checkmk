@@ -30,7 +30,7 @@
 
 def inv_oracle_performance(parsed, status_data_tree):
     status_node = status_data_tree.get_list("software.applications.oracle.sga:")
-    for entry, entryinfo in parsed.items():
+    for entry, entryinfo in sorted(parsed.items()):
         if "SGA_info" in entryinfo:
             sga_data = entryinfo["SGA_info"]
             status_node.append({

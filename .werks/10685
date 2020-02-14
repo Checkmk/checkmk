@@ -1,0 +1,14 @@
+Title: Windows Agent custom installation folder is disabled by default
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p9
+Date: 1581668678
+Class: feature
+
+To install in the custom folder you may use next command
+
+<tt>msiexec /i check_mk_agent.msi ENABLE_CUSTOM_FOLDER=1</tt>
+
+

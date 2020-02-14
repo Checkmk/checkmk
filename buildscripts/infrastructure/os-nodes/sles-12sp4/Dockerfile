@@ -41,7 +41,7 @@ RUN pip install --upgrade setuptools \
 RUN zypper ref \
     && zypper -n in -y --force-resolution \
     joe \
-    ping \
+    iputils \
     vim \
     && zypper clean -a
 

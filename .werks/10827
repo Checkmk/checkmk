@@ -1,0 +1,10 @@
+Title: oracle_instance, oracle_performance, oracle_recovery_area: Inventory tables are now sorted by SID
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.6.0p9
+Date: 1581665823
+Class: fix
+
+

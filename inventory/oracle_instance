@@ -51,7 +51,7 @@ def inv_oracle_instance(info, inventory_tree, status_data_tree):
     path = "software.applications.oracle.instance:"
     inv_node = inventory_tree.get_list(path)
     status_node = status_data_tree.get_list(path)
-    for line in info:
+    for line in sorted(info):
         raw_db_creation_time = None
         raw_up_seconds = None
         logmode = None

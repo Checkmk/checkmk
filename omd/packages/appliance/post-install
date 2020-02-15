@@ -6,32 +6,31 @@
 CAP_PROGRAMS="bin/mkeventd_open514 lib/nagios/plugins/check_icmp lib/nagios/plugins/check_dhcp lib/cmc/icmpsender lib/cmc/icmpreceiver"
 
 for PROGRAM in $CAP_PROGRAMS; do
-  PROGRAM_PATH=$PROGRAM
-  if [ -f "$PROGRAM_PATH" ]; then
-    chgrp omd "$PROGRAM_PATH"
-    chmod 750 "$PROGRAM_PATH"
+    PROGRAM_PATH=$PROGRAM
+    if [ -f "$PROGRAM_PATH" ]; then
+        chgrp omd "$PROGRAM_PATH"
+        chmod 750 "$PROGRAM_PATH"
 
-    if [ "$PROGRAM" = "lib/nagios/plugins/check_icmp" ]; then
-        CAP="cap_net_raw+ep"
-    elif [ "$PROGRAM" = "lib/nagios/plugins/check_dhcp" ]; then
-        CAP="cap_net_raw,cap_net_bind_service=+ep"
-    elif [ "$PROGRAM" = "lib/cmc/icmpsender" ]; then
-        CAP="cap_net_raw+ep"
-    elif [ "$PROGRAM" = "lib/cmc/icmpreceiver" ]; then
-        CAP="cap_net_raw+ep"
-    elif [ "$PROGRAM" = "bin/mkeventd_open514" ]; then
-        CAP="cap_net_bind_service+ep"
-    fi
+        if [ "$PROGRAM" = "lib/nagios/plugins/check_icmp" ]; then
+            CAP="cap_net_raw+ep"
+        elif [ "$PROGRAM" = "lib/nagios/plugins/check_dhcp" ]; then
+            CAP="cap_net_raw,cap_net_bind_service=+ep"
+        elif [ "$PROGRAM" = "lib/cmc/icmpsender" ]; then
+            CAP="cap_net_raw+ep"
+        elif [ "$PROGRAM" = "lib/cmc/icmpreceiver" ]; then
+            CAP="cap_net_raw+ep"
+        elif [ "$PROGRAM" = "bin/mkeventd_open514" ]; then
+            CAP="cap_net_bind_service+ep"
+        fi
 
-    # Capabilities are support as of CMA 1.4.7. To be compatible with older
-    # appliances, we add the setuid workaround here
-    if ! setcap "$CAP" "$PROGRAM_PATH"; then
-        echo "Failed to set capabilities $CAP for $PROGRAM. Falling back to setuid."
-        chmod 4750 "$PROGRAM"
+        # Capabilities are support as of CMA 1.4.7. To be compatible with older
+        # appliances, we add the setuid workaround here
+        if ! setcap "$CAP" "$PROGRAM_PATH"; then
+            echo "Failed to set capabilities $CAP for $PROGRAM. Falling back to setuid."
+            chmod 4750 "$PROGRAM"
+        fi
     fi
-  fi
 done
-
 
 # Decoding files using omd python and omd script
 # We have obfuscated pyinstaller binaries to avoid false positives
@@ -59,7 +58,7 @@ CMK_DECODED_EXE_PATH=$CMK_DECODED_DIR/$CMK_UPDATE_EXE_NAME
 CMK_PYTHON=$BASE_PATH/bin/python
 
 # cmk-update-agent.exe:
-if test -f CMK_ENCODED_EXE_PATH && test -f $DECODING_SCRIPT_PATH ; then
+if test -f $CMK_ENCODED_EXE_PATH && test -f $DECODING_SCRIPT_PATH; then
     echo "Decoding '$CMK_ENCODED_EXE_PATH' using '$DECODING_SCRIPT_PATH' to '$CMK_DECODED_EXE_PATH'"
     mkdir -p $CMK_DECODED_DIR
     echo "Calling internal python '$CMK_PYTHON'"

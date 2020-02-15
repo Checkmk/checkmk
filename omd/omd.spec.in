@@ -135,7 +135,7 @@ CMK_DECODED_EXE_PATH=$CMK_DECODED_DIR/$CMK_UPDATE_EXE_NAME
 CMK_PYTHON=$BASE_PATH/bin/python
 
 # cmk-update-agent.exe:
-if test -f CMK_ENCODED_EXE_PATH && test -f $DECODING_SCRIPT_PATH ; then
+if test -f $CMK_ENCODED_EXE_PATH && test -f $DECODING_SCRIPT_PATH ; then
     echo "Decoding '$CMK_ENCODED_EXE_PATH' using '$DECODING_SCRIPT_PATH' to '$CMK_DECODED_EXE_PATH'"
     mkdir -p $CMK_DECODED_DIR
     echo "Calling internal python '$CMK_PYTHON'"

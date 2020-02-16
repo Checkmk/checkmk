@@ -66,6 +66,9 @@ if TYPE_CHECKING:
     from cmk.gui.views import View  # pylint: disable=unused-import
     from cmk.gui.plugins.visuals.utils import Filter  # pylint: disable=unused-import
 
+PDFCellContent = Union[Text, str, HTML, Tuple[str, str]]
+PDFCellSpec = Union[CellSpec, Tuple[CSSClass, PDFCellContent]]
+
 
 # TODO: Better name it PainterOptions or DisplayOptions? There are options which only affect
 # painters, but some which affect generic behaviour of the views, so DisplayOptions might
@@ -1870,26 +1873,31 @@ class Cell(object):
         return self._tooltip_painter_name is not None
 
     def tooltip_painter_name(self):
+        # type: () -> str
+        assert self._tooltip_painter_name is not None
         return self._tooltip_painter_name
 
     def tooltip_painter(self):
+        # type: () -> Painter
+        assert self._tooltip_painter_name is not None
         return painter_registry[self._tooltip_painter_name]()
 
     def paint_as_header(self, is_last_column_header=False):
+        # type: (bool) -> None
         # Optional: Sort link in title cell
         # Use explicit defined sorter or implicit the sorter with the painter name
         # Important for links:
         # - Add the display options (Keeping the same display options as current)
         # - Link to _self (Always link to the current frame)
-        classes = []
+        classes = []  # type: List[str]
         onclick = ''
-        title = ''
+        title = u''
         if display_options.enabled(display_options.L) \
            and self._view.spec.get('user_sortable', False) \
            and _get_sorter_name_of_painter(self.painter_name()) is not None:
             params = [
                 ('sort', self._sort_url()),
-            ]
+            ]  # type: HTTPVariables
             if display_options.title_options:
                 params.append(('display_options', display_options.title_options))
 
@@ -1903,7 +1911,6 @@ class Cell(object):
         html.open_th(class_=classes, onclick=onclick, title=title)
         html.write(self.title())
         html.close_th()
-        #html.guitest_record_output("view", ("header", title))
 
     def _sort_url(self):
         # type: () -> Text
@@ -1994,6 +2001,7 @@ class Cell(object):
     # Same as self.render() for HTML output: Gets a painter and a data
     # row and creates the text for being painted.
     def render_for_pdf(self, row, time_range):
+        # type: (Row, TimeRange) -> PDFCellSpec
         # TODO: Move this somewhere else!
         def find_htdocs_image_path(filename):
             for file_path in [
@@ -2005,14 +2013,16 @@ class Cell(object):
 
         try:
             row = join_row(row, self)
-            css_classes, txt = self.render_content(row)
-            if txt is None:
+            css_classes, rendered_txt = self.render_content(row)
+            if rendered_txt is None:
                 return css_classes, ""
-            txt = txt.strip()
+
+            txt = rendered_txt.strip()  # type: PDFCellContent
 
             # Handle <img...>. Our PDF writer cannot draw arbitrary
             # images, but all that we need for showing simple icons.
             # Current limitation: *one* image
+            assert not isinstance(txt, tuple)
             if txt.lower().startswith("<img"):
                 img_filename = re.sub('.*src=["\']([^\'"]*)["\'].*', "\\1", str(txt))
                 img_path = find_htdocs_image_path(img_filename)
@@ -2034,6 +2044,7 @@ class Cell(object):
                                      (self.painter_name(), traceback.format_exc()))
 
     def render_content(self, row):
+        # type: (Row) -> CellSpec
         if not row:
             return "", ""  # nothing to paint
 
@@ -2044,6 +2055,7 @@ class Cell(object):
         return result
 
     def paint(self, row, tdattrs="", is_last_cell=False):
+        # type: (Row, str, bool) -> bool
         tdclass, content = self.render(row)
         has_content = content != ""
 

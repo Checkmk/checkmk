@@ -72,7 +72,7 @@ def escape_attribute(value):
 
 
 def unescape_attributes(value):
-    # type: (str) -> Text
+    # type: (Union[str, Text]) -> Text
     # In python3 use html.unescape
     return ensure_unicode(value  #
                           .replace("&amp;", "&")  #

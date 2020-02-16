@@ -194,6 +194,9 @@ class VisualType(six.with_metaclass(abc.ABCMeta, object)):
         if single_info_condition != ["host"]:
             raise NotImplementedError()
 
+        if not linking_view_rows:
+            return False  # Unknown host, no linking
+
         # In case we have rows of a single host context we only have a single row that holds the
         # host information. In case we have multiple rows, we normally have service rows which
         # all hold the same host information in their host columns.

@@ -396,7 +396,7 @@ def _check_auth_by_cookie():
                 auth_logger.debug('Exception while checking cookie %s: %s' %
                                   (cookie_name, traceback.format_exc()))
             except Exception:
-                auth_logger.error('Exception while checking cookie %s: %s' %
+                auth_logger.debug('Exception while checking cookie %s: %s' %
                                   (cookie_name, traceback.format_exc()))
     return None
 

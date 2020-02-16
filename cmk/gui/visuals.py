@@ -1428,7 +1428,8 @@ def verify_single_infos(visual, context):
     missing_variables = set(single_info_keys).difference(context)
 
     if missing_variables:
-        raise MKGeneralException(
+        raise MKUserError(
+            None,
             _("Missing context information: %s. You can either add this as a fixed "
               "setting, or call the with the missing HTTP variables.") %
             (", ".join(missing_variables)))

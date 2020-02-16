@@ -579,7 +579,11 @@ def ajax_snapin():
 
     snapin_code = []
     for snapin_id in snapin_ids:
-        snapin_instance = user_config.get_snapin(snapin_id).snapin_type()
+        try:
+            snapin_instance = user_config.get_snapin(snapin_id).snapin_type()
+        except KeyError:
+            continue  # Skip not existing snapins
+
         if not config.user.may(snapin_instance.permission_name()):
             continue
 

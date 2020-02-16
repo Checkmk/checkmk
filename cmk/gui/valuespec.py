@@ -408,13 +408,7 @@ class Integer(ValueSpec):
         return self._display_format % utils.saveint(value)
 
     def from_html_vars(self, varprefix):
-        try:
-            return int(html.request.var(varprefix))
-        except Exception:
-            raise MKUserError(
-                varprefix,
-                _("The text <b><tt>%s</tt></b> is not a valid integer number.") %
-                html.request.var(varprefix))
+        return html.get_integer_input(varprefix)
 
     def value_to_text(self, value):
         text = self._display_format % value
@@ -472,8 +466,8 @@ class Filesize(Integer):
 
     def from_html_vars(self, varprefix):
         try:
-            return int(html.request.var(varprefix + '_size')) * (1024**int(
-                html.request.var(varprefix + '_unit')))
+            return html.get_integer_input(varprefix + '_size') * (
+                1024**html.get_integer_input(varprefix + '_unit'))
         except Exception:
             raise MKUserError(varprefix + '_size', _("Please enter a valid integer number"))
 
@@ -4068,7 +4062,7 @@ class Alternative(ValueSpec):
             return _("invalid:") + " " + escaping.escape_attribute(str(value))
 
     def from_html_vars(self, varprefix):
-        nr = int(html.request.var(varprefix + "_use"))
+        nr = html.get_integer_input(varprefix + "_use")
         vs = self._elements[nr]
         return vs.from_html_vars(varprefix + "_%d" % nr)
 

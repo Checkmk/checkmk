@@ -2514,9 +2514,12 @@ class ABCTagFilter(six.with_metaclass(abc.ABCMeta, Filter)):
                           class_="op")
             html.close_td()
             html.open_td()
-            choices = grouped[html.request.var(prefix +
-                                               '_grp')] if html.request.var(prefix +
-                                                                            '_grp') else [("", "")]
+
+            if html.request.var(prefix + "_grp"):
+                choices = html.get_item_input(prefix + "_grp", grouped)[0]
+            else:
+                choices = [("", "")]
+
             html.dropdown(prefix + '_val', choices, style="width:129px", ordered=True, class_="val")
             html.close_td()
             html.close_tr()

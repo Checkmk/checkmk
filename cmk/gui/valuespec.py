@@ -2977,7 +2977,7 @@ class Timerange(CascadingDropdown):
         self._include_time = kwargs.get("include_time", False)
         self._fixed_choices = kwargs.get("choices", [])
         kwargs['choices'] = self._prepare_choices
-        CascadingDropdown.__init__(self, **kwargs)
+        CascadingDropdown.__init__(self, sorted=False, **kwargs)
 
     def _prepare_choices(self):
         choices = list(self._fixed_choices)

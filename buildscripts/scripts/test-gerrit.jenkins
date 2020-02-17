@@ -173,7 +173,7 @@ node {
             NAME: 'Cppcheck Livestatus',
             CONDITION: CHANGED_CORE_FILES != "",
             DIR: 'livestatus/src',
-            ENV_VARS: [],
+            ENV_VARS: ["CPPCHECK_NEB_RESULT=${RESULTS}/cppcheck-neb.xml"],
             COMMAND: "${WORKSPACE}/scripts/run-cxx-linter cppcheck-xml ${GERRIT_PATCHSET_REVISION}",
             TEXT_ON_SKIP: 'No core files changed. Skipping.'
          )
@@ -182,7 +182,7 @@ node {
             NAME: 'Cppcheck core',
             CONDITION: CHANGED_CORE_FILES != "",
             DIR: 'enterprise/core/src',
-            ENV_VARS: [],
+            ENV_VARS: ["CPPCHECK_CMC_RESULT=${RESULTS}/cppcheck-cmc.xml"],
             COMMAND: "${WORKSPACE}/scripts/run-cxx-linter cppcheck-xml ${GERRIT_PATCHSET_REVISION}",
             TEXT_ON_SKIP: 'No core files changed. Skipping.'
          )
@@ -249,7 +249,7 @@ node {
             def GCC = scanForIssues tool: gcc(pattern: "results/*.iwyu.txt,results/neb-cmc-compile.txt,results/*neb-cmc.txt,results/*yapf.txt")
             def PYLINT = scanForIssues tool: pyLint(pattern: "results/pylint*.txt")
             def MYPY = scanForIssues tool: myPy(pattern: "results/mypy*.xml")
-            def CPPCHECK = scanForIssues tool: cppCheck(pattern: '**/cppcheck-result.xml')
+            def CPPCHECK = scanForIssues tool: cppCheck(pattern: 'restults/cppcheck-*.xml')
 
             publishIssues issues:[CLANG,GCC,PYLINT,MYPY,CPPCHECK], trendChartType: 'TOOLS_ONLY', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]
             xunit([Custom(customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl", deleteOutputFiles: false, failIfNotNew: true, pattern: "results/*junit.xml", skipNoTestFiles: true, stopProcessingIfError: true)])

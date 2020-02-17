@@ -25,6 +25,7 @@
 CLANG_VERSION ?= 8
 
 CPPCHECK ?= cppcheck
+CPPCHECK_NEB_RESULT ?= cppcheck-result.xml
 DOXYGEN ?= doxygen
 IWYU_TOOL ?= $(abs_top_srcdir)/scripts/iwyu_tool
 RUN_CLANG_TIDY ?= \
@@ -314,8 +315,8 @@ cppcheck: compile_commands.json
 
 # We need to mangle the result a bit to make Jenkins' Cppcheck plugin happy
 cppcheck-xml: compile_commands.json
-	$(CPPCHECK) -UCMC --enable=all --suppressions-list=$(abs_top_srcdir)/.cppcheck-suppressions --inline-suppr --project=compile_commands.json --quiet --template=gcc --xml --xml-version=2 2> cppcheck-result.xml
-	sed -i "s%\\(<location.* file=\"\\)\\([^/]\\)%\\1$(subdir)/\\2%" cppcheck-result.xml
+	$(CPPCHECK) -UCMC --enable=all --suppressions-list=$(abs_top_srcdir)/.cppcheck-suppressions --inline-suppr --project=compile_commands.json --quiet --template=gcc --xml --xml-version=2 2> $(CPPCHECK_NEB_RESULT)
+	sed -i "s%\\(<location.* file=\"\\)\\([^/]\\)%\\1$(subdir)/\\2%" $(CPPCHECK_NEB_RESULT)
 
 documentation:
 	$(DOXYGEN) doc/Doxyfile
@@ -328,4 +329,4 @@ install-data-local:
 	rm -f $(DESTDIR)$(pkglibdir)/liblivestatus.a
 
 clean-local:
-	rm -rf *~ compile_commands.json cppcheck-result.xml test_detail.xml html $(INCLUDES_DIR) $(LIBS_DIR) $(ASIO_VERSION) $(GOOGLETEST_VERSION)
+	rm -rf *~ compile_commands.json $(CPPCHECK_NEB_RESULT) test_detail.xml html $(INCLUDES_DIR) $(LIBS_DIR) $(ASIO_VERSION) $(GOOGLETEST_VERSION)

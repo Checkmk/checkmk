@@ -1,11 +1,11 @@
-# VEEAM Backups
-# This powershell script needs to be run with the 64bit powershell
-# and thus from a 64bit check_mk agent
-# If a 64 bit check_mk agent is available it just needs to be renamed with
-# the extension .ps1
-# If only a 32bit  check_mk agent is available it needs to be relocated to a
-# directory given in veeam_backup_status.bat and the .bat file needs to be
-# started by the check_mk agent instead.
+## VEEAM Backups
+## This powershell script needs to be run with the 64bit powershell
+## and thus from a 64bit check_mk agent
+## If a 64 bit check_mk agent is available it just needs to be renamed with
+## the extension .ps1
+## If only a 32bit  check_mk agent is available it needs to be relocated to a
+## directory given in veeam_backup_status.bat and the .bat file needs to be
+## started by the check_mk agent instead.
 
 $pshost = get-host
 $pswindow = $pshost.ui.rawui

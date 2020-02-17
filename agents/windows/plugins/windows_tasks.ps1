@@ -1,23 +1,23 @@
-﻿# 
-# Monitor Windows Tasks
-#
+﻿####
+## Monitor Windows Tasks
+##
 
 Write-Host "<<<windows_tasks:sep(58):encoding(cp437)>>>"
 $lang = Get-UICulture | select -expand LCID
 
-# "..",".\n..","aaa"\n
-# We assume that correct newline can be placed only after "
-# Processing
-# \r\n   -> 'Z_Z'
-# "      -> 'o_o'
-# o_oZ_Z -> '\"\r\n' # the only valid new line symbols
-# o_o    -> '"'
-# Z_Z    -> ''
+## "..",".\n..","aaa"\n
+## We assume that correct newline can be placed only after "
+## Processing
+## \r\n   -> 'Z_Z'
+## "      -> 'o_o'
+## o_oZ_Z -> '\"\r\n' # the only valid new line symbols
+## o_o    -> '"'
+## Z_Z    -> ''
 
-# encoding "\n and "
+## encoding "\n and "
 $raw = (schtasks /query /fo csv -v | out-string) -replace '\r\n', 'Z_Z'
 $l = $raw -replace '\"', 'o_o'
-# decoding
+## decoding
 $d = $l -replace 'o_oZ_Z', "`"`r`n"
 $d = $d -replace 'o_o', '"'
 $d = $d -replace 'Z_Z', ''

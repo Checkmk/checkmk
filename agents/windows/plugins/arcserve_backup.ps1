@@ -1,19 +1,21 @@
-# ArcServe.ps1
-# Created by Ben Backx
-# modified by Hans-Christian Scherzer
-# Email: bbackx AT icorda.be
-# Version: 0.6de
-# Created: 10/12/2009
-# Last modification: 03/02/2014
+####
+## ArcServe.ps1
+####
+## Created by Ben Backx
+## modified by Hans-Christian Scherzer
+## Email: bbackx AT icorda.be
+## Version: 0.6de
+## Created: 10/12/2009
+## Last modification: 03/02/2014
 
-# Function:
-# ---------
-# This script connects to the ArcServe logging database (available
-# for version 12.0 and up) and processes the relevant logs.
-# works only with german version of ArcServe
-#
+## Function:
+## ---------
+## This script connects to the ArcServe logging database (available
+## for version 12.0 and up) and processes the relevant logs.
+## works only with german version of ArcServe
+##
 
-# SQL Database to connect to
+## SQL Database to connect to
 $sqlServer = "SATURN\ARCSERVE_DB"
 
 

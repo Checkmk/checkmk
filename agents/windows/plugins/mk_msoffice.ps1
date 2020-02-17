@@ -1,12 +1,12 @@
-# filename for timestamp
+## filename for timestamp
 $MK_CONFDIR = $env:MK_CONFDIR
 
-# Fallback if the (old) agent does not provide the MK_CONFDIR
+## Fallback if the (old) agent does not provide the MK_CONFDIR
 if (!$MK_CONFDIR) {
     $MK_CONFDIR= "c:\Program Files (x86)\check_mk\config"
 }
 
-# Source the configuration file for this agent plugin
+## Source the configuration file for this agent plugin
 $CONFIG_FILE="${MK_CONFDIR}\msoffice_cfg.ps1"
 if (test-path -path "${CONFIG_FILE}" ) {
      . "${CONFIG_FILE}"

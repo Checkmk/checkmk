@@ -38,7 +38,7 @@ import cmk.base.dump_host
 import cmk.base.backup
 import cmk.base.packaging
 import cmk.base.localize
-from cmk.base.utils import HostName, HostAddress  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, HostAddress  # pylint: disable=unused-import
 
 from cmk.base.modes import (
     modes,

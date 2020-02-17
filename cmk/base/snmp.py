@@ -25,7 +25,7 @@ import cmk.base.agent_simulator
 from cmk.base.exceptions import MKSNMPError
 import cmk.base.cleanup
 import cmk.base.snmp_utils as snmp_utils
-from cmk.base.utils import (  # pylint: disable=unused-import
+from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, HostAddress,
 )
 from cmk.base.check_utils import (  # pylint: disable=unused-import

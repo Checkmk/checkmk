@@ -10,7 +10,7 @@ from typing import (  # pylint: disable=unused-import
     Text, Callable, List, NamedTuple, Union, Tuple, Optional, Dict,
 )
 import six
-from cmk.base.utils import HostAddress, HostName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostAddress, HostName  # pylint: disable=unused-import
 from cmk.base.check_utils import SectionName, CheckPluginName  # pylint: disable=unused-import
 
 ContextName = str

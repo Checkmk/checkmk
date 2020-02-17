@@ -46,7 +46,7 @@ from cmk.base.check_utils import (  # pylint: disable=unused-import
     ServiceCheckResult, Metric, CheckPluginName, AgentSections, PiggybackRawData, SectionCacheInfo,
     RawAgentData, BoundedAbstractRawData, BoundedAbstractSections, BoundedAbstractPersistedSections,
 )
-from cmk.base.utils import (  # pylint: disable=unused-import
+from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, HostAddress,
 )
 

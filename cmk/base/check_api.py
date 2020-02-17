@@ -110,7 +110,7 @@ import cmk.base.snmp_utils as _snmp_utils
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
 import cmk.base.check_api_utils as _check_api_utils
-from cmk.base.utils import (  # pylint: disable=unused-import
+from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, ServiceName, CheckPluginName, MetricName,
 )
 from cmk.base.check_utils import (  # pylint: disable=unused-import

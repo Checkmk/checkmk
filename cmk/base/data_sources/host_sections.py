@@ -16,7 +16,7 @@ import cmk.base.caching as caching
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
 import cmk.base.check_utils
-from cmk.base.utils import HostName, HostAddress, ServiceName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, HostAddress, ServiceName  # pylint: disable=unused-import
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     CheckPluginName, SectionCacheInfo, PiggybackRawData, AbstractSectionContent, SectionName,
     ParsedSectionContent, BoundedAbstractRawData, BoundedAbstractSections,

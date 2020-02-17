@@ -16,7 +16,7 @@ import cmk.base.config as config
 import cmk.base.item_state as item_state
 import cmk.base.check_utils
 import cmk.base.check_api_utils as check_api_utils
-from cmk.base.utils import HostName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     Item, CheckParameters, CheckPluginName, CheckTable, Service)
 

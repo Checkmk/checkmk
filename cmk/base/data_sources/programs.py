@@ -26,7 +26,7 @@ import cmk.base.config as config
 import cmk.base.core_config as core_config
 from cmk.base.exceptions import MKAgentError
 from cmk.base.check_utils import CheckPluginName  # pylint: disable=unused-import
-from cmk.base.utils import (  # pylint: disable=unused-import
+from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, HostAddress)
 
 from .abstract import CheckMKAgentDataSource, RawAgentData  # pylint: disable=unused-import

@@ -29,7 +29,7 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.check_table as check_table
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     CheckPluginName,)
-from cmk.base.utils import HostName, HostAddress  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, HostAddress  # pylint: disable=unused-import
 
 from .snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from .ipmi import IPMIManagementBoardDataSource

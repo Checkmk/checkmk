@@ -9,11 +9,10 @@ from typing import (  # pylint: disable=unused-import
 )
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import Item, CheckPluginName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, Item, CheckPluginName  # pylint: disable=unused-import
 
 import cmk.base
 from cmk.base.discovered_labels import DiscoveredServiceLabels
-from cmk.base.utils import HostName
 
 if TYPE_CHECKING:
     from cmk.base.snmp_utils import (  # noqa: F401 # pylint: disable=unused-import

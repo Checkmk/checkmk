@@ -23,7 +23,7 @@ import cmk.base.utils
 import cmk.base.console as console
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.utils import HostName, HostAddress  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, HostAddress  # pylint: disable=unused-import
 
 Gateways = List[Tuple[Optional[Tuple[Optional[HostName], HostAddress, Optional[HostName]]], str,
                       int, str]]

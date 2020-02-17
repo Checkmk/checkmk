@@ -25,7 +25,7 @@ from cmk.utils.type_defs import CheckVariables
 
 import cmk.base.console
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
-from cmk.base.utils import HostName, ServiceName
+from cmk.utils.type_defs import HostName, ServiceName
 from cmk.base.check_utils import CheckPluginName, CheckParameters, DiscoveredService, Item, Service
 
 ComputeCheckParameters = Callable[[HostName, CheckPluginName, Item, CheckParameters],
@@ -193,8 +193,9 @@ def parse_autochecks_file(hostname, service_description):
 
     for child in ast.iter_child_nodes(tree):
         # Mypy is wrong about this: [mypy:] "AST" has no attribute "value"
-        if not isinstance(child, ast.Expr) and isinstance(child.value,  # type: ignore[attr-defined]
-                                                          ast.List):
+        if not isinstance(child, ast.Expr) and isinstance(
+                child.value,  # type: ignore[attr-defined]
+                ast.List):
             continue  # We only care about top level list
 
         # Mypy is wrong about this: [mypy:] "AST" has no attribute "value"

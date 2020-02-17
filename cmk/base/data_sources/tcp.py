@@ -12,7 +12,7 @@ from cmk.utils.exceptions import MKTerminate
 import cmk.utils.werks
 
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData
-from cmk.base.utils import (  # pylint: disable=unused-import
+from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, HostAddress,
 )
 from cmk.base.check_utils import RawAgentData  # pylint: disable=unused-import

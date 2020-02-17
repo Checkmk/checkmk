@@ -17,7 +17,7 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk.base.config as config
 import cmk.base.snmp as snmp
 import cmk.base.snmp_utils as snmp_utils
-from cmk.base.utils import (  # pylint: disable=unused-import
+from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, HostAddress,
 )
 from cmk.base.check_utils import (  # pylint: disable=unused-import

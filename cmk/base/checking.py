@@ -43,7 +43,7 @@ from cmk.base.check_utils import (  # pylint: disable=unused-import
     ServiceState, ServiceDetails, ServiceAdditionalDetails, ServiceCheckResult, Metric,
     CheckPluginName, Item, SectionName, CheckParameters,
 )
-from cmk.base.utils import HostName, HostAddress, ServiceName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, HostAddress, ServiceName  # pylint: disable=unused-import
 
 if not cmk.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module

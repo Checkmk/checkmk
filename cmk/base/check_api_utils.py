@@ -13,7 +13,7 @@ from typing import Optional  # pylint: disable=unused-import
 
 from cmk.base.discovered_labels import DiscoveredServiceLabels, DiscoveredHostLabels  # pylint: disable=unused-import
 from cmk.base.check_utils import CheckParameters, CheckPluginName, Item  # pylint: disable=unused-import
-from cmk.base.utils import HostName, ServiceName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, ServiceName  # pylint: disable=unused-import
 
 # Symbolic representations of states in plugin output
 state_markers = ["", "(!)", "(!!)", "(?)"]

@@ -32,7 +32,7 @@ import cmk.base.decorator
 import cmk.base.check_api as check_api
 from cmk.base.data_sources.snmp import SNMPHostSections
 
-from cmk.base.utils import HostName, HostAddress, CheckPluginName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, HostAddress, CheckPluginName  # pylint: disable=unused-import
 from cmk.base.snmp_utils import SNMPHostConfig  # pylint: disable=unused-import
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     ServiceState, ServiceDetails, ServiceAdditionalDetails, Metric,

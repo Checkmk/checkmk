@@ -16,7 +16,7 @@ import cmk.base.console as console
 import cmk.base.crash_reporting
 from cmk.base.exceptions import MKAgentError, MKSNMPError, MKIPAddressLookupError
 from cmk.base.check_utils import CheckPluginName  # pylint: disable=unused-import
-from cmk.base.utils import HostName, ServiceName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, ServiceName  # pylint: disable=unused-import
 
 if not cmk.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module

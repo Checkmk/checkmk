@@ -1,0 +1,40 @@
+Title: Feature Pack 1: Azure AD, Graylog, Huawei switches, Jenkins, Jira, K8s, MongoDB, TP-Link switches
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p9
+Date: 1581935210
+Class: feature
+
+With this release we publish the first feature pack of Checkmk. The idea behind
+the feature packs is that we can make selected features of the next stable
+release available to users of the current stable release much earlier. This
+allows features to be used and improved earlier.
+
+These features are delivered as optional features. They are included in our software
+as MKP packages which can be installed manually.
+
+This feature pack contains these features:
+
+<ul>
+    <li>Azure AD: Monitor Users and Sync Interval</li>
+    <li>Graylog Special Agent</li>
+    <li>Check plugins for Huawei switches</li>
+    <li>Jenkins special agent and checks</li>
+    <li>Jira Special Agent and checks</li>
+    <li>Kubernetes ingress and job info</li>
+    <li>MongoDB bugfixes and new checks</li>
+    <li>TP-LINK Switches Check Plugins</li>
+</ul>
+
+To install these features, you first need to install 1.6.0p9 or newer. Users of the
+Enterprise Edition can then open "Configuration > Extension Packages" and select
+the package of your choice to be installed. From this point it behaves just like
+any other MKP you have installed.
+
+Users of the Raw Edition need to use the command line interface to install these
+packages. For example: <tt>mkp install share/check_mk/optional_packages/huawei_switches-1.0.mkp</tt>.
+
+For details on how to use the new checks, please have a look at the manpages of
+the checks.

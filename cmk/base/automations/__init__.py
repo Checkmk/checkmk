@@ -14,10 +14,8 @@ import six
 import cmk.utils.debug
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.plugin_loader import load_plugins
-from cmk.utils.encoding import make_utf8
 from cmk.utils.exceptions import MKException
 
-import cmk.base.utils
 import cmk.base.config as config
 import cmk.base.console as console
 import cmk.base.profiling as profiling

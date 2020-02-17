@@ -19,7 +19,6 @@ import cmk.utils.paths
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.base.utils
 import cmk.base.console as console
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup

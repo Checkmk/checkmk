@@ -41,6 +41,7 @@ import cmk.base.check_utils
 import cmk.base.decorator
 import cmk.base.snmp_scan as snmp_scan
 from cmk.base.exceptions import MKParseFunctionError
+import cmk.base.utils
 from cmk.utils.type_defs import HostName, HostAddress  # pylint: disable=unused-import
 from cmk.base.core_config import MonitoringCore  # pylint: disable=unused-import
 from cmk.base.check_utils import (  # pylint: disable=unused-import

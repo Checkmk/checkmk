@@ -20,7 +20,6 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import StructuredDataTree
 import cmk.utils.debug
 
-import cmk.base.utils
 import cmk.base.console as console
 import cmk.base.config as config
 import cmk.base.check_api_utils as check_api_utils

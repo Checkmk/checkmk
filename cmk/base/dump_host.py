@@ -13,7 +13,6 @@ import cmk.utils.tty as tty
 import cmk.utils.render
 from cmk.utils.encoding import make_utf8
 
-import cmk.base.utils
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.console as console

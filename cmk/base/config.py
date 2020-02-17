@@ -57,7 +57,6 @@ import cmk.base.autochecks as autochecks
 import cmk.base.console as console
 import cmk.base.default_config as default_config
 import cmk.base.check_utils
-import cmk.base.utils
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.cleanup
 import cmk.base.snmp_utils

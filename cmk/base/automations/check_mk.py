@@ -26,7 +26,6 @@ import cmk.utils.cmk_subprocess as subprocess
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.type_defs import HostName, ServiceName, CheckPluginName  # pylint: disable=unused-import
 
-import cmk.base.utils
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.core_config as core_config

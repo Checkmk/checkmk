@@ -23,7 +23,6 @@ from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, CheckPluginName, Item, ServiceName,
 )
 
-import cmk.base.utils
 import cmk.base.check_utils
 import cmk.base.config as config
 from cmk.base.data_sources.host_sections import FinalSectionContent  # pylint: disable=unused-import

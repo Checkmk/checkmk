@@ -16,7 +16,6 @@ from cmk.utils.exceptions import MKGeneralException, MKBailOut
 import cmk.utils.store as store
 from cmk.utils.encoding import convert_to_unicode
 
-import cmk.base.utils
 import cmk.base.config as config
 import cmk.base.console as console
 import cmk.base.classic_snmp as classic_snmp

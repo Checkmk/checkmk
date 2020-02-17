@@ -31,7 +31,6 @@ from cmk.utils.encoding import (
     ensure_bytestr,
 )
 
-import cmk.base.utils
 import cmk.base.agent_simulator
 import cmk.base.console as console
 import cmk.base.config as config

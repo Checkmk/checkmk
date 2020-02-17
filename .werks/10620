@@ -1,0 +1,12 @@
+Title: Fix parsing of invalid state history files
+Knowledge: doc
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p9
+Date: 1581939130
+
+State history files missing the EOF would crash CMC shortly after start.

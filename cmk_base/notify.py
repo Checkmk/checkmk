@@ -1872,9 +1872,13 @@ def raw_context_from_backlog(nr):
 def raw_context_from_env():
     # Information about notification is excpected in the
     # environment in variables with the prefix NOTIFY_
-    return dict([(var[7:], value)
-                 for (var, value) in os.environ.items()
-                 if var.startswith("NOTIFY_") and not dead_nagios_variable(value)])
+    raw_context = {
+        var[7:]: value
+        for var, value in os.environ.items()
+        if var.startswith("NOTIFY_") and not dead_nagios_variable(value)
+    }
+    events.pipe_decode_raw_context(raw_context)
+    return raw_context
 
 
 def substitute_context(template, context):

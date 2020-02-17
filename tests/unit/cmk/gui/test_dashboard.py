@@ -437,5 +437,4 @@ def test_dashlet_context_inheritance(register_builtin_html):
         },
     }
 
-    assert sorted(dashlet._dashlet_context_vars().iteritems()) == sorted([('host', 'bla'),
-                                                                          ('wato_folder', '')])
+    assert sorted(dashlet._dashlet_context_vars()) == sorted([('host', 'bla'), ('wato_folder', '')])

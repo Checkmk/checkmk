@@ -159,8 +159,7 @@ class LinkedViewDashlet(ABCViewDashlet):
 
     def title_url(self):
         view_name = self._dashlet_spec["name"]
-        return html.makeuri_contextless([('view_name', view_name)] +
-                                        list(self._dashlet_context_vars().items()),
+        return html.makeuri_contextless([('view_name', view_name)] + self._dashlet_context_vars(),
                                         filename='view.py')
 
     def update(self):

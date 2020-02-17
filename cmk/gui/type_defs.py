@@ -9,6 +9,7 @@ from cmk.utils.type_defs import UserId
 
 HTTPVariables = List[Tuple[str, Union[None, int, str, Text]]]
 LivestatusQuery = Union[Text, str]
+PermissionName = str
 
 # View specific
 Row = Dict[str, Any]  # TODO: Improve this type
@@ -33,6 +34,9 @@ SorterFunction = Callable[[ColumnName, Row, Row], int]
 
 # Visual specific
 FilterName = str
-FilterHTTPVariables = Dict[str, str]
-VisualContext = Dict[FilterName, Union[str, FilterHTTPVariables]]
-SingleInfos = List[str]
+FilterHTTPVariables = Dict[str, Union[Text, str]]
+Visual = Dict[str, Any]
+VisualTypeName = str
+VisualContext = Dict[FilterName, Union[Union[Text, str], FilterHTTPVariables]]
+InfoName = str
+SingleInfos = List[InfoName]

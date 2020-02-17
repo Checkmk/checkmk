@@ -11,7 +11,9 @@ import traceback
 import json
 from contextlib import contextmanager
 from typing import (  # pylint: disable=unused-import
-    Text, Tuple, Optional, cast, Iterable, Dict, List, Callable, Union)
+    Text, Tuple, Optional, cast, Dict, List, Callable, Union, Iterator,
+)
+import six
 
 import cmk
 import cmk.gui.pages
@@ -21,7 +23,7 @@ from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKAuthException
 from cmk.gui.permissions import declare_permission
 from cmk.gui.pages import page_registry
 from cmk.gui.type_defs import (  # pylint: disable=unused-import
-    SingleInfos, VisualContext, FilterName,
+    SingleInfos, VisualContext, FilterName, InfoName, Visual, VisualTypeName, HTTPVariables,
 )
 from cmk.gui.valuespec import (
     Dictionary,
@@ -1007,6 +1009,7 @@ def page_edit_visual(what,
 
 
 def show_filter(f):
+    # type: (Filter) -> None
     html.open_div(class_=["floatfilter", "double" if f.double_height() else "single", f.ident])
     html.div(f.title, class_="legend")
     html.open_div(class_="content")
@@ -1061,7 +1064,8 @@ def filters_allowed_for_infos(info_list):
 # is some kind of filter translation between a filter of the "hostgroup" info
 # and the "hosts" info.
 def get_link_filter_names(visual, info_keys, link_filters):
-    names = []
+    # type: (Visual, List[InfoName], Dict[FilterName, FilterName]) -> List[Tuple[FilterName, FilterName]]
+    names = []  # type: List[Tuple[FilterName, FilterName]]
     for info_key in visual['single_infos']:
         if info_key not in info_keys:
             for key in info_params(info_key):
@@ -1070,12 +1074,13 @@ def get_link_filter_names(visual, info_keys, link_filters):
     return names
 
 
-# Collects all filters to be used for the given visual
 def filters_of_visual(visual, info_keys, link_filters=None):
+    # type: (Visual, List[InfoName], Optional[Dict[FilterName, FilterName]]) -> List[Filter]
+    """Collects all filters to be used for the given visual"""
     if link_filters is None:
-        link_filters = []
+        link_filters = {}
 
-    filters = {}
+    filters = {}  # type: Dict[FilterName, Filter]
 
     for info_key in info_keys:
         if info_key in visual['single_infos']:
@@ -1104,11 +1109,12 @@ def filters_of_visual(visual, info_keys, link_filters=None):
         if not filter_.info or filter_.info in info_keys:
             filters[fn] = filter_
 
-    return filters.values()
+    return list(filters.values())
 
 
 # TODO: Cleanup this special case
 def get_ubiquitary_filters():
+    # type: () -> List[FilterName]
     return ["wato_folder"]
 
 
@@ -1117,6 +1123,7 @@ def get_ubiquitary_filters():
 # For the moment we only remove the single context filters which have a
 # hard coded default value which is treated as enforced value.
 def visible_filters_of_visual(visual, use_filters):
+    # type; (Visual, List[Filter]) -> List[Filter]
     show_filters = []
 
     single_keys = get_single_info_keys(visual["single_infos"])
@@ -1158,9 +1165,9 @@ def add_context_to_uri_vars(context, single_infos, only_count=False):
 
 
 def get_context_uri_vars(context, single_infos):
-    # type: (VisualContext, SingleInfos) -> List[Tuple[str, str]]
+    # type: (VisualContext, SingleInfos) -> HTTPVariables
     """Produce key/value tuples for HTTP variables from the visual context"""
-    uri_vars = []  # type: List[Tuple[str, str]]
+    uri_vars = []  # type: HTTPVariables
     single_info_keys = get_single_info_keys(single_infos)
 
     for filter_name, filter_vars in context.items():
@@ -1180,6 +1187,7 @@ def get_context_uri_vars(context, single_infos):
 
 @contextmanager
 def context_uri_vars(context, single_infos):
+    # type: (VisualContext, SingleInfos) -> Iterator[None]
     """Updates the current HTTP variable context"""
     with html.stashed_vars():
         add_context_to_uri_vars(context, single_infos)
@@ -1189,10 +1197,11 @@ def context_uri_vars(context, single_infos):
 # Vice versa: find all filters that belong to the current URI variables
 # and create a context dictionary from that.
 def get_context_from_uri_vars(only_infos=None, single_infos=None):
+    # type: (Optional[List[InfoName]], SingleInfos) -> VisualContext
     if single_infos is None:
         single_infos = []
 
-    context = {}
+    context = {}  # type: VisualContext
     for filter_name, filter_class in filter_registry.items():
         filter_object = filter_class()
         if only_infos is None or filter_object.info in only_infos:
@@ -1200,7 +1209,9 @@ def get_context_from_uri_vars(only_infos=None, single_infos=None):
             for varname in filter_object.htmlvars:
                 if html.request.has_var(varname):
                     if filter_object.info in single_infos:
-                        context[filter_name] = html.get_unicode_input(varname)
+                        value = html.get_unicode_input(varname)
+                        assert isinstance(value, six.text_type)
+                        context[filter_name] = value
                         break
                     else:
                         this_filter_vars[varname] = html.request.var(varname)
@@ -1210,6 +1221,7 @@ def get_context_from_uri_vars(only_infos=None, single_infos=None):
 
 
 def get_merged_context(*contexts):
+    # type: (*VisualContext) -> VisualContext
     """Merges multiple filter contexts to a single one
 
     The last context that sets a filter wins. The intended order is to provide contexts in
@@ -1363,6 +1375,7 @@ class VisualFilter(ValueSpec):
 
 
 def SingleInfoSelection(info_keys):
+    # type: (List[InfoName]) -> DualListChoice
     infos = [visual_info_registry[key]() for key in info_keys]
     choices = [(i.ident, _('Show information of a single %s') % i.title)
                for i in sorted(infos, key=lambda inf: (inf.sort_index, inf.title))]
@@ -1377,6 +1390,7 @@ def SingleInfoSelection(info_keys):
 # Converts a context from the form { filtername : { ... } } into
 # the for { infoname : { filtername : { } } for editing.
 def pack_context_for_editing(visual, info_handler):
+    # type: (Visual, Callable[[Visual], List[InfoName]]) -> Dict
     # We need to pack all variables into dicts with the name of the
     # info. Since we have no mapping from info the the filter variable,
     # we pack into every info every filter. The dict valuespec will
@@ -1389,7 +1403,8 @@ def pack_context_for_editing(visual, info_handler):
 
 
 def unpack_context_after_editing(packed_context):
-    context = {}
+    # type: (Dict) -> VisualContext
+    context = {}  # type: VisualContext
     for _info_type, its_context in packed_context.items():
         context.update(its_context)
     return context
@@ -1409,10 +1424,12 @@ def unpack_context_after_editing(packed_context):
 
 
 def is_single_site_info(info_key):
+    # type: (InfoName) -> bool
     return visual_info_registry[info_key]().single_site
 
 
 def single_infos_spec(single_infos):
+    # type: (SingleInfos) -> Tuple[str, FixedValue]
     return ('single_infos',
             FixedValue(
                 single_infos,
@@ -1423,6 +1440,7 @@ def single_infos_spec(single_infos):
 
 
 def verify_single_infos(visual, context):
+    # type: (Visual, VisualContext) -> None
     """Check if all single infos from the element are known"""
     single_info_keys = get_single_info_keys(visual["single_infos"])
     missing_variables = set(single_info_keys).difference(context)
@@ -1436,6 +1454,7 @@ def verify_single_infos(visual, context):
 
 
 def visual_title(what, visual):
+    # type: (VisualTypeName, Visual) -> Text
     title = _u(visual["title"])
 
     if visual["add_context_to_title"]:
@@ -1454,6 +1473,7 @@ def visual_title(what, visual):
 
 
 def _add_context_title(visual, title):
+    # type: (Visual, Text) -> Text
     extra_titles = list(
         get_singlecontext_html_vars(visual["context"], visual["single_infos"]).values())
 
@@ -1492,11 +1512,11 @@ def _add_context_title(visual, title):
 # the variables "event_id" and "history_line" to be set in order
 # to exactly specify one history entry.
 def info_params(info_key):
-    # type: (str) -> Iterable[FilterName]
+    # type: (InfoName) -> List[FilterName]
     single_spec = visual_info_registry[info_key]().single_spec
     if single_spec is None:
         return []
-    return dict(single_spec).keys()
+    return list(dict(single_spec).keys())
 
 
 def get_single_info_keys(single_infos):
@@ -1528,6 +1548,7 @@ def get_singlecontext_html_vars(context, single_infos):
 
 
 def may_add_site_hint(visual_name, info_keys, single_info_keys, filter_names):
+    # type: (str, List[InfoName], SingleInfos, List[FilterName]) -> bool
     """Whether or not the site hint may be set when linking to a visual with the given details"""
     # When there is one non single site info used don't add the site hint
     if [info_key for info_key in single_info_keys if not is_single_site_info(info_key)]:
@@ -1564,6 +1585,7 @@ def may_add_site_hint(visual_name, info_keys, single_info_keys, filter_names):
 # TODO: Remove this code as soon as everything is moved over to pagetypes.py
 @cmk.gui.pages.register("ajax_popup_add_visual")
 def ajax_popup_add():
+    # type: () -> None
     add_type = html.request.var("add_type")
 
     html.open_ul()
@@ -1616,6 +1638,7 @@ def ajax_popup_add():
 
 @cmk.gui.pages.register("ajax_add_visual")
 def ajax_add_visual():
+    # type: () -> None
     visual_type_name = html.request.var('visual_type')  # dashboards / views / ...
     visual_type = visual_type_registry[visual_type_name]()
 

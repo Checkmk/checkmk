@@ -108,7 +108,7 @@ class DashletStats(six.with_metaclass(abc.ABCMeta, Dashlet)):
                 ("view_name", self._view_name()),
                 ("filled_in", "filter"),
                 ("search", "1"),
-            ] + table_url_vars + list(self._dashlet_context_vars().items())
+            ] + table_url_vars + self._dashlet_context_vars()
             url = html.makeuri_contextless(url_vars, filename="view.py")
 
             html.open_tr()

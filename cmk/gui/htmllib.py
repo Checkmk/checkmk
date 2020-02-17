@@ -66,7 +66,9 @@ else:
 #
 # Monkey patch in order to make the HTML class below json-serializable without changing the default json calls.
 def _default(self, obj):
-    return getattr(obj.__class__, "to_json", _default.default)(obj)
+    # type: (json.JSONEncoder, object) -> Text
+    # ignore attr-defined: See hack below
+    return getattr(obj.__class__, "to_json", _default.default)(obj)  # type: ignore[attr-defined]
 
 
 # TODO: suppress mypy warnings for this monkey patch right now. See also:

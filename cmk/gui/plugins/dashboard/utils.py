@@ -276,7 +276,9 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
         if not self.has_context():
             return url
 
-        context_vars = self._dashlet_context_vars()
+        context_vars = dict([
+            (k, six.ensure_str("%s" % v)) for k, v in self._dashlet_context_vars() if v is not None
+        ])
 
         parts = six.moves.urllib.parse.urlparse(url)
         url_vars = dict(six.moves.urllib.parse.parse_qsl(parts.query, keep_blank_values=True))
@@ -286,8 +288,8 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
         return six.moves.urllib.parse.urlunparse(tuple(parts[:4] + (new_qs,) + parts[5:]))
 
     def _dashlet_context_vars(self):
-        # type: () -> Dict[str, str]
-        return dict(visuals.get_context_uri_vars(self.context, self.single_infos()))
+        # type: () -> HTTPVariables
+        return visuals.get_context_uri_vars(self.context, self.single_infos())
 
     def size(self):
         # type: () -> DashletSize

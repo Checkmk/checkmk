@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -58,7 +58,7 @@ if TYPE_CHECKING:
 #   '----------------------------------------------------------------------'
 
 
-class DataSources(object):
+class DataSources(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, hostname, ipaddress):
         # type: (HostName, Optional[HostAddress]) -> None
         super(DataSources, self).__init__()
@@ -243,7 +243,7 @@ class DataSources(object):
             hosts.append((self._hostname, self._ipaddress, self, config.check_max_cachefile_age))
 
         if nodes:
-            import cmk.base.data_sources.abstract as abstract
+            import cmk.base.data_sources.abstract as abstract  # pylint: disable=import-outside-toplevel
             abstract.DataSource.set_may_use_cache_file()
 
         # Special agents can produce data for the same check_plugin_name on the same host, in this case

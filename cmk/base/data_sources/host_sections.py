@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -83,7 +83,7 @@ class AbstractHostSections(
         self.sections[section_name] = section  # type: ignore[assignment]
 
 
-class MultiHostSections(object):
+class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
     """Container object for wrapping the host sections of a host being processed
     or multiple hosts when a cluster is processed. Also holds the functionality for
     merging these information together for a check"""

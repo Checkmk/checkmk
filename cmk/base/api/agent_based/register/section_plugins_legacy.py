@@ -5,10 +5,50 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper to register a new-style section based on config.check_info
 """
-from typing import Any, Callable, List, Tuple
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple
 
+from cmk.base.check_api_utils import Service
+from cmk.base.snmp_utils import SNMPTable
+from cmk.base.discovered_labels import HostLabel, DiscoveredHostLabels
+from cmk.base.api import PluginName
 from cmk.base.api.agent_based.section_types import (
-    SNMPTree,)
+    AgentParseFunction,
+    AgentSectionContent,
+    AgentSectionPlugin,
+    HostLabelFunction,
+    SNMPParseFunction,
+    SNMPSectionPlugin,
+    SNMPTree,
+)
+from cmk.base.api.agent_based.utils import parse_string_table
+from cmk.base.api.agent_based.register.section_plugins import (
+    create_agent_section_plugin,
+    create_snmp_section_plugin,
+)
+
+from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
+    create_detect_spec,)
+
+
+def get_section_name(check_plugin_name):
+    # type: (str) -> str
+    return check_plugin_name.split(".", 1)[0]
+
+
+def _create_agent_parse_function(original_parse_function):
+    # type: (Optional[Callable]) -> AgentParseFunction
+    """Wrap parse function to comply to signature requirement"""
+
+    if original_parse_function is None:
+        return parse_string_table
+
+    # do not use functools.wraps, the point is the new argument name!
+    def parse_function(string_table):
+        # type: (AgentSectionContent) -> Any
+        return original_parse_function(string_table)  # type: ignore
+
+    parse_function.__name__ = original_parse_function.__name__
+    return parse_function
 
 
 def _create_layout_recover_function(elements_lengths):
@@ -112,3 +152,97 @@ def _create_snmp_trees(snmp_info):
     layout_recover_function = _create_layout_recover_function(element_lengths)
 
     return trees, layout_recover_function
+
+
+def _create_snmp_parse_function(original_parse_function, recover_layout_function):
+    # type: (Optional[Callable], Callable) -> SNMPParseFunction
+    """Wrap parse function to comply to signature requirement"""
+    if original_parse_function is None:
+        original_parse_function = parse_string_table
+
+    # do not use functools.wraps, the point is the new argument name!
+    def parse_function(string_table):
+        # type: (List[SNMPTable]) -> Any
+        return original_parse_function(  # type: ignore
+            recover_layout_function(string_table),)
+
+    parse_function.__name__ = original_parse_function.__name__
+    return parse_function
+
+
+def _create_host_label_function(discover_function, recover_layout_function, extra_sections):
+    # type: (Optional[Callable], Callable, List[str]) -> Optional[HostLabelFunction]
+    """Wrap discover_function to filter for HostLabels"""
+    if discover_function is None:
+        return None
+
+    extra_sections_count = len(extra_sections)
+
+    def host_label_function(section):
+        # type: (Any) -> Generator[HostLabel, None, None]
+        if not extra_sections_count:
+            discover_arg = recover_layout_function(section)
+        else:
+            discover_arg = [recover_layout_function(section)] + [[]] * extra_sections_count
+
+        for service_or_host_label in discover_function(discover_arg):  # type: ignore
+            if isinstance(service_or_host_label, Service):
+                for host_label in service_or_host_label.host_labels.to_list():
+                    yield host_label
+            elif isinstance(service_or_host_label, HostLabel):
+                yield service_or_host_label
+            elif isinstance(service_or_host_label, DiscoveredHostLabels):
+                for host_label in service_or_host_label.to_list():
+                    yield host_label
+
+    return host_label_function
+
+
+def create_agent_section_plugin_from_legacy(check_plugin_name, check_info_dict, forbidden_names):
+    # type: (str, Dict[str, Any], List[PluginName]) -> AgentSectionPlugin
+
+    parse_function = _create_agent_parse_function(check_info_dict.get('parse_function'),)
+
+    host_label_function = _create_host_label_function(
+        check_info_dict.get('inventory_function'),
+        lambda x: x,
+        check_info_dict.get('extra_sections', []),
+    )
+
+    return create_agent_section_plugin(
+        name=get_section_name(check_plugin_name),
+        parse_function=parse_function,
+        host_label_function=host_label_function,
+        forbidden_names=forbidden_names,
+    )
+
+
+def create_snmp_section_plugin_from_legacy(check_plugin_name, check_info_dict, snmp_scan_function,
+                                           snmp_info, forbidden_names):
+    # type: (str, Dict[str, Any], Callable, Any, List[PluginName]) -> SNMPSectionPlugin
+    trees, recover_layout_function = _create_snmp_trees(snmp_info)
+
+    parse_function = _create_snmp_parse_function(
+        check_info_dict.get('parse_function'),
+        recover_layout_function,
+    )
+
+    host_label_function = _create_host_label_function(
+        check_info_dict.get('inventory_function'),
+        recover_layout_function,
+        check_info_dict.get('extra_sections', []),
+    )
+
+    detect_spec = create_detect_spec(
+        check_plugin_name,
+        snmp_scan_function,
+    )
+
+    return create_snmp_section_plugin(
+        name=get_section_name(check_plugin_name),
+        parse_function=parse_function,
+        host_label_function=host_label_function,
+        forbidden_names=forbidden_names,
+        trees=trees,
+        detect_spec=detect_spec,
+    )

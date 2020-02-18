@@ -1,12 +1,29 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+from contextlib import contextmanager
 import pytest  # type: ignore[import]
 
 import cmk.base.config as config
 import cmk.base.check_api as check_api
+
+from cmk.base.api.agent_based.section_types import (
+    AgentSectionPlugin,
+    SNMPSectionPlugin,
+)
+
 from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function import (
     create_detect_spec,
     _explicit_conversions,
 )
-from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees
+
+from cmk.base.api.agent_based.register.section_plugins_legacy import (
+    _create_snmp_trees,
+    create_agent_section_plugin_from_legacy,
+    create_snmp_section_plugin_from_legacy,
+)
 
 pytestmark = pytest.mark.checks
 
@@ -44,14 +61,45 @@ KNOWN_FAILURES = {
 }
 
 
+@contextmanager
+def known_exceptions(name):
+    if name not in KNOWN_FAILURES:
+        yield
+        return
+
+    with pytest.raises(NotImplementedError):
+        yield
+
+
 @pytest.mark.parametrize("name, scan_func", list(config.snmp_scan_functions.items()))
 def test_snmp_scan_tranlation(name, scan_func):
-
-    if name in KNOWN_FAILURES:
-        with pytest.raises(NotImplementedError):
-            _ = create_detect_spec(name, scan_func)
-    else:
+    with known_exceptions(name):
         _ = create_detect_spec(name, scan_func)
+
+
+@pytest.mark.parametrize(
+    "name, check_info",
+    [(name, check_info) for (name, check_info) in config.check_info.items() if '.' not in name])
+def test_create_section_plugin_from_legacy(name, check_info):
+
+    scan_function = config.snmp_scan_functions.get(name)
+    if scan_function is None:
+        section = create_agent_section_plugin_from_legacy(
+            name,
+            check_info,
+            [],
+        )
+        assert isinstance(section, AgentSectionPlugin)
+    else:
+        with known_exceptions(name):
+            sec = create_snmp_section_plugin_from_legacy(
+                name,
+                check_info,
+                scan_function,
+                config.snmp_info[name],
+                [],
+            )
+        assert isinstance(sec, SNMPSectionPlugin)
 
 
 @pytest.mark.parametrize("_name, snmp_info", list(config.snmp_info.items()))

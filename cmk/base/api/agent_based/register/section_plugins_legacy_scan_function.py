@@ -331,7 +331,6 @@ def create_detect_spec(name, snmp_scan_function):
     scan_func_ast = _get_scan_function_ast(name, snmp_scan_function)
 
     expression_ast = _get_expression_from_function(name, scan_func_ast)
-    # unitl here: all but 74
 
     if isinstance(expression_ast, ast.NameConstant) and expression_ast.value is False:
         spec = []

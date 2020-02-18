@@ -68,7 +68,12 @@ checks = {
                     0, 'Result of summed up values: 37', [
                         ('jira_sum', 37.0, None, None, None, None)
                     ]
-                ), (0, u'Difference last 7 d: 0.00', [])
+                ),
+                (
+                    0, u'Difference last 7 d: 0.00', [
+                        ('jira_diff', 0, None, None, None, None)
+                    ]
+                )
             ]
         ),
         (
@@ -77,7 +82,12 @@ checks = {
                     0, 'Total number of issues: 414', [
                         ('jira_count', 414, None, None, None, None)
                     ]
-                ), (0, u'Difference last 7 d: 0.00', [])
+                ),
+                (
+                    0, u'Difference last 7 d: 0.00', [
+                        ('jira_diff', 0, None, None, None, None)
+                    ]
+                )
             ]
         )
     ]

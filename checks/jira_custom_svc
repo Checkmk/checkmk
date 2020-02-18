@@ -100,7 +100,7 @@ def check_jira_custom_svc(item, params, item_data):
 
             yield check_levels(
                 diff,
-                None,
+                "jira_diff",
                 diff_levels_upper + diff_levels_lower,
                 infoname="Difference last %s" % get_age_human_readable(timespan),
             )

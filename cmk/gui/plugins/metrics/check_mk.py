@@ -6364,6 +6364,12 @@ metric_info['jira_avg'] = {
     "color": "14/a",
 }
 
+metric_info['jira_diff'] = {
+    "title": _("Difference"),
+    "unit": "count",
+    "color": "11/a",
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |

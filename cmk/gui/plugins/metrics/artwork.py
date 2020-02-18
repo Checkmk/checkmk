@@ -699,59 +699,47 @@ def compute_graph_t_axis(start_time, end_time, width, step):
     # Depending on which time range is being shown we have different
     # steps of granularity
 
+    start_time += step  # RRD start has no data
+    end_time -= step  # this closes the interval
+
     start_time_local = time.localtime(start_time)
     start_date = start_time_local[:3]  # y, m, d
     start_month = start_time_local[:2]
-    start_year = start_time_local[0]
 
     end_time_local = time.localtime(end_time)
     end_date = end_time_local[:3]
     end_month = end_time_local[:2]
-    end_year = end_time_local[0]
 
     time_range = end_time - start_time
     time_range_days = time_range / 86400
 
     label_shift = 0  # shift seconds to future in order to center it
-    title_label = None
     label_distance_at_least = 0
+    title_label = cmk.utils.render.date(start_time)
+    if start_date != end_date:
+        title_label += u" \u2014 " + cmk.utils.render.date(end_time)
 
     # TODO: Monatsname und Wochenname lokalisierbar machen
     if start_date == end_date:
         labelling = "%H:%M"
-        title_label = cmk.utils.render.date(start_time)
         label_size = 5
 
     # Less than one week
     elif time_range_days < 7:
         labelling = "%a %H:%M"
         label_size = 9
-        title_label = _date_range_human_readable(start_time, end_time)
 
     elif time_range_days < 32 and start_month == end_month:
-        labelling = "%d."
+        labelling = "%d"
         label_size = 2.5
-        title_label = time.strftime(_("%B %Y"), time.localtime(start_time))
         label_shift = 86400 / 2
         label_distance_at_least = 86400
 
-    elif time_range_days < 370:
-        if start_year == end_year:
-            title_label = str(start_year)
-        else:
-            title_label = "%d - %d" % (start_year, end_year)
-
-        if time_range_days < 200:
-            labelling = _("%d.%m.")
-            label_size = 5
-        else:
-            labelling = "%b"
-            label_size = 3
-            label_shift = 86400 * 15
-
+    elif start_time_local.tm_year == end_time_local.tm_year:
+        labelling = _("%m-%d")
+        label_size = 5
     else:
         labelling = cmk.utils.render.date
-        title_label = None
         label_size = 8
 
     # Now guess a nice number of labels. This is similar to the
@@ -822,18 +810,6 @@ def compute_graph_t_axis(start_time, end_time, width, step):
         "range": (start_time, end_time),
         "title": add_step_to_title(title_label, step),
     }
-
-
-def _date_range_human_readable(start_time, end_time):
-    start_time_local = time.localtime(start_time)
-    end_time_local = time.localtime(end_time)
-
-    if start_time_local[:2] == end_time_local[:2]:  # same month
-        date_format = "%%d-%s %%B %%Y" % time.strftime("%d", end_time_local)
-        return time.strftime(date_format, start_time_local)
-
-    return cmk.utils.render.date(start_time) + " - " + \
-           cmk.utils.render.date(end_time)
 
 
 def add_step_to_title(title_label, step):

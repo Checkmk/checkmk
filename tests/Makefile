@@ -64,7 +64,7 @@ test-gui-crawl: $(NODE_MODULES)
 	$(PYTEST) -T gui_crawl $(realpath integration/cmk/gui/test_crawl.py)
 
 test-integration: $(NODE_MODULES)
-	$(PYTEST) -T integration $(realpath integration)
+	$(PYTEST) -T integration -p no:cov $(realpath integration)
 
 test-agent-integration:
 	$(PYTEST) -T agent-integration $(realpath agent-integration)

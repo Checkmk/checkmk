@@ -1778,8 +1778,9 @@ def get_user_sorters():
 def get_only_sites():
     # type: () -> Optional[List[SiteId]]
     """Is the view limited to specific sites by request?"""
-    if html.request.var("site"):
-        return [html.request.var("site")]
+    site_arg = html.request.var("site")
+    if site_arg:
+        return [SiteId(site_arg)]
     return None
 
 

@@ -6,7 +6,7 @@
 """Wrapper layer between WSGI and GUI application code"""
 
 import sys
-from typing import Optional, Text  # pylint: disable=unused-import
+from typing import List, Optional, Any, Iterator, Union, Dict, Text, Tuple  # pylint: disable=unused-import
 import six
 import werkzeug.wrappers
 import werkzeug.wrappers.json as json  # type: ignore[import]
@@ -16,6 +16,8 @@ from cmk.utils.encoding import ensure_unicode
 
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
+
+UploadedFile = Tuple[str, str, bytes]
 
 
 class LegacyVarsMixin(object):  # pylint: disable=useless-object-inheritance
@@ -29,10 +31,15 @@ class LegacyVarsMixin(object):  # pylint: disable=useless-object-inheritance
     DELETED = object()
 
     def __init__(self, *args, **kw):
-        super(LegacyVarsMixin, self).__init__(*args, **kw)
-        self.legacy_vars = self._vars = {}
+        # type: (*Any, **Any) -> None
+        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
+        # up with 1.7, once we have moved to python 3.
+        # [mypy:] Too many arguments for "__init__" of "object"  [call-arg]
+        super(LegacyVarsMixin, self).__init__(*args, **kw)  # type: ignore[call-arg]
+        self.legacy_vars = self._vars = {}  # type: Dict[str, Union[str, object]]
 
     def set_var(self, varname, value):
+        # type: (str, Union[Text, str]) -> None
         if not isinstance(value, six.string_types):
             raise TypeError(_("Only str and unicode values are allowed, got %s") % type(value))
 
@@ -45,56 +52,76 @@ class LegacyVarsMixin(object):  # pylint: disable=useless-object-inheritance
         self.legacy_vars[varname] = value
 
     def del_var(self, varname):
+        # type: (Union[str, Text]) -> None
         varname = six.ensure_str(varname)
         self.legacy_vars[varname] = self.DELETED
 
     def del_vars(self, prefix=""):
+        # type: (str) -> None
         for varname, _value in list(self.legacy_vars.items()):
             if varname.startswith(prefix):
                 self.del_var(varname)
 
     def itervars(self, prefix=""):
+        # type: (str) -> Iterator[Tuple[str, str]]
         skip = []
         for name, value in self.legacy_vars.items():
             if name.startswith(prefix):
                 skip.append(name)
                 if value is self.DELETED:
                     continue
+                assert isinstance(value, str)
                 yield name, value
 
         # We only fall through to the real HTTP request if our var isn't set and isn't deleted.
-        for name, value in super(LegacyVarsMixin, self).itervars(prefix=prefix):
+        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
+        # up with 1.7, once we have moved to python 3.
+        for name, val in super(LegacyVarsMixin, self).itervars(prefix=prefix):  # type: ignore[misc]
             if name in skip:
                 continue
-            yield name, value
+            yield name, val
 
     def has_var(self, varname):
+        # type: (Union[str, Text]) -> bool
         varname = six.ensure_str(varname)
         if varname in self.legacy_vars:
             return self.legacy_vars[varname] is not self.DELETED
 
         # We only fall through to the real HTTP request if our var isn't set and isn't deleted.
-        return super(LegacyVarsMixin, self).has_var(varname)
+        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
+        # up with 1.7, once we have moved to python 3.
+        return super(LegacyVarsMixin, self).has_var(varname)  # type: ignore[misc]
 
     def var(self, varname, default=None):
+        # type: (str, Optional[str]) -> Optional[str]
         varname = six.ensure_str(varname)
         legacy_var = self.legacy_vars.get(varname, None)
         if legacy_var is not None:
             if legacy_var is not self.DELETED:
+                assert isinstance(legacy_var, str)
                 return legacy_var
             return default
         # We only fall through to the real HTTP request if our var isn't set and isn't deleted.
-        return super(LegacyVarsMixin, self).var(varname, default)
+        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
+        # up with 1.7, once we have moved to python 3.
+        return super(LegacyVarsMixin, self).var(varname, default)  # type: ignore[misc]
 
 
 class LegacyUploadMixin(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, *args, **kw):
-        super(LegacyUploadMixin, self).__init__(*args, **kw)
-        self.upload_cache = {}
+        # type: (*Any, **Any) -> None
+        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
+        # up with 1.7, once we have moved to python 3.
+        # [mypy:] Too many arguments for "__init__" of "object"  [call-arg]
+        super(LegacyUploadMixin, self).__init__(*args, **kw)  # type: ignore[call-arg]
+        self.upload_cache = {}  # type: Dict[str, UploadedFile]
 
     def uploaded_file(self, name):
+        # type: (str) -> UploadedFile
         # NOTE: There could be multiple entries with the same key, we ignore that for now...
-        f = self.files.get(name)
+        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
+        # up with 1.7, once we have moved to python 3.
+        f = self.files.get(name)  # type: ignore[attr-defined]
         if name not in self.upload_cache and f:
             self.upload_cache[name] = (f.filename, f.mimetype, f.read())
             f.close()
@@ -109,15 +136,21 @@ class LegacyDeprecatedMixin(object):  # pylint: disable=useless-object-inheritan
     methods and properties in Request itself.
     """
     def itervars(self, prefix=""):
+        # type: (str) -> Iterator[Tuple[str, Optional[str]]]
+        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
+        # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
-        for name, values in self.values.lists():
+        for name, values in self.values.lists():  # type: ignore[attr-defined]
             if name.startswith(prefix):
                 # Preserve previous behaviour
                 yield name, six.ensure_str(values[-1]) if values else None
 
     def var(self, name, default=None):
+        # type: (str, Optional[str]) -> Optional[str]
+        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
+        # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
-        values = self.values.getlist(name)
+        values = self.values.getlist(name)  # type: ignore[attr-defined]
         if not values:
             return default
 
@@ -125,62 +158,96 @@ class LegacyDeprecatedMixin(object):  # pylint: disable=useless-object-inheritan
         return six.ensure_str(values[-1])
 
     def has_var(self, varname):
+        # type: (str) -> bool
+        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
+        # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
-        return varname in self.values
+        return varname in self.values  # type: ignore[attr-defined]
 
     def has_cookie(self, varname):
+        # type: (str) -> bool
         """Whether or not the client provides a cookie with the given name"""
+        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
+        # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
-        return varname in self.cookies
+        return varname in self.cookies  # type: ignore[attr-defined]
 
     def cookie(self, varname, default=None):
+        # type: (str, Optional[str]) -> Optional[str]
         """Return the value of the cookie provided by the client.
 
         If the cookie has not been set, None will be returned as a default.
         This default can be changed by passing is as the second parameter."""
+        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
+        # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
-        value = self.cookies.get(varname, default)
+        value = self.cookies.get(varname, default)  # type: ignore[attr-defined]
         if value is not None:
             # Why would we want to do that? test_http.py requires it though.
             return six.ensure_str(value)
+        return None
 
     def get_request_header(self, key, default=None):
+        # type: (str, Optional[str]) -> Optional[str]
+        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
+        # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
-        return self.headers.get(key, default)
+        return self.headers.get(key, default)  # type: ignore[attr-defined]
 
     def get_cookie_names(self):
+        # type: () -> List[str]
+        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
+        # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
-        return self.cookies.keys()
+        return list(self.cookies.keys())  # type: ignore[attr-defined]
 
     @property
     def referer(self):
+        # type: () -> Optional[str]
+        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
+        # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
-        return self.referrer
+        return self.referrer  # type: ignore[attr-defined]
 
     @property
     def request_method(self):
+        # type: () -> str
+        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
+        # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
-        return self.method
+        return self.method  # type: ignore[attr-defined]
 
     @property
     def requested_url(self):
+        # type: () -> str
+        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
+        # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
-        return self.url
+        return self.url  # type: ignore[attr-defined]
 
     @property
     def requested_file(self):
+        # type: () -> str
+        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
+        # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
-        return self.base_url
+        return self.base_url  # type: ignore[attr-defined]
 
     @property
     def is_ssl_request(self):
+        # type: () -> bool
+        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
+        # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
-        return self.is_secure
+        return self.is_secure  # type: ignore[attr-defined]
 
     @property
     def remote_ip(self):
+        # type: () -> str
+        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
+        # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
-        return self.remote_addr
+        return self.remote_addr  # type: ignore[attr-defined]
 
 
 class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JSONMixin,
@@ -195,6 +262,7 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
     # pylint: disable=too-many-ancestors
     @property
     def request_timeout(self):
+        # type: () -> int
         """The system web servers configured request timeout. This is the time
         before the request is terminated from the view of the client."""
         # TODO: Found no way to get this information from WSGI environment. Hard code
@@ -248,7 +316,7 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
     def get_unicode_input(self, varname, deflt=None):
         # type: (str, Optional[Text]) -> Optional[Text]
         try:
-            val = self.var(varname, deflt)
+            val = self.var(varname, six.ensure_str(deflt) if deflt is not None else None)
             if val is None:
                 return None
             return ensure_unicode(val)
@@ -268,7 +336,7 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
     def get_integer_input(self, varname, deflt=None):
         # type: (str, Optional[int]) -> Optional[int]
 
-        value = self.var(varname, deflt)
+        value = self.var(varname, "%d" % deflt if deflt is not None else None)
         if value is None:
             return None
 
@@ -290,14 +358,17 @@ class Response(werkzeug.wrappers.Response):
     autocorrect_location_header = False
 
     def __init__(self, is_secure, *args, **kwargs):
+        # type: (bool, *Any, **Any) -> None
         super(Response, self).__init__(*args, **kwargs)
         self._is_secure = is_secure
 
     def set_http_cookie(self, key, value, secure=None):
+        # type: (str, str, Optional[bool]) -> None
         if secure is None:
             # TODO: Use the request-self proxy for this so the callers don't have to supply this
             secure = self._is_secure
         super(Response, self).set_cookie(key, value, secure=secure, httponly=True)
 
     def set_content_type(self, mime_type):
+        # type: (str) -> None
         self.headers["Content-type"] = get_content_type(mime_type, self.charset)

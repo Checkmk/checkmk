@@ -106,11 +106,14 @@ def _ensure_connected(user, force_authuser):
     # type: (Optional[UserType], Optional[UserId]) -> None
     if 'live' in g:
         return
+
     if user is None:
-        _user = config.user
         user = config.user
+
     if force_authuser is None:
-        force_authuser = html.request.var("force_authuser")
+        request_force_authuser = html.request.get_unicode_input("force_authuser")
+        force_authuser = UserId(request_force_authuser) if request_force_authuser else None
+
     g.site_status = {}
     _connect_multiple_sites(user)
     _set_livestatus_auth(user, force_authuser)
@@ -260,7 +263,7 @@ def _set_initial_site_states(enabled_sites, disabled_sites):
 # If Multisite is retricted to data the user is a contact for, we need to set an
 # AuthUser: header for livestatus.
 def _set_livestatus_auth(user, force_authuser):
-    # type: (UserType, UserId) -> None
+    # type: (UserType, Optional[UserId]) -> None
     user_id = _livestatus_auth_user(user, force_authuser)
     if user_id is not None:
         g.live.set_auth_user('read', user_id)
@@ -281,7 +284,7 @@ def _set_livestatus_auth(user, force_authuser):
 # Returns either None when no auth user shal be set or the name of the user
 # to be used as livestatus auth user
 def _livestatus_auth_user(user, force_authuser):
-    # type: (UserType, UserId) -> Optional[UserId]
+    # type: (UserType, Optional[UserId]) -> Optional[UserId]
     if not user.may("general.see_all"):
         return user.id
     if force_authuser == "1":

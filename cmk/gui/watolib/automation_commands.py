@@ -6,6 +6,7 @@
 """Managing the available automation calls"""
 
 import abc
+from typing import Optional  # pylint: disable=unused-import
 import six
 
 import cmk
@@ -37,7 +38,7 @@ class AutomationCommand(six.with_metaclass(abc.ABCMeta, object)):
         raise NotImplementedError()
 
     def _verify_slave_site_config(self, site_id):
-        # type: (str) -> None
+        # type: (Optional[str]) -> None
         if not site_id:
             raise MKGeneralException(_("Missing variable siteid"))
 

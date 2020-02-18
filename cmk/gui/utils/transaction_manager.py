@@ -84,7 +84,7 @@ class TransactionManager(object):
         if not self._request.has_var("_transid"):
             return False
 
-        transid = self._request.var("_transid")
+        transid = self._request.get_str_input_mandatory("_transid", "")
         if self._ignore_transids and (not transid or transid == '-1'):
             return True  # automation
 

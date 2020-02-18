@@ -378,47 +378,55 @@ class CEESiteManagement(SiteManagement):
         return Alternative(
             title=_("Use Livestatus Proxy Daemon"),
             style="dropdown",
-            elements = [
-                FixedValue(None,
+            elements=[
+                FixedValue(
+                    None,
                     title=_("Connect directly, without Livestatus Proxy"),
                     totext="",
                 ),
                 Transform(
                     Dictionary(
-                title=_("Use Livestatus Proxy Daemon"),
-                optional_keys = ["tcp"],
-                columns = 1,
-                elements = [
-                    ("params", Alternative(
-                        title = _("Parameters"),
-                        style = "dropdown",
-                        elements = [
-                            FixedValue(None,
-                                title = _("Use global connection parameters"),
-                                totext = _("Use the <a href=\"%s\">global parameters</a> for this connection") % \
-                                    "wato.py?mode=edit_configvar&site=&varname=liveproxyd_default_connection_params",
-                            ),
-                            Dictionary(
-                                title = _("Use custom connection parameters"),
-                                elements = cls.liveproxyd_connection_params_elements(),
-                            ),
+                        title=_("Use Livestatus Proxy Daemon"),
+                        optional_keys=["tcp"],
+                        columns=1,
+                        elements=[
+                            ("params",
+                             Alternative(
+                                 title=_("Parameters"),
+                                 style="dropdown",
+                                 elements=[
+                                     FixedValue(
+                                         None,
+                                         title=_("Use global connection parameters"),
+                                         totext=
+                                         _("Use the <a href=\"%s\">global parameters</a> for this connection"
+                                          ) %
+                                         "wato.py?mode=edit_configvar&site=&varname=liveproxyd_default_connection_params",
+                                     ),
+                                     Dictionary(
+                                         title=_("Use custom connection parameters"),
+                                         elements=cls.liveproxyd_connection_params_elements(),
+                                     ),
+                                 ],
+                             )),
+                            ("tcp",
+                             LivestatusViaTCP(
+                                 title=_("Allow access via TCP"),
+                                 help=
+                                 _("This option can be useful to build a cascading distributed setup. "
+                                   "The Livestatus Proxy of this site connects to the site configured "
+                                   "here via Livestatus and opens up a TCP port for clients. The "
+                                   "requests of the clients are forwarded to the destination site. "
+                                   "You need to configure a TCP port here that is not used on the "
+                                   "local system yet."),
+                                 tcp_port=6560,
+                             )),
                         ],
-                    )),
-                    ("tcp", LivestatusViaTCP(
-                        title = _("Allow access via TCP"),
-                        help = _("This option can be useful to build a cascading distributed setup. "
-                                 "The Livestatus Proxy of this site connects to the site configured "
-                                 "here via Livestatus and opens up a TCP port for clients. The "
-                                 "requests of the clients are forwarded to the destination site. "
-                                 "You need to configure a TCP port here that is not used on the "
-                                 "local system yet."),
-                        tcp_port = 6560,
-                    )),
-                ],
-            ),
-            forth = cls.transform_old_connection_params,
-        ),
-        ],)
+                    ),
+                    forth=cls.transform_old_connection_params,
+                ),
+            ],
+        )
 
     # Duplicate code with cmk.cee.liveproxy.Channel._transform_old_socket_spec
     @classmethod
@@ -695,6 +703,7 @@ class AutomationPushSnapshot(AutomationCommand):
         site_id = html.request.var("siteid")
 
         self._verify_slave_site_config(site_id)
+        assert site_id is not None
 
         snapshot = html.request.uploaded_file("snapshot")
         if not snapshot:

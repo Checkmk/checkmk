@@ -1241,7 +1241,7 @@ class html(ABCHTMLGenerator):
     # makes it white instead.
     def _init_screenshot_mode(self):
         # type: () -> None
-        if self.request.var("screenshotmode", config.screenshotmode):
+        if self.request.var("screenshotmode", "1" if config.screenshotmode else ""):
             self.screenshotmode = True
 
     def _requested_file_name(self):
@@ -1359,6 +1359,8 @@ class html(ABCHTMLGenerator):
             raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
 
         url = self.request.var(varname)
+        assert url is not None
+
         if not utils.is_allowed_url(url):
             if deflt:
                 return deflt
@@ -1381,6 +1383,7 @@ class html(ABCHTMLGenerator):
         if self.request.var("request_format") == "python":
             try:
                 python_request = self.request.var("request", "{}")
+                assert python_request is not None
                 request = ast.literal_eval(python_request)
             except (SyntaxError, ValueError) as e:
                 raise MKUserError(
@@ -1389,6 +1392,7 @@ class html(ABCHTMLGenerator):
         else:
             try:
                 json_request = self.request.var("request", "{}")
+                assert json_request is not None
                 request = json.loads(json_request)
                 request["request_format"] = "json"
             except ValueError as e:  # Python3: json.JSONDecodeError
@@ -1397,9 +1401,7 @@ class html(ABCHTMLGenerator):
 
         for key, val in self.request.itervars():
             if key not in ["request", "output_format"] + exclude_vars:
-                if isinstance(val, bytes):
-                    val = ensure_unicode(val)
-                request[key] = val
+                request[key] = ensure_unicode(val) if isinstance(val, bytes) else val
 
         return request
 
@@ -1705,7 +1707,8 @@ class html(ABCHTMLGenerator):
         new_vars = [nv[0] for nv in addvars]
         vars_ = [(v, val)
                  for v, val in self.request.itervars()
-                 if v[0] != "_" and v not in new_vars and (not delvars or v not in delvars)]
+                 if v[0] != "_" and v not in new_vars and (not delvars or v not in delvars)
+                ]  # type: HTTPVariables
         if remove_prefix is not None:
             vars_ = [i for i in vars_ if not i[0].startswith(remove_prefix)]
         vars_ = vars_ + addvars

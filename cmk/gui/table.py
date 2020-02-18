@@ -264,7 +264,8 @@ class Table(object):
             return
 
         if self.options["output_format"] == "csv":
-            self._write_csv(csv_separator=html.request.var("csv_separator", ";"))
+            self._write_csv(
+                csv_separator=html.request.get_str_input_mandatory("csv_separator", ";"))
             return
 
         if self.title:

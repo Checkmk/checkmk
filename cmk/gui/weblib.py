@@ -18,13 +18,10 @@ from cmk.gui.exceptions import MKUserError
 @cmk.gui.pages.register("tree_openclose")
 def ajax_tree_openclose():
     # type: () -> None
-    tree = html.request.var("tree")
-    name = html.request.get_unicode_input("name")
+    tree = html.request.get_str_input_mandatory("tree")
+    name = html.request.get_unicode_input_mandatory("name")
 
-    if not tree or not name:
-        raise MKUserError(None, _('tree or name parameter missing'))
-
-    config.user.set_tree_state(tree, name, html.request.var("state"))
+    config.user.set_tree_state(tree, name, html.request.get_str_input("state"))
     config.user.save_tree_states()
     html.write('OK')  # Write out something to make debugging easier
 
@@ -56,7 +53,8 @@ def selection_id():
         html.request.set_var('selection', sel_id)
         return sel_id
 
-    sel_id = html.request.var('selection')
+    sel_id = html.request.get_str_input_mandatory('selection')
+
     # Avoid illegal file access by introducing .. or /
     if not re.match("^[-0-9a-zA-Z]+$", sel_id):
         new_id = utils.gen_id()
@@ -68,12 +66,10 @@ def selection_id():
 @cmk.gui.pages.register("ajax_set_rowselection")
 def ajax_set_rowselection():
     # type: () -> None
-    ident = html.request.var('id')
-
-    action = html.request.var('action', 'set')
+    ident = html.request.get_str_input_mandatory('id')
+    action = html.request.get_str_input_mandatory('action', 'set')
     if action not in ['add', 'del', 'set', 'unset']:
         raise MKUserError(None, _('Invalid action'))
 
-    rows = html.request.var('rows', '').split(',')
-
+    rows = html.request.get_str_input_mandatory('rows', '').split(',')
     config.user.set_rowselection(selection_id(), ident, rows, action)

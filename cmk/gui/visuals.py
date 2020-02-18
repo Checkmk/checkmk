@@ -13,7 +13,6 @@ from contextlib import contextmanager
 from typing import (  # pylint: disable=unused-import
     Text, Tuple, Optional, cast, Dict, List, Callable, Union, Iterator,
 )
-import six
 
 import cmk
 import cmk.gui.pages
@@ -1149,7 +1148,7 @@ def add_context_to_uri_vars(context, single_infos, only_count=False):
     for filter_name, filter_vars in context.items():
         # Enforce the single context variables that are available in the visual context
         if filter_name in single_info_keys:
-            html.request.set_var(filter_name, uri_vars[filter_name])
+            html.request.set_var(filter_name, "%s" % uri_vars[filter_name])
             continue
 
         if not isinstance(filter_vars, dict):
@@ -1161,7 +1160,7 @@ def add_context_to_uri_vars(context, single_infos, only_count=False):
         skip = any(html.request.has_var(uri_varname) for uri_varname in filter_vars)
         if not skip or only_count:
             for uri_varname in filter_vars.keys():
-                html.request.set_var(uri_varname, uri_vars[uri_varname])
+                html.request.set_var(uri_varname, "%s" % uri_vars[uri_varname])
 
 
 def get_context_uri_vars(context, single_infos):
@@ -1209,12 +1208,10 @@ def get_context_from_uri_vars(only_infos=None, single_infos=None):
             for varname in filter_object.htmlvars:
                 if html.request.has_var(varname):
                     if filter_object.info in single_infos:
-                        value = html.request.get_unicode_input(varname)
-                        assert isinstance(value, six.text_type)
-                        context[filter_name] = value
+                        context[filter_name] = html.request.get_unicode_input_mandatory(varname)
                         break
                     else:
-                        this_filter_vars[varname] = html.request.var(varname)
+                        this_filter_vars[varname] = html.request.get_str_input_mandatory(varname)
             if this_filter_vars:
                 context[filter_name] = this_filter_vars
     return context
@@ -1639,14 +1636,17 @@ def ajax_popup_add():
 @cmk.gui.pages.register("ajax_add_visual")
 def ajax_add_visual():
     # type: () -> None
-    visual_type_name = html.request.var('visual_type')  # dashboards / views / ...
+    visual_type_name = html.request.get_str_input_mandatory(
+        'visual_type')  # dashboards / views / ...
     visual_type = visual_type_registry[visual_type_name]()
 
-    visual_name = html.request.var("visual_name")  # add to this visual
+    visual_name = html.request.get_str_input_mandatory("visual_name")  # add to this visual
 
     # type of the visual to add (e.g. view)
-    element_type = html.request.var("type")
+    element_type = html.request.get_str_input_mandatory("type")
 
-    create_info = json.loads(html.request.var("create_info"))
+    create_info_raw = html.request.get_str_input_mandatory("create_info")
+
+    create_info = json.loads(create_info_raw)
     visual_type.add_visual_handler(visual_name, element_type, create_info["context"],
                                    create_info["params"])

@@ -2107,7 +2107,7 @@ def _encode_sorter_url(sorters):
 
 
 def _parse_url_sorters(sort):
-    # type: (str) -> List[SorterSpec]
+    # type: (Optional[str]) -> List[SorterSpec]
     sorters = []  # type: List[SorterSpec]
     if not sort:
         return sorters

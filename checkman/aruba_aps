@@ -1,6 +1,6 @@
 title: Aruba Access Points
 agents: snmp
-catalog: app/aruba
+catalog: hw/network/aruba 
 license: GPL
 distribution: check_mk
 description:

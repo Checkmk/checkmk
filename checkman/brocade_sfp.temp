@@ -1,5 +1,5 @@
 title: Brocade FibreChannel Switches: SFP temperature
-catalog: hw/storagehw/brocade
+catalog: hw/envirnonment/brocade
 agents: snmp
 license: GPL
 distribution: check_mk

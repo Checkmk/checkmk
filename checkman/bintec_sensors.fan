@@ -1,6 +1,6 @@
 title: Bintec Routers: Fan Speed
 agents: snmp
-catalog: hw/network/bintec
+catalog: hw/environment/bintec
 license: GPL
 distribution: check_mk
 description:

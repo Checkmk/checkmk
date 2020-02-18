@@ -1,6 +1,6 @@
 title: Aruba CPU Utilization
 agents: snmp
-catalog: app/aruba
+catalog: hw/network/aruba 
 license: GPL
 distribution: check_mk
 description:

@@ -1,6 +1,6 @@
 title: Skype For Business - Mediation Server
 agents: windows
-catalog: os/services
+catalog: app/skype
 license: GPL
 distribution: check_mk
 description:

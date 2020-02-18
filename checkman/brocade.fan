@@ -1,5 +1,5 @@
 title: Brocade FibreChannel Switches: Fans
-catalog: hw/storagehw/brocade
+catalog: hw/environment/brocade
 agents: snmp
 license: GPL
 distribution: check_mk

@@ -188,7 +188,7 @@ class ModeBulkDiscovery(WatoMode):
             if not self._only_failed or host.discovery_failed():
                 entries.append((host_name, folder))
         if self._recurse:
-            for subfolder in folder.all_subfolders().values():
+            for subfolder in folder.subfolders():
                 entries += self._recurse_hosts(subfolder)
         return entries
 

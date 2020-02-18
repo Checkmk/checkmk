@@ -310,7 +310,7 @@ class RulesetCollection(object):
 
 class AllRulesets(RulesetCollection):
     def _load_rulesets_recursively(self, folder, only_varname=None):
-        for subfolder in folder.all_subfolders().values():
+        for subfolder in folder.subfolders():
             self._load_rulesets_recursively(subfolder, only_varname)
 
         self._load_folder_rulesets(folder, only_varname)
@@ -328,7 +328,7 @@ class AllRulesets(RulesetCollection):
         self._save_rulesets_recursively(Folder.root_folder())
 
     def _save_rulesets_recursively(self, folder):
-        for subfolder in folder.all_subfolders().values():
+        for subfolder in folder.subfolders():
             self._save_rulesets_recursively(subfolder)
 
         self._save_folder(folder)

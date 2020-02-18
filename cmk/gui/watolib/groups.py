@@ -340,7 +340,7 @@ def _find_usages_of_contact_group_in_mkeventd_notify_contactgroup(name, global_c
 
 def _find_usages_of_contact_group_in_hosts_and_folders(name, folder):
     used_in = []
-    for subfolder in folder.all_subfolders().values():
+    for subfolder in folder.subfolders():
         used_in += _find_usages_of_contact_group_in_hosts_and_folders(name, subfolder)
 
     attributes = folder.attributes()

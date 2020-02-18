@@ -4,13 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import abc
+import operator
 import os
 import time
 import re
 import shutil
 import uuid
 
-from typing import Type, Union, List, Text, Dict  # pylint: disable=unused-import
+from typing import Type, Union, List, Text, Dict, Optional, Any  # pylint: disable=unused-import
+
 import six
 
 import cmk
@@ -45,6 +47,7 @@ from cmk.gui.watolib.host_attributes import host_attribute_registry
 
 from cmk.gui.plugins.watolib.utils import wato_fileheader
 from cmk.utils import store as store
+from cmk.utils.iterables import first
 from cmk.utils.memoize import MemoizeCache
 
 if cmk.is_managed_edition():
@@ -91,24 +94,26 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
         super(WithUniqueIdentifier, self).__init__(*args, **kw)
 
     def id(self):
+        # type: () -> Optional[str]
         """The unique identifier of this particular instance.
+
+        Before loading the instance with `load_instance` this attribute will be None.
 
         Returns:
             The id.
-
         """
         return self._id
 
     @classmethod
     def by_id(cls, identifier):
+        # type: (str) -> Any
         """Return the Folder instance of this particular identifier.
 
         Args:
-            identifier:
-                The 16 byte uuid.uuid4() key, hex encoded (32 chars, byte-string).
+            identifier (str): The unique key.
 
         Returns:
-
+            The Folder-instance
         """
         return cls._mapped_by_id()[identifier]
 
@@ -117,12 +122,12 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
 
         """
         if self._id is None:
-            self._id = uuid.uuid4().hex
+            self._id = self._get_identifier()
 
         data = self._get_instance_data()
         data['__id'] = self._id
-        store.makedirs(os.path.dirname(self._config_file_name()))
-        store.save_object_to_file(self._config_file_name(), self._get_instance_data())
+        store.makedirs(os.path.dirname(self._store_file_name()))
+        store.save_object_to_file(self._store_file_name(), self._get_instance_data())
 
     def load_instance(self):
         """Load the data of this instance and return it.
@@ -132,18 +137,25 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
         Returns:
             The loaded data.
         """
-        data = store.load_object_from_file(self._config_file_name(), default={})
+        data = store.load_object_from_file(self._store_file_name(), default={})
         unique_id = data.pop('__id', None)
         if self._id is None:
             self._id = unique_id
         return data
 
     @abc.abstractmethod
-    def _get_instance_data(self):
+    def _get_identifier(self):
+        """The unique identifier of this object."""
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _config_file_name(self):
+    def _get_instance_data(self):
+        """The data to persist to the file."""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _store_file_name(self):
+        """The filename to which to persist this object."""
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -322,7 +334,7 @@ class BaseFolder(object):
             num += 1
 
         # Render the current folder when having subfolders
-        if not link_to_folder and self.has_subfolders() and self.visible_subfolders():
+        if not link_to_folder and self.has_subfolders() and self.subfolders(only_visible=True):
             breadcrump_element_start(z_index=100 + num)
             html.open_div(class_=["content"])
             html.open_form(name="folderpath", method="GET")
@@ -347,7 +359,10 @@ class BaseFolder(object):
     def title(self):
         raise NotImplementedError()
 
-    def visible_subfolders(self):
+    def subfolders(self, only_visible=False):
+        raise NotImplementedError()
+
+    def subfolder_by_title(self, title):
         raise NotImplementedError()
 
     def subfolder(self, name):
@@ -449,7 +464,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     # path in the variable "folder" or by a host name in the variable "host". In the
     # latter case we need to load all hosts in all folders and actively search the host.
     # Another case is the host search which has the "host_search" variable set. To handle
-    # the later case we call .current() of SearchFolder() to let it decide whether or not
+    # the later case we call .current() of SearchFolder() to let it decide whether
     # this is a host search. This method has to return a folder in all cases.
     @staticmethod
     def current():
@@ -488,10 +503,6 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def set_current(folder):
         g.wato_current_folder = folder
 
-    # .-----------------------------------------------------------------------.
-    # | CONSTRUCTION, LOADING & SAVING                                        |
-    # '-----------------------------------------------------------------------'
-
     def __init__(self,
                  name,
                  folder_path=None,
@@ -504,6 +515,9 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self._parent = parent_folder
         self._subfolders = {}
 
+        if attributes is None:
+            attributes = {}
+
         self._choices_for_moving_host = None
 
         self._root_dir = root_dir
@@ -513,23 +527,17 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             self._root_dir = wato_root_dir()
 
         if folder_path is not None:
-            self._init_by_loading_existing_directory(folder_path)
+            self._hosts = None
+            self._load()
+            self.load_subfolders()
         else:
-            self._init_by_creating_new(title, attributes)
-
-    def _init_by_loading_existing_directory(self, folder_path):
-        self._hosts = None
-        self._load()
-        self.load_subfolders()
-
-    def _init_by_creating_new(self, title, attributes):
-        self._hosts = {}
-        self._num_hosts = 0
-        self._title = title
-        self._attributes = attributes
-        self._locked = False
-        self._locked_hosts = False
-        self._locked_subfolders = False
+            self._hosts = {}
+            self._num_hosts = 0
+            self._title = title or self._fallback_title()
+            self._attributes = attributes
+            self._locked = False
+            self._locked_hosts = False
+            self._locked_subfolders = False
 
     def __repr__(self):
         return "Folder(%r, %r)" % (self.path(), self._title)
@@ -729,7 +737,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         call_hook_hosts_changed(self)
 
     def _save_hosts_file(self):
-        self._ensure_folder_directory()
+        store.makedirs(self.filesystem_path())
         if not self.has_hosts():
             if os.path.exists(self.hosts_file_path()):
                 os.remove(self.hosts_file_path())
@@ -921,6 +929,9 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self.persist_instance()
         Folder.invalidate_caches()
 
+    def _get_identifier(self):
+        return uuid.uuid4().hex
+
     def _get_instance_data(self):
         return self.get_wato_info()
 
@@ -932,9 +943,6 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             "lock": self._locked,
             "lock_subfolders": self._locked_subfolders,
         }
-
-    def _ensure_folder_directory(self):
-        store.makedirs(self.filesystem_path())
 
     def _fallback_title(self):
         if self.is_root():
@@ -1021,45 +1029,73 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def num_hosts_recursively(self):
         num = self.num_hosts()
-        for subfolder in self.visible_subfolders().values():
+        for subfolder in self.subfolders(only_visible=True):
             num += subfolder.num_hosts_recursively()
         return num
 
     def all_hosts_recursively(self):
         hosts = {}
         hosts.update(self.hosts())
-        for subfolder in self.all_subfolders().values():
+        for subfolder in self.subfolders():
             hosts.update(subfolder.all_hosts_recursively())
         return hosts
 
-    def visible_subfolders(self):
-        visible_folders = {}
-        for folder_name, folder in self._subfolders.items():
-            if folder.folder_should_be_shown("read"):
-                visible_folders[folder_name] = folder
+    def subfolders(self, only_visible=False):
+        # type: (bool) -> List[CREFolder]
+        """Filter subfolder collection by various means.
 
-        return visible_folders
+        Args:
+            only_visible:
+                Only show visible folders. Default is to show all folders.
 
-    def all_subfolders(self):
-        return self._subfolders
+        Returns:
+            A dict with the keys being the relative subfolder-name, and the value
+            being the Folder instance.
+        """
+        subfolders = list(self._subfolders.values())
+
+        if only_visible:
+            return [folder for folder in subfolders if folder.folder_should_be_shown("read")]
+
+        return subfolders
 
     def subfolder(self, name):
+        # type: (Text) -> CREFolder
+        """Find a Folder by its name-part.
+
+        Args:
+            name (Text): The basename of this Folder, not its path.
+
+        Returns:
+            The found Folder-instance or raises a KeyError.
+        """
         return self._subfolders[name]
 
     def subfolder_by_title(self, title):
-        for subfolder in self.all_subfolders().values():
-            if subfolder.title() == title:
-                return subfolder
+        # type: (Text) -> Optional[CREFolder]
+        """Find a Folder by its title.
+
+        Args:
+            title (Text): The `title()` of the folder to retrieve.
+
+        Returns:
+            The found Folder-instance or None.
+
+        """
+        return first([f for f in self.subfolders() if f.title() == title])
 
     def has_subfolder(self, name):
+        # type: (Text) -> bool
         return name in self._subfolders
 
     def has_subfolders(self):
+        # type: () -> bool
         return len(self._subfolders) > 0
 
     def subfolder_choices(self):
         choices = []
-        for subfolder in self.visible_subfolders_sorted_by_title():
+        for subfolder in sorted(self.subfolders(only_visible=True),
+                                key=operator.methodcaller('title')):
             choices.append((subfolder.path(), subfolder.title()))
         return choices
 
@@ -1075,7 +1111,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         sel = [(self.path(), title)]
 
-        for subfolder in self.visible_subfolders_sorted_by_title():
+        for subfolder in sorted(self.subfolders(only_visible=True),
+                                key=operator.methodcaller('title')):
             sel += subfolder.recursive_subfolder_choices(current_depth + 1, pretty)
         return sel
 
@@ -1094,7 +1131,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             return True
 
         has_permission = self.may(how)
-        for subfolder in self.all_subfolders().values():
+        for subfolder in self.subfolders():
             if has_permission:
                 break
             has_permission = subfolder.folder_should_be_shown(how)
@@ -1113,7 +1150,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             if what == "folder":
                 if folder.is_same_as(self.parent()):
                     continue  # We are already in that folder
-                if folder.name() in folder.all_subfolders():
+                if folder.name() in folder.subfolders():
                     continue  # naming conflict
                 if self.is_transitive_parent_of(folder):
                     continue  # we cannot be moved in our child folder
@@ -1123,12 +1160,6 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         choices.sort(key=lambda x: x[1].lower())
         return choices
-
-    def subfolders_sorted_by_title(self):
-        return sorted(self.all_subfolders().values(), key=lambda x: x.title())
-
-    def visible_subfolders_sorted_by_title(self):
-        return sorted(self.visible_subfolders().values(), key=lambda x: x.title())
 
     def site_id(self):
         if "site" in self._attributes:
@@ -1227,7 +1258,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         if host:
             return host
 
-        for subfolder in self.all_subfolders().values():
+        for subfolder in self.subfolders():
             host = subfolder.find_host_recursively(host_name)
             if host:
                 return host
@@ -1268,7 +1299,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             self.need_unlocked_subfolders()
             self.need_unlocked_hosts()
 
-        for subfolder in self.all_subfolders().values():
+        for subfolder in self.subfolders():
             subfolder.need_recursive_permission(how)
 
     def need_unlocked(self):
@@ -1436,13 +1467,13 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         # 3. Actual modification
         hooks.call("folder-deleted", subfolder)
-        self._clear_id_cache()
         add_change("delete-folder",
                    _("Deleted folder %s") % subfolder.alias_path(),
                    obj=self,
                    sites=subfolder.all_site_ids())
-        self._remove_subfolder(name)
+        del self._subfolders[name]
         shutil.rmtree(subfolder.filesystem_path())
+        self._clear_id_cache()
         Folder.invalidate_caches()
         need_sidebar_reload()
 
@@ -1672,7 +1703,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def rewrite_hosts_files(self):
         self._rewrite_hosts_file()
-        for subfolder in self.all_subfolders().values():
+        for subfolder in self.subfolders():
             subfolder.rewrite_hosts_files()
 
     def _add_host(self, host):
@@ -1687,14 +1718,11 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         host._folder = None
         self._num_hosts = len(self._hosts)
 
-    def _remove_subfolder(self, name):
-        del self._subfolders[name]
-
     def _add_all_sites_to_set(self, site_ids):
         site_ids.add(self.site_id())
         for host in self.hosts().values():
             site_ids.add(host.site_id())
-        for subfolder in self.all_subfolders().values():
+        for subfolder in self.subfolders():
             subfolder._add_all_sites_to_set(site_ids)
 
     def _rewrite_hosts_file(self):
@@ -1741,7 +1769,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 lock_message = "<ul>" + li_elements + "</ul>"
             html.show_message(lock_message)
 
-    def _config_file_name(self):
+    def _store_file_name(self):
         return self.wato_info_path()
 
     def _clear_id_cache(self):
@@ -1904,7 +1932,7 @@ class SearchFolder(BaseFolder):
 
     def _search_hosts_recursively(self, in_folder):
         hosts = self._search_hosts(in_folder)
-        for subfolder in in_folder.all_subfolders().values():
+        for subfolder in in_folder.subfolders():
             hosts.update(self._search_hosts_recursively(subfolder))
         return hosts
 
@@ -2364,7 +2392,7 @@ class CMEFolder(CREFolder):
         self._check_hosts_customer_conflicts(site_id)
 
         # Check subfolders
-        for subfolder in self.all_subfolders().values():
+        for subfolder in self.subfolders():
             subfolder_explicit_site = subfolder.attributes().get("site")
             if subfolder_explicit_site:
                 subfolder_customer = subfolder._get_customer_id()
@@ -2487,7 +2515,7 @@ class CMEFolder(CREFolder):
                 result_dict["explicit_host_sites"].setdefault(host_explicit_site,
                                                               []).append(host.name())
 
-        for subfolder in self.all_subfolders().values():
+        for subfolder in self.subfolders():
             subfolder_explicit_site = subfolder.attributes().get("site")
             if subfolder_explicit_site:
                 result_dict["explicit_folder_sites"].setdefault(subfolder_explicit_site,
@@ -2536,9 +2564,9 @@ def folders_by_id():
     #   Downside is of course a lot of wasted CPU cycles/IO on big installations, but in order to
     #   be more efficient the Folder classes need more invasive changes.
     def _update_mapping(_folder, _mapping):
-        _mapping[_folder.id] = _folder
-        for _sub_folder in _folder.all_subfolders():
-            _mapping[_sub_folder.id] = _sub_folder
+        if not _folder.is_root():
+            _mapping[_folder.id()] = _folder
+        for _sub_folder in _folder.subfolders():
             _update_mapping(_sub_folder, _mapping)
 
     mapping = {}  # type: Dict[str, Type[CREFolder]]

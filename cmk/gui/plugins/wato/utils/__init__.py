@@ -1675,7 +1675,7 @@ def configure_attributes(new,
 # of mandatory attributes.
 def some_host_hasnt_set(folder, attrname):
     # Check subfolders
-    for subfolder in folder.all_subfolders().values():
+    for subfolder in folder.subfolders():
         # If the attribute is not set in the subfolder, we need
         # to check all hosts and that folder.
         if attrname not in subfolder.attributes() \

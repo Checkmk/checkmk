@@ -975,7 +975,7 @@ def _change_host_tags_in_folders(operation, mode, folder):
                 # Ignore MKAuthExceptions of locked host.mk files
                 pass
 
-        for subfolder in folder.all_subfolders().values():
+        for subfolder in folder.subfolders():
             aff_folders, aff_hosts, aff_rulespecs = _change_host_tags_in_folders(
                 operation, mode, subfolder)
             affected_folders += aff_folders

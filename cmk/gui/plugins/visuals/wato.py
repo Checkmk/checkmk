@@ -104,12 +104,12 @@ class FilterWatoFolder(Filter):
             title_prefix = ""
         self.path_to_tree[my_path] = folder.title()
         sel = [(my_path, title_prefix + folder.title())]
-        sel += self.sublist(folder.all_subfolders(), my_path, depth)
+        sel += self.sublist(folder.subfolders(), my_path, depth)
         return sel
 
     def sublist(self, elements, my_path, depth):
         sel = []
-        for e in sorted(elements.values(), key=lambda x: x.title().lower()):
+        for e in sorted(elements, key=lambda x: x.title().lower()):
             sel += self.folder_selection(e, my_path, depth + 1)
         return sel
 

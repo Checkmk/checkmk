@@ -183,7 +183,7 @@ class ModeBulkRenameHost(WatoMode):
             if target_name and host.may("write"):
                 entries.append((folder, host_name, target_name))
         if renaming_config["recurse"]:
-            for subfolder in folder.all_subfolders().values():
+            for subfolder in folder.subfolders():
                 entries += self._recurse_hosts_for_renaming(subfolder, renaming_config)
         return entries
 
@@ -459,7 +459,7 @@ def rename_host_as_parent(oldname, newname, in_folder=None):
         if in_folder.rename_parent(oldname, newname):
             parents.append(in_folder.name())
 
-    for subfolder in in_folder.all_subfolders().values():
+    for subfolder in in_folder.subfolders():
         parents += rename_host_as_parent(oldname, newname, subfolder)
 
     return parents
@@ -488,7 +488,7 @@ def rename_host_in_rulesets(folder, oldname, newname):
                        sites=folder.all_site_ids())
             rulesets.save()
 
-        for subfolder in folder.all_subfolders().values():
+        for subfolder in folder.subfolders():
             rename_host_in_folder_rules(subfolder)
 
     rename_host_in_folder_rules(watolib.Folder.root_folder())

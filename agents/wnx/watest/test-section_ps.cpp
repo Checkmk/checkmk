@@ -75,7 +75,7 @@ TEST(PsTest, Time) {
         EXPECT_EQ(check_tm.tm_sec, 9);
         EXPECT_EQ(check_tm.tm_min, 9);
         EXPECT_EQ(check_tm.tm_year, 100);
-        EXPECT_EQ(check_tm.tm_mon, 8);
+        EXPECT_EQ(check_tm.tm_mon, 1);
         EXPECT_EQ(check_tm.tm_mday, 9);
     }
 }

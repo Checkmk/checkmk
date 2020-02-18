@@ -1,0 +1,13 @@
+Title: Windows agent ps section now reports correct process uptime
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p9
+Date: 1582024775
+Class: fix
+
+Previously Windows agent may report invalid process uptime.
+
+Now the problem have been fixed.
+

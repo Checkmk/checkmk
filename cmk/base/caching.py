@@ -18,6 +18,10 @@ class CacheManager(object):  # pylint: disable=useless-object-inheritance
         # type: () -> None
         self._caches = {}  # type: Dict[str, Cache]
 
+    def reset(self):
+        # type: () -> None
+        self._caches = {}
+
     def exists(self, name):
         # type: (str) -> bool
         return name in self._caches

@@ -5,6 +5,7 @@
 
 #include <string>
 #include <string_view>
+#include <tuple>
 
 #include "cfg.h"
 #include "logger.h"
@@ -255,7 +256,8 @@ HCRYPTHASH DuplicateHash(HCRYPTHASH hash) {
 std::optional<uint32_t> BlockSize(HCRYPTKEY key) {
     DWORD block_length = 0;
     DWORD param_length = sizeof(block_length);
-    if (FALSE == ::CryptGetKeyParam(key, KP_BLOCKLEN, (BYTE *)&block_length,
+    if (FALSE == ::CryptGetKeyParam(key, KP_BLOCKLEN,
+                                    reinterpret_cast<BYTE *>(&block_length),
                                     &param_length, 0)) {
         XLOG::l("Failure getting block len [{}]", GetLastError());
         return {};

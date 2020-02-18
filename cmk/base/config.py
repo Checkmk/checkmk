@@ -52,7 +52,7 @@ from cmk.utils.type_defs import (  # pylint: disable=unused-import
     TimeperiodName, ServicegroupName, Labels, RulesetName, ContactgroupName, HostgroupName,
     LabelSources, TagValue, Tags, TagList, TagGroups, Ruleset, CheckVariables)
 
-import cmk.base
+from cmk.base import config_cache as _config_cache, runtime_cache as _runtime_cache
 import cmk.base.autochecks as autochecks
 import cmk.base.console as console
 import cmk.base.default_config as default_config
@@ -233,7 +233,7 @@ def _perform_post_config_loading_actions():
     # type: () -> None
     """These tasks must be performed after loading the Check_MK base configuration"""
     # First cleanup things (needed for e.g. reloading the config)
-    cmk.base.config_cache.clear_all()
+    _config_cache.clear_all()
 
     get_config_cache().initialize()
 
@@ -693,7 +693,7 @@ def set_use_core_config(use_core_config):
 
 def strip_tags(tagged_hostlist):
     # type: (List[str]) -> List[str]
-    cache = cmk.base.config_cache.get_dict("strip_tags")
+    cache = _config_cache.get_dict("strip_tags")
 
     cache_id = tuple(tagged_hostlist)
     try:
@@ -1013,7 +1013,7 @@ def get_final_service_description(hostname, description):
 
     # Sanitize; Remove illegal characters from a service description
     description = description.strip()
-    cache = cmk.base.config_cache.get_dict("final_service_description")
+    cache = _config_cache.get_dict("final_service_description")
     try:
         new_description = cache[description]
     except KeyError:
@@ -1131,7 +1131,7 @@ def _get_piggyback_translations(hostname):
 
 def get_service_translations(hostname):
     # type: (HostName) -> cmk.utils.translations.TranslationOptions
-    translations_cache = cmk.base.config_cache.get_dict("service_description_translations")
+    translations_cache = _config_cache.get_dict("service_description_translations")
     if hostname in translations_cache:
         return translations_cache[hostname]
 
@@ -1894,10 +1894,10 @@ def checks_by_checkgroup():
 # These caches both only hold the base names of the checks
 def initialize_check_type_caches():
     # type: () -> None
-    snmp_cache = cmk.base.runtime_cache.get_set("check_type_snmp")
+    snmp_cache = _runtime_cache.get_set("check_type_snmp")
     snmp_cache.update(snmp_info)
 
-    tcp_cache = cmk.base.runtime_cache.get_set("check_type_tcp")
+    tcp_cache = _runtime_cache.get_set("check_type_tcp")
     for check_plugin_name in check_info:
         section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
         if section_name not in snmp_cache:
@@ -3048,10 +3048,10 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
 
     def _initialize_caches(self):
         # type: () -> None
-        self.check_table_cache = cmk.base.config_cache.get_dict("check_tables")
+        self.check_table_cache = _config_cache.get_dict("check_tables")
 
-        self._cache_is_snmp_check = cmk.base.runtime_cache.get_dict("is_snmp_check")
-        self._cache_is_tcp_check = cmk.base.runtime_cache.get_dict("is_tcp_check")
+        self._cache_is_snmp_check = _runtime_cache.get_dict("is_snmp_check")
+        self._cache_is_tcp_check = _runtime_cache.get_dict("is_tcp_check")
         self._cache_section_name_of = {}  # type: Dict[CheckPluginName, SectionName]
 
         self._cache_match_object_service = {
@@ -3427,7 +3427,7 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
         try:
             return self._cache_is_snmp_check[check_plugin_name]
         except KeyError:
-            snmp_checks = cmk.base.runtime_cache.get_set("check_type_snmp")
+            snmp_checks = _runtime_cache.get_set("check_type_snmp")
             result = self.section_name_of(check_plugin_name) in snmp_checks
             self._cache_is_snmp_check[check_plugin_name] = result
             return result
@@ -3437,7 +3437,7 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
         try:
             return self._cache_is_tcp_check[check_plugin_name]
         except KeyError:
-            tcp_checks = cmk.base.runtime_cache.get_set("check_type_tcp")
+            tcp_checks = _runtime_cache.get_set("check_type_tcp")
             result = self.section_name_of(check_plugin_name) in tcp_checks
             self._cache_is_tcp_check[check_plugin_name] = result
             return result
@@ -3635,7 +3635,7 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
 
 def get_config_cache():
     # type: () -> ConfigCache
-    config_cache = cmk.base.config_cache.get_dict("config_cache")
+    config_cache = _config_cache.get_dict("config_cache")
     if not config_cache:
         cache_class = ConfigCache if cmk.is_raw_edition() else CEEConfigCache
         config_cache["cache"] = cache_class()

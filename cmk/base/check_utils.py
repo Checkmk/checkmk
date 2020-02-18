@@ -11,7 +11,7 @@ from typing import (  # pylint: disable=unused-import
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostName, Item, CheckPluginName  # pylint: disable=unused-import
 
-import cmk.base
+from cmk.base import runtime_cache as _runtime_cache
 from cmk.base.discovered_labels import DiscoveredServiceLabels
 
 if TYPE_CHECKING:
@@ -165,11 +165,11 @@ def section_name_of(check_plugin_name):
 
 def is_snmp_check(check_plugin_name):
     # type: (str) -> bool
-    cache = cmk.base.runtime_cache.get_dict("is_snmp_check")
+    cache = _runtime_cache.get_dict("is_snmp_check")
     try:
         return cache[check_plugin_name]
     except KeyError:
-        snmp_checks = cmk.base.runtime_cache.get_set("check_type_snmp")
+        snmp_checks = _runtime_cache.get_set("check_type_snmp")
         result = section_name_of(check_plugin_name) in snmp_checks
         cache[check_plugin_name] = result
         return result
@@ -177,11 +177,11 @@ def is_snmp_check(check_plugin_name):
 
 def is_tcp_check(check_plugin_name):
     # type: (str) -> bool
-    cache = cmk.base.runtime_cache.get_dict("is_tcp_check")
+    cache = _runtime_cache.get_dict("is_tcp_check")
     try:
         return cache[check_plugin_name]
     except KeyError:
-        tcp_checks = cmk.base.runtime_cache.get_set("check_type_tcp")
+        tcp_checks = _runtime_cache.get_set("check_type_tcp")
         result = section_name_of(check_plugin_name) in tcp_checks
         cache[check_plugin_name] = result
         return result

@@ -16,7 +16,7 @@ import cmk.utils.debug
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKTimeout, MKTerminate
 
-import cmk.base
+from cmk.base import config_cache as _config_cache
 import cmk.base.console as console
 import cmk.base.config as config
 from cmk.utils.type_defs import (  # pylint: disable=unused-import
@@ -102,7 +102,7 @@ def lookup_ip_address(hostname, family=None):
 # Variables needed during the renaming of hosts (see automation.py)
 def cached_dns_lookup(hostname, family):
     # type: (HostName, int) -> Optional[str]
-    cache = cmk.base.config_cache.get_dict("cached_dns_lookup")
+    cache = _config_cache.get_dict("cached_dns_lookup")
     cache_id = hostname, family
 
     # Address has already been resolved in prior call to this function?
@@ -212,11 +212,11 @@ class IPLookupCache(cmk.base.caching.DictCache):
 def _get_ip_lookup_cache():
     # type: () -> IPLookupCache
     """A file based fall-back DNS cache in case resolution fails"""
-    if cmk.base.config_cache.exists("ip_lookup"):
+    if _config_cache.exists("ip_lookup"):
         # Return already created and initialized cache
-        return cast(IPLookupCache, cmk.base.config_cache.get("ip_lookup", IPLookupCache))
+        return cast(IPLookupCache, _config_cache.get("ip_lookup", IPLookupCache))
 
-    cache = cast(IPLookupCache, cmk.base.config_cache.get("ip_lookup", IPLookupCache))
+    cache = cast(IPLookupCache, _config_cache.get("ip_lookup", IPLookupCache))
     cache.load_persisted()
     return cache
 

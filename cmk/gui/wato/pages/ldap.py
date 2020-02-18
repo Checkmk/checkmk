@@ -85,8 +85,8 @@ class ModeLDAPConfig(LDAPMode):
             if not html.check_transaction():
                 return
 
-            from_pos = html.get_integer_input("_move")
-            to_pos = html.get_integer_input("_index")
+            from_pos = html.get_integer_input_mandatory("_move")
+            to_pos = html.get_integer_input_mandatory("_index")
             connection = connections[from_pos]
             self._add_change(
                 "move-ldap-connection",

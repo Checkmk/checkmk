@@ -14,6 +14,13 @@ def set_vars(register_builtin_html):
     html.request.set_var("abc", "äbc")
 
 
+@pytest.fixture()
+def set_int_vars(register_builtin_html):
+    html.request.set_var("number", "2")
+    html.request.set_var("float", "2.2")
+    html.request.set_var("not_a_number", "a")
+
+
 @pytest.mark.usefixtures("set_vars")
 def test_get_str_input_type():
     assert html.get_str_input("xyz") == "x"
@@ -126,29 +133,61 @@ def test_get_unicode_input_mandatory_default():
         html.get_unicode_input_mandatory("zzz")
 
 
-def test_get_integer_input(register_builtin_html):
-    html.request.set_var("number", "2")
-    html.request.set_var("float", "2.2")
-    html.request.set_var("not_a_number", "a")
-
-    with pytest.raises(MKUserError) as e:
-        html.get_integer_input("not_existing")
-    assert "is missing" in "%s" % e
-
+@pytest.mark.usefixtures("set_int_vars")
+def test_get_integer_input_default():
+    assert html.get_integer_input("not_existing") is None
     assert html.get_integer_input("get_default", 1) == 1
+    assert html.get_integer_input("bla") is None
 
+
+@pytest.mark.usefixtures("set_int_vars")
+def test_get_integer_input_regular():
     assert html.get_integer_input("number") == 2
 
-    with pytest.raises(MKUserError) as e:
-        html.get_integer_input("bla")
-    assert "is missing" in "%s" % e
 
+@pytest.mark.usefixtures("set_int_vars")
+def test_get_integer_input_float():
     with pytest.raises(MKUserError) as e:
         html.get_integer_input("float")
     assert "is not an integer" in "%s" % e
 
+
+@pytest.mark.usefixtures("set_int_vars")
+def test_get_integer_input_not_a_number():
     with pytest.raises(MKUserError) as e:
         html.get_integer_input("not_a_number")
+    assert "is not an integer" in "%s" % e
+
+
+@pytest.mark.usefixtures("set_int_vars")
+def test_get_integer_input_mandatory_default():
+    with pytest.raises(MKUserError) as e:
+        html.get_integer_input_mandatory("not_existing")
+    assert "is missing" in "%s" % e
+
+    assert html.get_integer_input_mandatory("get_default", 1) == 1
+
+    with pytest.raises(MKUserError) as e:
+        html.get_integer_input_mandatory("bla")
+    assert "is missing" in "%s" % e
+
+
+@pytest.mark.usefixtures("set_int_vars")
+def test_get_integer_input_mandatory_regular():
+    assert html.get_integer_input_mandatory("number") == 2
+
+
+@pytest.mark.usefixtures("set_int_vars")
+def test_get_integer_input_mandatory_float():
+    with pytest.raises(MKUserError) as e:
+        html.get_integer_input_mandatory("float")
+    assert "is not an integer" in "%s" % e
+
+
+@pytest.mark.usefixtures("set_int_vars")
+def test_get_integer_input_mandatory_not_a_number():
+    with pytest.raises(MKUserError) as e:
+        html.get_integer_input_mandatory("not_a_number")
     assert "is not an integer" in "%s" % e
 
 

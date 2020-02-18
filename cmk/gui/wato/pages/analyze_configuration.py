@@ -71,7 +71,7 @@ class ModeAnalyzeConfig(WatoMode):
 
         test_id = html.request.var("_test_id")
         site_id = html.request.var("_site_id")
-        status_id = html.get_integer_input("_status_id", 0)
+        status_id = html.get_integer_input_mandatory("_status_id", 0)
 
         if not test_id:
             raise MKUserError("_ack_test_id", _("Needed variable missing"))

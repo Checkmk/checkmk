@@ -47,7 +47,7 @@ def test_request_processing(register_builtin_html):
     html.request.set_var("varname2", "1")
 
     html.get_unicode_input("varname", deflt="lol")
-    html.get_integer_input("varname2")
+    html.get_integer_input_mandatory("varname2")
     html.get_request(exclude_vars=["varname2"])
     # TODO: Make a test which works:
     # html.parse_field_storage(["field1", "field2"], handle_uploads_as_file_obj = False)

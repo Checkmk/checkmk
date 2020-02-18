@@ -897,7 +897,7 @@ def ajax_dashlet():
     if not name:
         raise MKUserError("name", _('The name of the dashboard is missing.'))
 
-    ident = html.get_integer_input("id")
+    ident = html.get_integer_input_mandatory("id")
 
     try:
         board = get_permitted_dashboards()[name]
@@ -918,7 +918,7 @@ def ajax_dashlet():
     if the_dashlet['type'] not in dashlet_registry:
         raise MKUserError("id", _('The requested dashlet type does not exist.'))
 
-    mtime = html.get_integer_input('mtime', 0)
+    mtime = html.get_integer_input_mandatory('mtime', 0)
 
     dashlet_instance = None
     try:
@@ -1175,7 +1175,7 @@ def page_edit_dashlet():
     ty = html.request.var('type')
 
     if html.request.has_var('id'):
-        ident = html.get_integer_input("id")
+        ident = html.get_integer_input_mandatory("id")
     else:
         ident = None
 
@@ -1384,7 +1384,7 @@ def page_clone_dashlet():
     if not board:
         raise MKUserError("name", _('The name of the dashboard is missing.'))
 
-    ident = html.get_integer_input("id")
+    ident = html.get_integer_input_mandatory("id")
 
     try:
         dashboard = get_permitted_dashboards()[board]
@@ -1417,7 +1417,7 @@ def page_delete_dashlet():
     if not board:
         raise MKUserError("name", _('The name of the dashboard is missing.'))
 
-    ident = html.get_integer_input("id")
+    ident = html.get_integer_input_mandatory("id")
 
     try:
         dashboard = get_permitted_dashboards()[board]
@@ -1458,7 +1458,7 @@ def check_ajax_update():
     if not board:
         raise MKUserError("name", _('The name of the dashboard is missing.'))
 
-    ident = html.get_integer_input("id")
+    ident = html.get_integer_input_mandatory("id")
 
     try:
         dashboard = get_permitted_dashboards()[board]

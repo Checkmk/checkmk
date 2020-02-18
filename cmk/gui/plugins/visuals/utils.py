@@ -365,7 +365,7 @@ class FilterTristate(Filter):
         html.end_radio_group()
 
     def tristate_value(self):
-        return html.get_integer_input(self.varname, self.deflt)
+        return html.get_integer_input_mandatory(self.varname, self.deflt)
 
     def filter(self, infoname):
         current = self.tristate_value()
@@ -446,10 +446,10 @@ class FilterTime(Filter):
                 return None
 
         elif rangename == "unix":
-            return html.get_integer_input(varprefix)
+            return html.get_integer_input_mandatory(varprefix)
 
         try:
-            count = html.get_integer_input(varprefix)
+            count = html.get_integer_input_mandatory(varprefix)
             secs = count * int(rangename)
             return int(time.time()) - secs
         except Exception:

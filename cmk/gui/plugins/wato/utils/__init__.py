@@ -1342,8 +1342,8 @@ class EventsMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
 
         elif html.request.has_var("_move"):
             if html.check_transaction():
-                from_pos = html.get_integer_input("_move")
-                to_pos = html.get_integer_input("_index")
+                from_pos = html.get_integer_input_mandatory("_move")
+                to_pos = html.get_integer_input_mandatory("_index")
                 rule = rules[from_pos]
                 del rules[from_pos]  # make to_pos now match!
                 rules[to_pos:to_pos] = [rule]

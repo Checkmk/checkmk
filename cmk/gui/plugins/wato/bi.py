@@ -1228,7 +1228,7 @@ class ModeBIAggregations(ModeBI):
             return self._bulk_move_after_confirm()
 
     def _delete_after_confirm(self):
-        aggregation_id = html.get_integer_input("_del_aggr")
+        aggregation_id = html.get_integer_input_mandatory("_del_aggr")
         c = wato_confirm(
             _("Confirm aggregation deletion"),
             _("Do you really want to delete the aggregation number <b>%s</b>?") %
@@ -1723,7 +1723,8 @@ class ModeBIEditAggregation(ModeBI):
 
     def __init__(self):
         ModeBI.__init__(self)
-        self._edited_nr = html.get_integer_input("id", -1)  # In case of Aggregations: index in list
+        self._edited_nr = html.get_integer_input_mandatory(
+            "id", -1)  # In case of Aggregations: index in list
         if self._edited_nr == -1:
             self._new = True
             self._edited_aggregation = {"groups": [_("Main")]}

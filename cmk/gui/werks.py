@@ -51,7 +51,7 @@ def page_version():
 
 def handle_acknowledgement():
     if html.request.var("_werk_ack") and html.check_transaction():
-        werk_id = html.get_integer_input("_werk_ack")
+        werk_id = html.get_integer_input_mandatory("_werk_ack")
         if werk_id not in g_werks:
             raise MKUserError("werk", _("This werk does not exist."))
         werk = g_werks[werk_id]
@@ -79,7 +79,7 @@ def handle_acknowledgement():
 @cmk.gui.pages.register("werk")
 def page_werk():
     load_werks()
-    werk_id = html.get_integer_input("werk")
+    werk_id = html.get_integer_input_mandatory("werk")
     if werk_id not in g_werks:
         raise MKUserError("werk", _("This werk does not exist."))
     werk = g_werks[werk_id]

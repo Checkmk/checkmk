@@ -735,7 +735,7 @@ def ajax_graph_hover():
     html.set_output_format("json")
     try:
         context = json.loads(html.request.var("context"))
-        hover_time = html.get_integer_input("hover_time")
+        hover_time = html.get_integer_input_mandatory("hover_time")
 
         response_data = render_ajax_graph_hover(context, hover_time)
         html.write(json.dumps(response_data))

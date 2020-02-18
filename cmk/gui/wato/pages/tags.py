@@ -185,8 +185,8 @@ class ModeTags(ABCTagMode):
             return "tags", message if message is not True else None
 
     def _move_tag_group(self):
-        move_nr = html.get_integer_input("_move")
-        move_to = html.get_integer_input("_index")
+        move_nr = html.get_integer_input_mandatory("_move")
+        move_to = html.get_integer_input_mandatory("_index")
 
         moved = self._tag_config.tag_groups.pop(move_nr)
         self._tag_config.tag_groups.insert(move_to, moved)

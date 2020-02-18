@@ -1250,8 +1250,8 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         # Move rule packages
         elif html.request.has_var("_move"):
-            from_pos = html.get_integer_input("_move")
-            to_pos = html.get_integer_input("_index")
+            from_pos = html.get_integer_input_mandatory("_move")
+            to_pos = html.get_integer_input_mandatory("_index")
             rule_pack = self._rule_packs[from_pos]
             del self._rule_packs[from_pos]  # make to_pos now match!
             self._rule_packs[to_pos:to_pos] = [rule_pack]
@@ -1261,7 +1261,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         # Export rule pack
         elif html.request.has_var("_export"):
-            nr = html.get_integer_input("_export")
+            nr = html.get_integer_input_mandatory("_export")
             try:
                 rule_pack = self._rule_packs[nr]
             except KeyError:
@@ -1275,7 +1275,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         # Make rule pack non-exportable
         elif html.request.has_var("_dissolve"):
-            nr = html.get_integer_input("_dissolve")
+            nr = html.get_integer_input_mandatory("_dissolve")
             try:
                 self._rule_packs[nr] = self._rule_packs[nr].rule_pack
             except KeyError:
@@ -1287,7 +1287,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         # Reset to rule pack provided via MKP
         elif html.request.has_var("_reset"):
-            nr = html.get_integer_input("_reset")
+            nr = html.get_integer_input_mandatory("_reset")
             try:
                 self._rule_packs[nr] = ec.MkpRulePackProxy(self._rule_packs[nr]['id'])
             except KeyError:
@@ -1300,7 +1300,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         # Synchronize modified rule pack with MKP
         elif html.request.has_var("_synchronize"):
-            nr = html.get_integer_input("_synchronize")
+            nr = html.get_integer_input_mandatory("_synchronize")
             export_mkp_rule_pack(self._rule_packs[nr])
             try:
                 self._rule_packs[nr] = ec.MkpRulePackProxy(self._rule_packs[nr]['id'])
@@ -1603,8 +1603,8 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
         if html.check_transaction():
             if html.request.has_var("_move"):
-                from_pos = html.get_integer_input("_move")
-                to_pos = html.get_integer_input("_index")
+                from_pos = html.get_integer_input_mandatory("_move")
+                to_pos = html.get_integer_input_mandatory("_index")
 
                 rules = self._rules
                 if type_ == ec.RulePackType.unmodified_mkp:
@@ -1808,7 +1808,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         return ["mkeventd.edit"]
 
     def _from_vars(self):
-        self._edit_nr = html.get_integer_input("edit", -1)  # missing -> new rule pack
+        self._edit_nr = html.get_integer_input_mandatory("edit", -1)  # missing -> new rule pack
         self._new = self._edit_nr < 0
 
         if self._new:

@@ -9,7 +9,7 @@
 # Notes for future rewrite:
 #
 # - Find all call sites which do something like "int(html.request.var(...))"
-#   and replace it with html.get_integer_input(...)
+#   and replace it with html.get_integer_input_mandatory(...)
 #
 # - Make clear which functions return values and which write out values
 #   render_*, add_*, write_* (e.g. icon() -> outputs directly,
@@ -1395,16 +1395,23 @@ class html(ABCHTMLGenerator):
         return value
 
     def get_integer_input(self, varname, deflt=None):
-        # type: (str, Optional[int]) -> int
-        if deflt is not None and not self.request.has_var(varname):
-            return deflt
+        # type: (str, Optional[int]) -> Optional[int]
+
+        value = self.request.var(varname, deflt)
+        if value is None:
+            return None
 
         try:
-            return int(self.request.var(varname))
-        except TypeError:
-            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
+            return int(value)
         except ValueError:
             raise MKUserError(varname, _("The parameter \"%s\" is not an integer.") % varname)
+
+    def get_integer_input_mandatory(self, varname, deflt=None):
+        # type: (str, Optional[int]) -> int
+        value = self.get_integer_input(varname, deflt)
+        if value is None:
+            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
+        return value
 
     def get_item_input(self, varname, collection):
         # type: (str, Mapping[str, str]) -> Tuple[str, str]

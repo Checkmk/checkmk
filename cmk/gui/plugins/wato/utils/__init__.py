@@ -1342,8 +1342,8 @@ class EventsMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
 
         elif html.request.has_var("_move"):
             if html.check_transaction():
-                from_pos = html.get_integer_input_mandatory("_move")
-                to_pos = html.get_integer_input_mandatory("_index")
+                from_pos = html.request.get_integer_input_mandatory("_move")
+                to_pos = html.request.get_integer_input_mandatory("_index")
                 rule = rules[from_pos]
                 del rules[from_pos]  # make to_pos now match!
                 rules[to_pos:to_pos] = [rule]
@@ -2184,7 +2184,7 @@ def _single_folder_rule_match_condition():
 
 
 def get_search_expression():
-    search = html.get_unicode_input("search")
+    search = html.request.get_unicode_input("search")
     if search is not None:
         search = search.strip().lower()
     return search

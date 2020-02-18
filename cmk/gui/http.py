@@ -4,12 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Wrapper layer between WSGI and GUI application code"""
+
+import sys
+from typing import Optional, Text  # pylint: disable=unused-import
 import six
 import werkzeug.wrappers
 import werkzeug.wrappers.json as json  # type: ignore[import]
 from werkzeug.utils import get_content_type
 
+from cmk.utils.encoding import ensure_unicode
+
 from cmk.gui.i18n import _
+from cmk.gui.exceptions import MKUserError
 
 
 class LegacyVarsMixin(object):  # pylint: disable=useless-object-inheritance
@@ -194,6 +200,89 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
         # TODO: Found no way to get this information from WSGI environment. Hard code
         #       the timeout for the moment.
         return 110
+
+    # TODO: For historic reasons this needs to return byte strings. We will clean this up
+    # soon when moving to python 3
+    def get_str_input(self, varname, deflt=None):
+        # type: (str, Optional[str]) -> Optional[str]
+        return self.var(varname, deflt)
+
+    def get_str_input_mandatory(self, varname, deflt=None):
+        # type: (str, Optional[str]) -> str
+        value = self.var(varname, deflt)
+        if value is None:
+            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
+        return value
+
+    # TODO: For historic reasons this needs to return byte strings. We will clean this up
+    # soon when moving to python 3
+    def get_ascii_input(self, varname, deflt=None):
+        # type: (str, Optional[str]) -> Optional[str]
+        """Helper to retrieve a byte string and ensure it only contains ASCII characters
+        In case a non ASCII character is found an MKUserError() is raised."""
+        value = self.var(varname, deflt)
+
+        if value is None:
+            return value
+
+        if sys.version_info[0] >= 3:
+            if not value.isascii():
+                raise MKUserError(varname, _("The given text must only contain ASCII characters."))
+        else:
+            try:
+                value.decode("ascii")
+            except UnicodeDecodeError:
+                raise MKUserError(varname, _("The given text must only contain ASCII characters."))
+
+        return value
+
+    # TODO: For historic reasons this needs to return byte strings. We will clean this up
+    # soon when moving to python 3
+    def get_ascii_input_mandatory(self, varname, deflt=None):
+        # type: (str, Optional[str]) -> str
+        value = self.get_ascii_input(varname, deflt)
+        if value is None:
+            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
+        return value
+
+    def get_unicode_input(self, varname, deflt=None):
+        # type: (str, Optional[Text]) -> Optional[Text]
+        try:
+            val = self.var(varname, deflt)
+            if val is None:
+                return None
+            return ensure_unicode(val)
+        except UnicodeDecodeError:
+            raise MKUserError(
+                varname,
+                _("The given text is wrong encoded. "
+                  "You need to provide a UTF-8 encoded text."))
+
+    def get_unicode_input_mandatory(self, varname, deflt=None):
+        # type: (str, Optional[Text]) -> Text
+        value = self.get_unicode_input(varname, deflt)
+        if value is None:
+            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
+        return value
+
+    def get_integer_input(self, varname, deflt=None):
+        # type: (str, Optional[int]) -> Optional[int]
+
+        value = self.var(varname, deflt)
+        if value is None:
+            return None
+
+        try:
+            return int(value)
+        except ValueError:
+            raise MKUserError(varname, _("The parameter \"%s\" is not an integer.") % varname)
+
+    def get_integer_input_mandatory(self, varname, deflt=None):
+        # type: (str, Optional[int]) -> int
+        value = self.get_integer_input(varname, deflt)
+        if value is None:
+            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
+        return value
 
 
 class Response(werkzeug.wrappers.Response):

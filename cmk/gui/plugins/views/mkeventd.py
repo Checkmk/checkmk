@@ -1142,11 +1142,13 @@ class CommandECUpdateEvent(ECCommand):
     def action(self, cmdtag, spec, row, row_index, num_rows):
         if html.request.var('_mkeventd_update'):
             if config.user.may("mkeventd.update_comment"):
-                comment = html.get_unicode_input("_mkeventd_comment").strip().replace(";", ",")
+                comment = html.request.get_unicode_input("_mkeventd_comment").strip().replace(
+                    ";", ",")
             else:
                 comment = ""
             if config.user.may("mkeventd.update_contact"):
-                contact = html.get_unicode_input("_mkeventd_contact").strip().replace(":", ",")
+                contact = html.request.get_unicode_input("_mkeventd_contact").strip().replace(
+                    ":", ",")
             else:
                 contact = ""
             ack = html.get_checkbox("_mkeventd_acknowledge")

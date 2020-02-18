@@ -98,7 +98,7 @@ class FilterText(Filter):
 class FilterUnicode(FilterText):
     def _current_value(self):
         htmlvar = self.htmlvars[0]
-        return html.get_unicode_input(htmlvar, "")
+        return html.request.get_unicode_input(htmlvar, "")
 
 
 @filter_registry.register
@@ -2770,12 +2770,12 @@ class ABCFilterCustomAttribute(six.with_metaclass(abc.ABCMeta, Filter)):
         raise NotImplementedError()
 
     def filter(self, infoname):
-        if not html.get_ascii_input(self.name_varname):
+        if not html.request.get_ascii_input(self.name_varname):
             return ""
 
         attribute_id = html.get_item_input(self.name_varname,
                                            dict(self._custom_attribute_choices()))[1]
-        value = html.get_unicode_input(self.value_varname)
+        value = html.request.get_unicode_input(self.value_varname)
         return "Filter: %s_custom_variables ~~ %s ^%s\n" % (
             self.info, livestatus.lqencode(attribute_id.upper()), livestatus.lqencode(value))
 
@@ -3090,7 +3090,7 @@ class FilterAggrGroup(FilterUnicodeFilter):
                       [("", "")] + [(group, group) for group in bi.get_aggregation_group_trees()])
 
     def selected_group(self):
-        return html.get_unicode_input(self.htmlvars[0])
+        return html.request.get_unicode_input(self.htmlvars[0])
 
     def filter_table(self, rows):
         group = self.selected_group()
@@ -3099,7 +3099,7 @@ class FilterAggrGroup(FilterUnicodeFilter):
         return [row for row in rows if row[self.column] == group]
 
     def heading_info(self):
-        return html.get_unicode_input(self.htmlvars[0])
+        return html.request.get_unicode_input(self.htmlvars[0])
 
 
 @filter_registry.register
@@ -3128,10 +3128,10 @@ class FilterAggrGroupTree(FilterUnicodeFilter):
         html.dropdown(htmlvar, [("", "")] + self._get_selection())
 
     def selected_group(self):
-        return html.get_unicode_input(self.htmlvars[0])
+        return html.request.get_unicode_input(self.htmlvars[0])
 
     def heading_info(self):
-        return html.get_unicode_input(self.htmlvars[0])
+        return html.request.get_unicode_input(self.htmlvars[0])
 
     def _get_selection(self):
         def _build_tree(group, parent, path):
@@ -3187,10 +3187,10 @@ class BITextFilter(FilterUnicodeFilter):
         html.text_input(self.htmlvars[0])
 
     def heading_info(self):
-        return html.get_unicode_input(self.htmlvars[0])
+        return html.request.get_unicode_input(self.htmlvars[0])
 
     def filter_table(self, rows):
-        val = html.get_unicode_input(self.htmlvars[0])
+        val = html.request.get_unicode_input(self.htmlvars[0])
         if not val:
             return rows
         if self.how == "regex":
@@ -3349,13 +3349,13 @@ class FilterAggrService(Filter):
         html.text_input(self.htmlvars[2])
 
     def heading_info(self):
-        return html.get_unicode_input(self.htmlvars[1], "") \
-               + " / " + html.get_unicode_input(self.htmlvars[2], "")
+        return html.request.get_unicode_input(self.htmlvars[1], "") \
+               + " / " + html.request.get_unicode_input(self.htmlvars[2], "")
 
     def service_spec(self):
         if html.request.has_var(self.htmlvars[2]):
-            return html.get_unicode_input(self.htmlvars[0]), html.get_unicode_input(
-                self.htmlvars[1]), html.get_unicode_input(self.htmlvars[2])
+            return html.request.get_unicode_input(self.htmlvars[0]), html.request.get_unicode_input(
+                self.htmlvars[1]), html.request.get_unicode_input(self.htmlvars[2])
 
     # Used for linking
     def variable_settings(self, row):

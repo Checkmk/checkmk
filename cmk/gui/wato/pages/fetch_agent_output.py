@@ -184,7 +184,7 @@ class ABCAutomationFetchAgentOutput(six.with_metaclass(abc.ABCMeta, AutomationCo
         # type: () -> FetchAgentOutputRequest
         config.user.need_permission("wato.download_agent_output")
 
-        ascii_input = html.get_ascii_input("request")
+        ascii_input = html.request.get_ascii_input("request")
         if ascii_input is None:
             raise MKUserError("request", _("The parameter \"%s\" is missing.") % "request")
         return FetchAgentOutputRequest.deserialize(ast.literal_eval(ascii_input))

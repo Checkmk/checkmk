@@ -158,7 +158,7 @@ class ModeDiscovery(WatoMode):
         return ["hosts"]
 
     def _from_vars(self):
-        self._host = watolib.Folder.current().host(html.get_ascii_input("host"))
+        self._host = watolib.Folder.current().host(html.request.get_ascii_input("host"))
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
 
@@ -356,7 +356,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
         # type: () -> StartDiscoveryRequest
         config.user.need_permission("wato.hosts")
 
-        host_name = html.get_ascii_input("host_name")
+        host_name = html.request.get_ascii_input("host_name")
         if host_name is None:
             raise MKGeneralException(_("Host is missing"))
         host = watolib.Host.host(host_name)
@@ -368,7 +368,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
                   "for further information.") % (host_name, config.omd_site()))
         host.need_permission("read")
 
-        ascii_input = html.get_ascii_input("options")
+        ascii_input = html.request.get_ascii_input("options")
         if ascii_input is not None:
             options = json.loads(ascii_input)
         else:
@@ -1710,18 +1710,18 @@ class DiscoveryPageRenderer(object):
 @page_registry.register_page("wato_ajax_execute_check")
 class ModeAjaxExecuteCheck(AjaxPage):
     def _from_vars(self):
-        self._site = html.get_ascii_input("site")
+        self._site = html.request.get_ascii_input("site")
         if self._site not in config.sitenames():
             raise MKUserError("site", _("You called this page with an invalid site."))
 
-        self._host_name = html.get_ascii_input("host")
+        self._host_name = html.request.get_ascii_input("host")
         self._host = watolib.Folder.current().host(self._host_name)
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
         self._host.need_permission("read")
 
         # TODO: Validate
-        self._check_type = html.get_ascii_input("checktype")
+        self._check_type = html.request.get_ascii_input("checktype")
         # TODO: Validate
         self._item = html.request.var("item")
 

@@ -252,7 +252,7 @@ class ModeParentScan(WatoMode):
         # TODO: Make dedicated class or class members
         self._settings = {
             "where": html.request.var("where"),
-            "alias": html.get_unicode_input("alias", "").strip() or None,
+            "alias": html.request.get_unicode_input("alias", "").strip() or None,
             "recurse": html.get_checkbox("recurse"),
             "select": html.request.var("select"),
             "timeout": utils.saveint(html.request.var("timeout")) or 8,

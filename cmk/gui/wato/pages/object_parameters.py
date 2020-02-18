@@ -50,14 +50,14 @@ class ModeObjectParameters(WatoMode):
         return ["hosts", "rulesets"]
 
     def _from_vars(self):
-        self._hostname = html.get_ascii_input("host")  # may be empty in new/clone mode
+        self._hostname = html.request.get_ascii_input("host")  # may be empty in new/clone mode
         self._host = watolib.Folder.current().host(self._hostname)
         if self._host is None:
             raise MKUserError("host", _('The given host does not exist.'))
         self._host.need_permission("read")
 
         # TODO: Validate?
-        self._service = html.get_unicode_input("service")
+        self._service = html.request.get_unicode_input("service")
 
     def title(self):
         title = _("Parameters of") + " " + self._hostname

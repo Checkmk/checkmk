@@ -19,7 +19,7 @@ from cmk.gui.exceptions import MKUserError
 def ajax_tree_openclose():
     # type: () -> None
     tree = html.request.var("tree")
-    name = html.get_unicode_input("name")
+    name = html.request.get_unicode_input("name")
 
     if not tree or not name:
         raise MKUserError(None, _('tree or name parameter missing'))

@@ -1084,7 +1084,8 @@ class Overridable(Base):
                 cls.remove_instance((owner_user_id, page_name))  # will be added later again
             else:  # clone
                 title = cls.phrase("clone")
-                load_user = html.get_unicode_input("load_user")  # FIXME: Change varname to "owner"
+                load_user = html.request.get_unicode_input(
+                    "load_user")  # FIXME: Change varname to "owner"
 
                 try:
                     page = cls.instance((load_user, page_name))

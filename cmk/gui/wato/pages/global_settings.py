@@ -194,7 +194,7 @@ class EditGlobalSettingMode(WatoMode):
         raise NotImplementedError()
 
     def _from_vars(self):
-        self._varname = html.get_ascii_input("varname")
+        self._varname = html.request.get_ascii_input("varname")
         try:
             self._config_variable = config_variable_registry[self._varname]()
             self._valuespec = self._config_variable.valuespec()

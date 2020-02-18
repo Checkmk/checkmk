@@ -116,11 +116,11 @@ class GUICrashReport(cmk.utils.crash_reporting.ABCCrashReport):
 class ABCCrashReportPage(six.with_metaclass(abc.ABCMeta, cmk.gui.pages.Page)):
     def __init__(self):
         super(ABCCrashReportPage, self).__init__()
-        self._crash_id = html.get_unicode_input("crash_id")
+        self._crash_id = html.request.get_unicode_input("crash_id")
         if not self._crash_id:
             raise MKUserError("crash_id", _("The parameter \"%s\" is missing.") % "crash_id")
 
-        self._site_id = html.get_unicode_input("site")
+        self._site_id = html.request.get_unicode_input("site")
         if not self._site_id:
             raise MKUserError("site", _("The parameter \"%s\" is missing.") % "site")
 

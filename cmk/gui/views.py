@@ -2612,7 +2612,7 @@ def query_action_data(what, host, site, svcdesc):
 def ajax_popup_action_menu():
     site = html.request.var('site')
     host = html.request.var('host')
-    svcdesc = html.get_unicode_input('service')
+    svcdesc = html.request.get_unicode_input('service')
     what = 'service' if svcdesc else 'host'
 
     display_options.load_from_html()
@@ -2680,8 +2680,8 @@ def do_reschedule():
     if not host:
         raise MKGeneralException("Action reschedule: missing host name")
 
-    service = html.get_unicode_input("service", "")
-    wait_svc = html.get_unicode_input("wait_svc", "")
+    service = html.request.get_unicode_input("service", "")
+    wait_svc = html.request.get_unicode_input("wait_svc", "")
 
     if service:
         cmd = "SVC"

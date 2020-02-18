@@ -1209,7 +1209,7 @@ def get_context_from_uri_vars(only_infos=None, single_infos=None):
             for varname in filter_object.htmlvars:
                 if html.request.has_var(varname):
                     if filter_object.info in single_infos:
-                        value = html.get_unicode_input(varname)
+                        value = html.request.get_unicode_input(varname)
                         assert isinstance(value, six.text_type)
                         context[filter_name] = value
                         break
@@ -1541,7 +1541,7 @@ def get_singlecontext_html_vars(context, single_infos):
     # type: (VisualContext, SingleInfos) -> Dict[str, Union[str, Text]]
     vars_ = get_singlecontext_vars(context, single_infos)
     for key in get_single_info_keys(single_infos):
-        val = html.get_unicode_input(key)
+        val = html.request.get_unicode_input(key)
         if val is not None:
             vars_[key] = val
     return vars_

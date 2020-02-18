@@ -526,7 +526,7 @@ class FilterInvHasSoftwarePackage(Filter):
 
     @property
     def filtername(self):
-        return html.get_unicode_input(self._varprefix + "name")
+        return html.request.get_unicode_input(self._varprefix + "name")
 
     def need_inventory(self):
         return bool(self.filtername)

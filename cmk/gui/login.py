@@ -342,7 +342,7 @@ def verify_automation_secret(user_id, secret):
 def _check_auth_automation():
     # type: () -> UserId
     secret = html.request.var("_secret", "").strip()
-    user_id = html.get_unicode_input("_username", "")
+    user_id = html.request.get_unicode_input("_username", "")
     assert isinstance(user_id, six.text_type)
 
     user_id = UserId(user_id.strip())
@@ -444,7 +444,7 @@ class LoginPage(Page):
             return
 
         try:
-            username_var = html.get_unicode_input('_username', '')
+            username_var = html.request.get_unicode_input('_username', '')
             assert username_var is not None
             username = UserId(username_var.rstrip())
             if username == '':

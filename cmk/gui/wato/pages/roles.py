@@ -241,7 +241,7 @@ class ModeEditRole(RoleManagement, WatoMode):
         if html.form_submitted("search"):
             return
 
-        alias = html.get_unicode_input("alias")
+        alias = html.request.get_unicode_input("alias")
 
         unique, info = watolib.is_alias_used("roles", self._role_id, alias)
         if not unique:

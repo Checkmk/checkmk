@@ -179,7 +179,7 @@ class ModeEditGroup(six.with_metaclass(abc.ABCMeta, WatoMode)):
         if not html.check_transaction():
             return "%s_groups" % self.type_name
 
-        alias = html.get_unicode_input("alias").strip()
+        alias = html.request.get_unicode_input("alias").strip()
         if not alias:
             raise MKUserError("alias", _("Please specify an alias name."))
 

@@ -343,7 +343,7 @@ class ModeRenameHost(WatoMode):
         return ["hosts", "manage_hosts"]
 
     def _from_vars(self):
-        host_name = html.get_ascii_input("host")
+        host_name = html.request.get_ascii_input("host")
 
         if not watolib.Folder.current().has_host(host_name):
             raise MKUserError("host", _("You called this page with an invalid host name."))

@@ -507,7 +507,7 @@ class CommandFakeCheckResult(Command):
         for s in [0, 1, 2, 3]:
             statename = html.request.var("_fake_%d" % s)
             if statename:
-                pluginoutput = html.get_unicode_input("_fake_output").strip()
+                pluginoutput = html.request.get_unicode_input("_fake_output").strip()
                 if not pluginoutput:
                     pluginoutput = _("Manually set to %s by %s") % (
                         escaping.escape_attribute(statename), config.user.id)
@@ -593,7 +593,7 @@ class CommandCustomNotification(Command):
 
     def action(self, cmdtag, spec, row, row_index, num_rows):
         if html.request.var("_customnotification"):
-            comment = html.get_unicode_input("_cusnot_comment")
+            comment = html.request.get_unicode_input("_cusnot_comment")
             broadcast = 1 if html.get_checkbox("_cusnot_broadcast") else 0
             forced = 2 if html.get_checkbox("_cusnot_forced") else 0
             command = "SEND_CUSTOM_%s_NOTIFICATION;%s;%s;%s;%s" % (
@@ -713,7 +713,7 @@ class CommandAcknowledge(Command):
                 specs.append((site, spec, cmdtag))
 
         if html.request.var("_acknowledge"):
-            comment = html.get_unicode_input("_ack_comment")
+            comment = html.request.get_unicode_input("_ack_comment")
             if not comment:
                 raise MKUserError("_ack_comment", _("You need to supply a comment."))
             if ";" in comment:
@@ -823,7 +823,7 @@ class CommandAddComment(Command):
 
     def action(self, cmdtag, spec, row, row_index, num_rows):
         if html.request.var("_add_comment"):
-            comment = html.get_unicode_input("_comment")
+            comment = html.request.get_unicode_input("_comment")
             if not comment:
                 raise MKUserError("_comment", _("You need to supply a comment."))
             command = "ADD_" + cmdtag + "_COMMENT;%s;1;%s" % \
@@ -1104,7 +1104,7 @@ class CommandScheduleDowntimes(Command):
             if html.request.var("_down_adhoc"):
                 comment = config.adhoc_downtime.get("comment", "")
             else:
-                comment = html.get_unicode_input("_down_comment")
+                comment = html.request.get_unicode_input("_down_comment")
             if not comment:
                 raise MKUserError("_down_comment",
                                   _("You need to supply a comment for your downtime."))

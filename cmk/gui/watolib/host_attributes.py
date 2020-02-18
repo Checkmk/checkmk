@@ -772,7 +772,7 @@ class ABCHostAttributeText(six.with_metaclass(abc.ABCMeta, ABCHostAttribute)):
         html.text_input(varprefix + "attr_" + self.name(), value, size=self._size)
 
     def from_html_vars(self, varprefix):
-        value = html.get_unicode_input(varprefix + "attr_" + self.name())
+        value = html.request.get_unicode_input(varprefix + "attr_" + self.name())
         if value is None:
             value = ""
         return value.strip()

@@ -356,8 +356,8 @@ class Table(object):
 
         if self.options["searchable"]:
             # Search is always lower case -> case insensitive
-            search_term = html.get_unicode_input('_%s_search' % table_id,
-                                                 table_opts.get('search', ''))
+            search_term = html.request.get_unicode_input('_%s_search' % table_id,
+                                                         table_opts.get('search', ''))
             assert search_term is not None
             search_term = search_term.lower()
             if search_term:

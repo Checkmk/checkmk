@@ -66,7 +66,7 @@ class QuicksearchSnapin(SidebarSnapin):
         }
 
     def _ajax_search(self):
-        q = _maybe_strip(html.get_unicode_input('q'))
+        q = _maybe_strip(html.request.get_unicode_input('q'))
         if not q:
             return
 

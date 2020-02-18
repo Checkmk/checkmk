@@ -1064,7 +1064,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         if action != "trust":
             return
 
-        digest_sha256 = html.get_ascii_input("_digest")
+        digest_sha256 = html.request.get_ascii_input("_digest")
 
         try:
             cert_details = self._fetch_certificate_details()

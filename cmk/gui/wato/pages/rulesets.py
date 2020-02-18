@@ -181,7 +181,7 @@ class RulesetMode(WatoMode):
         raise NotImplementedError()
 
     def _from_vars(self):
-        self._group_name = html.get_ascii_input("group")
+        self._group_name = html.request.get_ascii_input("group")
 
         #  Explicitly hide deprecated rulesets by default
         if not html.request.has_var("search_p_ruleset_deprecated"):
@@ -198,7 +198,7 @@ class RulesetMode(WatoMode):
 
         # Transform the search argument to the "rule search" arguments
         if html.request.has_var("search"):
-            html.request.set_var("search_p_fulltext", html.get_unicode_input("search"))
+            html.request.set_var("search_p_fulltext", html.request.get_unicode_input("search"))
             html.request.set_var("search_p_fulltext_USE", "on")
             html.request.del_var("search")
 
@@ -211,7 +211,7 @@ class RulesetMode(WatoMode):
 
         self._search_options = ModeRuleSearch().search_options
 
-        self._only_host = html.get_ascii_input("host")
+        self._only_host = html.request.get_ascii_input("host")
 
     @abc.abstractmethod
     def _rulesets(self):
@@ -458,9 +458,9 @@ class ModeEditRuleset(WatoMode):
         self._predefined_conditions = store.filter_usable_entries(store.load_for_reading())
 
     def _from_vars(self):
-        self._name = html.get_ascii_input("varname")
-        self._back_mode = html.get_ascii_input(
-            "back_mode", html.get_ascii_input("ruleset_back_mode", "rulesets"))
+        self._name = html.request.get_ascii_input("varname")
+        self._back_mode = html.request.get_ascii_input(
+            "back_mode", html.request.get_ascii_input("ruleset_back_mode", "rulesets"))
 
         if not may_edit_ruleset(self._name):
             raise MKAuthException(_("You are not permitted to access this ruleset."))
@@ -471,7 +471,7 @@ class ModeEditRuleset(WatoMode):
         # TODO: Clean this up. In which case is it used?
         # - The calculation for the service_description is not even correct, because it does not
         # take translations into account (see cmk.base.config.service_description()).
-        check_command = html.get_ascii_input("check_command")
+        check_command = html.request.get_ascii_input("check_command")
         if check_command:
             checks = watolib.check_mk_local_automation("get-check-information")
             if check_command.startswith("check_mk-"):
@@ -503,7 +503,7 @@ class ModeEditRuleset(WatoMode):
                 except Exception:
                     pass
 
-        hostname = html.get_ascii_input("host")
+        hostname = html.request.get_ascii_input("host")
         if hostname and watolib.Folder.current().has_host(hostname):
             self._hostname = hostname
         else:

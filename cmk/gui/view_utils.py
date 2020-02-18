@@ -110,12 +110,13 @@ def query_limit_exceeded_warn(limit, user_config):
     """Compare query reply against limits, warn in the GUI about incompleteness"""
     text = HTML(_("Your query produced more than %d results. ") % limit)
 
-    if html.get_ascii_input("limit",
-                            "soft") == "soft" and user_config.may("general.ignore_soft_limit"):
+    if html.request.get_ascii_input(
+            "limit", "soft") == "soft" and user_config.may("general.ignore_soft_limit"):
         text += html.render_a(_('Repeat query and allow more results.'),
                               target="_self",
                               href=html.makeuri([("limit", "hard")]))
-    elif html.get_ascii_input("limit") == "hard" and user_config.may("general.ignore_hard_limit"):
+    elif html.request.get_ascii_input("limit") == "hard" and user_config.may(
+            "general.ignore_hard_limit"):
         text += html.render_a(_('Repeat query without limit.'),
                               target="_self",
                               href=html.makeuri([("limit", "none")]))

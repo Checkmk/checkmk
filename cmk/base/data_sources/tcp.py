@@ -103,8 +103,6 @@ class TCPDataSource(CheckMKAgentDataSource):
                     output_lines.append(data)
                 else:
                     break
-        except MKTerminate:
-            raise
 
         except socket.error as e:
             if cmk.utils.debug.enabled():

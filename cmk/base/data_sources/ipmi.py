@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -45,15 +45,15 @@ def _handle_false_positive_warnings(reading):
     states = [s for s in reading.states if not s.startswith("Unknown state ")]
 
     if not states:
-        return "no state reported"
+        return b"no state reported"
 
     if any("non-critical" in s for s in states):
-        return "WARNING"
+        return b"WARNING"
 
     # just keep all the available info. It should be dealt with in
     # ipmi_sensors.include (freeipmi_status_txt_mapping),
     # where it will default to 2(CRIT)
-    return ', '.join(states)
+    return b', '.join(states)
 
 
 class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataSource):
@@ -92,7 +92,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         try:
             connection = self._create_ipmi_connection()
 
-            output = ""
+            output = b""
             output += self._fetch_ipmi_sensors_section(connection)
             output += self._fetch_ipmi_firmware_section(connection)
 
@@ -131,7 +131,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         except NotImplementedError as e:
             self._logger.log(VERBOSE, "Failed to fetch sensor data: %r", e)
             self._logger.debug("Exception", exc_info=True)
-            return ""
+            return b""
 
         sensors = []
         for number in sdr.get_sensor_numbers():
@@ -143,8 +143,8 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
             if reading is not None:
                 sensors.append(self._parse_sensor_reading(number, reading))
 
-        return "<<<mgmt_ipmi_sensors:sep(124)>>>\n" + "".join(
-            ["|".join(sensor) + "\n" for sensor in sensors])
+        return b"<<<mgmt_ipmi_sensors:sep(124)>>>\n" + b"".join(
+            [b"|".join(sensor) + b"\n" for sensor in sensors])
 
     @staticmethod
     def _parse_sensor_reading(number, reading):
@@ -152,24 +152,24 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         # {'states': [], 'health': 0, 'name': 'CPU1 Temp', 'imprecision': 0.5,
         #  'units': '\xc2\xb0C', 'state_ids': [], 'type': 'Temperature',
         #  'value': 25.0, 'unavailable': 0}]]
-        health_txt = "N/A"
+        health_txt = b"N/A"
         if reading.health >= ipmi_const.Health.Failed:
-            health_txt = "FAILED"
+            health_txt = b"FAILED"
         elif reading.health >= ipmi_const.Health.Critical:
-            health_txt = "CRITICAL"
+            health_txt = b"CRITICAL"
         elif reading.health >= ipmi_const.Health.Warning:
-            health_txt = "WARNING"
+            health_txt = b"WARNING"
             # workaround for pyghmi bug: https://bugs.launchpad.net/pyghmi/+bug/1790120
             health_txt = _handle_false_positive_warnings(reading)
         elif reading.health == ipmi_const.Health.Ok:
-            health_txt = "OK"
+            health_txt = b"OK"
 
         return [
-            "%d" % number,
+            b"%d" % number,
             reading.name,
             reading.type,
-            ("%0.2f" % reading.value) if reading.value else "N/A",
-            reading.units if reading.units != "\xc2\xb0C" else "C",
+            (b"%0.2f" % reading.value) if reading.value else b"N/A",
+            reading.units if reading.units != b"\xc2\xb0C" else b"C",
             health_txt,
         ]
 
@@ -181,12 +181,12 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         except Exception as e:
             self._logger.log(VERBOSE, "Failed to fetch firmware information: %r", e)
             self._logger.debug("Exception", exc_info=True)
-            return ""
+            return b""
 
-        output = "<<<mgmt_ipmi_firmware:sep(124)>>>\n"
+        output = b"<<<mgmt_ipmi_firmware:sep(124)>>>\n"
         for entity_name, attributes in firmware_entries:
             for attribute_name, value in attributes.items():
-                output += "%s|%s|%s\n" % (entity_name, attribute_name, value)
+                output += b"%s|%s|%s\n" % (entity_name, attribute_name, value)
 
         return output
 

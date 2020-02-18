@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -11,6 +11,7 @@ from typing import (  # pylint: disable=unused-import
     Set, Union, Text, Optional, Tuple, Dict,
 )
 import sys
+import six
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
@@ -56,27 +57,49 @@ class ProgramDataSource(CheckMKAgentDataSource):
         return self._get_agent_info_program(command_line, command_stdin)
 
     def _get_agent_info_program(self, commandline, command_stdin):
-        # type: (Union[bytes, Text], Optional[bytes]) -> RawAgentData
+        # type: (Union[bytes, Text], Optional[str]) -> RawAgentData
         exepath = commandline.split()[0]  # for error message, hide options!
 
         self._logger.debug("Calling external program %r" % (commandline))
         p = None
         try:
             if config.monitoring_core == "cmc":
-                p = subprocess.Popen(  # nosec
-                    commandline,
-                    shell=True,
-                    stdin=subprocess.PIPE if command_stdin else open(os.devnull),
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    preexec_fn=os.setsid,
-                    close_fds=True,
-                )
+                if sys.version_info[0] >= 3:
+                    # Warning:
+                    # The preexec_fn parameter is not safe to use in the presence of threads in your
+                    # application. The child process could deadlock before exec is called. If you
+                    # must use it, keep it trivial! Minimize the number of libraries you call into.
+                    #
+                    # Note:
+                    # If you need to modify the environment for the child use the env parameter
+                    # rather than doing it in a preexec_fn. The start_new_session parameter can take
+                    # the place of a previously common use of preexec_fn to call os.setsid() in the
+                    # child.
+                    p = subprocess.Popen(
+                        commandline,
+                        shell=True,
+                        stdin=subprocess.PIPE if command_stdin else open(os.devnull),
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        start_new_session=True,
+                        close_fds=True,
+                    )
+                else:
+                    # Python 2: start_new_session not available
+                    p = subprocess.Popen(  # pylint: disable=subprocess-popen-preexec-fn
+                        commandline,
+                        shell=True,
+                        stdin=subprocess.PIPE if command_stdin else open(os.devnull),
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        preexec_fn=os.setsid,
+                        close_fds=True,
+                    )
             else:
                 # We can not create a separate process group when running Nagios
                 # Upon reaching the service_check_timeout Nagios only kills the process
                 # group of the active check.
-                p = subprocess.Popen(  # nosec
+                p = subprocess.Popen(
                     commandline,
                     shell=True,
                     stdin=subprocess.PIPE if command_stdin else open(os.devnull),
@@ -109,8 +132,10 @@ class ProgramDataSource(CheckMKAgentDataSource):
 
         if exitstatus:
             if exitstatus == 127:
-                raise MKAgentError("Program '%s' not found (exit code 127)" % exepath)
-            raise MKAgentError("Agent exited with code %d: %s" % (exitstatus, stderr))
+                raise MKAgentError("Program '%s' not found (exit code 127)" %
+                                   six.ensure_str(exepath))
+            raise MKAgentError("Agent exited with code %d: %s" %
+                               (exitstatus, six.ensure_str(stderr)))
 
         return stdout
 
@@ -172,7 +197,7 @@ class DSProgramDataSource(ProgramDataSource):
                                                    parents_list))
 
         macros = core_config.get_host_macros_from_attributes(self._hostname, attrs)
-        return ensure_bytestr(core_config.replace_macros(cmd, macros))
+        return six.ensure_str(core_config.replace_macros(cmd, macros))
 
 
 SpecialAgentConfiguration = collections.namedtuple("SpecialAgentConfiguration", ["args", "stdin"])

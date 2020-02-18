@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -52,7 +52,7 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
         if self._ipaddress is not None:
             raw_data_from_sources += _raw_data(self._ipaddress, self._time_settings)
 
-        raw_data = ""
+        raw_data = b""
         for source_raw_data in raw_data_from_sources:
             self._processed_file_reasons.add(
                 (source_raw_data.reason_status, source_raw_data.reason))
@@ -74,10 +74,10 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
         """Return a <<<labels>>> agent section which adds the piggyback sources
         to the labels of the current host"""
         if not source_hostnames:
-            return ""
+            return b""
 
         labels = {"cmk/piggyback_source_%s" % name: "yes" for name in source_hostnames}
-        return '<<<labels:sep(0)>>>\n%s\n' % json.dumps(labels)
+        return b'<<<labels:sep(0)>>>\n%s\n' % json.dumps(labels).encode("utf-8")
 
     def _get_raw_data(self):
         # type: () -> Tuple[RawAgentData, bool]

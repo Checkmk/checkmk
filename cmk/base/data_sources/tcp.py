@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,6 +6,8 @@
 
 import socket
 from typing import Tuple, List, Optional  # pylint: disable=unused-import
+from hashlib import sha256, md5
+from Cryptodome.Cipher import AES
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKTerminate
@@ -119,7 +121,7 @@ class TCPDataSource(CheckMKAgentDataSource):
         if len(output) < 16:
             raise MKAgentError("Too short output from agent: %r" % output)
 
-        output_is_plaintext = output.startswith("<<<")
+        output_is_plaintext = output.startswith(b"<<<")
         if encryption_settings["use_regular"] == "enforce" and output_is_plaintext:
             raise MKAgentError(
                 "Agent output is plaintext but encryption is enforced by configuration")
@@ -131,7 +133,7 @@ class TCPDataSource(CheckMKAgentDataSource):
                 output = self._decrypt_package(output[2:], encryption_settings["passphrase"],
                                                protocol)
             except ValueError:
-                raise MKAgentError("Unsupported protocol version: %s" % output[:2])
+                raise MKAgentError("Unsupported protocol version: %s" % str(output[:2]))
             except Exception as e:
                 if encryption_settings["use_regular"] == "enforce":
                     raise MKAgentError("Failed to decrypt agent output: %s" % e)
@@ -145,24 +147,22 @@ class TCPDataSource(CheckMKAgentDataSource):
     # TODO: Sync with real_type_checks._decrypt_rtc_package
     def _decrypt_package(self, encrypted_pkg, encryption_key, protocol):
         # type: (bytes, str, int) -> RawAgentData
-        from Cryptodome.Cipher import AES
-        from hashlib import sha256, md5
         encrypt_digest = sha256 if protocol == 2 else md5
 
         # Adapt OpenSSL handling of key and iv
         def derive_key_and_iv(password, key_length, iv_length):
-            # type: (str, int, int) -> Tuple[str, str]
-            d = d_i = ''
+            # type: (bytes, int, int) -> Tuple[bytes, bytes]
+            d = d_i = b''
             while len(d) < key_length + iv_length:
                 d_i = encrypt_digest(d_i + password).digest()
                 d += d_i
             return d[:key_length], d[key_length:key_length + iv_length]
 
-        key, iv = derive_key_and_iv(encryption_key, 32, AES.block_size)
+        key, iv = derive_key_and_iv(encryption_key.encode("utf-8"), 32, AES.block_size)
         decryption_suite = AES.new(key, AES.MODE_CBC, iv)
         decrypted_pkg = decryption_suite.decrypt(encrypted_pkg)
         # Strip of fill bytes of openssl
-        return decrypted_pkg[0:-ord(decrypted_pkg[-1])]
+        return decrypted_pkg[0:-ord(str(decrypted_pkg[-1]))]
 
     def describe(self):
         # type: () -> str

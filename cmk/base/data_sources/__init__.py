@@ -22,7 +22,6 @@ import cmk.utils.paths
 import cmk.utils.debug
 import cmk.utils.piggyback
 
-import cmk.base
 import cmk.base.config as config
 import cmk.base.console as console
 import cmk.base.ip_lookup as ip_lookup

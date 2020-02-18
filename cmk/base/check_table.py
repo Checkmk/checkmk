@@ -11,7 +11,6 @@ from typing import (  # pylint: disable=unused-import
 
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.base
 import cmk.base.config as config
 import cmk.base.item_state as item_state
 import cmk.base.check_utils

@@ -22,7 +22,7 @@ import cmk.base.console as console
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
-from cmk.base import config_cache
+from cmk.base import config_cache as _config_cache
 import cmk.base.cleanup
 from cmk.base.core_config import MonitoringCore  # pylint: disable=unused-import
 
@@ -193,7 +193,7 @@ def check_timeperiod(timeperiod):
 
     # Note: This also returns True when the timeperiod is unknown
     #       The following function timeperiod_active handles this differently
-    return config_cache.get_dict("timeperiods_cache").get(timeperiod, True)
+    return _config_cache.get_dict("timeperiods_cache").get(timeperiod, True)
 
 
 def timeperiod_active(timeperiod):
@@ -206,14 +206,14 @@ def timeperiod_active(timeperiod):
     Raises an exception if e.g. a timeout or connection error appears.
     This way errors can be handled upstream."""
     update_timeperiods_cache()
-    return config_cache.get_dict("timeperiods_cache").get(timeperiod)
+    return _config_cache.get_dict("timeperiods_cache").get(timeperiod)
 
 
 def update_timeperiods_cache():
     # type: () -> None
     # { "last_update": 1498820128, "timeperiods": [{"24x7": True}] }
     # The value is store within the config cache since we need a fresh start on reload
-    tp_cache = config_cache.get_dict("timeperiods_cache")
+    tp_cache = _config_cache.get_dict("timeperiods_cache")
 
     if not tp_cache:
         response = livestatus.LocalConnection().query("GET timeperiods\nColumns: name in")
@@ -223,7 +223,7 @@ def update_timeperiods_cache():
 
 def cleanup_timeperiod_caches():
     # type: () -> None
-    config_cache.get_dict("timeperiods_cache").clear()
+    _config_cache.get_dict("timeperiods_cache").clear()
 
 
 cmk.base.cleanup.register_cleanup(cleanup_timeperiod_caches)

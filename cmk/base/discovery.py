@@ -24,7 +24,7 @@ from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.exceptions import MKException
 
-import cmk.base
+from cmk.base import config_cache as _config_cache
 import cmk.base.crash_reporting
 import cmk.base.config as config
 import cmk.base.console as console
@@ -603,7 +603,7 @@ def discover_marked_hosts(core):
         console.verbose("\nRestarting monitoring core with updated configuration...\n")
         with config.set_use_core_config(use_core_config=False):
             try:
-                cmk.base.config_cache.clear_all()
+                _config_cache.clear_all()
                 config.get_config_cache().initialize()
 
                 if config.monitoring_core == "cmc":
@@ -611,7 +611,7 @@ def discover_marked_hosts(core):
                 else:
                     cmk.base.core.do_restart(core)
             finally:
-                cmk.base.config_cache.clear_all()
+                _config_cache.clear_all()
                 config.get_config_cache().initialize()
 
 

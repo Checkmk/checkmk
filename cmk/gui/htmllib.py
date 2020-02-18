@@ -1331,7 +1331,20 @@ class html(ABCHTMLGenerator):
         self.request.__dict__.pop('values', None)
 
     # TODO: For historic reasons this needs to return byte strings. We will clean this up
-    # soon, before moving to Python 3.
+    # soon when moving to python 3
+    def get_str_input(self, varname, deflt=None):
+        # type: (str, Optional[str]) -> Optional[str]
+        return self.request.var(varname, deflt)
+
+    def get_str_input_mandatory(self, varname, deflt=None):
+        # type: (str, Optional[str]) -> str
+        value = self.request.var(varname, deflt)
+        if value is None:
+            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
+        return value
+
+    # TODO: For historic reasons this needs to return byte strings. We will clean this up
+    # soon when moving to python 3
     def get_ascii_input(self, varname, deflt=None):
         # type: (str, Optional[str]) -> Optional[str]
         """Helper to retrieve a byte string and ensure it only contains ASCII characters
@@ -1352,6 +1365,15 @@ class html(ABCHTMLGenerator):
 
         return value
 
+    # TODO: For historic reasons this needs to return byte strings. We will clean this up
+    # soon when moving to python 3
+    def get_ascii_input_mandatory(self, varname, deflt=None):
+        # type: (str, Optional[str]) -> str
+        value = self.get_ascii_input(varname, deflt)
+        if value is None:
+            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
+        return value
+
     def get_unicode_input(self, varname, deflt=None):
         # type: (str, Optional[Text]) -> Optional[Text]
         try:
@@ -1365,15 +1387,12 @@ class html(ABCHTMLGenerator):
                 _("The given text is wrong encoded. "
                   "You need to provide a UTF-8 encoded text."))
 
-    def get_item_input(self, varname, collection):
-        # type: (str, Mapping[str, str]) -> Tuple[str, str]
-        """Helper to get an item from the given collection
-        Raises a MKUserError() in case the requested item is not available."""
-        item = self.get_ascii_input(varname)
-        if item not in collection:
-            raise MKUserError(varname, _("The requested item %s does not exist") % item)
-        assert item is not None
-        return collection[item], item
+    def get_unicode_input_mandatory(self, varname, deflt=None):
+        # type: (str, Optional[Text]) -> Text
+        value = self.get_unicode_input(varname, deflt)
+        if value is None:
+            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
+        return value
 
     def get_integer_input(self, varname, deflt=None):
         # type: (str, Optional[int]) -> int
@@ -1386,6 +1405,16 @@ class html(ABCHTMLGenerator):
             raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
         except ValueError:
             raise MKUserError(varname, _("The parameter \"%s\" is not an integer.") % varname)
+
+    def get_item_input(self, varname, collection):
+        # type: (str, Mapping[str, str]) -> Tuple[str, str]
+        """Helper to get an item from the given collection
+        Raises a MKUserError() in case the requested item is not available."""
+        item = self.get_ascii_input(varname)
+        if item not in collection:
+            raise MKUserError(varname, _("The requested item %s does not exist") % item)
+        assert item is not None
+        return collection[item], item
 
     # TODO: Invalid default URL is not validated. Should we do it?
     # TODO: This is only protecting against some not allowed URLs but does not

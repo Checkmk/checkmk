@@ -1,25 +1,129 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import pytest
+import pytest  # type: ignore
+import six
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
 
 
-def test_get_ascii_input(register_builtin_html):
+@pytest.fixture()
+def set_vars(register_builtin_html):
     html.request.set_var("xyz", "x")
     html.request.set_var("abc", "äbc")
 
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_str_input_type():
+    assert html.get_str_input("xyz") == "x"
+    assert isinstance(html.get_str_input("xyz"), str)
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_str_input_non_ascii():
+    assert html.get_str_input("abc") == b"äbc"
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_str_input_default():
+    assert html.get_str_input("get_default", "xyz") == "xyz"
+    assert html.get_str_input("zzz") is None
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_str_input_mandatory_input_type():
+    assert html.get_str_input_mandatory("xyz") == "x"
+    assert isinstance(html.get_str_input_mandatory("xyz"), str)
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_str_input_mandatory_non_ascii():
+    assert html.get_str_input_mandatory("abc") == b"äbc"
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_str_input_mandatory_default():
+    assert html.get_str_input_mandatory("get_default", "xyz") == "xyz"
+
+    with pytest.raises(MKUserError, match="is missing"):
+        html.get_str_input_mandatory("zzz")
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_ascii_input_input_type():
     assert html.get_ascii_input("xyz") == "x"
     assert isinstance(html.get_ascii_input("xyz"), str)
 
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_ascii_input_non_ascii():
     with pytest.raises(MKUserError) as e:
         html.get_ascii_input("abc")
     assert "must only contain ASCII" in "%s" % e
 
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_ascii_input_default():
     assert html.get_ascii_input("get_default", "xyz") == "xyz"
     assert html.get_ascii_input("zzz") is None
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_ascii_input_mandatory_input_type():
+    assert html.get_ascii_input_mandatory("xyz") == "x"
+    assert isinstance(html.get_ascii_input_mandatory("xyz"), str)
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_ascii_input_mandatory_non_ascii():
+    with pytest.raises(MKUserError) as e:
+        html.get_ascii_input_mandatory("abc")
+    assert "must only contain ASCII" in "%s" % e
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_ascii_input_mandatory_default():
+    assert html.get_ascii_input_mandatory("get_default", "xyz") == "xyz"
+
+    with pytest.raises(MKUserError, match="is missing"):
+        html.get_ascii_input_mandatory("zzz")
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_unicode_input_type():
+    assert html.get_unicode_input("xyz") == "x"
+    assert isinstance(html.get_unicode_input("xyz"), six.text_type)
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_unicode_input_non_ascii():
+    assert html.get_unicode_input("abc") == u"äbc"
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_unicode_input_default():
+    assert html.get_unicode_input("get_default", u"xyz") == u"xyz"
+    assert html.get_unicode_input("zzz") is None
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_unicode_input_mandatory_input_type():
+    assert html.get_unicode_input_mandatory("xyz") == u"x"
+    assert isinstance(html.get_unicode_input_mandatory("xyz"), six.text_type)
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_unicode_input_mandatory_non_ascii():
+    assert html.get_unicode_input_mandatory("abc") == u"äbc"
+
+
+@pytest.mark.usefixtures("set_vars")
+def test_get_unicode_input_mandatory_default():
+    assert html.get_unicode_input_mandatory("get_default", u"xyz") == u"xyz"
+
+    with pytest.raises(MKUserError, match="is missing"):
+        html.get_unicode_input_mandatory("zzz")
 
 
 def test_get_integer_input(register_builtin_html):

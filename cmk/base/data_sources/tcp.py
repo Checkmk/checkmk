@@ -10,7 +10,6 @@ from hashlib import sha256, md5
 from Cryptodome.Cipher import AES
 
 import cmk.utils.debug
-from cmk.utils.exceptions import MKTerminate
 import cmk.utils.werks
 
 from cmk.base.exceptions import MKAgentError, MKEmptyAgentData

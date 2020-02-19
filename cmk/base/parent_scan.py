@@ -19,6 +19,7 @@ import cmk.utils.paths
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 
+from cmk.base import config_cache as _config_cache
 import cmk.base.console as console
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
@@ -309,8 +310,8 @@ def gateway_reachable_via_ping(ip, probes):
 # from all_hosts
 def _ip_to_hostname(config_cache, ip):
     # type: (config.ConfigCache, Optional[HostAddress]) -> Optional[HostName]
-    if not cmk.base.config_cache.exists("ip_to_hostname"):
-        cache = cmk.base.config_cache.get_dict("ip_to_hostname")
+    if not _config_cache.exists("ip_to_hostname"):
+        cache = _config_cache.get_dict("ip_to_hostname")
 
         for host in config_cache.all_active_realhosts():
             try:
@@ -318,7 +319,7 @@ def _ip_to_hostname(config_cache, ip):
             except Exception:
                 pass
     else:
-        cache = cmk.base.config_cache.get_dict("ip_to_hostname")
+        cache = _config_cache.get_dict("ip_to_hostname")
 
     return cache.get(ip)
 

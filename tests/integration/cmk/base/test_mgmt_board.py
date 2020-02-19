@@ -10,9 +10,9 @@ import cmk.base.config as config
 
 @pytest.fixture(scope="function")
 def clear_config_caches(monkeypatch):
-    import cmk.base
-    cmk.base.config_cache.reset()
-    cmk.base.runtime_cache.reset()
+    from cmk.base import config_cache as _config_cache, runtime_cache as _runtime_cache
+    _config_cache.reset()
+    _runtime_cache.reset()
 
 
 def reload_config():

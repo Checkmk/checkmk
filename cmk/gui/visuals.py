@@ -1387,7 +1387,7 @@ def SingleInfoSelection(info_keys):
 # Converts a context from the form { filtername : { ... } } into
 # the for { infoname : { filtername : { } } for editing.
 def pack_context_for_editing(visual, info_handler):
-    # type: (Visual, Callable[[Visual], List[InfoName]]) -> Dict
+    # type: (Visual, Optional[Callable[[Visual], List[InfoName]]]) -> Dict
     # We need to pack all variables into dicts with the name of the
     # info. Since we have no mapping from info the the filter variable,
     # we pack into every info every filter. The dict valuespec will

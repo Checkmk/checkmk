@@ -781,6 +781,7 @@ def page_edit_views():
 
 
 def DatasourceSelection():
+    # type: () -> DropdownChoice
     """Create datasource selection valuespec, also for other modules"""
     return DropdownChoice(
         title=_('Datasource'),

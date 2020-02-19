@@ -94,10 +94,8 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
         super(WithUniqueIdentifier, self).__init__(*args, **kw)
 
     def id(self):
-        # type: () -> Optional[str]
+        # type: () -> str
         """The unique identifier of this particular instance.
-
-        Before loading the instance with `load_instance` this attribute will be None.
 
         Returns:
             The id.
@@ -115,7 +113,10 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
         Returns:
             The Folder-instance
         """
-        return cls._mapped_by_id()[identifier]
+        folders = cls._mapped_by_id()
+        if identifier not in folders:
+            raise MKUserError(None, _("Folder %s not found.") % (identifier,))
+        return folders[identifier]
 
     def persist_instance(self):
         """Save the current state of the instance to a file.
@@ -125,9 +126,11 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
             self._id = self._get_identifier()
 
         data = self._get_instance_data()
+        data = self._upgrade_keys(data)
+        data['attributes']['updated_at'] = time.time()
         data['__id'] = self._id
         store.makedirs(os.path.dirname(self._store_file_name()))
-        store.save_object_to_file(self._store_file_name(), self._get_instance_data())
+        store.save_object_to_file(self._store_file_name(), data)
 
     def load_instance(self):
         """Load the data of this instance and return it.
@@ -138,7 +141,8 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
             The loaded data.
         """
         data = store.load_object_from_file(self._store_file_name(), default={})
-        unique_id = data.pop('__id', None)
+        data = self._upgrade_keys(data)
+        unique_id = data.get('__id')
         if self._id is None:
             self._id = unique_id
         return data
@@ -146,6 +150,11 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractmethod
     def _get_identifier(self):
         """The unique identifier of this object."""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _upgrade_keys(self, data):
+        """Upgrade the structure of the store-file."""
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -170,12 +179,12 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
 
 
 class WithAttributes(object):
-    """Base class containing a couple of generic permission checking functions
+    """Mixin containing attribute management methods.
 
     Used in the Host and Folder classes."""
     def __init__(self, *args, **kw):
         super(WithAttributes, self).__init__(*args, **kw)
-        self._attributes = {}
+        self._attributes = {'meta_data': {}}
         self._effective_attributes = None
 
     # .--------------------------------------------------------------------.
@@ -550,6 +559,13 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self._root_dir = root_dir.rstrip("/") + "/"  # O.o
 
     def parent(self):
+        # type: () -> CREFolder
+        """Give the parent instance.
+
+        Returns:
+             CREFolder: The parent folder instance.
+
+        """
         return self._parent
 
     def is_disk_folder(self):
@@ -611,6 +627,10 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         return Host(self, host_name, attributes, cluster_nodes)
 
+    def _upgrade_keys(self, data):
+        data['attributes'] = self._transform_old_attributes(data.get('attributes', {}))
+        return data
+
     def _transform_old_attributes(self, attributes):
         """Mangle all attribute structures read from the disk to prepare it for the current logic"""
         attributes = self._transform_pre_15_agent_type_in_attributes(attributes)
@@ -634,13 +654,26 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             attributes["tag_snmp_ds"] = attributes.pop("tag_snmp")
         return attributes
 
-    # 1.6 introduced meta_data for hosts and folders to keep information about their
-    # creation time. Populate this attribute for existing objects with empty data.
     def _add_missing_meta_data(self, attributes):
-        attributes.setdefault("meta_data", {
-            "created_at": None,
-            "created_by": None,
-        })
+        """Bring meta_data structure up to date.
+
+        New in 1.6:
+            'meta_data' struct added.
+
+        New in 1.7:
+            Key 'updated_at' in 'meta_data' added for use in the REST API.
+
+        Args:
+            attributes: The attributes dictionary
+
+        Returns:
+            The modified 'attributes' dictionary. In actually is modified in-place though.
+
+        """
+        attributes.setdefault("meta_data", {})
+        for key in ['created_at', 'updated_at', 'created_by']:
+            attributes['meta_data'].setdefault(key, None)
+
         return attributes
 
     # Old tag group trans:
@@ -913,7 +946,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def _load(self):
         wato_info = self.load_instance()
         self._title = wato_info.get("title", self._fallback_title())
-        self._attributes = self._transform_old_attributes(wato_info.get("attributes", {}))
+        self._attributes = wato_info.get("attributes", {})
         # Can either be set to True or a string (which will be used as host lock message)
         self._locked = wato_info.get("lock", False)
         # Can either be set to True or a string (which will be used as host lock message)
@@ -960,7 +993,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                     subfolder_path = entry
                 self._subfolders[entry] = Folder(entry,
                                                  subfolder_path,
-                                                 self,
+                                                 parent_folder=self,
                                                  root_dir=self._root_dir)
 
     def wato_info_path(self):
@@ -1005,11 +1038,10 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return self.path()
 
     def path(self):
-        if self.is_root():
-            return ""
-        elif self.parent().is_root():
-            return self.name()
-        return self.parent().path() + "/" + self.name()
+        if self.parent() and not self.parent().is_root() and not self.is_root():
+            return self.parent().path() + "/" + self.name()
+
+        return self.name()
 
     def path_for_rule_matching(self):
         if self.is_root():
@@ -1501,6 +1533,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         target_folder._subfolders[subfolder.name()] = subfolder
         shutil.move(old_filesystem_path, subfolder.filesystem_path())
         subfolder.rewrite_hosts_files()  # fixes changed inheritance
+        self._clear_id_cache()
         Folder.invalidate_caches()
         affected_sites = list(set(affected_sites + subfolder.all_site_ids()))
         add_change("move-folder",
@@ -2007,6 +2040,9 @@ class CREHost(WithPermissions, WithAttributes):
     # .--------------------------------------------------------------------.
     # | ELEMENT ACCESS                                                     |
     # '--------------------------------------------------------------------'
+
+    def id(self):
+        return self.name()
 
     def ident(self):
         return self.name()
@@ -2540,6 +2576,13 @@ else:
     Host = CMEHost
 
 
+class SetOnceDict(dict):
+    def __setitem__(self, key, value):
+        if key in self:
+            raise ValueError("key %r already set" % (key,))
+        dict.__setitem__(self, key, value)
+
+
 @MemoizeCache
 def folders_by_id():
     # type: () -> Dict[str, Type[CREFolder]]
@@ -2569,7 +2612,7 @@ def folders_by_id():
         for _sub_folder in _folder.subfolders():
             _update_mapping(_sub_folder, _mapping)
 
-    mapping = {}  # type: Dict[str, Type[CREFolder]]
+    mapping = SetOnceDict()  # type: Dict[str, Type[CREFolder]]
     _update_mapping(Folder.root_folder(), mapping)
     return mapping
 
@@ -2667,5 +2710,6 @@ def check_wato_foldername(htmlvarname, name, just_name=False):
 def get_meta_data(created_by):
     return {
         "created_at": time.time(),
+        "updated_at": None,
         "created_by": created_by,
     }

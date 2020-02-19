@@ -19,10 +19,11 @@ from cmk.gui.config import clear_user_login, set_user_by_id
 from cmk.gui.exceptions import MKException, MKAuthException, MKUserError
 from cmk.gui.login import verify_automation_secret, set_auth_type
 
+from cmk.gui.wsgi.wrappers import ParameterDict
 from cmk.gui.wsgi.types import RFC7662  # pylint: disable=unused-import
 
 MK_STATUS = {
-    MKUserError: 404,
+    MKUserError: 400,
     MKAuthException: 401,
 }
 
@@ -75,7 +76,8 @@ def with_user(func):
 
         try:
             with verify_user(user_id, token_info):
-                return func(*args, **kw)
+                parameters = ParameterDict(kw)
+                return func(parameters)
         except MKException as exc:
             return problem(
                 status=MK_STATUS.get(type(exc), 500),

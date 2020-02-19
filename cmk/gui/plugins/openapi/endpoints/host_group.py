@@ -10,6 +10,10 @@ from cmk.gui.watolib.groups import load_host_group_information, edit_group
 from cmk.gui.wsgi.types import RFC7662, HostGroup  # pylint: disable=unused-import
 
 
+def create(ident, body, user=None, token_info=None):
+    raise Exception
+
+
 def post(ident, body, user=None, token_info=None):
     # type: (str, HostGroup, Optional[str], Optional[RFC7662]) -> HostGroup
     edit_group(ident, 'host', body)

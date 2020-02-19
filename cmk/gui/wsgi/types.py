@@ -14,6 +14,7 @@ Audience = Union[str, List[str]]
 TokenType = str
 RFC7662 = Dict[str, Any]
 HostGroup = Dict[str, str]
+DomainObject = Dict[str, Any]
 #TokenType = Union[Literal["access_token"], Literal["refresh_token"]]
 #RFC7662 = TypedDict(
 #    'RFC7662',

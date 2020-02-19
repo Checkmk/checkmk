@@ -34,16 +34,6 @@ def get_input(valuespec, varprefix):
     return value
 
 
-# TODO: Remove all call sites and clean this up! The mechanic of this
-# and the edit_dictionaries() is very uncommon compared to the other
-# usages of valuespecs.
-def edit_dictionary(entries, value, **args):
-    result = edit_dictionaries([("value", entries)], {"value": value}, **args)
-    if result:
-        return result["value"]
-    return result
-
-
 # Edit a list of several dictionaries. Those can either be dictionary
 # valuespec or just a list of elements. Each entry in dictionaries is
 # a pair of key and either a list of elements or a Dictionary.
@@ -51,8 +41,7 @@ def edit_dictionary(entries, value, **args):
 # we can drop edit_dictionaries()? At least the function for editing
 # several dictionaries at once.
 # TODO: Remove all call sites and clean this up! The mechanic of this
-# and the edit_dictionary() is very uncommon compared to the other
-# usages of valuespecs.
+# is very uncommon compared to the other usages of valuespecs.
 def edit_dictionaries(dictionaries,
                       value,
                       focus=None,

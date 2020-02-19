@@ -75,7 +75,7 @@ def edit_dictionaries(dictionaries,
         else:
             sections.append((keyname, None, d))  # valuespec Dictionary, title used from dict
 
-    if html.request.var("filled_in") == formname and html.transaction_valid():
+    if html.request.get_ascii_input("filled_in") == formname and html.transaction_valid():
         if not preview and consume_transid:
             html.check_transaction()
 
@@ -175,7 +175,7 @@ def edit_valuespec(vs,
                    consume_transid=True,
                    focus=None):
 
-    if html.request.var("filled_in") == formname and html.transaction_valid():
+    if html.request.get_ascii_input("filled_in") == formname and html.transaction_valid():
         if consume_transid:
             html.check_transaction()
 

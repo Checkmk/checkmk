@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -260,7 +260,7 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
         else:
             missing_sections.add(cmk.base.check_utils.section_name_of(service.check_plugin_name))
 
-    import cmk.base.inventory as inventory
+    import cmk.base.inventory as inventory  # pylint: disable=import-outside-toplevel
     inventory.do_inventory_actions_during_checking_for(sources, multi_host_sections, host_config,
                                                        ipaddress)
 
@@ -524,7 +524,7 @@ def _sanitize_check_result_infotext(infotext, allow_missing_infotext):
     if infotext is None and not allow_missing_infotext:
         raise MKGeneralException("Invalid infotext from check: \"None\"")
 
-    if isinstance(infotext, str):
+    if isinstance(infotext, six.binary_type):
         return infotext.decode('utf-8')
 
     return infotext
@@ -696,9 +696,9 @@ def _submit_via_command_pipe(host, service, state, output):
     _open_command_pipe()
     if _nagios_command_pipe is not None and not isinstance(_nagios_command_pipe, bool):
         # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
-        _nagios_command_pipe.write(
-            "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" %
-            (int(time.time()), host, make_utf8(service), state, make_utf8(output)))
+        msg = "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % (time.time(), host, service,
+                                                                   state, output)
+        _nagios_command_pipe.write(make_utf8(msg))
         # Important: Nagios needs the complete command in one single write() block!
         # Python buffers and sends chunks of 4096 bytes, if we do not flush.
         _nagios_command_pipe.flush()
@@ -715,7 +715,7 @@ def _open_command_pipe():
         try:
             signal.signal(signal.SIGALRM, _core_pipe_open_timeout)
             signal.alarm(3)  # three seconds to open pipe
-            _nagios_command_pipe = open(cmk.utils.paths.nagios_command_pipe_path, 'w')
+            _nagios_command_pipe = open(cmk.utils.paths.nagios_command_pipe_path, 'wb')
             signal.alarm(0)  # cancel alarm
         except Exception as e:
             _nagios_command_pipe = False

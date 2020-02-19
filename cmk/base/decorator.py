@@ -1,10 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import cast, Any, Callable  # pylint: disable=unused-import
+import six
 
 import cmk
 import cmk.utils.debug
@@ -40,9 +41,6 @@ def handle_check_mk_check_result(check_plugin_name, description):
             try:
                 status, infotexts, long_infotexts, perfdata = check_func(hostname, *args, **kwargs)
 
-            except SystemExit:
-                raise
-
             except MKTimeout:
                 if _in_keepalive_mode():
                     raise
@@ -76,9 +74,9 @@ def handle_check_mk_check_result(check_plugin_name, description):
 
             if _in_keepalive_mode():
                 keepalive.add_keepalive_active_check_result(hostname, output_txt)
-                console.verbose(output_txt.encode("utf-8"))
+                console.verbose(six.ensure_str(output_txt))
             else:
-                console.output(output_txt.encode("utf-8"))
+                console.output(six.ensure_str(output_txt))
 
             return status
 

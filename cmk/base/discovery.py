@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -13,6 +13,9 @@ from typing import (  # pylint: disable=unused-import
     Pattern, AnyStr, Union, Iterator, Callable, List, Text, Optional, Dict, Tuple, Set, NoReturn,
     Any,
 )
+import six
+
+import livestatus
 
 from cmk.utils.regex import regex
 import cmk.utils.misc
@@ -618,12 +621,20 @@ def discover_marked_hosts(core):
 def _fetch_host_states():
     # type: () -> Dict[HostName, HostState]
     try:
-        import livestatus
         query = "GET hosts\nColumns: name state"
-        return {n: s for n, s in livestatus.LocalConnection().query(query)}
+        response = livestatus.LocalConnection().query(query)
+        return {k: v for row in response for k, v in [_parse_row(row)]}
     except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
         pass
     return {}
+
+
+def _parse_row(row):
+    # type: (livestatus.LivestatusRow) -> Tuple[HostName, HostState]
+    hostname, hoststate = row
+    if isinstance(hostname, HostName) and isinstance(hoststate, HostState):
+        return hostname, hoststate
+    raise MKGeneralException("Invalid response from livestatus: %s" % row)
 
 
 def _discover_marked_host_exists(config_cache, hostname):
@@ -765,12 +776,12 @@ def _get_item_filter_func(params_rediscovery):
     whitelist = regex("|".join(["(%s)" % p for p in service_whitelist]))
     blacklist = regex("|".join(["(%s)" % p for p in service_blacklist]))
 
-    return lambda hostname, check_plugin_name, item:\
-           _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, blacklist)
+    return lambda hostname, check_plugin_name, item: _discovery_filter_by_lists(
+        hostname, check_plugin_name, item, whitelist, blacklist)
 
 
 def _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, blacklist):
-    # type: (HostName, CheckPluginName, Item, Pattern[AnyStr], Pattern[AnyStr]) -> bool
+    # type: (HostName, CheckPluginName, Item, Pattern[str], Pattern[str]) -> bool
     description = config.service_description(hostname, check_plugin_name, item)
     return whitelist.match(description) is not None and blacklist.match(description) is None
 
@@ -805,7 +816,7 @@ def schedule_discovery_check(hostname):
         if config.monitoring_core == "cmc":
             command += ";TRY"
 
-        s.send("COMMAND [%d] %s\n" % (now, command))
+        s.send(six.ensure_binary("COMMAND [%d] %s\n" % (now, command)))
     except Exception:
         if cmk.utils.debug.enabled():
             raise
@@ -869,7 +880,7 @@ def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_err
             except Exception as e:
                 if on_error == "raise":
                     raise
-                elif on_error == "warn":
+                if on_error == "warn":
                     console.error("Discovery of '%s' failed: %s\n" % (check_plugin_name, e))
 
         check_table_formatted = {}  # type: check_table.CheckTable
@@ -940,7 +951,7 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
                 new_exception.__traceback__ = x[2]  # type: ignore[attr-defined]
                 raise new_exception
 
-            elif on_error == "warn":
+            if on_error == "warn":
                 section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
                 console.warning("Exception while parsing agent section '%s': %s\n" %
                                 (section_name, e))
@@ -1319,8 +1330,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                         new_exception = x[0](x[1])
                         new_exception.__traceback__ = x[2]  # type: ignore[attr-defined]
                         raise new_exception
-                    else:
-                        raise
+                    raise
             except Exception as e:
                 if cmk.utils.debug.enabled():
                     raise

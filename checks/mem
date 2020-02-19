@@ -185,6 +185,7 @@ def check_memory_dict(meminfo, params, render_base=1024):
             params.get("levels_ram"),
             metric_name="mem_used",
             render_base=render_base,
+            create_percent_metric=True,
         )
 
     # Swap
@@ -338,7 +339,9 @@ def check_mem_linux(_no_item, params, info):
 
     # show these always:
     yield results.pop("virtual", (0, ""))[:2]
-    yield results.pop("ram", (0, ""))[:2]
+    state, info, perfdata = results.pop("ram", (0, ""))
+    yield state, info
+    meminfo["MemUsedPercent"] = perfdata[-1][1]
     yield results.pop("swap", (0, ""))[:2]
     # show rest only if not OK:
     for state, infotext, _perf in results.values():

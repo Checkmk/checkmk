@@ -783,7 +783,7 @@ metric_info["pagefile_used"] = {
 
 metric_info["mem_used_percent"] = {
     "color": "#80ff40",
-    "title": _("RAM used"),
+    "title": _("RAM used %"),
     "unit": "%",
 }
 

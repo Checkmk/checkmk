@@ -2,7 +2,6 @@
 
 # yapf: disable
 # type: ignore
-
 checkname = 'mem'
 
 info = [
@@ -48,7 +47,10 @@ checks = {
                         ('mem_free', 6501437440, None, None, None, None),
                         ('mem_total', 8588865536, None, None, None, None),
                         ('mem_used', 1164308480, None, None, None, None),
-                        ('page_tables', 7856128, None, None, None, None),
+                        (
+                            'mem_used_percent', 13.556021748388446, None, None,
+                            None, None
+                        ), ('page_tables', 7856128, None, None, None, None),
                         ('pending', 659461, None, None, None, None),
                         ('swap_cached', 4096, None, None, None, None),
                         ('swap_free', 1137807360, None, None, None, None),

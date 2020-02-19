@@ -17,13 +17,15 @@ namespace cma::provider {
 namespace df {
 std::pair<std::string, std::string> GetNamesByVolumeId(
     std::string_view volume_id) {
-    std::array<char, 128> filesystem_name = {};
-    std::array<char, 512> volume_name = {};
+    constexpr DWORD kFileSystemSize = 128;
+    constexpr DWORD kVolumeNameSize = 512;
+    std::array<char, kFileSystemSize> filesystem_name = {};
+    std::array<char, kVolumeNameSize> volume_name = {};
 
     DWORD flags = 0;
-    if (!::GetVolumeInformationA(
-            volume_id.data(), volume_name.data(), volume_name.size(), nullptr,
-            nullptr, &flags, filesystem_name.data(), filesystem_name.size())) {
+    if (!::GetVolumeInformationA(volume_id.data(), volume_name.data(),
+                                 kVolumeNameSize, nullptr, nullptr, &flags,
+                                 filesystem_name.data(), kFileSystemSize)) {
         filesystem_name[0] =
             '\0';  // May be necessary if partial information returned
         XLOG::d("df: Information for volume '{}' is not available [{}]",

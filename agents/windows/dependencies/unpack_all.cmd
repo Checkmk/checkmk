@@ -44,10 +44,13 @@ powershell Write-Host "%out_dir_name%:" -ForegroundColor blue
 call %unpack_cmd% %unpacker_exe% %src_dir_name% %src_file_name% %out_root% %out_dir_name% *
 rem specific asio, renaming asio/asio to asio
 set top_folder=%out_root%\%out_dir_name%
+if not exist %top_folder%\asio powershell Write-Host "asio\asio is absent, nothing to move" -foreground cyan && goto skip_asio_move
+powershell Write-Host "asio\asio exists moving to asio" -foreground green
 rename %top_folder% tmp
 move %out_root%\tmp\asio %top_folder%
 rmdir /q/s %out_root%\tmp
 
+:skip_asio_move
 rem with internal folder in the tar.gz
 set nm=fmt
 set vv=-master-6.1.0
@@ -60,7 +63,7 @@ call %unpack_cmd% %unpacker_exe% %src_dir_name% %src_file_name% %out_root% %out_
 
 rem with internal folder in the tar.gz
 set nm=yaml-cpp
-set vv=-master
+set vv=.9a362420
 set src_dir_name=%omd_path%\%nm%
 if not exist %src_dir_name% set src_dir_name=%agent_path%\%nm%
 set src_file_name=%nm%%vv%

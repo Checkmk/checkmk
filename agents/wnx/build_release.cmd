@@ -6,7 +6,7 @@ rem build before owm build start.
 rem this is for command line only
 rem In GUI we should do Batch Rebuild of everything
 rem variables to set OPTOIONALLY, when you are using the same git checkout multiple times
-rem REMOTE_MACHINE - final artefacts
+rem REMOTE_MACHINE - final artefacts, expected bz build script
 rem LOCAL_IMAGES_EXE - exe
 rem LOCAL_IMAGE_PDB - pdb
 rem WNX_BUILD - in the future this is name of subfloder to build out
@@ -121,6 +121,11 @@ copy check_mk_service64.exe check_mk_agent-64.exe || powershell Write-Host "Fail
 powershell Write-Host "File Deployment succeeded" -Foreground Green
 
 popd
+
+set build_dir=.\build
+copy %build_dir%\watest\Win32\Release\watest32.exe %REMOTE_MACHINE% /y	
+copy %build_dir%\watest\x64\Release\watest64.exe %REMOTE_MACHINE% /Y	
+
 
 @rem Additional Phase: post processing/build special modules using make
 !make_exe! msi_patch || powershell Write-Host "Failed to patch MSI exec" -Foreground Red && echo set && exit /b 36

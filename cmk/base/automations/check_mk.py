@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -14,6 +14,7 @@ import shutil
 import io
 import contextlib
 from typing import Iterator, Tuple, Optional, Dict, Any, Text, List  # pylint: disable=unused-import
+import six
 
 import cmk.utils.paths
 import cmk.utils.debug
@@ -561,7 +562,7 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
             stderr=subprocess.STDOUT,
             close_fds=True,
         )
-        p.communicate(input=sed_commands)
+        p.communicate(input=sed_commands.encode("utf-8"))
         # TODO: error handling?
 
         handled_files += file_paths
@@ -596,7 +597,7 @@ class AutomationAnalyseServices(Automation):
     def execute(self, args):
         # type: (List[str]) -> Dict
         hostname = args[0]
-        servicedesc = args[1].decode("utf-8")
+        servicedesc = args[1]
 
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
@@ -856,7 +857,7 @@ class AutomationRestart(Automation):
                 configuration_warnings = core_config.create_core_config(core)
 
                 try:
-                    from cmk.base.cee.agent_bakery import bake_on_restart
+                    from cmk.base.cee.agent_bakery import bake_on_restart  # pylint: disable=import-outside-toplevel
                     bake_on_restart()
                 except ImportError:
                     pass
@@ -906,14 +907,14 @@ class AutomationRestart(Automation):
         return this_time > last_time
 
     def _last_modification_in_dir(self, dir_path):
-        # type: (str) -> int
+        # type: (str) -> float
         max_time = os.stat(dir_path).st_mtime
         for file_name in os.listdir(dir_path):
             max_time = max(max_time, os.stat(dir_path + "/" + file_name).st_mtime)
         return max_time
 
     def _time_of_last_core_restart(self):
-        # type: () -> int
+        # type: () -> float
         if config.monitoring_core == "cmc":
             pidfile_path = cmk.utils.paths.omd_root + "/tmp/run/cmc.pid"
         else:
@@ -922,7 +923,7 @@ class AutomationRestart(Automation):
         if os.path.exists(pidfile_path):
             return os.stat(pidfile_path).st_mtime
 
-        return 0
+        return 0.0
 
 
 automations.register(AutomationRestart())
@@ -1009,7 +1010,7 @@ class AutomationGetCheckInformation(Automation):
                 else:
                     title = check_plugin_name
 
-                check_infos[check_plugin_name] = {"title": title.decode("utf-8")}
+                check_infos[check_plugin_name] = {"title": title}
 
                 if check["group"]:
                     check_infos[check_plugin_name]["group"] = check["group"]
@@ -1051,8 +1052,7 @@ class AutomationGetRealTimeChecks(Automation):
                     if cmk.utils.debug.enabled():
                         raise
 
-                rt_checks.append(
-                    (check_plugin_name, "%s - %s" % (check_plugin_name, title.decode("utf-8"))))
+                rt_checks.append((check_plugin_name, "%s - %s" % (check_plugin_name, title)))
 
         return rt_checks
 
@@ -1204,7 +1204,7 @@ class AutomationDiagHost(Automation):
                 if p.stdout is None:
                     raise RuntimeError()
                 response = p.stdout.read()
-                return (p.wait(), response)
+                return (p.wait(), response.decode("utf-8"))
 
             if test == 'agent':
                 sources = data_sources.DataSources(hostname, ipaddress)
@@ -1362,7 +1362,7 @@ class AutomationActiveCheck(Automation):
     def execute(self, args):
         # type: (List[str]) -> Optional[Tuple[ServiceState, ServiceDetails]]
         hostname, plugin, raw_item = args
-        item = raw_item.decode("utf-8")
+        item = raw_item
 
         host_config = config.get_config_cache().get_host_config(hostname)
 
@@ -1432,7 +1432,7 @@ class AutomationActiveCheck(Automation):
     def _execute_check_plugin(self, commandline):
         # type: (Text) -> Tuple[ServiceState, ServiceDetails]
         try:
-            p = os.popen(commandline.encode("utf-8") + " 2>&1")  # nosec
+            p = os.popen(commandline + " 2>&1")  # nosec
             output = p.read().strip()
             ret = p.close()
             if not ret:
@@ -1475,12 +1475,12 @@ class AutomationGetAgentOutput(Automation):
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args):
-        # type: (List[str]) -> Tuple[bool, ServiceDetails, str]
+        # type: (List[str]) -> Tuple[bool, ServiceDetails, bytes]
         hostname, ty = args
 
         success = True
         output = u""
-        info = ""
+        info = b""
 
         try:
             if ty == "agent":
@@ -1491,7 +1491,7 @@ class AutomationGetAgentOutput(Automation):
                 sources = data_sources.DataSources(hostname, ipaddress)
                 sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
-                agent_output = ""
+                agent_output = b""
                 for source in sources.get_data_sources():
                     if isinstance(source, data_sources.abstract.CheckMKAgentDataSource):
                         agent_output += source.run_raw(hostname, ipaddress)
@@ -1511,14 +1511,15 @@ class AutomationGetAgentOutput(Automation):
                 for walk_oid in snmp.oids_to_walk():
                     try:
                         for oid, value in snmp.walk_for_export(host_config, walk_oid):
-                            lines.append("%s %s\n" % (oid, value))
+                            raw_oid_value = "%s %s\n" % (oid, value)
+                            lines.append(six.ensure_binary(raw_oid_value))
                     except Exception as e:
                         if cmk.utils.debug.enabled():
                             raise
                         success = False
                         output += "OID '%s': %s\n" % (oid, e)
 
-                info = "".join(lines)
+                info = b"".join(lines)
         except Exception as e:
             success = False
             output = "Failed to fetch data from %s: %s\n" % (hostname, e)
@@ -1637,7 +1638,7 @@ class AutomationGetLabelsOf(Automation):
             }
 
         if object_type == "service":
-            service_description = args[2].decode("utf-8")
+            service_description = args[2]
             return {
                 "labels": config_cache.labels_of_service(host_name, service_description),
                 "label_sources": config_cache.label_sources_of_service(

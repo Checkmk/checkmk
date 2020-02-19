@@ -450,21 +450,22 @@ def fetch_metric(inst, path, title, itemspec, inst_add=None):
             continue
 
         if len(subinstance) > 1:
-            item = ",".join((inst.name,) + subinstance[:-1])
+            instance_out = ",".join((inst.name,) + subinstance[:-1])
         elif inst_add is not None:
-            item = ",".join((inst.name, inst_add))
+            instance_out = ",".join((inst.name, inst_add))
         else:
-            item = inst.name
+            instance_out = inst.name
+        instance_out = instance_out.replace(" ", "_")
 
         if title:
             if subinstance:
-                tit = title + "." + subinstance[-1]
+                title_out = title + "." + subinstance[-1]
             else:
-                tit = title
+                title_out = title
         else:
-            tit = subinstance[-1]
+            title_out = subinstance[-1]
 
-        yield (item.replace(" ", "_"), tit, value)
+        yield instance_out, title_out, value
 
 
 @cached
@@ -488,8 +489,8 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):
 def _process_queries(inst, queries):
     for mbean_path, title, itemspec in queries:
         try:
-            for item, out_title, value in fetch_metric(inst, mbean_path, title, itemspec):
-                yield item, out_title, value
+            for instance_out, title_out, value in fetch_metric(inst, mbean_path, title, itemspec):
+                yield instance_out, title_out, value
         except (IOError, socket.timeout):
             raise SkipInstance()
         except SkipMBean:

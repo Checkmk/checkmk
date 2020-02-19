@@ -50,7 +50,7 @@ size_t AsioSession::allocCryptBuffer(const cma::encrypt::Commander *Crypt) {
         // calculating length and allocating persistent memory
         auto block_size = Crypt->blockSize().value();
         crypt_segment_size = (segment_size_ / block_size + 1) * block_size;
-        crypt_buf_ = std::make_unique<char>(crypt_segment_size);
+        crypt_buf_.resize(crypt_segment_size);
         XLOG::d.i("Encrypted output block {} bytes, crypt buffer {} bytes...",
                   block_size, crypt_segment_size);
 
@@ -127,7 +127,7 @@ void AsioSession::do_write(const void *Data, std::size_t Length,
                 }
 
                 // encryption
-                auto buf = crypt_buf_.get();
+                auto buf = crypt_buf_.data();
                 memcpy(buf, data, to_send);
                 auto [success, len] = Crypt->encode(buf, to_send, crypt_buf_len,
                                                     Length == to_send);

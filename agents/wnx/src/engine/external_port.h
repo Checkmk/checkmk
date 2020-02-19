@@ -104,7 +104,7 @@ private:
     enum { kMaxLength = 1024 };
     char data_[kMaxLength];
     const size_t segment_size_ = 48 * 1024;
-    std::unique_ptr<char> crypt_buf_;
+    std::vector<char> crypt_buf_;
 };
 
 }  // namespace cma::world

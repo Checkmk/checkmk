@@ -99,7 +99,7 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):
 
     def __repr__(self):
         # type: () -> str
-        return "DiscoveredHostLabels(%r)" % (repr(arg) for arg in self.to_list())
+        return "DiscoveredHostLabels(%s)" % ", ".join(repr(arg) for arg in self.to_list())
 
 
 class ABCLabel(object):  # pylint: disable=useless-object-inheritance

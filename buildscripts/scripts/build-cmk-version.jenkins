@@ -261,15 +261,31 @@ def set_version(CMK_VERS) {
 
 def build_windows_agent() {
     stage('Build windows agent') {
-        bat 'powershell Remove-Item .\\* -Recurse -Force'
-        // Receive files needed for building the agent
-        unstash(name: 'WinDep')
-        bat 'cd agents\\wnx && call build_release.cmd'
-        dir('artefacts') {
-            // Store the built files for later packaging
-            stash(
-                name: 'WinMSI',
-                includes: 'check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,mk_logwatch.exe,mk_jolokia.exe'
+        try {
+            bat 'powershell Remove-Item .\\* -Recurse -Force'
+            // Receive files needed for building the agent
+            unstash(name: 'WinDep')
+            bat 'cd agents\\wnx && call build_release.cmd'
+            dir('artefacts') {
+                // Store the built files for later packaging
+                stash(
+                    name: 'WinMSI',
+                    includes: 'check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,mk_logwatch.exe,mk_jolokia.exe'
+                )
+            }
+        } catch(ERROR) {
+            mail(
+                to: WIN_DEV_MAIL,
+                cc: '', 
+                bcc: '', 
+                from: JENKINS_MAIL, 
+                replyTo: '', 
+                subject: "Win Error in $BUILD_URL",
+                body: """
+                    The following Error appered in 
+                    Build URL: $BUILD_URL
+                    $ERROR
+                """
             )
         }
     }

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -11,7 +11,6 @@ import six
 
 import cmk.utils.tty as tty
 import cmk.utils.render
-from cmk.utils.encoding import make_utf8
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
@@ -69,9 +68,7 @@ def dump_host(hostname):
     tags = [(tag_template % ":".join(t)) for t in sorted(host_config.tag_groups.items())]
     console.output(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
 
-    labels = [
-        (tag_template % ":".join(l)).encode("utf-8") for l in sorted(host_config.labels.items())
-    ]
+    labels = [tag_template % ":".join(l) for l in sorted(host_config.labels.items())]
     console.output(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
 
     # TODO: Clean this up once cluster parent handling has been moved to HostConfig
@@ -85,9 +82,9 @@ def dump_host(hostname):
         console.output(tty.yellow + "Parents:                " + tty.normal +
                        ", ".join(parents_list) + "\n")
     console.output(tty.yellow + "Host groups:            " + tty.normal +
-                   make_utf8(", ".join(host_config.hostgroups)) + "\n")
+                   ", ".join(host_config.hostgroups) + "\n")
     console.output(tty.yellow + "Contact groups:         " + tty.normal +
-                   make_utf8(", ".join(host_config.contactgroups)) + "\n")
+                   ", ".join(host_config.contactgroups) + "\n")
 
     agenttypes = []
     sources = data_sources.DataSources(hostname, ipaddress)

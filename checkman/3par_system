@@ -8,5 +8,8 @@ description:
  number, the model name, system version and amount of connected nodes. The
  state will change to {CRIT} if a node is not available anymore.
 
+item:
+ Name of the system.
+
 inventory:
  Only one service is created

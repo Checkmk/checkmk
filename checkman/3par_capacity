@@ -12,5 +12,8 @@ description:
  the check will go to a {WARN} or {CRIT} state and show how many MiBs
  have failed.
 
+item:
+ The drive type (ie. {{SSD}}, {{FC}} (Fast Class) or {{NL}} (Near Line)) or {{all}}.
+
 inventory:
  One service is created for each device type and one summary service.

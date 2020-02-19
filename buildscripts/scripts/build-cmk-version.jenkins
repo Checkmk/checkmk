@@ -285,7 +285,7 @@ def build_windows_agent() {
                     The following Error appered in 
                     Build URL: $BUILD_URL \n
                 """
-                    + $ERROR.getMessage()
+                    + ERROR.getMessage()
             )
             throw ERROR
         }

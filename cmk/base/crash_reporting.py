@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -152,7 +152,7 @@ def _read_snmp_info(hostname):
 def _read_agent_output(hostname):
     # type: (str) -> Optional[RawAgentData]
     try:
-        import cmk.base.cee.real_time_checks as real_time_checks  # pylint: disable=import-outside-toplevel
+        import cmk.base.cee.real_time_checks as real_time_checks
     except ImportError:
         real_time_checks = None  # type: ignore[assignment]
 

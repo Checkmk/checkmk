@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -12,8 +12,6 @@ import py_compile
 import tempfile
 import errno
 from typing import Tuple, Text, Any, IO, Optional, List, Set, Dict  # pylint: disable=unused-import
-
-import six
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -53,6 +51,7 @@ class NagiosCore(core_config.MonitoringCore):
         """
         tmp_path = None
         try:
+            # TODO: Refactor to IO[Text]
             with tempfile.NamedTemporaryFile(
                     "w",
                     dir=os.path.dirname(cmk.utils.paths.nagios_objects_file),
@@ -63,7 +62,7 @@ class NagiosCore(core_config.MonitoringCore):
                 create_config(tmp, hostnames=None)
                 os.rename(tmp.name, cmk.utils.paths.nagios_objects_file)
 
-        except Exception:
+        except Exception as e:
             # In case an exception happens cleanup the tempfile created for writing
             try:
                 if tmp_path:
@@ -71,6 +70,7 @@ class NagiosCore(core_config.MonitoringCore):
             except IOError as e:
                 if e.errno == errno.ENOENT:  # No such file or directory
                     pass
+
             raise
 
     def precompile(self):
@@ -92,10 +92,10 @@ class NagiosCore(core_config.MonitoringCore):
 #   '----------------------------------------------------------------------'
 
 
-class NagiosConfig(object):  # pylint: disable=useless-object-inheritance
+class NagiosConfig(object):
     # type: () -> None
     def __init__(self, outfile, hostnames):
-        # type: (IO[str], Optional[List[HostName]]) -> None
+        # type: (IO[bytes], Optional[List[HostName]]) -> None
         super(NagiosConfig, self).__init__()
         self.outfile = outfile
         self.hostnames = hostnames
@@ -110,7 +110,7 @@ class NagiosConfig(object):  # pylint: disable=useless-object-inheritance
 
 
 def create_config(outfile, hostnames):
-    # type: (IO[str], Optional[List[HostName]]) -> None
+    # type: (IO[bytes], Optional[List[HostName]]) -> None
     if config.host_notification_periods != []:
         core_config.warning(
             "host_notification_periods is not longer supported. Please use extra_host_conf['notification_period'] instead."
@@ -171,7 +171,7 @@ def _create_nagios_config_host(cfg, config_cache, hostname):
     host_attrs = core_config.get_host_attributes(hostname, config_cache)
     if config.generate_hostconf:
         host_spec = _create_nagios_host_spec(cfg, config_cache, hostname, host_attrs)
-        cfg.outfile.write(_format_nagios_object("host", host_spec))
+        cfg.outfile.write(_format_nagios_object("host", host_spec).encode("utf-8"))
     _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs)
 
 
@@ -267,7 +267,7 @@ def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
 def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
     # type: (NagiosConfig, ConfigCache, HostName, ObjectAttributes) -> None
     outfile = cfg.outfile
-    import cmk.base.check_table as check_table  # pylint: disable=import-outside-toplevel
+    import cmk.base.check_table as check_table
 
     host_config = config_cache.get_host_config(hostname)
 
@@ -288,8 +288,8 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
         return False
 
     def get_dependencies(hostname, servicedesc):
-        # type: (HostName, ServiceName) -> str
-        result = ""
+        # type: (HostName, ServiceName) -> Text
+        result = u""
         for dep in config.service_depends_on(hostname, servicedesc):
             result += _format_nagios_object(
                 "servicedependency", {
@@ -327,7 +327,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
             template = config.passive_service_template
 
         # Services Dependencies for autochecks
-        outfile.write(get_dependencies(hostname, service.description))
+        outfile.write(get_dependencies(hostname, service.description).encode("utf-8"))
 
         service_spec = {
             "use": template,
@@ -342,7 +342,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
         service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname,
                                                    service.description))
 
-        outfile.write(_format_nagios_object("service", service_spec))
+        outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
         cfg.checknames_to_define.add(service.check_plugin_name)
         have_at_least_one_service = True
@@ -356,7 +356,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
         }
         service_spec.update(check_mk_attrs)
         service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, "Check_MK"))
-        outfile.write(_format_nagios_object("service", service_spec))
+        outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
     # legacy checks via active_checks
     actchecks = []
@@ -420,10 +420,10 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
             service_spec.update(
                 core_config.get_service_attributes(hostname, description, config_cache))
             service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, description))
-            outfile.write(_format_nagios_object("service", service_spec))
+            outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
             # write service dependencies for active checks
-            outfile.write(get_dependencies(hostname, description))
+            outfile.write(get_dependencies(hostname, description).encode("utf-8"))
 
     # Legacy checks via custom_checks
     custchecks = host_config.custom_checks
@@ -494,10 +494,10 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
             service_spec.update(
                 core_config.get_service_attributes(hostname, description, config_cache))
             service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, description))
-            outfile.write(_format_nagios_object("service", service_spec))
+            outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
             # write service dependencies for custom checks
-            outfile.write(get_dependencies(hostname, description))
+            outfile.write(get_dependencies(hostname, description).encode("utf-8"))
 
     service_discovery_name = config_cache.service_discovery_name()
 
@@ -520,7 +520,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
             "retry_interval": params["check_interval"],
         })
 
-        outfile.write(_format_nagios_object("service", service_spec))
+        outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
         if have_at_least_one_service:
             outfile.write(
@@ -531,7 +531,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
                         "service_description": "Check_MK",
                         "dependent_host_name": hostname,
                         "dependent_service_description": service_discovery_name,
-                    }))
+                    }).encode("utf-8"))
 
     # No check_mk service, no legacy service -> create PING service
     if not have_at_least_one_service and not actchecks and not custchecks:
@@ -568,11 +568,11 @@ def _add_ping_service(cfg, config_cache, host_config, ipaddress, family, descr, 
     }
     service_spec.update(core_config.get_service_attributes(hostname, descr, config_cache))
     service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, descr))
-    cfg.outfile.write(_format_nagios_object("service", service_spec))
+    cfg.outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
 
 def _format_nagios_object(object_type, object_spec):
-    # type: (str, ObjectSpec) -> str
+    # type: (str, ObjectSpec) -> Text
     cfg = ["define %s {" % object_type]
     for key, val in sorted(object_spec.items(), key=lambda x: x[0]):
         # Use a base16 encoding for names and values of tags, labels and label
@@ -581,17 +581,12 @@ def _format_nagios_object(object_type, object_spec):
         if key[0] == "_":  # quick pre-check: custom variable?
             for prefix in ("__TAG_", "__LABEL_", "__LABELSOURCE_"):
                 if key.startswith(prefix):
-                    key = prefix + _b16encode(key[len(prefix):])
-                    val = _b16encode(val)
+                    key = prefix + base64.b16encode(key[len(prefix):])
+                    val = base64.b16encode(val)
         cfg.append("  %-29s %s" % (key, val))
     cfg.append("}")
 
-    return "\n".join(cfg) + "\n\n"
-
-
-def _b16encode(b):
-    # type: (str) -> str
-    return six.ensure_str(base64.b16encode(six.ensure_binary(b)))
+    return u"\n".join(cfg) + "\n\n"
 
 
 def _simulate_command(cfg, command):
@@ -620,7 +615,7 @@ def _create_nagios_config_hostgroups(cfg):
                 _format_nagios_object("hostgroup", {
                     "hostgroup_name": hg,
                     "alias": alias,
-                }))
+                }).encode("utf-8"))
 
     # No creation of host groups but we need to define
     # default host group
@@ -629,7 +624,7 @@ def _create_nagios_config_hostgroups(cfg):
             _format_nagios_object("hostgroup", {
                 "hostgroup_name": config.default_host_group,
                 "alias": "Check_MK default hostgroup",
-            }))
+            }).encode("utf-8"))
 
 
 def _create_nagios_config_servicegroups(cfg):
@@ -650,7 +645,7 @@ def _create_nagios_config_servicegroups(cfg):
                 _format_nagios_object("servicegroup", {
                     "servicegroup_name": sg,
                     "alias": alias,
-                }))
+                }).encode("utf-8"))
 
 
 def _create_nagios_config_contactgroups(cfg):
@@ -680,7 +675,7 @@ def _create_nagios_config_contactgroups(cfg):
         if members:
             contactgroup_spec["members"] = ",".join(members)
 
-        cfg.outfile.write(_format_nagios_object("contactgroup", contactgroup_spec))
+        cfg.outfile.write(_format_nagios_object("contactgroup", contactgroup_spec).encode("utf-8"))
 
 
 def _create_nagios_config_commands(cfg):
@@ -696,7 +691,7 @@ def _create_nagios_config_commands(cfg):
                     "command", {
                         "command_name": "check_mk-%s" % checkname,
                         "command_line": config.dummy_check_commandline,
-                    }))
+                    }).encode("utf-8"))
 
     # active_checks
     for acttype in cfg.active_checks_to_define:
@@ -706,7 +701,7 @@ def _create_nagios_config_commands(cfg):
                 "command", {
                     "command_name": "check_mk_active-%s" % acttype,
                     "command_line": core_config.autodetect_plugin(act_info["command_line"]),
-                }))
+                }).encode("utf-8"))
 
     # custom_checks
     for command_name in cfg.custom_commands_to_define:
@@ -714,7 +709,7 @@ def _create_nagios_config_commands(cfg):
             _format_nagios_object("command", {
                 "command_name": command_name,
                 "command_line": "$ARG1$",
-            }))
+            }).encode("utf-8"))
 
     # custom host checks
     for command_name, command_line in cfg.hostcheck_commands_to_define:
@@ -722,7 +717,7 @@ def _create_nagios_config_commands(cfg):
             _format_nagios_object("command", {
                 "command_name": command_name,
                 "command_line": command_line,
-            }))
+            }).encode("utf-8"))
 
 
 def _create_nagios_config_timeperiods(cfg):
@@ -750,7 +745,7 @@ def _create_nagios_config_timeperiods(cfg):
             if "exclude" in tp:
                 timeperiod_spec["exclude"] = ",".join(tp["exclude"])
 
-            cfg.outfile.write(_format_nagios_object("timeperiod", timeperiod_spec))
+            cfg.outfile.write(_format_nagios_object("timeperiod", timeperiod_spec).encode("utf-8"))
 
 
 def _create_nagios_config_contacts(cfg, hostnames):
@@ -816,7 +811,7 @@ def _create_nagios_config_contacts(cfg, hostnames):
                 contact_spec[macro] = contact[macro]
 
             contact_spec["contactgroups"] = ", ".join(cgrs)
-            cfg.outfile.write(_format_nagios_object("contact", contact_spec))
+            cfg.outfile.write(_format_nagios_object("contact", contact_spec).encode("utf-8"))
 
     if config.enable_rulebased_notifications and hostnames:
         cfg.contactgroups_to_define.add("check-mk-notify")
@@ -833,7 +828,7 @@ def _create_nagios_config_contacts(cfg, hostnames):
                     "host_notification_commands": "check-mk-notify",
                     "service_notification_commands": "check-mk-notify",
                     "contactgroups": "check-mk-notify",
-                }))
+                }).encode("utf-8"))
 
 
 def _quote_nagios_string(s):
@@ -1105,7 +1100,7 @@ if '-d' in sys.argv:
 
 def _get_needed_check_plugin_names(host_config):
     # type: (config.HostConfig) -> Set[CheckPluginName]
-    import cmk.base.check_table as check_table  # pylint: disable=import-outside-toplevel
+    import cmk.base.check_table as check_table
     needed_check_plugin_names = set([])
 
     # In case the host is monitored as special agent, the check plugin for the special agent needs

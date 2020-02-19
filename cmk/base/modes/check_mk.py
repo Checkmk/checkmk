@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -319,7 +319,7 @@ modes.register(
 
 def mode_list_checks():
     # type: () -> None
-    import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
+    import cmk.utils.man_pages as man_pages
     all_check_manuals = man_pages.all_man_pages()
 
     checks_sorted = sorted(
@@ -381,12 +381,15 @@ def mode_dump_agent(hostname):
             raise MKBailOut("Can not be used with cluster hosts")
 
         ipaddress = ip_lookup.lookup_ip_address(hostname)
+
+        output = ""
+
         sources = data_sources.DataSources(hostname, ipaddress)
         sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
-        output = b"".join(source.run_raw()
-                          for source in sources.get_data_sources()
-                          if isinstance(source, data_sources.abstract.CheckMKAgentDataSource))
+        for source in sources.get_data_sources():
+            if isinstance(source, data_sources.abstract.CheckMKAgentDataSource):
+                output += source.run_raw()
 
         # Show errors of problematic data sources
         has_errors = False
@@ -396,7 +399,7 @@ def mode_dump_agent(hostname):
                 console.error("ERROR [%s]: %s\n", source.id(), six.ensure_str(source_output))
                 has_errors = True
 
-        console.output(six.ensure_str(output))
+        console.output(output)
         if has_errors:
             sys.exit(1)
     except Exception as e:
@@ -1028,7 +1031,7 @@ modes.register(
 
 def mode_dump_nagios_config(args):
     # type: (List[HostName]) -> None
-    from cmk.base.core_nagios import create_config  # pylint: disable=import-outside-toplevel
+    from cmk.base.core_nagios import create_config
     create_config(sys.stdout, args if len(args) else None)
 
 
@@ -1051,7 +1054,7 @@ modes.register(
 
 def mode_update_no_precompile(options):
     # type: (Dict) -> None
-    from cmk.base.core_config import do_update  # pylint: disable=import-outside-toplevel
+    from cmk.base.core_config import do_update
     do_update(create_core(options), with_precompile=False)
 
 
@@ -1114,7 +1117,7 @@ modes.register(
 
 def mode_update(options):
     # type: (Dict) -> None
-    from cmk.base.core_config import do_update  # pylint: disable=import-outside-toplevel
+    from cmk.base.core_config import do_update
     do_update(create_core(options), with_precompile=True)
 
 
@@ -1203,7 +1206,7 @@ modes.register(
 
 def mode_man(args):
     # type: (List[str]) -> None
-    import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
+    import cmk.utils.man_pages as man_pages
     if args:
         man_pages.ConsoleManPageRenderer(args[0]).paint()
     else:
@@ -1240,7 +1243,7 @@ modes.register(
 
 def mode_browse_man():
     # type: () -> None
-    import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
+    import cmk.utils.man_pages as man_pages
     man_pages.print_man_page_browser()
 
 
@@ -1376,7 +1379,7 @@ modes.register(
 
 def mode_automation(args):
     # type: (List[str]) -> None
-    import cmk.base.automations as automations  # pylint: disable=import-outside-toplevel
+    import cmk.base.automations as automations
 
     if not args:
         raise automations.MKAutomationError("You need to provide arguments")
@@ -1409,7 +1412,7 @@ modes.register(
 
 def mode_notify(options, args):
     # type: (Dict, List[str]) -> Optional[int]
-    import cmk.base.notify as notify  # pylint: disable=import-outside-toplevel
+    import cmk.base.notify as notify
     with store.lock_checkmk_configuration():
         config.load(with_conf_d=True, validate_hosts=False)
     return notify.do_notify(options, args)
@@ -1573,10 +1576,10 @@ modes.register(
 
 def mode_check(options, args):
     # type: (Dict, List[str]) -> None
-    import cmk.base.checking as checking  # pylint: disable=import-outside-toplevel
-    import cmk.base.item_state as item_state  # pylint: disable=import-outside-toplevel
+    import cmk.base.checking as checking
+    import cmk.base.item_state as item_state
     try:
-        import cmk.base.cee.keepalive as keepalive  # pylint: disable=import-outside-toplevel
+        import cmk.base.cee.keepalive as keepalive
     except ImportError:
         keepalive = None  # type: ignore[assignment]
 

@@ -12,8 +12,11 @@ description:
  The sensor reports an individual status description.
 
  Numeric sensors can be
+
  - water level
+
  - ethernet link
+
  - a-link bus power
 
 item:

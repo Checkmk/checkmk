@@ -8,8 +8,11 @@ description:
  states of MSSQL databases reported by MSSQL.
 
  Default configuration for auto close and -shrink is:
+ 
  - on is CRIT
+ 
  - off if OK
+ 
  These states are configurable.
 
 item:

@@ -22,9 +22,13 @@ description:
  of the power can be one of the following:
 
  - Unknown
+ 
  - Alternating Current
+ 
  - Direct Current
+ 
  - External Power Supply
+ 
  - Internal Redundant
 
  Currently, testing has been completed with the Dell PowerConnect 5448 and 5424 models,

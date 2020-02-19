@@ -11,7 +11,9 @@ description:
  on at least one node then the custer will be considered "RUNNING".
 
  If the state of the cluster is
+ 
  - "RUNNING" then the service state will be OK,
+ 
  - otherwise CRIT.
 
 item:

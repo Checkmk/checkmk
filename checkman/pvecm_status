@@ -10,9 +10,13 @@ description:
  {check_mk_agent.linux} must be installed.
 
  The check will be CRIT in the following three cases:
+ 
  - the cman tool cannot open connection,
+ 
  - the expected votes are not equal the total votes,
+ 
  - quorum says 'activity blocked'.
+ 
  Otherwise the check reports OK.
 
 item:

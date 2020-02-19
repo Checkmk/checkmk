@@ -11,7 +11,9 @@ description:
  Check status:
 
  - {OK} if the vServer status is {running}.
+ 
  - {OK} if the vServer status is {stopped} but the vServer subtype is {dp_destination}.
+ 
  - {CRIT} if the vServer status is not {running} and has not vServer subtype {dp_destination}.
 
 inventory:

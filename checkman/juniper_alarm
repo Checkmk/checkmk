@@ -7,9 +7,13 @@ description:
  This check monitors the alarm state of a Juniper Ethernet Switch Chassis.
 
  The device sends the state by itself:
+ 
  - normally workinh, online: OK
+ 
  - offline, warning: WARN
+ 
  - failed or alert: CRIT
+ 
  - unknown or unavailable: UNKNOWN
 
 item:

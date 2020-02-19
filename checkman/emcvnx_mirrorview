@@ -18,7 +18,9 @@ description:
  logical units with the state 'Attention' are WARN.
 
  Furthermore the faulted mirror view state can be:
+ 
  - NO would be OK
+ 
  - Yes would be CRIT.
 
 item:

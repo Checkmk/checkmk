@@ -9,12 +9,19 @@ description:
  special agent {Amazon Web Services (AWS)}.
 
  We get the following default limits:
+
  - Total Block store snapshots: 100000
+
  - Total Magnetic volumes space: 300 TiB
+ 
  - Total Provisioned IOPS SSD space: 300 TiB
+ 
  - Total Provisioned IOPS SSD IO operations per second: 300000
+ 
  - Total General Purpose SSD space: 300 TiB
+ 
  - Total Cold HDD space: 300 TiB
+ 
  - Total Throughput Optimized HDD space: 300 TiB
 
  The current value for each limit type is calculated by summing

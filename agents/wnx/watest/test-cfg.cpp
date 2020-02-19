@@ -3,8 +3,6 @@
 
 #include "pch.h"
 
-#include <yaml-cpp/yaml.h>
-
 #include <filesystem>
 
 #include "cap.h"
@@ -14,6 +12,7 @@
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
+#include "common/yaml.h"
 #include "install_api.h"
 #include "providers/mrpe.h"
 #include "read_file.h"

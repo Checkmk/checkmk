@@ -1,6 +1,8 @@
 // Configuration Parameters for YAML and YAML-INI related configs
 #pragma once
 #include <cstdint>
+#include <string_view>
+
 namespace cma::cfg {
 
 namespace yml_var {
@@ -19,24 +21,25 @@ constexpr const std::string_view kDataOld = "@data";
 };  // namespace yml_var
 
 namespace groups {
-constexpr const char* const kGlobal = "global";
-constexpr const char* const kWinPerf = "winperf";
-constexpr const char* const kLogFiles = "logfiles";
-constexpr const char* const kPs = "ps";
-constexpr const char* const kPlugins = "plugins";
-constexpr const char* const kFileInfo = "fileinfo";
-constexpr const char* const kMrpe = "mrpe";
-constexpr const char* const kLogWatchEvent = "logwatch";
-constexpr const char* const kLocal = "local";
-constexpr const char* const kSystem = "system";
+constexpr std::string_view kGlobal = "global";
+constexpr std::string_view kWinPerf = "winperf";
+constexpr std::string_view kLogFiles = "logfiles";
+constexpr std::string_view kPs = "ps";
+constexpr std::string_view kPlugins = "plugins";
+constexpr std::string_view kFileInfo = "fileinfo";
+constexpr std::string_view kMrpe = "mrpe";
+constexpr std::string_view kLogWatchEvent = "logwatch";
+constexpr std::string_view kLocal = "local";
+constexpr std::string_view kSystem = "system";
+constexpr std::string_view kModules = "modules";
 }  // namespace groups
 
 // ALL name of variables in the YAML
 namespace vars {
 // universal
-const char* const kEnabled = "enabled";  // bool
-const char* const kFile = "file";        // string
-const char* const kTimeout = "timeout";  // int
+constexpr std::string_view kEnabled = "enabled";  // bool
+constexpr std::string_view kFile = "file";        // string
+constexpr std::string_view kTimeout = "timeout";  // int
 
 // group "global"
 // root
@@ -172,6 +175,12 @@ const char* const kFileInfoPath = "path";  // sequence
 const char* const kMrpeConfig = "config";      // sequence
 const char* const kMrpeParallel = "parallel";  // boool
 
+// group "modules"
+constexpr std::string_view kModulesTable = "table";  // list of nodes
+constexpr std::string_view kModulesName = "name";    // string
+constexpr std::string_view kModulesExts = "exts";    // list of string
+constexpr std::string_view kModulesExec = "exec";    // string
+
 // group "system"
 constexpr const char* const kFirewall = "firewall";  // dictionary
 constexpr const char* const kFirewallMode = "mode";  // string
@@ -183,10 +192,13 @@ constexpr const char* const kService = "service";                  // dictionary
 constexpr const char* const kRestartOnCrash = "restart_on_crash";  // bool
 constexpr const char* const kErrorMode = "error_mode";             // string
 constexpr const char* const kStartMode = "start_mode";             // string
-
 }  // namespace vars
 
 namespace values {
+// modules.table
+constexpr std::string_view kModulesNamePython = "python-3.8";             //
+constexpr std::string_view kModulesCmdPython = "Scripts\\python.exe {}";  //
+
 // Firewall.Mode
 constexpr const char* const kModeConfigure = "configure";  // install [*]
 constexpr const char* const kModeNone = "none";            // does noting

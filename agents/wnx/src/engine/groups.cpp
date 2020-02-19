@@ -3,7 +3,6 @@
 
 #include <shellapi.h>
 #include <shlobj.h>  // known path
-#include <yaml-cpp/yaml.h>
 
 #include <filesystem>
 #include <string>
@@ -11,6 +10,7 @@
 #include "cfg.h"
 #include "common/cfg_info.h"
 #include "common/wtools.h"
+#include "common/yaml.h"
 #include "tools/_raii.h"  // on out
 #include "tools/_tgt.h"   // we need IsDebug
 
@@ -323,7 +323,7 @@ void Plugins::ExeUnit::apply(std::string_view filename,
     }
 }
 
-void Plugins::loadFromMainConfig(const std::string& GroupName) {
+void Plugins::loadFromMainConfig(std::string_view GroupName) {
     using namespace std;
     using namespace cma::cfg;
     auto config = GetLoadedConfig();

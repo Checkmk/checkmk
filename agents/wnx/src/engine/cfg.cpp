@@ -7,7 +7,6 @@
 #include <shlobj.h>  // known path
 #include <versionhelpers.h>
 #include <windows.h>
-#include <yaml-cpp/yaml.h>
 
 #include <atomic>
 #include <filesystem>
@@ -21,6 +20,7 @@
 #include "common/object_repo.h"
 #include "common/version.h"
 #include "common/wtools.h"
+#include "common/yaml.h"
 #include "logger.h"
 #include "read_file.h"
 #include "tools/_misc.h"     // setenv
@@ -1060,8 +1060,8 @@ std::vector<std::string> StringToTable(const std::string& WholeValue) {
 }
 
 // gets string from the yaml and split it in table using space as divider
-std::vector<std::string> GetInternalArray(const std::string& Section,
-                                          const std::string& Name,
+std::vector<std::string> GetInternalArray(std::string_view Section,
+                                          std::string_view Name,
                                           int* ErrorOut) noexcept {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
@@ -1081,26 +1081,26 @@ std::vector<std::string> GetInternalArray(const std::string& Section,
 }
 
 // opposite operation for the GetInternalArray
-void PutInternalArray(YAML::Node Yaml, const std::string& Name,
+void PutInternalArray(YAML::Node Yaml, std::string_view name,
                       std::vector<std::string>& Arr, int* ErrorOut) noexcept {
     try {
-        auto section = Yaml[Name];
+        auto section = Yaml[name];
         if (Arr.empty()) {
-            section.remove(Name);
+            section.remove(name);
             return;
         }
 
         auto result = cma::tools::JoinVector(Arr, " ");
         if (result.back() == ' ') result.pop_back();
-        Yaml[Name] = result;
+        Yaml[name] = result;
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file '{}' with '{}' code:'{}'",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Name, e.what());
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), name, e.what());
     }
 }
 
 // opposite operation for the GetInternalArray
-void PutInternalArray(const std::string& Section, const std::string& Name,
+void PutInternalArray(std::string_view section_name, std::string_view key,
                       std::vector<std::string>& Arr, int* ErrorOut) noexcept {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
@@ -1108,18 +1108,18 @@ void PutInternalArray(const std::string& Section, const std::string& Name,
         return;
     }
     try {
-        auto section = yaml[Section];
-        PutInternalArray(section, Name, Arr, ErrorOut);
+        auto section = yaml[section_name];
+        PutInternalArray(section, key, Arr, ErrorOut);
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file '{}' with '{}.{} 'code:'{}'",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Section, Name,
-                e.what());
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), section_name,
+                key, e.what());
     }
 }
 
 // gets string from the yaml and split it in table using space as divider
 std::vector<std::string> GetInternalArray(const YAML::Node& yaml_node,
-                                          const std::string& name) noexcept {
+                                          std::string_view name) noexcept {
     try {
         auto val = yaml_node[name];
         if (!val.IsDefined() || val.IsNull()) {
@@ -1981,9 +1981,9 @@ std::string ReplacePredefinedMarkers(std::string_view work_path) {
 // "marker\\any\\relative\\path"
 // return false if yaml is not suitable for patching
 // normally used only by cvt
-bool PatchRelativePath(YAML::Node Yaml, const std::string& group_name,
-                       const std::string& key_name,
-                       std::string_view subkey_name, std::string_view marker) {
+bool PatchRelativePath(YAML::Node Yaml, std::string_view group_name,
+                       std::string_view key_name, std::string_view subkey_name,
+                       std::string_view marker) {
     namespace fs = std::filesystem;
     if (group_name.empty() || key_name.empty() || subkey_name.empty() ||
         marker.empty()) {

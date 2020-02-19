@@ -4,8 +4,6 @@
 
 #include "cap.h"
 
-#include <yaml-cpp/yaml.h>
-
 #include <cstdint>
 #include <filesystem>
 #include <string>
@@ -15,6 +13,7 @@
 #include "cfg.h"
 #include "cma_core.h"
 #include "common/cma_yml.h"
+#include "common/yaml.h"
 #include "cvt.h"
 #include "logger.h"
 #include "tools/_raii.h"

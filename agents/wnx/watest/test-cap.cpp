@@ -3,12 +3,11 @@
 
 #include "pch.h"
 
-#include <yaml-cpp/yaml.h>
-
 #include <filesystem>
 
 #include "cap.h"
 #include "cfg.h"
+#include "common/yaml.h"
 #include "lwa/types.h"
 #include "read_file.h"
 #include "test_tools.h"

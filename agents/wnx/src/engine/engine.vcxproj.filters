@@ -228,6 +228,9 @@
     <ClInclude Include="..\common\wtools_user_control.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\yaml.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

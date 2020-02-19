@@ -246,6 +246,16 @@ mrpe:
         # - include user_name = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
         # - include = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
 
+
+modules:
+    enabled: yes
+
+    table:
+        - name: 'python-3.8'              # this is name of the zip file and folder where  zip is installed to
+          exts: ['.py', '.tribe29.py' ]   # list of extensions to be used automatically
+          exec: 'Scripts\python.exe {}'   # command line, exe is relative to folder modules
+    
+
 system:
     enabled: yes
 

@@ -3,8 +3,6 @@
 
 #include "pch.h"
 
-#include <yaml-cpp/yaml.h>
-
 #include <filesystem>
 
 #include "cfg.h"
@@ -12,6 +10,7 @@
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
+#include "common/yaml.h"
 #include "providers/mrpe.h"
 #include "read_file.h"
 #include "test_tools.h"
@@ -715,7 +714,7 @@ TEST(AgentConfig, InternalArray) {
     }
 }
 
-TEST(AgentConfig, WorkScenario) {
+TEST(AgentConfig, WorkConfig) {
     using namespace std::filesystem;
     using namespace std;
     using namespace cma::cfg;
@@ -846,6 +845,41 @@ TEST(AgentConfig, WorkScenario) {
         EXPECT_EQ(mrpe_timeout, 60);
         auto mrpe_parallel = GetVal(groups::kMrpe, vars::kMrpeParallel, true);
         EXPECT_FALSE(mrpe_parallel);
+    }
+
+    // modules
+    {
+        auto modules_table = GetLoadedConfig()[groups::kModules];
+        SCOPED_TRACE("");
+        tst::CheckYaml(modules_table,
+                       {
+                           // name, type
+                           {vars::kEnabled, YAML::NodeType::Scalar},
+                           {vars::kModulesTable, YAML::NodeType::Sequence}
+                           //
+                       });
+    }
+
+    {
+        auto table =
+            GetArray<YAML::Node>(groups::kModules, vars::kModulesTable);
+        EXPECT_TRUE(table.size() == 1);
+        auto modules_table =
+            GetLoadedConfig()[groups::kModules][vars::kModulesTable];
+        auto pos = 0;
+        for (auto entry : modules_table) {
+            EXPECT_EQ(entry[vars::kModulesName].as<std::string>(),
+                      values::kModulesNamePython);
+            EXPECT_EQ(entry[vars::kModulesExec].as<std::string>(),
+                      values::kModulesCmdPython);
+            auto exts_array = entry[vars::kModulesExts];
+            ASSERT_EQ(exts_array.size(), 2);
+            EXPECT_EQ(exts_array[0].as<std::string>(), ".py");
+            EXPECT_EQ(exts_array[1].as<std::string>(), ".tribe29.py");
+            pos++;
+        }
+
+        EXPECT_TRUE(pos == 1) << "one entry allowed for the modules.table";
     }
 
     // system

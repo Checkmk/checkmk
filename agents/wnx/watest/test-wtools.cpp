@@ -3,8 +3,6 @@
 
 #include "pch.h"
 
-#include <yaml-cpp/yaml.h>
-
 #include <chrono>
 #include <filesystem>
 #include <future>
@@ -13,6 +11,7 @@
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
+#include "common/yaml.h"
 #include "read_file.h"
 #include "test_tools.h"
 #include "tools/_misc.h"

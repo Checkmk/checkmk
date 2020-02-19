@@ -4,7 +4,6 @@
 #include "service_processor.h"
 
 #include <shlobj_core.h>
-#include <yaml-cpp/yaml.h>
 
 #include <chrono>
 #include <cstdint>  // wchar_t when compiler options set weird
@@ -13,6 +12,7 @@
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
 #include "common/wtools_service.h"
+#include "common/yaml.h"
 #include "external_port.h"
 #include "realtime.h"
 #include "tools/_process.h"

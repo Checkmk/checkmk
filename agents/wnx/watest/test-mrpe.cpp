@@ -33,7 +33,7 @@ public:
         auto yaml = GetLoadedConfig();
         auto sections =
             GetInternalArray(groups::kGlobal, vars::kSectionsEnabled);
-        sections.push_back(groups::kMrpe);
+        sections.push_back(std::string(groups::kMrpe));
         PutInternalArray(groups::kGlobal, vars::kSectionsEnabled, sections);
         yaml[groups::kGlobal].remove(vars::kSectionsDisabled);
         yaml[groups::kGlobal][vars::kLogDebug] = "all";
@@ -59,7 +59,7 @@ TEST(SectionProviderMrpe, Construction) {
     EXPECT_TRUE(out.empty());
 }
 
-void replaceYamlSeq(const std::string Group, const std::string SeqName,
+void replaceYamlSeq(std::string_view Group, std::string_view SeqName,
                     std::vector<std::string> Vec) {
     YAML::Node Yaml = cma::cfg::GetLoadedConfig();
     for (size_t i = 0; i < Yaml[Group][SeqName].size(); i++)

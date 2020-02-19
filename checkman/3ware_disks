@@ -12,7 +12,7 @@ description:
  The utility {tw_cli} can be downloaded from {http://3ware.com/support/downloadpage.asp}.
 
 item:
- A string containing the unit number of the disk, e.g. {"p0"}.
+ The port identifier of the disk, e.g. {p0} or {p1}.
 
 inventory:
  All logical units which don't have the status NOT-PRESENT are automatically inventorized. States like

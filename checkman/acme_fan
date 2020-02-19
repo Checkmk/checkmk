@@ -10,7 +10,7 @@ description:
  "unknown".
 
 item:
- The name of the fan.
+ Name of the fan.
 
 inventory:
  One service per fan is created.

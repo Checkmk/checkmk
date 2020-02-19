@@ -12,7 +12,7 @@ description:
  Upper and lower levels can be set. There are no default levels.
 
 item:
- The name of the temperature sensor.
+ Name of the temperature sensor.
 
 inventory:
  One service per sensor is created.

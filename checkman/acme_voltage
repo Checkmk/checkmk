@@ -12,7 +12,7 @@ description:
  Lower levels can be set. There are no default levels.
 
 item:
- The name of the entity.
+ Name of the entity.
 
 inventory:
  One service per entity is created.

@@ -31,6 +31,11 @@ def main(argv=None):
         if args.debug:
             raise
         return 1
+    except JIRAError as jira_error:
+        sys.stderr.write("Jira error %s: %s\n" % (jira_error.status_code, jira_error.text))
+        if args.debug:
+            raise
+        return 1
 
     try:
         _handle_request(args, jira)

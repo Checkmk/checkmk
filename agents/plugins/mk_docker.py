@@ -184,6 +184,8 @@ class MKDockerClient(docker.DockerClient):
         all_containers = self.containers.list(all=True)
         if config['container_id'] == "name":
             self.all_containers = dict([(c.attrs["Name"].lstrip('/'), c) for c in all_containers])
+		elif config['container_id'] == "nodename_name":
+            self.all_containers = dict([("%s_%s" % (c.attrs["Config"]['Hostname'], c.attrs["Name"].lstrip('/')), c) for c in all_containers])
         elif config['container_id'] == "long":
             self.all_containers = dict([(c.attrs["Id"], c) for c in all_containers])
         else:

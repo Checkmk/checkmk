@@ -17,6 +17,8 @@ description:
 
  If the CPU Temperature is supported depends on the switch mode (not supported on Hawk models).
 
+item:
+ The slot index and the name of the CPU. The slot index is optional
+
 inventory:
  One check is created
-

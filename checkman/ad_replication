@@ -20,5 +20,4 @@ inventory:
  Each replication partner results in one service.
 
 item:
- The name of the replication partner.
-
+ Site and the Domain Controller of the replication partner.

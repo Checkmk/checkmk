@@ -13,7 +13,7 @@ description:
  the check is {CRIT}, otherwise it is {OK}.
 
 item:
- The name of the power supply module
+ Name of the power supply module.
 
 inventory:
  All connected power supply units are detected

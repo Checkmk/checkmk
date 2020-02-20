@@ -1,0 +1,17 @@
+Title: check_dns: Act case-insensitive
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p10
+Date: 1582206585
+
+When comparing the answer from DNS, check_dns always acts case-sensitive. That
+means, it marks answers as CRITICAL, when for instance the hostname in check-mk
+is lowercase and the answer comes as uppercase.
+This has been fixed.
+
+CMK-3595

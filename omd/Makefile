@@ -28,6 +28,7 @@ PACKAGES := \
     python2-rrdtool \
     msitools \
     net-snmp \
+    python2-net-snmp \
     apache-omd \
     mod_fcgid \
     mod_wsgi \

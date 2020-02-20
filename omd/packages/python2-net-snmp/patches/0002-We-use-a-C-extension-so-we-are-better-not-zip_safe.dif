@@ -1,0 +1,24 @@
+From 77a9e0959bce15dd37896a2b29bf937057d6d8de Mon Sep 17 00:00:00 2001
+From: Sven Panne <sp@mathias-kettner.de>
+Date: Mon, 14 Nov 2016 13:20:40 +0100
+Subject: [PATCH 02/11] We use a C extension, so we are better not zip_safe.
+
+---
+ python/setup.py | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/python/setup.py b/python/setup.py
+index bdd9878..8d48cfb 100644
+--- a/python/setup.py
++++ b/python/setup.py
+@@ -45,5 +45,6 @@ setup(
+                  library_dirs=libdirs,
+                  include_dirs=incdirs,
+                  libraries=libs )
+-       ]
++       ],
++    zip_safe = False
+     )
+-- 
+2.7.4
+

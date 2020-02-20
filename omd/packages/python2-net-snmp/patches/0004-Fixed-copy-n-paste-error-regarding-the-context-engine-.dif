@@ -1,0 +1,26 @@
+From 9ca6d88245e3c92a7d7a22fb6ab97a36a9deaba5 Mon Sep 17 00:00:00 2001
+From: Sven Panne <sp@mathias-kettner.de>
+Date: Mon, 14 Nov 2016 13:41:15 +0100
+Subject: [PATCH 04/11] Fixed copy-n-paste error regarding the context engine
+ ID.
+
+---
+ python/netsnmp/client_intf.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/python/netsnmp/client_intf.c b/python/netsnmp/client_intf.c
+index 7dbb0b3..3efb26f 100644
+--- a/python/netsnmp/client_intf.c
++++ b/python/netsnmp/client_intf.c
+@@ -1213,7 +1213,7 @@ netsnmp_create_session_v3(PyObject *self, PyObject *args)
+     hex_to_binary2((unsigned char*)sec_eng_id, STRLEN(sec_eng_id),
+ 		   (char **) &session.securityEngineID);
+   session.contextEngineIDLen =
+-    hex_to_binary2((unsigned char*)sec_eng_id, STRLEN(sec_eng_id),
++    hex_to_binary2((unsigned char*)context_eng_id, STRLEN(context_eng_id),
+ 		   (char **) &session.contextEngineID);
+   session.engineBoots = eng_boots;
+   session.engineTime = eng_time;
+-- 
+2.7.4
+

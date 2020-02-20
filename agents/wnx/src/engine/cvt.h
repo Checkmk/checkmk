@@ -14,12 +14,6 @@
 #include "logger.h"
 
 namespace cma::cfg::cvt {
-//
-[[deprecated]] YAML::Node LoadIni(const std::filesystem::path& IniFile);
-
-}  // namespace cma::cfg::cvt
-
-namespace cma::cfg::cvt {
 class ParserImplementation;
 bool CheckIniFile(const std::filesystem::path& Path);
 

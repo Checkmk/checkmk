@@ -32,7 +32,7 @@ def main(argv=None):
             raise
         return 1
     except JIRAError as jira_error:
-        sys.stderr.write("Jira error %s: %s\n" % (jira_error.status_code, jira_error.text))
+        sys.stderr.write("Jira error %s\n" % jira_error.status_code)
         if args.debug:
             raise
         return 1

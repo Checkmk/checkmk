@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -100,8 +100,6 @@ def do_inv_check(hostname, options):
     _inv_hw_changes = options.get("hw-changes", 0)
     _inv_sw_changes = options.get("sw-changes", 0)
     _inv_sw_missing = options.get("sw-missing", 0)
-    _inv_fail_status = options.get("inv-fail-status",
-                                   1)  # State in case of an error (default: WARN)
 
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)  # type: config.HostConfig
@@ -208,7 +206,7 @@ def do_inventory_actions_during_checking_for(sources, multi_host_sections, host_
         return  # nothing to do here
 
     # This is called during checking, but the inventory plugins are not loaded yet
-    import cmk.base.inventory_plugins as inventory_plugins
+    import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
     inventory_plugins.load_plugins(check_api.get_check_api_context, get_inventory_context)
 
     config_cache = config.get_config_cache()
@@ -292,7 +290,7 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
         multi_host_sections = sources.get_host_sections()
 
     console.step("Executing inventory plugins")
-    import cmk.base.inventory_plugins as inventory_plugins
+    import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
     console.verbose("Plugins:")
     for section_name, plugin in inventory_plugins.sorted_inventory_plugins():
         section_content = multi_host_sections.get_section_content(hostname,
@@ -410,7 +408,7 @@ def _save_status_data_tree(hostname, status_data_tree):
 
 def _run_inventory_export_hooks(host_config, inventory_tree):
     # type: (config.HostConfig, StructuredDataTree) -> None
-    import cmk.base.inventory_plugins as inventory_plugins
+    import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
     hooks = host_config.inventory_export_hooks
 
     if not hooks:

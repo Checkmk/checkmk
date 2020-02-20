@@ -12,6 +12,7 @@ import subprocess
 import pytest  # type: ignore[import]
 
 from testlib import web  # pylint: disable=unused-import
+from testlib.base import AUTO_MIGRATION_ERRORS
 import cmk.base.config as config
 import cmk.base.check_api as check_api
 import cmk.base.autochecks as autochecks
@@ -102,7 +103,7 @@ check_info["test_check_1"] = {
                      stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert "OK - (10.0, 20.0)" in stdout
-    assert stderr == ""
+    assert stderr == AUTO_MIGRATION_ERRORS
     assert p.returncode == 0
 
     # And now overwrite the setting in the config
@@ -115,7 +116,7 @@ check_info["test_check_1"] = {
     stdout, stderr = p.communicate()
     assert "OK - (10.0, 20.0)" not in stdout
     assert "OK - (5.0, 30.1)" in stdout
-    assert stderr == ""
+    assert stderr == AUTO_MIGRATION_ERRORS
     assert p.returncode == 0
 
 
@@ -242,7 +243,7 @@ check_info["test_check_3"] = {
                      stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert "OK - {'param1': 123}\n" in stdout
-    assert stderr == ""
+    assert stderr == AUTO_MIGRATION_ERRORS
     assert p.returncode == 0
 
     # And now overwrite the setting in the config
@@ -262,5 +263,5 @@ checkgroup_parameters['asd'] = [
     stdout, stderr = p.communicate()
     assert "'param1': 123" in stdout
     assert "'param2': 'xxx'" in stdout
-    assert stderr == ""
+    assert stderr == AUTO_MIGRATION_ERRORS
     assert p.returncode == 0

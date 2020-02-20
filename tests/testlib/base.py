@@ -8,6 +8,48 @@ import cmk.base.config as config
 import cmk.base.autochecks as autochecks
 import cmk.utils.tags
 
+KNOWN_AUTO_MIGRATION_FAILURES = [
+    # this is a sorted (!) list of auto conversions currently
+    # failing. These are used in various tests, to predict the
+    # expected console output. In an ideal world, this list will (!)
+    # be empty. If that is the case, please remove it entirely.
+    ('section', 'checkpoint_connections'),
+    ('section', 'checkpoint_fan'),
+    ('section', 'checkpoint_firewall'),
+    ('section', 'checkpoint_ha_problems'),
+    ('section', 'checkpoint_ha_status'),
+    ('section', 'checkpoint_memory'),
+    ('section', 'checkpoint_packets'),
+    ('section', 'checkpoint_powersupply'),
+    ('section', 'checkpoint_svn_status'),
+    ('section', 'checkpoint_temp'),
+    ('section', 'checkpoint_tunnels'),
+    ('section', 'checkpoint_voltage'),
+    ('section', 'cisco_mem_asa'),
+    ('section', 'cisco_mem_asa64'),
+    ('section', 'emc_ecs_cpu_util'),
+    ('section', 'emc_ecs_diskio'),
+    ('section', 'emc_ecs_mem'),
+    ('section', 'f5_bigip_cluster'),
+    ('section', 'f5_bigip_cluster_status'),
+    ('section', 'f5_bigip_cluster_status.v11_2'),
+    ('section', 'f5_bigip_cluster_status_v11_2'),
+    ('section', 'f5_bigip_cluster_v11'),
+    ('section', 'f5_bigip_vcmpfailover'),
+    ('section', 'f5_bigip_vcmpguests'),
+    ('section', 'hr_mem'),
+    ('section', 'if'),
+    ('section', 'if64'),
+    ('section', 'if64adm'),
+    ('section', 'if_brocade'),
+    ('section', 'if_lancom'),
+    ('section', 'printer_pages'),
+    ('section', 'ucd_mem'),
+]
+
+AUTO_MIGRATION_ERRORS = ''.join('WARNING: %s\n' % (config._AUTO_MIGRATION_ERR_MSG % known_fail)
+                                for known_fail in KNOWN_AUTO_MIGRATION_FAILURES)
+
 
 class Scenario(object):  # pylint: disable=useless-object-inheritance
     """Helper class to modify the Check_MK base configuration for unit tests"""

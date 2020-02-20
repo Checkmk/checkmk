@@ -10,5 +10,8 @@ description:
 
  No default levels are set. These are configurable.
 
+item:
+ Name of the instance if all required metrics (DiskQueueDepth, ReadIOPS, ReadLatency, ReadThroughput, WriteIOPS, WriteLatency and WriteThroughput) are given.
+
 inventory:
  One service per databse will be created.

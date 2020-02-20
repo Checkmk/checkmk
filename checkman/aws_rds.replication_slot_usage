@@ -11,5 +11,8 @@ description:
 
  No default levels are set. Upper levels are configurable.
 
+item:
+ Name of the instance if all required metrics (ReplicationSlotDiskUsage) are given.
+
 inventory:
  One service per databse will be created.

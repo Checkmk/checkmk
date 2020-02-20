@@ -10,5 +10,8 @@ description:
 
  If at least one jobs fails the check goes WARN.
 
+item:
+ Name of the instance if all required metrics (FailedSQLServerAgentJobsCount) are given.
+
 inventory:
  One service per database will be created.

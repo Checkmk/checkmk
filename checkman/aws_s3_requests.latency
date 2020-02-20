@@ -17,5 +17,8 @@ description:
  You have to enable requests metrics in AWS/S3 console. This
  is a paid feature
 
+item:
+ Name of the instance if all required metrics (TotalRequestLatency) are given.
+
 inventory:
  One service per bucket will be created.

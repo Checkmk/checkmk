@@ -10,5 +10,8 @@ description:
  {Amazon Web Services (AWS)}.
  Upper levels are configurable; no default levels are set.
 
+item:
+ Service name
+
 inventory:
  One service per AWS service will be created.

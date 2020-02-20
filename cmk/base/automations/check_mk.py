@@ -31,7 +31,6 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.encoding import convert_to_unicode
 import cmk.utils.cmk_subprocess as subprocess
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-from cmk.utils.encoding import ensure_unicode
 from cmk.utils.type_defs import HostName, ServiceName, CheckPluginName  # pylint: disable=unused-import
 
 import cmk.base.config as config
@@ -1014,9 +1013,9 @@ class AutomationGetCheckInformation(Automation):
                 if manfile:
                     title = cmk.utils.man_pages.get_title_from_man_page(Path(manfile))
                 else:
-                    title = ensure_unicode(check_plugin_name)
+                    title = six.ensure_text(check_plugin_name)
 
-                check_infos[check_plugin_name] = {"title": six.ensure_text(title)}
+                check_infos[check_plugin_name] = {"title": title}
 
                 if check["group"]:
                     check_infos[check_plugin_name]["group"] = check["group"]
@@ -1048,7 +1047,7 @@ class AutomationGetRealTimeChecks(Automation):
         rt_checks = []
         for check_plugin_name, check in config.check_info.items():
             if check["handle_real_time_checks"]:
-                title = ensure_unicode(check_plugin_name)
+                title = six.ensure_text(check_plugin_name)
                 try:
                     manfile = manuals.get(check_plugin_name)
                     if manfile:
@@ -1058,8 +1057,7 @@ class AutomationGetRealTimeChecks(Automation):
                         raise
 
                 rt_checks.append(
-                    (check_plugin_name,
-                     u"%s - %s" % (six.ensure_text(check_plugin_name), six.ensure_text(title))))
+                    (check_plugin_name, u"%s - %s" % (six.ensure_text(check_plugin_name), title)))
 
         return rt_checks
 

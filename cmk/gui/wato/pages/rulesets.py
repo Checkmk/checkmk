@@ -1666,13 +1666,15 @@ class VSExplicitConditions(Transform):
         if value.startswith("!"):
             raise MKUserError(varprefix, _("It's not allowed to use a leading \"!\" here."))
 
-    def value_to_text(self, conditions):  # pylint: disable=arguments-differ
-        # type: (RuleConditions) -> None
-        html.open_ul(class_="conditions")
-        renderer = RuleConditionRenderer()
-        for condition in renderer.render(self._rulespec, conditions):
-            html.li(condition, class_="condition")
-        html.close_ul()
+    def value_to_text(self, value):
+        # type: (RuleConditions) -> Text
+        with html.plugged():
+            html.open_ul(class_="conditions")
+            renderer = RuleConditionRenderer()
+            for condition in renderer.render(self._rulespec, value):
+                html.li(condition, class_="condition")
+            html.close_ul()
+            return html.drain()
 
 
 class LabelCondition(Transform):

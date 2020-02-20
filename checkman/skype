@@ -7,12 +7,18 @@ description:
  This check monitors some general usage statistics of a skype frontend
  server.
  These are:
-    - number of failed search requests per second on the address book web interface
-    - number of failed location requests per second on location information service
-    - number of timed out active directory requests per second
-    - number of 5xx responses sent per second
-    - number of ASP.NET requests rejected
-    - average time taken to process incoming messages
+
+ - number of failed search requests per second on the address book web interface
+
+ - number of failed location requests per second on location information service
+
+ - number of timed out active directory requests per second
+
+ - number of 5xx responses sent per second
+
+ - number of ASP.NET requests rejected
+
+ - average time taken to process incoming messages
 
  Thresholds can be configured for all these counters.
 

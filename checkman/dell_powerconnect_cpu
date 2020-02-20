@@ -7,9 +7,11 @@ description:
  This check monitors the CPU load on Dell PowerConnect Switches which support the
  RADWARE-MIB. It will check the percentage of the CPU load for the following states:
 
-  - 1 second (the load average of when the check ran).
-  - 60 seconds (the "average" over the last 60 seconds at the time the check occurred).
-  - 5 minutes (the "average" over the last 5 minutes, at the time the check occurred).
+ - 1 second (the load average of when the check ran).
+
+ - 60 seconds (the "average" over the last 60 seconds at the time the check occurred).
+
+ - 5 minutes (the "average" over the last 5 minutes, at the time the check occurred).
 
  A single service will be created showing the percentage of CPU use at the time
  the check occurred (using the 1 second load average).  However, charts are created

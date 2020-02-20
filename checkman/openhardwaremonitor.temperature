@@ -16,10 +16,12 @@ description:
  All temperature sensors (cpu, hdd, ...) are handled through this
  same check but different default levels are applied based on
  device type:
-    cpu    - warn = 60, crit = 70
-    hdd    - warn = 40, crit = 50
-    others - warn = 70, crit = 80
 
+ - CPU:     60, 70 degree celcius
+ 
+ - HDD:     40, 50 degree celcius
+ 
+ - others:  70, 80 degree celcius
 
 item:
  The name of the sensor as reported by OpenHardwareMonitor

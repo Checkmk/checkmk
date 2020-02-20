@@ -57,6 +57,9 @@ needed-packages: ../omd/distros/DEBIAN_9.mk
 check-mk-$(EDITION)-docker-$(VERSION).tar.gz: image
 	docker save $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) | gzip > check-mk-$(EDITION)-docker-$(VERSION).tar.gz
 
+check-mk-$(EDITION)-docker-$(VERSION).demo.tar.gz: image-demo
+	docker save $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION).demo | gzip > check-mk-$(EDITION)-docker-$(VERSION).demo.tar.gz
+
 image: needed-packages
 	SECRET_CONTAINER_ID=$$(docker run -d --rm --volume $(CREDENTIALS_FILE):/files/secret \
 	    busybox timeout 180 httpd -f -p 8000 -h /files) ; \
@@ -65,6 +68,17 @@ image: needed-packages
 	    --build-arg CMK_VERSION="$(VERSION)" \
 	    --build-arg CMK_EDITION="$(EDITION)" \
 	    -t $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) \
+	    . ; \
+	docker stop $$SECRET_CONTAINER_ID
+
+image-demo: needed-packages
+	SECRET_CONTAINER_ID=$$(docker run -d --rm --volume $(CREDENTIALS_FILE):/files/secret \
+	    busybox timeout 180 httpd -f -p 8000 -h /files) ; \
+	docker build \
+	    --network=container:$$SECRET_CONTAINER_ID \
+	    --build-arg CMK_VERSION="$(VERSION).demo" \
+	    --build-arg CMK_EDITION="$(EDITION)" \
+	    -t $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION).demo \
 	    . ; \
 	docker stop $$SECRET_CONTAINER_ID
 

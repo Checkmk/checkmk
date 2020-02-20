@@ -10,7 +10,7 @@ description:
  Upper and lower levels are configurable.
 
 item:
- The disk name.
+ The fixed name {{Disk}}.
 
 inventory:
  One service is created.

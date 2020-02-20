@@ -9,6 +9,9 @@ description:
  rule and will turn warn/crit if the drop rate is below or above
  the configured lower or upper limits, respectively.
 
+item:
+ The fixed name {{Overrun}}.
+
 inventory:
  Exactly one service is discovered.
 

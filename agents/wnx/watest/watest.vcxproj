@@ -298,6 +298,7 @@ copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
     <ClCompile Include="test-health.cpp" />
     <ClCompile Include="test-install-auto.cpp" />
     <ClCompile Include="test-log.cpp" />
+    <ClCompile Include="test-modules.cpp" />
     <ClCompile Include="test-mrpe.cpp" />
     <ClCompile Include="test-object_repo.cpp" />
     <ClCompile Include="test-ohm.cpp" />

@@ -290,6 +290,7 @@
     <ClInclude Include="firewall.h" />
     <ClInclude Include="install_api.h" />
     <ClInclude Include="logger.h" />
+    <ClInclude Include="modules.h" />
     <ClInclude Include="onlyfrom.h" />
     <ClInclude Include="on_start.h" />
     <ClInclude Include="providers\check_mk.h" />
@@ -516,6 +517,7 @@
     <ClCompile Include="groups.cpp" />
     <ClCompile Include="install_api.cpp" />
     <ClCompile Include="logger.cpp" />
+    <ClCompile Include="modules.cpp" />
     <ClCompile Include="onlyfrom.cpp" />
     <ClCompile Include="on_start.cpp" />
     <ClCompile Include="providers\check_mk.cpp" />

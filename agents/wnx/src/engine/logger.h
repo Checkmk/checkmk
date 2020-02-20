@@ -395,7 +395,7 @@ public:
     // **********************************
     // STREAM OUTPUT
     template <typename... T>
-    auto operator()(const std::string& Format, T... args) {
+    auto operator()(const std::string& Format, T... args) noexcept {
         try {
             auto s = fmt::format(Format, args...);
             if (!constructed()) {
@@ -418,7 +418,7 @@ public:
 
     // #TODO make more versatile
     template <typename... T>
-    auto operator()(int Flags, const std::string& Format, T... args) {
+    auto operator()(int Flags, const std::string& Format, T... args) noexcept {
         try {
             auto s = fmt::format(Format, args...);
             if (!constructed()) {

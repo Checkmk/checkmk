@@ -25,7 +25,7 @@ $sqlServer = "SATURN\ARCSERVE_DB"
 function GetLatestJobId($sqlCmd) {
    # Put the command in our sqlCmd
    # Please adapt description if english translation is used
-   $sqlCmd.CommandText = "SELECT top 1 jobid FROM dbo.aslogw WHERE msgtext LIKE '%Ausführung von Job Sichern%' ORDER BY jobid DESC"
+   $sqlCmd.CommandText = "SELECT top 1 jobid FROM dbo.aslogw WHERE msgtext LIKE '%AusfÃ¼hrung von Job Sichern%' ORDER BY jobid DESC"
 
    # Create an adapter to put the data we get from SQL and get the data
    $sqlAdapter = New-Object System.Data.SqlClient.SqlDataAdapter
@@ -42,7 +42,7 @@ function GetLatestJobId($sqlCmd) {
 function GetPreLatestJobId($sqlCmd, $jobId) {
    # Put the command in our sqlCmd
    # Please adapt description if english translation is used
-   $sqlCmd.CommandText = "SELECT top 1 jobid FROM dbo.aslogw WHERE msgtext LIKE '%Ausführung von Job Sichern%' AND jobid < " + $jobId + " ORDER BY jobid DESC"
+   $sqlCmd.CommandText = "SELECT top 1 jobid FROM dbo.aslogw WHERE msgtext LIKE '%AusfÃ¼hrung von Job Sichern%' AND jobid < " + $jobId + " ORDER BY jobid DESC"
 
    # Create an adapter to put the data we get from SQL and get the data
    $sqlAdapter = New-Object System.Data.SqlClient.SqlDataAdapter

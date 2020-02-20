@@ -168,6 +168,24 @@ def event_data_available(loop_interval):
     return bool(select.select([0], [], [], loop_interval)[0])
 
 
+def pipe_decode_raw_context(raw_context):
+    """
+    cmk_base replaces all occurences of the pipe symbol in the infotext with
+    the character "Light vertical bar" before a check result is submitted to
+    the core. We remove this special encoding here since it may result in
+    gibberish output when deliered via a notification plugin.
+    """
+    def _remove_pipe_encoding(value):
+        return value.replace(u"\u2758", u"|")
+
+    output = raw_context.get('SERVICEOUTPUT')
+    if output:
+        raw_context['SERVICEOUTPUT'] = _remove_pipe_encoding(output)
+    long_output = raw_context.get('LONGSERVICEOUTPUT')
+    if long_output:
+        raw_context['LONGSERVICEOUTPUT'] = _remove_pipe_encoding(long_output)
+
+
 def raw_context_from_string(data):
     # type: (bytes) -> EventContext
     # Context is line-by-line in g_notify_readahead_buffer
@@ -179,6 +197,7 @@ def raw_context_from_string(data):
     except Exception:  # line without '=' ignored or alerted
         if cmk.utils.debug.enabled():
             raise
+    pipe_decode_raw_context(context)
     return context
 
 

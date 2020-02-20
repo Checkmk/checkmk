@@ -2086,6 +2086,7 @@ def raw_context_from_stdin():
     for line in sys.stdin:
         varname, value = line.strip().split("=", 1)
         context[varname] = events.expand_backslashes(value)
+    events.pipe_decode_raw_context(context)
     return context
 
 
@@ -2093,11 +2094,13 @@ def raw_context_from_env():
     # type: () -> EventContext
     # Information about notification is excpected in the
     # environment in variables with the prefix NOTIFY_
-    return {
+    context = {
         var[7:]: value
         for (var, value) in os.environ.items()
         if var.startswith("NOTIFY_") and not dead_nagios_variable(value)
     }
+    events.pipe_decode_raw_context(context)
+    return context
 
 
 def substitute_context(template, context):

@@ -49,8 +49,6 @@ def test_discovered_labels_delitem(labels):
 def test_discovered_labels_iter(labels):
     labels["abc"] = "123"
     labels["xyz"] = "bla"
-
-    assert next(labels.keys()) in ["abc", "xyz"]
     assert sorted(labels.keys()) == ["abc", "xyz"]
 
 

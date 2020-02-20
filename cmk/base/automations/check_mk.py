@@ -1010,7 +1010,7 @@ class AutomationGetCheckInformation(Automation):
                 else:
                     title = check_plugin_name
 
-                check_infos[check_plugin_name] = {"title": title}
+                check_infos[check_plugin_name] = {"title": six.ensure_text(title)}
 
                 if check["group"]:
                     check_infos[check_plugin_name]["group"] = check["group"]
@@ -1052,7 +1052,9 @@ class AutomationGetRealTimeChecks(Automation):
                     if cmk.utils.debug.enabled():
                         raise
 
-                rt_checks.append((check_plugin_name, "%s - %s" % (check_plugin_name, title)))
+                rt_checks.append(
+                    (check_plugin_name,
+                     u"%s - %s" % (six.ensure_text(check_plugin_name), six.ensure_text(title))))
 
         return rt_checks
 

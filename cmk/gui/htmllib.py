@@ -2296,16 +2296,20 @@ class html(ABCHTMLGenerator):
             self.write('<br>'.join(self.user_errors.values()))
             self.close_div()
 
-    def text_input(self,
-                   varname,
-                   default_value="",
-                   cssclass="text",
-                   size=None,
-                   label=None,
-                   id_=None,
-                   submit=None,
-                   **args):
-        # type: (str, Text, str, Optional[Union[str, int]], Optional[Text], str, Optional[str], **HTMLTagAttributeValue) -> None
+    def text_input(
+        self,
+        varname,  # type: str
+        default_value=u"",  # type: Text
+        cssclass="text",  # type: str
+        size=None,  # type: Optional[Union[str, int]]
+        label=None,  # type: Optional[Text]
+        id_=None,  # type: str
+        submit=None,  # type: Optional[str]
+        try_max_width=False,  # type: bool
+        read_only=False,  # type: bool
+        **args  # type: HTMLTagAttributeValue
+    ):
+        # type: (...) -> None
 
         # Model
         error = self.user_errors.get(varname)
@@ -2319,7 +2323,7 @@ class html(ABCHTMLGenerator):
         # View
         style_size = None  # type: Optional[str]
         field_size = None  # type: Optional[str]
-        if args.get("try_max_width"):
+        if try_max_width:
             style_size = "width: calc(100% - 10px); "
             if size is not None:
                 assert isinstance(size, int)
@@ -2361,7 +2365,7 @@ class html(ABCHTMLGenerator):
             "style": style,
             "size": field_size,
             "autocomplete": args.get("autocomplete"),
-            "readonly": "true" if args.get("read_only") else None,
+            "readonly": "true" if read_only else None,
             "value": value,
             "onkeydown": onkeydown,
         }  # type: HTMLTagAttributes
@@ -2423,8 +2427,10 @@ class html(ABCHTMLGenerator):
                        label=None,
                        id_=None,
                        submit=None,
+                       try_max_width=False,
+                       read_only=False,
                        **attrs):
-        # type: (str, Text, str, Optional[Union[str, int]], Optional[Text], str, Optional[str], **HTMLTagAttributeValue) -> None
+        # type: (str, Text, str, Optional[Union[str, int]], Optional[Text], str, Optional[str], bool, bool, **HTMLTagAttributeValue) -> None
         self.text_input(varname,
                         default_value,
                         cssclass=cssclass,
@@ -2433,6 +2439,8 @@ class html(ABCHTMLGenerator):
                         id_=id_,
                         submit=submit,
                         type_="password",
+                        try_max_width=try_max_width,
+                        read_only=read_only,
                         **attrs)
 
     def text_area(self, varname, deflt="", rows=4, cols=30, try_max_width=False, **attrs):

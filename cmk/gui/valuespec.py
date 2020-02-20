@@ -58,6 +58,7 @@ import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.defines as defines
 from cmk.utils.encoding import ensure_unicode
+from cmk.utils.type_defs import Seconds  # pylint: disable=unused-import
 
 import cmk.gui.forms as forms
 import cmk.gui.utils as utils
@@ -66,6 +67,7 @@ from cmk.gui.i18n import _
 from cmk.gui.pages import page_registry, Page, AjaxPage
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib import Choices  # pylint: disable=unused-import
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 
 import livestatus
@@ -98,14 +100,25 @@ class ValueSpec(object):
         self._validate = validate
 
     def title(self):
+        # type: () -> TypingOptional[Text]
         return self._title
 
     def help(self):
-        if isinstance(self._help, (types.FunctionType, types.MethodType)):
+        # type: () -> Union[Text, HTML, None]
+        if isinstance(self._help, (types.LambdaType, types.FunctionType, types.MethodType)):
             return self._help()
-        return self._help
+
+        if isinstance(self._help, HTML):
+            return self._help
+
+        if self._help is None:
+            return None
+
+        assert isinstance(self._help, six.string_types)
+        return ensure_unicode(self._help)
 
     def render_input(self, varprefix, value):
+        # type: (str, Any) -> None
         """Create HTML-form elements that represent a given
         value and let the user edit that value
 
@@ -116,16 +129,19 @@ class ValueSpec(object):
         pass
 
     def set_focus(self, varprefix):
+        # type: (str) -> None
         """Sets the input focus (cursor) into the most promiment field of the
         HTML code previously rendered with render_input()"""
         html.set_focus(varprefix)
 
     def canonical_value(self):
+        # type: () -> Any
         """Create a canonical, minimal, default value that matches the datatype
         of the value specification and fulfills also data validation."""
         return None
 
     def default_value(self):
+        # type: () -> Any
         """Return a default value for this variable
 
         This is optional and only used in the value editor for same cases where
@@ -139,6 +155,7 @@ class ValueSpec(object):
 
     # TODO: Rename to value_to_html?
     def value_to_text(self, value):
+        # type: (Any) -> Text
         """Creates a text-representation of the value that can be
         used in tables and other contextes
 
@@ -151,6 +168,7 @@ class ValueSpec(object):
         return repr(value)
 
     def from_html_vars(self, varprefix):
+        # type: (str) -> Any
         """Create a value from the current settings of the HTML variables
 
         This function must also check the validity and may raise a MKUserError
@@ -158,6 +176,7 @@ class ValueSpec(object):
         return None
 
     def validate_value(self, value, varprefix):
+        # type: (Any, str) -> None
         """Check if a given value is a valid structure for the current valuespec
 
         The validation is done in 3 phases:
@@ -180,10 +199,12 @@ class ValueSpec(object):
         self._custom_validate(value, varprefix)
 
     def validate_datatype(self, value, varprefix):
+        # type: (Any, str) -> None
         """Check if a given value matches the datatype of described by this class."""
         pass
 
     def _validate_value(self, value, varprefix):
+        # type: (Any, str) -> None
         """Override this method to implement custom validation functions for sub-valuespec types
 
         This function should assume that the data type is valid (either because
@@ -192,6 +213,7 @@ class ValueSpec(object):
         pass
 
     def _custom_validate(self, value, varprefix):
+        # type: (Any, str) -> None
         """Call instance specific validations
 
         These are the ones that are configured by the valuespec instance argument
@@ -219,22 +241,27 @@ class FixedValue(ValueSpec):
         self._totext = totext
 
     def canonical_value(self):
+        # type: () -> Any
         return self._value
 
     def render_input(self, varprefix, value):
+        # type: (str, Any) -> None
         html.write(self.value_to_text(value))
 
     def value_to_text(self, value):
+        # type: (Any) -> Text
         if self._totext is not None:
             return self._totext
         elif isinstance(value, six.text_type):
             return value
-        return str(value)
+        return ensure_unicode(value)
 
     def from_html_vars(self, varprefix):
+        # type: (str) -> Any
         return self._value
 
     def validate_datatype(self, value, varprefix):
+        # type: (Any, str) -> None
         if not self._value == value:
             raise MKUserError(varprefix,
                               _("Invalid value, must be '%r' but is '%r'") % (self._value, value))
@@ -245,8 +272,8 @@ class Age(ValueSpec):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         label=None,  # type: TypingOptional[Text]
-        minvalue=None,  # type: TypingOptional[int]
-        maxvalue=None,  # type: TypingOptional[Union[int, float]]
+        minvalue=None,  # type: TypingOptional[Seconds]
+        maxvalue=None,  # type: TypingOptional[Union[Seconds, float]]
         display=None,  # type: TypingOptional[List[str]]
         title=None,  # type: TypingOptional[Text]
         help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
@@ -266,11 +293,13 @@ class Age(ValueSpec):
         self._cssclass = cssclass
 
     def canonical_value(self):
+        # type: () -> Seconds
         if self._minvalue:
             return self._minvalue
         return 0
 
     def render_input(self, varprefix, value):
+        # type: (str, Seconds) -> None
         days, rest = divmod(value, 60 * 60 * 24)
         hours, rest = divmod(rest, 60 * 60)
         minutes, seconds = divmod(rest, 60)
@@ -297,13 +326,15 @@ class Age(ValueSpec):
         html.close_div()
 
     def from_html_vars(self, varprefix):
+        # type: (str) -> Seconds
         # TODO: Validate for correct numbers!
-        return (utils.saveint(html.request.var(varprefix + '_days', 0)) * 3600 * 24 +
-                utils.saveint(html.request.var(varprefix + '_hours', 0)) * 3600 +
-                utils.saveint(html.request.var(varprefix + '_minutes', 0)) * 60 +
-                utils.saveint(html.request.var(varprefix + '_seconds', 0)))
+        return (html.request.get_integer_input_mandatory(varprefix + '_days', 0) * 3600 * 24 +
+                html.request.get_integer_input_mandatory(varprefix + '_hours', 0) * 3600 +
+                html.request.get_integer_input_mandatory(varprefix + '_minutes', 0) * 60 +
+                html.request.get_integer_input_mandatory(varprefix + '_seconds', 0))
 
     def value_to_text(self, value):
+        # type: (Seconds) -> Text
         days, rest = divmod(value, 60 * 60 * 24)
         hours, rest = divmod(rest, 60 * 60)
         minutes, seconds = divmod(rest, 60)
@@ -322,12 +353,14 @@ class Age(ValueSpec):
         return _("no time")
 
     def validate_datatype(self, value, varprefix):
+        # type: (Seconds, str) -> None
         if not isinstance(value, int):
             raise MKUserError(
                 varprefix,
                 _("The value %r has type %s, but must be of type int") % (value, _type_name(value)))
 
     def _validate_value(self, value, varprefix):
+        # type: (Seconds, str) -> None
         if self._minvalue is not None and value < self._minvalue:
             raise MKUserError(
                 varprefix,
@@ -376,11 +409,13 @@ class Integer(ValueSpec):
             self._size = size if size is not None else 5
 
     def canonical_value(self):
+        # type: () -> Union[float, int]
         if self._minvalue:
             return self._minvalue
         return 0
 
     def render_input(self, varprefix, value):
+        # type: (str, int) -> None
         if self._label:
             html.write(self._label)
             html.nbsp()
@@ -405,15 +440,18 @@ class Integer(ValueSpec):
             html.write(self._unit)
 
     def _render_value(self, value):
+        # type: (int) -> Text
         return self._display_format % utils.saveint(value)
 
     def from_html_vars(self, varprefix):
+        # type: (str) -> int
         return html.request.get_integer_input_mandatory(varprefix)
 
     def value_to_text(self, value):
+        # type: (int) -> Text
         text = self._display_format % value
         if self._thousand_sep:
-            sepped = ""
+            sepped = u""
             rest = text
             while len(rest) > 3:
                 sepped = self._thousand_sep + rest[-3:] + sepped
@@ -426,6 +464,7 @@ class Integer(ValueSpec):
         return text
 
     def validate_datatype(self, value, varprefix):
+        # type: (int, str) -> None
         if not isinstance(value, numbers.Integral):
             raise MKUserError(
                 varprefix,
@@ -433,6 +472,7 @@ class Integer(ValueSpec):
                 (value, _type_name(value)))
 
     def _validate_value(self, value, varprefix):
+        # type: (int, str) -> None
         if self._minvalue is not None and value < self._minvalue:
             raise MKUserError(
                 varprefix,
@@ -445,26 +485,30 @@ class Integer(ValueSpec):
 
 class Filesize(Integer):
     """Filesize in Byte, KByte, MByte, Gigabyte, Terabyte"""
-    _names = ['Byte', 'KByte', 'MByte', 'GByte', 'TByte']
+    _names = [u'Byte', u'KByte', u'MByte', u'GByte', u'TByte']
 
     def get_exponent(self, value):
+        # type: (int) -> TypingTuple[int, int]
         for exp, count in ((exp, 1024**exp) for exp in reversed(range(len(self._names)))):
             if value == 0:
                 return 0, 0
             if value % count == 0:
                 return exp, int(value / count)  # fixed: true-division
+        raise ValueError("Invalid value: %r" % value)
 
     def render_input(self, varprefix, value):
+        # type: (str, int) -> None
         exp, count = self.get_exponent(value)
         html.text_input(varprefix + '_size',
                         default_value=str(count),
                         size=self._size,
                         cssclass="number")
         html.nbsp()
-        choices = [(str(nr), name) for (nr, name) in enumerate(self._names)]
+        choices = [(str(nr), name) for (nr, name) in enumerate(self._names)]  # type: Choices
         html.dropdown(varprefix + '_unit', choices, deflt=str(exp))
 
     def from_html_vars(self, varprefix):
+        # type: (str) -> int
         try:
             return html.request.get_integer_input_mandatory(varprefix + '_size') * (
                 1024**html.request.get_integer_input_mandatory(varprefix + '_unit'))
@@ -472,6 +516,7 @@ class Filesize(Integer):
             raise MKUserError(varprefix + '_size', _("Please enter a valid integer number"))
 
     def value_to_text(self, value):
+        # type: (int) -> Text
         exp, count = self.get_exponent(value)
         return "%s %s" % (count, self._names[exp])
 
@@ -520,9 +565,10 @@ class TextAscii(ValueSpec):
         self._read_only = read_only
         self._none_is_empty = none_is_empty
         self._forbidden_chars = forbidden_chars
-        self._regex = regex
-        if isinstance(self._regex, str):
-            self._regex = re.compile(self._regex)
+        if isinstance(regex, str):
+            self._regex = re.compile(regex)  # type: TypingOptional[Pattern[str]]
+        else:
+            self._regex = regex
         self._regex_error = regex_error if regex_error is not None else \
             _("Your input does not match the required format.")
         self._minlen = minlen
@@ -531,50 +577,50 @@ class TextAscii(ValueSpec):
         self._hidden = hidden
 
     def canonical_value(self):
+        # type: () -> str
         return ""
 
     def render_input(self, varprefix, value):
-        value_text = "%s" % value if value is not None else ""
-
+        # type: (str, TypingOptional[str]) -> None
         if self._label:
             html.write(self._label)
             html.nbsp()
 
-        type_ = "password" if self._hidden else "text"
-
-        attrs = {}
-        if self._onkeyup:
-            attrs["onkeyup"] = self._onkeyup
-
         html.text_input(
             varprefix,
-            value_text,
+            value_text="%s" % value if value is not None else "",
             size=self._size,
             try_max_width=self._try_max_width,
             read_only=self._read_only,
             cssclass=self._cssclass,
-            type_=type_,
-            attrs=attrs,
+            type_="password" if self._hidden else "text",
             autocomplete="off" if not self._autocomplete else None,
+            onkeyup=self._onkeyup if self._onkeyup else None,
         )
 
     def value_to_text(self, value):
+        # type: (TypingOptional[str]) -> Text
         if not value:
             return self._empty_text
 
         if self._attrencode:
             return escaping.escape_attribute(value)
-        return value
+        return ensure_unicode(value)
 
     def from_html_vars(self, varprefix):
-        value = html.request.var(varprefix, "")
-        if self._strip:
+        # type: (str) -> TypingOptional[str]
+        value = html.request.get_str_input(varprefix, "")
+
+        if self._strip and value:
             value = value.strip()
+
         if self._none_is_empty and not value:
             return None
+
         return value
 
     def validate_datatype(self, value, varprefix):
+        # type: (TypingOptional[str], str) -> None
         if self._none_is_empty and value is None:
             return
 
@@ -584,10 +630,15 @@ class TextAscii(ValueSpec):
                 _("The value must be of type str, but it has type %s") % _type_name(value))
 
     def _validate_value(self, value, varprefix):
+        # type: (TypingOptional[str], str) -> None
         try:
             six.text_type(value)
         except UnicodeDecodeError:
             raise MKUserError(varprefix, _("Non-ASCII characters are not allowed here."))
+
+        if value is None:
+            return  # Can only happen when self._none_is_empty is set, we need no more validation
+
         if self._forbidden_chars:
             for c in self._forbidden_chars:
                 if c in value:
@@ -595,6 +646,7 @@ class TextAscii(ValueSpec):
                                       _("The character <tt>%s</tt> is not allowed here.") % c)
         if self._none_is_empty and value == "":
             raise MKUserError(varprefix, _("An empty value must be represented with None here."))
+
         if not self._allow_empty and value.strip() == "":
             raise MKUserError(varprefix, _("An empty value is not allowed here."))
         if value and self._regex:

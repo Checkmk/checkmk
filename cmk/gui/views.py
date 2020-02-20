@@ -14,6 +14,7 @@ import json
 import functools
 from typing import (  # pylint: disable=unused-import
     TYPE_CHECKING, Union, Sequence, Any, Dict, List, Optional, Set, Text, Tuple as TypingTuple,
+    Callable,
 )
 import six
 
@@ -117,7 +118,7 @@ if cmk.is_managed_edition():
 if TYPE_CHECKING:
     from cmk.gui.plugins.views.utils import Sorter, SorterSpec  # pylint: disable=unused-import
     from cmk.gui.plugins.visuals.utils import Filter  # pylint: disable=unused-import
-    from cmk.gui.type_defs import Row, ColumnName  # pylint: disable=unused-import
+    from cmk.gui.type_defs import Row, Rows, ColumnName  # pylint: disable=unused-import
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
@@ -1481,7 +1482,7 @@ def show_view(view, view_renderer, only_count=False):
                     sla_params, rows)
                 sla.SLAProcessor(sla_configurations_container).add_sla_data_to_rows(rows)
 
-        sort_data(rows, sorters)
+        _sort_data(view, rows, sorters)
     else:
         rows = []
 
@@ -2141,16 +2142,15 @@ def ajax_count_button():
     config.user.save_button_counts()
 
 
-# Sort data according to list of sorters. The tablename
-# is needed in order to handle different column names
-# for same objects (e.g. host_name in table services and
-# simply name in table hosts)
-def sort_data(data, sorters):
+def _sort_data(view, data, sorters):
+    # type: (View, Rows, List[SorterEntry]) -> None
+    """Sort data according to list of sorters."""
     if not sorters:
         return
 
     # Handle case where join columns are not present for all rows
     def safe_compare(compfunc, row1, row2):
+        # type: (Callable[[Row, Row], int], Row, Row) -> int
         if row1 is None and row2 is None:
             return 0
         elif row1 is None:
@@ -2161,6 +2161,7 @@ def sort_data(data, sorters):
         return compfunc(row1, row2)
 
     def multisort(e1, e2):
+        # type: (Row, Row) -> int
         for entry in sorters:
             neg = -1 if entry.negate else 1
 

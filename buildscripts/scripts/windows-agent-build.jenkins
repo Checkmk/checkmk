@@ -8,28 +8,10 @@ properties([
 node ('windows') {
     stage('git checkout') {
         checkout(scm)
+        windows = load 'buildscripts/scripts/lib/windows.groovy'
+        
     }
-    stage('Windows agent build') {
-        try {
-        bat 'cd agents\\wnx && call build_release.cmd'
-        dir('artefacts') {
-            archiveArtifacts "*"
-        }
-        } catch(ERROR) {
-            mail(
-                to: WIN_DEV_MAIL,
-                cc: '', 
-                bcc: '', 
-                from: JENKINS_MAIL, 
-                replyTo: '', 
-                subject: "Win Error in $BUILD_URL",
-                body: """
-                    The following Error appered in 
-                    Build URL: $BUILD_URL \n
-                """
-                    + ERROR.getMessage()
-            )
-            throw ERROR
-        }
-    }
+    windows.build(
+        TARGET: 'agent'
+    )
 }

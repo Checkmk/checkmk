@@ -274,6 +274,21 @@ TEST(CmaCfg, InstallProtocol) {
     EXPECT_TRUE(name.empty());
 }
 
+TEST(CmaCfg, Modules) {
+    ASSERT_TRUE(!cma::cfg::GetModulesDir().empty());
+    ASSERT_TRUE(std::wstring(cma::cfg::dirs::kModules) == L"modules");
+    ASSERT_TRUE(envs::kMkModulesDirName == "MK_MODULESDIR");
+    auto all_dir = details::AllDirTable();
+    ASSERT_TRUE(std::any_of(
+        std::begin(all_dir), std::end(all_dir),
+        [](std::wstring_view dir) { return dir == dirs::kModules; }));
+
+    auto removable_dir = details::AllDirTable();
+    ASSERT_TRUE(std::any_of(
+        std::begin(removable_dir), std::end(removable_dir),
+        [](std::wstring_view dir) { return dir == dirs::kModules; }));
+}
+
 TEST(CmaCfg, ProcessPluginEnvironment) {
     //
     cma::OnStartTest();

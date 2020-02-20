@@ -1,5 +1,11 @@
+import sys
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+
 import six
-from pathlib2 import Path
 
 import cmk.utils.crash_reporting
 import cmk.base.crash_reporting as crash_reporting

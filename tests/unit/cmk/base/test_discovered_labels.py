@@ -50,8 +50,8 @@ def test_discovered_labels_iter(labels):
     labels["abc"] = "123"
     labels["xyz"] = "bla"
 
-    assert next(labels.iterkeys()) in ["abc", "xyz"]
-    assert sorted(list(labels.iterkeys())) == ["abc", "xyz"]
+    assert next(labels.keys()) in ["abc", "xyz"]
+    assert sorted(labels.keys()) == ["abc", "xyz"]
 
 
 def test_discovered_labels_len(labels):

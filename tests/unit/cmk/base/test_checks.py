@@ -1,7 +1,13 @@
 # pylint: disable=redefined-outer-name
 
 import re
-from pathlib2 import Path
+import sys
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+
 import pytest  # type: ignore[import]
 
 from testlib.base import Scenario

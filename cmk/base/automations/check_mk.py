@@ -16,6 +16,12 @@ import contextlib
 from typing import Iterator, Tuple, Optional, Dict, Any, Text, List  # pylint: disable=unused-import
 import six
 
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
+
 import cmk.utils.paths
 import cmk.utils.debug
 import cmk.utils.log as log
@@ -25,6 +31,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.encoding import convert_to_unicode
 import cmk.utils.cmk_subprocess as subprocess
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+from cmk.utils.encoding import ensure_unicode
 from cmk.utils.type_defs import HostName, ServiceName, CheckPluginName  # pylint: disable=unused-import
 
 import cmk.base.config as config
@@ -1004,11 +1011,10 @@ class AutomationGetCheckInformation(Automation):
         for check_plugin_name, check in config.check_info.items():
             try:
                 manfile = manuals.get(check_plugin_name)
-                # TODO: Use cmk.utils.man_pages module standard functions to read the title
                 if manfile:
-                    title = open(manfile).readline().strip().split(":", 1)[1].strip()
+                    title = cmk.utils.man_pages.get_title_from_man_page(Path(manfile))
                 else:
-                    title = check_plugin_name
+                    title = ensure_unicode(check_plugin_name)
 
                 check_infos[check_plugin_name] = {"title": six.ensure_text(title)}
 
@@ -1042,12 +1048,11 @@ class AutomationGetRealTimeChecks(Automation):
         rt_checks = []
         for check_plugin_name, check in config.check_info.items():
             if check["handle_real_time_checks"]:
-                # TODO: Use cmk.utils.man_pages module standard functions to read the title
-                title = check_plugin_name
+                title = ensure_unicode(check_plugin_name)
                 try:
                     manfile = manuals.get(check_plugin_name)
                     if manfile:
-                        title = open(manfile).readline().strip().split(":", 1)[1].strip()
+                        title = cmk.utils.man_pages.get_title_from_man_page(Path(manfile))
                 except Exception:
                     if cmk.utils.debug.enabled():
                         raise

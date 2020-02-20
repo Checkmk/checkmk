@@ -16,7 +16,7 @@ import re
 import sys
 from io import StringIO
 import subprocess
-from typing import Any, Dict, List, Optional, Tuple  # pylint: disable=unused-import
+from typing import Text, Any, Dict, List, Optional, Tuple  # pylint: disable=unused-import
 
 import six  # pylint: disable=unused-import
 
@@ -302,15 +302,16 @@ def print_man_page_table():
     table = []
     for name, path in sorted(all_man_pages().items()):
         try:
-            table.append([name, _get_title_from_man_page(Path(path))])
+            table.append([name, six.ensure_str(get_title_from_man_page(Path(path)))])
         except MKGeneralException as e:
             sys.stderr.write(str("ERROR: %s" % e))
 
     tty.print_table([str('Check type'), str('Title')], [tty.bold, tty.normal], table)
 
 
-def _get_title_from_man_page(path):
-    with path.open(encoding="utf-8") as fp:
+def get_title_from_man_page(path):
+    # type: (Path) -> Text
+    with path.open(encoding=six.ensure_str("utf-8")) as fp:
         for line in fp:
             if line.startswith("title:"):
                 return line.split(":", 1)[1].strip()

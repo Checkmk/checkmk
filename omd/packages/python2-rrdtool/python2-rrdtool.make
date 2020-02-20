@@ -57,6 +57,7 @@ $(PYTHON2_RRDTOOL_BUILD): $(PYTHON2_RRDTOOL_CONFIGURE) $(PYTHON_CACHE_PKG_PROCES
 	export LDFLAGS="$(shell pkg-config --libs gthread-2.0) -lglib-2.0 $(PACKAGE_PYTHON_LDFLAGS)" ; \
 	export CPPFLAGS="$(shell pkg-config --cflags gthread-2.0)" ; \
 	export CFLAGS="-I$(PACKAGE_PYTHON2_INCLUDE_PATH)" ; \
+	$(MAKE) -C $(PYTHON2_RRDTOOL_BUILD_DIR)/src all && \
 	$(MAKE) -C $(PYTHON2_RRDTOOL_BUILD_DIR)/bindings all
 	$(TOUCH) $@
 

@@ -81,7 +81,8 @@ RUN set -e \
        fi \
     && dpkg-sig --verify "${PKG_FILE}" \
     && dpkg -i "${PKG_FILE}" \
-    && dpkg -i "/omd/versions/default/share/check_mk/agents/check-mk-agent_${CMK_VERSION}-1_all.deb" \
+    && AGENT=$(ls /omd/versions/default/share/check_mk/agents/check-mk-agent_*-1_all.deb) \
+    && dpkg -i ${AGENT} \
     && rm -f -- *.deb *.gpg needed-packages \
     && apt-get clean \
     && rm /usr/sbin/policy-rc.d \

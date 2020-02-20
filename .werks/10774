@@ -12,3 +12,5 @@ Graph Time range title uses ISO format with day precision YEAR-MONTH-DAY
 
 Graph Time axis follows same convention dropping YEAR or YEAR-MONTH if they
 are the same within the time range.
+
+On Check 1.6 this change only affects the Enterprise Edition Graphs

@@ -67,6 +67,12 @@ from cmk.base.snmp_utils import (  # pylint: disable=unused-import
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     SectionName, CheckParameters, DiscoveredService,
 )
+from cmk.base.api import PluginName
+from cmk.base.api.agent_based.section_types import AgentSectionPlugin, SNMPSectionPlugin
+from cmk.base.api.agent_based.register.section_plugins_legacy import (
+    create_agent_section_plugin_from_legacy,
+    create_snmp_section_plugin_from_legacy,
+)
 
 # TODO: Prefix helper functions with "_".
 
@@ -1235,6 +1241,15 @@ def get_http_proxy(http_proxy):
     return None
 
 
+def get_registered_section_plugin(plugin_name):
+    # type: (PluginName) -> Optional[Union[AgentSectionPlugin, SNMPSectionPlugin]]
+    if plugin_name in registered_agent_sections:
+        return registered_agent_sections[plugin_name]
+    if plugin_name in registered_snmp_sections:
+        return registered_snmp_sections[plugin_name]
+    return None
+
+
 #.
 #   .--Host matching-------------------------------------------------------.
 #   |  _   _           _                     _       _     _               |
@@ -1313,6 +1328,11 @@ snmp_scan_functions = {}  # type: Dict[str, ScanFunction]
 active_check_info = {}  # type: Dict[str, Dict[str, Any]]
 special_agent_info = {}  # type: Dict[str, SpecialAgentInfoFunction]
 
+# The following data structures hold information registered by the API functions
+# with the correspondig name, e.g. register.agent_section -> registered_agent_sections
+registered_agent_sections = {}  # type: Dict[PluginName, AgentSectionPlugin]
+registered_snmp_sections = {}  # type: Dict[PluginName, SNMPSectionPlugin]
+
 # Names of variables registered in the check files. This is used to
 # keep track of the variables needed by each file. Those variables are then
 # (if available) read from the config and applied to the checks module after
@@ -1371,6 +1391,9 @@ def _initialize_data_structures():
     snmp_scan_functions.clear()
     active_check_info.clear()
     special_agent_info.clear()
+
+    registered_agent_sections.clear()
+    registered_snmp_sections.clear()
 
 
 def get_plugin_paths(*dirs):
@@ -1482,6 +1505,7 @@ def load_checks(get_check_api_context, filelist):
 
     # Now convert check_info to new format.
     convert_check_info()
+    _extract_agent_and_snmp_sections()
     verify_checkgroup_members()
     initialize_check_type_caches()
 
@@ -1862,6 +1886,47 @@ def convert_check_info():
 
         if info["snmp_scan_function"] and section_name not in snmp_scan_functions:
             snmp_scan_functions[section_name] = info["snmp_scan_function"]
+
+
+def _extract_agent_and_snmp_sections():
+    # type: () -> None
+    """Here comes the next layer of converting-to-"new"-api.
+
+    For the new check-API in cmk/base/api/agent_based, we use the accumulated information
+    in check_info, snmp_scan_functions and snmp_info to create API compliant plugin objects.
+    """
+    for check_plugin_name in sorted(check_info):
+        section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
+        is_snmp_plugin = section_name in snmp_info
+
+        if get_registered_section_plugin(PluginName(section_name)):
+            continue
+
+        check_info_dict = check_info.get(section_name, check_info[check_plugin_name])
+        try:
+            if is_snmp_plugin:
+                snmp_section_plugin = create_snmp_section_plugin_from_legacy(
+                    section_name,
+                    check_info_dict,
+                    snmp_scan_functions[section_name],
+                    snmp_info[section_name],
+                )
+                registered_snmp_sections[snmp_section_plugin.name] = snmp_section_plugin
+            else:
+                agent_section_plugin = create_agent_section_plugin_from_legacy(
+                    section_name,
+                    check_info_dict,
+                )
+                registered_agent_sections[agent_section_plugin.name] = agent_section_plugin
+        except (NotImplementedError, KeyError):
+            msg = ("Failed to auto-migrate legacy plugin to section: %s\n"
+                   "Please refer to Werk 10601 for more information.") % check_plugin_name
+            # TODO (mo): Uncomment this once we have a solution for the plugins currently
+            # failing here. For now we need too keep it commented out, because we can't
+            # test otherwise.
+            #if cmk.utils.debug.enabled():
+            #    raise MKGeneralException(exc)
+            console.warning(msg)
 
 
 # This function validates the checks which are members of checkgroups to have either

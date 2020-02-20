@@ -16,6 +16,8 @@ import cmk.base.caching as caching
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
 import cmk.base.check_utils
+from cmk.base.api import PluginName
+from cmk.base.api.agent_based.section_types import AgentSectionPlugin, SNMPSectionPlugin  # pylint: disable=unused-import
 from cmk.utils.type_defs import HostName, HostAddress, ServiceName  # pylint: disable=unused-import
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     CheckPluginName, SectionCacheInfo, PiggybackRawData, AbstractSectionContent, SectionName,
@@ -295,16 +297,24 @@ class MultiHostSections(object):  # pylint: disable=useless-object-inheritance
         All exceptions raised by the parse function will be catched and re-raised as
         MKParseFunctionError() exceptions."""
 
-        if section_name not in config.check_info:
+        # TODO (mo): change this function to expect a PluginName as argument
+        section_plugin_name = PluginName(section_name)
+        section_plugin = config.get_registered_section_plugin(section_plugin_name)
+        if section_plugin is None:
             return section_content
 
+        # TODO (mo): deal with the parsed_section_name feature (CMK-4006)
+        if section_plugin.name != section_plugin.parsed_section_name:
+            raise NotImplementedError()
+
+        # TODO (mo): make this unnecessary
         parse_function = cast(Callable[[AbstractSectionContent], ParsedSectionContent],
-                              config.check_info[section_name]["parse_function"])
-        if not parse_function:
-            return section_content
+                              section_plugin.parse_function)
 
         # TODO: Item state needs to be handled in local objects instead of the
         # item_state._cached_item_states object
+        # TODO (mo): ValueStores (formally Item state) need to be *only* available
+        # from within the check function, nowhere else.
         orig_item_state_prefix = item_state.get_item_state_prefix()
         try:
             item_state.set_item_state_prefix(section_name, None)

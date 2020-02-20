@@ -10,6 +10,8 @@ import cmk.base.config as config
 import cmk.base.check_api as check_api
 import cmk.base.check_utils as check_utils
 
+from cmk.base.api import PluginName
+
 from cmk.base.api.agent_based.section_types import (
     AgentSectionPlugin,
     SNMPSectionPlugin,
@@ -21,9 +23,8 @@ from cmk.base.api.agent_based.register.section_plugins_legacy_scan_function impo
     _explicit_conversions,
 )
 
-from cmk.base.api.agent_based.register.section_plugins_legacy import (
-    _create_snmp_trees,
-    create_agent_section_plugin_from_legacy,
+from cmk.base.api.agent_based.register.section_plugins_legacy import (  # pylint: disable=unused-import
+    _create_snmp_trees, create_agent_section_plugin_from_legacy,
     create_snmp_section_plugin_from_legacy,
 )
 
@@ -97,30 +98,34 @@ def _get_check_info(_load_all_checks):
     return config.check_info.copy()
 
 
-def test_create_section_plugin_from_legacy(check_info, snmp_scan_functions, snmp_info):
+@pytest.fixture(scope="module", name="migrated_agent_sections")
+def _get_migrated_agent_sections(_load_all_checks):
+    return config.registered_agent_sections.copy()
+
+
+@pytest.fixture(scope="module", name="migrated_snmp_sections")
+def _get_migrated_snmp_sections(_load_all_checks):
+    return config.registered_snmp_sections.copy()
+
+
+def test_create_section_plugin_from_legacy(check_info, snmp_info, migrated_agent_sections,
+                                           migrated_snmp_sections):
     for name, check_info_dict in check_info.items():
         # only test main checks
         if name != check_utils.section_name_of(name):
             continue
 
+        section_name = PluginName(name)
         section = None
 
         if name not in snmp_info:
-            section = create_agent_section_plugin_from_legacy(
-                name,
-                check_info_dict,
-            )
+            section = migrated_agent_sections[section_name]
             assert isinstance(section, AgentSectionPlugin)
         else:
             with known_exceptions(name):
-                if name not in snmp_scan_functions:
-                    raise NotImplementedError("missing scan function")
-                section = create_snmp_section_plugin_from_legacy(
-                    name,
-                    check_info_dict,
-                    snmp_scan_functions[name],
-                    snmp_info[name],
-                )
+                if section_name not in migrated_snmp_sections:
+                    raise NotImplementedError(name)
+                section = migrated_snmp_sections[section_name]
                 assert isinstance(section, SNMPSectionPlugin)
 
         if section is None:

@@ -119,7 +119,7 @@ def test_snmp_tree_tranlation(snmp_info):
         assert all(isinstance(tree, SNMPTree) for tree in new_trees)
 
 
-def test_scan_function_trranslation(snmp_scan_functions):
+def test_scan_function_translation(snmp_scan_functions):
     for name, scan_func in snmp_scan_functions.items():
         assert scan_func is not None
 

@@ -65,6 +65,7 @@ node {
                     checkout_git(scm, VERSION)
                     // Load libraries
                     versioning = load 'buildscripts/scripts/lib/versioning.groovy'
+                    windows = load 'buildscripts/scripts/lib/windows.groovy'
                     withFolderProperties{
                         DOCKER_TAG = versioning.select_docker_tag(BRANCH, DOCKER_TAG_BUILD, env.DOCKER_TAG_FOLDER)
                     }
@@ -88,7 +89,17 @@ AGENT_LIST.each { AGENT ->
     AGENT_BUILDS['build agent ' + AGENT] = {
         if (AGENT == 'windows') {
             node('windows') {
-                build_windows_agent()
+                bat 'powershell Remove-Item .\\* -Recurse -Force'
+                // Receive files needed for building the agent
+                unstash(name: 'WinDep')
+                windows.build(
+                    TARGET: 'agent',
+                    STASH_NAME: 'WinMSI'
+                )
+                windows.build(
+                    TARGET: 'module',
+                    STASH_NAME: 'WinPython'
+                )
             }
         }
         else {
@@ -259,39 +270,6 @@ def set_version(CMK_VERS) {
     sh "make NEW_VERSION=${CMK_VERS} setversion"
 }
 
-def build_windows_agent() {
-    stage('Build windows agent') {
-        try {
-            bat 'powershell Remove-Item .\\* -Recurse -Force'
-            // Receive files needed for building the agent
-            unstash(name: 'WinDep')
-            bat 'cd agents\\wnx && call build_release.cmd'
-            dir('artefacts') {
-                // Store the built files for later packaging
-                stash(
-                    name: 'WinMSI',
-                    includes: 'check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,mk_logwatch.exe,mk_jolokia.exe'
-                )
-            }
-        } catch(ERROR) {
-            mail(
-                to: WIN_DEV_MAIL,
-                cc: '', 
-                bcc: '', 
-                from: JENKINS_MAIL, 
-                replyTo: '', 
-                subject: "Win Error in $BUILD_URL",
-                body: """
-                    The following Error appered in 
-                    Build URL: $BUILD_URL \n
-                """
-                    + ERROR.getMessage()
-            )
-            throw ERROR
-        }
-    }
-}
-
 // TODO: Clean this up
 // - AGENT variable handling is confusing
 // - Naming is misleading here. We build:
@@ -360,6 +338,7 @@ def create_source_package(DAILY_DATA) {
        sh 'rm -rf *'
        unstash(name: 'WinMSI')
        sh "mv check_mk_agent-64.exe check_mk_agent.exe check_mk_agent.msi check_mk.user.yml mk_logwatch.exe mk_jolokia.exe ${DAILY_DATA}/agents/"
+       unstash(name: 'WinPython')
        dir("${DAILY_DATA}/git") {
             if(EDITION != 'raw') {
                 sh "cp ${DAILY_DATA}/agents/cmk-update-agent enterprise/agents/plugins/"
@@ -377,10 +356,10 @@ def create_source_package(DAILY_DATA) {
 def get_source_package_name(DAILY_DATA, EDITION, CMK_VERS) {
     def PACKAGE_PATH = ""
     dir(DAILY_DATA + "/git") {
-        PACKAGE_PATH = sh(script: "ls check-mk-${EDITION}-${CMK_VERS}.c?e.tar.gz", returnStdout: true).toString().trim()
+        PACKAGE_PATH = sh(script: "ls check-mk-${EDITION}-${CMK_VERS}.c?e*.tar.gz", returnStdout: true).toString().trim()
     }
     if (PACKAGE_PATH == "") {
-        throw new Exception("Found no source package path matching ${DAILY_DATA}/git/check-mk-${EDITION}-${CMK_VERS}.c?e.tar.gz")
+        throw new Exception("Found no source package path matching ${DAILY_DATA}/git/check-mk-${EDITION}-${CMK_VERS}.c?e*.tar.gz")
     }
     return PACKAGE_PATH
 }

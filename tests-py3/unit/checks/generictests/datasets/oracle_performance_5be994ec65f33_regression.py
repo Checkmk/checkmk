@@ -45,12 +45,21 @@ info = [['TWH', 'sys_time_model', 'DB CPU', '14826'],
 ]
 
 
-discovery = {'': [('TWH', None)]}
+discovery = {'': [('TWH', {})]}
 
 
 checks = {'': [('TWH',
                 {},
                 [(0,
+                  'DB Time: 0.00 1/s',
+                  [('oracle_db_time', 0.0, None, None, None, None)]),
+                 (0,
+                  'DB CPU: 0.00 1/s',
+                  [('oracle_db_cpu', 0.0, None, None, None, None)]),
+                 (0,
+                  'DB Non-Idle Wait: 0.00 1/s',
+                  [('oracle_db_wait_time', 0.0, None, None, None, None)]),
+                 (0,
                   'Buffer hit ratio: 98.1%',
                   [('oracle_buffer_hit_ratio',
                     98.096392315184,
@@ -67,9 +76,8 @@ checks = {'': [('TWH',
                     None,
                     None)]),
                  (0,
-                  'DB CPU: 0.0/s, DB time: 0.0/s',
-                  sorted([('oracle_db_time', 0.0, None, None, None, None),
-                   ('oracle_db_cpu', 0.0, None, None, None, None),
+                  '',
+                  sorted([
                    ('oracle_db_block_gets', 0.0, None, None, None, None),
                    ('oracle_db_block_change', 0.0, None, None, None, None),
                    ('oracle_consistent_gets', 0.0, None, None, None, None),

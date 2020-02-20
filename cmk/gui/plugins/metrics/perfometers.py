@@ -1214,9 +1214,125 @@ def register_hop_perfometers():
 register_hop_perfometers()
 
 perfometer_info.append({
+    "type": "linear",
+    "segments": ["oracle_db_cpu", "oracle_db_wait_time"],
+    "total": "20,oracle_db_time,oracle_db_time,30,/,/,+",
+})
+perfometer_info.append({
+    "type": "stacked",
+    "perfometers": [
+        {
+            "type": "dual",
+            "perfometers": [
+                {
+                    "type": "logarithmic",
+                    "metric": "oracle_ios_f_total_s_rb",
+                    "half_value": 50.0,
+                    "exponent": 2,
+                },
+                {
+                    "type": "logarithmic",
+                    "metric": "oracle_ios_f_total_s_wb",
+                    "half_value": 50.0,
+                    "exponent": 2,
+                },
+            ]
+        },
+        {
+            "type": "dual",
+            "perfometers": [
+                {
+                    "type": "logarithmic",
+                    "metric": "oracle_ios_f_total_l_rb",
+                    "half_value": 50.0,
+                    "exponent": 2,
+                },
+                {
+                    "type": "logarithmic",
+                    "metric": "oracle_ios_f_total_l_wb",
+                    "half_value": 50.0,
+                    "exponent": 2,
+                },
+            ]
+        },
+    ]
+})
+perfometer_info.append({
+    "type": "stacked",
+    "perfometers": [
+        {
+            "type": "dual",
+            "perfometers": [
+                {
+                    "type": "logarithmic",
+                    "metric": "oracle_ios_f_total_s_r",
+                    "half_value": 50.0,
+                    "exponent": 2,
+                },
+                {
+                    "type": "logarithmic",
+                    "metric": "oracle_ios_f_total_s_w",
+                    "half_value": 50.0,
+                    "exponent": 2,
+                },
+            ]
+        },
+        {
+            "type": "dual",
+            "perfometers": [
+                {
+                    "type": "logarithmic",
+                    "metric": "oracle_ios_f_total_l_r",
+                    "half_value": 50.0,
+                    "exponent": 2,
+                },
+                {
+                    "type": "logarithmic",
+                    "metric": "oracle_ios_f_total_l_w",
+                    "half_value": 50.0,
+                    "exponent": 2,
+                },
+            ]
+        },
+    ]
+})
+perfometer_info.append({
+    "type": "stacked",
+    "perfometers": [
+        {
+            "type": "linear",
+            "segments": ["oracle_buffer_hit_ratio"],
+            "total": 100.0,
+        },
+        {
+            "type": "linear",
+            "segments": ["oracle_library_cache_hit_ratio"],
+            "total": 100.0,
+        },
+    ]
+})
+perfometer_info.append({
+    "type": "dual",
+    "perfometers": [
+        {
+            "type": "logarithmic",
+            "metric": "oracle_wait_class_total#00b0c0",
+            "half_value": 50.0,
+            "exponent": 2,
+        },
+        {
+            "type": "logarithmic",
+            "metric": "oracle_wait_class_total_fg#30e0f0",
+            "half_value": 50.0,
+            "exponent": 2,
+        },
+    ]
+})
+
+perfometer_info.append({
     "type": "logarithmic",
-    "metric": "oracle_db_cpu",
-    "half_value": 50.0,
+    "metric": "oracle_sga_size,oracle_pga_total_pga_allocated,+",
+    "half_value": 16589934592.0,
     "exponent": 2,
 })
 

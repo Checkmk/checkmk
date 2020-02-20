@@ -25,6 +25,7 @@ PACKAGES := \
     python-modules \
     python3-modules \
     rrdtool \
+    python2-rrdtool \
     msitools \
     net-snmp \
     apache-omd \

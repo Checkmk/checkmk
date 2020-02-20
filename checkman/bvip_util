@@ -6,6 +6,9 @@ distribution: check_mk
 description:
  This Check monitors the Total CPU utilization on the Camera. There are also two seperate Checks for the utilization used for the Coder and for the VCA.
 
+item:
+ {{Total}}, {{Coder}} or {{VCA}}.
+
 inventory:
  Creates one check .
 

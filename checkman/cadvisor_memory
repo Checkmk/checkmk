@@ -13,7 +13,3 @@ description:
  This check obtains its metrics values through Prometheus. In order to allow
  generation of cAdvisor related memory services, the user needs to enable
  the cAdvisor option under the Prometheus Datasource Programs ruleset.
-
-item:
- One service for each pod/container is created
-

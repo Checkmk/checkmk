@@ -2710,7 +2710,7 @@ def _valuespec_special_agents_jira():
             (
                 "project_workflows",
                 _vs_jira_projects(
-                    _("Monitor the number of issues for given projects and there "
+                    _("Monitor the number of issues for given projects and their "
                       "workflows. This results in a service for each project with "
                       "the number of issues per workflow."),),
             ),

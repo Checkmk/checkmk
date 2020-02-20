@@ -180,6 +180,7 @@ constexpr std::string_view kModulesTable = "table";  // list of nodes
 constexpr std::string_view kModulesName = "name";    // string
 constexpr std::string_view kModulesExts = "exts";    // list of string
 constexpr std::string_view kModulesExec = "exec";    // string
+constexpr std::string_view kModulesDir = "dir";      // string
 
 // group "system"
 constexpr const char* const kFirewall = "firewall";  // dictionary
@@ -235,6 +236,8 @@ constexpr bool kRestartOnCrash = true;
 constexpr uint32_t kMrpeTimeout = 10;
 
 constexpr const char* const kTryKillPluginProcess = values::kTryKillSafe;
+
+constexpr std::string_view kModulesDir = "modules\\{}";
 
 }  // namespace defaults
 

@@ -8,8 +8,5 @@ description:
 
  Upper levels are configurable. Default levels are set to 80, 90 percent.
 
-item:
- No item.
-
 inventory:
  One service is created.

@@ -8,9 +8,6 @@ description:
  It reports the remaining API calls (which are limited by Microsoft),
  the monitored groups and encountered issues.
 
-item:
- "Azure Agent Info".
-
 inventory:
  One service is created per monitored resource group and one for the
  host that the agent is assigned to.

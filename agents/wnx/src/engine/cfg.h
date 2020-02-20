@@ -124,6 +124,7 @@ std::wstring GetRootInstallDir() noexcept;  // for cap, ini and dat
 std::wstring GetUserDir() noexcept;
 std::wstring GetUpgradeProtocolDir() noexcept;
 std::wstring GetBakeryDir() noexcept;
+std::wstring GetModulesDir() noexcept;
 std::filesystem::path GetBakeryFile() noexcept;
 std::wstring GetLocalDir() noexcept;
 std::wstring GetStateDir() noexcept;
@@ -398,23 +399,25 @@ std::vector<std::string> GetInternalArray(const YAML::Node& yaml_node,
                                           std::string_view name) noexcept;
 
 template <typename T>
-std::vector<T> GetArray(const YAML::Node& Yaml, const std::string& Name,
-                        int* ErrorOut = nullptr) noexcept {
-    if (Yaml.size() == 0) {
-        if (ErrorOut) *ErrorOut = Error::kEmpty;
+std::vector<T> GetArray(const YAML::Node& yaml, std::string_view node_name,
+                        int* error_out = nullptr) noexcept {
+    if (yaml.size() == 0) {
+        if (error_out) *error_out = Error::kEmpty;
         return {};
     }
     try {
-        auto val = Yaml[Name];
+        auto val = yaml[node_name];
         if (val.IsSequence()) return ConvertNode2Sequence<T>(val);
 
         if (!val.IsDefined() || val.IsNull())
-            XLOG::t("Node '{}' is not defined/empty,return empty array", Name);
+            XLOG::t("Node '{}' is not defined/empty,return empty array",
+                    node_name);
         else
-            XLOG::d("Node '{}' has bad type [{}]", Name, val.Type());
+            XLOG::d("Node '{}' has bad type [{}]", node_name, val.Type());
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {} code:{}",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Name, e.what());
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), node_name,
+                e.what());
     }
     return {};
 }

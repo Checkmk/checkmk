@@ -326,6 +326,11 @@ std::wstring GetRootInstallDir() noexcept {
     return root / dirs::kFileInstallDir;
 }
 
+std::wstring GetModulesDir() noexcept {
+    auto root = GetCfg().getRootDir();
+    return root / dirs::kModules;
+}
+
 std::wstring GetLocalDir() noexcept { return GetCfg().getLocalDir(); }
 
 std::wstring GetStateDir() noexcept { return GetCfg().getStateDir(); }
@@ -765,6 +770,7 @@ std::vector<std::wstring_view> AllDirTable() {
             dirs::kTemp,     //
             dirs::kInstall,  // for installing data
             dirs::kUpdate,   // for incoming MSI
+            dirs::kModules,  // for all modules
 
             // may contain user content
             dirs::kState,          // state folder
@@ -783,7 +789,8 @@ std::vector<std::wstring_view> RemovableDirTable() {
         dirs::kBackup,   // backed up files
         dirs::kTemp,     //
         dirs::kInstall,  // for installing data
-        dirs::kUpdate    // for incoming MSI
+        dirs::kUpdate,   // for incoming MSI
+        dirs::kModules,  // for all modules
     };                   //
 }
 
@@ -1211,6 +1218,7 @@ void ProcessPluginEnvironment(
             {envs::kMkSpoolDirName, &cma::cfg::GetSpoolDir},
             {envs::kMkInstallDirName, &cma::cfg::GetUserInstallDir},
             {envs::kMkMsiPathName, &cma::cfg::GetUpdateDir},
+            {envs::kMkModulesDirName, &cma::cfg::GetModulesDir},
             //
         };
 

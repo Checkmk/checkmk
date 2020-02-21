@@ -708,19 +708,19 @@ class CheckMKAgentDataSource(
         for line in raw_data.split(b"\n"):
             line = line.rstrip(b"\r")
             stripped_line = line.strip()
-            if stripped_line[:4] == '<<<<' and stripped_line[-4:] == '>>>>':
+            if stripped_line[:4] == b'<<<<' and stripped_line[-4:] == b'>>>>':
                 piggybacked_hostname =\
                     self._get_sanitized_and_translated_piggybacked_hostname(stripped_line)
 
             elif piggybacked_hostname:  # processing data for an other host
-                if stripped_line[:3] == '<<<' and stripped_line[-3:] == '>>>':
+                if stripped_line[:3] == b'<<<' and stripped_line[-3:] == b'>>>':
                     line = self._add_cached_info_to_piggybacked_section_header(
                         stripped_line, piggybacked_cached_at, piggybacked_cache_age)
                 piggybacked_raw_data.setdefault(piggybacked_hostname, []).append(line)
 
             # Found normal section header
             # section header has format <<<name:opt1(args):opt2:opt3(args)>>>
-            elif stripped_line[:3] == '<<<' and stripped_line[-3:] == '>>>':
+            elif stripped_line[:3] == b'<<<' and stripped_line[-3:] == b'>>>':
                 section_header = stripped_line[3:-3]
                 headerparts = section_header.split(b":")
                 section_name = headerparts[0]
@@ -766,7 +766,7 @@ class CheckMKAgentDataSource(
                 # The section data might have a different encoding
                 encoding = section_options.get(b"encoding")
 
-            elif stripped_line != '':
+            elif stripped_line != b'':
                 raw_nostrip = section_options.get(b"nostrip")
                 if raw_nostrip is None:
                     line = stripped_line

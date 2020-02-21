@@ -459,10 +459,8 @@ class MockStructuredDataTree(object):  # pylint: disable=useless-object-inherita
 
 class InventoryPluginManager(object):  # pylint: disable=useless-object-inheritance
     def load(self):
-        if sys.version_info[0] < 3:
-            # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk.base.inventory_plugins as inv_plugins  # pylint: disable=import-outside-toplevel
-            import cmk.base.check_api as check_api  # pylint: disable=import-outside-toplevel
+        import cmk.base.inventory_plugins as inv_plugins  # pylint: disable=import-outside-toplevel
+        import cmk.base.check_api as check_api  # pylint: disable=import-outside-toplevel
         g_inv_tree = MockStructuredDataTree()
         g_status_tree = MockStructuredDataTree()
 
@@ -486,9 +484,8 @@ class MissingInvInfoError(KeyError):
 
 class InventoryPlugin(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, name, g_inv_tree, g_status_tree):
-        if sys.version_info[0] < 3:
-            # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk.base.inventory_plugins as inv_plugins  # pylint: disable=import-outside-toplevel
+        # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
+        import cmk.base.inventory_plugins as inv_plugins  # pylint: disable=import-outside-toplevel
         super(InventoryPlugin, self).__init__()
         self.name = name
         if self.name not in inv_plugins.inv_info:

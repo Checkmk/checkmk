@@ -55,8 +55,9 @@ def test_cfg(monkeypatch):
         ('cat %s/<HOST>' % cmk.utils.paths.tcp_cache_dir, [], test_hosts, {}),
     ])
 
-    with open("%s/tests/integration/cmk/base/test-files/linux-agent-output" % repo_path()) as f:
-        linux_agent_output = f.read().decode("utf-8")
+    with Path("%s/tests/integration/cmk/base/test-files/linux-agent-output" %
+              repo_path()).open(encoding="utf-8") as f:
+        linux_agent_output = f.read()
 
     for h in test_hosts:
         cache_path = Path(cmk.utils.paths.tcp_cache_dir, h)

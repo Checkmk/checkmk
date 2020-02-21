@@ -10,8 +10,7 @@ import time
 import signal
 from types import FrameType  # pylint: disable=unused-import
 from typing import (  # pylint: disable=unused-import
-    Pattern, AnyStr, Union, Iterator, Callable, List, Text, Optional, Dict, Tuple, Set, NoReturn,
-    Any,
+    Pattern, Union, Iterator, Callable, List, Text, Optional, Dict, Tuple, Set, NoReturn, Any,
 )
 import six
 
@@ -1373,9 +1372,9 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                         cmk.base.check_utils.is_snmp_check(discovered_service.check_plugin_name),
                     )
                     item_state.raise_counter_wrap()
-                except item_state.MKCounterWrapped as e:
+                except item_state.MKCounterWrapped:
                     output = u"WAITING - Counter based check, cannot be done offline"
-                except Exception as e:
+                except Exception:
                     if cmk.utils.debug.enabled():
                         raise
                     exitcode = 3

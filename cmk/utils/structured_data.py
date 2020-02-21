@@ -111,9 +111,13 @@ class StructuredDataTree(object):
         filepath = "%s/%s" % (path, filename)
         output = self.get_raw_tree()
         store.save_object_to_file(filepath, output, pretty=pretty)
-        gzip.open(filepath + ".gz", "w").write(repr(output) + "\n")
+
+        # TODO: Can be set to encoding="utf-8" once we are on Python 3 only
+        with gzip.open(filepath + ".gz", "wb") as f:
+            f.write(six.ensure_binary(repr(output) + "\n"))
+
         # Inform Livestatus about the latest inventory update
-        store.save_file("%s/.last" % path, "")
+        store.save_text_to_file("%s/.last" % path, u"")
 
     def load_from(self, filepath):
         raw_tree = store.load_object_from_file(filepath)

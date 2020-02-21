@@ -1318,7 +1318,7 @@ modes.register(
 
 
 def mode_inventory_as_check(options, hostname):
-    # type: (Dict, HostName) -> None
+    # type: (Dict, HostName) -> int
     inventory_plugins.load_plugins(check_api.get_check_api_context, inventory.get_inventory_context)
 
     return inventory.do_inv_check(hostname, options)

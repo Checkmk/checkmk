@@ -135,7 +135,7 @@ def _parse_lnx_if_sections(info):
             # Parse '/proc/net/dev'
             # IFACE_NAME: VAL VAL VAL ...
             iface = ethtool_stats.setdefault((node, line[0]), {})
-            iface.update({"counters": map(int, line[1].strip().split())})
+            iface.update({"counters": list(map(int, line[1].strip().split()))})
             continue
 
         elif line[0].startswith('[') and line[0].endswith(']'):

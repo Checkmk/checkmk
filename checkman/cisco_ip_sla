@@ -3,6 +3,10 @@ agents: snmp
 catalog: hw/network/cisco
 license: GPL
 distribution: check_mk
+
+item:
+ RTT row index
+
 description:
  This check detects the configured IP SLA operations on Cisco IOS devices
  and checks their current status.

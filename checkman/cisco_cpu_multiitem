@@ -3,6 +3,10 @@ agents: snmp
 catalog: hw/network/cisco
 license: GPL
 distribution: check_mk
+
+item:
+ Index of CPU
+
 description:
  Check CPU utilization of the last 5 minutes in percent on Cisco devices.
 

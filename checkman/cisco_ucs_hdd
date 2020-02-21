@@ -3,6 +3,10 @@ agents: snmp
 catalog: hw/network/cisco
 license: GPL
 distribution: check_mk
+
+item:
+ Identifier of the disk
+
 description:
  This check allows to monitor the operational status and presence of
  the HDDs in a Cisco UCS device. The check will report {OK} as long as the operational

@@ -3,6 +3,10 @@ agents: snmp
 catalog: hw/network/cisco
 license: GPL
 distribution: check_mk
+
+item:
+ Name of the WLC
+
 description:
  This check automatically detects all online accesspoints and checks for the current status.
  If an accesspoint is not longer reachable, the checks also triggers a critical state.

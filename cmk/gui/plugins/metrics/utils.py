@@ -260,11 +260,9 @@ def _split_perf_data(perf_data_string):
 def perfvar_translation(perfvar_name, check_command):
     """Get translation info for one performance var."""
     cm = check_metrics.get(check_command, {})
-    translation_entry = {}  # Default: no translation necessary
+    translation_entry = cm.get(perfvar_name, {})  # Default: no translation necessary
 
-    if perfvar_name in cm:
-        translation_entry = cm[perfvar_name]
-    else:
+    if not translation_entry:
         for orig_varname, te in cm.items():
             if orig_varname[0] == "~" and cmk.utils.regex.regex(
                     orig_varname[1:]).match(perfvar_name):  # Regex entry
@@ -295,10 +293,10 @@ def normalize_perf_data(perf_data, check_command):
     translation_entry = perfvar_translation(perf_data[0], check_command)
 
     new_entry = {
-        "orig_name": perf_data[0],
+        "orig_name": [perf_data[0]],
         "value": perf_data[1] * translation_entry["scale"],
         "scalar": scalar_bounds(perf_data[3:], translation_entry["scale"]),
-        "scale": translation_entry["scale"],  # needed for graph recipes
+        "scale": [translation_entry["scale"]],  # needed for graph recipes
         # Do not create graphs for ungraphed metrics if listed here
         "auto_graph": translation_entry["auto_graph"],
     }
@@ -336,15 +334,17 @@ def translate_metrics(perf_data, check_command):
     for entry in perf_data:
 
         metric_name, new_entry = normalize_perf_data(entry, check_command)
-        if metric_name in translated_metrics:
-            continue  # ignore duplicate value
 
         mi, color_index = get_metric_info(metric_name, color_index)
         new_entry.update(mi)
 
         new_entry["unit"] = unit_info[new_entry["unit"]]
 
-        translated_metrics[metric_name] = new_entry
+        if metric_name in translated_metrics:
+            translated_metrics[metric_name]["orig_name"].extend(new_entry["orig_name"])
+            translated_metrics[metric_name]["scale"].extend(new_entry["scale"])
+        else:
+            translated_metrics[metric_name] = new_entry
     return translated_metrics
 
 

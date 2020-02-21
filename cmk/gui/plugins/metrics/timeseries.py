@@ -168,4 +168,5 @@ def time_series_operators():
         "MAX": (_("Maximum"), time_series_operator_maximum),
         "MIN": (_("Minimum"), time_series_operator_minimum),
         "AVERAGE": (_("Average"), time_series_operator_average),
+        "MERGE": ("First non None", lambda x: next(iter(clean_time_series_point(x)))),
     }

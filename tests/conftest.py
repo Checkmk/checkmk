@@ -85,7 +85,7 @@ def pytest_collection_modifyitems(items):
         file_path = Path("%s" % item.reportinfo()[0])
         repo_rel_path = file_path.relative_to(testlib.repo_path())
 
-        if sys.version_info[0] >= 3 and repo_rel_path.parts[0] != "tests-py":
+        if sys.version_info[0] >= 3 and repo_rel_path.parts[0] != "tests-py3":
             raise Exception("Executed non py3 test %s with Python %s" %
                             (repo_rel_path, sys.version))
         if sys.version_info[0] < 3 and repo_rel_path.parts[0] != "tests":

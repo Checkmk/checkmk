@@ -2206,7 +2206,7 @@ def finalize_site(version_info, site, what, apache_reload):
             finalize_site_as_user(version_info, site, what, ignored_hooks=["TMPFS"])
             sys.exit(0)
         except Exception as e:
-            bail_out("%s" % e)
+            bail_out("Failed to finalize site: %s" % e)
     else:
         _wpid, status = os.waitpid(pid, 0)
         if status:

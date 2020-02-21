@@ -1,0 +1,10 @@
+Title: ipmi_sensors, mgmt_ipmi_sensors: Fix crashing parsing for a certain format of undefined device levels
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p10
+Date: 1582291121
+Class: fix
+
+

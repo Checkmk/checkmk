@@ -147,15 +147,16 @@ def parse_freeipmi(info):
             if "(" in stripped_line[2]:
                 # 339 Voltage_3.3VCC 3.33_V_(NA/NA) [OK]
                 current, levels = stripped_line[2].split("(")
+                lower, upper = levels[:-1].split("/")
             else:
                 # 59 M2_Temp0(PCIe1)_(Temperature) NA/79.00_41.00_C [OK]
                 levels, current = stripped_line[2].split("_", 1)
+                lower, upper = levels.split("/")
             cparts = current.split("_")
             unit = "NA"
             if len(cparts) > 1:
                 unit = cparts[1]
 
-            lower, upper = levels[:-1].split("/")
             add_valid_values([("value", cparts[0], float), ("unit", unit, str),
                               ("crit_low", lower, float), ("crit_high", upper, float)])
 

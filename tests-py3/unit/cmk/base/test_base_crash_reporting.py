@@ -12,7 +12,8 @@ import cmk.base.crash_reporting as crash_reporting
 import cmk.base.check_api as check_api
 import cmk.base.config as config
 
-from testlib.base import Scenario
+# No stub file
+from testlib.base import Scenario  # type: ignore[import]
 
 
 def test_base_crash_report_registry():
@@ -92,10 +93,10 @@ def test_check_crash_report_from_exception(monkeypatch):
     assert crash.crash_info["exc_value"] == "DING"
 
     for key, (ty, value) in {
-            "check_output": (unicode, "Output"),
+            "check_output": (six.text_type, "Output"),
             "host": (str, "testhost"),
             "is_cluster": (bool, False),
-            "description": (unicode, "Uptime"),
+            "description": (six.text_type, "Uptime"),
             "check_type": (str, "uptime"),
             "item": (type(None), None),
             "params": (type(None), None),
@@ -157,7 +158,7 @@ def test_check_crash_report_read_agent_output(monkeypatch):
             text=u"Output",
         )
 
-    assert crash.agent_output == u"<<<abc>>>\nblablub\n"
+    assert crash.agent_output == b"<<<abc>>>\nblablub\n"
     assert crash.snmp_info is None
 
 
@@ -188,4 +189,4 @@ def test_check_crash_report_read_snmp_info(monkeypatch):
         )
 
     assert crash.agent_output is None
-    assert crash.snmp_info == u"[]\n"
+    assert crash.snmp_info == b"[]\n"

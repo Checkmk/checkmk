@@ -42,12 +42,12 @@ def _handle_false_positive_warnings(reading):
     The health warning is set, but only due to the lookup errors. We remove the lookup
     errors, and see whether the remaining states are meaningful.
     """
-    states = [s for s in reading.states if not s.startswith("Unknown state ")]
+    states = [s.encode("utf-8") for s in reading.states if not s.startswith("Unknown state ")]
 
     if not states:
         return b"no state reported"
 
-    if any("non-critical" in s for s in states):
+    if any(b"non-critical" in s for s in states):
         return b"WARNING"
 
     # just keep all the available info. It should be dealt with in

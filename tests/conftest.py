@@ -81,21 +81,11 @@ def pytest_collection_modifyitems(items):
         type_marker = item.get_closest_marker("type")
         if type_marker and type_marker.args:
             continue  # Do not modify manually set marks
-
         file_path = Path("%s" % item.reportinfo()[0])
         repo_rel_path = file_path.relative_to(testlib.repo_path())
-
-        if sys.version_info[0] >= 3 and repo_rel_path.parts[0] != "tests-py3":
-            raise Exception("Executed non py3 test %s with Python %s" %
-                            (repo_rel_path, sys.version))
-        if sys.version_info[0] < 3 and repo_rel_path.parts[0] != "tests":
-            raise Exception("Executed non py2 test %s with Python %s" %
-                            (repo_rel_path, sys.version))
-
         ty = repo_rel_path.parts[1]
         if ty not in test_types:
             raise Exception("Test in %s not TYPE marked: %r (%r)" % (repo_rel_path, item, ty))
-
         item.add_marker(pytest.mark.type.with_args(ty))
 
 

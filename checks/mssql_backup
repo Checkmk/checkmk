@@ -134,6 +134,8 @@ def check_mssql_backup(item, params, parsed):
         dbinfo = parsed[1].get(item[6:], {})
     except AttributeError:
         dbinfo = {}
+    if not dbinfo:
+        dbinfo = {}
 
     if not isinstance(params, dict):
         params = {"database": params}

@@ -1,0 +1,1 @@
+../../../../tests/unit/cmk/base/test_check_table.py

@@ -172,4 +172,4 @@ def test_get_check_table_of_mgmt_boards(monkeypatch, hostname, expected_result):
     monkeypatch.setattr(config_cache, "get_autochecks_of", lambda h: autochecks.get(h, []))
 
     CheckManager().load(["mgmt_ipmi_sensors", "ipmi_sensors"])
-    assert check_table.get_check_table(hostname).keys() == expected_result
+    assert list(check_table.get_check_table(hostname).keys()) == expected_result

@@ -1,0 +1,1 @@
+../../../../tests/unit/cmk/base/test_core_nagios.py

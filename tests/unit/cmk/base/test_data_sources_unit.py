@@ -74,7 +74,8 @@ def test_mgmt_board_data_source_is_ip_address():
 def test_mgmt_board_data_source_management_board_ipaddress(monkeypatch, result, address,
                                                            resolvable):
     Scenario().add_host("hostname").apply(monkeypatch)
-    source = cmk.base.data_sources.snmp.SNMPManagementBoardDataSource("hostname", "ipaddress")
+    # TODO: Extremely obscure code belwo: The class seems to be abstract??!!
+    source = cmk.base.data_sources.snmp.SNMPManagementBoardDataSource("hostname", "ipaddress")  # pylint: disable=abstract-class-instantiated
 
     if resolvable:
         monkeypatch.setattr(ip_lookup, "lookup_ip_address", lambda h: "127.0.1.1")

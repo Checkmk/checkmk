@@ -209,6 +209,10 @@ def test_get_single_oid_next(snmp_config):
     assert snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.9.1.*") == ".1.3.6.1.6.3.10.3.1.1"
 
 
+def test_get_single_oid_hex(snmp_config):
+    assert snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.2.2.1.6.2") == b"\x00\x12yb\xf9@"
+
+
 # Missing in currently used dump:
 # 5 NULL
 #68 - Opaque

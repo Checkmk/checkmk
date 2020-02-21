@@ -83,7 +83,8 @@ def get_cmk_download_credentials():
     try:
         return tuple(file(get_cmk_download_credentials_file()).read().strip().split(":"))
     except IOError:
-        raise Exception("Missing %s file (Create with content: USER:PASSWORD)" % cred)
+        raise Exception("Missing %s file (Create with content: USER:PASSWORD)" %
+                        get_cmk_download_credentials_file())
 
 
 def import_module(pathname):
@@ -805,8 +806,18 @@ class Site(object):
     def _install_test_python_modules(self):
         venv = virtualenv_path()
         bin_dir = venv / "bin"
-        packages_dir = venv / "lib/python2.7/site-packages"
+        self._copy_python_modules_from(venv / "lib/python2.7/site-packages")
 
+        # Some distros have a separate platfrom dependent library directory, handle it....
+        platlib64 = venv / "lib64/python2.7/site-packages"
+        if platlib64.exists():
+            self._copy_python_modules_from(platlib64)
+
+        for file_name in ["py.test", "pytest"]:
+            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/bin" %  # nosec
+                             (self.id, self.id, bin_dir / file_name, self.root)) >> 8 == 0
+
+    def _copy_python_modules_from(self, packages_dir):
         enforce_override = ["backports"]
 
         for file_name in os.listdir(str(packages_dir)):
@@ -818,10 +829,6 @@ class Site(object):
 
             assert os.system("sudo rsync -a --chown %s:%s %s %s/local/lib/python/" %  # nosec
                              (self.id, self.id, packages_dir / file_name, self.root)) >> 8 == 0
-
-        for file_name in ["py.test", "pytest"]:
-            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/bin" %  # nosec
-                             (self.id, self.id, bin_dir / file_name, self.root)) >> 8 == 0
 
     def rm(self, site_id=None):
         if site_id is None:

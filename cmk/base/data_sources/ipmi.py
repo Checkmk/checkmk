@@ -141,6 +141,10 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
 
             reading = sdr.sensors[number].decode_sensor_reading(rsp['data'])
             if reading is not None:
+                # sometimes (wrong) data for GPU sensors is reported, even if
+                # not installed
+                if "GPU" in reading.name and self._has_gpu(connection):
+                    continue
                 sensors.append(self._parse_sensor_reading(number, reading))
 
         return b"<<<mgmt_ipmi_sensors:sep(124)>>>\n" + b"".join(
@@ -189,6 +193,22 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
                 output += b"%s|%s|%s\n" % (entity_name, attribute_name, value)
 
         return output
+
+    # helper to sort out not installed GPU components
+    def _has_gpu(self, connection):
+        self._logger.debug("Fetching inventory information via UDP from %s:623" % (self._ipaddress))
+        try:
+            inventory_entries = connection.get_inventory_descriptions()
+        except Exception as e:
+            self._logger.verbose("Failed to fetch inventory information: %r" % e)
+            self._logger.debug("Exception", exc_info=True)
+            return ""
+
+        for line in inventory_entries:
+            if "GPU" in line:
+                return False
+
+        return True
 
     def _summary_result(self, for_checking):
         # type: (bool) -> ServiceCheckResult

@@ -736,7 +736,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         cmd += env_var_str + subprocess.list2cmdline(cmd_parts)
         print(cmd)
         args = ["/usr/bin/sudo", "--", "/bin/su", "-l", self.id, "-c", cmd]
-        return subprocess.call(args)
+        return subprocess.call(args, stderr=subprocess.STDOUT)
 
     # This opens a currently free TCP port and remembers it in the object for later use
     # Not free of races, but should be sufficient.

@@ -1,4 +1,4 @@
-import pytest
+import pytest  # type: ignore[import]
 import cmk.base.core
 import cmk.base.config
 import cmk.base.checking

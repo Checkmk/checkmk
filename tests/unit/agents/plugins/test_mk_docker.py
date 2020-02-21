@@ -21,7 +21,7 @@ def test_docker_plugin_version(mk_docker):
     assert md5 == PLUGIN_CHECKSUMS.get(mk_docker.VERSION), """
     Plugin source code has changed.
     If your changes are compatible to previous versions,
-    put the new md5 sum of the plugin into PLUIGIN_CHECKSUMS.
+    put the new md5 sum of the plugin into PLUGIN_CHECKSUMS.
     If your change is incompatible, increase the mk_docker.VERSION
-    and put a new entry into PLUIGIN_CHECKSUMS.
+    and put a new entry into PLUGIN_CHECKSUMS.
     """

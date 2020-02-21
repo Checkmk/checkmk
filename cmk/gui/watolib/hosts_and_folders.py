@@ -127,7 +127,7 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
 
         data = self._get_instance_data()
         data = self._upgrade_keys(data)
-        data['attributes']['updated_at'] = time.time()
+        data['attributes']['meta_data']['updated_at'] = time.time()
         data['__id'] = self._id
         store.makedirs(os.path.dirname(self._store_file_name()))
         store.save_object_to_file(self._store_file_name(), data)

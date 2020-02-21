@@ -5,8 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+import sys
 import subprocess
-from typing import cast, Iterable, Set, Tuple, Optional, Dict, List  # pylint: disable=unused-import
+from typing import Text, cast, Iterable, Set, Tuple, Optional, Dict, List  # pylint: disable=unused-import
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path  # pylint: disable=import-error
 
 import six
 
@@ -31,8 +37,8 @@ from cmk.base.check_utils import (  # pylint: disable=unused-import
     CheckPluginName,)
 from cmk.base.snmp_utils import (  # pylint: disable=unused-import
     OIDInfo, OIDWithColumns, OIDWithSubOIDsAndColumns, OID, Column, SNMPValueEncoding,
-    SNMPHostConfig, SNMPRowInfo, SNMPTable, ResultColumnsUnsanitized, ResultColumnsSanitized,
-    ResultColumnsDecoded, RawValue, ContextName, DecodedBinary, SNMPContext,
+    SNMPHostConfig, SNMPRowInfo, SNMPRowInfoForStoredWalk, SNMPTable, ResultColumnsUnsanitized,
+    ResultColumnsSanitized, ResultColumnsDecoded, RawValue, ContextName, DecodedBinary, SNMPContext,
 )
 
 try:
@@ -225,17 +231,18 @@ def get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache)
             fetchoid, max_column, value_encoding = columns[max_len_col]
             for o, _unused_value in max_column:
                 if index_format == snmp_utils.OID_END:
-                    index_rows.append((o, _extract_end_oid(fetchoid, o)))
+                    val = six.ensure_binary(_extract_end_oid(fetchoid, o))
                 elif index_format == snmp_utils.OID_STRING:
-                    index_rows.append((o, o))
+                    val = six.ensure_binary(o)
                 elif index_format == snmp_utils.OID_BIN:
-                    index_rows.append((o, _oid_to_bin(o)))
+                    val = _oid_to_bin(o)
                 elif index_format == snmp_utils.OID_END_BIN:
-                    index_rows.append((o, _oid_to_bin(_extract_end_oid(fetchoid, o))))
+                    val = _oid_to_bin(_extract_end_oid(fetchoid, o))
                 elif index_format == snmp_utils.OID_END_OCTET_STRING:
-                    index_rows.append((o, _oid_to_bin(_extract_end_oid(fetchoid, o))[1:]))
+                    val = _oid_to_bin(_extract_end_oid(fetchoid, o))[1:]
                 else:
                     raise MKGeneralException("Invalid index format %r" % (index_format,))
+                index_rows.append((o, val))
 
             index_encoding = columns[index_column][-1]
             columns[index_column] = fetchoid, index_rows, index_encoding
@@ -244,8 +251,8 @@ def get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache)
         if suboid and columns:
             fetchoid, first_column, value_encoding = columns[0]
             new_first_column = []
-            for o, val in first_column:
-                new_first_column.append((o, str(suboid) + "." + str(val)))
+            for o, col_val in first_column:
+                new_first_column.append((o, six.ensure_binary(suboid) + b"." + col_val))
             columns[0] = fetchoid, new_first_column, value_encoding
 
         # Here we have to deal with a nasty problem: Some brain-dead devices
@@ -255,7 +262,7 @@ def get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache)
         sanitized_columns = _sanitize_snmp_table_columns(columns)
 
         # From all SNMP data sources (stored walk, classic SNMP, inline SNMP) we
-        # get normal python strings. But for Check_MK we need unicode strings now.
+        # get python byte strings. But for Check_MK we need unicode strings now.
         # Convert them by using the standard Check_MK approach for incoming data
         decoded_columns = _sanitize_snmp_encoding(snmp_config, sanitized_columns)
 
@@ -279,7 +286,7 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
     if _is_in_single_oid_cache(oid):
         console.vverbose("       Using cached OID %s: " % oid)
         value = _get_oid_from_single_oid_cache(oid)
-        console.vverbose("%s%s%s%s\n" % (tty.bold, tty.green, value, tty.normal))
+        console.vverbose("%s%s%r%s\n" % (tty.bold, tty.green, value, tty.normal))
         return value
 
     # get_single_oid() can only return a single value. When SNMPv3 is used with multiple
@@ -304,7 +311,7 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
             value = None
 
     if value is not None:
-        console.vverbose("%s%s%s%s\n" % (tty.bold, tty.green, value, tty.normal))
+        console.vverbose("%s%s%r%s\n" % (tty.bold, tty.green, value, tty.normal))
     else:
         console.vverbose("failed.\n")
 
@@ -357,8 +364,6 @@ class StoredWalkSNMPBackend(snmp_utils.ABCSNMPBackend):
         path = cmk.utils.paths.snmpwalks_dir + "/" + snmp_config.hostname
 
         console.vverbose("  Loading %s from %s\n" % (oid, path))
-
-        rowinfo = []  # type: List[Tuple[str, str]]
 
         if snmp_config.hostname in _g_walk_cache:
             lines = _g_walk_cache[snmp_config.hostname]
@@ -445,7 +450,7 @@ class StoredWalkSNMPBackend(snmp_utils.ABCSNMPBackend):
 
 
 def walk_for_export(snmp_config, oid):
-    # type: (SNMPHostConfig, OID) -> SNMPRowInfo
+    # type: (SNMPHostConfig, OID) -> SNMPRowInfoForStoredWalk
     if snmp_config.is_inline_snmp_host:
         backend = inline_snmp.InlineSNMPBackend()  # type: snmp_utils.ABCSNMPBackend
     else:
@@ -475,22 +480,22 @@ def enforce_use_stored_walks():
 
 
 def _convert_rows_for_stored_walk(rows):
-    # type: (SNMPRowInfo) -> SNMPRowInfo
+    # type: (SNMPRowInfo) -> SNMPRowInfoForStoredWalk
     def should_be_encoded(v):
-        # type: (str) -> bool
-        for c in v:
-            if ord(c) < 32 or ord(c) > 127:
+        # type: (RawValue) -> bool
+        for c in bytearray(v):
+            if c < 32 or c > 127:
                 return True
         return False
 
     def hex_encode_value(v):
-        # type: (str) -> str
+        # type: (RawValue) -> Text
         encoded = ""
-        for c in v:
-            encoded += "%02X " % ord(c)
+        for c in bytearray(v):
+            encoded += "%02X " % c
         return "\"%s\"" % encoded
 
-    new_rows = []
+    new_rows = []  # type: SNMPRowInfoForStoredWalk
     for oid, value in rows:
         if value == "ENDOFMIBVIEW":
             continue
@@ -498,13 +503,13 @@ def _convert_rows_for_stored_walk(rows):
         if should_be_encoded(value):
             new_rows.append((oid, hex_encode_value(value)))
         else:
-            new_rows.append((oid, value))
+            new_rows.append((oid, six.ensure_text(value)))
     return new_rows
 
 
 def _oid_to_bin(oid):
-    # type: (OID) -> str
-    return "".join([chr(int(p)) for p in oid.strip(".").split(".")])
+    # type: (OID) -> RawValue
+    return six.ensure_binary("".join([chr(int(p)) for p in oid.strip(".").split(".")]))
 
 
 def _extract_end_oid(prefix, complete):
@@ -590,7 +595,7 @@ def _perform_snmpwalk(snmp_config, check_plugin_name, base_oid, fetchoid):
 
         for row_oid, val in rows:
             if row_oid in added_oids:
-                console.vverbose("Duplicate OID found: %s (%s)\n" % (row_oid, val))
+                console.vverbose("Duplicate OID found: %s (%r)\n" % (row_oid, val))
             else:
                 rowinfo.append((row_oid, val))
                 added_oids.add(row_oid)
@@ -635,7 +640,7 @@ def _sanitize_snmp_encoding(snmp_config, columns):
 
 def _snmp_decode_binary(text):
     # type: (RawValue) -> DecodedBinary
-    return list(map(ord, text))
+    return list(bytearray(text))
 
 
 def _sanitize_snmp_table_columns(columns):
@@ -675,14 +680,14 @@ def _sanitize_snmp_table_columns(columns):
             eo = _extract_end_oid(fetchoid, o)
             if len(row_info) != len(endoids):
                 while i < len(endoids) and endoids[i] != eo:
-                    new_column.append("")  # (beginoid + '.' +endoids[i], "" ) )
+                    new_column.append(b"")  # (beginoid + '.' +endoids[i], "" ) )
                     i += 1
             new_column.append(value)
             i += 1
 
         # At the end check if trailing OIDs are missing
         while i < len(endoids):
-            new_column.append("")  # (beginoid + '.' +endoids[i], "") )
+            new_column.append(b"")  # (beginoid + '.' +endoids[i], "") )
             i += 1
         new_columns.append((new_column, value_encoding))
 
@@ -845,17 +850,17 @@ def _do_snmpwalk_on(snmp_config, options, filename):
 
     oids = oids_to_walk(options)
 
-    with open(filename, "w") as out:
+    with Path(filename).open("w", encoding="utf-8") as out:
         for rows in _execute_walks_for_dump(snmp_config, oids):
             for oid, value in rows:
-                out.write("%s %s\n" % (oid, value))
+                out.write(six.ensure_text("%s %s\n" % (oid, value)))
             console.verbose("%d variables.\n" % len(rows))
 
     console.verbose("Wrote fetched data to %s%s%s.\n" % (tty.bold, filename, tty.normal))
 
 
 def _execute_walks_for_dump(snmp_config, oids):
-    # type: (SNMPHostConfig, List[OID]) -> Iterable[SNMPRowInfo]
+    # type: (SNMPHostConfig, List[OID]) -> Iterable[SNMPRowInfoForStoredWalk]
     for oid in oids:
         try:
             console.verbose("Walk on \"%s\"..." % oid)

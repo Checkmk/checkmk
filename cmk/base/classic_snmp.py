@@ -148,7 +148,7 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
         rowinfo = []
         while True:
             try:
-                line = next(line_iter).strip()
+                line = six.ensure_str(next(line_iter).strip())
             except StopIteration:
                 break
 
@@ -286,7 +286,7 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
 
 
 def strip_snmp_value(value):
-    # no-type: (str) -> RawValue
+    # type: (str) -> RawValue
     v = value.strip()
     if v.startswith('"'):
         v = v[1:-1]

@@ -75,10 +75,7 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
         if commandtype == "getnext" and not item.startswith(oid_prefix + "."):
             return None
 
-        # Strip quotes
-        if value.startswith('"') and value.endswith('"'):
-            return value[1:-1]
-        return value
+        return strip_snmp_value(value)
 
     def walk(self,
              snmp_config,

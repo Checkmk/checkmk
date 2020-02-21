@@ -3,6 +3,10 @@ agents: active
 catalog: agentless
 license: GPL
 distribution: check_mk
+
+item:
+ The TCP port
+
 description:
  This is an active check that connects to any given TCP port and checks
  if the connection could be established. Therefor it can be used to check

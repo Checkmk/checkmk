@@ -3,6 +3,10 @@ agents: snmp
 catalog: hw/network/checkpoint
 license: GPL
 distribution: check_mk
+
+item:
+ Name of the sensor
+
 description:
  This check monitors voltages in checkpoint firewalls.
  The status of this check is translated directly from a device status and

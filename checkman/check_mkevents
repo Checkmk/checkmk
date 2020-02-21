@@ -3,6 +3,10 @@ agents: active
 catalog: agentless
 license: GPL
 distribution: check_mk
+
+item:
+ Name of the application
+
 description:
  Checks the Event Console for open events for a host - either for any events for
  for those with certain application names. This check can be used for having the

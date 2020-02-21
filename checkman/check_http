@@ -3,6 +3,10 @@ agents: active
 catalog: agentless
 license: GPL
 distribution: check_mk
+
+item:
+ The name of the connection (Service name)
+
 description:
  This performs an active check of a HTTP or HTTPS server.
 

@@ -3,6 +3,10 @@ agents: active
 catalog: agentless
 license: GPL
 distribution: check_mk
+
+item:
+ The port number (optional).
+
 description:
  This performs an active check of an FTP server. It does this by connecting
  to the server using the FTP control socket, looking for the welcome message

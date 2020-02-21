@@ -3,6 +3,10 @@ agents: active
 catalog: app/omd
 license: GPL
 distribution: check_mk
+
+item:
+ The name set at {{Item suffix}}
+
 description:
  Checks for occurrence of defined log messages in a defined interval.
  Warn/Crit level can be set on message count

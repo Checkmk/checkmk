@@ -3,5 +3,9 @@ agents: active
 catalog: agentless
 license: GPL
 distribution: check_mk
+
+item:
+ If available the executed command, otherwise the service description
+
 description:
  This is an active check which uses SSH to execute commands on a remote host.

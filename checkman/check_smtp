@@ -3,6 +3,10 @@ agents: active
 catalog: agentless
 license: GPL
 distribution: check_mk
+
+item:
+ The name of the host
+
 description:
  This is an active check that connects to a SMTP server and checks if the
  SMTP protocol works. STARTTLS can be used to establish a SSL encrypted

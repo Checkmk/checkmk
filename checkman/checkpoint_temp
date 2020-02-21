@@ -3,6 +3,10 @@ agents: snmp
 catalog: hw/network/checkpoint
 license: GPL
 distribution: check_mk
+
+item:
+ Name of the temperature sensor.
+
 description:
  This check monitors the temperature sensors in checkpoint firewalls.
 

@@ -7,7 +7,8 @@ ENV LANG=C.UTF-8
 
 ARG PACKAGES
 
-RUN apt-get update \
+RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list \
+    && apt-get update \
     && apt-get install -y \
     gdebi \
     git \

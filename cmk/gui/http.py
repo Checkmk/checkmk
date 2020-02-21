@@ -126,7 +126,12 @@ class LegacyUploadMixin(object):  # pylint: disable=useless-object-inheritance
             self.upload_cache[name] = (f.filename, f.mimetype, f.read())
             f.close()
 
-        return self.upload_cache[name]
+        try:
+            upload = self.upload_cache[name]
+        except KeyError:
+            raise MKUserError(name, _("Please choose a file to upload."))
+
+        return upload
 
 
 class LegacyDeprecatedMixin(object):  # pylint: disable=useless-object-inheritance

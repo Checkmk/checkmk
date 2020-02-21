@@ -4,8 +4,6 @@
 
 #include "cap.h"
 
-#include <yaml-cpp/yaml.h>
-
 #include <cstdint>
 #include <filesystem>
 #include <string>
@@ -15,6 +13,7 @@
 #include "cfg.h"
 #include "cma_core.h"
 #include "common/cma_yml.h"
+#include "common/yaml.h"
 #include "cvt.h"
 #include "logger.h"
 #include "tools/_raii.h"
@@ -186,14 +185,88 @@ bool StoreFile(const std::wstring &Name, const std::vector<char> &Data) {
             ofs.write(Data.data(), Data.size());
             return true;
         }
+        XLOG::l.crit("Cannot create file to '{}', status = {}",
+                     fpath.u8string(), ::GetLastError());
 
     } catch (const std::exception &e) {
         XLOG::l("Exception on create/write file '{}',  '{}'", fpath.u8string(),
                 e.what());
     }
-    XLOG::l.crit("Cannot create file to '{}', status = {}", fpath.u8string(),
-                 GetLastError());
     return false;
+}
+
+[[nodiscard]] std::wstring GetProcessToKill(std::wstring_view name) {
+    namespace fs = std::filesystem;
+    fs::path p = name;
+    if (!p.has_filename()) return {};
+    if (!cma::tools::IsEqual(p.extension().u8string(), kAllowedExtension))
+        return {};
+
+    auto proc_name = p.filename().wstring();
+    if (proc_name.length() < kMinimumProcessNameLength) return {};
+
+    return proc_name;
+}
+
+static std::string GetTryKillMode() {
+    return GetVal(groups::kGlobal, vars::kTryKillPluginProcess,
+                  std::string(cma::cfg::defaults::kTryKillPluginProcess));
+}
+
+static const std::wstring TryToKillAllowedNames[] = {
+    L"cmk-update-agent.exe", L"mk_logwatch.exe", L"mk_jolokia.exe"};
+
+[[nodiscard]] bool IsAllowedToKill(std::wstring_view proc_name) {
+    auto try_kill_mode = GetTryKillMode();
+    if (try_kill_mode == cma::cfg::values::kTryKillSafe) {
+        XLOG::d.i("Mode is safe, checking on list");
+        auto in_list = std::any_of(
+            std::begin(TryToKillAllowedNames), std::end(TryToKillAllowedNames),
+            [proc_name](const std::wstring &name) {
+                return cma::tools::IsEqual(proc_name, name);
+            });
+        if (in_list) return true;
+
+        XLOG::l.w("Can't kill the process for file '{}' as not safe process",
+                  wtools::ConvertToUTF8(proc_name));
+        return false;
+    }
+
+    return try_kill_mode == cma::cfg::values::kTryKillAll;
+}
+
+// we will try to kill the process with name of the executable if
+// we cannot write to the file
+[[nodiscard]] bool StoreFileAgressive(const std::wstring &name,
+                                      const std::vector<char> &data,
+                                      uint32_t attempts_count) {
+    using namespace std::chrono;
+    for (uint32_t i = 0; i < attempts_count + 1; ++i) {
+        auto success = StoreFile(name, data);
+        if (success) return true;
+
+        // we try to kill potentially running process
+        auto proc_name = GetProcessToKill(name);
+        if (proc_name.empty()) {
+            XLOG::l.w("Can't kill the process for file '{}'",
+                      wtools::ConvertToUTF8(name));
+            return false;
+        }
+
+        auto allowed_to_kill = IsAllowedToKill(proc_name);
+
+        if (!allowed_to_kill) return false;
+
+        wtools::KillProcessFully(proc_name);
+        cma::tools::sleep(500ms);
+    }
+
+    return false;
+}
+
+[[nodiscard]] bool IsStoreFileAgressive() noexcept {
+    // stub function
+    return GetTryKillMode() != cma::cfg::values::kTryKillNo;
 }
 
 bool CheckAllFilesWritable(const std::string &Directory) {
@@ -277,7 +350,14 @@ bool Process(const std::string &cap_name, ProcMode Mode,
         const auto full_path = ProcessPluginPath(name);
 
         if (Mode == ProcMode::install) {
-            StoreFile(full_path, data);
+            auto success = IsStoreFileAgressive()
+                               ? StoreFileAgressive(full_path, data,
+                                                    kMaxAttemptsToStoreFile)
+                               : StoreFile(full_path, data);
+            if (!success)
+                XLOG::l("Can't store file '{}'",
+                        wtools::ConvertToUTF8(full_path));
+
             std::error_code ec;
             if (fs::exists(full_path, ec)) FilesLeftOnDisk.push_back(full_path);
         } else if (Mode == ProcMode::remove) {

@@ -1,19 +1,20 @@
+import contextlib
+import os
+import shutil
+
 import pytest  # type: ignore[import]
-import json
-import urllib
-# cmk.gui.wato: needed to load all WATO plugins
+from werkzeug.test import create_environ
+
 import cmk.gui.wato  # pylint: disable=unused-import
 import cmk.gui.config as config  # pylint: disable=unused-import
 import cmk.gui.watolib as watolib  # pylint: disable=unused-import
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
-
-from cmk.gui.plugins.wato import host_attribute_registry
 import cmk.gui.htmllib as htmllib
 
-from werkzeug.test import create_environ
-from testlib.utils import DummyApplication
 from cmk.gui.http import Request, Response
 from cmk.gui.globals import AppContext, RequestContext
+
+from testlib.utils import DummyApplication
 
 
 @pytest.mark.usefixtures("load_config")
@@ -114,5 +115,26 @@ def test_write_and_read_host_attributes(tmp_path, attributes, monkeypatch):
         # Read data back
         read_folder_hosts = read_data_folder.hosts()
         assert len(read_folder_hosts) == 1
-        for hostname, host in read_folder_hosts.iteritems():
+        for _, host in read_folder_hosts.iteritems():
             assert host.attributes() == attributes
+
+
+@contextlib.contextmanager
+def in_chdir(directory):
+    cur = os.getcwd()
+    os.chdir(directory)
+    yield
+    os.chdir(cur)
+
+
+def test_create_nested_folders(register_builtin_html):
+    with in_chdir("/"):
+        root = watolib.Folder.root_folder()
+
+        folder1 = watolib.Folder("folder1", parent_folder=root)
+        folder1.persist_instance()
+
+        folder2 = watolib.Folder("folder2", parent_folder=folder1)
+        folder2.persist_instance()
+
+        shutil.rmtree(os.path.dirname(folder1.wato_info_path()))

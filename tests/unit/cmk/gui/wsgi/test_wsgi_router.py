@@ -1,6 +1,7 @@
 import ast
 import json
 import os
+import uuid
 from cookielib import CookieJar
 from urllib import urlencode
 
@@ -14,6 +15,18 @@ from cmk.gui.wsgi import make_app
 # pylint: disable=redefined-outer-name
 
 
+def get_link(resp, rel):
+    for link in resp['links']:
+        if link['rel'].startswith(rel):
+            return link
+    for member in resp.get('members', {}).values():
+        if member['memberType'] == 'action':
+            for link in member['links']:
+                if link['rel'].startswith(rel):
+                    return link
+    raise KeyError("%r not found" % (rel,))
+
+
 class WebTestAppForCMK(webtest.TestApp):
     """A webtest.TestApp class with helper functions for automation user APIs"""
     def __init__(self, *args, **kw):
@@ -24,6 +37,12 @@ class WebTestAppForCMK(webtest.TestApp):
     def set_credentials(self, username, password):
         self.username = username
         self.password = password
+
+    def follow_link(self, resp, rel, base='', **kw):
+        """Follow a link description as defined in a restful-objects entity"""
+        link = get_link(resp.json, rel)
+        method = getattr(self, link.get('method', 'GET').lower())
+        return method(base + link['href'], **kw)
 
     def api_request(self, action, request, output_format='json', **kw):
         if self.username is None or self.password is None:
@@ -93,13 +112,105 @@ def test_deploy_agent(wsgi_app):
     assert response.body.startswith("Missing host")
 
 
-def test_openapi_app(
+def test_openapi_version(
     wsgi_app,  # type: WebTestAppForCMK
     with_automation_user,
 ):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     wsgi_app.get("/NO_SITE/check_mk/api/v0/version", status=200)
+
+
+def test_openapi_app_exception(
+    wsgi_app,  # type: WebTestAppForCMK
+    with_automation_user,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    resp = wsgi_app.get("/NO_SITE/check_mk/api/v0/version?fail=1", status=500)
+    assert 'detail' in resp.json
+    assert 'title' in resp.json
+    # TODO: Check CrashReport storage
+
+
+def test_openapi_missing_folder(
+    wsgi_app,  # type: WebTestAppForCMK
+    with_automation_user,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    wsgi_app.get("/NO_SITE/check_mk/api/v0/objects/folder/asdf" + uuid.uuid4().hex, status=404)
+
+
+def test_openapi_folders(
+    wsgi_app,  # type: WebTestAppForCMK
+    with_automation_user,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    resp = wsgi_app.post("/NO_SITE/check_mk/api/v0/collections/folder",
+                         params='{"name": "new_folder", "title": "foo", "parent": null}',
+                         status=200,
+                         content_type='application/json')
+
+    base = '/NO_SITE/check_mk/api/v0'
+
+    # First test without the proper ETag, fails with 412 (precondition failed)
+    wsgi_app.follow_link(resp,
+                         '.../update',
+                         base=base,
+                         status=412,
+                         params='{"title": "foobar"}',
+                         content_type='application/json')
+    # With the right ETag, the operation shall succeed
+    resp = wsgi_app.follow_link(resp,
+                                '.../update',
+                                base=base,
+                                status=200,
+                                headers={'If-Match': resp.headers['ETag']},
+                                params='{"title": "foobar"}',
+                                content_type='application/json')
+    # Even twice, as this is idempotent.
+    resp = wsgi_app.follow_link(resp,
+                                '.../update',
+                                base=base,
+                                status=200,
+                                headers={'If-Match': resp.headers['ETag']},
+                                params='{"title": "foobar"}',
+                                content_type='application/json')
+
+    # Invoke directly for now. Ideally this should be a 2-stage step:
+    #   1. fetch the resource description
+    #   2. send the argument as in the specification
+    wsgi_app.follow_link(resp,
+                         '.../invoke;action="move"',
+                         base=base,
+                         status=400,
+                         headers={'If-Match': resp.headers['ETag']},
+                         params=json.dumps({"destination": 'root'}),
+                         content_type='application/json')
+
+    # Check that unknown folders also give a 400
+    wsgi_app.follow_link(resp,
+                         '.../invoke;action="move"',
+                         base=base,
+                         status=400,
+                         headers={'If-Match': resp.headers['ETag']},
+                         params=json.dumps({"destination": 'asdf'}),
+                         content_type='application/json')
+
+    # Delete all folders.
+    coll = wsgi_app.get("/NO_SITE/check_mk/api/v0/collections/folder", status=200)
+    for entry in coll.json['value']:
+        # Fetch the new E-Tag.
+        resp = wsgi_app.get("/NO_SITE/check_mk/api/v0" + entry['href'], status=200)
+        # With the right ETag, the operation shall succeed
+        wsgi_app.follow_link(resp,
+                             '.../delete',
+                             base=base,
+                             status=200,
+                             headers={'If-Match': resp.headers['ETag']})
 
 
 @pytest.mark.skip

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -92,7 +92,7 @@ class DownloadSnmpWalkIcon(Icon):
 def _paint_download_host_info(what, row, tags, host_custom_vars, ty):
     if (what == "host" or (what == "service" and row["service_description"] == "Check_MK")) \
        and config.user.may("wato.download_agent_output") \
-       and not row["host_check_type"] == 2: # Not for shadow hosts
+       and not row["host_check_type"] == 2:  # Not for shadow hosts
 
         # Not 100% acurate to use the tags here, but this is the best we can do
         # with the available information.

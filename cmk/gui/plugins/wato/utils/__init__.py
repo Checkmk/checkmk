@@ -1,9 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """Module to hold shared code for WATO internals and the WATO plugins"""
 
 # TODO: More feature related splitting up would be better
@@ -1343,8 +1342,8 @@ class EventsMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
 
         elif html.request.has_var("_move"):
             if html.check_transaction():
-                from_pos = html.get_integer_input("_move")
-                to_pos = html.get_integer_input("_index")
+                from_pos = html.request.get_integer_input_mandatory("_move")
+                to_pos = html.request.get_integer_input_mandatory("_index")
                 rule = rules[from_pos]
                 del rules[from_pos]  # make to_pos now match!
                 rules[to_pos:to_pos] = [rule]
@@ -1676,7 +1675,7 @@ def configure_attributes(new,
 # of mandatory attributes.
 def some_host_hasnt_set(folder, attrname):
     # Check subfolders
-    for subfolder in folder.all_subfolders().values():
+    for subfolder in folder.subfolders():
         # If the attribute is not set in the subfolder, we need
         # to check all hosts and that folder.
         if attrname not in subfolder.attributes() \
@@ -2185,7 +2184,7 @@ def _single_folder_rule_match_condition():
 
 
 def get_search_expression():
-    search = html.get_unicode_input("search")
+    search = html.request.get_unicode_input("search")
     if search is not None:
         search = search.strip().lower()
     return search

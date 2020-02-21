@@ -1,11 +1,11 @@
 # encoding: utf-8
 # pylint: disable=redefined-outer-name
+import io
 import itertools
-from StringIO import StringIO
 
+import six
 import pytest  # type: ignore[import]
 from testlib.base import Scenario
-import six
 
 import cmk.base.core_config as core_config
 import cmk.base.core_nagios as core_nagios
@@ -180,7 +180,7 @@ def test_create_nagios_host_spec(hostname, result, monkeypatch):
             "parents": [('switch', ['node1', 'node2']),],
         })
 
-    outfile = StringIO()
+    outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
 
     config_cache = ts.apply(monkeypatch)

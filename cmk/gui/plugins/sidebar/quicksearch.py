@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -66,7 +66,7 @@ class QuicksearchSnapin(SidebarSnapin):
         }
 
     def _ajax_search(self):
-        q = _maybe_strip(html.get_unicode_input('q'))
+        q = _maybe_strip(html.request.get_unicode_input('q'))
         if not q:
             return
 
@@ -635,7 +635,7 @@ class GroupMatchPlugin(QuicksearchMatchPlugin):
 
     def get_matches(self, for_view, row, livestatus_table, used_filters, rows=None):
         supported_views = {
-            ### View name    url fieldname,                  key in row
+            # View name    url fieldname,                  key in row
             # Group domains (hostgroups, servicegroups)
             "hostgroup": ["hostgroup", "name"],
             "hostgroups": ["hostgroup_regex", "name"],

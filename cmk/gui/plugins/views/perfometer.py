@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -199,12 +199,10 @@ class PainterPerfometer(Painter):
     def ident(self):
         return "perfometer"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Service Perf-O-Meter")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Perf-O-Meter")
 
     @property

@@ -1,28 +1,8 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """This module handles the manual pages of Check_MK checks. These man
 pages are meant to document the individual checks of Check_MK and are
 used as base for the list of supported checks and catalogs of checks.
@@ -36,7 +16,7 @@ import re
 import sys
 from io import StringIO
 import subprocess
-from typing import Any, Dict, List, Optional, Tuple  # pylint: disable=unused-import
+from typing import Text, Any, Dict, List, Optional, Tuple  # pylint: disable=unused-import
 
 import six  # pylint: disable=unused-import
 
@@ -68,6 +48,7 @@ catalog_titles = {
             "didactum"     : "Didactum",
             "eaton"        : "Eaton",
             "emerson"      : "EMERSON",
+            "emka"         : "EMKA Electronic Locking & Monitoring",
             "eltek"        : "ELTEK",
             "epson"        : "Epson",
             "hwg"          : "HW group",
@@ -84,14 +65,13 @@ catalog_titles = {
             "socomec"      : "Socomec",
             "stulz"        : "STULZ",
             "teracom"      : "Teracom",
+            "tinkerforge"  : "Tinkerforge",
             "wagner"       : "WAGNER Group",
             "wut"          : "Wiesemann & Theis",
-            "emka"         : "EMKA Electronic Locking & Monitoring",
-            "tinkerforge"  : "Tinkerforge",
         "other"       : "Other devices",
         "time"        : "Clock Devices",
-            "meinberg"   : "Meinberg",
             "hopf"       : "Hopf",
+            "meinberg"   : "Meinberg",
         "network"     : "Networking (Switches, Routers, etc.)",
             "aerohive"    : "Aerohive Networking",
             "adva"        : "ADVA Optical Networking",
@@ -162,16 +142,16 @@ catalog_titles = {
             "atto"       : "ATTO",
             "brocade"    : "Brocade",
             "bdt"        : "BDT",
+            "emc"        : "EMC",
             "fastlta"    : "FAST LTA",
             "fujitsu"    : "Fujitsu",
             "mcdata"     : "McDATA",
             "netapp"     : "NetApp",
             "nimble"     : "Nimble Storage",
             "hitachi"    : "Hitachi",
-            "emc"        : "EMC",
+            "oraclehw"   : "ORACLE",
             "qlogic"     : "QLogic",
             "quantum"    : "Quantum",
-            "oraclehw"   : "ORACLE",
             "synology"   : "Synology Inc.",
         "phone"       : "Telephony",
 
@@ -180,31 +160,33 @@ catalog_titles = {
         "apache"        : "Apache Webserver",
         "activemq"      : "Apache ActiveMQ",
         "artec"         : "ARTEC",
+        "barracuda"     : "Barracuda",
+        "check_mk"      : "Check_MK Monitoring System",
+        "citrix"        : "Citrix",
         "couchbase"     : "Couchbase",
         "db2"           : "IBM DB2",
         "elasticsearch" : "Elasticsearch",
-        "graylog"       : "Graylog",
-        "jenkins"       : "Jenkins",
-        "jira"          : "Jira",
-        "splunk"        : "Splunk",
-        "mongodb"       : "MongoDB",
-        "citrix"        : "Citrix",
-        "netscaler"     : "Citrix Netscaler",
         "exchange"      : "Microsoft Exchange",
+        "graylog"       : "Graylog",
         "haproxy"       : "HAProxy Loadbalancer",
         "informix"      : "IBM Informix",
         "java"          : "Java (Tomcat, Weblogic, JBoss, etc.)",
+        "jenkins"       : "Jenkins",
+        "jira"          : "Jira",
+        "kaspersky"     : "Kaspersky Lab",
         "libelle"       : "Libelle Business Shadow",
         "lotusnotes"    : "IBM Lotus Domino",
+        "mongodb"       : "MongoDB",
         "mailman"       : "Mailman",
+        "mcafee"        : "McAfee",
         "mssql"         : "Microsoft SQL Server",
         "mysql"         : "MySQL",
         "msoffice"      : "MS Office",
+        "netscaler"     : "Citrix Netscaler",
         "nginx"         : "NGINX",
         "nullmailer"    : "Nullmailer",
         "nutanix"       : "Nutanix",
         "omd"           : "Open Monitoring Distribution (OMD)",
-        "check_mk"      : "Check_MK Monitoring System",
         "oracle"        : "ORACLE Database",
         "plesk"         : "Plesk",
         "pfsense"       : "pfsense",
@@ -216,13 +198,12 @@ catalog_titles = {
         "ruckus"        : "Ruckus Spot",
         "sap"           : "SAP R/3",
         "sap_hana"      : "SAP HANA",
+        "sansymphony"   : "Datacore SANsymphony",
+        "skype"         : "Skype",
+        "splunk"        : "Splunk",
+        "sshd"          : "SSH Daemon",
         "tsm"           : "IBM Tivoli Storage Manager (TSM)",
         "unitrends"     : "Unitrends",
-        "sansymphony"   : "Datacore SANsymphony",
-        "sshd"          : "SSH Daemon",
-        "kaspersky"     : "Kaspersky Lab",
-        "mcafee"        : "McAfee",
-        "barracuda"     : "Barracuda",
         "vnx"           : "VNX NAS",
         "websphere_mq"  : "WebSphere MQ",
         "zerto"         : "Zerto",
@@ -321,15 +302,16 @@ def print_man_page_table():
     table = []
     for name, path in sorted(all_man_pages().items()):
         try:
-            table.append([name, _get_title_from_man_page(Path(path))])
+            table.append([name, six.ensure_str(get_title_from_man_page(Path(path)))])
         except MKGeneralException as e:
             sys.stderr.write(str("ERROR: %s" % e))
 
     tty.print_table([str('Check type'), str('Title')], [tty.bold, tty.normal], table)
 
 
-def _get_title_from_man_page(path):
-    with path.open(encoding="utf-8") as fp:
+def get_title_from_man_page(path):
+    # type: (Path) -> Text
+    with path.open(encoding=six.ensure_str("utf-8")) as fp:
         for line in fp:
             if line.startswith("title:"):
                 return line.split(":", 1)[1].strip()

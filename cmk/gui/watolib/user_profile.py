@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -35,7 +35,7 @@ def push_user_profiles_to_site_transitional_wrapper(site, user_profiles):
             failed_info = []
             for user_id, user in user_profiles.items():
                 result = _legacy_push_user_profile_to_site(site, user_id, user)
-                if result != True:
+                if result is not True:
                     failed_info.append(result)
 
             if failed_info:
@@ -66,7 +66,7 @@ def _legacy_push_user_profile_to_site(site, user_id, profile):
 
     try:
         response = mk_eval(response)
-    except:
+    except Exception:
         # The remote site will send non-Python data in case of an error.
         raise MKAutomationException("%s: <pre>%s</pre>" % (_("Got invalid data"), response))
     return response

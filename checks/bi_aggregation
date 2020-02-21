@@ -44,19 +44,10 @@ def check_bi_aggregation(item, _no_params, parsed):
         return
 
     aggr_state = bi_data["aggr_state"]
-    bi_state = aggr_state["state_computed_by_agent"]
+    yield aggr_state["state_computed_by_agent"], ""
 
-    infotext = "Aggregation is %s" % core_state_names[bi_state]
-    extra_info = []
-    if aggr_state.get("in_downtime"):
-        extra_info.append("in downtime")
-    if aggr_state.get("acknowledged"):
-        extra_info.append("is acknowledged")
-
-    if extra_info:
-        infotext += " (%s)" % ", ".join(extra_info)
-
-    yield bi_state, infotext
+    yield 0, "In downtime: %s" % ("yes" if aggr_state.get("in_downtime") else "no")
+    yield 0, "Acknowledged: %s" % ("yes" if aggr_state.get("acknowledged") else "no")
 
 
 check_info["bi_aggregation"] = {

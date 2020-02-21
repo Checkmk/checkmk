@@ -1,9 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """Page user can change several aspects of it's own profile"""
 
 import time
@@ -53,7 +52,7 @@ def user_profile_async_replication_dialog(sites):
     num_replsites = 0
     for site_id in sites:
         site = config.sites[site_id]
-        if not "secret" in site:
+        if "secret" not in site:
             status_txt = _('Not logged in.')
             start_sync = False
             icon = 'repl_locked'
@@ -353,7 +352,7 @@ class ModeAjaxProfileReplication(AjaxPage):
         site = config.site(site_id)
         result = self._synchronize_profile(site_id, site, config.user.id)
 
-        if result != True:
+        if result is not True:
             _add_profile_replication_change(site_id, result)
             raise MKGeneralException(result)
 
@@ -361,7 +360,7 @@ class ModeAjaxProfileReplication(AjaxPage):
 
     def _synchronize_profile(self, site_id, site, user_id):
         users = userdb.load_users(lock=False)
-        if not user_id in users:
+        if user_id not in users:
             raise MKUserError(None, _('The requested user does not exist'))
 
         start = time.time()

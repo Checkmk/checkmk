@@ -1,8 +1,8 @@
-# MSExchange Replication
-# Load Exchange Management Powershell Plugin
+## MSExchange Replication
+## Load Exchange Management Powershell Plugin
 try{ (Add-PSSnapin Microsoft.Exchange.Management.PowerShell.E2010 -ErrorAction:Stop) }
 
-# exit without any output if this fails
+## exit without any output if this fails
 catch{exit}
 
 write-host "<<<msexch_dag:sep(58)>>>"

@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION=$(sed -rn 's/^VERSION[[:space:]]*:= *([0-9]+\.[0-9]+\.[0-9a-z]+).*/\1/p' < ~/git/check_mk/defines.make)
+#VERSION=$(sed -rn 's/^VERSION[[:space:]]*:= *([0-9]+\.[0-9]+\.[0-9a-z]+).*/\1/p' < ~/git/check_mk/defines.make)
 CRE_LICENSE_NAME="GNU General Public License v2"
 CEE_LICENSE_NAME="Check_MK Enterprise License"
 
@@ -12,12 +12,8 @@ header ()
 
 headrify ()
 {
-  if [ ! -f "$file" ] ; then
-      if [[ -d "$file" && ! -L "$file" ]] ; then
-          echo "Skipping the directory $file/"
-      else
-          echo "Skipping $file. It's not a file."
-      fi
+  if [[ ! -f "$file" || -L "$file" ]]; then
+      echo "Skipping $file. It's not a file / It is a symlink."
       return
   fi
 
@@ -56,10 +52,12 @@ headrify ()
       bangpath="#!/usr/bin/php"
   elif [ "${headline:0:22}" = "#!/usr/bin/env python3" ] ; then
       comment="# "
-      bangpath="#!/usr/bin/env python3"
+      bangpath="#!/usr/bin/env python3
+# -*- coding: utf-8 -*-"
   elif [ "${headline:0:21}" = "#!/usr/bin/env python" ] ; then
       comment="# "
-      bangpath="#!/usr/bin/env python2"
+      bangpath="#!/usr/bin/env python2
+# -*- coding: utf-8 -*-"
   else
       bangpath=""
       case "${file##*/}" in
@@ -116,7 +114,7 @@ headrify ()
 }
 
 if [ "$#" -gt 0 ] ; then
-  echo "Headrifying to version $VERSION"
+  #echo "Headrifying to version $VERSION"
   for file in "$@"
   do
     headrify "$file"

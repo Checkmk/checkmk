@@ -4,10 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Tuple, Optional, Union, Text  # pylint: disable=unused-import
+from typing import Optional, Union, Text  # pylint: disable=unused-import
 import six
 
-HTTPVariables = List[Tuple[str, Optional[Union[int, str, Text]]]]
+from cmk.gui.type_defs import HTTPVariables  # pylint: disable=unused-import
 
 
 # TODO: Change methods to simple helper functions. The URLEncoder class is not really needed

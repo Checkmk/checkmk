@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -1039,7 +1039,7 @@ def compute_availability_groups(what, av_data, avoptions):
                     title = _("Not contained in any group")
                 else:
                     title = group_titles.get(group_id, group_id)
-                titled_groups.append((title, group_id))  ## ACHTUNG
+                titled_groups.append((title, group_id))  # ACHTUNG
 
         # 3. Loop over all groups and render them
         for title, group_id in sorted(titled_groups, key=lambda x: x[1]):
@@ -1277,7 +1277,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
 
         # Iconbuttons with URLs
         urls = []
-        if not "omit_buttons" in labelling:
+        if "omit_buttons" not in labelling:
             if what != "bi":
                 timeline_url = html.makeuri([("av_mode", "timeline"), ("av_site", site),
                                              ("av_host", host), ("av_service", service)])

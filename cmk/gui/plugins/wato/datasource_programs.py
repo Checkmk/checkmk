@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -101,6 +101,26 @@ rulespec_registry.register(
         group=RulespecGroupDatasourcePrograms,
         name="special_agents:ddn_s2a",
         valuespec=_valuespec_special_agents_ddn_s2a,
+    ))
+
+
+def _valuespec_special_agents_proxmox():
+    return Dictionary(
+        elements=[
+            ("username", TextAscii(title=_(u"Username"), allow_empty=False)),
+            ("password", IndividualOrStoredPassword(title=_(u"Password"), allow_empty=False)),
+            ("port", Integer(title=_(u"Port"), default_value=8006)),
+        ],
+        optional_keys=["port"],
+        title=_(u"Proxmox"),
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupDatasourcePrograms,
+        name="special_agents:proxmox",
+        valuespec=_valuespec_special_agents_proxmox,
     ))
 
 
@@ -2710,7 +2730,7 @@ def _valuespec_special_agents_jira():
             (
                 "project_workflows",
                 _vs_jira_projects(
-                    _("Monitor the number of issues for given projects and there "
+                    _("Monitor the number of issues for given projects and their "
                       "workflows. This results in a service for each project with "
                       "the number of issues per workflow."),),
             ),

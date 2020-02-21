@@ -137,10 +137,12 @@ include \
     packages/python3-modules/python3-modules.make \
     packages/omd/omd.make \
     packages/net-snmp/net-snmp.make \
+    packages/python2-net-snmp/python2-net-snmp.make \
     packages/mod_wsgi/mod_wsgi.make \
     packages/python3-mod_wsgi/python3-mod_wsgi.make \
     packages/re2/re2.make \
     packages/rrdtool/rrdtool.make \
+    packages/python2-rrdtool/python2-rrdtool.make \
     packages/mk-livestatus/mk-livestatus.make \
     packages/snap7/snap7.make \
     packages/Webinject/Webinject.make \

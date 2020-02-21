@@ -12,7 +12,7 @@ PIPENV="$REPO_PATH/scripts/run-pipenv"
 printf -v files " %s" "$@"
 PYTHON_FILES=$(python_files 2 "$files")
 
-if [ ! -z "$PYTHON2_FILES" ]; then
+if [ ! -z "$PYTHON_FILES" ]; then
     export PYTHON_FILES
     tests/test-futurize
 fi

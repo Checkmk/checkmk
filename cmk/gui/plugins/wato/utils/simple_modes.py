@@ -1,9 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """These modes implement a complete set of modes for managing a set of standard objects
 
 Together with WatoSimpleConfigFile() as store class this implements
@@ -194,7 +193,7 @@ class SimpleListMode(SimpleWatoModeBase):
 
         entries = self._store.load_for_modification()
 
-        ident = html.get_ascii_input("_delete")
+        ident = html.request.get_ascii_input("_delete")
         if ident not in entries:
             raise MKUserError("_delete",
                               _("This %s does not exist.") % self._mode_type.name_singular())
@@ -264,7 +263,7 @@ class SimpleEditMode(six.with_metaclass(abc.ABCMeta, SimpleWatoModeBase)):
         raise NotImplementedError()
 
     def _from_vars(self):
-        ident = html.get_ascii_input("ident")
+        ident = html.request.get_ascii_input("ident")
         if ident is not None:
             try:
                 entry = self._store.filter_editable_entries(self._store.load_for_reading())[ident]
@@ -277,7 +276,7 @@ class SimpleEditMode(six.with_metaclass(abc.ABCMeta, SimpleWatoModeBase)):
             self._entry = entry
             return
 
-        clone = html.get_ascii_input("clone")
+        clone = html.request.get_ascii_input("clone")
         if clone is not None:
             try:
                 entry = self._store.filter_editable_entries(self._store.load_for_reading())[clone]

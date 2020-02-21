@@ -1,28 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import errno
 import os
@@ -32,7 +12,7 @@ import abc
 import logging
 import sys
 from typing import (  # pylint: disable=unused-import
-    TYPE_CHECKING, TypeVar, AnyStr, Dict, Set, List, cast, Tuple, Union, Optional, Text, Generic,
+    TypeVar, AnyStr, Dict, Set, List, cast, Tuple, Union, Optional, Text, Generic,
 )
 import six
 
@@ -51,7 +31,6 @@ from cmk.utils.encoding import (
     ensure_bytestr,
 )
 
-import cmk.base.utils
 import cmk.base.agent_simulator
 import cmk.base.console as console
 import cmk.base.config as config
@@ -64,11 +43,9 @@ from cmk.base.check_api_utils import state_markers
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     PersistedAgentSections, SectionName, AgentSectionContent, ServiceState, ServiceDetails,
     ServiceCheckResult, Metric, CheckPluginName, AgentSections, PiggybackRawData, SectionCacheInfo,
-    RawAgentData, AbstractRawData, AbstractSections, AbstractPersistedSections,
-    BoundedAbstractRawData, BoundedAbstractSections, BoundedAbstractPersistedSections,
-    BoundedAbstractSectionContent,
+    RawAgentData, BoundedAbstractRawData, BoundedAbstractSections, BoundedAbstractPersistedSections,
 )
-from cmk.base.utils import (  # pylint: disable=unused-import
+from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, HostAddress,
 )
 
@@ -249,7 +226,7 @@ class DataSource(
             self._logger.log(VERBOSE, "Use cached data")
             return raw_data, True
 
-        elif raw_data is None and config.simulation_mode:
+        if raw_data is None and config.simulation_mode:
             raise MKAgentError("Got no data (Simulation mode enabled and no cachefile present)")
 
         self._logger.log(VERBOSE, "Execute data source")
@@ -296,7 +273,7 @@ class DataSource(
 
         # TODO: Use some generic store file read function to generalize error handling,
         # but there is currently no function that simply reads data from the file
-        result = open(cachefile).read()
+        result = open(cachefile, 'rb').read()
         if not result:
             self._logger.debug("Not using cache (Empty)")
             return None
@@ -724,12 +701,12 @@ class CheckMKAgentDataSource(
         # handle sections with option persist(...)
         persisted_sections = {}  # type: PersistedAgentSections
         section_content = []  # type: AgentSectionContent
-        section_options = {}  # type: Dict[str, Optional[str]]
+        section_options = {}  # type: Dict[bytes, Optional[bytes]]
         agent_cache_info = {}  # type: SectionCacheInfo
         separator = None  # type: Optional[str]
         encoding = None
-        for line in raw_data.split("\n"):
-            line = line.rstrip("\r")
+        for line in raw_data.split(b"\n"):
+            line = line.rstrip(b"\r")
             stripped_line = line.strip()
             if stripped_line[:4] == '<<<<' and stripped_line[-4:] == '>>>>':
                 piggybacked_hostname =\
@@ -745,12 +722,12 @@ class CheckMKAgentDataSource(
             # section header has format <<<name:opt1(args):opt2:opt3(args)>>>
             elif stripped_line[:3] == '<<<' and stripped_line[-3:] == '>>>':
                 section_header = stripped_line[3:-3]
-                headerparts = section_header.split(":")
+                headerparts = section_header.split(b":")
                 section_name = headerparts[0]
                 section_options = {}
-                opt_args = None  # type: Optional[str]
+                opt_args = None  # type: Optional[bytes]
                 for o in headerparts[1:]:
-                    opt_parts = o.split("(")
+                    opt_parts = o.split(b"(")
                     opt_name = opt_parts[0]
                     if len(opt_parts) > 1:
                         opt_args = opt_parts[1][:-1]
@@ -758,39 +735,44 @@ class CheckMKAgentDataSource(
                         opt_args = None
                     section_options[opt_name] = opt_args
 
-                content = sections.get(section_name, None)
+                content = sections.get(str(section_name), None)
                 if content is None:  # section appears in output for the first time
                     section_content = []
-                    sections[section_name] = section_content
+                    sections[six.ensure_str(section_name)] = section_content
                 else:
                     section_content = content
 
-                try:
-                    separator = chr(int(cast(str, section_options["sep"])))
-                except Exception:
+                raw_separator = section_options.get(b"sep")
+                if raw_separator is None:
                     separator = None
+                else:
+                    separator = chr(int(raw_separator))
 
                 # Split of persisted section for server-side caching
-                if "persist" in section_options:
-                    until = int(cast(str, section_options["persist"]))
+                raw_persist = section_options.get(b"persist")
+                if raw_persist is not None:
+                    until = int(raw_persist)
                     cached_at = int(time.time())  # Estimate age of the data
                     cache_interval = int(until - cached_at)
-                    agent_cache_info[section_name] = (cached_at, cache_interval)
-                    persisted_sections[section_name] = (cached_at, until, section_content)
+                    agent_cache_info[six.ensure_str(section_name)] = (cached_at, cache_interval)
+                    persisted_sections[six.ensure_str(section_name)] = (cached_at, until,
+                                                                        section_content)
 
-                if "cached" in section_options:
-                    cache_times = list(map(int, cast(str, section_options["cached"]).split(",")))
-                    agent_cache_info[section_name] = cache_times[0], cache_times[1]
+                raw_cached = section_options.get(b"cached")
+                if raw_cached is not None:
+                    cache_times = list(map(int, raw_cached.split(b",")))
+                    agent_cache_info[six.ensure_str(section_name)] = cache_times[0], cache_times[1]
 
                 # The section data might have a different encoding
-                encoding = section_options.get("encoding")
+                encoding = section_options.get(b"encoding")
 
             elif stripped_line != '':
-                if "nostrip" not in section_options:
+                raw_nostrip = section_options.get(b"nostrip")
+                if raw_nostrip is None:
                     line = stripped_line
 
                 if encoding:
-                    decoded_line = convert_to_unicode(line, std_encoding=encoding)
+                    decoded_line = convert_to_unicode(line, std_encoding=six.ensure_str(encoding))
                 else:
                     decoded_line = convert_to_unicode(line)
 
@@ -800,8 +782,8 @@ class CheckMKAgentDataSource(
                                  persisted_sections)
 
     def _get_sanitized_and_translated_piggybacked_hostname(self, orig_piggyback_header):
-        # type: (str) -> Optional[HostName]
-        piggybacked_hostname = orig_piggyback_header[4:-4]
+        # type: (bytes) -> Optional[HostName]
+        piggybacked_hostname = str(orig_piggyback_header[4:-4])
         if not piggybacked_hostname:
             return None
 
@@ -817,10 +799,10 @@ class CheckMKAgentDataSource(
 
     def _add_cached_info_to_piggybacked_section_header(self, orig_section_header, cached_at,
                                                        cache_age):
-        # type: (str, int, int) -> str
-        if ':cached(' in orig_section_header or ':persist(' in orig_section_header:
+        # type: (bytes, int, int) -> bytes
+        if b':cached(' in orig_section_header or b':persist(' in orig_section_header:
             return orig_section_header
-        return '<<<%s:cached(%s,%s)>>>' % (orig_section_header[3:-3], cached_at, cache_age)
+        return b'<<<%s:cached(%s,%s)>>>' % (orig_section_header[3:-3], cached_at, cache_age)
 
     # TODO: refactor
     def _summary_result(self, for_checking):
@@ -895,7 +877,7 @@ class CheckMKAgentDataSource(
             return (status, "unexpected agent version %s (should be %s)%s" %
                     (agent_version, expected, state_markers[status]), [])
 
-        elif config.agent_min_version and cast(int, agent_version) < config.agent_min_version:
+        if config.agent_min_version and cast(int, agent_version) < config.agent_min_version:
             # TODO: This branch seems to be wrong. Or: In which case is agent_version numeric?
             status = cast(int, self._host_config.exit_code_spec().get("wrong_version", 1))
             return (status, "old plugin version %s (should be at least %s)%s" %
@@ -941,7 +923,7 @@ class CheckMKAgentDataSource(
             if isinstance(expected_version, six.string_types) and expected_version != agent_version:
                 return False
 
-            elif isinstance(expected_version, tuple) and expected_version[0] == 'at_least':
+            if isinstance(expected_version, tuple) and expected_version[0] == 'at_least':
                 spec = cast(Dict[str, str], expected_version[1])
                 if cmk.utils.misc.is_daily_build_version(agent_version) and 'daily_build' in spec:
                     expected = int(spec['daily_build'].replace('.', ''))
@@ -1029,19 +1011,20 @@ class ManagementBoardDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
 
 
 def _normalize_ip_addresses(ip_addresses):
-    # type: (Union[AnyStr, List[AnyStr]]) -> List[AnyStr]
+    # type: (Union[AnyStr, List[AnyStr]]) -> List[Text]
     '''factorize 10.0.0.{1,2,3}'''
     if not isinstance(ip_addresses, list):
         ip_addresses = ip_addresses.split()
 
-    expanded = [word for word in ip_addresses if '{' not in word]
-    for word in ip_addresses:
+    decoded_ip_addresses = [six.ensure_text(word) for word in ip_addresses]
+    expanded = [word for word in decoded_ip_addresses if '{' not in word]
+    for word in decoded_ip_addresses:
         if word in expanded:
             continue
         try:
             prefix, tmp = word.split('{')
             curly, suffix = tmp.split('}')
             expanded.extend(prefix + i + suffix for i in curly.split(','))
-        except:
+        except Exception:
             raise MKGeneralException("could not expand %r" % word)
     return expanded

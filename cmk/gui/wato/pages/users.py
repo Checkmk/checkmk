@@ -1,9 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """Modes for managing users and contacts"""
 
 import base64
@@ -91,7 +90,7 @@ class ModeUsers(WatoMode):
 
     def action(self):
         if html.request.var('_delete'):
-            delid = html.get_unicode_input("_delete")
+            delid = html.request.get_unicode_input("_delete")
             c = wato_confirm(
                 _("Confirm deletion of user %s") % delid,
                 _("Do you really want to delete the user %s?") % delid)
@@ -422,8 +421,8 @@ class ModeEditUser(WatoMode):
             self._vs_customer = managed.vs_customer()
 
     def _from_vars(self):
-        self._user_id = html.get_unicode_input("edit")  # missing -> new user
-        self._cloneid = html.get_unicode_input("clone")  # Only needed in 'new' mode
+        self._user_id = html.request.get_unicode_input("edit")  # missing -> new user
+        self._cloneid = html.request.get_unicode_input("clone")  # Only needed in 'new' mode
         self._is_new_user = self._user_id is None
 
         self._users = userdb.load_users(lock=html.is_transaction())
@@ -460,11 +459,11 @@ class ModeEditUser(WatoMode):
             self._user_id = UserID(allow_empty=False).from_html_vars("user_id")
             user_attrs = {}
         else:
-            self._user_id = html.get_unicode_input("edit").strip()
+            self._user_id = html.request.get_unicode_input("edit").strip()
             user_attrs = self._users[self._user_id]
 
         # Full name
-        user_attrs["alias"] = html.get_unicode_input("alias").strip()
+        user_attrs["alias"] = html.request.get_unicode_input("alias").strip()
 
         # Locking
         user_attrs["locked"] = html.get_checkbox("locked")

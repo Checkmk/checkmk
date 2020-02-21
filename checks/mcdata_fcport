@@ -29,7 +29,7 @@ mcdata_fcport_opstatus = {"1": "1", "2": "2", "3": "testing", "4": "faulty"}
 
 
 def mcdata_bin_to_64(bin_):
-    return str(binstring_to_int(bin_))
+    return sum(b * 265**i for i, b in enumerate(bin_[::-1]))
 
 
 def mcdata_fcport_convert_to_if64(info):
@@ -87,11 +87,11 @@ check_info["mcdata_fcport"] = {
             1,  # EF-6000-MIB::ef6000PortIndex
             3,  # EF-6000-MIB::ef6000PortOpStatus
             11,  # EF-6000-MIB::ef6000PortSpeed
-            67,  # EF-6000-MIB::ef6000PortTxWords64
-            68,  # EF-6000-MIB::ef6000PortRxWords64
-            69,  # EF-6000-MIB::ef6000PortTxFrames64
-            70,  # EF-6000-MIB::ef6000PortRxFrames64
-            83,  # EF-6000-MIB::ef6000PortC3Discards64
+            BINARY(67),  # EF-6000-MIB::ef6000PortTxWords64
+            BINARY(68),  # EF-6000-MIB::ef6000PortRxWords64
+            BINARY(69),  # EF-6000-MIB::ef6000PortTxFrames64
+            BINARY(70),  # EF-6000-MIB::ef6000PortRxFrames64
+            BINARY(83),  # EF-6000-MIB::ef6000PortC3Discards64
             65,  # EF-6000-MIB::ef6000PortCrcs
         ]),
     # check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2

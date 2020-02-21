@@ -1,9 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """Mange custom attributes of users and hosts"""
 
 import abc
@@ -135,7 +134,7 @@ class ModeEditCustomAttr(six.with_metaclass(abc.ABCMeta, WatoMode)):
         if not html.check_transaction():
             return
 
-        title = html.get_unicode_input("title").strip()
+        title = html.request.get_unicode_input("title").strip()
         if not title:
             raise MKUserError("title", _("Please specify a title."))
 
@@ -146,7 +145,7 @@ class ModeEditCustomAttr(six.with_metaclass(abc.ABCMeta, WatoMode)):
                     _("This alias is already used by the attribute %s.") % this_attr['name'])
 
         topic = html.request.var('topic', '').strip()
-        help_txt = html.get_unicode_input('help').strip()
+        help_txt = html.request.get_unicode_input('help').strip()
         show_in_table = html.get_checkbox('show_in_table')
         add_custom_macro = html.get_checkbox('add_custom_macro')
 

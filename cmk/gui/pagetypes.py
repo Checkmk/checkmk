@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -527,12 +527,12 @@ class Overridable(Base):
         #    continue # not allowed to see this view
 
         # TODO: Permissions
-        ### visual = visuals[(owner, visual_name)]
-        ### if owner == config.user.id or \
-        ###    (visual["public"] and owner != '' and config.user_may(owner, "general.publish_" + what)):
-        ###     custom.append((owner, visual_name, visual))
-        ### elif visual["public"] and owner == "":
-        ###     builtin.append((owner, visual_name, visual))
+        # ## visual = visuals[(owner, visual_name)]
+        # ## if owner == config.user.id or \
+        # ##    (visual["public"] and owner != '' and config.user_may(owner, "general.publish_" + what)):
+        # ##     custom.append((owner, visual_name, visual))
+        # ## elif visual["public"] and owner == "":
+        # ##     builtin.append((owner, visual_name, visual))
 
     @classmethod
     def permitted_instances_sorted(cls):
@@ -854,8 +854,8 @@ class Overridable(Base):
         if has_reporting():
             html.context_button(_("Reports"), "edit_reports.py", "report")
 
-        ### if render_custom_context_buttons:
-        ###     render_custom_context_buttons()
+        # ## if render_custom_context_buttons:
+        # ##     render_custom_context_buttons()
 
         for other_type_name, other_pagetype in page_types.items():
             if cls.type_name() != other_type_name:
@@ -971,8 +971,8 @@ class Overridable(Base):
                     # Custom columns specific to that page type
                     instance.render_extra_columns(table)
 
-                    ### for title, renderer in custom_columns:
-                    ###     table.cell(title, renderer(visual))
+                    # ## for title, renderer in custom_columns:
+                    # ##     table.cell(title, renderer(visual))
 
                     # Owner
                     if instance.is_builtin():
@@ -985,8 +985,8 @@ class Overridable(Base):
 
                     # FIXME: WTF?!?
                     # TODO: Haeeh? Another custom columns
-                    ### if render_custom_columns:
-                    ###     render_custom_columns(visual_name, visual)
+                    # ## if render_custom_columns:
+                    # ##     render_custom_columns(visual_name, visual)
 
             if what != "builtin":
                 html.button("_bulk_delete_%s" % what,
@@ -1084,7 +1084,8 @@ class Overridable(Base):
                 cls.remove_instance((owner_user_id, page_name))  # will be added later again
             else:  # clone
                 title = cls.phrase("clone")
-                load_user = html.get_unicode_input("load_user")  # FIXME: Change varname to "owner"
+                load_user = html.request.get_unicode_input(
+                    "load_user")  # FIXME: Change varname to "owner"
 
                 try:
                     page = cls.instance((load_user, page_name))

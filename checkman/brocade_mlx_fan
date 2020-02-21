@@ -1,6 +1,6 @@
 title: Brocade NetIron MLX / ADX / FGS / ICX devices: Fans
 agents: snmp
-catalog: hw/network/brocade
+catalog: hw/environment/brocade
 license: GPL
 distribution: check_mk
 description:

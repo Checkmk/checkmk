@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,6 +8,10 @@ from typing import Optional  # pylint: disable=unused-import
 
 from cmk.gui.watolib.groups import load_host_group_information, edit_group
 from cmk.gui.wsgi.types import RFC7662, HostGroup  # pylint: disable=unused-import
+
+
+def create(ident, body, user=None, token_info=None):
+    raise Exception
 
 
 def post(ident, body, user=None, token_info=None):

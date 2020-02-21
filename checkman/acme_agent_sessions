@@ -10,7 +10,7 @@ description:
  CRIT if "out of service".
 
 item:
- The hostname.
+ Name of the host.
 
 inventory:
  One service per hostname is created.

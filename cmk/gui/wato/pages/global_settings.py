@@ -1,9 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """Editor for global settings in main.mk and modes for these global
 settings"""
 
@@ -195,7 +194,7 @@ class EditGlobalSettingMode(WatoMode):
         raise NotImplementedError()
 
     def _from_vars(self):
-        self._varname = html.get_ascii_input("varname")
+        self._varname = html.request.get_ascii_input("varname")
         try:
             self._config_variable = config_variable_registry[self._varname]()
             self._valuespec = self._config_variable.valuespec()

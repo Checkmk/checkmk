@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -153,12 +153,10 @@ class PainterCrashIdent(Painter):
     def ident(self):
         return "crash_ident"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Crash Ident")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("ID")
 
     @property
@@ -182,12 +180,10 @@ class PainterCrashType(Painter):
     def ident(self):
         return "crash_type"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Crash Type")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Type")
 
     @property
@@ -204,12 +200,10 @@ class PainterCrashTime(Painter):
     def ident(self):
         return "crash_time"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Crash Time")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Time")
 
     @property
@@ -230,12 +224,10 @@ class PainterCrashVersion(Painter):
     def ident(self):
         return "crash_version"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Crash Checkmk Version")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Version")
 
     @property
@@ -252,12 +244,10 @@ class PainterCrashException(Painter):
     def ident(self):
         return "crash_exception"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Crash Exception")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Exc.")
 
     @property
@@ -265,8 +255,8 @@ class PainterCrashException(Painter):
         return ["crash_exc_type", "crash_exc_value"]
 
     def render(self, row, cell):
-        return (None, "%s: %s" % \
-            (escape_text(row["crash_exc_type"]), escape_text(row["crash_exc_value"])))
+        return (None, "%s: %s" %
+                (escape_text(row["crash_exc_type"]), escape_text(row["crash_exc_value"])))
 
 
 @sorter_registry.register

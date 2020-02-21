@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -57,7 +57,7 @@ class ModeCheckPlugins(WatoMode):
 
     def _from_vars(self):
         self._search = get_search_expression()
-        self._topic = html.get_ascii_input("topic")
+        self._topic = html.request.get_ascii_input("topic")
         if self._topic and not self._search:
             if not re.match("^[a-zA-Z0-9_./]+$", self._topic):
                 raise MKUserError("topic", _("Invalid topic"))
@@ -320,7 +320,7 @@ class ModeCheckManPage(WatoMode):
         return []
 
     def _from_vars(self):
-        self._check_type = html.get_ascii_input("check_type")
+        self._check_type = html.request.get_ascii_input("check_type")
 
         # TODO: There is one check "sap.value-groups" which will be renamed to "sap.value_groups".
         # As long as the old one is available, allow a minus here.

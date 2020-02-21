@@ -105,6 +105,7 @@ botocore = "==1.14.11" # needed by boto3 (aws)
 s3transfer = "==0.3.2" # needed by boto3 (aws)
 boto3 = "==1.11.11" # needed by boto3 (aws)
 mypy_extensions = "==0.4.3"  # direct dependency
+rrdtool = "==0.1.15"  # Actually we ship the binding which comes with rrdtool itself...
 
 [requires]
 python_version = "3.7"

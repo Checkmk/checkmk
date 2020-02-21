@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -16,7 +16,7 @@ from cmk.gui.utils.html import HTML
 OutputFunnelInput = Union[str, Text, "HTML"]
 
 
-class OutputFunnel(object):  # pylint: disable=useless-object-inheritance
+class OutputFunnel(object):
     """
     Provides the write functionality. The method _lowlevel_write needs
     to be overwritten in the specific subclass!

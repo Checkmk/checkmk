@@ -480,7 +480,8 @@ just to signal that real build script was not called -->
     </Feature>
 
     <Property Id="INSTALLSERVICE" Value="1" />
-    <!-- must be disabled to avoid hitting check box
+    <Property Id="WIXUI_MIGRATELEGACY" Value="1" />
+      <!-- must be disabled to avoid hitting check box
     <Property Id="WIXUI_REMOVELEGACY" Value="0" />
     -->
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER_SERVICE"/>
@@ -591,8 +592,16 @@ just to signal that real build script was not called -->
           <RegistryValue Type="string"
                          Name="Remove_Legacy"
                          Value="[WIXUI_REMOVELEGACY]"/>
-          
-          <RegistryValue Type="string"
+
+            <RegistryValue Type="string"
+                           Name="Clean_Installation"
+                           Value="[WIXUI_CLEANINSTALL]"/>
+
+            <RegistryValue Type="string"
+                           Name="Migration"
+                           Value="[WIXUI_MIGRATELEGACY]"/>
+
+            <RegistryValue Type="string"
                          Name="Install_Service"
                          Value="[INSTALLSERVICE]"/>
         </RegistryKey>

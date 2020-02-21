@@ -1,28 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Performing the actual checks."""
 
 import os
@@ -63,7 +43,7 @@ from cmk.base.check_utils import (  # pylint: disable=unused-import
     ServiceState, ServiceDetails, ServiceAdditionalDetails, ServiceCheckResult, Metric,
     CheckPluginName, Item, SectionName, CheckParameters,
 )
-from cmk.base.utils import HostName, HostAddress, ServiceName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, HostAddress, ServiceName  # pylint: disable=unused-import
 
 if not cmk.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
@@ -280,7 +260,7 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
         else:
             missing_sections.add(cmk.base.check_utils.section_name_of(service.check_plugin_name))
 
-    import cmk.base.inventory as inventory
+    import cmk.base.inventory as inventory  # pylint: disable=import-outside-toplevel
     inventory.do_inventory_actions_during_checking_for(sources, multi_host_sections, host_config,
                                                        ipaddress)
 
@@ -544,7 +524,7 @@ def _sanitize_check_result_infotext(infotext, allow_missing_infotext):
     if infotext is None and not allow_missing_infotext:
         raise MKGeneralException("Invalid infotext from check: \"None\"")
 
-    if isinstance(infotext, str):
+    if isinstance(infotext, six.binary_type):
         return infotext.decode('utf-8')
 
     return infotext
@@ -598,7 +578,7 @@ def _submit_check_result(host, servicedesc, result, cached_at=None, cache_interv
         infotext = defines.short_service_state_name(state) + " - " + infotext
 
     # make sure that plugin output does not contain a vertical bar. If that is the
-    # case then replace it with a Uniocode "Light vertical bar
+    # case then replace it with a Uniocode "Light vertical bar"
     if isinstance(infotext, six.text_type):
         # regular check results are unicode...
         infotext = infotext.replace(u"|", u"\u2758")
@@ -716,9 +696,9 @@ def _submit_via_command_pipe(host, service, state, output):
     _open_command_pipe()
     if _nagios_command_pipe is not None and not isinstance(_nagios_command_pipe, bool):
         # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
-        _nagios_command_pipe.write(
-            "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" %
-            (int(time.time()), host, make_utf8(service), state, make_utf8(output)))
+        msg = "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % (time.time(), host, service,
+                                                                   state, output)
+        _nagios_command_pipe.write(make_utf8(msg))
         # Important: Nagios needs the complete command in one single write() block!
         # Python buffers and sends chunks of 4096 bytes, if we do not flush.
         _nagios_command_pipe.flush()
@@ -735,7 +715,7 @@ def _open_command_pipe():
         try:
             signal.signal(signal.SIGALRM, _core_pipe_open_timeout)
             signal.alarm(3)  # three seconds to open pipe
-            _nagios_command_pipe = open(cmk.utils.paths.nagios_command_pipe_path, 'w')
+            _nagios_command_pipe = open(cmk.utils.paths.nagios_command_pipe_path, 'wb')
             signal.alarm(0)  # cancel alarm
         except Exception as e:
             _nagios_command_pipe = False

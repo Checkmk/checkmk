@@ -1,9 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """WATO-Module for the rules and aggregations of Check_MK BI"""
 
 import os
@@ -1229,7 +1228,7 @@ class ModeBIAggregations(ModeBI):
             return self._bulk_move_after_confirm()
 
     def _delete_after_confirm(self):
-        aggregation_id = html.get_integer_input("_del_aggr")
+        aggregation_id = html.request.get_integer_input_mandatory("_del_aggr")
         c = wato_confirm(
             _("Confirm aggregation deletion"),
             _("Do you really want to delete the aggregation number <b>%s</b>?") %
@@ -1675,7 +1674,7 @@ class ModeBIRuleTree(ModeBI):
 
     def __init__(self):
         ModeBI.__init__(self)
-        self._ruleid = html.get_ascii_input("id")
+        self._ruleid = html.request.get_ascii_input("id")
         if not self.pack_containing_rule(self._ruleid):
             raise MKUserError("id", _("This BI rule does not exist"))
 
@@ -1724,7 +1723,8 @@ class ModeBIEditAggregation(ModeBI):
 
     def __init__(self):
         ModeBI.__init__(self)
-        self._edited_nr = html.get_integer_input("id", -1)  # In case of Aggregations: index in list
+        self._edited_nr = html.request.get_integer_input_mandatory(
+            "id", -1)  # In case of Aggregations: index in list
         if self._edited_nr == -1:
             self._new = True
             self._edited_aggregation = {"groups": [_("Main")]}
@@ -1814,7 +1814,7 @@ class ModeBIEditRule(ModeBI):
 
     def __init__(self):
         ModeBI.__init__(self)
-        self._ruleid = html.get_ascii_input("id")  # In case of Aggregations: index in list
+        self._ruleid = html.request.get_ascii_input("id")  # In case of Aggregations: index in list
         self._new = self._ruleid is None
 
         if not self._new and not self.pack_containing_rule(self._ruleid):

@@ -1,6 +1,6 @@
 title: SAP Process List on AIX
 agents: aix
-catalog: app/sap
+catalog: os/services
 license: GPL
 distribution: check_mk
 description:

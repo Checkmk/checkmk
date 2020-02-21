@@ -1,8 +1,14 @@
 # pylint: disable=redefined-outer-name
 
 import re
+import sys
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+
 import pytest  # type: ignore[import]
-from pathlib2 import Path
 
 from testlib.base import Scenario
 
@@ -10,6 +16,47 @@ import cmk.utils.paths
 import cmk.base.config as config
 import cmk.base.check_utils
 import cmk.base.check_api as check_api
+
+
+def _search_deprecated_api_feature(check_file_path, deprecated_pattern):
+    with check_file_path.open() as handle:
+        return [
+            "%s:%d:%s" % (check_file_path.stem, line_no, repr(line.strip()))
+            for line_no, line in enumerate(handle, 1)
+            if re.search(deprecated_pattern, line.strip())
+        ]
+
+
+@pytest.mark.parametrize("deprecated_pattern", [
+    r"\bservice_description\(",
+    r"\bOID_BIN\b",
+    r"\bOID_STRING\b",
+    r"\bOID_END_BIN\b",
+    r"\bOID_END_OCTET_STRING\b",
+    r"\ball_matching_hosts\b",
+    r"\bbinstring_to_int\b",
+    r"\bcheck_type\b",
+    r"\bcore_state_names\b",
+    r"\bget_http_proxy\b",
+    r"\bhosttags_match_taglist\b",
+    r"\bin_extraconf_hostlist\b",
+    r"\bis_cmc\b",
+    r"\bnagios_illegal_chars\b",
+    r"\bquote_shell_string\b",
+    r"\btags_of_host\b",
+])
+def test_deprecated_api_features(deprecated_pattern):
+    check_files = Path(cmk.utils.paths.checks_dir).glob("*")
+    with_deprecated_feature = [
+        finding  #
+        for check_file_path in check_files  #
+        for finding in _search_deprecated_api_feature(check_file_path, deprecated_pattern)
+    ]
+    assert not with_deprecated_feature, "Found %d deprecated API name '%r' usages:\n%s" % (
+        len(with_deprecated_feature),
+        deprecated_pattern,
+        "\n".join(with_deprecated_feature),
+    )
 
 
 def _search_from_imports(check_file_path):

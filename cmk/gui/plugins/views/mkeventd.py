@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -287,12 +287,10 @@ class PainterEventId(Painter):
     def ident(self):
         return "event_id"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("ID of the event")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("ID")
 
     @property
@@ -309,12 +307,10 @@ class PainterEventCount(Painter):
     def ident(self):
         return "event_count"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Count (number of recent occurrances)")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Cnt.")
 
     @property
@@ -331,12 +327,10 @@ class PainterEventText(Painter):
     def ident(self):
         return "event_text"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Text/Message of the event")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Message")
 
     @property
@@ -353,12 +347,10 @@ class PainterEventMatchGroups(Painter):
     def ident(self):
         return "event_match_groups"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Match Groups")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Match")
 
     @property
@@ -381,12 +373,10 @@ class PainterEventFirst(Painter):
     def ident(self):
         return "event_first"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Time of first occurrence of this serial")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("First")
 
     @property
@@ -407,12 +397,10 @@ class PainterEventLast(Painter):
     def ident(self):
         return "event_last"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Time of last occurrance")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Last")
 
     @property
@@ -433,12 +421,10 @@ class PainterEventComment(Painter):
     def ident(self):
         return "event_comment"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Comment to the event")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Comment")
 
     @property
@@ -455,12 +441,10 @@ class PainterEventSl(Painter):
     def ident(self):
         return "event_sl"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Service-Level")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Level")
 
     @property
@@ -478,12 +462,10 @@ class PainterEventHost(Painter):
     def ident(self):
         return "event_host"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Hostname")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Host")
 
     @property
@@ -502,12 +484,10 @@ class PainterEventIpaddress(Painter):
     def ident(self):
         return "event_ipaddress"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Original IP-Address")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Orig. IP")
 
     @property
@@ -524,12 +504,10 @@ class PainterEventHostInDowntime(Painter):
     def ident(self):
         return "event_host_in_downtime"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Host in downtime during event creation")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Dt.")
 
     @property
@@ -546,12 +524,10 @@ class PainterEventOwner(Painter):
     def ident(self):
         return "event_owner"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Owner of event")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("owner")
 
     @property
@@ -568,12 +544,10 @@ class PainterEventContact(Painter):
     def ident(self):
         return "event_contact"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Contact Person")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Contact")
 
     @property
@@ -590,12 +564,10 @@ class PainterEventApplication(Painter):
     def ident(self):
         return "event_application"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Application / Syslog-Tag")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Application")
 
     @property
@@ -612,12 +584,10 @@ class PainterEventPid(Painter):
     def ident(self):
         return "event_pid"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Process ID")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("PID")
 
     @property
@@ -634,12 +604,10 @@ class PainterEventPriority(Painter):
     def ident(self):
         return "event_priority"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Syslog-Priority")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Prio")
 
     @property
@@ -656,12 +624,10 @@ class PainterEventFacility(Painter):
     def ident(self):
         return "event_facility"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Syslog-Facility")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Facility")
 
     @property
@@ -678,12 +644,10 @@ class PainterEventRuleId(Painter):
     def ident(self):
         return "event_rule_id"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Rule-ID")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Rule")
 
     @property
@@ -704,12 +668,10 @@ class PainterEventState(Painter):
     def ident(self):
         return "event_state"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("State (severity) of event")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("State")
 
     @property
@@ -728,12 +690,10 @@ class PainterEventPhase(Painter):
     def ident(self):
         return "event_phase"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Phase of event (open, counting, etc.)")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Phase")
 
     @property
@@ -819,12 +779,10 @@ class PainterEventIcons(Painter):
     def ident(self):
         return "event_icons"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Event Icons")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Icons")
 
     @property
@@ -845,12 +803,10 @@ class PainterEventHistoryIcons(Painter):
     def ident(self):
         return "event_history_icons"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Event Icons")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Icons")
 
     @property
@@ -871,12 +827,10 @@ class PainterEventContactGroups(Painter):
     def ident(self):
         return "event_contact_groups"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Contact groups defined in rule")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Rule contact groups")
 
     @property
@@ -898,12 +852,10 @@ class PainterEventEffectiveContactGroups(Painter):
     def ident(self):
         return "event_effective_contact_groups"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Contact groups effective (Host or rule contact groups)")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Contact groups")
 
     @property
@@ -936,12 +888,10 @@ class PainterHistoryLine(Painter):
     def ident(self):
         return "history_line"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Line number in log file")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Line")
 
     @property
@@ -958,12 +908,10 @@ class PainterHistoryTime(Painter):
     def ident(self):
         return "history_time"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Time of entry in logfile")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Time")
 
     @property
@@ -984,12 +932,10 @@ class PainterHistoryWhat(Painter):
     def ident(self):
         return "history_what"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Type of event action")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Action")
 
     @property
@@ -1007,8 +953,7 @@ class PainterHistoryWhatExplained(Painter):
     def ident(self):
         return "history_what_explained"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Explanation for event action")
 
     @property
@@ -1025,12 +970,10 @@ class PainterHistoryWho(Painter):
     def ident(self):
         return "history_who"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("User who performed action")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Who")
 
     @property
@@ -1047,12 +990,10 @@ class PainterHistoryAddinfo(Painter):
     def ident(self):
         return "history_addinfo"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Additional Information")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Info")
 
     @property
@@ -1201,11 +1142,13 @@ class CommandECUpdateEvent(ECCommand):
     def action(self, cmdtag, spec, row, row_index, num_rows):
         if html.request.var('_mkeventd_update'):
             if config.user.may("mkeventd.update_comment"):
-                comment = html.get_unicode_input("_mkeventd_comment").strip().replace(";", ",")
+                comment = html.request.get_unicode_input("_mkeventd_comment").strip().replace(
+                    ";", ",")
             else:
                 comment = ""
             if config.user.may("mkeventd.update_contact"):
-                contact = html.get_unicode_input("_mkeventd_contact").strip().replace(":", ",")
+                contact = html.request.get_unicode_input("_mkeventd_contact").strip().replace(
+                    ":", ",")
             else:
                 contact = ""
             ack = html.get_checkbox("_mkeventd_acknowledge")

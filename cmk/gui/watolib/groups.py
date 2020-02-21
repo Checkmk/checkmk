@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -314,8 +314,8 @@ def _find_usages_of_contact_group_in_default_user_profile(name, global_config):
     domain = config_variable.domain()
     configured = global_config.get('default_user_profile', {})
     default_value = domain().default_globals()["default_user_profile"]
-    if (configured and name in configured['contactgroups']) \
-       or name in  default_value['contactgroups']:
+    if ((configured and name in configured['contactgroups']) or
+            name in default_value['contactgroups']):
         used_in.append(('%s' % (_('Default User Profile')),
                         folder_preserving_link([('mode', 'edit_configvar'),
                                                 ('varname', 'default_user_profile')])))
@@ -340,7 +340,7 @@ def _find_usages_of_contact_group_in_mkeventd_notify_contactgroup(name, global_c
 
 def _find_usages_of_contact_group_in_hosts_and_folders(name, folder):
     used_in = []
-    for subfolder in folder.all_subfolders().values():
+    for subfolder in folder.subfolders():
         used_in += _find_usages_of_contact_group_in_hosts_and_folders(name, subfolder)
 
     attributes = folder.attributes()

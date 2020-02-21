@@ -254,3 +254,7 @@ RESULT=$(futurize $FIXER_OPTS $PYTHON_FILES 2>&1)
 echo "$RESULT" | grep  -v '^RefactoringTool: '
 echo "$RESULT" | grep '^+++ .*(refactored)$' | \
     sed -e 's/^+++ //' -e 's/[[:blank:]]*(refactored)$/:1:1: error: file needs to be refactored/'
+# exit with proper return code to be detected by Jenkins 
+if [[ $(echo "$RESULT" | grep '^+++ .*(refactored)$') ]] ; then
+    exit 1;
+fi

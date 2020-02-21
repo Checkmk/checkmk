@@ -115,9 +115,6 @@ try {
                                     'ubuntu-18.04')
                                         DISTRO_CODE='_0.bionic_amd64.deb'
                                         ;;
-                                    'ubuntu-18.10')
-                                        DISTRO_CODE='_0.cosmic_amd64.deb'
-                                        ;;
                                     'ubuntu-19.04')
                                         DISTRO_CODE='_0.disco_amd64.deb'
                                         ;;

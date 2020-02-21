@@ -43,6 +43,9 @@ global:
     # Run sync scripts in parallel (to each other). Default is "async"
     async: yes
 
+    # Determines behavior of the Agent when plugin file is Access Denied on installation
+    try_kill_plugin_process: safe # allowed safe, all, no # safe is lmited to few exe from the build
+
     # Just output certain sections
     # Output order is random with exception check_mk, always first and systemtime, always last`
     sections: 
@@ -242,6 +245,17 @@ mrpe:
         # - check = Console 'c:\windows\system32\mode.com' CON CP /STATUS
         # - include user_name = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
         # - include = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
+
+
+modules:
+    enabled: yes
+
+    table:
+        - name: 'python-3.8'              # this is name of the zip file and folder where  zip is installed to
+          exts: ['.py', '.tribe29.py' ]   # list of extensions to be used automatically
+          exec: 'Scripts\python.exe {}'   # command line, exe is relative to folder modules
+          dir: 'modules\{}'               #  relative folder to install the package {} means name
+    
 
 system:
     enabled: yes

@@ -9,14 +9,23 @@ description:
  number of error since the last reset. Default parameters are set during
  discovery, interpreting one error since discovery as WARN and five
  errors as CRIT. The monitored error types are:
+
  - Link failure error
+ 
  - Lost sync error
+ 
  - Loss of signal error
+ 
  - PrimSeq error
+ 
  - CRC error
+ 
  - Receive error
+ 
  - CTIO timeout
+ 
  - CTIO transmission error
+ 
  - CTIO other error
 
 item:

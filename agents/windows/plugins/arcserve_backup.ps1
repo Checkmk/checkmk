@@ -1,19 +1,21 @@
-# ArcServe.ps1
-# Created by Ben Backx
-# modified by Hans-Christian Scherzer
-# Email: bbackx AT icorda.be
-# Version: 0.6de
-# Created: 10/12/2009
-# Last modification: 03/02/2014
+####
+## ArcServe.ps1
+####
+## Created by Ben Backx
+## modified by Hans-Christian Scherzer
+## Email: bbackx AT icorda.be
+## Version: 0.6de
+## Created: 10/12/2009
+## Last modification: 03/02/2014
 
-# Function:
-# ---------
-# This script connects to the ArcServe logging database (available
-# for version 12.0 and up) and processes the relevant logs.
-# works only with german version of ArcServe
-#
+## Function:
+## ---------
+## This script connects to the ArcServe logging database (available
+## for version 12.0 and up) and processes the relevant logs.
+## works only with german version of ArcServe
+##
 
-# SQL Database to connect to
+## SQL Database to connect to
 $sqlServer = "SATURN\ARCSERVE_DB"
 
 
@@ -23,7 +25,7 @@ $sqlServer = "SATURN\ARCSERVE_DB"
 function GetLatestJobId($sqlCmd) {
    # Put the command in our sqlCmd
    # Please adapt description if english translation is used
-   $sqlCmd.CommandText = "SELECT top 1 jobid FROM dbo.aslogw WHERE msgtext LIKE '%Ausführung von Job Sichern%' ORDER BY jobid DESC"
+   $sqlCmd.CommandText = "SELECT top 1 jobid FROM dbo.aslogw WHERE msgtext LIKE '%AusfÃ¼hrung von Job Sichern%' ORDER BY jobid DESC"
 
    # Create an adapter to put the data we get from SQL and get the data
    $sqlAdapter = New-Object System.Data.SqlClient.SqlDataAdapter
@@ -40,7 +42,7 @@ function GetLatestJobId($sqlCmd) {
 function GetPreLatestJobId($sqlCmd, $jobId) {
    # Put the command in our sqlCmd
    # Please adapt description if english translation is used
-   $sqlCmd.CommandText = "SELECT top 1 jobid FROM dbo.aslogw WHERE msgtext LIKE '%Ausführung von Job Sichern%' AND jobid < " + $jobId + " ORDER BY jobid DESC"
+   $sqlCmd.CommandText = "SELECT top 1 jobid FROM dbo.aslogw WHERE msgtext LIKE '%AusfÃ¼hrung von Job Sichern%' AND jobid < " + $jobId + " ORDER BY jobid DESC"
 
    # Create an adapter to put the data we get from SQL and get the data
    $sqlAdapter = New-Object System.Data.SqlClient.SqlDataAdapter

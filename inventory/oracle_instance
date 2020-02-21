@@ -51,8 +51,7 @@ def inv_oracle_instance(info, inventory_tree, status_data_tree):
     path = "software.applications.oracle.instance:"
     inv_node = inventory_tree.get_list(path)
     status_node = status_data_tree.get_list(path)
-
-    for item_data in info.values():
+    for item_data in sorted(info.values(), key=lambda v: v.get("sid")):
         if item_data['invalid_data']:
             continue
 

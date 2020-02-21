@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -259,8 +259,9 @@ class SorterServicelevel(Sorter):
 
 
 def cmp_service_name(column, r1, r2):
-    return  (cmp_service_name_equiv(r1[column])> cmp_service_name_equiv(r2[column]))-(cmp_service_name_equiv(r1[column])< cmp_service_name_equiv(r2[column])) or \
-           cmp_num_split(column, r1, r2)
+    return ((cmp_service_name_equiv(r1[column]) > cmp_service_name_equiv(r2[column])) -
+            (cmp_service_name_equiv(r1[column]) < cmp_service_name_equiv(r2[column])) or
+            cmp_num_split(column, r1, r2))
 
 
 #                      name                      title                              column                       sortfunction

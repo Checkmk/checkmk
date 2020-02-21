@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -84,7 +84,7 @@ class TransactionManager(object):
         if not self._request.has_var("_transid"):
             return False
 
-        transid = self._request.var("_transid")
+        transid = self._request.get_str_input_mandatory("_transid", "")
         if self._ignore_transids and (not transid or transid == '-1'):
             return True  # automation
 

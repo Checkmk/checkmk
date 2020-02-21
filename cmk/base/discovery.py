@@ -1,28 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import os
 import socket
@@ -33,6 +13,9 @@ from typing import (  # pylint: disable=unused-import
     Pattern, AnyStr, Union, Iterator, Callable, List, Text, Optional, Dict, Tuple, Set, NoReturn,
     Any,
 )
+import six
+
+import livestatus
 
 from cmk.utils.regex import regex
 import cmk.utils.misc
@@ -44,7 +27,7 @@ from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.encoding import convert_to_unicode
 from cmk.utils.exceptions import MKException
 
-import cmk.base
+from cmk.base import config_cache as _config_cache
 import cmk.base.crash_reporting
 import cmk.base.config as config
 import cmk.base.console as console
@@ -61,7 +44,8 @@ import cmk.base.check_utils
 import cmk.base.decorator
 import cmk.base.snmp_scan as snmp_scan
 from cmk.base.exceptions import MKParseFunctionError
-from cmk.base.utils import HostName, HostAddress  # pylint: disable=unused-import
+import cmk.base.utils
+from cmk.utils.type_defs import HostName, HostAddress  # pylint: disable=unused-import
 from cmk.base.core_config import MonitoringCore  # pylint: disable=unused-import
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     CheckPluginName, CheckParameters, DiscoveredService, Item, ServiceState, Metric, RulesetName,
@@ -622,7 +606,7 @@ def discover_marked_hosts(core):
         console.verbose("\nRestarting monitoring core with updated configuration...\n")
         with config.set_use_core_config(use_core_config=False):
             try:
-                cmk.base.config_cache.clear_all()
+                _config_cache.clear_all()
                 config.get_config_cache().initialize()
 
                 if config.monitoring_core == "cmc":
@@ -630,19 +614,27 @@ def discover_marked_hosts(core):
                 else:
                     cmk.base.core.do_restart(core)
             finally:
-                cmk.base.config_cache.clear_all()
+                _config_cache.clear_all()
                 config.get_config_cache().initialize()
 
 
 def _fetch_host_states():
     # type: () -> Dict[HostName, HostState]
     try:
-        import livestatus
         query = "GET hosts\nColumns: name state"
-        return {n: s for n, s in livestatus.LocalConnection().query(query)}
+        response = livestatus.LocalConnection().query(query)
+        return {k: v for row in response for k, v in [_parse_row(row)]}
     except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
         pass
     return {}
+
+
+def _parse_row(row):
+    # type: (livestatus.LivestatusRow) -> Tuple[HostName, HostState]
+    hostname, hoststate = row
+    if isinstance(hostname, HostName) and isinstance(hoststate, HostState):
+        return hostname, hoststate
+    raise MKGeneralException("Invalid response from livestatus: %s" % row)
 
 
 def _discover_marked_host_exists(config_cache, hostname):
@@ -784,12 +776,12 @@ def _get_item_filter_func(params_rediscovery):
     whitelist = regex("|".join(["(%s)" % p for p in service_whitelist]))
     blacklist = regex("|".join(["(%s)" % p for p in service_blacklist]))
 
-    return lambda hostname, check_plugin_name, item:\
-           _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, blacklist)
+    return lambda hostname, check_plugin_name, item: _discovery_filter_by_lists(
+        hostname, check_plugin_name, item, whitelist, blacklist)
 
 
 def _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, blacklist):
-    # type: (HostName, CheckPluginName, Item, Pattern[AnyStr], Pattern[AnyStr]) -> bool
+    # type: (HostName, CheckPluginName, Item, Pattern[str], Pattern[str]) -> bool
     description = config.service_description(hostname, check_plugin_name, item)
     return whitelist.match(description) is not None and blacklist.match(description) is None
 
@@ -824,7 +816,7 @@ def schedule_discovery_check(hostname):
         if config.monitoring_core == "cmc":
             command += ";TRY"
 
-        s.send("COMMAND [%d] %s\n" % (now, command))
+        s.send(six.ensure_binary("COMMAND [%d] %s\n" % (now, command)))
     except Exception:
         if cmk.utils.debug.enabled():
             raise
@@ -888,7 +880,7 @@ def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_err
             except Exception as e:
                 if on_error == "raise":
                     raise
-                elif on_error == "warn":
+                if on_error == "warn":
                     console.error("Discovery of '%s' failed: %s\n" % (check_plugin_name, e))
 
         check_table_formatted = {}  # type: check_table.CheckTable
@@ -959,7 +951,7 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
                 new_exception.__traceback__ = x[2]  # type: ignore[attr-defined]
                 raise new_exception
 
-            elif on_error == "warn":
+            if on_error == "warn":
                 section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
                 console.warning("Exception while parsing agent section '%s': %s\n" %
                                 (section_name, e))
@@ -1338,8 +1330,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                         new_exception = x[0](x[1])
                         new_exception.__traceback__ = x[2]  # type: ignore[attr-defined]
                         raise new_exception
-                    else:
-                        raise
+                    raise
             except Exception as e:
                 if cmk.utils.debug.enabled():
                     raise

@@ -7,6 +7,8 @@ description:
  This check monitors input voltage of APC Symmetra UPS which support the PowerNet-MIB.
  There are no default levels set. Lower levels are configurable.
 
+item:
+ The current phase containing the device state, voltage and current.
+
 inventory:
  One service is created.
-

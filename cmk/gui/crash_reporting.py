@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -116,11 +116,11 @@ class GUICrashReport(cmk.utils.crash_reporting.ABCCrashReport):
 class ABCCrashReportPage(six.with_metaclass(abc.ABCMeta, cmk.gui.pages.Page)):
     def __init__(self):
         super(ABCCrashReportPage, self).__init__()
-        self._crash_id = html.get_unicode_input("crash_id")
+        self._crash_id = html.request.get_unicode_input("crash_id")
         if not self._crash_id:
             raise MKUserError("crash_id", _("The parameter \"%s\" is missing.") % "crash_id")
 
-        self._site_id = html.get_unicode_input("site")
+        self._site_id = html.request.get_unicode_input("site")
         if not self._site_id:
             raise MKUserError("site", _("The parameter \"%s\" is missing.") % "site")
 

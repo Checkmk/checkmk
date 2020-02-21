@@ -1,10 +1,9 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Optional  # pylint: disable=unused-import
 import cmk.gui.views as views
 import cmk.gui.visuals as visuals
 from cmk.gui.i18n import _
@@ -160,8 +159,7 @@ class LinkedViewDashlet(ABCViewDashlet):
 
     def title_url(self):
         view_name = self._dashlet_spec["name"]
-        return html.makeuri_contextless([('view_name', view_name)] +
-                                        list(self._dashlet_context_vars().items()),
+        return html.makeuri_contextless([('view_name', view_name)] + self._dashlet_context_vars(),
                                         filename='view.py')
 
     def update(self):

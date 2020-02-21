@@ -4,11 +4,10 @@
 // on Fail empty otional or default
 
 #pragma once
-#include <yaml-cpp/yaml.h>
-
 #include <string>
 #include <string_view>
 
+#include "common/yaml.h"
 #include "logger.h"
 namespace cma::yml {
 void LogException(const std::string& format, std::string_view group,

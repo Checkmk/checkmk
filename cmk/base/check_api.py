@@ -1,29 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
-
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """
 The things in this module specify the official Check_MK check API. Meaning all
 variables, functions etc. and default modules that are available to checks.
@@ -85,7 +64,7 @@ Global variables:
                          function. See get_rate() documentation for details
     ZERO                 Used as value for the "onwrap" argument of the get_rate()
                          function. See get_rate() documentation for details
-""" # # pylint: disable=pointless-string-statement
+"""  # pylint: disable=pointless-string-statement
 
 # NOTE: The above suppression is necessary because our testing framework blindly
 # concatenates lots of files, including this one.
@@ -94,18 +73,19 @@ Global variables:
 
 # TODO: Move imports directly to checks?
 from __future__ import division  # pylint: disable=misplaced-future
-import collections  # pylint: disable=unused-import
-import enum  # pylint: disable=unused-import
-import fnmatch  # pylint: disable=unused-import
+import collections  # noqa: F401 # pylint: disable=unused-import
+import enum  # noqa: F401 # pylint: disable=unused-import
+import fnmatch  # noqa: F401 # pylint: disable=unused-import
 import functools
-import math  # pylint: disable=unused-import
+import math  # noqa: F401 # pylint: disable=unused-import
 import os
-import re  # pylint: disable=unused-import
-import socket  # pylint: disable=unused-import
+import re  # noqa: F401 # pylint: disable=unused-import
+import socket  # noqa: F401 # pylint: disable=unused-import
 import sys  # pylint: disable=unused-import
 import time
 # NOTE: We do not use pprint in this module, but it is part of the check API.
-import pprint  # pylint: disable=unused-import
+import pprint  # noqa: F401 # pylint: disable=unused-import
+import calendar
 
 from typing import (  # pylint: disable=unused-import
     Set, Any, Callable, Dict, Iterable, List, Optional, Tuple, Union, Text,
@@ -117,7 +97,7 @@ import cmk.utils.debug as _debug
 import cmk.utils.defines as _defines
 import cmk.utils.paths as _paths
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.regex import regex  # pylint: disable=unused-import
+from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
 import cmk.utils.render as render
 import cmk.utils.rulesets.tuple_rulesets as _tuple_rulesets
 
@@ -126,12 +106,12 @@ import cmk.utils.rulesets.tuple_rulesets as _tuple_rulesets
 # check context.
 import cmk.utils as _cmk_utils
 import cmk.base.config as _config
-import cmk.base.console as _console  # pylint: disable=unused-import
+import cmk.base.console as _console  # noqa: F401 # pylint: disable=unused-import
 import cmk.base.snmp_utils as _snmp_utils
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
 import cmk.base.check_api_utils as _check_api_utils
-from cmk.base.utils import (  # pylint: disable=unused-import
+from cmk.utils.type_defs import (  # pylint: disable=unused-import
     HostName, ServiceName, CheckPluginName, MetricName,
 )
 from cmk.base.check_utils import (  # pylint: disable=unused-import
@@ -187,7 +167,7 @@ host_name = _check_api_utils.host_name
 service_description = _check_api_utils.service_description
 check_type = _check_api_utils.check_type
 
-from cmk.base.discovered_labels import (  # pylint: disable=unused-import
+from cmk.base.discovered_labels import (  # noqa: F401 # pylint: disable=unused-import
     DiscoveredServiceLabels as ServiceLabels, ServiceLabel, DiscoveredHostLabels as HostLabels,
     HostLabel,
 )
@@ -230,9 +210,9 @@ class as_float(float):
     def __repr__(self):
         # type: () -> str
         if self > sys.float_info.max:
-            return '1e309'
+            return '1e%d' % (sys.float_info.max_10_exp + 1)
         if self < -1 * sys.float_info.max:
-            return '-1e309'
+            return '-1e%d' % (sys.float_info.max_10_exp + 1)
         return super(as_float, self).__repr__()
 
 
@@ -563,7 +543,6 @@ def utc_mktime(time_struct):
     # type: (time.struct_time) -> int
     """Works like time.mktime() but assumes the time_struct to be in UTC,
     not in local time."""
-    import calendar
     return calendar.timegm(time_struct)
 
 
@@ -606,7 +585,8 @@ def _agent_cache_file_age(hostname, check_plugin_name):
     if host_config.is_cluster:
         raise MKGeneralException("get_agent_data_time() not valid for cluster")
 
-    import cmk.base.check_utils
+    # TODO 'import-outside-toplevel' not available in pylint for Python 2
+    import cmk.base.check_utils  # pylint: disable-all
     if cmk.base.check_utils.is_snmp_check(check_plugin_name):
         cachefile = _paths.tcp_cache_dir + "/" + hostname + "." + check_plugin_name.split(".")[
             0]  # type: Optional[str]
@@ -784,4 +764,4 @@ def discover(selector=None, default_params=None):
 # import in sync with our intended API.
 # TODO: Do we really need this? Is there code which uses a star import for this
 # module?
-__all__ = get_check_api_context().keys()
+__all__ = list(get_check_api_context())

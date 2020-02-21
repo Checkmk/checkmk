@@ -9,7 +9,7 @@ description:
  If the expire date lies in the past the state will be CRIT.
 
 item:
- The name of the certificate.
+ Name of the certificate.
 
 inventory:
  One service per certificate is created.

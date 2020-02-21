@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 _sentinel = object()
 
 
-class _AppCtxGlobals(object):  # pylint: disable=useless-object-inheritance
+class _AppCtxGlobals(object):
     def get(self, name, default=None):
         return self.__dict__.get(name, default)
 
@@ -57,7 +57,7 @@ def _lookup_app_object(name):
     return getattr(top, name)
 
 
-class AppContext(object):  # pylint: disable=useless-object-inheritance
+class AppContext(object):
     def __init__(self, app):
         self.app = app
         self.g = _AppCtxGlobals()
@@ -101,7 +101,7 @@ def _lookup_req_object(name):
     return getattr(top, name)
 
 
-class RequestContext(object):  # pylint: disable=useless-object-inheritance
+class RequestContext(object):
     def __init__(self, html_obj=None, req=None, resp=None):
         self.html = html_obj
         self.auth_type = None

@@ -38,22 +38,19 @@ def parse_ceph_status(info):
     return parsed
 
 
-def ceph_check_epoch(_id, epoch, params):
+def ceph_check_epoch(id_, epoch, params):
     warn, crit, avg_interval_min = params.get("epoch", (None, None, 1))
-    epoch_rate = get_rate("%s.epoch.rate" % _id, time.time(), epoch, allow_negative=True)
-    epoch_avg = get_average("%s.epoch.avg" % _id, time.time(), epoch_rate, avg_interval_min)
-    state = 0
-    infotext = 'Epoch: %s/%s' % (epoch_avg, get_age_human_readable(avg_interval_min * 60))
+    now = time.time()
+    epoch_rate = get_rate("%s.epoch.rate" % id_, now, epoch, allow_negative=True)
+    epoch_avg = get_average("%s.epoch.avg" % id_, now, epoch_rate, avg_interval_min)
 
-    if warn is not None and crit is not None:
-        if epoch_avg >= crit:
-            state = 2
-        elif epoch_avg >= warn:
-            state = 1
-        if state > 0:
-            infotext += " (warn/crit at %.1f/%.1f)" % (warn, crit)
-
-    return state, infotext
+    infoname = 'Epoch rate (%s average)' % get_age_human_readable(avg_interval_min * 60)
+    return check_levels(
+        epoch_avg,
+        None,
+        (warn, crit),
+        infoname=infoname,
+    )[:2]
 
 
 #   .--status--------------------------------------------------------------.

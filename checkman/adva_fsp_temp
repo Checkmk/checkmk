@@ -20,8 +20,7 @@ description:
  shorter than the configured one.
 
 item:
- The name of the module or port
+ Name of the module or port.
 
 inventory:
  All temperature sensors on all modules/ports are detected
-

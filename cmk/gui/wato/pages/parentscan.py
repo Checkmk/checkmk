@@ -1,9 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """Mode for automatic scan of parents (similar to cmk --scan-parents)"""
 
 import collections
@@ -253,7 +252,7 @@ class ModeParentScan(WatoMode):
         # TODO: Make dedicated class or class members
         self._settings = {
             "where": html.request.var("where"),
-            "alias": html.get_unicode_input("alias", "").strip() or None,
+            "alias": html.request.get_unicode_input("alias", "").strip() or None,
             "recurse": html.get_checkbox("recurse"),
             "select": html.request.var("select"),
             "timeout": utils.saveint(html.request.var("timeout")) or 8,
@@ -320,7 +319,7 @@ class ModeParentScan(WatoMode):
                 entries.append(host)
 
         if recurse:
-            for subfolder in folder.all_subfolders().values():
+            for subfolder in folder.subfolders():
                 entries += self._recurse_hosts(subfolder, recurse, select)
         return entries
 

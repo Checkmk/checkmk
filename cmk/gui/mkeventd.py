@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -338,7 +338,7 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
             cp = True
 
         match_groups = match(rule.get("match_ok", ""), event["text"], complete=False)
-        if match_groups != False and cp:
+        if match_groups is not False and cp:
             if match_groups is True:
                 match_groups = ()
             return True, match_groups

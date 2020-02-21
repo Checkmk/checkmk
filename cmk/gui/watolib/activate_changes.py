@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -898,7 +898,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         manager = ActivateChangesManager()
         manager.load()
         manager.load_activation(self._activation_id)
-        manager.activate_until()
+        return manager.activate_until()
 
     def _set_done_result(self, configuration_warnings):
         if any(configuration_warnings.values()):
@@ -988,7 +988,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         if isinstance(result, list):
             result = True
 
-        if result != True:
+        if result is not True:
             raise MKGeneralException(_("Failed to synchronize with site: %s") % result)
 
     def _push_snapshot_to_site(self):

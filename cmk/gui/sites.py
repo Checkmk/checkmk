@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,7 +6,7 @@
 
 from contextlib import contextmanager
 from typing import (  # pylint: disable=unused-import
-    TYPE_CHECKING, Any, cast, Dict, Iterator, List, NewType, Optional, Text, Tuple, Union,
+    Any, cast, Dict, Iterator, List, NewType, Optional, Text, Tuple, Union,
 )
 
 from livestatus import (
@@ -46,7 +46,7 @@ def live(user=None, force_authuser=None):
     return g.live
 
 
-SiteStatus = NewType('SiteStatus', Dict[bytes, Any])
+SiteStatus = NewType('SiteStatus', Dict[str, Any])
 SiteStates = NewType('SiteStates', Dict[SiteId, SiteStatus])
 
 
@@ -66,7 +66,7 @@ def disconnect():
 
 # TODO: This should live somewhere else, it's just a random helper...
 def all_groups(what):
-    # type: (bytes) -> List[Tuple[Text, Text]]
+    # type: (str) -> List[Tuple[Text, Text]]
     """Returns a list of host/service/contact groups (pairs of name/alias)
 
     Groups are collected via livestatus from all sites. In case no alias is defined
@@ -106,11 +106,14 @@ def _ensure_connected(user, force_authuser):
     # type: (Optional[UserType], Optional[UserId]) -> None
     if 'live' in g:
         return
+
     if user is None:
-        _user = config.user
         user = config.user
+
     if force_authuser is None:
-        force_authuser = html.request.var("force_authuser")
+        request_force_authuser = html.request.get_unicode_input("force_authuser")
+        force_authuser = UserId(request_force_authuser) if request_force_authuser else None
+
     g.site_status = {}
     _connect_multiple_sites(user)
     _set_livestatus_auth(user, force_authuser)
@@ -204,7 +207,7 @@ def _site_config_for_livestatus(site_id, site):
 
 
 def encode_socket_for_livestatus(site_id, site):
-    # type: (SiteId, SiteConfiguration) -> bytes
+    # type: (SiteId, SiteConfiguration) -> str
     socket_spec = site["socket"]
     family_spec, address_spec = socket_spec
 
@@ -236,7 +239,7 @@ def update_site_states_from_dead_sites():
 
 
 def _status_host_state_name(shs):
-    # type: (Optional[int]) -> bytes
+    # type: (Optional[int]) -> str
     return _STATUS_NAMES.get(shs, "unknown")
 
 
@@ -260,7 +263,7 @@ def _set_initial_site_states(enabled_sites, disabled_sites):
 # If Multisite is retricted to data the user is a contact for, we need to set an
 # AuthUser: header for livestatus.
 def _set_livestatus_auth(user, force_authuser):
-    # type: (UserType, UserId) -> None
+    # type: (UserType, Optional[UserId]) -> None
     user_id = _livestatus_auth_user(user, force_authuser)
     if user_id is not None:
         g.live.set_auth_user('read', user_id)
@@ -281,7 +284,7 @@ def _set_livestatus_auth(user, force_authuser):
 # Returns either None when no auth user shal be set or the name of the user
 # to be used as livestatus auth user
 def _livestatus_auth_user(user, force_authuser):
-    # type: (UserType, UserId) -> Optional[UserId]
+    # type: (UserType, Optional[UserId]) -> Optional[UserId]
     if not user.may("general.see_all"):
         return user.id
     if force_authuser == "1":

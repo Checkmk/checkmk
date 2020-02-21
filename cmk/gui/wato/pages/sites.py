@@ -1,9 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """Mode for managing sites"""
 
 import traceback
@@ -1065,7 +1064,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         if action != "trust":
             return
 
-        digest_sha256 = html.get_ascii_input("_digest")
+        digest_sha256 = html.request.get_ascii_input("_digest")
 
         try:
             cert_details = self._fetch_certificate_details()

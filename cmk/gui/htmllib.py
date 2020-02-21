@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -9,7 +9,7 @@
 # Notes for future rewrite:
 #
 # - Find all call sites which do something like "int(html.request.var(...))"
-#   and replace it with html.get_integer_input(...)
+#   and replace it with html.request.get_integer_input_mandatory(...)
 #
 # - Make clear which functions return values and which write out values
 #   render_*, add_*, write_* (e.g. icon() -> outputs directly,
@@ -66,7 +66,9 @@ else:
 #
 # Monkey patch in order to make the HTML class below json-serializable without changing the default json calls.
 def _default(self, obj):
-    return getattr(obj.__class__, "to_json", _default.default)(obj)
+    # type: (json.JSONEncoder, object) -> Text
+    # ignore attr-defined: See hack below
+    return getattr(obj.__class__, "to_json", _default.default)(obj)  # type: ignore[attr-defined]
 
 
 # TODO: suppress mypy warnings for this monkey patch right now. See also:
@@ -89,10 +91,10 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel, OutputFunnelInput  # pylint: disable=unused-import
 from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.timeout_manager import TimeoutManager
-from cmk.gui.utils.url_encoder import URLEncoder, HTTPVariables  # pylint: disable=unused-import
+from cmk.gui.utils.url_encoder import URLEncoder  # pylint: disable=unused-import
 from cmk.gui.i18n import _
 from cmk.gui.http import Request, Response  # pylint: disable=unused-import
-from cmk.gui.type_defs import VisualContext  # pylint: disable=unused-import
+from cmk.gui.type_defs import VisualContext, HTTPVariables  # pylint: disable=unused-import
 
 if TYPE_CHECKING:
     from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
@@ -301,7 +303,7 @@ class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, object)):
         self.write_html(self._render_opening_tag('a', close_tag=False, **attrs))
 
     def render_a(self, content, href, **attrs):
-        # type: (HTMLTagContent, str, **HTMLTagAttributeValue) -> HTML
+        # type: (HTMLTagContent, Union[Text, str], **HTMLTagAttributeValue) -> HTML
         attrs['href'] = href
         return self._render_content_tag('a', content, **attrs)
 
@@ -1174,8 +1176,7 @@ class html(ABCHTMLGenerator):
         self.response.headers["Cache-Control"] = "no-cache"
 
         try:
-            output_format = self.get_ascii_input("output_format", "html")
-            assert output_format is not None
+            output_format = self.request.get_ascii_input_mandatory("output_format", "html")
             self.set_output_format(output_format.lower())
         except (MKUserError, MKGeneralException):
             pass  # Silently ignore unsupported formats
@@ -1240,7 +1241,7 @@ class html(ABCHTMLGenerator):
     # makes it white instead.
     def _init_screenshot_mode(self):
         # type: () -> None
-        if self.request.var("screenshotmode", config.screenshotmode):
+        if self.request.var("screenshotmode", "1" if config.screenshotmode else ""):
             self.screenshotmode = True
 
     def _requested_file_name(self):
@@ -1328,62 +1329,15 @@ class html(ABCHTMLGenerator):
         self.request.__dict__.pop('args', None)
         self.request.__dict__.pop('values', None)
 
-    # TODO: For historic reasons this needs to return byte strings. We will clean this up
-    # soon, before moving to Python 3.
-    def get_ascii_input(self, varname, deflt=None):
-        # type: (str, Optional[str]) -> Optional[str]
-        """Helper to retrieve a byte string and ensure it only contains ASCII characters
-        In case a non ASCII character is found an MKUserError() is raised."""
-        value = self.request.var(varname, deflt)
-
-        if value is None:
-            return value
-
-        if sys.version_info[0] >= 3:
-            if not value.isascii():
-                raise MKUserError(varname, _("The given text must only contain ASCII characters."))
-        else:
-            try:
-                value.decode("ascii")
-            except UnicodeDecodeError:
-                raise MKUserError(varname, _("The given text must only contain ASCII characters."))
-
-        return value
-
-    def get_unicode_input(self, varname, deflt=None):
-        # type: (str, Optional[Text]) -> Optional[Text]
-        try:
-            val = self.request.var(varname, deflt)
-            if val is None:
-                return None
-            return ensure_unicode(val)
-        except UnicodeDecodeError:
-            raise MKUserError(
-                varname,
-                _("The given text is wrong encoded. "
-                  "You need to provide a UTF-8 encoded text."))
-
     def get_item_input(self, varname, collection):
         # type: (str, Mapping[str, str]) -> Tuple[str, str]
         """Helper to get an item from the given collection
         Raises a MKUserError() in case the requested item is not available."""
-        item = self.get_ascii_input(varname)
+        item = self.request.get_ascii_input(varname)
         if item not in collection:
             raise MKUserError(varname, _("The requested item %s does not exist") % item)
         assert item is not None
         return collection[item], item
-
-    def get_integer_input(self, varname, deflt=None):
-        # type: (str, Optional[int]) -> int
-        if deflt is not None and not self.request.has_var(varname):
-            return deflt
-
-        try:
-            return int(self.request.var(varname))
-        except TypeError:
-            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
-        except ValueError:
-            raise MKUserError(varname, _("The parameter \"%s\" is not an integer.") % varname)
 
     # TODO: Invalid default URL is not validated. Should we do it?
     # TODO: This is only protecting against some not allowed URLs but does not
@@ -1405,6 +1359,8 @@ class html(ABCHTMLGenerator):
             raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
 
         url = self.request.var(varname)
+        assert url is not None
+
         if not utils.is_allowed_url(url):
             if deflt:
                 return deflt
@@ -1427,6 +1383,7 @@ class html(ABCHTMLGenerator):
         if self.request.var("request_format") == "python":
             try:
                 python_request = self.request.var("request", "{}")
+                assert python_request is not None
                 request = ast.literal_eval(python_request)
             except (SyntaxError, ValueError) as e:
                 raise MKUserError(
@@ -1435,6 +1392,7 @@ class html(ABCHTMLGenerator):
         else:
             try:
                 json_request = self.request.var("request", "{}")
+                assert json_request is not None
                 request = json.loads(json_request)
                 request["request_format"] = "json"
             except ValueError as e:  # Python3: json.JSONDecodeError
@@ -1443,9 +1401,7 @@ class html(ABCHTMLGenerator):
 
         for key, val in self.request.itervars():
             if key not in ["request", "output_format"] + exclude_vars:
-                if isinstance(val, bytes):
-                    val = ensure_unicode(val)
-                request[key] = val
+                request[key] = ensure_unicode(val) if isinstance(val, bytes) else val
 
         return request
 
@@ -1751,7 +1707,8 @@ class html(ABCHTMLGenerator):
         new_vars = [nv[0] for nv in addvars]
         vars_ = [(v, val)
                  for v, val in self.request.itervars()
-                 if v[0] != "_" and v not in new_vars and (not delvars or v not in delvars)]
+                 if v[0] != "_" and v not in new_vars and (not delvars or v not in delvars)
+                ]  # type: HTTPVariables
         if remove_prefix is not None:
             vars_ = [i for i in vars_ if not i[0].startswith(remove_prefix)]
         vars_ = vars_ + addvars
@@ -2115,7 +2072,7 @@ class html(ABCHTMLGenerator):
             for var, _val in self.request.itervars():
                 if var not in self.form_vars and \
                     (var[0] != "_" or add_action_vars):  # and var != "filled_in":
-                    self.hidden_field(var, self.get_unicode_input(var))
+                    self.hidden_field(var, self.request.get_unicode_input(var))
 
     def hidden_field(self, var, value, id_=None, add_var=False, class_=None):
         # type: (str, HTMLTagValue, str, bool, CSSSpec) -> None
@@ -2352,7 +2309,7 @@ class html(ABCHTMLGenerator):
 
         # Model
         error = self.user_errors.get(varname)
-        value = self.get_unicode_input(varname, default_value)
+        value = self.request.get_unicode_input(varname, default_value)
         if not value:
             value = ""
         if error:
@@ -2481,7 +2438,7 @@ class html(ABCHTMLGenerator):
     def text_area(self, varname, deflt="", rows=4, cols=30, try_max_width=False, **attrs):
         # type: (str, Union[Text, str], int, int, bool, **HTMLTagAttributeValue) -> None
 
-        value = self.get_unicode_input(varname, deflt)
+        value = self.request.get_unicode_input(varname, deflt)
         error = self.user_errors.get(varname)
 
         self.form_vars.append(varname)
@@ -2527,7 +2484,7 @@ class html(ABCHTMLGenerator):
                  size=1,
                  **attrs):
         # type: (str, Choices, DefaultChoice, bool, Optional[Text], CSSSpec, int, **HTMLTagAttributeValue) -> None
-        current = self.get_unicode_input(varname, deflt)
+        current = self.request.get_unicode_input(varname, deflt)
         error = self.user_errors.get(varname)
         if varname:
             self.form_vars.append(varname)
@@ -3013,7 +2970,7 @@ class html(ABCHTMLGenerator):
                            target=None,
                            cssclass=None,
                            class_=None):
-        # type: (Optional[str], Text, str, Optional[str], Optional[str], Optional[str], Optional[str], Optional[str], CSSSpec) -> HTML
+        # type: (Optional[Union[Text, str]], Text, str, Optional[str], Optional[str], Optional[str], Optional[str], Optional[str], CSSSpec) -> HTML
 
         # Same API as other elements: class_ can be a list or string/None
         classes = [cssclass]

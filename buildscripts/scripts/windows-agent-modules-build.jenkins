@@ -8,11 +8,9 @@ properties([
 node ('windows') {
     stage('git checkout') {
         checkout(scm)
+            windows = load 'buildscripts/scripts/lib/windows.groovy'
     }
-    stage('Windows python module build') {
-        bat 'cd agents\\modules\\windows && call build_the_module.cmd python'
-        dir('artefacts') {
-            archiveArtifacts "*"
-        }
-    }
+    windows.build(
+        TARGET: 'module'
+    )
 }

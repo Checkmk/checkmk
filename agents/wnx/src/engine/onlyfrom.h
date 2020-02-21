@@ -1,7 +1,7 @@
 #ifndef onlyfrom_h__
 #define onlyfrom_h__
 
-#include <yaml-cpp/yaml.h>
+#include "common/yaml.h"
 
 #include <string>
 #include <string_view>

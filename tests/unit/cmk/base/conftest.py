@@ -1,10 +1,9 @@
-import pytest
+import pytest  # type: ignore[import]
 
 
 # Automatically refresh caches for each test
 @pytest.fixture(autouse=True, scope="function")
 def clear_config_caches(monkeypatch):
-    import cmk.base.config
-    import cmk.base.caching
-    monkeypatch.setattr(cmk.base, "config_cache", cmk.base.caching.CacheManager())
-    monkeypatch.setattr(cmk.base, "runtime_cache", cmk.base.caching.CacheManager())
+    from cmk.base import config_cache as _config_cache, runtime_cache as _runtime_cache
+    _config_cache.reset()
+    _runtime_cache.reset()

@@ -82,8 +82,8 @@ def _create_and_destroy_user(automation=False):
     _touch(cmk.utils.paths.omd_root + '/etc/diskspace.conf')
     _makepath(cmk.utils.paths.var_dir + "/wato/auth")
     _makepath(config.config_dir)
-    username = 'test123-' + get_random_string(size=5, from_ascii=ord('a'), to_ascii=ord('z'))
-    password = 'Ischbinwischtisch'
+    username = u'test123-' + get_random_string(size=5, from_ascii=ord('a'), to_ascii=ord('z'))
+    password = u'Ischbinwischtisch'
     edit_users(_mk_user_obj(username, password, automation=automation))
     config.load_config()
     yield username, password

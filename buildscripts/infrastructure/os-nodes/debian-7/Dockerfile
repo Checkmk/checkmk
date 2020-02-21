@@ -26,6 +26,7 @@ RUN apt-get update \
     python-dev \
     rrdtool \
     strace \
+    ping \
     vim \
     && curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
     && python get-pip.py \

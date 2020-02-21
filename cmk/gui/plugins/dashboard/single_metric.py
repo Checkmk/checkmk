@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -250,7 +250,7 @@ class SingleMetricDashlet(Dashlet):
         for data in self._perf_data:
             varname = data[0]
             orig_varname = varname
-            if not varname in t_metrics:
+            if varname not in t_metrics:
                 varname = check_metrics[self._check_command][varname]["name"]
             metric_title = t_metrics[varname]["title"]
             metric_choices.append((varname, "%s (%s)" % (varname, metric_title)))

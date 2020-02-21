@@ -1,9 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """Modes for renaming one or multiple existing hosts"""
 
 import os
@@ -184,7 +183,7 @@ class ModeBulkRenameHost(WatoMode):
             if target_name and host.may("write"):
                 entries.append((folder, host_name, target_name))
         if renaming_config["recurse"]:
-            for subfolder in folder.all_subfolders().values():
+            for subfolder in folder.subfolders():
                 entries += self._recurse_hosts_for_renaming(subfolder, renaming_config)
         return entries
 
@@ -344,7 +343,7 @@ class ModeRenameHost(WatoMode):
         return ["hosts", "manage_hosts"]
 
     def _from_vars(self):
-        host_name = html.get_ascii_input("host")
+        host_name = html.request.get_ascii_input("host")
 
         if not watolib.Folder.current().has_host(host_name):
             raise MKUserError("host", _("You called this page with an invalid host name."))
@@ -460,7 +459,7 @@ def rename_host_as_parent(oldname, newname, in_folder=None):
         if in_folder.rename_parent(oldname, newname):
             parents.append(in_folder.name())
 
-    for subfolder in in_folder.all_subfolders().values():
+    for subfolder in in_folder.subfolders():
         parents += rename_host_as_parent(oldname, newname, subfolder)
 
     return parents
@@ -489,7 +488,7 @@ def rename_host_in_rulesets(folder, oldname, newname):
                        sites=folder.all_site_ids())
             rulesets.save()
 
-        for subfolder in folder.all_subfolders().values():
+        for subfolder in folder.subfolders():
             rename_host_in_folder_rules(subfolder)
 
     rename_host_in_folder_rules(watolib.Folder.root_folder())

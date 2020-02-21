@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6362,6 +6362,12 @@ metric_info['jira_avg'] = {
     "title": _("Average value"),
     "unit": "count",
     "color": "14/a",
+}
+
+metric_info['jira_diff'] = {
+    "title": _("Difference"),
+    "unit": "count",
+    "color": "11/a",
 }
 
 #.

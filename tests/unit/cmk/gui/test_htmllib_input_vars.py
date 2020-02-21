@@ -1,51 +1,9 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import pytest
-
+import pytest  # type: ignore
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
-
-
-def test_get_ascii_input(register_builtin_html):
-    html.request.set_var("xyz", "x")
-    html.request.set_var("abc", "äbc")
-
-    assert html.get_ascii_input("xyz") == "x"
-    assert isinstance(html.get_ascii_input("xyz"), str)
-
-    with pytest.raises(MKUserError) as e:
-        html.get_ascii_input("abc")
-    assert "must only contain ASCII" in "%s" % e
-
-    assert html.get_ascii_input("get_default", "xyz") == "xyz"
-    assert html.get_ascii_input("zzz") is None
-
-
-def test_get_integer_input(register_builtin_html):
-    html.request.set_var("number", "2")
-    html.request.set_var("float", "2.2")
-    html.request.set_var("not_a_number", "a")
-
-    with pytest.raises(MKUserError) as e:
-        html.get_integer_input("not_existing")
-    assert "is missing" in "%s" % e
-
-    assert html.get_integer_input("get_default", 1) == 1
-
-    assert html.get_integer_input("number") == 2
-
-    with pytest.raises(MKUserError) as e:
-        html.get_integer_input("bla")
-    assert "is missing" in "%s" % e
-
-    with pytest.raises(MKUserError) as e:
-        html.get_integer_input("float")
-    assert "is not an integer" in "%s" % e
-
-    with pytest.raises(MKUserError) as e:
-        html.get_integer_input("not_a_number")
-    assert "is not an integer" in "%s" % e
 
 
 @pytest.mark.parametrize("invalid_url", [

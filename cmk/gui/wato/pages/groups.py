@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -179,7 +179,7 @@ class ModeEditGroup(six.with_metaclass(abc.ABCMeta, WatoMode)):
         if not html.check_transaction():
             return "%s_groups" % self.type_name
 
-        alias = html.get_unicode_input("alias").strip()
+        alias = html.request.get_unicode_input("alias").strip()
         if not alias:
             raise MKUserError("alias", _("Please specify an alias name."))
 

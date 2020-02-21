@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -72,7 +72,7 @@ def escape_attribute(value):
 
 
 def unescape_attributes(value):
-    # type: (str) -> Text
+    # type: (Union[str, Text]) -> Text
     # In python3 use html.unescape
     return ensure_unicode(value  #
                           .replace("&amp;", "&")  #

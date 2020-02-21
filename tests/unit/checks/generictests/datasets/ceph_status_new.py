@@ -56,4 +56,4 @@ discovery = {'': [(None, {})], 'mgrs': [], 'osds': [], 'pgs': []}
 
 checks = {'': [(None,
                 {'epoch': (1, 3, 30)},
-                [(0, 'Health: OK', []), (0, 'Epoch: 0/30 m', [])])]}
+                [(0, 'Health: OK', []), (0, 'Epoch rate (30 m average): 0.00', [])])]}

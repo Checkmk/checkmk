@@ -1,28 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Currently this module manages the inventory tree which is built
 while the inventory is performed for one host.
 
@@ -40,7 +20,6 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import StructuredDataTree
 import cmk.utils.debug
 
-import cmk.base.utils
 import cmk.base.console as console
 import cmk.base.config as config
 import cmk.base.check_api_utils as check_api_utils
@@ -52,7 +31,7 @@ import cmk.base.decorator
 import cmk.base.check_api as check_api
 from cmk.base.data_sources.snmp import SNMPHostSections
 
-from cmk.base.utils import HostName, HostAddress, CheckPluginName  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, HostAddress, CheckPluginName  # pylint: disable=unused-import
 from cmk.base.snmp_utils import SNMPHostConfig  # pylint: disable=unused-import
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     ServiceState, ServiceDetails, ServiceAdditionalDetails, Metric,
@@ -121,8 +100,6 @@ def do_inv_check(hostname, options):
     _inv_hw_changes = options.get("hw-changes", 0)
     _inv_sw_changes = options.get("sw-changes", 0)
     _inv_sw_missing = options.get("sw-missing", 0)
-    _inv_fail_status = options.get("inv-fail-status",
-                                   1)  # State in case of an error (default: WARN)
 
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)  # type: config.HostConfig
@@ -229,7 +206,7 @@ def do_inventory_actions_during_checking_for(sources, multi_host_sections, host_
         return  # nothing to do here
 
     # This is called during checking, but the inventory plugins are not loaded yet
-    import cmk.base.inventory_plugins as inventory_plugins
+    import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
     inventory_plugins.load_plugins(check_api.get_check_api_context, get_inventory_context)
 
     config_cache = config.get_config_cache()
@@ -313,7 +290,7 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
         multi_host_sections = sources.get_host_sections()
 
     console.step("Executing inventory plugins")
-    import cmk.base.inventory_plugins as inventory_plugins
+    import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
     console.verbose("Plugins:")
     for section_name, plugin in inventory_plugins.sorted_inventory_plugins():
         section_content = multi_host_sections.get_section_content(hostname,
@@ -431,7 +408,7 @@ def _save_status_data_tree(hostname, status_data_tree):
 
 def _run_inventory_export_hooks(host_config, inventory_tree):
     # type: (config.HostConfig, StructuredDataTree) -> None
-    import cmk.base.inventory_plugins as inventory_plugins
+    import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
     hooks = host_config.inventory_export_hooks
 
     if not hooks:

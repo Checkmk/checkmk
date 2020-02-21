@@ -1,28 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # This file is being used by the rule based notifications and (CEE
 # only) by the alert handling
@@ -33,7 +13,12 @@ import sys
 import select
 import socket
 import time
-import urllib
+
+if sys.version_info[0] >= 3:
+    # No stub file
+    from urllib.parse import quote  # type: ignore[import]  # pylint: disable=unused-import,no-name-in-module
+else:
+    from urllib import quote  # pylint: disable=unused-import,no-name-in-module
 
 from typing import (  # pylint: disable=unused-import
     Any, Callable, Dict, Iterable, List, Optional, Text, Union)
@@ -111,13 +96,13 @@ def event_keepalive(event_function,
 
                     os.execvp("cmk", sys.argv)
 
-                data = ""
-                while not data.endswith("\n\n"):
+                data = b""
+                while not data.endswith(b"\n\n"):
                     try:
-                        new_data = ""
+                        new_data = b""
                         new_data = os.read(0, 32768)
                     except IOError as e:
-                        new_data = ""
+                        new_data = b""
                     except Exception as e:
                         if cmk.utils.debug.enabled():
                             raise
@@ -131,7 +116,7 @@ def event_keepalive(event_function,
                     data += new_data
 
                 try:
-                    context = raw_context_from_string(data.rstrip('\n'))
+                    context = raw_context_from_string(data.rstrip(b'\n'))
                     event_function(context)
                 except Exception:
                     if cmk.utils.debug.enabled():
@@ -161,14 +146,15 @@ def event_keepalive(event_function,
 
 def config_timestamp():
     # type: () -> float
-    mtime = 0
+    mtime = 0.0
     for dirpath, _unused_dirnames, filenames in os.walk(cmk.utils.paths.check_mk_config_dir):
         for f in filenames:
             mtime = max(mtime, os.stat(dirpath + "/" + f).st_mtime)
 
     for path in [
-            cmk.utils.paths.main_config_file, cmk.utils.paths.final_config_file,
-            cmk.utils.paths.local_config_file
+            cmk.utils.paths.main_config_file,
+            cmk.utils.paths.final_config_file,
+            cmk.utils.paths.local_config_file,
     ]:
         try:
             mtime = max(mtime, os.stat(path).st_mtime)
@@ -182,17 +168,36 @@ def event_data_available(loop_interval):
     return bool(select.select([0], [], [], loop_interval)[0])
 
 
+def pipe_decode_raw_context(raw_context):
+    """
+    cmk_base replaces all occurences of the pipe symbol in the infotext with
+    the character "Light vertical bar" before a check result is submitted to
+    the core. We remove this special encoding here since it may result in
+    gibberish output when deliered via a notification plugin.
+    """
+    def _remove_pipe_encoding(value):
+        return value.replace(u"\u2758", u"|")
+
+    output = raw_context.get('SERVICEOUTPUT')
+    if output:
+        raw_context['SERVICEOUTPUT'] = _remove_pipe_encoding(output)
+    long_output = raw_context.get('LONGSERVICEOUTPUT')
+    if long_output:
+        raw_context['LONGSERVICEOUTPUT'] = _remove_pipe_encoding(long_output)
+
+
 def raw_context_from_string(data):
-    # type: (str) -> EventContext
+    # type: (bytes) -> EventContext
     # Context is line-by-line in g_notify_readahead_buffer
     context = {}
     try:
-        for line in data.split('\n'):
-            varname, value = line.strip().split("=", 1)
+        for line in data.split(b'\n'):
+            varname, value = six.ensure_str(line.strip()).split("=", 1)
             context[varname] = expand_backslashes(value)
     except Exception:  # line without '=' ignored or alerted
         if cmk.utils.debug.enabled():
             raise
+    pipe_decode_raw_context(context)
     return context
 
 
@@ -316,12 +321,14 @@ def complete_raw_context(raw_context, with_dump):
             # from that one, but we try to keep this simple here.
             raw_context["MICROTIME"] = "%d" % (time.time() * 1000000)
 
-        raw_context['HOSTURL'] = '/check_mk/index.py?start_url=%s' % \
-                            urllib.quote('view.py?view_name=hoststatus&host=%s&site=%s' % (raw_context['HOSTNAME'], raw_context['OMD_SITE']))
+        url_host_view = 'view.py?view_name=hoststatus&host=%s&site=%s' % (raw_context['HOSTNAME'],
+                                                                          raw_context['OMD_SITE'])
+        raw_context['HOSTURL'] = '/check_mk/index.py?start_url=%s' % quote(url_host_view)
+
         if raw_context['WHAT'] == 'SERVICE':
-            raw_context['SERVICEURL'] = '/check_mk/index.py?start_url=%s' % \
-                                        urllib.quote('view.py?view_name=service&host=%s&service=%s&site=%s' %
-                                                     (raw_context['HOSTNAME'], raw_context['SERVICEDESC'], raw_context['OMD_SITE']))
+            url_service_view = 'view.py?view_name=service&host=%s&service=%s&site=%s' % (
+                raw_context['HOSTNAME'], raw_context['SERVICEDESC'], raw_context['OMD_SITE'])
+            raw_context['SERVICEURL'] = '/check_mk/index.py?start_url=%s' % quote(url_service_view)
 
         # Relative Timestamps for several macros
         for macro in [
@@ -384,8 +391,8 @@ def complete_raw_context(raw_context, with_dump):
                 raw_context[key[:-5] + "SHORTSTATE"] = value[:4]
 
         if raw_context["WHAT"] == "SERVICE":
-            raw_context['SERVICEFORURL'] = urllib.quote(raw_context['SERVICEDESC'])
-        raw_context['HOSTFORURL'] = urllib.quote(raw_context['HOSTNAME'])
+            raw_context['SERVICEFORURL'] = quote(raw_context['SERVICEDESC'])
+        raw_context['HOSTFORURL'] = quote(raw_context['HOSTNAME'])
 
         convert_context_to_unicode(raw_context)
 

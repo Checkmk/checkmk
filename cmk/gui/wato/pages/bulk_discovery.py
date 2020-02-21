@@ -1,9 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """When the user wants to scan the services of multiple hosts at once
 this mode is used."""
 
@@ -189,7 +188,7 @@ class ModeBulkDiscovery(WatoMode):
             if not self._only_failed or host.discovery_failed():
                 entries.append((host_name, folder))
         if self._recurse:
-            for subfolder in folder.all_subfolders().values():
+            for subfolder in folder.subfolders():
                 entries += self._recurse_hosts(subfolder)
         return entries
 

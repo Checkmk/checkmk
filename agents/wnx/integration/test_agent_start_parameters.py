@@ -89,6 +89,7 @@ def expected_output(request, testconfig):
             r'# MK_SPOOLDIR=\.?',
             r'# MK_INSTALLDIR=\.?',
             r'# MK_MSI_PATH=\.?',
+            r'# MK_MODULESDIR=\.?',
             r'# Loaded Config Files:',
             r'# system: \.?',
             r'# bakery: \.?',

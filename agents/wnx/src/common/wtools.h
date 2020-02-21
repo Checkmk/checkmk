@@ -1060,6 +1060,21 @@ bool RemoveCmaUser(const std::wstring& user_name) noexcept;
 std::wstring GenerateRandomString(size_t max_length) noexcept;
 std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept;
 
+class Bstr {
+public:
+    Bstr(const Bstr&) = delete;
+    Bstr(Bstr&&) = delete;
+    Bstr& operator=(const Bstr&) = delete;
+    Bstr& operator=(Bstr&&) = delete;
+
+    Bstr(std::wstring_view str) { data_ = ::SysAllocString(str.data()); }
+    ~Bstr() { ::SysFreeString(data_); }
+    operator BSTR() { return data_; }
+
+public:
+    BSTR data_;
+};
+
 }  // namespace wtools
 
 #endif  // wtools_h__

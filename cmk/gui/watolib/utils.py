@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -116,7 +116,7 @@ def mk_eval(s):
         if not config.wato_legacy_eval:
             return ast.literal_eval(base64.b64decode(s))
         return pickle.loads(base64.b64decode(s))
-    except:
+    except Exception:
         raise MKGeneralException(_('Unable to parse provided data: %s') % html.render_text(repr(s)))
 
 

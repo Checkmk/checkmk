@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -211,11 +211,12 @@ def _session_cookie_value(username, session_id):
 
 def _get_session_id_from_cookie(username):
     # type: (UserId) -> str
-    raw_value = html.request.cookie(_session_cookie_name(), "::")
-    cookie_username, session_id, cookie_hash = raw_value.split(':', 2)
+    raw_value = html.request.cookie(_session_cookie_name(), b"::")
+    assert raw_value is not None
+    cookie_username, session_id, cookie_hash = raw_value.split(b':', 2)
 
     if ensure_unicode(cookie_username) != username \
-       or cookie_hash != _generate_hash(username, username + ":" + session_id):
+       or cookie_hash != _generate_hash(username, cookie_username + ":" + session_id):
         auth_logger.error("Invalid session: %s, Cookie: %r" % (username, raw_value))
         return ""
 
@@ -268,7 +269,10 @@ def _check_auth_cookie(cookie_name):
 
 def _parse_auth_cookie(cookie_name):
     # type: (str) -> Tuple[UserId, float, str]
-    raw_value = ensure_unicode(html.request.cookie(cookie_name, b"::"))
+    raw_cookie = html.request.cookie(cookie_name, b"::")
+    assert raw_cookie is not None
+
+    raw_value = ensure_unicode(raw_cookie)
     username, issue_time, cookie_hash = raw_value.split(':', 2)
     return UserId(username), float(issue_time) if issue_time else 0.0, six.ensure_str(cookie_hash)
 
@@ -341,9 +345,8 @@ def verify_automation_secret(user_id, secret):
 
 def _check_auth_automation():
     # type: () -> UserId
-    secret = html.request.var("_secret", "").strip()
-    user_id = html.get_unicode_input("_username", "")
-    assert isinstance(user_id, six.text_type)
+    secret = html.request.get_str_input_mandatory("_secret", "").strip()
+    user_id = html.request.get_unicode_input_mandatory("_username", "")
 
     user_id = UserId(user_id.strip())
     html.del_var_from_env('_username')
@@ -361,6 +364,7 @@ def _check_auth_http_header():
     # type: () -> Optional[UserId]
     """When http header auth is enabled, try to read the user_id from the var
     and when there is some available, set the auth cookie (for other addons) and proceed."""
+    assert isinstance(config.auth_by_http_header, str)
     user_id = html.request.get_request_header(config.auth_by_http_header)
     if not user_id:
         return None
@@ -396,7 +400,7 @@ def _check_auth_by_cookie():
                 auth_logger.debug('Exception while checking cookie %s: %s' %
                                   (cookie_name, traceback.format_exc()))
             except Exception:
-                auth_logger.error('Exception while checking cookie %s: %s' %
+                auth_logger.debug('Exception while checking cookie %s: %s' %
                                   (cookie_name, traceback.format_exc()))
     return None
 
@@ -444,14 +448,14 @@ class LoginPage(Page):
             return
 
         try:
-            username_var = html.get_unicode_input('_username', '')
+            username_var = html.request.get_unicode_input('_username', '')
             assert username_var is not None
             username = UserId(username_var.rstrip())
-            if username == '':
+            if not username:
                 raise MKUserError('_username', _('No username given.'))
 
             password = html.request.var('_password', '')
-            if password == '':
+            if not password:
                 raise MKUserError('_password', _('No password given.'))
 
             default_origtarget = config.url_prefix() + "check_mk/"
@@ -595,9 +599,8 @@ class LogoutPage(Page):
         else:
             # Implement HTTP logout with cookie hack
             if not html.request.has_cookie('logout'):
-                html.response.headers[
-                    'WWW-Authenticate'] = 'Basic realm="OMD Monitoring Site %s"' % config.omd_site(
-                    )
+                html.response.headers['WWW-Authenticate'] = (
+                    'Basic realm="OMD Monitoring Site %s"' % config.omd_site())
                 html.response.set_http_cookie('logout', '1')
                 raise FinalizeRequest(six.moves.http_client.UNAUTHORIZED)
             else:

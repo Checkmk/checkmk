@@ -2,7 +2,10 @@
 #define test_tools_h__
 //
 
+#include <vector>
+
 #include "cfg.h"
+#include "common/yaml.h"
 #include "iosfwd"                // for ofstream
 #include "on_start.h"            // for OnStart, AppType, AppType::test
 #include "system_error"          // for error_code
@@ -102,6 +105,17 @@ void SafeCleanTmpxDir();
 
 void PrintNode(YAML::Node node, std::string_view S);
 std::vector<std::string> ReadFileAsTable(const std::string& Name);
+
+using CheckYamlVector =
+    std::vector<std::pair<std::string_view, YAML::NodeType::value>>;
+inline void CheckYaml(YAML::Node table, const CheckYamlVector& vec) {
+    int pos = 0;
+    for (auto t : table) {
+        EXPECT_EQ(t.first.as<std::string>(), vec[pos].first);
+        EXPECT_EQ(t.second.Type(), vec[pos].second);
+        ++pos;
+    }
+}
 
 }  // namespace tst
 #endif  // test_tools_h__

@@ -54,6 +54,12 @@ repos:
             entry: scripts/check-pylint
             language: script
             types: [file, python]
+          - id: doctest
+            name: Doctests
+            entry: scripts/run-doctests
+            language: script
+            types: [file, python]
+            verbose: true
           - id: futurize
             name: Check futurize
             entry: scripts/check-futurize

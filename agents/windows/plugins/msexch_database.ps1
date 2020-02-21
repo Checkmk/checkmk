@@ -1,6 +1,6 @@
-# MS Exchange Database counters
+## MS Exchange Database counters
 
-# localize counter name
+## localize counter name
 $locale = ([System.Globalization.Cultureinfo]::CurrentCulture.name)
 switch -wildcard($locale){
     "en-*" {$counter_name = "\MSExchange Database ==> Instances(*)\*"}

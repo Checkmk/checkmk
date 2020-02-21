@@ -1,4 +1,5 @@
-# tnsnames.ora Network Configuration File:
+# tnsnames.ora
+# Network Configuration File:
 
 # example with the following values:
 # SID = XE

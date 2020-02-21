@@ -151,7 +151,7 @@ def fix_if_64_highspeed(info):
 # Stupid fix: Remove all 0 bytes. Hope this causes no problems.
 def cleanup_if_strings(s):
     if s and s != '':
-        return "".join([c for c in s if c not in nagios_illegal_chars + chr(0)]).strip()
+        return "".join([c for c in s if c != chr(0)]).strip()
     return s
 
 
@@ -163,10 +163,6 @@ def tryint(x):
         return int(x)
     except (TypeError, ValueError):
         return x
-
-
-# make sure, that configuration variable is present in precompiled host checks
-check_config_variables.append("nagios_illegal_chars")
 
 
 # Name of state (lookup SNMP enum)

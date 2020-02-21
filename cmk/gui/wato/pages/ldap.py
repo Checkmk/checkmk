@@ -1,9 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """LDAP configuration and diagnose page"""
 
 import six
@@ -86,8 +85,8 @@ class ModeLDAPConfig(LDAPMode):
             if not html.check_transaction():
                 return
 
-            from_pos = html.get_integer_input("_move")
-            to_pos = html.get_integer_input("_index")
+            from_pos = html.request.get_integer_input_mandatory("_move")
+            to_pos = html.request.get_integer_input_mandatory("_index")
             connection = connections[from_pos]
             self._add_change(
                 "move-ldap-connection",

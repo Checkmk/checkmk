@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # The script creates a chroot based on a current ubuntu version
 # and installs all dependencies needed to build the windows agent.
 

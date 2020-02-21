@@ -152,7 +152,7 @@ class ConfigInfo {
     struct YamlData {
         YamlData(const std::filesystem::path& Path,
                  std::filesystem::file_time_type Timestamp)
-            : path_(Path), bad_(false) {}
+            : path_(Path) {}
 
         void loadFile() {
             checkStatus();
@@ -211,8 +211,8 @@ class ConfigInfo {
         }
 
         std::filesystem::file_time_type last_loaded_time_;
-        bool exists_;
-        bool bad_;
+        bool exists_ = false;
+        bool bad_ = true;
         std::filesystem::file_time_type timestamp_;
     };
 

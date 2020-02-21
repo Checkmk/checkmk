@@ -1,14 +1,14 @@
-# Windows Teaming Interfaces
-# runs on windows 2003 or newer
+## Windows Teaming Interfaces
+## runs on windows 2003 or newer
 if ([Environment]::OSVersion.Version.Major -ge "5"){
 	Write-Host "<<<winperf_if:sep(9)>>>"
 }
 
-# runs on windows 2012 or newer
-# [teaming_start]
-# TeamName        TeamingMode     LoadBalancingAlgorithm  MemberMACAddresses      MemberNames     MemberDescriptions      Speed   GUID
-# LAN     Lacp    Dynamic         5C:F3:FC:37:2A:34;5C:F3:FC:37:2A:30     Ethernet;Ethernet 2     QLogic 1/10GbE Server Adapter #2;QLogic 1/10GbE Server Adapter  10000000000;10000000000 {11477AB1-0A749C-8768-A17F47C02A1F};{2B232067-0EE5-41EE-B498-0CA2FE8715D0}
-# [teaming_end]
+## runs on windows 2012 or newer
+## [teaming_start]
+## TeamName        TeamingMode     LoadBalancingAlgorithm  MemberMACAddresses      MemberNames     MemberDescriptions      Speed   GUID
+## LAN     Lacp    Dynamic         5C:F3:FC:37:2A:34;5C:F3:FC:37:2A:30     Ethernet;Ethernet 2     QLogic 1/10GbE Server Adapter #2;QLogic 1/10GbE Server Adapter  10000000000;10000000000 {11477AB1-0A749C-8768-A17F47C02A1F};{2B232067-0EE5-41EE-B498-0CA2FE8715D0}
+## [teaming_end]
 if ((([Environment]::OSVersion.Version.Major -eq "6") -and ([Environment]::OSVersion.Version.Minor -ge "2")) -or ([Environment]::OSVersion.Version.Major -ge "7")){
 	$teams = Get-NetLbfoTeam
 	if ($teams){

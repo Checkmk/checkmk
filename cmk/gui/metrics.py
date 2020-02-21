@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -313,7 +313,7 @@ class Perfometers(object):
         if not isinstance(value, str):
             return True
 
-        if not ":" in value:
+        if ":" not in value:
             return True
 
         perf_name, perf_param = value.split(":", 1)
@@ -598,7 +598,7 @@ class MetricometerRendererDual(MetricometerRenderer):
 def page_host_service_graph_popup():
     site_id = html.request.var('site')
     host_name = html.request.var('host_name')
-    service_description = html.get_unicode_input('service')
+    service_description = html.request.get_unicode_input('service')
     host_service_graph_popup_cmk(site_id, host_name, service_description)
 
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -14,6 +14,7 @@ Audience = Union[str, List[str]]
 TokenType = str
 RFC7662 = Dict[str, Any]
 HostGroup = Dict[str, str]
+DomainObject = Dict[str, Any]
 #TokenType = Union[Literal["access_token"], Literal["refresh_token"]]
 #RFC7662 = TypedDict(
 #    'RFC7662',

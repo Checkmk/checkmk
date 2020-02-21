@@ -10,20 +10,29 @@ description:
  The check monitors the service group states. A states map can be
  configured in the rule "Veritas Cluster Server". By default the 
  check can have the following states:
+ 
  - "ONLINE" will be OK,
+ 
  - "OFFLINE" will be WARN,
+ 
  - "FAULTED" will be CRIT,
+ 
  - all others will be WARN
 
  The check is cluster-aware. In this case
+ 
  - if all service groups report the same, that state is used,
+ 
  - if any service group reports "FAULTED", "UNKNOWN", "ONLINE" or
    "RUNNING", the respective state will be used (checked in that order)
+ 
  - otherwise the states will be concatenated.
 
  Additionaly the service group is checked for being (temporarily) frozen.
  By default
+ 
  - temporarily frozen will be WARN
+ 
  - frozen will be CRIT
 
 item:

@@ -2,7 +2,7 @@
 # TODO: This should be realized as unit tests
 
 from __future__ import print_function
-import pytest
+import pytest  # type: ignore[import]
 from testlib import web
 
 import cmk.base.config as config
@@ -10,10 +10,9 @@ import cmk.base.config as config
 
 @pytest.fixture(scope="function")
 def clear_config_caches(monkeypatch):
-    import cmk.base
-    import cmk.base.caching
-    monkeypatch.setattr(cmk.base, "config_cache", cmk.base.caching.CacheManager())
-    monkeypatch.setattr(cmk.base, "runtime_cache", cmk.base.caching.CacheManager())
+    from cmk.base import config_cache as _config_cache, runtime_cache as _runtime_cache
+    _config_cache.reset()
+    _runtime_cache.reset()
 
 
 def reload_config():

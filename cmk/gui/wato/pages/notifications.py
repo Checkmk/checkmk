@@ -1,9 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """Modes for managing notification configuration"""
 
 import abc
@@ -754,8 +753,8 @@ class UserNotificationsMode(NotificationsMode):
 
         elif html.request.has_var("_move"):
             if html.check_transaction():
-                from_pos = html.get_integer_input("_move")
-                to_pos = html.get_integer_input("_index")
+                from_pos = html.request.get_integer_input_mandatory("_move")
+                to_pos = html.request.get_integer_input_mandatory("_index")
                 rule = self._rules[from_pos]
                 del self._rules[from_pos]  # make to_pos now match!
                 self._rules[to_pos:to_pos] = [rule]
@@ -796,7 +795,7 @@ class ModeUserNotifications(UserNotificationsMode):
         return ["users"]
 
     def _user_id(self):
-        return html.get_unicode_input("user")
+        return html.request.get_unicode_input("user")
 
 
 @mode_registry.register
@@ -842,8 +841,8 @@ class EditNotificationRuleMode(NotificationsMode):
 
     # TODO: Refactor this
     def _from_vars(self):
-        self._edit_nr = html.get_integer_input("edit", -1)
-        self._clone_nr = html.get_integer_input("clone", -1)
+        self._edit_nr = html.request.get_integer_input_mandatory("edit", -1)
+        self._clone_nr = html.request.get_integer_input_mandatory("clone", -1)
         self._new = self._edit_nr < 0
 
         if self._user_id():
@@ -1291,7 +1290,7 @@ class ModeEditNotificationRule(EditNotificationRuleMode):
         return ["notifications"]
 
     def _user_id(self):
-        return html.get_unicode_input("user")
+        return html.request.get_unicode_input("user")
 
     def _back_mode(self):
         if self._user_id():

@@ -1575,6 +1575,7 @@ def do_system_restore(opts, info):
     log("Performing system data restore (system-data%s)" % archive_suffix())
     cleanup_directory_contents("/omd", excludes=["/omd/lost+found"])
     do_system_data_restore(opts, info)
+    fix_linux_capabilities()
     log("Finished system data restore")
 
     def exclude_sites(opts):
@@ -1686,6 +1687,21 @@ def get_system_rw_files():
         for name in file_names:
             files.append("%s/%s" % (base_dir, name))
     return files
+
+
+def fix_linux_capabilities():
+    """Make the restored Checkmk versions work again
+
+    Checkmk uses capabilities since #7344. These need to be setup explicitly,
+    because the information are not backed up before by our TarFile mechanism.
+    We could make the tarfile keep these information by extending the
+    pax_headers manually (set the attribute SCHILY.xattr.security.capability),
+    but it is easier to simply re-execute the post-install script of each Checkmk
+    version.
+    """
+    import cma  # pylint: disable=import-error
+    for version in cma.compatible_omd_versions():
+        cma.execute_post_install(version)
 
 
 def cleanup_system_rw_files(files_before, files_restored):

@@ -76,7 +76,8 @@ class Scenario(object):  # pylint: disable=useless-object-inheritance
         }
         tag_config.update(tags)
 
-        for tg_id, tag_id in tag_config.items():
+        # NOTE: tag_config is modified within loop!
+        for tg_id, tag_id in list(tag_config.items()):
             if tg_id == "site":
                 continue
 

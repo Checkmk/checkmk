@@ -1,4 +1,5 @@
-import pytest
+# No stub file
+import pytest  # type: ignore[import]
 import cmk.base.inventory_plugins
 from cmk.utils.exceptions import MKGeneralException
 

@@ -4,13 +4,13 @@
 #pragma once
 #define NOMINMAX     // must before every windows include
 #include <shlobj.h>  // known path
-#include <yaml-cpp/yaml.h>
 
 #include <chrono>
 #include <filesystem>
 #include <string>
 
 #include "common/cfg_yaml.h"
+#include "common/yaml.h"
 
 namespace cma {
 // set only when executable works as a service
@@ -167,6 +167,7 @@ constexpr const wchar_t* kUserInstallDir = L"install";  // owned by agent
 constexpr const wchar_t* kBakery = L"bakery";           // owned by site
 constexpr const wchar_t* kState = L"state";             // owned by plugins
 constexpr const wchar_t* kPluginConfig = L"config";     // owned by plugins
+constexpr const wchar_t* kModules = L"modules";         // owned by agent
 
 constexpr const wchar_t* kAuStateLocation = kPluginConfig;  // owned by plugins
 
@@ -191,6 +192,7 @@ constexpr const char* const kRemoteHost = "REMOTE_HOST";
 constexpr const char* const kRemote = "REMOTE";
 
 constexpr std::string_view kMkInstallDirName = "MK_INSTALLDIR";
+constexpr std::string_view kMkModulesDirName = "MK_MODULESDIR";
 constexpr std::string_view kMkMsiPathName = "MK_MSI_PATH";
 
 };  // namespace envs

@@ -40,7 +40,7 @@ def check_firewall_if(item, params, data):
         if params.get("averaging"):
             backlog_minutes = params["averaging"]
             avgrate = get_average("firewall_if-%s.%s" % (what, item), this_time, rate,
-                                  backlog_minutes * 60)
+                                  backlog_minutes)
             check_against = avgrate
         else:
             check_against = rate

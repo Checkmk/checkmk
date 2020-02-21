@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -51,7 +51,7 @@ def page_version():
 
 def handle_acknowledgement():
     if html.request.var("_werk_ack") and html.check_transaction():
-        werk_id = html.get_integer_input("_werk_ack")
+        werk_id = html.request.get_integer_input_mandatory("_werk_ack")
         if werk_id not in g_werks:
             raise MKUserError("werk", _("This werk does not exist."))
         werk = g_werks[werk_id]
@@ -79,7 +79,7 @@ def handle_acknowledgement():
 @cmk.gui.pages.register("werk")
 def page_werk():
     load_werks()
-    werk_id = html.get_integer_input("werk")
+    werk_id = html.request.get_integer_input_mandatory("werk")
     if werk_id not in g_werks:
         raise MKUserError("werk", _("This werk does not exist."))
     werk = g_werks[werk_id]

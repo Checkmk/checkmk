@@ -6,7 +6,13 @@
 # caching is checked
 
 from __future__ import print_function
-from pathlib2 import Path
+import sys
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+
 import pytest  # type: ignore[import]
 
 from testlib import repo_path

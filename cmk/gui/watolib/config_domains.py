@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -310,7 +310,7 @@ class ConfigDomainOMD(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
     ident = "omd"
-    omd_config_dir = "%s/etc/omd" % (cmk.utils.paths.omd_root)
+    omd_config_dir = "%s/etc/omd" % (cmk.utils.paths.omd_root,)
 
     def __init__(self):
         super(ConfigDomainOMD, self).__init__()

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -1655,8 +1655,7 @@ def get_services_filtered_by_host_name(host_re):
             entries = [((e[0], host_re), e[1]) for e in g_services_by_hostname[middle]]
             host_re = "(.*)"
 
-    elif not honor_site and not '*' in host_re and not '$' in host_re \
-         and not '|' in host_re and not '[' in host_re:
+    elif not honor_site and '*' not in host_re and '$' not in host_re and '|' not in host_re and '[' not in host_re:
         # Exact host match
         entries = [((e[0], host_re), e[1]) for e in g_services_by_hostname.get(host_re, [])]
 
@@ -2027,8 +2026,7 @@ def compile_leaf_node(host_re, service_re=config.HOST_STATE):
         return found
 
     honor_site = SITE_SEP in host_re
-    if not honor_site and not '*' in host_re and not '$' in host_re \
-        and not '|' in host_re and '[' not in host_re:
+    if not honor_site and '*' not in host_re and '$' not in host_re and '|' not in host_re and '[' not in host_re:
         # Exact host match
         entries = [((e[0], host_re), e[1]) for e in g_services_by_hostname.get(host_re, [])]
 
@@ -2602,9 +2600,9 @@ def page_all():
 
 @cmk.gui.pages.register("bi_set_assumption")
 def ajax_set_assumption():
-    site = html.get_unicode_input("site")
-    host = html.get_unicode_input("host")
-    service = html.get_unicode_input("service")
+    site = html.request.get_unicode_input("site")
+    host = html.request.get_unicode_input("host")
+    service = html.request.get_unicode_input("service")
     if service:
         key = (site, host, service)
     else:
@@ -2619,7 +2617,7 @@ def ajax_set_assumption():
 
 @cmk.gui.pages.register("bi_save_treestate")
 def ajax_save_treestate():
-    path_id = html.get_unicode_input("path")
+    path_id = html.request.get_unicode_input("path")
     current_ex_level, path = path_id.split(":", 1)
     current_ex_level = int(current_ex_level)
 
@@ -2633,9 +2631,9 @@ def ajax_save_treestate():
 
 @cmk.gui.pages.register("bi_render_tree")
 def ajax_render_tree():
-    aggr_group = html.get_unicode_input("group")
+    aggr_group = html.request.get_unicode_input("group")
     reqhosts = [tuple(sitehost.split('#')) for sitehost in html.request.var("reqhosts").split(',')]
-    aggr_title = html.get_unicode_input("title")
+    aggr_title = html.request.get_unicode_input("title")
     omit_root = bool(html.request.var("omit_root"))
     only_problems = bool(html.request.var("only_problems"))
 

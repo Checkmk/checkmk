@@ -10,5 +10,8 @@ description:
  will change to {WARN} if the reported state is "Degraded" and
  to {CRIT} if the reported state is "Failed".
 
+item:
+ Name of the {{CPG}} (Common Provisioning Group).
+
 inventory:
  One service is created for each CPG Member.

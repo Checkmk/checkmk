@@ -266,11 +266,9 @@ def create_linux_test_host(request, web, site, hostname):
 class CheckManager(object):  # pylint: disable=useless-object-inheritance
     def load(self, file_names=None):
         """Load either all check plugins or the given file_names"""
-        if sys.version_info[0] < 3:
-            # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk.base.config as config  # pylint: disable=import-outside-toplevel
-            import cmk.base.check_api as check_api  # pylint: disable=import-outside-toplevel
-            import cmk.utils.paths  # pylint: disable=import-outside-toplevel
+        import cmk.base.config as config  # pylint: disable=import-outside-toplevel
+        import cmk.base.check_api as check_api  # pylint: disable=import-outside-toplevel
+        import cmk.utils.paths  # pylint: disable=import-outside-toplevel
 
         if file_names is None:
             config.load_all_checks(check_api.get_check_api_context)  # loads all checks

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -735,7 +735,7 @@ def ajax_graph_hover():
     html.set_output_format("json")
     try:
         context = json.loads(html.request.var("context"))
-        hover_time = html.get_integer_input("hover_time")
+        hover_time = html.request.get_integer_input_mandatory("hover_time")
 
         response_data = render_ajax_graph_hover(context, hover_time)
         html.write(json.dumps(response_data))

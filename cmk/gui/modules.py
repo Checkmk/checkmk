@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -29,7 +29,7 @@ import errno
 import os
 import sys
 from types import ModuleType
-from typing import Any, Dict, List  # pylint: disable=unused-import
+from typing import Optional, Iterator, Any, Dict, List  # pylint: disable=unused-import
 
 import cmk
 import cmk.utils.paths
@@ -56,19 +56,22 @@ _legacy_modules = []  # type: List[ModuleType]
 
 
 def register_handlers(handlers):
+    # type: (Dict) -> None
     pagehandlers.update(handlers)
 
 
-# Returns a list of names of all currently imported python modules
 def _imports():
+    # type: () -> Iterator[str]
+    """Returns a list of names of all currently imported python modules"""
     for val in globals().values():
         if isinstance(val, ModuleType):
             yield val.__name__
 
 
-# Loads all modules needed into memory and performs global initializations for
-# each module, when it needs some. These initializations should be fast ones.
 def init_modules():
+    # type: () -> None
+    """Loads all modules needed into memory and performs global initializations for
+    each module, when it needs some. These initializations should be fast ones."""
     global _legacy_modules
 
     _legacy_modules = []
@@ -85,8 +88,9 @@ def init_modules():
 g_all_modules_loaded = False
 
 
-# Call the load_plugins() function in all modules
 def load_all_plugins(only_modules=None):
+    # type: (Optional[List[str]]) -> None
+    """Call the load_plugins() function in all modules"""
     global g_all_modules_loaded
     # Initially, we have to load all modules, regardless of any optimization.
     if not g_all_modules_loaded:
@@ -97,7 +101,8 @@ def load_all_plugins(only_modules=None):
     for module in _cmk_gui_top_level_modules() + _legacy_modules:
         if (only_modules is None or module.__name__ in only_modules) and \
            hasattr(module, "load_plugins"):
-            module.load_plugins(force=need_plugins_reload)
+            # hasattr above ensures the function is available. Mypy does not understand this.
+            module.load_plugins(force=need_plugins_reload)  # type: ignore[attr-defined]
 
     # TODO: Clean this up once we drop support for the legacy plugins
     for path, page_func in pagehandlers.items():
@@ -109,6 +114,7 @@ def load_all_plugins(only_modules=None):
 
 
 def _cmk_gui_top_level_modules():
+    # type: () -> List[ModuleType]
     return [module \
             for name, module in sys.modules.items()
             # None entries are only an import optimization of cPython and can be removed:
@@ -122,6 +128,7 @@ def _cmk_gui_top_level_modules():
 
 
 def _find_local_web_plugins():
+    # type: () -> Iterator[str]
     basedir = str(cmk.utils.paths.local_web_dir) + "/plugins/"
 
     try:
@@ -141,10 +148,11 @@ def _find_local_web_plugins():
                     yield dir_path + "/" + file_name
 
 
-_last_web_plugins_update = 0
+_last_web_plugins_update = 0.0
 
 
 def _local_web_plugins_have_changed():
+    # type: () -> bool
     global _last_web_plugins_update
 
     if 'local_web_plugins_have_changed' in g:

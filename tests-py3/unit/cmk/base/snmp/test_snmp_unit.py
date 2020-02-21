@@ -1,0 +1,1 @@
+../../../../../tests/unit/cmk/base/snmp/test_snmp_unit.py

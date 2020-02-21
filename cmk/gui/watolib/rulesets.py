@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,7 +7,7 @@
 import os
 import re
 import pprint
-from typing import Text, Dict, Union, NamedTuple, List, Optional  # pylint: disable=unused-import
+from typing import Dict, Union, List, Optional  # pylint: disable=unused-import
 
 import cmk.utils.store as store
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
@@ -310,7 +310,7 @@ class RulesetCollection(object):
 
 class AllRulesets(RulesetCollection):
     def _load_rulesets_recursively(self, folder, only_varname=None):
-        for subfolder in folder.all_subfolders().values():
+        for subfolder in folder.subfolders():
             self._load_rulesets_recursively(subfolder, only_varname)
 
         self._load_folder_rulesets(folder, only_varname)
@@ -328,7 +328,7 @@ class AllRulesets(RulesetCollection):
         self._save_rulesets_recursively(Folder.root_folder())
 
     def _save_rulesets_recursively(self, folder):
-        for subfolder in folder.all_subfolders().values():
+        for subfolder in folder.subfolders():
             self._save_rulesets_recursively(subfolder)
 
         self._save_folder(folder)

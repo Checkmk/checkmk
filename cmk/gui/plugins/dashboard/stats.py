@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -108,7 +108,7 @@ class DashletStats(six.with_metaclass(abc.ABCMeta, Dashlet)):
                 ("view_name", self._view_name()),
                 ("filled_in", "filter"),
                 ("search", "1"),
-            ] + table_url_vars + list(self._dashlet_context_vars().items())
+            ] + table_url_vars + self._dashlet_context_vars()
             url = html.makeuri_contextless(url_vars, filename="view.py")
 
             html.open_tr()
@@ -231,19 +231,16 @@ class HostStatsDashlet(DashletStats):
             "Stats: state = 0\n" \
             "Stats: scheduled_downtime_depth = 0\n" \
             "StatsAnd: 2\n"),
-
            ( _("Down"), "#f00",
             [("is_host_scheduled_downtime_depth", "0"), ("hst1", "on")],
             "Stats: state = 1\n" \
             "Stats: scheduled_downtime_depth = 0\n" \
             "StatsAnd: 2\n"),
-
            ( _("Unreachable"), "#f80",
             [("is_host_scheduled_downtime_depth", "0"), ("hst2", "on")],
             "Stats: state = 2\n" \
             "Stats: scheduled_downtime_depth = 0\n" \
             "StatsAnd: 2\n"),
-
            ( _("In Downtime"), "#0af",
             [("searchhost&search", "1"), ("is_host_scheduled_downtime_depth", "1")],
             "Stats: scheduled_downtime_depth > 0\n" \
@@ -294,20 +291,17 @@ class ServiceStatsDashlet(DashletStats):
             "Stats: host_state = 0\n" \
             "Stats: host_has_been_checked = 1\n" \
             "StatsAnd: 5\n"),
-
            ( _("In Downtime"), "#0af",
             [("is_in_downtime", "1")],
             "Stats: scheduled_downtime_depth > 0\n" \
             "Stats: host_scheduled_downtime_depth > 0\n" \
             "StatsOr: 2\n"),
-
            ( _("On Down host"), "#048",
             [("hst1", "on"), ("hst2", "on"), ("hstp", "on"), ("is_in_downtime", "0")],
             "Stats: scheduled_downtime_depth = 0\n" \
             "Stats: host_scheduled_downtime_depth = 0\n" \
             "Stats: host_state != 0\n" \
             "StatsAnd: 3\n"),
-
            ( _("Warning"), "#ff0",
             [("hst0", "on"), ("st1", "on"), ("is_in_downtime", "0")],
             "Stats: state = 1\n" \
@@ -316,7 +310,6 @@ class ServiceStatsDashlet(DashletStats):
             "Stats: host_state = 0\n" \
             "Stats: host_has_been_checked = 1\n" \
             "StatsAnd: 5\n"),
-
            ( _("Unknown"), "#f80",
             [("hst0", "on"), ("st3", "on"), ("is_in_downtime", "0")],
             "Stats: state = 3\n" \
@@ -325,7 +318,6 @@ class ServiceStatsDashlet(DashletStats):
             "Stats: host_state = 0\n" \
             "Stats: host_has_been_checked = 1\n" \
             "StatsAnd: 5\n"),
-
            ( _("Critical"), "#f00",
             [("hst0", "on"), ("st2", "on"), ("is_in_downtime", "0")],
             "Stats: state = 2\n" \

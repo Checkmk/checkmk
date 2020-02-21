@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -408,13 +408,7 @@ class Integer(ValueSpec):
         return self._display_format % utils.saveint(value)
 
     def from_html_vars(self, varprefix):
-        try:
-            return int(html.request.var(varprefix))
-        except Exception:
-            raise MKUserError(
-                varprefix,
-                _("The text <b><tt>%s</tt></b> is not a valid integer number.") %
-                html.request.var(varprefix))
+        return html.request.get_integer_input_mandatory(varprefix)
 
     def value_to_text(self, value):
         text = self._display_format % value
@@ -472,8 +466,8 @@ class Filesize(Integer):
 
     def from_html_vars(self, varprefix):
         try:
-            return int(html.request.var(varprefix + '_size')) * (1024**int(
-                html.request.var(varprefix + '_unit')))
+            return html.request.get_integer_input_mandatory(varprefix + '_size') * (
+                1024**html.request.get_integer_input_mandatory(varprefix + '_unit'))
         except Exception:
             raise MKUserError(varprefix + '_size', _("Please enter a valid integer number"))
 
@@ -614,7 +608,7 @@ class TextAscii(ValueSpec):
 
 class TextUnicode(TextAscii):
     def from_html_vars(self, varprefix):
-        return html.get_unicode_input(varprefix, "").strip()
+        return html.request.get_unicode_input(varprefix, "").strip()
 
     def validate_datatype(self, value, varprefix):
         if not isinstance(value, six.string_types):
@@ -1382,7 +1376,7 @@ class TextAreaUnicode(TextUnicode):
 
     # Overridded because we do not want to strip() here and remove '\r'
     def from_html_vars(self, varprefix):
-        text = html.get_unicode_input(varprefix, "").replace('\r', '')
+        text = html.request.get_unicode_input(varprefix, "").replace('\r', '')
         if text and not text.endswith("\n"):
             text += "\n"  # force newline at end
         return text
@@ -1861,7 +1855,7 @@ class ListOf(ValueSpec):
         return "%s" % html.render_table(HTML().join(s))
 
     def get_indexes(self, varprefix):
-        count = html.get_integer_input(varprefix + "_count", 0)
+        count = html.request.get_integer_input_mandatory(varprefix + "_count", 0)
         n = 1
         indexes = {}
         while n <= count:
@@ -4068,7 +4062,7 @@ class Alternative(ValueSpec):
             return _("invalid:") + " " + escaping.escape_attribute(str(value))
 
     def from_html_vars(self, varprefix):
-        nr = int(html.request.var(varprefix + "_use"))
+        nr = html.request.get_integer_input_mandatory(varprefix + "_use")
         vs = self._elements[nr]
         return vs.from_html_vars(varprefix + "_%d" % nr)
 
@@ -5068,7 +5062,7 @@ class Labels(ValueSpec):
         labels = {}
 
         try:
-            decoded_labels = json.loads(html.get_unicode_input(varprefix) or "[]")
+            decoded_labels = json.loads(html.request.get_unicode_input(varprefix) or "[]")
         except ValueError as e:
             raise MKUserError(varprefix, _("Failed to parse labels: %s") % e)
 

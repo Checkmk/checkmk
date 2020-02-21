@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -333,7 +333,7 @@ def render_availability_tables(availability_tables, what, avoptions):
 
     # Legend for Availability levels
     av_levels = avoptions["av_levels"]
-    if av_levels and not "omit_av_levels" in avoptions["labelling"]:
+    if av_levels and "omit_av_levels" not in avoptions["labelling"]:
         warn, crit = av_levels
         html.open_div(class_="avlegend levels")
         html.h3(_("Availability levels"))
@@ -817,7 +817,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
             html.icon_button(delete_url, _("Delete this annotation"), "delete")
 
             if not omit_service:
-                if not "omit_host" in avoptions["labelling"]:
+                if "omit_host" not in avoptions["labelling"]:
                     host_url = "view.py?" + html.urlencode_vars([("view_name", "hoststatus"),
                                                                  ("site", site_id), ("host", host)])
                     table.cell(_("Host"), html.render_a(host, host_url))

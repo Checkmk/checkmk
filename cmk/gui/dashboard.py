@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,12 +8,11 @@ import time
 import copy
 import json
 from typing import (  # pylint: disable=unused-import
-    Any, Dict, Optional, NamedTuple, Tuple, Text, Type, List, Union, Callable,
+    Dict, Optional, NamedTuple, Tuple, Text, Type, List, Union, Callable,
 )
 import six
 
 from cmk.gui.utils.html import HTML
-from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
 from cmk.utils.exceptions import MKException
 from cmk.utils.encoding import ensure_unicode
 
@@ -24,6 +23,7 @@ import cmk.gui.visuals as visuals
 import cmk.gui.forms as forms
 import cmk.gui.utils as utils
 import cmk.gui.crash_reporting as crash_reporting
+from cmk.gui.type_defs import InfoName  # pylint: disable=unused-import
 from cmk.gui.valuespec import (
     Transform,
     Dictionary,
@@ -76,7 +76,7 @@ from cmk.gui.plugins.dashboard.utils import (
     get_permitted_dashboards,
     copy_view_into_dashlet,
 )
-from cmk.gui.plugins.dashboard.utils import (  # pylint: disable=unused-import
+from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=unused-import
     DashletType, DashletTypeName, DashletRefreshInterval, DashletRefreshAction, DashletConfig,
     DashboardConfig, DashboardName, DashletSize, DashletInputFunc, DashletHandleInputFunc,
     DashletId,
@@ -425,7 +425,8 @@ def _transform_old_dict_based_dashlets():
             _type_name = dashlet_type_id
             _spec = dashlet_spec
 
-        _it_is_really_used = LegacyDashletType  # help pylint
+        # help pylint
+        _it_is_really_used = LegacyDashletType  # noqa: F841
 
 
 # HTML page handler for generating the (a) dashboard. The name
@@ -639,9 +640,10 @@ def render_dashlet_exception_content(dashlet_spec, dashlet_id, e):
             except UnicodeDecodeError:
                 exc_txt = ensure_unicode(str(e))
 
-            html.show_error(_("Problem while rendering dashlet %d of type %s: %s. Have a look at "
-                              "<tt>var/log/web.log</tt> for further information.") % \
-                            (dashlet_id, dashlet_spec["type"], exc_txt))
+            html.show_error(
+                _("Problem while rendering dashlet %d of type %s: %s. Have a look at "
+                  "<tt>var/log/web.log</tt> for further information.") %
+                (dashlet_id, dashlet_spec["type"], exc_txt))
             return html.drain()
 
         crash_reporting.handle_exception_as_gui_crash_report(
@@ -897,7 +899,7 @@ def ajax_dashlet():
     if not name:
         raise MKUserError("name", _('The name of the dashboard is missing.'))
 
-    ident = html.get_integer_input("id")
+    ident = html.request.get_integer_input_mandatory("id")
 
     try:
         board = get_permitted_dashboards()[name]
@@ -918,7 +920,7 @@ def ajax_dashlet():
     if the_dashlet['type'] not in dashlet_registry:
         raise MKUserError("id", _('The requested dashlet type does not exist.'))
 
-    mtime = html.get_integer_input('mtime', 0)
+    mtime = html.request.get_integer_input_mandatory('mtime', 0)
 
     dashlet_instance = None
     try:
@@ -1059,7 +1061,7 @@ def _vs_dashboard():
 def page_create_link_view_dashlet():
     # type: () -> None
     """Choose an existing view from the list of available views"""
-    name = html.request.var('name')
+    name = html.request.get_str_input_mandatory('name')
     choose_view(name, _('Link existing view'), _create_linked_view_dashlet_spec)
 
 
@@ -1074,7 +1076,7 @@ def _create_linked_view_dashlet_spec(dashlet_id, view_name):
 def page_create_view_dashlet():
     # type: () -> None
     create = html.request.var('create', '1') == '1'
-    name = html.request.var('name')
+    name = html.request.get_str_input_mandatory('name')
 
     if create:
         import cmk.gui.views as views
@@ -1098,7 +1100,7 @@ def _create_cloned_view_dashlet_spec(dashlet_id, view_name):
 @cmk.gui.pages.register("create_view_dashlet_infos")
 def page_create_view_dashlet_infos():
     # type: () -> None
-    ds_name = html.request.var('datasource')
+    ds_name = html.request.get_str_input_mandatory('datasource')
     if ds_name not in data_source_registry:
         raise MKUserError("datasource", _('The given datasource is not supported'))
 
@@ -1172,12 +1174,8 @@ def page_edit_dashlet():
     if not board:
         raise MKUserError("name", _('The name of the dashboard is missing.'))
 
-    ty = html.request.var('type')
-
-    if html.request.has_var('id'):
-        ident = html.get_integer_input("id")
-    else:
-        ident = None
+    ty = html.request.get_str_input_mandatory('type')
+    ident = html.request.get_integer_input("id")
 
     if ident is None and not ty:
         raise MKUserError("id", _('The ID of the dashlet is missing.'))
@@ -1211,7 +1209,7 @@ def page_edit_dashlet():
         ident = len(dashboard['dashlets'])
 
         single_infos_raw = html.request.var('single_infos')
-        single_infos = []
+        single_infos = []  # type: List[InfoName]
         if single_infos_raw:
             single_infos = single_infos_raw.split(',')
             for key in single_infos:
@@ -1384,7 +1382,7 @@ def page_clone_dashlet():
     if not board:
         raise MKUserError("name", _('The name of the dashboard is missing.'))
 
-    ident = html.get_integer_input("id")
+    ident = html.request.get_integer_input_mandatory("id")
 
     try:
         dashboard = get_permitted_dashboards()[board]
@@ -1417,7 +1415,7 @@ def page_delete_dashlet():
     if not board:
         raise MKUserError("name", _('The name of the dashboard is missing.'))
 
-    ident = html.get_integer_input("id")
+    ident = html.request.get_integer_input_mandatory("id")
 
     try:
         dashboard = get_permitted_dashboards()[board]
@@ -1425,7 +1423,7 @@ def page_delete_dashlet():
         raise MKUserError("name", _('The requested dashboard does not exist.'))
 
     try:
-        _dashlet = dashboard['dashlets'][ident]
+        _dashlet = dashboard['dashlets'][ident]  # noqa: F841
     except IndexError:
         raise MKUserError("id", _('The dashlet does not exist.'))
 
@@ -1454,11 +1452,8 @@ def check_ajax_update():
     if not config.user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
-    board = html.request.var('name')
-    if not board:
-        raise MKUserError("name", _('The name of the dashboard is missing.'))
-
-    ident = html.get_integer_input("id")
+    board = html.request.get_str_input_mandatory('name')
+    ident = html.request.get_integer_input_mandatory("id")
 
     try:
         dashboard = get_permitted_dashboards()[board]
@@ -1480,8 +1475,10 @@ def ajax_dashlet_pos():
 
     board['mtime'] = int(time.time())
 
-    dashlet['position'] = int(html.request.var('x')), int(html.request.var('y'))
-    dashlet['size'] = int(html.request.var('w')), int(html.request.var('h'))
+    dashlet['position'] = (html.request.get_integer_input_mandatory("x"),
+                           html.request.get_integer_input_mandatory("y"))
+    dashlet['size'] = (html.request.get_integer_input_mandatory("w"),
+                       html.request.get_integer_input_mandatory("h"))
     save_all_dashboards()
     html.write('OK %d' % board['mtime'])
 
@@ -1489,7 +1486,7 @@ def ajax_dashlet_pos():
 @cmk.gui.pages.register("ajax_delete_user_notification")
 def ajax_delete_user_notification():
     # type: () -> None
-    msg_id = html.request.var("id")
+    msg_id = html.request.get_str_input_mandatory("id")
     notify.delete_gui_message(msg_id)
 
 

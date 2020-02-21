@@ -22,7 +22,7 @@ inline const std::filesystem::path G_TestPath =
 // definitions required for gtest
 #define _SILENCE_CXX17_STRSTREAM_DEPRECATION_WARNING
 #define _CRT_SECURE_NO_WARNINGS
-#include <yaml-cpp/yaml.h>
+#include "common/yaml.h"
 
 #include "gtest/gtest.h"
 

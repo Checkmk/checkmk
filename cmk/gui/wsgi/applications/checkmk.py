@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -196,7 +196,7 @@ def _load_all_plugins():
 
 def _localize_request():
     previous_language = cmk.gui.i18n.get_current_language()
-    user_language = html.get_ascii_input("lang", config.user.language)
+    user_language = html.request.get_ascii_input("lang", config.user.language)
 
     html.set_language_cookie(user_language)
     cmk.gui.i18n.localize(user_language)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -218,8 +218,7 @@ class PainterServiceGraphs(Painter):
     def ident(self):
         return "service_graphs"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Service Graphs with Timerange Previews")
 
     @property
@@ -254,8 +253,7 @@ class PainterHostGraphs(Painter):
     def ident(self):
         return "host_graphs"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Host Graphs with Timerange Previews")
 
     @property

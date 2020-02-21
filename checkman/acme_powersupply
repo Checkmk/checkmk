@@ -10,7 +10,7 @@ description:
  "unknown".
 
 item:
- The name of the power supply.
+ Name of the power supply.
 
 inventory:
  One service per power supply is created.

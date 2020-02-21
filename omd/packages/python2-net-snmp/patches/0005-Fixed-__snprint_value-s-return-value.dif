@@ -1,0 +1,53 @@
+From 54967251f6554a0fddcd4b308b120421587b9c0e Mon Sep 17 00:00:00 2001
+From: Sven Panne <sp@mathias-kettner.de>
+Date: Mon, 14 Nov 2016 13:48:52 +0100
+Subject: [PATCH 05/11] Fixed __snprint_value's return value.
+
+It always returned zero for exception type values and opaque floats/doubles.
+---
+ python/netsnmp/client_intf.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/python/netsnmp/client_intf.c b/python/netsnmp/client_intf.c
+index 3efb26f..401a249 100644
+--- a/python/netsnmp/client_intf.c
++++ b/python/netsnmp/client_intf.c
+@@ -310,12 +310,15 @@ int flag;
+ 
+ 	case SNMP_ENDOFMIBVIEW:
+           snprintf(buf, buf_len, "%s", "ENDOFMIBVIEW");
++          len = STRLEN(buf);
+ 	  break;
+ 	case SNMP_NOSUCHOBJECT:
+ 	  snprintf(buf, buf_len, "%s", "NOSUCHOBJECT");
++          len = STRLEN(buf);
+ 	  break;
+ 	case SNMP_NOSUCHINSTANCE:
+ 	  snprintf(buf, buf_len, "%s", "NOSUCHINSTANCE");
++          len = STRLEN(buf);
+ 	  break;
+ 
+         case ASN_COUNTER64:
+@@ -340,13 +343,17 @@ int flag;
+             break;
+ #ifdef OPAQUE_SPECIAL_TYPES
+         case ASN_OPAQUE_FLOAT:
+-	  if (var->val.floatVal)
++	  if (var->val.floatVal) {
+ 	    snprintf(buf, buf_len, "%f", *var->val.floatVal);
++            len = STRLEN(buf);
++          }
+          break;
+          
+         case ASN_OPAQUE_DOUBLE:
+-	  if (var->val.doubleVal)
++	  if (var->val.doubleVal) {
+ 	    snprintf(buf, buf_len, "%f", *var->val.doubleVal);
++            len = STRLEN(buf);
++          }
+          break;
+ #endif
+          
+-- 
+2.7.4
+

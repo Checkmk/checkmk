@@ -1,28 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Please have a look at doc/Notifications.png:
 #
@@ -45,7 +25,8 @@ import time
 from typing import (  # pylint: disable=unused-import
     Dict, Tuple, List, Text, Any, Optional, FrozenSet, Set, Union, cast,
 )
-
+import traceback
+import uuid
 import six
 
 import livestatus
@@ -104,7 +85,7 @@ NotifyBulk = Tuple[str, float, Union[None, str, int], Union[None, str, int], int
 NotifyBulks = List[NotifyBulk]
 
 PluginName = str
-PluginContext = Dict  # TODO: Improve this
+PluginContext = Dict[str, str]
 
 NotificationTableEntry = Dict[str, Union[PluginName, List]]
 NotificationTable = List[NotificationTableEntry]
@@ -1365,7 +1346,7 @@ def notify_via_email(plugin_context):
         body_t = notification_host_body
 
     subject = substitute_context(subject_t, plugin_context)
-    plugin_context["SUBJECT"] = subject
+    plugin_context["SUBJECT"] = six.ensure_str(subject)
     body = substitute_context(notification_common_body + body_t, plugin_context)
     command = substitute_context(notification_mail_command, plugin_context)
     command_utf8 = command.encode("utf-8")
@@ -1517,7 +1498,7 @@ def call_notification_script(plugin_name, plugin_context):
             if line != '':
                 plugin_log("Output: %s" % line.decode('utf-8').rstrip())
                 if _log_to_stdout:
-                    console.output(line)
+                    console.output(six.ensure_str(line))
             else:
                 break
         # the stdout is closed but the return code may not be available just yet - wait for the
@@ -1539,7 +1520,7 @@ def call_notification_script(plugin_name, plugin_context):
 
 # Construct the environment for the notification script
 def notification_script_env(plugin_context):
-    # type: (PluginContext) -> Dict[str, bytes]
+    # type: (PluginContext) -> PluginContext
     # Use half of the maximum allowed string length MAX_ARG_STRLEN
     # which is usually 32 pages on Linux (see "man execve").
     #
@@ -1552,10 +1533,10 @@ def notification_script_env(plugin_context):
         max_length = 32 * 4046 // 2
 
     def format_(value):
-        # type: (str) -> bytes
+        # type: (str) -> str
         if len(value) > max_length:
-            value = value[:max_length] + "...\nAttention: Removed remaining content because it was too long."
-        return value.encode("utf-8")
+            return value[:max_length] + "...\nAttention: Removed remaining content because it was too long."
+        return value
 
     notify_env = os.environ.copy()
     notify_env.update(
@@ -1740,8 +1721,8 @@ def do_bulk_notify(plugin_name, params, plugin_context, bulk):
 
     logger.info("    --> storing for bulk notification %s", "|".join(bulk_path))
     bulk_dirname = create_bulk_dirname(bulk_path)
-    uuid = fresh_uuid()
-    filename = bulk_dirname + "/" + uuid
+    notify_uuid = fresh_uuid()
+    filename = bulk_dirname + "/" + notify_uuid
     open(filename + ".new", "w").write("%r\n" % ((params, plugin_context),))
     os.rename(filename + ".new", filename)  # We need an atomic creation!
     logger.info("        - stored in %s", filename)
@@ -1797,15 +1778,16 @@ def bulk_parts(method_dir, bulk):
 def bulk_uuids(bulk_dir):
     # type: (str) -> Tuple[UUIDs, float]
     uuids, oldest = [], time.time()
-    for uuid in os.listdir(bulk_dir):  # 4ded0fa2-f0cd-4b6a-9812-54374a04069f
-        if uuid.endswith(".new"):
+    for notify_uuid in os.listdir(bulk_dir):  # 4ded0fa2-f0cd-4b6a-9812-54374a04069f
+        if notify_uuid.endswith(".new"):
             continue
-        if len(uuid) != 36:
-            logger.info("Skipping invalid notification file %s", os.path.join(bulk_dir, uuid))
+        if len(notify_uuid) != 36:
+            logger.info("Skipping invalid notification file %s",
+                        os.path.join(bulk_dir, notify_uuid))
             continue
 
-        mtime = os.stat(os.path.join(bulk_dir, uuid)).st_mtime
-        uuids.append((mtime, uuid))
+        mtime = os.stat(os.path.join(bulk_dir, notify_uuid)).st_mtime
+        uuids.append((mtime, notify_uuid))
         oldest = min(oldest, mtime)
     uuids.sort()
     return uuids, oldest
@@ -1930,13 +1912,14 @@ def notify_bulk(dirname, uuids):
     bulk_context = []
     old_params = None
     unhandled_uuids = []  # type: UUIDs
-    for mtime, uuid in uuids:
+    for mtime, notify_uuid in uuids:
         try:
-            params, context = store.load_object_from_file(dirname + "/" + uuid)
+            params, context = store.load_object_from_file(dirname + "/" + notify_uuid)
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
-            logger.info("    Deleting corrupted or empty bulk file %s/%s: %s", dirname, uuid, e)
+            logger.info("    Deleting corrupted or empty bulk file %s/%s: %s", dirname, notify_uuid,
+                        e)
             continue
 
         if old_params is None:
@@ -1944,7 +1927,7 @@ def notify_bulk(dirname, uuids):
         elif params != old_params:
             logger.info(
                 "     Parameters are different from previous, postponing into separate bulk")
-            unhandled_uuids.append((mtime, uuid))
+            unhandled_uuids.append((mtime, notify_uuid))
             continue
 
         bulk_context.append(context)
@@ -1986,9 +1969,9 @@ def notify_bulk(dirname, uuids):
         logger.info("No valid notification file left. Skipping this bulk.")
 
     # Remove sent notifications
-    for mtime, uuid in uuids:
-        if (mtime, uuid) not in unhandled_uuids:
-            path = os.path.join(dirname, uuid)
+    for mtime, notify_uuid in uuids:
+        if (mtime, notify_uuid) not in unhandled_uuids:
+            path = os.path.join(dirname, notify_uuid)
             try:
                 os.remove(path)
             except Exception as e:
@@ -2103,6 +2086,7 @@ def raw_context_from_stdin():
     for line in sys.stdin:
         varname, value = line.strip().split("=", 1)
         context[varname] = events.expand_backslashes(value)
+    events.pipe_decode_raw_context(context)
     return context
 
 
@@ -2110,9 +2094,13 @@ def raw_context_from_env():
     # type: () -> EventContext
     # Information about notification is excpected in the
     # environment in variables with the prefix NOTIFY_
-    return dict([(var[7:], value)
-                 for (var, value) in os.environ.items()
-                 if var.startswith("NOTIFY_") and not dead_nagios_variable(value)])
+    context = {
+        var[7:]: value
+        for (var, value) in os.environ.items()
+        if var.startswith("NOTIFY_") and not dead_nagios_variable(value)
+    }
+    events.pipe_decode_raw_context(context)
+    return context
 
 
 def substitute_context(template, context):
@@ -2141,8 +2129,6 @@ def substitute_context(template, context):
 
 def format_exception():
     # type: () -> str
-    import traceback
-
     txt = six.StringIO()
     t, v, tb = sys.exc_info()
     traceback.print_exception(t, v, tb, None, txt)
@@ -2169,7 +2155,6 @@ def fresh_uuid():
         # On platforms where the above file does not exist we try to
         # use the python uuid module which seems to be a good fallback
         # for those systems. Well, if got python < 2.5 you are lost for now.
-        import uuid
         return str(uuid.uuid4())
 
 
@@ -2183,7 +2168,7 @@ def _log_to_history(message):
 def _livestatus_cmd(command):
     # type: (Text) -> None
     try:
-        livestatus.LocalConnection().command("[%d] %s" % (time.time(), command.encode("utf-8")))
+        livestatus.LocalConnection().command("[%d] %s" % (time.time(), command))
     except Exception as e:
         if cmk.utils.debug.enabled():
             raise

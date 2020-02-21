@@ -8,9 +8,7 @@
 #include "cfg.h"
 #include "logger.h"
 
-namespace cma {
-
-namespace commander {
+namespace cma::commander {
 
 std::mutex run_command_processor_lock;
 
@@ -61,6 +59,4 @@ void ChangeRunCommandProcessor(RunCommandProcessor rcp) {
     g_rcp = rcp;
 }
 
-}  // namespace commander
-
-}  // namespace cma
+}  // namespace cma::commander

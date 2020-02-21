@@ -1,28 +1,8 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import OrderedDict
 import ast
@@ -72,12 +52,11 @@ from cmk.utils.type_defs import (  # pylint: disable=unused-import
     TimeperiodName, ServicegroupName, Labels, RulesetName, ContactgroupName, HostgroupName,
     LabelSources, TagValue, Tags, TagList, TagGroups, Ruleset, CheckVariables)
 
-import cmk.base
+from cmk.base import config_cache as _config_cache, runtime_cache as _runtime_cache
 import cmk.base.autochecks as autochecks
 import cmk.base.console as console
 import cmk.base.default_config as default_config
 import cmk.base.check_utils
-import cmk.base.utils
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.cleanup
 import cmk.base.snmp_utils
@@ -254,7 +233,7 @@ def _perform_post_config_loading_actions():
     # type: () -> None
     """These tasks must be performed after loading the Check_MK base configuration"""
     # First cleanup things (needed for e.g. reloading the config)
-    cmk.base.config_cache.clear_all()
+    _config_cache.clear_all()
 
     get_config_cache().initialize()
 
@@ -358,7 +337,7 @@ def _load_config(with_conf_d, exclude_parents_mk):
             all_hosts.set_current_path(current_path)  # pylint: disable=no-member
             clusters.set_current_path(current_path)  # pylint: disable=no-member
 
-            exec (open(_f).read(), global_dict, global_dict)
+            exec(open(_f).read(), global_dict, global_dict)
 
             if not isinstance(all_hosts, SetFolderPathList):
                 raise MKGeneralException(
@@ -667,7 +646,7 @@ class PackedConfig(object):  # pylint: disable=useless-object-inheritance
     def load(self):
         # type: () -> None
         _initialize_config()
-        exec (marshal.load(open(self._path)), globals())
+        exec(marshal.load(open(self._path)), globals())
         _perform_post_config_loading_actions()
 
 
@@ -714,7 +693,7 @@ def set_use_core_config(use_core_config):
 
 def strip_tags(tagged_hostlist):
     # type: (List[str]) -> List[str]
-    cache = cmk.base.config_cache.get_dict("strip_tags")
+    cache = _config_cache.get_dict("strip_tags")
 
     cache_id = tuple(tagged_hostlist)
     try:
@@ -1034,7 +1013,7 @@ def get_final_service_description(hostname, description):
 
     # Sanitize; Remove illegal characters from a service description
     description = description.strip()
-    cache = cmk.base.config_cache.get_dict("final_service_description")
+    cache = _config_cache.get_dict("final_service_description")
     try:
         new_description = cache[description]
     except KeyError:
@@ -1152,7 +1131,7 @@ def _get_piggyback_translations(hostname):
 
 def get_service_translations(hostname):
     # type: (HostName) -> cmk.utils.translations.TranslationOptions
-    translations_cache = cmk.base.config_cache.get_dict("service_description_translations")
+    translations_cache = _config_cache.get_dict("service_description_translations")
     if hostname in translations_cache:
         return translations_cache[hostname]
 
@@ -1694,6 +1673,10 @@ def load_precompiled_plugin(path, check_context):
     case there is already a compiled file that is newer than the current one,
     then the precompiled file is loaded."""
 
+    # https://docs.python.org/3/library/py_compile.html
+    # https://www.python.org/dev/peps/pep-0552/
+    # HACK:
+    header_size = 16 if sys.version_info[0] >= 3 else 8
     precompiled_path = _precompiled_plugin_path(path)
 
     if not _is_plugin_precompiled(path, precompiled_path):
@@ -1701,7 +1684,7 @@ def load_precompiled_plugin(path, check_context):
         store.makedirs(os.path.dirname(precompiled_path))
         py_compile.compile(path, precompiled_path, doraise=True)
 
-    exec (marshal.loads(open(precompiled_path, "rb").read()[8:]), check_context)
+    exec(marshal.loads(open(precompiled_path, "rb").read()[header_size:]), check_context)
 
 
 def _is_plugin_precompiled(path, precompiled_path):
@@ -1915,10 +1898,10 @@ def checks_by_checkgroup():
 # These caches both only hold the base names of the checks
 def initialize_check_type_caches():
     # type: () -> None
-    snmp_cache = cmk.base.runtime_cache.get_set("check_type_snmp")
+    snmp_cache = _runtime_cache.get_set("check_type_snmp")
     snmp_cache.update(snmp_info)
 
-    tcp_cache = cmk.base.runtime_cache.get_set("check_type_tcp")
+    tcp_cache = _runtime_cache.get_set("check_type_tcp")
     for check_plugin_name in check_info:
         section_name = cmk.base.check_utils.section_name_of(check_plugin_name)
         if section_name not in snmp_cache:
@@ -3069,10 +3052,10 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
 
     def _initialize_caches(self):
         # type: () -> None
-        self.check_table_cache = cmk.base.config_cache.get_dict("check_tables")
+        self.check_table_cache = _config_cache.get_dict("check_tables")
 
-        self._cache_is_snmp_check = cmk.base.runtime_cache.get_dict("is_snmp_check")
-        self._cache_is_tcp_check = cmk.base.runtime_cache.get_dict("is_tcp_check")
+        self._cache_is_snmp_check = _runtime_cache.get_dict("is_snmp_check")
+        self._cache_is_tcp_check = _runtime_cache.get_dict("is_tcp_check")
         self._cache_section_name_of = {}  # type: Dict[CheckPluginName, SectionName]
 
         self._cache_match_object_service = {
@@ -3448,7 +3431,7 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
         try:
             return self._cache_is_snmp_check[check_plugin_name]
         except KeyError:
-            snmp_checks = cmk.base.runtime_cache.get_set("check_type_snmp")
+            snmp_checks = _runtime_cache.get_set("check_type_snmp")
             result = self.section_name_of(check_plugin_name) in snmp_checks
             self._cache_is_snmp_check[check_plugin_name] = result
             return result
@@ -3458,7 +3441,7 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
         try:
             return self._cache_is_tcp_check[check_plugin_name]
         except KeyError:
-            tcp_checks = cmk.base.runtime_cache.get_set("check_type_tcp")
+            tcp_checks = _runtime_cache.get_set("check_type_tcp")
             result = self.section_name_of(check_plugin_name) in tcp_checks
             self._cache_is_tcp_check[check_plugin_name] = result
             return result
@@ -3656,7 +3639,7 @@ class ConfigCache(object):  # pylint: disable=useless-object-inheritance
 
 def get_config_cache():
     # type: () -> ConfigCache
-    config_cache = cmk.base.config_cache.get_dict("config_cache")
+    config_cache = _config_cache.get_dict("config_cache")
     if not config_cache:
         cache_class = ConfigCache if cmk.is_raw_edition() else CEEConfigCache
         config_cache["cache"] = cache_class()

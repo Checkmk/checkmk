@@ -1,9 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """
 Provides the user with hints about his setup. Performs different
 checks and tells the user what could be improved.
@@ -72,7 +71,7 @@ class ModeAnalyzeConfig(WatoMode):
 
         test_id = html.request.var("_test_id")
         site_id = html.request.var("_site_id")
-        status_id = html.get_integer_input("_status_id", 0)
+        status_id = html.request.get_integer_input_mandatory("_status_id", 0)
 
         if not test_id:
             raise MKUserError("_ack_test_id", _("Needed variable missing"))

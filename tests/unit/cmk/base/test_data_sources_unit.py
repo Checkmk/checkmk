@@ -1,5 +1,6 @@
 # pylint: disable=redefined-outer-name
 
+import os
 import pytest  # type: ignore[import]
 from testlib.base import Scenario
 
@@ -37,7 +38,6 @@ def test_disable_data_source_cache_no_read(mocker, monkeypatch):
     source.set_max_cachefile_age(999)
     source.disable_data_source_cache()
 
-    import os
     mocker.patch.object(os.path, "exists", return_value=True)
 
     disabled_checker = mocker.patch.object(source, "is_agent_cache_disabled")
@@ -74,7 +74,8 @@ def test_mgmt_board_data_source_is_ip_address():
 def test_mgmt_board_data_source_management_board_ipaddress(monkeypatch, result, address,
                                                            resolvable):
     Scenario().add_host("hostname").apply(monkeypatch)
-    source = cmk.base.data_sources.snmp.SNMPManagementBoardDataSource("hostname", "ipaddress")
+    # TODO: Extremely obscure code belwo: The class seems to be abstract??!!
+    source = cmk.base.data_sources.snmp.SNMPManagementBoardDataSource("hostname", "ipaddress")  # pylint: disable=abstract-class-instantiated
 
     if resolvable:
         monkeypatch.setattr(ip_lookup, "lookup_ip_address", lambda h: "127.0.1.1")

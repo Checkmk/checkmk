@@ -1,13 +1,14 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """Modes for managing folders"""
 
 import abc
 import json
+import operator
+
 import six
 
 import cmk.gui.config as config
@@ -121,7 +122,7 @@ class ModeFolder(WatoMode):
         if html.request.var("_search"):  # just commit to search form
             return
 
-        ### Operations on SUBFOLDERS
+        # Operations on SUBFOLDERS
 
         if html.request.var("_delete_folder"):
             if html.transaction_valid():
@@ -135,7 +136,7 @@ class ModeFolder(WatoMode):
                 watolib.Folder.current().move_subfolder_to(what_folder, target_folder)
             return
 
-        ### Operations on HOSTS
+        # Operations on HOSTS
 
         # Deletion of single hosts
         delname = html.request.var("_delete_host")
@@ -257,7 +258,8 @@ class ModeFolder(WatoMode):
         if self._folder.has_subfolders():
             html.open_div(
                 class_="folders")  # This won't hurt even if there are no visible subfolders
-            for subfolder in self._folder.visible_subfolders_sorted_by_title():  # pylint: disable=no-member
+            for subfolder in sorted(self._folder.subfolders(only_visible=True),
+                                    key=operator.methodcaller('title')):
                 self._show_subfolder(subfolder)
             html.close_div()
             html.open_div(class_=["floatfolder", "unlocked", "newfolder"],
@@ -738,9 +740,9 @@ class ModeFolder(WatoMode):
             parts = aliaspath.strip("/").split("/")
             folder = watolib.Folder.root_folder()
             while len(parts) > 0:
-                # Look in current folder for subfolder with the target name
+                # Look in the current folder for a subfolder with the target title
                 subfolder = folder.subfolder_by_title(parts[0])
-                if subfolder:
+                if subfolder is not None:
                     folder = subfolder
                 else:
                     name = _create_wato_foldername(parts[0], folder)

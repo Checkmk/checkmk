@@ -1,9 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """Mode for displaying and modifying the rule based host and service
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
@@ -51,14 +50,14 @@ class ModeObjectParameters(WatoMode):
         return ["hosts", "rulesets"]
 
     def _from_vars(self):
-        self._hostname = html.get_ascii_input("host")  # may be empty in new/clone mode
+        self._hostname = html.request.get_ascii_input("host")  # may be empty in new/clone mode
         self._host = watolib.Folder.current().host(self._hostname)
         if self._host is None:
             raise MKUserError("host", _('The given host does not exist.'))
         self._host.need_permission("read")
 
         # TODO: Validate?
-        self._service = html.get_unicode_input("service")
+        self._service = html.request.get_unicode_input("service")
 
     def title(self):
         title = _("Parameters of") + " " + self._hostname

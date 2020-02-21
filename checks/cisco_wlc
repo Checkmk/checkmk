@@ -46,14 +46,14 @@ def check_cisco_wlc(item, params, info):
             state, state_readable = map_states.get(status, ("3", "unknown[%s]" % status))
             return state, "Accesspoint: %s%s" % (state_readable, nodeinfo)
 
+    infotext = "Accesspoint not found"
     # Special treatment if this device is missing
     if params:
         for ap_name, ap_state in params.get("ap_name", []):
             if item.startswith(ap_name):
-                return ap_state, "Accesspoint 1 not found (State set to %s by rule)" % core_state_names[
-                    ap_state]
+                return ap_state, infotext
 
-    return 2, "Accesspoint not found"
+    return 2, infotext
 
 
 check_info["cisco_wlc"] = {

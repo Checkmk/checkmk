@@ -1,6 +1,6 @@
 title: Skype For Business - SIP Stack
 agents: windows
-catalog: os/services
+catalog: app/skype 
 license: GPL
 distribution: check_mk
 description:
@@ -8,17 +8,29 @@ description:
  Stack on skype frontend and edge servers.
 
  These are:
+
  - average incoming message processing time
+
  - average time incoming messages were being held
+
  - average delay on the outgoing queue
+
  - queue latency (time waiting)
+
  - sproc latency (time for processing)
+
  - number of incoming responses dropped per second
+
  - number of incoming requests dropped per second
+
  - number of requests that had to be throttled per second
+
  - number of 503 responses per second
+
  - number of sends that timed out per second
+
  - number of incoming messages that timed out
+
  - number of flow-controlled connections
 
  Thresholds can be configured for all these counters.

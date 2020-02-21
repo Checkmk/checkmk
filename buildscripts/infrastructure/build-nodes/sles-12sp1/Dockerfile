@@ -75,6 +75,7 @@ RUN zypper ref \
     && zypper -n in -y --force-resolution \
     chrpath \
     joe \
+    iputils \
     vim \
     && zypper clean -a
 

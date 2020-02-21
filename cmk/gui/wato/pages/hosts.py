@@ -1,9 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """Modes for creating and editing hosts"""
 
 import abc
@@ -178,7 +177,7 @@ class ModeEditHost(HostMode):
         return ["hosts"]
 
     def _init_host(self):
-        hostname = html.get_ascii_input("host")  # may be empty in new/clone mode
+        hostname = html.request.get_ascii_input("host")  # may be empty in new/clone mode
 
         if not watolib.Folder.current().has_host(hostname):
             raise MKUserError("host", _("You called this page with an invalid host name."))
@@ -293,7 +292,7 @@ class CreateHostMode(HostMode):
             self._mode = "new"
 
     def _init_host(self):
-        clonename = html.get_ascii_input("clone")
+        clonename = html.request.get_ascii_input("clone")
         if clonename:
             if not watolib.Folder.current().has_host(clonename):
                 raise MKUserError("host", _("You called this page with an invalid host name."))

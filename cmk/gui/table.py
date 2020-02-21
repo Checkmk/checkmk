@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -132,7 +132,7 @@ class Table(object):
         # determine row limit
         if limit is None:
             limit = config.table_row_limit
-        if html.request.var('limit') == 'none' or output_format != "html":
+        if html.request.get_ascii_input('limit') == 'none' or output_format != "html":
             limit = None
 
         self.id = table_id
@@ -264,7 +264,8 @@ class Table(object):
             return
 
         if self.options["output_format"] == "csv":
-            self._write_csv(csv_separator=html.request.var("csv_separator", ";"))
+            self._write_csv(
+                csv_separator=html.request.get_str_input_mandatory("csv_separator", ";"))
             return
 
         if self.title:
@@ -345,27 +346,26 @@ class Table(object):
 
         # Handle the initial visibility of the actions
         actions_visible = table_opts.get('actions_visible', False)
-        if html.request.var('_%s_actions' % table_id):
-            actions_visible = html.request.var('_%s_actions' % table_id) == '1'
+        if html.request.get_ascii_input('_%s_actions' % table_id):
+            actions_visible = html.request.get_ascii_input('_%s_actions' % table_id) == '1'
             table_opts['actions_visible'] = actions_visible
 
-        if html.request.var('_%s_reset' % table_id):
+        if html.request.get_ascii_input('_%s_reset' % table_id):
             html.request.del_var('_%s_search' % table_id)
             if 'search' in table_opts:
                 del table_opts['search']  # persist
 
         if self.options["searchable"]:
             # Search is always lower case -> case insensitive
-            search_term = html.get_unicode_input('_%s_search' % table_id,
-                                                 table_opts.get('search', ''))
-            assert search_term is not None
+            search_term = html.request.get_unicode_input_mandatory('_%s_search' % table_id,
+                                                                   table_opts.get('search', ''))
             search_term = search_term.lower()
             if search_term:
                 html.request.set_var('_%s_search' % table_id, search_term)
                 table_opts['search'] = search_term  # persist
                 rows = _filter_rows(rows, search_term)
 
-        if html.request.var('_%s_reset_sorting' % table_id):
+        if html.request.get_ascii_input('_%s_reset_sorting' % table_id):
             html.request.del_var('_%s_sort' % table_id)
             if 'sort' in table_opts:
                 del table_opts['sort']  # persist
@@ -386,7 +386,7 @@ class Table(object):
 
     def _get_sort_column(self, table_opts):
         # type: (Dict[str, Any]) -> Optional[str]
-        return html.request.var('_%s_sort' % self.id, table_opts.get('sort'))
+        return html.request.get_ascii_input('_%s_sort' % self.id, table_opts.get('sort'))
 
     def _write_table(self, rows, actions_enabled, actions_visible, search_term):
         # type: (TableRows, bool, bool, Optional[Text]) -> None
@@ -554,7 +554,7 @@ class Table(object):
                 html.open_th(class_=css_class)
             else:
                 reverse = 0
-                sort = html.request.var('_%s_sort' % table_id)
+                sort = html.request.get_ascii_input('_%s_sort' % table_id)
                 if sort:
                     sort_col, sort_reverse = map(int, sort.split(',', 1))
                     if sort_col == nr:

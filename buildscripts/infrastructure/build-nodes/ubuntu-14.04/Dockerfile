@@ -59,6 +59,7 @@ RUN apt-get update \
     && apt-get install -y \
     chrpath \
     joe \
+    iputils-ping \
     vim \
     && rm -rf /var/lib/apt/lists/*
 

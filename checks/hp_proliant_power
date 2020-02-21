@@ -31,15 +31,13 @@
 #       present(2) The Power Meter data is available.
 #       absent(3) The Power Meter data is not available at this time.
 
-hp_prolaint_power_default_levels = (300, 400)
-
 
 def inventory_hp_proliant_power(info):
     if len(info) > 0 and info[0][0] not in ['0', '3']:
-        return [(None, 'hp_prolaint_power_default_levels')]
+        return [(None, None)]
 
 
-def check_hp_proliant_power(item, params, info):
+def check_hp_proliant_power(_item, params, info):
     status_table = {
         1: "other",
         2: "present",
@@ -48,18 +46,12 @@ def check_hp_proliant_power(item, params, info):
     status, reading = map(int, info[0])
     if status != 2:
         return 2, "Power Meter state: %s" % (status_table[status])
-    warn, crit = params
-    state = 0
-    levels = ''
-    if reading >= crit:
-        state = 2
-        levels = ' (Warning/Critical %s/%s)' % (warn, crit)
-    elif reading >= warn:
-        state = 1
-        levels = ' (Warning/Critical %s/%s)' % (warn, crit)
 
-    perf = [('watt', reading, warn, crit)]
-    return state, "Current reading: %d Watt" % reading + levels, perf
+    return check_levels(reading,
+                        "watt",
+                        params if params else (None, None),
+                        infoname="Current reading",
+                        unit="Watts")
 
 
 check_info["hp_proliant_power"] = {

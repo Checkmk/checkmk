@@ -1,28 +1,8 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import os
 import subprocess
@@ -95,10 +75,7 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
         if commandtype == "getnext" and not item.startswith(oid_prefix + "."):
             return None
 
-        # Strip quotes
-        if value.startswith('"') and value.endswith('"'):
-            return value[1:-1]
-        return value
+        return strip_snmp_value(value)
 
     def walk(self,
              snmp_config,
@@ -171,7 +148,7 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
         rowinfo = []
         while True:
             try:
-                line = next(line_iter).strip()
+                line = six.ensure_str(next(line_iter).strip())
             except StopIteration:
                 break
 
@@ -319,8 +296,8 @@ def strip_snmp_value(value):
         # netsnmp command line tools. An example:
         # Checking windows systems via SNMP with hr_fs: disk names like c:\
         # are reported as c:\\, fix this to single \
-        return v.strip().replace('\\\\', '\\')
-    return v
+        return six.ensure_binary(v.strip().replace('\\\\', '\\'))
+    return six.ensure_binary(v)
 
 
 def _is_hex_string(value):
@@ -344,9 +321,9 @@ def _is_hex_string(value):
 
 
 def _convert_from_hex(value):
-    # type: (str) -> str
-    hexparts = value.split()
-    r = ""
-    for hx in hexparts:
-        r += chr(int(hx, 16))
-    return r
+    # type: (str) -> bytes
+    """Convert string containing a Hex-String to bytes
+
+    e.g. "B2 E0 7D 2C 4D 15" -> b'\xb2\xe0},M\x15'
+    """
+    return bytes(bytearray(int(hx, 16) for hx in value.split()))

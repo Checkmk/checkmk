@@ -192,7 +192,7 @@ def initialize():
 #   | Users can localize custom strings using the global configuration     |
 #   '----------------------------------------------------------------------'
 
-_user_localizations = {}  # type: Dict[Text, Dict[Optional[str], Text]]
+_user_localizations = {}  # type: Dict[Text, Dict[str, Text]]
 
 
 # Localization of user supplied texts
@@ -200,12 +200,15 @@ def _u(text):
     # type: (Text) -> Text
     ldict = _user_localizations.get(text)
     if ldict:
-        return ldict.get(get_current_language(), text)
+        current_language = get_current_language()
+        if current_language is None:
+            return text
+        return ldict.get(current_language, text)
     return text
 
 
 def set_user_localizations(localizations):
-    # type: (Dict[Text, Dict[Optional[str], Text]]) -> None
+    # type: (Dict[Text, Dict[str, Text]]) -> None
     _user_localizations.clear()
     _user_localizations.update(localizations)
 

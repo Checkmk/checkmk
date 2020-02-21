@@ -1,9 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """A host attribute is something that is inherited from folders to
 hosts. Examples are the IP address and the host tags."""
 
@@ -773,7 +772,7 @@ class ABCHostAttributeText(six.with_metaclass(abc.ABCMeta, ABCHostAttribute)):
         html.text_input(varprefix + "attr_" + self.name(), value, size=self._size)
 
     def from_html_vars(self, varprefix):
-        value = html.get_unicode_input(varprefix + "attr_" + self.name())
+        value = html.request.get_unicode_input(varprefix + "attr_" + self.name())
         if value is None:
             value = ""
         return value.strip()

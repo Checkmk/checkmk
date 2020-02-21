@@ -1,28 +1,8 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Naming:
 #
@@ -34,32 +14,21 @@
 #                cache info and piggyback lines that is used to process the
 #                data within Check_MK.
 
-import ast
-import os
-import signal
-import socket
-import subprocess
-import sys
-import time
 from typing import (  # pylint: disable=unused-import
-    cast, Iterable, TYPE_CHECKING, List, Dict, Optional, Set,
+    Iterable, TYPE_CHECKING, List, Dict, Optional, Set,
 )
 
 import cmk.utils.paths
 import cmk.utils.debug
-from cmk.utils.exceptions import MKGeneralException
-import cmk.utils.store as store
 import cmk.utils.piggyback
 
-import cmk.base
 import cmk.base.config as config
 import cmk.base.console as console
-import cmk.base.item_state as item_state
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.check_table as check_table
 from cmk.base.check_utils import (  # pylint: disable=unused-import
     CheckPluginName,)
-from cmk.base.utils import HostName, HostAddress  # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, HostAddress  # pylint: disable=unused-import
 
 from .snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from .ipmi import IPMIManagementBoardDataSource
@@ -89,7 +58,7 @@ if TYPE_CHECKING:
 #   '----------------------------------------------------------------------'
 
 
-class DataSources(object):
+class DataSources(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, hostname, ipaddress):
         # type: (HostName, Optional[HostAddress]) -> None
         super(DataSources, self).__init__()
@@ -175,10 +144,10 @@ class DataSources(object):
         if self._host_config.is_all_agents_host:
             return "Normal Checkmk agent, all configured special agents"
 
-        elif self._host_config.is_all_special_agents_host:
+        if self._host_config.is_all_special_agents_host:
             return "No Checkmk agent, all configured special agents"
 
-        elif self._host_config.is_tcp_host:
+        if self._host_config.is_tcp_host:
             return "Normal Checkmk agent, or special agent if configured"
 
         return "No agent"
@@ -274,7 +243,7 @@ class DataSources(object):
             hosts.append((self._hostname, self._ipaddress, self, config.check_max_cachefile_age))
 
         if nodes:
-            import cmk.base.data_sources.abstract as abstract
+            import cmk.base.data_sources.abstract as abstract  # pylint: disable=import-outside-toplevel
             abstract.DataSource.set_may_use_cache_file()
 
         # Special agents can produce data for the same check_plugin_name on the same host, in this case

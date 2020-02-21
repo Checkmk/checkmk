@@ -15,5 +15,8 @@ description:
  The check will also change the state if the virtual volume on
  the filer reports a degraded or failed state.
 
+item:
+ Name of the volume.
+
 inventory:
  One service is created for each virtual volume.

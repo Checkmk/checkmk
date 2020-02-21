@@ -232,7 +232,7 @@ def _parse_autocheck_entry(hostname, entry, service_description):
     elif isinstance(ast_item, ast.Num) and isinstance(ast_item.n, (int, float)):
         # NOTE: We exclude complex here. :-)
         item = "%s" % int(ast_item.n)
-    elif isinstance(ast_item, ast.Name) and ast_item.id == "None":
+    elif _ast_node_is_none(ast_item):
         item = None
     else:
         raise Exception("Invalid autocheck: Wrong item type: %r" % ast_item)
@@ -254,6 +254,12 @@ def _parse_autocheck_entry(hostname, entry, service_description):
         description,
         _parse_unresolved_parameters_from_ast(ast_parameters_unresolved),
         service_labels=_parse_discovered_service_label_from_ast(ast_service_labels))
+
+
+def _ast_node_is_none(node):
+    if sys.version_info[0] >= 3:
+        return isinstance(node, ast.NameConstant) and node.value is None
+    return isinstance(node, ast.Name) and node.id == "None"
 
 
 def _parse_pre_16_tuple_autocheck_entry(entry):

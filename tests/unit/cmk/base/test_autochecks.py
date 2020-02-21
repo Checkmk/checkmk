@@ -127,8 +127,8 @@ def test_manager_get_autochecks_of(test_config, autochecks_content, expected_res
     assert test_config.get_autochecks_of("host") == result
 
     # Check that there are no str items (None, int, ...)
-    assert all(not isinstance(s.item, str) for s in result)
-    # All desriptions need to be unicode
+    assert all(not isinstance(s.item, six.binary_type) for s in result)
+    # All desriptions need to be of type text
     assert all(isinstance(s.description, six.text_type) for s in result)
 
 
@@ -235,8 +235,8 @@ def test_remove_autochecks_file():
     assert autochecks.has_autochecks("host") is False
 
 
-@pytest.mark.parametrize("items,expected_content", [
-    ([], "[\n]\n"),
+@pytest.mark.parametrize("items,expected_content_py2,expected_content_py3", [
+    ([], "[\n]\n", "[\n]\n"),
     ([
         discovery.DiscoveredService('df', u'/xyz', u"Filesystem /xyz", "None",
                                     DiscoveredServiceLabels(ServiceLabel(u"x", u"y"))),
@@ -248,13 +248,18 @@ def test_remove_autochecks_file():
   {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels, 'service_labels': {u'x': u'y'}},
   {'check_plugin_name': 'df', 'item': u'/', 'parameters': {}, 'service_labels': {u'x': u'y'}},
   {'check_plugin_name': 'df', 'item': u'/xyz', 'parameters': None, 'service_labels': {u'x': u'y'}},
+]\n""", """[
+  {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels, 'service_labels': {'x': 'y'}},
+  {'check_plugin_name': 'df', 'item': '/', 'parameters': {}, 'service_labels': {'x': 'y'}},
+  {'check_plugin_name': 'df', 'item': '/xyz', 'parameters': None, 'service_labels': {'x': 'y'}},
 ]\n"""),
 ])
-def test_save_autochecks_file(items, expected_content):
+def test_save_autochecks_file(items, expected_content_py2, expected_content_py3):
     autochecks.save_autochecks_file("host", items)
 
     autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
     with autochecks_file.open("r", encoding="utf-8") as f:  # pylint: disable=no-member
         content = f.read()
 
+    expected_content = expected_content_py3 if sys.version_info[0] >= 3 else expected_content_py2
     assert expected_content == content

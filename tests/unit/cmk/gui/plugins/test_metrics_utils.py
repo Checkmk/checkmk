@@ -15,7 +15,7 @@ def test_split_perf_data(data_string, result):
 
 
 @pytest.mark.parametrize("perf_str, check_command, result", [
-    ("", None, ([], None)),
+    ("", None, ([], "")),
     ("hi=6 [ihe]", "ter", ([("hi", 6, "", None, None, None, None)], "ihe")),
     (u"hi=l6 [ihe]", "ter", ([], "ihe")),
     (u"hi=6 [ihe]", "ter", ([("hi", 6, "", None, None, None, None)], "ihe")),

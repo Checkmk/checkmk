@@ -192,14 +192,12 @@ def split_unit(value_text):
 
 
 def parse_perf_data(perf_data_string, check_command=None):
-    """ Convert perf_data_string into perf_data, extract check_command
-
-This methods must not return None or anything else. It must strictly
-return a tuple of perf_data list and the check_command. In case of
-errors during parsing it returns an empty list for the perf_data.
-"""
+    # type: (str, Optional[str]) -> Tuple[List, Optional[str]]
+    """ Convert perf_data_string into perf_data, extract check_command"""
     # Strip away arguments like in "check_http!-H checkmk.com"
-    if hasattr(check_command, 'split'):
+    if check_command is None:
+        check_command = ""
+    elif hasattr(check_command, 'split'):
         check_command = check_command.split("!")[0]
 
     # Split the perf data string into parts. Preserve quoted strings!

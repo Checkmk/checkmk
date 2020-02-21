@@ -337,7 +337,7 @@ def _load_config(with_conf_d, exclude_parents_mk):
             all_hosts.set_current_path(current_path)  # pylint: disable=no-member
             clusters.set_current_path(current_path)  # pylint: disable=no-member
 
-            exec (open(_f).read(), global_dict, global_dict)
+            exec(open(_f).read(), global_dict, global_dict)
 
             if not isinstance(all_hosts, SetFolderPathList):
                 raise MKGeneralException(
@@ -646,7 +646,7 @@ class PackedConfig(object):  # pylint: disable=useless-object-inheritance
     def load(self):
         # type: () -> None
         _initialize_config()
-        exec (marshal.load(open(self._path)), globals())
+        exec(marshal.load(open(self._path)), globals())
         _perform_post_config_loading_actions()
 
 
@@ -1673,6 +1673,10 @@ def load_precompiled_plugin(path, check_context):
     case there is already a compiled file that is newer than the current one,
     then the precompiled file is loaded."""
 
+    # https://docs.python.org/3/library/py_compile.html
+    # https://www.python.org/dev/peps/pep-0552/
+    # HACK:
+    header_size = 16 if sys.version_info[0] >= 3 else 8
     precompiled_path = _precompiled_plugin_path(path)
 
     if not _is_plugin_precompiled(path, precompiled_path):
@@ -1680,7 +1684,7 @@ def load_precompiled_plugin(path, check_context):
         store.makedirs(os.path.dirname(precompiled_path))
         py_compile.compile(path, precompiled_path, doraise=True)
 
-    exec (marshal.loads(open(precompiled_path, "rb").read()[8:]), check_context)
+    exec(marshal.loads(open(precompiled_path, "rb").read()[header_size:]), check_context)
 
 
 def _is_plugin_precompiled(path, precompiled_path):

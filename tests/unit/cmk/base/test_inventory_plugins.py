@@ -1,4 +1,4 @@
-import pytest
+import pytest  # type: ignore[import]
 import cmk.base.inventory_plugins
 from cmk.utils.exceptions import MKGeneralException
 

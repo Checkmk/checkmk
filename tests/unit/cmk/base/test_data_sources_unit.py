@@ -1,5 +1,6 @@
 # pylint: disable=redefined-outer-name
 
+import os
 import pytest  # type: ignore[import]
 from testlib.base import Scenario
 
@@ -37,7 +38,6 @@ def test_disable_data_source_cache_no_read(mocker, monkeypatch):
     source.set_max_cachefile_age(999)
     source.disable_data_source_cache()
 
-    import os
     mocker.patch.object(os.path, "exists", return_value=True)
 
     disabled_checker = mocker.patch.object(source, "is_agent_cache_disabled")

@@ -4,11 +4,6 @@
 import pytest  # type: ignore[import]
 
 import cmk.base.discovery as discovery
-from cmk.base.check_api_utils import Service
-from cmk.base.discovered_labels import (
-    DiscoveredServiceLabels,
-    ServiceLabel,
-)
 
 
 def test_discovered_service_init():
@@ -33,7 +28,7 @@ def test_discovered_service_eq():
     s4 = discovery.DiscoveredService("abc", u"Xtem", u"ABC Item", "None")
     s5 = discovery.DiscoveredService("abc", u"Item", u"ABC Item", "[]")
 
-    assert s1 == s1
+    assert s1 == s1  # pylint: disable=comparison-with-itself
     assert s1 == s2
     assert s1 != s3
     assert s1 != s4

@@ -202,7 +202,7 @@ def test_label(cls):
 @pytest.mark.parametrize("cls", [HostLabel, ServiceLabel])
 def test_label_validation(cls):
     with pytest.raises(MKGeneralException, match="Invalid label name"):
-        cls("übc", u"abc")
+        cls(b"\xc3\xbcbc", u"abc")
 
     with pytest.raises(MKGeneralException, match="Invalid label value"):
-        cls(u"äbc", "übc")
+        cls(u"äbc", b"\xc3\xbcbc")

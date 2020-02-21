@@ -335,6 +335,7 @@ copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="test-zip.cpp" />
     <ClCompile Include="test_check_mk.cpp" />
     <ClCompile Include="test_tools.cpp" />
     <ClCompile Include="watest.cpp" />

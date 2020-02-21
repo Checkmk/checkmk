@@ -321,6 +321,7 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="upgrade.h" />
     <ClInclude Include="windows_service_api.h" />
+    <ClInclude Include="zip.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\extlibs\yaml-cpp\src\binary.cpp">
@@ -555,6 +556,7 @@
     </ClCompile>
     <ClCompile Include="upgrade.cpp" />
     <ClCompile Include="windows_service_api.cpp" />
+    <ClCompile Include="zip.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\test_files\config\check_mk.example.ini" />

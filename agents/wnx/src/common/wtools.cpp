@@ -1513,7 +1513,7 @@ bool WmiWrapper::impersonate() noexcept {
 
     if (SUCCEEDED(hres)) return true;
 
-    XLOG::l.e("Failed blanker/impersonation locator wmI {X}", hres);
+    XLOG::l.e("Failed blanker/impersonation locator wmI {:X}", hres);
     return false;  // Program has failed.
 }
 

@@ -4,6 +4,7 @@
 #include "pch.h"
 
 #include <fmt/format.h>
+#include <shellapi.h>
 
 #include <iterator>
 
@@ -28,7 +29,7 @@ constexpr bool is_iterable_v = is_iterable<T>::value;
 namespace cma::cfg::modules {
 
 template <typename T>
-bool Compare(const T& t, const T& v) {
+bool Compare(const T &t, const T &v) {
     static_assert(cma::tools::is_iterable<T>::value);
     if (t.size() != v.size()) return false;
 

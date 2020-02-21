@@ -289,7 +289,7 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
 
 
 def strip_snmp_value(value):
-    # type: (str) -> RawValue
+    # no-type: (str) -> RawValue
     v = value.strip()
     if v.startswith('"'):
         v = v[1:-1]
@@ -299,8 +299,8 @@ def strip_snmp_value(value):
         # netsnmp command line tools. An example:
         # Checking windows systems via SNMP with hr_fs: disk names like c:\
         # are reported as c:\\, fix this to single \
-        return v.strip().replace('\\\\', '\\')
-    return v
+        return six.ensure_binary(v.strip().replace('\\\\', '\\'))
+    return six.ensure_binary(v)
 
 
 def _is_hex_string(value):
@@ -324,9 +324,9 @@ def _is_hex_string(value):
 
 
 def _convert_from_hex(value):
-    # type: (str) -> str
-    hexparts = value.split()
-    r = ""
-    for hx in hexparts:
-        r += chr(int(hx, 16))
-    return r
+    # type: (str) -> bytes
+    """Convert string containing a Hex-String to bytes
+
+    e.g. "B2 E0 7D 2C 4D 15" -> b'\xb2\xe0},M\x15'
+    """
+    return bytes(bytearray(int(hx, 16) for hx in value.split()))

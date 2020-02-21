@@ -188,3 +188,13 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
 def test_snmp_walk_command(monkeypatch, settings, expected):
     assert classic_snmp.ClassicSNMPBackend()._snmp_walk_command(settings.snmp_config,
                                                                 settings.context_name) == expected
+
+
+@pytest.mark.parametrize("value,expected", [
+    ("", b""),
+    ("\"\"", b""),
+    ("\"B2 E0 7D 2C 4D 15 \"", b"\xb2\xe0},M\x15"),
+    ("\"B2 E0 7D 2C 4D 15\"", b"B2 E0 7D 2C 4D 15"),
+])
+def test_strip_snmp_value(value, expected):
+    assert classic_snmp.strip_snmp_value(value) == expected

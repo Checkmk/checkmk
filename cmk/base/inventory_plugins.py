@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -55,7 +55,7 @@ def load_plugins(get_check_api_context, get_inventory_context):
 
             _load_plugin_includes(f, plugin_context)
 
-            exec (open(f).read(), plugin_context)
+            exec(open(f).read(), plugin_context)  # yapf: disable
             loaded_files.add(file_name)
         except Exception as e:
             console.error("Error in inventory plugin file %s: %s\n", f, e)
@@ -92,7 +92,7 @@ def _load_plugin_includes(check_file_path, plugin_context):
     for name in config.includes_of_plugin(check_file_path):
         path = _include_file_path(name)
         try:
-            exec (open(path).read(), plugin_context)
+            exec(open(path).read(), plugin_context)  # yapf: disable
         except Exception as e:
             console.error("Error in include file %s: %s\n", path, e)
             if cmk.utils.debug.enabled():

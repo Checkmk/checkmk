@@ -126,7 +126,6 @@ def inv_tree(path, default_value=None):
         node = default_value
     else:
         node = {}
-
     return node
 """)
 

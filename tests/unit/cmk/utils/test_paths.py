@@ -1,5 +1,11 @@
 import os
-from pathlib2 import Path
+import sys
+
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+
 from testlib import repo_path, import_module
 
 pathlib_paths = [
@@ -32,7 +38,7 @@ pathlib_paths = [
 
 
 def _check_paths(root, module):
-    for var, value in module.__dict__.iteritems():
+    for var, value in module.__dict__.items():
         if not var.startswith("_") and var not in ('Path', 'os', 'sys', 'Union'):
             if var in pathlib_paths:
                 assert isinstance(value, Path)

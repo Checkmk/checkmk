@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
 import six
 
 
@@ -32,6 +33,9 @@ class MKException(Exception):
           >>> str(Exception(b"h\xc3\xa9 \xc3\x9f\xc3\x9f", 123, "hé ßß"))
           "(b'h\\xc3\\xa9 \\xc3\\x9f\\xc3\\x9f', 123, 'hé ßß')"
         """
+
+        if sys.version_info[0] >= 3:
+            return super(MKException, self).__str__()
 
         if not self.args:
             return six.text_type("")

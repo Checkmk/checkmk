@@ -1,7 +1,13 @@
 # encoding: utf-8
 
-from pathlib2 import Path
+import sys
 import pytest  # type: ignore[import]
+
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path
 
 from testlib import cmk_path
 

@@ -1,10 +1,18 @@
 # pylint: disable=redefined-outer-name
 
 import os
+import sys
 import subprocess
 from collections import defaultdict
-from pathlib2 import Path
+
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
+    from pathlib2 import Path
+
 import pytest  # type: ignore[import]
+import six
 
 import testlib
 import cmk.utils.werks
@@ -108,8 +116,11 @@ _werk_to_git_tag = defaultdict(list)  # type: ignore[var-annotated]
 
 @cmk.utils.memoize.MemoizeCache
 def _werks_in_git_tag(tag):
-    werks_in_tag = subprocess.check_output(["git", "ls-tree", "-r", "--name-only", tag, ".werks"],
-                                           cwd=testlib.cmk_path()).split("\n")
+    werks_in_tag = six.ensure_str(
+        subprocess.check_output(
+            [b"git", b"ls-tree", b"-r", b"--name-only",
+             six.ensure_binary(tag), b".werks"],
+            cwd=six.ensure_binary(testlib.cmk_path()))).split("\n")
 
     # Populate the map of all tags a werk is in
     for werk_file in werks_in_tag:

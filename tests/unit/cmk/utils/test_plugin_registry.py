@@ -25,12 +25,12 @@ def basic_registry():
 
 def test_initialization():
     registry = PluginRegistry()
-    assert registry.items() == []
+    assert list(registry.items()) == []
 
 
 def test_decorator_registration():
     registry = PluginRegistry()
-    assert registry.items() == []
+    assert list(registry.items()) == []
 
     @registry.register
     class DecoratedPlugin(Plugin):
@@ -41,7 +41,7 @@ def test_decorator_registration():
 
 def test_method_registration():
     registry = PluginRegistry()
-    assert registry.items() == []
+    assert list(registry.items()) == []
 
     class MethodRegisteredPlugin(Plugin):
         pass
@@ -68,21 +68,21 @@ def test_delitem(basic_registry):
 
 def test_getitem(basic_registry):
     with pytest.raises(KeyError):
-        _unused = basic_registry["bla"]
+        _unused = basic_registry["bla"]  # noqa: F841
 
     assert basic_registry["Plugin"] == Plugin
 
 
 def test_values(basic_registry):
-    assert basic_registry.values() == [Plugin]
+    assert list(basic_registry.values()) == [Plugin]
 
 
 def test_items(basic_registry):
-    assert basic_registry.items() == [("Plugin", Plugin)]
+    assert list(basic_registry.items()) == [("Plugin", Plugin)]
 
 
 def test_keys(basic_registry):
-    assert basic_registry.keys() == ["Plugin"]
+    assert list(basic_registry.keys()) == ["Plugin"]
 
 
 def test_get(basic_registry):

@@ -18,6 +18,8 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path
 
+import six
+
 import cmk.utils.paths
 
 from cmk.utils.exceptions import MKGeneralException
@@ -190,8 +192,8 @@ def _load_werk(path):
 
 
 def write_precompiled_werks(path, werks):
-    with path.open("wb") as fp:
-        json.dump(werks, fp, check_circular=False)
+    with path.open("w", encoding="utf-8") as fp:
+        fp.write(six.ensure_text(json.dumps(werks, check_circular=False)))
 
 
 def write_as_text(werks, f, write_version=True):

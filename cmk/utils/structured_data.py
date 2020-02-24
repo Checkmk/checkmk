@@ -254,12 +254,6 @@ class StructuredDataTree(object):
             filtered_tree._root.merge_with(sub_tree)
         return filtered_tree
 
-    #   ---testing--------------------------------------------------------------
-
-    def get_tree_repr(self):
-        # Just for testing
-        return self._root.get_tree_repr()
-
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self.get_raw_tree()))
 
@@ -309,12 +303,6 @@ class NodeAttribute(object):
         raise NotImplementedError()
 
     def copy(self):
-        raise NotImplementedError()
-
-    #   ---testing--------------------------------------------------------------
-
-    def get_tree_repr(self):
-        # Just for testing
         raise NotImplementedError()
 
     def __repr__(self):
@@ -476,17 +464,6 @@ class Container(NodeAttribute):
         for edge, abs_path, child in self.get_children():
             new_node.add_child(edge, child.copy(), abs_path)
         return new_node
-
-    #   ---testing--------------------------------------------------------------
-
-    def get_tree_repr(self):
-        # Just for testing
-        tree = {}  # type: Dict
-        for edge, abs_path, child in self.get_children():
-            tree.setdefault(edge, {'__path__': abs_path})
-            key = '__%s__' % type(child).__name__[:3]
-            tree[edge].setdefault(key, child.get_tree_repr())
-        return tree
 
     #   ---container methods----------------------------------------------------
 
@@ -803,12 +780,6 @@ class Numeration(Leaf):
         new_node.set_child_data(self._numeration[:])
         return new_node
 
-    #   ---testing--------------------------------------------------------------
-
-    def get_tree_repr(self):
-        # Just for testing
-        return '[:]'
-
     #   ---leaf methods---------------------------------------------------------
 
     def set_child_data(self, data):
@@ -887,12 +858,6 @@ class Attributes(Leaf):
         new_node = Attributes()
         new_node.set_child_data(self._attributes.copy())
         return new_node
-
-    #   ---testing--------------------------------------------------------------
-
-    def get_tree_repr(self):
-        # Just for testing
-        return '{:}'
 
     #   ---leaf methods---------------------------------------------------------
 

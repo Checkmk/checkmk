@@ -392,6 +392,21 @@ public:
     }
     // **********************************
 
+    inline std::string SafePrintToDebuggerAndEventLog(
+        const std::string& text) noexcept {
+        std::string s;
+        try {
+            s = fmt::format(
+                "[ERROR] [CRITICAL] Invalid parameters for log string \"{}\"\n",
+                text);
+            return s;
+        } catch (...) {
+            s = "[ERROR] [CRITICAL] Failed Print\n";
+        }
+        xlog::internal_PrintStringDebugger(s.c_str());
+        return s;
+    }
+
     // **********************************
     // STREAM OUTPUT
     template <typename... T>
@@ -407,12 +422,7 @@ public:
             postProcessAndPrint(s);
             return s;
         } catch (...) {
-            auto s =
-                fmt::format("Invalid parameters for log string \"{}\"", Format);
-            auto e = *this;
-            e.mods_ = XLOG::kCritError;
-            e.postProcessAndPrint(s);
-            return s;
+            return SafePrintToDebuggerAndEventLog(Format);
         }
     }
 
@@ -431,12 +441,7 @@ public:
             e.postProcessAndPrint(s);
             return s;
         } catch (...) {
-            auto s =
-                fmt::format("Invalid parameters for log string \"{}\"", Format);
-            auto e = *this;
-            e.mods_ = XLOG::kCritError;
-            e.postProcessAndPrint(s);
-            return s;
+            return SafePrintToDebuggerAndEventLog(Format);
         }
     }
     // **********************************
@@ -478,14 +483,7 @@ public:
             e.postProcessAndPrint(s);
             return s;
         } catch (...) {
-            // we do not want any exceptions during logging
-            auto s =
-                fmt::format("Invalid parameters for log string \"{}\"", Format);
-            if (!this->constructed_) return s;
-            auto e = *this;
-            e.mods_ |= XLOG::kCritError;
-            e.postProcessAndPrint(s);
-            return s;
+            return SafePrintToDebuggerAndEventLog(Format);
         }
     }
 

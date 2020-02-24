@@ -1,5 +1,8 @@
 import pytest  # type: ignore[import]
 
+# TODO: Change back to fixture (see conftest.py) after Python 3 migration
+from inventory_testlib import inventory_plugin_manager, check_manager
+
 
 @pytest.mark.parametrize('line, inventory_data, status_data', [
     ([], {}, {}),
@@ -181,14 +184,13 @@ import pytest  # type: ignore[import]
         "db_uptime": 123,
     }),
 ])
-def test_inv_oracle_instance(inventory_plugin_manager, check_manager, line, inventory_data,
-                             status_data):
-    check_plugin = check_manager.get_check('oracle_instance')
+def test_inv_oracle_instance(line, inventory_data, status_data):
+    check_plugin = check_manager().get_check('oracle_instance')
     parse_function = check_plugin.info.get("parse_function")
 
     parsed = parse_function([line])
 
-    inv_plugin = inventory_plugin_manager.get_inventory_plugin('oracle_instance')
+    inv_plugin = inventory_plugin_manager().get_inventory_plugin('oracle_instance')
     inventory_tree_data, status_tree_data = inv_plugin.run_inventory(parsed)
 
     path = "software.applications.oracle.instance:"

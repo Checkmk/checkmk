@@ -1,5 +1,8 @@
 import pytest  # type: ignore[import]
 
+# TODO: Change back to fixture (see conftest.py) after Python 3 migration
+from inventory_testlib import inventory_plugin_manager
+
 
 @pytest.mark.parametrize('parsed, inventory_data, status_data', [
     ({
@@ -30,8 +33,8 @@ import pytest  # type: ignore[import]
         "num_images": 22,
     }),
 ])
-def test_inv_docker_node_info(inventory_plugin_manager, parsed, inventory_data, status_data):
-    inv_plugin = inventory_plugin_manager.get_inventory_plugin('docker_node_info')
+def test_inv_docker_node_info(parsed, inventory_data, status_data):
+    inv_plugin = inventory_plugin_manager().get_inventory_plugin('docker_node_info')
     inventory_tree_data, status_tree_data = inv_plugin.run_inventory(parsed)
 
     path = "software.applications.docker."

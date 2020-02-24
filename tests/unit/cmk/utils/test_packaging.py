@@ -7,11 +7,10 @@ import ast
 import json
 from io import BytesIO
 
-# Explicitly check for Python 3 (which is understood by mypy)
 if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
+    from pathlib import Path  # noqa: F401 # pylint: disable=import-error,unused-import
 else:
-    from pathlib2 import Path
+    from pathlib2 import Path  # noqa: F401 # pylint: disable=import-error,unused-import
 
 import pytest  # type: ignore[import]
 import six

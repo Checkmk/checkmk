@@ -1,0 +1,14 @@
+Title: IPMI Management Board: Do not report GPU sensors if not installed
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0p10
+Date: 1582285046
+
+We have seen discovered GPU sensors with strange values, even if those
+components are not installed. Such sensors will be not discovered any more. If
+you already discovered such services, rediscovery is needed.

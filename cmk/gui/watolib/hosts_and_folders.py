@@ -544,6 +544,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         if attributes is None:
             attributes = {}
 
+        attributes.setdefault('meta_data', {})
+
         self._choices_for_moving_host = None
 
         self._root_dir = root_dir
@@ -561,6 +563,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             self._num_hosts = 0
             self._title = title or self._fallback_title()
             self._attributes = attributes
+            self._attributes['meta_data']['created_at'] = time.time()
+            self._attributes['meta_data']['update_at'] = time.time()
             self._locked = False
             self._locked_hosts = False
             self._locked_subfolders = False
@@ -1523,6 +1527,16 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     # '-----------------------------------------------------------------------'
 
     def create_subfolder(self, name, title, attributes):
+        """Create a subfolder of the current folder
+
+        Args:
+            name: The filename of the folder to be created.
+            title: The title.
+            attributes: The attributes.
+
+        Returns:
+            Created Folder instance.
+        """
         # 1. Check preconditions
         config.user.need_permission("wato.manage_folders")
         self.need_permission("write")

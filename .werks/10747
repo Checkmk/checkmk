@@ -1,0 +1,13 @@
+Title: ibm_svc_mdisk: don't crash on discovery
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p10
+Date: 1582551977
+Class: fix
+
+On devices that do not support the lsmdisk command the check plugin
+ibm_svc_mdisk failed so that the "Check_MK Discovery" service showed
+the error "UNKN - check failed - please submit a crash report!".
+This is fixed.

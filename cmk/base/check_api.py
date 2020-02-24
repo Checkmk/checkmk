@@ -747,7 +747,7 @@ def discover(selector=None, default_params=None):
 def _get_discovery_iter(name, get_name):
     # type: (Any, Callable[[], str]) -> Iterable[str]
     if isinstance(name, six.string_types):
-        return iter((name,))
+        return iter((six.ensure_str(name),))
     if name is True:
         return iter((get_name(),))
     try:

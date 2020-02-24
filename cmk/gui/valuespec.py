@@ -448,7 +448,7 @@ class Integer(ValueSpec):
         return html.request.get_integer_input_mandatory(varprefix)
 
     def value_to_text(self, value):
-        # type: (int) -> Text
+        # type: (float) -> Text
         text = self._display_format % value
         if self._thousand_sep:
             sepped = u""
@@ -515,7 +515,8 @@ class Filesize(Integer):
         except Exception:
             raise MKUserError(varprefix + '_size', _("Please enter a valid integer number"))
 
-    def value_to_text(self, value):
+    # TODO: Cleanup this hierarchy problem
+    def value_to_text(self, value):  # type: ignore[override]
         # type: (int) -> Text
         exp, count = self.get_exponent(value)
         return "%s %s" % (count, self._names[exp])
@@ -646,10 +647,13 @@ class TextAscii(ValueSpec):
 
 
 class TextUnicode(TextAscii):
-    def from_html_vars(self, varprefix):
-        return html.request.get_unicode_input(varprefix, "").strip()
+    # TODO: Once we switched to Python 3 we can merge the unicode and non unicode class
+    def from_html_vars(self, varprefix):  # type: ignore[override]
+        # type: (str) -> Text
+        return html.request.get_unicode_input_mandatory(varprefix, "").strip()
 
     def validate_datatype(self, value, varprefix):
+        # type: (Text, str) -> None
         if not isinstance(value, six.string_types):
             raise MKUserError(
                 varprefix,
@@ -747,7 +751,8 @@ class RegExp(TextAscii):
         self._maxgroups = maxgroups
 
     def help(self):
-        help_text = []
+        # type: () -> Union[Text, HTML, None]
+        help_text = []  # type: List[Union[Text, HTML]]
 
         default_help_text = super(RegExp, self).help()
         if default_help_text is not None:
@@ -779,7 +784,7 @@ class RegExp(TextAscii):
             _("Read more about [cms_regexes|regular expression matching in Checkmk] in our user manual."
              ))
 
-        return " ".join(help_text)
+        return u" ".join(u"%s" % h for h in help_text)
 
     def _css_classes(self, case_sensitive, mode):
         classes = ["text", "regexp"]
@@ -874,6 +879,7 @@ class EmailAddress(TextAscii):
         self._make_clickable = make_clickable
 
     def value_to_text(self, value):
+        # type: (str) -> Text
         if not value:
             return super(EmailAddress, self).value_to_text(value)
         elif self._make_clickable:
@@ -889,11 +895,20 @@ class EmailAddressUnicode(TextUnicode, EmailAddress):
         self._regex = re.compile(r'^[\w.%&+-]+@(localhost|[\w.-]+\.[\w]{2,24})$', re.I | re.UNICODE)
 
 
-# TODO: Do not use kwargs here. Find out the arguments that are used
-def IPNetwork(ip_class=None, **kwargs):
+def IPNetwork(  # pylint: disable=redefined-builtin
+    ip_class=None,  # type: Union[Type[ipaddress.IPv4Address], Type[ipaddress.IPv6Address]]
+    # TextAscii
+    allow_empty=True,  # type: bool
+    size=34,  # type: Union[int, str]
+    # From ValueSpec
+    title=None,  # type: TypingOptional[Text]
+    help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+    default_value=_DEF_VALUE,  # type: Any
+):
+    # type: (...) -> TextAscii
     """Same as IPv4Network, but allowing both IPv4 and IPv6"""
     if ip_class is None:
-        ip_class = ipaddress.ip_interface
+        ip_class = ipaddress.IPv4Address
 
     def _validate_value(value, varprefix):
         try:
@@ -901,21 +916,42 @@ def IPNetwork(ip_class=None, **kwargs):
         except ValueError as e:
             raise MKUserError(varprefix, _("Invalid address: %s") % e)
 
-    kwargs.setdefault("size", 34)
-    return TextAscii(validate=_validate_value, **kwargs)
+    return TextAscii(
+        validate=_validate_value,
+        allow_empty=allow_empty,
+        size=size,
+        title=title,
+        help=help,
+        default_value=default_value,
+    )
 
 
-# TODO: Do not use kwargs here. Find out the arguments that are used
-def IPv4Network(**kwargs):
+def IPv4Network(  # pylint: disable=redefined-builtin
+    title=None,  # type: TypingOptional[Text]
+    help=None  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+):
+    # type: (...) -> TextAscii
     """Network as used in routing configuration, such as '10.0.0.0/8' or '192.168.56.1'"""
-    kwargs.setdefault("size", 18)
-    return IPNetwork(ip_class=ipaddress.IPv4Interface, **kwargs)
+    return IPNetwork(ip_class=ipaddress.IPv4Interface, size=18, title=title, help=help)
 
 
-# TODO: Do not use kwargs here. Find out the arguments that are used
-def IPv4Address(**kwargs):
-    kwargs.setdefault("size", 16)
-    return IPNetwork(ip_class=ipaddress.IPv4Address, **kwargs)
+def IPv4Address(  # pylint: disable=redefined-builtin
+    # TextAscii
+    allow_empty=True,  # type: bool
+    # From ValueSpec
+    title=None,  # type: TypingOptional[Text]
+    help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+    default_value=_DEF_VALUE,  # type: Any
+):
+    # type: (...) -> TextAscii
+    return IPNetwork(
+        ip_class=ipaddress.IPv4Address,
+        size=16,
+        title=title,
+        help=help,
+        default_value=default_value,
+        allow_empty=allow_empty,
+    )
 
 
 class TextAsciiAutocomplete(TextAscii):
@@ -1047,6 +1083,7 @@ class MonitoredHostname(TextAsciiAutocomplete):
 @page_registry.register_page("ajax_vs_autocomplete")
 class PageVsAutocomplete(Page):
     def page(self):
+        # type: () -> None
         html.set_output_format("json")
         # TODO: Move ajax_handler to this class? Should we also move the autocomplete_choices()?
         TextAsciiAutocomplete.ajax_handler()
@@ -1118,6 +1155,7 @@ class HostAddress(TextAscii):
         self._allow_ipv6_address = allow_ipv6_address
 
     def _validate_value(self, value, varprefix):
+        # type: (str, str) -> None
         if value and self._allow_host_name and self._is_valid_host_name(value):
             pass
         elif value and self._allow_ipv4_address and self._is_valid_ipv4_address(value):
@@ -1131,6 +1169,7 @@ class HostAddress(TextAscii):
                   "either as %s.") % ", ".join(self._allowed_type_names()))
 
     def _is_valid_host_name(self, hostname):
+        # type: (str) -> bool
         # http://stackoverflow.com/questions/2532053/validate-a-hostname-string/2532344#2532344
         if len(hostname) > 255:
             return False
@@ -1148,6 +1187,7 @@ class HostAddress(TextAscii):
         return all(allowed.match(x) for x in hostname.split("."))
 
     def _is_valid_ipv4_address(self, address):
+        # type: (str) -> bool
         # http://stackoverflow.com/questions/319279/how-to-validate-ip-address-in-python/4017219#4017219
         try:
             socket.inet_pton(socket.AF_INET, address)
@@ -1165,6 +1205,7 @@ class HostAddress(TextAscii):
         return True
 
     def _is_valid_ipv6_address(self, address):
+        # type: (str) -> bool
         # http://stackoverflow.com/questions/319279/how-to-validate-ip-address-in-python/4017219#4017219
         try:
             address = address.split('%')[0]
@@ -1174,7 +1215,8 @@ class HostAddress(TextAscii):
         return True
 
     def _allowed_type_names(self):
-        allowed = []
+        # type: () -> List[Text]
+        allowed = []  # type: List[Text]
         if self._allow_host_name:
             allowed.append(_("Host- or DNS name"))
 
@@ -1187,21 +1229,36 @@ class HostAddress(TextAscii):
         return allowed
 
 
-# TODO: Cleanup kwargs
-def AbsoluteDirname(**kwargs):
+def AbsoluteDirname(  # pylint: disable=redefined-builtin
+    # TextAscii
+    allow_empty=True,  # type: bool
+    size=25,  # type: Union[int, str]
+    # ValueSpec
+    title=None,  # type: TypingOptional[Text]
+    help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+    default_value=_DEF_VALUE,  # type: Any
+    validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+):
+    # type: (...) -> TextAscii
     return TextAscii(
         regex=re.compile('^(/|(/[^/]+)+)$'),
         regex_error=_("Please enter a valid absolut pathname with / as a path separator."),
-        **kwargs)
+        allow_empty=allow_empty,
+        size=size,
+        title=title,
+        help=help,
+        default_value=default_value,
+        validate=validate,
+    )
 
 
 class Url(TextAscii):
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        default_scheme,  # type: Text
-        allowed_schemes,  # type: List[Text]
+        default_scheme,  # type: str
+        allowed_schemes,  # type: List[str]
         show_as_link=False,  # type: bool
-        target=None,  # type: TypingOptional[Text]
+        target=None,  # type: TypingOptional[str]
         # TextAscii
         label=None,  # type: TypingOptional[Text]
         size=64,  # type: Union[int, str]
@@ -1253,6 +1310,8 @@ class Url(TextAscii):
         self._link_target = target
 
     def _validate_value(self, value, varprefix):
+        # type: (str, str) -> None
+        assert value is not None
         super(Url, self)._validate_value(value, varprefix)
 
         if self._allow_empty and value == "":
@@ -1269,12 +1328,14 @@ class Url(TextAscii):
                 _("Invalid URL scheme. Must be one of: %s") % ", ".join(self._allowed_schemes))
 
     def from_html_vars(self, varprefix):
+        # type: (str) -> str
         value = super(Url, self).from_html_vars(varprefix)
         if value and "://" not in value:
             value = self._default_scheme + "://" + value
         return value
 
     def value_to_text(self, value):
+        # type: (str) -> Text
         if not any(value.startswith(scheme + "://") for scheme in self._allowed_schemes):
             value = self._default_scheme + "://" + value
 
@@ -1289,9 +1350,8 @@ class Url(TextAscii):
 
         # Remove trailing / if the url does not contain any path component
         if self._show_as_link:
-            return html.render_a(text,
-                                 href=value,
-                                 target=self._link_target if self._link_target else None)
+            return u"%s" % html.render_a(
+                text, href=value, target=self._link_target if self._link_target else None)
 
         return value
 
@@ -1305,18 +1365,24 @@ def HTTPUrl(show_as_link=True, **kwargs):
                **kwargs)
 
 
-# TODO: cleanup kwargs
-def CheckMKVersion(**kwargs):
-    return TextAscii(regex=r"[0-9]+\.[0-9]+\.[0-9]+([bpi][0-9]+|i[0-9]+p[0-9]+)?$",
-                     regex_error=_("This is not a valid Checkmk version number"),
-                     **kwargs)
+def CheckMKVersion(
+    # ValueSpec
+    title=None,  # type: TypingOptional[Text]
+    default_value=_DEF_VALUE,  # type: Any
+):
+    return TextAscii(
+        regex=r"[0-9]+\.[0-9]+\.[0-9]+([bpi][0-9]+|i[0-9]+p[0-9]+)?$",
+        regex_error=_("This is not a valid Checkmk version number"),
+        title=title,
+        default_value=default_value,
+    )
 
 
 class TextAreaUnicode(TextUnicode):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         cols=60,  # type: int
-        rows=20,  # type: Union[int, Text]
+        rows=20,  # type: Union[int, str]
         minrows=0,  # type: int
         monospaced=False,  # type: bool
         # TextAscii
@@ -1371,24 +1437,28 @@ class TextAreaUnicode(TextUnicode):
         self._monospaced = monospaced  # select TT font
 
     def value_to_text(self, value):
+        # type: (Text) -> Text
         if self._monospaced:
             # TODO: This is a workaround for a bug. This function needs to return str objects right now.
             return "%s" % html.render_pre(HTML(value), class_="ve_textarea")
         return escaping.escape_attribute(value).replace("\n", "<br>")
 
-    def render_input(self, varprefix, value):
+    # TODO: Once we switched to Python 3 we can merge the unicode and non unicode class
+    def render_input(self, varprefix, value):  # type: ignore[override]
+        # type: (str, Text) -> None
         if value is None:
             value = ""  # should never happen, but avoids exception for invalid input
         if self._rows == "auto":
             func = 'cmk.valuespecs.textarea_resize(this);'
             attrs = {"onkeyup": func, "onmousedown": func, "onmouseup": func, "onmouseout": func}
             if html.request.has_var(varprefix):
-                rows = len(html.request.var(varprefix).splitlines())
+                rows = len(self.from_html_vars(varprefix).splitlines())
             else:
                 rows = len(value.splitlines())
             rows = max(rows, self._minrows)
         else:
             attrs = {}
+            assert isinstance(self._rows, int)
             rows = self._rows
 
         if self._monospaced:
@@ -1401,9 +1471,11 @@ class TextAreaUnicode(TextUnicode):
                        try_max_width=self._try_max_width,
                        **attrs)
 
-    # Overridded because we do not want to strip() here and remove '\r'
-    def from_html_vars(self, varprefix):
-        text = html.request.get_unicode_input(varprefix, "").replace('\r', '')
+    # Overridden because we do not want to strip() here and remove '\r'
+    # TODO: Once we switched to Python 3 we can merge the unicode and non unicode class
+    def from_html_vars(self, varprefix):  # type: ignore[override]
+        # type: (str) -> Text
+        text = html.request.get_unicode_input_mandatory(varprefix, "").replace('\r', '')
         if text and not text.endswith("\n"):
             text += "\n"  # force newline at end
         return text
@@ -1417,8 +1489,8 @@ class Filename(TextAscii):
     # TODO: Cleanup default / default_value?
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        default="/tmp/foo",  # type: Text
-        trans_func=None,  # type: TypingOptional[Callable[[Text], Text]]
+        default="/tmp/foo",  # type: str
+        trans_func=None,  # type: TypingOptional[Callable[[str], str]]
         # TextAscii
         label=None,  # type: TypingOptional[Text]
         size=60,  # type: Union[int, str]
@@ -1468,9 +1540,11 @@ class Filename(TextAscii):
         self._trans_func = trans_func
 
     def canonical_value(self):
+        # type: () -> str
         return self._default_path
 
     def _validate_value(self, value, varprefix):
+        # type: (str, str) -> None
         # The transformation function only changes the value for validation. This is
         # usually a function which is later also used within the code which uses
         # this variable to e.g. replace macros
@@ -1534,6 +1608,7 @@ class ListOfStrings(ValueSpec):
         self._split_separators = split_separators
 
     def help(self):
+        # type: () -> Union[Text, HTML, None]
         help_texts = [
             super(ListOfStrings, self).help(),
             self._valuespec.help(),
@@ -1546,9 +1621,10 @@ class ListOfStrings(ValueSpec):
                   "then be split by these separators and the single parts are added into dedicated "
                   "input fields.") % self._split_separators)
 
-        return " ".join([t for t in help_texts if t])
+        return u" ".join(u"%s" % t for t in help_texts if t)
 
     def render_input(self, varprefix, value):
+        # type: (str, List[str]) -> None
         # Form already submitted?
         if html.request.has_var(varprefix + "_0"):
             value = self.from_html_vars(varprefix)
@@ -1581,9 +1657,11 @@ class ListOfStrings(ValueSpec):
                             self._split_on_paste), json.dumps(self._split_separators)))
 
     def canonical_value(self):
+        # type: () -> List[str]
         return []
 
     def value_to_text(self, value):
+        # type: (List[str]) -> Text
         if not value:
             return self._empty_text
 
@@ -1594,21 +1672,23 @@ class ListOfStrings(ValueSpec):
                 for v in value
             ]
             return "%s" % html.render_table(HTML().join(s))
-        return ", ".join([self._valuespec.value_to_text(v) for v in value])
+        return u", ".join([self._valuespec.value_to_text(v) for v in value])
 
     def from_html_vars(self, varprefix):
-        value = []
+        # type: (str) -> List[str]
+        value = []  # type: List[str]
         nr = 0
         while True:
             varname = varprefix + "_%d" % nr
             if not html.request.has_var(varname):
                 break
-            if html.request.var(varname, "").strip():
+            if html.request.get_str_input_mandatory(varname, "").strip():
                 value.append(self._valuespec.from_html_vars(varname))
             nr += 1
         return value
 
     def validate_datatype(self, value, varprefix):
+        # type: (List[str], str) -> None
         if not isinstance(value, list):
             raise MKUserError(
                 varprefix,
@@ -1617,6 +1697,7 @@ class ListOfStrings(ValueSpec):
             self._valuespec.validate_datatype(s, varprefix + "_%d" % nr)
 
     def _validate_value(self, value, varprefix):
+        # type: (List[str], str) -> None
         if len(value) == 0 and not self._allow_empty:
             if self._empty_text:
                 msg = self._empty_text
@@ -1663,7 +1744,7 @@ class ListOf(ValueSpec):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         valuespec,  # type: ValueSpec
-        magic="@!@",  # type: Text
+        magic="@!@",  # type: str
         add_label=None,  # type: TypingOptional[Text]
         del_label=None,  # type: TypingOptional[Text]
         movable=True,  # type: bool
@@ -1707,6 +1788,7 @@ class ListOf(ValueSpec):
     # numbering in labels, etc. possible). The current number
     # of entries is stored in the hidden variable 'varprefix'
     def render_input(self, varprefix, value):
+        # type: (str, List[Any]) -> None
         html.open_div(class_=["valuespec_listof", self._style.value])
 
         # Beware: the 'value' is only the default value in case the form
@@ -1741,6 +1823,7 @@ class ListOf(ValueSpec):
             html.javascript("cmk.valuespecs.listof_update_indices(%s)" % json.dumps(varprefix))
 
     def _show_entries(self, varprefix, value):
+        # type: (str, List[Any]) -> None
         if self._style == ListOf.Style.REGULAR:
             self._show_current_entries(varprefix, value)
             html.br()
@@ -1764,6 +1847,7 @@ class ListOf(ValueSpec):
             raise NotImplementedError()
 
     def _list_buttons(self, varprefix):
+        # type: (str) -> None
         html.jsbutton(
             varprefix + "_add", self._add_label, "cmk.valuespecs.listof_add(%s, %s, %s)" %
             (json.dumps(varprefix), json.dumps(self._magic), json.dumps(self._style.value)))
@@ -1774,6 +1858,7 @@ class ListOf(ValueSpec):
                 (json.dumps(varprefix), json.dumps(self._magic), json.dumps(self._sort_by)))
 
     def _show_reference_entry(self, varprefix, index, value):
+        # type: (str, str, Any) -> None
         if self._style == ListOf.Style.REGULAR:
             html.open_table(style="display:none;")
             html.open_tbody(id_="%s_prototype" % varprefix, class_="vlof_prototype")
@@ -1796,6 +1881,7 @@ class ListOf(ValueSpec):
             raise NotImplementedError()
 
     def _show_current_entries(self, varprefix, value):
+        # type: (str, Any) -> None
         if self._style == ListOf.Style.REGULAR:
             html.open_table(class_=["valuespec_listof"])
             html.open_tbody(id_="%s_container" % varprefix)
@@ -1819,6 +1905,7 @@ class ListOf(ValueSpec):
             raise NotImplementedError()
 
     def _show_entry(self, varprefix, index, value):
+        # type: (str, str, Any) -> None
         entry_id = "%s_entry_%s" % (varprefix, index)
 
         if self._style == ListOf.Style.REGULAR:
@@ -1839,6 +1926,7 @@ class ListOf(ValueSpec):
             raise NotImplementedError()
 
     def _show_entry_cell(self, varprefix, index, value):
+        # type: (str, str, Any) -> None
         html.open_td(class_="vlof_buttons")
 
         html.hidden_field(varprefix + "_indexof_" + index, "", add_var=True,
@@ -1861,13 +1949,16 @@ class ListOf(ValueSpec):
         html.close_td()
 
     def _del_button(self, vp, nr):
+        # type: (str, str) -> None
         js = "cmk.valuespecs.listof_delete(%s, %s)" % (json.dumps(vp), json.dumps(nr))
         html.icon_button("#", self._del_label, "delete", onclick=js)
 
     def canonical_value(self):
+        # type: () -> List[Any]
         return []
 
     def value_to_text(self, value):
+        # type: (List[Any]) -> Text
         if self._totext:
             if "%d" in self._totext:
                 return self._totext % len(value)
@@ -1880,6 +1971,7 @@ class ListOf(ValueSpec):
         return "%s" % html.render_table(HTML().join(s))
 
     def get_indexes(self, varprefix):
+        # type: (str) -> Dict[int, int]
         count = html.request.get_integer_input_mandatory(varprefix + "_count", 0)
         n = 1
         indexes = {}
@@ -1892,6 +1984,7 @@ class ListOf(ValueSpec):
         return indexes
 
     def from_html_vars(self, varprefix):
+        # type: (str) -> List[Any]
         indexes = self.get_indexes(varprefix)
         value = []
         k = sorted(indexes.keys())
@@ -1901,12 +1994,14 @@ class ListOf(ValueSpec):
         return value
 
     def validate_datatype(self, value, varprefix):
+        # type: (List[Any], str) -> None
         if not isinstance(value, list):
             raise MKUserError(varprefix, _("The type must be list, but is %s") % _type_name(value))
         for n, v in enumerate(value):
             self._valuespec.validate_datatype(v, varprefix + "_%d" % (n + 1))
 
     def _validate_value(self, value, varprefix):
+        # type: (List[Any], str) -> None
         if not self._allow_empty and len(value) == 0:
             raise MKUserError(varprefix, self._empty_text)
         for n, v in enumerate(value):
@@ -1919,7 +2014,7 @@ class ListOfMultiple(ValueSpec):
     """
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        choices,  # type: List[TypingTuple[str, Text]]
+        choices,  # type: List[TypingTuple[str, ValueSpec]]
         choice_page_name,  # type: str
         page_request_vars=None,  # type: Dict[Text, Text]
         size=None,  # type: TypingOptional[int]
@@ -1945,11 +2040,13 @@ class ListOfMultiple(ValueSpec):
         self._delete_style = delete_style  # or "filter"
 
     def del_button(self, varprefix, ident):
+        # type: (str, str) -> None
         js = "cmk.valuespecs.listofmultiple_del(%s, %s)" % (json.dumps(varprefix),
                                                             json.dumps(ident))
         html.icon_button("#", self._del_label, "delete", onclick=js)
 
     def render_input(self, varprefix, value):
+        # type: (str, Dict[str, Any]) -> None
         # Beware: the 'value' is only the default value in case the form
         # has not yet been filled in. In the complain phase we must
         # ignore 'value' but reuse the input from the HTML variables -
@@ -1983,7 +2080,8 @@ class ListOfMultiple(ValueSpec):
         html.close_tbody()
         html.close_table()
 
-        choices = [('', '')] + [(ident, vs.title()) for ident, vs in self._choices]
+        choices = [('', u'')]  # type: Choices
+        choices += [(ident, vs.title() or u"") for ident, vs in self._choices]
         html.dropdown(varprefix + '_choice',
                       choices,
                       style="width: %dex" % self._size if self._size is not None else None,
@@ -1995,6 +2093,7 @@ class ListOfMultiple(ValueSpec):
                 self._choice_page_name), json.dumps(self._page_request_vars)))
 
     def show_choice_row(self, varprefix, ident, value):
+        # type: (str, str, Dict[str, Any]) -> None
         prefix = varprefix + '_' + ident
         html.open_tr(id_="%s_row" % prefix)
         if self._delete_style == "filter":
@@ -2006,20 +2105,24 @@ class ListOfMultiple(ValueSpec):
         html.close_tr()
 
     def _show_content(self, varprefix, ident, value):
+        # type: (str, str, Dict[str, Any]) -> None
         prefix = varprefix + '_' + ident
         html.open_td(class_=["vlof_content"])
         self._choice_dict[ident].render_input(prefix, value.get(ident))
         html.close_td()
 
     def _show_del_button(self, varprefix, ident):
+        # type: (str, str) -> None
         html.open_td(class_=["vlof_buttons"])
         self.del_button(varprefix, ident)
         html.close_td()
 
     def canonical_value(self):
+        # type: () -> Dict[str, Any]
         return {}
 
     def value_to_text(self, value):
+        # type: (Dict[str, Any]) -> Text
         table_content = HTML()
         for ident, val in value:
             vs = self._choice_dict[ident]
@@ -2029,8 +2132,9 @@ class ListOfMultiple(ValueSpec):
         return "%s" % html.render_table(table_content)
 
     def from_html_vars(self, varprefix):
-        value = {}
-        active = html.request.var('%s_active' % varprefix).strip()
+        # type: (str) -> Dict[str, Any]
+        value = {}  # type: Dict[str, Any]
+        active = html.request.get_str_input_mandatory('%s_active' % varprefix).strip()
         if not active:
             return value
 
@@ -2040,12 +2144,14 @@ class ListOfMultiple(ValueSpec):
         return value
 
     def validate_datatype(self, value, varprefix):
+        # type: (Dict[str, Any], str) -> None
         if not isinstance(value, dict):
             raise MKUserError(varprefix, _("The type must be dict, but is %s") % _type_name(value))
         for ident, val in value.items():
             self._choice_dict[ident].validate_datatype(val, varprefix + '_' + ident)
 
     def _validate_value(self, value, varprefix):
+        # type: (Dict[str, Any], str) -> None
         for ident, val in value.items():
             self._choice_dict[ident].validate_value(val, varprefix + '_' + ident)
 
@@ -2053,13 +2159,16 @@ class ListOfMultiple(ValueSpec):
 class ABCPageListOfMultipleGetChoice(six.with_metaclass(abc.ABCMeta, AjaxPage)):
     @abc.abstractmethod
     def _get_choices(self, request):
+        # type: (Dict[Text, Text]) -> List[TypingTuple[str, ValueSpec]]
         raise NotImplementedError()
 
     def page(self):
+        # type: () -> Dict
         request = html.get_request()
         vs = ListOfMultiple(self._get_choices(request), "unused_dummy_page")
         with html.plugged():
-            vs.show_choice_row(request["varprefix"], request["ident"], {})
+            vs.show_choice_row(six.ensure_str(request["varprefix"]),
+                               six.ensure_str(request["ident"]), {})
             return {"html_code": html.drain()}
 
 
@@ -2071,8 +2180,8 @@ class Float(Integer):
         allow_int=False,  # type: bool
         # Integer
         size=None,  # type: TypingOptional[int]
-        minvalue=None,  # type: TypingOptional[Union[int, float]]
-        maxvalue=None,  # type: TypingOptional[Union[int, float]]
+        minvalue=None,  # type: TypingOptional[float]
+        maxvalue=None,  # type: TypingOptional[float]
         label=None,  # type: TypingOptional[Text]
         unit="",  # type: Text
         thousand_sep=None,  # type: TypingOptional[Text]
@@ -2100,17 +2209,22 @@ class Float(Integer):
         self._allow_int = allow_int
 
     def _render_value(self, value):
+        # type: (float) -> Text
         return self._display_format % utils.savefloat(value)
 
     def canonical_value(self):
+        # type: () -> float
         return float(Integer.canonical_value(self))
 
     def value_to_text(self, value):
+        # type: (float) -> Text
         return super(Float, self).value_to_text(value).replace(".", self._decimal_separator)
 
-    def from_html_vars(self, varprefix):
+    # TODO: Cleanup this hierarchy problem
+    def from_html_vars(self, varprefix):  # type: ignore[override]
+        # type: (str) -> float
         try:
-            return float(html.request.var(varprefix))
+            return float(html.request.get_str_input_mandatory(varprefix, ""))
         except Exception:
             raise MKUserError(
                 varprefix,
@@ -2118,6 +2232,7 @@ class Float(Integer):
                 html.request.var(varprefix))
 
     def validate_datatype(self, value, varprefix):
+        # type: (float, str) -> None
         if isinstance(value, float):
             return
 
@@ -2167,9 +2282,11 @@ class Percentage(Float):
                                          validate=validate)
 
     def value_to_text(self, value):
+        # type: (float) -> Text
         return (self._display_format + "%%") % value
 
     def validate_datatype(self, value, varprefix):
+        # type: (float, str) -> None
         if self._allow_int:
             if not isinstance(value, (int, float)):
                 raise MKUserError(
@@ -2202,18 +2319,23 @@ class Checkbox(ValueSpec):
         self._onclick = onclick
 
     def canonical_value(self):
+        # type: () -> bool
         return False
 
     def render_input(self, varprefix, value):
+        # type: (str, bool) -> None
         html.checkbox(varprefix, value, label=self._label, onclick=self._onclick)
 
     def value_to_text(self, value):
+        # type: (bool) -> Text
         return self._true_label if value else self._false_label
 
     def from_html_vars(self, varprefix):
+        # type: (str) -> bool
         return bool(html.request.var(varprefix))
 
     def validate_datatype(self, value, varprefix):
+        # type: (bool, str) -> None
         if not isinstance(value, bool):
             raise MKUserError(
                 varprefix,
@@ -4740,8 +4862,10 @@ class Transform(ValueSpec):
         return self._valuespec.title()
 
     def help(self):
-        if self._help:
-            return self._help
+        # type: () -> Union[Text, HTML, None]
+        transform_help = super(Transform, self).help()
+        if transform_help:
+            return transform_help
         return self._valuespec.help()
 
     def render_input(self, varprefix, value):

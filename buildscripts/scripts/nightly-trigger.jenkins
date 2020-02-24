@@ -2,8 +2,10 @@ BRANCH_NAME = scm.branches[0].name
 FOLDER_ID = currentBuild.fullProjectName.split('/')[0]
 
 def DISTRO_LIST_DEFAULT = ''
+def NODE = ''
 withFolderProperties{
     DISTRO_LIST_DEFAULT = env.DISTRO_LIST
+    NODE = env.BUILD_NODE
 }
 
 properties([
@@ -18,6 +20,7 @@ properties([
 ])
 
 node: {
+    label 'NODE'
     stage('Build Packages') {
         build(job: "${FOLDER_ID}/nightly_build_containerized",
               parameters: [

@@ -1,12 +1,15 @@
 import java.text.SimpleDateFormat
 
 def DISTRO_LIST_DEFAULT = ''
+def NODE = ''
 withFolderProperties{
     if(JOB_BASE_NAME == 'nightly_build_containerized') {
         DISTRO_LIST_DEFAULT = env.DISTRO_LIST
     } else {
         DISTRO_LIST_DEFAULT = env.DISTRO_LIST_TESTBUILD
     }
+
+    NODE = env.BUILD_NODE
 }
 
 properties([
@@ -58,7 +61,7 @@ def DOCKER_ARGS = "${DOCKER_BASE_ARGS} -v ${DAILY_DATA}:${DAILY_DATA} -v ${ARCHI
 // MAIN
 //
 
-node {
+node(NODE) {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         docker.image(BUILD_IMAGE).inside(DOCKER_BASE_ARGS + " -v ${DAILY_DATA_BASE_DIR}:${DAILY_DATA_BASE_DIR}") {
             stage('Checkout sources') {
@@ -105,7 +108,7 @@ AGENT_LIST.each { AGENT ->
             }
         }
         else {
-            node {
+            node(NODE) {
                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                     docker.image('agent-builder-' + AGENT).inside(DOCKER_ARGS + " --privileged") {
                         build_agent_related_artifact(DAILY_DATA, WORKSPACE, AGENT, EDITION)
@@ -117,7 +120,7 @@ AGENT_LIST.each { AGENT ->
 }
 parallel AGENT_BUILDS
 
-node {
+node(NODE) {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro") {
             prepare_archive_dir(ARCHIVE_DIR, CMK_VERS)
@@ -139,7 +142,7 @@ node {
 
 DISTRO_LIST.each { DISTRO ->
     PACKAGE_BUILDS[DISTRO] = {
-        node {
+        node(NODE) {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 docker.image(DISTRO + ':' + DOCKER_TAG).inside(DOCKER_ARGS + " --privileged --hostname ${DISTRO}") {
                     withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
@@ -149,7 +152,7 @@ DISTRO_LIST.each { DISTRO ->
                 }
             }
         }
-        node {
+        node(NODE) {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
                     def PACKAGE_NAME = get_package_name(DAILY_DATA, DISTRO, CMK_VERS)

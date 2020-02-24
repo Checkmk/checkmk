@@ -1,6 +1,8 @@
 def DISTRO_LIST_DEFAULT
+def NODE = ''
 withFolderProperties{
     DISTRO_LIST_DEFAULT = env.DISTRO_LIST
+    NODE = env.BUILD_NODE
 }
 
 properties([
@@ -13,7 +15,7 @@ def DISTRO_LIST = DISTROS.split(' ')
 def DOCKER_BUILDS = [:]
 
 currentBuild.description = 'Building for the following Distros:\n' + DISTRO_LIST
-node {
+node (NODE) {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         def COMMON_IMAGE = docker.image('ubuntu-18.04-common')
         COMMON_IMAGE.pull()
@@ -43,7 +45,7 @@ node {
 
 DISTRO_LIST.each { DISTRO ->
     DOCKER_BUILDS[DISTRO] = {
-        node {
+        node (NODE) {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 def COMMON_IMAGE = docker.image('ubuntu-18.04-common')
                 COMMON_IMAGE.pull()

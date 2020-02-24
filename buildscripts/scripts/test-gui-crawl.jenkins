@@ -1,8 +1,13 @@
+def NODE = ''
+withFolderProperties{
+    NODE = env.BUILD_NODE
+}
+
 properties([
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
 ])
 
-node {
+node(NODE) {
     // First use one container with network access to check out the repository
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         def COMMON_IMAGE = docker.image('ubuntu-18.04-common')

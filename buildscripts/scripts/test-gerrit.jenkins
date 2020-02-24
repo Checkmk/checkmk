@@ -2,7 +2,13 @@ throttle(['Gerrit']){
 properties([
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '200')),
 ])
-node {
+
+def NODE = ''
+withFolderProperties{
+    NODE = env.BUILD_NODE
+}
+
+node (NODE) {
     def WORKSPACE = pwd()
     def RESULTS = WORKSPACE + "/results"
 

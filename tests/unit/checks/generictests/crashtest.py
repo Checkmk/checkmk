@@ -31,12 +31,18 @@ Note that this will only work, if the crash report contains the
 local variables 'parsed' or 'info'.
 """
 from __future__ import print_function
+import sys
 import base64
 import json
 import tarfile
 import pprint
-import pytest
-from pathlib2 import Path
+import pytest  # type: ignore[import]
+
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
 import generictests
 from generictests.regression import WritableDataset

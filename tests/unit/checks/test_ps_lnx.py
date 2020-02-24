@@ -30,6 +30,6 @@ def test_parse_ps_lnx(check_manager, info, attrs, cmd):
     parsed_line = parse_ps_lnx(info)[0]
     ps_info, parsed_cmd = parsed_line[1], parsed_line[2:]
 
-    for key, value in attrs.iteritems():
+    for key, value in attrs.items():
         assert getattr(ps_info, key) == value
     assert parsed_cmd == cmd

@@ -98,51 +98,55 @@ check_ref = namedtuple('result', ['parameters', 'check_output'])
 
 @pytest.mark.parametrize(
     "capture, result",
-    zip(agent_out, [
-        check_ref(
-            {
-                'status': ['Licensed', 'Initial grace period'],
-                'expiration_time': (8 * 24 * 60 * 60, 5 * 24 * 60 * 60),
-            },
-            CheckResult([
-                (0, "Software is Initial grace period"),
-                (0, "License will expire in 9 d"),
-            ])),
-        check_ref(
-            {
-                'status': ['Licensed', 'Initial grace period'],
-                'expiration_time': (180 * 24 * 60 * 60, 90 * 24 * 60 * 60),
-            },
-            CheckResult([
-                (0, "Software is Licensed"),
-                (1, "License will expire in 176 d (warn/crit at 180 d/90 d)"),
-            ])),
-        check_ref(
-            {
-                'status': ['Licensed', 'Initial grace period'],
-                'expiration_time': (360 * 24 * 60 * 60, 180 * 24 * 60 * 60),
-            },
-            CheckResult([
-                (0, "Software is Licensed"),
-                (2, "License will expire in 174 d (warn/crit at 360 d/180 d)"),
-            ])),
-        check_ref(
-            {
-                'status': ['Licensed', 'Initial grace period'],
-                'expiration_time': (14 * 24 * 60 * 60, 7 * 24 * 60 * 60),
-            }, CheckResult([(0, "Software is Licensed")])),
-    ]) + zip(agent_out, [
-        check_ref(
-            {
-                'status': ["Registered"],
-                'expiration_time': (8 * 24 * 60 * 60, 5 * 24 * 60 * 60),
-            },
-            CheckResult([(2, "Software is Initial grace period Required: Registered"),
-                         (0, 'License will expire in 9 d')])),
-        check_ref(None,
-                  CheckResult([(0, "Software is Licensed"), (0, 'License will expire in 176 d')])),
-    ]),
-    ids=map(str, range(6)))
+    list(
+        zip(agent_out, [
+            check_ref(
+                {
+                    'status': ['Licensed', 'Initial grace period'],
+                    'expiration_time': (8 * 24 * 60 * 60, 5 * 24 * 60 * 60),
+                },
+                CheckResult([
+                    (0, "Software is Initial grace period"),
+                    (0, "License will expire in 9 d"),
+                ])),
+            check_ref(
+                {
+                    'status': ['Licensed', 'Initial grace period'],
+                    'expiration_time': (180 * 24 * 60 * 60, 90 * 24 * 60 * 60),
+                },
+                CheckResult([
+                    (0, "Software is Licensed"),
+                    (1, "License will expire in 176 d (warn/crit at 180 d/90 d)"),
+                ])),
+            check_ref(
+                {
+                    'status': ['Licensed', 'Initial grace period'],
+                    'expiration_time': (360 * 24 * 60 * 60, 180 * 24 * 60 * 60),
+                },
+                CheckResult([
+                    (0, "Software is Licensed"),
+                    (2, "License will expire in 174 d (warn/crit at 360 d/180 d)"),
+                ])),
+            check_ref(
+                {
+                    'status': ['Licensed', 'Initial grace period'],
+                    'expiration_time': (14 * 24 * 60 * 60, 7 * 24 * 60 * 60),
+                }, CheckResult([(0, "Software is Licensed")])),
+        ])) +
+    list(
+        zip(agent_out, [
+            check_ref(
+                {
+                    'status': ["Registered"],
+                    'expiration_time': (8 * 24 * 60 * 60, 5 * 24 * 60 * 60),
+                },
+                CheckResult([(2, "Software is Initial grace period Required: Registered"),
+                             (0, 'License will expire in 9 d')])),
+            check_ref(
+                None, CheckResult([(0, "Software is Licensed"),
+                                   (0, 'License will expire in 176 d')])),
+        ])),
+    ids=list(map(str, range(6))))
 def test_check_win_license(check_manager, capture, result):
     check = check_manager.get_check("win_license")
     output = check.run_check(None, result.parameters or check.default_parameters(),

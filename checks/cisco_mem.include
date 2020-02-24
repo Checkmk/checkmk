@@ -79,7 +79,7 @@ def check_cisco_mem_sub(item, params, mem_used, mem_total):
 
     warn, crit = params.get("levels", (None, None))
     mode = get_levels_mode_from_value(warn)
-    if isinstance(warn, (int, long)):
+    if isinstance(warn, six.integer_types):
         warn *= 1048576  # convert from megabyte to byte
         crit *= 1048576
     if warn is not None:

@@ -1,5 +1,12 @@
 """Helpers for generictests"""
-from pathlib2 import Path
+
+import sys
+
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
 EXCLUDES = ('', '__init__', 'conftest', '__pycache__')
 

@@ -6,6 +6,7 @@
 import os
 import re
 import pytest
+import six
 
 pytestmark = pytest.mark.checks
 
@@ -14,21 +15,21 @@ regex = re.compile
 exec (open(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docker.include')).read())
 
 REQUIRED_IMAGE_KEYS = (
-    ("Id", (str, unicode)),
+    ("Id", (str, six.text_type)),
     ("RepoTags", list),
-    ("Created", (str, unicode)),
+    ("Created", (str, six.text_type)),
     ("VirtualSize", int),
     ("Labels", dict),
     ("amount_containers", int),
 )
 
 REQUIRED_CONTAINER_KEYS = (
-    ("Id", (str, unicode)),
-    ("Image", (str, unicode)),
-    ("Created", (str, unicode)),
+    ("Id", (str, six.text_type)),
+    ("Image", (str, six.text_type)),
+    ("Created", (str, six.text_type)),
     ("Labels", dict),
-    ("Name", (str, unicode)),
-    ("Status", (str, unicode)),
+    ("Name", (str, six.text_type)),
+    ("Status", (str, six.text_type)),
 )
 
 SUBSECTIONS1 = {
@@ -291,14 +292,14 @@ SUBSECTIONS1 = {
             'CEST","ID":"fdd04795069e","Image":"checkmk/check-mk-raw:1.5.0p5","Labels":"org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com","LocalVolumes":"1","Mounts":"/etc/localtime,10b7c962177bf2…","Names":"monitoringx","Networks":"bridge","Ports":"","RunningFor":"7',
             'hours', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/docker-entrypoint.…\\"","CreatedAt":"2018-10-10', '08:40:21', '+0200',
             'CEST","ID":"b17185d5dcc5","Image":"94f49a7afedb","Labels":"org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk","LocalVolumes":"0","Mounts":"","Names":"friendly_banach","Networks":"bridge","Ports":"","RunningFor":"2',
@@ -308,7 +309,7 @@ SUBSECTIONS1 = {
             '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:40:20',
             '+0200',
             'CEST","ID":"73237ecc5183","Image":"d27276979703","Labels":"org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk","LocalVolumes":"0","Mounts":"","Names":"festive_stallman","Networks":"bridge","Ports":"","RunningFor":"2',
@@ -320,7 +321,7 @@ SUBSECTIONS1 = {
             'CEST","ID":"0d7e34ebb911","Image":"03d98e475cd6","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=2018.10.10","LocalVolumes":"0","Mounts":"","Names":"youthful_pare","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
@@ -328,7 +329,7 @@ SUBSECTIONS1 = {
             '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:40:20',
             '+0200',
             'CEST","ID":"580a7b4bd20a","Image":"3e0dd44b22e4","Labels":"org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk","LocalVolumes":"0","Mounts":"","Names":"reverent_proskuriakova","Networks":"bridge","Ports":"","RunningFor":"2',
@@ -349,7 +350,7 @@ SUBSECTIONS1 = {
         [
             '{"Command":"\\"/docker-entrypoint.…\\"","CreatedAt":"2018-10-10', '08:37:26', '+0200',
             'CEST","ID":"6fe73b950209","Image":"d4c95e27986c","Labels":"org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk","LocalVolumes":"0","Mounts":"","Names":"admiring_haibt","Networks":"bridge","Ports":"","RunningFor":"2',
@@ -359,7 +360,7 @@ SUBSECTIONS1 = {
             '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:37:26',
             '+0200',
             'CEST","ID":"bfdb64ccf0ba","Image":"21b2f3d5e6c0","Labels":"org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\u0026', 'Application',
             'Monitoring","LocalVolumes":"0","Mounts":"","Names":"lucid_bohr","Networks":"bridge","Ports":"","RunningFor":"2',
@@ -371,7 +372,7 @@ SUBSECTIONS1 = {
             'CEST","ID":"24772268cc09","Image":"6e66f5473958","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=1.5.0p5","LocalVolumes":"0","Mounts":"","Names":"zen_bartik","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
@@ -381,7 +382,7 @@ SUBSECTIONS1 = {
             'CEST","ID":"8f8ded35fc90","Image":"6bccd8c3ed71","Labels":"org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH","LocalVolumes":"0","Mounts":"","Names":"keen_cori","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
@@ -1297,7 +1298,7 @@ SUBSECTIONS2 = {
             '{"Command":"\\"/docker-entrypoint.\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
             '16:12:02', '+0200',
             'CEST","ID":"11893c5d9694","Image":"559214f8c758","Labels":"org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk","LocalVolumes":"0","Mounts":"","Names":"affectionate_shannon","Networks":"bridge","Ports":"","RunningFor":"3',
@@ -1309,7 +1310,7 @@ SUBSECTIONS2 = {
             'CEST","ID":"95796d6d26db","Image":"fcd54dfcb5b8","Labels":"org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH","LocalVolumes":"0","Mounts":"","Names":"distracted_heisenberg","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
@@ -1319,7 +1320,7 @@ SUBSECTIONS2 = {
             'CEST","ID":"58ea2160fe8f","Image":"3bd4e802a09f","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=1.5.0p5","LocalVolumes":"0","Mounts":"","Names":"lucid_kowalevski","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
@@ -1329,7 +1330,7 @@ SUBSECTIONS2 = {
             'CEST","ID":"74ee5065acb2","Image":"a0529d041d12","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=1.5.0p5","LocalVolumes":"0","Mounts":"","Names":"peaceful_joliot","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
@@ -1377,7 +1378,7 @@ SUBSECTIONS2 = {
             'CEST","ID":"fdd04795069e","Image":"checkmk/check-mk-raw:1.5.0p5","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=1.5.0p5","LocalVolumes":"1","Mounts":"/etc/localtime,10b7c962177bf2\xe2\x80\xa6","Names":"monitoringx","Networks":"bridge","Ports":"6557/tcp,',
             '0.0.0.0:8080-\\u003e5000/tcp","RunningFor":"4', 'days',
             'ago","Size":"0B","Status":"Up', '6', 'hours', '(healthy)"}'
@@ -1386,7 +1387,7 @@ SUBSECTIONS2 = {
             '{"Command":"\\"/docker-entrypoint.\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:40:21', '+0200',
             'CEST","ID":"b17185d5dcc5","Image":"94f49a7afedb","Labels":"org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk","LocalVolumes":"0","Mounts":"","Names":"friendly_banach","Networks":"bridge","Ports":"","RunningFor":"6',
@@ -1396,7 +1397,7 @@ SUBSECTIONS2 = {
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:40:20', '+0200',
             'CEST","ID":"73237ecc5183","Image":"d27276979703","Labels":"org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk","LocalVolumes":"0","Mounts":"","Names":"festive_stallman","Networks":"bridge","Ports":"","RunningFor":"6',
@@ -1408,7 +1409,7 @@ SUBSECTIONS2 = {
             'CEST","ID":"0d7e34ebb911","Image":"03d98e475cd6","Labels":"org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH","LocalVolumes":"0","Mounts":"","Names":"youthful_pare","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
@@ -1416,7 +1417,7 @@ SUBSECTIONS2 = {
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:40:20', '+0200',
             'CEST","ID":"580a7b4bd20a","Image":"3e0dd44b22e4","Labels":"org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/","LocalVolumes":"0","Mounts":"","Names":"reverent_proskuriakova","Networks":"bridge","Ports":"","RunningFor":"6',
@@ -1440,7 +1441,7 @@ SUBSECTIONS2 = {
             'CEST","ID":"6fe73b950209","Image":"d4c95e27986c","Labels":"org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH","LocalVolumes":"0","Mounts":"","Names":"admiring_haibt","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
@@ -1450,7 +1451,7 @@ SUBSECTIONS2 = {
             'CEST","ID":"bfdb64ccf0ba","Image":"21b2f3d5e6c0","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=1.5.0p5","LocalVolumes":"0","Mounts":"","Names":"lucid_bohr","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
@@ -1458,7 +1459,7 @@ SUBSECTIONS2 = {
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:37:25', '+0200',
             'CEST","ID":"24772268cc09","Image":"6e66f5473958","Labels":"org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk","LocalVolumes":"0","Mounts":"","Names":"zen_bartik","Networks":"bridge","Ports":"","RunningFor":"6',
@@ -1468,7 +1469,7 @@ SUBSECTIONS2 = {
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:37:25', '+0200',
             'CEST","ID":"8f8ded35fc90","Image":"6bccd8c3ed71","Labels":"org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring","LocalVolumes":"0","Mounts":"","Names":"keen_cori","Networks":"bridge","Ports":"","RunningFor":"6',
@@ -4328,7 +4329,7 @@ SUBSECTIONS3 = {
             'CEST","ID":"11893c5d9694","Image":"559214f8c758","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=1.5.0p5","LocalVolumes":"0","Mounts":"","Names":"affectionate_shannon","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
@@ -4336,7 +4337,7 @@ SUBSECTIONS3 = {
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
             '16:12:02', '+0200',
             'CEST","ID":"95796d6d26db","Image":"fcd54dfcb5b8","Labels":"org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/","LocalVolumes":"0","Mounts":"","Names":"distracted_heisenberg","Networks":"bridge","Ports":"","RunningFor":"3',
@@ -4346,7 +4347,7 @@ SUBSECTIONS3 = {
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
             '16:12:01', '+0200',
             'CEST","ID":"58ea2160fe8f","Image":"3bd4e802a09f","Labels":"org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk","LocalVolumes":"0","Mounts":"","Names":"lucid_kowalevski","Networks":"bridge","Ports":"","RunningFor":"3',
@@ -4356,7 +4357,7 @@ SUBSECTIONS3 = {
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
             '16:12:01', '+0200',
             'CEST","ID":"74ee5065acb2","Image":"a0529d041d12","Labels":"org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk","LocalVolumes":"0","Mounts":"","Names":"peaceful_joliot","Networks":"bridge","Ports":"","RunningFor":"3',
@@ -4404,7 +4405,7 @@ SUBSECTIONS3 = {
             '{"Command":"\\"/docker-entrypoint.\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
             '09:17:54', '+0200',
             'CEST","ID":"fdd04795069e","Image":"checkmk/check-mk-raw:1.5.0p5","Labels":"org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/","LocalVolumes":"1","Mounts":"/etc/localtime,10b7c962177bf2\xe2\x80\xa6","Names":"monitoringx","Networks":"bridge","Ports":"6557/tcp,',
@@ -4415,7 +4416,7 @@ SUBSECTIONS3 = {
             '{"Command":"\\"/docker-entrypoint.\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:40:21', '+0200',
             'CEST","ID":"b17185d5dcc5","Image":"94f49a7afedb","Labels":"org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk","LocalVolumes":"0","Mounts":"","Names":"friendly_banach","Networks":"bridge","Ports":"","RunningFor":"6',
@@ -4425,7 +4426,7 @@ SUBSECTIONS3 = {
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:40:20', '+0200',
             'CEST","ID":"73237ecc5183","Image":"d27276979703","Labels":"org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/","LocalVolumes":"0","Mounts":"","Names":"festive_stallman","Networks":"bridge","Ports":"","RunningFor":"6',
@@ -4437,7 +4438,7 @@ SUBSECTIONS3 = {
             'CEST","ID":"0d7e34ebb911","Image":"03d98e475cd6","Labels":"org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"youthful_pare","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
@@ -4445,7 +4446,7 @@ SUBSECTIONS3 = {
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:40:20', '+0200',
             'CEST","ID":"580a7b4bd20a","Image":"3e0dd44b22e4","Labels":"org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring","LocalVolumes":"0","Mounts":"","Names":"reverent_proskuriakova","Networks":"bridge","Ports":"","RunningFor":"6',
@@ -4467,7 +4468,7 @@ SUBSECTIONS3 = {
             '{"Command":"\\"/docker-entrypoint.\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:37:26', '+0200',
             'CEST","ID":"6fe73b950209","Image":"d4c95e27986c","Labels":"org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk","LocalVolumes":"0","Mounts":"","Names":"admiring_haibt","Networks":"bridge","Ports":"","RunningFor":"6',
@@ -4479,7 +4480,7 @@ SUBSECTIONS3 = {
             'CEST","ID":"bfdb64ccf0ba","Image":"21b2f3d5e6c0","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=1.5.0p5","LocalVolumes":"0","Mounts":"","Names":"lucid_bohr","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
@@ -4487,7 +4488,7 @@ SUBSECTIONS3 = {
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:37:25', '+0200',
             'CEST","ID":"24772268cc09","Image":"6e66f5473958","Labels":"org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk","LocalVolumes":"0","Mounts":"","Names":"zen_bartik","Networks":"bridge","Ports":"","RunningFor":"6',
@@ -4497,7 +4498,7 @@ SUBSECTIONS3 = {
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:37:25', '+0200',
             'CEST","ID":"8f8ded35fc90","Image":"6bccd8c3ed71","Labels":"org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
-            
+
             'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring","LocalVolumes":"0","Mounts":"","Names":"keen_cori","Networks":"bridge","Ports":"","RunningFor":"6',
@@ -4796,7 +4797,7 @@ def test_parse_legacy_docker_node_images(subsections, ex_img, ex_cont):
         assert isinstance(dic, dict)
         assert key in dic, "key missing in output: %r" % key
         if isinstance(value, dict):
-            for recurse_key, recurse_value in value.iteritems():
+            for recurse_key, recurse_value in value.items():
                 assert_contains(dic[key], recurse_key, recurse_value)
         else:
             assert dic[key] == value, "expected: %r, got: %r" % (value, dic[key])
@@ -4805,12 +4806,12 @@ def test_parse_legacy_docker_node_images(subsections, ex_img, ex_cont):
     assert_contains(parsed, "images", ex_img)
     assert_contains(parsed, "containers", ex_cont)
 
-    for image in parsed["images"].itervalues():
+    for image in parsed["images"].values():
         for key, type_ in REQUIRED_IMAGE_KEYS:
             assert key in image
             assert isinstance(image[key], type_)
 
-    for container in parsed["containers"].itervalues():
+    for container in parsed["containers"].values():
         for key, type_ in REQUIRED_CONTAINER_KEYS:
             assert key in container
             assert isinstance(container[key], type_)

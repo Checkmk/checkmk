@@ -3,7 +3,8 @@ import pytest
 
 pytestmark = pytest.mark.checks
 
-execfile(os.path.join(os.path.dirname(__file__), '../../../checks/cisco_sensor_item.include'))
+exec (open(os.path.join(os.path.dirname(__file__),
+                        '../../../checks/cisco_sensor_item.include')).read())
 
 FALLBACK = '999'
 

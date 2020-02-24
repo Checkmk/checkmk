@@ -300,9 +300,7 @@ class MissingCheckInfoError(KeyError):
 class BaseCheck(six.with_metaclass(abc.ABCMeta, object)):
     """Abstract base class for Check and ActiveCheck"""
     def __init__(self, name):
-        if sys.version_info[0] < 3:
-            # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk.base.check_api_utils  # pylint: disable=import-outside-toplevel
+        import cmk.base.check_api_utils  # pylint: disable=import-outside-toplevel
         self.set_hostname = cmk.base.check_api_utils.set_hostname
         self.set_service = cmk.base.check_api_utils.set_service
         self.name = name
@@ -324,9 +322,7 @@ class BaseCheck(six.with_metaclass(abc.ABCMeta, object)):
 
 class Check(BaseCheck):
     def __init__(self, name):
-        if sys.version_info[0] < 3:
-            # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk.base.config as config  # pylint: disable=import-outside-toplevel
+        import cmk.base.config as config  # pylint: disable=import-outside-toplevel
         super(Check, self).__init__(name)
         if self.name not in config.check_info:
             raise MissingCheckInfoError(self.name)
@@ -334,9 +330,7 @@ class Check(BaseCheck):
         self.context = config._check_contexts[self.name]
 
     def default_parameters(self):
-        if sys.version_info[0] < 3:
-            # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk.base.config as config  # pylint: disable=import-outside-toplevel
+        import cmk.base.config as config  # pylint: disable=import-outside-toplevel
         params = {}
         return config._update_with_default_check_parameters(self.name, params)
 
@@ -387,9 +381,7 @@ class Check(BaseCheck):
 
 class ActiveCheck(BaseCheck):
     def __init__(self, name):
-        if sys.version_info[0] < 3:
-            # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk.base.config as config  # pylint: disable=import-outside-toplevel
+        import cmk.base.config as config  # pylint: disable=import-outside-toplevel
         super(ActiveCheck, self).__init__(name)
         assert self.name.startswith(
             'check_'), 'Specify the full name of the active check, e.g. check_http'
@@ -405,9 +397,7 @@ class ActiveCheck(BaseCheck):
 
 class SpecialAgent(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, name):
-        if sys.version_info[0] < 3:
-            # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
-            import cmk.base.config as config  # pylint: disable=import-outside-toplevel
+        import cmk.base.config as config  # pylint: disable=import-outside-toplevel
         super(SpecialAgent, self).__init__()
         self.name = name
         assert self.name.startswith(
@@ -484,7 +474,6 @@ class MissingInvInfoError(KeyError):
 
 class InventoryPlugin(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, name, g_inv_tree, g_status_tree):
-        # This has not been ported to Python 3 yet. Prevent mypy in Python 3 mode from following
         import cmk.base.inventory_plugins as inv_plugins  # pylint: disable=import-outside-toplevel
         super(InventoryPlugin, self).__init__()
         self.name = name

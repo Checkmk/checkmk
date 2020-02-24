@@ -436,11 +436,11 @@ def test_parse_legacy_docker_node_info(indata, outdata_subset):
     def assert_contains(dic, key, value):
         assert key in dic, "missing key: %r" % key
         if isinstance(value, dict):
-            for r_key, r_value in value.iteritems():
+            for r_key, r_value in value.items():
                 assert_contains(dic[key], r_key, r_value)
         else:
             assert dic[key] == value, "expected: %r, got %r" % (v, parsed[k])
 
     parsed = parse_legacy_docker_node_info(indata)
-    for k, v in outdata_subset.iteritems():
+    for k, v in outdata_subset.items():
         assert_contains(parsed, k, v)

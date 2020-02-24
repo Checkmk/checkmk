@@ -109,10 +109,9 @@ class BasicCheckResult(Tuploid):
         assert status in [0, 1, 2, 3], \
                "BasicCheckResult: status must be in (0, 1, 2, 3) - not %r" % (status,)
 
-        ti = type(infotext)
-        assert ti in [str, unicode], \
-               "BasicCheckResult: infotext %r must be of type str or unicode - not %r" \
-               % (infotext, ti)
+        assert isinstance(infotext, six.string_types), \
+                "BasicCheckResult: infotext %r must be of type str or unicode - not %r" % \
+                (infotext, type(infotext))
         if "\n" in infotext:
             self.infotext, \
             self.multiline = infotext.split("\n", 1)
@@ -266,9 +265,9 @@ class DiscoveryEntry(Tuploid):
         else:
             self.item, self.default_params = entry
         ti = type(self.item)
-        assert ti in [str, unicode, type(None)], \
+        assert self.item is None or isinstance(self.item, six.string_types), \
                "DiscoveryEntry: item %r must be of type str, unicode or None - not %r" \
-               % (self.item, ti)
+               % (self.item, type(ti))
 
     @property
     def tuple(self):

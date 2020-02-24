@@ -62,8 +62,13 @@ import ast
 import sys
 import time
 from importlib import import_module
-from pathlib2 import Path
-import yapf
+import yapf  # type: ignore[import]
+
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
 import generictests.run
 
@@ -142,7 +147,7 @@ class WritableDataset(object):  # pylint: disable=too-many-instance-attributes
             pass
 
         if isinstance(value, dict):
-            iterate = value.iteritems()
+            iterate = value.items()
         elif isinstance(value, (tuple, list)):
             iterate = value
         else:

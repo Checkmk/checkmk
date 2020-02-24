@@ -39,10 +39,10 @@ def generate_inputs():
         # windows agent
         splitter(
             """(SYSTEM,0,0,0,0,0,0,0,0,1,0)	System Idle Process
-(\\NT AUTHORITY\SYSTEM,46640,10680,0,600,5212,27924179,58500375,370,11,12)	svchost.exe
-(\\NT AUTHORITY\NETWORK SERVICE,36792,10040,0,676,5588,492183155,189541215,380,8,50)	svchost.exe
-(\\NT AUTHORITY\LOCAL SERVICE,56100,18796,0,764,56632,1422261117,618855967,454,13,4300)	svchost.exe
-(\\KLAPPRECHNER\ab,29284,2948,0,3124,904,400576,901296,35,1,642)\tNOTEPAD.EXE""", "\t"),
+(\\NT AUTHORITY\\SYSTEM,46640,10680,0,600,5212,27924179,58500375,370,11,12)	svchost.exe
+(\\NT AUTHORITY\\NETWORK SERVICE,36792,10040,0,676,5588,492183155,189541215,380,8,50)	svchost.exe
+(\\NT AUTHORITY\\LOCAL SERVICE,56100,18796,0,764,56632,1422261117,618855967,454,13,4300)	svchost.exe
+(\\KLAPPRECHNER\\ab,29284,2948,0,3124,904,400576,901296,35,1,642)\tNOTEPAD.EXE""", "\t"),
         # aix, bsd, hpux, macos, netbsd, openbsd agent(4 entry, cmk>=1.1.5)
         splitter("(db2prtl,17176,17540,0.0) /usr/lib/ssh/sshd", node="bsd"),
         # aix with zombies
@@ -52,7 +52,7 @@ def generate_inputs():
         # windows agent(10 entry, cmk>1.2.5)
         splitter(
             """(SYSTEM,0,0,0,0,0,0,0,0,2)	System Idle Process
-(\\KLAPPRECHNER\ab,29284,2948,0,3124,904,400576,901296,35,1)\tNOTEPAD.EXE""", "\t"),
+(\\KLAPPRECHNER\\ab,29284,2948,0,3124,904,400576,901296,35,1)\tNOTEPAD.EXE""", "\t"),
         # windows agent(wmic_info, cmk<1.2.5)# From server-windows-mssql-2
         splitter("""[System Process]
 System
@@ -117,7 +117,7 @@ result_parse = [
       ],
       [
           None,
-          ("\\KLAPPRECHNER\x07b", "29284", "2948", "0", "3124", "904", "400576", "901296", "35",
+          ("\\KLAPPRECHNER\\ab", "29284", "2948", "0", "3124", "904", "400576", "901296", "35",
            "1", "642"), "NOTEPAD.EXE"
       ]]),
     (1, [["bsd", ("db2prtl", "17176", "17540", "0.0"), "/usr/lib/ssh/sshd"]]),
@@ -129,7 +129,7 @@ result_parse = [
         [None, ("SYSTEM", "0", "0", "0", "0", "0", "0", "0", "0", "2"), "System Idle Process"],
         [
             None,
-            ("\\KLAPPRECHNER\x07b", "29284", "2948", "0", "3124", "904", "400576", "901296", "35",
+            ("\\KLAPPRECHNER\\ab", "29284", "2948", "0", "3124", "904", "400576", "901296", "35",
              "1"), "NOTEPAD.EXE"
         ],
     ]),

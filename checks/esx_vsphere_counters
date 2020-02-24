@@ -216,7 +216,7 @@ def parse_esx_vsphere_counters(info):
 def esx_vsphere_get_average(values):
     if not values:
         return 0
-    int_values = map(int, values)
+    int_values = list(map(int, values))
     return sum(int_values) / float(len(int_values))
 
 

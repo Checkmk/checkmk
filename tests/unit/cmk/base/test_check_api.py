@@ -130,7 +130,8 @@ def test_discover_decorator_key_match():
     def selector(key, value):
         return key == "hello"
 
-    assert list(selector({"hola": "es", "hello": "en"})) == [("hello", {})]
+    # Pylint does not understand our decorator magic here. Investigate
+    assert list(selector({"hola": "es", "hello": "en"})) == [("hello", {})]  # pylint: disable=no-value-for-parameter
 
 
 def test_discover_decorator_with_params():
@@ -154,7 +155,8 @@ def test_discover_decorator_returned_name():
         'try': ['used', 'ready', 'total'],
     }
 
-    assert list(inventory_thecheck(data)) == [('TRY', {})]
+    # Pylint does not understand our decorator magic here. Investigate
+    assert list(inventory_thecheck(data)) == [('TRY', {})]  # pylint: disable=no-value-for-parameter
 
 
 def test_discover_decorator_with_nested_entries():
@@ -170,7 +172,8 @@ def test_discover_decorator_with_nested_entries():
         'house': [['performance_schema', 5, 7], ['test', 1, 5]]
     }
 
-    assert sorted(nested_discovery(data)) == [
+    # Pylint does not understand our decorator magic here. Investigate
+    assert sorted(nested_discovery(data)) == [  # pylint: disable=no-value-for-parameter
         ("host:home", {}),
         ("house:test", {}),
     ]

@@ -148,11 +148,13 @@ def _is_pure_section_declaration(check):
 def test_find_missing_manpages():
     all_check_manuals = man_pages.all_man_pages()
 
-    import cmk.base.check_api as check_api
+    import cmk.base.check_api as check_api  # pylint: disable=import-outside-toplevel
     config.load_all_checks(check_api.get_check_api_context)
-    checks_sorted = sorted([ (name, entry) for (name, entry) in config.check_info.items()
-                      if not _is_pure_section_declaration(entry) ] + \
-       [ ("check_" + name, entry) for (name, entry) in config.active_check_info.items() ])
+    checks_sorted = sorted([(name, entry)
+                            for (name, entry) in config.check_info.items()
+                            if not _is_pure_section_declaration(entry)] +
+                           [("check_" + name, entry)
+                            for (name, entry) in config.active_check_info.items()])
     assert len(checks_sorted) > 1000
 
     for check_plugin_name, _check in checks_sorted:

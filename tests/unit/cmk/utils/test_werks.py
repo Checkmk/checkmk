@@ -29,9 +29,9 @@ def test_write_precompiled_werks(tmp_path, monkeypatch):
     tmp_dir = str(tmp_path)
 
     all_werks = cmk.utils.werks.load_raw_files(Path(testlib.cmk_path()) / ".werks")
-    cre_werks = dict([(w["id"], w) for w in all_werks.values() if w["edition"] == "cre"])
-    cee_werks = dict([(w["id"], w) for w in all_werks.values() if w["edition"] == "cee"])
-    cme_werks = dict([(w["id"], w) for w in all_werks.values() if w["edition"] == "cme"])
+    cre_werks = {w["id"]: w for w in all_werks.values() if w["edition"] == "cre"}
+    cee_werks = {w["id"]: w for w in all_werks.values() if w["edition"] == "cee"}
+    cme_werks = {w["id"]: w for w in all_werks.values() if w["edition"] == "cme"}
 
     assert len(cre_werks) > 1000
     assert [w for w in cre_werks.keys() if 9000 <= w < 10000] == []

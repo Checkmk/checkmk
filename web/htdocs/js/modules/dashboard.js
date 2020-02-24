@@ -732,10 +732,10 @@ function calculate_relative_dashlet_coords(nr, anchor_id) {
 
     var dashlet_obj = document.getElementById("dashlet_" + nr);
 
-    var x = dashlet_obj.offsetLeft / dashboard_properties.grid_size;
-    var y = dashlet_obj.offsetTop / dashboard_properties.grid_size;
-    var w = dashlet_obj.clientWidth / dashboard_properties.grid_size;
-    var h = dashlet_obj.clientHeight / dashboard_properties.grid_size;
+    var x = align_to_grid(dashlet_obj.offsetLeft) / dashboard_properties.grid_size;
+    var y = align_to_grid(dashlet_obj.offsetTop) / dashboard_properties.grid_size;
+    var w = align_to_grid(dashlet_obj.clientWidth) / dashboard_properties.grid_size;
+    var h = align_to_grid(dashlet_obj.clientHeight) / dashboard_properties.grid_size;
 
     var screen_size  = new vec(g_dashboard_width, g_dashboard_height);
     var raster_size  = screen_size.divide(dashboard_properties.grid_size);

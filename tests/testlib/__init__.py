@@ -125,6 +125,27 @@ def fake_version_and_paths():
                         Path(tmp_dir) / "var/check_mk/piggyback_sources")
     monkeypatch.setattr("cmk.utils.paths.htpasswd_file", os.path.join(tmp_dir, "etc/htpasswd"))
 
+    monkeypatch.setattr("cmk.utils.paths.local_share_dir", Path(tmp_dir, "local/share/check_mk"))
+    monkeypatch.setattr("cmk.utils.paths.local_checks_dir",
+                        Path(tmp_dir, "local/share/check_mk/checks"))
+    monkeypatch.setattr("cmk.utils.paths.local_notifications_dir",
+                        Path(tmp_dir, "local/share/check_mk/notifications"))
+    monkeypatch.setattr("cmk.utils.paths.local_inventory_dir",
+                        Path(tmp_dir, "local/share/check_mk/inventory"))
+    monkeypatch.setattr("cmk.utils.paths.local_check_manpages_dir",
+                        Path(tmp_dir, "local/share/check_mk/checkman"))
+    monkeypatch.setattr("cmk.utils.paths.local_agents_dir",
+                        Path(tmp_dir, "local/share/check_mk/agents"))
+    monkeypatch.setattr("cmk.utils.paths.local_web_dir", Path(tmp_dir, "local/share/check_mk/web"))
+    monkeypatch.setattr("cmk.utils.paths.local_pnp_templates_dir",
+                        Path(tmp_dir, "local/share/check_mk/pnp-templates"))
+    monkeypatch.setattr("cmk.utils.paths.local_doc_dir", Path(tmp_dir, "local/share/doc/check_mk"))
+    monkeypatch.setattr("cmk.utils.paths.local_locale_dir",
+                        Path(tmp_dir, "local/share/check_mk/locale"))
+    monkeypatch.setattr("cmk.utils.paths.local_bin_dir", Path(tmp_dir, "local/bin"))
+    monkeypatch.setattr("cmk.utils.paths.local_lib_dir", Path(tmp_dir, "local/lib"))
+    monkeypatch.setattr("cmk.utils.paths.local_mib_dir", Path(tmp_dir, "local/share/snmp/mibs"))
+
 
 def import_module(pathname):
     """Return the module loaded from `pathname`.

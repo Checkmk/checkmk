@@ -30,8 +30,8 @@ def _omd_path(path):
 
 
 def _local_path(global_path):
-    # type: (Union[str, Path]) -> str
-    return _path(omd_root, "local", Path(global_path).relative_to(omd_root))
+    # type: (Union[str, Path]) -> Path
+    return Path(_path(omd_root, "local", Path(global_path).relative_to(omd_root)))
 
 
 # TODO: Add active_checks_dir and use it in code
@@ -97,16 +97,16 @@ lib_dir = _omd_path("lib")
 mib_dir = Path(_omd_path("share/snmp/mibs"))
 optional_packages_dir = Path(_omd_path("share/check_mk/optional_packages"))
 
-local_share_dir = Path(_local_path(share_dir))
-local_checks_dir = Path(_local_path(checks_dir))
-local_notifications_dir = Path(_local_path(notifications_dir))
-local_inventory_dir = Path(_local_path(inventory_dir))
-local_check_manpages_dir = Path(_local_path(check_manpages_dir))
-local_agents_dir = Path(_local_path(agents_dir))
-local_web_dir = Path(_local_path(web_dir))
-local_pnp_templates_dir = Path(_local_path(pnp_templates_dir))
-local_doc_dir = Path(_local_path(doc_dir))
-local_locale_dir = Path(_local_path(locale_dir))
-local_bin_dir = Path(_local_path(bin_dir))
-local_lib_dir = Path(_local_path(lib_dir))
-local_mib_dir = Path(_local_path(mib_dir))
+local_share_dir = _local_path(share_dir)
+local_checks_dir = _local_path(checks_dir)
+local_notifications_dir = _local_path(notifications_dir)
+local_inventory_dir = _local_path(inventory_dir)
+local_check_manpages_dir = _local_path(check_manpages_dir)
+local_agents_dir = _local_path(agents_dir)
+local_web_dir = _local_path(web_dir)
+local_pnp_templates_dir = _local_path(pnp_templates_dir)
+local_doc_dir = _local_path(doc_dir)
+local_locale_dir = _local_path(locale_dir)
+local_bin_dir = _local_path(bin_dir)
+local_lib_dir = _local_path(lib_dir)
+local_mib_dir = _local_path(mib_dir)

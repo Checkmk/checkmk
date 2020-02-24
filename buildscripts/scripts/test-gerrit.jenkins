@@ -18,7 +18,12 @@ node {
          }
 
         // Creates a \n separated list of changed files
-        def CHANGED_FILES_REL = sh(script: "git diff-tree --no-commit-id --name-only -r ${GERRIT_PATCHSET_REVISION}", returnStdout: true).toString().trim()
+        // We get realpaths here. However, the scripts/find-python-files calls
+        // later work with logical paths which would not match the realpaths
+        // produced here. We try to make both match here... hope it is enough.
+        // In case things get complicated here we should try to move the logic
+        // to some kind of helper script/function to improve maintainability
+        def CHANGED_FILES_REL = sh(script: "git diff-tree --no-commit-id --name-only -r ${GERRIT_PATCHSET_REVISION} | sed -E 's#(enterprise|managed)/cmk/#cmk/#g'", returnStdout: true).toString().trim()
         def CHANGED_FILES_ABS = sh(script: "echo '${CHANGED_FILES_REL}' | sed 's|^|${WORKSPACE}/|g'", returnStdout: true).toString().trim()
 
         // Gather the list of changed python files

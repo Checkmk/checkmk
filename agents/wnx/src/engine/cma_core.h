@@ -67,6 +67,9 @@ T ReadFromHandle(HANDLE Handle) {
     return buf;
 }
 
+bool AreFilesSame(const std::filesystem::path& tgt,
+                  const std::filesystem::path& src);
+
 // primitive command line checker
 bool CheckArgvForValue(int argc, const wchar_t* argv[], int pos,
                        std::string_view value) noexcept;
@@ -725,4 +728,5 @@ std::optional<std::string> GetPiggyBackName(const std::string& in_string);
 
 bool TryToHackStringWithCachedInfo(std::string& in_string,
                                    const std::string& value_to_insert);
+
 }  // namespace cma

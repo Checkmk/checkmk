@@ -71,6 +71,32 @@ std::atomic<int> PluginEntry::thread_count_ = 0;
 
 namespace tools {
 
+bool AreFilesSame(const std::filesystem::path& tgt,
+                  const std::filesystem::path& src) {
+    try {
+        std::ifstream f1(tgt, std::ifstream::binary | std::ifstream::ate);
+        std::ifstream f2(src, std::ifstream::binary | std::ifstream::ate);
+
+        if (f1.fail() || f2.fail()) {
+            return false;  // file problem
+        }
+
+        if (f1.tellg() != f2.tellg()) {
+            return false;  // size mismatch
+        }
+
+        // seek back to beginning and use std::equal to compare contents
+        f1.seekg(0, std::ifstream::beg);
+        f2.seekg(0, std::ifstream::beg);
+        return std::equal(std::istreambuf_iterator<char>(f1.rdbuf()),
+                          std::istreambuf_iterator<char>(),
+                          std::istreambuf_iterator<char>(f2.rdbuf()));
+    } catch (const std::exception& e) {
+        XLOG::l(XLOG_FUNC + " exception '{}'", e.what());
+        return false;
+    }
+}
+
 bool CheckArgvForValue(int argc, const wchar_t* argv[], int pos,
                        std::string_view value) noexcept {
     return argv && argc > pos && pos > 0 && argv[pos] &&

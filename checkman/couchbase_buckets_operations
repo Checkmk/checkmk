@@ -13,4 +13,4 @@ inventory:
  One service per bucket is created.
 
 item:
- The item is the name of the bucket.
+ The name of the bucket.

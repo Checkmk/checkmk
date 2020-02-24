@@ -14,8 +14,5 @@ description:
  extracted and a state of {WARN} is assumed if the actual flow is
  outside these limits.
 
-item:
- None
-
 inventory:
  None

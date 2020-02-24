@@ -8,7 +8,7 @@ description:
  to Climaveneta mc01_o4cv device.
 
 item:
- The item is the sensor description of the sensor as string.
+ The item is the sensor description of the sensor.
 
 inventory:
  All available temperature sensors are automatically inventorized.

@@ -20,4 +20,4 @@ inventory:
  One service per node is created.
 
 item:
- The item is the name of the node.
+ The name of the node.

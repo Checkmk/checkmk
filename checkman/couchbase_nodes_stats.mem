@@ -12,4 +12,4 @@ inventory:
  One check per host in the output is created automatically.
 
 item:
- The item is the name of the current node as provided by the agent.
+ The name of the current node as provided by the agent.

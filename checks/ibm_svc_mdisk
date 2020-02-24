@@ -72,9 +72,9 @@ def parse_ibm_svc_mdisk(info):
     for rows in parse_ibm_svc_with_header(info, dflt_header).values():
         try:
             data = rows[0]
-        except IndexError:
+            parsed.setdefault(data['name'], data)
+        except (KeyError, IndexError):
             continue
-        parsed.setdefault(data['name'], data)
     return parsed
 
 

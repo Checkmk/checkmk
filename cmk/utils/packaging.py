@@ -45,40 +45,40 @@ class PackageException(MKException):
 
 logger = logging.getLogger("cmk.utils.packaging")
 
-# order matters! See function _get_permissions
-PERM_MAP = (
-    (cmk.utils.paths.checks_dir, 0o644),
-    (str(cmk.utils.paths.local_checks_dir), 0o644),
-    (str(cmk.utils.paths.notifications_dir), 0o755),
-    (str(cmk.utils.paths.local_notifications_dir), 0o755),
-    (cmk.utils.paths.inventory_dir, 0o644),
-    (str(cmk.utils.paths.local_inventory_dir), 0o644),
-    (cmk.utils.paths.check_manpages_dir, 0o644),
-    (str(cmk.utils.paths.local_check_manpages_dir), 0o644),
-    (cmk.utils.paths.agents_dir, 0o755),
-    (str(cmk.utils.paths.local_agents_dir), 0o755),
-    (cmk.utils.paths.web_dir, 0o644),
-    (str(cmk.utils.paths.local_web_dir), 0o644),
-    (str(cmk.utils.paths.pnp_templates_dir), 0o644),
-    (str(cmk.utils.paths.local_pnp_templates_dir), 0o644),
-    (str(cmk.utils.paths.doc_dir), 0o644),
-    (str(cmk.utils.paths.local_doc_dir), 0o644),
-    (str(cmk.utils.paths.locale_dir), 0o644),
-    (str(cmk.utils.paths.local_locale_dir), 0o644),
-    (str(cmk.utils.paths.local_bin_dir), 0o755),
-    (str(cmk.utils.paths.local_lib_dir / "nagios" / "plugins"), 0o755),
-    (str(cmk.utils.paths.local_lib_dir), 0o644),
-    (str(cmk.utils.paths.local_mib_dir), 0o644),
-    (os.path.join(cmk.utils.paths.share_dir, "alert_handlers"), 0o755),
-    (str(cmk.utils.paths.local_share_dir / "alert_handlers"), 0o755),
-    (str(ec.mkp_rule_pack_dir()), 0o644),
-)
-
 
 def _get_permissions(path):
     # type: (str) -> int
     """Determine permissions by the first matching beginning of 'path'"""
-    for path_begin, perm in PERM_MAP:
+
+    # order matters! See function _get_permissions
+    perm_map = (
+        (cmk.utils.paths.checks_dir, 0o644),
+        (str(cmk.utils.paths.local_checks_dir), 0o644),
+        (str(cmk.utils.paths.notifications_dir), 0o755),
+        (str(cmk.utils.paths.local_notifications_dir), 0o755),
+        (cmk.utils.paths.inventory_dir, 0o644),
+        (str(cmk.utils.paths.local_inventory_dir), 0o644),
+        (cmk.utils.paths.check_manpages_dir, 0o644),
+        (str(cmk.utils.paths.local_check_manpages_dir), 0o644),
+        (cmk.utils.paths.agents_dir, 0o755),
+        (str(cmk.utils.paths.local_agents_dir), 0o755),
+        (cmk.utils.paths.web_dir, 0o644),
+        (str(cmk.utils.paths.local_web_dir), 0o644),
+        (str(cmk.utils.paths.pnp_templates_dir), 0o644),
+        (str(cmk.utils.paths.local_pnp_templates_dir), 0o644),
+        (str(cmk.utils.paths.doc_dir), 0o644),
+        (str(cmk.utils.paths.local_doc_dir), 0o644),
+        (str(cmk.utils.paths.locale_dir), 0o644),
+        (str(cmk.utils.paths.local_locale_dir), 0o644),
+        (str(cmk.utils.paths.local_bin_dir), 0o755),
+        (str(cmk.utils.paths.local_lib_dir / "nagios" / "plugins"), 0o755),
+        (str(cmk.utils.paths.local_lib_dir), 0o644),
+        (str(cmk.utils.paths.local_mib_dir), 0o644),
+        (os.path.join(cmk.utils.paths.share_dir, "alert_handlers"), 0o755),
+        (str(cmk.utils.paths.local_share_dir / "alert_handlers"), 0o755),
+        (str(ec.mkp_rule_pack_dir()), 0o644),
+    )
+    for path_begin, perm in perm_map:
         if path.startswith(path_begin):
             return perm
     raise PackageException("could not determine permissions for %r" % path)
@@ -100,29 +100,6 @@ PartFiles = List[str]
 PackageFiles = Dict[PartName, PartFiles]
 PackagePartInfo = Dict[PartName, Any]
 
-_package_parts = [
-    PackagePart("checks", "Checks", str(cmk.utils.paths.local_checks_dir)),
-    PackagePart("notifications", "Notification scripts",
-                str(cmk.utils.paths.local_notifications_dir)),
-    PackagePart("inventory", "Inventory plugins", str(cmk.utils.paths.local_inventory_dir)),
-    PackagePart("checkman", "Checks' man pages", str(cmk.utils.paths.local_check_manpages_dir)),
-    PackagePart("agents", "Agents", str(cmk.utils.paths.local_agents_dir)),
-    PackagePart("web", "Multisite extensions", str(cmk.utils.paths.local_web_dir)),
-    PackagePart("pnp-templates", "PNP4Nagios templates",
-                str(cmk.utils.paths.local_pnp_templates_dir)),
-    PackagePart("doc", "Documentation files", str(cmk.utils.paths.local_doc_dir)),
-    PackagePart("locales", "Localizations", str(cmk.utils.paths.local_locale_dir)),
-    PackagePart("bin", "Binaries", str(cmk.utils.paths.local_bin_dir)),
-    PackagePart("lib", "Libraries", str(cmk.utils.paths.local_lib_dir)),
-    PackagePart("mibs", "SNMP MIBs", str(cmk.utils.paths.local_mib_dir)),
-    PackagePart("alert_handlers", "Alert handlers",
-                str(cmk.utils.paths.local_share_dir / "alert_handlers")),
-]
-
-_config_parts = [
-    PackagePart("ec_rule_packs", "Event Console rule packs", str(ec.mkp_rule_pack_dir())),
-]
-
 package_ignored_files = {
     "lib": ["nagios/plugins/README.txt"],
 }
@@ -135,12 +112,31 @@ def package_dir():
 
 def get_config_parts():
     # type: () -> List[PackagePart]
-    return _config_parts
+    return [
+        PackagePart("ec_rule_packs", "Event Console rule packs", str(ec.mkp_rule_pack_dir())),
+    ]
 
 
 def get_package_parts():
     # type: () -> List[PackagePart]
-    return _package_parts
+    return [
+        PackagePart("checks", "Checks", str(cmk.utils.paths.local_checks_dir)),
+        PackagePart("notifications", "Notification scripts",
+                    str(cmk.utils.paths.local_notifications_dir)),
+        PackagePart("inventory", "Inventory plugins", str(cmk.utils.paths.local_inventory_dir)),
+        PackagePart("checkman", "Checks' man pages", str(cmk.utils.paths.local_check_manpages_dir)),
+        PackagePart("agents", "Agents", str(cmk.utils.paths.local_agents_dir)),
+        PackagePart("web", "Multisite extensions", str(cmk.utils.paths.local_web_dir)),
+        PackagePart("pnp-templates", "PNP4Nagios templates",
+                    str(cmk.utils.paths.local_pnp_templates_dir)),
+        PackagePart("doc", "Documentation files", str(cmk.utils.paths.local_doc_dir)),
+        PackagePart("locales", "Localizations", str(cmk.utils.paths.local_locale_dir)),
+        PackagePart("bin", "Binaries", str(cmk.utils.paths.local_bin_dir)),
+        PackagePart("lib", "Libraries", str(cmk.utils.paths.local_lib_dir)),
+        PackagePart("mibs", "SNMP MIBs", str(cmk.utils.paths.local_mib_dir)),
+        PackagePart("alert_handlers", "Alert handlers",
+                    str(cmk.utils.paths.local_share_dir / "alert_handlers")),
+    ]
 
 
 def release_package(pacname):

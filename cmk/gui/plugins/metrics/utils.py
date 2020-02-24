@@ -493,8 +493,7 @@ def _evaluate_literal(expression, translated_metrics):
     elif expression[0].isdigit() or expression[0] == '-':
         return float(expression), unit_info[""], None
 
-    if expression.endswith(".max") or expression.endswith(".min") or expression.endswith(
-            ".average"):
+    if any(expression.endswith(cf) for cf in ['.max', '.min', '.average']):
         expression = expression.rsplit(".", 1)[0]
 
     color = None
@@ -602,21 +601,19 @@ def get_graph_templates(translated_metrics):
     if not translated_metrics:
         return []
 
-    explicit_templates = _get_explicit_graph_templates(translated_metrics)
+    explicit_templates = list(_get_explicit_graph_templates(translated_metrics))
     already_graphed_metrics = _get_graphed_metrics(explicit_templates)
-    implicit_templates = _get_implicit_graph_templates(translated_metrics, already_graphed_metrics)
+    implicit_templates = list(
+        _get_implicit_graph_templates(translated_metrics, already_graphed_metrics))
     return explicit_templates + implicit_templates
 
 
 def _get_explicit_graph_templates(translated_metrics):
-    templates = []
     for graph_template in graph_info.values():
         if _graph_possible(graph_template, translated_metrics):
-            templates.append(graph_template)
+            yield graph_template
         elif _graph_possible_without_optional_metrics(graph_template, translated_metrics):
-            templates.append(
-                _graph_without_missing_optional_metrics(graph_template, translated_metrics))
-    return templates
+            yield _graph_without_missing_optional_metrics(graph_template, translated_metrics)
 
 
 def _get_graphed_metrics(graph_templates):
@@ -627,18 +624,15 @@ def _get_graphed_metrics(graph_templates):
 
 
 def _get_implicit_graph_templates(translated_metrics, already_graphed_metrics):
-    templates = []
     for metric_name, metric_entry in sorted(translated_metrics.items()):
         if metric_entry["auto_graph"] and metric_name not in already_graphed_metrics:
-            templates.append(generic_graph_template(metric_name))
-    return templates
+            yield generic_graph_template(metric_name)
 
 
 def _metrics_used_by_graph(graph_template):
-    used_metrics = []
     for metric_definition in graph_template["metrics"]:
-        used_metrics += list(_metrics_used_in_definition(metric_definition[0]))
-    return used_metrics
+        for metric in _metrics_used_in_definition(metric_definition[0]):
+            yield metric
 
 
 def _metrics_used_in_definition(metric_definition):

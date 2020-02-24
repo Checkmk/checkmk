@@ -121,7 +121,7 @@ def test_discoverable_tcp_checks():
     assert "logwatch" in config.discoverable_tcp_checks()
 
 
-############ Management board checks
+# ########### Management board checks
 
 
 def _check_plugins():
@@ -142,7 +142,7 @@ def patch_mgmt_board_plugins(monkeypatch):
     monkeypatch.setattr(cmk.base.check_utils, "is_snmp_check", lambda c: c.startswith("snmp_"))
 
 
-############ Unknown check plugins
+# ########### Unknown check plugins
 
 
 @pytest.mark.usefixtures("patch_mgmt_board_plugins")
@@ -155,7 +155,7 @@ def test_filter_by_management_board_unknown_check_plugins(monkeypatch, for_disco
     ts.add_host("this_host")
     ts.apply(monkeypatch)
 
-    found_check_plugins = [c for c in _check_plugins()]
+    found_check_plugins = set(_check_plugins())
     monkeypatch.setattr(config, "check_info", [])
 
     assert config.filter_by_management_board("this_host",
@@ -164,7 +164,7 @@ def test_filter_by_management_board_unknown_check_plugins(monkeypatch, for_disco
                                              for_discovery=for_discovery) == set(result)
 
 
-############ TCP host
+# ########### TCP host
 
 
 @pytest.mark.usefixtures("patch_mgmt_board_plugins")
@@ -186,7 +186,7 @@ def test_filter_by_management_board_TCP_host_without_mgmt_board(monkeypatch, for
                                              for_discovery=for_discovery) == set(result)
 
 
-############ SNMP host
+# ########### SNMP host
 
 
 @pytest.mark.usefixtures("patch_mgmt_board_plugins")
@@ -209,7 +209,7 @@ def test_filter_by_management_board_SNMP_host_without_mgmt_board(monkeypatch, fo
                                              for_discovery=for_discovery) == set(result)
 
 
-############ Dual host
+# ########### Dual host
 
 
 @pytest.mark.usefixtures("patch_mgmt_board_plugins")
@@ -229,7 +229,7 @@ def test_filter_by_management_board_dual_host_without_mgmt_board(monkeypatch, fo
     ts.add_host("this_host", tags={"snmp_ds": "snmp-v1", "agent": "cmk-agent"})
     ts.apply(monkeypatch)
 
-    found_check_plugins = [c for c in _check_plugins()]
+    found_check_plugins = set(_check_plugins())
     monkeypatch.setattr(config, "check_info", found_check_plugins)
 
     assert config.filter_by_management_board("this_host",
@@ -238,7 +238,7 @@ def test_filter_by_management_board_dual_host_without_mgmt_board(monkeypatch, fo
                                              for_discovery=for_discovery) == set(result)
 
 
-############ TCP host + SNMP Management Board
+# ########### TCP host + SNMP Management Board
 
 
 @pytest.mark.usefixtures("patch_mgmt_board_plugins")
@@ -275,7 +275,7 @@ def test_filter_by_management_board_TCP_host_with_SNMP_mgmt_board(monkeypatch, f
                                              for_discovery=for_discovery) == set(mgmt_board_result)
 
 
-############ SNMP host + SNMP Management Board
+# ########### SNMP host + SNMP Management Board
 
 
 @pytest.mark.usefixtures("patch_mgmt_board_plugins")
@@ -308,7 +308,7 @@ def test_filter_by_management_board_SNMP_host_with_SNMP_mgmt_board(monkeypatch, 
                                              for_discovery=for_discovery) == set(mgmt_board_result)
 
 
-############ Dual host + SNMP Management Board
+# ########### Dual host + SNMP Management Board
 
 
 @pytest.mark.usefixtures("patch_mgmt_board_plugins")
@@ -330,7 +330,7 @@ def test_filter_by_management_board_dual_host_with_SNMP_mgmt_board(monkeypatch, 
     h = config_cache.get_host_config("this_host")
     h.has_management_board = True
 
-    found_check_plugins = [c for c in _check_plugins()]
+    found_check_plugins = set(_check_plugins())
     monkeypatch.setattr(config, "check_info", found_check_plugins)
 
     assert config.filter_by_management_board("this_host",

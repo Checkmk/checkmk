@@ -1,6 +1,11 @@
+def DISTRO_LIST_DEFAULT
+withFolderProperties{
+    DISTRO_LIST_DEFAULT = env.DISTRO_LIST
+}
+
 properties([
   parameters([
-    string(name: 'DISTROS', defaultValue: DISTRO_LIST_MASTER, description: 'List of targeted distros' )
+    string(name: 'DISTROS', defaultValue: DISTRO_LIST_DEFAULT, description: 'List of targeted distros' )
    ])
 ])
 

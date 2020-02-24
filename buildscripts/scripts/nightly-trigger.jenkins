@@ -1,18 +1,14 @@
 BRANCH_NAME = scm.branches[0].name
 FOLDER_ID = BRANCH_NAME.replaceAll('\\.','')
 
-def DISTRO_STR = ''
-if(JOB_BASE_NAME == 'trigger' && BRANCH_NAME == 'master') {
-    DISTRO_STR = DISTRO_LIST_MASTER
-} else if(JOB_BASE_NAME == 'trigger' && BRANCH_NAME == '1.6.0') {
-    DISTRO_STR = DISTRO_LIST_160
-} else {
-    DISTRO_STR = DISTRO_LIST_TESTBUILD
+def DISTRO_LIST_DEFAULT = ''
+withFolderProperties{
+    DISTRO_LIST_DEFAULT = env.DISTRO_LIST
 }
 
 properties([
   parameters([
-    string(name: 'DISTROS', defaultValue: DISTRO_STR, description: 'List of targeted distros' ),
+    string(name: 'DISTROS', defaultValue: DISTRO_LIST_DEFAULT, description: 'List of targeted distros' ),
     string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' )
   ]),
   pipelineTriggers([

@@ -536,7 +536,6 @@ class TextAscii(ValueSpec):
         allow_empty=True,  # type: bool
         empty_text="",  # type: Text
         read_only=False,  # type: bool
-        none_is_empty=False,  # type: bool
         forbidden_chars="",  # type: Text
         regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
         regex_error=None,  # type: TypingOptional[Text]
@@ -563,7 +562,6 @@ class TextAscii(ValueSpec):
         self._allow_empty = allow_empty
         self._empty_text = empty_text
         self._read_only = read_only
-        self._none_is_empty = none_is_empty
         self._forbidden_chars = forbidden_chars
         if isinstance(regex, str):
             self._regex = re.compile(regex)  # type: TypingOptional[Pattern[str]]
@@ -588,7 +586,7 @@ class TextAscii(ValueSpec):
 
         html.text_input(
             varprefix,
-            value_text="%s" % value if value is not None else "",
+            default_value="%s" % value if value is not None else "",
             size=self._size,
             try_max_width=self._try_max_width,
             read_only=self._read_only,
@@ -599,7 +597,7 @@ class TextAscii(ValueSpec):
         )
 
     def value_to_text(self, value):
-        # type: (TypingOptional[str]) -> Text
+        # type: (str) -> Text
         if not value:
             return self._empty_text
 
@@ -608,44 +606,33 @@ class TextAscii(ValueSpec):
         return ensure_unicode(value)
 
     def from_html_vars(self, varprefix):
-        # type: (str) -> TypingOptional[str]
-        value = html.request.get_str_input(varprefix, "")
+        # type: (str) -> str
+        value = html.request.get_str_input_mandatory(varprefix, "")
 
         if self._strip and value:
             value = value.strip()
 
-        if self._none_is_empty and not value:
-            return None
-
         return value
 
     def validate_datatype(self, value, varprefix):
-        # type: (TypingOptional[str], str) -> None
-        if self._none_is_empty and value is None:
-            return
-
+        # type: (str, str) -> None
         if not isinstance(value, str):
             raise MKUserError(
                 varprefix,
                 _("The value must be of type str, but it has type %s") % _type_name(value))
 
     def _validate_value(self, value, varprefix):
-        # type: (TypingOptional[str], str) -> None
+        # type: (str, str) -> None
         try:
             six.text_type(value)
         except UnicodeDecodeError:
             raise MKUserError(varprefix, _("Non-ASCII characters are not allowed here."))
-
-        if value is None:
-            return  # Can only happen when self._none_is_empty is set, we need no more validation
 
         if self._forbidden_chars:
             for c in self._forbidden_chars:
                 if c in value:
                     raise MKUserError(varprefix,
                                       _("The character <tt>%s</tt> is not allowed here.") % c)
-        if self._none_is_empty and value == "":
-            raise MKUserError(varprefix, _("An empty value must be represented with None here."))
 
         if not self._allow_empty and value.strip() == "":
             raise MKUserError(varprefix, _("An empty value is not allowed here."))
@@ -718,7 +705,6 @@ class RegExp(TextAscii):
         allow_empty=True,  # type: bool
         empty_text="",  # type: Text
         read_only=False,  # type: bool
-        none_is_empty=False,  # type: bool
         forbidden_chars="",  # type: Text
         regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
         regex_error=None,  # type: TypingOptional[Text]
@@ -742,7 +728,6 @@ class RegExp(TextAscii):
             allow_empty=allow_empty,
             empty_text=empty_text,
             read_only=read_only,
-            none_is_empty=none_is_empty,
             forbidden_chars=forbidden_chars,
             regex=regex,
             regex_error=regex_error,
@@ -849,7 +834,6 @@ class EmailAddress(TextAscii):
         allow_empty=True,  # type: bool
         empty_text="",  # type: Text
         read_only=False,  # type: bool
-        none_is_empty=False,  # type: bool
         forbidden_chars="",  # type: Text
         regex_error=None,  # type: TypingOptional[Text]
         minlen=None,  # type: TypingOptional[int]
@@ -872,7 +856,6 @@ class EmailAddress(TextAscii):
             allow_empty=allow_empty,
             empty_text=empty_text,
             read_only=read_only,
-            none_is_empty=none_is_empty,
             forbidden_chars=forbidden_chars,
             # The "new" top level domains are very unlimited in length. Theoretically they can be
             # up to 63 chars long. But currently the longest is 24 characters. Check this out with:
@@ -950,7 +933,6 @@ class TextAsciiAutocomplete(TextAscii):
         allow_empty=True,  # type: bool
         empty_text="",  # type: Text
         read_only=False,  # type: bool
-        none_is_empty=False,  # type: bool
         forbidden_chars="",  # type: Text
         regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
         regex_error=None,  # type: TypingOptional[Text]
@@ -977,7 +959,6 @@ class TextAsciiAutocomplete(TextAscii):
             allow_empty=allow_empty,
             empty_text=empty_text,
             read_only=read_only,
-            none_is_empty=none_is_empty,
             forbidden_chars=forbidden_chars,
             regex=regex,
             regex_error=regex_error,
@@ -1097,7 +1078,6 @@ class HostAddress(TextAscii):
         allow_empty=True,  # type: bool
         empty_text="",  # type: Text
         read_only=False,  # type: bool
-        none_is_empty=False,  # type: bool
         forbidden_chars="",  # type: Text
         regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
         regex_error=None,  # type: TypingOptional[Text]
@@ -1121,7 +1101,6 @@ class HostAddress(TextAscii):
             allow_empty=allow_empty,
             empty_text=empty_text,
             read_only=read_only,
-            none_is_empty=none_is_empty,
             forbidden_chars=forbidden_chars,
             regex=regex,
             regex_error=regex_error,
@@ -1233,7 +1212,6 @@ class Url(TextAscii):
         allow_empty=True,  # type: bool
         empty_text="",  # type: Text
         read_only=False,  # type: bool
-        none_is_empty=False,  # type: bool
         forbidden_chars="",  # type: Text
         regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
         regex_error=None,  # type: TypingOptional[Text]
@@ -1257,7 +1235,6 @@ class Url(TextAscii):
             allow_empty=allow_empty,
             empty_text=empty_text,
             read_only=read_only,
-            none_is_empty=none_is_empty,
             forbidden_chars=forbidden_chars,
             regex=regex,
             regex_error=regex_error,
@@ -1352,7 +1329,6 @@ class TextAreaUnicode(TextUnicode):
         allow_empty=True,  # type: bool
         empty_text="",  # type: Text
         read_only=False,  # type: bool
-        none_is_empty=False,  # type: bool
         forbidden_chars="",  # type: Text
         regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
         regex_error=None,  # type: TypingOptional[Text]
@@ -1376,7 +1352,6 @@ class TextAreaUnicode(TextUnicode):
             allow_empty=allow_empty,
             empty_text=empty_text,
             read_only=read_only,
-            none_is_empty=none_is_empty,
             forbidden_chars=forbidden_chars,
             regex=regex,
             regex_error=regex_error,
@@ -1454,7 +1429,6 @@ class Filename(TextAscii):
         allow_empty=True,  # type: bool
         empty_text="",  # type: Text
         read_only=False,  # type: bool
-        none_is_empty=False,  # type: bool
         forbidden_chars="",  # type: Text
         regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
         regex_error=None,  # type: TypingOptional[Text]
@@ -1478,7 +1452,6 @@ class Filename(TextAscii):
             allow_empty=allow_empty,
             empty_text=empty_text,
             read_only=read_only,
-            none_is_empty=none_is_empty,
             forbidden_chars=forbidden_chars,
             regex=regex,
             regex_error=regex_error,

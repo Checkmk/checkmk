@@ -698,13 +698,17 @@ class ModeEditTagGroup(ABCEditTagMode):
             ListOf(
                 Tuple(
                     elements=[
-                        TextAscii(
-                            title=_("Tag ID"),
-                            size=16,
-                            regex="^[-a-z0-9A-Z_]*$",
-                            none_is_empty=True,
-                            regex_error=_("Invalid tag ID. Only the characters a-z, A-Z, "
-                                          "0-9, _ and - are allowed."),
+                        Transform(
+                            TextAscii(
+                                title=_("Tag ID"),
+                                size=16,
+                                regex="^[-a-z0-9A-Z_]*$",
+                                regex_error=_("Invalid tag ID. Only the characters a-z, A-Z, "
+                                              "0-9, _ and - are allowed."),
+                                allow_empty=True,
+                            ),
+                            forth=lambda x: "" if x is None else x,
+                            back=lambda x: None if not x else x,
                         ),
                         TextUnicode(
                             title=_("Title") + "*",

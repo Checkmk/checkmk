@@ -9,4 +9,4 @@ description:
  if the state is "degraded" or "redundancy offline", {CRIT} if the state is "lost" and {OK} if the state is "full" or "not redundant".
 
 item:
- One service for each redundancy group will be created
+ Index of the power unit

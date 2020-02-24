@@ -14,7 +14,7 @@ description:
  (OMSA) on your target server. This is available for Linux and Windows.
 
 item:
- The compination of EnclosureID, Channel and TargetID seperated by colums
+ The combination of EnclosureID, Channel and TargetID seperated by colons
 
 inventory:
  One check is created for each Disk

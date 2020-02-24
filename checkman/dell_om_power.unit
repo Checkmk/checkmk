@@ -10,7 +10,7 @@ description:
  psu is added to the output.
 
 item:
- The index of the PSU is used as item
+ The index of the PSU
 
 inventory:
  One service for each PSU is created

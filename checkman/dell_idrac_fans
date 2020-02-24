@@ -15,4 +15,4 @@ description:
  the defaults from this device will be used.
 
 item:
- One service for each fan will be created
+ Index of the cooling device

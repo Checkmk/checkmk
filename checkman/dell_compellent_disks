@@ -10,7 +10,7 @@ description:
  reported health is binary and can be {OK} or {CRIT}.
 
 item:
- The disk number is the item
+ The disk number
 
 inventory:
  One service for each disk is created

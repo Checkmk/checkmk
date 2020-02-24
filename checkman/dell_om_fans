@@ -14,7 +14,7 @@ description:
  Thresholds can be also defined by the common ruleset for fans.
 
 item:
- The fan index is the item
+ The fan index
 
 inventory:
  One service for each fan is created

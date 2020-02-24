@@ -13,7 +13,7 @@ description:
  to be installed.
 
 item:
- Vogical disk number as reported by omreport
+ Logical disk number as reported by omreport
 
 inventory:
  One check is created for each virtual disk

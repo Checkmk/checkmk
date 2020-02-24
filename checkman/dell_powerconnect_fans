@@ -25,6 +25,9 @@ inventory:
  During the inventory phase of check_mk, it will create one or more service {Sensor fanX_unitX}
  entries, as long as the MIB defined above is supported on the switch.
 
+item:
+ Name of the fan
+
 example:
  If a switch has 3 FANS in the device, it will create 3 service entries titled:
 

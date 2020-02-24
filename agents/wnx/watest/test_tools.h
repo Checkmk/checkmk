@@ -81,6 +81,20 @@ inline std::tuple<std::filesystem::path, std::filesystem::path> CreateInOut() {
     return {};
 }
 
+inline std::filesystem::path CreateDirInTemp(std::wstring_view Dir) {
+    namespace fs = std::filesystem;
+    fs::path temp_dir = cma::cfg::GetTempDir();
+    auto normal_dir =
+        temp_dir.wstring().find(L"\\tmp", 0) != std::wstring::npos;
+    if (normal_dir) {
+        std::error_code ec;
+        auto lwa_dir = temp_dir / Dir;
+        fs::create_directories(lwa_dir, ec);
+        return lwa_dir;
+    }
+    return {};
+}
+
 // add Str to enabled sections and remove from disabled
 // optionally updates parameters in Config
 void EnableSectionsNode(const std::string_view& Str, bool UpdateGlobal = true);
@@ -116,6 +130,8 @@ inline void CheckYaml(YAML::Node table, const CheckYamlVector& vec) {
         ++pos;
     }
 }
+
+constexpr std::string_view zip_to_test = "unzip_test.zip";
 
 }  // namespace tst
 #endif  // test_tools_h__

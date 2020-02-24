@@ -10,16 +10,14 @@
 #include "test_tools.h"
 #include "zip.h"
 
-static constexpr std::string_view zip_to_test = "unzip_test.zip";
-
 namespace cma::tools::zip {
 TEST(CmaTools, Zip) {
     namespace fs = std::filesystem;
     cma::OnStartTest();  // to get temporary folder
     fs::path user_dir = cma::cfg::GetUserDir();
-    auto zip_file = user_dir / zip_to_test;
+    auto zip_file = user_dir / tst::zip_to_test;
     ASSERT_TRUE(fs::exists(zip_file))
-        << "Please make '" << zip_to_test << "' available in the '"
+        << "Please make '" << tst::zip_to_test << "' available in the '"
         << user_dir.u8string() << "'";
     //
     tst::SafeCleanTempDir();

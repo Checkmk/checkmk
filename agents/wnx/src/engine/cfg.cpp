@@ -326,9 +326,9 @@ std::wstring GetRootInstallDir() noexcept {
     return root / dirs::kFileInstallDir;
 }
 
-std::wstring GetModulesDir() noexcept {
-    auto root = GetCfg().getRootDir();
-    return root / dirs::kModules;
+std::wstring GetUserModulesDir() noexcept {
+    auto user = GetCfg().getUserDir();
+    return user / dirs::kUserModules;
 }
 
 std::wstring GetLocalDir() noexcept { return GetCfg().getLocalDir(); }
@@ -705,7 +705,7 @@ static void RemoveOwnGeneratedFile() {
     XLOG::l.i("Removing yml files.");
     fs::path user_yml = GetUserDir();
     user_yml /= files::kUserYmlFile;
-    if (cap::AreFilesSame(target_yml_example, user_yml)) {
+    if (cma::tools::AreFilesSame(target_yml_example, user_yml)) {
         XLOG::l.i("Removing user yml files.");
         fs::remove(user_yml, ec);
     }
@@ -764,13 +764,13 @@ bool CleanDataFolder(CleanMode mode) {
 std::vector<std::wstring_view> AllDirTable() {
     return {//
             // may not contain user content
-            dirs::kBakery,   // config file(s)
-            dirs::kUserBin,  // placeholder for ohm
-            dirs::kBackup,   // backed up files
-            dirs::kTemp,     //
-            dirs::kInstall,  // for installing data
-            dirs::kUpdate,   // for incoming MSI
-            dirs::kModules,  // for all modules
+            dirs::kBakery,       // config file(s)
+            dirs::kUserBin,      // placeholder for ohm
+            dirs::kBackup,       // backed up files
+            dirs::kTemp,         //
+            dirs::kInstall,      // for installing data
+            dirs::kUpdate,       // for incoming MSI
+            dirs::kUserModules,  // for all modules
 
             // may contain user content
             dirs::kState,          // state folder
@@ -784,14 +784,14 @@ std::vector<std::wstring_view> AllDirTable() {
 
 std::vector<std::wstring_view> RemovableDirTable() {
     return {
-        dirs::kBakery,   // config file(s)
-        dirs::kUserBin,  // placeholder for ohm
-        dirs::kBackup,   // backed up files
-        dirs::kTemp,     //
-        dirs::kInstall,  // for installing data
-        dirs::kUpdate,   // for incoming MSI
-        dirs::kModules,  // for all modules
-    };                   //
+        dirs::kBakery,       // config file(s)
+        dirs::kUserBin,      // placeholder for ohm
+        dirs::kBackup,       // backed up files
+        dirs::kTemp,         //
+        dirs::kInstall,      // for installing data
+        dirs::kUpdate,       // for incoming MSI
+        dirs::kUserModules,  // for all modules
+    };                       //
 }
 
 //
@@ -1218,7 +1218,7 @@ void ProcessPluginEnvironment(
             {envs::kMkSpoolDirName, &cma::cfg::GetSpoolDir},
             {envs::kMkInstallDirName, &cma::cfg::GetUserInstallDir},
             {envs::kMkMsiPathName, &cma::cfg::GetUpdateDir},
-            {envs::kMkModulesDirName, &cma::cfg::GetModulesDir},
+            {envs::kMkModulesDirName, &cma::cfg::GetUserModulesDir},
             //
         };
 

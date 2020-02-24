@@ -1,15 +1,19 @@
-// watest.cpp : This file contains the 'main' function. Program execution begins
-// and ends there.
+//
+// modules tests
+//
 //
 #include "pch.h"
 
 #include <fmt/format.h>
 #include <shellapi.h>
 
+#include <filesystem>
 #include <iterator>
 
 #include "cfg.h"
 #include "modules.h"
+#include "test_tools.h"
+#include "zip.h"
 
 namespace cma::tools {
 template <typename T, typename = void>
@@ -173,6 +177,170 @@ TEST(ModulesTest, TableLoader) {
             EXPECT_EQ(modules[1].dir(), "m\\the2");
         }
     }
+}
+
+TEST(ModuleCommanderTest, ReadConfig) {
+    std::string base =
+        "modules:\n"
+        "  enabled: yes\n"
+        "  table:\n"
+        "    - name: unzip_test\n"     // valid
+        "      exts: ['.test']\n"      //
+        "      exec: 'nothing {}'\n"   //
+        "    - name: unzip_test2\n"    // valid
+        "      exts: ['.test2']\n"     //
+        "      exec: 'nothing2 {}'\n"  //
+        "      dir:  'plugins'\n";
+
+    ModuleCommander mc;
+    auto node = YAML::Load(base);
+    mc.readConfig(node);
+    ASSERT_TRUE(mc.modules_.size() == 2);
+    EXPECT_EQ(mc.modules_[0].name(), "unzip_test");
+    EXPECT_EQ(mc.modules_[1].name(), "unzip_test2");
+    EXPECT_EQ(mc.modules_[0].exec(), L"nothing {}");
+    EXPECT_EQ(mc.modules_[1].exec(), L"nothing2 {}");
+    EXPECT_EQ(mc.modules_[0].dir(), "modules\\unzip_test");
+    EXPECT_EQ(mc.modules_[1].dir(), "plugins");
+}
+
+TEST(ModuleCommanderTest, FindModules) {
+    using namespace std::literals;
+    namespace fs = std::filesystem;
+    cma::OnStartTest();
+    tst::SafeCleanTempDir();
+    fs::path root = cma::cfg::GetTempDir();
+    fs::path install = tst::CreateDirInTemp(dirs::kInstall);
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+
+    std::string base =
+        "modules:\n"
+        "  enabled: yes\n"
+        "  table:\n"
+        "    - name: real_module_module\n"   // valid
+        "      exts: ['.test']\n"            //
+        "      exec: 'nothing {}'\n"         //
+        "    - name: real_module_module2\n"  // valid
+        "      exts: ['.test2']\n"           //
+        "      exec: 'nothing2 {}'\n"        //
+        "      dir:  'plugins'\n";
+
+    ModuleCommander mc;
+    EXPECT_FALSE(mc.isBelongsToModules("c:\\windows\\real_module_module.zip"));
+    auto node = YAML::Load(base);
+    mc.readConfig(node);
+    ASSERT_EQ(mc.findModuleFiles(root), 0);
+    EXPECT_TRUE(mc.files_.empty());
+    tst::ConstructFile(install / "not_module", "z");
+    ASSERT_EQ(mc.findModuleFiles(root), 0);
+    tst::ConstructFile(install / ("null_module_module"s + kExtension.data()),
+                       "");
+    ASSERT_EQ(mc.findModuleFiles(root), 0);
+
+    tst::ConstructFile(install / ("real_module_module"s + kExtension.data()),
+                       "zip");
+    ASSERT_EQ(mc.findModuleFiles(root), 1);
+
+    tst::ConstructFile(install / ("real_module_module2"s + kExtension.data()),
+                       "zip");
+    ASSERT_EQ(mc.findModuleFiles(root), 2);
+
+    // check that name are correctly found in modules list
+    EXPECT_FALSE(mc.isBelongsToModules("c:\\windows\\real_module_module"));
+    EXPECT_FALSE(mc.isBelongsToModules("c:\\windows\\real_module_module.zi"));
+    EXPECT_TRUE(mc.isBelongsToModules("c:\\windows\\real_module_module.zip"));
+    EXPECT_TRUE(mc.isBelongsToModules("c:\\windows\\real_module_module2.zip"));
+
+    EXPECT_FALSE(mc.isBelongsToModules(""));
+}
+
+TEST(ModuleCommanderTest, Internal) {
+    using namespace std::literals;
+    namespace fs = std::filesystem;
+    cma::OnStartTest();
+    fs::path user_dir = cma::cfg::GetUserDir();
+    tst::SafeCleanTempDir();
+    fs::path user = cma::cfg::GetTempDir();
+    fs::path modules = ModuleCommander::GetModInstall(user);
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+
+    ModuleCommander mc;
+    auto dir = user / dirs::kUserModules / "tst";
+    EXPECT_FALSE(mc.createFileForTargetDir("c:\\windows", modules));
+    EXPECT_FALSE(mc.createFileForTargetDir(modules / "tst", "c:\\windows"));
+    EXPECT_TRUE(mc.createFileForTargetDir(modules / "tst", modules));
+
+    auto result =
+        cma::tools::ReadFileInString((dir / kTargetDir).u8string().c_str());
+    ASSERT_EQ(result, modules.u8string());
+
+    // simulate file creation from unzip
+    fs::create_directories(modules / "doc");
+    tst::CreateWorkFile(modules / "test.txt", "z");
+    // simulate file existing before(should stay)
+
+    // uninstall by directory content
+    tst::CreateWorkFile(modules / "test_left.txt", "z");
+
+    // check results
+    EXPECT_TRUE(fs::exists(modules / "doc"));
+    EXPECT_TRUE(fs::exists(modules / "test.txt"));
+    EXPECT_TRUE(fs::exists(modules / "test_left.txt"));
+
+    EXPECT_TRUE(mc.removeContentByTargetDir({}, modules / "tst"));
+    EXPECT_FALSE(mc.removeContentByTargetDir({L"doc"}, modules / "t"));
+
+    EXPECT_FALSE(mc.removeContentByTargetDir({L"doc", L"test.txt"}, {}));
+
+    EXPECT_TRUE(
+        mc.removeContentByTargetDir({L"doc", L"test.txt"}, modules / "tst"));
+    EXPECT_FALSE(fs::exists(modules / "doc"));
+    EXPECT_FALSE(fs::exists(modules / "test.txt"));
+    EXPECT_TRUE(fs::exists(modules / "test_left.txt"));
+}
+
+TEST(ModuleCommanderTest, InstallModules) {
+    using namespace std::literals;
+    namespace fs = std::filesystem;
+    cma::OnStartTest();
+    tst::SafeCleanTempDir();
+    fs::path user_dir = cma::cfg::GetUserDir();
+
+    auto zip_file = user_dir / tst::zip_to_test;
+    ASSERT_TRUE(fs::exists(zip_file))
+        << "Please make '" << tst::zip_to_test << "' available in the '"
+        << user_dir.u8string() << "'";
+
+    auto [root, user] = tst::CreateInOut();
+    fs::path install = root / dirs::kInstall;
+    fs::create_directories(install);
+
+    std::error_code ec;
+    fs::create_directories(install, ec);
+    fs::create_directories(user / dirs::kInstall, ec);
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+    ON_OUT_OF_SCOPE(cma::OnStartTest());
+    GetCfg().pushFolders(root, user);
+    ON_OUT_OF_SCOPE(GetCfg().popFolders(););
+
+    std::string modules_text =
+        "enabled: yes\n"
+        "table:\n"
+        "  - name: unzip_test\n"    // valid
+        "    exts: ['.test']\n"     //
+        "    exec: 'nothing {}'\n"  //
+        ;
+
+    auto main_yaml = GetLoadedConfig();
+    main_yaml[groups::kModules] = YAML::Load(modules_text);
+
+    ModuleCommander mc;
+    mc.readConfig(main_yaml);
+    fs::copy_file(zip_file, install / tst::zip_to_test);
+    ASSERT_EQ(mc.findModuleFiles(GetRootDir()), 1);
+    ASSERT_TRUE(mc.installModule(mc.modules_[0], root,
+                                 user / dirs::kUserInstallDir,
+                                 InstallMode::force));
 }
 
 }  // namespace cma::cfg::modules

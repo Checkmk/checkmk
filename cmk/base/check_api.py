@@ -643,13 +643,12 @@ def discover_single(info):
 def validate_filter(filter_function):
     # type: (Any) -> Callable
     """Validate function argument is a callable and return it"""
-
-    if hasattr(filter_function, '__call__'):
+    if callable(filter_function):
         return filter_function
-    if filter_function is not None:
-        raise ValueError("Filtering function is not a callable,"
-                         " a {} has been given.".format(type(filter_function)))
-    return lambda *entry: entry[0]
+    if filter_function is None:
+        return lambda *entry: entry[0]
+    raise ValueError("Filtering function is not a callable, a {} has been given.".format(
+        type(filter_function)))
 
 
 def discover(selector=None, default_params=None):
@@ -744,13 +743,17 @@ def discover(selector=None, default_params=None):
                     yield (key, params)
                 elif name is True and not from_dict:
                     yield (entry[0], params)
-                elif name and hasattr(name, '__iter__'):
-                    for new_name in name:
+                else:
+                    try:
+                        it = iter(name)
+                    except TypeError:
+                        it = iter(())
+                    for new_name in it:
                         yield (new_name, params)
 
         return discoverer
 
-    if selector is not None and hasattr(selector, '__call__'):
+    if callable(selector):
         return _discovery(selector)
 
     if selector is None and default_params is None:

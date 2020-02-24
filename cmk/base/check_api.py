@@ -727,19 +727,16 @@ def discover(selector=None, default_params=None):
             # type: (Union[Dict[Any, Any], List[Any], Tuple]) -> Iterable[Tuple[str, Union[Dict[Any, Any], str]]]
             params = default_params if isinstance(default_params, six.string_types +
                                                   (dict,)) else {}
-            filterer = validate_filter(filter_function)
-            from_dict = isinstance(parsed, dict)
-
-            for entry in roller(parsed):
-                if from_dict:
-                    key, value = entry
-                    name = filterer(key, value)
-                    get_name = lambda: key
-                else:
-                    name = filterer(entry)
-                    get_name = lambda: entry[0]
-                for new_name in _get_discovery_iter(name, get_name):
-                    yield (new_name, params)
+            if isinstance(parsed, dict):
+                filterer = validate_filter(filter_function)
+                for key, value in roller(parsed):
+                    for n in _get_discovery_iter(filterer(key, value), lambda: key):
+                        yield (n, params)
+            else:
+                filterer = validate_filter(filter_function)
+                for entry in roller(parsed):
+                    for n in _get_discovery_iter(filterer(entry), lambda: entry[0]):
+                        yield (n, params)
 
         return discoverer
 

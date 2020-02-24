@@ -711,15 +711,6 @@ def discover(selector=None, default_params=None):
 
             check_info["chk"] = {'inventory_function': inventory_thecheck}
     """
-    def roller(parsed):
-        # type: (Any) -> Any
-        if isinstance(parsed, dict):
-            return parsed.items()
-        if isinstance(parsed, (list, tuple)):
-            return parsed
-        raise ValueError("Discovery function only works with dictionaries,"
-                         " lists, and tuples you gave a {}".format(type(parsed)))
-
     def _discovery(filter_function):
         # type: (Callable) -> Callable
         @functools.wraps(filter_function)
@@ -729,14 +720,18 @@ def discover(selector=None, default_params=None):
                                                   (dict,)) else {}
             if isinstance(parsed, dict):
                 filterer = validate_filter(filter_function)
-                for key, value in roller(parsed):
+                for key, value in parsed.items():
                     for n in _get_discovery_iter(filterer(key, value), lambda: key):
                         yield (n, params)
-            else:
+            elif isinstance(parsed, (list, tuple)):
                 filterer = validate_filter(filter_function)
-                for entry in roller(parsed):
+                for entry in parsed:
                     for n in _get_discovery_iter(filterer(entry), lambda: entry[0]):
                         yield (n, params)
+            else:
+                raise ValueError(
+                    "Discovery function only works with dictionaries, lists, and tuples you gave a {}"
+                    .format(type(parsed)))
 
         return discoverer
 

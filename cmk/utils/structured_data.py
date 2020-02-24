@@ -111,11 +111,9 @@ class StructuredDataTree(object):
         filepath = "%s/%s" % (path, filename)
         output = self.get_raw_tree()
         store.save_object_to_file(filepath, output, pretty=pretty)
-
         # TODO: Can be set to encoding="utf-8" once we are on Python 3 only
         with gzip.open(filepath + ".gz", "wb") as f:
             f.write(six.ensure_binary(repr(output) + "\n"))
-
         # Inform Livestatus about the latest inventory update
         store.save_text_to_file("%s/.last" % path, u"")
 
@@ -337,8 +335,7 @@ class Container(NodeAttribute):
         return True
 
     def is_equal(self, foreign, edges=None):
-        for _, __, my_child, foreign_child in \
-            self._get_comparable_children(foreign, edges=edges):
+        for _, __, my_child, foreign_child in self._get_comparable_children(foreign, edges=edges):
             if not my_child.is_equal(foreign_child):
                 return False
         return True
@@ -407,7 +404,7 @@ class Container(NodeAttribute):
 
     def _is_nested_numeration_tree(self, child):
         if isinstance(child, Container):
-            for key in child._edges.keys():
+            for key in child._edges:
                 if isinstance(key, int):
                     return True
         return False
@@ -513,7 +510,7 @@ class Container(NodeAttribute):
     #   ---getting [sub] nodes/node attributes----------------------------------
 
     def get_edge_nodes(self):
-        return self._edges.items()
+        return list(self._edges.items())
 
     def get_children(self, edges=None):
         """Returns a flatten list of tuples (edge, absolute path, child)"""
@@ -536,7 +533,7 @@ class Container(NodeAttribute):
         """Returns a flatten list of tuples (edge, absolute path, my child, foreign child)"""
         comparable_children = set()
         if edges is None:
-            edges = set(self._edges.keys()).union(set(foreign._edges.keys()))
+            edges = set(self._edges).union(foreign._edges)
         for edge in edges:
             my_node = self._edges.get(edge, Node())
             foreign_node = foreign._edges.get(edge, Node())
@@ -772,13 +769,10 @@ class Numeration(Leaf):
                 entry.update(foreign_num[key])
                 del foreign_num[key]
 
-        self._numeration += foreign_num.values()
+        self._numeration += list(foreign_num.values())
 
     def _get_numeration_keys(self):
-        keys = set()  # type: Set
-        for entry in self._numeration:
-            keys.update(entry.keys())
-        return keys
+        return {key for row in self._numeration for key in row}
 
     def _prepare_key(self, entry, keys):
         return tuple(entry[key] for key in sorted(keys) if key in entry)
@@ -1000,7 +994,7 @@ def _compare_dict_keys(old_dict, new_dict):
     - intersection of both
     - relative complement of old_dict in new_dict
     """
-    old_keys, new_keys = set(old_dict.keys()), set(new_dict.keys())
+    old_keys, new_keys = set(old_dict), set(new_dict)
     return old_keys - new_keys, old_keys.intersection(new_keys),\
            new_keys - old_keys
 

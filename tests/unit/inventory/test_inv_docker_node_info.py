@@ -1,4 +1,4 @@
-import pytest
+import pytest  # type: ignore[import]
 
 
 @pytest.mark.parametrize('parsed, inventory_data, status_data', [

@@ -117,7 +117,10 @@ def site_id():
 
 
 def is_running_as_site_user():
-    return pwd.getpwuid(os.getuid()).pw_name == site_id()
+    try:
+        return pwd.getpwuid(os.getuid()).pw_name == site_id()
+    except KeyError:
+        return False # Not existing user -> No site user
 
 
 def add_python_paths():

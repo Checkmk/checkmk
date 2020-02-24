@@ -190,7 +190,7 @@ class Encoder(object):
         assert isinstance(vars_, list)
         pairs = []
         for varname, value in sorted(vars_):
-            assert isinstance(varname, str)
+            assert isinstance(varname, (str, unicode))
 
             if isinstance(value, int):
                 value = str(value)

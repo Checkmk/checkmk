@@ -1,10 +1,12 @@
 import java.text.SimpleDateFormat
 
-def DISTRO_STR = ''
-if(JOB_BASE_NAME == 'nightly_build_containerized') {
-    DISTRO_STR = DISTRO_LIST_MASTER
-} else {
-    DISTRO_STR = DISTRO_LIST_TESTBUILD
+def DISTRO_LIST_DEFAULT = ''
+withFolderProperties{
+    if(JOB_BASE_NAME == 'nightly_build_containerized') {
+        DISTRO_LIST_DEFAULT = env.DISTRO_LIST
+    } else {
+        DISTRO_LIST_DEFAULT = env.DISTRO_LIST_TESTBUILD
+    }
 }
 
 properties([

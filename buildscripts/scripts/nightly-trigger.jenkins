@@ -1,10 +1,15 @@
 BRANCH_NAME = scm.branches[0].name
 FOLDER_ID = BRANCH_NAME.replaceAll('\\.','')
 
+def DISTRO_LIST_DEFAULT = ''
+withFolderProperties{
+    DISTRO_LIST_DEFAULT = env.DISTRO_LIST
+}
+
 properties([
     buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
     parameters([
-        string(name: 'DISTROS', defaultValue: DISTRO_LIST_MASTER, description: 'List of targeted distros' ),
+        string(name: 'DISTROS', defaultValue: DISTRO_LIST_DEFAULT, description: 'List of targeted distros' ),
         string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' )
     ]),
     pipelineTriggers([

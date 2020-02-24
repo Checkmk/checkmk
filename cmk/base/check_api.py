@@ -734,22 +734,12 @@ def discover(selector=None, default_params=None):
                 if from_dict:
                     key, value = entry
                     name = filterer(key, value)
+                    get_name = lambda: key
                 else:
                     name = filterer(entry)
-
-                if isinstance(name, six.string_types):
-                    yield (name, params)
-                elif name is True and from_dict:
-                    yield (key, params)
-                elif name is True and not from_dict:
-                    yield (entry[0], params)
-                else:
-                    try:
-                        it = iter(name)
-                    except TypeError:
-                        it = iter(())
-                    for new_name in it:
-                        yield (new_name, params)
+                    get_name = lambda: entry[0]
+                for new_name in _get_discovery_iter(name, get_name):
+                    yield (new_name, params)
 
         return discoverer
 
@@ -760,6 +750,18 @@ def discover(selector=None, default_params=None):
         return _discovery(lambda *args: args[0])
 
     return _discovery
+
+
+def _get_discovery_iter(name, get_name):
+    # type: (Any, Callable[[], str]) -> Iterable[str]
+    if isinstance(name, six.string_types):
+        return iter((name,))
+    if name is True:
+        return iter((get_name(),))
+    try:
+        return iter(name)
+    except TypeError:
+        return iter(())
 
 
 # NOTE: Currently this is not really needed, it is just here to keep any start

@@ -8,6 +8,9 @@ description:
 
  Returns {WARN}/{CRIT} if the current utilization is above the given levels.
 
+item:
+ Name of the director
+
 inventory:
  Creates one check for each director.
 

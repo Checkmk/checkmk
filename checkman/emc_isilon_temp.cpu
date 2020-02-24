@@ -7,7 +7,7 @@ description:
  Checks the temperature of the CPUs in EMC Isilon storage devices.
 
 item:
- {CPU 0}, {CPU 1}, ...
+ {{CPU}} followed by the index of the CPU
 
 inventory:
  Creates one service per CPU

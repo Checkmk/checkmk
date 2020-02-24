@@ -6,6 +6,9 @@ distribution: check_mk
 description:
  Checks space on the cluster filesystem.
 
+item:
+ The fixed statement {{Cluster}}
+
 inventory:
  One check will be created
 

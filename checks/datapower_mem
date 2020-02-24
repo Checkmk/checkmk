@@ -34,6 +34,7 @@ factory_settings["datapower_mem_default_levels"] = {"levels": ("perc_used", (80.
 
 
 def inventory_datapower_mem(info):
+    # TODO: Cleanup empty string and change manpage
     if info:
         return [("", {})]
 

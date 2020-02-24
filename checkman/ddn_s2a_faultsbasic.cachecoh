@@ -7,8 +7,5 @@ description:
  This check monitors the cache coherency status. It treats
  "not enabled" as WARN and "not established" as CRIT.
 
-item:
- None
-
 inventory:
  One service per device is created.

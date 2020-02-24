@@ -7,8 +7,5 @@ description:
  This check monitors the power-on time. Note that this value differs
  from the uptime value supplied via SNMP, hence the different service description.
 
-item:
- None
-
 inventory:
  One service per device is created.

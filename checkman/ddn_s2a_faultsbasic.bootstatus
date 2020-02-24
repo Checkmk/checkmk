@@ -7,8 +7,5 @@ description:
  This check monitors the device's boot status. "System not fully booted"
  is treated as WARN.
 
-item:
- None
-
 inventory:
  One service per device is created.

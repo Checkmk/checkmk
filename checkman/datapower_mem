@@ -14,3 +14,6 @@ description:
 
 inventory:
  On each gateway one service is created.
+
+item:
+ Empty string

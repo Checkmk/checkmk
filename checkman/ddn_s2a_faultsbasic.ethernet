@@ -7,8 +7,5 @@ description:
  This check monitors whether an established ethernet connection exists.
  Any other state is treated as WARN.
 
-item:
- None
-
 inventory:
  One service per device is created.

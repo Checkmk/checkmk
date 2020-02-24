@@ -7,8 +7,5 @@ description:
  This check displays the ping fault status, where a detected
  ping fault is being treated as WARN.
 
-item:
- None
-
 inventory:
  One service per device is created.

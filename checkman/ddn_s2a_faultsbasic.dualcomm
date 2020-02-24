@@ -7,8 +7,5 @@ description:
  This check monitors whether dual communication is established.
  Any other state is treated as WARN.
 
-item:
- None
-
 inventory:
  One service per device is created.

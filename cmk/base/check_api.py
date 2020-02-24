@@ -88,7 +88,7 @@ import pprint  # noqa: F401 # pylint: disable=unused-import
 import calendar
 
 from typing import (  # pylint: disable=unused-import
-    Set, Any, Callable, Dict, Iterable, List, Optional, Tuple, Union, Text,
+    Any, Callable, Dict, Iterable, List, Optional, Set, Text, Tuple, Union,
 )
 
 import six
@@ -641,7 +641,7 @@ def discover_single(info):
 
 
 def validate_filter(filter_function):
-    # type: (Callable) -> Callable
+    # type: (Any) -> Callable
     """Validate function argument is a callable and return it"""
 
     if hasattr(filter_function, '__call__'):
@@ -653,7 +653,7 @@ def validate_filter(filter_function):
 
 
 def discover(selector=None, default_params=None):
-    # type: (Optional[Callable], Optional[Union[dict, str]]) -> Callable
+    # type: (Optional[Callable], Optional[Union[Dict[Any, Any], str]]) -> Callable
     """Helper function to assist with service discoveries
 
     The discovery function is in many cases just a boilerplate function to
@@ -725,8 +725,7 @@ def discover(selector=None, default_params=None):
         # type: (Callable) -> Callable
         @functools.wraps(filter_function)
         def discoverer(parsed):
-            # type: (Union[dict, list]) -> Iterable[Tuple]
-
+            # type: (Union[Dict[Any, Any], List[Any], Tuple]) -> Iterable[Tuple[str, Union[Dict[Any, Any], str]]]
             params = default_params if isinstance(default_params, six.string_types +
                                                   (dict,)) else {}
             filterer = validate_filter(filter_function)

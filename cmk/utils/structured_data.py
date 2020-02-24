@@ -418,7 +418,9 @@ class Container(NodeAttribute):
         for edge, _, child in self.get_children():
             child_tree = child.get_raw_tree()
             if self._is_nested_numeration_tree(child):
-                tree.setdefault(edge, child_tree.values())
+                # Sort by index but forget index afterwards => nested sub nodes as before
+                sorted_values = [child_tree[k] for k in sorted(child_tree.keys())]
+                tree.setdefault(edge, sorted_values)
             elif isinstance(child, Numeration):
                 tree.setdefault(edge, child_tree)
             else:
@@ -677,7 +679,13 @@ class Numeration(Leaf):
         return self._numeration == []
 
     def is_equal(self, foreign, edges=None):
-        return sorted(self._numeration) == sorted(foreign._numeration)
+        for row in self._numeration:
+            if row not in foreign._numeration:
+                return False
+        for row in foreign._numeration:
+            if row not in self._numeration:
+                return False
+        return True
 
     def count_entries(self):
         return sum(map(len, self._numeration))

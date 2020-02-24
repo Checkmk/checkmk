@@ -1,0 +1,12 @@
+Title: HW/SW Inventory: Unsorted branches may pollute inventory archive
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p10
+Date: 1582550220
+
+

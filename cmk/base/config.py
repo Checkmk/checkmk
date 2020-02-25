@@ -638,7 +638,7 @@ class PackedConfig(object):  # pylint: disable=useless-object-inheritance
         store.save_file(self._path + ".orig", helper_config + "\n")
 
         code = compile(helper_config, '<string>', 'exec')
-        with open(self._path + ".compiled", "w") as compiled_file:
+        with open(self._path + ".compiled", "wb") as compiled_file:
             marshal.dump(code, compiled_file)
 
         os.rename(self._path + ".compiled", self._path)
@@ -646,7 +646,8 @@ class PackedConfig(object):  # pylint: disable=useless-object-inheritance
     def load(self):
         # type: () -> None
         _initialize_config()
-        exec(marshal.load(open(self._path)), globals())
+        with open(self._path, "rb") as f:
+            exec(marshal.load(f), globals())
         _perform_post_config_loading_actions()
 
 

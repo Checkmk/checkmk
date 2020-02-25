@@ -23,6 +23,7 @@
 #include "common/wtools.h"
 #include "external_port.h"
 #include "logger.h"
+#include "modules.h"
 #include "providers/check_mk.h"
 #include "providers/df.h"
 #include "providers/fileinfo.h"
@@ -248,12 +249,14 @@ private:
     // controlled exclusively by mainThread
     std::string internal_port_;
 
+    cma::cfg::modules::ModuleCommander mc_;
+
     // called by external port BEFORE starting context run
     // on this phase we are starting our async plugins
     void preContextCall() {}
 
-    void informDevice(cma::rt::Device& Device,
-                      std::string_view Ip) const noexcept;
+    void informDevice(cma::rt::Device& Device, std::string_view Ip) const
+        noexcept;
 
     // used to start OpenHardwareMonitor if conditions are ok
     bool stopRunningOhmProcess() noexcept;

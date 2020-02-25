@@ -33,7 +33,7 @@ constexpr bool is_iterable_v = is_iterable<T>::value;
 namespace cma::cfg::modules {
 
 template <typename T>
-bool Compare(const T &t, const T &v) {
+bool Compare(const T& t, const T& v) {
     static_assert(cma::tools::is_iterable<T>::value);
     if (t.size() != v.size()) return false;
 
@@ -204,6 +204,44 @@ TEST(ModuleCommanderTest, ReadConfig) {
     EXPECT_EQ(mc.modules_[1].dir(), "plugins");
 }
 
+TEST(ModuleCommanderTest, LowLevelFs) {
+    using namespace std::literals;
+    namespace fs = std::filesystem;
+    cma::OnStartTest();
+    tst::SafeCleanTempDir();
+    fs::path root = cma::cfg::GetTempDir();
+    fs::path user = tst::CreateDirInTemp(L"user");
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+
+    ModuleCommander::CreateBackupFolder(user);
+    auto backup_dir = user / dirs::kInstall / dirs::kInstalledModules;
+    ASSERT_TRUE(fs::exists(backup_dir));
+
+    auto mod_file = user / "to_backup";
+    tst::ConstructFile(mod_file, "11");
+
+    auto backup_file = backup_dir / "to_backup";
+    ASSERT_FALSE(fs::exists(backup_file));
+    ASSERT_TRUE(ModuleCommander::BackupModule(mod_file, backup_file));
+    ASSERT_TRUE(fs::exists(backup_file));
+    {
+        // simulate busy
+        std::fstream fs;
+        fs.open(backup_file, std::ios::in, _SH_DENYRW);
+        ASSERT_FALSE(ModuleCommander::BackupModule(mod_file, backup_file));
+    }
+
+    auto mod_dir = user / dirs::kUserModules / "zis";
+    ModuleCommander::PrepareCleanTargetDir(mod_dir);
+    ASSERT_TRUE(fs::exists(mod_dir));
+    auto dummy_file = mod_dir / "t.txt";
+    tst::ConstructFile(dummy_file, "aaaaa");
+    ASSERT_TRUE(fs::exists(dummy_file));
+    ModuleCommander::PrepareCleanTargetDir(mod_dir);
+    ASSERT_TRUE(fs::exists(mod_dir));
+    ASSERT_FALSE(fs::exists(dummy_file));
+}
+
 TEST(ModuleCommanderTest, FindModules) {
     using namespace std::literals;
     namespace fs = std::filesystem;
@@ -266,9 +304,9 @@ TEST(ModuleCommanderTest, Internal) {
 
     ModuleCommander mc;
     auto dir = user / dirs::kUserModules / "tst";
-    EXPECT_FALSE(mc.createFileForTargetDir("c:\\windows", modules));
-    EXPECT_FALSE(mc.createFileForTargetDir(modules / "tst", "c:\\windows"));
-    EXPECT_TRUE(mc.createFileForTargetDir(modules / "tst", modules));
+    EXPECT_FALSE(mc.CreateFileForTargetDir("c:\\windows", modules));
+    EXPECT_FALSE(mc.CreateFileForTargetDir(modules / "tst", "c:\\windows"));
+    EXPECT_TRUE(mc.CreateFileForTargetDir(modules / "tst", modules));
 
     auto result =
         cma::tools::ReadFileInString((dir / kTargetDir).u8string().c_str());
@@ -287,13 +325,13 @@ TEST(ModuleCommanderTest, Internal) {
     EXPECT_TRUE(fs::exists(modules / "test.txt"));
     EXPECT_TRUE(fs::exists(modules / "test_left.txt"));
 
-    EXPECT_TRUE(mc.removeContentByTargetDir({}, modules / "tst"));
-    EXPECT_FALSE(mc.removeContentByTargetDir({L"doc"}, modules / "t"));
+    EXPECT_TRUE(mc.RemoveContentByTargetDir({}, modules / "tst"));
+    EXPECT_FALSE(mc.RemoveContentByTargetDir({L"doc"}, modules / "t"));
 
-    EXPECT_FALSE(mc.removeContentByTargetDir({L"doc", L"test.txt"}, {}));
+    EXPECT_FALSE(mc.RemoveContentByTargetDir({L"doc", L"test.txt"}, {}));
 
     EXPECT_TRUE(
-        mc.removeContentByTargetDir({L"doc", L"test.txt"}, modules / "tst"));
+        mc.RemoveContentByTargetDir({L"doc", L"test.txt"}, modules / "tst"));
     EXPECT_FALSE(fs::exists(modules / "doc"));
     EXPECT_FALSE(fs::exists(modules / "test.txt"));
     EXPECT_TRUE(fs::exists(modules / "test_left.txt"));
@@ -338,9 +376,77 @@ TEST(ModuleCommanderTest, InstallModules) {
     mc.readConfig(main_yaml);
     fs::copy_file(zip_file, install / tst::zip_to_test);
     ASSERT_EQ(mc.findModuleFiles(GetRootDir()), 1);
-    ASSERT_TRUE(mc.installModule(mc.modules_[0], root,
-                                 user / dirs::kUserInstallDir,
-                                 InstallMode::force));
+
+    // check installation
+    auto bad_module = mc.modules_[0];
+    bad_module.name_ = "zzzz";
+    bad_module.dir_ = "moduleS\\zzzz";
+    ASSERT_FALSE(mc.InstallModule(bad_module, root, user, InstallMode::normal));
+    tst::ConstructFile(root / dirs::kFileInstallDir / "zzzz.zip", "");
+    ASSERT_FALSE(mc.InstallModule(bad_module, root, user, InstallMode::normal))
+        << "empty file should return false";
+
+    ASSERT_FALSE(mc.UninstallModuleZip(fs::path(bad_module.name()),
+                                       user / dirs::kUserModules))
+        << "if file absent returns false";
+
+    tst::ConstructFile(root / dirs::kFileInstallDir / "zzzz.zip",
+                       "OKYYYYSSD");  // not null file should fail
+    ASSERT_FALSE(mc.InstallModule(bad_module, root, user, InstallMode::normal));
+
+    ASSERT_TRUE(
+        mc.InstallModule(mc.modules_[0], root, user, InstallMode::normal));
+    {
+        auto target_folder = user / dirs::kUserModules / "zzzz";
+        auto backup_file =
+            user / dirs::kUserInstallDir / dirs::kInstalledModules / "zzzz.zip";
+        ASSERT_FALSE(fs::exists(target_folder));
+        ASSERT_FALSE(fs::exists(backup_file));
+    }
+
+    // check install
+    auto target_folder = user / dirs::kUserModules / "unzip_test";
+    auto backup_file = user / dirs::kUserInstallDir / dirs::kInstalledModules /
+                       tst::zip_to_test;
+    ASSERT_TRUE(fs::exists(target_folder) && fs::is_directory(target_folder));
+    ASSERT_TRUE(fs::exists(backup_file) && fs::is_regular_file(backup_file));
+
+    // check duplicated install
+    ASSERT_FALSE(
+        mc.InstallModule(mc.modules_[0], root, user, InstallMode::normal));
+    ASSERT_TRUE(fs::exists(target_folder) && fs::is_directory(target_folder));
+    ASSERT_TRUE(fs::exists(backup_file) && fs::is_regular_file(backup_file));
+
+    // check forced install
+    ASSERT_TRUE(
+        mc.InstallModule(mc.modules_[0], root, user, InstallMode::force));
+    ASSERT_TRUE(fs::exists(target_folder) && fs::is_directory(target_folder));
+    ASSERT_TRUE(fs::exists(backup_file) && fs::is_regular_file(backup_file));
+
+    // check uninstall
+    auto mod_backup = mc.GetModBackup(user);
+    auto mod_install = mc.GetModInstall(user);
+
+    auto installed = mc.ScanDir(mod_backup);
+
+    ASSERT_EQ(installed.size(), 1);
+    ASSERT_TRUE(mc.isBelongsToModules(installed[0]));
+    ASSERT_TRUE(mc.UninstallModuleZip(installed[0], mod_install));
+    installed = mc.ScanDir(mod_backup);
+
+    ASSERT_TRUE(installed.empty());
+    ASSERT_TRUE(!fs::exists(backup_file));
+
+    // Simulate full install
+    mc.installModules(root, user, InstallMode::normal);
+    ASSERT_TRUE(fs::exists(target_folder) && fs::is_directory(target_folder));
+    ASSERT_TRUE(fs::exists(backup_file) && fs::is_regular_file(backup_file));
+
+    // Simulate install of the empty file(as packaged)
+    tst::ConstructFile(root / dirs::kFileInstallDir / tst::zip_to_test, "");
+    mc.installModules(root, user, InstallMode::normal);
+    ASSERT_TRUE(!fs::exists(target_folder));
+    ASSERT_TRUE(!fs::exists(backup_file));
 }
 
 }  // namespace cma::cfg::modules

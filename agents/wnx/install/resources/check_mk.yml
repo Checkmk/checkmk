@@ -254,7 +254,6 @@ modules:
         - name: 'python-3.8'              # this is name of the zip file and folder where  zip is installed to
           exts: ['.py', '.tribe29.py' ]   # list of extensions to be used automatically
           exec: 'Scripts\python.exe {}'   # command line, exe is relative to folder modules
-          dir: 'modules\{}'               #  relative folder to install the package {} means name
     
 
 system:

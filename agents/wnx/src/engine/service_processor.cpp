@@ -559,6 +559,11 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
     cma::MailSlot mailbox(mailslot_name, 0);
     using namespace cma::carrier;
     internal_port_ = BuildPortName(kCarrierMailslotName, mailbox.GetName());
+    if (cma::IsService()) {
+        mc_.InstallDefault(cma::cfg::modules::InstallMode::normal);
+    } else
+        mc_.LoadDefault();
+
     try {
         // start and stop for mailbox thread
         mailbox.ConstructThread(SystemMailboxCallback, 20, this);

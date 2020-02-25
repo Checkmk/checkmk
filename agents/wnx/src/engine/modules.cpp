@@ -158,7 +158,7 @@ bool CreateDir(const std::filesystem::path &mod) noexcept {
     return true;
 }
 
-PathVector ScanDir(const std::filesystem::path &dir) noexcept {
+PathVector ModuleCommander::ScanDir(const std::filesystem::path &dir) noexcept {
     namespace fs = std::filesystem;
     PathVector vec;
     for (auto &p : fs::directory_iterator(dir)) {
@@ -193,7 +193,7 @@ bool ModuleCommander::isBelongsToModules(
 
 // looks for the kTargetDir file in target_dir - this is symbolic link to folder
 // for remove content
-bool ModuleCommander::removeContentByTargetDir(
+bool ModuleCommander::RemoveContentByTargetDir(
     const std::vector<std::wstring> &content,
     const std::filesystem::path &target_dir) {
     namespace fs = std::filesystem;
@@ -221,7 +221,7 @@ bool ModuleCommander::removeContentByTargetDir(
     return false;
 }
 
-bool ModuleCommander::createFileForTargetDir(
+bool ModuleCommander::CreateFileForTargetDir(
     const std::filesystem::path &module_dir,
     const std::filesystem::path &target_dir) {
     namespace fs = std::filesystem;
@@ -259,15 +259,20 @@ bool ModuleCommander::createFileForTargetDir(
     }
 }
 
-bool ModuleCommander::uninstallModuleZip(
+bool ModuleCommander::UninstallModuleZip(
     const std::filesystem::path &file, const std::filesystem::path &mod_root) {
     namespace fs = std::filesystem;
+    std::error_code ec;
+    if (!fs::exists(file, ec)) {
+        XLOG::d.i("'{}' is absent, no need to uninstall", file.u8string());
+        return false;
+    }
+
     auto name = file.filename();
     name.replace_extension("");
     auto target_dir = mod_root / name;
-    std::error_code ec;
     auto list = cma::tools::zip::List(file.wstring());
-    removeContentByTargetDir(list, target_dir);
+    RemoveContentByTargetDir(list, target_dir);
 
     fs::remove_all(target_dir, ec);
     fs::remove(file, ec);
@@ -275,64 +280,106 @@ bool ModuleCommander::uninstallModuleZip(
     return true;
 }
 
-bool ModuleCommander::installModule(const Module &module,
-                                    const std::filesystem::path &root,
-                                    const std::filesystem::path &user,
-                                    InstallMode mode) const {
+void ModuleCommander::CreateBackupFolder(const std::filesystem::path &user) {
+    namespace fs = std::filesystem;
+    auto mod_backup = ModuleCommander::GetModBackup(user);
+    std::error_code ec;
+    if (fs::exists(mod_backup, ec)) return;
+
+    XLOG::d.i("creating backup folder for modules installing '{}'",
+              mod_backup.u8string());
+
+    fs::create_directories(ModuleCommander::GetModBackup(user), ec);
+}
+
+bool ModuleCommander::BackupModule(const std::filesystem::path &module_file,
+                                   const std::filesystem::path &backup_file) {
+    namespace fs = std::filesystem;
+    std::error_code ec;
+    auto ret = fs::copy_file(module_file, backup_file,
+                             fs::copy_options::overwrite_existing, ec);
+    if (ret) return true;
+
+    XLOG::l.crit("Error [{}] '{}' installing new mod", ec.value(),
+                 ec.message());
+    return false;
+}
+
+bool ModuleCommander::PrepareCleanTargetDir(
+    const std::filesystem::path &mod_dir) {
     namespace fs = std::filesystem;
 
-    auto backup_file = GetModBackup(user) / module.name();
+    if (mod_dir.u8string().size() < kResonableDirLengthMin) {
+        XLOG::l("target_dir '{}'is too short when installing new module '{}'",
+                mod_dir.u8string());
+        return false;
+    }
+    std::error_code ec;
+    fs::remove_all(mod_dir, ec);
+    fs::create_directories(mod_dir, ec);
+
+    return true;
+}
+
+bool ModuleCommander::InstallModule(const Module &mod,
+                                    const std::filesystem::path &root,
+                                    const std::filesystem::path &user,
+                                    InstallMode mode) {
+    namespace fs = std::filesystem;
+
+    auto backup_file = GetModBackup(user) / mod.name();
     backup_file += kExtension.data();
-    auto module_file = root / dirs::kFileInstallDir / module.name();
+    auto module_file = root / dirs::kFileInstallDir / mod.name();
     module_file += kExtension.data();
 
     std::error_code ec;
     if (!fs::exists(module_file, ec) || fs::file_size(module_file) == 0) {
+        UninstallModuleZip(backup_file, GetModInstall(user));
         XLOG::l.i(
-            "Installation of the module '{}' is not required, module file '{}'is absent or too short",
-            module.name(), module_file.u8string());
+            "Installation of the module '{}' is not required, module file '{}'is "
+            "absent or too short. Backup will be uninstalled",
+            mod.name(), module_file.u8string());
         return false;
     }
+
     if (cma::tools::AreFilesSame(backup_file, module_file) &&
         mode == InstallMode::normal) {
         XLOG::l.i(
             "Installation of the module '{}' is not required, module file '{}'is same",
-            module.name(), module_file.u8string());
+            mod.name(), module_file.u8string());
         return false;
     }
 
-    auto uninstalled = uninstallModuleZip(backup_file, GetModInstall(user));
+    CreateBackupFolder(user);
 
-    if (!fs::exists(GetModBackup(user), ec)) {
-        fs::create_directories(GetModBackup(user), ec);
+    auto uninstalled = UninstallModuleZip(backup_file, GetModInstall(user));
+
+    if (!BackupModule(module_file, backup_file)) return false;
+
+    fs::path default_dir = GetModInstall(user) / mod.name();  // default
+    fs::path actual_dir = user / mod.dir();
+    if (!PrepareCleanTargetDir(default_dir)) return false;
+
+    if (!fs::equivalent(default_dir, actual_dir)) {
+        // establish symbolic link
+        CreateFileForTargetDir(default_dir, actual_dir);
     }
 
-    auto ret = fs::copy_file(module_file, backup_file,
-                             fs::copy_options::overwrite_existing, ec);
+    auto ret =
+        cma::tools::zip::Extract(backup_file.wstring(), actual_dir.wstring());
     if (!ret) {
-        XLOG::l("Error [{}] '{}' installing new module '{}'", ec.value(),
-                ec.message(), module.name());
-        return false;
+        XLOG::l(
+            "Extraction failed: removing backup file '{}' and default dir '{}'",
+            backup_file.u8string(), default_dir.u8string());
+        fs::remove(backup_file, ec);
+        fs::remove_all(default_dir);
     }
 
-    fs::path target_dir = user / module.dir();
-
-    if (target_dir.u8string().size() < 32) {
-        XLOG::l("target_dir '{}'is too short when installing new module '{}'",
-                target_dir.u8string(), module.name());
-        return false;
-    }
-    fs::remove_all(target_dir);
-    fs::create_directories(target_dir);
-    if (target_dir.parent_path() != GetModInstall(user)) {
-        createFileForTargetDir(GetModInstall(user) / module.name(), target_dir);
-    }
-
-    return cma::tools::zip::Extract(backup_file.wstring(),
-                                    target_dir.wstring());
+    return ret;
 }
 
-void ModuleCommander::installModules(const std::filesystem::path &user,
+void ModuleCommander::installModules(const std::filesystem::path &root,
+                                     const std::filesystem::path &user,
                                      InstallMode mode) const {
     namespace fs = std::filesystem;
     auto mod_root = GetModInstall(user);
@@ -344,13 +391,38 @@ void ModuleCommander::installModules(const std::filesystem::path &user,
 
     for (auto &f : installed) {
         if (!isBelongsToModules(f)) {
-            uninstallModuleZip(f, mod_root);
+            UninstallModuleZip(f, mod_root);
         }
     }
 
     for (auto &m : modules_) {
-        installModule(m, mod_root, mod_backup, mode);
+        InstallModule(m, root, user, mode);
     }
 }
 
+void ModuleCommander::InstallDefault(InstallMode mode) noexcept {
+    try {
+        auto root = GetRootDir();
+        auto user = GetUserDir();
+        auto yaml = GetLoadedConfig();
+        XLOG::l.i("Reading module config {}",
+                  mode == InstallMode::force ? "forced" : "normal");
+        readConfig(yaml);
+        XLOG::l.i("Finding modules");
+        findModuleFiles(root);
+        XLOG::l.i("Installing modules");
+        installModules(root, user, mode);
+    } catch (const std::exception &e) {
+        XLOG::l("Exception installing modules '{}'", e.what());
+    }
+}
+void ModuleCommander::LoadDefault() noexcept {
+    try {
+        auto yaml = GetLoadedConfig();
+        XLOG::l.i("Loading module config");
+        readConfig(yaml);
+    } catch (const std::exception &e) {
+        XLOG::l("Exception loading modules config '{}'", e.what());
+    }
+}
 }  // namespace cma::cfg::modules

@@ -12,5 +12,8 @@ description:
 
  The check uses the thresholds provided by the SNMP agent to raise WARNING/CRITICAL states.
 
+item:
+ Name of the temperature sensor
+
 inventory:
  The check creates one service for each temperature sensor provided in the SNMP data.

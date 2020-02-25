@@ -9,6 +9,9 @@ description:
  check is always {OK}, but individual levels for {WARN} and {CRIT}
  can be configured.
 
+item:
+ Type of queue (i.e. {{Executable}}, {{PDF}}, ...)
+
 inventory:
  One check per queue will be created.
 

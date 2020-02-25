@@ -9,6 +9,9 @@ description:
  hence there is one service per domain.
  This check is currently purely informational and is thus always "OK".
 
+item:
+ Name of the SSL VPN tunnel
+
 inventory:
  One service per virtual domain will be created
 

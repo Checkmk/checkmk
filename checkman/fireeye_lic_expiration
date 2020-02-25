@@ -12,7 +12,7 @@ description:
  days drops below configurable values
 
 item:
- The feature.
+ The feature of the license
 
 inventory:
  One service per feature is created.

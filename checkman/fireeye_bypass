@@ -13,8 +13,6 @@ description:
  differs from the time of inventory.
 
  To reset the expected value, Tabula Rasa is needed.
-item:
- No item.
 
 inventory:
  One service is created.

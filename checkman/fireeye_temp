@@ -13,7 +13,7 @@ description:
  temperature reading.
 
 item:
- The "System".
+ The fixed statement {{system}}
 
 inventory:
  One service for the system is created.

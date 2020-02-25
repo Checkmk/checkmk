@@ -28,6 +28,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
 #include <cctype>
 #include <cerrno>
 #include <cstdio>
@@ -167,7 +168,7 @@ int main(int argc, char **argv) {
         w = append_str(text, w);
         *w = 0;
     } else {
-        strncpy(message, argv[1], sizeof(message));
+        strncpy(message, argv[1], sizeof(message) - 1);
     }
 
     /* If we have a remote host and there is no local event Console running,

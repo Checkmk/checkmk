@@ -27,7 +27,7 @@
 from typing import Union, Tuple, Optional, AnyStr, List
 
 # TODO: Can be removed with python 3.8+
-if sys.version_info[0] >= 3:
+if sys.version_info[0] == 3 and sys.version_info[1] < 8:
     from mypy_extensions import TypedDict
 else:
     from typing import TypedDict

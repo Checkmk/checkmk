@@ -642,7 +642,7 @@ def check_logwatch_generic(item, params, loglines, found):
 
     header = time.strftime("<<<%Y-%m-%d %H:%M:%S UNKNOWN>>>\n")
     output_size += len(header)
-    header = header.decode('utf-8')
+    header = six.ensure_str(header)
 
     # process new input lines - but only when there is some room left in the file
     if output_size < logwatch_max_filesize:

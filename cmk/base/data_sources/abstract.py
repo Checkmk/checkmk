@@ -701,7 +701,7 @@ class CheckMKAgentDataSource(
         # handle sections with option persist(...)
         persisted_sections = {}  # type: PersistedAgentSections
         section_content = []  # type: AgentSectionContent
-        section_options = {}  # type: Dict[bytes, Optional[bytes]]
+        section_options = {}  # type: Dict[str, Optional[str]]
         agent_cache_info = {}  # type: SectionCacheInfo
         separator = None  # type: Optional[str]
         encoding = None
@@ -721,13 +721,13 @@ class CheckMKAgentDataSource(
             # Found normal section header
             # section header has format <<<name:opt1(args):opt2:opt3(args)>>>
             elif stripped_line[:3] == b'<<<' and stripped_line[-3:] == b'>>>':
-                section_header = stripped_line[3:-3]
-                headerparts = section_header.split(b":")
+                section_header = six.ensure_str(stripped_line[3:-3])
+                headerparts = section_header.split(":")
                 section_name = headerparts[0]
                 section_options = {}
-                opt_args = None  # type: Optional[bytes]
+                opt_args = None  # type: Optional[str]
                 for o in headerparts[1:]:
-                    opt_parts = o.split(b"(")
+                    opt_parts = o.split("(")
                     opt_name = opt_parts[0]
                     if len(opt_parts) > 1:
                         opt_args = opt_parts[1][:-1]
@@ -735,39 +735,38 @@ class CheckMKAgentDataSource(
                         opt_args = None
                     section_options[opt_name] = opt_args
 
-                content = sections.get(str(section_name), None)
+                content = sections.get(section_name, None)
                 if content is None:  # section appears in output for the first time
                     section_content = []
-                    sections[six.ensure_str(section_name)] = section_content
+                    sections[section_name] = section_content
                 else:
                     section_content = content
 
-                raw_separator = section_options.get(b"sep")
+                raw_separator = section_options.get("sep")
                 if raw_separator is None:
                     separator = None
                 else:
                     separator = chr(int(raw_separator))
 
                 # Split of persisted section for server-side caching
-                raw_persist = section_options.get(b"persist")
+                raw_persist = section_options.get("persist")
                 if raw_persist is not None:
                     until = int(raw_persist)
                     cached_at = int(time.time())  # Estimate age of the data
                     cache_interval = int(until - cached_at)
-                    agent_cache_info[six.ensure_str(section_name)] = (cached_at, cache_interval)
-                    persisted_sections[six.ensure_str(section_name)] = (cached_at, until,
-                                                                        section_content)
+                    agent_cache_info[section_name] = (cached_at, cache_interval)
+                    persisted_sections[section_name] = (cached_at, until, section_content)
 
-                raw_cached = section_options.get(b"cached")
+                raw_cached = section_options.get("cached")
                 if raw_cached is not None:
-                    cache_times = list(map(int, raw_cached.split(b",")))
-                    agent_cache_info[six.ensure_str(section_name)] = cache_times[0], cache_times[1]
+                    cache_times = list(map(int, raw_cached.split(",")))
+                    agent_cache_info[section_name] = cache_times[0], cache_times[1]
 
                 # The section data might have a different encoding
-                encoding = section_options.get(b"encoding")
+                encoding = section_options.get("encoding")
 
             elif stripped_line != b'':
-                raw_nostrip = section_options.get(b"nostrip")
+                raw_nostrip = section_options.get("nostrip")
                 if raw_nostrip is None:
                     line = stripped_line
 
@@ -783,7 +782,7 @@ class CheckMKAgentDataSource(
 
     def _get_sanitized_and_translated_piggybacked_hostname(self, orig_piggyback_header):
         # type: (bytes) -> Optional[HostName]
-        piggybacked_hostname = str(orig_piggyback_header[4:-4])
+        piggybacked_hostname = six.ensure_str(orig_piggyback_header[4:-4])
         if not piggybacked_hostname:
             return None
 

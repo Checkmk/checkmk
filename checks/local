@@ -156,7 +156,7 @@ def parse_local(info):
             # In python2 shlex uses cStringIO (if available), which is not able to deal with unicode
             # strings *urgs* (See https://docs.python.org/2/library/stringio.html#module-cStringIO).
             # To workaround this, we encode/and decode for shlex.
-            stripped_line = [s.decode("utf-8") for s in shlex.split(line[1].encode("utf-8"))]
+            stripped_line = [six.ensure_text(s) for s in shlex.split(six.ensure_str(line[1]))]
         else:
             stripped_line = line[1:]
         node = line[0]

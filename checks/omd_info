@@ -42,7 +42,7 @@ def parse_omd_info(info):
 
         elif section:
             if headers is None:
-                headers = map(str, line)
+                headers = list(map(str, line))
             else:
                 parsed[section][line[0]] = dict(zip(headers, line))
 

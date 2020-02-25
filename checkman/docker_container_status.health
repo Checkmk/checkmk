@@ -15,9 +15,6 @@ description:
  If you are configuring the plugin via the configuration file, make sure you do not skip the
  section "docker_container_status" (the default setting is fine).
 
-item:
- None
-
 inventory:
  One service is discovered for every active container (running or restart policy 'always')
  that has a health test configured.

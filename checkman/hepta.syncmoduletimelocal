@@ -10,4 +10,4 @@ inventory:
  One service for SyncModuleTimeLocal
 
 item:
- "SyncModuleTimeLocal"
+ The fixed statement {{SyncModuleTimeLocal}}

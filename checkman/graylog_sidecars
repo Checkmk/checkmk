@@ -13,7 +13,7 @@ description:
  Needs the datasource "Check state of Graylog" to be configured.
 
 item:
- The item is the name of the sidecar.
+ The name of the sidecar.
 
 inventory:
  One service for each node {"Graylog Sidecar my_sidecar"} will be created.

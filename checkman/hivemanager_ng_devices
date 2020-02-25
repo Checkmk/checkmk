@@ -11,7 +11,7 @@ description:
  name <i>Aerohive HiveManager NG</i> in WATO -> Datasource Programs.
 
 item:
- The name of the Devices
+ The hostname of the device
 
 inventory:
  One check for each device will be created

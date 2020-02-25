@@ -16,6 +16,9 @@ description:
  inventory. This has been changed to not nailing down the node. You can change this back
  to the old default by changing your configuration.
 
+item:
+ Name of the resource
+
 inventory:
  On each node one service for each resource group or resource will be created.
  If {heartbeat_crm_resources_naildown} is set to {True}, then for each resource

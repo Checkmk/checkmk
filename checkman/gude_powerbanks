@@ -11,7 +11,7 @@ description:
  These and other levels are configurable
 
 item:
- The powerbank index.
+ The index of the powerbank
 
 inventory:
  One service per powerbank is created.

@@ -9,5 +9,8 @@ description:
  It shows the number if incoming and outgoing bytes and packets, the connection rate
  and the current connections.
 
+item:
+ Name of the Source NAT
+
 inventory:
  One check is generated per source NAT.

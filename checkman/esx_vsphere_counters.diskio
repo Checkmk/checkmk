@@ -9,6 +9,9 @@ description:
  the check is always OK and does one summary check over
  all disks and LUNs of the system.
 
+item:
+ The fixed statement {{SUMMARY}}
+
 inventory:
  One service per ESX host is being created.
 

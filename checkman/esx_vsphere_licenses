@@ -6,6 +6,9 @@ distribution: check_mk
 description:
  This check monitors the number of used licenses for ESX systems.
 
+item:
+ Name of license
+
 inventory:
  One service per license type will be created.
 

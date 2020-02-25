@@ -18,6 +18,9 @@ description:
  following oids: ltmPoolMemberMonitorState, ltmPoolMemberMonitorStatus,
  ltmPoolMemberSessionStatus
 
+item:
+ Name of the pool
+
 inventory:
  The check collects a list of the pools defined on a system. It will include
  non-enabled ones, as this is considered a temporary state.

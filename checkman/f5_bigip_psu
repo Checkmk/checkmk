@@ -10,6 +10,9 @@ description:
  It supports devices running the 9.0 and above releases of the F5 OS. It's tested against 9.3
  devices.
 
+item:
+ Name of the power supply
+
 inventory:
  The check gather a list of the existing power supplies in a system.
  One service is created per power supply (PSU)

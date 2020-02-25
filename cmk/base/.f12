@@ -17,6 +17,12 @@ sudo rsync \
     --exclude=cme.py \
     -a * $ROOT/lib/python/cmk/base/
 sudo pycompile -q $ROOT/lib/python/cmk/base
+sudo rsync \
+     --exclude=cee \
+     --exclude=cee.py \
+     --exclude=cme.py \
+     -a * $ROOT/lib/python3/cmk/base/
+sudo py3compile -q $ROOT/lib/python3/cmk/base
 
 # Also deploy all other directories of same type
 if [ ${ALL_EDITIONS:-1} != 0 ]; then

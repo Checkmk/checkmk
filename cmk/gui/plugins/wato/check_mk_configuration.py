@@ -630,7 +630,6 @@ class ConfigVariableCrashReportURL(ConfigVariable):
         return HTTPUrl(
             title=_("Crash report HTTP URL"),
             help=_("By default crash reports will be sent to our crash reporting server."),
-            size=80,
             show_as_link=False,
         )
 

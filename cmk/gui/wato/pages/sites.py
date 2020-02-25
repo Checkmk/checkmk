@@ -387,7 +387,6 @@ class ModeEditSite(WatoMode):
             ("multisiteurl",
              HTTPUrl(
                  title=_("URL of remote site"),
-                 size=60,
                  help=_(
                      "URL of the remote Check_MK including <tt>/check_mk/</tt>. "
                      "This URL is in many cases the same as the URL-Prefix but with <tt>check_mk/</tt> "

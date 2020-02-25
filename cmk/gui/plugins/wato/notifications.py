@@ -331,8 +331,7 @@ class NotificationParameterVictorOPS(NotificationParameter):
                        "<br />This URL can also be collected from the Password Store from Check_MK."
                       ),
                      choices=[("webhook_url", _("REST Endpoint URL"),
-                               HTTPUrl(size=80,
-                                       allow_empty=False,
+                               HTTPUrl(allow_empty=False,
                                        regex=r"^https://alert\.victorops\.com/integrations/.+",
                                        regex_error=_(
                                            "The Webhook-URL must begin with "

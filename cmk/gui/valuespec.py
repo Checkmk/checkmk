@@ -955,6 +955,8 @@ def IPv4Address(  # pylint: disable=redefined-builtin
 
 
 class TextAsciiAutocomplete(TextAscii):
+    ident = ""
+
     def __init__(  # pylint: disable=redefined-builtin
         self,
         completion_ident,  # type: Text
@@ -1010,6 +1012,7 @@ class TextAsciiAutocomplete(TextAscii):
 
     @classmethod
     def idents(cls):
+        # type: () -> Dict[str, Type[TextAsciiAutocomplete]]
         idents = {}
         for type_class in cls.__subclasses__():  # pylint: disable=no-member
             idents[type_class.ident] = type_class
@@ -1017,6 +1020,7 @@ class TextAsciiAutocomplete(TextAscii):
 
     @classmethod
     def ajax_handler(cls):
+        # type: () -> None
         ident = html.request.var("ident")
         if not ident:
             raise MKUserError("ident", _("You need to set the \"%s\" parameter.") % "ident")
@@ -1050,6 +1054,7 @@ class TextAsciiAutocomplete(TextAscii):
     #@abc.abstractclassmethod
     @classmethod
     def autocomplete_choices(cls, value, params):
+        # type: (str, Dict) -> Choices
         raise NotImplementedError()
 
 
@@ -1068,6 +1073,7 @@ class MonitoredHostname(TextAsciiAutocomplete):
 
     @classmethod
     def autocomplete_choices(cls, value, params):
+        # type: (str, Dict) -> Choices
         """Return the matching list of dropdown choices
         Called by the webservice with the current input field value and the completions_params to get the list of choices"""
         import cmk.gui.sites as sites
@@ -1089,13 +1095,24 @@ class PageVsAutocomplete(Page):
         TextAsciiAutocomplete.ajax_handler()
 
 
-# TODO: Cleanup kwargs
-def Hostname(allow_empty=False, **kwargs):
+def Hostname(  # pylint: disable=redefined-builtin
+    # TextAscii
+    allow_empty=False,
+    # ValueSpec
+    title=None,  # type: TypingOptional[Text]
+    help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+    default_value=_DEF_VALUE,  # type: Any
+):
     """A host name with or without domain part. Also allow IP addresses"""
-    return TextAscii(regex=re.compile('^[-0-9a-zA-Z_.]+$'),
-                     regex_error=_("Please enter a valid hostname or IPv4 address. "
-                                   "Only letters, digits, dash, underscore and dot are allowed."),
-                     **kwargs)
+    return TextAscii(
+        regex=re.compile('^[-0-9a-zA-Z_.]+$'),
+        regex_error=_("Please enter a valid hostname or IPv4 address. "
+                      "Only letters, digits, dash, underscore and dot are allowed."),
+        allow_empty=allow_empty,
+        title=title,
+        help=help,
+        default_value=default_value,
+    )
 
 
 class HostAddress(TextAscii):
@@ -1356,13 +1373,32 @@ class Url(TextAscii):
         return value
 
 
-# TODO: cleanup kwargs
-def HTTPUrl(show_as_link=True, **kwargs):
+def HTTPUrl(  # pylint: disable=redefined-builtin
+    show_as_link=True,  # type: bool
+    # Url
+    regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
+    regex_error=None,  # type: TypingOptional[Text]
+    # TextAscii
+    allow_empty=True,  # type: bool
+    size=80,  # type: Union[int, str]
+    # ValueSpec
+    title=None,  # type: TypingOptional[Text]
+    help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+    default_value=_DEF_VALUE,  # type: Any
+):
     """Valuespec for a HTTP or HTTPS Url, that automatically adds http:// to the value if no scheme has been specified"""
-    return Url(allowed_schemes=["http", "https"],
-               default_scheme="http",
-               show_as_link=show_as_link,
-               **kwargs)
+    return Url(
+        allowed_schemes=["http", "https"],
+        default_scheme="http",
+        regex=regex,
+        regex_error=regex_error,
+        show_as_link=show_as_link,
+        allow_empty=allow_empty,
+        size=size,
+        title=title,
+        help=help,
+        default_value=default_value,
+    )
 
 
 def CheckMKVersion(

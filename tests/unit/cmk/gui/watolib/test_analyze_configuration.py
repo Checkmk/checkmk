@@ -13,6 +13,7 @@ def test_registered_ac_tests():
         'ACTestBackupNotEncryptedConfigured',
         'ACTestBrokenGUIExtension',
         'ACTestCheckMKHelperUsage',
+        'ACTestConnectivity',
         'ACTestESXDatasources',
         'ACTestGenericCheckHelperUsage',
         'ACTestHTTPSecured',

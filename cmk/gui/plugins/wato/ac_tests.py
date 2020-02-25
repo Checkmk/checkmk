@@ -873,3 +873,19 @@ class ACTestRulebasedNotifications(ACTest):
 def _site_is_using_livestatus_proxy(site_id):
     site_configs = SiteManagementFactory().factory().load_sites()
     return site_configs[site_id].get("proxy") is not None
+
+
+@ac_test_registry.register
+class ACTestConnectivity(ACTest):
+    def category(self):
+        return ACTestCategories.connectivity
+
+    def title(self):
+        return _("Site connectivity")
+
+    def help(self):
+        return _("This check returns CRIT if the connection to the remote site failed.")
+
+    def is_relevant(self):
+        # This test is always irrelevant :)
+        return False

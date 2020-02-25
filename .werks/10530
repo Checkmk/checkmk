@@ -1,0 +1,11 @@
+Title: Analyze configuration: The connecitivity status of the sites is now shown in a separate table
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1582648850
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.6.0p10
+
+Previous version showed a red error box in case of connection problems.

@@ -8,7 +8,7 @@ node {
 
     try {
         stage("Auschecken: Checkmk") {
-             print("Git Statusi before checkout")
+             print("Git Status before checkout")
              sh("git status || exit 0")
              print("Git log before checkout")
              sh("git log --oneline -n10 || exit 0")

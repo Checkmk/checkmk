@@ -507,12 +507,18 @@ class CREFolder(BaseFolder):
         nodes_of = {}
         for cluster_with_tags, nodes in variables["clusters"].items():
             variables["all_hosts"].append(cluster_with_tags)
-            nodes_of[cluster_with_tags.split('|')[0]] = nodes
+            # Werk #10863: In 1.6 some hosts / rulesets were saved as unicode
+            # strings.  After reading the config into the GUI ensure we really
+            # process the host names as str. TODO: Can be removed with Python 3.
+            nodes_of[str(cluster_with_tags.split('|')[0])] = list(map(str, nodes))
 
         # Build list of individual hosts
         for host_name_with_tags in variables["all_hosts"]:
-            parts = host_name_with_tags.split('|')
-            host_name = parts[0]
+            parts = host_name_with_tags.split('|', 1)
+            # Werk #10863: In 1.6 some hosts / rulesets were saved as unicode
+            # strings.  After reading the config into the GUI ensure we really
+            # process the host names as str. TODO: Can be removed with Python 3.
+            host_name = str(parts[0])
             host = self._create_host_from_variables(host_name, nodes_of, variables)
             self._hosts[host_name] = host
 

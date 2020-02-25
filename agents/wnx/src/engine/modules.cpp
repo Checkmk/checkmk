@@ -137,7 +137,7 @@ int ModuleCommander::findModuleFiles(const std::filesystem::path &root) {
         }
     }
 
-    return files_.size();
+    return static_cast<int>(files_.size());
 }
 
 bool CreateDir(const std::filesystem::path &mod) noexcept {

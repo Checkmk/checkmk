@@ -62,13 +62,16 @@ def escape_attribute(value):
     attr_type = type(value)
     if value is None:
         return u''
-    elif attr_type == int:
+    if attr_type == int:
         return six.text_type(value)
-    elif isinstance(value, HTML):
+    if isinstance(value, HTML):
         return value.__html__()  # This is HTML code which must not be escaped
-    elif not isinstance(attr_type, six.string_types):  # also possible: type Exception!
-        value = u"%s" % value
-    return ensure_unicode(html_escape(value, quote=True))
+    if isinstance(attr_type, six.text_type):
+        return html_escape(value, quote=True)
+    if isinstance(attr_type, six.binary_type):  # TODO: Not in the signature!
+        return html_escape(six.ensure_str(value), quote=True)
+    # TODO: What is this case for? Exception?
+    return html_escape(u"%s" % value, quote=True)  # TODO: Not in the signature!
 
 
 def unescape_attributes(value):

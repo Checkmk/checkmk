@@ -623,7 +623,9 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
-        print(stderr)
+        print("omd config: %s is set to %r" % (key, stdout.strip()))
+        if stderr:
+            print(stderr)
         return stdout.strip()
 
     # These things are needed to make the site basically being setup. So this
@@ -652,16 +654,21 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             print("WATO is already initialized -> Skipping initializiation")
             return
 
+        print("Initializing WATO...")
+
         web = CMKWebSession(self)
         web.login()
         web.set_language("en")
 
         # Call WATO once for creating the default WATO configuration
+        print("Requesting wato.py (which creates the WATO factory settings)...")
         response = web.get("wato.py").text
+        print("Debug: %r" % response)
         assert "<title>WATO" in response
         assert "<div class=\"title\">Manual Checks</div>" in response, \
                 "WATO does not seem to be initialized: %r" % response
 
+        print("Waiting for WATO files to be created...")
         wait_time = 20
         while self._missing_but_required_wato_files() and wait_time >= 0:
             time.sleep(0.5)

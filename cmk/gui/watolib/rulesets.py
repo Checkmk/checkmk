@@ -59,7 +59,10 @@ class RuleConditions(object):
         self.host_folder = host_folder
         self.host_tags = host_tags or {}
         self.host_labels = host_labels or {}
-        self.host_name = host_name
+        # Werk #10863: In 1.6 some hosts / rulesets were saved as unicode
+        # strings.  After reading the config into the GUI ensure we really
+        # process the host names as str. TODO: Can be removed with Python 3.
+        self.host_name = list(map(str, host_name)) if host_name else host_name
         self.service_description = service_description
         self.service_labels = service_labels or {}
 
@@ -67,7 +70,11 @@ class RuleConditions(object):
         self.host_folder = conditions.get("host_folder", self.host_folder)
         self.host_tags = conditions.get("host_tags", {})
         self.host_labels = conditions.get("host_labels", {})
-        self.host_name = conditions.get("host_name")
+        # Werk #10863: In 1.6 some hosts / rulesets were saved as unicode
+        # strings.  After reading the config into the GUI ensure we really
+        # process the host names as str. TODO: Can be removed with Python 3.
+        host_name = conditions.get("host_name")
+        self.host_name = list(map(str, host_name)) if host_name else host_name
         self.service_description = conditions.get("service_description")
         self.service_labels = conditions.get("service_labels", {})
         return self

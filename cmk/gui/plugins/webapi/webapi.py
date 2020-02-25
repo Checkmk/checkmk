@@ -236,8 +236,11 @@ class APICallHosts(APICallCollection):
                                                 request.get("create_folders", "1"))
         create_parent_folders = bool(int(create_parent_folders_var))
 
-        hostname = request.get("hostname")
-        folder_path = request.get("folder")
+        # Werk #10863: In 1.6 some hosts / rulesets were saved as unicode
+        # strings.  After reading the config into the GUI ensure we really
+        # process the host names as str. TODO: Can be removed with Python 3.
+        hostname = str(request.get("hostname"))
+        folder_path = str(request.get("folder"))
         attributes = request.get("attributes", {})
         cluster_nodes = request.get("nodes")
 

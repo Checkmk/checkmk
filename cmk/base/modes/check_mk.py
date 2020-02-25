@@ -396,7 +396,7 @@ def mode_dump_agent(hostname):
                 console.error("ERROR [%s]: %s\n", source.id(), six.ensure_str(source_output))
                 has_errors = True
 
-        console.output(six.ensure_str(output))
+        console.output(six.ensure_str(output, errors="surrogateescape"))
         if has_errors:
             sys.exit(1)
     except Exception as e:

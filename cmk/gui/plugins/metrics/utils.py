@@ -898,10 +898,10 @@ def render_color_icon(color):
 @MemoizeCache
 def reverse_translate_metric_name(canonical_name):
     "Return all known perf data names that are translated into canonical_name"
-    return set([
-        metric for trans in check_metrics.values()
-        for metric, options in trans.items() if options.get('name', '') == canonical_name
-    ] + [canonical_name])
+    return [canonical_name] + list({
+        metric for trans in check_metrics.values() for metric, options in trans.items()
+        if options.get('name', '') == canonical_name and not options.get("deprecated")
+    })
 
 
 def MetricName():

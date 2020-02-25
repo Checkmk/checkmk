@@ -23,7 +23,6 @@ import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.regex import regex
 import cmk.utils.debug
-from cmk.utils.encoding import make_utf8
 
 import cmk.base.utils
 import cmk.base.core
@@ -366,12 +365,20 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
                 return a
             return min(a, b)
 
+        def maxn(a, b):
+            # type: (Optional[int], Optional[int]) -> Optional[int]
+            if a is None:
+                return b
+            if b is None:
+                return a
+            return max(a, b)
+
         for host_sections in multi_host_sections.get_host_sections().values():
             section_entries = host_sections.cache_info
             if section_name in section_entries:
                 cached_at, cache_interval = section_entries[section_name]
                 oldest_cached_at = minn(oldest_cached_at, cached_at)
-                largest_interval = max(largest_interval, cache_interval)
+                largest_interval = maxn(largest_interval, cache_interval)
 
         _submit_check_result(hostname,
                              description,
@@ -624,8 +631,9 @@ def _output_check_result(servicedesc, state, infotext, perftexts):
         p = ''
         infotext_fmt = "%s"
 
-    console.verbose("%-20s %s%s" + infotext_fmt + "%s%s\n", servicedesc.encode('utf-8'), tty.bold,
-                    tty.states[state], make_utf8(infotext.split('\n')[0]), tty.normal, make_utf8(p))
+    console.verbose("%-20s %s%s" + infotext_fmt + "%s%s\n", six.ensure_str(servicedesc), tty.bold,
+                    tty.states[state], six.ensure_str(infotext.split('\n')[0]), tty.normal,
+                    six.ensure_str(p))
 
 
 def _do_submit_to_core(host, service, state, output, cached_at=None, cache_interval=None):
@@ -665,7 +673,7 @@ finish_time=%.1f
 return_code=%d
 output=%s
 
-""" % (host, make_utf8(service), now, now, state, make_utf8(output)))
+""" % (host, six.ensure_str(service), now, now, state, six.ensure_str(output)))
 
 
 def _open_checkresult_file():
@@ -698,7 +706,7 @@ def _submit_via_command_pipe(host, service, state, output):
         # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
         msg = "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % (time.time(), host, service,
                                                                    state, output)
-        _nagios_command_pipe.write(make_utf8(msg))
+        _nagios_command_pipe.write(six.ensure_binary(msg))
         # Important: Nagios needs the complete command in one single write() block!
         # Python buffers and sends chunks of 4096 bytes, if we do not flush.
         _nagios_command_pipe.flush()

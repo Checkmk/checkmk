@@ -6844,7 +6844,8 @@ check_metrics["check_mk-jolokia_metrics.tp"] = {
 check_metrics["check_mk-mem.win"] = {
     "memory": {
         "name": "mem_used",
-        "scale": MB
+        "scale": MB,
+        "deprecated": True
     },
     "pagefile": {
         "name": "pagefile_used",

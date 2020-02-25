@@ -504,8 +504,9 @@ def check_mem_windows(_no_item, params, info):
             crit = total_mb - levels[1]
         return warn, crit
 
-    for title, prefix, paramname in [("RAM", "Mem", "memory"),
-                                     ("Commit charge", "Page", "pagefile")]:
+    for title, prefix, paramname, metric_name in [("RAM", "Mem", "memory", "mem_used"),
+                                                  ("Commit charge", "Page", "pagefile",
+                                                   "pagefile_used")]:
 
         total_kb = meminfo.get("%sTotal" % prefix)
         free_kb = meminfo.get("%sFree" % prefix)
@@ -520,14 +521,15 @@ def check_mem_windows(_no_item, params, info):
 
         warn, crit = _get_levels_on_used_mb(paramname, total_mb)
 
-        infotext = check_memory_element(
+        status, infotext, perfdata = check_memory_element(
             title,
             used_kb * 1024,
             total_kb * 1024,
             None,
-        )[1]
+            metric_name=metric_name,
+            create_percent_metric=title == "RAM",
+        )
 
-        perfdata = [(paramname, used_mb, warn, crit, 0, total_mb)]
         if prefix == "Mem":
             perfdata.append(("mem_total", total_mb))
         elif prefix == "Page":

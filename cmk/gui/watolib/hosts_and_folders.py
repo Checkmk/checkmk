@@ -11,9 +11,12 @@ import re
 import shutil
 import uuid
 
-from typing import Type, Union, List, Text, Dict, Optional, Any  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Type, Union, List, Text, Dict, Optional, Any, Set,
+)
 
 import six
+from livestatus import SiteId  # pylint: disable=unused-import
 
 import cmk
 
@@ -29,7 +32,9 @@ from cmk.gui.exceptions import (
 )
 from cmk.gui.htmllib import HTML
 from cmk.gui.globals import g, html
+from cmk.gui.type_defs import HTTPVariables  # pylint: disable=unused-import
 
+from cmk.gui.valuespec import Choices  # pylint: disable=unused-import
 from cmk.gui.watolib.utils import (
     wato_root_dir,
     rename_host_in_list,
@@ -65,6 +70,7 @@ if cmk.is_managed_edition():
 
 class WithPermissions(object):
     def may(self, how):  # how is "read" or "write"
+        # type: (str) -> bool
         try:
             self._user_needs_permission(how)
             return True
@@ -72,6 +78,7 @@ class WithPermissions(object):
             return False
 
     def reason_why_may_not(self, how):
+        # type: (str) -> Union[bool, HTML]
         try:
             self._user_needs_permission(how)
             return False
@@ -79,9 +86,11 @@ class WithPermissions(object):
             return HTML("%s" % e)
 
     def need_permission(self, how):
+        # type: (str) -> None
         self._user_needs_permission(how)
 
     def _user_needs_permission(self, how):
+        # type: (str) -> None
         raise NotImplementedError()
 
 
@@ -119,6 +128,7 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
         return folders[identifier]
 
     def persist_instance(self):
+        # type: () -> None
         """Save the current state of the instance to a file.
 
         """
@@ -133,6 +143,7 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
         store.save_object_to_file(self._store_file_name(), data)
 
     def load_instance(self):
+        # type: () -> Dict[str, Any]
         """Load the data of this instance and return it.
 
         The internal state of the object will not be changed.
@@ -149,31 +160,37 @@ class WithUniqueIdentifier(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def _get_identifier(self):
+        # type: () -> str
         """The unique identifier of this object."""
         raise NotImplementedError()
 
     @abc.abstractmethod
     def _upgrade_keys(self, data):
+        # type: (Dict[str, Any]) -> Dict[str, Any]
         """Upgrade the structure of the store-file."""
         raise NotImplementedError()
 
     @abc.abstractmethod
     def _get_instance_data(self):
+        # type: () -> Dict[str, Any]
         """The data to persist to the file."""
         raise NotImplementedError()
 
     @abc.abstractmethod
     def _store_file_name(self):
+        # type: () -> str
         """The filename to which to persist this object."""
         raise NotImplementedError()
 
     @abc.abstractmethod
     def _clear_id_cache(self):
+        # type: () -> None
         """Clear the cache if applicable."""
         raise NotImplementedError()
 
     @classmethod
     def _mapped_by_id(cls):
+        # type: () -> Dict[str, Any]
         """Give out a mapping from unique identifiers to class instances."""
         raise NotImplementedError()
 
@@ -1155,9 +1172,11 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return sel
 
     def choices_for_moving_folder(self):
+        # type: () -> Choices
         return self._choices_for_moving("folder")
 
     def choices_for_moving_host(self):
+        # type: () -> Choices
         if self._choices_for_moving_host is not None:
             return self._choices_for_moving_host  # Cached
 
@@ -1165,6 +1184,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return self._choices_for_moving_host
 
     def folder_should_be_shown(self, how):
+        # type: (str) -> bool
         if not config.wato_hide_folders_without_read_permissions:
             return True
 
@@ -1177,6 +1197,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return has_permission
 
     def _choices_for_moving(self, what):
+        # type: (str) -> Choices
         choices = []
 
         for folder_path, folder in Folder.all_folders().items():
@@ -1200,6 +1221,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return choices
 
     def site_id(self):
+        # type: () -> SiteId
         if "site" in self._attributes:
             return self._attributes["site"]
         elif self.has_parent():
@@ -1207,7 +1229,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return default_site()
 
     def all_site_ids(self):
-        site_ids = set()
+        # type: () -> List[SiteId]
+        site_ids = set()  # type: Set[SiteId]
         self._add_all_sites_to_set(site_ids)
         return list(site_ids)
 
@@ -1224,6 +1247,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return titles
 
     def title_path_without_root(self):
+        # type: () -> List[Union[HTML, Text]]
         if self.is_root():
             return [self.title()]
         return self.title_path()[1:]
@@ -1292,7 +1316,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return permitted_groups, host_contact_groups, cgconf.get("use_for_services", False)
 
     def find_host_recursively(self, host_name):
-        host = self.host(host_name)
+        # type: (str) -> Optional[CREHost]
+        host = self.host(host_name)  # type: Optional[CREHost]
         if host:
             return host
 
@@ -1300,8 +1325,10 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             host = subfolder.find_host_recursively(host_name)
             if host:
                 return host
+        return None
 
     def _user_needs_permission(self, how):
+        # type: (str) -> None
         if how == "write" and config.user.may("wato.all_folders"):
             return
 
@@ -1309,6 +1336,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             return
 
         permitted_groups, _folder_contactgroups, _use_for_services = self.groups()
+        assert config.user.id is not None
         user_contactgroups = userdb.contactgroups_of_user(config.user.id)
 
         for c in user_contactgroups:
@@ -1331,6 +1359,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         raise MKAuthException(reason)
 
     def need_recursive_permission(self, how):
+        # type: (str) -> None
         self.need_permission(how)
         if how == "write":
             self.need_unlocked()
@@ -1341,20 +1370,24 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             subfolder.need_recursive_permission(how)
 
     def need_unlocked(self):
+        # type: () -> None
         if self.locked():
             raise MKAuthException(
                 _("Sorry, you cannot edit the folder %s. It is locked.") % self.title())
 
     def need_unlocked_hosts(self):
+        # type: () -> None
         if self.locked_hosts():
             raise MKAuthException(_("Sorry, the hosts in the folder %s are locked.") % self.title())
 
     def need_unlocked_subfolders(self):
+        # type: () -> None
         if self.locked_subfolders():
             raise MKAuthException(
                 _("Sorry, the sub folders in the folder %s are locked.") % self.title())
 
     def url(self, add_vars=None):
+        # type: (Optional[HTTPVariables]) -> str
         if add_vars is None:
             add_vars = []
 
@@ -1372,6 +1405,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return html.makeuri_contextless(url_vars, filename="wato.py")
 
     def edit_url(self, backfolder=None):
+        # type: (Optional[CREFolder]) -> str
         if backfolder is None:
             if self.has_parent():
                 backfolder = self.parent()
@@ -1384,12 +1418,15 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         ])
 
     def locked(self):
+        # type: () -> bool
         return self._locked
 
     def locked_subfolders(self):
+        # type: () -> bool
         return self._locked_subfolders
 
     def locked_hosts(self):
+        # type: () -> bool
         self._load_hosts_on_demand()
         return self._locked_hosts
 
@@ -1397,8 +1434,9 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     #  None:      No network scan is enabled.
     #  timestamp: Next planned run according to config.
     def next_network_scan_at(self):
+        # type: () -> Optional[float]
         if "network_scan" not in self._attributes:
-            return
+            return None
 
         interval = self._attributes["network_scan"]["scan_interval"]
         last_end = self._attributes.get("network_scan_result", {}).get("end", None)
@@ -1420,10 +1458,30 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             # First transform the time given by the user to UTC time
             brokentime = list(time.localtime(next_time))
             brokentime[3], brokentime[4] = time_allowed[0]
-            start_time = time.mktime(brokentime)
+            start_time = time.mktime((
+                brokentime[0],
+                brokentime[1],
+                brokentime[2],
+                brokentime[3],
+                brokentime[4],
+                brokentime[5],
+                brokentime[6],
+                brokentime[7],
+                brokentime[8],
+            ))
 
             brokentime[3], brokentime[4] = time_allowed[1]
-            end_time = time.mktime(brokentime)
+            end_time = time.mktime((
+                brokentime[0],
+                brokentime[1],
+                brokentime[2],
+                brokentime[3],
+                brokentime[4],
+                brokentime[5],
+                brokentime[6],
+                brokentime[7],
+                brokentime[8],
+            ))
 
             # In case the next time is earlier than the allowed time frame at a day set
             # the time to the time frame start.
@@ -1816,6 +1874,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     @classmethod
     def _mapped_by_id(cls):
+        # type: () -> Dict[str, Type[CREFolder]]
         return folders_by_id()
 
 
@@ -1879,6 +1938,7 @@ class SearchFolder(BaseFolder):
         return True
 
     def _user_needs_permission(self, how):
+        # type: (str) -> None
         pass
 
     def title(self):
@@ -2186,6 +2246,7 @@ class CREHost(WithPermissions, WithAttributes):
         return self.folder().groups(self)
 
     def _user_needs_permission(self, how):
+        # type: (str) -> None
         if how == "write" and config.user.may("wato.all_folders"):
             return
 
@@ -2196,6 +2257,7 @@ class CREHost(WithPermissions, WithAttributes):
             config.user.need_permission("wato.edit_hosts")
 
         permitted_groups, _host_contact_groups, _use_for_services = self.groups()
+        assert config.user.id is not None
         user_contactgroups = userdb.contactgroups_of_user(config.user.id)
 
         for c in user_contactgroups:

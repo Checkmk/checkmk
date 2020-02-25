@@ -802,7 +802,9 @@ class CheckMKAgentDataSource(
         # type: (bytes, int, int) -> bytes
         if b':cached(' in orig_section_header or b':persist(' in orig_section_header:
             return orig_section_header
-        return b'<<<%s:cached(%s,%s)>>>' % (orig_section_header[3:-3], cached_at, cache_age)
+        return b'<<<%s:cached(%s,%s)>>>' % (orig_section_header[3:-3],
+                                            six.ensure_binary("%d" % cached_at),
+                                            six.ensure_binary("%d" % cache_age))
 
     # TODO: refactor
     def _summary_result(self, for_checking):

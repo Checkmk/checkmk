@@ -8,6 +8,8 @@ description:
  This check monitors the speed of fans in MCS cooling devices. Thresholds
  are configureable throudh the regular fan rules.
 
+item:
+ Name of the sensor
 
 inventory:
  One service for each fan sensor will be created.

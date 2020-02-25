@@ -12,6 +12,10 @@ description:
 
  The check monitors the reported state of the builtin memory state sensors.
 
+item:
+ The slot in which the memory board or cartridge is installed.
+ A value of 0 indicates memory installed directly on the system board.
+
 inventory:
  One check is automatically created for each memory module which is
  provided in the SNMP output and marked as present.

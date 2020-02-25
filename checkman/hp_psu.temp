@@ -9,7 +9,7 @@ description:
  Upper and lower temperature levels are supported.
 
 item:
- The power supplies' index.
+ The index of the power supply
 
 inventory:
  One service per power supply is created.

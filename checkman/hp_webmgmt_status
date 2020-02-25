@@ -13,6 +13,9 @@ description:
  support some switches and tape libraries of the storever series.
  It's possible support for the used mib is configurable in the device.
 
+item:
+ The unique device identification.
+
 inventory:
  One service per management object is discovered, usually one.
 

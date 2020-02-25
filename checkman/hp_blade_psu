@@ -17,7 +17,7 @@ description:
  Nagios.
 
 item:
- Number of the PSU (as string, not int).
+ Number of the PSU
 
 inventory:
  All PSUs with the present state "present" are automatically inventorized.

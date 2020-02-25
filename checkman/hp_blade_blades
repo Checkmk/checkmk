@@ -18,7 +18,7 @@ description:
  other information like serial number and product name are printed anyway.
 
 item:
- Number of the blade (as string, not int).
+ Number of the blade
 
 inventory:
  All blades with the present state "present" are automatically inventorized.

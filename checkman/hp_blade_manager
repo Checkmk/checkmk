@@ -18,7 +18,7 @@ description:
  other information like role name and serial number will be printed anyway.
 
 item:
- Number of the manager (as string, not int).
+ Number of the manager
 
 inventory:
  All manager boards with the present state "present" are automatically inventorized.

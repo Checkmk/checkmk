@@ -12,7 +12,7 @@ description:
  as CRITICAL service.
 
 item:
- Number of the FAN (as string, not int).
+ Number of the fan
 
 inventory:
  All FANs with the present state "present" are automatically inventorized.

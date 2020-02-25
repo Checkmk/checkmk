@@ -13,6 +13,9 @@ description:
  The check will result in a WARNING/CRITICAL state when the given thresholds
  for the memory usage are reached.
 
+item:
+ Empty string
+
 inventory:
  On each switch which supports this MIB one service {Memory} is being created.
 

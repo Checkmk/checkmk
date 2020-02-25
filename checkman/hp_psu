@@ -10,7 +10,7 @@ description:
  in the MIB, appears to mean the device is unplugged, which we treat as CRIT.
 
 item:
- The power supplies' index.
+ The index of the power supply
 
 inventory:
  One service per power supply is created.

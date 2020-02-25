@@ -8,5 +8,8 @@ description:
  If the health status is "OK" then the service will be OK.
  Otherwise the service state change to WARN or CRIT and reports a health reason.
 
+item:
+ Name of the system
+
 inventory:
  One service is created.

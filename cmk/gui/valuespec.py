@@ -3532,6 +3532,9 @@ class AbsoluteDate(ValueSpec):
             return MKUserError(varprefix, _("%s is not a valid UNIX timestamp") % value)
 
 
+TimeofdayValue = TypingTuple[int, int]
+
+
 class Timeofday(ValueSpec):
     """Valuespec for entering times like 00:35 or 16:17
 
@@ -3557,27 +3560,32 @@ class Timeofday(ValueSpec):
         self._allow_empty = allow_empty
 
     def canonical_value(self):
+        # type: () -> TypingOptional[TimeofdayValue]
         if self._allow_empty:
             return None
         return (0, 0)
 
     def render_input(self, varprefix, value):
+        # type: (str, TypingOptional[TimeofdayValue]) -> None
         text = ("%02d:%02d" % value) if value else ''
         html.text_input(varprefix, text, size=5)
 
     def value_to_text(self, value):
+        # type: (TypingOptional[TimeofdayValue]) -> Text
         if value is None:
-            return ""
-        return "%02d:%02d" % value
+            return u""
+        return u"%02d:%02d" % value
 
     def from_html_vars(self, varprefix):
+        # type: (str) -> TypingOptional[TimeofdayValue]
         # Fully specified
-        text = html.request.var(varprefix, "").strip()
+        text = html.request.get_str_input_mandatory(varprefix, "").strip()
         if not text:
             return None
 
         if re.match("^(24|[0-1][0-9]|2[0-3]):[0-5][0-9]$", text):
-            return tuple(map(int, text.split(":")))
+            hours, minutes = text.split(":")
+            return int(hours), int(minutes)
 
         # only hours
         try:
@@ -3589,6 +3597,7 @@ class Timeofday(ValueSpec):
                 _("Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format.") % text)
 
     def validate_datatype(self, value, varprefix):
+        # type: (TypingOptional[TimeofdayValue], str) -> None
         if self._allow_empty and value is None:
             return
 
@@ -3608,17 +3617,26 @@ class Timeofday(ValueSpec):
                     _("All elements of the tuple must be of type int, you have %s") % _type_name(x))
 
     def _validate_value(self, value, varprefix):
+        # type: (TypingOptional[TimeofdayValue], str) -> None
         if not self._allow_empty and value is None:
             raise MKUserError(varprefix, _("Please enter a time."))
+
+        if value is None:
+            return
+
         if self._allow_24_00:
             max_value = (24, 0)
         else:
             max_value = (23, 59)
+
         if value > max_value:
             raise MKUserError(varprefix,
                               _("The time must not be greater than %02d:%02d.") % max_value)
         elif value[0] < 0 or value[1] < 0 or value[0] > 24 or value[1] > 59:
             raise MKUserError(varprefix, _("Hours/Minutes out of range"))
+
+
+TimeofdayRangeValue = TypingTuple[TypingTuple[int, int], TypingTuple[int, int]]
 
 
 class TimeofdayRange(ValueSpec):
@@ -3643,27 +3661,29 @@ class TimeofdayRange(ValueSpec):
         )
 
     def canonical_value(self):
+        # type: () -> TypingOptional[TimeofdayRangeValue]
         if self._allow_empty:
             return None
         return (0, 0), (24, 0)
 
     def render_input(self, varprefix, value):
-        if value is None:
-            value = (None, None)
-        self._bounds[0].render_input(varprefix + "_from", value[0])
+        # type: (str, TypingOptional[TimeofdayRangeValue]) -> None
+        self._bounds[0].render_input(varprefix + "_from", value[0] if value is not None else None)
         html.nbsp()
         html.write_text("-")
         html.nbsp()
-        self._bounds[1].render_input(varprefix + "_until", value[1])
+        self._bounds[1].render_input(varprefix + "_until", value[1] if value is not None else None)
 
     def value_to_text(self, value):
+        # type: (TypingOptional[TimeofdayRangeValue]) -> Text
         if value is None:
-            return ""
+            return u""
 
-        return self._bounds[0].value_to_text(value[0]) + "-" + \
-               self._bounds[1].value_to_text(value[1])
+        return six.ensure_text(self._bounds[0].value_to_text(value[0]) + "-" +
+                               self._bounds[1].value_to_text(value[1]))
 
     def from_html_vars(self, varprefix):
+        # type: (str) -> TypingOptional[TimeofdayRangeValue]
         from_value = self._bounds[0].from_html_vars(varprefix + "_from")
         until_value = self._bounds[1].from_html_vars(varprefix + "_until")
         if (from_value is None) != (until_value is None):
@@ -3672,9 +3692,12 @@ class TimeofdayRange(ValueSpec):
                 _("Please leave either both from and until empty or enter two times."))
         if from_value is None:
             return None
+        if until_value is None:
+            return None
         return (from_value, until_value)
 
     def validate_datatype(self, value, varprefix):
+        # type: (TypingOptional[TimeofdayRangeValue], str) -> None
         if self._allow_empty and value is None:
             return
 
@@ -3691,6 +3714,7 @@ class TimeofdayRange(ValueSpec):
         self._bounds[1].validate_datatype(value[1], varprefix + "_until")
 
     def _validate_value(self, value, varprefix):
+        # type: (TypingOptional[TimeofdayRangeValue], str) -> None
         if value is None:
             if self._allow_empty:
                 return

@@ -8543,49 +8543,27 @@ check_metrics["check_mk-mssql_counters.file_sizes"] = {
     },
 }
 
-check_metrics["check_mk-cisco_mem"] = {
+cisco_mem_translation = {
     "mem_used": {
-        "name": "mem_used_percent"
+        "name": "mem_used_percent",
+        "deprecated": True
     },
+}
+check_metrics["check_mk-cisco_cpu_memory"] = cisco_mem_translation
+check_metrics["check_mk-cisco_sys_mem"] = cisco_mem_translation
+
+cisco_mem_translation_with_trend = dict(cisco_mem_translation)
+cisco_mem_translation_with_trend.update({
     "growth": {
         "name": "mem_growth"
     },
     "trend": {
         "name": "mem_trend"
     },
-}
-
-check_metrics["check_mk-cisco_cpu_memory"] = {"mem_used": {"name": "cpu_mem_used_percent"}}
-
-check_metrics["check_mk-cisco_sys_mem"] = {
-    "mem_used": {
-        "name": "mem_used_percent"
-    },
-}
-
-check_metrics["check_mk-cisco_mem_asa"] = {
-    "mem_used": {
-        "name": "mem_used_percent"
-    },
-    "growth": {
-        "name": "mem_growth"
-    },
-    "trend": {
-        "name": "mem_trend"
-    },
-}
-
-check_metrics["check_mk-cisco_mem_asa64"] = {
-    "mem_used": {
-        "name": "mem_used_percent"
-    },
-    "growth": {
-        "name": "mem_growth"
-    },
-    "trend": {
-        "name": "mem_trend"
-    },
-}
+})
+check_metrics["check_mk-cisco_mem"] = cisco_mem_translation_with_trend
+check_metrics["check_mk-cisco_mem_asa"] = cisco_mem_translation_with_trend
+check_metrics["check_mk-cisco_mem_asa64"] = cisco_mem_translation_with_trend
 
 check_metrics["check_mk-fortigate_sessions_base"] = {
     "session": {

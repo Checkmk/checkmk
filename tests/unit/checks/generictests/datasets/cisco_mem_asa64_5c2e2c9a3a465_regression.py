@@ -17,7 +17,7 @@ checks = {
             }, [
                 (
                     0, 'Usage: 0% - 0.00 B of 1.57 GB', [
-                        ('mem_used', 0.0, 80.0, 90.0, 0, None)
+                        ('mem_used_percent', 0.0, 80.0, 90.0, 0, None)
                     ]
                 )
             ]

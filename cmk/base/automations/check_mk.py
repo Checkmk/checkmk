@@ -1198,155 +1198,33 @@ class AutomationDiagHost(Automation):
 
             ipaddress = resolved_address
 
-        snmp_config = host_config.snmp_config(ipaddress)
-
         try:
             if test == 'ping':
-                base_cmd = "ping6" if host_config.is_ipv6_primary else "ping"
-                p = subprocess.Popen([base_cmd, "-A", "-i", "0.2", "-c", "2", "-W", "5", ipaddress],
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.STDOUT)
-                if p.stdout is None:
-                    raise RuntimeError()
-                response = p.stdout.read()
-                return (p.wait(), response.decode("utf-8"))
+                return self._execute_ping(host_config, ipaddress)
 
             if test == 'agent':
-                sources = data_sources.DataSources(hostname, ipaddress)
-                sources.set_max_cachefile_age(config.check_max_cachefile_age)
-
-                state, output = 0, u""
-                for source in sources.get_data_sources():
-                    if isinstance(source, data_sources.DSProgramDataSource) and cmd:
-                        source = data_sources.DSProgramDataSource(hostname, ipaddress, cmd)
-                    elif isinstance(source, data_sources.TCPDataSource):
-                        source.set_port(agent_port)
-                        if tcp_connect_timeout is not None:
-                            source.set_timeout(tcp_connect_timeout)
-                    elif isinstance(source, data_sources.snmp.SNMPDataSource):
-                        continue
-
-                    source_output = source.run_raw()
-
-                    # We really receive a byte string here. The agent sections
-                    # may have different encodings and are normally decoded one
-                    # by one (CheckMKAgentDataSource._parse_info).  For the
-                    # moment we use UTF-8 with fallback to latin-1 by default,
-                    # similar to the CheckMKAgentDataSource, but we do not
-                    # respect the ecoding options of sections.
-                    # If this is a problem, we would have to apply parse and
-                    # decode logic and unparse the decoded output again.
-                    output += convert_to_unicode(source_output)
-
-                    if source.exception():
-                        state = 1
-                        output += "%s" % source.exception()
-
-                return state, output
+                return self._execute_agent(hostname, ipaddress, agent_port, cmd,
+                                           tcp_connect_timeout)
 
             if test == 'traceroute':
-                family_flag = "-6" if host_config.is_ipv6_primary else "-4"
-                try:
-                    p = subprocess.Popen(['traceroute', family_flag, '-n', ipaddress],
-                                         stdout=subprocess.PIPE,
-                                         stderr=subprocess.STDOUT)
-                except OSError as e:
-                    if e.errno == errno.ENOENT:
-                        return 1, "Cannot find binary <tt>traceroute</tt>."
-                    raise
-                if p.stdout is None:
-                    raise RuntimeError()
-                return (p.wait(), p.stdout.read().decode("utf-8"))
+                return self._execute_traceroute(host_config, ipaddress)
 
             if test.startswith('snmp'):
-                # SNMPv3 tuples
-                # ('noAuthNoPriv', "username")
-                # ('authNoPriv', 'md5', '11111111', '22222222')
-                # ('authPriv', 'md5', '11111111', '22222222', 'DES', '33333333')
-
-                credentials = snmp_config.credentials  # type: snmp_utils.SNMPCredentials
-
-                # Insert preconfigured communitiy
-                if test == "snmpv3":
-                    if snmpv3_use:
-                        snmpv3_credentials = [snmpv3_use]
-                        if snmpv3_use in ["authNoPriv", "authPriv"]:
-                            if not isinstance(snmpv3_auth_proto, str) \
-                                or not isinstance(snmpv3_security_name, str) \
-                                or not isinstance(snmpv3_security_password, str):
-                                raise TypeError()
-                            snmpv3_credentials.extend(
-                                [snmpv3_auth_proto, snmpv3_security_name, snmpv3_security_password])
-                        else:
-                            if not isinstance(snmpv3_security_name, str):
-                                raise TypeError()
-                            snmpv3_credentials.extend([snmpv3_security_name])
-
-                        if snmpv3_use == "authPriv":
-                            if not isinstance(snmpv3_privacy_proto, str) or not isinstance(
-                                    snmpv3_privacy_password, str):
-                                raise TypeError()
-                            snmpv3_credentials.extend(
-                                [snmpv3_privacy_proto, snmpv3_privacy_password])
-
-                        credentials = tuple(snmpv3_credentials)
-                elif snmp_community:
-                    credentials = snmp_community
-
-                # Determine SNMPv2/v3 community
-                if hostname not in config.explicit_snmp_communities:
-                    cred = host_config.snmp_credentials_of_version(
-                        snmp_version=3 if test == "snmpv3" else 2)
-                    if cred is not None:
-                        credentials = cred
-
-                # SNMP versions
-                if test in ['snmpv2', 'snmpv3']:
-                    is_bulkwalk_host = True
-                    is_snmpv2or3_without_bulkwalk_host = False
-                elif test == 'snmpv2_nobulk':
-                    is_bulkwalk_host = False
-                    is_snmpv2or3_without_bulkwalk_host = True
-                elif test == 'snmpv1':
-                    is_bulkwalk_host = False
-                    is_snmpv2or3_without_bulkwalk_host = False
-
-                else:
-                    return 1, "SNMP command not implemented"
-
-                #TODO: What about SNMP management boards?
-                snmp_config = snmp_utils.SNMPHostConfig(
-                    is_ipv6_primary=snmp_config.is_ipv6_primary,
-                    hostname=hostname,
-                    ipaddress=ipaddress,
-                    credentials=credentials,
-                    port=snmp_config.port,
-                    is_bulkwalk_host=is_bulkwalk_host,
-                    is_snmpv2or3_without_bulkwalk_host=is_snmpv2or3_without_bulkwalk_host,
-                    bulk_walk_size_of=snmp_config.bulk_walk_size_of,
-                    timing={
-                        'timeout': snmp_timeout,
-                        'retries': snmp_retries,
-                    },
-                    oid_range_limits=snmp_config.oid_range_limits,
-                    snmpv3_contexts=snmp_config.snmpv3_contexts,
-                    character_encoding=snmp_config.character_encoding,
-                    is_usewalk_host=snmp_config.is_usewalk_host,
-                    is_inline_snmp_host=snmp_config.is_inline_snmp_host,
+                return self._execute_snmp(
+                    test,
+                    host_config,
+                    hostname,
+                    ipaddress,
+                    snmp_community,
+                    snmp_timeout,
+                    snmp_retries,
+                    snmpv3_use,
+                    snmpv3_auth_proto,
+                    snmpv3_security_name,
+                    snmpv3_security_password,
+                    snmpv3_privacy_proto,
+                    snmpv3_privacy_password,
                 )
-
-                # TODO: It is unclear why mypy complains about this structure. Investigate!
-                data = snmp.get_snmp_table(
-                    snmp_config,
-                    "",
-                    ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']),  # type: ignore[arg-type]
-                    use_snmpwalk_cache=True)
-
-                if data:
-                    return 0, 'sysDescr:\t%s\nsysContact:\t%s\nsysName:\t%s\nsysLocation:\t%s\n' % tuple(
-                        data[0])
-
-                return 1, 'Got empty SNMP response'
 
             return 1, "Command not implemented"
 
@@ -1354,6 +1232,178 @@ class AutomationDiagHost(Automation):
             if cmk.utils.debug.enabled():
                 raise
             return 1, str(e)
+
+    def _execute_ping(self, host_config, ipaddress):
+        # type: (config.HostConfig, str) -> Tuple[int, str]
+        base_cmd = "ping6" if host_config.is_ipv6_primary else "ping"
+        p = subprocess.Popen(
+            [base_cmd, "-A", "-i", "0.2", "-c", "2", "-W", "5", ipaddress],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+        )
+        if p.stdout is None:
+            raise RuntimeError()
+        response = p.stdout.read()
+        return p.wait(), response
+
+    def _execute_agent(self, hostname, ipaddress, agent_port, cmd, tcp_connect_timeout):
+        # type: (str, str, int, str, Optional[float]) -> Tuple[int, str]
+        sources = data_sources.DataSources(hostname, ipaddress)
+        sources.set_max_cachefile_age(config.check_max_cachefile_age)
+
+        state, output = 0, u""
+        for source in sources.get_data_sources():
+            if isinstance(source, data_sources.DSProgramDataSource) and cmd:
+                source = data_sources.DSProgramDataSource(hostname, ipaddress, cmd)
+            elif isinstance(source, data_sources.TCPDataSource):
+                source.set_port(agent_port)
+                if tcp_connect_timeout is not None:
+                    source.set_timeout(tcp_connect_timeout)
+            elif isinstance(source, data_sources.snmp.SNMPDataSource):
+                continue
+
+            source_output = source.run_raw()
+
+            # We really receive a byte string here. The agent sections
+            # may have different encodings and are normally decoded one
+            # by one (CheckMKAgentDataSource._parse_info).  For the
+            # moment we use UTF-8 with fallback to latin-1 by default,
+            # similar to the CheckMKAgentDataSource, but we do not
+            # respect the ecoding options of sections.
+            # If this is a problem, we would have to apply parse and
+            # decode logic and unparse the decoded output again.
+            output += convert_to_unicode(source_output)
+
+            if source.exception():
+                state = 1
+                output += "%s" % source.exception()
+
+        return state, output
+
+    def _execute_traceroute(self, host_config, ipaddress):
+        # type: (config.HostConfig, str) -> Tuple[int, str]
+        family_flag = "-6" if host_config.is_ipv6_primary else "-4"
+        try:
+            p = subprocess.Popen(
+                ['traceroute', family_flag, '-n', ipaddress],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                encoding="utf-8",
+            )
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                return 1, "Cannot find binary <tt>traceroute</tt>."
+            raise
+        if p.stdout is None:
+            raise RuntimeError()
+        return p.wait(), p.stdout.read()
+
+    def _execute_snmp(
+        self,
+        test,
+        host_config,
+        hostname,
+        ipaddress,
+        snmp_community,
+        snmp_timeout,
+        snmp_retries,
+        snmpv3_use,
+        snmpv3_auth_proto,
+        snmpv3_security_name,
+        snmpv3_security_password,
+        snmpv3_privacy_proto,
+        snmpv3_privacy_password,
+    ):
+        snmp_config = host_config.snmp_config(ipaddress)
+
+        # SNMPv3 tuples
+        # ('noAuthNoPriv', "username")
+        # ('authNoPriv', 'md5', '11111111', '22222222')
+        # ('authPriv', 'md5', '11111111', '22222222', 'DES', '33333333')
+
+        credentials = snmp_config.credentials  # type: snmp_utils.SNMPCredentials
+
+        # Insert preconfigured communitiy
+        if test == "snmpv3":
+            if snmpv3_use:
+                snmpv3_credentials = [snmpv3_use]
+                if snmpv3_use in ["authNoPriv", "authPriv"]:
+                    if not isinstance(snmpv3_auth_proto, str) \
+                        or not isinstance(snmpv3_security_name, str) \
+                        or not isinstance(snmpv3_security_password, str):
+                        raise TypeError()
+                    snmpv3_credentials.extend(
+                        [snmpv3_auth_proto, snmpv3_security_name, snmpv3_security_password])
+                else:
+                    if not isinstance(snmpv3_security_name, str):
+                        raise TypeError()
+                    snmpv3_credentials.extend([snmpv3_security_name])
+
+                if snmpv3_use == "authPriv":
+                    if not isinstance(snmpv3_privacy_proto, str) or not isinstance(
+                            snmpv3_privacy_password, str):
+                        raise TypeError()
+                    snmpv3_credentials.extend([snmpv3_privacy_proto, snmpv3_privacy_password])
+
+                credentials = tuple(snmpv3_credentials)
+        elif snmp_community:
+            credentials = snmp_community
+
+        # Determine SNMPv2/v3 community
+        if hostname not in config.explicit_snmp_communities:
+            cred = host_config.snmp_credentials_of_version(
+                snmp_version=3 if test == "snmpv3" else 2)
+            if cred is not None:
+                credentials = cred
+
+        # SNMP versions
+        if test in ['snmpv2', 'snmpv3']:
+            is_bulkwalk_host = True
+            is_snmpv2or3_without_bulkwalk_host = False
+        elif test == 'snmpv2_nobulk':
+            is_bulkwalk_host = False
+            is_snmpv2or3_without_bulkwalk_host = True
+        elif test == 'snmpv1':
+            is_bulkwalk_host = False
+            is_snmpv2or3_without_bulkwalk_host = False
+
+        else:
+            return 1, "SNMP command not implemented"
+
+        #TODO: What about SNMP management boards?
+        snmp_config = snmp_utils.SNMPHostConfig(
+            is_ipv6_primary=snmp_config.is_ipv6_primary,
+            hostname=hostname,
+            ipaddress=ipaddress,
+            credentials=credentials,
+            port=snmp_config.port,
+            is_bulkwalk_host=is_bulkwalk_host,
+            is_snmpv2or3_without_bulkwalk_host=is_snmpv2or3_without_bulkwalk_host,
+            bulk_walk_size_of=snmp_config.bulk_walk_size_of,
+            timing={
+                'timeout': snmp_timeout,
+                'retries': snmp_retries,
+            },
+            oid_range_limits=snmp_config.oid_range_limits,
+            snmpv3_contexts=snmp_config.snmpv3_contexts,
+            character_encoding=snmp_config.character_encoding,
+            is_usewalk_host=snmp_config.is_usewalk_host,
+            is_inline_snmp_host=snmp_config.is_inline_snmp_host,
+        )
+
+        # TODO: It is unclear why mypy complains about this structure. Investigate!
+        data = snmp.get_snmp_table(
+            snmp_config,
+            "",
+            ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']),  # type: ignore[arg-type]
+            use_snmpwalk_cache=True)
+
+        if data:
+            return 0, 'sysDescr:\t%s\nsysContact:\t%s\nsysName:\t%s\nsysLocation:\t%s\n' % tuple(
+                data[0])
+
+        return 1, 'Got empty SNMP response'
 
 
 automations.register(AutomationDiagHost())

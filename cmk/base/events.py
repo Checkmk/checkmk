@@ -169,6 +169,7 @@ def event_data_available(loop_interval):
 
 
 def pipe_decode_raw_context(raw_context):
+    # type: (EventContext) -> None
     """
     cmk_base replaces all occurences of the pipe symbol in the infotext with
     the character "Light vertical bar" before a check result is submitted to
@@ -189,7 +190,7 @@ def pipe_decode_raw_context(raw_context):
 def raw_context_from_string(data):
     # type: (bytes) -> EventContext
     # Context is line-by-line in g_notify_readahead_buffer
-    context = {}
+    context = {}  # type: EventContext
     try:
         for line in data.split(b'\n'):
             varname, value = six.ensure_str(line.strip()).split("=", 1)
@@ -386,7 +387,7 @@ def complete_raw_context(raw_context, with_dump):
             raw_context["PREVIOUSSERVICEHARDSTATE"] = prev_state
 
         # Add short variants for state names (at most 4 characters)
-        for key, value in raw_context.items():
+        for key, value in list(raw_context.items()):
             if key.endswith("STATE"):
                 raw_context[key[:-5] + "SHORTSTATE"] = value[:4]
 

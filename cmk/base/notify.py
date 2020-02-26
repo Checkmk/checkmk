@@ -1487,6 +1487,7 @@ def call_notification_script(plugin_name, plugin_context):
                              stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT,
                              env=notification_script_env(plugin_context),
+                             encoding="utf-8",
                              close_fds=True)
 
         stdout = p.stdout
@@ -1496,7 +1497,7 @@ def call_notification_script(plugin_name, plugin_context):
             # one - potentially huge - memory buffer
             line = stdout.readline()
             if line != '':
-                plugin_log("Output: %s" % line.decode('utf-8').rstrip())
+                plugin_log("Output: %s" % line.rstrip())
                 if _log_to_stdout:
                     console.output(six.ensure_str(line))
             else:

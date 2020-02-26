@@ -1,0 +1,11 @@
+Title: Analyze configuration: Set request timeout when contacting remote sites
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1582706715
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.6.0p10
+
+A hanging remote site no longer prevents rendering of the analyze configuration page.

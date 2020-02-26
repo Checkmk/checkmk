@@ -894,7 +894,7 @@ def oids_to_walk(options=None):
     elif "extraoids" in options:
         oids += options["extraoids"]
 
-    return sorted(oids, key=lambda x: map(int, x.strip(".").split(".")))
+    return sorted(oids, key=lambda x: list(map(int, x.strip(".").split("."))))
 
 
 def do_snmpget(oid, hostnames):

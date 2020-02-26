@@ -243,6 +243,7 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		windows/check_mk_agent-64.exe \
 		windows/check_mk_agent.exe \
 		windows/check_mk_agent.msi \
+		windows/python-3.8.zip \
 		windows/check_mk_agent_legacy-64.exe \
 		windows/check_mk_agent_legacy.exe \
 		windows/check_mk_agent_legacy.msi \

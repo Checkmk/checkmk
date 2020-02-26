@@ -337,7 +337,9 @@ class ModeAnalyzeConfig(WatoMode):
 
             else:
                 results_data = watolib.do_remote_automation(config.site(site_id),
-                                                            "check-analyze-config", [])
+                                                            "check-analyze-config", [],
+                                                            timeout=html.request.request_timeout -
+                                                            10)
 
             self._logger.debug("[%s] Finished" % site_id)
 

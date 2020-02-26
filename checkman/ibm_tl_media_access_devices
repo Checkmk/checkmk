@@ -10,7 +10,7 @@ description:
  The device sends its state itself.
 
 item:
- The media access device name.
+ The name of the media access device
 
 inventory:
  One service for each device is created.

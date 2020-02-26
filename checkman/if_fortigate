@@ -3,6 +3,13 @@ agents: snmp
 catalog: hw/network/fortinet
 license: GPL
 distribution: check_mk
+
+item:
+ There are three allowed ways to specify a port: {1}: the last component of
+ the SNMP OID number (as string), the {ifDescr} of the port or the {ifAlias} of
+ the port. If you are using the alias, you have to make sure that it is unique
+ by configuring useful aliases in the switch. Check_MK does not check for uniqueness.
+
 description:
  This check does exactly the same as {if64} but retrieves {ifName} instead
  of {ifAlias}, because {ifAlias} is not useful in Fortigate firewalls.

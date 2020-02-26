@@ -15,8 +15,10 @@ description:
  can be configured by WATO.
 
 item:
- The item name is "Node <node_id> Slot <adapter_location> Port <adapter_port_id>"
- or "Port <port_id>" for older versions of the device.
+ {{Node}} plus the id of the node followed by {{Slot}} plus the location of the adapter and {{Port}}
+ plus the adapter port id.
+
+ i. e. {{Node <node_id> Slot <adapter_location> Port <adapter_port_id>/<port_id>}}
 
 inventory:
  Creates one check for every SAS Port in the IBM SVC / Storwize V3700 / V7000 device

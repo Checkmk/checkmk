@@ -12,5 +12,8 @@ description:
   The check status will be {OK} if there are no errors at all, {WARN}
   on "recovered" errors and {CRIT} on unrecoverable errors.
 
+item:
+ ID of the drive
+
 inventory:
   One item per connected drive is created.

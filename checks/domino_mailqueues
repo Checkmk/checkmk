@@ -36,6 +36,9 @@ MAILQUEUES_LABEL = (
 
 
 def parse_domino_mailqueues(info):
+    if not info:
+        return {}
+
     return {
         item: (label, int(raw_value))
         for (item, label), raw_value in zip(MAILQUEUES_LABEL, info[0])

@@ -1408,7 +1408,7 @@ div.help {
     content: "i";
   }
 
-  a, a:link {
+  a, a:link, a:visited {
     color: $help-link-color;
 
     &:hover {

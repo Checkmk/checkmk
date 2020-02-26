@@ -31,10 +31,13 @@ from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
 )
+from cmk.gui.plugins.wato.ac_tests import ACTestConnectivity
 
 from cmk.gui.watolib.changes import activation_sites
 from cmk.gui.watolib.analyze_configuration import (
     ACResult,
+    ACResultOK,
+    ACResultCRIT,
     ACTestCategories,
     AutomationCheckAnalyzeConfig,
 )
@@ -264,6 +267,12 @@ class ModeAnalyzeConfig(WatoMode):
                         result = ACResult.from_repr(result_data)
                         test_results.append(result)
 
+                    # Add general connectivity result
+                    result = ACResultOK(_("No connectivity problems"))
+                    result.from_test(ACTestConnectivity())
+                    result.site_id = site_id
+                    test_results.append(result)
+
                     results_by_site[site_id] = test_results
 
                 else:
@@ -273,8 +282,12 @@ class ModeAnalyzeConfig(WatoMode):
                 time.sleep(0.5)  # wait some time to prevent CPU hogs
 
             except Exception as e:
+                result = ACResultCRIT("%s" % e)
+                result.from_test(ACTestConnectivity())
+                result.site_id = site_id
+                results_by_site[site_id] = [result]
+
                 logger.exception("error analyzing configuration for site %s", site_id)
-                html.show_error("%s: %s" % (site_id, e))
 
         self._logger.debug("Got test results")
 

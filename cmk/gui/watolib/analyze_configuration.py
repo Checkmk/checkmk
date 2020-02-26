@@ -106,6 +106,7 @@ class ACResultOK(ACResult):
 
 
 class ACTestCategories(object):
+    connectivity = "connectivity"
     usability = "usability"
     performance = "performance"
     security = "security"
@@ -115,6 +116,7 @@ class ACTestCategories(object):
     @classmethod
     def title(cls, ident):
         return {
+            "connectivity": _("Connectivity"),
             "usability": _("Usability"),
             "performance": _("Performance"),
             "security": _("Security"),

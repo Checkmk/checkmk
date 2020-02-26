@@ -11,7 +11,7 @@ description:
  otherwise CRIT.
 
 item:
- The sensor name.
+ The name of the digital input sensor
 
 inventory:
  One service per sensor is created.

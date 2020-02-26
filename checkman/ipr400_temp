@@ -6,5 +6,8 @@ distribution: check_mk
 description:
  The check monitors the temperature on Omnitronics IPR400 VoIP devices.
 
+item:
+ The fixed statement {{Ambient}}
+
 inventory:
  Creates exactly one service

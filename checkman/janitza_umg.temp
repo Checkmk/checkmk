@@ -9,7 +9,7 @@ description:
  similar.
 
 item:
- consecutive numbers.
+ Current value of the counter
 
 inventory:
  Creates up to two items - one per temperature sensor.

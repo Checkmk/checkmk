@@ -112,7 +112,7 @@ def check_postgres_stats(item, params, parsed):
                            None,
                            params.get("last_%s" % paramskey),
                            human_readable_func=get_age_human_readable,
-                           infoname='Time since last vacuum')
+                           infoname='Time since last %s' % paramskey)
 
     for subresult in _check_never_checked(item, text, never_checked, params, now):
         yield subresult

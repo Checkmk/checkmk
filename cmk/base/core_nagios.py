@@ -953,7 +953,7 @@ def _precompile_hostcheck(config_cache, hostname):
         return
 
     output = open(source_filename + ".new", "w")
-    output.write("#!/usr/bin/env python\n")
+    output.write("#!/usr/bin/env python3\n")
     output.write("# encoding: utf-8\n\n")
 
     output.write("import logging\n")
@@ -1063,9 +1063,9 @@ if '-d' in sys.argv:
     output.write("except MKTerminate:\n")
     output.write("    console.output('<Interrupted>\\n', stream=sys.stderr)\n")
     output.write("    sys.exit(1)\n")
-    output.write("except SystemExit, e:\n")
+    output.write("except SystemExit as e:\n")
     output.write("    sys.exit(e.code)\n")
-    output.write("except Exception, e:\n")
+    output.write("except Exception as e:\n")
     output.write("    import traceback, pprint\n")
 
     # status output message

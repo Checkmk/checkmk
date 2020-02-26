@@ -662,7 +662,8 @@ def _submit_via_check_result_file(host, service, state, output):
     if _checkresult_file_fd:
         now = time.time()
         os.write(
-            _checkresult_file_fd, """host_name=%s
+            _checkresult_file_fd,
+            six.ensure_binary("""host_name=%s
 service_description=%s
 check_type=1
 check_options=0
@@ -673,7 +674,7 @@ finish_time=%.1f
 return_code=%d
 output=%s
 
-""" % (host, six.ensure_str(service), now, now, state, six.ensure_str(output)))
+""" % (host, six.ensure_str(service), now, now, state, six.ensure_str(output))))
 
 
 def _open_checkresult_file():
@@ -682,8 +683,8 @@ def _open_checkresult_file():
     global _checkresult_file_path
     if _checkresult_file_fd is None:
         try:
-            _checkresult_file_fd, _checkresult_file_path = \
-                tempfile.mkstemp('', 'c', cmk.utils.paths.check_result_path)
+            _checkresult_file_fd, _checkresult_file_path = tempfile.mkstemp(
+                '', 'c', cmk.utils.paths.check_result_path)
         except Exception as e:
             raise MKGeneralException("Cannot create check result file in %s: %s" %
                                      (cmk.utils.paths.check_result_path, e))

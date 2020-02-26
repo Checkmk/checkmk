@@ -275,7 +275,7 @@ modes.register(
 def mode_list_tag(args):
     # type: (List[str]) -> None
     hosts = _list_all_hosts_with_tags(args)
-    console.output("\n".join(hosts))
+    console.output("\n".join(sorted(hosts)))
     if hosts:
         console.output("\n")
 

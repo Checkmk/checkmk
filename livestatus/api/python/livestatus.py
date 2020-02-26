@@ -494,8 +494,10 @@ class SingleSiteConnection(Helpers):
         if not query.endswith("\n"):
             query += "\n"
         query += self.auth_header + self.add_headers
-        query += "Localtime: %d\nOutputFormat: python\nKeepAlive: on\nResponseHeader: fixed16\n" % int(
-            time.time())
+        query += "Localtime: %d\n" % int(time.time())
+        query += "OutputFormat: %s\n" % ("python3" if sys.version_info[0] >= 3 else "python")
+        query += "KeepAlive: on\n"
+        query += "ResponseHeader: fixed16\n"
         query += add_headers
 
         if not query.endswith("\n"):

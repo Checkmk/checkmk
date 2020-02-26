@@ -8,7 +8,7 @@ description:
  the HWg-STE Ethernet thermometer.
 
 item:
- The name of the sensor "a string".
+ The name of the sensor
 
 inventory:
  All available humidity sensors are automatically inventorized.

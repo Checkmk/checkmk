@@ -8,6 +8,9 @@ description:
  checks if the current state of the VM equals to the state detected during the inventory.
  The check produces an error after the state has changed.
 
+item:
+ Name of the virtual machine
+
 inventory:
  One service will be created for each system.
 

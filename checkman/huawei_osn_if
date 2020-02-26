@@ -9,7 +9,7 @@ description:
  parameters can be set for most values.
 
 item:
- The Interface name will be the item
+ Name of the interface
 
 inventory:
  One service for each interface is created

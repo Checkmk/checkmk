@@ -12,7 +12,7 @@ description:
  Default levels are set to 80, 90 percent. These levels can be configured in WATO.
 
 item:
- The stack member number.
+ The stack member number and the entity number seperated by a {{/}}.
 
 inventory:
  One service for each stack member is created

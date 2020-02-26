@@ -1,24 +1,8 @@
 #!/usr/bin/env python
 # TODO: This should be realized as unit tests
 
-from __future__ import print_function
 import pytest  # type: ignore[import]
 from testlib.base import Scenario
-
-
-@pytest.fixture(scope="function", autouse=True)
-def clear_config_caches(monkeypatch):
-    from cmk.base import config_cache as _config_cache, runtime_cache as _runtime_cache
-    _config_cache.reset()
-    _runtime_cache.reset()
-
-
-@pytest.fixture(scope="function", autouse=True)
-def enable_debug():
-    import cmk.utils.debug
-    cmk.utils.debug.enable()
-    yield
-    cmk.utils.debug.disable()
 
 
 @pytest.mark.parametrize("protocol,cred_attribute,credentials", [

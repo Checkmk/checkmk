@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 r"""
 Migrate RRDs metadata which are based on mountpoint names to static name 'fs_used'
@@ -23,7 +23,7 @@ import subprocess
 from shlex import split
 import xml.etree.ElementTree as ET
 
-from pathlib2 import Path
+from pathlib import Path
 import six
 
 import cmk.base.autochecks

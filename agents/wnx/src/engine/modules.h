@@ -14,6 +14,7 @@
 #include "cma_core.h"
 
 namespace cma::cfg::modules {
+constexpr std::string_view kNoExtension = ".";
 constexpr std::string_view kExtension = ".zip";
 constexpr std::string_view kTargetDir = ".target.dir";  // dir for installation
 constexpr int kResonableDirLengthMin = 20;
@@ -30,8 +31,24 @@ public:
     [[nodiscard]] auto exec() const noexcept { return exec_; }
     [[nodiscard]] auto dir() const noexcept { return dir_; }
 
-    [[nodiscard]] bool isModuleFile(const std::filesystem::path& file) const
+    [[nodiscard]] auto bin() const noexcept { return bin_; }
+    [[nodiscard]] auto zip() const noexcept { return zip_; }
+
+    [[nodiscard]] bool isModuleZip(const std::filesystem::path& file) const
         noexcept;
+
+    // finds the zip and executable
+    bool prepareToWork(const std::filesystem::path& backup_dir,
+                       const std::filesystem::path& modules_dir);
+
+    //
+    bool isMyScript(const std::filesystem::path& script) const noexcept;
+    std::wstring buildCommandLine(const std::filesystem::path& script) const
+        noexcept;
+
+    // makes command line with script, if bin_ is empty returns nothing
+    std::wstring buildCommandLineForced(
+        const std::filesystem::path& script) const noexcept;
 
 private:
     void reset() noexcept;
@@ -40,10 +57,21 @@ private:
     std::wstring exec_;
     std::string dir_;
 
+    std::filesystem::path bin_;  // executable from the exec:
+    std::filesystem::path zip_;  // path to valid zip file
+
+    std::filesystem::path findZip(const std::filesystem::path& backup_dir) const
+        noexcept;
+
+    std::filesystem::path findBin(
+        const std::filesystem::path& modules_dir) const noexcept;
+
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class Modules;
+    friend class ModulesTest;
     FRIEND_TEST(ModulesTest, Loader);
     FRIEND_TEST(ModulesTest, Internal);
+    FRIEND_TEST(ModulesTest, PrepareToWork);
+    FRIEND_TEST(ModulesTest, IsMyScript);
 
     friend class ModuleCommanderTest;
     FRIEND_TEST(ModuleCommanderTest, InstallModules);
@@ -62,6 +90,11 @@ public:
     void LoadDefault() noexcept;
     void InstallDefault(InstallMode mode) noexcept;
     void readConfig(YAML::Node& node);
+
+    void prepareToWork();
+    bool isModuleScript(const std::string_view filename);
+    std::wstring buildCommandLine(const std::string_view filename);
+
     int findModuleFiles(const std::filesystem::path& root);
     void installModules(const std::filesystem::path& root,
                         const std::filesystem::path& user,
@@ -106,11 +139,14 @@ private:
     std::vector<Module> modules_;
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class ModuleCommanderTest;
-    FRIEND_TEST(ModuleCommanderTest, ReadConfig);
     FRIEND_TEST(ModuleCommanderTest, FindModules);
     FRIEND_TEST(ModuleCommanderTest, InstallModules);
     FRIEND_TEST(ModuleCommanderTest, Internal);
     FRIEND_TEST(ModuleCommanderTest, LowLevelFs);
+    FRIEND_TEST(ModuleCommanderTest, PrepareToWork2);
+
+    friend class ModuleCommander;
+    FRIEND_TEST(ModuleCommander, ReadConfig);
 #endif
 };
 

@@ -18,6 +18,7 @@
 #include "common/cfg_info.h"
 #include "common/wtools.h"
 #include "logger.h"
+#include "tools/_misc.h"
 #include "zip.h"
 
 namespace cma::cfg::modules {
@@ -27,9 +28,123 @@ void Module::reset() noexcept {
     exts_.clear();
     exec_.clear();
     dir_.clear();
+    zip_.clear();
+    bin_.clear();
 }
 
-[[nodiscard]] bool Module::isModuleFile(const std::filesystem::path &file) const
+std::filesystem::path Module::findZip(
+    const std::filesystem::path &backup_dir) const noexcept {
+    namespace fs = std::filesystem;
+    try {
+        auto zip = backup_dir / (name() + std::string{kExtension});
+        if (fs::exists(zip) && fs::is_regular_file(zip) &&
+            fs::file_size(zip) > 0)
+            return zip;
+
+        XLOG::d.i("Module '{}' has no zip installed, this is normal", name());
+
+    } catch (const std::exception &e) {
+        XLOG::d.i(
+            "Module '{}' has no zip installed, this is normal, exception '{}'",
+            name(), e.what());
+    }
+    return {};
+}
+
+std::filesystem::path Module::findBin(
+    const std::filesystem::path &modules_dir) const noexcept {
+    namespace fs = std::filesystem;
+    fs::path actual_dir = modules_dir.parent_path() / dir();
+
+    try {
+        fs::path default_dir = modules_dir / name();
+
+        // default must exist
+        if (!fs::exists(default_dir) || !fs::is_directory(default_dir)) {
+            XLOG::d("Module '{}' has no work folder, this is bad", name());
+            return {};
+        }
+
+        // check for actual
+        if (fs::exists(actual_dir) && fs::is_directory(actual_dir) &&
+            !fs::equivalent(default_dir, actual_dir)) {
+            // check symbolic link, actual is not the same as default
+            XLOG::d("Module '{}' has predefined work folder", name());
+        }
+        auto table = cma::tools::SplitString(exec(), L" ");
+
+        auto bin = actual_dir / table[0];
+        if (!fs::exists(bin) || !fs::is_regular_file(bin)) {
+            XLOG::d("Module '{}' has no bin, this is bad", name());
+            return {};
+        }
+
+        return bin;
+    } catch (const std::exception &e) {
+        XLOG::d("Module '{}' has no work folder, this is bad, exception '{}'",
+                name(), e.what());
+    }
+
+    return {};
+}
+
+bool Module::prepareToWork(const std::filesystem::path &backup_dir,
+                           const std::filesystem::path &modules_dir) {
+    namespace fs = std::filesystem;
+
+    // Find Zip
+    zip_ = findZip(backup_dir);
+    if (zip_.empty()) return false;
+
+    bin_ = findBin(modules_dir);
+    if (bin_.empty()) return false;
+
+    XLOG::l.i("Module '{}' is prepared to work with bin '{}'", name(),
+              bin_.u8string());
+    return true;
+}
+
+bool Module::isMyScript(const std::filesystem::path &script) const noexcept {
+    using namespace std::literals;
+    try {
+        std::string extension{script.has_extension()
+                                  ? script.extension().u8string()
+                                  : kNoExtension};
+
+        if (std::any_of(std::begin(exts_), std::end(exts_),
+                        [extension](const std::string &ext) {
+                            return cma::tools::IsEqual(extension, ext);
+                        }))
+            return true;
+    } catch (const std::exception &e) {
+        XLOG::l(XLOG_FUNC + ": Exception '{}'", e.what());
+    }
+
+    return false;
+}
+
+std::wstring Module::buildCommandLineForced(
+    const std::filesystem::path &script) const noexcept {
+    try {
+        if (bin().empty()) return {};
+        auto result = fmt::format(exec(), script.wstring());
+        return result;
+    } catch (const std::exception &e) {
+        XLOG::d("can't build valid command line for '{}', exception is '{}'",
+                name(), e.what());
+    }
+
+    return {};
+}
+
+std::wstring Module::buildCommandLine(const std::filesystem::path &script) const
+    noexcept {
+    if (!isMyScript(script)) return {};
+
+    return buildCommandLineForced(script);
+}
+
+[[nodiscard]] bool Module::isModuleZip(const std::filesystem::path &file) const
     noexcept {
     try {
         return tools::IsEqual(name() + std::string(kExtension),
@@ -425,4 +540,33 @@ void ModuleCommander::LoadDefault() noexcept {
         XLOG::l("Exception loading modules config '{}'", e.what());
     }
 }
+
+void ModuleCommander::prepareToWork() {
+    namespace fs = std::filesystem;
+    auto mod_backup = GetModBackup(cma::cfg::GetUserDir());
+    auto mod_root = GetModInstall(cma::cfg::GetUserDir());
+
+    for (auto &m : modules_) {
+        m.prepareToWork(mod_backup, mod_root);
+    }
+}
+
+bool ModuleCommander::isModuleScript(const std::string_view filename) {
+    for (auto &m : modules_) {
+        if (m.isMyScript(filename)) return true;
+    }
+    return false;
+}
+
+std::wstring ModuleCommander::buildCommandLine(
+    const std::string_view filename) {
+    namespace fs = std::filesystem;
+    for (auto &m : modules_) {
+        if (m.isMyScript(filename)) {
+            return m.buildCommandLine(fs::path{filename});
+        }
+    }
+    return {};
+}
+
 }  // namespace cma::cfg::modules

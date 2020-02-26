@@ -49,14 +49,28 @@ TEST(ModulesTest, Internal) {
     EXPECT_TRUE(m.exec_.empty());
     EXPECT_TRUE(m.exts_.empty());
     EXPECT_TRUE(m.name_.empty());
+    EXPECT_TRUE(m.bin_.empty());
+    EXPECT_TRUE(m.zip_.empty());
 
     m.exec_ = L"a";
-    m.exts_.emplace_back("v");
+    m.exts_.emplace_back(".v");
     m.name_ = "z";
     EXPECT_EQ(m.exec(), L"a");
     EXPECT_EQ(m.name(), "z");
-    EXPECT_TRUE(Compare(m.exts(), {"v"}));
+    EXPECT_TRUE(Compare(m.exts(), {".v"}));
     EXPECT_TRUE(m.valid());
+
+    m.bin_ = "z";
+    EXPECT_EQ(m.bin(), "z");
+
+    m.zip_ = "z";
+    EXPECT_EQ(m.zip(), "z");
+
+    EXPECT_EQ(m.buildCommandLine("q.v"), m.exec());
+    EXPECT_TRUE(m.buildCommandLine("q.x").empty()) << "invalid extension";
+
+    m.exec_ = L"a {}";
+    EXPECT_EQ(m.buildCommandLine("q.v"), L"a q.v");
 
     // reset test
     m.reset();
@@ -64,6 +78,8 @@ TEST(ModulesTest, Internal) {
     EXPECT_TRUE(m.exec().empty());
     EXPECT_TRUE(m.exts().empty());
     EXPECT_TRUE(m.name().empty());
+    EXPECT_TRUE(m.zip().empty());
+    EXPECT_TRUE(m.bin().empty());
 }
 
 struct TestSet {
@@ -124,6 +140,27 @@ TEST(ModulesTest, Loader) {
     }
 }
 
+TEST(ModulesTest, IsMyScript) {
+    namespace fs = std::filesystem;
+
+    Module m;
+    EXPECT_FALSE(m.isMyScript("z"));
+    EXPECT_FALSE(m.isMyScript("z.ix"));
+    m.exts_.emplace_back(".ix");
+    EXPECT_TRUE(m.isMyScript("z.ix"));
+    EXPECT_TRUE(m.isMyScript("z.m.ix"));
+    EXPECT_FALSE(m.isMyScript("z"));
+    m.exts_.emplace_back(".vv");
+    EXPECT_TRUE(m.isMyScript("z.vv"));
+    EXPECT_TRUE(m.isMyScript("z.ix"));
+    EXPECT_TRUE(m.isMyScript("z.m.ix"));
+    EXPECT_FALSE(m.isMyScript("z"));
+    m.exts_.emplace_back("vvv");
+    EXPECT_FALSE(m.isMyScript("z.vvv"));
+    m.exts_.emplace_back(".");
+    EXPECT_TRUE(m.isMyScript("z"));
+}
+
 TEST(ModulesTest, TableLoader) {
     std::string work_set[7] = {
         "the",  "['.a', '.b']", "x",           //
@@ -179,7 +216,7 @@ TEST(ModulesTest, TableLoader) {
     }
 }
 
-TEST(ModuleCommanderTest, ReadConfig) {
+TEST(ModuleCommander, ReadConfig) {
     std::string base =
         "modules:\n"
         "  enabled: yes\n"
@@ -204,14 +241,117 @@ TEST(ModuleCommanderTest, ReadConfig) {
     EXPECT_EQ(mc.modules_[1].dir(), "plugins");
 }
 
-TEST(ModuleCommanderTest, LowLevelFs) {
+class ModuleCommanderTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        cma::OnStartTest();
+        tst::SafeCleanTempDir();
+    }
+
+    void TearDown() override { tst::SafeCleanTempDir(); }
+};
+
+TEST_F(ModuleCommanderTest, PrepareToWork) {
+    namespace fs = std::filesystem;
+    using namespace cma::cfg;
+
+    fs::path user = tst::CreateDirInTemp(L"user");
+    auto modules_dir = user / dirs::kUserModules;
+    auto backup_dir = user / dirs::kInstall / dirs::kInstalledModules;
+    fs::create_directories(modules_dir);
+    fs::create_directories(backup_dir);
+
+    Module m;
+    std::string test_1 =
+        "name: zz\n"      // valid
+        "exts: ['.t']\n"  //
+        "exec: 'zz.exe {}'\n";
+    ASSERT_TRUE(m.loadFrom(YAML::Load(test_1)));
+    ASSERT_TRUE(m.name() == "zz" && m.exec() == L"zz.exe {}");
+    EXPECT_FALSE(m.prepareToWork(backup_dir, modules_dir));
+    tst::ConstructFile(backup_dir / (m.name() + kExtension.data()), "zip");
+    EXPECT_FALSE(m.prepareToWork(backup_dir, modules_dir));
+    EXPECT_EQ(m.zip(), backup_dir / "zz.zip");
+    EXPECT_TRUE(m.buildCommandLine("x.t").empty());
+
+    fs::create_directories(modules_dir / m.name());
+    tst::ConstructFile(modules_dir / m.name() / "zz.exe", "exe");
+    EXPECT_TRUE(m.prepareToWork(backup_dir, modules_dir));
+    EXPECT_EQ(m.bin(), modules_dir / m.name() / "zz.exe");
+    EXPECT_EQ(m.buildCommandLine("x.t"), L"zz.exe x.t");
+    EXPECT_TRUE(m.buildCommandLine("x.tx").empty());
+    EXPECT_EQ(m.buildCommandLineForced("x.z"), L"zz.exe x.z");
+}
+
+TEST_F(ModuleCommanderTest, PrepareToWork2) {
+    namespace fs = std::filesystem;
+    using namespace cma::cfg;
+
+    fs::path user = tst::CreateDirInTemp(L"user");
+    fs::path root = tst::CreateDirInTemp(L"root");
+    GetCfg().pushFolders(root, user);
+    ON_OUT_OF_SCOPE(GetCfg().popFolders());
+
+    auto modules_dir = user / dirs::kUserModules;
+    auto backup_dir = user / dirs::kInstall / dirs::kInstalledModules;
+    fs::create_directories(modules_dir);
+    fs::create_directories(backup_dir);
+
+    std::string base =
+        "modules:\n"
+        "  enabled: yes\n"
+        "  table:\n"
+        "    - name: zz\n"           // valid
+        "      exts: ['.t']\n"       //
+        "      exec: 'zz.exe {}'\n"  //
+        "    - name: qq\n"           // valid
+        "      exts: ['.test2']\n"   //
+        "      exec: 'nothing2'\n"   //
+        "      dir:  'plugins'\n";
+
+    ModuleCommander mc;
+    auto node = YAML::Load(base);
+    mc.readConfig(node);
+    ASSERT_EQ(mc.modules_.size(), 2);
+
+    mc.prepareToWork();
+    for (auto& m : mc.modules_) {
+        ASSERT_TRUE(m.bin().empty());
+        ASSERT_TRUE(m.zip().empty());
+    }
+
+    tst::ConstructFile(backup_dir / (mc.modules_[0].name() + kExtension.data()),
+                       "zip");
+    mc.prepareToWork();
+    {
+        ASSERT_TRUE(mc.modules_[0].bin().empty());
+        ASSERT_FALSE(mc.modules_[0].zip().empty());
+        ASSERT_TRUE(mc.modules_[1].bin().empty());
+        ASSERT_TRUE(mc.modules_[1].zip().empty());
+    }
+
+    fs::create_directories(modules_dir / mc.modules_[0].name());
+    tst::ConstructFile(modules_dir / mc.modules_[0].name() / "zz.exe", "exe");
+    mc.prepareToWork();
+    {
+        ASSERT_FALSE(mc.modules_[0].bin().empty());
+        ASSERT_FALSE(mc.modules_[0].zip().empty());
+        ASSERT_TRUE(mc.modules_[1].bin().empty());
+        ASSERT_TRUE(mc.modules_[1].zip().empty());
+    }
+
+    EXPECT_TRUE(mc.isModuleScript("cc.t"));
+    EXPECT_FALSE(mc.isModuleScript("cc"));
+    EXPECT_FALSE(mc.isModuleScript("cc.c"));
+
+    EXPECT_EQ(mc.buildCommandLine("x.t"), L"zz.exe x.t");
+}
+
+TEST_F(ModuleCommanderTest, LowLevelFs) {
     using namespace std::literals;
     namespace fs = std::filesystem;
-    cma::OnStartTest();
-    tst::SafeCleanTempDir();
     fs::path root = cma::cfg::GetTempDir();
     fs::path user = tst::CreateDirInTemp(L"user");
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
 
     ModuleCommander::CreateBackupFolder(user);
     auto backup_dir = user / dirs::kInstall / dirs::kInstalledModules;
@@ -242,14 +382,11 @@ TEST(ModuleCommanderTest, LowLevelFs) {
     ASSERT_FALSE(fs::exists(dummy_file));
 }
 
-TEST(ModuleCommanderTest, FindModules) {
+TEST_F(ModuleCommanderTest, FindModules) {
     using namespace std::literals;
     namespace fs = std::filesystem;
-    cma::OnStartTest();
-    tst::SafeCleanTempDir();
     fs::path root = cma::cfg::GetTempDir();
     fs::path install = tst::CreateDirInTemp(dirs::kInstall);
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
 
     std::string base =
         "modules:\n"
@@ -292,15 +429,12 @@ TEST(ModuleCommanderTest, FindModules) {
     EXPECT_FALSE(mc.isBelongsToModules(""));
 }
 
-TEST(ModuleCommanderTest, Internal) {
+TEST_F(ModuleCommanderTest, Internal) {
     using namespace std::literals;
     namespace fs = std::filesystem;
-    cma::OnStartTest();
     fs::path user_dir = cma::cfg::GetUserDir();
-    tst::SafeCleanTempDir();
     fs::path user = cma::cfg::GetTempDir();
     fs::path modules = ModuleCommander::GetModInstall(user);
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
 
     ModuleCommander mc;
     auto dir = user / dirs::kUserModules / "tst";
@@ -337,11 +471,9 @@ TEST(ModuleCommanderTest, Internal) {
     EXPECT_TRUE(fs::exists(modules / "test_left.txt"));
 }
 
-TEST(ModuleCommanderTest, InstallModules) {
+TEST_F(ModuleCommanderTest, InstallModules) {
     using namespace std::literals;
     namespace fs = std::filesystem;
-    cma::OnStartTest();
-    tst::SafeCleanTempDir();
     fs::path user_dir = cma::cfg::GetUserDir();
 
     auto zip_file = user_dir / tst::zip_to_test;

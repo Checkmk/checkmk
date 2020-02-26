@@ -40,7 +40,8 @@ inline void sleep(std::chrono::duration<T, B> dur) noexcept {
 }
 
 // gtest [+]
-inline bool IsEqual(std::string_view Left, std::string_view Right) {
+[[nodiscard]] inline bool IsEqual(std::string_view Left,
+                                  std::string_view Right) {
     return std::equal(Left.cbegin(), Left.cend(), Right.cbegin(), Right.cend(),
                       [](char LeftChar, char RightChar) {
                           return std::tolower(LeftChar) ==
@@ -48,7 +49,8 @@ inline bool IsEqual(std::string_view Left, std::string_view Right) {
                       });
 }
 
-inline bool IsEqual(std::wstring_view Left, std::wstring_view Right) {
+[[nodiscard]] inline bool IsEqual(std::wstring_view Left,
+                                  std::wstring_view Right) {
     return std::equal(Left.cbegin(), Left.cend(), Right.cbegin(), Right.cend(),
                       [](wchar_t LeftChar, wchar_t RightChar) {
                           return std::tolower(LeftChar) ==
@@ -56,7 +58,8 @@ inline bool IsEqual(std::wstring_view Left, std::wstring_view Right) {
                       });
 }
 
-inline bool IsEqual(const std::wstring& Left, const std::wstring& Right) {
+[[nodiscard]] inline bool IsEqual(const std::wstring& Left,
+                                  const std::wstring& Right) {
     return std::equal(Left.cbegin(), Left.cend(), Right.cbegin(), Right.cend(),
                       [](wchar_t LeftChar, wchar_t RightChar) {
                           return std::tolower(LeftChar) ==
@@ -65,7 +68,8 @@ inline bool IsEqual(const std::wstring& Left, const std::wstring& Right) {
 }
 
 // returns true if left is Less than right
-inline bool IsLess(const std::string& Left, const std::string& Right) {
+[[nodiscard]] inline bool IsLess(const std::string& Left,
+                                 const std::string& Right) {
     auto li = Left.cbegin();
     auto ri = Right.cbegin();
     for (; li != Left.cend() && ri != Right.cend(); ++ri, ++li) {

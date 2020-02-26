@@ -12,11 +12,12 @@ import socket
 import contextlib
 import binascii
 
-import typing  # pylint: disable=unused-import
-from typing import Dict, List, NamedTuple, Text, Union  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Dict, List, NamedTuple, Text, Union, Tuple as _Tuple,
+)
 
 import six
-from OpenSSL import crypto
+from OpenSSL import crypto  # type: ignore[import]
 from OpenSSL import SSL  # type: ignore[attr-defined]
 # mypy can't find x509 for some reason (is a c extension involved?)
 from cryptography.x509.oid import ExtensionOID, NameOID  # type: ignore[import]
@@ -516,7 +517,7 @@ class ModeDistributedMonitoring(WatoMode):
             self._site_mgmt.delete_site(delete_id)
             return None
 
-        elif c is False:
+        if c is False:
             return ""
 
         return None
@@ -537,11 +538,10 @@ class ModeDistributedMonitoring(WatoMode):
                                sites=[watolib.default_site()])
             return None, _("Logged out.")
 
-        elif c is False:
+        if c is False:
             return ""
 
-        else:
-            return None
+        return None
 
     def _action_login(self, login_id):
         configured_sites = self._site_mgmt.load_sites()
@@ -817,12 +817,12 @@ class ReplicationStatusFetcher(object):
         self._logger = logger.getChild("replication-status")
 
     def fetch(self, sites):
-        # type: (List[typing.Tuple[str, Dict]]) -> Dict[str, PingResult]
+        # type: (List[_Tuple[str, Dict]]) -> Dict[str, PingResult]
         self._logger.debug("Fetching replication status for %d sites" % len(sites))
         results_by_site = {}
 
         # Results are fetched simultaneously from the remote sites
-        result_queue = multiprocessing.JoinableQueue()
+        result_queue = multiprocessing.JoinableQueue()  # type: ignore[var-annotated]
 
         processes = []
         for site_id, site in sites:
@@ -837,6 +837,7 @@ class ReplicationStatusFetcher(object):
                 result = result_queue.get_nowait()
                 result_queue.task_done()
                 results_by_site[result.site_id] = result
+
             except six.moves.queue.Empty:
                 time.sleep(0.5)  # wait some time to prevent CPU hogs
 
@@ -974,11 +975,10 @@ class ModeEditSiteGlobals(GlobalSettingsMode):
                 return "edit_site_globals", msg
             return "edit_site_globals"
 
-        elif c is False:
+        if c is False:
             return ""
 
-        else:
-            return None
+        return None
 
     def _edit_mode(self):
         return "edit_site_configvar"
@@ -1189,7 +1189,8 @@ class ModeSiteLivestatusEncryption(WatoMode):
         cert_details = []
         for result in verify_chain_results:
             # use cryptography module over OpenSSL because it is easier to do the x509 parsing
-            crypto_cert = x509.load_pem_x509_certificate(result.cert_pem, default_backend())
+            crypto_cert = x509.load_pem_x509_certificate(six.ensure_binary(result.cert_pem),
+                                                         default_backend())
 
             cert_details.append(
                 CertificateDetails(
@@ -1198,7 +1199,8 @@ class ModeSiteLivestatusEncryption(WatoMode):
                     valid_from=six.text_type(crypto_cert.not_valid_before),
                     valid_till=six.text_type(crypto_cert.not_valid_after),
                     signature_algorithm=crypto_cert.signature_hash_algorithm.name,
-                    digest_sha256=binascii.hexlify(crypto_cert.fingerprint(hashes.SHA256())),
+                    digest_sha256=six.ensure_str(
+                        binascii.hexlify(crypto_cert.fingerprint(hashes.SHA256()))),
                     serial_number=crypto_cert.serial_number,
                     is_ca=self._is_ca_certificate(crypto_cert),
                     verify_result=result,

@@ -211,9 +211,9 @@ def _session_cookie_value(username, session_id):
 
 def _get_session_id_from_cookie(username):
     # type: (UserId) -> str
-    raw_value = html.request.cookie(_session_cookie_name(), b"::")
+    raw_value = html.request.cookie(_session_cookie_name(), "::")
     assert raw_value is not None
-    cookie_username, session_id, cookie_hash = raw_value.split(b':', 2)
+    cookie_username, session_id, cookie_hash = raw_value.split(':', 2)
 
     if ensure_unicode(cookie_username) != username \
        or cookie_hash != _generate_hash(username, cookie_username + ":" + session_id):
@@ -269,7 +269,7 @@ def _check_auth_cookie(cookie_name):
 
 def _parse_auth_cookie(cookie_name):
     # type: (str) -> Tuple[UserId, float, str]
-    raw_cookie = html.request.cookie(cookie_name, b"::")
+    raw_cookie = html.request.cookie(cookie_name, "::")
     assert raw_cookie is not None
 
     raw_value = ensure_unicode(raw_cookie)
@@ -499,11 +499,10 @@ class LoginPage(Page):
                 if change_pw_result:
                     raise HTTPRedirect('user_change_pw.py?_origtarget=%s&reason=%s' %
                                        (html.urlencode(origtarget), change_pw_result))
-                else:
-                    raise HTTPRedirect(origtarget)
-            else:
-                userdb.on_failed_login(username)
-                raise MKUserError(None, _('Invalid credentials.'))
+                raise HTTPRedirect(origtarget)
+
+            userdb.on_failed_login(username)
+            raise MKUserError(None, _('Invalid credentials.'))
         except MKUserError as e:
             html.add_user_error(e.varname, e)
 
@@ -596,13 +595,13 @@ class LogoutPage(Page):
 
         if auth_type == 'cookie':
             raise HTTPRedirect(config.url_prefix() + 'check_mk/login.py')
-        else:
-            # Implement HTTP logout with cookie hack
-            if not html.request.has_cookie('logout'):
-                html.response.headers['WWW-Authenticate'] = (
-                    'Basic realm="OMD Monitoring Site %s"' % config.omd_site())
-                html.response.set_http_cookie('logout', '1')
-                raise FinalizeRequest(six.moves.http_client.UNAUTHORIZED)
-            else:
-                html.response.delete_cookie('logout')
-                raise HTTPRedirect(config.url_prefix() + 'check_mk/')
+
+        # Implement HTTP logout with cookie hack
+        if not html.request.has_cookie('logout'):
+            html.response.headers['WWW-Authenticate'] = ('Basic realm="OMD Monitoring Site %s"' %
+                                                         config.omd_site())
+            html.response.set_http_cookie('logout', '1')
+            raise FinalizeRequest(six.moves.http_client.UNAUTHORIZED)
+
+        html.response.delete_cookie('logout')
+        raise HTTPRedirect(config.url_prefix() + 'check_mk/')

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -9,12 +9,8 @@ from typing import (  # pylint: disable=unused-import
     Any, cast, Dict, Iterator, List, NewType, Optional, Text, Tuple, Union,
 )
 
-from livestatus import (
-    MultiSiteConnection,
-    MKLivestatusQueryError,
-    SiteId,
-    SiteConfiguration,
-    SiteConfigurations,
+from livestatus import (  # type: ignore[import]  # pylint: disable=unused-import
+    MultiSiteConnection, MKLivestatusQueryError, SiteId, SiteConfiguration, SiteConfigurations,
 )
 
 from cmk import is_managed_edition
@@ -169,8 +165,8 @@ def _connect_multiple_sites(user):
 
 def _get_enabled_and_disabled_sites(user):
     # type: (UserType) -> Tuple[SiteConfigurations, SiteConfigurations]
-    enabled_sites = SiteConfigurations({})
-    disabled_sites = SiteConfigurations({})
+    enabled_sites = {}  # type: SiteConfigurations
+    disabled_sites = {}  # type: SiteConfigurations
 
     for site_id, site in user.authorized_sites().items():
         site = _site_config_for_livestatus(site_id, site)
@@ -192,18 +188,18 @@ def _site_config_for_livestatus(site_id, site):
     a) Tell livestatus not to strip away the cache header
     b) Connect in plain text to the sites local proxy unix socket
     """
-    site = SiteConfiguration(site.copy())
+    copied_site = site.copy()  # type: SiteConfiguration
 
-    if site["proxy"] is not None:
-        site["cache"] = site["proxy"].get("cache", True)
+    if copied_site["proxy"] is not None:
+        copied_site["cache"] = site["proxy"].get("cache", True)
 
     else:
-        if site["socket"][0] in ["tcp", "tcp6"]:
-            site["tls"] = site["socket"][1]["tls"]
+        if copied_site["socket"][0] in ["tcp", "tcp6"]:
+            copied_site["tls"] = site["socket"][1]["tls"]
 
-    site["socket"] = encode_socket_for_livestatus(site_id, site)
+    copied_site["socket"] = encode_socket_for_livestatus(site_id, site)
 
-    return site
+    return copied_site
 
 
 def encode_socket_for_livestatus(site_id, site):

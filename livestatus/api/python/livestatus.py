@@ -35,11 +35,15 @@ import sys
 from typing import (  # pylint: disable=unused-import
     NewType, AnyStr, Any, Type, List, Text, cast, Tuple, Union, Dict, Pattern, Optional,
 )
+import six
 
-UserId = NewType("UserId", Text)
-SiteId = NewType("SiteId", str)
-SiteConfiguration = NewType("SiteConfiguration", Dict[str, Any])
-SiteConfigurations = NewType("SiteConfigurations", Dict[SiteId, SiteConfiguration])
+# TODO: Find a better solution for this issue. Astroid 2.x bug prevents us from using NewType :(
+# (https://github.com/PyCQA/pylint/issues/2296)
+UserId = six.text_type  # NewType("UserId", Text)
+SiteId = str  # NewType("SiteId", str)
+SiteConfiguration = Dict[str, Any]  # NewType("SiteConfiguration", Dict[str, Any])
+SiteConfigurations = Dict[
+    SiteId, SiteConfiguration]  # NewType("SiteConfigurations", Dict[SiteId, SiteConfiguration])
 
 LivestatusColumn = Any
 LivestatusRow = NewType("LivestatusRow", List[LivestatusColumn])

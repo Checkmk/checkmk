@@ -15,6 +15,7 @@ import sys
 import time
 import traceback
 from types import FrameType  # pylint: disable=unused-import
+import io
 
 from typing import Tuple, Callable, Type, List, Text, Optional, Union, Dict, Any  # pylint: disable=unused-import
 import psutil  # type: ignore[import]
@@ -95,7 +96,7 @@ class BackgroundProcessInterface(object):
         result_message_path = Path(
             self.get_work_dir()) / BackgroundJobDefines.result_message_filename
         with result_message_path.open("ab") as f:  # pylint: disable=no-member
-            f.write(encoded_info)
+            f.write(six.ensure_binary(encoded_info))
 
     def send_exception(self, info):
         # type: (Union[Text, str]) -> None
@@ -105,7 +106,7 @@ class BackgroundProcessInterface(object):
         encoded_info = "%s\n" % six.ensure_str(info)
         sys.stdout.write(encoded_info)
         with (Path(self.get_work_dir()) / BackgroundJobDefines.exceptions_filename).open("ab") as f:  # pylint: disable=no-member
-            f.write(encoded_info)
+            f.write(six.ensure_binary(encoded_info))
 
 
 #.
@@ -156,7 +157,7 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
         # type: () -> None
         # Detach from parent and cleanup inherited file descriptors
         os.setsid()
-        daemon.set_procname(BackgroundJobDefines.process_name)
+        daemon.set_procname(six.ensure_binary(BackgroundJobDefines.process_name))
         sys.stdin.close()
         sys.stdout.close()
         sys.stderr.close()
@@ -222,9 +223,15 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
         #   to be able to catch the (debug) output of libraries like libldap or subproccesses
         # - Use buffering=0 to make the non flushed output directly visible in
         #   the job progress dialog
-        sys.stdout = sys.stderr = (
+        # - Python 3's stdout and stderr expect 'str' not 'bytes'
+        unbuffered = (
             Path(self.get_work_dir()) /  # pylint: disable=no-member
             BackgroundJobDefines.progress_update_filename).open("wb", buffering=0)
+
+        if sys.version_info[0] >= 3:
+            sys.stdout = sys.stderr = io.TextIOWrapper(unbuffered, write_through=True)
+        else:
+            sys.stdout = sys.stderr = unbuffered
 
         os.dup2(sys.stdout.fileno(), 1)
         os.dup2(sys.stderr.fileno(), 2)
@@ -493,7 +500,8 @@ class BackgroundJob(object):
         job_parameters["job_id"] = self._job_id
         job_parameters["jobstatus"] = self._jobstatus
         job_parameters["function_parameters"] = self._queued_function
-        p = multiprocessing.Process(target=self._start_background_subprocess, args=[job_parameters])
+        p = multiprocessing.Process(target=self._start_background_subprocess,
+                                    args=(job_parameters,))
 
         p.start()
         p.join()

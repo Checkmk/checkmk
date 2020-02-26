@@ -353,7 +353,6 @@ class SiteManagement(object):
                                            _("Deleted site %s") % html.render_tt(site_id),
                                            domains=domains,
                                            sites=[default_site()])
-        return None
 
     @classmethod
     def _affected_config_domains(cls):
@@ -690,7 +689,10 @@ def _delete_distributed_wato_file():
         store.save_file(p, "")
 
 
-PushSnapshotRequest = NamedTuple("PushSnapshotRequest", [("site_id", str), ("tar_content", str)])
+PushSnapshotRequest = NamedTuple("PushSnapshotRequest", [
+    ("site_id", str),
+    ("tar_content", six.binary_type),
+])
 
 
 @automation_command_registry.register
@@ -709,7 +711,7 @@ class AutomationPushSnapshot(AutomationCommand):
         if not snapshot:
             raise MKGeneralException(_('Invalid call: The snapshot is missing.'))
 
-        return PushSnapshotRequest(site_id=site_id, tar_content=snapshot[2])
+        return PushSnapshotRequest(site_id=site_id, tar_content=six.ensure_binary(snapshot[2]))
 
     def execute(self, request):
         # type: (PushSnapshotRequest) -> bool

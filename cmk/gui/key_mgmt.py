@@ -14,7 +14,7 @@ import time
 # safe here and tell pylint about that.
 # pylint: disable=wrong-import-position
 os.environ["CRYPTOGRAPHY_ALLOW_OPENSSL_098"] = "1"
-from OpenSSL import crypto
+from OpenSSL import crypto  # type: ignore[import]
 
 import cmk.utils.render
 import cmk.utils.store as store

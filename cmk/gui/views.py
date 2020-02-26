@@ -1545,7 +1545,7 @@ def show_view(view, view_renderer, only_count=False):
 def _get_all_active_filters(view):
     # type: (View) -> List[Filter]
     # Always allow the users to specify all allowed filters using the URL
-    use_filters = visuals.filters_allowed_for_infos(view.datasource.infos).values()
+    use_filters = list(visuals.filters_allowed_for_infos(view.datasource.infos).values())
 
     # See show_view() for more information about this hack
     if _is_ec_unrelated_host_view(view):

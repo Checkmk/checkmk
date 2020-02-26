@@ -41,7 +41,6 @@
 import sys
 import time
 import os
-import urllib
 import ast
 import re
 import json
@@ -1320,7 +1319,7 @@ class html(ABCHTMLGenerator):
         decoded_qs = [
             (key, value) for key, value in self.request.args.items(multi=True) if key != varname
         ]
-        self.request.environ['QUERY_STRING'] = urllib.urlencode(decoded_qs)
+        self.request.environ['QUERY_STRING'] = six.moves.urllib.parse.urlencode(decoded_qs)
         # We remove the form entry. As this entity is never copied it will be modified within
         # it's cache.
         dict.pop(self.request.form, varname, None)
@@ -3155,7 +3154,7 @@ class html(ABCHTMLGenerator):
                 if v is None:
                     v = ''
                 elif isinstance(v, six.text_type):
-                    v = v.encode('utf-8')
+                    v = six.ensure_str(v)
                 encoded_vars[k] = v
 
             self.popup_trigger(

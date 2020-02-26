@@ -23,7 +23,9 @@ else:
 
 from werkzeug.local import LocalProxy
 
-from livestatus import SiteId, SiteConfiguration, SiteConfigurations  # pylint: disable=unused-import
+from livestatus import (  # type: ignore[import]  # pylint: disable=unused-import
+    SiteId, SiteConfiguration, SiteConfigurations,
+)
 
 import cmk
 import cmk.utils.tags
@@ -756,23 +758,19 @@ class LoggedInUser(object):
 
         authorized_sites = self.get_attribute("authorized_sites")
         if authorized_sites is None:
-            return SiteConfigurations(dict(unfiltered_sites))
+            return dict(unfiltered_sites)
 
-        return SiteConfigurations({
+        return {
             site_id: s  #
             for site_id, s in unfiltered_sites.items()
             if site_id in authorized_sites
-        })
+        }
 
     def authorized_login_sites(self):
         # type: () -> SiteConfigurations
         login_site_ids = get_login_slave_sites()
         return self.authorized_sites(
-            SiteConfigurations({
-                site_id: s  #
-                for site_id, s in allsites().items()
-                if site_id in login_site_ids
-            }))
+            {site_id: s for site_id, s in allsites().items() if site_id in login_site_ids})
 
     def may(self, pname):
         # type: (str) -> bool
@@ -974,12 +972,12 @@ def migrate_old_site_config(site_config):
 #    This has now been split up. The top level socket settings are now used independent of the proxy.
 #    The proxy options are stored in the separate key "proxy" which is a mandatory key.
 def _migrate_pre_16_socket_config(site_cfg):
-    # type: (Dict[AnyStr, Any]) -> None
-    if site_cfg.get("socket") is None:
+    # type: (Dict[str, Any]) -> None
+    socket = site_cfg.get("socket")
+    if socket is None:
         site_cfg["socket"] = ("local", None)
         return
 
-    socket = site_cfg["socket"]
     if isinstance(socket, tuple) and socket[0] == "proxy":
         site_cfg["proxy"] = socket[1]
 
@@ -1009,12 +1007,13 @@ def _migrate_pre_16_socket_config(site_cfg):
 
 
 def _migrate_string_encoded_socket(value):
-    # type: (AnyStr) -> Tuple[AnyStr, Union[Dict]]
-    family_txt, address = value.split(":", 1)  # pylint: disable=no-member
+    # type: (AnyStr) -> Tuple[str, Union[Dict]]
+    str_value = six.ensure_str(value)
+    family_txt, address = str_value.split(":", 1)  # pylint: disable=no-member
 
     if family_txt == "unix":
         return "unix", {
-            "path": value.split(":", 1)[1],
+            "path": str_value.split(":", 1)[1],
         }
 
     if family_txt in ["tcp", "tcp6"]:
@@ -1052,8 +1051,8 @@ def url_prefix():
 
 def default_single_site_configuration():
     # type: () -> SiteConfigurations
-    return SiteConfigurations({
-        omd_site(): SiteConfiguration({
+    return {
+        omd_site(): {
             'alias': _("Local site %s") % omd_site(),
             'socket': ("local", None),
             'disable_wato': True,
@@ -1067,16 +1066,16 @@ def default_single_site_configuration():
             'timeout': 5,
             'user_login': True,
             'proxy': None,
-        })
-    })
+        }
+    }
 
 
-sites = SiteConfigurations({})
+sites = {}  # type: SiteConfigurations
 
 
 def sitenames():
     # type: () -> List[SiteId]
-    return sites.keys()
+    return list(sites)
 
 
 # TODO: Cleanup: Make clear that this function is used by the status GUI (and not WATO)
@@ -1085,16 +1084,16 @@ def sitenames():
 # TODO: Rename this!
 def allsites():
     # type: () -> SiteConfigurations
-    return SiteConfigurations({
+    return {
         name: site(name)  #
         for name in sitenames()
         if not site(name).get("disabled", False)
-    })
+    }
 
 
 def configured_sites():
     # type: () -> SiteConfigurations
-    return SiteConfigurations({site_id: site(site_id) for site_id in sitenames()})
+    return {site_id: site(site_id) for site_id in sitenames()}
 
 
 def has_wato_slave_sites():
@@ -1133,11 +1132,11 @@ def get_login_slave_sites():
 
 def wato_slave_sites():
     # type: () -> SiteConfigurations
-    return SiteConfigurations({
+    return {
         site_id: s  #
         for site_id, s in sites.items()
         if s.get("replication")
-    })
+    }
 
 
 def sorted_sites():
@@ -1148,7 +1147,7 @@ def sorted_sites():
 
 def site(site_id):
     # type: (SiteId) -> SiteConfiguration
-    s = SiteConfiguration(dict(sites.get(site_id, {})))
+    s = dict(sites.get(site_id, {}))
     # Now make sure that all important keys are available.
     # Add missing entries by supplying default values.
     s.setdefault("alias", site_id)

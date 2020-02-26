@@ -1167,7 +1167,7 @@ def url_to_view(row, view_name):
     add_site_hint = visuals.may_add_site_hint(view_name,
                                               info_keys=datasource.infos,
                                               single_info_keys=view["single_infos"],
-                                              filter_names=dict(url_vars).keys())
+                                              filter_names=[v for v, _ in url_vars])
     if add_site_hint and row.get('site'):
         url_vars.append(('site', row['site']))
 

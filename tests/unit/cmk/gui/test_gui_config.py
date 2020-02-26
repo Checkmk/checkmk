@@ -15,7 +15,6 @@ from cmk.gui.permissions import (
     permission_section_registry,
     permission_registry,
 )
-from livestatus import SiteConfigurations
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 
@@ -998,14 +997,14 @@ def test_unauthenticated_users_language(mocker, user):
     config.LoggedInSuperUser(),
 ])
 def test_unauthenticated_users_authorized_sites(mocker, user):
-    assert user.authorized_sites(SiteConfigurations({
+    assert user.authorized_sites({
         'site1': {},
-    })) == SiteConfigurations({
+    }) == {
         'site1': {},
-    })
+    }
 
-    mocker.patch.object(config, 'allsites', lambda: SiteConfigurations({'site1': {}, 'site2': {}}))
-    assert user.authorized_sites() == SiteConfigurations({'site1': {}, 'site2': {}})
+    mocker.patch.object(config, 'allsites', lambda: {'site1': {}, 'site2': {}})
+    assert user.authorized_sites() == {'site1': {}, 'site2': {}}
 
 
 @pytest.mark.parametrize('user', [
@@ -1014,11 +1013,11 @@ def test_unauthenticated_users_authorized_sites(mocker, user):
 ])
 def test_unauthenticated_users_authorized_login_sites(mocker, user):
     mocker.patch.object(config, 'get_login_slave_sites', lambda: ['slave_site'])
-    mocker.patch.object(config, 'allsites', lambda: SiteConfigurations({
+    mocker.patch.object(config, 'allsites', lambda: {
         'master_site': {},
         'slave_site': {},
-    }))
-    assert user.authorized_login_sites() == SiteConfigurations({'slave_site': {}})
+    })
+    assert user.authorized_login_sites() == {'slave_site': {}}
 
 
 def test_logged_in_nobody_permissions(mocker):

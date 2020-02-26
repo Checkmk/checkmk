@@ -24,13 +24,14 @@ SingleOIDInfo = Union[OIDWithColumns, OIDWithSubOIDsAndColumns]
 MultiOIDInfo = List[SingleOIDInfo]
 OIDInfo = Union[SingleOIDInfo, MultiOIDInfo]
 RawValue = bytes
-OIDFunction = Callable[[OID, Optional[RawValue], Optional[CheckPluginName]], Optional[RawValue]]
+DecodedString = Text
+OIDFunction = Callable[[OID, Optional[DecodedString], Optional[CheckPluginName]],
+                       Optional[DecodedString]]
 ScanFunction = Callable[[OIDFunction], bool]
 SNMPRowInfo = List[Tuple[OID, RawValue]]
 SNMPRowInfoForStoredWalk = List[Tuple[OID, Text]]
 ResultColumnsUnsanitized = List[Tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
 ResultColumnsSanitized = List[Tuple[List[RawValue], SNMPValueEncoding]]
-DecodedString = Text
 DecodedBinary = List[int]
 DecodedValues = Union[DecodedString, DecodedBinary]
 ResultColumnsDecoded = List[List[DecodedValues]]

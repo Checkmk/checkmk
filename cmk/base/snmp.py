@@ -39,6 +39,7 @@ from cmk.base.snmp_utils import (  # pylint: disable=unused-import
     OIDInfo, OIDWithColumns, OIDWithSubOIDsAndColumns, OID, Column, SNMPValueEncoding,
     SNMPHostConfig, SNMPRowInfo, SNMPRowInfoForStoredWalk, SNMPTable, ResultColumnsUnsanitized,
     ResultColumnsSanitized, ResultColumnsDecoded, RawValue, ContextName, DecodedBinary, SNMPContext,
+    DecodedString,
 )
 
 try:
@@ -51,7 +52,7 @@ _enforce_stored_walks = False
 # TODO: Replace this by generic caching
 _g_single_oid_hostname = None  # type: Optional[HostName]
 _g_single_oid_ipaddress = None  # type: Optional[HostAddress]
-_g_single_oid_cache = None  # type: Optional[Dict[OID, Optional[RawValue]]]
+_g_single_oid_cache = None  # type: Optional[Dict[OID, Optional[DecodedString]]]
 # TODO: Move to StoredWalkSNMPBackend?
 _g_walk_cache = {}  # type: Dict[str, List[str]]
 
@@ -97,7 +98,7 @@ def write_single_oid_cache(snmp_config):
 
 
 def set_single_oid_cache(oid, value):
-    # type: (OID, Optional[RawValue]) -> None
+    # type: (OID, Optional[DecodedString]) -> None
     assert _g_single_oid_cache is not None
     _g_single_oid_cache[oid] = value
 
@@ -109,13 +110,13 @@ def _is_in_single_oid_cache(oid):
 
 
 def _get_oid_from_single_oid_cache(oid):
-    # type: (OID) -> Optional[RawValue]
+    # type: (OID) -> Optional[DecodedString]
     assert _g_single_oid_cache is not None
     return _g_single_oid_cache.get(oid)
 
 
 def _load_single_oid_cache(snmp_config):
-    # type: (SNMPHostConfig) -> Dict[OID, Optional[RawValue]]
+    # type: (SNMPHostConfig) -> Dict[OID, Optional[DecodedString]]
     cache_path = "%s/%s.%s" % (cmk.utils.paths.snmp_scan_cache_dir, snmp_config.hostname,
                                snmp_config.ipaddress)
     return store.load_object_from_file(cache_path, default={})
@@ -273,7 +274,7 @@ def get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache)
 
 # Contextes can only be used when check_plugin_name is given.
 def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
-    # type: (SNMPHostConfig, str, Optional[str], bool) -> Optional[RawValue]
+    # type: (SNMPHostConfig, str, Optional[str], bool) -> Optional[DecodedString]
     # The OID can end with ".*". In that case we do a snmpgetnext and try to
     # find an OID with the prefix in question. The *cache* is working including
     # the X, however.
@@ -285,9 +286,9 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
     # TODO: Use generic cache mechanism
     if _is_in_single_oid_cache(oid):
         console.vverbose("       Using cached OID %s: " % oid)
-        value = _get_oid_from_single_oid_cache(oid)
-        console.vverbose("%s%s%r%s\n" % (tty.bold, tty.green, value, tty.normal))
-        return value
+        cached_value = _get_oid_from_single_oid_cache(oid)
+        console.vverbose("%s%s%r%s\n" % (tty.bold, tty.green, cached_value, tty.normal))
+        return cached_value
 
     # get_single_oid() can only return a single value. When SNMPv3 is used with multiple
     # SNMP contexts, all contextes will be queried until the first answer is received.
@@ -315,8 +316,14 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
     else:
         console.vverbose("failed.\n")
 
-    set_single_oid_cache(oid, value)
-    return value
+    if value is not None:
+        decoded_value = convert_to_unicode(
+            value, encoding=snmp_config.character_encoding)  # type: Optional[DecodedString]
+    else:
+        decoded_value = value
+
+    set_single_oid_cache(oid, decoded_value)
+    return decoded_value
 
 
 class SNMPBackendFactory(object):  # pylint: disable=useless-object-inheritance

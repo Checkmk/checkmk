@@ -14,7 +14,9 @@ import cmk.base.config as config
 import cmk.base.console as console
 from cmk.base.exceptions import MKSNMPError
 import cmk.base.snmp as snmp
-from cmk.base.snmp_utils import SNMPHostConfig, OID, RawValue, ScanFunction  # pylint: disable=unused-import
+from cmk.base.snmp_utils import (  # pylint: disable=unused-import
+    SNMPHostConfig, OID, ScanFunction, DecodedString,
+)
 import cmk.base.check_api_utils as check_api_utils
 from cmk.base.check_utils import CheckPluginName  # pylint: disable=unused-import
 
@@ -74,8 +76,8 @@ def _snmp_scan(host_config,
         # Fake OID values to prevent issues with a lot of scan functions
         console.vverbose("       Skipping system description OID "
                          "(Set .1.3.6.1.2.1.1.1.0 and .1.3.6.1.2.1.1.2.0 to \"\")\n")
-        snmp.set_single_oid_cache(".1.3.6.1.2.1.1.1.0", b"")
-        snmp.set_single_oid_cache(".1.3.6.1.2.1.1.2.0", b"")
+        snmp.set_single_oid_cache(".1.3.6.1.2.1.1.1.0", "")
+        snmp.set_single_oid_cache(".1.3.6.1.2.1.1.2.0", "")
 
     found_check_plugin_names = set()  # type: Set[CheckPluginName]
     if for_inv:
@@ -113,7 +115,7 @@ def _snmp_scan(host_config,
             try:
 
                 def oid_function(oid, default_value=None, cp_name=check_plugin_name):
-                    # type: (OID, Optional[RawValue], Optional[CheckPluginName]) -> Optional[RawValue]
+                    # type: (OID, Optional[DecodedString], Optional[CheckPluginName]) -> Optional[DecodedString]
                     value = snmp.get_single_oid(host_config,
                                                 oid,
                                                 cp_name,

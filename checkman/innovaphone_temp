@@ -6,6 +6,9 @@ distribution: check_mk
 description:
  This check shows the current device temperature in degree celsisus.
 
+item:
+ The fixed statement {{Ambient}}
+
 inventory:
  One check will be created
 

@@ -10,6 +10,9 @@ description:
  slip error count you can eighter do a reinventory or fix the problem and
  reboot the device.
 
+item:
+ Table of the Pri (primary rate interface)
+
 inventory:
  One service for each port in state UP will be created.
 

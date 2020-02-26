@@ -6,7 +6,8 @@ distribution: check_mk
 description:
  This check shows monitors for free ISDN channels.
 
-
+item:
+ Index of the channel
 
 inventory:
  One check will be created

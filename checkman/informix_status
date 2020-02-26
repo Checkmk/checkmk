@@ -13,7 +13,7 @@ description:
  it goes CRIT if the state is shutdown or offline.
 
 item:
- Instance name.
+ Name of the instance
 
 inventory:
  One service per instance.

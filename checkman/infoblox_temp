@@ -16,7 +16,7 @@ description:
  no default levels set.
 
 item:
- System or CPU1 or CPU2.
+ Type of the device (i.e. {{System}} or {{CPU}}) and the index
 
 inventory:
  One service for each sensor is created.

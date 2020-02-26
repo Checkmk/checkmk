@@ -6683,15 +6683,48 @@ check_metrics["check_mk-netscaler_mem"] = memory_simple_translation
 ram_used_swap_translation = {
     "ramused": {
         "name": "mem_used",
-        "scale": MB
+        "scale": MB,
+        "deprecated": True,
+    },
+    "mem_used_percent": {
+        "auto_graph": False,
     },
     "swapused": {
         "name": "swap_used",
-        "scale": MB
+        "scale": MB,
+        "deprecated": True,
     },
     "memused": {
         "name": "mem_lnx_total_used",
         "auto_graph": False,
+        "scale": MB,
+        "deprecated": True,
+    },
+    "mem_lnx_total_used": {
+        "auto_graph": False,
+    },
+    "memusedavg": {
+        "name": "memory_avg",
+        "scale": MB
+    },
+    "shared": {
+        "name": "mem_lnx_shmem",
+        "deprecated": True,
+        "scale": MB
+    },
+    "pagetables": {
+        "name": "mem_lnx_page_tables",
+        "deprecated": True,
+        "scale": MB
+    },
+    "mapped": {
+        "name": "mem_lnx_mapped",
+        "deprecated": True,
+        "scale": MB
+    },
+    "committed_as": {
+        "name": "mem_lnx_committed_as",
+        "deprecated": True,
         "scale": MB
     },
 }
@@ -6701,37 +6734,8 @@ check_metrics["check_mk-hr_mem"] = ram_used_swap_translation
 check_metrics["check_mk-solaris_mem"] = ram_used_swap_translation
 check_metrics["check_mk-docker_container_mem"] = ram_used_swap_translation
 check_metrics["check_mk-emc_ecs_mem"] = ram_used_swap_translation
-
-check_metrics["check_mk-mem.used"] = {
-    "ramused": {
-        "name": "mem_used",
-        "scale": MB
-    },
-    "swapused": {
-        "name": "swap_used",
-        "scale": MB
-    },
-    "memused": {
-        "name": "mem_lnx_total_used",
-        "scale": MB
-    },
-    "shared": {
-        "name": "mem_lnx_shmem",
-        "scale": MB
-    },
-    "pagetable": {
-        "name": "mem_lnx_page_tables",
-        "scale": MB
-    },
-    "mapped": {
-        "name": "mem_lnx_mapped",
-        "scale": MB
-    },
-    "committed_as": {
-        "name": "mem_lnx_committed_as",
-        "scale": MB
-    },
-}
+check_metrics["check_mk-aix_memory"] = ram_used_swap_translation
+check_metrics["check_mk-mem.used"] = ram_used_swap_translation
 
 check_metrics["check_mk-esx_vsphere_vm.mem_usage"] = {
     "host": {
@@ -6834,25 +6838,6 @@ check_metrics["check_mk-jolokia_metrics.tp"] = {
     },
     "currentThreadsBusy": {
         "name": "threads_busy"
-    },
-}
-
-check_metrics["check_mk-aix_memory"] = {
-    "ramused": {
-        "name": "mem_used",
-        "scale": MB
-    },
-    "swapused": {
-        "name": "swap_used",
-        "scale": MB
-    },
-    "memused": {
-        "name": "mem_lnx_total_used",
-        "scale": MB
-    },
-    "memusedavg": {
-        "name": "memory_avg",
-        "scale": MB
     },
 }
 

@@ -214,7 +214,7 @@ def check_memory(params, meminfo, render_base=1024):
     if "SwapFree" in meminfo:
         swaptotal = MemBytes(meminfo['SwapTotal'], render_base)
         swapused = MemBytes(swaptotal.kb - meminfo['SwapFree'], render_base)
-        perfdata = [('swapused', swapused.mb, None, None, 0, swaptotal.mb)]
+        perfdata = [('swap_used', swapused.bytes, None, None, 0, swaptotal.bytes)]
     else:
         swaptotal = None
         swapused = None
@@ -225,7 +225,7 @@ def check_memory(params, meminfo, render_base=1024):
     # that for used
     if 'PageTables' in meminfo:
         pagetables = MemBytes(meminfo['PageTables'], render_base)
-        perfdata.append(('pagetables', pagetables.mb))
+        perfdata.append(('mem_lnx_page_tables', pagetables.bytes))
     else:
         pagetables = None
 
@@ -233,9 +233,9 @@ def check_memory(params, meminfo, render_base=1024):
     caches = MemBytes(meminfo.get('Buffers', 0) + meminfo.get('Cached', 0), render_base)
 
     ramused = MemBytes(memused.kb - caches.kb, render_base)
-    if perfdata:
-        # if perfdata is empty here, ramused and totalused would be the same anyway.
-        perfdata.append(('ramused', ramused.mb, None, None, 0, memtotal.mb))
+    perfdata.append(('mem_used', ramused.bytes, None, None, 0, memtotal.bytes))
+    perfdata.append(
+        ('mem_used_percent', 100. * ramused.bytes / memtotal.bytes, None, None, 0, 100.))
 
     totalused, totalused_descr = _get_total_usage(ramused, swapused, pagetables)
 
@@ -275,7 +275,8 @@ def check_memory(params, meminfo, render_base=1024):
         render_base=render_base,
         render_unit=1024**2,
     )
-    perfdata.append(('memused', totalused.mb, warn_mb, crit_mb, 0, totalvirt.mb))
+    perfdata.append(('mem_lnx_total_used', totalused.bytes, warn_mb * 1024**2, crit_mb * 1024**2, 0,
+                     totalvirt.bytes))
 
     # Check levels
     state = _compute_state(comp_mb, warn_mb, crit_mb)
@@ -304,9 +305,9 @@ def check_memory(params, meminfo, render_base=1024):
     # Add additional metrics, provided by Linux.
     if meminfo.get('Mapped'):
         for key, label, metric in (
-            ('Mapped', 'Mapped', 'mapped'),
-            ('Committed_AS', 'Committed', 'committed_as'),
-            ('Shmem', 'Shared', 'shared'),
+            ('Mapped', 'Mapped', 'mem_lnx_mapped'),
+            ('Committed_AS', 'Committed', 'mem_lnx_committed_as'),
+            ('Shmem', 'Shared', 'mem_lnx_shmem'),
         ):
             value = MemBytes(meminfo.get(key, 0), render_base)
-            yield 0, "%s: %s" % (label, value.render()), [(metric, value.mb)]
+            yield 0, "%s: %s" % (label, value.render()), [(metric, value.bytes)]

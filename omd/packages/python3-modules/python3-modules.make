@@ -101,6 +101,13 @@ PYTHON3_MODULES_LIST += botocore-1.14.11.tar.gz # needed by boto3 (aws)
 PYTHON3_MODULES_LIST += s3transfer-0.3.2.tar.gz # needed by boto3 (aws)
 PYTHON3_MODULES_LIST += boto3-1.11.11.tar.gz # needed by boto3 (aws)
 
+# To automatically generate checkmk.yaml OpenAPI spec file
+PYTHON3_MODULES_LIST += apispec-2.0.2.tar.gz
+PYTHON3_MODULES_LIST += marshmallow-2.20.5.tar.gz
+PYTHON3_MODULES_LIST += marshmallow-oneofschema-1.0.6.tar.gz
+PYTHON3_MODULES_LIST += apispec-oneofschema-2.1.1.tar.gz
+
+
 PYTHON3_MODULES_LIST += mypy_extensions-0.4.3.tar.gz  # direct dependency
 
 # TODO: Can we clean this up and use the intermediate install step results? Would be possible

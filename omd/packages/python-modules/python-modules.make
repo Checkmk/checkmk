@@ -229,6 +229,13 @@ PYTHON_MODULES_LIST += numpy-1.15.4.tar.gz  # Downgraded to 1.15.4 due to https:
 
 PYTHON_MODULES_LIST += mypy_extensions-0.4.3.tar.gz  # direct dependency
 
+# To automatically generate checkmk.yaml OpenAPI spec file
+PYTHON_MODULES_LIST += apispec-2.0.2.tar.gz
+PYTHON_MODULES_LIST += marshmallow-2.20.5.tar.gz
+PYTHON_MODULES_LIST += marshmallow-oneofschema-1.0.6.tar.gz
+PYTHON_MODULES_LIST += apispec-oneofschema-2.1.1.tar.gz
+
+
 # NOTE: Setting SODIUM_INSTALL variable below is an extremely cruel hack to
 # avoid installing libsodium headers and libraries. The need for this hack
 # arises because of our "interesting" flag use for "setup.py install" and our

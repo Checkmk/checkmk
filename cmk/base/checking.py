@@ -7,9 +7,10 @@
 
 import os
 import signal
-import tempfile
+from random import Random
 import time
 import copy
+import errno
 from types import FrameType  # pylint: disable=unused-import
 from typing import (  # pylint: disable=unused-import
     cast, IO, Union, Any, AnyStr, List, Tuple, Optional, Text, Iterable, Dict,
@@ -683,11 +684,78 @@ def _open_checkresult_file():
     global _checkresult_file_path
     if _checkresult_file_fd is None:
         try:
-            _checkresult_file_fd, _checkresult_file_path = tempfile.mkstemp(
-                '', 'c', cmk.utils.paths.check_result_path)
+            _checkresult_file_fd, _checkresult_file_path = _create_nagios_check_result_file()
         except Exception as e:
             raise MKGeneralException("Cannot create check result file in %s: %s" %
                                      (cmk.utils.paths.check_result_path, e))
+
+
+def _create_nagios_check_result_file():
+    # type: () -> Tuple[int, str]
+    """Create some temporary file for storing the checkresults.
+    Nagios expects a seven character long file starting with "c". Since Python3 we can not
+    use tempfile.mkstemp anymore since it produces file names with 9 characters length.
+
+    Logic is similar to tempfile.mkstemp, but simplified. No prefix/suffix/thread-safety
+    """
+
+    base_dir = cmk.utils.paths.check_result_path
+
+    flags = os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW
+
+    names = _get_candidate_names()
+    for _seq in range(os.TMP_MAX):
+        name = next(names)
+        filepath = os.path.join(base_dir, "c" + name)
+        try:
+            fd = os.open(filepath, flags, 0o600)
+        except FileExistsError:
+            continue  # try again
+        return (fd, os.path.abspath(filepath))
+
+    raise FileExistsError(errno.EEXIST, "No usable temporary file name found")
+
+
+_name_sequence = None  # type: Optional[_RandomNameSequence]
+
+
+def _get_candidate_names():
+    # type: () -> _RandomNameSequence
+    global _name_sequence
+    if _name_sequence is None:
+        _name_sequence = _RandomNameSequence()
+    return _name_sequence
+
+
+class _RandomNameSequence(object):  # pylint: disable=useless-object-inheritance
+    """An instance of _RandomNameSequence generates an endless
+    sequence of unpredictable strings which can safely be incorporated
+    into file names.  Each string is eight characters long.  Multiple
+    threads can safely use the same instance at the same time.
+
+    _RandomNameSequence is an iterator."""
+
+    characters = "abcdefghijklmnopqrstuvwxyz0123456789_"
+
+    @property
+    def rng(self):
+        # type: () -> Random
+        cur_pid = os.getpid()
+        if cur_pid != getattr(self, '_rng_pid', None):
+            self._rng = Random()
+            self._rng_pid = cur_pid
+        return self._rng
+
+    def __iter__(self):
+        # type: () -> _RandomNameSequence
+        return self
+
+    def __next__(self):
+        # type: () -> str
+        c = self.characters
+        choose = self.rng.choice
+        letters = [choose(c) for dummy in range(6)]
+        return ''.join(letters)
 
 
 def _close_checkresult_file():
@@ -695,8 +763,10 @@ def _close_checkresult_file():
     global _checkresult_file_fd
     if _checkresult_file_fd is not None and _checkresult_file_path is not None:
         os.close(_checkresult_file_fd)
-        open(_checkresult_file_path + ".ok", "w")
         _checkresult_file_fd = None
+
+        with open(_checkresult_file_path + ".ok", "w"):
+            pass
 
 
 def _submit_via_command_pipe(host, service, state, output):

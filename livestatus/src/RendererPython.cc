@@ -68,7 +68,7 @@ void RendererPython::endDict() { _os << "}"; }
 void RendererPython::outputNull() { _os << "None"; }
 
 void RendererPython::outputBlob(const std::vector<char> &value) {
-    outputByteString("", value);
+    outputByteString("b", value);
 }
 
 void RendererPython::outputString(const std::string &value) {

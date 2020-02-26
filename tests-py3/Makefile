@@ -58,7 +58,9 @@ MYPY2_FILES=$(shell \
     grep -v $$(realpath '../livestatus/api/python') | \
     grep -v $$(realpath '../notifications/sms') | \
     grep -v $$(realpath '../omd/packages') | \
-    grep -v $$(realpath '../tests'))
+    grep -v $$(realpath '../tests')) | \
+    `: This is currently a base+GUI and py2/py3 mix. Reenable when GUI is py3` \
+    grep -v $$(realpath '../bin/cmk-update-config')
 
 test-mypy:
 	$(MYPY) $(MYPY2_FILES)

@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import subprocess
 import signal
 from typing import List, Optional  # pylint: disable=unused-import
 
@@ -13,6 +12,7 @@ import six
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
+import cmk.utils.cmk_subprocess as subprocess
 
 import cmk.base.console as console
 import cmk.base.snmp_utils as snmp_utils

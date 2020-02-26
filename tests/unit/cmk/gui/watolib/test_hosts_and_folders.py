@@ -5,7 +5,6 @@ import shutil
 import pytest  # type: ignore[import]
 from werkzeug.test import create_environ
 
-import cmk.gui.wato  # pylint: disable=unused-import
 import cmk.gui.config as config  # pylint: disable=unused-import
 import cmk.gui.watolib as watolib  # pylint: disable=unused-import
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
@@ -17,7 +16,24 @@ from cmk.gui.globals import AppContext, RequestContext
 from testlib.utils import DummyApplication
 
 
-@pytest.mark.usefixtures("load_config")
+@pytest.fixture(name="mocked_user")
+def fixture_mocked_user(monkeypatch):
+    # Write/Read operations always require a valid user
+    monkeypatch.setattr(config, "user", config.LoggedInSuperUser())
+
+
+@pytest.fixture(autouse=True)
+def test_env(mocked_user, load_config, load_plugins):
+    # Ensure we have clean folder/host caches
+    hosts_and_folders.Folder.invalidate_caches()
+
+    yield
+
+    # Cleanup WATO folders created by the test
+    shutil.rmtree(hosts_and_folders.Folder.root_folder().filesystem_path())
+    os.mkdir(hosts_and_folders.Folder.root_folder().filesystem_path())
+
+
 @pytest.mark.parametrize("attributes,expected_tags", [
     ({
         "tag_snmp": "no-snmp",
@@ -62,7 +78,6 @@ def test_host_tags(attributes, expected_tags):
     assert host.tag_groups() == expected_tags
 
 
-@pytest.mark.usefixtures("load_config")
 @pytest.mark.parametrize("attributes,result", [
     ({
         "tag_snmp_ds": "no-snmp",
@@ -93,7 +108,6 @@ def test_host_is_ping_host(attributes, result):
 }])
 def test_write_and_read_host_attributes(tmp_path, attributes, monkeypatch):
     folder_path = str(tmp_path)
-
     # Write/Read operations always require a valid user
     monkeypatch.setattr(config, "user", config.LoggedInSuperUser())
 
@@ -138,3 +152,99 @@ def test_create_nested_folders(register_builtin_html):
         folder2.persist_instance()
 
         shutil.rmtree(os.path.dirname(folder1.wato_info_path()))
+
+
+@pytest.mark.parametrize("protocol,host_attribute,base_variable,credentials,folder_credentials", [
+    ("snmp", "management_snmp_community", "management_snmp_credentials", "HOST", "FOLDER"),
+    ("ipmi", "management_ipmi_credentials", "management_ipmi_credentials", {
+        "username": "USER",
+        "password": "PASS",
+    }, {
+        "username": "FOLDERUSER",
+        "password": "FOLDERPASS",
+    }),
+])
+def test_mgmt_inherit_credentials_explicit_host(protocol, host_attribute, base_variable,
+                                                credentials, folder_credentials):
+
+    folder = hosts_and_folders.Folder.root_folder()
+    folder.set_attribute(host_attribute, folder_credentials)
+
+    folder.create_hosts([("test-host", {
+        "ipaddress": "127.0.0.1",
+        "management_protocol": protocol,
+        host_attribute: credentials,
+    }, [])])
+
+    data = folder._load_hosts_file()
+    assert data["management_protocol"]["test-host"] == protocol
+    assert data[base_variable]["test-host"] == credentials
+
+
+@pytest.mark.parametrize("protocol,host_attribute,base_variable,folder_credentials", [
+    ("snmp", "management_snmp_community", "management_snmp_credentials", "FOLDER"),
+    ("ipmi", "management_ipmi_credentials", "management_ipmi_credentials", {
+        "username": "FOLDERUSER",
+        "password": "FOLDERPASS",
+    }),
+])
+def test_mgmt_inherit_credentials(protocol, host_attribute, base_variable, folder_credentials):
+    folder = hosts_and_folders.Folder.root_folder()
+    folder.set_attribute(host_attribute, folder_credentials)
+
+    folder.create_hosts([("mgmt-host", {
+        "ipaddress": "127.0.0.1",
+        "management_protocol": protocol,
+    }, [])])
+
+    data = folder._load_hosts_file()
+    assert data["management_protocol"]["mgmt-host"] == protocol
+    assert data[base_variable]["mgmt-host"] == folder_credentials
+
+
+@pytest.mark.parametrize("protocol,host_attribute,base_variable,credentials,folder_credentials", [
+    ("snmp", "management_snmp_community", "management_snmp_credentials", "HOST", "FOLDER"),
+    ("ipmi", "management_ipmi_credentials", "management_ipmi_credentials", {
+        "username": "USER",
+        "password": "PASS",
+    }, {
+        "username": "FOLDERUSER",
+        "password": "FOLDERPASS",
+    }),
+])
+def test_mgmt_inherit_protocol_explicit_host(protocol, host_attribute, base_variable, credentials,
+                                             folder_credentials):
+    folder = hosts_and_folders.Folder.root_folder()
+    folder.set_attribute("management_protocol", None)
+    folder.set_attribute(host_attribute, folder_credentials)
+
+    folder.create_hosts([("mgmt-host", {
+        "ipaddress": "127.0.0.1",
+        "management_protocol": protocol,
+        host_attribute: credentials,
+    }, [])])
+
+    data = folder._load_hosts_file()
+    assert data["management_protocol"]["mgmt-host"] == protocol
+    assert data[base_variable]["mgmt-host"] == credentials
+
+
+@pytest.mark.parametrize("protocol,host_attribute,base_variable,folder_credentials", [
+    ("snmp", "management_snmp_community", "management_snmp_credentials", "FOLDER"),
+    ("ipmi", "management_ipmi_credentials", "management_ipmi_credentials", {
+        "username": "FOLDERUSER",
+        "password": "FOLDERPASS",
+    }),
+])
+def test_mgmt_inherit_protocol(protocol, host_attribute, base_variable, folder_credentials):
+    folder = hosts_and_folders.Folder.root_folder()
+    folder.set_attribute("management_protocol", protocol)
+    folder.set_attribute(host_attribute, folder_credentials)
+
+    folder.create_hosts([("mgmt-host", {
+        "ipaddress": "127.0.0.1",
+    }, [])])
+
+    data = folder._load_hosts_file()
+    assert data["management_protocol"]["mgmt-host"] == protocol
+    assert data[base_variable]["mgmt-host"] == folder_credentials

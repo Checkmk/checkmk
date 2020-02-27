@@ -8,7 +8,7 @@ description:
  triggered.
 
 item:
- The Sesorname as configured in the device
+ The name of the sensor as configured in the device
 
 inventory:
  All available sensors are automatically inventorized.

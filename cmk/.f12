@@ -52,6 +52,7 @@ PYTHON2_PATHS=(
     utils
     ec/__init__.py
     ec/export.py
+    ec/rule_packs.py
     ec/settings.py
     ec/defaults.py
 )

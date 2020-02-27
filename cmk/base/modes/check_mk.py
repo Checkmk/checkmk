@@ -1381,7 +1381,7 @@ def mode_automation(args):
     if not args:
         raise automations.MKAutomationError("You need to provide arguments")
 
-    sys.exit(automations.automations.execute(args[0], args[2:]))
+    sys.exit(automations.automations.execute(args[0], args[1:]))
 
 
 modes.register(

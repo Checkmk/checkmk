@@ -63,7 +63,7 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
     if timeout:
         args = ["--timeout", "%d" % timeout] + args
 
-    cmd = ['check_mk', '--automation', command, '--'] + args
+    cmd = ['check_mk', '--automation', command] + args
     if command in ['restart', 'reload']:
         call_hook_pre_activate_changes()
 

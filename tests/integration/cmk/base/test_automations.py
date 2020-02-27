@@ -95,17 +95,9 @@ def _execute_automation(site,
                         expect_stderr_pattern="",
                         expect_exit_code=0,
                         parse_data=True):
-    if args is None:
-        args = []
-
-    if args:
-        args = ["--"] + args
-
-    print(["cmk", "--automation", cmd] + args)
-    p = site.execute(["cmk", "--automation", cmd] + args,
-                     stdout=subprocess.PIPE,
-                     stderr=subprocess.PIPE,
-                     stdin=subprocess.PIPE)
+    cmdline = ["cmk", "--automation", cmd] + ([] if args is None else args)
+    print(cmdline)
+    p = site.execute(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
 
     stdout, stderr = p.communicate(stdin)
 

@@ -442,7 +442,7 @@ def _fileinfo_check_function(check_definition, params, outof_range_txt):
         infotexts.append(infotext)
 
         # because strings go into infos but not into perfdata
-        if isinstance(value, (long, int)):
+        if isinstance(value, six.integer_types):
             allperfdata.append(perfdata)
         else:
             allperfdata.append([])

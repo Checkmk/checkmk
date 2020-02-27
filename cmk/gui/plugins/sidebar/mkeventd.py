@@ -40,13 +40,14 @@ class SidebarSnapinCustomers(SidebarSnapin):
         return True
 
     def show(self):
+        # type: () -> None
         only_sites = snapin_site_choice("mkeventd_performance",
                                         config.get_event_console_site_choices())
 
         try:
             entries = self._mkeventd_performance_entries(only_sites)
         except Exception as e:
-            html.show_error(e)
+            html.show_error("%s" % e)
             return
 
         html.open_table(class_=["mkeventd_performance"])

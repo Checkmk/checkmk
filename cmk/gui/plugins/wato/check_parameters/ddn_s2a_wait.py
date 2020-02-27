@@ -20,61 +20,63 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_ddn_s2a_wait():
-    return DropdownChoice(title=_(u"Host or Disk"),
+    # type: () -> DropdownChoice
+    return DropdownChoice(title=_("Host or Disk"),
                           choices=[
-                              ("Disk", _(u"Disk")),
-                              ("Host", _(u"Host")),
+                              ("Disk", _("Disk")),
+                              ("Host", _("Host")),
                           ])
 
 
 def _parameter_valuespec_ddn_s2a_wait():
+    # type: () -> Dictionary
     return Dictionary(elements=[
         ("read_avg",
          Tuple(
-             title=_(u"Read wait average"),
+             title=_("Read wait average"),
              elements=[
-                 Float(title=_(u"Warning at"), unit="s"),
-                 Float(title=_(u"Critical at"), unit="s"),
+                 Float(title=_("Warning at"), unit="s"),
+                 Float(title=_("Critical at"), unit="s"),
              ],
          )),
         ("read_min",
          Tuple(
-             title=_(u"Read wait minimum"),
+             title=_("Read wait minimum"),
              elements=[
-                 Float(title=_(u"Warning at"), unit="s"),
-                 Float(title=_(u"Critical at"), unit="s"),
+                 Float(title=_("Warning at"), unit="s"),
+                 Float(title=_("Critical at"), unit="s"),
              ],
          )),
         ("read_max",
          Tuple(
-             title=_(u"Read wait maximum"),
+             title=_("Read wait maximum"),
              elements=[
-                 Float(title=_(u"Warning at"), unit="s"),
-                 Float(title=_(u"Critical at"), unit="s"),
+                 Float(title=_("Warning at"), unit="s"),
+                 Float(title=_("Critical at"), unit="s"),
              ],
          )),
         ("write_avg",
          Tuple(
-             title=_(u"Write wait average"),
+             title=_("Write wait average"),
              elements=[
-                 Float(title=_(u"Warning at"), unit="s"),
-                 Float(title=_(u"Critical at"), unit="s"),
+                 Float(title=_("Warning at"), unit="s"),
+                 Float(title=_("Critical at"), unit="s"),
              ],
          )),
         ("write_min",
          Tuple(
-             title=_(u"Write wait minimum"),
+             title=_("Write wait minimum"),
              elements=[
-                 Float(title=_(u"Warning at"), unit="s"),
-                 Float(title=_(u"Critical at"), unit="s"),
+                 Float(title=_("Warning at"), unit="s"),
+                 Float(title=_("Critical at"), unit="s"),
              ],
          )),
         ("write_max",
          Tuple(
-             title=_(u"Write wait maximum"),
+             title=_("Write wait maximum"),
              elements=[
-                 Float(title=_(u"Warning at"), unit="s"),
-                 Float(title=_(u"Critical at"), unit="s"),
+                 Float(title=_("Warning at"), unit="s"),
+                 Float(title=_("Critical at"), unit="s"),
              ],
          )),
     ],)

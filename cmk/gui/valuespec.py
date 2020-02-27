@@ -911,8 +911,11 @@ def IPNetwork(  # pylint: disable=redefined-builtin
         ip_class = ipaddress.IPv4Address
 
     def _validate_value(value, varprefix):
+        # type: (str, str) -> None
+
+        this_ip_class = ipaddress.IPv4Address if ip_class is None else ip_class
         try:
-            ip_class(ensure_unicode(value))
+            this_ip_class(ensure_unicode(value))
         except ValueError as e:
             raise MKUserError(varprefix, _("Invalid address: %s") % e)
 
@@ -2379,6 +2382,9 @@ class Checkbox(ValueSpec):
                 (value, _type_name(value)))
 
 
+DropdownChoiceValue = Any
+
+
 class DropdownChoice(ValueSpec):
     """A type-save dropdown choice
 
@@ -2454,12 +2460,14 @@ class DropdownChoice(ValueSpec):
         return result
 
     def canonical_value(self):
+        # type: () -> DropdownChoiceValue
         choices = self.choices()
         if len(choices) > 0:
             return choices[0][0]
         return None
 
     def render_input(self, varprefix, value):
+        # type: (str, DropdownChoiceValue) -> None
         if self._label:
             html.write("%s " % self._label)
 
@@ -2487,24 +2495,23 @@ class DropdownChoice(ValueSpec):
 
         if len(options) == 0:
             html.write(self._empty_text)
-        elif len(options[0]) == 3:
-            html.icon_dropdown(varprefix,
-                               self._options_for_html(options),
-                               deflt=self._option_for_html(defval))
-        else:
-            html.dropdown(varprefix,
-                          self._options_for_html(options),
-                          deflt=self._option_for_html(defval),
-                          onchange=self._on_change,
-                          ordered=self._sorted,
-                          read_only=self._read_only)
+            return
+
+        html.dropdown(varprefix,
+                      self._options_for_html(options),
+                      deflt=self._option_for_html(defval),
+                      onchange=self._on_change,
+                      ordered=self._sorted,
+                      read_only=self._read_only)
 
     def _get_invalid_choice_title(self, value):
+        # type: (DropdownChoiceValue) -> Text
         if "%s" in self._invalid_choice_title or "%r" in self._invalid_choice_title:
             return self._invalid_choice_title % (value,)
         return self._invalid_choice_title
 
     def value_to_text(self, value):
+        # type: (DropdownChoiceValue) -> Text
         for entry in self.choices():
             val, title = entry[:2]
             if value == val:
@@ -2515,6 +2522,7 @@ class DropdownChoice(ValueSpec):
         return escaping.escape_attribute(self._get_invalid_choice_title(value))
 
     def from_html_vars(self, varprefix):
+        # type: (str) -> DropdownChoiceValue
         choices = self.choices()
 
         for entry in choices:
@@ -2530,15 +2538,18 @@ class DropdownChoice(ValueSpec):
             raise MKUserError(varprefix, self._invalid_choice_error)
 
     def _is_selected_option_from_html(self, varprefix, val):
+        # type: (str, DropdownChoiceValue) -> bool
         selected_value = html.request.var(varprefix)
         return selected_value == self._option_for_html(val)
 
     def _option_for_html(self, value):
+        # type: (DropdownChoiceValue) -> DropdownChoiceValue
         if self._encode_value:
             return self.option_id(value)
         return value
 
     def _options_for_html(self, orig_options):
+        # type: (List[TypingTuple[Any, Text]]) -> List[TypingTuple[DropdownChoiceValue, Text]]
         options = []
         for val, title in orig_options:
             options.append((self._option_for_html(val), title))
@@ -2546,9 +2557,11 @@ class DropdownChoice(ValueSpec):
 
     @staticmethod
     def option_id(val):
+        # type: () -> str
         return "%s" % hashlib.sha256(six.ensure_binary(repr(val))).hexdigest()
 
     def _validate_value(self, value, varprefix):
+        # type: (DropdownChoiceValue, str) -> None
         if self._no_preselect and value == self._no_preselect_value:
             raise MKUserError(varprefix, self._no_preselect_error)
 
@@ -2559,6 +2572,7 @@ class DropdownChoice(ValueSpec):
                 raise MKUserError(varprefix, self._empty_text)
 
     def _value_is_invalid(self, value):
+        # type: (DropdownChoiceValue) -> bool
         for entry in self.choices():
             if entry[0] == value:
                 return False

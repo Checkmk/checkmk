@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Tuple as TypingTuple, Text  # pylint: disable=unused-import
+
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Alternative,
@@ -24,22 +26,25 @@ from cmk.gui.plugins.wato import (
 
 
 def _vs_cisco_dom(which_levels):
+    # type: (str) -> TypingTuple[str, Alternative]
     def _button_text_warn(which_levels):
+        # type: (str) -> Text
         if which_levels == "upper":
-            text = "Warning at"
+            text = _("Warning at")
         elif which_levels == "lower":
-            text = "Warning below"
+            text = _("Warning below")
         else:
-            raise ValueError
+            raise ValueError()
         return text
 
     def _button_text_crit(which_levels):
+        # type: (str) -> Text
         if which_levels == "upper":
-            text = "Critical at"
+            text = _("Critical at")
         elif which_levels == "lower":
-            text = "Critical below"
+            text = _("Critical below")
         else:
-            raise ValueError
+            raise ValueError()
         return text
 
     return (
@@ -56,8 +61,8 @@ def _vs_cisco_dom(which_levels):
                 ),
                 Tuple(title=_("Use the following levels"),
                       elements=[
-                          Float(title=_(_button_text_warn(which_levels)), unit=_("dBm")),
-                          Float(title=_(_button_text_crit(which_levels)), unit=_("dBm")),
+                          Float(title=_button_text_warn(which_levels), unit=_("dBm")),
+                          Float(title=_button_text_crit(which_levels), unit=_("dBm")),
                       ]),
                 FixedValue(
                     False,
@@ -68,10 +73,12 @@ def _vs_cisco_dom(which_levels):
 
 
 def _item_spec_cisco_dom():
+    # type: () -> TextAscii
     return TextAscii(title=_("Sensor description if present, sensor index otherwise"))
 
 
 def _parameter_valuespec_cisco_dom():
+    # type: () -> Dictionary
     return Dictionary(elements=[
         (_vs_cisco_dom("upper")),
         (_vs_cisco_dom("lower")),

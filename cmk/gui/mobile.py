@@ -331,7 +331,7 @@ class MobileViewRenderer(views.ViewRenderer):
                     try:
                         show_commands = do_commands(view_spec, self.view.datasource.infos[0], rows)
                     except MKUserError as e:
-                        html.show_error(e)
+                        html.show_error("%s" % e)
                         html.add_user_error(e.varname, e)
                         show_commands = True
                 if show_commands:

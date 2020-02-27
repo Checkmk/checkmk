@@ -915,6 +915,7 @@ class Target(BackupEntity):
         return self.type_class()(self.type_params())
 
     def show_backup_list(self, only_type):
+        # type: (str) -> None
         with table_element(sortable=False, searchable=False) as table:
 
             for backup_ident, info in sorted(self.backups().items()):

@@ -19,14 +19,15 @@ from cmk.gui.plugins.wato import (
 
 
 def _parameter_valuespec_hacmp_resources():
+    # type: () -> Dictionary
     return Dictionary(
         elements=[
             ("expect_online_on",
              DropdownChoice(
-                 title=_(u"Expect resource to be online on"),
+                 title=_("Expect resource to be online on"),
                  choices=[
-                     ("first", _(u"the first node")),
-                     ("any", _(u"any node")),
+                     ("first", _("the first node")),
+                     ("any", _("any node")),
                  ],
              )),
         ],

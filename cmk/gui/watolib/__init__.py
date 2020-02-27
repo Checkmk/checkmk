@@ -216,6 +216,7 @@ from cmk.gui.watolib.sidebar_reload import (
     need_sidebar_reload,
 )
 from cmk.gui.watolib.analyze_configuration import (
+    ACResult,
     ACResultNone,
     ACResultCRIT,
     ACResultWARN,

@@ -8,7 +8,7 @@
 import abc
 import traceback
 import json
-from typing import List  # pylint: disable=unused-import
+from typing import Dict, List  # pylint: disable=unused-import
 import six
 
 import cmk.utils.plugin_registry
@@ -28,6 +28,8 @@ from cmk.gui.permissions import (
 snapin_width = 230
 
 search_plugins = []  # type: List
+
+PageHandlers = Dict[str, "cmk.gui.pages.PageHandlerFunc"]
 
 
 @permission_section_registry.register
@@ -97,6 +99,7 @@ class SidebarSnapin(six.with_metaclass(abc.ABCMeta, object)):
         return None
 
     def page_handlers(self):
+        # type: () -> PageHandlers
         return {}
 
 

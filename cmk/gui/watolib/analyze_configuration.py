@@ -7,7 +7,9 @@
 checks and tells the user what could be improved."""
 
 import traceback
-from typing import Optional  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Type, Iterator, Text, Optional, List, Any,
+)
 
 from livestatus import LocalConnection
 import cmk.utils.defines
@@ -127,29 +129,36 @@ class ACTestCategories(object):
 
 class ACTest(object):
     def __init__(self):
+        # type: () -> None
         self._executed = False
-        self._results = []
+        self._results = []  # type: List[ACResult]
 
     def id(self):
+        # type: () -> str
         return self.__class__.__name__
 
     def category(self):
+        # type: () -> str
         """Return the internal name of the category the BP test is associated with"""
         raise NotImplementedError()
 
     def title(self):
+        # type: () -> Text
         raise NotImplementedError()
 
     def help(self):
+        # type: () -> Text
         raise NotImplementedError()
 
     def is_relevant(self):
+        # type: () -> bool
         """A test can check whether or not is relevant for the current evnironment.
         In case this method returns False, the check will not be executed and not
         be shown to the user."""
         raise NotImplementedError()
 
     def execute(self):
+        # type: () -> Iterator[ACResult]
         """Implement the test logic here. The method needs to add one or more test
         results like this:
 
@@ -158,6 +167,7 @@ class ACTest(object):
         raise NotImplementedError()
 
     def run(self):
+        # type: () -> Iterator[ACResult]
         self._executed = True
         try:
             # Do not merge results that have been gathered on one site for different sites
@@ -182,24 +192,29 @@ class ACTest(object):
             yield result
 
     def status(self):
-        return max([0] + [r.status for r in self.results])
+        # type: () -> int
+        return max([0] + [(r.status or 0) for r in self.results])
 
     def status_name(self):
+        # type: () -> Text
         return cmk.utils.defines.short_service_state_name(self.status())
 
     @property
     def results(self):
+        # type: () -> List[ACResult]
         if not self._executed:
             raise MKGeneralException(_("The test has not been executed yet"))
         return self._results
 
     def _uses_microcore(self):
+        # type: () -> bool
         """Whether or not the local site is using the CMC"""
         local_connection = LocalConnection()
         version = local_connection.query_value("GET status\nColumns: program_version\n", deflt="")
         return version.startswith("Check_MK")
 
     def _get_effective_global_setting(self, varname):
+        # type: (str) -> Any
         global_settings = load_configuration_settings()
         default_values = ABCConfigDomain.get_all_default_globals()
 
@@ -221,9 +236,11 @@ class ACTest(object):
 
 class ACTestRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
+        # type: () -> Type[ACTest]
         return ACTest
 
     def plugin_name(self, plugin_class):
+        # type: (Type[ACTest]) -> str
         return plugin_class.__name__
 
 
@@ -233,13 +250,16 @@ ac_test_registry = ACTestRegistry()
 @automation_command_registry.register
 class AutomationCheckAnalyzeConfig(AutomationCommand):
     def command_name(self):
+        # type: () -> str
         return "check-analyze-config"
 
     def get_request(self):
+        # type: () -> None
         return None
 
     def execute(self, _unused_request):
-        results = []
+        # type: (None) -> List[ACResult]
+        results = []  # type: List[ACResult]
         for test_cls in ac_test_registry.values():
             test = test_cls()
 

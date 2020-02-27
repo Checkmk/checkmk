@@ -7,6 +7,9 @@
 import abc
 import json
 import inspect
+from typing import (  # pylint: disable=unused-import
+    Dict, Any, Text, Type, Callable, Optional,
+)
 import six
 
 import cmk.utils.plugin_registry
@@ -15,18 +18,23 @@ import cmk.gui.config as config
 from cmk.utils.exceptions import MKException
 from cmk.gui.log import logger
 
+PageHandlerFunc = Callable[[], None]
+
 
 class Page(six.with_metaclass(abc.ABCMeta, object)):
-    @classmethod
     #TODO: Use when we are using python3 abc.abstractmethod
+    @classmethod
     def ident(cls):
+        # type: () -> str
         raise NotImplementedError()
 
     def handle_page(self):
+        # type: () -> None
         self.page()
 
     @abc.abstractmethod
     def page(self):
+        # type: () -> Any
         """Override this to implement the page functionality"""
         raise NotImplementedError()
 
@@ -39,14 +47,23 @@ class AjaxPage(six.with_metaclass(abc.ABCMeta, Page)):
         self._from_vars()
 
     def _from_vars(self):
+        # type: () -> None
         """Override this method to set mode specific attributes based on the
         given HTTP variables."""
         pass
 
     def webapi_request(self):
+        # type: () -> Dict[Text, Text]
         return html.get_request()
 
+    @abc.abstractmethod
+    def page(self):
+        # type: () -> Dict[str, Any]
+        """Override this to implement the page functionality"""
+        raise NotImplementedError()
+
     def handle_page(self):
+        # type: () -> None
         """The page handler, called by the page registry"""
         html.set_output_format("json")
         try:
@@ -66,18 +83,23 @@ class AjaxPage(six.with_metaclass(abc.ABCMeta, Page)):
 
 class PageRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
+        # type: () -> Type[Page]
         return Page
 
     def plugin_name(self, plugin_class):
+        # type: (Type[Page]) -> str
         return plugin_class.ident()
 
     def register_page(self, path):
+        # type: (str) -> Callable[[Type[Page]], Type[Page]]
         def wrap(plugin_class):
+            # type: (Type[Page]) -> Type[Page]
             if not inspect.isclass(plugin_class):
                 raise NotImplementedError()
 
-            plugin_class._ident = path
-            plugin_class.ident = classmethod(lambda cls: cls._ident)
+            # mypy is not happy with this. Find a cleaner way
+            plugin_class._ident = path  # type: ignore[attr-defined]
+            plugin_class.ident = classmethod(lambda cls: cls._ident)  # type: ignore[assignment]
 
             self.register(plugin_class)
             return plugin_class
@@ -91,6 +113,7 @@ page_registry = PageRegistry()
 # TODO: Refactor all call sites to sub classes of Page() and change the
 # registration to page_registry.register("path")
 def register(path):
+    # type: (str) -> Callable[[PageHandlerFunc], PageHandlerFunc]
     """Register a function to be called when the given URL is called.
 
     In case you need to register some callable like staticmethods or
@@ -100,6 +123,7 @@ def register(path):
     It is essentially a decorator that calls register_page_handler().
     """
     def wrap(wrapped_callable):
+        # type: (PageHandlerFunc) -> PageHandlerFunc
         cls_name = "PageClass%s" % path.title().replace(":", "")
         LegacyPageClass = type(cls_name, (Page,), {
             "_wrapped_callable": (wrapped_callable,),
@@ -114,12 +138,14 @@ def register(path):
 
 # TODO: replace all call sites by directly calling page_registry.register_page("path")
 def register_page_handler(path, page_func):
+    # type: (str, PageHandlerFunc) -> PageHandlerFunc
     """Register a function to be called when the given URL is called."""
     wrap = register(path)
     return wrap(page_func)
 
 
 def get_page_handler(name, dflt=None):
+    # type: (str, Optional[PageHandlerFunc]) -> Optional[PageHandlerFunc]
     """Returns either the page handler registered for the given name or None
 
     In case dflt is given it returns dflt instead of None when there is no

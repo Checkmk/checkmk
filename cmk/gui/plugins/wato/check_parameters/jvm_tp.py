@@ -21,6 +21,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_jvm_tp():
+    # type: () -> TextAscii
     return TextAscii(
         title=_("Name of the virtual machine and/or<br>threadpool"),
         help=_("The name of the application server"),
@@ -29,6 +30,7 @@ def _item_spec_jvm_tp():
 
 
 def _parameter_valuespec_jvm_tp():
+    # type: () -> Dictionary
     return Dictionary(
         help=_("This ruleset also covers Tomcat, Jolokia and JMX. "),
         elements=[
@@ -39,8 +41,8 @@ def _parameter_valuespec_jvm_tp():
                      Tuple(
                          title=_("Percentage levels of current thread count in threadpool"),
                          elements=[
-                             Integer(title=_("Warning at"), unit=_(u"%")),
-                             Integer(title=_("Critical at"), unit=_(u"%")),
+                             Integer(title=_("Warning at"), unit=_("%")),
+                             Integer(title=_("Critical at"), unit=_("%")),
                          ],
                      )
                  ],
@@ -52,8 +54,8 @@ def _parameter_valuespec_jvm_tp():
                      Tuple(
                          title=_("Percentage of current threads busy in threadpool"),
                          elements=[
-                             Integer(title=_("Warning at"), unit=_(u"%")),
-                             Integer(title=_("Critical at"), unit=_(u"%")),
+                             Integer(title=_("Warning at"), unit=_("%")),
+                             Integer(title=_("Critical at"), unit=_("%")),
                          ],
                      )
                  ],

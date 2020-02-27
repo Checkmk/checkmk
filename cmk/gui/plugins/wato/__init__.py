@@ -19,6 +19,7 @@ from cmk.utils.plugin_loader import load_plugins
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 from cmk.gui.plugins.wato.utils import (
     PermissionSectionWATO,
+    ACResult,
     ACResultCRIT,
     ACResultOK,
     ACResultWARN,

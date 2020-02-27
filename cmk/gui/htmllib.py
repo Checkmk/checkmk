@@ -2481,16 +2481,19 @@ class html(ABCHTMLGenerator):
 
     # Choices is a list pairs of (key, title). They keys of the choices
     # and the default value must be of type None, str or unicode.
-    def dropdown(self,
-                 varname,
-                 choices,
-                 deflt='',
-                 ordered=False,
-                 label=None,
-                 class_=None,
-                 size=1,
-                 **attrs):
-        # type: (str, Choices, DefaultChoice, bool, Optional[Text], CSSSpec, int, **HTMLTagAttributeValue) -> None
+    def dropdown(
+        self,
+        varname,  # type: str
+        choices,  # type: Choices
+        deflt='',  # type: DefaultChoice
+        ordered=False,  # type: bool
+        label=None,  # type: Optional[Text]
+        class_=None,  # type: CSSSpec
+        size=1,  # type: int
+        read_only=False,  # type: bool
+        **attrs  # type: HTMLTagAttributeValue
+    ):
+        # type: (...) -> None
         current = self.request.get_unicode_input(varname, deflt)
         error = self.user_errors.get(varname)
         if varname:
@@ -2504,7 +2507,7 @@ class html(ABCHTMLGenerator):
         if error:
             self.open_x(class_="inputerror")
 
-        if "read_only" in attrs and attrs.pop("read_only"):
+        if read_only:
             attrs["disabled"] = "disabled"
             self.hidden_field(varname, current, add_var=False)
 

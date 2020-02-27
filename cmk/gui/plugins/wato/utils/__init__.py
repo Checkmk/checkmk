@@ -158,6 +158,7 @@ from cmk.gui.watolib import (
     ACResultCRIT,
     ACResultWARN,
     ACResultOK,
+    ACResult,
     config_domain_registry,
     ABCConfigDomain,
     ConfigDomainCore,

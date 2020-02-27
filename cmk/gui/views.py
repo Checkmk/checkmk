@@ -491,7 +491,7 @@ class GUIViewRenderer(ViewRenderer):
                     has_done_actions = do_actions(view_spec, self.view.datasource.infos[0], rows,
                                                   backurl)
                 except MKUserError as e:
-                    html.show_error(e)
+                    html.show_error("%s" % e)
                     html.add_user_error(e.varname, e)
                     if display_options.enabled(display_options.C):
                         show_command_form(True, self.view.datasource)

@@ -20,77 +20,78 @@ from cmk.gui.plugins.wato import (
 
 
 def _parameter_valuespec_ddn_s2a_port_errors():
+    # type: () -> Dictionary
     return Dictionary(elements=[
         ("link_failure_errs",
          Tuple(
-             title=_(u"Link failure errors"),
+             title=_("Link failure errors"),
              elements=[
-                 Integer(title=_(u"Warning at")),
-                 Integer(title=_(u"Critical at")),
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
              ],
          )),
         ("lost_sync_errs",
          Tuple(
-             title=_(u"Lost synchronization errors"),
+             title=_("Lost synchronization errors"),
              elements=[
-                 Integer(title=_(u"Warning at")),
-                 Integer(title=_(u"Critical at")),
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
              ],
          )),
         ("loss_of_signal_errs",
          Tuple(
-             title=_(u"Loss of signal errors"),
+             title=_("Loss of signal errors"),
              elements=[
-                 Integer(title=_(u"Warning at")),
-                 Integer(title=_(u"Critical at")),
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
              ],
          )),
         ("prim_seq_errs",
          Tuple(
-             title=_(u"PrimSeq erros"),
+             title=_("PrimSeq erros"),
              elements=[
-                 Integer(title=_(u"Warning at")),
-                 Integer(title=_(u"Critical at")),
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
              ],
          )),
         ("crc_errs",
          Tuple(
-             title=_(u"CRC errors"),
+             title=_("CRC errors"),
              elements=[
-                 Integer(title=_(u"Warning at")),
-                 Integer(title=_(u"Critical at")),
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
              ],
          )),
         ("receive_errs",
          Tuple(
-             title=_(u"Receive errors"),
+             title=_("Receive errors"),
              elements=[
-                 Integer(title=_(u"Warning at")),
-                 Integer(title=_(u"Critical at")),
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
              ],
          )),
         ("ctio_timeouts",
          Tuple(
-             title=_(u"CTIO timeouts"),
+             title=_("CTIO timeouts"),
              elements=[
-                 Integer(title=_(u"Warning at")),
-                 Integer(title=_(u"Critical at")),
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
              ],
          )),
         ("ctio_xmit_errs",
          Tuple(
-             title=_(u"CTIO transmission errors"),
+             title=_("CTIO transmission errors"),
              elements=[
-                 Integer(title=_(u"Warning at")),
-                 Integer(title=_(u"Critical at")),
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
              ],
          )),
         ("ctio_other_errs",
          Tuple(
-             title=_(u"other CTIO errors"),
+             title=_("other CTIO errors"),
              elements=[
-                 Integer(title=_(u"Warning at")),
-                 Integer(title=_(u"Critical at")),
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
              ],
          )),
     ],)

@@ -16,7 +16,7 @@ from cmk.gui.plugins.wato import (
 
 def _parameter_valuespec_safenet_ntls_links():
     return Levels(
-        title=_(u"NTLS Links"),
+        title=_("NTLS Links"),
         default_value=None,
     )
 

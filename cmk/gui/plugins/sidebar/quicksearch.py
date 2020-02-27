@@ -23,7 +23,7 @@ from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import HTTPRedirect
-from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry
+from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry, PageHandlers  # pylint: disable=unused-import
 
 
 @snapin_registry.register
@@ -38,9 +38,11 @@ class QuicksearchSnapin(SidebarSnapin):
 
     @classmethod
     def description(cls):
-        return _("Interactive search field for direct access to hosts, services, host- and "\
-                 "servicegroups.<br>You can use the following filters:<br> <i>h:</i> Host, <i>s:</i> Service<br> "\
-                 "<i>hg:</i> Hostgroup, <i>sg:</i> Servicegroup<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Hosttag")
+        return _(
+            "Interactive search field for direct access to hosts, services, host- and "
+            "servicegroups.<br>You can use the following filters:<br> <i>h:</i> Host, <i>s:</i> Service<br> "
+            "<i>hg:</i> Hostgroup, <i>sg:</i> Servicegroup<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Hosttag"
+        )
 
     def show(self):
         html.open_div(id_="mk_side_search",
@@ -60,12 +62,14 @@ class QuicksearchSnapin(SidebarSnapin):
         return ["user", "admin", "guest"]
 
     def page_handlers(self):
+        # type: () -> PageHandlers
         return {
             "ajax_search": self._ajax_search,
             "search_open": self._page_search_open,
         }
 
     def _ajax_search(self):
+        # type: () -> None
         q = _maybe_strip(html.request.get_unicode_input('q'))
         if not q:
             return
@@ -73,7 +77,7 @@ class QuicksearchSnapin(SidebarSnapin):
         try:
             generate_results(q)
         except MKException as e:
-            html.show_error(e)
+            html.show_error("%s" % e)
         except Exception as e:
             logger.exception("error generating quicksearch results")
             if config.debug:
@@ -81,6 +85,7 @@ class QuicksearchSnapin(SidebarSnapin):
             html.show_error(traceback.format_exc())
 
     def _page_search_open(self):
+        # type: () -> None
         q = _maybe_strip(html.request.var('q'))
         if not q:
             return

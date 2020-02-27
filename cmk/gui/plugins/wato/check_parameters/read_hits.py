@@ -19,11 +19,12 @@ from cmk.gui.plugins.wato import (
 
 
 def _parameter_valuespec_read_hits():
+    # type: () -> Tuple
     return Tuple(
-        title=_(u"Prefetch hits"),
+        title=_("Prefetch hits"),
         elements=[
-            Float(title=_(u"Warning below"), default_value=95.0),
-            Float(title=_(u"Critical below"), default_value=90.0),
+            Float(title=_("Warning below"), default_value=95.0),
+            Float(title=_("Critical below"), default_value=90.0),
         ],
     )
 

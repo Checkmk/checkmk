@@ -662,7 +662,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
         # Call WATO once for creating the default WATO configuration
         print("Requesting wato.py (which creates the WATO factory settings)...")
-        response = web.get("wato.py").text
+        response = web.get("wato.py?mode=sites").text
         print("Debug: %r" % response)
         assert "<title>WATO" in response
         assert "<div class=\"title\">Manual Checks</div>" in response, \

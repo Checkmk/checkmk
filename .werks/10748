@@ -1,0 +1,10 @@
+Title: lvm_lvs: add missing performance data
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p10
+Date: 1582790810
+Class: fix
+
+

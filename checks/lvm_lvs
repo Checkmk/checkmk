@@ -31,49 +31,42 @@ factory_settings["lvm_lvs_default_levels"] = {
     "levels_meta": (80.0, 90.0),
 }
 
+LvmLvsEntry = collections.namedtuple('LvmLvsEntry', ['data', 'meta'])
+
 
 def parse_lvm_lvs(info):
+    possible_items = {"%s/%s" % (line[1], line[4]) for line in info if line[4] != ''}
+
     parsed = {}
     for line in info:
-        item = "%s/%s" % (line[1], line[4])
-        if not line[4] == "" and not item in parsed:
-            parsed[item] = []
-
-    for line in info:
         item = "%s/%s" % (line[1], line[0])
-        if item in parsed:
-            parsed[item] = {"data": line[6], "meta": line[7]}
+        if item not in possible_items:
+            continue
 
+        try:
+            parsed[item] = LvmLvsEntry(data=float(line[6]), meta=float(line[7]))
+        except (IndexError, ValueError):
+            pass
     return parsed
 
 
-def inventory_lvm_lvs(parsed):
-    for key in parsed.iterkeys():
-        yield (key, {})
-
-
-def check_lvm_lvs(item, params, parsed):
-    for key, values in parsed.iteritems():
-        if item == key:
-            for key, value in values.iteritems():
-                value = float(value)
-                warn, crit = params["levels_%s" % key]
-                if value >= crit:
-                    state = 2
-                elif value >= warn:
-                    state = 1
-                else:
-                    state = 0
-
-                key = key[0].upper() + key[1:]
-                yield 0, "%s usage: %.2f %%" % (key, value)
-                if state:
-                    yield state, "(warn/crit at %s/%s)" % (warn, crit)
+@get_parsed_item_data
+def check_lvm_lvs(item, params, entry):
+    yield check_levels(entry.data,
+                       "data_usage",
+                       params["levels_data"],
+                       human_readable_func=get_percent_human_readable,
+                       infoname="Data usage")
+    yield check_levels(entry.meta,
+                       "meta_usage",
+                       params["levels_meta"],
+                       human_readable_func=get_percent_human_readable,
+                       infoname="Meta usage")
 
 
 check_info['lvm_lvs'] = {
     'parse_function': parse_lvm_lvs,
-    'inventory_function': inventory_lvm_lvs,
+    'inventory_function': discover(),
     'check_function': check_lvm_lvs,
     'service_description': 'LVM LV Pool %s',
     'has_perfdata': True,

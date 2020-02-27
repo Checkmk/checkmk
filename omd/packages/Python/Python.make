@@ -1,6 +1,6 @@
 # Package definition
 PYTHON := Python
-PYTHON_VERS := 2.7.16
+PYTHON_VERS := 2.7.17
 PYTHON_DIR := $(PYTHON)-$(PYTHON_VERS)
 
 PYTHON_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-build

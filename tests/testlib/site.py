@@ -664,8 +664,8 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         print("Requesting wato.py (which creates the WATO factory settings)...")
         response = web.get("wato.py?mode=sites").text
         print("Debug: %r" % response)
-        assert "<title>WATO" in response
-        assert "<div class=\"title\">Manual Checks</div>" in response, \
+        assert "<title>Distributed Monitoring</title>" in response
+        assert "replication_status_%s" % web.site.id in response, \
                 "WATO does not seem to be initialized: %r" % response
 
         print("Waiting for WATO files to be created...")

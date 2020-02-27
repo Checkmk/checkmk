@@ -9,6 +9,9 @@ description:
  With additional configuration the messages can be reclassified to a different state via
  logwatch patterns before they are forwarded to the Event Console.
 
+item:
+ The forwarded logs
+
 inventory:
  One service "Log Forwarding" is created on each host when the following options are set:
  {logwatch_forward_to_ec} is {True}, {separate_checks} is {True}

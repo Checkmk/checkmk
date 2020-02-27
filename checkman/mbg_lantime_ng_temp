@@ -11,5 +11,5 @@ inventory:
  One check per device is created.
 
 item:
- "System"
+ The fixed statement {{System}}
 

@@ -37,9 +37,6 @@ description:
  {Do not impose levels} the check status is always {OK} independent of a
  possible RAM corruption.
 
-item:
- {None}
-
 inventory:
  One item per Linux host is being created.
 

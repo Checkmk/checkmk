@@ -35,9 +35,6 @@ description:
  Hint: If you want to monitor swapping, you probably better measure major
  pagefaults. Please look at the check {kernel}.
 
-item:
- {None}
-
 inventory:
  {mem.used} creates one check on each host that provides
  the section {<<<mem>>>}. If that section also outputs

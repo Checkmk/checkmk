@@ -11,7 +11,7 @@ description:
  results in a critical state.
 
 item:
- The {VolumeID} of the raid array (as string).
+ The {VolumeID} of the raid array
 
 inventory:
  All existing arrays are detected automatically. Arrays that are

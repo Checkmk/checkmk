@@ -11,6 +11,9 @@ description:
   To make this check work, you have to install the mailman_lists
   agent plugin on your the host running mailman.
 
+item:
+ Name of the mailinglist
+
 inventory:
  Each mailinglist results in one service. The service is named by
  the internal name of the mailinglist

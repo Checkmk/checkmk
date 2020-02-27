@@ -692,7 +692,7 @@ class MultiSiteConnection(Helpers):
     def __init__(self, sites, disabled_sites=None):
         # type: (SiteConfigurations, Optional[SiteConfigurations]) -> None
         if disabled_sites is None:
-            disabled_sites = SiteConfigurations({})
+            disabled_sites = {}
 
         self.sites = sites
         self.connections = []  # type: List[Tuple[SiteId, SiteConfiguration, SingleSiteConnection]]

@@ -176,7 +176,7 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
             (warn_perf / range_sec * H24) if warn_perf is not None else None,
             (crit_perf / range_sec * H24) if crit_perf is not None else None,
             0,
-            size_mb / range_hours,  # fixed: true-division
+            1.0 * size_mb / range_hours,
         ))
 
     if levels.get("trend_showtimeleft"):

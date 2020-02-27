@@ -201,7 +201,7 @@ oxyreduct_tag_map = {
 
 
 def _inventory_oxyreduct_names(parsed):
-    for name, area_info in parsed.iteritems():
+    for name, area_info in parsed.items():
         tagids = area_info
         if min(tagids) < 10:
             yield name
@@ -216,7 +216,7 @@ def _check_oxyreduct(params, data):
     def to_binary(number):
         return ''.join(str(1 & int(number) >> i) for i in range(16)[::-1])
 
-    for tagid, value in data.iteritems():
+    for tagid, value in data.items():
         ref_tagid = tagid
         if ref_tagid > 17:
             ref_tagid = ((ref_tagid - 18) % 8) + 10

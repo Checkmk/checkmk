@@ -5,7 +5,7 @@ import mock
 import pytest  # type: ignore[import]
 import six
 from cmk.base.item_state import MKCounterWrapped
-from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel, DiscoveredServiceLabels
+from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 from cmk.base.check_api_utils import Service
 
 
@@ -14,7 +14,7 @@ class Tuploid(object):
     def __eq__(self, other_value):
         if isinstance(other_value, self.__class__):
             return other_value.tuple == self.tuple
-        elif isinstance(other_value, tuple):
+        if isinstance(other_value, tuple):
             return all(x == y for x, y in zip(other_value, self.tuple))
 
     def __ne__(self, other_value):
@@ -556,7 +556,7 @@ class Immutables(object):
             try:
                 assertEqual(self.refs[k], self.copies[k], repr(k) + descr)
             except AssertionError as exc:
-                raise ImmutablesChangedError(*exc)
+                raise ImmutablesChangedError(exc)
 
 
 def assertEqual(first, second, descr=''):

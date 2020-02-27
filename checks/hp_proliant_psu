@@ -69,7 +69,7 @@ def check_hp_proliant_psu(item, params, psu):
 
     # usage info
     info = 'Usage: %d Watts' % psu.used
-    cap_perc = psu.used * 100 / psu.max
+    cap_perc = psu.used * 100.0 / psu.max
     perf_data = [
         ('power_usage_percentage', cap_perc),
         ('power_usage', psu.used),

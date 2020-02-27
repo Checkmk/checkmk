@@ -64,7 +64,7 @@ def get_levels_mode_from_value(warn):
      * negative float -> percentages on free
     """
     type_ = "perc" if isinstance(warn, float) else "abs"
-    reference = "used" if warn > 0 else "free"
+    reference = "used" if warn is not None and warn > 0 else "free"
     return "%s_%s" % (type_, reference)
 
 

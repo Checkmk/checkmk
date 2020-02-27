@@ -33,6 +33,22 @@ else:
     from typing import TypedDict
 
 
+def minn(a, b):
+    if a is None:
+        return b
+    if b is None:
+        return a
+    return min(a, b)
+
+
+def maxx(a, b):
+    if a is None:
+        return b
+    if b is None:
+        return a
+    return max(a, b)
+
+
 def fahrenheit_to_celsius(tempf, relative=False):
     if tempf is None:
         return None
@@ -92,9 +108,6 @@ temp_unitsym = {
 
 def check_temperature_determine_levels(dlh, usr_warn, usr_crit, usr_warn_lower, usr_crit_lower,
                                        dev_warn, dev_crit, dev_warn_lower, dev_crit_lower):
-    # min that deals correctly with None
-    def minn(a, b):
-        return min(a, b) or a or b
 
     # Default values if none of the branches will match.
     warn = crit = warn_lower = crit_lower = None
@@ -114,15 +127,15 @@ def check_temperature_determine_levels(dlh, usr_warn, usr_crit, usr_warn_lower, 
     # take that. max deals correctly with None here. min does not work because None < int.
     # minn is a min that deals with None in the way we want here.
     elif dlh == "best":
-        warn, crit = max(usr_warn, dev_warn), max(usr_crit, dev_crit)
+        warn, crit = maxx(usr_warn, dev_warn), maxx(usr_crit, dev_crit)
         warn_lower, crit_lower = minn(usr_warn_lower,
                                       dev_warn_lower), minn(usr_crit_lower, dev_crit_lower)
 
     # Use most critical of your and device's levels
     elif dlh == "worst":
         warn, crit = minn(usr_warn, dev_warn), minn(usr_crit, dev_crit)
-        warn_lower, crit_lower = max(usr_warn_lower,
-                                     dev_warn_lower), max(usr_crit_lower, dev_crit_lower)
+        warn_lower, crit_lower = maxx(usr_warn_lower,
+                                      dev_warn_lower), maxx(usr_crit_lower, dev_crit_lower)
 
     # Use user's levels if present, otherwise the device's
     elif dlh == "usrdefault":

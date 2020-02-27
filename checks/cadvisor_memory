@@ -29,7 +29,7 @@ import json
 def parse_cadvisor_memory(info):
     memory_info = json.loads(info[0][0])
     parsed = {}
-    for memory_name, memory_entries in memory_info.iteritems():
+    for memory_name, memory_entries in memory_info.items():
         if len(memory_entries) != 1:
             continue
         try:

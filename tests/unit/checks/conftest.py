@@ -1,6 +1,6 @@
 import pytest  # type: ignore[import]
-import testlib
-from testlib.base import Scenario
+import testlib  # type: ignore[import]
+from testlib.base import Scenario  # type: ignore[import]
 
 
 @pytest.fixture(scope="module")

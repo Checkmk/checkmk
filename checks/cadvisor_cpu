@@ -29,7 +29,7 @@ import json
 def parse_cadvisor_cpu(info):
     cpu_info = json.loads(info[0][0])
     parsed = {}
-    for cpu_name, cpu_entries in cpu_info.iteritems():
+    for cpu_name, cpu_entries in cpu_info.items():
         if len(cpu_entries) != 1:
             continue
         try:

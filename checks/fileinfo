@@ -451,7 +451,9 @@ def _fileinfo_check_function(check_definition, params, outof_range_txt):
         infotexts = [outof_range_txt] + infotexts
         states = [0] * (len(states) + 1)
         allperfdata = [[]] + allperfdata
-    return zip(states, infotexts, allperfdata)
+
+    for res in zip(states, infotexts, allperfdata):
+        yield res
 
 
 def inventory_fileinfo(parsed):

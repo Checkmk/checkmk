@@ -1,5 +1,8 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'proxmox_version'
 
 info = [
@@ -19,11 +22,7 @@ discovery = {
 }
 
 checks = {
-    '': [
-        (
-            None, {
-                u"discovered_release": u"6.1"
-            }, [(0, "Version running: u'6.1', Version during discovery: u'6.1'", [])]
-        )
-    ]
+    '': [(None, {
+        u"discovered_release": u"6.1"
+    }, [(0, "Version running: 6.1, Version during discovery: 6.1", [])])]
 }

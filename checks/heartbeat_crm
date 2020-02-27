@@ -379,7 +379,7 @@ def check_heartbeat_crm_resources(item, target_node, info):
         yield 0, u"no resources found"
 
     for resource in resources:
-        yield 0, ' '.join([isinstance(p, list) and repr(p) or p for p in resource])
+        yield 0, ' '.join([isinstance(p, list) and ", ".join(p) or p for p in resource])
 
         if len(resource) == 3 and resource[2] != 'Started':
             yield 2, u'Resource is in state "%s"' % (resource[2],)

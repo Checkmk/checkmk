@@ -1,5 +1,8 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 from cmk.base.discovered_labels import HostLabel
 
 checkname = 'docker_container_status'
@@ -17,37 +20,19 @@ info = [
 ]
 
 discovery = {
-    '': [
-        HostLabel(u'cmk/docker_object', u'container', plugin_name=None),
-        (None, {})
-    ],
+    '': [HostLabel(u'cmk/docker_object', u'container', plugin_name=None), (None, {})],
     'uptime': [(None, {})],
     'health': [(None, {})]
 }
 
 checks = {
     '': [(None, {}, [(0, u'Container running', [])])],
-    'uptime': [
-        (
-            None, {}, [
-                (
-                    0, 'Up since Wed Jun  5 10:58:06 2019, uptime: 0:42:00', [
-                        ('uptime', 2520.0, None, None, None, None)
-                    ]
-                )
-            ]
-        )
-    ],
-    'health': [
-        (
-            None, {}, [
-                (2, u'Health status: Unhealthy', []),
-                (0, u'Last health report: mysqld is alive', []),
-                (2, 'Failing streak: 0', []),
-                (0, "Health test: u'CMD-SHELL /healthcheck.sh'", [])
-            ]
-        )
-    ]
+    'uptime': [(None, {}, [(0, 'Up since Wed Jun  5 10:58:06 2019, uptime: 0:42:00',
+                            [('uptime', 2520.0, None, None, None, None)])])],
+    'health': [(None, {}, [(2, u'Health status: Unhealthy', []),
+                           (0, u'Last health report: mysqld is alive', []),
+                           (2, 'Failing streak: 0', []),
+                           (0, u"Health test: CMD-SHELL /healthcheck.sh", [])])]
 }
 
 extra_sections = {'': [[]], 'uptime': [[]], 'health': [[]]}

@@ -40,6 +40,7 @@ def parse_mrpe(info):
 
         if len(line) < 2:
             continue
+
         item = six.moves.urllib.parse.unquote(line[0])
         state = line[1]
         line = line[2:]
@@ -48,8 +49,9 @@ def parse_mrpe(info):
             state = int(state)
         except ValueError:
             pass
+
         if state not in (0, 1, 2, 3):
-            line.insert(0, "Invalid plugin status %r. Output is:" % state)
+            line.insert(0, "Invalid plugin status '%s'. Output is:" % state)
             state = 3
 
         # convert to original format by joining and splitting at \1 (which replaced \n)

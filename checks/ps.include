@@ -36,6 +36,22 @@ ps_info = collections.namedtuple(
 ps_info.__new__.__defaults__ = (None,) * len(ps_info._fields)
 
 
+def minn(a, b):
+    if a is None:
+        return b
+    if b is None:
+        return a
+    return min(a, b)
+
+
+def maxx(a, b):
+    if a is None:
+        return b
+    if b is None:
+        return a
+    return max(a, b)
+
+
 def ps_info_tuple(entry):
     ps_tuple_re = regex(r"^\((.*)\)$")
     matched_ps_info = ps_tuple_re.match(entry)
@@ -542,8 +558,8 @@ class ProcessAggregator(object):
 
         if elapsed_text:
             elapsed = parse_ps_time(elapsed_text)
-            self.min_elapsed = min(self.min_elapsed or elapsed, elapsed)
-            self.max_elapsed = max(self.max_elapsed, elapsed)
+            self.min_elapsed = minn(self.min_elapsed or elapsed, elapsed)
+            self.max_elapsed = maxx(self.max_elapsed, elapsed)
 
             now = time.time()
             creation_time_unix = int(now - elapsed)

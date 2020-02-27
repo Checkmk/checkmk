@@ -93,9 +93,12 @@ def test_df_check(check_manager):
             u'raidtype': u'RAID0',
         }
     }
-    expected_result = (0, '57.81% used (1.16 of 2.00 TB), trend: 0.00 B / 24 hours',
-                       [('VMFS_01', 1212896, 1678313.6, 1888102.8, 0, 2097892),
-                        ('fs_size', 2097892), ('growth', 0.0), ('trend', 0, None, None, 0, 87412)])
+    expected_result = (0, '57.81% used (1.16 of 2.00 TB), trend: 0.00 B / 24 hours', [
+        ('VMFS_01', 1212896, 1678313.6, 1888102.8, 0, 2097892),
+        ('fs_size', 2097892),
+        ('growth', 0.0),
+        ('trend', 0, None, None, 0, 87412.16666666667),
+    ])
     _, trend_result = check.run_check(item_1st, params, parsed)
     assertCheckResultsEqual(CheckResult(trend_result), CheckResult(expected_result))
 

@@ -29,7 +29,7 @@ import json
 def parse_cadvisor_df(info):
     diskstat_info = json.loads(info[0][0])
     parsed = {}
-    for diskstat_name, diskstat_entries in diskstat_info.iteritems():
+    for diskstat_name, diskstat_entries in diskstat_info.items():
         if len(diskstat_entries) != 1:
             continue
         try:

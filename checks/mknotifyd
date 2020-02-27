@@ -138,7 +138,7 @@ def parse_mknotifyd(info):
     # to create artificial numbers if that is the case
     for stats in parsed["sites"].values():
         remote_addresses = {}
-        for connection_name, connection in stats["connections"].items():
+        for connection_name, connection in list(stats["connections"].items()):
             if connection["Type"] == "incoming":
                 remote_address = connection_name.split(":")[0]
                 remote_addresses.setdefault(remote_address, []).append(connection)

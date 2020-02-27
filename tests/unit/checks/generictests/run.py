@@ -1,6 +1,8 @@
 """Submodule providing the `run` function of generictests package"""
 from __future__ import print_function
 from ast import literal_eval
+from contextlib import contextmanager
+import freezegun  # type: ignore[import]
 
 from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
                          CheckResult, assertCheckResultsEqual, \
@@ -8,10 +10,8 @@ from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
                          Immutables, assertEqual
 from testlib import MissingCheckInfoError
 from generictests.checkhandler import checkhandler
-from contextlib import contextmanager
-import freezegun
+
 from cmk.gui.watolib.rulespecs import rulespec_registry
-import cmk.gui.plugins.wato.check_parameters
 
 
 class DiscoveryParameterTypeError(AssertionError):
@@ -71,7 +71,7 @@ def get_mock_values(dataset, subcheck):
     mock_is_d = getattr(dataset, 'mock_item_state', {})
     mock_hc_d = getattr(dataset, 'mock_host_conf', {})
     mock_hc_m = getattr(dataset, 'mock_host_conf_merged', {})
-    return mock_is_d.get(subcheck, {}), mock_hc_d.get(subcheck, []), mock_hc_m.get(subcheck, {}),
+    return mock_is_d.get(subcheck, {}), mock_hc_d.get(subcheck, []), mock_hc_m.get(subcheck, {})
 
 
 def get_discovery_expected(subcheck, dataset):

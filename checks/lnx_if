@@ -237,11 +237,11 @@ def parse_lnx_if(info):
                     ifOperStatus = 2
 
         raw_phys_address = attr.get("Address", attr.get("link/ether", ""))
-        try:
+        if ":" in raw_phys_address:
             # We saw interface entries of tunnels for the address
             # is an integer, eg. '1910236'; especially on OpenBSD.
             ifPhysAddress = "".join([chr(int(x, 16)) for x in raw_phys_address.split(":")])
-        except ValueError:
+        else:
             ifPhysAddress = ''
 
         row = [node_info] + list(

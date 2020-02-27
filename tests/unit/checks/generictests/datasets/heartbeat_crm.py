@@ -1,4 +1,8 @@
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 
 
 checkname = 'heartbeat_crm'
@@ -117,12 +121,12 @@ checks = {'': [(None,
           'resources': [(u'clone_nfs_sapmnt_IFG',
                          {},
                          [(0,
-                           u"clone_nfs_sapmnt_IFG Clone Started [u'hrssc61i01', u'hrssc61i02']",
+                           u"clone_nfs_sapmnt_IFG Clone Started hrssc61i01, hrssc61i02",
                            [])]),
                         (u'clone_nfs_usr_sap_IFG',
                          {},
                          [(0,
-                           u"clone_nfs_usr_sap_IFG Clone Started [u'hrssc61i01', u'hrssc61i02']",
+                           u"clone_nfs_usr_sap_IFG Clone Started hrssc61i01, hrssc61i02",
                            [])]),
                         (u'grp_IFG_ASCS22',
                          {},

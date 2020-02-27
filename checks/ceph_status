@@ -74,11 +74,11 @@ def inventory_ceph_status(parsed):
 
 def _extract_error_messages(parsed):
     error_messages = []
-    for err in sorted(parsed.get("health", {}).get("checks", {}).values()):
+    for err in parsed.get("health", {}).get("checks", {}).values():
         err_msg = err.get("summary", {}).get("message")
         if err_msg:
             error_messages.append(err_msg)
-    return error_messages
+    return sorted(error_messages)
 
 
 # TODO genereller Status -> ceph health (Ausnahmen für "too many PGs per OSD" als Option ermöglichen)

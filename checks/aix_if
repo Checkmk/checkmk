@@ -99,7 +99,7 @@ def parse_aix_if(info):
         # No information from entstat. We consider interfaces up
         # if they have been used at least some time since the
         # system boot.
-        elif nic_info[nic]["ifInOctets"] > 0:
+        elif int(nic_info[nic]["ifInOctets"]) > 0:
             nic_info[nic]["ifOperStatus"] = 1
         else:
             # unknown, or never been up

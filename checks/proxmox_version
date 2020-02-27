@@ -39,7 +39,7 @@ def check_proxmox_version(item, params, parsed):
     state = (
         OK if version_to_tuple(current_version) >= version_to_tuple(discovered_version) else  #
         WARN)
-    yield state, "Version running: %r, Version during discovery: %r" % (  #
+    yield state, "Version running: %s, Version during discovery: %s" % (  #
         current_version, discovered_version)
 
 

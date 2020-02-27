@@ -78,7 +78,7 @@ YAPF_STYLE = {
 }
 
 
-class WritableDataset(object):  # pylint: disable=too-many-instance-attributes
+class WritableDataset(object):
     def __init__(self, init_dict):
         self.writelist = (
             'checkname',
@@ -210,4 +210,3 @@ def test_main(check_manager, datasetfile, inplace):
     generictests.run(check_manager, regression, write=True)
 
     regression.write(_get_out_filename(datasetfile, inplace))
-    return

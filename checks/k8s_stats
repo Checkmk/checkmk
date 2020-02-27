@@ -83,7 +83,7 @@ def check_k8s_stats_network(item, params, parsed):
     metrics, _ = parsed
 
     device = sum([
-        collections.Counter(device)
+        collections.Counter(_get_device_counters(device))
         for device in metrics['network']['interfaces']
         if device.get('name') == item
     ], collections.Counter())
@@ -117,7 +117,7 @@ def check_k8s_stats_fs(item, params, parsed):
     metrics, _ = parsed
 
     disk = sum([
-        collections.Counter(device)
+        collections.Counter(_get_device_counters(device))
         for device in metrics['filesystem']
         if device.get('device') == item
     ], collections.Counter())
@@ -131,6 +131,10 @@ def check_k8s_stats_fs(item, params, parsed):
         disk['inodes_free'],
         params,
     )
+
+
+def _get_device_counters(device):
+    return {k: v for k, v in device.items() if isinstance(v, (int, float))}
 
 
 check_info['k8s_stats'] = {

@@ -54,7 +54,7 @@ def parse_dell_compellent_disks(info):
     for idx, (number, status, health, health_message, enclosure) in enumerate(disk_info):
         inst_data = [status, health, health_message, enclosure]
         try:
-            inst_data.append(disk_serials[idx])
+            inst_data.append(disk_serials[idx][0])
         except IndexError:
             inst_data.append(None)
         parsed.setdefault(number, inst_data)

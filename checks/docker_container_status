@@ -106,7 +106,7 @@ def check_docker_container_status_health(_no_item, _no_params, parsed_extra):
 
     health_test = parsed.get("Healthcheck", {}).get("Test")
     if health_test:
-        yield 0, "Health test: %r" % ' '.join(health_test)
+        yield 0, "Health test: %s" % ' '.join(health_test)
 
 
 check_info["docker_container_status.health"] = {

@@ -36,7 +36,7 @@ def parse_cadvisor_diskstat(info):
         "disk_read_throughput": "read_throughput",
     }
     parsed = {}
-    for diskstat_name, diskstat_entries in diskstat_info.iteritems():
+    for diskstat_name, diskstat_entries in diskstat_info.items():
         if len(diskstat_entries) != 1:
             continue
         try:

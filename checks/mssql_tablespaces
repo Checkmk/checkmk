@@ -63,7 +63,7 @@ def parse_mssql_tablespaces(info):
         if len(line) < 14:
             continue
 
-        pairs = zip(line[:14:2], line[1:14:2])
+        pairs = list(zip(line[:14:2], line[1:14:2]))
         item = "%s %s" % pairs[0]
         keys = ('size', 'unallocated', 'reserved', 'data', 'indexes', 'unused')
         values = (to_bytes(*p) for p in pairs[1:])

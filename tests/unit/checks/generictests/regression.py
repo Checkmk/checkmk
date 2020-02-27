@@ -80,7 +80,6 @@ YAPF_STYLE = {
 
 class WritableDataset(object):  # pylint: disable=too-many-instance-attributes
     def __init__(self, init_dict):
-        self.comments = [u'-*- encoding: utf-8', u'yapf: disable']
         self.writelist = (
             'checkname',
             'freeze_time',
@@ -136,7 +135,23 @@ class WritableDataset(object):  # pylint: disable=too-many-instance-attributes
         )
 
         with Path(filename).open('w') as handle:
-            handle.writelines(u'# %s\n' % c for c in self.comments)
+            # Disabling yapf: yapf parses comment blocks and disables the next
+            # lines if and only if the FIRST line of that block contains
+            #   '# yapf: disable'
+            # Does not work:
+            #   '# -*- encoding: utf-8'
+            #   '# yapf: disable'
+            # Works:
+            #   '# -*- encoding: utf-8'
+            #   ''
+            #   '# yapf: disable'
+            comments = [
+                u'# -*- encoding: utf-8 -*-\n',
+                u'\n',
+                u'# yapf: disable\n',
+                u'# type: ignore\n',
+            ]
+            handle.writelines(comments)
             handle.write(yapfed_content)
 
     def get_imports(self, value):

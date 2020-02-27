@@ -117,7 +117,8 @@ def _execute_automation(site,
 
 
 def test_automation_discovery_no_host(test_cfg, site):
-    p = site.execute(["cmk", "--automation", "inventory", "@raiseerrors", "new"],
+    # NOTE: We can't use @raiseerrors here, because this would redirect stderr to /dev/null!
+    p = site.execute(["cmk", "--automation", "inventory", "@scan", "new"],
                      stdout=subprocess.PIPE,
                      stderr=subprocess.PIPE)
 

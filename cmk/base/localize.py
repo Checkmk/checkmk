@@ -307,7 +307,7 @@ def _initialize_local_po_file(lang):
     """Initialize the file in the local hierarchy with the file in the default hierarchy if needed"""
     po_file = _po_file(lang)
 
-    store.makedirs(po_file)
+    store.makedirs(Path(po_file).parent)
 
     builtin_po_file = _builtin_po_file(lang)
     if not os.path.exists(po_file) and builtin_po_file.exists():

@@ -7,7 +7,6 @@
 import os
 import sys
 import socket
-import subprocess
 import time
 import pprint
 from typing import Union, Tuple, Optional, Set, Dict, List  # pylint: disable=unused-import
@@ -18,6 +17,7 @@ import cmk.utils.tty as tty
 import cmk.utils.paths
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
+import cmk.utils.cmk_subprocess as subprocess
 
 from cmk.base import config_cache as _config_cache
 import cmk.base.console as console
@@ -154,7 +154,8 @@ def scan_parents_of(config_cache, hosts, silent=False, settings=None):
                           subprocess.Popen(command,
                                            stdout=subprocess.PIPE,
                                            stderr=subprocess.STDOUT,
-                                           close_fds=True)))
+                                           close_fds=True,
+                                           encoding="utf-8")))
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise

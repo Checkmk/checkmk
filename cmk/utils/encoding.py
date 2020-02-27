@@ -50,10 +50,3 @@ def ensure_bytestr(value):
     if isinstance(value, six.binary_type):
         return value
     return value.encode("utf-8")
-
-
-def make_utf8(value):
-    # type: (AnyStr) -> bytes
-    if isinstance(value, six.text_type):
-        return value.encode('utf-8')
-    return value

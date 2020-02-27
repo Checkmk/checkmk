@@ -10,19 +10,21 @@ import ast
 import re
 import socket
 import time
-from typing import List, Tuple, Text  # pylint: disable=unused-import
+from typing import Optional, List, Tuple, Text  # pylint: disable=unused-import
 
 if sys.version_info[0] >= 3:
     from pathlib import Path  # pylint: disable=import-error
 else:
     from pathlib2 import Path  # pylint: disable=import-error
 
+import six
+
 import livestatus
+from livestatus import SiteId  # pylint: disable=unused-import
 
 import cmk.utils.paths
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
-from cmk.utils.encoding import make_utf8
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -183,7 +185,7 @@ def send_event(event):
         (event["sl"], event["host"], event["ipaddress"], event["application"], event["text"]),
     ]
 
-    execute_command("CREATE", list(map(make_utf8, rfc)), site=event["site"])
+    execute_command("CREATE", list(map(six.ensure_text, rfc)), site=event["site"])
 
     return ";".join(rfc)
 
@@ -229,6 +231,7 @@ def query_ec_directly(query):
 
 
 def execute_command(name, args=None, site=None):
+    # type: (str, Optional[List[str]], Optional[SiteId]) -> None
     if args:
         formated_args = ";" + ";".join(args)
     else:

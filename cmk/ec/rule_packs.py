@@ -3,7 +3,6 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """
 Utility module for common code between the Event Console and other parts
 of Check_MK. The GUI is e.g. accessing this module for gathering the default
@@ -35,7 +34,8 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path  # pylint: disable=import-error,unused-import
 
-from cmk.utils.encoding import make_utf8
+import six
+
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -215,7 +215,7 @@ def load_config(settings):
     for path in [settings.paths.main_config_file.value] + \
             sorted(settings.paths.config_dir.value.glob('**/*.mk')):
         with open(str(path), mode="rb") as file_object:
-            exec(file_object.read(), config)  # pylint: disable=exec-used
+            exec (file_object.read(), config)  # pylint: disable=exec-used
     config.pop("MkpRulePackProxy", None)
     _bind_to_rule_pack_proxies(config['rule_packs'], config['mkp_rule_packs'])
 
@@ -293,7 +293,7 @@ def save_rule_packs(rule_packs, pretty_print=False, dir_=None):
     if not dir_:
         dir_ = rule_pack_dir()
     dir_.mkdir(parents=True, exist_ok=True)
-    store.save_file(str(dir_ / "rules.mk"), make_utf8(output))
+    store.save_text_to_file(dir_ / "rules.mk", six.ensure_text(output))
 
 
 # NOTE: It is essential that export_rule_pack() is called *before*
@@ -327,7 +327,7 @@ def export_rule_pack(rule_pack, pretty_print=False, dir_=None):
     if not dir_:
         dir_ = mkp_rule_pack_dir()
     dir_.mkdir(parents=True, exist_ok=True)
-    store.save_file(str(dir_ / ("%s.mk" % rule_pack['id'])), make_utf8(output))
+    store.save_text_to_file(dir_ / ("%s.mk" % rule_pack['id']), six.text_type(output))
 
 
 def add_rule_pack_proxies(file_names):

@@ -1,4 +1,8 @@
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'netapp_api_connection'
 
 info = [['line_0_element_0', 'line_0_element_1'], ['line_1_element_0', 'line_1_element_1'],

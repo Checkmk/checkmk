@@ -1,5 +1,8 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 
 
 checkname = 'df'
@@ -22,7 +25,6 @@ mock_host_conf_merged = {
 }
 
 
-# TODO: this should only discover C and the Group
 discovery = {'': [(r'C:\\ C://', {}),  # TODO: make this even more beautiful
                   ('SQL_Database_[GROUPME] D://', {}),
                   ('Scratch_Volume_[GROUPME] E://', {}),

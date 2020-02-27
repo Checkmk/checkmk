@@ -1,4 +1,8 @@
-#yapf: disable
+# -*- encoding: utf-8 -*-
+
+# yapf: disable
+# type: ignore
+
 
 
 checkname = 'alcatel_power_aos7'

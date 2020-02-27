@@ -1,4 +1,8 @@
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'mysql_slave'
 
 info = [['***************************', '1.', 'row', '***************************'],

@@ -1,5 +1,8 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'graylog_streams'
 
 info = [[u'{"total": 5, "streams": []}']]

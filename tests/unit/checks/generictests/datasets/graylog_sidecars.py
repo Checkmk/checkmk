@@ -1,5 +1,8 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'graylog_sidecars'
 
 freeze_time = '2019-10-24 10:48:00'

@@ -1,13 +1,14 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'tplink_mem'
 
 info = [[u'30'], [u'60']] # multiple memory units
 
 discovery = {'': [(None, {})]}
 
-# This check tests the level parameters as well as the averaging of the
-# memory utilization values from multiple units
 checks = {
     '': [
         (

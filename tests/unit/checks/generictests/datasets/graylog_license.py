@@ -1,5 +1,8 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'graylog_license'
 
 freeze_time = '2019-11-08T08:56:00'

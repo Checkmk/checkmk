@@ -1,5 +1,8 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'emc_ecs_diskio'
 
 freeze_time = '1970-01-01 00:00:01'

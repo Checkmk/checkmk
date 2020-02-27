@@ -1,5 +1,8 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'qnap_fans'
 
 info = [[u'1', u'1027 RPM'], [u'2', u'968 RPM']]

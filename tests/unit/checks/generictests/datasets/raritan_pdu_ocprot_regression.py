@@ -1,4 +1,8 @@
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'raritan_pdu_ocprot'
 
 info = [[[u'1.1.1', u'4', u'0'], [u'1.1.15', u'1', u'0'], [u'1.2.1', u'4', u'0'],

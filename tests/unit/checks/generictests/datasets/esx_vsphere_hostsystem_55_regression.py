@@ -1,5 +1,8 @@
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
-# Check the output of a LUN and a controller for ESX version 5.5
+# type: ignore
+
 
 checkname = 'esx_vsphere_hostsystem'
 

@@ -1,3 +1,8 @@
+# -*- encoding: utf-8 -*-
+
+# yapf: disable
+# type: ignore
+
 checkname = 'winperf_processor'
 
 info = [[u'1556221294.75', u'238', u'10000000'],

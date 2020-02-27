@@ -1,5 +1,8 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'jenkins_jobs'
 
 freeze_time = '2019-09-09T14:19:00'

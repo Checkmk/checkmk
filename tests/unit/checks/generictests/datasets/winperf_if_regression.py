@@ -1,4 +1,8 @@
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'winperf_if'
 
 info = [[u'1457449582.48', u'510'],

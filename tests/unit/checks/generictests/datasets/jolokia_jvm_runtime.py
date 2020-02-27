@@ -1,5 +1,8 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'jolokia_jvm_runtime'
 
 freeze_time = '2019-10-11 08:32:51'

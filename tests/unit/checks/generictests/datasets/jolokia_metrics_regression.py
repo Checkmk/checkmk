@@ -1,5 +1,8 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'jolokia_metrics'
 
 freeze_time = '2019-10-10 20:38:55'

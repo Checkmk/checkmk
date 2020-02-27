@@ -1,4 +1,8 @@
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'alcatel_cpu'
 
 info = [['17', 'doesnt matter', 'doesnt matter'], ['doesnt matter']]

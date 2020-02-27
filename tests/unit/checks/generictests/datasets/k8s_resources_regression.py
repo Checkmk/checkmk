@@ -1,4 +1,9 @@
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
+
 checkname = 'k8s_resources'
 
 info = [[

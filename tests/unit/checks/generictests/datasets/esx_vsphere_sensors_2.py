@@ -1,4 +1,8 @@
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'esx_vsphere_sensors'
 
 info = [['Dummy sensor', '', '', '', '', '', 'green', 'all is good', 'the sun is shining']]

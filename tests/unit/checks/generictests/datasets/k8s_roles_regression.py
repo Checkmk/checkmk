@@ -1,4 +1,9 @@
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
+
 checkname = 'k8s_roles'
 
 info = [[
@@ -8,15 +13,6 @@ info = [[
 discovery = {'': [(None, {})]}
 
 checks = {
-    '': [(
-        None,
-        {},
-        [
-            (0, 'Total: 61', [('k8s_total_roles', 61, None, None, None, None)]),
-            (0, 'Cluster roles: 53', [('k8s_cluster_roles', 53, None, None, None, None)]),
-            (0, 'Roles: 8', [('k8s_roles', 8, None, None, None, None)]),
-        ],
-    )],
     '': [(
         None,
         {

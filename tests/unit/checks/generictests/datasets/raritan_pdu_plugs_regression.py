@@ -1,4 +1,8 @@
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'raritan_pdu_plugs'
 
 info = [[u'1', u'', u'7'], [u'36', u'FooName', u'7']]

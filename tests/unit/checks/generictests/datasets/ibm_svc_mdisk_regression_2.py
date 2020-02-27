@@ -1,12 +1,13 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 
 
 checkname = 'ibm_svc_mdisk'
 
 
-# This device does not support the lsmdisk command so
-# no services should be discovered.
 info = [[u'id',
          u'status',
          u'mode',

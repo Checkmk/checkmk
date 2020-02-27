@@ -1,5 +1,8 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 
 
 checkname = u'kemp_loadmaster_services'
@@ -23,4 +26,4 @@ checks = {'': [('Bar',
                 [(0, 'Status: in service', []),
                  (0,
                   'Active connections: 0',
-                  [('conns', 0, None, None, None, None)])])]}
+                 [('conns', 0, None, None, None, None)])])]}

@@ -1,3 +1,8 @@
+# -*- encoding: utf-8 -*-
+
+# yapf: disable
+# type: ignore
+
 checkname = 'veritas_vcs'
 
 info = [

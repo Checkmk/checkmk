@@ -1,4 +1,8 @@
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'poseidon_temp'
 
 info = [[u'Bezeichnung Sensor 1', u'1', u'16.8 C']]

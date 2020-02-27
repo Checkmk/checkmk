@@ -1,12 +1,14 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 
 
 checkname = 'netapp_api_fcp'
 
 
 freeze_time = '2001-09-09T01:46:40'
-# This corresponds to epoch 1000000000.0.
 
 
 mock_item_state = {

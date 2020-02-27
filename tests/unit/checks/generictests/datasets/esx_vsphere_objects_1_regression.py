@@ -1,4 +1,8 @@
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'esx_vsphere_objects'
 
 info = [['hostsystem', '10.1.1.112', '', 'poweredOn'],

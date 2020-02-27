@@ -1,4 +1,8 @@
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'esx_vsphere_vm'
 
 freeze_time = "2019-06-22 14:37"

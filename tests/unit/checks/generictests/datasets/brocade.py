@@ -1,4 +1,8 @@
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'brocade'
 
 info = [['1', '24', 'SLOT #0: TEMP #1'], ['2', '12', 'SLOT #0: TEMP #2'],

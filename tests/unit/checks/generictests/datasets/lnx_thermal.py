@@ -1,4 +1,8 @@
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'lnx_thermal'
 
 info = [['thermal_zone0', 'enabled', 'acpitz', '57000', '127000', 'critical'],

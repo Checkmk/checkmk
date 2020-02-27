@@ -1,5 +1,8 @@
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
-# pylint: disable=invalid-name
+# type: ignore
+
 
 checkname = 'filestats'
 

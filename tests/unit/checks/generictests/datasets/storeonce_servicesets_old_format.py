@@ -1,5 +1,8 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'storeonce_servicesets'
 
 freeze_time = '2020-01-02 13:41:00'

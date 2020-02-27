@@ -1,5 +1,8 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = u'cisco_mem_asa64'
 
 info = [[u'System memory', u'', u'1686331208']]

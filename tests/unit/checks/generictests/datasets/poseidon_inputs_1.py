@@ -1,4 +1,8 @@
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'poseidon_inputs'
 
 info = [[u'1', u'Bezeichnung Eingang 1', u'1', u'0'], [u'0', u'Bezeichnung Eingang 2', u'2', u'0'],

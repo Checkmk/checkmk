@@ -1,5 +1,8 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'couchbase_nodes_uptime'
 
 freeze_time = '2019-10-23 14:49:25'

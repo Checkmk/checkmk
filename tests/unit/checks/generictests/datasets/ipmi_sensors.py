@@ -1,4 +1,8 @@
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'ipmi_sensors'
 
 info = [['32', 'Temperature_Ambient', '20.00_C_(1.00/42.00)', '[OK]'],

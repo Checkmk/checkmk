@@ -1,5 +1,8 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'hp_fan'
 
 info = [['0', '2', '5'], ['1', '3', '3'], ['2', '4', '1']]

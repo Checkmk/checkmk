@@ -1,5 +1,8 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'innovaphone_priports_l1'
 
 info = [['Foo', '1', '0', '23'], ['Bar', '2', '42', '23']]

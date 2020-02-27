@@ -1,5 +1,8 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'hp_psu'
 
 info = [[u'1', u'3', u'25'], [u'2', u'3', u'23']]

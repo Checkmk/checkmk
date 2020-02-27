@@ -1,5 +1,8 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'emc_isilon_ifs'
 
 info = [[u'615553001652224', u'599743491129344']]

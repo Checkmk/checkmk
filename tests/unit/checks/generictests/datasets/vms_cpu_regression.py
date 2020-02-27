@@ -1,4 +1,8 @@
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'vms_cpu'
 
 info = [['1', '99.17', '0.54', '0.18', '0.00']]

@@ -1,6 +1,15 @@
-# -*- encoding: utf-8
-# yapf: disable
+# -*- encoding: utf-8 -*-
 
+# yapf: disable
+# type: ignore
+
+# Notes:
+# docker0 has ifInOctets == 0.
+# - If docker0 is not updated with ip address statistics we get:
+#   'ifInOctects == 0' => 'ifOperState == 4'
+#   => The interface is not discovered
+# - ip address statistics contain <UP>; we get 'ifOperState == 1'
+#   and the docker0 interface will be discovered.
 
 checkname = 'lnx_if'
 
@@ -93,13 +102,6 @@ info = [[None, u'[start_iplink]'],
          u'       0       0    0    0    0     0          0         0    25963     287    0    0    0     0       0          0']]
 
 
-# Notes:
-# docker0 has ifInOctets == 0.
-# - If docker0 is not updated with ip address statistics we get:
-#   'ifInOctects == 0' => 'ifOperState == 4'
-#   => The interface is not discovered
-# - ip address statistics contain <UP>; we get 'ifOperState == 1'
-#   and the docker0 interface will be discovered.
 
 
 discovery = {'': [('1', "{'state': ['1'], 'speed': 0}"),

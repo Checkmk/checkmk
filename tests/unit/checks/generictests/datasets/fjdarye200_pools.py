@@ -1,5 +1,8 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
+
 checkname = 'fjdarye200_pools'
 
 info = [[u'0', u'117190584', u'105269493']]

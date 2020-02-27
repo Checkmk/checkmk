@@ -1,9 +1,10 @@
-# -*- encoding: utf-8
+# -*- encoding: utf-8 -*-
+
 # yapf: disable
+# type: ignore
 
 
 from cmk.base.discovered_labels import HostLabel
-
 
 checkname = 'k8s_job_info'
 

@@ -1174,11 +1174,7 @@ def page_edit_dashlet():
     if not board:
         raise MKUserError("name", _('The name of the dashboard is missing.'))
 
-    ty = html.request.get_str_input_mandatory('type')
     ident = html.request.get_integer_input("id")
-
-    if ident is None and not ty:
-        raise MKUserError("id", _('The ID of the dashlet is missing.'))
 
     try:
         dashboard = get_permitted_dashboards()[board]
@@ -1186,6 +1182,7 @@ def page_edit_dashlet():
         raise MKUserError("name", _('The requested dashboard does not exist.'))
 
     if ident is None:
+        ty = html.request.get_str_input_mandatory('type')
         mode = 'add'
         title = _('Add Dashlet')
 

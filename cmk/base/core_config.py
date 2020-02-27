@@ -243,7 +243,7 @@ def do_create_config(core, with_agents):
     if with_agents:
         try:
             import cmk.base.cee.agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
-            cmk.base.cee.agent_bakery.bake_on_restart()  # pylint: disable=no-member
+            cmk.base.cee.agent_bakery.bake_on_restart()
         except ImportError:
             pass
 
@@ -469,7 +469,7 @@ def get_host_attributes(hostname, config_cache):
         attrs["_ACTIONS"] = ",".join(actions)
 
     if cmk.is_managed_edition():
-        attrs["_CUSTOMER"] = config.current_customer  # type: ignore[attr-defined] # pylint: disable=no-member
+        attrs["_CUSTOMER"] = config.current_customer  # type: ignore[attr-defined]
 
     return attrs
 

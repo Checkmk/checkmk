@@ -111,9 +111,8 @@ def _compiled_werks_dir():
 def load():
     werks = {}  # type: Dict[int, Dict[str, Any]]
     # The suppressions are needed because of https://github.com/PyCQA/pylint/issues/1660
-    for file_name in itertools.chain(
-            _compiled_werks_dir().glob("werks"),  # pylint: disable=no-member
-            _compiled_werks_dir().glob("werks-*")):  # pylint: disable=no-member
+    for file_name in itertools.chain(_compiled_werks_dir().glob("werks"),
+                                     _compiled_werks_dir().glob("werks-*")):
         werks.update(load_precompiled_werks_file(file_name))
     return werks
 

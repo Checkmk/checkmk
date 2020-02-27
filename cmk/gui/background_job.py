@@ -95,7 +95,7 @@ class BackgroundProcessInterface(object):
 
         result_message_path = Path(
             self.get_work_dir()) / BackgroundJobDefines.result_message_filename
-        with result_message_path.open("ab") as f:  # pylint: disable=no-member
+        with result_message_path.open("ab") as f:
             f.write(six.ensure_binary(encoded_info))
 
     def send_exception(self, info):
@@ -105,7 +105,7 @@ class BackgroundProcessInterface(object):
         # Exceptions also get an extra newline, since some error messages tend not output a \n at the end..
         encoded_info = "%s\n" % six.ensure_str(info)
         sys.stdout.write(encoded_info)
-        with (Path(self.get_work_dir()) / BackgroundJobDefines.exceptions_filename).open("ab") as f:  # pylint: disable=no-member
+        with (Path(self.get_work_dir()) / BackgroundJobDefines.exceptions_filename).open("ab") as f:
             f.write(six.ensure_binary(encoded_info))
 
 
@@ -224,9 +224,8 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
         # - Use buffering=0 to make the non flushed output directly visible in
         #   the job progress dialog
         # - Python 3's stdout and stderr expect 'str' not 'bytes'
-        unbuffered = (
-            Path(self.get_work_dir()) /  # pylint: disable=no-member
-            BackgroundJobDefines.progress_update_filename).open("wb", buffering=0)
+        unbuffered = (Path(self.get_work_dir()) /
+                      BackgroundJobDefines.progress_update_filename).open("wb", buffering=0)
 
         if sys.version_info[0] >= 3:
             sys.stdout = sys.stderr = io.TextIOWrapper(unbuffered, write_through=True)
@@ -562,7 +561,7 @@ class JobStatus(object):
 
     def get_status_from_file(self):
         # type: () -> JobStatusSpec
-        if not self._jobstatus_path.exists():  # pylint: disable=no-member
+        if not self._jobstatus_path.exists():
             data = {}  # type: JobStatusSpec
             data["state"] = "initialized"
         else:
@@ -583,7 +582,7 @@ class JobStatus(object):
         for field_id, field_path in [("JobProgressUpdate", self._progress_update_path),
                                      ("JobResult", self._result_message_path),
                                      ("JobException", self._exceptions_path)]:
-            if field_path.exists():  # pylint: disable=no-member
+            if field_path.exists():
                 data["loginfo"][field_id] = open(str(field_path)).read().splitlines()
             else:
                 data["loginfo"][field_id] = []
@@ -600,11 +599,11 @@ class JobStatus(object):
 
     def statusfile_exists(self):
         # type: () -> bool
-        return self._jobstatus_path.exists()  # pylint: disable=no-member
+        return self._jobstatus_path.exists()
 
     def update_status(self, params):
         # type: (JobStatusSpec) -> None
-        if not self._jobstatus_path.parent.exists():  # pylint: disable=no-member
+        if not self._jobstatus_path.parent.exists():
             return
 
         if params:

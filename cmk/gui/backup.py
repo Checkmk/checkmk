@@ -1214,14 +1214,14 @@ class ABCBackupTargetType(six.with_metaclass(abc.ABCMeta, object)):
     def choices(cls):
         choices = []
         # TODO: subclasses with the same name may be registered multiple times, due to execfile
-        for type_class in cls.__subclasses__():  # pylint: disable=no-member
+        for type_class in cls.__subclasses__():
             choices.append((type_class.ident, type_class.title(), type_class.valuespec()))
         return sorted(choices, key=lambda x: x[1])
 
     @classmethod
     def get_type(cls, type_ident):
         # TODO: subclasses with the same name may be registered multiple times, due to execfile
-        for type_class in cls.__subclasses__():  # pylint: disable=no-member
+        for type_class in cls.__subclasses__():
             if type_class.ident == type_ident:
                 return type_class
 

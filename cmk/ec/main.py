@@ -856,13 +856,13 @@ class EventServer(ECServerThread):
             # Accept new connection on event unix socket
             if self._eventsocket in readable:
                 client_socket, address = self._eventsocket.accept()
-                # pylint: disable=no-member
+
                 client_sockets[client_socket.fileno()] = (client_socket, address, b"")
 
             # Same for the TCP syslog socket
             if self._syslog_tcp and self._syslog_tcp in readable:
                 client_socket, address = self._syslog_tcp.accept()
-                # pylint: disable=no-member
+
                 client_sockets[client_socket.fileno()] = (client_socket, address, b"")
 
             # Read data from existing event unix socket connections

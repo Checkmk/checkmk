@@ -63,8 +63,8 @@ def test_backup_site_to_tarfile_broken_link(site, tmp_path):
 def test_backup_site_to_tarfile_vanishing_files(site, tmp_path, monkeypatch):
     test_dir = Path(site.dir) / "xyz"
     test_file = test_dir / "test_file"
-    test_dir.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
-    test_file.touch()  # pylint: disable=no-member
+    test_dir.mkdir(parents=True, exist_ok=True)
+    test_file.touch()
 
     orig_add = omdlib.backup.BackupTarFile.add
 
@@ -75,7 +75,7 @@ def test_backup_site_to_tarfile_vanishing_files(site, tmp_path, monkeypatch):
         # add() for all found entries. Remove the test_file here to simulate
         # a vanished file during this step.
         if arcname == "unit/xyz/test_file":
-            test_file.unlink()  # pylint: disable=no-member
+            test_file.unlink()
         orig_add(self, name, arcname, recursive, filter=filter)
 
     monkeypatch.setattr(omdlib.backup.BackupTarFile, "add", add)

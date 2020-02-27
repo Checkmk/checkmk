@@ -17,13 +17,13 @@ def _strip_ansi(s):
 def test_initialize_site_ca(monkeypatch, tmp_path):
     site_id = "tested"
     ca_path = tmp_path / site_id / "etc" / "ssl"
-    ca_path.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    ca_path.mkdir(parents=True, exist_ok=True)
 
     monkeypatch.setattr(omdlib.certs.CertificateAuthority, "ca_path", property(lambda x: ca_path))
 
     omdlib.main.initialize_site_ca(omdlib.main.SiteContext(site_id))
-    assert (ca_path / "ca.pem").exists()  # pylint: disable=no-member
-    assert (ca_path / "sites" / ("%s.pem" % site_id)).exists()  # pylint: disable=no-member
+    assert (ca_path / "ca.pem").exists()
+    assert (ca_path / "sites" / ("%s.pem" % site_id)).exists()
 
 
 @pytest.fixture()

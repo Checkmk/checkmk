@@ -120,7 +120,7 @@ def _create_simple_test_package(pacname):
 
 def _create_test_file(name):
     check_path = cmk.utils.paths.local_checks_dir.joinpath(name)
-    with check_path.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
+    with check_path.open("w", encoding="utf-8") as f:
         f.write(u"lala\n")
 
 
@@ -208,7 +208,7 @@ def test_install_package():
     package_info = packaging.read_package_info("aaa")
     assert package_info["version"] == "1.0"
     assert package_info["files"]["checks"] == ["aaa"]
-    assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()  # pylint: disable=no-member
+    assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
 
 def test_install_package_by_path(tmp_path):
@@ -233,7 +233,7 @@ def test_install_package_by_path(tmp_path):
     package_info = packaging.read_package_info("aaa")
     assert package_info["version"] == "1.0"
     assert package_info["files"]["checks"] == ["aaa"]
-    assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()  # pylint: disable=no-member
+    assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
 
 def test_release_package_not_existing():
@@ -244,12 +244,12 @@ def test_release_package_not_existing():
 def test_release_package():
     _create_simple_test_package("aaa")
     assert packaging._package_exists("aaa") is True
-    assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()  # pylint: disable=no-member
+    assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
     packaging.release_package("aaa")
 
     assert packaging._package_exists("aaa") is False
-    assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()  # pylint: disable=no-member
+    assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
 
 def test_create_mkp_file():
@@ -298,7 +298,7 @@ def test_unpackaged_files():
     _create_test_file("abc")
 
     p = cmk.utils.paths.local_doc_dir.joinpath("docxx")
-    with p.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
+    with p.open("w", encoding="utf-8") as f:
         f.write(u"lala\n")
 
     assert packaging.unpackaged_files() == {

@@ -109,5 +109,5 @@ def _makepath(path):
 
 
 def _touch(path):
-    pathlib2.Path(path).parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    pathlib2.Path(path).parent.mkdir(parents=True, exist_ok=True)
     pathlib2.Path(path).touch()

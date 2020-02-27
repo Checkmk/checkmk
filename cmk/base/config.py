@@ -334,10 +334,10 @@ def _load_config(with_conf_d, exclude_parents_mk):
                 "FOLDER_PATH": folder_path,
             })
 
-            all_hosts.set_current_path(current_path)  # pylint: disable=no-member
-            clusters.set_current_path(current_path)  # pylint: disable=no-member
+            all_hosts.set_current_path(current_path)
+            clusters.set_current_path(current_path)
 
-            exec(open(_f).read(), global_dict, global_dict)
+            exec (open(_f).read(), global_dict, global_dict)
 
             if not isinstance(all_hosts, SetFolderPathList):
                 raise MKGeneralException(
@@ -647,7 +647,7 @@ class PackedConfig(object):  # pylint: disable=useless-object-inheritance
         # type: () -> None
         _initialize_config()
         with open(self._path, "rb") as f:
-            exec(marshal.load(f), globals())
+            exec (marshal.load(f), globals())
         _perform_post_config_loading_actions()
 
 
@@ -1685,7 +1685,7 @@ def load_precompiled_plugin(path, check_context):
         store.makedirs(os.path.dirname(precompiled_path))
         py_compile.compile(path, precompiled_path, doraise=True)
 
-    exec(marshal.loads(open(precompiled_path, "rb").read()[header_size:]), check_context)
+    exec (marshal.loads(open(precompiled_path, "rb").read()[header_size:]), check_context)
 
 
 def _is_plugin_precompiled(path, precompiled_path):

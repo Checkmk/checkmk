@@ -1399,7 +1399,7 @@ def test_labels_of_service_discovered_labels(monkeypatch, tmp_path):
 
     monkeypatch.setattr(cmk.utils.paths, "autochecks_dir", str(tmp_path))
     autochecks_file = Path(cmk.utils.paths.autochecks_dir, "test-host.mk")
-    with autochecks_file.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
+    with autochecks_file.open("w", encoding="utf-8") as f:
         f.write(u"""[
     {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels, 'service_labels': {u'äzzzz': u'eeeeez'}},
 ]""")
@@ -1812,22 +1812,22 @@ cmc_host_rrd_config = [
 """ % {"name": "main-host"})
 
     wato_main_folder = config_dir / "wato"
-    wato_main_folder.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    wato_main_folder.mkdir(parents=True, exist_ok=True)
     _add_host_in_folder(wato_main_folder, "lvl0-host")
     _add_rule_in_folder(wato_main_folder, "LVL0")
 
     wato_lvl1_folder = wato_main_folder / "lvl1"
-    wato_lvl1_folder.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    wato_lvl1_folder.mkdir(parents=True, exist_ok=True)
     _add_host_in_folder(wato_lvl1_folder, "lvl1-host")
     _add_rule_in_folder(wato_lvl1_folder, "LVL1")
 
     wato_lvl1a_folder = wato_main_folder / "lvl1_aaa"
-    wato_lvl1a_folder.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    wato_lvl1a_folder.mkdir(parents=True, exist_ok=True)
     _add_host_in_folder(wato_lvl1a_folder, "lvl1aaa-host")
     _add_rule_in_folder(wato_lvl1a_folder, "LVL1aaa")
 
     wato_lvl2_folder = wato_main_folder / "lvl1" / "lvl2"
-    wato_lvl2_folder.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    wato_lvl2_folder.mkdir(parents=True, exist_ok=True)
     _add_host_in_folder(wato_lvl2_folder, "lvl2-host")
     _add_rule_in_folder(wato_lvl2_folder, "LVL2")
 
@@ -1836,15 +1836,15 @@ cmc_host_rrd_config = [
     yield
 
     # Cleanup after the test. Would be better to use a dedicated test directory
-    Path(cmk.utils.paths.main_config_file).unlink()  # pylint: disable=no-member
-    (wato_main_folder / "hosts.mk").unlink()  # pylint: disable=no-member
-    (wato_main_folder / "rules.mk").unlink()  # pylint: disable=no-member
-    (wato_lvl1_folder / "hosts.mk").unlink()  # pylint: disable=no-member
-    (wato_lvl1_folder / "rules.mk").unlink()  # pylint: disable=no-member
-    (wato_lvl1a_folder / "hosts.mk").unlink()  # pylint: disable=no-member
-    (wato_lvl1a_folder / "rules.mk").unlink()  # pylint: disable=no-member
-    (wato_lvl2_folder / "hosts.mk").unlink()  # pylint: disable=no-member
-    (wato_lvl2_folder / "rules.mk").unlink()  # pylint: disable=no-member
+    Path(cmk.utils.paths.main_config_file).unlink()
+    (wato_main_folder / "hosts.mk").unlink()
+    (wato_main_folder / "rules.mk").unlink()
+    (wato_lvl1_folder / "hosts.mk").unlink()
+    (wato_lvl1_folder / "rules.mk").unlink()
+    (wato_lvl1a_folder / "hosts.mk").unlink()
+    (wato_lvl1a_folder / "rules.mk").unlink()
+    (wato_lvl2_folder / "hosts.mk").unlink()
+    (wato_lvl2_folder / "rules.mk").unlink()
     (config._initialize_config())
 
 

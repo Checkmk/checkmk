@@ -65,7 +65,7 @@ class TagConfigFile(WatoSimpleConfigFile):
 
         # Cleanup pre 1.6 config files (tags were just saved with new path)
         try:
-            self._pre_16_hosttags_path().unlink()  # pylint: disable=no-member
+            self._pre_16_hosttags_path().unlink()
         except OSError as e:
             if e.errno != errno.ENOENT:
                 raise

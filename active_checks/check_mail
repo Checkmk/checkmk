@@ -333,7 +333,7 @@ def forward_to_ec(conn_timeout, messages, forwarded, cleanup_messages, forward_m
                     sock.send(message + "\n")
                 sock.close()
 
-            elif not forward_method.startswith('spool:'):  # pylint: disable=no-member
+            elif not forward_method.startswith('spool:'):
                 # write into local event pipe
                 # Important: When the event daemon is stopped, then the pipe
                 # is *not* existing! This prevents us from hanging in such

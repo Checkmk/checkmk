@@ -608,7 +608,7 @@ def query_nodes(args, server, nodes, what, node_attribute="node-name"):
         for node in nodes:
             node_query = NaElement(what)  # pylint: disable=undefined-variable
             node_query.child_add_string(node_attribute, node)
-            response = server.invoke_elem(node_query)  # pylint: disable=no-member
+            response = server.invoke_elem(node_query)
             if response.results_status() == "failed":
                 section_errors.append("In class %s: %s" % (what, response.results_reason()))
                 continue
@@ -691,7 +691,7 @@ def query_counters(args, server, netapp_mode, what):
             instance_query = NaElement("perf-object-instance-list-info-iter")  # pylint: disable=undefined-variable
             instance_query.child_add_string("objectname", what)
 
-            instance_query_response = server.invoke_elem(instance_query)  # pylint: disable=no-member
+            instance_query_response = server.invoke_elem(instance_query)
             instance_list = instance_query_response.child_get("attributes-list")
             if instance_list:
                 for instance_data in instance_list.children_get():
@@ -708,7 +708,7 @@ def query_counters(args, server, netapp_mode, what):
                 return
 
         # Query counters
-        response = server.invoke_elem(counter_query)  # pylint: disable=no-member
+        response = server.invoke_elem(counter_query)
         if response.results_status() == "failed":
             section_errors.append("In counter %s: %s" % (what, response.results_reason()))
         else:
@@ -861,7 +861,7 @@ def fetch_nodes(args, server):
 
     if args.legacy:
         node_query = NaElement("system-get-node-info-iter")  # pylint: disable=undefined-variable
-        node_list = server.invoke_elem(node_query)  # pylint: disable=no-member
+        node_list = server.invoke_elem(node_query)
         for instance in node_list.child_get("attributes-list").children_get():
             nodes.append(instance.child_get_string("system-name"))
         return nodes

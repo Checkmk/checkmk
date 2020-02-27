@@ -1242,9 +1242,9 @@ class ModeSiteLivestatusEncryption(WatoMode):
                 SSL.Connection(ctx, socket.socket(address_family, socket.SOCK_STREAM))) as sock:
 
             # pylint does not get the object type of sock right
-            sock.connect(address_spec["address"])  # pylint: disable=no-member
-            sock.do_handshake()  # pylint: disable=no-member
-            certificate_chain = sock.get_peer_cert_chain()  # pylint: disable=no-member
+            sock.connect(address_spec["address"])
+            sock.do_handshake()
+            certificate_chain = sock.get_peer_cert_chain()
 
             return self._verify_certificate_chain(sock, certificate_chain)
 

@@ -236,7 +236,7 @@ def remove_package(package):
                         raise
                     raise Exception("Cannot remove %s: %s\n" % (path, e))
 
-    (package_dir() / package["name"]).unlink()  # pylint: disable=no-member
+    (package_dir() / package["name"]).unlink()
 
 
 def create_package(pkg_info):
@@ -615,7 +615,7 @@ def all_package_names():
 
 def _package_exists(pacname):
     # type: (PackageName) -> bool
-    return (package_dir() / pacname).exists()  # pylint: disable=no-member
+    return (package_dir() / pacname).exists()
 
 
 def write_package_info(package):
@@ -627,7 +627,7 @@ def write_package_info(package):
 
 def _remove_package_info(pacname):
     # type: (PackageName) -> None
-    (package_dir() / pacname).unlink()  # pylint: disable=no-member
+    (package_dir() / pacname).unlink()
 
 
 def parse_package_info(python_string):

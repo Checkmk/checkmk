@@ -124,9 +124,9 @@ def main(sys_argv=None):
         return 1
 
     # Status code should be 201.
-    if not req.status_code == requests.codes.CREATED:  # pylint: disable=no-member
+    if not req.status_code == requests.codes.CREATED:
         sys.stderr.write("Wrong status code: %s. Expected: %s \n" %
-                         (req.status_code, requests.codes.CREATED))  # pylint: disable=no-member
+                         (req.status_code, requests.codes.CREATED))
         return 1
     else:
         try:
@@ -153,7 +153,7 @@ def main(sys_argv=None):
                           timeout=10,
                           verify=opt_verify)
 
-    if not req.status_code == requests.codes.OK:  # pylint: disable=no-member
+    if not req.status_code == requests.codes.OK:
         sys.stderr.write("Wrong status code: %s. Expected: %s \n" %
-                         (req.status_code, requests.codes.OK))  # pylint: disable=no-member
+                         (req.status_code, requests.codes.OK))
         return 1

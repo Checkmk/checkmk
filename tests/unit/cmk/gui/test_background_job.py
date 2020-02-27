@@ -57,10 +57,10 @@ def job_base_dir(tmp_path, monkeypatch):
     var_dir = tmp_path
 
     log_dir = var_dir / "log"
-    log_dir.mkdir()  # pylint: disable=no-member
+    log_dir.mkdir()
 
     job_dir = var_dir / "background_jobs"
-    job_dir.mkdir()  # pylint: disable=no-member
+    job_dir.mkdir()
 
     # Patch for web.log. Sholdn't we do this for all web tests?
     monkeypatch.setattr(cmk.utils.paths, "log_dir", str(log_dir))

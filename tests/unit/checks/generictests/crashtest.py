@@ -151,7 +151,7 @@ class CrashReportList(list):
                 continue
 
             crash_report_path = CRASHDATA_DIR / Path("%s.tar.gz" % cr_info[0])
-            if not crash_report_path.exists():  # pylint: disable=no-member
+            if not crash_report_path.exists():
                 continue
 
             try:

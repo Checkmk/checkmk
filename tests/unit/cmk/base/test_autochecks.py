@@ -108,7 +108,7 @@ def test_config(monkeypatch):
     ])
 def test_manager_get_autochecks_of(test_config, autochecks_content, expected_result):
     autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
-    with autochecks_file.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
+    with autochecks_file.open("w", encoding="utf-8") as f:
         f.write(autochecks_content)
 
     manager = test_config._autochecks_manager
@@ -203,7 +203,7 @@ def test_parse_autochecks_file_not_existing():
     ])
 def test_parse_autochecks_file(test_config, autochecks_content, expected_result):
     autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
-    with autochecks_file.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
+    with autochecks_file.open("w", encoding="utf-8") as f:
         f.write(autochecks_content)
 
     if expected_result is MKGeneralException:
@@ -258,7 +258,7 @@ def test_save_autochecks_file(items, expected_content_py2, expected_content_py3)
     autochecks.save_autochecks_file("host", items)
 
     autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
-    with autochecks_file.open("r", encoding="utf-8") as f:  # pylint: disable=no-member
+    with autochecks_file.open("r", encoding="utf-8") as f:
         content = f.read()
 
     expected_content = expected_content_py3 if sys.version_info[0] >= 3 else expected_content_py2

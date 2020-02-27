@@ -2052,13 +2052,12 @@ class ModeNewRule(EditRuleMode):
     def _save_rule(self):
         self._ruleset.append_rule(self._folder, self._rule)
         self._rulesets.save()
-        add_change(
-            "edit-rule",
-            _("Created new rule in ruleset \"%s\" in folder \"%s\"") %
-            (self._ruleset.title(), self._folder.alias_path()),  # pylint: disable=no-member
-            sites=self._folder.all_site_ids())  # pylint: disable=no-member
+        add_change("edit-rule",
+                   _("Created new rule in ruleset \"%s\" in folder \"%s\"") %
+                   (self._ruleset.title(), self._folder.alias_path()),
+                   sites=self._folder.all_site_ids())
 
     def _success_message(self):
         return _("Created new rule in ruleset \"%s\" in folder \"%s\"") % \
                  (self._ruleset.title(),
-                  self._folder.alias_path())  # pylint: disable=no-member
+                  self._folder.alias_path())

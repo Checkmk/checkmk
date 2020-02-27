@@ -246,7 +246,7 @@ class SNMPTrapTranslator:
 
         def do_translate(oid, value):
             # Disable mib_var[0] type detection
-            # pylint: disable=no-member
+
             mib_var = pysnmp.smi.rfc1902.ObjectType(pysnmp.smi.rfc1902.ObjectIdentity(oid),
                                                     value).resolveWithMib(self._mib_resolver)
 

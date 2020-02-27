@@ -30,7 +30,7 @@ else:
 def omd_version():
     # type: () -> Text
     version_link = Path(cmk.utils.paths.omd_root).joinpath("version")
-    return ensure_unicode(version_link.resolve().name)  # pylint: disable=no-member
+    return ensure_unicode(version_link.resolve().name)
 
 
 def omd_site():

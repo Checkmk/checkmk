@@ -1014,7 +1014,7 @@ class TextAsciiAutocomplete(TextAscii):
     def idents(cls):
         # type: () -> Dict[str, Type[TextAsciiAutocomplete]]
         idents = {}
-        for type_class in cls.__subclasses__():  # pylint: disable=no-member
+        for type_class in cls.__subclasses__():
             idents[type_class.ident] = type_class
         return idents
 

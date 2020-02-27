@@ -149,7 +149,7 @@ if use_automation_user:
     username = "automation"
     secret_file_path = Path(cmk.utils.paths.var_dir) / "web" / username / "automation.secret"
     try:
-        with secret_file_path.open(encoding="utf-8") as f:  # pylint: disable=no-member
+        with secret_file_path.open(encoding="utf-8") as f:
             password = f.read()
     except IOError:
         sys.stderr.write('Unable to read credentials for "automation" user.\n')

@@ -140,7 +140,7 @@ def test_check_crash_report_read_agent_output(monkeypatch):
          "%s/snmp_uptime" % cmk.utils.paths.checks_dir])
 
     cache_path = Path(cmk.utils.paths.tcp_cache_dir, "testhost")
-    cache_path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
     with cache_path.open("w", encoding="utf-8") as f:
         f.write(u"<<<abc>>>\nblablub\n")
 
@@ -170,7 +170,7 @@ def test_check_crash_report_read_snmp_info(monkeypatch):
          "%s/snmp_uptime" % cmk.utils.paths.checks_dir])
 
     cache_path = Path(cmk.utils.paths.data_source_cache_dir, "snmp", "testhost")
-    cache_path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
     with cache_path.open("w", encoding="utf-8") as f:
         f.write(u"[]\n")
 

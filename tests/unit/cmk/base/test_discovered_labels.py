@@ -183,10 +183,10 @@ def test_discovered_host_labels_store_save(discovered_host_labels_dir):
     labels = DiscoveredHostLabels(HostLabel(u"xyz", u"äbc"))
     label_dict = labels.to_dict()
 
-    assert not store.file_path.exists()  # pylint: disable=no-member
+    assert not store.file_path.exists()
 
     store.save(label_dict)
-    assert store.file_path.exists()  # pylint: disable=no-member
+    assert store.file_path.exists()
     assert store.load() == label_dict
 
 

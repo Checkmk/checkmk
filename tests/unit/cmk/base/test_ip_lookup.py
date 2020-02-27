@@ -24,7 +24,7 @@ def clear_config_caches_ip_lookup(monkeypatch):
 @pytest.fixture()
 def _cache_file():
     p = Path(ip_lookup._cache_path())
-    p.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    p.parent.mkdir(parents=True, exist_ok=True)
 
     yield p
 

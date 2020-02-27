@@ -68,9 +68,9 @@ def check_df_sources_include_flag():
     logger.info("Looking for df.include files...")
     for path_dir in checks_dirs:
         df_file = path_dir / 'df.include'
-        if df_file.exists():  # pylint: disable=no-member
+        if df_file.exists():
             logger.info("Inspecting %s", df_file)
-            with df_file.open('r') as fid:  # pylint: disable=no-member
+            with df_file.open('r') as fid:
                 r = fid.read()
                 mat = re.search('^df_use_fs_used_as_metric_name *= *(True|False)', r, re.M)
                 if not mat:

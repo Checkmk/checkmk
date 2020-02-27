@@ -413,7 +413,8 @@ def page_handler():
               " in your <tt>multisite.mk</tt> if you want to use WATO."))
 
     # config.current_customer can not be checked with CRE repos
-    if cmk.is_managed_edition() and not managed.is_provider(config.current_customer):  # type: ignore[attr-defined] # pylint: disable=no-member
+    if cmk.is_managed_edition() and not managed.is_provider(
+            config.current_customer):  # type: ignore[attr-defined]
         raise MKGeneralException(
             _("Check_MK can only be configured on "
               "the managers central site."))

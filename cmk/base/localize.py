@@ -44,7 +44,7 @@ def _locale_base():
 def _pot_file():
     # type: () -> str
     local_pot_file = cmk.utils.paths.local_locale_dir / 'multisite.pot'
-    if local_pot_file.exists():  # pylint: disable=no-member
+    if local_pot_file.exists():
         return str(local_pot_file)
     return _locale_base() + '/multisite.pot'
 

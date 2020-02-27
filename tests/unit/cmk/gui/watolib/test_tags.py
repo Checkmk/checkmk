@@ -16,7 +16,7 @@ def test_pre_16_cfg(monkeypatch):
     multisite_dir.mkdir(parents=True, exist_ok=True)
     hosttags_mk = multisite_dir / "hosttags.mk"
 
-    with hosttags_mk.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
+    with hosttags_mk.open("w", encoding="utf-8") as f:
         f.write(u"""# Created by WATO
 # encoding: utf-8
 
@@ -41,8 +41,8 @@ wato_aux_tags += [("bla", u"bläää")]
 
     yield cfg
 
-    if hosttags_mk.exists():  # pylint: disable=no-member
-        hosttags_mk.unlink()  # pylint: disable=no-member
+    if hosttags_mk.exists():
+        hosttags_mk.unlink()
 
 
 @pytest.fixture()
@@ -51,14 +51,14 @@ def test_cfg(test_pre_16_cfg):
     tags_mk = multisite_dir / "tags.mk"
     hosttags_mk = multisite_dir / "hosttags.mk"
 
-    with tags_mk.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
+    with tags_mk.open("w", encoding="utf-8") as f:
         f.write(u"""# Created by WATO
 # encoding: utf-8
 
 wato_tags = %s
 """ % repr(test_pre_16_cfg.get_dict_format()))
 
-    with hosttags_mk.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
+    with hosttags_mk.open("w", encoding="utf-8") as f:
         f.write(u"")
 
     cfg = tags.TagConfig()
@@ -66,8 +66,8 @@ wato_tags = %s
 
     yield cfg
 
-    if tags_mk.exists():  # pylint: disable=no-member
-        tags_mk.unlink()  # pylint: disable=no-member
+    if tags_mk.exists():
+        tags_mk.unlink()
 
 
 def test_tag_config_load_pre_16(test_pre_16_cfg):

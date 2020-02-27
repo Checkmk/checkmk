@@ -59,8 +59,8 @@ def test_cleanup_version_specific_caches(uc):
     for base_dir in paths:
         base_dir.mkdir(parents=True, exist_ok=True)
         cached_file = base_dir / "if"
-        with cached_file.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
+        with cached_file.open("w", encoding="utf-8") as f:
             f.write(u"\n")
         uc._cleanup_version_specific_caches()
-        assert not cached_file.exists()  # pylint: disable=no-member
+        assert not cached_file.exists()
         assert base_dir.exists()

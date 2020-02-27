@@ -207,7 +207,7 @@ class ModeFolder(WatoMode):
         c = wato_confirm(_("Confirm folder deletion"), msg)
 
         if c:
-            self._folder.delete_subfolder(subfolder_name)  # pylint: disable=no-member
+            self._folder.delete_subfolder(subfolder_name)
             return "folder"
         elif c is False:  # not yet confirmed
             return ""

@@ -3290,7 +3290,7 @@ class AWSConfig:
 
     def _load_config_hash(self):
         try:
-            with self._config_hash_file.open(mode='r', encoding="utf-8") as f:  # pylint: disable=no-member
+            with self._config_hash_file.open(mode='r', encoding="utf-8") as f:
                 return int(f.read().strip())
         except IOError as e:
             if e.errno != errno.ENOENT:

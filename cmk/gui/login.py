@@ -95,8 +95,8 @@ def _load_secret():
     secret_path = htpasswd_path.parent.joinpath('auth.secret')
 
     secret = u''
-    if secret_path.exists():  # pylint: disable=no-member
-        with secret_path.open(encoding="utf-8") as f:  # pylint: disable=no-member
+    if secret_path.exists():
+        with secret_path.open(encoding="utf-8") as f:
             secret = f.read().strip()
 
     # Create new secret when this installation has no secret
@@ -107,7 +107,7 @@ def _load_secret():
     # renew their login after update.
     if secret == '' or len(secret) == 32:
         secret = _generate_secret()
-        with secret_path.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
+        with secret_path.open("w", encoding="utf-8") as f:
             f.write(secret)
 
     return secret

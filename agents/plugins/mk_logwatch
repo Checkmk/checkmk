@@ -172,7 +172,7 @@ class MEIFolderCleaner(object):
                 if invalid_dir:
                     continue
 
-                pyinstaller_tmp_path = win32file.GetLongPathName(sys._MEIPASS).lower()  # pylint: disable=no-member
+                pyinstaller_tmp_path = win32file.GetLongPathName(sys._MEIPASS).lower()
                 if pyinstaller_tmp_path == path.lower():
                     continue  # Skip our own directory
 

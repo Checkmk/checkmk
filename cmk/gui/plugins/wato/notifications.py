@@ -246,7 +246,7 @@ class NotificationParameterMail(NotificationParameter):
         ])
 
         if not cmk.is_raw_edition():
-            elements += cmk.gui.cee.plugins.wato.syncsmtp.cee_html_mail_smtp_sync_option  # pylint: disable=no-member
+            elements += cmk.gui.cee.plugins.wato.syncsmtp.cee_html_mail_smtp_sync_option
 
         return elements
 

@@ -22,5 +22,5 @@ def test_discovered_host_labels_store_file_path(discovered_host_labels_dir):
 
 def test_discovered_host_labels_store_load_default(discovered_host_labels_dir):
     store = DiscoveredHostLabelsStore("host")
-    assert not store.file_path.exists()  # pylint: disable=no-member
+    assert not store.file_path.exists()
     assert store.load() == {}

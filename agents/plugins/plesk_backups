@@ -41,7 +41,7 @@ import MySQLdb
 
 def connect():
     # Fix pylint issues in case MySQLdb is not present
-    # pylint: disable=no-member
+
     try:
         return MySQLdb.connect(
             host='localhost',

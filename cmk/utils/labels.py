@@ -135,7 +135,7 @@ class ABCDiscoveredLabelsStore(six.with_metaclass(abc.ABCMeta, object)):
                 self.file_path.unlink()
             return
 
-        self.file_path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+        self.file_path.parent.mkdir(parents=True, exist_ok=True)
         store.save_object_to_file(str(self.file_path), labels)
 
 

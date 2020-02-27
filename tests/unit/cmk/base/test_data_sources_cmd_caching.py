@@ -61,7 +61,7 @@ def test_cfg(monkeypatch):
 
     for h in test_hosts:
         cache_path = Path(cmk.utils.paths.tcp_cache_dir, h)
-        cache_path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
 
         with cache_path.open("w", encoding="utf-8") as f:
             f.write(linux_agent_output)

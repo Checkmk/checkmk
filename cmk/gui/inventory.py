@@ -492,21 +492,21 @@ class InventoryHousekeeping(object):
         self._inventory_delta_cache_path = Path(cmk.utils.paths.var_dir) / "inventory_delta_cache"
 
     def run(self):
-        if not self._inventory_delta_cache_path.exists() or not self._inventory_archive_path.exists(  # pylint: disable=no-member
+        if not self._inventory_delta_cache_path.exists() or not self._inventory_archive_path.exists(
         ):
             return
 
         last_cleanup = self._inventory_delta_cache_path / "last_cleanup"
         # TODO: remove with pylint 2
-        if last_cleanup.exists() and time.time() - last_cleanup.stat().st_mtime < 3600 * 12:  # pylint: disable=no-member
+        if last_cleanup.exists() and time.time() - last_cleanup.stat().st_mtime < 3600 * 12:
             return
 
         # TODO: remove with pylint 2
         inventory_archive_hosts = {
-            x.name for x in self._inventory_archive_path.iterdir() if x.is_dir()  # pylint: disable=no-member
+            x.name for x in self._inventory_archive_path.iterdir() if x.is_dir()
         }
         inventory_delta_cache_hosts = {
-            x.name for x in self._inventory_delta_cache_path.iterdir() if x.is_dir()  # pylint: disable=no-member
+            x.name for x in self._inventory_delta_cache_path.iterdir() if x.is_dir()
         }
 
         folders_to_delete = inventory_delta_cache_hosts - inventory_archive_hosts
@@ -532,7 +532,7 @@ class InventoryHousekeeping(object):
                     (self._inventory_delta_cache_path / hostname / filename).unlink()
 
         # TODO: remove with pylint 2
-        last_cleanup.touch()  # pylint: disable=no-member
+        last_cleanup.touch()
 
     def _get_timestamps_for_host(self, hostname):
         timestamps = {"None"}  # 'None' refers to the histories start

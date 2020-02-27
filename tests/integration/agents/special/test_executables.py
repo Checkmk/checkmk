@@ -38,7 +38,7 @@ def test_no_exeption(site):
     errors or a wrong PYTHONPATH.
     """
     special_agent_dir = Path(site.root) / 'share' / 'check_mk' / 'agents' / 'special'
-    for special_agent_path in special_agent_dir.glob('agent_*'):  # pylint: disable=no-member
+    for special_agent_path in special_agent_dir.glob('agent_*'):
         command = [str(special_agent_path)]
         p = site.execute(command,
                          stdout=subprocess.PIPE,

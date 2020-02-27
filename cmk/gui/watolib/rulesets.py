@@ -737,7 +737,7 @@ class Ruleset(object):
                           "for editing and save the rule again without modification.") %
                         (rule_index, self.title(), folder.title()))
 
-                new_result = rule.value.copy()  # pylint: disable=no-member
+                new_result = rule.value.copy()
                 new_result.update(resultdict)
                 resultdict = new_result
                 effectiverules.append((folder, rule_index, rule))

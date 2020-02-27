@@ -391,7 +391,7 @@ def _remove_duplicate_autochecks(autochecks):
 def save_autochecks_file(hostname, items):
     # type: (HostName, List[DiscoveredService]) -> None
     path = _autochecks_path_for(hostname)
-    path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    path.parent.mkdir(parents=True, exist_ok=True)
     content = []
     content.append("[")
     for discovered_service in sorted(items, key=lambda s: (s.check_plugin_name, s.item)):

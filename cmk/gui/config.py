@@ -1009,7 +1009,7 @@ def _migrate_pre_16_socket_config(site_cfg):
 def _migrate_string_encoded_socket(value):
     # type: (AnyStr) -> Tuple[str, Union[Dict]]
     str_value = six.ensure_str(value)
-    family_txt, address = str_value.split(":", 1)  # pylint: disable=no-member
+    family_txt, address = str_value.split(":", 1)
 
     if family_txt == "unix":
         return "unix", {
@@ -1263,10 +1263,10 @@ def theme_choices():
             continue
 
         theme_base_dir = base_dir / "htdocs" / "themes"
-        if not theme_base_dir.exists():  # pylint: disable=no-member
+        if not theme_base_dir.exists():
             continue
 
-        for theme_dir in theme_base_dir.iterdir():  # pylint: disable=no-member
+        for theme_dir in theme_base_dir.iterdir():
             meta_file = theme_dir / "theme.json"
             if not meta_file.exists():
                 continue

@@ -1456,31 +1456,31 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         next_allowed_times = []
         for time_allowed in times_allowed:
             # First transform the time given by the user to UTC time
-            brokentime = list(time.localtime(next_time))
-            brokentime[3], brokentime[4] = time_allowed[0]
+            brokentime = time.localtime(next_time)
+            start_tm_hour, start_tm_min = time_allowed[0]
             start_time = time.mktime((
-                brokentime[0],
-                brokentime[1],
-                brokentime[2],
-                brokentime[3],
-                brokentime[4],
-                brokentime[5],
-                brokentime[6],
-                brokentime[7],
-                brokentime[8],
+                brokentime.tm_year,
+                brokentime.tm_mon,
+                brokentime.tm_mday,
+                start_tm_hour,
+                start_tm_min,
+                brokentime.tm_sec,
+                brokentime.tm_wday,
+                brokentime.tm_yday,
+                brokentime.tm_isdst,
             ))
 
-            brokentime[3], brokentime[4] = time_allowed[1]
+            end_tm_hour, end_tm_min = time_allowed[1]
             end_time = time.mktime((
-                brokentime[0],
-                brokentime[1],
-                brokentime[2],
-                brokentime[3],
-                brokentime[4],
-                brokentime[5],
-                brokentime[6],
-                brokentime[7],
-                brokentime[8],
+                brokentime.tm_year,
+                brokentime.tm_mon,
+                brokentime.tm_mday,
+                end_tm_hour,
+                end_tm_min,
+                brokentime.tm_sec,
+                brokentime.tm_wday,
+                brokentime.tm_yday,
+                brokentime.tm_isdst,
             ))
 
             # In case the next time is earlier than the allowed time frame at a day set

@@ -9,7 +9,7 @@ description:
  the job is overdue.
 
 item:
- The ident of the job (string).
+ The id of the job
 
 inventory:
  One service per backup job will be created.

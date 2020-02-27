@@ -11,5 +11,8 @@ description:
  the agent. Please refer to the online documentation
  for how to install that plugin.
 
+item:
+ Name of the database
+
 inventory:
  One check per instance is created.

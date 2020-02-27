@@ -12,5 +12,8 @@ description:
  register is taken as the status detail of the check.
  If the value is not out of 0,1,2 the check state is {UNKNOWN}.
 
+item:
+ The channel dio index
+
 inventory:
  A check will be created for all registers found on the device.

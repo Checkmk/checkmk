@@ -9,6 +9,9 @@ description:
  It reads the current signal strength in decibel and calculates
  the quality in a scale up to 100. 100 means optimal signal quality.
 
+item:
+ Name of the network
+
 inventory:
  One service for each network will be created.
 

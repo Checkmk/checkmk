@@ -9,5 +9,8 @@ description:
   been renewed and will expire after a 30-day grace period. The check will turn
   {WARN} or {CRIT} if the license usage exceeds configurable levels.
 
+item:
+ Name of the license
+
 inventory:
   One service will be created for each license.

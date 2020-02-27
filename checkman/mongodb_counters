@@ -12,7 +12,7 @@ description:
  to a pseudo host named after the replica set name, intead.
 
 item:
- {Operations} and {Replica Operations}.
+ One of the two statement {{Operations}} or {{Replica Operations}}.
 
 inventory:
  Creates a service for the {Operations} and another one for

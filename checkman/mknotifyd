@@ -10,7 +10,7 @@ description:
  not run.
 
 item:
- The name of the site (string).
+ The name of the site.
 
 inventory:
  One sevice per site will be created.

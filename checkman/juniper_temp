@@ -11,7 +11,7 @@ description:
  The upper and lower levels are configurable.
 
 item:
- The name of the module.
+ The name or description of the module.
 
 inventory:
  One service per module is created.

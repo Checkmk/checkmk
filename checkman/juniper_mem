@@ -11,7 +11,7 @@ description:
  These levels are configurable.
 
 item:
- The module name.
+ The name or description of the module.
 
 inventory:
  One sevice per module is created.

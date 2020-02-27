@@ -13,7 +13,7 @@ description:
  on every other.
 
 item:
- The IP address of the peer.
+ The remote BGP peer's FSM state.
 
 inventory:
  Finds one check for every BGP connection reported by SNMP.

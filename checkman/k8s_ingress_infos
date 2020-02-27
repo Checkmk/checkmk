@@ -12,6 +12,9 @@ description:
  Use Check HTTP service to monitor the state of the services
  behind the ingresses.
 
+item:
+ Backend of the ingress
+
 inventory:
  One service is created per path.
 

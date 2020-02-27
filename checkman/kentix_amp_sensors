@@ -14,7 +14,7 @@ description:
  The status can be OK, WARN, CRIT.
 
 item:
- The sensor name.
+ The name of the sensor.
 
 inventory:
  One service is created per sensor.

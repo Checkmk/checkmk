@@ -9,5 +9,8 @@ description:
  If an error condition is detected or a node or a pod is not ready the check returns
  {CRIT} otherwise {OK}.
 
+item:
+ Name of the condition
+
 inventory:
  One service is created for each condition and one for the readiness status.

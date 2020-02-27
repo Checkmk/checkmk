@@ -9,3 +9,6 @@ description:
 
  You can specify the times when it alarms by the rule.
  By default all motions will become an alarm.
+
+item:
+ Index of the sensor

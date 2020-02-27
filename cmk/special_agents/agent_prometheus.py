@@ -450,7 +450,7 @@ class KubeStateExporter:
                                                      {}).setdefault(labels["container"], {})
 
                 if condition == "ready":
-                    metric_dict["ready"] = True if query_value else False
+                    metric_dict["ready"] = bool(query_value)
                 elif condition == "terminated":
                     metric_dict["state_exit_code"] = query_value
                     if query_value:

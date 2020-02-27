@@ -339,15 +339,15 @@ def create_source_package(DAILY_DATA) {
     stage('Create source package') {
        sh 'rm -rf *'
        unstash(name: 'WinMSI')
-       sh "mv check_mk_agent-64.exe check_mk_agent.exe check_mk_agent.msi check_mk.user.yml mk_logwatch.exe mk_jolokia.exe ${DAILY_DATA}/agents/"
        unstash(name: 'WinPython')
+       sh "mv check_mk_agent-64.exe check_mk_agent.exe check_mk_agent.msi check_mk.user.yml mk_logwatch.exe mk_jolokia.exe python-3.8.zip ${DAILY_DATA}/agents/"
        dir("${DAILY_DATA}/git") {
             if(EDITION != 'raw') {
                 sh "cp ${DAILY_DATA}/agents/cmk-update-agent enterprise/agents/plugins/"
                 sh "cp ${DAILY_DATA}/agents/cmk-update-agent-32 enterprise/agents/plugins/"
                 sh "cp ${DAILY_DATA}/agents/cmk-update-agent.exe enterprise/agents/windows/plugins/"
             }
-            sh "cp ${DAILY_DATA}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml} agents/windows"
+            sh "cp ${DAILY_DATA}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,python-3.8.zip} agents/windows"
             sh "cp ${DAILY_DATA}/agents/{check_mk_agent_legacy-64.exe,check_mk_agent_legacy.exe,check_mk_agent_legacy.msi} agents/windows"
             sh "cp ${DAILY_DATA}/agents/{mk_logwatch.exe,mk_jolokia.exe} agents/windows/plugins"
             sh 'make dist || cat /root/.npm/_logs/*-debug.log'

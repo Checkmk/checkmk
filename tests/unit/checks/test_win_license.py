@@ -1,6 +1,6 @@
 from collections import namedtuple
 
-import pytest
+import pytest  # type: ignore[import]
 
 from checktestlib import CheckResult, assertCheckResultsEqual
 # Mark all tests in this file as check related tests

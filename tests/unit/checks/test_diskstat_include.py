@@ -1,10 +1,10 @@
-import re
 import os
-import pytest
+import re  # pylint: disable=unused-import
+import pytest  # type: ignore[import]
 
 from checktestlib import CheckResult, assertCheckResultsEqual
-
 from cmk.base.check_api import get_bytes_human_readable, check_levels
+
 pytestmark = pytest.mark.checks
 
 
@@ -36,7 +36,7 @@ exec (open(os.path.join(os.path.dirname(__file__), '../../../checks/diskstat.inc
      ]))),
 ])
 def test_check_diskstat_line(args, expected_result):
-    actual_result = CheckResult(check_diskstat_line(*args))
+    actual_result = CheckResult(check_diskstat_line(*args))  # pylint: disable=undefined-variable
     assertCheckResultsEqual(actual_result, expected_result)
 
 
@@ -50,5 +50,5 @@ def test_check_diskstat_line(args, expected_result):
      ], CheckResult((3, 'summary mode not supported in a cluster', []))),
 ])
 def test_check_diskstat_generic_summary_clutster(info, expected_result):
-    actual_result = CheckResult(check_diskstat_generic("SUMMARY", {}, 0, info))
+    actual_result = CheckResult(check_diskstat_generic("SUMMARY", {}, 0, info))  # pylint: disable=undefined-variable
     assertCheckResultsEqual(actual_result, expected_result)

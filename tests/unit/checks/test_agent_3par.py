@@ -1,4 +1,4 @@
-import pytest
+import pytest  # type: ignore[import]
 
 
 @pytest.mark.parametrize("params,result", [

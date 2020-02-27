@@ -1,6 +1,4 @@
-import pytest
-import ast
-from testlib import cmk_path
+import pytest  # type: ignore[import]
 
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks

@@ -1,6 +1,6 @@
 # coding=utf-8
 # yapf: disable
-import pytest
+import pytest  # type: ignore[import]
 
 from checktestlib import assertCheckResultsEqual, CheckResult
 

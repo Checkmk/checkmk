@@ -5,7 +5,8 @@
 # pylint: disable=invalid-name
 import os
 import re
-import pytest
+# No stub file
+import pytest  # type: ignore[import]
 import six
 
 pytestmark = pytest.mark.checks
@@ -288,16 +289,16 @@ SUBSECTIONS1 = {
             'hours', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/docker-entrypoint.…\\"","CreatedAt":"2018-10-12', '09:17:54', '+0200',
+            '{"Command":"\\"/docker-entrypoint.\u2026\\"","CreatedAt":"2018-10-12', '09:17:54', '+0200',
             'CEST","ID":"fdd04795069e","Image":"checkmk/check-mk-raw:1.5.0p5","Labels":"org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
 
-            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com","LocalVolumes":"1","Mounts":"/etc/localtime,10b7c962177bf2…","Names":"monitoringx","Networks":"bridge","Ports":"","RunningFor":"7',
+            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com","LocalVolumes":"1","Mounts":"/etc/localtime,10b7c962177bf2\u2026","Names":"monitoringx","Networks":"bridge","Ports":"","RunningFor":"7',
             'hours', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/docker-entrypoint.…\\"","CreatedAt":"2018-10-10', '08:40:21', '+0200',
+            '{"Command":"\\"/docker-entrypoint.\u2026\\"","CreatedAt":"2018-10-10', '08:40:21', '+0200',
             'CEST","ID":"b17185d5dcc5","Image":"94f49a7afedb","Labels":"org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
 
             'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
@@ -306,7 +307,7 @@ SUBSECTIONS1 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:40:20',
+            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '\u2026\\"","CreatedAt":"2018-10-10', '08:40:20',
             '+0200',
             'CEST","ID":"73237ecc5183","Image":"d27276979703","Labels":"org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
 
@@ -316,7 +317,7 @@ SUBSECTIONS1 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:40:20',
+            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '\u2026\\"","CreatedAt":"2018-10-10', '08:40:20',
             '+0200',
             'CEST","ID":"0d7e34ebb911","Image":"03d98e475cd6","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\u0026', 'Application',
@@ -326,7 +327,7 @@ SUBSECTIONS1 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:40:20',
+            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '\u2026\\"","CreatedAt":"2018-10-10', '08:40:20',
             '+0200',
             'CEST","ID":"580a7b4bd20a","Image":"3e0dd44b22e4","Labels":"org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
 
@@ -336,19 +337,19 @@ SUBSECTIONS1 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', '\'set', '-e', '…\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', '\'set', '-e', '\u2026\\"","CreatedAt":"2018-10-10',
             '08:39:29', '+0200',
             'CEST","ID":"4a6806b168b1","Image":"089108b69108","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"festive_fermi","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '2', 'days', 'ago"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', '\'set', '-e', '…\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', '\'set', '-e', '\u2026\\"","CreatedAt":"2018-10-10',
             '08:37:43', '+0200',
             'CEST","ID":"93e0c88a69fa","Image":"b16a30c66821","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"objective_darwin","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '2', 'days', 'ago"}'
         ],
         [
-            '{"Command":"\\"/docker-entrypoint.…\\"","CreatedAt":"2018-10-10', '08:37:26', '+0200',
+            '{"Command":"\\"/docker-entrypoint.\u2026\\"","CreatedAt":"2018-10-10', '08:37:26', '+0200',
             'CEST","ID":"6fe73b950209","Image":"d4c95e27986c","Labels":"org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
 
             'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
@@ -357,7 +358,7 @@ SUBSECTIONS1 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:37:26',
+            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '\u2026\\"","CreatedAt":"2018-10-10', '08:37:26',
             '+0200',
             'CEST","ID":"bfdb64ccf0ba","Image":"21b2f3d5e6c0","Labels":"org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
 
@@ -367,7 +368,7 @@ SUBSECTIONS1 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:37:25',
+            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '\u2026\\"","CreatedAt":"2018-10-10', '08:37:25',
             '+0200',
             'CEST","ID":"24772268cc09","Image":"6e66f5473958","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\u0026', 'Application',
@@ -377,7 +378,7 @@ SUBSECTIONS1 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:37:25',
+            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '\u2026\\"","CreatedAt":"2018-10-10', '08:37:25',
             '+0200',
             'CEST","ID":"8f8ded35fc90","Image":"6bccd8c3ed71","Labels":"org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\u0026', 'Application',
@@ -387,85 +388,85 @@ SUBSECTIONS1 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', '\'set', '-e', '…\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', '\'set', '-e', '\u2026\\"","CreatedAt":"2018-10-10',
             '08:36:45', '+0200',
             'CEST","ID":"a073bb9adfbe","Image":"7aa4b82c92ae","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"jovial_archimedes","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '2', 'days', 'ago"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', '\'set', '-e', '…\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', '\'set', '-e', '\u2026\\"","CreatedAt":"2018-10-10',
             '08:34:58', '+0200',
             'CEST","ID":"4d4d9f3be74b","Image":"b16a30c66821","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"pensive_spence","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '2', 'days', 'ago"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:58',
+            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '\u2026\\"","CreatedAt":"2018-10-10', '08:34:58',
             '+0200',
             'CEST","ID":"df44340ed121","Image":"1b013e043efa","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"unruffled_hopper","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:58',
+            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '\u2026\\"","CreatedAt":"2018-10-10', '08:34:58',
             '+0200',
             'CEST","ID":"860d8dfff4f6","Image":"7e7f944ba518","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"dazzling_meninsky","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:57',
+            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '\u2026\\"","CreatedAt":"2018-10-10', '08:34:57',
             '+0200',
             'CEST","ID":"a17f21f95383","Image":"a2a187fcaa76","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"serene_poincare","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:57',
+            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '\u2026\\"","CreatedAt":"2018-10-10', '08:34:57',
             '+0200',
             'CEST","ID":"6cae82f879ff","Image":"1d9b21b9e019","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"elated_poitras","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:57',
+            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '\u2026\\"","CreatedAt":"2018-10-10', '08:34:57',
             '+0200',
             'CEST","ID":"aad80d524200","Image":"e002e37aec84","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"competent_keller","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:56',
+            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '\u2026\\"","CreatedAt":"2018-10-10', '08:34:56',
             '+0200',
             'CEST","ID":"d1c70f4690b5","Image":"0b5da1249a04","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"trusting_panini","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:56',
+            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '\u2026\\"","CreatedAt":"2018-10-10', '08:34:56',
             '+0200',
             'CEST","ID":"9b08cf26da8c","Image":"164429e47a3f","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"pensive_swartz","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:56',
+            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '\u2026\\"","CreatedAt":"2018-10-10', '08:34:56',
             '+0200',
             'CEST","ID":"c04099ed3f18","Image":"d1a41c564864","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"dreamy_thompson","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:56',
+            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '\u2026\\"","CreatedAt":"2018-10-10', '08:34:56',
             '+0200',
             'CEST","ID":"cdc7e1e4a24e","Image":"999fc035fc76","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"lucid_brown","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:55',
+            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '\u2026\\"","CreatedAt":"2018-10-10', '08:34:55',
             '+0200',
             'CEST","ID":"10d6b884f348","Image":"a0a951b126eb","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"wizardly_ritchie","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:55',
+            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '\u2026\\"","CreatedAt":"2018-10-10', '08:34:55',
             '+0200',
             'CEST","ID":"d37198a74c08","Image":"caac4aa6ac57","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"distracted_mccarthy","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:55',
+            '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '\u2026\\"","CreatedAt":"2018-10-10', '08:34:55',
             '+0200',
             'CEST","ID":"55632dca94c8","Image":"1919d446eafa","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"stoic_perlman","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
@@ -1290,12 +1291,12 @@ SUBSECTIONS2 = {
     'containers': [
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
-            '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12', '16:12:19', '+0200',
+            '…\\"","CreatedAt":"2018-10-12', '16:12:19', '+0200',
             'CEST","ID":"802786d33cfb","Image":"010bad2c964b","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"boring_cori","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Exited', '(100)', '3', 'days', 'ago"}'
         ],
         [
-            '{"Command":"\\"/docker-entrypoint.\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
+            '{"Command":"\\"/docker-entrypoint.…\\"","CreatedAt":"2018-10-12',
             '16:12:02', '+0200',
             'CEST","ID":"11893c5d9694","Image":"559214f8c758","Labels":"org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
 
@@ -1305,7 +1306,7 @@ SUBSECTIONS2 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-12',
             '16:12:02', '+0200',
             'CEST","ID":"95796d6d26db","Image":"fcd54dfcb5b8","Labels":"org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
@@ -1315,7 +1316,7 @@ SUBSECTIONS2 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-12',
             '16:12:01', '+0200',
             'CEST","ID":"58ea2160fe8f","Image":"3bd4e802a09f","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
@@ -1325,7 +1326,7 @@ SUBSECTIONS2 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-12',
             '16:12:01', '+0200',
             'CEST","ID":"74ee5065acb2","Image":"a0529d041d12","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
@@ -1336,25 +1337,25 @@ SUBSECTIONS2 = {
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
-            '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12', '16:11:24', '+0200',
+            '…\\"","CreatedAt":"2018-10-12', '16:11:24', '+0200',
             'CEST","ID":"7db7baa17fee","Image":"fd98c3cc9762","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"stoic_jennings","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '3', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
-            '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12', '16:09:34', '+0200',
+            '…\\"","CreatedAt":"2018-10-12', '16:09:34', '+0200',
             'CEST","ID":"249ca074445f","Image":"010bad2c964b","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"infallible_goodall","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '3', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
-            '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12', '16:07:29', '+0200',
+            '…\\"","CreatedAt":"2018-10-12', '16:07:29', '+0200',
             'CEST","ID":"63c0ad8e9eb7","Image":"0983f5184ce7","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"ecstatic_babbage","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Exited', '(1)', '3', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
-            '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12', '16:05:44', '+0200',
+            '…\\"","CreatedAt":"2018-10-12', '16:05:44', '+0200',
             'CEST","ID":"d91a2be75e8b","Image":"010bad2c964b","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"jovial_bardeen","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '3', 'days', 'ago"}'
         ],
@@ -1373,18 +1374,18 @@ SUBSECTIONS2 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/docker-entrypoint.\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
+            '{"Command":"\\"/docker-entrypoint.…\\"","CreatedAt":"2018-10-12',
             '09:17:54', '+0200',
             'CEST","ID":"fdd04795069e","Image":"checkmk/check-mk-raw:1.5.0p5","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
 
-            'GmbH,org.opencontainers.image.version=1.5.0p5","LocalVolumes":"1","Mounts":"/etc/localtime,10b7c962177bf2\xe2\x80\xa6","Names":"monitoringx","Networks":"bridge","Ports":"6557/tcp,',
+            'GmbH,org.opencontainers.image.version=1.5.0p5","LocalVolumes":"1","Mounts":"/etc/localtime,10b7c962177bf2…","Names":"monitoringx","Networks":"bridge","Ports":"6557/tcp,',
             '0.0.0.0:8080-\\u003e5000/tcp","RunningFor":"4', 'days',
             'ago","Size":"0B","Status":"Up', '6', 'hours', '(healthy)"}'
         ],
         [
-            '{"Command":"\\"/docker-entrypoint.\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/docker-entrypoint.…\\"","CreatedAt":"2018-10-10',
             '08:40:21', '+0200',
             'CEST","ID":"b17185d5dcc5","Image":"94f49a7afedb","Labels":"org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
 
@@ -1394,7 +1395,7 @@ SUBSECTIONS2 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:40:20', '+0200',
             'CEST","ID":"73237ecc5183","Image":"d27276979703","Labels":"org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
 
@@ -1404,7 +1405,7 @@ SUBSECTIONS2 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:40:20', '+0200',
             'CEST","ID":"0d7e34ebb911","Image":"03d98e475cd6","Labels":"org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
@@ -1414,7 +1415,7 @@ SUBSECTIONS2 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:40:20', '+0200',
             'CEST","ID":"580a7b4bd20a","Image":"3e0dd44b22e4","Labels":"org.opencontainers.image.vendor=tribe29',
 
@@ -1425,18 +1426,18 @@ SUBSECTIONS2 = {
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
-            '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10', '08:39:29', '+0200',
+            '…\\"","CreatedAt":"2018-10-10', '08:39:29', '+0200',
             'CEST","ID":"4a6806b168b1","Image":"089108b69108","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"festive_fermi","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '6', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
-            '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10', '08:37:43', '+0200',
+            '…\\"","CreatedAt":"2018-10-10', '08:37:43', '+0200',
             'CEST","ID":"93e0c88a69fa","Image":"b16a30c66821","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"objective_darwin","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '6', 'days', 'ago"}'
         ],
         [
-            '{"Command":"\\"/docker-entrypoint.\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/docker-entrypoint.…\\"","CreatedAt":"2018-10-10',
             '08:37:26', '+0200',
             'CEST","ID":"6fe73b950209","Image":"d4c95e27986c","Labels":"org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
@@ -1446,7 +1447,7 @@ SUBSECTIONS2 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:37:26', '+0200',
             'CEST","ID":"bfdb64ccf0ba","Image":"21b2f3d5e6c0","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
@@ -1456,7 +1457,7 @@ SUBSECTIONS2 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:37:25', '+0200',
             'CEST","ID":"24772268cc09","Image":"6e66f5473958","Labels":"org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
 
@@ -1466,7 +1467,7 @@ SUBSECTIONS2 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:37:25', '+0200',
             'CEST","ID":"8f8ded35fc90","Image":"6bccd8c3ed71","Labels":"org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
 
@@ -1477,84 +1478,84 @@ SUBSECTIONS2 = {
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
-            '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10', '08:36:45', '+0200',
+            '…\\"","CreatedAt":"2018-10-10', '08:36:45', '+0200',
             'CEST","ID":"a073bb9adfbe","Image":"7aa4b82c92ae","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"jovial_archimedes","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '6', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
-            '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10', '08:34:58', '+0200',
+            '…\\"","CreatedAt":"2018-10-10', '08:34:58', '+0200',
             'CEST","ID":"4d4d9f3be74b","Image":"b16a30c66821","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"pensive_spence","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '6', 'days', 'ago"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:58', '+0200',
             'CEST","ID":"df44340ed121","Image":"1b013e043efa","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"unruffled_hopper","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:58', '+0200',
             'CEST","ID":"860d8dfff4f6","Image":"7e7f944ba518","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"dazzling_meninsky","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:57', '+0200',
             'CEST","ID":"a17f21f95383","Image":"a2a187fcaa76","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"serene_poincare","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:57', '+0200',
             'CEST","ID":"6cae82f879ff","Image":"1d9b21b9e019","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"elated_poitras","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:57', '+0200',
             'CEST","ID":"aad80d524200","Image":"e002e37aec84","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"competent_keller","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:56', '+0200',
             'CEST","ID":"d1c70f4690b5","Image":"0b5da1249a04","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"trusting_panini","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:56', '+0200',
             'CEST","ID":"9b08cf26da8c","Image":"164429e47a3f","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"pensive_swartz","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:56', '+0200',
             'CEST","ID":"c04099ed3f18","Image":"d1a41c564864","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"dreamy_thompson","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:56', '+0200',
             'CEST","ID":"cdc7e1e4a24e","Image":"999fc035fc76","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"lucid_brown","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:55', '+0200',
             'CEST","ID":"10d6b884f348","Image":"a0a951b126eb","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"wizardly_ritchie","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:55', '+0200',
             'CEST","ID":"d37198a74c08","Image":"caac4aa6ac57","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"distracted_mccarthy","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:55', '+0200',
             'CEST","ID":"55632dca94c8","Image":"1919d446eafa","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"stoic_perlman","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
@@ -4319,12 +4320,12 @@ SUBSECTIONS3 = {
     'containers': [
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
-            '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12', '16:12:19', '+0200',
+            '…\\"","CreatedAt":"2018-10-12', '16:12:19', '+0200',
             'CEST","ID":"802786d33cfb","Image":"010bad2c964b","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"boring_cori","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Exited', '(100)', '3', 'days', 'ago"}'
         ],
         [
-            '{"Command":"\\"/docker-entrypoint.\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
+            '{"Command":"\\"/docker-entrypoint.…\\"","CreatedAt":"2018-10-12',
             '16:12:02', '+0200',
             'CEST","ID":"11893c5d9694","Image":"559214f8c758","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
@@ -4334,7 +4335,7 @@ SUBSECTIONS3 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-12',
             '16:12:02', '+0200',
             'CEST","ID":"95796d6d26db","Image":"fcd54dfcb5b8","Labels":"org.opencontainers.image.vendor=tribe29',
 
@@ -4344,7 +4345,7 @@ SUBSECTIONS3 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-12',
             '16:12:01', '+0200',
             'CEST","ID":"58ea2160fe8f","Image":"3bd4e802a09f","Labels":"org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
 
@@ -4354,7 +4355,7 @@ SUBSECTIONS3 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-12',
             '16:12:01', '+0200',
             'CEST","ID":"74ee5065acb2","Image":"a0529d041d12","Labels":"org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
 
@@ -4365,25 +4366,25 @@ SUBSECTIONS3 = {
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
-            '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12', '16:11:24', '+0200',
+            '…\\"","CreatedAt":"2018-10-12', '16:11:24', '+0200',
             'CEST","ID":"7db7baa17fee","Image":"fd98c3cc9762","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"stoic_jennings","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '3', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
-            '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12', '16:09:34', '+0200',
+            '…\\"","CreatedAt":"2018-10-12', '16:09:34', '+0200',
             'CEST","ID":"249ca074445f","Image":"010bad2c964b","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"infallible_goodall","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '3', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
-            '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12', '16:07:29', '+0200',
+            '…\\"","CreatedAt":"2018-10-12', '16:07:29', '+0200',
             'CEST","ID":"63c0ad8e9eb7","Image":"0983f5184ce7","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"ecstatic_babbage","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Exited', '(1)', '3', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
-            '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12', '16:05:44', '+0200',
+            '…\\"","CreatedAt":"2018-10-12', '16:05:44', '+0200',
             'CEST","ID":"d91a2be75e8b","Image":"010bad2c964b","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"jovial_bardeen","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '3', 'days', 'ago"}'
         ],
@@ -4402,18 +4403,18 @@ SUBSECTIONS3 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/docker-entrypoint.\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
+            '{"Command":"\\"/docker-entrypoint.…\\"","CreatedAt":"2018-10-12',
             '09:17:54', '+0200',
             'CEST","ID":"fdd04795069e","Image":"checkmk/check-mk-raw:1.5.0p5","Labels":"org.opencontainers.image.vendor=tribe29',
 
             'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/","LocalVolumes":"1","Mounts":"/etc/localtime,10b7c962177bf2\xe2\x80\xa6","Names":"monitoringx","Networks":"bridge","Ports":"6557/tcp,',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/","LocalVolumes":"1","Mounts":"/etc/localtime,10b7c962177bf2…","Names":"monitoringx","Networks":"bridge","Ports":"6557/tcp,',
             '0.0.0.0:8080-\\u003e5000/tcp","RunningFor":"4', 'days',
             'ago","Size":"0B","Status":"Up', '6', 'hours', '(healthy)"}'
         ],
         [
-            '{"Command":"\\"/docker-entrypoint.\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/docker-entrypoint.…\\"","CreatedAt":"2018-10-10',
             '08:40:21', '+0200',
             'CEST","ID":"b17185d5dcc5","Image":"94f49a7afedb","Labels":"org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
 
@@ -4423,7 +4424,7 @@ SUBSECTIONS3 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:40:20', '+0200',
             'CEST","ID":"73237ecc5183","Image":"d27276979703","Labels":"org.opencontainers.image.vendor=tribe29',
 
@@ -4433,7 +4434,7 @@ SUBSECTIONS3 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:40:20', '+0200',
             'CEST","ID":"0d7e34ebb911","Image":"03d98e475cd6","Labels":"org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
@@ -4443,7 +4444,7 @@ SUBSECTIONS3 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:40:20', '+0200',
             'CEST","ID":"580a7b4bd20a","Image":"3e0dd44b22e4","Labels":"org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
 
@@ -4454,18 +4455,18 @@ SUBSECTIONS3 = {
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
-            '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10', '08:39:29', '+0200',
+            '…\\"","CreatedAt":"2018-10-10', '08:39:29', '+0200',
             'CEST","ID":"4a6806b168b1","Image":"089108b69108","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"festive_fermi","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '6', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
-            '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10', '08:37:43', '+0200',
+            '…\\"","CreatedAt":"2018-10-10', '08:37:43', '+0200',
             'CEST","ID":"93e0c88a69fa","Image":"b16a30c66821","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"objective_darwin","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '6', 'days', 'ago"}'
         ],
         [
-            '{"Command":"\\"/docker-entrypoint.\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/docker-entrypoint.…\\"","CreatedAt":"2018-10-10',
             '08:37:26', '+0200',
             'CEST","ID":"6fe73b950209","Image":"d4c95e27986c","Labels":"org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
 
@@ -4475,7 +4476,7 @@ SUBSECTIONS3 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:37:26', '+0200',
             'CEST","ID":"bfdb64ccf0ba","Image":"21b2f3d5e6c0","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
@@ -4485,7 +4486,7 @@ SUBSECTIONS3 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:37:25', '+0200',
             'CEST","ID":"24772268cc09","Image":"6e66f5473958","Labels":"org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
 
@@ -4495,7 +4496,7 @@ SUBSECTIONS3 = {
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:37:25', '+0200',
             'CEST","ID":"8f8ded35fc90","Image":"6bccd8c3ed71","Labels":"org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
 
@@ -4506,84 +4507,84 @@ SUBSECTIONS3 = {
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
-            '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10', '08:36:45', '+0200',
+            '…\\"","CreatedAt":"2018-10-10', '08:36:45', '+0200',
             'CEST","ID":"a073bb9adfbe","Image":"7aa4b82c92ae","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"jovial_archimedes","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '6', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
-            '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10', '08:34:58', '+0200',
+            '…\\"","CreatedAt":"2018-10-10', '08:34:58', '+0200',
             'CEST","ID":"4d4d9f3be74b","Image":"b16a30c66821","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"pensive_spence","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '6', 'days', 'ago"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:58', '+0200',
             'CEST","ID":"df44340ed121","Image":"1b013e043efa","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"unruffled_hopper","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:58', '+0200',
             'CEST","ID":"860d8dfff4f6","Image":"7e7f944ba518","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"dazzling_meninsky","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:57', '+0200',
             'CEST","ID":"a17f21f95383","Image":"a2a187fcaa76","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"serene_poincare","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:57', '+0200',
             'CEST","ID":"6cae82f879ff","Image":"1d9b21b9e019","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"elated_poitras","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:57', '+0200',
             'CEST","ID":"aad80d524200","Image":"e002e37aec84","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"competent_keller","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:56', '+0200',
             'CEST","ID":"d1c70f4690b5","Image":"0b5da1249a04","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"trusting_panini","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:56', '+0200',
             'CEST","ID":"9b08cf26da8c","Image":"164429e47a3f","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"pensive_swartz","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:56', '+0200',
             'CEST","ID":"c04099ed3f18","Image":"d1a41c564864","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"dreamy_thompson","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:56', '+0200',
             'CEST","ID":"cdc7e1e4a24e","Image":"999fc035fc76","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"lucid_brown","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:55', '+0200',
             'CEST","ID":"10d6b884f348","Image":"a0a951b126eb","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"wizardly_ritchie","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:55', '+0200',
             'CEST","ID":"d37198a74c08","Image":"caac4aa6ac57","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"distracted_mccarthy","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
-            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
+            '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '…\\"","CreatedAt":"2018-10-10',
             '08:34:55', '+0200',
             'CEST","ID":"55632dca94c8","Image":"1919d446eafa","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"stoic_perlman","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'

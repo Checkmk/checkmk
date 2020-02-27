@@ -1,4 +1,4 @@
-import pytest
+import pytest  # type: ignore[import]
 
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks

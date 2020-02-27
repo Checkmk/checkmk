@@ -6,7 +6,8 @@ import pytest  # type: ignore[import]
 from cmk.base.check_api import MKGeneralException
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 from checktestlib import CheckResult, assertCheckResultsEqual
-from testlib import on_time
+# No stub file
+from testlib import on_time  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
 
@@ -582,8 +583,8 @@ def test_inventory_common(check_manager):
     check.set_check_api_utils_globals()  # needed for host name
     info = sum(generate_inputs(), [])
     parsed = check.context['parse_ps'](info)[1]
-    assert sorted(check.context["inventory_ps_common"](PS_DISCOVERY_WATO_RULES,
-                                                parsed)) == sorted(PS_DISCOVERED_ITEMS + PS_DISCOVERED_HOST_LABELS)
+    assert check.context["inventory_ps_common"](PS_DISCOVERY_WATO_RULES,
+                                                parsed) == PS_DISCOVERED_ITEMS + PS_DISCOVERED_HOST_LABELS
 
 
 @pytest.mark.parametrize("service_description, matches, result", [

@@ -1,4 +1,4 @@
-import pytest
+import pytest  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
 
@@ -12,8 +12,7 @@ def test_inventory_function(check_manager, info, item_expected, data_expected):
     Verifies if the item is detected corresponding to info content.
     """
     check = check_manager.get_check("alcatel_temp")
-    result = check.run_discovery(info)
-    result = [r for r in result]
+    result = list(check.run_discovery(info))
     assert result[0][0] == item_expected
     assert result[0][1] == data_expected
 

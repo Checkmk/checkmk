@@ -3,8 +3,8 @@
 import collections
 import datetime as dt
 
-import freezegun
-import pytest
+import freezegun  # type: ignore[import]
+import pytest  # type: ignore[import]
 
 from checktestlib import MockItemState, assertCheckResultsEqual, CheckResult
 

@@ -1,6 +1,6 @@
-import pytest
 import os
 import re
+import pytest  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
 

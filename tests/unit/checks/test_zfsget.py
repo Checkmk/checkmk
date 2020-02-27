@@ -1,4 +1,4 @@
-import pytest
+import pytest  # type: ignore[import]
 from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual
 
 pytestmark = pytest.mark.checks

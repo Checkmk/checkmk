@@ -1,4 +1,4 @@
-import pytest
+import pytest  # type: ignore[import]
 from checktestlib import CheckResult, assertCheckResultsEqual
 
 # all tests in this file are hp_msa_volume check related

@@ -1,5 +1,5 @@
-import pytest
 import os
+import pytest  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
 
@@ -11,5 +11,5 @@ exec (open(os.path.join(os.path.dirname(__file__), '../../../checks/docker.inclu
      "e3456c851a15"),
 ])
 def test_parse_short_id(indata, expected):
-    actual = docker_get_short_id(indata)
+    actual = docker_get_short_id(indata)  # pylint: disable=undefined-variable
     assert actual == expected

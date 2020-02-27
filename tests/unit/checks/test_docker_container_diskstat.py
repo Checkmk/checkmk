@@ -1,12 +1,10 @@
 # *--encoding: UTF-8--*
 # yapf: disable
-import pytest
+import pytest  # type: ignore[import]
 from cmk.base.check_api import MKCounterWrapped
 from checktestlib import (
     DiscoveryResult,
-    CheckResult,
     assertDiscoveryResultsEqual,
-    assertCheckResultsEqual,
     MockItemState,
 )
 

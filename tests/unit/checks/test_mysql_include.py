@@ -1,5 +1,5 @@
 import os
-import pytest
+import pytest  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
 
@@ -15,7 +15,7 @@ exec (open(os.path.join(os.path.dirname(__file__), '../../../checks/mysql.includ
     ], ('mysql', 'some/other/socket/name')),
 ])
 def test_mysql_parse_per_item(info, expected_items):
-    @mysql_parse_per_item
+    @mysql_parse_per_item  # pylint: disable=undefined-variable
     def dummy_parse(info):
         return 'Whoop'
 

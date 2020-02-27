@@ -1,5 +1,5 @@
 # yapf: disable
-import pytest
+import pytest  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
 

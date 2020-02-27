@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import pytest
+import pytest  # type: ignore[import]
 from checktestlib import BasicCheckResult
 
 pytestmark = pytest.mark.checks

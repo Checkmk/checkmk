@@ -1,5 +1,5 @@
-import pytest
 import os
+import pytest  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
 
@@ -107,10 +107,6 @@ exec (open(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docke
                 "Labels": [],
                 # needed for check:
                 "Name": "Tiberius",
-                "Containers": 22,
-                "ContainersRunning": 0,
-                "ContainersStopped": 22,
-                "ContainersPaused": 0,
             }),
         (
             [
@@ -211,10 +207,6 @@ exec (open(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docke
                 "Labels": ["staging=true", "storage=ssd"],
                 # needed for check:
                 "Name": "ubuntu",
-                "Containers": 14,
-                "ContainersRunning": 3,
-                "ContainersStopped": 10,
-                "ContainersPaused": 1,
             }),
         (
             [
@@ -284,10 +276,6 @@ exec (open(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docke
                 "Labels": [],
                 # needed for check:
                 "Name": "Klappspaten",
-                "Containers": 2,
-                "ContainersRunning": 1,
-                "ContainersStopped": 1,
-                "ContainersPaused": 0,
             }),
         (
             [
@@ -361,10 +349,6 @@ exec (open(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docke
                 "Labels": [],
                 # needed for check:
                 "Name": "klappson",
-                "Containers": 5,
-                "ContainersRunning": 1,
-                "ContainersStopped": 4,
-                "ContainersPaused": 0,
             }),
         (
             [
@@ -419,10 +403,6 @@ exec (open(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docke
                 "Labels": [],
                 # needed for check:
                 "Name": "Klappspaten",
-                "Containers": 2,
-                "ContainersRunning": 1,
-                "ContainersStopped": 1,
-                "ContainersPaused": 0,
             }),
         ([[
             u'Got', u'permission', u'denied', u'while', u'trying', u'to', u'connect', u'to', u'the',
@@ -439,8 +419,8 @@ def test_parse_legacy_docker_node_info(indata, outdata_subset):
             for r_key, r_value in value.items():
                 assert_contains(dic[key], r_key, r_value)
         else:
-            assert dic[key] == value, "expected: %r, got %r" % (v, parsed[k])
+            assert dic[key] == value, "expected: %r, got %r" % (value, parsed[key])
 
-    parsed = parse_legacy_docker_node_info(indata)
+    parsed = parse_legacy_docker_node_info(indata)  # pylint: disable=undefined-variable
     for k, v in outdata_subset.items():
         assert_contains(parsed, k, v)

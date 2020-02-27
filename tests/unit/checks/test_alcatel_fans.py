@@ -1,4 +1,4 @@
-import pytest
+import pytest  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
 
@@ -11,8 +11,7 @@ CHECK_NAME = "alcatel_fans"
 ])
 def test_inventory_function(check_manager, info, result_expected):
     check = check_manager.get_check(CHECK_NAME)
-    result = check.run_discovery(info)
-    result = [r for r in result]
+    result = list(check.run_discovery(info))
     assert result == result_expected
 
 

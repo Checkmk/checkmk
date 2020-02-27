@@ -17,7 +17,7 @@ regression test dataset as described in ''checks/generictests/regression.py''
 """
 from importlib import import_module
 import pytest  # type: ignore[import]
-import testlib
+import testlib  # type: ignore[import]
 import generictests
 
 pytestmark = pytest.mark.checks

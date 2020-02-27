@@ -1,6 +1,10 @@
-import pytest
-from checktestlib import CheckResult, assertCheckResultsEqual, \
-                         BasicItemState, MockItemState, assertMKCounterWrapped
+import pytest  # type: ignore[import]
+from checktestlib import (
+    CheckResult,
+    assertCheckResultsEqual,
+    MockItemState,
+    assertMKCounterWrapped,
+)
 
 pytestmark = pytest.mark.checks
 

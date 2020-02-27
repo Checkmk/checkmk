@@ -1,5 +1,4 @@
-import pytest
-import sys
+import pytest  # type: ignore[import]
 from checktestlib import CheckResult
 
 pytestmark = pytest.mark.checks

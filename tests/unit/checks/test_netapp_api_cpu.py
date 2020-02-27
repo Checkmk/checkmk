@@ -1,6 +1,5 @@
-import pytest
+import pytest  # type: ignore[import]
 from cmk.base.check_api import MKCounterWrapped
-from checktestlib import BasicCheckResult, CheckResult, DiscoveryResult, assertDiscoveryResultsEqual, PerfValue
 
 pytestmark = pytest.mark.checks
 
@@ -71,11 +70,11 @@ result_parsed_over_time = [
 ]
 
 
-@pytest.mark.parametrize("info, result_parsed", zip(agent_info, result_parsed))
-def test_parse_function(check_manager, info, result_parsed):
+@pytest.mark.parametrize("info, expected_parsed", zip(agent_info, result_parsed))
+def test_parse_function(check_manager, info, expected_parsed):
     check = check_manager.get_check("netapp_api_cpu")
     parsed = check.run_parse(info)
-    assert parsed == result_parsed
+    assert parsed == expected_parsed
 
 
 @pytest.mark.parametrize("params, first_result_change, second_result_change", [

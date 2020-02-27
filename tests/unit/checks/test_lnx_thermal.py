@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import pytest
+import pytest  # type: ignore[import]
 
 from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual
 
@@ -26,8 +26,10 @@ thermal_zone5|-|x86_pkg_temp|48000|0|passive|0|passive
 thermal_zone6|-|B0D4|61000|127000|critical|127000|hot|99000|passive|99000|active|94000|active""",
         '|')
 ]
-result_discovery = [[('Zone %s' % i, {}) for i in [0, 1, 3, 5]],
-                    [('Zone %s' % i, {}) for i in [0, 3, 4, 5, 6]]]
+result_discovery = [  # type: ignore
+    [('Zone %s' % i, {}) for i in [0, 1, 3, 5]],
+    [('Zone %s' % i, {}) for i in [0, 3, 4, 5, 6]],
+]
 
 
 @pytest.mark.parametrize("info, result", zip(agent_info, result_discovery))
@@ -60,5 +62,5 @@ result_check = [
 def test_check_functions_perfdata(check_manager, info, discovered, checked):
     check = check_manager.get_check("lnx_thermal")
     parsed = check.run_parse(info)
-    for (item, params), result in zip(discovered, checked):
+    for (item, _params), result in zip(discovered, checked):
         assert check.run_check(item, {}, parsed) == result

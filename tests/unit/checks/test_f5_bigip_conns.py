@@ -1,9 +1,6 @@
-import pytest
+import pytest  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
-
-from cmk.base.check_api import MKGeneralException
-from checktestlib import CheckResult, assertCheckResultsEqual
 
 
 @pytest.mark.parametrize("config, result", [

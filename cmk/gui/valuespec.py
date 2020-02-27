@@ -4853,64 +4853,86 @@ class ElementSelection(ValueSpec):
 
 class AutoTimestamp(FixedValue):
     def canonical_value(self):
+        # type: () -> float
         return time.time()
 
     def from_html_vars(self, varprefix):
+        # type: (str) -> float
         return time.time()
 
     def value_to_text(self, value):
+        # type: (float) -> Text
         return time.strftime("%F %T", time.localtime(value))
 
     def validate_datatype(self, value, varprefix):
+        # type: (float, str) -> None
         if not isinstance(value, (int, float)):
             return MKUserError(varprefix, _("Invalid datatype of timestamp: must be int or float."))
 
 
 class Foldable(ValueSpec):
     """Fully transparant VS encapsulating a vs in a foldable container"""
-    def __init__(self, valuespec, **kwargs):
+    def __init__(self, valuespec, title_function=None, **kwargs):  # pylint: disable=redefined-builtin
+        # type: (ValueSpec, TypingOptional[Callable[[Any], Text]], **Any) -> None
         super(Foldable, self).__init__(**kwargs)
         self._valuespec = valuespec
-        self._open = kwargs.get("open", False)
-        self._title_function = kwargs.get("title_function", None)
+        self._title_function = title_function
 
     def render_input(self, varprefix, value):
-        try:
+        # type: (str, Any) -> None
+        html.begin_foldable_container(
+            treename="valuespec_foldable",
+            id_=varprefix,
+            isopen=False,
+            title=self._get_title(varprefix, value),
+            indent=False,
+        )
+        html.help(self._valuespec.help())
+        self._valuespec.render_input(varprefix, value)
+        html.end_foldable_container()
+
+    def _get_title(self, varprefix, value):
+        # type: (str, Any) -> Text
+        if self._title_function:
             title_value = value
             if html.form_submitted():
                 try:
                     title_value = self._valuespec.from_html_vars(varprefix)
                 except Exception:
                     pass
-            title = self._title_function(title_value)
-        except Exception:
-            title = self._valuespec.title()
-            if not title:
-                title = _("(no title)")
-        html.begin_foldable_container("valuespec_foldable", varprefix, self._open, title, False)
-        html.help(self._valuespec.help())
-        self._valuespec.render_input(varprefix, value)
-        html.end_foldable_container()
+            return self._title_function(title_value)
+
+        title = self._valuespec.title()
+        if not title:
+            title = _("(no title)")
+        return title
 
     def set_focus(self, varprefix):
+        # type: (str) -> None
         self._valuespec.set_focus(varprefix)
 
     def canonical_value(self):
+        # type: () -> Any
         return self._valuespec.canonical_value()
 
     def default_value(self):
+        # type: () -> Any
         return self._valuespec.default_value()
 
     def value_to_text(self, value):
+        # type: (Any) -> Text
         return self._valuespec.value_to_text(value)
 
     def from_html_vars(self, varprefix):
+        # type: (str) -> Any
         return self._valuespec.from_html_vars(varprefix)
 
     def validate_datatype(self, value, varprefix):
+        # type: (Any, str) -> None
         self._valuespec.validate_datatype(value, varprefix)
 
     def _validate_value(self, value, varprefix):
+        # type: (Any, str) -> None
         self._valuespec.validate_value(value, varprefix)
 
 
@@ -4941,16 +4963,19 @@ class Transform(ValueSpec):
         self._forth = forth
 
     def forth(self, value):
+        # type: (Any) -> Any
         if self._forth:
             return self._forth(value)
         return value
 
     def back(self, value):
+        # type: (Any) -> Any
         if self._back:
             return self._back(value)
         return value
 
     def title(self):
+        # type: () -> TypingOptional[Text]
         if self._title:
             return self._title
         return self._valuespec.title()
@@ -4963,42 +4988,53 @@ class Transform(ValueSpec):
         return self._valuespec.help()
 
     def render_input(self, varprefix, value):
+        # type: (str, Any) -> None
         self._valuespec.render_input(varprefix, self.forth(value))
 
     def render_input_as_form(self, varprefix, value):
+        # type: (str, Dict[str, Any]) -> None
         if not isinstance(self._valuespec, Dictionary):
             raise NotImplementedError()
         self._valuespec.render_input_as_form(varprefix, self.forth(value))
 
     def set_focus(self, varprefix):
+        # type: (str) -> None
         self._valuespec.set_focus(varprefix)
 
     def canonical_value(self):
+        # type: () -> Any
         return self.back(self._valuespec.canonical_value())
 
     def default_value(self):
+        # type: () -> Any
         return self.back(self._valuespec.default_value())
 
     def value_to_text(self, value):
+        # type: (Any) -> Text
         return self._valuespec.value_to_text(self.forth(value))
 
     def from_html_vars(self, varprefix):
+        # type: (str) -> Any
         return self.back(self._valuespec.from_html_vars(varprefix))
 
     def validate_datatype(self, value, varprefix):
+        # type: (Any, str) -> None
         self._valuespec.validate_datatype(self.forth(value), varprefix)
 
     def _validate_value(self, value, varprefix):
+        # type: (Any, str) -> None
         self._valuespec.validate_value(self.forth(value), varprefix)
 
 
 # TODO: Change to factory, cleanup kwargs
 class LDAPDistinguishedName(TextUnicode):
-    def __init__(self, **kwargs):
+    def __init__(self, enforce_suffix=None, **kwargs):
+        # type: (TypingOptional[str], **Any) -> None
         super(LDAPDistinguishedName, self).__init__(**kwargs)
-        self.enforce_suffix = kwargs.get('enforce_suffix')
+        self.enforce_suffix = enforce_suffix
 
     def _validate_value(self, value, varprefix):
+        # type: (str, str) -> None
         super(LDAPDistinguishedName, self)._validate_value(value, varprefix)
 
         # Check whether or not the given DN is below a base DN
@@ -5008,7 +5044,9 @@ class LDAPDistinguishedName(TextUnicode):
 
 
 class Password(TextAscii):
+    # TODO: Cleanup kwargs
     def __init__(self, is_stored_plain=True, **kwargs):
+        # type: (bool, **Any) -> None
         self._is_stored_plain = is_stored_plain
         kwargs.setdefault("autocomplete", False)
 
@@ -5026,6 +5064,7 @@ class Password(TextAscii):
         super(Password, self).__init__(attrencode=True, **kwargs)
 
     def render_input(self, varprefix, value):
+        # type: (str, TypingOptional[str]) -> None
         if value is None:
             value = ""
 
@@ -5033,16 +5072,15 @@ class Password(TextAscii):
             html.write(self._label)
             html.nbsp()
 
-        kwargs = {
-            "size": self._size,
-        }
-
-        if self._autocomplete is False:
-            kwargs["autocomplete"] = "new-password"
-
-        html.password_input(varprefix, str(value), **kwargs)
+        html.password_input(
+            varprefix,
+            str(value),
+            size=self._size,
+            autocomplete="new-password" if self._autocomplete is False else None,
+        )
 
     def password_plaintext_warning(self):
+        # type: () -> None
         if self._is_stored_plain:
             html.span(
                 _("<br>Please note that Check_MK needs this password in clear"
@@ -5050,25 +5088,29 @@ class Password(TextAscii):
                   "<br>on the Check_MK server."))
 
     def value_to_text(self, value):
+        # type: (TypingOptional[Text]) -> Text
         if value is None:
             return _("none")
-        return '******'
+        return u'******'
 
 
 class PasswordSpec(Password):
+    # TODO: Cleanup kwargs
     def __init__(self, hidden=True, **kwargs):
+        # type: (bool, **Any) -> None
         super(PasswordSpec, self).__init__(hidden=hidden, **kwargs)
 
     def render_input(self, varprefix, value):
+        # type: (str, TypingOptional[str]) -> None
         super(PasswordSpec, self).render_input(varprefix, value)
         if not value:
             html.icon_button("#",
-                             _(u"Randomize password"),
+                             _("Randomize password"),
                              "random",
                              onclick="cmk.valuespecs.passwordspec_randomize(this);")
         if self._hidden:
             html.icon_button("#",
-                             _(u"Show/Hide password"),
+                             _("Show/Hide password"),
                              "showhide",
                              onclick="cmk.valuespecs.toggle_hidden(this);")
 

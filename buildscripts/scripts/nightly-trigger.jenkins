@@ -1,5 +1,5 @@
 BRANCH_NAME = scm.branches[0].name
-FOLDER_ID = BRANCH_NAME.replaceAll('\\.','')
+FOLDER_ID = currentBuild.fullProjectName.split('/')[0]
 
 def DISTRO_LIST_DEFAULT = ''
 withFolderProperties{
@@ -19,7 +19,7 @@ properties([
 
 node: {
     stage('Build Packages') {
-        build(job: "cmk_${FOLDER_ID}/nightly_build_containerized",
+        build(job: "${FOLDER_ID}/nightly_build_containerized",
               parameters: [
                 [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
                 [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
@@ -27,12 +27,12 @@ node: {
         )
     }
     stage('Build CMK Container') {
-        build(job: "cmk_${FOLDER_ID}/nightly_cmk_container")
+        build(job: "${FOLDER_ID}/nightly_cmk_container")
     }
     parallel([
         'Integration Test for Packages': {
             stage('Integration Test for Packages') {
-                build(job: "cmk_${FOLDER_ID}/nightly_test_integration-pipeline",
+                build(job: "${FOLDER_ID}/nightly_test_integration-pipeline",
                       parameters: [
                         [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
                         [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
@@ -42,7 +42,7 @@ node: {
         },
         'Composition Test for Packages': {
             stage('Composition Test for Packages') {
-                build(job: "cmk_${FOLDER_ID}/test-composition",
+                build(job: "${FOLDER_ID}/test-composition",
                       parameters: [
                         [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
                         [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
@@ -52,7 +52,7 @@ node: {
         },
         'Integration Test for Docker Container': {
             stage('Integration Test for Docker Container') {
-                build(job: "cmk_${FOLDER_ID}/docker_integration")
+                build(job: "${FOLDER_ID}/docker_integration")
             }
         }
     ])

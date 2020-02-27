@@ -121,7 +121,7 @@ def _connect_multiple_sites(user):
     _set_initial_site_states(enabled_sites, disabled_sites)
 
     if is_managed_edition():
-        import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+        import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module,import-outside-toplevel
         g.live = managed.CMEMultiSiteConnection(enabled_sites, disabled_sites)
     else:
         g.live = MultiSiteConnection(enabled_sites, disabled_sites)

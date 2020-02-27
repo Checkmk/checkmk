@@ -2601,6 +2601,15 @@ def HostState(**kwargs):
     ], **kwargs)
 
 
+CascadingDropdownChoiceValue = Union[TypingOptional[Text], TypingTuple[TypingOptional[Text], Any]]
+CascadingDropdownCleanChoice = TypingTuple[TypingOptional[Text], Text, TypingOptional[ValueSpec]]
+CascadingDropdownChoiceFunc = Callable[[], List[Union[TypingTuple[Text, Text],
+                                                      CascadingDropdownCleanChoice]]]
+CascadingDropdownChoices = Union[List[Union[TypingTuple[Text, Text], CascadingDropdownCleanChoice]],
+                                 CascadingDropdownChoiceFunc]
+CascadingDropdownCleanChoices = List[CascadingDropdownCleanChoice]
+
+
 class CascadingDropdown(ValueSpec):
     """A Dropdown choice where the elements are ValueSpecs.
 
@@ -2621,14 +2630,12 @@ class CascadingDropdown(ValueSpec):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        # TODO: Make this more specific
-        choices,  # type: Union[List[Union[TypingTuple[Text, Text], TypingTuple[Text, Text, ValueSpec]]], Callable]
+        choices,  # type: CascadingDropdownChoices
         label=None,  # type: TypingOptional[Text]
-        separator=", ",  # type: TypingOptional[Text]
+        separator=", ",  # type: Text
         sorted=True,  # type: bool
         orientation="vertical",  # type: Text
         render=None,  # type: TypingOptional[CascadingDropdown.Render]
-        encoding="tuple",  # type: Text
         no_elements_text=None,  # type: TypingOptional[Text]
         no_preselect=False,  # type: bool
         no_preselect_value=None,  # type: TypingOptional[Any]
@@ -2648,16 +2655,17 @@ class CascadingDropdown(ValueSpec):
                                                 validate=validate)
 
         if isinstance(choices, list):
-            self._choices = self.normalize_choices(choices)
+            self._choices = self.normalize_choices(
+                choices)  # type: Union[CascadingDropdownCleanChoices, CascadingDropdownChoiceFunc]
         else:
-            self._choices = choices  # function, store for later
+            # function, store for later
+            self._choices = choices
 
         self._label = label
         self._separator = separator
         self._sorted = sorted
         self._orientation = orientation  # or horizontal
         self._render = render if render is not None else CascadingDropdown.Render.normal
-        self._encoding_type = list if encoding == "list" else tuple
 
         self._no_elements_text = no_elements_text if no_elements_text is not None else _(
             "There are no elements defined for this selection")
@@ -2674,35 +2682,41 @@ class CascadingDropdown(ValueSpec):
         self._render_sub_vs_request_vars = render_sub_vs_request_vars or {}
 
     def normalize_choices(self, choices):
-        new_choices = []
+        # type: (List[Union[TypingTuple[Text, Text], CascadingDropdownCleanChoice]]) -> CascadingDropdownCleanChoices
+        new_choices = []  # type: CascadingDropdownCleanChoices
         for entry in choices:
             if len(entry) == 2:  # plain entry with no sub-valuespec
-                entry = entry + (None,)  # normlize to three entries
-            new_choices.append(entry)
+                entry = (entry[0], entry[1], None)  # normalize to three entries
+            # Mypy does not understand that we just erased the "tuple length of two" case
+            new_choices.append(entry)  # type: ignore[arg-type]
         return new_choices
 
     def choices(self):
+        # type: () -> CascadingDropdownCleanChoices
         if isinstance(self._choices, list):
-            result = self._choices
+            result = self._choices  # type: CascadingDropdownCleanChoices
         else:
             result = self.normalize_choices(self._choices())
 
         if self._no_preselect:
-            result = [(self._no_preselect_value, self._no_preselect_title, None)] \
-                     + result
+            choice = (self._no_preselect_value, self._no_preselect_title, None
+                     )  # type: CascadingDropdownCleanChoice
+            result = [choice] + result
 
         return result
 
     def canonical_value(self):
+        # type: () -> CascadingDropdownChoiceValue
         choices = self.choices()
         if not choices:
             return None
 
-        if choices[0][2]:
-            return self._encoding_type((choices[0][0], choices[0][2].canonical_value()))
+        if choices[0][2] is not None:
+            return choices[0][0], choices[0][2].canonical_value()
         return choices[0][0]
 
     def default_value(self):
+        # type: () -> CascadingDropdownChoiceValue
         try:
             return self._default_value
         except Exception:
@@ -2710,13 +2724,14 @@ class CascadingDropdown(ValueSpec):
             if not choices:
                 return None
 
-            if choices[0][2]:
-                return self._encoding_type((choices[0][0], choices[0][2].default_value()))
+            if choices[0][2] is not None:
+                return choices[0][0], choices[0][2].default_value()
             return choices[0][0]
 
     def render_input(self, varprefix, value):
+        # type: (str, CascadingDropdownChoiceValue) -> None
         def_val = '0'
-        options = []
+        options = []  # type: Choices
         choices = self.choices()
         if not choices:
             html.write(self._no_elements_text)
@@ -2729,7 +2744,7 @@ class CascadingDropdown(ValueSpec):
             # Note: the html.dropdown() with automatically show the modified
             # selection, if the HTML variable varprefix_sel aleady
             # exists.
-            if value == val or (isinstance(value, self._encoding_type) and value[0] == val):
+            if value == val or (isinstance(value, tuple) and value[0] == val):
                 def_val = str(nr)
 
         vp = varprefix + "_sel"
@@ -2773,7 +2788,7 @@ class CascadingDropdown(ValueSpec):
                 # Form painted the first time
                 if nr == int(def_val):
                     # This choice is the one choosen by the given value
-                    if isinstance(value, self._encoding_type) and len(value) == 2:
+                    if isinstance(value, tuple) and len(value) == 2:
                         def_val_2 = value[1]
                     else:
                         def_val_2 = vs.default_value()
@@ -2791,10 +2806,12 @@ class CascadingDropdown(ValueSpec):
                 self._show_sub_valuespec_container(vp, val, def_val_2)
 
     def show_sub_valuespec(self, varprefix, vs, value):
+        # type: (str, ValueSpec, Any) -> None
         html.help(vs.help())
         vs.render_input(varprefix, value)
 
     def _show_sub_valuespec_container(self, varprefix, choice_id, value):
+        # type: (str, TypingOptional[Text], Any) -> None
         html.span("", id_="%s_sub" % varprefix)
 
         request_vars = {
@@ -2812,35 +2829,42 @@ class CascadingDropdown(ValueSpec):
                          })))
 
     def value_to_text(self, value):
+        # type: (CascadingDropdownChoiceValue) -> Text
         choices = self.choices()
         for val, title, vs in choices:
-            if (vs and value and value[0] == val) or \
-               (value == val):
-                if not vs:
+            if not vs:  # Handle choices without nested valuespec
+                if value == val:
                     return title
+                continue
 
-                rendered_value = vs.value_to_text(value[1])
-                if not rendered_value:
-                    return title
+            if not value:
+                continue
 
-                if self._render == CascadingDropdown.Render.foldable:
-                    with html.plugged():
-                        html.begin_foldable_container(
-                            "foldable_cascading_dropdown",
-                            id_=hashlib.sha256(six.ensure_binary(repr(value))).hexdigest(),
-                            isopen=False,
-                            title=title,
-                            indent=False)
-                        html.write(vs.value_to_text(value[1]))
-                        html.end_foldable_container()
-                    return html.drain()
+            if value[0] != val:
+                continue  # Skip not selected choices
 
-                return title + self._separator + \
-                       vs.value_to_text(value[1])
+            rendered_value = vs.value_to_text(value[1])
+            if not rendered_value:
+                return title
 
-        return ""  # Nothing selected? Should never happen
+            if self._render == CascadingDropdown.Render.foldable:
+                with html.plugged():
+                    html.begin_foldable_container("foldable_cascading_dropdown",
+                                                  id_=hashlib.sha256(six.ensure_binary(
+                                                      repr(value))).hexdigest(),
+                                                  isopen=False,
+                                                  title=title,
+                                                  indent=False)
+                    html.write(vs.value_to_text(value[1]))
+                    html.end_foldable_container()
+                return html.drain()
+
+            return title + self._separator + vs.value_to_text(value[1])
+
+        return u""  # Nothing selected? Should never happen
 
     def from_html_vars(self, varprefix):
+        # type: (str) -> CascadingDropdownChoiceValue
         choices = self.choices()
 
         # No choices and "no elements text" is shown: The html var is
@@ -2849,37 +2873,35 @@ class CascadingDropdown(ValueSpec):
         if not choices:
             return self.default_value()
 
-        try:
-            sel = int(html.request.var(varprefix + "_sel", ""))
-        except ValueError:
-            sel = 0
-        val, _title, vs = choices[sel]
+        sel = html.request.get_integer_input_mandatory(varprefix + "_sel", 0)
+        choice_val, _title, vs = choices[sel]
         if vs:
-            val = self._encoding_type((val, vs.from_html_vars(varprefix + "_%d" % sel)))
-        return val
+            return choice_val, vs.from_html_vars(varprefix + "_%d" % sel)
+        return choice_val
 
     def validate_datatype(self, value, varprefix):
+        # type: (CascadingDropdownChoiceValue, str) -> None
         choices = self.choices()
         for nr, (val, _title, vs) in enumerate(choices):
-            if value == val or (isinstance(value, self._encoding_type) and value[0] == val):
+            if value == val or (isinstance(value, tuple) and value[0] == val):
                 if vs:
-                    if not isinstance(value, self._encoding_type) or len(value) != 2:
-                        raise MKUserError(
-                            varprefix + "_sel",
-                            _("Value must be a %s with two elements.") %
-                            self._encoding_type.__name__)
+                    if not isinstance(value, tuple) or len(value) != 2:
+                        raise MKUserError(varprefix + "_sel",
+                                          _("Value must be a tuple with two elements."))
                     vs.validate_datatype(value[1], varprefix + "_%d" % nr)
                 return
         raise MKUserError(varprefix + "_sel", _("Value %r is not allowed here.") % value)
 
     def _validate_value(self, value, varprefix):
+        # type: (CascadingDropdownChoiceValue, str) -> None
         if self._no_preselect and value == self._no_preselect_value:
             raise MKUserError(varprefix + "_sel", self._no_preselect_error)
 
         choices = self.choices()
         for nr, (val, _title, vs) in enumerate(choices):
-            if value == val or (isinstance(value, self._encoding_type) and value[0] == val):
+            if value == val or (isinstance(value, tuple) and value[0] == val):
                 if vs:
+                    assert isinstance(value, tuple)
                     vs.validate_value(value[1], varprefix + "_%d" % nr)
                 self._custom_validate(value, varprefix)
                 return
@@ -3803,11 +3825,10 @@ class Timerange(CascadingDropdown):
         # CascadingDropdown
         # TODO: Make this more specific
         label=None,  # type: TypingOptional[Text]
-        separator=", ",  # type: TypingOptional[Text]
+        separator=", ",  # type: Text
         sorted=False,  # type: bool
         orientation="vertical",  # type: Text
         render=None,  # type: TypingOptional[CascadingDropdown.Render]
-        encoding="tuple",  # type: Text
         no_elements_text=None,  # type: TypingOptional[Text]
         no_preselect=False,  # type: bool
         no_preselect_value=None,  # type: TypingOptional[Any]
@@ -3828,7 +3849,6 @@ class Timerange(CascadingDropdown):
             sorted=sorted,
             orientation=orientation,
             render=render,
-            encoding=encoding,
             no_elements_text=no_elements_text,
             no_preselect=no_preselect,
             no_preselect_value=no_preselect_value,

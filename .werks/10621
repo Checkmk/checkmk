@@ -1,0 +1,15 @@
+Title: Fix bug where scheduler would become inactive
+Knowledge: doc
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p9
+Date: 1582124387
+
+Certain configurations let CMC schedule jobs with invalid
+timestamps.  These jobs would never be scheduled and let
+the schedulers in a nonoperating state, resulting in
+stale hosts and services.

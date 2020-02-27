@@ -3828,18 +3828,6 @@ metric_info["nvme_data_units_written"] = {
     "color": "24/a",
 }
 
-metric_info["data_usage"] = {
-    "title": _("Data usage"),
-    "unit": "%",
-    "color": "21/a",
-}
-
-metric_info["meta_usage"] = {
-    "title": _("Meta usage"),
-    "unit": "%",
-    "color": "31/a",
-}
-
 metric_info["ap_devices_total"] = {
     "title": _("Total devices"),
     "unit": "count",

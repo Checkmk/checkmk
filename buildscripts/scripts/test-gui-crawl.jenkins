@@ -28,7 +28,8 @@ node {
         // in the container. For the moment this does not look like a problem.
         // But it may be that we get to the point where we need an existing
         // user in the container.
-        COMMON_IMAGE.inside('--group-add=docker --ulimit nofile=1024:1024 -v /var/run/docker.sock:/var/run/docker.sock') {
+        // The download credentials are needed by the image build part
+        COMMON_IMAGE.inside('--group-add=docker --ulimit nofile=1024:1024 -v /var/run/docker.sock:/var/run/docker.sock -v /root/.cmk-credentials:/root/.cmk-credentials') {
             try {
                 stage('Test GUI crawl') {
                     dir ('tests-py3') {

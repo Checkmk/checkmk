@@ -47,10 +47,13 @@ def is_managed_repo():
     return os.path.exists(cme_path())
 
 
-def virtualenv_path():
+def virtualenv_path(version=None):
+    if version is None:
+        version = sys.version_info[0]
+
     venv = subprocess.check_output(
         [repo_path() + "/scripts/run-pipenv",
-         str(sys.version_info[0]), "--bare", "--venv"])
+         str(version), "--bare", "--venv"])
     if not isinstance(venv, six.text_type):
         venv = venv.decode("utf-8")
     return Path(venv.rstrip("\n"))

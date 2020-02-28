@@ -2,13 +2,6 @@ import os
 import pytest  # type: ignore[import]
 
 
-# Packaging tests should not be executed in site.
-# -> Disabled site fixture for them
-@pytest.fixture(scope="session")
-def site(request):
-    pass
-
-
 # TODO: Better hand over arguments using pytest mechanisms (http://doc.pytest.org/en/latest/example/parametrize.html)
 @pytest.fixture(scope="module")
 def package_path():

@@ -6,7 +6,7 @@ import cmk.base.automations.check_mk as automations
 import cmk.base.config as config
 
 
-def test_registered_automations(site):
+def test_registered_automations():
     needed_automations = [
         'active-check',
         'analyse-host',

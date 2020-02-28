@@ -12,7 +12,6 @@ pytest.register_assert_rewrite(
 
 import collections
 import errno
-import os
 import shutil
 import sys
 
@@ -126,8 +125,8 @@ def pytest_cmdline_main(config):
         return  # missing option is handled later
 
     context = test_types[config.getoption("-T")]
-    if context == EXECUTE_IN_SITE:
-        setup_site_and_switch_user()
+    if context == EXECUTE_IN_SITE and not testlib.is_running_as_site_user():
+        raise Exception()
     else:
         verify_virtualenv()
 
@@ -138,68 +137,9 @@ def verify_virtualenv():
                          "(Use \"pipenv shell\" or configure direnv)")
 
 
-def setup_site_and_switch_user():
-    if testlib.is_running_as_site_user():
-        return  # This is executed as site user. Nothing to be done.
-
-    sys.stdout.write("===============================================\n")
-    sys.stdout.write("Setting up site '%s'\n" % testlib.site_id())
-    sys.stdout.write("===============================================\n")
-
-    site = _get_site_object()
-
-    cleanup_pattern = os.environ.get("CLEANUP_OLD")
-    if cleanup_pattern:
-        site.cleanup_old_sites(cleanup_pattern)
-
-    site.cleanup_if_wrong_version()
-    site.create()
-    #site.open_livestatus_tcp()
-    site.start()
-    site.prepare_for_tests()
-
-    sys.stdout.write("===============================================\n")
-    sys.stdout.write("Switching to site context\n")
-    sys.stdout.write("===============================================\n")
-    sys.stdout.flush()
-
-    exit_code = site.switch_to_site_user()
-    sys.exit(exit_code)
-
-
-def _get_site_object():
-    def site_version():
-        return os.environ.get("VERSION", testlib.CMKVersion.DAILY)
-
-    def site_edition():
-        return os.environ.get("EDITION", testlib.CMKVersion.CEE)
-
-    def site_branch():
-        return os.environ.get("BRANCH", testlib.current_branch_name())
-
-    def reuse_site():
-        return os.environ.get("REUSE", "1") == "1"
-
-    return testlib.Site(site_id=testlib.site_id(),
-                        version=site_version(),
-                        edition=site_edition(),
-                        reuse=reuse_site(),
-                        branch=site_branch())
-
-
 #
 # MAIN
 #
 
 testlib.add_python_paths()
 testlib.fake_version_and_paths()
-
-
-# Session fixtures must be in conftest.py to work properly
-@pytest.fixture(scope="session", autouse=True)
-def site(request):
-    site_obj = _get_site_object()
-    yield site_obj
-    print("")
-    print("Cleanup site processes after test execution...")
-    site_obj.stop()

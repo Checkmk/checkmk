@@ -19,6 +19,8 @@ from testlib.utils import (
     cme_path,
     cmc_path,
     virtualenv_path,
+    current_base_branch_name,
+    site_id as test_site_id,
 )
 from testlib.web_session import CMKWebSession
 from testlib.version import CMKVersion
@@ -504,12 +506,12 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             })
 
     def _install_test_python_modules(self):
-        venv = virtualenv_path()
+        venv = virtualenv_path(version=2)
         bin_dir = venv / "bin"
-        self._copy_python_modules_from(venv / "lib/python3.7/site-packages")
+        self._copy_python_modules_from(venv / "lib/python2.7/site-packages")
 
         # Some distros have a separate platfrom dependent library directory, handle it....
-        platlib64 = venv / "lib64/python3.7/site-packages"
+        platlib64 = venv / "lib64/python2.7/site-packages"
         if platlib64.exists():
             self._copy_python_modules_from(platlib64)
 
@@ -524,10 +526,10 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             # Only copy modules that do not exist in regular module path
             if file_name not in enforce_override:
                 if os.path.exists("%s/lib/python/%s" % (self.root, file_name)) \
-                   or os.path.exists("%s/lib/python3.7/site-packages/%s" % (self.root, file_name)):
+                   or os.path.exists("%s/lib/python2.7/site-packages/%s" % (self.root, file_name)):
                     continue
 
-            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/lib/python3/" %  # nosec
+            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/lib/python/" %  # nosec
                              (self.id, self.id, packages_dir / file_name, self.root)) >> 8 == 0
 
     def rm(self, site_id=None):
@@ -721,35 +723,6 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                 missing.append(f)
         return missing
 
-    # For reliable testing we need the site environment. The only environment for executing
-    # Check_MK is now the site, so all tests that somehow rely on the environment should be
-    # executed this way.
-    def switch_to_site_user(self):
-        env_vars = {
-            "VERSION": self.version._version,
-            "REUSE": "1" if self.reuse else "0",
-            "BRANCH": self.version._branch,
-        }
-        for varname in [
-                "WORKSPACE", "PYTEST_ADDOPTS", "BANDIT_OUTPUT_ARGS", "SHELLCHECK_OUTPUT_ARGS",
-                "PYLINT_ARGS"
-        ]:
-            if varname in os.environ:
-                env_vars[varname] = os.environ[varname]
-
-        env_var_str = " ".join(["%s=%s" % (k, pipes.quote(v)) for k, v in env_vars.items()]) + " "
-
-        cmd_parts = [
-            "python3",
-            self.path("local/bin/py.test"),
-        ] + sys.argv[1:]
-
-        cmd = "cd %s && " % pipes.quote(cmk_path())
-        cmd += env_var_str + subprocess.list2cmdline(cmd_parts)
-        print(cmd)
-        args = ["/usr/bin/sudo", "--", "/bin/su", "-l", self.id, "-c", cmd]
-        return subprocess.call(args, stderr=subprocess.STDOUT)
-
     # This opens a currently free TCP port and remembers it in the object for later use
     # Not free of races, but should be sufficient.
     def open_livestatus_tcp(self):
@@ -816,6 +789,14 @@ class SiteFactory(object):  # pylint: disable=useless-object-inheritance
             return self._sites[name]
         return self._new_site(name)
 
+    def get_existing_site(self, name):
+        if "%s%s" % (self._base_ident, name) in self._sites:
+            return self._sites["%s%s" % (self._base_ident, name)]
+        # For convenience, allow to retreive site by name or full ident
+        if name in self._sites:
+            return self._sites[name]
+        return self._site_obj(name)
+
     def remove_site(self, name):
         if "%s%s" % (self._base_ident, name) in self._sites:
             site_id = "%s%s" % (self._base_ident, name)
@@ -833,14 +814,18 @@ class SiteFactory(object):  # pylint: disable=useless-object-inheritance
         self._index += 1
         return new_ident
 
-    def _new_site(self, name):
+    def _site_obj(self, name):
         site_id = "%s%s" % (self._base_ident, name)
-        site = Site(site_id=site_id,
+        return Site(site_id=site_id,
                     reuse=False,
                     version=self._version,
                     edition=self._edition,
                     branch=self._branch,
                     install_test_python_modules=self._install_test_python_modules)
+
+    def _new_site(self, name):
+        site = self._site_obj(name)
+
         site.create()
         site.open_livestatus_tcp()
         # No TLS for testing
@@ -849,10 +834,25 @@ class SiteFactory(object):  # pylint: disable=useless-object-inheritance
         site.prepare_for_tests()
         # There seem to be still some changes that want to be activated
         CMKWebSession(site).activate_changes()
-        print("Created site %s" % site_id)
-        self._sites[site_id] = site
+        print("Created site %s" % site.id)
+        self._sites[site.id] = site
         return site
 
     def cleanup(self):
         for site_id in list(self._sites.keys()):
             self.remove_site(site_id)
+
+
+def get_site_factory(prefix, install_test_python_modules):
+    version = os.environ.get("VERSION", CMKVersion.DAILY)
+    edition = os.environ.get("EDITION", CMKVersion.CEE)
+    branch = os.environ.get("BRANCH", current_base_branch_name())
+
+    logger.info("Version: %s, Edition: %s, Branch: %s", version, edition, branch)
+    return SiteFactory(
+        version=version,
+        edition=edition,
+        branch=branch,
+        prefix=prefix,
+        install_test_python_modules=install_test_python_modules,
+    )

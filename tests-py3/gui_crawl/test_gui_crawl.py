@@ -16,13 +16,9 @@ import queue
 import traceback
 from pathlib import Path
 from urllib.parse import urlsplit, parse_qsl, urlunsplit, urljoin, urlencode
-from bs4 import BeautifulSoup # type: ignore[import]
+from bs4 import BeautifulSoup  # type: ignore[import]
 
-from testlib.utils import (
-    current_base_branch_name,
-)
-from testlib.site import SiteFactory
-from testlib.version import CMKVersion
+from testlib.site import get_site_factory
 from testlib.web_session import CMKWebSession
 
 logger = logging.getLogger()
@@ -448,23 +444,8 @@ class Crawler:
         #    self.save_stats()
 
 
-def site_factory():
-    version = os.environ.get("VERSION", CMKVersion.DAILY)
-    edition = os.environ.get("EDITION", CMKVersion.CEE)
-    branch = os.environ.get("BRANCH", current_base_branch_name())
-
-    logger.info("Version: %s, Edition: %s, Branch: %s", version, edition, branch)
-    return SiteFactory(
-        version=version,
-        edition=edition,
-        branch=branch,
-        prefix="crawl_",
-        install_test_python_modules=False,
-    )
-
-
 def test_crawl():
-    sf = site_factory()
+    sf = get_site_factory(prefix="crawl_", install_test_python_modules=False)
     site = sf.get_site("central")
     logger.info("Site %s is ready!", site.id)
 

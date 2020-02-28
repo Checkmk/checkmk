@@ -7,8 +7,7 @@ description:
  This check monitors all digital inputs from Poseidon devices.
 
 item:
- The name of the sensors
-
+ The name of the sensor
 
 inventory:
  One separate service per sensor is being created.

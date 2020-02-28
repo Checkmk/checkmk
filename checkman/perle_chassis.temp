@@ -10,7 +10,7 @@ description:
  There are no default levels set. Upper and lower levels are configurable.
 
 item:
- The chassis.
+ The fixed statement {{chassis}}
 
 inventory:
  One service is created.

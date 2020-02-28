@@ -8,7 +8,7 @@ description:
  devices which support the ORION-MIB.
 
 item:
- The item is called 'Battery'.
+ The fixed statemnt {{System}}
 
 inventory:
  One service for each item is generated.

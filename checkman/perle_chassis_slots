@@ -14,7 +14,7 @@ description:
  CRIT. Otherwise it's OK.
 
 item:
- The module name connected to this slot.
+ The index of the slot
 
 inventory:
  One service per module is created

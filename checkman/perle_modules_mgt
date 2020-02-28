@@ -10,7 +10,7 @@ description:
  The check is OK if there are no alarms, otherwise CRIT.
 
 item:
- The module name.
+ The name of the module
 
 inventory:
  One service per module is created.

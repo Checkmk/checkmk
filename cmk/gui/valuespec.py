@@ -167,6 +167,12 @@ class ValueSpec(object):
         layout in the GUI."""
         return repr(value)
 
+    def value_to_json(self, value):
+        raise NotImplementedError()
+
+    def value_from_json(self, json_value):
+        raise NotImplementedError()
+
     def from_html_vars(self, varprefix):
         # type: (str) -> Any
         """Create a value from the current settings of the HTML variables
@@ -351,6 +357,12 @@ class Age(ValueSpec):
         if parts:
             return " ".join(parts)
         return _("no time")
+
+    def value_to_json(self, value):
+        return value
+
+    def value_from_json(self, json_value):
+        return json_value
 
     def validate_datatype(self, value, varprefix):
         # type: (Seconds, str) -> None
@@ -2521,6 +2533,12 @@ class DropdownChoice(ValueSpec):
                 return escaping.escape_attribute(title)
         return escaping.escape_attribute(self._get_invalid_choice_title(value))
 
+    def value_to_json(self, value):
+        return value
+
+    def value_from_json(self, json_value):
+        return json_value
+
     def from_html_vars(self, varprefix):
         # type: (str) -> DropdownChoiceValue
         choices = self.choices()
@@ -2862,6 +2880,46 @@ class CascadingDropdown(ValueSpec):
             return title + self._separator + vs.value_to_text(value[1])
 
         return u""  # Nothing selected? Should never happen
+
+    def value_to_json(self, value):
+        choices = self.choices()
+
+        for ident, _title, vs in choices:
+            # Determine the default value for the select, so the
+            # the dropdown pre-selects the line corresponding with value.
+            # Note: the html.dropdown() with automatically show the modified
+            # selection, if the HTML variable varprefix_sel aleady
+            # exists.
+
+            # Simple text match
+            if isinstance(value, str) and value == ident:
+                return value
+
+            if not vs:
+                continue
+
+            try:
+                vs.validate_datatype(value[1], "")
+                return [ident, vs.value_to_json(value[1])]
+            except Exception as _e:  # TODO: fix exc
+                continue
+
+    def value_from_json(self, json_value):
+        choices = self.choices()
+
+        for ident, _title, vs in choices:
+            if json_value == ident:
+                return json_value
+
+            if not vs:
+                continue
+
+            try:
+                value = vs.value_from_json(json_value[1])
+                vs.validate_datatype(value, "")
+                return (ident, value)
+            except Exception as _e:  # TODO: fix exc
+                continue
 
     def from_html_vars(self, varprefix):
         # type: (str) -> CascadingDropdownChoiceValue
@@ -3513,6 +3571,12 @@ class AbsoluteDate(ValueSpec):
 
     def value_to_text(self, value):
         return time.strftime(self._format, time.localtime(value))
+
+    def value_to_json(self, value):
+        return value
+
+    def value_from_json(self, json_value):
+        return json_value
 
     def from_html_vars(self, varprefix):
         parts = []
@@ -4422,6 +4486,18 @@ class Tuple(ValueSpec):
         return "" + ", ".join(
             [element.value_to_text(val) for (element, val) in zip(self._elements, value)]) + ""
 
+    def value_to_json(self, value):
+        json_value = []
+        for idx, element in enumerate(self._elements):
+            json_value.append(element.value_to_json(value[idx]))
+        return json_value
+
+    def value_from_json(self, json_value):
+        real_value = []
+        for idx, element in enumerate(self._elements):
+            real_value.append(element.value_from_json(json_value[idx]))
+        return tuple(real_value)
+
     def from_html_vars(self, varprefix):
         value = []
         for no, element in enumerate(self._elements):
@@ -4721,6 +4797,18 @@ class Dictionary(ValueSpec):
         if not oneline:
             s = html.render_table(s)
         return "%s" % s
+
+    def value_to_json(self, value):
+        json_value = {}
+        for param, vs in self._get_elements():
+            json_value[param] = vs.value_to_json(value[param])
+        return json_value
+
+    def value_from_json(self, json_value):
+        real_value = {}
+        for param, vs in self._get_elements():
+            real_value[param] = vs.value_from_json(json_value[param])
+        return real_value
 
     def from_html_vars(self, varprefix):
         value = {}

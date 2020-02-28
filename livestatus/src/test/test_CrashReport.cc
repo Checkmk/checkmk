@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <fstream>
 #include <optional>
+#include <random>
 #include <string>
 #include "CrashReport.h"
 #include "Logger.h"
@@ -12,13 +13,34 @@
 
 namespace fs = std::filesystem;
 
+// Next function from:
+// https://stackoverflow.com/questions/440133/how-do-i-create-a-random-alpha-numeric-string-in-c
+
+std::string random_string(const std::string::size_type length) {
+    static auto& chrs =
+        "0123456789"
+        "abcdefghijklmnopqrstuvwxyz"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    thread_local static std::mt19937 rg{std::random_device{}()};
+    thread_local static std::uniform_int_distribution<std::string::size_type>
+        pick(0, sizeof(chrs) - 2);
+
+    std::string str(length, 0);
+    for (auto& c : str) {
+        c = chrs[pick(rg)];
+    };
+    return str;
+}
+
 class CrashReportFixture : public ::testing::Test {
 public:
     const std::string uuid{"8966a88e-e369-11e9-981a-acbc328d0e0b"};
     const std::string component{"gui"};
     const std::string crash_info{"crash.info"};
     const std::string json{"{}\n"};
-    const fs::path basepath{fs::temp_directory_path() / "crash_report_tests"};
+    const fs::path basepath{fs::temp_directory_path() / "crash_report_tests" /
+                            random_string(12)};
     const fs::path fullpath{basepath / component / uuid / crash_info};
 
     void SetUp() override {

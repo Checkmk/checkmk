@@ -69,7 +69,9 @@ def execute_tests_in_container(version, result_path, command):
         # Now execute the real crawl test.  It will create a site "crawl_central"
         # and start to crawl all reachable GUI pages. Print the output during the
         # execution of the test.
-        exit_code = _exec_run(container, command,
+        exit_code = _exec_run(
+            container,
+            command,
             environment=_container_env(version),
             workdir="/git",
             stream=True,
@@ -146,16 +148,17 @@ def _create_cmk_image(client, base_image_name, version):
     #    privileged=True,
     #)
     with _start(
-        client,
-        image=base_image_name,
-        command=["tail", "-f", "/dev/null"],  # keep running
-        volumes=_image_build_volumes(),
-        # needed to make the overlay mounts work on the /git directory
-        # Should work, but does not seem to be enough: 'cap_add=["SYS_ADMIN"]'. Using this instead:
-        privileged=True,
-        ) as container:
+            client,
+            image=base_image_name,
+            command=["tail", "-f", "/dev/null"],  # keep running
+            volumes=_image_build_volumes(),
+            # needed to make the overlay mounts work on the /git directory
+            # Should work, but does not seem to be enough: 'cap_add=["SYS_ADMIN"]'. Using this instead:
+            privileged=True,
+    ) as container:
 
-        logger.info("Building in container %s (created from %s)", container.short_id, base_image_name)
+        logger.info("Building in container %s (created from %s)", container.short_id,
+                    base_image_name)
 
         assert _exec_run(container, ["mkdir", "-p", "/results"]) == 0
 
@@ -270,7 +273,7 @@ def _start(client, **kwargs):
 def _exec_run(c, cmd, **kwargs):
     if kwargs:
         logger.info("Execute in container %s: %r (kwargs: %r)", c.short_id,
-            subprocess.list2cmdline(cmd), kwargs)
+                    subprocess.list2cmdline(cmd), kwargs)
     else:
         logger.info("Execute in container %s: %r", c.short_id, subprocess.list2cmdline(cmd))
 
@@ -288,9 +291,20 @@ def _exec_run(c, cmd, **kwargs):
 
     return result.poll()
 
-def container_exec(container, cmd, stdout=True, stderr=True, stdin=False,
-                   tty=False, privileged=False, user='', detach=False,
-                   stream=False, socket=False, environment=None, workdir=None):
+
+def container_exec(container,
+                   cmd,
+                   stdout=True,
+                   stderr=True,
+                   stdin=False,
+                   tty=False,
+                   privileged=False,
+                   user='',
+                   detach=False,
+                   stream=False,
+                   socket=False,
+                   environment=None,
+                   workdir=None):
     """
     An enhanced version of #docker.Container.exec_run() which returns an object
     that can be properly inspected for the status of the executed commands.
@@ -298,18 +312,27 @@ def container_exec(container, cmd, stdout=True, stderr=True, stdin=False,
     Taken from https://github.com/docker/docker-py/issues/1989. Thanks!
     """
 
-    exec_id = container.client.api.exec_create(
-      container.id, cmd, stdout=stdout, stderr=stderr, stdin=stdin, tty=tty,
-      privileged=privileged, user=user, environment=environment,
-      workdir=workdir)['Id']
+    exec_id = container.client.api.exec_create(container.id,
+                                               cmd,
+                                               stdout=stdout,
+                                               stderr=stderr,
+                                               stdin=stdin,
+                                               tty=tty,
+                                               privileged=privileged,
+                                               user=user,
+                                               environment=environment,
+                                               workdir=workdir)['Id']
 
-    output = container.client.api.exec_start(
-      exec_id, detach=detach, tty=tty, stream=stream, socket=socket)
+    output = container.client.api.exec_start(exec_id,
+                                             detach=detach,
+                                             tty=tty,
+                                             stream=stream,
+                                             socket=socket)
 
     return ContainerExec(container.client, exec_id, output)
 
 
-class ContainerExec:
+class ContainerExec(object):  # pylint: disable=useless-object-inheritance
     def __init__(self, client, container_id, output):
         self.client = client
         self.id = container_id
@@ -331,8 +354,8 @@ class ContainerExec:
                 sys.stdout.buffer.write(line_prefix)
                 nl = data.find(b'\n', offset)
                 if nl >= 0:
-                    slce = data[offset:nl+1]
-                    offset = nl+1
+                    slce = data[offset:nl + 1]
+                    offset = nl + 1
                 else:
                     slce = data[offset:]
                     offset += len(slce)
@@ -341,6 +364,7 @@ class ContainerExec:
         while self.poll() is None:
             raise RuntimeError()
         return self.poll()
+
 
 def _copy_directory(container, src_path, dest_path):
     # type: (docker.types.containers.Container, Path, Path) -> None
@@ -383,6 +407,7 @@ def _prepare_git_overlay(container, lower_path, target_path):
             (lower_path, upperdir_path, workdir_path), target_path
         ],
     ) == 0
+
 
 def _prepare_virtual_environments(container, version):
     # When the git is mounted to the crawl container for a node which already

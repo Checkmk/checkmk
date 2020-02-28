@@ -8,7 +8,7 @@ import tarfile
 import fnmatch
 import pytest  # type: ignore[import]
 
-from testlib import web, InterProcessLock  # pylint: disable=unused-import
+from testlib import web  # pylint: disable=unused-import
 
 
 @pytest.fixture()
@@ -89,20 +89,13 @@ def test_cfg(web, site, backup_path):
     site.delete_file("etc/check_mk/backup.mk")
 
 
-def BackupLock():
-    return InterProcessLock("/tmp/cmk-test-execute-backup")
-
-
 def _execute_backup(site, job_id="testjob"):
-    with BackupLock():
-        # Perform the backup
-        p = site.execute(["mkbackup", "backup", job_id],
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate()
-        assert stderr == ""
-        assert p.wait() == 0
-        assert "Backup completed" in stdout, "Invalid output: %r" % stdout
+    # Perform the backup
+    p = site.execute(["mkbackup", "backup", job_id], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    assert stderr == ""
+    assert p.wait() == 0
+    assert "Backup completed" in stdout, "Invalid output: %r" % stdout
 
     # Check successful backup listing
     p = site.execute(["mkbackup", "list", "test-target"],
@@ -128,22 +121,21 @@ def _execute_backup(site, job_id="testjob"):
 
 
 def _execute_restore(site, backup_id, env=None):
-    with BackupLock():
-        p = site.execute(["mkbackup", "restore", "test-target", backup_id],
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE,
-                         env=env)
-        stdout, stderr = p.communicate()
+    p = site.execute(["mkbackup", "restore", "test-target", backup_id],
+                     stdout=subprocess.PIPE,
+                     stderr=subprocess.PIPE,
+                     env=env)
+    stdout, stderr = p.communicate()
 
-        try:
-            assert "Restore completed" in stdout, "Invalid output: %r" % stdout
-            assert stderr == ""
-            assert p.wait() == 0
-        except Exception:
-            # Bring back the site in case the restore test fails which may leave the
-            # site in a stopped state
-            site.start()
-            raise
+    try:
+        assert "Restore completed" in stdout, "Invalid output: %r" % stdout
+        assert stderr == ""
+        assert p.wait() == 0
+    except Exception:
+        # Bring back the site in case the restore test fails which may leave the
+        # site in a stopped state
+        site.start()
+        raise
 
 
 #.

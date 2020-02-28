@@ -8,7 +8,7 @@ import logging
 
 import requests
 
-from testlib.utils import InterProcessLock, get_cmk_download_credentials
+from testlib.utils import get_cmk_download_credentials
 
 logger = logging.getLogger()
 
@@ -183,11 +183,10 @@ class CMKVersion(object):  # pylint: disable=useless-object-inheritance
             time.sleep(1)
 
         # Improve the protection against other test runs installing packages
-        with InterProcessLock("/tmp/cmk-test-install-version"):
-            cmd = "sudo /usr/bin/gdebi --non-interactive %s" % package_path
-            logger.info(cmd)
-            sys.stdout.flush()
-            if os.system(cmd) >> 8 != 0:  # nosec
-                raise Exception("Failed to install package: %s" % package_path)
+        cmd = "sudo /usr/bin/gdebi --non-interactive %s" % package_path
+        logger.info(cmd)
+        sys.stdout.flush()
+        if os.system(cmd) >> 8 != 0:  # nosec
+            raise Exception("Failed to install package: %s" % package_path)
 
         assert self.is_installed()

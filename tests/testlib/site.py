@@ -13,14 +13,11 @@ import six
 from six.moves.urllib.parse import urlparse
 
 from testlib.utils import (
-    InterProcessLock,
-    SiteActionLock,
     cmk_path,
     cme_path,
     cmc_path,
     virtualenv_path,
     current_base_branch_name,
-    site_id as test_site_id,
 )
 from testlib.web_session import CMKWebSession
 from testlib.version import CMKVersion
@@ -346,83 +343,33 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         return os.path.split(os.readlink("/omd/sites/%s/version" % self.id))[-1]
 
     def create(self):
-        with SiteActionLock():
-            if not self.version.is_installed():
-                self.version.install()
+        if not self.version.is_installed():
+            self.version.install()
 
-            if self.update_with_git:
-                self._copy_omd_version_for_test()
+        if not self.reuse and self.exists():
+            raise Exception("The site %s already exists." % self.id)
 
-            if not self.reuse and self.exists():
-                raise Exception("The site %s already exists." % self.id)
+        if not self.exists():
+            print("[%0.2f] Creating site '%s'" % (time.time(), self.id))
+            p = subprocess.Popen([
+                "/usr/bin/sudo", "/usr/bin/omd", "-V",
+                self.version.version_directory(), "create", "--admin-password", "cmk",
+                "--apache-reload", self.id
+            ])
+            exit_code = p.wait()
+            print("[%0.2f] Executed create command" % time.time())
+            assert exit_code == 0
+            assert os.path.exists("/omd/sites/%s" % self.id)
 
-            if not self.exists():
-                print("[%0.2f] Creating site '%s'" % (time.time(), self.id))
-                p = subprocess.Popen([
-                    "/usr/bin/sudo", "/usr/bin/omd", "-V",
-                    self.version.version_directory(), "create", "--admin-password", "cmk",
-                    "--apache-reload", self.id
-                ])
-                exit_code = p.wait()
-                print("[%0.2f] Executed create command" % time.time())
-                assert exit_code == 0
-                assert os.path.exists("/omd/sites/%s" % self.id)
+            self._set_number_of_helpers()
+            #self._enabled_liveproxyd_debug_logging()
+            self._enable_mkeventd_debug_logging()
 
-                self._set_number_of_helpers()
-                #self._enabled_liveproxyd_debug_logging()
-                self._enable_mkeventd_debug_logging()
+        if self.install_test_python_modules:
+            self._install_test_python_modules()
 
-            if self.install_test_python_modules:
-                self._install_test_python_modules()
-
-            if self.update_with_git:
-                self._update_with_f12_files()
-
-    # When using the Git version, the original version files will be
-    # replaced by the .f12 scripts. When tests are running in parallel
-    # with the same daily build, this may lead to problems when the .f12
-    # scripts are executed while another test is loading affected files
-    # As workaround we copy the original files to a test specific version
-    def _copy_omd_version_for_test(self):
-        if not os.environ.get("BUILD_NUMBER"):
-            return  # Don't do this in non CI environments
-
-        src_version, src_path = self.version.version, self.version.version_path()
-        new_version_name = "%s-%s" % (src_version, os.environ["BUILD_NUMBER"])
-        self.version = CMKVersion(new_version_name, self.version.edition(), self.version._branch)
-
-        print("Copy CMK '%s' to '%s'" % (src_path, self.version.version_path()))
-        assert not os.path.exists(self.version.version_path()), \
-            "New version path '%s' already exists" % self.version.version_path()
-
-        def execute(cmd):
-            print("Executing: %s" % cmd)
-            rc = os.system(cmd) >> 8  # nosec
-            if rc != 0:
-                raise Exception("Failed to execute '%s'. Exit code: %d" % (cmd, rc))
-
-        execute("sudo /bin/cp -a %s %s" % (src_path, self.version.version_path()))
-
-        execute("sudo sed -i \"s|%s|%s|g\" %s/bin/omd" %
-                (src_version, new_version_name, self.version.version_path()))
-
-        omd_init_path = "%s/lib/python3/omdlib/__init__.py" % self.version.version_path()
-        execute("sudo sed -i \"s|%s|%s|g\" %s" % (src_version, new_version_name, omd_init_path))
-
-        execute("sudo sed -i \"s|%s|%s|g\" %s/share/omd/omd.info" %
-                (src_version, new_version_name, self.version.version_path()))
-
-        # we should use self.version.version_path() in the RPATH, but that is limited to
-        # 32 bytes and our versions exceed this limit. We need to use some hack to make
-        # this possible
-        if not os.path.exists("/omd/v"):
-            execute("sudo /bin/ln -s /omd/versions /omd/v")
-
-        execute("sudo chrpath -r /omd/v/%s/lib %s/bin/python" %
-                (self.version.version_directory(), self.version.version_path()))
-
-        execute("sudo chrpath -r /omd/v/%s/lib %s/bin/python3" %
-                (self.version.version_directory(), self.version.version_path()))
+        if self.update_with_git:
+            self._update_with_f12_files()
 
     def _update_with_f12_files(self):
         paths = [
@@ -536,12 +483,11 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         if site_id is None:
             site_id = self.id
 
-        with SiteActionLock():
-            # TODO: LM: Temporarily disabled until "omd rm" issue is fixed.
-            #assert subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
-            subprocess.Popen(
-                ["/usr/bin/sudo", "/usr/bin/omd", "-f", "rm", "--apache-reload", "--kill",
-                 site_id]).wait()
+        # TODO: LM: Temporarily disabled until "omd rm" issue is fixed.
+        #assert subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
+        subprocess.Popen(
+            ["/usr/bin/sudo", "/usr/bin/omd", "-f", "rm", "--apache-reload", "--kill",
+             site_id]).wait()
 
     def cleanup_old_sites(self, cleanup_pattern):
         if not os.path.exists("/omd/sites"):
@@ -732,15 +678,13 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             start_again = True
             self.stop()
 
-        sys.stdout.write("Getting livestatus port lock (/tmp/cmk-test-open-livestatus-port)...\n")
-        with InterProcessLock("/tmp/cmk-test-livestatus-port"):
-            sys.stdout.write("Have livestatus port lock\n")
-            self.set_config("LIVESTATUS_TCP", "on")
-            self._gather_livestatus_port()
-            self.set_config("LIVESTATUS_TCP_PORT", str(self._livestatus_port))
+        sys.stdout.write("Have livestatus port lock\n")
+        self.set_config("LIVESTATUS_TCP", "on")
+        self._gather_livestatus_port()
+        self.set_config("LIVESTATUS_TCP_PORT", str(self._livestatus_port))
 
-            if start_again:
-                self.start()
+        if start_again:
+            self.start()
 
         sys.stdout.write("After livestatus port lock\n")
 

@@ -5,16 +5,11 @@
 from __future__ import print_function
 
 import os
-import glob
-import pwd
 import time
-import re
 import sys
-import ast
 import abc
 import tempfile
 import datetime
-import inspect
 from contextlib import contextmanager
 import six
 
@@ -28,7 +23,6 @@ import urllib3  # type: ignore[import]
 import freezegun  # type: ignore[import]
 
 from testlib.utils import (
-    InterProcessLock,
     repo_path,
     cmk_path,
     cme_path,

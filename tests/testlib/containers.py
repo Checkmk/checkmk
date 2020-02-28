@@ -211,7 +211,7 @@ def _image_build_volumes():
         },
         # Credentials file for fetching the package from the download server. Used by
         # testlib/version.py in case the version package needs to be downloaded
-        "%s/.cmk-credentials" % os.environ["HOME"]: {
+        os.path.join(os.environ["HOME"], ".cmk-credentials"): {
             "bind": "/root/.cmk-credentials",
             "mode": "ro",
         }
@@ -230,7 +230,7 @@ def _runtime_volumes():
         # For whatever reason the image can not be started when nothing is mounted
         # at the file mount that was used while building the image. This is not
         # really needed during runtime of the test. We could mount any file.
-        "%s/.cmk-credentials" % os.environ["HOME"]: {
+        os.path.join(os.environ["HOME"], ".cmk-credentials"): {
             "bind": "/root/.cmk-credentials",
             "mode": "ro",
         }

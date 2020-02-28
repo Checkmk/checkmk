@@ -33,6 +33,7 @@ node {
             try {
                 stage('Test GUI crawl') {
                     dir ('tests-py3') {
+                        sh "env"
                         sh "RESULT_PATH='${WORKSPACE}/test-results' make test-gui-crawl-docker"
                     }
                 }

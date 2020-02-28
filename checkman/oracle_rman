@@ -28,3 +28,7 @@ parameters (dict):
  "backup_age": (int, int) - Maximum time in seconds for warn and crit
  for the last RMAN Backup.
 
+item:
+ The sid and the type of the backup seperated by a {{.}} and optionally
+ the backup level seperated by an underscore
+

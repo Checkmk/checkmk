@@ -10,8 +10,5 @@ description:
 
  This check is always OK or stale when no data is found from agent.
 
-item:
- ORA-GI Version
-
 inventory:
  One service will be created for each host

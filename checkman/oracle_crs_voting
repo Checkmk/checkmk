@@ -13,8 +13,5 @@ description:
 
  Services goues stale when cssd is not running.
 
-item:
- ORA-GI Voting
-
 inventory:
  One service will be created for each host

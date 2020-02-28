@@ -7,3 +7,6 @@ description:
  The check monitors the wait time for locks in ORACLE. Per default the checks
  warns if the wait time for a lock is more than half an hour and goes crit
  at one hour.
+
+item:
+ Name of the device

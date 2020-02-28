@@ -27,7 +27,7 @@ description:
  11.2 and 12.1.
 
 item:
- ORA-GI <Name of Resource> Resource
+ Name of Resource
 
 inventory:
  One service will be created for each resource.

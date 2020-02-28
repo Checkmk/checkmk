@@ -7,3 +7,6 @@ description:
  Checks the used space in the recovery area of an ORACLE database. Reclaimable
  space is considered as free hereby. The default levels for warn/crit are at
  70% and 90% of used space.
+
+item:
+ The ORACLE_SID

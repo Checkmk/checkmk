@@ -20,8 +20,7 @@ description:
  exceeds the time in seconds.
 
 item:
- {ORA} {<SID>.<JOB_OWNER>.<JOB_NAME>} {Job} for each entry from the
- plugin.
+ The SID, the PDB name, the job owner and the job name (optional) each seperated by {{.}}
 
 inventory:
  One separate check for each enabled job will be created.

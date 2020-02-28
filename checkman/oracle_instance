@@ -110,5 +110,5 @@ description:
  https://mathias-kettner.de/checkmk_oracle.html
 
 item:
- ORA <ORACLE_SID> Instance
+ The ORACLE_SID
 

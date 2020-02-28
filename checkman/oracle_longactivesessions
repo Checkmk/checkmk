@@ -3,6 +3,10 @@ agents: linux, solaris, hpux
 catalog: app/oracle
 license: GPL
 distribution: check_mk
+
+item:
+ Name of the instance
+
 description:
  Looks for the current number of long active sessions and warns if (per default) these
  exceed 500. Goes critical at 1000.

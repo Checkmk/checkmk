@@ -1,10 +1,9 @@
 import pytest  # type: ignore[import]
-import testlib
+import testlib  # type: ignore[import]
 
-
-# TODO Orig conftest file (Python 2)
+# TODO Python 3: Copied conftest from orig conftest file (Python 2)
 # If new fixtures are implemented, don't forget to port them to
-#   tests-py3/unit/inventory/conftest.py
+#   tests/unit/inventory/conftest.py
 
 
 @pytest.fixture(scope="module")

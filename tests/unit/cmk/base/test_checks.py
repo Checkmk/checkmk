@@ -362,3 +362,21 @@ def test_check_tests_symlinks():
     assert py2_check_tests.issubset(
         py3_check_tests), "Forget to implement/symlink related Python 3 check test: %s" % ", ".join(
             py2_check_tests - py3_check_tests)
+
+
+def test_inventory_tests_symlinks():
+    # TODO After complete Python 3 migration we can remove this
+    pattern = 'test_*.py'
+
+    py2_inventory_plugin_tests = set(
+        p.name
+        for p in Path(testlib.repo_path()).joinpath(Path('tests/unit/inventory')).glob(pattern))
+
+    py3_inventory_plugin_tests = set(
+        p.name
+        for p in Path(testlib.repo_path()).joinpath(Path('tests-py3/unit/inventory')).glob(pattern))
+
+    assert py2_inventory_plugin_tests.issubset(
+        py3_inventory_plugin_tests
+    ), "Forget to implement/symlink related Python 3 inventory plugin test: %s" % ", ".join(
+        py2_inventory_plugin_tests - py3_inventory_plugin_tests)

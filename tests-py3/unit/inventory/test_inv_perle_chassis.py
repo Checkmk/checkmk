@@ -1,0 +1,1 @@
+../../../tests/unit/inventory/test_inv_perle_chassis.py

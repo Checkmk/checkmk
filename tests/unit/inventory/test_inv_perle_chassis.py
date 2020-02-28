@@ -1,8 +1,5 @@
 import pytest  # type: ignore[import]
 
-# TODO: Change back to fixture (see conftest.py) after Python 3 migration
-from inventory_testlib import inventory_plugin_manager
-
 
 @pytest.mark.parametrize(
     'info, inventory_data',
@@ -12,8 +9,8 @@ from inventory_testlib import inventory_plugin_manager
         "bootloader": "BOOTLOADER",
         "firmware": "FW"
     })])
-def test_inv_perle_chassis(info, inventory_data):
-    inv_plugin = inventory_plugin_manager().get_inventory_plugin('perle_chassis')
+def test_inv_perle_chassis(inventory_plugin_manager, info, inventory_data):
+    inv_plugin = inventory_plugin_manager.get_inventory_plugin('perle_chassis')
     inventory_tree_data, status_tree_data = inv_plugin.run_inventory(info)
 
     assert status_tree_data == {}

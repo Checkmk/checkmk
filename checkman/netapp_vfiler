@@ -11,5 +11,5 @@ inventory:
  The check creates one service per vFiler found.
 
 item:
- A string naming the vFiler as defined on the Filer.
+ Name of the vFiler as defined on the Filer.
 

@@ -10,7 +10,7 @@ description:
  Upper default levels are 45, 50 measured in Celsius.
 
 item:
- Temperature System.
+ The fixed statement {{System}}
 
 inventory:
  One service per is created.

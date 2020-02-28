@@ -10,7 +10,7 @@ description:
  Upper default levels are 110, 120 Watt. These levels are configurable.
 
 item:
- Power Supply 1.
+ The index of the power supply
 
 inventory:
  One service is created.

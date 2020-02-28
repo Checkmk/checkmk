@@ -12,7 +12,7 @@ description:
  These levels are configurable.
 
 item:
- The output power supply number.
+ The index of the power supply
 
 inventory:
  One service per power supply is created.

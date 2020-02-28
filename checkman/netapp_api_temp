@@ -10,6 +10,9 @@ description:
  (e.g. {temp-sensor-hi-critical}) have been breached. You can also override the levels
  with the WATO rule set for temperatures.
 
+item:
+ Either {{Internal Shelf}} or {{Ambient Shelf}} followed by the name of the shelf
+
 inventory:
  Two summary checks are created for each shelf. {Temperature Internal Shelfes} and {Temperature Ambient Shelfs}
 

@@ -8,6 +8,9 @@ description:
  Right now the check is always {OK} and reports the following informations for
  each vFilfer: {Network Data Received/Send}, {Disk Data Read/Written}, {Read/Write Operations Per Second}
 
+item:
+ Name of the CPU
+
 inventory:
  Creates one check for each vFiler.
 

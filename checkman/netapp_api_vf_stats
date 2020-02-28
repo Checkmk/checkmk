@@ -9,6 +9,9 @@ description:
  {WARN} or {CRIT} is returned, if the usage in the last 60 sec was above
  given thresholds. {OK} is returned otherwise.
 
+item:
+ Name of the CPU
+
 inventory:
  Creates one check for each vFiler.
 

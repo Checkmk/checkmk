@@ -3,8 +3,9 @@ import time
 import json
 import ast
 import re
-import six
 import logging
+
+import six
 from six.moves.urllib.parse import urlparse
 from bs4 import BeautifulSoup  # type: ignore[import]
 

@@ -74,13 +74,17 @@ def install():
         sys.stdout.write("already installed\n")
         return 1
 
-    import urllib2
+    if sys.version_info[0] >= 3:
+        from urllib.request import urlopen  # pylint: disable=no-name-in-module
+        from io import BytesIO
+    else:
+        from urllib2 import urlopen
+        from cStringIO import StringIO as BytesIO
     import shutil
     from zipfile import ZipFile
-    from cStringIO import StringIO
     url = "http://download.tinkerforge.com/bindings/python/tinkerforge_python_bindings_latest.zip"
-    response = urllib2.urlopen(url)
-    buf = StringIO(response.read())
+    response = urlopen(url)
+    buf = BytesIO(response.read())
     z = ZipFile(buf)
 
     extract_files = [f for f in z.namelist() if f.startswith("source/tinkerforge")]
@@ -119,39 +123,39 @@ def print_generic(settings, sensor_type, ident, factor, unit, *values):
 
 
 def print_ambient_light(conn, settings, uid):
-    from tinkerforge.bricklet_ambient_light import BrickletAmbientLight
+    from tinkerforge.bricklet_ambient_light import BrickletAmbientLight  # type: ignore[import]
     br = BrickletAmbientLight(uid, conn)
     print_generic(settings, "ambient", br.get_identity(), 0.01, "L", br.get_illuminance())
 
 
 def print_ambient_light_v2(conn, settings, uid):
-    from tinkerforge.bricklet_ambient_light_v2 import BrickletAmbientLightV2
+    from tinkerforge.bricklet_ambient_light_v2 import BrickletAmbientLightV2  # type: ignore[import]
     br = BrickletAmbientLightV2(uid, conn)
     print_generic(settings, "ambient", br.get_identity(), 0.01, "L", br.get_illuminance())
 
 
 def print_temperature(conn, settings, uid):
-    from tinkerforge.bricklet_temperature import BrickletTemperature
+    from tinkerforge.bricklet_temperature import BrickletTemperature  # type: ignore[import]
     br = BrickletTemperature(uid, conn)
     print_generic(settings, "temperature", br.get_identity(), 0.01, u"\N{DEGREE SIGN}C",
                   br.get_temperature())
 
 
 def print_temperature_ext(conn, settings, uid):
-    from tinkerforge.bricklet_ptc import BrickletPTC
+    from tinkerforge.bricklet_ptc import BrickletPTC  # type: ignore[import]
     br = BrickletPTC(uid, conn)
     print_generic(settings, "temperature.ext", br.get_identity(), 0.01, u"\N{DEGREE SIGN}C",
                   br.get_temperature())
 
 
 def print_humidity(conn, settings, uid):
-    from tinkerforge.bricklet_humidity import BrickletHumidity
+    from tinkerforge.bricklet_humidity import BrickletHumidity  # type: ignore[import]
     br = BrickletHumidity(uid, conn)
     print_generic(settings, "humidity", br.get_identity(), 0.1, "RH", br.get_humidity())
 
 
 def print_master(conn, settings, uid):
-    from tinkerforge.brick_master import BrickMaster
+    from tinkerforge.brick_master import BrickMaster  # type: ignore[import]
     br = BrickMaster(uid, conn)
     print_generic(
         settings,
@@ -166,7 +170,7 @@ def print_master(conn, settings, uid):
 
 
 def print_motion_detector(conn, settings, uid):
-    from tinkerforge.bricklet_motion_detector import BrickletMotionDetector
+    from tinkerforge.bricklet_motion_detector import BrickletMotionDetector  # type: ignore[import]
     br = BrickletMotionDetector(uid, conn)
     print_generic(settings, "motion", br.get_identity(), 1.0, "", br.get_motion_detected())
 
@@ -200,7 +204,7 @@ def display_on_segment(conn, settings, text):
         u"\N{DEGREE SIGN}": 0x63,
     }
 
-    from tinkerforge.bricklet_segment_display_4x7 import BrickletSegmentDisplay4x7
+    from tinkerforge.bricklet_segment_display_4x7 import BrickletSegmentDisplay4x7  # type: ignore[import]
     br = BrickletSegmentDisplay4x7(segment_display, conn)
     segments = []
     for letter in text:
@@ -305,7 +309,7 @@ def main():
         return install()
 
     try:
-        from tinkerforge.ip_connection import IPConnection
+        from tinkerforge.ip_connection import IPConnection  # type: ignore[import]
     except ImportError:
         sys.stdout.write("<<<tinkerforge:sep(44)>>>\n")
         sys.stdout.write("master,0.0.0,tinkerforge api isn't installed\n")

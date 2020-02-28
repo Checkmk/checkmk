@@ -12,6 +12,9 @@ description:
  {CPU utilization of Devices with Modules}. It is possible to configure
  averaging of the CPU utilization via parameter {Averaging}.
 
+item:
+ The name of the cluster node
+
 inventory:
  Creates one check.
 

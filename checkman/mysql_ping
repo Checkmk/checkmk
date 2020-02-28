@@ -13,6 +13,9 @@ description:
   found in the Check_MK online documentation in the article
   "Monitoring MySQL with Check_MK".
 
+item:
+ Name of the MySQL service
+
 inventory:
   On each host where the agent plugin {mk_mysql} is being installed
   one service per instance is being generated.

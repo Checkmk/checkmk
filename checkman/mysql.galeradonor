@@ -13,7 +13,7 @@ description:
  "Monitoring MySQL with Check_MK".
 
 item:
- The instance name.
+ The name of the instance
 
 inventory:
  On each host where the agent plugin {mk_mysql} is being installed

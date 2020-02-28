@@ -252,7 +252,7 @@ def _container_env(version):
 
 @contextmanager
 def _start(client, **kwargs):
-    logger.info("Start new container from %s", kwargs["image"])
+    logger.info("Start new container from %s (Args: %s)", kwargs["image"], kwargs)
 
     try:
         client.images.get(kwargs["image"])

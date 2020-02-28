@@ -49,5 +49,5 @@ inventory:
  One service per web server will be created.
 
 item:
- A string-combination of servername and port, e.g. {127.0.0.1:80}.
+ The servername and the port seperated by a colon, e.g. {127.0.0.1:80}.
 

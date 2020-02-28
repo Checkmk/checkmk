@@ -16,7 +16,7 @@ description:
  or when all sites on the nodes are stopped.
 
 item:
- The name of the site (string).
+ The name of the site.
 
 inventory:
  One check per site will be created for each site where {AUTOSTART} is

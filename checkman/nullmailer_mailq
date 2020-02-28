@@ -14,5 +14,8 @@ description:
  The check will result in WARNING/CRITICAL states when the number of items
  in the queues have reached the defined thresholds.
 
+item:
+ Empty string
+
 inventory:
  On each system which provides the {nullmailer-send} command one service is created.

@@ -15,7 +15,7 @@ description:
  be truncated each time it has been checked.
 
 item:
- The name of the site (string).
+ The name of the site.
 
 inventory:
  One check per site will be created for each site.

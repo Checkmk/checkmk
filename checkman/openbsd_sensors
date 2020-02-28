@@ -11,7 +11,7 @@ description:
  checks of the same type.
 
 item:
- The item is the description of the sensor.
+ The description of the sensor.
 
 inventory:
  A Service is created for each sensor item if there is a valid output.

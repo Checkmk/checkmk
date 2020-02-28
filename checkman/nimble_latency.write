@@ -12,5 +12,8 @@ description:
 
  Thresholds and correlating states can be defined for each latency group.
 
+item:
+ Name of the volume
+
 inventory:
  One services for each volume will be created.

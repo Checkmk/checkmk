@@ -36,5 +36,5 @@ checks = {'': [(u'hdisk0', {'paths': 1}, [(0, '1 paths total', [])]),
                 [(1, '1 paths not enabled (!), 4 paths total', [])]),
                (u'hdisk3',
                 {'paths': 6},
-                [(1, '3 paths not enabled (!), 6 paths total', [])]),
+                [(2, '3 paths not enabled (!!), 6 paths total', [])]),
                ]}

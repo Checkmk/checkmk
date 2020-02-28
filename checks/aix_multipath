@@ -56,7 +56,7 @@ def check_aix_multipath(item, params, info):
                 state_count += 1
 
     #How many Paths are not enabled
-    if state_count != 0 and (100 / path_count * state_count) < 50:
+    if state_count != 0 and (100.0 / path_count * state_count) < 50:
         state = 1
         message.append('%d paths not enabled (!)' % (state_count))
     elif state_count != 0:

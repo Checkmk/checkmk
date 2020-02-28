@@ -96,12 +96,12 @@ def check_postgres_stats(item, params, parsed):
             continue
 
         value = line[stats_field]
-        if value == "-1" or value == "":
+        if value in ("-1", ""):
             never_checked.append(line["tname"])
             continue
 
         last_time = int(value)
-        if not oldest_element or last_time < oldest_element[stats_field]:
+        if not oldest_element or last_time < int(oldest_element[stats_field]):
             oldest_element = line
 
     now = time.time()

@@ -1,0 +1,1 @@
+../../../tests/unit/checks/test_ra32e_switch_check.py

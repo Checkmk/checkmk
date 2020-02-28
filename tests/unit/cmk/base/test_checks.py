@@ -10,7 +10,8 @@ else:
 
 import pytest  # type: ignore[import]
 
-from testlib.base import Scenario
+import testlib  # type: ignore[import]
+from testlib.base import Scenario  # type: ignore[import]
 
 import cmk.utils.paths
 import cmk.base.config as config
@@ -345,3 +346,19 @@ def test_filter_by_management_board_dual_host_with_SNMP_mgmt_board(monkeypatch, 
                                              found_check_plugins,
                                              True,
                                              for_discovery=for_discovery) == set(mgmt_board_result)
+
+
+def test_check_tests_symlinks():
+    # TODO After complete Python 3 migration we can remove this
+    pattern = 'test_*.py'
+
+    py2_check_tests = set(
+        p.name for p in Path(testlib.repo_path()).joinpath(Path('tests/unit/checks')).glob(pattern))
+
+    py3_check_tests = set(
+        p.name
+        for p in Path(testlib.repo_path()).joinpath(Path('tests-py3/unit/checks')).glob(pattern))
+
+    assert py2_check_tests.issubset(
+        py3_check_tests), "Forget to implement/symlink related Python 3 check test: %s" % ", ".join(
+            py2_check_tests - py3_check_tests)

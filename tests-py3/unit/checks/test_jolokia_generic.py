@@ -1,0 +1,1 @@
+../../../tests/unit/checks/test_jolokia_generic.py

@@ -1,0 +1,1 @@
+../../../tests/unit/checks/test_esx_vsphere_hostsystem.py

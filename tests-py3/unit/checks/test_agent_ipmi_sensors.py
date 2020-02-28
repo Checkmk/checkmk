@@ -1,0 +1,1 @@
+../../../tests/unit/checks/test_agent_ipmi_sensors.py

@@ -1,0 +1,1 @@
+../../../tests/unit/checks/test_logwatch_privates.py

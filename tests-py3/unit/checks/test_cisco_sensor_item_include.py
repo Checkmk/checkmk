@@ -1,0 +1,1 @@
+../../../tests/unit/checks/test_cisco_sensor_item_include.py

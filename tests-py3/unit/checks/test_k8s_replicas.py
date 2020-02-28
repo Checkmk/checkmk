@@ -1,0 +1,1 @@
+../../../tests/unit/checks/test_k8s_replicas.py

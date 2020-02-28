@@ -2,9 +2,9 @@ import pytest  # type: ignore[import]
 import testlib  # type: ignore[import]
 from testlib.base import Scenario  # type: ignore[import]
 
-# TODO Orig conftest file (Python 2)
+# TODO Python 3: Copied conftest from orig conftest file (Python 2)
 # If new fixtures are implemented, don't forget to port them to
-#   tests-py3/unit/checks/conftest.py
+#   tests/unit/checks/conftest.py
 
 
 @pytest.fixture(scope="module")

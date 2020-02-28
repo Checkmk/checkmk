@@ -405,9 +405,6 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                 (src_version, new_version_name, self.version.version_path()))
 
         omd_init_path = "%s/lib/python3/omdlib/__init__.py" % self.version.version_path()
-        # Temporary hack. Can be removed after 2019-12-19
-        if not os.path.exists(omd_init_path):
-            omd_init_path = "%s/lib/python/omdlib/__init__.py" % self.version.version_path()
         execute("sudo sed -i \"s|%s|%s|g\" %s" % (src_version, new_version_name, omd_init_path))
 
         execute("sudo sed -i \"s|%s|%s|g\" %s/share/omd/omd.info" %
@@ -509,10 +506,10 @@ class Site(object):  # pylint: disable=useless-object-inheritance
     def _install_test_python_modules(self):
         venv = virtualenv_path()
         bin_dir = venv / "bin"
-        self._copy_python_modules_from(venv / "lib/python2.7/site-packages")
+        self._copy_python_modules_from(venv / "lib/python3.7/site-packages")
 
         # Some distros have a separate platfrom dependent library directory, handle it....
-        platlib64 = venv / "lib64/python2.7/site-packages"
+        platlib64 = venv / "lib64/python3.7/site-packages"
         if platlib64.exists():
             self._copy_python_modules_from(platlib64)
 
@@ -527,10 +524,10 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             # Only copy modules that do not exist in regular module path
             if file_name not in enforce_override:
                 if os.path.exists("%s/lib/python/%s" % (self.root, file_name)) \
-                   or os.path.exists("%s/lib/python2.7/site-packages/%s" % (self.root, file_name)):
+                   or os.path.exists("%s/lib/python3.7/site-packages/%s" % (self.root, file_name)):
                     continue
 
-            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/lib/python/" %  # nosec
+            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/lib/python3/" %  # nosec
                              (self.id, self.id, packages_dir / file_name, self.root)) >> 8 == 0
 
     def rm(self, site_id=None):
@@ -743,7 +740,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         env_var_str = " ".join(["%s=%s" % (k, pipes.quote(v)) for k, v in env_vars.items()]) + " "
 
         cmd_parts = [
-            "python",
+            "python3",
             self.path("local/bin/py.test"),
         ] + sys.argv[1:]
 

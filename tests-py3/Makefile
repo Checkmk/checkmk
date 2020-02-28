@@ -5,7 +5,8 @@ MYPY     := ../scripts/run-mypy
 
 .PHONY: help test-docker test-pylint test-unit \
 	test-mypy test-mypy-raw test-mypy3 test-mypy3-raw \
-	clean test-packaging test-gui-crawl test-gui-crawl-docker
+	clean test-packaging test-gui-crawl test-gui-crawl-docker \
+	test-integration test-integration-docker
 
 help:
 	@echo "test-mypy                 - Run mypy tests"
@@ -18,6 +19,8 @@ help:
 	@echo "test-packaging            - Run packaging tests"
 	@echo "test-gui-crawl            - Run GUI crawl locally"
 	@echo "test-gui-crawl-docker     - Run GUI crawl in container"
+	@echo "test-integration          - Run integration tests locally"
+	@echo "test-integration-docker   - Run integration tests in container"
 
 $(NODE_MODULES):
 	$(MAKE) -C $(dir $(NODE_MODULES)) $(notdir $(NODE_MODULES))
@@ -91,7 +94,13 @@ test-gui-crawl: $(NODE_MODULES)
 	$(PYTEST) -T gui_crawl $(realpath gui_crawl/test_gui_crawl.py)
 
 test-gui-crawl-docker:
-	$(PIPENV3) run gui_crawl/run-gui-crawl.py
+	$(PIPENV3) run scripts/run-dockerized.py "test-gui-crawl"
+
+test-integration: $(NODE_MODULES)
+	$(PYTEST) -T integration -p no:cov $(realpath integration)
+
+test-integration-docker:
+	$(PIPENV3) run scripts/run-dockerized.py "test-integration"
 
 clean:
 	rm -rf .mypy_cache

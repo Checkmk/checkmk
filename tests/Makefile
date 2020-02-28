@@ -9,7 +9,7 @@ YAPF     := $(PIPENV2) run yapf
 FUTURIZE := $(PIPENV2) run ./test-futurize
 
 .PHONY: help pipenv-check test-bandit test-format-python \
-        test-format-shell test-integration test-agent-integration \
+        test-format-shell test-agent-integration \
         test-pylint test-python-futurize test-shellcheck test-unit \
         list-unit-tests test-unit-one-by-one test-unit-coverage-html test-unit-sh
 
@@ -18,7 +18,6 @@ help:
 	@echo "test-bandit               - Run bandit (security) tests"
 	@echo "test-format-python        - Test the python formatting"
 	@echo "test-format-shell         - Run the shell formatting"
-	@echo "test-integration          - Run integration tests"
 	@echo "test-agent-integration    - Run agent (plugin) related integration tests"
 	@echo "test-format-python        - Test the python formatting"
 	@echo "test-pylint               - Run pylint based tests"
@@ -58,9 +57,6 @@ test-format-python: ../.style.yapf
 
 test-format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
-
-test-integration: $(NODE_MODULES)
-	$(PYTEST) -T integration -p no:cov $(realpath integration)
 
 test-agent-integration:
 	$(PYTEST) -T agent-integration $(realpath agent-integration)

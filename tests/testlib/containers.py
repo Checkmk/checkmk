@@ -66,9 +66,7 @@ def execute_tests_in_container(version, result_path, command):
         # in the container and reuse it here.
         _prepare_virtual_environments(container, version)
 
-        # Now execute the real crawl test.  It will create a site "crawl_central"
-        # and start to crawl all reachable GUI pages. Print the output during the
-        # execution of the test.
+        # Now execute the real test in the container context
         exit_code = _exec_run(
             container,
             command,
@@ -169,7 +167,7 @@ def _create_cmk_image(client, base_image_name, version):
         logger.info("Install Checkmk version")
         assert _exec_run(
             container,
-            ["scripts/run-pipenv", "3", "run", "/git/tests-py3/gui_crawl/install-cmk.py"],
+            ["scripts/run-pipenv", "3", "run", "/git/tests-py3/scripts/install-cmk.py"],
             workdir="/git",
             environment=_container_env(version),
             stream=True,
@@ -410,7 +408,7 @@ def _prepare_git_overlay(container, lower_path, target_path):
 
 
 def _prepare_virtual_environments(container, version):
-    # When the git is mounted to the crawl container for a node which already
+    # When the git is mounted to the test container for a node which already
     # created it's virtual environments these may be incopatible with the
     # containers OS. Clean up, just to be sure.
     logger.info("Cleanup previous virtual environments")

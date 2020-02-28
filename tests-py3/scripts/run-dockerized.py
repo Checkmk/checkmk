@@ -3,9 +3,11 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Starts a docker container and executes the GUI crawl tests in it
+"""Starts a docker container and executes tests in it
 
-The GUI crawl tests create a site and crawl all pages of the site to find errors.
+The tests are executed in the container using the MAKE_TARGET given as first argument
+to this script.
+
 The exit code is used as exit code of this script and the resulting files are
 saved in the given RESULT_PATH.
 
@@ -17,8 +19,9 @@ import os
 import sys
 import logging
 import tempfile
+import argparse
 from pathlib import Path
-from typing import Optional  # pylint: disable=unused-import
+from typing import List
 
 # Make the testlib available
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
@@ -31,8 +34,10 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(filename)s %(me
 logger = logging.getLogger()
 
 
-def main():
-    with tempfile.TemporaryDirectory(prefix="gui_crawl") as tmpdir:
+def main(raw_args):
+    args = _parse_arguments(raw_args)
+
+    with tempfile.TemporaryDirectory(prefix="cmk-run-dockerized-") as tmpdir:
         tmp_path = Path(tmpdir)
 
         version_spec = os.environ.get("VERSION", CMKVersion.GIT)
@@ -47,11 +52,21 @@ def main():
         logger.info("Prepared result path: %s", result_path)
 
         return execute_tests_in_container(
-            command=["make", "-C", "tests-py3", "test-gui-crawl"],
+            command=["make", "-C", "tests-py3", args.make_target],
             version=version,
             result_path=result_path,
         )
 
 
+def _parse_arguments(args):
+    # type: (List[str]) -> argparse.Namespace
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("make_target",
+                   metavar="MAKE_TARGET",
+                   help="The make target to execute in test-py3 directory")
+
+    return p.parse_args(args)
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

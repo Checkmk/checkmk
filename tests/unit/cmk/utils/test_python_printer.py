@@ -20,19 +20,26 @@ def test_same_as_repr():
         ((11,), (22, (1.25, -44))),
         [],
         [[], [11, (22, []), 3.5]],
-            set(),
-        {11, -22, 33},
-        {(11, 22, (33, 44))},
         {},
         {
             11: 22,
             (33, 44): [-8],
         },
         {
-            (11,): {22},
+            (11,): (33, 44, 22),
         },
     ]:
         assert pformat(obj) == repr(obj)
+
+
+@pytest.mark.parametrize('obj, result', [
+    (set(), "set()"),
+    ({11}, "{11}"),
+    ({11, -22, 33}, "{-22, 11, 33}"),
+    ({(11, 22, (33, 44))}, "{(11, 22, (33, 44))}"),
+])
+def test_sets(obj, result):
+    assert pformat(obj) == result
 
 
 @pytest.mark.parametrize(
@@ -50,23 +57,35 @@ def test_same_as_repr():
          "{b'Kontiom\\xc3\\xa4ki': {b'Wassersee'}, b'Vesij\\xc3\\xa4rvi': [(b'B\\xc3\\xa4renh\\xc3\\xbcgel', True), 42]}"
         )
     ])
-@pytest.mark.skipif(sys.version_info[0] < 3, reason="Not yet done...")
 def test_byte_strings_are_prefixed(obj, result):
     assert pformat(obj) == result
 
 
 @pytest.mark.parametrize('obj, result', [
     (u'', "u''"),
-    (u'bläh', "u'bl\\xe4h'"),
-    (((11,), (22, (u'bläh', -44))), "((11,), (22, (u'bl\\xe4h', -44)))"),
-    ([[], [11, (u'blöh', []), 3.5]], "[[], [11, (u'bl\\xf6h', []), 3.5]]"),
+    (u'bläh', "u'bläh'"),
+    (((11,), (22, (u'bläh', -44))), "((11,), (22, (u'bläh', -44)))"),
+    ([[], [11, (u'blöh', []), 3.5]], "[[], [11, (u'blöh', []), 3.5]]"),
     ({
         u'Kontiomäki': {u'Wassersee'},
         u'Vesijärvi': [(u'Bärenhügel', True), 42],
-    },
-     "{u'Kontiom\\xe4ki': set([u'Wassersee']), u'Vesij\\xe4rvi': [(u'B\\xe4renh\\xfcgel', True), 42]}"
-    ),
+    }, "{u'Kontiomäki': {u'Wassersee'}, u'Vesijärvi': [(u'Bärenhügel', True), 42]}"),
 ])
-@pytest.mark.skipif(reason="Not yet done...")
 def test_unicode_strings_are_prefixed(obj, result):
+    # Python 2 uses hex escapes for non-ASCII characters in Unicode strings.
+    if sys.version_info[0] < 3:
+        for c in u'äöüÄÖÜß':
+            result = result.replace(c.encode('utf-8'), '\\' + hex(ord(c))[1:])
     assert pformat(obj) == result
+
+
+@pytest.mark.parametrize('obj', [
+    (frozenset([11, 22]),),
+    (NotImplemented,),
+    (sys,),
+    (memoryview(b'blabla'),),
+    (type("Hurz", (), {}),),
+])
+def test_raise_when_unknown(obj):
+    with pytest.raises(ValueError):
+        pformat(obj)

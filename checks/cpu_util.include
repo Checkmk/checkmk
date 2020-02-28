@@ -128,9 +128,16 @@ def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
     if this_time is None:
         this_time = time.time()
 
-    levels = params.get("util")
-    if levels is None:  # legacy rules before 1.6
-        levels = params.get("levels")
+    # Old/mixed config may look like:
+    # {'util': (80.0, 90.0), 'levels': None}
+    # 'levels is None' means: Do not impose levels
+    # 'util' from default levels
+    if "levels" in params and "util" in params:
+        levels = params.get('levels')
+    else:
+        levels = params.get("util")
+        if levels is None:  # legacy rules before 1.6
+            levels = params.get("levels")
 
     warn, crit = levels if isinstance(levels, tuple) else (None, None)  # only for perfdata
     perfdata = [("util", util, warn, crit, 0, perf_max)]

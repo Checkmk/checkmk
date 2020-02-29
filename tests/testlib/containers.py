@@ -13,6 +13,7 @@ from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
 from typing import List, Dict, Optional  # pylint: disable=unused-import
+import requests
 
 import dockerpty  # type: ignore[import]
 import docker  # type: ignore[import]
@@ -138,6 +139,9 @@ def _get_or_load_image(client, image_name):
                 "registry using \"docker login %s\" to be able to execute the tests." %
                 (_DOCKER_REGISTRY, _DOCKER_REGISTRY_URL))
         if "request canceled while waiting for connection" in "%s" % e:
+            return None
+        if "dial tcp: lookup " in "%s" % e:
+            # May happen when offline on ubuntu
             return None
         raise
 
@@ -512,4 +516,15 @@ def _reuse_persisted_virtual_environment(container, version):
             stream=True,
         ) == 0
 
-    _setup_virtual_environments(container, version)
+    if _mirror_reachable():
+        #  Only try to update when the mirror is available, otherwise continue with the current
+        #  state, which is good for the most of the time.
+        _setup_virtual_environments(container, version)
+
+
+def _mirror_reachable():
+    try:
+        requests.get(_DOCKER_REGISTRY_URL, timeout=2)
+        return True
+    except requests.exceptions.ConnectionError:
+        return False

@@ -20,6 +20,7 @@ import sys
 import pipes
 import subprocess
 import logging
+import shutil
 from pathlib import Path
 
 # Make the testlib available
@@ -51,8 +52,11 @@ def main(args):
     logger.info("Switching to site context")
     logger.info("===============================================")
 
-    exit_code = _execute_as_site_user(site, args)
-    sys.exit(exit_code)
+    try:
+        return _execute_as_site_user(site, args)
+    finally:
+        shutil.copy(site.path("junit.xml"), "/results")
+        shutil.copytree(site.path("var/log"), "/results/logs")
 
 
 def _execute_as_site_user(site, args):
@@ -70,8 +74,11 @@ def _execute_as_site_user(site, args):
 
     env_var_str = " ".join(["%s=%s" % (k, pipes.quote(v)) for k, v in env_vars.items()]) + " "
 
-    cmd_parts = ["python",
-                 site.path("local/bin/py.test"), "-T", "integration", "-p", "no:cov"] + args
+    cmd_parts = [
+        "python",
+        site.path("local/bin/py.test"), "-T", "integration", "-p", "no:cov", "--junitxml",
+        site.path("junit.xml")
+    ] + args
 
     cmd = "cd %s && " % pipes.quote(cmk_path())
     cmd += env_var_str + subprocess.list2cmdline(cmd_parts)

@@ -61,10 +61,7 @@ def execute_tests_in_container(version, result_path, command):
     ) as container:
         # Ensure we can make changes to the git directory (not persisting it outside of the container)
         _prepare_git_overlay(container, "/git-lowerdir", "/git")
-        # TODO: Would be nice if we could use the virtualenv from the image building, but it is
-        # currently built in a tmpfs overlay volume. We could try to copy it to some other directory
-        # in the container and reuse it here.
-        _prepare_virtual_environments(container, version)
+        _reuse_persisted_virtual_environment(container, version)
 
         # Now execute the real test in the container context
         exit_code = _exec_run(
@@ -163,6 +160,7 @@ def _create_cmk_image(client, base_image_name, version):
         # Ensure we can make changes to the git directory (not persisting it outside of the container)
         _prepare_git_overlay(container, "/git-lowerdir", "/git")
         _prepare_virtual_environments(container, version)
+        _persist_virtual_environments(container, version)
 
         logger.info("Install Checkmk version")
         assert _exec_run(
@@ -174,11 +172,7 @@ def _create_cmk_image(client, base_image_name, version):
         ) == 0
 
         logger.info("Check whether or not installation was OK")
-        assert _exec_run(
-            container,
-            ["ls", "/omd/versions/default"],
-            workdir="/",
-        ) == 0
+        assert _exec_run(container, ["ls", "/omd/versions/default"], workdir="/") == 0
 
         logger.info("Finalizing image")
 
@@ -379,6 +373,12 @@ def _copy_directory(container, src_path, dest_path):
 
 
 def _prepare_git_overlay(container, lower_path, target_path):
+    """Prevent modification of git checkout volume contents
+
+    Create some tmpfs that is mounted as rw layer over the the git checkout
+    at /git. All modifications to the git will be lost after the container is
+    removed.
+    """
     logger.info("Preparing overlay filesystem for %s at %s", lower_path, target_path)
     tmpfs_path = "/git-rw"
     upperdir_path = "%s/upperdir" % tmpfs_path
@@ -408,18 +408,17 @@ def _prepare_git_overlay(container, lower_path, target_path):
 
 
 def _prepare_virtual_environments(container, version):
-    # When the git is mounted to the test container for a node which already
-    # created it's virtual environments these may be incopatible with the
-    # containers OS. Clean up, just to be sure.
-    logger.info("Cleanup previous virtual environments")
-    assert _exec_run(
-        container,
-        ["rm", "-rf", "virtual-envs/3.7/.venv"],
-        workdir="/git",
-        environment=_container_env(version),
-        stream=True,
-    ) == 0
+    """Ensure the virtual environments are ready for use
 
+    Because the virtual environments are in the /git path (which is not persisted),
+    the initialized virtual environment will be copied to /virtual-envs, which is
+    persisted with the image. The test containers may use them.
+    """
+    _cleanup_previous_virtual_environments(container, version)
+    _setup_virtual_environments(container, version)
+
+
+def _setup_virtual_environments(container, version):
     logger.info("Prepare virtual environment")
     assert _exec_run(
         container,
@@ -428,3 +427,55 @@ def _prepare_virtual_environments(container, version):
         environment=_container_env(version),
         stream=True,
     ) == 0
+
+    assert _exec_run(container, ["test", "-d", "/git/virtual-envs/2.7/.venv"]) == 0
+    assert _exec_run(container, ["test", "-d", "/git/virtual-envs/3.7/.venv"]) == 0
+
+
+def _cleanup_previous_virtual_environments(container, version):
+    # When the git is mounted to the test container for a node which already
+    # created it's virtual environments these may be incompatible with the
+    # containers OS. Clean up, just to be sure.
+    logger.info("Cleanup previous virtual environments")
+    assert _exec_run(
+        container,
+        ["rm", "-rf", "virtual-envs/3.7/.venv", "virtual-envs/2.7/.venv"],
+        workdir="/git",
+        environment=_container_env(version),
+        stream=True,
+    ) == 0
+
+    assert _exec_run(container, ["test", "-n", "/virtual-envs/2.7/.venv"]) == 0
+    assert _exec_run(container, ["test", "-n", "/virtual-envs/3.7/.venv"]) == 0
+
+
+def _persist_virtual_environments(container, version):
+    logger.info("Persisting virtual environments for later use")
+    assert _exec_run(
+        container,
+        ["rsync", "-aR", "virtual-envs/2.7/.venv", "virtual-envs/3.7/.venv", "/"],
+        workdir="/git",
+        environment=_container_env(version),
+        stream=True,
+    ) == 0
+
+    assert _exec_run(container, ["test", "-d", "/virtual-envs/2.7/.venv"]) == 0
+    assert _exec_run(container, ["test", "-d", "/virtual-envs/3.7/.venv"]) == 0
+
+
+def _reuse_persisted_virtual_environment(container, version):
+    _cleanup_previous_virtual_environments(container, version)
+
+    if _exec_run(container, ["test", "-d", "/virtual-envs"],
+                 workdir="/git",
+                 environment=_container_env(version)) == 0:
+        logger.info("Restore previously created virtual environments")
+        assert _exec_run(
+            container,
+            ["rsync", "-a", "/virtual-envs", "/git"],
+            workdir="/git",
+            environment=_container_env(version),
+            stream=True,
+        ) == 0
+
+    _setup_virtual_environments(container, version)

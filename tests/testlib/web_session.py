@@ -753,7 +753,7 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
                 "Failed to activate %s: %r" % (site_id, status)
             assert status["_time_ended"] > time_started
 
-        logger.info("Waiting for core reloads of: %r", involved_sites)
+        logger.info("Waiting for core reloads of: %s", ", ".join(involved_sites))
         for site in relevant_sites:
             if site.id in involved_sites:
                 site.wait_for_core_reloaded(old_t[site.id])

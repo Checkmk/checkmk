@@ -55,6 +55,7 @@ def main(raw_args):
             command=["make", "-C", "tests-py3", args.make_target],
             version=version,
             result_path=result_path,
+            interactive=args.make_target == "debug",
         )
 
 

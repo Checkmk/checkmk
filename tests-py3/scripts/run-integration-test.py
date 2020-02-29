@@ -35,7 +35,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(filename)s %(me
 logger = logging.getLogger()
 
 
-def main():
+def main(args):
     if is_running_as_site_user():
         raise Exception()
 
@@ -51,11 +51,11 @@ def main():
     logger.info("Switching to site context")
     logger.info("===============================================")
 
-    exit_code = _execute_as_site_user(site)
+    exit_code = _execute_as_site_user(site, args)
     sys.exit(exit_code)
 
 
-def _execute_as_site_user(site):
+def _execute_as_site_user(site, args):
     env_vars = {
         "VERSION": site.version._version,
         "REUSE": "1" if site.reuse else "0",
@@ -70,11 +70,8 @@ def _execute_as_site_user(site):
 
     env_var_str = " ".join(["%s=%s" % (k, pipes.quote(v)) for k, v in env_vars.items()]) + " "
 
-    cmd_parts = [
-        "python",
-        site.path("local/bin/py.test"), "-T", "integration", "-p", "no:cov",
-        os.path.join(cmk_path(), "tests/integration")
-    ]
+    cmd_parts = ["python",
+                 site.path("local/bin/py.test"), "-T", "integration", "-p", "no:cov"] + args
 
     cmd = "cd %s && " % pipes.quote(cmk_path())
     cmd += env_var_str + subprocess.list2cmdline(cmd_parts)
@@ -84,4 +81,4 @@ def _execute_as_site_user(site):
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

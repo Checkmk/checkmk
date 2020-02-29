@@ -177,6 +177,7 @@ python3-modules-dump-Pipfile:
 	@echo 'bson = "*"  # used by test_mk_mongodb unit test'
 	@echo 'compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json'
 	@echo 'docker = "*"  # used by test_docker test and mk_docker agent plugin'
+	@echo 'dockerpty = "*"  # used by dockerized tests for opening debug shells'
 	@echo 'freezegun = "*"  # used by various unit tests'
 	@echo 'isort = "*"  # used as a plugin for editors'
 	@echo 'lxml = "*"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent'

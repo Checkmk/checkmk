@@ -14,6 +14,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import List, Dict, Optional  # pylint: disable=unused-import
 
+import dockerpty  # type: ignore[import]
 import docker  # type: ignore[import]
 
 import testlib
@@ -26,8 +27,8 @@ _DOCKER_IMAGE = "%s/ubuntu-19.04-os-image" % _DOCKER_REGISTRY
 logger = logging.getLogger()
 
 
-def execute_tests_in_container(version, result_path, command):
-    # type: (CMKVersion, Path, List[str]) -> int
+def execute_tests_in_container(version, result_path, command, interactive):
+    # type: (CMKVersion, Path, List[str], bool) -> int
     client = _docker_client()
     info = client.info()
     logger.info("Docker version: %s", info["ServerVersion"])
@@ -44,24 +45,55 @@ def execute_tests_in_container(version, result_path, command):
     with _start(
             client,
             image=image_name,
-            # Create some init process that manages signals and processes
-            init=True,
-            # Important to workaround really high default of docker which results
-            # in problems when trying to close all FDs in Python 2.
-            ulimits=[
-                docker.types.Ulimit(name="nofile", soft=1024, hard=1024),
-            ],
-            # May be useful for debugging
-            #ports={'80/tcp': 3334},
-            command=["tail", "-f", "/dev/null"],  # keep running
-            volumes=_runtime_volumes(),
-            # needed to make the overlay mounts work on the /git directory
-            # Should work, but does not seem to be enough: 'cap_add=["SYS_ADMIN"]'. Using this instead:
-            privileged=True,
+            command="/bin/bash",
+            volumes=list(_runtime_volumes().keys()),
+            host_config=client.api.create_host_config(
+                # Create some init process that manages signals and processes
+                init=True,
+                # needed to make the overlay mounts work on the /git directory
+                # Should work, but does not seem to be enough: 'cap_add=["SYS_ADMIN"]'. Using this instead:
+                privileged=True,
+                # Important to workaround really high default of docker which results
+                # in problems when trying to close all FDs in Python 2.
+                ulimits=[
+                    docker.types.Ulimit(name="nofile", soft=1024, hard=1024),
+                ],
+                binds=[":".join([k, v["bind"], v["mode"]]) for k, v in _runtime_volumes().items()],
+            ),
+            stdin_open=True,
+            tty=True,
     ) as container:
         # Ensure we can make changes to the git directory (not persisting it outside of the container)
         _prepare_git_overlay(container, "/git-lowerdir", "/git")
         _reuse_persisted_virtual_environment(container, version)
+
+        if interactive:
+            logger.info("+-------------------------------------------------")
+            logger.info("| Next steps:")
+            logger.info("| ")
+            logger.info("| /git/scripts/run-pipenv 3 shell")
+            logger.info("| cd /git")
+            logger.info("| ")
+            logger.info("| ... start whatever test you want, for example:")
+            logger.info("| ")
+            logger.info("| make -C tests-py3 test-integration")
+            logger.info("| ")
+            logger.info("|   Execute all integration tests")
+            logger.info("| ")
+            logger.info("| tests-py3/scripts/run-integration-test.py "
+                        "tests/integration/livestatus/test_livestatus.py")
+            logger.info("| ")
+            logger.info("|   Execute some integration tests")
+            logger.info("| ")
+            logger.info("| tests-py3/scripts/run-integration-test.py "
+                        "tests/integration/livestatus/test_livestatus.py "
+                        "-k test_service_custom_variables ")
+            logger.info("| ")
+            logger.info("|   Execute a single test")
+            logger.info("| ")
+            logger.info("+-------------------------------------------------")
+            dockerpty.start(client.api, container.id)
+            return 0
 
         # Now execute the real test in the container context
         exit_code = _exec_run(
@@ -133,23 +165,19 @@ def _create_cmk_image(client, base_image_name, version):
             "not implemented yet to build the image locally. Terminating." %
             (base_image_name, _DOCKER_REGISTRY_URL))
 
-    #container = client.containers.run(
-    #    image=base_image,
-    #    command=["tail", "-f", "/dev/null"],  # keep running
-    #    volumes=_image_build_volumes(),
-    #    detach=True,
-    #    # needed to make the overlay mounts work on the /git directory
-    #    # Should work, but does not seem to be enough: 'cap_add=["SYS_ADMIN"]'. Using this instead:
-    #    privileged=True,
-    #)
     with _start(
             client,
             image=base_image_name,
             command=["tail", "-f", "/dev/null"],  # keep running
-            volumes=_image_build_volumes(),
-            # needed to make the overlay mounts work on the /git directory
-            # Should work, but does not seem to be enough: 'cap_add=["SYS_ADMIN"]'. Using this instead:
-            privileged=True,
+            volumes=list(_image_build_volumes().keys()),
+            host_config=client.api.create_host_config(
+                # needed to make the overlay mounts work on the /git directory
+                # Should work, but does not seem to be enough: 'cap_add=["SYS_ADMIN"]'. Using this instead:
+                privileged=True,
+                binds=[
+                    ":".join([k, v["bind"], v["mode"]]) for k, v in _image_build_volumes().items()
+                ],
+            ),
     ) as container:
 
         logger.info("Building in container %s (created from %s)", container.short_id,
@@ -251,7 +279,12 @@ def _start(client, **kwargs):
     except docker.errors.ImageNotFound:
         raise Exception("Image %s could not be found locally" % kwargs["image"])
 
-    c = client.containers.run(detach=True, **kwargs)
+    # Start the container with lowlevel API to be able to attach with a debug shell
+    # after initialization
+    container_id = client.api.create_container(**kwargs)["Id"]
+    client.api.start(container_id)
+    c = client.containers.get(container_id)
+
     logger.info("Container ID: %s", c.short_id)
 
     logger.info("Container is ready")
@@ -343,15 +376,16 @@ class ContainerExec(object):  # pylint: disable=useless-object-inheritance
 
             offset = 0
             while offset < len(data):
-                sys.stdout.buffer.write(line_prefix)
                 nl = data.find(b'\n', offset)
                 if nl >= 0:
                     slce = data[offset:nl + 1]
                     offset = nl + 1
+                    sys.stdout.buffer.write(slce)
+                    sys.stdout.buffer.write(line_prefix)
                 else:
                     slce = data[offset:]
                     offset += len(slce)
-                sys.stdout.buffer.write(slce)
+                    sys.stdout.buffer.write(slce)
             sys.stdout.flush()
         while self.poll() is None:
             raise RuntimeError()

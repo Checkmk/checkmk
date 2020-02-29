@@ -6,21 +6,23 @@ MYPY     := ../scripts/run-mypy
 .PHONY: help test-docker test-pylint test-unit \
 	test-mypy test-mypy-raw test-mypy3 test-mypy3-raw \
 	clean test-packaging test-gui-crawl test-gui-crawl-docker \
-	test-integration test-integration-docker
+	test-integration test-integration-docker \
+	test-integration-docker-debug
 
 help:
-	@echo "test-mypy                 - Run mypy tests"
-	@echo "test-mypy-raw             - Run mypy tests with raw edition config"
-	@echo "test-mypy3                - Run mypy tests for Python 3"
-	@echo "test-mypy3-raw            - Run mypy tests for Python 3 with raw edition config"
-	@echo "test-docker               - Run docker tests"
-	@echo "test-pylint               - Run pylint based tests"
-	@echo "test-unit                 - Run unit tests"
-	@echo "test-packaging            - Run packaging tests"
-	@echo "test-gui-crawl            - Run GUI crawl locally"
-	@echo "test-gui-crawl-docker     - Run GUI crawl in container"
-	@echo "test-integration          - Run integration tests locally"
-	@echo "test-integration-docker   - Run integration tests in container"
+	@echo "test-mypy                     - Run mypy tests"
+	@echo "test-mypy-raw                 - Run mypy tests with raw edition config"
+	@echo "test-mypy3                    - Run mypy tests for Python 3"
+	@echo "test-mypy3-raw                - Run mypy tests for Python 3 with raw edition config"
+	@echo "test-docker                   - Run docker tests"
+	@echo "test-pylint                   - Run pylint based tests"
+	@echo "test-unit                     - Run unit tests"
+	@echo "test-packaging                - Run packaging tests"
+	@echo "test-gui-crawl                - Run GUI crawl locally"
+	@echo "test-gui-crawl-docker         - Run GUI crawl in container"
+	@echo "test-integration              - Run integration tests locally"
+	@echo "test-integration-docker       - Run integration tests in container"
+	@echo "test-integration-docker-debug - Run test container for manual debugging"
 
 $(NODE_MODULES):
 	$(MAKE) -C $(dir $(NODE_MODULES)) $(notdir $(NODE_MODULES))
@@ -97,10 +99,13 @@ test-gui-crawl-docker:
 	$(PIPENV3) run scripts/run-dockerized.py "test-gui-crawl"
 
 test-integration: $(NODE_MODULES)
-	$(PIPENV3) run scripts/run-integration-test.py
+	$(PIPENV3) run scripts/run-integration-test.py $(realpath ../tests/integration)
 
 test-integration-docker:
 	$(PIPENV3) run scripts/run-dockerized.py "test-integration"
+
+test-integration-docker-debug: $(NODE_MODULES)
+	$(PIPENV3) run scripts/run-dockerized.py debug
 
 clean:
 	rm -rf .mypy_cache

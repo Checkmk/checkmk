@@ -210,19 +210,8 @@ class NotificationsMode(EventsMode):
 
         vs_match_conditions = Dictionary(elements=self._rule_match_conditions())
 
-        if not show_title:
-            title = ""
-        elif profilemode:
-            title = _("Notification rules")
-        elif userid:
-            url = html.makeuri([("mode", "user_notifications"), ("user", userid)])
-            code = html.render_icon_button(url, _("Edit this user's notifications"), "edit")
-            title = code + _("Notification rules of user %s") % userid
-        else:
-            title = _("Global notification rules")
-
+        title = self._table_title(show_title, profilemode, userid)
         with table_element(title=title, limit=None, sortable=False) as table:
-
             if analyse:
                 analyse_rules, _analyse_plugins = analyse
 
@@ -323,6 +312,7 @@ class NotificationsMode(EventsMode):
                     html.write("&nbsp;")
                 html.write_text(rule["description"])
                 table.cell(_("Contacts"))
+
                 infos = []
                 if rule.get("contact_object"):
                     infos.append(_("all contacts of the notified object"))
@@ -336,9 +326,9 @@ class NotificationsMode(EventsMode):
                     infos.append(_("contact groups: ") + (", ".join(rule["contact_groups"])))
                 if rule.get("contact_emails"):
                     infos.append(_("email addresses: ") + (", ".join(rule["contact_emails"])))
+
                 if not infos:
                     html.i(_("(no one)"))
-
                 else:
                     for line in infos:
                         html.write("&bullet; %s" % line)
@@ -378,6 +368,17 @@ class NotificationsMode(EventsMode):
             ],
             default_value=["host"],
         )
+
+    def _table_title(self, show_title, profilemode, userid):
+        if not show_title:
+            return ""
+        if profilemode:
+            return _("Notification rules")
+        if userid:
+            url = html.makeuri([("mode", "user_notifications"), ("user", userid)])
+            code = html.render_icon_button(url, _("Edit this user's notifications"), "edit")
+            return code + _("Notification rules of user %s") % userid
+        return _("Global notification rules")
 
 
 @mode_registry.register

@@ -2407,7 +2407,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             mibname = filename
 
         msg = self._validate_and_compile_mib(mibname.upper(), content)
-        with (cmk.gui.mkeventd.mib_upload_dir() / filename).open("w") as f:
+        with (cmk.gui.mkeventd.mib_upload_dir() / filename).open("wb") as f:
             f.write(content)
         self._add_change("uploaded-mib", _("MIB %s: %s") % (filename, msg))
         return msg
@@ -2440,7 +2440,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 
         # Directories containing ASN1 MIB files which may be used for
         # dependency resolution
-        compiler.addSources(*[FileReader(path) for path, _title in cmk.gui.mkeventd.mib_dirs()])
+        compiler.addSources(*[FileReader(str(path)) for path, _title in cmk.gui.mkeventd.mib_dirs()])
 
         # check for already compiled MIBs
         compiler.addSearchers(PyFileSearcher(compiled_mibs_dir))

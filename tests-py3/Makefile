@@ -1,19 +1,23 @@
 SHELL    := /bin/bash -e
 PIPENV3  := ../scripts/run-pipenv 3
 PYTEST   := $(PIPENV3) run py.test -vv
+YAPF     := $(PIPENV3) run yapf
 MYPY     := ../scripts/run-mypy
 
 .PHONY: help test-docker test-pylint test-unit \
 	test-mypy test-mypy-raw test-mypy3 test-mypy3-raw \
 	clean test-packaging test-gui-crawl test-gui-crawl-docker \
 	test-integration test-integration-docker \
-	test-integration-docker-debug
+	test-integration-docker-debug \
+	test-format-python test-format-python3 \
 
 help:
 	@echo "test-mypy                     - Run mypy tests"
 	@echo "test-mypy-raw                 - Run mypy tests with raw edition config"
 	@echo "test-mypy3                    - Run mypy tests for Python 3"
 	@echo "test-mypy3-raw                - Run mypy tests for Python 3 with raw edition config"
+	@echo "test-format-python            - Run Python 2 formatting tests"
+	@echo "test-format-python3           - Run Python 3 formatting tests"
 	@echo "test-docker                   - Run docker tests"
 	@echo "test-pylint                   - Run pylint based tests"
 	@echo "test-unit                     - Run unit tests"
@@ -88,6 +92,32 @@ test-mypy:
 
 test-mypy-raw:
 	$(MYPY) --config-file=$(realpath ../mypy-raw.ini)  $(MYPY2_FILES)
+
+test-format-python: ../.style.yapf
+# Explicitly specify --style [FILE] to prevent costly searching in parent directories
+# for each file specified via command line
+#
+# There are some mixed up lines on stdout caused by the --parallel option.
+# Nevertheless, we keep that option to get a big performance boost. GitHub issue
+# opened for this problem: https://github.com/google/yapf/issues/644.
+	@PYTHON_FILES=$${PYTHON_FILES-$$(../scripts/find-python-files 2)} ; \
+	$(YAPF) --parallel --style ../.style.yapf --verbose --diff $$PYTHON_FILES | \
+	grep '^+++ .*(reformatted)$$' | \
+	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/' ; \
+	exit $${PIPESTATUS[0]}
+
+test-format-python3: ../.style.yapf
+# Explicitly specify --style [FILE] to prevent costly searching in parent directories
+# for each file specified via command line
+#
+# There are some mixed up lines on stdout caused by the --parallel option.
+# Nevertheless, we keep that option to get a big performance boost. GitHub issue
+# opened for this problem: https://github.com/google/yapf/issues/644.
+	@PYTHON_FILES=$${PYTHON_FILES-$$(../scripts/find-python-files 3)} ; \
+	$(YAPF) --parallel --style ../.style.yapf --verbose --diff $$PYTHON_FILES | \
+	grep '^+++ .*(reformatted)$$' | \
+	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/' ; \
+	exit $${PIPESTATUS[0]}
 
 test-packaging:
 	$(PYTEST) -T packaging packaging

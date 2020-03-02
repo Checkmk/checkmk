@@ -95,8 +95,8 @@ THEME_RESOURCES    := $(THEME_CSS_FILES) $(THEME_JSON_FILES) $(THEME_IMAGE_DIRS)
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc cppcheck dist documentation format format-c \
-        format-windows format-linux format-python format-shell \
-        GTAGS headers help install \
+        format-windows format-linux format-python format-python2 format-python3 \
+	format-shell GTAGS headers help install \
         iwyu mrproper mrclean optimize-images packages setup setversion tidy version \
         am--refresh skel .venv .venv-2.7 .venv-3.7
 
@@ -532,14 +532,26 @@ format-windows:
 format-linux:
 	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT_LINUX)
 
-format-python:
+format-python: format-python3 format-python2
+
+format-python2:
 # Explicitly specify --style [FILE] to prevent costly searching in parent directories
 # for each file specified via command line
 #
 # Saw some mixed up lines on stdout after adding the --parallel option. Leaving it on
 # for the moment to get the performance boost this option brings.
 	PYTHON_FILES=$${PYTHON_FILES-$$(scripts/find-python-files 2)} ; \
-	$(PIPENV2) run yapf --parallel --style .style.yapf --verbose -i $$PYTHON_FILES
+	$(PIPENV3) run yapf --parallel --style .style.yapf --verbose -i $$PYTHON_FILES
+
+format-python3:
+# Explicitly specify --style [FILE] to prevent costly searching in parent directories
+# for each file specified via command line
+#
+# Saw some mixed up lines on stdout after adding the --parallel option. Leaving it on
+# for the moment to get the performance boost this option brings.
+	PYTHON_FILES=$${PYTHON_FILES-$$(scripts/find-python-files 3)} ; \
+	$(PIPENV3) run yapf --parallel --style .style.yapf --verbose -i $$PYTHON_FILES
+
 
 format-shell:
 	sudo docker run --rm -v "$(realpath .):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES)

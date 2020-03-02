@@ -715,7 +715,13 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
 
 class SiteFactory(object):  # pylint: disable=useless-object-inheritance
-    def __init__(self, version, edition, branch, update_from_git=False, install_test_python_modules=True, prefix=None):
+    def __init__(self,
+                 version,
+                 edition,
+                 branch,
+                 update_from_git=False,
+                 install_test_python_modules=True,
+                 prefix=None):
         self._base_ident = prefix or "s_%s_" % branch[:6]
         self._version = version
         self._edition = edition

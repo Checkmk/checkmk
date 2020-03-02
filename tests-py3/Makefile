@@ -36,7 +36,12 @@ MYPY3_FILES=$(shell \
     ../scripts/find-python-files 3 | \
     `: filter out plugins, they are not real modules` \
     grep -v $$(realpath '../checks') | \
-    grep -v $$(realpath '../inventory'))
+    grep -v $$(realpath '../inventory') | \
+    if test -d ../enterprise; then \
+        grep -v $$(realpath '../agents')/bakery; \
+    else \
+        cat; \
+    fi)
 
 test-mypy3:
 	$(MYPY) $(MYPY3_FILES)

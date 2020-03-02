@@ -210,155 +210,155 @@ class NotificationsMode(EventsMode):
 
         vs_match_conditions = Dictionary(elements=self._rule_match_conditions())
 
-        if rules:
-            if not show_title:
-                title = ""
-            elif profilemode:
-                title = _("Notification rules")
-            elif userid:
-                url = html.makeuri([("mode", "user_notifications"), ("user", userid)])
-                code = html.render_icon_button(url, _("Edit this user's notifications"), "edit")
-                title = code + _("Notification rules of user %s") % userid
-            else:
-                title = _("Global notification rules")
-            with table_element(title=title, limit=None, sortable=False) as table:
+        if not show_title:
+            title = ""
+        elif profilemode:
+            title = _("Notification rules")
+        elif userid:
+            url = html.makeuri([("mode", "user_notifications"), ("user", userid)])
+            code = html.render_icon_button(url, _("Edit this user's notifications"), "edit")
+            title = code + _("Notification rules of user %s") % userid
+        else:
+            title = _("Global notification rules")
 
+        with table_element(title=title, limit=None, sortable=False) as table:
+
+            if analyse:
+                analyse_rules, _analyse_plugins = analyse
+
+            # have_match = False
+            for nr, rule in enumerate(rules):
+                table.row()
+
+                # Analyse
                 if analyse:
-                    analyse_rules, _analyse_plugins = analyse
+                    table.cell(css="buttons")
+                    what, _anarule, reason = analyse_rules[nr + start_nr]
+                    if what == "match":
+                        html.icon(_("This rule matches"), "rulematch")
+                    elif what == "miss":
+                        html.icon(_("This rule does not match: %s") % reason, "rulenmatch")
 
-                # have_match = False
-                for nr, rule in enumerate(rules):
-                    table.row()
+                if profilemode:
+                    listmode = "user_notifications_p"
+                elif userid:
+                    listmode = "user_notifications"
+                else:
+                    listmode = "notifications"
 
-                    # Analyse
-                    if analyse:
-                        table.cell(css="buttons")
-                        what, _anarule, reason = analyse_rules[nr + start_nr]
-                        if what == "match":
-                            html.icon(_("This rule matches"), "rulematch")
-                        elif what == "miss":
-                            html.icon(_("This rule does not match: %s") % reason, "rulenmatch")
+                # In case a notification plugin does not exist anymore the permission is completely missing.
+                permission_name = "notification_plugin.%s" % rule['notify_plugin'][0]
+                actions_allowed = permission_name not in permissions.permission_registry \
+                    or config.user.may(permission_name)
 
-                    if profilemode:
-                        listmode = "user_notifications_p"
-                    elif userid:
-                        listmode = "user_notifications"
-                    else:
-                        listmode = "notifications"
+                if show_buttons and actions_allowed:
+                    anavar = html.request.var("analyse", "")
+                    delete_url = make_action_link([
+                        ("mode", listmode),
+                        ("user", userid),
+                        ("_delete", nr),
+                    ])
+                    drag_url = make_action_link([
+                        ("mode", listmode),
+                        ("analyse", anavar),
+                        ("user", userid),
+                        ("_move", nr),
+                    ])
+                    suffix = "_p" if profilemode else ""
+                    edit_url = watolib.folder_preserving_link([
+                        ("mode", "notification_rule" + suffix),
+                        ("edit", nr),
+                        ("user", userid),
+                    ])
+                    clone_url = watolib.folder_preserving_link([
+                        ("mode", "notification_rule" + suffix),
+                        ("clone", nr),
+                        ("user", userid),
+                    ])
 
-                    # In case a notification plugin does not exist anymore the permission is completely missing.
-                    permission_name = "notification_plugin.%s" % rule['notify_plugin'][0]
-                    actions_allowed = permission_name not in permissions.permission_registry \
-                        or config.user.may(permission_name)
-
-                    if show_buttons and actions_allowed:
-                        anavar = html.request.var("analyse", "")
-                        delete_url = make_action_link([
-                            ("mode", listmode),
-                            ("user", userid),
-                            ("_delete", nr),
-                        ])
-                        drag_url = make_action_link([
-                            ("mode", listmode),
-                            ("analyse", anavar),
-                            ("user", userid),
-                            ("_move", nr),
-                        ])
-                        suffix = "_p" if profilemode else ""
-                        edit_url = watolib.folder_preserving_link([
-                            ("mode", "notification_rule" + suffix),
-                            ("edit", nr),
-                            ("user", userid),
-                        ])
-                        clone_url = watolib.folder_preserving_link([
-                            ("mode", "notification_rule" + suffix),
-                            ("clone", nr),
-                            ("user", userid),
-                        ])
-
-                        table.cell(_("Actions"), css="buttons")
-                        html.icon_button(edit_url, _("Edit this notification rule"), "edit")
-                        html.icon_button(clone_url, _("Create a copy of this notification rule"),
-                                         "clone")
-                        html.element_dragger_url("tr", base_url=drag_url)
-                        html.icon_button(delete_url, _("Delete this notification rule"), "delete")
-                    else:
-                        table.cell("", css="buttons")
-                        for _x in range(4):
-                            html.empty_icon_button()
-
-                    table.cell("", css="narrow")
-                    if rule.get("disabled"):
-                        html.icon(_("This rule is currently disabled and will not be applied"),
-                                  "disabled")
-                    else:
+                    table.cell(_("Actions"), css="buttons")
+                    html.icon_button(edit_url, _("Edit this notification rule"), "edit")
+                    html.icon_button(clone_url, _("Create a copy of this notification rule"),
+                                     "clone")
+                    html.element_dragger_url("tr", base_url=drag_url)
+                    html.icon_button(delete_url, _("Delete this notification rule"), "delete")
+                else:
+                    table.cell("", css="buttons")
+                    for _x in range(4):
                         html.empty_icon_button()
 
-                    notify_method = rule["notify_plugin"]
-                    # Catch rules with empty notify_plugin key
-                    # Maybe this should be avoided somewhere else (e.g. rule editor)
-                    if not notify_method:
-                        notify_method = (None, [])
-                    notify_plugin = notify_method[0]
+                table.cell("", css="narrow")
+                if rule.get("disabled"):
+                    html.icon(_("This rule is currently disabled and will not be applied"),
+                              "disabled")
+                else:
+                    html.empty_icon_button()
 
-                    table.cell(_("Type"), css="narrow")
-                    if notify_method[1] is None:
-                        html.icon(_("Cancel notifications for this plugin type"), "notify_cancel")
-                    else:
-                        html.icon(_("Create a notification"), "notify_create")
+                notify_method = rule["notify_plugin"]
+                # Catch rules with empty notify_plugin key
+                # Maybe this should be avoided somewhere else (e.g. rule editor)
+                if not notify_method:
+                    notify_method = (None, [])
+                notify_plugin = notify_method[0]
 
-                    table.cell(_("Plugin"), notify_plugin or _("Plain Email"), css="narrow nowrap")
+                table.cell(_("Type"), css="narrow")
+                if notify_method[1] is None:
+                    html.icon(_("Cancel notifications for this plugin type"), "notify_cancel")
+                else:
+                    html.icon(_("Create a notification"), "notify_create")
 
-                    table.cell(_("Bulk"), css="narrow")
-                    if "bulk" in rule or "bulk_period" in rule:
-                        html.icon(_("This rule configures bulk notifications."), "bulk")
+                table.cell(_("Plugin"), notify_plugin or _("Plain Email"), css="narrow nowrap")
 
-                    table.cell(_("Description"))
-                    url = rule.get("docu_url")
-                    if url:
-                        html.icon_button(url,
-                                         _("Context information about this rule"),
-                                         "url",
-                                         target="_blank")
-                        html.write("&nbsp;")
-                    html.write_text(rule["description"])
-                    table.cell(_("Contacts"))
-                    infos = []
-                    if rule.get("contact_object"):
-                        infos.append(_("all contacts of the notified object"))
-                    if rule.get("contact_all"):
-                        infos.append(_("all users"))
-                    if rule.get("contact_all_with_email"):
-                        infos.append(_("all users with and email address"))
-                    if rule.get("contact_users"):
-                        infos.append(_("users: ") + (", ".join(rule["contact_users"])))
-                    if rule.get("contact_groups"):
-                        infos.append(_("contact groups: ") + (", ".join(rule["contact_groups"])))
-                    if rule.get("contact_emails"):
-                        infos.append(_("email addresses: ") + (", ".join(rule["contact_emails"])))
-                    if not infos:
-                        html.i(_("(no one)"))
+                table.cell(_("Bulk"), css="narrow")
+                if "bulk" in rule or "bulk_period" in rule:
+                    html.icon(_("This rule configures bulk notifications."), "bulk")
 
-                    else:
-                        for line in infos:
-                            html.write("&bullet; %s" % line)
-                            html.br()
+                table.cell(_("Description"))
+                url = rule.get("docu_url")
+                if url:
+                    html.icon_button(url,
+                                     _("Context information about this rule"),
+                                     "url",
+                                     target="_blank")
+                    html.write("&nbsp;")
+                html.write_text(rule["description"])
+                table.cell(_("Contacts"))
+                infos = []
+                if rule.get("contact_object"):
+                    infos.append(_("all contacts of the notified object"))
+                if rule.get("contact_all"):
+                    infos.append(_("all users"))
+                if rule.get("contact_all_with_email"):
+                    infos.append(_("all users with and email address"))
+                if rule.get("contact_users"):
+                    infos.append(_("users: ") + (", ".join(rule["contact_users"])))
+                if rule.get("contact_groups"):
+                    infos.append(_("contact groups: ") + (", ".join(rule["contact_groups"])))
+                if rule.get("contact_emails"):
+                    infos.append(_("email addresses: ") + (", ".join(rule["contact_emails"])))
+                if not infos:
+                    html.i(_("(no one)"))
 
-                    table.cell(_("Conditions"), css="rule_conditions")
-                    num_conditions = len([key for key in rule if key.startswith("match_")])
-                    if num_conditions:
-                        title = _("%d conditions") % num_conditions
-                        html.begin_foldable_container(
-                            treename="rule_%s_%d" % (userid, nr),
-                            id_="%s" % nr,
-                            isopen=False,
-                            title=title,
-                            indent=False,
-                        )
-                        html.write(vs_match_conditions.value_to_text(rule))
-                        html.end_foldable_container()
-                    else:
-                        html.i(_("(no conditions)"))
+                else:
+                    for line in infos:
+                        html.write("&bullet; %s" % line)
+                        html.br()
+
+                table.cell(_("Conditions"), css="rule_conditions")
+                num_conditions = len([key for key in rule if key.startswith("match_")])
+                if num_conditions:
+                    title = _("%d conditions") % num_conditions
+                    html.begin_foldable_container(
+                        treename="rule_%s_%d" % (userid, nr),
+                        id_="%s" % nr,
+                        isopen=False,
+                        title=title,
+                        indent=False,
+                    )
+                    html.write(vs_match_conditions.value_to_text(rule))
+                    html.end_foldable_container()
+                else:
+                    html.i(_("(no conditions)"))
 
     def _add_change(self, log_what, log_text):
         add_change(log_what, log_text, need_restart=False)

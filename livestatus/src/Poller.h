@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <poll.h>
+#include <asio/basic_socket.hpp>
 #include <cerrno>
 #include <chrono>
 #include <string>
@@ -37,6 +38,15 @@
 
 enum class PollEvents { in = 1 << 0, out = 1 << 1, hup = 1 << 2 };
 IS_BIT_MASK(PollEvents);
+
+namespace {
+template <typename Protocol>
+int native_handle(const asio::basic_socket<Protocol>& sock) {
+    // socket::native_handle is not const but we just want
+    // the copy of an int here.
+    return const_cast<asio::basic_socket<Protocol>&>(sock).native_handle();
+}
+}  // namespace
 
 class Poller {
 public:
@@ -105,10 +115,22 @@ public:
         _pollfds.push_back({fd, toMask(e), 0});
     }
 
+    template <typename Protocol>
+    void addFileDescriptor(const asio::basic_socket<Protocol>& sock,
+                           PollEvents e) {
+        addFileDescriptor(native_handle(sock), e);
+    }
+
     bool isFileDescriptorSet(int fd, PollEvents e) const {
         auto it = _fd_to_pollfd.find(fd);
         return it != _fd_to_pollfd.end() &&
                (_pollfds[it->second].revents & toMask(e)) != 0;
+    }
+
+    template <typename Protocol>
+    bool isFileDescriptorSet(const asio::basic_socket<Protocol>& sock,
+                             PollEvents e) const {
+        return isFileDescriptorSet(native_handle(sock), e);
     }
 
 private:

@@ -134,6 +134,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
             return ""
 
         sensors = []
+        has_no_gpu = not self._has_gpu(connection)
         for number in sdr.get_sensor_numbers():
             rsp = connection.raw_command(command=0x2d, netfn=4, data=(number,))
             if 'error' in rsp:
@@ -146,7 +147,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
 
             # sometimes (wrong) data for GPU sensors is reported, even if
             # not installed
-            if "GPU" in reading.name and self._has_gpu(connection):
+            if "GPU" in reading.name and has_no_gpu:
                 continue
 
             # {'states': [], 'health': 0, 'name': 'CPU1 Temp', 'imprecision': 0.5,
@@ -204,13 +205,11 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         except Exception as e:
             self._logger.verbose("Failed to fetch inventory information: %r" % e)
             self._logger.debug("Exception", exc_info=True)
-            return ""
+            # in case of connection problems, we don't want to ignore possible
+            # GPU entries
+            return True
 
-        for line in inventory_entries:
-            if "GPU" in line:
-                return False
-
-        return True
+        return any("GPU" in line for line in inventory_entries)
 
     def _summary_result(self, for_checking):
         return 0, "Version: %s" % self._get_ipmi_version(), []

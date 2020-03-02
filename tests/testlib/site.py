@@ -69,7 +69,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
 
     @property
     def live(self):
-        import livestatus  # pylint: disable=import-outside-toplevel
+        import livestatus  # pylint: disable=import-outside-toplevel,import-outside-toplevel
         # Note: If the site comes from a SiteFactory instance, the TCP connection
         # is insecure, i.e. no TLS.
         live = (livestatus.LocalConnection() if self._is_running_as_site_user() else
@@ -95,7 +95,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         # core restart/reload, so e.g. querying a Livestatus table immediately
         # might not reflect the changes yet. Ask the core for a successful reload.
         def config_reloaded():
-            import livestatus  # pylint: disable=import-outside-toplevel
+            import livestatus  # pylint: disable=import-outside-toplevel,import-outside-toplevel
             try:
                 new_t = self.live.query_value("GET status\nColumns: program_start\n")
             except livestatus.MKLivestatusException:
@@ -173,14 +173,15 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                                   expected_state):
         wait_timeout = 20
         last_check, state, plugin_output = self.live.query_row(
-            "GET hosts\n" \
-            "Columns: last_check state plugin_output\n" \
-            "Filter: host_name = %s\n" \
-            "WaitObject: %s\n" \
-            "WaitTimeout: %d\n" \
-            "WaitCondition: last_check > %d\n" \
-            "WaitCondition: state = %d\n" \
-            "WaitTrigger: check\n" % (hostname, hostname, wait_timeout*1000, last_check_before, expected_state))
+            "GET hosts\n"
+            "Columns: last_check state plugin_output\n"
+            "Filter: host_name = %s\n"
+            "WaitObject: %s\n"
+            "WaitTimeout: %d\n"
+            "WaitCondition: last_check > %d\n"
+            "WaitCondition: state = %d\n"
+            "WaitTrigger: check\n" %
+            (hostname, hostname, wait_timeout * 1000, last_check_before, expected_state))
         self._verify_next_check_output(command_timestamp, last_check, last_check_before, state,
                                        expected_state, plugin_output, wait_timeout)
 
@@ -188,16 +189,17 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                                      command_timestamp, expected_state):
         wait_timeout = 20
         last_check, state, plugin_output = self.live.query_row(
-            "GET services\n" \
-            "Columns: last_check state plugin_output\n" \
-            "Filter: host_name = %s\n" \
-            "Filter: description = %s\n" \
-            "WaitObject: %s;%s\n" \
-            "WaitTimeout: %d\n" \
-            "WaitCondition: last_check > %d\n" \
-            "WaitCondition: state = %d\n" \
-            "WaitCondition: has_been_checked = 1\n" \
-            "WaitTrigger: check\n" % (hostname, service_description, hostname, service_description, wait_timeout*1000, last_check_before, expected_state))
+            "GET services\n"
+            "Columns: last_check state plugin_output\n"
+            "Filter: host_name = %s\n"
+            "Filter: description = %s\n"
+            "WaitObject: %s;%s\n"
+            "WaitTimeout: %d\n"
+            "WaitCondition: last_check > %d\n"
+            "WaitCondition: state = %d\n"
+            "WaitCondition: has_been_checked = 1\n"
+            "WaitTrigger: check\n" % (hostname, service_description, hostname, service_description,
+                                      wait_timeout * 1000, last_check_before, expected_state))
         self._verify_next_check_output(command_timestamp, last_check, last_check_before, state,
                                        expected_state, plugin_output, wait_timeout)
 
@@ -212,17 +214,16 @@ class Site(object):  # pylint: disable=useless-object-inheritance
             "Expected %d state, got %d state, output %s" % (expected_state, state, plugin_output)
 
     def _last_host_check(self, hostname):
-        return self.live.query_value(
-            "GET hosts\n" \
-            "Columns: last_check\n" \
-            "Filter: host_name = %s\n" % (hostname))
+        return self.live.query_value("GET hosts\n"
+                                     "Columns: last_check\n"
+                                     "Filter: host_name = %s\n" % (hostname))
 
     def _last_service_check(self, hostname, service_description):
-        return self.live.query_value(
-                "GET services\n" \
-                "Columns: last_check\n" \
-                "Filter: host_name = %s\n" \
-                "Filter: service_description = %s\n" % (hostname, service_description))
+        return self.live.query_value("GET services\n"
+                                     "Columns: last_check\n"
+                                     "Filter: host_name = %s\n"
+                                     "Filter: service_description = %s\n" %
+                                     (hostname, service_description))
 
     def get_host_state(self, hostname):
         return self.live.query_value("GET hosts\nColumns: state\nFilter: host_name = %s" % hostname)
@@ -669,9 +670,9 @@ class Site(object):  # pylint: disable=useless-object-inheritance
                 missing.append(f)
         return missing
 
-    # This opens a currently free TCP port and remembers it in the object for later use
-    # Not free of races, but should be sufficient.
-    def open_livestatus_tcp(self):
+    def open_livestatus_tcp(self, encrypted):
+        """This opens a currently free TCP port and remembers it in the object for later use
+        Not free of races, but should be sufficient."""
         start_again = False
 
         if self.is_running():
@@ -682,6 +683,7 @@ class Site(object):  # pylint: disable=useless-object-inheritance
         self.set_config("LIVESTATUS_TCP", "on")
         self._gather_livestatus_port()
         self.set_config("LIVESTATUS_TCP_PORT", str(self._livestatus_port))
+        self.set_config("LIVESTATUS_TCP_TLS", "on" if encrypted else "off")
 
         if start_again:
             self.start()
@@ -771,9 +773,7 @@ class SiteFactory(object):  # pylint: disable=useless-object-inheritance
         site = self._site_obj(name)
 
         site.create()
-        site.open_livestatus_tcp()
-        # No TLS for testing
-        site.set_config("LIVESTATUS_TCP_TLS", "off")
+        site.open_livestatus_tcp(encrypted=False)
         site.start()
         site.prepare_for_tests()
         # There seem to be still some changes that want to be activated

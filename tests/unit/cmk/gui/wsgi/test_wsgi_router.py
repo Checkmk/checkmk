@@ -106,10 +106,10 @@ def test_normal_auth(
 @pytest.mark.skipif(cmk.is_raw_edition(), reason="No agent deployment in raw edition")
 def test_deploy_agent(wsgi_app):
     response = wsgi_app.get('/NO_SITE/check_mk/deploy_agent.py')
-    assert response.body.startswith("Missing or invalid")
+    assert response.body.startswith("ERROR: Missing or invalid")
 
     response = wsgi_app.get('/NO_SITE/check_mk/deploy_agent.py?mode=agent')
-    assert response.body.startswith("Missing host")
+    assert response.body.startswith("ERROR: Missing host")
 
 
 def test_openapi_version(

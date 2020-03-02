@@ -939,7 +939,7 @@ class Rule(object):
         # address the object is located at).
         # Since we do not work with regular rulesets here, we need to clear the cache
         # (that is not useful in this situation)
-        matcher.ruleset_optimizer.clear_host_ruleset_cache()
+        matcher.ruleset_optimizer.clear_ruleset_caches()
 
         ruleset = [rule_dict]
 

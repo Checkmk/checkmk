@@ -290,9 +290,10 @@ class RulesetOptimizer(object):
         # TODO: Clean this one up?
         self._initialize_host_lookup()
 
-    def clear_host_ruleset_cache(self):
+    def clear_ruleset_caches(self):
         # type: () -> None
         self._host_ruleset_cache.clear()
+        self._service_ruleset_cache.clear()
 
     def all_processed_hosts(self):
         # type: () -> Set[str]

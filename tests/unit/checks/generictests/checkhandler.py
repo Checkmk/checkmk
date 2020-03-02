@@ -4,7 +4,7 @@ import cmk.base.config as config
 import cmk.base.check_api as check_api
 
 
-class CheckHandler(object):
+class CheckHandler(object):  # pylint: disable=useless-object-inheritance
     """Collect the info on all checks"""
     def __init__(self):
         config.load_all_checks(check_api.get_check_api_context)

@@ -235,7 +235,7 @@ def _parameter_valuespec_fileinfo_groups():
                    "a conjunction are reached then the related state is reported."),
              )),
         ],
-        ignored_keys=["precompiled_patterns"],
+        ignored_keys=["precompiled_patterns", "group_patterns"],
     )
 
 

@@ -7,6 +7,7 @@
 
 import abc
 import time
+from typing import NamedTuple  # pylint: disable=unused-import
 
 import cmk
 import cmk.utils.store as store
@@ -228,44 +229,14 @@ class NotificationsMode(EventsMode):
                     elif what == "miss":
                         html.icon(_("This rule does not match: %s") % reason, "rulenmatch")
 
-                if profilemode:
-                    listmode = "user_notifications_p"
-                elif userid:
-                    listmode = "user_notifications"
-                else:
-                    listmode = "notifications"
-
                 if show_buttons and self._actions_allowed(rule):
-                    anavar = html.request.var("analyse", "")
-                    delete_url = make_action_link([
-                        ("mode", listmode),
-                        ("user", userid),
-                        ("_delete", nr),
-                    ])
-                    drag_url = make_action_link([
-                        ("mode", listmode),
-                        ("analyse", anavar),
-                        ("user", userid),
-                        ("_move", nr),
-                    ])
-                    suffix = "_p" if profilemode else ""
-                    edit_url = watolib.folder_preserving_link([
-                        ("mode", "notification_rule" + suffix),
-                        ("edit", nr),
-                        ("user", userid),
-                    ])
-                    clone_url = watolib.folder_preserving_link([
-                        ("mode", "notification_rule" + suffix),
-                        ("clone", nr),
-                        ("user", userid),
-                    ])
-
                     table.cell(_("Actions"), css="buttons")
-                    html.icon_button(edit_url, _("Edit this notification rule"), "edit")
-                    html.icon_button(clone_url, _("Create a copy of this notification rule"),
+                    links = self._rule_links(nr, profilemode, userid)
+                    html.icon_button(links.edit, _("Edit this notification rule"), "edit")
+                    html.icon_button(links.clone, _("Create a copy of this notification rule"),
                                      "clone")
-                    html.element_dragger_url("tr", base_url=drag_url)
-                    html.icon_button(delete_url, _("Delete this notification rule"), "delete")
+                    html.element_dragger_url("tr", base_url=links.drag)
+                    html.icon_button(links.delete, _("Delete this notification rule"), "delete")
                 else:
                     table.cell("", css="buttons")
                     for _x in range(4):
@@ -383,6 +354,56 @@ class NotificationsMode(EventsMode):
         permission_name = "notification_plugin.%s" % rule['notify_plugin'][0]
         return (permission_name not in permissions.permission_registry or
                 config.user.may(permission_name))
+
+    def _rule_links(self, nr, profilemode, userid):
+        anavar = html.request.var("analyse", "")
+
+        if profilemode:
+            listmode = "user_notifications_p"
+        elif userid:
+            listmode = "user_notifications"
+        else:
+            listmode = "notifications"
+
+        if profilemode:
+            mode = "notification_rule_p"
+        else:
+            mode = "notification_rule"
+
+        delete_url = make_action_link([
+            ("mode", listmode),
+            ("user", userid),
+            ("_delete", nr),
+        ])
+        drag_url = make_action_link([
+            ("mode", listmode),
+            ("analyse", anavar),
+            ("user", userid),
+            ("_move", nr),
+        ])
+        edit_url = watolib.folder_preserving_link([
+            ("mode", mode),
+            ("edit", nr),
+            ("user", userid),
+        ])
+        clone_url = watolib.folder_preserving_link([
+            ("mode", mode),
+            ("clone", nr),
+            ("user", userid),
+        ])
+
+        return NotificationRuleLinks(delete=delete_url,
+                                     edit=edit_url,
+                                     drag=drag_url,
+                                     clone=clone_url)
+
+
+NotificationRuleLinks = NamedTuple('NotificationRuleLinks', [
+    ('delete', str),
+    ('edit', str),
+    ('drag', str),
+    ('clone', str),
+])
 
 
 @mode_registry.register

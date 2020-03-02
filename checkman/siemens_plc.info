@@ -15,5 +15,8 @@ description:
 
  The checks does always returns {OK}.
 
+item:
+ Name of the device and the mode seperated by a space
+
 inventory:
  One check for each configured text value is created automatically.

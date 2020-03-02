@@ -10,7 +10,7 @@ description:
  is not "connected" or the membership does not return "joined".
 
 item:
- The SDS id is used as item
+ The SDS id
 
 inventory:
  One service for each SDS is created

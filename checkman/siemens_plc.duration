@@ -18,5 +18,8 @@ description:
  device does not report any thresholds. When the duration value is smaller than the previous
  one, the check goes to {CRIT} for one check.
 
+item:
+ Name of the device and the mode seperated by a space
+
 inventory:
  One check for each configured duration value is created automatically.

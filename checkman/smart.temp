@@ -19,5 +19,5 @@ inventory:
  automatically inventorized. One service is being created for each HDD.
 
 item:
- The device name. Example: {/dev/sda}
+ The name of the disk. Example: {/dev/sda}
 

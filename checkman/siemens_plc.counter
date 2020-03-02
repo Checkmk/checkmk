@@ -16,5 +16,8 @@ description:
  The checks does not {WARN}/{CRIT} unless you configure the thresholds for the check, as the
  device does not report any thresholds.
 
+item:
+ Name of the device and the mode seperated by a space
+
 inventory:
  One check for each configured counter is created automatically.

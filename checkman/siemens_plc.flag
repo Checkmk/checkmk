@@ -16,5 +16,8 @@ description:
  By default the check reports {OK} for bits set to 1 and {CRIT} for bits set to 0, but you
  can configure the check to handle them vice versa.
 
+item:
+ Name of the device and the mode seperated by a space
+
 inventory:
  One check for each configured flag value is created automatically.

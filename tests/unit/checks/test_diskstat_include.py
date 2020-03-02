@@ -3,7 +3,9 @@ import re  # pylint: disable=unused-import
 import pytest  # type: ignore[import]
 
 from checktestlib import CheckResult, assertCheckResultsEqual
-from cmk.base.check_api import get_bytes_human_readable, check_levels
+from cmk.base.check_api import (  # pylint: disable=unused-import
+    get_bytes_human_readable, check_levels,
+)
 
 pytestmark = pytest.mark.checks
 

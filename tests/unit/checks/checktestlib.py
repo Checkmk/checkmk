@@ -9,7 +9,7 @@ from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 from cmk.base.check_api_utils import Service
 
 
-class Tuploid(object):
+class Tuploid(object):  # pylint: disable=useless-object-inheritance
     """Base class for values with (potentially variadic) tuple representations"""
     def __eq__(self, other_value):
         if isinstance(other_value, self.__class__):
@@ -163,7 +163,7 @@ def assertBasicCheckResultsEqual(actual, expected):
     assert expected.multiline == actual.multiline, msg % ("multiline", actual.multiline)
 
 
-class CheckResult(object):
+class CheckResult(object):  # pylint: disable=useless-object-inheritance
     """
     A check result potentially consisting of multiple subresults,
     as returned by yield-style checks
@@ -277,7 +277,7 @@ class DiscoveryEntry(Tuploid):
         return "DiscoveryEntry(%r, %r)" % self.tuple
 
 
-class DiscoveryResult(object):
+class DiscoveryResult(object):  # pylint: disable=useless-object-inheritance
     """
     The result of the discovery as a whole.
 
@@ -352,7 +352,7 @@ def assertDiscoveryResultsEqual(check, actual, expected):
         assert laba == labe, "discovered host labels differ: expected %r got %r" % (laba, labe)
 
 
-class BasicItemState(object):
+class BasicItemState(object):  # pylint: disable=useless-object-inheritance
     """Item state as returned by get_item_state
 
     We assert that we have exactly two values,
@@ -373,7 +373,7 @@ class BasicItemState(object):
         # We want to be able to test time anomalies.
 
 
-class MockItemState(object):
+class MockItemState(object):  # pylint: disable=useless-object-inheritance
     """Mock the calls to item_state API.
 
     Due to our rather unorthodox import structure, we cannot mock
@@ -441,7 +441,7 @@ class MockItemState(object):
         return self.context.__exit__(*exc_info)
 
 
-class assertMKCounterWrapped(object):
+class assertMKCounterWrapped(object):  # pylint: disable=useless-object-inheritance
     """Contextmanager in which a MKCounterWrapped exception is expected
 
     If you can choose to also assert a certain error message:
@@ -478,7 +478,7 @@ class assertMKCounterWrapped(object):
         return True
 
 
-class MockHostExtraConf(object):
+class MockHostExtraConf(object):  # pylint: disable=useless-object-inheritance
     """Mock the calls to host_extra_conf.
 
     Due to our rather unorthodox import structure, we cannot mock
@@ -522,7 +522,7 @@ class MockHostExtraConf(object):
 
     def __enter__(self):
         '''The default context: just mock get_item_state'''
-        import cmk.base.config
+        import cmk.base.config  # pylint: disable=import-outside-toplevel
         config_cache = cmk.base.config.get_config_cache()
         self.context = mock.patch.object(
             config_cache,
@@ -539,7 +539,7 @@ class ImmutablesChangedError(AssertionError):
     pass
 
 
-class Immutables(object):
+class Immutables(object):  # pylint: disable=useless-object-inheritance
     """Store some data and ensure it is not changed"""
     def __init__(self):
         self.refs = {}
